@@ -5,6 +5,7 @@
  * PURPOSE:     Chinese (Simplified) Language Resources
  * TRANSLATORS: 2008 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
                 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+				2017 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -57,13 +58,13 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "剪下(&T)\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "复制(&C)\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "贴上(&P)\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "贴上快捷方式(&S)", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "粘贴(&P)\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "粘贴快捷方式(&S)", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "将复制到文件夹...(&F)", FCIDM_SHVIEW_COPYTO
+    MENUITEM "复制到文件夹...(&F)", FCIDM_SHVIEW_COPYTO
     MENUITEM "移动到文件夹...(&V)", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "选择所有(&A)\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "全选(&A)\tCtrl+A", FCIDM_SHVIEW_SELECTALL
     MENUITEM "反向选择(&I)", FCIDM_SHVIEW_INVERTSELECTION
 END
 
@@ -154,7 +155,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS 被带到你的是：", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "带给你 ReactOS 的是：", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -164,7 +165,7 @@ CAPTION "运行"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "输入程序，目录，文件或者Internet资源名，ReactOS将为您打开它。", 12289, 36, 11, 182, 18
+    LTEXT "输入程序，目录，文件或者 Internet 资源名，ReactOS 将为您打开它。", 12289, 36, 11, 182, 18
     LTEXT "打开(&O):", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "确定", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -187,7 +188,7 @@ BEGIN
     LTEXT "目标(&T):", 14008, 8, 71, 68, 10
     EDITTEXT 14009, 79, 69, 150, 14, ES_AUTOHSCROLL
     LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "开始在(&S):", 14010, 8, 98, 68, 10
+    LTEXT "起始位置(&S):", 14010, 8, 98, 68, 10
     EDITTEXT 14011, 79, 96, 150, 14, ES_AUTOHSCROLL
     LTEXT "快捷键(&K):", 14014, 8, 117, 68, 10
     CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
@@ -255,7 +256,7 @@ BEGIN
     CONTROL "文件", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "打开方式:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "更换...(&C)", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "更改...(&C)", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "地点:", 14008, 8, 75, 45, 10
@@ -386,13 +387,13 @@ BEGIN
     RADIOBUTTON "自定义大小(&C):", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "最大大小(MB)(&A):", -1, 20, 105, 70, 10
-    RADIOBUTTON "不将文件移到回收站。删除文件时，立即删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    RADIOBUTTON "不将文件移入回收站，而是彻底删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "显示删除确认对话框(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "开放与"
+CAPTION "打开方式"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
@@ -540,7 +541,7 @@ BEGIN
     LTEXT "ReactOS 可以执行相同的操作每次您插入盘或连接的设备与此类型的文件：", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "你想要 ReactOS 做的是什么？", 1002, 32, 41, 190, 8
+    LTEXT "你想要 ReactOS 做什么？", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "始终执行选择的操作。", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "确定", IDOK, 96, 185, 60, 14
@@ -615,10 +616,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "更改图标"
 FONT 9, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    LTEXT "在这个文件中查找图标:", -1, 7, 7, 179, 10
     PUSHBUTTON "浏览...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LTEXT "从以下列表选择一个图标:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "确定", IDOK, 81, 179, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 135, 179, 50, 14
@@ -669,10 +670,10 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS "管理工具"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "配置您计算机的管理设置。"
+    IDS_FOLDER_OPTIONS_DESCRIPTION "自定义文件和文件夹的显示。"
+    IDS_FONTS_DESCRIPTION "添加、更改和管理您计算机上的字体"
+    IDS_PRINTERS_DESCRIPTION "显示安装的打印机和传真打印机，并帮助您添加新的。"
 
     /* context menus */
     IDS_VIEW_LARGE "大图标(&G)"
@@ -690,11 +691,11 @@ BEGIN
     IDS_FORMATDRIVE "格式..."
     IDS_RENAME "重命名"
     IDS_PASTE "贴上"
-    IDS_EJECT "Eject"
-    IDS_DISCONNECT "Disconnect"
+    IDS_EJECT "弹出"
+    IDS_DISCONNECT "断开"
 
-    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
-    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
+    IDS_CREATEFOLDER_DENIED "无法创建文件夹 '%1'"
+    IDS_CREATEFOLDER_CAPTION "无法创建文件夹"
     IDS_DELETEITEM_CAPTION "确认文件删除"
     IDS_DELETEFOLDER_CAPTION "确认文件夹删除"
     IDS_DELETEITEM_TEXT "确实要删除 '%1'?"
@@ -738,7 +739,7 @@ BEGIN
     IDS_MYMUSIC "我的音乐"
     IDS_MYVIDEO "我的视频"
     IDS_DESKTOPDIRECTORY "桌面"
-    IDS_NETHOOD "NetHood"
+    IDS_NETHOOD "网上邻居"
     IDS_TEMPLATES "模板"
     IDS_APPDATA "应用程序数据"
     IDS_PRINTHOOD "PrintHood"
@@ -757,11 +758,11 @@ BEGIN
     IDS_CDBURN_AREA "本地设置\\应用程序数据\\微软\\光盘刻录"
     IDS_NETWORKPLACE "网上邻居"
 
-    IDS_NEWFOLDER "新的文件夹"
+    IDS_NEWFOLDER "新建文件夹"
 
     IDS_DRIVE_FIXED "本地磁盘"
-    IDS_DRIVE_CDROM "CD 磁盘"
-    IDS_DRIVE_NETWORK "网络磁盘"
+    IDS_DRIVE_CDROM "光盘驱动器"
+    IDS_DRIVE_NETWORK "网络驱动器"
     IDS_DRIVE_FLOPPY "3.5 英寸软盘"
     IDS_DRIVE_REMOVABLE "可移动磁盘"
     IDS_FS_UNKNOWN "未知"
@@ -785,11 +786,11 @@ BEGIN
     IDS_PICK_ICON_FILTER "图标文件 (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "可执行文件 (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
-    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
-    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
-    IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
-    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
+    IDS_CANTLOCKVOLUME "无法锁定卷 (错误代码: %lu)."
+    IDS_CANTDISMOUNTVOLUME "无法卸载卷 (错误代码: %lu)."
+    IDS_CANTEJECTMEDIA "无法弹出媒体 (错误代码: %lu)."
+    IDS_CANTSHOWPROPERTIES "无法显示属性 (错误代码: %lu)."
+    IDS_CANTDISCONNECT "无法断开连接 (错误代码: %lu)."
 
     IDS_DIRECTORY "文件夹"
     IDS_BAT_FILE "ReactOS 批处理文件"
@@ -807,7 +808,7 @@ BEGIN
     IDS_ICO_FILE "图标"
     IDS_INI_FILE "配置设置"
     IDS_LNK_FILE "快捷方式"
-    IDS_PIF_FILE "NT VDM 程序信息文件"
+    IDS_PIF_FILE "NTVDM 程序信息文件"
     IDS_SCR_FILE "屏幕保护程序"
     IDS_SYS_FILE "系统文件"
     IDS_VXD_FILE "虚拟设备驱动程序"
