@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/gdi/ntgdi/text.c
  * PURPOSE:         Text/Font
- * PROGRAMMER:
+ * PROGRAMMER:      Katayama Hirofumi MZ
  */
 
 /** Includes ******************************************************************/
@@ -512,12 +512,12 @@ NtGdiGetTextFaceW(
 
     TextObj = RealizeFontInit(hFont);
     ASSERT(TextObj != NULL);
-    fLen = wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName) + 1;
+    fLen = wcslen(TextObj->FaceName) + 1;
 
     if (FaceName != NULL)
     {
         Count = min(Count, fLen);
-        Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
+        Status = MmCopyToCaller(FaceName, TextObj->FaceName, Count * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             TEXTOBJ_UnlockText(TextObj);
