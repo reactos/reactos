@@ -4044,12 +4044,12 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         if (UserCharSet != TM->tmCharSet)
         {
             /* UNDOCUMENTED */
-            Penalty += 20;
+            Penalty += 100;
 
             if (ANSI_CHARSET != TM->tmCharSet)
             {
                 /* UNDOCUMENTED */
-                Penalty += 10;
+                Penalty += 50;
             }
         }
     }
