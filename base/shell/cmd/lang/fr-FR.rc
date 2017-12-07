@@ -147,7 +147,7 @@ ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
         A     Fichiers archivables\n\
         H     Fichiers cachés\n\
         -     préfixe signifiant ne pas\n"
-    STRING_DEL_HELP2 "Tous les fichiers du répertoire seront effacés!\n\Etes vous sûr(e) (O/N) ? "
+    STRING_DEL_HELP2 "Tous les fichiers du répertoire seront effacés!\nEtes vous sûr(e) (O/N) ? "
     STRING_DEL_HELP3 "    %lu fichier effacé\n"
     STRING_DEL_HELP4 "    %lu fichiers effacés\n"
     STRING_DELAY_HELP "Attend pendant n secondes ou millisecondes.\n\
