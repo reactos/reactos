@@ -21,6 +21,11 @@
 
 #pragma once
 
+extern inline BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
+{
+    return (pidl == NULL || pidl->mkid.cb == 0);
+}
+
 class CBandSiteBase :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IBandSite,

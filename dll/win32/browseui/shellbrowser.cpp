@@ -818,11 +818,6 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
     return S_OK;
 }
 
-BOOL WINAPI _ILIsDesktop(LPCITEMIDLIST pidl)
-{
-    return (pidl == NULL || pidl->mkid.cb == 0);
-}
-
 BOOL WINAPI _ILIsPidlSimple(LPCITEMIDLIST pidl)
 {
     LPCITEMIDLIST                           pidlnext;

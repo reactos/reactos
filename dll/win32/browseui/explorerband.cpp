@@ -54,12 +54,6 @@ static BOOL _ILIsSpecialFolder (LPCITEMIDLIST pidl)
         PT_YAGUID == lpPData->type)) || (pidl && pidl->mkid.cb == 0x00)));
 }
 
-static BOOL _ILIsDesktop (LPCITEMIDLIST pidl)
-{
-    return (pidl && pidl->mkid.cb == 0x00);
-}
-
-
 HRESULT GetDisplayName(LPCITEMIDLIST pidlDirectory,TCHAR *szDisplayName,UINT cchMax,DWORD uFlags)
 {
     IShellFolder *pShellFolder = NULL;
