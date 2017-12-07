@@ -513,6 +513,8 @@ NtGdiGetTextFaceW(
     TextObj = RealizeFontInit(hFont);
     ASSERT(TextObj != NULL);
     fLen = wcslen(TextObj->FaceName) + 1;
+    if (fLen > LF_FACESIZE)
+        fLen = LF_FACESIZE;
 
     if (FaceName != NULL)
     {
@@ -525,7 +527,7 @@ NtGdiGetTextFaceW(
             return 0;
         }
         /* Terminate if we copied only part of the font name */
-        if (Count > 0 && Count < fLen)
+        if (0 < Count && Count <= fLen)
         {
             FaceName[Count - 1] = '\0';
         }
