@@ -120,7 +120,9 @@ static const WELLKNOWNRID WellKnownRids[] = {
     { {'R','S'}, WinAccountRasAndIasServersSid, DOMAIN_ALIAS_RID_RAS_SERVERS },
 };
 
+#ifndef __REACTOS__
 static const SID sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
+#endif
 
 static const WCHAR SDDL_NO_READ_UP[]       = {'N','R',0};
 static const WCHAR SDDL_NO_WRITE_UP[]      = {'N','W',0};
@@ -131,13 +133,17 @@ static const WCHAR SDDL_NO_EXECUTE_UP[]    = {'N','X',0};
  */
 static const WCHAR SDDL_ACCESS_ALLOWED[]        = {'A',0};
 static const WCHAR SDDL_ACCESS_DENIED[]         = {'D',0};
+#ifndef __REACTOS__
 static const WCHAR SDDL_OBJECT_ACCESS_ALLOWED[] = {'O','A',0};
 static const WCHAR SDDL_OBJECT_ACCESS_DENIED[]  = {'O','D',0};
+#endif
 static const WCHAR SDDL_AUDIT[]                 = {'A','U',0};
 static const WCHAR SDDL_ALARM[]                 = {'A','L',0};
 static const WCHAR SDDL_MANDATORY_LABEL[]       = {'M','L',0};
+#ifndef __REACTOS__
 static const WCHAR SDDL_OBJECT_AUDIT[]          = {'O','U',0};
 static const WCHAR SDDL_OBJECT_ALARM[]          = {'O','L',0};
+#endif
 
 /*
  * SDDL ADS Rights
