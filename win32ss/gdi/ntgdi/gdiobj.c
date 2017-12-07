@@ -319,7 +319,7 @@ InitGdiHandleTable(void)
     InitLookasideList(GDIObjType_PATH_TYPE, sizeof(PATH));
     InitLookasideList(GDIObjType_PAL_TYPE, sizeof(PALETTE));
     InitLookasideList(GDIObjType_ICMLCS_TYPE, sizeof(COLORSPACE));
-    InitLookasideList(GDIObjType_LFONT_TYPE, sizeof(TEXTOBJ));
+    InitLookasideList(GDIObjType_LFONT_TYPE, sizeof(LFONT));
     InitLookasideList(GDIObjType_BRUSH_TYPE, sizeof(BRUSH));
 
     return STATUS_SUCCESS;
@@ -1299,7 +1299,7 @@ GreGetObject(
             break;
 
         case GDILoObjType_LO_FONT_TYPE:
-            iResult = FontGetObject(pvObj, cbCount, pvBuffer);
+            iResult = LFONT_GetObject(pvObj, cbCount, pvBuffer);
             break;
 
         case GDILoObjType_LO_PALETTE_TYPE:

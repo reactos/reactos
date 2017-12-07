@@ -26,6 +26,8 @@
 
 /* Internal NtGdi Headers */
 typedef struct _DC *PDC;
+typedef struct _RFONT *PRFONT;
+typedef struct _LFONT *PLFONT;
 #include "gdi/ntgdi/rect.h"
 #include "gdi/ntgdi/misc.h"
 #include "gdi/ntgdi/gdiobj.h"

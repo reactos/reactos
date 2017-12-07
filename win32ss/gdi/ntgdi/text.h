@@ -53,8 +53,6 @@ typedef struct _STRGDI
   ULONG     acFaceNameGlyphs[8];
 } STRGDI, *PSTRGDI;
 
-#define TEXTOBJECT_INIT 0x00010000
-
 /* GDI logical font object */
 typedef struct _LFONT
 {
@@ -63,72 +61,65 @@ typedef struct _LFONT
    BASEOBJECT    BaseObject;
    LFTYPE        lft;
    FLONG         fl;
-   FONTOBJ      *Font;
-   WCHAR         FullName[LF_FULLFACESIZE];
-   WCHAR         Style[LF_FACESIZE];
-   WCHAR         FaceName[LF_FACESIZE];
-   DWORD         dwOffsetEndArray;
-// Fixed:
    ENUMLOGFONTEXDVW logfont;
-   EX_PUSH_LOCK lock;
-} TEXTOBJ, *PTEXTOBJ, LFONT, *PLFONT;
+} LFONT;
 
-/*  Internal interface  */
-
-#define LFONT_AllocFontWithHandle() ((PLFONT)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_FONT, sizeof(TEXTOBJ)))
+#define LFONT_AllocFontWithHandle() ((PLFONT)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_FONT, sizeof(LFONT)))
 #define LFONT_ShareLockFont(hfont) (PLFONT)GDIOBJ_ReferenceObjectByHandle(hfont, GDIObjType_LFONT_TYPE)
 #define LFONT_ShareUnlockFont(plfnt) GDIOBJ_vDereferenceObject((POBJ)plfnt)
 #define LFONT_UnlockFont(plfnt) GDIOBJ_vUnlockObject((POBJ)plfnt)
+ULONG LFONT_GetObject(PLFONT plfont, ULONG cjBuffer, PVOID pvBuffer);
+PRFONT LFONT_Realize(PLFONT pLFont, PPDEVOBJ hdevConsumer, DHPDEV dhpdev);
 
-FORCEINLINE
-PTEXTOBJ
-TEXTOBJ_LockText(HFONT hfont)
+/* Realized GDI font object */
+typedef struct _RFONT
 {
-    PLFONT plfnt = LFONT_ShareLockFont(hfont);
-    if (plfnt != 0)
-    {
-        KeEnterCriticalRegion();
-        ExAcquirePushLockExclusive(&plfnt->lock);
-    }
-    return plfnt;
-}
+    FONTOBJ      *Font;
+    WCHAR         FullName[LF_FULLFACESIZE];
+    WCHAR         Style[LF_FACESIZE];
+    WCHAR         FaceName[LF_FACESIZE];
 
-FORCEINLINE
-VOID
-TEXTOBJ_UnlockText(PLFONT plfnt)
-{
-    ExReleasePushLockExclusive(&plfnt->lock);
-    KeLeaveCriticalRegion();
-    LFONT_ShareUnlockFont(plfnt);
-}
+    PPDEVOBJ      hdevConsumer;
+    DHPDEV        dhpdev;
 
+    LONG lfHeight;
+    LONG lfWidth;
+    LONG lfOrientation;
+    LONG lfWeight;
+    BYTE lfItalic;
+    BYTE lfUnderline;
+    BYTE lfStrikeOut;
+    BYTE lfQuality;
+} RFONT;
 
-PTEXTOBJ FASTCALL RealizeFontInit(HFONT);
-NTSTATUS FASTCALL TextIntRealizeFont(HFONT,PTEXTOBJ);
+#define RFONT_Alloc() ((PRFONT)ExAllocatePoolWithTag(PagedPool, sizeof(RFONT), GDITAG_TEXT))
+#define RFONT_Free(prfnt) (ExFreePoolWithTag(prfnt, GDITAG_TEXT))
+
+PRFONT DC_prfnt(PDC pdc);
+
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
 BOOL FASTCALL InitFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 VOID FASTCALL IntEnableFontRendering(BOOL Enable);
-ULONG FASTCALL FontGetObject(PTEXTOBJ TextObj, ULONG Count, PVOID Buffer);
 VOID FASTCALL IntLoadSystemFonts(VOID);
 VOID FASTCALL IntGdiCleanupPrivateFontsForProcess(VOID);
 INT FASTCALL IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
 HANDLE FASTCALL IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded);
 BOOL FASTCALL IntGdiRemoveFontMemResource(HANDLE hMMFont);
 ULONG FASTCALL ftGdiGetGlyphOutline(PDC,WCHAR,UINT,LPGLYPHMETRICS,ULONG,PVOID,LPMAT2,BOOL);
-INT FASTCALL IntGetOutlineTextMetrics(PFONTGDI,UINT,OUTLINETEXTMETRICW *);
-BOOL FASTCALL TextIntUpdateSize(PDC,PTEXTOBJ,PFONTGDI,BOOL);
+INT FASTCALL IntGetOutlineTextMetrics(PRFONT,UINT,OUTLINETEXTMETRICW *);
+BOOL TextIntUpdateSize(PRFONT,BOOL);
 BOOL FASTCALL ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS);
-BOOL FASTCALL TextIntGetTextExtentPoint(PDC,PTEXTOBJ,LPCWSTR,INT,ULONG,LPINT,LPINT,LPSIZE,FLONG);
+BOOL FASTCALL TextIntGetTextExtentPoint(PDC,PRFONT,LPCWSTR,INT,ULONG,LPINT,LPINT,LPSIZE,FLONG);
 BOOL FASTCALL ftGdiGetTextMetricsW(HDC,PTMW_INTERNAL);
 DWORD FASTCALL IntGetFontLanguageInfo(PDC);
 INT FASTCALL ftGdiGetTextCharsetInfo(PDC,PFONTSIGNATURE,DWORD);
-DWORD FASTCALL ftGetFontUnicodeRanges(PFONTGDI, PGLYPHSET);
-DWORD FASTCALL ftGdiGetFontData(PFONTGDI,DWORD,DWORD,PVOID,DWORD);
+DWORD FASTCALL ftGetFontUnicodeRanges(PRFONT, PGLYPHSET);
+DWORD FASTCALL ftGdiGetFontData(PRFONT,DWORD,DWORD,PVOID,DWORD);
 BOOL FASTCALL IntGdiGetFontResourceInfo(PUNICODE_STRING,PVOID,DWORD*,DWORD);
-BOOL FASTCALL ftGdiRealizationInfo(PFONTGDI,PREALIZATION_INFO);
-DWORD FASTCALL ftGdiGetKerningPairs(PFONTGDI,DWORD,LPKERNINGPAIR);
+BOOL FASTCALL ftGdiRealizationInfo(PRFONT,PREALIZATION_INFO);
+DWORD FASTCALL ftGdiGetKerningPairs(PRFONT,DWORD,LPKERNINGPAIR);
 BOOL NTAPI GreExtTextOutW(IN HDC,IN INT,IN INT,IN UINT,IN OPTIONAL RECTL*,
     IN LPCWSTR, IN INT, IN OPTIONAL LPINT, IN DWORD);
 DWORD FASTCALL IntGetCharDimensions(HDC, PTEXTMETRICW, PDWORD);

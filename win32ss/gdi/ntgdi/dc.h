@@ -58,7 +58,7 @@ typedef struct _DCLEVEL
   POINTL            ptlBrushOrigin;
   PBRUSH            pbrFill;
   PBRUSH            pbrLine;
-  _Notnull_ struct _LFONT   * plfnt; /* LFONT* (TEXTOBJ*) */
+  _Notnull_ PLFONT  plfnt;
   HGDIOBJ           hPath; /* HPATH */
   FLONG             flPath;
   LINEATTRS         laPath; /* 0x20 bytes */
@@ -123,7 +123,7 @@ typedef struct _DC
   HFONT       hlfntCur;
   FLONG       flSimulationFlags;
   LONG        lEscapement;
-  PVOID       prfnt;    /* RFONT* */
+  PRFONT      prfnt;
   XCLIPOBJ    co;       /* CLIPOBJ */
   PVOID       pPFFList; /* PPFF* */
   PVOID       pClrxFormLnk;
