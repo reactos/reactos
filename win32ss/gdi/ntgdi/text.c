@@ -527,11 +527,19 @@ NtGdiGetTextFaceW(
             return 0;
         }
         /* Terminate if we copied only part of the font name */
+        ret = Count;
         if (Count > 0 && Count <= fLen)
         {
-            FaceName[Count - 1] = '\0';
+            _SEH2_TRY
+            {
+                FaceName[Count - 1] = '\0';
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                ret = 0;
+            }
+            _SEH2_END
         }
-        ret = Count;
     }
     else
     {
