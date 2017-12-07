@@ -71,11 +71,13 @@ typedef struct FormatConverter {
 } FormatConverter;
 
 /* https://www.w3.org/Graphics/Color/srgb */
+#ifndef __REACTOS__
 static inline float from_sRGB_component(float f)
 {
     if (f <= 0.04045f) return f / 12.92f;
     return powf((f + 0.055f) / 1.055f, 2.4f);
 }
+#endif
 
 static inline float to_sRGB_component(float f)
 {

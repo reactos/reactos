@@ -397,7 +397,7 @@ START_TEST(NtLoadUnloadKey)
     {
         PCWSTR HiveName;
         PCWSTR RegMountPoint;
-    } HIVE_LIST_ENTRY, *PHIVE_LIST_ENTRY;
+    } HIVE_LIST_ENTRY;
 
     static const HIVE_LIST_ENTRY RegistryHives[] =
     {
