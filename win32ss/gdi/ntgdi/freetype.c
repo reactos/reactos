@@ -4532,7 +4532,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
 
         Face = FontGdi->SharedFace->Face;
 
-
         //FontGdi->OriginalWeight = WeightFromStyle(Face->style_name);
 
         if (!FontGdi->OriginalItalic)
