@@ -10,8 +10,8 @@
 
 #define WIN32_NO_STATUS
 
-#include "windef.h"
-#include "winbase.h"
+#include <windef.h>
+#include <winbase.h>
 
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
@@ -19,12 +19,7 @@
 #include <ndk/rtlfuncs.h>
 #include <fltmgr_shared.h>
 
-#include "wine/debug.h"
-
-
 /* DATA ****************************************************************************/
-
-WINE_DEFAULT_DEBUG_CHANNEL(fltlib);
 
 static
 HRESULT

@@ -87,8 +87,10 @@ static const WCHAR class_sounddeviceW[] =
     {'W','i','n','3','2','_','S','o','u','n','d','D','e','v','i','c','e',0};
 static const WCHAR class_systemenclosureW[] =
     {'W','i','n','3','2','_','S','y','s','t','e','m','E','n','c','l','o','s','u','r','e',0};
+#ifndef __REACTOS__
 static const WCHAR class_videocontrollerW[] =
     {'W','i','n','3','2','_','V','i','d','e','o','C','o','n','t','r','o','l','l','e','r',0};
+#endif
 
 static const WCHAR prop_accountnameW[] =
     {'A','c','c','o','u','n','t','N','a','m','e',0};
@@ -98,18 +100,22 @@ static const WCHAR prop_acceptstopW[] =
     {'A','c','c','e','p','t','S','t','o','p',0};
 static const WCHAR prop_accessmaskW[] =
     {'A','c','c','e','s','s','M','a','s','k',0};
+#ifndef __REACTOS__
 static const WCHAR prop_adapterdactypeW[] =
     {'A','d','a','p','t','e','r','D','A','C','T','y','p','e',0};
 static const WCHAR prop_adapterramW[] =
     {'A','d','a','p','t','e','r','R','A','M',0};
+#endif
 static const WCHAR prop_adaptertypeW[] =
     {'A','d','a','p','t','e','r','T','y','p','e',0};
 static const WCHAR prop_addresswidthW[] =
     {'A','d','d','r','e','s','s','W','i','d','t','h',0};
 static const WCHAR prop_attributesW[] =
     {'A','t','t','r','i','b','u','t','e','s',0};
+#ifndef __REACTOS__
 static const WCHAR prop_availabilityW[] =
     {'A','v','a','i','l','a','b','i','l','i','t','y',0};
+#endif
 static const WCHAR prop_binaryrepresentationW[] =
     {'B','i','n','a','r','y','R','e','p','r','e','s','e','n','t','a','t','i','o','n',0};
 static const WCHAR prop_bootableW[] =
@@ -130,18 +136,23 @@ static const WCHAR prop_codesetW[] =
     {'C','o','d','e','S','e','t',0};
 static const WCHAR prop_commandlineW[] =
     {'C','o','m','m','a','n','d','L','i','n','e',0};
+#ifndef __REACTOS__
 static const WCHAR prop_configmanagererrorcodeW[] =
     {'C','o','n','f','i','g','M','a','n','a','g','e','r','E','r','r','o','r','C','o','d','e',0};
+#endif
 static const WCHAR prop_countrycodeW[] =
     {'C','o','u','n','t','r','y','C','o','d','e',0};
 static const WCHAR prop_cpustatusW[] =
     {'C','p','u','S','t','a','t','u','s',0};
 static const WCHAR prop_csdversionW[] =
     {'C','S','D','V','e','r','s','i','o','n',0};
+#ifndef __REACTOS__
 static const WCHAR prop_currentbitsperpixelW[] =
     {'C','u','r','r','e','n','t','B','i','t','s','P','e','r','P','i','x','e','l',0};
+#endif
 static const WCHAR prop_currentclockspeedW[] =
     {'C','u','r','r','e','n','t','C','l','o','c','k','S','p','e','e','d',0};
+#ifndef __REACTOS__
 static const WCHAR prop_currenthorizontalresW[] =
     {'C','u','r','r','e','n','t','H','o','r','i','z','o','n','t','a','l','R','e','s','o','l','u','t','i','o','n',0};
 static const WCHAR prop_currentrefreshrateW[] =
@@ -150,6 +161,7 @@ static const WCHAR prop_currentscanmodeW[] =
     {'C','u','r','r','e','n','t','S','c','a','n','M','o','d','e',0};
 static const WCHAR prop_currentverticalresW[] =
     {'C','u','r','r','e','n','t','V','e','r','t','i','c','a','l','R','e','s','o','l','u','t','i','o','n',0};
+#endif
 static const WCHAR prop_datawidthW[] =
     {'D','a','t','a','W','i','d','t','h',0};
 static const WCHAR prop_defaultipgatewayW[] =
@@ -180,12 +192,16 @@ static const WCHAR prop_domainroleW[] =
     {'D','o','m','a','i','n','R','o','l','e',0};
 static const WCHAR prop_driveW[] =
     {'D','r','i','v','e',0};
+#ifndef __REACTOS__
 static const WCHAR prop_driverdateW[] =
     {'D','r','i','v','e','r','D','a','t','e',0};
+#endif
 static const WCHAR prop_drivernameW[] =
     {'D','r','i','v','e','r','N','a','m','e',0};
+#ifndef __REACTOS__
 static const WCHAR prop_driverversionW[] =
     {'D','r','i','v','e','r','V','e','r','s','i','o','n',0};
+#endif
 static const WCHAR prop_drivetypeW[] =
     {'D','r','i','v','e','T','y','p','e',0};
 static const WCHAR prop_familyW[] =
@@ -212,8 +228,10 @@ static const WCHAR prop_indexW[] =
     {'I','n','d','e','x',0};
 static const WCHAR prop_installdateW[] =
     {'I','n','s','t','a','l','l','D','a','t','e',0};
+#ifndef __REACTOS__
 static const WCHAR prop_installeddisplaydriversW[]=
     {'I','n','s','t','a','l','l','e','d','D','i','s','p','l','a','y','D','r','i','v','e','r','s',0};
+#endif
 static const WCHAR prop_interfaceindexW[] =
     {'I','n','t','e','r','f','a','c','e','I','n','d','e','x',0};
 static const WCHAR prop_interfacetypeW[] =
@@ -326,8 +344,10 @@ static const WCHAR prop_startingoffsetW[] =
     {'S','t','a','r','t','i','n','g','O','f','f','s','e','t',0};
 static const WCHAR prop_stateW[] =
     {'S','t','a','t','e',0};
+#ifndef __REACTOS__
 static const WCHAR prop_statusW[] =
     {'S','t','a','t','u','s',0};
+#endif
 static const WCHAR prop_statusinfoW[] =
     {'S','t','a','t','u','s','I','n','f','o',0};
 static const WCHAR prop_strvalueW[] =
@@ -362,6 +382,7 @@ static const WCHAR prop_versionW[] =
     {'V','e','r','s','i','o','n',0};
 static const WCHAR prop_vendorW[] =
     {'V','e','n','d','o','r',0};
+#ifndef __REACTOS__
 static const WCHAR prop_videoarchitectureW[] =
     {'V','i','d','e','o','A','r','c','h','i','t','e','c','t','u','r','e',0};
 static const WCHAR prop_videomemorytypeW[] =
@@ -370,6 +391,7 @@ static const WCHAR prop_videomodedescriptionW[] =
     {'V','i','d','e','o','M','o','d','e','D','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR prop_videoprocessorW[] =
     {'V','i','d','e','o','P','r','o','c','e','s','s','o','r',0};
+#endif /* !__REACTOS__ */
 static const WCHAR prop_volumenameW[] =
     {'V','o','l','u','m','e','N','a','m','e',0};
 static const WCHAR prop_volumeserialnumberW[] =
@@ -663,6 +685,8 @@ static const struct column col_systemsecurity[] =
     { method_getsdW,                    CIM_FLAG_ARRAY|COL_FLAG_METHOD },
     { method_setsdW,                    CIM_FLAG_ARRAY|COL_FLAG_METHOD },
 };
+
+#ifndef __REACTOS__
 static const struct column col_videocontroller[] =
 {
     { prop_adapterdactypeW,         CIM_STRING },
@@ -688,6 +712,7 @@ static const struct column col_videocontroller[] =
     { prop_videomodedescriptionW,   CIM_STRING|COL_FLAG_DYNAMIC },
     { prop_videoprocessorW,         CIM_STRING|COL_FLAG_DYNAMIC },
 };
+#endif
 
 static const WCHAR baseboard_manufacturerW[] =
     {'I','n','t','e','l',' ','C','o','r','p','o','r','a','t','i','o','n',0};
@@ -771,6 +796,7 @@ static const WCHAR systemenclosure_tagW[] =
     {'S','y','s','t','e','m',' ','E','n','c','l','o','s','u','r','e',' ','0',0};
 static const WCHAR systemenclosure_manufacturerW[] =
     {'W','i','n','e',0};
+#ifndef __REACTOS__
 static const WCHAR videocontroller_dactypeW[] =
     {'I','n','t','e','g','r','a','t','e','d',' ','R','A','M','D','A','C',0};
 static const WCHAR videocontroller_deviceidW[] =
@@ -781,6 +807,7 @@ static const WCHAR videocontroller_driverversionW[] =
     {'1','.','0',0};
 static const WCHAR videocontroller_statusW[] =
     {'O','K',0};
+#endif
 
 #include "pshpack1.h"
 struct record_baseboard
