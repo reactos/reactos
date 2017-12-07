@@ -5,7 +5,7 @@
  * PURPOSE:     Chinese (Simplified) Language Resources
  * TRANSLATORS: 2008 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
                 2011 Elton Chung aka MfldElton <elton328@gmail.com>
-				2017 Luo Yufan <njlyf2011@hotmail.com>
+                2017 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -865,5 +865,6 @@ BEGIN
     IDS_ADVANCED_CLASSIC_VIEW_STATE "记住每个文件夹的视图设置"
     IDS_ADVANCED_PERSIST_BROWSERS "在登录时还原上一个文件夹窗口"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "在我的电脑中显示控制面板"
+    IDS_ADVANCED_SHOW_COMP_COLOR "用彩色显示加密或压缩的 NTFS 文件"
     IDS_ADVANCED_SHOW_INFO_TIP "鼠标指向文件夹和桌面项时显示提示信息"
 END
