@@ -4,18 +4,19 @@
  * FILE:       base/applications/mmc/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File for Management Console
  * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+ *             Li Keqing <auroracloud4096@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
-    POPUP "档案(&F)"
+    POPUP "文件(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
         MENUITEM "打开(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "结束(&X)\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "退出(&X)\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -25,14 +26,14 @@ END
 
 IDM_CONSOLE_LARGE MENU
 BEGIN
-    POPUP "档案(&F)"
+    POPUP "文件(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
         MENUITEM "打开(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM "保存", IDM_FILE_SAVE
         MENUITEM "另存为...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "结束(&X)\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "退出(&X)\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "窗口(&W)"
     BEGIN

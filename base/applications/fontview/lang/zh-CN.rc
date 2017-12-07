@@ -4,6 +4,7 @@
  * FILE:       base/applications/fontview/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File for FontView
  * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+ *             Li Keqing <auroracloud4096@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -11,13 +12,13 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 STRINGTABLE
 BEGIN
     IDS_INSTALL "安装"
-    IDS_PRINT "列印"
+    IDS_PRINT "打印"
     IDS_STRING "ReactOS 给所有人一个自由的操作系统！1234567890"
-    IDS_OPEN "打开字体档案..."
+    IDS_OPEN "打开字体文件..."
     IDS_ERROR "错误"
     IDS_ERROR_NOMEM "没有足够的内存来完成操作。"
-    IDS_ERROR_NOFONT "％1不是一个有效的字体档案。"
-    IDS_ERROR_NOCLASS "窗口无法初始化。"
+    IDS_ERROR_NOFONT "％1不是一个有效的字体文件。"
+    IDS_ERROR_NOCLASS "无法初始化窗口。"
     IDS_FILTER_LIST "支持所有的字体 (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 字体文件 (*.fon;*.fnt)\0*.fon;*.fnt\0\
 TrueType 字体 (*.ttf)\0*.ttf\0\
@@ -25,6 +26,6 @@ TrueType Font Collection (*.ttc)\0*.ttc\0\
 OpenType 字体 (*.otf)\0*.otf\0\
 OpenType Font Collection (*.otc)\0*.otc\0\
 所有文件 (*.*)\0*.*\0"
-    IDS_PREVIOUS "< P&revious"
-    IDS_NEXT "&Next >"
+    IDS_PREVIOUS "< 上一个(&R)"
+    IDS_NEXT "下一个(&N) >"
 END
