@@ -163,6 +163,42 @@ static const CHARSETINFO FontTci[MAXTCIINDEX] =
 /* list head */
 static RTL_STATIC_LIST_HEAD(FontSubstListHead);
 
+PRFONT
+NTAPI
+RFONT_AllocRFONT(void)
+{
+    PRFONT prfnt;
+
+    /* Allocate the RFONT structure */
+    prfnt = ExAllocatePoolWithTag(PagedPool, sizeof(RFONT), GDITAG_TEXT);
+    if (!prfnt)
+    {
+        DPRINT1("Not enough memory to allocate RFONT\n");
+        return NULL;
+    }
+
+    /* Zero out the whole structure */
+    RtlZeroMemory(prfnt, sizeof(RFONT));
+
+    /* Set a unique number */
+    //prfnt->fobj.iUniq = InterlockedIncrementUL(&gulRFONTUnique);
+
+
+    return prfnt;
+}
+
+VOID
+NTAPI
+RFONT_vDeleteRFONT(
+    _Inout_ PRFONT prfnt)
+{
+    //ASSERT(prfnt->cSelected == 0);
+
+    /* Free the structure */
+    ExFreePoolWithTag(prfnt, GDITAG_TEXT);
+
+}
+
 static void
 SharedMem_AddRef(PSHARED_MEM Ptr)
 {
@@ -4424,7 +4460,7 @@ IntFontType(PFONTGDI Font)
     return ret;
 }
 
-PRFONT LFONT_Realize(PLFONT pLFont, PPDEVOBJ hdevConsumer, DHPDEV dhpdev)
+PRFONT LFONT_prfntRealizeFont(PLFONT pLFont, PDC pdc)
 {
     PPROCESSINFO Win32Process;
     ULONG MatchPenalty;
@@ -4466,7 +4502,7 @@ PRFONT LFONT_Realize(PLFONT pLFont, PPDEVOBJ hdevConsumer, DHPDEV dhpdev)
     }
     else
     {
-        prfnt = RFONT_Alloc();
+        prfnt = RFONT_AllocRFONT();
         if (prfnt)
         {
             PFONTGDI FontGdi;
@@ -4483,8 +4519,8 @@ PRFONT LFONT_Realize(PLFONT pLFont, PPDEVOBJ hdevConsumer, DHPDEV dhpdev)
             prfnt->lfUnderline = pLogFont->lfUnderline;
             prfnt->lfStrikeOut = pLogFont->lfStrikeOut;
             prfnt->lfQuality = pLogFont->lfQuality;
-            prfnt->hdevConsumer = hdevConsumer;
-            prfnt->dhpdev = dhpdev;
+            prfnt->hdevConsumer = pdc->ppdev;
+            prfnt->dhpdev = pdc->dhpdev;
 
             // Legacy crap that will die later on
             FontGdi = ObjToGDI(pFontObj, FONT);

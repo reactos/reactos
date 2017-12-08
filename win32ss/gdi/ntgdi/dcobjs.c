@@ -553,7 +553,6 @@ DC_hSelectFont(
 {
     PLFONT plfntNew;
     HFONT hlfntOld;
-    PRFONT prfnt;
 
     /* Get the current selected font */
     hlfntOld = pdc->dclevel.plfnt->BaseObject.hHmgr;
@@ -575,15 +574,6 @@ DC_hSelectFont(
             /* Update dirty flags */
             pdc->pdcattr->ulDirty_ |= DIRTY_CHARSET;
             pdc->pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-
-            // Legacy crap that will die with font engine rewrite
-            prfnt = LFONT_Realize(pdc->dclevel.plfnt, pdc->ppdev, pdc->dhpdev);
-            if (prfnt)
-            {
-                if (pdc->prfnt)
-                    RFONT_Free(pdc->prfnt);
-                pdc->prfnt = prfnt;
-            }
         }
         else
         {

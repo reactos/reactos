@@ -392,8 +392,41 @@ IntGetFontLanguageInfo(PDC Dc)
 
 PRFONT DC_prfnt(PDC pdc)
 {
-    /* FIXME! */
-    return pdc->prfnt;
+    PRFONT prfnt = 0;
+
+    /* Select "current" font */
+    DC_hSelectFont(pdc, pdc->pdcattr->hlfntNew);
+
+    /* Check if font is already realized */
+    if (pdc->hlfntCur != pdc->dclevel.plfnt->BaseObject.hHmgr)
+    {
+        prfnt = LFONT_prfntRealizeFont(pdc->dclevel.plfnt, pdc);
+
+        if (prfnt)
+        {
+            /* Dereference the old RFONT */
+            //RFONT_ShareUnlockFont(pdc->prfnt);
+            if (pdc->prfnt)
+                RFONT_vDeleteRFONT(pdc->prfnt);
+
+            pdc->prfnt = prfnt;
+
+            /* Set as new active font */
+            pdc->hlfntCur = pdc->pdcattr->hlfntNew;
+        }
+        else
+        {
+            /* Realize failed, lets keep using the previous font */
+            prfnt = pdc->prfnt;
+        }
+    }
+    else
+    {
+        prfnt = pdc->prfnt;
+    }
+
+    //ASSERT(prfnt);
+    return prfnt;
 }
 
 /** Functions ******************************************************************/

@@ -69,7 +69,7 @@ typedef struct _LFONT
 #define LFONT_ShareUnlockFont(plfnt) GDIOBJ_vDereferenceObject((POBJ)plfnt)
 #define LFONT_UnlockFont(plfnt) GDIOBJ_vUnlockObject((POBJ)plfnt)
 ULONG LFONT_GetObject(PLFONT plfont, ULONG cjBuffer, PVOID pvBuffer);
-PRFONT LFONT_Realize(PLFONT pLFont, PPDEVOBJ hdevConsumer, DHPDEV dhpdev);
+PRFONT LFONT_prfntRealizeFont(PLFONT pLFont, PDC pdc);
 
 /* Realized GDI font object */
 typedef struct _RFONT
@@ -92,9 +92,8 @@ typedef struct _RFONT
     BYTE lfQuality;
 } RFONT;
 
-#define RFONT_Alloc() ((PRFONT)ExAllocatePoolWithTag(PagedPool, sizeof(RFONT), GDITAG_TEXT))
-#define RFONT_Free(prfnt) (ExFreePoolWithTag(prfnt, GDITAG_TEXT))
-
+PRFONT NTAPI RFONT_AllocRFONT(void);
+VOID NTAPI RFONT_vDeleteRFONT(_Inout_ PRFONT prfnt);
 PRFONT DC_prfnt(PDC pdc);
 
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
