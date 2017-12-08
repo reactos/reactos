@@ -504,7 +504,7 @@ USBPORT_DeleteEndpoint(IN PDEVICE_OBJECT FdoDevice,
     BOOLEAN Result;
     KIRQL OldIrql;
 
-    DPRINT("USBPORT_DeleteEndpoint: Endpoint - %p\n", Endpoint);
+    DPRINT1("USBPORT_DeleteEndpoint: Endpoint - %p\n", Endpoint);
 
     FdoExtension = FdoDevice->DeviceExtension;
 
@@ -602,7 +602,7 @@ USBPORT_ClosePipe(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
     BOOLEAN IsReady;
     KIRQL OldIrql;
 
-    DPRINT("USBPORT_ClosePipe \n");
+    DPRINT1("USBPORT_ClosePipe \n");
 
     FdoExtension = FdoDevice->DeviceExtension;
 
@@ -679,6 +679,7 @@ USBPORT_ClosePipe(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
         KeAcquireSpinLock(&FdoExtension->TtSpinLock, &OldIrql);
 
         TtExtension = Endpoint->TtExtension;
+        DPRINT1("USBPORT_ClosePipe: TtExtension - %p\n", TtExtension);
 
         if (TtExtension)
         {
@@ -698,7 +699,8 @@ USBPORT_ClosePipe(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
                         FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
                     }
 
-                    ExFreePool(TtExtension);
+                    DPRINT1("USBPORT_ClosePipe: ExFreePoolWithTag TtExtension - %p\n", TtExtension);
+                    ExFreePoolWithTag(TtExtension, USB_PORT_TAG);
                 }
             }
         }
@@ -785,7 +787,7 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
     USHORT AdditionalTransaction;
     BOOLEAN IsAllocatedBandwidth;
 
-    DPRINT("USBPORT_OpenPipe: DeviceHandle - %p, FdoDevice - %p, PipeHandle - %p\n",
+    DPRINT1("USBPORT_OpenPipe: DeviceHandle - %p, FdoDevice - %p, PipeHandle - %p\n",
            DeviceHandle,
            FdoDevice,
            PipeHandle);
@@ -1172,7 +1174,7 @@ USBPORT_ReopenPipe(IN PDEVICE_OBJECT FdoDevice,
     KIRQL MiniportOldIrql;
     NTSTATUS Status;
 
-    DPRINT("USBPORT_ReopenPipe ... \n");
+    DPRINT1("USBPORT_ReopenPipe ... \n");
 
     FdoExtension = FdoDevice->DeviceExtension;
     Packet = &FdoExtension->MiniPortInterface->Packet;

@@ -7,7 +7,7 @@
 
 #include "usbport.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 NTSTATUS
@@ -1654,7 +1654,8 @@ USBPORT_RemoveDevice(IN PDEVICE_OBJECT FdoDevice,
                 FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
             }
 
-            ExFreePool(TtExtension);
+            DPRINT("USBPORT_RemoveDevice: ExFreePoolWithTag TtExtension - %p\n", TtExtension);
+            ExFreePoolWithTag(TtExtension, USB_PORT_TAG);
         }
 
         KeReleaseSpinLock(&FdoExtension->TtSpinLock, OldIrql);
