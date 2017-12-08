@@ -11,6 +11,7 @@ extern void func_CShellDesktop(void);
 extern void func_CShellLink(void);
 extern void func_menu(void);
 extern void func_PathResolve(void);
+extern void func_SHCreateFileExtractIconW(void);
 extern void func_ShellExecuteEx(void);
 extern void func_SHParseDisplayName(void);
 
@@ -24,6 +25,7 @@ const struct test winetest_testlist[] =
     { "CShellLink", func_CShellLink },
     { "menu", func_menu },
     { "PathResolve", func_PathResolve },
+    { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
     { "ShellExecuteEx", func_ShellExecuteEx },
     { "SHParseDisplayName", func_SHParseDisplayName },
     { 0, 0 }
