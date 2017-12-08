@@ -1335,4 +1335,14 @@ NTAPI
 USB2_InitController(
   IN PUSB2_HC_EXTENSION HcExtension);
 
+VOID
+NTAPI
+USBPORT_DumpingEndpointProperties(
+  IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties);
+
+VOID
+NTAPI
+USBPORT_DumpingTtEndpoint(
+  IN PUSB2_TT_ENDPOINT TtEndpoint);
+
 #endif /* USBPORT_H__ */
