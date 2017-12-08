@@ -811,6 +811,13 @@ DeleteFontSubstFromRegistry(PUNICODE_STRING pTargetFaceNameW)
     NTSTATUS Status;
     HANDLE KeyHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    KEY_FULL_INFORMATION        KeyFullInfo;
+    ULONG                       i, nLength;
+    BYTE                        InfoBuffer[128];
+    PKEY_VALUE_FULL_INFORMATION pInfo;
+    LPWSTR                      lpTargetW;
+    UNICODE_STRING              NameW;
+    BOOL                        ret = FALSE;
 
     /* open registry key */
     InitializeObjectAttributes(&ObjectAttributes, &FontSubstKey,
@@ -825,18 +832,64 @@ DeleteFontSubstFromRegistry(PUNICODE_STRING pTargetFaceNameW)
 
     /* delete the face name value */
     Status = ZwDeleteValueKey(KeyHandle, pTargetFaceNameW);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
+    {
+        ret = TRUE;     /* success */
+    }
+    else
     {
         DPRINT("ZwDeleteValueKey failed: 0x%08X\n", Status);
     }
 
-    /* TODO: delete also "(FaceName),(CharSetNumber)" values
-             by using ZwQueryKey, ZwEnumerateValueKey */
+    /* get key info to enumerate values */
+    Status = ZwQueryKey(KeyHandle, KeyFullInformation,
+                        &KeyFullInfo, sizeof(KeyFullInfo), &nLength);
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(KeyHandle);
+
+        return ret;
+    }
+
+    /* delete also "(FaceName),(CharSetNumber)" values */
+    lpTargetW = pTargetFaceNameW->Buffer;
+    for (i = 0; i < KeyFullInfo.Values; ++i)
+    {
+        /* get a value info as pInfo */
+        Status = ZwEnumerateValueKey(KeyHandle, i, KeyValueFullInformation,
+                                     InfoBuffer, sizeof(InfoBuffer), &nLength);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("ZwEnumerateValueKey failed: 0x%08X\n", Status);
+            break;  /* failure */
+        }
+        pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
+
+        /* check pInfo->Name */
+        nLength = pTargetFaceNameW->Length;
+        if (RtlCompareMemory(lpTargetW, pInfo->Name, nLength) == nLength &&
+            pInfo->Name[pTargetFaceNameW->Length / sizeof(WCHAR)] == L',')
+        {
+            /* "(FaceName),(CharSetNumber)" was found. delete it */
+            RtlInitUnicodeString(&NameW, pInfo->Name);
+            Status = ZwDeleteValueKey(KeyHandle, &NameW);
+            if (NT_SUCCESS(Status))
+            {
+                ret = TRUE;     /* success */
+                --i;
+                --(KeyFullInfo.Values);
+            }
+            else
+            {
+                DPRINT("ZwDeleteValueKey failed: 0x%08X\n", Status);
+            }
+        }
+    }
 
     /* close now */
     ZwClose(KeyHandle);
 
-    return NT_SUCCESS(Status);
+    return ret;
 }
 
 static INT FASTCALL
