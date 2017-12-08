@@ -199,10 +199,11 @@ KdpPrintString(
 ULONG
 NTAPI
 KdpPrompt(
-    IN LPSTR InString,
-    IN USHORT InStringLength,
-    OUT LPSTR OutString,
-    IN USHORT OutStringLength
+    _In_reads_bytes_(InStringLength) PCHAR UnsafeInString,
+    _In_ USHORT InStringLength,
+    _Out_writes_bytes_(OutStringLength) PCHAR UnsafeOutString,
+    _In_ USHORT OutStringLength,
+    _In_ KPROCESSOR_MODE PreviousMode
 );
 
 BOOLEAN

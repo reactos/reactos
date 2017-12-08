@@ -175,7 +175,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                                     (USHORT)ExceptionRecord->
                                     ExceptionInformation[2],
                                     OutString,
-                                    OutStringLength);
+                                    OutStringLength,
+                                    PreviousMode);
 
             /* Return the number of characters that we received */
             Context->Eax = ReturnValue;

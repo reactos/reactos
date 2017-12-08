@@ -3662,15 +3662,61 @@ extern KSPIN_LOCK KdpSerialSpinLock;
 
 ULONG
 NTAPI
-KdpPrompt(IN LPSTR InString,
-          IN USHORT InStringLength,
-          OUT LPSTR OutString,
-          IN USHORT OutStringLength)
+KdpPrompt(
+    _In_reads_bytes_(InStringLength) PCHAR UnsafeInString,
+    _In_ USHORT InStringLength,
+    _Out_writes_bytes_(OutStringLength) PCHAR UnsafeOutString,
+    _In_ USHORT OutStringLength,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     USHORT i;
     CHAR Response;
     ULONG DummyScanCode;
     KIRQL OldIrql;
+    PCHAR InString;
+    PCHAR OutString;
+
+    /* Normalize the lengths */
+    InStringLength = min(InStringLength,
+                         512);
+    OutStringLength = min(OutStringLength,
+                          512);
+
+    /* Check if we need to verify the string */
+    if (PreviousMode != KernelMode)
+    {
+        /* Handle user-mode buffers safely */
+        _SEH2_TRY
+        {
+            /* Probe the prompt */
+            ProbeForRead(UnsafeInString,
+                         InStringLength,
+                         1);
+
+            /* Capture prompt */
+            InString = _alloca(InStringLength);
+            RtlCopyMemory(InString,
+                          UnsafeInString,
+                          InStringLength);
+
+            /* Probe and make room for response */
+            ProbeForWrite(UnsafeOutString,
+                          OutStringLength,
+                          1);
+            OutString = _alloca(OutStringLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Bad string pointer, bail out */
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        InString = UnsafeInString;
+        OutString = UnsafeOutString;
+    }
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
     while (TRUE)
@@ -3778,6 +3824,24 @@ KdpPrompt(IN LPSTR InString,
 
     /* Lower IRQL back */
     KeLowerIrql(OldIrql);
+
+    /* Copy back response if required */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Safely copy back response to user mode */
+            RtlCopyMemory(UnsafeOutString,
+                          OutString,
+                          i);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* String became invalid after we exited, fail */
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END;
+    }
 
     /* Return the length  */
     return i;
