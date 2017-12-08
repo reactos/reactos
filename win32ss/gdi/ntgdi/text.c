@@ -542,7 +542,7 @@ NtGdiGetTextFaceW(
             {
                 ret = 0;
             }
-            _SEH2_END
+            _SEH2_END;
         }
     }
     else
