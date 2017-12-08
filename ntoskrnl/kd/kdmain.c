@@ -153,11 +153,38 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
 #ifdef KDBG
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
+            PKD_SYMBOLS_INFO SymbolsInfo;
+            KD_SYMBOLS_INFO CapturedSymbolsInfo;
             PLDR_DATA_TABLE_ENTRY LdrEntry;
 
-            /* Load symbols. Currently implemented only for KDBG! */
-            if(KdbpSymFindModule(((PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2])->BaseOfDll, NULL, -1, &LdrEntry))
-                KdbSymProcessSymbols(LdrEntry);
+            SymbolsInfo = (PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2];
+            if (PreviousMode != KernelMode)
+            {
+                _SEH2_TRY
+                {
+                    ProbeForRead(SymbolsInfo,
+                                 sizeof(*SymbolsInfo),
+                                 1);
+                    RtlCopyMemory(&CapturedSymbolsInfo,
+                                  SymbolsInfo,
+                                  sizeof(*SymbolsInfo));
+                    SymbolsInfo = &CapturedSymbolsInfo;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    SymbolsInfo = NULL;
+                }
+                _SEH2_END;
+            }
+
+            if (SymbolsInfo != NULL)
+            {
+                /* Load symbols. Currently implemented only for KDBG! */
+                if (KdbpSymFindModule(SymbolsInfo->BaseOfDll, NULL, -1, &LdrEntry))
+                {
+                    KdbSymProcessSymbols(LdrEntry);
+                }
+            }
         }
         else if (ExceptionCommand == BREAKPOINT_PROMPT)
         {
