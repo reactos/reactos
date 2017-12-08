@@ -9,7 +9,8 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(stobject);
+#include <undocshell.h>
+#include <shellutils.h>
 
 SysTrayIconHandlers_t g_IconHandlers [] = {
         { Volume_Init, Volume_Shutdown, Volume_Update, Volume_Message },

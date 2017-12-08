@@ -8,22 +8,16 @@
  *              David Quintana <gigaherz@gmail.com>
  */
 
-#include <windows.h>
-#include <setupapi.h>
-#include <devguid.h>
-#include <batclass.h> 
-
 #include "precomp.h"
-#include "powrprof.h"
 
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <atlstr.h>
+#include <devguid.h>
+#include <winioctl.h>
+#include <powrprof.h>
+#include <windows.h>
+#include <batclass.h>
 
 #define GBS_HASBATTERY 0x1
 #define GBS_ONBATTERY  0x2
-
-WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
 int br_icons[5] = { IDI_BATTCAP0, IDI_BATTCAP1, IDI_BATTCAP2, IDI_BATTCAP3, IDI_BATTCAP4 }; // battery mode icons.
 int bc_icons[5] = { IDI_BATTCHA0, IDI_BATTCHA1, IDI_BATTCHA2, IDI_BATTCHA3, IDI_BATTCHA4 }; // charging mode icons.

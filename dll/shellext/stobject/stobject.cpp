@@ -9,9 +9,6 @@
 
 #include "precomp.h"
 
-#include <olectl.h>
-#include <atlwin.h>
-
 BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_SysTray, CSysTray)
 END_OBJECT_MAP()

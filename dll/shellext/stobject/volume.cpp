@@ -8,10 +8,7 @@
 
 #include "precomp.h"
 
-#include <mmsystem.h>
 #include <mmddk.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
 HICON g_hIconVolume;
 HICON g_hIconMute;
