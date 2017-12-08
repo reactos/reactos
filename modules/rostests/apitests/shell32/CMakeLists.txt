@@ -14,10 +14,12 @@ add_executable(shell32_apitest
     CShellLink.cpp
     menu.cpp
     PathResolve.cpp
+    SHCreateFileExtractIconW.cpp
     ShellExecuteEx.cpp
     shelltest.cpp
     SHParseDisplayName.cpp
     testlist.c
+    resource.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_apitest.def)
 target_link_libraries(shell32_apitest wine uuid ${PSEH_LIB})
 set_module_type(shell32_apitest win32cui)
