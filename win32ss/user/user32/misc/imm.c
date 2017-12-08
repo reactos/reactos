@@ -25,19 +25,6 @@ HINSTANCE ghImm32 = NULL;
 BOOL bImmInitializing = FALSE;
 BOOL ImmApiTableZero = TRUE;
 
-HRESULT WINAPI GetImmFileName(PWSTR lpBuffer, UINT uSize)
-{
-  UINT length;
-  STRSAFE_LPWSTR Safe = lpBuffer;
-
-  length = GetSystemDirectoryW(lpBuffer, uSize);
-  if ( length && length < uSize )
-  {
-    StringCchCatW(Safe, uSize, L"\\");
-    return StringCchCatW(Safe, uSize, L"IMM32.DLL");
-  }
-  return StringCchCopyW(Safe, uSize, L"IMM32.DLL");
-}  
 
 /*
  *  This function should not be implemented, it is used,
@@ -58,6 +45,20 @@ HWND WINAPI IMM_ImmGetDefaultIMEWnd(HWND hwnd) { return 0; }
 BOOL WINAPI IMM_ImmNotifyIME(HIMC himc, DWORD dword1, DWORD dword2, DWORD dword3) { return 0; }
 BOOL WINAPI IMM_ImmRegisterClient(PVOID ptr, HINSTANCE hMod) { return 0; }
 UINT WINAPI IMM_ImmProcessKey(HWND hwnd, HKL hkl, UINT Vk, LPARAM lParam, DWORD HotKey) { return 0; }
+
+HRESULT WINAPI GetImmFileName(PWSTR lpBuffer, UINT uSize)
+{
+  UINT length;
+  STRSAFE_LPWSTR Safe = lpBuffer;
+
+  length = GetSystemDirectoryW(lpBuffer, uSize);
+  if ( length && length < uSize )
+  {
+    StringCchCatW(Safe, uSize, L"\\");
+    return StringCchCatW(Safe, uSize, L"imm32.dll");
+  }
+  return StringCchCopyW(Safe, uSize, L"imm32.dll");
+}  
 
 /*
  * @unimplemented
@@ -189,7 +190,7 @@ BOOL WINAPI InitializeImmEntryTable(VOID)
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 {
-    TRACE("(%x)\n", magic);
+    TRACE("Imm (%x)\n", magic);
 
     if (magic != IMM_INIT_MAGIC)
         return FALSE;
@@ -205,9 +206,7 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     if (ghImm32 == NULL && !bImmInitializing)
     {
        WCHAR ImmFile[MAX_PATH];
-       ERR("IMM32 not installed!\n");
        GetImmFileName(ImmFile, sizeof(ImmFile));
-       ERR("File %ws\n",ImmFile);
        ghImm32 = LoadLibraryW(ImmFile);
        if (ghImm32 == NULL)
        {
@@ -285,6 +284,30 @@ LRESULT WINAPI ImeWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
     return ImeWndProc_common(hwnd, msg, wParam, lParam, TRUE);
 }
 
+BOOL
+WINAPI
+UpdatePerUserImmEnabling(VOID)
+{
+  BOOL Ret = NtUserCallNoParam(NOPARAM_ROUTINE_UPDATEPERUSERIMMENABLING);
+  if ( Ret )
+  {
+    if ( gpsi->dwSRVIFlags & SRVINFO_IMM32 )
+    {
+      HMODULE imm32 = GetModuleHandleW(L"imm32.dll");
+      if ( !imm32 )
+      {
+        imm32 = LoadLibraryW(L"imm32.dll");
+        if (!imm32)
+        {
+           ERR("UPUIE: Imm32 not installed!\n");
+           Ret = FALSE;
+        }
+      }
+    }
+  }
+  return Ret;
+}
+
 static const WCHAR imeW[] = {'I','M','E',0};
 
 BOOL
@@ -311,6 +334,7 @@ RegisterIMEClass(VOID)
     if (atom)
     {
        RegisterDefaultClasses |= ICLASS_TO_MASK(ICLS_IME);
+       TRACE("Register IME Class!\n");
        return TRUE;
     }
     ERR("Failed to register IME Class!\n");

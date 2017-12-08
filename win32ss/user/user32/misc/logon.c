@@ -107,5 +107,8 @@ WINAPI
 UpdatePerUserSystemParameters(DWORD dwReserved,
                               BOOL bEnable)
 {
+    // Update Imm support and load Imm32.dll.
+    UpdatePerUserImmEnabling();
+
     return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
