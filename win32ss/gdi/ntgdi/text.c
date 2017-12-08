@@ -4,10 +4,10 @@
  * FILE:            win32ss/gdi/ntgdi/text.c
  * PURPOSE:         Text/Font
  * PROGRAMMERS:     Amine Khaldi <amine.khaldi@reactos.org>
+ *                  Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  James Tabor <james.tabor@reactos.org>
  *                  Hermes Belusca-Maito <hermes.belusca@sfr.fr>
  *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- *                  James Tabor <james.tabor@reactos.org>
- *                  Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /** Includes ******************************************************************/
