@@ -207,12 +207,12 @@ CAPTION "高级属性"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
-    LTEXT "选择你想要为这个快捷方式的高级的属性。", -1, 5, 30, 210, 10
-    CHECKBOX "以不同用户身份运行", 14000, 25, 50, 150, 10
-    LTEXT "此选项可以允许您运行此快捷方式作为另一个用户，或继续作为自己同时保护您的计算机和数据免受未经授权的程序活动。", -1, 50, 60, 175, 40
+    LTEXT "为这个快捷方式选择您想要的高级属性。", -1, 5, 30, 210, 10
+    CHECKBOX "以其他用户身份运行", 14000, 25, 50, 150, 10
+    LTEXT "此选项允许您以另一用户身份运行此快捷方式，或继续以您自己的身份运行以保护您的计算机和数据不受未授权程序的破坏。", -1, 50, 60, 175, 40
     CHECKBOX "在单独的内存空间中运行", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "确定", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "中止", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "取消", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -274,7 +274,7 @@ BEGIN
     EDITTEXT 14019, 68, 163, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "属性：", 14020, 8, 189, 45, 10
-    AUTOCHECKBOX "只读模式(&R)", 14021, 58, 189, 67, 10
+    AUTOCHECKBOX "只读(&R)", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "隐藏(&H)", 14022, 126, 189, 50, 10
     AUTOCHECKBOX "存档(&A)", 14023, 181, 189, 49, 10
     PUSHBUTTON "高级...(&A)", 14028, 180, 185, 50, 15, WS_TABSTOP
@@ -312,7 +312,7 @@ BEGIN
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
-    LTEXT "已用的空间：", -1, 25, 69, 80, 10
+    LTEXT "已用空间：", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
@@ -327,8 +327,8 @@ BEGIN
     LTEXT "磁盘 %c", 14009, 100, 150, 70, 10
     PUSHBUTTON "磁盘清理(&D)", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "压缩磁盘以节省磁盘空间", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "允许索引服务编制该磁盘的快速搜索文件", 14012, 8, 205, 222, 10, WS_DISABLED
+    CHECKBOX "压缩磁盘以节约磁盘空间", 14011, 8, 191, 222, 10, WS_DISABLED
+    CHECKBOX "允许索引服务编制该磁盘的索引以便快速搜索文件", 14012, 8, 205, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -336,9 +336,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "工具"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "错误检查", -1, 5, 5, 230, 60
+    GROUPBOX "查错", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "该选项将检查容量\n错误。", -1, 40, 25, 160, 20
+    LTEXT "该选项将检查卷\n错误。", -1, 40, 25, 160, 20
     PUSHBUTTON "现在检查...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "碎片整理", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
@@ -346,7 +346,7 @@ BEGIN
     PUSHBUTTON "立即进行碎片整理...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "备份", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "此选项将备份容量上的文件。", -1, 40, 150, 160, 20
+    LTEXT "此选项将备份卷上的文件。", -1, 40, 150, 160, 20
     PUSHBUTTON "现在备份...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
@@ -367,7 +367,7 @@ BEGIN
     LTEXT "保护我的计算机和数据不受未授权的程序的活动", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "此选项可防止计算机病毒危害您的计算机或个人数据，但选择它可能会引起程序工作不正常。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "下列用户:", 14002, 10, 100, 90, 10
-    LTEXT "用户名称：", -1, 20, 118, 54, 10
+    LTEXT "用户名：", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "密码：", -1, 20, 143, 53, 10
@@ -538,7 +538,7 @@ CAPTION "混合的内容"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS 可以执行相同的操作每次您插入盘或连接的设备与此类型的文件：", 1001, 30, 7, 193, 20
+    LTEXT "每次您插入盘或连接的设备与此类型的文件，ReactOS 可以执行相同的操作：", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "你想要 ReactOS 做什么？", 1002, 32, 41, 190, 8
@@ -554,8 +554,8 @@ CAPTION "自动播放"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS 可以执行相同的操作每次您连接此设备。", 1001, 32, 7, 190, 22
-    LTEXT "你想要 ReactOS 做的是什么？(&W)", 1002, 32, 31, 190, 8
+    LTEXT "每次您连接此设备，ReactOS 可以执行相同的操作。", 1001, 32, 7, 190, 22
+    LTEXT "你想要 ReactOS 做什么？(&W)", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "总是执行选定的操作(&A)", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "确定", IDOK, 94, 160, 60, 14
@@ -631,7 +631,7 @@ CAPTION "警告"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "由操作系统或另一个应用程序，也可以使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能较弱。\n\n\
+    LTEXT "由操作系统或另一个应用程序，也可以使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能变弱。\n\n\
 你确定你想要打开此文件？", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "是", IDYES, 125, 55, 50, 14
     PUSHBUTTON "否", IDNO, 180, 55, 50, 14
@@ -745,16 +745,16 @@ BEGIN
     IDS_PRINTHOOD "打印文件夹"
     IDS_LOCAL_APPDATA "本地设置\\应用程序数据"
     IDS_INTERNET_CACHE "本地设置\\互联网临时文件"
-    IDS_COOKIES "小型文字档案"
+    IDS_COOKIES "Cookies"
     IDS_HISTORY "本地设置\\历史记录"
     IDS_PROGRAM_FILES "程序文件"
     IDS_MYPICTURES "我的图片"
     IDS_PROGRAM_FILES_COMMON "程序文件\\共同文件"
     IDS_COMMON_DOCUMENTS "文件"
     IDS_ADMINTOOLS "开始菜单\\程序\\管理工具"
-    IDS_COMMON_MUSIC "我的文件\\我的音乐"
-    IDS_COMMON_PICTURES "我的文件\\我的图片"
-    IDS_COMMON_VIDEO "我的文件\\我的视频"
+    IDS_COMMON_MUSIC "我的文档\\我的音乐"
+    IDS_COMMON_PICTURES "我的文档\\我的图片"
+    IDS_COMMON_VIDEO "我的文档\\我的视频"
     IDS_CDBURN_AREA "本地设置\\应用程序数据\\微软\\光盘刻录"
     IDS_NETWORKPLACE "网上邻居"
 
@@ -771,7 +771,7 @@ BEGIN
     IDS_OPEN_WITH "打开方式"
     IDS_OPEN_WITH_CHOOSE "选择程序"
     IDS_OPEN_WITH_RECOMMENDED "推荐的程序："
-    IDS_OPEN_WITH_OTHER "其他的程序："
+    IDS_OPEN_WITH_OTHER "其他程序："
 
     IDS_SHELL_ABOUT_AUTHORS "作者(&A)"
     IDS_SHELL_ABOUT_BACK "< 返回(&B)"
