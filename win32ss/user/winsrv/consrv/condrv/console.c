@@ -23,7 +23,7 @@
 static ULONG CurrentConsoleID = 0;
 
 /* Linked list of consoles */
-static LIST_ENTRY ConsoleList;
+static LIST_ENTRY ConDrvConsoleList;
 static RTL_RESOURCE ListLock;
 
 #define ConDrvLockConsoleListExclusive()    \
@@ -37,7 +37,7 @@ static RTL_RESOURCE ListLock;
 
 
 static NTSTATUS
-InsertConsole(IN PCONSOLE Console)
+ConDrvInsertConsole(IN PCONSOLE Console)
 {
     ASSERT(Console);
 
@@ -45,7 +45,7 @@ InsertConsole(IN PCONSOLE Console)
     ConDrvLockConsoleListExclusive();
 
     DPRINT("Insert in the list\n");
-    InsertTailList(&ConsoleList, &Console->ListEntry);
+    InsertTailList(&ConDrvConsoleList, &Console->ListEntry);
 
     // FIXME: Move this code to the caller function!!
     /* Get a new console ID */
@@ -152,7 +152,7 @@ ConDrvInitConsoleSupport(VOID)
     DPRINT("CONSRV: ConDrvInitConsoleSupport()\n");
 
     /* Initialize the console list and its lock */
-    InitializeListHead(&ConsoleList);
+    InitializeListHead(&ConDrvConsoleList);
     RtlInitializeResource(&ListLock);
 }
 
@@ -248,7 +248,7 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     DPRINT("Console initialized\n");
 
     /* All went right, so add the console to the list */
-    Status = InsertConsole(Console);
+    Status = ConDrvInsertConsole(Console);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */

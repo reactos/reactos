@@ -20,7 +20,6 @@
 
 #include "font.h"
 #include "guiterm.h"
-#include "conwnd.h"
 #include "resource.h"
 
 /* GLOBALS ********************************************************************/
@@ -170,28 +169,6 @@ BOOLEAN
 UnRegisterConWndClass(HINSTANCE hInstance)
 {
     return !!UnregisterClassW(GUI_CONWND_CLASS, hInstance);
-}
-
-
-/* NOTE: Also used in guiterm.c */
-/* static */ VOID
-GetScreenBufferSizeUnits(IN PCONSOLE_SCREEN_BUFFER Buffer,
-                         IN PGUI_CONSOLE_DATA GuiData,
-                         OUT PUINT WidthUnit,
-                         OUT PUINT HeightUnit)
-{
-    ASSERT(Buffer && GuiData && WidthUnit && HeightUnit);
-
-    if (GetType(Buffer) == TEXTMODE_BUFFER)
-    {
-        *WidthUnit  = GuiData->CharWidth ;
-        *HeightUnit = GuiData->CharHeight;
-    }
-    else /* if (GetType(Buffer) == GRAPHICS_BUFFER) */
-    {
-        *WidthUnit  = 1;
-        *HeightUnit = 1;
-    }
 }
 
 static VOID
@@ -740,20 +717,6 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
         DPRINT("TODO: Create console caret\n");
     else
         DPRINT("TODO: Destroy console caret\n");
-}
-
-static VOID
-SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
-{
-    PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
-    UINT WidthUnit, HeightUnit;
-
-    GetScreenBufferSizeUnits(Buffer, GuiData, &WidthUnit, &HeightUnit);
-
-    Rect->left   = (SmallRect->Left       - Buffer->ViewOrigin.X) * WidthUnit ;
-    Rect->top    = (SmallRect->Top        - Buffer->ViewOrigin.Y) * HeightUnit;
-    Rect->right  = (SmallRect->Right  + 1 - Buffer->ViewOrigin.X) * WidthUnit ;
-    Rect->bottom = (SmallRect->Bottom + 1 - Buffer->ViewOrigin.Y) * HeightUnit;
 }
 
 VOID
