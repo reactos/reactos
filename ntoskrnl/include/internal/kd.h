@@ -193,8 +193,8 @@ KdpCallGdb(
 ULONG
 NTAPI
 KdpPrintString(
-    LPSTR String,
-    ULONG Length);
+    _In_reads_bytes_(Length) PCHAR UnsafeString,
+    _In_ ULONG Length);
 
 ULONG
 NTAPI

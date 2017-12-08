@@ -567,13 +567,37 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 
 ULONG
 NTAPI
-KdpPrintString(LPSTR String,
-               ULONG Length)
+KdpPrintString(
+    _In_reads_bytes_(Length) PCHAR UnsafeString,
+    _In_ ULONG Length)
 {
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
+    PCHAR String;
 
     if (!KdpDebugMode.Value) return 0;
+
+    Length = min(Length, 512);
+
+    if (ExGetPreviousMode() != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(UnsafeString, Length, 1);
+            String = _alloca(Length + 1);
+            RtlCopyMemory(String, UnsafeString, Length);
+            String[Length] = ANSI_NULL;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            return 0;
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        String = UnsafeString;
+    }
 
     /* Call the registered handlers */
     CurrentEntry = KdProviders.Flink;
