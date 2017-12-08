@@ -491,6 +491,167 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
                              IN PUSB2_REBALANCE Rebalance,
                              IN PULONG RebalanceListEntries)
 {
+    PUSB2_TT Tt;
+    PUSB2_HC_EXTENSION HcExtension;
+    ULONG Speed;
+    ULONG TimeUsed;
+    ULONG MinTimeUsed;
+    ULONG ix;
+    ULONG frame;
+    ULONG uframe;
+    ULONG Microframe;
+    ULONG TransferType;
+    ULONG Overhead;
+    BOOLEAN Result = TRUE;
+
+    DPRINT("USB2_AllocateTimeForEndpoint: TtEndpoint - %p\n", TtEndpoint);
+
+    Tt = TtEndpoint->Tt;
+    HcExtension = Tt->HcExtension;
+
+    TtEndpoint->Nums.NumStarts = 0;
+    TtEndpoint->Nums.NumCompletes = 0;
+
+    TtEndpoint->StartFrame = 0;
+    TtEndpoint->StartMicroframe = 0;
+
+    if (TtEndpoint->CalcBusTime)
+    {
+        DPRINT("USB2_AllocateTimeForEndpoint: TtEndpoint already allocated!\n");
+        return FALSE;
+    }
+
+    Speed = TtEndpoint->TtEndpointParams.DeviceSpeed;
+
+    if (Speed == UsbHighSpeed)
+    {
+        if (TtEndpoint->Period > USB2_MAX_MICROFRAMES)
+            TtEndpoint->ActualPeriod = USB2_MAX_MICROFRAMES;
+        else
+            TtEndpoint->ActualPeriod = TtEndpoint->Period;
+
+        MinTimeUsed = HcExtension->TimeUsed[0][0];
+
+        for (ix = 1; ix < TtEndpoint->ActualPeriod; ix++)
+        {
+            frame = ix / USB2_MICROFRAMES;
+            uframe = ix % (USB2_MICROFRAMES - 1);
+
+            TimeUsed = HcExtension->TimeUsed[frame][uframe];
+
+            if (TimeUsed < MinTimeUsed)
+            {
+                MinTimeUsed = TimeUsed;
+                TtEndpoint->StartFrame = frame;
+                TtEndpoint->StartMicroframe = uframe;
+            }
+        }
+
+        TtEndpoint->CalcBusTime = USB2_GetOverhead(TtEndpoint) +
+                                  USB2_AddDataBitStuff(TtEndpoint->MaxPacketSize);
+
+        DPRINT("USB2_AllocateTimeForEndpoint: StartFrame - %X, StartMicroframe - %X, CalcBusTime - %X\n",
+               TtEndpoint->StartFrame,
+               TtEndpoint->StartMicroframe,
+               TtEndpoint->CalcBusTime);
+
+        Microframe = TtEndpoint->StartFrame * USB2_MICROFRAMES +
+                     TtEndpoint->StartMicroframe;
+
+        if (Microframe >= USB2_MAX_MICROFRAMES)
+        {
+            DPRINT("USB2_AllocateTimeForEndpoint: Microframe >= 256. Result - TRUE\n");
+            return TRUE;
+        }
+
+        for (ix = Microframe;
+             ix < USB2_MAX_MICROFRAMES;
+             ix += TtEndpoint->ActualPeriod)
+        {
+            frame = ix / USB2_MICROFRAMES;
+            uframe = ix % (USB2_MICROFRAMES - 1);
+
+            DPRINT("USB2_AllocateTimeForEndpoint: frame - %X, uframe - %X, TimeUsed[f][uf] - %X\n",
+                   frame,
+                   uframe,
+                   HcExtension->TimeUsed[frame][uframe]);
+
+            if (!USB2_AllocateCheck(&HcExtension->TimeUsed[frame][uframe],
+                                    TtEndpoint->CalcBusTime,
+                                    USB2_MAX_MICROFRAME_ALLOCATION))
+            {
+                DPRINT("USB2_AllocateTimeForEndpoint: Result = FALSE\n");
+                Result = FALSE;
+            }
+        }
+
+        if (!Result)
+        {
+            for (ix = Microframe;
+                 ix < USB2_MAX_MICROFRAMES;
+                 ix += TtEndpoint->ActualPeriod)
+            {
+                frame = ix / USB2_MICROFRAMES;
+                uframe = ix % (USB2_MICROFRAMES - 1);
+
+                HcExtension->TimeUsed[frame][uframe] -= TtEndpoint->CalcBusTime;
+            }
+        }
+
+        DPRINT("USB2_AllocateTimeForEndpoint: Result - TRUE\n");
+        return TRUE;
+    }
+
+    /* Speed != UsbHighSpeed (FS/LS) */
+
+    if (TtEndpoint->Period > USB2_FRAMES)
+        TtEndpoint->ActualPeriod = USB2_FRAMES;
+    else
+        TtEndpoint->ActualPeriod = TtEndpoint->Period;
+
+    MinTimeUsed = Tt->FrameBudget[0].TimeUsed;
+
+    for (ix = 1; ix < TtEndpoint->ActualPeriod; ix++)
+    {
+        if ((Tt->FrameBudget[ix].TimeUsed) < MinTimeUsed)
+        {
+            MinTimeUsed = Tt->FrameBudget[ix].TimeUsed;
+            TtEndpoint->StartFrame = ix;
+        }
+    }
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        if (Speed == UsbFullSpeed)
+        {
+            Overhead = USB2_FS_ISOCHRONOUS_OVERHEAD + Tt->DelayTime;
+        }
+        else
+        {
+            DPRINT("USB2_AllocateTimeForEndpoint: ISO can not be on a LS bus!\n");
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (Speed == UsbFullSpeed)
+            Overhead = USB2_FS_INTERRUPT_OVERHEAD + Tt->DelayTime;
+        else
+            Overhead = USB2_LS_INTERRUPT_OVERHEAD + Tt->DelayTime;
+    }
+
+    if (Speed == UsbLowSpeed)
+    {
+        TtEndpoint->CalcBusTime = TtEndpoint->MaxPacketSize * 8 + Overhead;
+    }
+    else
+    {
+        TtEndpoint->CalcBusTime = TtEndpoint->MaxPacketSize + Overhead;
+    }
+
+
     DPRINT("USB2_AllocateTimeForEndpoint: UNIMPLEMENTED. FIXME\n");
     ASSERT(FALSE);
     return FALSE;
