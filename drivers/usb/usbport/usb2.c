@@ -555,13 +555,19 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
     ULONG RebalanceListEntries;
     PUSB2_TT_ENDPOINT TtEndpoint;
     PUSB2_TT_ENDPOINT RebalanceTtEndpoint;
-
     PUSB2_TT Tt;
     USB_DEVICE_SPEED DeviceSpeed;
     ULONG Period;
-
+    ULONG AllocedBusTime;
+    ULONG EndpointBandwidth;
+    ULONG ScheduleOffset;
+    ULONG Factor;
     ULONG ix;
+    ULONG n;
     BOOLEAN Direction;
+    UCHAR SMask;
+    UCHAR CMask;
+    UCHAR ActualPeriod;
     BOOLEAN Result;
 
     DPRINT("USBPORT_AllocateBandwidthUSB2: FdoDevice - %p, Endpoint - %p\n",
@@ -619,9 +625,10 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
             case UsbFullSpeed:
             {
                 Tt = &TtExtension->Tt;
+
                 Period = USB2_FRAMES;
 
-                while (Period && Period > EndpointProperties->Period)
+                while (Period > 0 && Period > EndpointProperties->Period)
                 {
                     Period >>= 1;
                 }
@@ -633,18 +640,22 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
             case UsbHighSpeed:
             {
                 Tt = &FdoExtension->Usb2Extension->HcTt;
-                Period = EndpointProperties->Period;
 
                 if (EndpointProperties->Period > USB2_MAX_MICROFRAMES)
                     Period = USB2_MAX_MICROFRAMES;
+                else
+                    Period = EndpointProperties->Period;
 
                 break;
             }
 
             default:
             {
-                DPRINT1("USBPORT_AllocateBandwidthUSB2: DeviceSpeed - %X!\n", DeviceSpeed);
+                DPRINT1("USBPORT_AllocateBandwidthUSB2: DeviceSpeed - %X!\n",
+                        DeviceSpeed);
+
                 DbgBreakPoint();
+
                 Tt = &TtExtension->Tt;
                 break;
             }
@@ -690,23 +701,66 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
 
     for (ix = 0; ix < RebalanceListEntries; ix++)
     {
-        DPRINT("USBPORT_AllocateBandwidthUSB2: RebalanceEndpoint[%X] - %X\n",
-               ix,
-               Rebalance->RebalanceEndpoint[ix]);
-
         RebalanceTtEndpoint = Rebalance->RebalanceEndpoint[ix];
+
+        DPRINT("USBPORT_AllocateBandwidthUSB2: RebalanceTtEndpoint[%X] - %p, RebalanceTtEndpoint - %p, RebalanceLink - %p\n",
+               ix,
+               RebalanceTtEndpoint,
+               &RebalanceTtEndpoint->Endpoint->RebalanceLink);
 
         InsertTailList(&RebalanceList,
                        &RebalanceTtEndpoint->Endpoint->RebalanceLink);
     }
 
     if (Rebalance)
-        ExFreePool(Rebalance);
+        ExFreePoolWithTag(Rebalance, USB_PORT_TAG);
 
     if (Result)
     {
-        DPRINT1("USBPORT_AllocateBandwidthUSB2: UNIMPLEMENTED. FIXME. \n");
-        ASSERT(FALSE);
+        SMask = USB2_GetSMASK(Endpoint->TtEndpoint);
+        EndpointProperties->InterruptScheduleMask = SMask;
+
+        CMask = USB2_GetCMASK(Endpoint->TtEndpoint);
+        EndpointProperties->SplitCompletionMask = CMask;
+
+        AllocedBusTime = TtEndpoint->CalcBusTime;
+
+        EndpointBandwidth = USB2_MICROFRAMES * AllocedBusTime;
+        EndpointProperties->UsbBandwidth = EndpointBandwidth;
+
+        ActualPeriod = Endpoint->TtEndpoint->ActualPeriod;
+        EndpointProperties->Period = ActualPeriod;
+
+        ScheduleOffset = Endpoint->TtEndpoint->StartFrame;
+        EndpointProperties->ScheduleOffset = ScheduleOffset;
+
+        Factor = USB2_FRAMES / ActualPeriod;
+        ASSERT(Factor);
+
+        n = ScheduleOffset * Factor;
+
+        if (TtExtension)
+        {
+            for (ix = 0; ix < Factor; ix++)
+            {
+                TtExtension->Bandwidth[n + ix] -= EndpointBandwidth;
+            }
+        }
+        else
+        {
+            for (ix = 1; ix < Factor; ix++)
+            {
+                FdoExtension->Bandwidth[n + ix] -= EndpointBandwidth;
+            }
+        }
+
+        USBPORT_DumpingEndpointProperties(EndpointProperties);
+        USBPORT_DumpingTtEndpoint(Endpoint->TtEndpoint);
+
+        if (AllocedBusTime >= (USB2_FS_MAX_PERIODIC_ALLOCATION / 2))
+        {
+            DPRINT1("USBPORT_AllocateBandwidthUSB2: AllocedBusTime >= 0.5 * MAX_ALLOCATION \n");
+        }
     }
 
     //USB2_Rebalance(FdoDevice, &RebalanceList);
