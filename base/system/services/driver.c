@@ -140,8 +140,13 @@ ScmGetDriverStatus(PSERVICE lpService,
 
     DPRINT1("ScmGetDriverStatus() called\n");
 
-    memset(lpServiceStatus, 0, sizeof(SERVICE_STATUS));
+    /* Zero output buffer if any */
+    if (lpServiceStatus != NULL)
+    {
+        memset(lpServiceStatus, 0, sizeof(SERVICE_STATUS));
+    }
 
+    /* Select the appropriate object directory based on driver type */
     if (lpService->Status.dwServiceType == SERVICE_KERNEL_DRIVER)
     {
         RtlInitUnicodeString(&DirName, L"\\Driver");
@@ -158,6 +163,7 @@ ScmGetDriverStatus(PSERVICE lpService,
                                NULL,
                                NULL);
 
+    /* Open the object directory where loaded drivers are */
     Status = NtOpenDirectoryObject(&DirHandle,
                                    DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
                                    &ObjectAttributes);
@@ -167,12 +173,14 @@ ScmGetDriverStatus(PSERVICE lpService,
         return RtlNtStatusToDosError(Status);
     }
 
+    /* Allocate a buffer big enough for querying the object */
     BufferLength = sizeof(OBJECT_DIRECTORY_INFORMATION) +
                    2 * MAX_PATH * sizeof(WCHAR);
     DirInfo = (OBJECT_DIRECTORY_INFORMATION*) HeapAlloc(GetProcessHeap(),
                         HEAP_ZERO_MEMORY,
                         BufferLength);
 
+    /* Now, start browsing entry by entry */
     Index = 0;
     while (TRUE)
     {
@@ -183,19 +191,23 @@ ScmGetDriverStatus(PSERVICE lpService,
                                         FALSE,
                                         &Index,
                                         &DataLength);
+        /* End of enumeration, the driver was not found */
         if (Status == STATUS_NO_MORE_ENTRIES)
         {
             DPRINT("No more services\n");
             break;
         }
 
+        /* Other error, fail */
         if (!NT_SUCCESS(Status))
             break;
 
         DPRINT("Comparing: '%S'  '%wZ'\n", lpService->lpServiceName, &DirInfo->Name);
 
+        /* Compare names to check whether it matches our driver */
         if (_wcsicmp(lpService->lpServiceName, DirInfo->Name.Buffer) == 0)
         {
+            /* That's our driver, bail out! */
             DPRINT1("Found: '%S'  '%wZ'\n",
                     lpService->lpServiceName, &DirInfo->Name);
             bFound = TRUE;
@@ -204,17 +216,27 @@ ScmGetDriverStatus(PSERVICE lpService,
         }
     }
 
+    /* Release resources we don't need */
     HeapFree(GetProcessHeap(),
              0,
              DirInfo);
     NtClose(DirHandle);
 
-    if (!NT_SUCCESS(Status))
+    /* Only quit if there's a failure
+     * Not having found the driver is legit!
+     * It means the driver was registered as a service, but not loaded
+     * We have not to fail in that situation, but to return proper status
+     */
+    if (!NT_SUCCESS(Status) && Status != STATUS_NO_MORE_ENTRIES)
     {
         DPRINT1("Status: %lx\n", Status);
         return RtlNtStatusToDosError(Status);
     }
 
+    /* Now, we have two cases:
+     * We found the driver: it means it's running
+     * We didn't find the driver: it wasn't running
+     */
     if ((bFound != FALSE) &&
         (lpService->Status.dwCurrentState != SERVICE_STOP_PENDING))
     {
@@ -235,6 +257,7 @@ ScmGetDriverStatus(PSERVICE lpService,
                 lpService->Status.dwWin32ExitCode = ERROR_SUCCESS;
         }
     }
+    /* Not found, return it's stopped */
     else
     {
         lpService->Status.dwCurrentState = SERVICE_STOPPED;
@@ -248,6 +271,7 @@ ScmGetDriverStatus(PSERVICE lpService,
             lpService->Status.dwWin32ExitCode = ERROR_GEN_FAILURE;
     }
 
+    /* Copy service status if required */
     if (lpServiceStatus != NULL)
     {
         memcpy(lpServiceStatus,
