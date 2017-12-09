@@ -449,6 +449,9 @@ GetDefaultPrinterA(LPSTR pszBuffer, LPDWORD pcchBuffer)
         goto Cleanup;
     }
 
+    // We successfully got a string in pwszBuffer, so convert the Unicode string to ANSI.
+    WideCharToMultiByte(CP_ACP, 0, pwszBuffer, -1, pszBuffer, *pcchBuffer, NULL, NULL);
+
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
