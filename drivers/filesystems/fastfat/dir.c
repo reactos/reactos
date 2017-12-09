@@ -427,9 +427,10 @@ VfatGetFileBothInformation(
         {
             pInfo->ShortNameLength = (CCHAR)DirContext->ShortNameU.Length;
 
-            RtlCopyMemory(pInfo->FileName,
-                          DirContext->LongNameU.Buffer,
-                          DirContext->LongNameU.Length);
+            ASSERT(pInfo->ShortNameLength / sizeof(WCHAR) <= 12);
+            RtlCopyMemory(pInfo->ShortName,
+                          DirContext->ShortNameU.Buffer,
+                          DirContext->ShortNameU.Length);
 
             /* pInfo->FileIndex = ; */
 
