@@ -564,6 +564,79 @@ USB2_GetSMASK(IN PUSB2_TT_ENDPOINT TtEndpoint)
     return SMask;
 }
 
+UCHAR
+NTAPI
+USB2_GetCMASK(IN PUSB2_TT_ENDPOINT TtEndpoint)
+{
+    ULONG NumCompletes;
+    ULONG TransferType;
+    ULONG DeviceSpeed;
+    ULONG Direction;
+    UCHAR Result;
+    UCHAR MicroFrameCS;
+    UCHAR HcFrame;
+    UCHAR HcMicroFrame;
+    UCHAR MaskCS = 0;
+    static const UCHAR CMASKS[USB2_MICROFRAMES] = {
+      0x1C, 0x38, 0x70, 0xE0, 0xC1, 0x83, 0x07, 0x0E 
+    };   
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+    DeviceSpeed = TtEndpoint->TtEndpointParams.DeviceSpeed;
+    Direction = TtEndpoint->TtEndpointParams.Direction;
+
+    if (DeviceSpeed == UsbHighSpeed)
+    {
+        return 0;
+    }
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        USB2_ConvertFrame(TtEndpoint->StartFrame,
+                          TtEndpoint->StartMicroframe,
+                          &HcFrame,
+                          &HcMicroFrame);
+
+        Result = CMASKS[HcMicroFrame];
+    }
+    else
+    {
+        if (Direction == USBPORT_TRANSFER_DIRECTION_OUT)
+        {
+            return 0;
+        }
+
+        USB2_ConvertFrame(TtEndpoint->StartFrame,
+                          TtEndpoint->StartMicroframe,
+                          &HcFrame,
+                          &HcMicroFrame);
+
+        NumCompletes = TtEndpoint->Nums.NumCompletes;
+
+        for (MicroFrameCS = HcMicroFrame + 2;
+             MicroFrameCS < USB2_MICROFRAMES;
+             MicroFrameCS++)
+        {
+            MaskCS |= (1 << MicroFrameCS);
+            NumCompletes--;
+
+            if (!NumCompletes)
+            {
+                return MaskCS;
+            }
+        }
+
+        for (; NumCompletes; NumCompletes--)
+        {
+            MaskCS |= (1 << (MicroFrameCS - USB2_MICROFRAMES));
+        }
+
+        Result = MaskCS;
+    }
+
+    return Result;
+}
+
 BOOLEAN
 NTAPI
 USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
