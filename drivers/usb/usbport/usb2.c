@@ -500,6 +500,12 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     ULONG Microframe;
     ULONG TransferType;
     ULONG Overhead;
+    ULONG LatestStart;
+    PUSB2_TT_ENDPOINT prevTtEndpoint;
+    PUSB2_TT_ENDPOINT nextTtEndpoint;
+    PUSB2_TT_ENDPOINT IntEndpoint;
+    ULONG StartTime;
+    ULONG calcBusTime;
     BOOLEAN Result = TRUE;
 
     DPRINT("USB2_AllocateTimeForEndpoint: TtEndpoint - %p\n", TtEndpoint);
@@ -649,10 +655,188 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
         TtEndpoint->CalcBusTime = TtEndpoint->MaxPacketSize + Overhead;
     }
 
+    LatestStart = USB2_HUB_DELAY + USB2_FS_SOF_TIME;
 
-    DPRINT("USB2_AllocateTimeForEndpoint: UNIMPLEMENTED. FIXME\n");
-    ASSERT(FALSE);
-    return FALSE;
+    for (ix = 0;
+         (TtEndpoint->StartFrame + ix) < USB2_FRAMES;
+         ix += TtEndpoint->ActualPeriod)
+    {
+        frame = TtEndpoint->StartFrame + ix;
+
+        if (Tt->FrameBudget[frame].AltEndpoint &&
+            TtEndpoint->CalcBusTime >= (USB2_FS_MAX_PERIODIC_ALLOCATION / 2))
+        {
+            DPRINT("USB2_AllocateTimeForEndpoint: return FALSE\n");
+            return FALSE;
+        }
+
+        if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+            prevTtEndpoint = Tt->FrameBudget[frame].IsoEndpoint;
+        else
+            prevTtEndpoint = Tt->FrameBudget[frame].IntEndpoint;
+
+        for (nextTtEndpoint = prevTtEndpoint->NextTtEndpoint;
+             nextTtEndpoint;
+             nextTtEndpoint = nextTtEndpoint->NextTtEndpoint)
+        {
+            if (USB2_CheckTtEndpointInsert(nextTtEndpoint, TtEndpoint))
+            {
+                break;
+            }
+
+            prevTtEndpoint = nextTtEndpoint;
+        }
+
+        StartTime = USB2_GetStartTime(nextTtEndpoint,
+                                      TtEndpoint,
+                                      prevTtEndpoint,
+                                      frame);
+
+        if (StartTime > LatestStart)
+            LatestStart = StartTime;
+    }
+
+    TtEndpoint->StartTime = LatestStart;
+
+    if ((LatestStart + TtEndpoint->CalcBusTime) > USB2_FS_MAX_PERIODIC_ALLOCATION)
+    {
+        TtEndpoint->CalcBusTime = 0;
+        DPRINT("USB2_AllocateTimeForEndpoint: return FALSE\n");
+        return FALSE;
+    }
+
+    for (ix = 0, frame = -TtEndpoint->StartFrame;
+         ix < USB2_FRAMES;
+         ix++, frame++)
+    {
+        DPRINT("USB2_AllocateTimeForEndpoint: ix - %X, frame - %X, StartFrame - %X\n",
+               ix,
+               frame,
+               TtEndpoint->StartFrame);
+
+        if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+        {
+            DPRINT1("USB2_AllocateTimeForEndpoint: Iso Ep UNIMPLEMENTED. FIXME\n");
+            ASSERT(FALSE);
+        }
+        else
+        {
+            IntEndpoint = Tt->FrameBudget[ix].IntEndpoint;
+            nextTtEndpoint = IntEndpoint->NextTtEndpoint;
+
+            for (nextTtEndpoint = IntEndpoint->NextTtEndpoint;
+                 nextTtEndpoint;
+                 nextTtEndpoint = nextTtEndpoint->NextTtEndpoint)
+            {
+                if (USB2_CheckTtEndpointInsert(nextTtEndpoint, TtEndpoint))
+                    break;
+                IntEndpoint = nextTtEndpoint;
+            }
+
+            if ((frame % TtEndpoint->ActualPeriod) == 0)
+            {
+                calcBusTime = 0;
+            }
+            else
+            {
+                if (nextTtEndpoint)
+                {
+                    calcBusTime = LatestStart + TtEndpoint->CalcBusTime -
+                                  nextTtEndpoint->StartTime;
+                }
+                else
+                {
+                    calcBusTime = TtEndpoint->CalcBusTime;
+                }
+
+                if (calcBusTime > 0)
+                {
+                    TimeUsed = Tt->FrameBudget[ix].TimeUsed;
+
+                    if (!USB2_AllocateCheck(&TimeUsed,
+                                            calcBusTime,
+                                            USB2_FS_MAX_PERIODIC_ALLOCATION))
+                    {
+                        DPRINT("USB2_AllocateTimeForEndpoint: Result = FALSE\n");
+                        Result = FALSE;
+                    }
+                }
+            }
+
+            if (nextTtEndpoint != TtEndpoint)
+            {
+                if ((frame % TtEndpoint->ActualPeriod) == 0)
+                {
+                    if (frame == 0)
+                    {
+                        DPRINT("USB2_AllocateTimeForEndpoint: frame == 0\n");
+                        TtEndpoint->NextTtEndpoint = nextTtEndpoint;
+                    }
+
+                    IntEndpoint->NextTtEndpoint = TtEndpoint;
+
+                    DPRINT("USB2_AllocateTimeForEndpoint: TtEndpoint - %p, nextTtEndpoint - %p\n",
+                           TtEndpoint,
+                           nextTtEndpoint);
+                }
+
+                if (calcBusTime > 0)
+                {
+                    BOOLEAN IsMoved;
+                    BOOLEAN MoveResult;
+
+                    DPRINT("USB2_AllocateTimeForEndpoint: nextTtEndpoint - %p, calcBusTime - %X\n",
+                           nextTtEndpoint,
+                           calcBusTime);
+
+                    for (;
+                         nextTtEndpoint;
+                         nextTtEndpoint = nextTtEndpoint->NextTtEndpoint)
+                    {
+                        MoveResult = USB2_MoveTtEndpoint(nextTtEndpoint,
+                                                         calcBusTime,
+                                                         Rebalance,
+                                                         *RebalanceListEntries,
+                                                         &IsMoved);
+
+                        if (!IsMoved)
+                        {
+                            DPRINT("USB2_AllocateTimeForEndpoint: Result = FALSE\n");
+                            Result = FALSE;
+                        }
+
+                        if (!MoveResult)
+                            break;
+                    }
+                }
+            }
+        }
+
+        if ((frame % TtEndpoint->ActualPeriod) == 0)
+        {
+            if (!USB2_AllocateHS(TtEndpoint, frame))
+            {
+                DPRINT1("USB2_AllocateTimeForEndpoint: USB2_AllocateHS return FALSE\n");
+                Result = FALSE;
+            }
+
+            Tt->FrameBudget[ix].TimeUsed += TtEndpoint->CalcBusTime;
+        }
+
+        if (Result == FALSE)
+        {
+            USB2_DeallocateEndpointBudget(TtEndpoint,
+                                          Rebalance,
+                                          RebalanceListEntries,
+                                          ix + 1);
+
+            DPRINT("USB2_AllocateTimeForEndpoint: return FALSE\n");
+            return FALSE;
+        }
+    }
+
+    DPRINT("USB2_AllocateTimeForEndpoint: Result - %X\n", Result);
+    return Result;
 }
 
 BOOLEAN
