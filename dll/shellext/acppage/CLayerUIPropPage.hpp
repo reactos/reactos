@@ -5,6 +5,8 @@
  * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
+#pragma once
+
 class CLayerUIPropPage :
     public CPropertyPageImpl<CLayerUIPropPage>,
     public CComCoClass<CLayerUIPropPage, &CLSID_CLayerUIPropPage>,
