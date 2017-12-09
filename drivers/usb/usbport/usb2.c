@@ -284,8 +284,6 @@ USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
                     IN USHORT MaxPacketSize,
                     IN PUSB2_TT Tt)
 {
-    RtlZeroMemory(TtEndpoint, sizeof(USB2_TT_ENDPOINT));
-
     TtEndpoint->TtEndpointParams.TransferType = TransferType;
     TtEndpoint->TtEndpointParams.Direction = Direction;
     TtEndpoint->TtEndpointParams.DeviceSpeed = DeviceSpeed;
@@ -293,6 +291,18 @@ USB2_InitTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     TtEndpoint->Period = Period;
     TtEndpoint->MaxPacketSize = MaxPacketSize;
     TtEndpoint->Tt = Tt;
+
+    TtEndpoint->CalcBusTime = 0;
+    TtEndpoint->StartTime = 0;
+    TtEndpoint->ActualPeriod = 0;
+    TtEndpoint->StartFrame = 0;
+    TtEndpoint->StartMicroframe = 0;
+
+    TtEndpoint->Nums.AsULONG = 0;
+    TtEndpoint->NextTtEndpoint = NULL;
+    TtEndpoint->Reserved2 = 0;
+    TtEndpoint->PreviosPeriod = 0;
+    TtEndpoint->IsPromoted = FALSE;
 }
 
 BOOLEAN
