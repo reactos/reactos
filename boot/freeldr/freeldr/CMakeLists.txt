@@ -32,11 +32,9 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/elf)
 
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 
-
 list(APPEND FREELDR_BOOTLIB_COMMON_SOURCE
     lib/debug.c
     lib/peloader.c
-
     lib/comm/rs232.c
     ## add KD support
     lib/fs/ext2.c
@@ -49,16 +47,14 @@ list(APPEND FREELDR_BOOTLIB_COMMON_SOURCE
     lib/inifile/parse.c
     lib/mm/meminit.c
     lib/mm/mm.c
-    lib/mm/heap.c
-    )
+    lib/mm/heap.c)
 
 list(APPEND FREELDR_NTLDR_COMMON_SOURCE
     ntldr/conversion.c
     ntldr/registry.c
     ntldr/winldr.c
     ntldr/wlmemory.c
-    ntldr/wlregistry.c
-    )
+    ntldr/wlregistry.c)
 
 list(APPEND FREELDR_ARC_COMMON_SOURCE
     arcname.c
@@ -68,9 +64,8 @@ list(APPEND FREELDR_ARC_COMMON_SOURCE
     cache/cache.c
     disk/disk.c
     disk/partition.c
-    disk/ramdisk.c
+    disk/ramdisk.c)
     #disk/scsiport.c
-    )
 
 list(APPEND FREELDR_COMMON_SOURCE
     include/freeldr.h
@@ -90,8 +85,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     ui/ui.c
     video/fade.c
     video/palette.c
-    video/video.c
-    )
+    video/video.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
@@ -100,21 +94,16 @@ if(ARCH STREQUAL "i386")
         arch/i386/pnpbios.S
         arch/i386/i386trap.S
         arch/i386/linux.S
-        arch/i386/mb.S
-        )
+        arch/i386/mb.S)
 
     list(APPEND FREELDR_NTLDR_COMMON_SOURCE
         ntldr/arch/i386/winldr.c
-        ntldr/headless.c
-        )
+        ntldr/headless.c)
 
-    ## list(APPEND FREELDR_COMMON_SOURCE
     list(APPEND FREELDR_ARC_COMMON_SOURCE
         lib/fs/pxe.c
-
         arch/i386/halstub.c
         arch/i386/ntoskrnl.c
-
         arch/i386/archmach.c
         arch/i386/drivemap.c
         arch/i386/hardware.c
@@ -151,15 +140,11 @@ elseif(ARCH STREQUAL "amd64")
         arch/amd64/pnpbios.S)
 
     list(APPEND FREELDR_NTLDR_COMMON_SOURCE
-        ntldr/arch/amd64/winldr.c
-        )
+        ntldr/arch/amd64/winldr.c)
 
-    ## list(APPEND FREELDR_COMMON_SOURCE
     list(APPEND FREELDR_ARC_COMMON_SOURCE
         lib/fs/pxe.c
-
         arch/i386/ntoskrnl.c
-
         arch/i386/drivemap.c
         arch/i386/hardware.c
         arch/i386/hwacpi.c
@@ -180,10 +165,8 @@ elseif(ARCH STREQUAL "arm")
         arch/arm/boot.S)
 
     list(APPEND FREELDR_NTLDR_COMMON_SOURCE
-        ntldr/arch/arm/winldr.c
-        )
+        ntldr/arch/arm/winldr.c)
 
-    ## list(APPEND FREELDR_COMMON_SOURCE
     list(APPEND FREELDR_ARC_COMMON_SOURCE
         arch/arm/entry.c
         arch/arm/macharm.c)
@@ -192,16 +175,28 @@ else()
 endif()
 
 add_asm_files(freeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE})
-add_library(freeldr_common ${FREELDR_BOOTLIB_COMMON_SOURCE} ${FREELDR_ARC_COMMON_SOURCE}
-            ${FREELDR_NTLDR_COMMON_SOURCE}
-            ${FREELDR_COMMON_SOURCE} ${freeldr_common_asm})
-add_pch(freeldr_common include/freeldr.h FREELDR_COMMON_SOURCE)
-add_dependencies(freeldr_common bugcodes asm xdk)
+
+add_library(freeldr_common
+    ${FREELDR_BOOTLIB_COMMON_SOURCE}
+    ${FREELDR_ARC_COMMON_SOURCE}
+    ${FREELDR_NTLDR_COMMON_SOURCE}
+    ${FREELDR_COMMON_SOURCE}
+    ${freeldr_common_asm}
+    linuxboot.c)
 
 if(USE_CLANG_CL)
     # We need to reduce the binary size
-    set_property(SOURCE ${FREELDR_BOOTLIB_COMMON_SOURCE} ${FREELDR_ARC_COMMON_SOURCE} APPEND_STRING PROPERTY COMPILE_FLAGS " /Os")
+    add_target_compile_flags(freeldr_common "/Os")
 endif()
+
+set(PCH_SOURCE
+    ${FREELDR_BOOTLIB_COMMON_SOURCE}
+    ${FREELDR_ARC_COMMON_SOURCE}
+    ${FREELDR_NTLDR_COMMON_SOURCE}
+    ${FREELDR_COMMON_SOURCE})
+
+add_pch(freeldr_common include/freeldr.h PCH_SOURCE)
+add_dependencies(freeldr_common bugcodes asm xdk)
 
 if(ARCH STREQUAL "i386" AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
