@@ -5108,21 +5108,11 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     PAGED_CODE();
 
     //
-    // Only two flags are supported
+    // Only two flags are supported, exclusively.
     //
-    if (!(FreeType & (MEM_RELEASE | MEM_DECOMMIT)))
+    if (FreeType != MEM_RELEASE && FreeType != MEM_DECOMMIT)
     {
-        DPRINT1("Invalid FreeType\n");
-        return STATUS_INVALID_PARAMETER_4;
-    }
-
-    //
-    // Check if no flag was used, or if both flags were used
-    //
-    if (!((FreeType & (MEM_DECOMMIT | MEM_RELEASE))) ||
-         ((FreeType & (MEM_DECOMMIT | MEM_RELEASE)) == (MEM_DECOMMIT | MEM_RELEASE)))
-    {
-        DPRINT1("Invalid FreeType combination\n");
+        DPRINT1("Invalid FreeType (0x%08lx)\n", FreeType);
         return STATUS_INVALID_PARAMETER_4;
     }
 
@@ -5200,8 +5190,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         }
     }
 
-    DPRINT("NtFreeVirtualMemory: Process 0x%p, Adress 0x%p, size 0x%x, FreeType %x.\n",
-        Process, PBaseAddress, PRegionSize, FreeType);
+    DPRINT("NtFreeVirtualMemory: Process 0x%p, Address 0x%p, Size 0x%Ix, FreeType 0x%08lx\n",
+           Process, PBaseAddress, PRegionSize, FreeType);
 
     //
     // Lock the address space
