@@ -12,7 +12,7 @@ list(APPEND SOURCE
     CreateBitmapIndirect.c
     CreateCompatibleDC.c
     CreateDIBitmap.c
-    CreateDIBPatternBrush
+    CreateDIBPatternBrush.c
     CreateFont.c
     CreateFontIndirect.c
     CreateIconIndirect.c
