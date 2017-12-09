@@ -101,17 +101,17 @@ VfatGetFileNameInformation(
     *Written = 0;
     Status = STATUS_BUFFER_OVERFLOW;
 
-    if (FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName) > BufferLength)
+    if (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName) > BufferLength)
         return Status;
 
-    if (First || (BufferLength >= FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName) + DirContext->LongNameU.Length))
+    if (First || (BufferLength >= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName) + DirContext->LongNameU.Length))
     {
         pInfo->FileNameLength = DirContext->LongNameU.Length;
 
-        *Written = FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName);
-        if (BufferLength > FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName))
+        *Written = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+        if (BufferLength > FIELD_OFFSET(FILE_NAME_INFORMATION, FileName))
         {
-            BytesToCopy = min(DirContext->LongNameU.Length, BufferLength - FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName));
+            BytesToCopy = min(DirContext->LongNameU.Length, BufferLength - FIELD_OFFSET(FILE_NAME_INFORMATION, FileName));
             RtlCopyMemory(pInfo->FileName,
                          DirContext->LongNameU.Buffer,
                          BytesToCopy);
