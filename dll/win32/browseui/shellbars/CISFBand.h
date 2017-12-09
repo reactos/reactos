@@ -5,6 +5,7 @@
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
  * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
+
 #pragma once
 
 class CISFBand :

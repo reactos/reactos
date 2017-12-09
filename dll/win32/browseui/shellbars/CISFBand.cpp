@@ -7,11 +7,9 @@
  */
 
 #include "shellbars.h"
-#include <commoncontrols.h>
-#include <strsafe.h>
 
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+#include <commoncontrols.h>
+#include <shellapi.h>
 
 /*
 TODO:

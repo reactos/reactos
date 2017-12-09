@@ -20,7 +20,8 @@
  */
 
 #include "shellbars.h"
-#include <strsafe.h>
+
+#include <browseui_undoc.h>
 
 /* The menu consists of 3 parts. The first is loaded from the resources,
    the second is populated with the classes of the CATID_DeskBand comcat
