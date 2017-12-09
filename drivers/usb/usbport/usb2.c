@@ -481,6 +481,15 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
     return Result;
 }
 
+VOID
+NTAPI
+USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                  IN ULONG Frame)
+{
+    DPRINT("USB2_DeallocateHS: UNIMPLEMENTED FIXME\n");
+    ASSERT(FALSE);
+}
+
 BOOLEAN
 NTAPI
 USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
