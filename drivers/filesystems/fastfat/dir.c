@@ -91,20 +91,43 @@ NTSTATUS
 VfatGetFileNameInformation(
     PVFAT_DIRENTRY_CONTEXT DirContext,
     PFILE_NAMES_INFORMATION pInfo,
-    ULONG BufferLength)
+    ULONG BufferLength,
+    PULONG Written,
+    BOOLEAN First)
 {
-    if ((sizeof(FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
-        return STATUS_BUFFER_OVERFLOW;
+    NTSTATUS Status;
+    ULONG BytesToCopy = 0;
 
-    pInfo->FileNameLength = DirContext->LongNameU.Length;
-    pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_DIRECTORY_INFORMATION) +
-                                            DirContext->LongNameU.Length);
+    *Written = 0;
+    Status = STATUS_BUFFER_OVERFLOW;
 
-    RtlCopyMemory(pInfo->FileName,
-                  DirContext->LongNameU.Buffer,
-                  DirContext->LongNameU.Length);
+    if (FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName) > BufferLength)
+        return Status;
 
-    return STATUS_SUCCESS;
+    if (First || (BufferLength >= FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName) + DirContext->LongNameU.Length))
+    {
+        pInfo->FileNameLength = DirContext->LongNameU.Length;
+
+        *Written = FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName);
+        pInfo->NextEntryOffset = 0;
+        if (BufferLength > FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName))
+        {
+            BytesToCopy = min(DirContext->LongNameU.Length, BufferLength - FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName));
+            RtlCopyMemory(pInfo->FileName,
+                         DirContext->LongNameU.Buffer,
+                         BytesToCopy);
+            *Written += BytesToCopy;
+
+            if (BytesToCopy == DirContext->LongNameU.Length)
+            {
+                pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_NAMES_INFORMATION) +
+                                                        BytesToCopy);
+                Status = STATUS_SUCCESS;
+            }
+        }
+    }
+
+    return Status;
 }
 
 static
@@ -113,90 +136,115 @@ VfatGetFileDirectoryInformation(
     PVFAT_DIRENTRY_CONTEXT DirContext,
     PDEVICE_EXTENSION DeviceExt,
     PFILE_DIRECTORY_INFORMATION pInfo,
-    ULONG BufferLength)
+    ULONG BufferLength,
+    PULONG Written,
+    BOOLEAN First)
 {
-    if ((sizeof(FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
-        return STATUS_BUFFER_OVERFLOW;
+    NTSTATUS Status;
+    ULONG BytesToCopy = 0;
 
-    pInfo->FileNameLength = DirContext->LongNameU.Length;
-    pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_DIRECTORY_INFORMATION) +
-                                            DirContext->LongNameU.Length);
-    /* pInfo->FileIndex = ; */
+    *Written = 0;
+    Status = STATUS_BUFFER_OVERFLOW;
 
-    RtlCopyMemory(pInfo->FileName,
-                  DirContext->LongNameU.Buffer,
-                  DirContext->LongNameU.Length);
+    if (FIELD_OFFSET(FILE_DIRECTORY_INFORMATION, FileName) > BufferLength)
+        return Status;
 
-    if (vfatVolumeIsFatX(DeviceExt))
+    if (First || (BufferLength >= FIELD_OFFSET(FILE_DIRECTORY_INFORMATION, FileName) + DirContext->LongNameU.Length))
     {
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.CreationDate,
-                                   DirContext->DirEntry.FatX.CreationTime,
-                                   &pInfo->CreationTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.AccessDate,
-                                   DirContext->DirEntry.FatX.AccessTime,
-                                   &pInfo->LastAccessTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.UpdateDate,
-                                   DirContext->DirEntry.FatX.UpdateTime,
-                                   &pInfo->LastWriteTime);
+        pInfo->FileNameLength = DirContext->LongNameU.Length;
+        /* pInfo->FileIndex = ; */
 
-        pInfo->ChangeTime = pInfo->LastWriteTime;
-
-        if (BooleanFlagOn(DirContext->DirEntry.FatX.Attrib, FILE_ATTRIBUTE_DIRECTORY))
+        *Written = FIELD_OFFSET(FILE_DIRECTORY_INFORMATION, FileName);
+        pInfo->NextEntryOffset = 0;
+        if (BufferLength > FIELD_OFFSET(FILE_DIRECTORY_INFORMATION, FileName))
         {
-            pInfo->EndOfFile.QuadPart = 0;
-            pInfo->AllocationSize.QuadPart = 0;
+            BytesToCopy = min(DirContext->LongNameU.Length, BufferLength - FIELD_OFFSET(FILE_DIRECTORY_INFORMATION, FileName));
+            RtlCopyMemory(pInfo->FileName,
+                         DirContext->LongNameU.Buffer,
+                         BytesToCopy);
+            *Written += BytesToCopy;
+
+            if (BytesToCopy == DirContext->LongNameU.Length)
+            {
+                pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_DIRECTORY_INFORMATION) +
+                                                        BytesToCopy);
+                Status = STATUS_SUCCESS;
+            }
+        }
+
+
+
+        if (vfatVolumeIsFatX(DeviceExt))
+        {
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.CreationDate,
+                                       DirContext->DirEntry.FatX.CreationTime,
+                                       &pInfo->CreationTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.AccessDate,
+                                       DirContext->DirEntry.FatX.AccessTime,
+                                       &pInfo->LastAccessTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.UpdateDate,
+                                       DirContext->DirEntry.FatX.UpdateTime,
+                                       &pInfo->LastWriteTime);
+
+            pInfo->ChangeTime = pInfo->LastWriteTime;
+
+            if (BooleanFlagOn(DirContext->DirEntry.FatX.Attrib, FILE_ATTRIBUTE_DIRECTORY))
+            {
+                pInfo->EndOfFile.QuadPart = 0;
+                pInfo->AllocationSize.QuadPart = 0;
+            }
+            else
+            {
+                pInfo->EndOfFile.u.HighPart = 0;
+                pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.FatX.FileSize;
+                /* Make allocsize a rounded up multiple of BytesPerCluster */
+                pInfo->AllocationSize.u.HighPart = 0;
+                pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.FatX.FileSize,
+                                                           DeviceExt->FatInfo.BytesPerCluster);
+            }
+
+            pInfo->FileAttributes = DirContext->DirEntry.FatX.Attrib & 0x3f;
         }
         else
         {
-            pInfo->EndOfFile.u.HighPart = 0;
-            pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.FatX.FileSize;
-            /* Make allocsize a rounded up multiple of BytesPerCluster */
-            pInfo->AllocationSize.u.HighPart = 0;
-            pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.FatX.FileSize,
-                                                       DeviceExt->FatInfo.BytesPerCluster);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.CreationDate,
+                                       DirContext->DirEntry.Fat.CreationTime,
+                                       &pInfo->CreationTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.AccessDate,
+                                       0,
+                                       &pInfo->LastAccessTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.UpdateDate,
+                                       DirContext->DirEntry.Fat.UpdateTime,
+                                       &pInfo->LastWriteTime);
+
+            pInfo->ChangeTime = pInfo->LastWriteTime;
+
+            if (BooleanFlagOn(DirContext->DirEntry.Fat.Attrib, FILE_ATTRIBUTE_DIRECTORY))
+            {
+                pInfo->EndOfFile.QuadPart = 0;
+                pInfo->AllocationSize.QuadPart = 0;
+            }
+            else
+            {
+                pInfo->EndOfFile.u.HighPart = 0;
+                pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.Fat.FileSize;
+                /* Make allocsize a rounded up multiple of BytesPerCluster */
+                pInfo->AllocationSize.u.HighPart = 0;
+                pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.Fat.FileSize,
+                                                           DeviceExt->FatInfo.BytesPerCluster);
+            }
+
+            pInfo->FileAttributes = DirContext->DirEntry.Fat.Attrib & 0x3f;
         }
-
-        pInfo->FileAttributes = DirContext->DirEntry.FatX.Attrib & 0x3f;
-    }
-    else
-    {
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.CreationDate,
-                                   DirContext->DirEntry.Fat.CreationTime,
-                                   &pInfo->CreationTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.AccessDate,
-                                   0,
-                                   &pInfo->LastAccessTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.UpdateDate,
-                                   DirContext->DirEntry.Fat.UpdateTime,
-                                   &pInfo->LastWriteTime);
-
-        pInfo->ChangeTime = pInfo->LastWriteTime;
-
-        if (BooleanFlagOn(DirContext->DirEntry.Fat.Attrib, FILE_ATTRIBUTE_DIRECTORY))
-        {
-            pInfo->EndOfFile.QuadPart = 0;
-            pInfo->AllocationSize.QuadPart = 0;
-        }
-        else
-        {
-            pInfo->EndOfFile.u.HighPart = 0;
-            pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.Fat.FileSize;
-            /* Make allocsize a rounded up multiple of BytesPerCluster */
-            pInfo->AllocationSize.u.HighPart = 0;
-            pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.Fat.FileSize,
-                                                       DeviceExt->FatInfo.BytesPerCluster);
-        }
-
-        pInfo->FileAttributes = DirContext->DirEntry.Fat.Attrib & 0x3f;
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 static
@@ -205,71 +253,94 @@ VfatGetFileFullDirectoryInformation(
     PVFAT_DIRENTRY_CONTEXT DirContext,
     PDEVICE_EXTENSION DeviceExt,
     PFILE_FULL_DIR_INFORMATION pInfo,
-    ULONG BufferLength)
+    ULONG BufferLength,
+    PULONG Written,
+    BOOLEAN First)
 {
-    if ((sizeof(FILE_FULL_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
-        return STATUS_BUFFER_OVERFLOW;
+    NTSTATUS Status;
+    ULONG BytesToCopy = 0;
 
-    pInfo->FileNameLength = DirContext->LongNameU.Length;
-    pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_FULL_DIR_INFORMATION) +
-                                            DirContext->LongNameU.Length);
-    /* pInfo->FileIndex = ; */
-    /* pInfo->EaSize = ; */
+    *Written = 0;
+    Status = STATUS_BUFFER_OVERFLOW;
 
-    RtlCopyMemory(pInfo->FileName,
-                  DirContext->LongNameU.Buffer,
-                  DirContext->LongNameU.Length);
+    if (FIELD_OFFSET(FILE_FULL_DIR_INFORMATION, FileName) > BufferLength)
+        return Status;
 
-    if (vfatVolumeIsFatX(DeviceExt))
+    if (First || (BufferLength >= FIELD_OFFSET(FILE_FULL_DIR_INFORMATION, FileName) + DirContext->LongNameU.Length))
     {
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.CreationDate,
-                                   DirContext->DirEntry.FatX.CreationTime,
-                                   &pInfo->CreationTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.AccessDate,
-                                   DirContext->DirEntry.FatX.AccessTime,
-                                   &pInfo->LastAccessTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.UpdateDate,
-                                   DirContext->DirEntry.FatX.UpdateTime,
-                                   &pInfo->LastWriteTime);
+        pInfo->FileNameLength = DirContext->LongNameU.Length;
+        /* pInfo->FileIndex = ; */
+        pInfo->EaSize = 0;
 
-        pInfo->ChangeTime = pInfo->LastWriteTime;
-        pInfo->EndOfFile.u.HighPart = 0;
-        pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.FatX.FileSize;
-        /* Make allocsize a rounded up multiple of BytesPerCluster */
-        pInfo->AllocationSize.u.HighPart = 0;
-        pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.FatX.FileSize,
-                                                   DeviceExt->FatInfo.BytesPerCluster);
-        pInfo->FileAttributes = DirContext->DirEntry.FatX.Attrib & 0x3f;
+        *Written = FIELD_OFFSET(FILE_FULL_DIR_INFORMATION, FileName);
+        pInfo->NextEntryOffset = 0;
+        if (BufferLength > FIELD_OFFSET(FILE_FULL_DIR_INFORMATION, FileName))
+        {
+            BytesToCopy = min(DirContext->LongNameU.Length, BufferLength - FIELD_OFFSET(FILE_FULL_DIR_INFORMATION, FileName));
+            RtlCopyMemory(pInfo->FileName,
+                         DirContext->LongNameU.Buffer,
+                         BytesToCopy);
+            *Written += BytesToCopy;
+
+            if (BytesToCopy == DirContext->LongNameU.Length)
+            {
+                pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_FULL_DIR_INFORMATION) +
+                                                        BytesToCopy);
+                Status = STATUS_SUCCESS;
+            }
+        }
+
+        if (vfatVolumeIsFatX(DeviceExt))
+        {
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.CreationDate,
+                                       DirContext->DirEntry.FatX.CreationTime,
+                                       &pInfo->CreationTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.AccessDate,
+                                       DirContext->DirEntry.FatX.AccessTime,
+                                       &pInfo->LastAccessTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.UpdateDate,
+                                       DirContext->DirEntry.FatX.UpdateTime,
+                                       &pInfo->LastWriteTime);
+
+            pInfo->ChangeTime = pInfo->LastWriteTime;
+            pInfo->EndOfFile.u.HighPart = 0;
+            pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.FatX.FileSize;
+            /* Make allocsize a rounded up multiple of BytesPerCluster */
+            pInfo->AllocationSize.u.HighPart = 0;
+            pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.FatX.FileSize,
+                                                       DeviceExt->FatInfo.BytesPerCluster);
+            pInfo->FileAttributes = DirContext->DirEntry.FatX.Attrib & 0x3f;
+        }
+        else
+        {
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.CreationDate,
+                                       DirContext->DirEntry.Fat.CreationTime,
+                                       &pInfo->CreationTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.AccessDate,
+                                       0,
+                                       &pInfo->LastAccessTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.UpdateDate,
+                                       DirContext->DirEntry.Fat.UpdateTime,
+                                       &pInfo->LastWriteTime);
+
+            pInfo->ChangeTime = pInfo->LastWriteTime;
+            pInfo->EndOfFile.u.HighPart = 0;
+            pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.Fat.FileSize;
+            /* Make allocsize a rounded up multiple of BytesPerCluster */
+            pInfo->AllocationSize.u.HighPart = 0;
+            pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.Fat.FileSize,
+                                                       DeviceExt->FatInfo.BytesPerCluster);
+            pInfo->FileAttributes = DirContext->DirEntry.Fat.Attrib & 0x3f;
+        }
     }
-    else
-    {
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.CreationDate,
-                                   DirContext->DirEntry.Fat.CreationTime,
-                                   &pInfo->CreationTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.AccessDate,
-                                   0,
-                                   &pInfo->LastAccessTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.UpdateDate,
-                                   DirContext->DirEntry.Fat.UpdateTime,
-                                   &pInfo->LastWriteTime);
 
-        pInfo->ChangeTime = pInfo->LastWriteTime;
-        pInfo->EndOfFile.u.HighPart = 0;
-        pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.Fat.FileSize;
-        /* Make allocsize a rounded up multiple of BytesPerCluster */
-        pInfo->AllocationSize.u.HighPart = 0;
-        pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.Fat.FileSize,
-                                                   DeviceExt->FatInfo.BytesPerCluster);
-        pInfo->FileAttributes = DirContext->DirEntry.Fat.Attrib & 0x3f;
-    }
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 static
@@ -278,110 +349,124 @@ VfatGetFileBothInformation(
     PVFAT_DIRENTRY_CONTEXT DirContext,
     PDEVICE_EXTENSION DeviceExt,
     PFILE_BOTH_DIR_INFORMATION pInfo,
-    ULONG BufferLength)
+    ULONG BufferLength,
+    PULONG Written,
+    BOOLEAN First)
 {
-    if ((sizeof(FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
-        return STATUS_BUFFER_OVERFLOW;
+    NTSTATUS Status;
+    ULONG BytesToCopy = 0;
 
-    pInfo->EaSize = 0;
+    *Written = 0;
+    Status = STATUS_BUFFER_OVERFLOW;
 
-    if (vfatVolumeIsFatX(DeviceExt))
+    if (FIELD_OFFSET(FILE_BOTH_DIR_INFORMATION, FileName) > BufferLength)
+        return Status;
+
+    if (First || (BufferLength >= FIELD_OFFSET(FILE_BOTH_DIR_INFORMATION, FileName) + DirContext->LongNameU.Length))
     {
         pInfo->FileNameLength = DirContext->LongNameU.Length;
+        pInfo->EaSize = 0;
 
-        RtlCopyMemory(pInfo->FileName,
-                      DirContext->LongNameU.Buffer,
-                      DirContext->LongNameU.Length);
-
-        pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) +
-                                                DirContext->LongNameU.Length);
-        pInfo->ShortName[0] = 0;
-        pInfo->ShortNameLength = 0;
-        /* pInfo->FileIndex = ; */
-
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.CreationDate,
-                                   DirContext->DirEntry.FatX.CreationTime,
-                                   &pInfo->CreationTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.AccessDate,
-                                   DirContext->DirEntry.FatX.AccessTime,
-                                   &pInfo->LastAccessTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.FatX.UpdateDate,
-                                   DirContext->DirEntry.FatX.UpdateTime,
-                                   &pInfo->LastWriteTime);
-
-        pInfo->ChangeTime = pInfo->LastWriteTime;
-
-        if (BooleanFlagOn(DirContext->DirEntry.FatX.Attrib, FILE_ATTRIBUTE_DIRECTORY))
+        *Written = FIELD_OFFSET(FILE_BOTH_DIR_INFORMATION, FileName);
+        pInfo->NextEntryOffset = 0;
+        if (BufferLength > FIELD_OFFSET(FILE_BOTH_DIR_INFORMATION, FileName))
         {
-            pInfo->EndOfFile.QuadPart = 0;
-            pInfo->AllocationSize.QuadPart = 0;
+            BytesToCopy = min(DirContext->LongNameU.Length, BufferLength - FIELD_OFFSET(FILE_BOTH_DIR_INFORMATION, FileName));
+            RtlCopyMemory(pInfo->FileName,
+                         DirContext->LongNameU.Buffer,
+                         BytesToCopy);
+            *Written += BytesToCopy;
+
+            if (BytesToCopy == DirContext->LongNameU.Length)
+            {
+                pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) +
+                                                        BytesToCopy);
+                Status = STATUS_SUCCESS;
+            }
+        }
+
+        if (vfatVolumeIsFatX(DeviceExt))
+        {
+            pInfo->ShortName[0] = 0;
+            pInfo->ShortNameLength = 0;
+            /* pInfo->FileIndex = ; */
+
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.CreationDate,
+                                       DirContext->DirEntry.FatX.CreationTime,
+                                       &pInfo->CreationTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.AccessDate,
+                                       DirContext->DirEntry.FatX.AccessTime,
+                                       &pInfo->LastAccessTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.FatX.UpdateDate,
+                                       DirContext->DirEntry.FatX.UpdateTime,
+                                       &pInfo->LastWriteTime);
+
+            pInfo->ChangeTime = pInfo->LastWriteTime;
+
+            if (BooleanFlagOn(DirContext->DirEntry.FatX.Attrib, FILE_ATTRIBUTE_DIRECTORY))
+            {
+                pInfo->EndOfFile.QuadPart = 0;
+                pInfo->AllocationSize.QuadPart = 0;
+            }
+            else
+            {
+                pInfo->EndOfFile.u.HighPart = 0;
+                pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.FatX.FileSize;
+                /* Make allocsize a rounded up multiple of BytesPerCluster */
+                pInfo->AllocationSize.u.HighPart = 0;
+                pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.FatX.FileSize,
+                                                           DeviceExt->FatInfo.BytesPerCluster);
+            }
+
+            pInfo->FileAttributes = DirContext->DirEntry.FatX.Attrib & 0x3f;
         }
         else
         {
-            pInfo->EndOfFile.u.HighPart = 0;
-            pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.FatX.FileSize;
-            /* Make allocsize a rounded up multiple of BytesPerCluster */
-            pInfo->AllocationSize.u.HighPart = 0;
-            pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.FatX.FileSize,
-                                                       DeviceExt->FatInfo.BytesPerCluster);
+            pInfo->ShortNameLength = (CCHAR)DirContext->ShortNameU.Length;
+
+            RtlCopyMemory(pInfo->FileName,
+                          DirContext->LongNameU.Buffer,
+                          DirContext->LongNameU.Length);
+
+            /* pInfo->FileIndex = ; */
+
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.CreationDate,
+                                       DirContext->DirEntry.Fat.CreationTime,
+                                       &pInfo->CreationTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.AccessDate,
+                                       0,
+                                       &pInfo->LastAccessTime);
+            FsdDosDateTimeToSystemTime(DeviceExt,
+                                       DirContext->DirEntry.Fat.UpdateDate,
+                                       DirContext->DirEntry.Fat.UpdateTime,
+                                       &pInfo->LastWriteTime);
+
+            pInfo->ChangeTime = pInfo->LastWriteTime;
+
+            if (BooleanFlagOn(DirContext->DirEntry.Fat.Attrib, FILE_ATTRIBUTE_DIRECTORY))
+            {
+                pInfo->EndOfFile.QuadPart = 0;
+                pInfo->AllocationSize.QuadPart = 0;
+            }
+            else
+            {
+                pInfo->EndOfFile.u.HighPart = 0;
+                pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.Fat.FileSize;
+                /* Make allocsize a rounded up multiple of BytesPerCluster */
+                pInfo->AllocationSize.u.HighPart = 0;
+                pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.Fat.FileSize, DeviceExt->FatInfo.BytesPerCluster);
+            }
+
+            pInfo->FileAttributes = DirContext->DirEntry.Fat.Attrib & 0x3f;
         }
-
-        pInfo->FileAttributes = DirContext->DirEntry.FatX.Attrib & 0x3f;
-    }
-    else
-    {
-        pInfo->FileNameLength = DirContext->LongNameU.Length;
-        pInfo->NextEntryOffset = ULONG_ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) +
-                                                DirContext->LongNameU.Length);
-
-        RtlCopyMemory(pInfo->ShortName,
-                      DirContext->ShortNameU.Buffer,
-                      DirContext->ShortNameU.Length);
-
-        pInfo->ShortNameLength = (CCHAR)DirContext->ShortNameU.Length;
-
-        RtlCopyMemory(pInfo->FileName,
-                      DirContext->LongNameU.Buffer,
-                      DirContext->LongNameU.Length);
-
-        /* pInfo->FileIndex = ; */
-
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.CreationDate,
-                                   DirContext->DirEntry.Fat.CreationTime,
-                                   &pInfo->CreationTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.AccessDate,
-                                   0,
-                                   &pInfo->LastAccessTime);
-        FsdDosDateTimeToSystemTime(DeviceExt,
-                                   DirContext->DirEntry.Fat.UpdateDate,
-                                   DirContext->DirEntry.Fat.UpdateTime,
-                                   &pInfo->LastWriteTime);
-
-        pInfo->ChangeTime = pInfo->LastWriteTime;
-
-        if (BooleanFlagOn(DirContext->DirEntry.Fat.Attrib, FILE_ATTRIBUTE_DIRECTORY))
-        {
-            pInfo->EndOfFile.QuadPart = 0;
-            pInfo->AllocationSize.QuadPart = 0;
-        }
-        else
-        {
-            pInfo->EndOfFile.u.HighPart = 0;
-            pInfo->EndOfFile.u.LowPart = DirContext->DirEntry.Fat.FileSize;
-            /* Make allocsize a rounded up multiple of BytesPerCluster */
-            pInfo->AllocationSize.u.HighPart = 0;
-            pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.Fat.FileSize, DeviceExt->FatInfo.BytesPerCluster);
-        }
-
-        pInfo->FileAttributes = DirContext->DirEntry.Fat.Attrib & 0x3f;
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 static
@@ -402,6 +487,7 @@ DoQuery(
     VFAT_DIRENTRY_CONTEXT DirContext;
     WCHAR LongNameBuffer[LONGNAME_MAX_LENGTH + 1];
     WCHAR ShortNameBuffer[13];
+    ULONG Written;
 
     PIO_STACK_LOCATION Stack = IrpContext->Stack;
 
@@ -517,6 +603,7 @@ DoQuery(
     DirContext.ShortNameU.Buffer = ShortNameBuffer;
     DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
 
+    Written = 0;
     while ((Status == STATUS_SUCCESS) && (BufferLength > 0))
     {
         Status = FindFile(IrpContext->DeviceExt,
@@ -536,28 +623,36 @@ DoQuery(
                 case FileNameInformation:
                     Status = VfatGetFileNameInformation(&DirContext,
                                                         (PFILE_NAMES_INFORMATION)Buffer,
-                                                        BufferLength);
+                                                        BufferLength,
+                                                        &Written,
+                                                        Buffer0 == NULL);
                     break;
 
                 case FileDirectoryInformation:
                     Status = VfatGetFileDirectoryInformation(&DirContext,
                                                              IrpContext->DeviceExt,
                                                              (PFILE_DIRECTORY_INFORMATION)Buffer,
-                                                             BufferLength);
+                                                             BufferLength,
+                                                             &Written,
+                                                             Buffer0 == NULL);
                     break;
 
                 case FileFullDirectoryInformation:
                     Status = VfatGetFileFullDirectoryInformation(&DirContext,
                                                                  IrpContext->DeviceExt,
                                                                  (PFILE_FULL_DIR_INFORMATION)Buffer,
-                                                                 BufferLength);
+                                                                 BufferLength,
+                                                                 &Written,
+                                                                 Buffer0 == NULL);
                     break;
 
                 case FileBothDirectoryInformation:
                     Status = VfatGetFileBothInformation(&DirContext,
                                                         IrpContext->DeviceExt,
                                                         (PFILE_BOTH_DIR_INFORMATION)Buffer,
-                                                        BufferLength);
+                                                        BufferLength,
+                                                        &Written,
+                                                        Buffer0 == NULL);
                     break;
 
                 default:
@@ -590,6 +685,12 @@ DoQuery(
         Buffer0->NextEntryOffset = 0;
         Status = STATUS_SUCCESS;
         IrpContext->Irp->IoStatus.Information = Stack->Parameters.QueryDirectory.Length - BufferLength;
+    }
+    else
+    {
+        ASSERT(Status != STATUS_SUCCESS || BufferLength == 0);
+        ASSERT(Written <= Stack->Parameters.QueryDirectory.Length);
+        IrpContext->Irp->IoStatus.Information = Written;
     }
 
     ExReleaseResourceLite(&pFcb->MainResource);
