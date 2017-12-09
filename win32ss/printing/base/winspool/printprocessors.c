@@ -29,6 +29,7 @@ _MarshallUpPrintProcessorInfo(PPRINTPROCESSOR_INFO_1W* ppPrintProcessorInfo1)
 BOOL WINAPI
 AddPrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPathName, PWSTR pPrintProcessorName)
 {
+    TRACE("AddPrintProcessorW(%S, %S, %S, %S)\n", pName, pEnvironment, pPathName, pPrintProcessorName);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -36,6 +37,7 @@ AddPrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPathName, PWSTR pPrin
 BOOL WINAPI
 DeletePrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPrintProcessorName)
 {
+    TRACE("DeletePrintProcessorW(%S, %S, %S)\n", pName, pEnvironment, pPrintProcessorName);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -43,6 +45,7 @@ DeletePrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPrintProcessorName
 BOOL WINAPI
 EnumPrintProcessorDatatypesA(PSTR pName, LPSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
+    TRACE("EnumPrintProcessorDatatypesA(%s, %s, %lu, %p, %lu, %p, %p)\n", pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -51,6 +54,8 @@ BOOL WINAPI
 EnumPrintProcessorDatatypesW(PWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
+
+    TRACE("EnumPrintProcessorDatatypesW(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
 
     // Sanity checks
     if (Level != 1)
@@ -90,6 +95,8 @@ EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintP
 {
     DWORD dwErrorCode;
 
+    TRACE("EnumPrintProcessorsW(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
+
     // Choose our current environment if the caller didn't give any.
     if (!pEnvironment)
         pEnvironment = (PWSTR)wszCurrentEnvironment;
@@ -126,6 +133,8 @@ GetPrintProcessorDirectoryA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pP
     PWSTR pwszName = NULL;
     PWSTR pwszEnvironment = NULL;
     PWSTR pwszPrintProcessorInfo = NULL;
+
+    TRACE("GetPrintProcessorDirectoryA(%s, %s, %lu, %p, %lu, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
 
     if (pName)
     {
@@ -198,6 +207,8 @@ BOOL WINAPI
 GetPrintProcessorDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
+
+    TRACE("GetPrintProcessorDirectoryW(%S, %S, %lu, %p, %lu, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
 
     // Sanity checks
     if (Level != 1)

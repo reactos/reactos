@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Main functions
- * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
@@ -72,6 +72,8 @@ midl_user_free(void __RPC_FAR* ptr)
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+    TRACE("DllMain(%p, %lu, %p)\n", hinstDLL, fdwReason, lpvReserved);
+
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
@@ -88,6 +90,8 @@ SpoolerInit(VOID)
 {
     BOOL bReturnValue = FALSE;
     DWORD dwErrorCode;
+
+    TRACE("SpoolerInit()\n");
 
     // Nothing to initialize here yet, but pass this call to the Spool Service as well.
     RpcTryExcept

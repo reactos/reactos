@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions giving information about DEVMODE structures
- * COPYRIGHT:   Copyright 2016 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2017 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
@@ -136,6 +136,8 @@ IsValidDevmodeA(PDEVMODEA pDevmode, size_t DevmodeSize)
     PMINIMUM_SIZE_TABLE pTable = MinimumSizeA;
     WORD wRequiredSize;
 
+    TRACE("IsValidDevmodeA(%p, %lu)\n", pDevmode, DevmodeSize);
+
     // Check if a Devmode was given at all.
     if (!pDevmode)
         goto Failure;
@@ -185,6 +187,8 @@ IsValidDevmodeW(PDEVMODEW pDevmode, size_t DevmodeSize)
 {
     PMINIMUM_SIZE_TABLE pTable = MinimumSizeW;
     WORD wRequiredSize;
+
+    TRACE("IsValidDevmodeW(%p, %lu)\n", pDevmode, DevmodeSize);
 
     // Check if a Devmode was given at all.
     if (!pDevmode)

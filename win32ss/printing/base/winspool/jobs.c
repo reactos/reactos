@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions for managing print jobs
- * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
@@ -59,6 +59,7 @@ _MarshallUpJobInfo(PBYTE pJobInfo, DWORD Level)
 BOOL WINAPI
 AddJobA(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded)
 {
+    TRACE("AddJobA(%p, %lu, %p, %lu, %p)\n", hPrinter, Level, pData, cbBuf, pcbNeeded);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -68,6 +69,8 @@ AddJobW(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded
 {
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    TRACE("AddJobW(%p, %lu, %p, %lu, %p)\n", hPrinter, Level, pData, cbBuf, pcbNeeded);
 
     if (!pHandle)
     {
@@ -98,6 +101,7 @@ Cleanup:
 BOOL WINAPI
 EnumJobsA(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
+    TRACE("EnumJobsA(%p, %lu, %lu, %lu, %p, %lu, %p, %p)\n", hPrinter, FirstJob, NoJobs, Level, pJob, cbBuf, pcbNeeded, pcReturned);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -109,6 +113,8 @@ EnumJobsW(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob
     DWORD i;
     PBYTE p = pJob;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    TRACE("EnumJobsW(%p, %lu, %lu, %lu, %p, %lu, %p, %p)\n", hPrinter, FirstJob, NoJobs, Level, pJob, cbBuf, pcbNeeded, pcReturned);
 
     if (!pHandle)
     {
@@ -150,6 +156,7 @@ Cleanup:
 BOOL WINAPI
 GetJobA(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWORD pcbNeeded)
 {
+    TRACE("GetJobA(%p, %lu, %lu, %p, %lu, %p)\n", hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -159,6 +166,8 @@ GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWO
 {
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    TRACE("GetJobW(%p, %lu, %lu, %p, %lu, %p)\n", hPrinter, JobId, Level, pJob, cbBuf, pcbNeeded);
 
     if (!pHandle)
     {
@@ -195,6 +204,8 @@ ScheduleJob(HANDLE hPrinter, DWORD dwJobID)
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
+    TRACE("ScheduleJob(%p, %lu)\n", hPrinter, dwJobID);
+
     if (!pHandle)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
@@ -221,6 +232,7 @@ Cleanup:
 BOOL WINAPI
 SetJobA(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
 {
+    TRACE("SetJobA(%p, %lu, %lu, %p, %lu)\n", hPrinter, JobId, Level, pJobInfo, Command);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -231,6 +243,8 @@ SetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
     WINSPOOL_JOB_CONTAINER JobContainer;
+
+    TRACE("SetJobW(%p, %lu, %lu, %p, %lu)\n", hPrinter, JobId, Level, pJobInfo, Command);
 
     if (!pHandle)
     {
