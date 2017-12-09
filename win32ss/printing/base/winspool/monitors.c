@@ -23,6 +23,14 @@ _MarshallUpMonitorInfo(PBYTE pMonitorInfo, DWORD Level)
 }
 
 BOOL WINAPI
+AddMonitorA(PSTR pName, DWORD Level, PBYTE pMonitors)
+{
+    TRACE("AddMonitorA(%s, %lu, %p)\n", pName, Level, pMonitors);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 AddMonitorW(PWSTR pName, DWORD Level, PBYTE pMonitors)
 {
     TRACE("AddMonitorW(%S, %lu, %p)\n", pName, Level, pMonitors);
@@ -31,9 +39,25 @@ AddMonitorW(PWSTR pName, DWORD Level, PBYTE pMonitors)
 }
 
 BOOL WINAPI
+DeleteMonitorA(PSTR pName, PSTR pEnvironment, PSTR pMonitorName)
+{
+    TRACE("DeleteMonitorA(%s, %s, %s)\n", pName, pEnvironment, pMonitorName);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 DeleteMonitorW(PWSTR pName, PWSTR pEnvironment, PWSTR pMonitorName)
 {
     TRACE("DeleteMonitorW(%S, %S, %S)\n", pName, pEnvironment, pMonitorName);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
+EnumMonitorsA(PSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+{
+    TRACE("EnumMonitorsA(%s, %lu, %p, %lu, %p, %p)\n", pName, Level, pMonitors, cbBuf, pcbNeeded, pcReturned);
     UNIMPLEMENTED;
     return FALSE;
 }

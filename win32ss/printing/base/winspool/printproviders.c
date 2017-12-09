@@ -8,9 +8,25 @@
 #include "precomp.h"
 
 BOOL WINAPI
+AddPrintProvidorA(PSTR pName, DWORD Level, PBYTE pProviderInfo)
+{
+    TRACE("AddPrintProvidorA(%s, %lu, %p)\n", pName, Level, pProviderInfo);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 AddPrintProvidorW(PWSTR pName, DWORD Level, PBYTE pProviderInfo)
 {
     TRACE("AddPrintProvidorW(%S, %lu, %p)\n", pName, Level, pProviderInfo);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
+DeletePrintProvidorA(PSTR pName, PSTR pEnvironment, PSTR pPrintProviderName)
+{
+    TRACE("DeletePrintProvidorW(%s, %s, %s)\n", pName, pEnvironment, pPrintProviderName);
     UNIMPLEMENTED;
     return FALSE;
 }

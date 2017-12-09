@@ -212,6 +212,22 @@ _StartDocPrinterWithRPC(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1)
     return dwErrorCode;
 }
 
+BOOL WINAPI
+AbortPrinter(HANDLE hPrinter)
+{
+    TRACE("AbortPrinter(%p)\n", hPrinter);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+HANDLE WINAPI
+AddPrinterA(PSTR pName, DWORD Level, PBYTE pPrinter)
+{
+    TRACE("AddPrinterA(%s, %lu, %p)\n", pName, Level, pPrinter);
+    UNIMPLEMENTED;
+    return NULL;
+}
+
 HANDLE WINAPI
 AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
 {
@@ -259,10 +275,19 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
+BOOL WINAPI
+DeletePrinter(HANDLE hPrinter)
+{
+    TRACE("DeletePrinter(%p)\n", hPrinter);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 DWORD WINAPI
 DeviceCapabilitiesA(LPCSTR pDevice, LPCSTR pPort, WORD fwCapability, LPSTR pOutput, const DEVMODEA* pDevMode)
 {
     TRACE("DeviceCapabilitiesA(%s, %s, %hu, %p, %p)\n", pDevice, pPort, fwCapability, pOutput, pDevMode);
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -270,6 +295,7 @@ DWORD WINAPI
 DeviceCapabilitiesW(LPCWSTR pDevice, LPCWSTR pPort, WORD fwCapability, LPWSTR pOutput, const DEVMODEW* pDevMode)
 {
     TRACE("DeviceCapabilitiesW(%S, %S, %hu, %p, %p)\n", pDevice, pPort, fwCapability, pOutput, pDevMode);
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -277,14 +303,16 @@ LONG WINAPI
 DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDevModeOutput, PDEVMODEA pDevModeInput, DWORD fMode)
 {
     TRACE("DocumentPropertiesA(%p, %p, %s, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
-    return 0;
+    UNIMPLEMENTED;
+    return -1;
 }
 
 LONG WINAPI
 DocumentPropertiesW(HWND hWnd, HANDLE hPrinter, LPWSTR pDeviceName, PDEVMODEW pDevModeOutput, PDEVMODEW pDevModeInput, DWORD fMode)
 {
     TRACE("DocumentPropertiesW(%p, %p, %S, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
-    return 0;
+    UNIMPLEMENTED;
+    return -1;
 }
 
 BOOL WINAPI
@@ -430,6 +458,14 @@ EnumPrintersW(DWORD Flags, PWSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cb
 Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+FlushPrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pcWritten, DWORD cSleep)
+{
+    TRACE("FlushPrinter(%p, %p, %lu, %p, %lu)\n", hPrinter, pBuf, cbBuf, pcWritten, cSleep);
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -791,6 +827,14 @@ Cleanup:
 }
 
 BOOL WINAPI
+ResetPrinterA(HANDLE hPrinter, PPRINTER_DEFAULTSA pDefault)
+{
+    TRACE("ResetPrinterA(%p, %p)\n", hPrinter, pDefault);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 ResetPrinterW(HANDLE hPrinter, PPRINTER_DEFAULTSW pDefault)
 {
     TRACE("ResetPrinterW(%p, %p)\n", hPrinter, pDefault);
@@ -942,6 +986,14 @@ Cleanup:
 
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+SetPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
+{
+    TRACE("SetPrinterA(%p, %lu, %p, %lu)\n", hPrinter, Level, pPrinter, Command);
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 BOOL WINAPI
