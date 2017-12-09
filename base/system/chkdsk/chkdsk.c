@@ -228,6 +228,7 @@ ChkdskCallback(
     DWORD       Modifier,
     PVOID       Argument)
 {
+    BOOLEAN     Ret;
     PDWORD      percent;
     PBOOLEAN    status;
     PTEXTOUTPUT output;
@@ -236,6 +237,7 @@ ChkdskCallback(
     // We get other types of commands,
     // but we don't have to pay attention to them
     //
+    Ret = TRUE;
     switch (Command)
     {
         case UNKNOWN2:
@@ -259,7 +261,8 @@ ChkdskCallback(
             break;
 
         case VOLUMEINUSE:
-            ConPuts(StdOut, L"VOLUMEINUSE\n");
+            ConPuts(StdOut, L"Volume is in use and cannot be locked\n");
+            Ret = FALSE;
             break;
 
         case UNKNOWN9:
@@ -313,7 +316,7 @@ ChkdskCallback(
             }
             break;
     }
-    return TRUE;
+    return Ret;
 }
 
 #ifndef FMIFS_IMPORT_DLL
