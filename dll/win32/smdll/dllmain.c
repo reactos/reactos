@@ -5,7 +5,7 @@
  * PURPOSE:         SM Helper Library
  */
 
-#include <windef.h>
+#include "precomp.h"
 
 BOOL WINAPI DllMainCRTStartup(HANDLE hinstDll, DWORD fdwReason, LPVOID fImpLoad)
 {
