@@ -449,6 +449,9 @@ GetDefaultPrinterA(LPSTR pszBuffer, LPDWORD pcchBuffer)
         goto Cleanup;
     }
 
+    // We successfully got a string in pwszBuffer, so convert the Unicode string to ANSI.
+    WideCharToMultiByte(CP_ACP, 0, pwszBuffer, -1, pszBuffer, *pcchBuffer, NULL, NULL);
+
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
@@ -570,6 +573,14 @@ BOOL WINAPI
 GetPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
 
     // Dismiss invalid levels already at this point.
     if (Level > 9)
@@ -584,7 +595,7 @@ GetPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
     // Do the RPC call
     RpcTryExcept
     {
-        dwErrorCode = _RpcGetPrinter(hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
+        dwErrorCode = _RpcGetPrinter(pHandle->hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
