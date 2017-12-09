@@ -6,6 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 /* DEFINES **********************************************************/
 
 #define HISTORYSIZE 11

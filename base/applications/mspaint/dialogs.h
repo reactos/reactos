@@ -6,6 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 class CMirrorRotateDialog : public CDialogImpl<CMirrorRotateDialog>
 {
 public:

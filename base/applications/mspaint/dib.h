@@ -6,6 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 HBITMAP CreateDIBWithProperties(int width, int height);
 
 int GetDIBWidth(HBITMAP hbm);

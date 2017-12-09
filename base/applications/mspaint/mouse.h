@@ -6,6 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 void placeSelWin(void);
 
 void startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg);

@@ -6,6 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 class CToolSettingsWindow : public CWindowImpl<CToolSettingsWindow>
 {
 public:

@@ -7,6 +7,8 @@
  *              Katayama Hirofumi MZ
  */
 
+#pragma once
+
 class CSelectionWindow : public CWindowImpl<CSelectionWindow>
 {
 public:

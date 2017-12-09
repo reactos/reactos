@@ -7,6 +7,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 class CMiniatureWindow : public CWindowImpl<CMiniatureWindow>
 {
 public:

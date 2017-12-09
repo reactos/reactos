@@ -7,6 +7,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 class CMainWindow : public CWindowImpl<CMainWindow>
 {
 public:
