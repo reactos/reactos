@@ -66,7 +66,7 @@ IntReadConsole(IN HANDLE hConsoleInput,
         UNICODE_STRING ExeName;
         ExeName.Length = ExeName.MaximumLength = ReadConsoleRequest->ExeLength;
         ExeName.Buffer = (PWCHAR)ReadConsoleRequest->StaticBuffer;
-        DPRINT1("IntReadConsole(ExeName = %wZ)\n", &ExeName);
+        DPRINT("IntReadConsole(ExeName = %wZ)\n", &ExeName);
     }
     /******************************/
 
