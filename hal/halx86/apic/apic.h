@@ -1,4 +1,6 @@
 
+#pragma once
+
 #ifdef _M_AMD64
 #define IOAPIC_BASE 0xFFFFFFFFFFFE1000ULL // checkme
 #define ZERO_VECTOR          0x00 // IRQL 00
