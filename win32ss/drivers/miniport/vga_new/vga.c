@@ -91,10 +91,10 @@ VgaIsPresent(
     PHW_DEVICE_EXTENSION HwDeviceExtension
     );
 
-VOID
+VP_STATUS
 NTAPI
 VgaInterpretCmdStream(
-    PVOID HwDeviceExtension,
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
     PUSHORT pusCmdStream
     );
 
