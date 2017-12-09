@@ -10,6 +10,7 @@
 LONG WINAPI
 AdvancedDocumentPropertiesW(HWND hWnd, HANDLE hPrinter, PWSTR pDeviceName, PDEVMODEW pDevModeOutput, PDEVMODEW pDevModeInput)
 {
+    TRACE("AdvancedDocumentPropertiesW(%p, %p, %S, %p, %p)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -17,6 +18,7 @@ AdvancedDocumentPropertiesW(HWND hWnd, HANDLE hPrinter, PWSTR pDeviceName, PDEVM
 DWORD WINAPI
 GetPrinterDataA(HANDLE hPrinter, LPSTR pValueName, LPDWORD pType, LPBYTE pData, DWORD nSize, LPDWORD pcbNeeded)
 {
+    TRACE("GetPrinterDataA(%p, %s, %p, %p, %lu, %p)\n", hPrinter, pValueName, pType, pData, nSize, pcbNeeded);
     return GetPrinterDataExA(hPrinter, "PrinterDriverData", pValueName, pType, pData, nSize, pcbNeeded);
 }
 
@@ -32,6 +34,8 @@ GetPrinterDataExA(HANDLE hPrinter, LPCSTR pKeyName, LPCSTR pValueName, LPDWORD p
     PVOID pUnicodeData = NULL;
     PWSTR pwszKeyName = NULL;
     PWSTR pwszValueName = NULL;
+
+    TRACE("GetPrinterDataExA(%p, %s, %s, %p, %p, %lu, %p)\n", hPrinter, pKeyName, pValueName, pType, pData, nSize, pcbNeeded);
 
     if (pKeyName)
     {
@@ -191,6 +195,8 @@ GetPrinterDataExW(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, LPDWORD
     DWORD dwType = REG_NONE;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
+    TRACE("GetPrinterDataExW(%p, %S, %S, %p, %p, %lu, %p)\n", hPrinter, pKeyName, pValueName, pType, pData, nSize, pcbNeeded);
+
     // Sanity checks
     if (!pHandle)
         return ERROR_INVALID_HANDLE;
@@ -223,12 +229,14 @@ GetPrinterDataExW(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, LPDWORD
 DWORD WINAPI
 GetPrinterDataW(HANDLE hPrinter, LPWSTR pValueName, LPDWORD pType, LPBYTE pData, DWORD nSize, LPDWORD pcbNeeded)
 {
+    TRACE("GetPrinterDataW(%p, %S, %p, %p, %lu, %p)\n", hPrinter, pValueName, pType, pData, nSize, pcbNeeded);
     return GetPrinterDataExW(hPrinter, L"PrinterDriverData", pValueName, pType, pData, nSize, pcbNeeded);
 }
 
 DWORD WINAPI
 SetPrinterDataA(HANDLE hPrinter, PSTR pValueName, DWORD Type, PBYTE pData, DWORD cbData)
 {
+    TRACE("SetPrinterDataA(%p, %s, %lu, %p, %lu)\n", hPrinter, pValueName, Type, pData, cbData);
     return SetPrinterDataExA(hPrinter, "PrinterDriverData", pValueName, Type, pData, cbData);
 }
 
@@ -240,6 +248,8 @@ SetPrinterDataExA(HANDLE hPrinter, LPCSTR pKeyName, LPCSTR pValueName, DWORD Typ
     PWSTR pwszKeyName = NULL;
     PWSTR pwszValueName = NULL;
     PWSTR pUnicodeData = NULL;
+
+    TRACE("SetPrinterDataExA(%p, %s, %s, %lu, %p, %lu)\n", hPrinter, pKeyName, pValueName, Type, pData, cbData);
 
     if (pKeyName)
     {
@@ -313,6 +323,8 @@ SetPrinterDataExW(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, DWORD T
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
+    TRACE("SetPrinterDataExW(%p, %S, %S, %lu, %p, %lu)\n", hPrinter, pKeyName, pValueName, Type, pData, cbData);
+
     // Sanity checks
     if (!pHandle)
         return ERROR_INVALID_HANDLE;
@@ -337,5 +349,6 @@ SetPrinterDataExW(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, DWORD T
 DWORD WINAPI
 SetPrinterDataW(HANDLE hPrinter, PWSTR pValueName, DWORD Type, PBYTE pData, DWORD cbData)
 {
+    TRACE("SetPrinterDataW(%p, %S, %lu, %p, %lu)\n", hPrinter, pValueName, Type, pData, cbData);
     return SetPrinterDataExW(hPrinter, L"PrinterDriverData", pValueName, Type, pData, cbData);
 }

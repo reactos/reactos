@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Ports
- * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
@@ -25,6 +25,7 @@ _MarshallUpPortInfo(PBYTE pPortInfo, DWORD Level)
 BOOL WINAPI
 AddPortW(PWSTR pName, HWND hWnd, PWSTR pMonitorName)
 {
+    TRACE("AddPortW(%S, %p, %S)\n", pName, hWnd, pMonitorName);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -32,6 +33,7 @@ AddPortW(PWSTR pName, HWND hWnd, PWSTR pMonitorName)
 BOOL WINAPI
 ConfigurePortW(PWSTR pName, HWND hWnd, PWSTR pPortName)
 {
+    TRACE("ConfigurePortW(%S, %p, %S)\n", pName, hWnd, pPortName);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -39,6 +41,7 @@ ConfigurePortW(PWSTR pName, HWND hWnd, PWSTR pPortName)
 BOOL WINAPI
 DeletePortW(PWSTR pName, HWND hWnd, PWSTR pPortName)
 {
+    TRACE("DeletePortW(%S, %p, %S)\n", pName, hWnd, pPortName);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -49,6 +52,8 @@ EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded
     DWORD dwErrorCode;
     DWORD i;
     PBYTE p = pPorts;
+
+    TRACE("EnumPortsW(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pPorts, cbBuf, pcbNeeded, pcReturned);
 
     // Do the RPC call
     RpcTryExcept

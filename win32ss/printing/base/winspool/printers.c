@@ -215,6 +215,7 @@ _StartDocPrinterWithRPC(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1)
 HANDLE WINAPI
 AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
 {
+    TRACE("AddPrinterW(%S, %lu, %p)\n", pName, Level, pPrinter);
     UNIMPLEMENTED;
     return NULL;
 }
@@ -224,6 +225,8 @@ ClosePrinter(HANDLE hPrinter)
 {
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    TRACE("ClosePrinter(%p)\n", hPrinter);
 
     // Sanity checks.
     if (!pHandle)
@@ -259,24 +262,28 @@ Cleanup:
 DWORD WINAPI
 DeviceCapabilitiesA(LPCSTR pDevice, LPCSTR pPort, WORD fwCapability, LPSTR pOutput, const DEVMODEA* pDevMode)
 {
+    TRACE("DeviceCapabilitiesA(%s, %s, %hu, %p, %p)\n", pDevice, pPort, fwCapability, pOutput, pDevMode);
     return 0;
 }
 
 DWORD WINAPI
 DeviceCapabilitiesW(LPCWSTR pDevice, LPCWSTR pPort, WORD fwCapability, LPWSTR pOutput, const DEVMODEW* pDevMode)
 {
+    TRACE("DeviceCapabilitiesW(%S, %S, %hu, %p, %p)\n", pDevice, pPort, fwCapability, pOutput, pDevMode);
     return 0;
 }
 
 LONG WINAPI
 DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDevModeOutput, PDEVMODEA pDevModeInput, DWORD fMode)
 {
+    TRACE("DocumentPropertiesA(%p, %p, %s, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
     return 0;
 }
 
 LONG WINAPI
 DocumentPropertiesW(HWND hWnd, HANDLE hPrinter, LPWSTR pDeviceName, PDEVMODEW pDevModeOutput, PDEVMODEW pDevModeInput, DWORD fMode)
 {
+    TRACE("DocumentPropertiesW(%p, %p, %S, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
     return 0;
 }
 
@@ -285,6 +292,8 @@ EndDocPrinter(HANDLE hPrinter)
 {
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    TRACE("EndDocPrinter(%p)\n", hPrinter);
 
     // Sanity checks.
     if (!pHandle)
@@ -339,6 +348,8 @@ EndPagePrinter(HANDLE hPrinter)
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
+    TRACE("EndPagePrinter(%p)\n", hPrinter);
+
     // Sanity checks.
     if (!pHandle)
     {
@@ -374,6 +385,7 @@ Cleanup:
 BOOL WINAPI
 EnumPrintersA(DWORD Flags, PSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
+    TRACE("EnumPrintersA(%lu, %s, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
     return FALSE;
 }
 
@@ -381,6 +393,8 @@ BOOL WINAPI
 EnumPrintersW(DWORD Flags, PWSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
+
+    TRACE("EnumPrintersW(%lu, %S, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
 
     // Dismiss invalid levels already at this point.
     if (Level == 3 || Level > 5)
@@ -423,6 +437,8 @@ GetDefaultPrinterA(LPSTR pszBuffer, LPDWORD pcchBuffer)
 {
     DWORD dwErrorCode;
     PWSTR pwszBuffer = NULL;
+
+    TRACE("GetDefaultPrinterA(%p, %p)\n", pszBuffer, pcchBuffer);
 
     // Sanity check.
     if (!pcchBuffer)
@@ -471,6 +487,8 @@ GetDefaultPrinterW(LPWSTR pszBuffer, LPDWORD pcchBuffer)
     HKEY hWindowsKey = NULL;
     PWSTR pwszDevice = NULL;
     PWSTR pwszComma;
+
+    TRACE("GetDefaultPrinterW(%p, %p)\n", pszBuffer, pcchBuffer);
 
     // Sanity check.
     if (!pcchBuffer)
@@ -554,18 +572,21 @@ Cleanup:
 BOOL WINAPI
 GetPrinterA(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
 {
+    TRACE("GetPrinterA(%p, %lu, %p, %lu, %p)\n", hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
     return FALSE;
 }
 
 BOOL WINAPI
 GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
 {
+    TRACE("GetPrinterDriverA(%p, %s, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
     return FALSE;
 }
 
 BOOL WINAPI
 GetPrinterDriverW(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
 {
+    TRACE("GetPrinterDriverW(%p, %S, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
     return FALSE;
 }
 
@@ -573,6 +594,8 @@ BOOL WINAPI
 GetPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
+
+    TRACE("GetPrinterW(%p, %lu, %p, %lu, %p)\n", hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
 
     // Dismiss invalid levels already at this point.
     if (Level > 9)
@@ -614,6 +637,8 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
     DWORD cch;
     PWSTR pwszPrinterName = NULL;
     PRINTER_DEFAULTSW wDefault = { 0 };
+
+    TRACE("OpenPrinterA(%s, %p, %p)\n", pPrinterName, phPrinter, pDefault);
 
     if (pPrinterName)
     {
@@ -680,6 +705,8 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
     WINSPOOL_DEVMODE_CONTAINER DevModeContainer = { 0 };
     ACCESS_MASK AccessRequired = 0;
 
+    TRACE("OpenPrinterW(%S, %p, %p)\n", pPrinterName, phPrinter, pDefault);
+
     // Sanity check
     if (!phPrinter)
     {
@@ -737,6 +764,8 @@ ReadPrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pNoBytesRead)
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
+    TRACE("ReadPrinter(%p, %p, %lu, %p)\n", hPrinter, pBuf, cbBuf, pNoBytesRead);
+
     // Sanity checks.
     if (!pHandle)
     {
@@ -764,6 +793,7 @@ Cleanup:
 BOOL WINAPI
 ResetPrinterW(HANDLE hPrinter, PPRINTER_DEFAULTSW pDefault)
 {
+    TRACE("ResetPrinterW(%p, %p)\n", hPrinter, pDefault);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -774,6 +804,8 @@ SetDefaultPrinterA(LPCSTR pszPrinter)
     BOOL bReturnValue = FALSE;
     DWORD cch;
     PWSTR pwszPrinter = NULL;
+
+    TRACE("SetDefaultPrinterA(%s)\n", pszPrinter);
 
     if (pszPrinter)
     {
@@ -813,6 +845,8 @@ SetDefaultPrinterW(LPCWSTR pszPrinter)
     HKEY hWindowsKey = NULL;
     PWSTR pwszDeviceValueData = NULL;
     WCHAR wszPrinter[MAX_PRINTER_NAME + 1];
+
+    TRACE("SetDefaultPrinterW(%S)\n", pszPrinter);
 
     // Open the Devices registry key.
     dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_CURRENT_USER, wszDevicesKey, 0, KEY_READ, &hDevicesKey);
@@ -913,6 +947,7 @@ Cleanup:
 BOOL WINAPI
 SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
 {
+    TRACE("SetPrinterW(%p, %lu, %p, %lu)\n", hPrinter, Level, pPrinter, Command);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -925,6 +960,8 @@ StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
     DWORD dwErrorCode;
     DWORD dwReturnValue = 0;
     PDOC_INFO_1A pDocInfo1 = (PDOC_INFO_1A)pDocInfo;
+
+    TRACE("StartDocPrinterA(%p, %lu, %p)\n", hPrinter, Level, pDocInfo);
 
     // Only check the minimum required for accessing pDocInfo.
     // Additional sanity checks are done in StartDocPrinterW.
@@ -1016,6 +1053,8 @@ StartDocPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
     PDOC_INFO_1W pDocInfo1 = (PDOC_INFO_1W)pDocInfo;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
+    TRACE("StartDocPrinterW(%p, %lu, %p)\n", hPrinter, Level, pDocInfo);
+
     // Sanity checks.
     if (!pHandle)
     {
@@ -1100,6 +1139,8 @@ StartPagePrinter(HANDLE hPrinter)
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
+    TRACE("StartPagePrinter(%p)\n", hPrinter);
+
     // Sanity checks.
     if (!pHandle)
     {
@@ -1129,6 +1170,8 @@ WritePrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pcWritten)
 {
     DWORD dwErrorCode;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    TRACE("WritePrinter(%p, %p, %lu, %p)\n", hPrinter, pBuf, cbBuf, pcWritten);
 
     // Sanity checks.
     if (!pHandle)
@@ -1181,5 +1224,6 @@ Cleanup:
 BOOL WINAPI
 XcvDataW(HANDLE hXcv, PCWSTR pszDataName, PBYTE pInputData, DWORD cbInputData, PBYTE pOutputData, DWORD cbOutputData, PDWORD pcbOutputNeeded, PDWORD pdwStatus)
 {
+    TRACE("XcvDataW(%p, %S, %p, %lu, %p, %lu, %p, %p)\n", hXcv, pszDataName, pInputData, cbInputData, pOutputData, cbOutputData, pcbOutputNeeded, pdwStatus);
     return FALSE;
 }
