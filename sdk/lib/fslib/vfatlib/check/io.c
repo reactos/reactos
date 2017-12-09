@@ -159,7 +159,7 @@ static off_t WIN32lseek(HANDLE fd, off_t offset, int whence)
 /******************************************************************************/
 
 
-void fs_open(PUNICODE_STRING DriveRoot, int read_write)
+NTSTATUS fs_open(PUNICODE_STRING DriveRoot, int read_write)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -180,11 +180,14 @@ void fs_open(PUNICODE_STRING DriveRoot, int read_write)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenFile() failed with status 0x%.08x\n", Status);
-        return;
+        return Status;
     }
 
     // If read_write is specified, then the volume should be exclusively locked
-    if (read_write) fs_lock(TRUE);
+    if (read_write)
+    {
+        Status = fs_lock(TRUE);
+    }
 
     // Query geometry and partition info, to have bytes per sector, etc
 
@@ -192,6 +195,8 @@ void fs_open(PUNICODE_STRING DriveRoot, int read_write)
 
     changes = last = NULL;
     did_change = 0;
+
+    return Status;
 }
 
 BOOLEAN fs_isdirty(void)
@@ -231,6 +236,13 @@ NTSTATUS fs_lock(BOOLEAN LockVolume)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtFsControlFile() failed with Status 0x%08x\n", Status);
+#if 1
+        /* FIXME: ReactOS HACK for 1stage due to IopParseDevice() hack */
+        if (Status == STATUS_INVALID_DEVICE_REQUEST)
+        {
+            Status = STATUS_ACCESS_DENIED;
+        }
+#endif
     }
 
     return Status;

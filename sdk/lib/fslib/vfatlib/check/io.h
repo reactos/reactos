@@ -34,7 +34,7 @@
 //#include <sys/types.h> /* for loff_t */
 // #include <fcntl.h>		/* for off_t */
 
-void fs_open(PUNICODE_STRING DriveRoot, int read_write);
+NTSTATUS fs_open(PUNICODE_STRING DriveRoot, int read_write);
 
 /* Opens the file system PATH. If RW is zero, the file system is opened
    read-only, otherwise, it is opened read-write. */
