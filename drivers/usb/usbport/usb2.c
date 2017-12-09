@@ -492,6 +492,19 @@ USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
 
 BOOLEAN
 NTAPI
+USB2_MoveTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                    IN USHORT BusTime,
+                    IN PUSB2_REBALANCE Rebalance,
+                    IN ULONG RebalanceListEntries,
+                    OUT BOOLEAN * OutResult)
+{
+    DPRINT("USB2_MoveTtEndpoint: UNIMPLEMENTED FIXME\n");
+    ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
 USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
                               IN PUSB2_REBALANCE Rebalance,
                               IN PULONG RebalanceListEntries,
