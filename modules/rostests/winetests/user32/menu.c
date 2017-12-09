@@ -19,21 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#define _WIN32_WINNT 0x0501
-
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
-#define OEMRESOURCE         /* For OBM_MNARROW */
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 static ATOM atomMenuCheckClass;
 

@@ -18,21 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* To get CS_DROPSHADOW with the MSVC headers */
-//#define _WIN32_WINNT 0x0501
+#include "precomp.h"
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commctrl.h"
+#include <commctrl.h>
 
 #define NUMCLASSWORDS 4
 

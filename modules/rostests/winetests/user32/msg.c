@@ -20,21 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#define _WIN32_WINNT 0x0600 /* For WM_CHANGEUISTATE,QS_RAWINPUT,WM_DWMxxxx */
-//#define WINVER 0x0600 /* for WM_GETTITLEBARINFOEX */
+#include "precomp.h"
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "dbt.h"
-
-#include "wine/test.h"
+#include <dbt.h>
 
 #define MDI_FIRST_CHILD_ID 2004
 

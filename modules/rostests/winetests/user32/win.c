@@ -20,20 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* To get ICON_SMALL2 with the MSVC headers */
-//#define _WIN32_WINNT 0x0501
-
-#include <assert.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 #ifndef SPI_GETDESKWALLPAPER
 #define SPI_GETDESKWALLPAPER 0x0073
