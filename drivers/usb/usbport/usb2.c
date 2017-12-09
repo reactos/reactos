@@ -315,16 +315,18 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
     ULONG TransferType;
     ULONG Direction;
     ULONG DataTime;
+    ULONG DataSize;
     ULONG RemainDataTime;
     ULONG OverheadCS;
     ULONG OverheadSS;
     ULONG ix;
     USHORT PktSize;
+    USHORT PktSizeBitStuff;
     UCHAR frame;
     UCHAR uframe;
     BOOL Result = TRUE;
 
-    DPRINT("USB2_AllocateHS: TtEndpoint - %p, Frame - %X, TtEndpoint->StartFrame - %X\n",
+    DPRINT("USB2_AllocateHS: TtEndpoint - %p, Frame - %X, StartFrame - %X\n",
            TtEndpoint,
            Frame,
            TtEndpoint->StartFrame);
@@ -352,14 +354,10 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
         {
             TtEndpoint->Nums.NumStarts = 1;
 
-            if ((CHAR)TtEndpoint->StartMicroframe < 5)
-            {
+            if ((CHAR)TtEndpoint->StartMicroframe < (USB2_MICROFRAMES - 3))
                 TtEndpoint->Nums.NumCompletes = 3;
-            }
             else
-            {
                 TtEndpoint->Nums.NumCompletes = 2;
-            }
         }
     }
     else
@@ -391,7 +389,8 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
             Result = FALSE;
         }
 
-        if (Tt->NumStartSplits[frame][uframe] > (USB2_MAX_FS_LS_TRANSACTIONS_IN_UFRAME - 1))
+        if (Tt->NumStartSplits[frame][uframe] > 
+            (USB2_MAX_FS_LS_TRANSACTIONS_IN_UFRAME - 1))
         {
             DPRINT1("USB2_AllocateHS: Num Start Splits - %X\n",
                     Tt->NumStartSplits[frame][uframe] + 1);
@@ -419,10 +418,44 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
         USB2_IncMicroFrame(&frame, &uframe);
     }
 
+    PktSize = TtEndpoint->MaxPacketSize;
+    PktSizeBitStuff = USB2_AddDataBitStuff(PktSize);
+
     if (Direction == USBPORT_TRANSFER_DIRECTION_OUT)
     {
-        DPRINT("USB2_AllocateHS: DIRECTION OUT UNIMPLEMENTED\n");
-        ASSERT(FALSE);
+        frame = TtEndpoint->StartFrame + Frame;
+        uframe = TtEndpoint->StartMicroframe;
+
+        if (uframe == 0xFF)
+            USB2_GetPrevMicroFrame(&frame, &uframe);
+
+        DataTime = 0;
+
+        for (ix = 0; ix < TtEndpoint->Nums.NumStarts; ix++)
+        {
+            DataSize = PktSizeBitStuff - DataTime;
+
+            if (DataSize <= USB2_FS_RAW_BYTES_IN_MICROFRAME)
+                DataTime = DataSize;
+            else
+                DataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME;
+
+            DPRINT("USB2_AllocateHS: ix - %X, frame - %X, uframe - %X, TimeUsed - %X\n",
+                   ix,
+                   frame,
+                   uframe,
+                   HcExtension->TimeUsed[frame][uframe]);
+
+            if (!USB2_AllocateCheck(&HcExtension->TimeUsed[frame][uframe],
+                                    DataTime,
+                                    USB2_MAX_MICROFRAME_ALLOCATION))
+            {
+                Result = FALSE;
+            }
+
+            USB2_IncMicroFrame(&frame, &uframe);
+            DataTime += USB2_FS_RAW_BYTES_IN_MICROFRAME;
+        }
     }
     else
     {
@@ -433,25 +466,20 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
         {
             if (Tt->TimeCS[frame][uframe] < USB2_FS_RAW_BYTES_IN_MICROFRAME)
             {
-                if (Tt->TimeCS[frame][uframe] < USB2_FS_RAW_BYTES_IN_MICROFRAME)
-                {
-                    RemainDataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME -
-                                     Tt->TimeCS[frame][uframe];
-                }
-                else
-                {
-                    RemainDataTime = 0;
-                }
+                RemainDataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME -
+                                 Tt->TimeCS[frame][uframe];
 
-                PktSize = TtEndpoint->MaxPacketSize;
-
-                if (RemainDataTime >= USB2_AddDataBitStuff(PktSize))
+                if (RemainDataTime >= PktSizeBitStuff)
                 {
-                    DataTime = USB2_AddDataBitStuff(PktSize);
+                    DataTime = PktSizeBitStuff;
                 }
-                else
+                else if (RemainDataTime > 0)
                 {
                     DataTime = RemainDataTime;
+                }
+                else
+                {
+                    DataTime = 0;
                 }
 
                 if (!USB2_AllocateCheck(&HcExtension->TimeUsed[frame][uframe],
@@ -462,16 +490,10 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
                 }
             }
 
-            PktSize = TtEndpoint->MaxPacketSize;
-
-            if (USB2_AddDataBitStuff(PktSize) < USB2_FS_RAW_BYTES_IN_MICROFRAME)
-            {
-                Tt->TimeCS[frame][uframe] += USB2_AddDataBitStuff(PktSize);
-            }
+            if (PktSizeBitStuff < USB2_FS_RAW_BYTES_IN_MICROFRAME)
+                Tt->TimeCS[frame][uframe] += PktSizeBitStuff;
             else
-            {
                 Tt->TimeCS[frame][uframe] += USB2_FS_RAW_BYTES_IN_MICROFRAME;
-            }
 
             USB2_IncMicroFrame(&frame, &uframe);
         }
