@@ -503,6 +503,67 @@ USB2_MoveTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     return FALSE;
 }
 
+VOID
+NTAPI
+USB2_ConvertFrame(IN UCHAR Frame,
+                  IN UCHAR Microframe,
+                  OUT PUCHAR HcFrame,
+                  OUT PUCHAR HcMicroframe)
+{
+    DPRINT("USB2_ConvertFrame: Frame - %x, Microframe - %x\n",
+           Frame,
+           Microframe);
+
+    if (Microframe == 0xFF)
+    {
+        *HcFrame = Frame;
+        *HcMicroframe = 0;
+    }
+
+    if (Microframe >= 0 &&
+        Microframe <= (USB2_MICROFRAMES - 2))
+    {
+        *HcFrame = Frame;
+        *HcMicroframe = Microframe + 1;
+    }
+
+    if (Microframe == (USB2_MICROFRAMES - 1))
+    {
+        *HcFrame = Frame + 1;
+        *HcMicroframe = 0;
+    }
+}
+
+UCHAR
+NTAPI
+USB2_GetSMASK(IN PUSB2_TT_ENDPOINT TtEndpoint)
+{
+    ULONG ix;
+    UCHAR SMask = 0;
+    UCHAR HcFrame;
+    UCHAR HcMicroFrame;
+
+    if (TtEndpoint->TtEndpointParams.DeviceSpeed == UsbHighSpeed)
+    {
+        SMask = (1 << TtEndpoint->StartMicroframe);
+    }
+    else
+    {
+        USB2_ConvertFrame(TtEndpoint->StartFrame,
+                          TtEndpoint->StartMicroframe,
+                          &HcFrame,
+                          &HcMicroFrame);
+
+        for (ix = 0; ix < TtEndpoint->Nums.NumStarts; ix++)
+        {
+            SMask |= (1 << HcMicroFrame);
+            HcMicroFrame++;
+        }
+    }
+
+    return SMask;
+}
+
 BOOLEAN
 NTAPI
 USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
