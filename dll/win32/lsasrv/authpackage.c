@@ -106,12 +106,6 @@ LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr);
 typedef wchar_t *PSAMPR_SERVER_NAME;
 typedef void *SAMPR_HANDLE;
 
-typedef struct _SAMPR_ULONG_ARRAY
-{
-    unsigned long Count;
-    unsigned long *Element;
-} SAMPR_ULONG_ARRAY, *PSAMPR_ULONG_ARRAY;
-
 typedef struct _SAMPR_SID_INFORMATION
 {
     PRPC_SID SidPointer;
