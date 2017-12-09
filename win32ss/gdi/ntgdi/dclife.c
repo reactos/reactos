@@ -368,6 +368,8 @@ DC_vCleanup(PVOID ObjectBody)
     /* Release font */
     if (pdc->dclevel.plfnt)
         LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
+    if (pdc->prfnt)
+        RFONT_vDeleteRFONT(pdc->prfnt);
 
     /*  Free regions */
     if (pdc->dclevel.prgnClip)
