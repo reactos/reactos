@@ -1188,6 +1188,8 @@ VfatGetAllInformation(
     if (*BufferLength < FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName))
         return STATUS_BUFFER_OVERFLOW;
 
+    *BufferLength -= (sizeof(FILE_ACCESS_INFORMATION) + sizeof(FILE_MODE_INFORMATION) + sizeof(FILE_ALIGNMENT_INFORMATION));
+
     /* Basic Information */
     Status = VfatGetBasicInformation(FileObject, Fcb, DeviceExt, &Info->BasicInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
@@ -1200,15 +1202,9 @@ VfatGetAllInformation(
     /* EA Information */
     Status = VfatGetEaInformation(FileObject, Fcb, DeviceExt, &Info->EaInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
-    /* Access Information: The IO-Manager adds this information */
-    *BufferLength -= sizeof(FILE_ACCESS_INFORMATION);
     /* Position Information */
     Status = VfatGetPositionInformation(FileObject, Fcb, DeviceExt, &Info->PositionInformation, BufferLength);
     if (!NT_SUCCESS(Status)) return Status;
-    /* Mode Information: The IO-Manager adds this information */
-    *BufferLength -= sizeof(FILE_MODE_INFORMATION);
-    /* Alignment Information: The IO-Manager adds this information */
-    *BufferLength -= sizeof(FILE_ALIGNMENT_INFORMATION);
     /* Name Information */
     Status = VfatGetNameInformation(FileObject, Fcb, DeviceExt, &Info->NameInformation, BufferLength);
 
