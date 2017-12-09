@@ -14,9 +14,6 @@
 
 #include <winreg.h>
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(msafd);
-
 CRITICAL_SECTION HelperDLLDatabaseLock;
 LIST_ENTRY HelperDLLDatabaseListHead;
 
