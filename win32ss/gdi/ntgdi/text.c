@@ -3,7 +3,11 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/gdi/ntgdi/text.c
  * PURPOSE:         Text/Font
- * PROGRAMMER:
+ * PROGRAMMERS:     Amine Khaldi <amine.khaldi@reactos.org>
+ *                  Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  James Tabor <james.tabor@reactos.org>
+ *                  Hermes Belusca-Maito <hermes.belusca@sfr.fr>
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /** Includes ******************************************************************/
@@ -512,12 +516,14 @@ NtGdiGetTextFaceW(
 
     TextObj = RealizeFontInit(hFont);
     ASSERT(TextObj != NULL);
-    fLen = wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName) + 1;
+    fLen = wcslen(TextObj->FaceName) + 1;
+    if (fLen > LF_FACESIZE)
+        fLen = LF_FACESIZE;
 
     if (FaceName != NULL)
     {
         Count = min(Count, fLen);
-        Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
+        Status = MmCopyToCaller(FaceName, TextObj->FaceName, Count * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             TEXTOBJ_UnlockText(TextObj);
@@ -525,11 +531,19 @@ NtGdiGetTextFaceW(
             return 0;
         }
         /* Terminate if we copied only part of the font name */
-        if (Count > 0 && Count < fLen)
-        {
-            FaceName[Count - 1] = '\0';
-        }
         ret = Count;
+        if (Count > 0 && Count <= fLen)
+        {
+            _SEH2_TRY
+            {
+                FaceName[Count - 1] = '\0';
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                ret = 0;
+            }
+            _SEH2_END;
+        }
     }
     else
     {
