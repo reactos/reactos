@@ -10,13 +10,13 @@ list(APPEND SOURCE
     moniker.c
     protocol.c
     storage.c
-    precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/itss_stubs.c)
+    precomp.h)
 
 add_library(itss SHARED
     ${SOURCE}
     guid.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/itss_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/itss.def)
 
 set_module_type(itss win32dll)
