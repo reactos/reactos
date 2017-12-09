@@ -88,47 +88,6 @@ FsdSystemTimeToDosDateTime(
 
 static
 NTSTATUS
-VfatGetFileNameInformation(
-    PVFAT_DIRENTRY_CONTEXT DirContext,
-    PFILE_NAME_INFORMATION pInfo,
-    ULONG BufferLength,
-    PULONG Written,
-    BOOLEAN First)
-{
-    NTSTATUS Status;
-    ULONG BytesToCopy = 0;
-
-    *Written = 0;
-    Status = STATUS_BUFFER_OVERFLOW;
-
-    if (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName) > BufferLength)
-        return Status;
-
-    if (First || (BufferLength >= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName) + DirContext->LongNameU.Length))
-    {
-        pInfo->FileNameLength = DirContext->LongNameU.Length;
-
-        *Written = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
-        if (BufferLength > FIELD_OFFSET(FILE_NAME_INFORMATION, FileName))
-        {
-            BytesToCopy = min(DirContext->LongNameU.Length, BufferLength - FIELD_OFFSET(FILE_NAME_INFORMATION, FileName));
-            RtlCopyMemory(pInfo->FileName,
-                         DirContext->LongNameU.Buffer,
-                         BytesToCopy);
-            *Written += BytesToCopy;
-
-            if (BytesToCopy == DirContext->LongNameU.Length)
-            {
-                Status = STATUS_SUCCESS;
-            }
-        }
-    }
-
-    return Status;
-}
-
-static
-NTSTATUS
 VfatGetFileNamesInformation(
     PVFAT_DIRENTRY_CONTEXT DirContext,
     PFILE_NAMES_INFORMATION pInfo,
@@ -661,14 +620,6 @@ DoQuery(
         {
             switch (FileInformationClass)
             {
-                case FileNameInformation:
-                    Status = VfatGetFileNameInformation(&DirContext,
-                                                        (PFILE_NAME_INFORMATION)Buffer,
-                                                        BufferLength,
-                                                        &Written,
-                                                        Buffer0 == NULL);
-                    break;
-
                 case FileDirectoryInformation:
                     Status = VfatGetFileDirectoryInformation(&DirContext,
                                                              IrpContext->DeviceExt,
