@@ -200,9 +200,9 @@ USB2_GetHsOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint,
             *OverheadCS = HostDelay + USB2_HS_CS_INTERRUPT_IN_OVERHEAD;
         }
 
-        DPRINT("USB2_GetHsOverhead: *OverheadSS - %X, *OverheadCS - %X\n",
-               *OverheadSS,
-               *OverheadCS);
+        //DPRINT("USB2_GetHsOverhead: *OverheadSS - %X, *OverheadCS - %X\n",
+        //       *OverheadSS,
+        //       *OverheadCS);
     }
 }
 
@@ -214,9 +214,9 @@ USB2_GetLastIsoTime(IN PUSB2_TT_ENDPOINT TtEndpoint,
     PUSB2_TT_ENDPOINT nextTtEndpoint;
     ULONG Result;
 
-    DPRINT("USB2_GetLastIsoTime: TtEndpoint - %p, Frame - %X\n",
-           TtEndpoint,
-           Frame);
+    //DPRINT("USB2_GetLastIsoTime: TtEndpoint - %p, Frame - %X\n",
+    //       TtEndpoint,
+    //       Frame);
 
     nextTtEndpoint = TtEndpoint->Tt->FrameBudget[Frame].IsoEndpoint->NextTtEndpoint;
 
