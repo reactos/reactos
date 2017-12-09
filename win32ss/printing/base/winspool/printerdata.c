@@ -8,11 +8,115 @@
 #include "precomp.h"
 
 LONG WINAPI
+AdvancedDocumentPropertiesA(HWND hWnd, HANDLE hPrinter, PSTR pDeviceName, PDEVMODEA pDevModeOutput, PDEVMODEA pDevModeInput)
+{
+    TRACE("AdvancedDocumentPropertiesA(%p, %p, %s, %p, %p)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput);
+    UNIMPLEMENTED;
+    return 0;
+}
+
+LONG WINAPI
 AdvancedDocumentPropertiesW(HWND hWnd, HANDLE hPrinter, PWSTR pDeviceName, PDEVMODEW pDevModeOutput, PDEVMODEW pDevModeInput)
 {
     TRACE("AdvancedDocumentPropertiesW(%p, %p, %S, %p, %p)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput);
     UNIMPLEMENTED;
-    return FALSE;
+    return 0;
+}
+
+DWORD WINAPI
+DeletePrinterDataA(HANDLE hPrinter, PSTR pValueName)
+{
+    TRACE("DeletePrinterDataA(%p, %s)\n", hPrinter, pValueName);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+DeletePrinterDataExA(HANDLE hPrinter, PCSTR pKeyName, PCSTR pValueName)
+{
+    TRACE("DeletePrinterDataExA(%p, %s, %s)\n", hPrinter, pKeyName, pValueName);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+DeletePrinterDataExW(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName)
+{
+    TRACE("DeletePrinterDataExW(%p, %S, %S)\n", hPrinter, pKeyName, pValueName);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+DeletePrinterDataW(HANDLE hPrinter, PWSTR pValueName)
+{
+    TRACE("DeletePrinterDataW(%p, %S)\n", hPrinter, pValueName);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+DeletePrinterKeyA(HANDLE hPrinter, PCSTR pKeyName)
+{
+    TRACE("DeletePrinterKeyA(%p, %s)\n", hPrinter, pKeyName);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+DeletePrinterKeyW(HANDLE hPrinter, PCWSTR pKeyName)
+{
+    TRACE("DeletePrinterKeyW(%p, %S)\n", hPrinter, pKeyName);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+EnumPrinterDataA(HANDLE hPrinter, DWORD dwIndex, PSTR pValueName, DWORD cbValueName, PDWORD pcbValueName, PDWORD pType, PBYTE pData, DWORD cbData, PDWORD pcbData)
+{
+    TRACE("EnumPrinterDataA(%p, %lu, %s, %lu, %p, %p, %p, %lu, %p)\n", hPrinter, dwIndex, pValueName, cbValueName, pcbValueName, pType, pData, cbData, pcbData);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+EnumPrinterDataExA(HANDLE hPrinter, PCSTR pKeyName, PBYTE pEnumValues, DWORD cbEnumValues, PDWORD pcbEnumValues, PDWORD pnEnumValues)
+{
+    TRACE("EnumPrinterDataExA(%p, %s, %p, %lu, %p, %p)\n", hPrinter, pKeyName, pEnumValues, cbEnumValues, pcbEnumValues, pnEnumValues);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+EnumPrinterDataExW(HANDLE hPrinter, PCWSTR pKeyName, PBYTE pEnumValues, DWORD cbEnumValues, PDWORD pcbEnumValues, PDWORD pnEnumValues)
+{
+    TRACE("EnumPrinterDataExW(%p, %S, %p, %lu, %p, %p)\n", hPrinter, pKeyName, pEnumValues, cbEnumValues, pcbEnumValues, pnEnumValues);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+EnumPrinterDataW(HANDLE hPrinter, DWORD dwIndex, PWSTR pValueName, DWORD cbValueName, PDWORD pcbValueName, PDWORD pType, PBYTE pData, DWORD cbData, PDWORD pcbData)
+{
+    TRACE("EnumPrinterDataW(%p, %lu, %S, %lu, %p, %p, %p, %lu, %p)\n", hPrinter, dwIndex, pValueName, cbValueName, pcbValueName, pType, pData, cbData, pcbData);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+EnumPrinterKeyA(HANDLE hPrinter, PCSTR pKeyName, PSTR pSubkey, DWORD cbSubkey, PDWORD pcbSubkey)
+{
+    TRACE("EnumPrinterKeyA(%p, %s, %s, %lu, %p)\n", hPrinter, pKeyName, pSubkey, cbSubkey, pcbSubkey);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+EnumPrinterKeyW(HANDLE hPrinter, PCWSTR pKeyName, PWSTR pSubkey, DWORD cbSubkey, PDWORD pcbSubkey)
+{
+    TRACE("EnumPrinterKeyW(%p, %S, %S, %lu, %p)\n", hPrinter, pKeyName, pSubkey, cbSubkey, pcbSubkey);
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
 }
 
 DWORD WINAPI
