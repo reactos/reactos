@@ -14,9 +14,8 @@ list(APPEND SOURCE
     atl30.c
     atl_ax.c
     registrar.c
-    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/atl_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/atl.def)
+    precomp.h)
 
 list(APPEND atl_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/atl.rgs
@@ -25,7 +24,12 @@ list(APPEND atl_rc_deps
     ${CMAKE_CURRENT_BINARY_DIR}/atl_lib.tlb)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${atl_rc_deps}")
-add_library(atl SHARED ${SOURCE} rsrc.rc)
+
+add_library(atl SHARED
+    ${SOURCE}
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/atl.def)
+
 add_typelib(atl_lib.idl)
 add_dependencies(atl stdole2)
 set_module_type(atl win32dll)

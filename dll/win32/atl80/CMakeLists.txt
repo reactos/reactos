@@ -13,11 +13,13 @@ list(APPEND SOURCE
     atl80.c
     ${REACTOS_SOURCE_DIR}/dll/win32/atl/atl_ax.c
     ${REACTOS_SOURCE_DIR}/dll/win32/atl/registrar.c
-    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/atl80_stubs.c
+    precomp.h)
+
+add_library(atl80 SHARED
+    ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/atl80.def)
 
-add_library(atl80 SHARED ${SOURCE})
 set_module_type(atl80 win32dll)
 target_link_libraries(atl80 uuid wine)
 add_importlibs(atl80 oleaut32 user32 ole32 gdi32 advapi32 advapi32_vista shlwapi msvcrt kernel32 ntdll)
