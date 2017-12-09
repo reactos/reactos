@@ -251,13 +251,11 @@ USB2_GetStartTime(IN PUSB2_TT_ENDPOINT nextTtEndpoint,
 
     TransferType = TtEndpoint->TtEndpointParams.TransferType;
 
-    if (nextTtEndpoint && TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
-    {
-        return nextTtEndpoint->StartTime + nextTtEndpoint->CalcBusTime;
-    }
-
     if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
     {
+        if (nextTtEndpoint)
+            return nextTtEndpoint->StartTime + nextTtEndpoint->CalcBusTime;
+
         ttEndpoint = TtEndpoint->Tt->FrameBudget[Frame].AltEndpoint;
 
         if (ttEndpoint)
