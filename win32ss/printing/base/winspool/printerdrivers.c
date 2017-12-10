@@ -88,6 +88,14 @@ EnumPrinterDriversW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pDriverI
 }
 
 BOOL WINAPI
+GetPrinterDriverDirectoryA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pDriverDirectory, DWORD cbBuf, PDWORD pcbNeeded)
+{
+    TRACE("GetPrinterDriverDirectoryA(%s, %s, %lu, %p, %lu, %p)\n", pName, pEnvironment, Level, pDriverDirectory, cbBuf, pcbNeeded);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 GetPrinterDriverDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pDriverDirectory, DWORD cbBuf, PDWORD pcbNeeded)
 {
     TRACE("GetPrinterDriverDirectoryW(%S, %S, %lu, %p, %lu, %p)\n", pName, pEnvironment, Level, pDriverDirectory, cbBuf, pcbNeeded);

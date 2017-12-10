@@ -11,19 +11,19 @@
 SKIPLIST PrinterList;
 
 // Forward Declarations
-static void _LocalGetPrinterLevel0(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_STRESS* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel1(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_1W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel2(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_2W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel3(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_3* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel4(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_4W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel6(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_6* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel7(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_7W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel8(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_8W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
-static void _LocalGetPrinterLevel9(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_9W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel0(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_STRESS* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel1(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_1W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel2(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_2W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel3(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_3* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel4(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_4W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel6(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_6* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel7(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_7W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel8(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_8W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
+static void _LocalGetPrinterLevel9(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_9W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName);
 
 // Local Constants
-typedef void (*PLocalGetPrinterLevelFunc)(PLOCAL_PRINTER, PVOID, PBYTE*, PDWORD, DWORD, PWSTR);
+typedef void (*PLocalGetPrinterLevelFunc)(PLOCAL_PRINTER, PVOID, PBYTE*, PDWORD, DWORD, PCWSTR);
 
 static const PLocalGetPrinterLevelFunc pfnGetPrinterLevels[] = {
     (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel0,
@@ -488,7 +488,7 @@ _DumpLevel1PrintProviderInformation(PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbN
 }
 
 static void
-_LocalGetPrinterLevel0(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_STRESS* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel0(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_STRESS* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     size_t cbName;
     PWSTR p;
@@ -535,7 +535,7 @@ _LocalGetPrinterLevel0(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_STRESS* ppPrinterI
 }
 
 static void
-_LocalGetPrinterLevel1(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_1W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel1(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_1W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     const WCHAR wszComma[] = L",";
 
@@ -590,7 +590,7 @@ _LocalGetPrinterLevel1(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_1W* ppPrinterInfo,
 }
 
 static void
-_LocalGetPrinterLevel2(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_2W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel2(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_2W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     WCHAR wszEmpty[] = L"";
 
@@ -682,7 +682,7 @@ _LocalGetPrinterLevel2(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_2W* ppPrinterInfo,
 }
 
 static void
-_LocalGetPrinterLevel3(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_3* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel3(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_3* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     SECURITY_DESCRIPTOR SecurityDescriptor = { 0 };
 
@@ -704,7 +704,7 @@ _LocalGetPrinterLevel3(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_3* ppPrinterInfo, 
 }
 
 static void
-_LocalGetPrinterLevel4(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_4W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel4(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_4W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     size_t cbPrinterName;
     PWSTR p;
@@ -738,7 +738,7 @@ _LocalGetPrinterLevel4(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_4W* ppPrinterInfo,
 }
 
 static void
-_LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     size_t cbPrinterName;
     size_t cbPortName;
@@ -779,7 +779,7 @@ _LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo,
 }
 
 static void
-_LocalGetPrinterLevel6(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_6* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel6(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_6* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     if (!ppPrinterInfo)
     {
@@ -795,7 +795,7 @@ _LocalGetPrinterLevel6(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_6* ppPrinterInfo, 
 }
 
 static void
-_LocalGetPrinterLevel7(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_7W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel7(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_7W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     if (!ppPrinterInfo)
     {
@@ -814,7 +814,7 @@ _LocalGetPrinterLevel7(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_7W* ppPrinterInfo,
 }
 
 static void
-_LocalGetPrinterLevel8(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_8W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel8(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_8W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     DWORD cbDevMode;
 
@@ -837,7 +837,7 @@ _LocalGetPrinterLevel8(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_8W* ppPrinterInfo,
 }
 
 static void
-_LocalGetPrinterLevel9(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_9W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+_LocalGetPrinterLevel9(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_9W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PCWSTR wszComputerName)
 {
     DWORD cbDevMode;
 
@@ -965,6 +965,10 @@ Cleanup:
 BOOL WINAPI
 LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
 {
+    // We never prepend a Computer Name to the output, but need to provide an empty string,
+    // because this variable is passed to StringCbCopyExW.
+    const WCHAR wszDummyComputerName[] = L"";
+
     DWORD dwErrorCode;
     PBYTE pPrinterEnd;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
@@ -997,7 +1001,7 @@ LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDW
 
     // Count the required buffer size.
     *pcbNeeded = 0;
-    pfnGetPrinterLevels[Level](pPrinterHandle->pPrinter, NULL, NULL, pcbNeeded, 0, NULL);
+    pfnGetPrinterLevels[Level](pPrinterHandle->pPrinter, NULL, NULL, pcbNeeded, 0, wszDummyComputerName);
 
     // Check if the supplied buffer is large enough.
     if (cbBuf < *pcbNeeded)
@@ -1008,7 +1012,7 @@ LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDW
 
     // Copy over the Printer information.
     pPrinterEnd = &pPrinter[*pcbNeeded];
-    pfnGetPrinterLevels[Level](pPrinterHandle->pPrinter, &pPrinter, &pPrinterEnd, NULL, 0, NULL);
+    pfnGetPrinterLevels[Level](pPrinterHandle->pPrinter, &pPrinter, &pPrinterEnd, NULL, 0, wszDummyComputerName);
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:

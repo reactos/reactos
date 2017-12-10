@@ -152,7 +152,7 @@
 251 stdcall GetPrinterDataExW(ptr wstr wstr ptr ptr long ptr)
 252 stdcall GetPrinterDataW(ptr wstr ptr ptr long ptr)
 253 stdcall GetPrinterDriverA(ptr str long ptr long ptr)
-254 stdcall -stub GetPrinterDriverDirectoryA(str str long ptr long ptr)
+254 stdcall GetPrinterDriverDirectoryA(str str long ptr long ptr)
 255 stdcall GetPrinterDriverDirectoryW(wstr wstr long ptr long ptr)
 256 stdcall GetPrinterDriverW(ptr wstr long ptr long ptr)
 257 stdcall GetPrinterW(ptr long ptr long ptr)

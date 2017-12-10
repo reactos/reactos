@@ -630,8 +630,16 @@ BOOL WINAPI
 GetPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
 {
     DWORD dwErrorCode;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
     TRACE("GetPrinterW(%p, %lu, %p, %lu, %p)\n", hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
 
     // Dismiss invalid levels already at this point.
     if (Level > 9)
@@ -646,7 +654,7 @@ GetPrinterW(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD 
     // Do the RPC call
     RpcTryExcept
     {
-        dwErrorCode = _RpcGetPrinter(hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
+        dwErrorCode = _RpcGetPrinter(pHandle->hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
