@@ -2787,7 +2787,7 @@ SetConsoleIcon(HICON hIcon)
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-SetConsoleInputExeNameW(IN LPWSTR lpExeName)
+SetConsoleInputExeNameW(IN LPCWSTR lpExeName)
 {
     DWORD ExeLength;
 
@@ -2827,7 +2827,7 @@ SetConsoleInputExeNameW(IN LPWSTR lpExeName)
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-SetConsoleInputExeNameA(IN LPSTR lpExeName)
+SetConsoleInputExeNameA(IN LPCSTR lpExeName)
 {
     NTSTATUS Status;
 #ifdef USE_TEB_STATIC_USTR
