@@ -200,7 +200,7 @@ STRINGTABLE
 BEGIN
     IDS_MSCONFIG            "系统配置实用程序"
     IDS_MSCONFIG_2          "系统配置"
-    IDS_ABOUT               "关于...(&A)\tShift+F1"
+    IDS_ABOUT               "关于(&A)...\tShift+F1"
 END
 
 STRINGTABLE
