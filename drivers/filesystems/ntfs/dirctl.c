@@ -61,16 +61,16 @@ NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
 
 
 static NTSTATUS
-NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
-                       PFILE_RECORD_HEADER FileRecord,
-                       ULONGLONG MFTIndex,
-                       PFILE_NAMES_INFORMATION Info,
-                       ULONG BufferLength)
+NtfsGetNamesInformation(PDEVICE_EXTENSION DeviceExt,
+                        PFILE_RECORD_HEADER FileRecord,
+                        ULONGLONG MFTIndex,
+                        PFILE_NAMES_INFORMATION Info,
+                        ULONG BufferLength)
 {
     ULONG Length;
     PFILENAME_ATTRIBUTE FileName;
 
-    DPRINT("NtfsGetNameInformation() called\n");
+    DPRINT("NtfsGetNamesInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(DeviceExt, FileRecord);
     if (FileName == NULL)
@@ -395,12 +395,12 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 
             switch (FileInformationClass)
             {
-                case FileNameInformation:
-                    Status = NtfsGetNameInformation(DeviceExtension,
-                                                    FileRecord,
-                                                    MFTRecord,
-                                                    (PFILE_NAMES_INFORMATION)Buffer,
-                                                    BufferLength);
+                case FileNamesInformation:
+                    Status = NtfsGetNamesInformation(DeviceExtension,
+                                                     FileRecord,
+                                                     MFTRecord,
+                                                     (PFILE_NAMES_INFORMATION)Buffer,
+                                                     BufferLength);
                     break;
 
                 case FileDirectoryInformation:
