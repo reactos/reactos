@@ -35,8 +35,8 @@
 /* FUNCTIONS ****************************************************************/
 
 static
-PWCHAR
-NtfsGetNextPathElement(PWCHAR FileName)
+PCWSTR
+NtfsGetNextPathElement(PCWSTR FileName)
 {
     if (*FileName == L'\0')
     {
@@ -55,7 +55,7 @@ NtfsGetNextPathElement(PWCHAR FileName)
 static
 VOID
 NtfsWSubString(PWCHAR pTarget,
-               const PWCHAR pSource,
+               PCWSTR pSource,
                size_t pLength)
 {
     wcsncpy(pTarget, pSource, pLength);
@@ -506,6 +506,7 @@ static NTSTATUS
 NtfsDirFindFile(PNTFS_VCB Vcb,
                 PNTFS_FCB DirectoryFcb,
                 PWSTR FileToFind,
+                BOOLEAN CaseSensitive,
                 PNTFS_FCB *FoundFCB)
 {
     NTSTATUS Status;
@@ -517,7 +518,12 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     PNTFS_ATTR_CONTEXT DataContext;
     USHORT Length = 0;
 
-    DPRINT1("NtfsDirFindFile(%p, %p, %S, %p)\n", Vcb, DirectoryFcb, FileToFind, FoundFCB);
+    DPRINT1("NtfsDirFindFile(%p, %p, %S, %s, %p)\n",
+            Vcb,
+            DirectoryFcb,
+            FileToFind,
+            CaseSensitive ? "TRUE" : "FALSE",
+            FoundFCB);
 
     *FoundFCB = NULL;
     RtlInitUnicodeString(&File, FileToFind);
@@ -551,7 +557,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
         DPRINT1("Will now look for file '%wZ' with stream '%S'\n", &File, Colon);
     }
 
-    Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &MFTIndex, CurrentDir);
+    Status = NtfsLookupFileAt(Vcb, &File, CaseSensitive, &FileRecord, &MFTIndex, CurrentDir);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -568,7 +574,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     }
     else if (Colon != 0)
     {
-        Status = FindAttribute(Vcb, FileRecord, AttributeData, Colon, wcslen(Colon), &DataContext);
+        Status = FindAttribute(Vcb, FileRecord, AttributeData, Colon, wcslen(Colon), &DataContext, NULL);
         if (!NT_SUCCESS(Status))
         {
             return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -587,20 +593,22 @@ NTSTATUS
 NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pParentFCB,
                   PNTFS_FCB *pFCB,
-                  const PWSTR pFileName)
+                  PCWSTR pFileName,
+                  BOOLEAN CaseSensitive)
 {
     NTSTATUS Status;
     WCHAR pathName [MAX_PATH];
     WCHAR elementName [MAX_PATH];
-    PWCHAR currentElement;
+    PCWSTR currentElement;
     PNTFS_FCB FCB;
     PNTFS_FCB parentFCB;
 
-    DPRINT("NtfsGetFCBForFile(%p, %p, %p, '%S')\n",
+    DPRINT("NtfsGetFCBForFile(%p, %p, %p, '%S', %s)\n",
            Vcb,
            pParentFCB,
            pFCB,
-           pFileName);
+           pFileName,
+           CaseSensitive ? "TRUE" : "FALSE");
 
     /* Dummy code */
 //  FCB = NtfsOpenRootFCB(Vcb);
@@ -609,7 +617,7 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
 
 #if 1
     /* Trivial case, open of the root directory on volume */
-    if (pFileName [0] == L'\0' || wcscmp(pFileName, L"\\") == 0)
+    if (pFileName[0] == L'\0' || wcscmp(pFileName, L"\\") == 0)
     {
         DPRINT("returning root FCB\n");
 
@@ -677,7 +685,7 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
                            NtfsGetNextPathElement(currentElement) - currentElement);
             DPRINT("  elementName:%S\n", elementName);
 
-            Status = NtfsDirFindFile(Vcb, parentFCB, elementName, &FCB);
+            Status = NtfsDirFindFile(Vcb, parentFCB, elementName, CaseSensitive, &FCB);
             if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
             {
                 *pParentFCB = parentFCB;
@@ -741,14 +749,14 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
         return Status;
     }
 
-    Status = FindAttribute(Vcb, FileRecord, Type, Name, NameLength, &AttrCtxt);
+    Status = FindAttribute(Vcb, FileRecord, Type, Name, NameLength, &AttrCtxt, NULL);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return Status;
     }
 
-    AttrLength = AttributeDataLength(&AttrCtxt->Record);
+    AttrLength = AttributeDataLength(AttrCtxt->pRecord);
     *Data = ExAllocatePoolWithTag(NonPagedPool, AttrLength, TAG_NTFS);
     if (*Data == NULL)
     {

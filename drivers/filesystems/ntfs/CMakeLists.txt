@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     attrib.c
     blockdev.c
+    btree.c
     cleanup.c
     close.c
     create.c
