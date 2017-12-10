@@ -508,8 +508,122 @@ NTAPI
 USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
                   IN ULONG Frame)
 {
-    DPRINT("USB2_DeallocateHS: UNIMPLEMENTED FIXME\n");
-    ASSERT(FALSE);
+    PUSB2_TT Tt;
+    PUSB2_HC_EXTENSION HcExtension;
+    ULONG OverheadCS;
+    ULONG OverheadSS;
+    ULONG Direction;
+    ULONG ix;
+    ULONG CurrentDataTime;
+    ULONG RemainDataTime;
+    ULONG DataTime;
+    ULONG DataSize;
+    USHORT PktSize;
+    USHORT PktSizeBitStuff;
+    UCHAR uframe;
+    UCHAR frame;
+
+    DPRINT("USB2_DeallocateHS: TtEndpoint - %p, Frame - %X\n",
+           TtEndpoint,
+           Frame);
+
+    Tt = TtEndpoint->Tt;
+    HcExtension = Tt->HcExtension;
+
+    USB2_GetHsOverhead(TtEndpoint, &OverheadSS, &OverheadCS);
+
+    frame = TtEndpoint->StartFrame + Frame;
+    uframe = TtEndpoint->StartMicroframe;
+
+    if (TtEndpoint->StartMicroframe == 0xFF)
+    {
+        USB2_GetPrevMicroFrame(&frame, &uframe);
+    }
+
+    for (ix = 0; ix < TtEndpoint->Nums.NumStarts; ix++)
+    {
+        HcExtension->TimeUsed[frame][uframe] -= OverheadSS;
+        --Tt->NumStartSplits[frame][uframe];
+        USB2_IncMicroFrame(&frame, &uframe);
+    }
+
+    frame = TtEndpoint->StartFrame + Frame;
+    uframe = TtEndpoint->StartMicroframe + TtEndpoint->Nums.NumStarts + 1;
+
+    for (ix = 0; ix < TtEndpoint->Nums.NumCompletes; ix++)
+    {
+        HcExtension->TimeUsed[frame][uframe] -= OverheadCS;
+        USB2_IncMicroFrame(&frame, &uframe);
+    }
+
+    Direction = TtEndpoint->TtEndpointParams.Direction;
+    PktSize = TtEndpoint->MaxPacketSize;
+    PktSizeBitStuff = USB2_AddDataBitStuff(PktSize);
+
+    if (Direction == USBPORT_TRANSFER_DIRECTION_OUT)
+    {
+        frame = TtEndpoint->StartFrame + Frame;
+        uframe = TtEndpoint->StartMicroframe;
+
+        if (TtEndpoint->StartMicroframe == 0xFF)
+        {
+            USB2_GetPrevMicroFrame(&frame, &uframe);
+        }
+
+        DataTime = 0;
+
+        for (ix = 0; ix < TtEndpoint->Nums.NumStarts; ix++)
+        {
+            DataSize = PktSizeBitStuff - DataTime;
+
+            if (DataSize <= USB2_FS_RAW_BYTES_IN_MICROFRAME)
+            {
+                CurrentDataTime = PktSizeBitStuff - DataTime;
+            }
+            else
+            {
+                CurrentDataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME;
+            }
+
+            HcExtension->TimeUsed[frame][uframe] -= CurrentDataTime;
+            USB2_IncMicroFrame(&frame, &uframe);
+            DataTime += USB2_FS_RAW_BYTES_IN_MICROFRAME;
+        }
+    }
+    else
+    {
+        frame = TtEndpoint->StartFrame + Frame;
+        uframe = TtEndpoint->StartMicroframe + TtEndpoint->Nums.NumStarts + 1;
+
+        for (ix = 0; ix < TtEndpoint->Nums.NumCompletes; ix++)
+        {
+            if (PktSizeBitStuff >= USB2_FS_RAW_BYTES_IN_MICROFRAME)
+            {
+                CurrentDataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME;
+            }
+            else
+            {
+                CurrentDataTime = PktSizeBitStuff;
+            }
+
+            Tt->TimeCS[frame][uframe] -= CurrentDataTime;
+
+            if (Tt->TimeCS[frame][uframe] < USB2_FS_RAW_BYTES_IN_MICROFRAME)
+            {
+                RemainDataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME -
+                                 Tt->TimeCS[frame][uframe];
+
+                if (RemainDataTime >= PktSizeBitStuff)
+                    RemainDataTime = PktSizeBitStuff;
+
+                HcExtension->TimeUsed[frame][uframe] -= RemainDataTime;
+            }
+
+            USB2_IncMicroFrame(&frame, &uframe);
+        }
+    }
+
+    return;
 }
 
 BOOLEAN
