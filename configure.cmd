@@ -15,8 +15,7 @@ if /I "%1" == "/?" (
     echo Syntax: path\to\source\configure.cmd [script-options] [Cmake-options]
     echo Available script-options: Codeblocks, Eclipse, Makefiles, clang, VSSolution, RTC
     echo Cmake-options: -DVARIABLE:TYPE=VALUE
-    endlocal
-    exit /b
+    goto quit
 )
 
 REM Special case %1 = arm_hosttools %2 = vcvarsall.bat %3 = %CMAKE_GENERATOR%
@@ -33,6 +32,16 @@ if /I "%1" == "arm_hosttools" (
 
 REM Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
+
+REM Ensure there's no spaces in the source path
+echo %REACTOS_SOURCE_DIR%| find " " > NUL
+if %ERRORLEVEL% == 0 (
+    echo. && echo   Your source path contains at least one space.
+    echo   This will cause problems with building.
+    echo   Please rename your folders so there are no spaces in the source path,
+    echo   or move your source to a different folder.
+    goto quit
+)
 
 REM Set default generator
 set CMAKE_GENERATOR="Ninja"
@@ -63,8 +72,7 @@ if defined ROS_ARCH (
     cl 2>&1 | find "19.12." > NUL && set VS_VERSION=15
     if not defined VS_VERSION (
         echo Error: Visual Studio version too old or version detection failed.
-        endlocal
-        exit /b
+        goto quit
     )
     set BUILD_ENVIRONMENT=VS
     set VS_SOLUTION=0
@@ -72,15 +80,13 @@ if defined ROS_ARCH (
     echo Detected Visual Studio Environment !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
 ) else (
     echo Error: Unable to detect build environment. Configure script failure.
-    endlocal
-    exit /b
+    goto quit
 )
 
 REM Checkpoint
 if not defined ARCH (
     echo Unknown build architecture
-    endlocal
-    exit /b
+    goto quit
 )
 
 set NEW_STYLE_BUILD=1
@@ -88,7 +94,7 @@ set USE_CLANG_CL=0
 
 REM Parse command line parameters
 :repeat
-    if /I "%1%" == "-DNEW_STYLE_BUILD" (
+    if /I "%1" == "-DNEW_STYLE_BUILD" (
         set NEW_STYLE_BUILD=%2
     ) else if "%BUILD_ENVIRONMENT%" == "MinGW" (
         if /I "%1" == "Codeblocks" (
@@ -97,6 +103,21 @@ REM Parse command line parameters
             set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
         ) else if /I "%1" == "Makefiles" (
             set CMAKE_GENERATOR="MinGW Makefiles"
+        ) else if /I "%1" == "VSSolution" (
+            echo. && echo Error: Creation of VS Solution files is not supported in a MinGW environment.
+            echo Please run this command in a [Developer] Command Prompt for Visual Studio.
+            goto quit
+        ) else if /I "%1" == "RTC" (
+            echo. && echo 	Warning: RTC switch is ignored outside of a Visual Studio environment. && echo.
+        ) else if /I "%1" NEQ "" (
+            echo %1| find /I "-D" > NUL
+            if %ERRORLEVEL% == 0 (
+                REM User is passing a switch to CMake
+                REM Ignore it, and ignore the next parameter that follows
+                Shift
+            ) else (
+                echo. && echo   Warning: Unrecognized switch "%1" && echo.
+            )
         ) else (
             goto continue
         )
@@ -168,6 +189,15 @@ REM Parse command line parameters
         ) else if /I "%1" == "RTC" (
             echo Runtime checks enabled
             set VS_RUNTIME_CHECKS=1
+        ) else if /I "%1" NEQ "" (
+            echo %1| find /I "-D" > NUL
+            if %ERRORLEVEL% == 0 (
+                REM User is passing a switch to CMake
+                REM Ignore it, and ignore the next parameter that follows
+                Shift
+            ) else (
+                echo. && echo   Warning: Unrecognized switch "%1" && echo.
+            )
         ) else (
             goto continue
         )
@@ -185,13 +215,34 @@ if "!CMAKE_GENERATOR!" == "Ninja" (
 
 REM Create directories
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
+
+if "%VS_SOLUTION%" == "1" (
+    set REACTOS_OUTPUT_PATH=%REACTOS_OUTPUT_PATH%-sln
+)
+
 if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
+    set CD_SAME_AS_SOURCE=1
     echo Creating directories in %REACTOS_OUTPUT_PATH%
 
     if not exist %REACTOS_OUTPUT_PATH% (
         mkdir %REACTOS_OUTPUT_PATH%
     )
     cd %REACTOS_OUTPUT_PATH%
+)
+
+if "%VS_SOLUTION%" == "1" (
+
+    if exist build.ninja (
+        echo. && echo Error: This directory has already been configured for ninja.
+        echo An output folder configured for ninja can't be reconfigured for VSSolution.
+        echo Use an empty folder or delete the contents of this folder, then try again.
+        goto quit
+    )
+) else if exist REACTOS.sln (
+    echo. && echo Error: This directory has already been configured for Visual Studio.
+    echo An output folder configured for VSSolution can't be reconfigured for ninja.
+    echo Use an empty folder or delete the contents of this folder, then try again. && echo.
+    goto quit
 )
 
 if "%NEW_STYLE_BUILD%"=="0" (
@@ -251,11 +302,27 @@ if "%NEW_STYLE_BUILD%"=="0" (
     cd..
 )
 
-echo Configure script complete^^! Execute appropriate build commands (ex: ninja, make, nmake, etc...).
-endlocal
-exit /b
+if %ERRORLEVEL% NEQ 0 (
+    goto quit
+)
+
+if "%CD_SAME_AS_SOURCE%" == "1" (
+    set ENDV= from %REACTOS_OUTPUT_PATH%
+)
+
+if "%VS_SOLUTION%" == "1" (
+    set ENDV= You can now use msbuild or open REACTOS.sln%ENDV%.
+) else (
+    set ENDV= Execute appropriate build commands ^(ex: ninja, make, nmake, etc...^)%ENDV%
+)
+
+echo. && echo Configure script complete^^!%ENDV%
+
+goto quit
 
 :cmake_notfound
 echo Unable to find cmake, if it is installed, check your PATH variable.
+
+:quit
 endlocal
 exit /b
