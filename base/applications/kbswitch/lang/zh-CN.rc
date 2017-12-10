@@ -14,6 +14,6 @@ BEGIN
     BEGIN
         MENUITEM "选项(&P)...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "结束(&E)", ID_EXIT
+        MENUITEM "退出(&E)", ID_EXIT
     END
 END
