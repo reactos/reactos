@@ -123,31 +123,31 @@ BEGIN
 END
 
 IDD_RECOVERY DIALOGEX 6, 6, 253, 232
-CAPTION "Recovery"
+CAPTION "Wiederherstellen"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    LTEXT "Select the computer's response if this service fails.", IDC_STATIC, 7, 7, 238, 8
-    LTEXT "&First failure:", IDC_STATIC, 7, 24, 92, 8
+    LTEXT "Wählen Sie, was bei Dienstausfall durchgeführt werden soll.", IDC_STATIC, 7, 7, 238, 8
+    LTEXT "&Erster Fehlschlag:", IDC_STATIC, 7, 24, 92, 8
     COMBOBOX IDC_FIRST_FAILURE, 104, 22, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "&Second failure:", IDC_STATIC, 7, 41, 92, 8
+    LTEXT "Zwei&ter Fehlschlag:", IDC_STATIC, 7, 41, 92, 8
     COMBOBOX IDC_SECOND_FAILURE, 104, 39, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Subsequent failures:", IDC_STATIC, 7, 58, 92, 8
+    LTEXT "Weitere &Fehlschläge:", IDC_STATIC, 7, 58, 92, 8
     COMBOBOX IDC_SUBSEQUENT_FAILURES, 104, 56, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Reset fail c&ounter after:", IDC_STATIC, 7, 75, 72, 8
+    LTEXT "Fehlerzähler &nach", IDC_STATIC, 7, 75, 72, 8
     EDITTEXT IDC_RESET_TIME, 104, 73, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT "days", IDC_STATIC, 150, 75, 95, 8
-    LTEXT "Restart ser&vice after:", IDC_RESTART_TEXT1, 7, 92, 92, 8
+    LTEXT "Tagen auf Null zurücksetzen", IDC_STATIC, 150, 75, 95, 8
+    LTEXT "Dien&st nach", IDC_RESTART_TEXT1, 7, 92, 92, 8
     EDITTEXT IDC_RESTART_TIME, 104, 90, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT "minutes", IDC_RESTART_TEXT2, 150, 92, 95, 8
-    GROUPBOX "Run program", IDC_RUN_GROUPBOX, 7, 108, 238, 80
-    LTEXT "&Program:", IDC_RUN_TEXT1, 14, 121, 168, 8
+    LTEXT "Minuten neu starten", IDC_RESTART_TEXT2, 150, 92, 95, 8
+    GROUPBOX "Programm ausführen", IDC_RUN_GROUPBOX, 7, 108, 238, 80
+    LTEXT "&Programm:", IDC_RUN_TEXT1, 14, 121, 168, 8
     EDITTEXT IDC_PROGRAM, 14, 131, 165, 14
-    PUSHBUTTON "&Browse...", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
-    LTEXT "&Command line parameters:", IDC_RUN_TEXT2, 14, 155, 108, 8
+    PUSHBUTTON "D&urchsuchen...", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
+    LTEXT "Befeh&lszeilenparameter:", IDC_RUN_TEXT2, 14, 155, 108, 8
     EDITTEXT IDC_PARAMETERS, 128, 152, 110, 14
-    AUTOCHECKBOX "Append fail count to &end of command line (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Restart Computer Options...", IDC_RESTART_OPTIONS, 116, 197, 129, 14
+    AUTOCHECKBOX "Fehler&zähler zur Befehlszeile hinzufügen (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Neustart&optionen...", IDC_RESTART_OPTIONS, 165, 197, 80, 14
 END
 
 IDD_DLG_DEPEND DIALOGEX 6, 6, 253, 225
