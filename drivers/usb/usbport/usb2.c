@@ -711,6 +711,33 @@ USB2_MoveTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     return TRUE;
 }
 
+BOOLEAN
+NTAPI
+USB2_CommonFrames(IN PUSB2_TT_ENDPOINT NextTtEndpoint,
+                  IN PUSB2_TT_ENDPOINT TtEndpoint)
+{
+    UCHAR Frame;
+
+    DPRINT("USB2_CommonFrames: \n");
+
+    if (NextTtEndpoint->ActualPeriod == ENDPOINT_INTERRUPT_1ms ||
+        TtEndpoint->ActualPeriod == ENDPOINT_INTERRUPT_1ms)
+    {
+        return TRUE;
+    }
+
+    if (NextTtEndpoint->ActualPeriod < TtEndpoint->ActualPeriod)
+    {
+        Frame = TtEndpoint->StartFrame % TtEndpoint->ActualPeriod;
+    }
+    else
+    {
+        Frame = NextTtEndpoint->StartFrame % TtEndpoint->ActualPeriod;
+    }
+
+    return (Frame == TtEndpoint->StartFrame);
+}
+
 VOID
 NTAPI
 USB2_ConvertFrame(IN UCHAR Frame,
