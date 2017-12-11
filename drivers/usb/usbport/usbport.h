@@ -483,7 +483,7 @@ typedef union _USB2_TT_ENDPOINT_PARAMS {
     ULONG TransferType           : 4;
     ULONG Direction              : 1;
     USB_DEVICE_SPEED DeviceSpeed : 2;
-    ULONG EndpointMoved          : 1;
+    BOOL EndpointMoved           : 1;
     ULONG Reserved               : 24;
   };
   ULONG AsULONG;

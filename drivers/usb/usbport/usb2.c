@@ -634,9 +634,81 @@ USB2_MoveTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
                     IN ULONG RebalanceListEntries,
                     OUT BOOLEAN * OutResult)
 {
-    DPRINT("USB2_MoveTtEndpoint: UNIMPLEMENTED FIXME\n");
-    ASSERT(FALSE);
-    return FALSE;
+    ULONG EndBusTime;
+    ULONG TransferType;
+    ULONG Num;
+    UCHAR ix;
+
+    DPRINT("USB2_MoveTtEndpoint: TtEndpoint - %p, BusTime - %X\n",
+           TtEndpoint,
+           BusTime);
+
+    *OutResult = TRUE;
+
+    for (Num = 0; Rebalance->RebalanceEndpoint[Num]; Num++)
+    {
+        if (Rebalance->RebalanceEndpoint[Num] == TtEndpoint)
+            break;
+    }
+
+    DPRINT("USB2_MoveTtEndpoint: Num - %X\n", Num);
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+
+    if (Rebalance->RebalanceEndpoint[Num] &&
+        TtEndpoint->TtEndpointParams.EndpointMoved == TRUE &&
+        (TransferType != USBPORT_TRANSFER_TYPE_INTERRUPT || BusTime >= 0))
+    {
+        DPRINT("USB2_MoveTtEndpoint: result - FALSE\n");
+        return FALSE;
+    }
+
+    for (ix = 0;
+         (TtEndpoint->StartFrame + ix) < USB2_FRAMES;
+         ix += TtEndpoint->ActualPeriod)
+    {
+        USB2_DeallocateHS(TtEndpoint, ix);
+    }
+
+    TtEndpoint->StartTime += BusTime;
+
+    EndBusTime = TtEndpoint->StartTime + TtEndpoint->CalcBusTime;
+
+    if (EndBusTime > USB2_FS_MAX_PERIODIC_ALLOCATION)
+    {
+        DPRINT("USB2_MoveTtEndpoint: EndBusTime is too large!\n");
+        *OutResult = FALSE;
+    }
+
+    TtEndpoint->TtEndpointParams.EndpointMoved = TRUE;
+
+    if (Rebalance->RebalanceEndpoint[Num] == NULL)
+    {
+        if (Num >= RebalanceListEntries)
+        {
+            DPRINT("USB2_MoveTtEndpoint: Too many changes!\n");
+            *OutResult = FALSE;
+        }
+        else
+        {
+            Rebalance->RebalanceEndpoint[Num] = TtEndpoint;
+            Rebalance->RebalanceEndpoint[Num + 1] = NULL;
+        }
+    }
+
+    for (ix = 0;
+         (TtEndpoint->StartFrame + ix) < USB2_FRAMES;
+         ix += TtEndpoint->ActualPeriod)
+    {
+        if (!USB2_AllocateHS(TtEndpoint, ix))
+        {
+            DPRINT("USB2_MoveTtEndpoint: OutResult - FALSE\n");
+            OutResult = FALSE;
+        }
+    }
+
+    DPRINT("USB2_MoveTtEndpoint: result - TRUE\n");
+    return TRUE;
 }
 
 VOID
