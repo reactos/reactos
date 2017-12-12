@@ -6,7 +6,7 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+#pragma once
 
 /*
  * This is the glue code for the Memory Manager version of AVL Trees that is used
