@@ -879,9 +879,60 @@ USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
                               IN PULONG RebalanceListEntries,
                               IN ULONG MaxFrames)
 {
+    PUSB2_TT Tt;
+    PUSB2_HC_EXTENSION HcExtension;
+    ULONG Speed;
+    ULONG StartMicroframe;
+    ULONG ix;
+
+    UCHAR frame;
+    UCHAR uframe;
+
+    DPRINT("USB2_DeallocateEndpointBudget: TtEndpoint - %p, MaxFrames - %X\n",
+           TtEndpoint,
+           MaxFrames);
+
+    if (TtEndpoint->CalcBusTime == 0)
+    {
+        DPRINT("USB2_DeallocateEndpointBudget: endpoint not allocated\n");//error((int)"endpoint not allocated");
+        return FALSE;
+    }
+
+    Tt = TtEndpoint->Tt;
+    HcExtension = Tt->HcExtension;
+
+    Speed = TtEndpoint->TtEndpointParams.DeviceSpeed;
+    DPRINT("USB2_DeallocateEndpointBudget: DeviceSpeed - %X\n", Speed);
+
+    StartMicroframe = TtEndpoint->StartFrame * USB2_MICROFRAMES +
+                      TtEndpoint->StartMicroframe;
+
+    if (Speed == UsbHighSpeed)
+    {
+        for (ix = StartMicroframe;
+             ix < USB2_MAX_MICROFRAMES;
+             ix += TtEndpoint->ActualPeriod)
+        {
+            frame = ix / USB2_MICROFRAMES;
+            uframe = ix % (USB2_MICROFRAMES - 1);
+
+            HcExtension->TimeUsed[frame][uframe] -= TtEndpoint->CalcBusTime;
+        }
+
+        TtEndpoint->CalcBusTime = 0;
+
+        DPRINT("USB2_DeallocateEndpointBudget: return TRUE\n");
+        return TRUE;
+    }
+
+    /* Speed != UsbHighSpeed (FS/LS) */
+
     DPRINT("USB2_DeallocateEndpointBudget: UNIMPLEMENTED FIXME\n");
     ASSERT(FALSE);
-    return FALSE;
+
+    TtEndpoint->CalcBusTime = 0;
+    DPRINT("USB2_DeallocateEndpointBudget: return TRUE\n");
+    return TRUE;
 }
 
 BOOLEAN
