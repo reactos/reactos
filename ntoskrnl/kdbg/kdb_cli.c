@@ -3675,12 +3675,14 @@ KdpPrompt(
     KIRQL OldIrql;
     PCHAR InString;
     PCHAR OutString;
+    CHAR InStringBuffer[512];
+    CHAR OutStringBuffer[512];
 
     /* Normalize the lengths */
     InStringLength = min(InStringLength,
-                         512);
+                         sizeof(InStringBuffer));
     OutStringLength = min(OutStringLength,
-                          512);
+                          sizeof(OutStringBuffer));
 
     /* Check if we need to verify the string */
     if (PreviousMode != KernelMode)
@@ -3694,7 +3696,7 @@ KdpPrompt(
                          1);
 
             /* Capture prompt */
-            InString = _alloca(InStringLength);
+            InString = InStringBuffer;
             RtlCopyMemory(InString,
                           UnsafeInString,
                           InStringLength);
@@ -3703,7 +3705,7 @@ KdpPrompt(
             ProbeForWrite(UnsafeOutString,
                           OutStringLength,
                           1);
-            OutString = _alloca(OutStringLength);
+            OutString = OutStringBuffer;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {

@@ -574,17 +574,18 @@ KdpPrintString(
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
     PCHAR String;
+    CHAR StringBuffer[512];
 
     if (!KdpDebugMode.Value) return 0;
 
-    Length = min(Length, 512);
+    Length = min(Length, sizeof(StringBuffer));
 
     if (ExGetPreviousMode() != KernelMode)
     {
         _SEH2_TRY
         {
             ProbeForRead(UnsafeString, Length, 1);
-            String = _alloca(Length);
+            String = StringBuffer;
             RtlCopyMemory(String, UnsafeString, Length);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
