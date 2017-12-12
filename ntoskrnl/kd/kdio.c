@@ -340,7 +340,7 @@ KdpSerialDebugPrint(LPSTR Message,
     }
 
     /* Output the message */
-    while (*pch != 0)
+    while (pch < Message + Length && *pch != '\0')
     {
         if (*pch == '\n')
         {
@@ -412,7 +412,7 @@ KdpScreenPrint(LPSTR Message,
     KIRQL OldIrql;
     PCHAR pch = (PCHAR) Message;
 
-    while (*pch)
+    while (pch < Message + Length && *pch)
     {
         if(*pch == '\b')
         {
@@ -584,9 +584,8 @@ KdpPrintString(
         _SEH2_TRY
         {
             ProbeForRead(UnsafeString, Length, 1);
-            String = _alloca(Length + 1);
+            String = _alloca(Length);
             RtlCopyMemory(String, UnsafeString, Length);
-            String[Length] = ANSI_NULL;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
