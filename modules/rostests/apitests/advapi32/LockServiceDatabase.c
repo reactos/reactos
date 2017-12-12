@@ -5,10 +5,7 @@
  * PROGRAMMER:      Hermès BÉLUSCA - MAÏTO
  */
 
-#include <apitest.h>
-
-#include <winsvc.h>
-#include <strsafe.h>
+#include "precomp.h"
 
 #define TESTING_SERVICE     L"Spooler"
 

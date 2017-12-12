@@ -7,8 +7,7 @@
  *                  Hermes Belusca-Maito
  */
 
-// #include <apitest.h>
-
+#pragma once
 
 /**********  S E R V I C E   ( C L I E N T )   M O D U L E   S I D E  *********/
 

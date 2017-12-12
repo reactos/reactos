@@ -5,8 +5,8 @@
  * PROGRAMMER:      Hermes Belusca-Maito
  */
 
-#include <apitest.h>
-#include <winsvc.h>
+#include "precomp.h"
+
 #include "svchlp.h"
 
 

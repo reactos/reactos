@@ -6,10 +6,7 @@
  *                  Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <winnls.h>
-#include <winsvc.h>
-#include <strsafe.h>
+#include "precomp.h"
 
 static char **argv;
 static int argc;

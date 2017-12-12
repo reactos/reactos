@@ -5,10 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <winreg.h>
+#include "precomp.h"
 
 #define TestKeyAccess(da, er, es) TestKeyAccess_(__FILE__, __LINE__, da, er, es)
 static

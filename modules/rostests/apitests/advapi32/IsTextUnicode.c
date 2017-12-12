@@ -6,13 +6,8 @@
  *                  Dmitry Chapyshev
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <wincon.h>
 #include <stdio.h>
 
 PVOID LoadCodePageData(ULONG Code)

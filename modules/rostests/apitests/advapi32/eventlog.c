@@ -5,10 +5,7 @@
  * PROGRAMMER:      Hermes Belusca-Maito
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <winbase.h>
+#include "precomp.h"
 
 START_TEST(eventlog)
 {

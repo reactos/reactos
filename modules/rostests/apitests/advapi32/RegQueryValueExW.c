@@ -4,10 +4,8 @@
  * PURPOSE:         Test for the RegQueryValueW API
  * PROGRAMMER:      Victor Martinez Calvo <victor.martinez@reactos.org>
  */
-#include <apitest.h>
 
-#define WIN32_NO_STATUS
-#include <winreg.h>
+#include "precomp.h"
 
 static DWORD delete_key(HKEY hkey)
 {

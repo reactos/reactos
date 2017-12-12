@@ -13,10 +13,7 @@
  *   the service process, without really passing it 
  */
 
-#include <apitest.h>
-#include <winnls.h>
-#include <winsvc.h>
-#include <strsafe.h>
+#include "precomp.h"
 
 static HANDLE hClientPipe = INVALID_HANDLE_VALUE;
 static WCHAR named_pipe_name[100]; // Shared: FIXME!
