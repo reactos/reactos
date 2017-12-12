@@ -5,7 +5,8 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#pragma once
+#ifndef _COM_APITEST_H_
+#define _COM_APITEST_H_
 
 /* Define this if you're adding new classes - the test will auto-generate the
  * interface table entries for you ;) */
@@ -17,33 +18,23 @@
 
 #define COBJMACROS
 #define WIN32_NO_STATUS
+
 #include <wine/test.h>
+
 #include <objbase.h>
 #include <objsafe.h>
 #include <oleacc.h>
 #include <oledb.h>
-#include <oaidl.h>
-#include <dispex.h>
 #include <netcon.h>
 #include <netcfgx.h>
 #include <netcfgn.h>
-#include <mshtmhst.h>
 #include <perhist.h>
 #include <shlguid.h>
-#include <shlobj.h>
-#include <shobjidl.h>
-#include <shldisp.h>
 #include <shdeprecated.h>
-#include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
-#include <shlwapi.h>
-#include <commoncontrols.h>
-#include <activscp.h>
 #include <urlhist.h>
 #include <htiface.h>
-#include <htiframe.h>
 #include <mshtml.h>
-#include <ndk/rtlfuncs.h>
 #include <initguid.h>
 
 typedef IUnknown *PUNKNOWN;
@@ -202,3 +193,5 @@ DEFINE_GUID(IID_DFConstraint,              0x403df050, 0x23bd, 0x11d2, 0x93, 0x9
 DEFINE_GUID(IID_CDefView,                  0x4434ff80, 0xef4c, 0x11ce, 0xae, 0x65, 0x08, 0x00, 0x2b, 0xe2, 0x12, 0x62);
 DEFINE_GUID(IID_FolderItems2,              0xc94f0ad0, 0xf363, 0x11d2, 0xa3, 0x27, 0x00, 0xc0, 0x4f, 0x8e, 0xec, 0x7f);
 DEFINE_GUID(IID_FolderItems3,              0xeaa7c309, 0xbbec, 0x49d5, 0x82, 0x1d, 0x64, 0xd9, 0x66, 0xcb, 0x66, 0x7f);
+
+#endif /* _COM_APITEST_H_ */

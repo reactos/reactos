@@ -7,6 +7,12 @@
 
 #include "com_apitest.h"
 
+#include <mshtmhst.h>
+#include <shlwapi.h>
+#include <commoncontrols.h>
+#include <activscp.h>
+#include <ndk/rtlfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
