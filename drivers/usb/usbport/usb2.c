@@ -881,6 +881,90 @@ USB2_RebalanceEndpoint(IN PDEVICE_OBJECT FdoDevice,
     ASSERT(FALSE);
 }
 
+VOID
+NTAPI
+USB2_Rebalance(IN PDEVICE_OBJECT FdoDevice,
+               IN PLIST_ENTRY RebalanceList)
+{
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    PUSBPORT_ENDPOINT Endpoint;
+    PLIST_ENTRY Entry;
+    LIST_ENTRY BalanceListInt1;
+    LIST_ENTRY BalanceListInt2;
+    ULONG TransferType;
+    ULONG ScheduleOffset;
+    UCHAR SMask;
+    UCHAR CMask;
+    UCHAR ActualPeriod;
+
+    DPRINT("USB2_Rebalance: FdoDevice - %p, RebalanceList - %p\n",
+           FdoDevice,
+           RebalanceList);
+
+    InitializeListHead(&BalanceListInt1);
+    InitializeListHead(&BalanceListInt2);
+
+    while (!IsListEmpty(RebalanceList))
+    {
+        Entry = RebalanceList->Flink;
+
+        Endpoint = CONTAINING_RECORD(Entry,
+                                     USBPORT_ENDPOINT,
+                                     RebalanceLink.Flink);
+
+        DPRINT("USBPORT_Rebalance: Entry - %p, Endpoint - %p\n",
+               Entry,
+               Endpoint);
+
+        RemoveHeadList(RebalanceList);
+        Entry->Flink = NULL;
+        Entry->Blink = NULL;
+
+        SMask = USB2_GetSMASK(Endpoint->TtEndpoint);
+        CMask = USB2_GetCMASK(Endpoint->TtEndpoint);
+
+        ScheduleOffset = Endpoint->TtEndpoint->StartFrame;
+        ActualPeriod = Endpoint->TtEndpoint->ActualPeriod;
+
+        EndpointProperties = &Endpoint->EndpointProperties;
+        TransferType = EndpointProperties->TransferType;
+
+        switch (TransferType)
+        {
+            case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
+                DPRINT("USBPORT_Rebalance: USBPORT_TRANSFER_TYPE_ISOCHRONOUS. FIXME\n");
+                ASSERT(FALSE);
+                break;
+
+            case USBPORT_TRANSFER_TYPE_INTERRUPT:
+                if (SMask != EndpointProperties->InterruptScheduleMask ||
+                    CMask != EndpointProperties->SplitCompletionMask || 
+                    ScheduleOffset != EndpointProperties->ScheduleOffset ||
+                    ActualPeriod != EndpointProperties->Period)
+                {
+                    if (ActualPeriod == EndpointProperties->Period &&
+                        ScheduleOffset == EndpointProperties->ScheduleOffset)
+                    {
+                        InsertTailList(&BalanceListInt1, Entry);
+                    }
+                    else
+                    {
+                        InsertTailList(&BalanceListInt2, Entry);
+                    }
+                }
+                break;
+
+            default:
+                ASSERT(FALSE);
+                break;
+        }
+    }
+
+    USB2_RebalanceEndpoint(FdoDevice, &BalanceListInt2);
+    USB2_RebalanceEndpoint(FdoDevice, &BalanceListInt1);
+    //USB2_RebalanceEndpoint(FdoDevice, &BalanceListIso);
+}
+
 BOOLEAN
 NTAPI
 USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
@@ -1567,7 +1651,7 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
         }
     }
 
-    //USB2_Rebalance(FdoDevice, &RebalanceList);
+    USB2_Rebalance(FdoDevice, &RebalanceList);
 
     if (!TtExtension)
     {
