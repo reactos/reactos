@@ -953,8 +953,8 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     ULONG TransferType;
     ULONG Overhead;
     ULONG LatestStart;
-    PUSB2_TT_ENDPOINT prevTtEndpoint;
-    PUSB2_TT_ENDPOINT nextTtEndpoint;
+    PUSB2_TT_ENDPOINT prevEndpoint;
+    PUSB2_TT_ENDPOINT nextEndpoint;
     PUSB2_TT_ENDPOINT IntEndpoint;
     ULONG StartTime;
     ULONG calcBusTime;
@@ -1123,25 +1123,25 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
         }
 
         if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
-            prevTtEndpoint = Tt->FrameBudget[frame].IsoEndpoint;
+            prevEndpoint = Tt->FrameBudget[frame].IsoEndpoint;
         else
-            prevTtEndpoint = Tt->FrameBudget[frame].IntEndpoint;
+            prevEndpoint = Tt->FrameBudget[frame].IntEndpoint;
 
-        for (nextTtEndpoint = prevTtEndpoint->NextTtEndpoint;
-             nextTtEndpoint;
-             nextTtEndpoint = nextTtEndpoint->NextTtEndpoint)
+        for (nextEndpoint = prevEndpoint->NextTtEndpoint;
+             nextEndpoint;
+             nextEndpoint = nextEndpoint->NextTtEndpoint)
         {
-            if (USB2_CheckTtEndpointInsert(nextTtEndpoint, TtEndpoint))
+            if (USB2_CheckTtEndpointInsert(nextEndpoint, TtEndpoint))
             {
                 break;
             }
 
-            prevTtEndpoint = nextTtEndpoint;
+            prevEndpoint = nextEndpoint;
         }
 
-        StartTime = USB2_GetStartTime(nextTtEndpoint,
+        StartTime = USB2_GetStartTime(nextEndpoint,
                                       TtEndpoint,
-                                      prevTtEndpoint,
+                                      prevEndpoint,
                                       frame);
 
         if (StartTime > LatestStart)
@@ -1174,15 +1174,15 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
         else
         {
             IntEndpoint = Tt->FrameBudget[ix].IntEndpoint;
-            nextTtEndpoint = IntEndpoint->NextTtEndpoint;
+            nextEndpoint = IntEndpoint->NextTtEndpoint;
 
-            for (nextTtEndpoint = IntEndpoint->NextTtEndpoint;
-                 nextTtEndpoint;
-                 nextTtEndpoint = nextTtEndpoint->NextTtEndpoint)
+            for (nextEndpoint = IntEndpoint->NextTtEndpoint;
+                 nextEndpoint;
+                 nextEndpoint = nextEndpoint->NextTtEndpoint)
             {
-                if (USB2_CheckTtEndpointInsert(nextTtEndpoint, TtEndpoint))
+                if (USB2_CheckTtEndpointInsert(nextEndpoint, TtEndpoint))
                     break;
-                IntEndpoint = nextTtEndpoint;
+                IntEndpoint = nextEndpoint;
             }
 
             if ((frame % TtEndpoint->ActualPeriod) == 0)
@@ -1191,10 +1191,10 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
             }
             else
             {
-                if (nextTtEndpoint)
+                if (nextEndpoint)
                 {
                     calcBusTime = LatestStart + TtEndpoint->CalcBusTime -
-                                  nextTtEndpoint->StartTime;
+                                  nextEndpoint->StartTime;
                 }
                 else
                 {
@@ -1215,21 +1215,21 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
                 }
             }
 
-            if (nextTtEndpoint != TtEndpoint)
+            if (nextEndpoint != TtEndpoint)
             {
                 if ((frame % TtEndpoint->ActualPeriod) == 0)
                 {
                     if (frame == 0)
                     {
                         DPRINT("USB2_AllocateTimeForEndpoint: frame == 0\n");
-                        TtEndpoint->NextTtEndpoint = nextTtEndpoint;
+                        TtEndpoint->NextTtEndpoint = nextEndpoint;
                     }
 
                     IntEndpoint->NextTtEndpoint = TtEndpoint;
 
-                    DPRINT("USB2_AllocateTimeForEndpoint: TtEndpoint - %p, nextTtEndpoint - %p\n",
+                    DPRINT("USB2_AllocateTimeForEndpoint: TtEndpoint - %p, nextEndpoint - %p\n",
                            TtEndpoint,
-                           nextTtEndpoint);
+                           nextEndpoint);
                 }
 
                 if (calcBusTime > 0)
@@ -1237,15 +1237,15 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
                     BOOLEAN IsMoved;
                     BOOLEAN MoveResult;
 
-                    DPRINT("USB2_AllocateTimeForEndpoint: nextTtEndpoint - %p, calcBusTime - %X\n",
-                           nextTtEndpoint,
+                    DPRINT("USB2_AllocateTimeForEndpoint: nextEndpoint - %p, calcBusTime - %X\n",
+                           nextEndpoint,
                            calcBusTime);
 
                     for (;
-                         nextTtEndpoint;
-                         nextTtEndpoint = nextTtEndpoint->NextTtEndpoint)
+                         nextEndpoint;
+                         nextEndpoint = nextEndpoint->NextTtEndpoint)
                     {
-                        MoveResult = USB2_MoveTtEndpoint(nextTtEndpoint,
+                        MoveResult = USB2_MoveTtEndpoint(nextEndpoint,
                                                          calcBusTime,
                                                          Rebalance,
                                                          *RebalanceListEntries,
