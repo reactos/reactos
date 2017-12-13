@@ -1,8 +1,0 @@
-LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Заставка ""Матриця"""
-    IDS_TITLE       "About"
-    IDS_TEXT        "Ця заставка не має налаштовуваних параметрів."
-END

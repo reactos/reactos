@@ -1,8 +1,0 @@
-LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
-
-STRINGTABLE
-BEGIN
-    IDS_USAGE "Tastați «EVENTCREATE /?» pentru informații de utilizare.\n"
-    IDS_NOSET "hostname -s is not supported."
-    IDS_ERROR "Win32 error"
-END

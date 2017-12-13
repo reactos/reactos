@@ -1,8 +1,0 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Екранен предпазител Matrix"
-    IDS_TITLE       "About"
-    IDS_TEXT        "Няма възможност за настройки."
-END

@@ -1,7 +1,0 @@
-LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "Заставка ""Вхід до системи"""
-    IDS_TEXT "Ця заставка не має налаштовуваних параметрів."
-END

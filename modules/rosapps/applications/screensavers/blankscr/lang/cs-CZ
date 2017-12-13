@@ -1,7 +1,0 @@
-LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Blank screen"
-    IDS_TEXT        "Žádná nastavení nejsou potřeba."
-END

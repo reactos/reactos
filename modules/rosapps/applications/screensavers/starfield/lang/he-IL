@@ -1,8 +1,0 @@
-LANGUAGE LANG_HEBREW, SUBLANG_HEBREW_ISRAEL
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Starfield ScreenSaver"
-    IDS_TITLE       "About"
-    IDS_TEXT        "אין אפשרויות כדי להגדיר"
-END

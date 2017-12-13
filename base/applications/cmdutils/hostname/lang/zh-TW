@@ -1,8 +1,0 @@
-LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
-
-STRINGTABLE
-BEGIN
-    IDS_USAGE "\n輸入 ""CLIP /?"" 知道用法資訊。\n"
-    IDS_NOSET "hostname -s is not supported."
-    IDS_ERROR "Win32 error"
-END

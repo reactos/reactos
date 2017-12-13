@@ -1,7 +1,0 @@
-LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "Salvapantallas de texto en 3D"
-    IDS_TEXT "No se necesita configurar ninguna opción."
-END

@@ -1,9 +1,0 @@
-LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
-
-STRINGTABLE
-BEGIN
-    IDS_USAGE "\nPara ver los argumentos y opciones de uso escribe ""CLIP /?"".\n"
-    IDS_HELP "\nRedirects the output of command-line programs to the clipboard.\n\n\
-CLIP [/?]\n\n\
-    /?  Show this help message.\n"
-END

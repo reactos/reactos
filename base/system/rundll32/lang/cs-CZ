@@ -1,7 +1,0 @@
-LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary se nepodařilo načíst '%s'"
-    IDS_MissingEntry "Chybí vstupní bod:%s\nV %s"
-END

@@ -1,7 +1,0 @@
-LANGUAGE LANG_SANSKRIT, SUBLANG_SANSKRIT_INDIA
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary failed to load '%s'"
-    IDS_MissingEntry "Missing entry point:%s\nIn %s"
-END

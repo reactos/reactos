@@ -1,8 +1,0 @@
-LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Starfield ScreenSaver"
-    IDS_TITLE       "About"
-    IDS_TEXT        "Ayarlanması gereken seçenek yok."
-END

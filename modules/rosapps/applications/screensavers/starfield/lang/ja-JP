@@ -1,8 +1,0 @@
-LANGUAGE LANG_JAPANESE, SUBLANG_JAPANESE_JAPAN
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Starfield ScreenSaver"
-    IDS_TITLE       "About"
-    IDS_TEXT        "設定が必要なオプションはありません。"
-END

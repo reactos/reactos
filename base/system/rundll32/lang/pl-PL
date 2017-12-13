@@ -1,7 +1,0 @@
-LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "Funkcja LoadLibrary nie mogła załadować '%s'"
-    IDS_MissingEntry "Brakujący punkt wejścia:%s\nW %s"
-END

@@ -1,7 +1,0 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "Заставка 3D-текст"
-    IDS_TEXT "Эта заставка не имеет настраиваемых параметров."
-END

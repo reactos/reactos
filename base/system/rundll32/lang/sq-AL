@@ -1,7 +1,0 @@
-LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary deshtoj ne ngarkim '%s'"
-    IDS_MissingEntry "Mungon pika hyrese:%s\nNë %s"
-END

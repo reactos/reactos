@@ -1,7 +1,0 @@
-LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Blank screen"
-    IDS_TEXT        "No se necesita configurar ninguna opción."
-END

@@ -1,8 +1,0 @@
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Écran de veille Matrix"
-    IDS_TITLE       "About"
-    IDS_TEXT        "Il n'y a aucune option à définir."
-END

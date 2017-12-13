@@ -1,8 +1,0 @@
-LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Salvapantallas Matrix"
-    IDS_TITLE       "Acerca de"
-    IDS_TEXT        "No se necesita configurar ninguna opción."
-END

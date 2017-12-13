@@ -1,8 +1,0 @@
-LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
-
-STRINGTABLE
-BEGIN
-    IDS_USAGE "\nPara ver los argumentos y opciones de uso escribe ""CLIP /?"".\n"
-    IDS_NOSET "hostname -s is not supported."
-    IDS_ERROR "Win32 error"
-END

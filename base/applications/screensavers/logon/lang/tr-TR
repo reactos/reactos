@@ -1,7 +1,0 @@
-LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "Oturum Açma Görüntülük Koruyucusu"
-    IDS_TEXT "Ayarlanması gereken seçenek yok."
-END

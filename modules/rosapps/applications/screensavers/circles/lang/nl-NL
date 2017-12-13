@@ -1,7 +1,0 @@
-LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Circles"
-    IDS_TEXT        "Geen dingen om in te stellen."
-END

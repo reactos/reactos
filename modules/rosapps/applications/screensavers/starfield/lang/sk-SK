@@ -1,8 +1,0 @@
-LANGUAGE LANG_SLOVAK, SUBLANG_SLOVAK_SLOVAKIA
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Matrix - šetrič obrazovky"
-    IDS_TITLE       "About"
-    IDS_TEXT        "Nie sú potrebné žiadne nastavenia."
-END

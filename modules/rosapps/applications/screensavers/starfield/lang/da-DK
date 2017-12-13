@@ -1,8 +1,0 @@
-LANGUAGE LANG_DANISH, SUBLANG_DANISH_DENMARK
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Starfield ScreenSaver"
-    IDS_TITLE       "About"
-    IDS_TEXT        "No options need to be set."
-END

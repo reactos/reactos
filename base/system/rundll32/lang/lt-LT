@@ -1,7 +1,0 @@
-LANGUAGE LANG_LITHUANIAN, SUBLANG_LITHUANIAN_LITHUANIA
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary nepavyko paleisti '%s'"
-    IDS_MissingEntry "Trūksta įėjimo taško:%s\nIn %s"
-END

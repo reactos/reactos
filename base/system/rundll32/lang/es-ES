@@ -1,7 +1,0 @@
-LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary('%s') falló.\nGetLastError devuelve 0x%08x."
-    IDS_MissingEntry "Punto de entrada perdido:%s\nIn %s"
-END

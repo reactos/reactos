@@ -1,7 +1,0 @@
-LANGUAGE LANG_MALAY, SUBLANG_MALAY_MALAYSIA
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary failed to load '%s'"
-    IDS_MissingEntry "Missing entry point:%s\nIn %s"
-END

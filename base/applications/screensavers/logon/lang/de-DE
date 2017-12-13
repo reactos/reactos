@@ -1,7 +1,0 @@
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "Logon-Bildschirmschoner"
-    IDS_TEXT "Keinerlei Einstellungen notwendig."
-END

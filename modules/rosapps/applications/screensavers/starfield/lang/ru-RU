@@ -1,8 +1,0 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Заставка ""Лабиринт"""
-    IDS_TITLE       "About"
-    IDS_TEXT        "Эта заставка не имеет настраиваемых параметров."
-END
