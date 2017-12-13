@@ -1,11 +1,11 @@
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
 
 /* Dialogs */
 
 SELWINDOW DIALOGEX 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Вибір вікна"
+CAPTION "Select Window"
 BEGIN
     LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -20,37 +20,37 @@ BEGIN
     BEGIN
         MENUITEM "&Скасувати", EM_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Вирізати", WM_CUT
-        MENUITEM "&Копіювати", WM_COPY
-        MENUITEM "Вст&авити", WM_PASTE
-        MENUITEM "В&идалити", WM_CLEAR
+        MENUITEM "C&ut", WM_CUT
+        MENUITEM "&Copy", WM_COPY
+        MENUITEM "&Paste", WM_PASTE
+        MENUITEM "&Видалити", WM_CLEAR
         MENUITEM SEPARATOR
-        MENUITEM "Виділити вс&е", EM_SETSEL
+        MENUITEM "Select &All", EM_SETSEL
     END
 END
 
 SYSMENU MENU
 BEGIN
-    MENUITEM "&Відновити", SC_RESTORE
-    MENUITEM "П&еремістити", SC_MOVE
-    MENUITEM "Роз&мір", SC_SIZE
-    MENUITEM "З&горнути", SC_MINIMIZE
-    MENUITEM "&Розгорнути", SC_MAXIMIZE
+    MENUITEM "&Restore", SC_RESTORE
+    MENUITEM "&Move", SC_MOVE
+    MENUITEM "&Size", SC_SIZE
+    MENUITEM "Mi&nimize", SC_MINIMIZE
+    MENUITEM "Ma&ximize", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Закрити\tAlt+F4", SC_CLOSE
+    MENUITEM "&Close\tAlt+F4", SC_CLOSE
 END
 
 SYSMENUMDI MENU
 BEGIN
-    MENUITEM "&Відновити", SC_RESTORE
-    MENUITEM "П&еремістити", SC_MOVE
-    MENUITEM "Роз&мір", SC_SIZE
-    MENUITEM "З&горнути", SC_MINIMIZE
-    MENUITEM "&Розгорнути", SC_MAXIMIZE
+    MENUITEM "&Restore", SC_RESTORE
+    MENUITEM "&Move", SC_MOVE
+    MENUITEM "&Size", SC_SIZE
+    MENUITEM "Mi&nimize", SC_MINIMIZE
+    MENUITEM "Ma&ximize", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Закрити\tCtrl+F4", SC_CLOSE
+    MENUITEM "&Close\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "Нас&тупне вікно\tCtrl+F6", SC_NEXTWINDOW
+    MENUITEM "Nex&t\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
@@ -59,14 +59,14 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "Помилка"
     IDS_OK "OK"
-    IDS_CANCEL "Скасувати"
+    IDS_CANCEL "Cancel"
     IDS_ABORT "П&ерервати"
     IDS_RETRY "&Повторити"
     IDS_IGNORE "Пр&опустити"
-    IDS_YES "&Так"
-    IDS_NO "Н&і"
-    IDS_CLOSE "&Закрити"
-    IDS_HELP "Довідка"
+    IDS_YES "&Yes"
+    IDS_NO "&No"
+    IDS_CLOSE "Закрити"
+    IDS_HELP "Help"
     IDS_TRYAGAIN "По&вторити"
     IDS_CONTINUE "&Продовжити"
 END

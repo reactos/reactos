@@ -1,0 +1,8 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Print the current host's name.\n\nhostname"
+    IDS_NOSET "hostname -s is not supported."
+    IDS_ERROR "Win32 error"
+END

@@ -1,10 +1,8 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "打印当前主机的名称。\n\nhostname"
+    IDS_USAGE "键入 “EVENTCREATE /?” 以了解用法。\n"
     IDS_NOSET "hostname -s 不受支持。"
     IDS_ERROR "Win32 错误"
 END

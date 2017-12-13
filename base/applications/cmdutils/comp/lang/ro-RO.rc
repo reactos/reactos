@@ -1,15 +1,14 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
-LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "Compară conținuturile a două fișiere sau grupuri de fișiere.\n\n\
+    IDS_HELP "Compares the contents of two files or sets of files.\n\n\
 COMP [/L] [/A] [data1] [data2]\n\n\
-  data1      Calea și numele primului fișier de comparat.\n\
-  data2      Calea și numele celui de-al doilea fișier de comparat.\n\
-  /A         Afișează diferențele în caractere ASCII (implicit: hexazecimal).\n\
-  /L         Afișează numărul liniei pentru diferențe.\n"
-    IDS_INVALIDSWITCH "Parametru nevalid - /%c\n"
+  data1      Specifies location and name of first file to compare.\n\
+  data2      Specifies location and name of second file to compare.\n\
+  /A         Display differences in ASCII characters (default: hexadecimal).\n\
+  /L         Display line numbers for differences.\n"
+    IDS_INVALIDSWITCH "Argument eronat - /%c\n"
     IDS_BADSYNTAX "Sintaxă eronată\n"
     IDS_FILEERROR "Nu poate fi găsit/deschis fișierul: %s\n"
     IDS_COMPARING "%s este comparat cu %s...\n"

@@ -1,21 +1,13 @@
-/*
- * PROJECT:    ReactOS MPlay32
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/mplay32/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language File for MPlay32
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
- */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
 
 IDR_MAINMENU MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "開啟(&O)...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "開啟...(&O)\tCtrl+O", IDM_OPEN_FILE
         MENUITEM "關閉(&C)\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "結束(&E)", IDM_EXIT
+        MENUITEM "退出(&X)", IDM_EXIT
     END
     POPUP "播放(&P)"
     BEGIN
@@ -24,7 +16,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "重複(&T)\tCtrl+T", IDM_REPEAT
     END
-    POPUP "視圖(&V)"
+    POPUP "檢視(&V)"
     BEGIN
         MENUITEM "單窗模式(&M)", IDM_SWITCHVIEW
     END
@@ -35,9 +27,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "音量控制(&V)", IDM_VOLUMECTL
     END
-    POPUP "說明(&H)"
+    POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "關於(&A)", IDM_ABOUT
+        MENUITEM "關於註冊表編輯器(&A)", IDM_ABOUT
     END
 END
 
@@ -62,7 +54,7 @@ BEGIN
     IDS_MODE_NOT_READY "未準備好"
     IDS_ALL_TYPES_FILTER "所有支援格式"
     IDS_TOOLTIP_PLAY "播放"
-    IDS_TOOLTIP_STOP "停止"
+    IDS_TOOLTIP_STOP "Stop"
     IDS_TOOLTIP_EJECT "卸載"
     IDS_TOOLTIP_BACKWARD "迴轉"
     IDS_TOOLTIP_SEEKBACK "後退"

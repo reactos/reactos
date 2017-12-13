@@ -1,18 +1,16 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
-
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Edit&are"
-    IDS_MARK "&Marchează"
+    IDS_EDIT "&Editare"
+    IDS_MARK "Marcare"
     IDS_COPY "&Copiază\tEnter"
     IDS_PASTE "&Lipește"
     IDS_SELECTALL "Selectează t&ot"
-    IDS_SCROLL "Derulea&ză"
+    IDS_SCROLL "Derul"
     IDS_FIND "&Găsire…"
     IDS_DEFAULTS "Impli&cite"
-    IDS_PROPERTIES "&Proprietăți"
+    IDS_PROPERTIES "&Proprietăți…"
 /*
     IDS_SCROLLHERE "Derulează aici"
     IDS_SCROLLTOP "Derulează la început"
@@ -27,6 +25,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Marchează"
-    IDS_SELECT_TITLE "Selectează"
+    IDS_MARK_TITLE "Marcare"
+    IDS_SELECT_TITLE "Select"
 END

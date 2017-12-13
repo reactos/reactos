@@ -1,6 +1,5 @@
 /*
  * Copyright 2004 by Krzysztof Foltman
- * TRANLATOR : Ardit Dani
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,39 +16,39 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDM_MAINMENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "E Re...\tCtrl+N",       ID_FILE_NEW
-        MENUITEM "Hap...\tCtrl+O",        ID_FILE_OPEN
-        MENUITEM "Ruaj\tCtrl+S",          ID_FILE_SAVE
-        MENUITEM "Ruaj si...",            ID_FILE_SAVEAS
+        MENUITEM "&Hap...\tCtrl+O",      ID_FILE_OPEN
+        MENUITEM "&Ruaj\tCtrl+S",         ID_FILE_SAVE
+        MENUITEM "Ruaj &si...",           ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Printo...\tCtrl+P",    ID_PRINT
-        MENUITEM "Print previe&w...",     ID_PREVIEW
-        MENUITEM "Faqe setup...",         ID_PRINTSETUP
+        MENUITEM "&Printo...\tCtrl+P",     ID_PRINT
+        MENUITEM "Print previe&w...",        ID_PREVIEW
+        MENUITEM "Faqe setup...",        ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "Dil",                   ID_FILE_EXIT
+        MENUITEM "dIL",                 ID_FILE_EXIT
     END
     POPUP "Modifiko"
     BEGIN
-        MENUITEM "Zhbej\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&v\tCtrl+Z",               ID_EDIT_UNDO
         MENUITEM "Ribej\tCtrl+Y",               ID_EDIT_REDO
         MENUITEM SEPARATOR
         MENUITEM "Prej\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "Kopjo\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "Ngjit\tCtrl+V",               ID_EDIT_PASTE
+        MENUITEM "&Kopjo\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Ngjit\tCtrl+V",              ID_EDIT_PASTE
         MENUITEM "Pastro\tDEL",                 ID_EDIT_CLEAR
-        MENUITEM "Perzgjidh t'gjitha\tCtrl+A",  ID_EDIT_SELECTALL
+        MENUITEM "Perzgjedh te gjitha\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Gjej...\tCtrl+F",             ID_FIND
-        MENUITEM "Gjej tjetren\tF3",            ID_FIND_NEXT
-        MENUITEM "Zevendeso...\tCtrl+H",        ID_REPLACE
+        MENUITEM "Gjej...\tCtrl+F",            ID_FIND
+        MENUITEM "Gjej tjetren\tF3",              ID_FIND_NEXT
+        MENUITEM "Ndrysho...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "I lexueshem",                 ID_EDIT_READONLY
+        MENUITEM "I lexueshem",                  ID_EDIT_READONLY
         MENUITEM "&Modifiko",                   ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "E&xtra"
@@ -58,15 +57,15 @@ BEGIN
             MENUITEM "Karaktere &format",           ID_EDIT_CHARFORMAT
             MENUITEM "&Def. char format",           ID_EDIT_DEFCHARFORMAT
             MENUITEM "Paragrap&h format",           ID_EDIT_PARAFORMAT
-            MENUITEM "Merr tekstin",                ID_EDIT_GETTEXT
+            MENUITEM "Merr tekstin",                   ID_EDIT_GETTEXT
         END
     END
-    POPUP "&Vezhgo"
+    POPUP "&Vëzhgo"
     BEGIN
         MENUITEM "&Toolbar",        ID_TOGGLE_TOOLBAR
         MENUITEM "&Format Bar",     ID_TOGGLE_FORMATBAR
-        MENUITEM "Vizore",          ID_TOGGLE_RULER
-        MENUITEM "&Status Bar",     ID_TOGGLE_STATUSBAR
+        MENUITEM "&Vizore",          ID_TOGGLE_RULER
+        MENUITEM "Status&bar",     ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Opsione...",     ID_VIEWPROPERTIES
     END
@@ -77,18 +76,18 @@ BEGIN
     POPUP "F&ormat"
     BEGIN
         MENUITEM "&Font...",                     ID_FONTSETTINGS
-        MENUITEM "Pika",                         ID_BULLET
-        MENUITEM "&Paragraf...",                 ID_PARAFORMAT
+        MENUITEM "Pika",               ID_BULLET
+        MENUITEM "&Paragraf...",                ID_PARAFORMAT
         MENUITEM "&Tabs...",                     ID_TABSTOPS
         POPUP "Sfon&d"
         BEGIN
             MENUITEM "&Sisteme\tCtrl+1",         ID_BACK_1
-            MENUITEM "&PostoAte e verdhe\tCtrl+2", ID_BACK_2
+            MENUITEM "&PostoAte e verdhe\tCtrl+2",    ID_BACK_2
         END
     END
-    POPUP "Ndihmë"
+    POPUP "&File"
     BEGIN
-        MENUITEM "Rreth Wordpad",            ID_ABOUT
+        MENUITEM "Rreth Wordpad",      ID_ABOUT
     END
 END
 
@@ -98,10 +97,10 @@ BEGIN
     BEGIN
         MENUITEM "Prej",                ID_EDIT_CUT
         MENUITEM "Kopjo",               ID_EDIT_COPY
-        MENUITEM "Ngjit",               ID_EDIT_PASTE
+        MENUITEM "Ngjit",              ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Pika",                ID_BULLET
-        MENUITEM "&Paragraf...",        ID_PARAFORMAT
+        MENUITEM "Pika",      ID_BULLET
+        MENUITEM "&Paragraf...",       ID_PARAFORMAT
     END
 END
 
@@ -109,23 +108,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "E Zeze",     ID_COLOR_BLACK
-        MENUITEM "Geshtenje",  ID_COLOR_MAROON
-        MENUITEM "Jeshil",     ID_COLOR_GREEN
-        MENUITEM "Ulliri",     ID_COLOR_OLIVE
+        MENUITEM "E Zeze",      ID_COLOR_BLACK
+        MENUITEM "Geshtenje",     ID_COLOR_MAROON
+        MENUITEM "Jeshil",      ID_COLOR_GREEN
+        MENUITEM "Ulliri",      ID_COLOR_OLIVE
         MENUITEM "Navy",       ID_COLOR_NAVY
-        MENUITEM "Lelja",      ID_COLOR_PURPLE
+        MENUITEM "Lelja",     ID_COLOR_PURPLE
         MENUITEM "Teal",       ID_COLOR_TEAL
-        MENUITEM "Gri",        ID_COLOR_GRAY
-        MENUITEM "Argjend",    ID_COLOR_SILVER
-        MENUITEM "Kuqe",       ID_COLOR_RED
+        MENUITEM "Gri",       ID_COLOR_GRAY
+        MENUITEM "Argjend",     ID_COLOR_SILVER
+        MENUITEM "Kuqe",        ID_COLOR_RED
         MENUITEM "Lime",       ID_COLOR_LIME
-        MENUITEM "E Verdhe",   ID_COLOR_YELLOW
-        MENUITEM "Blu",        ID_COLOR_BLUE
+        MENUITEM "E Verdhe",     ID_COLOR_YELLOW
+        MENUITEM "Blu",       ID_COLOR_BLUE
         MENUITEM "Fuchsia",    ID_COLOR_FUCHSIA
-        MENUITEM "Uje",        ID_COLOR_AQUA
-        MENUITEM "E Bardhe",   ID_COLOR_WHITE
-        MENUITEM "Automatike", ID_COLOR_AUTOMATIC
+        MENUITEM "Uje",       ID_COLOR_AQUA
+        MENUITEM "E Bardhe",      ID_COLOR_WHITE
+        MENUITEM "Automatik",  ID_COLOR_AUTOMATIC
     END
 END
 
@@ -150,8 +149,8 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_VIEWPROPS_TITLE,          "Opsione"
-    STRING_VIEWPROPS_TEXT,           "Tekst"
+    STRING_VIEWPROPS_TITLE,          "OpSIONE"
+    STRING_VIEWPROPS_TEXT,           "Teksti"
     STRING_VIEWPROPS_RICHTEXT,       "Tekst i pasur"
 END
 
@@ -198,7 +197,7 @@ BEGIN
     LTEXT        "Formatet e disponushem",-1,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     DEFPUSHBUTTON "OK",IDOK,87,12,40,12
-    PUSHBUTTON   "Anulo",IDCANCEL,87,26,40,12
+    PUSHBUTTON   "Cancel",IDCANCEL,87,26,40,12
 END
 
 IDD_NEWFILE DIALOGEX 30, 20, 140, 80
@@ -209,7 +208,7 @@ BEGIN
     LTEXT        "Tipi dok te ri",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     DEFPUSHBUTTON "OK",IDOK,97,12,40,12
-    PUSHBUTTON   "Anulo",IDCANCEL,97,26,40,12
+    PUSHBUTTON   "Cancel",IDCANCEL,97,26,40,12
 END
 
 IDD_PARAFORMAT DIALOGEX 30, 20, 220, 110
@@ -227,7 +226,7 @@ BEGIN
     LTEXT "Radhitje", -1, 15, 87, 60, 13
     COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
     DEFPUSHBUTTON "OK", IDOK, 160, 15, 50, 15
-    PUSHBUTTON "Anulo", IDCANCEL, 160, 33, 50, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 160, 33, 50, 15
 END
 
 IDD_TABSTOPS DIALOGEX 30, 20, 200, 110
@@ -240,7 +239,7 @@ BEGIN
     DEFPUSHBUTTON "Shto", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "Hiq", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "OK", IDOK, 135, 15, 58, 15
-    PUSHBUTTON "&Anulo", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 135, 33, 58, 15
     PUSHBUTTON "Hiq te gjith", ID_TAB_EMPTY, 135, 51, 58, 15
 END
 
@@ -257,6 +256,6 @@ BEGIN
     CHECKBOX "&Toolbar", IDC_PAGEFMT_TB, 165, 20, 80, 15
     CHECKBOX "&Format Bar", IDC_PAGEFMT_FB, 165, 38, 80, 15
     CHECKBOX "&Vizore", IDC_PAGEFMT_RU, 165, 56, 80, 15
-    CHECKBOX "&Status Bar", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    CHECKBOX "Status&bar", IDC_PAGEFMT_SB, 165, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END

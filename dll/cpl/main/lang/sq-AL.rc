@@ -1,8 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TRANSLATION:  18-01-2014
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -11,21 +7,21 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Përsëritje karakteri", -1, 5, 5, 236, 135
     ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 13, 18, 15, 15
-    LTEXT "Përsërit &vonesë:", -1, 40, 18, 100, 10
+    LTEXT "përsëritje vonesë:", -1, 40, 18, 100, 10
     LTEXT "Gjatë", -1, 40, 33, 20, 10
     LTEXT "Shkurtër", -1, 200, 33, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 33, 130, 17
     ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 70, 15, 15
     LTEXT "&Shkalla Përsëritjes:", -1, 40, 70, 100, 10
-    LTEXT "Ngadalë", -1, 40, 85, 20, 10
-    LTEXT "Shpejt", -1, 200, 85, 20, 10
+    LTEXT "Ngadal", -1, 40, 85, 20, 10
+    LTEXT "Shpejte", -1, 200, 85, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
     LTEXT "Kliko këtu dhe mbani të shtypur një buton për të &testuar normën e përsëritjes:", -1, 15, 105, 216, 10
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
     GROUPBOX "Indikues &normë levizje:", -1, 5, 145, 236, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
-    LTEXT "Asnjë", -1, 40, 165, 25, 10
-    LTEXT "Shpejt", -1, 200, 165, 30, 10
+    LTEXT "None", -1, 40, 165, 25, 10
+    LTEXT "Shpejte", -1, 200, 165, 30, 10
     CONTROL "", IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
 
@@ -62,12 +58,12 @@ BEGIN
     GROUPBOX "Shpejtësia e dy-klikimeve", -1, 5, 78, 236, 70
     LTEXT "Kliko-dy here dosjen për të testuar parametrat tuaj. Në rast se dosja nuk hapet ose mbyllet, provoni duke përdorur një parameter më të ngadaltë.", -1, 10, 90, 156, 28
     LTEXT "Shpejtesi:   Ngadale", -1, 10, 123, 50, 10
-    LTEXT "Shpejt", -1, 136, 123, 24, 10
+    LTEXT "Shpejte", -1, 136, 123, 24, 10
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
     CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
     GROUPBOX "KlikoMbyll", -1, 5, 150, 236, 70
     CHECKBOX "&Ndez KlikoMbyll", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-    PUSHBUTTON "&Parametra...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
+    PUSHBUTTON "&Konfigurime...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
     LTEXT "Ju mundëson për të nxjerrë në pah ose terhiq pa mbajtur butonin e miut. Për të vendosur, shtypni për pak kohë butonin e miut. Për të liruar, klikoni butonin e miut përsëri.", -1, 10, 180, 224, 30
 END
 
@@ -78,14 +74,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Skemë", -1, 5, 5, 181, 45
     COMBOBOX IDC_COMBO_CURSOR_SCHEME, 12, 15, 167, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Ruaj Si...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
+    PUSHBUTTON "Ruaj si...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
     PUSHBUTTON "&Fshi", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 196, 9, 45, 41, WS_EX_STATICEDGE
     LTEXT "&Rregullo", -1, 5, 57, 60, 10
     LISTBOX IDC_LISTBOX_CURSOR, 5, 68, 236, 124, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
     CHECKBOX "&Aktivizo hijen treguesit", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
     PUSHBUTTON "Përdor parazgjedhur", IDC_BUTTON_USE_DEFAULT_CURSOR, 117, 196, 65, 14
-    PUSHBUTTON "&Shfleto...", IDC_BUTTON_BROWSE_CURSOR, 186, 196, 55, 14
+    PUSHBUTTON "&Browse...", IDC_BUTTON_BROWSE_CURSOR, 186, 196, 55, 14
 END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 192, 53
@@ -108,7 +104,7 @@ BEGIN
     LTEXT "Zgjedh shpejtësine e treguesit:", -1, 52, 15, 110, 10
     LTEXT "Ngadal", -1, 60, 30, 20, 10
     CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
-    LTEXT "Shpejt", -1, 170, 30, 20, 10
+    LTEXT "Shpejte", -1, 170, 30, 20, 10
     ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
     CHECKBOX "&Rrit Saktësin Treguesit", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
     GROUPBOX "Kalo në", -1, 5, 70, 236, 40
@@ -117,7 +113,7 @@ BEGIN
     ICON IDI_MOUSE_BUTTON, IDC_ICON_SNAP_TO, 18, 83, 15, 15
     GROUPBOX "Dukshmëria", -1, 5, 115, 236, 95
     CHECKBOX "&Shfaq shtigjet e treguesit:", IDC_CHECK_POINTER_TRAIL, 52, 128, 125, 10
-    LTEXT "Shkurt", IDC_TEXT_TRAIL_SHORT, 54, 143, 25, 10
+    LTEXT "Shkurtër", IDC_TEXT_TRAIL_SHORT, 54, 143, 25, 10
     LTEXT "Gjatë", IDC_TEXT_TRAIL_LONG, 157, 143, 30, 10
     ICON IDI_MOUSE_TRAILS, IDC_ICON_POINTER_TRAIL, 20, 128, 15, 15
     CONTROL "", IDC_SLIDER_POINTER_TRAIL, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 143, 70, 17
@@ -163,7 +159,7 @@ BEGIN
     IDS_SIZEALL "Leviz"
     IDS_UPARROW "Zgjidhhje Alternative"
     IDS_HAND "Zgjidh linkun"
-    IDS_NONE "(Asnjë)"
+    IDS_NONE "(Asnje)"
     IDS_SYSTEM_SCHEME "(Skema Sistemit)"
     IDS_BROWSE_FILTER "Treguesi (*.ani, *.cur)\0*.ani;*.cur\0Treguesi animuar (*.ani)\0*.ani\0Treguesi statik (*.cur)\0*.cur\0T'gjith Dokumentat\0*.*\0\0"
     IDS_BROWSE_TITLE "Shfleto"

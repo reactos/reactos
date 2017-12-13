@@ -1,0 +1,8 @@
+LANGUAGE LANG_GREEK, SUBLANG_GREEK_GREECE
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Starfield ScreenSaver"
+    IDS_TITLE       "About"
+    IDS_TEXT        "Αυτή η προφύλαξη οθόνης δε διαθέτει επιλογές τις οποίες μπορείτε να ορίσετε."
+END

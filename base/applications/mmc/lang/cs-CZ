@@ -1,0 +1,43 @@
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Nový\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Otevřít...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Ukončit\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Nový\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Otevřít...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "Uložit j&ako...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Ukončit\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Okna"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Management Console"
+    IDS_CONSOLETITLE "Console%1!u!"
+END

@@ -1,4 +1,4 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 STRINGTABLE
 BEGIN
@@ -6,11 +6,11 @@ BEGIN
     IDS_APPDATA "Приложни данни"
     IDS_DESKTOP "Работна площ"
     IDS_FAVORITES "Любимки"
-    IDS_MYDOCUMENTS "Документите ми"
-    IDS_NETHOOD "Съседска мрежа"
+    IDS_MYDOCUMENTS "Книжа"
+    IDS_NETHOOD "Мрежова околност"
     IDS_PRINTHOOD "Съседски печатачи"
     IDS_RECENT "Скорошни"
-    IDS_SENDTO "Изпращане в"
+    IDS_SENDTO "Изпращане"
     IDS_TEMPLATES "Шаблони"
     IDS_STARTMENU "Пусков изборник"
     IDS_PROGRAMS "Пусков изборник\\Приложения"
@@ -18,7 +18,7 @@ BEGIN
     IDS_LOCALSETTINGS "Местни настройки"
     IDS_LOCALAPPDATA "Местни настройки\\Приложни данни"
     IDS_TEMP "Местни настройки\\Временни"
-    IDS_CACHE "Местни настройки\\Временни файлове за интернет"
-    IDS_HISTORY "Местни настройки\\Посетени"
-    IDS_COOKIES "Курабийки"
+    IDS_CACHE "Местни настройки\\Temporary Internet Files"
+    IDS_HISTORY "Местни настройки\\History"
+    IDS_COOKIES "Бисквитки"
 END

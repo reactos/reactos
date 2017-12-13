@@ -1,15 +1,13 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_MAINMENU MENU
 BEGIN
     POPUP "文件(&F)"
     BEGIN
-        MENUITEM "打开... (&O)\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "打开...(&O)\tCtrl+O", IDM_OPEN_FILE
         MENUITEM "关闭(&C)\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "退出(&E)", IDM_EXIT
+        MENUITEM "退出(&X)", IDM_EXIT
     END
     POPUP "播放(&P)"
     BEGIN
@@ -18,7 +16,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "重复(&T)\tCtrl+T", IDM_REPEAT
     END
-    POPUP "视图(&V)"
+    POPUP "查看(&V)"
     BEGIN
         MENUITEM "单窗模式(&M)", IDM_SWITCHVIEW
     END
@@ -29,9 +27,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "音量控制(&V)", IDM_VOLUMECTL
     END
-    POPUP "帮助(&H)"
+    POPUP "文件(&F)"
     BEGIN
-        MENUITEM "关于(&A)", IDM_ABOUT
+        MENUITEM "关于注册表编辑器(&A)", IDM_ABOUT
     END
 END
 
@@ -56,7 +54,7 @@ BEGIN
     IDS_MODE_NOT_READY "未准备好"
     IDS_ALL_TYPES_FILTER "所有支持的格式"
     IDS_TOOLTIP_PLAY "播放"
-    IDS_TOOLTIP_STOP "停止"
+    IDS_TOOLTIP_STOP "Stop"
     IDS_TOOLTIP_EJECT "弹出"
     IDS_TOOLTIP_BACKWARD "向后跳过"
     IDS_TOOLTIP_SEEKBACK "快退"

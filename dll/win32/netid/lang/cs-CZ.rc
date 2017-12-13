@@ -1,9 +1,4 @@
-/* FILE:       dll/win32/netid/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2010-03-14
- */
-
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
 
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -19,7 +14,7 @@ BEGIN
     LTEXT "Pracovní skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Kliknutím na ""Síťová ID"" lze použít Průvodce síťovou identifikací k připojení se k doméně a vytvoření místního uživatele.", IDC_STATIC, 6, 113, 172, 24
-    PUSHBUTTON "&Síťová ID...", IDC_NETWORK_ID, 190, 114, 58, 15 //FIXME nic vic nez "sitova ID" se nevejde na tlacitko!
+    PUSHBUTTON "&Síťová ID...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT "Kliknutím na ""Změnit"" lze přejmenovat tento počítač nebo se připojit k doméně.", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON "&Změnit...", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT "Poznámka: Identifikaci tohoto počítače mohou změnit pouze administrátoři.", IDC_STATIC, 6, 179, 300, 9
@@ -75,9 +70,11 @@ BEGIN
     25 "Lze změnit název a členství tohoto počítače. Změny mohou mít vliv na přístup k síťovým prostředkům."
     1021 "Poznámka: Identifikaci tohoto počítače mohou změnit pouze administrátoři."
     1022 "Poznámka: Identifikace počítače nemůže být změněna z následujících důvodů:"
-    1030 "Nový název počítače ""%s"" obsahuje nepovolené znaky. Mezi nepovolené znaky patří ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / ?"
-    3210 "&Detaily >>"
-    3220 "<< &Detaily"
-    4000 "Informace"
-    4001 "Nelze nastavit nový název počítače!"
+    1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
+    /* Windows allows using these characters, although it displays a warning message.
+       Forbidding the use of these characters means incompatibility with Windows. */
+    3210 "&Details >>"
+    3220 "<< &Details"
+    4000 "Information"
+    4001 "Can't set new a computer name!"
 END

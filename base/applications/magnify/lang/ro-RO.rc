@@ -1,16 +1,11 @@
-/*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot md)
- */
-
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 IDC_MAGNIFIER MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "I&eșire", IDM_EXIT
-        MENUITEM "&Opțiuni…", IDM_OPTIONS
+        MENUITEM "&Opțiuni", IDM_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Despre…", IDM_ABOUT
     END
@@ -30,7 +25,7 @@ BEGIN
     ICON IDI_ICON, IDC_MYICON, 14, 9, 20, 20
     LTEXT "Lupă Versiunea 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
     LTEXT "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 48, 24, 125, 22
-    PUSHBUTTON "Î&nchide", IDOK, 162, 48, 50, 14
+    PUSHBUTTON "Con&firmă", IDOK, 162, 48, 50, 14
 END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
@@ -38,8 +33,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Configurare lupă"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "Î&nchide", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "&Manual…", IDC_BUTTON_HELP, 38, 161, 50, 14
+    DEFPUSHBUTTON "Con&firmă", IDOK, 96, 161, 50, 14
+    PUSHBUTTON "&Fișier", IDC_BUTTON_HELP, 38, 161, 50, 14
     LTEXT "&Factorul de mărire:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Urmărire", IDC_STATIC, 7, 25, 139, 59
@@ -63,7 +58,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
 CAPTION "Lupă - introducere"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "Î&nchide", IDOK, 193, 76, 50, 14
+    DEFPUSHBUTTON "Con&firmă", IDOK, 193, 76, 50, 14
     ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
     LTEXT "Acest instrument este destinat persoanelor cu deficiențe vizuale minore. Pentru rezultate mai bune, folosiți un instrument mai sofisticat.", IDC_STATIC, 36, 7, 207, 33
     CONTROL "N&u doresc recurența acestui mesaj", IDC_SHOWWARNINGCHECK, "Button",

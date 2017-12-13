@@ -1,12 +1,4 @@
-/*
- * PROJECT:    ReactOS CACLS
- * FILE:       base/applications/cacls/lang/zh-CN.rc
- * LICENSE:    LGPL - See COPYING.LIB in the top level directory
- * PURPOSE:    Simplified Chinese resource file
- * TRANSLATOR: zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
- */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN

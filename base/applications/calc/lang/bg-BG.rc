@@ -1,10 +1,4 @@
-/* Превод на Български/ Bulgarian translation
- * http://www.reactos.org/wiki/Bulgarian_translation
- * FILE: base/applications/calc/lang/bg-BG.rc
- * Недовършен / Incomplete
- */
-
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 /* Dialogs */
 
@@ -135,17 +129,17 @@ BEGIN
     PUSHBUTTON "Дроб", IDC_BUTTON_F, 286, 140, 24, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     GROUPBOX "", IDC_STATIC, 147, 14, 163, 20
-    CONTROL "ЧДума", IDC_RADIO_QWORD, "Button", BS_AUTORADIOBUTTON |
+    CONTROL "Qword", IDC_RADIO_QWORD, "Button", BS_AUTORADIOBUTTON |
             NOT WS_VISIBLE, 150, 21, 38, 10
-    CONTROL "ДДума", IDC_RADIO_DWORD, "Button", BS_AUTORADIOBUTTON |
+    CONTROL "Dword", IDC_RADIO_DWORD, "Button", BS_AUTORADIOBUTTON |
             NOT WS_VISIBLE, 190, 21, 38, 10
-    CONTROL "Дума", IDC_RADIO_WORD, "Button", BS_AUTORADIOBUTTON |
+    CONTROL "Word", IDC_RADIO_WORD, "Button", BS_AUTORADIOBUTTON |
             NOT WS_VISIBLE, 230, 21, 38, 10
-    CONTROL "Байт", IDC_RADIO_BYTE, "Button", BS_AUTORADIOBUTTON |
+    CONTROL "Byte", IDC_RADIO_BYTE, "Button", BS_AUTORADIOBUTTON |
             NOT WS_VISIBLE, 270, 21, 38, 10
     CONTROL "Градуси", IDC_RADIO_DEG, "Button", BS_AUTORADIOBUTTON, 150, 21, 45, 10
     CONTROL "Радиани", IDC_RADIO_RAD, "Button", BS_AUTORADIOBUTTON, 204, 21, 45, 10
-    CONTROL "Градове", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
+    CONTROL "Гради", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
     PUSHBUTTON "C", IDC_BUTTON_CANC, 267, 38, 43, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "CE", IDC_BUTTON_CE, 222, 38, 43, 18, BS_CENTER | BS_VCENTER |
@@ -158,7 +152,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Изчислителян на РеактОС"
+CAPTION "Изчислителят на РеактОС"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -241,7 +235,7 @@ BEGIN
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 276, 24, 40, 17
     CONTROL "CE", IDC_BUTTON_CE, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 232, 24, 40, 17
-    CONTROL "Назад", IDC_BUTTON_BACK, "Button", BS_OWNERDRAW | BS_CENTER |
+    CONTROL "Back", IDC_BUTTON_BACK, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 188, 24, 40,17
     RTEXT "", IDC_TEXT_OUTPUT, 5, 1, 312, 14, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
     CONTROL "7", IDC_BUTTON_7, "Button", BS_OWNERDRAW | BS_CENTER |
@@ -276,7 +270,7 @@ BEGIN
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 266, 86, 24, 18
     CONTROL "+", IDC_BUTTON_ADD, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 266, 105, 24, 18
-    CONTROL "Крн2", IDC_BUTTON_SQRT, "Button", BS_OWNERDRAW | BS_CENTER |
+    CONTROL "Sqrt", IDC_BUTTON_SQRT, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 292, 48, 24, 18
     CONTROL "%", IDC_BUTTON_PERCENT, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 292, 67, 24, 18
@@ -315,10 +309,10 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Изглед"
+    POPUP "&Изглед"
     BEGIN
         MENUITEM "Обикновен", IDM_VIEW_STANDARD
         MENUITEM "Научен", IDM_VIEW_SCIENTIFIC
@@ -335,7 +329,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Разделяне на хилядите", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Помощ"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -347,12 +341,12 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Изглед"
+    POPUP "&Изглед"
     BEGIN
-        MENUITEM "Стандартно", IDM_VIEW_STANDARD
+        MENUITEM "Обикновен", IDM_VIEW_STANDARD
         MENUITEM "Научен", IDM_VIEW_SCIENTIFIC
         MENUITEM "Преобразуване", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
@@ -368,7 +362,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Разделяне на хилядите", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Помощ"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -380,18 +374,18 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Изглед"
+    POPUP "&Изглед"
     BEGIN
-        MENUITEM "Стандартно", IDM_VIEW_STANDARD
+        MENUITEM "Обикновен", IDM_VIEW_STANDARD
         MENUITEM "Научен", IDM_VIEW_SCIENTIFIC
         MENUITEM "Преобразуване", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Разделяне на хилядите", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Помощ"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -428,7 +422,7 @@ BEGIN
     IDS_CONV_TEMPERATURE "Температура"
     IDS_CONV_TIME "Време"
     IDS_CONV_VELOCITY "Скорост"
-    IDS_CONV_VOLUME "Обем"
+    IDS_CONV_VOLUME "Volume"
     IDS_CONV_WEIGHT "Тегло"
 END
 

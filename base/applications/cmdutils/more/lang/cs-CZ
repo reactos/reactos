@@ -1,0 +1,15 @@
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Displays data page-by-page on the screen.\n\n\
+  MORE < [Drive:][Path]File name\n\
+  Command | MORE \n\
+  MORE [Drive:][Path]File name\n\n\
+  [Drive:][Path]File name    A file, whose content shall be displayed.\n\
+  Command\t\t     A command, whose output shall be displayed.\n\n\
+  At the prompt """-- Continue --"" you can press any key to show the next page.\n"
+    IDS_CONTINUE "-- Pokračovat --"
+    IDS_CONTINUE_PROGRESS "-- Pokračovat (%d%%) --"
+    IDS_FILE_ACCESS "Nelze získat přístup k souboru %s.\n"
+END

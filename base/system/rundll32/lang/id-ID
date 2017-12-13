@@ -1,0 +1,7 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_INDONESIAN_INDONESIA
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "LoadLibrary gagal untuk mengambil '%s'"
+    IDS_MissingEntry "entry point hilang:%s\nDalam %s"
+END

@@ -1,20 +1,15 @@
-/* FILE:       applications/mmc/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2008-02-29
- */
-
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "Nový\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Nový\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Otevřít...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Uk&ončit\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "&Ukončit\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Nápověda"
+    POPUP "&Soubor"
     BEGIN
         MENUITEM "&O konzoli řízení systému ReactOS", IDM_HELP_ABOUT
     END
@@ -24,18 +19,18 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "Nový\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Nový\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Otevřít...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Uložiť", IDM_FILE_SAVE
+        MENUITEM "Uložit", IDM_FILE_SAVE
         MENUITEM "Uložit j&ako...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Uk&ončit\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "&Ukončit\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Okna"
     BEGIN
         MENUITEM "Seznam", IDM_WINDOWS_LIST
     END
-    POPUP "&Nápověda"
+    POPUP "&Soubor"
     BEGIN
         MENUITEM "&O konzoli řízení systému ReactOS", IDM_HELP_ABOUT
     END

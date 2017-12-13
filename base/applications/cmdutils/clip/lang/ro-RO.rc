@@ -1,10 +1,9 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nTastați ""CLIP /?"" pentru informațiile de utilizare.\n"
-    IDS_HELP "\nRedirecționează în clipboard ieșirea programelor linie-de-comandă.\n\n\
+    IDS_HELP "\nRedirects the output of command-line programs to the clipboard.\n\n\
 CLIP [/?]\n\n\
-    /?  Afișează acest mesaj.\n"
+    /?  Show this help message.\n"
 END

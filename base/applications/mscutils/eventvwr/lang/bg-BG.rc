@@ -1,4 +1,12 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+/*
+ * PROJECT:    ReactOS Event Viewer
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/mscutils/eventvwr/lang/en-US.rc
+ * PURPOSE:    English Language File for ReactOS Event Viewer
+ * TRANSLATOR: Marc Piulachs
+ */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 IDM_EVENTVWR MENU
 BEGIN
@@ -6,7 +14,7 @@ BEGIN
     BEGIN
         MENUITEM "&Open...", IDM_OPEN_EVENTLOG
         MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG
-        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "Затваряне", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "C&lear all Events", IDM_CLEAR_EVENTS
         MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
@@ -14,7 +22,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Из&ход", IDM_EXIT
     END
-    POPUP "Из&глед"
+    POPUP "&Изглед"
     BEGIN
         MENUITEM "&Newest first", IDM_LIST_NEWEST
         MENUITEM "&Oldest first", IDM_LIST_OLDEST
@@ -27,7 +35,7 @@ BEGIN
     BEGIN
         MENUITEM "&Show event details view", IDM_SHOW_EVENT_DETAILS_VIEW
     END
-    POPUP "Помо&щ"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "Помо&щ", IDM_HELP
         MENUITEM SEPARATOR
@@ -50,8 +58,8 @@ CAPTION "Подробно за събитието"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "EvtDetailsCtrl", IDC_STATIC, 0, 0, 266, 215
-    PUSHBUTTON "Помо&щ", IDHELP, 8, 220, 50, 14
-    DEFPUSHBUTTON "&Затваряне", IDOK, 208, 220, 50, 14
+    PUSHBUTTON "&Файл", IDHELP, 8, 220, 50, 14
+    DEFPUSHBUTTON "Затваряне", IDOK, 208, 220, 50, 14
 END
 
 IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
@@ -82,9 +90,9 @@ BEGIN
     LTEXT "&Описание:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "&Данни:", IDC_DETAILS_STATIC, 8, 140, 25, 8
+    LTEXT "&Данни:", IDC_DETAILS_STATIC, 8, 140, 20, 8
     CONTROL "&Байтове", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
-    CONTROL "&Думи", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 85, 140, 34, 8
+    CONTROL "&Word", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -99,7 +107,7 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "Размер:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -133,7 +141,7 @@ BEGIN
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
     IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
     IDS_LOADING_WAIT "Зареждане на събитията. Почакайте..."
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
+    IDS_NO_ITEMS "There are no items to show in this view."" // ""No events in this log."
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
@@ -144,8 +152,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_EVENTLOG_ERROR_TYPE "Error"
-    IDS_EVENTLOG_WARNING_TYPE "Warning"
+    IDS_EVENTLOG_ERROR_TYPE "Грешка"
+    IDS_EVENTLOG_WARNING_TYPE "Предупреждение"
     IDS_EVENTLOG_INFORMATION_TYPE "Information"
     IDS_EVENTLOG_AUDIT_SUCCESS "Audit Success"
     IDS_EVENTLOG_AUDIT_FAILURE "Audit Failure"
@@ -155,13 +163,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    IDS_BYTES_FORMAT "bytes"" // ""%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE "Вид"
+    IDS_COLUMNTYPE "Type"
     IDS_COLUMNDATE "Дата"
     IDS_COLUMNTIME "Време"
     IDS_COLUMNSOURCE "Източник"

@@ -1,0 +1,8 @@
+LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Starfield ScreenSaver"
+    IDS_TITLE       "About"
+    IDS_TEXT        "No options need to be set."
+END

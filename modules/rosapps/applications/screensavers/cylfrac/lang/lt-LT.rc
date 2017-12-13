@@ -1,17 +1,8 @@
-/*
- * PROJECT:     ReactOS Cylinders fractal
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        rosapps/applications/screensavers/cylfrac/lang/lt-LT.rc
- * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Girdžijauskas (cman@cman.us)
- * DATE:        2007-12-02
- */
-
-LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_LITHUANIAN, SUBLANG_LITHUANIAN_LITHUANIA
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Cilindrinis fraktalas"
-    IDS_TITLE       "Apie"
+    IDS_TITLE       "About"
     IDS_TEXT        "Ekrano užsklanda sukurta unC0Rr.\nSpecialiai ReactOS."
 END

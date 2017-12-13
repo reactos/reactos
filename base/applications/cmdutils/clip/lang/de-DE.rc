@@ -1,9 +1,9 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nGeben Sie ""CLIP /?"" ein, um die Syntax anzuzeigen.\n"
-    IDS_HELP "\nLeitet die Ausgabe von Befehlszeilenprogrammen in die Zwischenablage um.\n\n\
+    IDS_HELP "\nRedirects the output of command-line programs to the clipboard.\n\n\
 CLIP [/?]\n\n\
-    /?  Zeigt diese Hilfe an.\n"
+    /?  Show this help message.\n"
 END

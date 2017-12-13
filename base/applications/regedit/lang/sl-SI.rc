@@ -1,4 +1,4 @@
-LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_SLOVENIAN, SUBLANG_SLOVENIAN_SLOVENIA
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -18,7 +18,7 @@ BEGIN
     BEGIN
         MENUITEM "Iz&hod", ID_REGISTRY_EXIT
     END
-    POPUP "&Pomoè"
+    POPUP "&Datoteka"
     BEGIN
         MENUITEM "&O", ID_HELP_ABOUT
     END
@@ -26,7 +26,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Register"
+    POPUP "&Datoteka"
     BEGIN
         MENUITEM "&Uvozi registrsko datoteko ...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Izvozi registrsko datoteko ...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -79,7 +79,7 @@ BEGIN
         MENUITEM "&Dodaj med Priljubljene", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Odstrani iz Priljubljenih", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&Pomoè"
+    POPUP "&Datoteka"
     BEGIN
         MENUITEM "&Teme pomoèi", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
@@ -91,21 +91,21 @@ IDR_POPUP_MENUS MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Modify", ID_EDIT_MODIFY
+        MENUITEM "&Spremeni", ID_EDIT_MODIFY
         MENUITEM "Modify Binary Data", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
-        MENUITEM "&Delete\tDel", ID_EDIT_DELETE
-        MENUITEM "&Rename", ID_EDIT_RENAME
+        MENUITEM "Izbri&ši\tDel", ID_EDIT_DELETE
+        MENUITEM "Prei&menuj", ID_EDIT_RENAME
     END
     POPUP ""
     BEGIN
-        POPUP "&New"
+        POPUP "&Nova"
         BEGIN
-            MENUITEM "&Key", ID_EDIT_NEW_KEY
+            MENUITEM "&Kljuè", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&String Value", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binary Value", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD Value", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Niz", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binarna vrednost", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD vrednost", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
@@ -113,25 +113,25 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "Expand/Collapse", ID_TREE_EXPANDBRANCH
-        POPUP "&New"
+        POPUP "&Nova"
         BEGIN
-            MENUITEM "&Key", ID_EDIT_NEW_KEY
+            MENUITEM "&Kljuè", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&String Value", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binary Value", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD Value", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Niz", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binarna vrednost", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD vrednost", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Najdi...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Delete", ID_TREE_DELETE
-        MENUITEM "&Rename", ID_TREE_RENAME
+        MENUITEM "Prei&menuj", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Export", ID_TREE_EXPORT
         MENUITEM "&Permissions...", ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Copy Key Name", ID_EDIT_COPYKEYNAME
+        MENUITEM "&Kopiraj ime kljuèa", ID_EDIT_COPYKEYNAME
     END
     POPUP ""
     BEGIN
@@ -254,8 +254,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LIST_COLUMN_NAME "Ime"
-    IDS_LIST_COLUMN_TYPE "Vrsta"
+    IDS_LIST_COLUMN_NAME "Name"
+    IDS_LIST_COLUMN_TYPE "Type"
     IDS_LIST_COLUMN_DATA "Podatki"
 END
 
@@ -538,7 +538,7 @@ END
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS "Odpre pomoè."
- *    ID_HELP_ABOUT "Informacije o programu, številki razlièice in avtorskih pravicah."
+ *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
+ *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
  *END
  */

@@ -1,0 +1,24 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_END_NOW DIALOGEX 0, 0, 200, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "End Program - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ending Program... Please wait", IDC_STATIC, 7, 7, 186, 11
+    CONTROL "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
+    LTEXT "If you choose to end the program immediately, you will lose any unsaved data. To end the program now, click End Now.", IDC_STATIC, 7, 40, 186, 26
+    DEFPUSHBUTTON "&End Now", IDC_END_NOW, 150, 71, 43, 17
+END
+
+IDD_NOT_RESPONDING DIALOGEX 0, 0, 192, 122
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "End Program - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "Cancel", IDCANCEL, 142, 98, 43, 17
+    PUSHBUTTON "&End Now", IDC_END_NOW, 78, 98, 43, 17
+    LTEXT "This program is not responding.", IDC_STATIC, 7, 7, 178, 8
+    LTEXT "To return to ReactOS and check the status of the program, click Cancel.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "If you choose to end the program immediately, you will lose any unsaved data. To end the program now, click End Now.", IDC_STATIC, 7, 53, 178, 26
+END

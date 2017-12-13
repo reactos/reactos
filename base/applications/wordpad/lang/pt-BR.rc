@@ -1,8 +1,5 @@
 /*
- * Portuguese Language File
- *
- * Copyright 2008 Ricardo Filipe
- * Copyright 2010 Gustavo Henrique Milaré
+ * Copyright 2004 by Krzysztof Foltman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,78 +16,76 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma code_page(65001)
-
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 IDM_MAINMENU MENU
 BEGIN
     POPUP "&Arquivo"
     BEGIN
-        MENUITEM "&Novo...\tCtrl+N",      ID_FILE_NEW
-        MENUITEM "&Abrir...\tCtrl+O",     ID_FILE_OPEN
-        MENUITEM "&Salvar\tCtrl+S",       ID_FILE_SAVE
-        MENUITEM "Salvar &como...",       ID_FILE_SAVEAS
+        MENUITEM "&Novo...\tCtrl+N",       ID_FILE_NEW
+        MENUITEM "A&brir...\tCtrl+O",      ID_FILE_OPEN
+        MENUITEM "&Salvar\tCtrl+S",         ID_FILE_SAVE
+        MENUITEM "Salvar &como...",           ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Imprimir...\tCtrl+P",  ID_PRINT
-        MENUITEM "&Pré visualizar...",    ID_PREVIEW
-        MENUITEM "C&onfigurar página...", ID_PRINTSETUP
+        MENUITEM "I&mprimir...\tCtrl+P",     ID_PRINT
+        MENUITEM "&Pré visualizar...",        ID_PREVIEW
+        MENUITEM "C&onfigurar página...",        ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "&Sair",                 ID_FILE_EXIT
+        MENUITEM "Sai&r",                 ID_FILE_EXIT
     END
     POPUP "&Editar"
     BEGIN
-        MENUITEM "&Desfazer\tCtrl+Z",           ID_EDIT_UNDO
-        MENUITEM "&Refazer\tCtrl+Y",            ID_EDIT_REDO
+        MENUITEM "Desfa&zer\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Refazer\tCtrl+Y",               ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "Cor&tar\tCtrl+X",             ID_EDIT_CUT
-        MENUITEM "C&opiar\tCtrl+C",             ID_EDIT_COPY
-        MENUITEM "&Colar\tCtrl+V",              ID_EDIT_PASTE
-        MENUITEM "&Limpar\tDEL",                ID_EDIT_CLEAR
-        MENUITEM "&Selecionar tudo\tCtrl+A",    ID_EDIT_SELECTALL
+        MENUITEM "&Recortar\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copiar\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "C&olar\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "&Limpar\tDEL",                 ID_EDIT_CLEAR
+        MENUITEM "Selecionar &tudo\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Locali&zar...\tCtrl+F",       ID_FIND
-        MENUITEM "&Localizar próxima\tF3",      ID_FIND_NEXT
-        MENUITEM "Substitui&r...\tCtrl+H",      ID_REPLACE
+        MENUITEM "Locali&zar...\tCtrl+F",            ID_FIND
+        MENUITEM "Localizar pró&ximo\tF3",              ID_FIND_NEXT
+        MENUITEM "Replace...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Some&nte leitura",            ID_EDIT_READONLY
-        MENUITEM "&Modificado",                 ID_EDIT_MODIFIED
+        MENUITEM "Some&nte leitura",                  ID_EDIT_READONLY
+        MENUITEM "&Modificado",                   ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "E&xtras"
         BEGIN
-            MENUITEM "&Informação da selecção",         ID_EDIT_SELECTIONINFO
-            MENUITEM "&Formato dos caracteres",         ID_EDIT_CHARFORMAT
-            MENUITEM "&Definir formato dos caracteres", ID_EDIT_DEFCHARFORMAT
-            MENUITEM "F&ormato dos parágrafos",         ID_EDIT_PARAFORMAT
+            MENUITEM "&Informação da selecção",             ID_EDIT_SELECTIONINFO
+            MENUITEM "&Formato dos caracteres",           ID_EDIT_CHARFORMAT
+            MENUITEM "&Definir formato dos caracteres",           ID_EDIT_DEFCHARFORMAT
+            MENUITEM "F&ormato dos parágrafos",           ID_EDIT_PARAFORMAT
             MENUITEM "&Buscar texto",                   ID_EDIT_GETTEXT
         END
     END
-    POPUP "E&xibir"
+    POPUP "&Exibir"
     BEGIN
-        MENUITEM "&Barra de Ferramentas", ID_TOGGLE_TOOLBAR
-        MENUITEM "Barra de &Formatação",  ID_TOGGLE_FORMATBAR
-        MENUITEM "&Régua",                ID_TOGGLE_RULER
-        MENUITEM "Barra de &Estado",      ID_TOGGLE_STATUSBAR
+        MENUITEM "&Barra de Ferramentas",        ID_TOGGLE_TOOLBAR
+        MENUITEM "Barra de &Formatação",     ID_TOGGLE_FORMATBAR
+        MENUITEM "&Régua",          ID_TOGGLE_RULER
+        MENUITEM "&Barra de status",     ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Opções...",            ID_VIEWPROPERTIES
+        MENUITEM "&Opções...",     ID_VIEWPROPERTIES
     END
     POPUP "&Inserir"
     BEGIN
-        MENUITEM "&Data e hora...",    ID_DATETIME
+        MENUITEM "&Data e hora...",  ID_DATETIME
     END
     POPUP "F&ormatar"
     BEGIN
-        MENUITEM "&Fonte...",                    ID_FONTSETTINGS
-        MENUITEM "&Marcadores",                  ID_BULLET
+        MENUITEM "&Fonte...",                     ID_FONTSETTINGS
+        MENUITEM "&Marcadores",               ID_BULLET
         MENUITEM "&Parágrafo...",                ID_PARAFORMAT
-        MENUITEM "T&abulação...",                ID_TABSTOPS
+        MENUITEM "T&abulação...",                     ID_TABSTOPS
         POPUP "&Fundo"
         BEGIN
-            MENUITEM "&Sistema\tCtrl+1",        ID_BACK_1
-            MENUITEM "&PostThat amarelo\tCtrl+2",      ID_BACK_2
+            MENUITEM "&Sistema\tCtrl+1",         ID_BACK_1
+            MENUITEM "&PostThat amarelo\tCtrl+2",    ID_BACK_2
         END
     END
-    POPUP "&Ajuda"
+    POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Sobre Wine Wordpad",      ID_ABOUT
     END
@@ -100,11 +95,11 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Cortar",             ID_EDIT_CUT
-        MENUITEM "C&opiar",             ID_EDIT_COPY
-        MENUITEM "Co&lar",              ID_EDIT_PASTE
+        MENUITEM "C&ut",                ID_EDIT_CUT
+        MENUITEM "&Copy",               ID_EDIT_COPY
+        MENUITEM "&Paste",              ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Marcadores",         ID_BULLET
+        MENUITEM "&Marcadores",      ID_BULLET
         MENUITEM "&Parágrafo...",       ID_PARAFORMAT
     END
 END
@@ -113,23 +108,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Preto",        ID_COLOR_BLACK
+        MENUITEM "Preto",      ID_COLOR_BLACK
         MENUITEM "Castanho",     ID_COLOR_MAROON
-        MENUITEM "Verde",        ID_COLOR_GREEN
-        MENUITEM "Verde-oliva",  ID_COLOR_OLIVE
-        MENUITEM "Azul-marinho", ID_COLOR_NAVY
-        MENUITEM "Roxo",         ID_COLOR_PURPLE
-        MENUITEM "Azul-petróleo",ID_COLOR_TEAL
-        MENUITEM "Cinza",        ID_COLOR_GRAY
+        MENUITEM "Verde",      ID_COLOR_GREEN
+        MENUITEM "Verde-oliva",      ID_COLOR_OLIVE
+        MENUITEM "Azul-marinho",       ID_COLOR_NAVY
+        MENUITEM "Roxo",     ID_COLOR_PURPLE
+        MENUITEM "Azul-petróleo",       ID_COLOR_TEAL
+        MENUITEM "Cinza",       ID_COLOR_GRAY
         MENUITEM "Prateado",     ID_COLOR_SILVER
-        MENUITEM "Vermelho",     ID_COLOR_RED
-        MENUITEM "Verde-limão",  ID_COLOR_LIME
-        MENUITEM "Amarelo",      ID_COLOR_YELLOW
-        MENUITEM "Azul",         ID_COLOR_BLUE
-        MENUITEM "Fúcsia",       ID_COLOR_FUCHSIA
-        MENUITEM "Azul-piscina", ID_COLOR_AQUA
-        MENUITEM "Branco",       ID_COLOR_WHITE
-        MENUITEM "Automático",   ID_COLOR_AUTOMATIC
+        MENUITEM "Vermelho",        ID_COLOR_RED
+        MENUITEM "Verde-limão",       ID_COLOR_LIME
+        MENUITEM "Amarelo",     ID_COLOR_YELLOW
+        MENUITEM "Azul",       ID_COLOR_BLUE
+        MENUITEM "Fúcsia",    ID_COLOR_FUCHSIA
+        MENUITEM "Azul-piscina",       ID_COLOR_AQUA
+        MENUITEM "Branco",      ID_COLOR_WHITE
+        MENUITEM "Automatic",  ID_COLOR_AUTOMATIC
     END
 END
 
@@ -202,7 +197,7 @@ BEGIN
     LTEXT        "Formatos Disponíveis",-1,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     DEFPUSHBUTTON "OK",IDOK,87,12,40,12
-    PUSHBUTTON   "&Cancelar",IDCANCEL,87,26,40,12
+    PUSHBUTTON   "Cancel",IDCANCEL,87,26,40,12
 END
 
 IDD_NEWFILE DIALOGEX 30, 20, 140, 80
@@ -213,7 +208,7 @@ BEGIN
     LTEXT        "Novo tipo de documento",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     DEFPUSHBUTTON "OK",IDOK,97,12,40,12
-    PUSHBUTTON   "&Cancelar",IDCANCEL,97,26,40,12
+    PUSHBUTTON   "Cancel",IDCANCEL,97,26,40,12
 END
 
 IDD_PARAFORMAT DIALOGEX 30, 20, 220, 110
@@ -231,7 +226,7 @@ BEGIN
     LTEXT "Alinhamento", -1, 15, 87, 60, 13
     COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
     DEFPUSHBUTTON "OK", IDOK, 160, 15, 50, 15
-    PUSHBUTTON "&Cancelar", IDCANCEL, 160, 33, 50, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 160, 33, 50, 15
 END
 
 IDD_TABSTOPS DIALOGEX 30, 20, 200, 110
@@ -242,9 +237,9 @@ BEGIN
     GROUPBOX "Marca de tabulação", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
     DEFPUSHBUTTON "&Adicionar", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "&Remover", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "&Remove", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "OK", IDOK, 135, 15, 58, 15
-    PUSHBUTTON "&Cancelar", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 135, 33, 58, 15
     PUSHBUTTON "Remover &todos", ID_TAB_EMPTY, 135, 51, 58, 15
 END
 
@@ -261,6 +256,6 @@ BEGIN
     CHECKBOX "&Barra de Ferramentas", IDC_PAGEFMT_TB, 165, 20, 80, 15
     CHECKBOX "Barra de &Formatação", IDC_PAGEFMT_FB, 165, 38, 80, 15
     CHECKBOX "&Régua", IDC_PAGEFMT_RU, 165, 56, 80, 15
-    CHECKBOX "Barra de &Estado", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    CHECKBOX "&Barra de status", IDC_PAGEFMT_SB, 165, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END

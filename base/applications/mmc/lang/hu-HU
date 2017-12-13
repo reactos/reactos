@@ -1,0 +1,43 @@
+LANGUAGE LANG_HUNGARIAN, SUBLANG_HUNGARIAN_HUNGARY
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Új\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Meg&nyitás...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Kilépés\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Új\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Meg&nyitás...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "Mentés má&sként...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Kilépés\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Ablak"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+    POPUP "&Fájl"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Management Console"
+    IDS_CONSOLETITLE "Console%1!u!"
+END

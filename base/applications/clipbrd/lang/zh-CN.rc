@@ -1,6 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -24,11 +22,11 @@ BEGIN
     BEGIN
         MENUITEM "自动(&A)", CMD_AUTOMATIC
     END
-    POPUP "帮助(&H)"
+    POPUP "文件(&F)"
     BEGIN
         MENUITEM "帮助主题(&H)", CMD_HELP
         MENUITEM SEPARATOR
-        MENUITEM "关于(&A)", CMD_ABOUT
+        MENUITEM "关于注册表编辑器(&A)", CMD_ABOUT
     END
 END
 
@@ -45,7 +43,7 @@ END
 STRINGTABLE
 BEGIN
     STRING_CF_UNKNOWN "未知的格式"
-    STRING_CF_TEXT "文本"
+    STRING_CF_TEXT "文字"
     STRING_CF_BITMAP "位图"
     STRING_CF_OEMTEXT "OEM 文本"
     STRING_CF_UNICODETEXT "Unicode 文本"

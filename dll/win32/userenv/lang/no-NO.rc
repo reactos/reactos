@@ -1,4 +1,4 @@
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
@@ -8,17 +8,17 @@ BEGIN
     IDS_FAVORITES "Favoritter"
     IDS_MYDOCUMENTS "Mine dokumenter"
     IDS_NETHOOD "NetHood"
-    IDS_PRINTHOOD "PrintHood"
+    IDS_PRINTHOOD "Skrivere"
     IDS_RECENT "Siste"
-    IDS_SENDTO "Send til"
-    IDS_TEMPLATES "Templates"
-    IDS_STARTMENU "Start-Meny"
-    IDS_PROGRAMS "Start-Meny\\Programmer"
+    IDS_SENDTO "Sendtil"
+    IDS_TEMPLATES "Maler"
+    IDS_STARTMENU "Startmeny"
+    IDS_PROGRAMS "Start-meny\\Programmer"
     IDS_STARTUP "Start-Meny\\Programmer\\Oppstart"
     IDS_LOCALSETTINGS "Lokale innstillinger"
     IDS_LOCALAPPDATA "Lokale innstillinger\\Programdata"
     IDS_TEMP "Lokale innstillinger\\Midlertidig"
-    IDS_CACHE "Lokale innstillinger\\Midlertidig internett filer"
+    IDS_CACHE "Lokale innstillinger\\Midligtidig internett filer"
     IDS_HISTORY "Lokale innstillinger\\Logg"
-    IDS_COOKIES "Informasjonkapsel"
+    IDS_COOKIES "Informasjonskapsel"
 END

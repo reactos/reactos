@@ -1,0 +1,3 @@
+files:
+  - source: /**/en-US.rc
+    translation: /**/%locale%.rc

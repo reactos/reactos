@@ -1,0 +1,7 @@
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Nastavení telefonu a modemu"
+    IDS_CPLSYSTEMDESCRIPTION "Zde lze konfigurovat pravidla pro vytáčení telefonních čísel a nastavení modemu."
+END

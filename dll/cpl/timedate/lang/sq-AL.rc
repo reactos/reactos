@@ -1,8 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TRANSLATION:  18-01-2014
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -53,7 +49,7 @@ BEGIN
     IDS_CPLDESCRIPTION "Ndryshon datën, orën dhe orën e informacionit së zonës."
     IDS_TIMEZONETEXT "Ora zonës aktuale: %s"
     IDS_TIMEZONEINVALID "Invalide"
-    IDS_TIMEZONEUNKNOWN "i'panjohur"
+    IDS_TIMEZONEUNKNOWN "I'panjohur"
     IDS_INETTIMESUCSYNC "Ora është e sinkronizuar me sukses me %s në %s në %s"
     IDS_INETTIMENEXTSYNC "Sinkronizimi tjetër: %s në %s"
     IDS_INETTIMESYNCING "Ju lutem prisni ndërkohë që ReactOS sinkronizon orën me %s"

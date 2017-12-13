@@ -1,8 +1,4 @@
-/* Превод на Български/ Bulgarian translation */
-/* http://www.reactos.org/wiki/Bulgarian_translation */
-/* LOCATION: base/applications/rapps/lang */
-
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 IDR_MAINMENU MENU
 BEGIN
@@ -24,10 +20,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
-    POPUP "Помощ"
+    POPUP "Help"
     BEGIN
         MENUITEM "Помощ\tF1", ID_HELP, GRAYED
-        MENUITEM "За", ID_ABOUT
+        MENUITEM "&За", ID_ABOUT
     END
 END
 
@@ -56,16 +52,16 @@ BEGIN
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 254, 215
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Общи", -1, 4, 2, 244, 61
-    AUTOCHECKBOX "&Съхраняване разположението на прозореца", IDC_SAVE_WINDOW_POS, 15, 12, 223, 12
-    AUTOCHECKBOX "Об&новяване на списъка с достъпните приложения при пускане", IDC_UPDATE_AVLIST, 15, 29, 227, 12
-    AUTOCHECKBOX "&Вписване на слаганията и маханията на приложения", IDC_LOG_ENABLED, 15, 46, 223, 12
-    GROUPBOX "Сваляне", -1, 4, 65, 244, 51
+    GROUPBOX "General", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Съхраняване разположението на прозореца", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "Об&новяване на списъка с достъпните приложения при пускане", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Вписване на слаганията и маханията на приложения", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Сваляне", -1, 4, 65, 240, 51
     LTEXT "Папка за свалените файлове", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "Из&бор", IDC_CHOOSE, 187, 85, 50, 14
@@ -78,8 +74,8 @@ BEGIN
     LTEXT "No proxy for", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Подразбирано", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "Добре", IDOK, 116, 195, 60, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 181, 195, 60, 14
+    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 181, 195, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -90,26 +86,26 @@ BEGIN
     LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "Слагане от оптичен носител", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Сваляне и слагане", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "Добре", IDOK, 86, 78, 60, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 150, 78, 60, 14
+    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE 
 CAPTION "Сваляне %ls..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
-    PUSHBUTTON "Отказ", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 210, 66
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "За"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Управителят за приложожения на РеактОС\nВъзпроизводствени права (C) 2009\nДмитрий Чапъйшев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 150, 39
+    LTEXT "Управителят за приложожения на РеактОС\nВъзпроизводствени права (C) 2009\nДмитрий Чапъйшев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
     PUSHBUTTON "Затваряне", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -127,8 +123,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_NAME "Име"
-    IDS_APP_INST_VERSION "Издание"
+    IDS_APP_NAME "Name"
+    IDS_APP_INST_VERSION "Версия"
     IDS_APP_DESCRIPTION "Описание"
 END
 
@@ -178,7 +174,7 @@ BEGIN
     IDS_CAT_INTERNET "Интернет и мрежа"
     IDS_CAT_LIBS "Библиотеки"
     IDS_CAT_OFFICE "Служебни"
-    IDS_CAT_OTHER "Други"
+    IDS_CAT_OTHER "Other"
     IDS_CAT_SCIENCE "Наука"
     IDS_CAT_TOOLS "Средства"
     IDS_CAT_VIDEO "Видео"
@@ -202,7 +198,7 @@ BEGIN
     IDS_CHOOSE_FOLDER_TEXT "Изберете папка, в която да се свалят приложенията:"
     IDS_CHOOSE_FOLDER_ERROR "Указали сте несъществуваща папка!"
     IDS_APP_REG_REMOVE "Уверен ли сте, че искате да изтриете данните за сложеното приложение от регистъра?"
-    IDS_INFORMATION "Сведения"
+    IDS_INFORMATION "Information"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Премахването на данните за приложението от регистъра е невъзможно!"
@@ -218,7 +214,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
+    IDS_STATUS_INSTALLED "Сложено"
     IDS_STATUS_NOTINSTALLED "Not installed"
     IDS_STATUS_DOWNLOADED "Downloaded"
     IDS_STATUS_UPDATE_AVAILABLE "Update available"

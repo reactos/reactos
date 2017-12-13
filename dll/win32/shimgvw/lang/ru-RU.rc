@@ -1,10 +1,10 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Программа просмотра изображений и факсов"
     IDS_SETASDESKBG "Установить как фон рабочего стола"
-    IDS_PREVIEW "Предпросмотр"
+    IDS_PREVIEW "Просмотр"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Следующее изображение"
     IDS_TOOLTIP_PREV_PIC "Предыдущее изображение"

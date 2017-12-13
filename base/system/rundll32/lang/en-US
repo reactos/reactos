@@ -1,0 +1,7 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "LoadLibrary failed to load '%s'"
+    IDS_MissingEntry "Missing entry point:%s\nIn %s"
+END

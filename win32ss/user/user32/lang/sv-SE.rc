@@ -1,17 +1,15 @@
-/* Swedish translation by David Nordenberg */
-
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
 
 /* Dialogs */
 
 SELWINDOW DIALOGEX 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Välj fönster"
+CAPTION "Select Window"
 BEGIN
     LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Avbryt", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Cancel", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 /* Menus */
@@ -20,39 +18,39 @@ EDITMENU MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Ångra", EM_UNDO
+        MENUITEM "&Undo", EM_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Klipp ut", WM_CUT
-        MENUITEM "K&opiera", WM_COPY
-        MENUITEM "K&listra in", WM_PASTE
-        MENUITEM "&Ta bort", WM_CLEAR
+        MENUITEM "Klipp &ut", WM_CUT
+        MENUITEM "&Kopiera", WM_COPY
+        MENUITEM "Klistra &in", WM_PASTE
+        MENUITEM "&Delete", WM_CLEAR
         MENUITEM SEPARATOR
-        MENUITEM "&Markera allt", EM_SETSEL
+        MENUITEM "Markera &Allt", EM_SETSEL
     END
 END
 
 SYSMENU MENU
 BEGIN
-    MENUITEM "&Återställ", SC_RESTORE
-    MENUITEM "&Flytta", SC_MOVE
-    MENUITEM "S&torlek", SC_SIZE
-    MENUITEM "&Minimera", SC_MINIMIZE
-    MENUITEM "Ma&ximera", SC_MAXIMIZE
+    MENUITEM "&Restore", SC_RESTORE
+    MENUITEM "&Move", SC_MOVE
+    MENUITEM "&Size", SC_SIZE
+    MENUITEM "Mi&nimize", SC_MINIMIZE
+    MENUITEM "Ma&ximize", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Stäng\tAlt+F4", SC_CLOSE
+    MENUITEM "&Close\tAlt+F4", SC_CLOSE
 END
 
 SYSMENUMDI MENU
 BEGIN
-    MENUITEM "&Återställ", SC_RESTORE
-    MENUITEM "&Flytta", SC_MOVE
-    MENUITEM "S&torlek", SC_SIZE
-    MENUITEM "&Minimera", SC_MINIMIZE
-    MENUITEM "Ma&ximera", SC_MAXIMIZE
+    MENUITEM "&Restore", SC_RESTORE
+    MENUITEM "&Move", SC_MOVE
+    MENUITEM "&Size", SC_SIZE
+    MENUITEM "Mi&nimize", SC_MINIMIZE
+    MENUITEM "Ma&ximize", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Stäng\tCtrl+F4", SC_CLOSE
+    MENUITEM "&Close\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "&Nästa\tCtrl+F6", SC_NEXTWINDOW
+    MENUITEM "Nex&t\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
@@ -61,14 +59,14 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "Fel"
     IDS_OK "OK"
-    IDS_CANCEL "Avbryt"
+    IDS_CANCEL "Cancel"
     IDS_ABORT "&Avbryt"
     IDS_RETRY "&Försök igen"
     IDS_IGNORE "&Ignorera"
-    IDS_YES "&Ja"
-    IDS_NO "&Nej"
-    IDS_CLOSE "&Stäng"
-    IDS_HELP "Hjälp"
+    IDS_YES "&Yes"
+    IDS_NO "&No"
+    IDS_CLOSE "Stäng"
+    IDS_HELP "Help"
     IDS_TRYAGAIN "&Försök igen"
     IDS_CONTINUE "F&ortsätt"
 END

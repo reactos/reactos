@@ -1,0 +1,7 @@
+LANGUAGE LANG_SANSKRIT, SUBLANG_SANSKRIT_INDIA
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Phone and Modem Options"
+    IDS_CPLSYSTEMDESCRIPTION "Configure your telephone dialing rules and modem settings."
+END

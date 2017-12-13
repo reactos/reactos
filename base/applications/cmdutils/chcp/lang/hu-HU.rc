@@ -1,13 +1,11 @@
-/* Hungarian translation by Robert Horvath (talley at cubeclub.hu) 2005 */
-
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_HUNGARIAN, SUBLANG_HUNGARIAN_HUNGARY
 
 STRINGTABLE
 BEGIN
-    STRING_CHCP_HELP "Megjeleníti vagy megváltoztatja az aktív kódlapot.\n\n\
+    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
 CHCP [nnn]\n\n\
-  nnn   A használni kívánt kódlap száma.\n\n\
-Írd be a  CHCP paraméterek nélkül, hogy megjelenítse az aktív kódlapot.\n"
+  nnn   Specifies the active code page number.\n\n\
+Type CHCP without a parameter to display the active code page number.\n"
     STRING_CHCP_ERROR1 "Aktív kódlap: %u\n"
     STRING_CHCP_ERROR4 "Érvénytelen kódlap\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Érvénytelen paraméter megadás - %s\n"

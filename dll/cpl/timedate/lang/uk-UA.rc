@@ -1,12 +1,4 @@
-/*
- * PROJECT:     Timedate Control Panel Applet
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/timedate/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File
- * PROGRAMMERS: Artem Reznikov
- */
-
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -57,7 +49,7 @@ BEGIN
     IDS_CPLDESCRIPTION "Установлення дати, часу й часового поясу для цього комп'ютера."
     IDS_TIMEZONETEXT "Поточний часовий пояс: %s"
     IDS_TIMEZONEINVALID "Недійсний"
-    IDS_TIMEZONEUNKNOWN "Невідомий"
+    IDS_TIMEZONEUNKNOWN "Невідомо"
     IDS_INETTIMESUCSYNC "Час було успішно синхронізовано з %s на %s в %s"
     IDS_INETTIMENEXTSYNC "Наступна синхронізація: %s в %s"
     IDS_INETTIMESYNCING "Будь ласка зачекайте, поки ReactOS синхронізує час з %s"

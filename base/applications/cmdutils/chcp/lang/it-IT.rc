@@ -1,11 +1,11 @@
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
 
 STRINGTABLE
 BEGIN
-    STRING_CHCP_HELP "Visualizza o attiva il numero di tabella dei codici.\n\n\
+    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
 CHCP [nnn]\n\n\
-  nnn   Indica il numero di tabella dei codici.\n\n\
-Scrivi CHCP senza parametri per visualizzare il numero attuale.\n"
+  nnn   Specifies the active code page number.\n\n\
+Type CHCP without a parameter to display the active code page number.\n"
     STRING_CHCP_ERROR1 "Tabella dei codici attiva: %u\n"
     STRING_CHCP_ERROR4 "Tabella dei codici non valida\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Formato dei parametri non valido - %s\n"

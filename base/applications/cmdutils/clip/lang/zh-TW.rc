@@ -1,11 +1,9 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n輸入 ""CLIP /?"" 知道用法資訊。\n"
-    IDS_HELP "\n將命令列程式的輸出重定向到剪貼簿。\n\n\
+    IDS_HELP "\nRedirects the output of command-line programs to the clipboard.\n\n\
 CLIP [/?]\n\n\
-    /?  顯示此説明消息。\n"
+    /?  Show this help message.\n"
 END

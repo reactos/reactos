@@ -1,0 +1,44 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
+
+IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Oprire calculator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Acum puteți închide calculatorul în siguranță.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Repornire", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Eroare interfață de utilizator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Fișierul DLL al interfeței „%s” nu a putut fi încărcat.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Reinstalați ReactOS pentru a rezolva această problemă.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Repornire", 1, 80, 91, 68, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "Conexiuni în rețea în curs de pregătire…"
+    IDS_APPLYINGCOMPUTERSETTINGS "Configurații generale în curs de instituire…"
+    IDS_RUNNINGSTARTUPSCRIPTS "Operații de pornire în curs de execuție…"
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Operații de oprire în curs de execuție…"
+    IDS_APPLYINGYOURPERSONALSETTINGS "Configurații personale în curs de instituire…"
+    IDS_RUNNINGLOGOFFSCRIPTS "Operații de deautentificare în curs de efectuare…"
+    IDS_RUNNINGLOGONSCRIPTS "Operații de autentificare în curs de efectuare…"
+    IDS_LOADINGYOURPERSONALSETTINGS "Configurații personale în curs de reconstituire…"
+    IDS_CLOSINGNETWORKCONNECTIONS "Conexiuni în rețea în curs de închidere…"
+    IDS_REACTOSISSHUTTINGDOWN "Sistem de operare în curs de oprire…"
+    IDS_PREPARETOSTANDBY "Stare de veghe în curs de pregătire…"
+    IDS_PREPARETOHIBERNATE "Stare de hibernare în curs de pregătire…"
+    IDS_SAVEYOURSETTINGS "Configurații personale în curs de păstrare…"
+    IDS_REACTOSISSTARTINGUP "Sistem de operare în curs de pornire…"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon a eșuat la activarea interfeței-utilizator!"
+END

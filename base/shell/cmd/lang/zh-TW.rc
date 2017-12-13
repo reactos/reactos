@@ -1,60 +1,60 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    STRING_ASSOC_HELP "修改檔案關聯。\n\n\
-assoc [.ext[=[檔案類型]]]\n\
+    STRING_ASSOC_HELP "Modify file extension associations.\n\n\
+assoc [.ext[=[FileType]]]\n\
 \n\
-assoc (輸出所有檔案關聯)\n\
-assoc .ext (輸出指定的檔案關聯)\n\
-assoc .ext= (刪除指定的檔案關聯)\n\
-assoc .ext=檔案類型 (添加新的檔案關聯)\n"
-    STRING_ATTRIB_HELP "顯示或更改檔案屬性。\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 檔案 ...\n\
+assoc (print all associations)\n\
+assoc .ext (print specific association)\n\
+assoc .ext= (remove specific association)\n\
+assoc .ext=FileType (add new association)\n"
+    STRING_ATTRIB_HELP "Displays or changes file attributes.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
        [/S [/D]]\n\n\
-  +   設定一個屬性\n\
-  -   清除一個屬性\n\
-  R   只讀屬性\n\
-  A   歸檔屬性\n\
-  S   系統屬性\n\
-  H   隱藏屬性\n\
-  /S  處理當前目錄和所有子目錄下的所有匹配檔案\n\
-  /D  同時處理目錄\n\n\
-執行不帶參數的 ATTRIB 將會顯示所有檔案的屬性。\n"
-    STRING_ALIAS_HELP "設定、刪除或顯示別名。\n\n\
-ALIAS [別名=[命令]]\n\n\
-  別名    別名的名稱。\n\
-  命令    取代別名的文字。\n\n\
-顯示所有別名：\n\
+  +   Sets an attribute\n\
+  -   Clears an attribute\n\
+  R   Read-only file attribute\n\
+  A   Archive file attribute\n\
+  S   System file attribute\n\
+  H   Hidden file attribute\n\
+  /S  Processes matching files in the current directory\n\
+      and all subdirectories\n\
+  /D  Processes directories as well\n\n\
+Type ATTRIB without a parameter to display the attributes of all files.\n"
+    STRING_ALIAS_HELP "Sets, removes or shows aliases.\n\n\
+ALIAS [alias=[command]]\n\n\
+  alias    Name for an alias.\n\
+  command  Text to be substituted for an alias.\n\n\
+To list all aliases:\n\
   ALIAS\n\n\
-設定一個新的或者替換一個已存在的別名：\n\
+To set a new or replace an existing alias:\n\
   ALIAS da=dir a:\n\n\
-刪除一個別名：\n\
+To remove an alias from the alias list:\n\
   ALIAS da="
     STRING_BEEP_HELP "使揚聲器發出BEEP聲。\n\nBEEP\n"
-    STRING_CALL_HELP "從一個批處理程式呼叫另一個。\n\n\
-CALL [驅動器:][路徑]檔名 [批處理參數]\n\n\
-  批處理參數  指定被呼叫的批處理程式所需的命令列資訊。"
-    STRING_CD_HELP "改變當前目錄或者顯示當前目錄名。\n\n\
-CHDIR [/D][驅動器:][路徑]\n\
+    STRING_CALL_HELP "Calls one batch program from another.\n\n\
+CALL [drive:][path]filename [batch-parameter]\n\n\
+  batch-parameter  Specifies any command-line information required by the\n\
+                   batch program."
+    STRING_CD_HELP "Changes the current directory or displays it's name\n\n\
+CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
-CD [/D][驅動器:][路徑]\n\
+CD [/D][drive:][path]\n\
 CD[..|.]\n\n\
-  ..   上一級目錄\n\
-  .    當前目錄\n\
-  /D   將會改變當前驅動器和當前目錄。\n\n\
-執行 CD 驅動器: 顯示指定驅動器上的當前目錄。\n\
-不帶參數執行 CD 顯示當前驅動器和目錄。\n"
-    STRING_CHOICE_HELP "等待使用者在一組選項中做出一個選擇。\n\n\
-CHOICE  [/C[:]選項][/N][/S][/T[:]c,nn][文字]\n\n\
-  /C[:]選項     指定允許的選項。默認為 YN。\n\
-  /N            不要在提示字元串最後顯示選項和問號。\n\
-  /S            選項輸入區分大小寫。\n\
-  /T[:]c,nn     在 nn 秒後默認選擇 c 。\n\
-  文字          要顯示的提示字元串。\n\n\
-ERRORLEVEL 將被設定為使用者輸入在選項中的偏移。\n"
+  ..   parent directory\n\
+  .    current directory\n\
+  /D   Will change current drive and current directory.\n\n\
+Type CD drive: to display the current directory on the specified drive.\n\
+Type CD without a parameter to display the current drive and directory.\n"
+    STRING_CHOICE_HELP "Waits for the user to choose one of a set of choices.\n\n\
+CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
+  /C[:]choices  Specifies allowable keys. Default is YN.\n\
+  /N            Do not display choices and ? at the end of the prompt string.\n\
+  /S            Treat choice keys as case sensitive.\n\
+  /T[:]c,nn     Default choice to c after nn seconds.\n\
+  text          Prompt string to display.\n\n\
+ERRORLEVEL is set to offset of key user presses in choices.\n"
     STRING_CLS_HELP "清除螢幕。\n\nCLS\n"
     STRING_CMD_HELP1 "\n可用的內部命令：\n"
     STRING_CMD_HELP2 "\n可用功能："
@@ -63,22 +63,23 @@ ERRORLEVEL 將被設定為使用者輸入在選項中的偏移。\n"
     STRING_CMD_HELP5 "  [Bash 檔名自動完成]"
     STRING_CMD_HELP6 "  [目錄棧]"
     STRING_CMD_HELP7 "  [重定向和管道]"
-    STRING_CMD_HELP8 "啟動一個新的 ReactOS 命令列直譯器的新例項。\n\n\
-CMD [/[C|K] 命令][/P][/Q][/T:bf]\n\n\
-  /C 命令      運行指定的命令後退出。\n\
-  /K 命令      運行指定的命令後不退出。\n\
-  /P           永久保留 CMD 並運行 autoexec.bat (無法終止)。\n\
-  /T:bf        設定前景/背景顏色 (參見 COLOR 命令)。\n"
-    STRING_COLOR_HELP1 "設定默認前景和背景顏色。\n\n\
-COLOR [屬性 [/-F]]\n\n\
-  屬性          指定控制檯輸出的顏色屬性。\n\
-  /-F           不要使用顏色填充控制檯的空白區域。\n\n\
-有3種方法指定顏色：\n\
-1) [bright] 名稱 on [bright] 名稱 (僅需要開頭的3個字母)\n\
-2) 十進位制 on 十進位制\n\
-3) 兩位十六進位制數\n\n\
-顏色列表：\n\
-dec  hex  名稱         dec  hex  名稱\n\
+    STRING_CMD_HELP8 "Starts a new instance of the ReactOS command line interpreter.\n\n\
+CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
+  /C command  Runs the specified command and terminates.\n\
+  /K command  Runs the specified command and remains.\n\
+  /P          CMD becomes permanent and runs autoexec.bat\n\
+              (cannot be terminated).\n\
+  /T:bf       Sets the background/foreground color (see COLOR command).\n"
+    STRING_COLOR_HELP1 "Sets the default foreground and background colors.\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Specifies color attribute of console output.\n\
+  /-F         Does not fill the console blank space with color attribute.\n\n\
+There are three ways to specify the colors:\n\
+1) [bright] name on [bright] name  (only the first three letters are required)\n\
+2) decimal on decimal\n\
+3) two hex digits\n\n\
+Colors are:\n\
+dec  hex  name       dec  hex  name\n\
 0    0    Black       8   8    Gray(Bright black)\n\
 1    1    Blue        9   9    Bright Blue\n\
 2    2    Green      10   A    Bright Green\n\
@@ -88,17 +89,19 @@ dec  hex  名稱         dec  hex  名稱\n\
 6    6    Yellow     14   E    Bright Yellow\n\
 7    7    White      15   F    Bright White\n"
     STRING_COPY_HELP1 "覆蓋 %s 嗎 (Yes/No/All)? "
-    STRING_COPY_HELP2 "將一個或多個檔案複製到另一個位置。\n\n\
-COPY [/V][/Y|/-Y][/A|/B] 源 [/A|/B]\n\
-     [+ 源 [/A|/B] [+ ...]] [目的 [/A|/B]]\n\n\
-  源             指定要複製的一個或多個檔案。\n\
-  /A             表明一個 ASCII 文字檔案。\n\
-  /B             表明一個二進位制檔案。\n\
-  目的           指定要複製到的目錄和/或新的檔名。\n\
-  /V             檢驗新檔案是否正確地被寫入。\n\
-  /Y             覆蓋一個已存在的檔案時不提示。\n\
-  /-Y            覆蓋一個已存在的檔案時請求確認。\n\n\
-/Y 開關也可以在 COPYCMD 環境變數中指定。\n\
+    STRING_COPY_HELP2 "Copies one or more files to another location.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n\
+     [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n\n\
+  source       Specifies the file or files to be copied.\n\
+  /A           Indicates an ASCII text file.\n\
+  /B           Indicates a binary file.\n\
+  destination  Specifies the directory and/or filename for the new file(s).\n\
+  /V           Verifies that new files are written correctly.\n\
+  /Y           Suppresses prompting to confirm you want to overwrite an\n\
+               existing destination file.\n\
+  /-Y          Causes prompting to confirm you want to overwrite an\n\
+               existing destination file.\n\n\
+The switch /Y may be present in the COPYCMD environment variable.\n\
 ...\n"
     STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
 CTTY device\n\n\
@@ -111,66 +114,72 @@ device."
     STRING_DATE_HELP1 "\n輸入新的日期 (mm%cdd%cyyyy)："
     STRING_DATE_HELP2 "\n輸入新的日期 (dd%cmm%cyyyy)："
     STRING_DATE_HELP3 "\n輸入新的日期 (yyyy%cmm%cdd)："
-    STRING_DATE_HELP4 "顯示或者設定日期。\n\n\
-DATE [/T][日期]\n\n\
-  /T    僅顯示\n\n\
-不帶參數執行 DATE 將會顯示當前的日期設定和一個請求輸入新日期的提示。按 ENTER 鍵以保持原有設定。\n"
-    STRING_DEL_HELP1 "刪除一個或多個檔案。\n\n\
-DEL [/N /P /T /Q /S /W /Y /Z /A[[:]屬性]] 檔案 ...\n\
-DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]屬性]] 檔案 ...\n\
-ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]屬性]] 檔案 ...\n\n\
-      檔案  指定要刪除的一個或多個檔案。\n\n\
+    STRING_DATE_HELP4 "Displays or sets the date.\n\n\
+DATE [/T][date]\n\n\
+  /T    display only\n\n\
+Type DATE without parameters to display the current date setting and\n\
+a prompt for a new one.  Press ENTER to keep the same date.\n"
+    STRING_DEL_HELP1 "Deletes one or more files.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
+      file  Specifies the file(s) to delete.\n\n\
   /N    Nothing.\n\
-  /P    在刪除每個檔案前詢問。\n\
-  /T    顯示刪除檔案的總數和釋放的磁碟空間。n\
-  /Q    安靜模式。\n\
-  /W    在刪除檔案前使用隨機數覆蓋。\n\
-  /Y    刪除檔案前不提示。\n\
-  /F    強制刪除隱藏、只讀和系統檔案。\n\
-  /S    從所有子目錄刪除檔案。\n\
-  /A    根據屬性選擇要刪除的檔案。\n\
-          屬性列表：\n\
-          R     只讀檔案\n\
-          S     系統檔案\n\
-          A     歸檔檔案\n\
-          H     隱藏檔案\n\
-          -     意為“否”的字首\n"
+  /P    Prompt. Ask before deleting each file.\n\
+  /T    Total. Display total number of deleted files and freed disk space.\n\
+  /Q    Quiet.\n\
+  /W    Wipe. Overwrite the file with random numbers before deleting it.\n\
+  /Y    Yes. Kill even *.* without asking.\n\
+  /F    Force Delete hidden, read-only and system files.\n\
+  /S    Delete file from all sub directory\n\
+  /A    Select files to be deleted based on attributes.\n\
+        attributes\n\
+        R     Read Only files\n\
+        S     System files\n\
+        A     Archiveable files\n\
+        H     Hidden Files\n\
+        -     prefix meaning not\n"
     STRING_DEL_HELP2 "該目錄中的所有檔案都將被刪除！\n您確定嗎 (Y/N)？ "
     STRING_DEL_HELP3 "    %lu 檔案已刪除\n"
     STRING_DEL_HELP4 "    %lu 檔案已刪除\n"
-    STRING_DELAY_HELP "暫停 n 秒或毫秒。\n\
+    STRING_DELAY_HELP "Pause for n seconds or milliseconds.\n\
 DELAY [/m]n\n\n\
-  /m          指定 n 的單位使用毫秒，否則為秒。\n"
-    STRING_DIR_HELP1 "DIR [驅動器:][路徑][檔名] [/A[[:]屬性]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]排序順序]] [/P] [/Q] [/R] [/S] [/T[[:]時間欄位]] [/W] [/X] [/4]\n\n\
-  [驅動器:][路徑][檔名]\n\
-              指定要列表顯示的驅動器、目錄和/或檔案。\n\n\
-  /A          顯示具有指定屬性的檔案。\n\
-  屬性         D  目錄                           R  只讀檔案\n\
-               H  隱藏檔案                       A  歸檔檔案\n\
-               S  系統檔案                       -  意為“否”的字首\n\
-  /B          使用原始格式 (沒有開頭資訊或總覽)。\n\
-  /C          在檔案大小中顯示千分符。這是默認行為。使用 /-C 來禁用分隔符的顯示。\n\
-  /D          和寬模式相同但檔案是按列排序的。\n\
-  /L          使用小寫字母。\n\
-  /N          新的檔名在右邊的長列表格式。\n\
-  /O          排序顯示的檔案列表。\n\
-  排序順序     N  按名稱 (字母順序)               S  按大小 (小檔案在前)\n\
-               E  按副檔名 (字母順序)             D  按日期/時間 (最老的檔案在前)\n\
-               G  分組目錄在前                    -  反轉順序的字首\n\
-  /P          在每螢幕資訊輸出後停頓。\n\
-  /Q          顯示檔案的所有者。\n\
+  /m          Specify that n are in milliseconds,\n\
+              otherwise n are in seconds.\n"
+    STRING_DIR_HELP1 "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]sortorder]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+  [drive:][path][filename]\n\
+              Specifies drive, directory, and/or files to list.\n\n\
+  /A          Displays files with specified attributes.\n\
+  attributes   D  Directories                R  Read-only files\n\
+               H  Hidden files               A  Files ready for archiving\n\
+               S  System files               -  Prefix meaning not\n\
+  /B          Uses bare format (no heading information or summary).\n\
+  /C          Display the thousand separator in file sizes.  This is the\n\
+              default.  Use /-C to disable display of separator.\n\
+  /D          Same as wide but files are list sorted by column.\n\
+  /L          Uses lowercase.\n\
+  /N          New long list format where filenames are on the far right.\n\
+  /O          List by files in sorted order.\n\
+  sortorder    N  By name (alphabetic)       S  By size (smallest first)\n\
+               E  By extension (alphabetic)  D  By date/time (oldest first)\n\
+               G  Group directories first    -  Prefix to reverse order\n\
+  /P          Pauses after each screenful of information.\n\
+  /Q          Display the owner of the file.\n\
   /R          Displays alternate data streams of the files.\n\
-  /S          顯示指定目錄和所有子目錄中的檔案。\n\
-  /T          控制要顯示或者用於排序的時間欄位。\n\
-  時間欄位    C  創建時間\n\
-              A  上次訪問時間\n\
-              W  上次修改時間\n\
-  /W          使用寬列表格式。\n\
-  /X          為非8.3格式檔名顯示生成的短名稱。使用 /N 將會使短名稱在長名稱之前顯示。\n\
-              如果沒有短名稱，空白將會被顯示。\n\
-  /4          顯示四位數年份。\n\n\
-開關可能在 DIRCMD 環境變數中設定。可以使用 - 來覆蓋已有的開關——示例： /-W。\n"
+  /S          Displays files in specified directory and all subdirectories.\n\
+  /T          Controls which time field displayed or used for sorting\n\
+  timefield   C  Creation\n\
+              A  Last Access\n\
+              W  Last Written\n\
+  /W          Uses wide list format.\n\
+  /X          This displays the short names generated for non-8dot3 file\n\
+              names.  The format is that of /N with the short name inserted\n\
+              before the long name. If no short name is present, blanks are\n\
+              displayed in its place.\n\
+  /4          Displays four-digit years\n\n\
+Switches may be preset in the DIRCMD environment variable.  Override\n\
+preset switches by prefixing any switch with - (hyphen)--for example, /-W.\n"
     STRING_DIR_HELP2 " 驅動器 %c 中的卷是 %s\n"
     STRING_DIR_HELP3 " 驅動器 %c 中的卷沒有卷標。\n"
     STRING_DIR_HELP4 " 卷的序列號是 %04X-%04X\n"
@@ -178,174 +187,190 @@ DELAY [/m]n\n\n\
     STRING_DIR_HELP6 "%16i 個目錄 % 15s 位元組空閒\n"
     STRING_DIR_HELP7 "\n %s 的目錄\n\n"
     STRING_DIR_HELP8 "%16i 個檔案 % 14s 位元組\n"
-    STRING_DIRSTACK_HELP1 "將當前目錄存儲以便 POPD 命令使用，然後切換到指定的目錄。\n\n\
-PUSHD [路徑 | ..]\n\n\
-  路徑          指定要切換到的目錄。\n"
+    STRING_DIRSTACK_HELP1 "Stores the current directory for use by the POPD command, then\n\
+changes to the specified directory.\n\n\
+PUSHD [path | ..]\n\n\
+  path        Specifies the directory to make the current directory\n"
     STRING_DIRSTACK_HELP2 "切換到被 PUSHD 命令存儲的目錄。\n\nPOPD"
     STRING_DIRSTACK_HELP3 "輸出目錄棧的內容。\n\nDIRS"
     STRING_DIRSTACK_HELP4 "目錄棧為空"
-    STRING_ECHO_HELP1 "顯示一個沒有回車和換行符的訊息。\n\n\
-  ECHOS 訊息"
-    STRING_ECHO_HELP2 "向標準錯誤輸出一個訊息。\n\n\
-  ECHOERR 訊息\n\
-  ECHOERR.           輸出空行"
-    STRING_ECHO_HELP3 "向標準錯誤輸出一個沒有回車和換行符的訊息。\n\n\
-  ECHOSERR 訊息"
-    STRING_ECHO_HELP4 "顯示一個訊息或者將命令回顯設定為開或關。\n\n\
+    STRING_ECHO_HELP1 "Display a messages without trailing carriage return and line feed.\n\n\
+  ECHOS message"
+    STRING_ECHO_HELP2 "Displays a message to the standard error output.\n\n\
+  ECHOERR message\n\
+  ECHOERR.           prints an empty line"
+    STRING_ECHO_HELP3 "Prints a messages to standard error output without trailing carriage return and line feed.\n\n\
+  ECHOSERR message"
+    STRING_ECHO_HELP4 "Displays a message or switches command echoing on or off.\n\n\
   ECHO [ON | OFF]\n\
-  ECHO [訊息]\n\
-  ECHO.             輸出空行\n\n\
-執行不帶參數的 ECHO 將會顯示當前的 ECHO 設定。"
+  ECHO [message]\n\
+  ECHO.             prints an empty line\n\n\
+Type ECHO without a parameter to display the current ECHO setting."
     STRING_ECHO_HELP5 "ECHO 為 %s\n"
-    STRING_EXIT_HELP "退出命令列直譯器。\n\nEXIT [/b] [ExitCode]\n\n\
-  /B            僅退出一個批處理檔案。\n\
-                如果在一個批處理檔案之外運行，將會使 cmd.exe 退出。\n\
-  退出程式碼      這個值將會在退出時賦給 ERRORLEVEL。\n"
-    STRING_FOR_HELP1 "在一組檔案中為每個檔案運行指定的命令。\n\n\
-FOR %變數 IN (集合) DO 命令 [參數]\n\
-FOR /L %變數 IN (start,step,end) DO 命令 [參數]\n\
-FOR /D %變數 IN (集合) DO 命令 [參數]\n\
-FOR /R [[drive:]path] IN (集合) DO 命令 [參數]\n\
-FOR /F [""options""] IN (集合) DO 命令 [參數]\n\n\
+    STRING_EXIT_HELP "Exits the command line interpreter.\n\nEXIT [/b] [ExitCode]\n\n\
+  /B            Exits a batch file only.  \n\
+                If run outside of a batch file it will exit cmd.exe\n\
+  ExitCode      This value will be assigned to ERRORLEVEL on exit\n"
+    STRING_FOR_HELP1 "Runs a specified command for each file in a set of files.\n\n\
+FOR %variable IN (set) DO command [parameters]\n\
+FOR /L %variable IN (start,step,end) DO command [parameters]\n\
+FOR /D %variable IN (set) DO command [parameters]\n\
+FOR /R [[drive:]path] IN (set) DO command [parameters]\n\
+FOR /F [""options""] IN (set) DO command [parameters]\n\n\
   /L    Generates a number sequence from start to end incrementing by step.\n\
   /D    Modifies the set to refer to directories instead of files.\n\
   /R    Executes command for files in the set in the specified path (or current\n\
         working directory if not specified) and every directory below.\n\
   /F    Modifies the set to refer to the contents of the files in the set.\n\n\
-  %變數       指定一個可被替換的參數。\n\
-  (集合)      指定一個含有一個或多個檔案的集合。可以使用通配符。\n\
-  命令        指定要為每個檔案執行的命令。\n\
-  參數        為指定的命令指定參數或開關。\n\
+  %variable  Specifies a replaceable parameter.\n\
+  (set)      Specifies a set of one or more files. Wildcards may be used.\n\
+  command    Specifies the command to carry out for each file.\n\
+  parameters Specifies parameters or switches for the specified command.\n\
   options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
 Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
 after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
 f,d,p,n,x,s,a,t,z.\n\n\
-在批處理檔案中使用 FOR 命令時，使用 %%變數 而不是 %變數。\n"
-    STRING_FREE_HELP1 "\n驅動器 %s 中的卷是 %-11s\n\
- 序列號為 %s\n\
-  %16s 位元組 總磁碟空間\n\
-  %16s 位元組 已使用\n\
-  %16s 位元組 空閒\n"
+To use the FOR command in a batch program, specify %%variable instead of\n\
+%variable.\n"
+    STRING_FREE_HELP1 "\nVolume in drive %s is %-11s\n\
+ Serial number is %s\n\
+  %16s bytes total disk space\n\
+  %16s bytes used\n\
+  %16s bytes free\n"
     STRING_FREE_HELP2 "顯示驅動器資訊。\n\nFREE [驅動器: ...]\n"
-    STRING_GOTO_HELP1 "在批處理指令碼中將 CMD 定向到被標記的行執行。\n\n\
-GOTO 標籤\n\n\
-  標籤    在批處理指令碼中被用作標籤的文字字元串。\n\n\
-使用冒號開頭的一行就作為一個標籤。"
-    STRING_IF_HELP1 "在批處理檔案中執行條件控制處理。\n\n\
-  IF [NOT] ERRORLEVEL 數字 命令\n\
-  IF [NOT] 字元串1==字元串2 命令\n\
-  IF [NOT] EXIST 檔名 命令\n\
-  IF [NOT] DEFINED 變數 命令\n\n\
-NOT               說明 CMD 應當在條件為假時執行命令。\n\
-ERRORLEVEL 數字    當上一個程式返回一個大於或等於指定數字的退出碼時為真。\n\
-命令               當條件成立時所指定的命令。\n\
-字元串1==字元串2   當所指定的字元串相匹配時為真。\n\
-EXIST 檔名       當指定的檔名存在時為真。\n\
-DEFINED 變數       當指定的變數已被定義時為真。\n"
+    STRING_GOTO_HELP1 "Directs CMD to a labeled line in a batch script.\n\n\
+GOTO label\n\n\
+  label  Specifies a text string used in a batch script as a label.\n\n\
+You type a label on a line by itself, beginning with a colon."
+    STRING_IF_HELP1 "Performs conditional processing in batch programs.\n\n\
+  IF [NOT] ERRORLEVEL number command\n\
+  IF [NOT] string1==string2 command\n\
+  IF [NOT] EXIST filename command\n\
+  IF [NOT] DEFINED variable command\n\n\
+NOT               Specifies that CMD should carry out the command only if\n\
+                  the condition is false\n\
+ERRORLEVEL number Specifies a true condition if the last program run returned\n\
+                  an exit code equal or greater than the number specified.\n\
+command           Specifies the command to carry out if the condition is met.\n\
+string1==string2  Specifies a true condition if the specified text strings\n\
+                  match.\n\
+EXIST filename    Specifies a true condition if the specified filename exists.\n\
+DEFINED variable  Specifies a true condition if the specified variable is\n\
+                  defined.\n"
     STRING_LABEL_HELP1 "顯示或改變驅動器卷標。\n\nLABEL [驅動器:][卷標]\n"
     STRING_LABEL_HELP2 "驅動器 %c 中的卷是 %s\n"
     STRING_LABEL_HELP3 "驅動器 %c 中的卷沒有卷標。\n"
     STRING_LABEL_HELP4 "卷的序列號是 %04X-%04X\n"
     STRING_LABEL_HELP5 "驅動器卷標 (11 個字元, 按 ENTER 忽略)? "
     STRING_LOCALE_HELP1 "當前時間是"
-    STRING_MKDIR_HELP "創建一個目錄。\n\n\
-MKDIR [驅動器:]路徑\nMD [驅動器:]路徑"
-    STRING_MKLINK_HELP "創建一個檔案系統連結物件。\n\n\
-MKLINK [/D | /H | /J] 連結名 目標\n\n\
-  /D  指示符號連結目標是一個目錄。\n\
-  /H  創建一個硬連結。\n\
-  /J  創建一個目錄連線點。\n\n\
-如果 /H 或 /J 均未被指定，一個符號連結將被創建。"
+    STRING_MKDIR_HELP "Creates a directory.\n\n\
+MKDIR [drive:]path\nMD [drive:]path"
+    STRING_MKLINK_HELP "Creates a filesystem link object.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Indicates that the symbolic link target is a directory.\n\
+  /H  Create a hard link.\n\
+  /J  Create a directory junction.\n\n\
+If neither /H or /J is specified, a symbolic link is created."
     STRING_MEMORY_HELP1 "顯示系統內存容量。\n\nMEMORY"
-    STRING_MEMORY_HELP2 "\n  %12s%% 內存已安裝。\n\n\
-  %13s 位元組 總物理內存。\n\
-  %13s 位元組 可用物理內存。\n\n\
-  %13s 位元組 總頁面檔案大小。\n\
-  %13s 位元組 可用頁面檔案。\n\n\
-  %13s 位元組 總虛擬內存。\n\
-  %13s 位元組 可用虛擬內存。\n"
+    STRING_MEMORY_HELP2 "\n  %12s%% memory load.\n\n\
+  %13s bytes total physical RAM.\n\
+  %13s bytes available physical RAM.\n\n\
+  %13s bytes total page file.\n\
+  %13s bytes available page file.\n\n\
+  %13s bytes total virtual memory.\n\
+  %13s bytes available virtual memory.\n"
     STRING_MISC_HELP1 "按任意鍵繼續..."
-    STRING_MOVE_HELP1 "覆蓋 %s 嗎 (Yes/No/All)？"
-    STRING_MOVE_HELP2 "移動檔案並重新命名檔案和目錄。\n\n\
-移動一個或多個檔案：\n\
-MOVE [/N][驅動器:][路徑]檔名1[,...] 目標\n\n\
-重新命名一個目錄：\n\
-MOVE [/N][驅動器:][路徑]目錄名1 目錄名2\n\n\
-  [驅動器:][路徑]檔名1     指定你想要移動的一個或多個檔案的位置和名稱。\n\
-  /N                    執行除移動檔案或目錄之外的所有事情。\n\n\
-當前限制：\n\
-  - 你不能把檔案或目錄從一個驅動器移動到另一個。\n"
-    STRING_MSGBOX_HELP "顯示一個訊息框並返回使用者反應。\n\n\
-MSGBOX 類型 ['標題'] 提示語\n\n\
-類型            顯示的按鈕\n\
-                可能的值有：OK, OKCANCEL,\n\
-                  YESNO, YESNOCANCEL\n\
-標題            訊息框的標題\n\
-提示語          訊息框上顯示的文字\n\n\n\
-ERRORLEVEL 將會根據被按下的按鈕而被設定為以下某值：\n\n\
+    STRING_MOVE_HELP1 "覆蓋 %s 嗎 (Yes/No/All)? "
+    STRING_MOVE_HELP2 "Moves files and renames files and directories.\n\n\
+To move one or more files:\n\
+MOVE [/N][drive:][path]filename1[,...] destination\n\n\
+To rename a directory:\n\
+MOVE [/N][drive:][path]dirname1 dirname2\n\n\
+  [drive:][path]filename1  Specifies the location and name of the file\n\
+                           or files you want to move.\n\
+  /N                    Nothing. Do everything but move files or directories.\n\n\
+Current limitations:\n\
+  - You can't move a file or directory from one drive to another.\n"
+    STRING_MSGBOX_HELP "display a message box and return user response\n\n\
+MSGBOX type ['title'] prompt\n\n\
+type          button displayed\n\
+              possible values are: OK, OKCANCEL,\n\
+              YESNO, YESNOCANCEL\n\
+title         title of message box\n\
+prompt        text displayed by the message box\n\n\n\
+ERRORLEVEL is set according the button pressed:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
-    STRING_PATH_HELP1 "顯示或設定可執行檔案的搜索路徑。\n\n\
-PATH [[驅動器:]路徑[;...]]\nPATH ;\n\n\
-執行 PATH ; 以清除所有的搜索路徑設定並指示命令列外殼僅在當前目錄搜索。\n\
-不帶參數執行 PATH 將會顯示當前路徑。\n"
-    STRING_PROMPT_HELP1 "改變命令提示符。\n\n\
-PROMPT [文字]\n\n\
-  文字      指定新的命令提示符。\n\n\
-提示符可以由普通字元和以下特殊程式碼組合：\n\n\
-  $A   & (AND 符號)\n\
-  $B   | (管道)\n\
-  $C   ( (左括號)\n\
-  $D   當前日期\n\
-  $E   ESC 碼 (ASCII 碼 27)\n\
-  $F   ) (右括號)\n\
-  $G   > (大於號)\n\
-  $H   退格 (擦除前一個字元)\n\
+    STRING_PATH_HELP1 "Displays or sets a search path for executable files.\n\n\
+PATH [[drive:]path[;...]]\nPATH ;\n\n\
+Type PATH ; to clear all search-path settings and direct the command shell\n\
+to search only in the current directory.\n\
+Type PATH without parameters to display the current path.\n"
+    STRING_PROMPT_HELP1 "Changes the command prompt.\n\n\
+PROMPT [text]\n\n\
+  text    Specifies a new command prompt.\n\n\
+Prompt can be made up of normal characters and the following special codes:\n\n\
+  $A   & (Ampersand)\n\
+  $B   | (pipe)\n\
+  $C   ( (Left parenthesis)\n\
+  $D   Current date\n\
+  $E   Escape code (ASCII code 27)\n\
+  $F   ) (Right parenthesis)\n\
+  $G   > (greater-than sign)\n\
+  $H   Backspace (erases previous character)\n\
   $I   Information line\n\
-  $L   < (小於號)\n\
-  $N   當前驅動器\n\
-  $P   當前驅動器和路徑\n\
-  $Q   = (等於號)\n\
+  $L   < (less-than sign)\n\
+  $N   Current drive\n\
+  $P   Current drive and path\n\
+  $Q   = (equal sign)\n\
   $S   (space)\n\
-  $T   當前時間\n\
-  $V   作業系統版本號\n\
-  $_    回車和換行符\n\
-  $$   $ (美元符號)\n"
-    STRING_PAUSE_HELP1 "停止一個批處理檔案的執行並顯示以下資訊：\n\
-'按任意鍵繼續...' 或者一條使用者定義的訊息。\n\n\
-PAUSE [訊息]"
+  $T   Current time\n\
+  $V   OS version number\n\
+  $_   Carriage return and linefeed\n\
+  $$   $ (dollar sign)\n"
+    STRING_PAUSE_HELP1 "Stops the execution of a batch file and shows the following message:\n\
+'Press any key to continue...' or a user defined message.\n\n\
+PAUSE [message]"
     STRING_PROMPT_HELP2 "  $+   顯示當前目錄棧的深度"
     STRING_PROMPT_HELP3 "\n執行不帶參數的 PROMPT 將會把提示符重置為默認設定。"
     STRING_REM_HELP "在批處理檔案中開始一行註釋。\n\nREM [註釋]"
-    STRING_RMDIR_HELP "刪除一個目錄。\n\n\
-RMDIR [驅動器:]路徑\nRD [驅動器:]路徑\n\
-/S          刪除目標中的所有檔案和資料夾。\n\
-/Q          刪除時不要提示。\n"
+    STRING_RMDIR_HELP "Removes a directory.\n\n\
+RMDIR [drive:]path\nRD [drive:]path\n\
+/S          Deletes all files and folders within target\n\
+/Q          Doesn't prompt for user\n"
     STRING_RMDIR_HELP2 "目錄非空！\n"
-    STRING_REN_HELP1 "重新命名一個或者多個檔案或資料夾。\n\n\
-RENAME [/E /N /P /Q /S /T] 舊名稱 ... 新名稱\n\
-REN [/E /N /P /Q /S /T] 舊名稱 ... 新名稱\n\n\
-  /E    不顯示錯誤訊息。\n\
-  /N    不做任何處理。\n\
-  /P    在重新命名每個檔案前請求確認。\n\
-          (尚未實現！)\n\
-  /Q    安靜模式。\n\
-  /S    重新命名子目錄。\n\
-  /T    顯示被重新命名檔案的總數。\n\n\
-記住您不能在目的地裡指定新的驅動器或路徑。使用 MOVE 命令來達成這個目的。\n"
+    STRING_REN_HELP1 "Renames a file/directory or files/directories.\n\n\
+RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\
+REN [/E /N /P /Q /S /T] old_name ... new_name\n\n\
+  /E    No error messages.\n\
+  /N    Nothing.\n\
+  /P    Prompts for confirmation before renaming each file.\n\
+        (Not implemented yet!)\n\
+  /Q    Quiet.\n\
+  /S    Rename subdirectories.\n\
+  /T    Display total number of renamed files.\n\n\
+Note that you cannot specify a new drive or path for your destination. Use\n\
+the MOVE command for that purpose.\n"
     STRING_REN_HELP2 "    %lu 檔案已重新命名\n"
     STRING_REN_HELP3 "    %lu 個檔案已重新命名\n"
-    STRING_REPLACE_HELP1 "替換檔案。\n\n\
-REPLACE [驅動器1:][路徑1]檔名 [驅動器2:][路徑2] [/A] [/P] [/R] [/W]\n\
-REPLACE [驅動器1:][路徑1]檔名 [驅動器2:][路徑2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [驅動器1:][路徑1]檔名   指定一個或多個原始檔。\n\
-  [驅動器2:][路徑2]         指定要被替換檔案所在的目錄。\n\
-  /A                        將新檔案添加到目標目錄。不能和 /S 或 /U 同時使用。\n\
-  /P                        在替換一個檔案或添加一個原始檔之前請求確認。\n\
-  /R                        將只讀檔案視為未保護檔案並替換。\n\
-  /S                        替換目標目錄中所有子目錄中的檔案。不能與 /A 同時使用。\n\
-  /W                        在開始前等待您插入一張磁碟。\n\
-  /U                        僅替換(更新)比原檔案老的檔案。不能和 /A 同時使用。\n"
+    STRING_REPLACE_HELP1 "Replaces files.\n\n\
+REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
+REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [drive1:][path1]filename Specifies the source file or files.\n\
+  [drive2:][path2]         Specifies the directory where files are to be\n\
+                           replaced.\n\
+  /A                       Adds new files to destination directory. Cannot\n\
+                           use with /S or /U switches.\n\
+  /P                       Prompts for confirmation before replacing a file or\n\
+                           adding a source file.\n\
+  /R                       Replaces read-only files as well as unprotected\n\
+                           files.\n\
+  /S                       Replaces files in all subdirectories of the\n\
+                           destination directory. Cannot use with the /A\n\
+                           switch.\n\
+  /W                       Waits for you to insert a disk before beginning.\n\
+  /U                       Replaces (updates) only files that are older than\n\
+                           source files. Cannot use with the /A switch.\n"
     STRING_REPLACE_HELP2 "需要源路徑\n"
     STRING_REPLACE_HELP3 "沒有檔案被替換\n"
     STRING_REPLACE_HELP4 "%lu 個檔案已被替換\n"
@@ -356,21 +381,21 @@ REPLACE [驅動器1:][路徑1]檔名 [驅動器2:][路徑2] [/P] [/R] [/S] [/W] 
     STRING_REPLACE_HELP9 "添加 %s 嗎 (Y/N)？"
     STRING_REPLACE_HELP10 "替換 %s 嗎 (Y/N)？"
     STRING_REPLACE_HELP11 "正在添加 %s\n"
-    STRING_SHIFT_HELP "在批處理檔案中改變可替換參數的位置。\n\n\
+    STRING_SHIFT_HELP "Changes the position of replaceable parameters in a batch file.\n\n\
 SHIFT [DOWN]"
-    STRING_SCREEN_HELP "移動遊標並可選地輸出文字\n\n\
-SCREEN 行 列 [文字]\n\n\
-  行          要將遊標移動到的行\n\
-  列          要將遊標移動到的列"
-    STRING_SET_HELP "顯示、設定或刪除環境變數。\n\n\
-SET [變數[=][字元串]]\n\n\
-  變數        指定環境變數名。\n\
-  字元串      指定要賦給該環境變數的一系列字元。\n\n\
-執行不帶參數的 SET 將會顯示當前所有環境變數。\n"
-    STRING_START_HELP1 "啟動一個命令。\n\n\
+    STRING_SCREEN_HELP "move cursor and optionally print text\n\n\
+SCREEN row col [text]\n\n\
+  row         row to which move the cursor\n\
+  col         column to which move the cursor"
+    STRING_SET_HELP "Displays, sets, or removes environment variables.\n\n\
+SET [variable[=][string]]\n\n\
+  variable  Specifies the environment-variable name.\n\
+  string    Specifies a series of characters to assign to the variable.\n\n\
+Type SET without parameters to display the current environment variables.\n"
+    STRING_START_HELP1 "Starts a command.\n\n\
 START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
       [command/program] [parameters]\n\n\
-  ""title""     Title of the window.\n\
+  """options"""     Title of the window.\n\
   path        Specifies the startup directory.\n\
   I           Uses the original environment given to cmd.exe,\n\
               instead of the current environment.\n\
@@ -378,42 +403,48 @@ START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
   MIN         Starts with a minimized window.\n\
   MAX         Starts with a maximized window.\n\
   WAIT        Starts the command or program and waits for its termination.\n\
-  命令         要啟動的命令。\n\
+  command     Specifies the command or program to run.\n\
   parameters  Specifies the parameters to be given to the command or program.\n"
-    STRING_TITLE_HELP "設定命令提示符視窗的標題。\n\n\
-TITLE [字元串]\n\n\
-字元串         指定命令提示符視窗的標題。\n"
-    STRING_TIME_HELP1 "顯示或設定系統時間。\n\n\
-TIME [/T][時間]\n\n\
-  /T    僅顯示\n\n\
-執行不帶參數的 TIME 將會顯示當前時間設定並且提示設定新的時間。按下 ENTER 鍵來保持原有設定。\n"
+    STRING_TITLE_HELP "Sets the window title for the command prompt window.\n\n\
+TITLE [string]\n\n\
+string       Specifies the title for the command prompt window.\n"
+    STRING_TIME_HELP1 "Displays or sets the system time.\n\n\
+TIME [/T][time]\n\n\
+  /T    display only\n\n\
+Type TIME with no parameters to display the current time setting and a prompt\n\
+for a new one.  Press ENTER to keep the same time.\n"
     STRING_TIME_HELP2 "輸入新的時間："
     STRING_TIMER_HELP1 "已過去 %d 毫秒\n"
     STRING_TIMER_HELP2 "已過去 %02d%c%02d%c%02d%c%02d\n"
-    STRING_TIMER_HELP3 "允許使用最多十個停表。\n\n\
+    STRING_TIMER_HELP3 "allow the use of ten stopwatches.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
-  ON          啟動停表\n\
-  OFF         停止停表\n\
-  /S          分割時間。返回停表分割時間而不改變它的值。\n\
-  /n          指定停表編號。停表編號可以從 0 至 9。如果未指定則默認為 1。\n\
-  /Fn         輸出格式\n\
-              n 可以為:\n\
-                    0    毫秒\n\
+  ON          set stopwatch ON\n\
+  OFF         set stopwatch OFF\n\
+  /S          Split time. Return stopwatch split\n\
+              time without changing its value\n\
+  /n          Specify the stopwatch number.\n\
+              Stopwatches available are 0 to 9\n\
+              If it is not specified default is 1\n\
+  /Fn         Format for output\n\
+              n can be:\n\
+                    0    milliseconds\n\
                     1    hh%cmm%css%cdd\n\n\
-如果沒有 ON，OFF 或者 /S 在呼叫該命令時被指定，將會切換停表狀態。\n\n"
-    STRING_TYPE_HELP1 "顯示文字檔案的內容。\n\nTYPE [驅動器:][路徑]檔名 \n\
-  /P          每次只顯示一屏內容。\n"
-    STRING_VERIFY_HELP1 "這條命令只是個擺設！！\n\
-設定是否檢查您的檔案已被正確地寫入磁碟。\n\n\
+if none of ON, OFF or /S is specified the command\n\
+will toggle stopwatch state\n\n"
+    STRING_TYPE_HELP1 "Displays the contents of text files.\n\nTYPE [drive:][path]filename \n\
+  /P          Shows one screen of output at a time.\n"
+    STRING_VERIFY_HELP1 "This command is just a dummy!!\n\
+Sets whether to verify that your files are written correctly to a\n\
+disk.\n\n\
 VERIFY [ON | OFF]\n\n\
-執行不帶參數的 VERIFY 將會顯示當前 VERIFY 的設定。\n"
+Type VERIFY without a parameter to display the current VERIFY setting.\n"
     STRING_VERIFY_HELP2 "VERIFY 的狀態是 %s。\n"
     STRING_VERIFY_HELP3 "必須設定為 ON 或 OFF。"
-    STRING_VERSION_HELP1 "顯示外殼版本資訊\n\n\
+    STRING_VERSION_HELP1 "Displays shell version information\n\n\
 VER [/C][/R][/W]\n\n\
-  /C  顯示作者。\n\
-  /R  顯示再釋出資訊。\n\
-  /W  顯示保證資訊。"
+  /C  Displays credits.\n\
+  /R  Displays redistribution information.\n\
+  /W  Displays warranty information."
     STRING_VERSION_HELP2 " comes with ABSOLUTELY NO WARRANTY; for details\n\
 type: `ver /w'. This is free software, and you are welcome to redistribute\n\
 it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n\
@@ -426,30 +457,30 @@ listing of credits."
  it under the terms of the GNU General Public License as published by\n\
  the Free Software Foundation; either version 2 of the License, or\n\
  (at your option) any later version.\n"
-    STRING_VERSION_HELP5 "\nBug 報告發送到 <ros-dev@reactos.org>。\n\
-更新可在 http://www.reactos.org 檢視。"
+    STRING_VERSION_HELP5 "\nSend bug reports to <ros-dev@reactos.org>.\n\
+Updates are available at: http://www.reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS 版本作者：\n"
     STRING_VERSION_HELP7 "\nReactOS 版本作者：\n"
     STRING_VOL_HELP1 " 驅動器 %c 中的卷是 %s\n"
     STRING_VOL_HELP2 " 驅動器 %c 中的卷沒有卷標。\n"
-    STRING_VOL_HELP3 " 卷序列號是 %04X-%04X\n"
+    STRING_VOL_HELP3 " 卷的序列號是 %04X-%04X\n"
     STRING_VOL_HELP4 "顯示磁碟卷標和序列號，如果存在。\n\nVOL [驅動器:]"
-    STRING_WINDOW_HELP1 "改變控制檯視窗投影\n\n\
-WINDOW [/POS[=]左,上,寬度,高度]\n\
-              [MIN|MAX|RESTORE] ['標題']\n\n\
-/POS          指定視窗的位置\n\
-MIN           最小化視窗\n\
-MAX           最大化視窗\n\
-RESTORE       恢復視窗"
-    STRING_WINDOW_HELP2 "改變控制檯視窗投影\n\n\
-ACTIVATE '視窗' [/POS[=]左,上,寬度,高度]\n\
-              [MIN|MAX|RESTORE] ['標題']\n\n\
-視窗          要執行動作的視窗標題\n\
-/POS          指定視窗的位置\n\
-MIN           最小化視窗\n\
-MAX           最大化視窗\n\
-RESTORE       恢復視窗\n\
-標題          指定新的標題\n"
+    STRING_WINDOW_HELP1 "change console window aspect\n\n\
+WINDOW [/POS[=]left,top,width,height]\n\
+              [MIN|MAX|RESTORE] ['title']\n\n\
+/POS          specify window placement and dimensions\n\
+MIN           minimize the window\n\
+MAX           maximize the window\n\
+RESTORE       restore the window"
+    STRING_WINDOW_HELP2 "change console window aspect\n\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
+              [MIN|MAX|RESTORE] ['title']\n\n\
+window        tile of window on which perform actions\n\
+/POS          specify window placement and dimensions\n\
+MIN           minimize the window\n\
+MAX           maximize the window\n\
+RESTORE       restore the window\n\
+title         new title\n"
     STRING_CHOICE_OPTION "YN"
     STRING_COPY_OPTION "YNA"
     STRING_ALIAS_ERROR "別名展開後的命令列太長！\n"
@@ -533,4 +564,4 @@ RESTORE       恢復視窗\n\
     STRING_EXPECTED_CLOSE_PAREN "期望 ')'。"
     STRING_EXPECTED_NUMBER_OR_VARIABLE "期望數值或變數名。"
     STRING_SYNTAX_COMMAND_INCORRECT "命令語法不正確。"
-END 
+END

@@ -1,18 +1,16 @@
-/* Swedish translation by Jaix Bly */
-
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Redigera"
-    IDS_MARK "Markera"
+    IDS_EDIT "&Redigera"
+    IDS_MARK "Mark"
     IDS_COPY "Kopiera\tEnter"
     IDS_PASTE "Klistra in"
     IDS_SELECTALL "Markera Allt"
-    IDS_SCROLL "Skrolla"
+    IDS_SCROLL "Scroll"
     IDS_FIND "Sök..."
     IDS_DEFAULTS "Ursprunglig"
-    IDS_PROPERTIES "Egenskaper"
+    IDS_PROPERTIES "&Properties"
 /*
     IDS_SCROLLHERE "Skrolla hit"
     IDS_SCROLLTOP "Skrolla till topp"

@@ -1,13 +1,12 @@
 /*
  * PROJECT:     Solitaire
  * LICENSE:     Freeware, permission to use under Public Domain
- * FILE:        base/applications/games/solitaire/lang/sq-AL.rc
+ * FILE:        base/applications/games/solitaire/lang/en-US.rc
  * PURPOSE:     English Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
- * TRANSLATOR: 2013 - Ardit Dani (ard1t) (ardit.dani@gmail.com)
  */
 
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 /* Dialogs */
 
@@ -23,11 +22,11 @@ BEGIN
     AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
     AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Shfaq Kohen", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
+    AUTOCHECKBOX "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "T&abela e Statusit", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
     AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "Anulo", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -48,7 +47,7 @@ BEGIN
     CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 232, 89, 50, 71
     CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 289, 89, 50, 71
     DEFPUSHBUTTON "OK", IDOK, 114, 165, 54, 14
-    PUSHBUTTON "Anulo", IDCANCEL, 176, 165, 54, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 176, 165, 54, 14
 END
 
 /* Strings */
@@ -75,12 +74,12 @@ BEGIN
         MENUITEM "Pa&ko...", IDM_GAME_DECK
         MENUITEM "&Opsione...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Dil", IDM_GAME_EXIT
+        MENUITEM "dIL", IDM_GAME_EXIT
     END
-    POPUP "&Ndihmë"
+    POPUP "&File"
     BEGIN
         MENUITEM "&Contents\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&About", IDM_HELP_ABOUT
+        MENUITEM "rRETH", IDM_HELP_ABOUT
     END
 END
 

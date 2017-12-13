@@ -1,8 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
- * DATE OF TR:  29-11-2013
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 /* Dialog */
 IDD_GUI DIALOGEX 0, 0, 240, 255
@@ -11,12 +7,12 @@ CAPTION "Fikje ne distance"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&OK", IDC_OK, 125, 232, 50, 14
-    PUSHBUTTON "Anulo", IDC_CANCEL, 178, 232, 50, 14
+    PUSHBUTTON "&Anulo", IDC_CANCEL, 178, 232, 50, 14
     LTEXT "Ko&mpjuter:", IDC_STATIC, 9, 9, 35, 36
     LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
     PUSHBUTTON "Shto...", IDC_ADD_SYSTEM, 179, 19, 50, 14
     PUSHBUTTON "Hiq", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
-    PUSHBUTTON "Shfleto...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    PUSHBUTTON "&Browse...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
     LTEXT "Veprim", IDC_ACTION, 11, 81, 20, 14
     COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
     CHECKBOX "Paralajmero perdoruesin", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -34,39 +30,39 @@ END
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Vegla e fikjes se ReactOS\n\
+    IDS_USAGE "ReactOS Shutdown Utility\n\
 \n\
 Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
-       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
+       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c """comment"""]]\n\
 \n\
-    Ska argument ose /?    Shfaq ndihmen.\n\
-    /i      Shfaq interfaqen grafike te perdoruesit (GUI). Ky opsion duhet te jete\n\
-            i pari.\n\
-    /l      Dil vetem nga sistemi vendas. Nuk mund te perdoret me /m ose /d.\n\
-    /s      Fik kompjuterin.\n\
-    /r      Rifillo kompjuterin.\n\
-    /g      Rifillo kompjuterin dhe rifillo te gjitha programet e rregjistrume.\n\
-    /a      Anulo fikjen e vonuar. Mund te perdoret vetem gjate kohes se\n\
-            voneses.\n\
-    /p      Fik kompjuterin vendas pa asnje paralajmerim ose kohe. Mund te perdoret\n\
-            me /d ose /f.\n\
-    /h      Ver ne pushim kompjuterin vendas. Perdoret me /f.\n\
-    /e      Dokumento arsyen e fikjes se kompjuterit vendas ne papritshmerin e fikjes.\n\
-    /m \\\\computer  Specifiko kompjuterin e planifikuar (UNC/IP address).\n\
-    /t xxx  Shih kohen dhe periudhen tel xxx sekonda para fikjes.\n\
-            Periudha e vlefshme fillon nga 0 deri 315360000 (10 vjet),\n\
-            30 eshte vlera e parazgjedhur.\n\
-    /c ""comment""  Komento arsyen e fikjes ose rifillimit.\n\
-            512 karaktere te lejuar maksimalisht.\n\
-    /f      Sforco mbylljen e aplikacioneve pa paralajmerim te perdoruesit. Nese ju\n\
-            nuk specifikone parametra te tjere, ky opsion do te jete gjithashtu per dil.\n\
-    /d [p|u:]xx:yy  Hep kodin e arsyes per fikje ose per rifillimin.\n\
-            p tregon qe fikja ose rifillimi eshte plafinikuar.\n\
-            u tregon qe arsya eshte percaktuar nga perdoruesi.\n\
-            Nese as p apo u jane te specifikuar, fikja ose rifillimi nuk jane\n\
-            te planifikuara.\n\
-            xx eshte arsya e kodit madhor (intigeri pozitiv me i vogel se 256).\n\
-            yy eshte arsya e kodit minor (intigeri pozitiv me i vogel se 65536).\n"
+    No arguments or /?    Display this help.\n\
+    /i      Show the graphical user interface (GUI). This option must be the\n\
+            first one.\n\
+    /l      Log off on the local system only. Cannot be used with /m or /d.\n\
+    /s      Shutdown the computer.\n\
+    /r      Restart the computer.\n\
+    /g      Restart the computer and restart all the registered applications.\n\
+    /a      Cancel a delayed shutdown. Can only be used during the delay\n\
+            period.\n\
+    /p      Shutdown the local computer without any timeout or warning. Can be\n\
+            used with /d or /f.\n\
+    /h      Hibernate the local computer. Usable with /f.\n\
+    /e      Document the reason for the unexpected computer shutdown.\n\
+    /m \\\\computer  Specify the target computer (UNC/IP address).\n\
+    /t xxx  Set the timeout period to xxx seconds before shutting down.\n\
+            The valid range starts from 0 to 315360000 (10 years),\n\
+            30 being the default value.\n\
+    /c """comment"""  Comment on the reason for shutdown or restart.\n\
+            512 characters maximum allowed.\n\
+    /f      Force running applications to close without warning users. If you\n\
+            do not specify any other parameter, this option will also log off.\n\
+    /d [p|u:]xx:yy  Give the reason code for the shutdown or the restart.\n\
+            p indicates that the shutdown or the restart is planned.\n\
+            u indicates that the reason is defined by the user.\n\
+            If neither p nor u are specified, the shutdown or the restart are\n\
+            not planned.\n\
+            xx is the major reason code (positive integer smaller than 256).\n\
+            yy is the minor reason code (positive integer smaller than 65536).\n"
 
     IDS_ERROR_SHUTDOWN_REBOOT "ERROR: E pamundur te fiket dhe rifillohet ne te njejten kohe.\n"
     IDS_ERROR_TIMEOUT "ERROR: Vlera e kohezgjatjes e %u eshte jasht kufirit (0-315360000).\n"

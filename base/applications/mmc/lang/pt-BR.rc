@@ -1,15 +1,15 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Novo\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "&Abrir...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "A&brir...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Sai&r\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "Aj&uda"
+    POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Sobre o Console de gerenciamento ReactOS", IDM_HELP_ABOUT
     END
@@ -20,17 +20,17 @@ BEGIN
     POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Novo\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "&Abrir...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Salvar", IDM_FILE_SAVE
+        MENUITEM "A&brir...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
         MENUITEM "Salvar &como...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Sai&r\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Windows"
+    POPUP "&Janelas"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-    POPUP "Aj&uda"
+    POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Sobre o Console de gerenciamento ReactOS", IDM_HELP_ABOUT
     END

@@ -1,0 +1,8 @@
+// Don't translate this file at current time
+
+LANGUAGE LANG_FINNISH, SUBLANG_FINNISH_FINLAND
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_FONTS_FOLDER "ReactOS Font Folder"
+END

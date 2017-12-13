@@ -1,4 +1,4 @@
-LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_SLOVENIAN, SUBLANG_SLOVENIAN_SLOVENIA
 
 MENU_001 MENUEX
 BEGIN
@@ -19,7 +19,7 @@ MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", FCIDM_SHVIEW_VIEW
+        POPUP "Pogl&ed", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Lar&ge Icons", FCIDM_SHVIEW_BIGICON
             MENUITEM "S&mall Icons", FCIDM_SHVIEW_SMALLICON
@@ -27,7 +27,7 @@ BEGIN
             MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "Arrange &Icons By", FCIDM_SHVIEW_VIEW
+        POPUP "Arrange &Icons By", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Auto Arrange", FCIDM_SHVIEW_AUTOARRANGE
@@ -54,7 +54,7 @@ BEGIN
     MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Select &All\tCtrl+A", FCIDM_SHVIEW_SELECTALL
     MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
 END
 
@@ -66,10 +66,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "C&ut", IDM_CUT
         MENUITEM "&Copy", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Create &Link", IDM_CREATELINK
         MENUITEM "&Delete", IDM_DELETE
-        MENUITEM "&Rename", IDM_RENAME
+        MENUITEM "Prei&menuj", IDM_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Properties", IDM_PROPERTIES
     END
@@ -84,7 +85,7 @@ BEGIN
     PUSHBUTTON "Cancel", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 12
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
@@ -95,7 +96,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "Folder:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Make New Folder", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -137,7 +138,7 @@ BEGIN
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
     LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
-    DEFPUSHBUTTON "V redu", IDOK, 220, 178, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
 END
 
@@ -158,9 +159,9 @@ BEGIN
     LTEXT "Vnesite ime programa, mape, dokumenta ali spletne strani, in ReactOS ga (jo) bo odprl.", 12289, 36, 11, 182, 18
     LTEXT "&Odpri:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
-    DEFPUSHBUTTON "V redu", IDOK, 62, 63, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Prekliči", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Pre&brskaj", 12288, 170, 63, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
+    PUSHBUTTON "&Browse...", 12288, 160, 63, 59, 14, WS_TABSTOP
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
@@ -202,7 +203,7 @@ BEGIN
     LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
     CHECKBOX "Run in seperate memory space", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "Abort", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Cancel", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -425,7 +426,7 @@ CAPTION "View"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Folder views", -1, 7, 10, 249, 60
-    //ICON
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
     PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
@@ -441,11 +442,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Registered file &types:", -1, 7, 10, 70, 10
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-    PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Nova", 14001, 120, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
     LTEXT "Opens with:", -1, 12, 140, 40, 10
-    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
+    //ICON
     LTEXT "Appname", 14005, 100, 140, 40, 10
     PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
     LTEXT "", 14007, 12, 155, 160, 30
@@ -563,7 +564,7 @@ BEGIN
     LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
     PUSHBUTTON "Cancel", IDCANCEL, 75, 82, 60, 14
-    PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
+    PUSHBUTTON "&Datoteka", IDHELP, 144, 82, 60, 14
 END
 
 IDD_FORMAT_DRIVE DIALOGEX 50, 50, 184, 218
@@ -596,7 +597,7 @@ BEGIN
     GROUPBOX "Check disk options", -1, 7, 6, 179, 40
     PUSHBUTTON "Cancel", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Automatically fix file system errors", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -633,10 +634,10 @@ STRINGTABLE
 BEGIN
     /* columns in the shellview */
     IDS_SHV_COLUMN_NAME "Name"
-    IDS_SHV_COLUMN_SIZE "Velikost"
-    IDS_SHV_COLUMN_TYPE "Vrsta"
-    IDS_SHV_COLUMN_MODIFIED "Spremenjena"
-    IDS_SHV_COLUMN_ATTRIBUTES "Atributi"
+    IDS_SHV_COLUMN_SIZE "Size"
+    IDS_SHV_COLUMN_TYPE "Type"
+    IDS_SHV_COLUMN_MODIFIED "Modified"
+    IDS_SHV_COLUMN_ATTRIBUTES "Attributes"
     IDS_SHV_COLUMN_DISK_CAPACITY "Točna velikost"
     IDS_SHV_COLUMN_DISK_AVAILABLE "Prosto"
     IDS_SHV_COLUMN_OWNER "Owner"
@@ -767,7 +768,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Authors"
     IDS_SHELL_ABOUT_BACK "< &Back"
-    FCIDM_SHVIEW_NEW "New"
+    FCIDM_SHVIEW_NEW "Nov dokument"
     FCIDM_SHVIEW_NEWFOLDER "New &Folder"
     FCIDM_SHVIEW_NEWLINK "New &Link"
     IDS_FOLDER_OPTIONS "Folder Options"
@@ -811,11 +812,11 @@ BEGIN
     IDS_RUNAS_VERB "Run as..."
     IDS_EDIT_VERB "Edit"
     IDS_FIND_VERB "Find"
-    IDS_PRINT_VERB "Print"
+    IDS_PRINT_VERB "Natisni"
 
     IDS_FILE_FOLDER "%u Files, %u Folders"
     IDS_PRINTERS "Printers"
-    IDS_FONTS "Fonts"
+    IDS_FONTS "F&ormat"
     IDS_INSTALLNEWFONT "Install New Font..."
 
     IDS_DEFAULT_CLUSTER_SIZE "Default allocation size"

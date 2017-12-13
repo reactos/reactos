@@ -1,4 +1,4 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -23,7 +23,7 @@ BEGIN
     POPUP "&Файл"
     BEGIN
         MENUITEM "&Нов\tCtrl+N", CMD_NEW
-        MENUITEM "&Отваряне\tCtrl+O", CMD_OPEN
+        MENUITEM "&Отваряне...\tAlt+tCtrl+O", CMD_OPEN
         MENUITEM "&Запис\tCtrl+S", CMD_SAVE
         MENUITEM "Запис &като...", CMD_SAVE_AS
         MENUITEM SEPARATOR
@@ -34,11 +34,11 @@ BEGIN
     END
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "&Отмяна\tCtrl+Z", CMD_UNDO
+        MENUITEM "Отмяна\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "От&рязване\tCtrl+X", CMD_CUT
-        MENUITEM "&Запомняне\tCtrl+C", CMD_COPY
-        MENUITEM "&Поставяне\tCtrl+V", CMD_PASTE
+        MENUITEM "Отрязване\tCtrl+X", CMD_CUT
+        MENUITEM "Запомняне\tCtrl+C", CMD_COPY
+        MENUITEM "Поставяне\tCtrl+V", CMD_PASTE
         MENUITEM "&Изтриване\tDel", CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Търсене...\tCtrl+F", CMD_SEARCH
@@ -46,7 +46,7 @@ BEGIN
         MENUITEM "Замяна...\tCtrl+H", CMD_REPLACE
         MENUITEM "Отиване на...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Избор на вси&чки\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Избиране на всичко\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "&Време/дата\tF5", CMD_TIME_DATE
     END
     POPUP "О&формление"
@@ -58,7 +58,7 @@ BEGIN
     BEGIN
         MENUITEM "Лента на &състоянието", CMD_STATUSBAR
     END
-    POPUP "Помо&щ"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "&Съдържание", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
@@ -110,10 +110,10 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_S
 FONT 8, "MS Shell Dlg"
 CAPTION "Знаков набор"
 BEGIN
-    COMBOBOX ID_ENCODING, 65, 0, 145, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Знаков набор:", 0x155, 5, 2, 60, 12
-    COMBOBOX ID_EOLN, 65, 18, 145, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Знак за нов ред:", 0x156, 5, 20, 60, 12
+    COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Знаков набор:", 0x155, 5, 2, 41, 12
+    COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Знак за нов ред:", 0x156, 5, 20, 41, 12
 END
 
 /* Dialog 'Go To' */
@@ -124,8 +124,8 @@ CAPTION "Отиване на ред"
 BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
     LTEXT "Ред номер:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
-    DEFPUSHBUTTON "Добре", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-    PUSHBUTTON "Отказ", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
@@ -154,23 +154,23 @@ BEGIN
     STRING_PAGESETUP_TOPVALUE "25 мм" /* FIXME */
     STRING_PAGESETUP_BOTTOMVALUE "25 мм" /* FIXME */
     STRING_NOTEPAD "Бележник"
-    STRING_ERROR "ГРЕШКА"
-    STRING_WARNING "ПРЕДУПРЕЖДЕНИЕ"
-    STRING_INFO "Сведение"
+    STRING_ERROR "ERROR"
+    STRING_WARNING "WARNING"
+    STRING_INFO "Information"
     STRING_UNTITLED "Без име"
-    STRING_ALL_FILES "Всички файлове (*.*)"
+    STRING_ALL_FILES "All files (*.*)"
     STRING_TEXT_FILES_TXT "Словесни файлове (*.txt)"
-    STRING_TOOLARGE "Файлът '%s' е твърде голям за бележника.\n \
-Използвайте друг обработчик."
-    STRING_NOTEXT "Не сте въвел текст. \
-\nНапишете нещо и опитайте пак."
-    STRING_DOESNOTEXIST "Файлът '%s'\nне съществува\n\n \
-Искате ли да създадете нов файл?"
-    STRING_NOTSAVED "Файлът '%s'\nе бил променен\n\n \
-Искате ли да запишете промените?"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+Please use a different editor."
+    STRING_NOTEXT "You didn't enter any text. \
+\nPlease type something and try again"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
     STRING_NOTFOUND "'%s' не може да бъде открит."
-    STRING_OUT_OF_MEMORY "Няма достатъчно памет за приключване на\
-задачата. \nЗатворете едно или повече приложения,\n за да освободите памет."
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree memory."
     STRING_CANNOTFIND "Не мога да открия '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Уникод"

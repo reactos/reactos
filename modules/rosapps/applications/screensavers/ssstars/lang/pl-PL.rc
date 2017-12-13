@@ -1,4 +1,4 @@
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
 
 // Dialog
 
@@ -24,7 +24,7 @@ BEGIN
                     WS_TABSTOP
     CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
                     4,4,284,92
-    GROUPBOX        "Zaawansowane",IDC_STATIC,16,180,260,72
+    GROUPBOX        "Advanced",IDC_STATIC,16,180,260,72
     CONTROL         "Włącz łączenie tła",IDC_CHECK_DOBLENDING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
     CONTROL         "Włącz precyzyjną poprawę perspektywy",
@@ -36,7 +36,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
     PUSHBUTTON      "OK",IDOK,60,260,52,16
     PUSHBUTTON      "Anuluj",IDCANCEL,120,260,52,16
-    PUSHBUTTON      "O wygaszaczu",IDC_BUTTON_ABOUT,179,260,52,16
+    PUSHBUTTON      "O programie",IDC_BUTTON_ABOUT,179,260,52,16
 END
 
 // String Tables
@@ -44,9 +44,9 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_DESCRIPTION         "Gwiezdne pole"
-    IDS_ROTATION_NONE       "brak"
+    IDS_ROTATION_NONE       "None"
     IDS_ROTATION_LINEAR     "Liniowo"
     IDS_ROTATION_PERIODIC   "Okresowo"
     IDS_LICENSE             "Gwiezdne pole to darmowe oprogramowanie wydane na licencji GNU GPL."
-    IDS_AUTHOR              "Napisane przez Carlo Bramini"
+    IDS_AUTHOR              "Autorstwa: Carlo Bramini"
 END

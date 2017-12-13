@@ -1,4 +1,4 @@
-LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_SLOVENIAN, SUBLANG_SLOVENIAN_SLOVENIA
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -22,10 +22,10 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Datoteka"
     BEGIN
-        MENUITEM "&Nova\tCtrl+N", CMD_NEW
-        MENUITEM "&Odpri\tCtrl+O", CMD_OPEN
-        MENUITEM "&Shrani\tCtrl+S", CMD_SAVE
-        MENUITEM "Shrani &kot ...", CMD_SAVE_AS
+        MENUITEM "&New\tCtrl+N", CMD_NEW
+        MENUITEM "&Open...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Save\tCtrl+S", CMD_SAVE
+        MENUITEM "Save &As...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "P&riprava strani ...", CMD_PAGE_SETUP
         MENUITEM "Na&tisni...\tCtrl+P", CMD_PRINT
@@ -34,19 +34,19 @@ BEGIN
     END
     POPUP "&Urejanje"
     BEGIN
-        MENUITEM "&Razveljavi\tCtrl+Z", CMD_UNDO
+        MENUITEM "&Undo\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Izreži\tCtrl+X", CMD_CUT
-        MENUITEM "&Kopiraj\tCtrl+C", CMD_COPY
-        MENUITEM "&Prilepi\tCtrl+V", CMD_PASTE
+        MENUITEM "Cu&t\tCtrl+X", CMD_CUT
+        MENUITEM "&Copy\tCtrl+C", CMD_COPY
+        MENUITEM "&Paste\tCtrl+V", CMD_PASTE
         MENUITEM "Izbri&ši\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Najdi ...", CMD_SEARCH
+        MENUITEM "&Najdi...\tCtrl+F", CMD_SEARCH
         MENUITEM "Na&daljuj iskanje\tF3", CMD_SEARCH_NEXT
         MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Izberi &vse", CMD_SELECT_ALL
+        MENUITEM "Select &All\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "Èas/&Datum\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormat"
@@ -54,11 +54,11 @@ BEGIN
         MENUITEM "Pr&elom vrstice", CMD_WRAP
         MENUITEM "&Font...", CMD_FONT
     END
-    POPUP "&View"
+    POPUP "Pogl&ed"
     BEGIN
         MENUITEM "Status&bar", CMD_STATUSBAR
     END
-    POPUP "&Pomoè"
+    POPUP "&Datoteka"
     BEGIN
         MENUITEM "&Teme pomoèi", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
@@ -154,23 +154,23 @@ BEGIN
     STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
     STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
     STRING_NOTEPAD "Beležnica"
-    STRING_ERROR "NAPAKA"
-    STRING_WARNING "OPOZORILO"
-    STRING_INFO "Informacija"
+    STRING_ERROR "ERROR"
+    STRING_WARNING "WARNING"
+    STRING_INFO "Information"
     STRING_UNTITLED "Neimenovana"
-    STRING_ALL_FILES "Vse datoteke (*.*)"
+    STRING_ALL_FILES "All files (*.*)"
     STRING_TEXT_FILES_TXT "Datoteke z besedilom (*.txt)"
-    STRING_TOOLARGE "Datoteka '%s' je prevelika za Beležnico.\n \
-Uporabite drug urejevalnik."
-    STRING_NOTEXT "Niste vnesli besedila. \
-\nVnesite besedilo in poskusite znova."
-    STRING_DOESNOTEXIST "Datoteka '%s' ne obstaja.\n\n \
-Ali želite ustvariti novo datoteko?"
-    STRING_NOTSAVED "Vsebina datoteke '%s'je bila spremenjena.\n\n \
-Ali želite shraniti spremembe?"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+Please use a different editor."
+    STRING_NOTEXT "You didn't enter any text. \
+\nPlease type something and try again"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
     STRING_NOTFOUND "Ni mogoèe najti '%s'."
-    STRING_OUT_OF_MEMORY "Na voljo ni dovolj pomnilnika, da bi bilo mogoèe dokonèati to \
-operacijo. \nÈe ga želite sprostiti, konèajte enega ali veè programov in poskusite znova. "
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree memory."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

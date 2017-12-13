@@ -1,4 +1,4 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 STRINGTABLE
 {
@@ -20,7 +20,7 @@ STRINGTABLE
     STRING_YES, "Y"
     STRING_NO, "N"
     STRING_CANCELLED, "The registry operation was cancelled\n"
-    STRING_DEFAULT_VALUE, "(Default)"
+    STRING_DEFAULT_VALUE, "(Подразбрана)"
     STRING_DELETE_VALUE, "Are you sure you want to delete the registry value '%1'?"
     STRING_DELETE_VALUEALL, "Are you sure you want to delete all registry values in '%1'?"
     STRING_DELETE_SUBKEY, "Are you sure you want to delete the registry key '%1'?"
@@ -32,7 +32,7 @@ STRINGTABLE
     STRING_INVALID_OPTION, "reg: Invalid option [%1]. "
     STRING_REG_HELP, "Type ""REG /?"" for help.\n"
     STRING_FUNC_HELP, "Type ""REG %1 /?"" for help.\n"
-    STRING_VALUE_NOT_SET, "(value not set)"
+    STRING_VALUE_NOT_SET, "(незададена стойност)"
     STRING_IMPORT_USAGE, "REG IMPORT file.reg\n"
     STRING_FILE_NOT_FOUND, "reg: The file '%1' was not found.\n"
     STRING_OPEN_KEY_FAILED, "reg: Unable to open the registry key '%1'.\n"

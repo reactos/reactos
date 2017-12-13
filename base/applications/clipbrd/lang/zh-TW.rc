@@ -1,6 +1,4 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -24,11 +22,11 @@ BEGIN
     BEGIN
         MENUITEM "自動(&A)", CMD_AUTOMATIC
     END
-    POPUP "幫助(&H)"
+    POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "幫助主題(&H)", CMD_HELP
+        MENUITEM "說明主題", CMD_HELP
         MENUITEM SEPARATOR
-        MENUITEM "關於(&A)", CMD_ABOUT
+        MENUITEM "關於註冊表編輯器(&A)", CMD_ABOUT
     END
 END
 

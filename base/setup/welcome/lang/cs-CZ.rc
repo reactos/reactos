@@ -1,4 +1,4 @@
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
 
 /* String Tables */
 
@@ -24,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Instalovat ReactOS"
+    IDS_TOPIC_TITLE0 "Nainstalovat systém ReactOS"
     IDS_TOPIC_TITLE1 "Prohlížet toto CD"
     IDS_TOPIC_TITLE2 "Konec"
 END

@@ -1,0 +1,11 @@
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Terminates a session.\n\n\
+  /v\t\tDisplays information about the actions performed.\n\
+  /?\t\tShows this information.\n\n"
+    IDS_LOGOFF_REMOTE "正在終止遠端機器的階段。"
+    IDS_LOGOFF_LOCAL "正在終止本機器的當前階段。"
+    IDS_ILLEGAL_PARAM "無效參數\n"
+END

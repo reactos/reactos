@@ -1,23 +1,17 @@
-/* FILE:       applications/sndvol32/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * THANKS TO:  Denzil, who translated major part of this file
- * UPDATED:    2011-04-09
- */
-
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
 
 IDM_MAINMENU MENU
 BEGIN
     POPUP "&Nastavení"
     BEGIN
-        MENUITEM "&Možnosti", IDC_PROPERTIES
+        MENUITEM "Vl&astnosti", IDC_PROPERTIES
         MENUITEM "&Rozšířené nastavení", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Konec", IDC_EXIT
+        MENUITEM "U&končit", IDC_EXIT
     END
-    POPUP "&Nápověda"
+    POPUP "&Soubor"
     BEGIN
-        MENUITEM "&Témata nápovědy", IDC_HELP_TOPICS
+        MENUITEM "Témata nápovědy", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&O ovládání hlasitosti ...", IDC_ABOUT
     END

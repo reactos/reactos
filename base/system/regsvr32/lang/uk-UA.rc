@@ -1,19 +1,19 @@
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
 
 STRINGTABLE
 BEGIN
-    IDS_UsageMessage "%s\n\nВикористання: regsvr32 [/u] [/s] [/c] [/n] [/i[:параметри]] назва_dll\n\
-/u -	Відмінити реєстрацію сервера\n\
-/s -	Тихий режим: Не виводити повідомлень\n\
-/c -	Вивід в консоль\n\
-/i -	Викликати DllInstall  з додатковими параметрами [параметри]; Коли використовується ключ /u викликається DllUninstall\n\
-/n -	Не викликати DllRegisterServer; цей ключ має використовуватися з /i"
+    IDS_UsageMessage "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Unregister server\n\
+/s -	Silent; display no message boxes\n\
+/c -	Console output\n\
+/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
+/n -	Do not call DllRegisterServer; this option must be used with /i"
     IDS_NoDllSpecified "Не вказано ім'я DLL."
     IDS_InvalidFlag "Невідомий ключ: %s"
     IDS_SwitchN_NoI "Невідомий ключ: /n використовується лише з ключем /i"
     IDS_DllNotLoaded "LoadLibrary('%s') завершився аварійно.\nGetLastError повернуло 0x%08x."
-    IDS_MissingEntry "%s було запущено, але точка входу для %s не знайдено.\n\n\
-%s може не експортуватись, чи в пам'яті лежить пошкоджена версія %s. Для того щоб знайти  і видалти %s, використовуйте PView."
+    IDS_MissingEntry "%s was loaded, but the %s entry point was not found.\n\n\
+%s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it."
     IDS_FailureMessage "%s в %s завершилося аварійно.\nКод завершення: 0x%08x"
     IDS_SuccessMessage "%s в %s успішно виконано."
 END

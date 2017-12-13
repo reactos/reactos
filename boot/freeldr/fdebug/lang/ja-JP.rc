@@ -1,4 +1,4 @@
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+LANGUAGE LANG_JAPANESE, SUBLANG_JAPANESE_JAPAN
 
 /* Menu */
 IDC_FDEBUG MENU
@@ -6,7 +6,7 @@ BEGIN
     POPUP "ファイル(&F)"
     BEGIN
         MENUITEM "接続(&C)", IDM_FILE_CONNECT
-        MENUITEM "切断(&D)", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Disconnect", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
@@ -15,9 +15,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "ローカル エコー(&L)", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "終了(&X)", IDM_EXIT
+        MENUITEM "レジストリ エディタの終了(&X)", IDM_EXIT
     END
-    POPUP "ヘルプ(&H)"
+    POPUP "ファイル(&F)"
     BEGIN
         MENUITEM "バージョン情報(&A)...", IDM_ABOUT
     END
@@ -35,7 +35,7 @@ END
 IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "FreeLoader Debugger について"
-FONT 9, "MS UI Gothic"
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "OK", IDOK, 183, 189, 44, 14, WS_GROUP
@@ -46,7 +46,7 @@ END
 IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "接続オプション"
-FONT 9, "MS UI Gothic"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "COM ポートを入力してください (例: COM1):", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
@@ -59,7 +59,7 @@ END
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "取り込みファイル"
-FONT 9, "MS UI Gothic"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "取り込みファイル名:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
@@ -79,5 +79,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "このプログラムはフリーソフトウェアです。あなたはこれを、フリーソフトウェア財団によって発行された GNU General Public License (バージョン 2 か、希望によってはそれ以降のバージョンのうちどれか) の定める条件の下で再頒布または改変することができます。\r\n\r\nこのプログラムは有用であることを願って頒布されますが、*全くの無保証* です。商業可能性の保証や特定の目的への適合性は、言外に示されたものも含め全く存在しません。詳しくは GNU General Public License をご覧ください。\r\n\r\nあなたはこのプログラムと共に、GNU General Public License の複製物を一部受け取ったはずです。もし受け取っていなければ、フリーソフトウェア財団まで請求してください (宛先は the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.)。"
+    IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END

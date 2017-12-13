@@ -1,16 +1,14 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 /* Basic application information */
 STRINGTABLE
 BEGIN
     IDS_APP_HEADER "ReactOS 磁盘分区"
-    IDS_APP_USAGE "\n磁盘分区口译员。\n\n\
+    IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
-/S <文件名>\t运行给定的脚本。\n\
-/T <超时>\t超时秒数，防止 DiskPart 使用重叠。\n\
-/?\t\t显示此帮助消息。\n\n"
+/S filename\tRuns the given script.\n\
+/T timeout\tTimeout in seconds to prevent DiskPart usage overlap.\n\
+/?\t\tDisplay this help message.\n\n"
     IDS_APP_LICENSE "根据 GNU GPLv2 许可\n"
     IDS_APP_CURR_COMPUTER "在计算机上: %s\n\n"
     IDS_APP_LEAVING "\n离开 DiskPart 中......\n"
@@ -89,7 +87,7 @@ BEGIN
     IDS_MSG_ARG_SYNTAX_ERROR "为此命令指定的参数不是有效的。\n有关命令类型的详细信息:"
 END
 
-/* Help Command Descripions */
+/* Help Command Descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- 所选将分区标记为活动。\n"
@@ -144,250 +142,250 @@ END
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ACTIVE "\n\
-<活动命令帮助在此处添加文本>\n\n"
+<Add active command help text here>\n\n"
 END
 
 /* Add help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ADD "\n\
-<添加命令帮助在此处添加文本>\n\n"
+<Add add command help text here>\n\n"
 END
 
 /* Assign help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ASSIGN "\n\
-<指定命令的帮助在此处添加文本>\n\n"
+<Add assign command help text here>\n\n"
 END
 
 /* Attach help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ATTACH "\n\
-<添加附加命令的帮助文本在这里>\n\n"
+<Add attach command help text here>\n\n"
 END
 
 /* Attributes Command Messages */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ATTRIBUTES "\n\
-<属性命令帮助在此处添加文本>\n\n"
+<Add attributes command help text here>\n\n"
 END
 
 /* Automount help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_AUTOMOUNT "\n\
-<自动挂载命令帮助在此处添加文本>\n\n"
+<Add automount command help text here>\n\n"
 END
 
 /* Break help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_BREAK "\n\
-<自动挂载命令帮助在此处添加文本>\n\n"
+<Add break command help text here>\n\n"
 END
 
 /* Clean help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CLEAN "\n\
-<清理命令的帮助在此处添加文本>\n\n"
+<Add clean command help text here>\n\n"
 END
 
 /* Compact help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_COMPACT "\n\
-<紧凑的命令帮助在此处添加文本>\n\n"
+<Add compact command help text here>\n\n"
 END
 
 /* Convert help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CONVERT "\n\
-<转换命令帮助在此处添加文本>\n\n"
+<Add convert command help text here>\n\n"
 END
 
 /* Convert help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CREATE "\n\
-<添加创建命令的帮助文本在这里>\n\n"
+<Add create command help text here>\n\n"
 END
 
 /* Delete help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DELETE "\n\
-<删除命令的帮助在此处添加文本>\n\n"
+<Add delete command help text here>\n\n"
 END
 
 /* Delete help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DETAIL "\n\
-<详细命令帮助在此处添加文本>\n\n"
+<Add detail command help text here>\n\n"
 END
 
 /* Detach help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DETACH "\n\
-<添加分离命令帮助文本在这里>\n\n"
+<Add detach command help text here>\n\n"
 END
 
 /* Expand help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_EXPAND "\n\
-<添加扩展命令的帮助文本在这里>\n\n"
+<Add expand command help text here>\n\n"
 END
 
 /* Extend help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_EXTEND "\n\
-<添加扩展命令的帮助文本在这里>\n\n"
+<Add extend command help text here>\n\n"
 END
 
 /* Filesystems help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_FILESYSTEMS "\n\
-<文件系统命令的帮助在此处添加文本>\n\n"
+<Add filesystems command help text here>\n\n"
 END
 
 /* Format help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_FORMAT "\n\
-<格式命令帮助在此处添加文本>\n\n"
+<Add format command help text here>\n\n"
 END
 
 /* GPT help description */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_GPT "\n\
-<Gpt 命令帮助在此处添加文本>\n\n"
+<Add gpt command help text here>\n\n"
 END
 
 /* Help help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_HELP "\n\
-<帮助命令的帮助在此处添加文本>\n\n"
+<Add help command help text here>\n\n"
 END
 
 /* Import help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_IMPORT "\n\
-<导入命令帮助在此处添加文本>\n\n"
+<Add import command help text here>\n\n"
 END
 
 /* Inactive help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_INACTIVE "\n\
-<处于非活动状态的命令的帮助在此处添加文本>\n\n"
+<Add inactive command help text here>\n\n"
 END
 
 /* List help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_LIST "\n\
-<列表命令的帮助在此处添加文本>\n\n"
+<Add list command help text here>\n\n"
 END
 
 /* Merge help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_MERGE "\n\
-<合并命令帮助在此处添加文本>\n\n"
+<Add merge command help text here>\n\n"
 END
 
 /* Offline help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_OFFLINE "\n\
-<脱机命令帮助在此处添加文本>\n\n"
+<Add OFFLINE command help text here>\n\n"
 END
 
 /* Online help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_ONLINE "\n\
-<在线的命令帮助在此处添加文本>\n\n"
+<Add ONLINE command help text here>\n\n"
 END
 
 /* Recover help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RECOVER "\n\
-<恢复命令帮助在此处添加文本>\n\n"
+<Add RECOVER command help text here>\n\n"
 END
 
 /* Remove help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_REMOVE "\n\
-<删除命令的帮助在此处添加文本\n\n"
+<Add REMOVE command help text here>\n\n"
 END
 
 /* Repair help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_REPAIR "\n\
-<修复命令帮助在此处添加文本>\n\n"
+<Add REPAIR command help text here>\n\n"
 END
 
 /* Rescan help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RESCAN "\n\
-<重新扫描命令帮助在此处添加文本>\n\n"
+<Add RESCAN command help text here>\n\n"
 END
 
 /* Retain help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_RETAIN "\n\
-<保留命令帮助在此处添加文本>\n\n"
+<Add RETAIN command help text here>\n\n"
 END
 
 /* San help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SAN "\n\
-<SAN 命令的帮助在此处添加文本>\n\n"
+<Add SAN command help text here>\n\n"
 END
 
 /* Select help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SELECT "\n\
-<选择命令帮助在此处添加文本>\n\n"
+<Add SELECT command help text here>\n\n"
 END
 
 /* Setid help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SETID "\n\
-<SETID 命令帮助在此处添加文本>\n\n"
+<Add SETID command help text here>\n\n"
 END
 
 /* Setid help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SHRINK "\n\
-<收缩命令帮助在此处添加文本>\n\n"
+<Add SHRINK command help text here>\n\n"
 END
 
 /* Uniqueid help descriptions */
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_UNIQUEID "\n\
-<UNIQUEID 命令帮助在此处添加文本>\n\n"
+<Add UNIQUEID command help text here>\n\n"
 END

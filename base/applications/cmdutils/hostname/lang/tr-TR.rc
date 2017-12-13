@@ -1,10 +1,8 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Şimdiki anabilgisayarın adını yazdır.\n\nhostname"
+    IDS_USAGE "Kullanım bilgisi için ""EVENTCREATE /?"" yazınız.\n"
     IDS_NOSET "hostname -s desteklenmiyor."
     IDS_ERROR "Win32 yanlışlığı"
 END

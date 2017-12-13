@@ -1,12 +1,4 @@
-/*
- * PROJECT:     ReactOS
- * LICENSE:     Public Domain
- * FILE:        applications/cmdutils/arping/lang/ru-RU.rc
- * PURPOSE:     Russian Language File for arping
- * TRANSLATOR:  Sergey Stopkin
- */
-
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 STRINGTABLE
 BEGIN

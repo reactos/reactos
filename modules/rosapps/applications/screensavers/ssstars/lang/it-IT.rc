@@ -1,4 +1,4 @@
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
 
 // Dialog
 
@@ -14,7 +14,7 @@ BEGIN
                     TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,96,116,140,12
     CTEXT           "Static",IDC_TEXT_NUM_OF_STARS,240,116,24,12,
                     SS_CENTERIMAGE,WS_EX_STATICEDGE
-    RTEXT           "Velocitŕ:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
+    RTEXT           "Velocità:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
     CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH | 
                     TBS_NOTICKS | WS_TABSTOP,96,137,140,12
     CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
@@ -24,7 +24,7 @@ BEGIN
                     WS_TABSTOP
     CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
                     4,4,284,92
-    GROUPBOX        "Avanzate",IDC_STATIC,16,180,260,72
+    GROUPBOX        "Advanced",IDC_STATIC,16,180,260,72
     CONTROL         "Attiva blending sullo sfondo",IDC_CHECK_DOBLENDING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
     CONTROL         "Attiva correzione prospettica accurata",
@@ -35,8 +35,8 @@ BEGIN
     CONTROL         "Attiva illuminazione accurata",IDC_CHECK_SHADING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
     PUSHBUTTON      "OK",IDOK,60,260,52,16
-    PUSHBUTTON      "Annulla",IDCANCEL,120,260,52,16
-    PUSHBUTTON      "Info",IDC_BUTTON_ABOUT,179,260,52,16
+    PUSHBUTTON      "Cancel",IDCANCEL,120,260,52,16
+    PUSHBUTTON      "Informazioni Magnifier",IDC_BUTTON_ABOUT,179,260,52,16
 END
 
 // String Tables
@@ -44,7 +44,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_DESCRIPTION         "Campo stellare"
-    IDS_ROTATION_NONE       "Nessuna"
+    IDS_ROTATION_NONE       "None"
     IDS_ROTATION_LINEAR     "Lineare"
     IDS_ROTATION_PERIODIC   "Periodica"
     IDS_LICENSE             "Campo stellare e` software libero rilasciato sotto licenza GNU GPL."

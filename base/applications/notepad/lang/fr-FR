@@ -1,0 +1,186 @@
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Nouveau\tCtrl+N", CMD_NEW
+        MENUITEM "&Ouvrir...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Enregistrer\tCtrl+S", CMD_SAVE
+        MENUITEM "Enregistrer &sous...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Page Set&up...", CMD_PAGE_SETUP
+        MENUITEM "&Print...\tCtrl+P", CMD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", CMD_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Annuler\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Couper\tCtrl+X", CMD_CUT
+        MENUITEM "Copier\tCtrl+C", CMD_COPY
+        MENUITEM "Coller\tCtrl+V", CMD_PASTE
+        MENUITEM "De&lete\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F", CMD_SEARCH
+        MENUITEM "Find &Next\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&Replace...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&Go To...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Sélectionner tout\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Time/&Date\tF5", CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Word Wrap", CMD_WRAP
+        MENUITEM "&Font...", CMD_FONT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Status Bar", CMD_STATUSBAR
+    END
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "View &Help", CMD_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Notepad", CMD_ABOUT
+        MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+CAPTION "Page Setup"
+BEGIN
+    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "L&eft:", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Right:", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "T&op:", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Header:", 0x140, 8, 132, 40, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Footer:", 0x142, 8, 149, 40, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encoding"
+BEGIN
+    COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Encoding:", 0x155, 5, 2, 41, 12
+    COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Endlines:", 0x156, 5, 20, 41, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Goto line"
+BEGIN
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Line number:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About ReactOS Notepad"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
+    DEFPUSHBUTTON "Fermer", IDOK, 114, 149, 44, 15, WS_GROUP
+    ICON IDI_NPICON, -1, 12, 9, 20, 30
+    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    STRING_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "Page &s" /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_NOTEPAD "Notepad"
+    STRING_ERROR "ERROR"
+    STRING_WARNING "WARNING"
+    STRING_INFO "Information"
+    STRING_UNTITLED "Untitled"
+    STRING_ALL_FILES "All files (*.*)"
+    STRING_TEXT_FILES_TXT "Text files (*.txt)"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+Please use a different editor."
+    STRING_NOTEXT "You didn't enter any text. \
+\nPlease type something and try again"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
+    STRING_NOTFOUND "'%s' can not be found."
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree memory."
+    STRING_CANNOTFIND "Cannot find '%s'"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (big endian)"
+    STRING_UTF8 "UTF-8"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "Line %d, column %d"
+    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+
+    STRING_TEXT_DOCUMENT "Text Document"
+END

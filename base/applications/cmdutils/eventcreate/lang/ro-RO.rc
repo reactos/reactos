@@ -1,54 +1,52 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
-
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "Tastați «EVENTCREATE /?» pentru informații de utilizare.\n"
     IDS_HELP "\n\
-EVENTCREATE [/S calculator [/U [domeniu\\]nume [/P parolă]]]\n\
-            /ID id_eveniment {[/L nume_jurnal] | [/SO sursă]}\n\
-            /T tip /C categorie /D descriere\n\
+EVENTCREATE [/S computer [/U [domain\\]user [/P password]]] /ID EventID\n\
+            {[/L logname] | [/SO source]} /T type /C category /D description\n\
 \n\
-Descriere:\n\
-    Acest instrument oferă unui administrator crearea unui eveniment\n\
-    particular într-un jurnal de evenimente specificat.\n\
+Description:\n\
+    This tool enables an administrator to create a custom event in\n\
+    a specified event log.\n\
 \n\
-Parametri:\n\
-    /S  calculator        Specifică sistemul la care se face conectarea.\n\
+Parameters:\n\
+    /S  computer          Specifies the remote computer where to connect.\n\
 \n\
-    /U  [domeniu\\]nume    Numele contului de utilizator sub care va fi\n\
-                          executată comanda.\n\
+    /U  [domain\\]user     Specifies the user account under which the command\n\
+                          should execute.\n\
 \n\
-    /P  [parolă]          Specifică parola contului de utilizator.\n\
-                          Va fi cerută la prompt în cazul omiterii.\n\
+    /P  [password]        Specifies the password of the user account.\n\
+                          Prompts for input if omitted.\n\
 \n\
-    /L  nume_jurnal       Specifică numele jurnalului în care evenimentul va fi\n\
-                          creat. Numele valide sunt:\n\
+    /L  logname           Specifies the name of the log where the event will be\n\
+                          created. The valid names are:\n\
                           Application, System, Security\n\
-                          (ultimul este rezervat doar pentru contul SYSTEM).\n\
+                          (the latter is reserved only for the SYSTEM account).\n\
 \n\
-    /SO sursă             Specifică numele sursei utilizate pentru eveniment.\n\
-                          (Dacă nu e specificat, numele implicit al sursei va\n\
-                           fi «eventcreate».)\n\
-                          O sursă validă poate fi orice șir de caractere și ar\n\
-                          trebui să reprezinte aplicația sau evenimentul care\n\
-                          generează evenimentul.\n\
+    /SO source            Specifies the source name to use for the event\n\
+                          (if not specified, the default source name\n\
+                           will be 'eventcreate').\n\
+                          A valid source can be any string and should represent\n\
+                          the application or the component that is generating\n\
+                          the event.\n\
 \n\
-    /T  tip               Specifică tipul de eveniment creat.\n\
-                          Tipurile valide sunt: SUCCESS, ERROR, WARNING,\n\
+    /T  type              Specifies the type of event to create.\n\
+                          The valid types are: SUCCESS, ERROR, WARNING,\n\
                           INFORMATION.\n\
 \n\
-    /C  categorie         Specifică categoria de eveniment (ca număr întreg).\n\
+    /C  category          Specifies the event category (integer) for the event.\n\
 \n\
-    /ID id_eveniment      Specifică numărul de identificare pentru eveniment.\n\
-                          Acesta trebuie să fie un număr între 0 și 65535.\n\
+    /ID EventID           Specifies the event ID for the event. This must be\n\
+                          an integer between 0 and 65535.\n\
 \n\
-    /D  descriere         Specifică o descriere pentru evenimentul nou creat.\n\
+    /D  description       Specifies the description to use for the newly\n\
+                          created event.\n\
 \n\
-    /?                    Afișează acest manual de utilizare.\n\
+    /?                    Displays this help screen.\n\
 "
-    IDS_INVALIDSWITCH "Parametru eronat - «%s».\n"
+    IDS_INVALIDSWITCH "Parametru nevalid - /%c\n"
     IDS_BADSYNTAX_0 "Comandă cu sintaxă eronată.\n"
     IDS_BADSYNTAX_1 "Comandă cu sintaxă eronată. Opțiunea «%s» necesită o valoare.\n"
     IDS_BADSYNTAX_2 "Comandă cu sintaxă eronată. Valoarea pentru opțiunea «%s» nu poate fi omisă.\n"
@@ -56,7 +54,7 @@ Parametri:\n\
     IDS_BADSYNTAX_4 "Comandă cu sintaxă eronată. Valoarea dată nu poate fi specificată pentru opțiunea «%s».\n"
     IDS_BADSYNTAX_5 "Comandă cu sintaxă eronată. Opțiunea «%s» nu este permisă mai mult de %lu ori.\n"
     IDS_BADSYNTAX_6 "Comandă cu sintaxă eronată. Opțiunea obligatorie «%s» a fost omisă.\n"
-    // IDS_BADSYNTAX_7 "Comandă cu sintaxă eronată. Valoarea pentru opțiunea «%s» este în afara domeniului permis.\n"
+    // IDS_BADSYNTAX_7 "Comandă cu sintaxă eronată. Valoarea pentru opțiunea «%s» trebuie să fie între %d și %d.\n"
     IDS_BADSYNTAX_7 "Comandă cu sintaxă eronată. Valoarea pentru opțiunea «%s» trebuie să fie între %d și %d.\n"
 
     IDS_LOG_NOT_FOUND "Jurnalul «%s» nu există. Evenimentul nu poate fi creat.\n"

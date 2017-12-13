@@ -1,4 +1,4 @@
-LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+LANGUAGE LANG_THAI, SUBLANG_THAI_THAILAND
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -49,7 +49,7 @@ BEGIN
     IDS_CPLDESCRIPTION "เปลี่ยนข้อมูลของวันที่, เวลา และเขตเวลา"
     IDS_TIMEZONETEXT "เขตเวลาในปัจจุบัน: %s"
     IDS_TIMEZONEINVALID "ยกเลิกการปรับเทียบเวลา"
-    IDS_TIMEZONEUNKNOWN "ไม่ทราบค่า"
+    IDS_TIMEZONEUNKNOWN "ไม่ทราบ"
     IDS_INETTIMESUCSYNC "เวลาได้รับการปรับเทียบเวลาสำเร็จแล้วภายใน %s ของ %s ใน %s"
     IDS_INETTIMENEXTSYNC "การปรับเทียบต่อไป: %s ใน %s"
     IDS_INETTIMESYNCING "โปรดรอ ReactOS กำลังปรับเทียบเวลาภายใน %s"

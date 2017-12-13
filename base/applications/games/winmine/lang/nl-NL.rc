@@ -1,4 +1,4 @@
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 
 STRINGTABLE
 BEGIN
@@ -22,10 +22,10 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Afsluiten\tAlt+X", IDM_EXIT
     END
-    POPUP "&Info"
+    POPUP "Informatie"
     BEGIN
         MENUITEM "&Snelste tijden...", IDM_TIMES
-        MENUITEM "&Over WineMine", IDM_ABOUT
+        MENUITEM "&Info", IDM_ABOUT
     END
 END
 
@@ -36,7 +36,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Snelste tijden", -1, 10, 10, 140, 45
     LTEXT "Beginner", -1, 20, 20, 40, 8
-    LTEXT "Gevorderde", -1, 20, 30, 40, 8
+    LTEXT "Advanced", -1, 20, 30, 40, 8
     LTEXT "Expert", -1, 20, 40, 40, 8
     LTEXT "999", IDC_TIME1, 70, 20, 15, 8
     LTEXT "999", IDC_TIME2, 70, 30, 15, 8
@@ -69,5 +69,5 @@ BEGIN
     EDITTEXT IDC_EDITCOLS, 5, 45, 20, 12, ES_NUMBER
     EDITTEXT IDC_EDITMINES, 5, 75, 20, 12, ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 40, 30, 50, 15
-    PUSHBUTTON "Annuleren", IDCANCEL, 40, 50, 50, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 40, 50, 50, 15
 END

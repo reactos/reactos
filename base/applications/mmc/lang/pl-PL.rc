@@ -1,22 +1,15 @@
-/*
- *    Translated by xrogers
- *    xxrogers@users.sourceforge.net
- *    https://sourceforge.net/projects/reactospl
- *    UTF-8 conversion by Caemyr (May, 2011)
- */
-
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
-    POPUP "Pl&ik"
+    POPUP "&Plik"
     BEGIN
-        MENUITEM "&Nowa\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Nowy\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Otwórz...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "Pomo&c"
+    POPUP "&Plik"
     BEGIN
         MENUITEM "Konsola Zarządzania ReactOS - i&nformacje", IDM_HELP_ABOUT
     END
@@ -24,20 +17,20 @@ END
 
 IDM_CONSOLE_LARGE MENU
 BEGIN
-    POPUP "Pl&ik"
+    POPUP "&Plik"
     BEGIN
-        MENUITEM "&Nowa\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Nowy\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Otwórz...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Zapisz", IDM_FILE_SAVE
+        MENUITEM "Zapisz", IDM_FILE_SAVE
         MENUITEM "Z&apisz jako...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Okno"
+    POPUP "O&kna"
     BEGIN
         MENUITEM "Lista", IDM_WINDOWS_LIST
     END
-    POPUP "Pomo&c"
+    POPUP "&Plik"
     BEGIN
         MENUITEM "Konsola Zarządzania ReactOS - i&nformacje", IDM_HELP_ABOUT
     END

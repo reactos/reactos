@@ -1,23 +1,15 @@
-/*
- * PROJECT:    ReactOS Management Console
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/mmc/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language File for Management Console
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
- */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "開啟(&O)\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "開啟...(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "說明(&H)"
+    POPUP "檔案(&F)"
     BEGIN
         MENUITEM "關於 ReactOS 控制台(&A)", IDM_HELP_ABOUT
     END
@@ -28,17 +20,17 @@ BEGIN
     POPUP "檔案(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "開啟(&O)\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "開啟...(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM "儲存", IDM_FILE_SAVE
-        MENUITEM "另存為...", IDM_FILE_SAVEAS
+        MENUITEM "另存為...(&A)", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "視窗(&W)"
+    POPUP "窗口(&W)"
     BEGIN
         MENUITEM "清單", IDM_WINDOWS_LIST
     END
-    POPUP "說明(&H)"
+    POPUP "檔案(&F)"
     BEGIN
         MENUITEM "關於 ReactOS 控制台(&A)", IDM_HELP_ABOUT
     END

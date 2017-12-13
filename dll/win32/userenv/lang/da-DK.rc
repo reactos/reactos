@@ -1,10 +1,10 @@
-LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+LANGUAGE LANG_DANISH, SUBLANG_DANISH_DENMARK
 
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Lokale Indstillinger"
     IDS_APPDATA "Application Data"
-    IDS_DESKTOP "Skrivebord"
+    IDS_DESKTOP "Desktop"
     IDS_FAVORITES "Favoritter"
     IDS_MYDOCUMENTS "Mine Dokumenter"
     IDS_NETHOOD "NetHood"
@@ -18,7 +18,7 @@ BEGIN
     IDS_LOCALSETTINGS "Lokale Indstillinger"
     IDS_LOCALAPPDATA "Lokale Indstillinger\\Application Data"
     IDS_TEMP "Lokale Indstillinger\\Temp"
-    IDS_CACHE "Lokale Indstillinger\\Midlertidige Internet Filer"
-    IDS_HISTORY "Lokale Indstillinger\\Historie"
+    IDS_CACHE "Midlertidige Internet Filer"
+    IDS_HISTORY "Historie"
     IDS_COOKIES "Cookies"
 END

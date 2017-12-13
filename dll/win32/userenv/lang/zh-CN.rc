@@ -1,6 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
@@ -15,12 +13,12 @@ BEGIN
     IDS_SENDTO "为必填项"
     IDS_TEMPLATES "模板"
     IDS_STARTMENU "开始菜单"
-    IDS_PROGRAMS "开始菜单\\应用程序"
+    IDS_PROGRAMS "开始菜单\\程序"
     IDS_STARTUP "开始菜单\\应用程序\\启动"
     IDS_LOCALSETTINGS "本地设置"
     IDS_LOCALAPPDATA "本地设置\\应用程序数据"
     IDS_TEMP "本地设置\\Temp"
     IDS_CACHE "本地设置\\互联网临时文件"
-    IDS_HISTORY "本地设置\\历史"
+    IDS_HISTORY "本地设置\\历史记录"
     IDS_COOKIES "小型文字檔案"
 END

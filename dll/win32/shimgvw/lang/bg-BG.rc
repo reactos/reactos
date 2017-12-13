@@ -1,10 +1,10 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Прегледът за снимки и факсове на РеактОС"
     IDS_SETASDESKBG "Слагане като подкраска"
-    IDS_PREVIEW "Преглед"
+    IDS_PREVIEW "Preview"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Следващо изображение"
     IDS_TOOLTIP_PREV_PIC "Предходно изображение"

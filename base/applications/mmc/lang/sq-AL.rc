@@ -1,19 +1,15 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
- * DATE OF TR:  29-11-2013
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "I Ri\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&E Re\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Hap...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "D&il\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "&Dil\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Ndihmë"
+    POPUP "&File"
     BEGIN
         MENUITEM "&Rreth menaxhimit konsol të ReactOS", IDM_HELP_ABOUT
     END
@@ -23,18 +19,18 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "I Ri\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&E Re\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Hap...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Ruaj", IDM_FILE_SAVE
+        MENUITEM "Ruaj", IDM_FILE_SAVE
         MENUITEM "Ruaj &si...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "D&il\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "&Dil\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Dritare"
+    POPUP "Dritare"
     BEGIN
         MENUITEM "Lista", IDM_WINDOWS_LIST
     END
-    POPUP "&Ndihmë"
+    POPUP "&File"
     BEGIN
         MENUITEM "&Rreth menaxhimit konsol të ReactOS", IDM_HELP_ABOUT
     END

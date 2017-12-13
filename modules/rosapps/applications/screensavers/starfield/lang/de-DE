@@ -1,0 +1,8 @@
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Maze Bildschirmschoner"
+    IDS_TITLE       "About"
+    IDS_TEXT        "Keinerlei Einstellungen notwendig."
+END

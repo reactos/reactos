@@ -1,0 +1,7 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "Erro ao carregar '%s'"
+    IDS_MissingEntry "Está faltando a entrada:%s\nem %s"
+END

@@ -1,18 +1,16 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Düzenle"
-    IDS_MARK "İmle"
+    IDS_EDIT "D&üzenle"
+    IDS_MARK "İm"
     IDS_COPY "Çoğalt\tGiriş"
     IDS_PASTE "Yapıştır"
     IDS_SELECTALL "Tümünü Seç"
-    IDS_SCROLL "Kaydır"
+    IDS_SCROLL "Kaydırma Kilidi"
     IDS_FIND "Bul..."
     IDS_DEFAULTS "Ön Tanımlılar"
-    IDS_PROPERTIES "Husûsîyetler"
+    IDS_PROPERTIES "Husûsiyetler"
 /*
     IDS_SCROLLHERE "Buraya Kaydır"
     IDS_SCROLLTOP "Üste Kaydır"

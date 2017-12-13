@@ -1,16 +1,16 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Bearbeiten"
-    IDS_MARK "Markieren"
+    IDS_EDIT "&Bearbeiten"
+    IDS_MARK "Markierung"
     IDS_COPY "Kopieren\tEnter"
     IDS_PASTE "Einfügen"
     IDS_SELECTALL "Alles auswählen"
-    IDS_SCROLL "Scrollen"
+    IDS_SCROLL "Rollen"
     IDS_FIND "Suchen..."
     IDS_DEFAULTS "Standardwerte"
-    IDS_PROPERTIES "Eigenschaften"
+    IDS_PROPERTIES "&Eigenschaften"
 /*
     IDS_SCROLLHERE "Hier scrollen"
     IDS_SCROLLTOP "Ganz nach oben scrollen"
@@ -25,6 +25,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Mark"
+    IDS_MARK_TITLE "Markierung"
     IDS_SELECT_TITLE "Select"
 END

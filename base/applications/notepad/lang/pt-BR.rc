@@ -1,4 +1,4 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -23,30 +23,30 @@ BEGIN
     POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Novo\tCtrl+N", CMD_NEW
-        MENUITEM "A&brir\tCtrl+O", CMD_OPEN
+        MENUITEM "A&brir...\tCtrl+O", CMD_OPEN
         MENUITEM "&Salvar\tCtrl+S", CMD_SAVE
         MENUITEM "Salvar &como...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "C&onfigurar página...", CMD_PAGE_SETUP
-        MENUITEM "&Imprimir...\tCtrl+P", CMD_PRINT
+        MENUITEM "I&mprimir...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Sai&r", CMD_EXIT
     END
     POPUP "&Editar"
     BEGIN
-        MENUITEM "&Desfazer\tCtrl+Z", CMD_UNDO
+        MENUITEM "Desfa&zer\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Recortar\tCtrl+X", CMD_CUT
         MENUITEM "&Copiar\tCtrl+C", CMD_COPY
         MENUITEM "C&olar\tCtrl+V", CMD_PASTE
         MENUITEM "E&xcluir\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Localizar...", CMD_SEARCH
+        MENUITEM "Locali&zar...\tCtrl+F", CMD_SEARCH
         MENUITEM "Localizar &próxima\tF3", CMD_SEARCH_NEXT
         MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Ir Para...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Selecionar &tudo", CMD_SELECT_ALL
+        MENUITEM "Selecionar &tudo\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "&Data/Hora\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormatar"
@@ -54,11 +54,11 @@ BEGIN
         MENUITEM "&Quebrar automática de linha", CMD_WRAP
         MENUITEM "&Fonte...", CMD_FONT
     END
-    POPUP "&Visualizar"
+    POPUP "&Exibir"
     BEGIN
         MENUITEM "&Barra de status", CMD_STATUSBAR
     END
-    POPUP "&Ajuda"
+    POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Conteúdo", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
@@ -125,7 +125,7 @@ BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
     LTEXT "Número da linha:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-    PUSHBUTTON "Cancelar", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
@@ -142,7 +142,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    STRING_LICENSE "Este programa é software livre; você pode redistribuí-lo e/ou modificá-lo sob os termos da GNU General Public License conforme publicada pela Free Software Foundation; quer a versão 2 da licença, ou (conforme você escolha) qualquer versão posterior.\r\n\r\nEste programa é  distribuído com a esperança de que seja útil, mas SEM QUALQUER GARANTIA; mesmo sem a garantia  implícita de MERCANTIBILIDADE OU ADEQUAÇÃO A UM DETERMINADO PROPÓSITO. Para mais detalhes,  veja a GNU General Public License.\r\n\r\nVocê deve ter recebido uma cópia da GNU General  Public License juntamente com este programa; caso contrário, escreva para a Free Software  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA."
 END
 
 STRINGTABLE
@@ -154,23 +154,23 @@ BEGIN
     STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
     STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
     STRING_NOTEPAD "Notepad"
-    STRING_ERROR "ERRO"
-    STRING_WARNING "AVISO"
-    STRING_INFO "Informação"
+    STRING_ERROR "ERROR"
+    STRING_WARNING "WARNING"
+    STRING_INFO "Information"
     STRING_UNTITLED "Sem nome"
-    STRING_ALL_FILES "Todos os arquivos (*.*)"
+    STRING_ALL_FILES "All files (*.*)"
     STRING_TEXT_FILES_TXT "Arquivos texto (*.txt)"
-    STRING_TOOLARGE "Arquivo '%s' é muito longo para o notepad.\n \
-Por favor use um editor diferente."
-    STRING_NOTEXT "Você não digitou nenhum texto. \
-\nPor favor digite alguma coisa e tente novamente"
-    STRING_DOESNOTEXIST "Arquivo '%s'\nnão existe\n\n \
-Você deseja criar um novo arquivo?"
-    STRING_NOTSAVED "Arquivo '%s'\nfoi modificado\n\n \
-Gostaria de salvar as alteraçÕes?"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+Please use a different editor."
+    STRING_NOTEXT "You didn't enter any text. \
+\nPlease type something and try again"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
     STRING_NOTFOUND "'%s' não pode ser encontrado."
-    STRING_OUT_OF_MEMORY "Não há memória suficiente para completar essa \
-tarefa. \nFeche uma ou mais aplicações para aumentar a quantidade de memória livre."
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree memory."
     STRING_CANNOTFIND "Não foi encontrado '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

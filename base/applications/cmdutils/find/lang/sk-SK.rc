@@ -1,17 +1,13 @@
-/* TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR: 12-02-2008
- */
-
-LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+LANGUAGE LANG_SLOVAK, SUBLANG_SLOVAK_SLOVAKIA
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FIND: Zobrazí všetky riadky súboru obsahujúce hľadaný reťazec.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""reťazec"" [ súbor... ]\n\
-    /C  Zobrazí počet riadkov, ktoré obsahujú reťazec.\n\
-    /I  Ignoruje veľkosť písmen.\n\
-    /N  Čísluje zobrazené riadky, začína od 1.\n\
-    /V  Zobrazí všetky riadky, ktoré neobsahujú hľadaný reťazec."
+    IDS_USAGE "FIND: Prints all lines of a file that contain a string.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] """reťazec""" [ file... ]\n\
+    /C  Count the number of lines that contain string\n\
+    /I  Ignore case\n\
+    /N  Number the displayed lines, starting at 1\n\
+    /V  Print lines that do not contain the string"
     IDS_NO_SUCH_FILE "FIND: Súbor %s sa nenašiel.\n"
     IDS_CANNOT_OPEN "FIND: Súbor %s sa nedá otvoriť.\n"
 END

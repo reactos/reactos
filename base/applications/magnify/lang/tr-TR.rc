@@ -1,12 +1,4 @@
-/*
- * PROJECT:    ReactOS Magnifier
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/magnify/lang/tr-TR.rc
- * PURPOSE:    Turkish Resource File for RecatOS Magnifier
- * TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
- */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDC_MAGNIFIER MENU
 BEGIN
@@ -42,7 +34,7 @@ CAPTION "Seçenekler"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "&Yardım", IDC_BUTTON_HELP, 38, 161, 50, 14
+    PUSHBUTTON "&Kütük", IDC_BUTTON_HELP, 38, 161, 50, 14
     LTEXT "&Büyütme Düzeyi:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "İzleme", IDC_STATIC, 7, 25, 139, 59

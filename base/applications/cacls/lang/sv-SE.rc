@@ -1,11 +1,4 @@
-/*
- * PROJECT:    ReactOS CACLS
- * FILE:       base/applications/cacls/lang/sv-SE.rc
- * PURPOSE:    Swedish resource file
- * TRANSLATOR: Jaix Bly
- */
-
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
 
 STRINGTABLE
 BEGIN

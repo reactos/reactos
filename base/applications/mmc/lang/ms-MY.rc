@@ -1,17 +1,15 @@
-/* Malay translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_MALAY, SUBLANG_DEFAULT
+LANGUAGE LANG_MALAY, SUBLANG_MALAY_MALAYSIA
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
-    POPUP "&Fail"
+    POPUP "&File"
     BEGIN
-        MENUITEM "Baru(&N)\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Buka(&O)...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "Keluar(&X)\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "Bantuan(&H)"
+    POPUP "&Fail"
     BEGIN
         MENUITEM "Tent&ang Konsol Pengurusan ReactOS", IDM_HELP_ABOUT
     END
@@ -19,20 +17,20 @@ END
 
 IDM_CONSOLE_LARGE MENU
 BEGIN
-    POPUP "&Fail"
+    POPUP "&File"
     BEGIN
-        MENUITEM "Baru(&N)\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Buka(&O)...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Simpan", IDM_FILE_SAVE
-        MENUITEM "Simp&an sebagai...", IDM_FILE_SAVEAS
+        MENUITEM "&New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "Save &As...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Keluar(&X)\tAlt+F4", IDM_FILE_EXIT
+        MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "Tertingkap(&W)"
+    POPUP "&Windows"
     BEGIN
         MENUITEM "Senarai", IDM_WINDOWS_LIST
     END
-    POPUP "Bantuan(&H)"
+    POPUP "&Fail"
     BEGIN
         MENUITEM "Tent&ang Konsol Pengurusan ReactOS", IDM_HELP_ABOUT
     END

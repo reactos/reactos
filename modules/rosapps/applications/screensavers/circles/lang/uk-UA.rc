@@ -1,12 +1,4 @@
-/*
- * PROJECT:     Circles ScreenSaver
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        applications/screensavers/circles/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for Circles ScreenSaver
- * TRANSLATOR:  Artem Reznikov
- */
-
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
 
 STRINGTABLE DISCARDABLE
 BEGIN

@@ -1,15 +1,15 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "&Отваряне...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Нов\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Отваряне...\tAlt+tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Из&ход\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "Помо&щ"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "&За Прибора за управление на РеактОС", IDM_HELP_ABOUT
     END
@@ -19,18 +19,18 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "&Отваряне...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Запис", IDM_FILE_SAVE
+        MENUITEM "&Нов\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Отваряне...\tAlt+tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
         MENUITEM "Запис &като...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Из&ход\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Windows"
+    POPUP "&Прозорци"
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-    POPUP "Помо&щ"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "&За Прибора за управление на РеактОС", IDM_HELP_ABOUT
     END

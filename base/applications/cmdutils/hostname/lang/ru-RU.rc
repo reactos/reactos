@@ -1,8 +1,8 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Печать имени текущего узла.\n\nhostname"
+    IDS_USAGE "Введите ""EVENTCREATE /?"" для получения справки по использованию.\n"
     IDS_NOSET "hostname -s не поддерживается."
     IDS_ERROR "Ошибка Win32"
 END

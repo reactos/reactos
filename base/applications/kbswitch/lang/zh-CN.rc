@@ -1,12 +1,4 @@
-/*
- * PROJECT:    ReactOS KBSwitch
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/kbswitch/lang/zh-CN.rc
- * PURPOSE:    Chinese (Simplified) Language File for KBSwitch
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
- */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_POPUP MENU
 BEGIN
@@ -14,6 +6,6 @@ BEGIN
     BEGIN
         MENUITEM "选项(&P)...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "退出(&E)", ID_EXIT
+        MENUITEM "退出(&X)", ID_EXIT
     END
 END

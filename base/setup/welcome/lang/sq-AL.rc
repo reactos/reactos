@@ -1,8 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
- * DATE OF TR:  29-11-2013
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 /* String Tables */
 
@@ -28,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Instalo ReactOS"
+    IDS_TOPIC_TITLE0 "InstalO ReactOS"
     IDS_TOPIC_TITLE1 "Shfleto këtë CD"
     IDS_TOPIC_TITLE2 "Dil"
 END

@@ -1,0 +1,8 @@
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Starfield ScreenSaver"
+    IDS_TITLE       "About"
+    IDS_TEXT        "Žádná nastavení nejsou potřeba."
+END

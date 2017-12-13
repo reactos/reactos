@@ -1,0 +1,7 @@
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Blank screen"
+    IDS_TEXT        "Ayarlanması gereken seçenek yok."
+END

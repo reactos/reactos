@@ -1,0 +1,13 @@
+LANGUAGE LANG_NORWEGIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "FINDSTR: Prints all lines of a file that contain a string.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] """string""" [ file... ]\n\
+    /C  Count the number of lines that contain string\n\
+    /I  Ignore case\n\
+    /N  Number the displayed lines, starting at 1\n\
+    /V  Print lines that do not contain the string"
+    IDS_NO_SUCH_FILE "FINN: %s: Ingen filer\n"
+    IDS_CANNOT_OPEN "FINN: %s: Kan ikke åpne filen\n"
+END

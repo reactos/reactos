@@ -1,0 +1,8 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Введите ""EVENTCREATE /?"" для получения справки по использованию.\n"
+    IDS_NOSET "hostname -s is not supported."
+    IDS_ERROR "Win32 error"
+END

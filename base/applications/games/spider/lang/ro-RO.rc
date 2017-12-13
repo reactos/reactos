@@ -1,7 +1,14 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+/*
+ * PROJECT:    Spider Solitaire
+ * LICENSE:    See COPYING in top level directory
+ * FILE:       base/applications/games/spider/lang/en-US.rc
+ * PURPOSE:    English Language File for Spider Solitaire
+ * TRANSLATOR: Gregor Schneider
+ */
 
-/* Dialoguri */
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
+
+/* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
 CAPTION "Selectare culoare dorsală"
@@ -36,7 +43,7 @@ BEGIN
     PUSHBUTTON "A&nulează", IDCANCEL, 58, 58, 40, 14
 END
 
-/* Șiruri */
+/* Strings */
 
 STRINGTABLE
 BEGIN
@@ -47,7 +54,7 @@ BEGIN
     IDS_SPI_DEAL "O nouă rundă?"
 END
 
-/* Meniuri */
+/* Menus */
 
 IDR_MENU1 MENU
 BEGIN
@@ -59,14 +66,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_GAME_EXIT
     END
-    POPUP "Aj&utor"
+    POPUP "&Fișier"
     BEGIN
         MENUITEM "&Manual…\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Despre…", IDM_HELP_ABOUT
     END
 END
 
-/* Acceleratori */
+/* Accelerator */
 IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT

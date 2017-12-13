@@ -1,15 +1,13 @@
-/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Hoş Geldiniz", IDC_WELCOMETITLE, 120, 8, 195, 16
+    LTEXT "Hoş Geldiniz", IDC_WELCOMETITLE, 120, 8, 195, 24
     LTEXT "Bu yardımcı, şunun için yeni bir aygıt sürücüsü kurar:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Sürdürmek için İleri'ye tıklayınız.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "Aygıtları kurmak için İleri'ye tıklayınız.", IDC_STATIC, 120, 169, 195, 16
     LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "UYARI! HUSÛSİ BİR AYGIT KURMA BİLGİSAYARINIZI, DONDURABİLİR VEYÂ AÇILAMAZ YAPABİLİR!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Sürücüyü Kendiliğinden Kur", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
@@ -94,5 +92,5 @@ BEGIN
     IDS_UPDATEWIZARDTITLE "Sürücü Şimdikileştirme Yardımcısı"
     IDS_CHSOURCE_TITLE "Arama ve Kurma Seçeneklerini Seç"
     IDS_SEARCHDRV_TITLE "Arıyor..."
-    IDS_INSTALLDRV_TITLE "Kuruyor..."
+    IDS_INSTALLDRV_TITLE "Kuruluyor..."
 END

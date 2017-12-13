@@ -1,0 +1,7 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "LoadLibrary fallita '%s'"
+    IDS_MissingEntry "Manca:%s\nIn %s"
+END

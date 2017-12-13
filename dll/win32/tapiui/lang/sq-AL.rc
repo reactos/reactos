@@ -1,8 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TRANSLATION:  06-02-2014
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 101 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
@@ -13,8 +9,8 @@ BEGIN
     LTEXT "Lista e mëposhtme tregon vendet që keni specifikuar. Zgjidhni vendin nga i cili ju po formoni numrin.", -1, 35, 7, 210, 16
     LTEXT "&Vendndodhje:", -1, 7, 35, 210, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&E'Re...", 1030, 87, 155, 50, 14
-    PUSHBUTTON "&Modifiko...", 1031, 141, 155, 50, 14
+    PUSHBUTTON "&E're...", 1030, 87, 155, 50, 14
+    PUSHBUTTON "Modifiko...", 1031, 141, 155, 50, 14
     PUSHBUTTON "&Fshi", 1032, 195, 155, 50, 14
     LTEXT "Numri Telefonik do të thirret si:", 1052, 7, 181, 100, 8
     LTEXT "", 1053, 14, 195, 224, 16
@@ -22,7 +18,7 @@ END
 
 102 DIALOGEX 0, 0, 252, 255
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Përgjithshëm"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 202, 2000, 7, 7, 20, 20
@@ -48,7 +44,7 @@ BEGIN
     LTEXT "Thirr duke përdorur:", -1, 14, 195, 40, 8
     AUTORADIOBUTTON "&Tonalitet", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&Pulse", 1037, 112, 194, 50, 10, NOT WS_TABSTOP
-    LTEXT "Numri telefonik do të thirret si:", 1052, 7, 219, 100, 8
+    LTEXT "Numri Telefonik do të thirret si:", 1052, 7, 219, 100, 8
     LTEXT "", 1053, 14, 232, 224, 16
 END
 
@@ -61,9 +57,9 @@ BEGIN
     LTEXT "Rregullat &pre-fikseve:", -1, 7, 31, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
     PUSHBUTTON "&E're...", 1030, 87, 147, 50, 14
-    PUSHBUTTON "&Modifiko...", 1031, 141, 147, 50, 14
+    PUSHBUTTON "Modifiko...", 1031, 141, 147, 50, 14
     PUSHBUTTON "&Fshi", 1032, 195, 147, 50, 14
-    GROUPBOX "Përshkrim", 2006, 7, 166, 238, 45
+    GROUPBOX "P♪7rshkrimi", 2006, 7, 166, 238, 45
     LTEXT "", 1039, 14, 180, 224, 24
 END
 
@@ -76,7 +72,7 @@ BEGIN
     LTEXT "&Tipi Kartës:", -1, 7, 23, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
     PUSHBUTTON "&E're...", 1030, 87, 103, 50, 14
-    PUSHBUTTON "&Modifiko...", 1031, 141, 103, 50, 14
+    PUSHBUTTON "Modifiko...", 1031, 141, 103, 50, 14
     PUSHBUTTON "&Fshi", 1032, 195, 103, 50, 14
     LTEXT "Numri llogarisë:", -1, 7, 127, 91, 8
     EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
@@ -93,7 +89,7 @@ END
 
 105 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Përgjithshëm"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 203, 2000, 7, 7, 20, 20
@@ -120,7 +116,7 @@ BEGIN
     LTEXT "Përdorni butonat më poshtë për të hyrë në hapat formues të numrit për të bërë thirrje në distancë të gjatë.  Shkruani këto hapa në mënyrë të saktë si ato të shfaqen në kartën tuaj të quajtur.", 2000, 7, 40, 238, 24
     LTEXT "Hapat thirrjes kartës telefonuese:", -1, 7, 72, 80, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Lëviz &Lart", 1022, 195, 83, 50, 14
+    PUSHBUTTON "Leviz lart", 1022, 195, 83, 50, 14
     PUSHBUTTON "&Lëviz Poshtë", 1023, 195, 101, 50, 14
     PUSHBUTTON "&Fshi", 1024, 195, 119, 50, 14
     PUSHBUTTON "&Numër Hyrës", 1025, 7, 161, 90, 14
@@ -139,17 +135,17 @@ BEGIN
     LTEXT "Numër hyrës për telefonata &ndërkombëtare:", -1, 7, 7, 238, 8
     EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "Përdorni butonat më poshtë për të hyrë në hapat formimit të numrit për të bërë telefonata ndërkombëtare.  Shkruani këto hapa në mënyrë të saktë si ato që shfaqen në kartën tuaj të quajtur.", 2000, 7, 40, 244, 24
-    LTEXT "Kartë thirrëse hapat formim numrit:", -1, 7, 72, 80, 8
+    LTEXT "Hapat thirrjes kartës telefonuese:", -1, 7, 72, 80, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Lëviz &Lart", 1022, 195, 83, 50, 14
+    PUSHBUTTON "Leviz lart", 1022, 195, 83, 50, 14
     PUSHBUTTON "&Lëviz Poshtë", 1023, 195, 101, 50, 14
     PUSHBUTTON "&Fshi", 1024, 195, 119, 50, 14
-    PUSHBUTTON "Numër Hyrës", 1025, 7, 161, 90, 14
+    PUSHBUTTON "&Numër Hyrës", 1025, 7, 161, 90, 14
     PUSHBUTTON "Numër Llogarie", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
-    PUSHBUTTON "Numri Destinacinit...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "Numri Destinacioni...", 1020, 101, 179, 90, 14
     PUSHBUTTON "&Prisni për Prompt...", 1017, 7, 197, 90, 14
-    PUSHBUTTON "&Specifikoni shifrat...", 1021, 101, 197, 90, 14
+    PUSHBUTTON "&Specifikoni shifra...", 1021, 101, 197, 90, 14
 END
 
 108 DIALOGEX 0, 0, 252, 218
@@ -160,17 +156,17 @@ BEGIN
     LTEXT "Numri hyrës për &thirrje lokale:", -1, 7, 7, 238, 8
     EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "Përdorni butonat më poshtë për të hyrë në hapat formues numrit për të bërë thirrje lokale. Shkruani këto hapa në mënyrë të saktë si ato që shfaqen në kartën tuaj të quajtur.", 2000, 7, 40, 238, 24
-    LTEXT "Hapat thirrës për kartën telefonuese:", -1, 7, 72, 238, 8
+    LTEXT "Hapat thirrjes kartës telefonuese:", -1, 7, 72, 238, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
-    PUSHBUTTON "Lëviz &Lart", 1022, 195, 83, 50, 14
+    PUSHBUTTON "Leviz lart", 1022, 195, 83, 50, 14
     PUSHBUTTON "&Lëviz Poshtë", 1023, 195, 101, 50, 14
     PUSHBUTTON "&Fshi", 1024, 195, 119, 50, 14
-    PUSHBUTTON "Numër Hyrës", 1025, 7, 161, 90, 14
+    PUSHBUTTON "&Numër Hyrës", 1025, 7, 161, 90, 14
     PUSHBUTTON "Numër Llogarie", 1018, 101, 161, 90, 14
     PUSHBUTTON "&PIN", 1019, 7, 179, 90, 14
-    PUSHBUTTON "Numër Destinacioni...", 1020, 101, 179, 90, 14
-    PUSHBUTTON "&prisni për Prompt...", 1017, 7, 197, 90, 14
-    PUSHBUTTON "&Specifikoni shifrat...", 1021, 101, 197, 90, 14
+    PUSHBUTTON "Numri Destinacioni...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "&Prisni për Prompt...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "&Specifikoni shifra...", 1021, 101, 197, 90, 14
 END
 
 109 DIALOGEX 0, 0, 252, 257
@@ -188,20 +184,20 @@ BEGIN
     AUTORADIOBUTTON "Përfshij &vetëm pre-fikset në listën poshtë:", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
     LTEXT "&Prefixes to include:", 1057, 26, 117, 119, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000411D, 25, 128, 66, 32, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Shto...", 1005, 95, 128, 50, 14
+    PUSHBUTTON "Shto...", 1005, 95, 128, 50, 14
     PUSHBUTTON "Fshi", 1024, 95, 146, 50, 14
     LTEXT "Kur formoni numrat e telefonit që përmbajnë pre-fikset e mësipërme:", -1, 14, 184, 224, 8
     AUTOCHECKBOX "&Thirr:", 1012, 14, 198, 30, 12
     EDITTEXT 1007, 46, 196, 42, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "Përfshini kodin e zonës", 1029, 14, 214, 85, 12
     DEFPUSHBUTTON "OK", 1, 141, 236, 50, 14
-    PUSHBUTTON "Anulo", 2, 195, 236, 50, 14
+    PUSHBUTTON "Cancel", 2, 195, 236, 50, 14
     RTEXT "Pre-fiksi i rrethit", 2001, 133, 31, 51, 8
     LTEXT "Pre-fiksi", 2002, 200, 31, 45, 8
     CONTROL "", 2003, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 180, 41, 1, 6
     CONTROL "", 2004, "STATIC", SS_BLACKFRAME | SS_SUNKEN, 203, 41, 1, 6
     RTEXT "X - X X X - X X X - X X X X", 2005, 133, 48, 112, 8
-    GROUPBOX "Pre-fiksi", -1, 7, 64, 238, 102
+    GROUPBOX "Pre-fikse", -1, 7, 64, 238, 102
     GROUPBOX "Rregullat", -1, 7, 170, 238, 60
 END
 
@@ -214,7 +210,7 @@ BEGIN
     LTEXT "", 1039, 7, 23, 213, 8
     EDITTEXT 1031, 7, 34, 213, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 116, 62, 50, 14
-    PUSHBUTTON "Anulo", 2, 170, 62, 50, 14
+    PUSHBUTTON "Cancel", 2, 170, 62, 50, 14
 END
 
 111 DIALOGEX 0, 0, 252, 124
@@ -231,7 +227,7 @@ BEGIN
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
     LTEXT "&sekonda", -1, 58, 81, 187, 8
     DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
-    PUSHBUTTON "Anulo", 2, 195, 103, 50, 14
+    PUSHBUTTON "Cancel", 2, 195, 103, 50, 14
 END
 
 112 DIALOGEX 0, 0, 252, 111
@@ -245,20 +241,20 @@ BEGIN
     AUTOCHECKBOX "Thirrni &pre-fiksin zonës", 1034, 7, 55, 238, 10
     AUTOCHECKBOX "Thirr &numrin", 1008, 7, 71, 238, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", 1, 141, 92, 50, 14
-    PUSHBUTTON "Anulo", 2, 195, 92, 50, 14
+    PUSHBUTTON "Cancel", 2, 195, 92, 50, 14
 END
 
 113 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Përparuar"
+CAPTION "Advanced"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
     LTEXT "Ofruesit e mëposhtme telefonisë janë instaluar në këtë kompjuter:", -1, 40, 7, 205, 8
     LTEXT "&Ofruesit:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
-    PUSHBUTTON "Shto...", 1005, 87, 197, 50, 14
-    PUSHBUTTON "&Hiq", 1024, 141, 197, 50, 14
+    PUSHBUTTON "Sh&to...", 1005, 87, 197, 50, 14
+    PUSHBUTTON "Hiq", 1024, 141, 197, 50, 14
     PUSHBUTTON "&Konfiguro...", 1031, 195, 197, 50, 14
 END
 
@@ -270,8 +266,8 @@ BEGIN
     LTEXT "Zgjidhni ofruesin që ju dëshironi të instaloni nga lista më poshtë, dhe klikoni Shto.", 2000, 7, 7, 241, 8
     LTEXT "&Ofrues Telefonie:", -1, 7, 23, 144, 10
     LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Shto", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "Anulo", 2, 195, 106, 50, 14
+    PUSHBUTTON "Shto", 1005, 141, 106, 50, 14
+    DEFPUSHBUTTON "Cancel", 2, 195, 106, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228
@@ -294,7 +290,7 @@ BEGIN
     AUTORADIOBUTTON "&Tingulli thirrës", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Pulse thirrës", 1037, 175, 178, 57, 14, NOT WS_TABSTOP
     DEFPUSHBUTTON "OK", 1, 192, 204, 50, 14
-    PUSHBUTTON "Anulo", 2, 246, 204, 50, 14
+    PUSHBUTTON "Cancel", 2, 246, 204, 50, 14
 END
 
 400 DIALOGEX 0, 0, 290, 151
@@ -307,7 +303,7 @@ BEGIN
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Çfarë pre-fiks zone(ose kodi qytetit) jeni në tani?", -1, 95, 61, 188, 10
     EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
-    LTEXT "Nëse ju duhet të specifikoni një kod shërbyesi, çfarë është ajo?", -1, 95, 96, 188, 10
+    LTEXT "Nëse ju thirrni një numër për të hyrë në një linjë të jashtme, çfarë është ajo?", -1, 95, 96, 188, 10
     EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "Sistemi Telefonisë në këtë vend përdor:", -1, 95, 129, 159, 10
     AUTORADIOBUTTON "&Tingulli thirrës", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
@@ -316,7 +312,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS Eksplorues"
+CAPTION "ReactOS Explorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -328,9 +324,9 @@ END
 
 STRINGTABLE
 BEGIN
-    1 "Alternativa Telefoni dhe Modemi"
+    1 "Opsionet e Telefonit dhe Modemit"
     2 "Konfiguro rregullat formuese të numrit dhe pronat për të përdorur modemin tuaj."
-    3 "Vendndodhja"
+    3 "Vendnodhje"
     4 "Për të krijuar një vendndodhje të re, kliko E're."
     5 "Vendndodhje e Re"
     6 "Modifiko Vendndodhjen"
@@ -347,8 +343,8 @@ BEGIN
     17 "Thirr %1 plus kodi zonës"
     18 "Thirr kodi zonës"
     19 "Thirr vetëm numrat"
-    20 "Të Gjithë"
-    21 "Zgjedhurat"
+    20 "GENERIC_ALL"
+    21 "Përzgjedhur"
     22 "Modifiko rregullat e kodit zonës"
     23 "Zgjidh një rregull në listën e mësipërme për të parë përshkrimin e saj, ose klikoni E're për të shtuar një rregull."
     24 "Thirr '%2' plus kodi i zonës para numrit për të gjitha thirrjet brenda %1 kodi zonës."
@@ -397,7 +393,7 @@ BEGIN
     67 "Rregulli i juaj për në distancë të gjatë kërkon numrin e kartës tuaj të distancës."
     68 "Rregulli i juaj ndërkombëtare kërkon numër kartës ndërkombëtare tuaj të thirrjes."
     69 "Rregulli i juaj lokal kërkon numër kartës lokale tuaj duke bërë thirrje të numrit."
-    70 "Asnjë"
+    70 "None"
     71 "Jeni te sigurte qe doni te hiqni zgjedhjen Ofruesin Shërbimit Telefonisë?"
     72 "<ofruesi i shërbimit nuk është i instaluar>"
     73 "Ju duhet të fusni një pre-fiks për të cilat zbatohet ky rregull."

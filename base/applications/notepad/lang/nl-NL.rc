@@ -1,4 +1,4 @@
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -22,26 +22,26 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Bestand"
     BEGIN
-        MENUITEM "&Nieuw\tCtrl+N", CMD_NEW
-        MENUITEM "&Openen\tCtrl+O", CMD_OPEN
-        MENUITEM "O&pslaan\tCtrl+S", CMD_SAVE
+        MENUITEM "Nieuw\tCtrl+N", CMD_NEW
+        MENUITEM "Openen...\tCtrl+O", CMD_OPEN
+        MENUITEM "Opslaan\tCtrl+S", CMD_SAVE
         MENUITEM "Ops&laan als...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Pagina-in&stelling...", CMD_PAGE_SETUP
-        MENUITEM "&Afdrukken...\tCtrl+P", CMD_PRINT
+        MENUITEM "Af&drukken...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Afsluiten", CMD_EXIT
     END
-    POPUP "Be&werken"
+    POPUP "&Bewerken"
     BEGIN
-        MENUITEM "&Ongedaan maken\tCtrl+Z", CMD_UNDO
+        MENUITEM "Ongedaan maken\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "K&nippen\tCtrl+X", CMD_CUT
-        MENUITEM "&Kopiëren\tCtrl+C", CMD_COPY
-        MENUITEM "&Plakken\tCtrl+V", CMD_PASTE
+        MENUITEM "Knippen\tCtrl+X", CMD_CUT
+        MENUITEM "Kopiëren\tCtrl+C", CMD_COPY
+        MENUITEM "Plakken\tCtrl+V", CMD_PASTE
         MENUITEM "&Verwijderen\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Zoeken\tCtrl+Z", CMD_SEARCH
+        MENUITEM "&Zoeken...\tCtrl+F", CMD_SEARCH
         MENUITEM "&Volgende zoeken\tF3", CMD_SEARCH_NEXT
         MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G", CMD_GOTO
@@ -54,11 +54,11 @@ BEGIN
         MENUITEM "A&utomatische terugloop", CMD_WRAP
         MENUITEM "&Lettertype instellen...", CMD_FONT
     END
-    POPUP "&View"
+    POPUP "Bee&ld"
     BEGIN
         MENUITEM "Status&bar", CMD_STATUSBAR
     END
-    POPUP "&Help"
+    POPUP "&Bestand"
     BEGIN
         MENUITEM "&Help-onderwerpen", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
@@ -135,7 +135,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Close", IDOK, 114, 149, 44, 15, WS_GROUP
+    DEFPUSHBUTTON "Sluit", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30
     EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
@@ -154,23 +154,23 @@ BEGIN
     STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
     STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
     STRING_NOTEPAD "Kladblok"
-    STRING_ERROR "FOUT"
-    STRING_WARNING "WAARSCHUWING"
-    STRING_INFO "Informatie"
+    STRING_ERROR "ERROR"
+    STRING_WARNING "WARNING"
+    STRING_INFO "Information"
     STRING_UNTITLED "Naamloos"
-    STRING_ALL_FILES "Alle bestanden (*.*)"
+    STRING_ALL_FILES "All files (*.*)"
     STRING_TEXT_FILES_TXT "Tekstbestanden (*.txt)"
-    STRING_TOOLARGE "Het bestand '%s' is te groot voor Kladblok.\n \
-Gebruik een andere editor."
-    STRING_NOTEXT "U heeft geen tekst ingevoerd. \
-\nType uw tekst en probeer het nogmaals"
-    STRING_DOESNOTEXIST "Het bestand '%s'\nbestaat niet\n\n \
-Wilt u een nieuw bestand maken?"
-    STRING_NOTSAVED "Het bestand '%s'\nis gewijzigd\n\n \
-Wilt u de wijzigingen opslaan?"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+Please use a different editor."
+    STRING_NOTEXT "You didn't enter any text. \
+\nPlease type something and try again"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
     STRING_NOTFOUND "'%s' kan niet worden gevonden."
-    STRING_OUT_OF_MEMORY "Onvoldoende geheugen. \
-\nSluit een of meer applicaties om de hoeveelheid \nbeschikbaar geheugen te vergroten."
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree memory."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

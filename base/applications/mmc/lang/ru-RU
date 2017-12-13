@@ -1,0 +1,43 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Созд&ать\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Открыть...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Созд&ать\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Открыть...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "Сохранить &как...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Окна"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Management Console"
+    IDS_CONSOLETITLE "Console%1!u!"
+END
