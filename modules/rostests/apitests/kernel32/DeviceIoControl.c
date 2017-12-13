@@ -5,10 +5,9 @@
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
  */
 
-#include <apitest.h>
-#include <strsafe.h>
+#include "precomp.h"
+
 #include <winioctl.h>
-#include <mountmgr.h>
 #include <mountdev.h>
 
 WCHAR Letter;

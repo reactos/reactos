@@ -5,11 +5,8 @@
  * PROGRAMMER:      Mike "tamlin" Nordell
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#include <stdio.h>
-#include <ndk/rtltypes.h>
 #include <xmmintrin.h>
 
 /*
