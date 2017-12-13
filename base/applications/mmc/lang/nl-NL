@@ -1,0 +1,43 @@
+LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Nieuw\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Openen...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "Afsluiten\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Bestand"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Nieuw\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Openen...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "Ops&laan als...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "Afsluiten\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Vensters"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+    POPUP "&Bestand"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Management Console"
+    IDS_CONSOLETITLE "Console%1!u!"
+END

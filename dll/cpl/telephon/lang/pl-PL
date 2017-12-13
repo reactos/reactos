@@ -1,0 +1,7 @@
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Opcje telefonu i modemu"
+    IDS_CPLSYSTEMDESCRIPTION "Skonfiguruj reguły wybierania numerów oraz ustawienia modemu."
+END

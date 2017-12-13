@@ -1,0 +1,7 @@
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Opsionet e Telefonit dhe Modemit"
+    IDS_CPLSYSTEMDESCRIPTION "Konfiguro rregullat tuaja për të formuar numrin në telefon dhe cilësimet e modemit."
+END

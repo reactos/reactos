@@ -1,0 +1,38 @@
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS - Hoş Geldiniz"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "ReactOS İşletim Dizgesi'ne hoş geldiniz.\n\nSolda bir konuya tıklayınız."
+
+    IDS_CHECKTEXT "&Bu iletiyi yine göster."
+    IDS_CLOSETEXT "&Çıkış"
+END
+
+/* Topic buttons */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_BUTTON0 "&ReactOS'u Kur"
+    IDS_TOPIC_BUTTON1 "Bu &CD'yi Araştır"
+    IDS_TOPIC_BUTTON2 "&Çıkış"
+END
+
+/* Topic titles */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_TITLE0 "Install ReactOS"
+    IDS_TOPIC_TITLE1 "Bu CD'yi Araştır"
+    IDS_TOPIC_TITLE2 "Çıkış"
+END
+
+/* Topic descriptions */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_DESC0 "Bilgisayarınıza yeni bir ReactOS yükleyiniz ya da var olan bir yüklemeyi yükseltiniz."
+    IDS_TOPIC_DESC1 "CD'yi araştır."
+    IDS_TOPIC_DESC2 "Bu uygulamadan çıkmak için tıklayınız."
+END

@@ -1,0 +1,43 @@
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+
+STRINGTABLE
+BEGIN
+    STRING_HELP "Usage: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+  [drive:]         Specifies the drive to format.\n\
+  -FS:file-system  Specifies the type of file system (%s).\n\
+  -V:label         Specifies volume label.\n\
+  -Q               Performs a quick format.\n\
+  -A:size          Overrides the default allocation unit size. Default settings\n\
+                   are strongly recommended for general use\n\
+                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS compression is not supported for allocation unit sizes\n\
+                   above 4096.\n\
+  -C               Files created on the new volume will be compressed by\n\
+                   default.\n\n"
+    STRING_COMPLETE "%lu por ciento completado.\r"
+    STRING_FORMAT_FAIL "FormatEx fue incapaz de completarse satisfactoriamente.\n\n"
+    STRING_NO_SUPPORT "Operación No Soportada"
+    STRING_FMIFS_FAIL "Imposible localizar puntos de entrada FMIFS.\n\n"
+    STRING_UNKNOW_ARG "Argumento desconocido: %s\n"
+    STRING_DRIVE_PARM "Parámetro de unidad requerido no encontrado.\n\n"
+    STRING_ERROR_DRIVE_TYPE "Imposible determinar el tipo de unidad"
+    STRING_INSERT_DISK "Inserte un nuevo disco en la unidad %C:\ny presione Enter cuando esté preparado..."
+    STRING_NO_VOLUME "Imposible consultar el volumen"
+    STRING_NO_VOLUME_SIZE "Imposible consultar el tamaño de volumen"
+    STRING_FILESYSTEM "El tipo del Sistema de archivos es %s.\n"
+    STRING_LABEL_NAME_EDIT "Introduzca la etiqueta del volumen para la unidad %C: "
+    STRING_ERROR_LABEL "Etiqueta de volumen incorrecta para esta unidad.\n"
+    STRING_YN_FORMAT "\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n\
+DRIVE %C: WILL BE LOST!\nProceed with Format (Y/N)? "
+    STRING_YES_NO_FAQ "SN"
+    STRING_VERIFYING "Verificando"
+    STRING_FAST_FMT "Dando formato rápido"
+    STRING_CREATE_FSYS "Creando archivo de estrucutra del sistema.\n"
+    STRING_FMT_COMPLETE "Formato completado.\n"
+    STRING_VOL_COMPRESS "El volumen no soporta compresión.\n"
+    STRING_ENTER_LABEL "Etiqueta del Volumen (11 caracteres, Enter para ninguno)? "
+    STRING_NO_LABEL "Imposible etiquetar el volumen"
+    STRING_FREE_SPACE "\n%I64d bytes espacio total del disco.\n%I64d bytes disponibles en el disco.\n"
+    STRING_SERIAL_NUMBER "\nNúmero de Serie del Volumen es %04X-%04X\n"
+END

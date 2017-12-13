@@ -1,0 +1,8 @@
+LANGUAGE LANG_CATALAN, SUBLANG_CATALAN_CATALAN
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Starfield ScreenSaver"
+    IDS_TITLE       "About"
+    IDS_TEXT        "No options need to be set."
+END

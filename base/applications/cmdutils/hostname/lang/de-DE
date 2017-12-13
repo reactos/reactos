@@ -1,0 +1,8 @@
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nGeben Sie ""CLIP /?"" ein, um die Syntax anzuzeigen.\n"
+    IDS_NOSET "hostname -s is not supported."
+    IDS_ERROR "Win32 error"
+END

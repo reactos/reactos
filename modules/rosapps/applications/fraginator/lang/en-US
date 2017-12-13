@@ -1,0 +1,84 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_MAIN DIALOGEX 0, 0, 375, 103
+STYLE DS_SHELLFONT | DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE |
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_DRIVES_LIST,78,52,29,111,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_METHODS_LIST,159,52,73,111,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_PRIORITY_LIST,241,52,73,111,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Start",IDC_STARTSTOP,322,7,45,15
+    PUSHBUTTON      "Help",ID_MAIN_HELP,322,29,45,15
+    PUSHBUTTON      "Exit",IDC_QUIT,322,51,45,15
+    CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
+                    WS_BORDER,7,7,78,58
+    LTEXT           "Choose a drive:",-1,78,40,73,8
+    LTEXT           "Choose an action:",-1,159,40,73,8
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
+                    0x1,7,71,320,10
+    CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
+                    SS_SUNKEN | WS_GROUP,7,86,359,10
+    LTEXT           "I am a monkey, hear me eeK",IDC_WISECRACKS,78,15,115,8
+    LTEXT           "100.00%",IDC_PERCENT,337,71,30,8,0,WS_EX_RIGHT
+    LTEXT           "Process Priority:",-1,241,40,73,8
+END
+
+IDD_REPORT DIALOGEX  0, 0, 405, 169
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Report"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Bytes",IDC_BYTES,7,148,50,14
+    DEFPUSHBUTTON   "Kilobytes",IDC_KILOBYTES,61,148,50,14
+    DEFPUSHBUTTON   "Megabytes",IDC_MEGABYTES,115,148,50,14
+    DEFPUSHBUTTON   "Gigabytes",IDC_GIGABYTES,169,148,50,14
+    DEFPUSHBUTTON   "OK",IDC_REPORTOK,348,148,50,14
+    LTEXT           "Volume",-1,7,7,75,8
+    LTEXT           "Capacity",-1,7,51,75,8
+    LTEXT           "(Drive Letter)",IDC_DRIVELETTER,83,7,117,10,SS_SUNKEN
+    LTEXT           "(Disk Size, Bytes)",IDC_DISKSIZEBYTES,83,51,117,10,
+                    SS_SUNKEN
+    LTEXT           "(Disk Size, Clusters)",IDC_DISKSIZECLUSTERS,83,73,117,
+                    10,SS_SUNKEN
+    LTEXT           "Total clusters",-1,7,73,75,8
+    LTEXT           "(Cluster size)",IDC_DISKCLUSTERSIZE,83,84,117,10,
+                    SS_SUNKEN
+    LTEXT           "Cluster size",-1,7,84,75,8
+    LTEXT           "(Files count)",IDC_FILESCOUNT,281,18,117,10,SS_SUNKEN
+    LTEXT           "(Files size, Bytes)",IDC_FILESSIZEBYTES,281,29,117,10,
+                    SS_SUNKEN
+    LTEXT           "# of files",-1,205,18,75,8
+    LTEXT           "Total size",-1,205,29,75,8
+    LTEXT           "Size on disk",-1,205,40,75,8
+    LTEXT           "(Total size, Bytes)",IDC_FILESSIZEONDISK,281,40,117,10,
+                    SS_SUNKEN
+    LTEXT           "(Files slack Bytes)",IDC_FILESSLACKBYTES,281,51,117,10,
+                    SS_SUNKEN
+    LTEXT           "Wasted slack",-1,205,51,75,8
+    LTEXT           "(Disk Free, Bytes)",IDC_DISKFREEBYTES,83,62,117,10,
+                    SS_SUNKEN
+    LTEXT           "Free space",-1,7,62,75,8
+    LTEXT           "(Files fragmented, count)",IDC_FILESFRAGGED,281,62,117,
+                    10,SS_SUNKEN
+    LTEXT           "Fragmented files",-1,205,62,75,8
+    LTEXT           "(Dirs count)",IDC_DIRSCOUNT,281,7,117,10,SS_SUNKEN
+    LTEXT           "# of directories",-1,205,7,75,8
+    LTEXT           "File System",-1,7,40,75,8
+    LTEXT           "(File System Name)",IDC_FILESYSTEM,83,40,117,10,
+                    SS_SUNKEN
+    LTEXT           "Volume Label",-1,7,18,75,8
+    LTEXT           "(Volume Name)",IDC_VOLUMELABEL,83,18,117,10,SS_SUNKEN
+    LTEXT           "Serial",-1,7,29,75,8
+    LTEXT           "(Volume Serial)",IDC_VOLUMESERIAL,83,29,117,10,
+                    SS_SUNKEN
+    LTEXT           "(Average Frags Per File)",IDC_AVERAGEFRAGS,281,73,117,
+                    10,SS_SUNKEN
+    LTEXT           "Average fragments per file",-1,205,73,75,20
+    LTEXT           "XX.X% of the files on this drive are fragmented. It is recommended that you perform a SSSSSSS defragmentation.",
+                    IDC_RECOMMEND,7,106,391,38,SS_SUNKEN
+    LTEXT           "Recommendations:",-1,7,96,75,8
+END

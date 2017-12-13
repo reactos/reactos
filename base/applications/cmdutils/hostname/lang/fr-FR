@@ -1,0 +1,8 @@
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Entrez ""EVENTCREATE /?"" pour afficher la syntaxe.\n"
+    IDS_NOSET "hostname -s is not supported."
+    IDS_ERROR "Win32 error"
+END

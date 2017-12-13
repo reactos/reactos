@@ -1,0 +1,8 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Matrix (animație de inactivitate)"
+    IDS_TITLE       "About"
+    IDS_TEXT        "Această animație de ecran inactiv nu are opțiuni."
+END

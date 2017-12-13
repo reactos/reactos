@@ -1,0 +1,12 @@
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Specifies the active code page number.\n\n\
+Type CHCP without a parameter to display the active code page number.\n"
+    STRING_CHCP_ERROR1 "Página codificación activa: %u\n"
+    STRING_CHCP_ERROR4 "Código de página inválido\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Formato de parámetro erróneo - %s\n"
+END

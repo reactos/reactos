@@ -1,0 +1,7 @@
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "LoadLibrary, ""%s"" kitaplığını yüklemede başarısız oldu."
+    IDS_MissingEntry "%s içinde %s giriş noktası eksik."
+END

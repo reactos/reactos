@@ -1,0 +1,7 @@
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "3D Tekst ScreenSaver"
+    IDS_TEXT "opsionet nuk duhen tE jene te vendosura."
+END

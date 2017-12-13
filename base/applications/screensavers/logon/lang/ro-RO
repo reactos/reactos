@@ -1,0 +1,7 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "Sigla ReactOS"
+    IDS_TEXT "Această animație de ecran inactiv nu are opțiuni."
+END

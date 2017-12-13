@@ -1,0 +1,7 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "Неуспешно зареждане на библиотека '%s'"
+    IDS_MissingEntry "Липсваща входна точка:%s\nв %s"
+END

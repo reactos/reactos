@@ -1,0 +1,186 @@
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "&Nuevo\tCtrl+N", CMD_NEW
+        MENUITEM "&Abrir...\tCtrl+A", CMD_OPEN
+        MENUITEM "&Guardar\tCtrl+G", CMD_SAVE
+        MENUITEM "Guardar &como...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Configurar &página...", CMD_PAGE_SETUP
+        MENUITEM "Im&primir...\tCtrl+P", CMD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "&Salir", CMD_EXIT
+    END
+    POPUP "&Edición"
+    BEGIN
+        MENUITEM "Deshacer\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cortar\tCtrl+X", CMD_CUT
+        MENUITEM "Copiar\tCtrl+C", CMD_COPY
+        MENUITEM "Pegar\tCtrl+V", CMD_PASTE
+        MENUITEM "&Eliminar\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Buscar...\tCtrl+F", CMD_SEARCH
+        MENUITEM "Buscar &siguiente\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Reemplazar...\tCtrl+R", CMD_REPLACE
+        MENUITEM "Ir a...\tCtrl+T", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Seleccionar todo\tCtrl+E", CMD_SELECT_ALL
+        MENUITEM "&Hora y fecha\tF5", CMD_TIME_DATE
+    END
+    POPUP "F&ormato"
+    BEGIN
+        MENUITEM "&Ajuste de línea", CMD_WRAP
+        MENUITEM "Tipo de &letra...", CMD_FONT
+    END
+    POPUP "&Ver"
+    BEGIN
+        MENUITEM "Barra d&e estado", CMD_STATUSBAR
+    END
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "Í&ndice", CMD_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "&Acerca de", CMD_ABOUT
+        MENUITEM "&Información...", CMD_HELP_ABOUT_NOTEPAD
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+CAPTION "Ajuste de página"
+BEGIN
+    GROUPBOX "Vista previa", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "Papel", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Tamaño:", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&Bandeja:", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "Orientación", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&Vertical", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Horizontal", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "Márgenes", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "Izqui&erdo:", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "De&recho:", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "Superi&or:", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "Infer&ior:", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&Encabezado:", 0x140, 8, 132, 40, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Pie de página:", 0x142, 8, 149, 40, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "Ayuda", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "Cancelar", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "Imp&resora...", psh3, 310, 170, 50, 14
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Codificación"
+BEGIN
+    COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Codificación:", 0x155, 5, 2, 41, 12
+    COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Fin de línea:", 0x156, 5, 20, 41, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Ir a la línea"
+BEGIN
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Número de línea:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    DEFPUSHBUTTON "Aceptar", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Acerca de Bloc de notas de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Bloc de notas de ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
+    DEFPUSHBUTTON "Cerrar", IDOK, 114, 149, 44, 15, WS_GROUP
+    ICON IDI_NPICON, -1, 12, 9, 20, 30
+    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    STRING_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los términos de la GNU General Public License tal y como se publica por la Free Software Foundation; ya sea la versión 2 de la Licencia, o (bajo tu discreción) cualquier versión posterior.\r\n\r\nEste programa se distribuye con el fin de ser útil, pero viene SIN NINGUNA GARANTÍA; sin tan siquiera la garantía implícita de COMERCIALIZACIÓN o la de IDONEIDAD PARA UN PROPÓSITO CONCRETO. Para más información lee la GNU General Public License.\r\n\r\nDeberías de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "Página &s" /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_NOTEPAD "Bloc de notas"
+    STRING_ERROR "ERROR"
+    STRING_WARNING "ADVERTENCIA"
+    STRING_INFO "Información"
+    STRING_UNTITLED "Sin título"
+    STRING_ALL_FILES "Todos los archivos (*.*)"
+    STRING_TEXT_FILES_TXT "Documentos de texto (*.txt)"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+Please use a different editor."
+    STRING_NOTEXT "You didn't enter any text. \
+\nPlease type something and try again"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
+    STRING_NOTFOUND "No se encontró '%s'."
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree memory."
+    STRING_CANNOTFIND "No se encontró '%s'"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (big endian)"
+    STRING_UTF8 "UTF-8"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "Línea %d, columna %d"
+    STRING_PRINTERROR "No se puede imprimir el archivo '%s'.\n\nAsegúrese de que la impresora esté encendida y configurada correctamente."
+
+    STRING_TEXT_DOCUMENT "Documento de texto"
+END

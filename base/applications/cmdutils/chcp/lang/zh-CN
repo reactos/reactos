@@ -1,0 +1,12 @@
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Specifies the active code page number.\n\n\
+Type CHCP without a parameter to display the active code page number.\n"
+    STRING_CHCP_ERROR1 "Active code page: %u\n"
+    STRING_CHCP_ERROR4 "Invalid code page\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "无效的参数格式 - %s\n"
+END

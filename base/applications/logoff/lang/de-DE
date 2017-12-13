@@ -1,0 +1,11 @@
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Terminates a session.\n\n\
+  /v\t\tDisplays information about the actions performed.\n\
+  /?\t\tShows this information.\n\n"
+    IDS_LOGOFF_REMOTE "Beendet eine Sitzung auf einem entfernten Rechner."
+    IDS_LOGOFF_LOCAL "Beendet eine Sitzung auf diesem Rechner."
+    IDS_ILLEGAL_PARAM "Ungültige(r) Parameter\n"
+END

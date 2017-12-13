@@ -1,0 +1,38 @@
+LANGUAGE LANG_HEBREW, SUBLANG_HEBREW_ISRAEL
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ברוכים הבאים - ReactOS"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "ברוכים הבאים למערכת ההפעלה ReactOS,\nבחר נושא מצד ימין"
+
+    IDS_CHECKTEXT "הראה חלון זה שוב"
+    IDS_CLOSETEXT "יציאה"
+END
+
+/* Topic buttons */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_BUTTON0 "התקנת ReactOS"
+    IDS_TOPIC_BUTTON1 "סייר בתוכן הדיסק"
+    IDS_TOPIC_BUTTON2 "יציאה"
+END
+
+/* Topic titles */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_TITLE0 "Install ReactOS"
+    IDS_TOPIC_TITLE1 "סייר בתוכן הדיסק"
+    IDS_TOPIC_TITLE2 "יציאה"
+END
+
+/* Topic descriptions */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_DESC0 "צור התקנה חדשה של ReactOS במחשבך או שדרג את ההתקנה הנוכחית."
+    IDS_TOPIC_DESC1 "סייר בתוכן הדיסק."
+    IDS_TOPIC_DESC2 "לחץ כדי לסגור יישום זה."
+END

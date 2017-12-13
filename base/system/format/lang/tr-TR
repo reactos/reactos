@@ -1,0 +1,43 @@
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
+
+STRINGTABLE
+BEGIN
+    STRING_HELP "Usage: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+  [drive:]         Specifies the drive to format.\n\
+  -FS:file-system  Specifies the type of file system (%s).\n\
+  -V:label         Specifies volume label.\n\
+  -Q               Performs a quick format.\n\
+  -A:size          Overrides the default allocation unit size. Default settings\n\
+                   are strongly recommended for general use\n\
+                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS compression is not supported for allocation unit sizes\n\
+                   above 4096.\n\
+  -C               Files created on the new volume will be compressed by\n\
+                   default.\n\n"
+    STRING_COMPLETE "Yüzde %lu bitti.\r"
+    STRING_FORMAT_FAIL "FormatEx başarılı olarak bitiremedi.\n\n"
+    STRING_NO_SUPPORT "İşlem Desteklenmiyor"
+    STRING_FMIFS_FAIL "FMIFS giriş noktaları konumlandırılamadı.\n\n"
+    STRING_UNKNOW_ARG "Bilinmeyen değiştirgen: %s\n"
+    STRING_DRIVE_PARM "İstenen sürücü değişkeni eksik.\n\n"
+    STRING_ERROR_DRIVE_TYPE "Sürücü türü alınamadı."
+    STRING_INSERT_DISK "%C: sürücüsüne yeni bir yumuşak disk yerleştiriniz\nve anık olduğunda Giriş'e basınız..."
+    STRING_NO_VOLUME "Birim sorgulanamadı."
+    STRING_NO_VOLUME_SIZE "Birim boyutu sorgulanamadı."
+    STRING_FILESYSTEM "Kütük dizgesinin türü %s.\n"
+    STRING_LABEL_NAME_EDIT "%C: sürücüsü için şimdiki birim etiketini giriniz: "
+    STRING_ERROR_LABEL "Bu sürücü için yanlış bir birim etiketi girildi.\n"
+    STRING_YN_FORMAT "\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n\
+DRIVE %C: WILL BE LOST!\nProceed with Format (Y/N)? "
+    STRING_YES_NO_FAQ "EH"
+    STRING_VERIFYING "Doğrulanıyor"
+    STRING_FAST_FMT "Hızlı biçimlendiriliyor"
+    STRING_CREATE_FSYS "Kütük dizgesi yapıları oluşturuluyor.\n"
+    STRING_FMT_COMPLETE "Biçimlendirme bitti.\n"
+    STRING_VOL_COMPRESS "Birim sıkıştırmayı desteklemiyor.\n"
+    STRING_ENTER_LABEL "Birim Etiketi (11 damga, yok için Giriş)? "
+    STRING_NO_LABEL "Birim etiketlenemedi."
+    STRING_FREE_SPACE "\n%I64d çoklu tüm disk alanı.\nDiskte %I64d çoklu kullanılabilir.\n"
+    STRING_SERIAL_NUMBER "\nBirim Dizilik Numarası %04X-%04X\n"
+END

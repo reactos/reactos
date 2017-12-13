@@ -1,0 +1,7 @@
+LANGUAGE LANG_MALAY, SUBLANG_MALAY_MALAYSIA
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "Logon ScreenSaver"
+    IDS_TEXT "No options need to be set."
+END

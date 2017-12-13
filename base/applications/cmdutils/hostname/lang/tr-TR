@@ -1,0 +1,8 @@
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Kullanım bilgisi için ""EVENTCREATE /?"" yazınız.\n"
+    IDS_NOSET "hostname -s is not supported."
+    IDS_ERROR "Win32 error"
+END

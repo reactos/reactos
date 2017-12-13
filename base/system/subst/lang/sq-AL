@@ -1,0 +1,20 @@
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
+
+STRINGTABLE
+BEGIN
+    IDS_INCORRECT_PARAMETER_COUNT "Numri i parametrave jo i sakte - %s\n"
+    IDS_INVALID_PARAMETER "Numri i parametrave jo i sakte - %s\n"
+    IDS_INVALID_PARAMETER2 "Parameter i gabuar - %s\n"
+    IDS_PATH_NOT_FOUND "Rruga nuk u gjet - %s\n"
+    IDS_ACCESS_DENIED "Refuzot hyrja - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Drive tashme i SUBSTed\n"
+    IDS_FAILED_WITH_ERRORCODE "Deshtoj me error kode 0x%x: %s\n"
+    IDS_USAGE "Associates a path with a drive letter.\n\n\
+SUBST [drive1: [drive2:]path]\n\
+SUBST drive1: /D\n\n\
+  drive1:        Specifies a virtual drive to which you want to assign a path.\n\
+  [drive2:]path  Specifies a physical drive and path you want to assign to\n\
+                 a virtual drive.\n\
+  /D             Deletes a substituted (virtual) drive.\n\n\
+Type SUBST with no parameters to display a list of current virtual drives.\n"
+END

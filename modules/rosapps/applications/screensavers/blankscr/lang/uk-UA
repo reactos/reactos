@@ -1,0 +1,7 @@
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Blank screen"
+    IDS_TEXT        "Ця заставка не має налаштовуваних параметрів."
+END

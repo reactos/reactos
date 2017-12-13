@@ -1,0 +1,12 @@
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Visually displays the folder structure of a drive or path.\n\n\
+TREE [drive:][path] [/F] [/A]\n\n\
+\t/F   Display the names of the files in each folder.\n\
+\t/A   Use ASCII instead of extended characters.\n"
+    IDS_NO_SUBDIRECTORIES "不存在子目录"
+    IDS_FOLDER_PATH "文件夹路径列表\n"
+    IDS_VOL_SERIAL "卷序列号是 %x:%x\n"
+END

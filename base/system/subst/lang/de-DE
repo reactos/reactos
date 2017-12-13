@@ -1,0 +1,20 @@
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+STRINGTABLE
+BEGIN
+    IDS_INCORRECT_PARAMETER_COUNT "Falsche Anzahl an Parametern - %s\n"
+    IDS_INVALID_PARAMETER "Falsche Anzahl an Parametern - %s\n"
+    IDS_INVALID_PARAMETER2 "Ungültiger Parameter - %s\n"
+    IDS_PATH_NOT_FOUND "Pfad wurde nicht gefunden - %s\n"
+    IDS_ACCESS_DENIED "Zugriff verweigert - %s\n"
+    IDS_DRIVE_ALREADY_SUBSTED "SUBST wurde hier schon ausgeführt.\n"
+    IDS_FAILED_WITH_ERRORCODE "Fehlgeschlagen - Code 0x%x: %s\n"
+    IDS_USAGE "Associates a path with a drive letter.\n\n\
+SUBST [drive1: [drive2:]path]\n\
+SUBST drive1: /D\n\n\
+  drive1:        Specifies a virtual drive to which you want to assign a path.\n\
+  [drive2:]path  Specifies a physical drive and path you want to assign to\n\
+                 a virtual drive.\n\
+  /D             Deletes a substituted (virtual) drive.\n\n\
+Type SUBST with no parameters to display a list of current virtual drives.\n"
+END

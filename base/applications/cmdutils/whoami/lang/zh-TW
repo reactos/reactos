@@ -1,0 +1,56 @@
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "使用者資訊"
+    IDS_GROU_HEADER "組資訊"
+    IDS_PRIV_HEADER "特權資訊"
+    IDS_COL_USER_NAME "使用者名稱"
+    IDS_COL_GROUP_NAME "組名稱"
+    IDS_COL_TYPE "Type"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "內容"
+    IDS_COL_PRIV_NAME "許可權名稱"
+    IDS_COL_DESCRIPTION "Description"
+    IDS_COL_STATE "狀態"
+    IDS_TP_WELL_KNOWN_GROUP "已知組"
+    IDS_TP_ALIAS "別名"
+    IDS_TP_LABEL "標籤"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "強制性組， "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "默認情況下，啟用， "
+    IDS_ATTR_GROUP_ENABLED "已啟用的組， "
+    IDS_ATTR_GROUP_OWNER "組的所有者， "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "啟用"
+    IDS_STATE_DISABLED "Disabled"
+    IDS_ERROR_UPN "錯誤: 無法獲取使用者主體名稱 (UPN) 與當前登入的使用者\n不是域使用者。\n"
+    IDS_ERROR_FQDN "錯誤: 無法獲取完全限定可分辨名稱 (FQDN) 與當前\n登入的使用者不是域使用者。\n"
+    IDS_ERROR_VALUEXPECTED "錯誤: 無效語法。 值的預期 '/fo'。\n輸入 ""WHOAMI /?"" 以瞭解用法。\n"
+    IDS_ERROR_VALUENOTALLOWED "錯誤: 無效語法。 '%s' 值不允許為 '/fo' 選項。\n輸入 ""WHOAMI /?"" 以瞭解用法。\n"
+    IDS_ERROR_1TIMES "錯誤: 無效語法。 選項不允許超過 '1' 的次數。\n輸入 ""WHOAMI /?"" 以瞭解用法。\n"
+    IDS_ERROR_INVALIDSYNTAX "錯誤: 無效語法。\n輸入 ""WHOAMI /?"" 以瞭解用法。\n"
+    IDS_ERROR_INVALIDARG "錯誤: 無效的參數/選項 - '%s'。\n輸入 ""WHOAMI /?"" 以瞭解用法。\n"
+    IDS_ERROR_NH_LIST "錯誤: /NH 開關不能用的列表格式。\n輸入 ""WHOAMI /?"" 以瞭解用法。\n"
+    IDS_HELP "DESCRIPTION:\n\
+  Display user, group and privileges information for the local logged-on user.\n\
+  If no arguments are provided, displays the current domain and user name.\n\
+\n\
+  Available output formats for the '/fo' option are 'csv', 'list' and 'table'.\n\
+  Use '/nh' to hide headers. By default the data is displayed in a table.\n\
+\n\
+SYNTAX:\n\
+  whoami [/upn | /fqdn | /logonid] \n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+  whoami /all [/fo <Format>] [/nh] \n\
+\n\
+EXAMPLES: \n\
+  whoami /groups /priv /nh /fo csv \n\
+  whoami /logonid \n\
+  whoami \n"
+END

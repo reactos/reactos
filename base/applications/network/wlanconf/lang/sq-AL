@@ -1,0 +1,37 @@
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nConfigure a WLAN adapter.\n\n\
+WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
+\t-c SSID\t\tConnects to a supplied SSID,\n\
+\t-w WEP\t\tSpecifies a WEP key to use.\n\
+\t-a\t\tSpecifies the target network is ad-hoc\n\
+\t-d\t\tDisconnects from the current AP.\n\
+\t-s\t\tScans and displays a list of access points\n\
+\t\t\tin range.\n\n\
+Passing no parameters will print information about the current WLAN connection\n"
+    IDS_NO_NETWORK "Nuk gjinden rrjete ne zone\n"
+    IDS_NO_WLAN_ADAPTER "E pamundur gjetja e nje adapteri WLAN ne sistem\n"
+    IDS_SUCCESS "Operacioni përfundoi me sukses.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN u shkeput\n"
+    IDS_MSG_WEP_ENABLED "WEP aktivizua: %s\n"
+    IDS_MSG_NETWORK_MODE "Mënyra e rrjetit: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nInformacionet e konfigurimit aktual te wireless'it:\n\n"
+    IDS_MSG_ENCRYPTED "E'kriptuar: %s\n"
+    IDS_MSG_NETWORK_TYPE "Tipi Rrjetit: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Masa suportuse (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "Forca e transmetimit: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Numri i antenave: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Antene transmetuese: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antene transmetuese: Any\n"
+    IDS_MSG_RECEIVE_ANTENNA "Antene marrese: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Antene marrese: Any\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Copëzim fragmentimi: %d bytes\n"
+    IDS_MSG_RTS_THRESHOLD "Copezim RTS: %d bytes\n"
+    IDS_YES "Po"
+    IDS_NO "Jo"
+    IDS_ADHOC "Adhoc"
+    IDS_INFRASTRUCTURE "Infrastruktura"
+END
