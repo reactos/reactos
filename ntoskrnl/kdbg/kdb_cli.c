@@ -2112,7 +2112,7 @@ KdbpCmdPcr(
               "  Tib.FiberData/Version:     0x%08x\n"
               "  Tib.ArbitraryUserPointer:  0x%08x\n"
               "  Tib.Self:                  0x%08x\n"
-              "  Self:                      0x%08x\n"
+              "  SelfPcr:                   0x%08x\n"
               "  PCRCB:                     0x%08x\n"
               "  Irql:                      0x%02x\n"
               "  IRR:                       0x%08x\n"
@@ -2133,7 +2133,7 @@ KdbpCmdPcr(
               "  InterruptMode:             0x%08x\n",
               Pcr->NtTib.ExceptionList, Pcr->NtTib.StackBase, Pcr->NtTib.StackLimit,
               Pcr->NtTib.SubSystemTib, Pcr->NtTib.FiberData, Pcr->NtTib.ArbitraryUserPointer,
-              Pcr->NtTib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
+              Pcr->NtTib.Self, Pcr->SelfPcr, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
               Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
               Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
               Pcr->Number, Pcr->SecondLevelCacheAssociativity,

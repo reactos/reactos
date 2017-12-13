@@ -5,10 +5,7 @@
  * PROGRAMMER:      Nikita Pechenkin (n.pechenkin@mail.ru)
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <stdio.h>
+#include "precomp.h"
 
 #define LMS TEXT("\\\\.\\mailslot\\rostest_slot")
 #define MSG (0x50DA)

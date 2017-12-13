@@ -5,10 +5,7 @@
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <stdio.h>
+#include "precomp.h"
 
 static VOID
 TestGetVolumeInformationA(VOID)

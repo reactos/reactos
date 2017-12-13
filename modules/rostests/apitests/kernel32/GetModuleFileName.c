@@ -5,14 +5,8 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#include <stdio.h>
-#include <winreg.h>
-#include <winnls.h>
 #include <shlwapi.h>
 
 static

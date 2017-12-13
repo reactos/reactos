@@ -5,9 +5,7 @@
  * PROGRAMMER:      Mike "tamlin" Nordell
  */
 
-#include <apitest.h>
-
-#include <winnls.h>
+#include "precomp.h"
 
 START_TEST(MultiByteToWideChar)
 {

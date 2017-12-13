@@ -5,11 +5,7 @@
  * PROGRAMMER:      Pierre Schweitzer <pierre.schweitzer@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <stdio.h>
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 static
 void

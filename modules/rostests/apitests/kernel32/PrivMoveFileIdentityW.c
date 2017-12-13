@@ -5,11 +5,9 @@
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
 #include <ndk/iofuncs.h>
-#include <ndk/rtltypes.h>
 
 static const WCHAR FileName[] = L"TestFile.xxx";
 static const CHAR FileNameA[] = "TestFile.xxx";

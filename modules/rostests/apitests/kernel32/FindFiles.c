@@ -5,9 +5,7 @@
  * PROGRAMMER:      Hermès BÉLUSCA - MAÏTO
  */
 
-#include <apitest.h>
-
-#include <windows.h>
+#include "precomp.h"
 
 /*
  * NOTE: This test supposes the following requirements:
