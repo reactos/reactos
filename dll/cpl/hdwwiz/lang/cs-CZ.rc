@@ -1,9 +1,4 @@
-/* FILE:       dll/cpl/hdwwiz/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2014-04-25 
- */
-
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -135,7 +130,7 @@ BEGIN
     LTEXT "Pokračovat lze po připojení hardwaru k počítači.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "Vypnou&t počítač po klepnutí na tlačítko Dokončit, aby mohl být hardware připojen.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
     LTEXT "Ve většině případů ReactOS automaticky nainstaluje hardware po jeho připojení. Pokud jej ReactOS nenajde, lze tohoto průvodce znovu spustit a nainstalovat podpůrný software.", -1, 114, 98, 193, 32
-    LTEXT "Klepnutím na tlačítko Dokončit ukončíte průvodce.", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "Klepnutím na Dokončit uzavřete průvodce.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE

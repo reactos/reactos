@@ -1,18 +1,18 @@
 /*
  * PROJECT:    Spider Solitaire
  * LICENSE:    See COPYING in top level directory
- * FILE:       base/applications/games/spider/lang/ja-JP.rc
- * PURPOSE:    Japanese Language File for Spider Solitaire
- * TRANSLATOR: Tomoya Kitagawa
+ * FILE:       base/applications/games/spider/lang/en-US.rc
+ * PURPOSE:    English Language File for Spider Solitaire
+ * TRANSLATOR: Gregor Schneider
  */
 
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+LANGUAGE LANG_JAPANESE, SUBLANG_JAPANESE_JAPAN
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
 CAPTION "カードの背景を選択"
-FONT 9, "MS UI Gothic"
+FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
     CONTROL "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 50, 71
@@ -34,7 +34,7 @@ END
 IDD_DIFFICULTY DIALOGEX 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "難易度"
-FONT 9, "MS UI Gothic"
+FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "初級: 1 色(&O)", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "中級: 2 色(&T)", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
@@ -64,9 +64,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "カードの装飾(&D)...", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "スパイダの終了(&E)", IDM_GAME_EXIT
+        MENUITEM "レジストリ エディタの終了(&X)", IDM_GAME_EXIT
     END
-    POPUP "ヘルプ(&H)"
+    POPUP "ファイル(&F)"
     BEGIN
         MENUITEM "目次(&C)\tF1", IDM_HELP_CONTENTS
         MENUITEM "バージョン情報(&A)", IDM_HELP_ABOUT

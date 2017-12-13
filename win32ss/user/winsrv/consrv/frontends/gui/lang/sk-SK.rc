@@ -1,21 +1,16 @@
-/* TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR: 29-05-2008
- * LastChange: 12-04-2011
- */
-
-LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+LANGUAGE LANG_SLOVAK, SUBLANG_SLOVAK_SLOVAKIA
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Upraviť"
-    IDS_MARK "Označiť"
+    IDS_EDIT "&Upraviť"
+    IDS_MARK "Mark"
     IDS_COPY "Kopírovať\tEnter"
     IDS_PASTE "Vložiť"
     IDS_SELECTALL "Vybrať všetko"
-    IDS_SCROLL "Rolovať"
+    IDS_SCROLL "Scroll"
     IDS_FIND "Find..."
     IDS_DEFAULTS "Defaults"
-    IDS_PROPERTIES "Vlastnosti"
+    IDS_PROPERTIES "&Properties"
 /*
     IDS_SCROLLHERE "Rolovať sem"
     IDS_SCROLLTOP "K hornému okraju"

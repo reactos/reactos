@@ -1,0 +1,7 @@
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Blank screen"
+    IDS_TEXT        "Keinerlei Einstellungen notwendig."
+END

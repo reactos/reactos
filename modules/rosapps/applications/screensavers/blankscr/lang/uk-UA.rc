@@ -1,12 +1,4 @@
-/*
- * PROJECT:     Default ScreenSaver
- * LICENSE:     Public Domain
- * FILE:        rosapps/applications/screensavers/blankscr/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for Default ScreenSaver
- * TRANSLATOR:  Artem Reznikov
- */
-
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
 
 STRINGTABLE DISCARDABLE
 BEGIN

@@ -1,6 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -119,7 +117,7 @@ BEGIN
     LTEXT "Donanım Ekleme Yardımcısı'nı Bitirme", IDC_FINISHTITLE, 114, 8, 195, 28
     LTEXT "Seçtiğiniz donanımın şimdiki durumu:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Karşılaşabildiğiniz bir olası sorunu çözmenize yardımcı olabilen bir sorun çözücü başlatmak için Bitir'e tıklayınız.", -1, 114, 136, 193, 1
+    LTEXT "Karşılaşabildiğiniz bir olası sorunu çözmenize yardımcı olabilen bir sorun çözücü başlatmak için Bitir'e tıklayınız.", -1, 114, 136, 193, 16
     LTEXT "Bu yardımcıdan çıkmak için İptal'e tıklayınız.", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 

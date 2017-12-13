@@ -1,11 +1,4 @@
-/* 
- * FILE:        dll/win32/shimgvw/lang/ro-RO.rc
- *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * LAST CHANGE: 2011-12-17  small correction
- */
-
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN

@@ -1,15 +1,13 @@
-/* Spanish translation by Javier Remacha 2008-26-01 */
-
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 
 STRINGTABLE
 BEGIN
     IDS_EDIT "Editar"
-    IDS_MARK "Marcar"
+    IDS_MARK "Marca"
     IDS_COPY "Copiar\tIntroducir"
-    IDS_PASTE "Pegar"
+    IDS_PASTE "Insertar"
     IDS_SELECTALL "Seleccionar Todo"
-    IDS_SCROLL "Desplazar"
+    IDS_SCROLL "Desp."
     IDS_FIND "Buscar..."
     IDS_DEFAULTS "Por defecto"
     IDS_PROPERTIES "Propiedades"

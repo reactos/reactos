@@ -1,0 +1,7 @@
+LANGUAGE LANG_HUNGARIAN, SUBLANG_HUNGARIAN_HUNGARY
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "A(z) '%s' állományt, vagy valamelyik összetevõjét nem sikerült megnyitni"
+    IDS_MissingEntry "Hiányzó bejegyzés: %s\nIn A Következõ állomány nem tölthetõ be: %s"
+END

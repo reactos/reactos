@@ -1,25 +1,19 @@
-/*
- * FILE:       base/system/regsvr32/lang/ro-RO.rc
- *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
- */
- 
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN
-    IDS_UsageMessage "%s\n\nUtilizare: regsvr32 [/u] [/s] [/c] [/n] [/i[:argumente]] nume_fișier_dll         \n\
-/u -	Anulează înregistrarea\n\
-/s -	Tacit; fără ferestre de mesaje\n\
-/c -	Debitează informațiile la consolă\n\
-/i -	Apelează DllInstall cu [argumente]; cu /u apelează DllUninstall\n\
-/n -	Omite apelul DllRegisterServer; este utilizat cu /i"
+    IDS_UsageMessage "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Unregister server\n\
+/s -	Silent; display no message boxes\n\
+/c -	Console output\n\
+/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
+/n -	Do not call DllRegisterServer; this option must be used with /i"
     IDS_NoDllSpecified "Nu a fost specificat nici un DLL."
     IDS_InvalidFlag "Argument nerecunoscut: %s"
     IDS_SwitchN_NoI "Argument nerecunoscut: /n trebuie utilizat cu /i"
     IDS_DllNotLoaded "Eroare la apelul LoadLibrary('%s').\nCodul de eroare este: 0x%08x."
-    IDS_MissingEntry "%s a fost inclus, dar punctul de intrare %s nu e.\n\n\
-Fie %s nu a fost exportat, fie %s nu este corect. Pentru detectarea problemei/corectare poate fi utilizat instrumentul PView."
+    IDS_MissingEntry "%s was loaded, but the %s entry point was not found.\n\n\
+%s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it."
     IDS_FailureMessage "%s din %s nu a fost realizat.\nCodul de eroare este: 0x%08x"
     IDS_SuccessMessage "%s din %s a fost realizat cu succes."
 END

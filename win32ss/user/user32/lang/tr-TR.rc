@@ -1,13 +1,11 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
- 
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 /* Dialogs */
 
 SELWINDOW DIALOGEX 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Pencere Seç"
+CAPTION "Select Window"
 BEGIN
     LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON "Tamam", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -33,26 +31,26 @@ END
 
 SYSMENU MENU
 BEGIN
-    MENUITEM "&Önceki Boyutlarına Döndür", SC_RESTORE
-    MENUITEM "&Taşı", SC_MOVE
-    MENUITEM "&Yeniden Boyutlandır", SC_SIZE
-    MENUITEM "&Simge Durumuna Küçült", SC_MINIMIZE
-    MENUITEM "&Görüntülüğü Kaplat", SC_MAXIMIZE
+    MENUITEM "&Restore", SC_RESTORE
+    MENUITEM "&Move", SC_MOVE
+    MENUITEM "&Size", SC_SIZE
+    MENUITEM "Mi&nimize", SC_MINIMIZE
+    MENUITEM "Ma&ximize", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Kapat\tSeçenek+F4", SC_CLOSE
+    MENUITEM "&Close\tAlt+F4", SC_CLOSE
 END
 
 SYSMENUMDI MENU
 BEGIN
-    MENUITEM "&Önceki Boyutlarına Döndür", SC_RESTORE
-    MENUITEM "&Taşı", SC_MOVE
-    MENUITEM "&Yeniden Boyutlandır", SC_SIZE
-    MENUITEM "&Simge Durumuna Küçült", SC_MINIMIZE
-    MENUITEM "&Görüntülüğü Kaplat", SC_MAXIMIZE
+    MENUITEM "&Restore", SC_RESTORE
+    MENUITEM "&Move", SC_MOVE
+    MENUITEM "&Size", SC_SIZE
+    MENUITEM "Mi&nimize", SC_MINIMIZE
+    MENUITEM "Ma&ximize", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Kapat\tDenetim+F4", SC_CLOSE
+    MENUITEM "&Close\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "&İleri\tDenetim+F6", SC_NEXTWINDOW
+    MENUITEM "Nex&t\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
@@ -65,9 +63,9 @@ BEGIN
     IDS_ABORT "&Durdur"
     IDS_RETRY "&Yeniden Dene"
     IDS_IGNORE "Y&ok Say"
-    IDS_YES "&Evet"
-    IDS_NO "&Hayır"
-    IDS_CLOSE "&Kapat"
+    IDS_YES "&Yes"
+    IDS_NO "&No"
+    IDS_CLOSE "Tamam"
     IDS_HELP "Yardım"
     IDS_TRYAGAIN "Ye&niden Dene"
     IDS_CONTINUE "&Sürdür"

@@ -1,24 +1,19 @@
-/* FILE:       base/system/regsvr32/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2008-04-21
- */
-
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
 
 STRINGTABLE
 BEGIN
-    IDS_UsageMessage "%s\n\nPoužití: regsvr32 [/u] [/s] [/c] [/n] [/i[:příkaz]] názevdll\n\
-/u -	Odregistrovat server\n\
-/s -	Tichý režim; nezobrazuje žádné zprávy\n\
-/c -	Výstup na konzoli\n\
-/i -	Zavolat DllInstall a předat volitelný [příkaz]; při použití s /u volá odinstalaci dll\n\
-/n -	Nevolat DllRegisterServer; tato volba musí být použita s /i"
+    IDS_UsageMessage "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Unregister server\n\
+/s -	Silent; display no message boxes\n\
+/c -	Console output\n\
+/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
+/n -	Do not call DllRegisterServer; this option must be used with /i"
     IDS_NoDllSpecified "Nebyl zadán název DLL."
     IDS_InvalidFlag "Nerozpoznaný přepínač: %s"
     IDS_SwitchN_NoI "Nerozpoznaný přepínač: /n musí být použito s přepínačem /i"
     IDS_DllNotLoaded "LoadLibrary('%s') selhalo.\nGetLastError vrací 0x%08x."
-    IDS_MissingEntry "%s bylo načteno, ale vstupní bod %s nebyl nalezen.\n\n\
-%s nemusí být vyexportováno, nebo v paměti může být poškozená verze %s. Zvažte použití PView k nalezení a odstranění."
+    IDS_MissingEntry "%s was loaded, but the %s entry point was not found.\n\n\
+%s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it."
     IDS_FailureMessage "%s v %s selhalo.\nNávratový kód je: 0x%08x"
     IDS_SuccessMessage "%s v %s uspělo."
 END

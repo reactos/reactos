@@ -1,8 +1,8 @@
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Fractale de cylindres"
-    IDS_TITLE       "À propos de"
+    IDS_TITLE       "À propos"
     IDS_TEXT        "Fractale de cylindres par unC0Rr.\nSpécial pour ReactOS."
 END

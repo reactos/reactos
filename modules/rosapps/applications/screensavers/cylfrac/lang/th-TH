@@ -1,0 +1,8 @@
+LANGUAGE LANG_THAI, SUBLANG_THAI_THAILAND
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Cylinders fractal"
+    IDS_TITLE       "About"
+    IDS_TEXT        "Cylinders fractal by unC0Rr.\nSpecial for ReactOS."
+END

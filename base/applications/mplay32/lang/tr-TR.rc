@@ -1,6 +1,4 @@
-/* TRANSLATOR: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDR_MAINMENU MENU
 BEGIN
@@ -29,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ses Düzeyi Denetimi", IDM_VOLUMECTL
     END
-    POPUP "&Yardım"
+    POPUP "&Kütük"
     BEGIN
         MENUITEM "&Üzerine", IDM_ABOUT
     END
@@ -46,7 +44,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Bilinmiyor"
+    IDS_MODE_UNKNOWN "Bilinmeyen"
     IDS_MODE_OPEN "Açık"
     IDS_MODE_STOP "Durduruldu"
     IDS_MODE_PLAY "Çalıyor"
@@ -56,7 +54,7 @@ BEGIN
     IDS_MODE_NOT_READY "Anık değil"
     IDS_ALL_TYPES_FILTER "Desteklenen Kütükler"
     IDS_TOOLTIP_PLAY "Çal"
-    IDS_TOOLTIP_STOP "Durdur"
+    IDS_TOOLTIP_STOP "Kaydırma Kilidi"
     IDS_TOOLTIP_EJECT "Çıkart"
     IDS_TOOLTIP_BACKWARD "Bir Öncekine Geç"
     IDS_TOOLTIP_SEEKBACK "Geri Sar"

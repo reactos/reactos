@@ -1,19 +1,17 @@
-/* Swedish translation by David Nordenberg, Jaix Bly */
-
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
 
 IDM_MAINMENU MENU
 BEGIN
     POPUP "&Alternativ"
     BEGIN
-        MENUITEM "&Inställningar", IDC_PROPERTIES
+        MENUITEM "P&roperties", IDC_PROPERTIES
         MENUITEM "A&vancerade kontroller", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta", IDC_EXIT
     END
-    POPUP "&Hjälp"
+    POPUP "&Arkiv"
     BEGIN
-        MENUITEM "&Hjälpavsnitt", IDC_HELP_TOPICS
+        MENUITEM "Innehåll", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Om ...", IDC_ABOUT
     END
@@ -40,7 +38,7 @@ BEGIN
     LTEXT "Visa följander volymekontroller:", IDC_LABELCONTROLS, 7, 109, 162, 8
     CONTROL "", IDC_CONTROLS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP | WS_BORDER, 7, 122, 211, 96
     PUSHBUTTON "OK", IDOK, 114, 226, 50, 14
-    PUSHBUTTON "Avbryt", IDCANCEL, 168, 226, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 168, 226, 50, 14
 END
 
 IDD_VOLUME_CTRL DIALOG 0, 0, 90, 150

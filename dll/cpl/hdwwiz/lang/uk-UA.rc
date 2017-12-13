@@ -1,12 +1,4 @@
-/*
- * PROJECT:     Add Hardware Control Panel Applet
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/hdwwiz/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for Add Hardware Control Panel Applet
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
- */
-
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -126,7 +118,7 @@ BEGIN
     LTEXT "Поточний стан вибраного пристрою:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Для запуску діагностики та отримання допомоги щодо усунення неполадок натисніть ""Завршити"".", -1, 114, 136, 193, 16
-    LTEXT "Для припинення роботи майстра натисніть кнопку ""Скасувати"".", IDC_STATUSTEXT, 114, 166, 170, 16
+    LTEXT "Для припинення роботи майстра натисніть кнопку ""Скасувати"".", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
@@ -136,9 +128,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Майстер встановлення обладнання не може продовжити роботу", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Для продовження під'єднайте цей пристрій до комп'ютера.", -1, 114, 40, 193, 16
-    AUTOCHECKBOX "&Вимкнути комп'ютер після натиснення кнопки ""Завершити"" щоб можна було відкрити комп'ютер та під'єднати пристрій.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 25, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Вимкнути комп'ютер після натиснення кнопки ""Завершити"" щоб можна було відкрити комп'ютер та під'єднати пристрій.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
     LTEXT "В більшості випадків ReactOS автоматично встановить нове обладнання після його під'єднання. Якщо ReactOS його не знайде, запустіть цього майстра знов для встановлення програмної підтримки.", -1, 114, 98, 193, 32
-    LTEXT "Для закриття майстра натисніть кпопку ""Завершити"".", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "Для закриття майстра натисніть кнопку ""Завершити"".", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE

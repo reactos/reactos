@@ -1,10 +1,10 @@
-LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Visionneuse d'Images et Fax de ReactOS"
     IDS_SETASDESKBG "Définir comme Arrière-plan du Bureau"
-    IDS_PREVIEW "Aperçu"
+    IDS_PREVIEW "Preview"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Image Suivante"
     IDS_TOOLTIP_PREV_PIC "Image Précédente"

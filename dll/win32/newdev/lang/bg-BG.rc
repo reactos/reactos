@@ -1,13 +1,13 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Слагане на устройство"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Здравейте", IDC_WELCOMETITLE, 120, 8, 195, 16
+    LTEXT "Здравейте", IDC_WELCOMETITLE, 120, 8, 195, 24
     LTEXT "Вълшебникът ще сложи водач за ново устройство:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Натиснете „Напред“ за продължение.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "Натиснете „Напред“ за настройка на устройствата.", IDC_STATIC, 120, 169, 195, 16
     LTEXT "НЕИЗВЕСТНО УСТРОЙСТВО", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "ВНИМАНИЕ! СЛАГАНЕТО НА ИЗБРАНО ОТ ПОТРЕБИТЕЛЯ УСТРОЙСТВО МОЖЕ ДА ДОВЕДЕ ДО ЗАБИВАНЕ НА КОМПЮТЪРА ВИ ИЛИ ДА ГО НАПРАВИ НЕЗАПУСКАЕМ!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Сам сложи водача", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
@@ -80,9 +80,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Слагане на устройство"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Слагането завърши", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Слагането приключи", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Вълшебникът завърши слагането на водач за:", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "Натиснете „Край“ за затваряне на вълшебника.", IDC_STATIC, 120, 174, 195, 12
+    LTEXT "Натиснете „Край“, за да затворите вълшебника.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "НЕИЗВЕСТНО УСТРОЙСТВО", IDC_DEVICE, 148, 53, 147, 12
 END
 

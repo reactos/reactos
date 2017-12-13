@@ -1,4 +1,4 @@
-LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+LANGUAGE LANG_DANISH, SUBLANG_DANISH_DENMARK
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -20,33 +20,33 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "&Fil"
+    POPUP "&File"
     BEGIN
-        MENUITEM "&Ny\tCtrl+N", CMD_NEW
-        MENUITEM "Å&bn...\tCtrl+O", CMD_OPEN
-        MENUITEM "&Gem\tCtrl+S", CMD_SAVE
-        MENUITEM "Gem so&m...", CMD_SAVE_AS
+        MENUITEM "&New\tCtrl+N", CMD_NEW
+        MENUITEM "&Open...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Save\tCtrl+S", CMD_SAVE
+        MENUITEM "Save &As...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Side&opsætning...", CMD_PAGE_SETUP
-        MENUITEM "&Udskriv...\tCtrl+P", CMD_PRINT
+        MENUITEM "&Print...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
-        MENUITEM "&Afslut", CMD_EXIT
+        MENUITEM "E&xit", CMD_EXIT
     END
-    POPUP "&Rediger"
+    POPUP "&Edit"
     BEGIN
-        MENUITEM "&Fortryd\tCtrl+Z", CMD_UNDO
+        MENUITEM "&Undo\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Klip\tCtrl+X", CMD_CUT
-        MENUITEM "K&opier\tCtrl+C", CMD_COPY
-        MENUITEM "Sæt &ind\tCtrl+V", CMD_PASTE
+        MENUITEM "Cu&t\tCtrl+X", CMD_CUT
+        MENUITEM "&Copy\tCtrl+C", CMD_COPY
+        MENUITEM "&Paste\tCtrl+V", CMD_PASTE
         MENUITEM "&Slet\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Søg...", CMD_SEARCH
+        MENUITEM "&Find...\tCtrl+F", CMD_SEARCH
         MENUITEM "&Find næste\tF3", CMD_SEARCH_NEXT
         MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Marker &alt", CMD_SELECT_ALL
+        MENUITEM "Select &All\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "&Dato/tid\tF5", CMD_TIME_DATE
     END
     POPUP "&Søg"
@@ -58,7 +58,7 @@ BEGIN
     BEGIN
         MENUITEM "Status&bar", CMD_STATUSBAR
     END
-    POPUP "&Hjælp"
+    POPUP "&Fil"
     BEGIN
         MENUITEM "&Indhold", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
@@ -135,7 +135,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Close", IDOK, 114, 149, 44, 15, WS_GROUP
+    DEFPUSHBUTTON "Luk", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30
     EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
@@ -148,30 +148,29 @@ END
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
-    STRING_PAGESETUP_FOOTERVALUE "Side &s"
+    STRING_PAGESETUP_FOOTERVALUE "Side &s" /* FIXME */
     STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
     STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
     STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
     STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
     STRING_NOTEPAD "Notesblok"
-    STRING_ERROR "Fejl"
-    STRING_WARNING "Advarsel"
+    STRING_ERROR "FEJL"
+    STRING_WARNING "ADVARSEL"
     STRING_INFO "Information"
     STRING_UNTITLED "Ikke-navngivet"
     STRING_ALL_FILES "Alle filer (*.*)"
     STRING_TEXT_FILES_TXT "Tekst filer (*.txt)"
-    STRING_TOOLARGE "Filen '%s' er for stor til Notesblok. \
-\nBrug en anden editor til at redigere filen."
-    STRING_NOTEXT "Du har ikke skrevet noget tekst. \
-\nSkriv noget tekst, og prøv så igen"
-    STRING_DOESNOTEXIST "Filen '%s'\neksistere ikke\n\n \
-Ønkser du at oprette en ny fil?"
-    STRING_NOTSAVED "Filen '%s'\ner blevet ændret\n\n \
-Ønsker du at gemme ændringerne?"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+Please use a different editor."
+    STRING_NOTEXT "You didn't enter any text. \
+\nPlease type something and try again"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
     STRING_NOTFOUND "Kan ikke finde '%s'."
-    STRING_OUT_OF_MEMORY "Der er ikke nok hukommelse til at udføre \
-denne operation. \nAfslut et eller flere aktive programmer for at frigøre \
-hukommelse, og prøv så igen."
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree memory."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

@@ -1,14 +1,14 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "Сравнение содержимого двух файлов или наборов файлов.\n\n\
-COMP [/L] [/A] [данные1] [данные2]\n\n\
-  данные1    Расположение и имя первого файла для сравнения.\n\
-  данные2    Расположение и имя второго файла для сравнения.\n\
-  /A         Вывод различий в формате ASCII (по умолчанию: шестнадцатиричный).\n\
-  /L         Вывод номеров строк, в которых обнаружены различия.\n"
-    IDS_INVALIDSWITCH "Недопустимый ключ - /%c\n"
+    IDS_HELP "Compares the contents of two files or sets of files.\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      Specifies location and name of first file to compare.\n\
+  data2      Specifies location and name of second file to compare.\n\
+  /A         Display differences in ASCII characters (default: hexadecimal).\n\
+  /L         Display line numbers for differences.\n"
+    IDS_INVALIDSWITCH "Неверный параметр - /%c\n"
     IDS_BADSYNTAX "Не верный формат командной строки\n"
     IDS_FILEERROR "Не удалось найти/открыть файл: %s\n"
     IDS_COMPARING "Сравнение %s и %s...\n"

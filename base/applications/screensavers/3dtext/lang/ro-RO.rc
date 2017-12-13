@@ -1,11 +1,4 @@
-/* 
- * FILE:       base/applications/screensavers/3dtext/lang/ro-RO.rc
- *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG: 2011-08-24  initial translation
- */
-
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 273, 178
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU

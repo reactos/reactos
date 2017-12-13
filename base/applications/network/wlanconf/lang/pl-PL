@@ -1,0 +1,37 @@
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nConfigure a WLAN adapter.\n\n\
+WLANCONF [-c SSID [-w WEP] [-a]] [-d] [-s]\n\n\
+\t-c SSID\t\tConnects to a supplied SSID,\n\
+\t-w WEP\t\tSpecifies a WEP key to use.\n\
+\t-a\t\tSpecifies the target network is ad-hoc\n\
+\t-d\t\tDisconnects from the current AP.\n\
+\t-s\t\tScans and displays a list of access points\n\
+\t\t\tin range.\n\n\
+Passing no parameters will print information about the current WLAN connection\n"
+    IDS_NO_NETWORK "Brak sieci w zasięgu\n"
+    IDS_NO_WLAN_ADAPTER "Adapter WLAN nie został wykryty w systemie\n"
+    IDS_SUCCESS "Operacja zako?czyła się sukcesem.\n"
+    IDS_WLAN_DISCONNECT "\nWLAN został odłączony\n"
+    IDS_MSG_WEP_ENABLED "WEP w u?yciu: %s\n"
+    IDS_MSG_NETWORK_MODE "Tryb połączenia: %s\n"
+    IDS_MSG_CURRENT_WIRELESS "\nInformacje o konfiguracji obecnej sieci bezprzewodowej:\n\n"
+    IDS_MSG_ENCRYPTED "Szyfrowana: %s\n"
+    IDS_MSG_NETWORK_TYPE "Typ sieci: %s\n"
+    IDS_MSG_RSSI "RSSI: %i dBm\n"
+    IDS_MSG_SUPPORT_RATE "Dostępne prędkości transmisji (Mbps): "
+    IDS_MSG_TRANSMISSION_POWER "Moc transmisji: %d mW\n"
+    IDS_MSG_ANTENNA_COUNT "Liczba anten: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA "Antena nadająca: %d\n"
+    IDS_MSG_TRANSMIT_ANTENNA_ANY "Antena nadająca: Dowolna\n"
+    IDS_MSG_RECEIVE_ANTENNA "Antena odbierająca: %d\n"
+    IDS_MSG_RECEIVE_ANTENNA_ANY "Antena odbierająca: Dowolna\n"
+    IDS_MSG_FRAGMENT_THRESHOLD "Pułap fragmentacji: %d bytes\n"
+    IDS_MSG_RTS_THRESHOLD "Pułap RTS: %d bytes\n"
+    IDS_YES "Yes"
+    IDS_NO "No"
+    IDS_ADHOC "Ad-hoc"
+    IDS_INFRASTRUCTURE "Infrastruktura"
+END

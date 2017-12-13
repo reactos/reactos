@@ -1,11 +1,9 @@
-/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
-
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nВведите ""CLIP /?"" для получения справки по использованию.\n"
-    IDS_HELP "\nПеренаправляет вывод от утилит командной строки в буфер обмена.\n\n\
+    IDS_HELP "\nRedirects the output of command-line programs to the clipboard.\n\n\
 CLIP [/?]\n\n\
-    /?  Вывод справки по использованию.\n"
+    /?  Show this help message.\n"
 END

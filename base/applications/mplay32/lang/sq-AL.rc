@@ -1,17 +1,13 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
- * DATE OF TR:  29-11-2013
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&Skeda"
+    POPUP "&File"
     BEGIN
-        MENUITEM "&Hape...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Hap...\tCtrl+O", IDM_OPEN_FILE
         MENUITEM "&Mbylle\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "&Dil", IDM_EXIT
+        MENUITEM "dIL", IDM_EXIT
     END
     POPUP "&Play"
     BEGIN
@@ -20,7 +16,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&Vëzhgo"
     BEGIN
         MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
     END
@@ -31,9 +27,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Volume Control", IDM_VOLUMECTL
     END
-    POPUP "&Ndihmë"
+    POPUP "&File"
     BEGIN
-        MENUITEM "&Rreth", IDM_ABOUT
+        MENUITEM "rRETH", IDM_ABOUT
     END
 END
 
@@ -48,7 +44,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
+    IDS_MODE_UNKNOWN "I'panjohur"
     IDS_MODE_OPEN "Opened"
     IDS_MODE_STOP "Stopped"
     IDS_MODE_PLAY "Playing"
@@ -58,7 +54,7 @@ BEGIN
     IDS_MODE_NOT_READY "Not ready"
     IDS_ALL_TYPES_FILTER "Të gjith suportimet"
     IDS_TOOLTIP_PLAY "Fillo"
-    IDS_TOOLTIP_STOP "Ndalo"
+    IDS_TOOLTIP_STOP "Stop"
     IDS_TOOLTIP_EJECT "Nxjerr"
     IDS_TOOLTIP_BACKWARD "Kthe Mbrapa"
     IDS_TOOLTIP_SEEKBACK "Kërko mbrapa"

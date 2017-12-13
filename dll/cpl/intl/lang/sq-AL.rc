@@ -1,12 +1,8 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TRANSLATION:  18-01-2014
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Alternativa Rajonale"
+CAPTION "Alternativat Rajonale"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standarte dhe formatet", -1, 5, 5, 234, 162
@@ -40,13 +36,13 @@ BEGIN
     PUSHBUTTON "De&taje...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Mbështetje Gjuhë shtesë", -1, 5, 62, 234, 82
     LTEXT "Shumica e gjuhëve janë instaluar me parazgjedhje. Për të instaluar gjuhë shtesë, zgjidhni kutinë e përshtatshme, kontrolloni më poshtë.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstalo dokumenta për skripta komplekse dhe gjuhët djathtë në të majtë", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
-    CHECKBOX "In&stalo dokumentat për gjuhët e Azisë Lindore", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "I&nstall files for complex script and right-to-left languages", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "In&stall files for East Asian languages", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Avancuar"
+CAPTION "Advanced"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Gjuhë për programe jo-Unicode", -1, 5, 5, 234, 90
@@ -56,7 +52,7 @@ BEGIN
     GROUPBOX "Tabela konvertimit dhe kodet e faqeve ", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Konfigurimi llogarise përdoruesit parazgjedhur", -1, 5, 193, 234, 32
-    CHECKBOX "Apply all settings to the current user account and to the default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "Apply all settings to the current user account and to the &default", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -111,13 +107,13 @@ BEGIN
     COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Grupimi simboleve:", -1, 10, 156, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Grupim Sh&ifrash:", -1, 10, 173, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Sh&ifër grupimi:", -1, 10, 173, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ora"
+CAPTION "Koha"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Shëmbuj modeli", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
@@ -185,7 +181,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Rregullo Alternativat Rajonale"
-    IDS_SPAIN "Spanjisht (Spain)"
+    IDS_SPAIN "Spanish (Spain)"
     IDS_METRIC "Metric"
     IDS_IMPERIAL "Imperial"
 END
@@ -206,7 +202,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR "Error"
+    IDS_ERROR "Win32 error"
     IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
     IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
     IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"

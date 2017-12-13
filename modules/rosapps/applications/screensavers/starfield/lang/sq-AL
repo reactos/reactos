@@ -1,0 +1,8 @@
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Starfield ScreenSaver"
+    IDS_TITLE       "About"
+    IDS_TEXT        "opsionet nuk duhen tE jene te vendosura."
+END

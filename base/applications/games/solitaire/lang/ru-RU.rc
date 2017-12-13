@@ -1,8 +1,14 @@
-/* Russian language resource file (Dmitry Chapyshev, 2007-06-10) */
+/*
+ * PROJECT:     Solitaire
+ * LICENSE:     Freeware, permission to use under Public Domain
+ * FILE:        base/applications/games/solitaire/lang/en-US.rc
+ * PURPOSE:     English Language File for Solitaire
+ * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
+ */
 
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
-/* Диалоги */
+/* Dialogs */
 
 IDD_OPTIONS DIALOGEX 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
@@ -13,11 +19,11 @@ BEGIN
     AUTORADIOBUTTON "По &одной", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "По &три", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
     GROUPBOX "Счёт", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "на &очки", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "С&тандартная", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&на деньги", IDC_OPT_VEGAS, 107, 32, 60, 10
     AUTORADIOBUTTON "не &ведётся", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Показывать время", IDC_OPT_SHOWTIME, 7 ,51 ,75 ,10, WS_TABSTOP
-    AUTOCHECKBOX "&Строка состояния", IDC_OPT_STATUSBAR, 7, 66, 75, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
+    AUTOCHECKBOX "&Строка состояния", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
     AUTOCHECKBOX "П&еретаскивание контура", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 101, 97, 50, 14
@@ -44,7 +50,7 @@ BEGIN
     PUSHBUTTON "Отмена", IDCANCEL, 176, 165, 54, 14
 END
 
-/* Строки */
+/* Strings */
 
 STRINGTABLE
 BEGIN
@@ -57,7 +63,7 @@ BEGIN
     IDS_SOL_TIME "Время: %d"
 END
 
-/* Меню */
+/* Menus */
 
 IDR_MENU1 MENU
 BEGIN
@@ -68,9 +74,9 @@ BEGIN
         MENUITEM "&Обложки...", IDM_GAME_DECK
         MENUITEM "&Настройки...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Выход", IDM_GAME_EXIT
+        MENUITEM "В&ыход", IDM_GAME_EXIT
     END
-    POPUP "&Помощь"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "&Справка\tF1", IDM_HELP_CONTENTS
         MENUITEM "&О программе", IDM_HELP_ABOUT

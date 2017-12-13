@@ -1,11 +1,4 @@
-/*
- * PROJECT:     ReactOS CALC
- * FILE:        base/applications/calc/lang/sv-SE.rc
- * PURPOSE:     Swedish resource file
- * Translation: Jaix Bly
- */
-
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
 
 /* Dialogs */
 
@@ -146,7 +139,7 @@ BEGIN
             NOT WS_VISIBLE, 270, 21, 38, 10
     CONTROL "Grader", IDC_RADIO_DEG, "Button", BS_AUTORADIOBUTTON, 150, 21, 45, 10
     CONTROL "Radianer", IDC_RADIO_RAD, "Button", BS_AUTORADIOBUTTON, 204, 21, 45, 10
-    CONTROL "Gradienter", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
+    CONTROL "Gradianer", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
     PUSHBUTTON "C", IDC_BUTTON_CANC, 267, 38, 43, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "CE", IDC_BUTTON_CE, 222, 38, 43, 18, BS_CENTER | BS_VCENTER |
@@ -242,7 +235,7 @@ BEGIN
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 276, 24, 40, 17
     CONTROL "CE", IDC_BUTTON_CE, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 232, 24, 40, 17
-    CONTROL "Backsteg", IDC_BUTTON_BACK, "Button", BS_OWNERDRAW | BS_CENTER |
+    CONTROL "Back", IDC_BUTTON_BACK, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 188, 24, 40,17
     RTEXT "", IDC_TEXT_OUTPUT, 5, 1, 312, 14, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
     CONTROL "7", IDC_BUTTON_7, "Button", BS_OWNERDRAW | BS_CENTER |
@@ -314,12 +307,12 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
-    POPUP "Redigera"
+    POPUP "&Redigera"
     BEGIN
-        MENUITEM "Kopiera\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Klistra in\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopiera\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Klistra in\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Visa"
+    POPUP "&Visa"
     BEGIN
         MENUITEM "Standard", IDM_VIEW_STANDARD
         MENUITEM "Vetenskaplig", IDM_VIEW_SCIENTIFIC
@@ -336,9 +329,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Siffergruppering", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hjälp"
+    POPUP "&Arkiv"
     BEGIN
-        MENUITEM "Visa hjälp", IDM_HELP_HELP
+        MENUITEM "Innehåll", IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
     END
@@ -346,12 +339,12 @@ END
 
 IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
-    POPUP "Redigera"
+    POPUP "&Redigera"
     BEGIN
-        MENUITEM "Kopiera\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Klistra in\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopiera\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Klistra in\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Vis"
+    POPUP "&Visa"
     BEGIN
         MENUITEM "Standard", IDM_VIEW_STANDARD
         MENUITEM "Vetenskaplig", IDM_VIEW_SCIENTIFIC
@@ -369,9 +362,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Siffergruppering", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hjälp"
+    POPUP "&Arkiv"
     BEGIN
-        MENUITEM "Visa hjälp", IDM_HELP_HELP
+        MENUITEM "Innehåll", IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
     END
@@ -379,22 +372,22 @@ END
 
 IDR_MENU_STANDARD MENU
 BEGIN
-    POPUP "Redigera"
+    POPUP "&Redigera"
     BEGIN
-        MENUITEM "Kopiera\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Klistra in\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopiera\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "Klistra in\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Visa"
+    POPUP "&Visa"
     BEGIN
         MENUITEM "Standard", IDM_VIEW_STANDARD
-        MENUITEM "Vetenskapelig", IDM_VIEW_SCIENTIFIC
+        MENUITEM "Vetenskaplig", IDM_VIEW_SCIENTIFIC
         MENUITEM "Konvertering", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Siffergruppering", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hjälp"
+    POPUP "&Arkiv"
     BEGIN
-        MENUITEM "Visa hjälp", IDM_HELP_HELP
+        MENUITEM "Innehåll", IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
     END
@@ -429,7 +422,7 @@ BEGIN
     IDS_CONV_TEMPERATURE "Temperatur"
     IDS_CONV_TIME "Tid"
     IDS_CONV_VELOCITY "Hastighet"
-    IDS_CONV_VOLUME "Volym"
+    IDS_CONV_VOLUME "Volyme"
     IDS_CONV_WEIGHT "Vikt"
 END
 

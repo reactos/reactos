@@ -1,15 +1,13 @@
-/* Ukraianian translation by Artem Reznikov */
-
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Редагувати"
-    IDS_MARK "Виділити"
+    IDS_EDIT "Правка"
+    IDS_MARK "Маркер (1)"
     IDS_COPY "Копіювати\tEnter"
     IDS_PASTE "Вставити"
     IDS_SELECTALL "Виділити все"
-    IDS_SCROLL "Прокрутити"
+    IDS_SCROLL "Scroll"
     IDS_FIND "Знайти..."
     IDS_DEFAULTS "Замовчування"
     IDS_PROPERTIES "Властивості"

@@ -1,8 +1,8 @@
-LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+LANGUAGE LANG_GREEK, SUBLANG_GREEK_GREECE
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Καλώς ήλθατε στον οδηγό εγκατάστασης του ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
@@ -12,7 +12,7 @@ END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Install ReactOS", IDC_INSTALL, 7, 7, 277, 10
@@ -24,29 +24,29 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Υπολογιστής:", IDC_STATIC, 20, 15, 80, 10
-    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 150, 80
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
     LTEXT "Εμφάνιση:", IDC_STATIC, 20, 35, 80, 10
-    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 150, 80
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
     LTEXT "Πληκτρολόγιο:", IDC_STATIC, 20, 55, 80, 10
-    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 150, 80
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
     LTEXT "Click Next setup of the installation device.", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysListView32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Δημιουργία", IDC_PARTCREATE, 7, 122, 50, 15
-    PUSHBUTTON "&Διαγραφή", IDC_PARTDELETE, 63, 122, 50, 15
-    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
-    PUSHBUTTON "&Επιλογές για προχωρημένους...", IDC_PARTMOREOPTS, 230, 122, 80, 15
-    LTEXT "Πατήστε Επόμενο για να ξεκινήσετε τη διαδικασία εγκατάστασης.", IDC_STATIC, 10, 180, 277, 20
+    PUSHBUTTON "&Δημιουργία", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&Διαγραφή", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Επιλογές για προχωρημένους...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+/*    LTEXT "Click Next to check the summary.", IDC_STATIC, 7, 128, 277, 8 */
 END
 
 IDD_PARTITION DIALOGEX 0, 0, 145, 90
@@ -85,17 +85,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Click Next to start the installation process.", IDC_STATIC, 7, 180, 303, 20
+    LTEXT "Click Next to start the installation process.", IDC_STATIC, 7, 128, 303, 8
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Install files...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 7, 120, 303, 8
 END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
@@ -103,10 +103,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Ολοκληρώνεται η εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ολοκληρώσατε επιτυχώς το πρώτο στάδιο της εγκατάστασης του ReactOS.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Όταν πατήσετε Ολοκλήρωση, θα γίνει επανεκκίνηση του υπολογιστή σας.", IDC_STATIC, 20, 80, 277, 10
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Αν υπάρχει κάποιο CD, αφαιρέστε το. Έπειτα, για να γίνει επανεκκίνηση, πατήστε Ολοκλήρωση.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "You have successfully completed the first stage of ReactOS Setup.", IDC_STATIC, 115, 50, 195, 10
+    LTEXT "When you click Finish, your computer will restart.", IDC_STATIC, 115, 80, 195, 10
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 115, 169, 195, 17
 END
 
 STRINGTABLE

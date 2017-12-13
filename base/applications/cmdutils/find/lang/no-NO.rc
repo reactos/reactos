@@ -1,13 +1,13 @@
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FINN: Skriv alle linjene for filen som inneholder en streng.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""streng"" [ fil... ]\n\
-    /C  Teller nummer av linjer som inneholder strenger\n\
-    /I  Ignorere sak\n\
-    /N  Nummer viste linjer, start med 1\n\
-    /V  Skriv linjer som ikke inneholder en streng"
+    IDS_USAGE "FIND: Prints all lines of a file that contain a string.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] """streng""" [ file... ]\n\
+    /C  Count the number of lines that contain string\n\
+    /I  Ignore case\n\
+    /N  Number the displayed lines, starting at 1\n\
+    /V  Print lines that do not contain the string"
     IDS_NO_SUCH_FILE "FINN: %s: Ingen filer\n"
     IDS_CANNOT_OPEN "FINN: %s: Kan ikke åpne filen\n"
 END

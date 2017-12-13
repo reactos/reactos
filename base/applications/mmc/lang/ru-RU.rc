@@ -1,17 +1,15 @@
-/* Russian language resource file by Dmitry Chapyshev, 2007-06-10, Kudratov Olimjon (olim98@bk.ru) */
-
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Создать\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Созд&ать\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Открыть...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Справка"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "&О программе", IDM_HELP_ABOUT
     END
@@ -21,18 +19,18 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Создать\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Созд&ать\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Открыть...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "Со&хранить", IDM_FILE_SAVE
-        MENUITEM "Сохр&анить как...", IDM_FILE_SAVEAS
+        MENUITEM "&Сохранить", IDM_FILE_SAVE
+        MENUITEM "Сохранить &как...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Окно"
+    POPUP "&Окна"
     BEGIN
         MENUITEM "&Сверху вниз", IDM_WINDOWS_LIST
     END
-    POPUP "&Справка"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "&О программе", IDM_HELP_ABOUT
     END

@@ -1,0 +1,11 @@
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Terminates a session.\n\n\
+  /v\t\tDisplays information about the actions performed.\n\
+  /?\t\tShows this information.\n\n"
+    IDS_LOGOFF_REMOTE "Termine une session sur une machine distante."
+    IDS_LOGOFF_LOCAL "Termine la session courante sur cette machine."
+    IDS_ILLEGAL_PARAM "Paramètre(s) invalide(s)\n"
+END

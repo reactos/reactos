@@ -1,9 +1,12 @@
 /*
- * Translators: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ * PROJECT:    ReactOS Event Viewer
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:       base/applications/mscutils/eventvwr/lang/en-US.rc
+ * PURPOSE:    English Language File for ReactOS Event Viewer
+ * TRANSLATOR: Marc Piulachs
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 IDM_EVENTVWR MENU
 BEGIN
@@ -11,7 +14,7 @@ BEGIN
     BEGIN
         MENUITEM "&Deschidere…", IDM_OPEN_EVENTLOG
         MENUITEM "&Păstrare jurnal de evenimente ca…", IDM_SAVE_EVENTLOG
-        MENUITEM "Î&nchide", IDM_CLOSE_EVENTLOG
+        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "Înlăt&ură toate evenimentele", IDM_CLEAR_EVENTS
         MENUITEM "&Redenumire\tF2", IDM_RENAME_EVENTLOG
@@ -26,13 +29,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Detalii…\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "Împ&rospătare\tF5", IDM_REFRESH
+        MENUITEM "Împ&rospătează\tF5", IDM_REFRESH
     END
     POPUP "&Opțiuni"
     BEGIN
         MENUITEM "&Afișează detalii de eveniment", IDM_SHOW_EVENT_DETAILS_VIEW
     END
-    POPUP "Aj&utor"
+    POPUP "&Fișier"
     BEGIN
         MENUITEM "&Manual…", IDM_HELP
         MENUITEM SEPARATOR
@@ -55,8 +58,8 @@ CAPTION "Detalii eveniment"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "EvtDetailsCtrl", IDC_STATIC, 0, 0, 266, 215
-    PUSHBUTTON "&Manual…", IDHELP, 8, 220, 50, 14
-    DEFPUSHBUTTON "Î&nchide", IDOK, 208, 220, 50, 14
+    PUSHBUTTON "&Fișier", IDHELP, 8, 220, 50, 14
+    DEFPUSHBUTTON "&Close", IDOK, 208, 220, 50, 14
 END
 
 IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
@@ -95,7 +98,7 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "N&ume afișat:", IDC_STATIC, 7, 9, 60, 8
@@ -104,7 +107,7 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Fiși&er de jurnal:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Dimensiune:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "Marime:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Creat:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -120,13 +123,13 @@ BEGIN
     LTEXT "Kio", IDC_STATIC, 130, 122, 20, 8
     LTEXT "Când dimensiunea maximă este atinsă:", IDC_STATIC, 17, 140, 219, 8
     CONTROL "Suprascrie evenimentele cân&d este necesar", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Suprascrie evenimentele mai &vechi de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 155, 10
-    EDITTEXT IDC_EDIT_EVENTS_AGE, 175, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
+    CONTROL "Suprascrie evenimentele mai &vechi de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 104, 165, 10, 14
-    LTEXT "zile", IDC_STATIC, 215, 168, 20, 8
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
+    LTEXT "days", IDC_STATIC, 162, 168, 20, 8
     CONTROL "Inter&zice suprascrierea\n(gestiune manuală de jurnal)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "&Opțiuni implicite", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    PUSHBUTTON "&Valori implicite", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "Conexiune de &bandă limitată", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Curăță jurnal", ID_CLEARLOG, 195, 213, 50, 14
 END
@@ -138,7 +141,7 @@ BEGIN
     IDS_APP_TITLE_EX "%s - %s autentificat pe \\\\"
     IDS_STATUS_MSG "%s are %lu (de) eveniment(e) (afișate: %lu)"
     IDS_LOADING_WAIT "Jurnal de evenimente în încărcare. Așteptați…"
-    IDS_NO_ITEMS "Nu există elemente de afișat." // "No events in this log."
+    IDS_NO_ITEMS "Nu există elemente de afișat."" // ""No events in this log."
     IDS_EVENTLOG_SYSTEM "Jurnale de sistem"
     IDS_EVENTLOG_APP "Jurnale de aplicație"
     IDS_EVENTLOG_USER "Jurnale de utilizator"
@@ -151,7 +154,7 @@ STRINGTABLE
 BEGIN
     IDS_EVENTLOG_ERROR_TYPE "Eroare"
     IDS_EVENTLOG_WARNING_TYPE "Avertisment"
-    IDS_EVENTLOG_INFORMATION_TYPE "Informație"
+    IDS_EVENTLOG_INFORMATION_TYPE "Information"
     IDS_EVENTLOG_AUDIT_SUCCESS "Audit reușit"
     IDS_EVENTLOG_AUDIT_FAILURE "Audit nereușit"
     IDS_EVENTLOG_SUCCESS "Succes"
@@ -160,7 +163,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "octeți" // "%s bytes"
+    IDS_BYTES_FORMAT "octeți"" // ""%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
@@ -178,19 +181,19 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Tip eveniment:       %s\r\n\
-Sursă eveniment:     %s\r\n\
-Categorie eveniment: %s\r\n\
-ID eveniment:        %s\r\n\
-Dată:                %s\r\n\
-Oră:                 %s\r\n\
-Utilizator:          %s\r\n\
-Calculator:          %s\r\n\
-Descriere :\r\n%s"
+    IDS_COPY "Event Type:     %s\r\n\
+Event Source:   %s\r\n\
+Event Category: %s\r\n\
+Event ID:       %s\r\n\
+Date:           %s\r\n\
+Time:           %s\r\n\
+User:           %s\r\n\
+Computer:       %s\r\n\
+Description:\r\n%s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "Nespecificată"
+    IDS_NONE "Nespecificat"
     IDS_NOT_AVAILABLE "Nespecificat"
 END

@@ -1,12 +1,4 @@
-/*
- * PROJECT:    ReactOS CACLS
- * FILE:       base/applications/cacls/lang/zh-TW.rc
- * LICENSE:    LGPL - See COPYING.LIB in the top level directory
- * PURPOSE:    TRADITIONAL Chinese resource file
- * TRANSLATOR: jauming <jauming.tw@gmail.com>
- */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN

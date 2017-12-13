@@ -1,8 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
- * DATE OF TR:  04-01-2014
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -107,9 +103,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Shto Hardware Magjistari"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kompletimi i shtimit te Hardware me magjistare", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Kompletim i shto magjistarit Hardware", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "Magjistar gjetur hardware e mëposhtme lidhur me kompjuterin tuaj:", -1, 114, 32, 193, 19
-    LTEXT "Për të mbyllur kete magjistare, kliko Finish.", -1, 114, 166, 132, 8
+    LTEXT "To close this wizard, click Finish.", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
@@ -118,7 +114,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Shto Hardware Magjistari"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kompletimi i shtimit te Hardware me magjistare", IDC_FINISHTITLE, 114, 8, 195, 28
+    LTEXT "Kompletim i shto magjistarit Hardware", IDC_FINISHTITLE, 114, 8, 195, 28
     LTEXT "Këtu është statusi aktual i hardware keni zgjedhur:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Për të nisur një ekspert që mund të ju ndihmojë të zgjidhur çdo problem që mund të ketë, klikoni Finish.", -1, 114, 136, 193, 16
@@ -134,7 +130,7 @@ BEGIN
     LTEXT "Për të vazhduar, lidhë këtë hardware në kompjuterin tuaj.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Fik kompjuterin kur unë klikoj Finish në mënyrë që unë mund të hap kompjuterin dhe të lidhe hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
     LTEXT "Në shumicën e rasteve ReactOS automatikisht do të instalojë hardwarin tuaj, pasi ju lidhni atë. Nëse ReactOS nuk e ka gjetur atë, ju mund të rihapni këtë magjistar për të instaluar software mbështetës.", -1, 114, 98, 193, 32
-    LTEXT "Për të mbyllur këtë magjistar, kliko Finish.", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "To close this wizard, click Finish.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE

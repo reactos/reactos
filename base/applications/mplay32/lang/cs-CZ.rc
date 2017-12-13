@@ -1,9 +1,4 @@
-/* FILE:       base/applications/mplay32/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2014-08-31
- */
-
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
 
 IDR_MAINMENU MENU
 BEGIN
@@ -12,7 +7,7 @@ BEGIN
         MENUITEM "&Otevřít...\tCtrl+O", IDM_OPEN_FILE
         MENUITEM "&Zavřít\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "&Ukončit", IDM_EXIT
+        MENUITEM "U&končit", IDM_EXIT
     END
     POPUP "&Přehrát"
     BEGIN
@@ -32,9 +27,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Ovládání &hlasitosti", IDM_VOLUMECTL
     END
-    POPUP "&Nápověda"
+    POPUP "&Soubor"
     BEGIN
-        MENUITEM "&O programu", IDM_ABOUT
+        MENUITEM "&O editoru registru", IDM_ABOUT
     END
 END
 
@@ -59,7 +54,7 @@ BEGIN
     IDS_MODE_NOT_READY "Nepřipraveno"
     IDS_ALL_TYPES_FILTER "Všechny podporované"
     IDS_TOOLTIP_PLAY "Přehrát"
-    IDS_TOOLTIP_STOP "Zastavit"
+    IDS_TOOLTIP_STOP "Stop"
     IDS_TOOLTIP_EJECT "Vysunout"
     IDS_TOOLTIP_BACKWARD "Přeskočit zpět"
     IDS_TOOLTIP_SEEKBACK "Posunout zpět"

@@ -1,15 +1,13 @@
-/* TRANSLATOR: 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "İki kütüğün ya da iki kütük öbeğinin içeriklerini karşılaştırır.\n\n\
-COMP [/L] [/A] [veri1] [veri2]\n\n\
-  veri1      Karşılaştırılacak birinci kütüğün adını ve konumunu belirtir.\n\
-  veri2      Karşılaştırılacak ikinci kütüğün adını ve konumunu belirtir.\n\
-  /A         ASCII damgalarındaki ayrımları görüntüle. (Ön tanımlı: On altılık.)\n\
-  /L         Ayrımlar için yataç numaraları görüntüle.\n"
+    IDS_HELP "Compares the contents of two files or sets of files.\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      Specifies location and name of first file to compare.\n\
+  data2      Specifies location and name of second file to compare.\n\
+  /A         Display differences in ASCII characters (default: hexadecimal).\n\
+  /L         Display line numbers for differences.\n"
     IDS_INVALIDSWITCH "Geçersiz seçenek - /%c\n"
     IDS_BADSYNTAX "Geçersiz komut yatacı söz dizimi.\n"
     IDS_FILEERROR "Kütük açılamıyor ya da aranamıyor: %s\n"

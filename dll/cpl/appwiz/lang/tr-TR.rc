@@ -1,6 +1,4 @@
-/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, 380, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -30,7 +28,7 @@ BEGIN
     LTEXT "Öğenin konumunu yazınız:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "&Göz At...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-    LTEXT "Sürdürmek için ""İleri""ye tıklayınız.", -1, 120, 97, 162, 10
+    LTEXT "Aygıtları kurmak için İleri'ye tıklayınız.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -51,7 +49,7 @@ BEGIN
     LTEXT "&Başlat seçkesinden bir öğe silmek için öğeyi seçiniz ve Sil'e tıklayınız.", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
-    PUSHBUTTON "&Sil", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Kaldır", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "Kapat", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
@@ -63,7 +61,7 @@ BEGIN
     CONTROL "ReactOS, HTML gömülü uygulamaları düzgün çalıştırmak için gereken bir Wine Gecko paketi bulamadı. ReactOS, sizin için onu kendiliğinden indirebilir ve kurabilir.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Kur", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Kur...", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "İptal", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END
 

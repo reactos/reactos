@@ -1,6 +1,4 @@
-/* Spanish translation by Samuel Serapion, Javier Remacha */
-
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 
 IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -53,12 +51,12 @@ BEGIN
     LTEXT "Use esta opción si desea que ReactOS use colores y letras diseñadas para una lectura más cómoda.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar alto contraste", IDC_CONTRAST_BOX, 12, 49, 126, 14
-    PUSHBUTTON "C&onfiguración", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
+    PUSHBUTTON "&Configuración", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
     GROUPBOX "Opciones del cursor ", -1, 6, 79, 234, 115
     LTEXT "Mueva los controles deslizantes para cambiar la velocidad de las intermitencias del cursor y la anchura del cursor.",
           -1, 12, 88, 222, 20
     CTEXT "Velocidad de intermitencia:", -1, 12, 115, 222, 11
-    LTEXT "Ninguna", -1, 18, 130, 36, 11
+    LTEXT "Ninguno", -1, 18, 130, 36, 11
     LTEXT "Rápida", -1, 192, 130, 36, 11
     CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 124, 126, 20
@@ -79,7 +77,7 @@ BEGIN
     LTEXT "Use esta opción si desea controlar el puntero con el teclado numérico del teclado.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Utilizar &MouseKeys", IDC_MOUSE_BOX, 12, 49, 126, 14
-    PUSHBUTTON "C&onfiguración", IDC_MOUSE_BUTTON, 144, 49, 90, 14
+    PUSHBUTTON "&Configuración", IDC_MOUSE_BUTTON, 144, 49, 90, 14
 END
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
@@ -101,7 +99,7 @@ BEGIN
     LTEXT "Los dispositivos SerialKey permiten acceso alternativo a las caraterísticas del teclado y del ratón.",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "Usa&r SerialKey", IDC_SERIAL_BOX, 12, 142, 126, 14
-    PUSHBUTTON "Opcion&es", IDC_SERIAL_BUTTON, 144, 142, 90, 14
+    PUSHBUTTON "Co&nfiguración", IDC_SERIAL_BUTTON, 144, 142, 90, 14
     GROUPBOX "Opciones administrativas ", -1, 6, 169, 234, 47
     AUTOCHECKBOX "Aplicar todas las opciones al escritorio de inicio de sesión", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
@@ -118,7 +116,7 @@ BEGIN
     LTEXT "El método abreviado para StickyKeys es: \nPresionar la tecla MAYÚS cinco veces.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar método abreviado", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
-    GROUPBOX "Opciones ", -1, 6, 83, 234, 44
+    GROUPBOX "Opciones", -1, 6, 83, 234, 44
     AUTOCHECKBOX "&Presionar dos veces la tecla modificadora para bloquear", IDC_STICKY_LOCK_CHECK,
                  12, 94, 222, 14
     AUTOCHECKBOX "&Desactivar StickyKeys si se presionan dos teclas a la vez", IDC_STICKY_UNLOCK_CHECK,
@@ -143,10 +141,10 @@ BEGIN
     AUTOCHECKBOX "&Utilizar método abreviado", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Opciones de filtro ", -1, 6, 79, 234, 79
     AUTORADIOBUTTON "&Pasar por alto pulsaciones repetidas", IDC_FILTER_BOUNCE_RADIO,
-                    12, 91, 127, 11, WS_GROUP | WS_TABSTOP
+                    12, 91, 120, 11, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "P&asar por alto pulsaciones repetidas y disminuir la velocidad de repetición", IDC_FILTER_REPEAT_RADIO,
-                    12, 106, 128, 20, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "C&onfiguración", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
+                    12, 106, 120, 20, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Configuración", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
     PUSHBUTTON "Co&nfiguración", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
     LTEXT "Es&criba aquí para probar la configuración:", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
@@ -209,14 +207,14 @@ BEGIN
     LTEXT "Lenta", -1, 66, 123, 18, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
-    LTEXT "Rápida", -1, 204, 123, 21, 11
+    LTEXT "Rápida", -1, 204, 123, 18, 11
     AUTOCHECKBOX "&Presionar Ctrl para aumentarla o Mayús para disminuirla", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
-    LTEXT "Utilizar MouseKeys cuando Bloq Num esté:", -1, 6, 171, 135, 20
-    AUTORADIOBUTTON "A&ctivada", IDC_MOUSEKEYS_ON_RADIO, 144, 170, 40, 11
-    AUTORADIOBUTTON "D&esactivada", IDC_MOUSEKEYS_OFF_RADIO, 186, 170, 52, 11
-    AUTOCHECKBOX "&Mostrar en pantalla el estado de MouseKeys", IDC_MOUSEKEYS_STATUS_CHECK,
-                 6, 187, 222, 14
+    LTEXT "Utilizar MouseKeys cuando Bloq Num esté:", -1, 6, 171, 120, 11
+    AUTORADIOBUTTON "O&n", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
+    AUTORADIOBUTTON "Of&f", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11
+    AUTOCHECKBOX "&Show MouseKey status on screen", IDC_MOUSEKEYS_STATUS_CHECK,
+                 6, 184, 222, 14
     DEFPUSHBUTTON "Aceptar", IDOK, 135, 207, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 189, 207, 50, 14
 END
@@ -230,7 +228,7 @@ BEGIN
     LTEXT "&Ignorar pulsaciones cuya velocidad de repetición sea superior a:", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Ár&ea de prueba:", -1, 6, 65, 48, 20
+    LTEXT "&Test area:", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Aceptar", IDOK, 135, 207, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 189, 207, 50, 14
@@ -238,25 +236,25 @@ END
 
 IDD_REPEATKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Configuración avanzada para RepeatKeys"
+CAPTION "Configuración avanzada para FilterKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Repeat Keys", -1, 6, 11, 234, 106
     LTEXT "Hacer prevalecer esta configuración de teclado sobre la del Panel de control:",
           -1, 12, 20, 222, 20
-    AUTORADIOBUTTON "&Sin repetición en el teclado", IDC_REPEAT_NOREPEAT_RADIO, 12, 35, 127, 11, WS_GROUP
-    AUTORADIOBUTTON "&Disminuir la velocidad de repetición del teclado", IDC_REPEAT_REPEAT_RADIO, 12, 45, 180, 11
-    LTEXT "Retras&o de la repetición:", -1, 24, 60, 90, 11
+    AUTORADIOBUTTON "&No keyboard repeat", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
+    AUTORADIOBUTTON "&Disminuir la velocidad de repetición del teclado", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11
+    LTEXT "Retras&o de la repetición:", -1, 24, 60, 60, 11
     COMBOBOX IDC_REPEAT_DELAY_COMBO, 24, 71, 210, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Velocidad de &repetición:", -1, 24, 89, 90, 11
+    LTEXT "Velocidad de &repetición:", -1, 24, 89, 60, 11
     COMBOBOX IDC_REPEAT_REPEAT_COMBO, 24, 100, 210, 65,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "Slow Keys", -1, 6, 124, 234, 42
     LTEXT "&Las teclas deben mantenerse presionadas durante:", -1, 12, 133, 222, 11
     COMBOBOX IDC_REPEAT_WAIT_COMBO, 12, 150, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Ár&ea de prueba:", -1, 6, 175, 48, 20
+    LTEXT "&Test area:", -1, 6, 178, 48, 11
     EDITTEXT IDC_REPEAT_TEST_EDIT, 60, 180, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Aceptar", IDOK, 135, 207, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 189, 207, 50, 14

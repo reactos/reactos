@@ -1,4 +1,4 @@
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -22,26 +22,26 @@ MAIN_MENU MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "開新檔案(&N)\tCtrl+N", CMD_NEW
-        MENUITEM "開啟舊檔(&O)...\tCtrl+O", CMD_OPEN
-        MENUITEM "儲存檔案(&S)\tCtrl+S", CMD_SAVE
-        MENUITEM "另存新檔(&A)...", CMD_SAVE_AS
+        MENUITEM "新建(&N)\tCtrl+N", CMD_NEW
+        MENUITEM "開啟...(&O)\tCtrl+O", CMD_OPEN
+        MENUITEM "儲存(&S)\tCtrl+S", CMD_SAVE
+        MENUITEM "另存為...(&A)", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "版面設定(&T)...", CMD_PAGE_SETUP
         MENUITEM "列印(&P)...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
-        MENUITEM "結束(&X)", CMD_EXIT
+        MENUITEM "退出(&X)", CMD_EXIT
     END
     POPUP "編輯(&E)"
     BEGIN
-        MENUITEM "復原(&U)\tCtrl+Z", CMD_UNDO
+        MENUITEM "復原\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "剪下(&T)\tCtrl+X", CMD_CUT
-        MENUITEM "複製(&C)\tCtrl+C", CMD_COPY
-        MENUITEM "貼上(&P)\tCtrl+V", CMD_PASTE
+        MENUITEM "剪下\tCtrl+X", CMD_CUT
+        MENUITEM "複製\tCtrl+C", CMD_COPY
+        MENUITEM "貼上\tCtrl+V", CMD_PASTE
         MENUITEM "刪除(&D)\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "搜尋(&F)...\tCtrl+F", CMD_SEARCH
+        MENUITEM "查找(&F)...\tCtrl+F", CMD_SEARCH
         MENUITEM "找下一個(&N)\tF3", CMD_SEARCH_NEXT
         MENUITEM "取代(&R)...\tCtrl+H", CMD_REPLACE
         MENUITEM "跳到(&G)...\tCtrl+G", CMD_GOTO
@@ -58,7 +58,7 @@ BEGIN
     BEGIN
         MENUITEM "狀態列(&S)", CMD_STATUSBAR
     END
-    POPUP "說明(&H)"
+    POPUP "檔案(&F)"
     BEGIN
         MENUITEM "內容(&C)", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
@@ -70,7 +70,7 @@ END
 /* Dialog 'Page setup' */
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
-FONT 9, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg"
 CAPTION "版面設定"
 BEGIN
     GROUPBOX "預覽", 0, 240, 6, 120, 153, BS_GROUPBOX
@@ -107,7 +107,7 @@ END
 /* Dialog 'Encoding' */
 DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
-FONT 9, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg"
 CAPTION "編碼"
 BEGIN
     COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -119,7 +119,7 @@ END
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0, 0, 165, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 9, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg"
 CAPTION "跳到行數"
 BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
@@ -131,7 +131,7 @@ END
 IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "關於 ReactOS 記事本"
-FONT 9, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "ReactOS 記事本 v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
@@ -154,23 +154,23 @@ BEGIN
     STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
     STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
     STRING_NOTEPAD "記事本"
-    STRING_ERROR "錯誤"
-    STRING_WARNING "警告"
-    STRING_INFO "資訊"
+    STRING_ERROR "ERROR"
+    STRING_WARNING "WARNING"
+    STRING_INFO "Information"
     STRING_UNTITLED "未命名"
-    STRING_ALL_FILES "所有檔案 (*.*)"
+    STRING_ALL_FILES "All files (*.*)"
     STRING_TEXT_FILES_TXT "純文字檔案 (*.txt)"
-    STRING_TOOLARGE """%s"" 檔案過大。\n\
-請使用其他編輯器。"
-    STRING_NOTEXT "沒有輸入文字。\n\
-請輸入文字再重試。"
-    STRING_DOESNOTEXIST """%s"" 檔案不存在。\n\
-要開新檔案嗎?"
-    STRING_NOTSAVED """%s"" 檔案已被修改。\n\
-是否要儲存這些變更?"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
+Please use a different editor."
+    STRING_NOTEXT "You didn't enter any text. \
+\nPlease type something and try again"
+    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
     STRING_NOTFOUND "找不到檔案 ""%s"""
-    STRING_OUT_OF_MEMORY "沒有足夠記憶體以進行此操作。\n\
-請關閉一些程式以增加可用記憶體，然後再重試。"
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree memory."
     STRING_CANNOTFIND "找不到 ""%s"""
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
@@ -180,8 +180,7 @@ BEGIN
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "第 %d 行，第 %d 字元"
-    STRING_PRINTERROR """%s"" 檔案列印失敗。\n\
-請檢查印表機是否已經開機和正確設定。"
+    STRING_PRINTERROR """%s"""
 
     STRING_TEXT_DOCUMENT "Text Document"
 END

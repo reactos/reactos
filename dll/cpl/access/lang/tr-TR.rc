@@ -1,6 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -84,7 +82,7 @@ END
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Kendiliğinden Sıfırla", -1, 6, 11, 234, 47
@@ -101,7 +99,7 @@ BEGIN
     LTEXT "Dizilik Düğme aygıtları, düğme takımı ve fâre husûsiyetleri için başka erişim sağlar.",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "&Dizilik Düğme Aygıtlarını Destekle", IDC_SERIAL_BOX, 12, 142, 126, 14
-    PUSHBUTTON "&Ayarlar", IDC_SERIAL_BUTTON, 144, 142, 90, 14
+    PUSHBUTTON "Aya&rlar", IDC_SERIAL_BUTTON, 144, 142, 90, 14
     GROUPBOX "Yönetim Seçenekleri", -1, 6, 169, 234, 47
     AUTOCHECKBOX "&Oturum Açma Masaüstüne Tüm Ayarları Uygula", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
@@ -209,7 +207,7 @@ BEGIN
     LTEXT "Az", -1, 66, 123, 18, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
-    LTEXT "Çok", -1, 204, 123, 18, 11
+    LTEXT "Hızlı", -1, 204, 123, 18, 11
     AUTOCHECKBOX "&Hızlandırmak İçin Denetim'e, Yavaşlatmak İçin Üst Damga'ya Basılı Tut", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
     LTEXT "Sayılık Kilit Şöyleyken Fâre Düğmeleri'ni Kullan:", -1, 6, 171, 120, 11

@@ -1,6 +1,4 @@
-/* Thai translation by Sumath Aowsakulsutthi */
-
-LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+LANGUAGE LANG_THAI, SUBLANG_THAI_THAILAND
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -20,7 +18,7 @@ BEGIN
     BEGIN
         MENUITEM "&ออกจากโปรแกรม", ID_REGISTRY_EXIT
     END
-    POPUP "&ช่วยเหลือ"
+    POPUP "แฟ้ม"
     BEGIN
         MENUITEM "เ&กี่ยวกับ", ID_HELP_ABOUT
     END
@@ -81,7 +79,7 @@ BEGIN
         MENUITEM "&Add to Favorites", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remove Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&Help"
+    POPUP "แฟ้ม"
     BEGIN
         MENUITEM "&Help Topics\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
@@ -93,7 +91,7 @@ IDR_POPUP_MENUS MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Modify", ID_EDIT_MODIFY
+        MENUITEM "&ปรับปรุง", ID_EDIT_MODIFY
         MENUITEM "Modify Binary Data", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
         MENUITEM "&Delete\tDel", ID_EDIT_DELETE
@@ -101,7 +99,7 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        POPUP "&New"
+        POPUP "ใ&หม่"
         BEGIN
             MENUITEM "&Key", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
@@ -115,7 +113,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "Expand/Collapse", ID_TREE_EXPANDBRANCH
-        POPUP "&New"
+        POPUP "ใ&หม่"
         BEGIN
             MENUITEM "&Key", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR

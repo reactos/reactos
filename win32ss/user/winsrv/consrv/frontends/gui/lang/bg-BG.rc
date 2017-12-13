@@ -1,16 +1,16 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Обработка"
-    IDS_MARK "Отбелязване"
+    IDS_EDIT "&Обработка"
+    IDS_MARK "Mark"
     IDS_COPY "Запомняне\tEnter"
-    IDS_PASTE "Поставяне"
+    IDS_PASTE "Вмъкване"
     IDS_SELECTALL "Избор на всичко"
-    IDS_SCROLL "Прелистване"
+    IDS_SCROLL "Scroll"
     IDS_FIND "Търсене..."
     IDS_DEFAULTS "Подразбирани"
-    IDS_PROPERTIES "Свойства"
+    IDS_PROPERTIES "&Properties"
 /*
     IDS_SCROLLHERE "Прелистване тук"
     IDS_SCROLLTOP "Прелистване до горе"

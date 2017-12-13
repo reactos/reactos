@@ -1,0 +1,72 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "SYSTEMINFO [/S system [/U username [/P [password]]]] [/FO format] [/NH]\n\n\
+Description:\n\
+  This command line tool enables an administrator to query for basic\n\
+  system configuration information.\n\n\
+Parameter List:\n\
+  /S      system           Specifies the remote system to connect to.\n\n\
+  /U      [domain\\]user   Specifies the user context under which\n\
+                           the command should execute.\n\n\
+  /P      [password]       Specifies the password for the given\n\
+                           user context. Prompts for input if omitted.\n\n\
+  /FO     format           Specifies the format in which the output\n\
+                           is to be displayed.\n\
+                           Valid values: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                      Specifies that the ""Column Header"" should\n\
+                           not be displayed in the output.\n\
+                           Valid only for ""TABLE"" and ""CSV"" formats.\n\n\
+  /?                       Displays this help/usage.\n\n\
+Examples:\n\
+  SYSTEMINFO\n\
+  SYSTEMINFO /?\n\
+  SYSTEMINFO /S system\n\
+  SYSTEMINFO /S system /U user\n\
+  SYSTEMINFO /S system /U domain\\user /P password /FO TABLE\n\
+  SYSTEMINFO /S system /FO LIST\n\
+  SYSTEMINFO /S system /FO CSV /NH\n"
+
+IDS_HOST_NAME,               "Host Name"
+IDS_OS_NAME,                 "OS Name"
+IDS_OS_VERSION,              "OS Version"
+IDS_BUILD,                   "Build"
+IDS_OS_BUILD_TYPE,           "OS Build Type"
+IDS_REG_OWNER,               "Registered Owner"
+IDS_REG_ORG,                 "Registered Organization"
+IDS_PRODUCT_ID,              "Product ID"
+IDS_INST_DATE,               "Install Date"
+IDS_UP_TIME,                 "System Up Time"
+IDS_UP_TIME_FORMAT,          "%u Days, %u Hours, %u Minutes, %u Seconds"
+IDS_SYS_MANUFACTURER,        "System Manufacturer"
+IDS_SYS_MODEL,               "System Model"
+IDS_SYS_TYPE,                "System type"
+IDS_PROCESSORS,              "Processor(s)"
+IDS_PROCESSORS_FORMAT,       "%u Processor(s) Installed."
+IDS_BIOS_DATE,               "BIOS Date"
+IDS_BIOS_VERSION,            "BIOS Version"
+IDS_ROS_DIR,                 "ReactOS Directory"
+IDS_SYS_DIR,                 "System Directory"
+IDS_BOOT_DEV,                "Boot Device"
+IDS_SYS_LOCALE,              "System Locale"
+IDS_INPUT_LOCALE,            "Input Locale"
+IDS_TIME_ZONE,               "Time zone"
+IDS_TOTAL_PHYS_MEM,          "Total Physical Memory"
+IDS_AVAIL_PHISICAL_MEM,      "Available Physical Memory"
+IDS_VIRT_MEM_MAX,            "Virtual Memory: Max Size"
+IDS_VIRT_MEM_AVAIL,          "Virtual Memory: Available"
+IDS_VIRT_MEM_INUSE,          "Virtual Memory: In Use"
+IDS_PAGEFILE_LOC,            "Page File Location(s)"
+IDS_DOMAIN,                  "Domain"
+IDS_NETWORK_CARDS,           "Network Card(s)"
+IDS_NETWORK_CARDS_FORMAT,    "%u Installed."
+IDS_CONNECTION_NAME,         "Connection Name"
+IDS_STATUS,                  "Status"
+IDS_MEDIA_DISCONNECTED,      "Media disconnected"
+IDS_DHCP_ENABLED,            "DHCP Enabled"
+IDS_NO,                      "No"
+IDS_IP_ADDRESSES,            "IP address(es)"
+
+END

@@ -1,30 +1,30 @@
 /*
- * FILE:        base/applications/network/ping/lang/sv-SE.rc
- * PURPOSE:     Swedish translations for ReactOS Ping Command
- * TRANSLATORS: Jaix Bly
+ * FILE:        base/applications/network/ping/lang/es-US.rc
+ * PURPOSE:     English translations for ReactOS Ping Command
+ * TRANSLATORS:
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-SYNTAX: ping [-t] [-a] [-n antal] [-l storlek] [-f] [-i TTL] [-v TOS]\n\
-             [-w timeout] [-4] [-6] värddator\n\
+Usage: ping [-t] [-a] [-n count] [-l size] [-f] [-i TTL] [-v TOS]\n\
+            [-w timeout] [-4] [-6] target\n\
 \n\
-Alternativ:\n\
+Options:\n\
     -t          Ping the specified host until stopped.\n\
                 To see statistics and continue - type Control-Break;\n\
                 To stop - type Control-C.\n\
     -a          Resolve addresses to hostnames.\n\
-    -n antal    Antal ekobegäranden som ska skickas.\n\
-    -l storlek  Sändniningsbuffertens storlek.\n\
+    -n count    Number of echo requests to send.\n\
+    -l size     Send buffer size.\n\
     -f          Set Don't Fragment flag in packet (IPv4-only).\n\
     -i TTL      Time To Live.\n\
     -v TOS      Type Of Service (IPv4-only. This setting has been deprecated\n\
                 and has no effect on the type of service field in the IP\n\
                 Header).\n\
-    -w timeout  Timeout i millisekunder att vänta på varje svar.\n\
+    -w timeout  Timeout in milliseconds to wait for each reply.\n\
     -4          Force using IPv4.\n\
     -6          Force using IPv6.\n\
 \n"
@@ -56,11 +56,11 @@ Alternativ:\n\
     IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %u)\n"
 
     IDS_STATISTICS "\n\
-Ping statistk för %s:\n\
-    Packet: Sända = %d, Mottagna = %d, Förlorade %d (%d%% förlust),\n"
+Ping statistics for %s:\n\
+    Packets: Sent = %d, Received = %d, Lost %d (%d%% loss),\n"
 
-    IDS_APPROXIMATE_RTT "Ungefärliga slingtider i millisekunder:\n\
-    Minimum = %lums, Maximum = %lums, Genomsnittlig = %lums\n"
+    IDS_APPROXIMATE_RTT "Approximate round-trip time in milliseconds:\n\
+    Minimum = %lums, Maximum = %lums, Average = %lums\n"
 
     IDS_WINSOCK_FAIL "Failed to initialize WinSock: %i\n"
 END

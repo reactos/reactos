@@ -1,12 +1,4 @@
-/*
- *    Translated by niski
- *    bjauy@o2.pl
- *    https://sourceforge.net/projects/reactospl
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- */
-
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -125,8 +117,8 @@ BEGIN
     LTEXT "Kończenie pracy Kreatora dodawania sprzętu", IDC_FINISHTITLE, 114, 8, 195, 28
     LTEXT "Oto aktualny stan wybranego urządzenia:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Aby uruchomić moduł rozwiązywania problemów, który może pomóc Ci rozwiązać ewentualne problemy z urządzeniem, kliknij Zakończ.", -1, 114, 136, 193, 25
-    LTEXT "Aby zamknąć kreator, kliknij przycisk Anuluj", IDC_STATUSTEXT, 114, 166, 138, 8
+    LTEXT "Aby uruchomić moduł rozwiązywania problemów, który może pomóc Ci rozwiązać ewentualne problemy z urządzeniem, kliknij Zakończ.", -1, 114, 136, 193, 16
+    LTEXT "Aby zamknąć kreator, kliknij przycisk Anuluj", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
@@ -138,7 +130,7 @@ BEGIN
     LTEXT "Aby kontynuować, podłącz nowe urządzenie do komputera.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Wyłącz komputer po kliknięciu przycisku Zakończ, aby można było otworzyć komputer i podłączyć urządzenie.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
     LTEXT "W większości przypadków ReactOS automatycznie zainstaluje urządzenie po jego podłączeniu. Jeśli ReactOS nie odnajdzie urządzenia, uruchom ponownie ten kreator w celu zainstalowania oprogramowania do obsługi urządzenia.", -1, 114, 98, 193, 32
-    LTEXT "Aby zamknąć kreatora, kliknij Zakończ.", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "Aby zamknąć kreatora, kliknij Zakończ", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE

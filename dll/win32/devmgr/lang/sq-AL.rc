@@ -1,17 +1,13 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TRANSLATION:  18-01-2014
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 STRINGTABLE
 BEGIN
-    IDS_NAME "Emri"
-    IDS_TYPE "Tipi"
+    IDS_NAME "Name"
+    IDS_TYPE "Type"
     IDS_MANUFACTURER "Prodhues: %1"
     IDS_LOCATION "Vendnodhje: %1"
     IDS_STATUS "Gjendja Pjesës Elektronike: %1"
-    IDS_UNKNOWN "Panjohur"
+    IDS_UNKNOWN "I'panjohur"
     IDS_LOCATIONSTR "Vendnodhje %1!u! (%2)"
     IDS_DEVCODE " (Kode %1!u!)"
     IDS_DEVCODE2 " (Kode %2!u!)"
@@ -20,10 +16,10 @@ BEGIN
     IDS_UNKNOWNDEVICE "Pjesë panjohur"
     IDS_NODRIVERLOADED "Komanduesit e kësaj pajisje nuk kane instaluar."
     IDS_DEVONPARENT "ndeyur %1"
-    IDS_TROUBLESHOOTDEV "&Rregullo..."
+    IDS_TROUBLESHOOTDEV "&Kontrollo..."
     IDS_ENABLEDEV "Mundëso Pajisjen"
     IDS_REINSTALLDRV "Re&instalo Komanduesit"
-    IDS_PROPERTIES "Karakteristikat"
+    IDS_PROPERTIES "Të gjitha"
     IDS_UPDATEDRV "Azhorno Komanduesin..."
     IDS_REBOOT "Rifillo &Komphuterin..."
     IDS_NOTAVAILABLE "Jo në dispozicion"
@@ -57,7 +53,7 @@ BEGIN
     IDS_DEV_FAILED_START "Kjo pajisje është ose nuk është i pranishme, nuk punon si duhet, ose nuk ka të gjithë komanduesat e instaluar."
     IDS_DEV_LIAR "ReactOS ndaloi se përgjigjuri duke u përpjekur për të filluar këtë pajisje, dhe për këtë arsye nuk do të përpiqet për të filluar këtë pajisje përsëri."
     IDS_DEV_NORMAL_CONFLICT "Kjo pajisje nuk mund të gjejnë ndonjë burim të lirë %1 për të përdorur si."
-    IDS_DEV_NOT_VERIFIED "Kjo pajisje ose nuk është i pranishme, nuk punon si duhet, ose nuk ka të gjithë komanduesit e instaluar."
+    IDS_DEV_NOT_VERIFIED "Kjo pajisje është ose nuk është i pranishme, nuk punon si duhet, ose nuk ka të gjithë komanduesat e instaluar."
     IDS_DEV_NEED_RESTART "Kjo pajisje nuk mund të punojnë si duhet deri sa ju të rinisni kompjuterin tuaj."
     IDS_DEV_REENUMERATION "Kjo pajisje është duke shkaktuar një konflikt të burimeve."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS nuk mund të identifikojë të gjitha burimet për këtë pajisje."
@@ -68,9 +64,9 @@ BEGIN
     IDS_DEV_DISABLED "Kjo pajisje nuk është nisur."
     IDS_DEV_DISABLED2 "Kjo pajisje është gjymtuar."
     IDS_DEV_DEVLOADER_NOT_READY "Ngarkuesit për këtë pajisje nuk mund të ngarkojnë komanduesin e kërkuar."
-    IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
+    IDS_DEV_DEVLOADER_NOT_READY2 """ /* unused */
     IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
-    IDS_DEV_DEVICE_NOT_THERE "Kjo pajisje ose nuk është e pranishme, nuk punon si duhet, ose nuk ka të gjithë komanduesit e instaluar."
+    IDS_DEV_DEVICE_NOT_THERE ""Kjo pajisje ose nuk është e pranishme, nuk punon si duhet, ose nuk ka të gjithë komanduesit e instaluar."
     IDS_DEV_MOVED "ReactOS është në procesin e krijimit të kësaj pajisje."
     IDS_DEV_TOO_EARLY "ReactOS është në procesin e krijimit të kësaj pajisje."
     IDS_DEV_NO_VALID_LOG_CONF "ReactOS nuk mund të specifikojë burimet për këtë pajisje."
@@ -105,7 +101,7 @@ BEGIN
     IDS_PROP_HARDWAREIDS "Pajisja Elektronike IDs"
     IDS_PROP_COMPATIBLEIDS "Pajtushmëria IDs"
     IDS_PROP_MATCHINGDEVICEID "Koincidim Pajisje ID"
-    IDS_PROP_SERVICE "Shërbim"
+    IDS_PROP_SERVICE "Shërbimet"
     IDS_PROP_ENUMERATOR "Anketues"
     IDS_PROP_CAPABILITIES "Aftësi"
     IDS_PROP_DEVNODEFLAGS "Flamuj Devnode"
@@ -138,13 +134,13 @@ BEGIN
     LTEXT "", IDC_MANUFACTURER, 14, 88, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_LOCATION, 14, 100, 183, 10, SS_ENDELLIPSIS
     LTEXT "", IDC_STATUS, 14, 112, 183, 30
-    PUSHBUTTON "&Diagnostikim...", IDC_TROUBLESHOOT, 80, 140, 60, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "Karakteristika", IDC_PROPERTIES, 146, 140, 50, 14
+    PUSHBUTTON "&Kontrollo...", IDC_TROUBLESHOOT, 80, 140, 60, 14, BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Të gjitha", IDC_PROPERTIES, 146, 140, 50, 14
 END
 
 IDD_DEVICEGENERAL DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Përgjithshëm"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -157,14 +153,14 @@ BEGIN
     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     GROUPBOX "Gjëndja Pajisjes", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-    PUSHBUTTON "&Diagnostikim...", IDC_DEVPROBLEM, 148, 163, 90, 15
+    PUSHBUTTON "&Kontrollo...", IDC_DEVPROBLEM, 148, 163, 90, 15
     LTEXT "&Përdorimi pajisjes:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
 IDD_DEVICEDRIVER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Komandues"
+CAPTION "Driver"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -194,7 +190,7 @@ BEGIN
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
-    LTEXT "Furniyues:", -1, 14, 134, 50, 8
+    LTEXT "Ofruesi:", -1, 14, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Versioni Dokumentit:", -1, 14, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
@@ -233,13 +229,12 @@ END
 
 IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Energji"
+CAPTION "Force"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
 END
-
 
 
 /*
@@ -250,10 +245,10 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&File"
   BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
+    MENUITEM "dIL",                       IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "Veprim",                        IDC_ACTIONMENU
+  POPUP "&Vëzhgo"
   BEGIN
     MENUITEM "Devices by type",             IDC_DEVBYTYPE
     MENUITEM "Devices by connection",       IDC_DEVBYCONN
@@ -262,9 +257,9 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "&File"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "rRETH",                       IDC_ABOUT
   END
 END
 
@@ -278,19 +273,19 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_MENU_UPDATE           "Update driver software..."
-  IDS_MENU_ENABLE           "Enable"
+  IDS_MENU_ENABLE           "Mundëso"
   IDS_MENU_DISABLE          "Disable"
   IDS_MENU_UNINSTALL        "Uninstall"
   IDS_MENU_SCAN             "Scan for hardware changes"
   IDS_MENU_ADD              "Add hardware"
-  IDS_MENU_PROPERTIES       "Properties"
+  IDS_MENU_PROPERTIES       "Tipare"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Properties"
+  IDS_TOOLTIP_PROPERTIES    "Tipare"
   IDS_TOOLTIP_SCAN          "Scan for hardware changes"
-  IDS_TOOLTIP_ENABLE        "Enable"
+  IDS_TOOLTIP_ENABLE        "Mundëso"
   IDS_TOOLTIP_DISABLE       "Disable"
   IDS_TOOLTIP_UPDATE        "Update Driver Software"
   IDS_TOOLTIP_UNINSTALL     "Uninstall"
@@ -308,7 +303,7 @@ BEGIN
   IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
   IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
   IDS_HINT_ABOUT        " About ReactOS Device Manager."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_EXIT         " Del nga programi."
 
   IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
   IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
@@ -316,11 +311,10 @@ BEGIN
   IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
   IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Kthe kete dritare ne mase normale."
+  IDS_HINT_SYS_MOVE     " Leviz kete dritare."
+  IDS_HINT_SYS_SIZE     " Ndryshon permasen e dritares."
+  IDS_HINT_SYS_MINIMIZE " Ndryshon kete dritare ne ikone."
+  IDS_HINT_SYS_MAXIMIZE " Zgjeron kete dritare te mbush ekranin."
+  IDS_HINT_SYS_CLOSE    " Mbyll dritaren."
 END
-

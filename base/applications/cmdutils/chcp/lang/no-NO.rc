@@ -1,11 +1,11 @@
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CHCP_HELP "Viser eller velger aktive tegntabellnummer.\n\n\
+    STRING_CHCP_HELP "Displays or sets the active code page number.\n\n\
 CHCP [nnn]\n\n\
-  nnn   Spesifisere aktive tegntabellnummer.\n\n\
-Skriv CHCP uten parametrer for å vise aktiv tegntabellnummer.\n"
+  nnn   Specifies the active code page number.\n\n\
+Type CHCP without a parameter to display the active code page number.\n"
     STRING_CHCP_ERROR1 "Aktiv tegntabell: %u\n"
     STRING_CHCP_ERROR4 "Ugyldig tegntabell\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Ugyldig parameter format - %s\n"

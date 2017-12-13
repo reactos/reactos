@@ -1,14 +1,10 @@
-/* Превод на Български/ Bulgarian translation
- * http://www.reactos.org/wiki/Bulgarian_translation
- * LOCATION:\base\applications\mplay32\lang */
-
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 IDR_MAINMENU MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
-        MENUITEM "&Отваряне...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "&Отваряне...\tAlt+tCtrl+O", IDM_OPEN_FILE
         MENUITEM "&Затваряне\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
         MENUITEM "Из&ход", IDM_EXIT
@@ -20,7 +16,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&Изглед"
     BEGIN
         MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
     END
@@ -31,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Volume Control", IDM_VOLUMECTL
     END
-    POPUP "Помо&щ"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "&За", IDM_ABOUT
     END
@@ -48,7 +44,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
+    IDS_MODE_UNKNOWN "Неизвестен"
     IDS_MODE_OPEN "Opened"
     IDS_MODE_STOP "Stopped"
     IDS_MODE_PLAY "Playing"
@@ -58,7 +54,7 @@ BEGIN
     IDS_MODE_NOT_READY "Not ready"
     IDS_ALL_TYPES_FILTER "Всички поддържани"
     IDS_TOOLTIP_PLAY "Пускане"
-    IDS_TOOLTIP_STOP "Спиране"
+    IDS_TOOLTIP_STOP "Stop"
     IDS_TOOLTIP_EJECT "Изваждане"
     IDS_TOOLTIP_BACKWARD "Прескачане назад"
     IDS_TOOLTIP_SEEKBACK "Търсене назад"
@@ -66,6 +62,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Търсене напред"
     IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "Мултимедийният възпроизводител на РеактОС"
-    IDS_PLAY "Възпроизвеждане"
+    IDS_PLAY "Пускане"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
 END

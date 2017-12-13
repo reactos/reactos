@@ -1,21 +1,19 @@
-/* Translation by Vytis 'CMan' Girdžijauskas cman@cman.us */
-
-LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_LITHUANIAN, SUBLANG_LITHUANIAN_LITHUANIA
 
 STRINGTABLE
 BEGIN
-    IDS_UsageMessage "%s\n\nNaudojimas: regsvr32 [/u] [/s] [/c] [/n] [/i[:parametras]] dll_bylos_vardas\n\
-/u -	Išregistruoti serverį\n\
-/s -	Tylus; nerodomi pranešimų langai\n\
-/c -	Išvedimas į konsolę\n\
-/i -	Iškviesti DllInstall perduodant nebūtiną [parametras]; kai naudojama su /u iškviečia dll uninstall\n\
-/n -	Neiškviesti DllRegisterServer; ši parinktis turi būti naudojama su /i"
+    IDS_UsageMessage "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Unregister server\n\
+/s -	Silent; display no message boxes\n\
+/c -	Console output\n\
+/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
+/n -	Do not call DllRegisterServer; this option must be used with /i"
     IDS_NoDllSpecified "Nenurodytas DLL bylos vardas."
     IDS_InvalidFlag "Neatpažintas parametras: %s"
     IDS_SwitchN_NoI "Neatpažintas parametras: /n turi būti naudojama kartu su /i"
     IDS_DllNotLoaded "LoadLibrary('%s') nepavyko.\nGetLastError gražino 0x%08x."
-    IDS_MissingEntry "%s įkelta, bet %s įėjimo taškas nerastas.\n\n\
-%s neeksportuota, arba atmintyje yra sugadinta %s versija. Klaidos aptikimui ir pašalinimui siūloma naudoti PView."
+    IDS_MissingEntry "%s was loaded, but the %s entry point was not found.\n\n\
+%s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it."
     IDS_FailureMessage "%s in %s nepavyko.\nGražino: 0x%08x"
     IDS_SuccessMessage "%s in %s pavyko."
 END

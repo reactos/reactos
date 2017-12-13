@@ -1,9 +1,17 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+/*
+ * PROJECT:    Spider Solitaire
+ * LICENSE:    See COPYING in top level directory
+ * FILE:       base/applications/games/spider/lang/en-US.rc
+ * PURPOSE:    English Language File for Spider Solitaire
+ * TRANSLATOR: Gregor Schneider
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Selecionar Carta Anterior"
+CAPTION "Selecionar Cartas"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -20,7 +28,7 @@ BEGIN
     CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 232, 89, 50, 71
     CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 289, 89, 50, 71
     DEFPUSHBUTTON "OK", IDOK, 114, 165, 54, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 176, 165, 54, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 176, 165, 54, 14
 END
 
 IDD_DIFFICULTY DIALOGEX 100, 100, 106, 80
@@ -32,7 +40,7 @@ BEGIN
     AUTORADIOBUTTON "Médio: &Duas Cores", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
     AUTORADIOBUTTON "Difícil: &Três Cores", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
     DEFPUSHBUTTON "OK", IDOK, 8, 58, 40, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 58, 58, 40, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Strings */
@@ -41,9 +49,9 @@ STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Spider"
     IDS_SPI_ABOUT "Paciência Spider por Gregor Schneider\n\nCardLib versão 1.0"
-    IDS_SPI_QUIT "Desistir do jogo atual?"
-    IDS_SPI_WIN "Parabéns, você venceu!"
-    IDS_SPI_DEAL "Deseja jogar mais uma partida?"
+    IDS_SPI_QUIT "Sair do jogo Atual?"
+    IDS_SPI_WIN "Parabéns, Você ganhou!"
+    IDS_SPI_DEAL "Jogar de Novo?"
 END
 
 /* Menus */
@@ -56,9 +64,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Baralho...", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "&Sair", IDM_GAME_EXIT
+        MENUITEM "Sai&r", IDM_GAME_EXIT
     END
-    POPUP "&Ajuda"
+    POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Conteúdo\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Sobre", IDM_HELP_ABOUT

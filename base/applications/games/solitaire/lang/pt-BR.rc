@@ -1,6 +1,12 @@
-/* Portuguese translation of solitaire by Lucas Raziel (Oldcpv3) (raziellucas@hotmail.com) */
+/*
+ * PROJECT:     Solitaire
+ * LICENSE:     Freeware, permission to use under Public Domain
+ * FILE:        base/applications/games/solitaire/lang/en-US.rc
+ * PURPOSE:     English Language File for Solitaire
+ * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
+ */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 /* Dialogs */
 
@@ -13,14 +19,14 @@ BEGIN
     AUTORADIOBUTTON "&Uma Carta", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Três Cartas", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
     GROUPBOX "Pontuação", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Padrão", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
     AUTORADIOBUTTON "&Nenhum", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Mostrar Tempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
+    AUTOCHECKBOX "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "B&arra de Status", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
     AUTOCHECKBOX "Manter a pontuação", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -68,9 +74,9 @@ BEGIN
         MENUITEM "Baralho...", IDM_GAME_DECK
         MENUITEM "&Opções...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Sair", IDM_GAME_EXIT
+        MENUITEM "Sai&r", IDM_GAME_EXIT
     END
-    POPUP "&Ajuda"
+    POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Conteúdo\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Sobre", IDM_HELP_ABOUT

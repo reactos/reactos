@@ -1,21 +1,13 @@
-/* 
- * FILE:       base/applications/cmdutils/find/lang/ro-RO.rc
- *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG: 2011-08-20  initial translation
- *             2011-10-17  diacritics change, other minor changes
- */
-
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FIND: Tipărește toate rândurile unui fișier ce conțin un șir.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""șir"" [ fișier... ]\n\
-    /C  Numără liniile ce conțin șirul.\n\
-    /I  Ignoră diferențele între majuscule și minuscule.\n\
-    /N  Numără rândurile afișate, începând cu 1.\n\
-    /V  Tipărește rândurile ce nu conțin șirul."
+    IDS_USAGE "FIND: Prints all lines of a file that contain a string.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] """șir""" [ file... ]\n\
+    /C  Count the number of lines that contain string\n\
+    /I  Ignore case\n\
+    /N  Number the displayed lines, starting at 1\n\
+    /V  Print lines that do not contain the string"
     IDS_NO_SUCH_FILE "FIND: Fișierul «%s» nu există!\n"
     IDS_CANNOT_OPEN "FIND: Fișierul «%s» nu poate fi deschis!\n"
 END

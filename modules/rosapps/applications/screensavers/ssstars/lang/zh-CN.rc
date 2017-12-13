@@ -1,6 +1,4 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 // Dialog
 
@@ -26,7 +24,7 @@ BEGIN
                     WS_TABSTOP
     CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
                     4,4,284,92
-    GROUPBOX        "高级",IDC_STATIC,16,180,260,72
+    GROUPBOX        "Advanced",IDC_STATIC,16,180,260,72
     CONTROL         "启用背景混合",IDC_CHECK_DOBLENDING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
     CONTROL         "启用准确的角度校正",
@@ -50,5 +48,5 @@ BEGIN
     IDS_ROTATION_LINEAR     "线性"
     IDS_ROTATION_PERIODIC   "定期"
     IDS_LICENSE             "星空是 GNU GPL 许可证下发布的免费软件。"
-    IDS_AUTHOR              "开发者：Carlo Bramini"
+    IDS_AUTHOR              "作者 Carlo Bramini"
 END

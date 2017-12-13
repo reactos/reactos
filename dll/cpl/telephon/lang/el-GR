@@ -1,0 +1,7 @@
+LANGUAGE LANG_GREEK, SUBLANG_GREEK_GREECE
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Προσθαφαίρεση προγραμμάτων"
+    IDS_CPLSYSTEMDESCRIPTION "Ρυθμίζει τα προγράμματα και δημιουργεί συντομεύσεις."
+END

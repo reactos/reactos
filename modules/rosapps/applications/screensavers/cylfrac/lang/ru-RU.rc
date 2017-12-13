@@ -1,12 +1,4 @@
-/*
- * PROJECT:     Cylinders fractal ScreenSaver
- * LICENSE:     Public Domain
- * FILE:        applications/screensavers/cylfrac/lang/ru-RU.rc
- * PURPOSE:     Russian Language File for Cylinders fractal ScreenSaver
- * TRANSLATOR:  Sergey Stopkin
- */
-
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 STRINGTABLE DISCARDABLE
 BEGIN

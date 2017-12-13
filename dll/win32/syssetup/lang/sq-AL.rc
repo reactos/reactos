@@ -17,21 +17,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ndërto ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Mirë se vini në Magjistari Ndërtues i ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Mirë se vini në instalimin e ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "Ky magjistar instalon ReactOS në kompjuterin tuaj. Magjistari ka nevojë për të mbledhur disa informacione në lidhje me ju dhe kompjuterin tuaj për të ndërtuat ReactOS si duhet.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klikoni Tjetër për të vazhduar me Ndërtimin.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ndërto ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Zhvilluesit e ReactOS dëshirojnë të vlerësojë projektet e mëposhtme Burim i Hapur, (pjesëve të) të cilave u përdorën për të krijuar ReactOS:", IDC_STATIC, 15, 7, 286, 19
@@ -43,7 +43,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ndërto ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -56,7 +56,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ndërto ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -74,23 +74,23 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ndërto ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Sistemi vendorë duhet të përputhet me gjuhën e aplikacioneve që dëshironi të përdorni. Përdoruesi vendorë kontrollon se si duket numrat, monedhat, dhe datat.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Për të ndryshuar parametrat e sistemit ose përdoruesit vendorë, kliko Ndrysho.", IDC_STATIC, 53, 60, 196, 8
-    PUSHBUTTON "&Ndrysho...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    PUSHBUTTON "Rregulloje...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "Paraqitja Tastierës kontrollon karakteret që shfaqen kur ju shkruani.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Për të ndryshuar paraqitje tastieres, kliko Ndrysho.", IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "Ndrysho...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
+    PUSHBUTTON "Rregullo...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ndërto ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -113,7 +113,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ndërto ReactOS"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -123,13 +123,13 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kompletimi i Ndërtuesit ReactOS"
+CAPTION "Kompletimi i instalimit te ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kompletimi i Magjistarit Ndërtues të ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Ju keni përfunduar me sukses Ndërtuesin e ReactOS.\n\nKur ju klikoni Mbaro, kompjuteri juaj do të rifillojë.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Nëse ka një CD në drive, hiqni atë. Pastaj, për të rinisur kompjuterin tuaj, klikoni Mbaroj.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -143,7 +143,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Ju Lutem prisni..."
+CAPTION "Ju Lutem Prisni..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
@@ -162,14 +162,15 @@ BEGIN
     IDS_DATETIMETITLE "Data dhe Ora"
     IDS_DATETIMESUBTITLE "Vendos datën e saktë dhe orën për kompjuterin tuaj."
     IDS_PROCESSTITLE "Regjistrimi Komponenteve"
-    IDS_PROCESSSUBTITLE "Ju Lutem prisni..."
-    IDS_THEMESELECTIONTITLE "Appearance"
+    IDS_PROCESSSUBTITLE "Ju Lutem Prisni..."
+    IDS_THEMESELECTIONTITLE "Dukje"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
+
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Ndërtuesi ReactOS"
+    IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_UNKNOWN_ERROR "gabim i panjohur"
     IDS_REGISTERING_COMPONENTS "Regjistrimi Komponenteve..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary dështoj: "
@@ -185,7 +186,7 @@ BEGIN
      *   Also check the IDD_COMPUTERPAGE dialog.
      */
     IDS_ADMINISTRATOR_NAME "Administratorër"
-    IDS_MACHINE_OWNER_NAME "Zotëruesi"
+    IDS_MACHINE_OWNER_NAME "Pronari"
 END
 
 STRINGTABLE

@@ -1,8 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
- * DATE OF TR:  29-11-2013
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
@@ -12,7 +8,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Informacione rreth ReactOS rregjistruesi i zerit"
+CAPTION "Rreth Menaxherit të Shërbimeve"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
@@ -23,20 +19,20 @@ END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "File"
+    POPUP "&File"
     BEGIN
-        MENUITEM "E Re ", ID_FILE_NEW
-        MENUITEM "Hap...", ID_FILE_OPEN
+        MENUITEM "E Re", ID_FILE_NEW
+        MENUITEM "&Open...", ID_FILE_OPEN
         MENUITEM "Ruaj", ID_FILE_SAVE, GRAYED
-        MENUITEM "Ruaj si...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Ruaj &si...", ID_FILE_SAVEAS, GRAYED
         MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "&Properties", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "Dil", ID_FILE_EXIT
+        MENUITEM "dIL", ID_FILE_EXIT
     END
-    POPUP "&Edit"
+    POPUP "Modifiko"
     BEGIN
-        MENUITEM "&Copy", ID_EDIT_COPY
+        MENUITEM "Kopjo", ID_EDIT_COPY
         MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
         MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
@@ -61,7 +57,7 @@ BEGIN
     END
     POPUP "?"
     BEGIN
-        MENUITEM "Rreth", ID_ABOUT
+        MENUITEM "rRETH", ID_ABOUT
     END
 END
 

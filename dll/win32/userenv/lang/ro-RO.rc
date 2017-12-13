@@ -1,16 +1,10 @@
-/*
- * FILE:        dll/win32/userenv/lang/ro-RO.rc
- *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
- */
-
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documente și preferințe"
     IDS_APPDATA "Date de aplicație"
-    IDS_DESKTOP "Birou"
+    IDS_DESKTOP "Fundal"
     IDS_FAVORITES "Favorite"
     IDS_MYDOCUMENTS "Documentele mele"
     IDS_NETHOOD "Rețele"
@@ -18,7 +12,7 @@ BEGIN
     IDS_RECENT "Recente"
     IDS_SENDTO "Trimitere"
     IDS_TEMPLATES "Șabloane"
-    IDS_STARTMENU "Meniul Pornire"
+    IDS_STARTMENU "Meniul „Pornire”"
     IDS_PROGRAMS "Meniul Pornire\\Programe"
     IDS_STARTUP "Meniul Pornire\\Programe\\Autolansate"
     IDS_LOCALSETTINGS "Preferințe locale"

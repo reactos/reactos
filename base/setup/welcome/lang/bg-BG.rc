@@ -1,6 +1,4 @@
-/* Bulgarian (BG) translation by Violin Iliev */
-
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 /* String Tables */
 
@@ -26,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Инсталиране на ReactOSS"
+    IDS_TOPIC_TITLE0 "Слагане на РеактОС"
     IDS_TOPIC_TITLE1 "Разгледай това CD"
     IDS_TOPIC_TITLE2 "Изход"
 END

@@ -1,18 +1,16 @@
-/* Translated by Radek Liska aka Black_Fox (radekliska at gmail dot com) */
-
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Upravit"
-    IDS_MARK "Označit"
+    IDS_EDIT "&Úpravy"
+    IDS_MARK "Mark"
     IDS_COPY "Kopírovat\tEnter"
     IDS_PASTE "Vložit"
     IDS_SELECTALL "Označit vše"
-    IDS_SCROLL "Posunout"
+    IDS_SCROLL "Scroll"
     IDS_FIND "Najít..."
     IDS_DEFAULTS "Výchozí"
-    IDS_PROPERTIES "Vlastnosti"
+    IDS_PROPERTIES "&Vlastnosti"
 /*
     IDS_SCROLLHERE "Posunout sem"
     IDS_SCROLLTOP "Posunout na začátek"
@@ -27,6 +25,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Označit"
-    IDS_SELECT_TITLE "Vybrat"
+    IDS_MARK_TITLE "Mark"
+    IDS_SELECT_TITLE "Select"
 END

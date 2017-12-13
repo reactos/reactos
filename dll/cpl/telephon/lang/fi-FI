@@ -1,0 +1,7 @@
+LANGUAGE LANG_FINNISH, SUBLANG_FINNISH_FINLAND
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Phone and Modem Options"
+    IDS_CPLSYSTEMDESCRIPTION "Configure your telephone dialing rules and modem settings."
+END

@@ -1,4 +1,4 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -37,7 +37,7 @@ BEGIN
     AUTOCHECKBOX "Самосверяване през интернет от сървър за времето",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Сървър:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "Обнови веднага", IDC_UPDATEBUTTON, 187, 22, 60, 14
+    PUSHBUTTON "Обнови веднага", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
     LTEXT "Сверяването може да се осъществи само, когато компютърът ви е свързан с интернет.", -1, 12, 114, 225, 25
@@ -49,7 +49,7 @@ BEGIN
     IDS_CPLDESCRIPTION "Променя времето, датата и часовия пояс."
     IDS_TIMEZONETEXT "Текущ часови пояс: %s"
     IDS_TIMEZONEINVALID "Неправилно"
-    IDS_TIMEZONEUNKNOWN "Неизвестно"
+    IDS_TIMEZONEUNKNOWN "Неизвестен"
     IDS_INETTIMESUCSYNC "Времето бе успешно сверено с %s на %s в %s"
     IDS_INETTIMENEXTSYNC "Следващо сверяване: %s at %s"
     IDS_INETTIMESYNCING "Почакайте, докато РеактОС сверява времето с %s"

@@ -1,0 +1,44 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Desligar Computador"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "O seu computador pode ser desligado com segurança.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Restart", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Falha Interface de Usuário"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "A DLL de Logon de Interface de Usuário %s falhou ao carregar.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Contate o administrador do seu sistema para substituir a DLL, ou recuperar a DLL original.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Restart", 1, 80, 91, 68, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "Preparando conexões de rede..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Aplicando configurações do computador..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Executando scripts de inicialização..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Executando scripts de desligamento..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Aplicando suas configurações pessoais..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Executando scripts de logoff..."
+    IDS_RUNNINGLOGONSCRIPTS "Executando scripts de logon..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Carregando suas configurações pessoais..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Terminando conexões de rede..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS está desligando..."
+    IDS_PREPARETOSTANDBY "Preparando para entrar em Modo de Espera..."
+    IDS_PREPARETOHIBERNATE "Preparando para Hibernar..."
+    IDS_SAVEYOURSETTINGS "Salvando suas configurações..."
+    IDS_REACTOSISSTARTINGUP "ReactOS está iniciando..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon falhou ao ativer user shell!"
+END

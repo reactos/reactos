@@ -1,0 +1,7 @@
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
+
+STRINGTABLE
+BEGIN
+    IDS_DllNotLoaded "LoadLibrary не вдалося завантажити '%s'"
+    IDS_MissingEntry "Неможливо знайти точку входу:%s\nВ бібліотеці %s"
+END

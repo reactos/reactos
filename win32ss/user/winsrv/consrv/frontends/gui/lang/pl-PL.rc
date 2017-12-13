@@ -1,25 +1,16 @@
-/*
- *    Translated by xrogers
- *    xxrogers@users.sourceforge.net
- *    https://sourceforge.net/projects/reactospl
- *    Translation update by Olaf Siejka (Caemyr), Apr 2011
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Update by wojo664 (June 2014)
- */
-
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Edytuj"
-    IDS_MARK "Zaznacz"
+    IDS_EDIT "&Edycja"
+    IDS_MARK "Jedynka"
     IDS_COPY "Kopiuj\tWejdź"
-    IDS_PASTE "Wklej"
+    IDS_PASTE "Włóż"
     IDS_SELECTALL "Zaznacz wszystko"
-    IDS_SCROLL "Przewiń"
+    IDS_SCROLL "Scroll"
     IDS_FIND "Znajdź..."
     IDS_DEFAULTS "Ustawienia domyślne"
-    IDS_PROPERTIES "Właściwości"
+    IDS_PROPERTIES "Właś&ciwości"
 /*
     IDS_SCROLLHERE "Przewiń tutaj"
     IDS_SCROLLTOP "Przewiń na początek"
@@ -34,6 +25,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MARK_TITLE "Zaznacz"
+    IDS_MARK_TITLE "Jedynka"
     IDS_SELECT_TITLE "Wybierz"
 END

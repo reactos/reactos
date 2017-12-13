@@ -1,0 +1,11 @@
+LANGUAGE LANG_GREEK, SUBLANG_GREEK_GREECE
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Terminates a session.\n\n\
+  /v\t\tDisplays information about the actions performed.\n\
+  /?\t\tShows this information.\n\n"
+    IDS_LOGOFF_REMOTE "Γίνεται τερματισμός της συνεδρίας στον απομακρυσμένο υπολογιστή."
+    IDS_LOGOFF_LOCAL "Γίνεται τερματισμός της συνεδρίας στον υπολογιστή."
+    IDS_ILLEGAL_PARAM "Μη έγκυρη παράμετρος(οι)\n"
+END

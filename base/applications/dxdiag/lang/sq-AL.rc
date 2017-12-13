@@ -1,19 +1,15 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
- * DATE OF TR:  29-11-2013
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDD_MAIN_DIALOG DIALOGEX 0, 0, 478, 280
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactX-Programi i diaknostikimit"
+CAPTION "Veglat diaknostikuse të ReactX"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1", IDC_TAB_CONTROL, "SysTabControl32", WS_TABSTOP, 2, 2, 474, 250
-    PUSHBUTTON "&Ndihmë", IDC_BUTTON_HELP, 2, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&File", IDC_BUTTON_HELP, 2, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
     DEFPUSHBUTTON "&Faqja tjetër", IDC_BUTTON_NEXT, 257, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Ruaj të gjithë informacionet...", IDC_BUTTON_SAVE_INFO, 311, 260, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Ruaj të gjithë informacionet...", IDC_BUTTON_SAVE_INFO, 311, 260, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "&Dil", IDC_BUTTON_EXIT, 425, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
@@ -129,11 +125,11 @@ BEGIN
     EDITTEXT IDC_STATIC_DSOUND_LOGO, 335, 40, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_DSOUND_FILES, 335, 50, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT IDC_STATIC_ADAPTER_PROVIDER, 335, 60, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Karakteristikat e ReactX", IDC_STATIC, 5, 97, 452, 70
+    GROUPBOX "ReactX Features", IDC_STATIC, 5, 97, 452, 70
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 110, 125, 80, 17
     RTEXT "Karakteristikat e ReactX:", IDC_STATIC, 10, 125, 90, 20, WS_DISABLED
     PUSHBUTTON "Testo ZërinDirekt", IDC_BUTTON_TESTDSOUND, 270, 125, 80, 14, WS_DISABLED
-    GROUPBOX "Shënime", IDC_STATIC, 5, 170, 452, 50
+    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_TEXT_DSOUNDINFO, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -164,7 +160,7 @@ BEGIN
     GROUPBOX "PjesëHyrese Elektronike", IDC_STATIC, 5, 87, 452, 81
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
             WS_VISIBLE | WS_BORDER | WS_TABSTOP, 15, 99, 432, 60, 0x00000200
-    GROUPBOX "Informacione", IDC_STATIC, 5, 170, 452, 50
+    GROUPBOX "Notes", IDC_STATIC, 5, 170, 452, 50
     EDITTEXT IDC_RICH_INFO, 15, 182, 432, 30, ES_LEFT | WS_BORDER | ES_READONLY | WS_TABSTOP
 END
 
@@ -187,7 +183,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Still can't find the information you're looking for? Here are some additional things you can do:", IDC_STATIC, 5, 0, 300, 10
-    PUSHBUTTON "System Information", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
+    PUSHBUTTON "Informacioni i Sistemit", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
     LTEXT "Displays additional system information", IDC_STATIC, 90, 23, 300, 10
     PUSHBUTTON "Refresh Rate Override", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
     LTEXT "Overrides the Refresh Rate for DirectDraw", IDC_STATIC, 90, 43, 300, 10
@@ -196,13 +192,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_MAIN_DIALOG "Veglat diaknostikuse të ReactX"
-    IDS_SYSTEM_DIALOG "Sistemi"
+    IDS_SYSTEM_DIALOG "System"
     IDS_DISPLAY_DIALOG "Monitori"
     IDS_SOUND_DIALOG "Zëri"
     IDS_MUSIC_DIALOG "Muzika"
     IDS_INPUT_DIALOG "Të dhena"
     IDS_NETWORK_DIALOG "Networku"
-    IDS_HELP_DIALOG "Ndihmë"
+    IDS_HELP_DIALOG "Help"
     IDS_FORMAT_MB "%I64uMB RAM"
     IDS_FORMAT_SWAP "%I64u MB në perdorim, %I64u MB i mundshem"
     IDS_FORMAT_UNIPROC "%s (%u CPU)"
@@ -210,16 +206,16 @@ BEGIN
     IDS_VERSION_UNKNOWN "Version i paditur"
     IDS_DEVICE_STATUS_ATTACHED "I lidhur"
     IDS_DEVICE_STATUS_MISSING "I shkeputur"
-    IDS_DEVICE_STATUS_UNKNOWN "I paditur"
+    IDS_DEVICE_STATUS_UNKNOWN "I'panjohur"
     IDS_DEVICE_NAME "Emri i pjesës"
-    IDS_DEVICE_STATUS "Statusi"
+    IDS_DEVICE_STATUS "Gjendja"
     IDS_DEVICE_CONTROLLER "ID e kontrolluesit"
     IDS_DEVICE_MANUFACTURER "ID e proshuesit"
     IDS_DEVICE_PRODUCT "ID e produktit"
     IDS_DEVICE_FORCEFEEDBACK "Detyro prapaveprimin e Driverit"
     IDS_NOT_APPLICABLE "n/a"
     IDS_OPTION_YES "Po"
-    IDS_DIRECTPLAY_COL_NAME1 "Emri"
+    IDS_DIRECTPLAY_COL_NAME1 "Name"
     IDS_DIRECTPLAY_COL_NAME2 "Regjistri"
     IDS_DIRECTPLAY_COL_NAME3 "Dokumenta"
     IDS_DIRECTPLAY_COL_NAME4 "Versioni"
@@ -232,7 +228,7 @@ BEGIN
     IDS_DIRECTPLAY_MODEMCONN "Lidhja me modem për DirectPlay"
     IDS_DIRECTPLAY_SERIALCONN "Lidhaj seriale për DirectPlay"
     IDS_REG_SUCCESS "OK"
-    IDS_REG_FAIL "Error"
+    IDS_REG_FAIL "Win32 error"
     IDS_DDTEST_ERROR "Testi dështoj!"
     IDS_DDTEST_DESCRIPTION "Kjo do të fillojë ndërfaqen e testit për DirectDraw ndërfaqes. Vazhdo?"
     IDS_DDPRIMARY_DESCRIPTION "Ky test do të përdorë DirectDraw për të nxjerrë në sipërfaqe primare. Drejtkëndësh të zi dhe të bardhë duhet të nxirren. Vazhdo?"
@@ -243,11 +239,11 @@ BEGIN
     IDS_DDFULLSCREEN_RESULT "A e shihni ju drejtkëndësh të bardhë të lëvizshem në ekran të plotë?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
     IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
-    IDS_OPTION_NO "No"
+    IDS_OPTION_NO "Jo"
     IDS_D3DTEST_DESCRIPTION "Kjo do të fillojë ndërfaqes etestit Direct3D. Vazhdo?"
     IDS_D3DTEST_D3Dx "Ky test do të përdore pjesë elektronike të përshpejtuara për Direct3D %u ndërfaqe."
     IDS_OS_VERSION "%s %s (%d.%d, Build %d)"
-    IDS_DMUSIC_DESC "Description"
+    IDS_DMUSIC_DESC "P♪7rshkrimi"
     IDS_DMUSIC_TYPE "Type"
     IDS_DMUSIC_KERNEL "Kernel Mode"
     IDS_DMUSIC_IO "In/Out"

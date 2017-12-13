@@ -1,19 +1,19 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 STRINGTABLE
 BEGIN
-    IDS_UsageMessage "%s\n\nИспользование: regsvr32 [/u] [/s] [/c] [/n] [/i[:параметр]] DLL-файл\n\
-/u - Отмена регистрации DLL\n\
-/s - ""Тихий"" режим; окна сообщения не отображаются\n\
-/c - Вывод в консоль\n\
-/i - Вызов DllInstall с дополнительным параметром [параметр]; При использовании ключа /u вызывает DllUnInstall\n\
-/n - Не вызывает DllRegisterServer; эта опция должна использоваться с /i"
+    IDS_UsageMessage "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Unregister server\n\
+/s -	Silent; display no message boxes\n\
+/c -	Console output\n\
+/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
+/n -	Do not call DllRegisterServer; this option must be used with /i"
     IDS_NoDllSpecified "Не указано имя DLL."
     IDS_InvalidFlag "Неизвестный параметр: %s"
     IDS_SwitchN_NoI "Неизвестный параметр: /n должен использоваться совместно с параметром /i"
     IDS_DllNotLoaded "Вызов LoadLibrary('%s') завершился неудачей.\nФункция GetLastError возвратила код ошибки: 0x%08x."
-    IDS_MissingEntry "%s был загружен, но точка входа %s не найдена.\n\n\
-%s может быть не экспортируемой или поврежденная версия %s находится в памяти. Используйте PView, чтобы обнаружить и удалить его."
+    IDS_MissingEntry "%s was loaded, but the %s entry point was not found.\n\n\
+%s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it."
     IDS_FailureMessage "%s в %s завершился неудачей.\nВозвращенный код: 0x%08x"
     IDS_SuccessMessage "%s в %s успешно завершено."
 END

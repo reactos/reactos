@@ -1,23 +1,19 @@
-/* German language file by Klemens Friedl 2005-06-03 */
-
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 STRINGTABLE
 BEGIN
-    IDS_UsageMessage "%s\n\nSyntax: regsvr32 [/u] [/s] [/c] [/n] [/i[:Befehlszeile]] DLL-Name\n\
-/u -	Serverregistrierung aufheben\n\
-/s -	Hintergrundmodus; Meldungen werden nicht angezeigt\n\
-/c -	Konsolenausgabe verwenden\n\
-/i -	Aufruf von DLLInstall, wobei optional eine [Befehlszeile] übergeben\n\
-	werden kann. Unter Verwendung von /u wird die DLL-Deinstallation\n\
-	aufgerufen.\n\
-/n -	Kein Aufruf von DLLRegisterServer. Diese Option muss mit /i verwendet werden."
+    IDS_UsageMessage "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Unregister server\n\
+/s -	Silent; display no message boxes\n\
+/c -	Console output\n\
+/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
+/n -	Do not call DllRegisterServer; this option must be used with /i"
     IDS_NoDllSpecified "Es wurde kein DLL-Name angegeben."
     IDS_InvalidFlag "Ungültiger Parameter: %s"
     IDS_SwitchN_NoI "Ungültiger Parameter: /n muss zusammen mit dem /i-Schalter verwendet werden."
     IDS_DllNotLoaded "LoadLibrary('%s') ist fehlgeschlagen.\nRückgabewert von GetLastError: 0x%08x."
-    IDS_MissingEntry "%s wurde geladen, aber der %s Einstiegspunkt wurde nicht gefunden.\n\n\
-%s wurde möglicherweise nicht exportiert, oder eine fehlerhafte Version von %s befindet sich im Speicher.\n Mit PView können Sie diese finden und löschen."
+    IDS_MissingEntry "%s was loaded, but the %s entry point was not found.\n\n\
+%s may not be exported, or a corrupt version of %s may be in memory. Consider using PView to detect and remove it."
     IDS_FailureMessage "%s in %s ist fehlgeschlagen.\nRückgabewert: 0x%08x"
     IDS_SuccessMessage "%s in %s war erfolgreich."
 END

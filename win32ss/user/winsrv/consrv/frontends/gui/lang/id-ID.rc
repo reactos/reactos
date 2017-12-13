@@ -1,16 +1,16 @@
-LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_INDONESIAN, SUBLANG_INDONESIAN_INDONESIA
 
 STRINGTABLE
 BEGIN
-    IDS_EDIT "Edit"
-    IDS_MARK "Tandai"
+    IDS_EDIT "&Edit"
+    IDS_MARK "Mark"
     IDS_COPY "Copy\tEnter"
     IDS_PASTE "Paste"
     IDS_SELECTALL "Pilih Semua"
-    IDS_SCROLL "Gulung"
+    IDS_SCROLL "Scroll"
     IDS_FIND "Cari..."
     IDS_DEFAULTS "Standar"
-    IDS_PROPERTIES "Properti"
+    IDS_PROPERTIES "&Properties"
 /*
     IDS_SCROLLHERE "Gulung ke Sini"
     IDS_SCROLLTOP "Gulung ke Atas"

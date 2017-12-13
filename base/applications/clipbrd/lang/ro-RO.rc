@@ -1,5 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -11,7 +10,7 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Deschidere…", CMD_OPEN
-        MENUITEM "Păst&rare ca…", CMD_SAVE_AS
+        MENUITEM "Păst&rare în…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", CMD_EXIT
     END
@@ -23,7 +22,7 @@ BEGIN
     BEGIN
         MENUITEM "&Automată", CMD_AUTOMATIC
     END
-    POPUP "Aj&utor"
+    POPUP "&Fișier"
     BEGIN
         MENUITEM "&Manual…", CMD_HELP
         MENUITEM SEPARATOR

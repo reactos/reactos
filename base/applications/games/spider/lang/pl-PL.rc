@@ -1,18 +1,17 @@
 /*
  * PROJECT:    Spider Solitaire
  * LICENSE:    See COPYING in top level directory
- * FILE:       base/applications/games/spider/lang/pl-PL.rc
- * PURPOSE:    Polish Language File for Spider Solitaire
- * TRANSLATOR: Maciej Bialas
- * UTF-8 conversion by Caemyr (May, 2011)
+ * FILE:       base/applications/games/spider/lang/en-US.rc
+ * PURPOSE:    English Language File for Spider Solitaire
+ * TRANSLATOR: Gregor Schneider
  */
 
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Wybierz koszulkę talii"
+CAPTION "Wybieranie koszulki karty"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -50,9 +49,9 @@ STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Pająk"
     IDS_SPI_ABOUT "Pasjans - Pająk, autor: Gregor Schneider\n\nCardLib wersja 1.0"
-    IDS_SPI_QUIT "Czy na pewno chcesz zakończyć?"
-    IDS_SPI_WIN "Gratulacje, wygrałeś(aś)!"
-    IDS_SPI_DEAL "Rozdać ponownie?"
+    IDS_SPI_QUIT "Zakończyć aktualną grę?"
+    IDS_SPI_WIN "Gratulacje, wygrałeś!"
+    IDS_SPI_DEAL "Nowe rozdanie?"
 END
 
 /* Menus */
@@ -65,12 +64,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Talia...", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "&Wyjście", IDM_GAME_EXIT
+        MENUITEM "Za&kończ", IDM_GAME_EXIT
     END
-    POPUP "&Pomoc"
+    POPUP "&Plik"
     BEGIN
-        MENUITEM "&Zawartość\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&O programie", IDM_HELP_ABOUT
+        MENUITEM "&Spis treści\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Informacje", IDM_HELP_ABOUT
     END
 END
 

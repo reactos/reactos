@@ -1,24 +1,15 @@
-/*
- * PROJECT:    ReactOS Management Console
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/mmc/lang/zh-CN.rc
- * PURPOSE:    Chinese (Simplified) Language File for Management Console
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
- *             Li Keqing <auroracloud4096@gmail.com>
- */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "文件(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "打开(&O)\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "打开...(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "帮助(&H)"
+    POPUP "文件(&F)"
     BEGIN
         MENUITEM "关于 ReactOS 控制台(&A)", IDM_HELP_ABOUT
     END
@@ -29,9 +20,9 @@ BEGIN
     POPUP "文件(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "打开(&O)\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "打开...(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM "保存", IDM_FILE_SAVE
-        MENUITEM "另存为...", IDM_FILE_SAVEAS
+        MENUITEM "另存为...(&A)", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)\tAlt+F4", IDM_FILE_EXIT
     END
@@ -39,7 +30,7 @@ BEGIN
     BEGIN
         MENUITEM "列表", IDM_WINDOWS_LIST
     END
-    POPUP "帮助(&H)"
+    POPUP "文件(&F)"
     BEGIN
         MENUITEM "关于 ReactOS 控制台(&A)", IDM_HELP_ABOUT
     END

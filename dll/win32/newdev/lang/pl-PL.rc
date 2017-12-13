@@ -1,21 +1,13 @@
-/*
- *    Translated by TestamenT
- *    testament@users.sourceforge.net
- *    https://sourceforge.net/projects/reactospl
- *    Corrected by Caemyr - Olaf Siejka (May, 2007; Jan, 2008)
- *    UTF-8 conversion by Caemyr (May, 2011) 
- */
-
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalacja urządzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Witamy", IDC_WELCOMETITLE, 120, 8, 195, 16
+    LTEXT "Witamy", IDC_WELCOMETITLE, 120, 8, 195, 24
     LTEXT "Ten kreator zainstaluje nowe sterowniki dla urządzenia:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Naciśnij Dalej, aby kontynuować.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "Naciśnij Dalej, aby zmienić ustawienia sprzętu.", IDC_STATIC, 120, 169, 195, 16
     LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "UWAGA! NIEODPOWIEDNI STEROWNIK MOŻE ZDESTABILIZOWAĆ LUB NAWET ZAWIESIĆ SYSTEM!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Zainstaluj sterownik automatycznie", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12

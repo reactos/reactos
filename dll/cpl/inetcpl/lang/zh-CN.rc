@@ -19,9 +19,7 @@
  *
  */
 
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE_SIMPLIFIED, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
@@ -37,32 +35,34 @@ BEGIN
 END
 
 /* "General" propsheet */
-IDD_GENERAL DIALOG  0, 0, 320, 220
-STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+IDD_GENERAL DIALOGEX  0, 0, 320, 220
+STYLE DS_SHELLFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg"
-CAPTION "常规"
+CAPTION "General"
 BEGIN
 
     GROUPBOX    "主页", IDC_STATIC, 4, 4, 312, 56
-    LTEXT       "您可以选择将用作您的主页地址。",
-                IDC_STATIC, 10, 14, 300, 10
-    EDITTEXT    IDC_HOME_EDIT, 10, 26, 300, 12, WS_VISIBLE | ES_AUTOHSCROLL
+    ICON ICO_HOME, ICO_HOME, 10, 15, 21, 20
+    LTEXT       "You can choose the address that will be used as your home page.",
+                IDC_STATIC, 40, 14, 265, 10
+    EDITTEXT    IDC_HOME_EDIT, 40, 26, 270, 12, WS_VISIBLE | ES_AUTOHSCROLL
     PUSHBUTTON  "当前页(&C)", IDC_HOME_CURRENT, 58, 42, 80, 14
     PUSHBUTTON  "默认页(&D)", IDC_HOME_DEFAULT, 144, 42, 80, 14
     PUSHBUTTON  "空白页(&B)", IDC_HOME_BLANK, 230, 42, 80, 14
     GROUPBOX    "浏览历史记录", IDC_STATIC, 4, 66, 312, 42
-    LTEXT       "您可以删除缓存的页面、 小型文字檔案和其他数据。",
-                IDC_STATIC, 10, 76, 300, 10
+    ICON ICO_HISTORY, ICO_HISTORY, 10, 78, 80, 14
+    LTEXT       "You can delete cached pages, cookies and other data.",
+                IDC_STATIC, 40, 76, 270, 10
     PUSHBUTTON  "删除文件...(&F)", IDC_HISTORY_DELETE, 144, 90, 80, 14
     PUSHBUTTON  "设置...(&S)", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
 
 END
 
 /* "Delete browsing history" dialog */
-IDD_DELETE_HISTORY DIALOG  0, 0, 250, 250
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+IDD_DELETE_HISTORY DIALOGEX  0, 0, 250, 250
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "删除浏览历史记录"
+CAPTION "Delete browsing history"
 BEGIN
 
     AUTOCHECKBOX   "互联网临时文件\n缓存的网站页面、 图像和证书的副本。",
@@ -76,15 +76,15 @@ BEGIN
     AUTOCHECKBOX   "密码\n保存在窗体中输入的密码。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "删除", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "删除(&D)", IDOK, 120, 230, 60, 15, WS_GROUP
 
 END
 
 /* "Security" propsheet */
-IDD_SECURITY DIALOG  0, 0, 320, 220
-STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+IDD_SECURITY DIALOGEX  0, 0, 320, 220
+STYLE DS_SHELLFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg"
-CAPTION "安全"
+CAPTION "Security"
 BEGIN
 
     CONTROL     "", IDC_SEC_LISTVIEW, "SysListView32",
@@ -99,15 +99,16 @@ BEGIN
 END
 
 /* "Content" propsheet */
-IDD_CONTENT DIALOG  0, 0, 320, 220
-STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+IDD_CONTENT DIALOGEX  0, 0, 320, 220
+STYLE DS_SHELLFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg"
-CAPTION "内容"
+CAPTION "Content"
 BEGIN
 
     GROUPBOX    "证书", IDC_STATIC, 4, 4, 312, 50
-    LTEXT       "为您的个人身份，确定证书颁发机构和出版商使用证书。",
-                IDC_STATIC, 58, 14, 252, 18
+    ICON ICO_CERTIFICATES, ICO_CERTIFICATES, 10, 15, 21, 20
+    LTEXT       "Certificates are used for your personal identification and to identify certificate authorities and publishers.",
+                IDC_STATIC, 40, 14, 252, 18
     PUSHBUTTON  "证书...", IDC_CERT, 146, 34, 80, 14
     PUSHBUTTON	"出版者...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 

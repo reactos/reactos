@@ -1,0 +1,23 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Compares the contents of two files or sets of files.\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      Specifies location and name of first file to compare.\n\
+  data2      Specifies location and name of second file to compare.\n\
+  /A         Display differences in ASCII characters (default: hexadecimal).\n\
+  /L         Display line numbers for differences.\n"
+    IDS_INVALIDSWITCH "Invalid switch - /%c\n"
+    IDS_BADSYNTAX "Bad command line syntax\n"
+    IDS_FILEERROR "Cannot find/open file: %s\n"
+    IDS_COMPARING "Comparing %s and %s...\n"
+    IDS_FILESIZEERROR "Cannot determine size of file: %s\n"
+    IDS_SIZEDIFFERS "Files are different sizes.\n"
+    IDS_READERROR "Files read error.\n"
+    IDS_MISMATCHLINE "Compare error at LINE %d\n"
+    IDS_MISMATCHOFFSET "Compare error at OFFSET 0x%X\n"
+    IDS_ASCIIDIFF "file%d = %c\n"
+    IDS_HEXADECIMALDIFF "file%d = %X\n"
+    IDS_MATCH "Files compare OK\n"
+END

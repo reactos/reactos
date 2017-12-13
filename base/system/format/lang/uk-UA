@@ -1,0 +1,43 @@
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
+
+STRINGTABLE
+BEGIN
+    STRING_HELP "Usage: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+  [drive:]         Specifies the drive to format.\n\
+  -FS:file-system  Specifies the type of file system (%s).\n\
+  -V:label         Specifies volume label.\n\
+  -Q               Performs a quick format.\n\
+  -A:size          Overrides the default allocation unit size. Default settings\n\
+                   are strongly recommended for general use\n\
+                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS compression is not supported for allocation unit sizes\n\
+                   above 4096.\n\
+  -C               Files created on the new volume will be compressed by\n\
+                   default.\n\n"
+    STRING_COMPLETE "%lu відсотків виконано.\r"
+    STRING_FORMAT_FAIL "FormatEx не зміг успішно виконати завдання.\n\n"
+    STRING_NO_SUPPORT "Функція не підтримується"
+    STRING_FMIFS_FAIL "Не зміг знацти FMIFS точки входу.\n\n"
+    STRING_UNKNOW_ARG "Невідомий аргумент: %s\n"
+    STRING_DRIVE_PARM "Необхідний параметр операції відсутній.\n\n"
+    STRING_ERROR_DRIVE_TYPE "Не вдалося втсанвити тип пристрою"
+    STRING_INSERT_DISK "Вставте чистий диск в пристрій %C:\nі натисніть Enter щоб продовжити..."
+    STRING_NO_VOLUME "Не вдалося виконати запит до пристрою"
+    STRING_NO_VOLUME_SIZE "Не вдалося визначити розмір диску"
+    STRING_FILESYSTEM "Визначена файлова система %s.\n"
+    STRING_LABEL_NAME_EDIT "Визначте мітку диску %C: "
+    STRING_ERROR_LABEL "Було вказано некорректну мітку.\n"
+    STRING_YN_FORMAT "\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n\
+DRIVE %C: WILL BE LOST!\nProceed with Format (Y/N)? "
+    STRING_YES_NO_FAQ "YN"
+    STRING_VERIFYING "Перевірка"
+    STRING_FAST_FMT "Швидке форматування"
+    STRING_CREATE_FSYS "Створення файлової системи.\n"
+    STRING_FMT_COMPLETE "Форматування завершено.\n"
+    STRING_VOL_COMPRESS "Диск не підтримує стискання.\n"
+    STRING_ENTER_LABEL "Мітка диску (11 символів,натисніть Enter якщо не треба)? "
+    STRING_NO_LABEL "Не можу встановити мітку диску"
+    STRING_FREE_SPACE "\n%I64d байтів на диску.\n%I64d байтів доступно на диску.\n"
+    STRING_SERIAL_NUMBER "\nСерійний номер диску - %04X-%04X\n"
+END

@@ -1,14 +1,12 @@
-/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 IDR_MAINMENU MENU
 BEGIN
     POPUP "&Arquivo"
     BEGIN
-        MENUITEM "Confi&gurações", ID_SETTINGS
+        MENUITEM "&Configurações", ID_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "Sa&ir", ID_EXIT
+        MENUITEM "Sai&r", ID_EXIT
     END
     POPUP "&Programas"
     BEGIN
@@ -18,11 +16,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Remover do Registro", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "A&tualizar\tF5", ID_REFRESH
+        MENUITEM "Atuali&zar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
-    POPUP "Aj&uda"
+    POPUP "Help"
     BEGIN
         MENUITEM "Aj&uda\tF1", ID_HELP, GRAYED
         MENUITEM "&Sobre", ID_ABOUT
@@ -42,13 +40,13 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
+        MENUITEM "I&nstalar\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Remover do Registro", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Atualizar\tF5", ID_REFRESH
+        MENUITEM "Atuali&zar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
@@ -59,7 +57,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Configurações"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Geral", -1, 4, 2, 240, 61
+    GROUPBOX "General", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Salvar posição da janela", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Atualizar esta lista de programas ao iniciar", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "&Registro de instalação e remoção de programas", IDC_LOG_ENABLED, 15, 46, 219, 12
@@ -75,9 +73,9 @@ BEGIN
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "No proxy for", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Padrão", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "&Padrão", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
     PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 181, 195, 60, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 181, 195, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -89,17 +87,17 @@ BEGIN
     AUTORADIOBUTTON "&Instalar com uma mídia (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Baixar e instalar", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 150, 78, 60, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
-STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE 
 CAPTION "Download %ls..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
-    PUSHBUTTON "Cancelar", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
@@ -118,14 +116,14 @@ BEGIN
     IDS_TOOLTIP_UNINSTALL "Desinstalar"
     IDS_TOOLTIP_MODIFY "Modificar"
     IDS_TOOLTIP_SETTINGS "Configurações"
-    IDS_TOOLTIP_REFRESH "Atualizar"
+    IDS_TOOLTIP_REFRESH "Refresh"
     IDS_TOOLTIP_UPDATE_DB "Update Database"
     IDS_TOOLTIP_EXIT "Sair"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_NAME "Nome"
+    IDS_APP_NAME "Name"
     IDS_APP_INST_VERSION "Versão"
     IDS_APP_DESCRIPTION "Descrição"
 END
@@ -176,7 +174,7 @@ BEGIN
     IDS_CAT_INTERNET "Internet & Rede"
     IDS_CAT_LIBS "Bibliotecas"
     IDS_CAT_OFFICE "Escritório"
-    IDS_CAT_OTHER "Outros"
+    IDS_CAT_OTHER "Other"
     IDS_CAT_SCIENCE "Ciência"
     IDS_CAT_TOOLS "Ferramentas"
     IDS_CAT_VIDEO "Vídeo"
@@ -200,7 +198,7 @@ BEGIN
     IDS_CHOOSE_FOLDER_TEXT "Escolha uma pasta para armazenar os Downloads:"
     IDS_CHOOSE_FOLDER_ERROR "A pasta especificada não existe. Deseja criá-la?"
     IDS_APP_REG_REMOVE "Você tem certeza que deseja apagar as informações do programa instalado do registro?"
-    IDS_INFORMATION "Informações"
+    IDS_INFORMATION "Information"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Não foi possível remover as informações do programa do registro!"
@@ -216,7 +214,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
+    IDS_STATUS_INSTALLED "Instalado"
     IDS_STATUS_NOTINSTALLED "Not installed"
     IDS_STATUS_DOWNLOADED "Downloaded"
     IDS_STATUS_UPDATE_AVAILABLE "Update available"

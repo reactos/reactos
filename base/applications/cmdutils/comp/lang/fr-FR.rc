@@ -1,13 +1,13 @@
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "Compare le contenu de deux fichiers ou ensembles de fichiers.\n\n\
+    IDS_HELP "Compares the contents of two files or sets of files.\n\n\
 COMP [/L] [/A] [data1] [data2]\n\n\
-  data1      Spécifie l'emplacement et le nom du premier fichier à comparer.\n\
-  data2      Spécifie l'emplacement et le nom du second fichier à comparer.\n\
-  /A         Affiche les différences en caractères ASCII (défaut: hexadécimal).\n\
-  /L         Affiche les numéros de ligne des différences.\n"
+  data1      Specifies location and name of first file to compare.\n\
+  data2      Specifies location and name of second file to compare.\n\
+  /A         Display differences in ASCII characters (default: hexadecimal).\n\
+  /L         Display line numbers for differences.\n"
     IDS_INVALIDSWITCH "Paramètre invalide - /%c\n"
     IDS_BADSYNTAX "Syntaxe incorrecte\n"
     IDS_FILEERROR "Impossible de trouver/ouvrir le fichier : %s\n"

@@ -1,14 +1,13 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Sucht in einer Datei nach einer Zeichenfolge.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""Zeichenfolge""\n\
-     [[Laufwerk:][Pfad]Dateiname]]\n\
-    /C  Zeigt nur die Anzahl der die Zeichenfolge enthaltenen Zeilen an.\n\
-    /I  Ignoriert Groß-/Kleinbuchstaben bei der Suche.\n\
-    /N  Zeigt die Zeilen mit ihren Zeilennummern an.\n\
-    /V  Zeigt alle Zeilen an, die die Zeichenfolge NICHT enhalten."
+    IDS_USAGE "FIND: Prints all lines of a file that contain a string.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] """Zeichenfolge""" [ file... ]\n\
+    /C  Count the number of lines that contain string\n\
+    /I  Ignore case\n\
+    /N  Number the displayed lines, starting at 1\n\
+    /V  Print lines that do not contain the string"
     IDS_NO_SUCH_FILE "Datei %s nicht gefunden\n"
     IDS_CANNOT_OPEN "Datei %s kann nicht geöffnet werden.\n"
 END

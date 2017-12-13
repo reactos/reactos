@@ -1,10 +1,8 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
@@ -44,7 +42,7 @@ END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Gelişmiş"
+CAPTION "Advanced"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Bu ayarların çoğu için yönetici ayrıcalıkları gereklidir.", IDC_STATIC, 12, 5, 236, 8
@@ -53,10 +51,10 @@ BEGIN
     PUSHBUTTON "&Ayarlar", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Kullanıcı Profilleri", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Oturum açmanızla ilgili masaüstü ayarları.", IDC_STATIC, 16, 88, 228, 20
-    PUSHBUTTON "A&yarlar", IDC_USERPROFILE, 194, 103, 50, 15
+    PUSHBUTTON "Aya&rlar", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Başlangıç ve Kurtarma", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Başlangıç ve kurtarma seçenekleri, bilgisayarınıza, ne biçimde açılacağını ve bir yanlışlık bilgisayarınızın durmasına neden olduğunda ne yapacağını bildirir.", IDC_STATIC, 16, 144, 228, 19
-    PUSHBUTTON "Aya&rlar", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "&Ayarlar", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "&Dizge Ayarları", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "&Ortam Değişkenleri", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Ya&nlışlık Bildirimi", IDC_ERRORREPORT, 170, 192, 80, 15
@@ -67,7 +65,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Dizge Ayarları"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Sürüm Bilgisi",IDC_STATIC, 6, 3, 210, 73
+    GROUPBOX "Sürüm Bilgisi", IDC_STATIC, 6, 3, 210, 73
     CONTROL "İş İstasyonu Olarak Bildir", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS, bir sunucu işletim dizgesi olarak yapılmıştır ve öyle bildirilir. Yalnızca uygulamalar için, bunu değiştirmek için bu kutucuğu imleyiniz.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "Tamam", IDOK, 166, 83, 50, 14
@@ -92,7 +90,7 @@ BEGIN
     LTEXT "ReactOS başladığında:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&bir donanım profili seçene dek bekle.", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "b&ir profil seçmezsem dizelgelenen ilk profili seç:", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    LTEXT "Sâniye Sonra", IDC_STATIC, 65, 187, 35, 8
+    LTEXT "sâniye", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -102,7 +100,7 @@ END
 
 IDD_HARDWAREPROFILE DIALOGEX 0, 0, 212, 188
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Umûmî"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
@@ -138,9 +136,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Profilin Adını Değiştir"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Şundan:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "&Şuradan:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-    LTEXT "Ş&una:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "Ş&uraya:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
     DEFPUSHBUTTON "Tamam", IDOK, 199, 9, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 199, 30, 50, 14
@@ -177,14 +175,14 @@ BEGIN
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT "Sâniye", IDC_STATIC, 223, 56, 18, 8
+    LTEXT "s", IDC_STATIC, 223, 56, 18, 8
     AUTOCHECKBOX "&Gerektiğinde Kurtarma Seçeneklerini Görüntüleme Süresi:", IDC_STRRECREC, 14, 70, 170, 8
     EDITTEXT IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT "Sâniye", IDC_STATIC, 223, 70, 18, 8
+    LTEXT "s", IDC_STATIC, 223, 70, 18, 8
     LTEXT "Başlangıç seçenekleri kütüğünü elle düzenlemek için Düzenle'ye tıklayınız.", IDC_STATIC, 14, 89, 187, 8
-    PUSHBUTTON "&Düzenle", IDC_STRRECEDIT, 188, 87, 50, 14
+    PUSHBUTTON "&Düzen", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "Dizge Başarısızlığı", IDC_STATIC, 7, 111, 238, 140
     AUTOCHECKBOX "D&izge Kaydına Bir Olay Yaz", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
     AUTOCHECKBOX "&Bir Yönetim Uyarısı Gönder", IDC_STRRECSENDALERT, 14, 138, 148, 10
@@ -218,7 +216,7 @@ BEGIN
     AUTORADIOBUTTON "&Sayfalama Kütüğü Yok", IDC_NOPAGEFILE, 20, 158, 78, 9
     EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Ayarla", IDC_SET, 158, 155, 50, 13
+    PUSHBUTTON "Ayarla", IDC_SET, 158, 155, 50, 13
     GROUPBOX "Tüm Sürücüler İçin Toplam Sayfalama Kütüğü Büyüklüğü", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "En Az İzin Verilen:", IDC_STATIC, 18, 188, 58, 9
     LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
@@ -239,7 +237,7 @@ BEGIN
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yeni...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
-    PUSHBUTTON "&Düzenle...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
+    PUSHBUTTON "De&ğiştir...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON "&Sil", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
     GROUPBOX "Dizge Değişkenleri", IDC_STATIC, 7, 116, 238, 100
     CONTROL "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
@@ -275,7 +273,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Dizge"
+    IDS_CPLSYSTEMNAME "System"
     IDS_CPLSYSTEMDESCRIPTION "Bilgisayar üzerine bilgi görüntüler ve türlü dizge ve donanım ayarlarını değiştirir."
     IDS_MEGABYTE "MB Bellek"
     IDS_GIGABYTE "GB Bellek"
@@ -288,7 +286,7 @@ BEGIN
     IDS_KERNEL_DUMP "Çekirdek Dökümü"
     IDS_FULL_DUMP "Tüm Döküm"
     IDS_USERPROFILE_NAME "Ad"
-    IDS_USERPROFILE_SIZE "Büyüklük"
+    IDS_USERPROFILE_SIZE "Boyut"
     IDS_USERPROFILE_TYPE "Tür"
     IDS_USERPROFILE_STATUS "Durum"
     IDS_USERPROFILE_MODIFIED "Değiştirilmiş"

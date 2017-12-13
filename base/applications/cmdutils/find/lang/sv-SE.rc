@@ -1,13 +1,13 @@
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "FIND: Skriver ut alla rader i en fil som innehåller en sträng.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""sträng"" [ fil... ]\n\
-    /C  Räkna antalet rader som innehåller en strängen\n\
-    /I  Ignorera skiftläge\n\
-    /N  Antal visade rader, börjar på 1\n\
-    /V  Skriver ut rader som inte innehåller strängen"
+    IDS_USAGE "FIND: Prints all lines of a file that contain a string.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] """sträng""" [ file... ]\n\
+    /C  Count the number of lines that contain string\n\
+    /I  Ignore case\n\
+    /N  Number the displayed lines, starting at 1\n\
+    /V  Print lines that do not contain the string"
     IDS_NO_SUCH_FILE "FIND: %s: Ingen sorts fil\n"
     IDS_CANNOT_OPEN "FIND: %s: Kan inte öppna filen\n"
 END

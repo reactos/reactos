@@ -1,6 +1,4 @@
-/* Spanish translation by Ismael Ferreras Morezuelas (Swyter) */
-
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 
 STRINGTABLE
 BEGIN

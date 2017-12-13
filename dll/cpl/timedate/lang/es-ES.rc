@@ -1,4 +1,4 @@
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -37,7 +37,7 @@ BEGIN
     AUTOCHECKBOX "Sincronizar automáticamente con un servidor horario de Internet",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Servidor:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "Actualizar ahora", IDC_UPDATEBUTTON, 187, 22, 58, 14
+    PUSHBUTTON "Actualizar ahora", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
     LTEXT "La sincronización sólo se puede realizar cuando su equipo esté conectado a Internet.", -1, 12, 114, 225, 25

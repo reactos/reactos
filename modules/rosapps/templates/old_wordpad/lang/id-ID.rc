@@ -1,0 +1,169 @@
+LANGUAGE LANG_INDONESIAN, SUBLANG_INDONESIAN_INDONESIA
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&File"
+  BEGIN
+    MENUITEM "&Baru...",         ID_NEW
+    MENUITEM "&Open...",        ID_OPEN
+    MENUITEM SEPARATOR
+    MENUITEM "&Tutup\tCtrl+F4", ID_CLOSE, GRAYED
+    MENUITEM "Tutup s&emua",      ID_CLOSEALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Save",           ID_SAVE, GRAYED
+    MENUITEM "Save &As...",     ID_SAVEAS, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Tin&jau Cetakan",  ID_PRINTPRE, GRAYED
+    MENUITEM "&Cetak...",       ID_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Se&tup Halaman...",  ID_PAGESETUP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "E&xit\tAlt+F4",   ID_EXIT
+  END
+  POPUP "&Edit"
+  BEGIN
+    MENUITEM "&Undo",           ID_UNDO, GRAYED
+    MENUITEM "&Redo",           ID_REDO, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "C&ut",            ID_CUT, GRAYED
+    MENUITEM "&Copy",           ID_COPY, GRAYED
+    MENUITEM "&Paste",          ID_PASTE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Clear",           -1, GRAYED
+    MENUITEM "Select &All",     ID_SELALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Clear",-1, GRAYED
+    MENUITEM "Clear",       -1, GRAYED
+    MENUITEM "Clear", -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Clear",-1, GRAYED
+    MENUITEM "Clear",          -1, GRAYED
+  END
+  POPUP "&Lihat"
+  BEGIN
+    MENUITEM "&Toolbar",        -1, CHECKED
+    MENUITEM "&Toolbar",     -1, CHECKED
+    MENUITEM "&Toolbar",          -1, CHECKED
+    MENUITEM "Status&bar",     ID_STATUSBAR, CHECKED
+  END
+  POPUP "&Insert"
+  BEGIN
+    MENUITEM "&Date and Time...",-1, GRAYED
+    MENUITEM "&Date and Time...",       -1, GRAYED
+  END
+  POPUP "&Format"
+  BEGIN
+    MENUITEM "&Font...",        -1 GRAYED
+    MENUITEM "Bulletstyle",     -1, GRAYED
+    MENUITEM "Bulletstyle",    -1, GRAYED
+    MENUITEM "Bulletstyle",         -1, GRAYED
+  END
+  POPUP "&Window"
+  BEGIN
+    MENUITEM "&Cascade",           ID_WINDOW_CASCADE
+    MENUITEM "Tile &Horizontally", ID_WINDOW_TILE_HORZ
+    MENUITEM "Tile &Vertically",   ID_WINDOW_TILE_VERT
+    MENUITEM "&Arrange Icons",     ID_WINDOW_ARRANGE
+    MENUITEM SEPARATOR
+    MENUITEM "Nex&t\tCtrl+F6",     ID_WINDOW_NEXT
+  END
+  POPUP "&File"
+  BEGIN
+    MENUITEM "&Tentang...",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+
+    MENUITEM SEPARATOR
+
+  END
+END
+
+
+IDD_NEWDOCSEL DIALOGEX 6,6,159,67
+CAPTION "New"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  LTEXT "New document Type:", IDC_STATIC, 4, 3, 72, 9
+  LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
+  PUSHBUTTON "&OK", IDOK, 112, 16, 44, 13
+  PUSHBUTTON "&Cancel", IDCANCEL, 112, 33, 44, 13
+END
+
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "About WordPad"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "WordPad II v0.1\nCopyright (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON "Tutup", IDOK, 65, 162, 44, 15
+  ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE           "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_DEFAULT_NAME      "Document %1!u!"
+  IDS_READY             " Siap."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_DOC_TYPE_RICH_TEXT    "Rich Text Document"
+  IDS_DOC_TYPE_UNICODE_TEXT "Text Document"
+  IDS_DOC_TYPE_TEXT         "Unicode Text Document"
+END
+
+
+
+/* Tooltips */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_NEW       "New"
+  IDS_TOOLTIP_OPEN      "Open"
+  IDS_TOOLTIP_SAVE      "Save"
+  IDS_TOOLTIP_PRINTPRE  "Tinjau cetakan"
+  IDS_TOOLTIP_PRINT     "Print"
+  IDS_TOOLTIP_CUT       "Cut"
+  IDS_TOOLTIP_COPY      "Copy"
+  IDS_TOOLTIP_PASTE     "Paste"
+  IDS_TOOLTIP_UNDO      "Undo"
+  IDS_TOOLTIP_REDO      "Redo"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_NEW          " Membuat dokumen baru."
+  IDS_HINT_OPEN         " Membuka dokumen yang sudah ada."
+  IDS_HINT_CLOSE        " Menutup jendela ini."
+  IDS_HINT_CLOSEALL     " Menutup semua jendela."
+  IDS_HINT_SAVE         " Menyimpan dokumen aktif."
+  IDS_HINT_SAVEAS       " Menyimpan dokumen aktif dengan nama baru."
+  IDS_HINT_PRINT        " Mencetak dokumen aktif."
+  IDS_HINT_PRINTPRE     " Meninjau dulu dokumen yang dicetak."
+  IDS_HINT_PAGESETUP    " Changes page layout settings."
+  IDS_HINT_EXIT         " Keluar aplikasi ini."
+
+  IDS_HINT_CASCADE      " Mengatur jendela agar saling tindih."
+  IDS_HINT_TILE_HORZ    " Mengatur jendela seperti ubin tidak saling tindih."
+  IDS_HINT_TILE_VERT    " Mengatur jendela seperti ubin tidak saling tindih."
+  IDS_HINT_ARRANGE      " Mengatur ikon di bawah jendela."
+  IDS_HINT_NEXT         " Mengaktifkan jendela berikutnya."
+
+  IDS_HINT_SYS_RESTORE  " Mengembalikan jendela ini ke ukuran normal."
+  IDS_HINT_SYS_MOVE     " Memindahkan jendela ini."
+  IDS_HINT_SYS_SIZE     " Mengukur ulang jendela ini."
+  IDS_HINT_SYS_MINIMIZE " Menyempitkan jendela menjadi ikon."
+  IDS_HINT_SYS_MAXIMIZE " Melebarkan jendela ini memenuhi layar ini."
+END
+

@@ -1,5 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_ROMANIAN_ROMANIA
 
 STRINGTABLE
 BEGIN
@@ -10,7 +9,7 @@ END
 
 IDM_WINEMINE MENU
 BEGIN
-    POPUP "J&oc"
+    POPUP "&Opțiuni"
     BEGIN
         MENUITEM "&Nou\tF2", IDM_NEW
         MENUITEM SEPARATOR
@@ -23,7 +22,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+X", IDM_EXIT
     END
-    POPUP "Aj&utor"
+    POPUP "&Despre…"
     BEGIN
         MENUITEM "Scoruri ma&xime", IDM_TIMES
         MENUITEM "&Despre…", IDM_ABOUT
@@ -37,7 +36,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Scoruri maxime", -1, 10, 10, 140, 45
     LTEXT "Începător", -1, 20, 20, 40, 8
-    LTEXT "Avansat", -1, 20, 30, 40, 8
+    LTEXT "Advanced", -1, 20, 30, 40, 8
     LTEXT "Expert", -1, 20, 40, 40, 8
     LTEXT "999", IDC_TIME1, 70, 20, 15, 8
     LTEXT "999", IDC_TIME2, 70, 30, 15, 8
@@ -45,7 +44,7 @@ BEGIN
     LTEXT "", IDC_NAME1, 90, 20, 55, 8
     LTEXT "", IDC_NAME2, 90, 30, 55, 8
     LTEXT "", IDC_NAME3, 90, 40, 55, 8
-    DEFPUSHBUTTON "Î&nchide", IDOK, 55, 60, 50, 15
+    DEFPUSHBUTTON "Con&firmă", IDOK, 55, 60, 50, 15
 END
 
 DLG_CONGRATS DIALOGEX 0, 0, 160, 60

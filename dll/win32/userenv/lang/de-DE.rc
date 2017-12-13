@@ -1,4 +1,4 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 STRINGTABLE
 BEGIN
@@ -9,7 +9,7 @@ BEGIN
     IDS_MYDOCUMENTS "Eigene Dateien"
     IDS_NETHOOD "Netzwerkumgebung"
     IDS_PRINTHOOD "Druckumgebung"
-    IDS_RECENT "Recent"
+    IDS_RECENT "Dokumente"
     IDS_SENDTO "Senden an"
     IDS_TEMPLATES "Vorlagen"
     IDS_STARTMENU "Startmenü"

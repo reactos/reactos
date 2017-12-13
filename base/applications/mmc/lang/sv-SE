@@ -1,0 +1,43 @@
+LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Ny\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Öppna...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&Avsluta\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Arkiv"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Ny\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Öppna...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "Spara so&m...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Avsluta\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Fönster"
+    BEGIN
+        MENUITEM "List", IDM_WINDOWS_LIST
+    END
+    POPUP "&Arkiv"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Management Console"
+    IDS_CONSOLETITLE "Console%1!u!"
+END

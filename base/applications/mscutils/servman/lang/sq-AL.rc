@@ -1,17 +1,12 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
- * DATE OF TR:  29-11-2013
-*/
-
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDR_MAINMENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "Eksporto...", ID_EXPORT
+        MENUITEM "&Eksporto...", ID_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "Dil", ID_EXIT
+        MENUITEM "dIL", ID_EXIT
     END
     POPUP "Veprim"
     BEGIN
@@ -31,25 +26,25 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Tiparet...", ID_PROP, GRAYED
     END
-    POPUP "Vëzhgo"
+    POPUP "&Vëzhgo"
     BEGIN
-        MENUITEM "Ikona të mëdha", ID_VIEW_LARGE
-        MENUITEM "Ikona të vogla", ID_VIEW_SMALL
+        MENUITEM "Ikona te medha", ID_VIEW_LARGE
+        MENUITEM "Ikona te vogla", ID_VIEW_SMALL
         MENUITEM "Lista", ID_VIEW_LIST
-        MENUITEM "Detaje", ID_VIEW_DETAILS
+        MENUITEM "&Detaje", ID_VIEW_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "Rregullo...", ID_VIEW_CUST, GRAYED
     END
-    POPUP "Ndihmë"
+    POPUP "&File"
     BEGIN
-        MENUITEM "Ndihmë", ID_HELP
-        MENUITEM "Rreth", ID_ABOUT
+        MENUITEM "&File", ID_HELP
+        MENUITEM "rRETH", ID_ABOUT
     END
 END
 
 IDR_POPUP MENU
 BEGIN
-    POPUP "popup"
+    POPUP "shfaq"
     BEGIN
         MENUITEM "Fillo", ID_START, GRAYED
         MENUITEM "Ndalo", ID_STOP, GRAYED
@@ -57,12 +52,12 @@ BEGIN
         MENUITEM "Rifillo", ID_RESUME, GRAYED
         MENUITEM "Rifillo", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Rifresko", ID_REFRESH
+        MENUITEM "Rifesko", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Modifiko...", ID_EDIT, GRAYED
         MENUITEM "Fshi...", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Tipare...", ID_PROP, GRAYED
+        MENUITEM "Tiparet...", ID_PROP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Ndihmë...", ID_HELP
     END
@@ -74,13 +69,13 @@ FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
     LTEXT "Menaxher Shërbimesh v0.8\nCopyright (C) 2005-2007\nnga Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 40
-    PUSHBUTTON "Mbyll", IDOK, 75, 162, 44, 15
+    PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
     ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
-CAPTION "Përgjithshëm"
+CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -123,7 +118,7 @@ BEGIN
     EDITTEXT IDC_LOGON_PASSWORD2, 72, 86, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "You can enable or disable this service for the hardware profiles listed below:", IDC_STATIC, 7, 114, 210, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_LOGON_HWPROFILE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 124, 238, 65
-    PUSHBUTTON "&Enable", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "Mundeso", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "&Disable", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
 END
 
@@ -186,9 +181,9 @@ BEGIN
     LTEXT "*Rruga tek ekzekutimi :", IDC_STATIC, 10, 51, 68, 9
     LTEXT "Përshkrimi :", IDC_STATIC, 12, 86, 44, 9
     PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
-    PUSHBUTTON "Anulo", IDCANCEL, 176, 192, 46, 13
+    PUSHBUTTON "Cancel", IDCANCEL, 176, 192, 46, 13
     LTEXT "Opsione shtese (kliko ndihmë për detaje)", IDC_STATIC, 10, 151, 134, 9
-    PUSHBUTTON "Ndihmë", ID_CREATE_HELP, 10, 192, 44, 13
+    PUSHBUTTON "&File", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6, 6, 185, 148
@@ -220,7 +215,7 @@ BEGIN
 END
 
 IDD_DLG_HELP_OPTIONS DIALOGEX 6, 6, 200, 150
-CAPTION "Opsione"
+CAPTION "OpSIONE"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
@@ -237,14 +232,14 @@ BEGIN
     CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
     LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
     LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
-    PUSHBUTTON "Mbyll", IDOK, 100, 70, 54, 13
+    PUSHBUTTON "Close", IDOK, 100, 70, 54, 13
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FIRSTCOLUMN "Emri"
-    IDS_SECONDCOLUMN "Përshkrimi"
-    IDS_THIRDCOLUMN "Statusi"
+    IDS_FIRSTCOLUMN "Name"
+    IDS_SECONDCOLUMN "P♪7rshkrimi"
+    IDS_THIRDCOLUMN "Gjendja"
     IDS_FOURTHCOLUMN "Tipi i startupit"
     IDS_FITHCOLUMN "Hyr si"
 END
@@ -252,7 +247,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SERVICES_STARTED "Filluar"
-    IDS_SERVICES_STOPPED "Ndaluar"
+    IDS_SERVICES_STOPPED "Stopped"
     IDS_SERVICES_AUTO "Automatik"
     IDS_SERVICES_MAN "Manuale"
     IDS_SERVICES_DIS "E ndaluar"
@@ -263,12 +258,12 @@ BEGIN
     IDS_NUM_SERVICES "Num Shërbimit: %d"
     IDS_STOP_DEPENDS "Kur %s ndalon, keto shërbime te tjera do të ndalojnë gjithashtu"
     IDS_NO_DEPENDS "<Ska varës>"
-    IDS_LICENSE "Ky program është software falas; ju mund ta shpërndani dhe / ose modifikoni sipas kushteve të GNU General Public License të publikuar nga Fondacioni Free Software; sipas versionit 2 të Liçencës, ose (sipas opinionit tuaj) çdo versioni të mëvonshëm.\r\n\r\nKy program shpërndahet me shpresën që do t'ju jetë i dobishëm, por PA ASNJË GARANCI; madje edhe pa garancinë preçize të SHITJES apo PËRDORIMIT PËR NJË QËLLIM TË CAKTUAR. Shiko Liçencën Publike të Përgjithshme GNU për më shumë detaje.\r\n\r\nJu duhet të keni marrë një kopje të Liçensës së Përgjithshme Publike GNU së bashku me këtë program, e nëse jo, shkruani në Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Ky program eshte falas; ju mund ta shperndani ose modifikoni nen termat e liçenses publike te GNU nga Free Software Foundation; ose versionin 2 te Liçenses, ose (opsionet tend) versionet me te reja.\r\n\r\nKy program shperndahet me shpresen qe do te jete i nevojshem, POR PA ASNJE GARANCI; madje dhe pa nënkuptimin e garancisë së tregtimit apo përshtatshmerise për qëllim të veçantë. Shiko liçensen publike te GNU per me shume detaje.\r\n\r\nJu duhet te jeni paisur me nje kopje te liçenses GNU perkrah ketij programi; nese jo, shkruani Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TOOLTIP_PROP "Tipar"
+    IDS_TOOLTIP_PROP "Tipare"
     IDS_TOOLTIP_REFRESH "Rifresko"
     IDS_TOOLTIP_EXPORT "Lista eksportuese"
     IDS_TOOLTIP_CREATE "Krijo një shërbim të ri"
@@ -331,7 +326,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Menaxhues i shërbimeve të ReactOS"
+    IDS_APPNAME "WineMine"
 END
 
 STRINGTABLE

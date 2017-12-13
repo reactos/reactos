@@ -1,0 +1,7 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_BULGARIAN_BULGARIA
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "Възможности за телефон и модем"
+    IDS_CPLSYSTEMDESCRIPTION "Настройване на модема и на начина на избиране на телефона."
+END

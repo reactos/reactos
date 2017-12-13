@@ -1,8 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TR:  29-11-2013
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 /* Dialogs */
 
@@ -141,9 +137,9 @@ BEGIN
             NOT WS_VISIBLE, 230, 21, 38, 10
     CONTROL "Byte", IDC_RADIO_BYTE, "Button", BS_AUTORADIOBUTTON |
             NOT WS_VISIBLE, 270, 21, 38, 10
-    CONTROL "Degrees", IDC_RADIO_DEG, "Button", BS_AUTORADIOBUTTON, 150, 21, 45, 10
+    CONTROL "Gradë", IDC_RADIO_DEG, "Button", BS_AUTORADIOBUTTON, 150, 21, 45, 10
     CONTROL "Radians", IDC_RADIO_RAD, "Button", BS_AUTORADIOBUTTON, 204, 21, 45, 10
-    CONTROL "Gradians", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
+    CONTROL "Gradian", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
     PUSHBUTTON "C", IDC_BUTTON_CANC, 267, 38, 43, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "CE", IDC_BUTTON_CE, 222, 38, 43, 18, BS_CENTER | BS_VCENTER |
@@ -311,12 +307,12 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
-    POPUP "Edit"
+    POPUP "Modifiko"
     BEGIN
-        MENUITEM "Kopjo\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "Ngjit\tCtrl+V", IDM_EDIT_PASTE
+        MENUITEM "&Kopjo\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "&Ngjit\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Modifko"
+    POPUP "&Vëzhgo"
     BEGIN
         MENUITEM "Standart", IDM_VIEW_STANDARD
         MENUITEM "Shkencor", IDM_VIEW_SCIENTIFIC
@@ -333,9 +329,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Grupim numeror", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Ndihmë"
+    POPUP "&File"
     BEGIN
-        MENUITEM "Ndihmë temë", IDM_HELP_HELP
+        MENUITEM "Ndihmë me temë", IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
     END
@@ -345,14 +341,14 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Modifiko"
     BEGIN
-        MENUITEM "Kopjo\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "Ngjit\tCtrl+V", IDM_EDIT_PASTE
+        MENUITEM "&Kopjo\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "&Ngjit\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Vëzhgo"
+    POPUP "&Vëzhgo"
     BEGIN
         MENUITEM "Standart", IDM_VIEW_STANDARD
         MENUITEM "Shkencor", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Konverto", IDM_VIEW_CONVERSION
+        MENUITEM "Konvertim", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hex\tF5", IDM_VIEW_HEX, CHECKED
         MENUITEM "Decimal\tF6", IDM_VIEW_DEC, CHECKED
@@ -366,9 +362,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Grupim numeror", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Ndihmë"
+    POPUP "&File"
     BEGIN
-        MENUITEM "Ndihmë temë", IDM_HELP_HELP
+        MENUITEM "Ndihmë me temë", IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
     END
@@ -378,20 +374,20 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Modifiko"
     BEGIN
-        MENUITEM "Kopjo\tCtrl+C", IDM_EDIT_COPY
-        MENUITEM "Ngjit\tCtrl+V", IDM_EDIT_PASTE
+        MENUITEM "&Kopjo\tCtrl+C", IDM_EDIT_COPY
+        MENUITEM "&Ngjit\tCtrl+V", IDM_EDIT_PASTE
     END
-    POPUP "Vëzhgo"
+    POPUP "&Vëzhgo"
     BEGIN
-        MENUITEM "Standar", IDM_VIEW_STANDARD
+        MENUITEM "Standart", IDM_VIEW_STANDARD
         MENUITEM "Shkencor", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Konverto", IDM_VIEW_CONVERSION
+        MENUITEM "Konvertim", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Grupim numeror", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Ndihmë"
+    POPUP "&File"
     BEGIN
-        MENUITEM "Ndihmë temë", IDM_HELP_HELP
+        MENUITEM "Ndihmë me temë", IDM_HELP_HELP
         MENUITEM SEPARATOR
         MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
     END
@@ -401,7 +397,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MATH_ERROR "Error"
+    IDS_MATH_ERROR "Win32 error"
     IDS_QUICKHELP "Ndihmë e shpejtë"
 END
 
@@ -426,7 +422,7 @@ BEGIN
     IDS_CONV_TEMPERATURE "Temperature"
     IDS_CONV_TIME "Koha"
     IDS_CONV_VELOCITY "Shpejtesi"
-    IDS_CONV_VOLUME "Volum"
+    IDS_CONV_VOLUME "Volumi"
     IDS_CONV_WEIGHT "Pesha"
 END
 

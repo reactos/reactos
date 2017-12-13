@@ -1,7 +1,7 @@
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "En blanco"
-    IDS_TEXT        "Ninguna opción necesita ser configurada."
+    IDS_TEXT        "No se necesita configurar ninguna opción."
 END

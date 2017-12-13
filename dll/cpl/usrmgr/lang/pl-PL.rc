@@ -1,14 +1,4 @@
-/*
- *    Translated by Caemyr - Olaf Siejka (Jun, 2008)
- *    Updated by Saibamen - Adam Stachowicz (Jul, 2008)
- *    Use ReactOS forum PM or IRC to contact me
- *    http://www.reactos.org
- *    IRC: irc.freenode.net #reactos-pl
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (April, 2014)
- */
-
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
 
 /* Dialogs */
 
@@ -48,13 +38,13 @@ END
 
 IDD_USER_GENERAL DIALOGEX 0, 0, 252, 223
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ogólne"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_USER_GENERAL_NAME, 7, 12, 112, 8
     LTEXT "Imię i Nazwisko:", -1, 7, 46, 63, 8
     EDITTEXT IDC_USER_GENERAL_FULL_NAME, 77, 43, 168, 13, ES_AUTOHSCROLL
-    LTEXT "Opis:", -1, 7, 64, 63, 8
+    LTEXT "Description:", -1, 7, 64, 63, 8
     EDITTEXT IDC_USER_GENERAL_DESCRIPTION, 77, 61, 168, 13, ES_AUTOHSCROLL
     AUTOCHECKBOX "Użytkownik musi zmienić hasło podczas pierwszego logowania", IDC_USER_GENERAL_FORCE_CHANGE, 7, 82, 210, 10
     AUTOCHECKBOX "Użytkownik nie może zmienić hasła", IDC_USER_GENERAL_CANNOT_CHANGE, 7, 95, 210, 10
@@ -80,12 +70,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Profil użytkownika", -1, 7, 7, 238, 54
+    GROUPBOX "User profile", -1, 7, 7, 238, 54
     LTEXT "Ścieżka profilu:", -1, 16, 22, 55, 8
     EDITTEXT IDC_USER_PROFILE_PATH, 78, 19, 160, 13, ES_AUTOHSCROLL
     LTEXT "Skrypt logowania:", -1, 16, 40, 55, 8
     EDITTEXT IDC_USER_PROFILE_SCRIPT, 78, 37, 160, 13, ES_AUTOHSCROLL
-    GROUPBOX "Katalog domowy", -1, 7, 68, 238, 54
+    GROUPBOX "Home directory", -1, 7, 68, 238, 54
     AUTORADIOBUTTON "Ścieżka lokalna:", IDC_USER_PROFILE_LOCAL, 16, 83, 60, 10
     AUTORADIOBUTTON "Połącz:", IDC_USER_PROFILE_REMOTE, 16, 100, 60, 10
     EDITTEXT IDC_USER_PROFILE_LOCAL_PATH, 78, 81, 160, 13, ES_AUTOHSCROLL
@@ -97,11 +87,11 @@ END
 
 IDD_GROUP_GENERAL DIALOGEX 0, 0, 252, 223
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ogólne"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_GROUP_GENERAL_NAME, 7, 12, 112, 8
-    LTEXT "Opis:", -1, 7, 45, 46, 8
+    LTEXT "Description:", -1, 7, 45, 46, 8
     EDITTEXT IDC_GROUP_GENERAL_DESCRIPTION, 65, 42, 180, 13, ES_AUTOHSCROLL
     LTEXT "Członkowie:", -1, 7, 63, 45, 8
     CONTROL "", IDC_GROUP_GENERAL_MEMBERS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
@@ -133,7 +123,7 @@ BEGIN
     EDITTEXT IDC_USER_NEW_FULL_NAME, 107, 25, 153, 14, ES_AUTOHSCROLL
     RTEXT "Imię i Nazwisko:", -1, 7, 28, 96, 8
     EDITTEXT IDC_USER_NEW_DESCRIPTION, 107, 43, 153, 14, ES_AUTOHSCROLL
-    RTEXT "Opis:", -1, 7, 46, 96, 8
+    RTEXT "Description:", -1, 7, 46, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD1, 107, 67, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
     RTEXT "Hasło:", -1, 7, 70, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD2, 107, 85, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
@@ -141,7 +131,7 @@ BEGIN
     AUTOCHECKBOX "Użytkownik musi zmienić hasło podczas pierwszego logowania", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 200, 10
     AUTOCHECKBOX "Użytkownik nie może zmienić hasła", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Hasło nigdy nie wygasa", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED
-    AUTOCHECKBOX "Konto jest zablokowane", IDC_USER_NEW_DISABLED, 7, 151, 200, 10
+    AUTOCHECKBOX "Konto jest wyłączone", IDC_USER_NEW_DISABLED, 7, 151, 200, 10
     DEFPUSHBUTTON "OK", IDOK, 156, 179, 50, 14, WS_DISABLED
     PUSHBUTTON "Anuluj", IDCANCEL, 210, 179, 50, 14
 END
@@ -154,7 +144,7 @@ BEGIN
     EDITTEXT IDC_GROUP_NEW_NAME, 107, 7, 153, 14, ES_AUTOHSCROLL
     RTEXT "Nazwa grupy:", -1, 7, 10, 96, 8
     EDITTEXT IDC_GROUP_NEW_DESCRIPTION, 107, 25, 153, 14, ES_AUTOHSCROLL
-    RTEXT "Opis:", -1, 7, 28, 96, 8
+    RTEXT "Description:", -1, 7, 28, 96, 8
     DEFPUSHBUTTON "OK", IDOK, 156, 53, 50, 14, WS_DISABLED
     PUSHBUTTON "Anuluj", IDCANCEL, 210, 53, 50, 14
 END
@@ -198,7 +188,7 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "Zmień hasło", IDM_USER_CHANGE_PASSWORD
+        MENUITEM "Zmiana hasła", IDM_USER_CHANGE_PASSWORD
         MENUITEM SEPARATOR
         MENUITEM "Usuń", IDM_USER_DELETE
         MENUITEM "Zmień nazwę", IDM_USER_RENAME

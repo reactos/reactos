@@ -1,23 +1,15 @@
-/*
- *    Translated by TestamenT
- *    testament@users.sourceforge.net
- *    https://sourceforge.net/projects/reactospl
- *    Update by Caemyr - Olaf Siejka (Apr, 2011)
- *    UTF-8 conversion by Caemyr (May, 2011) 
- */
-
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
 
 IDM_MAINMENU MENU
 BEGIN
     POPUP "&Opcje"
     BEGIN
-        MENUITEM "&Właściwości", IDC_PROPERTIES
+        MENUITEM "Właś&ciwości", IDC_PROPERTIES
         MENUITEM "&Tryb zaawansowany", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "Zakoń&cz", IDC_EXIT
+        MENUITEM "Za&kończ", IDC_EXIT
     END
-    POPUP "Pomo&c"
+    POPUP "&Plik"
     BEGIN
         MENUITEM "&Tematy pomocy", IDC_HELP_TOPICS
         MENUITEM SEPARATOR

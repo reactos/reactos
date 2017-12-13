@@ -1,4 +1,4 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 
 IDR_MAINMENU MENU
 BEGIN
@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "&Открыть...\tCtrl+O", IDM_OPEN_FILE
         MENUITEM "&Закрыть\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "&Выход", IDM_EXIT
+        MENUITEM "В&ыход", IDM_EXIT
     END
     POPUP "&Воспроизведение"
     BEGIN
@@ -16,7 +16,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Повтор\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&Отображение"
+    POPUP "&Вид"
     BEGIN
         MENUITEM "Одно-оконный &режим", IDM_SWITCHVIEW
     END
@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Громкость", IDM_VOLUMECTL
     END
-    POPUP "&Помощь"
+    POPUP "&Файл"
     BEGIN
         MENUITEM "&О программе", IDM_ABOUT
     END
@@ -44,17 +44,17 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Неизвестно"
+    IDS_MODE_UNKNOWN "Неизвестный"
     IDS_MODE_OPEN "Открыт"
-    IDS_MODE_STOP "Остановлен"
+    IDS_MODE_STOP "Остановлено"
     IDS_MODE_PLAY "Воспроизводится"
-    IDS_MODE_PAUSE "Приостановлен"
+    IDS_MODE_PAUSE "Приостановлено"
     IDS_MODE_RECORD "Записывает"
     IDS_MODE_SEEK "Перематывает"
     IDS_MODE_NOT_READY "Не готов"
     IDS_ALL_TYPES_FILTER "Все поддерживаемые"
     IDS_TOOLTIP_PLAY "Воспроизведение"
-    IDS_TOOLTIP_STOP "Остановить"
+    IDS_TOOLTIP_STOP "Stop"
     IDS_TOOLTIP_EJECT "Извлечь"
     IDS_TOOLTIP_BACKWARD "Назад"
     IDS_TOOLTIP_SEEKBACK "Перемотка назад"
@@ -62,6 +62,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "Вперед"
     IDS_TOOLTIP_PAUSE "Приостановить"
     IDS_APPTITLE "Проигрыватель ReactOS"
-    IDS_PLAY "Воспроизвести"
+    IDS_PLAY "Воспроизведение"
     IDS_DEFAULTMCIERRMSG "Неизвестная ошибка."
 END

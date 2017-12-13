@@ -1,17 +1,17 @@
 /*
- * PROJECT:     ReactOS Spider
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/games/spider/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for ReactOS Spider
- * TRANSLATORS: Sakara Yevhen, Igor Paliychuk
+ * PROJECT:    Spider Solitaire
+ * LICENSE:    See COPYING in top level directory
+ * FILE:       base/applications/games/spider/lang/en-US.rc
+ * PURPOSE:    English Language File for Spider Solitaire
+ * TRANSLATOR: Gregor Schneider
  */
 
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_UKRAINIAN_UKRAINE
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Вибір оформлення"
+CAPTION "Вибрати сорочку"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -28,7 +28,7 @@ BEGIN
     CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 232, 89, 50, 71
     CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 289, 89, 50, 71
     DEFPUSHBUTTON "OK", IDOK, 114, 165, 54, 14
-    PUSHBUTTON "Скасувати", IDCANCEL, 176, 165, 54, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 176, 165, 54, 14
 END
 
 IDD_DIFFICULTY DIALOGEX 100, 100, 106, 80
@@ -36,11 +36,11 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Рівень"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Простий: &Один колір", IDC_DIF_ONECOLOR, 8, 10, 82, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Середній: &Два кольори", IDC_DIF_TWOCOLORS, 8, 23, 92, 10
-    AUTORADIOBUTTON "Складний: &Чотири кольори", IDC_DIF_FOURCOLORS, 8, 36, 120, 10
+    AUTORADIOBUTTON "Простий: &Один колір", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Середній: &Два кольори", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
+    AUTORADIOBUTTON "Складний: &Чотири кольори", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
     DEFPUSHBUTTON "OK", IDOK, 8, 58, 40, 14
-    PUSHBUTTON "Скасувати", IDCANCEL, 58, 58, 40, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Strings */
@@ -50,8 +50,8 @@ BEGIN
     IDS_SPI_NAME "Пас’янс Паук"
     IDS_SPI_ABOUT "Пас’янс Паук, Gregor Schneider\n\nCardLib версії 1.0"
     IDS_SPI_QUIT "Вийти з поточної гри?"
-    IDS_SPI_WIN "Вітаємо, ви виграли!"
-    IDS_SPI_DEAL "Спробувати знову?"
+    IDS_SPI_WIN "Вітання, Ви виграли!!"
+    IDS_SPI_DEAL "Роздати знову?"
 END
 
 /* Menus */
@@ -64,12 +64,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Оформлення...", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "&Вихід", IDM_GAME_EXIT
+        MENUITEM "В&ихід", IDM_GAME_EXIT
     END
-    POPUP "&Довідка"
+    POPUP "&Файл"
     BEGIN
-        MENUITEM "Пе&регляд довідки\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&Про програму...", IDM_HELP_ABOUT
+        MENUITEM "&Зміст\tF1", IDM_HELP_CONTENTS
+        MENUITEM "Пр&о програму", IDM_HELP_ABOUT
     END
 END
 

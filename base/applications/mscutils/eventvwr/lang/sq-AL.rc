@@ -1,12 +1,12 @@
 /*
  * PROJECT:    ReactOS Event Viewer
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/mscutils/eventvwr/lang/sq-AL.rc
- * PURPOSE:    Albanian Language File for ReactOS Event Viewer
- * TRANSLATOR: Ardit Dani
+ * FILE:       base/applications/mscutils/eventvwr/lang/en-US.rc
+ * PURPOSE:    English Language File for ReactOS Event Viewer
+ * TRANSLATOR: Marc Piulachs
  */
 
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDM_EVENTVWR MENU
 BEGIN
@@ -14,13 +14,13 @@ BEGIN
     BEGIN
         MENUITEM "&Open...", IDM_OPEN_EVENTLOG
         MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG
-        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "Close", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "C&lear all Events", IDM_CLEAR_EVENTS
         MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
         MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "Dil", IDM_EXIT
+        MENUITEM "dIL", IDM_EXIT
     END
     POPUP "&Vëzhgo"
     BEGIN
@@ -35,11 +35,11 @@ BEGIN
     BEGIN
         MENUITEM "&Show event details view", IDM_SHOW_EVENT_DETAILS_VIEW
     END
-    POPUP "Ndihmë"
+    POPUP "&File"
     BEGIN
         MENUITEM "Ndihmë", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Rreth", IDM_ABOUT
+        MENUITEM "rRETH", IDM_ABOUT
     END
 END
 
@@ -58,8 +58,8 @@ CAPTION "Detaje te ngjarjeve"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "EvtDetailsCtrl", IDC_STATIC, 0, 0, 266, 215
-    PUSHBUTTON "Ndihmë", IDHELP, 8, 220, 50, 14
-    DEFPUSHBUTTON "Mbylle", IDOK, 208, 220, 50, 14
+    PUSHBUTTON "&File", IDHELP, 8, 220, 50, 14
+    DEFPUSHBUTTON "Close", IDOK, 208, 220, 50, 14
 END
 
 IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
@@ -72,7 +72,7 @@ BEGIN
     EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Ora:", IDC_STATIC, 8, 15, 31, 8
     EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Kategoria:", IDC_STATIC, 103, 15, 36, 8
+    LTEXT "Category:", IDC_STATIC, 103, 15, 36, 8
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Tipi:", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -141,7 +141,7 @@ BEGIN
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
     IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
     IDS_LOADING_WAIT "Ngarkim loget e ngjarjeve. Ju lutem prisni..."
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
+    IDS_NO_ITEMS "There are no items to show in this view."" // ""No events in this log."
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
@@ -152,9 +152,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_EVENTLOG_ERROR_TYPE "Error"
+    IDS_EVENTLOG_ERROR_TYPE "Win32 error"
     IDS_EVENTLOG_WARNING_TYPE "Paralajmërim"
-    IDS_EVENTLOG_INFORMATION_TYPE "Informacion"
+    IDS_EVENTLOG_INFORMATION_TYPE "Information"
     IDS_EVENTLOG_AUDIT_SUCCESS "Audit me Sukses"
     IDS_EVENTLOG_AUDIT_FAILURE "Audit dështoj"
     IDS_EVENTLOG_SUCCESS "Sukses"
@@ -163,15 +163,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    IDS_BYTES_FORMAT "bytes"" // ""%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE "Tipi"
+    IDS_COLUMNTYPE "Type"
     IDS_COLUMNDATE "Data"
-    IDS_COLUMNTIME "Ora"
+    IDS_COLUMNTIME "Koha"
     IDS_COLUMNSOURCE "Burimi"
     IDS_COLUMNCATEGORY "Kategoria"
     IDS_COLUMNEVENT "Ngjarja"
@@ -194,6 +194,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "Asnje"
+    IDS_NONE "None"
     IDS_NOT_AVAILABLE "N/A"
 END

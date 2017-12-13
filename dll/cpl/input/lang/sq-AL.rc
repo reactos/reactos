@@ -1,19 +1,15 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TRANSLATION:  18-01-2014
-*/
-
-LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ALBANIAN, SUBLANG_ALBANIAN_ALBANIA
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Cilësimet"
+CAPTION "Konfigurime"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Zgjidhni shërbimet që ju dëshironi për çdo gjuhë të dhënash treguar në listë.\nPërdor Shto dhe Hiq butonat për të modifikuar këtë listë.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "&Vendos Parazgjedhur", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "Sh&to...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Hiq", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "Hiq", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Karakteristikat...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Preferenca", -1, 7, 185, 240, 36
     PUSHBUTTON "&Çeles cilësimesh...", IDC_KEY_SET_BTN, 14, 198, 110, 14
@@ -24,8 +20,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Cilësimet Avancume"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Konfigurimet Sistemit", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Fik shërbimet e avancuara tekstit", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Fik shërbimet e avancuara tekstit", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
     LTEXT "Zgjidhni këtë kuti kontrolli për të fikur shërbimet e avancuara me tekst në të gjitha programet.\nKjo nuk është e rekomanduar për përdoruesit e Azisë Lindore për shkak se kjo e mbyll tabelen e gjuhës.", -1, 14, 40, 230, 35
 END
 
@@ -43,7 +39,7 @@ BEGIN
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Ndrysho sekuencen e butonave...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
     DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
-    PUSHBUTTON "Anulo", IDCANCEL, 146, 140, 70, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 146, 140, 70, 14
 END
 
 IDD_ADD DIALOGEX 20, 20, 227, 90
@@ -56,7 +52,7 @@ BEGIN
     LTEXT "&Paraqitja Tastieres/IME:", -1, 7, 36, 110, 10
     COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
-    PUSHBUTTON "Anulo", IDCANCEL, 169, 68, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 169, 68, 50, 14
 END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
@@ -76,7 +72,7 @@ BEGIN
     AUTORADIOBUTTON "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
     AUTORADIOBUTTON "Left A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
     DEFPUSHBUTTON "OK", IDOK, 172, 9, 50, 14
-    PUSHBUTTON "Anulo", IDCANCEL, 172, 27, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 172, 27, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
@@ -89,7 +85,7 @@ BEGIN
     LTEXT "&Paraqitja Tastieres/IME:", -1, 7, 21, 110, 10
     COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
-    PUSHBUTTON "Anulo", IDCANCEL, 169, 53, 52, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 169, 53, 52, 14
 END
 
 STRINGTABLE
@@ -97,7 +93,7 @@ BEGIN
     IDS_CPLSYSTEMNAME "Shërbimet Tekst dhe Gjuha hyrese"
     IDS_CPLSYSTEMDESCRIPTION "Modifikon cilësimet për futjen e tekstit të gjuhëve."
     IDS_KEYBOARD "Tastiera"
-    IDS_NONE "(Asnjë)"
+    IDS_NONE "(Asnje)"
     IDS_UNKNOWN "(P'njohur)"
     IDS_RESTART "A doni të rinisni kompjuterin tuaj tani?"
     IDS_WHATS_THIS "Çfarë është kjo?"

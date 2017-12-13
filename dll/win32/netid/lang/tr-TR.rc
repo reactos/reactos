@@ -1,6 +1,4 @@
-/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -72,11 +70,11 @@ BEGIN
     25 "Bu bilgisayarın adını ve üyeliğini değiştirebilirsiniz. Değişiklikler, ağ kaynaklarına erişimi etkileyebilir."
     1021 "Önemli: Bu bilgisayarın kimliğini yalnızca yöneticiler değiştirebilir."
     1022 "Önemli: Bilgisayarın kimliği şundan dolayı değiştirilemedi:"
-    1030 """%s"" yeni bilgisayar adı izin verilmeyen damgalar içeriyor. İzin verilmeyen damgalar; `, ~, !, @, #, $, %%, ^, &, *, (, ), =, +, _, [, ], {, }, \\, |, ;, :, ', "", ,, ., <, >, /, ve ?'ni kapsar."
+    1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
     /* Windows allows using these characters, although it displays a warning message.
        Forbidding the use of these characters means incompatibility with Windows. */
-    3210 "&Ayrıntılar >>"
-    3220 "<< &Ayrıntılar"
-    4000 "Bilgi"
-    4001 "Yeni bir bilgisayar adı oluşturamaz!"
+    3210 "&Details >>"
+    3220 "<< &Details"
+    4000 "Information"
+    4001 "Can't set new a computer name!"
 END

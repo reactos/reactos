@@ -1,17 +1,15 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDM_MAINMENU MENU
 BEGIN
     POPUP "&Seçenekler"
     BEGIN
-        MENUITEM "&Husûsiyetler...", IDC_PROPERTIES
+        MENUITEM "&Husûsiyetler", IDC_PROPERTIES
         MENUITEM "&Gelişmiş Denetimler", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDC_EXIT
     END
-    POPUP "&Yardım"
+    POPUP "&Kütük"
     BEGIN
         MENUITEM "&Yardım Konuları", IDC_HELP_TOPICS
         MENUITEM SEPARATOR

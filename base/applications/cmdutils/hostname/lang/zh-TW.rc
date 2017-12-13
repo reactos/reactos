@@ -1,10 +1,8 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE_TRADITIONAL, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "列印當前主機的名稱。\n\nhostname"
+    IDS_USAGE "\n輸入 ""CLIP /?"" 知道用法資訊。\n"
     IDS_NOSET "hostname -s 不受支援。"
     IDS_ERROR "Win32 錯誤"
 END

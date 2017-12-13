@@ -1,6 +1,6 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* Magnus Olsen, 2005 */
 
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 STRINGTABLE
 BEGIN
@@ -9,69 +9,66 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "ReactOS komutları için yardım bilgisini sağlar.\n\n\
-HELP [komut]\n\n\
-  komut - Bu komut için yardım bilgisini görüntüler.\n"
-    IDS_HELP1 "Tüm kullanılabilir komutların (ve tanımların) dizelgesi:\n\n\
-  help komut\n\
-  komut /?     Belirtilen bir komut üzerine daha çok bilgi için\n\n\
-?        Tüm kullanılabilir komutları dizelgele (tanımlar olmadan).\n\
-ALIAS    Başka adları ayarlar, siler ya da gösterir.\n\
-ATTRIB   Kütük öz niteliklerini görüntüler ya da değiştirir.\n\
-BEEP     Hoparlörden ""bip"" sesi çıkart.\n\
-CALL     Bir toplu iş izlencesini bir başkasından çağırır.\n\
-CD       Şimdiki dizinin adını görüntüler ya da şimdiki dizini değiştirir.\n\
-CHCP     Etkin kod sayfası numarasını görüntüler ya da ayarlar.\n\
-CHOICE   Bir seçim takımından birini seçmeye kullanıcıyı bekler.\n\
-CLS      Görüntülüğü siler.\n\
-CMD      ReactOS komut yorumcusunun yeni bir örneğini başlatır.\n\
-COLOR    Ön tanımlı konsol ön plan ve arka plan renklerini ayarlar.\n\
-COPY     Bir ya da daha çok kütüğü başka bir konuma çoğaltır.\n\
-DATE     Târihi görüntüler ya da ayarlar.\n\
-DELETE   Bir ya da daha çok kütük siler.\n\
-DIR      Bir dizindeki kütüklerin ve alt dizinlerin bir dizelgesini görüntüler.\n\
-ECHO     İletileri görüntüler ya da komut yankılanmasını açar ya da kapatır.\n\
-ERASE    Bir ya da daha çok kütük siler.\n\
-EXIT     CMD.EXE izlencesinden (komut yorumcusundan) çıkar.\n\
-FOR      Bir kütük takımı içinde tüm kütükler için belirtilen bir komut\n\
-         çalıştırır.\n\
-FREE     (boş) disk alanı.\n\
-GOTO     Bir toplu iş izlencesinde ReactOS komut yorumcusunu etiketlenmiş bir\n\
-         yataca yönlendirir.\n\
-HELP     ReactOS komutları için yardım bilgisini sağlar.\n\
-HISTORY  Kullanılan tüm komutları dizelgele.\n\
-IF       Toplu iş izlencelerinde şartlı işlemeyi gerçekleştirir.\n\
-LABEL    Bir diskin birim etiketini oluşturur, değiştirir ya da siler.\n\
-MD       Bir dizin oluşturur.\n\
-MKDIR    Bir dizin oluşturur.\n\
-MKLINK   Bir kütük dizgesi bağlantı nesnesi oluşturur.\n\
-MOVE     Bir dizinden bir ya da daha çok kütüğü başka bir dizine taşır.\n\
-PATH     Çalıştırılailir kütükler için bir arama yolu görüntüler ya da\n\
-         oluşturur.\n\
-PAUSE    Bir toplu iş kütüğünde işlemeyi askıya alır ve bir ileti görüntüler.\n\
-POPD     PUSHD ile kaydedilen şimdiki dizinin bir önceki değerini \n\
-         yeniden yükler.\n\
-PROMPT   Komut istemini değiştirir.\n\
-PUSHD    Şimdiki dizini kaydeder, sonra onu değiştirir.\n\
-RD       Bir dizin siler.\n\
-REM      Toplu iş kütüklerinde yorumları (sözleri) kaydeder.\n\
-REN      Bir kütüğün ya da kütüklerin adını değiştirir.\n\
-RENAME   Bir kütüğün ya da kütüklerin adını değiştirir.\n\
-REPLACE  Kütüklerin yerlerini değiştirir.\n\
-RMDIR    Bir dizin siler.\n\
-SCREEN   İmleci taşı ve seçimlik olarak metin yazdır.\n\
-SET      ReactOS ortam değişkenlerini görüntüler, ayarlar ya da kaldırır.\n\
-SHIFT    Toplu iş kütüklerindeki yerine konulabilir değişkenlerin konumunu\n\
-         değiştirir.\n"
-    IDS_HELP2 "START    Belirtilen bir izlenceyi ya da komutu çalıştırmak için ayrı bir\n\
-         pencere başlatır.\n\
-         Komut çalıştırır.\n\
-TIME     Dizge saatini görüntüler ya da ayarlar.\n\
-TIMER    On süreölçeri kullanmaya izin verir.\n\
-TITLE    Bir CMD.EXE oturumu için pencere başlığını ayarlar.\n\
-TYPE     Bir metin kütüğünün içeriğini görüntüler.\n\
-VER      ReactOS sürümünü görüntüler.\n\
-VERIFY   ReactOS'a kütüklerinizin bir diske doğru yazıldığını doğrulayıp\n\
-         doğrulamayacağını söyler.\n\
-VOL      Bir disk birim etiketi ve dizilik numarasını görüntüler.\n"
+    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+    IDS_HELP1 "List of all available commands (+ description)\n\n\
+  help command\n\
+  command /?     For more information on a specific command\n\n\
+?        List all available commands (without description).\n\
+ALIAS    Sets, removes or shows aliases.\n\
+ATTRIB   Displays or changes file attributes.\n\
+BEEP     Beep the speaker.\n\
+CALL     Calls one batch program from another.\n\
+CD       Displays the name of or changes the current directory.\n\
+CHCP     Displays or sets the active code page number.\n\
+CHOICE   Waits for the user to choose one of a set of choices.\n\
+CLS      Clears the screen.\n\
+CMD      Starts a new instance of the ReactOS command interpreter.\n\
+COLOR    Sets the default console foreground and background colors.\n\
+COPY     Copies one or more files to another location.\n\
+DATE     Displays or sets the date.\n\
+DELETE   Deletes one or more files.\n\
+DIR      Displays a list of files and subdirectories in a directory.\n\
+ECHO     Displays messages, or turns command echoing on or off.\n\
+ERASE    Deletes one or more files.\n\
+EXIT     Quits the CMD.EXE program (command interpreter).\n\
+FOR      Runs a specified command for each file in a set of files.\n\
+FREE     (free) disc space.\n\
+GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
+         a batch program.\n\
+HELP     Provides Help information for ReactOS commands.\n\
+HISTORY  Lists all commands which have been used.\n\
+IF       Performs conditional processing in batch programs.\n\
+LABEL    Creates, changes, or deletes the volume label of a disk.\n\
+MD       Creates a directory.\n\
+MKDIR    Creates a directory.\n\
+MKLINK   Creates a filesystem link object.\n\
+MOVE     Moves one or more files from one directory to another\n\
+         directory.\n\
+PATH     Displays or sets a search path for executable files.\n\
+PAUSE    Suspends processing of a batch file and displays a message.\n\
+POPD     Restores the previous value of the current directory saved by\n\
+         PUSHD.\n\
+PROMPT   Changes the command prompt.\n\
+PUSHD    Saves the current directory then changes it.\n\
+RD       Removes a directory.\n\
+REM      Records comments (remarks) in batch files.\n\
+REN      Renames a file or files.\n\
+RENAME   Renames a file or files.\n\
+REPLACE  Replaces files.\n\
+RMDIR    Removes a directory.\n\
+SCREEN   Move cursor and optionally print text.\n\
+SET      Displays, sets, or removes ReactOS environment variables.\n\
+SHIFT    Shifts the position of replaceable parameters in batch files.\n"
+    IDS_HELP2 "START    Starts a separate window to run a specified program or command.\n\
+         Executes command.\n\
+TIME     Displays or sets the system time.\n\
+TIMER    Allow the use of ten stopwatches.\n\
+TITLE    Sets the window title for a CMD.EXE session.\n\
+TYPE     Displays the contents of a text file.\n\
+VER      Displays the ReactOS version.\n\
+VERIFY   Tells ReactOS whether to verify that your files are written\n\
+         correctly to a disk.\n\
+VOL      Displays a disk volume label and serial number.\n"
 END

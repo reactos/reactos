@@ -1,0 +1,11 @@
+LANGUAGE LANG_NORWEGIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Terminates a session.\n\n\
+  /v\t\tDisplays information about the actions performed.\n\
+  /?\t\tShows this information.\n\n"
+    IDS_LOGOFF_REMOTE "Logger av økt på en annen maskin"
+    IDS_LOGOFF_LOCAL "Logger av økten på denne maskinen."
+    IDS_ILLEGAL_PARAM "En eller flere ugyldige parametre.\n"
+END

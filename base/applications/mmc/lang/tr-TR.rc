@@ -1,17 +1,15 @@
-/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
         MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
-        MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
+        MENUITEM "&Aç...\tDenetim+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış\tSeçenek+F4", IDM_FILE_EXIT
     END
-    POPUP "&Yardım"
+    POPUP "&Kütük"
     BEGIN
         MENUITEM "&ReactOS Yönetim Konsolu Üzerine", IDM_HELP_ABOUT
     END
@@ -22,7 +20,7 @@ BEGIN
     POPUP "&Kütük"
     BEGIN
         MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
-        MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
+        MENUITEM "&Aç...\tDenetim+O", IDM_FILE_OPEN
         MENUITEM "&Sakla", IDM_FILE_SAVE
         MENUITEM "Ay&rı Sakla...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
@@ -32,7 +30,7 @@ BEGIN
     BEGIN
         MENUITEM "&Dizelgele", IDM_WINDOWS_LIST
     END
-    POPUP "&Yardım"
+    POPUP "&Kütük"
     BEGIN
         MENUITEM "&ReactOS Yönetim Konsolu Üzerine", IDM_HELP_ABOUT
     END

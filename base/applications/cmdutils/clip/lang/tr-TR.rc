@@ -1,11 +1,9 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_TURKISH_TURKEY
 
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nKullanım bilgisi için ""CLIP /?"" yazınız.\n"
-    IDS_HELP "\nKomut yatacı izlencelerinin çıktısını panoya yönlendirir.\n\n\
+    IDS_HELP "\nRedirects the output of command-line programs to the clipboard.\n\n\
 CLIP [/?]\n\n\
-    /?  Bu yardım iletisini göster.\n"
+    /?  Show this help message.\n"
 END
