@@ -872,6 +872,15 @@ USB2_GetCMASK(IN PUSB2_TT_ENDPOINT TtEndpoint)
     return Result;
 }
 
+VOID
+NTAPI
+USB2_RebalanceEndpoint(IN PDEVICE_OBJECT FdoDevice,
+                       IN PLIST_ENTRY List)
+{
+    DPRINT1("USB2_RebalanceEndpoint: UNIMPLEMENTED. FIXME\n");
+    ASSERT(FALSE);
+}
+
 BOOLEAN
 NTAPI
 USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
