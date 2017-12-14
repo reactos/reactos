@@ -506,8 +506,6 @@ ApicInitializeIOApic(VOID)
     ReDirReg.Mask = 0;
     ReDirReg.Destination = ApicRead(APIC_ID);
     IOApicWrite(IOAPIC_REDTBL + 2 * APIC_CLOCK_INDEX, ReDirReg.Long0);
-
-    ApicSendEOI();
 }
 
 VOID
