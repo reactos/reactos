@@ -8,6 +8,7 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/halinit.c
     generic/memory.c
     generic/misc.c
+    generic/pic.c
     generic/reboot.c
     generic/sysinfo.c
     generic/usage.c)
