@@ -8,8 +8,18 @@
 #include "precomp.h"
 #include <winuser.h>
 #include <algorithm>
+#include <shlobj.h>
+#include <strsafe.h>
 #include <tlhelp32.h>
+#include <conio.h>
 
+
+static const char szUsage[] = "Usage: DrWtsn32 [-i] [-g] [-p dddd] [-e dddd] [-?]\n"
+                              "    -i: Install DrWtsn32 as the postmortem debugger\n"
+                              "    -g: Ignored, Provided for compatibility with WinDbg and CDB.\n"
+                              "    -p dddd: Attach to process dddd.\n"
+                              "    -e dddd: Signal the event dddd.\n"
+                              "    -?: This help.\n";
 
 extern "C"
 NTSYSAPI ULONG NTAPI vDbgPrintEx(_In_ ULONG ComponentId, _In_ ULONG Level, _In_z_ PCCH Format, _In_ va_list ap);
@@ -97,11 +107,26 @@ void PrintBugreport(FILE* output, DumpData& data)
 }
 
 
+int abort(FILE* output, int err)
+{
+    if (output != stdout)
+        fclose(output);
+    else
+        _getch();
+
+    return err;
+}
 
 int main(int argc, char* argv[])
 {
     DWORD pid = 0;
     HANDLE hEvent = 0;
+    char Buffer[MAX_PATH+55];
+    char Filename[50];
+    FILE* output = NULL;
+    SYSTEMTIME st;
+
+
     for (int n = 0; n < argc; ++n)
     {
         char* arg = argv[n];
@@ -131,31 +156,56 @@ int main(int argc, char* argv[])
         }
         else if (!strcmp(arg, "-?"))
         {
-            MessageBoxA(NULL, "Usage: DrWtsn32 [-i] [-g] [-p dddd] [-e dddd] [-?]\n"
-                              "    -i: Install DrWtsn32 as the postmortem debugger\n"
-                              "    -g: Ignored, Provided for compatibility with WinDbg and CDB."
-                              "    -p dddd: Attach to process dddd."
-                              "    -e dddd: Signal the event dddd."
-                              "    -?: This help.",
-                        "DrWtsn32", MB_OK);
-            return 0;
+            MessageBoxA(NULL, szUsage, "DrWtsn32", MB_OK);
+            return abort(output, 0);
         }
         else if (!strcmp(arg, "/?"))
         {
-            // print to console
-            return 0;
+            xfprintf(stdout, "%s\n", szUsage);
+            return abort(stdout, 0);
         }
     }
 
+    if (!pid)
+    {
+        MessageBoxA(NULL, szUsage, "DrWtsn32", MB_OK);
+        return abort(stdout, 0);
+    }
+
+    GetLocalTime(&st);
+
+    if (SHGetFolderPathA(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, Buffer) == S_OK &&
+        SUCCEEDED(StringCchPrintfA(Filename, _countof(Filename), "Appcrash_%d-%02d-%02d_%02d-%02d-%02d.txt",
+                                   st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond)))
+    {
+        StringCchCatA(Buffer, _countof(Buffer), "\\");
+        StringCchCatA(Buffer, _countof(Buffer), Filename);
+        output = fopen(Buffer, "wb");
+    }
+    if (!output)
+        output = stdout;
+
+    //{
+    //    PROCESS_INFORMATION pi = {0};
+    //    STARTUPINFOA si = {0};
+    //    si.cb = sizeof(si);
+    //    CreateProcessA("C:\\Users\\Mark.DEV2\\Downloads\\BadApp\\BadApp.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    //    CloseHandle(pi.hProcess);
+    //    CloseHandle(pi.hThread);
+    //    Sleep(100);
+    //    pid = pi.dwProcessId;
+    //}
+
+
     if (!DebugActiveProcess(pid))
-        return -2;
+        return abort(output, -2);
 
     /* We should not kill it? */
     DebugSetProcessKillOnExit(FALSE);
 
     DEBUG_EVENT evt;
     if (!WaitForDebugEvent(&evt, 30000))
-        return -3;
+        return abort(output, -3);
 
     assert(evt.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT);
 
@@ -165,12 +215,13 @@ int main(int argc, char* argv[])
         ContinueDebugEvent(evt.dwProcessId, evt.dwThreadId, DBG_EXCEPTION_HANDLED);
 
         if (!WaitForDebugEvent(&evt, 30000))
-            return -4;
+            return abort(output, -4);
     }
 
-    PrintBugreport(stdout, data);
+    PrintBugreport(output, data);
 
     if (hEvent)
         SetEvent(hEvent);
-    return 0;
+
+    return abort(output, 0);
 }

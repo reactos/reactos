@@ -47,6 +47,7 @@ DumpData::DumpData()
     memset(&ExceptionInfo, 0, sizeof(ExceptionInfo));
 }
 
+//static bool g_bIgnoreOnce = true;
 
 bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
 {
@@ -73,6 +74,7 @@ bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
         CloseHandle(evt.u.CreateProcessInfo.hFile);
         data.ProcessID = evt.dwProcessId;
         data.ProcessHandle = evt.u.CreateProcessInfo.hProcess;
+        data.Threads[evt.dwThreadId] = ThreadData(evt.u.CreateProcessInfo.hThread);
     }
         break;
     case CREATE_THREAD_DEBUG_EVENT:
@@ -109,6 +111,15 @@ bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
     case OUTPUT_DEBUG_STRING_EVENT: // ignore
         break;
     case EXCEPTION_DEBUG_EVENT:
+        //if (g_bIgnoreOnce)
+        //{
+        //    g_bIgnoreOnce = false;
+        //    if (evt.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT)
+        //    {
+        //        xfprintf(stdout, "Ignoring initial breakpoint\n");
+        //        return true;
+        //    }
+        //}
         data.ExceptionInfo = evt.u.Exception;
         return false;
     case EXIT_PROCESS_DEBUG_EVENT:

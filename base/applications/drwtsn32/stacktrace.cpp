@@ -58,18 +58,24 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
 #define STACKWALK_MAX_NAMELEN   512
     char buf[sizeof(SYMBOL_INFO) + STACKWALK_MAX_NAMELEN] = {0};
     SYMBOL_INFO* sym = (SYMBOL_INFO *)buf;
-    IMAGEHLP_MODULE64 Module = { sizeof(Module) };
+    IMAGEHLP_MODULE64 Module = { 0 };
     sym->SizeOfStruct = sizeof(sym);
 
     /* FIXME: Disasm function! */
 
     xfprintf(output, NEWLINE "*----> Stack Back Trace <----*" NEWLINE NEWLINE);
     bool first = true;
+    int max = 200;
     while(StackWalk64(MachineType, data.ProcessHandle, thread.Handle, &StackFrame, &thread.Context,
                          NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL))
     {
         if (!StackFrame.AddrPC.Offset)
             break;
+
+        if (max-- < 0)
+        {
+            xfprintf(output, "Error, infinite loop, aborting!\n");
+        }
 
         if (first)
         {
@@ -77,13 +83,16 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
             first = false;
         }
 
-        if (!SymGetModuleInfo64(data.ProcessHandle, StackFrame.AddrPC.Offset, &Module))
-            strcpy(Module.ModuleName, "<nosymbols>");
+        Module.SizeOfStruct = sizeof(Module);
+        DWORD64 ModBase = SymGetModuleBase64(data.ProcessHandle, StackFrame.AddrPC.Offset);
+        if (!SymGetModuleInfo64(data.ProcessHandle, ModBase, &Module))
+            strcpy(Module.ModuleName, "<nomod>");
 
         memset(sym, '\0', sizeof(*sym) + STACKWALK_MAX_NAMELEN);
         sym->SizeOfStruct = sizeof(*sym);
         sym->MaxNameLen = STACKWALK_MAX_NAMELEN;
         DWORD64 displacement;
+
         if (!SymFromAddr(data.ProcessHandle, StackFrame.AddrPC.Offset, &displacement, sym))
             strcpy(sym->Name, "<nosymbols>");
 
