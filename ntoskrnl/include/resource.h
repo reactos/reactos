@@ -10,6 +10,7 @@
 #define IDB_BAR_SERVER      4
 #define IDB_BAR_WKSTA       8
 #define IDB_BAR_HOME        9
+#define IDB_ROTATING_LINE   19
 
 #define IDB_PROF_TEXT       10
 #define IDB_HOME_TEXT       11
@@ -21,3 +22,5 @@
 #define IDB_SERVER_FOOTER   15
 #define IDB_STORAGE_SERVER  16
 #define IDB_CLUSTER_SERVER  17
+
+#define IDB_MAX_RESOURCE    IDB_ROTATING_LINE
