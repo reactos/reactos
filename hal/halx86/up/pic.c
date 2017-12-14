@@ -99,8 +99,6 @@ PHAL_DISMISS_INTERRUPT HalpSpecialDismissLevelTable[16] =
 /* This table contains the static x86 PIC mapping between IRQLs and IRQs */
 ULONG KiI8259MaskTable[32] =
 {
-#if defined(__GNUC__) && \
-    (__GNUC__ * 100 + __GNUC_MINOR__ >= 404)
     /*
      * It Device IRQLs only start at 4 or higher, so these are just software
      * IRQLs that don't really change anything on the hardware
@@ -177,47 +175,11 @@ ULONG KiI8259MaskTable[32] =
     0b11111111111111111111111111111011, /* IRQL 29 */
     0b11111111111111111111111111111011, /* IRQL 30 */
     0b11111111111111111111111111111011  /* IRQL 31 */
-#else
-    0,                             /* IRQL 0 */
-    0,                             /* IRQL 1 */
-    0,                             /* IRQL 2 */
-    0,                             /* IRQL 3 */
-    0xFF800000,                    /* IRQL 4 */
-    0xFFC00000,                    /* IRQL 5 */
-    0xFFE00000,                    /* IRQL 6 */
-    0xFFF00000,                    /* IRQL 7 */
-    0xFFF80000,                    /* IRQL 8 */
-    0xFFFC0000,                    /* IRQL 9 */
-    0xFFFE0000,                    /* IRQL 10 */
-    0xFFFF0000,                    /* IRQL 11 */
-    0xFFFF8000,                    /* IRQL 12 */
-    0xFFFFC000,                    /* IRQL 13 */
-    0xFFFFE000,                    /* IRQL 14 */
-    0xFFFFF000,                    /* IRQL 15 */
-    0xFFFFF800,                    /* IRQL 16 */
-    0xFFFFFC00,                    /* IRQL 17 */
-    0xFFFFFE00,                    /* IRQL 18 */
-    0xFFFFFE00,                    /* IRQL 19 */
-    0xFFFFFE80,                    /* IRQL 20 */
-    0xFFFFFEC0,                    /* IRQL 21 */
-    0xFFFFFEE0,                    /* IRQL 22 */
-    0xFFFFFEF0,                    /* IRQL 23 */
-    0xFFFFFEF8,                    /* IRQL 24 */
-    0xFFFFFEF8,                    /* IRQL 25 */
-    0xFFFFFEFA,                    /* IRQL 26 */
-    0xFFFFFFFA,                    /* IRQL 27 */
-    0xFFFFFFFB,                    /* IRQL 28 */
-    0xFFFFFFFB,                    /* IRQL 29 */
-    0xFFFFFFFB,                    /* IRQL 30 */
-    0xFFFFFFFB                     /* IRQL 31 */
-#endif
 };
 
 /* This table indicates which IRQs, if pending, can preempt a given IRQL level */
 ULONG FindHigherIrqlMask[32] =
 {
-#if defined(__GNUC__) && \
-    (__GNUC__ * 100 + __GNUC_MINOR__ >= 404)
     /*
      * Software IRQLs, at these levels all hardware interrupts can preempt.
      * Each higher IRQL simply enables which software IRQL can preempt the
@@ -283,40 +245,6 @@ ULONG FindHigherIrqlMask[32] =
     0b00000000000000000000000000000000, /* IRQL 29 */
     0b00000000000000000000000000000000, /* IRQL 30 */
     0b00000000000000000000000000000000  /* IRQL 31 */
-#else
-    0xFFFFFFFE,                   /* IRQL  0 */
-    0xFFFFFFFC,                   /* IRQL 1 */
-    0xFFFFFFF8,                   /* IRQL 2 */
-    0xFFFFFFF0,                   /* IRQL 3 */
-    0x7FFFFF0,                    /* IRQL 4 */
-    0x3FFFFF0,                    /* IRQL 5 */
-    0x1FFFFF0,                    /* IRQL 6 */
-    0x0FFFFF0,                    /* IRQL 7 */
-    0x7FFFF0,                     /* IRQL 8 */
-    0x3FFFF0,                     /* IRQL 9 */
-    0x1FFFF0,                     /* IRQL 10 */
-    0x0FFFF0,                     /* IRQL 11 */
-    0x7FFF0,                      /* IRQL 12 */
-    0x3FFF0,                      /* IRQL 13 */
-    0x1FFF0,                      /* IRQL 14 */
-    0x0FFF0,                      /* IRQL 15 */
-    0x7FF0,                       /* IRQL 16 */
-    0x3FF0,                       /* IRQL 17 */
-    0x1FF0,                       /* IRQL 18 */
-    0x1FF0,                       /* IRQL 19 */
-    0x17F0,                       /* IRQL 20 */
-    0x13F0,                       /* IRQL 21 */
-    0x11F0,                       /* IRQL 22 */
-    0x10F0,                       /* IRQL 23 */
-    0x1070,                       /* IRQL 24 */
-    0x1030,                       /* IRQL 25 */
-    0x1010,                       /* IRQL 26 */
-    0x10,                         /* IRQL 27 */
-    0,                            /* IRQL 28 */
-    0,                            /* IRQL 29 */
-    0,                            /* IRQL 30 */
-    0                             /* IRQL 31 */
-#endif
 };
 
 /* Denotes minimum required IRQL before we can process pending SW interrupts */
