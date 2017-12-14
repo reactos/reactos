@@ -194,7 +194,8 @@ ULONG
 NTAPI
 KdpPrintString(
     _In_reads_bytes_(Length) PCHAR UnsafeString,
-    _In_ ULONG Length);
+    _In_ ULONG Length,
+    _In_ KPROCESSOR_MODE PreviousMode);
 
 ULONG
 NTAPI

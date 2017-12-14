@@ -41,14 +41,15 @@ ULONG
 NTAPI
 KdpServiceDispatcher(ULONG Service,
                      PVOID Buffer1,
-                     ULONG Buffer1Length)
+                     ULONG Buffer1Length,
+                     KPROCESSOR_MODE PreviousMode)
 {
     ULONG Result = 0;
 
     switch (Service)
     {
         case BREAKPOINT_PRINT: /* DbgPrint */
-            Result = KdpPrintString(Buffer1, Buffer1Length);
+            Result = KdpPrintString(Buffer1, Buffer1Length, PreviousMode);
             break;
 
 #if DBG
@@ -145,7 +146,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             /* Print the string */
             KdpServiceDispatcher(BREAKPOINT_PRINT,
                                  (PVOID)ExceptionRecord->ExceptionInformation[1],
-                                 ExceptionRecord->ExceptionInformation[2]);
+                                 ExceptionRecord->ExceptionInformation[2],
+                                 PreviousMode);
 
             /* Return success */
             KeSetContextReturnRegister(Context, STATUS_SUCCESS);
@@ -493,7 +495,10 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
                      IN KPROCESSOR_MODE PreviousMode)
 {
     /* HACK */
-    return KdpServiceDispatcher(Command, InputBuffer, InputBufferLength);
+    return KdpServiceDispatcher(Command,
+                                InputBuffer,
+                                InputBufferLength,
+                                PreviousMode);
 }
 
 PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;

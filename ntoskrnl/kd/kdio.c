@@ -569,7 +569,8 @@ ULONG
 NTAPI
 KdpPrintString(
     _In_reads_bytes_(Length) PCHAR UnsafeString,
-    _In_ ULONG Length)
+    _In_ ULONG Length,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
@@ -580,7 +581,7 @@ KdpPrintString(
 
     Length = min(Length, sizeof(StringBuffer));
 
-    if (ExGetPreviousMode() != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
