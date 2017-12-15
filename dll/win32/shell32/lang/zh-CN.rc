@@ -5,6 +5,7 @@
  * PURPOSE:     Chinese (Simplified) Language Resources
  * TRANSLATORS: 2008 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
                 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+                2017 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -57,14 +58,14 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "剪下(&T)\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "复制(&C)\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "贴上(&P)\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "贴上快捷方式(&S)", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "粘贴(&P)\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "粘贴快捷方式(&S)", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "将复制到文件夹...(&F)", FCIDM_SHVIEW_COPYTO
+    MENUITEM "复制到文件夹...(&F)", FCIDM_SHVIEW_COPYTO
     MENUITEM "移动到文件夹...(&V)", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "选择所有(&A)\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "反向选择(&I)", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "全选(&A)\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "反选(&I)", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -154,7 +155,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS 被带到你的是：", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "为你带来 ReactOS 的是：", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -164,7 +165,7 @@ CAPTION "运行"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "输入程序，目录，文件或者Internet资源名，ReactOS将为您打开它。", 12289, 36, 11, 182, 18
+    LTEXT "输入程序，目录，文件或者 Internet 资源名，ReactOS 将为您打开它。", 12289, 36, 11, 182, 18
     LTEXT "打开(&O):", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "确定", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -187,13 +188,13 @@ BEGIN
     LTEXT "目标(&T):", 14008, 8, 71, 68, 10
     EDITTEXT 14009, 79, 69, 150, 14, ES_AUTOHSCROLL
     LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "开始在(&S):", 14010, 8, 98, 68, 10
+    LTEXT "起始位置(&S):", 14010, 8, 98, 68, 10
     EDITTEXT 14011, 79, 96, 150, 14, ES_AUTOHSCROLL
     LTEXT "快捷键(&K):", 14014, 8, 117, 68, 10
     CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "运行(&R):", 14016, 8, 136, 68, 10
     COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    LTEXT "注解(&O):", 14018, 8, 154, 68, 10
+    LTEXT "备注(&O):", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "查找目标...(&F)", 14020, 9, 172, 70, 14, ES_LEFT
     PUSHBUTTON "更改图标...(&C)", 14021, 84, 172, 70, 14, ES_LEFT
@@ -202,16 +203,16 @@ END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "扩展的属性"
+CAPTION "高级属性"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
-    LTEXT "选择你想要为这个快捷方式的高级的属性。", -1, 5, 30, 210, 10
-    CHECKBOX "以不同用户身份运行", 14000, 25, 50, 150, 10
-    LTEXT "此选项可以允许您运行此快捷方式作为另一个用户，或继续作为自己同时保护您的计算机和数据免受未经授权的程序活动。", -1, 50, 60, 175, 40
+    LTEXT "为这个快捷方式选择您想要的高级属性。", -1, 5, 30, 210, 10
+    CHECKBOX "以其他用户身份运行", 14000, 25, 50, 150, 10
+    LTEXT "此选项允许您以另一用户身份运行此快捷方式，或继续以您自己的身份运行以保护您的计算机和数据不受未授权程序的破坏。", -1, 50, 60, 175, 40
     CHECKBOX "在单独的内存空间中运行", 14001, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "确定", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "中止", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "取消", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -255,7 +256,7 @@ BEGIN
     CONTROL "文件", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "打开方式:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "更换...(&C)", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "更改...(&C)", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "地点:", 14008, 8, 75, 45, 10
@@ -273,7 +274,7 @@ BEGIN
     EDITTEXT 14019, 68, 163, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "属性：", 14020, 8, 189, 45, 10
-    AUTOCHECKBOX "只读模式(&R)", 14021, 58, 189, 67, 10
+    AUTOCHECKBOX "只读(&R)", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "隐藏(&H)", 14022, 126, 189, 50, 10
     AUTOCHECKBOX "存档(&A)", 14023, 181, 189, 49, 10
     PUSHBUTTON "高级...(&A)", 14028, 180, 185, 50, 15, WS_TABSTOP
@@ -311,7 +312,7 @@ BEGIN
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
-    LTEXT "已用的空间：", -1, 25, 69, 80, 10
+    LTEXT "已用空间：", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
@@ -326,8 +327,8 @@ BEGIN
     LTEXT "磁盘 %c", 14009, 100, 150, 70, 10
     PUSHBUTTON "磁盘清理(&D)", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "压缩磁盘以节省磁盘空间", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "允许索引服务编制该磁盘的快速搜索文件", 14012, 8, 205, 222, 10, WS_DISABLED
+    CHECKBOX "压缩磁盘以节约磁盘空间", 14011, 8, 191, 222, 10, WS_DISABLED
+    CHECKBOX "允许索引服务编制该磁盘的索引以便快速搜索文件", 14012, 8, 205, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -335,9 +336,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "工具"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "错误检查", -1, 5, 5, 230, 60
+    GROUPBOX "查错", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "该选项将检查容量\n错误。", -1, 40, 25, 160, 20
+    LTEXT "该选项将检查卷\n错误。", -1, 40, 25, 160, 20
     PUSHBUTTON "现在检查...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "碎片整理", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
@@ -345,7 +346,7 @@ BEGIN
     PUSHBUTTON "立即进行碎片整理...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "备份", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "此选项将备份容量上的文件。", -1, 40, 150, 160, 20
+    LTEXT "此选项将备份卷上的文件。", -1, 40, 150, 160, 20
     PUSHBUTTON "现在备份...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
@@ -358,7 +359,7 @@ END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "运行作为"
+CAPTION "运行方式"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "你想要使用来运行这个程序哪一个用户帐户？", -1, 10, 20, 220, 20
@@ -366,7 +367,7 @@ BEGIN
     LTEXT "保护我的计算机和数据不受未授权的程序的活动", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "此选项可防止计算机病毒危害您的计算机或个人数据，但选择它可能会引起程序工作不正常。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "下列用户:", 14002, 10, 100, 90, 10
-    LTEXT "用户名称：", -1, 20, 118, 54, 10
+    LTEXT "用户名：", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
     LTEXT "密码：", -1, 20, 143, 53, 10
@@ -386,13 +387,13 @@ BEGIN
     RADIOBUTTON "自定义大小(&C):", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "最大大小(MB)(&A):", -1, 20, 105, 70, 10
-    RADIOBUTTON "不将文件移到回收站。删除文件时，立即删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    RADIOBUTTON "不将文件移入回收站，而是彻底删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "显示删除确认对话框(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "开放与"
+CAPTION "打开方式"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
@@ -438,7 +439,7 @@ BEGIN
     LTEXT "您可以应用您正在使用此文件夹的\n所有文件夹的视图 （如详细信息或平铺)。", -1, 60, 20, 180, 20
     PUSHBUTTON "应用到所有文件夹(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "重置所有文件夹(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP
-    LTEXT "高级的设置：", -1, 7, 80, 100, 10
+    LTEXT "高级设置：", -1, 7, 80, 100, 10
     CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "还原默认值(&D)", 14004, 177, 215, 80, 14, WS_TABSTOP
 END
@@ -456,7 +457,7 @@ BEGIN
     LTEXT "打开方式:", -1, 12, 140, 40, 10
     //ICON
     LTEXT "应用程序名称", 14005, 100, 140, 40, 10
-    PUSHBUTTON "更换...(&C)", 14006, 180, 140, 50, 14, WS_TABSTOP
+    PUSHBUTTON "更改...(&C)", 14006, 180, 140, 50, 14, WS_TABSTOP
     LTEXT "", 14007, 12, 155, 160, 30
     PUSHBUTTON "高级(&V)", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
@@ -488,7 +489,7 @@ CAPTION "注销 ReactOS"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "确信你想要注销吗?", -1, 35, 16, 146, 8
+    LTEXT "确实要注销吗?", -1, 35, 16, 146, 8
     DEFPUSHBUTTON "注销(&L)", IDOK, 41, 39, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 95, 39, 50, 14
 END
@@ -525,7 +526,7 @@ FONT 9, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "此磁盘或设备包含多个类型的内容。", 1001, 32, 7, 191, 20
-    LTEXT "你想要 ReactOS 做的是什么？", 1002, 32, 31, 188, 8
+    LTEXT "你想要 ReactOS 做什么？", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "确定", IDOK, 96, 186, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 160, 186, 60, 14
@@ -537,10 +538,10 @@ CAPTION "混合的内容"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS 可以执行相同的操作每次您插入盘或连接的设备与此类型的文件：", 1001, 30, 7, 193, 20
+    LTEXT "每次您插入盘或连接的设备与此类型的文件，ReactOS 可以执行相同的操作：", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "你想要 ReactOS 做的是什么？", 1002, 32, 41, 190, 8
+    LTEXT "你想要 ReactOS 做什么？", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "始终执行选择的操作。", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "确定", IDOK, 96, 185, 60, 14
@@ -553,8 +554,8 @@ CAPTION "自动播放"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS 可以执行相同的操作每次您连接此设备。", 1001, 32, 7, 190, 22
-    LTEXT "你想要 ReactOS 做的是什么？(&W)", 1002, 32, 31, 190, 8
+    LTEXT "每次您连接此设备，ReactOS 可以执行相同的操作。", 1001, 32, 7, 190, 22
+    LTEXT "你想要 ReactOS 做什么？(&W)", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "总是执行选定的操作(&A)", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "确定", IDOK, 94, 160, 60, 14
@@ -569,7 +570,7 @@ BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
     LTEXT "你想让计算机做什么？", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-    LTEXT "维护您的会话，保持在低功耗数据仍在内存中运行的计算机。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
+    LTEXT "维护会话，计算机数据仍然保持在内存中。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "确定", 1, 7, 82, 60, 14, WS_GROUP
     PUSHBUTTON "取消", IDCANCEL, 75, 82, 60, 14
     PUSHBUTTON "帮助(&H)", IDHELP, 144, 82, 60, 14
@@ -615,10 +616,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "更改图标"
 FONT 9, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    LTEXT "在这个文件中查找图标:", -1, 7, 7, 179, 10
     PUSHBUTTON "浏览...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LTEXT "从以下列表选择一个图标:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "确定", IDOK, 81, 179, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 135, 179, 50, 14
@@ -630,7 +631,7 @@ CAPTION "警告"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "由操作系统或另一个应用程序，也可以使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能较弱。\n\n\
+    LTEXT "由操作系统或另一个应用程序，也可以使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能变弱。\n\n\
 你确定你想要打开此文件？", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "是", IDYES, 125, 55, 50, 14
     PUSHBUTTON "否", IDNO, 180, 55, 50, 14
@@ -669,10 +670,10 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS "管理工具"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "配置您计算机的管理设置。"
+    IDS_FOLDER_OPTIONS_DESCRIPTION "自定义文件和文件夹的显示。"
+    IDS_FONTS_DESCRIPTION "添加、更改和管理您计算机上的字体"
+    IDS_PRINTERS_DESCRIPTION "显示安装的打印机和传真打印机，并帮助您添加新的。"
 
     /* context menus */
     IDS_VIEW_LARGE "大图标(&G)"
@@ -687,23 +688,23 @@ BEGIN
     IDS_PROPERTIES "属性(&P)"
     IDS_CUT "剪切(&U)"
     IDS_RESTORE "还原"
-    IDS_FORMATDRIVE "格式..."
+    IDS_FORMATDRIVE "格式化..."
     IDS_RENAME "重命名"
     IDS_PASTE "贴上"
-    IDS_EJECT "Eject"
-    IDS_DISCONNECT "Disconnect"
+    IDS_EJECT "弹出"
+    IDS_DISCONNECT "断开"
 
-    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
-    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
+    IDS_CREATEFOLDER_DENIED "无法创建文件夹 '%1'"
+    IDS_CREATEFOLDER_CAPTION "无法创建文件夹"
     IDS_DELETEITEM_CAPTION "确认文件删除"
     IDS_DELETEFOLDER_CAPTION "确认文件夹删除"
     IDS_DELETEITEM_TEXT "确实要删除 '%1'?"
     IDS_DELETEMULTIPLE_TEXT "确实要删除这 '%1' 项?"
     IDS_DELETESELECTED_TEXT "确实要删除所选的项目吗?"
-    IDS_TRASHITEM_TEXT "你确定你想要发送 '%1' 到回收箱？"
-    IDS_TRASHFOLDER_TEXT "确信你想要将 '%1' 和它的所有内容发送到回收站吗?"
+    IDS_TRASHITEM_TEXT "你确定你想要移动 '%1' 到回收站？"
+    IDS_TRASHFOLDER_TEXT "确定你想要将 '%1' 和它的所有内容发送到回收站吗?"
     IDS_TRASHMULTIPLE_TEXT "确实要将这 '%1' 项发送到回收站吗?"
-    IDS_CANTTRASH_TEXT "项目 '%1' 不能发送到回收站。你想要删除它相反吗？"
+    IDS_CANTTRASH_TEXT "项目 '%1' 不能发送到回收站。你想要彻底删除它吗？"
     IDS_OVERWRITEFILE_TEXT "此文件夹已包含名为 '%1' 的文件。\n\n你想要替换它吗？"
     IDS_OVERWRITEFILE_CAPTION "确认文件覆盖"
     IDS_OVERWRITEFOLDER_TEXT "此文件夹已包含一个名为 '%1' 文件夹。\n\n如果目标文件夹中的文件具有相同的名称作为\n所选文件夹中的文件，他们将被替换。 你仍然想要移动或\n复制该文件夹吗？"
@@ -732,36 +733,36 @@ BEGIN
     IDS_PERSONAL "我的文档"
     IDS_FAVORITES "收藏夹"
     IDS_STARTUP "开始菜单\\程序\\启动"
-    IDS_RECENT "最近"
-    IDS_SENDTO "为必填项"
+    IDS_RECENT "我最近的文档"
+    IDS_SENDTO "发送到"
     IDS_STARTMENU "开始菜单"
     IDS_MYMUSIC "我的音乐"
     IDS_MYVIDEO "我的视频"
     IDS_DESKTOPDIRECTORY "桌面"
-    IDS_NETHOOD "NetHood"
+    IDS_NETHOOD "网上邻居"
     IDS_TEMPLATES "模板"
     IDS_APPDATA "应用程序数据"
-    IDS_PRINTHOOD "PrintHood"
+    IDS_PRINTHOOD "打印文件夹"
     IDS_LOCAL_APPDATA "本地设置\\应用程序数据"
     IDS_INTERNET_CACHE "本地设置\\互联网临时文件"
-    IDS_COOKIES "小型文字檔案"
+    IDS_COOKIES "Cookies"
     IDS_HISTORY "本地设置\\历史记录"
     IDS_PROGRAM_FILES "程序文件"
     IDS_MYPICTURES "我的图片"
     IDS_PROGRAM_FILES_COMMON "程序文件\\共同文件"
     IDS_COMMON_DOCUMENTS "文件"
     IDS_ADMINTOOLS "开始菜单\\程序\\管理工具"
-    IDS_COMMON_MUSIC "我的文件\\我的音乐"
-    IDS_COMMON_PICTURES "我的文件\\我的图片"
-    IDS_COMMON_VIDEO "我的文件\\我的视频"
+    IDS_COMMON_MUSIC "我的文档\\我的音乐"
+    IDS_COMMON_PICTURES "我的文档\\我的图片"
+    IDS_COMMON_VIDEO "我的文档\\我的视频"
     IDS_CDBURN_AREA "本地设置\\应用程序数据\\微软\\光盘刻录"
     IDS_NETWORKPLACE "网上邻居"
 
-    IDS_NEWFOLDER "新的文件夹"
+    IDS_NEWFOLDER "新建文件夹"
 
     IDS_DRIVE_FIXED "本地磁盘"
-    IDS_DRIVE_CDROM "CD 磁盘"
-    IDS_DRIVE_NETWORK "网络磁盘"
+    IDS_DRIVE_CDROM "光盘驱动器"
+    IDS_DRIVE_NETWORK "网络驱动器"
     IDS_DRIVE_FLOPPY "3.5 英寸软盘"
     IDS_DRIVE_REMOVABLE "可移动磁盘"
     IDS_FS_UNKNOWN "未知"
@@ -770,7 +771,7 @@ BEGIN
     IDS_OPEN_WITH "打开方式"
     IDS_OPEN_WITH_CHOOSE "选择程序"
     IDS_OPEN_WITH_RECOMMENDED "推荐的程序："
-    IDS_OPEN_WITH_OTHER "其他的程序："
+    IDS_OPEN_WITH_OTHER "其他程序："
 
     IDS_SHELL_ABOUT_AUTHORS "作者(&A)"
     IDS_SHELL_ABOUT_BACK "< 返回(&B)"
@@ -785,11 +786,11 @@ BEGIN
     IDS_PICK_ICON_FILTER "图标文件 (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "可执行文件 (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
-    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
-    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
-    IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
-    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
+    IDS_CANTLOCKVOLUME "无法锁定卷 (错误代码: %lu)."
+    IDS_CANTDISMOUNTVOLUME "无法卸载卷 (错误代码: %lu)."
+    IDS_CANTEJECTMEDIA "无法弹出媒体 (错误代码: %lu)."
+    IDS_CANTSHOWPROPERTIES "无法显示属性 (错误代码: %lu)."
+    IDS_CANTDISCONNECT "无法断开连接 (错误代码: %lu)."
 
     IDS_DIRECTORY "文件夹"
     IDS_BAT_FILE "ReactOS 批处理文件"
@@ -815,7 +816,7 @@ BEGIN
 
     IDS_OPEN_VERB "打开"
     IDS_EXPLORE_VERB "浏览"
-    IDS_RUNAS_VERB "运行作为..."
+    IDS_RUNAS_VERB "运行方式..."
     IDS_EDIT_VERB "编辑"
     IDS_FIND_VERB "查找"
     IDS_PRINT_VERB "打印"
@@ -828,16 +829,16 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "默认分配大小"
     IDS_COPY_OF "副本"
 
-    IDS_SHLEXEC_NOASSOC "没有 ReactOS 程序配置为打开这种类型的文件。"
+    IDS_SHLEXEC_NOASSOC "没有为 ReactOS 配置关联的程序以打开这种类型的文件。"
 
-    IDS_FILE_DETAILS "'%S' 扩展的详细信息"
+    IDS_FILE_DETAILS "'%S' 扩展名的详细信息"
     IDS_FILE_DETAILSADV "文件扩展名为 '%s' 的类型 '%s'。若要更改会影响所有的 '%s' 文件的设置，请单击高级。"
     IDS_FILE_TYPES "文件类型"
-    IDS_COLUMN_EXTENSION "扩展"
+    IDS_COLUMN_EXTENSION "扩展名"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "%s 文件"
 
     IDS_BYTES_FORMAT "字节"
     IDS_UNKNOWN_APP "未知应用程序"
@@ -847,23 +848,23 @@ BEGIN
     IDS_OBJECTS "%d 个对象"
     IDS_OBJECTS_SELECTED "%d 个选定的对象"
 
-    IDS_ADVANCED_FOLDER "Files and Folders"
-    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
-    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
-    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
-    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
-    IDS_ADVANCED_HIDDEN "Hidden files and folders"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
-    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
-    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
-    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
-    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
-    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
+    IDS_ADVANCED_FOLDER "文件和文件夹"
+    IDS_ADVANCED_NET_CRAWLER "自动搜索网络文件夹和打印机"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "在文件夹提示中显示文件大小信息"
+    IDS_ADVANCED_FRIENDLY_TREE "在资源管理器文件夹列表中显示简单文件夹查看"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "显示系统文件夹的内容"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "在地址栏中显示完整路径"
+    IDS_ADVANCED_SHOW_FULL_PATH "在标题栏中显示完整路径"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "不缓存缩略图"
+    IDS_ADVANCED_HIDDEN "隐藏的文件和文件夹"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "不显示隐藏的文件和文件夹"
+    IDS_ADVANCED_SHOW_HIDDEN "显示隐藏的文件和文件夹"
+    IDS_ADVANCED_HIDE_FILE_EXT "隐藏已知文件类型的拓展名"
+    IDS_ADVANCED_SUPER_HIDDEN "隐藏受保护的操作系统文件 (推荐)"
+    IDS_ADVANCED_DESKTOP_PROCESS "在单独的进程中打开文件夹窗口"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "记住每个文件夹的视图设置"
+    IDS_ADVANCED_PERSIST_BROWSERS "在登录时还原上一个文件夹窗口"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "在我的电脑中显示控制面板"
+    IDS_ADVANCED_SHOW_COMP_COLOR "用彩色显示加密或压缩的 NTFS 文件"
+    IDS_ADVANCED_SHOW_INFO_TIP "鼠标指向文件夹和桌面项时显示提示信息"
 END

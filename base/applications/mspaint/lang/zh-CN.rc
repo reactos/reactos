@@ -4,6 +4,7 @@
  * FILE:       base/applications/mspaint/lang/zh-CN.rc
  * PURPOSE:    Chinese Language resource file
  * TRANSLATOR: Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ *             Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -17,19 +18,19 @@ BEGIN
         MENUITEM "保存(&S)\tCtrl+S", IDM_FILESAVE
         MENUITEM "另存为...(&A)", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "从扫描仪或照相机...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "页面视图", IDM_FILEPAGEVIEW
         MENUITEM "页面设置...", IDM_FILEPAGESETUP
         MENUITEM "打印(&P)...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "发送...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "保存为壁纸 (普通)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "保存为壁纸 (居中)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "保存为壁纸 (拉伸)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "最近使用过的文件", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)\tAlt+F4", IDM_FILEEXIT
     END
@@ -94,7 +95,7 @@ BEGIN
     BEGIN
         MENUITEM "帮助主题(&H)", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "信息(&I)", IDM_HELPINFO
+        MENUITEM "程序信息(&I)", IDM_HELPINFO
     END
 END
 
@@ -196,7 +197,7 @@ BEGIN
     IDS_PROGRAMNAME "画图"
     IDS_WINDOWTITLE "%s - 画图"
     IDS_INFOTITLE "ReactOS 画图"
-    IDS_INFOTEXT "ReactOS 画图是在 GNU LGPL 下发布的 (详见 www.gnu.org)"
+    IDS_INFOTEXT "ReactOS 画图是在 GNU LGPL 许可证下发布的 (详见 www.gnu.org)"
     IDS_SAVEPROMPTTEXT "您想把改变保存到 %s 吗？"
     IDS_DEFAULTFILENAME "未命名.bmp"
     IDS_MINIATURETITLE "缩略图"
@@ -216,8 +217,8 @@ BEGIN
     IDS_TOOLTIP14 "多边形"
     IDS_TOOLTIP15 "椭圆"
     IDS_TOOLTIP16 "圆角矩形"
-    IDS_ALLFILES "All Files"
-    IDS_ALLPICTUREFILES "All Picture Files"
+    IDS_ALLFILES "所有文件"
+    IDS_ALLPICTUREFILES "所有图片文件"
     IDS_FILESIZE "%d 字节"
     IDS_PRINTRES "%d x %d 像素每米"
     IDS_INTNUMBERS "只输入数字积分！"
