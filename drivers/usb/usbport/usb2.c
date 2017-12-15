@@ -877,8 +877,90 @@ NTAPI
 USB2_RebalanceEndpoint(IN PDEVICE_OBJECT FdoDevice,
                        IN PLIST_ENTRY List)
 {
-    DPRINT1("USB2_RebalanceEndpoint: UNIMPLEMENTED. FIXME\n");
-    ASSERT(FALSE);
+    PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    PUSBPORT_REGISTRATION_PACKET Packet;
+    PUSBPORT_ENDPOINT Endpoint;
+    PLIST_ENTRY Entry;
+    ULONG AllocedBusTime;
+    ULONG EndpointBandwidth;
+    ULONG Factor;
+    ULONG ScheduleOffset;
+    ULONG Bandwidth;
+    ULONG n;
+    ULONG ix;
+    KIRQL OldIrql;
+    UCHAR NewPeriod;
+    UCHAR SMask;
+    UCHAR CMask;
+
+    FdoExtension = FdoDevice->DeviceExtension;
+    Packet = &FdoExtension->MiniPortInterface->Packet;
+
+    while (!IsListEmpty(List))
+    {
+        Entry = RemoveHeadList(List);
+
+        Endpoint = CONTAINING_RECORD(Entry,
+                                     USBPORT_ENDPOINT,
+                                     RebalanceLink.Flink);
+
+        DPRINT("USB2_RebalanceEndpoint: Endpoint - %p\n", Endpoint);
+
+        Endpoint->RebalanceLink.Flink = NULL;
+        Endpoint->RebalanceLink.Blink = NULL;
+
+        KeAcquireSpinLock(&Endpoint->EndpointSpinLock,
+                          &Endpoint->EndpointOldIrql);
+
+        SMask = USB2_GetSMASK(Endpoint->TtEndpoint);
+        CMask = USB2_GetCMASK(Endpoint->TtEndpoint);
+
+        ScheduleOffset = Endpoint->TtEndpoint->StartFrame;
+        NewPeriod = Endpoint->TtEndpoint->ActualPeriod;
+
+        AllocedBusTime = Endpoint->TtEndpoint->CalcBusTime;
+        EndpointBandwidth = USB2_MICROFRAMES * AllocedBusTime;
+
+        Endpoint->EndpointProperties.InterruptScheduleMask = SMask;
+        Endpoint->EndpointProperties.SplitCompletionMask = CMask;
+
+        if (Endpoint->EndpointProperties.Period != NewPeriod)
+        {
+            Factor = USB2_FRAMES / Endpoint->EndpointProperties.Period;
+            ASSERT(Factor);
+
+            for (ix = 0; ix < Factor; ix++)
+            {
+                Bandwidth = Endpoint->EndpointProperties.UsbBandwidth;
+                n = Factor * Endpoint->EndpointProperties.ScheduleOffset;
+                Endpoint->TtExtension->Bandwidth[n + ix] += Bandwidth;
+            }
+
+            Endpoint->EndpointProperties.Period = NewPeriod;
+            Endpoint->EndpointProperties.ScheduleOffset = ScheduleOffset;
+            Endpoint->EndpointProperties.UsbBandwidth = EndpointBandwidth;
+
+            Factor = USB2_FRAMES / NewPeriod;
+            ASSERT(Factor);
+
+            for (ix = 0; ix < Factor; ix++)
+            {
+                n = Factor * ScheduleOffset;
+                Endpoint->TtExtension->Bandwidth[n + ix] += EndpointBandwidth;
+            }
+        }
+
+        KeAcquireSpinLock(&FdoExtension->MiniportSpinLock, &OldIrql);
+
+        Packet->RebalanceEndpoint(FdoExtension->MiniPortExt,
+                                  &Endpoint->EndpointProperties,
+                                  (PVOID)((ULONG_PTR)Endpoint + sizeof(USBPORT_ENDPOINT)));
+
+        KeReleaseSpinLock(&FdoExtension->MiniportSpinLock, OldIrql);
+
+        KeReleaseSpinLock(&Endpoint->EndpointSpinLock,
+                          Endpoint->EndpointOldIrql);
+    }
 }
 
 VOID
