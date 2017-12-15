@@ -1,14 +1,22 @@
-/* Simplified Chinese translation by zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn> */
-
+/*
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     LGPL
+ * FILE:        base/applications/mspaint/lang/zh-CN.rc
+ * PURPOSE:     Simplified Chinese Language resource file
+ * TRANSLATORS: zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *              Li Keqing <auroracloud4096@gmail.com>
+ *              Luo Yufan <njlyf2011@hotmail.com>
+ */
+ 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "关于系统配置程序"
+CAPTION "关于系统配置实用程序"
 FONT 9, "MS Shell Dlg"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
-    LTEXT           "系统配置程序\n版本 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
+    LTEXT           "系统配置实用程序\n版本 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
 //  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
     LTEXT           "版权所有 (C) ReactOS 团队 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
@@ -66,23 +74,23 @@ BEGIN
     PUSHBUTTON      "设置为默认(&S)", IDC_BTN_SET_DEFAULT_BOOT, 82, 68, 66, 14
     PUSHBUTTON      "向上移动(&U)", IDC_BTN_MOVE_UP_BOOT_OPTION, 153, 68, 66, 14
     PUSHBUTTON      "向下移动(&D)", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 224, 68, 66, 14
-    GROUPBOX        "启动选项", IDC_STATIC, 5, 84, 285, 86
+    GROUPBOX        "引导选项", IDC_STATIC, 5, 84, 285, 86
     GROUPBOX        "", IDC_STATIC, 10, 97, 143, 68
-    CHECKBOX        "安全启动 (/SA&FEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
+    CHECKBOX        "安全模式 (/SA&FEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
     CONTROL         "最小 (&MINIMAL)", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
-    CONTROL         "其他环境\n(M&INIMAL (ALTERNATESHELL))", IDC_RADIO4,
+    CONTROL         "其他外壳\n(M&INIMAL (ALTERNATESHELL))", IDC_RADIO4,
                     "Button", BS_AUTORADIOBUTTON | BS_MULTILINE, 15, 121, 133, 17
     CONTROL         "维修活动目录 (DSRE&PAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
     CONTROL         "网络 (NET&WORK)", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
-    CHECKBOX        "无 GUI 启动\n(/&NOGUIBOOT)", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
-    CHECKBOX        "启动日志 (/&BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
-    CHECKBOX        "基地视频 (/BAS&EVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
+    CHECKBOX        "无 GUI 引导\n(/&NOGUIBOOT)", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
+    CHECKBOX        "引导日志 (/&BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
+    CHECKBOX        "基本视频 (/BAS&EVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
     CHECKBOX        "OS 引导信息 (/S&OS)", IDC_CBX_SOS, 158, 138, 127, 12
     PUSHBUTTON      "高级选项...(&V)", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
     LTEXT           "超时:(&T)", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
     LTEXT           "秒", IDC_STATIC, 330, 104, 31, 10
-    CONTROL         "使所有的引导设置成为永久(&A)", 292,
+    CONTROL         "使所有的引导设置成为永久设置(&A)", 292,
                     "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
     PUSHBUTTON      "删除(&D)", IDC_BTN_DELETE, 295, 68, 66, 14
 END
@@ -124,16 +132,16 @@ END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "扩展文件从安装源"
+CAPTION "从安装源位置展开一个文件"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT           "指定您想要还原的文件，包含安装文件的源位置和文件的目标位置。", IDC_STATIC, 7, 7, 339, 17
+    LTEXT           "指定您要还原的文件，包含安装文件的源位置和文件的目标位置。", IDC_STATIC, 7, 7, 339, 17
     LTEXT           "要还原的文件:(&I)", IDC_STATIC, 7, 34, 93, 10
     EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
     PUSHBUTTON      "浏览文件...(&B)", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
-    LTEXT           "从还原:(&R)", IDC_STATIC, 7, 55, 93, 10
+    LTEXT           "还原自:(&R)", IDC_STATIC, 7, 55, 93, 10
     COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "从浏览...(&F)", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
+    PUSHBUTTON      "浏览自...(&F)", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
     LTEXT           "保存文件:(&S)", IDC_STATIC, 7, 76, 93, 10
     COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "浏览到...(&T)", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
@@ -152,11 +160,11 @@ BEGIN
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
     CONTROL         "区分大小写(&C)", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
     GROUPBOX        "方向", IDC_STATIC, 107, 26, 68, 28
-    CONTROL         "向上(&U)", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
-    CONTROL         "向下(&D)", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
+    CONTROL         "上移(&U)", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
+    CONTROL         "下移(&D)", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
     DEFPUSHBUTTON   "查找下一个(&N)", IDOK, 182, 5, 50, 14, WS_GROUP
     PUSHBUTTON      "取消", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "从一开始的搜索 (方向: 下来) 或结尾 (方向: 向上)(&S)", IDC_CBX_FIND_FROM_BEGINNING,
+    CONTROL         "从最初(方向:下)或末尾(方向:上)开始搜索(&S)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 
