@@ -42,12 +42,14 @@ void ThreadData::Update()
 
 DumpData::DumpData()
     :ProcessID(0)
+    ,ThreadID(0)
     ,ProcessHandle(NULL)
+    ,Event(NULL)
+    ,FirstBPHit(false)
 {
     memset(&ExceptionInfo, 0, sizeof(ExceptionInfo));
 }
 
-//static bool g_bIgnoreOnce = true;
 
 bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
 {
@@ -111,16 +113,34 @@ bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
     case OUTPUT_DEBUG_STRING_EVENT: // ignore
         break;
     case EXCEPTION_DEBUG_EVENT:
-        //if (g_bIgnoreOnce)
-        //{
-        //    g_bIgnoreOnce = false;
-        //    if (evt.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT)
-        //    {
-        //        xfprintf(stdout, "Ignoring initial breakpoint\n");
-        //        return true;
-        //    }
-        //}
+        if (evt.u.Exception.dwFirstChance)
+        {
+            switch(evt.u.Exception.ExceptionRecord.ExceptionCode)
+            {
+            case EXCEPTION_BREAKPOINT:
+                if (!data.FirstBPHit)
+                {
+                    data.FirstBPHit = true;
+
+                    if (data.Event)
+                    {
+                        SetEvent(data.Event);
+                        CloseHandle(data.Event);
+                        data.Event = NULL;
+                    }
+                    return true;
+                }
+                break;
+            case 0x406d1388:
+                /* Thread name */
+                return true;
+            case DBG_CONTROL_C:
+            case DBG_CONTROL_BREAK:
+                return true;
+            }
+        }
         data.ExceptionInfo = evt.u.Exception;
+        data.ThreadID = evt.dwThreadId;
         return false;
     case EXIT_PROCESS_DEBUG_EVENT:
         //assert(FALSE);

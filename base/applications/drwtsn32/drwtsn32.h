@@ -39,10 +39,13 @@ public:
     std::string ProcessPath;
     std::string ProcessName;
     DWORD ProcessID;
+    DWORD ThreadID;
     HANDLE ProcessHandle;
     ModuleList Modules;
     ThreadMap Threads;
     EXCEPTION_DEBUG_INFO ExceptionInfo;
+    HANDLE Event;
+    bool FirstBPHit;
 
     DumpData();
 };

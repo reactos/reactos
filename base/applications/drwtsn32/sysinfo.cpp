@@ -54,7 +54,7 @@ void PrintSystemInfo(FILE* output, DumpData& data)
     GetLocalTime(&LocalTime);
     xfprintf(output, NEWLINE "ReactOS " KERNEL_VERSION_STR " DrWtsn32" NEWLINE NEWLINE);
     xfprintf(output, "Application exception occurred:" NEWLINE);
-    xfprintf(output, "    App: %s (pid=%d)" NEWLINE, data.ProcessName.c_str(), data.ProcessID);
+    xfprintf(output, "    App: %s (pid=%d, tid=0x%x)" NEWLINE, data.ProcessName.c_str(), data.ProcessID, data.ThreadID);
     xfprintf(output, "    When: %d/%d/%d @ %02d:%02d:%02d.%d" NEWLINE,
              LocalTime.wDay, LocalTime.wMonth, LocalTime.wYear,
              LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, LocalTime.wMilliseconds);
@@ -98,8 +98,8 @@ void PrintSystemInfo(FILE* output, DumpData& data)
         ReadKey(hKey, "ProductName", Buffer, sizeof(Buffer));
         ReadKey(hKey, "CurrentVersion", Version, sizeof(Version));
         xfprintf(output, "    %s Version: %s" NEWLINE, Buffer, Version);
-        ReadKey(hKey, "CurrentBuild", Buffer, sizeof(Buffer));
-        xfprintf(output, "    Current Build: %s" NEWLINE, Buffer);
+        ReadKey(hKey, "BuildLab", Buffer, sizeof(Buffer));
+        xfprintf(output, "    BuildLab: %s" NEWLINE, Buffer);
         ReadKey(hKey, "CSDVersion", Buffer, sizeof(Buffer));
         if (Buffer[0])
             xfprintf(output, "    Service Pack: %s" NEWLINE, Buffer);

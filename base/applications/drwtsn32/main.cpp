@@ -120,11 +120,11 @@ int abort(FILE* output, int err)
 int main(int argc, char* argv[])
 {
     DWORD pid = 0;
-    HANDLE hEvent = 0;
     char Buffer[MAX_PATH+55];
     char Filename[50];
     FILE* output = NULL;
     SYSTEMTIME st;
+    DumpData data;
 
 
     for (int n = 0; n < argc; ++n)
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
         {
             if (n + 1 < argc)
             {
-                hEvent = (HANDLE)strtoul(argv[n+1], NULL, 10);
+                data.Event = (HANDLE)strtoul(argv[n+1], NULL, 10);
                 n++;
             }
         }
@@ -209,10 +209,9 @@ int main(int argc, char* argv[])
 
     assert(evt.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT);
 
-    DumpData data;
     while (UpdateFromEvent(evt, data))
     {
-        ContinueDebugEvent(evt.dwProcessId, evt.dwThreadId, DBG_EXCEPTION_HANDLED);
+        ContinueDebugEvent(evt.dwProcessId, evt.dwThreadId, DBG_CONTINUE);
 
         if (!WaitForDebugEvent(&evt, 30000))
             return abort(output, -4);
@@ -220,8 +219,7 @@ int main(int argc, char* argv[])
 
     PrintBugreport(output, data);
 
-    if (hEvent)
-        SetEvent(hEvent);
+    TerminateProcess(data.ProcessHandle, data.ExceptionInfo.ExceptionRecord.ExceptionCode);
 
     return abort(output, 0);
 }

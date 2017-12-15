@@ -65,17 +65,17 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
 
     xfprintf(output, NEWLINE "*----> Stack Back Trace <----*" NEWLINE NEWLINE);
     bool first = true;
-    int max = 200;
+    ULONG_PTR LastFrame = StackFrame.AddrFrame.Offset - 8;
     while(StackWalk64(MachineType, data.ProcessHandle, thread.Handle, &StackFrame, &thread.Context,
                          NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL))
     {
         if (!StackFrame.AddrPC.Offset)
             break;
 
-        if (max-- < 0)
-        {
-            xfprintf(output, "Error, infinite loop, aborting!\n");
-        }
+        if (LastFrame >= StackFrame.AddrFrame.Offset)
+            break;
+
+        LastFrame = StackFrame.AddrFrame.Offset;
 
         if (first)
         {
@@ -97,7 +97,7 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
             strcpy(sym->Name, "<nosymbols>");
 
         xfprintf(output, "%p %p %p %p %p %p %s!%s" NEWLINE,
-                 (ULONG_PTR)StackFrame.AddrFrame.Offset, (ULONG_PTR)StackFrame.AddrReturn.Offset,
+                 (ULONG_PTR)StackFrame.AddrFrame.Offset, (ULONG_PTR)StackFrame.AddrPC.Offset,
                  (ULONG_PTR)StackFrame.Params[0], (ULONG_PTR)StackFrame.Params[1],
                  (ULONG_PTR)StackFrame.Params[2], (ULONG_PTR)StackFrame.Params[3],
                  Module.ModuleName, sym->Name);
