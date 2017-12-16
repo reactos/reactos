@@ -29,7 +29,6 @@
 
 #ifndef __REACTOS__
 extern DISK_GEOMETRY const geom_tbl[VFD_MEDIA_MAX] = {
-DISK_GEOMETRY const geom_tbl[VFD_MEDIA_MAX] = {
 	{{ 80 },	F3_1Pt44_512,	2,	18,	VFD_BYTES_PER_SECTOR },	// default
 	{{ 40 },	F5_160_512,		1,	8,	VFD_BYTES_PER_SECTOR },	// 160K
 	{{ 40 },	F5_180_512,		1,	9,	VFD_BYTES_PER_SECTOR },	// 180K
@@ -48,22 +47,22 @@ DISK_GEOMETRY const geom_tbl[VFD_MEDIA_MAX] = {
 	{{ 80 },	F3_2Pt88_512,	2,	36,	VFD_BYTES_PER_SECTOR },	// 2880K
 #else
 DISK_GEOMETRY const geom_tbl[VFD_MEDIA_MAX] = {
-	{{ .QuadPart = 80 },	F3_1Pt44_512,	2,	18,	VFD_BYTES_PER_SECTOR },	// default
-	{{ .QuadPart = 40 },	F5_160_512,		1,	8,	VFD_BYTES_PER_SECTOR },	// 160K
-	{{ .QuadPart = 40 },	F5_180_512,		1,	9,	VFD_BYTES_PER_SECTOR },	// 180K
-	{{ .QuadPart = 40 },	F5_320_512,		2,	8,	VFD_BYTES_PER_SECTOR },	// 320K
-	{{ .QuadPart = 40 },	F5_360_512,		2,	9,	VFD_BYTES_PER_SECTOR },	// 360K
-	{{ .QuadPart = 80 },	F3_640_512,		2,	8,	VFD_BYTES_PER_SECTOR },	// 640k
-	{{ .QuadPart = 80 },	F5_640_512,		2,	8,	VFD_BYTES_PER_SECTOR },	// 640k
-	{{ .QuadPart = 80 },	F3_720_512,		2,	9,	VFD_BYTES_PER_SECTOR },	// 720K
-	{{ .QuadPart = 80 },	F5_720_512,		2,	9,	VFD_BYTES_PER_SECTOR },	// 720K
-	{{ .QuadPart = 82 },	RemovableMedia,	2,	10,	VFD_BYTES_PER_SECTOR },	// 820K
-	{{ .QuadPart = 80 },	F3_1Pt2_512,	2,	15,	VFD_BYTES_PER_SECTOR },	// 1200K
-	{{ .QuadPart = 80 },	F5_1Pt2_512,	2,	15,	VFD_BYTES_PER_SECTOR },	// 1200K
-	{{ .QuadPart = 80 },	F3_1Pt44_512,	2,	18,	VFD_BYTES_PER_SECTOR },	// 1440K
-	{{ .QuadPart = 80 },	RemovableMedia,	2,	21,	VFD_BYTES_PER_SECTOR },	// 1680K DMF
-	{{ .QuadPart = 82 },	RemovableMedia,	2,	21,	VFD_BYTES_PER_SECTOR },	// 1720K DMF
-	{{ .QuadPart = 80 },	F3_2Pt88_512,	2,	36,	VFD_BYTES_PER_SECTOR },	// 2880K
+	{{ {80} },	F3_1Pt44_512,	2,	18,	VFD_BYTES_PER_SECTOR },	// default
+	{{ {40} },	F5_160_512,		1,	8,	VFD_BYTES_PER_SECTOR },	// 160K
+	{{ {40} },	F5_180_512,		1,	9,	VFD_BYTES_PER_SECTOR },	// 180K
+	{{ {40} },	F5_320_512,		2,	8,	VFD_BYTES_PER_SECTOR },	// 320K
+	{{ {40} },	F5_360_512,		2,	9,	VFD_BYTES_PER_SECTOR },	// 360K
+	{{ {80} },	F3_640_512,		2,	8,	VFD_BYTES_PER_SECTOR },	// 640k
+	{{ {80} },	F5_640_512,		2,	8,	VFD_BYTES_PER_SECTOR },	// 640k
+	{{ {80} },	F3_720_512,		2,	9,	VFD_BYTES_PER_SECTOR },	// 720K
+	{{ {80} },	F5_720_512,		2,	9,	VFD_BYTES_PER_SECTOR },	// 720K
+	{{ {82} },	RemovableMedia,	2,	10,	VFD_BYTES_PER_SECTOR },	// 820K
+	{{ {80} },	F3_1Pt2_512,	2,	15,	VFD_BYTES_PER_SECTOR },	// 1200K
+	{{ {80} },	F5_1Pt2_512,	2,	15,	VFD_BYTES_PER_SECTOR },	// 1200K
+	{{ {80} },	F3_1Pt44_512,	2,	18,	VFD_BYTES_PER_SECTOR },	// 1440K
+	{{ {80} },	RemovableMedia,	2,	21,	VFD_BYTES_PER_SECTOR },	// 1680K DMF
+	{{ {82} },	RemovableMedia,	2,	21,	VFD_BYTES_PER_SECTOR },	// 1720K DMF
+	{{ {80} },	F3_2Pt88_512,	2,	36,	VFD_BYTES_PER_SECTOR },	// 2880K
 #endif
 };
 
