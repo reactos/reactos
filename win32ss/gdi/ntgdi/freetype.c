@@ -476,7 +476,10 @@ InitFontSupport(VOID)
     }
 
     IntLoadSystemFonts();
+
+    IntLockFreeType;
     IntLoadFontSubstList(&FontSubstListHead);
+    IntUnLockFreeType;
 
     return TRUE;
 }
@@ -529,8 +532,7 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
 
         CharSets[FONTSUBST_FROM] = pSubstEntry->CharSets[FONTSUBST_FROM];
 
@@ -588,9 +590,11 @@ SubstituteFontRecurse(LOGFONTW* pLogFont)
 
     while (RecurseCount-- > 0)
     {
+        IntLockFreeType;
         Found = SubstituteFontByList(&FontSubstListHead,
                                      &OutputNameW, &InputNameW,
                                      pLogFont->lfCharSet, CharSetMap);
+        IntUnLockFreeType;
         if (!Found)
             break;
 
@@ -5137,11 +5141,14 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Enumerate font families in the registry */
+    IntLockFreeType;
     if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
     {
+        IntUnLockFreeType;
         ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
+    IntUnLockFreeType;
 
     /* Return data to caller */
     if (0 != Count)
