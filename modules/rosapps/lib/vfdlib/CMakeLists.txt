@@ -26,7 +26,7 @@ endif()
 add_library(vfd SHARED
     ${SOURCE}
     vfdlib.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/vfdlib.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/vfd.def)
 
 include_directories(${REACTOS_SOURCE_DIR}/modules/rosapps/include/vfd
                     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
