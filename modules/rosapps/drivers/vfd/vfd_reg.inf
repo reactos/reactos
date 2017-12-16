@@ -1,0 +1,7 @@
+; Virtual floppy class driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\VirtualFD","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\VirtualFD","Group",0x00000000,"SCSI Class"
+HKLM,"SYSTEM\CurrentControlSet\Services\VirtualFD","ImagePath",0x00020000,"system32\drivers\vfd.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\VirtualFD","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\VirtualFD","Type",0x00010001,0x00000001

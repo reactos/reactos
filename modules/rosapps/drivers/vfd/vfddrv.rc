@@ -1,0 +1,30 @@
+/*
+	vfddrv.rc
+
+	Virtual Floppy Drive for Windows NT platform
+	Kernel mode driver: version resource script
+
+	Copyright (C) 2003-2005 Ken Kato
+*/
+
+//	!!! NOTE !!!
+//	Editing this file with Microsoft Visual Studio will almost
+//	certainly mess things up...
+
+#ifndef APSTUDIO_INVOKED
+
+#include <winver.h>
+#include "vfdver.h"
+
+#define VFD_FILEOS				VOS_NT_WINDOWS32
+#define VFD_FILETYPE			VFT_DRV
+#define VFD_FILESUBTYPE			VFT2_DRV_SYSTEM
+
+#define VFD_DESCRIPTION			"Virtual Floppy Drive Kernel Mode Driver"
+#define VFD_INTERNALNAME		VFD_DRIVER_FILENAME
+#define VFD_FILE_MAJOR			VFD_DRIVER_MAJOR
+#define VFD_FILE_MINOR			VFD_DRIVER_MINOR
+
+#include "vfdver.rc"
+
+#endif	// APSTUDIO_INVOKED
