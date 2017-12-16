@@ -2,7 +2,7 @@
 
 #include "doskey.h"
 
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Doskey Command"
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS DosKey Command"
 #define REACTOS_STR_INTERNAL_NAME     "doskey"
 #define REACTOS_STR_ORIGINAL_FILENAME "doskey.exe"
 #include <reactos/version.rc>
