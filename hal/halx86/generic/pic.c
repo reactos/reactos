@@ -22,6 +22,8 @@ HalpInitializeLegacyPICs(VOID)
     I8259_ICW3 Icw3;
     I8259_ICW4 Icw4;
 
+    ASSERT(!(__readeflags() & EFLAGS_INTERRUPT_MASK));
+
     /* Initialize ICW1 for master, interval 8, edge-triggered mode with ICW4 */
     Icw1.NeedIcw4 = TRUE;
     Icw1.OperatingMode = Cascade;
