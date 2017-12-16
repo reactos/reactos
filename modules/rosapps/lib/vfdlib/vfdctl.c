@@ -2928,15 +2928,8 @@ DWORD WINAPI VfdCheckDriverFile(
 		fixedinfo->dwFileType			!= VFT_DRV			||
 		fixedinfo->dwFileSubtype		!= VFT2_DRV_SYSTEM) {
 
-#ifndef __REACTOS__
 		VFDTRACE(0,
 			(FUNC ": Invalid file type flags\n"));
-#else
-		VFDTRACE(0,
-			(FUNC ": Invalid file type flags. os: %x (%x), type: %x (%x), subtype: %x (%x)\n",
-			fixedinfo->dwFileOS, VOS_NT_WINDOWS32, fixedinfo->dwFileType, VFT_DRV,
-			fixedinfo->dwFileSubtype, VFT2_DRV_SYSTEM));
-#endif
 
 		ret = ERROR_BAD_DRIVER;
 
