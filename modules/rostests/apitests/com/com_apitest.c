@@ -48,6 +48,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IAccessibleHandler)                },
     { ID_NAME(IID_IAccessControl),              TRUE },
     { ID_NAME(IID_IAccessor)                         },
+    { ID_NAME(IID_IACLCustomMRU)                     },
     { ID_NAME(IID_IActiveDesktop),              TRUE },
     { ID_NAME(IID_IActiveDesktopP),             TRUE },
     { ID_NAME(IID_IActionProgress)                   },
