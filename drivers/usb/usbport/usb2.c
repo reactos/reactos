@@ -1692,8 +1692,100 @@ USB2_PromotePeriods(IN PUSB2_TT_ENDPOINT TtEndpoint,
                     IN PUSB2_REBALANCE Rebalance,
                     IN PULONG RebalanceListEntries)
 {
-    DPRINT1("USB2_PromotePeriods: UNIMPLEMENTED. FIXME\n");
-    ASSERT(FALSE);
+    PUSB2_TT_ENDPOINT ttEndpoint;
+    ULONG TransferType;
+    ULONG ix;
+
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+
+    if (TtEndpoint->ActualPeriod != ENDPOINT_INTERRUPT_1ms &&
+        TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT &&
+        (CHAR)TtEndpoint->StartMicroframe > 2 &&
+        !USB2_ChangePeriod(TtEndpoint, Rebalance, RebalanceListEntries))
+    {
+        DPRINT("USB2_PromotePeriods: return FALSE\n");
+        return FALSE;
+    }
+
+    if (Rebalance->RebalanceEndpoint[0] == NULL)
+    {
+        DPRINT("USB2_PromotePeriods: return TRUE\n");
+        return TRUE;
+    }
+
+    DPRINT("USB2_PromotePeriods: RebalanceListEntries - %X\n",
+           *RebalanceListEntries);
+
+    for (ix = 0; Rebalance->RebalanceEndpoint[ix]; ix++)
+    {
+        Rebalance->RebalanceEndpoint[ix]->IsPromoted = FALSE;
+    }
+
+    for (ix = 0; ; ix++)
+    {
+        ttEndpoint = Rebalance->RebalanceEndpoint[ix];
+        TransferType = ttEndpoint->TtEndpointParams.TransferType;
+
+        if (ttEndpoint->ActualPeriod != ENDPOINT_INTERRUPT_1ms &&
+            TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT &&
+            ttEndpoint->StartMicroframe > 2)
+        {
+            USB2_DeallocateEndpointBudget(ttEndpoint,
+                                          Rebalance,
+                                          RebalanceListEntries,
+                                          USB2_FRAMES);
+
+            ttEndpoint->IsPromoted = TRUE;
+            ttEndpoint->PreviosPeriod = ttEndpoint->Period;
+            ttEndpoint->Period = ENDPOINT_INTERRUPT_1ms;
+
+            if (!USB2_AllocateTimeForEndpoint(ttEndpoint,
+                                              Rebalance,
+                                              RebalanceListEntries))
+            {
+                break;
+            }
+        }
+
+        if (Rebalance->RebalanceEndpoint[ix + 1] == NULL)
+        {
+            DPRINT("USB2_PromotePeriods: return TRUE\n");
+            return TRUE;
+        }
+    }
+
+    USB2_DeallocateEndpointBudget(TtEndpoint,
+                                  Rebalance,
+                                  RebalanceListEntries,
+                                  USB2_FRAMES);
+
+    TtEndpoint->Period = TtEndpoint->PreviosPeriod;
+    TtEndpoint->PreviosPeriod = 0;
+
+    for (ix = 0; Rebalance->RebalanceEndpoint[ix]; ix++)
+    {
+        ttEndpoint = Rebalance->RebalanceEndpoint[ix];
+
+        if (ttEndpoint->IsPromoted)
+        {
+            if (ttEndpoint->CalcBusTime)
+            {
+                USB2_DeallocateEndpointBudget(ttEndpoint,
+                                              Rebalance,
+                                              RebalanceListEntries,
+                                              USB2_FRAMES);
+            }
+
+            TtEndpoint->Period = TtEndpoint->PreviosPeriod;
+            TtEndpoint->PreviosPeriod = 0;
+
+            USB2_AllocateTimeForEndpoint(ttEndpoint,
+                                         Rebalance,
+                                         RebalanceListEntries);
+        }
+    }
+
+    DPRINT("USB2_PromotePeriods: return FALSE\n");
     return FALSE;
 }
 
