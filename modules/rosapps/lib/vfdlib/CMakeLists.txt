@@ -19,6 +19,10 @@ list(APPEND SOURCE
     vfdshutil.cpp
     vfdzip.c)
 
+if(DBG)
+    add_definitions(-D_DEBUG)
+endif()
+
 add_library(vfd SHARED
     ${SOURCE}
     vfdlib.rc
