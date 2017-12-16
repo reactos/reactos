@@ -37,7 +37,7 @@ extern BOOL WINAPI IsDebuggerPresent(VOID);
 /* Console Input facilities */
 HANDLE InputWaitHandle = INVALID_HANDLE_VALUE;
 
-#define EXENAME_LENGTH 255 + 1
+#define EXENAME_LENGTH (255 + 1)
 static RTL_CRITICAL_SECTION ExeNameLock;
 static BOOLEAN ExeNameInitialized;
 static WCHAR ExeNameBuffer[EXENAME_LENGTH]; // NULL-terminated
