@@ -1102,10 +1102,204 @@ USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
 
     /* Speed != UsbHighSpeed (FS/LS) */
 
-    DPRINT("USB2_DeallocateEndpointBudget: UNIMPLEMENTED FIXME\n");
-    ASSERT(FALSE);
+    TransferType = TtEndpoint->TtEndpointParams.TransferType;
+
+    for (ix = MaxFrames, Frame = (MaxFrames - 1) - TtEndpoint->StartFrame;
+         ix > 0;
+         ix--, Frame--)
+    {
+        frame = TtEndpoint->StartFrame + Frame;
+
+        DPRINT("USB2_DeallocateEndpointBudget: frame - %X, Frame - %X, StartFrame - %X\n",
+               frame,
+               Frame,
+               TtEndpoint->StartFrame);
+
+        if ((Frame % TtEndpoint->ActualPeriod) == 0)
+        {
+            USB2_DeallocateHS(TtEndpoint, Frame);
+            Tt->FrameBudget[frame].TimeUsed -= TtEndpoint->CalcBusTime;
+        }
+
+        if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+        {
+            endpoint = Tt->FrameBudget[frame].IntEndpoint;
+        }
+        else
+        {
+            endpoint = Tt->FrameBudget[frame].IsoEndpoint;
+        }
+
+        nextEndpoint = endpoint->NextTtEndpoint;
+
+        DPRINT("USB2_DeallocateEndpointBudget: TtEndpoint - %p, nextEndpoint - %p\n",
+               TtEndpoint,
+               nextEndpoint);
+
+        if (TtEndpoint->CalcBusTime > (USB2_FS_MAX_PERIODIC_ALLOCATION / 2))
+        {
+            while (nextEndpoint)
+            {
+                endpoint = nextEndpoint;
+                nextEndpoint = nextEndpoint->NextTtEndpoint;
+            }
+
+            nextEndpoint = TtEndpoint;
+
+            DPRINT("USB2_DeallocateEndpointBudget: endpoint - %p, nextEndpoint - %p\n",
+                   endpoint,
+                   nextEndpoint);
+        }
+        else
+        {
+            while (nextEndpoint &&
+                   !USB2_CheckTtEndpointInsert(nextEndpoint, TtEndpoint))
+            {
+                endpoint = nextEndpoint;
+                nextEndpoint = nextEndpoint->NextTtEndpoint;
+            }
+
+            if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS &&
+                nextEndpoint)
+            {
+                DPRINT1("USB2_DeallocateEndpointBudget: Iso Ep UNIMPLEMENTED. FIXME\n");
+                ASSERT(FALSE);
+            }
+
+            DPRINT("USB2_DeallocateEndpointBudget: endpoint - %p, nextEndpoint - %p\n",
+                   endpoint,
+                   nextEndpoint);
+        }
+
+        if ((Frame % TtEndpoint->ActualPeriod) == 0)
+        {
+            if (TtEndpoint->CalcBusTime > (USB2_FS_MAX_PERIODIC_ALLOCATION / 2))
+            {
+                Tt->FrameBudget[frame].AltEndpoint = NULL;
+            }
+            else if (nextEndpoint)
+            {
+                nextEndpoint = nextEndpoint->NextTtEndpoint;
+                endpoint->NextTtEndpoint = nextEndpoint;
+
+                DPRINT("USB2_DeallocateEndpointBudget: endpoint - %p, nextEndpoint - %p\n",
+                       endpoint,
+                       nextEndpoint);
+            }
+        }
+
+        if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+        {
+            if (endpoint == Tt->FrameBudget[frame].IntEndpoint)
+            {
+                if (Tt->FrameBudget[frame].IsoEndpoint->NextTtEndpoint)
+                {
+                    endpoint = Tt->FrameBudget[frame].IsoEndpoint->NextTtEndpoint;
+                    DPRINT("USB2_DeallocateEndpointBudget: endpoint - %p\n", endpoint);
+                }
+                else if (Tt->FrameBudget[frame].AltEndpoint)
+                {
+                    endpoint = Tt->FrameBudget[frame].AltEndpoint;
+                    DPRINT("USB2_DeallocateEndpointBudget: endpoint - %p\n", endpoint);
+                }
+            }
+        }
+        else
+        {
+            DPRINT1("USB2_DeallocateEndpointBudget: Iso Ep UNIMPLEMENTED. FIXME\n");
+            ASSERT(FALSE);
+        }
+
+        Period = TtEndpoint->ActualPeriod;
+
+        for (;
+             nextEndpoint;
+             endpoint = nextEndpoint,
+             nextEndpoint = nextEndpoint->NextTtEndpoint)
+        {
+            DPRINT("USB2_DeallocateEndpointBudget: endpoint - %p, nextEndpoint - %p\n",
+                   endpoint,
+                   nextEndpoint);
+
+            endTime = endpoint->StartTime + endpoint->CalcBusTime;
+            maxEndTime = endTime;
+
+            if (Period > nextEndpoint->ActualPeriod ||
+                TtEndpoint->StartFrame != nextEndpoint->StartFrame)
+            {
+                if (USB2_CommonFrames(nextEndpoint, TtEndpoint))
+                    Factor = Period / nextEndpoint->ActualPeriod;
+                else
+                    Factor = USB2_FRAMES / nextEndpoint->ActualPeriod;
+
+                maxEndTime = endTime;
+
+                for (jx = 0, frame = nextEndpoint->StartFrame;
+                     jx < Factor;
+                     jx++, frame += nextEndpoint->ActualPeriod)
+                {
+                    if (nextEndpoint->StartFrame != TtEndpoint->StartFrame)
+                    {
+                        lastEndpoint = Tt->FrameBudget[frame].IntEndpoint;
+
+                        if (Tt->FrameBudget[frame].IsoEndpoint->NextTtEndpoint)
+                        {
+                            lastEndpoint = Tt->FrameBudget[frame].IsoEndpoint->NextTtEndpoint;
+                        }
+                        else if (Tt->FrameBudget[frame].AltEndpoint)
+                        {
+                            lastEndpoint = Tt->FrameBudget[frame].AltEndpoint;
+                        }
+
+                        for (tmpEndpoint = Tt->FrameBudget[frame].IntEndpoint->NextTtEndpoint;
+                             tmpEndpoint && tmpEndpoint != nextEndpoint;
+                             tmpEndpoint = tmpEndpoint->NextTtEndpoint)
+                        {
+                            lastEndpoint = tmpEndpoint;
+                        }
+
+                        lastEndTime = lastEndpoint->StartTime + lastEndpoint->CalcBusTime;
+
+                        if (endTime < (lastEndTime - 1))
+                        {
+                            maxEndTime = lastEndTime;
+                            endTime = maxEndTime;
+
+                            if (nextEndpoint->StartTime == maxEndTime)
+                                break;
+                        }
+                        else
+                        {
+                            maxEndTime = endTime;
+                        }
+                    }
+                }
+            }
+
+            if (maxEndTime >= nextEndpoint->StartTime)
+                break;
+
+            if (!USB2_MoveTtEndpoint(nextEndpoint,
+                                     maxEndTime - nextEndpoint->StartTime,
+                                     Rebalance,
+                                     *RebalanceListEntries,
+                                     &IsMoved))
+            {
+                if (!IsMoved)
+                {
+                    DPRINT("USB2_DeallocateEndpointBudget: Not moved!\n");
+                }
+
+                break;
+            }
+
+            if (Period > nextEndpoint->ActualPeriod)
+                Period = nextEndpoint->ActualPeriod;
+        }
+    }
 
     TtEndpoint->CalcBusTime = 0;
+
     DPRINT("USB2_DeallocateEndpointBudget: return TRUE\n");
     return TRUE;
 }
