@@ -18,6 +18,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,   &IID_IEnumString },
             {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_IACList },
+            {    0x8,   &IID_IACLCustomMRU },
         },
     },
     {
@@ -33,6 +34,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,   &IID_IEnumString },
             {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_IACList },
+            {    0x8,   &IID_IACLCustomMRU },
         },
     },
     {
