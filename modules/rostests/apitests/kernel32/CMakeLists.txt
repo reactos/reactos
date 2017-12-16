@@ -1,6 +1,8 @@
 
 add_subdirectory(redirptest)
 
+add_message_headers(ANSI FormatMessage.mc)
+
 list(APPEND SOURCE
     Console.c
     CreateProcess.c
@@ -9,6 +11,7 @@ list(APPEND SOURCE
     dosdev.c
     FindActCtxSectionStringW.c
     FindFiles.c
+    FormatMessage.c
     GetComputerNameEx.c
     GetCurrentDirectory.c
     GetDriveType.c
@@ -30,11 +33,12 @@ list(APPEND SOURCE
     WideCharToMultiByte.c
     precomp.h)
 
-add_executable(kernel32_apitest ${SOURCE} testlist.c)
+add_executable(kernel32_apitest ${SOURCE} testlist.c kernel32_apitest.rc)
 target_link_libraries(kernel32_apitest wine ${PSEH_LIB})
 set_module_type(kernel32_apitest win32cui)
 add_delay_importlibs(kernel32_apitest advapi32 shlwapi)
 add_importlibs(kernel32_apitest msvcrt kernel32 ntdll)
+add_dependencies(kernel32_apitest FormatMessage)
 add_pch(kernel32_apitest precomp.h SOURCE)
 add_rostests_file(TARGET kernel32_apitest)
 
