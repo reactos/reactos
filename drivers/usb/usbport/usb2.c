@@ -1662,6 +1662,32 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
 
 BOOLEAN
 NTAPI
+USB2_ChangePeriod(IN PUSB2_TT_ENDPOINT TtEndpoint,
+                  IN PUSB2_REBALANCE Rebalance,
+                  IN PULONG RebalanceListEntries)
+{
+    BOOLEAN Result;
+
+    DPRINT("USB2_ChangePeriod: RebalanceListEntries - %X\n",
+           *RebalanceListEntries);
+
+    USB2_DeallocateEndpointBudget(TtEndpoint,
+                                  Rebalance,
+                                  RebalanceListEntries,
+                                  USB2_FRAMES);
+
+    TtEndpoint->PreviosPeriod = TtEndpoint->Period;
+    TtEndpoint->Period = ENDPOINT_INTERRUPT_1ms;
+
+    Result = USB2_AllocateTimeForEndpoint(TtEndpoint,
+                                          Rebalance,
+                                          RebalanceListEntries);
+
+    return Result;
+}
+
+BOOLEAN
+NTAPI
 USB2_PromotePeriods(IN PUSB2_TT_ENDPOINT TtEndpoint,
                     IN PUSB2_REBALANCE Rebalance,
                     IN PULONG RebalanceListEntries)
