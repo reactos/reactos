@@ -7,6 +7,13 @@
 
 #include "shelltest.h"
 
+#include <shlwapi.h>
+#include <unknownbase.h>
+#include <shlguid_undoc.h>
+
+#define test_S_OK(hres, message) ok(hres == S_OK, "%s (0x%lx instead of S_OK)\n",message, hResult);
+#define test_HRES(hres, hresExpected, message) ok(hres == hresExpected, "%s (0x%lx instead of 0x%lx)\n",message, hResult,hresExpected);
+
 BOOL CheckWindowClass(HWND hwnd, PCWSTR className)
 {
     ULONG size = (wcslen(className) + 1)* sizeof(WCHAR);

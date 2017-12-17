@@ -5,10 +5,7 @@
  * PROGRAMMER:      Yaroslav Veremenko <yaroslav@veremenko.info>
  */
 
-
 #include "shelltest.h"
-
-
 
 #define ok_ShellExecuteEx (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : TestShellExecuteEx
 

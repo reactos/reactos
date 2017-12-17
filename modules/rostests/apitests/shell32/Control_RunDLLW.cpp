@@ -6,7 +6,10 @@
  */
 
 #include "shelltest.h"
+
 #include <cpl.h>
+#include <stdio.h>
+
 #define NDEBUG
 #include <debug.h>
 

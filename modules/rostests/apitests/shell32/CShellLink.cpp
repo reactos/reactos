@@ -6,10 +6,6 @@
  */
 
 #include "shelltest.h"
-#include <atlbase.h>
-#include <atlcom.h>
-#include <strsafe.h>
-#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
 #include <debug.h>

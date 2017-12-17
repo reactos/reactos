@@ -6,13 +6,12 @@
  */
 
 #include "shelltest.h"
-#include <atlbase.h>
-#include <atlcom.h>
-ULONG DbgPrint(PCH Format,...);
-#include <shellutils.h>
+
 #include <wincon.h>
 #include <wingdi.h>
 
+ULONG DbgPrint(PCH Format,...);
+#include <shellutils.h>
 
 HRESULT (STDAPICALLTYPE *pSHCreateFileExtractIconW)(LPCWSTR pszFile, DWORD dwFileAttributes, REFIID riid, void **ppv);
 

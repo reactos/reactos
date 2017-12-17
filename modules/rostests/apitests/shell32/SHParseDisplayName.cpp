@@ -6,9 +6,6 @@
  */
 
 #include "shelltest.h"
-#include "apitest.h"
-#include <ndk/umtypes.h>
-#include <strsafe.h>
 
 /* Version masks */
 #define T_ALL     0x0
