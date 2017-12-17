@@ -61,10 +61,13 @@ list(APPEND SOURCE
     ntuser/NtUserUpdatePerUserSystemParameters.c
 
     #osver.c
+    win32nt.h)
+
+add_executable(win32knt_apitest
+    ${SOURCE}
     testlist.c
     w32knapi.rc)
 
-add_executable(win32knt_apitest ${SOURCE})
 target_link_libraries(win32knt_apitest ${PSEH_LIB} gditools)
 set_module_type(win32knt_apitest win32cui)
 add_importlibs(win32knt_apitest
@@ -78,4 +81,5 @@ add_importlibs(win32knt_apitest
     ntdll)
 
 add_dependencies(win32knt_apitest xdk)
+add_pch(win32knt_apitest win32nt.h SOURCE)
 add_rostests_file(TARGET win32knt_apitest)

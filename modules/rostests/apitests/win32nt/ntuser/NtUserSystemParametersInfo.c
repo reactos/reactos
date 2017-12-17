@@ -7,6 +7,8 @@
 
 #include <win32nt.h>
 
+#include <winreg.h>
+
 static const WCHAR* KEY_MOUSE = L"Control Panel\\Mouse";
 //static const WCHAR* VAL_MOUSE1 = L"MouseThreshold1";
 //static const WCHAR* VAL_MOUSE2 = L"MouseThreshold2";
