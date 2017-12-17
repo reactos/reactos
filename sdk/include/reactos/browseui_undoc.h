@@ -129,6 +129,21 @@ HRESULT WINAPI SHWriteClassesOfCategories(long param8, long paramC, long param10
 BOOL WINAPI SHIsExplorerBrowser(void);
 HRESULT WINAPI SHOpenNewFrame(LPITEMIDLIST pidl, IUnknown *paramC, long param10, DWORD dwFlags);
 
+
+#define INTERFACE IACLCustomMRU
+DECLARE_INTERFACE_IID_(IACLCustomMRU, IUnknown, "F729FC5E-8769-4F3E-BDB2-D7B50FD2275B")
+{
+    // *** IUnknown methods ***
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG, AddRef) (THIS)PURE;
+    STDMETHOD_(ULONG, Release) (THIS)PURE;
+
+    // *** IACLCustomMRU specific methods ***
+    STDMETHOD(Initialize) (THIS_ LPCWSTR pwszMRURegKey, DWORD dwMax) PURE;
+    STDMETHOD(AddMRUString) (THIS_ LPCWSTR pwszEntry) PURE;
+};
+#undef INTERFACE
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

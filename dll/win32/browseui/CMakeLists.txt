@@ -4,10 +4,15 @@ add_subdirectory(shellbars)
 
 set_cpp(WITH_RUNTIME)
 
+add_definitions(
+    -D_ATL_NO_EXCEPTIONS)
+
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    ACLCustomMRU.cpp
+    ACLCustomMRU.h
     aclistisf.cpp
     aclmulti.cpp
     addressband.cpp

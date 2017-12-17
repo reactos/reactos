@@ -103,6 +103,7 @@
 #define IDR_AUTOCOMPLETE         141
 #define IDR_ACLISTISF            142
 #define IDR_ISFBAND              143
+#define IDR_ACLCUSTOMMRU         144
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
