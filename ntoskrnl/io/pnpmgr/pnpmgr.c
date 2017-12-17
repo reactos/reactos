@@ -926,7 +926,7 @@ IopDeviceActionWorker(
                                                Data->Type);
 
         ObDereferenceObject(Data->DeviceObject);
-        ExFreePool(Data);
+        ExFreePoolWithTag(Data, TAG_IO);
         KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
     }
     IopDeviceActionInProgress = FALSE;
@@ -4892,7 +4892,9 @@ IoInvalidateDeviceRelations(
     PDEVICE_ACTION_DATA Data;
     KIRQL OldIrql;
 
-    Data = ExAllocatePool(NonPagedPool, sizeof(DEVICE_ACTION_DATA));
+    Data = ExAllocatePoolWithTag(NonPagedPool,
+                                 sizeof(DEVICE_ACTION_DATA),
+                                 TAG_IO);
     if (!Data)
         return;
 
