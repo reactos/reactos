@@ -19,24 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <assert.h>
-#include <string.h>
+#include "precomp.h"
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "mmsystem.h"
-#include "wine/winternl.h"
 #ifndef __REACTOS__ /* CORE-11331 */
 #include "wine/ddk/d3dkmthk.h"
 #endif
-
-#include "wine/test.h"
 
 #ifndef __REACTOS__ /* CORE-11331 */
 static NTSTATUS (WINAPI *pD3DKMTCreateDCFromMemory)( D3DKMT_CREATEDCFROMMEMORY *desc );

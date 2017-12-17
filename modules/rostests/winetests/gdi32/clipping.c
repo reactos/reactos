@@ -19,10 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/test.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
+#include "precomp.h"
 
 static void test_GetRandomRgn(void)
 {

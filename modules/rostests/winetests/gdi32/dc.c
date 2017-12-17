@@ -19,20 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "precomp.h"
 
-#define WINVER 0x0501 /* request latest DEVMODE */
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-
-#include <assert.h>
-#include <stdio.h>
-
-#include "wine/test.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winspool.h"
-#include "winerror.h"
+#include <winspool.h>
 
 #ifndef LAYOUT_LTR
 #define LAYOUT_LTR 0
