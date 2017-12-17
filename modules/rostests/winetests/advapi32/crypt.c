@@ -18,15 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#include "precomp.h"
 
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "winerror.h"
-#include "winreg.h"
-
-#include "wine/test.h"
+#include <wincrypt.h>
 
 static const char szRsaBaseProv[] = MS_DEF_PROV_A;
 static const char szNonExistentProv[] = "Wine Nonexistent Cryptographic Provider v11.2";

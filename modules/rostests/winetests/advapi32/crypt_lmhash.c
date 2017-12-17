@@ -19,14 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wine/winternl.h"
+#include "precomp.h"
 
 struct ustring {
     DWORD Length;

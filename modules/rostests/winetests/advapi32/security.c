@@ -19,25 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wine/winternl.h"
-#include "aclapi.h"
-#include "winnt.h"
-#include "sddl.h"
-#include "ntsecapi.h"
-#include "lmcons.h"
-
-#include <winsvc.h>
-
-#include "wine/test.h"
+#include "precomp.h"
 
 /* FIXME: Inspect */
 #define GetCurrentProcessToken() ((HANDLE)~(ULONG_PTR)3)

@@ -18,19 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#include "precomp.h"
 
-#include "initguid.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winnt.h"
-#include "winreg.h"
-#include "sddl.h"
-#include "wmistr.h"
-#include "evntrace.h"
-
-#include "wine/test.h"
+#include <wmistr.h>
+#include <initguid.h>
+#include <evntrace.h>
 
 static BOOL (WINAPI *pCreateWellKnownSid)(WELL_KNOWN_SID_TYPE,PSID,PSID,DWORD*);
 static BOOL (WINAPI *pGetEventLogInformation)(HANDLE,DWORD,LPVOID,DWORD,LPDWORD);
