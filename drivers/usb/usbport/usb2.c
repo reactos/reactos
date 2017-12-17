@@ -1057,11 +1057,23 @@ USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
     PUSB2_TT Tt;
     PUSB2_HC_EXTENSION HcExtension;
     ULONG Speed;
+    ULONG TransferType;
+    ULONG Frame;
     ULONG StartMicroframe;
     ULONG ix;
-
+    PUSB2_TT_ENDPOINT endpoint;
+    PUSB2_TT_ENDPOINT nextEndpoint;
+    PUSB2_TT_ENDPOINT lastEndpoint;
+    PUSB2_TT_ENDPOINT tmpEndpoint;
+    ULONG endTime;
+    ULONG maxEndTime;
+    ULONG lastEndTime;
+    ULONG Factor;
+    ULONG jx;
     UCHAR frame;
     UCHAR uframe;
+    USHORT Period;
+    BOOLEAN IsMoved = FALSE;
 
     DPRINT("USB2_DeallocateEndpointBudget: TtEndpoint - %p, MaxFrames - %X\n",
            TtEndpoint,
