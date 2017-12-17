@@ -77,7 +77,7 @@ ChkdskPartition(
     Status = FileSystem->ChkdskFunc(DriveRoot,
                                     TRUE,            /* FixErrors */
                                     FALSE,           /* Verbose */
-                                    FALSE,           /* CheckOnlyIfDirty */
+                                    TRUE,            /* CheckOnlyIfDirty */
                                     FALSE,           /* ScanDrive */
                                     ChkdskCallback); /* Callback */
 
