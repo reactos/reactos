@@ -18,16 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/test.h>
+#include "precomp.h"
 
-//#include <windows.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <commctrl.h>
 #include <reactos/undocuser.h>
-#include "msg.h"
-
-#include "resources.h"
 
 static HWND parenthwnd;
 static HWND sheethwnd;

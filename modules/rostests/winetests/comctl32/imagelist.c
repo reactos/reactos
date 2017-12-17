@@ -21,28 +21,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#define COBJMACROS
-#define CONST_VTABLE
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <objbase.h>
-#include <commctrl.h> /* must be included after objbase.h to get ImageList_Write */
 #include <ole2.h>
-#include <initguid.h>
-#include <commoncontrols.h>
 #include <shellapi.h>
 
-#include <wine/test.h>
-#include "v6util.h"
+#include <initguid.h>
+#include <commoncontrols.h>
 
 #define IMAGELIST_MAGIC (('L' << 8) | 'I')
 

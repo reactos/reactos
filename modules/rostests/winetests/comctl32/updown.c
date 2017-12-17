@@ -44,15 +44,7 @@
  *   - more stuff to test
  */
 
-#include <wine/test.h>
-
-//#include <windows.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <commctrl.h>
-#include <stdio.h>
-
-#include "msg.h"
+#include "precomp.h"
 
 #define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
 

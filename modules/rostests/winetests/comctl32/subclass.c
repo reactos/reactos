@@ -19,16 +19,12 @@
 
 #define _WIN32_WINNT 0x0501 /* For SetWindowSubclass/etc */
 
-#include <assert.h>
-#include <stdarg.h>
+#include "wine/test.h"
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
+#include <assert.h>
+
 #include "winuser.h"
 #include "commctrl.h"
-
-#include "wine/test.h"
 
 static BOOL (WINAPI *pSetWindowSubclass)(HWND, SUBCLASSPROC, UINT_PTR, DWORD_PTR);
 static BOOL (WINAPI *pRemoveWindowSubclass)(HWND, SUBCLASSPROC, UINT_PTR);

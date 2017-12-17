@@ -22,15 +22,13 @@
 
 #undef USE_WINE_TODOS
 
-//#include <windows.h>
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
+#include "wine/test.h"
+
+#include <assert.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include <commctrl.h>
 
-#include "wine/test.h"
 #include "v6util.h"
 #include "msg.h"
 

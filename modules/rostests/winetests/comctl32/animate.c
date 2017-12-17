@@ -17,15 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commctrl.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 #define SEARCHING_AVI_INDEX 151 /* From shell32 resource library */
 #define INVALID_AVI_INDEX 0xffff

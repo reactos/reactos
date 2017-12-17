@@ -20,6 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 
 #ifdef __i386__
@@ -60,7 +62,7 @@ static const CHAR manifest[] =
     "</dependency>\n"
     "</assembly>\n";
 
-static void unload_v6_module(ULONG_PTR cookie, HANDLE hCtx)
+static inline void unload_v6_module(ULONG_PTR cookie, HANDLE hCtx)
 {
     HANDLE hKernel32;
     BOOL (WINAPI *pDeactivateActCtx)(DWORD, ULONG_PTR);
@@ -81,7 +83,7 @@ static void unload_v6_module(ULONG_PTR cookie, HANDLE hCtx)
     DeleteFileA(manifest_name);
 }
 
-static BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
+static inline BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
 {
     HANDLE hKernel32;
     HANDLE (WINAPI *pCreateActCtxA)(ACTCTXA*);
