@@ -1115,6 +1115,22 @@ VfatLockOrUnlockVolume(
     /* Deny locking if we're not alone */
     if (Lock && DeviceExt->OpenHandleCount != 1)
     {
+        PLIST_ENTRY ListEntry;
+
+        DPRINT1("Can't lock: %u opened\n", DeviceExt->OpenHandleCount);
+
+        ListEntry = DeviceExt->FcbListHead.Flink;
+        while (ListEntry != &DeviceExt->FcbListHead)
+        {
+            Fcb = CONTAINING_RECORD(ListEntry, VFATFCB, FcbListEntry);
+            ListEntry = ListEntry->Flink;
+
+            if (Fcb->OpenHandleCount  > 0)
+            {
+                DPRINT1("Opened (%u - %u): %wZ\n", Fcb->OpenHandleCount, Fcb->RefCount, &Fcb->PathNameU);
+            }
+        }
+
         return STATUS_ACCESS_DENIED;
     }
 
