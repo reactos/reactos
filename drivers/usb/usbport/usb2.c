@@ -1075,13 +1075,14 @@ USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
     USHORT Period;
     BOOLEAN IsMoved = FALSE;
 
-    DPRINT("USB2_DeallocateEndpointBudget: TtEndpoint - %p, MaxFrames - %X\n",
+    DPRINT("USB2_DeallocateEndpointBudget: TtEndpoint - %p, MaxFrames - %X, CalcBusTime - %X\n",
            TtEndpoint,
-           MaxFrames);
+           MaxFrames,
+           TtEndpoint->CalcBusTime);
 
     if (TtEndpoint->CalcBusTime == 0)
     {
-        DPRINT("USB2_DeallocateEndpointBudget: endpoint not allocated\n");//error((int)"endpoint not allocated");
+        DPRINT("USB2_DeallocateEndpointBudget: TtEndpoint not allocated!\n");
         return FALSE;
     }
 
@@ -2087,7 +2088,122 @@ NTAPI
 USBPORT_FreeBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
                           IN PUSBPORT_ENDPOINT Endpoint)
 {
-    DPRINT1("USBPORT_FreeBandwidthUSB2: UNIMPLEMENTED. FIXME. \n");
+    PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    ULONG Period;
+    ULONG ScheduleOffset;
+    ULONG EndpointBandwidth;
+    LIST_ENTRY RebalanceList;
+    ULONG TransferType;
+    PUSB2_REBALANCE Rebalance;
+    ULONG RebalanceListEntries;
+    ULONG Factor;
+    ULONG ix;
+    ULONG n;
+    PUSB2_TT_EXTENSION TtExtension;
+    PUSB2_TT_ENDPOINT RebalanceTtEndpoint;
+
+    DPRINT("USBPORT_FreeBandwidthUSB2: Endpoint - %p\n", Endpoint);
+
+    FdoExtension = FdoDevice->DeviceExtension;
+
+    Period = Endpoint->EndpointProperties.Period;
+    ScheduleOffset = Endpoint->EndpointProperties.ScheduleOffset;
+    EndpointBandwidth = Endpoint->EndpointProperties.UsbBandwidth;
+
+    InitializeListHead(&RebalanceList);
+
+    TransferType = Endpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+        TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+        (Endpoint->Flags & ENDPOINT_FLAG_ROOTHUB_EP0))
+    {
+        return;
+    }
+
+    Rebalance = ExAllocatePoolWithTag(NonPagedPool,
+                                      sizeof(USB2_REBALANCE),
+                                      USB_PORT_TAG);
+
+    if (!Rebalance)
+    {
+        DPRINT1("USBPORT_FreeBandwidthUSB2: Rebalance == NULL!\n");
+        return;
+    }
+
+    RtlZeroMemory(Rebalance, sizeof(USB2_REBALANCE));
+
+    Factor = USB2_FRAMES / Period;
+    ASSERT(Factor);
+
+    n = ScheduleOffset * Factor;
+
+    TtExtension = Endpoint->TtExtension;
+
+    if (TtExtension)
+    {
+        for (ix = 0; ix < Factor; ix++)
+        {
+            TtExtension->Bandwidth[n + ix] += EndpointBandwidth;
+        }
+    }
+    else
+    {
+        for (ix = 1; ix < Factor; ix++)
+        {
+            FdoExtension->Bandwidth[n + ix] += EndpointBandwidth;
+        }
+    }
+
+    RebalanceListEntries = USB2_FRAMES - 2;
+
+    USB2_DeallocateEndpointBudget(Endpoint->TtEndpoint,
+                                  Rebalance,
+                                  &RebalanceListEntries,
+                                  USB2_FRAMES);
+
+    RebalanceListEntries = 0;
+
+    for (ix = 0; Rebalance->RebalanceEndpoint[ix]; ix++)
+    {
+        RebalanceListEntries = ix + 1;
+    }
+
+    for (ix = 0; ix < RebalanceListEntries; ix++)
+    {
+        RebalanceTtEndpoint = Rebalance->RebalanceEndpoint[ix];
+
+        DPRINT("USBPORT_AllocateBandwidthUSB2: RebalanceTtEndpoint[%X] - %p, RebalanceTtEndpoint - %p, RebalanceLink - %p\n",
+               ix,
+               RebalanceTtEndpoint,
+               &RebalanceTtEndpoint->Endpoint->RebalanceLink);
+
+        InsertTailList(&RebalanceList,
+                       &RebalanceTtEndpoint->Endpoint->RebalanceLink);
+    }
+
+    ExFreePoolWithTag(Rebalance, USB_PORT_TAG);
+
+    USB2_Rebalance(FdoDevice, &RebalanceList);
+
+    if (!TtExtension)
+    {
+        return;
+    }
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        FdoExtension->Bandwidth[ix] += TtExtension->MaxBandwidth;
+    }
+
+    USBPORT_UpdateAllocatedBwTt(TtExtension);
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        FdoExtension->Bandwidth[ix] -= TtExtension->MaxBandwidth;
+    }
+
+    DPRINT1("USBPORT_FreeBandwidthUSB2: exit\n");
 }
 
 VOID

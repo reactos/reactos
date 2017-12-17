@@ -508,6 +508,7 @@ typedef struct _USB2_TT_ENDPOINT {
   struct _USB2_TT_ENDPOINT * NextTtEndpoint;
   USB2_TT_ENDPOINT_PARAMS TtEndpointParams;
   USB2_TT_ENDPOINT_NUMS Nums;
+  BOOL IsPromoted;
   USHORT MaxPacketSize;
   USHORT PreviosPeriod;
   USHORT Period;
