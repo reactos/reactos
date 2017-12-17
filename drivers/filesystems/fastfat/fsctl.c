@@ -1203,7 +1203,7 @@ VfatDismountVolume(
     /* Rebrowse the FCB in order to free them now */
     while (!IsListEmpty(&DeviceExt->FcbListHead))
     {
-        NextEntry = RemoveHeadList(&DeviceExt->FcbListHead);
+        NextEntry = RemoveTailList(&DeviceExt->FcbListHead);
         Fcb = CONTAINING_RECORD(NextEntry, VFATFCB, FcbListEntry);
         vfatDestroyFCB(Fcb);
     }
