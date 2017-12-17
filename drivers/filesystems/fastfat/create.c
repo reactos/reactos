@@ -982,6 +982,8 @@ VfatCreateFile(
 
     /* FIXME : test write access if requested */
 
+    /* FIXME: That is broken, we cannot reach this code path with failure */
+    ASSERT(NT_SUCCESS(Status));
     if (NT_SUCCESS(Status))
     {
         vfatAddToStat(DeviceExt, Fat.SuccessfulCreates, 1);
