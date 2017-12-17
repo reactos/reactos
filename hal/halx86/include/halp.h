@@ -741,6 +741,12 @@ HalpReleaseCmosSpinLock(
     VOID
 );
 
+VOID
+NTAPI
+HalpInitializeLegacyPICs(
+    VOID
+);
+
 NTSTATUS
 NTAPI
 HalpOpenRegistryKey(
