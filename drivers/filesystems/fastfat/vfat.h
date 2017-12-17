@@ -13,11 +13,7 @@
 #endif
 
 #define USE_ROS_CC_AND_FS
-#if 0
-#ifndef _MSC_VER
 #define ENABLE_SWAPOUT
-#endif
-#endif
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
