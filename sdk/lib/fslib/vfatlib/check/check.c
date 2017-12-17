@@ -493,23 +493,25 @@ static int handle_dot(DOS_FS * fs, DOS_FILE * file, int dots)
 	if (interactive)
 	    printf("1) Drop it\n2) Auto-rename\n3) Rename\n"
 		   "4) Convert to directory\n");
-	else
+	else if (rw)
 	    printf("  Auto-renaming it.\n");
-	switch (interactive ? get_key("1234", "?") : '2') {
-	case '1':
-	    drop_file(fs, file);
-	    return 1;
-	case '2':
-	    auto_rename(file);
-	    printf("  Renamed to %s\n", file_name(file->dir_ent.name));
+	if (rw || interactive) {
+		switch (interactive ? get_key("1234", "?") : '2') {
+		case '1':
+		    drop_file(fs, file);
+		    return 1;
+		case '2':
+		    auto_rename(file);
+		    printf("  Renamed to %s\n", file_name(file->dir_ent.name));
+		    return 0;
+		case '3':
+		    rename_file(file);
 	    return 0;
-	case '3':
-	    rename_file(file);
-	    return 0;
-	case '4':
-	    MODIFY(file, size, htole32(0));
-	    MODIFY(file, attr, file->dir_ent.attr | ATTR_DIR);
-	    break;
+		case '4':
+		    MODIFY(file, size, htole32(0));
+		    MODIFY(file, attr, file->dir_ent.attr | ATTR_DIR);
+		    break;
+		}
 	}
     }
     if (!dots) {
@@ -528,9 +530,9 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 
     if (file->dir_ent.attr & ATTR_DIR) {
 	if (le32toh(file->dir_ent.size)) {
-	    printf("%s\n  Directory has non-zero size. Fixing it.\n",
-		   path_name(file));
-	    MODIFY(file, size, htole32(0));
+	    printf("%s\n  Directory has non-zero size.%s\n",
+		   path_name(file), (rw) ? " Fixing it." : "");
+	    if (rw) MODIFY(file, size, htole32(0));
 	}
 	if (file->parent
 	    && !strncmp((const char *)file->dir_ent.name, MSDOS_DOT,
@@ -539,7 +541,7 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 	    if (FSTART(file, fs) != expect) {
 		printf("%s\n  Start (%lu) does not point to parent (%lu)\n",
 		       path_name(file), (unsigned long)FSTART(file, fs), (long)expect);
-		MODIFY_START(file, expect, fs);
+		if (rw) MODIFY_START(file, expect, fs);
 	    }
 	    return 0;
 	}
@@ -553,14 +555,14 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 	    if (FSTART(file, fs) != expect) {
 		printf("%s\n  Start (%lu) does not point to .. (%lu)\n",
 		       path_name(file), (unsigned long)FSTART(file, fs), (unsigned long)expect);
-		MODIFY_START(file, expect, fs);
+		if (rw) MODIFY_START(file, expect, fs);
 	    }
 	    return 0;
 	}
 	if (FSTART(file, fs) == 0) {
-	    printf("%s\n Start does point to root directory. Deleting dir. \n",
-		   path_name(file));
-	    MODIFY(file, name[0], DELETED_FLAG);
+	    printf("%s\n Start does point to root directory.%s\n",
+		   path_name(file), (rw) ? " Deleting dir. " : "");
+	    if (rw) MODIFY(file, name[0], DELETED_FLAG);
 	    return 0;
 	}
     }
@@ -569,18 +571,19 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 	       path_name(file));
 	if (!file->offset)
 	    die("Bad FAT32 root directory! (bad start cluster 1)\n");
-	MODIFY_START(file, 0, fs);
+	if (rw) MODIFY_START(file, 0, fs);
     }
     if (FSTART(file, fs) >= fs->data_clusters + 2) {
 	printf
-	    ("%s\n  Start cluster beyond limit (%lu > %lu). Truncating file.\n",
+	    ("%s\n  Start cluster beyond limit (%lu > %lu).%s\n",
 	     path_name(file), (unsigned long)FSTART(file, fs),
-	     (unsigned long)(fs->data_clusters + 1));
+	     (unsigned long)(fs->data_clusters + 1),
+	     (rw) ? " Truncating file." : "");
 	if (!file->offset)
 	    die("Bad FAT32 root directory! (start cluster beyond limit: %lu > %lu)\n",
 		(unsigned long)FSTART(file, fs),
 		(unsigned long)(fs->data_clusters + 1));
-	MODIFY_START(file, 0, fs);
+	if (rw) MODIFY_START(file, 0, fs);
     }
     clusters = prev = 0;
     for (curr = FSTART(file, fs) ? FSTART(file, fs) :
@@ -589,25 +592,34 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 	get_fat(&curEntry, fs->fat, curr, fs);
 
 	if (!curEntry.value || bad_cluster(fs, curr)) {
-	    printf("%s\n  Contains a %s cluster (%lu). Assuming EOF.\n",
-		   path_name(file), curEntry.value ? "bad" : "free", (unsigned long)curr);
+	    printf("%s\n  Contains a %s cluster (%lu).%s\n",
+		   path_name(file), curEntry.value ? "bad" : "free", (unsigned long)curr,
+		   (rw) ? " Assuming EOF." : "");
 	    if (prev)
 		set_fat(fs, prev, -1);
 	    else if (!file->offset)
 		die("FAT32 root dir starts with a bad cluster!");
 	    else
-		MODIFY_START(file, 0, fs);
+		if (rw) MODIFY_START(file, 0, fs);
 	    break;
 	}
 	if (!(file->dir_ent.attr & ATTR_DIR) && le32toh(file->dir_ent.size) <=
 	    (uint64_t)clusters * fs->cluster_size) {
-	    printf
-		("%s\n  File size is %u bytes, cluster chain length is > %llu "
-		 "bytes.\n  Truncating file to %u bytes.\n", path_name(file),
-		 le32toh(file->dir_ent.size),
-		 (unsigned long long)clusters * fs->cluster_size,
-		 le32toh(file->dir_ent.size));
-	    truncate_file(fs, file, clusters);
+	    if (rw) {
+		    printf
+			("%s\n  File size is %u bytes, cluster chain length is > %llu "
+			 "bytes.\n  Truncating file to %u bytes.\n", path_name(file),
+			 le32toh(file->dir_ent.size),
+			 (unsigned long long)clusters * fs->cluster_size,
+			 le32toh(file->dir_ent.size));
+		    truncate_file(fs, file, clusters);
+	    } else {
+		    printf
+			("%s\n  File size is %u bytes, cluster chain length is > %llu "
+			 "bytes.\n", path_name(file),
+			 le32toh(file->dir_ent.size),
+			 (unsigned long long)clusters * fs->cluster_size);
+	    }
 	    break;
 	}
 	if ((owner = get_owner(fs, curr))) {
@@ -622,12 +634,12 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 		else
 		    clusters2++;
 	    restart = file->dir_ent.attr & ATTR_DIR;
-	    if (!owner->offset) {
+	    if (!owner->offset && rw) {
 		printf("  Truncating second to %llu bytes because first "
 		       "is FAT32 root dir.\n",
 		       (unsigned long long)clusters2 * fs->cluster_size);
 		do_trunc = 2;
-	    } else if (!file->offset) {
+	    } else if (!file->offset && rw) {
 		printf("  Truncating first to %llu bytes because second "
 		       "is FAT32 root dir.\n",
 		       (unsigned long long)clusters * fs->cluster_size);
@@ -638,11 +650,11 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 		       (unsigned long long)clusters * fs->cluster_size,
 		       restart ? " and restart" : "",
 		       (unsigned long long)clusters2 * fs->cluster_size);
-	    else
+	    else if (rw)
 		printf("  Truncating second to %llu bytes.\n",
 		       (unsigned long long)clusters2 * fs->cluster_size);
-	    if (do_trunc != 2
-		&& (do_trunc == 1
+	    if ((do_trunc != 2 && rw)
+		&& ((do_trunc == 1 && rw)
 		    || (interactive && get_key("12", "?") == '1'))) {
 		prev = 0;
 		clusters = 0;
@@ -684,7 +696,7 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 	prev = curr;
     }
     if (!(file->dir_ent.attr & ATTR_DIR) && le32toh(file->dir_ent.size) >
-	(uint64_t)clusters * fs->cluster_size) {
+	(uint64_t)clusters * fs->cluster_size && rw) {
 	printf
 	    ("%s\n  File size is %u bytes, cluster chain length is %llu bytes."
 	     "\n  Truncating file to %llu bytes.\n", path_name(file),
@@ -727,7 +739,7 @@ static int check_dir(DOS_FS * fs, DOS_FILE ** root, int dots)
 	       path_name(parent), bad, good + bad);
 	if (!dots)
 	    printf("  Not dropping root directory.\n");
-	else if (!interactive)
+	else if (!interactive || !rw)
 	    printf("  Not dropping it in auto-mode.\n");
 	else if (get_key("yn", "Drop directory ? (y/n)") == 'y') {
 	    truncate_file(fs, parent, 0);
@@ -759,23 +771,25 @@ static int check_dir(DOS_FS * fs, DOS_FILE ** root, int dots)
 	    if (interactive)
 		printf("1) Drop file\n2) Rename file\n3) Auto-rename\n"
 		       "4) Keep it\n");
-	    else
+	    else if (rw)
 		printf("  Auto-renaming it.\n");
-	    switch (interactive ? get_key("1234", "?") : '3') {
-	    case '1':
-		drop_file(fs, *walk);
-		walk = &(*walk)->next;
-		continue;
-	    case '2':
-		rename_file(*walk);
-		redo = 1;
-		break;
-	    case '3':
-		auto_rename(*walk);
-		printf("  Renamed to %s\n", file_name((*walk)->dir_ent.name));
-		break;
-	    case '4':
-		break;
+	    if (rw || interactive) {
+		    switch (interactive ? get_key("1234", "?") : '3') {
+		    case '1':
+			drop_file(fs, *walk);
+			walk = &(*walk)->next;
+			continue;
+		    case '2':
+			rename_file(*walk);
+			redo = 1;
+			break;
+		    case '3':
+			auto_rename(*walk);
+			printf("  Renamed to %s\n", file_name((*walk)->dir_ent.name));
+			break;
+		    case '4':
+			break;
+		    }
 	    }
 	}
 	/* don't check for duplicates of the volume label */
@@ -794,38 +808,40 @@ static int check_dir(DOS_FS * fs, DOS_FILE ** root, int dots)
 			    ("1) Drop first\n2) Drop second\n3) Rename first\n"
 			     "4) Rename second\n5) Auto-rename first\n"
 			     "6) Auto-rename second\n");
-		    else
+		    else if (rw)
 			printf("  Auto-renaming second.\n");
-		    switch (interactive ? get_key("123456", "?") : '6') {
-		    case '1':
-			drop_file(fs, *walk);
-			*walk = (*walk)->next;
-			skip = 1;
-			break;
-		    case '2':
-			drop_file(fs, *scan);
-			*scan = (*scan)->next;
-			continue;
-		    case '3':
-			rename_file(*walk);
-			printf("  Renamed to %s\n", path_name(*walk));
-			redo = 1;
-			break;
-		    case '4':
-			rename_file(*scan);
-			printf("  Renamed to %s\n", path_name(*walk));
-			redo = 1;
-			break;
-		    case '5':
-			auto_rename(*walk);
-			printf("  Renamed to %s\n",
-			       file_name((*walk)->dir_ent.name));
-			break;
-		    case '6':
-			auto_rename(*scan);
-			printf("  Renamed to %s\n",
-			       file_name((*scan)->dir_ent.name));
-			break;
+		    if (rw || interactive) {
+			    switch (interactive ? get_key("123456", "?") : '6') {
+			    case '1':
+				drop_file(fs, *walk);
+				*walk = (*walk)->next;
+				skip = 1;
+				break;
+			    case '2':
+				drop_file(fs, *scan);
+				*scan = (*scan)->next;
+				continue;
+			    case '3':
+				rename_file(*walk);
+				printf("  Renamed to %s\n", path_name(*walk));
+				redo = 1;
+				break;
+			    case '4':
+				rename_file(*scan);
+				printf("  Renamed to %s\n", path_name(*walk));
+				redo = 1;
+				break;
+			    case '5':
+				auto_rename(*walk);
+				printf("  Renamed to %s\n",
+				       file_name((*walk)->dir_ent.name));
+				break;
+			    case '6':
+				auto_rename(*scan);
+				printf("  Renamed to %s\n",
+				       file_name((*scan)->dir_ent.name));
+				break;
+			    }
 		    }
 		}
 		scan = &(*scan)->next;

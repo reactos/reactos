@@ -352,6 +352,8 @@ void fs_write(off_t pos, int size, void *data)
     CHANGE *new;
     int did;
 
+    assert(interactive || rw);
+
 #if 1 //SAE
 
     if (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE) {
