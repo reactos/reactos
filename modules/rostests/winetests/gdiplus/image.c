@@ -19,23 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
+#include "precomp.h"
 
-#include <math.h>
 #include <assert.h>
-#include <stdio.h>
-
-#include <initguid.h>
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include "windows.h"
-#include <wine/test.h>
-#include <wingdi.h>
-#include <winnls.h>
 #include <ole2.h>
-#include <gdiplus.h>
 
 /* FIXME: They belong to gdipluseffects.h */
 DEFINE_GUID(BlurEffectGuid, 0x633c80a4, 0x1843, 0x482b, 0x9e, 0xf2, 0xbe, 0x28, 0x34, 0xc5, 0xfd, 0xd4);
