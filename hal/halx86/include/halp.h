@@ -633,11 +633,11 @@ HalpReleasePciDeviceForDebugging(
 //
 // Memory routines
 //
-ULONG_PTR
+ULONG64
 NTAPI
 HalpAllocPhysicalMemory(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN ULONG_PTR MaxAddress,
+    IN ULONG64 MaxAddress,
     IN PFN_NUMBER PageCount,
     IN BOOLEAN Aligned
 );
