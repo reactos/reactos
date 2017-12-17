@@ -18,18 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-//#include <stdarg.h>
+#include "precomp.h"
 
-#include <windef.h>
-#include <winbase.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <winreg.h>
-//#include <winerror.h>
-#include <wincrypt.h>
-
-#include <wine/test.h>
 
 /* The following aren't defined in wincrypt.h, as they're "reserved" */
 #define CERT_CERT_PROP_ID 32

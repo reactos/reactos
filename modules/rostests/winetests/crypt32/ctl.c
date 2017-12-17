@@ -18,15 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdio.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include <winerror.h>
-#include <wincrypt.h>
-
-#include <wine/test.h>
+#include "precomp.h"
 
 static const BYTE emptyCTL[] = {
 0x30,0x17,0x30,0x00,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,

@@ -18,17 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdio.h>
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-//#include <winreg.h>
-//#include <winerror.h>
-#include <wincrypt.h>
-
-#include <wine/test.h>
-
+#include "precomp.h"
 
 static const BYTE bigCert[] = { 0x30, 0x7a, 0x02, 0x01, 0x01, 0x30, 0x02, 0x06,
  0x00, 0x30, 0x15, 0x31, 0x13, 0x30, 0x11, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13,
