@@ -369,18 +369,24 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
 
     CComPtr<IContextMenu> pcm;
     hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_PPV_ARG(IContextMenu, &pcm));
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (FAILED(hr))
+    {
+        ERR("SHCoCreateInstance(IContextMenu) failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
         return hr;
+    }
 
     CComPtr<IShellExtInit> pExtInit;
     hr = pcm->QueryInterface(IID_PPV_ARG(IShellExtInit, &pExtInit));
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (FAILED(hr))
+    {
+        ERR("IContextMenu->QueryInterface(IShellExtInit) failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
         return hr;
+    }
 
     hr = pExtInit->Initialize(m_pidlFolder, m_pDataObj, hKey);
     if (FAILED(hr))
     {
-        WARN("IShellExtInit::Initialize failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
+        ERR("IShellExtInit::Initialize failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
         return hr;
     }
 

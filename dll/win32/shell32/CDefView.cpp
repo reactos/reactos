@@ -72,6 +72,7 @@ class CDefView :
     private:
         CComPtr<IShellFolder>     m_pSFParent;
         CComPtr<IShellFolder2>    m_pSF2Parent;
+        CComPtr<IShellFolderViewCB> m_pShellFolderViewCB;
         CComPtr<IShellBrowser>    m_pShellBrowser;
         CComPtr<ICommDlgBrowser>  m_pCommDlgBrowser;
         CComPtr<IShellFolderViewDual> m_pShellFolderViewDual;
@@ -113,6 +114,7 @@ class CDefView :
     private:
         HRESULT _MergeToolbar();
         BOOL _Sort();
+        VOID _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     public:
         CDefView();
@@ -951,6 +953,8 @@ HRESULT CDefView::FillList()
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
 
+    _DoFolderViewCB(SFVM_LISTREFRESHED, NULL, NULL);
+
     return S_OK;
 }
 
@@ -1058,6 +1062,8 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         ntreg.pidl = m_pidlParent;
         m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
     }
+
+    /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
 
@@ -1410,6 +1416,8 @@ LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled
         ::MoveWindow(m_ListView, 0, 0, wWidth, wHeight, TRUE);
     }
 
+    _DoFolderViewCB(SFVM_SIZE, 0, 0);
+
     return 0;
 }
 
@@ -1757,6 +1765,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             TRACE("-- LVN_ITEMCHANGED %p\n", this);
             OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
             UpdateStatusbar();
+            _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
             break;
 
         case LVN_BEGINDRAG:
@@ -2588,6 +2597,8 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
     if (!*hwnd)
         return E_FAIL;
 
+    _DoFolderViewCB(SFVM_WINDOWCREATED, (WPARAM)m_hWnd, NULL);
+
     SetWindowPos(HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     UpdateWindow();
 
@@ -2796,8 +2807,11 @@ HRESULT STDMETHODCALLTYPE CDefView::GetItemSpacing(ITEMSPACING *spacing)
 
 HRESULT STDMETHODCALLTYPE CDefView::SetCallback(IShellFolderViewCB  *new_cb, IShellFolderViewCB **old_cb)
 {
-    FIXME("(%p)->(%p %p) stub\n", this, new_cb, old_cb);
-    return E_NOTIMPL;
+    if (old_cb)
+        *old_cb = m_pShellFolderViewCB.Detach();
+
+    m_pShellFolderViewCB = new_cb;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::Select(UINT flags)
@@ -3231,6 +3245,14 @@ HRESULT CDefView::_MergeToolbar()
     return S_OK;
 }
 
+VOID CDefView::_DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (m_pShellFolderViewCB)
+    {
+        m_pShellFolderViewCB->MessageSFVCB(uMsg, wParam, lParam);
+    }
+}
+
 HRESULT CDefView_CreateInstance(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CDefView>(pFolder, riid, ppvOut);
@@ -3272,6 +3294,15 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
     hRes = CDefView_CreateInstance(pcsfv->pshf, IID_PPV_ARG(IShellView, &psv));
     if (FAILED(hRes))
         return hRes;
+
+    if (pcsfv->psfvcb)
+    {
+        CComPtr<IShellFolderView> sfv;
+        if (SUCCEEDED(psv->QueryInterface(IID_PPV_ARG(IShellFolderView, &sfv))))
+        {
+            sfv->SetCallback(pcsfv->psfvcb, NULL);
+        }
+    }
 
     *ppsv = psv.Detach();
     return hRes;
