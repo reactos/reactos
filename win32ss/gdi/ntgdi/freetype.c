@@ -65,6 +65,8 @@ static UNICODE_STRING FontSubstKey =
    to serialize access to it */
 static PFAST_MUTEX FreeTypeLock;
 
+static PFAST_MUTEX FontSubstLock;
+
 static LIST_ENTRY FontListHead;
 static PFAST_MUTEX FontListLock;
 static BOOL RenderingEnabled = TRUE;
@@ -83,6 +85,12 @@ static BOOL RenderingEnabled = TRUE;
 
 #define IntUnLockFreeType \
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FreeTypeLock)
+
+#define IntLockFontSubst \
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(FontSubstLock)
+
+#define IntUnLockFontSubst \
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FontSubstLock)
 
 #define ASSERT_FREETYPE_LOCK_HELD() \
   ASSERT(FreeTypeLock->Owner == KeGetCurrentThread())
@@ -468,6 +476,13 @@ InitFontSupport(VOID)
     }
     ExInitializeFastMutex(FreeTypeLock);
 
+    FontSubstLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+    if (FontSubstLock == NULL)
+    {
+        return FALSE;
+    }
+    ExInitializeFastMutex(FontSubstLock);
+
     ulError = FT_Init_FreeType(&library);
     if (ulError)
     {
@@ -477,9 +492,9 @@ InitFontSupport(VOID)
 
     IntLoadSystemFonts();
 
-    IntLockFreeType;
+    IntLockFontSubst;
     IntLoadFontSubstList(&FontSubstListHead);
-    IntUnLockFreeType;
+    IntUnLockFontSubst;
 
     return TRUE;
 }
@@ -590,11 +605,9 @@ SubstituteFontRecurse(LOGFONTW* pLogFont)
 
     while (RecurseCount-- > 0)
     {
-        IntLockFreeType;
         Found = SubstituteFontByList(&FontSubstListHead,
                                      &OutputNameW, &InputNameW,
                                      pLogFont->lfCharSet, CharSetMap);
-        IntUnLockFreeType;
         if (!Found)
             break;
 
@@ -1109,9 +1122,9 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     }
 
     /* delete old font substitute */
-    IntLockFreeType;
+    IntLockFontSubst;
     DeleteFontSubstFromList(&FontSubstListHead, &Entry->FaceName);
-    IntUnLockFreeType;
+    IntUnLockFontSubst;
 
     DeleteFontSubstFromRegistry(&Entry->FaceName);
 
@@ -4606,7 +4619,9 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     /* substitute */
     SubstitutedLogFont = *pLogFont;
     DPRINT("Font '%S,%u' is substituted by: ", pLogFont->lfFaceName, pLogFont->lfCharSet);
+    IntLockFontSubst;
     SubstituteFontRecurse(&SubstitutedLogFont);
+    IntUnLockFontSubst;
     DPRINT("'%S,%u'.\n", SubstitutedLogFont.lfFaceName, SubstitutedLogFont.lfCharSet);
 
     MatchPenalty = 0xFFFFFFFF;
@@ -5141,14 +5156,14 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Enumerate font families in the registry */
-    IntLockFreeType;
+    IntLockFontSubst;
     if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
     {
-        IntUnLockFreeType;
+        IntUnLockFontSubst;
         ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
-    IntUnLockFreeType;
+    IntUnLockFontSubst;
 
     /* Return data to caller */
     if (0 != Count)
