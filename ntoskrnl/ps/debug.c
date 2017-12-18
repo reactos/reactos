@@ -59,6 +59,7 @@ PspDumpThreads(BOOLEAN IncludeSystem)
                    Thread->Tcb.State == Standby ||
                    Thread->Tcb.State == Waiting)
                 {
+#ifdef _M_IX86
                     ULONG i = 0;
                     PULONG Esp = (PULONG)Thread->Tcb.KernelStack;
                     PULONG Ebp = (PULONG)Esp[4];
@@ -77,6 +78,9 @@ PspDumpThreads(BOOLEAN IncludeSystem)
 
                     /* Print a new line if there's nothing */
                     if((i % 8) != 0) DbgPrint("\n");
+#else
+                    DbgPrint("FIXME: Backtrace skipped on non-x86\n");
+#endif
                 }
 
                 /* Move to the next Thread */
