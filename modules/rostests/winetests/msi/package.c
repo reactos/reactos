@@ -19,18 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
+#include "precomp.h"
 
 #include <assert.h>
-#include <stdio.h>
-#include <windows.h>
-#include <msidefs.h>
-#include <msi.h>
-#include <msiquery.h>
-#include <srrestoreptapi.h>
 #include <shlobj.h>
-
-#include "wine/test.h"
 
 static BOOL is_wow64;
 static const char msifile[] = "winetest-package.msi";
