@@ -1,9 +1,13 @@
 #ifndef _USER32_APITEST_PRECOMP_H_
 #define _USER32_APITEST_PRECOMP_H_
 
-#define WIN32_NO_STATUS
 #include <assert.h>
 #include <stdio.h>
+
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#define WIN32_NO_STATUS
+
 #include <apitest.h>
 #include <wingdi.h>
 #include <winuser.h>

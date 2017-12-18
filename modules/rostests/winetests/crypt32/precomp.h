@@ -2,6 +2,11 @@
 #define _CRYPT32_WINETEST_PRECOMP_H_
 
 #include <stdio.h>
+
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
 #include <wine/test.h>
 #include <winreg.h>
 #define CMSG_SIGNER_ENCODE_INFO_HAS_CMS_FIELDS

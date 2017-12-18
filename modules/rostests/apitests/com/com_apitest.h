@@ -16,11 +16,16 @@
  * we usually don't want to be that strict */
 //#define FAIL_WRONG_OFFSET
 
-#define COBJMACROS
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#define COBJMACROS
 
 #include <wine/test.h>
 
+#include <wingdi.h>
+#include <winuser.h>
+#include <prsht.h>
 #include <objbase.h>
 #include <objsafe.h>
 #include <oleacc.h>

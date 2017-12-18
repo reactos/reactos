@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#include <winreg.h>
+
 START_TEST(NtSetValueKey)
 {
     NTSTATUS Status;

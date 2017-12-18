@@ -7,6 +7,7 @@
 
 #include "com_apitest.h"
 
+#include <winreg.h>
 #include <mshtmhst.h>
 #include <shlwapi.h>
 #include <commoncontrols.h>
