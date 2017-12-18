@@ -36,7 +36,7 @@ DEFINE_GUID(CATID_SafeForInitializing, 0x7dd95802,0x9882,0x11cf,0x9f,0xa9,0x00,0
 //BFID_RGB_8
 //BFID_RGB_4
 //BFID_MONOCHROME
-//SID_SHTMLEditServices
+DEFINE_GUID(SID_SHTMLEditServices, 0x3050f7f9,0x98b5,0x11cf,0xbb,0x82,0x00,0xaa,0x00,0xbd,0xce,0x0b);
 //CLSID_HTMLPluginDocument
 //CLSID_HTMLApplication
 //CLSID_HTADocument
