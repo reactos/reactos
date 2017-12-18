@@ -57,7 +57,6 @@ scsiport.sys=,,,,,,x,,,,,,4
 storport.sys=,,,,,,x,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
 ramdisk.sys=,,,,,,x,,,,,,4
-ext2fs.sys=,,,,,,x,,,,,,4
 classpnp.sys=,,,,,,,,,,,,4
 pciide.sys=,,,,,,,,,,,,4
 pciidex.sys=,,,,,,,,,,,,4
@@ -68,9 +67,6 @@ ntdll.dll=,,,,,,,,,,,,2
 wmilib.sys=,,,,,,,,,,,,4
 ksecdd.sys=,,,,,,,,,,,,4
 mountmgr.sys=,,,,,,x,,,,,,4
-reiserfs.sys=,,,,,,x,,,,,,4
-ffs.sys=,,,,,,x,,,,,,4
-udfs.sys=,,,,,,x,,,,,,4
 
 [SystemPartitionFiles]
 
