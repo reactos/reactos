@@ -1545,10 +1545,11 @@ inline HRESULT __stdcall AtlInternalQueryInterface(void *pThis, const _ATL_INTMA
             else
             {
                 hResult = pEntries[i].pFunc(pThis, iid, ppvObject, 0);
-                if (hResult == S_OK || (FAILED(hResult) && pEntries[i].piid != NULL))
+                if (hResult == S_OK)
                     return hResult;
+                if (FAILED(hResult) && pEntries[i].piid != NULL)
+                    break;
             }
-            break;
         }
         i++;
     }
