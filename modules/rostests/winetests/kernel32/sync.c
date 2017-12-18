@@ -18,15 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#define _WIN32_WINNT 0x500
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <windef.h>
-#include <winbase.h>
-#include <wine/winternl.h>
-
-#include <wine/test.h>
+#include "precomp.h"
 
 #define QueryDepthSList(x) RtlQueryDepthSList(x)
 #define InterlockedPushEntrySList(x,y) RtlInterlockedPushEntrySList(x,y)

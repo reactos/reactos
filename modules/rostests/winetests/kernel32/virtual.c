@@ -18,19 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#include "precomp.h"
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winnt.h"
-#include "wine/winternl.h"
-#include "winerror.h"
-#include "winuser.h"
-#include "wine/exception.h"
-#include "wine/test.h"
+#include <wine/exception.h>
 
 #define NUM_THREADS 4
 #define MAPPING_SIZE 0x100000

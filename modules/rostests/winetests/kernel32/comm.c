@@ -18,14 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "wine/test.h"
-#include "wine/winternl.h"
-#include "winbase.h"
-#include "winnls.h"
+#include "precomp.h"
 
 #define TIMEOUT 1000   /* one second for Timeouts*/
 #define SLOWBAUD 150

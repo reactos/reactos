@@ -18,12 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Needed for PRODUCT_* defines and GetProductInfo() */
-#define _WIN32_WINNT 0x0600
-
-#include "wine/test.h"
-#include "winbase.h"
-#include "wine/winternl.h"
+#include "precomp.h"
 
 static BOOL (WINAPI * pGetProductInfo)(DWORD, DWORD, DWORD, DWORD, DWORD *);
 static BOOL (WINAPI * pVerifyVersionInfoA)(LPOSVERSIONINFOEXA, DWORD, DWORDLONG);

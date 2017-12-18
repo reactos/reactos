@@ -25,19 +25,7 @@
  *  the control panel i8n page), we will still get the expected results.
  */
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#undef WINVER
-#define WINVER 0x0600
-
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winnls.h"
+#include "precomp.h"
 
 static const WCHAR upper_case[] = {'\t','J','U','S','T','!',' ','A',',',' ','T','E','S','T',';',' ','S','T','R','I','N','G',' ','1','/','*','+','-','.','\r','\n',0};
 static const WCHAR lower_case[] = {'\t','j','u','s','t','!',' ','a',',',' ','t','e','s','t',';',' ','s','t','r','i','n','g',' ','1','/','*','+','-','.','\r','\n',0};

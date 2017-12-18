@@ -26,15 +26,7 @@
  *         FILE_NOTIFY_CHANGE_CREATION
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "wine/test.h"
-#include <windef.h>
-#include <winbase.h>
-#include <wine/winternl.h>
+#include "precomp.h"
 
 static DWORD CALLBACK NotificationThread(LPVOID arg)
 {

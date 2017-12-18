@@ -18,25 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Define _WIN32_WINNT to get SetThreadIdealProcessor on Windows */
-#define _WIN32_WINNT 0x0600
-
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-/* the tests intentionally pass invalid pointers and need an exception handler */
-#define WINE_NO_INLINE_STRING
-
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <windef.h>
-#include <winbase.h>
-#include <winnt.h>
-#include <winerror.h>
-#include <winnls.h>
-#include <wine/winternl.h>
-#include <wine/test.h>
+#include "precomp.h"
 
 /* THREAD_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */
 #define THREAD_ALL_ACCESS_NT4 (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3ff)

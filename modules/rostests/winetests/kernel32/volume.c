@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/test.h"
-#include "winbase.h"
-#include "winioctl.h"
-#include <stdio.h>
-#include "wine/ddk/ntddcdvd.h"
+#include "precomp.h"
+
+#include <wine/ddk/ntddcdvd.h>
 
 #include <pshpack1.h>
 struct COMPLETE_DVD_LAYER_DESCRIPTOR
