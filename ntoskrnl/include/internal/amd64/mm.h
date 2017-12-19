@@ -242,10 +242,18 @@ MiPxeToAddress(PMMPTE PointerPxe)
 
 FORCEINLINE
 VOID
-MI_MAKE_SUBSECTION_PTE(IN PMMPTE NewPte,
-                       IN PVOID Segment)
+MI_MAKE_SUBSECTION_PTE(
+    _Out_ PMMPTE NewPte,
+    _In_ PVOID Segment)
 {
-    ASSERT(FALSE);
+    ULONG_PTR Offset;
+
+    /* Mark this as a prototype */
+    NewPte->u.Long = 0;
+    NewPte->u.Subsect.Prototype = 1;
+
+    /* Store the lower 48 bits of the Segment address */
+    NewPte->u.Subsect.SubsectionAddress = ((ULONG_PTR)Segment & 0x0000FFFFFFFFFFFF);
 }
 
 FORCEINLINE
