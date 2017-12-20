@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-#include <windows.h>
-#include <stdio.h>
+#include "precomp.h"
+
 #include "init.h"
 
 #if 0

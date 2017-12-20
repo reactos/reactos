@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS GDI32
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Text drawing API.
+ * COPYRIGHT:   Copyright 2014 Timo Kreuzer
+ *              Copyright 2017 Katayama Hirofumi MZ
+ */
+
 #include <precomp.h>
 
 #define NDEBUG
@@ -18,18 +26,32 @@ TextOutA(
     ANSI_STRING StringA;
     UNICODE_STRING StringU;
     BOOL bResult;
+    NTSTATUS Status;
 
-    if (lpString != NULL)
+    if (lpString != NULL && cchString > 0)
     {
-        RtlInitAnsiString(&StringA, (LPSTR)lpString);
-        RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+        if (cchString > MAXUSHORT)
+            cchString = MAXUSHORT;
+
+        StringA.Length = (USHORT)cchString;
+        StringA.MaximumLength = (USHORT)cchString;
+        StringA.Buffer = (PCHAR)lpString;
+
+        Status = RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            StringU.Buffer = NULL;
+            StringU.Length = 0;
+        }
     }
     else
     {
         StringU.Buffer = NULL;
+        StringU.Length = 0;
     }
 
-    bResult = TextOutW(hdc, nXStart, nYStart, StringU.Buffer, cchString);
+    bResult = TextOutW(hdc, nXStart, nYStart,
+                       StringU.Buffer, StringU.Length / sizeof(WCHAR));
 
     RtlFreeUnicodeString(&StringU);
     return bResult;

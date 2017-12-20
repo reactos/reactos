@@ -5,12 +5,7 @@
  * PROGRAMMERS:     Andreas Maier
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
 
 #define TEST_MAX_MSG 50
 

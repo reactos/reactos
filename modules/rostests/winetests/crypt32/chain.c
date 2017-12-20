@@ -18,16 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-//#include <stdarg.h>
+#include "precomp.h"
 
-#include <windef.h>
-#include <winbase.h>
-//#include <winerror.h>
-#include <wincrypt.h>
 #include <wininet.h>
-
-#include <wine/test.h>
 
 static const BYTE selfSignedCert[] = {
  0x30, 0x82, 0x01, 0x1f, 0x30, 0x81, 0xce, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x02,

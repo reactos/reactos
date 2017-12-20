@@ -221,7 +221,7 @@ typedef struct _RAW_JOLIET_VD {
     UCHAR       Reserved[8];        // reserved 8 = 0
     ULONG       VolSpaceI;          // size of the volume in LBN's Intel
     ULONG       VolSpaceM;          // size of the volume in LBN's Motorola
-    UCHAR       CharSet[32];        // character set bytes 0 = ASCII, Joliet Seq here
+    UCHAR       CharSet[32];        // character set bytes 0 = ASCII, Joliett Seq here
     USHORT      VolSetSizeI;        // volume set size Intel
     USHORT      VolSetSizeM;        // volume set size Motorola
     USHORT      VolSeqNumI;         // volume set sequence number Intel
@@ -383,9 +383,9 @@ typedef RAW_DIRENT *PRAW_DIRENT;
 //
 //  VOID
 //  CdConvertCdTimeToNtTime (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PCHAR CdTime,
-//      OUT PLARGE_INTEGER NtTime
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _In_ PCHAR CdTime,
+//      _Out_ PLARGE_INTEGER NtTime
 //      );
 //
 

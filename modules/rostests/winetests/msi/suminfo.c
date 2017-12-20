@@ -18,15 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-#include <stdio.h>
-#include <windows.h>
-#include <msi.h>
-#include <msiquery.h>
-#include <objidl.h>
-
-#include "wine/test.h"
+#include "precomp.h"
 
 /*
  * The following are defined in Windows SDK's msidefs.h

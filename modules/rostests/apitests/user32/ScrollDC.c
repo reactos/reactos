@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
 
 void Test_ScrollDC()
 {
@@ -75,4 +72,3 @@ START_TEST(ScrollDC)
 {
     Test_ScrollDC();
 }
-

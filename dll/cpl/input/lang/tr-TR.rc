@@ -108,6 +108,7 @@ BEGIN
     IDS_CTRL_SHIFT "Denetim + Üst Damga"
     IDS_LEFT_ALT_SHIFT "Sol Seçenek + Üst Damga"
     IDS_SWITCH_BET_INLANG "Giriş dilleri arasında geçiş yap."
+    IDS_REBOOT_NOW, "Reboot now?"
 END
 
 STRINGTABLE

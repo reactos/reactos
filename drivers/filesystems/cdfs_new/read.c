@@ -25,8 +25,8 @@ Abstract:
 //
 //  VOID
 //  SafeZeroMemory (
-//      IN PUCHAR At,
-//      IN ULONG ByteCount
+//      _Out_ PUCHAR At,
+//      _In_ ULONG ByteCount
 //      );
 //
 
@@ -34,13 +34,24 @@ Abstract:
 //  This macro just puts a nice little try-except around RtlZeroMemory
 //
 
+#ifndef __REACTOS__
 #define SafeZeroMemory(IC,AT,BYTE_COUNT) {                  \
-    try {                                                   \
+    _SEH2_TRY {                                             \
         RtlZeroMemory( (AT), (BYTE_COUNT) );                \
-    } except( EXCEPTION_EXECUTE_HANDLER ) {                 \
+__pragma(warning(suppress: 6320))                           \
+    } _SEH2_EXCEPT( EXCEPTION_EXECUTE_HANDLER ) {           \
          CdRaiseStatus( IC, STATUS_INVALID_USER_BUFFER );   \
-    }                                                       \
+    } _SEH2_END;                                            \
 }
+#else
+#define SafeZeroMemory(IC,AT,BYTE_COUNT) {                  \
+    _SEH2_TRY {                                             \
+        RtlZeroMemory( (AT), (BYTE_COUNT) );                \
+    } _SEH2_EXCEPT( EXCEPTION_EXECUTE_HANDLER ) {           \
+         CdRaiseStatus( IC, STATUS_INVALID_USER_BUFFER );   \
+    } _SEH2_END;                                            \
+}
+#endif
 
 //
 // Read ahead amount used for normal data files
@@ -53,10 +64,12 @@ Abstract:
 #endif
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonRead (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -79,7 +92,7 @@ Return Value:
 --*/
 
 {
-    NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC Uninit var */
+    NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
 
     TYPE_OF_OPEN TypeOfOpen;
@@ -103,7 +116,7 @@ Return Value:
     BOOLEAN ReleaseFile = TRUE;
 
     CD_IO_CONTEXT LocalIoContext;
-
+    
     PAGED_CODE();
 
     //
@@ -122,6 +135,9 @@ Return Value:
     //
 
     TypeOfOpen = CdDecodeFileObject( IrpContext, IrpSp->FileObject, &Fcb, &Ccb );
+
+    // Internal lock object is acquired if return status is STATUS_PENDING
+    _Analysis_suppress_lock_checking_(Fcb->Resource);
 
     if ((TypeOfOpen == UnopenedFileObject) ||
         (TypeOfOpen == UserDirectoryOpen)) {
@@ -180,7 +196,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Fcb.  Allow reads if this is a DASD handle that is 
@@ -222,7 +238,7 @@ Return Value:
             //  based on the state of the file oplocks.
             //
 
-            Status = FsRtlCheckOplock( &Fcb->Oplock,
+            Status = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                        Irp,
                                        IrpContext,
                                        (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
@@ -250,22 +266,31 @@ Return Value:
         }
 
         //
-        //  Complete the request if it begins beyond the end of file.
+        //  Check request beyond end of file if this is not a read on a volume
+        //  handle marked for extended DASD IO.
         //
 
-        if (StartingOffset >= Fcb->FileSize.QuadPart) {
+        if ((TypeOfOpen != UserVolumeOpen) ||
+            (!FlagOn( Ccb->Flags, CCB_FLAG_ALLOW_EXTENDED_DASD_IO ))) {
 
-            try_return( Status = STATUS_END_OF_FILE );
-        }
+            //
+            //  Complete the request if it begins beyond the end of file.
+            //
 
-        //
-        //  Truncate the read if it extends beyond the end of the file.
-        //
+            if (StartingOffset >= Fcb->FileSize.QuadPart) {
 
-        if (ByteRange > Fcb->FileSize.QuadPart) {
+                try_return( Status = STATUS_END_OF_FILE );
+            }
 
-            ByteCount = (ULONG) (Fcb->FileSize.QuadPart - StartingOffset);
-            ByteRange = Fcb->FileSize.QuadPart;
+            //
+            //  Truncate the read if it extends beyond the end of the file.
+            //
+
+            if (ByteRange > Fcb->FileSize.QuadPart) {
+
+                ByteCount = (ULONG) (Fcb->FileSize.QuadPart - StartingOffset);
+                ByteRange = Fcb->FileSize.QuadPart;
+            }
         }
 
         //
@@ -515,7 +540,7 @@ Return Value:
         }
 
     try_exit:  NOTHING;
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the Fcb.
@@ -525,7 +550,7 @@ Return Value:
 
             CdReleaseFile( IrpContext, Fcb );
         }
-    }
+    } _SEH2_END;
 
     //
     //  Post the request if we got CANT_WAIT.
@@ -546,5 +571,6 @@ Return Value:
 
     return Status;
 }
+
 
 

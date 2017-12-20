@@ -5,12 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <stdio.h>
-#include <ndk/rtltypes.h>
-#include <winreg.h>
+#include "precomp.h"
 
 static
 VOID

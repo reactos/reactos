@@ -17,14 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#define STRICT
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-#include "wine/test.h"
+#include "precomp.h"
 
 #define TODO_COUNT 1
 

@@ -1596,6 +1596,11 @@ int ext3_release_dir (struct inode * inode, struct file * filp)
     return 0;
 }
 
+/* FIXME: Inspect the clang-cl code path */
+#if defined(__REACTOS__) && defined(__clang__)
+struct ext3_dir_entry_2* do_split(struct ext2_icb *icb, struct inode *dir, struct buffer_head **bh,struct dx_frame *frame, struct dx_hash_info *hinfo, int *error);
+#endif
+
 /*
  * Returns 0 for success, or a negative error value
  */

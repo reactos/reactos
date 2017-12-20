@@ -26,41 +26,43 @@ Abstract:
 //  Local support routines
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdQueryDirectory (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PFCB Fcb,
-    IN PCCB Ccb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PFCB Fcb,
+    _In_ PCCB Ccb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdNotifyChangeDirectory (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PCCB Ccb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PCCB Ccb
     );
 
 VOID
 CdInitializeEnumeration (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PFCB Fcb,
-    IN OUT PCCB Ccb,
-    IN OUT PFILE_ENUM_CONTEXT FileContext,
-    OUT PBOOLEAN ReturnNextEntry,
-    OUT PBOOLEAN ReturnSingleEntry,
-    OUT PBOOLEAN InitialQuery
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PFCB Fcb,
+    _Inout_ PCCB Ccb,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext,
+    _Out_ PBOOLEAN ReturnNextEntry,
+    _Out_ PBOOLEAN ReturnSingleEntry,
+    _Out_ PBOOLEAN InitialQuery
     );
 
 BOOLEAN
 CdEnumerateIndex (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCCB Ccb,
-    IN OUT PFILE_ENUM_CONTEXT FileContext,
-    IN BOOLEAN ReturnNextEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCCB Ccb,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext,
+    _In_ BOOLEAN ReturnNextEntry
     );
 
 #ifdef ALLOC_PRAGMA
@@ -72,10 +74,12 @@ CdEnumerateIndex (
 #endif
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonDirControl (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -152,13 +156,14 @@ Return Value:
 //  Local support routines
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdQueryDirectory (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PFCB Fcb,
-    IN PCCB Ccb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PFCB Fcb,
+    _In_ PCCB Ccb
     )
 
 /*++
@@ -197,9 +202,9 @@ Return Value:
     ULONG VersionStringBytes;
 
     FILE_ENUM_CONTEXT FileContext;
-    PDIRENT ThisDirent;
+    PDIRENT ThisDirent = NULL;
     BOOLEAN InitialQuery;
-    BOOLEAN ReturnNextEntry;
+    BOOLEAN ReturnNextEntry = FALSE;
     BOOLEAN ReturnSingleEntry;
     BOOLEAN Found;
     BOOLEAN DoCcbUpdate = FALSE;
@@ -209,7 +214,7 @@ Return Value:
 
     ULONG BaseLength;
 
-    PFILE_BOTH_DIR_INFORMATION DirInfo = NULL; /* ReactOS Change: GCC Uninit var */
+    PFILE_BOTH_DIR_INFORMATION DirInfo = NULL;
     PFILE_NAMES_INFORMATION NamesInfo;
     PFILE_ID_FULL_DIR_INFORMATION IdFullDirInfo;
     PFILE_ID_BOTH_DIR_INFORMATION IdBothDirInfo;
@@ -287,7 +292,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Fcb is still good.
@@ -387,7 +392,7 @@ Return Value:
             //
             //  Here are the rules concerning filling up the buffer:
             //
-            //  1.  The Io system guarantees that there will always be
+            //  1.  The Io system garentees that there will always be
             //      enough room for at least one base record.
             //
             //  2.  If the full first record (including file name) cannot
@@ -499,7 +504,7 @@ Return Value:
             //  such trickery.
             //
             
-            try {
+            _SEH2_TRY {
             
                 //
                 //  Zero and initialize the base part of the current entry.
@@ -543,21 +548,16 @@ Return Value:
     
                         DirInfo->EndOfFile.QuadPart = DirInfo->AllocationSize.QuadPart = 0;
     
-                        SetFlag( DirInfo->FileAttributes, FILE_ATTRIBUTE_DIRECTORY );
-    
+                        SetFlag( DirInfo->FileAttributes, FILE_ATTRIBUTE_DIRECTORY);
+                        
                     } else {
     
                         DirInfo->EndOfFile.QuadPart = FileContext.FileSize;
                         DirInfo->AllocationSize.QuadPart = LlSectorAlign( FileContext.FileSize );
+                        
+                        SetFlag( DirInfo->FileAttributes, FILE_ATTRIBUTE_READONLY);
                     }
-    
-                    //
-                    //  All Cdrom files are readonly.  We also copy the existence
-                    //  bit to the hidden attribute.
-                    //
-    
-                    SetFlag( DirInfo->FileAttributes, FILE_ATTRIBUTE_READONLY );
-    
+
                     if (FlagOn( ThisDirent->DirentFlags,
                                 CD_ATTRIBUTE_HIDDEN )) {
     
@@ -715,7 +715,10 @@ Return Value:
                 LastEntry = NextEntry;
                 NextEntry = QuadAlign( Information );
             
-            } except (EXCEPTION_EXECUTE_HANDLER) {
+#ifdef _MSC_VER
+#pragma warning(suppress: 6320)
+#endif
+            } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
 
                   //
                   //  We had a problem filling in the user's buffer, so stop and
@@ -724,16 +727,16 @@ Return Value:
                   //
                   
                   Information = 0;
-                  try_leave( Status = GetExceptionCode());
-            }
+                  try_leave( Status = _SEH2_GetExceptionCode());
+            } _SEH2_END;
         }
         
         DoCcbUpdate = TRUE;
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
-        //  Cleanup our search context - *before* acquiring the FCB mutex exclusive,
+        //  Cleanup our search context - *before* aquiring the FCB mutex exclusive,
         //  else can block on threads in cdcreateinternalstream/purge which 
         //  hold the FCB but are waiting for all maps in this stream to be released.
         //
@@ -741,7 +744,7 @@ Return Value:
         CdCleanupFileContext( IrpContext, &FileContext );
 
         //
-        //  Now we can safely acquire the FCB mutex if we need to.
+        //  Now we can safely aqure the FCB mutex if we need to.
         //
 
         if (DoCcbUpdate && !NT_ERROR( Status )) {
@@ -769,7 +772,7 @@ Return Value:
         //
 
         CdReleaseFile( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     //
     //  Complete the request here.
@@ -786,12 +789,13 @@ Return Value:
 //  Local support routines
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdNotifyChangeDirectory (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PCCB Ccb
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PCCB Ccb
     )
 
 /*++
@@ -837,7 +841,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Verify the Vcb.
@@ -862,14 +866,14 @@ Return Value:
                                         NULL,
                                         NULL );
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Release the Vcb.
         //
 
         CdReleaseVcb( IrpContext, IrpContext->Vcb );
-    }
+    } _SEH2_END;
 
     //
     //  Cleanup the IrpContext.
@@ -887,14 +891,14 @@ Return Value:
 
 VOID
 CdInitializeEnumeration (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIO_STACK_LOCATION IrpSp,
-    IN PFCB Fcb,
-    IN OUT PCCB Ccb,
-    IN OUT PFILE_ENUM_CONTEXT FileContext,
-    OUT PBOOLEAN ReturnNextEntry,
-    OUT PBOOLEAN ReturnSingleEntry,
-    OUT PBOOLEAN InitialQuery
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PIO_STACK_LOCATION IrpSp,
+    _In_ PFCB Fcb,
+    _Inout_ PCCB Ccb,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext,
+    _Out_ PBOOLEAN ReturnNextEntry,
+    _Out_ PBOOLEAN ReturnSingleEntry,
+    _Out_ PBOOLEAN InitialQuery
     )
 
 /*++
@@ -948,6 +952,31 @@ Return Value:
     BOOLEAN Found;
 
     PAGED_CODE();
+
+    //
+    //  If the user has specified that the scan be restarted, and has specicified 
+    //  a new query pattern, reinitialize the CCB.
+    //
+
+    if (FlagOn( IrpSp->Flags, SL_RESTART_SCAN )) {
+
+        CdLockFcb( IrpContext, Fcb );
+
+        FileName = (PUNICODE_STRING) IrpSp->Parameters.QueryDirectory.FileName;
+        if (FileName && FileName->Length > 0) {
+
+            if (!FlagOn( Ccb->Flags, CCB_FLAG_ENUM_MATCH_ALL )) {
+
+                CdFreePool( &Ccb->SearchExpression.FileName.Buffer );
+            }
+
+            ClearFlag(Ccb->Flags, CCB_FLAG_ENUM_MATCH_ALL);
+            ClearFlag(Ccb->Flags, CCB_FLAG_ENUM_INITIALIZED);
+            ClearFlag(Ccb->Flags, CCB_FLAG_ENUM_NAME_EXP_HAS_WILD);
+        }
+
+        CdUnlockFcb( IrpContext, Fcb );
+    }
 
     //
     //  If this is the initial query then build a search expression from the input
@@ -1049,8 +1078,8 @@ Return Value:
                 //
                 //  This should never fail.
                 //
-
-                ASSERT( Status == STATUS_SUCCESS );
+                __analysis_assert( Status == STATUS_SUCCESS );
+                NT_ASSERT( Status == STATUS_SUCCESS );
 
             } else {
 
@@ -1189,10 +1218,7 @@ Return Value:
     //  If there is no file object then create it now.
     //
 
-    if (Fcb->FileObject == NULL) {
-
-        CdCreateInternalStream( IrpContext, Fcb->Vcb, Fcb );
-    }
+    CdVerifyOrCreateDirStreamFile( IrpContext, Fcb);
 
     //
     //  Determine the offset in the stream to position the FileContext and
@@ -1330,10 +1356,10 @@ Return Value:
 
 BOOLEAN
 CdEnumerateIndex (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCCB Ccb,
-    IN OUT PFILE_ENUM_CONTEXT FileContext,
-    IN BOOLEAN ReturnNextEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCCB Ccb,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext,
+    _In_ BOOLEAN ReturnNextEntry
     )
 
 /*++
@@ -1371,7 +1397,7 @@ Return Value:
     PAGED_CODE();
 
     //
-    //  Loop until we find a match or exhaust the directory.
+    //  Loop until we find a match or exaust the directory.
     //
 
     while (TRUE) {

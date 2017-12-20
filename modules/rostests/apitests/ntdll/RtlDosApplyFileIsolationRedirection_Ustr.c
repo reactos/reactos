@@ -5,10 +5,7 @@
  * PROGRAMMER:      Giannis Adamopoulos
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 #define ok_eq_hex(value, expected) ok((value) == (expected), #value " = 0x%lx, expected 0x%lx\n", value, expected)
 #define ok_eq_pointer(value, expected) ok((value) == (expected), #value " = %p, expected %p\n", value, expected)

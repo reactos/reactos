@@ -5,10 +5,9 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
 #include <ndk/obfuncs.h>
-#include <strsafe.h>
 
 static
 HANDLE

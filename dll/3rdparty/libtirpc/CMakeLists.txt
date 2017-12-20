@@ -85,7 +85,8 @@ list(APPEND SOURCE
     src/xdr_rec.c
     src/xdr_reference.c
     src/xdr_sizeof.c
-    src/xdr_stdio.c)
+    src/xdr_stdio.c
+    precomp.h)
 
 add_library(libtirpc SHARED
     ${SOURCE}
@@ -93,7 +94,7 @@ add_library(libtirpc SHARED
     libtirpc/libtirpc_ros.rc
     ${CMAKE_CURRENT_BINARY_DIR}/libtirpc.def)
 
-if(MSVC)
+if(MSVC AND (NOT USE_CLANG_CL))
 else()
     # FIXME: Tons of warnings.
     add_target_compile_flags(libtirpc "-w")
@@ -102,4 +103,5 @@ endif()
 set_module_type(libtirpc win32dll)
 add_importlibs(libtirpc user32 advapi32 kernel32_vista ws2_32 msvcrt kernel32 ntdll)
 add_delay_importlibs(libtirpc secur32)
+add_pch(libtirpc precomp.h SOURCE)
 add_cd_file(TARGET libtirpc DESTINATION reactos/system32 FOR all)

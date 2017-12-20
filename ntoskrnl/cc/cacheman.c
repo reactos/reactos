@@ -158,8 +158,10 @@ CcSetReadAheadGranularity (
 	IN	ULONG		Granularity
 	)
 {
+    static ULONG Warn;
+
     CCTRACE(CC_API_DEBUG, "FileObject=%p Granularity=%lu\n",
         FileObject, Granularity);
 
-	UNIMPLEMENTED;
+    if (!Warn++) UNIMPLEMENTED;
 }

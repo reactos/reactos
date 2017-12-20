@@ -302,8 +302,7 @@ SetWorldTransform(
     _In_ HDC hdc,
     _Out_ CONST XFORM *pxform)
 {
-    /* FIXME  shall we add undoc #define MWT_SETXFORM 4 ?? */
-    return ModifyWorldTransform(hdc, pxform, MWT_MAX+1);
+    return ModifyWorldTransform(hdc, pxform, MWT_SET);
 }
 
 
@@ -319,7 +318,14 @@ ModifyWorldTransform(
     if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
         return FALSE;
 
-    HANDLE_METADC(BOOL, ModifyWorldTransform, FALSE, hdc, pxform, dwMode);
+    if (dwMode == MWT_SET)
+    {
+       HANDLE_METADC(BOOL, SetWorldTransform, FALSE, hdc, pxform);
+    }
+    else
+    {
+       HANDLE_METADC(BOOL, ModifyWorldTransform, FALSE, hdc, pxform, dwMode);
+    }
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);

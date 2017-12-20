@@ -5,14 +5,9 @@
  * PROGRAMMER:      Mark Jansen (mark.jansen@reactos.org)
  */
 
-#include <apitest.h>
-
-#include <ntndk.h>
-
+#include "precomp.h"
 
 #define TEST_STR    L"\\Registry\\Machine\\SOFTWARE"
-
-
 
 START_TEST(NtOpenKey)
 {

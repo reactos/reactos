@@ -5,12 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
-#include <ndk/kefuncs.h>
-#include <ndk/psfuncs.h>
+#include "precomp.h"
 
 static LARGE_INTEGER TestStartTime;
 

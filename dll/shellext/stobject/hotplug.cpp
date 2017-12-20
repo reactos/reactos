@@ -5,17 +5,14 @@
  * PURPOSE:     Removable devices notification icon handler
  * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com> 
  */
-#include <windows.h>
+
 #include "precomp.h"
-#include <mmsystem.h>
-#include <mmddk.h>
-#include <atlstr.h>
+
 #include <atlsimpcoll.h>
 #include <dbt.h>
-#include <setupapi.h>
 #include <cfgmgr32.h>
+#include <shlwapi.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 #define DISPLAY_NAME_LEN 40
 
 //BOOL WINAPI UnregisterDeviceNotification(HDEVNOTIFY Handle);

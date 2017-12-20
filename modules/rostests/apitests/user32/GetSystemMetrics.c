@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
 
 void Test_GetSystemMetrics()
 {
@@ -408,4 +405,3 @@ START_TEST(GetSystemMetrics)
 {
     Test_GetSystemMetrics();
 }
-

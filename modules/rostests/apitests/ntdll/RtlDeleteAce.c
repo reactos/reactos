@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <ndk/mmfuncs.h>
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 static
 PVOID

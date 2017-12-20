@@ -18,22 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
-
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "winsvc.h"
-#include "winnls.h"
-#include "lmcons.h"
-#include "aclapi.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 static const CHAR spooler[] = "Spooler"; /* Should be available on all platforms */
 static CHAR selfname[MAX_PATH];

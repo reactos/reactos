@@ -2,7 +2,8 @@
  * PROJECT:         input.dll
  * FILE:            dll/cpl/input/settings_page.c
  * PURPOSE:         input.dll
- * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
+ * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "input.h"
@@ -357,6 +358,32 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
     }
 }
 
+BOOL EnableProcessPrivileges(LPCWSTR lpPrivilegeName, BOOL bEnable)
+{
+    HANDLE hToken;
+    LUID luid;
+    TOKEN_PRIVILEGES tokenPrivileges;
+    BOOL Ret;
+
+    Ret = OpenProcessToken(GetCurrentProcess(),
+                           TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+                           &hToken);
+    if (!Ret)
+        return Ret;     // failure
+
+    Ret = LookupPrivilegeValueW(NULL, lpPrivilegeName, &luid);
+    if (Ret)
+    {
+        tokenPrivileges.PrivilegeCount = 1;
+        tokenPrivileges.Privileges[0].Luid = luid;
+        tokenPrivileges.Privileges[0].Attributes = bEnable ? SE_PRIVILEGE_ENABLED : 0;
+
+        Ret = AdjustTokenPrivileges(hToken, FALSE, &tokenPrivileges, 0, 0, 0);
+    }
+
+    CloseHandle(hToken);
+    return Ret;
+}
 
 static VOID
 OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
@@ -405,7 +432,20 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
         case PSN_APPLY:
         {
             /* Write Input Methods list to registry */
-            InputList_Process();
+            if (InputList_Process())
+            {
+                /* Needs reboot */
+                WCHAR szNeedsReboot[128], szLanguage[64];
+                LoadStringW(hApplet, IDS_REBOOT_NOW, szNeedsReboot, _countof(szNeedsReboot));
+                LoadStringW(hApplet, IDS_LANGUAGE, szLanguage, _countof(szLanguage));
+
+                if (MessageBoxW(hwndDlg, szNeedsReboot, szLanguage,
+                                MB_ICONINFORMATION | MB_YESNOCANCEL) == IDYES)
+                {
+                    EnableProcessPrivileges(SE_SHUTDOWN_NAME, TRUE);
+                    ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+                }
+            }
         }
         break;
     }

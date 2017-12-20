@@ -7,6 +7,8 @@
  *              Katayama Hirofumi MZ
  */
 
+#pragma once
+
 class CSizeboxWindow : public CWindowImpl<CSizeboxWindow>
 {
 public:

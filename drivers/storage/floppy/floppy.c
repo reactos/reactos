@@ -159,12 +159,13 @@ StopMotor(PCONTROLLER_INFO ControllerInfo)
 }
 
 
-VOID NTAPI
-WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo)
+NTSTATUS NTAPI
+WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo, PLARGE_INTEGER Timeout)
 /*
  * FUNCTION: Wait for the controller to interrupt, and then clear the event
  * ARGUMENTS:
  *     ControllerInfo: Controller to wait for
+ *     Timeout: How long to wait for
  * NOTES:
  *     - There is a small chance that an unexpected or spurious interrupt could
  *       be lost with this clear/wait/clear scheme used in this driver.  This is
@@ -173,11 +174,15 @@ WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo)
  *     - PAGED_CODE because it waits
  */
 {
+    NTSTATUS Status;
+
     PAGED_CODE();
     ASSERT(ControllerInfo);
 
-    KeWaitForSingleObject(&ControllerInfo->SynchEvent, Executive, KernelMode, FALSE, NULL);
+    Status = KeWaitForSingleObject(&ControllerInfo->SynchEvent, Executive, KernelMode, FALSE, Timeout);
     KeClearEvent(&ControllerInfo->SynchEvent);
+
+    return Status;
 }
 
 static DRIVER_DISPATCH CreateClose;
@@ -262,7 +267,7 @@ Recalibrate(PDRIVE_INFO DriveInfo)
             continue;
         }
 
-        WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+        WaitForControllerInterrupt(DriveInfo->ControllerInfo, NULL);
 
         /* Get the results */
         Status = HwRecalibrateResult(DriveInfo->ControllerInfo);
@@ -323,7 +328,7 @@ ResetChangeFlag(PDRIVE_INFO DriveInfo)
         return STATUS_IO_DEVICE_ERROR;
     }
 
-    WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+    WaitForControllerInterrupt(DriveInfo->ControllerInfo, NULL);
 
     if(HwSenseInterruptStatus(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
     {
@@ -340,7 +345,7 @@ ResetChangeFlag(PDRIVE_INFO DriveInfo)
         return STATUS_IO_DEVICE_ERROR;
     }
 
-    WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+    WaitForControllerInterrupt(DriveInfo->ControllerInfo, NULL);
 
     if(HwSenseInterruptStatus(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
     {
@@ -701,7 +706,7 @@ InitController(PCONTROLLER_INFO ControllerInfo)
     INFO_(FLOPPY, "InitController: waiting for initial interrupt\n");
 
     /* Wait for an interrupt */
-    WaitForControllerInterrupt(ControllerInfo);
+    WaitForControllerInterrupt(ControllerInfo, NULL);
 
     /* Reset means you have to clear each of the four interrupts (one per drive) */
     for(i = 0; i < MAX_DRIVES_PER_CONTROLLER; i++)

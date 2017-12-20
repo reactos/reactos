@@ -19,14 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <math.h>
-
-#include "wine/test.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winerror.h"
+#include "precomp.h"
 
 static DWORD (WINAPI *pSetLayout)(HDC hdc, DWORD layout);
 static DWORD (WINAPI *pGetLayout)(HDC hdc);

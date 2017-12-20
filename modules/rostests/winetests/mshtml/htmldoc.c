@@ -16,35 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#define CONST_VTABLE
+#include "precomp.h"
 
-#include <wine/test.h>
-//#include <stdarg.h>
-#include <stdio.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#include <initguid.h>
-//#include "ole2.h"
-#include <mshtml.h>
-//#include "docobj.h"
-#include <docobjectservice.h>
-#include <wininet.h>
-#include <mshtmhst.h>
-#include <mshtmdid.h>
-#include <mshtmcid.h>
-//#include "hlink.h"
-//#include "dispex.h"
 #include <idispids.h>
 #include <shlguid.h>
 #include <shdeprecated.h>
 #include <perhist.h>
-//#include "shobjidl.h"
-#include <htiface.h>
-#include <tlogstg.h>
 #include <exdispid.h>
-#include "mshtml_test.h"
+
+#include <initguid.h>
+#include <docobjectservice.h>
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 DEFINE_GUID(IID_IProxyManager,0x00000008,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);

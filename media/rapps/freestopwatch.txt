@@ -14,6 +14,9 @@ CDPath = none
 Description = Eine flexible digitale Stoppuhr-Software.
 Size = 1,5 MiB
 
+[Section.0415]
+Description = Elastyczny, cyfrowy stoper.
+
 [Section.0418]
 License = Gratuită
 Description = Aplicație flexibilă de cronometru digital.

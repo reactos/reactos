@@ -28,18 +28,8 @@
  * strangeness, especially since most are in situations that would not
  * normally be met.
  */
-#undef WINVER
-#define WINVER 0x0600 /* For NONCLIENTMETRICS with padding */
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
-
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
+#include "precomp.h"
 
 #define MAXHWNDS 1024
 static HWND hwnd [MAXHWNDS];

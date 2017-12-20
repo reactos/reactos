@@ -340,7 +340,7 @@ KdpSerialDebugPrint(LPSTR Message,
     }
 
     /* Output the message */
-    while (*pch != 0)
+    while (pch < Message + Length && *pch != '\0')
     {
         if (*pch == '\n')
         {
@@ -412,7 +412,7 @@ KdpScreenPrint(LPSTR Message,
     KIRQL OldIrql;
     PCHAR pch = (PCHAR) Message;
 
-    while (*pch)
+    while (pch < Message + Length && *pch)
     {
         if(*pch == '\b')
         {
@@ -567,13 +567,38 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 
 ULONG
 NTAPI
-KdpPrintString(LPSTR String,
-               ULONG Length)
+KdpPrintString(
+    _In_reads_bytes_(Length) PCHAR UnsafeString,
+    _In_ ULONG Length,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
+    PCHAR String;
+    CHAR StringBuffer[512];
 
     if (!KdpDebugMode.Value) return 0;
+
+    Length = min(Length, sizeof(StringBuffer));
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(UnsafeString, Length, 1);
+            String = StringBuffer;
+            RtlCopyMemory(String, UnsafeString, Length);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            return 0;
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        String = UnsafeString;
+    }
 
     /* Call the registered handlers */
     CurrentEntry = KdProviders.Flink;

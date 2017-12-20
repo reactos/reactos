@@ -34,7 +34,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-
 ULONGLONG
 NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
                 PFILE_RECORD_HEADER FileRecord,
@@ -47,11 +46,11 @@ NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PNTFS_ATTR_CONTEXT DataContext;
 
-    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Stream, StreamLength, &DataContext);
+    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Stream, StreamLength, &DataContext, NULL);
     if (NT_SUCCESS(Status))
     {
-        Size = AttributeDataLength(&DataContext->Record);
-        Allocated = AttributeAllocatedLength(&DataContext->Record);
+        Size = AttributeDataLength(DataContext->pRecord);
+        Allocated = AttributeAllocatedLength(DataContext->pRecord);
         ReleaseAttributeContext(DataContext);
     }
 
@@ -62,16 +61,16 @@ NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
 
 
 static NTSTATUS
-NtfsGetNameInformation(PDEVICE_EXTENSION DeviceExt,
-                       PFILE_RECORD_HEADER FileRecord,
-                       ULONGLONG MFTIndex,
-                       PFILE_NAMES_INFORMATION Info,
-                       ULONG BufferLength)
+NtfsGetNamesInformation(PDEVICE_EXTENSION DeviceExt,
+                        PFILE_RECORD_HEADER FileRecord,
+                        ULONGLONG MFTIndex,
+                        PFILE_NAMES_INFORMATION Info,
+                        ULONG BufferLength)
 {
     ULONG Length;
     PFILENAME_ATTRIBUTE FileName;
 
-    DPRINT("NtfsGetNameInformation() called\n");
+    DPRINT("NtfsGetNamesInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(DeviceExt, FileRecord);
     if (FileName == NULL)
@@ -377,7 +376,8 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                                 &Ccb->Entry,
                                 &FileRecord,
                                 &MFTRecord,
-                                Fcb->MFTIndex);
+                                Fcb->MFTIndex,
+                                BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE));
 
         if (NT_SUCCESS(Status))
         {
@@ -395,12 +395,12 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
 
             switch (FileInformationClass)
             {
-                case FileNameInformation:
-                    Status = NtfsGetNameInformation(DeviceExtension,
-                                                    FileRecord,
-                                                    MFTRecord,
-                                                    (PFILE_NAMES_INFORMATION)Buffer,
-                                                    BufferLength);
+                case FileNamesInformation:
+                    Status = NtfsGetNamesInformation(DeviceExtension,
+                                                     FileRecord,
+                                                     MFTRecord,
+                                                     (PFILE_NAMES_INFORMATION)Buffer,
+                                                     BufferLength);
                     break;
 
                 case FileDirectoryInformation:

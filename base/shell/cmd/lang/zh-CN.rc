@@ -135,7 +135,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] 文件 ...\n\n\
           A     归档文件\n\
           H     隐藏文件\n\
           -     意为“否”的前缀\n"
-    STRING_DEL_HELP2 "该目录中的所有文件都将被删除！\n您确定吗 (Y/N)？"
+    STRING_DEL_HELP2 "该目录中的所有文件都将被删除！\n您确定吗 (Y/N)？ "
     STRING_DEL_HELP3 "    %lu 文件已删除\n"
     STRING_DEL_HELP4 "    %lu 文件已删除\n"
     STRING_DELAY_HELP "暂停 n 秒或毫秒。\n\
@@ -202,11 +202,24 @@ PUSHD [路径 | ..]\n\n\
                 如果在一个批处理文件之外运行，将会使 cmd.exe 退出。\n\
   退出代码      这个值将会在退出时赋给 ERRORLEVEL。\n"
     STRING_FOR_HELP1 "在一组文件中为每个文件运行指定的命令。\n\n\
-FOR %变量 IN (集合) DO 命令 [参数]\n\n\
-  %变量        指定一个可被替换的参数。\n\
-  (集合)       指定一个含有一个或多个文件的集合。可以使用通配符。\n\
-  命令         指定要为每个文件执行的命令。\n\
-  参数         为指定的命令指定参数或开关。\n\n\
+FOR %变量 IN (集合) DO 命令 [参数]\n\
+FOR /L %变量 IN (start,step,end) DO 命令 [参数]\n\
+FOR /D %变量 IN (集合) DO 命令 [参数]\n\
+FOR /R [[drive:]path] IN (集合) DO 命令 [参数]\n\
+FOR /F [""options""] IN (集合) DO 命令 [参数]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %变量       指定一个可被替换的参数。\n\
+  (集合)      指定一个含有一个或多个文件的集合。可以使用通配符。\n\
+  命令        指定要为每个文件执行的命令。\n\
+  参数        为指定的命令指定参数或开关。\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 在批处理文件中使用 FOR 命令时，使用 %%变量 而不是 %变量。\n"
     STRING_FREE_HELP1 "\n驱动器 %s 中的卷是 %-11s\n\
  序列号为 %s\n\
@@ -340,8 +353,8 @@ REPLACE [驱动器1:][路径1]文件名 [驱动器2:][路径2] [/P] [/R] [/S] [/
     STRING_REPLACE_HELP6 "替换 %s\n"
     STRING_REPLACE_HELP7 "没有文件被添加\n"
     STRING_REPLACE_HELP8 "%lu 个文件已被添加\n"
-    STRING_REPLACE_HELP9 "添加 %s 吗 (Y/N)？"
-    STRING_REPLACE_HELP10 "替换 %s 吗 (Y/N)？"
+    STRING_REPLACE_HELP9 "添加 %s 吗 (Y/N)？ "
+    STRING_REPLACE_HELP10 "替换 %s 吗 (Y/N)？ "
     STRING_REPLACE_HELP11 "正在添加 %s\n"
     STRING_SHIFT_HELP "在批处理文件中改变可替换参数的位置。\n\n\
 SHIFT [DOWN]"
@@ -459,7 +472,7 @@ RESTORE       恢复窗口\n\
     STRING_COPY_ERROR4 "错误：尚未实现！\n"
     STRING_DATE_ERROR "无效日期。"
     STRING_DEL_ERROR5 "文件 %s 将会被删除！"
-    STRING_DEL_ERROR6 "您确定吗 (Y/N)？"
+    STRING_DEL_ERROR6 "您确定吗 (Y/N)？ "
     STRING_DEL_ERROR7 "正在删除：%s\n"
     STRING_ERROR_ERROR1 "未知错误！错误码：0x%lx\n"
     STRING_ERROR_ERROR2 "语法错误"

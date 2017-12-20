@@ -293,6 +293,29 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             goto nextRange;
         }
 
+        /* Extra safety: unexpected entry length.
+         * All in-between values are valid too, as x86 is little-indian
+         * and only lower byte is used per ACPI 6.2-A.
+         */
+        if (Regs.x.ecx < RTL_SIZEOF_THROUGH_FIELD(BIOS_MEMORY_MAP, Type) ||
+            Regs.x.ecx > sizeof(BIOS_MEMORY_MAP))
+        {
+            ERR("Int 15h AX=E820h returned an invalid entry length! (would-be-PcBiosMapCount = %lu, Entry length = (%Iu <=) %lu (<= %Iu))\n\n",
+                PcBiosMapCount, RTL_SIZEOF_THROUGH_FIELD(BIOS_MEMORY_MAP, Type), Regs.x.ecx, sizeof(BIOS_MEMORY_MAP));
+            /* Warn user, unless wrong case is "first and not too big entry", which is otherwise harmless. */
+            if (PcBiosMapCount > 0 || Regs.x.ecx > sizeof(BIOS_MEMORY_MAP))
+            {
+                ASSERTMSG("Int 15h AX=E820h returned an invalid entry length!", FALSE);
+            }
+            /* We keep previous entries (if any), but do not dare trying next entries.
+             * We assume these entries are good to use as is. If they are not, we are in trouble...
+             * (And don't ask what happens if BIOS actually overflowed our entry buffer...)
+             *
+             * FIXME: Safer = revert previous entries, Safest = blacklist this BIOS.
+             */
+            break;
+        }
+
         /* Copy data to global buffer */
         RtlCopyMemory(&PcBiosMemoryMap[PcBiosMapCount], (PVOID)BIOSCALLBUFFER, Regs.x.ecx);
 

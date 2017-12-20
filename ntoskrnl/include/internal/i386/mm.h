@@ -23,6 +23,7 @@
 #define MI_PAGED_POOL_START                     (PVOID)0xE1000000
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
 #define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
+#define MI_HIGHEST_SYSTEM_ADDRESS               (PVOID)0xFFFFFFFF
 
 /* FIXME: These are different for PAE */
 #define PTE_BASE    0xC0000000

@@ -5,11 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <winuser.h>
-#include <msgtrace.h>
-#include <user32testhelpers.h>
+#include "precomp.h"
 
 static HWND hWndList[5 + 1];
 static const int hWndCount = sizeof(hWndList) / sizeof(hWndList[0]) - 1;

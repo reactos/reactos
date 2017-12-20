@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include "precomp.h"
 
 #define DCX_USESTYLE 0x00010000
 
@@ -446,4 +444,3 @@ START_TEST(GetDCEx)
     Test_GetDCEx_CS_Mixed();
     Test_GetDCEx_CS_SwitchedStyle();
 }
-

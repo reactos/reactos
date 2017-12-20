@@ -6,34 +6,34 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "日志(&L)"
     BEGIN
-        MENUITEM "Open...(&O)", IDM_OPEN_EVENTLOG
-        MENUITEM "Save Event Log as...(&E)", IDM_SAVE_EVENTLOG
-        MENUITEM "Close(&C)", IDM_CLOSE_EVENTLOG
+        MENUITEM "打开(&O)...", IDM_OPEN_EVENTLOG
+        MENUITEM "保存日志为(&E)...", IDM_SAVE_EVENTLOG
+        MENUITEM "关闭(&C)", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "清除所有事件(&L)", IDM_CLEAR_EVENTS
-        MENUITEM "Rename(&R)\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Settings...(&T)", IDM_EVENTLOG_SETTINGS
+        MENUITEM "重命名(&R)\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "记录选项(&T)...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)", IDM_EXIT
     END
     POPUP "查看(&V)"
     BEGIN
-        MENUITEM "Newest first (&N)", IDM_LIST_NEWEST
-        MENUITEM "Oldest first (&O)", IDM_LIST_OLDEST
+        MENUITEM "后进先出(&N)", IDM_LIST_NEWEST
+        MENUITEM "先进先出(&O)", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "Details... (&D)\tEnter", IDM_EVENT_DETAILS
+        MENUITEM "详情(&D)...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "刷新(&R)\tF5", IDM_REFRESH
     END
     POPUP "选项(&O)"
     BEGIN
-        MENUITEM "&Show event details view", IDM_SHOW_EVENT_DETAILS_VIEW
+        MENUITEM "显示日志详情视图(&S)", IDM_SHOW_EVENT_DETAILS_VIEW
     END
     POPUP "帮助(&H)"
     BEGIN
         MENUITEM "帮助内容(&E)", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "关于... (&A)", IDM_ABOUT
+        MENUITEM "关于(&A)...", IDM_ABOUT
     END
 END
 
@@ -92,53 +92,53 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "通用"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Display name:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "显示名称(&D)：", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "&Log name:", IDC_STATIC, 7, 25, 60, 8
+    LTEXT "日志名(&L)：", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "日志文件(&F)：", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "大小：", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "创建时间：", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modified:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "修改时间：", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessed:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "访问时间：", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Log size", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "&Maximum log size:", IDC_STATIC, 17, 122, 58, 8
+    GROUPBOX "日志大小", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "日志大小上限(&M)：", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
-    LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    LTEXT "达到日志大小上限时：", IDC_STATIC, 17, 140, 219, 8
+    CONTROL "按需要覆盖事件(&O)", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
+    CONTROL "覆盖时间超过(&V)", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
-    LTEXT "days", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
-    AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
-    PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
+    LTEXT "天的事件", IDC_STATIC, 162, 168, 20, 8
+    CONTROL "不覆盖事件(&N)\n（手动清除日志）", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
+    PUSHBUTTON "还原为默认值(&R)", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    AUTOCHECKBOX "使用低速连接(&W)", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    PUSHBUTTON "清除日志(&C)", ID_CLEARLOG, 195, 213, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_COPYRIGHT "版权所有 (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "事件查看器"
-    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
+    IDS_APP_TITLE_EX "%s - %s 已登录 \\\\"
+    IDS_STATUS_MSG "%s 中有 %lu 个事件（已列出：%lu）"
     IDS_LOADING_WAIT "正在载入日志。请稍候..."
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "System Logs"
-    IDS_EVENTLOG_APP "Application Logs"
-    IDS_EVENTLOG_USER "User Logs"
+    IDS_NO_ITEMS "视图中没有可供显示的项目。" // "日志中没有事件。"
+    IDS_EVENTLOG_SYSTEM "系统日志"
+    IDS_EVENTLOG_APP "程序日志"
+    IDS_EVENTLOG_USER "用户日志"
     IDS_EVENTSTRINGIDNOTFOUND "来源 ( %s ) 中的事件 ID ( %lu ) 的描述无法找到。本地计算机可能没有显示来自远程计算机消息所必需的注册表信息或消息 DLL 文件。\n\nThe following information is part of the event:\n\n"
     IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日志吗？"
     IDS_SAVE_FILTER "事件日志 (*.evt)\0*.evt\0"

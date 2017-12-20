@@ -5,8 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <winuser.h>
+#include "precomp.h"
 
 #define ALIGN_DOWN_BY(size, align) \
     ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))

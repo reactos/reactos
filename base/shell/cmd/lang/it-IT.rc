@@ -139,7 +139,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\n\
         A     Archiviabile\n\
         H     nascosto\n\
         -     prefisso con il significato di non\n"
-    STRING_DEL_HELP2 "Tutti i file nella cartella saranno cancellati!\nSei sicuro (S/N)?"
+    STRING_DEL_HELP2 "Tutti i file nella cartella saranno cancellati!\nSei sicuro (S/N)? "
     STRING_DEL_HELP3 "    %lu file cancellato\n"
     STRING_DEL_HELP4 "    %lu file cancellati\n"
     STRING_DELAY_HELP "Aspetta per il tempo indicato in secondi o millisecondi.\n\
@@ -212,13 +212,26 @@ Usa ECHO senza parametri pr visualizzare lo stato attuale di ECHO."
     /B            Esce solo dalle procedure batch.\n\
                   Se eseguito al di fuori di un batch esce da cmd.exe\n\
     ExitCode      Verrà assegnato a ERRORLEVEL"
-    STRING_FOR_HELP1 "Esegue un comand specifico per ogni file indicato\n\n\
-FOR %variabile IN (listafile) DO comando [parametri]\n\n\
+    STRING_FOR_HELP1 "Esegue un comand specifico per ogni file indicato.\n\n\
+FOR %variabile IN (insieme) DO comando [parametri]\n\
+FOR /L %variabile IN (start,step,end) DO comando [parametri]\n\
+FOR /D %variabile IN (insieme) DO comando [parametri]\n\
+FOR /R [[drive:]path] IN (insieme) DO comando [parametri]\n\
+FOR /F [""options""] IN (insieme) DO comando [parametri]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
   %variabile Indica un parametro sostituibile.\n\
-  (listafile)Indica un insieme di uno o più file. Si possono usare i\
-             caratteri jolly.\n\
+  (insieme)  Indica un insieme di uno o più file. Si possono usare i caratteri\n\
+             jolly.\n\
   comando    Indica un comando da eseguire per ogni file.\n\
-  parametri  Indica i parametri o le selezioni per il comando.\n\n\
+  parametri  Indica i parametri o le selezioni per il comando.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 Per usare FOR in un batch usare %%variable invece di %variable.\n"
     STRING_FREE_HELP1 "\nIl Volume del disco %s è %-11s\n\
  Il numero di serie è %s\n\
@@ -373,8 +386,8 @@ REPLACE [disco1:][percorso1]nomefile [disco2:][percorso2] [/P] [/R] [/S] [/W] [/
     STRING_REPLACE_HELP6 "Sostituzione di %s\n"
     STRING_REPLACE_HELP7 "Nessun file aggiunto\n"
     STRING_REPLACE_HELP8 "%lu file aggiunti\n"
-    STRING_REPLACE_HELP9 "Aggiungere %s (S/N) "
-    STRING_REPLACE_HELP10 "Sostituire %s (S/N) "
+    STRING_REPLACE_HELP9 "Aggiungere %s (S/N)? "
+    STRING_REPLACE_HELP10 "Sostituire %s (S/N)? "
     STRING_REPLACE_HELP11 "Aggiunta di %s in corso\n"
     STRING_SHIFT_HELP "Cambia la posizione dei parametri in un batch.\n\n\
 SHIFT [DOWN]"
@@ -500,7 +513,7 @@ titolo        il nuovo titolo\n"
     STRING_COPY_ERROR4 "Errore: Non ancora implementato!\n"
     STRING_DATE_ERROR "Data non valida."
     STRING_DEL_ERROR5 "Il file %s sarà cancellato! "
-    STRING_DEL_ERROR6 "Sei sicuro (S/N)?"
+    STRING_DEL_ERROR6 "Sei sicuro (S/N)? "
     STRING_DEL_ERROR7 "Cancellazione di: %s\n"
     STRING_ERROR_ERROR1 "Errore sconosciuto! Codice errore: 0x%lx\n"
     STRING_ERROR_ERROR2 "Errore di sintassi"

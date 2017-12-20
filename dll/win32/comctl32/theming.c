@@ -43,7 +43,9 @@ extern LRESULT CALLBACK THEMING_ListBoxSubclassProc (HWND, UINT, WPARAM, LPARAM,
 extern LRESULT CALLBACK THEMING_ScrollbarSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                        ULONG_PTR) DECLSPEC_HIDDEN;
 
+#ifndef __REACTOS__
 static const WCHAR dialogClass[] = {'#','3','2','7','7','0',0};
+#endif
 static const WCHAR comboLboxClass[] = {'C','o','m','b','o','L','b','o','x',0};
 
 static const struct ThemingSubclass

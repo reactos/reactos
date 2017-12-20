@@ -267,8 +267,14 @@ int OnPostWinPosChanged(HWND hWnd, WINDOWPOS* pWinPos)
 
 static LRESULT CALLBACK
 ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-{      
-    if(!IsAppThemed() || !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
+{
+    PWND_DATA pwndData;
+
+    pwndData = (PWND_DATA)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
+
+    if(!IsAppThemed() || 
+       !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT) ||
+       (pwndData && pwndData->HasAppDefinedRgn))
     {
         return g_user32ApiHook.DefWindowProcW(hWnd, 
                                             Msg, 
@@ -286,7 +292,13 @@ ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK
 ThemeDefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    if(!IsAppThemed() || !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
+    PWND_DATA pwndData;
+
+    pwndData = (PWND_DATA)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
+
+    if(!IsAppThemed() || 
+       !(GetThemeAppProperties() & STAP_ALLOW_NONCLIENT) ||
+       (pwndData && pwndData->HasAppDefinedRgn))
     {
         return g_user32ApiHook.DefWindowProcA(hWnd, 
                                             Msg, 
@@ -501,6 +513,7 @@ ThemeDlgPostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_
                     HackFillStaticBg(hwndTarget, hdc, phbrush);
             }
 #endif
+            SetBkMode( hdc, TRANSPARENT );
             break;
         }
     }

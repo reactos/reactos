@@ -19,15 +19,9 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#include <wine/test.h>
-
-#define COBJMACROS
-#define CONST_VTABLE
-
+#include <wincon.h>
 #include <shlobj.h>
 
 #define IDT_CHANGEFILETYPE 500

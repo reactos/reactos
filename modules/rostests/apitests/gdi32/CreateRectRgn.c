@@ -5,7 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
 void Test_CreateRectRgn()
 {
@@ -16,4 +16,3 @@ START_TEST(CreateRectRgn)
 {
     Test_CreateRectRgn();
 }
-

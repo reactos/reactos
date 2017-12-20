@@ -27,16 +27,16 @@ Abstract:
 
 PNAME_LINK
 CdFindNameLink (
-    IN PIRP_CONTEXT IrpContext,
-    IN PRTL_SPLAY_LINKS *RootNode,
-    IN PUNICODE_STRING Name
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PRTL_SPLAY_LINKS *RootNode,
+    _In_ PUNICODE_STRING Name
     );
 
 BOOLEAN
 CdInsertNameLink (
-    IN PIRP_CONTEXT IrpContext,
-    IN PRTL_SPLAY_LINKS *RootNode,
-    IN PNAME_LINK NameLink
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PRTL_SPLAY_LINKS *RootNode,
+    _In_ PNAME_LINK NameLink
     );
 
 #ifdef ALLOC_PRAGMA
@@ -50,12 +50,12 @@ CdInsertNameLink (
 
 VOID
 CdInsertPrefix (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCD_NAME Name,
-    IN BOOLEAN IgnoreCase,
-    IN BOOLEAN ShortNameMatch,
-    IN PFCB ParentFcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ PCD_NAME Name,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ BOOLEAN ShortNameMatch,
+    _Inout_ PFCB ParentFcb
     )
 
 /*++
@@ -205,8 +205,8 @@ Return Value:
 
 VOID
 CdRemovePrefix (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb
     )
 
 /*++
@@ -228,7 +228,9 @@ Return Value:
 
 {
     PAGED_CODE();
-
+    
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Start with the short name prefix entry.
     //
@@ -281,12 +283,14 @@ Return Value:
 }
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdFindPrefix (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PFCB *CurrentFcb,
-    IN OUT PUNICODE_STRING RemainingName,
-    IN BOOLEAN IgnoreCase
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB *CurrentFcb,
+    _Inout_ PUNICODE_STRING RemainingName,
+    _In_ BOOLEAN IgnoreCase
     )
 
 /*++
@@ -459,9 +463,9 @@ Return Value:
 
 PNAME_LINK
 CdFindNameLink (
-    IN PIRP_CONTEXT IrpContext,
-    IN PRTL_SPLAY_LINKS *RootNode,
-    IN PUNICODE_STRING Name
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PRTL_SPLAY_LINKS *RootNode,
+    _In_ PUNICODE_STRING Name
     )
 
 /*++
@@ -562,9 +566,9 @@ Return Value:
 
 BOOLEAN
 CdInsertNameLink (
-    IN PIRP_CONTEXT IrpContext,
-    IN PRTL_SPLAY_LINKS *RootNode,
-    IN PNAME_LINK NameLink
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PRTL_SPLAY_LINKS *RootNode,
+    _In_ PNAME_LINK NameLink
     )
 
 /*++

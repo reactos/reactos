@@ -236,9 +236,9 @@ MmNotPresentFaultCachePage (
             KeBugCheck(CACHE_MANAGER);
         }
 
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
         MmReferencePage(Page);
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
 
         Status = MmCreateVirtualMapping(Process, Address, Attributes, &Page, 1);
         if (NT_SUCCESS(Status))

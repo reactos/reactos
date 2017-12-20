@@ -6,9 +6,6 @@
  */
 
 #include "shelltest.h"
-#include <atlbase.h>
-#include <atlcom.h>
-#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>

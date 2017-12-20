@@ -5,9 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <winnls.h>
+#include "precomp.h"
 
 #define ntv6(x) (LOBYTE(LOWORD(GetVersion())) >= 6 ? (x) : 0)
 

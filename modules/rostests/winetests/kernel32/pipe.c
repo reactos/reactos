@@ -18,16 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "wine/winternl.h"
-#include "winioctl.h"
-#include "wine/test.h"
+#include "precomp.h"
 
 #define PIPENAME "\\\\.\\PiPe\\tests_pipe.c"
 #define PIPENAME_SPECIAL "\\\\.\\PiPe\\tests->pipe.c"

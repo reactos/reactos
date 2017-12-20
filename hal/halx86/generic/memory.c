@@ -24,15 +24,15 @@ PVOID HalpHeapStart = MM_HAL_HEAP_START;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-ULONG_PTR
+ULONG64
 NTAPI
 HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                        IN ULONG_PTR MaxAddress,
+                        IN ULONG64 MaxAddress,
                         IN PFN_NUMBER PageCount,
                         IN BOOLEAN Aligned)
 {
     ULONG UsedDescriptors;
-    ULONG_PTR PhysicalAddress;
+    ULONG64 PhysicalAddress;
     PFN_NUMBER MaxPage, BasePage, Alignment;
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock, NewBlock, FreeBlock;
@@ -71,9 +71,8 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 (MdBlock->PageCount >= PageCount + Alignment) &&
                 (BasePage + PageCount + Alignment < MaxPage))
             {
-
                 /* We found an address */
-                PhysicalAddress = (BasePage + Alignment) << PAGE_SHIFT;
+                PhysicalAddress = ((ULONG64)BasePage + Alignment) << PAGE_SHIFT;
                 break;
             }
         }

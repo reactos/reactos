@@ -21,6 +21,9 @@ Description = Un IDE potente, de código abierto y multiplataforma. No viene con
 [Section.0410]
 Description = Un IDE potente, open source, multipiattaforma. Non contiene un compilatore.
 
+[Section.0415]
+Description = Otwartoźródłowe, wieloplatformowe, potężne środowisko programistyczne (IDE). Nie zawiera kompilatora.
+
 [Section.0418]
 Name = Code::Blocks (fără compilator)
 Description = Mediu de dezvoltare integrat (IDE) puternic, multiplatformă, cu surse deschise. Nu conține nici un compilator.

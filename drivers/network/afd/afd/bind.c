@@ -43,7 +43,10 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB, ULONG ShareType ) {
 
         if (NT_SUCCESS(Status) && !FCB->Recv.Window)
         {
-            FCB->Recv.Window = ExAllocatePool(PagedPool, FCB->Recv.Size);
+            FCB->Recv.Window = ExAllocatePoolWithTag(PagedPool,
+                                                     FCB->Recv.Size,
+                                                     TAG_AFD_DATA_BUFFER);
+
             if (!FCB->Recv.Window)
                 Status = STATUS_NO_MEMORY;
         }
@@ -87,7 +90,11 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
                                        Irp, 0 );
 
-    if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
+    if (FCB->LocalAddress)
+    {
+        ExFreePoolWithTag(FCB->LocalAddress, TAG_AFD_TRANSPORT_ADDRESS);
+    }
+
     FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
 
     if( FCB->LocalAddress )

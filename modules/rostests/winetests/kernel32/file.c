@@ -20,22 +20,9 @@
  *
  */
 
-/* ReplaceFile requires Windows 2000 or newer */
-#define _WIN32_WINNT 0x0601
+#include "precomp.h"
 
-#include <stdarg.h>
-#include <stdlib.h>
 #include <time.h>
-#include <stdio.h>
-
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <wine/test.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winerror.h>
-#include <wine/winternl.h>
-#include <winnls.h>
 #include <fileapi.h>
 
 #undef DeleteFile  /* needed for FILE_DISPOSITION_INFO */

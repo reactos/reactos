@@ -94,82 +94,77 @@ extern LONG CdXAFileHeader[];
 extern LONG CdAudioPlayHeader[];
 extern LONG CdXAAudioPhileHeader[];
 
-
+#ifdef CDFS_TELEMETRY_DATA
+
 //
-//  Turn on pseudo-asserts if CD_FREE_ASSERTS is defined.
+//  Globals for Telemetry data.
 //
 
-#if !DBG
-#ifdef CD_FREE_ASSERTS
-#undef ASSERT
-#undef ASSERTMSG
-#define ASSERT(exp)        if (!(exp)) { extern BOOLEAN KdDebuggerEnabled; DbgPrint("%s:%d %s\n",__FILE__,__LINE__,#exp); if (KdDebuggerEnabled) { DbgBreakPoint(); } }
-#define ASSERTMSG(msg,exp) if (!(exp)) { extern BOOLEAN KdDebuggerEnabled; DbgPrint("%s:%d %s %s\n",__FILE__,__LINE__,msg,#exp); if (KdDebuggerEnabled) { DbgBreakPoint(); } }
-#endif
-#endif
+extern CDFS_TELEMETRY_DATA_CONTEXT CdTelemetryData;
 
-
+#endif // CDFS_TELEMETRY_DATA
+
 //
 //  The following assertion macros ensure that the indicated structure
 //  is valid
 //
-//      ASSERT_STRUCT( IN PVOID Struct, IN CSHORT NodeType );
-//      ASSERT_OPTIONAL_STRUCT( IN PVOID Struct OPTIONAL, IN CSHORT NodeType );
+//      ASSERT_STRUCT( _In_ PVOID Struct, _In_ CSHORT NodeType );
+//      ASSERT_OPTIONAL_STRUCT( _In_opt_ PVOID Struct, _In_ CSHORT NodeType );
 //
-//      ASSERT_VCB( IN PVCB Vcb );
-//      ASSERT_OPTIONAL_VCB( IN PVCB Vcb OPTIONAL );
+//      ASSERT_VCB( _In_ PVCB Vcb );
+//      ASSERT_OPTIONAL_VCB( _In_opt_ PVCB Vcb );
 //
-//      ASSERT_FCB( IN PFCB Fcb );
-//      ASSERT_OPTIONAL_FCB( IN PFCB Fcb OPTIONAL );
+//      ASSERT_FCB( _In_ PFCB Fcb );
+//      ASSERT_OPTIONAL_FCB( _In_opt_ PFCB Fcb );
 //
-//      ASSERT_FCB_NONPAGED( IN PFCB_NONPAGED FcbNonpaged );
-//      ASSERT_OPTIONAL_FCB( IN PFCB_NONPAGED FcbNonpaged OPTIONAL );
+//      ASSERT_FCB_NONPAGED( _In_ PFCB_NONPAGED FcbNonpaged );
+//      ASSERT_OPTIONAL_FCB( _In_opt_ PFCB_NONPAGED FcbNonpaged );
 //
-//      ASSERT_CCB( IN PSCB Ccb );
-//      ASSERT_OPTIONAL_CCB( IN PSCB Ccb OPTIONAL );
+//      ASSERT_CCB( _In_ PSCB Ccb );
+//      ASSERT_OPTIONAL_CCB( _In_opt_ PSCB Ccb );
 //
-//      ASSERT_IRP_CONTEXT( IN PIRP_CONTEXT IrpContext );
-//      ASSERT_OPTIONAL_IRP_CONTEXT( IN PIRP_CONTEXT IrpContext OPTIONAL );
+//      ASSERT_IRP_CONTEXT( _In_ PIRP_CONTEXT IrpContext );
+//      ASSERT_OPTIONAL_IRP_CONTEXT( _In_opt_ PIRP_CONTEXT IrpContext );
 //
-//      ASSERT_IRP( IN PIRP Irp );
-//      ASSERT_OPTIONAL_IRP( IN PIRP Irp OPTIONAL );
+//      ASSERT_IRP( _In_ PIRP Irp );
+//      ASSERT_OPTIONAL_IRP( _In_opt_ PIRP Irp );
 //
-//      ASSERT_FILE_OBJECT( IN PFILE_OBJECT FileObject );
-//      ASSERT_OPTIONAL_FILE_OBJECT( IN PFILE_OBJECT FileObject OPTIONAL );
+//      ASSERT_FILE_OBJECT( _In_ PFILE_OBJECT FileObject );
+//      ASSERT_OPTIONAL_FILE_OBJECT( _In_opt_ PFILE_OBJECT FileObject );
 //
 //  The following macros are used to check the current thread owns
 //  the indicated resource
 //
-//      ASSERT_EXCLUSIVE_RESOURCE( IN PERESOURCE Resource );
+//      ASSERT_EXCLUSIVE_RESOURCE( _In_ PERESOURCE Resource );
 //
-//      ASSERT_SHARED_RESOURCE( IN PERESOURCE Resource );
+//      ASSERT_SHARED_RESOURCE( _In_ PERESOURCE Resource );
 //
-//      ASSERT_RESOURCE_NOT_MINE( IN PERESOURCE Resource );
+//      ASSERT_RESOURCE_NOT_MINE( _In_ PERESOURCE Resource );
 //
 //  The following macros are used to check whether the current thread
-//  owns the resource in the given structures.
+//  owns the resoures in the given structures.
 //
 //      ASSERT_EXCLUSIVE_CDDATA
 //
-//      ASSERT_EXCLUSIVE_VCB( IN PVCB Vcb );
+//      ASSERT_EXCLUSIVE_VCB( _In_ PVCB Vcb );
 //
-//      ASSERT_SHARED_VCB( IN PVCB Vcb );
+//      ASSERT_SHARED_VCB( _In_ PVCB Vcb );
 //
-//      ASSERT_EXCLUSIVE_FCB( IN PFCB Fcb );
+//      ASSERT_EXCLUSIVE_FCB( _In_ PFCB Fcb );
 //
-//      ASSERT_SHARED_FCB( IN PFCB Fcb );
+//      ASSERT_SHARED_FCB( _In_ PFCB Fcb );
 //
-//      ASSERT_EXCLUSIVE_FILE( IN PFCB Fcb );
+//      ASSERT_EXCLUSIVE_FILE( _In_ PFCB Fcb );
 //
-//      ASSERT_SHARED_FILE( IN PFCB Fcb );
+//      ASSERT_SHARED_FILE( _In_ PFCB Fcb );
 //
-//      ASSERT_LOCKED_VCB( IN PVCB Vcb );
+//      ASSERT_LOCKED_VCB( _In_ PVCB Vcb );
 //
-//      ASSERT_NOT_LOCKED_VCB( IN PVCB Vcb );
+//      ASSERT_NOT_LOCKED_VCB( _In_ PVCB Vcb );
 //
-//      ASSERT_LOCKED_FCB( IN PFCB Fcb );
+//      ASSERT_LOCKED_FCB( _In_ PFCB Fcb );
 //
-//      ASSERT_NOT_LOCKED_FCB( IN PFCB Fcb );
+//      ASSERT_NOT_LOCKED_FCB( _In_ PFCB Fcb );
 //
 
 //
@@ -183,19 +178,19 @@ extern LONG CdXAAudioPhileHeader[];
 
 #ifdef CD_SANITY
 
-#define ASSERT_STRUCT(S,T)                  ASSERT( SafeNodeType( S ) == (T) )
-#define ASSERT_OPTIONAL_STRUCT(S,T)         ASSERT( ((S) == NULL) ||  (SafeNodeType( S ) == (T)) )
+#define ASSERT_STRUCT(S,T)                  NT_ASSERT( SafeNodeType( S ) == (T) )
+#define ASSERT_OPTIONAL_STRUCT(S,T)         NT_ASSERT( ((S) == NULL) ||  (SafeNodeType( S ) == (T)) )
 
 #define ASSERT_VCB(V)                       ASSERT_STRUCT( (V), CDFS_NTC_VCB )
 #define ASSERT_OPTIONAL_VCB(V)              ASSERT_OPTIONAL_STRUCT( (V), CDFS_NTC_VCB )
 
 #define ASSERT_FCB(F)                                           \
-    ASSERT( (SafeNodeType( F ) == CDFS_NTC_FCB_DATA ) ||        \
+    NT_ASSERT( (SafeNodeType( F ) == CDFS_NTC_FCB_DATA ) ||        \
             (SafeNodeType( F ) == CDFS_NTC_FCB_INDEX ) ||       \
             (SafeNodeType( F ) == CDFS_NTC_FCB_PATH_TABLE ) )
 
 #define ASSERT_OPTIONAL_FCB(F)                                  \
-    ASSERT( ((F) == NULL) ||                                    \
+    NT_ASSERT( ((F) == NULL) ||                                    \
             (SafeNodeType( F ) == CDFS_NTC_FCB_DATA ) ||        \
             (SafeNodeType( F ) == CDFS_NTC_FCB_INDEX ) ||       \
             (SafeNodeType( F ) == CDFS_NTC_FCB_PATH_TABLE ) )
@@ -215,27 +210,27 @@ extern LONG CdXAAudioPhileHeader[];
 #define ASSERT_FILE_OBJECT(FO)              ASSERT_STRUCT( (FO), IO_TYPE_FILE )
 #define ASSERT_OPTIONAL_FILE_OBJECT(FO)     ASSERT_OPTIONAL_STRUCT( (FO), IO_TYPE_FILE )
 
-#define ASSERT_EXCLUSIVE_RESOURCE(R)        ASSERT( ExIsResourceAcquiredExclusiveLite( R ))
+#define ASSERT_EXCLUSIVE_RESOURCE(R)        NT_ASSERT( ExIsResourceAcquiredExclusiveLite( R ))
 
-#define ASSERT_SHARED_RESOURCE(R)           ASSERT( ExIsResourceAcquiredSharedLite( R ))
+#define ASSERT_SHARED_RESOURCE(R)           NT_ASSERT( ExIsResourceAcquiredSharedLite( R ))
 
-#define ASSERT_RESOURCE_NOT_MINE(R)         ASSERT( !ExIsResourceAcquiredSharedLite( R ))
+#define ASSERT_RESOURCE_NOT_MINE(R)         NT_ASSERT( !ExIsResourceAcquiredSharedLite( R ))
 
-#define ASSERT_EXCLUSIVE_CDDATA             ASSERT( ExIsResourceAcquiredExclusiveLite( &CdData.DataResource ))
-#define ASSERT_EXCLUSIVE_VCB(V)             ASSERT( ExIsResourceAcquiredExclusiveLite( &(V)->VcbResource ))
-#define ASSERT_SHARED_VCB(V)                ASSERT( ExIsResourceAcquiredSharedLite( &(V)->VcbResource ))
+#define ASSERT_EXCLUSIVE_CDDATA             NT_ASSERT( ExIsResourceAcquiredExclusiveLite( &CdData.DataResource ))
+#define ASSERT_EXCLUSIVE_VCB(V)             NT_ASSERT( ExIsResourceAcquiredExclusiveLite( &(V)->VcbResource ))
+#define ASSERT_SHARED_VCB(V)                NT_ASSERT( ExIsResourceAcquiredSharedLite( &(V)->VcbResource ))
 
-#define ASSERT_EXCLUSIVE_FCB(F)             ASSERT( ExIsResourceAcquiredExclusiveLite( &(F)->FcbNonpaged->FcbResource ))
-#define ASSERT_SHARED_FCB(F)                ASSERT( ExIsResourceAcquiredSharedLite( &(F)->FcbNonpaged->FcbResource ))
+#define ASSERT_EXCLUSIVE_FCB(F)             NT_ASSERT( ExIsResourceAcquiredExclusiveLite( &(F)->FcbNonpaged->FcbResource ))
+#define ASSERT_SHARED_FCB(F)                NT_ASSERT( ExIsResourceAcquiredSharedLite( &(F)->FcbNonpaged->FcbResource ))
 
-#define ASSERT_EXCLUSIVE_FILE(F)            ASSERT( ExIsResourceAcquiredExclusiveLite( (F)->Resource ))
-#define ASSERT_SHARED_FILE(F)               ASSERT( ExIsResourceAcquiredSharedLite( (F)->Resource ))
+#define ASSERT_EXCLUSIVE_FILE(F)            NT_ASSERT( ExIsResourceAcquiredExclusiveLite( (F)->Resource ))
+#define ASSERT_SHARED_FILE(F)               NT_ASSERT( ExIsResourceAcquiredSharedLite( (F)->Resource ))
 
-#define ASSERT_LOCKED_VCB(V)                ASSERT( (V)->VcbLockThread == PsGetCurrentThread() )
-#define ASSERT_NOT_LOCKED_VCB(V)            ASSERT( (V)->VcbLockThread != PsGetCurrentThread() )
+#define ASSERT_LOCKED_VCB(V)                NT_ASSERT( (V)->VcbLockThread == PsGetCurrentThread() )
+#define ASSERT_NOT_LOCKED_VCB(V)            NT_ASSERT( (V)->VcbLockThread != PsGetCurrentThread() )
 
-#define ASSERT_LOCKED_FCB(F)                ASSERT( !FlagOn( (F)->FcbState, FCB_STATE_IN_FCB_TABLE) || ((F)->FcbLockThread == PsGetCurrentThread()))
-#define ASSERT_NOT_LOCKED_FCB(F)            ASSERT( (F)->FcbLockThread != PsGetCurrentThread() )
+#define ASSERT_LOCKED_FCB(F)                NT_ASSERT( !FlagOn( (F)->FcbState, FCB_STATE_IN_FCB_TABLE) || ((F)->FcbLockThread == PsGetCurrentThread()))
+#define ASSERT_NOT_LOCKED_FCB(F)            NT_ASSERT( (F)->FcbLockThread != PsGetCurrentThread() )
 
 #else
 

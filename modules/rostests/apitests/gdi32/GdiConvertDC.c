@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
+#include "precomp.h"
 
 HDC WINAPI GdiConvertDC(HDC hdc);
 

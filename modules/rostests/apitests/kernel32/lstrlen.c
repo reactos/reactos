@@ -5,10 +5,7 @@
  * PROGRAMMER:      Hermes Belusca-Maito
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <stdio.h>
+#include "precomp.h"
 
 LONG WINAPI VEHandler_1(PEXCEPTION_POINTERS ExceptionInfo)
 {

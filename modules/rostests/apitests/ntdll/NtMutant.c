@@ -1,8 +1,5 @@
 
-#include <apitest.h>
-
-#include <ndk/exfuncs.h>
-
+#include "precomp.h"
 
 VOID
 Test_Release(VOID)

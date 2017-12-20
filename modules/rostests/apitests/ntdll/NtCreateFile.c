@@ -5,12 +5,7 @@
  * PROGRAMMER:      Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#define WIN32_NO_STATUS
-#include <wine/test.h>
-//#include <ndk/iotypes.h>
-#include <ndk/iofuncs.h>
-//#include <ndk/obtypes.h>
-//#include <ndk/obfuncs.h>
+#include "precomp.h"
 
 START_TEST(NtCreateFile)
 {

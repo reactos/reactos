@@ -620,7 +620,7 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
     UCHAR Direction;
     UCHAR Interval;
     UCHAR Period;
-    ULONG TransferParams[2] = {0};
+    USBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements = {0};
     PUSBPORT_COMMON_BUFFER_HEADER HeaderBuffer;
     MPSTATUS MpStatus;
     USBD_STATUS USBDStatus;
@@ -832,27 +832,27 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
 
         Packet->QueryEndpointRequirements(FdoExtension->MiniPortExt,
                                           &Endpoint->EndpointProperties,
-                                          TransferParams);
+                                          &EndpointRequirements);
 
         KeReleaseSpinLock(&FdoExtension->MiniportSpinLock, OldIrql);
 
         if ((EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_BULK) ||
             (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT))
         {
-            EndpointProperties->MaxTransferSize = TransferParams[1];
+            EndpointProperties->MaxTransferSize = EndpointRequirements.MaxTransferSize;
         }
 
-        if (TransferParams[0])
+        if (EndpointRequirements.HeaderBufferSize)
         {
             HeaderBuffer = USBPORT_AllocateCommonBuffer(FdoDevice,
-                                                        TransferParams[0]);
+                                                        EndpointRequirements.HeaderBufferSize);
         }
         else
         {
             HeaderBuffer = NULL;
         }
 
-        if (HeaderBuffer || (TransferParams[0] == 0))
+        if (HeaderBuffer || (EndpointRequirements.HeaderBufferSize == 0))
         {
             Endpoint->HeaderBuffer = HeaderBuffer;
 
@@ -969,7 +969,7 @@ USBPORT_ReopenPipe(IN PDEVICE_OBJECT FdoDevice,
 {
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     PUSBPORT_COMMON_BUFFER_HEADER HeaderBuffer;
-    ULONG EndpointRequirements[2] = {0};
+    USBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements = {0};
     PUSBPORT_REGISTRATION_PACKET Packet;
     KIRQL MiniportOldIrql;
     NTSTATUS Status;
@@ -1013,21 +1013,21 @@ USBPORT_ReopenPipe(IN PDEVICE_OBJECT FdoDevice,
 
     Packet->QueryEndpointRequirements(FdoExtension->MiniPortExt,
                                       &Endpoint->EndpointProperties,
-                                      EndpointRequirements);
+                                      &EndpointRequirements);
 
     KeReleaseSpinLock(&FdoExtension->MiniportSpinLock, MiniportOldIrql);
 
-    if (EndpointRequirements[0])
+    if (EndpointRequirements.HeaderBufferSize)
     {
         HeaderBuffer = USBPORT_AllocateCommonBuffer(FdoDevice,
-                                                    EndpointRequirements[0]);
+                                                    EndpointRequirements.HeaderBufferSize);
     }
     else
     {
         HeaderBuffer = NULL;
     }
 
-    if (HeaderBuffer || EndpointRequirements[0] == 0)
+    if (HeaderBuffer || EndpointRequirements.HeaderBufferSize == 0)
     {
         Endpoint->HeaderBuffer = HeaderBuffer;
         Status = STATUS_SUCCESS;

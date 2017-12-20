@@ -677,6 +677,19 @@ GdiDrawStream(HDC dc, ULONG l, PGDI_DRAW_STREAM pDS)
         else
             sizingtype = ST_STRETCH;
 
+        if (pDS->rcDest.right < pDS->rcDest.left || pDS->rcDest.bottom < pDS->rcDest.top)
+            return 0;
+
+        if (sm.cxLeftWidth + sm.cxRightWidth > pDS->rcDest.right - pDS->rcDest.left)
+        {
+            sm.cxLeftWidth = sm.cxRightWidth = 0;
+        }
+
+        if (sm.cyTopHeight + sm.cyBottomHeight > pDS->rcDest.bottom - pDS->rcDest.top)
+        {
+            sm.cyTopHeight = sm.cyBottomHeight = 0;
+        }
+
         UXTHEME_DrawImageBackground(pDS->hDC, 
                                     pDS->hImage, 
                                     &pDS->rcSrc, 

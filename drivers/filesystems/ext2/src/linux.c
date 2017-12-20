@@ -421,7 +421,7 @@ static void buffer_head_insert(struct block_device *bdev, struct buffer_head *bh
     rb_insert(&bdev->bd_bh_root, &bh->b_rb_node, buffer_head_blocknr_cmp);
 }
 
-static void buffer_head_remove(struct block_device *bdev, struct buffer_head *bh)
+void buffer_head_remove(struct block_device *bdev, struct buffer_head *bh)
 {
     rb_erase(&bh->b_rb_node, &bdev->bd_bh_root);
 }
@@ -469,6 +469,9 @@ get_block_bh_mdl(
     bh->b_blocknr = block;
     bh->b_size = size;
     bh->b_data = NULL;
+#ifdef __REACTOS__
+    InitializeListHead(&bh->b_link);
+#endif
 
 again:
 
@@ -476,11 +479,12 @@ again:
     offset.QuadPart <<= BLOCK_BITS;
 
     if (zero) {
+        /* PIN_EXCLUSIVE disabled, likely to deadlock with volume operations */
         if (!CcPreparePinWrite(Vcb->Volume,
                             &offset,
                             bh->b_size,
                             FALSE,
-                            PIN_WAIT | PIN_EXCLUSIVE,
+                            PIN_WAIT /* | PIN_EXCLUSIVE */,
                             &bcb,
                             &ptr)) {
             Ext2Sleep(100);
@@ -563,12 +567,14 @@ int submit_bh_mdl(int rw, struct buffer_head *bh)
 
         SetFlag(Vcb->Volume->Flags, FO_FILE_MODIFIED);
         Offset.QuadPart = ((LONGLONG)bh->b_blocknr) << BLOCK_BITS;
+
+        /* PIN_EXCLUSIVE disabled, likely to deadlock with volume operations */
         if (CcPreparePinWrite(
                     Vcb->Volume,
                     &Offset,
                     BLOCK_SIZE,
                     FALSE,
-                    PIN_WAIT | PIN_EXCLUSIVE,
+                    PIN_WAIT /* | PIN_EXCLUSIVE */,
                     &Bcb,
                     &Buffer )) {
 #if 0
@@ -592,8 +598,6 @@ int submit_bh_mdl(int rw, struct buffer_head *bh)
         }
 
     } else {
-
-        DbgBreak();
     }
 
 errorout:
@@ -644,6 +648,9 @@ get_block_bh_pin(
     bh->b_blocknr = block;
     bh->b_size = size;
     bh->b_data = NULL;
+#ifdef __REACTOS__
+    InitializeListHead(&bh->b_link);
+#endif
 
 again:
 
@@ -692,11 +699,11 @@ again:
     tbh = buffer_head_search(bdev, block);
     if (tbh) {
         get_bh(tbh);
-        ExReleaseResourceLite(&bdev->bd_bh_lock);
         free_buffer_head(bh);
         bh = tbh;
         RemoveEntryList(&bh->b_link);
         InitializeListHead(&bh->b_link);
+        ExReleaseResourceLite(&bdev->bd_bh_lock);
         goto errorout;
     } else {
         buffer_head_insert(bdev, bh);
@@ -734,7 +741,6 @@ int submit_bh_pin(int rw, struct buffer_head *bh)
                             (ULONG)bh->b_blocknr,
                             (bh->b_size >> BLOCK_BITS));
     } else {
-        DbgBreak();
     }
 
 errorout:
@@ -803,13 +809,6 @@ void __brelse(struct buffer_head *bh)
         ll_rw_block(WRITE, 1, &bh);
     }
 
-    if (1 == atomic_read(&bh->b_count)) {
-    } else if (atomic_dec_and_test(&bh->b_count)) {
-        atomic_inc(&bh->b_count);
-    } else {
-        return;
-    }
-
     ExAcquireResourceExclusiveLite(&bdev->bd_bh_lock, TRUE);
     if (atomic_dec_and_test(&bh->b_count)) {
         ASSERT(0 == atomic_read(&bh->b_count));
@@ -817,8 +816,11 @@ void __brelse(struct buffer_head *bh)
         ExReleaseResourceLite(&bdev->bd_bh_lock);
         return;
     }
-    buffer_head_remove(bdev, bh);
     KeQuerySystemTime(&bh->b_ts_drop);
+#ifdef __REACTOS__
+    if (!IsListEmpty(&bh->b_link))
+#endif
+    RemoveEntryList(&bh->b_link);
     InsertTailList(&Vcb->bd.bd_bh_free, &bh->b_link);
     KeClearEvent(&Vcb->bd.bd_bh_notify);
     ExReleaseResourceLite(&bdev->bd_bh_lock);
@@ -923,6 +925,7 @@ __find_get_block(struct block_device *bdev, sector_t block, unsigned long size)
 {
     return __getblk(bdev, block, size);
 }
+
 
 //
 // inode block mapping

@@ -86,13 +86,16 @@ AfdSetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->DisconnectOptions)
     {
-        ExFreePool(FCB->DisconnectOptions);
+        ExFreePoolWithTag(FCB->DisconnectOptions, TAG_AFD_DISCONNECT_OPTIONS);
         FCB->DisconnectOptions = NULL;
         FCB->DisconnectOptionsSize = 0;
         FCB->FilledDisconnectOptions = 0;
     }
 
-    FCB->DisconnectOptions = ExAllocatePool(PagedPool, DisconnectOptionsSize);
+    FCB->DisconnectOptions = ExAllocatePoolWithTag(PagedPool,
+                                                   DisconnectOptionsSize,
+                                                   TAG_AFD_DISCONNECT_OPTIONS);
+
     if (!FCB->DisconnectOptions)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -130,12 +133,15 @@ AfdSetDisconnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->DisconnectOptions)
     {
-        ExFreePool(FCB->DisconnectOptions);
+        ExFreePoolWithTag(FCB->DisconnectOptions, TAG_AFD_DISCONNECT_OPTIONS);
         FCB->DisconnectOptionsSize = 0;
         FCB->FilledDisconnectOptions = 0;
     }
 
-    FCB->DisconnectOptions = ExAllocatePool(PagedPool, *DisconnectOptionsSize);
+    FCB->DisconnectOptions = ExAllocatePoolWithTag(PagedPool,
+                                                   *DisconnectOptionsSize,
+                                                   TAG_AFD_DISCONNECT_OPTIONS);
+
     if (!FCB->DisconnectOptions) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     FCB->DisconnectOptionsSize = *DisconnectOptionsSize;
@@ -192,13 +198,16 @@ AfdSetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->DisconnectData)
     {
-        ExFreePool(FCB->DisconnectData);
+        ExFreePoolWithTag(FCB->DisconnectData, TAG_AFD_DISCONNECT_DATA);
         FCB->DisconnectData = NULL;
         FCB->DisconnectDataSize = 0;
         FCB->FilledDisconnectData = 0;
     }
 
-    FCB->DisconnectData = ExAllocatePool(PagedPool, DisconnectDataSize);
+    FCB->DisconnectData = ExAllocatePoolWithTag(PagedPool,
+                                                DisconnectDataSize,
+                                                TAG_AFD_DISCONNECT_DATA);
+
     if (!FCB->DisconnectData)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -236,12 +245,15 @@ AfdSetDisconnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->DisconnectData)
     {
-        ExFreePool(FCB->DisconnectData);
+        ExFreePoolWithTag(FCB->DisconnectData, TAG_AFD_DISCONNECT_DATA);
         FCB->DisconnectDataSize = 0;
         FCB->FilledDisconnectData = 0;
     }
 
-    FCB->DisconnectData = ExAllocatePool(PagedPool, *DisconnectDataSize);
+    FCB->DisconnectData = ExAllocatePoolWithTag(PagedPool,
+                                                *DisconnectDataSize,
+                                                TAG_AFD_DISCONNECT_DATA);
+
     if (!FCB->DisconnectData)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -319,7 +331,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("About to allocate the new FCB\n"));
 
-    FCB = ExAllocatePool(NonPagedPool, sizeof(AFD_FCB));
+    FCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(AFD_FCB), TAG_AFD_FCB);
     if( FCB == NULL ) {
         Irp->IoStatus.Status = STATUS_NO_MEMORY;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -354,11 +366,12 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( ConnectInfo ) {
         FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
         FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
-        FCB->TdiDeviceName.Buffer =
-            ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
+        FCB->TdiDeviceName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                          FCB->TdiDeviceName.Length,
+                                                          TAG_AFD_TRANSPORT_ADDRESS);
 
         if( !FCB->TdiDeviceName.Buffer ) {
-            ExFreePool(FCB);
+            ExFreePoolWithTag(FCB, TAG_AFD_FCB);
             AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
             Irp->IoStatus.Status = STATUS_NO_MEMORY;
             IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
@@ -388,8 +401,11 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     if( !NT_SUCCESS(Status) ) {
-        if( FCB->TdiDeviceName.Buffer ) ExFreePool( FCB->TdiDeviceName.Buffer );
-        ExFreePool( FCB );
+        if (FCB->TdiDeviceName.Buffer)
+        {
+            ExFreePoolWithTag(FCB->TdiDeviceName.Buffer, TAG_AFD_TRANSPORT_ADDRESS);
+        }
+        ExFreePoolWithTag(FCB, TAG_AFD_FCB);
         FileObject->FsContext = NULL;
     }
 
@@ -485,7 +501,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         ObDereferenceObject(Qelt->Object.Object);
         ZwClose(Qelt->Object.Handle);
 
-        ExFreePool(Qelt);
+        ExFreePoolWithTag(Qelt, TAG_AFD_ACCEPT_QUEUE);
     }
 
     SocketStateUnlock( FCB );
@@ -493,41 +509,41 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->EventSelect )
         ObDereferenceObject( FCB->EventSelect );
 
-    if( FCB->Context )
-        ExFreePool( FCB->Context );
+    if (FCB->Context)
+        ExFreePoolWithTag(FCB->Context, TAG_AFD_SOCKET_CONTEXT);
 
-    if( FCB->Recv.Window )
-        ExFreePool( FCB->Recv.Window );
+    if (FCB->Recv.Window)
+        ExFreePoolWithTag(FCB->Recv.Window, TAG_AFD_DATA_BUFFER);
 
-    if( FCB->Send.Window )
-        ExFreePool( FCB->Send.Window );
+    if (FCB->Send.Window)
+        ExFreePoolWithTag(FCB->Send.Window, TAG_AFD_DATA_BUFFER);
 
-    if( FCB->AddressFrom )
-        ExFreePool( FCB->AddressFrom );
+    if (FCB->AddressFrom)
+        ExFreePoolWithTag(FCB->AddressFrom, TAG_AFD_TDI_CONNECTION_INFORMATION);
 
-    if( FCB->ConnectCallInfo )
-        ExFreePool( FCB->ConnectCallInfo );
+    if (FCB->ConnectCallInfo)
+        ExFreePoolWithTag(FCB->ConnectCallInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
 
-    if( FCB->ConnectReturnInfo )
-        ExFreePool( FCB->ConnectReturnInfo );
+    if (FCB->ConnectReturnInfo)
+        ExFreePoolWithTag(FCB->ConnectReturnInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
 
-    if( FCB->ConnectData )
-        ExFreePool( FCB->ConnectData );
+    if (FCB->ConnectData)
+        ExFreePoolWithTag(FCB->ConnectData, TAG_AFD_CONNECT_DATA);
 
-    if( FCB->DisconnectData )
-        ExFreePool( FCB->DisconnectData );
+    if (FCB->DisconnectData)
+        ExFreePoolWithTag(FCB->DisconnectData, TAG_AFD_DISCONNECT_DATA);
 
-    if( FCB->ConnectOptions )
-        ExFreePool( FCB->ConnectOptions );
+    if (FCB->ConnectOptions)
+        ExFreePoolWithTag(FCB->ConnectOptions, TAG_AFD_CONNECT_OPTIONS);
 
-    if( FCB->DisconnectOptions )
-        ExFreePool( FCB->DisconnectOptions );
+    if (FCB->DisconnectOptions)
+        ExFreePoolWithTag(FCB->DisconnectOptions, TAG_AFD_DISCONNECT_OPTIONS);
 
-    if( FCB->LocalAddress )
-        ExFreePool( FCB->LocalAddress );
+    if (FCB->LocalAddress)
+        ExFreePoolWithTag(FCB->LocalAddress, TAG_AFD_TRANSPORT_ADDRESS);
 
-    if( FCB->RemoteAddress )
-        ExFreePool( FCB->RemoteAddress );
+    if (FCB->RemoteAddress)
+        ExFreePoolWithTag(FCB->RemoteAddress, TAG_AFD_TRANSPORT_ADDRESS);
 
     if( FCB->Connection.Object )
     {
@@ -554,10 +570,12 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
     }
 
-    if( FCB->TdiDeviceName.Buffer )
-        ExFreePool(FCB->TdiDeviceName.Buffer);
+    if (FCB->TdiDeviceName.Buffer)
+    {
+        ExFreePoolWithTag(FCB->TdiDeviceName.Buffer, TAG_AFD_TRANSPORT_ADDRESS);
+    }
 
-    ExFreePool(FCB);
+    ExFreePoolWithTag(FCB, TAG_AFD_FCB);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -817,7 +835,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
             }
 
-            ExFreePool(FCB->RemoteAddress);
+            ExFreePoolWithTag(FCB->RemoteAddress, TAG_AFD_TRANSPORT_ADDRESS);
 
             FCB->RemoteAddress = NULL;
         }

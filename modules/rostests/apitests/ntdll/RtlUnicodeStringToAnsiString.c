@@ -5,8 +5,7 @@
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>
  */
 
-#include <apitest.h>
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 START_TEST(RtlUnicodeStringToAnsiString)
 {

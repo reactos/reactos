@@ -5,11 +5,7 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
-#include <assert.h>
+#include "precomp.h"
 
 HHOOK hMouseHookLL, hMouseHook;
 

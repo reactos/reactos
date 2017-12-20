@@ -36,67 +36,18 @@ Ext2FlushCompletionRoutine (
 }
 
 NTSTATUS
-Ext2FlushFiles(
-    IN PEXT2_IRP_CONTEXT    IrpContext,
-    IN PEXT2_VCB            Vcb,
-    IN BOOLEAN              bShutDown
-)
-{
-    IO_STATUS_BLOCK    IoStatus;
-
-    PEXT2_FCB       Fcb;
-    PLIST_ENTRY     ListEntry;
-
-    if (IsVcbReadOnly(Vcb)) {
-        return STATUS_SUCCESS;
-    }
-
-    IoStatus.Status = STATUS_SUCCESS;
-
-    DEBUG(DL_INF, ( "Flushing Files ...\n"));
-
-    // Flush all Fcbs in Vcb list queue.
-    for (ListEntry = Vcb->FcbList.Flink;
-            ListEntry != &Vcb->FcbList;
-            ListEntry = ListEntry->Flink ) {
-
-        Fcb = CONTAINING_RECORD(ListEntry, EXT2_FCB, Next);
-        ExAcquireResourceExclusiveLite(
-            &Fcb->MainResource, TRUE);
-        IoStatus.Status = Ext2FlushFile(IrpContext, Fcb, NULL);
-        ExReleaseResourceLite(&Fcb->MainResource);
-    }
-
-    return IoStatus.Status;
-}
-
-NTSTATUS
 Ext2FlushVolume (
     IN PEXT2_IRP_CONTEXT    IrpContext,
     IN PEXT2_VCB            Vcb,
     IN BOOLEAN              bShutDown
 )
 {
-    IO_STATUS_BLOCK    IoStatus;
-
     DEBUG(DL_INF, ( "Ext2FlushVolume: Flushing Vcb ...\n"));
 
     ExAcquireSharedStarveExclusive(&Vcb->PagingIoResource, TRUE);
     ExReleaseResourceLite(&Vcb->PagingIoResource);
 
-    /* acquire gd lock to avoid gd/bh creation */
-    ExAcquireResourceExclusiveLite(&Vcb->sbi.s_gd_lock, TRUE);
-
-    /* discard buffer_headers for group_desc */
-    Ext2DropBH(Vcb);
-
-    /* do flushing */
-    CcFlushCache(&(Vcb->SectionObject), NULL, 0, &IoStatus);
-
-    /* release gd lock */
-    ExReleaseResourceLite(&Vcb->sbi.s_gd_lock);
-
-    return IoStatus.Status;
+    return Ext2FlushVcb(Vcb);
 }
 
 NTSTATUS
@@ -106,13 +57,19 @@ Ext2FlushFile (
     IN PEXT2_CCB            Ccb
 )
 {
-    IO_STATUS_BLOCK     IoStatus;
+    IO_STATUS_BLOCK     IoStatus = {0};
 
     ASSERT(Fcb != NULL);
     ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
            (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
 
     _SEH2_TRY {
+
+        /* do nothing if target fie was deleted */
+        if (FlagOn(Fcb->Flags, FCB_DELETE_PENDING)) {
+            IoStatus.Status = STATUS_FILE_DELETED;
+            _SEH2_LEAVE;
+        }
 
         /* update timestamp and achieve attribute */
         if (Ccb != NULL) {
@@ -143,6 +100,41 @@ Ext2FlushFile (
 
         /* do cleanup here */
     } _SEH2_END;
+
+    return IoStatus.Status;
+}
+
+NTSTATUS
+Ext2FlushFiles(
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_VCB            Vcb,
+    IN BOOLEAN              bShutDown
+)
+{
+    IO_STATUS_BLOCK    IoStatus;
+
+    PEXT2_FCB       Fcb;
+    PLIST_ENTRY     ListEntry;
+
+    if (IsVcbReadOnly(Vcb)) {
+        return STATUS_SUCCESS;
+    }
+
+    IoStatus.Status = STATUS_SUCCESS;
+
+    DEBUG(DL_INF, ( "Flushing Files ...\n"));
+
+    // Flush all Fcbs in Vcb list queue.
+    for (ListEntry = Vcb->FcbList.Flink;
+            ListEntry != &Vcb->FcbList;
+            ListEntry = ListEntry->Flink ) {
+
+        Fcb = CONTAINING_RECORD(ListEntry, EXT2_FCB, Next);
+        ExAcquireResourceExclusiveLite(
+            &Fcb->MainResource, TRUE);
+        Ext2FlushFile(IrpContext, Fcb, NULL);
+        ExReleaseResourceLite(&Fcb->MainResource);
+    }
 
     return IoStatus.Status;
 }

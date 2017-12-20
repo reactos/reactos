@@ -18,14 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdio.h>
-//#include <windows.h>
-
-#include <wine/test.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <commctrl.h>
-#include "v6util.h"
+#include "precomp.h"
 
 static PVOID (WINAPI * pAlloc)(LONG);
 static PVOID (WINAPI * pReAlloc)(PVOID, LONG);

@@ -19,16 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <assert.h>
+#include "precomp.h"
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-
-#include "wine/test.h"
+#include <winnls.h>
 
 static inline BOOL match_off_by_n(int a, int b, unsigned int n)
 {

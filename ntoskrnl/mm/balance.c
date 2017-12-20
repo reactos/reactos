@@ -357,7 +357,7 @@ MiBalancerThread(PVOID Unused)
                 PEPROCESS Process = PsGetCurrentProcess();
 
                 /* Acquire PFN lock */
-                KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                KIRQL OldIrql = MiAcquirePfnLock();
                 PMMPDE pointerPde;
                 for (Address = (ULONG_PTR)MI_LOWEST_VAD_ADDRESS;
                         Address < (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
@@ -372,7 +372,7 @@ MiBalancerThread(PVOID Unused)
                     }
                 }
                 /* Release lock */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
             }
 #endif
             do
@@ -410,7 +410,7 @@ BOOLEAN MmRosNotifyAvailablePage(PFN_NUMBER Page)
     PMMPFN Pfn1;
 
     /* Make sure the PFN lock is held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     if (!MiMinimumAvailablePages)
     {

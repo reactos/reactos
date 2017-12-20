@@ -5,11 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/mmfuncs.h>
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 /*
 ULONG

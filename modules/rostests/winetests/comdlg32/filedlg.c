@@ -19,24 +19,10 @@
  *
  */
 
-//#include <windows.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <wine/test.h>
-
-#include <wingdi.h>
-#include <objbase.h>
-#include <cderr.h>
-#include <dlgs.h>
-#include <commdlg.h>
+#include "precomp.h"
 
 #include <shlguid.h>
-#define COBJMACROS
 #include <shobjidl.h>
-
 #include <ole2.h>
 #include <reactos/undocuser.h>
 

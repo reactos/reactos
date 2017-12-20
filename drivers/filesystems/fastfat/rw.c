@@ -673,6 +673,9 @@ VfatRead(
             Status = /*STATUS_END_OF_FILE*/STATUS_SUCCESS;
         }
 
+        vfatAddToStat(IrpContext->DeviceExt, Base.UserFileReads, 1);
+        vfatAddToStat(IrpContext->DeviceExt, Base.UserFileReadBytes, Length);
+
         _SEH2_TRY
         {
             if (IrpContext->FileObject->PrivateCacheMap == NULL)
@@ -722,8 +725,16 @@ VfatRead(
             Length = (ULONG)(ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
         }
 
-        vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReads, 1);
-        vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReadBytes, Length);
+        if (!IsVolume)
+        {
+            vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReads, 1);
+            vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReadBytes, Length);
+        }
+        else
+        {
+            vfatAddToStat(IrpContext->DeviceExt, Base.MetaDataReads, 1);
+            vfatAddToStat(IrpContext->DeviceExt, Base.MetaDataReadBytes, Length);
+        }
 
         Status = VfatReadFileData(IrpContext, Length, ByteOffset, &ReturnedLength);
         if (NT_SUCCESS(Status))
@@ -954,6 +965,9 @@ VfatWrite(
     {
         // cached write
 
+        vfatAddToStat(IrpContext->DeviceExt, Base.UserFileWrites, 1);
+        vfatAddToStat(IrpContext->DeviceExt, Base.UserFileWriteBytes, Length);
+
         _SEH2_TRY
         {
             if (IrpContext->FileObject->PrivateCacheMap == NULL)
@@ -1006,8 +1020,16 @@ VfatWrite(
             CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
         }
 
-        vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedWrites, 1);
-        vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedWriteBytes, Length);
+        if (!IsVolume)
+        {
+            vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedWrites, 1);
+            vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedWriteBytes, Length);
+        }
+        else
+        {
+            vfatAddToStat(IrpContext->DeviceExt, Base.MetaDataWrites, 1);
+            vfatAddToStat(IrpContext->DeviceExt, Base.MetaDataWriteBytes, Length);
+        }
 
         Status = VfatWriteFileData(IrpContext, Length, ByteOffset);
         if (NT_SUCCESS(Status))

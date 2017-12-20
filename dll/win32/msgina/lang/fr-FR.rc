@@ -49,7 +49,7 @@ BEGIN
     PUSHBUTTON "Verrouiller l'ordinateur", IDC_LOCK, 4, 135, 82, 14
     PUSHBUTTON "Déconnecter", IDC_LOGOFF, 93, 135, 85, 14
     PUSHBUTTON "Éteindre", IDC_SHUTDOWN, 184, 135, 70, 14
-    PUSHBUTTON "Changer le mot de passe", IDC_CHANGEPWD, 10, 154, 76, 14
+    PUSHBUTTON "Changer le mot de passe", IDC_CHANGEPWD, 4, 154, 82, 14
     PUSHBUTTON "Gestionnaire de tâches", IDC_TASKMGR, 93, 154, 85, 14
     PUSHBUTTON "Annuler", IDCANCEL, 184, 154, 70, 14
 END

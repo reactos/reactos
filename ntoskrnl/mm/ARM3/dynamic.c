@@ -91,7 +91,7 @@ MmGetPhysicalMemoryRanges(VOID)
     //
     // Lock the PFN database
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     //
     // Make sure it hasn't changed before we had acquired the lock
@@ -121,6 +121,6 @@ MmGetPhysicalMemoryRanges(VOID)
     //
     // Release the lock and return
     //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
     return Buffer;
 }

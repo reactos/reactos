@@ -142,7 +142,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]öz nitelikler]] kütük ...\n\n\
         A     Belgeliklenebilir kütükler\n\
         H     Gizli kütükler\n\
         -     değil anlamına gelen ön ek\n"
-    STRING_DEL_HELP2 "Dizindeki tüm kütükler silinecek!\nEmin misiniz (Y/N)?"
+    STRING_DEL_HELP2 "Dizindeki tüm kütükler silinecek!\nEmin misiniz (Y/N)? "
     STRING_DEL_HELP3 "    %lu kütük silindi\n"
     STRING_DEL_HELP4 "    %lu kütük silindi\n"
     STRING_DELAY_HELP "n sâniye ya da milisâniye duraklat.\n\
@@ -218,12 +218,25 @@ PUSHD [yol | ..]\n\n\
                 Bir toplu iş kütüğünün dışında çalışırsa cmd.exe'den çıkacaktır.\n\
   çıkış kodu    Bu değer çıkışta ERRORLEVEL'e atanacaktır.\n"
     STRING_FOR_HELP1 "Bir takım kütükte tüm kütükler için belirtilen bir komut çalıştırır.\n\n\
-FOR %%değişken IN (takım) DO komut [değişkenler]\n\n\
-  %%değişken  Yerine geçebilir bir değişken belirtir.\n\
-  (takım)     Bir ya da daha çok kütük takımını belirtir. Umûmî arama damgaları kullanılabilir.\n\
+FOR %değişken IN (takım) DO komut [değişkenler]\n\
+FOR /L %değişken IN (start,step,end) DO komut [değişkenler]\n\
+FOR /D %değişken IN (takım) DO komut [değişkenler]\n\
+FOR /R [[drive:]path] IN (takım) DO komut [değişkenler]\n\
+FOR /F [""options""] IN (takım) DO komut [değişkenler]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %değişken   Yerine geçebilir bir değişken belirtir.\n\
+  (takım)     Bir ya da daha çok kütük takımını belirtir. Umûmî arama damgaları\n\
+              kullanılabilir.\n\
   komut       Tüm kütükler için yürütülecek komutu belirtir.\n\
   değişkenler Belirtilen komut için değişkenleri ya da seçenekleri belirtir.\n\n\
-FOR komutunu bir toplu iş kütüğünde kullanmak için %%değişken yerine %%%%değişken\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
+FOR komutunu bir toplu iş kütüğünde kullanmak için %değişken yerine %%değişken\n\
 belirtiniz.\n"
     STRING_FREE_HELP1 "\n%s sürücüsünde birim %-11s\n\
  Dizilik numarası %s\n\
@@ -371,8 +384,8 @@ REPLACE [sürücü1:][yol1]kütük adı [sürücü2:][yol2] [/P] [/R] [/S] [/W] 
     STRING_REPLACE_HELP6 "%s değiştir\n"
     STRING_REPLACE_HELP7 "Bir kütük eklenmedi\n"
     STRING_REPLACE_HELP8 "%lu kütük eklendi\n"
-    STRING_REPLACE_HELP9 "Ekle %s (E/H) "
-    STRING_REPLACE_HELP10 "Değiştir %s (E/H) "
+    STRING_REPLACE_HELP9 "Ekle %s (E/H)? "
+    STRING_REPLACE_HELP10 "Değiştir %s (E/H)? "
     STRING_REPLACE_HELP11 "%s ekleniyor\n"
     STRING_SHIFT_HELP "Bir toplu iş kütüğünde yerleri değiştirilebilir değişkenlerin konumunu değiştirir.\n\n\
 SHIFT [DOWN]"
@@ -495,7 +508,7 @@ başlık        Yeni başlık\n"
     STRING_COPY_ERROR4 "Yanlışlık: Daha bitirilmedi!\n"
     STRING_DATE_ERROR "Geçersiz târih."
     STRING_DEL_ERROR5 "%s kütüğü silinecek! "
-    STRING_DEL_ERROR6 "Emin misiniz (E/H)?"
+    STRING_DEL_ERROR6 "Emin misiniz (E/H)? "
     STRING_DEL_ERROR7 "Siliniyor: %s\n"
     STRING_ERROR_ERROR1 "Bilinmeyen yanlışlık! Yanlışlık kodu: 0x%lx\n"
     STRING_ERROR_ERROR2 "Yazım yanlışlığı"

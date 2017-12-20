@@ -24,8 +24,9 @@ Abstract:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFspDispatch (
-    IN PIRP_CONTEXT IrpContext
+    _In_ PVOID Context
     )
 
 /*++
@@ -48,7 +49,8 @@ Return Value:
 --*/
 
 {
-    THREAD_CONTEXT ThreadContext;
+    THREAD_CONTEXT ThreadContext = {0};
+    PIRP_CONTEXT IrpContext = Context;
     NTSTATUS Status;
 
     PIRP Irp = IrpContext->Irp;
@@ -94,7 +96,7 @@ Return Value:
 
         while (TRUE) {
 
-            try {
+            _SEH2_TRY {
 
                 //
                 //  Reinitialize for the next try at completing this
@@ -124,7 +126,7 @@ Return Value:
 
                 case IRP_MJ_CLOSE :
 
-                    ASSERT( FALSE );
+                    NT_ASSERT( FALSE );
                     break;
 
                 case IRP_MJ_READ :
@@ -174,7 +176,7 @@ Return Value:
 
                 case IRP_MJ_PNP :
 
-                    ASSERT( FALSE );
+                    NT_ASSERT( FALSE );
                     CdCommonPnp( IrpContext, Irp );
                     break;
 
@@ -184,10 +186,10 @@ Return Value:
                     CdCompleteRequest( IrpContext, Irp, Status );
                 }
 
-            } except( CdExceptionFilter( IrpContext, GetExceptionInformation() )) {
+            } _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() )) {
 
-                Status = CdProcessException( IrpContext, Irp, GetExceptionCode() );
-            }
+                Status = CdProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
+            } _SEH2_END;
 
             //
             //  Break out of the loop if we didn't get CANT_WAIT.
@@ -233,6 +235,12 @@ Return Value:
                 VolDo->OverflowQueueCount -= 1;
 
                 Entry = RemoveHeadList( &VolDo->OverflowQueue );
+
+            } else {
+
+                VolDo->PostedRequestCount -= 1;            
+
+                Entry = NULL;
             }
 
             KeReleaseSpinLock( &VolDo->OverflowQueueSpinLock, SavedIrql );
@@ -242,7 +250,10 @@ Return Value:
             //  the Ex Worker thread.
             //
 
-            if (Entry == NULL) { break; }
+            if (Entry == NULL) { 
+
+                break; 
+            }
 
             //
             //  Extract the IrpContext , Irp, set wait to TRUE, and loop.
@@ -254,20 +265,12 @@ Return Value:
 
             Irp = IrpContext->Irp;
             IrpSp = IoGetCurrentIrpStackLocation( Irp );
+            __analysis_assert( IrpSp != 0 );
 
             continue;
         }
 
         break;
-    }
-
-    //
-    //  Decrement the PostedRequestCount if there was a volume device object.
-    //
-
-    if (VolDo) {
-
-        InterlockedDecrement( &VolDo->PostedRequestCount );
     }
 
     return;

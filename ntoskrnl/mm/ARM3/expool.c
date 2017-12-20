@@ -460,6 +460,81 @@ ExpComputePartialHashForAddress(IN PVOID BaseAddress)
     return (Result >> 24) ^ (Result >> 16) ^ (Result >> 8) ^ Result;
 }
 
+#if DBG
+FORCEINLINE
+BOOLEAN
+ExpTagAllowPrint(CHAR Tag)
+{
+    if ((Tag >= 'a' && Tag <= 'z') ||
+        (Tag >= 'A' && Tag <= 'Z') ||
+        Tag == ' ')
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+VOID
+MiDumpNonPagedPoolConsumers(VOID)
+{
+    SIZE_T i;
+
+    DPRINT1("---------------------\n");
+    DPRINT1("Out of memory dumper!\n");
+
+    //
+    // We'll extract allocations for all the tracked pools
+    //
+    for (i = 0; i < PoolTrackTableSize; ++i)
+    {
+        PPOOL_TRACKER_TABLE TableEntry;
+
+        TableEntry = &PoolTrackTable[i];
+
+        //
+        // We only care about non paged
+        //
+        if (TableEntry->NonPagedBytes != 0)
+        {
+            //
+            // If there's a tag, attempt to do a pretty print
+            //
+            if (TableEntry->Key != 0 && TableEntry->Key != TAG_NONE)
+            {
+                CHAR Tag[4];
+
+                //
+                // Extract each 'component' and check whether they are printable
+                //
+                Tag[0] = TableEntry->Key & 0xFF;
+                Tag[1] = TableEntry->Key >> 8 & 0xFF;
+                Tag[2] = TableEntry->Key >> 16 & 0xFF;
+                Tag[3] = TableEntry->Key >> 24 & 0xFF;
+
+                if (ExpTagAllowPrint(Tag[0]) && ExpTagAllowPrint(Tag[1]) && ExpTagAllowPrint(Tag[2]) && ExpTagAllowPrint(Tag[3]))
+                {
+                    //
+                    // Print in reversed order to match what is in source code
+                    //
+                    DPRINT1("Tag: '%c%c%c%c', Size: %ld\n", Tag[3], Tag[2], Tag[1], Tag[0], TableEntry->NonPagedBytes);
+                }
+                else
+                {
+                    DPRINT1("Tag: %x, Size: %ld\n", TableEntry->Key, TableEntry->NonPagedBytes);
+                }
+            }
+            else
+            {
+                DPRINT1("Anon, Size: %ld\n", TableEntry->NonPagedBytes);
+            }
+        }
+    }
+
+    DPRINT1("---------------------\n");
+}
+#endif
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -1641,6 +1716,16 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         Entry = MiAllocatePoolPages(OriginalType, NumberOfBytes);
         if (!Entry)
         {
+#if DBG
+            //
+            // If non paged backed, display current consumption
+            //
+            if ((OriginalType & BASE_POOL_TYPE_MASK) == NonPagedPool)
+            {
+                MiDumpNonPagedPoolConsumers();
+            }
+#endif
+
             //
             // Must succeed pool is deprecated, but still supported. These allocation
             // failures must cause an immediate bugcheck
@@ -1967,6 +2052,16 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     Entry = MiAllocatePoolPages(OriginalType, PAGE_SIZE);
     if (!Entry)
     {
+#if DBG
+        //
+        // If non paged backed, display current consumption
+        //
+        if ((OriginalType & BASE_POOL_TYPE_MASK) == NonPagedPool)
+        {
+            MiDumpNonPagedPoolConsumers();
+        }
+#endif
+
         //
         // Must succeed pool is deprecated, but still supported. These allocation
         // failures must cause an immediate bugcheck

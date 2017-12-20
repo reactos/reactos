@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Katayama Hirofumi MZ
  */
 
-#include <apitest.h>
-#include <wincon.h>
-#include <winnls.h>
+#include "precomp.h"
 
 #define okCURSOR(hCon, c) do { \
   CONSOLE_SCREEN_BUFFER_INFO __sbi; \

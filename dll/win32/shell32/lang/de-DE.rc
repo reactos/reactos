@@ -684,6 +684,8 @@ BEGIN
     IDS_FORMATDRIVE "Formatieren..."
     IDS_RENAME "Umbenennen"
     IDS_PASTE "Einfügen"
+    IDS_EJECT "Auswerfen"
+    IDS_DISCONNECT "Trennen"
 
     IDS_CREATEFOLDER_DENIED " Der Ordner kann nicht erstellt werden '%1'"
     IDS_CREATEFOLDER_CAPTION " Der Ordner kann nicht erstellt werden."
@@ -776,6 +778,12 @@ BEGIN
     IDS_PICK_ICON_TITLE "Symbol auswählen"
     IDS_PICK_ICON_FILTER "Symboldateien (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Alle Dateien (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Programme (*.exe)\0*.exe\0Alle Dateien (*.*)\0*.*\0"
+
+    IDS_CANTLOCKVOLUME "Sperren des Volumes nicht möglich (Fehlercode: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Ausbinden des Volumes nicht möglich (Fehlercode: %lu)."
+    IDS_CANTEJECTMEDIA "Auswerfen des Mediums nicht möglich (Fehlercode: %lu)."
+    IDS_CANTSHOWPROPERTIES "Unable to show properties (Fehlercode: %lu)."
+    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     IDS_DIRECTORY "Dateiordner"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"

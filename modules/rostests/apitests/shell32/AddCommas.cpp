@@ -5,14 +5,13 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <windef.h>
+#include "shelltest.h"
+
 #include <winnls.h>
 #include <bcrypt.h>
-#include <ntstatus.h>
 #include <strsafe.h>
 
-DECLSPEC_IMPORT LPWSTR WINAPI AddCommasW(DWORD lValue, LPWSTR lpNumber);
+extern "C" DECLSPEC_IMPORT LPWSTR WINAPI AddCommasW(DWORD lValue, LPWSTR lpNumber);
 
 START_TEST(AddCommas)
 {

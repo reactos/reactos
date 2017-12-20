@@ -4504,6 +4504,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     }
     else
     {
+        UNICODE_STRING NameW;
         PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
         // Need hdev, when freetype is loaded need to create DEVOBJ for
         // Consumer and Producer.
@@ -4517,6 +4518,17 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
             FontGdi->RequestWeight = pLogFont->lfWeight;
         else
             FontGdi->RequestWeight = FW_NORMAL;
+
+        /* store the localized family name */
+        RtlInitUnicodeString(&NameW, NULL);
+        Status = IntGetFontLocalizedName(&NameW, FontGdi->SharedFace,
+                                         TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+        if (NT_SUCCESS(Status))
+        {
+            RtlCopyMemory(TextObj->FaceName, NameW.Buffer, NameW.Length);
+            TextObj->FaceName[NameW.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            RtlFreeUnicodeString(&NameW);
+        }
 
         Face = FontGdi->SharedFace->Face;
 

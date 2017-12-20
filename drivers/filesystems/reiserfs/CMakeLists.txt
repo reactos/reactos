@@ -78,10 +78,11 @@ list(APPEND SOURCE
 
 add_library(reiserfs SHARED ${SOURCE} src/rfsd.rc)
 
-if(NOT MSVC)
-    add_target_compile_flags(reiserfs "-Wno-pointer-sign -Wno-unused-function")
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_target_compile_flags(reiserfs "-Wno-unused-but-set-variable -Wno-unused-variable -Wno-missing-braces -D__GCC__")
+if(USE_CLANG_CL OR (NOT MSVC))
+    add_target_compile_flags(reiserfs "-Wno-missing-braces -Wno-pointer-sign")
+    add_target_compile_flags(reiserfs "-Wno-unused-function -Wno-unused-variable")
+    if(NOT USE_CLANG_CL)
+        add_target_compile_flags(reiserfs "-Wno-unused-but-set-variable -D__GCC__")
     endif()
 else()
     #disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
@@ -94,4 +95,4 @@ add_definitions(-D__KERNEL__)
 set_module_type(reiserfs kernelmodedriver)
 add_importlibs(reiserfs ntoskrnl hal)
 add_pch(reiserfs inc/rfsd.h SOURCE)
-add_cd_file(TARGET reiserfs DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_cd_file(TARGET reiserfs DESTINATION reactos/system32/drivers FOR all)

@@ -170,6 +170,12 @@ typedef enum GDILoObjType
     GDILoObjType_LO_METADC16_TYPE = 0x660000
 } GDILOOBJTYPE, *PGDILOOBJTYPE;
 
+/**
+       World Transform modification modes
+       See [MS-EMF] Section 2.1.24
+*/
+#define MWT_SET 0x04
+
 #define GdiWorldSpaceToPageSpace    0x203
 #define GdiWorldSpaceToDeviceSpace  0x204
 #define GdiPageSpaceToDeviceSpace   0x304

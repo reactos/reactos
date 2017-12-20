@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/mainwnd.c
  * PURPOSE:     Main window message handler
- * COPYRIGHT:   Copyright 2006-20015 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-2017 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -306,7 +306,7 @@ pCreateToolbar(PMAIN_WND_INFO Info)
 static BOOL
 CreateStatusBar(PMAIN_WND_INFO Info)
 {
-    INT StatWidths[] = {110, -1}; /* widths of status bar */
+    INT StatWidths[] = {130, -1}; /* widths of status bar */
 
     Info->hStatus = CreateWindowEx(0,
                                    STATUSCLASSNAME,

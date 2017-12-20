@@ -7,6 +7,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 class CToolBox : public CWindowImpl<CMainWindow>
 {
 public:

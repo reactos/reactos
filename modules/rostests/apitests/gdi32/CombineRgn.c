@@ -5,8 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-#include <windows.h>
+#include "precomp.h"
 
 typedef struct _RECT_TEST
 {

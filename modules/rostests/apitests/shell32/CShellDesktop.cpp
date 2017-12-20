@@ -7,15 +7,9 @@
  */
 
 #include "shelltest.h"
-#include <atlbase.h>
-#include <atlcom.h>
-#include <strsafe.h>
+
 #include <ndk/rtlfuncs.h>
-
-#define NDEBUG
-#include <debug.h>
 #include <shellutils.h>
-
 
 // We would normally use S_LESSTHAN and S_GREATERTHAN, but w2k3 returns numbers like 3 and -3...
 // So instead we check on the sign bit (compare result is the low word of the hresult).

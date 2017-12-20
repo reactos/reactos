@@ -639,12 +639,12 @@ MiResolveDemandZeroFault(IN PVOID Address,
     if (OldIrql == MM_NOIRQL)
     {
         /* Acquire it and remember we should release it after */
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
         HaveLock = TRUE;
     }
 
     /* We either manually locked the PFN DB, or already came with it locked */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
     ASSERT(PointerPte->u.Hard.Valid == 0);
 
     /* Assert we have enough pages */
@@ -693,7 +693,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     if (HaveLock)
     {
         /* Release it */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
 
         /* Update performance counters */
         if (Process > HYDRA_PROCESS) Process->NumberOfPrivatePages++;
@@ -767,7 +767,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     BOOLEAN OriginalProtection, DirtyPage;
 
     /* Must be called with an valid prototype PTE, with the PFN lock held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
     ASSERT(PointerProtoPte->u.Hard.Valid == 1);
 
     /* Get the page */
@@ -829,7 +829,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     }
 
     /* Release the PFN lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     /* Remove special/caching bits */
     Protection &= ~MM_PROTECT_SPECIAL;
@@ -896,7 +896,7 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     ASSERT(*OldIrql != MM_NOIRQL);
 
     /* We must hold the PFN lock */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* Some sanity checks */
     ASSERT(TempPte.u.Hard.Valid == 0);
@@ -923,13 +923,13 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     MI_WRITE_INVALID_PTE(PointerPte, TempPte);
 
     /* Release the PFN lock while we proceed */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, *OldIrql);
+    MiReleasePfnLock(*OldIrql);
 
     /* Do the paging IO */
     Status = MiReadPageFile(Page, PageFileIndex, PageFileOffset);
 
     /* Lock the PFN database again */
-    *OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    *OldIrql = MiAcquirePfnLock();
 
     /* Nobody should have changed that while we were not looking */
     ASSERT(Pfn1->u3.e1.ReadInProgress == 1);
@@ -1110,7 +1110,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     ULONG Protection;
 
     /* Must be called with an invalid, prototype PTE, with the PFN lock held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(PointerPte->u.Soft.Prototype == 1);
 
@@ -1140,7 +1140,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     {
         /* Release the lock */
         DPRINT1("Access on reserved section?\n");
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         return STATUS_ACCESS_VIOLATION;
     }
 
@@ -1197,7 +1197,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         }
 
         /* Lock again the PFN lock, MiResolveProtoPteFault unlocked it */
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
 
         /* And re-read the proto PTE */
         TempPte = *PointerProtoPte;
@@ -1240,7 +1240,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         MI_WRITE_VALID_PTE(PointerPte, PteContents);
 
         /* The caller expects us to release the PFN lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         return Status;
     }
 
@@ -1334,7 +1334,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         if (Address >= MmSystemRangeStart)
         {
             /* Lock the PFN database */
-            LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            LockIrql = MiAcquirePfnLock();
 
             /* Has the PTE been made valid yet? */
             if (!SuperProtoPte->u.Hard.Valid)
@@ -1385,7 +1385,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
             ProcessedPtes = 0;
 
             /* Lock the PFN database */
-            LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            LockIrql = MiAcquirePfnLock();
 
             /* We only handle the valid path */
             ASSERT(SuperProtoPte->u.Hard.Valid == 1);
@@ -1522,14 +1522,14 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
             {
                 /* We had a locked PFN, so acquire the PFN lock to dereference it */
                 ASSERT(PointerProtoPte != NULL);
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                OldIrql = MiAcquirePfnLock();
 
                 /* Dereference the locked PFN */
                 MiDereferencePfnAndDropLockCount(OutPfn);
                 ASSERT(OutPfn->u3.e2.ReferenceCount >= 1);
 
                 /* And now release the lock */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
             }
 
             /* Complete this as a transition fault */
@@ -1548,7 +1548,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         KEVENT CurrentPageEvent;
 
         /* Lock the PFN database */
-        LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        LockIrql = MiAcquirePfnLock();
 
         /* Resolve */
         Status = MiResolveTransitionFault(StoreInstruction, Address, PointerPte, Process, LockIrql, &InPageBlock);
@@ -1564,7 +1564,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         }
 
         /* And now release the lock and leave*/
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
+        MiReleasePfnLock(LockIrql);
 
         if (InPageBlock != NULL)
         {
@@ -1587,13 +1587,13 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     if (TempPte.u.Soft.PageFileHigh != 0)
     {
         /* Lock the PFN database */
-        LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        LockIrql = MiAcquirePfnLock();
 
         /* Resolve */
         Status = MiResolvePageFileFault(StoreInstruction, Address, PointerPte, Process, &LockIrql);
 
         /* And now release the lock and leave*/
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
+        MiReleasePfnLock(LockIrql);
 
         ASSERT(OldIrql == KeGetCurrentIrql());
         ASSERT(OldIrql <= APC_LEVEL);
@@ -1782,7 +1782,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             if (!IsSessionAddress)
             {
                 /* Check if the PTE is still valid under PFN lock */
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                OldIrql = MiAcquirePfnLock();
                 TempPte = *PointerPte;
                 if (TempPte.u.Hard.Valid)
                 {
@@ -1805,7 +1805,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                 }
 
                 /* Release PFN lock and return all good */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
                 return STATUS_SUCCESS;
             }
         }
@@ -2155,7 +2155,7 @@ UserFault:
                 PFN_NUMBER PageFrameIndex, OldPageFrameIndex;
                 PMMPFN Pfn1;
 
-                LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                LockIrql = MiAcquirePfnLock();
 
                 ASSERT(MmAvailablePages > 0);
 
@@ -2180,7 +2180,7 @@ UserFault:
 
                 MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
+                MiReleasePfnLock(LockIrql);
 
                 /* Return the status */
                 MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
@@ -2290,7 +2290,7 @@ UserFault:
             }
 
             /* Lock the PFN database since we're going to grab a page */
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            OldIrql = MiAcquirePfnLock();
 
             /* Make sure we have enough pages */
             ASSERT(MmAvailablePages >= 32);
@@ -2307,20 +2307,20 @@ UserFault:
                 ASSERT(PageFrameIndex);
 
                 /* Release the lock since we need to do some zeroing */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
 
                 /* Zero out the page, since it's for user-mode */
                 MiZeroPfn(PageFrameIndex);
 
                 /* Grab the lock again so we can initialize the PFN entry */
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                OldIrql = MiAcquirePfnLock();
             }
 
             /* Initialize the PFN entry now */
             MiInitializePfn(PageFrameIndex, PointerPte, 1);
 
             /* And we're done with the lock */
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiReleasePfnLock(OldIrql);
 
             /* Increment the count of pages in the process */
             CurrentProcess->NumberOfPrivatePages++;

@@ -2,7 +2,7 @@
 Name = Npackd
 Version = 1.23
 License = GPLv3
-Description = A powerful packet manager that offers software in different versions.
+Description = Npackd (pronounced "unpacked") is a GPLv3 licensed installer/application store/package manager/marketplace for applications for Windows.
 Size = 8.1 MiB
 Category = 5
 URLSite = http://npackd.appspot.com

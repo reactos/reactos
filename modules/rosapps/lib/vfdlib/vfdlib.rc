@@ -1,0 +1,219 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "vfdguirc.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Æ­°Ä×Ù resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(932)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "vfdguirc.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_OPENDIALOG DIALOGEX 0, 0, 250, 150
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Open Virtual Floppy Image"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Image File:",IDC_IMAGEFILE_LABEL,7,7,52,12,
+                    SS_CENTERIMAGE
+    EDITTEXT        IDC_IMAGEFILE,60,7,130,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BROWSE,193,7,50,14
+    LTEXT           "Description:",IDC_IMAGEDESC_LABEL,7,27,52,8
+    EDITTEXT        IDC_IMAGEFILE_DESC,60,27,183,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "additional information",IDC_IMAGEFILE_HINT,60,43,183,8
+    LTEXT           "Disk Type:",IDC_DISKTYPE_LABEL,7,59,52,10
+    CONTROL         "&FILE",IDC_DISKTYPE_FILE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,60,59,38,10
+    CONTROL         "&RAM",IDC_DISKTYPE_RAM,"Button",BS_AUTORADIOBUTTON,99,
+                    59,38,10
+    LTEXT           "&Media Type:",IDC_MEDIATYPE_LABEL,7,75,52,12,
+                    SS_CENTERIMAGE
+    COMBOBOX        IDC_MEDIATYPE,59,75,80,84,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "&Open",IDOK,72,129,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,127,129,50,14
+    CONTROL         "&Write Protect",IDC_OPEN_PROTECTED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,59,95,184,10
+END
+
+IDD_PROPDIALOG DIALOGEX 0, 0, 226, 215
+STYLE WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_CONTEXTHELP
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_VFD_ICON,IDC_STATIC,7,7,20,20
+    CTEXT           "Virtual Floppy Drive for Windows",IDC_PROPERTY_TITLE,29,
+                    10,168,8,SS_CENTERIMAGE
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,32,212,1
+    LTEXT           "Image File:",IDC_IMAGEFILE_LABEL,7,40,50,8
+    EDITTEXT        IDC_IMAGEFILE,58,40,161,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Description:",IDC_IMAGEDESC_LABEL,7,58,50,8
+    EDITTEXT        IDC_IMAGEFILE_DESC,58,58,161,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Disk Type:",IDC_DISKTYPE_LABEL,7,76,50,8
+    EDITTEXT        IDC_DISKTYPE,58,76,161,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Media Type:",IDC_MEDIATYPE_LABEL,7,94,50,8
+    EDITTEXT        IDC_MEDIATYPE,58,94,161,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "&Write Protect",IDC_WRITE_PROTECTED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,58,112,161,8
+    PUSHBUTTON      "&Open",IDC_OPEN,7,127,50,14
+    PUSHBUTTON      "&Save",IDC_SAVE,61,127,50,14
+    PUSHBUTTON      "&Close",IDC_CLOSE,115,127,50,14
+    PUSHBUTTON      "&Format",IDC_FORMAT,169,127,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,148,212,1
+    PUSHBUTTON      "&VFD Control Panel",IDC_CONTROL,139,192,80,14
+    CTEXT           "Copyright (c) 2003-2008 Ken Kato",IDC_COPYRIGHT_STR,29,
+                    20,168,8,SS_CENTERIMAGE
+END
+
+IDD_SAVEDIALOG DIALOGEX 0, 0, 250, 150
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Save Virtual Floppy Image"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Image File:",IDC_IMAGEFILE_LABEL,7,7,52,12
+    EDITTEXT        IDC_IMAGEFILE,60,7,183,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Disk Type:",IDC_DISKTYPE_LABEL,7,25,52,8,SS_NOPREFIX
+    EDITTEXT        IDC_DISKTYPE,60,25,58,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Media Type:",IDC_MEDIATYPE_LABEL,120,25,52,8,
+                    SS_NOPREFIX
+    EDITTEXT        IDC_MEDIATYPE,173,25,70,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Target &File:",IDC_TARGETFILE_LABEL,7,43,52,12,
+                    SS_CENTERIMAGE
+    EDITTEXT        IDC_TARGETFILE,60,43,131,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BROWSE,193,43,50,14
+    LTEXT           "Description:",IDC_IMAGEDESC_LABEL,7,64,52,8,SS_NOPREFIX
+    EDITTEXT        IDC_IMAGEFILE_DESC,60,64,183,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "&Overwrite an existing file",IDC_OVERWRITE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,60,95,183,10
+    CONTROL         "&Truncate an existing file",IDC_TRUNCATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,60,111,183,10
+    DEFPUSHBUTTON   "&Save",IDOK,72,129,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,127,129,50,14
+    LTEXT           "additional information",IDC_IMAGEFILE_HINT,60,80,183,8,
+                    SS_NOPREFIX
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_OPENDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_PROPDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 219
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 206
+    END
+
+    IDD_SAVEDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+#ifndef __REACTOS__
+IDI_VFD_ICON            ICON    DISCARDABLE     "res\\vfd.ico"
+IDI_IMAGE_ICON          ICON    DISCARDABLE     "res\\image.ico"
+IDI_CONFIG_ICON         ICON    DISCARDABLE     "res\\config.ico"
+#else
+IDI_VFD_ICON            ICON    DISCARDABLE     "res/vfd.ico"
+IDI_IMAGE_ICON          ICON    DISCARDABLE     "res/image.ico"
+IDI_CONFIG_ICON         ICON    DISCARDABLE     "res/config.ico"
+#endif
+#endif    // Æ­°Ä×Ù resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
+#ifdef __REACTOS__
+#include <vfdmsg_lib.rc>
+#endif

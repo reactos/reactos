@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern ULONG ObpAccessProtectCloseBit;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 BOOLEAN
@@ -193,6 +195,112 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
 
     /* Return the old object */
     return OldObject;
+}
+
+NTSTATUS
+NTAPI
+ObReferenceFileObjectForWrite(IN HANDLE Handle,
+                              IN KPROCESSOR_MODE AccessMode,
+                              OUT PFILE_OBJECT *FileObject,
+                              OUT POBJECT_HANDLE_INFORMATION HandleInformation)
+{
+    NTSTATUS Status;
+    PHANDLE_TABLE HandleTable;
+    POBJECT_HEADER ObjectHeader;
+    PHANDLE_TABLE_ENTRY HandleEntry;
+    ACCESS_MASK GrantedAccess, DesiredAccess;
+
+    /* Assume failure */
+    *FileObject = NULL;
+
+    /* Check if this is a special handle */
+    if (HandleToLong(Handle) < 0)
+    {
+        /* Make sure we have a valid kernel handle */
+        if (AccessMode != KernelMode || Handle == NtCurrentProcess() || Handle == NtCurrentThread())
+        {
+            return STATUS_INVALID_HANDLE;
+        }
+
+        /* Use the kernel handle table and get the actual handle value */
+        Handle = ObKernelHandleToHandle(Handle);
+        HandleTable = ObpKernelHandleTable;
+    }
+    else
+    {
+        /* Otherwise use this process's handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    ASSERT(HandleTable != NULL);
+    KeEnterCriticalRegion();
+
+    /* Get the handle entry */
+    HandleEntry = ExMapHandleToPointer(HandleTable, Handle);
+    if (HandleEntry)
+    {
+        /* Get the object header and validate the type*/
+        ObjectHeader = ObpGetHandleObject(HandleEntry);
+
+        /* Get the desired access from the file object */
+        if (!NT_SUCCESS(IoComputeDesiredAccessFileObject((PFILE_OBJECT)&ObjectHeader->Body,
+                        &DesiredAccess)))
+        {
+            Status = STATUS_OBJECT_TYPE_MISMATCH;
+        }
+        else
+        {
+            /* Extract the granted access from the handle entry */
+            if (BooleanFlagOn(NtGlobalFlag, FLG_KERNEL_STACK_TRACE_DB))
+            {
+                /* FIXME: Translate granted access */
+                GrantedAccess = HandleEntry->GrantedAccess;
+            }
+            else
+            {
+                GrantedAccess = HandleEntry->GrantedAccess & ~ObpAccessProtectCloseBit;
+            }
+
+            /* FIXME: Get handle information for audit */
+
+            HandleInformation->GrantedAccess = GrantedAccess;
+
+            /* FIXME: Get handle attributes */
+            HandleInformation->HandleAttributes = 0;
+
+            /* Do granted and desired access match? */
+            if (GrantedAccess & DesiredAccess)
+            {
+                /* FIXME: Audit access if required */
+
+                /* Reference the object directly since we have its header */
+                InterlockedIncrement(&ObjectHeader->PointerCount);
+
+                /* Unlock the handle */
+                ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+                KeLeaveCriticalRegion();
+
+                *FileObject = (PFILE_OBJECT)&ObjectHeader->Body;
+
+                /* Return success */
+                ASSERT(*FileObject != NULL);
+                return STATUS_SUCCESS;
+            }
+
+            /* No match, deny write access */
+            Status = STATUS_ACCESS_DENIED;
+
+            ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+        }
+    }
+    else
+    {
+        Status = STATUS_INVALID_HANDLE;
+    }
+
+    /* Return failure status */
+    KeLeaveCriticalRegion();
+    return Status;
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/

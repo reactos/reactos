@@ -9,9 +9,14 @@ reactos/sdk/lib/fslib/btrfslib              # Synced to 1.0.1
 
 The following FSD are shared with: http://www.ext2fsd.com/
 
-reactos/drivers/filesystems/ext2            # Synced to 0.68, with b7657e5, e7c1142, 785943f
+reactos/drivers/filesystems/ext2            # Synced to 0.69
 
 The following FSD are shared with: http://www.acc.umu.se/~bosse/
 
 reactos/drivers/filesystems/ffs             # Synced to 0.5.2
 reactos/drivers/filesystems/reiserfs        # Synced to 0.26
+
+The following FSD are shared with: https://github.com/Microsoft/Windows-driver-samples
+
+reactos/drivers/filesystems/fastfat_new     # Synced to 2817004
+reactos/drivers/filesystems/cdfs_new        # Synced to 2817004

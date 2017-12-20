@@ -17,11 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/test.h>
-
-//#include <windows.h>
-#include <winuser.h>
-#include <commctrl.h>
+#include "precomp.h"
 
 #define expect(expected, got) ok(expected == got, "expected %d, got %d\n", expected,got)
 

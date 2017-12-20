@@ -1,7 +1,4 @@
 #include "shelltest.h"
-#include <atlbase.h>
-#include <atlcom.h>
-
 
 // + Adapted from https://blogs.msdn.microsoft.com/oldnewthing/20130503-00/?p=4463/
 // In short: We want to create an IDLIST from an item that does not exist,

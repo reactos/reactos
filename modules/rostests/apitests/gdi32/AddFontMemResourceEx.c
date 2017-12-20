@@ -9,10 +9,7 @@
  *                    Captured from firefox, embedded on reactos.org
  */
 
-
-#include <apitest.h>
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
 
 typedef struct _fnt_res
 {

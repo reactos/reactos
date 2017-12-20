@@ -5,9 +5,7 @@
  * PROGRAMMER:      Jérôme Gardou <jerome.gardou@reactos.org>
  */
 
-#include <apitest.h>
-#include <winbase.h>
-#include <rtlfuncs.h>
+#include "precomp.h"
 
 #define ok_luid_equal(Luid, Expected)                                                                             \
     ok(RtlEqualLuid((Luid), (Expected)), "Got wrong LUID %08lx%08lx, expected (%08lx%08lx).\n", \

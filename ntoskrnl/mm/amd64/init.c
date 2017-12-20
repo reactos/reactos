@@ -610,9 +610,9 @@ MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Map the PDEs and PPEs for the pfn database (ignore holes) */
 #if (_MI_PAGING_LEVELS >= 3)
-    MiMapPPEs(MmPfnDatabase, (PUCHAR)MmPfnDatabase + MxPfnAllocation - 1);
+    MiMapPPEs(MmPfnDatabase, (PUCHAR)MmPfnDatabase + (MxPfnAllocation * PAGE_SIZE) - 1);
 #endif
-    MiMapPDEs(MmPfnDatabase, (PUCHAR)MmPfnDatabase + MxPfnAllocation - 1);
+    MiMapPDEs(MmPfnDatabase, (PUCHAR)MmPfnDatabase + (MxPfnAllocation * PAGE_SIZE) - 1);
 
     /* First initialize the color tables */
     MiInitializeColorTables();

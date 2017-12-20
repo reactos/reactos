@@ -5,6 +5,7 @@
  * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
+#pragma once
 
 /* TODO: Use HSDB instead of PDB */
 class CLayerStringList :

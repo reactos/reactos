@@ -218,9 +218,9 @@ MiMapLockedPagesInUserSpace(
 
         /* Acquire a share count */
         Pfn1 = MI_PFN_ELEMENT(PointerPde->u.Hard.PageFrameNumber);
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
         Pfn1->u2.ShareCount++;
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
 
         /* Next page */
         MdlPages++;
@@ -293,7 +293,7 @@ MiUnmapLockedPagesInUserSpace(
     ASSERT(Process->VadRoot.NodeHint != Vad);
 
     PointerPte = MiAddressToPte(BaseAddress);
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
     while (NumberOfPages != 0 &&
            *MdlPages != LIST_HEAD)
     {
@@ -336,7 +336,7 @@ MiUnmapLockedPagesInUserSpace(
     }
 
     KeFlushProcessTb();
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
     MiUnlockProcessWorkingSetUnsafe(Process, Thread);
     MmUnlockAddressSpace(&Process->Vm);
     ExFreePoolWithTag(Vad, 'ldaV');
@@ -560,7 +560,7 @@ MmFreePagesFromMdl(IN PMDL Mdl)
     //
     // Acquire PFN lock
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     //
     // Loop all the MDL pages
@@ -618,7 +618,7 @@ MmFreePagesFromMdl(IN PMDL Mdl)
     //
     // Release the lock
     //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     //
     // Remove the pages locked flag
@@ -1121,7 +1121,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Use the PFN lock
         //
         UsePfnLock = TRUE;
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
     }
     else
     {
@@ -1180,7 +1180,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                 //
                 // Release PFN lock
                 //
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
             }
             else
             {
@@ -1212,7 +1212,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                 //
                 // Grab the PFN lock
                 //
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                OldIrql = MiAcquirePfnLock();
             }
             else
             {
@@ -1250,7 +1250,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                             //
                             // Release PFN lock
                             //
-                            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                            MiReleasePfnLock(OldIrql);
                         }
                         else
                         {
@@ -1281,7 +1281,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                             //
                             // Grab the PFN lock
                             //
-                            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                            OldIrql = MiAcquirePfnLock();
                         }
                         else
                         {
@@ -1353,7 +1353,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         //
         // Release PFN lock
         //
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
     }
     else
     {
@@ -1381,7 +1381,7 @@ CleanupWithLock:
         //
         // Release PFN lock
         //
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
     }
     else
     {
@@ -1462,7 +1462,7 @@ MmUnlockPages(IN PMDL Mdl)
         //
         // Acquire PFN lock
         //
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
 
         //
         // Loop every page
@@ -1485,7 +1485,7 @@ MmUnlockPages(IN PMDL Mdl)
         //
         // Release the lock
         //
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
 
         //
         // Check if we have a process
@@ -1564,7 +1564,7 @@ MmUnlockPages(IN PMDL Mdl)
     //
     // Now grab the PFN lock for the actual unlock and dereference
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
     do
     {
         /* Get the current entry and reference count */
@@ -1575,7 +1575,7 @@ MmUnlockPages(IN PMDL Mdl)
     //
     // Release the lock
     //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     //
     // We're done

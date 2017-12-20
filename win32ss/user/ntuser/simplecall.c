@@ -113,6 +113,10 @@ NtUserCallNoParam(DWORD Routine)
       case NOPARAM_ROUTINE_ISCONSOLEMODE:
           RETURN( ScreenDeviceContext == NULL );
 
+      case NOPARAM_ROUTINE_UPDATEPERUSERIMMENABLING:
+          gpsi->dwSRVIFlags |= SRVINFO_IMM32; // Always set.
+          RETURN(1); // Always return TRUE.
+
       default:
          ERR("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
          EngSetLastError(ERROR_INVALID_PARAMETER);

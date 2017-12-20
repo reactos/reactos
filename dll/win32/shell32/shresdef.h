@@ -134,6 +134,11 @@
 #define IDS_RECYCLEBIN_LOCATION   153
 #define IDS_RECYCLEBIN_DISKSPACE  154
 #define IDS_OPEN_WITH_FILTER      155
+#define IDS_CANTLOCKVOLUME        156
+#define IDS_CANTDISMOUNTVOLUME    157
+#define IDS_CANTEJECTMEDIA        158
+#define IDS_CANTSHOWPROPERTIES    159
+#define IDS_CANTDISCONNECT        160
 
 /* Friendly File Type Names */
 #define IDS_DIRECTORY             200
@@ -205,6 +210,9 @@
 #define IDS_FILEOOP_FROM_TO      336
 #define IDS_FILEOOP_FROM         337
 #define IDS_FILEOOP_PREFLIGHT    338
+
+#define IDS_EJECT                339
+#define IDS_DISCONNECT           340
 
 #define IDS_MENU_EMPTY           34561
 

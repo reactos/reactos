@@ -7,19 +7,33 @@
 
 /* X86 opengl API entry points, fast forward to the current thread's dispatch table */
 #include <asm.inc>
+#include <ks386.inc>
+
+.data
+ASSUME nothing
+
+.align 16
 
 .code
-
-EXTERN _OglTlsIndex:DWORD
-EXTERN _TlsGetValue@4:PROC
 
 MACRO(USE_GL_FUNC, name, offset, stack)
 PUBLIC _gl&name&@&stack
 .PROC _gl&name&@&stack
-    push _OglTlsIndex
-    call _TlsGetValue@4
-    mov eax, [eax]
+
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
+
+    /* Get the TEB */
+    mov eax, fs:[TEB_SELF]
+    /* Get the GL table */
+    mov eax, [eax + TEB_GL_TABLE]
+
+    /* If we don't have a dispatch table, this is a nop */
+    test eax, eax
+    jz name&_fast_ret
+    /* Jump into the ICD */
     jmp dword ptr [eax+4*VAL(offset)]
+name&_fast_ret:
+    ret VAL(stack)
 .ENDP
 ENDM
 

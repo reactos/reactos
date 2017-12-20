@@ -746,7 +746,7 @@ typedef struct _KIPCR
             PVOID Used_Self;
         };
     };
-    struct _KPCR *Self;
+    struct _KPCR *SelfPcr;
     struct _KPRCB *Prcb;
     KIRQL Irql;
     ULONG IRR;

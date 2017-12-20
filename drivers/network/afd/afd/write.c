@@ -398,7 +398,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
             }
 
-            ExFreePool( TargetAddress );
+            ExFreePoolWithTag(TargetAddress, TAG_AFD_TDI_CONNECTION_INFORMATION);
 
             SocketStateUnlock(FCB);
 
@@ -597,7 +597,11 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->State == SOCKET_STATE_CREATED)
     {
-        if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
+        if (FCB->LocalAddress)
+        {
+            ExFreePoolWithTag(FCB->LocalAddress, TAG_AFD_TRANSPORT_ADDRESS);
+        }
+
         FCB->LocalAddress =
         TaBuildNullTransportAddress( ((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
                                       Address[0].AddressType );
@@ -660,7 +664,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             }
         }
 
-        ExFreePool(TargetAddress);
+        ExFreePoolWithTag(TargetAddress, TAG_AFD_TDI_CONNECTION_INFORMATION);
 
         SocketStateUnlock(FCB);
 

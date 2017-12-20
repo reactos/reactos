@@ -41,14 +41,15 @@ ULONG
 NTAPI
 KdpServiceDispatcher(ULONG Service,
                      PVOID Buffer1,
-                     ULONG Buffer1Length)
+                     ULONG Buffer1Length,
+                     KPROCESSOR_MODE PreviousMode)
 {
     ULONG Result = 0;
 
     switch (Service)
     {
         case BREAKPOINT_PRINT: /* DbgPrint */
-            Result = KdpPrintString(Buffer1, Buffer1Length);
+            Result = KdpPrintString(Buffer1, Buffer1Length, PreviousMode);
             break;
 
 #if DBG
@@ -145,7 +146,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             /* Print the string */
             KdpServiceDispatcher(BREAKPOINT_PRINT,
                                  (PVOID)ExceptionRecord->ExceptionInformation[1],
-                                 ExceptionRecord->ExceptionInformation[2]);
+                                 ExceptionRecord->ExceptionInformation[2],
+                                 PreviousMode);
 
             /* Return success */
             KeSetContextReturnRegister(Context, STATUS_SUCCESS);
@@ -153,11 +155,38 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
 #ifdef KDBG
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
+            PKD_SYMBOLS_INFO SymbolsInfo;
+            KD_SYMBOLS_INFO CapturedSymbolsInfo;
             PLDR_DATA_TABLE_ENTRY LdrEntry;
 
-            /* Load symbols. Currently implemented only for KDBG! */
-            if(KdbpSymFindModule(((PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2])->BaseOfDll, NULL, -1, &LdrEntry))
-                KdbSymProcessSymbols(LdrEntry);
+            SymbolsInfo = (PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2];
+            if (PreviousMode != KernelMode)
+            {
+                _SEH2_TRY
+                {
+                    ProbeForRead(SymbolsInfo,
+                                 sizeof(*SymbolsInfo),
+                                 1);
+                    RtlCopyMemory(&CapturedSymbolsInfo,
+                                  SymbolsInfo,
+                                  sizeof(*SymbolsInfo));
+                    SymbolsInfo = &CapturedSymbolsInfo;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    SymbolsInfo = NULL;
+                }
+                _SEH2_END;
+            }
+
+            if (SymbolsInfo != NULL)
+            {
+                /* Load symbols. Currently implemented only for KDBG! */
+                if (KdbpSymFindModule(SymbolsInfo->BaseOfDll, NULL, -1, &LdrEntry))
+                {
+                    KdbSymProcessSymbols(LdrEntry);
+                }
+            }
         }
         else if (ExceptionCommand == BREAKPOINT_PROMPT)
         {
@@ -175,7 +204,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                                     (USHORT)ExceptionRecord->
                                     ExceptionInformation[2],
                                     OutString,
-                                    OutStringLength);
+                                    OutStringLength,
+                                    PreviousMode);
 
             /* Return the number of characters that we received */
             Context->Eax = ReturnValue;
@@ -465,7 +495,10 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
                      IN KPROCESSOR_MODE PreviousMode)
 {
     /* HACK */
-    return KdpServiceDispatcher(Command, InputBuffer, InputBufferLength);
+    return KdpServiceDispatcher(Command,
+                                InputBuffer,
+                                InputBufferLength,
+                                PreviousMode);
 }
 
 PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;

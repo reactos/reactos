@@ -6,6 +6,8 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
+#pragma once
+
 //
 // Default size of the DbgPrint log buffer
 //

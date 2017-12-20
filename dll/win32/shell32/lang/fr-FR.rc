@@ -683,6 +683,8 @@ BEGIN
     IDS_FORMATDRIVE "Formater..."
     IDS_RENAME "Renommer"
     IDS_PASTE "Insérer"
+    IDS_EJECT "Éjecter"
+    IDS_DISCONNECT "Déconnecter"
 
     IDS_CREATEFOLDER_DENIED "Impossible de créer le dossier '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossible de créer un dossier"
@@ -751,7 +753,7 @@ BEGIN
     IDS_NEWFOLDER "Nouveau dossier"
 
     IDS_DRIVE_FIXED "Disque local"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "Lecteur CD"
     IDS_DRIVE_NETWORK "Disque réseau"
     IDS_DRIVE_FLOPPY "Disquette 3.5"
     IDS_DRIVE_REMOVABLE "Disque amovible"
@@ -776,6 +778,12 @@ BEGIN
     IDS_PICK_ICON_FILTER "Fichiers d'icônes (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Fichiers exécutables (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
+    IDS_CANTLOCKVOLUME "Impossible de verrouiller le volume (code d'erreur : %lu)."
+    IDS_CANTDISMOUNTVOLUME "Impossible de démonter le volume (code d'erreur : %lu)."
+    IDS_CANTEJECTMEDIA "Impossible d'éjecter le média (code d'erreur : %lu)."
+    IDS_CANTSHOWPROPERTIES "Impossible de montrer les propriétés (code d'erreur : %lu)."
+    IDS_CANTDISCONNECT "Impossible de déconnecter (code d'erreur : %lu)."
+
     IDS_DIRECTORY "Dossier"
     IDS_BAT_FILE "Fichier Batch ReactOS"
     IDS_CMD_FILE "Script de commandes ReactOS"
@@ -799,7 +807,7 @@ BEGIN
     IDS_ANY_FILE "%s-file"	
 
     IDS_OPEN_VERB "Ouvrir"
-    IDS_EXPLORE_VERB "Explore"
+    IDS_EXPLORE_VERB "Explorer"
     IDS_RUNAS_VERB "Exécuter en tant que..."
     IDS_EDIT_VERB "Éditer"
     IDS_FIND_VERB "Chercher"

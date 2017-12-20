@@ -25,6 +25,7 @@ Signature = "$ReactOS$"
 6 = inf
 7 = bin
 8 = bin\testdata
+80 = bin\suppl
 9 = media
 10 = Microsoft.NET
 11 = Microsoft.NET\Framework

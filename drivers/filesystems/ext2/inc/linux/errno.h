@@ -61,7 +61,9 @@
 
 #define	EBFONT		59      /* Bad font file format */
 #define	ENOSTR		60      /* Device not a stream */
+#endif
 #define	ENODATA		61      /* No data available */
+#ifndef __REACTOS__
 #define	ETIME		62      /* Timer expired */
 #define	ENOSR		63      /* Out of streams resources */
 #define	ENONET		64      /* Machine is not on the network */

@@ -56,13 +56,6 @@ UnRegisterConWndClass(HINSTANCE hInstance);
 
 /* FUNCTIONS ******************************************************************/
 
-/* NOTE: Defined in conwnd.c */
-VOID
-GetScreenBufferSizeUnits(IN PCONSOLE_SCREEN_BUFFER Buffer,
-                         IN PGUI_CONSOLE_DATA GuiData,
-                         OUT PUINT WidthUnit,
-                         OUT PUINT HeightUnit);
-
 VOID
 GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData)
 {
@@ -76,20 +69,6 @@ GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData)
                      0, 0,
                      SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
     }
-}
-
-static VOID
-SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
-{
-    PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
-    UINT WidthUnit, HeightUnit;
-
-    GetScreenBufferSizeUnits(Buffer, GuiData, &WidthUnit, &HeightUnit);
-
-    Rect->left   = (SmallRect->Left       - Buffer->ViewOrigin.X) * WidthUnit ;
-    Rect->top    = (SmallRect->Top        - Buffer->ViewOrigin.Y) * HeightUnit;
-    Rect->right  = (SmallRect->Right  + 1 - Buffer->ViewOrigin.X) * WidthUnit ;
-    Rect->bottom = (SmallRect->Bottom + 1 - Buffer->ViewOrigin.Y) * HeightUnit;
 }
 
 static VOID

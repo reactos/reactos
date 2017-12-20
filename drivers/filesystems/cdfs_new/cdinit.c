@@ -21,36 +21,39 @@ Abstract:
 
 #define BugCheckFileId                   (CDFS_BUG_CHECK_CDINIT)
 
+//  Tell prefast the function type.
+DRIVER_INITIALIZE DriverEntry;
+
 NTSTATUS
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DriverEntry(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath
     );
+
+
+// tell prefast this is a driver unload function
+DRIVER_UNLOAD CdUnload;
 
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdUnload(
-    IN PDRIVER_OBJECT DriverObject
+    _In_ PDRIVER_OBJECT DriverObject
     );
 
 NTSTATUS
 CdInitializeGlobalData (
-    IN PDRIVER_OBJECT DriverObject,
-    IN PDEVICE_OBJECT FileSystemDeviceObject
-    );
-
-NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdShutdown (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PDEVICE_OBJECT FileSystemDeviceObject
+#ifdef __REACTOS__
+    ,
+    IN PDEVICE_OBJECT HddFileSystemDeviceObject
+#endif
     );
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(INIT, DriverEntry)
 #pragma alloc_text(PAGE, CdUnload)
-#pragma alloc_text(PAGE, CdShutdown)
 #pragma alloc_text(INIT, CdInitializeGlobalData)
 #endif
 
@@ -62,8 +65,8 @@ CdShutdown (
 NTSTATUS
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DriverEntry(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath
     )
 
 /*++
@@ -89,6 +92,12 @@ Return Value:
     NTSTATUS Status;
     UNICODE_STRING UnicodeString;
     PDEVICE_OBJECT CdfsFileSystemDeviceObject;
+    FS_FILTER_CALLBACKS FilterCallbacks;
+#ifdef __REACTOS__
+    PDEVICE_OBJECT HddFileSystemDeviceObject;
+#endif
+
+    UNREFERENCED_PARAMETER( RegistryPath );
 
     //
     // Create the device object.
@@ -107,7 +116,38 @@ Return Value:
     if (!NT_SUCCESS( Status )) {
         return Status;
     }
+
+#ifdef __REACTOS__
+    //
+    // Create the HDD device object.
+    //
+
+    RtlInitUnicodeString( &UnicodeString, L"\\CdfsHdd" );
+
+    Status = IoCreateDevice( DriverObject,
+                             0,
+                             &UnicodeString,
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0,
+                             FALSE,
+                             &HddFileSystemDeviceObject );
+
+    if (!NT_SUCCESS( Status )) {
+        IoDeleteDevice (CdfsFileSystemDeviceObject);
+        return Status;
+    }
+#endif
+
+#ifdef _MSC_VER
+#pragma prefast(push)
+#pragma prefast(disable: 28155, "the dispatch routine has the correct type, prefast is just being paranoid.")
+#pragma prefast(disable: 28168, "the dispatch routine has the correct type, prefast is just being paranoid.")
+#pragma prefast(disable: 28169, "the dispatch routine has the correct type, prefast is just being paranoid.")
+#pragma prefast(disable: 28175, "we're allowed to change these.")
+#endif
+
     DriverObject->DriverUnload = CdUnload;
+
     //
     //  Note that because of the way data caching is done, we set neither
     //  the Direct I/O or Buffered I/O bit in DeviceObject->Flags.  If
@@ -125,6 +165,7 @@ Return Value:
     DriverObject->MajorFunction[IRP_MJ_CREATE]                  =
     DriverObject->MajorFunction[IRP_MJ_CLOSE]                   =
     DriverObject->MajorFunction[IRP_MJ_READ]                    =
+    DriverObject->MajorFunction[IRP_MJ_WRITE]                   =
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]       =
     DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION]         =
     DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION]=
@@ -133,14 +174,34 @@ Return Value:
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]          =
     DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL]            =
     DriverObject->MajorFunction[IRP_MJ_CLEANUP]                 =
-    DriverObject->MajorFunction[IRP_MJ_PNP]                     = (PDRIVER_DISPATCH) CdFsdDispatch;
-    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN]                = CdShutdown;
+    DriverObject->MajorFunction[IRP_MJ_PNP]                     = 
+    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN]                = (PDRIVER_DISPATCH) CdFsdDispatch;
+#ifdef _MSC_VER
+#pragma prefast(pop)
 
+#pragma prefast(suppress: 28175, "this is a file system driver, we're allowed to touch FastIoDispatch.")
+#endif
     DriverObject->FastIoDispatch = &CdFastIoDispatch;
 
-    Status = IoRegisterShutdownNotification (CdfsFileSystemDeviceObject);
-    if (!NT_SUCCESS (Status)) {
-        IoDeleteDevice (CdfsFileSystemDeviceObject);
+    //
+    //  Initialize the filter callbacks we use.
+    //
+
+    RtlZeroMemory( &FilterCallbacks,
+                   sizeof(FS_FILTER_CALLBACKS) );
+
+    FilterCallbacks.SizeOfFsFilterCallbacks = sizeof(FS_FILTER_CALLBACKS);
+    FilterCallbacks.PreAcquireForSectionSynchronization = CdFilterCallbackAcquireForCreateSection;
+
+    Status = FsRtlRegisterFileSystemFilterCallbacks( DriverObject,
+                                                     &FilterCallbacks );
+
+    if (!NT_SUCCESS( Status )) {
+
+        IoDeleteDevice( CdfsFileSystemDeviceObject );
+#ifdef __REACTOS__
+        IoDeleteDevice (HddFileSystemDeviceObject);
+#endif
         return Status;
     }
 
@@ -148,9 +209,16 @@ Return Value:
     //  Initialize the global data structures
     //
 
+#ifndef __REACTOS__
     Status = CdInitializeGlobalData( DriverObject, CdfsFileSystemDeviceObject );
+#else
+    Status = CdInitializeGlobalData( DriverObject, CdfsFileSystemDeviceObject, HddFileSystemDeviceObject );
+#endif
     if (!NT_SUCCESS (Status)) {
         IoDeleteDevice (CdfsFileSystemDeviceObject);
+#ifdef __REACTOS__
+        IoDeleteDevice (HddFileSystemDeviceObject);
+#endif
         return Status;
     }
 
@@ -161,9 +229,25 @@ Return Value:
     //
 
     CdfsFileSystemDeviceObject->Flags |= DO_LOW_PRIORITY_FILESYSTEM;
+#ifdef __REACTOS__
+    HddFileSystemDeviceObject->Flags |= DO_LOW_PRIORITY_FILESYSTEM;
+#endif
 
     IoRegisterFileSystem( CdfsFileSystemDeviceObject );
     ObReferenceObject (CdfsFileSystemDeviceObject);
+#ifdef __REACTOS__
+    IoRegisterFileSystem( HddFileSystemDeviceObject );
+    ObReferenceObject (HddFileSystemDeviceObject);
+#endif
+
+#ifdef CDFS_TELEMETRY_DATA
+    //
+    //  Initialize Telemetry
+    //
+
+    CdInitializeTelemetry();
+
+#endif
 
     //
     //  And return to our caller
@@ -172,42 +256,11 @@ Return Value:
     return( STATUS_SUCCESS );
 }
 
-NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdShutdown (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    )
-/*++
-
-Routine Description:
-
-    This routine is the shutdown handler for CDFS.
-
-Arguments:
-
-    DeviceObject - Supplies the registered device object for CDFS.
-    Irp - Shutdown IRP
-    
-
-Return Value:
-
-    None.
-
---*/
-{
-    IoUnregisterFileSystem (DeviceObject);
-    IoDeleteDevice (CdData.FileSystemDeviceObject);
-
-    CdCompleteRequest( NULL, Irp, STATUS_SUCCESS );
-    return STATUS_SUCCESS;
-}
-
 
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdUnload(
-    IN PDRIVER_OBJECT DriverObject
+    _In_ PDRIVER_OBJECT DriverObject
     )
 /*++
 
@@ -227,6 +280,10 @@ Return Value:
 {
     PIRP_CONTEXT IrpContext;
 
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( DriverObject );
+
     //
     // Free any IRP contexts
     //
@@ -241,6 +298,9 @@ Return Value:
     IoFreeWorkItem (CdData.CloseItem);
     ExDeleteResourceLite( &CdData.DataResource );
     ObDereferenceObject (CdData.FileSystemDeviceObject);
+#ifdef __REACTOS__
+    ObDereferenceObject (CdData.HddFileSystemDeviceObject);
+#endif
 }
 
 //
@@ -249,8 +309,12 @@ Return Value:
 
 NTSTATUS
 CdInitializeGlobalData (
-    IN PDRIVER_OBJECT DriverObject,
-    IN PDEVICE_OBJECT FileSystemDeviceObject
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PDEVICE_OBJECT FileSystemDeviceObject
+#ifdef __REACTOS__
+    ,
+    IN PDEVICE_OBJECT HddFileSystemDeviceObject
+#endif
     )
 
 /*++
@@ -279,6 +343,12 @@ Return Value:
     RtlZeroMemory( &CdFastIoDispatch, sizeof( FAST_IO_DISPATCH ));
 
     CdFastIoDispatch.SizeOfFastIoDispatch =    sizeof(FAST_IO_DISPATCH);
+
+#ifdef _MSC_VER
+#pragma prefast(push)
+#pragma prefast(disable:28155, "these are all correct")
+#endif
+
     CdFastIoDispatch.FastIoCheckIfPossible =   CdFastIoCheckIfPossible;  //  CheckForFastIo
     CdFastIoDispatch.FastIoRead =              FsRtlCopyRead;            //  Read
     CdFastIoDispatch.FastIoQueryBasicInfo =    CdFastQueryBasicInfo;     //  QueryBasicInfo
@@ -287,7 +357,11 @@ Return Value:
     CdFastIoDispatch.FastIoUnlockSingle =      CdFastUnlockSingle;       //  UnlockSingle
     CdFastIoDispatch.FastIoUnlockAll =         CdFastUnlockAll;          //  UnlockAll
     CdFastIoDispatch.FastIoUnlockAllByKey =    CdFastUnlockAllByKey;     //  UnlockAllByKey
-    CdFastIoDispatch.AcquireFileForNtCreateSection =  CdAcquireForCreateSection;
+    //
+    //  This callback has been replaced by CdFilterCallbackAcquireForCreateSection.
+    //
+
+    CdFastIoDispatch.AcquireFileForNtCreateSection =  NULL;
     CdFastIoDispatch.ReleaseFileForNtCreateSection =  CdReleaseForCreateSection;
     CdFastIoDispatch.FastIoQueryNetworkOpenInfo =     CdFastQueryNetworkInfo;   //  QueryNetworkInfo
     
@@ -295,6 +369,10 @@ Return Value:
     CdFastIoDispatch.MdlReadComplete = FsRtlMdlReadCompleteDev;
     CdFastIoDispatch.PrepareMdlWrite = FsRtlPrepareMdlWriteDev;
     CdFastIoDispatch.MdlWriteComplete = FsRtlMdlWriteCompleteDev;
+
+#ifdef _MSC_VER
+#pragma prefast(pop)
+#endif
 
     //
     //  Initialize the CdData structure.
@@ -307,6 +385,9 @@ Return Value:
 
     CdData.DriverObject = DriverObject;
     CdData.FileSystemDeviceObject = FileSystemDeviceObject;
+#ifdef __REACTOS__
+    CdData.HddFileSystemDeviceObject = HddFileSystemDeviceObject;
+#endif
 
     InitializeListHead( &CdData.VcbQueue );
 

@@ -15,6 +15,11 @@ list(APPEND SOURCE
 
 include_directories(${REACTOS_BINARY_DIR}/sdk/include/reactos/wine)
 add_executable(rpcss ${SOURCE} rpcss.rc)
+
+if(USE_CLANG_CL)
+    add_target_compile_flags(rpcss "-Wno-cast-calling-convention")
+endif()
+
 target_link_libraries(rpcss ${PSEH_LIB} wine)
 set_module_type(rpcss win32cui UNICODE)
 add_importlibs(rpcss advapi32 rpcrt4 msvcrt kernel32 ntdll)

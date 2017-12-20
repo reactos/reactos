@@ -8,6 +8,8 @@
 
 #include "precomp.h"
 
+#include <wine/unicode.h>
+
 // {845B0FB2-66E0-416B-8F91-314E23F7C12D}
 const GUID CLSID_NtObjectFolder = { 0x845b0fb2, 0x66e0, 0x416b, { 0x8f, 0x91, 0x31, 0x4e, 0x23, 0xf7, 0xc1, 0x2d } };
 

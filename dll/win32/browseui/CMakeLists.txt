@@ -4,10 +4,15 @@ add_subdirectory(shellbars)
 
 set_cpp(WITH_RUNTIME)
 
+add_definitions(
+    -D_ATL_NO_EXCEPTIONS)
+
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    ACLCustomMRU.cpp
+    ACLCustomMRU.h
     aclistisf.cpp
     aclmulti.cpp
     addressband.cpp
@@ -45,10 +50,7 @@ add_pch(browseui precomp.h SOURCE)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_target_compile_flags(browseui "-Wno-unused-but-set-variable")
-    endif()
-
+    add_target_compile_flags(browseui "-Wno-unused-but-set-variable")
     # Binutils linker bug
     if(LTCG)
         add_target_link_flags(browseui "-Wl,--allow-multiple-definition")

@@ -213,6 +213,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     ACCESS_MASK DesiredAccess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG BufferLength;
+    POOL_TYPE PoolType;
 
     PAGED_CODE();
 
@@ -495,6 +496,8 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     StackPtr->Parameters.DeviceIoControl.OutputBufferLength =
         OutputBufferLength;
 
+    PoolType = IsDevIoCtl ? NonPagedPoolCacheAligned : NonPagedPool;
+
     /* Handle the Methods */
     switch (AccessType)
     {
@@ -513,9 +516,9 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 {
                     /* Allocate the System Buffer */
                     Irp->AssociatedIrp.SystemBuffer =
-                        ExAllocatePoolWithTag(NonPagedPool,
-                                              BufferLength,
-                                              TAG_SYS_BUF);
+                        ExAllocatePoolWithQuotaTag(PoolType,
+                                                   BufferLength,
+                                                   TAG_SYS_BUF);
 
                     /* Check if we got a buffer */
                     if (InputBuffer)
@@ -560,9 +563,9 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 {
                     /* Allocate the System Buffer */
                     Irp->AssociatedIrp.SystemBuffer =
-                        ExAllocatePoolWithTag(NonPagedPool,
-                                              InputBufferLength,
-                                              TAG_SYS_BUF);
+                        ExAllocatePoolWithQuotaTag(PoolType,
+                                                   InputBufferLength,
+                                                   TAG_SYS_BUF);
 
                     /* Copy into the System Buffer */
                     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
@@ -3499,13 +3502,11 @@ NtWriteFile(IN HANDLE FileHandle,
     CapturedByteOffset.QuadPart = 0;
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
-    /* Get File Object */
-    Status = ObReferenceObjectByHandle(FileHandle,
-                                       0,
-                                       IoFileObjectType,
-                                       PreviousMode,
-                                       (PVOID*)&FileObject,
-                                       &ObjectHandleInfo);
+    /* Get File Object for write */
+    Status = ObReferenceFileObjectForWrite(FileHandle,
+                                           PreviousMode,
+                                           &FileObject,
+                                           &ObjectHandleInfo);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Validate User-Mode Buffers */
@@ -3513,21 +3514,6 @@ NtWriteFile(IN HANDLE FileHandle,
     {
         _SEH2_TRY
         {
-            /*
-             * Check if the handle has either FILE_WRITE_DATA or
-             * FILE_APPEND_DATA granted. However, if this is a named pipe,
-             * make sure we don't ask for FILE_APPEND_DATA as it interferes
-             * with the FILE_CREATE_PIPE_INSTANCE access right!
-             */
-            if (!(ObjectHandleInfo.GrantedAccess &
-                 ((!(FileObject->Flags & FO_NAMED_PIPE) ?
-                   FILE_APPEND_DATA : 0) | FILE_WRITE_DATA)))
-            {
-                /* We failed */
-                ObDereferenceObject(FileObject);
-                _SEH2_YIELD(return STATUS_ACCESS_DENIED);
-            }
-
             /* Probe the status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
 

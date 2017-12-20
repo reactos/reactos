@@ -2112,7 +2112,7 @@ KdbpCmdPcr(
               "  Tib.FiberData/Version:     0x%08x\n"
               "  Tib.ArbitraryUserPointer:  0x%08x\n"
               "  Tib.Self:                  0x%08x\n"
-              "  Self:                      0x%08x\n"
+              "  SelfPcr:                   0x%08x\n"
               "  PCRCB:                     0x%08x\n"
               "  Irql:                      0x%02x\n"
               "  IRR:                       0x%08x\n"
@@ -2133,7 +2133,7 @@ KdbpCmdPcr(
               "  InterruptMode:             0x%08x\n",
               Pcr->NtTib.ExceptionList, Pcr->NtTib.StackBase, Pcr->NtTib.StackLimit,
               Pcr->NtTib.SubSystemTib, Pcr->NtTib.FiberData, Pcr->NtTib.ArbitraryUserPointer,
-              Pcr->NtTib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
+              Pcr->NtTib.Self, Pcr->SelfPcr, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
               Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
               Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
               Pcr->Number, Pcr->SecondLevelCacheAssociativity,
@@ -3662,15 +3662,63 @@ extern KSPIN_LOCK KdpSerialSpinLock;
 
 ULONG
 NTAPI
-KdpPrompt(IN LPSTR InString,
-          IN USHORT InStringLength,
-          OUT LPSTR OutString,
-          IN USHORT OutStringLength)
+KdpPrompt(
+    _In_reads_bytes_(InStringLength) PCHAR UnsafeInString,
+    _In_ USHORT InStringLength,
+    _Out_writes_bytes_(OutStringLength) PCHAR UnsafeOutString,
+    _In_ USHORT OutStringLength,
+    _In_ KPROCESSOR_MODE PreviousMode)
 {
     USHORT i;
     CHAR Response;
     ULONG DummyScanCode;
     KIRQL OldIrql;
+    PCHAR InString;
+    PCHAR OutString;
+    CHAR InStringBuffer[512];
+    CHAR OutStringBuffer[512];
+
+    /* Normalize the lengths */
+    InStringLength = min(InStringLength,
+                         sizeof(InStringBuffer));
+    OutStringLength = min(OutStringLength,
+                          sizeof(OutStringBuffer));
+
+    /* Check if we need to verify the string */
+    if (PreviousMode != KernelMode)
+    {
+        /* Handle user-mode buffers safely */
+        _SEH2_TRY
+        {
+            /* Probe the prompt */
+            ProbeForRead(UnsafeInString,
+                         InStringLength,
+                         1);
+
+            /* Capture prompt */
+            InString = InStringBuffer;
+            RtlCopyMemory(InString,
+                          UnsafeInString,
+                          InStringLength);
+
+            /* Probe and make room for response */
+            ProbeForWrite(UnsafeOutString,
+                          OutStringLength,
+                          1);
+            OutString = OutStringBuffer;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Bad string pointer, bail out */
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        InString = UnsafeInString;
+        OutString = UnsafeOutString;
+    }
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
     while (TRUE)
@@ -3778,6 +3826,24 @@ KdpPrompt(IN LPSTR InString,
 
     /* Lower IRQL back */
     KeLowerIrql(OldIrql);
+
+    /* Copy back response if required */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Safely copy back response to user mode */
+            RtlCopyMemory(UnsafeOutString,
+                          OutString,
+                          i);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* String became invalid after we exited, fail */
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END;
+    }
 
     /* Return the length  */
     return i;

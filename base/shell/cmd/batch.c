@@ -299,7 +299,8 @@ INT Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
          * return until this context has been exited */
         new.prev = bc;
         /* copy some fields in the new structure if it is the same file */
-        if (same_fn) {
+        if (same_fn)
+        {
             new.mem     = bc->mem;
             new.memsize = bc->memsize;
             new.mempos  = 0;
@@ -365,6 +366,9 @@ INT Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
         ret = ExecuteCommand(Cmd);
         FreeCommand(Cmd);
     }
+
+    /* Always return the current errorlevel */
+    ret = nErrorLevel;
 
     TRACE ("Batch: returns TRUE\n");
 

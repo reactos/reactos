@@ -949,7 +949,7 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
                 /* Lock the PFN Database */
-                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                OldIrql = MiAcquirePfnLock();
                 while (PageCount--)
                 {
                     /* If the page really has no references, mark it as free */
@@ -966,7 +966,7 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 }
 
                 /* Release PFN database */
-                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                MiReleasePfnLock(OldIrql);
 
                 /* Done with this block */
                 break;
@@ -1138,7 +1138,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Acquire the PFN lock */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Loop the runs */
     LoaderPages = 0;
@@ -1180,7 +1180,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Release the PFN lock and flush the TLB */
     DPRINT("Loader pages freed: %lx\n", LoaderPages);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
     KeFlushCurrentTb();
 
     /* Free our run structure */
@@ -1829,7 +1829,7 @@ MiBuildPagedPool(VOID)
     //
     // Lock the PFN database
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
 #if (_MI_PAGING_LEVELS >= 3)
     /* On these systems, there's no double-mapping, so instead, the PPEs
@@ -1890,7 +1890,7 @@ MiBuildPagedPool(VOID)
     //
     // Release the PFN database lock
     //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     //
     // We only have one PDE mapped for now... at fault time, additional PDEs
@@ -2120,7 +2120,7 @@ MmArmInitSystem(IN ULONG Phase,
 
 #ifndef _M_AMD64 // Not working on x64 for obvoius reason
         /* Try a bunch of random addresses near the end of the address space */
-        PointerPte = (PMMPTE)0xFFFC8000;
+        PointerPte = (PMMPTE)((ULONG_PTR)MI_HIGHEST_SYSTEM_ADDRESS - 0x37FFF);
         for (j = 0; j < 20; j += 1)
         {
             MI_MAKE_PROTOTYPE_PTE(&TempPte, PointerPte);
@@ -2130,7 +2130,7 @@ MmArmInitSystem(IN ULONG Phase,
         }
 
         /* Subsection PTEs are always in nonpaged pool, pick a random address to try */
-        PointerPte = (PMMPTE)0xFFAACBB8;
+        PointerPte = (PMMPTE)((ULONG_PTR)MmNonPagedPoolStart + (MmSizeOfNonPagedPoolInBytes / 2));
         MI_MAKE_SUBSECTION_PTE(&TempPte, PointerPte);
         TestPte = MiSubsectionPteToSubsection(&TempPte);
         ASSERT(PointerPte == TestPte);

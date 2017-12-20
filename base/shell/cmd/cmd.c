@@ -636,7 +636,7 @@ ExecuteAsync(PARSED_COMMAND *Cmd)
     return prci.hProcess;
 }
 
-static VOID
+static INT
 ExecutePipeline(PARSED_COMMAND *Cmd)
 {
 #ifdef FEATURE_REDIRECTION
@@ -708,7 +708,7 @@ ExecutePipeline(PARSED_COMMAND *Cmd)
 
     while (--nProcesses >= 0)
         CloseHandle(hProcess[nProcesses]);
-    return;
+    return nErrorLevel;
 
 failed:
     if (hInput)
@@ -721,6 +721,8 @@ failed:
     SetStdHandle(STD_INPUT_HANDLE, hOldConIn);
     SetStdHandle(STD_OUTPUT_HANDLE, hOldConOut);
 #endif
+
+    return nErrorLevel;
 }
 
 INT
@@ -771,7 +773,7 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
             Ret = ExecuteCommand(Sub->Next);
         break;
     case C_PIPE:
-        ExecutePipeline(Cmd);
+        Ret = ExecutePipeline(Cmd);
         break;
     case C_IF:
         Ret = ExecuteIf(Cmd);
@@ -1798,7 +1800,7 @@ Initialize(VOID)
     HMODULE NtDllModule;
     TCHAR commandline[CMDLINE_LENGTH];
     TCHAR ModuleName[_MAX_PATH + 1];
-    INT nExitCode;
+    // INT nExitCode;
 
     HANDLE hIn, hOut;
 
@@ -1983,11 +1985,11 @@ Initialize(VOID)
         /* Do the /C or /K command */
         GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
         bWaitForCommand = TRUE;
-        nExitCode = ParseCommandLine(commandline);
+        /* nExitCode = */ ParseCommandLine(commandline);
         bWaitForCommand = FALSE;
         if (option != _T('K'))
         {
-            nErrorLevel = nExitCode;
+            // nErrorLevel = nExitCode;
             bExit = TRUE;
         }
     }

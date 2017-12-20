@@ -33,11 +33,6 @@ else()
     list(APPEND SOURCE txthost.c txtsrv.c)
 endif()
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    #FIXME: http://llvm.org/bugs/show_bug.cgi?id=19027
-    set_property(SOURCE txthost.c txtsrv.c APPEND_STRING PROPERTY COMPILE_FLAGS " -no-integrated-as")
-endif()
-
 list(APPEND ADDITIONAL_SOURCE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)

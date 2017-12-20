@@ -8,6 +8,8 @@
  *              Katayama Hirofumi MZ
  */
 
+#pragma once
+
 class CImgAreaWindow : public CWindowImpl<CMainWindow>
 {
 public:

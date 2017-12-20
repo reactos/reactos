@@ -110,6 +110,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "Left Alt+Shift"
     IDS_SWITCH_BET_INLANG "Ndërro ndër gjuhët hyrese"
+    IDS_REBOOT_NOW, "Reboot now?"
 END
 
 STRINGTABLE

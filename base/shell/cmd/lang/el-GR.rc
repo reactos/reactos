@@ -143,7 +143,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]χαρακτηριστικά]] ονόματ
            A     Αρχεία έτοιμα προς αρχειοθέτηση\n\
            H     Κρυφά αρχεία\n\
            -     Πρόθεμα που σημαίνει όχι\n"
-    STRING_DEL_HELP2 "Όλα τα αρχεία στον κατάλογο θα διαγραφούν!\nΕίστε σίγουροι (Y/N)?"
+    STRING_DEL_HELP2 "Όλα τα αρχεία στον κατάλογο θα διαγραφούν!\nΕίστε σίγουροι (Y/N)? "
     STRING_DEL_HELP3 "    %lu αρχείο διαγράφηκε\n"
     STRING_DEL_HELP4 "    %lu αρχεία διαγράφηκαν\n"
     STRING_DELAY_HELP "Παύση για n δευτερόλεπτα ή μιλιδευτερόλεπτα.\n\
@@ -215,12 +215,25 @@ Type ECHO without a parameter to display the current ECHO setting."
   /B            Exits a batch file only.  \n\
                 If run outside of a batch file it will exit cmd.exe\n\
   ExitCode      This value will be assigned to ERRORLEVEL on exit\n"
-    STRING_FOR_HELP1 "Runs a specified command for each file in a set of files\n\n\
-FOR %variable IN (set) DO command [parameters]\n\n\
+    STRING_FOR_HELP1 "Runs a specified command for each file in a set of files.\n\n\
+FOR %variable IN (set) DO command [parameters]\n\
+FOR /L %variable IN (start,step,end) DO command [parameters]\n\
+FOR /D %variable IN (set) DO command [parameters]\n\
+FOR /R [[drive:]path] IN (set) DO command [parameters]\n\
+FOR /F [""options""] IN (set) DO command [parameters]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
   %variable  Specifies a replaceable parameter.\n\
   (set)      Specifies a set of one or more files. Wildcards may be used.\n\
   command    Specifies the command to carry out for each file.\n\
-  parameters Specifies parameters or switches for the specified command.\n\n\
+  parameters Specifies parameters or switches for the specified command.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 To use the FOR command in a batch program, specify %%variable instead of\n\
 %variable.\n"
     STRING_FREE_HELP1 "\nVolume in drive %s is %-11s\n\
@@ -369,8 +382,8 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP6 "Αντικατάσταση του %s\n"
     STRING_REPLACE_HELP7 "Δεν προστέθηκαν αρχεία\n"
     STRING_REPLACE_HELP8 "%lu αρχείο(α) προστέθηκαν\n"
-    STRING_REPLACE_HELP9 "Προσθήκη %s (Y/N) "
-    STRING_REPLACE_HELP10 "Αντικατάσταση %s (Y/N) "
+    STRING_REPLACE_HELP9 "Προσθήκη %s (Y/N)? "
+    STRING_REPLACE_HELP10 "Αντικατάσταση %s (Y/N)? "
     STRING_REPLACE_HELP11 "Γίνεται προσθήκη του %s\n"
     STRING_SHIFT_HELP "Changes the position of replaceable parameters in a batch file.\n\n\
 SHIFT [DOWN]"
@@ -494,7 +507,7 @@ title         new title\n"
     STRING_COPY_ERROR4 "Σφάλμα: Not implemented yet!\n"
     STRING_DATE_ERROR "Μη έγκυρη ημερομηνία."
     STRING_DEL_ERROR5 "Το αρχείο %s πρόκειται να διαγραφεί! "
-    STRING_DEL_ERROR6 "Είστε σίγουροι (Y/N)?"
+    STRING_DEL_ERROR6 "Είστε σίγουροι (Y/N)? "
     STRING_DEL_ERROR7 "Γίνεται διαγραφή: %s\n"
     STRING_ERROR_ERROR1 "Άγνωστο σφάλμα! Κωδικός λάθους: 0x%lx\n"
     STRING_ERROR_ERROR2 "Σφάλμα σύνταξης"

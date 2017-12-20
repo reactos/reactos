@@ -649,8 +649,13 @@ NPCancelConnection(
 
                 DbgP((TEXT("NPCancelConnection: Name %S EntryName %S\n"),
                             lpName,pNetResource->LocalName));
+#ifndef __REACTOS__
                 DbgP((TEXT("NPCancelConnection: Name Length %d Entry Name Length %d\n"),
                            pNetResource->LocalNameLength,pNetResource->LocalName));
+#else
+                DbgP((TEXT("NPCancelConnection: Name Length %d Entry Name Length %d\n"),
+                           (wcslen(lpName) + 1) * sizeof(WCHAR), pNetResource->LocalNameLength));
+#endif
 
             }
         }

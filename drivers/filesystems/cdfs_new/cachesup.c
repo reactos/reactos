@@ -36,9 +36,10 @@ Abstract:
 
 VOID
 CdCreateInternalStream (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB Fcb,
+    _In_ PUNICODE_STRING Name
     )
 
 /*++
@@ -69,8 +70,8 @@ Return Value:
     BOOLEAN CleanupDirContext = FALSE;
     BOOLEAN UpdateFcbSizes = FALSE;
 
-    DIRENT Dirent;
-    DIRENT_ENUM_CONTEXT DirContext;
+    DIRENT Dirent = {0};
+    DIRENT_ENUM_CONTEXT DirContext = {0};
 
     PAGED_CODE();
 
@@ -94,14 +95,14 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    _SEH2_TRY {
 
         //
         //  Create the internal stream.  The Vpb should be pointing at our volume
         //  device object at this point.
         //
 
-        StreamFile = IoCreateStreamFileObject( NULL, Vcb->Vpb->RealDevice );
+        StreamFile = IoCreateStreamFileObjectLite( NULL, Vcb->Vpb->RealDevice );
 
         if (StreamFile == NULL) {
 
@@ -127,6 +128,14 @@ Return Value:
                          StreamFileOpen,
                          Fcb,
                          NULL );
+        
+        //
+        //  We'll give stream file objects a name to aid IO profiling etc. We 
+        //  NULL this in CdDeleteInternalStream before OB deletes the file object,
+        //  and before CdRemovePrefix is called (which frees Fcb names).
+        //
+
+        StreamFile->FileName = *Name;
 
         //
         //  We will reference the current Fcb twice to keep it from going
@@ -272,7 +281,7 @@ Return Value:
             }
         }
 
-    } finally {
+    } _SEH2_FINALLY {
 
         //
         //  Cleanup any dirent structures we may have used.
@@ -290,6 +299,14 @@ Return Value:
 
         if (StreamFile != NULL) {
 
+            //
+            //  Null the name pointer, since the stream file object never actually
+            //  'owns' the names, we just point it to existing ones.
+            //
+
+            StreamFile->FileName.Buffer = NULL;
+            StreamFile->FileName.MaximumLength = StreamFile->FileName.Length = 0;
+
             ObDereferenceObject( StreamFile );
             Fcb->FileObject = NULL;
         }
@@ -306,7 +323,7 @@ Return Value:
         }
 
         CdUnlockFcb( IrpContext, Fcb );
-    }
+    } _SEH2_END;
 
     return;
 }
@@ -314,8 +331,8 @@ Return Value:
 
 VOID
 CdDeleteInternalStream (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb
     )
 
 /*++
@@ -341,6 +358,8 @@ Return Value:
     PFILE_OBJECT FileObject;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     ASSERT_IRP_CONTEXT( IrpContext );
     ASSERT_FCB( Fcb );
@@ -375,17 +394,23 @@ Return Value:
             CcUninitializeCacheMap( FileObject, NULL, NULL );
         }
 
+        //
+        //  Null the name pointer, since the stream file object never actually
+        //  'owns' the names, we just point it to existing ones.
+        //
+        
+        FileObject->FileName.Buffer = NULL;
+        FileObject->FileName.MaximumLength = FileObject->FileName.Length = 0;
+
         ObDereferenceObject( FileObject );
     }
-
-    return;
 }
 
 
 NTSTATUS
 CdCompleteMdl (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -434,11 +459,13 @@ Return Value:
 }
 
 
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdPurgeVolume (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN BOOLEAN DismountUnderway
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ BOOLEAN DismountUnderway
     )
 
 /*++
@@ -592,7 +619,7 @@ Return Value:
         if (Vcb->PathTableFcb != NULL) {
 
             ThisFcb = Vcb->PathTableFcb;
-            InterlockedIncrement( &Vcb->PathTableFcb->FcbReference );
+            InterlockedIncrement( (LONG*)&Vcb->PathTableFcb->FcbReference );
 
             if ((ThisFcb->FcbNonpaged->SegmentObject.DataSectionObject != NULL) &&
                 !CcPurgeCacheSection( &ThisFcb->FcbNonpaged->SegmentObject,
@@ -606,7 +633,7 @@ Return Value:
 
             CdDeleteInternalStream( IrpContext, ThisFcb );
 
-            InterlockedDecrement( &ThisFcb->FcbReference );
+            InterlockedDecrement( (LONG*)&ThisFcb->FcbReference );
 
             CdTeardownStructures( IrpContext, ThisFcb, &RemovedFcb );
         }
@@ -614,7 +641,7 @@ Return Value:
         if (Vcb->VolumeDasdFcb != NULL) {
 
             ThisFcb = Vcb->VolumeDasdFcb;
-            InterlockedIncrement( &ThisFcb->FcbReference );
+            InterlockedIncrement( (LONG*)&ThisFcb->FcbReference );
 
             if ((ThisFcb->FcbNonpaged->SegmentObject.DataSectionObject != NULL) &&
                 !CcPurgeCacheSection( &ThisFcb->FcbNonpaged->SegmentObject,
@@ -626,7 +653,7 @@ Return Value:
                 Status = STATUS_UNABLE_TO_DELETE_SECTION;
             }
 
-            InterlockedDecrement( &ThisFcb->FcbReference );
+            InterlockedDecrement( (LONG*)&ThisFcb->FcbReference );
 
             CdTeardownStructures( IrpContext, ThisFcb, &RemovedFcb );
         }

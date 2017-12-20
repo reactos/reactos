@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <winuser.h>
-#include <user32testhelpers.h>
+#include "precomp.h"
 
 static ATOM Atom1, Atom2, Atom3;
 

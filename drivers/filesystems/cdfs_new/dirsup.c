@@ -80,8 +80,8 @@ Abstract:
 //
 //  PRAW_DIRENT
 //  CdRawDirent (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PDIR_ENUM_CONTEXT DirContext
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _In_ PDIR_ENUM_CONTEXT DirContext
 //      );
 //
 
@@ -94,15 +94,15 @@ Abstract:
 
 ULONG
 CdCheckRawDirentBounds (
-    IN PIRP_CONTEXT IrpContext,
-    IN PDIRENT_ENUM_CONTEXT DirContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PDIRENT_ENUM_CONTEXT DirContext
     );
 
 XA_EXTENT_TYPE
 CdCheckForXAExtent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PRAW_DIRENT RawDirent,
-    IN OUT PDIRENT Dirent
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PRAW_DIRENT RawDirent,
+    _Inout_ PDIRENT Dirent
     );
 
 #ifdef ALLOC_PRAGMA
@@ -123,10 +123,10 @@ CdCheckForXAExtent (
 
 VOID
 CdLookupDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG DirentOffset,
-    OUT PDIRENT_ENUM_CONTEXT DirContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ ULONG DirentOffset,
+    _Out_ PDIRENT_ENUM_CONTEXT DirContext
     )
 
 /*++
@@ -206,10 +206,10 @@ Return Value:
 
 BOOLEAN
 CdLookupNextDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PDIRENT_ENUM_CONTEXT CurrentDirContext,
-    OUT PDIRENT_ENUM_CONTEXT NextDirContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PDIRENT_ENUM_CONTEXT CurrentDirContext,
+    _Inout_ PDIRENT_ENUM_CONTEXT NextDirContext
     )
 
 /*++
@@ -241,7 +241,7 @@ Arguments:
         find.  This may already point to a dirent so we need to check if
         we are in the same sector and unmap any buffer as necessary.
 
-        This dirent is left in an indeterminate state if we don't find a dirent.
+        This dirent is left in an indeterminant state if we don't find a dirent.
 
 Return Value:
 
@@ -390,13 +390,14 @@ Return Value:
     return FoundDirent;
 }
 
-
+
+_At_(Dirent->CdTime, _Post_notnull_)
 VOID
 CdUpdateDirentFromRawDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PDIRENT_ENUM_CONTEXT DirContext,
-    IN OUT PDIRENT Dirent
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PDIRENT_ENUM_CONTEXT DirContext,
+    _Inout_ PDIRENT Dirent
     )
 
 /*++
@@ -425,6 +426,8 @@ Return Value:
     PRAW_DIRENT RawDirent = CdRawDirent( IrpContext, DirContext );
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( Fcb );
 
     //
     //  Clear all of the current state flags except the flag indicating that
@@ -465,7 +468,7 @@ Return Value:
     //  Save a pointer to the time stamps.
     //
 
-    Dirent->CdTime = (PCHAR)RawDirent->RecordTime; /* ReactOS change: GCC "pointer targets in assignment differ in signedness" */
+    Dirent->CdTime = (PCHAR)RawDirent->RecordTime;
 
     //
     //  Copy the dirent flags.
@@ -501,7 +504,7 @@ Return Value:
     }
 
     Dirent->FileNameLen = RawDirent->FileIdLen;
-    Dirent->FileName = (PCHAR)RawDirent->FileId; /* ReactOS change: GCC "pointer targets in assignment differ in signedness" */
+    Dirent->FileName = (PCHAR)RawDirent->FileId;
 
     //
     //  If there are any remaining bytes at the end of the dirent then
@@ -529,9 +532,9 @@ Return Value:
 
 VOID
 CdUpdateDirentName (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PDIRENT Dirent,
-    IN ULONG IgnoreCase
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PDIRENT Dirent,
+    _In_ ULONG IgnoreCase
     )
 
 /*++
@@ -704,7 +707,8 @@ Return Value:
                                    Dirent->FileName,
                                    Dirent->FileNameLen );
 
-        ASSERT( Status == STATUS_SUCCESS );
+        __analysis_assert( Status == STATUS_SUCCESS );
+        NT_ASSERT( Status == STATUS_SUCCESS );
         Dirent->CdFileName.FileName.Length = (USHORT) Length;
 
     } else {
@@ -781,6 +785,11 @@ Return Value:
         Dirent->CdFileName.FileName.Length -= sizeof( WCHAR );
     }
 
+    if (!CdIsLegalName( IrpContext, &Dirent->CdFileName.FileName )) {
+
+        CdRaiseStatus( IrpContext, STATUS_FILE_CORRUPT_ERROR );
+    }
+
     //
     //  If this an exact case operation then use the filename exactly.
     //
@@ -811,21 +820,21 @@ Return Value:
 }
 
 
-BOOLEAN
+_Success_(return != FALSE) BOOLEAN
 CdFindFile (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCD_NAME Name,
-    IN BOOLEAN IgnoreCase,
-    IN OUT PFILE_ENUM_CONTEXT FileContext,
-    OUT PCD_NAME *MatchingName
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PCD_NAME Name,
+    _In_ BOOLEAN IgnoreCase,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext,
+    _Out_ PCD_NAME *MatchingName
     )
 
 /*++
 
 Routine Description:
 
-    This routine is called to search a directory for a file matching the input
+    This routine is called to search a dirctory for a file matching the input
     name.  This name has been upcased at this point if this a case-insensitive
     search.  The name has been separated into separate name and version strings.
     We look for an exact match in the name and only consider the version if
@@ -864,10 +873,7 @@ Return Value:
     //  Make sure there is a stream file for this Fcb.
     //
 
-    if (Fcb->FileObject == NULL) {
-
-        CdCreateInternalStream( IrpContext, Fcb->Vcb, Fcb );
-    }
+    CdVerifyOrCreateDirStreamFile( IrpContext, Fcb);
 
     //
     //  Check to see whether we need to check for a possible short name.
@@ -989,18 +995,18 @@ Return Value:
 
 BOOLEAN
 CdFindDirectory (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCD_NAME Name,
-    IN BOOLEAN IgnoreCase,
-    IN OUT PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PCD_NAME Name,
+    _In_ BOOLEAN IgnoreCase,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext
     )
 
 /*++
 
 Routine Description:
 
-    This routine is called to search a directory for a directory matching the input
+    This routine is called to search a dirctory for a directory matching the input
     name.  This name has been upcased at this point if this a case-insensitive
     search.  We look for an exact match in the name and do not look for shortname
     equivalents.
@@ -1033,10 +1039,7 @@ Return Value:
     //  Make sure there is a stream file for this Fcb.
     //
 
-    if (Fcb->FileObject == NULL) {
-
-        CdCreateInternalStream( IrpContext, Fcb->Vcb, Fcb );
-    }
+    CdVerifyOrCreateDirStreamFile( IrpContext, Fcb);
 
     //
     //  Position ourselves at the first entry.
@@ -1100,14 +1103,15 @@ Return Value:
 }
 
 
+_At_(FileContext->ShortName.FileName.MaximumLength, _In_range_(>=, BYTE_COUNT_8_DOT_3))
 BOOLEAN
 CdFindFileByShortName (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCD_NAME Name,
-    IN BOOLEAN IgnoreCase,
-    IN ULONG ShortNameDirentOffset,
-    IN OUT PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PCD_NAME Name,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ ULONG ShortNameDirentOffset,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext
     )
 
 /*++
@@ -1153,10 +1157,7 @@ Return Value:
     //  Make sure there is a stream file for this Fcb.
     //
 
-    if (Fcb->FileObject == NULL) {
-
-        CdCreateInternalStream( IrpContext, Fcb->Vcb, Fcb );
-    }
+    CdVerifyOrCreateDirStreamFile( IrpContext, Fcb);
 
     //
     //  Position ourselves at the start of the directory and update
@@ -1272,9 +1273,9 @@ Return Value:
 
 BOOLEAN
 CdLookupNextInitialFileDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext
     )
 
 /*++
@@ -1283,7 +1284,7 @@ Routine Description:
 
     This routine is called to walk through the directory until we find the
     first possible dirent for file.  We are positioned at some point described
-    by the FileContext.  We will walk through any remaining dirents for the
+    by the FileContext.  We will walk through any remaing dirents for the
     current file until we find the first dirent for some subsequent file.
 
     We can be called when we have found just one dirent for a file or all
@@ -1423,9 +1424,9 @@ Return Value:
 
 VOID
 CdLookupLastFileDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PFILE_ENUM_CONTEXT FileContext
     )
 
 /*++
@@ -1457,9 +1458,9 @@ Return Value:
 --*/
 
 {
-    XA_EXTENT_TYPE ExtentType = 0; /* ReactOS Change: GCC Uninit var */
+    XA_EXTENT_TYPE ExtentType = Form1Data;
     PCOMPOUND_DIRENT CurrentCompoundDirent;
-    PDIRENT CurrentDirent;
+    PDIRENT CurrentDirent = NULL;
 
     BOOLEAN FirstPass = TRUE;
     BOOLEAN FoundDirent;
@@ -1633,8 +1634,8 @@ Return Value:
 
 VOID
 CdCleanupFileContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFILE_ENUM_CONTEXT FileContext
     )
 
 /*++
@@ -1661,6 +1662,8 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     //
     //  Cleanup the individual compound dirents.
     //
@@ -1683,8 +1686,8 @@ Return Value:
 
 ULONG
 CdCheckRawDirentBounds (
-    IN PIRP_CONTEXT IrpContext,
-    IN PDIRENT_ENUM_CONTEXT DirContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PDIRENT_ENUM_CONTEXT DirContext
     )
 
 /*++
@@ -1718,12 +1721,14 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+
     //
     //  We should always have at least a byte still available in the
     //  current buffer.
     //
 
-    ASSERT( (DirContext->DataLength - DirContext->SectorOffset) >= 1 );
+    NT_ASSERT( (DirContext->DataLength - DirContext->SectorOffset) >= 1 );
 
     //
     //  Get a pointer to the current dirent.
@@ -1783,9 +1788,9 @@ Return Value:
 
 XA_EXTENT_TYPE
 CdCheckForXAExtent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PRAW_DIRENT RawDirent,
-    IN OUT PDIRENT Dirent
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PRAW_DIRENT RawDirent,
+    _Inout_ PDIRENT Dirent
     )
 
 /*++
@@ -1814,6 +1819,8 @@ Return Value:
     PSYSTEM_USE_XA SystemUseArea;
 
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER( IrpContext );
 
     //
     //  Check if there is enough space for the XA system use area.

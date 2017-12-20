@@ -60,3 +60,7 @@ list(APPEND SOURCE
     src/winfonts/winfnt.c)
 
 add_library(freetype ${SOURCE})
+
+if(USE_CLANG_CL)
+    add_target_compile_flags(freetype "-Wno-tautological-constant-compare")
+endif()

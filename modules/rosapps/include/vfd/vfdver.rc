@@ -1,0 +1,79 @@
+/*
+	vfdver.rc
+
+	Virtual Floppy Drive for Windows
+	common version resource script
+
+	Copyright (C) 2003-2005 Ken Kato
+*/
+
+//	!!! NOTE !!!
+//	Editing this file with Microsoft Visual Studio will almost
+//	certainly mess things up...
+
+#ifndef APSTUDIO_INVOKED
+
+//	Language neutral
+LANGUAGE 0, 0
+
+VS_VERSION_INFO	VERSIONINFO
+FILEVERSION		VFD_FILE_MAJOR,VFD_FILE_MINOR,VFD_BUILD_YEAR,VFD_BUILD_MDAY
+PRODUCTVERSION	VFD_PRODUCT_MAJOR,VFD_PRODUCT_MINOR,VFD_BUILD_YEAR,VFD_BUILD_MDAY
+
+FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
+
+#ifndef VFD_SPECIAL_FLAG
+#define VFD_SPECIAL_FLAG 0
+#endif
+
+#if ((DBG) || defined(_DEBUG))
+FILEFLAGS		VS_FF_DEBUG | VFD_SPECIAL_FLAG
+#else
+FILEFLAGS		0 | VFD_SPECIAL_FLAG
+#endif
+
+FILEOS			VFD_FILEOS
+FILETYPE		VFD_FILETYPE
+FILESUBTYPE		VFD_FILESUBTYPE
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK	VFD_VERSIONINFO_LANG
+		BEGIN
+			VALUE "CompanyName",		VFD_COMPANY_NAME
+			VALUE "FileDescription",	VFD_DESCRIPTION VFD_DEBUG_TAG
+			VALUE "FileVersion",		VFD_FILE_VERSION_STR
+			VALUE "InternalName",		VFD_INTERNALNAME
+			VALUE "LegalCopyright",		VFD_COPYRIGHT_STR
+			VALUE "OriginalFilename",	VFD_INTERNALNAME
+			VALUE "ProductName",		VFD_PRODUCT_NAME
+			VALUE "ProductVersion",		VFD_PRODUCT_VERSION_STR
+#if VFD_SPECIAL_FLAG
+			Value "SpecialBuild",		VFD_SPECIAL_DESC
+#endif
+		END
+#ifdef VFD_VERSIONINFO_ALT
+		BLOCK	VFD_VERSIONINFO_ALT
+		BEGIN
+			VALUE "CompanyName",		VFD_COMPANY_NAME
+			VALUE "FileDescription",	VFD_DESCRIPTION_ALT VFD_DEBUG_TAG
+			VALUE "FileVersion",		VFD_FILE_VERSION_STR
+			VALUE "InternalName",		VFD_INTERNALNAME
+			VALUE "LegalCopyright",		VFD_COPYRIGHT_STR
+			VALUE "OriginalFilename",	VFD_INTERNALNAME
+			VALUE "ProductName",		VFD_PRODUCT_NAME_ALT
+			VALUE "ProductVersion",		VFD_PRODUCT_VERSION_STR
+#if VFD_SPECIAL_FLAG
+			Value "SpecialBuild",		VFD_SPECIAL_DESC_ALT
+#endif
+		END
+#endif	// VFD_VERSIONINFO_ALT
+	END
+
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", VFD_VERSIONINFO_TRANS
+	END
+END
+
+#endif	// APSTUDIO_INVOKED

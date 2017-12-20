@@ -17,13 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
+#include "precomp.h"
 
 static const struct
 {

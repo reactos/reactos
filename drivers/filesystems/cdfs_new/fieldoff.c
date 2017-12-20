@@ -127,7 +127,6 @@ main (argc, argv)
     printf("\n");
     {
         FCB_DATA d;
-        doit( FCB_DATA, Oplock );
         doit( FCB_DATA, FileLock );
     }
     printf("\n");
@@ -475,4 +474,3 @@ main (argc, argv)
         doit( SYSTEM_USE_XA, Reserved );
     }
 }
-

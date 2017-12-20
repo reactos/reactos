@@ -121,8 +121,12 @@ __END_DECLS
 __BEGIN_DECLS
 extern bool_t	xdr_authdes_cred(XDR *, struct authdes_cred *);
 extern bool_t	xdr_authdes_verf(XDR *, struct authdes_verf *);
+#ifndef __REACTOS__
 extern int	rtime(dev_t, struct netbuf *, int, struct timeval *,
 		    struct timeval *);
+#else
+extern int rtime(struct sockaddr_in *, struct timeval *, struct timeval *);
+#endif
 extern void	kgetnetname(char *);
 extern enum auth_stat _svcauth_des(struct svc_req *, struct rpc_msg *);
 __END_DECLS

@@ -428,8 +428,7 @@ PciIdeXPdoPnpDispatch(
 				{
 					DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						Stack->Parameters.QueryDeviceRelations.Type);
-					ASSERT(FALSE);
-					Status = STATUS_NOT_SUPPORTED;
+					Status = Irp->IoStatus.Status;
 					break;
 				}
 			}
@@ -526,7 +525,6 @@ PciIdeXPdoPnpDispatch(
 			/* We can't forward request to the lower driver, because
 			 * we are a Pdo, so we don't have lower driver... */
 			DPRINT1("IRP_MJ_PNP / Unknown minor function 0x%lx\n", MinorFunction);
-			ASSERT(FALSE);
 			Information = Irp->IoStatus.Information;
 			Status = Irp->IoStatus.Status;
 		}

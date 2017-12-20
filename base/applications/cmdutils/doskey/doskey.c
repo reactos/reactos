@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS DosKey Command
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Provides history and command aliases management for
+ *              command-line programs.
+ * COPYRIGHT:   Copyright 2008 Christoph von Wittich
+ *              Copyright 2013-2017 Hermès Bélusca-Maïto
+ */
+
 #include <stdio.h>
 #include <wchar.h>
 #include <locale.h>
@@ -8,6 +17,8 @@
 #include <wincon.h>
 
 /* Console API functions which are absent from wincon.h */
+#define EXENAME_LENGTH (255 + 1)
+
 VOID
 WINAPI
 ExpungeConsoleCommandHistoryW(LPCWSTR lpExeName);
@@ -37,7 +48,7 @@ static VOID SetInsert(DWORD dwFlag)
 {
     /*
      * NOTE: Enabling the ENABLE_INSERT_MODE mode can also be done by calling
-     * kernel32:SetConsoleCommandHistoryMode(CONSOLE_OVERSTRIKE) .
+     * kernel32:SetConsoleCommandHistoryMode(CONSOLE_OVERSTRIKE) (deprecated).
      */
     DWORD dwMode;
     HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
@@ -98,7 +109,10 @@ static INT SetMacro(LPWSTR definition)
         *nameend = temp;
     }
 
-    LoadStringW(GetModuleHandle(NULL), IDS_INVALID_MACRO_DEF, szStringBuf, MAX_STRING);
+    LoadStringW(GetModuleHandle(NULL),
+                IDS_INVALID_MACRO_DEF,
+                szStringBuf,
+                ARRAYSIZE(szStringBuf));
     wprintf(szStringBuf, definition);
     return 1;
 }
@@ -155,29 +169,86 @@ static VOID PrintAllMacros(VOID)
     HeapFree(GetProcessHeap(), 0, ExeNameBuf);
 }
 
-static VOID ReadFromFile(LPWSTR param)
+/* Remove starting and ending quotes from a string, if present */
+static LPWSTR RemoveQuotes(LPWSTR str)
+{
+    WCHAR *end;
+    if (*str == L'"' && *(end = str + wcslen(str) - 1) == L'"')
+    {
+        str++;
+        *end = L'\0';
+    }
+    return str;
+}
+
+static VOID ReadFromFile(LPWSTR FileName)
 {
     FILE* fp;
     WCHAR line[MAX_PATH];
+    WCHAR ExeNameBuffer[EXENAME_LENGTH];
+    LPWSTR pszOrgExeName = pszExeName;
 
-    fp = _wfopen(param, L"r");
+    /* Open the file */
+    fp = _wfopen(FileName, L"rt");
     if (!fp)
     {
-        _wperror(param);
+        _wperror(FileName);
         return;
     }
 
-    while ( fgetws(line, MAX_PATH, fp) != NULL)
+    while (fgetws(line, ARRAYSIZE(line), fp) != NULL)
     {
-        /* Remove newline character */
-        WCHAR *end = &line[wcslen(line) - 1];
+        PWCHAR end;
+
+        if (!*line)
+            continue;
+
+        /* Remove trailing newline character */
+        end = &line[wcslen(line) - 1];
         if (*end == L'\n')
             *end = L'\0';
 
-        if (*line)
+        if (!*line)
+            continue;
+
+        /* Check for any section redefining the current executable name */
+        end = NULL;
+        if (*line == L'[')
+            end = wcschr(line, L']');
+
+        if (end != NULL)
+        {
+            /* New section: change the current executable name */
+
+            *end = L'\0'; // NULL-terminate it
+            pszExeName = RemoveQuotes(line + 1);
+            if (*pszExeName)
+            {
+                /* Capture the new executable name and truncate it if needed */
+                end = &pszExeName[wcslen(pszExeName)];
+                if (end - pszExeName >= EXENAME_LENGTH)
+                    end = &pszExeName[EXENAME_LENGTH - 1];
+                *end = L'\0'; // Truncate it
+                wcscpy(ExeNameBuffer, pszExeName);
+                pszExeName = ExeNameBuffer;
+            }
+            else
+            {
+                /* Restore the original current executable name */
+                pszExeName = pszOrgExeName;
+            }
+        }
+        else
+        {
+            /* Set the new macro for the current executable */
             SetMacro(line);
+        }
     }
 
+    /* Restore the original current executable name if it has changed */
+    pszExeName = pszOrgExeName;
+
+    /* Close the file and return */
     fclose(fp);
     return;
 }
@@ -201,23 +272,10 @@ static BOOL GetArg(WCHAR **pStart, WCHAR **pEnd)
     return TRUE;
 }
 
-/* Remove starting and ending quotes from a string, if present */
-static LPWSTR RemoveQuotes(LPWSTR str)
-{
-    WCHAR *end;
-    if (*str == L'"' && *(end = str + wcslen(str) - 1) == L'"')
-    {
-        str++;
-        *end = L'\0';
-    }
-    return str;
-}
-
 int
 wmain(VOID)
 {
-    WCHAR *pArgStart;
-    WCHAR *pArgEnd;
+    LPWSTR pArgStart, pArgEnd;
 
     setlocale(LC_ALL, "");
 
@@ -230,13 +288,16 @@ wmain(VOID)
 
     while (GetArg(&pArgStart, &pArgEnd))
     {
-        /* NUL-terminate this argument to make processing easier */
+        /* NULL-terminate this argument to make processing easier */
         WCHAR tmp = *pArgEnd;
         *pArgEnd = L'\0';
 
         if (!wcscmp(pArgStart, L"/?"))
         {
-            LoadStringW(GetModuleHandle(NULL), IDS_HELP, szStringBuf, MAX_STRING);
+            LoadStringW(GetModuleHandle(NULL),
+                        IDS_HELP,
+                        szStringBuf,
+                        ARRAYSIZE(szStringBuf));
             wprintf(szStringBuf);
             break;
         }
@@ -287,7 +348,7 @@ wmain(VOID)
         {
             /* This is the beginning of a macro definition. It includes
              * the entire remainder of the line, so first put back the
-             * character that we replaced with NUL. */
+             * character that we replaced with NULL. */
             *pArgEnd = tmp;
             return SetMacro(pArgStart);
         }

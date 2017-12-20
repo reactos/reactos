@@ -379,7 +379,7 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     struct wgl_context* context;
     DHGLRC dhglrc;
     
-    TRACE("Creating context for %p, format %i\n", hdc);
+    TRACE("Creating context for %p.\n", hdc);
     
     if(!dc_data)
     {
@@ -696,7 +696,7 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
                 ERR("DrvSetContext failed!\n");
                 /* revert */
                 InterlockedExchange(&ctx->thread_id, 0);
-                IntSetCurrentDispatchTable(&StubTable.glDispatchTable);
+                IntSetCurrentDispatchTable(NULL);
                 SetLastError(ERROR_INVALID_PARAMETER);
                 return FALSE;
             }
@@ -728,8 +728,7 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
         InterlockedExchange(&old_ctx->thread_id, 0);
         /* Unset it */
         IntMakeCurrent(NULL, NULL, NULL);
-        /* Reset the no-op table */
-        set_api_table(&StubTable);
+        IntSetCurrentDispatchTable(NULL);
         /* Test conformance (extreme cases) */
         return hglrc == NULL;
     }

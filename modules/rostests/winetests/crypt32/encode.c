@@ -17,15 +17,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdio.h>
-//#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-//#include <winerror.h>
-#include <wincrypt.h>
 
-#include <wine/test.h>
-
+#include "precomp.h"
 
 static BOOL (WINAPI *pCryptDecodeObjectEx)(DWORD,LPCSTR,const BYTE*,DWORD,DWORD,PCRYPT_DECODE_PARA,void*,DWORD*);
 static BOOL (WINAPI *pCryptEncodeObjectEx)(DWORD,LPCSTR,const void*,DWORD,PCRYPT_ENCODE_PARA,void*,DWORD*);

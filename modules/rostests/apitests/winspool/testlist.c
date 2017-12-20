@@ -13,7 +13,9 @@
 extern void func_ClosePrinter(void);
 extern void func_EnumPrinters(void);
 extern void func_EnumPrintProcessorDatatypes(void);
-extern void func_GetDefaultPrinter(void);
+extern void func_GetDefaultPrinterA(void);
+extern void func_GetDefaultPrinterW(void);
+extern void func_GetPrinter(void);
 extern void func_GetPrinterData(void);
 extern void func_GetPrintProcessorDirectoryA(void);
 extern void func_GetPrintProcessorDirectoryW(void);
@@ -27,7 +29,9 @@ const struct test winetest_testlist[] =
     { "ClosePrinter", func_ClosePrinter },
     { "EnumPrinters", func_EnumPrinters },
     { "EnumPrintProcessorDatatypes", func_EnumPrintProcessorDatatypes },
-    { "GetDefaultPrinter", func_GetDefaultPrinter },
+    { "GetDefaultPrinterA", func_GetDefaultPrinterA },
+    { "GetDefaultPrinterW", func_GetDefaultPrinterW },
+    { "GetPrinter", func_GetPrinter },
     { "GetPrinterData", func_GetPrinterData },
     { "GetPrintProcessorDirectoryA", func_GetPrintProcessorDirectoryA },
     { "GetPrintProcessorDirectoryW", func_GetPrintProcessorDirectoryW },

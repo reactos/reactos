@@ -170,6 +170,7 @@ RWDetermineMediaType(PDRIVE_INFO DriveInfo, BOOLEAN OneShot)
     UCHAR HeadLoadTime;
     UCHAR HeadUnloadTime;
     UCHAR StepRateTime;
+    LARGE_INTEGER Timeout;
 
     PAGED_CODE();
 
@@ -181,9 +182,12 @@ RWDetermineMediaType(PDRIVE_INFO DriveInfo, BOOLEAN OneShot)
      * Note that only 1.44 has been tested at all.
      */
 
+    Timeout.QuadPart = -10000000; /* 1 second. Is that enough? */
+
     do
     {
         int i;
+        NTSTATUS Status;
 
         /* Program data rate */
         if(HwSetDataRate(DriveInfo->ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
@@ -219,7 +223,7 @@ RWDetermineMediaType(PDRIVE_INFO DriveInfo, BOOLEAN OneShot)
             }
 
             /* Wait for the recalibrate to finish */
-            WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+            WaitForControllerInterrupt(DriveInfo->ControllerInfo, NULL);
 
             RecalStatus = HwRecalibrateResult(DriveInfo->ControllerInfo);
 
@@ -244,9 +248,9 @@ RWDetermineMediaType(PDRIVE_INFO DriveInfo, BOOLEAN OneShot)
         }
 
         /* Wait for the ReadID to finish */
-        WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+        Status = WaitForControllerInterrupt(DriveInfo->ControllerInfo, &Timeout);
 
-        if(HwReadIdResult(DriveInfo->ControllerInfo, NULL, NULL) != STATUS_SUCCESS)
+        if(Status == STATUS_TIMEOUT || HwReadIdResult(DriveInfo->ControllerInfo, NULL, NULL) != STATUS_SUCCESS)
         {
             WARN_(FLOPPY, "RWDetermineMediaType(): ReadIdResult failed; continuing\n");
             if (OneShot)
@@ -303,7 +307,7 @@ RWSeekToCylinder(PDRIVE_INFO DriveInfo, UCHAR Cylinder)
         return STATUS_UNSUCCESSFUL;
     }
 
-    WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+    WaitForControllerInterrupt(DriveInfo->ControllerInfo, NULL);
 
     if(HwSenseInterruptStatus(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
     {
@@ -318,7 +322,7 @@ RWSeekToCylinder(PDRIVE_INFO DriveInfo, UCHAR Cylinder)
         return STATUS_UNSUCCESSFUL;
     }
 
-    WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+    WaitForControllerInterrupt(DriveInfo->ControllerInfo, NULL);
 
     if(HwReadIdResult(DriveInfo->ControllerInfo, &CurCylinder, NULL) != STATUS_SUCCESS)
     {
@@ -732,7 +736,7 @@ ReadWritePassive(PDRIVE_INFO DriveInfo, PIRP Irp)
          * At this point, we block and wait for an interrupt
          * FIXME: this seems to take too long
          */
-        WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+        WaitForControllerInterrupt(DriveInfo->ControllerInfo, NULL);
 
         /* Read is complete; flush & free adapter channel */
         IoFlushAdapterBuffers(DriveInfo->ControllerInfo->AdapterObject, Irp->MdlAddress,

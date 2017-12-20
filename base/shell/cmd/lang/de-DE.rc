@@ -138,7 +138,7 @@ ERASE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\n\
   /W          Sicheres Löschen. Dateien werden mit Zufallszahlen überschrieben, bevor sie gelöscht werden.\n\
   /Y          Löscht alles (*.*) ohne Vorwarnung.\n\
   /Z          Löscht versteckte, schreibgeschützte und Systemdateien.\n"
-    STRING_DEL_HELP2 "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sich sicher (J/N)?"
+    STRING_DEL_HELP2 "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sich sicher (J/N) ?"
     STRING_DEL_HELP3 "    %lu Datei(en) gelöscht\n"
     STRING_DEL_HELP4 "    %lu Datei(en) gelöscht\n"
     STRING_DELAY_HELP "Pause für n Sekunden oder Millisekunden.\n\
@@ -209,12 +209,25 @@ ECHO ohne Parameter zeigt die aktuelle Einstellung der Befehlsanzeige an."
     STRING_ECHO_HELP5 "ECHO ist %s\n"
     STRING_EXIT_HELP "Beendet den Befehlsinterpreter CMD.EXE oder die aktuelle Batchdatei.\n\nEXIT"
     STRING_FOR_HELP1 "Führt einen Befehl für jede einzelne Datei für einen Satz von Dateien aus.\n\n\
-FOR %Variable IN (Satz) DO Befehl [Parameter]\n\n\
-  %variable  Ein ersetzbarer Parameter bestehend aus einem einzelnen\n\
-              Buchstaben.\n\
+FOR %Variable IN (Satz) DO Befehl [Parameter]\n\
+FOR /L %Variable IN (start,step,end) DO Befehl [Parameter]\n\
+FOR /D %Variable IN (Satz) DO Befehl [Parameter]\n\
+FOR /R [[drive:]path] IN (Satz) DO Befehl [Parameter]\n\
+FOR /F [""options""] IN (Satz) DO Befehl [Parameter]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %Variable  Ein ersetzbarer Parameter bestehend aus einem einzelnen\n\
+             Buchstaben.\n\
   (Satz)     Ein Satz von mindestens einer Datei. Platzhalter sind zulässig.\n\
-  Befehl    Befehl, der für jede Datei ausgeführt werden soll.\n\
-  Parameter Parameter und Optionen für den angegebenen Befehl.\n\n\
+  Befehl     Befehl, der für jede Datei ausgeführt werden soll.\n\
+  Parameter  Parameter und Optionen für den angegebenen Befehl.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 Um den FOR-Befehl in einem Batchprogramm zu verwenden, geben Sie %%Variable\n\
 statt %Variable an."
     STRING_FREE_HELP1 "\nVolume in Laufwerk %s ist %-11s\n\
@@ -362,8 +375,8 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
     STRING_REPLACE_HELP6 "Ersetze %s\n"
     STRING_REPLACE_HELP7 "Keine Dateien hinzugefügt\n"
     STRING_REPLACE_HELP8 "%lu Datei(en) hinzugefügt\n"
-    STRING_REPLACE_HELP9 "Füge %s hinzu (J/N) "
-    STRING_REPLACE_HELP10 "Ersetze %s (J/N) "
+    STRING_REPLACE_HELP9 "Füge %s hinzu (J/N)? "
+    STRING_REPLACE_HELP10 "Ersetze %s (J/N)? "
     STRING_REPLACE_HELP11 "Füge %s hinzu\n"
     STRING_SHIFT_HELP "Verändert die Position ersetzbarer Parameter in einem Batchprogramm.\n\n\
 SHIFT [DOWN]"
@@ -489,7 +502,7 @@ Titel         neuer Titel"
     STRING_COPY_ERROR4 "Fehler: Noch nicht implementiert!\n"
     STRING_DATE_ERROR "Ungültiges Datum."
     STRING_DEL_ERROR5 "Die Datei %s wird gelöscht! "
-    STRING_DEL_ERROR6 "Sind Sie sicher (J/N)?"
+    STRING_DEL_ERROR6 "Sind Sie sicher (J/N)? "
     STRING_DEL_ERROR7 "Löschen: %s\n"
     STRING_ERROR_ERROR1 "Unbekannter Fehler! Fehlernummer: 0x%lx\n"
     STRING_ERROR_ERROR2 "Syntax-Fehler"

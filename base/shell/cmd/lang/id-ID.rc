@@ -141,7 +141,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
         A     File Bisa Diarsipkan\n\
         H     File Tersembunyi\n\
         -     prefiks berarti tidak\n"
-    STRING_DEL_HELP2 "Semua file dalam direktori akan dihapus!\nAnda yakin (Y/T)?"
+    STRING_DEL_HELP2 "Semua file dalam direktori akan dihapus!\nAnda yakin (Y/T)? "
     STRING_DEL_HELP3 "    %lu file dihapus\n"
     STRING_DEL_HELP4 "    %lu file dihapus\n"
     STRING_DELAY_HELP "Menunda n detik atau milidetik.\n\
@@ -213,12 +213,25 @@ Ketik ECHO tanpa parameter untuk menampilkan setelan ECHO saat ini."
   /B            Keluar dari hanya file batch.  \n\
                 Jika dijalankan di luar file batch ia akan keluar dari cmd.exe\n\
   ExitCode      Nilai ini akan ditempatkan ke ERRORLEVEL saat keluar\n"
-    STRING_FOR_HELP1 "Menjalankan perintah yang ditetapkan untuk setiap file dalam set file\n\n\
-FOR %variabel IN (set) DO perintah [parameter]\n\n\
+    STRING_FOR_HELP1 "Menjalankan perintah yang ditetapkan untuk setiap file dalam set file.\n\n\
+FOR %variabel IN (set) DO perintah [parameter]\n\
+FOR /L %variabel IN (start,step,end) DO perintah [parameter]\n\
+FOR /D %variabel IN (set) DO perintah [parameter]\n\
+FOR /R [[drive:]path] IN (set) DO perintah [parameter]\n\
+FOR /F [""options""] IN (set) DO perintah [parameter]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
   %variabel  Menetapkan parameter yang bisa diganti.\n\
   (set)      Mentetapkan sebuah set dari satu atau lebih file. Wildcards boleh dipakai.\n\
   perintah   Menetapkan perintah yang dilakukan untuk setiap file.\n\
-  parameter  Menetapkan parameter atau saklar untuk perintah yang dieteapkan.\n\n\
+  parameter  Menetapkan parameter atau saklar untuk perintah yang dieteapkan.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
 Untuk menggunakan perintah FOR dalam program batch, tetapkan %%variable daripada\n\
 %variabel.\n"
     STRING_FREE_HELP1 "\nVolume di drive %s adalah %-11s\n\
@@ -366,8 +379,8 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP6 "Replace %s\n"
     STRING_REPLACE_HELP7 "No files added\n"
     STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N) "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N) "
+    STRING_REPLACE_HELP9 "Add %s (Y/N)? "
+    STRING_REPLACE_HELP10 "Replace %s (Y/N)? "
     STRING_REPLACE_HELP11 "Adding %s\n"
     STRING_SHIFT_HELP "Mengubah posisi parameter yang bisa diganti dalam file batch.\n\n\
 SHIFT [DOWN]"
@@ -489,7 +502,7 @@ title         judul baru\n"
     STRING_COPY_ERROR4 "Salah: Belum diimplementasikan!\n"
     STRING_DATE_ERROR "Tanggal tidak benar."
     STRING_DEL_ERROR5 "File %s akan dihapus! "
-    STRING_DEL_ERROR6 "Anda yakin (Y/N)?"
+    STRING_DEL_ERROR6 "Anda yakin (Y/N)? "
     STRING_DEL_ERROR7 "Menghapus: %s\n"
     STRING_ERROR_ERROR1 "Kesalahan tidak dikenal! Kode kesalahan: 0x%lx\n"
     STRING_ERROR_ERROR2 "Sintaks salah"

@@ -91,20 +91,21 @@ END
 
 IDM_BAND_MENU MENUEX
 BEGIN
-	MENUITEM "Показать заголовок", IDM_BAND_TITLE
-	MENUITEM "Закрыть панель инструментов", IDM_BAND_CLOSE
+	MENUITEM "Показать за&головок", IDM_BAND_TITLE
+	MENUITEM "&Закрыть панель инструментов", IDM_BAND_CLOSE
 END
 
 IDM_POPUPMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", IDM_VIEW_MENU
+        POPUP "&Вид", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "&Крупные значки", IDM_LARGE_ICONS
+            MENUITEM "&Мелкие значки", IDM_SMALL_ICONS
         END
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "&Открыть папку", IDM_OPEN_FOLDER
+        MENUITEM "Показ&ывать подписи", IDM_SHOW_TEXT
     END    
 END
 
@@ -296,5 +297,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
+    IDS_BROWSEFORNEWTOOLAR "Выберите папку"
+    IDS_TOOLBAR_ERR_TITLE "Панель инструментов"
+    IDS_TOOLBAR_ERR_TEXT "Не удалось создать панель инструментов."
 END

@@ -18,20 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "wine/commctrl.h"
-
-#include "wine/test.h"
-#include "v6util.h"
-#include "msg.h"
+#include "precomp.h"
 
 static const char *TEST_CALLBACK_TEXT = "callback_text";
 

@@ -18,18 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#define _WIN32_WINNT 0x0501
-
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 typedef LONG (WINAPI *PBROADCAST)( DWORD,LPDWORD,UINT,WPARAM,LPARAM );
 typedef LONG (WINAPI *PBROADCASTEX)( DWORD,LPDWORD,UINT,WPARAM,LPARAM,PBSMINFO );

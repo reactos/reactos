@@ -18,13 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <assert.h>
-
-#include <windows.h>
-#include <wine/winternl.h>
-#include <winreg.h>
-#include "wine/test.h"
+#include "precomp.h"
 
 #ifndef STATUS_DEBUGGER_INACTIVE
 #define STATUS_DEBUGGER_INACTIVE         ((NTSTATUS) 0xC0000354)

@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "netapi32.h"
+
 #include <lmalert.h>
 #include <lmaudit.h>
 #include <lmconfig.h>
@@ -16,8 +17,6 @@
 #include <lmmsg.h>
 #include <lmrepl.h>
 #include <lmsvc.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
 /* FUNCTIONS *****************************************************************/
 

@@ -6,6 +6,8 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+#pragma once
+
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 /* Make the code cleaner with some definitions for size multiples */

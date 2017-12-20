@@ -729,33 +729,33 @@ private:
 
     VOID InitCategoriesList()
     {
-        HTREEITEM hRootItem1, hRootItem2;
+        HTREEITEM hRootItemInstalled, hRootItemAvailable;
 
-        hRootItem1 = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
-        AddCategory(hRootItem1, IDS_APPLICATIONS, IDI_APPS);
-        AddCategory(hRootItem1, IDS_UPDATES, IDI_APPUPD);
+        hRootItemInstalled = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
+        AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
+        AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
 
-        hRootItem2 = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
-        AddCategory(hRootItem2, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
-        AddCategory(hRootItem2, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
-        AddCategory(hRootItem2, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
-        AddCategory(hRootItem2, IDS_CAT_GAMES, IDI_CAT_GAMES);
-        AddCategory(hRootItem2, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
-        AddCategory(hRootItem2, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
-        AddCategory(hRootItem2, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
-        AddCategory(hRootItem2, IDS_CAT_EDU, IDI_CAT_EDU);
-        AddCategory(hRootItem2, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
-        AddCategory(hRootItem2, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
-        AddCategory(hRootItem2, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
-        AddCategory(hRootItem2, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
-        AddCategory(hRootItem2, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
-        AddCategory(hRootItem2, IDS_CAT_LIBS, IDI_CAT_LIBS);
-        AddCategory(hRootItem2, IDS_CAT_OTHER, IDI_CAT_OTHER);
+        hRootItemAvailable = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
+        AddCategory(hRootItemAvailable, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
+        AddCategory(hRootItemAvailable, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
+        AddCategory(hRootItemAvailable, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
+        AddCategory(hRootItemAvailable, IDS_CAT_GAMES, IDI_CAT_GAMES);
+        AddCategory(hRootItemAvailable, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
+        AddCategory(hRootItemAvailable, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
+        AddCategory(hRootItemAvailable, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
+        AddCategory(hRootItemAvailable, IDS_CAT_EDU, IDI_CAT_EDU);
+        AddCategory(hRootItemAvailable, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
+        AddCategory(hRootItemAvailable, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
+        AddCategory(hRootItemAvailable, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
+        AddCategory(hRootItemAvailable, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
+        AddCategory(hRootItemAvailable, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
+        AddCategory(hRootItemAvailable, IDS_CAT_LIBS, IDI_CAT_LIBS);
+        AddCategory(hRootItemAvailable, IDS_CAT_OTHER, IDI_CAT_OTHER);
 
         m_TreeView->SetImageList();
-        m_TreeView->Expand(hRootItem1, TVE_EXPAND);
-        m_TreeView->Expand(hRootItem2, TVE_EXPAND);
-        m_TreeView->SelectItem(hRootItem1);
+        m_TreeView->Expand(hRootItemInstalled, TVE_EXPAND);
+        m_TreeView->Expand(hRootItemAvailable, TVE_EXPAND);
+        m_TreeView->SelectItem(hRootItemAvailable);
     }
 
     BOOL CreateStatusBar()

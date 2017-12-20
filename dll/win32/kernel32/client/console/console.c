@@ -37,7 +37,7 @@ extern BOOL WINAPI IsDebuggerPresent(VOID);
 /* Console Input facilities */
 HANDLE InputWaitHandle = INVALID_HANDLE_VALUE;
 
-#define EXENAME_LENGTH 255 + 1
+#define EXENAME_LENGTH (255 + 1)
 static RTL_CRITICAL_SECTION ExeNameLock;
 static BOOLEAN ExeNameInitialized;
 static WCHAR ExeNameBuffer[EXENAME_LENGTH]; // NULL-terminated
@@ -2787,7 +2787,7 @@ SetConsoleIcon(HICON hIcon)
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-SetConsoleInputExeNameW(IN LPWSTR lpExeName)
+SetConsoleInputExeNameW(IN LPCWSTR lpExeName)
 {
     DWORD ExeLength;
 
@@ -2827,7 +2827,7 @@ SetConsoleInputExeNameW(IN LPWSTR lpExeName)
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
-SetConsoleInputExeNameA(IN LPSTR lpExeName)
+SetConsoleInputExeNameA(IN LPCSTR lpExeName)
 {
     NTSTATUS Status;
 #ifdef USE_TEB_STATIC_USTR

@@ -12,10 +12,11 @@ list(APPEND SOURCE
 add_library(cdrom_new SHARED ${SOURCE})
 target_link_libraries(cdrom_new libcntpr wdmguid)
 
-if((ARCH STREQUAL "i386") AND (NOT MSVC))
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #add_target_compile_flags(cdrom_new "-Wno-format -Wno-unused-variable -Wno-pointer-sign")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format -Wno-unused-variable -Wno-pointer-sign")
+if(USE_CLANG_CL OR (NOT MSVC))
+    add_target_compile_flags(cdrom_new "-Wno-format -Wno-unused-variable -Wno-pointer-sign")
+    if(USE_CLANG_CL)
+        add_target_compile_flags(cdrom_new "-Wno-enum-conversion -Wno-tautological-constant-compare")
+    endif()
 endif()
 
 set_module_type(cdrom_new kernelmodedriver)

@@ -13,14 +13,15 @@ list(APPEND SOURCE
     registry.c
     security.c
     service.c
-    testlist.c)
+    precomp.h)
 
-add_executable(advapi32_winetest ${SOURCE})
+add_executable(advapi32_winetest ${SOURCE} testlist.c)
 
-if(NOT MSVC)
+if(USE_CLANG_CL OR (NOT MSVC))
     add_target_compile_flags(advapi32_winetest "-Wno-format")
 endif()
 
 set_module_type(advapi32_winetest win32cui)
 add_importlibs(advapi32_winetest advapi32 ole32 user32 msvcrt kernel32 ntdll)
+add_pch(advapi32_winetest precomp.h SOURCE)
 add_rostests_file(TARGET advapi32_winetest)

@@ -45,6 +45,7 @@ SHA1 = 19db0e35ccdd2e0ab9f25d57232fa137990b8ac3
 
 [Section.0415]
 License = Nieznana
+Description = Bezpłatny program służący do przeglądania arkuszy kalkulacyjnych w formacie Office (*.xls).
 Size = 51.2 MiB
 URLDownload = http://download.microsoft.com/download/5/B/A/5BAB0B5A-706D-444C-B90A-1D97DB4C43A8/ExcelViewer.exe
 SHA1 = afd50f7c95d477befe3850cae9d314efed20f0ba

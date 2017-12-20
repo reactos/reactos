@@ -18,17 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-#include <stdio.h>
-
-#include <windows.h>
-#include <objidl.h>
-#include <msi.h>
-#include <msidefs.h>
-#include <msiquery.h>
-
-#include "wine/test.h"
+#include "precomp.h"
 
 static const char *msifile = "winetest-db.msi";
 static const char *msifile2 = "winetst2-db.msi";

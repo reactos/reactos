@@ -3,6 +3,7 @@
  *
  * Copyright 2005 Johannes Anderwald
  * Copyright 2012 Rafal Harabien
+ * Copyright 2017 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -117,7 +118,7 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, PCUITEMID_CH
 
     /* Handle drives */
     if (PathIsRootW(wszPath))
-        return SH_ShowDriveProperties(wszPath, pidlFolder, apidl);
+        return SUCCEEDED(SH_ShowDriveProperties(wszPath, pidlFolder, apidl));
 
     /* Handle files and folders */
     PROPSHEETHEADERW Header;

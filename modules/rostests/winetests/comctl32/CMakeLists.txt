@@ -5,7 +5,6 @@ add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     animate.c
-    button.c
     comboex.c
     datetime.c
     dpa.c
@@ -21,7 +20,6 @@ list(APPEND SOURCE
     propsheet.c
     rebar.c
     status.c
-    subclass.c
     syslink.c
     tab.c
     taskdialog.c
@@ -30,15 +28,20 @@ list(APPEND SOURCE
     trackbar.c
     treeview.c
     updown.c
-    testlist.c)
+    precomp.h)
 
-add_executable(comctl32_winetest ${SOURCE} rsrc.rc)
+add_executable(comctl32_winetest
+    ${SOURCE}
+    button.c
+    subclass.c
+    testlist.c
+    rsrc.rc)
+
+if(USE_CLANG_CL OR (NOT MSVC))
+    add_target_compile_flags(comctl32_winetest "-Wno-format")
+endif()
+
 set_module_type(comctl32_winetest win32cui)
 add_importlibs(comctl32_winetest comctl32 ole32 user32 gdi32 advapi32 msvcrt kernel32)
+add_pch(comctl32_winetest precomp.h SOURCE)
 add_rostests_file(TARGET comctl32_winetest)
-
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #add_target_compile_flags(comctl32_winetest "-Wno-format")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format")
-endif()

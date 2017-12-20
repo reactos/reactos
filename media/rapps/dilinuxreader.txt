@@ -14,6 +14,9 @@ CDPath = none
 Description = Eine einfache Möglichkeit zwischen Windows/ReactOS und Ext2/Ext3/Ext4, HFS und ReiserFS-Dateisystemen zu überbrücken.
 Size = 21,2 MiB
 
+[Section.0415]
+Description = Narzędzie zapewniające łatwy dostęp do systemów plików Ext2/Ext3/Ext4, HFS i ReiserFS z systemów Windows i ReactOS.
+
 [Section.0418]
 License = Gratuită
 Description = Utilitar facil de acces între Windows/ReactOS și sistemele de fișiere Ext2/Ext3/Ext4, HFS și ReiserFS.

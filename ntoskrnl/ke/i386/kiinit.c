@@ -345,7 +345,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->PrcbData.CurrentThread = IdleThread;
 
     /* Set pointers to ourselves */
-    Pcr->Self = (PKPCR)Pcr;
+    Pcr->SelfPcr = (PKPCR)Pcr;
     Pcr->Prcb = &Pcr->PrcbData;
 
     /* Set the PCR Version */

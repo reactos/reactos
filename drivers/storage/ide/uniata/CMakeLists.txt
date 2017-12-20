@@ -22,9 +22,11 @@ list(APPEND SOURCE
 
 add_library(uniata SHARED ${SOURCE} idedma.rc)
 
-if(NOT MSVC)
+if(USE_CLANG_CL OR (NOT MSVC))
     add_target_compile_flags(uniata "-Wno-narrowing")
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if(USE_CLANG_CL)
+        add_target_compile_flags(uniata "-Wno-unused-const-variable")
+    else()
         add_target_compile_flags(uniata "-Wno-unused-but-set-variable")
     endif()
 endif()

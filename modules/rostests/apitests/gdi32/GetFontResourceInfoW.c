@@ -4,11 +4,8 @@
  * PURPOSE:         Test for GetFontResourceInfoW
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-#include <apitest.h>
-#include <winuser.h>
-#include <wingdi.h>
-#include <winnls.h>
-#include <stdio.h>
+
+#include "precomp.h"
 
 /* GetFontResourceInfoW is undocumented */
 BOOL WINAPI GetFontResourceInfoW(LPCWSTR lpFileName, DWORD *pdwBufSize, void* lpBuffer, DWORD dwType);

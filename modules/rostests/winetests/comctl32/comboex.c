@@ -17,16 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-//#include <windows.h>
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <commctrl.h>
-
-//#include "wine/test.h"
-#include "msg.h"
+#include "precomp.h"
 
 #define EDITBOX_SEQ_INDEX  0
 #define NUM_MSG_SEQUENCES  1

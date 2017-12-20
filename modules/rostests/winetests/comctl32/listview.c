@@ -20,16 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/test.h>
-
-//#include <stdio.h>
-//#include <windows.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <commctrl.h>
-
-#include "v6util.h"
-#include "msg.h"
+#include "precomp.h"
 
 enum seq_index {
     PARENT_SEQ_INDEX,

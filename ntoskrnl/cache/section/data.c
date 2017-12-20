@@ -192,9 +192,9 @@ _MiFlushMappedSection(PVOID BaseAddress,
             (MmIsDirtyPageRmap(Page) || IS_DIRTY_SSE(Entry)) &&
             FileOffset.QuadPart < FileSize->QuadPart)
         {
-            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            OldIrql = MiAcquirePfnLock();
             MmReferencePage(Page);
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiReleasePfnLock(OldIrql);
             Pages[(PageAddress - BeginningAddress) >> PAGE_SHIFT] = Entry;
         }
         else

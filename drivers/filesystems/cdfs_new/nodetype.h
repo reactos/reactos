@@ -19,7 +19,7 @@ Abstract:
 #ifndef _CDNODETYPE_
 #define _CDNODETYPE_
 
-typedef CSHORT NODE_TYPE_CODE;
+typedef USHORT NODE_TYPE_CODE;
 typedef NODE_TYPE_CODE *PNODE_TYPE_CODE;
 
 #define NTC_UNDEFINED                   ((NODE_TYPE_CODE)0x0000)
@@ -90,12 +90,15 @@ typedef CSHORT NODE_BYTE_SIZE;
 #define CDFS_BUG_CHECK_PNP               (0x00140000)
 #define CDFS_BUG_CHECK_PREFXSUP          (0x00150000)
 #define CDFS_BUG_CHECK_READ              (0x00160000)
-#define CDFS_BUG_CHECK_RESRCSUP          (0x00170000)
-#define CDFS_BUG_CHECK_STRUCSUP          (0x00180000)
-#define CDFS_BUG_CHECK_TIMESUP           (0x00190000)
-#define CDFS_BUG_CHECK_VERFYSUP          (0x001a0000)
-#define CDFS_BUG_CHECK_VOLINFO           (0x001b0000)
-#define CDFS_BUG_CHECK_WORKQUE           (0x001c0000)
+#define CDFS_BUG_CHECK_WRITE             (0x00170000)
+#define CDFS_BUG_CHECK_RESRCSUP          (0x00180000)
+#define CDFS_BUG_CHECK_STRUCSUP          (0x00190000)
+#define CDFS_BUG_CHECK_TIMESUP           (0x001a0000)
+#define CDFS_BUG_CHECK_VERFYSUP          (0x001b0000)
+#define CDFS_BUG_CHECK_VOLINFO           (0x001c0000)
+#define CDFS_BUG_CHECK_WORKQUE           (0x001d0000)
+#define CDFS_BUG_CHECK_SHUTDOWN          (0x001e0000)
+
 
 #define CdBugCheck(A,B,C) { KeBugCheckEx(CDFS_FILE_SYSTEM, BugCheckFileId | __LINE__, A, B, C ); }
 

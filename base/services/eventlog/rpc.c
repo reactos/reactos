@@ -285,6 +285,7 @@ ElfDeleteEventLogHandle(PIELF_HANDLE LogHandle)
 
 /* Function 0 */
 NTSTATUS
+WINAPI
 ElfrClearELFW(
     IELF_HANDLE LogHandle,
     PRPC_UNICODE_STRING BackupFileName)
@@ -308,6 +309,7 @@ ElfrClearELFW(
 
 /* Function 1 */
 NTSTATUS
+WINAPI
 ElfrBackupELFW(
     IELF_HANDLE LogHandle,
     PRPC_UNICODE_STRING BackupFileName)
@@ -327,6 +329,7 @@ ElfrBackupELFW(
 
 /* Function 2 */
 NTSTATUS
+WINAPI
 ElfrCloseEL(
     PIELF_HANDLE LogHandle)
 {
@@ -336,6 +339,7 @@ ElfrCloseEL(
 
 /* Function 3 */
 NTSTATUS
+WINAPI
 ElfrDeregisterEventSource(
     PIELF_HANDLE LogHandle)
 {
@@ -345,6 +349,7 @@ ElfrDeregisterEventSource(
 
 /* Function 4 */
 NTSTATUS
+WINAPI
 ElfrNumberOfRecords(
     IELF_HANDLE LogHandle,
     PULONG NumberOfRecords)
@@ -393,6 +398,7 @@ ElfrNumberOfRecords(
 
 /* Function 5 */
 NTSTATUS
+WINAPI
 ElfrOldestRecord(
     IELF_HANDLE LogHandle,
     PULONG OldestRecordNumber)
@@ -423,6 +429,7 @@ ElfrOldestRecord(
 
 /* Function 6 */
 NTSTATUS
+WINAPI
 ElfrChangeNotify(
     IELF_HANDLE LogHandle,
     RPC_CLIENT_ID ClientId,
@@ -435,6 +442,7 @@ ElfrChangeNotify(
 
 /* Function 7 */
 NTSTATUS
+WINAPI
 ElfrOpenELW(
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING ModuleName,
@@ -462,6 +470,7 @@ ElfrOpenELW(
 
 /* Function 8 */
 NTSTATUS
+WINAPI
 ElfrRegisterEventSourceW(
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING ModuleName,
@@ -493,6 +502,7 @@ ElfrRegisterEventSourceW(
 
 /* Function 9 */
 NTSTATUS
+WINAPI
 ElfrOpenBELW(
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING BackupFileName,
@@ -516,6 +526,7 @@ ElfrOpenBELW(
 
 /* Function 10 */
 NTSTATUS
+WINAPI
 ElfrReadELW(
     IELF_HANDLE LogHandle,
     ULONG ReadFlags,
@@ -709,6 +720,7 @@ ElfrIntReportEventW(
 
 /* Function 11 */
 NTSTATUS
+WINAPI
 ElfrReportEventW(
     IELF_HANDLE LogHandle,
     ULONG Time,
@@ -746,6 +758,7 @@ ElfrReportEventW(
 
 /* Function 12 */
 NTSTATUS
+WINAPI
 ElfrClearELFA(
     IELF_HANDLE LogHandle,
     PRPC_STRING BackupFileName)
@@ -770,6 +783,7 @@ ElfrClearELFA(
 
 /* Function 13 */
 NTSTATUS
+WINAPI
 ElfrBackupELFA(
     IELF_HANDLE LogHandle,
     PRPC_STRING BackupFileName)
@@ -794,6 +808,7 @@ ElfrBackupELFA(
 
 /* Function 14 */
 NTSTATUS
+WINAPI
 ElfrOpenELA(
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING ModuleName,
@@ -830,6 +845,7 @@ ElfrOpenELA(
 
 /* Function 15 */
 NTSTATUS
+WINAPI
 ElfrRegisterEventSourceA(
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING ModuleName,
@@ -877,6 +893,7 @@ ElfrRegisterEventSourceA(
 
 /* Function 16 */
 NTSTATUS
+WINAPI
 ElfrOpenBELA(
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING BackupFileName,
@@ -919,6 +936,7 @@ ElfrOpenBELA(
 
 /* Function 17 */
 NTSTATUS
+WINAPI
 ElfrReadELA(
     IELF_HANDLE LogHandle,
     ULONG ReadFlags,
@@ -970,6 +988,7 @@ ElfrReadELA(
 
 /* Function 18 */
 NTSTATUS
+WINAPI
 ElfrReportEventA(
     IELF_HANDLE LogHandle,
     ULONG Time,
@@ -1088,6 +1107,7 @@ Done:
 
 /* Function 19 */
 NTSTATUS
+WINAPI
 ElfrRegisterClusterSvc(
     handle_t BindingHandle)
 {
@@ -1098,6 +1118,7 @@ ElfrRegisterClusterSvc(
 
 /* Function 20 */
 NTSTATUS
+WINAPI
 ElfrDeregisterClusterSvc(
     handle_t BindingHandle)
 {
@@ -1108,6 +1129,7 @@ ElfrDeregisterClusterSvc(
 
 /* Function 21 */
 NTSTATUS
+WINAPI
 ElfrWriteClusterEvents(
     handle_t BindingHandle)
 {
@@ -1118,6 +1140,7 @@ ElfrWriteClusterEvents(
 
 /* Function 22 */
 NTSTATUS
+WINAPI
 ElfrGetLogInformation(
     IELF_HANDLE LogHandle,
     ULONG InfoLevel,
@@ -1169,6 +1192,7 @@ ElfrGetLogInformation(
 
 /* Function 23 */
 NTSTATUS
+WINAPI
 ElfrFlushEL(
     IELF_HANDLE LogHandle)
 {
@@ -1196,6 +1220,7 @@ ElfrFlushEL(
 
 /* Function 24 */
 NTSTATUS
+WINAPI
 ElfrReportEventAndSourceW(
     IELF_HANDLE LogHandle,
     ULONG Time,

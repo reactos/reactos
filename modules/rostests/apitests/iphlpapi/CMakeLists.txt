@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    GetInterfaceName.c
     GetNetworkParams.c
     icmp.c
     SendARP.c

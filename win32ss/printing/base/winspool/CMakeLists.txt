@@ -5,6 +5,7 @@ spec2def(winspool.drv winspool.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     devmode.c
+    forms.c
     jobs.c
     main.c
     monitors.c

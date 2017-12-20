@@ -220,14 +220,15 @@ KdpPrompt(IN LPSTR PromptString,
 {
     STRING PromptBuffer, ResponseBuffer;
     BOOLEAN Enable, Resend;
-    PVOID CapturedPrompt;
+    CHAR CapturedPrompt[512];
+    CHAR SafeResponseBuffer[512];
     PCHAR SafeResponseString;
 
     /* Normalize the lengths */
     PromptLength = min(PromptLength,
-                       512);
+                       sizeof(CapturedPrompt));
     MaximumResponseLength = min(MaximumResponseLength,
-                                512);
+                                sizeof(SafeResponseBuffer));
 
     /* Check if we need to verify the string */
     if (PreviousMode != KernelMode)
@@ -241,7 +242,6 @@ KdpPrompt(IN LPSTR PromptString,
                          1);
 
             /* Capture prompt */
-            CapturedPrompt = _alloca(PromptLength);
             KdpMoveMemory(CapturedPrompt,
                           PromptString,
                           PromptLength);
@@ -251,7 +251,7 @@ KdpPrompt(IN LPSTR PromptString,
             ProbeForWrite(ResponseString,
                           MaximumResponseLength,
                           1);
-            SafeResponseString = _alloca(MaximumResponseLength);
+            SafeResponseString = SafeResponseBuffer;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {

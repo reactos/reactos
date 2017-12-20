@@ -17,18 +17,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdarg.h>
 
-#include <windef.h>
-#include <winbase.h>
-//#include "wingdi.h"
-#include <winuser.h>
-//#include "winnls.h"
-#include <winreg.h>
-#include <commctrl.h>
-//#include "shlwapi.h"
-
-#include <wine/test.h>
+#include "precomp.h"
 
 /* Keys for testing MRU functions */
 #define REG_TEST_BASEKEYA    "Software\\Wine"

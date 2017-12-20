@@ -359,9 +359,6 @@ typedef struct _GLCLTPROCTABLE
 
 typedef VOID (APIENTRY * PFN_SETPROCTABLE)(const GLCLTPROCTABLE*);
 
-/* Those functions are there in case GL calls are made without a context */
-extern const GLCLTPROCTABLE StubTable;
-
 /* This doesn't seem to be anywhere in ddk or psdk */
 DECLARE_HANDLE(DHGLRC);
 

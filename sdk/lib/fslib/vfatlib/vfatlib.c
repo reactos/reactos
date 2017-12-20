@@ -383,6 +383,7 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     BOOLEAN salvage_files;
     ULONG free_clusters;
     DOS_FS fs;
+    NTSTATUS Status;
 
     RtlZeroMemory(&fs, sizeof(fs));
 
@@ -403,7 +404,20 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
     salvage_files = TRUE;
 
     /* Open filesystem and lock it */
-    fs_open(DriveRoot, FsCheckFlags & FSCHECK_READ_WRITE);
+    Status = fs_open(DriveRoot, FsCheckFlags & FSCHECK_READ_WRITE);
+    if (Status == STATUS_ACCESS_DENIED)
+    {
+        /* We failed to lock, ask the caller whether we should continue */
+        if (Callback(VOLUMEINUSE, 0, NULL))
+        {
+            Status = STATUS_SUCCESS;
+        }
+    }
+    if (!NT_SUCCESS(Status))
+    {
+        fs_close(FALSE);
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
 
     if (CheckOnlyIfDirty && !fs_isdirty())
     {

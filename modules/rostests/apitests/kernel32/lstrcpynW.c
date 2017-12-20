@@ -4,10 +4,7 @@
  * PURPOSE:         Test for lstrcpynW
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <stdio.h>
+#include "precomp.h"
 
 START_TEST(lstrcpynW)
 {

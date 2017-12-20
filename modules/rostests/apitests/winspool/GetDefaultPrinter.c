@@ -13,7 +13,44 @@
 #include <wingdi.h>
 #include <winspool.h>
 
-START_TEST(GetDefaultPrinter)
+START_TEST(GetDefaultPrinterA)
+{
+    DWORD cchDefaultPrinter;
+    PSTR pszDefaultPrinter;
+
+    // Don't supply any parameters, this has to fail with ERROR_INVALID_PARAMETER.
+    SetLastError(0xDEADBEEF);
+    ok(!GetDefaultPrinterA(NULL, NULL), "GetDefaultPrinterA returns TRUE!\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetDefaultPrinterA returns error %lu!\n", GetLastError());
+
+    // Determine the size of the required buffer. This has to bail out with ERROR_INSUFFICIENT_BUFFER.
+    cchDefaultPrinter = 0;
+    SetLastError(0xDEADBEEF);
+    ok(!GetDefaultPrinterA(NULL, &cchDefaultPrinter), "GetDefaultPrinterA returns TRUE!\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetDefaultPrinterA returns error %lu!\n", GetLastError());
+
+    // Try with a buffer large enough.
+    pszDefaultPrinter = HeapAlloc(GetProcessHeap(), 0, cchDefaultPrinter);
+    SetLastError(0xDEADBEEF);
+    ok(GetDefaultPrinterA(pszDefaultPrinter, &cchDefaultPrinter), "GetDefaultPrinterA returns FALSE!\n");
+
+    // SetDefaultPrinterA with NULL needs to succeed and leave the default printer unchanged.
+    SetLastError(0xDEADBEEF);
+    ok(SetDefaultPrinterA(NULL), "SetDefaultPrinterA returns FALSE!\n");
+
+    // SetDefaultPrinterA with the previous default printer also needs to succeed.
+    SetLastError(0xDEADBEEF);
+    ok(SetDefaultPrinterA(pszDefaultPrinter), "SetDefaultPrinterA returns FALSE!\n");
+
+    // SetDefaultPrinterA with an invalid printer name needs to fail with ERROR_INVALID_PRINTER_NAME.
+    SetLastError(0xDEADBEEF);
+    ok(!SetDefaultPrinterA("INVALID PRINTER NAME!!!"), "SetDefaultPrinterA returns TRUE!\n");
+    ok(GetLastError() == ERROR_INVALID_PRINTER_NAME, "SetDefaultPrinterA returns error %lu!\n", GetLastError());
+
+    HeapFree(GetProcessHeap(), 0, pszDefaultPrinter);
+}
+
+START_TEST(GetDefaultPrinterW)
 {
     DWORD cchDefaultPrinter;
     PWSTR pwszDefaultPrinter;
@@ -33,17 +70,14 @@ START_TEST(GetDefaultPrinter)
     pwszDefaultPrinter = HeapAlloc(GetProcessHeap(), 0, cchDefaultPrinter * sizeof(WCHAR));
     SetLastError(0xDEADBEEF);
     ok(GetDefaultPrinterW(pwszDefaultPrinter, &cchDefaultPrinter), "GetDefaultPrinterW returns FALSE!\n");
-    ok(GetLastError() == ERROR_SUCCESS, "GetDefaultPrinterW returns error %lu!\n", GetLastError());
 
     // SetDefaultPrinterW with NULL needs to succeed and leave the default printer unchanged.
     SetLastError(0xDEADBEEF);
     ok(SetDefaultPrinterW(NULL), "SetDefaultPrinterW returns FALSE!\n");
-    ok(GetLastError() == ERROR_SUCCESS, "SetDefaultPrinterW returns error %lu!\n", GetLastError());
 
     // SetDefaultPrinterW with the previous default printer also needs to succeed.
     SetLastError(0xDEADBEEF);
     ok(SetDefaultPrinterW(pwszDefaultPrinter), "SetDefaultPrinterW returns FALSE!\n");
-    ok(GetLastError() == ERROR_SUCCESS, "SetDefaultPrinterW returns error %lu!\n", GetLastError());
 
     // SetDefaultPrinterW with an invalid printer name needs to fail with ERROR_INVALID_PRINTER_NAME.
     SetLastError(0xDEADBEEF);

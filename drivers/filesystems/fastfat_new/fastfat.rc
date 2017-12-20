@@ -1,0 +1,14 @@
+//
+//    Copyright (C) Microsoft.  All rights reserved.
+//
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DRV
+#define VER_FILESUBTYPE VFT2_DRV_SYSTEM
+#define VER_FILEDESCRIPTION_STR     "Fast FAT File System Driver"
+#define VER_INTERNALNAME_STR        "fastfat.sys"
+#define VER_ORIGINALFILENAME_STR    "FastFAT.Sys"
+
+#include "common.ver"

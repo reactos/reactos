@@ -106,6 +106,7 @@ BEGIN
     IDS_CTRL_SHIFT "CTRL+SHIFT"
     IDS_LEFT_ALT_SHIFT "ALT esquerdo+SHIFT"
     IDS_SWITCH_BET_INLANG "Alternar entre idiomas de entrada"
+    IDS_REBOOT_NOW, "Reboot now?"
 END
 
 STRINGTABLE

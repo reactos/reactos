@@ -6,6 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 /* VARIABLES declared in main.cpp ***********************************/
 
 class RegistrySettings;

@@ -6,10 +6,7 @@
  *                  Mark Jansen
  */
 
-#include <apitest.h>
-#include <winuser.h>
-#include <msgtrace.h>
-#include <user32testhelpers.h>
+#include "precomp.h"
 
 static void Test_Params(void)
 {

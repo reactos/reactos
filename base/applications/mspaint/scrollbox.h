@@ -6,6 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 class CScrollboxWindow : public CWindowImpl<CScrollboxWindow>
 {
 public:

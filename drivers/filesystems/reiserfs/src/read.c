@@ -605,7 +605,7 @@ RfsdReadFile(IN PRFSD_IRP_CONTEXT IrpContext)
         Length = IoStackLocation->Parameters.Read.Length;
         ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
         
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 		KdPrint(("$$$ " __FUNCTION__ " on key: %x,%xh to read %i bytes at the offset %xh in the file\n", 
 			Fcb->RfsdMcb->Key.k_dir_id, Fcb->RfsdMcb->Key.k_objectid,
 			Length, ByteOffset.QuadPart));

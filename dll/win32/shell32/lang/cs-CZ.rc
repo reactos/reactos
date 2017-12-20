@@ -689,6 +689,8 @@ BEGIN
     IDS_FORMATDRIVE "Formátovat..."
     IDS_RENAME "Přejmenovat"
     IDS_PASTE "Vložit"
+    IDS_EJECT "Eject"
+    IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Složku '%1' nebylo možné vytvořit"
     IDS_CREATEFOLDER_CAPTION "Složku nebylo možné vytvořit"
@@ -781,6 +783,12 @@ BEGIN
     IDS_PICK_ICON_TITLE "Zvolit ikonu"
     IDS_PICK_ICON_FILTER "Soubory ikon (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Spustitelné soubory (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+
+    IDS_CANTLOCKVOLUME "Unable to lock volume (Error Code: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Unable to dismount volume (Error Code: %lu)."
+    IDS_CANTEJECTMEDIA "Unable to eject media (Error Code: %lu)."
+    IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
+    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     IDS_DIRECTORY "Složka"
     IDS_BAT_FILE "ReactOS dávkový soubor"

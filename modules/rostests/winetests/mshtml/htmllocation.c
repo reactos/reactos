@@ -16,13 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include <wine/test.h>
-
-#include "mshtml.h"
-#include "wininet.h"
+#include "precomp.h"
 
 struct location_test {
     const char *name;

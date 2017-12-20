@@ -1,3 +1,4 @@
+
 project(appcompat)
 
 set_cpp(WITH_RUNTIME)
@@ -18,15 +19,15 @@ spec2def(acppage.dll acppage.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     ACPPage.cpp
     CLayerUIPropPage.cpp
-    CLayerUIPropPage.hpp
-    CLayerStringList.hpp
-    acppage.spec
-    precomp.h
-    resource.h)
+    precomp.h)
 
 add_library(acppage SHARED
     ${SOURCE}
+    acppage.spec
     ACPPage.rc
+    CLayerUIPropPage.hpp
+    CLayerStringList.hpp
+    resource.h
     ${CMAKE_CURRENT_BINARY_DIR}/acppage.def)
 
 set_module_type(acppage win32dll UNICODE)
@@ -35,4 +36,3 @@ add_delay_importlibs(acppage apphelp ole32 oleaut32 shlwapi comctl32 sfc_os)
 add_importlibs(acppage shell32 user32 advapi32 msvcrt kernel32)
 add_pch(acppage precomp.h SOURCE)
 add_cd_file(TARGET acppage DESTINATION reactos/system32 FOR all)
-

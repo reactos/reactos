@@ -69,6 +69,7 @@
 #define IDM_SMALL_ICONS      2003
 #define IDM_SHOW_TEXT        2004
 #define IDM_VIEW_MENU        2005
+#define IDM_OPEN_FOLDER      2006
 
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
@@ -102,6 +103,7 @@
 #define IDR_AUTOCOMPLETE         141
 #define IDR_ACLISTISF            142
 #define IDR_ISFBAND              143
+#define IDR_ACLCUSTOMMRU         144
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
@@ -109,6 +111,8 @@
 #define IDS_NOTEXTLABELS         12304
 #define IDS_SELECTIVETEXTONRIGHT 12305
 #define IDS_BROWSEFORNEWTOOLAR   12387
+#define IDS_TOOLBAR_ERR_TITLE    12388
+#define IDS_TOOLBAR_ERR_TEXT     12389
 #define IDS_GOBUTTONLABEL        12656
 #define IDS_GOBUTTONTIPTEMPLATE  12657
 #define IDS_SEARCHLABEL          12897

@@ -82,6 +82,10 @@ CmpFileRead(IN PHHIVE RegistryHive,
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
+    /* Just return success if no file is associated with this hive */
+    if (HiveHandle == NULL)
+        return TRUE;
+
     _FileOffset.QuadPart = *FileOffset;
     Status = ZwReadFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
                         Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
@@ -102,6 +106,14 @@ CmpFileWrite(IN PHHIVE RegistryHive,
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
+    /* Just return success if no file is associated with this hive */
+    if (HiveHandle == NULL)
+        return TRUE;
+
+    /* Don't do anything if we're not supposed to */
+    if (CmpNoWrite)
+        return TRUE;
+
     _FileOffset.QuadPart = *FileOffset;
     Status = ZwWriteFile(HiveHandle, NULL, NULL, NULL, &IoStatusBlock,
                          Buffer, (ULONG)BufferLength, &_FileOffset, NULL);
@@ -121,6 +133,10 @@ CmpFileSetSize(IN PHHIVE RegistryHive,
     FILE_ALLOCATION_INFORMATION FileAllocationInfo;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
+
+    /* Just return success if no file is associated with this hive */
+    if (HiveHandle == NULL)
+        return TRUE;
 
     EndOfFileInfo.EndOfFile.QuadPart = FileSize;
     Status = ZwSetInformationFile(HiveHandle,
@@ -152,6 +168,14 @@ CmpFileFlush(IN PHHIVE RegistryHive,
     HANDLE HiveHandle = CmHive->FileHandles[FileType];
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
+
+    /* Just return success if no file is associated with this hive */
+    if (HiveHandle == NULL)
+        return TRUE;
+
+    /* Don't do anything if we're not supposed to */
+    if (CmpNoWrite)
+        return TRUE;
 
     Status = ZwFlushBuffersFile(HiveHandle, &IoStatusBlock);
     return NT_SUCCESS(Status) ? TRUE : FALSE;

@@ -54,6 +54,11 @@ typedef struct _CONSOLE_PROCESS_DATA
     // LPTHREAD_START_ROUTINE ImeRoutine;
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
+typedef struct ConsoleInput_t
+{
+    LIST_ENTRY ListEntry;
+    INPUT_RECORD InputEvent;
+} ConsoleInput;
 
 // Helper for code refactoring
 // #define USE_NEW_CONSOLE_WAY

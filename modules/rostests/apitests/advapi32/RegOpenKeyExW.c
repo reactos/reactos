@@ -4,14 +4,10 @@
  * PURPOSE:         Test for the RegOpenKeyExW alignment
  * PROGRAMMER:      Mark Jansen (mark.jansen@reactos.org)
  */
-#include <apitest.h>
 
-#define WIN32_NO_STATUS
-#include <winreg.h>
-
+#include "precomp.h"
 
 #define TEST_STR    L".exe"
-
 
 START_TEST(RegOpenKeyExW)
 {

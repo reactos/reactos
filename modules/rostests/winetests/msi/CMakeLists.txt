@@ -15,10 +15,11 @@ list(APPEND SOURCE
     record.c
     source.c
     suminfo.c
-    testlist.c)
+    precomp.h)
 
-add_executable(msi_winetest ${SOURCE})
+add_executable(msi_winetest ${SOURCE} testlist.c)
 target_link_libraries(msi_winetest uuid)
 set_module_type(msi_winetest win32cui)
 add_importlibs(msi_winetest cabinet msi shell32 ole32 oleaut32 user32 advapi32 version msvcrt kernel32)
+add_pch(msi_winetest precomp.h SOURCE)
 add_rostests_file(TARGET msi_winetest)

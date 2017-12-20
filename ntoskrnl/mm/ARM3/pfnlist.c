@@ -144,7 +144,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     PMMPFN Pfn1;
 
     /* Make sure the PFN lock is held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* Make sure the PFN entry isn't in-use */
     ASSERT(Entry->u3.e1.WriteInProgress == 0);
@@ -267,7 +267,7 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
     PFN_NUMBER OldFlink, OldBlink;
 
     /* Make sure the PFN lock is held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* ARM3 should only call this for dead pages */
     ASSERT(Pfn->u3.e2.ReferenceCount == 0);
@@ -371,7 +371,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     PMMCOLOR_TABLES ColorTable;
 
     /* Make sure PFN lock is held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
     ASSERT(Color < MmSecondaryColors);
 
     /* Get the PFN entry */
@@ -478,7 +478,7 @@ MiRemoveAnyPage(IN ULONG Color)
     PMMPFN Pfn1;
 
     /* Make sure PFN lock is held and we have pages */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
     ASSERT(MmAvailablePages != 0);
     ASSERT(Color < MmSecondaryColors);
 
@@ -535,7 +535,7 @@ MiRemoveZeroPage(IN ULONG Color)
     BOOLEAN Zero = FALSE;
 
     /* Make sure PFN lock is held and we have pages */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
     ASSERT(MmAvailablePages != 0);
     ASSERT(Color < MmSecondaryColors);
 
@@ -723,7 +723,7 @@ MiInsertStandbyListAtFront(IN PFN_NUMBER PageFrameIndex)
 
     /* Make sure the lock is held */
     DPRINT("Inserting page: %lx into standby list !\n", PageFrameIndex);
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* Make sure the PFN is valid */
     ASSERT((PageFrameIndex != 0) &&
@@ -788,7 +788,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     ASSERT(ListHead != &MmFreePageListHead);
 
     /* Make sure the lock is held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* Make sure the PFN is valid */
     ASSERT((PageFrameIndex) &&
@@ -973,7 +973,7 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     PMMPFN Pfn1;
     NTSTATUS Status;
     PMMPTE PointerPtePte;
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* Setup the PTE */
     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
@@ -1040,7 +1040,7 @@ MiInitializePfnAndMakePteValid(IN PFN_NUMBER PageFrameIndex,
     PMMPFN Pfn1;
     NTSTATUS Status;
     PMMPTE PointerPtePte;
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* PTE must be invalid */
     ASSERT(PointerPte->u.Hard.Valid == 0);
@@ -1102,13 +1102,13 @@ MiInitializeAndChargePfn(OUT PPFN_NUMBER PageFrameIndex,
     TempPde = SessionAllocation ? ValidKernelPdeLocal : ValidKernelPde;
 
     /* Lock the PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     /* Make sure nobody is racing us */
     if (PointerPde->u.Hard.Valid == 1)
     {
         /* Return special error if that was the case */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
         return STATUS_RETRY;
     }
 
@@ -1124,7 +1124,7 @@ MiInitializeAndChargePfn(OUT PPFN_NUMBER PageFrameIndex,
     ASSERT(MI_PFN_ELEMENT(*PageFrameIndex)->u1.WsIndex == 0);
 
     /* Release the lock and return success */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
     return STATUS_SUCCESS;
 }
 
@@ -1186,7 +1186,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
         Pfn1->u3.e1.PageLocation = TransitionPage;
 
         /* PFN lock must be held */
-        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+        MI_ASSERT_PFN_LOCK_HELD();
 
         if (Pfn1->u3.e2.ReferenceCount == 1)
         {
@@ -1223,7 +1223,7 @@ MiDecrementReferenceCount(IN PMMPFN Pfn1,
                           IN PFN_NUMBER PageFrameIndex)
 {
     /* PFN lock must be held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     /* Sanity checks on the page */
     if (PageFrameIndex > MmHighestPhysicalPage ||

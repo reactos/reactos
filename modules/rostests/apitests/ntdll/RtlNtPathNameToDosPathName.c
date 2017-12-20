@@ -5,10 +5,7 @@
  * PROGRAMMER:      Mark Jansen
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
 NTSTATUS (NTAPI *pRtlNtPathNameToDosPathName)(ULONG Flags, PRTL_UNICODE_STRING_BUFFER Path, PULONG Type, PULONG Unknown4);
 

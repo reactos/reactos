@@ -5,10 +5,8 @@
  * PROGRAMMER:      Mark Jansen
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#include <ndk/rtlfuncs.h>
 #include <tlhelp32.h>
 
 

@@ -581,6 +581,11 @@ DriverEntry (
         goto errorout;
     }
 
+#ifdef _PNP_POWER_
+    DiskdevObject->DeviceObjectExtension->PowerControlNeeded = FALSE;
+    CdromdevObject->DeviceObjectExtension->PowerControlNeeded = FALSE;
+#endif
+
     /* initializing */
     Ext2Global->DiskdevObject  = DiskdevObject;
     Ext2Global->CdromdevObject = CdromdevObject;
@@ -603,6 +608,9 @@ DriverEntry (
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = Ext2BuildRequest;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]      = Ext2BuildRequest;
     DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL]        = Ext2BuildRequest;
+
+    DriverObject->MajorFunction[IRP_MJ_QUERY_EA] = Ext2BuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_SET_EA] = Ext2BuildRequest;
 
     DriverObject->MajorFunction[IRP_MJ_CLEANUP]             = Ext2BuildRequest;
 

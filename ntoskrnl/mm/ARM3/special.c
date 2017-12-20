@@ -206,7 +206,7 @@ MmExpandSpecialPool(VOID)
     ULONG i;
     PMMPTE PointerPte;
 
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     if (MiSpecialPoolExtraCount == 0)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -292,13 +292,13 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     }
 
     /* Lock PFN database */
-    Irql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Irql = MiAcquirePfnLock();
 
     /* Reject allocation in case amount of available pages is too small */
     if (MmAvailablePages < 0x100)
     {
         /* Release the PFN database lock */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, Irql);
+        MiReleasePfnLock(Irql);
         DPRINT1("Special pool: MmAvailablePages 0x%x is too small\n", MmAvailablePages);
         return NULL;
     }
@@ -311,7 +311,7 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
         {
             /* No reserves left, reject this allocation */
             static int once;
-            KeReleaseQueuedSpinLock(LockQueuePfnLock, Irql);
+            MiReleasePfnLock(Irql);
             if (!once++) DPRINT1("Special pool: No PTEs left!\n");
             return NULL;
         }
@@ -344,7 +344,7 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     MiInitializePfnAndMakePteValid(PageFrameNumber, PointerPte, TempPte);
 
     /* Release the PFN database lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, Irql);
+    MiReleasePfnLock(Irql);
 
     /* Increase page counter */
     PagesInUse = InterlockedIncrementUL(&MmSpecialPagesInUse);
@@ -601,7 +601,7 @@ MmFreeSpecialPool(PVOID P)
         InterlockedDecrementUL(&MiSpecialPagesNonPaged);
 
         /* Lock PFN database */
-        Irql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        Irql = MiAcquirePfnLock();
 
         /* Delete this PFN */
         MI_SET_PFN_DELETED(Pfn);
@@ -624,7 +624,7 @@ MmFreeSpecialPool(PVOID P)
         InterlockedDecrementUL(&MiSpecialPagesPagable);
 
         /* Lock PFN database */
-        Irql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        Irql = MiAcquirePfnLock();
     }
 
     /* Mark next PTE as invalid */
@@ -641,7 +641,7 @@ MmFreeSpecialPool(PVOID P)
     MiSpecialPoolLastPte = PointerPte;
 
     /* Release the PFN database lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, Irql);
+    MiReleasePfnLock(Irql);
 
     /* Update page counter */
     InterlockedDecrementUL(&MmSpecialPagesInUse);

@@ -5,17 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <apitest.h>
-
-#include <stdio.h>
-#include <wingdi.h>
-#include <winddi.h>
-#include <winuser.h>
-#include <include/ntgdityp.h>
-#include <include/ntgdihdl.h>
-
-#define TEST(x) ok(x, #x"\n")
-#define RTEST(x) ok(x, #x"\n")
+#include "precomp.h"
 
 HDC hdc1, hdc2;
 

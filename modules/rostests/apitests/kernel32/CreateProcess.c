@@ -5,10 +5,9 @@
  * PROGRAMMERS:     Mark Jansen
  */
 
-#include <apitest.h>
-#include <ndk/rtltypes.h>
-#include <ndk/rtlfuncs.h>
+#include "precomp.h"
 
+#include <ndk/rtlfuncs.h>
 
 START_TEST(CreateProcess)
 {

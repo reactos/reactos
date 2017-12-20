@@ -66,9 +66,9 @@ MmGetLRUFirstUserPage(VOID)
     KIRQL OldIrql;
 
     /* Find the first user page */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
     Position = RtlFindSetBits(&MiUserPfnBitMap, 1, 0);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
     if (Position == 0xFFFFFFFF) return 0;
 
     /* Return it */
@@ -87,9 +87,9 @@ MmInsertLRULastUserPage(PFN_NUMBER Pfn)
     ASSERT(Pfn != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Pfn));
     ASSERT(!RtlCheckBit(&MiUserPfnBitMap, (ULONG)Pfn));
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
     RtlSetBit(&MiUserPfnBitMap, (ULONG)Pfn);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 }
 
 PFN_NUMBER
@@ -100,9 +100,9 @@ MmGetLRUNextUserPage(PFN_NUMBER PreviousPfn)
     KIRQL OldIrql;
 
     /* Find the next user page */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
     Position = RtlFindSetBits(&MiUserPfnBitMap, 1, (ULONG)PreviousPfn + 1);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
     if (Position == 0xFFFFFFFF) return 0;
 
     /* Return it */
@@ -121,9 +121,9 @@ MmRemoveLRUUserPage(PFN_NUMBER Page)
     ASSERT(Page != 0);
     ASSERT_IS_ROS_PFN(MiGetPfnEntry(Page));
     ASSERT(RtlCheckBit(&MiUserPfnBitMap, (ULONG)Page));
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
     RtlClearBit(&MiUserPfnBitMap, (ULONG)Page);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 }
 
 BOOLEAN
@@ -217,7 +217,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     //
     // Lock the PFN database
     //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     //
     // Are we looking for any pages, without discriminating?
@@ -332,7 +332,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     //
     // Now release the PFN count
     //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 
     //
     // We might've found less pages, but not more ;-)
@@ -395,7 +395,7 @@ MmSetRmapListHeadPage(PFN_NUMBER Pfn, PMM_RMAP_ENTRY ListHead)
     KIRQL oldIrql;
     PMMPFN Pfn1;
 
-    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    oldIrql = MiAcquirePfnLock();
     Pfn1 = MiGetPfnEntry(Pfn);
     ASSERT(Pfn1);
     ASSERT_IS_ROS_PFN(Pfn1);
@@ -419,7 +419,7 @@ MmSetRmapListHeadPage(PFN_NUMBER Pfn, PMM_RMAP_ENTRY ListHead)
         /* ReactOS semantics will now release the page, which will make it free and enter a colored list */
     }
 
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+    MiReleasePfnLock(oldIrql);
 }
 
 PMM_RMAP_ENTRY
@@ -431,7 +431,7 @@ MmGetRmapListHeadPage(PFN_NUMBER Pfn)
     PMMPFN Pfn1;
 
     /* Lock PFN database */
-    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    oldIrql = MiAcquirePfnLock();
 
     /* Get the entry */
     Pfn1 = MiGetPfnEntry(Pfn);
@@ -445,7 +445,7 @@ MmGetRmapListHeadPage(PFN_NUMBER Pfn)
     ASSERT(MiIsPfnInUse(Pfn1) == TRUE);
 
     /* Release PFN database and return rmap list head */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+    MiReleasePfnLock(oldIrql);
     return ListHead;
 }
 
@@ -460,9 +460,9 @@ MmSetSavedSwapEntryPage(PFN_NUMBER Pfn,  SWAPENTRY SwapEntry)
     ASSERT(Pfn1);
     ASSERT_IS_ROS_PFN(Pfn1);
 
-    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    oldIrql = MiAcquirePfnLock();
     Pfn1->u1.SwapEntry = SwapEntry;
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+    MiReleasePfnLock(oldIrql);
 }
 
 SWAPENTRY
@@ -477,9 +477,9 @@ MmGetSavedSwapEntryPage(PFN_NUMBER Pfn)
     ASSERT(Pfn1);
     ASSERT_IS_ROS_PFN(Pfn1);
 
-    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    oldIrql = MiAcquirePfnLock();
     SwapEntry = Pfn1->u1.SwapEntry;
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+    MiReleasePfnLock(oldIrql);
 
     return(SwapEntry);
 }
@@ -492,7 +492,7 @@ MmReferencePage(PFN_NUMBER Pfn)
 
     DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    MI_ASSERT_PFN_LOCK_HELD();
     ASSERT(Pfn != 0);
     ASSERT(Pfn <= MmHighestPhysicalPage);
 
@@ -514,14 +514,14 @@ MmGetReferenceCountPage(PFN_NUMBER Pfn)
 
     DPRINT("MmGetReferenceCountPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    oldIrql = MiAcquirePfnLock();
     Pfn1 = MiGetPfnEntry(Pfn);
     ASSERT(Pfn1);
     ASSERT_IS_ROS_PFN(Pfn1);
 
     RCount = Pfn1->u3.e2.ReferenceCount;
 
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+    MiReleasePfnLock(oldIrql);
     return(RCount);
 }
 
@@ -540,7 +540,7 @@ MmDereferencePage(PFN_NUMBER Pfn)
     KIRQL OldIrql;
     DPRINT("MmDereferencePage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     Pfn1 = MiGetPfnEntry(Pfn);
     ASSERT(Pfn1);
@@ -561,7 +561,7 @@ MmDereferencePage(PFN_NUMBER Pfn)
         MiInsertPageInFreeList(Pfn);
     }
 
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
 }
 
 PFN_NUMBER
@@ -572,7 +572,7 @@ MmAllocPage(ULONG Type)
     PMMPFN Pfn1;
     KIRQL OldIrql;
 
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    OldIrql = MiAcquirePfnLock();
 
     PfnOffset = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
     if (!PfnOffset)
@@ -592,7 +592,7 @@ MmAllocPage(ULONG Type)
     Pfn1->u1.SwapEntry = 0;
     Pfn1->RmapListHead = NULL;
 
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiReleasePfnLock(OldIrql);
     return PfnOffset;
 }
 

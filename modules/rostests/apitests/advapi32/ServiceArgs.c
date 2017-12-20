@@ -6,10 +6,7 @@
  *                  Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <winnls.h>
-#include <winsvc.h>
-#include <strsafe.h>
+#include "precomp.h"
 
 static char **argv;
 static int argc;
@@ -32,6 +29,7 @@ static void send_msg(const char *type, const char *msg)
     WriteFile(pipe_handle, buf, strlen(buf)+1, &written, NULL);
 }
 
+#if 0
 static inline void service_trace(const char *msg, ...)
 {
     va_list valist;
@@ -43,6 +41,7 @@ static inline void service_trace(const char *msg, ...)
 
     send_msg("TRACE", buf);
 }
+#endif
 
 static void service_ok(int cnd, const char *msg, ...)
 {

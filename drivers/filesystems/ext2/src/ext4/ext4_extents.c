@@ -2454,6 +2454,7 @@ int ext4_ext_get_blocks(void *icb, handle_t *handle, struct inode *inode, ext4_f
 
 	/* allocate new block */
 	goal = ext4_ext_find_goal(inode, path, iblock);
+
 	newblock = ext4_new_meta_blocks(icb, handle, inode, goal, 0,
 			&allocated, &err);
 	if (!newblock)

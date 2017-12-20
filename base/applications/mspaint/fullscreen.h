@@ -6,6 +6,8 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
+#pragma once
+
 class CFullscreenWindow : public CWindowImpl<CFullscreenWindow>
 {
 public:

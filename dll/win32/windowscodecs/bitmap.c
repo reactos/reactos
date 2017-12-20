@@ -63,10 +63,13 @@ static inline BitmapImpl *impl_from_IMILUnknown1(IMILUnknown1 *iface)
     return CONTAINING_RECORD(iface, BitmapImpl, IMILUnknown1_iface);
 }
 
+#ifndef __REACTOS__
+/* This is currently unused */
 static inline BitmapImpl *impl_from_IMILUnknown2(IMILUnknown2 *iface)
 {
     return CONTAINING_RECORD(iface, BitmapImpl, IMILUnknown2_iface);
 }
+#endif
 
 static inline BitmapLockImpl *impl_from_IWICBitmapLock(IWICBitmapLock *iface)
 {

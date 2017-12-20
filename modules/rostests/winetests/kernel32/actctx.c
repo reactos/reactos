@@ -16,16 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <wine/test.h>
-#include <winbase.h>
-#include <windef.h>
-#include <winnt.h>
-#include <wine/winternl.h>
-#include <winnls.h>
-#include <stdio.h>
+#include "precomp.h"
 
+#include <objbase.h>
 #include <oaidl.h>
 #include <initguid.h>
 

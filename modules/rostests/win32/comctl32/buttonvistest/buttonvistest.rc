@@ -1,0 +1,65 @@
+#include <windows.h>
+#include <resource.h>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+IDI_WIN32PROJECT1       ICON                    "Win32Project1.ico"
+IDI_SMALL               ICON                    "small.ico"
+
+500 RT_MANIFEST "comctl6.manifest"
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "Win32Project1"
+    IDC_WIN32PROJECT1       "WIN32PROJECT1"
+END
+
+IDB_BITMAP1             BITMAP                  "143.bmp"
+IDB_BITMAP2             BITMAP                  "225.bmp"
+
+IDC_MENU MENU
+BEGIN
+    POPUP "Colours"
+    BEGIN
+        POPUP "Window brush"
+        BEGIN
+            MENUITEM "NULL_BRUSH",    IDM_NULL_WIN
+            MENUITEM "Red",           IDM_RED_WIN
+            MENUITEM "Green",         IDM_GREEN_WIN
+            MENUITEM "Blue",          IDM_BLUE_WIN
+            MENUITEM "Yellow",        IDM_YELLOW_WIN
+            MENUITEM "Cyan",          IDM_CYAN_WIN
+        END
+        POPUP "CTLCOLORSTATIC"
+        BEGIN
+            MENUITEM "NULL_BRUSH",    IDM_NULL_STATIC
+            MENUITEM "Red",           IDM_RED_STATIC
+            MENUITEM "Green",         IDM_GREEN_STATIC
+            MENUITEM "Blue",          IDM_BLUE_STATIC
+            MENUITEM "Yellow",        IDM_YELLOW_STATIC
+            MENUITEM "Cyan",          IDM_CYAN_STATIC
+        END
+        POPUP "CTLCOLORBTN"
+        BEGIN
+            MENUITEM "NULL_BRUSH",    IDM_NULL_BTN
+            MENUITEM "Red",           IDM_RED_BTN
+            MENUITEM "Green",         IDM_GREEN_BTN
+            MENUITEM "Blue",          IDM_BLUE_BTN
+            MENUITEM "Yellow",        IDM_YELLOW_BTN
+            MENUITEM "Cyan",          IDM_CYAN_BTN
+        END
+        POPUP "PRINTCLIENT clear"
+        BEGIN
+            MENUITEM "NULL_BRUSH",    IDM_NULL_PRINTCLNT
+            MENUITEM "Red",           IDM_RED_PRINTCLNT
+            MENUITEM "Green",         IDM_GREEN_PRINTCLNT
+            MENUITEM "Blue",          IDM_BLUE_PRINTCLNT
+            MENUITEM "Yellow",        IDM_YELLOW_PRINTCLNT
+            MENUITEM "Cyan",          IDM_CYAN_PRINTCLNT
+        END
+    END
+    POPUP "Skip"
+    BEGIN
+        MENUITEM "Skip erase",       IDM_SKIP_ERASE
+        MENUITEM "Skip paint",       IDM_SKIP_PAINT
+    END
+END

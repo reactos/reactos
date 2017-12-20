@@ -5,13 +5,7 @@
  * PROGRAMMER:      Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#include <stdio.h>
-#include <winnls.h>
+#include "precomp.h"
 
 #define MAX_RANGE   4
 

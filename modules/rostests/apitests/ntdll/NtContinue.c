@@ -5,8 +5,7 @@
  * PROGRAMMER:
  */
 
-#include <apitest.h>
-#include <ndk/kefuncs.h>
+#include "precomp.h"
 
 #include <setjmp.h>
 #include <time.h>

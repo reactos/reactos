@@ -5871,8 +5871,19 @@ static void test_http_connection(void)
     test_http_read(si.port);
     test_connection_break(si.port);
     test_long_url(si.port);
+#ifdef __REACTOS__
+if (!winetest_interactive)
+{
+    skip("Skipping test_redirect and test_persistent_connection due to hang. See ROSTESTS-294.\n");
+}
+else
+{
+#endif
     test_redirect(si.port);
     test_persistent_connection(si.port);
+#ifdef __REACTOS__
+}
+#endif
     test_remove_dot_segments(si.port);
     test_redirect_no_host(si.port);
 

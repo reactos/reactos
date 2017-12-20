@@ -42,41 +42,57 @@ typedef struct _RPC_CLIENT_ID {
 interface eventlog
 {
     /* Function 0 */
-    NTSTATUS ElfrClearELFW(
+    NTSTATUS
+    __stdcall
+    ElfrClearELFW(
         [in] IELF_HANDLE LogHandle,
         [in, unique] PRPC_UNICODE_STRING BackupFileName);
 
     /* Function 1 */
-     NTSTATUS ElfrBackupELFW(
+     NTSTATUS
+    __stdcall
+    ElfrBackupELFW(
         [in] IELF_HANDLE LogHandle,
         [in, unique] PRPC_UNICODE_STRING BackupFileName);
 
     /* Function 2 */
-    NTSTATUS ElfrCloseEL(
+    NTSTATUS
+    __stdcall
+    ElfrCloseEL(
         [in, out] PIELF_HANDLE LogHandle);
 
     /* Function 3 */
-    NTSTATUS ElfrDeregisterEventSource(
+    NTSTATUS
+    __stdcall
+    ElfrDeregisterEventSource(
         [in, out] PIELF_HANDLE LogHandle);
 
     /* Function 4 */
-    NTSTATUS ElfrNumberOfRecords(
+    NTSTATUS
+    __stdcall
+    ElfrNumberOfRecords(
         [in] IELF_HANDLE LogHandle,
         [out] PULONG NumberOfRecords);
 
     /* Function 5 */
-    NTSTATUS ElfrOldestRecord(
+    NTSTATUS
+    __stdcall
+    ElfrOldestRecord(
         [in] IELF_HANDLE LogHandle,
         [out] PULONG OldestRecordNumber);
 
     /* Function 6 */
-    NTSTATUS ElfrChangeNotify(
+    NTSTATUS
+    __stdcall
+    ElfrChangeNotify(
         [in] IELF_HANDLE LogHandle,
         [in] RPC_CLIENT_ID ClientId,
         [in] ULONG Event);
 
     /* Function 7 */
-    NTSTATUS ElfrOpenELW(
+    NTSTATUS
+    __stdcall
+    ElfrOpenELW(
         [in, unique] EVENTLOG_HANDLE_W UNCServerName, /* FIXME */
         [in] PRPC_UNICODE_STRING ModuleName,
         [in] PRPC_UNICODE_STRING RegModuleName,
@@ -85,7 +101,9 @@ interface eventlog
         [out] PIELF_HANDLE LogHandle);
 
     /* Function 8 */
-    NTSTATUS ElfrRegisterEventSourceW(
+    NTSTATUS
+    __stdcall
+    ElfrRegisterEventSourceW(
         [in, unique] EVENTLOG_HANDLE_W UNCServerName, /* FIXME */
         [in] PRPC_UNICODE_STRING ModuleName,
         [in] PRPC_UNICODE_STRING RegModuleName,
@@ -94,7 +112,9 @@ interface eventlog
         [out] PIELF_HANDLE LogHandle);
 
     /* Function 9 */
-    NTSTATUS ElfrOpenBELW(
+    NTSTATUS
+    __stdcall
+    ElfrOpenBELW(
         [in, unique] EVENTLOG_HANDLE_W UNCServerName, /* FIXME */
         [in] PRPC_UNICODE_STRING BackupFileName,
         [in] ULONG MajorVersion,
@@ -102,7 +122,9 @@ interface eventlog
         [out] PIELF_HANDLE LogHandle);
 
     /* Function 10 */
-    NTSTATUS ElfrReadELW(
+    NTSTATUS
+    __stdcall
+    ElfrReadELW(
         [in] IELF_HANDLE LogHandle,
         [in] ULONG ReadFlags,
         [in] ULONG RecordOffset,
@@ -112,7 +134,9 @@ interface eventlog
         [out] PULONG MinNumberOfBytesNeeded);
 
     /* Function 11 */
-    NTSTATUS ElfrReportEventW(
+    NTSTATUS
+    __stdcall
+    ElfrReportEventW(
         [in] IELF_HANDLE LogHandle,
         [in] ULONG Time,
         [in] USHORT EventType,
@@ -129,17 +153,23 @@ interface eventlog
         [in, out, unique] PULONG TimeWritten);
 
     /* Function 12 */
-    NTSTATUS ElfrClearELFA(
+    NTSTATUS
+    __stdcall
+    ElfrClearELFA(
         [in] IELF_HANDLE LogHandle,
         [in, unique] PRPC_STRING BackupFileName);
 
     /* Function 13 */
-     NTSTATUS ElfrBackupELFA(
+    NTSTATUS
+    __stdcall
+    ElfrBackupELFA(
         [in] IELF_HANDLE LogHandle,
         [in, unique] PRPC_STRING BackupFileName);
 
     /* Function 14 */
-    NTSTATUS ElfrOpenELA(
+    NTSTATUS
+    __stdcall
+    ElfrOpenELA(
         [in, unique] EVENTLOG_HANDLE_A UNCServerName, /* FIXME */
         [in] PRPC_STRING ModuleName,
         [in] PRPC_STRING RegModuleName,
@@ -148,7 +178,9 @@ interface eventlog
         [out] PIELF_HANDLE LogHandle);
 
     /* Function 15 */
-    NTSTATUS ElfrRegisterEventSourceA(
+    NTSTATUS
+    __stdcall
+    ElfrRegisterEventSourceA(
         [in, unique] EVENTLOG_HANDLE_A UNCServerName, /* FIXME */
         [in] PRPC_STRING ModuleName,
         [in] PRPC_STRING RegModuleName,
@@ -157,7 +189,9 @@ interface eventlog
         [out] PIELF_HANDLE LogHandle);
 
     /* Function 16 */
-    NTSTATUS ElfrOpenBELA(
+    NTSTATUS
+    __stdcall
+    ElfrOpenBELA(
         [in, unique] EVENTLOG_HANDLE_A UNCServerName, /* FIXME */
         [in] PRPC_STRING BackupFileName,
         [in] ULONG MajorVersion,
@@ -165,7 +199,9 @@ interface eventlog
         [out] PIELF_HANDLE LogHandle);
 
     /* Function 17 */
-    NTSTATUS ElfrReadELA(
+    NTSTATUS
+    __stdcall
+    ElfrReadELA(
         [in] IELF_HANDLE LogHandle,
         [in] ULONG ReadFlags,
         [in] ULONG RecordOffset,
@@ -175,7 +211,9 @@ interface eventlog
         [out] PULONG MinNumberOfBytesNeeded);
 
     /* Function 18 */
-    NTSTATUS ElfrReportEventA(
+    NTSTATUS
+    __stdcall
+    ElfrReportEventA(
         [in] IELF_HANDLE LogHandle,
         [in] ULONG Time,
         [in] USHORT EventType,
@@ -192,19 +230,27 @@ interface eventlog
         [in, out, unique] PULONG TimeWritten);
 
     /* Function 19 */
-    NTSTATUS ElfrRegisterClusterSvc(
+    NTSTATUS
+    __stdcall
+    ElfrRegisterClusterSvc(
         [in] handle_t BindingHandle);
 
     /* Function 20 */
-    NTSTATUS ElfrDeregisterClusterSvc(
+    NTSTATUS
+    __stdcall
+    ElfrDeregisterClusterSvc(
         [in] handle_t BindingHandle);
 
     /* Function 21 */
-    NTSTATUS ElfrWriteClusterEvents(
+    NTSTATUS
+    __stdcall
+    ElfrWriteClusterEvents(
         [in] handle_t BindingHandle);
 
     /* Function 22 */
-    NTSTATUS ElfrGetLogInformation(
+    NTSTATUS
+    __stdcall
+    ElfrGetLogInformation(
         [in] IELF_HANDLE LogHandle,
         [in] ULONG InfoLevel,
         [out, size_is(cbBufSize)] PBYTE Buffer,
@@ -212,11 +258,15 @@ interface eventlog
         [out] PULONG pcbBytesNeeded);
 
     /* Function 23 */
-    NTSTATUS ElfrFlushEL(
+    NTSTATUS
+    __stdcall
+    ElfrFlushEL(
         [in] IELF_HANDLE LogHandle);
 
     /* Function 24 */
-    NTSTATUS ElfrReportEventAndSourceW(
+    NTSTATUS
+    __stdcall
+    ElfrReportEventAndSourceW(
         [in] IELF_HANDLE LogHandle,
         [in] ULONG Time,
         [in] USHORT EventType,

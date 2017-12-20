@@ -253,6 +253,7 @@ VOID PrintCommandList(VOID)
             if (++y == 8)
             {
                 ConOutPuts(cmdptr->name);
+                ConOutChar(_T('\n'));
                 y = 0;
             }
             else

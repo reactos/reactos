@@ -27,10 +27,15 @@ if(MSVC)
     add_compile_flags("/Zc:wchar_t-")
 endif()
 
+# framedyn is skipped in the clang-cl build
+if(NOT USE_CLANG_CL)
+
 add_library(dllimport_test SHARED dllimport_framedyn.cpp)
 set_module_type(dllimport_test module)
 add_importlibs(dllimport_test framedyn)
 
 if(NOT MSVC)
     target_link_libraries(dllimport_test framedynex)
+endif()
+
 endif()

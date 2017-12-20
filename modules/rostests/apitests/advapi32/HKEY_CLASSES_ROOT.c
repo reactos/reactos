@@ -5,13 +5,9 @@
  * PROGRAMMER:      Jérôme Gardou <jerome.gardou@reactos.org>
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#include <winreg.h>
-#include <ndk/rtlfuncs.h>
 #include <ndk/cmfuncs.h>
-#include <ndk/cmtypes.h>
 
 #define IS_HKCR(hk) (((UINT_PTR)hk & 3) == 2)
 

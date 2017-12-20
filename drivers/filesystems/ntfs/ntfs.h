@@ -116,6 +116,7 @@ typedef struct
 
     NTFS_INFO NtfsInfo;
 
+    ULONG MftDataOffset;
     ULONG Flags;
     ULONG OpenHandleCount;
 
@@ -151,6 +152,7 @@ typedef struct
     FAST_IO_DISPATCH FastIoDispatch;
     NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
     NPAGED_LOOKASIDE_LIST FcbLookasideList;
+    BOOLEAN EnableWriteSupport;
 } NTFS_GLOBAL_DATA, *PNTFS_GLOBAL_DATA;
 
 
@@ -175,6 +177,10 @@ typedef enum
     AttributeEnd = 0xFFFFFFFF
 } ATTRIBUTE_TYPE, *PATTRIBUTE_TYPE;
 
+// FILE_RECORD_END seems to follow AttributeEnd in every file record starting with $Quota.
+// No clue what data is being represented here.
+#define FILE_RECORD_END              0x11477982 
+
 #define NTFS_FILE_MFT                0
 #define NTFS_FILE_MFTMIRR            1
 #define NTFS_FILE_LOGFILE            2
@@ -187,6 +193,7 @@ typedef enum
 #define NTFS_FILE_QUOTA                9
 #define NTFS_FILE_UPCASE            10
 #define NTFS_FILE_EXTEND            11
+#define NTFS_FILE_FIRST_USER_FILE   16
 
 #define NTFS_MFT_MASK 0x0000FFFFFFFFFFFFULL
 
@@ -200,6 +207,9 @@ typedef enum
 
 #define INDEX_ROOT_SMALL 0x0
 #define INDEX_ROOT_LARGE 0x1
+
+#define INDEX_NODE_SMALL 0x0
+#define INDEX_NODE_LARGE 0x1
 
 #define NTFS_INDEX_ENTRY_NODE            1
 #define NTFS_INDEX_ENTRY_END            2
@@ -216,6 +226,9 @@ typedef enum
 #define NTFS_FILE_TYPE_REPARSE    0x400
 #define NTFS_FILE_TYPE_COMPRESSED 0x800
 #define NTFS_FILE_TYPE_DIRECTORY  0x10000000
+
+/* Indexed Flag in Resident attributes - still somewhat speculative */
+#define RA_INDEXED    0x01
 
 typedef struct
 {
@@ -286,6 +299,16 @@ typedef struct
         } NonResident;
     };
 } NTFS_ATTR_RECORD, *PNTFS_ATTR_RECORD;
+
+// The beginning and length of an attribute record are always aligned to an 8-byte boundary,
+// relative to the beginning of the file record.
+#define ATTR_RECORD_ALIGNMENT 8
+
+// Data runs are aligned to a 4-byte boundary, relative to the start of the attribute record
+#define DATA_RUN_ALIGNMENT  4
+
+// Value offset is aligned to a 4-byte boundary, relative to the start of the attribute record
+#define VALUE_OFFSET_ALIGNMENT  4
 
 typedef struct
 {
@@ -389,6 +412,34 @@ typedef struct
     FILENAME_ATTRIBUTE    FileName;
 } INDEX_ENTRY_ATTRIBUTE, *PINDEX_ENTRY_ATTRIBUTE;
 
+struct _B_TREE_FILENAME_NODE;
+typedef struct _B_TREE_FILENAME_NODE B_TREE_FILENAME_NODE;
+
+// Keys are arranged in nodes as an ordered, linked list
+typedef struct _B_TREE_KEY
+{
+    struct _B_TREE_KEY *NextKey;
+    B_TREE_FILENAME_NODE *LesserChild;  // Child-Node. All the keys in this node will be sorted before IndexEntry
+    PINDEX_ENTRY_ATTRIBUTE IndexEntry;  // must be last member for FIELD_OFFSET
+}B_TREE_KEY, *PB_TREE_KEY;
+
+// Every Node is just an ordered list of keys.
+// Sub-nodes can be found attached to a key (if they exist).
+// A key's sub-node precedes that key in the ordered list.
+typedef struct _B_TREE_FILENAME_NODE
+{
+    ULONG KeyCount;
+    BOOLEAN HasValidVCN;
+    BOOLEAN DiskNeedsUpdating;
+    ULONGLONG VCN;
+    PB_TREE_KEY FirstKey;
+} B_TREE_FILENAME_NODE, *PB_TREE_FILENAME_NODE;
+
+typedef struct
+{
+    PB_TREE_FILENAME_NODE RootNode;
+} B_TREE, *PB_TREE;
+
 typedef struct
 {
     ULONGLONG Unknown1;
@@ -433,7 +484,9 @@ typedef struct _NTFS_ATTR_CONTEXT
     ULONGLONG            CacheRunLength;
     LONGLONG            CacheRunLastLCN;
     ULONGLONG            CacheRunCurrentOffset;
-    NTFS_ATTR_RECORD    Record;
+    LARGE_MCB           DataRunsMCB;
+    ULONGLONG           FileMFTIndex;
+    PNTFS_ATTR_RECORD    pRecord;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 
 #define FCB_CACHE_INITIALIZED   0x0001
@@ -483,7 +536,14 @@ typedef struct _FIND_ATTR_CONTXT
     PNTFS_ATTR_RECORD LastAttr;
     PNTFS_ATTR_RECORD NonResidentStart;
     PNTFS_ATTR_RECORD NonResidentEnd;
+    ULONG Offset;
 } FIND_ATTR_CONTXT, *PFIND_ATTR_CONTXT;
+
+typedef struct
+{
+    USHORT USN;
+    USHORT Array[];
+} FIXUP_ARRAY, *PFIXUP_ARRAY;
 
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 
@@ -504,10 +564,74 @@ NtfsMarkIrpContextForQueue(PNTFS_IRP_CONTEXT IrpContext)
 //VOID
 //NtfsDumpAttribute(PATTRIBUTE Attribute);
 
+NTSTATUS
+AddBitmap(PNTFS_VCB Vcb,
+          PFILE_RECORD_HEADER FileRecord,
+          PNTFS_ATTR_RECORD AttributeAddress,
+          PCWSTR Name,
+          USHORT NameLength);
+
+NTSTATUS
+AddData(PFILE_RECORD_HEADER FileRecord,
+        PNTFS_ATTR_RECORD AttributeAddress);
+
+NTSTATUS
+AddRun(PNTFS_VCB Vcb,
+       PNTFS_ATTR_CONTEXT AttrContext,
+       ULONG AttrOffset,
+       PFILE_RECORD_HEADER FileRecord,
+       ULONGLONG NextAssignedCluster,
+       ULONG RunLength);
+
+NTSTATUS
+AddIndexAllocation(PNTFS_VCB Vcb,
+                   PFILE_RECORD_HEADER FileRecord,
+                   PNTFS_ATTR_RECORD AttributeAddress,
+                   PCWSTR Name,
+                   USHORT NameLength);
+
+NTSTATUS
+AddIndexRoot(PNTFS_VCB Vcb,
+             PFILE_RECORD_HEADER FileRecord,
+             PNTFS_ATTR_RECORD AttributeAddress,
+             PINDEX_ROOT_ATTRIBUTE NewIndexRoot,
+             ULONG RootLength,
+             PCWSTR Name,
+             USHORT NameLength);
+
+NTSTATUS
+AddFileName(PFILE_RECORD_HEADER FileRecord,
+            PNTFS_ATTR_RECORD AttributeAddress,
+            PDEVICE_EXTENSION DeviceExt,
+            PFILE_OBJECT FileObject,
+            BOOLEAN CaseSensitive,
+            PULONGLONG ParentMftIndex);
+
+NTSTATUS
+AddStandardInformation(PFILE_RECORD_HEADER FileRecord,
+                       PNTFS_ATTR_RECORD AttributeAddress);
+
+NTSTATUS
+ConvertDataRunsToLargeMCB(PUCHAR DataRun,
+                          PLARGE_MCB DataRunsMCB,
+                          PULONGLONG pNextVBN);
+
+NTSTATUS
+ConvertLargeMCBToDataRuns(PLARGE_MCB DataRunsMCB,
+                          PUCHAR RunBuffer,
+                          ULONG MaxBufferSize,
+                          PULONG UsedBufferSize);
+
 PUCHAR
 DecodeRun(PUCHAR DataRun,
           LONGLONG *DataRunOffset,
           ULONGLONG *DataRunLength);
+
+ULONG GetFileNameAttributeLength(PFILENAME_ATTRIBUTE FileNameAttribute);
+
+VOID
+NtfsDumpDataRuns(PVOID StartOfRun,
+                 ULONGLONG CurrentLCN);
 
 VOID
 NtfsDumpFileAttributes(PDEVICE_EXTENSION Vcb,
@@ -521,6 +645,15 @@ PFILENAME_ATTRIBUTE
 GetFileNameFromRecord(PDEVICE_EXTENSION Vcb,
                       PFILE_RECORD_HEADER FileRecord,
                       UCHAR NameType);
+
+UCHAR
+GetPackedByteCount(LONGLONG NumberToPack,
+                   BOOLEAN IsSigned);
+
+NTSTATUS
+GetLastClusterInDataRun(PDEVICE_EXTENSION Vcb,
+                        PNTFS_ATTR_RECORD Attribute,
+                        PULONGLONG LastCluster);
 
 PFILENAME_ATTRIBUTE
 GetBestFileNameFromRecord(PDEVICE_EXTENSION Vcb,
@@ -540,6 +673,13 @@ FindNextAttribute(PFIND_ATTR_CONTXT Context,
 VOID
 FindCloseAttribute(PFIND_ATTR_CONTXT Context);
 
+NTSTATUS
+FreeClusters(PNTFS_VCB Vcb,
+             PNTFS_ATTR_CONTEXT AttrContext,
+             ULONG AttrOffset,
+             PFILE_RECORD_HEADER FileRecord,
+             ULONG ClustersToFree);
+
 /* blockdev.c */
 
 NTSTATUS
@@ -549,6 +689,13 @@ NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
              IN ULONG SectorSize,
              IN OUT PUCHAR Buffer,
              IN BOOLEAN Override);
+
+NTSTATUS
+NtfsWriteDisk(IN PDEVICE_OBJECT DeviceObject,
+              IN LONGLONG StartingOffset,
+              IN ULONG Length,
+              IN ULONG SectorSize,
+              IN const PUCHAR Buffer);
 
 NTSTATUS
 NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
@@ -567,6 +714,98 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
                     IN OUT PULONG OutputBufferSize,
                     IN BOOLEAN Override);
 
+
+/* btree.c */
+
+LONG
+CompareTreeKeys(PB_TREE_KEY Key1,
+                PB_TREE_KEY Key2,
+                BOOLEAN CaseSensitive);
+
+NTSTATUS
+CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
+                     PFILE_RECORD_HEADER FileRecordWithIndex,
+                     /*PCWSTR IndexName,*/
+                     PNTFS_ATTR_CONTEXT IndexRootContext,
+                     PINDEX_ROOT_ATTRIBUTE IndexRoot,
+                     PB_TREE *NewTree);
+
+NTSTATUS
+CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
+                         PB_TREE Tree,
+                         ULONG MaxIndexSize,
+                         PINDEX_ROOT_ATTRIBUTE *IndexRoot,
+                         ULONG *Length);
+
+NTSTATUS
+DemoteBTreeRoot(PB_TREE Tree);
+
+VOID
+DestroyBTree(PB_TREE Tree);
+
+VOID
+DestroyBTreeNode(PB_TREE_FILENAME_NODE Node);
+
+VOID
+DumpBTree(PB_TREE Tree);
+
+VOID
+DumpBTreeKey(PB_TREE Tree,
+             PB_TREE_KEY Key,
+             ULONG Number,
+             ULONG Depth);
+
+VOID
+DumpBTreeNode(PB_TREE Tree,
+              PB_TREE_FILENAME_NODE Node,
+              ULONG Number,
+              ULONG Depth);
+
+NTSTATUS
+CreateEmptyBTree(PB_TREE *NewTree);
+
+ULONGLONG
+GetAllocationOffsetFromVCN(PDEVICE_EXTENSION DeviceExt,
+                           ULONG IndexBufferSize,
+                           ULONGLONG Vcn);
+
+ULONGLONG
+GetIndexEntryVCN(PINDEX_ENTRY_ATTRIBUTE IndexEntry);
+
+ULONG
+GetSizeOfIndexEntries(PB_TREE_FILENAME_NODE Node);
+
+NTSTATUS
+NtfsInsertKey(PB_TREE Tree,
+              ULONGLONG FileReference,
+              PFILENAME_ATTRIBUTE FileNameAttribute,
+              PB_TREE_FILENAME_NODE Node,
+              BOOLEAN CaseSensitive,
+              ULONG MaxIndexRootSize,
+              ULONG IndexRecordSize,
+              PB_TREE_KEY *MedianKey,
+              PB_TREE_FILENAME_NODE *NewRightHandSibling);
+
+NTSTATUS
+SplitBTreeNode(PB_TREE Tree,
+               PB_TREE_FILENAME_NODE Node,
+               PB_TREE_KEY *MedianKey,
+               PB_TREE_FILENAME_NODE *NewRightHandSibling,
+               BOOLEAN CaseSensitive);
+
+NTSTATUS
+UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
+                      PB_TREE Tree,
+                      ULONG IndexBufferSize,
+                      PFILE_RECORD_HEADER FileRecord);
+
+NTSTATUS
+UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
+                PFILE_RECORD_HEADER FileRecord,
+                PB_TREE_FILENAME_NODE Node,
+                ULONG IndexBufferSize,
+                PNTFS_ATTR_CONTEXT IndexAllocationContext,
+                ULONG IndexAllocationOffset);
 
 /* close.c */
 
@@ -589,6 +828,20 @@ NtfsClose(PNTFS_IRP_CONTEXT IrpContext);
 NTSTATUS
 NtfsCreate(PNTFS_IRP_CONTEXT IrpContext);
 
+NTSTATUS
+NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
+                    PFILE_OBJECT FileObject,
+                    BOOLEAN CaseSensitive,
+                    BOOLEAN CanWait);
+
+PFILE_RECORD_HEADER
+NtfsCreateEmptyFileRecord(PDEVICE_EXTENSION DeviceExt);
+
+NTSTATUS
+NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
+                     PFILE_OBJECT FileObject,
+                     BOOLEAN CaseSensitive,
+                     BOOLEAN CanWait);
 
 /* devctl.c */
 
@@ -695,7 +948,8 @@ NTSTATUS
 NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pParentFCB,
                   PNTFS_FCB *pFCB,
-                  const PWSTR pFileName);
+                  PCWSTR pFileName,
+                  BOOLEAN CaseSensitive);
 
 NTSTATUS
 NtfsReadFCBAttribute(PNTFS_VCB Vcb,
@@ -720,6 +974,16 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
 NTSTATUS
 NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext);
 
+NTSTATUS
+NtfsSetEndOfFile(PNTFS_FCB Fcb,
+                 PFILE_OBJECT FileObject,
+                 PDEVICE_EXTENSION DeviceExt,
+                 ULONG IrpFlags,
+                 BOOLEAN CaseSensitive,
+                 PLARGE_INTEGER NewFileSize);
+
+NTSTATUS
+NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext);
 
 /* fsctl.c */
 
@@ -728,6 +992,22 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* mft.c */
+NTSTATUS
+NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
+                           ULONGLONG DirectoryMftIndex,
+                           ULONGLONG FileReferenceNumber,
+                           PFILENAME_ATTRIBUTE FilenameAttribute,
+                           BOOLEAN CaseSensitive);
+
+NTSTATUS
+AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
+               PDEVICE_EXTENSION DeviceExt,
+               PULONGLONG DestinationIndex,
+               BOOLEAN CanWait);
+
+VOID
+NtfsDumpData(ULONG_PTR Buffer, ULONG Length);
+
 PNTFS_ATTR_CONTEXT
 PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord);
 
@@ -741,11 +1021,69 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
               PCHAR Buffer,
               ULONG Length);
 
+NTSTATUS
+WriteAttribute(PDEVICE_EXTENSION Vcb,
+               PNTFS_ATTR_CONTEXT Context,
+               ULONGLONG Offset,
+               const PUCHAR Buffer,
+               ULONG Length,
+               PULONG LengthWritten,
+               PFILE_RECORD_HEADER FileRecord);
+
 ULONGLONG
 AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord);
 
-ULONG
+NTSTATUS
+InternalSetResidentAttributeLength(PDEVICE_EXTENSION DeviceExt,
+                                   PNTFS_ATTR_CONTEXT AttrContext,
+                                   PFILE_RECORD_HEADER FileRecord,
+                                   ULONG AttrOffset,
+                                   ULONG DataSize);
+
+PNTFS_ATTR_RECORD
+MoveAttributes(PDEVICE_EXTENSION DeviceExt,
+               PNTFS_ATTR_RECORD FirstAttributeToMove,
+               ULONG FirstAttributeOffset,
+               ULONG_PTR MoveTo);
+
+NTSTATUS
+SetAttributeDataLength(PFILE_OBJECT FileObject,
+                       PNTFS_FCB Fcb,
+                       PNTFS_ATTR_CONTEXT AttrContext,
+                       ULONG AttrOffset,
+                       PFILE_RECORD_HEADER FileRecord,
+                       PLARGE_INTEGER DataSize);
+
+VOID
+SetFileRecordEnd(PFILE_RECORD_HEADER FileRecord,
+                 PNTFS_ATTR_RECORD AttrEnd,
+                 ULONG EndMarker);
+
+NTSTATUS
+SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
+                                  PNTFS_ATTR_CONTEXT AttrContext,
+                                  ULONG AttrOffset,
+                                  PFILE_RECORD_HEADER FileRecord,
+                                  PLARGE_INTEGER DataSize);
+
+NTSTATUS
+SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
+                               PNTFS_ATTR_CONTEXT AttrContext,
+                               ULONG AttrOffset,
+                               PFILE_RECORD_HEADER FileRecord,
+                               PLARGE_INTEGER DataSize);
+
+ULONGLONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
+
+BOOLEAN
+CompareFileName(PUNICODE_STRING FileName,
+                PINDEX_ENTRY_ATTRIBUTE IndexEntry,
+                BOOLEAN DirSearch,
+                BOOLEAN CaseSensitive);
+
+NTSTATUS
+UpdateMftMirror(PNTFS_VCB Vcb);
 
 NTSTATUS
 ReadFileRecord(PDEVICE_EXTENSION Vcb,
@@ -753,12 +1091,42 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
                PFILE_RECORD_HEADER file);
 
 NTSTATUS
+UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
+                             PFILE_RECORD_HEADER MftRecord,
+                             PCHAR IndexRecord,
+                             ULONG IndexBlockSize,
+                             PINDEX_ENTRY_ATTRIBUTE FirstEntry,
+                             PINDEX_ENTRY_ATTRIBUTE LastEntry,
+                             PUNICODE_STRING FileName,
+                             PULONG StartEntry,
+                             PULONG CurrentEntry,
+                             BOOLEAN DirSearch,
+                             ULONGLONG NewDataSize,
+                             ULONGLONG NewAllocatedSize,
+                             BOOLEAN CaseSensitive);
+
+NTSTATUS
+UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
+                     ULONGLONG ParentMFTIndex,
+                     PUNICODE_STRING FileName,
+                     BOOLEAN DirSearch,
+                     ULONGLONG NewDataSize,
+                     ULONGLONG NewAllocationSize,
+                     BOOLEAN CaseSensitive);
+
+NTSTATUS
+UpdateFileRecord(PDEVICE_EXTENSION Vcb,
+                 ULONGLONG MftIndex,
+                 PFILE_RECORD_HEADER FileRecord);
+
+NTSTATUS
 FindAttribute(PDEVICE_EXTENSION Vcb,
               PFILE_RECORD_HEADER MftRecord,
               ULONG Type,
               PCWSTR Name,
               ULONG NameLength,
-              PNTFS_ATTR_CONTEXT * AttrCtx);
+              PNTFS_ATTR_CONTEXT * AttrCtx,
+              PULONG Offset);
 
 VOID
 ReadVCN(PDEVICE_EXTENSION Vcb,
@@ -771,6 +1139,10 @@ ReadVCN(PDEVICE_EXTENSION Vcb,
 NTSTATUS 
 FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
                          PNTFS_RECORD_HEADER Record);
+
+NTSTATUS
+AddFixupArray(PDEVICE_EXTENSION Vcb,
+              PNTFS_RECORD_HEADER Record);
 
 NTSTATUS
 ReadLCN(PDEVICE_EXTENSION Vcb,
@@ -786,15 +1158,21 @@ EnumerAttribute(PFILE_RECORD_HEADER file,
 NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
+               BOOLEAN CaseSensitive,
                PFILE_RECORD_HEADER *FileRecord,
                PULONGLONG MFTIndex);
 
 NTSTATUS
 NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
+                 BOOLEAN CaseSensitive,
                  PFILE_RECORD_HEADER *FileRecord,
                  PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex);
+
+VOID
+NtfsDumpFileRecord(PDEVICE_EXTENSION Vcb,
+                   PFILE_RECORD_HEADER FileRecord);
 
 NTSTATUS
 NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
@@ -802,7 +1180,17 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PULONG FirstEntry,
                PFILE_RECORD_HEADER *FileRecord,
                PULONGLONG MFTIndex,
-               ULONGLONG CurrentMFTIndex);
+               ULONGLONG CurrentMFTIndex,
+               BOOLEAN CaseSensitive);
+
+NTSTATUS
+NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
+                  ULONGLONG MFTIndex,
+                  PUNICODE_STRING FileName,
+                  PULONG FirstEntry,
+                  BOOLEAN DirSearch,
+                  BOOLEAN CaseSensitive,
+                  ULONGLONG *OutMFTIndex);
 
 /* misc.c */
 
@@ -816,6 +1204,21 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
 PVOID
 NtfsGetUserBuffer(PIRP Irp,
                   BOOLEAN Paging);
+
+NTSTATUS
+NtfsLockUserBuffer(IN PIRP Irp,
+                   IN ULONG Length,
+                   IN LOCK_OPERATION Operation);
+
+#if 0
+BOOLEAN
+wstrcmpjoki(PWSTR s1, PWSTR s2);
+
+VOID
+CdfsSwapString(PWCHAR Out,
+	       PUCHAR In,
+	       ULONG Count);
+#endif
 
 VOID
 NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
@@ -832,6 +1235,13 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* volinfo.c */
+
+NTSTATUS
+NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
+                     ULONG FirstDesiredCluster,
+                     ULONG DesiredClusters,
+                     PULONG FirstAssignedCluster,
+                     PULONG AssignedClusters);
 
 ULONGLONG
 NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt);

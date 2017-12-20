@@ -16,24 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600 /* For SPI_GETMOUSEHOVERWIDTH and more */
-//#define _WIN32_IE 0x0700
-#undef WINVER
-#define WINVER 0x0600 /* For COLOR_MENUBAR, NONCLIENTMETRICS with padding */
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "winnls.h"
+#include "precomp.h"
 
 #ifndef SPI_GETDESKWALLPAPER
 # define SPI_GETDESKWALLPAPER 0x0073

@@ -17,20 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* make sure the structures work with a comctl32 v5.x */
-#define _WIN32_WINNT 0x500
-#define _WIN32_IE 0x500
-
-#include <wine/test.h>
-
-#include <assert.h>
-//#include <stdarg.h>
-
-//#include <windows.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <commctrl.h>
-//#include <uxtheme.h>
+#include "precomp.h"
 
 static RECT height_change_notify_rect;
 static HWND hMainWnd;

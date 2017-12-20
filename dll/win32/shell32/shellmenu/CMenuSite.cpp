@@ -23,8 +23,6 @@
 
 #include "CMenuSite.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(menusite);
-
 CMenuSite::CMenuSite() :
     m_DeskBarSite(NULL),
     m_BandObject(NULL),

@@ -6,67 +6,67 @@
 105 stub PerfCollect
 106 stub PerfOpen
 107 stub ADVANCEDSETUPDIALOG
-108 stub AbortPrinter
-109 stub AddFormA
-110 stub AddFormW
-111 stdcall AddJobA(long long ptr long ptr)
-112 stdcall AddJobW(long long ptr long ptr)
-113 stub AddMonitorA
+108 stdcall AbortPrinter(ptr)
+109 stdcall AddFormA(ptr long ptr)
+110 stdcall AddFormW(ptr long ptr)
+111 stdcall AddJobA(ptr long ptr long ptr)
+112 stdcall AddJobW(ptr long ptr long ptr)
+113 stdcall AddMonitorA(str long ptr)
 114 stdcall AddMonitorW(wstr long ptr)
-115 stub AddPortA
-116 stub AddPortExA
-117 stub AddPortExW
-118 stdcall AddPortW(wstr long wstr)
-119 stub AddPrintProcessorA
+115 stdcall AddPortA(str ptr str)
+116 stdcall AddPortExA(str long ptr str)
+117 stdcall AddPortExW(wstr long ptr wstr)
+118 stdcall AddPortW(wstr ptr wstr)
+119 stdcall AddPrintProcessorA(str str str str)
 120 stdcall AddPrintProcessorW(wstr wstr wstr wstr)
-121 stub AddPrintProvidorA
+121 stdcall AddPrintProvidorA(str long ptr)
 122 stdcall AddPrintProvidorW(wstr long ptr)
-123 stub AddPrinterA
+123 stdcall AddPrinterA(str long ptr)
 124 stub AddPrinterConnectionA
 125 stub AddPrinterConnectionW
-126 stub AddPrinterDriverA
-127 stub AddPrinterDriverExA
-128 stub AddPrinterDriverExW
+126 stdcall AddPrinterDriverA(str long ptr)
+127 stdcall AddPrinterDriverExA(str long ptr long)
+128 stdcall AddPrinterDriverExW(wstr long ptr long)
 129 stdcall AddPrinterDriverW(wstr long ptr)
 130 stdcall AddPrinterW(wstr long ptr)
-131 stub AdvancedDocumentPropertiesA
-132 stdcall AdvancedDocumentPropertiesW(long long wstr ptr ptr)
+131 stdcall AdvancedDocumentPropertiesA(ptr ptr str ptr ptr)
+132 stdcall AdvancedDocumentPropertiesW(ptr ptr wstr ptr ptr)
 133 stub AdvancedSetupDialog
-134 stdcall ClosePrinter(long)
+134 stdcall ClosePrinter(ptr)
 135 stub CloseSpoolFileHandle
 136 stub CommitSpoolData
-137 stub ConfigurePortA
-138 stdcall ConfigurePortW(wstr long wstr)
+137 stdcall ConfigurePortA(str ptr str)
+138 stdcall ConfigurePortW(wstr ptr wstr)
 139 stub ConnectToPrinterDlg
 140 stub ConvertAnsiDevModeToUnicodeDevmode
 141 stub ConvertUnicodeDevModeToAnsiDevmode
 142 stub CreatePrinterIC
 143 stub DEVICECAPABILITIES
 144 stub DEVICEMODE
-145 stub DeleteFormA
-146 stub DeleteFormW
-147 stub DeleteMonitorA
+145 stdcall DeleteFormA(ptr str)
+146 stdcall DeleteFormW(ptr wstr)
+147 stdcall DeleteMonitorA(str str str)
 148 stdcall DeleteMonitorW(wstr wstr wstr)
-149 stub DeletePortA
-150 stdcall DeletePortW(wstr long wstr)
-151 stub DeletePrintProcessorA
+149 stdcall DeletePortA(str ptr str)
+150 stdcall DeletePortW(wstr ptr wstr)
+151 stdcall DeletePrintProcessorA(str str str)
 152 stdcall DeletePrintProcessorW(wstr wstr wstr)
-153 stub DeletePrintProvidorA
+153 stdcall DeletePrintProvidorA(str str str)
 154 stdcall DeletePrintProvidorW(wstr wstr wstr)
-155 stub DeletePrinter
+155 stdcall DeletePrinter(ptr)
 156 stub DeletePrinterConnectionA
 157 stub DeletePrinterConnectionW
-158 stub DeletePrinterDataA
-159 stub DeletePrinterDataExA
-160 stub DeletePrinterDataExW
-161 stub DeletePrinterDataW
-162 stub DeletePrinterDriverA
-163 stub DeletePrinterDriverExA
-164 stub DeletePrinterDriverExW
+158 stdcall DeletePrinterDataA(ptr str)
+159 stdcall DeletePrinterDataExA(ptr str str)
+160 stdcall DeletePrinterDataExW(ptr wstr wstr)
+161 stdcall DeletePrinterDataW(ptr wstr)
+162 stdcall DeletePrinterDriverA(str str str)
+163 stdcall DeletePrinterDriverExA(str str str long long)
+164 stdcall DeletePrinterDriverExW(wstr wstr wstr long long)
 165 stdcall DeletePrinterDriverW(wstr wstr wstr)
 166 stub DeletePrinterIC
-167 stub DeletePrinterKeyA
-168 stub DeletePrinterKeyW
+167 stdcall DeletePrinterKeyA(ptr str)
+168 stdcall DeletePrinterKeyW(ptr wstr)
 169 stub DevQueryPrint
 170 stub DevQueryPrintEx
 171 stub DeviceCapabilities
@@ -75,29 +75,29 @@
 174 stub DeviceMode
 175 stub DevicePropertySheets
 176 stub DocumentEvent
-177 stdcall DocumentPropertiesA(long long ptr ptr ptr long)
-178 stdcall DocumentPropertiesW(long long ptr ptr ptr long)
+177 stdcall DocumentPropertiesA(ptr ptr ptr ptr ptr long)
+178 stdcall DocumentPropertiesW(ptr ptr ptr ptr ptr long)
 179 stub DocumentPropertySheets
 180 stub EXTDEVICEMODE
-181 stdcall EndDocPrinter(long)
-182 stdcall EndPagePrinter(long)
-183 stub EnumFormsA
-184 stub EnumFormsW
-185 stdcall EnumJobsA(long long long long ptr long ptr ptr)
-186 stdcall EnumJobsW(long long long long ptr long ptr ptr)
-187 stub EnumMonitorsA
+181 stdcall EndDocPrinter(ptr)
+182 stdcall EndPagePrinter(ptr)
+183 stdcall EnumFormsA(ptr long ptr long ptr ptr)
+184 stdcall EnumFormsW(ptr long ptr long ptr ptr)
+185 stdcall EnumJobsA(ptr long long long ptr long ptr ptr)
+186 stdcall EnumJobsW(ptr long long long ptr long ptr ptr)
+187 stdcall EnumMonitorsA(str long ptr long ptr ptr)
 188 stdcall EnumMonitorsW(wstr long ptr long ptr ptr)
-189 stub EnumPortsA
+189 stdcall EnumPortsA(str long ptr long ptr ptr)
 190 stdcall EnumPortsW(wstr long ptr long ptr ptr)
 191 stdcall EnumPrintProcessorDatatypesA(ptr ptr long ptr long ptr ptr)
 192 stdcall EnumPrintProcessorDatatypesW(ptr ptr long ptr long ptr ptr)
-193 stub EnumPrintProcessorsA
-194 stdcall EnumPrintProcessorsW(ptr ptr long ptr long ptr ptr)
-195 stub EnumPrinterDataA
-196 stub EnumPrinterDataExA
-197 stub EnumPrinterDataExW
-198 stub EnumPrinterDataW
-199 stub EnumPrinterDriversA
+193 stdcall EnumPrintProcessorsA(str str long ptr long ptr ptr)
+194 stdcall EnumPrintProcessorsW(wstr wstr long ptr long ptr ptr)
+195 stdcall EnumPrinterDataA(ptr long str long ptr ptr ptr long ptr)
+196 stdcall EnumPrinterDataExA(ptr str ptr long ptr ptr)
+197 stdcall EnumPrinterDataExW(ptr wstr ptr long ptr ptr)
+198 stdcall EnumPrinterDataW(ptr long wstr long ptr ptr ptr long ptr)
+199 stdcall EnumPrinterDriversA(str str long ptr long ptr ptr)
 200 stdcall EnumPrinterDriversW(wstr wstr long ptr long ptr ptr)
 201 stdcall GetDefaultPrinterA(ptr ptr)
 202 stdcall SetDefaultPrinterA(str)
@@ -123,7 +123,7 @@
 222 stub -noname SendRecvBidiData
 223 stub -noname RouterFreeBidiResponseContainer
 224 stub -noname ExternalConnectToLd64In32Server
-225 stub EnumPrinterKeyA
+225 stdcall EnumPrinterKeyA(ptr str str long ptr)
 226 stub -noname PrintUIWebPnpEntry
 227 stub -noname PrintUIWebPnpPostEntry
 228 stub -noname PrintUICreateInstance
@@ -131,31 +131,31 @@
 230 stub -noname PrintUIPrinterSetup
 231 stub -noname PrintUIServerPropPages
 232 stub -noname AddDriverCatalog
-233 stub EnumPrinterKeyW
+233 stdcall EnumPrinterKeyW(ptr wstr wstr long ptr)
 234 stdcall EnumPrintersA(long ptr long ptr long ptr ptr)
 235 stdcall EnumPrintersW(long ptr long ptr long ptr ptr)
 236 stub ExtDeviceMode
 237 stub FindClosePrinterChangeNotification
 238 stub FindFirstPrinterChangeNotification
 239 stub FindNextPrinterChangeNotification
-240 stub FlushPrinter
+240 stdcall FlushPrinter(ptr ptr long ptr long)
 241 stub FreePrinterNotifyInfo
-242 stub GetFormA
-243 stub GetFormW
-244 stdcall GetJobA(long long long ptr long ptr)
-245 stdcall GetJobW(long long long ptr long ptr)
+242 stdcall GetFormA(ptr str long ptr long ptr)
+243 stdcall GetFormW(ptr str long ptr long ptr)
+244 stdcall GetJobA(ptr long long ptr long ptr)
+245 stdcall GetJobW(ptr long long ptr long ptr)
 246 stdcall GetPrintProcessorDirectoryA(str str long ptr long ptr)
 247 stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
-248 stdcall GetPrinterA(long long ptr long ptr)
-249 stdcall GetPrinterDataA(long str ptr ptr long ptr)
-250 stdcall GetPrinterDataExA(long str str ptr ptr long ptr)
-251 stdcall GetPrinterDataExW(long wstr wstr ptr ptr long ptr)
-252 stdcall GetPrinterDataW(long wstr ptr ptr long ptr)
-253 stdcall GetPrinterDriverA(long str long ptr long ptr)
-254 stdcall -stub GetPrinterDriverDirectoryA(str str long ptr long ptr)
+248 stdcall GetPrinterA(ptr long ptr long ptr)
+249 stdcall GetPrinterDataA(ptr str ptr ptr long ptr)
+250 stdcall GetPrinterDataExA(ptr str str ptr ptr long ptr)
+251 stdcall GetPrinterDataExW(ptr wstr wstr ptr ptr long ptr)
+252 stdcall GetPrinterDataW(ptr wstr ptr ptr long ptr)
+253 stdcall GetPrinterDriverA(ptr str long ptr long ptr)
+254 stdcall GetPrinterDriverDirectoryA(str str long ptr long ptr)
 255 stdcall GetPrinterDriverDirectoryW(wstr wstr long ptr long ptr)
-256 stdcall GetPrinterDriverW(long wstr long ptr long ptr)
-257 stdcall GetPrinterW(long long ptr long ptr)
+256 stdcall GetPrinterDriverW(ptr wstr long ptr long ptr)
+257 stdcall GetPrinterW(ptr long ptr long ptr)
 258 stub GetSpoolFileHandle
 259 stdcall IsValidDevmodeA(ptr long)
 260 stdcall IsValidDevmodeW(ptr long)
@@ -168,33 +168,33 @@
 267 stub QueryColorProfile
 268 stub QueryRemoteFonts
 269 stub QuerySpoolMode
-270 stdcall ReadPrinter(long ptr long ptr)
-271 stub ResetPrinterA
-272 stdcall ResetPrinterW(long ptr)
-273 stdcall ScheduleJob(long long)
+270 stdcall ReadPrinter(ptr ptr long ptr)
+271 stdcall ResetPrinterA(ptr ptr)
+272 stdcall ResetPrinterW(ptr ptr)
+273 stdcall ScheduleJob(ptr long)
 274 stub SeekPrinter
 275 stub SetAllocFailCount
-276 stub SetFormA
-277 stub SetFormW
-278 stdcall SetJobA(long long long ptr long)
-279 stdcall SetJobW(long long long ptr long)
-280 stub SetPortA
-281 stub SetPortW
-282 stub SetPrinterA
-283 stdcall SetPrinterDataA(long str long ptr long)
-284 stdcall SetPrinterDataExA(long str str long ptr long)
-285 stdcall SetPrinterDataExW(long wstr wstr long ptr long)
-286 stdcall SetPrinterDataW(long wstr long ptr long)
-287 stdcall SetPrinterW(long long ptr long)
+276 stdcall SetFormA(ptr str long str)
+277 stdcall SetFormW(ptr str long str)
+278 stdcall SetJobA(ptr long long ptr long)
+279 stdcall SetJobW(ptr long long ptr long)
+280 stdcall SetPortA(str str long ptr)
+281 stdcall SetPortW(wstr wstr long ptr)
+282 stdcall SetPrinterA(ptr long ptr long)
+283 stdcall SetPrinterDataA(ptr str long ptr long)
+284 stdcall SetPrinterDataExA(ptr str str long ptr long)
+285 stdcall SetPrinterDataExW(ptr wstr wstr long ptr long)
+286 stdcall SetPrinterDataW(ptr wstr long ptr long)
+287 stdcall SetPrinterW(ptr long ptr long)
 288 stub SplDriverUnloadComplete
 289 stub SpoolerDevQueryPrintW
 290 stdcall SpoolerInit()
 291 stub SpoolerPrinterEvent
 292 stub StartDocDlgA
 293 stub StartDocDlgW
-294 stdcall StartDocPrinterA(long long ptr)
-295 stdcall StartDocPrinterW(long long ptr)
-296 stdcall StartPagePrinter(long)
+294 stdcall StartDocPrinterA(ptr long ptr)
+295 stdcall StartDocPrinterW(ptr long ptr)
+296 stdcall StartPagePrinter(ptr)
 297 stub WaitForPrinterChange
-298 stdcall WritePrinter(long ptr long ptr)
-299 stdcall XcvDataW(long wstr ptr long ptr long ptr ptr)
+298 stdcall WritePrinter(ptr ptr long ptr)
+299 stdcall XcvDataW(ptr wstr ptr long ptr long ptr ptr)

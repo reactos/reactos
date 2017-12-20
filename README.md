@@ -1,12 +1,31 @@
-# ReactOS Project [![release.badge]][release.link] [![sfstats.badge]][sfstats.link] [![travis.badge]][travis.link] [![appveyor.badge]][appveyor.link]
-
 <p align=center>
-<img src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
+  <img src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
 </p>
 
-[![license.badge]][license.link] [![ghcontrib.badge]][ghcontrib.link] [![ghstats.badge]][ghstats.link] [![commits.badge]][commits.link] [![coverity.badge]][coverity.link] 
+---
 
-## Quick Links
+<p align=center>
+  <a href="https://reactos.org/project-news/reactos-047-released">
+    <img alt="Release 0.4.7 Release" src="https://img.shields.io/badge/release-0.4.7-0688CB.svg">
+  </a>
+  <a href="https://reactos.org/download">
+    <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg">
+  </a>
+  <a href="https://sourceforge.net/projects/reactos">
+    <img alt="SourceForge Download" src="https://img.shields.io/sourceforge/dm/reactos.svg?colorB=0688CB">
+  </a>
+  <a href="https://github.com/reactos/reactos/blob/master/COPYING">
+    <img alt="License" src="https://img.shields.io/badge/license-GNU_GPL_2.0-0688CB.svg">
+  </a>
+  <a href="https://reactos.org/donating">
+    <img alt="Donate" src="https://img.shields.io/badge/%24-donate-E44E4A.svg">
+  </a>
+  <a href="https://twitter.com/reactos">
+    <img alt="Follow on Twitter" src="https://img.shields.io/twitter/follow/reactos.svg?style=social&label=Follow%20%40reactos">
+  </a>
+</p>
+
+## Quick Links 
 
 - [Website](https://reactos.org)
 - [Wiki](https://reactos.org/wiki)
@@ -21,11 +40,13 @@ ReactOS™ is an Open Source effort to develop a quality operating system that i
 
 The ReactOS project, although currently focused on Windows Server 2003 compatibility, is always keeping an eye toward compatibility with Windows Vista and future Windows NT releases.
 
-The code of ReactOS is licensed under [GNU GPL 2.0+](https://spdx.org/licenses/GPL-2.0+.html).
+The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
 
-## Building [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link]
+## Building 
 
-To build the system it is strongly advised to use the _ReactOS Build Environment (RosBE)._
+[![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
+
+To build the system it is strongly advised to use the _ReactOS Build Environment (RosBE)._ 
 Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: http://www.reactos.org/wiki/Build_Environment.
 
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: https://www.reactos.org/wiki/Building_with_MSVC.
@@ -59,9 +80,11 @@ See ["File Bugs"](https://www.reactos.org/wiki/File_Bugs) for a guide.
 
 __NOTE:__ The bug tracker is _not_ for discussions. Please use `#reactos` Freenode IRC channel or our [forum](https://reactos.org/forum).
 
-## Contributing
+## Contributing  ![prwelcome.badge]
 
 We are always looking for developers! Check [how to contribute](CONTRIBUTING.md) if you are willing to participate.
+
+You can also support ReactOS by [donating](https://reactos.org/donating)! We rely on our backers to maintain our servers and accelerate development by [hiring full-time devs](https://reactos.org/node/785).
 
 ## More information
 
@@ -83,30 +106,19 @@ See also the [CREDITS](CREDITS) file for others.
 
 ## Code mirrors
 
-The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/) in case GitHub is down. 
+The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/?p=reactos.git) in case GitHub is down. 
 
 There is also an obsolete [SVN archive repository](https://svn.reactos.org/svn/reactos?view=revision) that is kept for historical purposes.
 
 [travis.badge]:     https://travis-ci.org/reactos/reactos.svg?branch=master
 [appveyor.badge]:   https://ci.appveyor.com/api/projects/status/github/reactos/reactos?branch=master&svg=true
 [coverity.badge]:   https://scan.coverity.com/projects/205/badge.svg?flat=1
-[commits.badge]:    https://img.shields.io/github/commits-since/reactos/reactos/0.4.7-dev.svg
-[release.badge]:    https://img.shields.io/badge/release-0.4.6-brightgreen.svg
-[license.badge]:    https://img.shields.io/badge/license-GNU_GPL_2.0+-blue.svg
-[sfstats.badge]:    https://img.shields.io/sourceforge/dm/reactos.svg
-[ghstats.badge]:    https://img.shields.io/github/commit-activity/4w/reactos/reactos.svg
-[ghcontrib.badge]:  https://img.shields.io/github/contributors/reactos/reactos.svg
-[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.5-blue.svg   
-[rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.1.2-blue.svg
+[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.5-0688CB.svg   
+[rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.1.2-0688CB.svg
+[prwelcome.badge]:  https://img.shields.io/badge/PR-welcome-0688CB.svg
 
 [travis.link]:      https://travis-ci.org/reactos/reactos
 [appveyor.link]:    https://ci.appveyor.com/project/AmineKhaldi/reactos
 [coverity.link]:    https://scan.coverity.com/projects/205
-[commits.link]:     https://github.com/reactos/reactos/commits/master
-[release.link]:     https://sourceforge.net/projects/reactos/files/ReactOS/0.4.6
-[license.link]:     https://spdx.org/licenses/GPL-2.0+.html
-[sfstats.link]:     https://sourceforge.net/projects/reactos
-[ghstats.link]:     https://github.com/reactos/reactos/graphs/commit-activity
-[ghcontrib.link]:   https://github.com/reactos/reactos/graphs/contributors
 [rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.1.5/
-[rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.1.2/
+[rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.1.2/  

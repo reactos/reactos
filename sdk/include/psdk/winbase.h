@@ -2266,6 +2266,7 @@ HANDLE WINAPI GetProcessHeap(VOID);
 DWORD WINAPI GetProcessHeaps(DWORD,PHANDLE);
 #if (_WIN32_WINNT >= 0x0502)
 DWORD WINAPI GetProcessId(HANDLE);
+DWORD WINAPI GetProcessIdOfThread(HANDLE);
 #endif
 #if (_WIN32_WINNT >= 0x0500)
 BOOL WINAPI GetProcessIoCounters(_In_ HANDLE, _Out_ PIO_COUNTERS);

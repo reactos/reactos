@@ -19,21 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
+#include "precomp.h"
 
 #include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wine/winternl.h"
-#include "winreg.h"
-#include "winperf.h"
-#include "winsvc.h"
-#include "winerror.h"
-#include "aclapi.h"
+#include <winperf.h>
 
 #define IS_HKCR(hk) ((UINT_PTR)hk > 0 && ((UINT_PTR)hk & 3) == 2)
 

@@ -6,8 +6,7 @@
  *                  Katayama Hirofumi MZ
  */
 
-#include <apitest.h>
-#include <wingdi.h>
+#include "precomp.h"
 
 #define trace_if(val, msg) do { if (!(val)) trace(msg); } while (0)
 

@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Spooler API
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Functions related to Print Processors
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
- */
+* PROJECT:     ReactOS Spooler API
+* LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+* PURPOSE:     Functions related to Print Processors
+* COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
+*/
 
 #include "precomp.h"
 #include <prtprocenv.h>
@@ -27,8 +27,25 @@ _MarshallUpPrintProcessorInfo(PPRINTPROCESSOR_INFO_1W* ppPrintProcessorInfo1)
 }
 
 BOOL WINAPI
+AddPrintProcessorA(PSTR pName, PSTR pEnvironment, PSTR pPathName, PSTR pPrintProcessorName)
+{
+    TRACE("AddPrintProcessorA(%s, %s, %s, %s)\n", pName, pEnvironment, pPathName, pPrintProcessorName);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 AddPrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPathName, PWSTR pPrintProcessorName)
 {
+    TRACE("AddPrintProcessorW(%S, %S, %S, %S)\n", pName, pEnvironment, pPathName, pPrintProcessorName);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
+DeletePrintProcessorA(PSTR pName, PSTR pEnvironment, PSTR pPrintProcessorName)
+{
+    TRACE("DeletePrintProcessorA(%s, %s, %s)\n", pName, pEnvironment, pPrintProcessorName);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -36,6 +53,7 @@ AddPrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPathName, PWSTR pPrin
 BOOL WINAPI
 DeletePrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPrintProcessorName)
 {
+    TRACE("DeletePrintProcessorW(%S, %S, %S)\n", pName, pEnvironment, pPrintProcessorName);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -43,6 +61,7 @@ DeletePrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPrintProcessorName
 BOOL WINAPI
 EnumPrintProcessorDatatypesA(PSTR pName, LPSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
+    TRACE("EnumPrintProcessorDatatypesA(%s, %s, %lu, %p, %lu, %p, %p)\n", pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -51,6 +70,8 @@ BOOL WINAPI
 EnumPrintProcessorDatatypesW(PWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
+
+    TRACE("EnumPrintProcessorDatatypesW(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
 
     // Sanity checks
     if (Level != 1)
@@ -64,7 +85,7 @@ EnumPrintProcessorDatatypesW(PWSTR pName, LPWSTR pPrintProcessorName, DWORD Leve
     {
         dwErrorCode = _RpcEnumPrintProcessorDatatypes(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
     }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwErrorCode = RpcExceptionCode();
         ERR("_RpcEnumPrintProcessorDatatypes failed with exception code %lu!\n", dwErrorCode);
@@ -86,9 +107,19 @@ Cleanup:
 }
 
 BOOL WINAPI
+EnumPrintProcessorsA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+{
+    TRACE("EnumPrintProcessorsA(%s, %s, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL WINAPI
 EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
+
+    TRACE("EnumPrintProcessorsW(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
 
     // Choose our current environment if the caller didn't give any.
     if (!pEnvironment)
@@ -99,7 +130,7 @@ EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintP
     {
         dwErrorCode = _RpcEnumPrintProcessors(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
     }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwErrorCode = RpcExceptionCode();
     }
@@ -126,6 +157,8 @@ GetPrintProcessorDirectoryA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pP
     PWSTR pwszName = NULL;
     PWSTR pwszEnvironment = NULL;
     PWSTR pwszPrintProcessorInfo = NULL;
+
+    TRACE("GetPrintProcessorDirectoryA(%s, %s, %lu, %p, %lu, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
 
     if (pName)
     {
@@ -199,6 +232,8 @@ GetPrintProcessorDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE 
 {
     DWORD dwErrorCode;
 
+    TRACE("GetPrintProcessorDirectoryW(%S, %S, %lu, %p, %lu, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
+
     // Sanity checks
     if (Level != 1)
     {
@@ -215,7 +250,7 @@ GetPrintProcessorDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE 
     {
         dwErrorCode = _RpcGetPrintProcessorDirectory(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
     }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwErrorCode = RpcExceptionCode();
     }

@@ -5,12 +5,8 @@
  * PROGRAMMER:      Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/ntndk.h>
-#include <winsafer.h>
 #include <ntsecapi.h>
 
 START_TEST(RtlEncryptMemory)

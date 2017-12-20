@@ -16,6 +16,9 @@ Size = 261,0 MiB
 [Section.0a]
 Description = Un juego de estrategia en tiempo real con tintes soviéticos. Necesitarás un programa como 7-zip para extraerlo.
 
+[Section.0415]
+Description = "Sowiecka" gra strategiczna czasu rzeczywistego (RTS) oparta na Boswars. Wymagany jest archiwizator plików do wypakowania gry.
+
 [Section.0418]
 Description = Joc de strategie în timp real, cu tematică sovietică bazată pe Boswars. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 261,0 Mio

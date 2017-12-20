@@ -19,18 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#include "precomp.h"
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "dde.h"
-#include "ddeml.h"
-#include "winerror.h"
-
-#include "wine/test.h"
+#include <dde.h>
+#include <ddeml.h>
 
 static const WCHAR TEST_DDE_SERVICE[] = {'T','e','s','t','D','D','E','S','e','r','v','i','c','e',0};
 

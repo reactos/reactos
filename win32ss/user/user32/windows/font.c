@@ -29,10 +29,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(text);
-
 DWORD WINAPI GdiGetCodePage(HDC hdc);
 
 INT WINAPI DrawTextExWorker( HDC hdc, LPWSTR str, INT i_count,

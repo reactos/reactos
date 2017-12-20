@@ -79,6 +79,12 @@ typedef struct _LSAP_LOGON_CONTEXT
     HANDLE ConnectionHandle;
 } LSAP_LOGON_CONTEXT, *PLSAP_LOGON_CONTEXT;
 
+typedef struct _SAMPR_ULONG_ARRAY
+{
+    unsigned long Count;
+    unsigned long *Element;
+} SAMPR_ULONG_ARRAY, *PSAMPR_ULONG_ARRAY;
+
 extern SID_IDENTIFIER_AUTHORITY NullSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY WorldSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY LocalSidAuthority;

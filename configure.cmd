@@ -83,6 +83,7 @@ if not defined ARCH (
 )
 
 set NEW_STYLE_BUILD=1
+set USE_CLANG_CL=0
 
 REM Parse command line parameters
 :repeat
@@ -95,8 +96,6 @@ REM Parse command line parameters
             set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
         ) else if /I "%1" == "Makefiles" (
             set CMAKE_GENERATOR="MinGW Makefiles"
-        ) else if /I "%1" == "clang" (
-            set MINGW_TOOCHAIN_FILE=toolchain-clang.cmake
         ) else (
             goto continue
         )
@@ -107,6 +106,8 @@ REM Parse command line parameters
             set CMAKE_GENERATOR="Eclipse CDT4 - NMake Makefiles"
         ) else if /I "%1" == "Makefiles" (
             set CMAKE_GENERATOR="NMake Makefiles"
+        ) else if /I "%1" == "clang" (
+            set USE_CLANG_CL=1
         ) else if /I "%1" == "VSSolution" (
             set VS_SOLUTION=1
             REM explicitly set VS version for project generator
@@ -239,6 +240,8 @@ if "%NEW_STYLE_BUILD%"=="0" (
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %* "%REACTOS_SOURCE_DIR%"
+) else if %USE_CLANG_CL% == 1 (
+        cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
 ) else (
     cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
 )

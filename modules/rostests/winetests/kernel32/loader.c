@@ -18,19 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-#include <stdarg.h>
-#include <stdio.h>
-#include <assert.h>
+#include "precomp.h"
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "wine/winternl.h"
-#include "winuser.h"
-#include "wine/test.h"
-#include "delayloadhandler.h"
+#include <delayloadhandler.h>
 
 /* PROCESS_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */
 #define PROCESS_ALL_ACCESS_NT4 (PROCESS_ALL_ACCESS & ~0xf000)
@@ -1546,7 +1536,7 @@ static void test_import_resolution(void)
         nt.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress = DATA_RVA(&data.tls);
 
         memset( &data, 0, sizeof(data) );
-        data.descr[0].u.OriginalFirstThunk = DATA_RVA( data.original_thunks );
+        data.descr[0].OriginalFirstThunk = DATA_RVA( data.original_thunks );
         data.descr[0].FirstThunk = DATA_RVA( data.thunks );
         data.descr[0].Name = DATA_RVA( data.module );
         strcpy( data.module, "kernel32.dll" );

@@ -19,21 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/test.h>
-
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#include <winuser.h>
-#include <wingdi.h>
-#include <winnls.h>
-#include <commctrl.h>
-
-#include "v6util.h"
-//#include <assert.h>
-//#include <windows.h>
-#include "msg.h"
+#include "precomp.h"
 
 #define expect(expected, got) ok(expected == got, "Expected %d, got %d\n", expected, got);
 #define expect_hex(expected, got) ok(expected == got, "Expected %x, got %x\n", expected, got);

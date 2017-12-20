@@ -44,19 +44,7 @@
  *
  */
 
-//#define _WIN32_WINNT 0x401
-//#define _WIN32_IE 0x0500
-
-#include <stdarg.h>
-#include <assert.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "winnls.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 /* globals */
 static HWND hWndTest;

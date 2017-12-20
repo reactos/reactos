@@ -108,8 +108,8 @@
 @ stub NTPTimeToNTFileTime
 @ stub NTTimeToNTPTime
 @ stub NhGetGuidFromInterfaceName
-@ stdcall NhGetInterfaceNameFromDeviceGuid(long long long long long)
-@ stub NhGetInterfaceNameFromGuid
+@ stdcall NhGetInterfaceNameFromDeviceGuid(ptr ptr ptr long long)
+@ stdcall NhGetInterfaceNameFromGuid(ptr ptr ptr long long)
 @ stdcall NhpAllocateAndGetInterfaceInfoFromStack(ptr ptr long ptr long)
 @ stub NhpGetInterfaceIndexFromStack
 @ stdcall NotifyAddrChange( ptr ptr )

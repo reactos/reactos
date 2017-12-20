@@ -124,7 +124,10 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 FCB->OobInline = InfoReq->Information.Boolean;
                 break;
             case AFD_INFO_RECEIVE_WINDOW_SIZE:
-                NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
+                NewBuffer = ExAllocatePoolWithTag(PagedPool,
+                                                  InfoReq->Information.Ulong,
+                                                  TAG_AFD_DATA_BUFFER);
+
                 if (NewBuffer)
                 {
                     if (FCB->Recv.Content > InfoReq->Information.Ulong)
@@ -136,7 +139,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                       FCB->Recv.Window,
                                       FCB->Recv.Content);
 
-                        ExFreePool(FCB->Recv.Window);
+                        ExFreePoolWithTag(FCB->Recv.Window, TAG_AFD_DATA_BUFFER);
                     }
 
                     FCB->Recv.Size = InfoReq->Information.Ulong;
@@ -150,7 +153,10 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
                 break;
             case AFD_INFO_SEND_WINDOW_SIZE:
-                NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
+                NewBuffer = ExAllocatePoolWithTag(PagedPool,
+                                                  InfoReq->Information.Ulong,
+                                                  TAG_AFD_DATA_BUFFER);
+
                 if (NewBuffer)
                 {
                     if (FCB->Send.BytesUsed > InfoReq->Information.Ulong)
@@ -162,7 +168,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                       FCB->Send.Window,
                                       FCB->Send.BytesUsed);
 
-                        ExFreePool(FCB->Send.Window);
+                        ExFreePoolWithTag(FCB->Send.Window, TAG_AFD_DATA_BUFFER);
                     }
 
                     FCB->Send.Size = InfoReq->Information.Ulong;

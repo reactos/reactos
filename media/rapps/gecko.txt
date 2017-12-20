@@ -1,4 +1,4 @@
-[Section]
+﻿[Section]
 Name = Wine Gecko Engine
 Version = 2.40
 License = GPL
@@ -13,6 +13,9 @@ CDPath = none
 [Section.0407]
 Description = Die Gecko Engine, welche normalerweise während des 1st stage Setups installiert wird, aber nur wenn zu diesem Zeitpunkt Internet verfügbar war. Wird für Anwendungen benötigt, die mshtml.dll einsetzen.
 Size = 26,7 MiB
+
+[Section.0415]
+Description = Silnik Gecko normalnie jest instalowany przy pierwszym etapie instalacji systemu, ale tylko, jeśli dostępne jest wtedy połączenie z internetem. Wymagane dla aplikacji, które używają mshtml.dll.
 
 [Section.0418]
 Description = Motorul Gecko, de redare a conținutului web, este în mod normal instalat împreună cu ReactOS, dacă exista o conexiune Internet disponibilă. Este necesar aplicațiilor care utilizează biblioteca „mshtml.dll”

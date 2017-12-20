@@ -104,7 +104,7 @@ Exemple:\n\
 COLOR green ON bright white\n\
 COLOR 0 ON 7\n\
 COLOR 8F /-F\n"
-    STRING_COPY_HELP1 "Suprascrieți «%s»? (Da|Nu|Toate)"
+    STRING_COPY_HELP1 "Suprascrieți «%s» (Da|Nu|Toate)? "
     STRING_COPY_HELP2 "Copiază unul sau mai multe fișiere într-un alt loc.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] sursă [/A|/B]\n\
      [+ sursă [/A|/B] [+ ...]] [destinație [/A|/B]]\n\n\
@@ -152,7 +152,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]atribute]] fișier ...\n\n\
           A   Arhivabil\n\
           H   Ascuns\n\
           -   Prefix de negație\n"
-    STRING_DEL_HELP2 "Toate fișierele din director vor fi șterse!\nConfirmați ștergerea? (Da|Nu)"
+    STRING_DEL_HELP2 "Toate fișierele din director vor fi șterse!\nConfirmați ștergerea (Da|Nu)? "
     STRING_DEL_HELP3 "    %lu fișier(e) șters(e)\n"
     STRING_DEL_HELP4 "    %lu fișier(e) șters(e)\n"
     STRING_DELAY_HELP "Pauză pentru n secunde sau milisecunde.\n\
@@ -235,14 +235,27 @@ Tastați ECHO fără argumente pentru afișarea stării curente a ecoului.\n"
   cod_de_ieșire   Valoare atribuită variabilei ERRORLEVEL la ieșirea din\n\
                   interpretorul de comenzi.\n"
     STRING_FOR_HELP1 "Execută o comandă pentru fiecare fișier dintr-un grup.\n\n\
-FOR %%variablă IN (grup) DO comandă [argumente]\n\n\
-  %%variablă  Specifică un argument înlocuitor.\n\
+FOR %variablă IN (grup) DO comandă [argumente]\n\
+FOR /L %variablă IN (start,step,end) DO comandă [argumente]\n\
+FOR /D %variablă IN (grup) DO comandă [argumente]\n\
+FOR /R [[drive:]path] IN (grup) DO comandă [argumente]\n\
+FOR /F [""options""] IN (grup) DO comandă [argumente]\n\n\
+  /L    Generates a number sequence from start to end incrementing by step.\n\
+  /D    Modifies the set to refer to directories instead of files.\n\
+  /R    Executes command for files in the set in the specified path (or current\n\
+        working directory if not specified) and every directory below.\n\
+  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  %variablă  Specifică un argument înlocuitor.\n\
   (grup)     Specifică un grup de unul sau mai multe fișiere.\n\
              Sunt permise metacaractere.\n\
   comandă    Specifică o comandă executată pentru fiecare fișier.\n\
-  argumente  Indică argumente pentru comanda executată.\n\n\
-Pentru utilizarea comenzii FOR într-un fișier de comenzi,\n\
-specificați %%%%variabilă în loc de %%variabilă.\n"
+  argumente  Indică argumente pentru comanda executată.\n\
+  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
+Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
+after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+f,d,p,n,x,s,a,t,z.\n\n\
+Pentru utilizarea comenzii FOR într-un fișier de comenzi, specificați\n\
+%%variabilă în loc de %variabilă.\n"
     STRING_FREE_HELP1 "\nVolumul unității %s este etichetat ca %-11s\n\
 Numărul de serie este %s\n\
   %16s octeți pe disc în total\n\
@@ -296,7 +309,7 @@ legătură simbolică."
   %13s octeți în total în memoria virtuală.\n\
   %13s octeți disponibili în memoria virtuală.\n"
     STRING_MISC_HELP1 "Tastați pentru a continua..."
-    STRING_MOVE_HELP1 "Suprascrieți «%s»? (Da|Nu|Toate)"
+    STRING_MOVE_HELP1 "Suprascrieți «%s» (Da|Nu|Toate)?"
     STRING_MOVE_HELP2 "Mută sau redenumește fișiere și directoare.\n\n\
 Pentru a muta unul sau mai multe fișiere:\n\
 MOVE [/N][unitate:][cale]fișier[,...] destinație\n\n\
@@ -397,8 +410,8 @@ REPLACE [unitate1:][cale1]fișier [unitate2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\
     STRING_REPLACE_HELP6 "Înlocuiește «%s»\n"
     STRING_REPLACE_HELP7 "Nu au fost adăugate fișiere\n"
     STRING_REPLACE_HELP8 "A(u) fost adăugat(e) %lu fișier(e)\n"
-    STRING_REPLACE_HELP9 "Adaugă «%s»? (Da|Nu)"
-    STRING_REPLACE_HELP10 "Înlocuiește «%s»? (Da|Nu)"
+    STRING_REPLACE_HELP9 "Adaugă «%s» (Da|Nu)? "
+    STRING_REPLACE_HELP10 "Înlocuiește «%s» (Da|Nu)? "
     STRING_REPLACE_HELP11 "Adăugare «%s»\n"
     STRING_SHIFT_HELP "Modifică poziția argumentelor înlocuibile într-un fișier de comenzi.\n\n\
 SHIFT [DOWN]\n"
@@ -521,7 +534,7 @@ titlu         Noul titlu.\n"
     STRING_COPY_ERROR4 "Eroare: Încă nu a fost implementat!\n"
     STRING_DATE_ERROR "Dată nevalidă."
     STRING_DEL_ERROR5 "Fișierul «%s» va fi șters!\n"
-    STRING_DEL_ERROR6 "Confirmați? (Da|Nu)"
+    STRING_DEL_ERROR6 "Confirmați (Da|Nu)? "
     STRING_DEL_ERROR7 "Ștergere: %s\n"
     STRING_ERROR_ERROR1 "Eroare necunoscută! Codul de eroare: 0x%lx\n"
     STRING_ERROR_ERROR2 "Eroare de sintaxă"

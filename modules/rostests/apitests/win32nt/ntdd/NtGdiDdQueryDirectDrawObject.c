@@ -7,6 +7,8 @@
 
 #include <win32nt.h>
 
+#include <ddrawi.h>
+
 /* Note : OsThunkDdQueryDirectDrawObject is the usermode name of NtGdiDdQueryDirectDrawObject
  *        it lives in d3d8thk.dll and in windows 2000 it doing syscall direcly to win32k.sus
  *        in windows xp and higher it call to gdi32.dll to DdEntry41 and it doing the syscall

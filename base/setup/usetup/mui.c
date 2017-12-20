@@ -52,13 +52,13 @@ FindLanguageIndex(VOID)
 
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
         {
             return lngIndex;
         }
 
         lngIndex++;
-    }while (LanguageList[lngIndex].MuiPages != NULL);
+    } while (MUILanguageList[lngIndex].MuiPages != NULL);
 
     return 0;
 }
@@ -72,11 +72,11 @@ IsLanguageAvailable(
 
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , LanguageId) == 0)
+        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID , LanguageId) == 0)
             return TRUE;
 
         lngIndex++;
-    }while (LanguageList[lngIndex].MuiPages != NULL);
+    } while (MUILanguageList[lngIndex].MuiPages != NULL);
 
     return FALSE;
 }
@@ -92,7 +92,7 @@ FindMUIEntriesOfPage(
     const MUI_PAGE * Pages = NULL;
 
     lngIndex = max(FindLanguageIndex(), 0);
-    Pages = LanguageList[lngIndex].MuiPages;
+    Pages = MUILanguageList[lngIndex].MuiPages;
 
     do
     {
@@ -111,7 +111,7 @@ const MUI_ERROR *
 FindMUIErrorEntries(VOID)
 {
     ULONG lngIndex = max(FindLanguageIndex(), 0);
-    return LanguageList[lngIndex].MuiErrors;
+    return MUILanguageList[lngIndex].MuiErrors;
 }
 
 
@@ -120,7 +120,7 @@ const MUI_STRING *
 FindMUIStringEntries(VOID)
 {
     ULONG lngIndex = max(FindLanguageIndex(), 0);
-    return LanguageList[lngIndex].MuiStrings;
+    return MUILanguageList[lngIndex].MuiStrings;
 }
 
 
@@ -128,7 +128,7 @@ LPCWSTR
 MUIDefaultKeyboardLayout(VOID)
 {
     ULONG lngIndex = max(FindLanguageIndex(), 0);
-    return LanguageList[lngIndex].MuiLayouts[0].LayoutID;
+    return MUILanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
 
 
@@ -136,7 +136,7 @@ PWCHAR
 MUIGetGeoID(VOID)
 {
     ULONG lngIndex = max(FindLanguageIndex(), 0);
-    return LanguageList[lngIndex].GeoID;
+    return MUILanguageList[lngIndex].GeoID;
 }
 
 
@@ -144,7 +144,7 @@ const MUI_LAYOUTS *
 MUIGetLayoutsList(VOID)
 {
     ULONG lngIndex = max(FindLanguageIndex(), 0);
-    return LanguageList[lngIndex].MuiLayouts;
+    return MUILanguageList[lngIndex].MuiLayouts;
 }
 
 
@@ -549,14 +549,14 @@ AddKeyboardLayouts(VOID)
 
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
         {
-            return AddKbLayoutsToRegistry(LanguageList[lngIndex].MuiLayouts);
+            return AddKbLayoutsToRegistry(MUILanguageList[lngIndex].MuiLayouts);
         }
 
         lngIndex++;
     }
-    while (LanguageList[lngIndex].MuiPages != NULL);
+    while (MUILanguageList[lngIndex].MuiPages != NULL);
 
     return FALSE;
 }
@@ -703,12 +703,12 @@ AddCodePage(VOID)
     ULONG lngIndex = 0;
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
         {
-            if (AddCodepageToRegistry(LanguageList[lngIndex].ACPage,
-                                      LanguageList[lngIndex].OEMCPage,
-                                      LanguageList[lngIndex].MACCPage)&&
-                AddFontsSettingsToRegistry(LanguageList[lngIndex].MuiSubFonts))
+            if (AddCodepageToRegistry(MUILanguageList[lngIndex].ACPage,
+                                      MUILanguageList[lngIndex].OEMCPage,
+                                      MUILanguageList[lngIndex].MACCPage)&&
+                AddFontsSettingsToRegistry(MUILanguageList[lngIndex].MuiSubFonts))
             {
                 return TRUE;
             }
@@ -720,7 +720,7 @@ AddCodePage(VOID)
 
         lngIndex++;
     }
-    while (LanguageList[lngIndex].MuiPages != NULL);
+    while (MUILanguageList[lngIndex].MuiPages != NULL);
 
     return FALSE;
 }
@@ -734,16 +734,16 @@ SetConsoleCodePage(VOID)
 
     do
     {
-        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
         {
-            wCodePage = (UINT) wcstoul(LanguageList[lngIndex].OEMCPage, NULL, 10);
+            wCodePage = (UINT) wcstoul(MUILanguageList[lngIndex].OEMCPage, NULL, 10);
             SetConsoleOutputCP(wCodePage);
             return;
         }
 
         lngIndex++;
     }
-    while (LanguageList[lngIndex].MuiPages != NULL);
+    while (MUILanguageList[lngIndex].MuiPages != NULL);
 }
 
 /* EOF */

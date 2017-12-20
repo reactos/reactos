@@ -29,7 +29,15 @@ endif()
 
 add_definitions(/Dinline=__inline /D__STDC__=1)
 
-add_compile_flags("/X /GR- /EHs-c- /GS- /Zl /W3")
+if(NOT USE_CLANG_CL)
+    add_compile_flags("/X /Zl")
+endif()
+
+add_compile_flags("/GR- /EHs-c- /GS- /W3")
+
+if(USE_CLANG_CL)
+    set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
+endif()
 
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See CORE-6507
@@ -88,6 +96,11 @@ endif()
 # - C4115: named type definition in parentheses
 add_compile_flags("/w14115")
 
+if(USE_CLANG_CL)
+    add_compile_flags_language("-nostdinc -Wno-multichar -Wno-char-subscripts -Wno-microsoft-enum-forward-reference -Wno-pragma-pack -Wno-microsoft-anon-tag -Wno-unknown-pragmas" "C")
+    add_compile_flags_language("-nostdinc -Wno-multichar -Wno-char-subscripts -Wno-microsoft-enum-forward-reference -Wno-pragma-pack -Wno-microsoft-anon-tag -Wno-unknown-pragmas" "CXX")
+endif()
+
 # Debugging
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -101,7 +114,9 @@ endif()
 
 # Hotpatchable images
 if(ARCH STREQUAL "i386")
-    add_compile_flags("/hotpatch")
+    if(NOT USE_CLANG_CL)
+        add_compile_flags("/hotpatch")
+    endif()
     set(_hotpatch_link_flag "/FUNCTIONPADMIN:5")
 elseif(ARCH STREQUAL "amd64")
     set(_hotpatch_link_flag "/FUNCTIONPADMIN:6")
@@ -135,7 +150,8 @@ if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
     add_definitions(/DLANGUAGE_EN_US)
 else()
     # Only VS 10+ resource compiler supports /nologo
-    if(MSVC_VERSION GREATER 1599)
+    # CMAKE_CXX_SIMULATE_VERSION is a similar check for our clang-cl builds
+    if((MSVC_VERSION GREATER 1599) OR (CMAKE_CXX_SIMULATE_VERSION VERSION_GREATER 15.99))
         set(rc_nologo_flag "/nologo")
     else()
         set(rc_nologo_flag)
@@ -208,7 +224,9 @@ if(PCH)
 
         if(IS_CPP)
             set(_pch_language CXX)
-            set(_cl_lang_flag "/TP")
+            if(NOT USE_CLANG_CL)
+                set(_cl_lang_flag "/TP")
+            endif()
         else()
             set(_pch_language C)
             set(_cl_lang_flag "/TC")
@@ -218,12 +236,18 @@ if(PCH)
             set(_pch_path_name_flag "/Fp${_gch}")
         endif()
 
+        if(USE_CLANG_CL)
+            set(_pch_compile_flags "${_cl_lang_flag} /Yc${_pch} /FI${_pch} /Fp${_gch}")
+        else()
+            set(_pch_compile_flags "${_cl_lang_flag} /Yc /Fp${_gch}")
+        endif()
+
         # Build the precompiled header
         # HEADER_FILE_ONLY FALSE: force compiling the header
         set_source_files_properties(${_pch} PROPERTIES
             HEADER_FILE_ONLY FALSE
             LANGUAGE ${_pch_language}
-            COMPILE_FLAGS "${_cl_lang_flag} /Yc /Fp${_gch}"
+            COMPILE_FLAGS ${_pch_compile_flags}
             OBJECT_OUTPUTS ${_gch})
 
         # Prevent a race condition related to writing to the PDB files between the PCH and the excluded list of source files
@@ -421,9 +445,15 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
     set(_object_file ${_binary_file}.obj)
     set(_temp_file ${_binary_file}.tmp)
 
+    if(USE_CLANG_CL)
+        set(_no_std_includes_flag "-nostdinc")
+    else()
+        set(_no_std_includes_flag "/X")
+    endif()
+
     add_custom_command(
         OUTPUT ${_temp_file}
-        COMMAND ${CMAKE_C_COMPILER} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm /I${REACTOS_SOURCE_DIR}/boot/freeldr /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
+        COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm /I${REACTOS_SOURCE_DIR}/boot/freeldr /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
         DEPENDS ${_asm_file})
 
     if(ARCH STREQUAL "arm")

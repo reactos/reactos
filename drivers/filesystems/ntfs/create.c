@@ -185,7 +185,7 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT1("NtfsOpenFileById(%p, %p, %I64x, %p)\n", DeviceExt, FileObject, MftId, FoundFCB);
 
-    ASSERT(MftId < 0x10);
+    ASSERT(MftId < NTFS_FILE_FIRST_USER_FILE);
     if (MftId > 0xb) /* No entries are used yet beyond this */
     {
         return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -246,6 +246,7 @@ NTSTATUS
 NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
              PFILE_OBJECT FileObject,
              PWSTR FileName,
+             BOOLEAN CaseSensitive,
              PNTFS_FCB * FoundFCB)
 {
     PNTFS_FCB ParentFcb;
@@ -253,7 +254,12 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PWSTR AbsFileName = NULL;
 
-    DPRINT1("NtfsOpenFile(%p, %p, %S, %p)\n", DeviceExt, FileObject, FileName, FoundFCB);
+    DPRINT1("NtfsOpenFile(%p, %p, %S, %s, %p)\n",
+            DeviceExt,
+            FileObject,
+            FileName,
+            CaseSensitive ? "TRUE" : "FALSE",
+            FoundFCB);
 
     *FoundFCB = NULL;
 
@@ -285,19 +291,20 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
         Status = NtfsGetFCBForFile(DeviceExt,
                                    &ParentFcb,
                                    &Fcb,
-                                   FileName);
+                                   FileName,
+                                   CaseSensitive);
         if (ParentFcb != NULL)
         {
             NtfsReleaseFCB(DeviceExt,
                            ParentFcb);
         }
 
-        if (!NT_SUCCESS (Status))
+        if (!NT_SUCCESS(Status))
         {
             DPRINT("Could not make a new FCB, status: %x\n", Status);
 
             if (AbsFileName)
-                ExFreePool(AbsFileName);
+                ExFreePoolWithTag(AbsFileName, TAG_NTFS);
 
             return Status;
         }
@@ -323,7 +330,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 static
 NTSTATUS
 NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
-               PIRP Irp)
+               PNTFS_IRP_CONTEXT IrpContext)
 {
     PDEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION Stack;
@@ -334,12 +341,13 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 //    PWSTR FileName;
     NTSTATUS Status;
     UNICODE_STRING FullPath;
+    PIRP Irp = IrpContext->Irp;
 
-    DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, Irp);
+    DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, IrpContext);
 
     DeviceExt = DeviceObject->DeviceExtension;
     ASSERT(DeviceExt);
-    Stack = IoGetCurrentIrpStackLocation (Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(Stack);
 
     RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
@@ -367,7 +375,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return STATUS_INVALID_PARAMETER;
 
         MFTId = (*(PULONGLONG)FileObject->FileName.Buffer) & NTFS_MFT_MASK;
-        if (MFTId < 0x10)
+        if (MFTId < NTFS_FILE_FIRST_USER_FILE)
         {
             Status = NtfsOpenFileById(DeviceExt, FileObject, MFTId, &Fcb);
         }
@@ -411,6 +419,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         Status = NtfsOpenFile(DeviceExt,
                               FileObject,
                               ((RequestedOptions & FILE_OPEN_BY_FILE_ID) ? FullPath.Buffer : FileObject->FileName.Buffer),
+                              BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
                               &Fcb);
 
         if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
@@ -476,26 +485,126 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return Status;
         }
 
-        /* HUGLY HACK: remain RO so far... */
         if (RequestedDisposition == FILE_OVERWRITE ||
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
-            DPRINT1("Denying write request on NTFS volume\n");
-            NtfsCloseFile(DeviceExt, FileObject);
-            return STATUS_ACCESS_DENIED;
+            PFILE_RECORD_HEADER fileRecord = NULL;
+            PNTFS_ATTR_CONTEXT dataContext = NULL;
+            ULONG DataAttributeOffset;
+            LARGE_INTEGER Zero;
+            Zero.QuadPart = 0;
+
+            if (!NtfsGlobalData->EnableWriteSupport)
+            {
+                DPRINT1("NTFS write-support is EXPERIMENTAL and is disabled by default!\n");
+                NtfsCloseFile(DeviceExt, FileObject);
+                return STATUS_ACCESS_DENIED;
+            }
+
+            // TODO: check for appropriate access
+           
+            ExAcquireResourceExclusiveLite(&(Fcb->MainResource), TRUE);
+
+            fileRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                               Fcb->Vcb->NtfsInfo.BytesPerFileRecord,
+                                               TAG_NTFS);
+            if (fileRecord)
+            {
+
+                Status = ReadFileRecord(Fcb->Vcb,
+                                        Fcb->MFTIndex,
+                                        fileRecord);
+                if (!NT_SUCCESS(Status))
+                    goto DoneOverwriting;
+
+                // find the data attribute and set it's length to 0 (TODO: Handle Alternate Data Streams)
+                Status = FindAttribute(Fcb->Vcb, fileRecord, AttributeData, L"", 0, &dataContext, &DataAttributeOffset);
+                if (!NT_SUCCESS(Status))
+                    goto DoneOverwriting;
+
+                Status = SetAttributeDataLength(FileObject, Fcb, dataContext, DataAttributeOffset, fileRecord, &Zero);
+            }
+            else
+            {
+                Status = STATUS_NO_MEMORY;
+            }            
+           
+        DoneOverwriting:
+            if (fileRecord)
+                ExFreePoolWithTag(fileRecord, TAG_NTFS);
+            if (dataContext)
+                ReleaseAttributeContext(dataContext);
+
+            ExReleaseResourceLite(&(Fcb->MainResource));
+
+            if (!NT_SUCCESS(Status))
+            {
+                NtfsCloseFile(DeviceExt, FileObject);
+                return Status;
+            }            
+
+            if (RequestedDisposition == FILE_SUPERSEDE)
+            {
+                Irp->IoStatus.Information = FILE_SUPERSEDED;
+            }
+            else
+            {
+                Irp->IoStatus.Information = FILE_OVERWRITTEN;
+            }
         }
     }
     else
     {
-        /* HUGLY HACK: remain RO so far... */
+        /* HUGLY HACK: Can't create new files yet... */
         if (RequestedDisposition == FILE_CREATE ||
             RequestedDisposition == FILE_OPEN_IF ||
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
-            DPRINT1("Denying write request on NTFS volume\n");
-            return STATUS_ACCESS_DENIED;
+            if (!NtfsGlobalData->EnableWriteSupport)
+            {
+                DPRINT1("NTFS write-support is EXPERIMENTAL and is disabled by default!\n");
+                NtfsCloseFile(DeviceExt, FileObject);
+                return STATUS_ACCESS_DENIED;
+            }
+
+            // Was the user trying to create a directory?
+            if (RequestedOptions & FILE_DIRECTORY_FILE)
+            {
+                // Create the directory on disk
+                Status = NtfsCreateDirectory(DeviceExt,
+                                             FileObject,
+                                             BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
+                                             BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT));
+            }
+            else
+            {
+                // Create the file record on disk
+                Status = NtfsCreateFileRecord(DeviceExt,
+                                              FileObject,
+                                              BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
+                                              BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT));
+            }
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR: Couldn't create file record!\n");
+                return Status;
+            }
+
+            // Before we open the file/directory we just created, we need to change the disposition (upper 8 bits of ULONG)
+            // from create to open, since we already created the file
+            Stack->Parameters.Create.Options = (ULONG)FILE_OPEN << 24 | RequestedOptions;
+
+            // Now we should be able to open the file using NtfsCreateFile()
+            Status = NtfsCreateFile(DeviceObject, IrpContext);
+            if (NT_SUCCESS(Status))
+            {
+                // We need to change Irp->IoStatus.Information to reflect creation
+                Irp->IoStatus.Information = FILE_CREATED;
+            }
+            return Status;
         }
     }
 
@@ -541,8 +650,319 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext)
     ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
                                    TRUE);
     Status = NtfsCreateFile(DeviceObject,
-                            IrpContext->Irp);
+                            IrpContext);
     ExReleaseResourceLite(&DeviceExt->DirResource);
+
+    return Status;
+}
+
+/**
+* @name NtfsCreateDirectory()
+* @implemented
+*
+* Creates a file record for a new directory and saves it to the MFT. Adds the filename attribute of the
+* created directory to the parent directory's index.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION
+*
+* @param FileObject
+* Pointer to a FILE_OBJECT describing the directory to be created
+*
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application created the folder with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
+* @param CanWait
+* Boolean indicating if the function is allowed to wait for exclusive access to the master file table.
+* This will only be relevant if the MFT doesn't have any free file records and needs to be enlarged.
+*
+* @return
+* STATUS_SUCCESS on success.
+* STATUS_INSUFFICIENT_RESOURCES if unable to allocate memory for the file record.
+* STATUS_CANT_WAIT if CanWait was FALSE and the function needed to resize the MFT but
+* couldn't get immediate, exclusive access to it.
+*/
+NTSTATUS
+NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
+                    PFILE_OBJECT FileObject,
+                    BOOLEAN CaseSensitive,
+                    BOOLEAN CanWait)
+{
+
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_RECORD NextAttribute;
+    PFILENAME_ATTRIBUTE FilenameAttribute;
+    ULONGLONG ParentMftIndex;
+    ULONGLONG FileMftIndex;
+    PB_TREE Tree;
+    PINDEX_ROOT_ATTRIBUTE NewIndexRoot;
+    ULONG MaxIndexRootSize;
+    ULONG RootLength;
+
+    DPRINT1("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
+            DeviceExt,
+            FileObject,
+            CaseSensitive ? "TRUE" : "FALSE",
+            CanWait ? "TRUE" : "FALSE");
+
+    // Start with an empty file record
+    FileRecord = NtfsCreateEmptyFileRecord(DeviceExt);
+    if (!FileRecord)
+    {
+        DPRINT1("ERROR: Unable to allocate memory for file record!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // Set the directory flag
+    FileRecord->Flags |= FRH_DIRECTORY;
+
+    // find where the first attribute will be added
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+
+    // add first attribute, $STANDARD_INFORMATION
+    AddStandardInformation(FileRecord, NextAttribute);
+
+    // advance NextAttribute pointer to the next attribute
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
+
+    // Add the $FILE_NAME attribute
+    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, CaseSensitive, &ParentMftIndex);
+
+    // save a pointer to the filename attribute
+    FilenameAttribute = (PFILENAME_ATTRIBUTE)((ULONG_PTR)NextAttribute + NextAttribute->Resident.ValueOffset);
+
+    // advance NextAttribute pointer to the next attribute
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
+
+    // Create an empty b-tree to represent our new index
+    Status = CreateEmptyBTree(&Tree);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to create empty B-Tree!\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Calculate maximum size of index root
+    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord 
+                       - ((ULONG_PTR)NextAttribute - (ULONG_PTR)FileRecord)
+                       - sizeof(ULONG) * 2;
+
+    // Create a new index record from the tree
+    Status = CreateIndexRootFromBTree(DeviceExt,
+                                      Tree,
+                                      MaxIndexRootSize,
+                                      &NewIndexRoot,
+                                      &RootLength);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Unable to create empty index root!\n");
+        DestroyBTree(Tree);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // We're done with the B-Tree
+    DestroyBTree(Tree);
+
+    // add the $INDEX_ROOT attribute
+    Status = AddIndexRoot(DeviceExt, FileRecord, NextAttribute, NewIndexRoot, RootLength, L"$I30", 4);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to add index root to new file record!\n");
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+
+#ifndef NDEBUG
+    NtfsDumpFileRecord(DeviceExt, FileRecord);
+#endif
+
+    // Now that we've built the file record in memory, we need to store it in the MFT.
+    Status = AddNewMftEntry(FileRecord, DeviceExt, &FileMftIndex, CanWait);
+    if (NT_SUCCESS(Status))
+    {
+        // The highest 2 bytes should be the sequence number, unless the parent happens to be root
+        if (FileMftIndex == NTFS_FILE_ROOT)
+            FileMftIndex = FileMftIndex + ((ULONGLONG)NTFS_FILE_ROOT << 48);
+        else
+            FileMftIndex = FileMftIndex + ((ULONGLONG)FileRecord->SequenceNumber << 48);
+
+        DPRINT1("New File Reference: 0x%016I64x\n", FileMftIndex);
+
+        // Add the filename attribute to the filename-index of the parent directory
+        Status = NtfsAddFilenameToDirectory(DeviceExt,
+                                            ParentMftIndex,
+                                            FileMftIndex,
+                                            FilenameAttribute,
+                                            CaseSensitive);
+    }
+
+    ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+
+    return Status;
+}
+
+/**
+* @name NtfsCreateEmptyFileRecord
+* @implemented
+*
+* Creates a new, empty file record, with no attributes.
+*
+* @param DeviceExt
+* Pointer to the DEVICE_EXTENSION of the target volume the file record will be stored on.
+* 
+* @return
+* A pointer to the newly-created FILE_RECORD_HEADER if the function succeeds, NULL otherwise.
+*/
+PFILE_RECORD_HEADER
+NtfsCreateEmptyFileRecord(PDEVICE_EXTENSION DeviceExt)
+{
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_RECORD NextAttribute;
+
+    DPRINT1("NtfsCreateEmptyFileRecord(%p)\n", DeviceExt);
+
+    // allocate memory for file record
+    FileRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                       DeviceExt->NtfsInfo.BytesPerFileRecord,
+                                       TAG_NTFS);
+    if (!FileRecord)
+    {
+        DPRINT1("ERROR: Unable to allocate memory for file record!\n");
+        return NULL;
+    }
+
+    RtlZeroMemory(FileRecord, DeviceExt->NtfsInfo.BytesPerFileRecord);
+
+    FileRecord->Ntfs.Type = NRH_FILE_TYPE;
+
+    // calculate USA offset and count
+    FileRecord->Ntfs.UsaOffset = FIELD_OFFSET(FILE_RECORD_HEADER, MFTRecordNumber) + sizeof(ULONG);
+
+    // size of USA (in ULONG's) will be 1 (for USA number) + 1 for every sector the file record uses
+    FileRecord->BytesAllocated = DeviceExt->NtfsInfo.BytesPerFileRecord;
+    FileRecord->Ntfs.UsaCount = (FileRecord->BytesAllocated / DeviceExt->NtfsInfo.BytesPerSector) + 1;
+
+    // setup other file record fields
+    FileRecord->SequenceNumber = 1;
+    FileRecord->AttributeOffset = FileRecord->Ntfs.UsaOffset + (2 * FileRecord->Ntfs.UsaCount);
+    FileRecord->AttributeOffset = ALIGN_UP_BY(FileRecord->AttributeOffset, ATTR_RECORD_ALIGNMENT);
+    FileRecord->Flags = FRH_IN_USE;
+    FileRecord->BytesInUse = FileRecord->AttributeOffset + sizeof(ULONG) * 2;
+
+    // find where the first attribute will be added
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+
+    // mark the (temporary) end of the file-record
+    NextAttribute->Type = AttributeEnd;
+    NextAttribute->Length = FILE_RECORD_END;
+
+    return FileRecord;
+}
+
+
+/**
+* @name NtfsCreateFileRecord()
+* @implemented
+*
+* Creates a file record and saves it to the MFT. Adds the filename attribute of the
+* created file to the parent directory's index.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION
+*
+* @param FileObject
+* Pointer to a FILE_OBJECT describing the file to be created
+*
+* @param CanWait
+* Boolean indicating if the function is allowed to wait for exclusive access to the master file table.
+* This will only be relevant if the MFT doesn't have any free file records and needs to be enlarged.
+* 
+* @return
+* STATUS_SUCCESS on success. 
+* STATUS_INSUFFICIENT_RESOURCES if unable to allocate memory for the file record.
+* STATUS_CANT_WAIT if CanWait was FALSE and the function needed to resize the MFT but 
+* couldn't get immediate, exclusive access to it.
+*/
+NTSTATUS
+NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
+                     PFILE_OBJECT FileObject,
+                     BOOLEAN CaseSensitive,
+                     BOOLEAN CanWait)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_RECORD NextAttribute;
+    PFILENAME_ATTRIBUTE FilenameAttribute;
+    ULONGLONG ParentMftIndex;
+    ULONGLONG FileMftIndex;
+
+    DPRINT1("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
+            DeviceExt,
+            FileObject,
+            CaseSensitive ? "TRUE" : "FALSE",
+            CanWait ? "TRUE" : "FALSE");
+
+    // allocate memory for file record
+    FileRecord = NtfsCreateEmptyFileRecord(DeviceExt);
+    if (!FileRecord)
+    {
+        DPRINT1("ERROR: Unable to allocate memory for file record!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // find where the first attribute will be added
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+
+    // add first attribute, $STANDARD_INFORMATION
+    AddStandardInformation(FileRecord, NextAttribute);
+
+    // advance NextAttribute pointer to the next attribute
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
+
+    // Add the $FILE_NAME attribute
+    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, CaseSensitive, &ParentMftIndex);
+
+    // save a pointer to the filename attribute
+    FilenameAttribute = (PFILENAME_ATTRIBUTE)((ULONG_PTR)NextAttribute + NextAttribute->Resident.ValueOffset);
+
+    // advance NextAttribute pointer to the next attribute
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
+
+    // add the $DATA attribute
+    AddData(FileRecord, NextAttribute);
+
+#ifndef NDEBUG
+    // dump file record in memory (for debugging)
+    NtfsDumpFileRecord(DeviceExt, FileRecord);
+#endif
+
+    // Now that we've built the file record in memory, we need to store it in the MFT.
+    Status = AddNewMftEntry(FileRecord, DeviceExt, &FileMftIndex, CanWait);
+    if (NT_SUCCESS(Status))
+    {
+        // The highest 2 bytes should be the sequence number, unless the parent happens to be root
+        if (FileMftIndex == NTFS_FILE_ROOT)
+            FileMftIndex = FileMftIndex + ((ULONGLONG)NTFS_FILE_ROOT << 48);
+        else
+            FileMftIndex = FileMftIndex + ((ULONGLONG)FileRecord->SequenceNumber << 48);
+
+        DPRINT1("New File Reference: 0x%016I64x\n", FileMftIndex);
+
+        // Add the filename attribute to the filename-index of the parent directory
+        Status = NtfsAddFilenameToDirectory(DeviceExt,
+                                            ParentMftIndex,
+                                            FileMftIndex,
+                                            FilenameAttribute,
+                                            CaseSensitive);
+    }
+
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
     return Status;
 }

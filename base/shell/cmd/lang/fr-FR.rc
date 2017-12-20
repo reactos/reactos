@@ -147,8 +147,7 @@ ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
         A     Fichiers archivables\n\
         H     Fichiers cachés\n\
         -     préfixe signifiant ne pas\n"
-    STRING_DEL_HELP2 "Tous les fichiers du répertoire seront effacés!\n\
-Etes vous sûr(e) (O/N) ?"
+    STRING_DEL_HELP2 "Tous les fichiers du répertoire seront effacés!\nEtes vous sûr(e) (O/N) ? "
     STRING_DEL_HELP3 "    %lu fichier effacé\n"
     STRING_DEL_HELP4 "    %lu fichiers effacés\n"
     STRING_DELAY_HELP "Attend pendant n secondes ou millisecondes.\n\
@@ -226,15 +225,30 @@ Taper ECHO sans paramètre pour afficher le réglage ECHO courant."
   /B            Quitte seulement un fichier batch.  \n\
                 En cas de lancement en dehors d'un fichier batch, cmd.exe sera quittée\n\
   CodeDeFin     ERRORLEVEL prendra cette valeur à la sortie\n"
-    STRING_FOR_HELP1 "Exécute une commande donnée pour chaque fichier d'un ensemble de fichiers.\n\
-FOR %variable IN (ensemble) do commande [paramètres]\n\n\
-  %variable  Spécife un paramètre remplaçable.\n\
-  (ensemble) Spécifie un ensemble d'un ou plusieurs fichiers.\n\
-             Des jokers peuvent être utilisés.\n\
-  commande   Spécifie la commande à éxécuter pour chaque fichier.\n\
-  paramètres Spécifie les paramètres ou switchs pour la commande spécifiée.\n\n\
-Pour utiliser la comamnde FOR dans un programme batch,\n\
-utiliser %%variable au lieu de %variable."
+    STRING_FOR_HELP1 "Exécute une commande donnée pour chaque fichier d'un ensemble de fichiers.\n\n\
+FOR %variable IN (ensemble) DO commande [paramètres]\n\
+FOR /L %variable IN (début,pas,fin) DO commande [paramètres]\n\
+FOR /D %variable IN (ensemble) DO commande [paramètres]\n\
+FOR /R [[lecteur:]chemin] IN (ensemble) DO commande [paramètres]\n\
+FOR /F [""options""] IN (ensemble) DO commande [paramètres]\n\n\
+  /L    Génère une séquence numérique allant de début à fin, incrémenté de pas.\n\
+  /D    L'ensemble se réfère à des répertoires au lieu de fichiers.\n\
+  /R    Exécute la commande pour les fichiers dans l'ensemble du répertoire\n\
+        spécifié (ou bien le répertoire de travail courant si non spécifié)\n\
+        ainsi que chaque sous-répertoire.\n\
+  /F    L'ensemble se réfère au contenu des fichiers de l'ensemble.\n\n\
+  %variable  Spécifie un paramètre remplaçable.\n\
+  (ensemble) Spécifie un ensemble d'un ou plusieurs fichiers. Des caractères\n\
+             jokers peuvent être utilisés.\n\
+  commande   Spécifie la commande à exécuter pour chaque fichier.\n\
+  paramètres Spécifie les paramètres ou commutateurs pour la commande.\n\
+  options    Les options supportées sont : eol, skip, delims, tokens, et\n\
+             usebackq.\n\n\
+Les paramètres remplaçables peuvent être modifiés par l'ajout d'un ~ et d'un\n\
+qualificateur optionnel après le % et avant le nom (par ex. %~X).\n\
+Les qualificateurs supportés sont : f,d,p,n,x,s,a,t,z.\n\n\
+Pour utiliser la comamnde FOR dans un programme batch, utiliser %%variable\n\
+au lieu de %variable."
     STRING_FREE_HELP1 "\nLe nom de volume du lecteur %s est %-11s\n\
 Le numéro de série est %s\n\
   %16s octets d'espace disque total\n\
@@ -301,7 +315,7 @@ prompt        texte affiché par la boite de dialogue \n\n\n\
 ERRORLEVEL est modifié suivant le bouton pressé:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
-    STRING_PATH_HELP1 "Affiche ou modifie le chemin de recherche pour les fichiers éxécutables.\n\n\
+    STRING_PATH_HELP1 "Affiche ou modifie le chemin de recherche pour les fichiers exécutables.\n\n\
 PATH [[lecteur:][chemin;...]]\nPATH ;\n\n\
 Taper PATH ; pour effacer tous les réglages courants\n\
 et indiquer à l'interpréteur de commandes\n\
@@ -330,7 +344,7 @@ des caractères spéciaux suivants:\n\n\
   $V   Numéro de version de ReactOS\n\
   $_   Retour chariot/saut de ligne\n\
   $$   $ (signe dollar)"
-    STRING_PAUSE_HELP1 "Stoppe l'éxécution d'un fichier batch et affiche le message suivant:\n\
+    STRING_PAUSE_HELP1 "Stoppe l'exécution d'un fichier batch et affiche le message suivant:\n\
 'Appuyer sur une touche pour continuer...' ou un message défini\n\
 par l'utilisateur.\n\n\
 PAUSE [message]"
@@ -380,8 +394,8 @@ REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/P] [/R] [/S] [/W
     STRING_REPLACE_HELP6 "Remplace %s\n"
     STRING_REPLACE_HELP7 "Aucun fichier ajouté\n"
     STRING_REPLACE_HELP8 "%lu fichier(s) ajouté(s)\n"
-    STRING_REPLACE_HELP9 "Ajouter %s (Y/N) "
-    STRING_REPLACE_HELP10 "Remplacer %s (Y/N) "
+    STRING_REPLACE_HELP9 "Ajouter %s (O/N) ? "
+    STRING_REPLACE_HELP10 "Remplacer %s (O/N) ? "
     STRING_REPLACE_HELP11 "Ajoute %s\n"
     STRING_SHIFT_HELP "Change la position de paramètres remplaçables dans un fichier batch.\n\n\
 SHIFT [DOWN]"
@@ -505,7 +519,7 @@ titre         titre de la fenêtre"
     STRING_COPY_ERROR4 "Erreur : Non implémenté actuellement !\n"
     STRING_DATE_ERROR "Date invalide."
     STRING_DEL_ERROR5 "Le fichier %s va être effacé ! "
-    STRING_DEL_ERROR6 "Etes vous sûr (O/N) ?"
+    STRING_DEL_ERROR6 "Etes vous sûr (O/N) ? "
     STRING_DEL_ERROR7 "Efface : %s\n"
     STRING_ERROR_ERROR1 "Erreur inconnue! Code d'erreur : 0x%lx\n"
     STRING_ERROR_ERROR2 "Erreur de syntaxe"

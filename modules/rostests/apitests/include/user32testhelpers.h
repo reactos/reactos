@@ -1,4 +1,6 @@
 
+#pragma once
+
 static __inline ATOM RegisterSimpleClass(WNDPROC lpfnWndProc, LPCWSTR lpszClassName)
 {
     WNDCLASSEXW wcex;

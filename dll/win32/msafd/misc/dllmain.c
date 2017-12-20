@@ -15,9 +15,6 @@
 #include <winuser.h>
 #include <wchar.h>
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(msafd);
-
 HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
 DWORD CatalogEntryId; /* CatalogEntryId for upcalls */

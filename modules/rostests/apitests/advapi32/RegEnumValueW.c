@@ -5,10 +5,7 @@
  * PROGRAMMER:      Jérôme Gardou <jerome.gardou@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#include <winreg.h>
+#include "precomp.h"
 
 START_TEST(RegEnumValueW)
 {

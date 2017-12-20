@@ -7,6 +7,7 @@
  *              David Quintana <gigaherz@gmail.com>
  *              Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
+
 #pragma once
 
 extern const GUID CLSID_SysTray;

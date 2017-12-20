@@ -104,6 +104,7 @@ BEGIN
             MENUITEM "&Large Icons", IDM_LARGE_ICONS
             MENUITEM "&Small Icons", IDM_SMALL_ICONS
         END
+        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
         MENUITEM "&Show Text", IDM_SHOW_TEXT
     END    
 END
@@ -297,4 +298,6 @@ END
 STRINGTABLE
 BEGIN
     IDS_BROWSEFORNEWTOOLAR "Choose a folder"
+    IDS_TOOLBAR_ERR_TITLE "Toolbar"
+    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
 END

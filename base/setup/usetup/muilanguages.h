@@ -411,7 +411,7 @@
     #include "lang/zh-TW.h"
 #endif
 
-const MUI_LANGUAGE LanguageList[] =
+const MUI_LANGUAGE MUILanguageList[] =
 {
   /* Lang ID,   ANSI CP, OEM CP, MAC CP,   Language Name,                   GeoID   page strgs,error strings,    other strings, fonts,       kb layouts */
 #ifdef LANGUAGE_AF_ZA

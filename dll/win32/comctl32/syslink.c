@@ -791,7 +791,9 @@ static LRESULT SYSLINK_Draw (const SYSLINK_INFO *infoPtr, HDC hdc)
     }
     else SetBkMode( hdc, TRANSPARENT );
 
+#ifndef __REACTOS__
     DeleteObject(hBrush);
+#endif
 
     LIST_FOR_EACH_ENTRY(Current, &infoPtr->Items, DOC_ITEM, entry)
     {

@@ -27,7 +27,11 @@ static NTSTATUS SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
 
     FCB->Connection = Qelt->Object;
 
-    if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
+    if (FCB->RemoteAddress)
+    {
+        ExFreePoolWithTag(FCB->RemoteAddress, TAG_AFD_TRANSPORT_ADDRESS);
+    }
+
     FCB->RemoteAddress =
         TaCopyTransportAddress( Qelt->ConnInfo->RemoteAddress );
 
@@ -115,13 +119,17 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
         /* Free ConnectionReturnInfo and ConnectionCallInfo */
         if (FCB->ListenIrp.ConnectionReturnInfo)
         {
-            ExFreePool(FCB->ListenIrp.ConnectionReturnInfo);
+            ExFreePoolWithTag(FCB->ListenIrp.ConnectionReturnInfo,
+                              TAG_AFD_TDI_CONNECTION_INFORMATION);
+
             FCB->ListenIrp.ConnectionReturnInfo = NULL;
         }
 
         if (FCB->ListenIrp.ConnectionCallInfo)
         {
-            ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
+            ExFreePoolWithTag(FCB->ListenIrp.ConnectionCallInfo,
+                              TAG_AFD_TDI_CONNECTION_INFORMATION);
+
             FCB->ListenIrp.ConnectionCallInfo = NULL;
         }
 
@@ -138,7 +146,10 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
         return Irp->IoStatus.Status;
     }
 
-    Qelt = ExAllocatePool( NonPagedPool, sizeof(*Qelt) );
+    Qelt = ExAllocatePoolWithTag(NonPagedPool,
+                                 sizeof(*Qelt),
+                                 TAG_AFD_ACCEPT_QUEUE);
+
     if( !Qelt ) {
         Status = STATUS_NO_MEMORY;
     } else {
@@ -256,7 +267,9 @@ NTSTATUS AfdListenSocket( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
+        ExFreePoolWithTag(FCB->ListenIrp.ConnectionCallInfo,
+                          TAG_AFD_TDI_CONNECTION_INFORMATION);
+
         FCB->ListenIrp.ConnectionCallInfo = NULL;
         return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
     }
@@ -372,7 +385,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
             AFD_DbgPrint(MID_TRACE,("Completed a wait for accept\n"));
 
-            ExFreePool( PendingConnObj );
+            ExFreePoolWithTag(PendingConnObj, TAG_AFD_ACCEPT_QUEUE);
 
             if( !IsListEmpty( &FCB->PendingConnections ) )
             {

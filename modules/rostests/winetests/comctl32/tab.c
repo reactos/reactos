@@ -18,16 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/test.h>
-
-#include <assert.h>
-//#include <windows.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <commctrl.h>
-#include <stdio.h>
-
-#include "msg.h"
+#include "precomp.h"
 
 #define DEFAULT_MIN_TAB_WIDTH 54
 #define TAB_PADDING_X 6

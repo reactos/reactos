@@ -55,7 +55,7 @@ static TCHAR CurrentToken[CMDLINE_LENGTH];
 static int CurrentTokenType;
 static int InsideBlock;
 
-static TCHAR ParseChar()
+static TCHAR ParseChar(void)
 {
     TCHAR Char;
 
@@ -69,7 +69,9 @@ restart:
      * even separate tokens.
      */
     do
+    {
         Char = *ParsePos++;
+    }
     while (Char == _T('\r'));
 
     if (!Char)
@@ -91,7 +93,7 @@ restart:
     return CurChar = Char;
 }
 
-static void ParseError()
+static void ParseError(void)
 {
     error_syntax(CurrentTokenType != TOK_END ? CurrentToken : NULL);
     bParseError = TRUE;
@@ -317,6 +319,7 @@ static PARSED_COMMAND *ParseBlock(REDIRECTION *RedirList)
 
         if (CurrentTokenType == TOK_END_BLOCK)
             break;
+
         /* Skip past the \n */
         ParseChar();
     }
@@ -501,6 +504,13 @@ static PARSED_COMMAND *ParseFor(void)
 
         if (Type == TOK_END_BLOCK)
             break;
+
+        if (Type == TOK_END)
+        {
+            /* Skip past the \n */
+            ParseChar();
+            continue;
+        }
 
         if (Type != TOK_NORMAL)
             goto error;

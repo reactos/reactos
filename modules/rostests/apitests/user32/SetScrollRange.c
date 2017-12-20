@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-
-#include <wingdi.h>
-#include <winuser.h>
+#include "precomp.h"
 
 START_TEST(SetScrollRange)
 {

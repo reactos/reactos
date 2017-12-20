@@ -41,6 +41,7 @@ VfatCleanupFile(
     if (IsVolume)
     {
         pFcb->OpenHandleCount--;
+        DeviceExt->OpenHandleCount--;
 
         if (pFcb->OpenHandleCount != 0)
         {

@@ -295,7 +295,13 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         return Status;
     }
 
-    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeData, L"", 0, &DeviceExt->MFTContext);
+    Status = FindAttribute(DeviceExt,
+                           DeviceExt->MasterFileTable,
+                           AttributeData,
+                           L"",
+                           0,
+                           &DeviceExt->MFTContext,
+                           &DeviceExt->MftDataOffset);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't find data attribute for Master File Table.\n");
@@ -333,11 +339,11 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     NtfsDumpFileAttributes(DeviceExt, VolumeRecord);
 
     /* Get volume name */
-    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, L"", 0, &AttrCtxt);
+    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, L"", 0, &AttrCtxt, NULL);
 
-    if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
+    if (NT_SUCCESS(Status) && AttrCtxt->pRecord->Resident.ValueLength != 0)
     {
-        Attribute = &AttrCtxt->Record;
+        Attribute = AttrCtxt->pRecord;
         DPRINT("Data length %lu\n", AttributeDataLength(Attribute));
         NtfsInfo->VolumeLabelLength =
            min (Attribute->Resident.ValueLength, MAXIMUM_VOLUME_LABEL_LENGTH);
@@ -374,11 +380,11 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     DeviceExt->VolumeFcb = VolumeFcb;
 
     /* Get volume information */
-    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeInformation, L"", 0, &AttrCtxt);
+    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeInformation, L"", 0, &AttrCtxt, NULL);
 
-    if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
+    if (NT_SUCCESS(Status) && AttrCtxt->pRecord->Resident.ValueLength != 0)
     {
-        Attribute = &AttrCtxt->Record;
+        Attribute = AttrCtxt->pRecord;
         DPRINT("Data length %lu\n", AttributeDataLength (Attribute));
         VolumeInfo = (PVOID)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
 
@@ -804,7 +810,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext);
+    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed find $DATA for bitmap: %lx\n", Status);

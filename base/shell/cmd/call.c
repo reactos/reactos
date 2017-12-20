@@ -34,7 +34,7 @@
  * Perform CALL command.
  */
 
-INT cmd_call (LPTSTR param)
+INT cmd_call(LPTSTR param)
 {
     TCHAR line[CMDLINE_LENGTH + 1];
     TCHAR *first;
@@ -49,7 +49,7 @@ INT cmd_call (LPTSTR param)
 
     /* Do a second round of %-variable substitutions */
     if (!SubstituteVars(param, line, _T('%')))
-        return nErrorLevel = 1;
+        return (nErrorLevel = 1);
 
     /* Find start and end of first word */
     first = line;
@@ -67,7 +67,7 @@ INT cmd_call (LPTSTR param)
     memmove(param + 1, param, (_tcslen(param) + 1) * sizeof(TCHAR));
     *param++ = _T('\0');
 
-    if (*first == _T(':') && (bc))
+    if (*first == _T(':') && bc)
     {
         /* CALL :label - call a subroutine of the current batch file */
         while (*param == _T(' '))

@@ -10,7 +10,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
-add_library(libjpeg SHARED
+list(APPEND SOURCE
     jaricom.c
     jcapimin.c
     jcapistd.c
@@ -56,8 +56,11 @@ add_library(libjpeg SHARED
     jquant2.c
     jutils.c
     jmemmgr.c
-    jmemnobs.c)
+    jmemnobs.c
+    precomp.h)
 
+add_library(libjpeg SHARED ${SOURCE})
 set_module_type(libjpeg win32dll)
 add_importlibs(libjpeg msvcrt kernel32)
+add_pch(libjpeg precomp.h SOURCE)
 add_cd_file(TARGET libjpeg DESTINATION reactos/system32 FOR all)

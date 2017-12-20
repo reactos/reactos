@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-//#include <windows.h>
-#include <wine/test.h>
+#pragma once
 
 /* undocumented SWP flags - from SDK 3.1 */
 #define SWP_NOCLIENTSIZE	0x0800
@@ -164,7 +162,7 @@ static void dump_sequence( struct msg_sequence **seq, int sequence_index,
     }
 }
 
-static void ok_sequence_(struct msg_sequence **seq, int sequence_index,
+static inline void ok_sequence_(struct msg_sequence **seq, int sequence_index,
     const struct message *expected, const char *context, BOOL todo,
     const char *file, int line)
 {
@@ -387,7 +385,7 @@ done:
         ok_sequence_(seq, index, (exp), (contx), (todo), __FILE__, __LINE__)
 
 
-static void init_msg_sequences(struct msg_sequence **seq, int n)
+static inline void init_msg_sequences(struct msg_sequence **seq, int n)
 {
     int i;
 

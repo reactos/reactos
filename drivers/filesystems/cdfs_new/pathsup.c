@@ -22,7 +22,7 @@ Abstract:
     of the tree.  The children of a given directory will be grouped together.
 
     The directories are assigned ordinal numbers based on their position in
-    the path table.  The root directory is assigned ordinal value 1.
+    the path table.  The root dirctory is assigned ordinal value 1.
 
     Path table sectors:
 
@@ -88,8 +88,8 @@ Abstract:
 //
 //  PRAW_PATH_ENTRY
 //  CdRawPathEntry (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PPATH_ENUM_CONTEXT PathContext
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _In_ PPATH_ENUM_CONTEXT PathContext
 //      );
 //
 
@@ -102,19 +102,20 @@ Abstract:
 
 VOID
 CdMapPathTableBlock (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG BaseOffset,
-    IN OUT PPATH_ENUM_CONTEXT PathContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG BaseOffset,
+    _Inout_ PPATH_ENUM_CONTEXT PathContext
     );
 
+_Success_(return != FALSE)
 BOOLEAN
 CdUpdatePathEntryFromRawPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG Ordinal,
-    IN BOOLEAN VerifyBounds,
-    IN PPATH_ENUM_CONTEXT PathContext,
-    OUT PPATH_ENTRY PathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG Ordinal,
+    _In_ BOOLEAN VerifyBounds,
+    _In_ PPATH_ENUM_CONTEXT PathContext,
+    _Out_ PPATH_ENTRY PathEntry
     );
 
 #ifdef ALLOC_PRAGMA
@@ -129,11 +130,11 @@ CdUpdatePathEntryFromRawPathEntry (
 
 VOID
 CdLookupPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG PathEntryOffset,
-    IN ULONG Ordinal,
-    IN BOOLEAN VerifyBounds,
-    IN OUT PCOMPOUND_PATH_ENTRY CompoundPathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG PathEntryOffset,
+    _In_ ULONG Ordinal,
+    _In_ BOOLEAN VerifyBounds,
+    _Inout_ PCOMPOUND_PATH_ENTRY CompoundPathEntry
     )
 
 /*++
@@ -204,9 +205,9 @@ Return Value:
 
 BOOLEAN
 CdLookupNextPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PPATH_ENUM_CONTEXT PathContext,
-    IN OUT PPATH_ENTRY PathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PPATH_ENUM_CONTEXT PathContext,
+    _Inout_ PPATH_ENTRY PathEntry
     )
 
 /*++
@@ -296,14 +297,14 @@ Return Value:
                                               PathEntry );
 }
 
-
+_Success_(return != FALSE)
 BOOLEAN
 CdFindPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB ParentFcb,
-    IN PCD_NAME DirName,
-    IN BOOLEAN IgnoreCase,
-    IN OUT PCOMPOUND_PATH_ENTRY CompoundPathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB ParentFcb,
+    _In_ PCD_NAME DirName,
+    _In_ BOOLEAN IgnoreCase,
+    _Inout_ PCOMPOUND_PATH_ENTRY CompoundPathEntry
     )
 
 /*++
@@ -481,10 +482,10 @@ Return Value:
 
 VOID
 CdMapPathTableBlock (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG BaseOffset,
-    IN OUT PPATH_ENUM_CONTEXT PathContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG BaseOffset,
+    _Inout_ PPATH_ENUM_CONTEXT PathContext
     )
 
 /*++
@@ -493,7 +494,7 @@ Routine Description:
 
     This routine is called to map (or allocate and copy) the next
     data block in the path table.  We check if the next block will
-    span a view boundary and allocate an auxiliary buffer in that case.
+    span a view boundary and allocate an auxilary buffer in that case.
 
 Arguments:
 
@@ -519,9 +520,11 @@ Return Value:
 
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER( IrpContext );
+    
     //
     //  Map the new block and set the enumeration context to this
-    //  point.  Allocate an auxiliary buffer if necessary.
+    //  point.  Allocate an auxilary buffer if necessary.
     //
 
     CurrentLength = 2 * SECTOR_SIZE;
@@ -564,7 +567,7 @@ Return Value:
         (FlagOn( ((ULONG) BaseOffset), VACB_MAPPING_MASK ) == LAST_VACB_SECTOR_OFFSET )) {
 
         //
-        //  Map each sector individually and store into an auxiliary
+        //  Map each sector individually and store into an auxilary
         //  buffer.
         //
 
@@ -605,7 +608,7 @@ Return Value:
 
         //
         //  There is a slight chance that we have allocated an
-        //  auxiliary buffer on the previous sector.
+        //  auxilary buffer on the previous sector.
         //
 
         if (PathContext->AllocatedData) {
@@ -629,14 +632,14 @@ Return Value:
 //
 //  Local support routine
 //
-
+_Success_(return != FALSE)
 BOOLEAN
 CdUpdatePathEntryFromRawPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG Ordinal,
-    IN BOOLEAN VerifyBounds,
-    IN PPATH_ENUM_CONTEXT PathContext,
-    OUT PPATH_ENTRY PathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG Ordinal,
+    _In_ BOOLEAN VerifyBounds,
+    _In_ PPATH_ENUM_CONTEXT PathContext,
+    _Out_ PPATH_ENTRY PathEntry
     )
 
 /*++
@@ -764,7 +767,7 @@ Return Value:
 
     PathEntry->PathEntryLength = WordAlign( PathEntry->PathEntryLength );
 
-    PathEntry->DirName = (PCHAR)RawPathEntry->DirId; /* ReactOS Change: GCC "assignment makes pointer from integer without a cast" */
+    PathEntry->DirName = (PCHAR)RawPathEntry->DirId;
 
     return TRUE;
 }
@@ -776,9 +779,9 @@ Return Value:
 
 VOID
 CdUpdatePathEntryName (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PPATH_ENTRY PathEntry,
-    IN BOOLEAN IgnoreCase
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PPATH_ENTRY PathEntry,
+    _In_ BOOLEAN IgnoreCase
     )
 
 /*++
@@ -789,7 +792,7 @@ Routine Description:
     path entry.  If this is a Joliet name then we will make sure we have
     an allocated buffer and need to convert from big endian to little
     endian.  We also correctly update the case name.  If this operation is ignore
-    case then we need an auxiliary buffer for the name.
+    case then we need an auxilary buffer for the name.
 
     For an Ansi disk we can use the name from the disk for the exact case.  We only
     need to allocate a buffer for the ignore case name.  The on-disk representation of
@@ -828,7 +831,7 @@ Return Value:
         //  There should be no allocated buffers.
         //
 
-        ASSERT( !FlagOn( PathEntry->Flags, PATH_ENTRY_FLAG_ALLOC_BUFFER ));
+        NT_ASSERT( !FlagOn( PathEntry->Flags, PATH_ENTRY_FLAG_ALLOC_BUFFER ));
 
         //
         //  Now use one of the hard coded directory names.
@@ -931,7 +934,8 @@ Return Value:
                                    PathEntry->DirName,
                                    PathEntry->DirNameLen );
 
-        ASSERT( Status == STATUS_SUCCESS );
+        NT_ASSERT( Status == STATUS_SUCCESS );
+        __analysis_assert( Status == STATUS_SUCCESS );        
         PathEntry->CdDirName.FileName.Length = (USHORT) Length;
 
     } else {

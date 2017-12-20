@@ -444,6 +444,10 @@ PspSetQuotaLimits(
 
         Status = STATUS_SUCCESS;
     }
+    else
+    {
+        Status = STATUS_SUCCESS;
+    }
 
     return Status;
 }

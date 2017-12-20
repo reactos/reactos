@@ -5,12 +5,9 @@
  * PROGRAMMER:      Mark Jansen
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#include <windows.h>
-
-#define WIN32_NO_STATUS
-#include <ntndk.h>
+#include <winsvc.h>
 
 enum ServiceCommands
 {
@@ -18,6 +15,7 @@ enum ServiceCommands
     RegisterShimCacheWithoutHandle = 129,
 };
 
+static NTSTATUS (NTAPI *pNtApphelpCacheControl)(APPHELPCACHESERVICECLASS, PAPPHELP_CACHE_SERVICE_LOOKUP);
 
 NTSTATUS CallCacheControl(UNICODE_STRING* PathName, BOOLEAN WithMapping, APPHELPCACHESERVICECLASS Service)
 {
@@ -41,7 +39,7 @@ NTSTATUS CallCacheControl(UNICODE_STRING* PathName, BOOLEAN WithMapping, APPHELP
     {
         CacheEntry.ImageHandle = INVALID_HANDLE_VALUE;
     }
-    Status = NtApphelpCacheControl(Service, &CacheEntry);
+    Status = pNtApphelpCacheControl(Service, &CacheEntry);
     if (CacheEntry.ImageHandle != INVALID_HANDLE_VALUE)
         NtClose(CacheEntry.ImageHandle);
     return Status;
@@ -67,31 +65,31 @@ void CheckValidation(UNICODE_STRING* PathName)
     NTSTATUS Status;
 
     /* Validate the handling of a NULL pointer */
-    Status = NtApphelpCacheControl(ApphelpCacheServiceRemove, NULL);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceRemove, NULL);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
-    Status = NtApphelpCacheControl(ApphelpCacheServiceLookup, NULL);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, NULL);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
 
     /* Validate the handling of a NULL pointer inside the struct */
-    Status = NtApphelpCacheControl(ApphelpCacheServiceRemove, &CacheEntry);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceRemove, &CacheEntry);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
-    Status = NtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
 
     /* Just call the dump function */
-    Status = NtApphelpCacheControl(ApphelpCacheServiceDump, NULL);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceDump, NULL);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Validate the handling of an invalid handle inside the struct */
     CacheEntry.ImageName = *PathName;
     CacheEntry.ImageHandle = (HANDLE)2;
-    Status = NtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, STATUS_NOT_FOUND);
 
     /* Validate the handling of an invalid service number */
-    Status = NtApphelpCacheControl(999, NULL);
+    Status = pNtApphelpCacheControl(999, NULL);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
-    Status = NtApphelpCacheControl(999, &CacheEntry);
+    Status = pNtApphelpCacheControl(999, &CacheEntry);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
 }
 
@@ -157,7 +155,7 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
         let's test invalid handle behavior */
     CacheEntry.ImageName = ntPath;
     CacheEntry.ImageHandle = 0;
-    Status = NtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, STATUS_NOT_FOUND);
 
     /* re-add it for the next test */
@@ -165,7 +163,7 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_SUCCESS);
     CacheEntry.ImageHandle = (HANDLE)1;
-    Status = NtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, STATUS_NOT_FOUND);
 
     /* and again */
@@ -173,7 +171,7 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_SUCCESS);
     CacheEntry.ImageHandle = (HANDLE)0x80000000;
-    Status = NtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
+    Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, STATUS_NOT_FOUND);
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, ntPath.Buffer);
@@ -346,6 +344,14 @@ START_TEST(NtApphelpCacheControl)
         win_skip("RegisterServiceCtrlHandlerExA not available, skipping tests\n");
         return;
     }
+
+    pNtApphelpCacheControl = (void*)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtApphelpCacheControl");
+    if (!pNtApphelpCacheControl)
+    {
+        win_skip("NtApphelpCacheControl not available, skipping tests\n");
+        return;
+    }
+
     argc = winetest_get_mainargs(&argv);
     if(argc < 3)
     {

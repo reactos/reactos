@@ -5,14 +5,9 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
 #include <winreg.h>
-#define WIN32_NO_STATUS
-#include <ndk/cmfuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/rtlfuncs.h>
-#include <strsafe.h>
 
 START_TEST(NtSetValueKey)
 {

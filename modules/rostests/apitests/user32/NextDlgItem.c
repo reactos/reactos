@@ -5,12 +5,8 @@
  * PROGRAMMERS:     Katayama Hirofumi MZ
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <apitest.h>
+#include "precomp.h"
 
-#include <wingdi.h>
-#include <winuser.h>
 #include <windowsx.h>
 #include <dlgs.h>
 

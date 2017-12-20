@@ -14,6 +14,9 @@ CDPath = none
 Description = Akronym für GNU Image Manipulation Program. Es ist ein frei verfügbares Programm für Aufgaben wie Foto-Retusche, Bildkomposition und Bild-Authoring.
 Size = 92,3 MiB
 
+[Section.0415]
+Description = Skrót od GNU Image Manipulation Program. Jest to darmowy program do tworzenia i edycji grafiki.
+
 [Section.0418]
 Description = Acronim pentru „GNU Image Manipulation Program” (program GNU de manipulare a imaginilor). Este un program gratuit pentru retușare foto, compoziție de imagine și creare de imagini.
 Size = 92,3 Mio

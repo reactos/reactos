@@ -47,5 +47,11 @@ add_library(stlport
     src/cxa.c
     src/c_locale.c)
 
+if(USE_CLANG_CL)
+    add_target_compile_flags(stlport "-Wno-missing-braces -Wno-unused-local-typedef")
+    add_target_compile_flags(stlport "-Wno-infinite-recursion -Wno-deprecated-register")
+    add_target_compile_flags(stlport "-Wno-tautological-unsigned-zero-compare")
+endif()
+
 add_dependencies(stlport xdk)
 add_pch(stlport src/stlport_prefix.h SOURCE)

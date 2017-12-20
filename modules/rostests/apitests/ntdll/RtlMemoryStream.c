@@ -5,10 +5,9 @@
  * PROGRAMMER:      David Quintana <gigaherz@gmail.com>
  */
 
-#define COBJMACROS
+#include "precomp.h"
 
-#include <apitest.h>
-#include <ndk/rtlfuncs.h>
+#define COBJMACROS
 #include <ole2.h>
 #include <wtypes.h>
 

@@ -6,9 +6,6 @@
  */
 
 #include "shelltest.h"
-#include "apitest.h"
-#include <ndk/umtypes.h>
-#include <strsafe.h>
 
 /* Version masks */
 #define T_ALL     0x0
@@ -46,7 +43,11 @@ struct test_data Tests[] =
     {__LINE__, L" :", NULL, 0, E_INVALIDARG, 0},
     {__LINE__, L"/", NULL, 0, E_INVALIDARG, 0},
     {__LINE__, L"//", NULL, 0, E_INVALIDARG, 0},
+    /* This opens C:\ from Win+R and address bar */
     {__LINE__, L"\\", NULL, 0, E_INVALIDARG, 0},
+    /* These two opens "C:\Program Files" from Win+R and address bar */
+    {__LINE__, L"\\Program Files", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"\\Program Files\\", NULL, 0, E_INVALIDARG, 0},
     {__LINE__, L"\\\\?", NULL, 0, E_INVALIDARG, 0},
     {__LINE__, L"\\\\?\\", NULL, 0, E_INVALIDARG, 0},
     /* Tests for the shell: protocol */
@@ -139,6 +140,7 @@ UINT get_host_os_flag()
 START_TEST(SHParseDisplayName)
 {
     HRESULT hr;
+    WCHAR winDir[MAX_PATH];
     UINT os_flag = get_host_os_flag();
     ok (os_flag != 0, "Incompatible os version %d!", os_flag);
     if (os_flag == 0)
@@ -147,6 +149,9 @@ START_TEST(SHParseDisplayName)
     IShellFolder *psfDesktop;
     hr = SHGetDesktopFolder(&psfDesktop);
     ok(hr == S_OK, "hr = %lx\n", hr);
+
+    GetWindowsDirectoryW(winDir, _countof(winDir));
+    SetCurrentDirectoryW(winDir);
 
     for (UINT i = 0; i < _countof(Tests); i ++)
     {

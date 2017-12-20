@@ -1,4 +1,6 @@
 
+#ifndef _TSC_H_
+#define _TSC_H_
 
 #define NUM_SAMPLES 4
 #define MSR_RDTSC 0x10
@@ -16,3 +18,5 @@ VOID NTAPI HalpInitializeTsc(void);
 #endif
 
 #endif
+
+#endif /* !_TSC_H_ */

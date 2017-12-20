@@ -1982,9 +1982,9 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     }
     else
     {
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        OldIrql = MiAcquirePfnLock();
         MmReferencePage(Page);
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiReleasePfnLock(OldIrql);
     }
 
     MmDeleteAllRmaps(Page, (PVOID)&Context, MmPageOutDeleteMapping);

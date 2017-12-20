@@ -5,11 +5,8 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/ntndk.h>
 #include <winsafer.h>
 
 #define SaferIdentifyLevel(c, p, h, r) SaferIdentifyLevel(c, (PSAFER_CODE_PROPERTIES)(p), h, r)

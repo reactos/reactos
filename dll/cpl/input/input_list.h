@@ -30,7 +30,7 @@ typedef struct _INPUT_LIST_NODE
 VOID
 InputList_Create(VOID);
 
-VOID
+BOOL
 InputList_Process(VOID);
 
 BOOL

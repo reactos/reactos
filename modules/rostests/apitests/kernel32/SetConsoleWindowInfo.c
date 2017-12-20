@@ -5,8 +5,7 @@
  * PROGRAMMER:      Hermes Belusca-Maito
  */
 
-#include <apitest.h>
-#include <wincon.h>
+#include "precomp.h"
 
 static VOID
 ResizeTextConsole(

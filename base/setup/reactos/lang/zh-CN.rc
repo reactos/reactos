@@ -6,7 +6,7 @@ CAPTION "ReactOS 安装"
 FONT 9, "MS Shell Dlg"
 BEGIN
     LTEXT "欢迎使用 ReactOS 安装向导。", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "您不能直接从此CD安装 ReactOS！ 请重新启动并从CD引导您的电脑以便安装 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "您不能直接从此 CD 安装 ReactOS！ 请重新启动并从 CD 引导您的电脑以便安装 ReactOS。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "点击完成退出安装。", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -16,9 +16,9 @@ CAPTION "ReactOS 安装"
 FONT 9, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "安装 ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "安装 ReactOS 的新副本。此选项没有保存你的文件、 设置和程序。你可以对磁盘和分区进行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "安装 ReactOS 的新副本。此选项将不会保存你的文件、 设置和程序。你可以对磁盘和分区进行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "修复或更新已安装的 ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "更新或修复 ReactOS 安装的副本。此选项会保存您的文件、 设置和程序。如果 ReactOS 已经安装在此计算机上, 此选项才能使用的。", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "更新或修复 ReactOS 安装的副本。此选项会保存您的文件、 设置和程序。如果 ReactOS 已经安装，此选项方可使用。", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "点击下一步安装设备。", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -55,7 +55,7 @@ CAPTION "建立分区"
 FONT 9, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
-    CONTROL "建立并格式化分区", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    CONTROL "创建并格式化分区", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
     LTEXT "大小:", IDC_STATIC, 13, 24, 27, 9
     EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
@@ -72,7 +72,7 @@ FONT 9, "MS Shell Dlg"
 BEGIN
     CONTROL "安装文件夹", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
     EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
-    CONTROL "引导器程序安装", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
+    CONTROL "引导程序安装", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
     CONTROL "安装引导程序到硬盘 (MBR 和 VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
     CONTROL "安装引导程序到硬盘 (仅 VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
     CONTROL "不安装引导程序", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11

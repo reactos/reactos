@@ -13,10 +13,14 @@ list(APPEND SOURCE
     protocol.c
     script.c
     style.c
-    testlist.c
-    xmlhttprequest.c)
+    xmlhttprequest.c
+    precomp.h)
 
-add_executable(mshtml_winetest ${SOURCE} rsrc.rc)
+add_executable(mshtml_winetest
+    ${SOURCE}
+    guid.c
+    testlist.c
+    rsrc.rc)
 
 list(APPEND mshtml_winetest_rc_deps
     ${CMAKE_CURRENT_BINARY_DIR}/test_tlb.tlb
@@ -33,4 +37,5 @@ target_link_libraries(mshtml_winetest uuid strmiids)
 set_module_type(mshtml_winetest win32cui)
 add_importlibs(mshtml_winetest wininet ole32 oleaut32 user32 gdi32 urlmon advapi32 msvcrt kernel32)
 add_dependencies(mshtml_winetest test_tlb_header stdole2)
+add_pch(mshtml_winetest precomp.h SOURCE)
 add_rostests_file(TARGET mshtml_winetest)

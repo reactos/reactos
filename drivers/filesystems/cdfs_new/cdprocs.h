@@ -17,11 +17,22 @@ Abstract:
 #ifndef _CDPROCS_
 #define _CDPROCS_
 
+#ifdef _MSC_VER
+#pragma warning( disable: 4127 ) // conditional expression is constant
+
+#pragma warning( push )
+#pragma warning( disable: 4201 ) // nonstandard extension used : nameless struct/union
+#pragma warning( disable: 4214 ) // nonstandard extension used : bit field types
+#endif
+
 #include <ntifs.h>
 
 #include <ntddcdrm.h>
 #include <ntdddisk.h>
 #include <ntddscsi.h>
+#ifdef __REACTOS__
+#include <pseh/pseh2.h>
+#endif
 
 #ifndef INLINE
 #define INLINE __inline
@@ -32,12 +43,31 @@ Abstract:
 #include "cdstruc.h"
 #include "cddata.h"
 
+#ifdef CDFS_TELEMETRY_DATA
+
+#include <winmeta.h>
+#include <TraceLoggingProvider.h>
+#include <telemetry\MicrosoftTelemetry.h>
+
+#endif // CDFS_TELEMETRY_DATA
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 //**** x86 compiler bug ****
 
 #if defined(_M_IX86)
 #undef Int64ShraMod32
 #define Int64ShraMod32(a, b) ((LONGLONG)(a) >> (b))
+#endif
+
+#ifndef Min
+#define Min(a, b)   ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef Max
+#define Max(a, b)   ((a) > (b) ? (a) : (b))
 #endif
 
 //
@@ -88,9 +118,9 @@ Abstract:
 //
 //  BOOLEAN
 //  CdIllegalFcbAccess (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN TYPE_OF_OPEN TypeOfOpen,
-//      IN ACCESS_MASK DesiredAccess
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _In_ TYPE_OF_OPEN TypeOfOpen,
+//      _In_ ACCESS_MASK DesiredAccess
 //      );
 //
 
@@ -114,49 +144,55 @@ Abstract:
 //  These routines are for querying allocation on individual streams.
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdLookupAllocation (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG FileOffset,
-    OUT PLONGLONG DiskOffset,
-    OUT PULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG FileOffset,
+    _Out_ PLONGLONG DiskOffset,
+    _Out_ PULONG ByteCount
     );
 
 VOID
 CdAddAllocationFromDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG McbEntryOffset,
-    IN LONGLONG StartingFileOffset,
-    IN PDIRENT Dirent
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ ULONG McbEntryOffset,
+    _In_ LONGLONG StartingFileOffset,
+    _In_ PDIRENT Dirent
     );
 
 VOID
 CdAddInitialAllocation (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG StartingBlock,
-    IN LONGLONG DataLength
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ ULONG StartingBlock,
+    _In_ LONGLONG DataLength
     );
 
 VOID
 CdTruncateAllocation (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG StartingFileOffset
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ LONGLONG StartingFileOffset
     );
 
+_At_(Fcb->NodeByteSize, _In_range_(>=, FIELD_OFFSET( FCB, FcbType )))
 VOID
 CdInitializeMcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_updates_bytes_(Fcb->NodeByteSize) PFCB Fcb
     );
 
+_At_(Fcb->NodeByteSize, _In_range_(>=, FIELD_OFFSET( FCB, FcbType )))
+_When_(Fcb->NodeTypeCode == CDFS_NTC_FCB_PATH_TABLE, _At_(Fcb->NodeByteSize, _In_range_(==, SIZEOF_FCB_INDEX)))
+_When_(Fcb->NodeTypeCode == CDFS_NTC_FCB_INDEX, _At_(Fcb->NodeByteSize, _In_range_(==, SIZEOF_FCB_INDEX)))
+_When_(Fcb->NodeTypeCode == CDFS_NTC_FCB_DATA, _At_(Fcb->NodeByteSize, _In_range_(==, SIZEOF_FCB_DATA)))
 VOID
 CdUninitializeMcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_updates_bytes_(Fcb->NodeByteSize) PFCB Fcb
     );
 
 
@@ -166,35 +202,59 @@ CdUninitializeMcb (
 
 VOID
 CdCreateInternalStream (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _Inout_ PFCB Fcb,
+    _In_ PUNICODE_STRING Name
     );
 
 VOID
 CdDeleteInternalStream (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb
     );
 
 NTSTATUS
 CdCompleteMdl (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdPurgeVolume (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN BOOLEAN DismountUnderway
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ BOOLEAN DismountUnderway
     );
+
+static /* ReactOS Change: GCC "multiple definition" */
+INLINE /* GCC only accepts __inline as the first modifier */
+VOID
+CdVerifyOrCreateDirStreamFile (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb
+    )
+{
+    //
+    //  Unsafe test to see if call / lock neccessary.
+    //
+    
+    if (NULL == Fcb->FileObject) {
+        
+        CdCreateInternalStream( IrpContext,
+                                Fcb->Vcb,
+                                Fcb, 
+                                &Fcb->FileNamePrefix.ExactCaseName.FileName);
+    }
+}
+
 
 //
 //  VOID
 //  CdUnpinData (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN OUT PBCB *Bcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PBCB *Bcb
 //      );
 //
 
@@ -209,56 +269,97 @@ CdPurgeVolume (
 //  the on disk structure and do not alter any other data structures.
 //
 
-NTSTATUS
-CdNonCachedRead (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount
+_Requires_lock_held_(_Global_critical_region_)
+VOID
+CdFreeDirCache (
+    _In_ PIRP_CONTEXT IrpContext
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+NTSTATUS
+CdNonCachedRead (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount
+    );
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdNonCachedXARead (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount
+    );
+
+_Requires_lock_held_(_Global_critical_region_)
+NTSTATUS
+CdVolumeDasdWrite (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount
     );
 
 BOOLEAN
 CdReadSectors (
-    IN PIRP_CONTEXT IrpContext,
-    IN LONGLONG StartingOffset,
-    IN ULONG ByteCount,
-    IN BOOLEAN RaiseOnError,
-    IN OUT PVOID Buffer,
-    IN PDEVICE_OBJECT TargetDeviceObject
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount,
+    _In_ BOOLEAN ReturnError,
+    _Out_writes_bytes_(ByteCount) PVOID Buffer,
+    _In_ PDEVICE_OBJECT TargetDeviceObject
     );
 
 NTSTATUS
 CdCreateUserMdl (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG BufferLength,
-    IN BOOLEAN RaiseOnError
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG BufferLength,
+    _In_ BOOLEAN RaiseOnError,
+    _In_ LOCK_OPERATION Operation
     );
 
 NTSTATUS
+FASTCALL
 CdPerformDevIoCtrl (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG IoControlCode,
-    IN PDEVICE_OBJECT Device,
-    OUT PVOID OutputBuffer OPTIONAL,
-    IN ULONG OutputBufferLength,
-    IN BOOLEAN InternalDeviceIoControl,
-    IN BOOLEAN OverrideVerify,
-    OUT PIO_STATUS_BLOCK Iosb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG IoControlCode,
+    _In_ PDEVICE_OBJECT Device,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _In_ BOOLEAN InternalDeviceIoControl,
+    _In_ BOOLEAN OverrideVerify,
+    _Out_opt_ PIO_STATUS_BLOCK Iosb
     );
+
+NTSTATUS
+CdPerformDevIoCtrlEx (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG IoControlCode,
+    _In_ PDEVICE_OBJECT Device,
+    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _In_ BOOLEAN InternalDeviceIoControl,
+    _In_ BOOLEAN OverrideVerify,
+    _Out_opt_ PIO_STATUS_BLOCK Iosb
+    );
+
+NTSTATUS
+CdHijackIrpAndFlushDevice (
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ PDEVICE_OBJECT TargetDeviceObject
+    );
+
 
 //
 //  VOID
 //  CdMapUserBuffer (
-//      IN PIRP_CONTEXT IrpContext
-//      OUT PVOID UserBuffer
+//      _In_ PIRP_CONTEXT IrpContext
+//      _Out_ PVOID UserBuffer
 //      );
 //
 //  Returns pointer to sys address.  Will raise on failure.
@@ -266,11 +367,22 @@ CdPerformDevIoCtrl (
 //
 //  VOID
 //  CdLockUserBuffer (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN ULONG BufferLength
+//      _Inout_ PIRP_CONTEXT IrpContext,
+//      _In_ ULONG BufferLength
 //      );
 //
 
+#ifndef __REACTOS__
+#define CdMapUserBuffer(IC, UB) {                                               \
+            *(UB) = (PVOID) ( ((IC)->Irp->MdlAddress == NULL) ?                 \
+                    (IC)->Irp->UserBuffer :                                     \
+                    (MmGetSystemAddressForMdlSafe( (IC)->Irp->MdlAddress, NormalPagePriority | MdlMappingNoExecute)));   \
+            if (NULL == *(UB))  {                         \
+                CdRaiseStatus( (IC), STATUS_INSUFFICIENT_RESOURCES);            \
+            }                                                                   \
+        }                                                                       
+        
+#else
 #define CdMapUserBuffer(IC, UB) {                                               \
             *(UB) = (PVOID) ( ((IC)->Irp->MdlAddress == NULL) ?                 \
                     (IC)->Irp->UserBuffer :                                     \
@@ -280,11 +392,13 @@ CdPerformDevIoCtrl (
             }                                                                   \
         }                                                                       
         
+#endif
 
-#define CdLockUserBuffer(IC,BL) {                   \
-    if ((IC)->Irp->MdlAddress == NULL) {            \
-        (VOID) CdCreateUserMdl( (IC), (BL), TRUE ); \
-    }                                               \
+
+#define CdLockUserBuffer(IC,BL,OP) {                        \
+    if ((IC)->Irp->MdlAddress == NULL) {                    \
+        (VOID) CdCreateUserMdl( (IC), (BL), TRUE, (OP) );   \
+    }                                                       \
 }
 
 
@@ -294,122 +408,124 @@ CdPerformDevIoCtrl (
 
 VOID
 CdLookupDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG DirentOffset,
-    OUT PDIRENT_ENUM_CONTEXT DirContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ ULONG DirentOffset,
+    _Out_ PDIRENT_ENUM_CONTEXT DirContext
     );
 
 BOOLEAN
 CdLookupNextDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PDIRENT_ENUM_CONTEXT CurrentDirContext,
-    OUT PDIRENT_ENUM_CONTEXT NextDirContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PDIRENT_ENUM_CONTEXT CurrentDirContext,
+    _Inout_ PDIRENT_ENUM_CONTEXT NextDirContext
     );
 
+_At_(Dirent->CdTime, _Post_notnull_)
 VOID
 CdUpdateDirentFromRawDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PDIRENT_ENUM_CONTEXT DirContext,
-    IN OUT PDIRENT Dirent
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PDIRENT_ENUM_CONTEXT DirContext,
+    _Inout_ PDIRENT Dirent
     );
 
 VOID
 CdUpdateDirentName (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PDIRENT Dirent,
-    IN ULONG IgnoreCase
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PDIRENT Dirent,
+    _In_ ULONG IgnoreCase
     );
 
-BOOLEAN
+_Success_(return != FALSE) BOOLEAN
 CdFindFile (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCD_NAME Name,
-    IN BOOLEAN IgnoreCase,
-    IN OUT PFILE_ENUM_CONTEXT FileContext,
-    OUT PCD_NAME *MatchingName
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PCD_NAME Name,
+    _In_ BOOLEAN IgnoreCase,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext,
+    _Out_ PCD_NAME *MatchingName
     );
 
 BOOLEAN
 CdFindDirectory (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCD_NAME Name,
-    IN BOOLEAN IgnoreCase,
-    IN OUT PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PCD_NAME Name,
+    _In_ BOOLEAN IgnoreCase,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext
     );
 
+_At_(FileContext->ShortName.FileName.MaximumLength, _In_range_(>=, BYTE_COUNT_8_DOT_3))
 BOOLEAN
 CdFindFileByShortName (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCD_NAME Name,
-    IN BOOLEAN IgnoreCase,
-    IN ULONG ShortNameDirentOffset,
-    IN OUT PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PCD_NAME Name,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ ULONG ShortNameDirentOffset,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext
     );
 
 BOOLEAN
 CdLookupNextInitialFileDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN OUT PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _Inout_ PFILE_ENUM_CONTEXT FileContext
     );
 
 VOID
 CdLookupLastFileDirent (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ PFILE_ENUM_CONTEXT FileContext
     );
 
 VOID
 CdCleanupFileContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFILE_ENUM_CONTEXT FileContext
     );
 
 //
 //  VOID
 //  CdInitializeFileContext (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFILE_ENUM_CONTEXT FileContext
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Out_ PFILE_ENUM_CONTEXT FileContext
 //      );
 //
 //
 //  VOID
 //  CdInitializeDirent (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PDIRENT Dirent
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Out_ PDIRENT Dirent
 //      );
 //
 //  VOID
 //  CdInitializeDirContext (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PDIRENT_ENUM_CONTEXT DirContext
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Out_ PDIRENT_ENUM_CONTEXT DirContext
 //      );
 //
 //  VOID
 //  CdCleanupDirent (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PDIRENT Dirent
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PDIRENT Dirent
 //      );
 //
 //  VOID
 //  CdCleanupDirContext (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PDIRENT_ENUM_CONTEXT DirContext
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PDIRENT_ENUM_CONTEXT DirContext
 //      );
 //
 //  VOID
 //  CdLookupInitialFileDirent (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb,
-//      IN PFILE_ENUM_CONTEXT FileContext,
-//      IN ULONG DirentOffset
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _In_ PFCB Fcb,
+//      _Out_ PFILE_ENUM_CONTEXT FileContext,
+//      _In_ ULONG DirentOffset
 //      );
 //
 
@@ -469,27 +585,33 @@ typedef enum _TYPE_OF_OPEN {
 } TYPE_OF_OPEN;
 typedef TYPE_OF_OPEN *PTYPE_OF_OPEN;
 
+_When_(TypeOfOpen == UnopenedFileObject, _At_(Fcb, _In_opt_))
+_When_(TypeOfOpen != UnopenedFileObject, _At_(Fcb, _In_))
 VOID
 CdSetFileObject (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_OBJECT FileObject,
-    IN TYPE_OF_OPEN TypeOfOpen,
-    IN PFCB Fcb OPTIONAL,
-    IN PCCB Ccb OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFILE_OBJECT FileObject,
+    _In_ TYPE_OF_OPEN TypeOfOpen,
+    PFCB Fcb,
+    _In_opt_ PCCB Ccb
     );
 
+_When_(return == UnopenedFileObject, _At_(*Fcb, _Post_null_))
+_When_(return != UnopenedFileObject, _At_(Fcb, _Outptr_))
+_When_(return == UnopenedFileObject, _At_(*Ccb, _Post_null_))
+_When_(return != UnopenedFileObject, _At_(Ccb, _Outptr_))
 TYPE_OF_OPEN
 CdDecodeFileObject (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_OBJECT FileObject,
-    OUT PFCB *Fcb,
-    OUT PCCB *Ccb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFILE_OBJECT FileObject,
+    PFCB *Fcb,
+    PCCB *Ccb
     );
 
 TYPE_OF_OPEN
 CdFastDecodeFileObject (
-    IN PFILE_OBJECT FileObject,
-    OUT PFCB *Fcb
+    _In_ PFILE_OBJECT FileObject,
+    _Out_ PFCB *Fcb
     );
 
 
@@ -497,69 +619,77 @@ CdFastDecodeFileObject (
 //  Name support routines, implemented in NameSup.c
 //
 
+_Post_satisfies_(_Old_(CdName->FileName.Length) >=
+                 CdName->FileName.Length + CdName->VersionString.Length)
 VOID
 CdConvertNameToCdName (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PCD_NAME CdName
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PCD_NAME CdName
     );
 
 VOID
 CdConvertBigToLittleEndian (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCHAR BigEndian,
-    IN ULONG ByteCount,
-    OUT PCHAR LittleEndian
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_reads_bytes_(ByteCount) PCHAR BigEndian,
+    _In_ ULONG ByteCount,
+    _Out_writes_bytes_(ByteCount) PCHAR LittleEndian
     );
 
 VOID
 CdUpcaseName (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCD_NAME Name,
-    IN OUT PCD_NAME UpcaseName
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCD_NAME Name,
+    _Inout_ PCD_NAME UpcaseName
     );
 
 VOID
 CdDissectName (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PUNICODE_STRING RemainingName,
-    OUT PUNICODE_STRING FinalName
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PUNICODE_STRING RemainingName,
+    _Out_ PUNICODE_STRING FinalName
+    );
+
+BOOLEAN
+CdIsLegalName (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PUNICODE_STRING FileName
     );
 
 BOOLEAN
 CdIs8dot3Name (
-    IN PIRP_CONTEXT IrpContext,
-    IN UNICODE_STRING FileName
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ UNICODE_STRING FileName
     );
 
 VOID
 CdGenerate8dot3Name (
-    IN PIRP_CONTEXT IrpContext,
-    IN PUNICODE_STRING FileName,
-    IN ULONG DirentOffset,
-    OUT PWCHAR ShortFileName,
-    OUT PUSHORT ShortByteCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PUNICODE_STRING FileName,
+    _In_ ULONG DirentOffset,
+    _Out_writes_bytes_to_(BYTE_COUNT_8_DOT_3, *ShortByteCount) PWCHAR ShortFileName,
+    _Out_ PUSHORT ShortByteCount
     );
 
 BOOLEAN
 CdIsNameInExpression (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCD_NAME CurrentName,
-    IN PCD_NAME SearchExpression,
-    IN ULONG  WildcardFlags,
-    IN BOOLEAN CheckVersion
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PCD_NAME CurrentName,
+    _In_ PCD_NAME SearchExpression,
+    _In_ ULONG  WildcardFlags,
+    _In_ BOOLEAN CheckVersion
     );
 
 ULONG
 CdShortNameDirentOffset (
-    IN PIRP_CONTEXT IrpContext,
-    IN PUNICODE_STRING Name
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PUNICODE_STRING Name
     );
 
 FSRTL_COMPARISON_RESULT
 CdFullCompareNames (
-    IN PIRP_CONTEXT IrpContext,
-    IN PUNICODE_STRING NameA,
-    IN PUNICODE_STRING NameB
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PUNICODE_STRING NameA,
+    _In_ PUNICODE_STRING NameB
     );
 
 
@@ -567,18 +697,20 @@ CdFullCompareNames (
 //  Filesystem control operations.  Implemented in Fsctrl.c
 //
 
+_Requires_lock_held_(_Global_critical_region_)
+_Requires_lock_held_(Vcb->VcbResource)
 NTSTATUS
 CdLockVolumeInternal (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_OBJECT FileObject OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb,
+    _In_opt_ PFILE_OBJECT FileObject
     );
 
 NTSTATUS
 CdUnlockVolumeInternal (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PFILE_OBJECT FileObject OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb,
+    _In_opt_ PFILE_OBJECT FileObject
     );
 
 
@@ -588,47 +720,48 @@ CdUnlockVolumeInternal (
 
 VOID
 CdLookupPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN ULONG PathEntryOffset,
-    IN ULONG Ordinal,
-    IN BOOLEAN VerifyBounds,
-    IN OUT PCOMPOUND_PATH_ENTRY CompoundPathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ ULONG PathEntryOffset,
+    _In_ ULONG Ordinal,
+    _In_ BOOLEAN VerifyBounds,
+    _Inout_ PCOMPOUND_PATH_ENTRY CompoundPathEntry
     );
 
 BOOLEAN
 CdLookupNextPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PPATH_ENUM_CONTEXT PathContext,
-    IN OUT PPATH_ENTRY PathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PPATH_ENUM_CONTEXT PathContext,
+    _Inout_ PPATH_ENTRY PathEntry
     );
 
+_Success_(return != FALSE)
 BOOLEAN
 CdFindPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB ParentFcb,
-    IN PCD_NAME DirName,
-    IN BOOLEAN IgnoreCase,
-    IN OUT PCOMPOUND_PATH_ENTRY CompoundPathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB ParentFcb,
+    _In_ PCD_NAME DirName,
+    _In_ BOOLEAN IgnoreCase,
+    _Inout_ PCOMPOUND_PATH_ENTRY CompoundPathEntry
     );
 
 VOID
 CdUpdatePathEntryName (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PPATH_ENTRY PathEntry,
-    IN BOOLEAN IgnoreCase
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PPATH_ENTRY PathEntry,
+    _In_ BOOLEAN IgnoreCase
     );
 
 //
 //  VOID
 //  CdInitializeCompoundPathEntry (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PCOMPOUND_PATH_ENTRY CompoundPathEntry
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Out_ PCOMPOUND_PATH_ENTRY CompoundPathEntry
 //      );
 //
 //  VOID
 //  CdCleanupCompoundPathEntry (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PCOMPOUND_PATH_ENTRY CompoundPathEntry
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Out_ PCOMPOUND_PATH_ENTRY CompoundPathEntry
 //      );
 //
 
@@ -652,26 +785,27 @@ CdUpdatePathEntryName (
 
 VOID
 CdInsertPrefix (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PCD_NAME Name,
-    IN BOOLEAN IgnoreCase,
-    IN BOOLEAN ShortNameMatch,
-    IN PFCB ParentFcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ PCD_NAME Name,
+    _In_ BOOLEAN IgnoreCase,
+    _In_ BOOLEAN ShortNameMatch,
+    _Inout_ PFCB ParentFcb
     );
 
 VOID
 CdRemovePrefix (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdFindPrefix (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PFCB *CurrentFcb,
-    IN OUT PUNICODE_STRING RemainingName,
-    IN BOOLEAN IgnoreCase
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB *CurrentFcb,
+    _Inout_ PUNICODE_STRING RemainingName,
+    _In_ BOOLEAN IgnoreCase
     );
 
 
@@ -703,93 +837,98 @@ typedef enum _TYPE_OF_ACQUIRE {
 
 } TYPE_OF_ACQUIRE, *PTYPE_OF_ACQUIRE;
 
+_Requires_lock_held_(_Global_critical_region_)
+_When_(Type == AcquireExclusive && return != FALSE, _Acquires_exclusive_lock_(*Resource))
+_When_(Type == AcquireShared && return != FALSE, _Acquires_shared_lock_(*Resource))
+_When_(Type == AcquireSharedStarveExclusive && return != FALSE, _Acquires_shared_lock_(*Resource))
+_When_(IgnoreWait == FALSE, _Post_satisfies_(return == TRUE))
 BOOLEAN
 CdAcquireResource (
-    IN PIRP_CONTEXT IrpContext,
-    IN PERESOURCE Resource,
-    IN BOOLEAN IgnoreWait,
-    IN TYPE_OF_ACQUIRE Type
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PERESOURCE Resource,
+    _In_ BOOLEAN IgnoreWait,
+    _In_ TYPE_OF_ACQUIRE Type
     );
 
 //
 //  BOOLEAN
 //  CdAcquireCdData (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //      );
 //
 //  VOID
 //  CdReleaseCdData (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //    );
 //
 //  BOOLEAN
 //  CdAcquireVcbExclusive (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PVCB Vcb,
-//      IN BOOLEAN IgnoreWait
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PVCB Vcb,
+//      _In_ BOOLEAN IgnoreWait
 //      );
 //
 //  BOOLEAN
 //  CdAcquireVcbShared (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PVCB Vcb,
-//      IN BOOLEAN IgnoreWait
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PVCB Vcb,
+//      _In_ BOOLEAN IgnoreWait
 //      );
 //
 //  VOID
 //  CdReleaseVcb (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PVCB Vcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PVCB Vcb
 //      );
 //
 //  VOID
 //  CdAcquireAllFiles (
-//      IN PIRP_CONTEXT,
-//      IN PVCB Vcb
+//      _In_ PIRP_CONTEXT,
+//      _In_ PVCB Vcb
 //      );
 //
 //  VOID
 //  CdReleaseAllFiles (
-//      IN PIRP_CONTEXT,
-//      IN PVCB Vcb
+//      _In_ PIRP_CONTEXT,
+//      _In_ PVCB Vcb
 //      );
 //
 //  VOID
 //  CdAcquireFileExclusive (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb,
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb,
 //      );
 //
 //  VOID
 //  CdAcquireFileShared (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 //  VOID
 //  CdReleaseFile (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //    );
 //
 //  BOOLEAN
 //  CdAcquireFcbExclusive (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb,
-//      IN BOOLEAN IgnoreWait
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb,
+//      _In_ BOOLEAN IgnoreWait
 //      );
 //
 //  BOOLEAN
 //  CdAcquireFcbShared (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb,
-//      IN BOOLEAN IgnoreWait
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb,
+//      _In_ BOOLEAN IgnoreWait
 //      );
 //
 //  BOOLEAN
 //  CdReleaseFcb (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 //  VOID
@@ -802,26 +941,39 @@ CdAcquireResource (
 //
 //  VOID
 //  CdLockVcb (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //      );
 //
 //  VOID
 //  CdUnlockVcb (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //      );
 //
 //  VOID
 //  CdLockFcb (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 //  VOID
 //  CdUnlockFcb (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
+
+
+#define CdAcquireCacheForRead( IC)                                                      \
+    ExAcquireResourceSharedLite( &(IC)->Vcb->SectorCacheResource, TRUE)
+    
+#define CdAcquireCacheForUpdate( IC)                                                    \
+    ExAcquireResourceExclusiveLite( &(IC)->Vcb->SectorCacheResource, TRUE)
+    
+#define CdReleaseCache( IC)                                                             \
+    ExReleaseResourceLite( &(IC)->Vcb->SectorCacheResource);
+
+#define CdConvertCacheToShared( IC)                                                     \
+    ExConvertExclusiveToSharedLite( &(IC)->Vcb->SectorCacheResource);
 
 #define CdAcquireCdData(IC)                                                             \
     ExAcquireResourceExclusiveLite( &CdData.DataResource, TRUE )
@@ -875,20 +1027,37 @@ CdAcquireResource (
 
 #define CdLockVcb(IC,V)                                                                 \
     ExAcquireFastMutex( &(V)->VcbMutex );                                               \
-    ASSERT( NULL == (V)->VcbLockThread);                                                \
+    NT_ASSERT( NULL == (V)->VcbLockThread);                                             \
     (V)->VcbLockThread = PsGetCurrentThread()
 
 #define CdUnlockVcb(IC,V)                                                               \
-    ASSERT( NULL != (V)->VcbLockThread);                                                \
+    NT_ASSERT( NULL != (V)->VcbLockThread);                                             \
     (V)->VcbLockThread = NULL;                                                          \
     ExReleaseFastMutex( &(V)->VcbMutex )
+
+#if defined(_PREFAST_)
+
+_Success_(return)
+_IRQL_saves_global_(OldIrql, FastMutex)
+BOOLEAN DummySaveIrql(_Inout_ PFAST_MUTEX FastMutex);
+
+_Success_(return)
+_IRQL_restores_global_(OldIrql, FastMutex)
+BOOLEAN DummyRestoreIrql(_Inout_ PFAST_MUTEX FastMutex);
+#endif // _PREFAST_
 
 #define CdLockFcb(IC,F) {                                                               \
     PVOID _CurrentThread = PsGetCurrentThread();                                        \
     if (_CurrentThread != (F)->FcbLockThread) {                                         \
         ExAcquireFastMutex( &(F)->FcbNonpaged->FcbMutex );                              \
-        ASSERT( (F)->FcbLockCount == 0 );                                               \
+        NT_ASSERT( (F)->FcbLockCount == 0 );                                            \
+        _Analysis_assume_( (F)->FcbLockCount == 0 );                                    \
         (F)->FcbLockThread = _CurrentThread;                                            \
+    }                                                                                   \
+    else                                                                                \
+    {                                                                                   \
+        _Analysis_assume_lock_held_( (F)->FcbNonpaged->FcbMutex );                      \
+        _Analysis_assume_(FALSE != DummySaveIrql(&(F)->FcbNonpaged->FcbMutex));   \
     }                                                                                   \
     (F)->FcbLockCount += 1;                                                             \
 }
@@ -899,44 +1068,73 @@ CdAcquireResource (
         (F)->FcbLockThread = NULL;                                                      \
         ExReleaseFastMutex( &(F)->FcbNonpaged->FcbMutex );                              \
     }                                                                                   \
+    else                                                                                \
+    {                                                                                   \
+        _Analysis_assume_lock_not_held_( (F)->FcbNonpaged->FcbMutex );                  \
+        _Analysis_assume_(FALSE != DummyRestoreIrql(&(F)->FcbNonpaged->FcbMutex)); \
+    }                                                                                   \
 }
+
+//
+//  The following macro is used to retrieve the oplock structure within
+//  the Fcb. This structure was moved to the advanced Fcb header
+//  in Win8.
+//
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+
+#define CdGetFcbOplock(F)   &(F)->Header.Oplock
+
+#else
+
+#define CdGetFcbOplock(F)   &(F)->Oplock
+
+#endif
 
 BOOLEAN
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopAcquire (
-    IN PVOID Fcb,
-    IN BOOLEAN Wait
+    _In_ PVOID Fcb,
+    _In_ BOOLEAN Wait
     );
 
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopRelease (
-    IN PVOID Fcb
+    _In_ PVOID Fcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+_When_(return!=0, _Acquires_shared_lock_(*Fcb->Resource))
 BOOLEAN
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCache (
-    IN PFCB Fcb,
-    IN BOOLEAN Wait
+    _Inout_ PFCB Fcb,
+    _In_ BOOLEAN Wait
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+_Releases_lock_(*Fcb->Resource)
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseFromCache (
-    IN PFCB Fcb
+    _Inout_ PFCB Fcb
     );
 
-VOID
+_Requires_lock_held_(_Global_critical_region_)
+NTSTATUS
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdAcquireForCreateSection (
-    IN PFILE_OBJECT FileObject
+CdFilterCallbackAcquireForCreateSection (
+    _In_ PFS_FILTER_CALLBACK_DATA CallbackData,
+    _Unreferenced_parameter_ PVOID *CompletionContext
     );
 
+_Function_class_(FAST_IO_RELEASE_FILE)
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseForCreateSection (
-    IN PFILE_OBJECT FileObject
+    _In_ PFILE_OBJECT FileObject
     );
 
 
@@ -946,108 +1144,110 @@ CdReleaseForCreateSection (
 
 VOID
 CdInitializeVcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PVCB Vcb,
-    IN PDEVICE_OBJECT TargetDeviceObject,
-    IN PVPB Vpb,
-    IN PCDROM_TOC CdromToc,
-    IN ULONG TocLength,
-    IN ULONG TocTrackCount,
-    IN ULONG TocDiskFlags,
-    IN ULONG BlockFactor,
-    IN ULONG MediaChangeCount
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb,
+    _In_ __drv_aliasesMem PDEVICE_OBJECT TargetDeviceObject,
+    _In_ __drv_aliasesMem PVPB Vpb,
+    _In_ __drv_aliasesMem PCDROM_TOC_LARGE CdromToc,
+    _In_ ULONG TocLength,
+    _In_ ULONG TocTrackCount,
+    _In_ ULONG TocDiskFlags,
+    _In_ ULONG BlockFactor,
+    _In_ ULONG MediaChangeCount
     );
 
 VOID
 CdUpdateVcbFromVolDescriptor (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PVCB Vcb,
-    IN PCHAR RawIsoVd OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb,
+    _In_reads_bytes_opt_(SECTOR_SIZE) PCHAR RawIsoVd
     );
 
 VOID
 CdDeleteVcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN OUT PVCB Vcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb
     );
 
 PFCB
 CdCreateFcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN FILE_ID FileId,
-    IN NODE_TYPE_CODE NodeTypeCode,
-    OUT PBOOLEAN FcbExisted OPTIONAL
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ FILE_ID FileId,
+    _In_ NODE_TYPE_CODE NodeTypeCode,
+    _Out_opt_ PBOOLEAN FcbExisted
     );
 
 VOID
 CdInitializeFcbFromPathEntry (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PFCB ParentFcb OPTIONAL,
-    IN PPATH_ENTRY PathEntry
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_opt_ PFCB ParentFcb,
+    _In_ PPATH_ENTRY PathEntry
     );
 
 VOID
 CdInitializeFcbFromFileContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN PFCB ParentFcb OPTIONAL,
-    IN PFILE_ENUM_CONTEXT FileContext
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ PFCB ParentFcb,
+    _In_ PFILE_ENUM_CONTEXT FileContext
     );
 
 PCCB
 CdCreateCcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB Fcb,
-    IN ULONG Flags
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ ULONG Flags
     );
 
 VOID
 CdDeleteCcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PCCB Ccb
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ __drv_freesMem( Pool ) PCCB Ccb
     );
 
+_When_(RaiseOnError || return, _At_(Fcb->FileLock, _Post_notnull_))
+_When_(RaiseOnError, _At_(IrpContext, _Pre_notnull_))
 BOOLEAN
 CdCreateFileLock (
-    IN PIRP_CONTEXT IrpContext OPTIONAL,
-    IN PFCB Fcb,
-    IN BOOLEAN RaiseOnError
+    _In_opt_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB Fcb,
+    _In_ BOOLEAN RaiseOnError
     );
 
 VOID
 CdDeleteFileLock (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFILE_LOCK FileLock
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFILE_LOCK FileLock
     );
 
-PIRP_CONTEXT
+_Ret_valid_ PIRP_CONTEXT
 CdCreateIrpContext (
-    IN PIRP Irp,
-    IN BOOLEAN Wait
+    _In_ PIRP Irp,
+    _In_ BOOLEAN Wait
     );
 
 VOID
 CdCleanupIrpContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN BOOLEAN Post
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ BOOLEAN Post
     );
 
 VOID
 CdInitializeStackIrpContext (
-    OUT PIRP_CONTEXT IrpContext,
-    IN PIRP_CONTEXT_LITE IrpContextLite
+    _Out_ PIRP_CONTEXT IrpContext,
+    _In_ PIRP_CONTEXT_LITE IrpContextLite
     );
 
 //
 //  PIRP_CONTEXT_LITE
 //  CdCreateIrpContextLite (
-//      IN PIRP_CONTEXT IrpContext
+//      _In_ PIRP_CONTEXT IrpContext
 //      );
 //
 //  VOID
 //  CdFreeIrpContextLite (
-//      IN PIRP_CONTEXT_LITE IrpContextLite
+//      _Inout_ PIRP_CONTEXT_LITE IrpContextLite
 //      );
 //
 
@@ -1057,52 +1257,53 @@ CdInitializeStackIrpContext (
 #define CdFreeIrpContextLite(ICL)  \
     CdFreePool( &(ICL) )
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 CdTeardownStructures (
-    IN PIRP_CONTEXT IrpContext,
-    IN PFCB StartingFcb,
-    OUT PBOOLEAN RemovedStartingFcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PFCB StartingFcb,
+    _Out_ PBOOLEAN RemovedStartingFcb
     );
 
 //
 //  VOID
 //  CdIncrementCleanupCounts (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 //  VOID
 //  CdDecrementCleanupCounts (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 //  VOID
 //  CdIncrementReferenceCounts (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb,
-//      IN ULONG ReferenceCount
-//      IN ULONG UserReferenceCount
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb,
+//      _In_ ULONG ReferenceCount
+//      _In_ ULONG UserReferenceCount
 //      );
 //
 //  VOID
 //  CdDecrementReferenceCounts (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb,
-//      IN ULONG ReferenceCount
-//      IN ULONG UserReferenceCount
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb,
+//      _In_ ULONG ReferenceCount
+//      _In_ ULONG UserReferenceCount
 //      );
 //
 //  VOID
 //  CdIncrementFcbReference (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 //  VOID
 //  CdDecrementFcbReference (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN PFCB Fcb
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _Inout_ PFCB Fcb
 //      );
 //
 
@@ -1150,30 +1351,30 @@ CdTeardownStructures (
                               sizeof( CD_IO_CONTEXT ),  \
                               TAG_IO_CONTEXT )
 
-#define CdFreeIoContext(IO)     CdFreePool( &(IO) )
+#define CdFreeIoContext(IO)     CdFreePool( (PVOID) &(IO) ) /* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
 
 PFCB
 CdLookupFcbTable (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN FILE_ID FileId
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ FILE_ID FileId
     );
 
 PFCB
 CdGetNextFcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,
-    IN PVOID *RestartKey
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PVCB Vcb,
+    _In_ PVOID *RestartKey
     );
 
 NTSTATUS
 CdProcessToc (
-    IN PIRP_CONTEXT IrpContext,
-    IN PDEVICE_OBJECT TargetDeviceObject,
-    IN PCDROM_TOC CdromToc,
-    IN OUT PULONG Length,
-    OUT PULONG TrackCount,
-    OUT PULONG DiskFlags
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PDEVICE_OBJECT TargetDeviceObject,
+    _In_ PCDROM_TOC_LARGE CdromToc,
+    _Inout_ PULONG Length,
+    _Out_ PULONG TrackCount,
+    _Inout_ PULONG DiskFlags
     );
 
 //
@@ -1182,19 +1383,24 @@ CdProcessToc (
 //
 
 #define CdPagedPool                 PagedPool
+#ifndef __REACTOS__
+#define CdNonPagedPool              NonPagedPoolNx
+#define CdNonPagedPoolCacheAligned  NonPagedPoolNxCacheAligned
+#else
 #define CdNonPagedPool              NonPagedPool
 #define CdNonPagedPoolCacheAligned  NonPagedPoolCacheAligned
+#endif
 
 
 //
 //  Verification support routines.  Contained in verfysup.c
 //
 
-/* ReactOS Change: "LD multiple definition of `_CdOperationIsDasdOpen'" */
-static inline
+static /* ReactOS Change: GCC "multiple definition" */
+INLINE
 BOOLEAN
-CdOperationIsDasdOpen(
-    IN PIRP_CONTEXT IrpContext
+CdOperationIsDasdOpen (
+    _In_ PIRP_CONTEXT IrpContext
     )
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( IrpContext->Irp);
@@ -1204,37 +1410,44 @@ CdOperationIsDasdOpen(
             (IrpSp->FileObject->RelatedFileObject == NULL));
 }
 
-
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdPerformVerify (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp,
-    IN PDEVICE_OBJECT DeviceToVerify
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ PDEVICE_OBJECT DeviceToVerify
+    );
+
+_Requires_lock_held_(_Global_critical_region_)
+BOOLEAN
+CdCheckForDismount (
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb,
+    _In_ BOOLEAN Force
     );
 
 BOOLEAN
-CdCheckForDismount (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB,
-    IN BOOLEAN Force
+CdMarkDevForVerifyIfVcbMounted (
+    _Inout_ PVCB Vcb
     );
 
 VOID
 CdVerifyVcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb
     );
 
 BOOLEAN
 CdVerifyFcbOperation (
-    IN PIRP_CONTEXT IrpContext OPTIONAL,
-    IN PFCB Fcb
+    _In_opt_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 CdDismountVcb (
-    IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb
+    _In_ PIRP_CONTEXT IrpContext,
+    _Inout_ PVCB Vcb
     );
 
 
@@ -1255,8 +1468,8 @@ CdDismountVcb (
 //
 //  BOOLEAN
 //  CdIsRawDevice (
-//      IN PIRP_CONTEXT IrpContext,
-//      IN NTSTATUS Status
+//      _In_ PIRP_CONTEXT IrpContext,
+//      _In_ NTSTATUS Status
 //      );
 //
 
@@ -1271,24 +1484,27 @@ CdDismountVcb (
 //  workque.c
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
-CdFsdPostRequest(
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+CdFsdPostRequest (
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPrePostIrp (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdOplockComplete (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
 
@@ -1301,9 +1517,8 @@ CdOplockComplete (
 //  otherwise
 //
 
-/* ReactOS Change: GCC doesn't understand the comment style */
-/*
- //#ifndef BooleanFlagOn
+/* GCC complains about multi-line comments.
+//#ifndef BooleanFlagOn
 //#define BooleanFlagOn(F,SF) (    \
 //    (BOOLEAN)(((F) & (SF)) != 0) \
 //)
@@ -1325,15 +1540,15 @@ CdOplockComplete (
 //
 //      CAST
 //      Add2Ptr (
-//          IN PVOID Pointer,
-//          IN ULONG Increment
-//          IN (CAST)
+//          _In_ PVOID Pointer,
+//          _In_ ULONG Increment
+//          _In_ (CAST)
 //          );
 //
 //      ULONG
 //      PtrOffset (
-//          IN PVOID BasePtr,
-//          IN PVOID OffsetPtr
+//          _In_ PVOID BasePtr,
+//          _In_ PVOID OffsetPtr
 //          );
 //
 
@@ -1395,6 +1610,16 @@ CdOplockComplete (
 #define SectorsFromBytes(L) (                                           \
     ((ULONG) (L)) >> SECTOR_SHIFT                                       \
 )
+
+static /* ReactOS Change: GCC "multiple definition" */
+INLINE
+ULONG
+SectorsFromLlBytes( 
+    ULONGLONG Bytes
+) {
+
+    return (ULONG)(Bytes >> SECTOR_SHIFT);
+}
 
 #define LlBytesFromSectors(L) (                                         \
     Int64ShllMod32( (LONGLONG)(L), SECTOR_SHIFT )                       \
@@ -1496,61 +1721,98 @@ typedef union _USHORT2 {
     *((USHORT2 *)(Dst)) = *((UNALIGNED USHORT2 *)(Src));\
     }
 
-
+//
+//  This macro copies an unaligned src longword to a dst longword,
+//  performing an little/big endian swap.
+//
+
+#define SwapCopyUchar4(Dst,Src) {                                        \
+    *((UNALIGNED UCHAR1 *)(Dst)) = *((UNALIGNED UCHAR1 *)(Src) + 3);     \
+    *((UNALIGNED UCHAR1 *)(Dst) + 1) = *((UNALIGNED UCHAR1 *)(Src) + 2); \
+    *((UNALIGNED UCHAR1 *)(Dst) + 2) = *((UNALIGNED UCHAR1 *)(Src) + 1); \
+    *((UNALIGNED UCHAR1 *)(Dst) + 3) = *((UNALIGNED UCHAR1 *)(Src));     \
+}
+
+VOID
+CdLbnToMmSsFf (
+    _In_ ULONG Blocks,
+    _Out_writes_(3) PUCHAR Msf
+    );
+
 //
 //  Following routines handle entry in and out of the filesystem.  They are
 //  contained in CdData.c
 //
 
+_IRQL_requires_max_(APC_LEVEL)
+__drv_dispatchType(DRIVER_DISPATCH)
+__drv_dispatchType(IRP_MJ_CREATE)
+__drv_dispatchType(IRP_MJ_CLOSE)
+__drv_dispatchType(IRP_MJ_READ)
+__drv_dispatchType(IRP_MJ_WRITE)
+__drv_dispatchType(IRP_MJ_QUERY_INFORMATION)
+__drv_dispatchType(IRP_MJ_SET_INFORMATION)
+__drv_dispatchType(IRP_MJ_QUERY_VOLUME_INFORMATION)
+__drv_dispatchType(IRP_MJ_DIRECTORY_CONTROL)
+__drv_dispatchType(IRP_MJ_FILE_SYSTEM_CONTROL)
+__drv_dispatchType(IRP_MJ_DEVICE_CONTROL)
+__drv_dispatchType(IRP_MJ_LOCK_CONTROL)
+__drv_dispatchType(IRP_MJ_CLEANUP)
+__drv_dispatchType(IRP_MJ_PNP)
+__drv_dispatchType(IRP_MJ_SHUTDOWN)
 NTSTATUS
+NTAPI
 CdFsdDispatch (
-    IN PVOLUME_DEVICE_OBJECT VolumeDeviceObject,
-    IN PIRP Irp
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
     );
+
+// DRIVER_DISPATCH CdFsdDispatch;
 
 LONG
 CdExceptionFilter (
-    IN PIRP_CONTEXT IrpContext,
-    IN PEXCEPTION_POINTERS ExceptionPointer
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _In_ PEXCEPTION_POINTERS ExceptionPointer
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdProcessException (
-    IN PIRP_CONTEXT IrpContext OPTIONAL,
-    IN PIRP Irp,
-    IN NTSTATUS ExceptionCode
+    _In_opt_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp,
+    _In_ NTSTATUS ExceptionCode
     );
 
 VOID
 CdCompleteRequest (
-    IN PIRP_CONTEXT IrpContext OPTIONAL,
-    IN PIRP Irp OPTIONAL,
-    IN NTSTATUS Status
+    _Inout_opt_ PIRP_CONTEXT IrpContext,
+    _Inout_opt_ PIRP Irp,
+    _In_ NTSTATUS Status
     );
 
 //
 //  VOID
 //  CdRaiseStatus (
-//      IN PRIP_CONTEXT IrpContext,
-//      IN NT_STATUS Status
+//      _In_ PRIP_CONTEXT IrpContext,
+//      _In_ NT_STATUS Status
 //      );
 //
 //  VOID
 //  CdNormalizeAndRaiseStatus (
-//      IN PRIP_CONTEXT IrpContext,
-//      IN NT_STATUS Status
+//      _In_ PRIP_CONTEXT IrpContext,
+//      _In_ NT_STATUS Status
 //      );
 //
 
 #if 0
 #define AssertVerifyDevice(C, S)                                                    \
-    ASSERT( (C) == NULL ||                                                          \
+    NT_ASSERT( (C) == NULL ||                                                          \
             FlagOn( (C)->Flags, IRP_CONTEXT_FLAG_IN_FSP ) ||                        \
             !((S) == STATUS_VERIFY_REQUIRED &&                                      \
               IoGetDeviceToVerify( PsGetCurrentThread() ) == NULL ));
 
 #define AssertVerifyDeviceIrp(I)                                                    \
-    ASSERT( (I) == NULL ||                                                          \
+    NT_ASSERT( (I) == NULL ||                                                          \
             !(((I)->IoStatus.Status) == STATUS_VERIFY_REQUIRED &&                   \
               ((I)->Tail.Overlay.Thread == NULL ||                                  \
                 IoGetDeviceToVerify( (I)->Tail.Overlay.Thread ) == NULL )));
@@ -1564,12 +1826,12 @@ CdCompleteRequest (
 
 DECLSPEC_NORETURN
 VOID
-CdRaiseStatusEx(
-    IN PIRP_CONTEXT IrpContext,
-    IN NTSTATUS Status,
-    IN BOOLEAN NormalizeStatus,
-    IN OPTIONAL ULONG FileId,
-    IN OPTIONAL ULONG Line
+CdRaiseStatusEx (
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ NTSTATUS Status,
+    _In_ BOOLEAN NormalizeStatus,
+    _In_opt_ ULONG FileId,
+    _In_opt_ ULONG Line
     );
 
 #else
@@ -1578,11 +1840,11 @@ INLINE
 DECLSPEC_NORETURN
 VOID
 CdRaiseStatusEx(
-    IN PIRP_CONTEXT IrpContext,
-    IN NTSTATUS Status,
-    IN BOOLEAN NormalizeStatus,
-    IN ULONG Fileid,
-    IN ULONG Line
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ NTSTATUS Status,
+    _In_ BOOLEAN NormalizeStatus,
+    _In_ ULONG Fileid,
+    _In_ ULONG Line
     )
 {
     if (NormalizeStatus)  {
@@ -1608,93 +1870,104 @@ CdRaiseStatusEx(
 //  Following are the fast entry points.
 //
 
-BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdFastQueryBasicInfo (
-    IN PFILE_OBJECT FileObject,
-    IN BOOLEAN Wait,
-    IN OUT PFILE_BASIC_INFORMATION Buffer,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
-    );
+//  _Success_(return != FALSE)
+//  BOOLEAN
+//  CdFastQueryBasicInfo (
+//      _In_ PFILE_OBJECT FileObject,
+//      _In_ BOOLEAN Wait,
+//      _Out_ PFILE_BASIC_INFORMATION Buffer,
+//      _Out_ PIO_STATUS_BLOCK IoStatus,
+//      _In_ PDEVICE_OBJECT DeviceObject
+//      );
 
-BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdFastQueryStdInfo (
-    IN PFILE_OBJECT FileObject,
-    IN BOOLEAN Wait,
-    IN OUT PFILE_STANDARD_INFORMATION Buffer,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
-    );
+FAST_IO_QUERY_BASIC_INFO CdFastQueryBasicInfo;
 
-BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdFastLock (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN PLARGE_INTEGER Length,
-    PEPROCESS ProcessId,
-    ULONG Key,
-    BOOLEAN FailImmediately,
-    BOOLEAN ExclusiveLock,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
-    );
+//  _Success_(return != FALSE)
+//  BOOLEAN
+//  CdFastQueryStdInfo (
+//      _In_ PFILE_OBJECT FileObject,
+//      _In_ BOOLEAN Wait,
+//      _Out_ PFILE_STANDARD_INFORMATION Buffer,
+//      _Out_ PIO_STATUS_BLOCK IoStatus,
+//      _In_ PDEVICE_OBJECT DeviceObject
+//      );
 
-BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdFastUnlockSingle (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN PLARGE_INTEGER Length,
-    PEPROCESS ProcessId,
-    ULONG Key,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
-    );
+FAST_IO_QUERY_STANDARD_INFO CdFastQueryStdInfo;
 
-BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdFastUnlockAll (
-    IN PFILE_OBJECT FileObject,
-    PEPROCESS ProcessId,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
-    );
+//  BOOLEAN
+//  CdFastLock (
+//      _In_ PFILE_OBJECT FileObject,
+//      _In_ PLARGE_INTEGER FileOffset,
+//      _In_ PLARGE_INTEGER Length,
+//      _In_ PEPROCESS ProcessId,
+//      _In_ ULONG Key,
+//      _In_ BOOLEAN FailImmediately,
+//      _In_ BOOLEAN ExclusiveLock,
+//      _Out_ PIO_STATUS_BLOCK IoStatus,
+//      _In_ PDEVICE_OBJECT DeviceObject
+//      );
 
-BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdFastUnlockAllByKey (
-    IN PFILE_OBJECT FileObject,
-    PVOID ProcessId,
-    ULONG Key,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
-    );
+FAST_IO_LOCK CdFastLock;
 
-BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdFastIoCheckIfPossible (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN ULONG Length,
-    IN BOOLEAN Wait,
-    IN ULONG LockKey,
-    IN BOOLEAN CheckForReadOperation,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
-    );
+//  BOOLEAN
+//  CdFastUnlockSingle (
+//      _In_ PFILE_OBJECT FileObject,
+//      _In_ PLARGE_INTEGER FileOffset,
+//      _In_ PLARGE_INTEGER Length,
+//      _In_ PEPROCESS ProcessId,
+//      _In_ ULONG Key,
+//      _Out_ PIO_STATUS_BLOCK IoStatus,
+//      _In_ PDEVICE_OBJECT DeviceObject
+//      );
 
-BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
-CdFastQueryNetworkInfo (
-    IN PFILE_OBJECT FileObject,
-    IN BOOLEAN Wait,
-    OUT PFILE_NETWORK_OPEN_INFORMATION Buffer,
-    OUT PIO_STATUS_BLOCK IoStatus,
-    IN PDEVICE_OBJECT DeviceObject
-    );
+FAST_IO_UNLOCK_SINGLE CdFastUnlockSingle;
+
+//  BOOLEAN
+//  CdFastUnlockAll (
+//      _In_ PFILE_OBJECT FileObject,
+//      _In_ PEPROCESS ProcessId,
+//      _Out_ PIO_STATUS_BLOCK IoStatus,
+//      _In_ PDEVICE_OBJECT DeviceObject
+//      );
+
+FAST_IO_UNLOCK_ALL CdFastUnlockAll;
+
+//  BOOLEAN
+//  CdFastUnlockAllByKey (
+//      _In_ PFILE_OBJECT FileObject,
+//      _In_ PVOID ProcessId,
+//      _In_ ULONG Key,
+//      _Out_ PIO_STATUS_BLOCK IoStatus,
+//      _In_ PDEVICE_OBJECT DeviceObject
+//      );
+
+FAST_IO_UNLOCK_ALL_BY_KEY CdFastUnlockAllByKey;
+
+//  BOOLEAN
+//  CdFastIoCheckIfPossible (
+//      _In_ PFILE_OBJECT FileObject,
+//      _In_ PLARGE_INTEGER FileOffset,
+//      _In_ ULONG Length,
+//      _In_ BOOLEAN Wait,
+//      _In_ ULONG LockKey,
+//      _In_ BOOLEAN CheckForReadOperation,
+//      _Out_ PIO_STATUS_BLOCK IoStatus,
+//      _In_ PDEVICE_OBJECT DeviceObject
+//      );
+
+FAST_IO_CHECK_IF_POSSIBLE CdFastIoCheckIfPossible;
+
+//  _Success_(return != FALSE)
+//  BOOLEAN
+//  CdFastQueryNetworkInfo (
+//      _In_ PFILE_OBJECT FileObject,
+//      _In_ BOOLEAN Wait,
+//      _Out_ PFILE_NETWORK_OPEN_INFORMATION Buffer,
+//      _Out_ PIO_STATUS_BLOCK IoStatus,
+//      _In_ PDEVICE_OBJECT DeviceObject
+//      );
+
+FAST_IO_QUERY_NETWORK_OPEN_INFO CdFastQueryNetworkInfo;
 
 //
 //  Following are the routines to handle the top level thread logic.
@@ -1702,15 +1975,15 @@ CdFastQueryNetworkInfo (
 
 VOID
 CdSetThreadContext (
-    IN PIRP_CONTEXT IrpContext,
-    IN PTHREAD_CONTEXT ThreadContext
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _In_ PTHREAD_CONTEXT ThreadContext
     );
 
 
 //
 //  VOID
 //  CdRestoreThreadContext (
-//      IN PIRP_CONTEXT IrpContext
+//      _Inout_ PIRP_CONTEXT IrpContext
 //      );
 //
 
@@ -1721,8 +1994,8 @@ CdSetThreadContext (
 
 ULONG
 CdSerial32 (
-    IN PCHAR Buffer,
-    IN ULONG ByteCount
+    _In_reads_bytes_(ByteCount) PCHAR Buffer,
+    _In_ ULONG ByteCount
     );
 
 //
@@ -1748,7 +2021,7 @@ CdSerial32 (
 
 #define CdIsFastIoPossible(F) ((BOOLEAN)                                            \
     ((((F)->Vcb->VcbCondition != VcbMounted ) ||                                    \
-      !FsRtlOplockIsFastIoPossible( &(F)->Oplock )) ?                               \
+      !FsRtlOplockIsFastIoPossible( CdGetFcbOplock(F) )) ?                          \
                                                                                     \
      FastIoIsNotPossible :                                                          \
                                                                                     \
@@ -1766,14 +2039,16 @@ CdSerial32 (
 //  work routine.
 //
 
-VOID
-CdFspDispatch (                             //  implemented in FspDisp.c
-    IN PIRP_CONTEXT IrpContext
-    );
+//  VOID
+//  CdFspDispatch (                             //  implemented in FspDisp.c
+//      _Inout_ PIRP_CONTEXT IrpContext
+//      );
+
+WORKER_THREAD_ROUTINE CdFspDispatch;
 
 VOID
 CdFspClose (                                //  implemented in Close.c
-    IN PVCB Vcb OPTIONAL
+    _In_opt_ PVCB Vcb
     );
 
 //
@@ -1781,77 +2056,102 @@ CdFspClose (                                //  implemented in Close.c
 //  based on the IrpSp major functions.
 //
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonCreate (                            //  Implemented in Create.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonClose (                             //  Implemented in Close.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonRead (                              //  Implemented in Read.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
+NTSTATUS
+CdCommonWrite (                             //  Implemented in Write.c
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
+    );
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonQueryInfo (                         //  Implemented in FileInfo.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonSetInfo (                           //  Implemented in FileInfo.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonQueryVolInfo (                      //  Implemented in VolInfo.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonDirControl (                        //  Implemented in DirCtrl.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonFsControl (                         //  Implemented in FsCtrl.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
 NTSTATUS
 CdCommonDevControl (                        //  Implemented in DevCtrl.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
 NTSTATUS
 CdCommonLockControl (                       //  Implemented in LockCtrl.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonCleanup (                           //  Implemented in Cleanup.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
 
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonPnp (                               //  Implemented in Pnp.c
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     );
+
+_Requires_lock_held_(_Global_critical_region_)
+NTSTATUS
+CdCommonShutdown (                         //  Implemented in Shutdown.c
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
+    );
+
 
 
 //
@@ -1881,17 +2181,14 @@ CdCommonPnp (                               //  Implemented in Pnp.c
 //
 //      #define try_return(S)  { S; goto try_exit; }
 //
-/* ReactOS Change: Remove SEH */
-#define try
-#define leave goto exitLabel;
-#define finally  if (0) goto exitLabel; exitLabel:
-#define except(x) while (0)
-#define GetExceptionCode() 0
-#define AbnormalTermination() 0
 
+#ifndef __REACTOS__
 #define try_return(S) { S; goto try_exit; }
 #define try_leave(S) { S; leave; }
-
+#else
+#define try_return(S) { S; goto try_exit; }
+#define try_leave(S) { S; _SEH2_LEAVE; }
+#endif
 
 //
 //  Encapsulate safe pool freeing
@@ -1899,9 +2196,11 @@ CdCommonPnp (                               //  Implemented in Pnp.c
 /* ReactOS Change: GCC "passing argument 1 of CdFreePool from incompatible pointer type" */
 #define CdFreePool(x) _CdFreePool((PVOID*)(x))
 
-/* ReactOS Change: "LD multiple definition of `_CdOperationIsDasdOpen'" */
-static inline void _CdFreePool(
-    IN PVOID *Pool
+static /* ReactOS Change: GCC "multiple definition" */
+INLINE
+VOID
+_CdFreePool(
+    _Inout_ _At_(*Pool, __drv_freesMem(Mem) _Post_null_) PVOID *Pool
     )
 {
     if (*Pool != NULL) {
@@ -1910,6 +2209,116 @@ static inline void _CdFreePool(
         *Pool = NULL;
     }
 }
+
+#ifdef CDFS_TELEMETRY_DATA
+
+//
+//  CDFS Telemetry.  Current implementation uses the Telemetry TraceLogging APIs.
+//
+//  The Telemetry TraceLoggingWrite() routines use a lot of stack space. We must
+//  therefor wrap all our telemetry points with our own routines, and add a guard to
+//  make sure there's enough stack space to call these routines.
+//
+//  These telemetry routines should not be called on high-performance code paths.
+//
+
+TRACELOGGING_DECLARE_PROVIDER( CdTelemetryProvider );
+
+VOID
+CdInitializeTelemetry (
+    VOID
+    );
+
+DECLSPEC_NOINLINE
+VOID
+CdTelemetryMount (
+        __in PGUID VolumeGuid,
+        __in NTSTATUS Status,
+        __in PVCB Vcb
+        );
+
+//
+//  Every additional argument passed to TraceLoggingWrite() consumes an additional
+//  16 to 32 bytes extra stack space. Having 512 bytes reserved space should be
+//  sufficient for up to 20 arguments or so. This will be less of course if our
+//  wrapper routines also declare their own local variables.
+//
+
+#define CDFS_TELEMETRY_STACK_THRESHOLD_DEFAULT  512    // for "small" telemetry points
+#define CDFS_TELEMETRY_STACK_THRESHOLD_LARGE    2048   // for "large" telemetry points
+
+INLINE
+BOOLEAN
+CdTelemetryGuard (
+    __in ULONG StackSpaceNeeded )
+/*++
+
+Routine Description:
+
+    This routine returns TRUE only when:
+
+      1)  There is an ETW listener, AND
+      2)  There is enough free stack space to safely call the Telemetry TraceLogging APIs
+
+    We'll also count how many times there wasn't enough stack space, and include this
+    value as part of the periodic cdfs Telemetry.
+
+Arguments:
+
+    StackSpaceNeeded - Stack space needed in bytes
+
+--*/
+{
+    ASSERT( IoGetRemainingStackSize() >= StackSpaceNeeded );
+
+    if (CdTelemetryProvider->LevelPlus1 <= 5) {
+
+        //
+        //  Bail out early if there are no ETW listeners
+        //
+
+        return FALSE;
+    }
+
+    if (IoGetRemainingStackSize() < StackSpaceNeeded) {
+
+        //
+        //  Count how many times it was unsafe to generate telemetry because of
+        //  not enough stack space.
+        //
+
+        InterlockedIncrement( &CdTelemetryData.MissedTelemetryPoints );
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+#define CdTelemetryMountSafe( VolumeGuid, Status, Vcb ) \
+    if (CdTelemetryGuard( CDFS_TELEMETRY_STACK_THRESHOLD_LARGE )) { \
+        CdTelemetryMount( VolumeGuid, Status, Vcb ); \
+    }
+
+#if DBG
+#define CDFS_TELEMETRY_PERIODIC_INTERVAL  CdTelemetryData.PeriodicInterval
+#else
+#define CDFS_TELEMETRY_PERIODIC_INTERVAL  INTERVAL_ONE_DAY
+#endif
+
+#else  // CDFS_TELEMETRY_DATA
+
+//
+//  When CDFS_TELEMETRY_DATA is not defined then the CdTelemetry___Safe() routines
+//  expand to nothing.  This minimizes the cdfs.sys binary footprint.  This also
+//  means that the places where these Safe() routines are called do not
+//  have to have to be surrounded by  #ifdef CDFS_TELEMETRY_DATA .. #endif
+//
+
+
+#define CdTelemetryMountSafe( ... )           NOTHING
+
+#endif  // CDFS_TELEMETRY_DATA
 
 #endif // _CDPROCS_
 

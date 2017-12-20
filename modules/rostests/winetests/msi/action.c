@@ -19,21 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define _WIN32_MSI 300
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <windows.h>
-#include <msiquery.h>
-#include <msidefs.h>
-#include <msi.h>
-#include <fci.h>
-#include <srrestoreptapi.h>
-#include <wtypes.h>
-#include <shellapi.h>
-#include <winsvc.h>
-
-#include "wine/test.h"
+#include "precomp.h"
 
 static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE *);

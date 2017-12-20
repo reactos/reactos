@@ -22,11 +22,11 @@ Abstract:
 
 #define BugCheckFileId                   (CDFS_BUG_CHECK_CLEANUP)
 
-
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonCleanup (
-    IN PIRP_CONTEXT IrpContext,
-    IN PIRP Irp
+    _Inout_ PIRP_CONTEXT IrpContext,
+    _Inout_ PIRP Irp
     )
 
 /*++
@@ -82,7 +82,7 @@ Return Value:
     TYPE_OF_OPEN TypeOfOpen;
 
     BOOLEAN SendUnlockNotification = FALSE;
-    BOOLEAN AttemptTeardown;
+    BOOLEAN AttemptTeardown = FALSE;
     BOOLEAN VcbAcquired = FALSE;
 
     PVCB Vcb;
@@ -148,7 +148,38 @@ Return Value:
     SetFlag( FileObject->Flags, FO_CLEANUP_COMPLETE );
 
     CdReleaseFile( IrpContext, Fcb);
-    
+
+    if (TypeOfOpen == UserVolumeOpen) {
+
+        //
+        //  For a force dismount, physically disconnect this Vcb from the device so 
+        //  a new mount can occur.  Vcb deletion cannot happen at this time since 
+        //  there is a reference on it associated with this very request,  but we'll 
+        //  call check for dismount again later after we process this close.
+        //
+        
+        if (FlagOn( Ccb->Flags, CCB_FLAG_DISMOUNT_ON_CLOSE )) {
+        
+            CdAcquireCdData( IrpContext );
+        
+            CdCheckForDismount( IrpContext, Vcb, TRUE );
+        
+            CdReleaseCdData( IrpContext );
+        
+        //
+        //  If this handle actually wrote something, flush the device buffers,
+        //  and then set the verify bit now just to be safe (in case there is no
+        //  dismount).
+        //
+        
+        } else if (FlagOn( FileObject->Flags, FO_FILE_MODIFIED )) {
+        
+            CdHijackIrpAndFlushDevice( IrpContext, Irp, Vcb->TargetDeviceObject );
+        
+            CdMarkDevForVerifyIfVcbMounted( Vcb );
+        }
+    }
+
     //
     //  Acquire the current file.
     //
@@ -159,7 +190,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    //try { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+    _SEH2_TRY {
     
         //
         //  Case on the type of open that we are trying to cleanup.
@@ -187,7 +218,7 @@ Return Value:
             //  need to check for STATUS_PENDING.
             //
 
-            FsRtlCheckOplock( &Fcb->Oplock,
+            FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                               Irp,
                               IrpContext,
                               NULL,
@@ -221,12 +252,15 @@ Return Value:
 
             break;
 
-        case UserVolumeOpen :
+        case UserVolumeOpen:
 
             break;
 
         default :
 
+#ifdef _MSC_VER
+#pragma prefast( suppress:__WARNING_USE_OTHER_FUNCTION, "argument bogus" )        
+#endif
             CdBugCheck( TypeOfOpen, 0, 0 );
         }
 
@@ -257,7 +291,7 @@ Return Value:
 
         if (FileObject == Vcb->VolumeLockFileObject) {
 
-            ASSERT( FlagOn( Vcb->VcbState, VCB_STATE_LOCKED));
+            NT_ASSERT( FlagOn( Vcb->VcbState, VCB_STATE_LOCKED));
 
             IoAcquireVpbSpinLock( &SavedIrql ); 
 
@@ -279,7 +313,7 @@ Return Value:
 
         IoRemoveShareAccess( FileObject, &Fcb->ShareAccess );
 
-    //} finally { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+    } _SEH2_FINALLY {
 
         CdReleaseFcb( IrpContext, Fcb );
         
@@ -287,7 +321,7 @@ Return Value:
             
             FsRtlNotifyVolumeEvent( FileObject, FSRTL_VOLUME_UNLOCK );
         }
-    //} /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+    } _SEH2_END;
 
     //
     //  If appropriate, try to spark teardown by purging the volume.  Should
@@ -305,19 +339,19 @@ Return Value:
         
         CdAcquireCdData( IrpContext);
 
-        try {
+        _SEH2_TRY {
             
             CdAcquireVcbExclusive( IrpContext, Vcb, FALSE );
             VcbAcquired = TRUE;
             
             CdPurgeVolume( IrpContext, Vcb, FALSE );
 
-        } finally {
+        } _SEH2_FINALLY {
 
             if (VcbAcquired) { CdReleaseVcb( IrpContext, Vcb ); }
             
             CdReleaseCdData( IrpContext);
-        }
+        } _SEH2_END;
     }
 
     //
