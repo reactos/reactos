@@ -10,6 +10,7 @@ extern void func_CMyComputer(void);
 extern void func_CShellDesktop(void);
 extern void func_CShellLink(void);
 extern void func_CUserNotification(void);
+extern void func_IShellFolderViewCB(void);
 extern void func_menu(void);
 extern void func_PathResolve(void);
 extern void func_SHCreateFileExtractIconW(void);
@@ -25,6 +26,7 @@ const struct test winetest_testlist[] =
     { "CShellDesktop", func_CShellDesktop },
     { "CShellLink", func_CShellLink },
     { "CUserNotification", func_CUserNotification },
+    { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "menu", func_menu },
     { "PathResolve", func_PathResolve },
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
