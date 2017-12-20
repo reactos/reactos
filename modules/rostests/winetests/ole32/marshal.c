@@ -18,29 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#define _WIN32_DCOM
-#define COBJMACROS
-#define CONST_VTABLE
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winnls.h>
-#include <ole2.h>
-//#include "objbase.h"
-//#include "olectl.h"
 #include <shlguid.h>
-//#include "shobjidl.h"
-//#include "initguid.h"
-
-#include <wine/test.h>
 
 DEFINE_GUID(CLSID_StdGlobalInterfaceTable,0x00000323,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 DEFINE_GUID(CLSID_ManualResetEvent,       0x0000032c,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);

@@ -18,24 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
-#define COBJMACROS
-#define CONST_VTABLE
-#define NONAMELESSUNION
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <ole2.h>
-//#include "objbase.h"
-
-#include <wine/test.h>
+#include "precomp.h"
 
 #define InitFormatEtc(fe, cf, med) \
         {\
@@ -1290,7 +1274,7 @@ static void test_flushed_getdata(void)
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_ISTORAGE, "got %x\n", med.tymed);
     if(SUCCEEDED(hr)) {
-        hr = IStorage_Stat(med.u.pstg, &stat, STATFLAG_NONAME);
+        hr = IStorage_Stat(med.pstg, &stat, STATFLAG_NONAME);
         ok(hr == S_OK, "got %08x\n", hr);
         ok(stat.grfMode == (STGM_SHARE_EXCLUSIVE | STGM_READWRITE), "got %08x\n", stat.grfMode);
         ReleaseStgMedium(&med);

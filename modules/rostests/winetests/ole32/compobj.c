@@ -18,31 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include <stdarg.h>
-#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <winreg.h>
-#define USE_COM_CONTEXT_DEF
-#include <initguid.h>
-//#include "objbase.h"
-//#include "shlguid.h"
-#include <ole2.h>
-#include <urlmon.h> /* for CLSID_FileProtocol */
 #include <dde.h>
-
 #include <ctxtcall.h>
-
-#include <wine/test.h>
+#include <initguid.h>
 
 extern const IID GUID_NULL;
 
