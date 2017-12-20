@@ -5,7 +5,7 @@
  * PURPOSE:         Device Object Management, including Notifications and Queues.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -1349,7 +1349,6 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
             if (FileObject->FileObjectExtension)
             {
                 PFILE_OBJECT_EXTENSION FileObjectExtension;
-                ASSERT(FALSE);
 
                 /* Cast the buffer to something we understand */
                 FileObjectExtension = FileObject->FileObjectExtension;
