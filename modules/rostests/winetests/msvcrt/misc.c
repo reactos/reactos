@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/test.h>
-#include <errno.h>
-#include <stdio.h>
+#include "precomp.h"
+
 #include <msvcrt.h>
-#include <process.h>
 
 static inline float __port_infinity(void)
 {

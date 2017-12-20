@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/test.h"
-#include <stdlib.h>
+#include "precomp.h"
 
 static const char *a_very_long_env_string =
  "LIBRARY_PATH="
