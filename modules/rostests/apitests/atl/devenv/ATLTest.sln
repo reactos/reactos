@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSimpleMap", "CSimpleMap.vc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CString", "CString.vcxproj", "{FBA6DAE7-7996-4DE1-BD03-9E44F7DB4ABD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CComObject", "CComObject.vcxproj", "{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{FBA6DAE7-7996-4DE1-BD03-9E44F7DB4ABD}.Release|x64.Build.0 = Release|x64
 		{FBA6DAE7-7996-4DE1-BD03-9E44F7DB4ABD}.Release|x86.ActiveCfg = Release|Win32
 		{FBA6DAE7-7996-4DE1-BD03-9E44F7DB4ABD}.Release|x86.Build.0 = Release|Win32
+		{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}.Debug|x64.ActiveCfg = Debug|x64
+		{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}.Debug|x64.Build.0 = Debug|x64
+		{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}.Debug|x86.ActiveCfg = Debug|Win32
+		{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}.Debug|x86.Build.0 = Debug|Win32
+		{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}.Release|x64.ActiveCfg = Release|x64
+		{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}.Release|x64.Build.0 = Release|x64
+		{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}.Release|x86.ActiveCfg = Release|Win32
+		{408AEF87-D169-4A2F-A9E3-FF3DD1D59E65}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

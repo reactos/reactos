@@ -8,6 +8,7 @@ list(APPEND SOURCE
     atltypes.cpp
     CComBSTR.cpp
     CComHeapPtr.cpp
+    CComObject.cpp
     CImage.cpp
     CRegKey.cpp
     CSimpleArray.cpp
