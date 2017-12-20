@@ -2118,7 +2118,6 @@ MmArmInitSystem(IN ULONG Phase,
         TestPte = MiProtoPteToPte(&TempPte);
         ASSERT(PointerPte == TestPte);
 
-#ifndef _M_AMD64 // Not working on x64 for obvoius reason
         /* Try a bunch of random addresses near the end of the address space */
         PointerPte = (PMMPTE)((ULONG_PTR)MI_HIGHEST_SYSTEM_ADDRESS - 0x37FFF);
         for (j = 0; j < 20; j += 1)
@@ -2134,7 +2133,6 @@ MmArmInitSystem(IN ULONG Phase,
         MI_MAKE_SUBSECTION_PTE(&TempPte, PointerPte);
         TestPte = MiSubsectionPteToSubsection(&TempPte);
         ASSERT(PointerPte == TestPte);
-#endif
 #endif
 
         /* Loop all 8 standby lists */
