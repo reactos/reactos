@@ -1,8 +1,8 @@
 /*
- * Mesa 3-D graphics library
- * Version:  6.3
+ * libtxc_dxtn
+ * Version:  1.0
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2004  Roland Scheidegger   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,33 +22,30 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef _TXC_DXTN_H
+#define _TXC_DXTN_H
 
-#include <assert.h>
+#include <GL/gl.h>
 
-#include "types.h"
-#include "internal.h"
+typedef GLubyte GLchan;
+#define UBYTE_TO_CHAN(b)  (b)
+#define CHAN_MAX 255
+#define RCOMP 0
+#define GCOMP 1
+#define BCOMP 2
+#define ACOMP 3
 
+void fetch_2d_texel_rgb_dxt1(GLint srcRowStride, const GLubyte *pixdata,
+			     GLint i, GLint j, GLvoid *texel);
+void fetch_2d_texel_rgba_dxt1(GLint srcRowStride, const GLubyte *pixdata,
+			     GLint i, GLint j, GLvoid *texel);
+void fetch_2d_texel_rgba_dxt3(GLint srcRowStride, const GLubyte *pixdata,
+			     GLint i, GLint j, GLvoid *texel);
+void fetch_2d_texel_rgba_dxt5(GLint srcRowStride, const GLubyte *pixdata,
+			     GLint i, GLint j, GLvoid *texel);
 
-void
-_mesa_upscale_teximage2d (unsigned int inWidth, unsigned int inHeight,
-			  unsigned int outWidth, unsigned int outHeight,
-			  unsigned int comps,
-			  const byte *src, int srcRowStride,
-			  byte *dest)
-{
-    unsigned int i, j, k;
+void tx_compress_dxtn(GLint srccomps, GLint width, GLint height,
+		      const GLubyte *srcPixData, GLenum destformat,
+		      GLubyte *dest, GLint dstRowStride);
 
-    assert(outWidth >= inWidth);
-    assert(outHeight >= inHeight);
-
-    for (i = 0; i < outHeight; i++) {
-	const int ii = i % inHeight;
-	for (j = 0; j < outWidth; j++) {
-	    const int jj = j % inWidth;
-	    for (k = 0; k < comps; k++) {
-		dest[(i * outWidth + j) * comps + k]
-		    = src[ii * srcRowStride + jj * comps + k];
-	    }
-	}
-    }
-}
+#endif /* _TXC_DXTN_H */
