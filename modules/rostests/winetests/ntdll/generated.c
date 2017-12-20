@@ -5,15 +5,7 @@
  * Unit tests for data structure packing
  */
 
-#define WINVER 0x0501
-#define _WIN32_IE 0x0501
-#define _WIN32_WINNT 0x0501
-
-#define WINE_NOWINSOCK
-
 #include "ntdll_test.h"
-
-#include "wine/test.h"
 
 /***********************************************************************
  * Compatibility macros

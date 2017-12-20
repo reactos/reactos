@@ -24,19 +24,7 @@
  * windows.
  */
 
-#include <stdio.h>
-#include <stdarg.h>
-
-#include "ntstatus.h"
-/* Define WIN32_NO_STATUS so MSVC does not give us duplicate macro
- * definition errors when we get to winnt.h
- */
-#define WIN32_NO_STATUS
-
-#include "wine/test.h"
-#include "wine/winternl.h"
-#include "winuser.h"
-#include "wine/winioctl.h"
+#include "ntdll_test.h"
 
 /* FIXME */
 typedef struct _REPARSE_DATA_BUFFER {

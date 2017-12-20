@@ -18,14 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <ntstatus.h>
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <winnt.h>
-#include <wine/winternl.h>
-#include <winerror.h>
-#include <stdio.h>
-#include "wine/test.h"
+#include "ntdll_test.h"
 
 static NTSTATUS (WINAPI *pNtNotifyChangeDirectoryFile)(
                           HANDLE,HANDLE,PIO_APC_ROUTINE,PVOID,

@@ -18,24 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#include "ntdll_test.h"
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x500 /* For NTSTATUS */
-#endif
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winnt.h"
-#include "winreg.h"
-#include "wine/winternl.h"
-#include "wine/exception.h"
-#include "wine/test.h"
+#include <wine/exception.h>
 
 static void *code_mem;
 

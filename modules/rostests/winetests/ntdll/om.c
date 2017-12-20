@@ -20,10 +20,6 @@
  */
 
 #include "ntdll_test.h"
-#include "wine/winternl.h"
-#include "stdio.h"
-#include "winnt.h"
-#include "stdlib.h"
 
 static HANDLE   (WINAPI *pCreateWaitableTimerA)(SECURITY_ATTRIBUTES*, BOOL, LPCSTR);
 static BOOLEAN  (WINAPI *pRtlCreateUnicodeStringFromAsciiz)(PUNICODE_STRING, LPCSTR);

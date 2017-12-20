@@ -23,11 +23,8 @@
  */
 
 #include "ntdll_test.h"
-#include "wine/winternl.h"
-#include "stdio.h"
-#include "winnt.h"
-#include "winnls.h"
-#include "stdlib.h"
+
+#include <winreg.h>
 
 /* A test string */
 static const WCHAR stringW[] = {'s', 't', 'r', 'i', 'n', 'g', 'W', 0};

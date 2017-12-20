@@ -18,12 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-
 #include "ntdll_test.h"
-
-#include "windef.h"
-#include "winbase.h"
 
 static NTSTATUS (WINAPI *pNtResumeProcess)(HANDLE);
 static NTSTATUS (WINAPI *pNtSuspendProcess)(HANDLE);
