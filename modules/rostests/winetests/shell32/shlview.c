@@ -18,27 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
-#include "shellapi.h"
-
-#include "shlguid.h"
-#include "shlobj.h"
-#include "shobjidl.h"
-#include "shlwapi.h"
-#include "ocidl.h"
-#include "oleauto.h"
-
-#include "initguid.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 #include "msg.h"
 

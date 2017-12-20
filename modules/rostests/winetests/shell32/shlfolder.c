@@ -18,26 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
-#include "shellapi.h"
-
-
-#include "shlguid.h"
-#include "shlobj.h"
-#include "shobjidl.h"
-#include "shlwapi.h"
-#include "ocidl.h"
-#include "oleauto.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 #include <initguid.h>
 DEFINE_GUID(IID_IParentAndItem, 0xB3A4B685, 0xB685, 0x4805, 0x99,0xD9, 0x5D,0xEA,0xD2,0x87,0x32,0x36);

@@ -19,15 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
+#include "precomp.h"
 
-#include <windows.h>
-#include <shlobj.h>
-#include <shobjidl.h>
-#include <string.h>
-#include "shellapi.h"
-
-#include "wine/test.h"
 #define IDD_MAKENEWFOLDER 0x3746 /* From "../shresdef.h" */
 #define TIMER_WAIT_MS 50 /* Should be long enough for slow systems */
 

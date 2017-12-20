@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <windows.h>
-#include "wine/test.h"
+#pragma once
 
 /* undocumented SWP flags - from SDK 3.1 */
 #define SWP_NOCLIENTSIZE	0x0800

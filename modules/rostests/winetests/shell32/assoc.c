@@ -17,16 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
+#include "precomp.h"
 
-#include <stdarg.h>
-
-#include "shlwapi.h"
-#include "shlguid.h"
-#include "shobjidl.h"
-
-#include "wine/test.h"
-
+#include <shobjidl.h>
 
 static void test_IQueryAssociations_QueryInterface(void)
 {

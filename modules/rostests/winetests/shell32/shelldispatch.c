@@ -18,16 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
+#include "precomp.h"
 
-#include "shldisp.h"
-#include "shlobj.h"
-#include "shlwapi.h"
-#include "wine/test.h"
-
-#include "initguid.h"
+#include <winsvc.h>
+#include <initguid.h>
 
 #define EXPECT_HR(hr,hr_exp) \
     ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)

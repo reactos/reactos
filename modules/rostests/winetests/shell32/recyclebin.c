@@ -18,12 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include "shellapi.h"
-
-#include <stdio.h>
-#include "wine/test.h"
+#include "precomp.h"
 
 static int (WINAPI *pSHQueryRecycleBinA)(LPCSTR,LPSHQUERYRBINFO);
 static int (WINAPI *pSHFileOperationA)(LPSHFILEOPSTRUCTA);

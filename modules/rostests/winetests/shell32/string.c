@@ -18,18 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#define WINE_NOWINSOCK
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
-#include "shellapi.h"
-#include "shtypes.h"
-#include "objbase.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 static HMODULE hShell32;
 static BOOL (WINAPI *pStrRetToStrNAW)(LPVOID,DWORD,LPSTRRET,const ITEMIDLIST *);

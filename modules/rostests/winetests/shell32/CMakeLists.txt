@@ -23,10 +23,13 @@ list(APPEND SOURCE
     shlview.c
     string.c
     systray.c
+    precomp.h)
+
+add_executable(shell32_winetest
+    ${SOURCE}
     testlist.c
     rsrc.rc)
 
-add_executable(shell32_winetest ${SOURCE})
 target_link_libraries(shell32_winetest uuid)
 set_module_type(shell32_winetest win32cui)
 add_importlibs(shell32_winetest shell32 ole32 oleaut32 user32 gdi32 advapi32 msvcrt kernel32)
@@ -35,4 +38,5 @@ if(MSVC)
     add_importlibs(shell32_winetest ntdll)
 endif()
 
+add_pch(shell32_winetest precomp.h SOURCE)
 add_rostests_file(TARGET shell32_winetest)

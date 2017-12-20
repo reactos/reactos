@@ -19,19 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include "shellapi.h"
-#include "shlobj.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 static inline BOOL SHELL_OsIsUnicode(void)
 {
@@ -164,10 +152,10 @@ if (0)
     hr = IShellFolder2_GetDefaultColumnState(folder, 6, &state);
     ok(broken(hr == E_NOTIMPL) || hr == E_INVALIDARG /* Win7 */, "got 0x%08x\n", hr);
 
-    details.str.u.pOleStr = NULL;
+    details.str.pOleStr = NULL;
     hr = IShellFolder2_GetDetailsOf(folder, NULL, 0, &details);
     ok(hr == S_OK || broken(hr == E_NOTIMPL) /* W2K */, "got 0x%08x\n", hr);
-    if (SHELL_OsIsUnicode()) SHFree(details.str.u.pOleStr);
+    if (SHELL_OsIsUnicode()) SHFree(details.str.pOleStr);
 
     /* test every column if method is implemented */
     if (hr == S_OK)
@@ -183,7 +171,7 @@ if (0)
             ok(details.fmt == LVCFMT_LEFT, "got 0x%x\n", details.fmt);
             /* can't be on w9x at this point, IShellFolder2 unsupported there,
                check present for running Wine with w9x setup */
-            if (SHELL_OsIsUnicode()) SHFree(details.str.u.pOleStr);
+            if (SHELL_OsIsUnicode()) SHFree(details.str.pOleStr);
 
             hr = IShellFolder2_GetDefaultColumnState(folder, i, &state);
             ok(hr == S_OK, "got 0x%08x\n", hr);

@@ -18,18 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+#include "precomp.h"
 
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include "shlobj.h"
-#include "shlwapi.h"
-
-#include "wine/test.h"
-
-#include "initguid.h"
-#include "mshtml.h"
+#include <initguid.h>
+#include <mshtml.h>
 
 /**********************************************************************
  * Some IIDs for test_SetSite.
