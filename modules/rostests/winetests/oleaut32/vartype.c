@@ -18,19 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define CONST_VTABLE
-#define COBJMACROS
-
-#include <wine/test.h>
-#include <winnls.h>
-#include <objbase.h>
-#include <oleauto.h>
-#include <math.h>
-#include <test_tlb.h>
+#include "precomp.h"
 
 #include <initguid.h>
 
