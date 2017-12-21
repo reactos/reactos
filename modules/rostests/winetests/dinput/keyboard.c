@@ -16,23 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define DIRECTINPUT_VERSION 0x0700
-
-#define COBJMACROS
-//#include <windows.h>
-
-//#include <math.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-
-#include <wine/test.h>
-//#include "windef.h"
-//#include "wingdi.h"
-#include <dinput.h>
+#include "precomp.h"
 
 static void acquire_tests(IDirectInputA *pDI, HWND hwnd)
 {
