@@ -5,6 +5,7 @@
  * COPYRIGHT:   Copyright 2011 Thomas Faber <thomas.faber@reactos.org>
  *              Copyright 2013 Timo Kreuzer <timo.kreuzer@reactos.org>
  *              Copyright 2015 Jérôme Gardou <jerome.gardou@reactos.org>
+ *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 #include "precomp.h"
@@ -564,6 +565,183 @@ CheckAdjacentVADs()
 
 }
 
+static
+VOID
+CheckSomeDefaultAddresses(VOID)
+{
+    NTSTATUS Status;
+    PVOID BaseAddress;
+    SIZE_T Size;
+
+    // NULL.
+
+    /* Reserve memory dynamically, not at 0x00000000 */
+    BaseAddress = NULL;
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok(BaseAddress != 0x00000000, "Unexpected BaseAddress = 0x00000000\n");
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    // 0x00000000, 64k: Free.
+
+    /* Reserve and commit memory at 0x00000000, after round down */
+    BaseAddress = UlongToPtr(0x00000000 + 0x0FFF);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE | MEM_COMMIT,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok_ptr(BaseAddress, 0x00000000);
+
+    // Double-check that it is not forbidden "in order to catch null pointer accesses".
+    StartSeh()
+        *(int*)UlongToPtr(0x00000000) = 1;
+    EndSeh(STATUS_SUCCESS)
+
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Reserve memory above 0x00000000 */
+    BaseAddress = UlongToPtr(0x00000000 + 0x1000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* The following checks assume very default addresses,
+     * no address space layout randomization (ASLR). */
+#ifdef _WIN64
+    ok(FALSE, "ToDo, 64-bit: Check/Adapt 32-bit results\n");
+#endif
+
+    // 0x00010000,  4k: Private Data.
+    // 0x00011000, 60k: Unusable.
+
+    /* Reserve memory below 0x00010000 */
+    BaseAddress = UlongToPtr(0x00010000 - 0x1000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Reserve memory at 0x00010000:
+     * Windows NT legacy default executable image base */
+    BaseAddress = UlongToPtr(0x00010000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
+    if (NT_SUCCESS(Status))
+    { // Unexpected, cleanup.
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+
+    // 0x00400000: Image base.
+
+    /* Reserve memory below 0x00400000 */
+    BaseAddress = UlongToPtr(0x00400000 - 0x1000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    if (NT_SUCCESS(Status))
+    {
+        trace("Below 0x00400000 is available, as on ReactOS and Windows S03\n");
+        // 0x003F0000, 64k: Free.
+        ok_ntstatus(Status, STATUS_SUCCESS);
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+    else
+    {
+        trace("Below 0x00400000 is not available, as on Windows XP\n");
+        // 0x003F0000,  4k: Shareable.
+        // 0x003F1000, 60k: Unusable.
+        ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
+    }
+
+    /* Reserve memory at 0x00400000:
+     * Windows NT legacy default DLL image base,
+     * (ReactOS and) Windows 95 new default executable image base */
+    BaseAddress = UlongToPtr(0x00400000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
+    if (NT_SUCCESS(Status))
+    { // Unexpected, cleanup.
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+
+    // 0x10000000: Free.
+
+    /* Reserve memory below 0x10000000 */
+    BaseAddress = UlongToPtr(0x10000000 - 0x1000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Reserve memory at 0x10000000:
+     * Windows new default non-OS DLL image base */
+    BaseAddress = UlongToPtr(0x10000000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+#ifdef _WIN64
+    skip("ToDo, 64-bit: Add 0x140000000/Exe and 0x180000000/DLL checks\n");
+#endif
+}
+
 #define RUNS 32
 
 START_TEST(NtAllocateVirtualMemory)
@@ -571,32 +749,10 @@ START_TEST(NtAllocateVirtualMemory)
     PVOID Mem1, Mem2;
     SIZE_T Size1, Size2;
     ULONG i;
-    NTSTATUS Status;
 
     CheckAlignment();
     CheckAdjacentVADs();
-
-    /* Reserve memory below 0x10000 */
-    Mem1 = UlongToPtr(0xf000);
-    Size1 = 0x1000;
-    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                     &Mem1,
-                                     0,
-                                     &Size1,
-                                     MEM_RESERVE,
-                                     PAGE_READWRITE);
-    ok_ntstatus(Status, STATUS_SUCCESS);
-
-    /* Reserve memory at 0x10000 */
-    Mem1 = UlongToPtr(0x10000);
-    Size1 = 0x1000;
-    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                     &Mem1,
-                                     0,
-                                     &Size1,
-                                     MEM_RESERVE,
-                                     PAGE_READWRITE);
-    ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
+    CheckSomeDefaultAddresses();
 
     Size1 = 32;
     Mem1 = Allocate(Size1);
