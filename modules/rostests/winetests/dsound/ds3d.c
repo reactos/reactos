@@ -23,21 +23,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <wine/test.h>
-
-//#include <windows.h>
-
-#include <math.h>
-#include <wingdi.h>
-#include <mmsystem.h>
-#include <dsound.h>
-#include <mmreg.h>
-#include "ks.h"
-#include "ksmedia.h"
 #include "dsound_test.h"
 
 #define PI 3.14159265358979323846

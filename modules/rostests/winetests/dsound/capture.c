@@ -19,23 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#define COBJMACROS
-
-#include <wine/test.h>
+#include "dsound_test.h"
 
 #include <stdio.h>
-//#include "initguid.h"
-//#include "windows.h"
-#include <wingdi.h>
-#include <mmsystem.h>
-#include <dsound.h>
-#include <mmreg.h>
-#include <dsconf.h>
-
-#include "dsound_test.h"
 
 #define NOTIFICATIONS    5
 

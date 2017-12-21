@@ -18,9 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef _DSOUND_TEST_H_
+#define _DSOUND_TEST_H_
+
+#include <math.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#define COBJMACROS
+
+#include <wine/test.h>
+
 #include <wingdi.h>
 #include <mmreg.h>
 #include <mmsystem.h>
+#include <dsound.h>
+#include <dsconf.h>
+#include <ks.h>
+#include <ksmedia.h>
 
 static const unsigned int formats[][4]={
     { 8000,  8, 1, 0 },
@@ -93,3 +109,5 @@ extern void test_buffer8(LPDIRECTSOUND8,LPDIRECTSOUNDBUFFER*,
 extern const char * getDSBCAPS(DWORD xmask);
 extern int align(int length, int align);
 extern const char * format_string(const WAVEFORMATEX* wfx);
+
+#endif /* !_DSOUND_TEST_H_ */

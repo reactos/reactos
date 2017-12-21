@@ -19,28 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-//#include <windows.h>
-
-#include <wine/test.h>
-#include <wingdi.h>
-#include <winnls.h>
-#include <mmreg.h>
-#include <dsound.h>
-#include <dsconf.h>
-
 #include "dsound_test.h"
+
+#include <winnls.h>
 
 #ifndef DSBCAPS_CTRLDEFAULT
 #define DSBCAPS_CTRLDEFAULT \
         DSBCAPS_CTRLFREQUENCY|DSBCAPS_CTRLPAN|DSBCAPS_CTRLVOLUME
 #endif
 
-#include "initguid.h"
+#include <initguid.h>
 
 DEFINE_GUID(DSPROPSETID_VoiceManager,
             0x62A69BAE,0xDF9D,0x11D1,0x99,0xA6,0x00,0xC0,0x4F,0xC9,0x9D,0x46);
