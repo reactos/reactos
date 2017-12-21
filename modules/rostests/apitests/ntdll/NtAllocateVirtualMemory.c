@@ -1,8 +1,10 @@
 /*
- * PROJECT:         ReactOS API Tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Stress Test for virtual memory allocation
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS API Tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Test for NtAllocateVirtualMemory
+ * COPYRIGHT:   Copyright 2011 Thomas Faber <thomas.faber@reactos.org>
+ *              Copyright 2013 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2015 Jérôme Gardou <jerome.gardou@reactos.org>
  */
 
 #include "precomp.h"
@@ -583,7 +585,7 @@ START_TEST(NtAllocateVirtualMemory)
                                      &Size1,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_2);
+    ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Reserve memory at 0x10000 */
     Mem1 = UlongToPtr(0x10000);
