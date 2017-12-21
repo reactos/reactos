@@ -5,11 +5,7 @@
 * PROGRAMMERS:     Miroslav Mastny 
 */
 
-#include <apitest.h>
-
-#include <stdio.h>
-#include <windows.h>
-#include <winsock2.h>
+#include "ws2_32.h"
 
 #define SVR_PORT 5000
 #define WAIT_TIMEOUT_ 10000

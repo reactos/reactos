@@ -5,16 +5,7 @@
  *  PROGRAMMER:      Sylvain Petreolle <sylvain.petreolle@reactos.org>
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <windef.h>
-#include <winsock2.h>
-#include <ndk/rtlfuncs.h>
-#include <ndk/mmfuncs.h>
+#include "ws2_32.h"
 
 // This test depends on WSAStartup not having been called
 START_TEST(nostartup)

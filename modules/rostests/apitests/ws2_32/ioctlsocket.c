@@ -5,9 +5,6 @@
  * PROGRAMMERS:     Colin Finck
  */
 
-#include <apitest.h>
-
-#include <stdio.h>
 #include "ws2_32.h"
 
 int Test_ioctlsocket()

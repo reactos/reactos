@@ -5,16 +5,7 @@
  * PROGRAMMER:      Peter Hater
  */
 
-#include <apitest.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <ws2tcpip.h>
-#include <ndk/umtypes.h>
+#include "ws2_32.h"
 
 CHAR LocalAddress[sizeof("255.255.255.255")];
 #define PORT 58888

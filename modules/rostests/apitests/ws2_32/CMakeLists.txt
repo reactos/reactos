@@ -16,10 +16,11 @@ list(APPEND SOURCE
     WSAIoctl.c
     WSARecv.c
     WSAStartup.c
-    testlist.c)
+    ws2_32.h)
 
-add_executable(ws2_32_apitest ${SOURCE})
+add_executable(ws2_32_apitest ${SOURCE} testlist.c)
 target_link_libraries(ws2_32_apitest wine ${PSEH_LIB})
 set_module_type(ws2_32_apitest win32cui)
 add_importlibs(ws2_32_apitest ws2_32 msvcrt iphlpapi kernel32 ntdll)
+add_pch(ws2_32_apitest ws2_32.h SOURCE)
 add_rostests_file(TARGET ws2_32_apitest)

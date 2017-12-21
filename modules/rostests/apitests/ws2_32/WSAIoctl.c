@@ -6,11 +6,9 @@
  * PROGRAMMERS:     Andreas Maier
  */
 
-#include <apitest.h>
+#include "ws2_32.h"
 
-#include <stdio.h>
-#include "ws2tcpip.h"
-#include "iphlpapi.h"
+#include <iphlpapi.h>
 
 void traceaddr(char* txt, sockaddr_gen a)
 {

@@ -5,11 +5,6 @@
  * PROGRAMMERS:     Peter Hater
  */
 
-#include <apitest.h>
-
-#include <stdio.h>
-#include <ntstatus.h>
-#include <wine/winternl.h>
 #include "ws2_32.h"
 
 void Test_CloseDuplicatedSocket()
