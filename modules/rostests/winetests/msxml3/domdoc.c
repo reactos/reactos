@@ -21,29 +21,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include <stdio.h>
-#include <assert.h>
-
-//#include "windows.h"
-
-#include <wine/test.h>
-
-#include <winnls.h>
-#include <ole2.h>
-#include <msxml.h>
-#include <msxml2.h>
-#include <msxml2did.h>
-#include <dispex.h>
-#include <objsafe.h>
-#include <initguid.h>
 #include <asptlb.h>
 
 /* undef the #define in msxml2 so that we can access all versions */

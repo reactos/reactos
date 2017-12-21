@@ -8,12 +8,12 @@ list(APPEND SOURCE
     httpreq.c
     saxreader.c
     schema.c
-    testlist.c
     xmldoc.c
     xmlparser.c
-    xmlview.c)
+    xmlview.c
+    precomp.h)
 
-add_executable(msxml3_winetest ${SOURCE} rsrc.rc)
+add_executable(msxml3_winetest ${SOURCE} testlist.c rsrc.rc)
 add_idl_headers(xmlparser_idlheader_test xmlparser.idl)
 add_dependencies(msxml3_winetest xmlparser_idlheader_test)
 set_module_type(msxml3_winetest win32cui)
@@ -23,4 +23,5 @@ if(MSVC)
     add_importlibs(msxml3_winetest ntdll)
 endif()
 
+add_pch(msxml3_winetest precomp.h SOURCE)
 add_rostests_file(TARGET msxml3_winetest)
