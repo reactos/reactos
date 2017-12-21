@@ -7,7 +7,7 @@
 
 #include <apitest.h>
 #include <atlbase.h>
-#include <atlcom.h>
+
 #include "resource.h"
 
 #define verify_str       (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : verify_str_imp

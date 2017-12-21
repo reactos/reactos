@@ -7,7 +7,6 @@
 
 #include <apitest.h>
 #include <atlbase.h>
-#include <atlcom.h>
 
 static PDWORD test_Alloc(DWORD value)
 {

@@ -11,7 +11,6 @@
 
 #include <apitest.h>
 #include <atlbase.h>
-#include <atlcom.h>
 
 void expect_bool_imp(const CComVariant& ccv, bool value)
 {
