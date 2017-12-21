@@ -16,20 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-//#include <math.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <wincodec.h>
-#include <wine/test.h>
+#include "precomp.h"
 
 static unsigned char testico_bad_icondirentry_size[] = {
     /* ICONDIR */

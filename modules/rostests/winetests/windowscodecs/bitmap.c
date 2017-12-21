@@ -17,24 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdarg.h>
-#include <stdio.h>
-#include <assert.h>
-//#include <math.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <objbase.h>
-#include <wincodec.h>
-#include <wine/test.h>
+#include "precomp.h"
 
 static IWICImagingFactory *factory;
 

@@ -17,26 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-//#include <stdarg.h>
-//#include <math.h>
-#include <assert.h>
+#include "precomp.h"
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
 #include <winnls.h>
-#include <winreg.h>
-#include <ole2.h>
-//#include "wincodec.h"
-#include <wincodecsdk.h>
 #include <propvarutil.h>
-#include <wine/test.h>
 
 #include <initguid.h>
 DEFINE_GUID(IID_MdbrUnknown, 0x00240e6f,0x3f23,0x4432,0xb0,0xcc,0x48,0xd5,0xbb,0xff,0x6c,0x36);
