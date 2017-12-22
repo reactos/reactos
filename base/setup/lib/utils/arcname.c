@@ -281,12 +281,14 @@ ArcMatchToken_UStr(
     while (TokenTable[Index])
     {
 #if 0
-        Length = wcslen(TokenTable[Index])*sizeof(WCHAR);
-        if (RtlCompareMemory(CandidateToken->Buffer, TokenTable[Index], Length) == Length)
+        Length = wcslen(TokenTable[Index]);
+        if ((Length == CandidateToken->Length / sizeof(WCHAR)) &&
+            (_wcsnicmp(CandidateToken->Buffer, TokenTable[Index], Length) == 0))
+        {
             break;
+        }
 #else
         RtlInitUnicodeString(&Token, TokenTable[Index]);
-        // if (RtlCompareUnicodeString(CandidateToken, &Token, TRUE) == 0)
         if (RtlEqualUnicodeString(CandidateToken, &Token, TRUE))
             break;
 #endif
@@ -376,13 +378,13 @@ ParseArcName(
     WCHAR TokenBuffer[50];
     UNICODE_STRING Token;
     PCWSTR p, q;
-    ULONG AdapterKey;
-    ULONG ControllerKey;
-    ULONG PeripheralKey;
-    ULONG PartitionNumber;
-    ADAPTER_TYPE AdapterType;
-    CONTROLLER_TYPE ControllerType;
-    PERIPHERAL_TYPE PeripheralType;
+    ULONG AdapterKey = 0;
+    ULONG ControllerKey = 0;
+    ULONG PeripheralKey = 0;
+    ULONG PartitionNumber = 0;
+    ADAPTER_TYPE AdapterType = AdapterTypeMax;
+    CONTROLLER_TYPE ControllerType = ControllerTypeMax;
+    PERIPHERAL_TYPE PeripheralType = PeripheralTypeMax;
     BOOLEAN UseSignature = FALSE;
 
     /*
@@ -417,7 +419,8 @@ ParseArcName(
     else
     {
         /* Check for regular adapters */
-        AdapterType = (ADAPTER_TYPE)/*ArcMatchTokenU*/ArcMatchToken_UStr(/*Token.Buffer*/&Token, AdapterTypes_U);
+        // ArcMatchTokenU(Token.Buffer, AdapterTypes_U);
+        AdapterType = (ADAPTER_TYPE)ArcMatchToken_UStr(&Token, AdapterTypes_U);
         if (AdapterType >= AdapterTypeMax)
         {
             DPRINT1("Invalid adapter type %wZ\n", &Token);
@@ -449,7 +452,8 @@ ParseArcName(
         DPRINT1("%S(%lu) adapter doesn't have a controller!\n", AdapterTypes_U[AdapterType], AdapterKey);
         return STATUS_OBJECT_PATH_SYNTAX_BAD;
     }
-    ControllerType = (CONTROLLER_TYPE)/*ArcMatchTokenU*/ArcMatchToken_UStr(/*Token.Buffer*/&Token, ControllerTypes_U);
+    // ArcMatchTokenU(Token.Buffer, ControllerTypes_U);
+    ControllerType = (CONTROLLER_TYPE)ArcMatchToken_UStr(&Token, ControllerTypes_U);
     if (ControllerType >= ControllerTypeMax)
     {
         DPRINT1("Invalid controller type %wZ\n", &Token);
@@ -494,7 +498,8 @@ ParseArcName(
                ControllerTypes_U[ControllerType], ControllerKey);
         return STATUS_OBJECT_PATH_SYNTAX_BAD;
     }
-    PeripheralType = (PERIPHERAL_TYPE)/*ArcMatchTokenU*/ArcMatchToken_UStr(/*Token.Buffer*/&Token, PeripheralTypes_U);
+    // ArcMatchTokenU(Token.Buffer, PeripheralTypes_U);
+    PeripheralType = (PERIPHERAL_TYPE)ArcMatchToken_UStr(&Token, PeripheralTypes_U);
     if (PeripheralType >= PeripheralTypeMax)
     {
         DPRINT1("Invalid peripheral type %wZ\n", &Token);
@@ -587,11 +592,6 @@ ResolveArcNameNtSymLink(
 
     if (NtName->MaximumLength < sizeof(UNICODE_NULL))
         return STATUS_BUFFER_TOO_SMALL;
-
-#if 0
-    *NtName->Buffer = UNICODE_NULL;
-    NtName->Length = 0;
-#endif
 
     /* Open the \ArcName object directory */
     RtlInitUnicodeString(&ArcNameDir, L"\\ArcName");
@@ -692,11 +692,6 @@ ResolveArcNameManually(
     if (NtName->MaximumLength < sizeof(UNICODE_NULL))
         return STATUS_BUFFER_TOO_SMALL;
 
-#if 0
-    *NtName->Buffer = UNICODE_NULL;
-    NtName->Length = 0;
-#endif
-
     /* Parse the ARC path */
     Status = ParseArcName(ArcNamePath,
                           &AdapterKey,
@@ -712,7 +707,7 @@ ResolveArcNameManually(
 
     // TODO: Check the partition number in case of fdisks and cdroms??
 
-    /* Check for adapters that don't take any extra controller or peripheral nodes */
+    /* Check for adapters that don't take any extra controller or peripheral node */
     if (AdapterType == NetAdapter || AdapterType == RamdiskAdapter)
     {
         if (AdapterType == NetAdapter)
@@ -771,7 +766,7 @@ ResolveArcNameManually(
                                     L"\\Device\\Harddisk%lu\\Partition%lu",
                                     DiskEntry->DiskNumber, PartitionNumber);
     }
-#if 0
+#if 0 // FIXME: Not implemented yet!
     else
     if (PeripheralType == VDiskPeripheral)
     {
@@ -783,7 +778,16 @@ ResolveArcNameManually(
 #endif
 
     if (!NT_SUCCESS(Status))
+    {
+        /* Returned NtName is invalid, so zero it out */
+        *NtName->Buffer = UNICODE_NULL;
+        NtName->Length = 0;
+
         return Status;
+    }
+
+    /* Update NtName length */
+    NtName->Length = wcslen(NtName->Buffer) * sizeof(WCHAR);
 
     return STATUS_SUCCESS;
 }
@@ -874,10 +878,11 @@ ArcPathToNtPath(
         }
     }
     NtPath->Length = wcslen(NtPath->Buffer) * sizeof(WCHAR);
+
     return TRUE;
 }
 
-#if 0
+#if 0 // FIXME: Not implemented yet!
 PWSTR
 NtPathToArcPath(
     IN PWSTR NtPath)
