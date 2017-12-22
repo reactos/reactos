@@ -3,6 +3,7 @@
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Kernel-Mode Test Suite loader application
  * COPYRIGHT:   Copyright 2011-2018 Thomas Faber <thomas.faber@reactos.org>
+ *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 #define KMT_DEFINE_TEST_FUNCTIONS
@@ -316,8 +317,11 @@ main(
     if (ArgCount >= 1)
         AppName = Arguments[0];
 
-    if (ArgCount <= 1)
+    if (ArgCount != 2)
     {
+        if (ArgCount > 2)
+            printf("Error: Too many arguments\n\n");
+
         printf("Usage: %s <test_name>                 - run the specified test (creates/starts the driver(s) as appropriate)\n", AppName);
         printf("       %s --list                      - list available tests\n", AppName);
         printf("       %s --list-all                  - list available tests, including hidden\n", AppName);

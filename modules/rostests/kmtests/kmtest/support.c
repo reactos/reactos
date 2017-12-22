@@ -4,6 +4,7 @@
  * PURPOSE:     Kernel-Mode Test Suite user-mode support routines
  * COPYRIGHT:   Copyright 2011-2018 Thomas Faber <thomas.faber@reactos.org>
  *              Copyright 2013 Nikolay Borisov <nib9@aber.ac.uk>
+ *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 #include <kmt_test.h>
@@ -141,15 +142,21 @@ KmtLoadDriver(
 
     if (Error)
     {
+        ok(FALSE, "KmtCreateAndStartService(\"%ls\") failed! (Error = 0x%08lx)\n", TestServiceName, Error);
+
         // TODO
         __debugbreak();
+    }
+    else
+    {
+        DPRINT("KmtCreateAndStartService(\"%ls\") succeeded\n", TestServiceName);
     }
 }
 
 /**
  * @name KmtUnloadDriver
  *
- * Unload special-purpose driver (stop the service)
+ * Unload special-purpose driver (stop and delete the service)
  */
 VOID
 KmtUnloadDriver(VOID)
@@ -160,8 +167,30 @@ KmtUnloadDriver(VOID)
 
     if (Error)
     {
+        ok(FALSE, "KmtStopService(\"%ls\") failed! (Error = 0x%08lx)\n", TestServiceName, Error);
+
         // TODO
         __debugbreak();
+
+        skip(FALSE, "KmtDeleteService(\"%ls\") will not be called...\n", TestServiceName);
+    }
+    else
+    {
+        DPRINT("KmtStopService(\"%ls\") succeeded\n", TestServiceName);
+
+        Error = KmtDeleteService(TestServiceName, &TestServiceHandle);
+
+        if (Error)
+        {
+            ok(FALSE, "KmtDeleteService(\"%ls\") failed! (Error = 0x%08lx)\n", TestServiceName, Error);
+
+            // TODO
+            __debugbreak();
+        }
+        else
+        {
+            DPRINT("KmtDeleteService(\"%ls\") succeeded\n", TestServiceName);
+        }
     }
 }
 
