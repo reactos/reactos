@@ -1,0 +1,9 @@
+#include <windef.h>
+#include <winuser.h>
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Shell Extension Debug Utility"
+#define REACTOS_STR_INTERNAL_NAME     "shlextdbg"
+#define REACTOS_STR_ORIGINAL_FILENAME "shlextdbg.exe"
+#include <reactos/version.rc>
+
+#include <reactos/manifest_exe.rc>
