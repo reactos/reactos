@@ -255,6 +255,10 @@ DWORD WINAPI VfdInstallDriver(
 	DWORD			len;
 	DWORD			ret = ERROR_SUCCESS;
 
+#ifdef __REACTOS__
+	CHAR			full_file_path[MAX_PATH];
+#endif
+
 	//	get SystemRoot directory path
 
 //	len = GetEnvironmentVariable(
@@ -269,6 +273,12 @@ DWORD WINAPI VfdInstallDriver(
 	}
 
 	inst_path = &system_dir[len];
+
+#ifdef __REACTOS__
+	strcpy(full_file_path, system_dir);
+	strcat(full_file_path, VFD_INSTALL_DIRECTORY);
+	strcat(full_file_path, VFD_DRIVER_FILENAME);
+#endif
 
 #ifdef VFD_EMBED_DRIVER
 	//
@@ -341,6 +351,14 @@ DWORD WINAPI VfdInstallDriver(
 			strcpy(file_name++, "\\" VFD_DRIVER_FILENAME);
 		}
 	}
+
+#ifdef __REACTOS__
+	//      Check install directory & file exist or use full_file_path
+
+	if (GetFileAttributesA(file_path) == INVALID_FILE_ATTRIBUTES) {
+		strcpy(file_path, full_file_path);
+	}
+#endif
 
 	//	Check if the file is a valid Virtual Floppy driver
 
