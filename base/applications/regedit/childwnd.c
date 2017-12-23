@@ -118,13 +118,13 @@ static void finish_splitbar(HWND hWnd, int x)
 
 /*******************************************************************************
  *
- *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
+ *  FUNCTION: ChildWnd_CmdWndProc(HWND, unsigned, WORD, LONG)
  *
  *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
  *
  */
 
-static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static BOOL ChildWnd_CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HTREEITEM hSelection;
     HKEY hRootKey;
@@ -426,7 +426,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             PostMessageW(g_pChildWnd->hAddressBarWnd, WM_KEYUP, VK_RETURN, 0);
         }
 
-        if (!_CmdWndProc(hWnd, message, wParam, lParam))
+        if (!ChildWnd_CmdWndProc(hWnd, message, wParam, lParam))
         {
             goto def;
         }
