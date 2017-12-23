@@ -13,11 +13,10 @@ BOOL DDPrimarySurfaceTest(HWND hWnd);
 BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen);
 VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface);
 VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE lpDDBackBuffer, BOOL Fullscreen, INT *posX, INT *posY, INT *gainX, INT *gainY, RECT *rectDD);
-static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #define TEST_DURATION 10000 
-#define WIDTH 640
-#define HEIGHT 480
+#define DD_TEST_WIDTH 640
+#define DD_TEST_HEIGHT 480
 #define DD_TEST_STEP 5
 #define DD_SQUARE_SIZE 100
 #define DD_SQUARE_STEP 2
@@ -79,7 +78,7 @@ VOID DDTests()
 
     winClass.cbSize = sizeof(WNDCLASSEX);
     winClass.style = CS_DBLCLKS | CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-    winClass.lpfnWndProc = WindowProc;
+    winClass.lpfnWndProc = DefWindowProc;
     winClass.cbClsExtra = 0;
     winClass.cbWndExtra = 0;
     winClass.hInstance = hInstance;
@@ -94,9 +93,9 @@ VOID DDTests()
         return;
 
     hWnd = CreateWindowEx(0, winClass.lpszClassName, NULL,WS_POPUP,
-                          (GetSystemMetrics(SM_CXSCREEN) - WIDTH)/2,
-                          (GetSystemMetrics(SM_CYSCREEN) - HEIGHT)/2,
-                          WIDTH, HEIGHT, NULL, NULL, hInstance, NULL);
+                          (GetSystemMetrics(SM_CXSCREEN) - DD_TEST_WIDTH)/2,
+                          (GetSystemMetrics(SM_CYSCREEN) - DD_TEST_HEIGHT)/2,
+                          DD_TEST_WIDTH, DD_TEST_HEIGHT, NULL, NULL, hInstance, NULL);
 
     if (!hWnd){
         return;
@@ -176,10 +175,10 @@ VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface)
         HBRUSH BlackBrush, WhiteBrush;
         BOOL Colour = FALSE;
 
-        rct.left = (GetSystemMetrics(SM_CXSCREEN) - WIDTH)/2;
-        rct.right = (GetSystemMetrics(SM_CXSCREEN) - WIDTH)/2 + WIDTH;
-        rct.top = (GetSystemMetrics(SM_CYSCREEN) - HEIGHT)/2;
-        rct.bottom = (GetSystemMetrics(SM_CYSCREEN) - HEIGHT)/2 + HEIGHT;
+        rct.left = (GetSystemMetrics(SM_CXSCREEN) - DD_TEST_WIDTH)/2;
+        rct.right = (GetSystemMetrics(SM_CXSCREEN) - DD_TEST_WIDTH)/2 + DD_TEST_WIDTH;
+        rct.top = (GetSystemMetrics(SM_CYSCREEN) - DD_TEST_HEIGHT)/2;
+        rct.bottom = (GetSystemMetrics(SM_CYSCREEN) - DD_TEST_HEIGHT)/2 + DD_TEST_HEIGHT;
 
         BlackBrush = CreateSolidBrush(RGB(0,0,0));
         WhiteBrush = CreateSolidBrush(RGB(255,255,255));
@@ -225,7 +224,7 @@ BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen){
             lpDD->lpVtbl->Release(lpDD);
             return FALSE;
         }
-        if(lpDD->lpVtbl->SetDisplayMode(lpDD, WIDTH, HEIGHT, 32) != DD_OK)
+        if(lpDD->lpVtbl->SetDisplayMode(lpDD, DD_TEST_WIDTH, DD_TEST_HEIGHT, 32) != DD_OK)
         {
             lpDD->lpVtbl->Release(lpDD);
             return FALSE;
@@ -268,8 +267,8 @@ BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen){
         ZeroMemory(&DDBBSurfaceDesc,sizeof(DDBBSurfaceDesc));
         DDBBSurfaceDesc.dwSize = sizeof(DDBBSurfaceDesc);
         DDBBSurfaceDesc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
-        DDBBSurfaceDesc.dwHeight = HEIGHT;
-        DDBBSurfaceDesc.dwWidth = WIDTH;
+        DDBBSurfaceDesc.dwHeight = DD_TEST_HEIGHT;
+        DDBBSurfaceDesc.dwWidth = DD_TEST_WIDTH;
         DDBBSurfaceDesc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
 
         if(lpDD->lpVtbl->CreateSurface(lpDD, &DDBBSurfaceDesc, &lpDDBackBuffer, NULL) != DD_OK)
@@ -345,8 +344,8 @@ VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE l
         WhiteBrush = CreateSolidBrush(RGB(255,255,255));
         FillRect(hdc, &rct, WhiteBrush);
 
-        if(*posX >= (WIDTH - DD_SQUARE_SIZE)) *gainX = -(*gainX);
-        if(*posY >= (HEIGHT - DD_SQUARE_SIZE)) *gainY = -(*gainY);
+        if(*posX >= (DD_TEST_WIDTH - DD_SQUARE_SIZE)) *gainX = -(*gainX);
+        if(*posY >= (DD_TEST_HEIGHT - DD_SQUARE_SIZE)) *gainY = -(*gainY);
         if(*posX < 0) *gainX = -1*(*gainX);
         if(*posY < 0) *gainY = -1*(*gainY);
 
@@ -364,9 +363,4 @@ VOID DDUpdateFrame(LPDIRECTDRAWSURFACE lpDDPrimarySurface ,LPDIRECTDRAWSURFACE l
             lpDDPrimarySurface->lpVtbl->Blt(lpDDPrimarySurface, rectDD, lpDDBackBuffer, NULL, DDBLT_WAIT, NULL);
         }
     }
-}
-
-static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    return DefWindowProc(hWnd, msg, wParam, lParam);
 }

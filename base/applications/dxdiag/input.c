@@ -151,7 +151,7 @@ BOOL CALLBACK DirectInputEnumDevCb(
 }
 
 VOID
-InitListViewColumns(PINPUT_DIALOG_CONTEXT pContext)
+InputPageInitListViewColumns(PINPUT_DIALOG_CONTEXT pContext)
 {
     WCHAR szText[256];
     LVCOLUMNW lvcolumn;
@@ -195,7 +195,7 @@ InitializeDirectInputDialog(HWND hwndDlg)
     ZeroMemory(&Context, sizeof(Context));
     Context.pObj = pObj;
     Context.hwndDlg = hwndDlg;
-    InitListViewColumns(&Context);
+    InputPageInitListViewColumns(&Context);
     pObj->lpVtbl->EnumDevices(pObj, DI8DEVCLASS_ALL, DirectInputEnumDevCb, (PVOID)&Context, DIEDFL_ALLDEVICES);
 
     pObj->lpVtbl->Release(pObj);
