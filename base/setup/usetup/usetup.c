@@ -2915,12 +2915,13 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 FormatPartitionPage(PINPUT_RECORD Ir)
 {
-    UNICODE_STRING PartitionRootPath;
-    WCHAR PathBuffer[MAX_PATH];
+    NTSTATUS Status;
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     PFILE_SYSTEM_ITEM SelectedFileSystem;
-    NTSTATUS Status;
+    UNICODE_STRING PartitionRootPath;
+    WCHAR PathBuffer[MAX_PATH];
+    CHAR Buffer[MAX_PATH];
 
 #ifndef NDEBUG
     ULONG Line;
@@ -3016,7 +3017,38 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             {
                 Status = FormatPartition(&PartitionRootPath,
                                          SelectedFileSystem);
-                if (!NT_SUCCESS(Status))
+                if (Status == STATUS_NOT_SUPPORTED)
+                {
+                    sprintf(Buffer,
+                            "Setup is currently unable to format a partition in %S.\n"
+                            "\n"
+                            "  \x07  Press ENTER to continue Setup.\n"
+                            "  \x07  Press F3 to quit Setup.",
+                            SelectedFileSystem->FileSystem->FileSystemName);
+
+                    PopupError(Buffer,
+                               MUIGetString(STRING_QUITCONTINUE),
+                               NULL, POPUP_WAIT_NONE);
+
+                    while (TRUE)
+                    {
+                        CONSOLE_ConInKey(Ir);
+
+                        if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x00 &&
+                            Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)  /* F3 */
+                        {
+                            if (ConfirmQuit(Ir))
+                                return QUIT_PAGE;
+                            else
+                                return SELECT_FILE_SYSTEM_PAGE;
+                        }
+                        else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
+                        {
+                            return SELECT_FILE_SYSTEM_PAGE;
+                        }
+                    }
+                }
+                else if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("FormatPartition() failed with status 0x%08lx\n", Status);
                     MUIDisplayError(ERROR_FORMATTING_PARTITION, Ir, POPUP_WAIT_ANY_KEY, PathBuffer);
@@ -3057,13 +3089,13 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 CheckFileSystemPage(PINPUT_RECORD Ir)
 {
+    NTSTATUS Status;
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
     PFILE_SYSTEM CurrentFileSystem;
     UNICODE_STRING PartitionRootPath;
     WCHAR PathBuffer[MAX_PATH];
     CHAR Buffer[MAX_PATH];
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
-    NTSTATUS Status;
 
     if (PartitionList == NULL)
     {
@@ -3099,7 +3131,8 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
         return CHECK_FILE_SYSTEM_PAGE;
     }
 
-    if (CurrentFileSystem->ChkdskFunc == NULL)
+    Status = ChkdskPartition(&PartitionRootPath, CurrentFileSystem);
+    if (Status == STATUS_NOT_SUPPORTED)
     {
         sprintf(Buffer,
                 "Setup is currently unable to check a partition formatted in %S.\n"
@@ -3131,26 +3164,22 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
             }
         }
     }
-    else
+    else if (!NT_SUCCESS(Status))
     {
-        Status = ChkdskPartition(&PartitionRootPath, CurrentFileSystem);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("ChkdskPartition() failed with status 0x%08lx\n", Status);
-            // sprintf(Buffer, "Setup failed to verify the selected partition.\n"
-            sprintf(Buffer, "ChkDsk detected some disk errors.\n"
-                    "(Status 0x%08lx).\n", Status);
-            PopupError(Buffer,
-                       // MUIGetString(STRING_REBOOTCOMPUTER),
-                       MUIGetString(STRING_CONTINUE),
-                       Ir, POPUP_WAIT_ENTER);
+        DPRINT("ChkdskPartition() failed with status 0x%08lx\n", Status);
+        // sprintf(Buffer, "Setup failed to verify the selected partition.\n"
+        sprintf(Buffer, "ChkDsk detected some disk errors.\n"
+                "(Status 0x%08lx).\n", Status);
+        PopupError(Buffer,
+                   // MUIGetString(STRING_REBOOTCOMPUTER),
+                   MUIGetString(STRING_CONTINUE),
+                   Ir, POPUP_WAIT_ENTER);
 
-            // return QUIT_PAGE;
-        }
-
-        PartEntry->NeedsCheck = FALSE;
-        return CHECK_FILE_SYSTEM_PAGE;
+        // return QUIT_PAGE;
     }
+
+    PartEntry->NeedsCheck = FALSE;
+    return CHECK_FILE_SYSTEM_PAGE;
 }
 
 

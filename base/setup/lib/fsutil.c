@@ -34,9 +34,11 @@
 
 FILE_SYSTEM RegisteredFileSystems[] =
 {
+    /* NOTE: The FAT formatter automatically determines
+     * whether it will use FAT-16 or FAT-32. */
     { L"FAT"  , VfatFormat, VfatChkdsk },
-//  { L"FAT32", VfatFormat, VfatChkdsk },
 #if 0
+    { L"FAT32", VfatFormat, VfatChkdsk }, // Do we support specific FAT sub-formats specifications?
     { L"FATX" , VfatxFormat, VfatxChkdsk },
     { L"NTFS" , NtfsFormat, NtfsChkdsk },
 

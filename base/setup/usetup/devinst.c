@@ -107,7 +107,7 @@ InstallDriver(
 
     /* Create service key */
     RtlInitUnicodeString(&StringU, Driver);
-    InitializeObjectAttributes(&ObjectAttributes, &StringU, 0, hServices, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &StringU, OBJ_CASE_INSENSITIVE, hServices, NULL);
     Status = NtCreateKey(&hService, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, &Disposition);
     if (!NT_SUCCESS(Status))
     {
@@ -218,7 +218,7 @@ InstallDevice(
     NTSTATUS Status;
 
     RtlInitUnicodeString(&DeviceIdU, DeviceId);
-    InitializeObjectAttributes(&ObjectAttributes, &DeviceIdU, 0, hEnum, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &DeviceIdU, OBJ_CASE_INSENSITIVE, hEnum, NULL);
     Status = NtOpenKey(&hDeviceKey, KEY_QUERY_VALUE | KEY_SET_VALUE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {

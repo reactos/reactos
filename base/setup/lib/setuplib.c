@@ -212,8 +212,8 @@ InstallSetupInfFile(
     PINICACHE UnattendCache;
     PINICACHEITERATOR Iterator;
 #else
-    // PCWSTR CrLf = L"\r\n";
-    PCSTR CrLf = "\r\n";
+    // WCHAR CrLf[] = {L'\r', L'\n'};
+    CHAR CrLf[] = {'\r', '\n'};
     HANDLE FileHandle, UnattendFileHandle, SectionHandle;
     FILE_STANDARD_INFORMATION FileInfo;
     ULONG FileSize;
@@ -360,7 +360,7 @@ Quit:
                          NULL,
                          &IoStatusBlock,
                          (PVOID)CrLf,
-                         2 * sizeof(CHAR), // 2 * sizeof(WCHAR),
+                         sizeof(CrLf),
                          &FileInfo.EndOfFile,
                          NULL);
 

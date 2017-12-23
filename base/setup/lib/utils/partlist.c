@@ -1249,7 +1249,7 @@ CreatePartitionList(VOID)
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &Name,
-                                   0,
+                                   OBJ_CASE_INSENSITIVE,
                                    NULL,
                                    NULL);
 
@@ -2777,9 +2777,10 @@ WritePartitions(
                         L"\\Device\\Harddisk%lu\\Partition0",
                         DiskEntry->DiskNumber);
     RtlInitUnicodeString(&Name, DstPath);
+
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               0,
+                               OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
@@ -2882,6 +2883,7 @@ SetMountedDeviceValue(
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
+
     Status =  NtOpenKey(&KeyHandle,
                         KEY_ALL_ACCESS,
                         &ObjectAttributes);
