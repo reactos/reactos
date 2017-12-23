@@ -29,9 +29,9 @@
 
 /* FUNCTIONS ******************************************************************/
 
-VOID BiosCharPrint(CHAR Character);
+VOID Dem_BiosCharPrint(CHAR Character);
 #define BiosDisplayMessage(Format, ...) \
-    PrintMessageAnsi(BiosCharPrint, (Format), ##__VA_ARGS__)
+    PrintMessageAnsi(Dem_BiosCharPrint, (Format), ##__VA_ARGS__)
 
 VOID DosCharPrint(CHAR Character);
 #define DosDisplayMessage(Format, ...)  \

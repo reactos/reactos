@@ -18,22 +18,22 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static BOOLEAN Reporting = FALSE;
+static BOOLEAN KeyboardReporting = FALSE;
 static BYTE KeyboardId = 0; // We only support basic old-type keyboard
-static BYTE DataByteWait = 0;
+static BYTE KbdDataByteWait = 0;
 
-static BYTE PS2Port = 0;
+static BYTE KbdPS2Port = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
 {
     /* Check if we were waiting for a data byte */
-    if (DataByteWait)
+    if (KbdDataByteWait)
     {
-        PS2QueuePush(PS2Port, KEYBOARD_ACK);
+        PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
 
-        switch (DataByteWait)
+        switch (KbdDataByteWait)
         {
             /* Set/Reset Mode Indicators */
             case 0xED:
@@ -52,7 +52,7 @@ static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
                 // the keyboard by sending keyboard commands and then
                 // performing polling on the port until "valid" data
                 // comes out.
-                DPRINT1("KeyboardCommand(0x%02X) NOT IMPLEMENTED\n", DataByteWait);
+                DPRINT1("KeyboardCommand(0x%02X) NOT IMPLEMENTED\n", KbdDataByteWait);
                 break;
             }
 
@@ -63,7 +63,7 @@ static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
             }
         }
 
-        DataByteWait = 0;
+        KbdDataByteWait = 0;
         return;
     }
 
@@ -76,39 +76,39 @@ static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
         /* Set Typematic Rate/Delay */
         case 0xF3:
         {
-            DataByteWait = Command;
-            PS2QueuePush(PS2Port, KEYBOARD_ACK);
+            KbdDataByteWait = Command;
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
             break;
         }
 
         /* Echo test command */
         case 0xEE:
         {
-            PS2QueuePush(PS2Port, 0xEE);
+            PS2QueuePush(KbdPS2Port, 0xEE);
             break;
         }
 
         /* Get Keyboard ID */
         case 0xF2:
         {
-            PS2QueuePush(PS2Port, KEYBOARD_ACK);
-            PS2QueuePush(PS2Port, KeyboardId);
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
+            PS2QueuePush(KbdPS2Port, KeyboardId);
             break;
         }
 
         /* Enable Reporting */
         case 0xF4:
         {
-            Reporting = TRUE;
-            PS2QueuePush(PS2Port, KEYBOARD_ACK);
+            KeyboardReporting = TRUE;
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
             break;
         }
 
         /* Disable Reporting */
         case 0xF5:
         {
-            Reporting = FALSE;
-            PS2QueuePush(PS2Port, KEYBOARD_ACK);
+            KeyboardReporting = FALSE;
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
             break;
         }
 
@@ -116,7 +116,7 @@ static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
         case 0xF6:
         {
             // So far, nothing to reset
-            PS2QueuePush(PS2Port, KEYBOARD_ACK);
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
             break;
         }
 
@@ -129,13 +129,13 @@ static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
              * and acknowledged as discussed in:
              * http://stanislavs.org/helppc/keyboard_commands.html
              */
-            PS2QueuePush(PS2Port, KEYBOARD_ACK);
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
         }
 
         /* Resend */
         case 0xFE:
         {
-            PS2QueuePush(PS2Port, KEYBOARD_ACK);
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
             UNIMPLEMENTED;
             break;
         }
@@ -144,20 +144,20 @@ static VOID WINAPI KeyboardCommand(LPVOID Param, BYTE Command)
         case 0xFF:
         {
             /* Send ACKnowledge */
-            PS2QueuePush(PS2Port, KEYBOARD_ACK);
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ACK);
 
             // So far, nothing to reset
 
             /* Send the Basic Assurance Test success code and the device ID */
-            PS2QueuePush(PS2Port, KEYBOARD_BAT_SUCCESS);
-            PS2QueuePush(PS2Port, KeyboardId);
+            PS2QueuePush(KbdPS2Port, KEYBOARD_BAT_SUCCESS);
+            PS2QueuePush(KbdPS2Port, KeyboardId);
             break;
         }
 
         /* Unknown command */
         default:
         {
-            PS2QueuePush(PS2Port, KEYBOARD_ERROR);
+            PS2QueuePush(KbdPS2Port, KEYBOARD_ERROR);
         }
     }
 }
@@ -170,7 +170,7 @@ VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent)
     BYTE ScanCode = (BYTE)KeyEvent->wVirtualScanCode;
 
     /* Check if we're not reporting */
-    if (!Reporting) return;
+    if (!KeyboardReporting) return;
 
     /* If this is a key release, set the highest bit in the scan code */
     if (!KeyEvent->bKeyDown) ScanCode |= 0x80;
@@ -178,8 +178,8 @@ VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent)
     /* Push the scan code into the PS/2 queue */
     for (i = 0; i < KeyEvent->wRepeatCount; i++)
     {
-        if (KeyEvent->dwControlKeyState & ENHANCED_KEY) PS2QueuePush(PS2Port, 0xE0);
-        PS2QueuePush(PS2Port, ScanCode);
+        if (KeyEvent->dwControlKeyState & ENHANCED_KEY) PS2QueuePush(KbdPS2Port, 0xE0);
+        PS2QueuePush(KbdPS2Port, ScanCode);
     }
 
     DPRINT("Press 0x%X\n", ScanCode);
@@ -188,7 +188,7 @@ VOID KeyboardEventHandler(PKEY_EVENT_RECORD KeyEvent)
 BOOLEAN KeyboardInit(BYTE PS2Connector)
 {
     /* Finish to plug the keyboard to the specified PS/2 port */
-    PS2Port = PS2Connector;
-    PS2SetDeviceCmdProc(PS2Port, NULL, KeyboardCommand);
+    KbdPS2Port = PS2Connector;
+    PS2SetDeviceCmdProc(KbdPS2Port, NULL, KeyboardCommand);
     return TRUE;
 }

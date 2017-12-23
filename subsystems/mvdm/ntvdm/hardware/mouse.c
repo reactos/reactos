@@ -34,19 +34,19 @@ static MOUSE_MODE Mode, PreviousMode;
 static COORD Position;
 static BYTE Resolution; /* Completely ignored */
 static BOOLEAN Scaling; /* Completely ignored */
-static BOOLEAN Reporting = FALSE;
+static BOOLEAN MouseReporting = FALSE;
 static BYTE MouseId;
 static ULONG ButtonState;
 static SHORT HorzCounter;
 static SHORT VertCounter;
 static CHAR ScrollCounter;
 static BOOLEAN EventsOccurred = FALSE;
-static BYTE DataByteWait = 0;
+static BYTE MouseDataByteWait = 0;
 static BYTE ScrollMagicCounter = 0, ExtraButtonMagicCounter = 0;
 
 static UINT MouseCycles = 10;
 
-static BYTE PS2Port = 1;
+static BYTE MousePS2Port = 1;
 
 /* PUBLIC VARIABLES ***********************************************************/
 
@@ -58,7 +58,7 @@ static VOID MouseResetConfig(VOID)
     MouseCycles = 10;
     Resolution = 4;
     Scaling = FALSE;
-    Reporting = FALSE;
+    MouseReporting = FALSE;
 }
 
 static VOID MouseResetCounters(VOID)
@@ -146,20 +146,20 @@ static VOID MouseGetPacket(PMOUSE_PACKET Packet)
 
 static VOID MouseDispatchPacket(PMOUSE_PACKET Packet)
 {
-    PS2QueuePush(PS2Port, Packet->Flags);
-    PS2QueuePush(PS2Port, Packet->HorzCounter);
-    PS2QueuePush(PS2Port, Packet->VertCounter);
-    if (MouseId >= 3) PS2QueuePush(PS2Port, Packet->Extra);
+    PS2QueuePush(MousePS2Port, Packet->Flags);
+    PS2QueuePush(MousePS2Port, Packet->HorzCounter);
+    PS2QueuePush(MousePS2Port, Packet->VertCounter);
+    if (MouseId >= 3) PS2QueuePush(MousePS2Port, Packet->Extra);
 }
 
 static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
 {
     /* Check if we were waiting for a data byte */
-    if (DataByteWait)
+    if (MouseDataByteWait)
     {
-        PS2QueuePush(PS2Port, MOUSE_ACK);
+        PS2QueuePush(MousePS2Port, MOUSE_ACK);
 
-        switch (DataByteWait)
+        switch (MouseDataByteWait)
         {
             /* Set Resolution */
             case 0xE8:
@@ -210,7 +210,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             }
         }
 
-        DataByteWait = 0;
+        MouseDataByteWait = 0;
         return;
     }
 
@@ -223,7 +223,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
          */
         if (Command != 0xEC && Command != 0xFF)
         {
-            PS2QueuePush(PS2Port, Command);
+            PS2QueuePush(MousePS2Port, Command);
             return;
         }
     }
@@ -234,7 +234,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         case 0xE6:
         {
             Scaling = FALSE;
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
@@ -242,7 +242,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         case 0xE7:
         {
             Scaling = TRUE;
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
@@ -251,8 +251,8 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         /* Set Sample Rate */
         case 0xF3:
         {
-            DataByteWait = Command;
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            MouseDataByteWait = Command;
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
@@ -262,13 +262,13 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             BYTE Status = ButtonState & 7;
 
             if (Scaling)   Status |= 1 << 4;
-            if (Reporting) Status |= 1 << 5;
+            if (MouseReporting) Status |= 1 << 5;
             if (Mode == MOUSE_REMOTE_MODE) Status |= 1 << 6;
 
-            PS2QueuePush(PS2Port, MOUSE_ACK);
-            PS2QueuePush(PS2Port, Status);
-            PS2QueuePush(PS2Port, Resolution);
-            PS2QueuePush(PS2Port, (BYTE)(1000 / MouseCycles));
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, Status);
+            PS2QueuePush(MousePS2Port, Resolution);
+            PS2QueuePush(MousePS2Port, (BYTE)(1000 / MouseCycles));
             break;
         }
 
@@ -278,14 +278,14 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             MouseResetCounters();
             Mode = MOUSE_STREAMING_MODE;
 
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
         /* Read Packet */
         case 0xEB:
         {
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             MouseGetPacket(&LastPacket);
             MouseDispatchPacket(&LastPacket);
             break;
@@ -299,11 +299,11 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
                 /* Restore the previous mode */
                 MouseResetCounters();
                 Mode = PreviousMode;
-                PS2QueuePush(PS2Port, MOUSE_ACK);
+                PS2QueuePush(MousePS2Port, MOUSE_ACK);
             }
             else
             {
-                PS2QueuePush(PS2Port, MOUSE_ERROR);
+                PS2QueuePush(MousePS2Port, MOUSE_ERROR);
             }
 
             break;
@@ -321,7 +321,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             MouseResetCounters();
             Mode = MOUSE_WRAP_MODE;
 
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
@@ -331,33 +331,33 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             MouseResetCounters();
             Mode = MOUSE_REMOTE_MODE;
 
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
         /* Get Mouse ID */
         case 0xF2:
         {
-            PS2QueuePush(PS2Port, MOUSE_ACK);
-            PS2QueuePush(PS2Port, MouseId);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MouseId);
             break;
         }
 
         /* Enable Reporting */
         case 0xF4:
         {
-            Reporting = TRUE;
+            MouseReporting = TRUE;
             MouseResetCounters();
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
         /* Disable Reporting */
         case 0xF5:
         {
-            Reporting = FALSE;
+            MouseReporting = FALSE;
             MouseResetCounters();
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
@@ -367,14 +367,14 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             /* Reset the configuration and counters */
             MouseResetConfig();
             MouseResetCounters();
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             break;
         }
 
         /* Resend */
         case 0xFE:
         {
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
             MouseDispatchPacket(&LastPacket);
             break;
         }
@@ -383,20 +383,20 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         case 0xFF:
         {
             /* Send ACKnowledge */
-            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(MousePS2Port, MOUSE_ACK);
 
             MouseReset();
 
             /* Send the Basic Assurance Test success code and the device ID */
-            PS2QueuePush(PS2Port, MOUSE_BAT_SUCCESS);
-            PS2QueuePush(PS2Port, MouseId);
+            PS2QueuePush(MousePS2Port, MOUSE_BAT_SUCCESS);
+            PS2QueuePush(MousePS2Port, MouseId);
             break;
         }
 
         /* Unknown command */
         default:
         {
-            PS2QueuePush(PS2Port, MOUSE_ERROR);
+            PS2QueuePush(MousePS2Port, MOUSE_ERROR);
         }
     }
 }
@@ -406,7 +406,7 @@ static VOID FASTCALL MouseStreamingCallback(ULONGLONG ElapsedTime)
     UNREFERENCED_PARAMETER(ElapsedTime);
 
     /* Check if we're not in streaming mode, not reporting, or there's nothing to report */
-    if (Mode != MOUSE_STREAMING_MODE || !Reporting || !EventsOccurred) return;
+    if (Mode != MOUSE_STREAMING_MODE || !MouseReporting || !EventsOccurred) return;
 
     MouseGetPacket(&LastPacket);
     MouseDispatchPacket(&LastPacket);
@@ -464,8 +464,8 @@ VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
 BOOLEAN MouseInit(BYTE PS2Connector)
 {
     /* Finish to plug the mouse to the specified PS/2 port */
-    PS2Port = PS2Connector;
-    PS2SetDeviceCmdProc(PS2Port, NULL, MouseCommand);
+    MousePS2Port = PS2Connector;
+    PS2SetDeviceCmdProc(MousePS2Port, NULL, MouseCommand);
 
     MouseMutex = CreateMutex(NULL, FALSE, NULL);
     if (MouseMutex == NULL) return FALSE;

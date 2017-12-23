@@ -54,7 +54,7 @@
 \******************************************************************************/
 
 
-VOID BiosCharPrint(CHAR Character)
+VOID Dem_BiosCharPrint(CHAR Character)
 {
     /* Save AX and BX */
     USHORT AX = getAX();
