@@ -8,11 +8,9 @@
  *      06-06-2001  CSH  Created
  */
 
-/* INCLUDES ******************************************************************/
 #define DEBUG
 #include <user32.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT delta, UINT *id );

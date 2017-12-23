@@ -5,11 +5,8 @@
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <user32.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define SIZEOF_DEVMODEA_300 124
@@ -18,8 +15,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define SIZEOF_DEVMODEW_300 188
 #define SIZEOF_DEVMODEW_400 212
 #define SIZEOF_DEVMODEW_500 220
-
-/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented

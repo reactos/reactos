@@ -8,10 +8,7 @@
  *                  James Tabor
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <user32.h>
-#include <wine/debug.h>
 
 BOOL WINAPI GdiValidateHandle(HGDIOBJ hobj);
 

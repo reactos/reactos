@@ -6,15 +6,9 @@
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <user32.h>
 
-#include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
-/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented

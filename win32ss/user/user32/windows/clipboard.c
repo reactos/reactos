@@ -9,16 +9,11 @@
  *
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <user32.h>
 
 #define NDEBUG
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
-/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented

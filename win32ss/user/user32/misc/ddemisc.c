@@ -24,9 +24,8 @@
  */
 
 #include <user32.h>
+
 #include "dde_private.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 

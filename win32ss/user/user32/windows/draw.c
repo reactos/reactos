@@ -28,11 +28,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* INCLUDES *******************************************************************/
-
 #include <user32.h>
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 

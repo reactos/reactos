@@ -25,11 +25,7 @@
  *      23-08-2002  RDD  Created from wine sources
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <user32.h>
-
-#include <wine/debug.h>
 
 /* WinHelp internal structure */
 typedef struct
