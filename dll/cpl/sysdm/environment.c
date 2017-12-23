@@ -270,7 +270,7 @@ GetEnvironmentVariables(HWND hwndListView,
 
 
 static VOID
-SetListViewColumns(HWND hwndListView)
+SetEnvironmentDialogListViewColumns(HWND hwndListView)
 {
     RECT rect;
     LV_COLUMN column;
@@ -296,7 +296,7 @@ SetListViewColumns(HWND hwndListView)
 
 
 static VOID
-OnInitDialog(HWND hwndDlg)
+OnInitEnvironmentDialog(HWND hwndDlg)
 {
     HWND hwndListView;
 
@@ -305,7 +305,7 @@ OnInitDialog(HWND hwndDlg)
 
     (void)ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_FULLROWSELECT);
 
-    SetListViewColumns(hwndListView);
+    SetEnvironmentDialogListViewColumns(hwndListView);
 
     GetEnvironmentVariables(hwndListView,
                             HKEY_CURRENT_USER,
@@ -324,7 +324,7 @@ OnInitDialog(HWND hwndDlg)
 
     (void)ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_FULLROWSELECT);
 
-    SetListViewColumns(hwndListView);
+    SetEnvironmentDialogListViewColumns(hwndListView);
 
     GetEnvironmentVariables(hwndListView,
                             HKEY_LOCAL_MACHINE,
@@ -690,7 +690,7 @@ EnvironmentDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            OnInitDialog(hwndDlg);
+            OnInitEnvironmentDialog(hwndDlg);
             break;
 
         case WM_COMMAND:

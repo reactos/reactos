@@ -659,11 +659,11 @@ GetProfiles(HWND hwndDlg)
 
 static
 BOOL
-OnInitDialog(HWND hwndDlg)
+OnInitHardProfDialog(HWND hwndDlg)
 {
     DWORD dwWaitInterval;
 
-    DPRINT("OnInitDialog()\n");
+    DPRINT("OnInitHardProfDialog()\n");
 
     SendMessage(GetDlgItem(hwndDlg, IDC_HRDPROFUP),
                 BM_SETIMAGE,(WPARAM)IMAGE_ICON,
@@ -732,7 +732,7 @@ HardProfDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            return OnInitDialog(hwndDlg);
+            return OnInitHardProfDialog(hwndDlg);
 
         case WM_DESTROY:
             if (pProfileData != NULL)

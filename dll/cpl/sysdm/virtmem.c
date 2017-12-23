@@ -597,7 +597,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 
 
 static VOID
-OnOk(PVIRTMEM pVirtMem)
+OnVirtMemDialogOk(PVIRTMEM pVirtMem)
 {
     if (pVirtMem->bModified != FALSE)
     {
@@ -613,7 +613,7 @@ OnOk(PVIRTMEM pVirtMem)
 
 
 static VOID
-OnInitDialog(HWND hwnd, PVIRTMEM pVirtMem)
+OnInitVirtMemDialog(HWND hwnd, PVIRTMEM pVirtMem)
 {
     INT i;
 
@@ -684,7 +684,7 @@ VirtMemDlgProc(HWND hwndDlg,
 
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pVirtMem);
 
-            OnInitDialog(hwndDlg, pVirtMem);
+            OnInitVirtMemDialog(hwndDlg, pVirtMem);
             break;
 
         case WM_DESTROY:
@@ -699,7 +699,7 @@ VirtMemDlgProc(HWND hwndDlg,
                     return TRUE;
 
                 case IDOK:
-                    OnOk(pVirtMem);
+                    OnVirtMemDialogOk(pVirtMem);
                     EndDialog(hwndDlg, pVirtMem->bModified);
                     return TRUE;
 
