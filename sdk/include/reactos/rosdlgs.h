@@ -69,6 +69,11 @@ namespace ATL
             ::SendMessage(GetParent(), bChanged ? PSM_CHANGED : PSM_UNCHANGED, (WPARAM)m_hWnd, 0L);
         }
 
+        void SetWizardButtons(DWORD dwFlags)
+        {
+            ::PostMessage(GetParent(), PSM_SETWIZBUTTONS, 0, (LPARAM)dwFlags);
+        }
+
         BOOL OnPageCreate()
         {
             return TRUE;
