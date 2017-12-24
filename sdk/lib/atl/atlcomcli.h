@@ -301,6 +301,12 @@ public:
         return *this;
     }
 
+    void Attach(BSTR bstr)
+    {
+        ::SysFreeString(m_str);
+        m_str = bstr;
+    }
+
     BSTR Detach()
     {
         BSTR str = m_str;
