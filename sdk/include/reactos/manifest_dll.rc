@@ -1,5 +1,5 @@
 
-#ifndef CREATEPROCESS_MANIFEST_RESOURCE_ID
+#ifndef ISOLATIONAWARE_MANIFEST_RESOURCE_ID
 #error please include winuser.h before including me!
 #endif
 
