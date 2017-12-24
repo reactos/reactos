@@ -1,0 +1,109 @@
+#. extracted from lang/en-US.rc, lang/ru-RU.rc
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-14 12:07+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Stopkin Sergey (stopkin.sergey@gmail.com)\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Accelerator-Marker: &\n"
+"X-Generator: Translate Toolkit 2.2.4\n"
+"X-Merge-On: location\n"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CAPTION
+msgctxt "DIALOGEX.IDD_ACPPAGESHEET.CAPTION"
+msgid "Compatibility"
+msgstr "Совместимость"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.LTEXT.IDC_EXPLANATION
+msgid ""
+"If you have problems running this program in ReactOS, select an operating "
+"system ReactOS should report to the application.\n"
+"Please note that this is a work in progress."
+msgstr ""
+"Если у вас есть проблемы с запуском этой программы в ReactOS, выберите "
+"операционную систему, которой ReactOS будет представляться приложению.\n"
+"Please note that this is a work in progress."
+
+#: DIALOGEX.IDD_ACPPAGESHEET.GROUPBOX.IDC_COMPATGROUP
+msgid "Compatibility mode"
+msgstr "Режим совместимости"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNCOMPATIBILITY
+msgid "Run this program in compatibility mode for:"
+msgstr "Запустить программу в режиме совместимости с:"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.GROUPBOX.Display_settings
+msgid "Display settings"
+msgstr "Параметры экрана"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNIN256COLORS
+msgid "Run in 256 colors"
+msgstr "Использовать 256 цветов"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNIN640480RES
+msgid "Run in 640x480 screenresolution"
+msgstr "Использовать разрешение экрана 640x480"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKDISABLEVISUALTHEMES
+msgid "Disable visual themes"
+msgstr "Отключить визуальное оформление"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.PUSHBUTTON.IDC_EDITCOMPATIBILITYMODES
+msgid "E&dit compatibility modes..."
+msgstr "Настроить режимы совместимости..."
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CONTROL.IDC_INFOLINK
+msgid "Learn more about <A>program compatibility</A>."
+msgstr "Узнать больше о <A>совместимости программ</A>."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.CAPTION
+msgid "Edit Compatibility Modes"
+msgstr "Изменить режимы совместимости"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_ADD
+msgid "&Add..."
+msgstr "&Добавить..."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_EDIT
+msgid "&Edit..."
+msgstr "&Редактировать..."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_DELETE
+msgid "&Delete"
+msgstr "&Удалить"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDOK
+msgid "&OK"
+msgstr "&OK"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDCANCEL
+msgid "&Cancel"
+msgstr "&Отмена"
+
+#: STRINGTABLE.IDS_TABTITLE
+msgctxt "STRINGTABLE.IDS_TABTITLE"
+msgid "Compatibility"
+msgstr "Совместимость"
+
+#: STRINGTABLE.IDS_FAILED_NETWORK
+msgid ""
+"Compatibility modes cannot be set on this program because it is on a network "
+"drive."
+msgstr ""
+"Режим совместимости не может быть установлен для этой программы, потому что "
+"она находится на сетевом диске."
+
+#: STRINGTABLE.IDS_FAILED_PROTECTED
+msgid ""
+"Compatibility modes cannot be set on this program because it is a part of "
+"ReactOS."
+msgstr "Режим совместимости не может быть использован для компонентов ReactOS."
+
+#: STRINGTABLE.IDS_YOU_DID_NOT_ADD
+msgid "You did not add the mode, do you want to add it now?"
+msgstr "Вы не добавили режим, добавить его сейчас?"

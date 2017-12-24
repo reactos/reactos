@@ -6,7 +6,7 @@ EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "תאימות"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "אם הנך נתקל בבעיות בהפעלת התכנית בReactOS, אנא בחר את מערכת ההפעלה שReactOS תדווח לתכנית.", -1, 7,7,210,31
+    LTEXT "אם הנך נתקל בבעיות בהפעלת התכנית בReactOS, אנא בחר את מערכת ההפעלה שReactOS תדווח לתכנית.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "מצב תאימות", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "הפעל תוכנית זו במצב תאימות עבור:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED

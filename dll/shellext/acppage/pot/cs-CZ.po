@@ -1,0 +1,108 @@
+#. extracted from lang/en-US.rc, lang/cs-CZ.rc
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2010-05-25\n"
+"Last-Translator: Radek Liska aka Black_Fox\n"
+"Language-Team: radekliska at gmail dot com\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Accelerator-Marker: &\n"
+"X-Generator: Translate Toolkit 2.2.4\n"
+"X-Merge-On: location\n"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CAPTION
+msgctxt "DIALOGEX.IDD_ACPPAGESHEET.CAPTION"
+msgid "Compatibility"
+msgstr "Kompatibilita"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.LTEXT.IDC_EXPLANATION
+msgid ""
+"If you have problems running this program in ReactOS, select an operating "
+"system ReactOS should report to the application.\n"
+"Please note that this is a work in progress."
+msgstr "Pokud jsou problémy se spouštěním tohoto programu v systému ReactOS, zvolte operační systém, který ReactOS tomuto programu sdělí.\nPlease note that this is a work in progress."
+
+#: DIALOGEX.IDD_ACPPAGESHEET.GROUPBOX.IDC_COMPATGROUP
+msgid "Compatibility mode"
+msgstr "Režim kompatibility"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNCOMPATIBILITY
+msgid "Run this program in compatibility mode for:"
+msgstr "Spustit tento program v režimu kompatibility pro:"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.GROUPBOX.Display_settings
+msgid "Display settings"
+msgstr "Nastavení zobrazení"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNIN256COLORS
+msgid "Run in 256 colors"
+msgstr "Spustit v 256 barvách"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNIN640480RES
+msgid "Run in 640x480 screenresolution"
+msgstr "Spustit v rozlišení 640x480"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKDISABLEVISUALTHEMES
+msgid "Disable visual themes"
+msgstr "Vypnout vizuální motivy"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.PUSHBUTTON.IDC_EDITCOMPATIBILITYMODES
+msgid "E&dit compatibility modes..."
+msgstr "Up&ravit režimy kompatibility..."
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CONTROL.IDC_INFOLINK
+msgid "Learn more about <A>program compatibility</A>."
+msgstr "Další informace o <A>kompatibilitě programů</A>."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.CAPTION
+msgid "Edit Compatibility Modes"
+msgstr "Upravit režimy kompatibility"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_ADD
+msgid "&Add..."
+msgstr "&Přidat..."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_EDIT
+msgid "&Edit..."
+msgstr "&Upravit..."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_DELETE
+msgid "&Delete"
+msgstr "S&mazat"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDOK
+msgid "&OK"
+msgstr "&OK"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDCANCEL
+msgid "&Cancel"
+msgstr "Storno"
+
+#: STRINGTABLE.IDS_TABTITLE
+msgctxt "STRINGTABLE.IDS_TABTITLE"
+msgid "Compatibility"
+msgstr "Compatibility"
+
+#: STRINGTABLE.IDS_FAILED_NETWORK
+msgid ""
+"Compatibility modes cannot be set on this program because it is on a network "
+"drive."
+msgstr ""
+"Compatibility modes cannot be set on this program because it is on a network "
+"drive."
+
+#: STRINGTABLE.IDS_FAILED_PROTECTED
+msgid ""
+"Compatibility modes cannot be set on this program because it is a part of "
+"ReactOS."
+msgstr ""
+"Compatibility modes cannot be set on this program because it is a part of "
+"ReactOS."
+
+#: STRINGTABLE.IDS_YOU_DID_NOT_ADD
+msgid "You did not add the mode, do you want to add it now?"
+msgstr "You did not add the mode, do you want to add it now?"

@@ -1,0 +1,108 @@
+#. extracted from lang/en-US.rc, lang/eu-ES.rc
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-14 12:07+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Accelerator-Marker: &\n"
+"X-Generator: Translate Toolkit 2.2.4\n"
+"X-Merge-On: location\n"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CAPTION
+msgctxt "DIALOGEX.IDD_ACPPAGESHEET.CAPTION"
+msgid "Compatibility"
+msgstr "Konpatibilitatea"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.LTEXT.IDC_EXPLANATION
+msgid ""
+"If you have problems running this program in ReactOS, select an operating "
+"system ReactOS should report to the application.\n"
+"Please note that this is a work in progress."
+msgstr "ReactOS programa hau exekutatzean arazoak badituzu, hautatu konpatibilitate aukera bat jada funtzionatzen duen beste sistema operatibo batekin\nPlease note that this is a work in progress."
+
+#: DIALOGEX.IDD_ACPPAGESHEET.GROUPBOX.IDC_COMPATGROUP
+msgid "Compatibility mode"
+msgstr "Konpatibilitate Modua "
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNCOMPATIBILITY
+msgid "Run this program in compatibility mode for:"
+msgstr "Programa hau exekutatu konpatibilizatzeko moduan honekin:"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.GROUPBOX.Display_settings
+msgid "Display settings"
+msgstr "Pantaila konfiguratu "
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNIN256COLORS
+msgid "Run in 256 colors"
+msgstr "Exekutatu 256 kolorerekin"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNIN640480RES
+msgid "Run in 640x480 screenresolution"
+msgstr "640x480 pantaila erresoluzioarekin exekutatu"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKDISABLEVISUALTHEMES
+msgid "Disable visual themes"
+msgstr "Ezgaitu gai bisualak"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.PUSHBUTTON.IDC_EDITCOMPATIBILITYMODES
+msgid "E&dit compatibility modes..."
+msgstr "Konpatibilitate moduan editatu..."
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CONTROL.IDC_INFOLINK
+msgid "Learn more about <A>program compatibility</A>."
+msgstr "<A> Programen konpatibilitateari buruz gehiago</A>."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.CAPTION
+msgid "Edit Compatibility Modes"
+msgstr "Konpatibilitate moduak editatu"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_ADD
+msgid "&Add..."
+msgstr "&Gehitu..."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_EDIT
+msgid "&Edit..."
+msgstr "&Editatu..."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_DELETE
+msgid "&Delete"
+msgstr "&Ezabatu"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDOK
+msgid "&OK"
+msgstr "&Ados"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDCANCEL
+msgid "&Cancel"
+msgstr "&Utzi"
+
+#: STRINGTABLE.IDS_TABTITLE
+msgctxt "STRINGTABLE.IDS_TABTITLE"
+msgid "Compatibility"
+msgstr "Compatibility"
+
+#: STRINGTABLE.IDS_FAILED_NETWORK
+msgid ""
+"Compatibility modes cannot be set on this program because it is on a network "
+"drive."
+msgstr ""
+"Compatibility modes cannot be set on this program because it is on a network "
+"drive."
+
+#: STRINGTABLE.IDS_FAILED_PROTECTED
+msgid ""
+"Compatibility modes cannot be set on this program because it is a part of "
+"ReactOS."
+msgstr ""
+"Compatibility modes cannot be set on this program because it is a part of "
+"ReactOS."
+
+#: STRINGTABLE.IDS_YOU_DID_NOT_ADD
+msgid "You did not add the mode, do you want to add it now?"
+msgstr "You did not add the mode, do you want to add it now?"

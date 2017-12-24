@@ -1,0 +1,111 @@
+#. extracted from lang/en-US.rc, lang/ro-RO.rc
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-14 12:07+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Ștefan Fulea (stefan dot fulea at mail dot md)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Accelerator-Marker: &\n"
+"X-Generator: Translate Toolkit 2.2.4\n"
+"X-Merge-On: location\n"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CAPTION
+msgctxt "DIALOGEX.IDD_ACPPAGESHEET.CAPTION"
+msgid "Compatibility"
+msgstr "Compatibilitate"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.LTEXT.IDC_EXPLANATION
+msgid ""
+"If you have problems running this program in ReactOS, select an operating "
+"system ReactOS should report to the application.\n"
+"Please note that this is a work in progress."
+msgstr ""
+"Dacă aveți probleme cu acest program în ReactOS, selectați un sistem de "
+"operare care să fie raportat aplicației.\nConștientizați că aceasta este "
+"o funcționalitate în dezvoltare."
+
+#: DIALOGEX.IDD_ACPPAGESHEET.GROUPBOX.IDC_COMPATGROUP
+msgid "Compatibility mode"
+msgstr "Modul de compatibilitate"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNCOMPATIBILITY
+msgid "Run this program in compatibility mode for:"
+msgstr "Lansați acest program în modul de compatibilitate pentru:"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.GROUPBOX.Display_settings
+msgid "Display settings"
+msgstr "Configurația de afișare"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNIN256COLORS
+msgid "Run in 256 colors"
+msgstr "Lansează în 256 culori"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKRUNIN640480RES
+msgid "Run in 640x480 screenresolution"
+msgstr "Lansează în rezoluție de 640x480 pixeli"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CHECKBOX.IDC_CHKDISABLEVISUALTHEMES
+msgid "Disable visual themes"
+msgstr "Dezactivează temele vizuale"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.PUSHBUTTON.IDC_EDITCOMPATIBILITYMODES
+msgid "E&dit compatibility modes..."
+msgstr "E&ditează modurile de compatibilitate…"
+
+#: DIALOGEX.IDD_ACPPAGESHEET.CONTROL.IDC_INFOLINK
+msgid "Learn more about <A>program compatibility</A>."
+msgstr "Aflați mai multe despre <A>compatibilitate de program</A>."
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.CAPTION
+msgid "Edit Compatibility Modes"
+msgstr "Modurile de compatibilitate"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_ADD
+msgid "&Add..."
+msgstr "&Adăugare…"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_EDIT
+msgid "&Edit..."
+msgstr "E&ditare…"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDC_DELETE
+msgid "&Delete"
+msgstr "&Elimnă"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDOK
+msgid "&OK"
+msgstr "Con&firmă"
+
+#: DIALOGEX.IDD_EDITCOMPATIBILITYMODES.PUSHBUTTON.IDCANCEL
+msgid "&Cancel"
+msgstr "A&nulează"
+
+#: STRINGTABLE.IDS_TABTITLE
+msgctxt "STRINGTABLE.IDS_TABTITLE"
+msgid "Compatibility"
+msgstr "Compatibilitate"
+
+#: STRINGTABLE.IDS_FAILED_NETWORK
+msgid ""
+"Compatibility modes cannot be set on this program because it is on a network "
+"drive."
+msgstr ""
+"Modurile de compatibilitate nu pot fi instituite pentru acest program "
+"deoarece rezidă pe o unitate de stocare în rețea."
+
+#: STRINGTABLE.IDS_FAILED_PROTECTED
+msgid ""
+"Compatibility modes cannot be set on this program because it is a part of "
+"ReactOS."
+msgstr ""
+"Modurile de compatibilitate nu pot fi instituite pentru acest program "
+"deoarece este parte din ReactOS."
+
+#: STRINGTABLE.IDS_YOU_DID_NOT_ADD
+msgid "You did not add the mode, do you want to add it now?"
+msgstr "Nu ați specificat un mod. Doriți să specificați unul?"
