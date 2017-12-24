@@ -551,7 +551,6 @@ IsThereAValidBootSector(
     HANDLE FileHandle;
     LARGE_INTEGER FileOffset;
     PUCHAR BootSector;
-    ULONG Instruction;
 
     /* Allocate buffer for bootsector */
     BootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
@@ -593,17 +592,18 @@ IsThereAValidBootSector(
     if (!NT_SUCCESS(Status))
         goto Quit;
 
-    /* Check the instruction; we use a ULONG to read three bytes */
-    Instruction = (*(PULONG)BootSector) & 0x00FFFFFF;
-    IsValid = (Instruction != 0x00000000);
-
-    /* Check the bootsector signature */
-    IsValid &= (*(PUSHORT)(BootSector + 0x1fe) == 0xaa55);
+    /* Check for the existence of the bootsector signature */
+    IsValid = (*(PUSHORT)(BootSector + 0x1FE) == 0xAA55);
+    if (IsValid)
+    {
+        /* Check for the first instruction encoded on three bytes */
+        IsValid = (((*(PULONG)BootSector) & 0x00FFFFFF) != 0x00000000);
+    }
 
 Quit:
     /* Free the boot sector */
     RtlFreeHeap(ProcessHeap, 0, BootSector);
-    return IsValid; // Status;
+    return IsValid;
 }
 
 static
