@@ -424,3 +424,18 @@ TEST_NAMEX(load_str)
     CStringX str5(MAKEINTRESOURCEY(IDS_TEST2));
     ok(str5 == _X("I am a happy BSTR"), "The value was '%s'\n", dbgstrx(str5));
 }
+
+TEST_NAMEX(bstr)
+{
+    CStringX str;
+
+    str = _X("Some test text here...");
+
+    BSTR bstr = str.AllocSysString();
+    ok(!!bstr, "Expected a valid pointer\n");
+    if (bstr)
+    {
+        ok(!wcscmp(bstr, L"Some test text here..."), "Expected 'Some test text here...', got: '%S'\n", bstr);
+        ::SysFreeString(bstr);
+    }
+}
