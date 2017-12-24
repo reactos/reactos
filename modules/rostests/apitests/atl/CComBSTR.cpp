@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test for CComBSTR
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Test for CComBSTR
+ * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <apitest.h>
@@ -105,6 +105,15 @@ void test_copyassignment()
     hr = happy.CopyTo((BSTR*)NULL);
     ok(hr == E_POINTER, "Expected hr to be E_POINTER, was: %u\n");
 #endif
+
+    BSTR RawPtr = ::SysAllocString(L"TEST--");
+    happy.Attach(RawPtr);
+    ok_ptr(happy.m_str, RawPtr);
+    verify_str(happy, L"TEST--");
+    happyCopy1.Attach(happy.Detach());
+    ok_ptr(happyCopy1.m_str, RawPtr);
+    verify_str(happyCopy1, L"TEST--");
+    ok_ptr(happy.m_str, NULL);
 }
 
 void test_fromguid()
