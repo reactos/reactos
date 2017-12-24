@@ -657,6 +657,11 @@ typedef struct _SBINFOEX
 typedef struct _WND
 {
     THRDESKHEAD head;
+#if 0
+    WW ww;
+#else
+    /* These fields should be moved in the WW at some point. */
+    /* Plese do not change them to keep the same layout with WW. */
     DWORD state;
     DWORD state2;
     /* Extended style. */
@@ -666,6 +671,7 @@ typedef struct _WND
     /* Handle of the module that created the window. */
     HINSTANCE hModule;
     DWORD fnid;
+#endif
     struct _WND *spwndNext;
     struct _WND *spwndPrev;
     struct _WND *spwndParent;
