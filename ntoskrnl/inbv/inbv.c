@@ -27,7 +27,7 @@
 /*
  * Enable this define when Inbv will support rotating progress bar.
  */
-#define INBV_ROTBAR_IMPLEMENTED
+// #define INBV_ROTBAR_IMPLEMENTED
 
 static KSPIN_LOCK BootDriverLock;
 static KIRQL InbvOldIrql;
@@ -41,19 +41,12 @@ static INBV_PROGRESS_STATE InbvProgressState;
 static BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
 static INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters = NULL;
 static ULONG ResourceCount = 0;
-static PUCHAR ResourceList[1 + IDB_MAX_RESOURCE]; // First entry == NULL, followed by 'ResourceCount' entries.
+static PUCHAR ResourceList[1 + IDB_CLUSTER_SERVER]; // First entry == NULL, followed by 'ResourceCount' entries.
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
-/*
- * Change this to modify progress bar behaviour
- */
-#define ROT_BAR_DEFAULT_MODE  RB_PROGRESS_BAR
 static BOOLEAN RotBarThreadActive = FALSE;
 static ROT_BAR_TYPE RotBarSelection;
 static ULONG PltRotBarStatus;
-static PVOID RotBarThread = NULL;
-static UCHAR RotBarBuffer[24 * 9];
-static UCHAR RotLineBuffer[640 * 6];
 #endif
 
 
@@ -769,147 +762,6 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
     return STATUS_SUCCESS;
 }
 
-#ifdef INBV_ROTBAR_IMPLEMENTED
-static
-VOID
-NTAPI
-InbvRotationThread(
-    _In_ PVOID Context)
-{
-    ULONG X, Y, Index, Total = 18;
-    LARGE_INTEGER Delay;
-
-    InbvAcquireLock();
-    if (RotBarSelection == RB_SQUARE_CELLS)
-    {
-        Delay.QuadPart = -800000; // 0.08 sec
-        Index = 0;
-    }
-    else
-    {
-        Delay.QuadPart = -600000; // 0.06 sec
-        Index = 32;
-    }
-    X = ProgressBarLeft + 2;
-    Y = ProgressBarTop + 2;
-    InbvReleaseLock();
-
-    while (InbvDisplayState == INBV_DISPLAY_STATE_OWNED && PltRotBarStatus != 3)
-    {
-        InbvAcquireLock();
-
-        if (RotBarSelection == RB_SQUARE_CELLS)
-        {
-            if (Index >= 3)
-            {
-                /* Fill previous bar position */
-                VidSolidColorFill(X + ((Index - 3) * 8), Y, (X + ((Index - 3) * 8)) + 8 - 1, Y + 9 - 1, 0);
-            }
-            if (Index < Total - 1)
-            {
-                /* Draw the progress bar bit */
-                if (Index < 2)
-                {
-                    /* Appearing from the left */
-                    VidBufferToScreenBlt(RotBarBuffer + 8 * (2 - Index) / 2, X, Y, 22 - 8 * (2 - Index), 9, 24);
-                }
-                else if (Index >= Total - 3)
-                {
-                    /* Hiding to the right */
-                    VidBufferToScreenBlt(RotBarBuffer, X + ((Index - 2) * 8), Y, 22 - 8 * (4 - (Total - Index)), 9, 24);
-                }
-                else
-                {
-                    VidBufferToScreenBlt(RotBarBuffer, X + ((Index - 2) * 8), Y, 22, 9, 24);
-                }
-            }
-            Index = (Index + 1) % Total;
-        }
-        else if (RotBarSelection == RB_PROGRESS_BAR)
-        {
-            /* Right part */
-            VidBufferToScreenBlt(RotLineBuffer, Index, 474, 640 - Index, 6, 640);
-            if (Index > 0)
-            {
-                /* Left part */
-                VidBufferToScreenBlt(RotLineBuffer + (640 - Index) / 2, 0, 474, Index - 2, 6, 640);
-            }
-            Index = (Index + 32) % 640;
-        }
-
-        InbvReleaseLock();
-
-        /* Wait for a bit */
-        KeDelayExecutionThread(KernelMode, FALSE, &Delay);
-    }
-    PsTerminateSystemThread(STATUS_SUCCESS);
-}
-
-VOID
-NTAPI
-INIT_FUNCTION
-InbvRotBarInit(VOID)
-{
-    NTSTATUS Status;
-    HANDLE ThreadHandle = NULL;
-
-    if (!InbvBootDriverInstalled || RotBarSelection == RB_UNSPECIFIED)
-        return;
-
-    RotBarThread = NULL;
-    PltRotBarStatus = 0;
-
-    Status = PsCreateSystemThread(&ThreadHandle,
-                                  SYNCHRONIZE,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  InbvRotationThread,
-                                  NULL);
-
-    if (NT_SUCCESS(Status))
-    {
-        Status = ObReferenceObjectByHandle(ThreadHandle,
-                                           SYNCHRONIZE,
-                                           PsThreadType,
-                                           KernelMode,
-                                           &RotBarThread,
-                                           NULL);
-        if (NT_SUCCESS(Status))
-        {
-            KeSetPriorityThread(RotBarThread, HIGH_PRIORITY);
-            RotBarThreadActive = TRUE;
-        }
-        ObCloseHandle(ThreadHandle, KernelMode);
-    }
-}
-
-VOID
-NTAPI
-INIT_FUNCTION
-InbvRotBarStop(VOID)
-{
-    if (!RotBarThread)
-    {
-        RotBarThreadActive = FALSE;
-        return;
-    }
-
-    InbvAcquireLock();
-    PltRotBarStatus = 3;
-    InbvReleaseLock();
-
-    KeWaitForSingleObject(RotBarThread,
-                          Executive,
-                          KernelMode,
-                          FALSE,
-                          NULL);
-    ObDereferenceObject(RotBarThread);
-    RotBarThread = NULL;
-    RotBarThreadActive = FALSE;
-}
-#endif
-
 VOID
 NTAPI
 INIT_FUNCTION
@@ -918,14 +770,13 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
     PVOID Header = NULL, Footer = NULL, Screen = NULL;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
-    UCHAR Buffer[24 * 9];
-    PVOID Bar = NULL, LineBmp = NULL;
+    PVOID Bar = NULL;
     ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
-    LARGE_INTEGER Delay;
 #endif
 
 #ifdef REACTOS_SKUS
     PVOID Text = NULL;
+    UCHAR Buffer[64];
 #endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
@@ -933,7 +784,9 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
     if (RotBarThreadActive)
     {
         /* Reset the progress bar */
-        InbvRotBarStop();
+        InbvAcquireLock();
+        RotBarSelection = RB_UNSPECIFIED;
+        InbvReleaseLock();
     }
 #endif
 
@@ -1018,9 +871,6 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             Bar = InbvGetResourceAddress(IDB_BAR_SERVER);
 #endif
         }
-#else
-        /* Use default status bar */
-        Bar = InbvGetResourceAddress(IDB_BAR_WKSTA);
 #endif
 
         /* Make sure we have a logo */
@@ -1043,7 +893,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
             /* Choose progress bar */
-            TempRotBarSelection = ROT_BAR_DEFAULT_MODE;
+            TempRotBarSelection = RB_SQUARE_CELLS;
 #endif
 
             /* Set progress bar coordinates and display it */
@@ -1070,61 +920,28 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
-        if (Bar)
-        {
-            /* Save previous screen pixels to buffer */
-            InbvScreenToBufferBlt(Buffer, 0, 0, 22, 9, 24);
-            /* Draw the progress bar bit */
-            InbvBitBlt(Bar, 0, 0);
-            /* Store it in global buffer */
-            InbvScreenToBufferBlt(RotBarBuffer, 0, 0, 22, 9, 24);
-            /* Restore screen pixels */
-            InbvBufferToScreenBlt(Buffer, 0, 0, 22, 9, 24);
-        }
-
-        LineBmp = InbvGetResourceAddress(IDB_ROTATING_LINE);
-        if (LineBmp && TempRotBarSelection == RB_PROGRESS_BAR)
-        {
-            /* Draw the line */
-            InbvBitBlt(LineBmp, 0, 474);
-            /* Store it in global buffer */
-            InbvScreenToBufferBlt(RotLineBuffer, 0, 474, 640, 6, 640);
-        }
+        /* Draw the progress bar bit */
+        if (Bar) InbvBitBlt(Bar, 0, 0);
 #endif
 
         /* Display the boot logo and fade it in */
         BootLogoFadeIn();
 
-#ifdef INBV_ROTBAR_IMPLEMENTED
-        if (TempRotBarSelection != RB_PROGRESS_BAR)
-        {
-            /* Hide simple progress bar if not used */
-            ShowProgressBar = FALSE;
-        }
-
-        /* Do we have a system thread? */
-        if (!RotBarThreadActive)
-        {
-            /* We don't, initialize the progress bar */
-            RotBarSelection = TempRotBarSelection;
-            InbvRotBarInit();
-        }
-
-        /* Start rotating bar */
-        InbvAcquireLock();
-        PltRotBarStatus = 1;
-        InbvReleaseLock();
-
-        if (TempRotBarSelection != RB_UNSPECIFIED)
-        {
-            Delay.QuadPart = -3000000; // 0.3 sec
-            KeDelayExecutionThread(KernelMode, FALSE, &Delay);
-        }
-#endif
-
         /* Set filter which will draw text display if needed */
         InbvInstallDisplayStringFilter(DisplayFilter);
     }
+
+#ifdef INBV_ROTBAR_IMPLEMENTED
+    /* Do we have a system thread? */
+    if (RotBarThreadActive)
+    {
+        /* We do, initialize the progress bar */
+        InbvAcquireLock();
+        RotBarSelection = TempRotBarSelection;
+        // InbvRotBarInit();
+        InbvReleaseLock();
+    }
+#endif
 }
 
 VOID
@@ -1156,10 +973,6 @@ NTAPI
 INIT_FUNCTION
 FinalizeBootLogo(VOID)
 {
-#ifdef INBV_ROTBAR_IMPLEMENTED
-    /* Reset rotation bar */
-    InbvRotBarStop();
-#endif
     /* Acquire lock and check the display state */
     InbvAcquireLock();
     if (InbvGetDisplayState() == INBV_DISPLAY_STATE_OWNED)
@@ -1167,6 +980,10 @@ FinalizeBootLogo(VOID)
         /* Clear the screen */
         VidSolidColorFill(0, 0, 639, 479, 0);
     }
-    /* Reset lock */
+
+    /* Reset progress bar and lock */
+#ifdef INBV_ROTBAR_IMPLEMENTED
+    PltRotBarStatus = 3;
+#endif
     InbvReleaseLock();
 }
