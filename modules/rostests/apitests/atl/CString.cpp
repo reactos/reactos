@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test for CString
- * PROGRAMMERS:     Mark Jansen
- *                  Katayama Hirofumi MZ
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Test for CString
+ * COPYRIGHT:   Copyright 2016-2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2017 Katayama Hirofumi MZ
  */
 
 #include <atlstr.h>
@@ -254,8 +254,11 @@ START_TEST(CString)
     test_load_strW();
     test_load_strA();
 
+    test_bstrW();
+    test_bstrA();
+
 #ifndef __REACTOS__
     printf("CString: %i tests executed (0 marked as todo, %i failures), %i skipped.\n", g_tests_executed, g_tests_failed, g_tests_skipped);
-    return 0;
+    return g_tests_failed;
 #endif
 }
