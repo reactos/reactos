@@ -47,8 +47,8 @@ HRESULT WINAPI EnableThemeDialogTexture(HWND hwnd, DWORD dwFlags)
     if (dwFlags & ETDT_USETABTEXTURE)
         return SetWindowTheme (hwnd, NULL, szTab);
     else
-        return SetWindowTheme (hwnd, NULL, NULL);
- }
+        return S_OK;
+}
 
 /***********************************************************************
  *      IsThemeDialogTextureEnabled                         (UXTHEME.@)
