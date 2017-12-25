@@ -536,7 +536,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS "Ångström"
-    IDS_LENGTH_ASTRONOMICAL_UNITS "Astronomical units"
+    IDS_LENGTH_ASTRONOMICAL_UNITS "Astronomiska enhet"
     IDS_LENGTH_BARLEYCORNS "Barleycorns"
     IDS_LENGTH_CENTIMETERS "Centimeter"
     IDS_LENGTH_CHAINS_UK "Chains (UK)"
@@ -545,7 +545,7 @@ BEGIN
     IDS_LENGTH_CHR "Chr"
     IDS_LENGTH_CUN "Cun"
     IDS_LENGTH_FATHOMS "Fathoms"
-    IDS_LENGTH_FATHOMS_HUNGARY "Fathoms (Ungarn)"
+    IDS_LENGTH_FATHOMS_HUNGARY "Fathoms (Ungern)"
     IDS_LENGTH_FEET "Fot"
     IDS_LENGTH_FURLONGS "Furlongs"
     IDS_LENGTH_GAN "Gan"
@@ -559,13 +559,13 @@ BEGIN
     IDS_LENGTH_KEUB "Keub"
     IDS_LENGTH_KILOMETERS "Kilometer"
     IDS_LENGTH_LAR "Lar"
-    IDS_LENGTH_LIGHT_YEARS "Ljus år"
+    IDS_LENGTH_LIGHT_YEARS "Ljusår"
     IDS_LENGTH_LINKS_UK "Linker (UK)"
     IDS_LENGTH_METERS "Meter"
     IDS_LENGTH_MICRONS "Micron"
     IDS_LENGTH_MILES "Mil"
     IDS_LENGTH_MILLIMETERS "Millimeter"
-    IDS_LENGTH_NAUTICAL_MILES "Nautisk mil"
+    IDS_LENGTH_NAUTICAL_MILES "Nautiska mil"
     IDS_LENGTH_NIEU "Nieu"
     IDS_LENGTH_PARSECS "Parsecs"
     IDS_LENGTH_PICAS "Picas"
@@ -587,9 +587,9 @@ END
 /* Powers */
 STRINGTABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE "Britisk värme-enhet per minut"
+    IDS_POWER_BTUS_PER_MINUTE "Brittisk värme-enhet per minut"
     IDS_POWER_FPS_PER_MINUTE "Fot-pund per minut"
-    IDS_POWER_HORSEPOWER "Hästekrafter"
+    IDS_POWER_HORSEPOWER "Hästkrafter"
     IDS_POWER_KILOWATTS "Kilowatt"
     IDS_POWER_MEGAWATTS "Megawatt"
     IDS_POWER_WATTS "Watt"
@@ -600,11 +600,11 @@ STRINGTABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES "Atmosfär"
     IDS_PRESSURE_BARS "Bar"
-    IDS_PRESSURE_HECTOPASCALS "Hectopascal"
+    IDS_PRESSURE_HECTOPASCALS "Hektopascal"
     IDS_PRESSURE_KILOPASCALS "Kilopascal"
-    IDS_PRESSURE_MM_OF_MERCURY "Millimeters kvicksilver"
+    IDS_PRESSURE_MM_OF_MERCURY "Millimeter kvicksilver"
     IDS_PRESSURE_PASCALS "Pascal"
-    IDS_PRESSURE_PSI "Pond per kvadrattum"
+    IDS_PRESSURE_PSI "Pund per kvadrattum"
 END
 
 /* Temperatures */
@@ -619,26 +619,26 @@ END
 /* Time */
 STRINGTABLE
 BEGIN
-    IDS_TIME_DAYS "Days"
-    IDS_TIME_HOURS "Hours"
-    IDS_TIME_NANOSECONDS "Nanoseconds"
-    IDS_TIME_MICROSECONDS "Microseconds"
-    IDS_TIME_MILLISECONDS "Milliseconds"
-    IDS_TIME_MINUTES "Minutes"
-    IDS_TIME_SECONDS "Seconds"
-    IDS_TIME_WEEKS "Weeks"
-    IDS_TIME_YEARS "Years"
+    IDS_TIME_DAYS "Dagar"
+    IDS_TIME_HOURS "Timmar"
+    IDS_TIME_NANOSECONDS "Nanosekunder"
+    IDS_TIME_MICROSECONDS "Microsekunder"
+    IDS_TIME_MILLISECONDS "Millisekunder"
+    IDS_TIME_MINUTES "Minuter"
+    IDS_TIME_SECONDS "Sekunder"
+    IDS_TIME_WEEKS "Veckor"
+    IDS_TIME_YEARS "År"
 END
 
 /* Velocities */
 STRINGTABLE
 BEGIN
-    IDS_VELOCITY_CMS_SECOND "Centimeter/time"
+    IDS_VELOCITY_CMS_SECOND "Centimeter per sekund/sekund"
     IDS_VELOCITY_FEET_HOUR "Fot/timme"
     IDS_VELOCITY_FEET_SECOND "Fot/sekund"
     IDS_VELOCITY_KILOMETERS_HOUR "Kilometer/timme"
     IDS_VELOCITY_KNOTS "Knop"
-    IDS_VELOCITY_MACH "Mach"
+    IDS_VELOCITY_MACH "Machtal"
     IDS_VELOCITY_METERS_SECOND "Meter/sekund"
     IDS_VELOCITY_MILES_HOUR "Mil/timme"
 END
@@ -646,8 +646,8 @@ END
 /* Volumes */
 STRINGTABLE
 BEGIN
-    IDS_VOLUME_BARRELS_UK "Barrels (UK)"
-    IDS_VOLUME_BARRELS_OIL "Barrels oil"
+    IDS_VOLUME_BARRELS_UK "Fat (UK)"
+    IDS_VOLUME_BARRELS_OIL "Fat (olja)"
     IDS_VOLUME_BUN "Bun"
     IDS_VOLUME_BUSHELS_UK "Bushels (UK)"
     IDS_VOLUME_BUSHELS_US "Bushels (US)"
@@ -655,7 +655,7 @@ BEGIN
     IDS_VOLUME_CUBIC_FEET "Kubikfot"
     IDS_VOLUME_CUBIC_INCHES "Kubiktumm"
     IDS_VOLUME_CUBIC_METERS "Kubikmeter"
-    IDS_VOLUME_CUBIC_YARDS "Kubikyards"
+    IDS_VOLUME_CUBIC_YARDS "Kubikyard"
     IDS_VOLUME_DOE "Doe"
     IDS_VOLUME_FLUID_OUNCES_UK "Fluid ounces (UK)"
     IDS_VOLUME_FLUID_OUNCES_US "Fluid ounces (US)"
@@ -686,7 +686,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_WEIGHT_BAHT "Baht"
-    IDS_WEIGHT_CARATS "Carats"
+    IDS_WEIGHT_CARATS "Karat"
     IDS_WEIGHT_CHUNG "Chung"
     IDS_WEIGHT_DON "Don"
     IDS_WEIGHT_GEUN "Geun"
@@ -694,17 +694,17 @@ BEGIN
     IDS_WEIGHT_GWAN "Gwan"
     IDS_WEIGHT_HARB "Harb"
     IDS_WEIGHT_JIN_CHINA "Jin (Kina)"
-    IDS_WEIGHT_JIN_TAIWAN "Jin (Taiwaner)"
+    IDS_WEIGHT_JIN_TAIWAN "Jin (Taiwan)"
     IDS_WEIGHT_KAN "Kan"
     IDS_WEIGHT_KILOGRAMS "Kilogram"
     IDS_WEIGHT_KIN "Kin"
     IDS_WEIGHT_LIANG_CHINA "Liang (Kina)"
-    IDS_WEIGHT_LIANG_TAIWAN "Liang (Taiwaner)"
+    IDS_WEIGHT_LIANG_TAIWAN "Liang (Taiwan)"
     IDS_WEIGHT_MONME "Monme"
     IDS_WEIGHT_OUNCES_AVOIRDUPOIS "Ounces, avoirdupois"
     IDS_WEIGHT_OUNCES_TROY "Ounces, troy"
     IDS_WEIGHT_POUNDS "Pund"
-    IDS_WEIGHT_QUINTAL_METRIC "Quintal (metric)"
+    IDS_WEIGHT_QUINTAL_METRIC "Quintal (metrisk)"
     IDS_WEIGHT_SALOUNG "Saloung"
     IDS_WEIGHT_STONES "Sten"
     IDS_WEIGHT_TAMLUNG "Tamlung"
