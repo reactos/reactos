@@ -963,7 +963,7 @@ Cleanup:
 BOOL WINAPI
 LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command)
 {
-    DWORD dwErrorCode;
+    DWORD dwErrorCode = ERROR_SUCCESS;
     PLOCAL_HANDLE pHandle;
     PLOCAL_JOB pJob;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
@@ -973,7 +973,7 @@ LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Com
 
     // Check if this is a printer handle.
     pHandle = (PLOCAL_HANDLE)hPrinter;
-    if (pHandle->HandleType != HandleType_Printer)
+    if (!pHandle || pHandle->HandleType != HandleType_Printer)
     {
         dwErrorCode = ERROR_INVALID_HANDLE;
         goto Cleanup;
@@ -989,16 +989,11 @@ LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Com
         goto Cleanup;
     }
 
-    // Setting job information is handled differently for each level.
-    if (Level)
-    {
-        if (Level == 1)
-            dwErrorCode = _LocalSetJobLevel1(pPrinterHandle, pJob, (PJOB_INFO_1W)pJobInfo);
-        else if (Level == 2)
-            dwErrorCode = _LocalSetJobLevel2(pPrinterHandle, pJob, (PJOB_INFO_2W)pJobInfo);
-        else
-            dwErrorCode = ERROR_INVALID_LEVEL;
-    }
+    // Set new job information if a valid level was given.
+    if (Level == 1)
+        dwErrorCode = _LocalSetJobLevel1(pPrinterHandle, pJob, (PJOB_INFO_1W)pJobInfo);
+    else if (Level == 2)
+        dwErrorCode = _LocalSetJobLevel2(pPrinterHandle, pJob, (PJOB_INFO_2W)pJobInfo);
 
     if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
@@ -1032,8 +1027,6 @@ LocalSetJob(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Com
             ERR("Unimplemented SetJob Command: %lu!\n", Command);
         }
     }
-
-    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     SetLastError(dwErrorCode);
