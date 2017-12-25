@@ -10,11 +10,9 @@
 
 #include "net.h"
 
-
 static
 int
-CompareUserInfo(const void *a,
-            const void *b)
+CompareUserInfo(const void *a, const void *b)
 {
     return _wcsicmp(((PUSER_INFO_0)a)->usri0_name,
                     ((PUSER_INFO_0)b)->usri0_name);
