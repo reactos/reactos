@@ -1907,8 +1907,8 @@ USBPORT_AddDevice(IN PDRIVER_OBJECT DriverObject,
     if (MiniPortInterface->Packet.MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
     {
         FdoExtension->Usb2Extension =
-        (PUSB2_HC_EXTENSION)FdoExtension->MiniPortExt +
-                            MiniPortInterface->Packet.MiniPortExtensionSize;
+        (PUSB2_HC_EXTENSION)((ULONG_PTR)FdoExtension->MiniPortExt +
+                             MiniPortInterface->Packet.MiniPortExtensionSize);
 
         DPRINT("USBPORT_AddDevice: Usb2Extension - %p\n",
                FdoExtension->Usb2Extension);
