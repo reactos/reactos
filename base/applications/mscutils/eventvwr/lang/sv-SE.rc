@@ -21,7 +21,7 @@ BEGIN
         MENUITEM "&Newest first", IDM_LIST_NEWEST
         MENUITEM "&Oldest first", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "&Details...\tEnter", IDM_EVENT_DETAILS
+        MENUITEM "&Detaljer...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "&Uppdatera\tF5", IDM_REFRESH
     END

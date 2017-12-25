@@ -13,7 +13,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Skriv ut...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Send...", IDM_FILESEND
         MENUITEM SEPARATOR
@@ -21,7 +21,7 @@ BEGIN
         MENUITEM "Ange som skrivbordsbakgrund (centrerad)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Ange som skrivbordsbakgrund (utsträckt)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Senast använda fil", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta\tAlt+F4", IDM_FILEEXIT
     END

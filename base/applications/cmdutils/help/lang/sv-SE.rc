@@ -10,19 +10,19 @@ BEGIN
     IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
-    IDS_HELP1 "Liste av alle tilgjengelige kommandoer (+ beskrivelse)\n\n\
+    IDS_HELP1 "Lista av alla tillgängeliga kommandon (+ beskrivning)\n\n\
 help kommando\n\
 kommando /?     For mer informasjon om en bestemt kommando\n\n\
 ?        Lister alle tilgjengelige kommando uten beskrivelse).\n\
-ALIAS    Sett, fjern eller vis alias.\n\
-ATTRIB   Viser eller ändra fil attributter.\n\
-BEEP     Piper i høyttaleren.\n\
-CALL     Starte et satsvis program fra et annet.\n\
-CD       Vis namnet på eller endrer aktuell mapp.\n\
-CHCP     Viser eller anger nummer på aktiv tegntabell.\n\
-CHOICE   Venter til bruken väljer en av et sett av val.\n\
-CLS      Tømmer skjermen.\n\
-CMD      Start en ny forekomst av ReactOS kommandotolk.\n\
+ALIAS    Sätt, ta bort eller visa alias.\n\
+ATTRIB   Viser eller ändra filattribut.\n\
+BEEP     Piper i högttalaren.\n\
+CALL     Starta en batch-fil från ett annat.\n\
+CD       Visa namnet på eller ändrar aktuell mapp.\n\
+CHCP     Visar eller anger nummer på aktiv teckentabell.\n\
+CHOICE   Väntar tills användaren väljer en av antal specifierade val.\n\
+CLS      Tömmer skämen.\n\
+CMD      Startar en ny instans av ReactOS kommandotolk.\n\
 COLOR    Anger standard forgrunn- och bakgrunnsfargr for konsollen.\n\
 COPY     Kopierer en eller flere filer til en annen plassering.\n\
 DATE     Viser eller anger datoen.\n\
@@ -53,17 +53,17 @@ RD       Fjerner en mapp.\n\
 REM      Anger kommentarer i satsvise filer.\n\
 REN      Gir nytt namn til en eller flere filer.\n\
 RENAME   Gir nytt namn til en eller flere filer.\n\
-RMDIR    Fjerner en mapp.\n\
-SCREEN   Flytter markør.\n\
-SET      Vis, sett, eller fjern ReactOS miljøvariabel.\n\
+RMDIR    Tar bort en mapp.\n\
+SCREEN   Flyttar markör.\n\
+SET      Visa, sätt, eller ta bort ReactOS miljövariabel.\n\
 SHIFT    Shift plass for erstattelige parameter i satsvise filer.\n"
     IDS_HELP2 "START    Start et separat vindu til att kjøre et spesifisert program eller kommando.\n\
          Utfører kommando.\n\
-TIME     Vis eller sett system tid.\n\
+TIME     Visa eller sätt systemtid.\n\
 TIMER    Håndtere stoppeklokker (maks 10 stk).\n\
 TITLE    Sett vindustittel for CMD.EXE sesjon.\n\
-TYPE     Vis innholdet i en text fil.\n\
-VER      Viser ReactOS version.\n\
+TYPE     Visa innhållet i en textfil.\n\
+VER      Visar ReactOS version.\n\
 VERIFY   Forteller ReactOS om att bekrefte om dine filer är skrevet\n\
          riktig til disk.\n\
 VOL      Vis et volums namn och serienummer.\n"
