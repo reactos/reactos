@@ -310,27 +310,6 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
 }
 
 #if (_MI_PAGING_LEVELS == 2)
-FORCEINLINE
-BOOLEAN
-MiSynchronizeSystemPde(PMMPDE PointerPde)
-{
-    MMPDE SystemPde;
-    ULONG Index;
-
-    /* Get the Index from the PDE */
-    Index = ((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE);
-
-    /* Copy the PDE from the double-mapped system page directory */
-    SystemPde = MmSystemPagePtes[Index];
-    *PointerPde = SystemPde;
-
-    /* Make sure we re-read the PDE and PTE */
-    KeMemoryBarrierWithoutFence();
-
-    /* Return, if we had success */
-    return (BOOLEAN)SystemPde.u.Hard.Valid;
-}
-
 NTSTATUS
 FASTCALL
 MiCheckPdeForSessionSpace(IN PVOID Address)
