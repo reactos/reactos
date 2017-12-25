@@ -56,10 +56,16 @@ static const UNICODE_STRING MarlettW = RTL_CONSTANT_STRING(L"Marlett");
 static UNICODE_STRING FontRegPath =
     RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
+/* the FontSubstitutes registry key */
+static UNICODE_STRING FontSubstKey =
+    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\"
+                        L"Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
 
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
 static PFAST_MUTEX FreeTypeLock;
+
+static PFAST_MUTEX FontSubstLock;
 
 static LIST_ENTRY FontListHead;
 static PFAST_MUTEX FontListLock;
@@ -79,6 +85,12 @@ static BOOL RenderingEnabled = TRUE;
 
 #define IntUnLockFreeType \
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FreeTypeLock)
+
+#define IntLockFontSubst \
+  ExEnterCriticalRegionAndAcquireFastMutexUnsafe(FontSubstLock)
+
+#define IntUnLockFontSubst \
+  ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FontSubstLock)
 
 #define ASSERT_FREETYPE_LOCK_HELD() \
   ASSERT(FreeTypeLock->Owner == KeGetCurrentThread())
@@ -324,12 +336,6 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
     LPWSTR                          pch;
     PFONTSUBST_ENTRY                pEntry;
 
-    /* the FontSubstitutes registry key */
-    static UNICODE_STRING FontSubstKey =
-        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\"
-                            L"Microsoft\\Windows NT\\CurrentVersion\\"
-                            L"FontSubstitutes");
-
     /* open registry key */
     InitializeObjectAttributes(&ObjectAttributes, &FontSubstKey,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
@@ -470,6 +476,13 @@ InitFontSupport(VOID)
     }
     ExInitializeFastMutex(FreeTypeLock);
 
+    FontSubstLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+    if (FontSubstLock == NULL)
+    {
+        return FALSE;
+    }
+    ExInitializeFastMutex(FontSubstLock);
+
     ulError = FT_Init_FreeType(&library);
     if (ulError)
     {
@@ -478,7 +491,10 @@ InitFontSupport(VOID)
     }
 
     IntLoadSystemFonts();
+
+    IntLockFontSubst;
     IntLoadFontSubstList(&FontSubstListHead);
+    IntUnLockFontSubst;
 
     return TRUE;
 }
@@ -531,8 +547,7 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
 
         CharSets[FONTSUBST_FROM] = pSubstEntry->CharSets[FONTSUBST_FROM];
 
@@ -773,6 +788,127 @@ WeightFromStyle(const char *style_name)
     return FW_NORMAL;
 }
 
+BOOL FASTCALL
+DeleteFontSubstFromList(
+    PLIST_ENTRY     pHead, 
+    PUNICODE_STRING pTargetFaceNameW)
+{
+    PLIST_ENTRY         pListEntry;
+    PFONTSUBST_ENTRY    pSubstEntry;
+    PUNICODE_STRING     pFrom;
+    BOOL                ret = FALSE;
+
+    for (pListEntry = pHead->Flink;
+         pListEntry != pHead;
+         pListEntry = pListEntry->Flink)
+    {
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
+
+        pFrom = &pSubstEntry->FontNames[FONTSUBST_FROM];
+        if (RtlEqualUnicodeString(pFrom, pTargetFaceNameW, TRUE))
+        {
+            RemoveEntryList(pListEntry);
+
+            /* free pSubstEntry */
+            RtlFreeUnicodeString(&pSubstEntry->FontNames[FONTSUBST_FROM]);
+            RtlFreeUnicodeString(&pSubstEntry->FontNames[FONTSUBST_TO]);
+            ExFreePoolWithTag(pSubstEntry, TAG_FONT);
+
+            ret = TRUE;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+BOOL FASTCALL
+DeleteFontSubstFromRegistry(PUNICODE_STRING pTargetFaceNameW)
+{
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    KEY_FULL_INFORMATION        KeyFullInfo;
+    ULONG                       i, nLength;
+    BYTE                        InfoBuffer[128];
+    PKEY_VALUE_FULL_INFORMATION pInfo;
+    LPWSTR                      lpTargetW;
+    UNICODE_STRING              NameW;
+    BOOL                        ret = FALSE;
+
+    /* open registry key */
+    InitializeObjectAttributes(&ObjectAttributes, &FontSubstKey,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenKey failed: 0x%08X\n", Status);
+        return FALSE;   /* failure */
+    }
+
+    /* delete the face name value */
+    Status = ZwDeleteValueKey(KeyHandle, pTargetFaceNameW);
+    if (NT_SUCCESS(Status))
+    {
+        ret = TRUE;     /* success */
+    }
+    else
+    {
+        DPRINT("ZwDeleteValueKey failed: 0x%08X\n", Status);
+    }
+
+    /* get key info to enumerate values */
+    Status = ZwQueryKey(KeyHandle, KeyFullInformation,
+                        &KeyFullInfo, sizeof(KeyFullInfo), &nLength);
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(KeyHandle);
+
+        return ret;
+    }
+
+    /* delete also "(FaceName),(CharSetNumber)" values */
+    lpTargetW = pTargetFaceNameW->Buffer;
+    for (i = 0; i < KeyFullInfo.Values; ++i)
+    {
+        /* get a value info as pInfo */
+        Status = ZwEnumerateValueKey(KeyHandle, i, KeyValueFullInformation,
+                                     InfoBuffer, sizeof(InfoBuffer), &nLength);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("ZwEnumerateValueKey failed: 0x%08X\n", Status);
+            break;  /* failure */
+        }
+        pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
+
+        /* check pInfo->Name */
+        nLength = pTargetFaceNameW->Length;
+        if (RtlCompareMemory(lpTargetW, pInfo->Name, nLength) == nLength &&
+            pInfo->Name[pTargetFaceNameW->Length / sizeof(WCHAR)] == L',')
+        {
+            /* "(FaceName),(CharSetNumber)" was found. delete it */
+            RtlInitUnicodeString(&NameW, pInfo->Name);
+            Status = ZwDeleteValueKey(KeyHandle, &NameW);
+            if (NT_SUCCESS(Status))
+            {
+                ret = TRUE;     /* success */
+                --i;
+                --(KeyFullInfo.Values);
+            }
+            else
+            {
+                DPRINT("ZwDeleteValueKey failed: 0x%08X\n", Status);
+            }
+        }
+    }
+
+    /* close now */
+    ZwClose(KeyHandle);
+
+    return ret;
+}
+
 static INT FASTCALL
 IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                           PSHARED_FACE SharedFace, FT_Long FontIndex, INT CharSetIndex)
@@ -984,6 +1120,13 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     {
         FontGDI->CharSet = SYMBOL_CHARSET;
     }
+
+    /* delete old font substitute */
+    IntLockFontSubst;
+    DeleteFontSubstFromList(&FontSubstListHead, &Entry->FaceName);
+    IntUnLockFontSubst;
+
+    DeleteFontSubstFromRegistry(&Entry->FaceName);
 
     ++FaceCount;
     DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
@@ -4476,7 +4619,9 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     /* substitute */
     SubstitutedLogFont = *pLogFont;
     DPRINT("Font '%S,%u' is substituted by: ", pLogFont->lfFaceName, pLogFont->lfCharSet);
+    IntLockFontSubst;
     SubstituteFontRecurse(&SubstitutedLogFont);
+    IntUnLockFontSubst;
     DPRINT("'%S,%u'.\n", SubstitutedLogFont.lfFaceName, SubstitutedLogFont.lfCharSet);
 
     MatchPenalty = 0xFFFFFFFF;
@@ -5023,11 +5168,14 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Enumerate font families in the registry */
+    IntLockFontSubst;
     if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
     {
+        IntUnLockFontSubst;
         ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
+    IntUnLockFontSubst;
 
     /* Return data to caller */
     if (0 != Count)
