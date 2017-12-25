@@ -76,7 +76,7 @@ UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
  RealUserDrawCaption: This function is passed through RegisterUserApiHook to uxtheme
                       to call it when the classic caption is needed to be drawn.
  */
-LRESULT WINAPI
+BOOL WINAPI
 RealUserDrawCaption(HWND hWnd, HDC hDC, LPCRECT lpRc, UINT uFlags)
 {
     ERR("Real DC flags %08x\n",uFlags);
