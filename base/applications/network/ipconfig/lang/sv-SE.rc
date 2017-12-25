@@ -10,7 +10,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_BCAST "Broadcast"
-    IDS_P2P "Peer To Peer"
+    IDS_P2P "Peer-till-Peer"
     IDS_MIXED "Mixad"
     IDS_HYBRID "Hybrid"
     IDS_UNKNOWN "Okänd"
@@ -18,13 +18,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OTHER "Annan Typ av Adapter"
-    IDS_ETH "Ethernet Adapter"
-    IDS_TOKEN "Token Ring Adapter"
-    IDS_FDDI "FDDI Adapter"
-    IDS_PPP "PPP Adapter"
-    IDS_LOOP "Loopback Adapter"
-    IDS_SLIP "SLIP Adapter"
+    IDS_OTHER "Annan typ av adapter"
+    IDS_ETH "Ethernet-adapter"
+    IDS_TOKEN "Tokenring-adapter"
+    IDS_FDDI "FDDI-adapter"
+    IDS_PPP "PPP-adapter"
+    IDS_LOOP "Loopback-adapter"
+    IDS_SLIP "SLIP-adapter"
 END
 
 STRINGTABLE

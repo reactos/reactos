@@ -36,7 +36,7 @@ static MUI_ENTRY svSELanguagePageEntries[] =
     {
         8,
         11,
-        "   Then Tryck ENTER.",
+        "   Tryck sedan ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
