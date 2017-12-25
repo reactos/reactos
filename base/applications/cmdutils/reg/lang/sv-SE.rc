@@ -20,7 +20,7 @@ STRINGTABLE
     STRING_YES, "Y"
     STRING_NO, "N"
     STRING_CANCELLED, "The registry operation was cancelled\n"
-    STRING_DEFAULT_VALUE, "(Default)"
+    STRING_DEFAULT_VALUE, "(Standard)"
     STRING_DELETE_VALUE, "Are you sure you want to delete the registry value '%1'?"
     STRING_DELETE_VALUEALL, "Are you sure you want to delete all registry values in '%1'?"
     STRING_DELETE_SUBKEY, "Are you sure you want to delete the registry key '%1'?"
