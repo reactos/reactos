@@ -152,6 +152,10 @@ AtapiDmaAlloc(
 
     if(!deviceExtension->Host64 && (WinVer_Id() > WinVer_NT)) {
         KdPrint2((PRINT_PREFIX "AtapiDmaAlloc: allocate tmp buffers below 4Gb\n"));
+        if(chan->DB_PRD) {
+            KdPrint2((PRINT_PREFIX "  already initialized %x\n", chan->DB_PRD));
+            return;
+        }
         chan->DB_PRD = MmAllocateContiguousMemory(sizeof(((PATA_REQ)NULL)->dma_tab), ph4gb);
         if(chan->DB_PRD) {
             chan->DB_PRD_PhAddr = AtapiVirtToPhysAddr(HwDeviceExtension, NULL, (PUCHAR)(chan->DB_PRD), &i, &ph_addru);

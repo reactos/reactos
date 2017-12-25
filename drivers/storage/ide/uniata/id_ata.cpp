@@ -4616,7 +4616,7 @@ AtapiCheckInterrupt__(
         }
         break; }
     case ATA_NVIDIA_ID: {
-        if(!(ChipFlags & UNIATA_SATA))
+        if(!(ChipFlags & UNIATA_SATA) || (ChipFlags & NVGEN))
             break;
 
         KdPrint2((PRINT_PREFIX "NVIDIA\n"));
@@ -7987,6 +7987,7 @@ make_reset:
 
     // must be already selected, experimental for ROS BUG-9119
     //AtapiWritePort1(chan, IDX_IO1_o_DriveSelect, IDE_USE_LBA | (DeviceNumber ? IDE_DRIVE_2 : IDE_DRIVE_1) );
+    AtapiWritePort1(chan, IDX_IO2_o_Control , 0);
     AtapiWritePort1(chan, IDX_ATAPI_IO1_o_Feature /*IDX_IO1_o_Feature*/, FeatureReg);
     //AtapiWritePort1(chan, IDX_ATAPI_IO1_o_Unused0, 0);  // experimental for ROS BUG-9119
     //AtapiWritePort1(chan, IDX_ATAPI_IO1_o_Unused1, 0);  // experimental for ROS BUG-9119
@@ -8712,7 +8713,7 @@ invalid_cdb:
             statusByte = WaitOnBaseBusy(chan);
 
             //SelectDrive(chan, DeviceNumber);
-            if (cdb->MEDIA_REMOVAL.Prevent != FALSE) {
+            if (cdb->MEDIA_REMOVAL.Prevent == TRUE) {
                 //AtapiWritePort1(chan, IDX_IO1_o_Command,IDE_COMMAND_DOOR_LOCK);
                 statusByte = AtaCommand(deviceExtension, DeviceNumber, lChannel, IDE_COMMAND_DOOR_LOCK, 0, 0, 0, 0, 0, ATA_IMMEDIATE);
             } else {
@@ -9002,7 +9003,7 @@ IdeMediaStatus(
     chan = &(deviceExtension->chan[lChannel]);
     SelectDrive(chan, DeviceNumber);
 
-    if (EnableMSN != FALSE){
+    if (EnableMSN == TRUE){
 
         // If supported enable Media Status Notification support
         if ((chan->lun[DeviceNumber]->DeviceFlags & DFLAGS_REMOVABLE_DRIVE)) {
@@ -9028,7 +9029,7 @@ IdeMediaStatus(
             }
 
         }
-    } else { // end if EnableMSN != FALSE
+    } else { // end if EnableMSN == TRUE
 
         // disable if previously enabled
         if ((chan->lun[DeviceNumber]->DeviceFlags & DFLAGS_MEDIA_STATUS_ENABLED)) {

@@ -696,6 +696,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 
 #define NV4OFF          0x0100
 #define NVQ             0x0200
+#define NVGEN           0x0400
 
 #define VIANEW		5
 #define VIA33		4
