@@ -24,8 +24,6 @@
 #include <mmsystem.h>
 #include <ntquery.h>
 
-#define MAX_PROPERTY_SHEET_PAGE 32
-
 WINE_DEFAULT_DEBUG_CHANNEL(CRecycleBin);
 
 typedef struct

@@ -21,8 +21,6 @@
 
 #include "precomp.h"
 
-#define MAX_PROPERTY_SHEET_PAGE 32
-
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 typedef struct
@@ -107,18 +105,6 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
 
     *pClusterSize = ClusterSize;
     return TRUE;
-}
-
-static BOOL CALLBACK
-AddPropSheetPageCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
-{
-    PROPSHEETHEADER *ppsh = (PROPSHEETHEADER *)lParam;
-    if (ppsh->nPages < MAX_PROPERTY_SHEET_PAGE)
-    {
-        ppsh->phpage[ppsh->nPages++] = hPage;
-        return TRUE;
-    }
-    return FALSE;
 }
 
 typedef struct _DRIVE_PROP_PAGE

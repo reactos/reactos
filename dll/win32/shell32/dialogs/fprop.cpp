@@ -22,25 +22,9 @@
 
 #include "precomp.h"
 
-#define MAX_PROPERTY_SHEET_PAGE 32
-
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
-
-static BOOL CALLBACK
-AddPropSheetPageCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
-{
-    PROPSHEETHEADERW *pHeader = (PROPSHEETHEADERW *)lParam;
-
-    if (pHeader->nPages < MAX_PROPERTY_SHEET_PAGE)
-    {
-        pHeader->phpage[pHeader->nPages++] = hPage;
-        return TRUE;
-    }
-
-    return FALSE;
-}
 
 static UINT
 LoadPropSheetHandlers(LPCWSTR pwszPath, PROPSHEETHEADERW *pHeader, UINT cMaxPages, HPSXA *phpsxa, IDataObject *pDataObj)
