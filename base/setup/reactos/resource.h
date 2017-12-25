@@ -1,14 +1,14 @@
 #pragma once
 
 /* Bitmaps */
-#define IDB_WATERMARK 100
-#define IDB_HEADER    101
+#define IDB_WATERMARK       100
+#define IDB_HEADER          101
 
 /* Icons */
-#define IDI_MAIN 3000
+#define IDI_MAIN            3000
 
 
-#define IDC_STATIC -1
+#define IDC_STATIC          -1
 
 /* Dialogs */
 #define IDD_STARTPAGE        2000
@@ -19,6 +19,10 @@
 #define IDC_INSTALLTEXT      2007
 #define IDC_UPDATE           2008
 #define IDC_UPDATETEXT       2009
+
+#define IDD_UPDATEREPAIRPAGE    2060
+#define IDC_NTOSLIST            2061
+#define IDC_SKIPUPGRADE         2062
 
 #define IDD_DEVICEPAGE       2011
 #define IDC_COMPUTER         2014
@@ -73,6 +77,9 @@
 #define IDS_NO_TXTSETUP_SIF  5053
 #define IDS_CAPTION          5054
 
+#define IDS_INSTALLATION_NAME   5100
+#define IDS_INSTALLATION_PATH   5101
+#define IDS_INSTALLATION_VENDOR 5102
 
 #define IDS_PARTITION_NAME   5200
 #define IDS_PARTITION_SIZE   5201

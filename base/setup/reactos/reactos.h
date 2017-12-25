@@ -70,13 +70,13 @@ typedef struct _KBLAYOUT
     TCHAR DllName[128];
 } KBLAYOUT, *PKBLAYOUT;
 
-
 // generic entries with simple 1:1 mapping
 typedef struct _GENENTRY
 {
     TCHAR Id[24];
     TCHAR Value[128];
 } GENENTRY, *PGENENTRY;
+
 
 typedef struct _SETUPDATA
 {
@@ -102,10 +102,12 @@ typedef struct _SETUPDATA
     LONG SelectedComputer; // selected computer type (table index)
     LONG SelectedDisplay; // selected display type (table index)
     LONG SelectedKeyboard; // selected keyboard type (table index)
+
     BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
 
 
     // txtsetup.sif data
+#if 1
     LONG DefaultLang; // default language (table index)
     PLANG pLanguages;
     LONG LangCount;
@@ -118,10 +120,31 @@ typedef struct _SETUPDATA
     LONG DispCount;
     PGENENTRY pKeyboards;
     LONG KeybCount;
+
+#else
+
+    // LONG DefaultLang; // default language (table index)
+    // LONG DefaultKBLayout; // default keyboard layout (table index)
+    PWCHAR SelectedLanguageId;
+    WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
+    WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
+
+    PGENERIC_LIST ComputerList;
+    PGENERIC_LIST DisplayList;
+    PGENERIC_LIST KeyboardList;
+    PGENERIC_LIST LayoutList;
+    PGENERIC_LIST LanguageList;
+
+    PPARTLIST PartitionList;
+    PNTOS_INSTALLATION CurrentInstallation;
+    PGENERIC_LIST NtOsInstallsList;
+#endif
+
 } SETUPDATA, *PSETUPDATA;
 
 extern HANDLE ProcessHeap;
 extern BOOLEAN IsUnattendedSetup;
+
 
 typedef struct _IMGINFO
 {
@@ -129,7 +152,6 @@ typedef struct _IMGINFO
     INT cxSource;
     INT cySource;
 } IMGINFO, *PIMGINFO;
-
 
 
 /*
@@ -144,6 +166,16 @@ ConvertNtPathToWin32Path(
 
 
 /* drivepage.c */
+
+BOOL
+CreateListViewColumns(
+    IN HINSTANCE hInstance,
+    IN HWND hWndListView,
+    IN const UINT* pIDs,
+    IN const INT* pColsWidth,
+    IN const INT* pColsAlign,
+    IN UINT nNumOfColumns);
+
 INT_PTR
 CALLBACK
 DriveDlgProc(

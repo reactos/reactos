@@ -30,8 +30,9 @@
 /* GLOBALS ******************************************************************/
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
-static const int default_column_widths[MAX_LIST_COLUMNS] = {200, 150, 150};
-static const int column_alignment[MAX_LIST_COLUMNS] = {LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT};
+static const UINT column_ids[MAX_LIST_COLUMNS] = {IDS_LIST_COLUMN_FIRST, IDS_LIST_COLUMN_FIRST + 1, IDS_LIST_COLUMN_FIRST + 2};
+static const INT  column_widths[MAX_LIST_COLUMNS] = {200, 150, 150};
+static const INT  column_alignment[MAX_LIST_COLUMNS] = {LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT};
 
 /* FUNCTIONS ****************************************************************/
 
@@ -109,32 +110,36 @@ PartitionDlgProc(HWND hwndDlg,
 }
 
 
-static
 BOOL
 CreateListViewColumns(
-    HINSTANCE hInstance,
-    HWND hWndListView)
+    IN HINSTANCE hInstance,
+    IN HWND hWndListView,
+    IN const UINT* pIDs,
+    IN const INT* pColsWidth,
+    IN const INT* pColsAlign,
+    IN UINT nNumOfColumns)
 {
-    WCHAR szText[50];
-    int index;
+    UINT i;
     LVCOLUMN lvC;
+    WCHAR szText[50];
 
-    /* Create columns. */
+    /* Create the columns */
     lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
     lvC.pszText = szText;
 
-    /* Load the column labels from the resource file. */
-    for (index = 0; index < MAX_LIST_COLUMNS; index++)
+    /* Load the column labels from the resource file */
+    for (i = 0; i < nNumOfColumns; i++)
     {
-        lvC.iSubItem = index;
-        lvC.cx = default_column_widths[index];
-        lvC.fmt = column_alignment[index];
+        lvC.iSubItem = i;
+        lvC.cx = pColsWidth[i];
+        lvC.fmt = pColsAlign[i];
 
-        LoadStringW(hInstance, IDS_LIST_COLUMN_FIRST + index, szText, 50);
+        LoadStringW(hInstance, pIDs[i], szText, ARRAYSIZE(szText));
 
-        if (ListView_InsertColumn(hWndListView, index, &lvC) == -1)
+        if (ListView_InsertColumn(hWndListView, i, &lvC) == -1)
             return FALSE;
     }
+
     return TRUE;
 }
 
@@ -167,7 +172,11 @@ DriveDlgProc(
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             CreateListViewColumns(pSetupData->hInstance,
-                                  GetDlgItem(hwndDlg, IDC_PARTITION));
+                                  GetDlgItem(hwndDlg, IDC_PARTITION),
+                                  column_ids,
+                                  column_widths,
+                                  column_alignment,
+                                  MAX_LIST_COLUMNS);
 
 #if 1
             h = SetupDiGetClassDevs(&GUID_DEVCLASS_DISKDRIVE, NULL, NULL, DIGCF_PRESENT);

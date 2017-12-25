@@ -103,10 +103,11 @@ INT DisplayError(
 }
 
 static INT_PTR CALLBACK
-StartDlgProc(HWND hwndDlg,
-             UINT uMsg,
-             WPARAM wParam,
-             LPARAM lParam)
+StartDlgProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     PSETUPDATA pSetupData;
 
@@ -156,10 +157,11 @@ StartDlgProc(HWND hwndDlg,
 }
 
 static INT_PTR CALLBACK
-TypeDlgProc(HWND hwndDlg,
-            UINT uMsg,
-            WPARAM wParam,
-            LPARAM lParam)
+TypeDlgProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     PSETUPDATA pSetupData;
 
@@ -220,11 +222,89 @@ TypeDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+#define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
+static const UINT column_ids[MAX_LIST_COLUMNS] = {IDS_LIST_COLUMN_FIRST, IDS_LIST_COLUMN_FIRST + 1, IDS_LIST_COLUMN_FIRST + 2};
+static const INT  column_widths[MAX_LIST_COLUMNS] = {200, 150, 150};
+static const INT  column_alignment[MAX_LIST_COLUMNS] = {LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT};
+
 static INT_PTR CALLBACK
-DeviceDlgProc(HWND hwndDlg,
-              UINT uMsg,
-              WPARAM wParam,
-              LPARAM lParam)
+UpgradeRepairDlgProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
+{
+    PSETUPDATA pSetupData;
+    HWND hList;
+
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWL_USERDATA);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            /* Save pointer to the global setup data */
+            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtrW(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+
+            hList = GetDlgItem(hwndDlg, IDC_LIST1);
+
+            CreateListViewColumns(pSetupData->hInstance,
+                                  hList,
+                                  column_ids,
+                                  column_widths,
+                                  column_alignment,
+                                  MAX_LIST_COLUMNS);
+
+            break;
+        }
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                    break;
+
+                case PSN_QUERYCANCEL:
+                    SetWindowLongPtrW(hwndDlg,
+                                     DWL_MSGRESULT,
+                                     MessageBox(GetParent(hwndDlg),
+                                                pSetupData->szAbortMessage,
+                                                pSetupData->szAbortTitle,
+                                                MB_YESNO | MB_ICONQUESTION) != IDYES);
+                    return TRUE;
+
+                case PSN_WIZNEXT: // set the selected data
+                    pSetupData->RepairUpdateFlag = !(SendMessageW(GetDlgItem(hwndDlg, IDC_INSTALL),
+                                                                 BM_GETCHECK,
+                                                                 (WPARAM) 0,
+                                                                 (LPARAM) 0) == BST_CHECKED);
+                    return TRUE;
+
+                default:
+                    break;
+            }
+        }
+        break;
+
+        default:
+            break;
+
+    }
+    return FALSE;
+}
+
+static INT_PTR CALLBACK
+DeviceDlgProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     PSETUPDATA pSetupData;
     LONG i;
@@ -339,10 +419,11 @@ DeviceDlgProc(HWND hwndDlg,
 }
 
 static INT_PTR CALLBACK
-SummaryDlgProc(HWND hwndDlg,
-               UINT uMsg,
-               WPARAM wParam,
-               LPARAM lParam)
+SummaryDlgProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     PSETUPDATA pSetupData;
 
@@ -389,10 +470,11 @@ SummaryDlgProc(HWND hwndDlg,
 }
 
 static INT_PTR CALLBACK
-ProcessDlgProc(HWND hwndDlg,
-               UINT uMsg,
-               WPARAM wParam,
-               LPARAM lParam)
+ProcessDlgProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     PSETUPDATA pSetupData;
 
@@ -441,10 +523,11 @@ ProcessDlgProc(HWND hwndDlg,
 }
 
 static INT_PTR CALLBACK
-RestartDlgProc(HWND hwndDlg,
-               UINT uMsg,
-               WPARAM wParam,
-               LPARAM lParam)
+RestartDlgProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     PSETUPDATA pSetupData;
 
@@ -516,7 +599,7 @@ RestartDlgProc(HWND hwndDlg,
 }
 
 BOOL LoadSetupData(
-    PSETUPDATA pSetupData)
+    IN OUT PSETUPDATA pSetupData)
 {
     BOOL ret = TRUE;
     INFCONTEXT InfContext;
@@ -827,6 +910,7 @@ _tWinMain(HINSTANCE hInst,
         DisplayError(NULL, IDS_CAPTION, IDS_NO_TXTSETUP_SIF);
         goto Quit;
     }
+
     /* Load extra setup data (HW lists etc...) */
     if (!LoadSetupData(&SetupData))
         goto Quit;
@@ -854,7 +938,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszTemplate = MAKEINTRESOURCE(IDD_STARTPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-        /* Create install type selection page */
+        /* Create the install type selection page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_TYPETITLE);
@@ -865,7 +949,18 @@ _tWinMain(HINSTANCE hInst,
         psp.pszTemplate = MAKEINTRESOURCE(IDD_TYPEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-        /* Create device settings page */
+        /* Create the upgrade/repair selection page */
+        psp.dwSize = sizeof(PROPSHEETPAGE);
+        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+        psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_TYPETITLE);
+        psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_TYPESUBTITLE);
+        psp.hInstance = hInst;
+        psp.lParam = (LPARAM)&SetupData;
+        psp.pfnDlgProc = UpgradeRepairDlgProc;
+        psp.pszTemplate = MAKEINTRESOURCE(IDD_UPDATEREPAIRPAGE);
+        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+        /* Create the device settings page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_DEVICETITLE);
@@ -876,7 +971,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszTemplate = MAKEINTRESOURCE(IDD_DEVICEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-        /* Create install device settings page / boot method / install directory */
+        /* Create the install device settings page / boot method / install directory */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_DRIVETITLE);
@@ -887,7 +982,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszTemplate = MAKEINTRESOURCE(IDD_DRIVEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-        /* Create summary page */
+        /* Create the summary page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
         psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SUMMARYTITLE);
@@ -899,7 +994,7 @@ _tWinMain(HINSTANCE hInst,
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
     }
 
-    /* Create installation progress page */
+    /* Create the installation progress page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROCESSTITLE);
@@ -910,7 +1005,7 @@ _tWinMain(HINSTANCE hInst,
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-    /* Create finish to reboot page */
+    /* Create the finish-and-reboot page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
     psp.hInstance = hInst;
