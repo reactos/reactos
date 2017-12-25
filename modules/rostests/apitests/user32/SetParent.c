@@ -61,7 +61,7 @@ EnumProc(
 static
 LRESULT
 CALLBACK
-WndProc(
+SetParentTest_WndProc(
     _In_ HWND hWnd,
     _In_ UINT message,
     _In_ WPARAM wParam,
@@ -120,7 +120,7 @@ START_TEST(SetParent)
 
     dwThreadId = GetCurrentThreadId();
     hWndList[0] = INVALID_HANDLE_VALUE;
-    RegisterSimpleClass(WndProc, L"CreateTest");
+    RegisterSimpleClass(SetParentTest_WndProc, L"CreateTest");
 
     hWnd = CreateWindowExW(0, L"CreateTest", NULL, 0,  10, 10, 20, 20,  NULL, NULL, 0, NULL);
     ok(hWnd != NULL, "CreateWindow failed\n");

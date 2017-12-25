@@ -11,7 +11,7 @@ HWND hWnd1, hWnd2, hWnd3;
 HHOOK hMouseHookLL, hMouseHook;
 int ignore_timer = 0, ignore_mouse = 0, ignore_mousell = 0;
 
-static int get_iwnd(HWND hWnd)
+static int TrackMouseEventTest_get_iwnd(HWND hWnd)
 {
     if(hWnd == hWnd1) return 1;
     else if(hWnd == hWnd2) return 2;
@@ -21,7 +21,7 @@ static int get_iwnd(HWND hWnd)
 
 LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = TrackMouseEventTest_get_iwnd(hWnd);
 
     if(message == WM_PAINT)
     {
@@ -50,7 +50,7 @@ LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-static LRESULT CALLBACK MouseLLHookProc(int nCode, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK TrackMouseEventTest_MouseLLHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret;
     RECORD_MESSAGE(0, WH_MOUSE_LL, HOOK, wParam, 0);
@@ -64,7 +64,7 @@ static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     MOUSEHOOKSTRUCT *hs = (MOUSEHOOKSTRUCT*) lParam;
     LRESULT ret;
-    RECORD_MESSAGE(get_iwnd(hs->hwnd), WH_MOUSE, HOOK, wParam, hs->wHitTestCode);
+    RECORD_MESSAGE(TrackMouseEventTest_get_iwnd(hs->hwnd), WH_MOUSE, HOOK, wParam, hs->wHitTestCode);
     ret = CallNextHookEx(hMouseHook, nCode, wParam, lParam);
     if(ignore_mouse)
         return TRUE;
@@ -77,7 +77,7 @@ static void FlushMessages()
 
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
     {
-        int iwnd = get_iwnd(msg.hwnd);
+        int iwnd = TrackMouseEventTest_get_iwnd(msg.hwnd);
         if(iwnd)
         {
             if(msg.message == WM_SYSTIMER)
@@ -100,7 +100,7 @@ static void FlushMessages()
 
 static void create_test_windows()
 {
-    hMouseHookLL = SetWindowsHookExW(WH_MOUSE_LL, MouseLLHookProc, GetModuleHandleW( NULL ), 0);
+    hMouseHookLL = SetWindowsHookExW(WH_MOUSE_LL, TrackMouseEventTest_MouseLLHookProc, GetModuleHandleW( NULL ), 0);
     hMouseHook = SetWindowsHookExW(WH_MOUSE, MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
     ok(hMouseHook!=NULL,"failed to set hook\n");
     ok(hMouseHookLL!=NULL,"failed to set hook\n");

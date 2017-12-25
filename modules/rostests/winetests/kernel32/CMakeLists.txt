@@ -50,5 +50,5 @@ endif()
 
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
-add_pch(kernel32_winetest precomp.h SOURCE)
+add_pch(kernel32_winetest precomp.h SOURCE NO_UNITY_BUILD)
 add_rostests_file(TARGET kernel32_winetest)

@@ -28,7 +28,7 @@ if(USE_CLANG_CL OR (NOT MSVC))
     add_target_compile_flags(cmipci "-Wno-write-strings -Wno-switch")
 endif()
 
-add_pch(cmipci precomp.h SOURCE)
+add_pch(cmipci precomp.h SOURCE NO_UNITY_BUILD)
 add_cd_file(TARGET cmipci DESTINATION reactos/system32/drivers FOR all)
 
 if(ARCH STREQUAL "i386")

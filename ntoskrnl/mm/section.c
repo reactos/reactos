@@ -69,7 +69,7 @@ extern MMSESSION MmSession;
 NTSTATUS
 NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
-                       IN PVOID Session,
+                       IN PMMSESSION Session,
                        OUT PVOID *MappedBase,
                        IN OUT PSIZE_T ViewSize);
 

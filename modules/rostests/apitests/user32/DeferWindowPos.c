@@ -10,7 +10,7 @@
 HWND hWnd1, hWnd2, hWnd3, hWnd4;
 
 /* FIXME: test for HWND_TOP, etc...*/
-static int get_iwnd(HWND hWnd)
+static int DeferWindowPosTest_get_iwnd(HWND hWnd)
 {
     if(hWnd == hWnd1) return 1;
     else if(hWnd == hWnd2) return 2;
@@ -21,7 +21,7 @@ static int get_iwnd(HWND hWnd)
 
 LRESULT CALLBACK DWPTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = DeferWindowPosTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -38,7 +38,7 @@ LRESULT CALLBACK DWPTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         {
             WINDOWPOS* pwp = (WINDOWPOS*)lParam;
             ok(wParam==0,"expected wParam=0\n");
-            RECORD_MESSAGE(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
+            RECORD_MESSAGE(iwnd, message, SENT, DeferWindowPosTest_get_iwnd(pwp->hwndInsertAfter), pwp->flags);
             break;
         }
     default:
@@ -47,13 +47,13 @@ LRESULT CALLBACK DWPTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-static void FlushMessages()
+static void DeferWindowPosTest_FlushMessages()
 {
     MSG msg;
 
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
     {
-        int iwnd = get_iwnd(msg.hwnd);
+        int iwnd = DeferWindowPosTest_get_iwnd(msg.hwnd);
         if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
             RECORD_MESSAGE(iwnd, msg.message, POST,0,0);
         DispatchMessageA( &msg );
@@ -80,7 +80,7 @@ static BOOL IsNext(HWND hWnd1, HWND hWnd2)
 #define EXPECT_NEXT(hWnd1, hWnd2)                                         \
        ok(IsNext(hWnd1, hWnd2),                                           \
        "After hwnd%d, expected hwnd%d not hwnd%d\n",                      \
-        get_iwnd(hWnd1), get_iwnd(hWnd2),get_iwnd(GetWindow(hWnd1,GW_HWNDNEXT)) )
+        DeferWindowPosTest_get_iwnd(hWnd1), DeferWindowPosTest_get_iwnd(hWnd2),DeferWindowPosTest_get_iwnd(GetWindow(hWnd1,GW_HWNDNEXT)) )
 
 #define EXPECT_CHAIN(A,B,C,D)       \
     EXPECT_NEXT(hWnd##A, hWnd##B);  \
@@ -100,7 +100,7 @@ static void set_default_pos()
     SetWindowPos(hWnd3, 0, 20,350,300,300, SWP_NOOWNERZORDER|SWP_SHOWWINDOW|SWP_NOACTIVATE);
     SetWindowPos(hWnd4, 0, 250,250,200,200, SWP_NOOWNERZORDER|SWP_SHOWWINDOW|SWP_NOACTIVATE);
     SetActiveWindow(hWnd4);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     EMPTY_CACHE();
 }
 
@@ -243,7 +243,7 @@ static void Test_DWP_Error(HWND hWnd, HWND hWnd2)
     ok_windowpos(hWnd, 50, 60, 230, 240, "Window 1");
     ok_windowpos(hWnd2, 70, 80, 250, 260, "Window 2");
 
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     EMPTY_CACHE();
 }
 
@@ -294,7 +294,7 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
 
     SetWindowPos(hWnd1, 0, 10,20,100,100,0);
     SetWindowPos(hWnd2, 0, 10,20,100,100,0);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     EMPTY_CACHE();
 
     /* move hWnd1 */
@@ -302,11 +302,11 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
     hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 20, 30, 100, 100, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(empty_chain);
     ret = EndDeferWindowPos(hdwp);
     ok(ret != 0, "EndDeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(move1_chain);
 
     /* resize hWnd1 */
@@ -314,11 +314,11 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
     hdwp = DeferWindowPos(hdwp, hWnd1, HWND_TOP, 20, 30, 110, 110, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(empty_chain);
     ret = EndDeferWindowPos(hdwp);
     ok(ret != 0, "EndDeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(resize1_chain);
 
     /* move both windows */
@@ -328,11 +328,11 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     ok(hdwp != NULL, "DeferWindowPos failed\n");
     hdwp = DeferWindowPos(hdwp, hWnd2, HWND_TOP, 30, 40, 100, 100, SWP_NOACTIVATE|SWP_NOOWNERZORDER);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(empty_chain);
     ret = EndDeferWindowPos(hdwp);
     ok(ret != 0, "EndDeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(move1_2_chain);
 
     /* change the z-order of the first window */
@@ -340,11 +340,11 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     ok(hdwp != NULL, "BeginDeferWindowPos failed\n");
     hdwp = DeferWindowPos(hdwp, hWnd1, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(empty_chain);
     ret = EndDeferWindowPos(hdwp);
     ok(ret != 0, "EndDeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(ZOrder1_chain);
 
     /* change the z-order of both windows */
@@ -354,11 +354,11 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     ok(hdwp != NULL, "DeferWindowPos failed\n");
     hdwp = DeferWindowPos(hdwp, hWnd2, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOSIZE);
     ok(hdwp != NULL, "DeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(empty_chain);
     ret = EndDeferWindowPos(hdwp);
     ok(ret != 0, "EndDeferWindowPos failed\n");
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(ZOrder1and2_chain);
 
 }
@@ -433,27 +433,27 @@ static void Test_DWP_OwnerZOrder()
     /* note that SWP_NOACTIVATE must be used because otherwise
        SetWindowPos will call SetWindowPos again with different parameters */
     SetWindowPos(hWnd1, 0, 0,0,0,0, OwnerZOrderAParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder1A_chain);
     EXPECT_CHAIN(4,3,1,2);
 
     SetWindowPos(hWnd2, 0, 0,0,0,0, OwnerZOrderAParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder2A_chain);
     EXPECT_CHAIN(2,4,3,1);
 
     SetWindowPos(hWnd3, 0, 0,0,0,0, OwnerZOrderAParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder3A_chain);
     EXPECT_CHAIN(3,4,1,2);
 
     SetWindowPos(hWnd1, 0, 0,0,0,0, OwnerZOrderAParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder4A_chain);
     EXPECT_CHAIN(3,4,1,2);
 
     SetWindowPos(hWnd4, 0, 0,0,0,0, OwnerZOrderAParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder5A_chain);
     EXPECT_CHAIN(4,3,1,2);
 
@@ -467,27 +467,27 @@ static void Test_DWP_OwnerZOrder()
     EXPECT_CHAIN(4,3,2,1);
 
     SetWindowPos(hWnd1, 0, 0,0,0,0, OwnerZOrderBParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder1B_chain);
     EXPECT_CHAIN(1,4,3,2);
 
     SetWindowPos(hWnd2, 0, 0,0,0,0, OwnerZOrderBParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder2B_chain);
     EXPECT_CHAIN(2,1,4,3);
 
     SetWindowPos(hWnd3, 0, 0,0,0,0, OwnerZOrderBParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder3B_chain);
     EXPECT_CHAIN(3,2,1,4);
 
     SetWindowPos(hWnd1, 0, 0,0,0,0, OwnerZOrderBParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder4B_chain);
     EXPECT_CHAIN(1,3,2,4);
 
     SetWindowPos(hWnd4, 0, 0,0,0,0, OwnerZOrderBParams);
-    FlushMessages();
+    DeferWindowPosTest_FlushMessages();
     COMPARE_CACHE(OwnerZOrder5B_chain);
     EXPECT_CHAIN(4,1,3,2);
 

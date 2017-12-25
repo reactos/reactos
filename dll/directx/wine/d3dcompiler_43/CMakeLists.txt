@@ -8,8 +8,6 @@ spec2def(d3dcompiler_43.dll d3dcompiler_43.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     asmparser.c
-    asmshader.tab.c
-    asmshader.yy.c
     blob.c
     bytecodewriter.c
     compiler.c
@@ -23,6 +21,8 @@ list(APPEND SOURCE
 
 add_library(d3dcompiler_43 SHARED
     ${SOURCE}
+    asmshader.tab.c
+    asmshader.yy.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43.def)
 
@@ -30,5 +30,5 @@ set_module_type(d3dcompiler_43 win32dll)
 target_link_libraries(d3dcompiler_43 dx10guid uuid wine wpp)
 add_importlibs(d3dcompiler_43 msvcrt kernel32 ntdll)
 add_dependencies(d3dcompiler_43 d3d_idl_headers)
-add_pch(d3dcompiler_43 d3dcompiler_private.h SOURCE)
+add_pch(d3dcompiler_43 d3dcompiler_private.h SOURCE UNITY_DEBUGCHANNELS_COMPAT)
 add_cd_file(TARGET d3dcompiler_43 DESTINATION reactos/system32 FOR all)

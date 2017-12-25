@@ -33,6 +33,11 @@
 
 #include <wine/debug.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(mci);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(msvideo);
+#endif
+
 #define ICM_CHOOSE_COMPRESSOR 1
 
 /* HIC struct (same layout as Win95 one) */

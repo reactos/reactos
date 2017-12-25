@@ -10,7 +10,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
+static const CLASS_AND_INTERFACES ExpectedBrowseuiInterfaces[] =
 {
     {
         ID_NAME(CLSID_ACLCustomMRU),
@@ -409,9 +409,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         },
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
+static const INT ExpectedBrowseuiInterfaceCount = RTL_NUMBER_OF(ExpectedBrowseuiInterfaces);
 
 START_TEST(browseui)
 {
-    TestClasses(L"browseui", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"browseui", ExpectedBrowseuiInterfaces, ExpectedBrowseuiInterfaceCount);
 }

@@ -395,34 +395,48 @@ endmacro()
 set(PSEH_LIB "pseh")
 
 # Macros
-if(PCH AND (NOT ENABLE_CCACHE) AND (NOT CMAKE_HOST_APPLE))
-    add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
+if((PCH AND (NOT ENABLE_CCACHE) AND (NOT CMAKE_HOST_APPLE)) OR (GLOBAL_UNITY_BUILD))
     macro(add_pch _target _pch _sources)
-        # When including x.h GCC looks for x.h.gch first
-        set(_pch_final_name "${_target}_pch.h")
-        set(_gch ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}.gch)
-
-        if(IS_CPP)
-            set(_pch_language CXX)
+        set(_last_argument ${ARGN})
+        # Ability to enable unity builds globally and skip modules using NO_UNITY_BUILD
+        if((GLOBAL_UNITY_BUILD AND (NOT _last_argument STREQUAL "NO_UNITY_BUILD")) OR
+        # Ability to enable unity builds per module using UNITY_BUILD or UNITY_DEBUGCHANNELS_COMPAT
+           ((_last_argument STREQUAL "UNITY_BUILD") OR (_last_argument STREQUAL "UNITY_DEBUGCHANNELS_COMPAT")))
+            add_target_compile_definitions(${_target} _UNITY_BUILD_ENABLED_)
+            if(_last_argument STREQUAL "UNITY_DEBUGCHANNELS_COMPAT")
+                enable_unity_build(${_target} ${_pch} ${_sources} UNITY_DEBUGCHANNELS_COMPAT)
+            else()
+                enable_unity_build(${_target} ${_pch} ${_sources})
+            endif()
         else()
-            set(_pch_language C)
+            set_target_properties(${_target} PROPERTIES UNITY_BUILD_ON FALSE)
+            add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
+            # When including x.h GCC looks for x.h.gch first
+            set(_pch_final_name "${_target}_pch.h")
+            set(_gch ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}.gch)
+
+            if(IS_CPP)
+                set(_pch_language CXX)
+            else()
+                set(_pch_language C)
+            endif()
+
+            # Build the precompiled header
+            # HEADER_FILE_ONLY FALSE: force compiling the header
+            # EXTERNAL_SOURCE TRUE: don't use the .gch file when linking
+            set_source_files_properties(${_pch} PROPERTIES
+                HEADER_FILE_ONLY FALSE
+                LANGUAGE ${_pch_language}
+                EXTERNAL_SOURCE TRUE
+                OBJECT_LOCATION ${_gch})
+
+            # Include the gch in the specified source files, skipping the pch file itself
+            list(REMOVE_ITEM ${_sources} ${_pch})
+            foreach(_src ${${_sources}})
+                set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}")
+                set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
+            endforeach()
         endif()
-
-        # Build the precompiled header
-        # HEADER_FILE_ONLY FALSE: force compiling the header
-        # EXTERNAL_SOURCE TRUE: don't use the .gch file when linking
-        set_source_files_properties(${_pch} PROPERTIES
-            HEADER_FILE_ONLY FALSE
-            LANGUAGE ${_pch_language}
-            EXTERNAL_SOURCE TRUE
-            OBJECT_LOCATION ${_gch})
-
-        # Include the gch in the specified source files, skipping the pch file itself
-        list(REMOVE_ITEM ${_sources} ${_pch})
-        foreach(_src ${${_sources}})
-            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}")
-            set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
-        endforeach()
     endmacro()
 else()
     macro(add_pch _target _pch _sources)

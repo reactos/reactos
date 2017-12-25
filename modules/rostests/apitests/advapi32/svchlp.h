@@ -11,10 +11,10 @@
 
 /**********  S E R V I C E   ( C L I E N T )   M O D U L E   S I D E  *********/
 
-void send_msg(const char *type, const char *msg);
+void SendMsg(const char *type, const char *msg);
 void service_trace(const char *msg, ...);
-void service_ok(int cnd, const char *msg, ...);
-void service_process(BOOL (*start_service)(PCSTR, PCWSTR), int argc, char** argv);
+void ServiceOk(int cnd, const char *msg, ...);
+void ServiceProcess(BOOL (*start_service)(PCSTR, PCWSTR), int argc, char** argv);
 
 
 /***********  T E S T E R   ( S E R V E R )   M O D U L E   S I D E  **********/
@@ -69,4 +69,4 @@ SC_HANDLE register_serviceW(
 #define register_service    register_serviceA
 #endif
 
-void test_runner(void (*run_test)(PCSTR, PCWSTR, void*), void *param);
+void TestRunner(void (*run_test)(PCSTR, PCWSTR, void*), void *param);

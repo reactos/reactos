@@ -17,9 +17,6 @@
 #include <md5.h>
 #include <rc4.h>
 
-static const unsigned char CRYPT_LMhash_Magic[8] =
-    { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
-
 /******************************************************************************
  * SystemFunction001  [ADVAPI32.@]
  *

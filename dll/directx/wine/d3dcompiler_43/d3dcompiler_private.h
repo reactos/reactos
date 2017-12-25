@@ -38,6 +38,14 @@
 #include <wine/list.h>
 #include <wine/rbtree.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(asmshader);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(d3dcompiler);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(bytecodewriter);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(hlsl_parser);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(parsed_shader);
+#endif
+
 /*
  * This doesn't belong here, but for some functions it is possible to return that value,
  * see http://msdn.microsoft.com/en-us/library/bb205278%28v=VS.85%29.aspx

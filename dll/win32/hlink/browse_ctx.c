@@ -324,7 +324,11 @@ static HRESULT WINAPI IHlinkBC_Close(IHlinkBrowseContext* iface,
     return E_NOTIMPL;
 }
 
+#ifdef __REACTOS__
+static const IHlinkBrowseContextVtbl hlbcvt =
+#else
 static const IHlinkBrowseContextVtbl hlvt =
+#endif
 {
     IHlinkBC_fnQueryInterface,
     IHlinkBC_fnAddRef,
@@ -360,7 +364,11 @@ HRESULT HLinkBrowseContext_Constructor(IUnknown *pUnkOuter, REFIID riid, void **
         return E_OUTOFMEMORY;
 
     hl->ref = 1;
+#ifdef __REACTOS__
+    hl->IHlinkBrowseContext_iface.lpVtbl = &hlbcvt;
+#else
     hl->IHlinkBrowseContext_iface.lpVtbl = &hlvt;
+#endif
     list_init(&hl->links);
     hl->current = NULL;
 

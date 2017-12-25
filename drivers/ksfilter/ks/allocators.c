@@ -555,7 +555,7 @@ IKsAllocator_FreeFrame(
 }
 
 
-static KSDISPATCH_TABLE DispatchTable =
+static KSDISPATCH_TABLE AllocatorDispatchTable =
 {
     IKsAllocator_DispatchDeviceIoControl,
     KsDispatchInvalidDeviceRequest,
@@ -608,7 +608,7 @@ KsCreateDefaultAllocatorEx(
 
     /* allocate object header */
     
-    Status = KsAllocateObjectHeader((KSOBJECT_HEADER*)&Allocator->Header, 0, NULL, Irp, &DispatchTable);
+    Status = KsAllocateObjectHeader((KSOBJECT_HEADER*)&Allocator->Header, 0, NULL, Irp, &AllocatorDispatchTable);
     if (!NT_SUCCESS(Status))
     {
         FreeItem(AllocatorFraming);

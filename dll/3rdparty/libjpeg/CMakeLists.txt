@@ -62,5 +62,5 @@ list(APPEND SOURCE
 add_library(libjpeg SHARED ${SOURCE})
 set_module_type(libjpeg win32dll)
 add_importlibs(libjpeg msvcrt kernel32)
-add_pch(libjpeg precomp.h SOURCE)
+add_pch(libjpeg precomp.h SOURCE NO_UNITY_BUILD)
 add_cd_file(TARGET libjpeg DESTINATION reactos/system32 FOR all)

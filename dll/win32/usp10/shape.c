@@ -528,7 +528,11 @@ static const ScriptShapeData ShapingData[] =
     {{ thai_features, 1}, {thai_gpos_features, 3}, NULL, 0, ContextualShape_Thai, ShapeCharGlyphProp_Thai},
 };
 
+#ifdef __REACTOS__
+extern const scriptData scriptInformation[];
+#else
 extern scriptData scriptInformation[];
+#endif
 
 static int GSUB_apply_feature_all_lookups(const void *header, LoadedFeature *feature,
         WORD *glyphs, unsigned int glyph_index, int write_dir, int *glyph_count)

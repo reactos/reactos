@@ -22,5 +22,5 @@ list(APPEND SOURCE
 add_executable(crypt32_winetest ${SOURCE} testlist.c)
 set_module_type(crypt32_winetest win32cui)
 add_importlibs(crypt32_winetest crypt32 advapi32 user32 shlwapi shell32 msvcrt kernel32)
-add_pch(crypt32_winetest precomp.h SOURCE)
+add_pch(crypt32_winetest precomp.h SOURCE NO_UNITY_BUILD)
 add_rostests_file(TARGET crypt32_winetest)

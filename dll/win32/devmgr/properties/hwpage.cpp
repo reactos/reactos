@@ -64,7 +64,7 @@ typedef struct _HARDWARE_PAGE_DATA
     /* struct may be dynamically expanded here! */
 } HARDWARE_PAGE_DATA, *PHARDWARE_PAGE_DATA;
 
-#define CX_TYPECOLUMN_WIDTH 80
+#define HARDWARE_PAGE_CX_TYPECOLUMN_WIDTH 80
 
 static VOID
 InitializeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
@@ -99,7 +99,7 @@ InitializeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                    szColName,
                    sizeof(szColName) / sizeof(szColName[0])))
     {
-        lvc.cx = rcClient.right - CX_TYPECOLUMN_WIDTH -
+        lvc.cx = rcClient.right - HARDWARE_PAGE_CX_TYPECOLUMN_WIDTH -
                  GetSystemMetrics(SM_CXVSCROLL);
         (void)ListView_InsertColumn(hpd->hWndDevList,
                                     iCol++,
@@ -110,7 +110,7 @@ InitializeDevicesList(IN PHARDWARE_PAGE_DATA hpd)
                    szColName,
                    sizeof(szColName) / sizeof(szColName[0])))
     {
-        lvc.cx = CX_TYPECOLUMN_WIDTH;
+        lvc.cx = HARDWARE_PAGE_CX_TYPECOLUMN_WIDTH;
         (void)ListView_InsertColumn(hpd->hWndDevList,
                                     iCol++,
                                     &lvc);

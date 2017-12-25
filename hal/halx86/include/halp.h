@@ -4,7 +4,7 @@
 
 #pragma once
 
-#if defined(__GNUC__) && !defined(_MINIHAL_)
+#if defined(__GNUC__) && !defined(_MINIHAL_) && !defined(_UNITY_BUILD_ENABLED_)
 #define INIT_SECTION __attribute__((section ("INIT")))
 #else
 #define INIT_SECTION /* Done via alloc_text for MSC */

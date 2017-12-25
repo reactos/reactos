@@ -35,7 +35,7 @@
 
 #include <ntifs.h>
 
-#define PARAMETERS_KEY L"Parameters"     /* The parameters subkey under the device-specific key */
+#define PARAMETERS_SUBKEY L"Parameters"     /* The parameters subkey under the device-specific key */
 
 /*
  * @implemented
@@ -284,7 +284,7 @@ NdisOpenProtocolConfiguration(
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
 
     KeyNameU.Length = 0;
-    KeyNameU.MaximumLength = ProtocolSection->Length + sizeof(PARAMETERS_KEY) + sizeof(UNICODE_NULL);
+    KeyNameU.MaximumLength = ProtocolSection->Length + sizeof(PARAMETERS_SUBKEY) + sizeof(UNICODE_NULL);
     KeyNameU.Buffer = ExAllocatePool(PagedPool, KeyNameU.MaximumLength);
     if(!KeyNameU.Buffer)
     {
@@ -295,7 +295,7 @@ NdisOpenProtocolConfiguration(
     }
 
     RtlCopyUnicodeString(&KeyNameU, ProtocolSection);
-    RtlAppendUnicodeToString(&KeyNameU, PARAMETERS_KEY);
+    RtlAppendUnicodeToString(&KeyNameU, PARAMETERS_SUBKEY);
     InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
     *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);

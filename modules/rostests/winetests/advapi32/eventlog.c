@@ -31,7 +31,11 @@ static BOOL (WINAPI *pGetComputerNameExA)(COMPUTER_NAME_FORMAT,LPSTR,LPDWORD);
 static BOOL (WINAPI *pWow64DisableWow64FsRedirection)(PVOID *);
 static BOOL (WINAPI *pWow64RevertWow64FsRedirection)(PVOID);
 
+#ifdef __REACTOS__
+static void init_eventlog_function_pointers(void)
+#else
 static void init_function_pointers(void)
+#endif
 {
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
@@ -1240,7 +1244,11 @@ START_TEST(eventlog)
         return;
     }
 
+#ifdef __REACTOS__
+    init_eventlog_function_pointers();
+#else
     init_function_pointers();
+#endif
 
     /* Parameters only */
     test_open_close();

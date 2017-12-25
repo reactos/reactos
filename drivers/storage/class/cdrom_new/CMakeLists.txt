@@ -21,4 +21,4 @@ endif()
 
 set_module_type(cdrom_new kernelmodedriver)
 add_importlibs(cdrom_new classpnp ntoskrnl hal)
-add_pch(cdrom_new cdrom.h SOURCE)
+add_pch(cdrom_new cdrom.h SOURCE NO_UNITY_BUILD)

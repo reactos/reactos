@@ -25,13 +25,19 @@
 #include <ndk/cmfuncs.h>
 
 /* Unicode constants */
+#ifndef __REACTOS__
 static const WCHAR BackSlash[] = {'\\',0};
+#endif
 static const WCHAR GroupOrderListKey[] = {'S','Y','S','T','E','M','\\','C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\','C','o','n','t','r','o','l','\\','G','r','o','u','p','O','r','d','e','r','L','i','s','t',0};
+#ifndef __REACTOS__
 static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
+#endif
 static const WCHAR OemFileMask[] = {'o','e','m','*','.','i','n','f',0};
 static const WCHAR OemFileSpecification[] = {'o','e','m','%','l','u','.','i','n','f',0};
 static const WCHAR DotLnk[] = {'.','l','n','k',0};
+#ifndef __REACTOS__
 static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
+#endif
 
 static const WCHAR DependenciesKey[] = {'D','e','p','e','n','d','e','n','c','i','e','s',0};
 static const WCHAR DescriptionKey[] = {'D','e','s','c','r','i','p','t','i','o','n',0};
@@ -119,7 +125,9 @@ static const WCHAR UnregisterDlls[]  = {'U','n','r','e','g','i','s','t','e','r',
 static const WCHAR ProfileItems[]    = {'P','r','o','f','i','l','e','I','t','e','m','s',0};
 static const WCHAR Include[]         = {'I','n','c','l','u','d','e',0};
 static const WCHAR Needs[]           = {'N','e','e','d','s',0};
+#ifndef __REACTOS__
 static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
+#endif
 #ifdef __WINESRC__
 static const WCHAR WineFakeDlls[]    = {'W','i','n','e','F','a','k','e','D','l','l','s',0};
 #endif

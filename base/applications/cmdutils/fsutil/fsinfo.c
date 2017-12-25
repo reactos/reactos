@@ -14,7 +14,7 @@ static HandlerProc DriveTypeMain;
 static HandlerProc VolumeInfoMain;
 static HandlerProc NtfsInfoMain;
 static HandlerProc StatisticsMain;
-static HandlerItem HandlersList[] =
+static HandlerItem FsInfoHandlersList[] =
 {
     /* Proc, name, help */
     { DrivesMain, _T("drives"), _T("Enumerates the drives") },
@@ -633,16 +633,20 @@ StatisticsMain(int argc, const TCHAR *argv[])
 }
 
 static void
-PrintUsage(const TCHAR * Command)
+FsInfoPrintUsage(const TCHAR * Command)
 {
-    PrintDefaultUsage(_T(" FSINFO "), Command, (HandlerItem *)&HandlersList,
-                      (sizeof(HandlersList) / sizeof(HandlersList[0])));
+    PrintDefaultUsage(_T(" FSINFO "),
+                      Command,
+                      (HandlerItem *)&FsInfoHandlersList,
+                      _countof(FsInfoHandlersList));
 }
 
 int
 FsInfoMain(int argc, const TCHAR *argv[])
 {
-    return FindHandler(argc, argv, (HandlerItem *)&HandlersList,
-                       (sizeof(HandlersList) / sizeof(HandlersList[0])),
-                       PrintUsage);
+    return FindHandler(argc,
+                       argv,
+                       (HandlerItem *)&FsInfoHandlersList,
+                       _countof(FsInfoHandlersList),
+                       FsInfoPrintUsage);
 }

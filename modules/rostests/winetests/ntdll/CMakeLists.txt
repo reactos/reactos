@@ -38,5 +38,5 @@ endif()
 
 set_module_type(ntdll_winetest win32cui)
 add_importlibs(ntdll_winetest user32 ole32 advapi32 msvcrt kernel32 ntdll)
-add_pch(ntdll_winetest ntdll_test.h SOURCE)
+add_pch(ntdll_winetest ntdll_test.h SOURCE NO_UNITY_BUILD)
 add_rostests_file(TARGET ntdll_winetest)

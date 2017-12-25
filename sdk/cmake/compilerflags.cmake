@@ -21,7 +21,13 @@ function(add_target_property _module _propname)
             set(_newvalue "${_newvalue} ${_flag}")
         endforeach()
     endif()
-    set_property(TARGET ${_module} PROPERTY ${_propname} ${_newvalue})
+
+    get_target_property(_is_unity_build_on ${_module} UNITY_BUILD_ON)
+    if(_is_unity_build_on AND (_propname STREQUAL "COMPILE_FLAGS"))
+        target_compile_options(${_module} PRIVATE ${_newvalue})
+    else()
+        set_property(TARGET ${_module} PROPERTY ${_propname} ${_newvalue})
+    endif()
 endfunction()
 
 # Wrapper functions for the important properties, using add_target_property

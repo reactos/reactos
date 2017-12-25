@@ -23,76 +23,8 @@ RtlDosSearchPath_U(
 #define PrintablePointer(p) ((p) == InvalidPointer ? NULL : (p))
 
 static
-BOOLEAN
-CheckStringBuffer(
-    PCWSTR Buffer,
-    SIZE_T Length,
-    SIZE_T MaximumLength,
-    PCWSTR Expected)
-{
-    SIZE_T ExpectedLength = wcslen(Expected) * sizeof(WCHAR);
-    SIZE_T EqualLength;
-    BOOLEAN Result = TRUE;
-    SIZE_T i;
-
-    if (Length != ExpectedLength)
-    {
-        ok(0, "String length is %lu, expected %lu\n", (ULONG)Length, (ULONG)ExpectedLength);
-        Result = FALSE;
-    }
-
-    EqualLength = RtlCompareMemory(Buffer, Expected, Length);
-    if (EqualLength != Length)
-    {
-        ok(0, "String is '%S', expected '%S'\n", Buffer, Expected);
-        Result = FALSE;
-    }
-
-    if (Buffer[Length / sizeof(WCHAR)] != UNICODE_NULL)
-    {
-        ok(0, "Not null terminated\n");
-        Result = FALSE;
-    }
-
-    /* the function nulls the rest of the buffer! */
-    for (i = Length + sizeof(UNICODE_NULL); i < MaximumLength; i++)
-    {
-        UCHAR Char = ((PUCHAR)Buffer)[i];
-        if (Char != 0)
-        {
-            ok(0, "Found 0x%x at offset %lu, expected 0x%x\n", Char, (ULONG)i, 0);
-            /* don't count this as a failure unless the string was actually wrong */
-            //Result = FALSE;
-            /* don't flood the log */
-            break;
-        }
-    }
-
-    return Result;
-}
-
-static
-BOOLEAN
-CheckBuffer(
-    PVOID Buffer,
-    SIZE_T Size,
-    UCHAR Value)
-{
-    PUCHAR Array = Buffer;
-    SIZE_T i;
-
-    for (i = 0; i < Size; i++)
-        if (Array[i] != Value)
-        {
-            trace("Expected %x, found %x at offset %lu\n", Value, Array[i], (ULONG)i);
-            return FALSE;
-        }
-    return TRUE;
-}
-
-static
 VOID
-RunTestCases(
+RtlDosSearchPath_U_RunTestCases(
     PCWSTR CustomPath)
 {
     struct
@@ -380,7 +312,7 @@ START_TEST(RtlDosSearchPath_U)
     ok(Okay, "CheckBuffer failed\n");
 
     /* Now test the actual functionality */
-    RunTestCases(CustomPath);
+    RtlDosSearchPath_U_RunTestCases(CustomPath);
 
     /*
      * Clean up test folder - We can't delete it

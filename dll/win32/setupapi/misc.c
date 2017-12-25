@@ -25,7 +25,9 @@
 #include <lzexpand.h>
 
 /* Unicode constants */
+#ifndef __REACTOS__
 static const WCHAR BackSlash[] = {'\\',0};
+#endif
 static const WCHAR TranslationRegKey[] = {'\\','V','e','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n',0};
 
 /* Handles and critical sections for the SetupLog API */

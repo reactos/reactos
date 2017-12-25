@@ -226,4 +226,8 @@ extern HRESULT create_monodata(REFIID riid, LPVOID *ppObj) DECLSPEC_HIDDEN;
 extern void runtimehost_init(void);
 extern void runtimehost_uninit(void);
 
+#ifdef __REACTOS__
+BOOL get_install_root(LPWSTR install_dir);
+#endif
+
 #endif   /* __MSCOREE_PRIVATE__ */

@@ -37,7 +37,11 @@ typedef int (WINAPI *md4hashfunc)(LPVOID, const LPBYTE, LPBYTE);
 static md4hashfunc pSystemFunction010;
 static md4hashfunc pSystemFunction011;
 
+#ifdef __REACTOS__
+#define md4_ctxcmp( a, b ) memcmp( a, b, FIELD_OFFSET( MD4_CTX, in ) )
+#else
 #define ctxcmp( a, b ) memcmp( a, b, FIELD_OFFSET( MD4_CTX, in ) )
+#endif
 
 static void test_md4_ctx(void)
 {
@@ -75,6 +79,19 @@ static void test_md4_ctx(void)
 
     memset( &ctx, 0, sizeof(ctx) );
     pMD4Init( &ctx );
+#ifdef __REACTOS__
+    ok( !md4_ctxcmp( &ctx, &ctx_initialized ), "invalid initialization\n" );
+
+    pMD4Update( &ctx, message, size );
+    ok( !md4_ctxcmp( &ctx, &ctx_update1 ), "update doesn't work correctly\n" );
+
+    pMD4Update( &ctx, message, size );
+    ok( !md4_ctxcmp( &ctx, &ctx_update2 ), "update doesn't work correctly\n" );
+
+    pMD4Final( &ctx );
+    ok( md4_ctxcmp( &ctx, &ctx_initialized ), "context has changed\n" );
+    ok( !memcmp( ctx.digest, expect, sizeof(expect) ), "incorrect result\n" );
+#else
     ok( !ctxcmp( &ctx, &ctx_initialized ), "invalid initialization\n" );
 
     pMD4Update( &ctx, message, size );
@@ -86,6 +103,7 @@ static void test_md4_ctx(void)
     pMD4Final( &ctx );
     ok( ctxcmp( &ctx, &ctx_initialized ), "context has changed\n" );
     ok( !memcmp( ctx.digest, expect, sizeof(expect) ), "incorrect result\n" );
+#endif /* __REACTOS__ */
 
 }
 

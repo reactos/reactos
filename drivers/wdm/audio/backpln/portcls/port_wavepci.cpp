@@ -66,7 +66,7 @@ protected:
 
 };
 
-static GUID InterfaceGuids[3] = 
+static GUID WavePciInterfaceGuids[3] = 
 {
     {
         /// KS_CATEGORY_AUDIO
@@ -276,7 +276,7 @@ CPortWavePci::Init(
    // create the subdevice descriptor
     Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor, 
                                          3,
-                                         InterfaceGuids,
+                                         WavePciInterfaceGuids,
                                          0, 
                                          NULL,
                                          2, 

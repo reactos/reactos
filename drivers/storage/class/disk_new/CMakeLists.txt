@@ -20,5 +20,5 @@ endif()
 
 set_module_type(disk_new kernelmodedriver)
 add_importlibs(disk_new classpnp ntoskrnl hal)
-add_pch(disk_new disk.h SOURCE)
+add_pch(disk_new disk.h SOURCE NO_UNITY_BUILD)
 add_cd_file(TARGET disk_new DESTINATION reactos/system32/drivers NO_CAB FOR all)

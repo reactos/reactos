@@ -103,11 +103,13 @@ static void acquire_tests(IDirectInputA *pDI, HWND hwnd)
     if (pKeyboard) IUnknown_Release(pKeyboard);
 }
 
+#ifndef __REACTOS__
 static const HRESULT SetCoop_null_window[16] =  {
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     S_OK,         E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
+#endif
 
 static const HRESULT SetCoop_invalid_window[16] =  {
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
@@ -121,11 +123,13 @@ static const HRESULT SetCoop_real_window[16] =  {
     E_INVALIDARG, E_NOTIMPL,    S_OK,         E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
 
+#ifndef __REACTOS__
 static const HRESULT SetCoop_child_window[16] =  {
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
+#endif
 
 static void test_set_coop(IDirectInputA *pDI, HWND hwnd)
 {

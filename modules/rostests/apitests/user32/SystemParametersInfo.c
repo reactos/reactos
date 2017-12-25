@@ -10,7 +10,7 @@
 HWND hWnd1, hWnd2;
 
 /* FIXME: test for HWND_TOP, etc...*/
-static int get_iwnd(HWND hWnd)
+static int SystemParametersInfoTest_get_iwnd(HWND hWnd)
 {
     if(hWnd == hWnd1) return 1;
     else if(hWnd == hWnd2) return 2;
@@ -19,7 +19,7 @@ static int get_iwnd(HWND hWnd)
 
 LRESULT CALLBACK SysParamsTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = SystemParametersInfoTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -34,7 +34,7 @@ LRESULT CALLBACK SysParamsTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         {
             WINDOWPOS* pwp = (WINDOWPOS*)lParam;
             ok(wParam==0,"expected wParam=0\n");
-            RECORD_MESSAGE(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
+            RECORD_MESSAGE(iwnd, message, SENT, SystemParametersInfoTest_get_iwnd(pwp->hwndInsertAfter), pwp->flags);
             break;
         }
     default:
@@ -43,13 +43,13 @@ LRESULT CALLBACK SysParamsTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-static void FlushMessages()
+static void SystemParametersInfoTest_FlushMessages()
 {
     MSG msg;
 
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
     {
-        int iwnd = get_iwnd(msg.hwnd);
+        int iwnd = SystemParametersInfoTest_get_iwnd(msg.hwnd);
         if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
             RECORD_MESSAGE(iwnd, msg.message, POST,0,0);
         DispatchMessageA( &msg );
@@ -104,29 +104,29 @@ static void Test_NonClientMetrics()
     /* Retrieve th non client metrics */
     NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-    FlushMessages();
+    SystemParametersInfoTest_FlushMessages();
     COMPARE_CACHE(empty_chain);
 
     /* Set the non client metric without making any change */
     SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-    FlushMessages();
+    SystemParametersInfoTest_FlushMessages();
     COMPARE_CACHE(NcMetricsChange_chain);
 
     /* Set the same metrics again with the SPIF_SENDCHANGE param */
     SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, SPIF_SENDCHANGE|SPIF_UPDATEINIFILE );
-    FlushMessages();
+    SystemParametersInfoTest_FlushMessages();
     COMPARE_CACHE(NcMetricsChange1_chain);
 
     /* Slightly change the caption height */
     NonClientMetrics.iCaptionHeight += 1;
     SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-    FlushMessages();
+    SystemParametersInfoTest_FlushMessages();
     COMPARE_CACHE(CaptionHeight_chain);
 
     /* Restore the original caption height */
     NonClientMetrics.iCaptionHeight -= 1;
     SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
-    FlushMessages();
+    SystemParametersInfoTest_FlushMessages();
     COMPARE_CACHE(CaptionHeight_chain);
 }
 

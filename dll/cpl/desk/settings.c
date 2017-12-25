@@ -10,14 +10,14 @@
 
 #include "desk.h"
 
-typedef struct _DATA
+typedef struct _SETTINGS_DATA
 {
     PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
     PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice;
     HBITMAP hSpectrumBitmaps[NUM_SPECTRUM_BITMAPS];
     int cxSource[NUM_SPECTRUM_BITMAPS];
     int cySource[NUM_SPECTRUM_BITMAPS];
-} DATA, *PDATA;
+} SETTINGS_DATA, *PSETTINGS_DATA;
 
 typedef struct _TIMEOUTDATA
 {
@@ -27,7 +27,7 @@ typedef struct _TIMEOUTDATA
 } TIMEOUTDATA, *PTIMEOUTDATA;
 
 static VOID
-UpdateDisplay(IN HWND hwndDlg, PDATA pData, IN BOOL bUpdateThumb)
+UpdateDisplay(IN HWND hwndDlg, PSETTINGS_DATA pData, IN BOOL bUpdateThumb)
 {
     TCHAR Buffer[64];
     TCHAR Pixel[64];
@@ -170,7 +170,7 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
 }
 
 static BOOL
-AddDisplayDevice(IN PDATA pData, IN const DISPLAY_DEVICE *DisplayDevice)
+AddDisplayDevice(IN PSETTINGS_DATA pData, IN const DISPLAY_DEVICE *DisplayDevice)
 {
     PDISPLAY_DEVICE_ENTRY newEntry = NULL;
     LPTSTR description = NULL;
@@ -277,7 +277,7 @@ ByeBye:
 }
 
 static VOID
-OnDisplayDeviceChanged(IN HWND hwndDlg, IN PDATA pData, IN PDISPLAY_DEVICE_ENTRY pDeviceEntry)
+OnDisplayDeviceChanged(IN HWND hwndDlg, IN PSETTINGS_DATA pData, IN PDISPLAY_DEVICE_ENTRY pDeviceEntry)
 {
     PSETTINGS_ENTRY Current;
     DWORD index;
@@ -308,16 +308,16 @@ OnDisplayDeviceChanged(IN HWND hwndDlg, IN PDATA pData, IN PDISPLAY_DEVICE_ENTRY
 }
 
 static VOID
-OnInitDialog(IN HWND hwndDlg)
+SettingsOnInitDialog(IN HWND hwndDlg)
 {
     BITMAP bitmap;
     DWORD Result = 0;
     DWORD iDevNum = 0;
     DWORD i;
     DISPLAY_DEVICE displayDevice;
-    PDATA pData;
+    PSETTINGS_DATA pData;
 
-    pData = HeapAlloc(GetProcessHeap(), 0, sizeof(DATA));
+    pData = HeapAlloc(GetProcessHeap(), 0, sizeof(SETTINGS_DATA));
     if (pData == NULL)
         return;
 
@@ -419,9 +419,9 @@ OnInitDialog(IN HWND hwndDlg)
     }
 }
 
-/* Get the ID for DATA::hSpectrumBitmaps */
+/* Get the ID for SETTINGS_DATA::hSpectrumBitmaps */
 static VOID
-ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PDATA pData)
+ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PSETTINGS_DATA pData)
 {
     HDC hdcMem;
     INT iBitmap;
@@ -453,7 +453,7 @@ ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PDATA pD
 }
 
 static VOID
-OnBPPChanged(IN HWND hwndDlg, IN PDATA pData)
+OnBPPChanged(IN HWND hwndDlg, IN PSETTINGS_DATA pData)
 {
     /* If new BPP is not compatible with resolution:
      * 1) try to find the nearest smaller matching resolution
@@ -548,7 +548,7 @@ OnBPPChanged(IN HWND hwndDlg, IN PDATA pData)
 }
 
 static VOID
-OnResolutionChanged(IN HWND hwndDlg, IN PDATA pData, IN DWORD NewPosition,
+OnResolutionChanged(IN HWND hwndDlg, IN PSETTINGS_DATA pData, IN DWORD NewPosition,
                     IN BOOL bUpdateThumb)
 {
     /* If new resolution is not compatible with color depth:
@@ -722,7 +722,7 @@ ConfirmDlgProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam
 }
 
 static VOID
-ApplyDisplaySettings(HWND hwndDlg, PDATA pData)
+ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
 {
     TCHAR Message[1024], Title[256];
     DEVMODE devmode;
@@ -807,15 +807,15 @@ ApplyDisplaySettings(HWND hwndDlg, PDATA pData)
 INT_PTR CALLBACK
 SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam)
 {
-    PDATA pData;
+    PSETTINGS_DATA pData;
 
-    pData = (PDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pData = (PSETTINGS_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
         case WM_INITDIALOG:
         {
-            OnInitDialog(hwndDlg);
+            SettingsOnInitDialog(hwndDlg);
             break;
         }
         case WM_DRAWITEM:

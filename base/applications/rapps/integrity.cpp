@@ -6,14 +6,10 @@
  * COPYRIGHT:   Copyright Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *              Copyright Mark Jansen
  */
+
 #include "rapps.h"
 
 #include <sha1.h>
-
-BOOL VerifyInteg(const ATL::CStringW &SHA1Hash, const ATL::CStringW &FileName)
-{
-    return VerifyInteg(SHA1Hash.GetString(), FileName.GetString());
-}
 
 BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName)
 {

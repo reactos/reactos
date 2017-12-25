@@ -3,7 +3,7 @@
 /*
  * Use these to place a function in a specific section of the executable
  */
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(_UNITY_BUILD_ENABLED_)
 #define INIT_SECTION __attribute__((section ("INIT")))
 #define INIT_FUNCTION INIT_SECTION
 #else

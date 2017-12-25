@@ -15,7 +15,7 @@
 
 static HWND hToolsPage     = NULL;
 static HWND hToolsListCtrl = NULL;
-static int  iSortedColumn  = 0;
+static int  iToolsPageSortedColumn  = 0;
 
 struct TOOL
 {
@@ -442,8 +442,8 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     {
                         int iSortingColumn = ((LPNMLISTVIEW)lParam)->iSubItem;
 
-                        ListView_SortEx(hToolsListCtrl, iSortingColumn, iSortedColumn);
-                        iSortedColumn = iSortingColumn;
+                        ListView_SortEx(hToolsListCtrl, iSortingColumn, iToolsPageSortedColumn);
+                        iToolsPageSortedColumn = iSortingColumn;
 
                         return TRUE;
                     }

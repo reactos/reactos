@@ -294,7 +294,7 @@ GroupDelete(HWND hwndDlg)
 
 
 static VOID
-OnInitDialog(HWND hwndDlg)
+OnGroupsPageInitDialog(HWND hwndDlg)
 {
     HWND hwndListView;
     HIMAGELIST hImgList;
@@ -319,7 +319,7 @@ OnInitDialog(HWND hwndDlg)
 
 
 static BOOL
-OnBeginLabelEdit(LPNMLVDISPINFO pnmv)
+OnGroupsPageBeginLabelEdit(LPNMLVDISPINFO pnmv)
 {
     HWND hwndEdit;
 
@@ -334,7 +334,7 @@ OnBeginLabelEdit(LPNMLVDISPINFO pnmv)
 
 
 static BOOL
-OnEndLabelEdit(LPNMLVDISPINFO pnmv)
+OnGroupsPageEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
     TCHAR szOldGroupName[UNLEN];
     TCHAR szNewGroupName[UNLEN];
@@ -388,7 +388,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 
 
 static BOOL
-OnNotify(HWND hwndDlg, PGROUP_DATA pGroupData, NMHDR *phdr)
+OnGroupsPageNotify(HWND hwndDlg, PGROUP_DATA pGroupData, NMHDR *phdr)
 {
     LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)phdr;
 
@@ -420,10 +420,10 @@ OnNotify(HWND hwndDlg, PGROUP_DATA pGroupData, NMHDR *phdr)
                     break;
 
                 case LVN_BEGINLABELEDIT:
-                    return OnBeginLabelEdit((LPNMLVDISPINFO)phdr);
+                    return OnGroupsPageBeginLabelEdit((LPNMLVDISPINFO)phdr);
 
                 case LVN_ENDLABELEDIT:
-                    return OnEndLabelEdit((LPNMLVDISPINFO)phdr);
+                    return OnGroupsPageEndLabelEdit((LPNMLVDISPINFO)phdr);
             }
             break;
     }
@@ -455,7 +455,7 @@ GroupsPageProc(HWND hwndDlg,
 
             pGroupData->hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDM_POPUP_GROUP));
 
-            OnInitDialog(hwndDlg);
+            OnGroupsPageInitDialog(hwndDlg);
             SetMenuDefaultItem(GetSubMenu(pGroupData->hPopupMenu, 1),
                                IDM_GROUP_PROPERTIES,
                                FALSE);
@@ -487,7 +487,7 @@ GroupsPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            return OnNotify(hwndDlg, pGroupData, (NMHDR *)lParam);
+            return OnGroupsPageNotify(hwndDlg, pGroupData, (NMHDR *)lParam);
 
         case WM_DESTROY:
             DestroyMenu(pGroupData->hPopupMenu);

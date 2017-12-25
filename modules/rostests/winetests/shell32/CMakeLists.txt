@@ -38,5 +38,5 @@ if(MSVC)
     add_importlibs(shell32_winetest ntdll)
 endif()
 
-add_pch(shell32_winetest precomp.h SOURCE)
+add_pch(shell32_winetest precomp.h SOURCE NO_UNITY_BUILD)
 add_rostests_file(TARGET shell32_winetest)

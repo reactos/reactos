@@ -239,7 +239,7 @@ if(USE_DIBLIB)
 endif()
 
 add_importlibs(win32k ntoskrnl hal ftfd)
-add_pch(win32k pch.h SOURCE)
+add_pch(win32k pch.h SOURCE NO_UNITY_BUILD)
 add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 
 set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/w32ksvc.h)

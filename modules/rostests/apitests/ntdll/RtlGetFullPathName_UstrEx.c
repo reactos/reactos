@@ -41,9 +41,15 @@ NTSTATUS
         ok((str1)->MaximumLength == (str2)->MaximumLength, "MaximumLength modified\n"); \
     } while (0)
 
+#if defined(_UNITY_BUILD_ENABLED_) && (defined(__GNUC__) || defined(__clang__))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wformat"
+#pragma GCC diagnostic warning "-Wformat-extra-args"
+#endif
+
 static
 BOOLEAN
-CheckStringBuffer(
+CheckUnicodeStringBuffer(
     PCUNICODE_STRING String,
     PCWSTR Expected)
 {
@@ -88,44 +94,15 @@ CheckStringBuffer(
     return Result;
 }
 
-static
-BOOLEAN
-CheckBuffer(
-    PVOID Buffer,
-    SIZE_T Size,
-    UCHAR Value)
-{
-    PUCHAR Array = Buffer;
-    SIZE_T i;
-
-    for (i = 0; i < Size; i++)
-    {
-        if (Array[i] != Value)
-        {
-            trace("Expected %x, found %x at offset %lu\n", Value, Array[i], (ULONG)i);
-            return FALSE;
-        }
-    }
-    return TRUE;
-}
-
 #define RtlPathTypeNotSet 123
 
 /* winetest_platform is "windows" for us, so broken() doesn't do what it should :( */
 #undef broken
 #define broken(x) 0
 
-typedef enum
-{
-    PrefixNone,
-    PrefixCurrentDrive,
-    PrefixCurrentPath,
-    PrefixCurrentPathWithoutLastPart
-} PREFIX_TYPE;
-
 static
 VOID
-RunTestCases(VOID)
+RtlGetFullPathName_UstrEx_RunTestCases(VOID)
 {
     /* TODO: don't duplicate this in the other tests */
     /* TODO: Drive Relative tests don't work yet if the current drive isn't C: */
@@ -232,7 +209,7 @@ RunTestCases(VOID)
         ok_eq_ustr(&FileName, &TempString);
         ok(FullPathName.Buffer        == FullPathNameBuffer,         "Buffer modified\n");
         ok(FullPathName.MaximumLength == sizeof(FullPathNameBuffer), "MaximumLength modified\n");
-        Okay = CheckStringBuffer(&FullPathName, ExpectedPathName);
+        Okay = CheckUnicodeStringBuffer(&FullPathName, ExpectedPathName);
         ok(Okay, "Wrong path name '%wZ', expected '%S'\n", &FullPathName, ExpectedPathName);
         ok(StringUsed == &FullPathName, "StringUsed = %p, expected %p\n", StringUsed, &FullPathName);
         switch (TestCases[i].FilePartPrefixType)
@@ -279,6 +256,10 @@ RunTestCases(VOID)
         ok(LengthNeeded == 0, "LengthNeeded = %lu\n", (ULONG)LengthNeeded);
     }
 }
+
+#if defined(_UNITY_BUILD_ENABLED_) && (defined(__GNUC__) || defined(__clang__))
+#pragma GCC diagnostic pop
+#endif
 
 START_TEST(RtlGetFullPathName_UstrEx)
 {
@@ -421,5 +402,5 @@ START_TEST(RtlGetFullPathName_UstrEx)
     /* TODO: play around with StaticString and DynamicString */
 
     /* Check the actual functionality with different paths */
-    RunTestCases();
+    RtlGetFullPathName_UstrEx_RunTestCases();
 }

@@ -25,5 +25,5 @@ add_library(rsaenh SHARED
 set_module_type(rsaenh win32dll)
 target_link_libraries(rsaenh wine)
 add_importlibs(rsaenh msvcrt crypt32 advapi32 kernel32 ntdll)
-add_pch(rsaenh tomcrypt.h SOURCE)
+add_pch(rsaenh tomcrypt.h SOURCE NO_UNITY_BUILD)
 add_cd_file(TARGET rsaenh DESTINATION reactos/system32 FOR all)

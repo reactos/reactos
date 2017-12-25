@@ -20,7 +20,7 @@ list(APPEND SOURCE
 if(CMAKE_CROSSCOMPILING)
     add_library(cmlib ${SOURCE})
     add_dependencies(cmlib bugcodes xdk)
-    add_pch(cmlib cmlib.h SOURCE)
+    add_pch(cmlib cmlib.h SOURCE NO_UNITY_BUILD)
 else()
     add_definitions(
         -D__NO_CTYPE_INLINES

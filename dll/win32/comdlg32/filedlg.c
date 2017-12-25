@@ -3644,7 +3644,11 @@ ret:
  * Although shell32 is already linked the behaviour of exported StrRetToStrN
  * is dependent on whether emulated OS is unicode or not.
  */
+#ifdef __REACTOS__
+static HRESULT FILEDLG_StrRetToStrNW (LPWSTR dest, DWORD len, LPSTRRET src, const ITEMIDLIST *pidl)
+#else
 static HRESULT COMDLG32_StrRetToStrNW (LPWSTR dest, DWORD len, LPSTRRET src, const ITEMIDLIST *pidl)
+#endif
 {
 	switch (src->uType)
 	{
@@ -3810,7 +3814,11 @@ static HRESULT GetName(LPSHELLFOLDER lpsf, LPITEMIDLIST pidl,DWORD dwFlags,LPWST
   /* Get the display name of the pidl relative to the folder */
   if (SUCCEEDED(hRes = IShellFolder_GetDisplayNameOf(lpsf, pidl, dwFlags, &str)))
   {
+#ifdef __REACTOS__
+      return FILEDLG_StrRetToStrNW(lpstrFileName, MAX_PATH, &str, pidl);
+#else
       return COMDLG32_StrRetToStrNW(lpstrFileName, MAX_PATH, &str, pidl);
+#endif
   }
   return E_FAIL;
 }

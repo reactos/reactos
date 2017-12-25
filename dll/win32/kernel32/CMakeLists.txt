@@ -111,6 +111,6 @@ set_subsystem(kernel32 console)
 
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
 add_importlibs(kernel32 ntdll)
-add_pch(kernel32 k32.h SOURCE)
+add_pch(kernel32 k32.h SOURCE NO_UNITY_BUILD)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)

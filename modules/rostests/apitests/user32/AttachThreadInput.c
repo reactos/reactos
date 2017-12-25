@@ -27,17 +27,17 @@ HHOOK hKbdHookLL = NULL;
 
 #define EXPECT_FOREGROUND(expected) ok(GetForegroundWindow() == expected, \
                                        "Expected hwnd%d at the foreground, got hwnd%d\n", \
-                                       get_iwnd(expected), get_iwnd(GetForegroundWindow()));
+                                       AttachThreadInputTest_get_iwnd(expected), AttachThreadInputTest_get_iwnd(GetForegroundWindow()));
 
 #define EXPECT_ACTIVE(expected) ok(GetActiveWindow() == expected, \
                                    "Expected hwnd%d to be active, got hwnd%d\n", \
-                                   get_iwnd(expected), get_iwnd(GetActiveWindow()));
+                                   AttachThreadInputTest_get_iwnd(expected), AttachThreadInputTest_get_iwnd(GetActiveWindow()));
 
 /*
  *  Helper functions
  */
 
-static int get_iwnd(HWND hWnd)
+static int AttachThreadInputTest_get_iwnd(HWND hWnd)
 {
     if(hWnd == data[0].hWnd) return 0;
     else if(hWnd == data[1].hWnd) return 1;
@@ -49,7 +49,7 @@ static int get_iwnd(HWND hWnd)
 
 LRESULT CALLBACK TestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = AttachThreadInputTest_get_iwnd(hWnd);
 
     if(iwnd >= 0 && message > 0 && message < WM_APP && message != WM_TIMER) 
         record_message(&data[iwnd].cache, iwnd, message, SENT, wParam,0);
@@ -57,14 +57,14 @@ LRESULT CALLBACK TestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-static void FlushMessages()
+static void AttachThreadInputTest_FlushMessages()
 {
     MSG msg;
     LRESULT res;
 
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
     {
-        int iwnd = get_iwnd(msg.hwnd);
+        int iwnd = AttachThreadInputTest_get_iwnd(msg.hwnd);
         if( iwnd >= 0 && msg.message > 0 && msg.message < WM_APP && msg.message != WM_TIMER)
             record_message(&data[0].cache, iwnd, msg.message, POST, msg.wParam,0);
         DispatchMessageA( &msg );
@@ -99,7 +99,7 @@ static DWORD WINAPI thread_proc(void *param)
                                        100, 100, 500, 500, NULL, NULL, 0, NULL);
     SetEvent( current_data->StartEvent );
 
-    iwnd = get_iwnd(current_data->hWnd);
+    iwnd = AttachThreadInputTest_get_iwnd(current_data->hWnd);
 
     /* Use MsgWaitForMultipleObjects to let the thread process apcs */
     while( GetMessage(&msg, 0,0,0) )
@@ -355,7 +355,7 @@ void Test_Focus() //Focus Active Capture Foreground Capture
     /* Window 1 is in the foreground */
     SetForegroundWindow(data[1].hWnd);
     SetActiveWindow(data[0].hWnd);
-    FlushMessages();
+    AttachThreadInputTest_FlushMessages();
 
     EXPECT_FOREGROUND(data[1].hWnd);
     EXPECT_ACTIVE(data[0].hWnd);
@@ -364,7 +364,7 @@ void Test_Focus() //Focus Active Capture Foreground Capture
     {
         ret = AttachThreadInput( data[0].tid, data[1].tid , TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
 
         EXPECT_FOREGROUND(data[1].hWnd);
         EXPECT_ACTIVE(data[1].hWnd);
@@ -378,7 +378,7 @@ void Test_Focus() //Focus Active Capture Foreground Capture
 
     SetForegroundWindow(data[1].hWnd);
     SetActiveWindow(data[0].hWnd);
-    FlushMessages();
+    AttachThreadInputTest_FlushMessages();
 
     EXPECT_FOREGROUND(data[1].hWnd);
     EXPECT_ACTIVE(data[0].hWnd);
@@ -387,7 +387,7 @@ void Test_Focus() //Focus Active Capture Foreground Capture
     {
         ret = AttachThreadInput( data[1].tid, data[0].tid , TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
 
         EXPECT_FOREGROUND(data[1].hWnd);
         EXPECT_ACTIVE(data[1].hWnd);
@@ -399,7 +399,7 @@ void Test_Focus() //Focus Active Capture Foreground Capture
     /* Window 0 is in the foreground */
     SetForegroundWindow(data[0].hWnd);
     SetActiveWindow(data[1].hWnd);
-    FlushMessages();
+    AttachThreadInputTest_FlushMessages();
 
     EXPECT_FOREGROUND(data[0].hWnd);
     EXPECT_ACTIVE(data[0].hWnd);
@@ -408,14 +408,14 @@ void Test_Focus() //Focus Active Capture Foreground Capture
     {
         ret = AttachThreadInput( data[0].tid, data[1].tid , TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
 
         EXPECT_FOREGROUND(data[0].hWnd);
         EXPECT_ACTIVE(data[0].hWnd);
 
         SetForegroundWindow(data[0].hWnd);
         SetActiveWindow(data[1].hWnd);
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
 
         EXPECT_FOREGROUND(data[1].hWnd);
         EXPECT_ACTIVE(data[1].hWnd);
@@ -429,7 +429,7 @@ void Test_Focus() //Focus Active Capture Foreground Capture
 
     SetForegroundWindow(data[0].hWnd);
     SetActiveWindow(data[1].hWnd);
-    FlushMessages();
+    AttachThreadInputTest_FlushMessages();
 
     EXPECT_FOREGROUND(data[0].hWnd);
     EXPECT_ACTIVE(data[0].hWnd);
@@ -438,14 +438,14 @@ void Test_Focus() //Focus Active Capture Foreground Capture
     {
         ret = AttachThreadInput( data[1].tid, data[0].tid , TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
 
         EXPECT_FOREGROUND(data[0].hWnd);
         EXPECT_ACTIVE(data[0].hWnd);
 
         SetForegroundWindow(data[0].hWnd);
         SetActiveWindow(data[1].hWnd);
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
 
         EXPECT_FOREGROUND(data[1].hWnd);
         EXPECT_ACTIVE(data[1].hWnd);
@@ -485,7 +485,7 @@ void Test_UnaffectedMessages()
         PostMessage(data[0].hWnd, WM_USER, 2,0);
         PostMessage(data[1].hWnd, WM_USER, 3,0);
 
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
         Sleep(100);
 
         COMPARE_CACHE_(&data[0].cache, Thread0_chain);
@@ -557,14 +557,14 @@ void Test_SendInput()
         ok(GetForegroundWindow() == data[1].hWnd, "wrong foreground got 0x%p\n",GetForegroundWindow());
         ok(GetActiveWindow() == data[0].hWnd, "wrong active got 0x%p\n",GetActiveWindow());
 
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
         EMPTY_CACHE_(&data[0].cache);
         EMPTY_CACHE_(&data[1].cache);
 
         keybd_event(VK_SHIFT, 0,0,0);
         keybd_event(VK_SHIFT, 0,KEYEVENTF_KEYUP,0);
         Sleep(100);
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
     
         COMPARE_CACHE_(&data[0].cache, empty_chain);
         COMPARE_CACHE_(&data[1].cache, Thread1_chain);
@@ -575,14 +575,14 @@ void Test_SendInput()
         ret = AttachThreadInput( data[1].tid, data[0].tid , TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
     
-        FlushMessages();    
+        AttachThreadInputTest_FlushMessages();    
         EMPTY_CACHE_(&data[0].cache);
         EMPTY_CACHE_(&data[1].cache);
 
         keybd_event(VK_SHIFT, 0,0,0);
         keybd_event(VK_SHIFT, 0,KEYEVENTF_KEYUP,0);
         Sleep(100);
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
     
         COMPARE_CACHE_(&data[0].cache, empty_chain);
         COMPARE_CACHE_(&data[1].cache, Thread1_chain);
@@ -592,7 +592,7 @@ void Test_SendInput()
     {
         SetForegroundWindow(data[1].hWnd);
         SetActiveWindow(data[0].hWnd);
-        FlushMessages();    
+        AttachThreadInputTest_FlushMessages();    
 
         ok(GetForegroundWindow() == data[0].hWnd, "wrong foreground got 0x%p\n",GetForegroundWindow());
         ok(GetActiveWindow() == data[0].hWnd, "wrong active got 0x%p\n",GetActiveWindow());
@@ -603,7 +603,7 @@ void Test_SendInput()
         keybd_event(VK_SHIFT, 0,0,0);
         keybd_event(VK_SHIFT, 0,KEYEVENTF_KEYUP,0);
         Sleep(100);
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
     
         COMPARE_CACHE_(&data[0].cache, Thread0_chain);
         COMPARE_CACHE_(&data[1].cache, empty_chain);
@@ -617,14 +617,14 @@ void Test_SendInput()
         ret = AttachThreadInput( data[0].tid, data[1].tid , TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
     
-        FlushMessages();    
+        AttachThreadInputTest_FlushMessages();    
         EMPTY_CACHE_(&data[0].cache);
         EMPTY_CACHE_(&data[1].cache);
 
         keybd_event(VK_SHIFT, 0,0,0);
         keybd_event(VK_SHIFT, 0,KEYEVENTF_KEYUP,0);
         Sleep(100);
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
     
         COMPARE_CACHE_(&data[0].cache, Thread0_chain);
         COMPARE_CACHE_(&data[1].cache, empty_chain);
@@ -634,7 +634,7 @@ void Test_SendInput()
     {
         SetForegroundWindow(data[1].hWnd);
         SetActiveWindow(data[0].hWnd);
-        FlushMessages();    
+        AttachThreadInputTest_FlushMessages();    
 
         ok(GetForegroundWindow() == data[0].hWnd, "wrong foreground got 0x%p\n",GetForegroundWindow());
         ok(GetActiveWindow() == data[0].hWnd, "wrong active got 0x%p\n",GetActiveWindow());
@@ -645,7 +645,7 @@ void Test_SendInput()
         keybd_event(VK_SHIFT, 0,0,0);
         keybd_event(VK_SHIFT, 0,KEYEVENTF_KEYUP,0);
         Sleep(100);
-        FlushMessages();
+        AttachThreadInputTest_FlushMessages();
     
         COMPARE_CACHE_(&data[0].cache, Thread0_chain);
         COMPARE_CACHE_(&data[1].cache, empty_chain);

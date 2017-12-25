@@ -12,7 +12,7 @@ HWND hWnd1, hWnd2;
 CRITICAL_SECTION CritSect;
 
 /* FIXME: test for HWND_TOP, etc...*/
-static int get_iwnd(HWND hWnd)
+static int EmptyClipboardTest_get_iwnd(HWND hWnd)
 {
     if(hWnd == hWnd1) return 1;
     else if(hWnd2 && hWnd == hWnd2) return 2;
@@ -21,7 +21,7 @@ static int get_iwnd(HWND hWnd)
 
 LRESULT CALLBACK ClipTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = EmptyClipboardTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -43,7 +43,7 @@ LRESULT CALLBACK ClipTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 static void RecordAndDispatch(MSG* pmsg)
 {
-    int iwnd = get_iwnd(pmsg->hwnd);
+    int iwnd = EmptyClipboardTest_get_iwnd(pmsg->hwnd);
     if(!(pmsg->message > WM_USER || !iwnd || IsDWmMsg(pmsg->message) || IseKeyMsg(pmsg->message)))
     {
         EnterCriticalSection(&CritSect);
@@ -53,7 +53,7 @@ static void RecordAndDispatch(MSG* pmsg)
     DispatchMessageA( pmsg );
 }
 
-static void FlushMessages()
+static void EmptyClipboardTest_FlushMessages()
 {
     MSG msg;
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
@@ -86,7 +86,7 @@ static DWORD WINAPI ClipThread(PVOID Parameter)
     ok (ret, "CloseClipboard failed\n");
 
     /* Record if we got any post messages */
-    FlushMessages();
+    EmptyClipboardTest_FlushMessages();
 
     /* Force the parent thread out of its loop */
     PostMessageW(hWnd1, WM_QUIT, 0, 0);
@@ -130,7 +130,7 @@ void TestMessages()
     ok (ret, "CloseClipboard failed\n");
 
     /* Record posted messages */
-    FlushMessages();
+    EmptyClipboardTest_FlushMessages();
     COMPARE_CACHE(empty_chain);
 
     /* Create the child thread and record messages till we get the WM_QUIT */

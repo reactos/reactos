@@ -11,6 +11,7 @@
 #include <winuser.h>
 #include <winreg.h>
 #include <winnetwk.h>
+#include <npapi.h>
 
 #include <wine/debug.h>
 

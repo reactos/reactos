@@ -33,7 +33,7 @@ add_library(classpnp SHARED
     class.rc
     ${CMAKE_CURRENT_BINARY_DIR}/classpnp.def)
 
-add_pch(classpnp classp.h SOURCE)
+add_pch(classpnp classp.h SOURCE NO_UNITY_BUILD)
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 set_module_type(classpnp kernelmodedriver)
 add_importlibs(classpnp hal ntoskrnl)

@@ -354,7 +354,7 @@ RemoveUserFromGroup(HWND hwndDlg,
 
 
 static BOOL
-OnNotify(HWND hwndDlg,
+OnGroupGeneralPageNotify(HWND hwndDlg,
          PGENERAL_GROUP_DATA pGroupData,
          LPARAM lParam)
 {
@@ -581,7 +581,7 @@ GroupGeneralPageProc(HWND hwndDlg,
             }
             else
             {
-                return OnNotify(hwndDlg, pGroupData, lParam);
+                return OnGroupGeneralPageNotify(hwndDlg, pGroupData, lParam);
             }
             break;
 
@@ -595,7 +595,7 @@ GroupGeneralPageProc(HWND hwndDlg,
 
 
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPTSTR pszGroup)
+InitGroupPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPTSTR pszGroup)
 {
     ZeroMemory(psp, sizeof(PROPSHEETPAGE));
     psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -638,7 +638,7 @@ GroupProperties(HWND hwndDlg)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_GROUP_GENERAL, GroupGeneralPageProc, szGroupName);
+    InitGroupPropSheetPage(&psp[0], IDD_GROUP_GENERAL, GroupGeneralPageProc, szGroupName);
 
     return (PropertySheet(&psh) == IDOK);
 }

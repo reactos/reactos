@@ -27,7 +27,11 @@ HMODULE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
 BOOL    WINAPI MLFreeLibrary(HMODULE);
 HRESULT WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
 
+#ifdef __REACTOS__
+static inline WCHAR *url_heap_strdupAtoW(const char *str)
+#else
 static inline WCHAR *heap_strdupAtoW(const char *str)
+#endif
 {
     LPWSTR ret = NULL;
 
@@ -241,7 +245,11 @@ HRESULT WINAPI UrlCanonicalizeA(LPCSTR pszUrl, LPSTR pszCanonicalized,
     if(!pszUrl || !pszCanonicalized || !pcchCanonicalized || !*pcchCanonicalized)
 	return E_INVALIDARG;
 
+#ifdef __REACTOS__
+    url = url_heap_strdupAtoW(pszUrl);
+#else
     url = heap_strdupAtoW(pszUrl);
+#endif
     canonical = HeapAlloc(GetProcessHeap(), 0, *pcchCanonicalized*sizeof(WCHAR));
     if(!url || !canonical) {
         HeapFree(GetProcessHeap(), 0, url);

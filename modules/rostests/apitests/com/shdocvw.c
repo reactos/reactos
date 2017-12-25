@@ -10,7 +10,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
+static const CLASS_AND_INTERFACES ExpectedShdocvwInterfaces[] =
 {
     {
         ID_NAME(CLSID_AdminFolderShortcut),
@@ -238,9 +238,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
+static const INT ExpectedShdocvwInterfaceCount = RTL_NUMBER_OF(ExpectedShdocvwInterfaces);
 
 START_TEST(shdocvw)
 {
-    TestClasses(L"shdocvw", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"shdocvw", ExpectedShdocvwInterfaces, ExpectedShdocvwInterfaceCount);
 }

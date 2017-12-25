@@ -78,13 +78,14 @@ protected:
 
 };
 
-
+#if 0
 typedef struct
 {
     CPortPinWaveRT *Pin;
     PIO_WORKITEM WorkItem;
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
+#endif
 
 
 //==================================================================================================================================

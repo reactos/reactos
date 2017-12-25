@@ -71,7 +71,9 @@ static VOID (WINAPI *pBuildTrusteeWithObjectsAndSidA)( PTRUSTEEA pTrustee,
                                                          PSID pSid );
 static LPSTR (WINAPI *pGetTrusteeNameA)( PTRUSTEEA pTrustee );
 static BOOL (WINAPI *pMakeSelfRelativeSD)( PSECURITY_DESCRIPTOR, PSECURITY_DESCRIPTOR, LPDWORD );
+#ifndef __REACTOS__
 static BOOL (WINAPI *pConvertStringSidToSidA)( LPCSTR str, PSID pSid );
+#endif
 static BOOL (WINAPI *pCheckTokenMembership)(HANDLE, PSID, PBOOL);
 static BOOL (WINAPI *pConvertStringSecurityDescriptorToSecurityDescriptorA)(LPCSTR, DWORD,
                                                                             PSECURITY_DESCRIPTOR*, PULONG );
@@ -157,7 +159,11 @@ static const char* debugstr_sid(PSID sid)
     return res;
 }
 
+#ifdef __REACTOS__
+static void security_test_init(void)
+#else
 static void init(void)
+#endif
 {
     HMODULE hntdll;
 
@@ -2425,7 +2431,11 @@ static void test_LookupAccountSid(void)
     }
 }
 
+#ifdef __REACTOS__
+static BOOL security_get_sid_info(PSID psid, LPSTR *user, LPSTR *dom)
+#else
 static BOOL get_sid_info(PSID psid, LPSTR *user, LPSTR *dom)
+#endif
 {
     static CHAR account[UNLEN + 1];
     static CHAR domain[UNLEN + 1];
@@ -2477,14 +2487,22 @@ static void check_wellknown_name(const char* name, WELL_KNOWN_SID_TYPE result)
         goto cleanup;
     }
 
+#ifdef __REACTOS__
+    ret2 = security_get_sid_info(wk_sid, &wk_account, &wk_domain);
+#else
     ret2 = get_sid_info(wk_sid, &wk_account, &wk_domain);
+#endif
     if (!ret2 && GetLastError() == ERROR_NONE_MAPPED)
     {
         win_skip("CreateWellKnownSid() succeeded but the account '%s' is not present (W2K)\n", name);
         goto cleanup;
     }
 
+#ifdef __REACTOS__
+    security_get_sid_info(psid, &account, &sid_domain);
+#else
     get_sid_info(psid, &account, &sid_domain);
+#endif
 
     ok(ret, "Failed to lookup account name %s\n",name);
     ok(sid_size != 0, "sid_size was zero\n");
@@ -2551,7 +2569,11 @@ static void test_LookupAccountName(void)
 
     /* try valid account name */
     ret = LookupAccountNameA(NULL, user_name, psid, &sid_size, domain, &domain_size, &sid_use);
+#ifdef __REACTOS__
+    security_get_sid_info(psid, &account, &sid_dom);
+#else
     get_sid_info(psid, &account, &sid_dom);
+#endif
     ok(ret, "Failed to lookup account name\n");
     ok(sid_size == GetLengthSid(psid), "Expected %d, got %d\n", GetLengthSid(psid), sid_size);
     ok(!lstrcmpA(account, user_name), "Expected %s, got %s\n", user_name, account);
@@ -2569,7 +2591,11 @@ static void test_LookupAccountName(void)
     else
     {
         ret = LookupAccountNameA(NULL, "Everyone", psid, &sid_size, domain, &domain_size, &sid_use);
+#ifdef __REACTOS__
+        security_get_sid_info(psid, &account, &sid_dom);
+#else
         get_sid_info(psid, &account, &sid_dom);
+#endif
         ok(ret, "Failed to lookup account name\n");
         ok(sid_size != 0, "sid_size was zero\n");
         ok(!lstrcmpA(account, "Everyone"), "Expected Everyone, got %s\n", account);
@@ -2635,7 +2661,11 @@ static void test_LookupAccountName(void)
 
         /* try NULL account name */
         ret = LookupAccountNameA(NULL, NULL, psid, &sid_size, domain, &domain_size, &sid_use);
+#ifdef __REACTOS__
+        security_get_sid_info(psid, &account, &sid_dom);
+#else
         get_sid_info(psid, &account, &sid_dom);
+#endif
         ok(ret, "Failed to lookup account name\n");
         /* Using a fixed string will not work on different locales */
         ok(!lstrcmpiA(account, domain),
@@ -8014,7 +8044,11 @@ static void test_BuildSecurityDescriptorW(void)
 
 START_TEST(security)
 {
+#ifdef __REACTOS__
+    security_test_init();
+#else
     init();
+#endif
     if (!hmod) return;
 
     if (myARGC >= 3)

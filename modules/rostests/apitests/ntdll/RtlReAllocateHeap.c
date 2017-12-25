@@ -9,25 +9,6 @@
 
 static
 BOOLEAN
-CheckBuffer(
-    PVOID Buffer,
-    SIZE_T Size,
-    UCHAR Value)
-{
-    PUCHAR Array = Buffer;
-    SIZE_T i;
-
-    for (i = 0; i < Size; i++)
-        if (Array[i] != Value)
-        {
-            trace("Expected %x, found %x at offset %lu\n", Value, Array[i], (ULONG)i);
-            return FALSE;
-        }
-    return TRUE;
-}
-
-static
-BOOLEAN
 ReAllocBuffer(
     PUCHAR *Buffer,
     SIZE_T Size,

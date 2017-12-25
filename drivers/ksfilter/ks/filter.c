@@ -1144,7 +1144,7 @@ IKsFilter_DispatchDeviceIoControl(
     return Status;
 }
 
-static KSDISPATCH_TABLE DispatchTable =
+static KSDISPATCH_TABLE FilterDispatchTable =
 {
     IKsFilter_DispatchDeviceIoControl,
     KsDispatchInvalidDeviceRequest,
@@ -1805,7 +1805,7 @@ KspCreateFilter(
     }
 
     /* now allocate the object header */
-    Status = KsAllocateObjectHeader((PVOID*)&This->ObjectHeader, 2, CreateItem, Irp, &DispatchTable);
+    Status = KsAllocateObjectHeader((PVOID*)&This->ObjectHeader, 2, CreateItem, Irp, &FilterDispatchTable);
     if (!NT_SUCCESS(Status))
     {
         /* failed to allocate object header */

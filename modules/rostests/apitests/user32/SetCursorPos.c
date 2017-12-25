@@ -30,19 +30,19 @@ struct _test_info results[8];
 int test_no = 0;
 
 
-LRESULT CALLBACK MouseLLHookProc(int nCode, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK SetCursorPosTest_MouseLLHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     results[test_no].ll_hook_called++;
     return CallNextHookEx(hMouseHookLL, nCode, wParam, lParam);
 }
 
-LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK SetCursorPosTest_MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     results[test_no].hook_called++;
     return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
 }
 
-static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+static LRESULT CALLBACK SetCursorPosTest_WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     if(msg == WM_MOUSEMOVE)
         results[test_no].mouse_move_called++;
@@ -59,7 +59,7 @@ static HWND CreateTestWindow()
 
     wclass.lpszClassName = "MouseInputTestClass";
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
-    wclass.lpfnWndProc   = WndProc;
+    wclass.lpfnWndProc   = SetCursorPosTest_WndProc;
     wclass.hInstance     = hInstance;
     wclass.hIcon         = LoadIconA( 0, IDI_APPLICATION );
     wclass.hCursor       = LoadCursorA( NULL, IDC_ARROW );
@@ -91,8 +91,8 @@ void Test_SetCursorPos()
     MSG msg;
     int i;
 
-    hMouseHookLL = SetWindowsHookEx(WH_MOUSE_LL, MouseLLHookProc, GetModuleHandleA( NULL ), 0);
-    hMouseHook = SetWindowsHookExW(WH_MOUSE, MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
+    hMouseHookLL = SetWindowsHookEx(WH_MOUSE_LL, SetCursorPosTest_MouseLLHookProc, GetModuleHandleA( NULL ), 0);
+    hMouseHook = SetWindowsHookExW(WH_MOUSE, SetCursorPosTest_MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
     ok(hMouseHook!=NULL,"failed to set hook\n");
     ok(hMouseHookLL!=NULL,"failed to set hook\n");
 

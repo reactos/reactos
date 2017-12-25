@@ -43,5 +43,5 @@ endif()
 
 set_module_type(comctl32_winetest win32cui)
 add_importlibs(comctl32_winetest comctl32 ole32 user32 gdi32 advapi32 msvcrt kernel32)
-add_pch(comctl32_winetest precomp.h SOURCE)
+add_pch(comctl32_winetest precomp.h SOURCE NO_UNITY_BUILD)
 add_rostests_file(TARGET comctl32_winetest)

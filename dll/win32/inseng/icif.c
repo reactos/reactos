@@ -1518,7 +1518,11 @@ void add_component_by_priority(struct ciffile *file, struct cifcomponent *compon
     list_add_tail(&file->components, &component->entry);
 }
 
+#ifdef __REACTOS__
+static HRESULT icif_process_component(struct ciffile *file, struct inf_section *section, const char *section_name)
+#else
 static HRESULT process_component(struct ciffile *file, struct inf_section *section, const char *section_name)
+#endif
 {
     struct cifcomponent *component;
     HRESULT hr = E_OUTOFMEMORY;
@@ -1633,7 +1637,11 @@ static HRESULT process_section(struct ciffile *file, struct inf_section *section
         return E_OUTOFMEMORY;
 
     if (!strcasecmp(type, "Component"))
+#ifdef __REACTOS__
+        hr = icif_process_component(file, section, section_name);
+#else
         hr = process_component(file, section, section_name);
+#endif
     else if (strcasecmp(type, "Group") == 0)
         hr = process_group(file, section, section_name);
     else

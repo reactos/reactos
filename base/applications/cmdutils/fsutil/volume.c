@@ -11,7 +11,7 @@
 /* Add handlers here for subcommands */
 static HandlerProc DismountMain;
 static HandlerProc DiskFreeMain;
-static HandlerItem HandlersList[] =
+static HandlerItem VolumeHandlersList[] =
 {
     /* Proc, name, help */
     { DismountMain, _T("dismount"), _T("Dismounts a volume") },
@@ -109,16 +109,20 @@ DiskFreeMain(int argc, const TCHAR *argv[])
 }
 
 static void
-PrintUsage(const TCHAR * Command)
+VolumePrintUsage(const TCHAR * Command)
 {
-    PrintDefaultUsage(_T(" VOLUME "), Command, (HandlerItem *)&HandlersList,
-                      (sizeof(HandlersList) / sizeof(HandlersList[0])));
+    PrintDefaultUsage(_T(" VOLUME "),
+                      Command,
+                      (HandlerItem *)&VolumeHandlersList,
+                      _countof(VolumeHandlersList));
 }
 
 int
 VolumeMain(int argc, const TCHAR *argv[])
 {
-    return FindHandler(argc, argv, (HandlerItem *)&HandlersList,
-                       (sizeof(HandlersList) / sizeof(HandlersList[0])),
-                       PrintUsage);
+    return FindHandler(argc,
+                       argv,
+                       (HandlerItem *)&VolumeHandlersList,
+                       _countof(VolumeHandlersList),
+                       VolumePrintUsage);
 }

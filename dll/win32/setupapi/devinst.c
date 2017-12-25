@@ -22,14 +22,22 @@
 #include "setupapi_private.h"
 
 /* Unicode constants */
+#ifndef __REACTOS__
 static const WCHAR BackSlash[] = {'\\',0};
+#endif
 static const WCHAR DateFormat[]  = {'%','u','-','%','u','-','%','u',0};
+#ifndef __REACTOS__
 static const WCHAR DotCoInstallers[]  = {'.','C','o','I','n','s','t','a','l','l','e','r','s',0};
+#endif
 static const WCHAR DotHW[]  = {'.','H','W',0};
+#ifndef __REACTOS__
 static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
 static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
+#endif
 static const WCHAR InstanceKeyFormat[] = {'%','0','4','l','u',0};
+#ifndef __REACTOS__
 static const WCHAR Version[]  = {'V','e','r','s','i','o','n',0};
+#endif
 static const WCHAR VersionFormat[] = {'%','u','.','%','u','.','%','u','.','%','u',0};
 
 static const WCHAR REGSTR_DRIVER_DATE[]  = {'D','r','i','v','e','r','D','a','t','e',0};

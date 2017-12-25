@@ -126,7 +126,7 @@ Test_SelectObject()
 }
 
 static void
-Test_Bitmap()
+Test_SelectObject_Bitmap()
 {
     HBITMAP hbmp, hbmpInvalid, hbmpOld;
 	BYTE bmBits[4] = {0};
@@ -172,7 +172,7 @@ Test_Bitmap()
 }
 
 static void
-Test_Pen()
+Test_SelectObject_Pen()
 {
     HPEN hpen, hpenOld;
 
@@ -186,7 +186,7 @@ Test_Pen()
 }
 
 static void
-Test_Region()
+Test_SelectObject_Region()
 {
     HRGN hrgn, hrgnOld;
 
@@ -219,8 +219,8 @@ START_TEST(SelectObject)
 	}
 
     Test_SelectObject();
-    Test_Bitmap();
-    Test_Pen();
-    Test_Region();
+    Test_SelectObject_Bitmap();
+    Test_SelectObject_Pen();
+    Test_SelectObject_Region();
 }
 

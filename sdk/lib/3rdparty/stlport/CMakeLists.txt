@@ -54,4 +54,4 @@ if(USE_CLANG_CL)
 endif()
 
 add_dependencies(stlport xdk)
-add_pch(stlport src/stlport_prefix.h SOURCE)
+add_pch(stlport src/stlport_prefix.h SOURCE NO_UNITY_BUILD)

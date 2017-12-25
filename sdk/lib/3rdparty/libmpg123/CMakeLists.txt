@@ -42,5 +42,10 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(libmpg123 ${SOURCE} optimize.c)
+
+if(NOT MSVC)
+    add_target_compile_flags(libmpg123 "-Wno-unused-variable")
+endif()
+
 add_dependencies(libmpg123 psdk)
 add_pch(libmpg123 precomp.h SOURCE)

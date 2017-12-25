@@ -14,7 +14,7 @@
 
 UNICODE_STRING DotDll = RTL_CONSTANT_STRING(L".DLL");
 
-struct test_data
+struct redirection_test_data
 {
     int testline;
     NTSTATUS ExpectedStatus;
@@ -22,7 +22,7 @@ struct test_data
     WCHAR* ExpectedSubString;
 };
 
-struct test_data Tests[] = 
+struct redirection_test_data Tests[] = 
 {
     /* Not redirected file */
     {__LINE__, STATUS_SXS_KEY_NOT_FOUND, L"somefilesomefile", NULL},

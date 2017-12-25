@@ -37,6 +37,12 @@
 
 #include <wine/debug.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(d3dxof);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(d3dxof_parsing);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(d3dxof_dump);
+#endif
+
 #define MAX_NAME_LEN 40
 #define MAX_ARRAY_DIM 4
 #define MAX_MEMBERS 50

@@ -11,7 +11,8 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/pic.c
     generic/reboot.c
     generic/sysinfo.c
-    generic/usage.c)
+    generic/usage.c
+    include/hal.h)
 
 if(ARCH STREQUAL "i386")
     list(APPEND HAL_GENERIC_SOURCE
@@ -24,4 +25,5 @@ endif()
 
 add_asm_files(lib_hal_generic_asm ${HAL_GENERIC_ASM_SOURCE})
 add_object_library(lib_hal_generic ${HAL_GENERIC_SOURCE} ${lib_hal_generic_asm})
+add_pch(lib_hal_generic include/hal.h HAL_GENERIC_SOURCE UNITY_BUILD)
 add_dependencies(lib_hal_generic asm)

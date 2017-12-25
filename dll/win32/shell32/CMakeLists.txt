@@ -110,5 +110,5 @@ target_link_libraries(shell32 shellmenu shelldesktop atlnew wine uuid recyclebin
 add_delay_importlibs(shell32 powrprof shdocvw devmgr winspool winmm mpr uxtheme ole32 oleaut32 userenv browseui version fmifs)
 add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi msvcrt kernel32 ntdll)
 add_dependencies(shell32 stdole2) # shell32_shldisp.tlb needs stdole2.tlb
-add_pch(shell32 precomp.h SOURCE)
+add_pch(shell32 precomp.h SOURCE UNITY_DEBUGCHANNELS_COMPAT)
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)

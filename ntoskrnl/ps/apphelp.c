@@ -450,9 +450,9 @@ ApphelpCacheInitialize(VOID)
     {
         ExInitializeResourceLite(&ApphelpCacheLock);
         RtlInitializeGenericTableAvl(&ApphelpShimCache,
-                                     ApphelpShimCacheCompareRoutine,
-                                     ApphelpShimCacheAllocateRoutine,
-                                     ApphelpShimCacheFreeRoutine,
+                                     (PRTL_AVL_COMPARE_ROUTINE)ApphelpShimCacheCompareRoutine,
+                                     (PRTL_AVL_ALLOCATE_ROUTINE)ApphelpShimCacheAllocateRoutine,
+                                     (PRTL_AVL_FREE_ROUTINE)ApphelpShimCacheFreeRoutine,
                                      NULL);
         InitializeListHead(&ApphelpShimCacheAge);
         ApphelpCacheEnabled = ApphelpCacheRead();

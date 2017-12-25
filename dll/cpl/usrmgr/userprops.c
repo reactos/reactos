@@ -586,7 +586,7 @@ AddGroupToUser(HWND hwndDlg,
 
 
 static BOOL
-OnNotify(HWND hwndDlg,
+OnUserMembershipPageNotify(HWND hwndDlg,
          PMEMBERSHIP_USER_DATA pUserData,
          LPARAM lParam)
 {
@@ -664,7 +664,7 @@ UserMembershipPageProc(HWND hwndDlg,
             }
             else
             {
-                return OnNotify(hwndDlg, pUserData, lParam);
+                return OnUserMembershipPageNotify(hwndDlg, pUserData, lParam);
             }
             break;
 
@@ -885,7 +885,7 @@ UserGeneralPageProc(HWND hwndDlg,
 
 
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPTSTR pszUser)
+InitUserPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPTSTR pszUser)
 {
     ZeroMemory(psp, sizeof(PROPSHEETPAGE));
     psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -928,9 +928,9 @@ UserProperties(HWND hwndDlg)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_USER_GENERAL, UserGeneralPageProc, szUserName);
-    InitPropSheetPage(&psp[1], IDD_USER_MEMBERSHIP, UserMembershipPageProc, szUserName);
-    InitPropSheetPage(&psp[2], IDD_USER_PROFILE, UserProfilePageProc, szUserName);
+    InitUserPropSheetPage(&psp[0], IDD_USER_GENERAL, UserGeneralPageProc, szUserName);
+    InitUserPropSheetPage(&psp[1], IDD_USER_MEMBERSHIP, UserMembershipPageProc, szUserName);
+    InitUserPropSheetPage(&psp[2], IDD_USER_PROFILE, UserProfilePageProc, szUserName);
 
     return (PropertySheet(&psh) == IDOK);
 }

@@ -20,9 +20,9 @@
 CSimpleArray<DEVINST> g_devList;
 /*static HDEVNOTIFY g_hDevNotify = NULL;*/
 static HICON g_hIconHotplug = NULL;
-static LPCWSTR g_strTooltip = L"Safely Remove Hardware and Eject Media";
+static LPCWSTR g_strHotplugTooltip = L"Safely Remove Hardware and Eject Media";
 static WCHAR g_strMenuSel[DISPLAY_NAME_LEN];
-static BOOL g_IsRunning = FALSE;
+static BOOL g_IsHotplugRunning = FALSE;
 static BOOL g_IsRemoving = FALSE;
 
 /*++
@@ -131,10 +131,10 @@ HRESULT STDMETHODCALLTYPE Hotplug_Init(_In_ CSysTray * pSysTray)
 { 
     TRACE("Hotplug_Init\n");
     g_hIconHotplug = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_HOTPLUG_OK));
-    g_IsRunning = TRUE;
+    g_IsHotplugRunning = TRUE;
     EnumHotpluggedDevices(g_devList);
 
-    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
+    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_HOTPLUG, g_hIconHotplug, g_strHotplugTooltip, NIS_HIDDEN);
 }
 
 HRESULT STDMETHODCALLTYPE Hotplug_Update(_In_ CSysTray * pSysTray)
@@ -142,16 +142,16 @@ HRESULT STDMETHODCALLTYPE Hotplug_Update(_In_ CSysTray * pSysTray)
     TRACE("Hotplug_Update\n");
 
     if(g_devList.GetSize() || g_IsRemoving)
-        return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip);
+        return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strHotplugTooltip);
     else
-        return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
+        return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_HOTPLUG, g_hIconHotplug, g_strHotplugTooltip, NIS_HIDDEN);
 }
 
 HRESULT STDMETHODCALLTYPE Hotplug_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Hotplug_Shutdown\n");
 
-    g_IsRunning = FALSE;
+    g_IsHotplugRunning = FALSE;
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_HOTPLUG, NULL, NULL);
 }
@@ -161,7 +161,7 @@ static void _RunHotplug(CSysTray * pSysTray)
     ShellExecuteW(pSysTray->GetHWnd(), L"open", L"rundll32.exe shell32.dll,Control_RunDLL hotplug.dll", NULL, NULL, SW_SHOWNORMAL);
 }
 
-static void _ShowContextMenu(CSysTray * pSysTray)
+static void RunHotplug_ShowContextMenu(CSysTray * pSysTray)
 {
     HMENU hPopup = CreatePopupMenu();
     ULONG ulLength = DISPLAY_NAME_LEN * sizeof(WCHAR);
@@ -274,7 +274,7 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
             TRACE("Hotplug_Message: WM_USER+221\n");
             if (wParam == 1)
             {
-                lResult = (LRESULT)g_IsRunning;
+                lResult = (LRESULT)g_IsHotplugRunning;
                 return S_OK;
             }
             return S_FALSE;
@@ -288,7 +288,7 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
                     break;
 
                 case WM_LBUTTONUP:
-                    _ShowContextMenu(pSysTray);
+                    RunHotplug_ShowContextMenu(pSysTray);
                     break;
 
                 case WM_LBUTTONDBLCLK:

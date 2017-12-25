@@ -43,6 +43,14 @@
 #include <wine/exception.h>
 #include <wine/unicode.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(driver);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(mci);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(mmio);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(mmtime);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(winmm);
+#endif
+
 #define WINE_DEFAULT_WINMM_DRIVER     "alsa,oss,coreaudio,esd"
 #define WINE_DEFAULT_WINMM_MAPPER     "msacm32.drv"
 #define WINE_DEFAULT_WINMM_MIDI       "midimap.dll"

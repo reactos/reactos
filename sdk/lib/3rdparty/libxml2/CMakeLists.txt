@@ -74,5 +74,5 @@ else()
 endif()
 
 target_link_libraries(libxml2 oldnames)
-add_pch(libxml2 libxml.h SOURCE)
+add_pch(libxml2 libxml.h SOURCE NO_UNITY_BUILD)
 add_dependencies(libxml2 psdk)

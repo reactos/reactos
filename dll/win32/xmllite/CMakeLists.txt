@@ -18,5 +18,5 @@ add_library(xmllite SHARED
 set_module_type(xmllite win32dll)
 target_link_libraries(xmllite uuid wine)
 add_importlibs(xmllite msvcrt kernel32 ntdll)
-add_pch(xmllite xmllite_private.h SOURCE)
+add_pch(xmllite xmllite_private.h SOURCE NO_UNITY_BUILD)
 add_cd_file(TARGET xmllite DESTINATION reactos/system32 FOR all)

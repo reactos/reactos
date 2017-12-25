@@ -55,7 +55,7 @@ static void service_ok(int cnd, const char *msg, ...)
     send_msg(cnd ? "OK" : "FAIL", buf);
 }
 
-static VOID WINAPI service_handler(DWORD ctrl)
+static VOID WINAPI ServiceHandler(DWORD ctrl)
 {
     SERVICE_STATUS status;
 
@@ -83,7 +83,7 @@ static void service_main_common(void)
     SERVICE_STATUS status;
     BOOL res;
 
-    service_handle = RegisterServiceCtrlHandlerW(service_nameW, service_handler);
+    service_handle = RegisterServiceCtrlHandlerW(service_nameW, ServiceHandler);
     service_ok(service_handle != NULL, "RegisterServiceCtrlHandler failed: %lu\n", GetLastError());
     if (!service_handle)
         return;

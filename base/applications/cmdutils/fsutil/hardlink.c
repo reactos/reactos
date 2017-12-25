@@ -10,7 +10,7 @@
 
 /* Add handlers here for subcommands */
 static HandlerProc CreateMain;
-static HandlerItem HandlersList[] =
+static HandlerItem HardLinkHandlersList[] =
 {
     /* Proc, name, help */
     { CreateMain, _T("create"), _T("Create a new hard link") },
@@ -56,16 +56,20 @@ CreateMain(int argc, const TCHAR *argv[])
 }
 
 static void
-PrintUsage(const TCHAR * Command)
+HardLinkPrintUsage(const TCHAR * Command)
 {
-    PrintDefaultUsage(_T(" HARDLINK "), Command, (HandlerItem *)&HandlersList,
-                      (sizeof(HandlersList) / sizeof(HandlersList[0])));
+    PrintDefaultUsage(_T(" HARDLINK "),
+                      Command,
+                      (HandlerItem *)&HardLinkHandlersList,
+                      _countof(HardLinkHandlersList));
 }
 
 int
 HardLinkMain(int argc, const TCHAR *argv[])
 {
-    return FindHandler(argc, argv, (HandlerItem *)&HandlersList,
-                       (sizeof(HandlersList) / sizeof(HandlersList[0])),
-                       PrintUsage);
+    return FindHandler(argc,
+                       argv,
+                       (HandlerItem *)&HardLinkHandlersList,
+                       _countof(HardLinkHandlersList),
+                       HardLinkPrintUsage);
 }

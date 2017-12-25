@@ -3228,7 +3228,11 @@ static void test_SetWinMetaFileBits(void)
   HeapFree(GetProcessHeap(), 0, buffer);
 }
 
+#ifdef __REACTOS__
+static BOOL metafile_near_match(int x, int y)
+#else
 static BOOL near_match(int x, int y)
+#endif
 {
     int epsilon = min(abs(x), abs(y));
 
@@ -3377,16 +3381,28 @@ static void getwinmetafilebits(UINT mode, int scale, RECT *rc)
             default:
                 pt.x = pt.y = 0;
             }
+#ifdef __REACTOS__
+            ok(metafile_near_match((short)rec->rdParm[0], pt.y), "got %d expect %d\n", (short)rec->rdParm[0], pt.y);
+            ok(metafile_near_match((short)rec->rdParm[1], pt.x), "got %d expect %d\n", (short)rec->rdParm[1], pt.x);
+#else
             ok(near_match((short)rec->rdParm[0], pt.y), "got %d expect %d\n", (short)rec->rdParm[0], pt.y);
             ok(near_match((short)rec->rdParm[1], pt.x), "got %d expect %d\n", (short)rec->rdParm[1], pt.x);
+#endif
         }
         if(rec_num == mfcomment_chunks + 2)
         {
             ok(rec->rdFunction == META_SETWINDOWEXT, "got %04x\n", rec->rdFunction);
+#ifdef __REACTOS__
+            ok(metafile_near_match((short)rec->rdParm[0], MulDiv(rc->bottom - rc->top, vert_res, vert_size * 100)),
+               "got %d\n", (short)rec->rdParm[0]);
+            ok(metafile_near_match((short)rec->rdParm[1], MulDiv(rc->right - rc->left, horz_res, horz_size * 100)),
+               "got %d\n", (short)rec->rdParm[1]);
+#else
             ok(near_match((short)rec->rdParm[0], MulDiv(rc->bottom - rc->top, vert_res, vert_size * 100)),
                "got %d\n", (short)rec->rdParm[0]);
             ok(near_match((short)rec->rdParm[1], MulDiv(rc->right - rc->left, horz_res, horz_size * 100)),
                "got %d\n", (short)rec->rdParm[1]);
+#endif
         }
 
         rec_num++;

@@ -28,5 +28,5 @@ add_library(secur32 SHARED
 set_module_type(secur32 win32dll UNICODE)
 target_link_libraries(secur32 lsalib wine)
 add_importlibs(secur32 advapi32 netapi32 msvcrt kernel32 ntdll)
-add_pch(secur32 precomp.h SOURCE)
+add_pch(secur32 precomp.h SOURCE NO_UNITY_BUILD)
 add_cd_file(TARGET secur32 DESTINATION reactos/system32 FOR all)

@@ -11,7 +11,7 @@
 
 static
 VOID
-StartChild(char **argv)
+StartChildProcess(char **argv)
 {
     BOOL Success;
     WCHAR Path[MAX_PATH];
@@ -118,7 +118,7 @@ START_TEST(GetModuleFileName)
 
     argc = winetest_get_mainargs(&argv);
     if (argc < 3)
-        StartChild(argv);
+        StartChildProcess(argv);
     else
     {
         TestGetModuleFileNameA();

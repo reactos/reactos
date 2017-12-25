@@ -10,7 +10,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
+static const CLASS_AND_INTERFACES ExpectedIeframeInterfaces[] =
 {
     {
         ID_NAME(CLSID_IE_SearchBand),
@@ -239,9 +239,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
+static const INT ExpectedIeframeInterfaceCount = RTL_NUMBER_OF(ExpectedIeframeInterfaces);
 
 START_TEST(ieframe)
 {
-    TestClasses(L"ieframe", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"ieframe", ExpectedIeframeInterfaces, ExpectedIeframeInterfaceCount);
 }

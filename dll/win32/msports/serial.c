@@ -10,7 +10,7 @@
 
 static
 BOOL
-OnInitDialog(HWND hwnd,
+OnInitSerialSettingsDialog(HWND hwnd,
              WPARAM wParam,
              LPARAM lParam)
 {
@@ -32,7 +32,7 @@ SerialSettingsDlgProc(HWND hwnd,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            return OnInitDialog(hwnd, wParam, lParam);
+            return OnInitSerialSettingsDialog(hwnd, wParam, lParam);
     }
 
     return FALSE;

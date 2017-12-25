@@ -36,6 +36,12 @@
 #include "resinfo.h"
 #include <wine/debug.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(icmp);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(iphlpapi);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(winediag);
+#endif
+
 #include "dhcp.h"
 #include <dhcpcsdk.h>
 #include <dhcpcapi.h>

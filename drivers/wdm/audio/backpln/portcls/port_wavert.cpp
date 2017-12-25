@@ -61,7 +61,7 @@ protected:
     LONG m_Ref;
 };
 
-static GUID InterfaceGuids[3] = 
+static GUID WaveRTInterfaceGuids[3] = 
 {
     {
         /// KS_CATEGORY_AUDIO
@@ -271,7 +271,7 @@ CPortWaveRT::Init(
     // create the subdevice descriptor
     Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor, 
                                          3,
-                                         InterfaceGuids,
+                                         WaveRTInterfaceGuids,
                                          0, 
                                          NULL,
                                          2, 

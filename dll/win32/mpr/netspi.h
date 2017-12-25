@@ -91,6 +91,8 @@ enum NOTIFYTYPE { NotifyAddConnection,
                   NotifyCancelConnection,
                   NotifyGetConnectionPerformance };
 
+#ifndef __REACTOS__
+
 #define NOTIFY_PRE              0x00
 #define NOTIFY_POST             0x01
 
@@ -102,6 +104,8 @@ typedef struct
     LPVOID  lpNPContext;
 
 } NOTIFYINFO, *LPNOTIFYINFO;
+
+#endif
 
 typedef struct
 {

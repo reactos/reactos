@@ -23,6 +23,11 @@
 
 #include <wine/debug.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(opengl32);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(wgl);
+#endif
+
 #include "icd.h"
 
 /* *$%$£^§! headers inclusion */

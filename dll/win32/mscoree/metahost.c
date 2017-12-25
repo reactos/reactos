@@ -366,6 +366,8 @@ static HRESULT WINAPI CLRRuntimeInfo_GetVersionString(ICLRRuntimeInfo* iface,
     return hr;
 }
 
+#ifndef __REACTOS__
+/* This is an exact copy of the one in mscoree_main.c */
 static BOOL get_install_root(LPWSTR install_dir)
 {
     const WCHAR dotnet_key[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t','\\','.','N','E','T','F','r','a','m','e','w','o','r','k','\\',0};
@@ -387,6 +389,7 @@ static BOOL get_install_root(LPWSTR install_dir)
 
     return TRUE;
 }
+#endif
 
 static HRESULT WINAPI CLRRuntimeInfo_GetRuntimeDirectory(ICLRRuntimeInfo* iface,
     LPWSTR pwzBuffer, DWORD *pcchBuffer)

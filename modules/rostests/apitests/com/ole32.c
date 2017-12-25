@@ -10,7 +10,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
+static const CLASS_AND_INTERFACES ExpectedOle32Interfaces[] =
 {
     {
         ID_NAME(CLSID_StdComponentCategoriesMgr),
@@ -22,9 +22,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         L"Both"
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
+static const INT ExpectedOle32InterfaceCount = RTL_NUMBER_OF(ExpectedOle32Interfaces);
 
 START_TEST(ole32)
 {
-    TestClasses(L"ole32", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"ole32", ExpectedOle32Interfaces, ExpectedOle32InterfaceCount);
 }

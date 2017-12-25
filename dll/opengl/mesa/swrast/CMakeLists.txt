@@ -29,7 +29,7 @@ list(APPEND SOURCE
 
 add_library(mesa_swrast STATIC ${SOURCE})
 add_dependencies(mesa_swrast xdk)
-add_pch(mesa_swrast precomp.h SOURCE)
+add_pch(mesa_swrast precomp.h SOURCE NO_UNITY_BUILD)
 
 if(MSVC AND (NOT USE_CLANG_CL))
     replace_compile_flags("/we4189" " ")

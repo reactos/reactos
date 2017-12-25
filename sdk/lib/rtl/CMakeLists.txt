@@ -111,5 +111,5 @@ endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
-add_pch(rtl rtl.h SOURCE)
+add_pch(rtl rtl.h SOURCE NO_UNITY_BUILD)
 add_dependencies(rtl psdk asm)

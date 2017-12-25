@@ -26,10 +26,12 @@
 #include <ndk/obfuncs.h>
 
 /* Unicode constants */
+#ifndef __REACTOS__
 static const WCHAR BackSlash[] = {'\\',0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
+#endif
 static const WCHAR InfFileSpecification[] = {'*','.','i','n','f',0};
 
 #define CONTROL_Z  '\x1a'
@@ -137,7 +139,9 @@ static const parser_state_func parser_funcs[NB_PARSER_STATES] =
 
 
 /* Unicode string constants */
+#ifndef __REACTOS__
 static const WCHAR Version[]    = {'V','e','r','s','i','o','n',0};
+#endif
 static const WCHAR Signature[]  = {'S','i','g','n','a','t','u','r','e',0};
 static const WCHAR Chicago[]    = {'$','C','h','i','c','a','g','o','$',0};
 static const WCHAR WindowsNT[]  = {'$','W','i','n','d','o','w','s',' ','N','T','$',0};

@@ -28,7 +28,9 @@
 
 /* Registry key and value names */
 static const WCHAR Backslash[] = {'\\', 0};
+#ifndef __REACTOS__
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
+#endif
 
 static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
                                      'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',

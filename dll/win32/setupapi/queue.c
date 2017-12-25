@@ -23,7 +23,9 @@
 #include <aclapi.h>
 
 /* Unicode constants */
+#ifndef __REACTOS__
 static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
+#endif
 
 /* context structure for the default queue callback */
 struct default_callback_context

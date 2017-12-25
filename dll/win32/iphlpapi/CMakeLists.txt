@@ -30,5 +30,5 @@ add_library(iphlpapi SHARED
 set_module_type(iphlpapi win32dll UNICODE)
 target_link_libraries(iphlpapi wine tdilib)
 add_importlibs(iphlpapi dhcpcsvc advapi32 ws2_32 msvcrt kernel32 ntdll)
-add_pch(iphlpapi iphlpapi_private.h SOURCE)
+add_pch(iphlpapi iphlpapi_private.h SOURCE UNITY_DEBUGCHANNELS_COMPAT)
 add_cd_file(TARGET iphlpapi DESTINATION reactos/system32 FOR all)

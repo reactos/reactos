@@ -21,11 +21,13 @@
 #include "setupapi_private.h"
 
 /* Unicode constants */
+#ifndef __REACTOS__
 static const WCHAR BackSlash[] = {'\\',0};
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR DotCoInstallers[]  = {'.','C','o','I','n','s','t','a','l','l','e','r','s',0};
 static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
 static const WCHAR Version[]  = {'V','e','r','s','i','o','n',0};
+#endif
 
 static const WCHAR INF_MANUFACTURER[]  = {'M','a','n','u','f','a','c','t','u','r','e','r',0};
 static const WCHAR INF_PROVIDER[]  = {'P','r','o','v','i','d','e','r',0};

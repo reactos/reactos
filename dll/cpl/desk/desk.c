@@ -64,7 +64,7 @@ LoadPopupMenu(IN HINSTANCE hInstance,
 }
 
 static BOOL CALLBACK
-PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
+DisplayAppletPropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 {
     PROPSHEETHEADER *ppsh = (PROPSHEETHEADER *)lParam;
     if (ppsh != NULL && ppsh->nPages < MAX_DESK_PAGES)
@@ -97,7 +97,7 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc, LPFNPSPCAL
         hPage = CreatePropertySheetPage(&psp);
         if (hPage != NULL)
         {
-            return PropSheetAddPage(hPage, (LPARAM)ppsh);
+            return DisplayAppletPropSheetAddPage(hPage, (LPARAM)ppsh);
         }
     }
 
@@ -199,7 +199,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
         /* Override the background page if requested by a shell extension */
         if (PropPages[i].idDlg == IDD_BACKGROUND && hpsxa != NULL &&
-            SHReplaceFromPropSheetExtArray(hpsxa, CPLPAGE_DISPLAY_BACKGROUND, PropSheetAddPage, (LPARAM)&psh) != 0)
+            SHReplaceFromPropSheetExtArray(hpsxa, CPLPAGE_DISPLAY_BACKGROUND, DisplayAppletPropSheetAddPage, (LPARAM)&psh) != 0)
         {
             /* The shell extension added one or more pages to replace the background page.
                Don't create the built-in page anymore! */

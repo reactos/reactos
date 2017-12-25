@@ -60,7 +60,11 @@ static BOOL (WINAPI *pCryptSetProvParam)(HCRYPTPROV, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptVerifySignatureW)(HCRYPTHASH, BYTE*, DWORD, HCRYPTKEY, LPCWSTR, DWORD);
 static BOOLEAN (WINAPI *pSystemFunction036)(PVOID, ULONG);
 
+#ifdef __REACTOS__
+static void init_crypt_function_pointers(void)
+#else
 static void init_function_pointers(void)
+#endif
 {
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
 
@@ -1177,7 +1181,11 @@ static void test_container_sd(void)
 
 START_TEST(crypt)
 {
+#ifdef __REACTOS__
+    init_crypt_function_pointers();
+#else
     init_function_pointers();
+#endif
     if (pCryptAcquireContextA && pCryptReleaseContext)
     {
 	test_rc2_keylen();

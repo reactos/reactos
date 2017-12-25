@@ -21,7 +21,7 @@ DWORD  g_muteControlID;
 UINT g_mmDeviceChange;
 
 static BOOL g_IsMute = FALSE;
-static BOOL g_IsRunning = FALSE;
+static BOOL g_IsVolumeRunning = FALSE;
 
 static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 {
@@ -156,7 +156,7 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 
     Volume_IsMute();
 
-    g_IsRunning = TRUE;
+    g_IsVolumeRunning = TRUE;
 
     HICON icon;
     if (g_IsMute)
@@ -204,7 +204,7 @@ HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Volume_Shutdown\n");
 
-    g_IsRunning = FALSE;
+    g_IsVolumeRunning = FALSE;
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_VOLUME, NULL, NULL);
 }
@@ -225,7 +225,7 @@ static void _RunMMCpl()
     ShellExecuteW(NULL, NULL, L"mmsys.cpl", NULL, NULL, SW_NORMAL);
 }
 
-static void _ShowContextMenu(CSysTray * pSysTray)
+static void Volume_ShowContextMenu(CSysTray * pSysTray)
 {
     WCHAR strAdjust[128];
     WCHAR strOpen[128];
@@ -280,7 +280,7 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
             TRACE("Volume_Message: WM_USER+221\n");
             if (wParam == 4)
             {
-                lResult = (LRESULT)g_IsRunning;
+                lResult = (LRESULT)g_IsVolumeRunning;
                 return S_OK;
             }
             return S_FALSE;
@@ -307,7 +307,7 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
                     break;
 
                 case WM_RBUTTONUP:
-                    _ShowContextMenu(pSysTray);
+                    Volume_ShowContextMenu(pSysTray);
                     break;
 
                 case WM_RBUTTONDBLCLK:

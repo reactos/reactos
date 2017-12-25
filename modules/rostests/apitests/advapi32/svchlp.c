@@ -7,7 +7,7 @@
  *                  Hermes Belusca-Maito
  *
  * NOTE: Room for improvements:
- * - One test_runner managing 1 pipe for 1 service process that is shared
+ * - One TestRunner managing 1 pipe for 1 service process that is shared
  *   by multiple services of type SERVICE_WIN32_SHARE_PROCESS.
  * - Find a way to elegantly determine the registered service name inside
  *   the service process, without really passing it 
@@ -24,7 +24,7 @@ static WCHAR service_nameW[100];
 
 /**********  S E R V I C E   ( C L I E N T )   M O D U L E   S I D E  *********/
 
-void send_msg(const char *type, const char *msg)
+void SendMsg(const char *type, const char *msg)
 {
     DWORD written = 0;
     char buf[512];
@@ -42,10 +42,10 @@ void service_trace(const char *msg, ...)
     StringCbVPrintfA(buf, sizeof(buf), msg, valist);
     va_end(valist);
 
-    send_msg("TRACE", buf);
+    SendMsg("TRACE", buf);
 }
 
-void service_ok(int cnd, const char *msg, ...)
+void ServiceOk(int cnd, const char *msg, ...)
 {
     va_list valist;
     char buf[512];
@@ -54,10 +54,10 @@ void service_ok(int cnd, const char *msg, ...)
     StringCbVPrintfA(buf, sizeof(buf), msg, valist);
     va_end(valist);
 
-    send_msg(cnd ? "OK" : "FAIL", buf);
+    SendMsg(cnd ? "OK" : "FAIL", buf);
 }
 
-void service_process(BOOL (*start_service)(PCSTR, PCWSTR), int argc, char** argv)
+void ServiceProcess(BOOL (*start_service)(PCSTR, PCWSTR), int argc, char** argv)
 {
     BOOL res;
 
@@ -223,17 +223,17 @@ SC_HANDLE register_serviceW(
                                 NULL, NULL, NULL, NULL, NULL);
 }
 
-static DWORD WINAPI pipe_thread(void *param)
+static DWORD WINAPI PipeThread(void *param)
 {
     HANDLE hServerPipe = (HANDLE)param;
     DWORD read;
     BOOL res;
     char buf[512];
 
-    // printf("pipe_thread -- ConnectNamedPipe...\n");
+    // printf("PipeThread -- ConnectNamedPipe...\n");
     res = ConnectNamedPipe(hServerPipe, NULL);
     ok(res || GetLastError() == ERROR_PIPE_CONNECTED, "ConnectNamedPipe failed: %lu\n", GetLastError());
-    // printf("pipe_thread -- ConnectNamedPipe ok\n");
+    // printf("PipeThread -- ConnectNamedPipe ok\n");
 
     while (1)
     {
@@ -242,7 +242,7 @@ static DWORD WINAPI pipe_thread(void *param)
         {
             ok(GetLastError() == ERROR_BROKEN_PIPE || GetLastError() == ERROR_INVALID_HANDLE,
                "ReadFile failed: %lu\n", GetLastError());
-            // printf("pipe_thread -- break loop\n");
+            // printf("PipeThread -- break loop\n");
             break;
         }
 
@@ -264,7 +264,7 @@ static DWORD WINAPI pipe_thread(void *param)
         }
     }
 
-    // printf("pipe_thread -- DisconnectNamedPipe\n");
+    // printf("PipeThread -- DisconnectNamedPipe\n");
 
     /*
      * Flush the pipe to allow the client to read
@@ -277,7 +277,7 @@ static DWORD WINAPI pipe_thread(void *param)
     return 0;
 }
 
-void test_runner(void (*run_test)(PCSTR, PCWSTR, void*), void *param)
+void TestRunner(void (*run_test)(PCSTR, PCWSTR, void*), void *param)
 {
     HANDLE hServerPipe = INVALID_HANDLE_VALUE;
     HANDLE hThread;
@@ -293,7 +293,7 @@ void test_runner(void (*run_test)(PCSTR, PCWSTR, void*), void *param)
     if (hServerPipe == INVALID_HANDLE_VALUE)
         return;
 
-    hThread = CreateThread(NULL, 0, pipe_thread, (LPVOID)hServerPipe, 0, NULL);
+    hThread = CreateThread(NULL, 0, PipeThread, (LPVOID)hServerPipe, 0, NULL);
     ok(hThread != NULL, "CreateThread failed: %lu\n", GetLastError());
     if (!hThread)
         goto Quit;

@@ -34,7 +34,7 @@ add_executable(user32_winetest
     testlist.c
     resource.rc)
 
-add_pch(user32_winetest precomp.h SOURCE)
+add_pch(user32_winetest precomp.h SOURCE NO_UNITY_BUILD)
 # some tests need to be run from an app compiled as GUI
 set_module_type(user32_winetest win32gui)
 add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32)

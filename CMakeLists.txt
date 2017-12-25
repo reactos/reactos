@@ -45,6 +45,10 @@ if(NOT DEFINED NEW_STYLE_BUILD)
     set(NEW_STYLE_BUILD TRUE)
 endif()
 
+if(NOT DEFINED GLOBAL_UNITY_BUILD)
+    set(GLOBAL_UNITY_BUILD TRUE)
+endif()
+
 if(NOT ARCH)
     set(ARCH i386)
 endif()

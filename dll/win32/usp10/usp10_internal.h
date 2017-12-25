@@ -24,6 +24,7 @@
 
 #include <config.h>
 
+#include <math.h>
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -37,6 +38,11 @@
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
+
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(bidi);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(uniscribe);
+#endif
 
 #define MS_MAKE_TAG( _x1, _x2, _x3, _x4 ) \
           ( ( (ULONG)_x4 << 24 ) |     \

@@ -49,7 +49,7 @@ report_service_status(DWORD dwCurrentState,
 #endif
 
     res = SetServiceStatus(status_handle, &status);
-    service_ok(res, "SetServiceStatus(%d) failed: %lu\n", dwCurrentState, GetLastError());
+    ServiceOk(res, "SetServiceStatus(%d) failed: %lu\n", dwCurrentState, GetLastError());
 }
 
 static VOID WINAPI service_handler(DWORD ctrl)
@@ -76,7 +76,7 @@ service_main(DWORD dwArgc, LPWSTR* lpszArgv)
 
     /* Register our service for control (lpszArgv[0] holds the service name) */
     status_handle = RegisterServiceCtrlHandlerW(lpszArgv[0], service_handler);
-    service_ok(status_handle != NULL, "RegisterServiceCtrlHandler failed: %lu\n", GetLastError());
+    ServiceOk(status_handle != NULL, "RegisterServiceCtrlHandler failed: %lu\n", GetLastError());
     if (!status_handle)
         return;
 
@@ -95,12 +95,12 @@ service_main(DWORD dwArgc, LPWSTR* lpszArgv)
 
     /* Check the presence of the user-related environment variables */
     dwSize = GetEnvironmentVariableW(L"ALLUSERSPROFILE", NULL, 0);
-    service_ok(dwSize != 0, "ALLUSERSPROFILE envvar not found, or GetEnvironmentVariableW failed: %lu\n", GetLastError());
+    ServiceOk(dwSize != 0, "ALLUSERSPROFILE envvar not found, or GetEnvironmentVariableW failed: %lu\n", GetLastError());
     dwSize = GetEnvironmentVariableW(L"USERPROFILE", NULL, 0);
-    service_ok(dwSize != 0, "USERPROFILE envvar not found, or GetEnvironmentVariableW failed: %lu\n", GetLastError());
+    ServiceOk(dwSize != 0, "USERPROFILE envvar not found, or GetEnvironmentVariableW failed: %lu\n", GetLastError());
 #if 0 // May not always exist
     dwSize = GetEnvironmentVariableW(L"USERNAME", NULL, 0);
-    service_ok(dwSize != 0, "USERNAME envvar not found, or GetEnvironmentVariableW failed: %lu\n", GetLastError());
+    ServiceOk(dwSize != 0, "USERNAME envvar not found, or GetEnvironmentVariableW failed: %lu\n", GetLastError());
 #endif
 
     /* Work is done */
@@ -118,7 +118,7 @@ static BOOL start_service(PCSTR service_nameA, PCWSTR service_nameW)
     };
 
     res = StartServiceCtrlDispatcherW(servtbl);
-    service_ok(res, "StartServiceCtrlDispatcherW failed: %lu\n", GetLastError());
+    ServiceOk(res, "StartServiceCtrlDispatcherW failed: %lu\n", GetLastError());
     return res;
 }
 
@@ -249,11 +249,11 @@ START_TEST(ServiceEnv)
     argc = winetest_get_mainargs(&argv);
     if (argc >= 3)
     {
-        service_process(start_service, argc, argv);
+        ServiceProcess(start_service, argc, argv);
         return;
     }
 
     /* We are started as the real test */
-    test_runner(my_test_server, NULL);
-    // trace("Returned from test_runner\n");
+    TestRunner(my_test_server, NULL);
+    // trace("Returned from TestRunner\n");
 }

@@ -71,7 +71,7 @@ list(APPEND SOURCE
 
 add_library(mesa_main STATIC ${SOURCE})
 add_dependencies(mesa_main xdk)
-add_pch(mesa_main precomp.h SOURCE)
+add_pch(mesa_main precomp.h SOURCE NO_UNITY_BUILD)
 
 if(NOT MSVC)
     add_target_compile_flags(mesa_main "-Wno-type-limits")

@@ -19,25 +19,37 @@
 
 #include "precomp.h"
 
+#ifndef __REACTOS__
 static const HRESULT SetCoop_null_window[16] =  {
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     S_OK,         E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
+#endif
 
+#ifdef __REACTOS__
+static const HRESULT MouseSetCoop_real_window[16] =  {
+#else
 static const HRESULT SetCoop_real_window[16] =  {
+#endif
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
     E_INVALIDARG, S_OK,         S_OK,         E_INVALIDARG,
     E_INVALIDARG, E_NOTIMPL,    S_OK,         E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
 
+#ifndef __REACTOS__
 static const HRESULT SetCoop_child_window[16] =  {
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
+#endif
 
+#ifdef __REACTOS__
+static void mouse_test_set_coop(IDirectInputA *pDI, HWND hwnd)
+#else
 static void test_set_coop(IDirectInputA *pDI, HWND hwnd)
+#endif
 {
     HRESULT hr;
     IDirectInputDeviceA *pMouse = NULL;
@@ -56,7 +68,11 @@ static void test_set_coop(IDirectInputA *pDI, HWND hwnd)
     for (i=0; i<16; i++)
     {
         hr = IDirectInputDevice_SetCooperativeLevel(pMouse, hwnd, i);
+#ifdef __REACTOS__
+        ok(hr == MouseSetCoop_real_window[i], "SetCooperativeLevel(hwnd, %d): %08x\n", i, hr);
+#else
         ok(hr == SetCoop_real_window[i], "SetCooperativeLevel(hwnd, %d): %08x\n", i, hr);
+#endif
     }
 
     child = CreateWindowA("static", "Title", WS_CHILD | WS_VISIBLE, 10, 10, 50, 50, hwnd, NULL,
@@ -198,7 +214,11 @@ static void mouse_tests(void)
     {
         ShowWindow(hwnd, SW_SHOW);
 
+#ifdef __REACTOS__
+        mouse_test_set_coop(pDI, hwnd);
+#else
         test_set_coop(pDI, hwnd);
+#endif
         test_acquire(pDI, hwnd);
 
         DestroyWindow(hwnd);

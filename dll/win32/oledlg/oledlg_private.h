@@ -40,6 +40,11 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(ole);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(oledlg);
+#endif
+
 #include "resource.h"
 
 extern HINSTANCE OLEDLG_hInstance DECLSPEC_HIDDEN;

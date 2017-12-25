@@ -26,5 +26,5 @@ if(MSVC)
     add_importlibs(shlwapi_winetest ntdll)
 endif()
 
-add_pch(shlwapi_winetest precomp.h SOURCE)
+add_pch(shlwapi_winetest precomp.h SOURCE NO_UNITY_BUILD)
 add_rostests_file(TARGET shlwapi_winetest)

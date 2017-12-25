@@ -23,7 +23,9 @@
 
 /* Unicode constants */
 static const WCHAR AddInterface[]  = {'A','d','d','I','n','t','e','r','f','a','c','e',0};
+#ifndef __REACTOS__
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
+#endif
 static const WCHAR Control[]  = {'C','o','n','t','r','o','l',0};
 static const WCHAR DeviceInstance[]  = {'D','e','v','i','c','e','I','n','s','t','a','n','c','e',0};
 static const WCHAR DotInterfaces[]  = {'.','I','n','t','e','r','f','a','c','e','s',0};

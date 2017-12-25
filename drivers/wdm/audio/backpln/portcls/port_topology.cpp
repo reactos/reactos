@@ -61,7 +61,7 @@ protected:
 
 };
 
-static GUID InterfaceGuids[2] = 
+static GUID TopologyInterfaceGuids[2] = 
 {
     {
         /// KS_CATEGORY_AUDIO
@@ -262,7 +262,7 @@ CPortTopology::Init(
     // create the subdevice descriptor
     Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor,
                                          2,
-                                         InterfaceGuids,
+                                         TopologyInterfaceGuids,
                                          0, 
                                          NULL,
                                          2, 

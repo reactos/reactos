@@ -262,7 +262,7 @@ static void _RunPower()
     ShellExecuteW(NULL, NULL, L"powercfg.cpl", NULL, NULL, SW_SHOWNORMAL);
 }
 
-static void _ShowContextMenu(CSysTray * pSysTray)
+static void Power_ShowContextMenu(CSysTray * pSysTray)
 {
     CString strOpen((LPCSTR)IDS_PWR_PROPERTIES);
     HMENU hPopup = CreatePopupMenu();
@@ -394,7 +394,7 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
                     break;
 
                 case WM_RBUTTONUP:
-                    _ShowContextMenu(pSysTray);
+                    Power_ShowContextMenu(pSysTray);
                     break;
 
                 case WM_RBUTTONDBLCLK:

@@ -10,7 +10,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
+static const CLASS_AND_INTERFACES ExpectedNetcfgxInterfaces[] =
 {
     {
         ID_NAME(CLSID_CNetCfg),
@@ -23,9 +23,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         L"Both"
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
+static const INT ExpectedNetcfgxInterfaceCount = RTL_NUMBER_OF(ExpectedNetcfgxInterfaces);
 
 START_TEST(netcfgx)
 {
-    TestClasses(L"netcfgx", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"netcfgx", ExpectedNetcfgxInterfaces, ExpectedNetcfgxInterfaceCount);
 }

@@ -64,7 +64,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(icmp);
 WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
-
 typedef struct {
     int sid;
     IP_OPTION_INFORMATION default_opts;

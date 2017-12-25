@@ -153,7 +153,7 @@ UserChangePassword(HWND hwndDlg)
 
 
 static VOID
-UpdateUserOptions(HWND hwndDlg,
+UpdateNewUserOptions(HWND hwndDlg,
                   PUSER_INFO_3 userInfo,
                   BOOL bInit)
 {
@@ -201,7 +201,7 @@ NewUserDlgProc(HWND hwndDlg,
             userInfo = (PUSER_INFO_3)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, lParam);
             SendDlgItemMessage(hwndDlg, IDC_USER_NEW_NAME, EM_SETLIMITTEXT, 20, 0);
-            UpdateUserOptions(hwndDlg, userInfo, TRUE);
+            UpdateNewUserOptions(hwndDlg, userInfo, TRUE);
             break;
 
         case WM_COMMAND:
@@ -217,17 +217,17 @@ NewUserDlgProc(HWND hwndDlg,
 
                 case IDC_USER_NEW_FORCE_CHANGE:
                     userInfo->usri3_password_expired = !userInfo->usri3_password_expired;
-                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    UpdateNewUserOptions(hwndDlg, userInfo, FALSE);
                     break;
 
                 case IDC_USER_NEW_CANNOT_CHANGE:
                     userInfo->usri3_flags ^= UF_PASSWD_CANT_CHANGE;
-                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    UpdateNewUserOptions(hwndDlg, userInfo, FALSE);
                     break;
 
                 case IDC_USER_NEW_NEVER_EXPIRES:
                     userInfo->usri3_flags ^= UF_DONT_EXPIRE_PASSWD;
-                    UpdateUserOptions(hwndDlg, userInfo, FALSE);
+                    UpdateNewUserOptions(hwndDlg, userInfo, FALSE);
                     break;
 
                 case IDC_USER_NEW_DISABLED:

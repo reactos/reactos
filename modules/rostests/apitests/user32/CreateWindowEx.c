@@ -69,7 +69,7 @@ HWND g_TestWindow = NULL;
 HWND g_ChildWindow = NULL;
 HWND g_hwndMDIClient = NULL;
 
-static int get_iwnd(HWND hWnd)
+static int CreateWindowExTest_get_iwnd(HWND hWnd)
 {
     if (!g_TestWindow)
         g_TestWindow = hWnd;
@@ -107,7 +107,7 @@ static int g_ChangeStyle = 0;
 static LRESULT CALLBACK MSGTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lRet;
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = CreateWindowExTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -334,7 +334,7 @@ static void Test_Messages(void)
 static LRESULT CALLBACK MSGChildProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lRet;
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = CreateWindowExTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -401,7 +401,7 @@ static LRESULT CALLBACK MSGChildProc2(HWND hWnd, UINT message, WPARAM wParam, LP
 static LRESULT CALLBACK MSGTestProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lRet;
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = CreateWindowExTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -651,7 +651,7 @@ static void Test_Messages_Child(void)
 static LRESULT CALLBACK MSGTestProcMDI(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lRet;
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = CreateWindowExTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -760,7 +760,7 @@ static void Test_Messages_MDI(void)
 static LRESULT CALLBACK MSGTestProcMDI2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lRet;
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = CreateWindowExTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -833,7 +833,7 @@ static LRESULT CALLBACK MSGTestProcMDI2(HWND hWnd, UINT message, WPARAM wParam, 
 static LRESULT CALLBACK MSGChildProcMDI2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT lRet;
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = CreateWindowExTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefMDIChildProc(hWnd, message, wParam, lParam);

@@ -10,7 +10,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
+static const CLASS_AND_INTERFACES ExpectedShell32Interfaces[] =
 {
     {
         ID_NAME(CLSID_CDBurn),
@@ -614,9 +614,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
+static const INT ExpectedShell32InterfaceCount = RTL_NUMBER_OF(ExpectedShell32Interfaces);
 
 START_TEST(shell32)
 {
-    TestClasses(L"shell32", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"shell32", ExpectedShell32Interfaces, ExpectedShell32InterfaceCount);
 }

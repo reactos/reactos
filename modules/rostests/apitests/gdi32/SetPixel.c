@@ -14,7 +14,7 @@ static struct
     WORD palVersion;
     WORD palNumEntries;
     PALETTEENTRY logpalettedata[8];
-} gpal =
+} SetPixel_test_gpal =
 {
     0x300, 8,
     {
@@ -136,7 +136,7 @@ void Test_SetPixel_PAL()
 
 
     /* Initialize the logical palette and select it */
-    hpal = CreatePalette((LOGPALETTE*)&gpal);
+    hpal = CreatePalette((LOGPALETTE*)&SetPixel_test_gpal);
     hpalOld = SelectPalette(hdc, hpal, FALSE);
     ok(hpalOld != NULL, "error=%ld\n", GetLastError());
 

@@ -189,28 +189,6 @@ ProtectToPTE(ULONG flProtect)
     return(Attributes);
 }
 
-/* Taken from ARM3/pagfault.c */
-FORCEINLINE
-BOOLEAN
-MiSynchronizeSystemPde(PMMPDE PointerPde)
-{
-    MMPDE SystemPde;
-    ULONG Index;
-
-    /* Get the Index from the PDE */
-    Index = ((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE);
-
-    /* Copy the PDE from the double-mapped system page directory */
-    SystemPde = MmSystemPagePtes[Index];
-    *PointerPde = SystemPde;
-
-    /* Make sure we re-read the PDE and PTE */
-    KeMemoryBarrierWithoutFence();
-
-    /* Return, if we had success */
-    return SystemPde.u.Hard.Valid != 0;
-}
-
 NTSTATUS
 NTAPI
 MiDispatchFault(IN BOOLEAN StoreInstruction,
@@ -220,9 +198,9 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                 IN BOOLEAN Recursive,
                 IN PEPROCESS Process,
                 IN PVOID TrapInformation,
-                IN PVOID Vad);
+                IN PMMVAD Vad);
 
-NTSTATUS
+VOID
 NTAPI
 MiFillSystemPageDirectory(IN PVOID Base,
                           IN SIZE_T NumberOfBytes);

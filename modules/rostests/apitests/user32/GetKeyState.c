@@ -54,7 +54,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(hKbdLLHook, nCode, wParam, lParam);
 }
 
-static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+static LRESULT CALLBACK GetKeyStateTest_WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     if(msg == WM_SYSKEYDOWN)
 	{
@@ -63,7 +63,7 @@ static LRESULT CALLBACK WndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return DefWindowProcA( hWnd, msg, wParam, lParam );
 }
 
-static HWND CreateTestWindow()
+static HWND CreateGetKeyStateTestWindow()
 {
     MSG msg;
     WNDCLASSA  wclass;
@@ -72,7 +72,7 @@ static HWND CreateTestWindow()
 	
     wclass.lpszClassName = "InputSysKeyTestClass";
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
-    wclass.lpfnWndProc   = WndProc;
+    wclass.lpfnWndProc   = GetKeyStateTest_WndProc;
     wclass.hInstance     = hInstance;
     wclass.hIcon         = LoadIconA( 0, IDI_APPLICATION );
     wclass.hCursor       = LoadCursorA( NULL, IDC_ARROW );
@@ -102,7 +102,7 @@ void Test_GetKeyState()
 	HWND hwnd;
     MSG msg;
 	
-	hwnd = CreateTestWindow();
+	hwnd = CreateGetKeyStateTestWindow();
 	
 	hKbdHook = SetWindowsHookEx(WH_KEYBOARD, KeyboardProc, GetModuleHandleA( NULL ), 0);
 	hKbdLLHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandleA( NULL ), 0);

@@ -18,5 +18,5 @@ add_library(qedit SHARED
 set_module_type(qedit win32dll)
 target_link_libraries(qedit strmbase strmiids uuid wine)
 add_importlibs(qedit ole32 oleaut32 msvcrt kernel32 ntdll)
-add_pch(qedit qedit_private.h SOURCE)
+add_pch(qedit qedit_private.h SOURCE NO_UNITY_BUILD)
 add_cd_file(TARGET qedit DESTINATION reactos/system32 FOR all)

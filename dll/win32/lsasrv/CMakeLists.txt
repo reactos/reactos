@@ -25,13 +25,13 @@ list(APPEND SOURCE
     session.c
     srm.c
     utils.c
-    lsasrv.h
-    ${CMAKE_CURRENT_BINARY_DIR}/dssetup_s.c
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_s.c
-    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c)
+    ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c
+    lsasrv.h)
 
 add_library(lsasrv SHARED
     ${SOURCE}
+    ${CMAKE_CURRENT_BINARY_DIR}/dssetup_s.c
     lsasrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/lsasrv.def)
 

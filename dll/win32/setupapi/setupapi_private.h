@@ -60,6 +60,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 #include "resource.h"
 
+#ifdef __REACTOS__
+static const WCHAR BackSlash[] = {'\\',0};
+static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
+static const WCHAR ClassGUID[] = {'C','l','a','s','s','G','U','I','D',0};
+static const WCHAR DotCoInstallers[] = {'.','C','o','I','n','s','t','a','l','l','e','r','s',0};
+static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
+static const WCHAR Version[] = {'V','e','r','s','i','o','n',0};
+static const WCHAR DotSecurity[] = {'.','S','e','c','u','r','i','t','y',0};
+static const WCHAR Class[] = {'C','l','a','s','s',0};
+#endif
+
 #define SETUP_DEVICE_INFO_SET_MAGIC 0xd00ff057
 #define SETUP_CLASS_IMAGE_LIST_MAGIC 0xd00ff058
 

@@ -24,5 +24,5 @@ list(APPEND SOURCE
     strmbase_private.h)
 
 add_library(strmbase ${SOURCE})
-add_pch(strmbase strmbase_private.h SOURCE)
+add_pch(strmbase strmbase_private.h SOURCE NO_UNITY_BUILD)
 add_dependencies(strmbase psdk dxsdk)

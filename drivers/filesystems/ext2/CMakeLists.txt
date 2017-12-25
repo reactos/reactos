@@ -115,7 +115,7 @@ add_importlibs(ext2fs ntoskrnl hal)
 
 if(NOT USE_CLANG_CL)
     # The fallback we have above prevents cl and clang-cl from using the same PCH
-    add_pch(ext2fs inc/ext2fs.h SOURCE)
+    add_pch(ext2fs inc/ext2fs.h SOURCE NO_UNITY_BUILD)
 endif()
 
 add_cd_file(TARGET ext2fs DESTINATION reactos/system32/drivers FOR all)

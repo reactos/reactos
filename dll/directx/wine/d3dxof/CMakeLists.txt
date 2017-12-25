@@ -18,5 +18,5 @@ add_library(d3dxof SHARED
 set_module_type(d3dxof win32dll)
 target_link_libraries(d3dxof dxguid uuid wine)
 add_importlibs(d3dxof msvcrt kernel32 ntdll)
-add_pch(d3dxof d3dxof_private.h SOURCE)
+add_pch(d3dxof d3dxof_private.h SOURCE UNITY_DEBUGCHANNELS_COMPAT)
 add_cd_file(TARGET d3dxof DESTINATION reactos/system32 FOR all)

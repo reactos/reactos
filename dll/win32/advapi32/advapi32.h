@@ -49,6 +49,16 @@
 #define FN_PROGRESSA FN_PROGRESS
 #endif
 
+static const unsigned char CRYPT_LMhash_Magic[8] =
+    { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
+
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(advapi);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(cred);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(crypt);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(reg);
+#endif
+
 /* logon.c */
 
 NTSTATUS

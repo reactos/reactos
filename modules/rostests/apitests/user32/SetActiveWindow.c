@@ -10,7 +10,7 @@
 HWND hWnd1, hWnd2;
 
 /* FIXME: test for HWND_TOP, etc...*/
-static int get_iwnd(HWND hWnd)
+static int SetActiveWindowTest_get_iwnd(HWND hWnd)
 {
     if(hWnd == hWnd1) return 1;
     else if(hWnd == hWnd2) return 2;
@@ -19,7 +19,7 @@ static int get_iwnd(HWND hWnd)
 
 LRESULT CALLBACK OwnerTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int iwnd = get_iwnd(hWnd);
+    int iwnd = SetActiveWindowTest_get_iwnd(hWnd);
 
     if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -44,7 +44,7 @@ LRESULT CALLBACK OwnerTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         {
             WINDOWPOS* pwp = (WINDOWPOS*)lParam;
             ok(wParam==0,"expected wParam=0\n");
-            RECORD_MESSAGE(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
+            RECORD_MESSAGE(iwnd, message, SENT, SetActiveWindowTest_get_iwnd(pwp->hwndInsertAfter), pwp->flags);
             break;
         }
     default:
@@ -53,20 +53,20 @@ LRESULT CALLBACK OwnerTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-static void FlushMessages()
+static void SetActiveWindowTest_FlushMessages()
 {
     MSG msg;
 
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
     {
-        int iwnd = get_iwnd(msg.hwnd);
+        int iwnd = SetActiveWindowTest_get_iwnd(msg.hwnd);
         if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
             RECORD_MESSAGE(iwnd, msg.message, POST,0,0);
         DispatchMessageA( &msg );
     }
 }
 
-static void create_test_windows()
+static void create_SetActiveWindow_test_windows()
 {
     RegisterSimpleClass(OwnerTestProc, L"ownertest"); 
     hWnd1 = CreateWindowW(L"ownertest", L"ownertest", WS_OVERLAPPEDWINDOW,
@@ -81,11 +81,11 @@ static void set_default_zorder()
     SetWindowPos(hWnd1, 0, 0,0,0,0, SWP_NOMOVE|SWP_NOREPOSITION|SWP_NOSIZE|SWP_SHOWWINDOW);
     SetWindowPos(hWnd2, 0, 0,0,0,0, SWP_NOMOVE|SWP_NOREPOSITION|SWP_NOSIZE|SWP_SHOWWINDOW);
 
-    FlushMessages();
+    SetActiveWindowTest_FlushMessages();
     EMPTY_CACHE();
 }
 
-static void destroy_test_window()
+static void destroy_SetActiveWindow_test_window()
 {
     DestroyWindow(hWnd1);
     DestroyWindow(hWnd2);
@@ -118,18 +118,18 @@ void Test_msg_simple()
 {
     SetCursorPos(0,0);
 
-    create_test_windows();
+    create_SetActiveWindow_test_windows();
     set_default_zorder();
 
     SetActiveWindow(hWnd1);
-    FlushMessages();
+    SetActiveWindowTest_FlushMessages();
     COMPARE_CACHE(activate2to1_chain);
 
     SetActiveWindow(hWnd2);
-    FlushMessages();
+    SetActiveWindowTest_FlushMessages();
     COMPARE_CACHE(activate1to2_chain);
 
-    destroy_test_window();
+    destroy_SetActiveWindow_test_window();
 }
 
 START_TEST(SetActiveWindow)

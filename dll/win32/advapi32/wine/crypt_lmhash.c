@@ -22,9 +22,6 @@
 
 #include <advapi32.h>
 
-static const unsigned char CRYPT_LMhash_Magic[8] =
-    { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
-
 static void CRYPT_LMhash( unsigned char *dst, const unsigned char *pwd, const int len )
 {
     int i, max = 14;

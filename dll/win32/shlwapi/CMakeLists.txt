@@ -14,7 +14,6 @@ spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     assoc.c
     clist.c
-    istream.c
     msgbox.c
     ordinal.c
     path.c
@@ -30,8 +29,9 @@ list(APPEND SOURCE
 
 add_library(shlwapi SHARED
     ${SOURCE}
-    shlwapi.rc
+    istream.c
     wsprintf.c
+    shlwapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 

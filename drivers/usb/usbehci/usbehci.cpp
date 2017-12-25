@@ -36,6 +36,7 @@ DriverEntry(
     return STATUS_SUCCESS;
 }
 
+#ifndef _UNITY_BUILD_ENABLED_
 extern "C" {
   void
 	  __cxa_pure_virtual()
@@ -46,6 +47,7 @@ extern "C" {
 
   }
 }
+#endif
 
 extern "C" {
    void free(void * ptr)

@@ -15,5 +15,6 @@
 #include <lmcons.h>
 #include <aclapi.h>
 
+static BOOL (WINAPI *pConvertStringSidToSidA)( LPCSTR str, PSID pSid );
 
 #endif /* !_ADVAPI32_WINETEST_PRECOMP_H_ */

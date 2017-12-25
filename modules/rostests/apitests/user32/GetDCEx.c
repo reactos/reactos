@@ -17,7 +17,7 @@ void Test_GetDCEx_Params()
 static
 LRESULT
 CALLBACK
-WndProc(
+GetDCExTest_WndProc(
     _In_ HWND hwnd,
     _In_ UINT uMsg,
     _In_ WPARAM wParam,
@@ -78,7 +78,7 @@ Test_GetDCEx_Cached()
     HDC hdc1, hdc2;
     HRGN hrgn;
 
-    atomClass = RegisterClassHelper(pszClassName, 0, WndProc);
+    atomClass = RegisterClassHelper(pszClassName, 0, GetDCExTest_WndProc);
     ok(atomClass != 0, "Failed to register class\n");
 
     hwnd = CreateWindowHelper(pszClassName, "Test Window1");
@@ -148,7 +148,7 @@ Test_GetDCEx_CS_OWNDC()
     HDC hdc1, hdc2;
     //HRGN hrgn;
 
-    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC, WndProc);
+    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC, GetDCExTest_WndProc);
     ok(atomClass != 0, "Failed to register class\n");
 
     hwnd = CreateWindowHelper(pszClassName, "Test Window1");
@@ -209,7 +209,7 @@ Test_GetDCEx_CS_CLASSDC()
     HDC hdc1, hdc2;
     //HRGN hrgn;
 
-    atomClass = RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
+    atomClass = RegisterClassHelper(pszClassName, CS_CLASSDC, GetDCExTest_WndProc);
     ok(atomClass != 0, "Failed to register class\n");
 
     hwnd1 = CreateWindowHelper(pszClassName, "Test Window1");
@@ -261,7 +261,7 @@ Test_GetDCEx_CS_Mixed()
     HDC hdc1, hdc2, hdc3;
 
     /* Register a class with CS_OWNDC *and* CS_CLASSDC */
-    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC | CS_CLASSDC, WndProc);
+    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC | CS_CLASSDC, GetDCExTest_WndProc);
     ok(atomClass != 0, "Failed to register class\n");
 
     /* Create the first window, this should create a single own and class DC */
@@ -377,7 +377,7 @@ Test_GetDCEx_CS_Mixed()
        "UnregisterClass failed\n");
 
     /* Create class again with CS_OWNDC */
-    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC, WndProc);
+    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC, GetDCExTest_WndProc);
     ok(atomClass != 0, "Failed to register class\n");
 
     hwnd1 = CreateWindowHelper(pszClassName, "Test Window1");
@@ -417,7 +417,7 @@ Test_GetDCEx_CS_SwitchedStyle()
     ATOM atomClass;
     HWND hwnd1, hwnd2;
 
-    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC, WndProc);
+    atomClass = RegisterClassHelper(pszClassName, CS_OWNDC, GetDCExTest_WndProc);
     ok(atomClass != 0, "Failed to register class\n");
 
     hwnd1 = CreateWindowHelper(pszClassName, "Test Window1");

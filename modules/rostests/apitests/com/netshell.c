@@ -10,7 +10,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
+static const CLASS_AND_INTERFACES ExpectedNetshellInterfaces[] =
 {
     {
         ID_NAME(CLSID_ConnectionCommonUi),
@@ -145,9 +145,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         L"Both"
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
+static const INT ExpectedNetshellInterfaceCount = RTL_NUMBER_OF(ExpectedNetshellInterfaces);
 
 START_TEST(netshell)
 {
-    TestClasses(L"netshell", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"netshell", ExpectedNetshellInterfaces, ExpectedNetshellInterfaceCount);
 }

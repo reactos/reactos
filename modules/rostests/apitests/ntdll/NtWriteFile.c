@@ -7,37 +7,6 @@
 
 #include "precomp.h"
 
-static
-BOOL
-Is64BitSystem(VOID)
-{
-#ifdef _WIN64
-    return TRUE;
-#else
-    NTSTATUS Status;
-    ULONG_PTR IsWow64;
-
-    Status = NtQueryInformationProcess(NtCurrentProcess(),
-                                       ProcessWow64Information,
-                                       &IsWow64,
-                                       sizeof(IsWow64),
-                                       NULL);
-    if (NT_SUCCESS(Status))
-    {
-        return IsWow64 != 0;
-    }
-
-    return FALSE;
-#endif
-}
-
-static
-ULONG
-SizeOfMdl(VOID)
-{
-    return Is64BitSystem() ? 48 : 28;
-}
-
 START_TEST(NtWriteFile)
 {
     NTSTATUS Status;

@@ -251,13 +251,19 @@ static BOOL CALLBACK EnumEffects(const DIEFFECTINFOA *lpef, void *ref)
     return DIENUM_CONTINUE;
 }
 
+#ifndef __REACTOS__
 static const HRESULT SetCoop_null_window[16] =  {
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     E_HANDLE,     E_INVALIDARG,
     E_INVALIDARG, E_HANDLE,     S_OK,         E_INVALIDARG,
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG};
+#endif
 
+#ifdef __REACTOS__
+static const HRESULT JoystickSetCoop_real_window[16] =  {
+#else
 static const HRESULT SetCoop_real_window[16] =  {
+#endif
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,
     E_INVALIDARG, S_OK,         S_OK,         E_INVALIDARG,
     E_INVALIDARG, S_OK,         S_OK,         E_INVALIDARG,
@@ -407,7 +413,11 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
     for (i=0; i<16; i++)
     {
         hr = IDirectInputDevice_SetCooperativeLevel(pJoystick, hWnd, i);
+#ifdef __REACTOS__
+        ok(hr == JoystickSetCoop_real_window[i], "SetCooperativeLevel(hwnd, %d): %08x\n", i, hr);
+#else
         ok(hr == SetCoop_real_window[i], "SetCooperativeLevel(hwnd, %d): %08x\n", i, hr);
+#endif
     }
 
     hr = IDirectInputDevice_SetCooperativeLevel(pJoystick, hWnd,

@@ -29,7 +29,9 @@ static inline BOOL match_off_by_n(int a, int b, unsigned int n)
 }
 #define match_off_by_1(a, b, exact) match_off_by_n((a), (b), (exact) ? 0 : 1)
 #define near_match(a, b) match_off_by_n((a), (b), 6)
+#ifndef __REACTOS__
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
+#endif
 
 static LONG  (WINAPI *pGdiGetCharDimensions)(HDC hdc, LPTEXTMETRICW lptm, LONG *height);
 static DWORD (WINAPI *pGdiGetCodePage)(HDC hdc);

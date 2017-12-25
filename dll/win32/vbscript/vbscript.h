@@ -40,6 +40,10 @@
 #include <wine/list.h>
 #include <wine/unicode.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(vbscript_disas);
+#endif
+
 WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 typedef struct {

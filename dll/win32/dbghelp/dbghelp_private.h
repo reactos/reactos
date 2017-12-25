@@ -64,6 +64,16 @@
 #include <wine/mscvpdb.h>
 #include <wine/unicode.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(dbghelp);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(dbghelp_coff);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(dbghelp_dwarf);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(dbghelp_msc);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(dbghelp_rsym);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(dbghelp_stabs);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(dbghelp_symt);
+#endif
+
 #else /* DBGHELP_STATIC_LIB */
 
 #include <string.h>

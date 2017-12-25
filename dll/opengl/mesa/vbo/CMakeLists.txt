@@ -19,4 +19,4 @@ list(APPEND SOURCE
 
 add_library(mesa_vbo STATIC ${SOURCE})
 add_dependencies(mesa_vbo xdk)
-add_pch(mesa_vbo precomp.h SOURCE)
+add_pch(mesa_vbo precomp.h SOURCE NO_UNITY_BUILD)

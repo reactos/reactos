@@ -26,7 +26,6 @@
 
 #include "usp10_internal.h"
 
-#include <math.h>
 #include <winuser.h>
 #include <winreg.h>
 

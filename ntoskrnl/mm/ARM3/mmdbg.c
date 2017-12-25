@@ -15,10 +15,12 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
-#ifndef _WINKD_
-#define KdpDprintf DPRINT
+#ifdef _WINKD_
+#include <internal/kd64.h>
 #elif defined(NDEBUG)
 #define KdpDprintf(...)
+#else
+#define KdpDprintf DPRINT
 #endif
 
 BOOLEAN

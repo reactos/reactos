@@ -86,12 +86,14 @@ typedef struct
     PVOID Tag;
 }DMUS_KERNEL_EVENT_WITH_TAG, *PDMUS_KERNEL_EVENT_WITH_TAG;
 
+#if 0
 typedef struct
 {
     CPortPinDMus *Pin;
     PIO_WORKITEM WorkItem;
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
+#endif
 
 //==================================================================================================================================
 NTSTATUS

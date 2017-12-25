@@ -12,7 +12,7 @@
 /* Add handlers here for subcommands */
 static HandlerProc QueryMain;
 static HandlerProc SetMain;
-static HandlerItem HandlersList[] =
+static HandlerItem DirtyHandlersList[] =
 {
     /* Proc, name, help */
     { QueryMain, _T("query"), _T("Show the dirty bit") },
@@ -95,16 +95,20 @@ SetMain(int argc, const TCHAR *argv[])
 }
 
 static void
-PrintUsage(const TCHAR * Command)
+DirtyPrintUsage(const TCHAR * Command)
 {
-    PrintDefaultUsage(_T(" DIRTY "), Command, (HandlerItem *)&HandlersList,
-                      (sizeof(HandlersList) / sizeof(HandlersList[0])));
+    PrintDefaultUsage(_T(" DIRTY "),
+                      Command,
+                      (HandlerItem *)&DirtyHandlersList,
+                      _countof(DirtyHandlersList));
 }
 
 int
 DirtyMain(int argc, const TCHAR *argv[])
 {
-    return FindHandler(argc, argv, (HandlerItem *)&HandlersList,
-                       (sizeof(HandlersList) / sizeof(HandlersList[0])),
-                       PrintUsage);
+    return FindHandler(argc,
+                       argv,
+                       (HandlerItem *)&DirtyHandlersList,
+                       _countof(DirtyHandlersList),
+                       DirtyPrintUsage);
 }

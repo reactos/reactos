@@ -61,7 +61,7 @@ protected:
 
 };
 
-static GUID InterfaceGuids[3] = 
+static GUID DMusInterfaceGuids[3] = 
 {
     {
         /// KS_CATEGORY_AUDIO
@@ -270,7 +270,7 @@ CPortDMus::Init(
     // create the subdevice descriptor
     Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor, 
                                          3,
-                                         InterfaceGuids, 
+                                         DMusInterfaceGuids, 
                                          0, 
                                          NULL,
                                          2, 

@@ -83,6 +83,16 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
+#if defined(_UNITY_BUILD_ENABLED_)
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(CRecycleBin);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(dmenu);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(exec);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(fprop);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(mydocs);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(pidl);
+WINE_FORWARD_DECLARE_DEBUG_CHANNEL(shell);
+#endif
+
 extern const GUID CLSID_AdminFolderShortcut;
 extern const GUID CLSID_FontsFolderShortcut;
 extern const GUID CLSID_StartMenu;

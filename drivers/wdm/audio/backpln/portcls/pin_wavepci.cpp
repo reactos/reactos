@@ -80,12 +80,14 @@ protected:
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
 };
 
+#if 0
 typedef struct
 {
     CPortPinWavePci *Pin;
     PIO_WORKITEM WorkItem;
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
+#endif
 
 NTSTATUS NTAPI PinWavePciState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWavePciDataFormat(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);

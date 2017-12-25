@@ -195,7 +195,7 @@ set(PCH_SOURCE
     ${FREELDR_NTLDR_COMMON_SOURCE}
     ${FREELDR_COMMON_SOURCE})
 
-add_pch(freeldr_common include/freeldr.h PCH_SOURCE)
+add_pch(freeldr_common include/freeldr.h PCH_SOURCE NO_UNITY_BUILD)
 add_dependencies(freeldr_common bugcodes asm xdk)
 
 if(ARCH STREQUAL "i386" AND NOT MSVC)
