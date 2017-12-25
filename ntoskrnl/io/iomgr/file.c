@@ -533,7 +533,7 @@ IopParseDevice(IN PVOID ParseObject,
         /* Check if we can simply use a dummy file */
         UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
 
-#if 0
+#if 1
         /* FIXME: Small hack still exists, have to check why...
          * This is triggered multiple times by usetup and then once per boot.
          */
