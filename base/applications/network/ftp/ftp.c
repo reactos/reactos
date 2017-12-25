@@ -73,7 +73,11 @@ int	ptflag = 0;
 int	allbinary;
 struct	sockaddr_in myctladdr;
 uid_t	getuid();
+#ifdef __REACTOS__
+void lostpeer(void);
+#else
 sig_t	lostpeer();
+#endif
 off_t	restart_point = 0;
 
 SOCKET cin, cout;
