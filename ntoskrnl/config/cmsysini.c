@@ -621,9 +621,14 @@ UseSet:
     ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
     /* Initialize the target link name */
-    RtlStringCbPrintfW(UnicodeBuffer, sizeof(UnicodeBuffer),
+    Status = RtlStringCbPrintfW(UnicodeBuffer, sizeof(UnicodeBuffer),
                        L"\\Registry\\Machine\\System\\ControlSet%03ld",
                        ControlSet);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
     RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
     /* Set the value */
@@ -844,6 +849,8 @@ NTAPI
 INIT_FUNCTION
 CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    static const WCHAR HivePath[] = L"\\SystemRoot\\System32\\Config\\SYSTEM";
+    static const UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
     PVOID HiveBase;
     ANSI_STRING LoadString;
     PVOID Buffer;
@@ -852,7 +859,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     BOOLEAN Allocate;
     UNICODE_STRING KeyName;
     PCMHIVE SystemHive = NULL;
-    UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
@@ -872,7 +878,12 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlInitEmptyUnicodeString(&CmpLoadOptions, Buffer, (USHORT)Length);
 
     /* Add the load options and null-terminate */
-    RtlAnsiStringToUnicodeString(&CmpLoadOptions, &LoadString, FALSE);
+    Status = RtlAnsiStringToUnicodeString(&CmpLoadOptions, &LoadString, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
     CmpLoadOptions.Buffer[LoadString.Length] = UNICODE_NULL;
     CmpLoadOptions.Length += sizeof(WCHAR);
 
@@ -880,50 +891,41 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HiveBase = LoaderBlock->RegistryBase;
     if (HiveBase)
     {
-        /* Import it */
-        Status = CmpInitializeHive(&SystemHive,
-                                   HINIT_MEMORY,
-                                   HIVE_NOLAZYFLUSH,
-                                   HFILE_TYPE_LOG,
-                                   HiveBase,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &HiveName,
-                                   2);
-        if (!NT_SUCCESS(Status)) return FALSE;
-
-        /* Set the hive filename */
-        RtlCreateUnicodeString(&SystemHive->FileFullPath,
-                               L"\\SystemRoot\\System32\\Config\\SYSTEM");
-
-        /* We imported, no need to create a new hive */
+        /* We import, no need to create a new hive */
         Allocate = FALSE;
-
-        /* Manually set the hive as volatile, if in LiveCD mode */
-        if (CmpShareSystemHives) SystemHive->Hive.HiveFlags = HIVE_VOLATILE;
     }
     else
     {
-        /* Create it */
-        Status = CmpInitializeHive(&SystemHive,
-                                   HINIT_CREATE,
-                                   HIVE_NOLAZYFLUSH,
-                                   HFILE_TYPE_LOG,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &HiveName,
-                                   0);
-        if (!NT_SUCCESS(Status)) return FALSE;
-
-        /* Set the hive filename */
-        RtlCreateUnicodeString(&SystemHive->FileFullPath,
-                               L"\\SystemRoot\\System32\\Config\\SYSTEM");
-
         /* Tell CmpLinkHiveToMaster to allocate a hive */
         Allocate = TRUE;
+    }
+
+    Status = CmpInitializeHive(&SystemHive,
+        HiveBase ? HINIT_MEMORY : HINIT_CREATE,
+        HIVE_NOLAZYFLUSH,
+        HFILE_TYPE_LOG,
+        HiveBase,
+        NULL,
+        NULL,
+        NULL,
+        &HiveName,
+        HiveBase ? 2 : 0);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    /* Set the hive filename */
+    Status = RtlCreateUnicodeString(&SystemHive->FileFullPath, HivePath);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    /* Manually set the hive as volatile, if in Live CD mode */
+    if (HiveBase && CmpShareSystemHives)
+    {
+        SystemHive->Hive.HiveFlags = HIVE_VOLATILE;
     }
 
     /* Save the boot type */
@@ -1233,6 +1235,7 @@ CmpGetRegistryPath(OUT PWCHAR ConfigPath)
     return STATUS_SUCCESS;
 }
 
+_Function_class_(KSTART_ROUTINE)
 VOID
 NTAPI
 CmpLoadHiveThread(IN PVOID StartContext)
@@ -1896,11 +1899,21 @@ CmGetSystemDriverList(VOID)
         /* Get the entry */
         DriverEntry = CONTAINING_RECORD(NextEntry, BOOT_DRIVER_LIST_ENTRY, Link);
 
-        /* Allocate the path for the caller and duplicate the registry path */
+        /* Allocate the path for the caller */
         ServicePath[i] = ExAllocatePool(NonPagedPool, sizeof(UNICODE_STRING));
-        RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-                                  &DriverEntry->RegistryPath,
-                                  ServicePath[i]);
+        if (!ServicePath[i])
+        {
+            KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 2, 1, 0, 0);
+        }
+
+        /* Duplicate the registry path */
+        Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                           &DriverEntry->RegistryPath,
+                                           ServicePath[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 2, 1, 0, 0);
+        }
     }
 
     /* Terminate the list */
