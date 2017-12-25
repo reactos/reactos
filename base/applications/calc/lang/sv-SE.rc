@@ -510,7 +510,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC "Luxembourg franc"
     IDS_CURRENCY_MALTESE_LIRA "Maltesisk lire"
     IDS_CURRENCY_PORTOGUESE_ESCUDO "Portugisisk escudo"
-    IDS_CURRENCY_SLOVAK_KORUNA "Slovasisk koruna"
+    IDS_CURRENCY_SLOVAK_KORUNA "Slovakisk koruna"
     IDS_CURRENCY_SLOVENIAN_TOLAR "Slovensk tolar"
     IDS_CURRENCY_SPANISH_PESETA "Spansk peseta"
 END
@@ -518,11 +518,11 @@ END
 /* Energies */
 STRINGTABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES "15 °C calories"
-    IDS_ENERGY_BTUS "Britisk värme-enhet"
+    IDS_ENERGY_15_C_CALORIES "15 °C kalorier"
+    IDS_ENERGY_BTUS "Brittisk värme-enhet"
     IDS_ENERGY_ERGS "Ergs"
-    IDS_ENERGY_EVS "Electron-Volt"
-    IDS_ENERGY_FOOT_POUNDS "Fot-Pound"
+    IDS_ENERGY_EVS "Elektron-Volt"
+    IDS_ENERGY_FOOT_POUNDS "Fot-Pund"
     IDS_ENERGY_IT_CALORIES "International Table calories"
     IDS_ENERGY_IT_KILOCALORIES "International Table kilocalories"
     IDS_ENERGY_JOULES "Joule"
@@ -536,7 +536,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS "Ångström"
-    IDS_LENGTH_ASTRONOMICAL_UNITS "Astronomiska enhet"
+    IDS_LENGTH_ASTRONOMICAL_UNITS "Astronomiska enheter"
     IDS_LENGTH_BARLEYCORNS "Barleycorns"
     IDS_LENGTH_CENTIMETERS "Centimeter"
     IDS_LENGTH_CHAINS_UK "Chains (UK)"
@@ -633,7 +633,7 @@ END
 /* Velocities */
 STRINGTABLE
 BEGIN
-    IDS_VELOCITY_CMS_SECOND "Centimeter per sekund/sekund"
+    IDS_VELOCITY_CMS_SECOND "Centimeter/timme"
     IDS_VELOCITY_FEET_HOUR "Fot/timme"
     IDS_VELOCITY_FEET_SECOND "Fot/sekund"
     IDS_VELOCITY_KILOMETERS_HOUR "Kilometer/timme"
