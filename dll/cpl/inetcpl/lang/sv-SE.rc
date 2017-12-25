@@ -27,13 +27,13 @@ STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "Internet Settings"
     IDS_CPL_INFO        "Configure WINE Internet Explorer and related settings."
-    IDS_SEC_SETTINGS    "Security settings for zone: "
-    IDS_SEC_LEVEL0      "Custom"
-    IDS_SEC_LEVEL1      "Very Low"
-    IDS_SEC_LEVEL2      "Low"
-    IDS_SEC_LEVEL3      "Medium"
-    IDS_SEC_LEVEL4      "Increased"
-    IDS_SEC_LEVEL5      "High"
+    IDS_SEC_SETTINGS    "Säkerhetsinställningar för zon: "
+    IDS_SEC_LEVEL0      "Valt"
+    IDS_SEC_LEVEL1      "Väldigt låg"
+    IDS_SEC_LEVEL2      "Låg"
+    IDS_SEC_LEVEL3      "Medel"
+    IDS_SEC_LEVEL4      "Ökad"
+    IDS_SEC_LEVEL5      "Hög"
 END
 
 /* "General" propsheet */
@@ -77,8 +77,8 @@ BEGIN
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Passwords\nSaved passwords you have entered into forms.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON  "Cancel", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Delete", IDOK, 120, 230, 60, 15, WS_GROUP
+    DEFPUSHBUTTON  "Avbryt", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Ta bort", IDOK, 120, 230, 60, 15, WS_GROUP
 
 END
 

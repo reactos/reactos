@@ -44,5 +44,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SPAIN "Spanish (Spain)"
+    IDS_SPAIN "Spanska (Spanien)"
 END
