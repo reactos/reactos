@@ -10,7 +10,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Добре дошли"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Добре дошли в операционна система ReactOS.\n\nИзберете си от темите в ляво."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Показвай отново този прозорец"
     IDS_CLOSETEXT "&Изход"
 END

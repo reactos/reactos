@@ -923,7 +923,8 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = FF_DONTCARE;
-    StringCchCopy(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), TEXT("Tahoma"));
+    if (LoadString(hInstance, IDS_FONTNAME, lf.lfFaceName, ARRAYSIZE(lf.lfFaceName)) == 0)
+        StringCchCopy(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), TEXT("Tahoma"));
 
     /* Topic title font */
     lf.lfHeight = -18;

@@ -8,7 +8,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Καλώς Ήλθατε"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Καλώς ήλθατε στο ReactOS Λειτουργικό Σύστημα.\n\nΕπιλέξτε ένα θέμα από το μενού στα αριστερά."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Show this dialog again"
     IDS_CLOSETEXT "&Έξοδος"
 END

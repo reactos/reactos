@@ -8,7 +8,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Welcome"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "ReactOS へようこそ。\n\n左側のトピックをクリックしてください。"
-
+    IDS_FONTNAME "MS UI Gothic"
     IDS_CHECKTEXT "&Show this dialog again"
     IDS_CLOSETEXT "終了(&Q)"
 END

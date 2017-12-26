@@ -12,7 +12,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Mirë se vini"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Mirë se vini në Sistemin Operative ReactOS.\n\nKliko në një topik në të majtë."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Trego këtë dialog përsëri"
     IDS_CLOSETEXT "&Dil"
 END

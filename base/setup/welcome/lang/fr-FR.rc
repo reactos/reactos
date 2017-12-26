@@ -8,7 +8,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Bienvenue"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Bienvenue sur le système d'exploitation ReactOS.\n\nCliquez sur une section à gauche."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Afficher cette boîte de dialogue de nouveau."
     IDS_CLOSETEXT "&Quitter"
 END
