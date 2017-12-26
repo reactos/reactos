@@ -56,7 +56,6 @@ list(APPEND SOURCE
     RtlGetLongestNtPathLength.c
     RtlHandle.c
     RtlImageRvaToVa.c
-    RtlInitializeBitMap.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
     RtlNtPathNameToDosPathName.c

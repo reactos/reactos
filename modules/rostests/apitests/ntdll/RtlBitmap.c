@@ -94,6 +94,10 @@ Test_RtlInitializeBitMap(void)
     _SEH2_END;
     ok_int(Exception, 1);
 
+    RtlInitializeBitMap(&BitMapHeader, NULL, -1);
+    ok_int(BitMapHeader.SizeOfBitMap, -1);
+    ok_ptr(BitMapHeader.Buffer, NULL);
+
     memset(Buffer, 0xcc, sizeof(Buffer));
     RtlInitializeBitMap(&BitMapHeader, Buffer, 0);
     ok_int(BitMapHeader.SizeOfBitMap, 0);

@@ -55,7 +55,6 @@ extern void func_RtlGetLengthWithoutTrailingPathSeperators(void);
 extern void func_RtlGetLongestNtPathLength(void);
 extern void func_RtlHandle(void);
 extern void func_RtlImageRvaToVa(void);
-extern void func_RtlInitializeBitMap(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlNtPathNameToDosPathName(void);
@@ -121,7 +120,6 @@ const struct test winetest_testlist[] =
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
     { "RtlHandle",                      func_RtlHandle },
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
-    { "RtlInitializeBitMap",            func_RtlInitializeBitMap },
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlNtPathNameToDosPathName",     func_RtlNtPathNameToDosPathName },
