@@ -10,7 +10,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Sveiki"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Sveiki, čia ReactOS Operacinė Sistema.\n\nPasirinkite punktą kairėje."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Rodyti šį langą vėl"
     IDS_CLOSETEXT "&Išeiti"
 END

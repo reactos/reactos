@@ -10,7 +10,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Bun venit"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Bun venit în Sistemul de Operare ReactOS.\n\nAlegeți o opțiune din stânga."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "Afișea&ză acest dialog și altă dată"
     IDS_CLOSETEXT "I&eșire"
 END

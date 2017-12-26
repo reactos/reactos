@@ -10,7 +10,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Hoş Geldiniz"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "ReactOS İşletim Dizgesi'ne hoş geldiniz.\n\nSolda bir konuya tıklayınız."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Bu iletiyi yine göster."
     IDS_CLOSETEXT "&Çıkış"
 END

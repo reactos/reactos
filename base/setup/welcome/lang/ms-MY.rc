@@ -10,7 +10,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Selamat Datang"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Selamat datang ke ReactOS Operating System.\n\nKlik tajuk di sebelah kiri."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Show this dialog again"
     IDS_CLOSETEXT "&Keluar"
 END

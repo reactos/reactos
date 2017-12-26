@@ -8,7 +8,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Vítejte"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Vítejte v operačním systému ReactOS.\n\nKlepněte na tlačítko v levém sloupci."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Zobrazit dialog znovu"
     IDS_CLOSETEXT "&Konec"
 END

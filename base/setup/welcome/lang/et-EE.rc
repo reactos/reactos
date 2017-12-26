@@ -8,7 +8,7 @@ BEGIN
     IDS_APPTITLE "ReactOS - Tere tulemast"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "Tere tulemast operatsioonisüsteemi ReactOS.\n\nVali teema vasakult."
-
+    IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Näita seda dialoogi veel"
     IDS_CLOSETEXT "&Välju"
 END
