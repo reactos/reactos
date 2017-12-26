@@ -39,7 +39,7 @@ END
 /* "General" propsheet */
 IDD_GENERAL DIALOG  0, 0, 320, 220
 STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
-FONT 8, "MS Shell Dlg"
+FONT 8, "新細明體"
 CAPTION "常规"
 BEGIN
 
@@ -61,7 +61,7 @@ END
 /* "Delete browsing history" dialog */
 IDD_DELETE_HISTORY DIALOG  0, 0, 250, 250
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
+FONT 8, "新細明體"
 CAPTION "删除浏览历史记录"
 BEGIN
 
@@ -83,7 +83,7 @@ END
 /* "Security" propsheet */
 IDD_SECURITY DIALOG  0, 0, 320, 220
 STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
-FONT 8, "MS Shell Dlg"
+FONT 8, "新細明體"
 CAPTION "安全"
 BEGIN
 
@@ -101,7 +101,7 @@ END
 /* "Content" propsheet */
 IDD_CONTENT DIALOG  0, 0, 320, 220
 STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
-FONT 8, "MS Shell Dlg"
+FONT 8, "新細明體"
 CAPTION "内容"
 BEGIN
 
