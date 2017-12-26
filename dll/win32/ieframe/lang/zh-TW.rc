@@ -67,7 +67,7 @@ STRINGTABLE
 IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
 CAPTION "開啟 URL"
-FONT 8, "MS Shell Dlg"
+FONT 9, "新細明體"
 {
     LTEXT "指定您希望要在 Internet Explorer 中開啟的 URL",-1, 35,5,160,25
     LTEXT "開啟:", -1, 5, 32, 30, 15
