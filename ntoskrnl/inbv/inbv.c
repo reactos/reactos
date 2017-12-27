@@ -48,9 +48,25 @@ static PUCHAR ResourceList[1 + IDB_MAX_RESOURCE]; // First entry == NULL, follow
  * Change this to modify progress bar behaviour
  */
 #define ROT_BAR_DEFAULT_MODE    RB_PROGRESS_BAR
+
+/*
+ * Values for PltRotBarStatus:
+ * - PltRotBarStatus == 1, do palette fading-in (done elsewhere in ReactOS);
+ * - PltRotBarStatus == 2, do rotation bar animation;
+ * - PltRotBarStatus == 3, stop the animation thread.
+ * - Any other value is ignored and the animation thread continues to run.
+ */
+typedef enum _ROT_BAR_STATUS
+{
+    RBS_FADEIN = 1,
+    RBS_ANIMATE,
+    RBS_STOP_ANIMATE,
+    RBS_STATUS_MAX
+} ROT_BAR_STATUS;
+
 static BOOLEAN RotBarThreadActive = FALSE;
-static ROT_BAR_TYPE RotBarSelection;
-static ULONG PltRotBarStatus;
+static ROT_BAR_TYPE RotBarSelection = RB_UNSPECIFIED;
+static ROT_BAR_STATUS PltRotBarStatus = 0;
 static UCHAR RotBarBuffer[24 * 9];
 static UCHAR RotLineBuffer[640 * 6];
 #endif
@@ -109,7 +125,7 @@ typedef struct tagRGBQUAD
 static RGBQUAD MainPalette[16];
 
 #define PALETTE_FADE_STEPS  15
-#define PALETTE_FADE_TIME   20 * 1000 /* 20ms */
+#define PALETTE_FADE_TIME   (20 * 1000) /* 20 ms */
 
 /** From bootvid/precomp.h **/
 //
@@ -143,52 +159,50 @@ BootLogoFadeIn(VOID)
     UCHAR PaletteBitmapBuffer[sizeof(BITMAPINFOHEADER) + sizeof(MainPalette)];
     PBITMAPINFOHEADER PaletteBitmap = (PBITMAPINFOHEADER)PaletteBitmapBuffer;
     LPRGBQUAD Palette = (LPRGBQUAD)(PaletteBitmapBuffer + sizeof(BITMAPINFOHEADER));
-
     ULONG Iteration, Index, ClrUsed;
 
-    /* Check if we're installed and we own it */
-    if (InbvBootDriverInstalled &&
-        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
+    LARGE_INTEGER Delay;
+    Delay.QuadPart = - (PALETTE_FADE_TIME * 10);
+
+    /* Check if we are installed and we own the display */
+    if (!InbvBootDriverInstalled ||
+        (InbvDisplayState != INBV_DISPLAY_STATE_OWNED))
     {
-        /* Acquire the lock */
-        InbvAcquireLock();
+        return;
+    }
 
-        /*
-         * Build a bitmap containing the fade in palette. The palette entries
-         * are then processed in a loop and set using VidBitBlt function.
-         */
-        ClrUsed = RTL_NUMBER_OF(MainPalette);
-        RtlZeroMemory(PaletteBitmap, sizeof(BITMAPINFOHEADER));
-        PaletteBitmap->biSize = sizeof(BITMAPINFOHEADER);
-        PaletteBitmap->biBitCount = 4;
-        PaletteBitmap->biClrUsed = ClrUsed;
+    /*
+     * Build a bitmap containing the fade-in palette. The palette entries
+     * are then processed in a loop and set using VidBitBlt function.
+     */
+    ClrUsed = RTL_NUMBER_OF(MainPalette);
+    RtlZeroMemory(PaletteBitmap, sizeof(BITMAPINFOHEADER));
+    PaletteBitmap->biSize = sizeof(BITMAPINFOHEADER);
+    PaletteBitmap->biBitCount = 4;
+    PaletteBitmap->biClrUsed = ClrUsed;
 
-        /*
-         * Main animation loop.
-         */
-        for (Iteration = 0; Iteration <= PALETTE_FADE_STEPS; ++Iteration)
+    /*
+     * Main animation loop.
+     */
+    for (Iteration = 0; Iteration <= PALETTE_FADE_STEPS; ++Iteration)
+    {
+        for (Index = 0; Index < ClrUsed; Index++)
         {
-            for (Index = 0; Index < ClrUsed; Index++)
-            {
-                Palette[Index].rgbRed = (UCHAR)
-                    (MainPalette[Index].rgbRed * Iteration / PALETTE_FADE_STEPS);
-                Palette[Index].rgbGreen = (UCHAR)
-                    (MainPalette[Index].rgbGreen * Iteration / PALETTE_FADE_STEPS);
-                Palette[Index].rgbBlue = (UCHAR)
-                    (MainPalette[Index].rgbBlue * Iteration / PALETTE_FADE_STEPS);
-            }
-
-            VidBitBlt(PaletteBitmapBuffer, 0, 0);
-
-            /* Wait for a bit */
-            KeStallExecutionProcessor(PALETTE_FADE_TIME);
+            Palette[Index].rgbRed = (UCHAR)
+                (MainPalette[Index].rgbRed * Iteration / PALETTE_FADE_STEPS);
+            Palette[Index].rgbGreen = (UCHAR)
+                (MainPalette[Index].rgbGreen * Iteration / PALETTE_FADE_STEPS);
+            Palette[Index].rgbBlue = (UCHAR)
+                (MainPalette[Index].rgbBlue * Iteration / PALETTE_FADE_STEPS);
         }
 
-        /* Release the lock */
+        /* Do the animation */
+        InbvAcquireLock();
+        VidBitBlt(PaletteBitmapBuffer, 0, 0);
         InbvReleaseLock();
 
         /* Wait for a bit */
-        KeStallExecutionProcessor(PALETTE_FADE_TIME);
+        KeDelayExecutionThread(KernelMode, FALSE, &Delay);
     }
 }
 
@@ -799,9 +813,9 @@ InbvRotationThread(
         InbvAcquireLock();
 
         /* Unknown unexpected command */
-        ASSERT(PltRotBarStatus <= 3);
+        ASSERT(PltRotBarStatus < RBS_STATUS_MAX);
 
-        if (PltRotBarStatus == 3)
+        if (PltRotBarStatus == RBS_STOP_ANIMATE)
         {
             /* Stop the thread */
             InbvReleaseLock();
@@ -866,7 +880,8 @@ NTAPI
 INIT_FUNCTION
 InbvRotBarInit(VOID)
 {
-    PltRotBarStatus = 1;
+    PltRotBarStatus = RBS_FADEIN;
+    /* Perform other initialization if needed */
 }
 #endif
 
@@ -890,10 +905,10 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
-    /* Check if the system thread has already been created */
+    /* Check if the animation thread has already been created */
     if (RotBarThreadActive)
     {
-        /* Reset the progress bar */
+        /* Yes, just reset the progress bar but keep the thread alive */
         InbvAcquireLock();
         RotBarSelection = RB_UNSPECIFIED;
         InbvReleaseLock();
@@ -994,7 +1009,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 
             /*
              * Save the main image palette and replace it with black palette,
-             * so that we can do fade in effect later.
+             * so that we can do fade-in effect later.
              */
             BitmapInfoHeader = (PBITMAPINFOHEADER)Screen;
             Palette = (LPRGBQUAD)((PUCHAR)Screen + BitmapInfoHeader->biSize);
@@ -1045,6 +1060,11 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             InbvBufferToScreenBlt(Buffer, 0, 0, 22, 9, 24);
         }
 
+        /*
+         * Add a rotating bottom horizontal bar when using a progress bar,
+         * to show that ReactOS can be still alive when the bar does not
+         * appear to progress.
+         */
         if (TempRotBarSelection == RB_PROGRESS_BAR)
         {
             LineBmp = InbvGetResourceAddress(IDB_ROTATING_LINE);
@@ -1078,6 +1098,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
                                           NULL);
             if (NT_SUCCESS(Status))
             {
+                /* The thread has started, close the handle as we don't need it */
                 RotBarThreadActive = TRUE;
                 ObCloseHandle(ThreadHandle, KernelMode);
             }
@@ -1089,7 +1110,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
     }
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
-    /* Do we have a system thread? */
+    /* Do we have the animation thread? */
     if (RotBarThreadActive)
     {
         /* We do, initialize the progress bar */
@@ -1148,7 +1169,7 @@ FinalizeBootLogo(VOID)
 
     /* Reset progress bar and lock */
 #ifdef INBV_ROTBAR_IMPLEMENTED
-    PltRotBarStatus = 3;
+    PltRotBarStatus = RBS_STOP_ANIMATE;
     RotBarThreadActive = FALSE;
 #endif
     InbvReleaseLock();
