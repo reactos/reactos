@@ -2121,18 +2121,12 @@ UserFault:
             return Status;
         }
 
-        /* Write a demand-zero PDE */
-        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
-
-        /* Dispatch the fault */
-        Status = MiDispatchFault(TRUE,
-                                 PointerPte,
+        /* Resolve a demand zero fault */
+        MiResolveDemandZeroFault(PointerPte,
                                  PointerPde,
-                                 NULL,
-                                 FALSE,
-                                 PsGetCurrentProcess(),
-                                 TrapInformation,
-                                 NULL);
+                                 MM_READWRITE,
+                                 CurrentProcess,
+                                 MM_NOIRQL);
 #if MI_TRACE_PFNS
         UserPdeFault = FALSE;
 #endif
