@@ -1,6 +1,6 @@
 #pragma once
 
-typedef struct _InbvProgressState
+typedef struct _INBV_PROGRESS_STATE
 {
     ULONG Floor;
     ULONG Ceiling;
