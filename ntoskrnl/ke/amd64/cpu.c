@@ -54,15 +54,8 @@ VOID
 NTAPI
 KiSetProcessorType(VOID)
 {
-    ULONG64 EFlags;
     CPU_INFO CpuInfo;
     ULONG Stepping, Type;
-
-    /* Start by assuming no CPUID data */
-    KeGetCurrentPrcb()->CpuID = 0;
-
-    /* Save EFlags */
-    EFlags = __readeflags();
 
     /* Do CPUID 1 now */
     KiCpuId(&CpuInfo, 1);
@@ -85,9 +78,6 @@ KiSetProcessorType(VOID)
     KeGetCurrentPrcb()->CpuID = TRUE;
     KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
     KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
-
-    /* Restore EFLAGS */
-    __writeeflags(EFlags);
 }
 
 ULONG
