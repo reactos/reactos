@@ -867,7 +867,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PVOID Buffer;
     ULONG Length;
     NTSTATUS Status;
-    BOOLEAN Allocate;
     UNICODE_STRING KeyName;
     PCMHIVE SystemHive = NULL;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
@@ -900,16 +899,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Get the System Hive base address */
     HiveBase = LoaderBlock->RegistryBase;
-    if (HiveBase)
-    {
-        /* We import, no need to create a new hive */
-        Allocate = FALSE;
-    }
-    else
-    {
-        /* Tell CmpLinkHiveToMaster to allocate a hive */
-        Allocate = TRUE;
-    }
 
     Status = CmpInitializeHive(&SystemHive,
                                HiveBase ? HINIT_MEMORY : HINIT_CREATE,
@@ -962,11 +951,12 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     SecurityDescriptor = CmpHiveRootSecurityDescriptor();
 
     /* Attach it to the system key */
+    /* Let CmpLinkHiveToMaster allocate a new hive if we got none from the LoaderBlock. */
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SYSTEM");
     Status = CmpLinkHiveToMaster(&KeyName,
                                  NULL,
                                  SystemHive,
-                                 Allocate,
+                                 !HiveBase,
                                  SecurityDescriptor);
 
     /* Free the security descriptor */
