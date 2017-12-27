@@ -945,6 +945,12 @@ GreGradientFill(
     rclExtent.top    += pdc->ptlDCOrig.y;
     rclExtent.bottom += pdc->ptlDCOrig.y;
 
+    if (RECTL_bIsEmptyRect(&rclExtent))
+    {
+        DC_UnlockDc(pdc);
+        return TRUE;
+    }
+
     ptlDitherOrg.x = ptlDitherOrg.y = 0;
     IntLPtoDP(pdc, (LPPOINT)&ptlDitherOrg, 1);
 
