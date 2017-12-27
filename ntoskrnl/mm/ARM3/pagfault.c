@@ -2025,43 +2025,67 @@ UserFault:
     /* Lock the working set */
     MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
 
+    ProtectionCode = MM_INVALID_PROTECTION;
+
 #if (_MI_PAGING_LEVELS == 4)
-// Note to Timo: You should call MiCheckVirtualAddress and also check if it's zero pte
-// also this is missing the page count increment
     /* Check if the PXE is valid */
     if (PointerPxe->u.Hard.Valid == 0)
     {
         /* Right now, we only handle scenarios where the PXE is totally empty */
         ASSERT(PointerPxe->u.Long == 0);
-#if 0
+
+        /* This is only possible for user mode addresses! */
+        ASSERT(PointerPte <= MiHighestUserPte);
+
+        /* Check if we have a VAD */
+        MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+        if (ProtectionCode == MM_NOACCESS)
+        {
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            return STATUS_ACCESS_VIOLATION;
+        }
+
         /* Resolve a demand zero fault */
-        Status = MiResolveDemandZeroFault(PointerPpe,
-                                          PointerPxe,
-                                          MM_READWRITE,
-                                          CurrentProcess,
-                                          MM_NOIRQL);
-#endif
+        MiResolveDemandZeroFault(PointerPpe,
+                                 PointerPxe,
+                                 MM_READWRITE,
+                                 CurrentProcess,
+                                 MM_NOIRQL);
+
         /* We should come back with a valid PXE */
         ASSERT(PointerPxe->u.Hard.Valid == 1);
     }
 #endif
 
 #if (_MI_PAGING_LEVELS >= 3)
-// Note to Timo: You should call MiCheckVirtualAddress and also check if it's zero pte
-// also this is missing the page count increment
     /* Check if the PPE is valid */
     if (PointerPpe->u.Hard.Valid == 0)
     {
         /* Right now, we only handle scenarios where the PPE is totally empty */
         ASSERT(PointerPpe->u.Long == 0);
-#if 0
+
+        /* This is only possible for user mode addresses! */
+        ASSERT(PointerPte <= MiHighestUserPte);
+
+        /* Check if we have a VAD, unless we did this already */
+        if (ProtectionCode == MM_INVALID_PROTECTION)
+        {
+            MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+        }
+
+        if (ProtectionCode == MM_NOACCESS)
+        {
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            return STATUS_ACCESS_VIOLATION;
+        }
+
         /* Resolve a demand zero fault */
-        Status = MiResolveDemandZeroFault(PointerPde,
-                                          PointerPpe,
-                                          MM_READWRITE,
-                                          CurrentProcess,
-                                          MM_NOIRQL);
-#endif
+        MiResolveDemandZeroFault(PointerPde,
+                                 PointerPpe,
+                                 MM_READWRITE,
+                                 CurrentProcess,
+                                 MM_NOIRQL);
+
         /* We should come back with a valid PPE */
         ASSERT(PointerPpe->u.Hard.Valid == 1);
     }
@@ -2077,7 +2101,12 @@ UserFault:
 #if MI_TRACE_PFNS
         UserPdeFault = TRUE;
 #endif
-        MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+        /* Check if we have a VAD, unless we did this already */
+        if (ProtectionCode == MM_INVALID_PROTECTION)
+        {
+            MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+        }
+
         if (ProtectionCode == MM_NOACCESS)
         {
 #if (_MI_PAGING_LEVELS == 2)
