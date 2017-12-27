@@ -669,6 +669,9 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Initialize it */
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
+    /* Increment demand zero faults */
+    KeGetCurrentPrcb()->MmDemandZeroCount++;
+
     /* Do we have the lock? */
     if (HaveLock)
     {
@@ -678,9 +681,6 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* Update performance counters */
         if (Process > HYDRA_PROCESS) Process->NumberOfPrivatePages++;
     }
-
-    /* Increment demand zero faults */
-    InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
 
     /* Zero the page if need be */
     if (NeedZero) MiZeroPfn(PageFrameNumber);
@@ -2297,14 +2297,14 @@ UserFault:
             /* Initialize the PFN entry now */
             MiInitializePfn(PageFrameIndex, PointerPte, 1);
 
-            /* And we're done with the lock */
-            MiReleasePfnLock(OldIrql);
-
             /* Increment the count of pages in the process */
             CurrentProcess->NumberOfPrivatePages++;
 
             /* One more demand-zero fault */
-            InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
+            KeGetCurrentPrcb()->MmDemandZeroCount++;
+
+            /* And we're done with the lock */
+            MiReleasePfnLock(OldIrql);
 
             /* Fault on user PDE, or fault on user PTE? */
             if (PointerPte <= MiHighestUserPte)
