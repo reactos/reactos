@@ -530,7 +530,10 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     CHAR ValueInfoBuffer[128];
     PKEY_VALUE_FULL_INFORMATION ValueInfo;
     WCHAR UnicodeBuffer[128];
-    HANDLE SelectHandle, KeyHandle, ConfigHandle = NULL, ProfileHandle = NULL;
+    HANDLE SelectHandle = NULL;
+    HANDLE KeyHandle = NULL;
+    HANDLE ConfigHandle = NULL;
+    HANDLE ProfileHandle = NULL;
     HANDLE ParentHandle = NULL;
     ULONG ControlSet, HwProfile;
     NTSTATUS Status;
@@ -545,7 +548,24 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                NULL,
                                NULL);
     Status = NtOpenKey(&SelectHandle, KEY_READ, &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
+    {
+        /* Open the current value */
+        RtlInitUnicodeString(&KeyName, L"Current");
+        Status = NtQueryValueKey(SelectHandle,
+                                 &KeyName,
+                                 KeyValueFullInformation,
+                                 ValueInfoBuffer,
+                                 sizeof(ValueInfoBuffer),
+                                 &ResultLength);
+        if (!NT_SUCCESS(Status))
+            goto Cleanup;
+
+        /* Get the actual value pointer, and get the control set ID */
+        ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
+        ControlSet = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
+    }
+    else
     {
         /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
         if (!LoaderBlock->RegistryBase)
@@ -565,42 +585,29 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  NULL,
                                  0,
                                  &Disposition);
-            if (!NT_SUCCESS(Status)) return Status;
+            if (!NT_SUCCESS(Status))
+                goto Cleanup;
 
             /* Create the Hardware Profile keys */
             Status = CmpCreateHardwareProfile(KeyHandle);
             if (!NT_SUCCESS(Status))
-                return Status;
+                goto Cleanup;
 
-            /* Don't need the handle */
-            ZwClose(KeyHandle);
+            /* Free the handle for the next NtCreateKey */
+            NtClose(KeyHandle);
+            KeyHandle = NULL;
 
             /* Use hard-coded setting */
             ControlSet = 1;
-            goto UseSet;
         }
-
-        /* Fail for real boots */
-        return Status;
+        else
+        {
+            /* Fail for real boots */
+            goto Cleanup;
+        }
     }
 
-    /* Open the current value */
-    RtlInitUnicodeString(&KeyName, L"Current");
-    Status = NtQueryValueKey(SelectHandle,
-                             &KeyName,
-                             KeyValueFullInformation,
-                             ValueInfoBuffer,
-                             sizeof(ValueInfoBuffer),
-                             &ResultLength);
-    NtClose(SelectHandle);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* Get the actual value pointer, and get the control set ID */
-    ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
-    ControlSet = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
-
     /* Create the current control set key */
-UseSet:
     RtlInitUnicodeString(&KeyName,
                          L"\\Registry\\Machine\\System\\CurrentControlSet");
     InitializeObjectAttributes(&ObjectAttributes,
@@ -615,7 +622,8 @@ UseSet:
                          NULL,
                          REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
                          &Disposition);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
     /* Sanity check */
     ASSERT(Disposition == REG_CREATED_NEW_KEY);
@@ -625,9 +633,7 @@ UseSet:
                                 L"\\Registry\\Machine\\System\\ControlSet%03ld",
                                 ControlSet);
     if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+        goto Cleanup;
 
     RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
@@ -638,7 +644,8 @@ UseSet:
                            REG_LINK,
                            KeyName.Buffer,
                            KeyName.Length);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
     /* Get the configuration database key */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -647,13 +654,12 @@ UseSet:
                                KeyHandle,
                                NULL);
     Status = NtOpenKey(&ConfigHandle, KEY_READ, &ObjectAttributes);
-    NtClose(KeyHandle);
 
     /* Check if we don't have one */
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup and exit */
-        ConfigHandle = NULL;
+        Status = STATUS_SUCCESS;
         goto Cleanup;
     }
 
@@ -677,7 +683,11 @@ UseSet:
         ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
 
         /* Check if we failed or got a non DWORD-value */
-        if (!(NT_SUCCESS(Status)) || (ValueInfo->Type != REG_DWORD)) goto Cleanup;
+        if (!(NT_SUCCESS(Status)) || (ValueInfo->Type != REG_DWORD))
+        {
+            Status = STATUS_SUCCESS;
+            goto Cleanup;
+        }
 
         /* Get the hadware profile */
         HwProfile = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
@@ -696,7 +706,7 @@ UseSet:
     if (!NT_SUCCESS(Status))
     {
         /* Exit and clean up */
-        ParentHandle = NULL;
+        Status = STATUS_SUCCESS;
         goto Cleanup;
     }
 
@@ -717,7 +727,7 @@ UseSet:
     if (!NT_SUCCESS (Status))
     {
         /* Cleanup and exit */
-        ProfileHandle = 0;
+        Status = STATUS_SUCCESS;
         goto Cleanup;
     }
 
@@ -763,19 +773,20 @@ UseSet:
                                REG_LINK,
                                KeyName.Buffer,
                                KeyName.Length);
-        NtClose(KeyHandle);
     }
 
-    /* Close every opened handle */
+    Status = STATUS_SUCCESS;
+
 Cleanup:
+    /* Close every opened handle */
+    if (SelectHandle) NtClose(SelectHandle);
+    if (KeyHandle) NtClose(KeyHandle);
     if (ConfigHandle) NtClose(ConfigHandle);
     if (ProfileHandle) NtClose(ProfileHandle);
     if (ParentHandle) NtClose(ParentHandle);
 
     DPRINT("CmpCreateControlSet() done\n");
-
-    /* Return success */
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
