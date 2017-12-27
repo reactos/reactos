@@ -622,8 +622,8 @@ UseSet:
 
     /* Initialize the target link name */
     Status = RtlStringCbPrintfW(UnicodeBuffer, sizeof(UnicodeBuffer),
-                       L"\\Registry\\Machine\\System\\ControlSet%03ld",
-                       ControlSet);
+                                L"\\Registry\\Machine\\System\\ControlSet%03ld",
+                                ControlSet);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -901,15 +901,15 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     Status = CmpInitializeHive(&SystemHive,
-        HiveBase ? HINIT_MEMORY : HINIT_CREATE,
-        HIVE_NOLAZYFLUSH,
-        HFILE_TYPE_LOG,
-        HiveBase,
-        NULL,
-        NULL,
-        NULL,
-        &HiveName,
-        HiveBase ? 2 : 0);
+                               HiveBase ? HINIT_MEMORY : HINIT_CREATE,
+                               HIVE_NOLAZYFLUSH,
+                               HFILE_TYPE_LOG,
+                               HiveBase,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &HiveName,
+                               HiveBase ? 2 : 0);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
