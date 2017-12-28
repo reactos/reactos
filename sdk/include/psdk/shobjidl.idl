@@ -2196,6 +2196,156 @@ interface IDefaultExtractIconInit : IUnknown
                        [in] int iIcon);
 }
 
+
+#ifdef __REACTOS__
+/*****************************************************************************
+ * IExplorerCommand interface (Vista+)
+ */
+
+interface IEnumExplorerCommand;
+
+[
+    uuid(A08CE4D0-FA25-44AB-B57C-C7B1C323E0B9),
+    pointer_default(unique)
+]
+interface IExplorerCommand : IUnknown
+{
+    cpp_quote("// GetIcon(ppszIcon) Receives resource string that identifies icon source")
+    typedef [v1_enum] enum _EXPCMDSTATE
+    {
+        ECS_ENABLED         = 0x000,
+        ECS_DISABLED        = 0x001,
+        ECS_HIDDEN          = 0x002,
+        ECS_CHECKBOX        = 0x004,
+        ECS_CHECKED         = 0x008,
+        ECS_RADIOCHECK      = 0x010,    // Windows 7
+    } EXPCMDSTATE;
+
+    typedef [v1_enum] enum _EXPCMDFLAGS
+    {
+        ECF_DEFAULT         = 0x000,
+        ECF_HASSUBCOMMANDS  = 0x001,
+        ECF_HASSPLITBUTTON  = 0x002,
+        ECF_HIDELABEL       = 0x004,
+        ECF_ISSEPARATOR     = 0x008,
+        ECF_HASLUASHIELD    = 0x010,
+        ECF_SEPARATORBEFORE = 0x020,    // Windows 7
+        ECF_SEPARATORAFTER  = 0x040,    // Windows 7
+        ECF_ISDROPDOWN      = 0x080,    // Windows 7
+        ECF_TOGGLEABLE      = 0x100,    // Windows 8
+        ECF_AUTOMENUICONS   = 0x200,    // Windows 8
+    } EXPCMDFLAGS;
+
+    HRESULT GetTitle(
+                    [in, unique] IShellItemArray *psiItemArray,
+                    [out, string] LPWSTR *ppszName);
+    HRESULT GetIcon(
+                    [in, unique] IShellItemArray *psiItemArray,
+                    [out, string] LPWSTR *ppszIcon);
+    HRESULT GetToolTip(
+                    [in, unique] IShellItemArray *psiItemArray,
+                    [out, string] LPWSTR *ppszInfotip);
+    HRESULT GetCanonicalName(
+                    [out] GUID* pguidCommandName);
+    HRESULT GetState(
+                    [in] IShellItemArray *psiItemArray,
+                    [in] BOOL fOkToBeSlow,
+                    [out] EXPCMDSTATE *pCmdState);
+    HRESULT Invoke(
+                    [in] IShellItemArray *psiItemArray,
+                    [in, unique] IBindCtx *pbc);
+    HRESULT GetFlags(
+                    [out] EXPCMDFLAGS *pFlags);
+    HRESULT EnumSubCommands(
+                    [out] IEnumExplorerCommand **ppEnum);
+};
+
+
+/*****************************************************************************
+ * IExplorerCommandState interface (Vista+)
+ */
+[
+    object,
+    uuid(BDDACB60-7657-47AE-8445-D23E1ACF82AE),
+    pointer_default(unique)
+]
+interface IExplorerCommandState : IUnknown
+{
+    HRESULT GetState(
+                    [in] IShellItemArray *psiItemArray,
+                    [in] BOOL fOkToBeSlow,
+                    [out] EXPCMDSTATE *pCmdState);
+}
+
+
+/*****************************************************************************
+ * IInitializeCommand interface (Vista+)
+ */
+[
+    object,
+    uuid(85075ACF-231F-40EA-9610-D26B7B58F638),
+    pointer_default(unique)
+]
+interface IInitializeCommand : IUnknown
+{
+    HRESULT Initialize(
+                    [in, string] LPCWSTR pszCommandName,
+                    [in] IPropertyBag *ppb);
+}
+
+
+/*****************************************************************************
+ * IEnumExplorerCommand interface (Vista+)
+ */
+[
+    object,
+    uuid(A88826F8-186F-4987-AADE-EA0CEF8FBFE8),
+    pointer_default(unique)
+]
+interface IEnumExplorerCommand : IUnknown
+{
+    [local]
+    HRESULT Next(
+                    [in] ULONG celt,
+                    [out] IExplorerCommand** pUICommand,
+                    [out, optional] ULONG *pceltFetched);
+    [call_as(Next)]
+    HRESULT RemoteNext(
+                    [in] ULONG celt,
+                    [out] IExplorerCommand** pUICommand,
+                    [out, optional] ULONG *pceltFetched);
+    HRESULT Skip(
+                    [in] ULONG celt);
+    HRESULT Reset();
+    HRESULT Clone(
+                    [out] IEnumExplorerCommand **ppenum);
+};
+
+
+/*****************************************************************************
+ * IExplorerCommandProvider interface (Vista+)
+ */
+[
+    uuid(64961751-0835-43C0-8FFE-D57686530E64),
+    pointer_default(unique)
+]
+interface IExplorerCommandProvider : IUnknown
+{
+    cpp_quote("// GetCommands usually creates an IEnumExplorerCommand")
+    cpp_quote("// GetCommand usually creates an IExplorerCommand")
+
+    HRESULT GetCommands(
+                    [in] IUnknown *punkSite,
+                    [in] REFIID riid,
+                    [out, iid_is(riid)] void **ppv);
+    HRESULT GetCommand(
+                    [in] REFGUID rguidCommandId,
+                    [in] REFIID riid,
+                    [out, iid_is(riid)] void **ppv);
+};
+
+#endif // __REACTOS__
+
 /*****************************************************************************
  * IDeskBand interface
  */

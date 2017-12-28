@@ -200,6 +200,36 @@ HRESULT __RPC_STUB IEnumShellItems_Next_Stub(
     return hr;
 }
 
+#ifdef __REACTOS__
+
+HRESULT CALLBACK IEnumExplorerCommand_Next_Proxy(
+    IEnumExplorerCommand *This,
+    ULONG celt,
+    IExplorerCommand **pUICommand,
+    ULONG *pceltFetched)
+{
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, pUICommand, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumExplorerCommand_RemoteNext_Proxy(This, celt, pUICommand, pceltFetched);
+}
+
+HRESULT __RPC_STUB IEnumExplorerCommand_Next_Stub(
+    IEnumExplorerCommand *This,
+    ULONG celt,
+    IExplorerCommand **pUICommand,
+    ULONG *pceltFetched)
+{
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, pUICommand, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumExplorerCommand_Next(This, celt, pUICommand, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
+}
+
+#endif // __REACTOS__
+
 HRESULT CALLBACK IModalWindow_Show_Proxy(
     IModalWindow *This,
     HWND hwndOwner)
