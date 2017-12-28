@@ -64,11 +64,10 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
     NTSTATUS Status;
     THREAD_BASIC_INFORMATION ThreadBasicInfo;
     LPDEBUG_EVENT DebugEvent = Win32DebugEvent;
-
+    
     /* Write common data */
-    DebugEvent->dwProcessId = (DWORD)WaitStateChange->
-                                     AppClientId.UniqueProcess;
-    DebugEvent->dwThreadId = (DWORD)WaitStateChange->AppClientId.UniqueThread;
+    DebugEvent->dwProcessId = PtrToUlong(WaitStateChange->AppClientId.UniqueProcess);
+    DebugEvent->dwThreadId = PtrToUlong(WaitStateChange->AppClientId.UniqueThread);
 
     /* Check what kind of even this is */
     switch (WaitStateChange->NewState)

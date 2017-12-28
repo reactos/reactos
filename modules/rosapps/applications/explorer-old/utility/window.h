@@ -838,7 +838,7 @@ protected:
 	{
 		if (!_cmd.empty()) {
 			HINSTANCE hinst = ShellExecute(GetParent(_hwnd), _T("open"), _cmd, 0, 0, SW_SHOWNORMAL);
-			return (int)hinst > HINSTANCE_ERROR;
+			return (INT_PTR)hinst > HINSTANCE_ERROR;
 		}
 
 		return true;
@@ -861,7 +861,7 @@ struct ToolTip : public WindowHandle
 	void add(HWND hparent, HWND htool, LPCTSTR txt=LPSTR_TEXTCALLBACK, LPARAM lparam=0)
 	{
 		TOOLINFO ti = {
-			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND|TTF_TRANSPARENT, hparent, (UINT)htool,
+			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND|TTF_TRANSPARENT, hparent, (UINT_PTR)htool,
 			{0,0,0,0}, 0, (LPTSTR)txt, lparam
 		};
 
@@ -893,7 +893,7 @@ struct ToolTip : public WindowHandle
 	void remove(HWND hparent, HWND htool)
 	{
 		TOOLINFO ti = {
-			sizeof(TOOLINFO), TTF_IDISHWND, hparent, (UINT)htool,
+			sizeof(TOOLINFO), TTF_IDISHWND, hparent, (UINT_PTR)htool,
 			{0,0,0,0}, 0, 0, 0
 		};
 

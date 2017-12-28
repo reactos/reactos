@@ -716,7 +716,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     /* Show the technical Data */
     sprintf(AnsiName,
             "\r\n\r\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n\r\n",
-            KiBugCheckData[0],
+            (ULONG)KiBugCheckData[0],
             (PVOID)KiBugCheckData[1],
             (PVOID)KiBugCheckData[2],
             (PVOID)KiBugCheckData[3],

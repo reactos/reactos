@@ -113,7 +113,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     {
     case WM_INITDIALOG:
         pIconContext = (PPICK_ICON_CONTEXT)lParam;
-        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)pIconContext);
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pIconContext);
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
         SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, 32, 0);
         EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext->hDlgCtrl);

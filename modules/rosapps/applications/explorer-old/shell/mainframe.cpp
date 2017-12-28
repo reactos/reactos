@@ -418,7 +418,7 @@ int MainFrameBase::Command(int id, int code)
 
 			HINSTANCE hinst = ShellExecute(_hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
 
-			if ((int)hinst <= 32)
+			if ((INT_PTR)hinst <= 32)
 				display_error(_hwnd, GetLastError());
 		}
 		break;}
