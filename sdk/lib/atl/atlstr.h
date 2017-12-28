@@ -27,9 +27,27 @@ public:
 
     static IAtlStringMgr* GetInstance(void)
     {
-        static CWin32Heap Win32Heap(::GetProcessHeap());
-        static CAtlStringMgr StringMgr(&Win32Heap);
-        return &StringMgr;
+        static CWin32Heap* s_Win32Heap = NULL;
+        static IAtlStringMgr* s_StringMgr;
+
+        if (s_Win32Heap == NULL)
+        {
+            CWin32Heap* Win32Heap = new CWin32Heap(::GetProcessHeap());
+            if (InterlockedCompareExchangePointer((PVOID*)&s_Win32Heap, Win32Heap, NULL) != NULL)
+            {
+                delete Win32Heap;
+            }
+        }
+
+        if (s_StringMgr == NULL)
+        {
+            IAtlStringMgr* StringMgr = new CAtlStringMgr(s_Win32Heap);
+            if (InterlockedCompareExchangePointer((PVOID*)&s_StringMgr, StringMgr, NULL) != NULL)
+            {
+                delete StringMgr;
+            }
+        }
+        return s_StringMgr;
     }
 
     virtual _Ret_maybenull_ _Post_writable_byte_size_(sizeof(CStringData) + NumChars * CharSize) CStringData* Allocate(
