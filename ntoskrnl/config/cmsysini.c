@@ -860,7 +860,6 @@ NTAPI
 INIT_FUNCTION
 CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    static const WCHAR HivePath[] = L"\\SystemRoot\\System32\\Config\\SYSTEM";
     static const UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
     PVOID HiveBase;
     ANSI_STRING LoadString;
@@ -916,7 +915,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Set the hive filename */
-    Status = RtlCreateUnicodeString(&SystemHive->FileFullPath, HivePath);
+    Status = RtlCreateUnicodeString(&SystemHive->FileFullPath, L"\\SystemRoot\\System32\\Config\\SYSTEM");
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
