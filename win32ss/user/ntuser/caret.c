@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Caret functions
  * FILE:             win32ss/user/ntuser/caret.c
- * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ * PROGRAMERS:       Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -21,6 +22,7 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
 {
     HDC hdc, hdcMem;
     HBITMAP hbmOld;
+    RECT rcClient;
     BOOL bDone = FALSE;
 
     if (pWnd == NULL)
@@ -29,17 +31,21 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
        return;
     }
 
-    hdc = UserGetDCEx(pWnd, 0, DCX_USESTYLE | DCX_WINDOW);
+    hdc = UserGetDCEx(pWnd, NULL, DCX_USESTYLE);
     if (!hdc)
     {
         ERR("GetDC failed\n");
         return;
     }
 
-    if (pWnd->hrgnUpdate)
-    {
-       NtGdiSaveDC(hdc);
-    }
+    NtGdiSaveDC(hdc);
+
+    IntGetClientRect(pWnd, &rcClient);
+    NtGdiIntersectClipRect(hdc,
+        rcClient.left,
+        rcClient.top,
+        rcClient.right,
+        rcClient.bottom);
 
     if (CaretInfo->Bitmap)
     {
@@ -80,10 +86,7 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
     }
 
 cleanup:
-    if (pWnd->hrgnUpdate)
-    {
-       NtGdiRestoreDC(hdc, -1);
-    }
+    NtGdiRestoreDC(hdc, -1);
 
     UserReleaseDC(pWnd, hdc, FALSE);
 }
