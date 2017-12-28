@@ -152,13 +152,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nVersione: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\nVersione Disponibile: "
     IDS_AINFO_DESCRIPTION "\nDescrizione: "
     IDS_AINFO_SIZE "\nDimensione: "
-    IDS_AINFO_URLSITE "\nHome Page: "
+    IDS_AINFO_URLSITE "\nPagina Iniziale: "
     IDS_AINFO_LICENSE "\nLicenza: "
     IDS_AINFO_URLDOWNLOAD "\nScaricare: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nLingue: "
 END
 
 STRINGTABLE
@@ -187,7 +187,7 @@ BEGIN
     IDS_INSTALL "Installa"
     IDS_UNINSTALL "Rimuovi"
     IDS_MODIFY "Modifica"
-    IDS_APPS_COUNT "Numero applicazioni: %d; Selected: %d"
+    IDS_APPS_COUNT "Numero applicazioni: %d; Selezionate: %d"
     IDS_WELCOME_TITLE "Benvenuto!\n\n"
     IDS_WELCOME_TEXT "Scegliere una categoria a sinistra, poi scegliere una applicazione da installare o disinstallare.\nReactOS Web Site: "
     IDS_WELCOME_URL "http://www.reactos.org"
@@ -200,28 +200,28 @@ BEGIN
     IDS_APP_REG_REMOVE "Sicuro di voler cancellare dal registro i dati sui programmi installati?"
     IDS_INFORMATION "Informazioni"
     IDS_UNABLE_TO_DOWNLOAD "Impossibile scaricare il pacchetto! Indirizzo non trovato!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Impossibile scaricare il pacchetto! Controlla la tua connessione internet!"
     IDS_UNABLE_TO_REMOVE "Impossibile cancellare i dati dal registro!"
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
+    IDS_UNABLE_TO_INSTALL "Impossibile aprire l'installer!"
     IDS_CERT_DOES_NOT_MATCH "Verifica del certificato SSL fallita."
-    IDS_INTEG_CHECK_TITLE "Verifica integrità pacchetto..."
-    IDS_INTEG_CHECK_FAIL "Il pacchetto non ha superato il controllo di integrità, potrebbe essere stato danneggiato o manomesso durante lo scaricamento. L'esecuzione del software non è raccomandata."
-    IDS_INTERRUPTED_DOWNLOAD "Lo scaricamento è stato interrotto. Verificare la connessione a Internet."
+    IDS_INTEG_CHECK_TITLE "Verifica integritÃ  pacchetto..."
+    IDS_INTEG_CHECK_FAIL "Il pacchetto non ha superato il controllo di integritÃ , potrebbe essere stato danneggiato o manomesso durante lo scaricamento. L'esecuzione del software non Ã¨ raccomandata."
+    IDS_INTERRUPTED_DOWNLOAD "Lo scaricamento Ã¨ stato interrotto. Verificare la connessione a Internet."
     IDS_UNABLE_TO_WRITE "Impossibile scrivere su disco: lo spazio libero potrebbe essere esaurito."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
+    IDS_SELECT_ALL "Seleziona/Deseleziona Tutte"
+    IDS_INSTALL_SELECTED "Installa le selezionate"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
-    IDS_STATUS_DOWNLOADED "Downloaded"
-    IDS_STATUS_UPDATE_AVAILABLE "Update available"
-    IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
-    IDS_STATUS_WAITING "Waiting to install…"
-    IDS_STATUS_FINISHED "Finished"
+    IDS_STATUS_INSTALLED "Installato"
+    IDS_STATUS_NOTINSTALLED "Non installato"
+    IDS_STATUS_DOWNLOADED "Scaricato"
+    IDS_STATUS_UPDATE_AVAILABLE "Aggiornamento disponibile"
+    IDS_STATUS_DOWNLOADING "Scaricamento..."
+    IDS_STATUS_INSTALLING "Installazione..."
+    IDS_STATUS_WAITING "In attesa di installare..."
+    IDS_STATUS_FINISHED "Finito"
 END
 
 STRINGTABLE
@@ -233,16 +233,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supporta la tua lingua"
+    IDS_LANGUAGE_NO_TRANSLATION "Supporta le altre lingue"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supporta l'Inglese"
+    IDS_LANGUAGE_SINGLE "Lingua singola"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d piÃ¹)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d disponibile)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database..."
+    IDS_DL_DIALOG_DB_DISP "Applicazioni Database"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aggiornamento Database..."
 END
