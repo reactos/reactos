@@ -1841,7 +1841,7 @@ SetWindowLongPtrA(HWND hWnd,
                   INT nIndex,
                   LONG_PTR dwNewLong)
 {
-    return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, FALSE);
+    return NtUserSetWindowLongPtr(hWnd, nIndex, dwNewLong, TRUE);
 }
 
 /*
@@ -1853,7 +1853,7 @@ SetWindowLongPtrW(HWND hWnd,
                   INT nIndex,
                   LONG_PTR dwNewLong)
 {
-    return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, FALSE);
+    return NtUserSetWindowLongPtr(hWnd, nIndex, dwNewLong, FALSE);
 }
 #endif
 
