@@ -29,6 +29,9 @@
 
 /* GLOBALS ******************************************************************/
 
+#define IDS_LIST_COLUMN_FIRST IDS_PARTITION_NAME
+#define IDS_LIST_COLUMN_LAST  IDS_PARTITION_TYPE
+
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
 static const UINT column_ids[MAX_LIST_COLUMNS] = {IDS_LIST_COLUMN_FIRST, IDS_LIST_COLUMN_FIRST + 1, IDS_LIST_COLUMN_FIRST + 2};
 static const INT  column_widths[MAX_LIST_COLUMNS] = {200, 150, 150};

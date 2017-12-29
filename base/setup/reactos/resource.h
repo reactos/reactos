@@ -6,6 +6,8 @@
 
 /* Icons */
 #define IDI_MAIN            3000
+#define IDI_ROSICON         3001
+#define IDI_WINICON         3002
 
 
 #define IDC_STATIC          -1
@@ -84,6 +86,3 @@
 #define IDS_PARTITION_NAME   5200
 #define IDS_PARTITION_SIZE   5201
 #define IDS_PARTITION_TYPE   5202
-
-#define IDS_LIST_COLUMN_FIRST IDS_PARTITION_NAME
-#define IDS_LIST_COLUMN_LAST IDS_PARTITION_TYPE

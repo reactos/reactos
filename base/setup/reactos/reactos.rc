@@ -12,7 +12,9 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Icons */
-IDI_MAIN ICON "res/setup.ico"
+IDI_MAIN    ICON "res/setup.ico"
+IDI_ROSICON ICON "res/roslogo.ico"
+IDI_WINICON ICON "res/winlogo.ico"
 
 /* Bitmaps */
 IDB_WATERMARK BITMAP "res/watermark.bmp"

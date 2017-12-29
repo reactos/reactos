@@ -40,10 +40,11 @@
 #include <wingdi.h>
 #include <winuser.h>
 
+#include <strsafe.h>
+
 #include <commctrl.h>
 /**/#include <setupapi.h>/**/
 #include <devguid.h>
-// #include <wine/unicode.h>
 
 #define NTOS_MODE_USER
 #include <ndk/cmtypes.h> // For CM_DISK stuff
@@ -56,26 +57,14 @@
 #include <../lib/setuplib.h>
 // #include "errorcode.h"
 
-
-typedef struct _LANG
-{
-    TCHAR LangId[9];
-    TCHAR LangName[128];
-} LANG, *PLANG;
-
+#if 0
 typedef struct _KBLAYOUT
 {
     TCHAR LayoutId[9];
     TCHAR LayoutName[128];
     TCHAR DllName[128];
 } KBLAYOUT, *PKBLAYOUT;
-
-// generic entries with simple 1:1 mapping
-typedef struct _GENENTRY
-{
-    TCHAR Id[24];
-    TCHAR Value[128];
-} GENENTRY, *PGENENTRY;
+#endif
 
 
 typedef struct _SETUPDATA
@@ -92,7 +81,7 @@ typedef struct _SETUPDATA
     USETUP_DATA USetupData;
     HINF SetupInf;
 
-    // Settings
+    /* Settings */
     LONG DestPartSize; // if partition doesn't exist, size of partition
     LONG FSType; // file system type on partition 
     LONG FormatPart; // type of format the partition
@@ -106,26 +95,10 @@ typedef struct _SETUPDATA
     BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
 
 
-    // txtsetup.sif data
-#if 1
-    LONG DefaultLang; // default language (table index)
-    PLANG pLanguages;
-    LONG LangCount;
-    LONG DefaultKBLayout; // default keyboard layout (table index)
-    PKBLAYOUT pKbLayouts;
-    LONG KbLayoutCount;
-    PGENENTRY pComputers;
-    LONG CompCount;
-    PGENENTRY pDisplays;
-    LONG DispCount;
-    PGENENTRY pKeyboards;
-    LONG KeybCount;
-
-#else
-
+    /* txtsetup.sif data */
     // LONG DefaultLang; // default language (table index)
     // LONG DefaultKBLayout; // default keyboard layout (table index)
-    PWCHAR SelectedLanguageId;
+    PCWSTR SelectedLanguageId;
     WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
     WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
 
@@ -138,7 +111,6 @@ typedef struct _SETUPDATA
     PPARTLIST PartitionList;
     PNTOS_INSTALLATION CurrentInstallation;
     PGENERIC_LIST NtOsInstallsList;
-#endif
 
 } SETUPDATA, *PSETUPDATA;
 
