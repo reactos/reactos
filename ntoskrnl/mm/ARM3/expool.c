@@ -475,9 +475,14 @@ ExpTagAllowPrint(CHAR Tag)
     return FALSE;
 }
 
+#ifdef KDBG
 #define MiDumperPrint(dbg, fmt, ...)        \
     if (dbg) KdbpPrint(fmt, ##__VA_ARGS__); \
     else DPRINT1(fmt, ##__VA_ARGS__)
+#else
+#define MiDumperPrint(dbg, fmt, ...)        \
+    DPRINT1(fmt, ##__VA_ARGS__)
+#endif
 
 VOID
 MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask)
