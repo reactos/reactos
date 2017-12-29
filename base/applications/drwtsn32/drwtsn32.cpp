@@ -8,6 +8,8 @@
 #include "precomp.h"
 #include <psapi.h>
 
+#define MS_VC_EXCEPTION_THREAD_NAME 0x406d1388
+
 ModuleData::ModuleData(void* addr)
 {
     BaseAddress = addr;
@@ -131,7 +133,7 @@ bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
                     return true;
                 }
                 break;
-            case 0x406d1388:
+            case MS_VC_EXCEPTION_THREAD_NAME:
                 /* Thread name */
                 return true;
             case DBG_CONTROL_C:
