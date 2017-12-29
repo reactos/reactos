@@ -500,7 +500,8 @@ MiDumpNonPagedPoolConsumers(BOOLEAN CalledFromDbg)
     //
     // Print table header
     //
-    MiDumperPrint(CalledFromDbg, "Tag\t\tAllocs\t\tUsed\n");
+    MiDumperPrint(CalledFromDbg, "\t\tNonPaged\t\t\tPaged\n");
+    MiDumperPrint(CalledFromDbg, "Tag\t\tAllocs\t\tUsed\t\tAllocs\t\tUsed\n");
 
     //
     // We'll extract allocations for all the tracked pools
@@ -512,9 +513,9 @@ MiDumpNonPagedPoolConsumers(BOOLEAN CalledFromDbg)
         TableEntry = &PoolTrackTable[i];
 
         //
-        // We only care about non paged
+        // We only care about tags which have allocated memory
         //
-        if (TableEntry->NonPagedBytes != 0)
+        if (TableEntry->NonPagedBytes != 0 || TableEntry->PagedBytes != 0)
         {
             //
             // If there's a tag, attempt to do a pretty print
@@ -536,16 +537,22 @@ MiDumpNonPagedPoolConsumers(BOOLEAN CalledFromDbg)
                     //
                     // Print in reversed order to match what is in source code
                     //
-                    MiDumperPrint(CalledFromDbg, "'%c%c%c%c'\t\t%ld\t\t%ld\n", Tag[3], Tag[2], Tag[1], Tag[0], TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes);
+                    MiDumperPrint(CalledFromDbg, "'%c%c%c%c'\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", Tag[3], Tag[2], Tag[1], Tag[0],
+                                  TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
+                                  TableEntry->PagedAllocs, TableEntry->PagedBytes);
                 }
                 else
                 {
-                    MiDumperPrint(CalledFromDbg, "%x\t%ld\t\t%ld\n", TableEntry->Key, TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes);
+                    MiDumperPrint(CalledFromDbg, "%x\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
+                                  TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
+                                  TableEntry->PagedAllocs, TableEntry->PagedBytes);
                 }
             }
             else
             {
-                MiDumperPrint(CalledFromDbg, "Anon\t\t%ld\t\t%ld\n", TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes);
+                MiDumperPrint(CalledFromDbg, "Anon\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n",
+                              TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
+                              TableEntry->PagedAllocs, TableEntry->PagedBytes);
             }
         }
     }
