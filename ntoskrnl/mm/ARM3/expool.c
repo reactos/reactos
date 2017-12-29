@@ -492,6 +492,15 @@ MiDumpNonPagedPoolConsumers(BOOLEAN CalledFromDbg)
         DPRINT1("---------------------\n");
         DPRINT1("Out of memory dumper!\n");
     }
+    else
+    {
+        KdbpPrint("Pool Used:\n");
+    }
+
+    //
+    // Print table header
+    //
+    MiDumperPrint(CalledFromDbg, "Tag\t\tAllocs\t\tUsed\n");
 
     //
     // We'll extract allocations for all the tracked pools
@@ -527,16 +536,16 @@ MiDumpNonPagedPoolConsumers(BOOLEAN CalledFromDbg)
                     //
                     // Print in reversed order to match what is in source code
                     //
-                    MiDumperPrint(CalledFromDbg, "Tag: '%c%c%c%c', Size: %ld\n", Tag[3], Tag[2], Tag[1], Tag[0], TableEntry->NonPagedBytes);
+                    MiDumperPrint(CalledFromDbg, "'%c%c%c%c'\t\t%ld\t\t%ld\n", Tag[3], Tag[2], Tag[1], Tag[0], TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes);
                 }
                 else
                 {
-                    MiDumperPrint(CalledFromDbg, "Tag: %x, Size: %ld\n", TableEntry->Key, TableEntry->NonPagedBytes);
+                    MiDumperPrint(CalledFromDbg, "%x\t%ld\t\t%ld\n", TableEntry->Key, TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes);
                 }
             }
             else
             {
-                MiDumperPrint(CalledFromDbg, "Anon, Size: %ld\n", TableEntry->NonPagedBytes);
+                MiDumperPrint(CalledFromDbg, "Anon\t\t%ld\t\t%ld\n", TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes);
             }
         }
     }
