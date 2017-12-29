@@ -497,10 +497,12 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask)
         DPRINT1("---------------------\n");
         DPRINT1("Out of memory dumper!\n");
     }
+#ifdef KDBG
     else
     {
         KdbpPrint("Pool Used:\n");
     }
+#endif
 
     //
     // Print table header
