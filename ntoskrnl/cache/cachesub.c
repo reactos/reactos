@@ -306,7 +306,7 @@ CcShutdownSystem(VOID)
     for (i = 0; i < CACHE_NUM_SECTIONS; i++)
     {
         PNOCC_BCB Bcb = &CcCacheSections[i];
-        if (Bcb->SectionObject)
+        if (Bcb->Dirty == TRUE) //(Bcb->SectionObject)
         {
             DPRINT1("Evicting #%02x %08x%08x %wZ\n",
                     i,
@@ -316,9 +316,9 @@ CcShutdownSystem(VOID)
             CcpFlushCache(Bcb->Map, NULL, 0, NULL, TRUE);
             Bcb->Dirty = FALSE;
         }
-		else if (Bcb->Dirty == TRUE) {
-			DPRINT1("Something is wrong here. Future file corruption detected.");
-		}
+		/*else if (Bcb->Dirty == TRUE) {
+			DPRINT1("Something is wrong here. Future file corruption detected");
+		} */
     }
 
     /* Evict all section pages */
