@@ -480,7 +480,7 @@ ExpTagAllowPrint(CHAR Tag)
     else DPRINT1(fmt, ##__VA_ARGS__)
 
 VOID
-MiDumpPoolConsumers(BOOLEAN CalledFromDbg)
+MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag)
 {
     SIZE_T i;
 
@@ -519,8 +519,10 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg)
         {
             //
             // If there's a tag, attempt to do a pretty print
+            // only if it matches the caller tag, or if
+            // any tag is allowed
             //
-            if (TableEntry->Key != 0 && TableEntry->Key != TAG_NONE)
+            if (TableEntry->Key != 0 && TableEntry->Key != TAG_NONE && (Tag == 0 || TableEntry->Key == Tag))
             {
                 CHAR Tag[4];
 
@@ -548,7 +550,7 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg)
                                   TableEntry->PagedAllocs, TableEntry->PagedBytes);
                 }
             }
-            else
+            else if (Tag == 0 || Tag == TAG_NONE)
             {
                 MiDumperPrint(CalledFromDbg, "Anon\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n",
                               TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
@@ -1749,7 +1751,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             //
             // Out of memory, display current consumption
             //
-            MiDumpPoolConsumers(FALSE);
+            MiDumpPoolConsumers(FALSE, 0);
 #endif
 
             //
@@ -2082,7 +2084,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // Out of memory, display current consumption
         //
-        MiDumpPoolConsumers(FALSE);
+        MiDumpPoolConsumers(FALSE, 0);
 #endif
 
         //
@@ -2942,7 +2944,25 @@ ExpKdbgExtPoolUsed(
     ULONG Argc,
     PCHAR Argv[])
 {
-    MiDumpPoolConsumers(TRUE);
+    ULONG Tag = 0;
+
+    if (Argc > 1)
+    {
+        CHAR Tmp[4];
+        ULONG Len;
+
+        /* Get the tag */
+        Len = strlen(Argv[1]);
+        if (Len > 4)
+        {
+            Len = 4;
+        }
+        RtlCopyMemory(Tmp, Argv[1], Len * sizeof(CHAR));
+
+        Tag = *((PULONG)Tmp);
+    }
+
+    MiDumpPoolConsumers(TRUE, Tag);
 
     return TRUE;
 }
