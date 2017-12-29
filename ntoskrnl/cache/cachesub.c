@@ -313,7 +313,6 @@ CcShutdownSystem(VOID)
                     Bcb->FileOffset.u.HighPart,
                     Bcb->FileOffset.u.LowPart,
                     &MmGetFileObjectForSection((PROS_SECTION_OBJECT)Bcb->SectionObject)->FileName);
-
             CcpFlushCache(Bcb->Map, NULL, 0, NULL, TRUE);
             Bcb->Dirty = FALSE;
         }
