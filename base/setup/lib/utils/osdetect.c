@@ -26,18 +26,15 @@
 /* GLOBALS ******************************************************************/
 
 /* Language-independent Vendor strings */
-static const PCWSTR KnownVendors[] = { L"ReactOS", L"Microsoft" };
+static const PCWSTR KnownVendors[] = { VENDOR_REACTOS, VENDOR_MICROSOFT };
 
 
 /* FUNCTIONS ****************************************************************/
 
 static BOOLEAN
-IsValidNTOSInstallation_UStr(
-    IN PUNICODE_STRING SystemRootPath);
-
-/*static*/ BOOLEAN
 IsValidNTOSInstallation(
-    IN PCWSTR SystemRoot);
+    IN PUNICODE_STRING SystemRootPath,
+    OUT PUNICODE_STRING VendorName OPTIONAL);
 
 static PNTOS_INSTALLATION
 FindExistingNTOSInstall(
@@ -49,13 +46,14 @@ FindExistingNTOSInstall(
 static PNTOS_INSTALLATION
 AddNTOSInstallation(
     IN PGENERIC_LIST List,
+    IN PCWSTR InstallationName,
+    IN PCWSTR VendorName,
     IN PCWSTR SystemRootArcPath,
     IN PUNICODE_STRING SystemRootNtPath, // or PCWSTR ?
     IN PCWSTR PathComponent,    // Pointer inside SystemRootNtPath buffer
     IN ULONG DiskNumber,
     IN ULONG PartitionNumber,
-    IN PPARTENTRY PartEntry OPTIONAL,
-    IN PCWSTR InstallationName);
+    IN PPARTENTRY PartEntry OPTIONAL);
 
 typedef struct _ENUM_INSTALLS_DATA
 {
@@ -74,16 +72,19 @@ EnumerateInstallations(
 {
     PENUM_INSTALLS_DATA Data = (PENUM_INSTALLS_DATA)Parameter;
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
-
     PNTOS_INSTALLATION NtOsInstall;
-    UNICODE_STRING SystemRootPath;
-    WCHAR SystemRoot[MAX_PATH];
-    WCHAR InstallNameW[MAX_PATH];
 
     ULONG DiskNumber = 0, PartitionNumber = 0;
     PCWSTR PathComponent = NULL;
     PDISKENTRY DiskEntry = NULL;
     PPARTENTRY PartEntry = NULL;
+
+    UNICODE_STRING SystemRootPath;
+    WCHAR SystemRoot[MAX_PATH];
+
+    UNICODE_STRING VendorName;
+    WCHAR VendorNameBuffer[MAX_PATH];
+
 
     /* We have a boot entry */
 
@@ -126,8 +127,8 @@ EnumerateInstallations(
     NtOsInstall = FindExistingNTOSInstall(Data->List, Options->OsLoadPath, NULL);
     if (NtOsInstall)
     {
-        DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
-                NtOsInstall->InstallationName, &NtOsInstall->SystemArcPath);
+        DPRINT1("    An NTOS installation with name \"%S\" from vendor \"%S\" already exists in SystemRoot '%wZ'\n",
+                NtOsInstall->InstallationName, NtOsInstall->VendorName, &NtOsInstall->SystemArcPath);
         /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
@@ -155,8 +156,8 @@ EnumerateInstallations(
     NtOsInstall = FindExistingNTOSInstall(Data->List, NULL /*Options->OsLoadPath*/, &SystemRootPath);
     if (NtOsInstall)
     {
-        DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
-                NtOsInstall->InstallationName, &NtOsInstall->SystemNtPath);
+        DPRINT1("    An NTOS installation with name \"%S\" from vendor \"%S\" already exists in SystemRoot '%wZ'\n",
+                NtOsInstall->InstallationName, NtOsInstall->VendorName, &NtOsInstall->SystemNtPath);
         /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
@@ -164,7 +165,8 @@ EnumerateInstallations(
     DPRINT1("EnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
 
     /* Check if this is a valid NTOS installation; stop there if it isn't one */
-    if (!IsValidNTOSInstallation_UStr(&SystemRootPath))
+    RtlInitEmptyUnicodeString(&VendorName, VendorNameBuffer, sizeof(VendorNameBuffer));
+    if (!IsValidNTOSInstallation(&SystemRootPath, &VendorName))
     {
         /* Continue the enumeration */
         return STATUS_SUCCESS;
@@ -192,27 +194,12 @@ EnumerateInstallations(
     }
 
     /* Add the discovered NTOS installation into the list */
-    if (PartEntry && PartEntry->DriveLetter)
-    {
-        /* We have retrieved a partition that is mounted */
-        RtlStringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW),
-                            L"%C:%s  \"%s\"",
-                            PartEntry->DriveLetter,
-                            PathComponent,
-                            BootEntry->FriendlyName);
-    }
-    else
-    {
-        /* We failed somewhere, just show the NT path */
-        RtlStringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW),
-                            L"%wZ  \"%s\"",
-                            &SystemRootPath,
-                            BootEntry->FriendlyName);
-    }
-    AddNTOSInstallation(Data->List, Options->OsLoadPath,
+    AddNTOSInstallation(Data->List,
+                        BootEntry->FriendlyName,
+                        VendorName.Buffer, // FIXME: What if it's not NULL-terminated?
+                        Options->OsLoadPath,
                         &SystemRootPath, PathComponent,
-                        DiskNumber, PartitionNumber, PartEntry,
-                        InstallNameW);
+                        DiskNumber, PartitionNumber, PartEntry);
 
     /* Continue the enumeration */
     return STATUS_SUCCESS;
@@ -348,13 +335,27 @@ UnmapCloseFile:
 //
 static BOOLEAN
 IsValidNTOSInstallationByHandle(
-    IN HANDLE SystemRootDirectory)
+    IN HANDLE SystemRootDirectory,
+    OUT PUNICODE_STRING VendorName OPTIONAL)
 {
     BOOLEAN Success = FALSE;
     PCWSTR PathName;
     USHORT i;
-    UNICODE_STRING VendorName;
+    UNICODE_STRING LocalVendorName;
     WCHAR VendorNameBuffer[MAX_PATH];
+
+    /* Check for VendorName validity */
+    if (VendorName->MaximumLength < sizeof(UNICODE_NULL))
+    {
+        /* Don't use it, invalidate the pointer */
+        VendorName = NULL;
+    }
+    else
+    {
+        /* Zero it out */
+        *VendorName->Buffer = UNICODE_NULL;
+        VendorName->Length = 0;
+    }
 
     /* Check for the existence of \SystemRoot\System32 */
     PathName = L"System32\\";
@@ -399,11 +400,11 @@ IsValidNTOSInstallationByHandle(
     }
 #endif
 
-    RtlInitEmptyUnicodeString(&VendorName, VendorNameBuffer, sizeof(VendorNameBuffer));
+    RtlInitEmptyUnicodeString(&LocalVendorName, VendorNameBuffer, sizeof(VendorNameBuffer));
 
     /* Check for the existence of \SystemRoot\System32\ntoskrnl.exe and retrieves its vendor name */
     PathName = L"System32\\ntoskrnl.exe";
-    Success = CheckForValidPEAndVendor(SystemRootDirectory, PathName, &VendorName);
+    Success = CheckForValidPEAndVendor(SystemRootDirectory, PathName, &LocalVendorName);
     if (!Success)
         DPRINT1("Kernel executable '%S' is either not a PE file, or does not have any vendor?\n", PathName);
 
@@ -412,7 +413,7 @@ IsValidNTOSInstallationByHandle(
     {
         for (i = 0; i < ARRAYSIZE(KnownVendors); ++i)
         {
-            Success = !!FindSubStrI(VendorName.Buffer, KnownVendors[i]);
+            Success = !!FindSubStrI(LocalVendorName.Buffer, KnownVendors[i]);
             if (Success)
             {
                 /* We have found a correct vendor combination */
@@ -422,18 +423,26 @@ IsValidNTOSInstallationByHandle(
         }
     }
 
+    /* Return the vendor name */
+    if (VendorName)
+    {
+        /* Copy the string and invalidate the pointer */
+        RtlCopyUnicodeString(VendorName, &LocalVendorName);
+        VendorName = NULL;
+    }
+
     /* OPTIONAL: Check for the existence of \SystemRoot\System32\ntkrnlpa.exe */
 
     /* Check for the existence of \SystemRoot\System32\ntdll.dll and retrieves its vendor name */
     PathName = L"System32\\ntdll.dll";
-    Success = CheckForValidPEAndVendor(SystemRootDirectory, PathName, &VendorName);
+    Success = CheckForValidPEAndVendor(SystemRootDirectory, PathName, &LocalVendorName);
     if (!Success)
         DPRINT1("User-mode DLL '%S' is either not a PE file, or does not have any vendor?\n", PathName);
     if (Success)
     {
         for (i = 0; i < ARRAYSIZE(KnownVendors); ++i)
         {
-            if (!!FindSubStrI(VendorName.Buffer, KnownVendors[i]))
+            if (!!FindSubStrI(LocalVendorName.Buffer, KnownVendors[i]))
             {
                 /* We have found a correct vendor combination */
                 DPRINT1("IsValidNTOSInstallation: The user-mode DLL '%S' is from %S\n", PathName, KnownVendors[i]);
@@ -442,12 +451,21 @@ IsValidNTOSInstallationByHandle(
         }
     }
 
+    /* Return the vendor name if not already obtained */
+    if (VendorName)
+    {
+        /* Copy the string and invalidate the pointer */
+        RtlCopyUnicodeString(VendorName, &LocalVendorName);
+        VendorName = NULL;
+    }
+
     return Success;
 }
 
 static BOOLEAN
-IsValidNTOSInstallation_UStr(
-    IN PUNICODE_STRING SystemRootPath)
+IsValidNTOSInstallation(
+    IN PUNICODE_STRING SystemRootPath,
+    OUT PUNICODE_STRING VendorName OPTIONAL)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -473,20 +491,11 @@ IsValidNTOSInstallation_UStr(
         return FALSE;
     }
 
-    Success = IsValidNTOSInstallationByHandle(SystemRootDirectory);
+    Success = IsValidNTOSInstallationByHandle(SystemRootDirectory, VendorName);
 
     /* Done! */
     NtClose(SystemRootDirectory);
     return Success;
-}
-
-/*static*/ BOOLEAN
-IsValidNTOSInstallation(
-    IN PCWSTR SystemRoot)
-{
-    UNICODE_STRING SystemRootPath;
-    RtlInitUnicodeString(&SystemRootPath, SystemRoot);
-    return IsValidNTOSInstallationByHandle(&SystemRootPath);
 }
 
 static VOID
@@ -502,11 +511,9 @@ DumpNTOSInstalls(
             NtOsInstallsCount,
             NtOsInstallsCount >= 2 ? "s" : "");
 
-    Entry = GetFirstListEntry(List);
-    while (Entry)
+    for (Entry = GetFirstListEntry(List); Entry; Entry = GetNextListEntry(Entry))
     {
-        NtOsInstall = (PNTOS_INSTALLATION)GetListEntryUserData(Entry);
-        Entry = GetNextListEntry(Entry);
+        NtOsInstall = (PNTOS_INSTALLATION)GetListEntryData(Entry);
 
         DPRINT1("    On disk #%d, partition #%d: Installation \"%S\" in SystemRoot '%wZ'\n",
                 NtOsInstall->DiskNumber, NtOsInstall->PartitionNumber,
@@ -536,11 +543,9 @@ FindExistingNTOSInstall(
 
     RtlInitUnicodeString(&SystemArcPath, SystemRootArcPath);
 
-    Entry = GetFirstListEntry(List);
-    while (Entry)
+    for (Entry = GetFirstListEntry(List); Entry; Entry = GetNextListEntry(Entry))
     {
-        NtOsInstall = (PNTOS_INSTALLATION)GetListEntryUserData(Entry);
-        Entry = GetNextListEntry(Entry);
+        NtOsInstall = (PNTOS_INSTALLATION)GetListEntryData(Entry);
 
         /*
          * Note that if both ARC paths are equal, then the corresponding
@@ -565,13 +570,14 @@ FindExistingNTOSInstall(
 static PNTOS_INSTALLATION
 AddNTOSInstallation(
     IN PGENERIC_LIST List,
+    IN PCWSTR InstallationName,
+    IN PCWSTR VendorName,
     IN PCWSTR SystemRootArcPath,
     IN PUNICODE_STRING SystemRootNtPath, // or PCWSTR ?
     IN PCWSTR PathComponent,    // Pointer inside SystemRootNtPath buffer
     IN ULONG DiskNumber,
     IN ULONG PartitionNumber,
-    IN PPARTENTRY PartEntry OPTIONAL,
-    IN PCWSTR InstallationName)
+    IN PPARTENTRY PartEntry OPTIONAL)
 {
     PNTOS_INSTALLATION NtOsInstall;
     SIZE_T ArcPathLength, NtPathLength;
@@ -580,8 +586,9 @@ AddNTOSInstallation(
     NtOsInstall = FindExistingNTOSInstall(List, SystemRootArcPath, SystemRootNtPath);
     if (NtOsInstall)
     {
-        DPRINT1("An NTOS installation with name \"%S\" already exists on disk #%d, partition #%d, in SystemRoot '%wZ'\n",
-                NtOsInstall->InstallationName, NtOsInstall->DiskNumber, NtOsInstall->PartitionNumber, &NtOsInstall->SystemNtPath);
+        DPRINT1("An NTOS installation with name \"%S\" from vendor \"%S\" already exists on disk #%d, partition #%d, in SystemRoot '%wZ'\n",
+                NtOsInstall->InstallationName, NtOsInstall->VendorName,
+                NtOsInstall->DiskNumber, NtOsInstall->PartitionNumber, &NtOsInstall->SystemNtPath);
         //
         // NOTE: We may use its "IsDefault" attribute, and only keep the entries that have IsDefault == TRUE...
         // Setting IsDefault to TRUE would imply searching for the "Default" entry in the loader configuration file.
@@ -621,8 +628,11 @@ AddNTOSInstallation(
                       ARRAYSIZE(NtOsInstall->InstallationName),
                       InstallationName);
 
-    // Having the GENERIC_LIST storing the display item string plainly sucks...
-    AppendGenericListEntry(List, InstallationName, NtOsInstall, FALSE);
+    RtlStringCchCopyW(NtOsInstall->VendorName,
+                      ARRAYSIZE(NtOsInstall->VendorName),
+                      VendorName);
+
+    AppendGenericListEntry(List, NtOsInstall, FALSE);
 
     return NtOsInstall;
 }
