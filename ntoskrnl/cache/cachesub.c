@@ -316,6 +316,9 @@ CcShutdownSystem(VOID)
             CcpFlushCache(Bcb->Map, NULL, 0, NULL, TRUE);
             Bcb->Dirty = FALSE;
         }
+		else if (Bcb->Dirty == TRUE) {
+			DPRINT1("Something is wrong here. Future file corruption detected.");
+		}
     }
 
     /* Evict all section pages */

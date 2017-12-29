@@ -4817,7 +4817,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 			if (SectionObjectPointer->DataSectionObject) {
 				DPRINT1("SectionObject has no DataSection\n");
 			}
-            return FALSE;
+            return FALSE; 
         }
 
 #ifdef NEWCC
