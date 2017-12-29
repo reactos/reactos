@@ -112,7 +112,7 @@ CcMdlWriteComplete2(IN PFILE_OBJECT FileObject,
                     IN PLARGE_INTEGER FileOffset,
                     IN PMDL MdlChain)
 {
-    UNIMPLEMENTED;
+	CcMdlWriteComplete2(FileObject, FileOffset, MdlChain);
 }
 
 VOID
