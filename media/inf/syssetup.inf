@@ -118,6 +118,7 @@ AddReg=Classes
 11,wbem,wbemdisp.dll,1
 11,wbem,wbemprox.dll,1
 11,,shellbtrfs.dll,1
+11,,zipfldr.dll,1
 
 [TypeLibraries]
 stdole2.tlb
