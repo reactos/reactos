@@ -562,11 +562,11 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Flags)
                 if (ExpTagAllowPrint(Tag[0]) && ExpTagAllowPrint(Tag[1]) && ExpTagAllowPrint(Tag[2]) && ExpTagAllowPrint(Tag[3]))
                 {
                     //
-                    // Print in reversed order to match what is in source code
+                    // Print in direct order to make !poolused TAG usage easier
                     //
                     if (Verbose)
                     {
-                        MiDumperPrint(CalledFromDbg, "'%c%c%c%c'\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", Tag[3], Tag[2], Tag[1], Tag[0],
+                        MiDumperPrint(CalledFromDbg, "'%c%c%c%c'\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", Tag[0], Tag[1], Tag[2], Tag[3],
                                       TableEntry->NonPagedAllocs, TableEntry->NonPagedFrees,
                                       (TableEntry->NonPagedAllocs - TableEntry->NonPagedFrees), TableEntry->NonPagedBytes,
                                       TableEntry->PagedAllocs, TableEntry->PagedFrees,
@@ -574,7 +574,7 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Flags)
                     }
                     else
                     {
-                        MiDumperPrint(CalledFromDbg, "'%c%c%c%c'\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", Tag[3], Tag[2], Tag[1], Tag[0],
+                        MiDumperPrint(CalledFromDbg, "'%c%c%c%c'\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", Tag[0], Tag[1], Tag[2], Tag[3],
                                       TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
                                       TableEntry->PagedAllocs, TableEntry->PagedBytes);
                     }
