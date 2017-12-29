@@ -1,4 +1,11 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+ * PROJECT: ReactOS Applications Manager (RAPPS)
+ * FILE:    base/applications/rapps/lang/ro-RO.rc
+ * PURPOSE: Romanian Translation for RAPPS
+ * TRANSLATORS:
+ *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ *          Bișoc George (fraizeraust99@gmail.com)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -85,7 +92,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalare aplicație"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "Instalea&ză de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Descarcă și instalează", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "Con&firmă", IDOK, 86, 78, 60, 14
@@ -94,7 +101,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "În curs de descărcare %ls..."
+CAPTION "În curs de descărcare %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -154,13 +161,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nVersiune: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\nVersiune disponibilă: "
     IDS_AINFO_DESCRIPTION "\nDescriere: "
     IDS_AINFO_SIZE "\nDimensiune: "
     IDS_AINFO_URLSITE "\nAdresă web: "
     IDS_AINFO_LICENSE "\nLicență: "
     IDS_AINFO_URLDOWNLOAD "\nURL fișier: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nLimbi: "
 END
 
 STRINGTABLE
@@ -189,7 +196,7 @@ BEGIN
     IDS_INSTALL "Instalează"
     IDS_UNINSTALL "Dezinstalează"
     IDS_MODIFY "Modifică"
-    IDS_APPS_COUNT "Numărul de programe: %d; Selected: %d"
+    IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
     IDS_WELCOME_TITLE "Bun venit la gestionarul de programe ReactOS!\n\n"
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
     IDS_WELCOME_URL "http://www.reactos.org"
@@ -204,47 +211,47 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD "Pachetul nu poate fi descărcat! Adresa nu este găsită!"
     IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu poate fi descărcat! Verificați conexiunea de Internet!"
     IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu au putut fi eliminate!"
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
+    IDS_UNABLE_TO_INSTALL "Programul de instalare nu poate fi executat!"
     IDS_CERT_DOES_NOT_MATCH "Verificarea certificatului SSL a eșuat."    
     IDS_INTEG_CHECK_TITLE "Integritatea pachetului în verificare…"
     IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
     IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."
-    IDS_UNABLE_TO_WRITE "Eșec la scriea pe disc. Una din cauze poate fi atingerea limitei de capacitate."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
+    IDS_UNABLE_TO_WRITE "Eșec la scrierea pe disc. Una din cauze poate fi atingerea limitei de capacitate."
+    IDS_SELECT_ALL "Selectează/Deselectează Toate"
+    IDS_INSTALL_SELECTED "Instalează selecționate"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
-    IDS_STATUS_DOWNLOADED "Downloaded"
-    IDS_STATUS_UPDATE_AVAILABLE "Update available"
-    IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
-    IDS_STATUS_WAITING "Waiting to install…"
-    IDS_STATUS_FINISHED "Finished"
+    IDS_STATUS_INSTALLED "Instalat"
+    IDS_STATUS_NOTINSTALLED "Nu instalat"
+    IDS_STATUS_DOWNLOADED "Descărcat"
+    IDS_STATUS_UPDATE_AVAILABLE "Actualizare disponibilă"
+    IDS_STATUS_DOWNLOADING "Descărcare…"
+    IDS_STATUS_INSTALLING "Instalare…"
+    IDS_STATUS_WAITING "În fază de instalare…"
+    IDS_STATUS_FINISHED "Terminat"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
+    IDS_LICENSE_OPENSOURCE "Sursă Deschisă"
     IDS_LICENSE_FREEWARE "Freeware"
     IDS_LICENSE_TRIAL "Trial/Demo"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Suportă limba respectivă"
+    IDS_LANGUAGE_NO_TRANSLATION "Suportă alte limbi"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Suportă limba Engleză"
+    IDS_LANGUAGE_SINGLE "Singura Limbă"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d mult)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d disponibil)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database..."
+    IDS_DL_DIALOG_DB_DISP "Aplicații baza de date"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare baza de date…"
 END
