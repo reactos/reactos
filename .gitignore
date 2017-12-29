@@ -1,2 +1,4 @@
 output-*
 modules/optional
+/.vs
+/x86build
