@@ -18,22 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <ole2.h>
-//#include "objbase.h"
-//#include "propidl.h" /* for LPSAFEARRAY_User* routines */
-
-#include <wine/test.h>
+#include "precomp.h"
 
 #if (__STDC__ && !defined(_FORCENAMELESSUNION)) || defined(NONAMELESSUNION)
 # define V_U2(A)  ((A)->n1.n2)

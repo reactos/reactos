@@ -58,7 +58,7 @@ typedef struct
 
 } BackgroundItem;
 
-typedef struct _DATA
+typedef struct _BACKGROUND_DATA
 {
     BOOL bWallpaperChanged;
     BOOL bClrBackgroundChanged;
@@ -79,7 +79,7 @@ typedef struct _DATA
     int cySource;
 
     ULONG_PTR gdipToken;
-} DATA, *PDATA;
+} BACKGROUND_DATA, *PBACKGROUND_DATA;
 
 GLOBAL_DATA g_GlobalData;
 
@@ -183,7 +183,7 @@ GdipGetSupportedFileExtensions(VOID)
 
 
 static UINT
-AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundItem *backgroundItem, PDATA pData, LPCTSTR wallpaperFilename, LPCTSTR wallpaperDirectory)
+AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundItem *backgroundItem, PBACKGROUND_DATA pData, LPCTSTR wallpaperFilename, LPCTSTR wallpaperDirectory)
 {
     WIN32_FIND_DATA fd;
     HANDLE hFind;
@@ -292,7 +292,7 @@ AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundIte
 
 /* Add the images in the C:\ReactOS, the wallpaper directory and the current wallpaper if any */
 static VOID
-AddListViewItems(HWND hwndDlg, PDATA pData)
+AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
 {
     TCHAR szSearchPath[MAX_PATH];
     LV_ITEM listItem;
@@ -454,7 +454,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
 
 
 static VOID
-InitBackgroundDialog(HWND hwndDlg, PDATA pData)
+InitBackgroundDialog(HWND hwndDlg, PBACKGROUND_DATA pData)
 {
     TCHAR szString[256];
     HKEY regKey;
@@ -538,7 +538,7 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
 
 
 static VOID
-OnColorButton(HWND hwndDlg, PDATA pData)
+OnColorButton(HWND hwndDlg, PBACKGROUND_DATA pData)
 {
     /* Load custom colors from Registry */
     HKEY hKey = NULL;
@@ -622,7 +622,7 @@ CheckListViewFilenameExists(HWND hwndList, LPCTSTR tszFileName)
 
 
 static VOID
-OnBrowseButton(HWND hwndDlg, PDATA pData)
+OnBrowseButton(HWND hwndDlg, PBACKGROUND_DATA pData)
 {
     OPENFILENAME ofn;
     TCHAR filename[MAX_PATH];
@@ -752,7 +752,7 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
 
 
 static VOID
-ListViewItemChanged(HWND hwndDlg, PDATA pData, int itemIndex)
+ListViewItemChanged(HWND hwndDlg, PBACKGROUND_DATA pData, int itemIndex)
 {
     BackgroundItem *backgroundItem = NULL;
 
@@ -786,7 +786,7 @@ ListViewItemChanged(HWND hwndDlg, PDATA pData, int itemIndex)
 
 
 static VOID
-DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PDATA pData)
+DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PBACKGROUND_DATA pData)
 {
     float scaleX;
     float scaleY;
@@ -997,7 +997,7 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PDATA pData)
 
 
 static VOID
-SetWallpaper(PDATA pData)
+SetWallpaper(PBACKGROUND_DATA pData)
 {
     HKEY regKey;
     TCHAR szWallpaper[MAX_PATH];
@@ -1121,7 +1121,7 @@ SetWallpaper(PDATA pData)
 
 /* Change system color */
 static VOID
-SetDesktopBackColor(HWND hwndDlg, DATA *pData)
+SetDesktopBackColor(HWND hwndDlg, PBACKGROUND_DATA pData)
 {
     HKEY hKey;
     INT iElement = COLOR_BACKGROUND;
@@ -1159,15 +1159,15 @@ BackgroundPageProc(HWND hwndDlg,
                    WPARAM wParam,
                    LPARAM lParam)
 {
-    PDATA pData;
+    PBACKGROUND_DATA pData;
     struct GdiplusStartupInput gdipStartup;
 
-    pData = (PDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    pData = (PBACKGROUND_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pData = (DATA*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DATA));
+            pData = (PBACKGROUND_DATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(BACKGROUND_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pData);
             gdipStartup.GdiplusVersion = 1;
             gdipStartup.DebugEventCallback = NULL;

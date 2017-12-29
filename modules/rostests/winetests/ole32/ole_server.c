@@ -18,15 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include <windows.h>
-#include <exdisp.h>
-#include <tlhelp32.h>
-#include <stdio.h>
-#include <assert.h>
-#include "wine/test.h"
+#include "precomp.h"
 
 #include <initguid.h>
 DEFINE_GUID(CLSID_WineTestObject, 0xdeadbeef,0xdead,0xbeef,0xde,0xad,0xbe,0xef,0xde,0xad,0xbe,0xef);

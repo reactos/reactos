@@ -76,20 +76,21 @@ typedef union _EXHANDLE
 {
      struct
      {
-         ULONG_PTR TagBits:		HANDLE_TAG_BITS;
-         ULONG_PTR Index: 		HANDLE_INDEX_BITS;
+         ULONG_PTR TagBits:     HANDLE_TAG_BITS;
+         ULONG_PTR Index:       HANDLE_INDEX_BITS;
          ULONG_PTR KernelFlag : KERNEL_FLAG_BITS;
      };
      struct
      {
-         ULONG_PTR TagBits2:	HANDLE_TAG_BITS;
-         ULONG_PTR LowIndex:	HANDLE_LOW_BITS;
-         ULONG_PTR MidIndex:	HANDLE_HIGH_BITS;
-         ULONG_PTR HighIndex:	HANDLE_HIGH_BITS;
-         ULONG_PTR KernelFlag2:	KERNEL_FLAG_BITS;
+         ULONG_PTR TagBits2:    HANDLE_TAG_BITS;
+         ULONG_PTR LowIndex:    HANDLE_LOW_BITS;
+         ULONG_PTR MidIndex:    HANDLE_HIGH_BITS;
+         ULONG_PTR HighIndex:   HANDLE_HIGH_BITS;
+         ULONG_PTR KernelFlag2: KERNEL_FLAG_BITS;
      };
      HANDLE GenericHandleOverlay;
      ULONG_PTR Value;
+     ULONG AsULONG;
 } EXHANDLE, *PEXHANDLE;
 
 typedef struct _ETIMER

@@ -10,7 +10,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define USE_VERSIONED_CLASSES
@@ -1117,6 +1116,15 @@ LONG_PTR IntGetWindowLong( HWND hwnd, INT offset, UINT size, BOOL unicode )
     case GWL_EXSTYLE:    retvalue = wndPtr->ExStyle; break;
     case GWLP_ID:        retvalue = wndPtr->IDMenu; break;
     case GWLP_HINSTANCE: retvalue = (ULONG_PTR)wndPtr->hModule; break;
+#if 0
+    /* -1 is an undocumented case which returns WW* */
+    /* source: http://www.geoffchappell.com/studies/windows/win32/user32/structs/wnd/index.htm*/
+    case -1:             retvalue = (ULONG_PTR)&wndPtr->ww; break;
+#else
+    /* We don't have a WW but WND already contains the same fields in the right order, */
+    /* so we can return a pointer to its first field */
+    case -1:             retvalue = (ULONG_PTR)&wndPtr->state; break;
+#endif
     case GWLP_WNDPROC:
     {
         if (!TestWindowProcess(wndPtr))

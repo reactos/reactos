@@ -22,13 +22,9 @@
  * windows.
  */
 
-#include <stdlib.h>
-
-#define INITGUID
-
 #include "ntdll_test.h"
-#include "winnls.h"
-#include "guiddef.h"
+
+#include <initguid.h>
 
 #define HASH_STRING_ALGORITHM_X65599   1
 #define HASH_STRING_ALGORITHM_INVALID  0xffffffff

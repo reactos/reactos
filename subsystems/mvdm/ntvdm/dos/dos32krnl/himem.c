@@ -169,7 +169,7 @@ Fail:
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static inline PXMS_HANDLE GetHandleRecord(WORD Handle)
+static inline PXMS_HANDLE GetXmsHandleRecord(WORD Handle)
 {
     PXMS_HANDLE Entry;
     if (Handle == 0 || Handle >= XMS_MAX_HANDLES) return NULL;
@@ -178,7 +178,7 @@ static inline PXMS_HANDLE GetHandleRecord(WORD Handle)
     return Entry->Size ? Entry : NULL;
 }
 
-static inline BOOLEAN ValidateHandle(PXMS_HANDLE HandleEntry)
+static inline BOOLEAN ValidateXmsHandle(PXMS_HANDLE HandleEntry)
 {
     return (HandleEntry != NULL && HandleEntry->Handle != 0);
 }
@@ -277,12 +277,12 @@ static UCHAR XmsAlloc(WORD Size, PWORD Handle)
 static UCHAR XmsRealloc(WORD Handle, WORD NewSize)
 {
     DWORD BlockNumber;
-    PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
+    PXMS_HANDLE HandleEntry = GetXmsHandleRecord(Handle);
     DWORD CurrentIndex = 0;
     ULONG RunStart;
     ULONG RunSize;
 
-    if (!ValidateHandle(HandleEntry))
+    if (!ValidateXmsHandle(HandleEntry))
         return XMS_STATUS_INVALID_HANDLE;
 
     if (HandleEntry->LockCount)
@@ -360,9 +360,9 @@ static UCHAR XmsRealloc(WORD Handle, WORD NewSize)
 static UCHAR XmsFree(WORD Handle)
 {
     DWORD BlockNumber;
-    PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
+    PXMS_HANDLE HandleEntry = GetXmsHandleRecord(Handle);
 
-    if (!ValidateHandle(HandleEntry))
+    if (!ValidateXmsHandle(HandleEntry))
         return XMS_STATUS_INVALID_HANDLE;
 
     if (HandleEntry->LockCount)
@@ -379,9 +379,9 @@ static UCHAR XmsFree(WORD Handle)
 
 static UCHAR XmsLock(WORD Handle, PDWORD Address)
 {
-    PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
+    PXMS_HANDLE HandleEntry = GetXmsHandleRecord(Handle);
 
-    if (!ValidateHandle(HandleEntry))
+    if (!ValidateXmsHandle(HandleEntry))
         return XMS_STATUS_INVALID_HANDLE;
 
     if (HandleEntry->LockCount == 0xFF)
@@ -396,9 +396,9 @@ static UCHAR XmsLock(WORD Handle, PDWORD Address)
 
 static UCHAR XmsUnlock(WORD Handle)
 {
-    PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
+    PXMS_HANDLE HandleEntry = GetXmsHandleRecord(Handle);
 
-    if (!ValidateHandle(HandleEntry))
+    if (!ValidateXmsHandle(HandleEntry))
         return XMS_STATUS_INVALID_HANDLE;
 
     if (!HandleEntry->LockCount)
@@ -596,8 +596,8 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
 
             if (CopyData->SourceHandle)
             {
-                HandleEntry = GetHandleRecord(CopyData->SourceHandle);
-                if (!ValidateHandle(HandleEntry))
+                HandleEntry = GetXmsHandleRecord(CopyData->SourceHandle);
+                if (!ValidateXmsHandle(HandleEntry))
                 {
                     setAX(0);
                     setBL(XMS_STATUS_BAD_SRC_HANDLE);
@@ -620,8 +620,8 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
 
             if (CopyData->DestHandle)
             {
-                HandleEntry = GetHandleRecord(CopyData->DestHandle);
-                if (!ValidateHandle(HandleEntry))
+                HandleEntry = GetXmsHandleRecord(CopyData->DestHandle);
+                if (!ValidateXmsHandle(HandleEntry))
                 {
                     setAX(0);
                     setBL(XMS_STATUS_BAD_DEST_HANDLE);
@@ -686,11 +686,11 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
         /* Get Handle Information */
         case 0x0E:
         {
-            PXMS_HANDLE HandleEntry = GetHandleRecord(getDX());
+            PXMS_HANDLE HandleEntry = GetXmsHandleRecord(getDX());
             UINT i;
             UCHAR Handles = 0;
 
-            if (!ValidateHandle(HandleEntry))
+            if (!ValidateXmsHandle(HandleEntry))
             {
                 setAX(0);
                 setBL(XMS_STATUS_INVALID_HANDLE);

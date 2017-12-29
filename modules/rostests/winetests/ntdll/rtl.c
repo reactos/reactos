@@ -21,14 +21,14 @@
  * windows.
  */
 
-#include <stdlib.h>
-
 #include "ntdll_test.h"
-#include "inaddr.h"
-#include "in6addr.h"
-#include "initguid.h"
+
+#include <inaddr.h>
+#include <in6addr.h>
+#include <objbase.h>
+#include <initguid.h>
 #define COBJMACROS
-#include "shobjidl.h"
+#include <shobjidl.h>
 
 #ifndef __WINE_WINTERNL_H
 

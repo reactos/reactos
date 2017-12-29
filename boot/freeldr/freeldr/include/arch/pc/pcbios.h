@@ -5,22 +5,55 @@
 
 typedef enum
 {
-    BiosMemoryUsable=1,
-    BiosMemoryReserved,
-    BiosMemoryAcpiReclaim,
-    BiosMemoryAcpiNvs
+    // ACPI 1.0.
+    BiosMemoryUsable        =  1,
+    BiosMemoryReserved      =  2,
+    BiosMemoryAcpiReclaim   =  3,
+    BiosMemoryAcpiNvs       =  4,
+    // ACPI 3.0.
+    BiosMemoryUnusable      =  5,
+    // ACPI 4.0.
+    BiosMemoryDisabled      =  6,
+    // ACPI 6.0.
+    BiosMemoryPersistent    =  7,
+    BiosMemoryUndefined08   =  8,
+    BiosMemoryUndefined09   =  9,
+    BiosMemoryUndefined10   = 10,
+    BiosMemoryUndefined11   = 11,
+    BiosMemoryOemDefined12  = 12
+    // BiosMemoryUndefinedNN   = 13-0xEFFFFFFF
+    // BiosMemoryOemDefinedNN  = 0xF0000000-0xFFFFFFFF
 } BIOS_MEMORY_TYPE;
 
 typedef struct
 {
-    ULONGLONG        BaseAddress;
-    ULONGLONG        Length;
-    ULONG        Type;
-    ULONG        Reserved;
+    // ACPI 1.0.
+    ULONGLONG   BaseAddress;
+    ULONGLONG   Length;
+    ULONG       Type;
+    // ACPI 3.0.
+    union
+    {
+        ULONG   ExtendedAttributesAsULONG;
+
+        struct
+        {
+            // Bit 0. ACPI 3.0. As of ACPI 4.0, became "Reserved -> must be 1".
+            ULONG Enabled_Reserved : 1;
+            // Bit 1. ACPI 3.0. As of ACPI 6.1, became "Unimplemented -> Deprecated".
+            ULONG NonVolatile_Deprecated : 1;
+            // Bit 2. ACPI 4.0. As of ACPI 6.1, became "Unimplemented -> Deprecated".
+            ULONG SlowAccess_Deprecated : 1;
+            // Bit 3. ACPI 4.0. ACPI 5.0-A added "Used only on PC-AT BIOS" (not UEFI).
+            ULONG ErrorLog : 1;
+            // Bits 4-31. ACPI 3.0.
+            ULONG Reserved : 28;
+        } ExtendedAttributes;
+    };
 } BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
 /* Int 15h AX=E820h Entry minimal size. */
-C_ASSERT(FIELD_OFFSET(BIOS_MEMORY_MAP, Reserved) == 20);
+C_ASSERT(FIELD_OFFSET(BIOS_MEMORY_MAP, ExtendedAttributes) == 20);
 /* Int 15h AX=E820h Entry maximal size. */
 C_ASSERT(sizeof(BIOS_MEMORY_MAP) == 24);
 

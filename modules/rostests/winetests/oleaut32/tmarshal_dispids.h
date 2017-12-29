@@ -17,6 +17,8 @@
  *
  */
 
+#pragma once
+
 #define DISPID_TM_NAME 1
 #define DISPID_TM_DOSOMETHING 2
 #define DISPID_TM_STATE 3

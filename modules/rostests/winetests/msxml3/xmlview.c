@@ -16,29 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#define COBJMACROS
-#define CONST_VTABLE
-
-//#include <stdio.h>
-//#include <assert.h>
-
-#include <wine/test.h>
-
-//#include "windows.h"
-#include <winnls.h>
-#include <wingdi.h>
-#include <ole2.h>
-#include <mshtml.h>
-#include <mshtmdid.h>
-#include <initguid.h>
 #include <perhist.h>
 #include <docobj.h>
-//#include "urlmon.h"
-#include <xmlparser.h>
+
+#define DISPID_HTMLDOCUMENTEVENTS2_ONREADYSTATECHANGE DISPID_READYSTATECHANGE
 
 HRESULT (WINAPI *pCreateURLMoniker)(IMoniker*, LPCWSTR, IMoniker**);
 

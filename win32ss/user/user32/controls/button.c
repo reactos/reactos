@@ -62,17 +62,17 @@
  *  - Button_SetImageList
  *  - Button_SetTextMargin
  */
+
 #include <user32.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(button);
 
 /* GetWindowLong offsets for window extra information */
 #define STATE_GWL_OFFSET  0
-#define HFONT_GWL_OFFSET  (sizeof(LONG))
-#define HIMAGE_GWL_OFFSET (HFONT_GWL_OFFSET+sizeof(HFONT))
-#define UISTATE_GWL_OFFSET (HIMAGE_GWL_OFFSET+sizeof(HFONT))
-#define NB_EXTRA_BYTES    (UISTATE_GWL_OFFSET+sizeof(LONG))
+#define BUTTON_HFONT_GWL_OFFSET  (sizeof(LONG))
+#define HIMAGE_GWL_OFFSET (BUTTON_HFONT_GWL_OFFSET+sizeof(HFONT))
+#define BUTTON_UISTATE_GWL_OFFSET (HIMAGE_GWL_OFFSET+sizeof(HFONT))
+#define NB_EXTRA_BYTES    (BUTTON_UISTATE_GWL_OFFSET+sizeof(LONG))
 
 /* undocumented flags */
 #define BUTTON_NSTATES         0x0F
@@ -117,9 +117,9 @@ static const WORD maxCheckState[MAX_BTN_TYPE] =
     BST_UNCHECKED       /* BS_OWNERDRAW */
 };
 
-typedef void (*pfPaint)( HWND hwnd, HDC hdc, UINT action );
+typedef void (*pfButtonPaint)( HWND hwnd, HDC hdc, UINT action );
 
-static const pfPaint btnPaintFunc[MAX_BTN_TYPE] =
+static const pfButtonPaint btnPaintFunc[MAX_BTN_TYPE] =
 {
     PB_Paint,    /* BS_PUSHBUTTON */
     PB_Paint,    /* BS_DEFPUSHBUTTON */
@@ -169,24 +169,24 @@ static inline void set_button_state( HWND hwnd, LONG state )
 
 static __inline void set_ui_state( HWND hwnd, LONG flags )
 {
-    SetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET, flags );
+    SetWindowLongPtrW( hwnd, BUTTON_UISTATE_GWL_OFFSET, flags );
 }
 
 static __inline LONG get_ui_state( HWND hwnd )
 {
-    return GetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET );
+    return GetWindowLongPtrW( hwnd, BUTTON_UISTATE_GWL_OFFSET );
 }
 
 #endif /* __REACTOS__ */
 
 static inline HFONT get_button_font( HWND hwnd )
 {
-    return (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
+    return (HFONT)GetWindowLongPtrW( hwnd, BUTTON_HFONT_GWL_OFFSET );
 }
 
 static inline void set_button_font( HWND hwnd, HFONT font )
 {
-    SetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET, (LONG_PTR)font );
+    SetWindowLongPtrW( hwnd, BUTTON_HFONT_GWL_OFFSET, (LONG_PTR)font );
 }
 
 static inline UINT get_button_type( LONG window_style )

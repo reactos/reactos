@@ -23,20 +23,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <windows.h>
-
-#include <math.h>
-
-#include <wine/test.h>
-#include <wingdi.h>
-#include <mmreg.h>
-#include <dsound.h>
-#include <ks.h>
-#include <ksmedia.h>
 #include "dsound_test.h"
 
 static HRESULT (WINAPI *pDirectSoundEnumerateA)(LPDSENUMCALLBACKA,LPVOID)=NULL;

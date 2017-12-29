@@ -111,7 +111,7 @@ AddUserProfiles(HWND hwndListView)
 
 
 static VOID
-OnInitDialog(HWND hwndDlg)
+OnInitUserProfileDialog(HWND hwndDlg)
 {
     /* Initialize the list view control */
     SetListViewColumns(GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
@@ -137,7 +137,7 @@ UserProfileDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            OnInitDialog(hwndDlg);
+            OnInitUserProfileDialog(hwndDlg);
             break;
 
         case WM_COMMAND:

@@ -15,13 +15,13 @@ ULONG DbgPrint(PCH Format,...);
 
 HRESULT (STDAPICALLTYPE *pSHCreateFileExtractIconW)(LPCWSTR pszFile, DWORD dwFileAttributes, REFIID riid, void **ppv);
 
-struct test_data
+struct TestData
 {
     const WCHAR* Name;
     DWORD dwFlags;
 };
 
-static test_data Tests[] =
+static TestData IconTests[] =
 {
     { L"xxx.zip", FILE_ATTRIBUTE_NORMAL },
     { L"xxx.zip", FILE_ATTRIBUTE_DIRECTORY },
@@ -101,9 +101,9 @@ START_TEST(SHCreateFileExtractIconW)
         return;
     }
 
-    for (size_t n = 0; n < _countof(Tests); ++n)
+    for (size_t n = 0; n < _countof(IconTests); ++n)
     {
-        test_data& cur = Tests[n];
+        TestData& cur = IconTests[n];
         bool useMyIcon = false;
 
         if (cur.Name == NULL)

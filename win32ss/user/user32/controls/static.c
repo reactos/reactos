@@ -44,8 +44,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(static);
 
 static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style );

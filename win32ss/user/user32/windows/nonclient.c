@@ -19,11 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* INCLUDES *******************************************************************/
-
 #include <user32.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define HASSIZEGRIP(Style, ExStyle, ParentStyle, WindowRect, ParentClientRect) \
@@ -79,7 +76,7 @@ UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
  RealUserDrawCaption: This function is passed through RegisterUserApiHook to uxtheme
                       to call it when the classic caption is needed to be drawn.
  */
-LRESULT WINAPI
+BOOL WINAPI
 RealUserDrawCaption(HWND hWnd, HDC hDC, LPCRECT lpRc, UINT uFlags)
 {
     ERR("Real DC flags %08x\n",uFlags);

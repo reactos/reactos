@@ -26,14 +26,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* INCLUDES *******************************************************************/
-
 #include <user32.h>
 
-#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(scrollbar);
-
-/* GLOBAL VARIABLES ***********************************************************/
 
 /* Definitions for scrollbar hit testing [See SCROLLBARINFO in MSDN] */
 #define SCROLL_NOWHERE		0x00    /* Outside the scroll bar */

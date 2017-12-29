@@ -25,8 +25,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 
 static LRESULT CALLBACK WDML_ClientProc(HWND, UINT, WPARAM, LPARAM);	/* only for one client, not conv list */

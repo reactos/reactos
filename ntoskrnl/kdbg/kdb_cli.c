@@ -92,6 +92,7 @@ static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdDmesg(ULONG Argc, PCHAR Argv[]);
 
 BOOLEAN ExpKdbgExtPool(ULONG Argc, PCHAR Argv[]);
+BOOLEAN ExpKdbgExtPoolUsed(ULONG Argc, PCHAR Argv[]);
 
 #ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
@@ -183,7 +184,8 @@ static const struct
     { "dmesg", "dmesg", "Display debug messages on screen, with navigation on pages.", KdbpCmdDmesg },
     { "kmsg", "kmsg", "Kernel dmesg. Alias for dmesg.", KdbpCmdDmesg },
     { "help", "help", "Display help screen.", KdbpCmdHelp },
-    { "!pool", "!pool [Address [Flags]]", "Display information about pool allocations.", ExpKdbgExtPool }
+    { "!pool", "!pool [Address [Flags]]", "Display information about pool allocations.", ExpKdbgExtPool },
+    { "!poolused", "!poolused [Tag]", "Display pool usage.", ExpKdbgExtPoolUsed },
 };
 
 /* FUNCTIONS *****************************************************************/

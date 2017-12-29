@@ -17,16 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-
-#include <wine/test.h>
-#include <winreg.h>
-#include <shlwapi.h>
-#include <shlguid.h>
+#include "precomp.h"
 
 #define expect(expected, got) ok( (expected) == (got), "Expected %d, got %d\n", (expected), (got))
 #define expect_hr(expected, got) ok( (expected) == (got), "Expected %08x, got %08x\n", (expected), (got))

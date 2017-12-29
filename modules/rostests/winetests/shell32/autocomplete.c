@@ -18,16 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-#include <wine/test.h>
-#include <stdarg.h>
-
-#include "windows.h"
-#include "shobjidl.h"
-#include "shlguid.h"
-#include "initguid.h"
-#include "shldisp.h"
+#include "precomp.h"
 
 static HWND hMainWnd, hEdit;
 static HINSTANCE hinst;

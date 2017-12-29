@@ -51,13 +51,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
+    IDS_MODE_UNKNOWN "Okänt"
+    IDS_MODE_OPEN "Öppnad"
+    IDS_MODE_STOP "Stoppad"
+    IDS_MODE_PLAY "Spelar"
+    IDS_MODE_PAUSE "Pausead"
     IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
+    IDS_MODE_SEEK "Söker"
     IDS_MODE_NOT_READY "Not ready"
     IDS_ALL_TYPES_FILTER "Alla kompaktibla filer"
     IDS_TOOLTIP_PLAY "Spela upp"

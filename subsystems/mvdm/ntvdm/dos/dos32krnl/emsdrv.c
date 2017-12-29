@@ -35,9 +35,9 @@
 
 static PDOS_DEVICE_NODE Node;
 static RTL_BITMAP AllocBitmap;
-static PULONG BitmapBuffer = NULL;
-static PEMS_PAGE PageTable = NULL;
-static EMS_HANDLE HandleTable[EMS_MAX_HANDLES];
+static PULONG EmsBitmapBuffer = NULL;
+static PEMS_PAGE EmsPageTable = NULL;
+static EMS_HANDLE EmsHandleTable[EMS_MAX_HANDLES];
 static PVOID Mapping[EMS_PHYSICAL_PAGES] = { NULL };
 static PVOID MappingBackup[EMS_PHYSICAL_PAGES] = { NULL };
 static ULONG EmsTotalPages = 0;
@@ -50,12 +50,12 @@ static VOID InitHandlesTable(VOID)
 {
     USHORT i;
 
-    for (i = 0; i < ARRAYSIZE(HandleTable); i++)
+    for (i = 0; i < ARRAYSIZE(EmsHandleTable); i++)
     {
-        HandleTable[i].Allocated = FALSE;
-        HandleTable[i].PageCount = 0;
-        RtlZeroMemory(HandleTable[i].Name, sizeof(HandleTable[i].Name));
-        InitializeListHead(&HandleTable[i].PageList);
+        EmsHandleTable[i].Allocated = FALSE;
+        EmsHandleTable[i].PageCount = 0;
+        RtlZeroMemory(EmsHandleTable[i].Name, sizeof(EmsHandleTable[i].Name));
+        InitializeListHead(&EmsHandleTable[i].PageList);
     }
 }
 
@@ -65,9 +65,9 @@ static PEMS_HANDLE CreateHandle(PUSHORT Handle)
     USHORT i;
 
     /* Handle 0 is reserved (system handle) */
-    for (i = 1; i < ARRAYSIZE(HandleTable); i++)
+    for (i = 1; i < ARRAYSIZE(EmsHandleTable); i++)
     {
-        HandleEntry = &HandleTable[i];
+        HandleEntry = &EmsHandleTable[i];
         if (!HandleEntry->Allocated)
         {
             *Handle = i;
@@ -87,10 +87,10 @@ static VOID FreeHandle(PEMS_HANDLE HandleEntry)
     // InitializeListHead(&HandleEntry->PageList);
 }
 
-static inline PEMS_HANDLE GetHandleRecord(USHORT Handle)
+static inline PEMS_HANDLE GetEmsHandleRecord(USHORT Handle)
 {
-    if (Handle >= ARRAYSIZE(HandleTable)) return NULL;
-    return &HandleTable[Handle];
+    if (Handle >= ARRAYSIZE(EmsHandleTable)) return NULL;
+    return &EmsHandleTable[Handle];
 }
 
 static inline BOOLEAN ValidateHandle(PEMS_HANDLE HandleEntry)
@@ -101,7 +101,7 @@ static inline BOOLEAN ValidateHandle(PEMS_HANDLE HandleEntry)
 static UCHAR EmsFree(USHORT Handle)
 {
     PLIST_ENTRY Entry;
-    PEMS_HANDLE HandleEntry = GetHandleRecord(Handle);
+    PEMS_HANDLE HandleEntry = GetEmsHandleRecord(Handle);
 
     if (!ValidateHandle(HandleEntry))
         return EMS_STATUS_INVALID_HANDLE;
@@ -111,7 +111,7 @@ static UCHAR EmsFree(USHORT Handle)
          Entry = Entry->Flink)
     {
         PEMS_PAGE PageEntry = (PEMS_PAGE)CONTAINING_RECORD(Entry, EMS_PAGE, Entry);
-        ULONG PageNumber = ARRAY_INDEX(PageEntry, PageTable);
+        ULONG PageNumber = ARRAY_INDEX(PageEntry, EmsPageTable);
 
         /* Free the page */
         RtlClearBits(&AllocBitmap, PageNumber, 1);
@@ -158,8 +158,8 @@ static UCHAR EmsAlloc(USHORT NumPages, PUSHORT Handle)
 
         for (i = 0; i < RunSize; i++)
         {
-            PageTable[RunStart + i].Handle = *Handle;
-            InsertTailList(&HandleEntry->PageList, &PageTable[RunStart + i].Entry);
+            EmsPageTable[RunStart + i].Handle = *Handle;
+            InsertTailList(&HandleEntry->PageList, &EmsPageTable[RunStart + i].Entry);
         }
     }
 
@@ -173,7 +173,7 @@ static UCHAR InitSystemHandle(USHORT NumPages)
     //
 
     ULONG i, CurrentIndex = 0;
-    PEMS_HANDLE HandleEntry = &HandleTable[EMS_SYSTEM_HANDLE];
+    PEMS_HANDLE HandleEntry = &EmsHandleTable[EMS_SYSTEM_HANDLE];
 
     /* The system handle must never have been initialized before */
     ASSERT(!HandleEntry->Allocated);
@@ -209,8 +209,8 @@ static UCHAR InitSystemHandle(USHORT NumPages)
 
         for (i = 0; i < RunSize; i++)
         {
-            PageTable[RunStart + i].Handle = EMS_SYSTEM_HANDLE;
-            InsertTailList(&HandleEntry->PageList, &PageTable[RunStart + i].Entry);
+            EmsPageTable[RunStart + i].Handle = EMS_SYSTEM_HANDLE;
+            InsertTailList(&HandleEntry->PageList, &EmsPageTable[RunStart + i].Entry);
         }
     }
 
@@ -234,7 +234,7 @@ static PEMS_PAGE GetLogicalPage(PEMS_HANDLE HandleEntry, USHORT LogicalPage)
 static UCHAR EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
 {
     PEMS_PAGE PageEntry;
-    PEMS_HANDLE HandleEntry = GetHandleRecord(Handle);
+    PEMS_HANDLE HandleEntry = GetEmsHandleRecord(Handle);
 
     if (!ValidateHandle(HandleEntry))
         return EMS_STATUS_INVALID_HANDLE;
@@ -253,7 +253,7 @@ static UCHAR EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
     if (!PageEntry) return EMS_STATUS_INV_LOGICAL_PAGE;
 
     Mapping[PhysicalPage] = (PVOID)((ULONG_PTR)EmsMemory
-                            + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE);
+                            + ARRAY_INDEX(PageEntry, EmsPageTable) * EMS_PAGE_SIZE);
     return EMS_STATUS_SUCCESS;
 }
 
@@ -344,9 +344,9 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             USHORT NumOpenHandles = 0;
             USHORT i;
 
-            for (i = 0; i < ARRAYSIZE(HandleTable); i++)
+            for (i = 0; i < ARRAYSIZE(EmsHandleTable); i++)
             {
-                if (HandleTable[i].Allocated)
+                if (EmsHandleTable[i].Allocated)
                     ++NumOpenHandles;
             }
 
@@ -358,7 +358,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         /* Get Handle Number of Pages */
         case 0x4C:
         {
-            PEMS_HANDLE HandleEntry = GetHandleRecord(getDX());
+            PEMS_HANDLE HandleEntry = GetEmsHandleRecord(getDX());
 
             if (!ValidateHandle(HandleEntry))
             {
@@ -378,12 +378,12 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             USHORT NumOpenHandles = 0;
             USHORT i;
 
-            for (i = 0; i < ARRAYSIZE(HandleTable); i++)
+            for (i = 0; i < ARRAYSIZE(EmsHandleTable); i++)
             {
-                if (HandleTable[i].Allocated)
+                if (EmsHandleTable[i].Allocated)
                 {
                     HandlePageInfo->Handle = i;
-                    HandlePageInfo->PageCount = HandleTable[i].PageCount;
+                    HandlePageInfo->PageCount = EmsHandleTable[i].PageCount;
                     ++HandlePageInfo;
                     ++NumOpenHandles;
                 }
@@ -430,7 +430,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         /* Get/Set Handle Name */
         case 0x53:
         {
-            PEMS_HANDLE HandleEntry = GetHandleRecord(getDX());
+            PEMS_HANDLE HandleEntry = GetEmsHandleRecord(getDX());
 
             if (!ValidateHandle(HandleEntry))
             {
@@ -474,13 +474,13 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 USHORT NumOpenHandles = 0;
                 USHORT i;
 
-                for (i = 0; i < ARRAYSIZE(HandleTable); i++)
+                for (i = 0; i < ARRAYSIZE(EmsHandleTable); i++)
                 {
-                    if (HandleTable[i].Allocated)
+                    if (EmsHandleTable[i].Allocated)
                     {
                         HandleDir->Handle = i;
                         RtlCopyMemory(HandleDir->Name,
-                                      HandleTable[i].Name,
+                                      EmsHandleTable[i].Name,
                                       sizeof(HandleDir->Name));
                         ++HandleDir;
                         ++NumOpenHandles;
@@ -498,20 +498,20 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 PEMS_HANDLE HandleFound = NULL;
                 USHORT i;
 
-                for (i = 0; i < ARRAYSIZE(HandleTable); i++)
+                for (i = 0; i < ARRAYSIZE(EmsHandleTable); i++)
                 {
-                    if (HandleTable[i].Allocated &&
+                    if (EmsHandleTable[i].Allocated &&
                         RtlCompareMemory(HandleName,
-                                         HandleTable[i].Name,
-                                         sizeof(HandleTable[i].Name)) == sizeof(HandleTable[i].Name))
+                                         EmsHandleTable[i].Name,
+                                         sizeof(EmsHandleTable[i].Name)) == sizeof(EmsHandleTable[i].Name))
                     {
-                        HandleFound = &HandleTable[i];
+                        HandleFound = &EmsHandleTable[i];
                         break;
                     }
                 }
 
                 /* Bail out if no handle was found */
-                if (i >= ARRAYSIZE(HandleTable)) // HandleFound == NULL
+                if (i >= ARRAYSIZE(EmsHandleTable)) // HandleFound == NULL
                 {
                     setAH(EMS_STATUS_HANDLE_NOT_FOUND);
                     break;
@@ -544,7 +544,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                  * a program may request.
                  */
                 setAH(EMS_STATUS_SUCCESS);
-                setBX(ARRAYSIZE(HandleTable));
+                setBX(ARRAYSIZE(EmsHandleTable));
             }
             else
             {
@@ -567,7 +567,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             if (Data->SourceType)
             {
                 /* Expanded memory */
-                HandleEntry = GetHandleRecord(Data->SourceHandle);
+                HandleEntry = GetEmsHandleRecord(Data->SourceHandle);
                 if (!ValidateHandle(HandleEntry))
                 {
                     setAH(EMS_STATUS_INVALID_HANDLE);
@@ -582,7 +582,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 }
 
                 SourcePtr = (PUCHAR)((ULONG_PTR)EmsMemory
-                                     + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE
+                                     + ARRAY_INDEX(PageEntry, EmsPageTable) * EMS_PAGE_SIZE
                                      + Data->SourceOffset);
             }
             else
@@ -594,7 +594,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             if (Data->DestType)
             {
                 /* Expanded memory */
-                HandleEntry = GetHandleRecord(Data->DestHandle);
+                HandleEntry = GetEmsHandleRecord(Data->DestHandle);
                 if (!ValidateHandle(HandleEntry))
                 {
                     setAH(EMS_STATUS_INVALID_HANDLE);
@@ -609,7 +609,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                 }
 
                 DestPtr = (PUCHAR)((ULONG_PTR)EmsMemory
-                                   + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE
+                                   + ARRAY_INDEX(PageEntry, EmsPageTable) * EMS_PAGE_SIZE
                                    + Data->DestOffset);
             }
             else
@@ -774,24 +774,24 @@ BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages)
     if (!UmaDescReserve(&EmsSegment, &Size)) return FALSE;
 
     EmsTotalPages = TotalPages;
-    BitmapBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                   HEAP_ZERO_MEMORY,
-                                   ((TotalPages + 31) / 32) * sizeof(ULONG));
-    if (BitmapBuffer == NULL)
+    EmsBitmapBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      HEAP_ZERO_MEMORY,
+                                      ((TotalPages + 31) / 32) * sizeof(ULONG));
+    if (EmsBitmapBuffer == NULL)
     {
         UmaDescRelease(EmsSegment);
         return FALSE;
     }
 
-    RtlInitializeBitMap(&AllocBitmap, BitmapBuffer, TotalPages);
+    RtlInitializeBitMap(&AllocBitmap, EmsBitmapBuffer, TotalPages);
 
-    PageTable = (PEMS_PAGE)RtlAllocateHeap(RtlGetProcessHeap(),
-                                           HEAP_ZERO_MEMORY,
-                                           TotalPages * sizeof(EMS_PAGE));
-    if (PageTable == NULL)
+    EmsPageTable = (PEMS_PAGE)RtlAllocateHeap(RtlGetProcessHeap(),
+                                              HEAP_ZERO_MEMORY,
+                                              TotalPages * sizeof(EMS_PAGE));
+    if (EmsPageTable == NULL)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
-        BitmapBuffer = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsBitmapBuffer);
+        EmsBitmapBuffer = NULL;
 
         UmaDescRelease(EmsSegment);
         return FALSE;
@@ -800,10 +800,10 @@ BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages)
     EmsMemory = (PVOID)RtlAllocateHeap(RtlGetProcessHeap(), 0, TotalPages * EMS_PAGE_SIZE);
     if (EmsMemory == NULL)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, PageTable);
-        PageTable = NULL;
-        RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
-        BitmapBuffer = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsPageTable);
+        EmsPageTable = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsBitmapBuffer);
+        EmsBitmapBuffer = NULL;
 
         UmaDescRelease(EmsSegment);
         return FALSE;
@@ -821,10 +821,10 @@ BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages)
 
         RtlFreeHeap(RtlGetProcessHeap(), 0, EmsMemory);
         EmsMemory = NULL;
-        RtlFreeHeap(RtlGetProcessHeap(), 0, PageTable);
-        PageTable = NULL;
-        RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
-        BitmapBuffer = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsPageTable);
+        EmsPageTable = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsBitmapBuffer);
+        EmsBitmapBuffer = NULL;
 
         UmaDescRelease(EmsSegment);
         return FALSE;
@@ -861,16 +861,16 @@ VOID EmsDrvCleanup(VOID)
         EmsMemory = NULL;
     }
 
-    if (PageTable)
+    if (EmsPageTable)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, PageTable);
-        PageTable = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsPageTable);
+        EmsPageTable = NULL;
     }
 
-    if (BitmapBuffer)
+    if (EmsBitmapBuffer)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
-        BitmapBuffer = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsBitmapBuffer);
+        EmsBitmapBuffer = NULL;
     }
 
     UmaDescRelease(EmsSegment);

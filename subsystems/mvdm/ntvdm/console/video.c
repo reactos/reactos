@@ -436,30 +436,6 @@ static VOID DetachFromConsoleInternal(VOID)
     TextFramebuffer = NULL;
 }
 
-static BOOL IsConsoleHandle(HANDLE hHandle)
-{
-    DWORD dwMode;
-
-    /* Check whether the handle may be that of a console... */
-    if ((GetFileType(hHandle) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR)
-        return FALSE;
-
-    /*
-     * It may be. Perform another test... The idea comes from the
-     * MSDN description of the WriteConsole API:
-     *
-     * "WriteConsole fails if it is used with a standard handle
-     *  that is redirected to a file. If an application processes
-     *  multilingual output that can be redirected, determine whether
-     *  the output handle is a console handle (one method is to call
-     *  the GetConsoleMode function and check whether it succeeds).
-     *  If the handle is a console handle, call WriteConsole. If the
-     *  handle is not a console handle, the output is redirected and
-     *  you should call WriteFile to perform the I/O."
-     */
-    return GetConsoleMode(hHandle, &dwMode);
-}
-
 static VOID SetActiveScreenBuffer(HANDLE ScreenBuffer)
 {
     ASSERT(ScreenBuffer);

@@ -19,32 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-#include <stdio.h>
-//#include <math.h>
-//#include <float.h>
-
-#define COBJMACROS
-#define CONST_VTABLE
-#define NONAMELESSUNION
-
-#include <wine/test.h>
-//#include <windef.h>
-//#include <winbase.h>
-//#include <winuser.h>
-#include <wingdi.h>
-#include <winnls.h>
-//#include <winerror.h>
-//#include <winnt.h>
-#include <ole2.h>
-//#include <urlmon.h>
-//#include <wtypes.h>
-#include <olectl.h>
-//#include <objidl.h>
+#include "precomp.h"
 
 #define expect_eq(expr, value, type, format) { type ret = (expr); ok((value) == ret, #expr " expected " format " got " format "\n", value, ret); }
 
@@ -761,8 +736,8 @@ static void test_Render(void)
 
     desc.cbSizeofstruct = sizeof(PICTDESC);
     desc.picType = PICTYPE_ICON;
-    desc.u.icon.hicon = LoadIconA(NULL, (LPCSTR)IDI_APPLICATION);
-    if(!desc.u.icon.hicon){
+    desc.icon.hicon = LoadIconA(NULL, (LPCSTR)IDI_APPLICATION);
+    if(!desc.icon.hicon){
         win_skip("LoadIcon failed. Skipping...\n");
         delete_render_dc(hdc);
         return;
@@ -1065,14 +1040,14 @@ static void test_himetric(void)
 
     desc.cbSizeofstruct = sizeof(desc);
     desc.picType = PICTYPE_BITMAP;
-    desc.u.bmp.hpal = NULL;
+    desc.bmp.hpal = NULL;
 
     hdc = CreateCompatibleDC(0);
 
     bmp = CreateBitmap(1.9 * GetDeviceCaps(hdc, LOGPIXELSX),
                        1.9 * GetDeviceCaps(hdc, LOGPIXELSY), 1, 1, NULL);
 
-    desc.u.bmp.hbitmap = bmp;
+    desc.bmp.hbitmap = bmp;
 
     /* size in himetric units reported rounded up to next integer value */
     hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
@@ -1099,7 +1074,7 @@ static void test_himetric(void)
     ok(icon != NULL, "failed to create icon\n");
 
     desc.picType = PICTYPE_ICON;
-    desc.u.icon.hicon = icon;
+    desc.icon.hicon = icon;
 
     hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
     ok(hr == S_OK, "got 0x%08x\n", hr);
@@ -1138,8 +1113,8 @@ static void test_load_save_bmp(void)
 
     desc.cbSizeofstruct = sizeof(desc);
     desc.picType = PICTYPE_BITMAP;
-    desc.u.bmp.hpal = 0;
-    desc.u.bmp.hbitmap = CreateBitmap(1, 1, 1, 1, NULL);
+    desc.bmp.hpal = 0;
+    desc.bmp.hbitmap = CreateBitmap(1, 1, 1, 1, NULL);
     hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
     ok(hr == S_OK, "OleCreatePictureIndirect error %#x\n", hr);
 
@@ -1150,7 +1125,7 @@ static void test_load_save_bmp(void)
 
     hr = IPicture_get_Handle(pic, &handle);
     ok(hr == S_OK,"get_Handle error %#8x\n", hr);
-    ok(IntToPtr(handle) == desc.u.bmp.hbitmap, "get_Handle returned wrong handle %#x\n", handle);
+    ok(IntToPtr(handle) == desc.bmp.hbitmap, "get_Handle returned wrong handle %#x\n", handle);
 
     hmem = GlobalAlloc(GMEM_ZEROINIT, 4096);
     hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
@@ -1190,7 +1165,7 @@ static void test_load_save_bmp(void)
     GlobalUnlock(hmem);
     GlobalFree(hmem);
 
-    DeleteObject(desc.u.bmp.hbitmap);
+    DeleteObject(desc.bmp.hbitmap);
     IPicture_Release(pic);
 }
 
@@ -1210,7 +1185,7 @@ static void test_load_save_icon(void)
 
     desc.cbSizeofstruct = sizeof(desc);
     desc.picType = PICTYPE_ICON;
-    desc.u.icon.hicon = LoadIconA(NULL, (LPCSTR)IDI_APPLICATION);
+    desc.icon.hicon = LoadIconA(NULL, (LPCSTR)IDI_APPLICATION);
     hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
     ok(hr == S_OK, "OleCreatePictureIndirect error %#x\n", hr);
 
@@ -1221,7 +1196,7 @@ static void test_load_save_icon(void)
 
     hr = IPicture_get_Handle(pic, &handle);
     ok(hr == S_OK,"get_Handle error %#8x\n", hr);
-    ok(IntToPtr(handle) == desc.u.icon.hicon, "get_Handle returned wrong handle %#x\n", handle);
+    ok(IntToPtr(handle) == desc.icon.hicon, "get_Handle returned wrong handle %#x\n", handle);
 
     hmem = GlobalAlloc(GMEM_ZEROINIT, 8192);
     hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
@@ -1263,7 +1238,7 @@ todo_wine
     GlobalUnlock(hmem);
     GlobalFree(hmem);
 
-    DestroyIcon(desc.u.icon.hicon);
+    DestroyIcon(desc.icon.hicon);
     IPicture_Release(pic);
 }
 
@@ -1397,8 +1372,8 @@ static void test_load_save_emf(void)
 
     desc.cbSizeofstruct = sizeof(desc);
     desc.picType = PICTYPE_ENHMETAFILE;
-    desc.u.emf.hemf = CloseEnhMetaFile(hdc);
-    ok(desc.u.emf.hemf != 0, "CloseEnhMetaFile failed\n");
+    desc.emf.hemf = CloseEnhMetaFile(hdc);
+    ok(desc.emf.hemf != 0, "CloseEnhMetaFile failed\n");
     hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
     ok(hr == S_OK, "OleCreatePictureIndirect error %#x\n", hr);
 
@@ -1409,7 +1384,7 @@ static void test_load_save_emf(void)
 
     hr = IPicture_get_Handle(pic, &handle);
     ok(hr == S_OK,"get_Handle error %#8x\n", hr);
-    ok(IntToPtr(handle) == desc.u.emf.hemf, "get_Handle returned wrong handle %#x\n", handle);
+    ok(IntToPtr(handle) == desc.emf.hemf, "get_Handle returned wrong handle %#x\n", handle);
 
     hmem = GlobalAlloc(GMEM_MOVEABLE, 0);
     hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
@@ -1455,7 +1430,7 @@ if (size)
     GlobalUnlock(hmem);
     GlobalFree(hmem);
 
-    DeleteEnhMetaFile(desc.u.emf.hemf);
+    DeleteEnhMetaFile(desc.emf.hemf);
     IPicture_Release(pic);
 }
 

@@ -19,30 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#define COBJMACROS
-#define CONST_VTABLE
-
-#include <wine/test.h>
-//#include <stdarg.h>
-#include <stdio.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-#include <winnls.h>
 #include <winreg.h>
-#include <objbase.h>
-#include <oleauto.h>
-//#include "ocidl.h"
-//#include "shlwapi.h"
-#include <tmarshal.h>
-#include <olectl.h>
-
 #include <test_reg.h>
-#include <test_tlb.h>
 
 #define expect_eq(expr, value, type, format) { type _ret = (expr); ok((value) == _ret, #expr " expected " format " got " format "\n", value, _ret); }
 #define expect_int(expr, value) expect_eq(expr, (int)(value), int, "%d")

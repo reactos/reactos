@@ -26,12 +26,12 @@
 
 #include "intl.h"
 
-static HWND hwndEnum = NULL;
+static HWND hwndTimeEnum = NULL;
 
 static BOOL CALLBACK
 TimeFormatEnumProc(PWSTR lpTimeFormatString)
 {
-    SendMessageW(hwndEnum,
+    SendMessageW(hwndTimeEnum,
                 CB_ADDSTRING,
                 0,
                 (LPARAM)lpTimeFormatString);
@@ -62,7 +62,7 @@ InitTimeFormatCB(
                         CB_LIMITTEXT, MAX_TIMEFORMAT, 0);
 
     /* Add available time formats to the list */
-    hwndEnum = GetDlgItem(hwndDlg, IDC_TIMEFORMAT);
+    hwndTimeEnum = GetDlgItem(hwndDlg, IDC_TIMEFORMAT);
     EnumTimeFormatsW(TimeFormatEnumProc, pGlobalData->UserLCID, 0);
 
     SendDlgItemMessageW(hwndDlg, IDC_TIMEFORMAT,

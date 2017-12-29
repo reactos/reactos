@@ -190,10 +190,10 @@ unsigned int __stdcall ActionThread(void* Param)
 }
 
 static BOOL
-InitDialog(HWND hDlg,
-           UINT Message,
-           WPARAM wParam,
-           LPARAM lParam)
+InitProgressDialog(HWND hDlg,
+                   UINT Message,
+                   WPARAM wParam,
+                   LPARAM lParam)
 {
     PPROGRESS_DATA ProgressData = (PPROGRESS_DATA)lParam;
     HANDLE hThread;
@@ -237,10 +237,7 @@ ProgressDialogProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            return InitDialog(hDlg,
-                              Message,
-                              wParam,
-                              lParam);
+            return InitProgressDialog(hDlg, Message, wParam, lParam);
         }
 
         case WM_COMMAND:

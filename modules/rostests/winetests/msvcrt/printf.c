@@ -23,17 +23,8 @@
 /* With Visual Studio >= 2005,  swprintf() takes an extra parameter unless
  * the following macro is defined.
  */
-#define _CRT_NON_CONFORMING_SWPRINTFS
- 
-#include <stdio.h>
-#include <errno.h>
-#include <locale.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-
-#include "wine/test.h"
+#include "precomp.h"
 
 static inline float __port_infinity(void)
 {

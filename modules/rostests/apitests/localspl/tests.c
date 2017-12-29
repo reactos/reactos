@@ -217,3 +217,8 @@ START_TEST(fpGetPrintProcessorDirectory)
 {
     _RunRemoteTest("fpGetPrintProcessorDirectory");
 }
+
+START_TEST(fpSetJob)
+{
+    _RunRemoteTest("fpSetJob");
+}

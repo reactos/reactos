@@ -20,9 +20,9 @@
 
 #include "regedit.h"
 
-#define CX_ICON    16
-#define CY_ICON    16
-#define NUM_ICONS   2
+#define CX_ICON            16
+#define CY_ICON            16
+#define LISTVIEW_NUM_ICONS 2
 
 int Image_String = 0;
 int Image_Bin = 0;
@@ -284,7 +284,7 @@ static BOOL InitListViewImageLists(HWND hwndLV)
 
     /* Create the image list.  */
     if ((himl = ImageList_Create(CX_ICON, CY_ICON,
-                                 ILC_MASK, 0, NUM_ICONS)) == NULL)
+                                 ILC_MASK, 0, LISTVIEW_NUM_ICONS)) == NULL)
     {
         return FALSE;
     }
@@ -296,7 +296,7 @@ static BOOL InitListViewImageLists(HWND hwndLV)
     Image_String = ImageList_AddIcon(himl, hico);
 
     /* Fail if not all of the images were added.  */
-    if (ImageList_GetImageCount(himl) < NUM_ICONS)
+    if (ImageList_GetImageCount(himl) < LISTVIEW_NUM_ICONS)
     {
         return FALSE;
     }

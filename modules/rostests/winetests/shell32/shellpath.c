@@ -21,20 +21,9 @@
  * namespace) path for a given folder (CSIDL value).
  */
 
-#define COBJMACROS
+#include "precomp.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include "windef.h"
-#include "winbase.h"
-#include "shlguid.h"
-#include "shlobj.h"
-#include "shlwapi.h"
-#include "knownfolders.h"
-#include "shellapi.h"
-#include "wine/test.h"
-
-#include "initguid.h"
+#include <initguid.h>
 
 /* CSIDL_MYDOCUMENTS is now the same as CSIDL_PERSONAL, but what we want
  * here is its original value.

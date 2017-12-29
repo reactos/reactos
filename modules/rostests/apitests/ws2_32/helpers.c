@@ -6,9 +6,6 @@
  * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
  */
 
-#include <apitest.h>
-
-#include <stdio.h>
 #include "ws2_32.h"
 
 int CreateSocket(SOCKET* psck)

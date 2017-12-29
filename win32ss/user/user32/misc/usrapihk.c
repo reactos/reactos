@@ -11,9 +11,8 @@
  *   http://www.reactos.org/wiki/RegisterUserApiHook
  *
  */
-#include <user32.h>
 
-#include <wine/debug.h>
+#include <user32.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 

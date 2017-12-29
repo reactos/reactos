@@ -5,12 +5,11 @@
  * PROGRAMMERS:     Colin Finck
  */
 
-#include <apitest.h>
-
-#include <stdio.h>
-#include <ntstatus.h>
-#include <wine/winternl.h>
 #include "ws2_32.h"
+
+#include <ndk/exfuncs.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
 
 #define RECV_BUF   4
 

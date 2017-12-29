@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/test.h"
-#include <winbase.h>
+#include "precomp.h"
+
 #include <signal.h>
 
 static int test_value = 0;

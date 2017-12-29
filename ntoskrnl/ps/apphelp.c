@@ -208,7 +208,7 @@ ApphelpCacheQueryInfo(
 RTL_GENERIC_COMPARE_RESULTS
 NTAPI
 ApphelpShimCacheCompareRoutine(
-    _In_ PRTL_AVL_TABLE Table,
+    _In_ struct _RTL_AVL_TABLE *Table,
     _In_ PVOID FirstStruct,
     _In_ PVOID SecondStruct)
 {
@@ -233,7 +233,7 @@ ApphelpShimCacheCompareRoutine(
 PVOID
 NTAPI
 ApphelpShimCacheAllocateRoutine(
-    _In_ PRTL_AVL_TABLE Table,
+    _In_ struct _RTL_AVL_TABLE *Table,
     _In_ CLONG ByteSize)
 {
     return ApphelpAlloc(ByteSize);
@@ -242,7 +242,7 @@ ApphelpShimCacheAllocateRoutine(
 VOID
 NTAPI
 ApphelpShimCacheFreeRoutine(
-    _In_ PRTL_AVL_TABLE Table,
+    _In_ struct _RTL_AVL_TABLE *Table,
     _In_ PVOID Buffer)
 {
     ApphelpFree(Buffer);

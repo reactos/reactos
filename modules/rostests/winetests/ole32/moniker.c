@@ -18,28 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#define _WIN32_DCOM
-#define COBJMACROS
-#define CONST_VTABLE
-
-//#include <stdarg.h>
-#include <stdio.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <ole2.h>
-//#include "objbase.h"
-//#include "ocidl.h"
-//#include "initguid.h"
 #include <comcat.h>
 #include <olectl.h>
-
-#include <wine/test.h>
 
 #define ok_more_than_one_lock() ok(cLocks > 0, "Number of locks should be > 0, but actually is %d\n", cLocks)
 #define ok_no_locks() ok(cLocks == 0, "Number of locks should be 0, but actually is %d\n", cLocks)

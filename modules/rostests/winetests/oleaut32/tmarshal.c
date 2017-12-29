@@ -17,25 +17,8 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-#define COBJMACROS
-#define CONST_VTABLE
-
-//#include <windows.h>
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <ole2.h>
-//#include <ocidl.h>
-//#include <stdio.h>
-
-#include <wine/test.h>
-
-#include <tmarshal.h>
 #include "tmarshal_dispids.h"
 
 static HRESULT (WINAPI *pVarAdd)(LPVARIANT,LPVARIANT,LPVARIANT);

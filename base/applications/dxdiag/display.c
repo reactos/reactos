@@ -160,7 +160,7 @@ EnumerateDrivers(PVOID Context, HDEVINFO hList, PSP_DEVINFO_DATA pInfoData)
 
 static
 void
-SetDeviceDetails(HWND * hDlgCtrls, LPCGUID classGUID, LPGUID * deviceGUID)
+DisplayPageSetDeviceDetails(HWND * hDlgCtrls, LPCGUID classGUID, LPGUID * deviceGUID)
 {
     HDEVINFO hInfo;
     DWORD dwIndex = 0;
@@ -305,7 +305,7 @@ InitializeDialog(HWND hwndDlg, PDISPLAY_DEVICEW pDispDevice)
     hDlgCtrls[3] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_VERSION);
     hDlgCtrls[4] = GetDlgItem(hwndDlg, IDC_STATIC_ADAPTER_DATE);
 
-    SetDeviceDetails(hDlgCtrls, &GUID_DEVCLASS_DISPLAY, NULL);
+    DisplayPageSetDeviceDetails(hDlgCtrls, &GUID_DEVCLASS_DISPLAY, NULL);
     return TRUE;
 }
 

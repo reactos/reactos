@@ -6,6 +6,8 @@
  * COPYRIGHT:   Copyright 2011-2012 Hermes BELUSCA - MAITO <hermes.belusca@sfr.fr>
  */
 
+#pragma once
+
 /*
  *
  * MSXML Version    Header File Name    Library File Name    DLL File Name

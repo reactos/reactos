@@ -19,21 +19,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/test.h"
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include "precomp.h"
+
 #include <fcntl.h>
 #include <share.h>
 #include <sys/stat.h>
 #include <io.h>
-#include <direct.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <process.h>
-#include <errno.h>
-#include <locale.h>
 
 #define MSVCRT_FD_BLOCK_SIZE 32
 typedef struct {

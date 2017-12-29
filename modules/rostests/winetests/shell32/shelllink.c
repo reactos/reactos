@@ -19,20 +19,7 @@
  *
  */
 
-#define COBJMACROS
-
-#include "initguid.h"
-#include "windows.h"
-#include "shlguid.h"
-#include "shobjidl.h"
-#include "shlobj.h"
-#include "shellapi.h"
-#include "commoncontrols.h"
-#include "wine/test.h"
-
-#include "shell32_test.h"
-
-#include <reactos/undocshell.h>
+#include "precomp.h"
 
 #ifndef SLDF_HAS_LOGO3ID
 #  define SLDF_HAS_LOGO3ID 0x00000800 /* not available in the Vista SDK */

@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
 #include "ntdll_test.h"
 
 /* FIXME: Inspect */
@@ -203,7 +202,7 @@ static void test_NtGetTickCount(void)
 
     for (i = 0; i < 5; ++i)
     {
-        diff = (user_shared_data->u.TickCountQuad * user_shared_data->TickCountMultiplier) >> 24;
+        diff = (user_shared_data->TickCountQuad * user_shared_data->TickCountMultiplier) >> 24;
         diff = pNtGetTickCount() - diff;
         ok(diff < 32, "NtGetTickCount - TickCountQuad too high, expected < 32 got %d\n", diff);
         Sleep(50);

@@ -20,12 +20,11 @@
  */
 
 #include <user32.h>
+
 #include <wine/commctrl.h>
 #include <commdlg.h>
 #include <richedit.h>
 #include <prsht.h>
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(message);
 

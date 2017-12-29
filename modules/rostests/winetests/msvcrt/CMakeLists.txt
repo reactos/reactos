@@ -18,10 +18,10 @@ list(APPEND SOURCE
     scanf.c
     signal.c
     string.c
-    testlist.c
-    time.c)
+    time.c
+    precomp.h)
 
-add_executable(msvcrt_winetest ${SOURCE})
+add_executable(msvcrt_winetest ${SOURCE} testlist.c)
 
 if(USE_CLANG_CL OR (NOT MSVC))
     add_target_compile_flags(msvcrt_winetest "-Wno-format")
@@ -35,4 +35,5 @@ if(MSVC)
     add_importlibs(msvcrt_winetest ntdll)
 endif()
 
+add_pch(msvcrt_winetest precomp.h SOURCE)
 add_rostests_file(TARGET msvcrt_winetest)

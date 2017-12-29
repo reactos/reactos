@@ -24,8 +24,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 /* Start of Hack section */
 
 WINE_DEFAULT_DEBUG_CHANNEL(icon);

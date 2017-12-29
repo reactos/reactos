@@ -642,6 +642,133 @@ RtlPcToFileHeader(IN PVOID PcValue,
     return ImageBase;
 }
 
+NTSTATUS get_buffer(LPWSTR *buffer, SIZE_T needed, PUNICODE_STRING CallerBuffer, BOOLEAN bAllocateBuffer)
+{
+    WCHAR *p;
+
+    if (CallerBuffer && CallerBuffer->MaximumLength > needed)
+    {
+        p = CallerBuffer->Buffer;
+        CallerBuffer->Length = needed - sizeof(WCHAR);
+    }
+    else
+    {
+        if (!bAllocateBuffer)
+            return STATUS_BUFFER_TOO_SMALL;
+
+        if (CallerBuffer)
+            CallerBuffer->Buffer[0] = 0;
+
+        p = RtlAllocateHeap(RtlGetProcessHeap(), 0, needed );
+        if (!p)
+            return STATUS_NO_MEMORY;
+    }
+    *buffer = p;
+
+    return STATUS_SUCCESS;
+}
+
+/* NOTE: Remove this one once our actctx support becomes better */
+NTSTATUS find_actctx_dll( PUNICODE_STRING pnameW, LPWSTR *fullname, PUNICODE_STRING CallerBuffer, BOOLEAN bAllocateBuffer)
+{
+    static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s','\\'};
+    static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
+
+    ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *info;
+    ACTCTX_SECTION_KEYED_DATA data;
+    NTSTATUS status;
+    SIZE_T needed, size = 1024;
+    WCHAR *p;
+
+    data.cbSize = sizeof(data);
+    status = RtlFindActivationContextSectionString( FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX, NULL,
+                                                    ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION,
+                                                    pnameW, &data );
+    if (status != STATUS_SUCCESS)
+    {
+        //DPRINT1("RtlFindActivationContextSectionString returned 0x%x for %wZ\n", status, pnameW);
+        return status;
+    }
+
+    for (;;)
+    {
+        if (!(info = RtlAllocateHeap( RtlGetProcessHeap(), 0, size )))
+        {
+            status = STATUS_NO_MEMORY;
+            goto done;
+        }
+        status = RtlQueryInformationActivationContext( 0, data.hActCtx, &data.ulAssemblyRosterIndex,
+                                                       AssemblyDetailedInformationInActivationContext,
+                                                       info, size, &needed );
+        if (status == STATUS_SUCCESS) break;
+        if (status != STATUS_BUFFER_TOO_SMALL) goto done;
+        RtlFreeHeap( RtlGetProcessHeap(), 0, info );
+        size = needed;
+    }
+
+    DPRINT("manifestpath === %S\n", info->lpAssemblyManifestPath);
+    DPRINT("DirectoryName === %S\n", info->lpAssemblyDirectoryName);
+    if (!info->lpAssemblyManifestPath /*|| !info->lpAssemblyDirectoryName*/)
+    {
+        status = STATUS_SXS_KEY_NOT_FOUND;
+        goto done;
+    }    
+
+    if ((p = wcsrchr( info->lpAssemblyManifestPath, '\\' )))
+    {
+        DWORD dirlen = info->ulAssemblyDirectoryNameLength / sizeof(WCHAR);
+
+        p++;
+        if (!info->lpAssemblyDirectoryName || _wcsnicmp( p, info->lpAssemblyDirectoryName, dirlen ) || wcsicmp( p + dirlen, dotManifestW ))
+        {
+            /* manifest name does not match directory name, so it's not a global
+             * windows/winsxs manifest; use the manifest directory name instead */
+            dirlen = p - info->lpAssemblyManifestPath;
+            needed = (dirlen + 1) * sizeof(WCHAR) + pnameW->Length;
+
+            status = get_buffer(fullname, needed, CallerBuffer, bAllocateBuffer);
+            if (!NT_SUCCESS(status))
+                goto done;
+
+            p = *fullname;
+
+            memcpy( p, info->lpAssemblyManifestPath, dirlen * sizeof(WCHAR) );
+            p += dirlen;
+            memcpy( p, pnameW->Buffer, pnameW->Length);
+            p += (pnameW->Length / sizeof(WCHAR));
+            *p = L'\0';
+
+            goto done;
+        }
+    }
+
+    needed = (wcslen(SharedUserData->NtSystemRoot) * sizeof(WCHAR) +
+              sizeof(winsxsW) + info->ulAssemblyDirectoryNameLength + pnameW->Length + 2*sizeof(WCHAR));
+
+    status = get_buffer(fullname, needed, CallerBuffer, bAllocateBuffer);
+    if (!NT_SUCCESS(status))
+        goto done;
+
+    p = *fullname;
+
+    wcscpy( p, SharedUserData->NtSystemRoot );
+    p += wcslen(p);
+    memcpy( p, winsxsW, sizeof(winsxsW) );
+    p += sizeof(winsxsW) / sizeof(WCHAR);
+    memcpy( p, info->lpAssemblyDirectoryName, info->ulAssemblyDirectoryNameLength );
+    p += info->ulAssemblyDirectoryNameLength / sizeof(WCHAR);
+    *p++ = L'\\';
+    memcpy( p, pnameW->Buffer, pnameW->Length);
+    p += (pnameW->Length / sizeof(WCHAR));
+    *p = L'\0';
+
+done:
+    RtlFreeHeap( RtlGetProcessHeap(), 0, info );
+    RtlReleaseActivationContext( data.hActCtx );
+    DPRINT("%S\n", fullname);
+    return status;
+}
+
 /*
  * @unimplemented
  */
@@ -658,7 +785,101 @@ RtlDosApplyFileIsolationRedirection_Ustr(IN ULONG Flags,
                                          IN PSIZE_T FileNameSize,
                                          IN PSIZE_T RequiredLength)
 {
-    return STATUS_SXS_KEY_NOT_FOUND;
+    NTSTATUS Status;
+    LPWSTR fullname;
+    WCHAR buffer [MAX_PATH];
+    UNICODE_STRING localStr, localStr2, *pstrParam;
+    WCHAR *p;
+    BOOLEAN GotExtension;
+    WCHAR c;
+
+    /* Check for invalid parameters */
+    if (!OriginalName)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!DynamicString && !StaticString)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ((DynamicString) && (StaticString) && !(NewName))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!OriginalName->Buffer || OriginalName->Length == 0)
+    {
+        return STATUS_SXS_KEY_NOT_FOUND;
+    }
+
+    if (StaticString && (OriginalName == StaticString || OriginalName->Buffer == StaticString->Buffer))
+    {
+        return STATUS_SXS_KEY_NOT_FOUND;
+    }
+
+    pstrParam = OriginalName;
+
+    /* Get the file name with an extension */
+    p = OriginalName->Buffer + OriginalName->Length / sizeof(WCHAR) - 1;
+    GotExtension = FALSE;
+    while (p >= OriginalName->Buffer)
+    {
+        c = *p--;
+        if (c == L'.')
+        {
+            GotExtension = TRUE;
+        }
+        else if (c == L'\\')
+        {
+            localStr.Buffer = p + 2;
+            localStr.Length = OriginalName->Length - ((ULONG_PTR)localStr.Buffer - (ULONG_PTR)OriginalName->Buffer);
+            localStr.MaximumLength = OriginalName->MaximumLength - ((ULONG_PTR)localStr.Buffer - (ULONG_PTR)OriginalName->Buffer);
+            pstrParam = &localStr;
+            break;
+        }
+    }
+
+    if (!GotExtension)
+    {
+        if (!Extension)
+        {
+            return STATUS_SXS_KEY_NOT_FOUND;
+        }
+
+        if (pstrParam->Length + Extension->Length > sizeof(buffer))
+        {
+            //FIXME!
+            return STATUS_NO_MEMORY;
+        }
+
+        RtlInitEmptyUnicodeString(&localStr2, buffer, sizeof(buffer));
+        RtlAppendUnicodeStringToString(&localStr2, pstrParam);
+        RtlAppendUnicodeStringToString(&localStr2, Extension);
+        pstrParam = &localStr2;
+    }
+
+    /* Use wine's function as long as we use wine's sxs implementation in ntdll */
+    Status = find_actctx_dll(pstrParam, &fullname, StaticString, DynamicString != NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    DPRINT("Redirecting %wZ to %S\n", OriginalName, fullname);
+
+    if (!StaticString || StaticString->Buffer != fullname)
+    {
+        RtlInitUnicodeString(DynamicString, fullname);
+        *NewName = DynamicString;
+    }
+    else
+    {
+        *NewName = StaticString;
+    }
+
+    return Status;
 }
 
 /*

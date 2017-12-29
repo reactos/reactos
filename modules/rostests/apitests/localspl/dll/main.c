@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler API Tests Injected DLL
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Main functions
- * COPYRIGHT:   Copyright 2015-2016 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
  */
 
 #define __ROS_LONG64__
@@ -27,13 +27,84 @@
 // Test list
 extern void func_fpEnumPrinters(void);
 extern void func_fpGetPrintProcessorDirectory(void);
+extern void func_fpSetJob(void);
 
 const struct test winetest_testlist[] =
 {
     { "fpEnumPrinters", func_fpEnumPrinters },
     { "fpGetPrintProcessorDirectory", func_fpGetPrintProcessorDirectory },
+    { "fpSetJob", func_fpSetJob },
     { 0, 0 }
 };
+
+/**
+ * We don't link against winspool, so we don't have GetDefaultPrinterW.
+ * We can easily implement a similar function ourselves though.
+ */
+PWSTR
+GetDefaultPrinterFromRegistry(VOID)
+{
+    static const WCHAR wszWindowsKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
+    static const WCHAR wszDeviceValue[] = L"Device";
+
+    DWORD cbNeeded;
+    DWORD dwErrorCode;
+    HKEY hWindowsKey = NULL;
+    PWSTR pwszDevice;
+    PWSTR pwszComma;
+    PWSTR pwszReturnValue = NULL;
+
+    // Open the registry key where the default printer for the current user is stored.
+    dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_CURRENT_USER, wszWindowsKey, 0, KEY_READ, &hWindowsKey);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        skip("RegOpenKeyExW failed with status %u!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Determine the size of the required buffer.
+    dwErrorCode = (DWORD)RegQueryValueExW(hWindowsKey, wszDeviceValue, NULL, NULL, NULL, &cbNeeded);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        skip("RegQueryValueExW failed with status %u!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Allocate it.
+    pwszDevice = HeapAlloc(GetProcessHeap(), 0, cbNeeded);
+    if (!pwszDevice)
+    {
+        skip("HeapAlloc failed!\n");
+        goto Cleanup;
+    }
+
+    // Now get the actual value.
+    dwErrorCode = RegQueryValueExW(hWindowsKey, wszDeviceValue, NULL, NULL, (PBYTE)pwszDevice, &cbNeeded);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        skip("RegQueryValueExW failed with status %u!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // We get a string "<Printer Name>,winspool,<Port>:".
+    // Extract the printer name from it.
+    pwszComma = wcschr(pwszDevice, L',');
+    if (!pwszComma)
+    {
+        skip("Found no or invalid default printer: %S!\n", pwszDevice);
+        goto Cleanup;
+    }
+
+    // Return the default printer.
+    *pwszComma = 0;
+    pwszReturnValue = pwszDevice;
+
+Cleanup:
+    if (hWindowsKey)
+        RegCloseKey(hWindowsKey);
+
+    return pwszReturnValue;
+}
 
 BOOL
 GetLocalsplFuncs(LPPRINTPROVIDOR pp)

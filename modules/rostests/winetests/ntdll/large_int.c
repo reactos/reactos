@@ -21,10 +21,7 @@
  * windows.
  */
 
-#include <stdlib.h>
-
 #include "ntdll_test.h"
-
 
 /* Function ptrs for ntdll calls */
 static HMODULE hntdll = 0;

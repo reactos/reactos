@@ -18,20 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-//#include <windows.h>
-//#include <stdio.h>
-
-#include <wine/test.h>
-#include <wingdi.h>
-#include <mmreg.h>
-#include <dsound.h>
-#include <dsconf.h>
-
 #include "dsound_test.h"
 
 static HRESULT (WINAPI *pDirectSoundFullDuplexCreate)(LPCGUID, LPCGUID,

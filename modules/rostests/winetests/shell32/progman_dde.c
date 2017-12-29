@@ -26,13 +26,7 @@
  *         Tests for Invalid Characters in Names / Invalid Parameters
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <winbase.h>
-#include "dde.h"
-#include "ddeml.h"
-#include "winuser.h"
-#include "shlobj.h"
+#include "precomp.h"
 
 /* Timeout on DdeClientTransaction Call */
 #define MS_TIMEOUT_VAL 1000

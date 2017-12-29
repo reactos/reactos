@@ -5,12 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <apitest.h>
-#include <winsock2.h>
-
-#define WIN32_NO_STATUS
-#include <ndk/mmfuncs.h>
-#include <ndk/rtlfuncs.h>
+#include "ws2_32.h"
 
 static
 PVOID

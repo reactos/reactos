@@ -18,21 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "precomp.h"
 
-//#include <stdio.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-//#include <windows.h>
-#include <wine/test.h>
-#include <winnls.h>
-#include <ole2.h>
-//#include "objidl.h"
 #include <initguid.h>
 
 DEFINE_GUID( test_stg_cls, 0x88888888, 0x0425, 0x0000, 0,0,0,0,0,0,0,0);
@@ -3540,10 +3527,10 @@ static void test_locking(void)
             hfile = CreateFileW(filename, open_mode, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
             ok(hfile != INVALID_HANDLE_VALUE, "couldn't open file with mode %x\n", current->stg_mode);
 
-            ol.u.s.OffsetHigh = 0;
+            ol.OffsetHigh = 0;
             ol.hEvent = NULL;
 
-            for (ol.u.s.Offset = 0x7ffffe00; ol.u.s.Offset != 0x80000000; ol.u.s.Offset++)
+            for (ol.Offset = 0x7ffffe00; ol.Offset != 0x80000000; ol.Offset++)
             {
                 if (LockFileEx(hfile, LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, &ol))
                     locked = FALSE;
@@ -3555,7 +3542,7 @@ static void test_locking(void)
 
                 UnlockFileEx(hfile, 0, 1, 0, &ol);
 
-                if ((ol.u.s.Offset&0x1ff) == *next_lock)
+                if ((ol.Offset&0x1ff) == *next_lock)
                 {
                     expect_locked = TRUE;
                     next_lock++;
@@ -3565,12 +3552,12 @@ static void test_locking(void)
 
                 if (!current->todo || locked == expect_locked)
                     ok(locked == expect_locked, "byte %x of file with mode %x is %slocked but should %sbe\n",
-                       ol.u.s.Offset, current->stg_mode, locked?"":"not ", expect_locked?"":"not ");
+                       ol.Offset, current->stg_mode, locked?"":"not ", expect_locked?"":"not ");
                 else
                 {
                     any_failure = TRUE;
                     todo_wine ok(locked == expect_locked, "byte %x of file with mode %x is %slocked but should %sbe\n",
-                              ol.u.s.Offset, current->stg_mode, locked?"":"not ", expect_locked?"":"not ");
+                              ol.Offset, current->stg_mode, locked?"":"not ", expect_locked?"":"not ");
                 }
             }
 
@@ -3589,17 +3576,17 @@ static void test_locking(void)
             hfile = CreateFileW(filename, open_mode, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
             ok(hfile != INVALID_HANDLE_VALUE, "couldn't open file with mode %x\n", current->stg_mode);
 
-            ol.u.s.OffsetHigh = 0;
+            ol.OffsetHigh = 0;
             ol.hEvent = NULL;
 
-            for (ol.u.s.Offset = 0x7ffffe00; ol.u.s.Offset != 0x80000000; ol.u.s.Offset++)
+            for (ol.Offset = 0x7ffffe00; ol.Offset != 0x80000000; ol.Offset++)
             {
-                if (ol.u.s.Offset == 0x7fffff92 ||
-                    (ol.u.s.Offset == 0x7fffff80 && current->stg_mode == (STGM_TRANSACTED|STGM_READWRITE)) ||
-                    (ol.u.s.Offset == 0x7fffff80 && current->stg_mode == (STGM_TRANSACTED|STGM_READ)))
+                if (ol.Offset == 0x7fffff92 ||
+                    (ol.Offset == 0x7fffff80 && current->stg_mode == (STGM_TRANSACTED|STGM_READWRITE)) ||
+                    (ol.Offset == 0x7fffff80 && current->stg_mode == (STGM_TRANSACTED|STGM_READ)))
                     continue; /* This makes opens hang */
 
-                if (ol.u.s.Offset < 0x7fffff00)
+                if (ol.Offset < 0x7fffff00)
                     LockFileEx(hfile, 0, 0, 1, 0, &ol);
                 else
                     LockFileEx(hfile, LOCKFILE_EXCLUSIVE_LOCK, 0, 1, 0, &ol);
@@ -3612,11 +3599,11 @@ static void test_locking(void)
 
                 failed = FAILED(hr);
 
-                if (!expect_failed && (ol.u.s.Offset&0x1ff) == next_range[0])
+                if (!expect_failed && (ol.Offset&0x1ff) == next_range[0])
                 {
                     expect_failed = TRUE;
                 }
-                else if (expect_failed && (ol.u.s.Offset&0x1ff) == next_range[1])
+                else if (expect_failed && (ol.Offset&0x1ff) == next_range[1])
                 {
                     expect_failed = FALSE;
                     next_range += 2;
@@ -3624,12 +3611,12 @@ static void test_locking(void)
 
                 if (!current->todo || failed == expect_failed)
                     ok(failed == expect_failed, "open with byte %x locked, mode %x %s but should %s\n",
-                       ol.u.s.Offset, current->stg_mode, failed?"failed":"succeeded", expect_failed?"fail":"succeed");
+                       ol.Offset, current->stg_mode, failed?"failed":"succeeded", expect_failed?"fail":"succeed");
                 else
                 {
                     any_failure = TRUE;
                     todo_wine ok(failed == expect_failed, "open with byte %x locked, mode %x %s but should %s\n",
-                                 ol.u.s.Offset, current->stg_mode, failed?"failed":"succeeded", expect_failed?"fail":"succeed");
+                                 ol.Offset, current->stg_mode, failed?"failed":"succeeded", expect_failed?"fail":"succeed");
                 }
             }
 

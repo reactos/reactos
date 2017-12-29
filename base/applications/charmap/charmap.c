@@ -439,8 +439,9 @@ AdvancedDlgProc(HWND hDlg,
     return FALSE;
 }
 #endif
+
 static int
-OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
+PanelOnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     HMENU hSysMenu;
     WCHAR lpAboutText[256];
@@ -488,7 +489,7 @@ PanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
     case WM_CREATE:
-        return OnCreate(hWnd, wParam, lParam);
+        return PanelOnCreate(hWnd, wParam, lParam);
 
     case WM_CLOSE:
         DestroyWindow(hWnd);

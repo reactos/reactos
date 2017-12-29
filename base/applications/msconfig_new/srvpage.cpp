@@ -582,7 +582,7 @@ static BOOL ValidateItem(int index, BOOL bNewState, BOOL bDisplayErrors)
 
 
 static void
-Update_Btn_States(HWND hDlg)
+UpdateBtnStates(HWND hDlg)
 {
     // HWND hTree = GetDlgItem(hDlg, IDC_SYSTEM_TREE);
 
@@ -714,7 +714,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             //
             GetServices();
             ListView_Sort(hServicesListCtrl, 0);
-            Update_Btn_States(hDlg);
+            UpdateBtnStates(hDlg);
 
             // Select the first item.
             ListView_SetItemState(hServicesListCtrl, 0, LVIS_SELECTED, LVIS_SELECTED);
@@ -745,7 +745,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     if (bAreThereMods)
                     {
-                        Update_Btn_States(hDlg);
+                        UpdateBtnStates(hDlg);
                         PropSheet_Changed(GetParent(hServicesPage), hServicesPage);
                     }
 
@@ -764,7 +764,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     if (bAreThereMods)
                     {
-                        Update_Btn_States(hDlg);
+                        UpdateBtnStates(hDlg);
                         PropSheet_Changed(GetParent(hServicesPage), hServicesPage);
                     }
 
@@ -775,7 +775,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     bMaskProprietarySvcs = !bMaskProprietarySvcs;
                     GetServices(bMaskProprietarySvcs);
-                    Update_Btn_States(hDlg);
+                    UpdateBtnStates(hDlg);
 
                     return TRUE;
                 }
@@ -792,7 +792,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             if (ValidateItem(/*reinterpret_cast<int>*/ int(lParam), bNewCheckState, !HideEssentialServiceWarning()))
             {
-                Update_Btn_States(hDlg);
+                UpdateBtnStates(hDlg);
                 PropSheet_Changed(GetParent(hServicesPage), hServicesPage);
             }
 
@@ -1058,7 +1058,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         }
 
                         GetServices(bMaskProprietarySvcs);
-                        Update_Btn_States(hDlg);
+                        UpdateBtnStates(hDlg);
 
                         return TRUE;
                     }

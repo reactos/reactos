@@ -26,11 +26,7 @@
  *      09-05-2001  CSH  Created
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <user32.h>
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 

@@ -144,7 +144,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define SHLINK_LOCAL  0
 #define SHLINK_REMOTE 1
-#define MAX_PROPERTY_SHEET_PAGE 32
 
 /* link file formats */
 

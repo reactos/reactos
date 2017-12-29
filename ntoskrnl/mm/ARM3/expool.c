@@ -475,13 +475,40 @@ ExpTagAllowPrint(CHAR Tag)
     return FALSE;
 }
 
+#ifdef KDBG
+#define MiDumperPrint(dbg, fmt, ...)        \
+    if (dbg) KdbpPrint(fmt, ##__VA_ARGS__); \
+    else DPRINT1(fmt, ##__VA_ARGS__)
+#else
+#define MiDumperPrint(dbg, fmt, ...)        \
+    DPRINT1(fmt, ##__VA_ARGS__)
+#endif
+
 VOID
-MiDumpNonPagedPoolConsumers(VOID)
+MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask)
 {
     SIZE_T i;
 
-    DPRINT1("---------------------\n");
-    DPRINT1("Out of memory dumper!\n");
+    //
+    // Only print header if called from OOM situation
+    //
+    if (!CalledFromDbg)
+    {
+        DPRINT1("---------------------\n");
+        DPRINT1("Out of memory dumper!\n");
+    }
+#ifdef KDBG
+    else
+    {
+        KdbpPrint("Pool Used:\n");
+    }
+#endif
+
+    //
+    // Print table header
+    //
+    MiDumperPrint(CalledFromDbg, "\t\tNonPaged\t\t\tPaged\n");
+    MiDumperPrint(CalledFromDbg, "Tag\t\tAllocs\t\tUsed\t\tAllocs\t\tUsed\n");
 
     //
     // We'll extract allocations for all the tracked pools
@@ -493,14 +520,19 @@ MiDumpNonPagedPoolConsumers(VOID)
         TableEntry = &PoolTrackTable[i];
 
         //
-        // We only care about non paged
+        // We only care about tags which have allocated memory
         //
-        if (TableEntry->NonPagedBytes != 0)
+        if (TableEntry->NonPagedBytes != 0 || TableEntry->PagedBytes != 0)
         {
             //
             // If there's a tag, attempt to do a pretty print
+            // only if it matches the caller's tag, or if
+            // any tag is allowed
+            // For checking whether it matches caller's tag,
+            // use the mask to make sure not to mess with the wildcards
             //
-            if (TableEntry->Key != 0 && TableEntry->Key != TAG_NONE)
+            if (TableEntry->Key != 0 && TableEntry->Key != TAG_NONE &&
+                (Tag == 0 || (TableEntry->Key & Mask) == (Tag & Mask)))
             {
                 CHAR Tag[4];
 
@@ -517,21 +549,30 @@ MiDumpNonPagedPoolConsumers(VOID)
                     //
                     // Print in reversed order to match what is in source code
                     //
-                    DPRINT1("Tag: '%c%c%c%c', Size: %ld\n", Tag[3], Tag[2], Tag[1], Tag[0], TableEntry->NonPagedBytes);
+                    MiDumperPrint(CalledFromDbg, "'%c%c%c%c'\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n", Tag[3], Tag[2], Tag[1], Tag[0],
+                                  TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
+                                  TableEntry->PagedAllocs, TableEntry->PagedBytes);
                 }
                 else
                 {
-                    DPRINT1("Tag: %x, Size: %ld\n", TableEntry->Key, TableEntry->NonPagedBytes);
+                    MiDumperPrint(CalledFromDbg, "%x\t%ld\t\t%ld\t\t%ld\t\t%ld\n", TableEntry->Key,
+                                  TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
+                                  TableEntry->PagedAllocs, TableEntry->PagedBytes);
                 }
             }
-            else
+            else if (Tag == 0 || (Tag & Mask) == (TAG_NONE & Mask))
             {
-                DPRINT1("Anon, Size: %ld\n", TableEntry->NonPagedBytes);
+                MiDumperPrint(CalledFromDbg, "Anon\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n",
+                              TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
+                              TableEntry->PagedAllocs, TableEntry->PagedBytes);
             }
         }
     }
 
-    DPRINT1("---------------------\n");
+    if (!CalledFromDbg)
+    {
+        DPRINT1("---------------------\n");
+    }
 }
 #endif
 
@@ -1718,12 +1759,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         {
 #if DBG
             //
-            // If non paged backed, display current consumption
+            // Out of memory, display current consumption
             //
-            if ((OriginalType & BASE_POOL_TYPE_MASK) == NonPagedPool)
-            {
-                MiDumpNonPagedPoolConsumers();
-            }
+            MiDumpPoolConsumers(FALSE, 0, 0);
 #endif
 
             //
@@ -2054,12 +2092,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     {
 #if DBG
         //
-        // If non paged backed, display current consumption
+        // Out of memory, display current consumption
         //
-        if ((OriginalType & BASE_POOL_TYPE_MASK) == NonPagedPool)
-        {
-            MiDumpNonPagedPoolConsumers();
-        }
+        MiDumpPoolConsumers(FALSE, 0, 0);
 #endif
 
         //
@@ -2910,6 +2945,46 @@ ExpKdbgExtPool(
         Entry = POOL_BLOCK(Entry, Entry->BlockSize);
     }
     while ((Entry->BlockSize != 0) && ((ULONG_PTR)Entry < (ULONG_PTR)PoolPage + PAGE_SIZE));
+
+    return TRUE;
+}
+
+BOOLEAN
+ExpKdbgExtPoolUsed(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    ULONG Tag = 0;
+    ULONG Mask = 0;
+
+    if (Argc > 1)
+    {
+        CHAR Tmp[4];
+        ULONG Len;
+        USHORT i;
+
+        /* Get the tag */
+        Len = strlen(Argv[1]);
+        if (Len > 4)
+        {
+            Len = 4;
+        }
+        /* Generate the mask to have wildcards support */
+        for (i = 0; i < Len; ++i)
+        {
+            Tmp[i] = Argv[1][i];
+            if (Tmp[i] != '?')
+            {
+                Mask |= (0xFF << i * 8);
+            }
+        }
+
+        /* Get the tag in the ulong form */
+        Tag = *((PULONG)Tmp);
+    }
+
+    /* Call the dumper */
+    MiDumpPoolConsumers(TRUE, Tag, Mask);
 
     return TRUE;
 }

@@ -18,22 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/test.h"
-#include <string.h>
+#include "precomp.h"
+
 #include <mbstring.h>
 #include <wchar.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <mbctype.h>
-#include <locale.h>
-#include <errno.h>
-#include <limits.h>
 #include <math.h>
-
-/* make it use a definition from string.h */
-#undef strncpy
-#include "winbase.h"
-#include "winnls.h"
 
 static char *buf_to_string(const unsigned char *bin, int len, int nr)
 {

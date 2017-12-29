@@ -145,7 +145,7 @@ TestCompareIDList(IShellFolder* psf)
 
 static
 VOID
-TestShellFolder(
+TestDesktopFolder(
     _In_ IShellFolder2 *psf2)
 {
     HRESULT hr;
@@ -243,7 +243,7 @@ START_TEST(CShellDesktop)
     ok(hr == S_OK, "hr = %lx\n", hr);
     ok(psf == static_cast<IShellFolder *>(psf2), "Expected %p == %p\n", static_cast<PVOID>(psf), static_cast<PVOID>(psf2));
 
-    TestShellFolder(psf2);
+    TestDesktopFolder(psf2);
     TestCompareIDList(psf);
     TestInitialize(psf);
 }

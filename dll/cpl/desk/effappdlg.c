@@ -12,7 +12,7 @@
 
 /* Update all the controls with the current values for the selected screen element */
 static VOID
-UpdateControls(HWND hwndDlg, GLOBALS *g)
+EffAppearanceDlgUpdateControls(HWND hwndDlg, GLOBALS *g)
 {
     WPARAM state;
 
@@ -49,7 +49,7 @@ do { \
 }
 
 static VOID
-SaveCurrentValues(HWND hwndDlg, GLOBALS *g)
+EffAppearanceDlgSaveCurrentValues(HWND hwndDlg, GLOBALS *g)
 {
     /* The settings get saved at the end of ApplyScheme() in theme.c,
      * when clicking Apply in the main dialog. */
@@ -107,7 +107,7 @@ do { \
 #undef FILL_COMBOBOX
 
     /* Update the controls */
-    UpdateControls(hwndDlg, g);
+    EffAppearanceDlgUpdateControls(hwndDlg, g);
 }
 
 INT_PTR CALLBACK
@@ -132,7 +132,7 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch(LOWORD(wParam))
             {
                 case IDOK:
-                    SaveCurrentValues(hwndDlg, g);
+                    EffAppearanceDlgSaveCurrentValues(hwndDlg, g);
                     EndDialog(hwndDlg, IDOK);
                     break;
 
@@ -148,7 +148,7 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDC_EFFAPPEARANCE_KEYBOARDCUES:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        UpdateControls(hwndDlg, g);
+                        EffAppearanceDlgUpdateControls(hwndDlg, g);
                     }
                     break;
 
@@ -165,7 +165,7 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                                 CB_GETCURSEL, 0, 0);
                         g->SchemeAdv.Effects.uiFontSmoothingType = (Index == CB_ERR) ? 0 : (Index + 1);
 
-                        UpdateControls(hwndDlg, g);
+                        EffAppearanceDlgUpdateControls(hwndDlg, g);
                     }
                     break;
 

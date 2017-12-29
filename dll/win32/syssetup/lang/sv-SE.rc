@@ -162,7 +162,7 @@ BEGIN
     IDS_DATETIMETITLE "Date and Time"
     IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
     IDS_PROCESSTITLE "Registering Components"
-    IDS_PROCESSSUBTITLE "Please wait..."
+    IDS_PROCESSSUBTITLE "Vänligen vänta..."
     IDS_THEMESELECTIONTITLE "Appearance"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
@@ -170,7 +170,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS Setup"
-    IDS_UNKNOWN_ERROR "Unknown error"
+    IDS_UNKNOWN_ERROR "Okänt fel"
     IDS_REGISTERING_COMPONENTS "Registering components..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary failed: "
     IDS_GETPROCADDR_FAILED "GetProcAddr failed: "
@@ -201,7 +201,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Installing devices..."
+    IDS_STATUS_INSTALL_DEV "Installerar enheter..."
 END
 
 /* ATTENTION: Synchronize the translation of these strings with shell32 */

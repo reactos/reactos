@@ -9,10 +9,17 @@
 #ifndef _WS2_32_APITESTS_H
 #define _WS2_32_APITESTS_H
 
+#include <ntstatus.h>
+#include <stdio.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#include <winsock2.h>
+
+#include <apitest.h>
+#include <ws2tcpip.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/mmfuncs.h>
 
 /* Simple macro for executing a socket command and doing cleanup operations in case of a failure */
 #define SCKTEST(_cmd_) \
@@ -34,4 +41,4 @@ int GetRequestAndWait(SOCKET sck);
 /* ws2_32.c */
 extern HANDLE g_hHeap;
 
-#endif
+#endif /* !_WS2_32_APITESTS_H */

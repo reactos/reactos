@@ -19,8 +19,6 @@
  */
 
 #include "ntdll_test.h"
-#include <winnls.h>
-#include <stdio.h>
 
 static NTSTATUS (WINAPI * pRtlDowncaseUnicodeString)(UNICODE_STRING *, const UNICODE_STRING *, BOOLEAN);
 static NTSTATUS (WINAPI * pNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG);

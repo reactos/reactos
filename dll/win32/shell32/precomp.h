@@ -93,4 +93,22 @@ extern const GUID CLSID_UnixDosFolder;
 extern const GUID SHELL32_AdvtShortcutProduct;
 extern const GUID SHELL32_AdvtShortcutComponent;
 
+#define MAX_PROPERTY_SHEET_PAGE 32
+
+extern inline
+BOOL
+CALLBACK
+AddPropSheetPageCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
+{
+    PROPSHEETHEADERW *pHeader = (PROPSHEETHEADERW *)lParam;
+
+    if (pHeader->nPages < MAX_PROPERTY_SHEET_PAGE)
+    {
+        pHeader->phpage[pHeader->nPages++] = hPage;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 #endif /* _PRECOMP_H__ */

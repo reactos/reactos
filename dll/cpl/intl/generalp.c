@@ -38,7 +38,7 @@
 
 HWND hList;
 HWND hLocaleList, hGeoList;
-BOOL bSpain = FALSE;
+BOOL isSpain = FALSE;
 
 GROUPINGDATA
 GroupingFormats[MAX_GROUPINGFORMATS] =
@@ -49,7 +49,7 @@ GroupingFormats[MAX_GROUPINGFORMATS] =
 };
 
 static BOOL CALLBACK
-LocalesEnumProc(LPTSTR lpLocale)
+GeneralPropertyPageLocalesEnumProc(LPTSTR lpLocale)
 {
     LCID lcid;
     WCHAR lang[255];
@@ -65,10 +65,10 @@ LocalesEnumProc(LPTSTR lpLocale)
     if (lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) ||
         lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT))
     {
-        if (bSpain == FALSE)
+        if (isSpain == FALSE)
         {
             LoadStringW(hApplet, IDS_SPAIN, lang, 255);
-            bSpain = TRUE;
+            isSpain = TRUE;
         }
         else
         {
@@ -169,8 +169,8 @@ CreateLanguagesList(HWND hwnd)
     WCHAR langSel[255];
 
     hList = hwnd;
-    bSpain = FALSE;
-    EnumSystemLocalesW(LocalesEnumProc, LCID_SUPPORTED);
+    isSpain = FALSE;
+    EnumSystemLocalesW(GeneralPropertyPageLocalesEnumProc, LCID_SUPPORTED);
 
     /* Select current locale */
     /* or should it be System and not user? */

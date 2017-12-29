@@ -18,15 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/test.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "time.h"
+#include "precomp.h"
 
-#include <stdlib.h> /*setenv*/
-#include <stdio.h> /*printf*/
-#include <locale.h>
-#include <errno.h>
+#include <time.h>
 
 #define _MAX__TIME64_T     (((__time64_t)0x00000007 << 32) | 0x93406FFF)
 

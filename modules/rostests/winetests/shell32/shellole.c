@@ -16,16 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#define CONST_VTABLE
-#define NONAMELESSUNION
+#include "precomp.h"
 
-#include <stdio.h>
-#include <wine/test.h>
-
-#include "winbase.h"
-#include "shlobj.h"
-#include "initguid.h"
+#include <initguid.h>
 
 DEFINE_GUID(FMTID_Test,0x12345678,0x1234,0x1234,0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12);
 DEFINE_GUID(FMTID_NotExisting, 0x12345678,0x1234,0x1234,0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x13);
@@ -116,10 +109,10 @@ static HRESULT WINAPI PropertyStorage_ReadMultiple(IPropertyStorage *This, ULONG
         ok(rgpropvar != NULL, "rgpropvar = NULL\n");
 
         ok(rgpspec[0].ulKind == PRSPEC_PROPID, "rgpspec[0].ulKind = %d\n", rgpspec[0].ulKind);
-        ok(rgpspec[0].u.propid == PID_CODEPAGE, "rgpspec[0].propid = %d\n", rgpspec[0].u.propid);
+        ok(rgpspec[0].propid == PID_CODEPAGE, "rgpspec[0].propid = %d\n", rgpspec[0].propid);
 
         rgpropvar[0].vt = VT_I2;
-        rgpropvar[0].u.iVal = 1234;
+        rgpropvar[0].iVal = 1234;
     } else {
         CHECK_EXPECT(ReadMultiple);
 
@@ -130,13 +123,13 @@ static HRESULT WINAPI PropertyStorage_ReadMultiple(IPropertyStorage *This, ULONG
         ok(rgpropvar[0].vt==0 || broken(rgpropvar[0].vt==VT_BSTR), "rgpropvar[0].vt = %d\n", rgpropvar[0].vt);
 
         rgpropvar[0].vt = VT_BSTR;
-        rgpropvar[0].u.bstrVal = (void*)0xdeadbeef;
+        rgpropvar[0].bstrVal = (void*)0xdeadbeef;
         rgpropvar[1].vt = VT_LPSTR;
-        rgpropvar[1].u.pszVal = (void*)0xdeadbeef;
+        rgpropvar[1].pszVal = (void*)0xdeadbeef;
         rgpropvar[2].vt = VT_BYREF|VT_I1;
-        rgpropvar[2].u.pcVal = (void*)0xdeadbeef;
+        rgpropvar[2].pcVal = (void*)0xdeadbeef;
         rgpropvar[3].vt = VT_BYREF|VT_VARIANT;
-        rgpropvar[3].u.pvarVal = (void*)0xdeadbeef;
+        rgpropvar[3].pvarVal = (void*)0xdeadbeef;
     }
 
     return S_OK;
@@ -419,7 +412,7 @@ static void test_SHPropStg_functions(void)
     CHECK_CALLED(WriteMultiple);
 
     read[0].vt = VT_BSTR;
-    read[0].u.bstrVal = (void*)0xdeadbeef;
+    read[0].bstrVal = (void*)0xdeadbeef;
     SET_EXPECT(ReadMultiple);
     SET_EXPECT(ReadMultipleCodePage);
     SET_EXPECT(Stat);
