@@ -702,7 +702,7 @@ typedef struct _WND
     ULONG cbwndExtra;
     struct _WND *spwndLastActive;
     HIMC hImc; // Input context associated with this window.
-    LONG dwUserData;
+    LONG_PTR dwUserData;
     PVOID pActCtx;
     //PD3DMATRIX pTransForm;
     struct _WND *spwndClipboardListener;
@@ -2801,7 +2801,7 @@ NtUserQueryUserCounters(
 #define QUERY_WINDOW_REAL_ID           0x05
 #define QUERY_WINDOW_FOREGROUND        0x06
 
-DWORD
+DWORD_PTR
 NTAPI
 NtUserQueryWindow(
     HWND hWnd,
@@ -3234,6 +3234,16 @@ NtUserSetWindowLong(
     DWORD Index,
     LONG NewValue,
     BOOL Ansi);
+
+#ifdef _WIN64
+LONG_PTR
+NTAPI
+NtUserSetWindowLongPtr(
+    HWND hWnd,
+    DWORD Index,
+    LONG_PTR NewValue,
+    BOOL Ansi);
+#endif // _WIN64
 
 BOOL
 NTAPI
