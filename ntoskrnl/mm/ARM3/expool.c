@@ -480,7 +480,7 @@ ExpTagAllowPrint(CHAR Tag)
     else DPRINT1(fmt, ##__VA_ARGS__)
 
 VOID
-MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag)
+MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask)
 {
     SIZE_T i;
 
@@ -519,10 +519,13 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag)
         {
             //
             // If there's a tag, attempt to do a pretty print
-            // only if it matches the caller tag, or if
+            // only if it matches the caller's tag, or if
             // any tag is allowed
+            // For checking whether it matches caller's tag,
+            // use the mask to make sure not to mess with the wildcards
             //
-            if (TableEntry->Key != 0 && TableEntry->Key != TAG_NONE && (Tag == 0 || TableEntry->Key == Tag))
+            if (TableEntry->Key != 0 && TableEntry->Key != TAG_NONE &&
+                (Tag == 0 || (TableEntry->Key & Mask) == (Tag & Mask)))
             {
                 CHAR Tag[4];
 
@@ -550,7 +553,7 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag)
                                   TableEntry->PagedAllocs, TableEntry->PagedBytes);
                 }
             }
-            else if (Tag == 0 || Tag == TAG_NONE)
+            else if (Tag == 0 || (Tag & Mask) == (TAG_NONE & Mask))
             {
                 MiDumperPrint(CalledFromDbg, "Anon\t\t%ld\t\t%ld\t\t%ld\t\t%ld\n",
                               TableEntry->NonPagedAllocs, TableEntry->NonPagedBytes,
@@ -1751,7 +1754,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             //
             // Out of memory, display current consumption
             //
-            MiDumpPoolConsumers(FALSE, 0);
+            MiDumpPoolConsumers(FALSE, 0, 0);
 #endif
 
             //
@@ -2084,7 +2087,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // Out of memory, display current consumption
         //
-        MiDumpPoolConsumers(FALSE, 0);
+        MiDumpPoolConsumers(FALSE, 0, 0);
 #endif
 
         //
@@ -2945,11 +2948,13 @@ ExpKdbgExtPoolUsed(
     PCHAR Argv[])
 {
     ULONG Tag = 0;
+    ULONG Mask = 0;
 
     if (Argc > 1)
     {
         CHAR Tmp[4];
         ULONG Len;
+        USHORT i;
 
         /* Get the tag */
         Len = strlen(Argv[1]);
@@ -2957,12 +2962,22 @@ ExpKdbgExtPoolUsed(
         {
             Len = 4;
         }
-        RtlCopyMemory(Tmp, Argv[1], Len * sizeof(CHAR));
+        /* Generate the mask to have wildcards support */
+        for (i = 0; i < Len; ++i)
+        {
+            Tmp[i] = Argv[1][i];
+            if (Tmp[i] != '?')
+            {
+                Mask |= (0xFF << i * 8);
+            }
+        }
 
+        /* Get the tag in the ulong form */
         Tag = *((PULONG)Tmp);
     }
 
-    MiDumpPoolConsumers(TRUE, Tag);
+    /* Call the dumper */
+    MiDumpPoolConsumers(TRUE, Tag, Mask);
 
     return TRUE;
 }
