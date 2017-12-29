@@ -475,13 +475,23 @@ ExpTagAllowPrint(CHAR Tag)
     return FALSE;
 }
 
+#define MiDumperPrint(dbg, fmt, ...)        \
+    if (dbg) KdbpPrint(fmt, ##__VA_ARGS__); \
+    else DPRINT1(fmt, ##__VA_ARGS__)
+
 VOID
-MiDumpNonPagedPoolConsumers(VOID)
+MiDumpNonPagedPoolConsumers(BOOLEAN CalledFromDbg)
 {
     SIZE_T i;
 
-    DPRINT1("---------------------\n");
-    DPRINT1("Out of memory dumper!\n");
+    //
+    // Only print header if called from OOM situation
+    //
+    if (!CalledFromDbg)
+    {
+        DPRINT1("---------------------\n");
+        DPRINT1("Out of memory dumper!\n");
+    }
 
     //
     // We'll extract allocations for all the tracked pools
@@ -517,21 +527,24 @@ MiDumpNonPagedPoolConsumers(VOID)
                     //
                     // Print in reversed order to match what is in source code
                     //
-                    DPRINT1("Tag: '%c%c%c%c', Size: %ld\n", Tag[3], Tag[2], Tag[1], Tag[0], TableEntry->NonPagedBytes);
+                    MiDumperPrint(CalledFromDbg, "Tag: '%c%c%c%c', Size: %ld\n", Tag[3], Tag[2], Tag[1], Tag[0], TableEntry->NonPagedBytes);
                 }
                 else
                 {
-                    DPRINT1("Tag: %x, Size: %ld\n", TableEntry->Key, TableEntry->NonPagedBytes);
+                    MiDumperPrint(CalledFromDbg, "Tag: %x, Size: %ld\n", TableEntry->Key, TableEntry->NonPagedBytes);
                 }
             }
             else
             {
-                DPRINT1("Anon, Size: %ld\n", TableEntry->NonPagedBytes);
+                MiDumperPrint(CalledFromDbg, "Anon, Size: %ld\n", TableEntry->NonPagedBytes);
             }
         }
     }
 
-    DPRINT1("---------------------\n");
+    if (!CalledFromDbg)
+    {
+        DPRINT1("---------------------\n");
+    }
 }
 #endif
 
@@ -1722,7 +1735,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             //
             if ((OriginalType & BASE_POOL_TYPE_MASK) == NonPagedPool)
             {
-                MiDumpNonPagedPoolConsumers();
+                MiDumpNonPagedPoolConsumers(FALSE);
             }
 #endif
 
@@ -2058,7 +2071,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         if ((OriginalType & BASE_POOL_TYPE_MASK) == NonPagedPool)
         {
-            MiDumpNonPagedPoolConsumers();
+            MiDumpNonPagedPoolConsumers(FALSE);
         }
 #endif
 
@@ -2910,6 +2923,16 @@ ExpKdbgExtPool(
         Entry = POOL_BLOCK(Entry, Entry->BlockSize);
     }
     while ((Entry->BlockSize != 0) && ((ULONG_PTR)Entry < (ULONG_PTR)PoolPage + PAGE_SIZE));
+
+    return TRUE;
+}
+
+BOOLEAN
+ExpKdbgExtPoolUsed(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    MiDumpNonPagedPoolConsumers(TRUE);
 
     return TRUE;
 }
