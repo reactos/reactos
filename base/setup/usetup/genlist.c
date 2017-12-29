@@ -36,11 +36,15 @@
 VOID
 InitGenericListUi(
     IN OUT PGENERIC_LIST_UI ListUi,
-    IN PGENERIC_LIST List)
+    IN PGENERIC_LIST List,
+    IN PGET_ENTRY_DESCRIPTION GetEntryDescriptionProc)
 {
     ListUi->List = List;
     ListUi->FirstShown = NULL;
     ListUi->LastShown = NULL;
+    ListUi->BackupEntry = NULL;
+
+    ListUi->GetEntryDescriptionProc = GetEntryDescriptionProc;
 
     ListUi->Left = 0;
     ListUi->Top = 0;
@@ -49,6 +53,16 @@ InitGenericListUi(
     ListUi->Redraw = TRUE;
 
     ListUi->CurrentItemText[0] = ANSI_NULL;
+
+    /* SaveGenericListUiState(ListUi); */
+    ListUi->BackupEntry = ListUi->List->CurrentEntry;
+}
+
+VOID
+RestoreGenericListUiState(
+    IN PGENERIC_LIST_UI ListUi)
+{
+    ListUi->List->CurrentEntry = ListUi->BackupEntry;
 }
 
 static
@@ -159,7 +173,13 @@ DrawListEntries(
             break;
         ListUi->LastShown = Entry;
 
-        sprintf(ListUi->CurrentItemText, "%S", ListEntry->Text);
+        ListUi->CurrentItemText[0] = ANSI_NULL;
+        if (ListUi->GetEntryDescriptionProc)
+        {
+            ListUi->GetEntryDescriptionProc(ListEntry,
+                                            ListUi->CurrentItemText,
+                                            ARRAYSIZE(ListUi->CurrentItemText));
+        }
 
         FillConsoleOutputAttribute(StdOutput,
                                    (List->CurrentEntry == ListEntry) ?
@@ -330,6 +350,26 @@ DrawGenericList(
 }
 
 VOID
+DrawGenericListCurrentItem(
+    IN PGENERIC_LIST List,
+    IN PGET_ENTRY_DESCRIPTION GetEntryDescriptionProc,
+    IN SHORT Left,
+    IN SHORT Top)
+{
+    //
+    // FIXME: That stuff crashes when the list is empty!!
+    //
+    CHAR CurrentItemText[256];
+    if (GetEntryDescriptionProc)
+    {
+        GetEntryDescriptionProc(GetCurrentListEntry(List),
+                                CurrentItemText,
+                                ARRAYSIZE(CurrentItemText));
+        CONSOLE_SetTextXY(Left, Top, CurrentItemText);
+    }
+}
+
+VOID
 ScrollDownGenericList(
     IN PGENERIC_LIST_UI ListUi)
 {
@@ -493,7 +533,13 @@ GenericListKeyPress(
 
     ListUi->Redraw = FALSE;
 
-    sprintf(ListUi->CurrentItemText, "%S", ListEntry->Text);
+    ListUi->CurrentItemText[0] = ANSI_NULL;
+    if (ListUi->GetEntryDescriptionProc)
+    {
+        ListUi->GetEntryDescriptionProc(ListEntry,
+                                        ListUi->CurrentItemText,
+                                        ARRAYSIZE(ListUi->CurrentItemText));
+    }
 
     if ((strlen(ListUi->CurrentItemText) > 0) && (tolower(ListUi->CurrentItemText[0]) == AsciiChar) &&
          (List->CurrentEntry->Entry.Flink != &List->ListHead))
@@ -501,7 +547,13 @@ GenericListKeyPress(
         ScrollDownGenericList(ListUi);
         ListEntry = List->CurrentEntry;
 
-        sprintf(ListUi->CurrentItemText, "%S", ListEntry->Text);
+        ListUi->CurrentItemText[0] = ANSI_NULL;
+        if (ListUi->GetEntryDescriptionProc)
+        {
+            ListUi->GetEntryDescriptionProc(ListEntry,
+                                            ListUi->CurrentItemText,
+                                            ARRAYSIZE(ListUi->CurrentItemText));
+        }
 
         if ((strlen(ListUi->CurrentItemText) > 0) && (tolower(ListUi->CurrentItemText[0]) == AsciiChar))
             goto End;
@@ -514,7 +566,13 @@ GenericListKeyPress(
 
     for (;;)
     {
-        sprintf(ListUi->CurrentItemText, "%S", ListEntry->Text);
+        ListUi->CurrentItemText[0] = ANSI_NULL;
+        if (ListUi->GetEntryDescriptionProc)
+        {
+            ListUi->GetEntryDescriptionProc(ListEntry,
+                                            ListUi->CurrentItemText,
+                                            ARRAYSIZE(ListUi->CurrentItemText));
+        }
 
         if ((strlen(ListUi->CurrentItemText) > 0) && (tolower(ListUi->CurrentItemText[0]) == AsciiChar))
         {

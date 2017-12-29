@@ -321,10 +321,8 @@ GetComputerIdentifier(
  */
 typedef UCHAR
 (NTAPI *PPROCESS_ENTRY_ROUTINE)(
-    IN PWCHAR KeyName,
-    IN PWCHAR KeyValue,
-    OUT PWCHAR DisplayText,
-    IN SIZE_T DisplayTextSize,
+    IN PCWSTR KeyName,
+    IN PCWSTR KeyValue,
     OUT PVOID* UserData,
     OUT PBOOLEAN Current,
     IN PVOID Parameter OPTIONAL);
@@ -344,7 +342,6 @@ AddEntriesFromInfSection(
     PVOID UserData;
     BOOLEAN Current;
     UCHAR RetVal;
-    WCHAR DisplayText[128];
 
     if (!SetupFindFirstLineW(InfFile, SectionName, NULL, pContext))
         return -1;
@@ -374,8 +371,6 @@ AddEntriesFromInfSection(
         Current  = FALSE;
         RetVal = ProcessEntry(KeyName,
                               KeyValue,
-                              DisplayText,
-                              sizeof(DisplayText),
                               &UserData,
                               &Current,
                               Parameter);
@@ -389,7 +384,7 @@ AddEntriesFromInfSection(
         }
         else if (RetVal == 1)
         {
-            AppendGenericListEntry(List, DisplayText, UserData, Current);
+            AppendGenericListEntry(List, UserData, Current);
             ++TotalCount;
         }
         // else if (RetVal == 2), skip the entry.
@@ -402,29 +397,36 @@ AddEntriesFromInfSection(
 static UCHAR
 NTAPI
 DefaultProcessEntry(
-    IN PWCHAR KeyName,
-    IN PWCHAR KeyValue,
-    OUT PWCHAR DisplayText,
-    IN SIZE_T DisplayTextSize,
+    IN PCWSTR KeyName,
+    IN PCWSTR KeyValue,
     OUT PVOID* UserData,
     OUT PBOOLEAN Current,
     IN PVOID Parameter OPTIONAL)
 {
     PWSTR CompareKey = (PWSTR)Parameter;
 
-    *UserData = RtlAllocateHeap(ProcessHeap, 0,
-                                (wcslen(KeyName) + 1) * sizeof(WCHAR));
-    if (*UserData == NULL)
+    PGENENTRY GenEntry;
+    SIZE_T IdSize, ValueSize;
+
+    IdSize    = (wcslen(KeyName)  + 1) * sizeof(WCHAR);
+    ValueSize = (wcslen(KeyValue) + 1) * sizeof(WCHAR);
+
+    GenEntry = RtlAllocateHeap(ProcessHeap, 0,
+                               sizeof(*GenEntry) + IdSize + ValueSize);
+    if (GenEntry == NULL)
     {
         /* Failure, stop enumeration */
         DPRINT1("RtlAllocateHeap() failed\n");
         return 0;
     }
 
-    wcscpy((PWCHAR)*UserData, KeyName);
-    RtlStringCbCopyW(DisplayText, DisplayTextSize, KeyValue);
+    GenEntry->Id    = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry));
+    GenEntry->Value = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry) + IdSize);
+    RtlStringCbCopyW((PWSTR)GenEntry->Id, IdSize, KeyName);
+    RtlStringCbCopyW((PWSTR)GenEntry->Value, ValueSize, KeyValue);
 
-    *Current = (CompareKey ? !_wcsicmp(KeyName, CompareKey) : FALSE);
+    *UserData = GenEntry;
+    *Current  = (CompareKey ? !_wcsicmp(KeyName, CompareKey) : FALSE);
 
     /* Add the entry */
     return 1;
@@ -765,7 +767,7 @@ ProcessComputerFiles(
     }
 
     RtlStringCchPrintfW(SectionName, ARRAYSIZE(SectionName),
-                        L"Files.%s", (PCWSTR)GetListEntryUserData(Entry));
+                        L"Files.%s", ((PGENENTRY)GetListEntryData(Entry))->Id);
     *AdditionalSectionName = SectionName;
 
     return TRUE;
@@ -797,7 +799,9 @@ ProcessDisplayRegistry(
         return FALSE;
     }
 
-    if (!SetupFindFirstLineW(InfFile, L"Display", (WCHAR*)GetListEntryUserData(Entry), &Context))
+    if (!SetupFindFirstLineW(InfFile, L"Display",
+                             ((PGENENTRY)GetListEntryData(Entry))->Id,
+                             &Context))
     {
         DPRINT1("SetupFindFirstLineW() failed\n");
         return FALSE;
@@ -936,7 +940,7 @@ ProcessLocaleRegistry(
     IN PGENERIC_LIST List)
 {
     PGENERIC_LIST_ENTRY Entry;
-    PWCHAR LanguageId;
+    PCWSTR LanguageId;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
@@ -948,7 +952,7 @@ ProcessLocaleRegistry(
     if (Entry == NULL)
         return FALSE;
 
-    LanguageId = (PWCHAR)GetListEntryUserData(Entry);
+    LanguageId = ((PGENENTRY)GetListEntryData(Entry))->Id;
     if (LanguageId == NULL)
         return FALSE;
 
@@ -1086,15 +1090,16 @@ typedef struct _LANG_ENTRY_PARAM
 static UCHAR
 NTAPI
 ProcessLangEntry(
-    IN PWCHAR KeyName,
-    IN PWCHAR KeyValue,
-    OUT PWCHAR DisplayText,
-    IN SIZE_T DisplayTextSize,
+    IN PCWSTR KeyName,
+    IN PCWSTR KeyValue,
     OUT PVOID* UserData,
     OUT PBOOLEAN Current,
     IN PVOID Parameter OPTIONAL)
 {
     PLANG_ENTRY_PARAM LangEntryParam = (PLANG_ENTRY_PARAM)Parameter;
+
+    PGENENTRY GenEntry;
+    SIZE_T IdSize, ValueSize;
 
     if (!IsLanguageAvailable(KeyName))
     {
@@ -1102,19 +1107,25 @@ ProcessLangEntry(
         return 2;
     }
 
-    *UserData = RtlAllocateHeap(ProcessHeap, 0,
-                                (wcslen(KeyName) + 1) * sizeof(WCHAR));
-    if (*UserData == NULL)
+    IdSize    = (wcslen(KeyName)  + 1) * sizeof(WCHAR);
+    ValueSize = (wcslen(KeyValue) + 1) * sizeof(WCHAR);
+
+    GenEntry = RtlAllocateHeap(ProcessHeap, 0,
+                               sizeof(*GenEntry) + IdSize + ValueSize);
+    if (GenEntry == NULL)
     {
         /* Failure, stop enumeration */
         DPRINT1("RtlAllocateHeap() failed\n");
         return 0;
     }
 
-    wcscpy((PWCHAR)*UserData, KeyName);
-    RtlStringCbCopyW(DisplayText, DisplayTextSize, KeyValue);
+    GenEntry->Id    = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry));
+    GenEntry->Value = (PCWSTR)((ULONG_PTR)GenEntry + sizeof(*GenEntry) + IdSize);
+    RtlStringCbCopyW((PWSTR)GenEntry->Id, IdSize, KeyName);
+    RtlStringCbCopyW((PWSTR)GenEntry->Value, ValueSize, KeyValue);
 
-    *Current = FALSE;
+    *UserData = GenEntry;
+    *Current  = FALSE;
 
     if (!_wcsicmp(KeyName, LangEntryParam->DefaultLanguage))
         DefaultLanguageIndex = LangEntryParam->uIndex;
@@ -1168,7 +1179,7 @@ CreateLanguageList(
     {
         DefaultLanguageIndex = 0;
         wcscpy(DefaultLanguage,
-               (PWSTR)GetListEntryUserData(GetFirstListEntry(List)));
+               ((PGENENTRY)GetListEntryData(GetFirstListEntry(List)))->Id);
     }
 
     return List;
@@ -1239,7 +1250,7 @@ ProcessKeyboardLayoutRegistry(
     IN PCWSTR LanguageId)
 {
     PGENERIC_LIST_ENTRY Entry;
-    PWCHAR LayoutId;
+    PCWSTR LayoutId;
     const MUI_LAYOUTS* LayoutsList;
     MUI_LAYOUTS NewLayoutsList[20];
     ULONG uIndex;
@@ -1249,7 +1260,7 @@ ProcessKeyboardLayoutRegistry(
     if (Entry == NULL)
         return FALSE;
 
-    LayoutId = (PWCHAR)GetListEntryUserData(Entry);
+    LayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
     if (LayoutId == NULL)
         return FALSE;
 

@@ -56,7 +56,7 @@ static WCHAR DestinationDriveLetter;
 
 /* OTHER Stuff *****/
 
-PWCHAR SelectedLanguageId;
+PCWSTR SelectedLanguageId;
 static WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
 static WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
 
@@ -414,21 +414,59 @@ UpdateKBLayout(VOID)
         }
     }
 
-    ListEntry = GetFirstListEntry(LayoutList);
-
     /* Search for default layout (if provided) */
     if (pszNewLayout != NULL)
     {
-        while (ListEntry != NULL)
+        for (ListEntry = GetFirstListEntry(LayoutList); ListEntry;
+             ListEntry = GetNextListEntry(ListEntry))
         {
-            if (!wcscmp(pszNewLayout, GetListEntryUserData(ListEntry)))
+            if (!wcscmp(pszNewLayout, ((PGENENTRY)GetListEntryData(ListEntry))->Id))
             {
                 SetCurrentListEntry(LayoutList, ListEntry);
                 break;
             }
-
-            ListEntry = GetNextListEntry(ListEntry);
         }
+    }
+}
+
+
+static NTSTATUS
+NTAPI
+GetSettingDescription(
+    IN PGENERIC_LIST_ENTRY Entry,
+    OUT PSTR Buffer,
+    IN SIZE_T cchBufferSize)
+{
+    return RtlStringCchPrintfA(Buffer, cchBufferSize, "%S",
+                               ((PGENENTRY)GetListEntryData(Entry))->Value);
+}
+
+static NTSTATUS
+NTAPI
+GetNTOSInstallationName(
+    IN PGENERIC_LIST_ENTRY Entry,
+    OUT PSTR Buffer,
+    IN SIZE_T cchBufferSize)
+{
+    PNTOS_INSTALLATION NtOsInstall = (PNTOS_INSTALLATION)GetListEntryData(Entry);
+    PPARTENTRY PartEntry = NtOsInstall->PartEntry;
+
+    if (PartEntry && PartEntry->DriveLetter)
+    {
+        /* We have retrieved a partition that is mounted */
+        return RtlStringCchPrintfA(Buffer, cchBufferSize,
+                                   "%c:%S  \"%S\"",
+                                   PartEntry->DriveLetter,
+                                   NtOsInstall->PathComponent,
+                                   NtOsInstall->InstallationName);
+    }
+    else
+    {
+        /* We failed somewhere, just show the NT path */
+        return RtlStringCchPrintfA(Buffer, cchBufferSize,
+                                   "%wZ  \"%S\"",
+                                   &NtOsInstall->SystemNtPath,
+                                   NtOsInstall->InstallationName);
     }
 }
 
@@ -449,7 +487,7 @@ static PAGE_NUMBER
 LanguagePage(PINPUT_RECORD Ir)
 {
     GENERIC_LIST_UI ListUi;
-    PWCHAR NewLanguageId;
+    PCWSTR NewLanguageId;
     BOOL RefreshPage = FALSE;
 
     /* Initialize the computer settings list */
@@ -478,10 +516,9 @@ LanguagePage(PINPUT_RECORD Ir)
         return WELCOME_PAGE;
     }
 
-    InitGenericListUi(&ListUi, LanguageList);
+    InitGenericListUi(&ListUi, LanguageList, GetSettingDescription);
     DrawGenericList(&ListUi,
-                    2,
-                    18,
+                    2, 18,
                     xScreen - 3,
                     yScreen - 3);
 
@@ -527,7 +564,11 @@ LanguagePage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
-            SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
+            //
+            // FIXME: That stuff crashes when the list is empty!!
+            //
+            SelectedLanguageId =
+                ((PGENENTRY)GetListEntryData(GetCurrentListEntry(LanguageList)))->Id;
 
             USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
@@ -550,7 +591,11 @@ LanguagePage(PINPUT_RECORD Ir)
 
         if (RefreshPage)
         {
-            NewLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
+            //
+            // FIXME: That stuff crashes when the list is empty!!
+            //
+            NewLanguageId =
+                ((PGENENTRY)GetListEntryData(GetCurrentListEntry(LanguageList)))->Id;
 
             if (wcscmp(SelectedLanguageId, NewLanguageId))
             {
@@ -603,6 +648,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     NTSTATUS Status;
     ULONG Error;
     PGENERIC_LIST_ENTRY ListEntry;
+    PCWSTR LocaleId;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -640,6 +686,8 @@ SetupStartPage(PINPUT_RECORD Ir)
     if (IsUnattendedSetup)
     {
         // TODO: Read options from inf
+        /* Load the hardware, language and keyboard layout lists */
+
         ComputerList = CreateComputerTypeList(SetupInf);
         DisplayList = CreateDisplayDriverList(SetupInf);
         KeyboardList = CreateKeyboardDriverList(SetupInf);
@@ -648,37 +696,35 @@ SetupStartPage(PINPUT_RECORD Ir)
 
         /* new part */
         SelectedLanguageId = DefaultLanguage;
-        wcscpy(SelectedLanguageId, USetupData.LocaleID);
+        wcscpy(DefaultLanguage, USetupData.LocaleID);
         USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
         LayoutList = CreateKeyboardLayoutList(SetupInf, SelectedLanguageId, DefaultKBLayout);
 
         /* first we hack LanguageList */
-        ListEntry = GetFirstListEntry(LanguageList);
-        while (ListEntry != NULL)
+        for (ListEntry = GetFirstListEntry(LanguageList); ListEntry;
+             ListEntry = GetNextListEntry(ListEntry))
         {
-            if (!wcsicmp(USetupData.LocaleID, GetListEntryUserData(ListEntry)))
+            LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
+            if (!wcsicmp(USetupData.LocaleID, LocaleId))
             {
-                DPRINT("found %S in LanguageList\n",GetListEntryUserData(ListEntry));
+                DPRINT("found %S in LanguageList\n", LocaleId);
                 SetCurrentListEntry(LanguageList, ListEntry);
                 break;
             }
-
-            ListEntry = GetNextListEntry(ListEntry);
         }
 
         /* now LayoutList */
-        ListEntry = GetFirstListEntry(LayoutList);
-        while (ListEntry != NULL)
+        for (ListEntry = GetFirstListEntry(LayoutList); ListEntry;
+             ListEntry = GetNextListEntry(ListEntry))
         {
-            if (!wcsicmp(USetupData.LocaleID, GetListEntryUserData(ListEntry)))
+            LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
+            if (!wcsicmp(USetupData.LocaleID, LocaleId))
             {
-                DPRINT("found %S in LayoutList\n",GetListEntryUserData(ListEntry));
+                DPRINT("found %S in LayoutList\n", LocaleId);
                 SetCurrentListEntry(LayoutList, ListEntry);
                 break;
             }
-
-            ListEntry = GetNextListEntry(ListEntry);
         }
 
         SetConsoleCodePage();
@@ -862,13 +908,11 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(UPGRADE_REPAIR_PAGE);
 
-    InitGenericListUi(&ListUi, NtOsInstallsList);
+    InitGenericListUi(&ListUi, NtOsInstallsList, GetNTOSInstallationName);
     DrawGenericList(&ListUi,
                     2, 23,
                     xScreen - 3,
                     yScreen - 3);
-
-    SaveGenericListState(NtOsInstallsList);
 
     // return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
     while (TRUE)
@@ -901,7 +945,7 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
             }
             case VK_ESCAPE: /* ESC */
             {
-                RestoreGenericListState(NtOsInstallsList);
+                RestoreGenericListUiState(&ListUi);
                 // return nextPage;    // prevPage;
 
                 // return INSTALL_INTRO_PAGE;
@@ -917,7 +961,12 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
             if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'U')  /* U */
             {
                 /* Retrieve the current installation */
-                CurrentInstallation = (PNTOS_INSTALLATION)GetListEntryUserData(GetCurrentListEntry(NtOsInstallsList));
+                //
+                // FIXME: That stuff crashes when the list is empty!!
+                //
+                CurrentInstallation =
+                    (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(NtOsInstallsList));
+
                 DPRINT1("Selected installation for repair: \"%S\" ; DiskNumber = %d , PartitionNumber = %d\n",
                         CurrentInstallation->InstallationName, CurrentInstallation->DiskNumber, CurrentInstallation->PartitionNumber);
 
@@ -1090,7 +1139,6 @@ static PAGE_NUMBER
 DeviceSettingsPage(PINPUT_RECORD Ir)
 {
     static ULONG Line = 16;
-    CHAR CurrentItemText[256];
 
     /* Initialize the computer settings list */
     if (ComputerList == NULL)
@@ -1145,14 +1193,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
-    sprintf(CurrentItemText, "%S", GetListEntryText(GetCurrentListEntry(ComputerList)));
-    CONSOLE_SetTextXY(25, 11, CurrentItemText);
-    sprintf(CurrentItemText, "%S", GetListEntryText(GetCurrentListEntry(DisplayList)));
-    CONSOLE_SetTextXY(25, 12, CurrentItemText);
-    sprintf(CurrentItemText, "%S", GetListEntryText(GetCurrentListEntry(KeyboardList)));
-    CONSOLE_SetTextXY(25, 13, CurrentItemText);
-    sprintf(CurrentItemText, "%S", GetListEntryText(GetCurrentListEntry(LayoutList)));
-    CONSOLE_SetTextXY(25, 14, CurrentItemText);
+    DrawGenericListCurrentItem(ComputerList, GetSettingDescription, 25, 11);
+    DrawGenericListCurrentItem(DisplayList , GetSettingDescription, 25, 12);
+    DrawGenericListCurrentItem(KeyboardList, GetSettingDescription, 25, 13);
+    DrawGenericListCurrentItem(LayoutList  , GetSettingDescription, 25, 14);
 
     CONSOLE_InvertTextXY(24, Line, 48, 1);
 
@@ -1263,7 +1307,7 @@ HandleGenericList(PGENERIC_LIST_UI ListUi,
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
-            RestoreGenericListState(ListUi->List);
+            RestoreGenericListUiState(ListUi);
             return nextPage;    // Use some "prevPage;" instead?
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1295,14 +1339,11 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(COMPUTER_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, ComputerList);
+    InitGenericListUi(&ListUi, ComputerList, GetSettingDescription);
     DrawGenericList(&ListUi,
-                    2,
-                    18,
+                    2, 18,
                     xScreen - 3,
                     yScreen - 3);
-
-    SaveGenericListState(ComputerList);
 
     return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }
@@ -1324,14 +1365,11 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(DISPLAY_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, DisplayList);
+    InitGenericListUi(&ListUi, DisplayList, GetSettingDescription);
     DrawGenericList(&ListUi,
-                    2,
-                    18,
+                    2, 18,
                     xScreen - 3,
                     yScreen - 3);
-
-    SaveGenericListState(DisplayList);
 
     return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }
@@ -1353,14 +1391,11 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(KEYBOARD_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, KeyboardList);
+    InitGenericListUi(&ListUi, KeyboardList, GetSettingDescription);
     DrawGenericList(&ListUi,
-                    2,
-                    18,
+                    2, 18,
                     xScreen - 3,
                     yScreen - 3);
-
-    SaveGenericListState(KeyboardList);
 
     return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }
@@ -1382,14 +1417,11 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(LAYOUT_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, LayoutList);
+    InitGenericListUi(&ListUi, LayoutList, GetSettingDescription);
     DrawGenericList(&ListUi,
-                    2,
-                    18,
+                    2, 18,
                     xScreen - 3,
                     yScreen - 3);
-
-    SaveGenericListState(LayoutList);
 
     return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }

@@ -11,19 +11,15 @@ typedef struct _GENERIC_LIST_ENTRY
 {
     LIST_ENTRY Entry;
     struct _GENERIC_LIST* List;
-    PVOID UserData;
-    WCHAR Text[1];      // FIXME: UI stuff
-
+    PVOID Data;
+    ULONG_PTR UiData;   // Cache variable for any UI list that displays these items
 } GENERIC_LIST_ENTRY, *PGENERIC_LIST_ENTRY;
 
 typedef struct _GENERIC_LIST
 {
     LIST_ENTRY ListHead;
     ULONG NumOfEntries;
-
     PGENERIC_LIST_ENTRY CurrentEntry;
-    PGENERIC_LIST_ENTRY BackupEntry;
-
 } GENERIC_LIST, *PGENERIC_LIST;
 
 
@@ -33,13 +29,12 @@ CreateGenericList(VOID);
 VOID
 DestroyGenericList(
     IN OUT PGENERIC_LIST List,
-    IN BOOLEAN FreeUserData);
+    IN BOOLEAN FreeData);
 
 BOOLEAN
 AppendGenericListEntry(
     IN OUT PGENERIC_LIST List,
-    IN PCWSTR Text,
-    IN PVOID UserData,
+    IN PVOID Data,
     IN BOOLEAN Current);
 
 VOID
@@ -60,23 +55,15 @@ GetNextListEntry(
     IN PGENERIC_LIST_ENTRY Entry);
 
 PVOID
-GetListEntryUserData(
+GetListEntryData(
     IN PGENERIC_LIST_ENTRY Entry);
 
-PCWSTR
-GetListEntryText(
+ULONG_PTR
+GetListEntryUiData(
     IN PGENERIC_LIST_ENTRY Entry);
 
 ULONG
 GetNumberOfListEntries(
-    IN PGENERIC_LIST List);
-
-VOID
-SaveGenericListState(
-    IN PGENERIC_LIST List);
-
-VOID
-RestoreGenericListState(
     IN PGENERIC_LIST List);
 
 BOOLEAN

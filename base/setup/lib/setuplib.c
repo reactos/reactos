@@ -516,7 +516,7 @@ LoadSetupInf(
 
     *SetupInf = SetupOpenInfFileExW(FileNameBuffer,
                                    NULL,
-                                   INF_STYLE_WIN4 | INF_STYLE_OLDNT,
+                                   /* INF_STYLE_WIN4 | */ INF_STYLE_OLDNT,
                                    pSetupData->LanguageId,
                                    &ErrorLine);
 

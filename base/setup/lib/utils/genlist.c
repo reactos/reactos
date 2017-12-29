@@ -27,9 +27,7 @@ CreateGenericList(VOID)
 
     InitializeListHead(&List->ListHead);
     List->NumOfEntries = 0;
-
     List->CurrentEntry = NULL;
-    List->BackupEntry = NULL;
 
     return List;
 }
@@ -37,7 +35,7 @@ CreateGenericList(VOID)
 VOID
 DestroyGenericList(
     IN OUT PGENERIC_LIST List,
-    IN BOOLEAN FreeUserData)
+    IN BOOLEAN FreeData)
 {
     PGENERIC_LIST_ENTRY ListEntry;
     PLIST_ENTRY Entry;
@@ -49,8 +47,8 @@ DestroyGenericList(
         ListEntry = CONTAINING_RECORD(Entry, GENERIC_LIST_ENTRY, Entry);
 
         /* Release user data */
-        if (FreeUserData && ListEntry->UserData != NULL)
-            RtlFreeHeap(ProcessHeap, 0, ListEntry->UserData);
+        if (FreeData && ListEntry->Data != NULL)
+            RtlFreeHeap(ProcessHeap, 0, ListEntry->Data);
 
         /* Release list entry */
         RtlFreeHeap(ProcessHeap, 0, ListEntry);
@@ -63,30 +61,24 @@ DestroyGenericList(
 BOOLEAN
 AppendGenericListEntry(
     IN OUT PGENERIC_LIST List,
-    IN PCWSTR Text,
-    IN PVOID UserData,
+    IN PVOID Data,
     IN BOOLEAN Current)
 {
     PGENERIC_LIST_ENTRY Entry;
-    SIZE_T TextSize;
 
-    TextSize = (wcslen(Text) + 1) * sizeof(WCHAR);
-    Entry = RtlAllocateHeap(ProcessHeap, 0,
-                            sizeof(GENERIC_LIST_ENTRY) + TextSize);
+    Entry = RtlAllocateHeap(ProcessHeap, 0, sizeof(GENERIC_LIST_ENTRY));
     if (Entry == NULL)
         return FALSE;
 
-    RtlStringCbCopyW(Entry->Text, TextSize, Text);
     Entry->List = List;
-    Entry->UserData = UserData;
+    Entry->Data = Data;
+    Entry->UiData = 0;
 
     InsertTailList(&List->ListHead, &Entry->Entry);
-    List->NumOfEntries++;
+    ++List->NumOfEntries;
 
     if (Current || List->CurrentEntry == NULL)
-    {
         List->CurrentEntry = Entry;
-    }
 
     return TRUE;
 }
@@ -112,11 +104,10 @@ PGENERIC_LIST_ENTRY
 GetFirstListEntry(
     IN PGENERIC_LIST List)
 {
-    PLIST_ENTRY Entry = List->ListHead.Flink;
-
-    if (Entry == &List->ListHead)
+    if (IsListEmpty(&List->ListHead))
         return NULL;
-    return CONTAINING_RECORD(Entry, GENERIC_LIST_ENTRY, Entry);
+
+    return CONTAINING_RECORD(List->ListHead.Flink, GENERIC_LIST_ENTRY, Entry);
 }
 
 PGENERIC_LIST_ENTRY
@@ -127,21 +118,22 @@ GetNextListEntry(
 
     if (Next == &Entry->List->ListHead)
         return NULL;
+
     return CONTAINING_RECORD(Next, GENERIC_LIST_ENTRY, Entry);
 }
 
 PVOID
-GetListEntryUserData(
+GetListEntryData(
     IN PGENERIC_LIST_ENTRY Entry)
 {
-    return Entry->UserData;
+    return Entry->Data;
 }
 
-PCWSTR
-GetListEntryText(
+ULONG_PTR
+GetListEntryUiData(
     IN PGENERIC_LIST_ENTRY Entry)
 {
-    return Entry->Text;
+    return Entry->UiData;
 }
 
 ULONG
@@ -151,30 +143,16 @@ GetNumberOfListEntries(
     return List->NumOfEntries;
 }
 
-VOID
-SaveGenericListState(
-    IN PGENERIC_LIST List)
-{
-    List->BackupEntry = List->CurrentEntry;
-}
-
-VOID
-RestoreGenericListState(
-    IN PGENERIC_LIST List)
-{
-    List->CurrentEntry = List->BackupEntry;
-}
-
 BOOLEAN
 GenericListHasSingleEntry(
     IN PGENERIC_LIST List)
 {
-    if (!IsListEmpty(&List->ListHead) && List->ListHead.Flink == List->ListHead.Blink)
-        return TRUE;
-
-    /* if both list head pointers (which normally point to the first and last list member, respectively)
-       point to the same entry then it means that there's just a single thing in there, otherwise... false! */
-    return FALSE;
+    /*
+     * If both list head pointers (which normally point to the first and last
+     * list member, respectively) point to the same entry then it means that
+     * there is just a single thing in there, otherwise... false!
+     */
+    return (!IsListEmpty(&List->ListHead) && (List->ListHead.Flink == List->ListHead.Blink));
 }
 
 /* EOF */

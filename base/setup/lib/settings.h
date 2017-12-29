@@ -26,6 +26,13 @@
 
 #pragma once
 
+/* Settings entries with simple 1:1 mapping */
+typedef struct _GENENTRY
+{
+    PCWSTR Id;
+    PCWSTR Value;
+} GENENTRY, *PGENENTRY;
+
 PGENERIC_LIST
 CreateComputerTypeList(
     IN HINF InfFile);
