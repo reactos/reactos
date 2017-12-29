@@ -83,7 +83,7 @@ NTAPI
 CcMdlReadComplete2(IN PFILE_OBJECT FileObject,
                    IN PMDL MdlChain)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 VOID
@@ -112,7 +112,7 @@ CcMdlWriteComplete2(IN PFILE_OBJECT FileObject,
                     IN PLARGE_INTEGER FileOffset,
                     IN PMDL MdlChain)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 VOID
