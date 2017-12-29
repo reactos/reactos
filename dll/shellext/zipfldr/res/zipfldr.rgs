@@ -1,0 +1,54 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        '{E88DCCE0-B7B3-11d1-A9F0-00AA0060FA31}' = s 'CompressedFolder'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'CompressedFolder'
+            ShellFolder
+            {
+                val Attributes = d '0x200001a0'
+                val UseDropHandler = s ''
+            }
+        }
+        '{b8cdcb65-b1bf-4b42-9428-1dfdb7ee92af}' = s 'Compressed (zipped) Folder Menu'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
+    }
+    NoRemove Applications
+    {
+        'zipfldr.dll' { val NoOpenWith = s '' }
+    }
+    NoRemove CompressedFolder
+    {
+        FriendlyTypeName = s '%MODULE%,-10195'
+        CLSID = s '{E88DCCE0-B7B3-11d1-A9F0-00AA0060FA31}'
+        DefaultIcon = s '%MODULE%'
+
+        NoRemove Shell
+        {
+            NoRemove Open
+            {
+                command = s 'rundll32.exe zipfldr.dll,RouteTheCall %%L'
+                val BrowserFlags = d '0x10'
+                val ExplorerFlags = d '0x10'
+            }
+        }
+
+        NoRemove shellex
+        {
+            NoRemove ContextMenuHandlers
+            {
+                ForceRemove '{b8cdcb65-b1bf-4b42-9428-1dfdb7ee92af}' = s 'Compressed (zipped) Folder Menu'
+                {
+                }
+            }
+        }
+    }
+    NoRemove '.zip' = s 'CompressedFolder'
+    {
+        val 'Content Type' = s 'application/x-zip-compressed'
+    }
+}
