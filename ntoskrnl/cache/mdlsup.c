@@ -83,7 +83,7 @@ NTAPI
 CcMdlReadComplete2(IN PFILE_OBJECT FileObject,
                    IN PMDL MdlChain)
 {
-    UNIMPLEMENTED;
+	CcMdlReadComplete(FileObject, MdlChain);
 }
 
 VOID
