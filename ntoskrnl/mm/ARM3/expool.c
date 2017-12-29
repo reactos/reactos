@@ -480,7 +480,7 @@ ExpTagAllowPrint(CHAR Tag)
     else DPRINT1(fmt, ##__VA_ARGS__)
 
 VOID
-MiDumpNonPagedPoolConsumers(BOOLEAN CalledFromDbg)
+MiDumpPoolConsumers(BOOLEAN CalledFromDbg)
 {
     SIZE_T i;
 
@@ -1747,12 +1747,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         {
 #if DBG
             //
-            // If non paged backed, display current consumption
+            // Out of memory, display current consumption
             //
-            if ((OriginalType & BASE_POOL_TYPE_MASK) == NonPagedPool)
-            {
-                MiDumpNonPagedPoolConsumers(FALSE);
-            }
+            MiDumpPoolConsumers(FALSE);
 #endif
 
             //
@@ -2083,12 +2080,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     {
 #if DBG
         //
-        // If non paged backed, display current consumption
+        // Out of memory, display current consumption
         //
-        if ((OriginalType & BASE_POOL_TYPE_MASK) == NonPagedPool)
-        {
-            MiDumpNonPagedPoolConsumers(FALSE);
-        }
+        MiDumpPoolConsumers(FALSE);
 #endif
 
         //
@@ -2948,7 +2942,7 @@ ExpKdbgExtPoolUsed(
     ULONG Argc,
     PCHAR Argv[])
 {
-    MiDumpNonPagedPoolConsumers(TRUE);
+    MiDumpPoolConsumers(TRUE);
 
     return TRUE;
 }
