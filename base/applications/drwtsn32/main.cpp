@@ -185,17 +185,6 @@ int main(int argc, char* argv[])
     if (!output)
         output = stdout;
 
-    //{
-    //    PROCESS_INFORMATION pi = {0};
-    //    STARTUPINFOA si = {0};
-    //    si.cb = sizeof(si);
-    //    CreateProcessA("C:\\Users\\Mark.DEV2\\Downloads\\BadApp\\BadApp.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-    //    CloseHandle(pi.hProcess);
-    //    CloseHandle(pi.hThread);
-    //    Sleep(100);
-    //    pid = pi.dwProcessId;
-    //}
-
 
     if (!DebugActiveProcess(pid))
         return abort(output, -2);
@@ -220,6 +209,14 @@ int main(int argc, char* argv[])
     PrintBugreport(output, data);
 
     TerminateProcess(data.ProcessHandle, data.ExceptionInfo.ExceptionRecord.ExceptionCode);
+
+    std::string Message = "The application '";
+    Message += data.ProcessName;
+    Message += "' has just crashed :(\n";
+    Message += "Information about this crash is saved to:\n";
+    Message += Filename;
+    Message += "\nThis file is stored on your desktop.";
+    MessageBoxA(NULL, Message.c_str(), "Sorry!", MB_OK);
 
     return abort(output, 0);
 }
