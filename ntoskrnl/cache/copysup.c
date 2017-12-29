@@ -123,7 +123,7 @@ CcFastCopyRead(IN PFILE_OBJECT FileObject,
 {
 	LARGE_INTEGER Offset;
 	Offset.QuadPart = FileOffset;
-	CcCopyRead(FileObject, &Offset, Length, FALSE, Buffer, IoStatus);
+	CcCopyRead(FileObject, &Offset, Length, TRUE, Buffer, IoStatus);
 }
 
 BOOLEAN
