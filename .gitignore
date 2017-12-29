@@ -2,3 +2,4 @@ output-*
 modules/optional
 /.vs
 /x86build
+/CMakeSettings.json

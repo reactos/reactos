@@ -77,13 +77,13 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
 {
     IoFreeMdl(MdlChain);
 }
-
+/* This API call is currently unimplemented */
 VOID
 NTAPI
 CcMdlReadComplete2(IN PFILE_OBJECT FileObject,
                    IN PMDL MdlChain)
 {
-    UNIMPLEMENTED
+	return; 
 }
 
 VOID
@@ -106,13 +106,14 @@ CcMdlWriteComplete(IN PFILE_OBJECT FileObject,
     IoFreeMdl(MdlChain);
 }
 
+/* This API call is currently unimplemented */
 VOID
 NTAPI
 CcMdlWriteComplete2(IN PFILE_OBJECT FileObject,
                     IN PLARGE_INTEGER FileOffset,
                     IN PMDL MdlChain)
 {
-    UNIMPLEMENTED
+	
 }
 
 VOID
