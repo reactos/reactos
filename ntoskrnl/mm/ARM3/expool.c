@@ -467,6 +467,7 @@ ExpTagAllowPrint(CHAR Tag)
 {
     if ((Tag >= 'a' && Tag <= 'z') ||
         (Tag >= 'A' && Tag <= 'Z') ||
+        (Tag >= '0' && Tag <= '9') ||
         Tag == ' ')
     {
         return TRUE;
