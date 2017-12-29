@@ -185,7 +185,7 @@ static const struct
     { "kmsg", "kmsg", "Kernel dmesg. Alias for dmesg.", KdbpCmdDmesg },
     { "help", "help", "Display help screen.", KdbpCmdHelp },
     { "!pool", "!pool [Address [Flags]]", "Display information about pool allocations.", ExpKdbgExtPool },
-    { "!poolused", "!poolused [Tag]", "Display pool usage.", ExpKdbgExtPoolUsed },
+    { "!poolused", "!poolused [Flags [Tag]]", "Display pool usage.", ExpKdbgExtPoolUsed },
 };
 
 /* FUNCTIONS *****************************************************************/
