@@ -46,24 +46,22 @@ DC_hSelectFont(PDC pdc, HFONT hlfntNew)
     return hlfntOld;
 }
 
-#if 0
 PRFONT
 NTAPI
 DC_prfnt(PDC pdc)
 {
-    PLFONT plfnt;
     PRFONT prfnt;
 
     /* Select "current" font */
-    DC_hSelectFont(pdc->pdcattr->hlfntNew);
+    DC_hSelectFont(pdc, pdc->pdcattr->hlfntNew);
 
     /* Check if font is already realized */
-    if (pdc->hlfntCur != pdc->pdcattr->hlfntNew)
+    if (pdc->hlfntCur != pdc->dclevel.plfnt->baseobj.hHmgr)
     {
-        prfnt = LFONT_prfntRealizeFont(pdc->dclevel.plfnt);
+        //prfnt = LFONT_prfntRealizeFont(pdc->dclevel.plfnt);
 
         /* Dereference the old RFONT */
-        RFONT_ShareUnlockFont(pdc->prfnt);
+        //RFONT_ShareUnlockFont(pdc->prfnt);
 
         pdc->prfnt = prfnt;
 
@@ -74,7 +72,6 @@ DC_prfnt(PDC pdc)
     ASSERT(prfnt);
     return prfnt;
 }
-#endif
 
 W32KAPI
 BOOL
