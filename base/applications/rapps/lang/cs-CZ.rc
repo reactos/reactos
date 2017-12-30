@@ -69,7 +69,7 @@ BEGIN
     GROUPBOX "Stahování", -1, 4, 65, 240, 51
     LTEXT "Složka se staženými soubory:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
-    PUSHBUTTON "&Procházet...", IDC_CHOOSE, 187, 85, 50, 14
+    PUSHBUTTON "&Procházet…", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Smazat instalátor programu po dokončení instalace", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Proxy", -1, 4, 116, 240, 76
     CONTROL "Systémové nastavení proxy", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
@@ -88,7 +88,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalace programu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Instalovat z média (CD nebo DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Stáhnout a instalovat", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -97,7 +97,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Stahování %ls..."
+CAPTION "Stahování %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -188,7 +188,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Správce aplikací"
-    IDS_SEARCH_TEXT "Hledat..."
+    IDS_SEARCH_TEXT "Hledat…"
     IDS_INSTALL "Instalovat"
     IDS_UNINSTALL "Odinstalovat"
     IDS_MODIFY "Změnit"
@@ -209,7 +209,7 @@ BEGIN
     IDS_UNABLE_TO_REMOVE "Nepodařilo se odstranit data programu z registru!"
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
-    IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
+    IDS_INTEG_CHECK_TITLE "Verifying package integrity…"
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
@@ -249,5 +249,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database..."
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
 END

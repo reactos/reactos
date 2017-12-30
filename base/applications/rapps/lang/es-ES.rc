@@ -86,7 +86,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalar programas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Instalar desde un disco (CD o DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Descargar e instalar", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "Aceptar", IDOK, 86, 78, 60, 14
@@ -95,7 +95,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Descargando %ls..."
+CAPTION "Descargando %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -186,7 +186,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Administrador de aplicaciones de ReactOS"
-    IDS_SEARCH_TEXT "Buscar..."
+    IDS_SEARCH_TEXT "Buscar…"
     IDS_INSTALL "Instalar"
     IDS_UNINSTALL "Desinstalar"
     IDS_MODIFY "Modificar"
@@ -207,7 +207,7 @@ BEGIN
     IDS_UNABLE_TO_REMOVE "No se pudieron borrar del Registro los datos de instalación del programa."
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
     IDS_CERT_DOES_NOT_MATCH "Ha fallado la comprobación del certificado SSL."
-    IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete..."
+    IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete…"
     IDS_INTEG_CHECK_FAIL "El paquete no ha pasado la comprobación de integridad, puede haber sido alterado o estar corrupto. No se recomienda ejecutarlo."
     IDS_INTERRUPTED_DOWNLOAD "Se ha interrumpido la descarga por un error de red. Comprueba la conexión a Internet."
     IDS_UNABLE_TO_WRITE "No se ha podido escribir en el disco duro, es posible que no quede espacio libre."
@@ -247,5 +247,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database..."
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
 END

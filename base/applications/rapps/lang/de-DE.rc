@@ -83,7 +83,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Programminstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Installation von einem Datenträger (CD oder DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "Herunterla&den und installieren", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -92,7 +92,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Download von %ls..."
+CAPTION "Download von %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -183,7 +183,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS-Anwendungsmanager"
-    IDS_SEARCH_TEXT "Suche..."
+    IDS_SEARCH_TEXT "Suche…"
     IDS_INSTALL "Installieren"
     IDS_UNINSTALL "Deinstallieren"
     IDS_MODIFY "Ändern"
@@ -204,7 +204,7 @@ BEGIN
     IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry löschen!"
     IDS_UNABLE_TO_INSTALL "Paket konnte nicht installiert werden!"
     IDS_CERT_DOES_NOT_MATCH "Überprüfung des SSL-Zertifikats fehlgeschlagen."
-    IDS_INTEG_CHECK_TITLE "Integritätsprüfung..."
+    IDS_INTEG_CHECK_TITLE "Integritätsprüfung…"
     IDS_INTEG_CHECK_FAIL "Das Paket hat die Integritätsprüfung nicht bestanden. Mögliche Ursachen sind Übertragungsfehler, Datenbankfehler oder Manipulation durch einen Angreifer. Sie sollten die Software nicht ausführen."
     IDS_INTERRUPTED_DOWNLOAD "Übertragung unterbrochen. Prüfen Sie Ihre Internetverbindung!"
     IDS_UNABLE_TO_WRITE "Schreibfehler. Prüfen Sie die Kapazität des Datenträgers!"
@@ -244,5 +244,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Anwendungsdatenbank"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Datenbank-Aktualisierung..."
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Datenbank-Aktualisierung…"
 END

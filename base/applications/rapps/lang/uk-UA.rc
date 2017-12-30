@@ -91,7 +91,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Встановлення програми"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Встановити з диску", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Завантажити та встановити", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -100,7 +100,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_SYSMENU | WS_VISIBLE
-CAPTION "Завантаження %ls..."
+CAPTION "Завантаження %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -110,7 +110,7 @@ END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Про програму..."
+CAPTION "Про програму…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Менеджер додатків ReactOS\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
@@ -191,7 +191,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Менеджер додатків ReactOS"
-    IDS_SEARCH_TEXT "Пошук..."
+    IDS_SEARCH_TEXT "Пошук…"
     IDS_INSTALL "Встановити"
     IDS_UNINSTALL "Видалити"
     IDS_MODIFY "Змінити"
@@ -212,7 +212,7 @@ BEGIN
     IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
     IDS_UNABLE_TO_INSTALL "Не вдалося завершити інсталювання!"
     IDS_CERT_DOES_NOT_MATCH "Помилка перевіки сертифікату SSL."
-    IDS_INTEG_CHECK_TITLE "Перевірка цілістності додатку..."
+    IDS_INTEG_CHECK_TITLE "Перевірка цілістності додатку…"
     IDS_INTEG_CHECK_FAIL "Додаток не пройшов перевірку цілістності, його молги пошкодити чи замінити. Запуск додатку не рекомендується."
     IDS_INTERRUPTED_DOWNLOAD "Завантаження перервано. Перевірте підключення до мережі Інтернет."
     IDS_UNABLE_TO_WRITE "Записк на диск неможливий. Можливо, на диску недостатньо містця."
@@ -228,7 +228,7 @@ BEGIN
     IDS_STATUS_UPDATE_AVAILABLE "Є оновлення"
     IDS_STATUS_DOWNLOADING "Завантажується…"
     IDS_STATUS_INSTALLING "Встановлюється…"
-    IDS_STATUS_WAITING "Очікування завантаження..."
+    IDS_STATUS_WAITING "Очікування завантаження…"
     IDS_STATUS_FINISHED "Завершено"
 END
 
@@ -252,5 +252,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Список програм"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Оновлення списку програм..."
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Оновлення списку програм…"
 END

@@ -83,7 +83,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installazione"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Installa da un disco (CD o DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Scarica e installa", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -92,7 +92,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Scaricamento in corso %ls..."
+CAPTION "Scaricamento in corso %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -183,7 +183,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Gestione applicazioni"
-    IDS_SEARCH_TEXT "Cerca..."
+    IDS_SEARCH_TEXT "Cerca…"
     IDS_INSTALL "Installa"
     IDS_UNINSTALL "Rimuovi"
     IDS_MODIFY "Modifica"
@@ -204,7 +204,7 @@ BEGIN
     IDS_UNABLE_TO_REMOVE "Impossibile cancellare i dati dal registro!"
     IDS_UNABLE_TO_INSTALL "Impossibile aprire l'installer!"
     IDS_CERT_DOES_NOT_MATCH "Verifica del certificato SSL fallita."
-    IDS_INTEG_CHECK_TITLE "Verifica integrità pacchetto..."
+    IDS_INTEG_CHECK_TITLE "Verifica integrità pacchetto…"
     IDS_INTEG_CHECK_FAIL "Il pacchetto non ha superato il controllo di integrità, potrebbe essere stato danneggiato o manomesso durante lo scaricamento. L'esecuzione del software non è raccomandata."
     IDS_INTERRUPTED_DOWNLOAD "Lo scaricamento è stato interrotto. Verificare la connessione a Internet."
     IDS_UNABLE_TO_WRITE "Impossibile scrivere su disco: lo spazio libero potrebbe essere esaurito."
@@ -218,9 +218,9 @@ BEGIN
     IDS_STATUS_NOTINSTALLED "Non installato"
     IDS_STATUS_DOWNLOADED "Scaricato"
     IDS_STATUS_UPDATE_AVAILABLE "Aggiornamento disponibile"
-    IDS_STATUS_DOWNLOADING "Scaricamento..."
-    IDS_STATUS_INSTALLING "Installazione..."
-    IDS_STATUS_WAITING "In attesa di installare..."
+    IDS_STATUS_DOWNLOADING "Scaricamento…"
+    IDS_STATUS_INSTALLING "Installazione…"
+    IDS_STATUS_WAITING "In attesa di installare…"
     IDS_STATUS_FINISHED "Finito"
 END
 
@@ -244,5 +244,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Applicazioni Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aggiornamento Database..."
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aggiornamento Database…"
 END

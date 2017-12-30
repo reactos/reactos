@@ -83,7 +83,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Установка программы"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Установить с диска", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Скачать и установить", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
@@ -92,7 +92,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_SYSMENU | WS_VISIBLE
-CAPTION "Загрузка %ls..."
+CAPTION "Загрузка %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -183,7 +183,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Менеджер приложений ReactOS"
-    IDS_SEARCH_TEXT "Поиск..."
+    IDS_SEARCH_TEXT "Поиск…"
     IDS_INSTALL "Установить"
     IDS_UNINSTALL "Удалить"
     IDS_MODIFY "Изменить"
@@ -204,7 +204,7 @@ BEGIN
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
     IDS_UNABLE_TO_INSTALL "Не удалось завершить установку!"
     IDS_CERT_DOES_NOT_MATCH "Ошибка проверки SSL сертификата."
-    IDS_INTEG_CHECK_TITLE "Проверка целостности приложения..."
+    IDS_INTEG_CHECK_TITLE "Проверка целостности приложения…"
     IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
     IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
     IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно, недостаточно свободного места на диске."
@@ -219,7 +219,7 @@ BEGIN
     IDS_STATUS_DOWNLOADED "Загружено"
     IDS_STATUS_UPDATE_AVAILABLE "Есть обновления"
     IDS_STATUS_DOWNLOADING "Загружается…"
-    IDS_STATUS_INSTALLING "Установка..."
+    IDS_STATUS_INSTALLING "Установка…"
     IDS_STATUS_WAITING "Ожидание установки…"
     IDS_STATUS_FINISHED "Завершено"
 END
@@ -244,5 +244,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "База данных приложений"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Обновление базы данных..."
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Обновление базы данных…"
 END
