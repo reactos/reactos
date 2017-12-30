@@ -413,7 +413,7 @@ StreamClassStartDevice(
     /* Setup get stream info struct */
     RequestBlock->Block.Command = SRB_GET_STREAM_INFO;
     RequestBlock->Block.CommandData.StreamBuffer = StreamDescriptor;
-    KeResetEvent(&RequestBlock->Event);
+    KeClearEvent(&RequestBlock->Event);
 
     /* send the request */
     DriverObjectExtension->Data.HwReceivePacket((PHW_STREAM_REQUEST_BLOCK)RequestBlock);

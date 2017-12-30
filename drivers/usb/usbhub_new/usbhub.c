@@ -2315,7 +2315,7 @@ USBH_ChangeIndication(IN PDEVICE_OBJECT DeviceObject,
 
     if (InterlockedIncrement(&HubExtension->ResetRequestCount) == 1)
     {
-        KeResetEvent(&HubExtension->ResetEvent);
+        KeClearEvent(&HubExtension->ResetEvent);
     }
 
     HubWorkItemBuffer->HubExtension = HubExtension;
@@ -2415,7 +2415,7 @@ USBH_SubmitStatusChangeTransfer(IN PUSBHUB_FDO_EXTENSION HubExtension)
                            TRUE,
                            TRUE);
 
-    KeResetEvent(&HubExtension->StatusChangeEvent);
+    KeClearEvent(&HubExtension->StatusChangeEvent);
 
     Status = IoCallDriver(HubExtension->LowerDevice, Irp);
 
@@ -2915,7 +2915,7 @@ USBD_RegisterRootHubCallBack(IN PUSBHUB_FDO_EXTENSION HubExtension)
         return STATUS_NOT_IMPLEMENTED;
     }
 
-    KeResetEvent(&HubExtension->RootHubNotificationEvent);
+    KeClearEvent(&HubExtension->RootHubNotificationEvent);
 
     return RootHubInitNotification(HubExtension->BusInterface.BusContext,
                                    HubExtension,
@@ -3828,7 +3828,7 @@ return; //HACK: delete it line after fixing Power Manager!!!
     if (IsHubCheck &&
         !(HubExtension->HubFlags & USBHUB_FDO_FLAG_WAIT_IDLE_REQUEST))
     {
-        KeResetEvent(&HubExtension->IdleEvent);
+        KeClearEvent(&HubExtension->IdleEvent);
         HubExtension->HubFlags |= USBHUB_FDO_FLAG_WAIT_IDLE_REQUEST;
         IsHubIdle = TRUE;
     }

@@ -261,7 +261,7 @@ NdisResetEvent(
  *     Event = Pointer to the initialized event object to be reset
  */
 {
-  KeResetEvent(&Event->Event);
+  KeClearEvent(&Event->Event);
 }
 
 

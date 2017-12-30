@@ -872,7 +872,7 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
         NextEntry = RemoveHeadList(&(DeviceExtension->UniqueIdWorkerItemListHead));
         WorkItem = CONTAINING_RECORD(NextEntry, UNIQUE_ID_WORK_ITEM, UniqueIdWorkerItemListEntry);
 
-        KeResetEvent(&UnloadEvent);
+        KeClearEvent(&UnloadEvent);
         WorkItem->Event = &UnloadEvent;
 
         KeReleaseSemaphore(&(DeviceExtension->DeviceLock), IO_NO_INCREMENT,

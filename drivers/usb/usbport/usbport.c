@@ -1393,7 +1393,7 @@ USBPORT_WorkerThread(IN PVOID StartContext)
         KeQuerySystemTime(&NewTime);
 
         KeAcquireSpinLock(&FdoExtension->WorkerThreadEventSpinLock, &OldIrql);
-        KeResetEvent(&FdoExtension->WorkerThreadEvent);
+        KeClearEvent(&FdoExtension->WorkerThreadEvent);
         KeReleaseSpinLock(&FdoExtension->WorkerThreadEventSpinLock, OldIrql);
         DPRINT_CORE("USBPORT_WorkerThread: run \n");
 

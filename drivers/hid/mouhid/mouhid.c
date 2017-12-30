@@ -497,7 +497,7 @@ MouHid_Create(
              DeviceExtension->FileObject = IoStack->FileObject;
 
              /* reset event */
-             KeResetEvent(&DeviceExtension->ReadCompletionEvent);
+             KeClearEvent(&DeviceExtension->ReadCompletionEvent);
 
              /* initiating read */
              Status = MouHid_InitiateRead(DeviceExtension);

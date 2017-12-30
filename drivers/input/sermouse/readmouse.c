@@ -137,7 +137,7 @@ SermouseDeviceWorker(
 		if (Status != STATUS_TIMEOUT)
 		{
 			/* we need to stop the worker thread */
-			KeResetEvent(&DeviceExtension->StopWorkerThreadEvent);
+			KeClearEvent(&DeviceExtension->StopWorkerThreadEvent);
 			break;
 		}
 
