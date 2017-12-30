@@ -541,15 +541,56 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLOADER_PARAMETER_EXTENSION LoaderExtension;
     PAGED_CODE();
 
-    /* Open the select key */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SelectName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenKey(&SelectHandle, KEY_READ, &ObjectAttributes);
-    if (NT_SUCCESS(Status))
+    /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
+    if (LoaderBlock->RegistryBase == NULL)
     {
+        /* Build the ControlSet001 key */
+        RtlInitUnicodeString(&KeyName,
+                             L"\\Registry\\Machine\\System\\ControlSet001");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = NtCreateKey(&KeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             &Disposition);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to create ControlSet001 key: 0x%lx\n", Status);
+            goto Cleanup;
+        }
+
+        /* Create the Hardware Profile keys */
+        Status = CmpCreateHardwareProfile(KeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to create Hardware profile keys: 0x%lx\n", Status);
+            goto Cleanup;
+        }
+
+        /* Use hard-coded setting */
+        ControlSet = 1;
+    }
+    else
+    {
+        /* Open the select key */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SelectName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = NtOpenKey(&SelectHandle, KEY_READ, &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to open select key: 0x%lx\n", Status);
+            goto Cleanup;
+        }
+
         /* Open the current value */
         RtlInitUnicodeString(&KeyName, L"Current");
         Status = NtQueryValueKey(SelectHandle,
@@ -559,52 +600,14 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  sizeof(ValueInfoBuffer),
                                  &ResultLength);
         if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to open the Current value: 0x%lx\n", Status);
             goto Cleanup;
+        }
 
         /* Get the actual value pointer, and get the control set ID */
         ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
         ControlSet = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
-    }
-    else
-    {
-        /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
-        if (!LoaderBlock->RegistryBase)
-        {
-            /* Build the ControlSet001 key */
-            RtlInitUnicodeString(&KeyName,
-                                 L"\\Registry\\Machine\\System\\ControlSet001");
-            InitializeObjectAttributes(&ObjectAttributes,
-                                       &KeyName,
-                                       OBJ_CASE_INSENSITIVE,
-                                       NULL,
-                                       NULL);
-            Status = NtCreateKey(&KeyHandle,
-                                 KEY_ALL_ACCESS,
-                                 &ObjectAttributes,
-                                 0,
-                                 NULL,
-                                 0,
-                                 &Disposition);
-            if (!NT_SUCCESS(Status))
-                goto Cleanup;
-
-            /* Create the Hardware Profile keys */
-            Status = CmpCreateHardwareProfile(KeyHandle);
-            if (!NT_SUCCESS(Status))
-                goto Cleanup;
-
-            /* Free the handle for the next NtCreateKey */
-            NtClose(KeyHandle);
-            KeyHandle = NULL;
-
-            /* Use hard-coded setting */
-            ControlSet = 1;
-        }
-        else
-        {
-            /* Fail for real boots */
-            goto Cleanup;
-        }
     }
 
     /* Create the current control set key */
@@ -664,7 +667,7 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
-    if (!LoaderBlock->RegistryBase)
+    if (LoaderBlock->RegistryBase == NULL)
     {
         HwProfile = 0;
     }
