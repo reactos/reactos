@@ -56,7 +56,6 @@
 /* Setup library headers */
 #include <reactos/rosioctl.h>
 #include <../lib/setuplib.h>
-// #include "errorcode.h"
 
 /* Internal Headers */
 #include "consup.h"
