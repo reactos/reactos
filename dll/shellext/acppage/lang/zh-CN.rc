@@ -1,4 +1,11 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Acppage
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/shellext/acppage/lang/zh-CN.rc
+ * PURPOSE:     Chinese (Simplified) Language Resources
+ * TRANSLATORS: 2015 Henry Tang Ih <henrytang2@hotmail.com>
+                2017 Luo Yufan <njlyf2011@hotmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -7,7 +14,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "兼容性"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "如果您有问题在 ReactOS 中运行此程序，选择 ReactOS 应报告给应用程序的操作系统。\nPlease note that this is a work in progress.", -1, 7, 7, 210, 31
+    LTEXT "如果您在 ReactOS 中运行此程序出现问题，选择 ReactOS 应报告给应用程序的操作系统。\n请注意，这是一项正在进行的工作。", -1, 7, 7, 210, 31
     GROUPBOX "兼容模式", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "用兼容模式运行这个程序:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
