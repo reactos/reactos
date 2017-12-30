@@ -1437,7 +1437,7 @@ MUI_ERROR svSEErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS installerades inte fullst„ndigt p† din\n"
         "dator. Om du avslutar Setup nu, kommer du att beh”va\n"
         "k”ra Setup igen f”r att installera ReactOS.\n"
@@ -1447,62 +1447,62 @@ MUI_ERROR svSEErrorEntries[] =
         "F3 = Avsluta  ENTER = Forts„tta"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Setup kunde inte hitta n†gon h†rddisk.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Setup kunde inte hitta sin k„lldisk.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Setup misslyckades att l„sa in filen TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Setup fann en korrupt TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup hittade en ogiltig signatur i TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Setup kunde inte l„sa in informationen om systemenheten.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Setup misslyckades installera FAT bootkod p† systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Setup misslyckades att l„sa datortypslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Setup misslyckades att l„sa in sk„rminst„llningslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Setup misslyckades att l„sa in tangentbordstypslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Setup misslyckades att l„sa in tangentbordslayoutslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Setup fann att minst en h†rdisk inneh†ller en partitionstabell\n"
         "inte „r kompatibel och inte kan hanteras korrekt!\n"
         "\n"
@@ -1513,7 +1513,7 @@ MUI_ERROR svSEErrorEntries[] =
         "F3 = Avsluta  ENTER = Forts„tt"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Du kan inte skapa en partition inuti\n"
         "en redat befintlig partition!\n"
         "\n"
@@ -1521,133 +1521,127 @@ MUI_ERROR svSEErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Du kan inte ta bort opartitionerrat diskutrymme!\n"
         "\n"
         "  * Tryck valfri tangent f”r att forts„tta.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Setup misslyckades att installera FAT bootkoden p† systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Ingen disk i enhet A:.",
         "ENTER = Forts„tt"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Setup misslyckades att updatera inst„llninarna f”r tangentbordslayout.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup misslyckades att uppdatera sk„rmregisterinst„llningen.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Setup misslyckades att improterea en registerdatafil.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Setup misslyckades att hitta registerdatafilerna.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Setup misslyckades att skapa registerdatafilerna.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Setup misslyckades att initialisera registret.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Kabinettet has inen giltig inf fil.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Kabinettet hittades inte.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Kabinettet har inget installationsskript.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Setup misslyckades att ”ppna filkopierningsk”n.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Setup kunnde inte skapa installationsmapparna.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Setup misslyckades att hitta 'Directories' sektionen\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Setup misslyckades att hitta '%S' sektionen\n"
         "i TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Setup misslyckades att hitta 'Directories' sektionen\n"
+        // ERROR_CABINET_SECTION,
+        "Setup misslyckades att hitta '%S' sektionen\n"
         "i kabinettet.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Setup kunnde inte skapa installationsmappen.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Setup misslyckades att hitta 'SetupData' sektionen\n"
-        "i TXTSETUP.SIF.\n",
-        "ENTER = Starta om datorn"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Setup misslyckades att skriva partitionstabellen.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Setup misslyckades att l„gga till vald codepage till registret.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Setup kunnde inte st„lla in 'system locale'.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Setup misslyckades att l„gga till tangentbordslayouten till registret.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Setup kunde inte stalla int 'geo id'.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1655,20 +1649,20 @@ MUI_ERROR svSEErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1832,8 +1826,6 @@ MUI_STRING svSEStrings[] =
     "F3 = Avsluta  ENTER = Forts„tt"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Starta om datorn"},
-    {STRING_TXTSETUPFAILED,
-    "Setup misslyckades att hitta '%S' sektionen\ni TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Kopierar fil: %S"},
     {STRING_SETUPCOPYINGFILES,

@@ -1461,7 +1461,7 @@ MUI_ERROR ptBRErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "O ReactOS n∆o est† completamente instalado no computador.\n"
         "Se vocà sair da instalaá∆o agora, precisar† executa-la\n"
         "novamente para instalar o ReactOS.\n"
@@ -1471,62 +1471,62 @@ MUI_ERROR ptBRErrorEntries[] =
         "F3=Sair  ENTER=Continuar"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "N∆o foi poss°vel localizar um disco r°digo.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "N∆o foi poss°vel localizar a unidade de origem.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "N∆o foi poss°vel carregar o arquivo TXTSETUP.SIF.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "O arquivos TXTSETUP.SIF est† corrompido.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "O arquivo TXTSETUP.SIF est† com a assinatura incorreta.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "N∆o foi poss°vel obter as informaá‰es sobre o disco do sistema.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Erro ao escrever o c¢digo de inicializaá∆o na partiá∆o do sistema.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "N∆o foi poss°vel carregar a lista de tipos de computadores.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "N∆o foi poss°vel carregar a lista de tipos de v°deo.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "N∆o foi poss°vel carregar a lista de tipos de teclado.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "N∆o foi poss°vel carregar a lista de leiautes de teclado.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "O instalador encontrou uma tabela de partiá∆o incompat°vel\n"
         "que n∆o pode ser utilizada corretamente!\n"
         "\n"
@@ -1537,7 +1537,7 @@ MUI_ERROR ptBRErrorEntries[] =
         "F3=Sair  ENTER=Continuar"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Vocà n∆o pode criar uma partiá∆o dentro de\n"
         "outra partiá∆o j† existente!\n"
         "\n"
@@ -1545,133 +1545,127 @@ MUI_ERROR ptBRErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Vocà n∆o pode excluir um espaáo n∆o-particionado!\n"
         "\n"
         "  * Pressione qualquer tecla para continuar.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Erro ao instalar o c¢digo de inicializaá∆o na partiá∆o do sistema.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "N∆o h† disco na unidade A:.",
         "ENTER=Continuar"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "N∆o foi poss°vel atualizar a configuraá∆o de leiaute de teclado.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "N∆o foi poss°vel atualizar a configuraá∆o de v°deo.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "N∆o foi poss°vel importar o arquivo de estrutura.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "N∆o foi poss°vel encontrar os arquivos do registro.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "N∆o foi poss°vel criar as estruturas do registro.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "N∆o foi poss°vel inicializar o registro.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "O arquivo cab n∆o contÇm um arquivo inf v†lido.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "N∆o foi poss°vel econtrar o arquivo cab.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "O arquivo cab n∆o contÇm um script de instalaá∆o.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "N∆o foi poss°vel abrir a lista de arquivos para c¢pia.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "N∆o foi poss°vel criar os diret¢rios de instalaá∆o.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "N∆o foi poss°vel encontrar a seá∆o 'Directories' no\n"
+        // ERROR_TXTSETUP_SECTION,
+        "N∆o foi poss°vel encontrar a seá∆o '%S' no\n"
         "arquivo TXTSETUP.SIF.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "N∆o foi poss°vel encontrar a seá∆o 'Directories' no\n"
+        // ERROR_CABINET_SECTION,
+        "N∆o foi poss°vel encontrar a seá∆o '%S' no\n"
         "arquivo cab.\n",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "N∆o foi poss°vel criar o diret¢rio de instalaá∆o.",
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "N∆o foi poss°vel encontrar a seá∆o 'SetupData' no\n"
-        "arquivo TXTSETUP.SIF.\n",
-        "ENTER=Reiniciar"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "N∆o foi poss°vel escrever a tabela de partiá‰es.\n"
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "N∆o foi poss°vel adicionar o c¢digo de localidade no registro.\n"
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "N∆o foi poss°vel configurar o idioma do sistema.\n"
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "N∆o foi poss°vel adicionar o leiaute do teclado no registro.\n"
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "N∆o foi poss°vel configurar a identificaá∆o geogr†fica.\n"
         "ENTER=Reiniciar"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1679,20 +1673,20 @@ MUI_ERROR ptBRErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1856,8 +1850,6 @@ MUI_STRING ptBRStrings[] =
     "F3=Sair  ENTER=Continuar"},
     {STRING_REBOOTCOMPUTER,
     "ENTER=Reiniciar"},
-    {STRING_TXTSETUPFAILED,
-    "N∆o foi poss°vel econtrar a seá∆o '%S' no\narquivo TXTSETUP.SIF.\n"},
     {STRING_COPYING,
     "   Copiando arquivo: %S"},
     {STRING_SETUPCOPYINGFILES,

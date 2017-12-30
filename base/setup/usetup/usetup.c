@@ -3499,9 +3499,7 @@ AddSectionToCopyQueueCab(HINF InfFile,
     /* Search for the SectionName section */
     if (!SetupFindFirstLineW(InfFile, SectionName, NULL, &FilesContext))
     {
-        CHAR Buffer[128];
-        sprintf(Buffer, MUIGetString(STRING_TXTSETUPFAILED), SectionName);
-        PopupError(Buffer, MUIGetString(STRING_REBOOTCOMPUTER), Ir, POPUP_WAIT_ENTER);
+        MUIDisplayError(ERROR_TXTSETUP_SECTION, Ir, POPUP_WAIT_ENTER, SectionName);
         return FALSE;
     }
 
@@ -3593,9 +3591,7 @@ AddSectionToCopyQueue(HINF InfFile,
     /* Search for the SectionName section */
     if (!SetupFindFirstLineW(InfFile, SectionName, NULL, &FilesContext))
     {
-        CHAR Buffer[128];
-        sprintf(Buffer, MUIGetString(STRING_TXTSETUPFAILED), SectionName);
-        PopupError(Buffer, MUIGetString(STRING_REBOOTCOMPUTER), Ir, POPUP_WAIT_ENTER);
+        MUIDisplayError(ERROR_TXTSETUP_SECTION, Ir, POPUP_WAIT_ENTER, SectionName);
         return FALSE;
     }
 
@@ -3759,13 +3755,9 @@ PrepareCopyPageInfFile(HINF InfFile,
     if (!SetupFindFirstLineW(InfFile, L"Directories", NULL, &DirContext))
     {
         if (SourceCabinet)
-        {
-            MUIDisplayError(ERROR_CABINET_SECTION, Ir, POPUP_WAIT_ENTER);
-        }
+            MUIDisplayError(ERROR_CABINET_SECTION, Ir, POPUP_WAIT_ENTER, L"Directories");
         else
-        {
-            MUIDisplayError(ERROR_TXTSETUP_SECTION, Ir, POPUP_WAIT_ENTER);
-        }
+            MUIDisplayError(ERROR_TXTSETUP_SECTION, Ir, POPUP_WAIT_ENTER, L"Directories");
 
         return FALSE;
     }

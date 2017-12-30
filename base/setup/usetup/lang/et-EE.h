@@ -1431,7 +1431,7 @@ MUI_ERROR etEEErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS ei ole tÑielikult paigaldatud.\n"
         "Kui paigaldamine praegu katkestada, siis tuleb\n"
         "ReactOSi paigaldamiseks paigaldusprogramm uuesti kÑivitada.\n"
@@ -1441,62 +1441,62 @@ MUI_ERROR etEEErrorEntries[] =
         "F3 = VÑlju  ENTER = JÑtka"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "K‰vaketast ei leitud.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Paigaldusprogramm ei leidnud ketast, millelt see kÑivitati.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "TXTSETUP.SIF faili ei ‰nnestunud laadida.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "TXTSETUP.SIF on vigane.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "TXTSETUP.SIF faili signatuur on vigane.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "SÅsteemiketta parameetreid ei ‰nnestunud lugeda.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "SÅsteemikettale ei ‰nnestunud kirjutada FAT alglaadimiskoodi.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "ArvutitÅÅpide nimekirja ei ‰nnestunud laadida.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Monitoride nimekirja ei ‰nnestunud laadida.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Klaviatuuri tÅÅpide nimekirja ei ‰nnestunud laadida.\n",
          "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Klaviatuuriasetuste nimekirja ei ‰nnestunud laadida.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Leiti vÑhemalt Åks k‰vaketas, millel on Åhildamatu partitsioonitabel,\n"
           "millega ei saanud korralikult Åmber kÑia!\n"
           "\n"
@@ -1507,7 +1507,7 @@ MUI_ERROR etEEErrorEntries[] =
           "F3 = VÑlju  ENTER = JÑtka"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Uut partitsioonitabelit ei saa juba olemasoleva\n"
         "partitsiooni sisse tekitada!\n"
         "\n"
@@ -1515,130 +1515,125 @@ MUI_ERROR etEEErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Partitsioneerimata kettaruumi ei saa kustutada!\n"
         "\n"
         "  * Vajuta suvalist klahvi, et jÑtkata.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "SÅsteemikettale ei ‰nnestunud paigaldada FAT alglaadimiskoodi.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Draivis A: ei ole flopiketast.",
         "ENTER = JÑtka"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Klaviatuuriasetuse seadistust ei ‰nnestunud uuendada.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Monitori seadistust registris ei ‰nnestunud uuendada.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Tarufaili ei ‰nnestunud importida.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Registri andmete faile ei leitud.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Registri tarusid ei ‰nnestunud luua.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Registrit ei ‰nnestunud luua.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Kapifailis ei olnud pÑdevaid inf faile.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Kapifaili ei leitud.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Kapifailis puudub paigaldusskript.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Kopeeritavate failide nimekirja ei ‰nnestunud avada.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Paigalduskaustu ei ‰nnestunud luua.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "TXTSETUP.SIF failist ei leitud 'Directories' sektsiooni.",
+        // ERROR_TXTSETUP_SECTION,
+        "TXTSETUP.SIF failist ei leitud '%S' sektsiooni.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Kapifailist ei leitud 'Directories' sektsiooni.",
+        // ERROR_CABINET_SECTION,
+        "Kapifailist ei leitud '%S' sektsiooni.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Paigalduskausta ei ‰nnestunud luua.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "TXTSETUP.SIF failist ei leitud 'SetupData' sektsiooni",
-        "ENTER = TaaskÑivita arvuti"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Partitsioonitabeleid ei ‰nnestunud kirjutada.\n"
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Kooditabelit ei ‰nnestunud registrisse lisada.\n"
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "SÅsteemilokaati ei ‰nnestunud sedistada.\n"
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Klaviatuuriasetusi ei ‰nnestunud registrisse lisada.\n"
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Geograafilist asukohta ei ‰nnestunud seadistada.\n"
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1646,20 +1641,20 @@ MUI_ERROR etEEErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1823,8 +1818,6 @@ MUI_STRING etEEStrings[] =
     "F3 = VÑlju  ENTER = JÑtka"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = TaaskÑivita arvuti"},
-    {STRING_TXTSETUPFAILED,
-     "TXTSETUP.SIF failist ei leitud '%S' sektsiooni\n"},
     {STRING_COPYING,
      "   Kopeerimine: %S"},
     {STRING_SETUPCOPYINGFILES,

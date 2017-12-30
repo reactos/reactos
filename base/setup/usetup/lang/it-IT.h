@@ -1436,7 +1436,7 @@ MUI_ERROR itITErrorEntries[] =
         "Successo\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS non \x8A stato installato completamente nel \n"
         "vostro computer. Se esce adesso, dovr\x85 eseguire il \n"
         "Setup nuovamente per installare ReactOS.\n"
@@ -1446,62 +1446,62 @@ MUI_ERROR itITErrorEntries[] =
         "F3 = Uscire INVIO = Continuare"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Setup non ha trovato un disco fisso.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Setup non ha trovato l'unit\x85 di origine.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Setup non ha potuto caricare il file TXTSETUP.SIF.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Setup ha trovato un file TXTSETUP.SIF corrotto.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup ha trovato una firma invalida in TXTSETUP.SIF.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Setup non ha potuto recuperare le informazioni dell'unit\x85 di sistema.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Impossibile installare il bootcode FAT nella partizione di sistema.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Setup non ha potuto caricare l'elenco di tipi di computer.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Setup non ha potuto caricare l'elenco di tipi di schermo.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Setup non ha potuto caricare l'elenco di tipi di tastiera.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Setup non ha potuto caricare l'elenco delle nazionalit\x85 di tastiera.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Setup ha trovato che almeno un disco fisso contiene una tabella delle\n"
         "partizioni incompatibile che non pu\x95 essere gestita correttamente!\n"
         "\n"
@@ -1512,7 +1512,7 @@ MUI_ERROR itITErrorEntries[] =
         "F3 = Uscire  INVIO = Continuare"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Non si pu\x95 creare una nuova partizione all'interno\n"
         "di una partizione gi\x85 esistente!\n"
         "\n"
@@ -1520,133 +1520,127 @@ MUI_ERROR itITErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Non si pu\x95 cancellare spazio in un disco non partizionato!\n"
         "\n"
         "  * Premere un tasto qualsiasi per continuare.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Impossibile installare il bootcode FAT nella partizione di sistema.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Non c'\x8A un disco nell'unit\x85 A:.",
         "ENTER = Continue"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Setup non ha potuto aggiornare la nazionalit\x85 della tastiera.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup non ha potuto aggiornare la configurazione di registro dello schermo.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Setup non ha potuto importare un file hive.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Setup non ha potuto trovare i file di dati del registro.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Setup non ha potuto creare gli hive del registro.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Setup non ha potuto inizializzare il registro.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Il Cabinet non ha un file inf valido.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet non trovato.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Il Cabinet non ha uno script di setup.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Setup non ha potuto aprire la coda di copia di file.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Setup non ha potuto creare le cartelle d'installazione.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Setup non ha potuto trovare le sezioni 'Cartelle'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Setup non ha potuto trovare le sezioni '%S'\n"
         "in TXTSETUP.SIF.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Setup non ha potuto trovare le sezioni 'Cartelle'\n"
+        // ERROR_CABINET_SECTION,
+        "Setup non ha potuto trovare le sezioni '%S'\n"
         "nel cabinet.\n",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Setup non ha potuto creare la cartella d'installazione.",
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Setup non ha trovato la sezione 'SetupData'\n"
-        "in TXTSETUP.SIF.\n",
-        "INVIO = Riavviare il computer"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Setup non ha potuto scrivere le tabelle delle partizioni.\n"
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Setup non ha potuto aggiungere la codepage al registro.\n"
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Setup non ha potuto impostare la regionalizzazione del sistema.\n"
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Impossibile aggiungere le nazionalit\x85 di tastiera al registro.\n"
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Setup non ha potuto impostare l'id geografico.\n"
         "INVIO = Riavviare il computer"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Nome della cartella non valido.\n"
         "\n"
         "  * Premere un tasto qualsiasi per continuare."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Spazio nella partizione insufficiente per installare ReactOS.\n"
         "La partizione deve avere una dimensione di almeno %lu MB.\n"
         "\n"
@@ -1654,20 +1648,20 @@ MUI_ERROR itITErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Non \x8A possibile creare una partizione primaria o secondaria nella\n"
         "tabella delle partizioni del disco perch\x8A questa \x8A piena.\n"
         "\n"
         "  * Premere un tasto qualsiasi per continuare."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Impossibile creare pi\x97 di una partizione primaria per disco.\n"
         "\n"
         "  * Premere un tasto qualsiasi per continuare."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup non \x8A riuscito a formattare la partizione:\n"
         " %S\n"
         "\n"
@@ -1829,8 +1823,6 @@ MUI_STRING itITStrings[] =
     "F3 = Esci  INVIO = Continua"},
     {STRING_REBOOTCOMPUTER,
     "INVIO = Riavvia il computer"},
-    {STRING_TXTSETUPFAILED,
-    "Setup non ha trovato la sezione '%S' \nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Copia di: %S"},
     {STRING_SETUPCOPYINGFILES,

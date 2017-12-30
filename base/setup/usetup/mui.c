@@ -175,15 +175,14 @@ MUIDisplayPage(
 }
 
 VOID
-MUIDisplayError(
+MUIDisplayErrorV(
     IN ULONG ErrorNum,
     OUT PINPUT_RECORD Ir,
     IN ULONG WaitEvent,
-    ...)
+    IN va_list args)
 {
-    const MUI_ERROR * entry;
+    const MUI_ERROR* entry;
     CHAR Buffer[2048];
-    va_list ap;
 
     if (ErrorNum >= ERROR_LAST_ERROR_CODE)
     {
@@ -191,7 +190,6 @@ MUIDisplayError(
                    "Press ENTER to continue",
                    Ir,
                    POPUP_WAIT_ENTER);
-
         return;
     }
 
@@ -205,14 +203,27 @@ MUIDisplayError(
         return;
     }
 
-    va_start(ap, WaitEvent);
-    vsprintf(Buffer, entry[ErrorNum].ErrorText, ap);
-    va_end(ap);
+    vsprintf(Buffer, entry[ErrorNum].ErrorText, args);
 
     PopupError(Buffer,
                entry[ErrorNum].ErrorStatus,
                Ir,
                WaitEvent);
+}
+
+VOID
+__cdecl
+MUIDisplayError(
+    IN ULONG ErrorNum,
+    OUT PINPUT_RECORD Ir,
+    IN ULONG WaitEvent,
+    ...)
+{
+    va_list arg_ptr;
+
+    va_start(arg_ptr, WaitEvent);
+    MUIDisplayErrorV(ErrorNum, Ir, WaitEvent, arg_ptr);
+    va_end(arg_ptr);
 }
 
 LPSTR

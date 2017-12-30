@@ -1435,7 +1435,7 @@ MUI_ERROR sqALErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS nuk ‰shte instaluar plotesisht ne kompjuterin\n"
         "tuaj. N‰se dilni nga instalimi tani, ju do t‰ duhet t‰\n"
         "rifilloni instalimin e ReactOS p‰rs‰ri.\n"
@@ -1445,62 +1445,62 @@ MUI_ERROR sqALErrorEntries[] =
         "F3 = Dil  ENTER = Vazhdo"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Instalimi nuk mund t‰ gjej nj‰ harddisk.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Instalimi nuk mund t‰ gjej burimin e t‰ dh‰nave/drive.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Instalimi d‰shtoj p‰r t‰ ngarkuar dokumentin TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Instalimi zbuloj nj‰ dokument t‰ korruptuar TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Instalimi zbuloj nj‰ firm‰ t‰ pavleshm‰ ne TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Instalimi nuk gjeti informacionet n‰ drive'rin e systemit.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Instalimi deshtoj n‰ instalimin e FAT bootcode n‰ particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ kompjuterit.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ konfigurimit t‰ ekranit.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ tipit t‰ p‰rzgjsdhjes t‰ tastier‰s.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ tipit t‰ p‰rzgjedhjes t‰ tastier‰s.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Instalimi zbuloi q‰ t‰ pakten nj‰ harddisk p‰rmban nj‰ mosp‰rputhshmeri\n"
           "n‰ tabel‰n e particionit q‰ nuk mund t‰ trajtohet tamam!\n"
           "\n"
@@ -1511,7 +1511,7 @@ MUI_ERROR sqALErrorEntries[] =
           "F3 = Dil  ENTER = Vazhdo"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Tani ju mund t‰ krijoni nj‰ particion brenda\n"
         "nj‰ particioni ekzistues!\n"
         "\n"
@@ -1519,91 +1519,91 @@ MUI_ERROR sqALErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Ju nuk mund t‰ fshini hap‰sir‰ n‰ disk jasht particioneve!\n"
         "\n"
         "  * Shtypni nj‰ tast cfar‰do p‰r t‰ vazhduar.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Instalimi d‰shtoj n‰ instalimin e FAT bootcode n‰ particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Ska disk n‰ drive A:.",
         "ENTER = Vazhdo"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ tipit tv p‰rzgjsdhjes t‰ tastier‰s.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Instalimi d‰shtoi p‰r t‰ rinovuar konfigurimet e regjistrit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Instalimi d‰shtoi n‰ importimin e skedes koshere.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Instalimi d‰shtoi p‰r t‰ gjetur dokumentat e regjistrit t‰ t‰ dh‰nave.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Instalimi d‰shtoi p‰r t krijuar rgjistrin e koshere.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Instalimi d‰shtoi n‰ nisjen e regjistrit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Kabineti nuk ka t‰ vlefshme dokumentin inf.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Kabineti nuk u gj‰nd.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Kabineti ska asnj‰ skript konfigurimi.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Installimi d‰shtoi rradh‰n e kopjimit t‰ dokumentave.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Instalimi nuk mund t‰ krijoj‰ skedat p‰r instalim.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Instalimi d‰shtoi p‰r t‰ gjetur seksionin e 'sked‰s'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Instalimi d‰shtoi p‰r t‰ gjetur '%S' seksionin\n"
         "ne TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Instalimi d‰shtoi p‰r t‰ gjetur seksionin e 'sked‰s'\n"
+        // ERROR_CABINET_SECTION,
+        "Instalimi d‰shtoi p‰r t‰ gjetur '%S' seksionin\n"
         "ne kabinet.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Instalimi nuk mund t‰ krijoj‰ skedat p‰r instalim.",
         "‰NT‰R = Ristarto kompjuterin"
     },
@@ -1614,38 +1614,38 @@ MUI_ERROR sqALErrorEntries[] =
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Instalimi d‰shtoi p‰r t‰ shkruar tabelen e particionit.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Instalimi d‰shtoi p‰r t‰ shtuar codepage n‰ regjister.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Instalimi nuk mund t‰ v‰ndosi v‰ndnoshjen n‰ sistem.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Instalimi d‰shtoi p‰r t‰ shtuar zgj‰dhjen e tastier‰s n‰ regjister.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Instalimi nuk mund t‰ vendosni id geo.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1653,20 +1653,20 @@ MUI_ERROR sqALErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1830,8 +1830,6 @@ MUI_STRING sqALStrings[] =
     "F3 = Dil  ENTER = Vazhdo"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Ristarto kompjuterin"},
-    {STRING_TXTSETUPFAILED,
-    "Instalimi d‰shtoj p‰r t‰ gjetur '%S' sectorin\nne TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Kopjo dokumentat: %S"},
     {STRING_SETUPCOPYINGFILES,

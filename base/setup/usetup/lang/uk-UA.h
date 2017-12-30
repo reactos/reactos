@@ -1436,7 +1436,7 @@ MUI_ERROR ukUAErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS не був повнiстю встановлений на Ваш\n"
         "комп'ютер. Якщо ви вийдете з встановлювача зараз,\n"
         "то Вам буде необхiдно запустити програму встановлення\n"
@@ -1447,62 +1447,62 @@ MUI_ERROR ukUAErrorEntries[] =
         "F3 = Вийти  ENTER = Продовжити"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Не вдалось знайти жорсткий диск.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Не вдалось знайти установочний диск.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Не вдалось завантажити файл TXTSETUP.SIF.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Файл TXTSETUP.SIF пошкоджений.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Виявлено некоректний пiдпис в TXTSETUP.SIF.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Не вдалось отримати данi про системний диск.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Не вдалось встановити завантажувальний код FAT на ситемний роздiл.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Не вдалось завантажити список типiв комп'ютера.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Не вдалось завантажити список режимiв екрану.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Не вдалось завантажити список типiв клавiатури.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Не вдалось завантажити список розкладок клавiатури.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Знайдено як мiнiмум один жорсткий диск, що мiстить роздiл,\n"
           "який не пiдтримується ReactOS!\n"
           "\n"
@@ -1513,7 +1513,7 @@ MUI_ERROR ukUAErrorEntries[] =
           "F3 = Вийти  ENTER = Продовжити"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Ви не можете створити новий роздiл на\n"
         "вже iснуючому роздiлi!\n"
         "\n"
@@ -1521,133 +1521,127 @@ MUI_ERROR ukUAErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Не можна видалити нерозмiчену область на диску!\n"
         "\n"
         "  * Натиснiть будь-яку клавiшу щоб продовжити.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Не вдалось встановити завантажувальний код FAT на ситемний роздiл.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Вiдсутня дискета в дисководi A:.",
         "ENTER = Продовжити"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Не вдалось оновити параметри розкладки клавiатури.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Не вдалось оновити параметри екрану в реєстрi.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Не вдалось iмпортувати файл кущiв реєстру.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Не вдалось знайти файли даних реєстру.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Не вдалось створити кущi реєстру.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Не вдалось iнiцiалiзувати реєстр.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet має некоректний inf-файл.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet не знайдено.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet не має установочного сценарiю.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Не вдалось вiдкрити чергу копiювання файлiв.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Не вдалось створити директорiї для встановлення.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Не вдалось знайти секцiю 'Directories'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Не вдалось знайти секцiю '%S'\n"
         "в файлi TXTSETUP.SIF.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Не вдалось знайти секцiю 'Directories'\n"
+        // ERROR_CABINET_SECTION,
+        "Не вдалось знайти секцiю '%S'\n"
         "в cabinet.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Не вдалось створити директорiю для встановлння.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Не вдалось знайти секцiю 'SetupData'\n"
-        "в файлi TXTSETUP.SIF.\n",
-        "ENTER = Перезавантажити комп'ютер"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Не вдалось записати таблицi роздiлiв.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Не вдалось додати параметри кодування в реєстр.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Не вдалось встановити локаль системи.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Не вдалось додати розкладки клавiатури до реєстру.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Не вдалось встановити geo id.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1655,20 +1649,20 @@ MUI_ERROR ukUAErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1832,8 +1826,6 @@ MUI_STRING ukUAStrings[] =
     "F3 = Вийти  ENTER = Продовжити"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Перезавантажити комп'ютер"},
-    {STRING_TXTSETUPFAILED,
-    "Встановлювач не змiг знайти секцiю '%S' \nв файлi TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Копiювання: %S"},
     {STRING_SETUPCOPYINGFILES,

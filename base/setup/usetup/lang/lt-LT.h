@@ -1439,7 +1439,7 @@ MUI_ERROR ltLTErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS is not completely installed on your\n"
         "computer. If you quit Setup now, you will need to\n"
         "run Setup again to install ReactOS.\n"
@@ -1449,62 +1449,62 @@ MUI_ERROR ltLTErrorEntries[] =
         "F3 = Quit  ENTER = Continue"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Setup could not find a harddisk.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Setup could not find its source drive.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Setup failed to load the file TXTSETUP.SIF.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Setup found a corrupt TXTSETUP.SIF.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup found an invalid signature in TXTSETUP.SIF.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Setup could not retrieve system drive information.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Setup failed to install FAT bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Setup failed to load the computer type list.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Setup failed to load the display settings list.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Setup failed to load the keyboard type list.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Setup failed to load the keyboard layout list.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Setup found that at least one harddisk contains an incompatible\n"
           "partition table that can not be handled properly!\n"
           "\n"
@@ -1515,7 +1515,7 @@ MUI_ERROR ltLTErrorEntries[] =
           "F3 = Quit  ENTER = Continue"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "You can not create a new Partition inside\n"
         "of an already existing Partition!\n"
         "\n"
@@ -1523,133 +1523,127 @@ MUI_ERROR ltLTErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "You can not delete unpartitioned disk space!\n"
         "\n"
         "  * Press any key to continue.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Setup failed to install the FAT bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "No disk in drive A:.",
         "ENTER = Continue"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Setup failed to update keyboard layout settings.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup failed to update display registry settings.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Setup failed to import a hive file.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Setup failed to find the registry data files.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Setup failed to create the registry hives.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Setup failed to initialize the registry.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet has no valid inf file.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet not found.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet has no setup script.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Setup failed to open the copy file queue.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Setup could not create install directories.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Setup failed to find the '%S' section\n"
         "in TXTSETUP.SIF.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
+        // ERROR_CABINET_SECTION,
+        "Setup failed to find the '%S' section\n"
         "in the cabinet.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Setup could not create the install directory.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Setup failed to find the 'SetupData' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Setup failed to write partition tables.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Setup could not set the system locale.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Setup failed to add keyboard layouts to registry.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Setup could not set the geo id.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1657,20 +1651,20 @@ MUI_ERROR ltLTErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1832,8 +1826,6 @@ MUI_STRING ltLTStrings[] =
     "F3 = Quit  ENTER = Continue"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reboot computer"},
-    {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,

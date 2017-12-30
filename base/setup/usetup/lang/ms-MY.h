@@ -1330,7 +1330,7 @@ MUI_ERROR msMYErrorEntries[] =
         "Berjaya\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS tidak benar-benar dipasang pada\n"
         "komputer anda. Jika anda berhenti persediaan sekarang, anda akan perlu\n"
         "untuk menjalankan persediaan untuk memasang ReactOS lagi.\n"
@@ -1340,62 +1340,62 @@ MUI_ERROR msMYErrorEntries[] =
         "F3 = Keluar  ENTER = Teruskan"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Persediaan tidak dapat mencari cakera keras.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Persediaan tidak dapat mencari sumber cakera.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Persediaan gagal untuk memuatkan fail TXTSETUP.SIF.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Persediaan mendapati TXTSETUP.SIF yang rosak.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Persediaan ditemui untuk tandatangan tidak sah dalam TXTSETUP.SIF.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Persediaan tidak dapat mendapatkan semula maklumat sistem cakera.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Persediaan gagal memasang bootcode FAT pada partition sistem.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Persediaan gagal untuk memuatkan senarai jenis komputer.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Persediaan gagal untuk memuatkan pengesetan paparan senarai.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Persediaan gagal untuk memuatkan senarai jenis papan kekunci.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Persediaan gagal untuk memuatkan senarai susun atur papan kekunci.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Persediaan mendapati bahawa sekurang-kurangnya satu cakera keras mengandungi\n"
           "jadual partition yang sesuai untuk yang tidak boleh dikendalikan dengan betul!\n"
           "\n"
@@ -1406,7 +1406,7 @@ MUI_ERROR msMYErrorEntries[] =
           "F3 = Keluar  ENTER = Teruskan"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Anda tidak boleh mencipta satu partition baru\n"
         "dalam partition yang telah sedia ada!\n"
         "\n"
@@ -1414,133 +1414,127 @@ MUI_ERROR msMYErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Anda tidak boleh menghapuskan ruang cakera yang tiada partition!\n"
         "\n"
         "  * Tekan sebarang kunci untuk meneruskan.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Persediaan gagal memasang bootcode FAT pada partition sistem.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Tiada cakera dalam cakera A:.",
         "ENTER = Teruskan"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Persediaan gagal mengemaskini seting susun atur papan kekunci.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Persediaan gagal mengemaskini daftaran seting paparan.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Persediaan gagal untuk mengimport fail gatal.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Persediaan gagal untuk mencari pendaftaran fail data.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Persediaan gagal mencipta gatal daftaran.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Persediaan gagal untuk diawalkan daftaran.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Kabinet mempunyai fail inf tidak sah.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Kabinet tidak dijumpai.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Kabinet mempunyai skrip tiada persediaan.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Persediaan gagal membuka baris gilir fail salinan.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Persediaan tidak dapat mencipta direktori pasang.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Persediaan gagal untuk mencari bahagian 'Direktori'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Persediaan gagal untuk mencari bahagian '%S'\n"
         "dalam TXTSETUP. SIF.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Persediaan gagal menemui bahagian 'Direktori'\n"
+        // ERROR_CABINET_SECTION,
+        "Persediaan gagal menemui bahagian '%S'\n"
         "dalam kabinet.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Persediaan tidak dapat mencipta direktori pasang.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Persediaan gagal untuk mencari bahagian 'SetupData'\n"
-        "dalam TXTSETUP.SIF.\n",
-        "ENTER = Memulakan semula komputer"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Persediaan gagal menulis jadual partition.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Persediaan gagal untuk menambah codepage ke daftaran.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Persediaan tidak dapat menyediakan penempatan sistem.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Persediaan gagal untuk menambah susun atur papan kekunci daftaran.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Persediaan tidak dapat disetkan geo id.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Nama direktori tidak sah.\n"
         "\n"
         "  * Tekan sebarang kunci untuk meneruskan."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Partition yang dipilih adalah tidak cukup besar untuk memasang ReactOS.\n"
         "Partition yang pasang hendaklah mempunyai saiz sekurang-kurangnya %lu MB.\n"
         "\n"
@@ -1548,14 +1542,14 @@ MUI_ERROR msMYErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Anda tidak boleh mencipta satu partition baru utama atau yang dilanjutkan\n"
         "dalam jadual partition cakera ini kerana jadual partition telah penuh.\n"
         "\n"
         "  * Tekan sebarang kunci untuk meneruskan."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Anda tidak boleh mencipta lebih daripada satu petak lanjutan setiap cakera.\n"
         "\n"
         "  * Tekan sebarang kunci untuk meneruskan."
@@ -1712,8 +1706,6 @@ MUI_STRING msMYStrings[] =
     "F3 = Keluar  ENTER = Teruskan"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Memulakan semuala komputer"},
-    {STRING_TXTSETUPFAILED,
-    "Persediaan yang gagal menemui bahagian '%S'\ndalam TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Menyalin fail: %S"},
     {STRING_SETUPCOPYINGFILES,

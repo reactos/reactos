@@ -1462,7 +1462,7 @@ MUI_ERROR roROErrorEntries[] =
         "Succes\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS nu a fost instalat în totalitate în calculator.\n"
         "Dacã abandonaþi instalarea acum, altã datã, pentru a\n"
         "instala ReactOS, va fi nevoie sã repetaþi toþi paºii.\n"
@@ -1472,68 +1472,68 @@ MUI_ERROR roROErrorEntries[] =
         "F3 = Ieºire  ENTER = Continuare"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Eºec la identificarea unitãþilor interne de stocare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Eºec la accesarea unitatãþii de instalare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Eºec la încãrcarea fiºierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Fiºieul TXTSETUP.SIF a fos gãsit deteriorat.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Fiºierul TXTSETUP.SIF conþine o semnãturã nevalidã.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Eºec la obþinerea de informaþii despre\n"
         "dispozitivele din calculator.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Eºec la instalarea codului FAT de iniþializare\n"
         "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Eºec la încãrcarea listei cu arhitecturi de\n"
         "calcul disponibile.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Eºec la încãrcarea listei cu parametri de\n"
         "afiºare pentru ecran.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Eºec la încãrcarea listei cu tipuri\n"
         "disponibile de tastaturã.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Eºec la încãrcarea listei de configuraþii\n"
         "ale tastaturii.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "A fost gãsitã cel puþin un disc cu tabelã nerecunoscutã\n"
         "de partiþii, care nu poate fi gestionatã corespunzãtor!\n"
         "\n"
@@ -1545,7 +1545,7 @@ MUI_ERROR roROErrorEntries[] =
         "F3 = Ieºire  ENTER = Continuare"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "O partiþie nouã nu poate fi creatã în interiorul\n"
         "unei partiþii existente!\n"
         "\n"
@@ -1553,7 +1553,7 @@ MUI_ERROR roROErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Aþi încercat ºtergerea de spaþiu nepartiþionat,\n"
         "însã doar spaþiul partiþionat poate fi ºters!\n"
         "\n"
@@ -1561,133 +1561,127 @@ MUI_ERROR roROErrorEntries[] =
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Eºec la instalarea codului FAT de iniþializare\n"
         "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Nu existã discuri flexibile în unitatea A:",
         "ENTER = Continuare"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Eºec la actualizarea configuraþiei de tastaturã.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Eºec la actualizarea registrului cu\n"
         "parametrii grafici ai ecranului!",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Eºec la importarea registrului.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Eºec la localizarea fiºierelor\n"
         "cu datele registrului.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Eºec la crearea registrului.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Eºec la iniþializarea registrului.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Fiºierul cabinet nu conþine nici\n"
         "un fiºier valid de tip inf.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Eºec la localizarea fiºierului cabinet.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Fiºierul cabinet nu conþine nici\n"
         "un script de instalare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Eºec la accesarea listei cu\n"
         "fiºiere pentru copiere.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Eºec la crearea directoarelor de instalare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Eºec la identificarea secþiunii de\n"
-        "directoare în fiºierul TXTSETUP.SIF.",
+        // ERROR_TXTSETUP_SECTION,
+        "Eºec la identificarea secþiunii\n"
+        "'%S' în fiºierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Eºec la identificarea secþiunii de\n"
-        "directoare în fiºierul cabinet.",
+        // ERROR_CABINET_SECTION,
+        "Eºec la identificarea secþiunii\n"
+        "'%S' în fiºierul cabinet.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Eºec la crearea directorului de instalare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Eºec la localizarea secþiunii pentru date\n"
-        "de instalare din fiºierul TXTSETUP.SIF.",
-        "ENTER = Repornire calculator"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Eºec la scrierea tabelelor de partiþii.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Eºec la includerea paginãrii în registru.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Eºec la instituirea sistemului de localizare.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Eºec la includerea în registru a configuraþiei\n"
         "de tastaturã.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Eºec la instituirea de geo id.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Numele de director este nevalid.\n"
         "\n"
         "  * Tastaþi pentru a continua."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Partiþia selectatã este prea micã pentru a instala ReactOS.\n"
         "Partiþia de instalare trebuie sã aibã cel puþin %lu Mocteþi.\n"
         "\n"
@@ -1695,20 +1689,20 @@ MUI_ERROR roROErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Nu poate fi creatã o nouã partiþie primarã sau extinsã în tabela\n"
         "de partiþii a acestui disc deoarece tabela de partiþii e plinã.\n"
         "\n"
         "  * Tastaþi pentru a continua."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Nu poate fi creatã mai mult de o partiþie extinsã pe un disc.\n"
         "\n"
         "  * Tastaþi pentru a continua."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Eºec la formatarea partiþiei:\n"
         " %S\n"
         "\n"
@@ -1870,8 +1864,6 @@ MUI_STRING roROStrings[] =
     "F3 = Ieºire  ENTER = Continuare"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Repornire calculator"},
-    {STRING_TXTSETUPFAILED,
-    "Nu s-a reuºit gãsirea sesiunii\n'%S' în TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Fiºierul curent: %S"},
     {STRING_SETUPCOPYINGFILES,

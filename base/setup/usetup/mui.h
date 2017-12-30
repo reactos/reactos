@@ -50,6 +50,14 @@ MUIClearPage(
     ULONG PageNumber);
 
 VOID
+MUIDisplayErrorV(
+    IN ULONG ErrorNum,
+    OUT PINPUT_RECORD Ir,
+    IN ULONG WaitEvent,
+    IN va_list args);
+
+VOID
+__cdecl
 MUIDisplayError(
     ULONG ErrorNum,
     PINPUT_RECORD Ir,
@@ -83,7 +91,6 @@ MUIGetString(
 #define STRING_CONTINUE                  12
 #define STRING_QUITCONTINUE              13
 #define STRING_REBOOTCOMPUTER            14
-#define STRING_TXTSETUPFAILED            15
 #define STRING_COPYING                   16
 #define STRING_SETUPCOPYINGFILES         17
 #define STRING_REGHIVEUPDATE             20

@@ -1439,7 +1439,7 @@ MUI_ERROR plPLErrorEntries[] =
         "Sukces\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS nie zostaˆ w peˆni zainstalowany na twoim\n"
         "komputerze. Je˜li wyjdziesz teraz, trzeba b©dzie\n"
         "ponownie uruchomi† instalator, by zainstalowa† ReactOS.\n"
@@ -1449,62 +1449,62 @@ MUI_ERROR plPLErrorEntries[] =
         "F3 = Wyj˜cie  ENTER = Kontynuacja"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Instalator nie znalazˆ ¾adnego dysku twardego.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Instalator nie znalazˆ nap©du «r¢dˆowego.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Instalator nie m¢gˆ zaˆadowa† pliku TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Instalator znalazˆ uszkodzony plik TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Instalator znalazˆ nieprawidˆowy wpis w TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Instalator nie m¢gˆ odczyta† informacji o nap©dzie.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Nieudane zapisanie FAT bootcode na partycji systemowej.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Instalator nie m¢gˆ zaˆadowa† listy typ¢w komputera.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Instalator nie m¢gˆ zaˆadowa† listy ustawieä ekranu.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Instalator nie m¢gˆ zaˆadowa† listy typ¢w klawiatury.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Instalator nie m¢gˆ zaˆadowa† listy ukˆad¢w klawiatury.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Instalator wykryˆ, ¾e co najmniej jeden dysk twardy zawiera niekompatybiln¥ \n"
         "tablic© partycji, kt¢ra nie b©dzie poprawnie obsˆugiwana!\n"
         "\n"
@@ -1515,7 +1515,7 @@ MUI_ERROR plPLErrorEntries[] =
         "F3 = Wyj˜cie  ENTER = Kontynuacja"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Nie mo¾esz stworzy† nowej partycji w miejscu ju¾\n"
         "istniej¥cej!\n"
         "\n"
@@ -1523,133 +1523,127 @@ MUI_ERROR plPLErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Nie mo¾esz usun¥† pustej przestrzeni, gdzie nie ma ¾adnej partycji!\n"
         "\n"
         "  * Naci˜nij dowolny klawisz, aby kontynuowa†.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Nieudana instalacja FAT bootcode na partycji systemowej.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Brak dyskietki w nap©dzie A:.",
         "ENTER = Kontynuacja"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Instalator nie m¢gˆ zmieni† ukˆadu klawiatury.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Instalator nie m¢gˆ zmieni† ustawieä ekranu w rejestrze.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Instalator nie byˆ w stanie zaimportowa† pliku gaˆ©zi rejestru.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Instalator nie byˆ w stanie znale«† plik¢w z danymi rejestru.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Instalator nie m¢gˆ stworzy† gaˆ©zi rejestru.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Instalator nie byˆ w stanie ustawi† inicjalizacji rejestru.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet nie zawiera prawidˆowego pliku inf.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet nie zostaˆ znaleziony.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet nie zawiera skryptu instalacji.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Instalator nie byˆ w stanie otworzy† kolejki kopiowania pliku.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Instalator nie m¢gˆ stworzy† katalog¢w.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Instalator nie byˆ w stanie znale«† sekcji 'Directories'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Instalator nie byˆ w stanie znale«† sekcji '%S'\n"
         "w pliku TXTSETUP.SIF.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Instalator nie byˆ w stanie znale«† sekcji 'Directories'\n"
+        // ERROR_CABINET_SECTION,
+        "Instalator nie byˆ w stanie znale«† sekcji '%S'\n"
         "w pliku cabinet.\n",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Instalator nie m¢gˆ stworzy† katalogu instalacji.",
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Instalator nie byˆ w stanie znale«† sekcji 'SetupData'\n"
-        "w pliku TXTSETUP.SIF.\n",
-        "ENTER = Restart komputera"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Instalator nie m¢gˆ zapisa† zmian w tablicy partycji.\n"
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Instalator nie m¢gˆ doda† strony kodowania do rejestru.\n"
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Instalator nie m¢gˆ ustawi† wersji j©zykowej.\n"
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Instalator nie m¢gˆ doda† ukˆad¢w klawiatury do rejestru.\n"
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Instalator nie m¢gˆ ustawi† lokalizacji geograficznej.\n"
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Nieprawidˆowa nazwa katalogu.\n"
         "\n"
         "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Wybrana partycja nie jest wystarczaj¥co du¾a, aby zainstalowa† ReactOS.\n"
         "Instalacyjna partycja musi mie† rozmiar co najmniej %lu MB.\n"
         "\n"
@@ -1657,20 +1651,20 @@ MUI_ERROR plPLErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Nie mo¾na utworzy† na tym dysku partycji podstawowej lub\n" // FIXME
         "rozszerzonej, poniewa¾ tabela partycji jest pe©na.\n"
         "\n"
         "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Nie mo¾esz utworzy† wi©cej ni¾ jednej partycji rozszerzonej na dysku.\n"
         "\n"
         "  * Naci˜nij dowolny klawisz, aby kontynuowa†."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Instalator nie m¢gˆ sformatowa† partycji:\n"
         " %S\n"
         "\n"
@@ -1832,8 +1826,6 @@ MUI_STRING plPLStrings[] =
     "F3 = Wyj˜cie  ENTER = Kontynuacja"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Restart komputera"},
-    {STRING_TXTSETUPFAILED,
-    "Instalator nie byˆ w stanie odnale«† sekcji '%S'\nw pliku TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Kopiowanie plik¢w: %S"},
     {STRING_SETUPCOPYINGFILES,

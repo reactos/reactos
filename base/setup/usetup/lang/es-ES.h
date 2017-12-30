@@ -1433,7 +1433,7 @@ MUI_ERROR esESErrorEntries[] =
         "Completado correctamente\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS no est  completamente instalado en su\n"
         "equipo. Si cierra ahora el Instalador, necesitar \n"
         "ejecutarlo otra vez para instalar ReactOS.\n"
@@ -1443,62 +1443,62 @@ MUI_ERROR esESErrorEntries[] =
         "F3 = Salir  INTRO = Continuar"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "El instalador no pudo encontrar un disco duro.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "El instalador no pudo encontrar su unidad fuente.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "El instalador fall¢ al cargar el archivo TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "El instalador encontr¢ un archivo TXTSETUP.SIF corrupto.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "El instalador encontr¢ una firma incorrecta en TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "El instalador no pudo recibir informaci¢n del disco del sistema.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "El instalador fall¢ al cargar la lista de tipos de equipos.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "El instalador fall¢ al cargar la lista de resoluciones de pantalla.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "El instalador fall¢ al cargar la lista de teclados.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "El instalador fall¢ al cargar la lista de distribuciones de teclado.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "­El instalador encontr¢ que al menos un disco duro contiene una tabla\n"
         "de partici¢n incompatible que no puede ser manejada correctamente!\n"
         "\n"
@@ -1509,7 +1509,7 @@ MUI_ERROR esESErrorEntries[] =
         "F3 = Salir  INTRO = Continuar"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "­No puede crear una nueva partici¢n dentro\n"
         "de una partici¢n existente!\n"
         "\n"
@@ -1517,133 +1517,127 @@ MUI_ERROR esESErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "­No se puede borrar un espacio de disco sin particionar!\n"
         "\n"
         "  * Presione cualquier tecla para continuar.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "No hay disco en la unidad A:.",
         "INTRO = Continuar"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "El instalador fall¢ al actualizar la configuraci¢n de distribuci¢n de teclado.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "El instalador fall¢ al actualizar la configuraci¢n de la pantalla.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "El instalador fall¢ al importar un archivo de la estructura.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "El instalador fall¢ al buscar los archivos de datos registrados.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "El instalador fall¢ al crear el registro de la estructura.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "El instalador fall¢ al configurar el registro de inicio.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet no tiene un archivo inf v lido.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet no encontrado.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet no tiene ning£n script de instalaci¢n.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "El instalador fall¢ al abrir la lista de archivos a copiar.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "El instalador no puede crear los directorios de instalaci¢n.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "El instalador fall¢ al buscar la secci¢n 'Directorios'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "El instalador fall¢ al buscar la secci¢n '%S'\n"
         "en TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "El instalador fall¢ al buscar la secci¢n 'Directorios'\n"
+        // ERROR_CABINET_SECTION,
+        "El instalador fall¢ al buscar la secci¢n '%S'\n"
         "en el cabinet.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "El instalador no puede crear el directorio de instalaci¢n.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "El instalador fall¢ al buscar la secci¢n 'SetupData'\n"
-        "en TXTSETUP.SIF.\n",
-        "INTRO = Reiniciar el equipo"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "El instalador fall¢ al escribir la tabla de particiones.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "El instalador fall¢ al a¤adir el c¢digo de p ginas al registro.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "El instalador no pudo configurar el idioma del sistema.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "El instalador no ha podido agregar los layouts de teclado al registro.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "El instalador no ha podido configurar el ID geogr fico.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Nombre de carpeta no v lido.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "La partici¢n selecionada no es lo suficientemente grande como para.\n"
         "instalar ReactOS. Se necesita una partici¢n de al menos %lu MB.\n"
         "\n"
@@ -1651,20 +1645,20 @@ MUI_ERROR esESErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "No es posible a¤adir una partici¢n primaria o extendida en la\n"
         "tabla de partici¢n de este disco, ya que est  completamente llena.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "No es posible crear m s de una partici¢n extendida por disco.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "El instalador es incapaz de formatear la partici¢n:\n"
         " %S\n"
         "\n"
@@ -1826,8 +1820,6 @@ MUI_STRING esESStrings[] =
     "F3 = Salir  INTRO = Continuar"},
     {STRING_REBOOTCOMPUTER,
     "INTRO = Reiniciar el equipo"},
-    {STRING_TXTSETUPFAILED,
-    "El instalador fall¢ al buscar la secci¢n\nen TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Copiando archivo: %S"},
     {STRING_SETUPCOPYINGFILES,

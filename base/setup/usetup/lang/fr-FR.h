@@ -1448,7 +1448,7 @@ MUI_ERROR frFRErrorEntries[] =
         "Succäs\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS n'est pas complätement installÇ sur votre\n"
         "ordinateur. Si vous quittez Setup maintenant, vous devrez\n"
         "lancer Setup de nouveau pour installer ReactOS.\n"
@@ -1458,62 +1458,62 @@ MUI_ERROR frFRErrorEntries[] =
         "F3 = Quitter  ENTRêE = Continuer"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Setup n'a pu trouver un disque dur.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Setup n'a pu trouver son lecteur source.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Setup n'a pas rÇussi Ö charger le fichier TXTSETUP.SIF.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Setup a trouvÇ un fichier TXTSETUP.SIF corrompu.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup a trouvÇ une signature invalide dans TXTSETUP.SIF.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Setup n'a pu rÇcupÇrer les informations du disque systäme.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Echec de l'installation du code de dÇmarrage FAT sur la partition systäme.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Setup n'a pu charger la liste de type d'ordinateurs.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Setup n'a pu charger la liste de rÇglages des Çcrans.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Setup n'a pu charger la liste de types de claviers.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Setup n'a pu charger la liste de dispositions de claviers.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Setup a dÇtectÇ qu'au moins un disque dur contient une table\n"
         "de partition incompatible qui ne peut àtre prise en compte!\n"
         "\n"
@@ -1524,7 +1524,7 @@ MUI_ERROR frFRErrorEntries[] =
         "F3 = Quitter  ENTRêE = Continuer"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Vous ne pouvez crÇer une nouvelle Partition Ö l'intÇrieur\n"
         "d'une Partition dÇjÖ existante!\n"
         "\n"
@@ -1532,133 +1532,127 @@ MUI_ERROR frFRErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Vous ne pouvez supprimer de l'espace disque non partitionnÇ!\n"
         "\n"
         "  * Appuyer sur une touche pour continuer.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Echec de l'installation du code de dÇmarrage FAT sur la partition systäme.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Pas de disque dans le lecteur A:.",
         "ENTRêE = Continuer"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Setup n'a pu mettre Ö jour les rÇglages de disposition du clavier.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup n'a pu mettre Ö jour les rÇglages de l'Çcran.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Setup n'a pu importer un fichier ruche.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Setup n'a pu trouver les fichiers de la base de registres.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Setup n'a pu crÇer les ruches de la base de registres.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Setup n'a pu initialiser la base de registres.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Le Cabinet n'a pas de fichier inf valide.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet non trouvÇ.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet n'a pas de script de setup.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Setup n'a pu ouvrir la file d'attente de copie de fichiers.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Setup n'a pu crÇer les rÇpertoires d'installation.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Setup n'a pu trouver la section 'Directories'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Setup n'a pu trouver la section '%S'\n"
         "dans TXTSETUP.SIF.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Setup n'a pu trouver la section 'Directories\n"
+        // ERROR_CABINET_SECTION,
+        "Setup n'a pu trouver la section '%S\n"
         "dans le cabinet.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Setup n'a pu crÇer le rÇpertoire d'installation.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Setup n'a pu trouver la section 'SetupData'\n"
-        "dans TXTSETUP.SIF.\n",
-        "ENTRêE = RedÇmarrer l'ordinateur"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Setup n'a pu Çcrire les tables de partition.\n"
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Setup n'a pu ajouter la page de codes Ö la base de registres.\n"
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Setup n'a pu changer la langue systäme.\n"
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Setup n'a pas pu ajouter les dispositions de clavier au registre.\n"
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Setup n'a pas pu dÇfinir la geo id.\n"
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Nom de rÇpertoire invalide.\n"
         "\n"
         "  * Appuyer sur une touche pour continuer."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1666,20 +1660,20 @@ MUI_ERROR frFRErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Impossible de crÇer une nouvelle partition primaire ou Çtendue\n"
         "sur ce disque parce que sa table de partition est pleine.\n"
         "\n"
         "  * Appuyer sur une touche pour continuer."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Impossible de crÇer plus d'une partition Çtendue par disque.\n"
         "\n"
         "  * Appuyer sur une touche pour continuer."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1841,8 +1835,6 @@ MUI_STRING frFRStrings[] =
     "F3 = Quitter  ENTRêE = Continuer"},
     {STRING_REBOOTCOMPUTER,
     "ENTRêE = RedÇmarrer l'ordinateur"},
-    {STRING_TXTSETUPFAILED,
-    "Setup n'a pu trouver la section '%S'\ndans TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Copie du fichier: %S"},
     {STRING_SETUPCOPYINGFILES,
