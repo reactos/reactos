@@ -38,6 +38,7 @@ InitFontSupport(VOID)
     ghsemFontDriver = EngCreateSemaphore();
     if (!ghsemFontDriver) return FALSE;
 
+    /* Initialize the global public font taböe */
     if (!PFT_bInit(&gpftPublic)) return FALSE;
 
     return TRUE;
@@ -272,6 +273,7 @@ leave:
 }
 
 BOOL
+NTAPI
 EngLoadFontDriver(
     IN PWSTR pwszDriverName)
 {
@@ -306,7 +308,7 @@ EngLoadFontDriver(
                                             HS_DDI_MAX,
                                             pfntdev->ahsurf,
                                             sizeof(GDIINFO),
-                                            &pfntdev->gdiinfo,
+                                            (ULONG*)&pfntdev->gdiinfo,
                                             sizeof(DEVINFO),
                                             &pfntdev->devinfo,
                                             (HDEV)pfntdev,

@@ -50,7 +50,7 @@ PRFONT
 NTAPI
 DC_prfnt(PDC pdc)
 {
-    PRFONT prfnt;
+    PRFONT prfnt = 0;
 
     /* Select "current" font */
     DC_hSelectFont(pdc, pdc->pdcattr->hlfntNew);
