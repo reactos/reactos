@@ -833,7 +833,7 @@ RawQueryFsSizeInfo(IN PVCB Vcb,
     else
     {
         /* Setup query IRP */
-        KeResetEvent(&Event);
+        KeClearEvent(&Event);
         Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO,
                                             RealDevice,
                                             NULL,

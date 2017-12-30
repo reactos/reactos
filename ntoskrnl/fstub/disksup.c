@@ -1014,7 +1014,7 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Reset event */
-        KeResetEvent(Event);
+        KeClearEvent(Event);
 
         /* Call the driver and check if it's pending */
         Status = IoCallDriver(DeviceObject, Irp);
@@ -1847,7 +1847,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     do
     {
         /* Reset the event since we reuse it */
-        KeResetEvent(&Event);
+        KeClearEvent(&Event);
 
         /* Build the read IRP */
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
@@ -1912,7 +1912,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
                 PartitionDescriptor->PartitionType = (UCHAR)PartitionType;
 
                 /* Reset the reusable event */
-                KeResetEvent(&Event);
+                KeClearEvent(&Event);
 
                 /* Build the write IRP */
                 Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,

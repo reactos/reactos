@@ -608,7 +608,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         if (ReceivePort->Flags & LPCP_WAITABLE_PORT)
         {
             /* Reset its event */
-            KeResetEvent(&ReceivePort->WaitEvent);
+            KeClearEvent(&ReceivePort->WaitEvent);
         }
 
         /* Release the lock and fail */
@@ -630,7 +630,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         if (ReceivePort->Flags & LPCP_WAITABLE_PORT)
         {
             /* Reset its event */
-            KeResetEvent(&ReceivePort->WaitEvent);
+            KeClearEvent(&ReceivePort->WaitEvent);
         }
     }
 
