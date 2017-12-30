@@ -20,7 +20,7 @@ BEGIN
     END
     POPUP "视图(&V)"
     BEGIN
-        MENUITEM "单窗模式(&M)", IDM_SWITCHVIEW
+        MENUITEM "单窗口模式(&M)", IDM_SWITCHVIEW
     END
     POPUP "设备(&D)"
     BEGIN
