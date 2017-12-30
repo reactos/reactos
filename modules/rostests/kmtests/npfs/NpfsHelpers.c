@@ -709,7 +709,7 @@ TriggerWork(
                                    FALSE,
                                    NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
-    KeResetEvent(&Context->WorkCompleteEvent);
+    KeClearEvent(&Context->WorkCompleteEvent);
     KeSetEvent(&Context->StartWorkEvent, IO_NO_INCREMENT, TRUE);
     return WaitForWork(Context, MilliSeconds);
 }

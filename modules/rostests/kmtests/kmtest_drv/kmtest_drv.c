@@ -458,7 +458,7 @@ DriverIoControl(
             RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, &WorkItem->Request, Length);
             Status = STATUS_SUCCESS;
 
-            KeResetEvent(&WorkList.NewWorkEvent);
+            KeClearEvent(&WorkList.NewWorkEvent);
             break;
 
         }
