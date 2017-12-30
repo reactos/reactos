@@ -121,7 +121,9 @@ CcFastCopyRead(IN PFILE_OBJECT FileObject,
                OUT PVOID Buffer,
                OUT PIO_STATUS_BLOCK IoStatus)
 {
-    UNIMPLEMENTED_DBGBREAK();
+	LARGE_INTEGER Offset;
+	Offset.QuadPart = FileOffset;
+	CcCopyRead(FileObject, &Offset, Length, TRUE, Buffer, IoStatus);
 }
 
 BOOLEAN
