@@ -7894,7 +7894,7 @@ RxScavengerTimerRoutine(
     {
         /* Done */
         Scavenger->State = RDBSS_SCAVENGER_ACTIVE;
-        KeResetEvent(&Scavenger->ScavengeEvent);
+        KeClearEvent(&Scavenger->ScavengeEvent);
 
         /* Scavenger the entries */
         RxReleaseScavengerMutex();
@@ -7982,7 +7982,7 @@ RxSpinUpRequestsDispatcher(
         {
             ListEntry = &RxDispatcher->SpinUpRequests;
         }
-        KeResetEvent(&RxDispatcher->SpinUpRequestsEvent);
+        KeClearEvent(&RxDispatcher->SpinUpRequestsEvent);
         KeReleaseSpinLock(&RxDispatcher->SpinUpRequestsLock, OldIrql);
 
         while (ListEntry != &RxDispatcher->SpinUpRequests)

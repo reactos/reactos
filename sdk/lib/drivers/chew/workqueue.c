@@ -81,7 +81,7 @@ BOOLEAN ChewCreate(VOID (*Worker)(PVOID), PVOID WorkerContext)
         Item->Worker = Worker;
         Item->WorkerContext = WorkerContext;
         ExInterlockedInsertTailList(&WorkQueue, &Item->Entry, &WorkQueueLock);
-        KeResetEvent(&WorkQueueClear);
+        KeClearEvent(&WorkQueueClear);
         IoQueueWorkItem(Item->WorkItem, ChewWorkItem, DelayedWorkQueue, Item);
 
         return TRUE;

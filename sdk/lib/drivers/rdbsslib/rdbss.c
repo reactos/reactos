@@ -4451,7 +4451,7 @@ RxCommonWrite(
                                           1,
                                           &RxStrucSupSpinLock) == 0)
                 {
-                    KeResetEvent(Fcb->NonPaged->OutstandingAsyncEvent);
+                    KeClearEvent(Fcb->NonPaged->OutstandingAsyncEvent);
                 }
 
                 UnwindOutstandingAsync = TRUE;
