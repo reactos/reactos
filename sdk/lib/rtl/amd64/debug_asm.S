@@ -47,11 +47,12 @@ DbgUserBreakPoint:
 .ENDP
 
 DebugService2:
+
+    /* Pass the service number in eax */
+    mov rax, r8
+    int HEX(2D)
+    int 3
     ret
-    /* Call the interrupt */
-//    mov eax, [rbp+8]
-//    int 0x2D
-//    int 3
 
 
 /******************************************************************************
