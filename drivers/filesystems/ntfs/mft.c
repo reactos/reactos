@@ -1064,6 +1064,10 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
         //TEMPTEMP
         ULONG UsedBufferSize;
         TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+        if (TempBuffer == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
         LastLCN = 0;
         CurrentOffset = 0;
@@ -1099,6 +1103,7 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
 
             if (*DataRun == 0)
             {
+                ExFreePoolWithTag(TempBuffer, TAG_NTFS);
                 return AlreadyRead;
             }
 
@@ -1379,7 +1384,11 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         CurrentOffset = 0;  
 
         // This will be rewritten in the next iteration to just use the DataRuns MCB directly
-        TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);        
+        TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+        if (TempBuffer == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
         ConvertLargeMCBToDataRuns(&Context->DataRunsMCB,
                                   TempBuffer,
@@ -1404,7 +1413,8 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
                 // (it may require increasing the allocation size).
                 DataRunStartLCN = -1;
                 DPRINT1("FIXME: Writing to sparse files is not supported yet!\n");
-                return STATUS_NOT_IMPLEMENTED;
+                Status = STATUS_NOT_IMPLEMENTED;
+                goto Cleanup;
             }
 
             // Have we reached the data run we're trying to write to?
@@ -1421,7 +1431,8 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
                 // (Presently, this code will rarely be reached, the write will usually have already failed by now)
                 // [We can reach here by creating a new file record when the MFT isn't large enough]
                 DPRINT1("FIXME: Master File Table needs to be enlarged.\n");
-                return STATUS_END_OF_FILE;
+                Status = STATUS_END_OF_FILE;
+                goto Cleanup;
             }
 
             CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
@@ -1455,7 +1466,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         Context->CacheRunLastLCN = LastLCN;
         Context->CacheRunCurrentOffset = CurrentOffset;
 
-        return Status;
+        goto Cleanup;
     }
 
     Length -= WriteLength;
@@ -1488,7 +1499,8 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         if (DataRunStartLCN == -1)
         {
             DPRINT1("FIXME: Don't know how to write to sparse files yet! (DataRunStartLCN == -1)\n");
-            return STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_NOT_IMPLEMENTED;
+            goto Cleanup;
         }
         else
         {
@@ -1519,7 +1531,8 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
             {
                 // Failed sanity check.
                 DPRINT1("Encountered EOF before expected!\n");
-                return STATUS_END_OF_FILE;
+                Status = STATUS_END_OF_FILE;
+                goto Cleanup;
             }
 
             break;
@@ -1541,16 +1554,17 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         }
     } // end while (Length > 0) [more data to write]
 
-    // TEMPTEMP
-    if (Context->pRecord->IsNonResident)
-        ExFreePoolWithTag(TempBuffer, TAG_NTFS);
-
     Context->CacheRun = DataRun;
     Context->CacheRunOffset = Offset + *RealLengthWritten;
     Context->CacheRunStartLCN = DataRunStartLCN;
     Context->CacheRunLength = DataRunLength;
     Context->CacheRunLastLCN = LastLCN;
     Context->CacheRunCurrentOffset = CurrentOffset;
+
+Cleanup:
+    // TEMPTEMP
+    if (Context->pRecord->IsNonResident)
+        ExFreePoolWithTag(TempBuffer, TAG_NTFS);
 
     return Status;
 }
