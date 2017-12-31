@@ -275,7 +275,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     ExFreePool(BootSector);
 
     ExInitializeNPagedLookasideList(&DeviceExt->FileRecLookasideList,
-                                    NULL, NULL, 0, NtfsInfo->BytesPerFileRecord, TAG_NTFS, 0);
+                                    NULL, NULL, 0, NtfsInfo->BytesPerFileRecord, TAG_FILE_REC, 0);
 
     DeviceExt->MasterFileTable = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (DeviceExt->MasterFileTable == NULL)

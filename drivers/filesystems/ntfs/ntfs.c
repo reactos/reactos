@@ -142,13 +142,13 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     /* Initialize lookaside list for IRP contexts */
     ExInitializeNPagedLookasideList(&NtfsGlobalData->IrpContextLookasideList,
-                                    NULL, NULL, 0, sizeof(NTFS_IRP_CONTEXT), 'PRIN', 0);
+                                    NULL, NULL, 0, sizeof(NTFS_IRP_CONTEXT), TAG_IRP_CTXT, 0);
     /* Initialize lookaside list for FCBs */
     ExInitializeNPagedLookasideList(&NtfsGlobalData->FcbLookasideList,
                                     NULL, NULL, 0, sizeof(NTFS_FCB), TAG_FCB, 0);
     /* Initialize lookaside list for attributes contexts */
     ExInitializeNPagedLookasideList(&NtfsGlobalData->AttrCtxtLookasideList,
-                                    NULL, NULL, 0, sizeof(NTFS_ATTR_CONTEXT), TAG_NTFS, 0);
+                                    NULL, NULL, 0, sizeof(NTFS_ATTR_CONTEXT), TAG_ATT_CTXT, 0);
 
     /* Driver can't be unloaded */
     DriverObject->DriverUnload = NULL;

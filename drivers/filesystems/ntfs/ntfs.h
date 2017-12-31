@@ -14,7 +14,12 @@
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
 	 (pDeviceExt)->NtfsInfo.UCHARsPerCluster : PAGE_SIZE)
 
-#define TAG_NTFS 'SFTN'
+#define TAG_NTFS '0ftN'
+#define TAG_CCB 'CftN'
+#define TAG_FCB 'FftN'
+#define TAG_IRP_CTXT 'iftN'
+#define TAG_ATT_CTXT 'aftN'
+#define TAG_FILE_REC 'rftN'
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
@@ -139,9 +144,6 @@ typedef struct
     ULONG LastCluster;
     ULONG LastOffset;
 } NTFS_CCB, *PNTFS_CCB;
-
-#define TAG_CCB 'BCCI'
-#define TAG_FCB 'BCFI'
 
 typedef struct
 {
