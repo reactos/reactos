@@ -948,6 +948,7 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                     DPRINT1("Unable to create LargeMcb!\n");
                     if (AttribDataSize.QuadPart > 0)
                         ExFreePoolWithTag(AttribData, TAG_NTFS);
+                    ExFreePoolWithTag(NewRecord, TAG_NTFS);
                     _SEH2_YIELD(return _SEH2_GetExceptionCode());
                 } _SEH2_END;
 
@@ -961,6 +962,7 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                     DPRINT1("ERROR: Couldn't update file record to continue migration!\n");
                     if (AttribDataSize.QuadPart > 0)
                         ExFreePoolWithTag(AttribData, TAG_NTFS);
+                    ExFreePoolWithTag(NewRecord, TAG_NTFS);
                     return Status;
                 }
 
