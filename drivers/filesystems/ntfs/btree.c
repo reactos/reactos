@@ -732,7 +732,8 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
     {
         DPRINT1("Filesystem corruption detected!\n");
         DestroyBTree(Tree);
-        return STATUS_FILE_CORRUPT_ERROR;
+        Status = STATUS_FILE_CORRUPT_ERROR;
+        goto Cleanup;
     }
 
     // Start at the first node entry
@@ -749,7 +750,8 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
         {
             DPRINT1("ERROR: Couldn't allocate memory for next key!\n");
             DestroyBTree(Tree);
-            return STATUS_INSUFFICIENT_RESOURCES;
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
         }
 
         RootNode->KeyCount++;
@@ -763,7 +765,8 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
             {
                 DPRINT1("ERROR: Couldn't allocate memory for next key!\n");
                 DestroyBTree(Tree);
-                return STATUS_INSUFFICIENT_RESOURCES;
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Cleanup;
             }
 
             RtlZeroMemory(NextKey, sizeof(B_TREE_KEY));
@@ -786,7 +789,8 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
                 {
                     DPRINT1("ERROR: Couldn't create child node!\n");
                     DestroyBTree(Tree);
-                    return STATUS_NOT_IMPLEMENTED;
+                    Status = STATUS_NOT_IMPLEMENTED;
+                    goto Cleanup;
                 }
             }
 
@@ -813,7 +817,8 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
                 {
                     DPRINT1("ERROR: Couldn't create child node!\n");
                     DestroyBTree(Tree);
-                    return STATUS_NOT_IMPLEMENTED;
+                    Status = STATUS_NOT_IMPLEMENTED;
+                    goto Cleanup;
                 }
             }
 
@@ -822,11 +827,13 @@ CreateBTreeFromIndex(PDEVICE_EXTENSION Vcb,
     }
 
     *NewTree = Tree;
+    Status = STATUS_SUCCESS;
 
+Cleanup:
     if (IndexAllocationContext)
         ReleaseAttributeContext(IndexAllocationContext);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /**
@@ -1242,6 +1249,7 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("ERROR: Failed to add index bitmap!\n");
+                    ReleaseAttributeContext(IndexAllocationContext);
                     return Status;
                 }
 
