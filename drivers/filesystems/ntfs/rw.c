@@ -545,6 +545,9 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     DPRINT("NtfsWrite(IrpContext %p)\n", IrpContext);
     ASSERT(IrpContext);
 
+    // get the I/O request packet
+    Irp = IrpContext->Irp;
+
     // This request is not allowed on the main device object
     if (IrpContext->DeviceObject == NtfsGlobalData->DeviceObject)
     {
@@ -553,9 +556,6 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
         Irp->IoStatus.Information = 0;
         return STATUS_INVALID_DEVICE_REQUEST;
     }
-
-    // get the I/O request packet
-    Irp = IrpContext->Irp;
 
     // get the File control block
     Fcb = (PNTFS_FCB)IrpContext->FileObject->FsContext;
