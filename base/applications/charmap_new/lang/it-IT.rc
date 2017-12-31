@@ -24,6 +24,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ABOUT "&Informazioni su..."
+    IDS_ABOUT "&Informazioni su…"
     IDS_TITLE "Mappa caratteri"
 END
