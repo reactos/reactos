@@ -21,7 +21,6 @@
 #include <winsock2.h>
 #include <Windows.h>
 #endif
-
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include <icmpapi.h>
@@ -219,7 +218,6 @@ PrintHopInfo(_In_ IPAddr Address)
     WCHAR HostName[NI_MAXHOST];
     if (Info.ResolveAddresses)
     {
-        
         Status = GetNameInfoW((PSOCKADDR)&SockAddrIn,
                               sizeof(SOCKADDR_IN),
                               HostName,
