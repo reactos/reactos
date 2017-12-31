@@ -105,13 +105,15 @@ PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord)
 VOID
 ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
 {
-    if (Context->pRecord->IsNonResident)
+    if (Context->pRecord)
     {
-        FsRtlUninitializeLargeMcb(&Context->DataRunsMCB);
-    }
+        if (Context->pRecord->IsNonResident)
+        {
+            FsRtlUninitializeLargeMcb(&Context->DataRunsMCB);
+        }
 
-    if(Context->pRecord)
         ExFreePoolWithTag(Context->pRecord, TAG_NTFS);
+    }
 
     ExFreePoolWithTag(Context, TAG_NTFS);
 }
