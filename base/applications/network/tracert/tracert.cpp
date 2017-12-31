@@ -519,6 +519,7 @@ ParseCmdline(int argc, wchar_t *argv[])
     return true;
 }
 
+EXTERN_C
 int wmain(int argc, wchar_t *argv[])
 {
     Info.ResolveAddresses = true;
