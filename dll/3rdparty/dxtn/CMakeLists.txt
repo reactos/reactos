@@ -6,6 +6,6 @@ add_library(dxtn SHARED
     txc_fetch_dxtn.c
     ${CMAKE_CURRENT_BINARY_DIR}/dxtn.def)
 
-set_entrypoint(dxtn 0)
-add_importlibs(dxtn msvcrt)
+set_module_type(dxtn win32dll ENTRYPOINT 0)
+add_importlibs(dxtn msvcrt kernel32)
 add_cd_file(TARGET dxtn DESTINATION reactos/system32 FOR all)
