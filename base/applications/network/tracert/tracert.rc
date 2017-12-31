@@ -11,9 +11,6 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
-#if 1
-#include "lang/en-US.rc"
-#else
 #ifdef LANGUAGE_BG_BG
 #include "lang/bg-BG.rc"
 #endif
@@ -61,5 +58,4 @@
 #endif
 #ifdef LANGUAGE_ZH_TW
 #include "lang/zh-TW.rc"
-#endif
 #endif

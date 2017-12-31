@@ -1,0 +1,32 @@
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\r\n\
+Usage: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name \r\n\r\n\
+Options:\r\n\
+    -d                 Do not resolve addresses to hostnames.\r\n\
+    -h maximum_hops    Maximum number of hops to search for target.\r\n\
+    -j host-list       Loose source route along host-list.\r\n\
+    -w timeout         Wait timeout milliseconds for each reply.\r\n\
+    -4                 Force using IPv4.\r\n\
+    -6                 Force using IPv6.\r\n\
+\r\n"
+
+    IDS_INVALID_OPTION  "%1 is not a valid command option.\r\n"
+    IDS_TRACE_INFO      "\r\nTracing route to %1 [%2]\r\nover a maximum of %3!u! hops:\r\n\r\n"
+    IDS_TRACE_COMPLETE  "\r\nTrace complete.\r\n"
+    IDS_UNABLE_RESOLVE  "Unable to resolve target system name %1.\r\n"
+
+    IDS_GEN_FAILURE     "General failure.\r\n"
+
+    IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
+    IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
+    IDS_HOP_ZERO,       "  <1 ms  %0\r\n"
+    IDS_TIMEOUT         "   *     %0\r\n"
+    IDS_HOP_RES_INFO    "%1 [%2]\r\n"
+    IDS_HOP_IP_INFO     "%1\r\n"
+    IDS_REQ_TIMED_OUT   "Request timed out.\r\n"
+
+END
