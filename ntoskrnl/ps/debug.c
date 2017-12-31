@@ -61,18 +61,18 @@ PspDumpThreads(BOOLEAN IncludeSystem)
                 {
 #ifdef _M_IX86
                     ULONG i = 0;
-                    PULONG Esp = (PULONG)Thread->Tcb.KernelStack;
-                    PULONG Ebp = (PULONG)Esp[4];
+                    PULONG_PTR Esp = (PULONG_PTR)Thread->Tcb.KernelStack;
+                    PULONG_PTR Ebp = (PULONG_PTR)Esp[4];
 
                     /* Print EBP */
                     DbgPrint("Ebp %p\n", Ebp);
 
                     /* Walk it */
-                    while(Ebp != 0 && Ebp >= (PULONG)Thread->Tcb.StackLimit)
+                    while(Ebp != 0 && Ebp >= (PULONG_PTR)Thread->Tcb.StackLimit)
                     {
                         /* Print what's on the stack */
                         DbgPrint("%.8X %.8X%s", Ebp[0], Ebp[1], (i % 8) == 7 ? "\n" : "  ");
-                        Ebp = (PULONG)Ebp[0];
+                        Ebp = (PULONG_PTR)Ebp[0];
                         i++;
                     }
 

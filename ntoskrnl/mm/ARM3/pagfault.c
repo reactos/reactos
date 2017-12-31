@@ -576,6 +576,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     BOOLEAN NeedZero = FALSE, HaveLock = FALSE;
     ULONG Color;
     PMMPFN Pfn1;
+    PMMPTE PtePte;
     DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
@@ -705,6 +706,9 @@ MiResolveDemandZeroFault(IN PVOID Address,
     if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
 
     /* Write it */
+    /* HACK: mark it as writeable before wiring to it */
+    PtePte = MiAddressToPte(PointerPte);
+    PtePte->u.Hard.Write = 1;
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
     /* Did we manually acquire the lock */
@@ -1640,6 +1644,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     ULONG Color;
     BOOLEAN IsSessionAddress;
     PMMPFN Pfn1;
+    PMMPTE PtePte;
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
     /* Check for page fault on high IRQL */
@@ -2029,10 +2034,10 @@ UserFault:
     {
         /* Right now, we only handle scenarios where the PXE is totally empty */
         ASSERT(PointerPxe->u.Long == 0);
-#if 0
+#if 1
         /* Resolve a demand zero fault */
         Status = MiResolveDemandZeroFault(PointerPpe,
-                                          MM_READWRITE,
+                                          MiAddressToPte(PointerPpe),
                                           CurrentProcess,
                                           MM_NOIRQL);
 #endif
@@ -2049,10 +2054,10 @@ UserFault:
     {
         /* Right now, we only handle scenarios where the PPE is totally empty */
         ASSERT(PointerPpe->u.Long == 0);
-#if 0
+#if 1
         /* Resolve a demand zero fault */
         Status = MiResolveDemandZeroFault(PointerPde,
-                                          MM_READWRITE,
+                                          MiAddressToPte(PointerPde),
                                           CurrentProcess,
                                           MM_NOIRQL);
 #endif
@@ -2087,6 +2092,9 @@ UserFault:
         }
 
         /* Write a demand-zero PDE */
+        /* HACK: make it writeable before writing */
+        PtePte = MiAddressToPte(PointerPde);
+        PtePte->u.Hard.Write = 1;
         MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
 
         /* Dispatch the fault */
