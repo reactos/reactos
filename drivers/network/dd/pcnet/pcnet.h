@@ -79,27 +79,27 @@ typedef struct _ADAPTER
   /* initialization block */
   ULONG InitializationBlockLength;
   PINITIALIZATION_BLOCK InitializationBlockVirt;
-  PINITIALIZATION_BLOCK InitializationBlockPhys;
+  PHYSICAL_ADDRESS InitializationBlockPhys;
 
   /* transmit descriptor ring */
   ULONG TransmitDescriptorRingLength;
   PTRANSMIT_DESCRIPTOR TransmitDescriptorRingVirt;
-  PTRANSMIT_DESCRIPTOR TransmitDescriptorRingPhys;
+  PHYSICAL_ADDRESS TransmitDescriptorRingPhys;
 
   /* transmit buffers */
   ULONG TransmitBufferLength;
   PCHAR TransmitBufferPtrVirt;
-  PCHAR TransmitBufferPtrPhys;
+  PHYSICAL_ADDRESS TransmitBufferPtrPhys;
 
   /* receive descriptor ring */
   ULONG ReceiveDescriptorRingLength;
   PRECEIVE_DESCRIPTOR ReceiveDescriptorRingVirt;
-  PRECEIVE_DESCRIPTOR ReceiveDescriptorRingPhys;
+  PHYSICAL_ADDRESS ReceiveDescriptorRingPhys;
 
   /* receive buffers */
   ULONG ReceiveBufferLength;
   PCHAR ReceiveBufferPtrVirt;
-  PCHAR ReceiveBufferPtrPhys;
+  PHYSICAL_ADDRESS ReceiveBufferPtrPhys;
 
   /* buffer count */
   ULONG BufferCount;

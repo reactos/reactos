@@ -139,8 +139,8 @@ MiniportHandleInterrupt(
               IndicatedData = TRUE;
 
               RtlZeroMemory(Descriptor, sizeof(RECEIVE_DESCRIPTOR));
-              Descriptor->RBADR =
-                  (ULONG)(Adapter->ReceiveBufferPtrPhys + Adapter->CurrentReceiveDescriptorIndex * BUFFER_SIZE);
+              Descriptor->RBADR = Adapter->ReceiveBufferPtrPhys.QuadPart +
+                                  (Adapter->CurrentReceiveDescriptorIndex * BUFFER_SIZE);
               Descriptor->BCNT = (-BUFFER_SIZE) | 0xf000;
               Descriptor->FLAGS |= RD_OWN;
 
@@ -308,11 +308,9 @@ MiFreeSharedMemory(
 {
   NDIS_PHYSICAL_ADDRESS PhysicalAddress;
 
-  PhysicalAddress.u.HighPart = 0;
-
   if(Adapter->InitializationBlockVirt)
     {
-      PhysicalAddress.u.LowPart = (ULONG)Adapter->InitializationBlockPhys;
+      PhysicalAddress = Adapter->InitializationBlockPhys;
       NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->InitializationBlockLength,
           FALSE, Adapter->InitializationBlockVirt, PhysicalAddress);
       Adapter->InitializationBlockVirt = NULL;
@@ -320,7 +318,7 @@ MiFreeSharedMemory(
 
   if(Adapter->TransmitDescriptorRingVirt)
     {
-      PhysicalAddress.u.LowPart = (ULONG)Adapter->TransmitDescriptorRingPhys;
+      PhysicalAddress = Adapter->TransmitDescriptorRingPhys;
       NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitDescriptorRingLength,
         FALSE, Adapter->TransmitDescriptorRingVirt, PhysicalAddress);
       Adapter->TransmitDescriptorRingVirt = NULL;
@@ -328,7 +326,7 @@ MiFreeSharedMemory(
 
   if(Adapter->ReceiveDescriptorRingVirt)
     {
-      PhysicalAddress.u.LowPart = (ULONG)Adapter->ReceiveDescriptorRingPhys;
+      PhysicalAddress = Adapter->ReceiveDescriptorRingPhys;
       NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveDescriptorRingLength,
           FALSE, Adapter->ReceiveDescriptorRingVirt, PhysicalAddress);
       Adapter->ReceiveDescriptorRingVirt = NULL;
@@ -336,7 +334,7 @@ MiFreeSharedMemory(
 
   if(Adapter->TransmitBufferPtrVirt)
     {
-      PhysicalAddress.u.LowPart = (ULONG)Adapter->TransmitBufferPtrPhys;
+      PhysicalAddress = Adapter->TransmitBufferPtrPhys;
       NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->TransmitBufferLength,
           TRUE, Adapter->TransmitBufferPtrVirt, PhysicalAddress);
       Adapter->TransmitBufferPtrVirt = NULL;
@@ -344,7 +342,7 @@ MiFreeSharedMemory(
 
   if(Adapter->ReceiveBufferPtrVirt)
     {
-      PhysicalAddress.u.LowPart = (ULONG)Adapter->ReceiveBufferPtrPhys;
+      PhysicalAddress = Adapter->ReceiveBufferPtrPhys;
       NdisMFreeSharedMemory(Adapter->MiniportAdapterHandle, Adapter->ReceiveBufferLength,
           TRUE, Adapter->ReceiveBufferPtrVirt, PhysicalAddress);
       Adapter->ReceiveBufferPtrVirt = NULL;
@@ -383,13 +381,13 @@ MiAllocateSharedMemory(
          return NDIS_STATUS_RESOURCES;
       }
 
-      if(((ULONG)Adapter->InitializationBlockVirt & 0x00000003) != 0)
+      if (((ULONG_PTR)Adapter->InitializationBlockVirt & 0x00000003) != 0)
       {
          DPRINT1("address 0x%x not dword-aligned\n", Adapter->InitializationBlockVirt);
          return NDIS_STATUS_RESOURCES;
       }
 
-      Adapter->InitializationBlockPhys = (PINITIALIZATION_BLOCK)NdisGetPhysicalAddressLow(PhysicalAddress);
+      Adapter->InitializationBlockPhys = PhysicalAddress;
 
       /* allocate the transport descriptor ring */
       Adapter->TransmitDescriptorRingLength = sizeof(TRANSMIT_DESCRIPTOR) * BufferCount;
@@ -404,13 +402,13 @@ MiAllocateSharedMemory(
           continue;
       }
 
-      if (((ULONG)Adapter->TransmitDescriptorRingVirt & 0x00000003) != 0)
+      if (((ULONG_PTR)Adapter->TransmitDescriptorRingVirt & 0x00000003) != 0)
       {
          DPRINT1("address 0x%x not dword-aligned\n", Adapter->TransmitDescriptorRingVirt);
          return NDIS_STATUS_RESOURCES;
       }
 
-      Adapter->TransmitDescriptorRingPhys = (PTRANSMIT_DESCRIPTOR)NdisGetPhysicalAddressLow(PhysicalAddress);
+      Adapter->TransmitDescriptorRingPhys = PhysicalAddress;
       RtlZeroMemory(Adapter->TransmitDescriptorRingVirt, sizeof(TRANSMIT_DESCRIPTOR) * BufferCount);
 
       /* allocate the receive descriptor ring */
@@ -426,13 +424,13 @@ MiAllocateSharedMemory(
           continue;
       }
 
-      if (((ULONG)Adapter->ReceiveDescriptorRingVirt & 0x00000003) != 0)
+      if (((ULONG_PTR)Adapter->ReceiveDescriptorRingVirt & 0x00000003) != 0)
       {
           DPRINT1("address 0x%x not dword-aligned\n", Adapter->ReceiveDescriptorRingVirt);
           return NDIS_STATUS_RESOURCES;
       }
 
-      Adapter->ReceiveDescriptorRingPhys = (PRECEIVE_DESCRIPTOR)NdisGetPhysicalAddressLow(PhysicalAddress);
+      Adapter->ReceiveDescriptorRingPhys = PhysicalAddress;
       RtlZeroMemory(Adapter->ReceiveDescriptorRingVirt, sizeof(RECEIVE_DESCRIPTOR) * BufferCount);
 
       /* allocate transmit buffers */
@@ -448,13 +446,13 @@ MiAllocateSharedMemory(
           continue;
       }
 
-      if (((ULONG)Adapter->TransmitBufferPtrVirt & 0x00000003) != 0)
+      if(((ULONG_PTR)Adapter->TransmitBufferPtrVirt & 0x00000003) != 0)
       {
           DPRINT1("address 0x%x not dword-aligned\n", Adapter->TransmitBufferPtrVirt);
           return NDIS_STATUS_RESOURCES;
       }
 
-      Adapter->TransmitBufferPtrPhys = (PCHAR)NdisGetPhysicalAddressLow(PhysicalAddress);
+      Adapter->TransmitBufferPtrPhys = PhysicalAddress;
       RtlZeroMemory(Adapter->TransmitBufferPtrVirt, BUFFER_SIZE * BufferCount);
 
       /* allocate receive buffers */
@@ -470,13 +468,13 @@ MiAllocateSharedMemory(
           continue;
       }
 
-      if (((ULONG)Adapter->ReceiveBufferPtrVirt & 0x00000003) != 0)
+      if (((ULONG_PTR)Adapter->ReceiveBufferPtrVirt & 0x00000003) != 0)
       {
           DPRINT1("address 0x%x not dword-aligned\n", Adapter->ReceiveBufferPtrVirt);
           return NDIS_STATUS_RESOURCES;
       }
 
-      Adapter->ReceiveBufferPtrPhys = (PCHAR)NdisGetPhysicalAddressLow(PhysicalAddress);
+      Adapter->ReceiveBufferPtrPhys = PhysicalAddress;
       RtlZeroMemory(Adapter->ReceiveBufferPtrVirt, BUFFER_SIZE * BufferCount);
 
       break;
@@ -495,7 +493,7 @@ MiAllocateSharedMemory(
   TransmitDescriptor = Adapter->TransmitDescriptorRingVirt;
   for(i = 0; i < BufferCount; i++)
     {
-      (TransmitDescriptor+i)->TBADR = (ULONG)Adapter->TransmitBufferPtrPhys + i * BUFFER_SIZE;
+      (TransmitDescriptor+i)->TBADR = Adapter->TransmitBufferPtrPhys.QuadPart + i * BUFFER_SIZE;
       (TransmitDescriptor+i)->BCNT = 0xf000 | -BUFFER_SIZE; /* 2's compliment  + set top 4 bits */
       (TransmitDescriptor+i)->FLAGS = TD1_STP | TD1_ENP;
     }
@@ -506,7 +504,7 @@ MiAllocateSharedMemory(
   ReceiveDescriptor = Adapter->ReceiveDescriptorRingVirt;
   for(i = 0; i < BufferCount; i++)
     {
-      (ReceiveDescriptor+i)->RBADR = (ULONG)Adapter->ReceiveBufferPtrPhys + i * BUFFER_SIZE;
+      (ReceiveDescriptor+i)->RBADR = Adapter->ReceiveBufferPtrPhys.QuadPart + i * BUFFER_SIZE;
       (ReceiveDescriptor+i)->BCNT = 0xf000 | -BUFFER_SIZE; /* 2's compliment  + set top 4 bits */
       (ReceiveDescriptor+i)->FLAGS = RD_OWN;
     }
@@ -542,12 +540,12 @@ MiPrepareInitializationBlock(
 
   /* set up receive ring */
   DPRINT("Receive ring physical address: 0x%x\n", Adapter->ReceiveDescriptorRingPhys);
-  Adapter->InitializationBlockVirt->RDRA = (ULONG)Adapter->ReceiveDescriptorRingPhys;
+  Adapter->InitializationBlockVirt->RDRA = Adapter->ReceiveDescriptorRingPhys.QuadPart;
   Adapter->InitializationBlockVirt->RLEN = (Adapter->LogBufferCount << 4) & 0xf0;
 
   /* set up transmit ring */
   DPRINT("Transmit ring physical address: 0x%x\n", Adapter->TransmitDescriptorRingPhys);
-  Adapter->InitializationBlockVirt->TDRA = (ULONG)Adapter->TransmitDescriptorRingPhys;
+  Adapter->InitializationBlockVirt->TDRA = Adapter->TransmitDescriptorRingPhys.QuadPart;
   Adapter->InitializationBlockVirt->TLEN = (Adapter->LogBufferCount << 4) & 0xf0;
 }
 
@@ -730,9 +728,9 @@ MiInitChip(
 
   /* set up csr1 and csr2 with init block */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR1);
-  NdisRawWritePortUshort(Adapter->PortOffset + RDP, (USHORT)((ULONG)Adapter->InitializationBlockPhys & 0xffff));
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, (USHORT)(Adapter->InitializationBlockPhys.LowPart & 0xffff));
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR2);
-  NdisRawWritePortUshort(Adapter->PortOffset + RDP, (USHORT)((ULONG)Adapter->InitializationBlockPhys >> 16) & 0xffff);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, (USHORT)(Adapter->InitializationBlockPhys.LowPart >> 16) & 0xffff);
 
   DPRINT("programmed with init block\n");
 
@@ -1223,7 +1221,7 @@ MiniportSend(
   Adapter->CurrentTransmitEndIndex %= Adapter->BufferCount;
 
   Desc->FLAGS = TD1_OWN | TD1_STP | TD1_ENP;
-  Desc->BCNT = 0xf000 | -TotalPacketLength;
+  Desc->BCNT = 0xf000 | -(INT)TotalPacketLength;
 
   NdisMSynchronizeWithInterrupt(&Adapter->InterruptObject, MiSyncStartTransmit, Adapter);
 
