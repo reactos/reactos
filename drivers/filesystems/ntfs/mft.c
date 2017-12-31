@@ -42,9 +42,7 @@ PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord)
 {
     PNTFS_ATTR_CONTEXT Context;
 
-    Context = ExAllocatePoolWithTag(NonPagedPool,
-                                    sizeof(NTFS_ATTR_CONTEXT),
-                                    TAG_NTFS);
+    Context = ExAllocateFromNPagedLookasideList(&NtfsGlobalData->AttrCtxtLookasideList);
     if(!Context)
     {
         DPRINT1("Error: Unable to allocate memory for context!\n");
@@ -56,7 +54,7 @@ PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord)
     if(!Context->pRecord)
     {
         DPRINT1("Error: Unable to allocate memory for attribute record!\n");
-        ExFreePoolWithTag(Context, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&NtfsGlobalData->AttrCtxtLookasideList, Context);
         return NULL;
     }
 
@@ -93,7 +91,7 @@ PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord)
         {
             DPRINT1("Unable to convert data runs to MCB!\n");
             ExFreePoolWithTag(Context->pRecord, TAG_NTFS);
-            ExFreePoolWithTag(Context, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&NtfsGlobalData->AttrCtxtLookasideList, Context);
             return NULL;
         }
     }
@@ -115,7 +113,7 @@ ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
         ExFreePoolWithTag(Context->pRecord, TAG_NTFS);
     }
 
-    ExFreePoolWithTag(Context, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&NtfsGlobalData->AttrCtxtLookasideList, Context);
 }
 
 
