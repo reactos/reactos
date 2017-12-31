@@ -1,8 +1,9 @@
 /*
  * PROJECT: ReactOS Character Map
+ * LICENSE: GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE: base/applications/charmap_new/lang/it-IT.rc
  * PURPOSE: Italian Translation for ReactOS Character Map
- * TRANSLATORS: Bișoc George (fraizeraust99@gmail.com)
+ * COPYRIGHT: Bișoc George (fraizeraust99@gmail.com)
  */
  
  LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
