@@ -47,9 +47,7 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
 
     DPRINT1("NtfsGetFreeClusters(%p)\n", DeviceExt);
 
-    BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                         DeviceExt->NtfsInfo.BytesPerFileRecord,
-                                         TAG_NTFS);
+    BitmapRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (BitmapRecord == NULL)
     {
         return 0;
@@ -58,14 +56,14 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
     Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return 0;
     }
 
     Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return 0;
     }
 
@@ -75,7 +73,7 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
     if (BitmapData == NULL)
     {
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return 0;
     }
 
@@ -94,7 +92,7 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
     FreeClusters = RtlNumberOfClearBits(&Bitmap);
 
     ExFreePoolWithTag(BitmapData, TAG_NTFS);
-    ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
 
     return FreeClusters;
 }
@@ -122,9 +120,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT1("NtfsAllocateClusters(%p, %lu, %lu, %p, %p)\n", DeviceExt, FirstDesiredCluster, DesiredClusters, FirstAssignedCluster, AssignedClusters);
 
-    BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                         DeviceExt->NtfsInfo.BytesPerFileRecord,
-                                         TAG_NTFS);
+    BitmapRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (BitmapRecord == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -133,14 +129,14 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return Status;
     }
 
     Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return Status;
     }
 
@@ -151,7 +147,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     if (BitmapData == NULL)
     {
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return  STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -169,7 +165,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
         ReleaseAttributeContext(DataContext);
 
         ExFreePoolWithTag(BitmapData, TAG_NTFS);
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return STATUS_DISK_FULL;
     }
     
@@ -201,7 +197,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     ReleaseAttributeContext(DataContext);
 
     ExFreePoolWithTag(BitmapData, TAG_NTFS);
-    ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
 
     return Status;
 }

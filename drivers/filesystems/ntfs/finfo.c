@@ -236,7 +236,7 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
     if (*BufferLength < sizeof(FILE_STREAM_INFORMATION))
         return STATUS_BUFFER_TOO_SMALL;
 
-    FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (FileRecord == NULL)
     {
         DPRINT1("Not enough memory!\n");
@@ -247,7 +247,7 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't find record!\n");
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -285,7 +285,7 @@ NtfsGetSteamInformation(PNTFS_FCB Fcb,
     }
 
     FindCloseAttribute(&Context);
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
     return Status;
 }
 
@@ -577,7 +577,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
 
 
     // Allocate non-paged memory for the file record
-    FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (FileRecord == NULL)
     {
         DPRINT1("Couldn't allocate memory for file record!");
@@ -591,7 +591,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     {
         // We couldn't get the file's record. Free the memory and return the error
         DPRINT1("Can't find record for %wS!\n", Fcb->ObjectName);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -607,7 +607,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
                                   NewFileSize))
         {
             DPRINT1("Couldn't decrease file size!\n");
-            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
             return STATUS_USER_MAPPED_FILE;
         }
     }
@@ -626,7 +626,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("No '%S' data stream associated with file!\n", Fcb->Stream);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -642,7 +642,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
         {
             // TODO - just fail for now
             ReleaseAttributeContext(DataContext);
-            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
             return STATUS_ACCESS_DENIED;
         }
     }
@@ -652,7 +652,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     if (!NT_SUCCESS(Status))
     {
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -663,7 +663,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     {
         DPRINT1("Unable to find FileName attribute associated with file!\n");
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -684,7 +684,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
                                   CaseSensitive);
 
     ReleaseAttributeContext(DataContext);
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
 
     return Status;
 }

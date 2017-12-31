@@ -114,9 +114,7 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
     DPRINT1("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
 
     RtlZeroMemory(FullPath, sizeof(FullPath));
-    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                      DeviceExt->NtfsInfo.BytesPerFileRecord,
-                                      TAG_NTFS);
+    MftRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (MftRecord == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -155,7 +153,7 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
             break;
     }
 
-    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, MftRecord);
 
     if (!NT_SUCCESS(Status))
         return Status;
@@ -191,9 +189,7 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                      DeviceExt->NtfsInfo.BytesPerFileRecord,
-                                      TAG_NTFS);
+    MftRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (MftRecord == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -202,13 +198,13 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
     Status = ReadFileRecord(DeviceExt, MftId, MftRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, MftRecord);
         return Status;
     }
 
     if (!(MftRecord->Flags & FRH_IN_USE))
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, MftRecord);
         return STATUS_OBJECT_PATH_NOT_FOUND;
     }
 
@@ -221,14 +217,14 @@ NtfsOpenFileById(PDEVICE_EXTENSION DeviceExt,
         Status = NtfsMakeFCBFromDirEntry(DeviceExt, NULL, &Name, NULL, MftRecord, MftId, &FCB);
         if (!NT_SUCCESS(Status))
         {
-            ExFreePoolWithTag(MftRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, MftRecord);
             return Status;
         }
     }
 
     ASSERT(FCB != NULL);
 
-    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, MftRecord);
 
     Status = NtfsAttachFCBToFileObject(DeviceExt,
                                        FCB,
@@ -506,9 +502,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
            
             ExAcquireResourceExclusiveLite(&(Fcb->MainResource), TRUE);
 
-            fileRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                               Fcb->Vcb->NtfsInfo.BytesPerFileRecord,
-                                               TAG_NTFS);
+            fileRecord = ExAllocateFromNPagedLookasideList(&Fcb->Vcb->FileRecLookasideList);
             if (fileRecord)
             {
 
@@ -532,7 +526,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
            
         DoneOverwriting:
             if (fileRecord)
-                ExFreePoolWithTag(fileRecord, TAG_NTFS);
+                ExFreeToNPagedLookasideList(&Fcb->Vcb->FileRecLookasideList, fileRecord);
             if (dataContext)
                 ReleaseAttributeContext(dataContext);
 
@@ -741,7 +735,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to create empty B-Tree!\n");
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -760,7 +754,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("ERROR: Unable to create empty index root!\n");
         DestroyBTree(Tree);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -773,7 +767,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("ERROR: Failed to add index root to new file record!\n");
         ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -803,7 +797,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
 
     return Status;
 }
@@ -829,9 +823,7 @@ NtfsCreateEmptyFileRecord(PDEVICE_EXTENSION DeviceExt)
     DPRINT1("NtfsCreateEmptyFileRecord(%p)\n", DeviceExt);
 
     // allocate memory for file record
-    FileRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                       DeviceExt->NtfsInfo.BytesPerFileRecord,
-                                       TAG_NTFS);
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (!FileRecord)
     {
         DPRINT1("ERROR: Unable to allocate memory for file record!\n");
@@ -963,7 +955,7 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
                                             CaseSensitive);
     }
 
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
 
     return Status;
 }

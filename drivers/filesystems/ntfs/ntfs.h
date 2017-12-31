@@ -116,6 +116,8 @@ typedef struct
 
     NTFS_INFO NtfsInfo;
 
+    NPAGED_LOOKASIDE_LIST FileRecLookasideList;
+
     ULONG MftDataOffset;
     ULONG Flags;
     ULONG OpenHandleCount;

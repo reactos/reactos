@@ -277,7 +277,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Couldn't find $BITMAP attribute of Mft!\n");
-        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
         ExReleaseResourceLite(&(Vcb->DirResource));
         return Status;
     }
@@ -308,7 +308,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (!BitmapBuffer)
     {
         DPRINT1("ERROR: Unable to allocate memory for bitmap attribute!\n");
-        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ReleaseAttributeContext(BitmapContext);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -326,7 +326,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (BytesRead != BitmapSize.LowPart)
     {
         DPRINT1("ERROR: Bytes read != Bitmap size!\n");
-        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
@@ -338,7 +338,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to set size of $MFT data attribute!\n");
-        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
@@ -351,7 +351,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Couldn't find $BITMAP attribute of Mft!\n");
-        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
         ExReleaseResourceLite(&(Vcb->DirResource));
         return Status;
     }
@@ -369,7 +369,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Failed to set size of bitmap attribute!\n");
-            ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
             ExReleaseResourceLite(&(Vcb->DirResource));
             ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
             ReleaseAttributeContext(BitmapContext);
@@ -384,7 +384,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to update $MFT file record!\n");
-        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
@@ -395,7 +395,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     Status = WriteAttribute(Vcb, BitmapContext, 0, BitmapBuffer, NewBitmapSize, &LengthWritten, Vcb->MasterFileTable);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
         ExReleaseResourceLite(&(Vcb->DirResource));
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
@@ -410,7 +410,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Failed to write blank file record!\n");
-            ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
             ExReleaseResourceLite(&(Vcb->DirResource));
             ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
             ReleaseAttributeContext(BitmapContext);
@@ -422,7 +422,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     Status = UpdateMftMirror(Vcb);
 
     // Cleanup
-    ExFreePoolWithTag(BlankFileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BlankFileRecord);
     ExReleaseResourceLite(&(Vcb->DirResource));
     ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
     ReleaseAttributeContext(BitmapContext);
@@ -1301,7 +1301,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         // Do we need to read the file record?
         if (FileRecord == NULL)
         {
-            FileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+            FileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
             if (!FileRecord)
             {
                 DPRINT1("Error: Couldn't allocate file record!\n");
@@ -1326,7 +1326,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         {
             DPRINT1("ERROR: Couldn't find matching attribute!\n");
             if(FileRecordAllocated)
-                ExFreePoolWithTag(FileRecord, TAG_NTFS);
+                ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
             return Status;
         }
 
@@ -1340,7 +1340,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
             DPRINT1("DRIVER ERROR: Data being written extends past end of file record!\n");
             ReleaseAttributeContext(FoundContext);
             if (FileRecordAllocated)
-                ExFreePoolWithTag(FileRecord, TAG_NTFS);
+                ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -1355,7 +1355,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
 
         ReleaseAttributeContext(FoundContext);
         if (FileRecordAllocated)
-            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
 
         if (NT_SUCCESS(Status))
             *RealLengthWritten = Length;
@@ -1624,9 +1624,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
            NewAllocationSize,
            CaseSensitive ? "TRUE" : "FALSE");
 
-    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                      Vcb->NtfsInfo.BytesPerFileRecord,
-                                      TAG_NTFS);
+    MftRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (MftRecord == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1635,7 +1633,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     Status = ReadFileRecord(Vcb, ParentMFTIndex, MftRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return Status;
     }
 
@@ -1643,7 +1641,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     Status = FindAttribute(Vcb, MftRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootCtx, NULL);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return Status;
     }
 
@@ -1651,7 +1649,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     if (IndexRecord == NULL)
     {
         ReleaseAttributeContext(IndexRootCtx);
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1661,7 +1659,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
         DPRINT1("ERROR: Failed to read Index Root!\n");
         ExFreePoolWithTag(IndexRecord, TAG_NTFS);
         ReleaseAttributeContext(IndexRootCtx);
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
     }
 
     IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
@@ -1699,7 +1697,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
 
     ReleaseAttributeContext(IndexRootCtx);
     ExFreePoolWithTag(IndexRecord, TAG_NTFS);
-    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
 
     return Status;
 }
@@ -2158,9 +2156,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONG NodeSize;
 
     // Allocate memory for the parent directory
-    ParentFileRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                             DeviceExt->NtfsInfo.BytesPerFileRecord,
-                                             TAG_NTFS);
+    ParentFileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (!ParentFileRecord)
     {
         DPRINT1("ERROR: Couldn't allocate memory for file record!\n");
@@ -2171,7 +2167,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     Status = ReadFileRecord(DeviceExt, DirectoryMftIndex, ParentFileRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         DPRINT1("ERROR: Couldn't read parent directory with index %I64u\n",
                 DirectoryMftIndex);
         return Status;
@@ -2194,7 +2190,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("ERROR: Couldn't find $I30 $INDEX_ROOT attribute for parent directory with MFT #: %I64u!\n",
                 DirectoryMftIndex);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return Status;
     }
 
@@ -2230,7 +2226,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("ERROR: Couldn't allocate memory for index root attribute!\n");
         ReleaseAttributeContext(IndexRootContext);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -2241,7 +2237,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         DPRINT1("ERROR: Couln't read index root attribute for Mft index #%I64u\n", DirectoryMftIndex);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return Status;
     }
 
@@ -2256,7 +2252,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         DPRINT1("ERROR: Failed to create B-Tree from Index!\n");
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return Status;
     }
 
@@ -2280,7 +2276,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         DestroyBTree(NewTree);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return Status;
     }
 
@@ -2329,7 +2325,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         DestroyBTree(NewTree);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return Status;
     }
 
@@ -2341,7 +2337,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         DestroyBTree(NewTree);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return Status;
     }
 
@@ -2390,7 +2386,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
             DestroyBTree(NewTree);
             ReleaseAttributeContext(IndexRootContext);
             ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-            ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
             return Status;
         }
 
@@ -2402,7 +2398,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
             DestroyBTree(NewTree);
             ReleaseAttributeContext(IndexRootContext);
             ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-            ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
             return Status;
         }
 
@@ -2444,7 +2440,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         DestroyBTree(NewTree);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return Status;
     }
 
@@ -2471,7 +2467,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
             ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
             ReleaseAttributeContext(IndexRootContext);
             ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-            ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
             DPRINT1("ERROR: Unable to set resident attribute length!\n");
             return Status;
         }
@@ -2484,7 +2480,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to update file record of directory with index: %llx\n", DirectoryMftIndex);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
@@ -2505,7 +2501,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
         return Status;
     }
 
@@ -2539,7 +2535,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
     ReleaseAttributeContext(IndexRootContext);
     ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
-    ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
 
     return Status;
 }
@@ -2668,7 +2664,7 @@ UpdateMftMirror(PNTFS_VCB Vcb)
     ULONG LengthWritten;
 
     // Allocate memory for the Mft mirror file record
-    MirrorFileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    MirrorFileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (!MirrorFileRecord)
     {
         DPRINT1("Error: Failed to allocate memory for $MFTMirr!\n");
@@ -2680,7 +2676,7 @@ UpdateMftMirror(PNTFS_VCB Vcb)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to read $MFTMirr!\n");
-        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MirrorFileRecord);
         return Status;
     }
 
@@ -2689,7 +2685,7 @@ UpdateMftMirror(PNTFS_VCB Vcb)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Couldn't find $DATA attribute!\n");
-        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MirrorFileRecord);
         return Status;
     }
 
@@ -2699,7 +2695,7 @@ UpdateMftMirror(PNTFS_VCB Vcb)
     {
         DPRINT1("ERROR: Couldn't find $DATA attribute!\n");
         ReleaseAttributeContext(MirrDataContext);
-        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MirrorFileRecord);
         return Status;
     }
 
@@ -2715,7 +2711,7 @@ UpdateMftMirror(PNTFS_VCB Vcb)
         DPRINT1("Error: Couldn't allocate memory for $DATA buffer!\n");
         ReleaseAttributeContext(MftDataContext);
         ReleaseAttributeContext(MirrDataContext);
-        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MirrorFileRecord);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -2729,7 +2725,7 @@ UpdateMftMirror(PNTFS_VCB Vcb)
         ReleaseAttributeContext(MftDataContext);
         ReleaseAttributeContext(MirrDataContext);
         ExFreePoolWithTag(DataBuffer, TAG_NTFS);
-        ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MirrorFileRecord);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -2750,7 +2746,7 @@ UpdateMftMirror(PNTFS_VCB Vcb)
     ReleaseAttributeContext(MftDataContext);
     ReleaseAttributeContext(MirrDataContext);
     ExFreePoolWithTag(DataBuffer, TAG_NTFS);
-    ExFreePoolWithTag(MirrorFileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MirrorFileRecord);
 
     return Status;
 }
@@ -3116,9 +3112,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
            CaseSensitive ? "TRUE" : "FALSE",
            OutMFTIndex);
 
-    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                      Vcb->NtfsInfo.BytesPerFileRecord,
-                                      TAG_NTFS);
+    MftRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (MftRecord == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -3127,7 +3121,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     Status = ReadFileRecord(Vcb, MFTIndex, MftRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return Status;
     }
 
@@ -3135,7 +3129,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     Status = FindAttribute(Vcb, MftRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootCtx, NULL);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return Status;
     }
 
@@ -3143,7 +3137,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     if (IndexRecord == NULL)
     {
         ReleaseAttributeContext(IndexRootCtx);
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -3170,7 +3164,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                                 OutMFTIndex);
 
     ExFreePoolWithTag(IndexRecord, TAG_NTFS);
-    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
 
     return Status;
 }
@@ -3213,7 +3207,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
         FsRtlDissectName(Current, &Current, &Remaining);
     }
 
-    *FileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    *FileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (*FileRecord == NULL)
     {
         DPRINT("NtfsLookupFileAt: Can't allocate MFT record\n");
@@ -3224,7 +3218,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsLookupFileAt: Can't read MFT record\n");
-        ExFreePoolWithTag(*FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, *FileRecord);
         return Status;
     }
 
@@ -3328,7 +3322,7 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
         return Status;
     }
 
-    *FileRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    *FileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (*FileRecord == NULL)
     {
         DPRINT("NtfsFindFileAt: Can't allocate MFT record\n");
@@ -3339,7 +3333,7 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsFindFileAt: Can't read MFT record\n");
-        ExFreePoolWithTag(*FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, *FileRecord);
         return Status;
     }
 

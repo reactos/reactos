@@ -1083,9 +1083,7 @@ FreeClusters(PNTFS_VCB Vcb,
     }
 
     // Read the $Bitmap file
-    BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                         Vcb->NtfsInfo.BytesPerFileRecord,
-                                         TAG_NTFS);
+    BitmapRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (BitmapRecord == NULL)
     {
         DPRINT1("Error: Unable to allocate memory for bitmap file record!\n");
@@ -1096,7 +1094,7 @@ FreeClusters(PNTFS_VCB Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: Unable to read file record for bitmap!\n");
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BitmapRecord);
         return 0;
     }
 
@@ -1104,7 +1102,7 @@ FreeClusters(PNTFS_VCB Vcb,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: Unable to find data attribute for bitmap file!\n");
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BitmapRecord);
         return 0;
     }
 
@@ -1116,7 +1114,7 @@ FreeClusters(PNTFS_VCB Vcb,
     {
         DPRINT1("Error: Unable to allocate memory for bitmap file data!\n");
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BitmapRecord);
         return 0;
     }
 
@@ -1156,13 +1154,13 @@ FreeClusters(PNTFS_VCB Vcb,
     {
         ReleaseAttributeContext(DataContext);
         ExFreePoolWithTag(BitmapData, TAG_NTFS);
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BitmapRecord);
         return Status;
     }
 
     ReleaseAttributeContext(DataContext);
     ExFreePoolWithTag(BitmapData, TAG_NTFS);
-    ExFreePoolWithTag(BitmapRecord, TAG_NTFS);    
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, BitmapRecord);
     
     // Save updated data runs to file record
 

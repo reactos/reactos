@@ -388,7 +388,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
             {
                 DPRINT1("Ignoring duplicate MFT entry 0x%x\n", MFTRecord);
                 Ccb->Entry++;
-                ExFreePoolWithTag(FileRecord, TAG_NTFS);
+                ExFreeToNPagedLookasideList(&DeviceExtension->FileRecLookasideList, FileRecord);
                 continue;
             }
             OldMFTRecord = MFTRecord;
@@ -468,7 +468,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
         }
         BufferLength -= Buffer0->NextEntryOffset;
         Buffer += Buffer0->NextEntryOffset;
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExtension->FileRecLookasideList, FileRecord);
     }
 
     if (Buffer0)

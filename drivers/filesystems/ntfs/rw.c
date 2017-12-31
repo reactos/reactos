@@ -79,7 +79,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         return STATUS_NOT_IMPLEMENTED;
     }
 
-    FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (FileRecord == NULL)
     {
         DPRINT1("Not enough memory!\n");
@@ -90,7 +90,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't find record!\n");
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -122,7 +122,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         FindCloseAttribute(&Context);
 
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -131,7 +131,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("Reading beyond stream end!\n");
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return STATUS_END_OF_FILE;
     }
 
@@ -159,7 +159,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         {
             DPRINT1("Not enough memory!\n");
             ReleaseAttributeContext(DataContext);
-            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         AllocatedBuffer = TRUE;
@@ -171,7 +171,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("Read failure!\n");
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         if (AllocatedBuffer)
         {
             ExFreePoolWithTag(ReadBuffer, TAG_NTFS);
@@ -180,7 +180,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     ReleaseAttributeContext(DataContext);
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
 
     *LengthRead = ToRead;
 
@@ -355,7 +355,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     // allocate non-paged memory for the FILE_RECORD_HEADER
-    FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (FileRecord == NULL)
     {
         DPRINT1("Not enough memory! Can't write %wS!\n", Fcb->PathName);
@@ -369,7 +369,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     {
         // We couldn't get the file's record. Free the memory and return the error
         DPRINT1("Can't find record for %wS!\n", Fcb->ObjectName);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -408,7 +408,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
         FindCloseAttribute(&Context);
 
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -437,7 +437,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
             if (!NT_SUCCESS(Status))
             {
                 ReleaseAttributeContext(DataContext);
-                ExFreePoolWithTag(FileRecord, TAG_NTFS);
+                ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
                 *LengthWritten = 0;
                 return Status;
             }
@@ -469,7 +469,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
         {
             // TODO - just fail for now
             ReleaseAttributeContext(DataContext);
-            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
             *LengthWritten = 0;
             return STATUS_ACCESS_DENIED;
         }
@@ -485,7 +485,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("Write failure!\n");
         ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
 
         return Status;
     }
@@ -499,7 +499,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     ReleaseAttributeContext(DataContext);
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
 
     return Status;
 }

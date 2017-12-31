@@ -311,9 +311,7 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
     PFILE_RECORD_HEADER MftRecord;
     PFILENAME_ATTRIBUTE FileName;
 
-    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                      Vcb->NtfsInfo.BytesPerFileRecord,
-                                      TAG_NTFS);
+    MftRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (MftRecord == NULL)
     {
         return NULL;
@@ -321,21 +319,21 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
 
     if (!NT_SUCCESS(ReadFileRecord(Vcb, NTFS_FILE_ROOT, MftRecord)))
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return NULL;
     }
 
     FileName = GetFileNameFromRecord(Vcb, MftRecord, NTFS_FILE_NAME_WIN32);
     if (!FileName)
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return NULL;
     }
 
     Fcb = NtfsCreateFCB(L"\\", NULL, Vcb);
     if (!Fcb)
     {
-        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
         return NULL;
     }
 
@@ -355,7 +353,7 @@ NtfsMakeRootFCB(PNTFS_VCB Vcb)
     NtfsAddFCBToTable(Vcb, Fcb);
     NtfsGrabFCB(Vcb, Fcb);
 
-    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
 
     return Fcb;
 }
@@ -570,6 +568,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
 
     if ((FileRecord->Flags & FRH_DIRECTORY) && Colon != 0)
     {
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
         return STATUS_INVALID_PARAMETER;
     }
     else if (Colon != 0)
@@ -583,7 +582,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     }
 
     Status = NtfsMakeFCBFromDirEntry(Vcb, DirectoryFcb, &File, Colon, FileRecord, MFTIndex, FoundFCB);
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
 
     return Status;
 }
@@ -734,9 +733,7 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
     PNTFS_ATTR_CONTEXT AttrCtxt;
     ULONGLONG AttrLength;
 
-    FileRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                       Vcb->NtfsInfo.BytesPerFileRecord,
-                                       TAG_NTFS);
+    FileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (FileRecord == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -745,14 +742,14 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
     Status = ReadFileRecord(Vcb, pFCB->MFTIndex, FileRecord);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
         return Status;
     }
 
     Status = FindAttribute(Vcb, FileRecord, Type, Name, NameLength, &AttrCtxt, NULL);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
         return Status;
     }
 
@@ -761,14 +758,14 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
     if (*Data == NULL)
     {
         ReleaseAttributeContext(AttrCtxt);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     ReadAttribute(Vcb, AttrCtxt, 0, *Data, AttrLength);
 
     ReleaseAttributeContext(AttrCtxt);
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
 
     return STATUS_SUCCESS;
 }

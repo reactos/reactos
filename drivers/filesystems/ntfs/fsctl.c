@@ -274,11 +274,13 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
     ExFreePool(BootSector);
 
-    DeviceExt->MasterFileTable = ExAllocatePoolWithTag(NonPagedPool,
-                                                       NtfsInfo->BytesPerFileRecord,
-                                                       TAG_NTFS);
+    ExInitializeNPagedLookasideList(&DeviceExt->FileRecLookasideList,
+                                    NULL, NULL, 0, NtfsInfo->BytesPerFileRecord, TAG_NTFS, 0);
+
+    DeviceExt->MasterFileTable = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (DeviceExt->MasterFileTable == NULL)
     {
+        ExDeleteNPagedLookasideList(&DeviceExt->FileRecLookasideList);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -291,7 +293,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed reading MFT.\n");
-        ExFreePool(DeviceExt->MasterFileTable);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, DeviceExt->MasterFileTable);
+        ExDeleteNPagedLookasideList(&DeviceExt->FileRecLookasideList);
         return Status;
     }
 
@@ -305,17 +308,17 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't find data attribute for Master File Table.\n");
-        ExFreePool(DeviceExt->MasterFileTable);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, DeviceExt->MasterFileTable);
+        ExDeleteNPagedLookasideList(&DeviceExt->FileRecLookasideList);
         return Status;
     }
 
-    VolumeRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                         NtfsInfo->BytesPerFileRecord,
-                                         TAG_NTFS);
+    VolumeRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (VolumeRecord == NULL)
     {
         DPRINT1("Allocation failed for volume record\n");
-        ExFreePool(DeviceExt->MasterFileTable);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, DeviceExt->MasterFileTable);
+        ExDeleteNPagedLookasideList(&DeviceExt->FileRecLookasideList);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -327,8 +330,9 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed reading volume file\n");
-        ExFreePool(VolumeRecord);
-        ExFreePool(DeviceExt->MasterFileTable);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, VolumeRecord);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, DeviceExt->MasterFileTable);
+        ExDeleteNPagedLookasideList(&DeviceExt->FileRecLookasideList);
         return Status;
     }
 
@@ -367,8 +371,9 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     if (VolumeFcb == NULL)
     {
         DPRINT1("Failed allocating volume FCB\n");
-        ExFreePool(VolumeRecord);
-        ExFreePool(DeviceExt->MasterFileTable);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, VolumeRecord);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, DeviceExt->MasterFileTable);
+        ExDeleteNPagedLookasideList(&DeviceExt->FileRecLookasideList);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -398,7 +403,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         ReleaseAttributeContext(AttrCtxt);
     }
 
-    ExFreePool(VolumeRecord);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, VolumeRecord);
 
     NtfsInfo->MftZoneReservation = NtfsQueryMftZoneReservation();
 
@@ -418,6 +423,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
     PNTFS_CCB Ccb = NULL;
     PNTFS_VCB Vcb = NULL;
     NTSTATUS Status;
+    BOOLEAN Lookaside = FALSE;
 
     DPRINT1("NtfsMountVolume() called\n");
 
@@ -445,6 +451,8 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
                             &NewDeviceObject);
     if (!NT_SUCCESS(Status))
         goto ByeBye;
+
+    Lookaside = TRUE;
 
     NewDeviceObject->Flags |= DO_DIRECT_IO;
     Vcb = (PVOID)NewDeviceObject->DeviceExtension;
@@ -558,6 +566,9 @@ ByeBye:
 
         if (NewDeviceObject)
             IoDeleteDevice(NewDeviceObject);
+
+        if (Lookaside)
+            ExDeleteNPagedLookasideList(&Vcb->FileRecLookasideList);
     }
 
     DPRINT("NtfsMountVolume() done (Status: %lx)\n", Status);
@@ -672,9 +683,7 @@ GetNtfsFileRecord(PDEVICE_EXTENSION DeviceExt,
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    FileRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                       DeviceExt->NtfsInfo.BytesPerFileRecord,
-                                       TAG_NTFS);
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (FileRecord == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -705,7 +714,7 @@ GetNtfsFileRecord(PDEVICE_EXTENSION DeviceExt,
     OutputBuffer->FileRecordLength = DeviceExt->NtfsInfo.BytesPerFileRecord;
     RtlCopyMemory(OutputBuffer->FileRecordBuffer, FileRecord, DeviceExt->NtfsInfo.BytesPerFileRecord);
 
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
 
     Irp->IoStatus.Information = FIELD_OFFSET(NTFS_FILE_RECORD_OUTPUT_BUFFER, FileRecordBuffer) + DeviceExt->NtfsInfo.BytesPerFileRecord;
 
@@ -794,9 +803,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
         ToCopy = Stack->Parameters.FileSystemControl.OutputBufferLength - FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer);
     }
 
-    BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                         DeviceExt->NtfsInfo.BytesPerFileRecord,
-                                         TAG_NTFS);
+    BitmapRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (BitmapRecord == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -806,7 +813,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed reading volume bitmap: %lx\n", Status);
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return Status;
     }
 
@@ -814,7 +821,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed find $DATA for bitmap: %lx\n", Status);
-        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
         return Status;
     }
 
@@ -833,7 +840,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     }
     _SEH2_END;
     ReleaseAttributeContext(DataContext);
-    ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
 
     return Status;
 }
