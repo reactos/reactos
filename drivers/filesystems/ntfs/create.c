@@ -772,6 +772,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Failed to add index root to new file record!\n");
+        ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return Status;
     }
