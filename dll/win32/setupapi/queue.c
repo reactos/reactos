@@ -987,15 +987,18 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 {
     BOOL rc = FALSE;
     BOOL docopy = TRUE;
-    WCHAR TempFile[MAX_PATH];
+#ifdef __REACTOS__
     INT hSource, hTemp;
     OFSTRUCT OfStruct;
     WCHAR TempPath[MAX_PATH];
+    WCHAR TempFile[MAX_PATH];
+#endif
 
     TRACE("copy %s to %s style 0x%x\n",debugstr_w(source),debugstr_w(target),style);
 
+#ifdef __REACTOS__
     /* Get a temp file name */
-    if (!GetTempPathW(sizeof(TempPath) / sizeof(WCHAR), TempPath))
+    if (!GetTempPathW(ARRAYSIZE(TempPath), TempPath))
     {
         ERR("GetTempPathW error\n");
         return FALSE;
@@ -1033,6 +1036,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
     LZCopy(hSource, hTemp);
     LZClose(hSource);
     LZClose(hTemp);
+#endif
 
     /* before copy processing */
     if (style & SP_COPY_REPLACEONLY)
