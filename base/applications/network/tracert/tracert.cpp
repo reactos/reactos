@@ -372,7 +372,8 @@ RunTraceRoute()
     }
     if (Info.hIcmpFile == INVALID_HANDLE_VALUE)
     {
-        goto Quit;
+        FreeAddrInfoW(Info.Target);
+        return false;
     }
 
     OutputText(IDS_TRACE_INFO, Info.HostName, Info.TargetIP, Info.MaxHops);
@@ -380,10 +381,10 @@ RunTraceRoute()
     IP_OPTION_INFORMATION IpOptionInfo;
     ZeroMemory(&IpOptionInfo, sizeof(IpOptionInfo));
 
-    DWORD Status;
+    bool Quit = false;
     ULONG HopCount = 1;
     bool FoundTarget = false;
-    while ((HopCount <= Info.MaxHops) && (FoundTarget == false))
+    while ((HopCount <= Info.MaxHops) && (FoundTarget == false) && (Quit == false))
     {
         OutputText(IDS_HOP_COUNT, HopCount);
 
@@ -398,32 +399,32 @@ RunTraceRoute()
                 ZeroMemory(&Source, sizeof(Source));
                 Source.sin6_family = AF_INET6;
 
-                Status = Icmp6SendEcho2(Info.hIcmpFile,
-                                        NULL,
-                                        NULL,
-                                        NULL,
-                                        &Source,
-                                        (struct sockaddr_in6 *)Info.Target->ai_addr,
-                                        SendBuffer,
-                                        (USHORT)PACKET_SIZE,
-                                        &IpOptionInfo,
-                                        ReplyBuffer,
-                                        ReplySize,
-                                        Info.Timeout);
+                (void)Icmp6SendEcho2(Info.hIcmpFile,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &Source,
+                                     (struct sockaddr_in6 *)Info.Target->ai_addr,
+                                     SendBuffer,
+                                     (USHORT)PACKET_SIZE,
+                                     &IpOptionInfo,
+                                     ReplyBuffer,
+                                     ReplySize,
+                                     Info.Timeout);
             }
             else
             {
-                Status = IcmpSendEcho2(Info.hIcmpFile,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       ((PSOCKADDR_IN)Info.Target->ai_addr)->sin_addr.s_addr,
-                                       SendBuffer,
-                                       (USHORT)PACKET_SIZE,
-                                       &IpOptionInfo,
-                                       ReplyBuffer,
-                                       ReplySize,
-                                       Info.Timeout);
+                (void)IcmpSendEcho2(Info.hIcmpFile,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     ((PSOCKADDR_IN)Info.Target->ai_addr)->sin_addr.s_addr,
+                                     SendBuffer,
+                                     (USHORT)PACKET_SIZE,
+                                     &IpOptionInfo,
+                                     ReplyBuffer,
+                                     ReplySize,
+                                     Info.Timeout);
             }
 
             bool Success;
@@ -438,7 +439,8 @@ RunTraceRoute()
 
             if (Success == false)
             {
-                goto Quit;
+                Quit = true;
+                break;
             }
 
             if (FoundTarget)
@@ -453,11 +455,7 @@ RunTraceRoute()
 
     OutputText(IDS_TRACE_COMPLETE);
 
-Quit:
-    if (Info.Target)
-    {
-        FreeAddrInfoW(Info.Target);
-    }
+    FreeAddrInfoW(Info.Target);
     if (Info.hIcmpFile)
     {
         IcmpCloseHandle(Info.hIcmpFile);
