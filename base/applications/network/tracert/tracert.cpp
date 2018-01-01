@@ -207,19 +207,39 @@ ResolveTarget()
 }
 
 static bool
-PrintHopInfo(_In_ IPAddr Address)
+PrintHopInfo(_In_ PVOID Buffer)
 {
-    SOCKADDR_IN SockAddrIn;
-    SockAddrIn.sin_family = (Info.Family == AF_INET6) ? AF_INET6 : AF_INET;
-    SockAddrIn.sin_addr.S_un.S_addr = Address;
+    SOCKADDR_IN6 SockAddrIn6 = { 0 };
+    SOCKADDR_IN SockAddrIn = { 0 };
+    PSOCKADDR SockAddr;
+    socklen_t Size;
+
+    if (Info.Family == AF_INET6)
+    {
+        PIPV6_ADDRESS_EX Ipv6Addr = (PIPV6_ADDRESS_EX)Buffer;
+        SockAddrIn6.sin6_family = AF_INET6;
+        CopyMemory(SockAddrIn6.sin6_addr.u.Word, Ipv6Addr->sin6_addr, sizeof(SockAddrIn6.sin6_addr));
+        //SockAddrIn6.sin6_addr = Ipv6Addr->sin6_addr;
+        SockAddr = (PSOCKADDR)&SockAddrIn6;
+        Size = sizeof(SOCKADDR_IN6);
+
+    }
+    else
+    {
+        IPAddr *Address = (IPAddr *)Buffer;
+        SockAddrIn.sin_family = AF_INET;
+        SockAddrIn.sin_addr.S_un.S_addr = *Address;
+        SockAddr = (PSOCKADDR)&SockAddrIn;
+        Size = sizeof(SOCKADDR_IN);
+    }
 
     INT Status;
     bool Resolved = false;
     WCHAR HostName[NI_MAXHOST];
     if (Info.ResolveAddresses)
     {
-        Status = GetNameInfoW((PSOCKADDR)&SockAddrIn,
-                              sizeof(SOCKADDR_IN),
+        Status = GetNameInfoW(SockAddr,
+                              Size,
                               HostName,
                               NI_MAXHOST,
                               NULL,
@@ -232,8 +252,8 @@ PrintHopInfo(_In_ IPAddr Address)
     }
 
     WCHAR IpAddress[MAX_IPADDRESS];
-    Status = GetNameInfoW((PSOCKADDR)&SockAddrIn,
-                          sizeof(SOCKADDR_IN),
+    Status = GetNameInfoW(SockAddr,
+                          Size,
                           IpAddress,
                           NI_MAXHOST,
                           NULL,
@@ -255,22 +275,40 @@ PrintHopInfo(_In_ IPAddr Address)
 }
 
 static bool
-DecodeV4Response(
+DecodeResponse(
     _In_ PVOID ReplyBuffer,
     _In_ bool OutputHopAddress,
     _Out_ bool& FoundTarget
 )
 {
-    PICMP_ECHO_REPLY EchoReply;
-    EchoReply = (PICMP_ECHO_REPLY)ReplyBuffer;
+    ULONG RoundTripTime;
+    PVOID AddressInfo;
+    ULONG Status;
 
-    switch (EchoReply->Status)
+    if (Info.Family == AF_INET6)
+    {
+        PICMPV6_ECHO_REPLY EchoReplyV6;
+        EchoReplyV6 = (PICMPV6_ECHO_REPLY)ReplyBuffer;
+        Status = EchoReplyV6->Status;
+        RoundTripTime = EchoReplyV6->RoundTripTime;
+        AddressInfo = &EchoReplyV6->Address;
+    }
+    else
+    {
+        PICMP_ECHO_REPLY EchoReplyV4;
+        EchoReplyV4 = (PICMP_ECHO_REPLY)ReplyBuffer;
+        Status = EchoReplyV4->Status;
+        RoundTripTime = EchoReplyV4->RoundTripTime;
+        AddressInfo = &EchoReplyV4->Address;
+    }
+
+    switch (Status)
     {
     case IP_SUCCESS:
     case IP_TTL_EXPIRED_TRANSIT:
-        if (EchoReply->RoundTripTime)
+        if (RoundTripTime)
         {
-            OutputText(IDS_HOP_TIME, EchoReply->RoundTripTime);
+            OutputText(IDS_HOP_TIME, RoundTripTime);
         }
         else
         {
@@ -296,31 +334,21 @@ DecodeV4Response(
 
     if (OutputHopAddress)
     {
-        if (EchoReply->Status == IP_SUCCESS)
+        if (Status == IP_SUCCESS)
         {
             FoundTarget = true;
         }
-        if (EchoReply->Status == IP_TTL_EXPIRED_TRANSIT || EchoReply->Status == IP_SUCCESS)
+        if (Status == IP_TTL_EXPIRED_TRANSIT || Status == IP_SUCCESS)
         {
-            PrintHopInfo(EchoReply->Address);
+            PrintHopInfo(AddressInfo);
         }
-        else if (EchoReply->Status == IP_REQ_TIMED_OUT)
+        else if (Status == IP_REQ_TIMED_OUT)
         {
             OutputText(IDS_REQ_TIMED_OUT);
         }
     }
 
     return true;
-}
-
-static bool
-DecodeV6Response(
-    _In_ PVOID ReplyBuffer,
-    _In_ bool OutputHopAddress,
-    _Out_ bool& FoundTarget
-)
-{
-    return false;
 }
 
 static bool
@@ -425,17 +453,7 @@ RunTraceRoute()
                                      Info.Timeout);
             }
 
-            bool Success;
-            if (Info.Family == AF_INET6)
-            {
-                Success = DecodeV6Response(ReplyBuffer, (Ping == NUM_OF_PINGS), FoundTarget);
-            }
-            else
-            {
-                Success = DecodeV4Response(ReplyBuffer, (Ping == NUM_OF_PINGS), FoundTarget);
-            }
-
-            if (Success == false)
+            if (DecodeResponse(ReplyBuffer, (Ping == NUM_OF_PINGS), FoundTarget) == false)
             {
                 Quit = true;
                 break;
@@ -443,6 +461,7 @@ RunTraceRoute()
 
             if (FoundTarget)
             {
+                Success = true;
                 break;
             }
         }
