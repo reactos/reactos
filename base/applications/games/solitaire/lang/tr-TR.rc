@@ -3,7 +3,7 @@
  * LICENSE:    Freeware, permission to use under Public Domain
  * FILE:       base/applications/games/solitaire/lang/tr-TR.rc
  * PURPOSE:    Turkish Resource File for ReactOS Solitaire
- * TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

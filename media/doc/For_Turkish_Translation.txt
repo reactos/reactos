@@ -1,7 +1,3 @@
-The ReactOS is translating to pure Turkish with new terminology. For new terminology, see: http://eersoy93.blogspot.com.tr/p/sozluk.html (in Turkish)
+ReactOS isn't translated to pure Turkish anymore by me but I may translate ReactOS to normal Turkish. For pure Turkish words, prefixes, suffixes etc. see for my pure Turkish dictionary: https://github.com/eersoy93/sozluklerim/blob/master/%C3%96z_T%C3%BCrk%C3%A7e_S%C3%B6zl%C3%BCk.md
 
-For more information on translating to Turkish, see this forum topic and this JIRA issue:
-http://www.reactos.org/forum/viewtopic.php?f=45&t=13528 (in Turkish)
-https://jira.reactos.org/browse/CORE-9609
-
-Erdem ERSOY (eersoy93) (erdemersoy@live.com)
+Erdem ERSOY (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
