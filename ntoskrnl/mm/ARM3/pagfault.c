@@ -1644,7 +1644,6 @@ MmArmAccessFault(IN ULONG FaultCode,
     ULONG Color;
     BOOLEAN IsSessionAddress;
     PMMPFN Pfn1;
-    BOOLEAN StoreInstruction = !MI_IS_NOT_PRESENT_FAULT(FaultCode);
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
     /* Check for page fault on high IRQL */
@@ -1694,10 +1693,10 @@ MmArmAccessFault(IN ULONG FaultCode,
 
         /* Not yet implemented in ReactOS */
         ASSERT(MI_IS_PAGE_LARGE(PointerPde) == FALSE);
-        ASSERT(((StoreInstruction) && MI_IS_PAGE_COPY_ON_WRITE(PointerPte)) == FALSE);
+        ASSERT((!MI_IS_NOT_PRESENT_FAULT(FaultCode) && MI_IS_PAGE_COPY_ON_WRITE(PointerPte)) == FALSE);
 
         /* Check if this was a write */
-        if (StoreInstruction)
+        if (MI_IS_WRITE_ACCESS(FaultCode))
         {
             /* Was it to a read-only page? */
             Pfn1 = MI_PFN_ELEMENT(PointerPte->u.Hard.PageFrameNumber);
@@ -1745,7 +1744,7 @@ MmArmAccessFault(IN ULONG FaultCode,
             /* PXE/PPE/PDE (still) not valid, kill the system */
             KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                          (ULONG_PTR)Address,
-                         StoreInstruction,
+                         FaultCode,
                          (ULONG_PTR)TrapInformation,
                          2);
         }
@@ -1766,7 +1765,7 @@ MmArmAccessFault(IN ULONG FaultCode,
                 if (TempPte.u.Hard.Valid)
                 {
                     /* Check if this was a write */
-                    if (StoreInstruction)
+                    if (MI_IS_WRITE_ACCESS(FaultCode))
                     {
                         /* Was it to a read-only page? */
                         Pfn1 = MI_PFN_ELEMENT(PointerPte->u.Hard.PageFrameNumber);
@@ -1799,7 +1798,7 @@ MmArmAccessFault(IN ULONG FaultCode,
                 /* It failed, this address is invalid */
                 KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                              (ULONG_PTR)Address,
-                             StoreInstruction,
+                             FaultCode,
                              (ULONG_PTR)TrapInformation,
                              6);
             }
@@ -1867,7 +1866,7 @@ _WARN("Session space stuff is not implemented yet!")
         if (TempPte.u.Hard.Valid == 1)
         {
             /* Check if this was a write */
-            if (StoreInstruction)
+            if (MI_IS_WRITE_ACCESS(FaultCode))
             {
                 /* Was it to a read-only page that is not copy on write? */
                 Pfn1 = MI_PFN_ELEMENT(PointerPte->u.Hard.PageFrameNumber);
@@ -1889,7 +1888,7 @@ _WARN("Session space stuff is not implemented yet!")
 
             /* Check for read-only write in session space */
             if ((IsSessionAddress) &&
-                (StoreInstruction) &&
+                MI_IS_WRITE_ACCESS(FaultCode) &&
                 !MI_IS_PAGE_WRITEABLE(&TempPte))
             {
                 /* Sanity check */
@@ -1932,7 +1931,7 @@ _WARN("Session space stuff is not implemented yet!")
                 /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
                 KeBugCheckEx(DRIVER_CAUGHT_MODIFYING_FREED_POOL,
                              (ULONG_PTR)Address,
-                             StoreInstruction,
+                             FaultCode,
                              Mode,
                              4);
             }
@@ -1962,7 +1961,7 @@ _WARN("Session space stuff is not implemented yet!")
                 /* Bugcheck the system! */
                 KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                              (ULONG_PTR)Address,
-                             StoreInstruction,
+                             FaultCode,
                              (ULONG_PTR)TrapInformation,
                              1);
             }
@@ -1973,14 +1972,14 @@ _WARN("Session space stuff is not implemented yet!")
                 /* Bugcheck the system! */
                 KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
                              (ULONG_PTR)Address,
-                             StoreInstruction,
+                             FaultCode,
                              (ULONG_PTR)TrapInformation,
                              0);
             }
         }
 
         /* Check for demand page */
-        if ((StoreInstruction) &&
+        if (MI_IS_WRITE_ACCESS(FaultCode) &&
             !(ProtoPte) &&
             !(IsSessionAddress) &&
             !(TempPte.u.Hard.Valid))
@@ -1999,7 +1998,7 @@ _WARN("Session space stuff is not implemented yet!")
         }
 
         /* Now do the real fault handling */
-        Status = MiDispatchFault(StoreInstruction,
+        Status = MiDispatchFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
                                  Address,
                                  PointerPte,
                                  ProtoPte,
@@ -2148,7 +2147,7 @@ UserFault:
     if (TempPte.u.Hard.Valid)
     {
         /* Check if this is a write on a readonly PTE */
-        if (StoreInstruction)
+        if (MI_IS_WRITE_ACCESS(FaultCode))
         {
             /* Is this a copy on write PTE? */
             if (MI_IS_PAGE_COPY_ON_WRITE(&TempPte))
@@ -2417,7 +2416,7 @@ UserFault:
     {
         /* Run a software access check first, including to detect guard pages */
         Status = MiAccessCheck(PointerPte,
-                               StoreInstruction,
+                               !MI_IS_NOT_PRESENT_FAULT(FaultCode),
                                Mode,
                                ProtectionCode,
                                TrapInformation,
@@ -2444,7 +2443,7 @@ UserFault:
     }
 
     /* Dispatch the fault */
-    Status = MiDispatchFault(StoreInstruction,
+    Status = MiDispatchFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
                              Address,
                              PointerPte,
                              ProtoPte,
