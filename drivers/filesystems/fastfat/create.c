@@ -919,7 +919,14 @@ VfatCreateFile(
 
             if (!vfatFCBIsDirectory(pFcb))
             {
-                *pFcb->Attributes = Attributes & ~FILE_ATTRIBUTE_NORMAL;
+                if (RequestedDisposition == FILE_SUPERSEDE)
+                {
+                    *pFcb->Attributes = Attributes & ~FILE_ATTRIBUTE_NORMAL;
+                }
+                else
+                {
+                    *pFcb->Attributes |= Attributes & ~FILE_ATTRIBUTE_NORMAL;
+                }
                 *pFcb->Attributes |= FILE_ATTRIBUTE_ARCHIVE;
                 VfatUpdateEntry(pFcb, vfatVolumeIsFatX(DeviceExt));
             }
