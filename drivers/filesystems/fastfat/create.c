@@ -728,6 +728,8 @@ VfatCreateFile(
         return Status;
     }
 
+    Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
+
     /* If the file open failed then create the required file */
     if (!NT_SUCCESS (Status))
     {
@@ -736,7 +738,6 @@ VfatCreateFile(
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
-            Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
             if (!BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE))
             {
                 if (TrailingBackslash)
@@ -908,9 +909,17 @@ VfatCreateFile(
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
+            if ((BooleanFlagOn(*pFcb->Attributes, FILE_ATTRIBUTE_HIDDEN) && !BooleanFlagOn(Attributes, FILE_ATTRIBUTE_HIDDEN)) ||
+                (BooleanFlagOn(*pFcb->Attributes, FILE_ATTRIBUTE_SYSTEM) && !BooleanFlagOn(Attributes, FILE_ATTRIBUTE_SYSTEM)))
+            {
+                VfatCloseFile(DeviceExt, FileObject);
+                vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
+                return STATUS_ACCESS_DENIED;
+            }
+
             if (!vfatFCBIsDirectory(pFcb))
             {
-                *pFcb->Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
+                *pFcb->Attributes = Attributes & ~FILE_ATTRIBUTE_NORMAL;
                 *pFcb->Attributes |= FILE_ATTRIBUTE_ARCHIVE;
                 VfatUpdateEntry(pFcb, vfatVolumeIsFatX(DeviceExt));
             }
