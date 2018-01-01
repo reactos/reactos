@@ -1,11 +1,11 @@
 /*
- * PROJECT: ReactOS Character Map
- * LICENSE: GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE: Italian Translation for ReactOS Character Map
- * COPYRIGHT: Bișoc George (fraizeraust99@gmail.com)
+ * PROJECT:     ReactOS Character Map
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Italian Translation for ReactOS Character Map
+ * COPYRIGHT:   Bișoc George (fraizeraust99@gmail.com)
  */
- 
- LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDD_CHARMAP DIALOGEX 6, 6, 290, 224
 FONT 8, "MS Shell Dlg", 0, 0
@@ -14,7 +14,7 @@ CAPTION "Mappa Caratteri di ReactOS"
 BEGIN
     LTEXT "Font:", IDC_STATIC, 6, 7, 24, 9
     COMBOBOX IDC_FONTCOMBO, 28, 5, 150, 210, WS_CHILD | WS_VISIBLE |
-             WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+            WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
     LTEXT "Caratteri da copiare:", IDC_STATIC, 6, 188, 66, 9
     CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
