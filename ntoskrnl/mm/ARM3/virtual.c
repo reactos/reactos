@@ -3350,7 +3350,7 @@ MiLockVirtualMemory(
             CurrentVa = MiPteToAddress(PointerPte);
 
             //HACK: Pass a placeholder TrapInformation so the fault handler knows we're unlocked
-            TempStatus = MmAccessFault(TRUE, CurrentVa, KernelMode, (PVOID)0xBADBADA3);
+            TempStatus = MmAccessFault(TRUE, CurrentVa, KernelMode, (PVOID)(ULONG_PTR)0xBADBADA3BADBADA3ULL);
             if (!NT_SUCCESS(TempStatus))
             {
                 // This should only happen, when remote backing storage is not accessible

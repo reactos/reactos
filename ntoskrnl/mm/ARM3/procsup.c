@@ -855,10 +855,10 @@ MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
     MmWorkingSetList->HashTable = NULL;
     MmWorkingSetList->HashTableSize = 0;
     MmWorkingSetList->NumberOfImageWaiters = 0;
-    MmWorkingSetList->Wsle = (PVOID)0xDEADBABE;
+    MmWorkingSetList->Wsle = (PVOID)(ULONG_PTR)0xDEADBABEDEADBABEULL;
     MmWorkingSetList->VadBitMapHint = 1;
-    MmWorkingSetList->HashTableStart = (PVOID)0xBADAB00B;
-    MmWorkingSetList->HighestPermittedHashAddress = (PVOID)0xCAFEBABE;
+    MmWorkingSetList->HashTableStart = (PVOID)(ULONG_PTR)0xBADAB00BBADAB00BULL;
+    MmWorkingSetList->HighestPermittedHashAddress = (PVOID)(ULONG_PTR)0xCAFEBABECAFEBABEULL;
     MmWorkingSetList->FirstFree = 1;
     MmWorkingSetList->FirstDynamic = 2;
     MmWorkingSetList->NextSlot = 3;
