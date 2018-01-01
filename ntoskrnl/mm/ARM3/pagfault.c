@@ -1618,7 +1618,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
 
 NTSTATUS
 NTAPI
-MmArmAccessFault(IN BOOLEAN StoreInstruction,
+MmArmAccessFault(IN ULONG FaultCode,
                  IN PVOID Address,
                  IN KPROCESSOR_MODE Mode,
                  IN PVOID TrapInformation)
@@ -1644,6 +1644,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     ULONG Color;
     BOOLEAN IsSessionAddress;
     PMMPFN Pfn1;
+    BOOLEAN StoreInstruction = !MI_IS_NOT_PRESENT_FAULT(FaultCode);
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
     /* Check for page fault on high IRQL */
