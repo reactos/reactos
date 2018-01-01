@@ -312,8 +312,10 @@ MmIsDisabledPage(PEPROCESS Process, PVOID Address)
 {
     MMPTE Pte;
     Pte.u.Long = MiGetPteValueForProcess(Process, Address);
-    __debugbreak(); // FIXME
-    return !Pte.u.Hard.Valid && !(Pte.u.Long & 0x800) && Pte.u.Hard.PageFrameNumber;
+
+    return (Pte.u.Hard.Valid == 0) && 
+           (Pte.u.Trans.Transition == 0) &&
+           (Pte.u.Hard.PageFrameNumber != 0);
 }
 
 BOOLEAN

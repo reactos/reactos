@@ -63,14 +63,15 @@ static LPWSTR load_message( HMODULE module, UINT id, WORD lang )
 {
     MESSAGE_RESOURCE_ENTRY *mre;
     WCHAR *buffer;
-    NTSTATUS status;
+    NTSTATUS Status;
 
     TRACE("module = %p, id = %08x\n", module, id );
 
     if (!module) module = GetModuleHandleW( NULL );
-    if ((status = RtlFindMessage( module, (ULONG)RT_MESSAGETABLE, lang, id, &mre )) != STATUS_SUCCESS)
+    Status = RtlFindMessage(module, (ULONG_PTR)RT_MESSAGETABLE, lang, id, &mre);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(status) );
+        SetLastError(RtlNtStatusToDosError(Status));
         return NULL;
     }
 

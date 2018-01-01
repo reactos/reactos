@@ -3567,7 +3567,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     ACCESS_MASK DesiredAccess;
     ULONG ProtectionMask;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
     static const ULONG ValidAllocationType = (MEM_TOP_DOWN | MEM_LARGE_PAGES |
             MEM_DOS_LIM | SEC_NO_CHANGE | MEM_RESERVE);
 #else

@@ -20,7 +20,7 @@ TranslateStdHandle(IN HANDLE hHandle)
 {
     PRTL_USER_PROCESS_PARAMETERS Ppb = NtCurrentPeb()->ProcessParameters;
 
-    switch ((ULONG)hHandle)
+    switch ((ULONG_PTR)hHandle)
     {
         case STD_INPUT_HANDLE:  return Ppb->StandardInput;
         case STD_OUTPUT_HANDLE: return Ppb->StandardOutput;

@@ -57,8 +57,9 @@ KeContextToTrapFrame(IN PCONTEXT Context,
 
     /* Handle floating point registers */
     if ((ContextFlags & CONTEXT_FLOATING_POINT) &&
-        (Context->SegCs & MODE_MASK))
+        ((Context->SegCs & MODE_MASK) != KernelMode))
     {
+        TrapFrame->MxCsr = Context->MxCsr;
         TrapFrame->Xmm0 = Context->Xmm0;
         TrapFrame->Xmm1 = Context->Xmm1;
         TrapFrame->Xmm2 = Context->Xmm2;
@@ -84,7 +85,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     if (ContextFlags & CONTEXT_CONTROL)
     {
         /* Check if this was a Kernel Trap */
-        if (Context->SegCs == KGDT64_R0_CODE)
+        if ((Context->SegCs & MODE_MASK) == KernelMode)
         {
             /* Set valid selectors */
             TrapFrame->SegCs = KGDT64_R0_CODE;
@@ -107,7 +108,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     if (ContextFlags & CONTEXT_SEGMENTS)
     {
         /* Check if this was a Kernel Trap */
-        if (Context->SegCs == KGDT64_R0_CODE)
+        if ((Context->SegCs & MODE_MASK) == KernelMode)
         {
             /* Set valid selectors */
             TrapFrame->SegDs = KGDT64_R3_DATA | RPL_MASK;
@@ -147,14 +148,20 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
                      IN PKEXCEPTION_FRAME ExceptionFrame,
                      IN OUT PCONTEXT Context)
 {
+    ULONG ContextFlags;
     KIRQL OldIrql;
 
     /* Do this at APC_LEVEL */
     OldIrql = KeGetCurrentIrql();
     if (OldIrql < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
 
+    /* Make sure we have an amd64 context, then remove the flag */
+    ContextFlags = Context->ContextFlags;
+    ASSERT(ContextFlags & CONTEXT_AMD64);
+    ContextFlags &= ~CONTEXT_AMD64;
+
     /* Handle integer registers */
-    if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+    if (ContextFlags & CONTEXT_INTEGER)
     {
         Context->Rax = TrapFrame->Rax;
         Context->Rbx = TrapFrame->Rbx;
@@ -178,8 +185,8 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Handle floating point registers */
-    if (((Context->ContextFlags & CONTEXT_FLOATING_POINT) ==
-        CONTEXT_FLOATING_POINT) && (TrapFrame->SegCs & MODE_MASK))
+    if ((ContextFlags & CONTEXT_FLOATING_POINT) && 
+        ((TrapFrame->SegCs & MODE_MASK) != KernelMode))
     {
         Context->Xmm0 = TrapFrame->Xmm0;
         Context->Xmm1 = TrapFrame->Xmm1;
@@ -203,10 +210,10 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Handle control registers */
-    if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+    if (ContextFlags & CONTEXT_CONTROL)
     {
         /* Check if this was a Kernel Trap */
-        if (TrapFrame->SegCs == KGDT64_R0_CODE)
+        if ((TrapFrame->SegCs & MODE_MASK) == KernelMode)
         {
             /* Set valid selectors */
             Context->SegCs = KGDT64_R0_CODE;
@@ -226,10 +233,10 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Handle segment selectors */
-    if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
+    if (ContextFlags & CONTEXT_SEGMENTS)
     {
         /* Check if this was a Kernel Trap */
-        if (TrapFrame->SegCs == KGDT64_R0_CODE)
+        if ((TrapFrame->SegCs & MODE_MASK) == KernelMode)
         {
             /* Set valid selectors */
             Context->SegDs = KGDT64_R3_DATA | RPL_MASK;
@@ -248,8 +255,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Handle debug registers */
-    if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) ==
-        CONTEXT_DEBUG_REGISTERS)
+    if (ContextFlags & CONTEXT_DEBUG_REGISTERS)
     {
         /* Copy the debug registers */
         Context->Dr0 = TrapFrame->Dr0;
