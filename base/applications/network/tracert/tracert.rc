@@ -15,7 +15,7 @@
     #include "lang/bg-BG.rc"
 #endif
 #ifdef LANGUAGE_CS_CZ
-#include "lang/cs-CZ.rc"
+    #include "lang/cs-CZ.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
