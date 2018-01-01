@@ -1199,7 +1199,6 @@ FASTCALL
 KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
-    BOOLEAN Present;
     BOOLEAN StoreInstruction;
     ULONG_PTR Cr2;
     NTSTATUS Status;
@@ -1227,7 +1226,6 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     _enable();
 
     /* Interpret the error code */
-    Present = (TrapFrame->ErrCode & 1) != 0;
     StoreInstruction = (TrapFrame->ErrCode & 2) != 0;
 
     /* Check if we came in with interrupts disabled */
@@ -1237,7 +1235,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         KeBugCheckWithTf(IRQL_NOT_LESS_OR_EQUAL,
                          Cr2,
                          (ULONG_PTR)-1,
-                         StoreInstruction,
+                         TrapFrame->ErrCode,
                          TrapFrame->Eip,
                          TrapFrame);
     }
@@ -1339,7 +1337,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 NotSListFault:
 
     /* Call the access fault handler */
-    Status = MmAccessFault(Present,
+    Status = MmAccessFault(TrapFrame->ErrCode,
                            (PVOID)Cr2,
                            KiUserTrap(TrapFrame),
                            TrapFrame);

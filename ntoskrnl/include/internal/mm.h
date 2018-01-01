@@ -744,7 +744,7 @@ MmFreeSpecialPool(
 NTSTATUS
 NTAPI
 MmAccessFault(
-    IN BOOLEAN StoreInstruction,
+    IN ULONG FaultCode,
     IN PVOID Address,
     IN KPROCESSOR_MODE Mode,
     IN PVOID TrapInformation
