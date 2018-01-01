@@ -1274,7 +1274,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
 
 NTSTATUS
 NTAPI
-MiDispatchFault(IN BOOLEAN StoreInstruction,
+MiDispatchFault(IN ULONG FaultCode,
                 IN PVOID Address,
                 IN PMMPTE PointerPte,
                 IN PMMPTE PointerProtoPte,
@@ -1333,7 +1333,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
             }
 
             /* Resolve the fault -- this will release the PFN lock */
-            Status = MiResolveProtoPteFault(StoreInstruction,
+            Status = MiResolveProtoPteFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
                                             Address,
                                             PointerPte,
                                             PointerProtoPte,
@@ -1450,7 +1450,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                 if (++ProcessedPtes == PteCount)
                 {
                     /* Complete the fault */
-                    MiCompleteProtoPteFault(StoreInstruction,
+                    MiCompleteProtoPteFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
                                             Address,
                                             PointerPte,
                                             PointerProtoPte,
@@ -1489,7 +1489,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
             ASSERT(PointerPte->u.Hard.Valid == 0);
 
             /* Resolve the fault -- this will release the PFN lock */
-            Status = MiResolveProtoPteFault(StoreInstruction,
+            Status = MiResolveProtoPteFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
                                             Address,
                                             PointerPte,
                                             PointerProtoPte,
@@ -1537,7 +1537,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         LockIrql = MiAcquirePfnLock();
 
         /* Resolve */
-        Status = MiResolveTransitionFault(StoreInstruction, Address, PointerPte, Process, LockIrql, &InPageBlock);
+        Status = MiResolveTransitionFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode), Address, PointerPte, Process, LockIrql, &InPageBlock);
 
         ASSERT(NT_SUCCESS(Status));
 
@@ -1576,7 +1576,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         LockIrql = MiAcquirePfnLock();
 
         /* Resolve */
-        Status = MiResolvePageFileFault(StoreInstruction, Address, PointerPte, Process, &LockIrql);
+        Status = MiResolvePageFileFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode), Address, PointerPte, Process, &LockIrql);
 
         /* And now release the lock and leave*/
         MiReleasePfnLock(LockIrql);
@@ -2028,7 +2028,7 @@ _WARN("Session space stuff is not implemented yet!")
         }
 
         /* Now do the real fault handling */
-        Status = MiDispatchFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
+        Status = MiDispatchFault(FaultCode,
                                  Address,
                                  PointerPte,
                                  ProtoPte,
@@ -2480,7 +2480,7 @@ UserFault:
     }
 
     /* Dispatch the fault */
-    Status = MiDispatchFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
+    Status = MiDispatchFault(FaultCode,
                              Address,
                              PointerPte,
                              ProtoPte,

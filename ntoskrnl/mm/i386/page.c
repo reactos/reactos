@@ -191,7 +191,7 @@ ProtectToPTE(ULONG flProtect)
 
 NTSTATUS
 NTAPI
-MiDispatchFault(IN BOOLEAN StoreInstruction,
+MiDispatchFault(IN ULONG FaultCode,
                 IN PVOID Address,
                 IN PMMPTE PointerPte,
                 IN PMMPTE PointerProtoPte,
@@ -262,7 +262,8 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             ASSERT(PointerPde->u.Long == 0);
 
             MI_WRITE_INVALID_PTE(PointerPde, DemandZeroPde);
-            Status = MiDispatchFault(TRUE,
+            // Tiny HACK: Parameter 1 is the architecture specific FaultCode for an access violation (i.e. page is present)
+            Status = MiDispatchFault(0x1,
                                      Pt,
                                      PointerPde,
                                      NULL,
