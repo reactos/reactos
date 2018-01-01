@@ -90,6 +90,7 @@
 
 /* Macros to identify the page fault reason from the error code */
 #define MI_IS_NOT_PRESENT_FAULT(FaultCode) TRUE
+#define MI_IS_WRITE_ACCESS(FaultCode) TRUE
 
 /* Convert an address to a corresponding PTE */
 #define MiAddressToPte(x) \

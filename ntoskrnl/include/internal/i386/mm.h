@@ -114,6 +114,7 @@
 
 /* Macros to identify the page fault reason from the error code */
 #define MI_IS_NOT_PRESENT_FAULT(FaultCode) !BooleanFlagOn(FaultCode, 0x1)
+#define MI_IS_WRITE_ACCESS(FaultCode) BooleanFlagOn(FaultCode, 0x2)
 
 /* On x86, these two are the same */
 #define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
