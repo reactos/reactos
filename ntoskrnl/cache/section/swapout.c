@@ -254,7 +254,7 @@ MmFinalizeSectionPageOut(PMM_SECTION_SEGMENT Segment,
     }
 
     /* Note: Writing may evict the segment... Nothing is guaranteed from here down */
-    MiSetPageEvent(Segment, FileOffset->LowPart);
+    MiSetPageEvent(Segment, (ULONG_PTR)FileOffset->QuadPart);
 
     DPRINT("Status %x\n", Status);
     return Status;

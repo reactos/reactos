@@ -1370,7 +1370,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     }
 
     RtlZeroMemory(Vad, sizeof(MMVAD_LONG));
-    Vad->u4.Banked = (PVOID)0xDEADBABE;
+    Vad->u4.Banked = (PVOID)(ULONG_PTR)0xDEADBABEDEADBABEULL;
 
     /* Write all the data required in the VAD for handling a fault */
     Vad->ControlArea = ControlArea;

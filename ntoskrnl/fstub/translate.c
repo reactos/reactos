@@ -176,7 +176,7 @@ xHalGetInterruptTranslator(IN INTERFACE_TYPE ParentInterfaceType,
     Translator->Size = sizeof(TRANSLATOR_INTERFACE);
     Translator->Version = HAL_IRQ_TRANSLATOR_VERSION;
     /* In case caller set interface to undefined, faulty it to ISA */
-    Translator->Context = (PVOID)((BridgeInterfaceType == InterfaceTypeUndefined) ? Isa : BridgeInterfaceType);
+    Translator->Context = UlongToPtr((BridgeInterfaceType == InterfaceTypeUndefined) ? Isa : BridgeInterfaceType);
     Translator->InterfaceReference = FstubTranslatorNull;
     Translator->InterfaceDereference = FstubTranslatorNull;
     Translator->TranslateResources = FstubTranslateResource;

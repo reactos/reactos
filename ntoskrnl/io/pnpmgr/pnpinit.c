@@ -63,7 +63,7 @@ PiInitCacheGroupInformation(VOID)
 
         /* Bogus data */
         PiInitGroupOrderTableCount = 0;
-        PiInitGroupOrderTable = (PVOID)0xBABEB00B;
+        PiInitGroupOrderTable = (PVOID)(ULONG_PTR)0xBABEB00BBABEB00BULL;
         return STATUS_SUCCESS;
     }
 

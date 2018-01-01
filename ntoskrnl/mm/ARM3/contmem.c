@@ -146,7 +146,7 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             Pfn1->u3.e1.EndOfAllocation = 0;
                             Pfn1->u3.e1.PrototypePte = 0;
                             Pfn1->u4.VerifierAllocation = 0;
-                            Pfn1->PteAddress = (PVOID)0xBAADF00D;
+                            Pfn1->PteAddress = (PVOID)(ULONG_PTR)0xBAADF00DBAADF00DULL;
 
                             //
                             // Check if this is the last PFN, otherwise go on

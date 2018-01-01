@@ -172,7 +172,7 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
         else
         {
             /* This is a section VAD. Store the MAREA here for now */
-            ASSERT(Vad->u4.Banked == (PVOID)0xDEADBABE);
+            ASSERT(Vad->u4.Banked == (PVOID)(ULONG_PTR)0xDEADBABEDEADBABEULL);
             Vad->u4.Banked = (PVOID)MemoryArea;
         }
     }
@@ -399,7 +399,7 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
         if (MemoryArea)
         {
             /* Make sure we have not already freed it */
-            ASSERT(MemoryArea != (PVOID)0xDEADBAB1);
+            ASSERT(MemoryArea != (PVOID)(ULONG_PTR)0xDEADBAB1DEADBAB1ULL);
 
             /* Get the process */
             Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
@@ -415,12 +415,12 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
             if (Vad->ControlArea == NULL)
             {
                 /* Delete the pointer to it */
-                Vad->FirstPrototypePte = (PVOID)0xDEADBAB1;
+                Vad->FirstPrototypePte = (PVOID)(ULONG_PTR)0xDEADBAB1DEADBAB1ULL;
             }
             else
             {
                 /* Delete the pointer to it */
-                Vad->u4.Banked = (PVOID)0xDEADBAB1;
+                Vad->u4.Banked = (PVOID)(ULONG_PTR)0xDEADBAB1DEADBAB1ULL;
             }
         }
     }

@@ -1194,7 +1194,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
             Address = MiPteToAddress(PointerPte);
 
             //HACK: Pass a placeholder TrapInformation so the fault handler knows we're unlocked
-            Status = MmAccessFault(FALSE, Address, KernelMode, (PVOID)0xBADBADA3);
+            Status = MmAccessFault(FALSE, Address, KernelMode, (PVOID)(ULONG_PTR)0xBADBADA3BADBADA3ULL);
             if (!NT_SUCCESS(Status))
             {
                 //
@@ -1263,7 +1263,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                         //
 
                         //HACK: Pass a placeholder TrapInformation so the fault handler knows we're unlocked
-                        Status = MmAccessFault(TRUE, Address, KernelMode, (PVOID)0xBADBADA3);
+                        Status = MmAccessFault(TRUE, Address, KernelMode, (PVOID)(ULONG_PTR)0xBADBADA3BADBADA3ULL);
                         if (!NT_SUCCESS(Status))
                         {
                             //
