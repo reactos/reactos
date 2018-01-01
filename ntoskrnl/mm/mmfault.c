@@ -201,12 +201,13 @@ extern BOOLEAN Mmi386MakeKernelPageTableGlobal(PVOID Address);
 
 NTSTATUS
 NTAPI
-MmAccessFault(IN BOOLEAN StoreInstruction,
+MmAccessFault(IN ULONG FaultCode,
               IN PVOID Address,
               IN KPROCESSOR_MODE Mode,
               IN PVOID TrapInformation)
 {
     PMEMORY_AREA MemoryArea = NULL;
+    BOOLEAN StoreInstruction = !MI_IS_NOT_PRESENT_FAULT(FaultCode);
 
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)

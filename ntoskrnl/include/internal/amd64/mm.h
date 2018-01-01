@@ -106,6 +106,9 @@
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 1)
 #endif
 
+/* Macros to identify the page fault reason from the error code */
+#define MI_IS_NOT_PRESENT_FAULT(FaultCode) !BooleanFlagOn(FaultCode, 0x1)
+
 /* On x64, these are the same */
 #define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
 #define ValidKernelPpe ValidKernelPde
