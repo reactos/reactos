@@ -209,37 +209,24 @@ inline BOOL CAvailableApplicationInfo::GetString(LPCWSTR lpKeyName, ATL::CString
 }
 // CAvailableApplicationInfo 
 
-// CAvailableApps
-ATL::CStringW CAvailableApps::m_szPath;
-ATL::CStringW CAvailableApps::m_szCabPath;
-ATL::CStringW CAvailableApps::m_szAppsPath;
-ATL::CStringW CAvailableApps::m_szSearchPath;
-
-BOOL CAvailableApps::InitializeStaticStrings()
+// AvailableStrings
+AvailableStrings::AvailableStrings()
 {
-
-    if (!m_szPath.IsEmpty())
-    {
-        // strings are filled
-        return TRUE;
-    }
-
     //FIXME: maybe provide a fallback?
-    if (GetStorageDirectory(m_szPath))
+    if (GetStorageDirectory(szPath))
     {
-        m_szAppsPath = m_szPath + L"\\rapps\\";
-        m_szCabPath = m_szPath + L"\\rappmgr.cab";
-        m_szSearchPath = m_szAppsPath + L"*.txt";
-        return TRUE;
+        szAppsPath = szPath + L"\\rapps\\";
+        szCabPath = szPath + L"\\rappmgr.cab";
+        szSearchPath = szAppsPath + L"*.txt";
     }
-
-    return FALSE;
 }
+// AvailableStrings
+
+// CAvailableApps
+AvailableStrings CAvailableApps::m_Strings;
 
 CAvailableApps::CAvailableApps()
 {
-    //set all paths
-    InitializeStaticStrings();
 }
 
 VOID CAvailableApps::FreeCachedEntries()
@@ -261,26 +248,21 @@ VOID CAvailableApps::DeleteCurrentAppsDB()
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    if (!InitializeStaticStrings())
-    {
-        return;
-    }
-
-    hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
+    hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
 
     if (hFind != INVALID_HANDLE_VALUE)
     {
         ATL::CStringW szTmp;
         do
         {
-            szTmp = m_szAppsPath + FindFileData.cFileName;
+            szTmp = m_Strings.szAppsPath + FindFileData.cFileName;
             DeleteFileW(szTmp.GetString());
         } while (FindNextFileW(hFind, &FindFileData) != 0);
         FindClose(hFind);
     }
 
-    RemoveDirectoryW(m_szAppsPath);
-    RemoveDirectoryW(m_szPath);
+    RemoveDirectoryW(m_Strings.szAppsPath);
+    RemoveDirectoryW(m_Strings.szPath);
 }
 
 BOOL CAvailableApps::UpdateAppsDB()
@@ -288,18 +270,13 @@ BOOL CAvailableApps::UpdateAppsDB()
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    if (!InitializeStaticStrings())
-    {
-        return FALSE;
-    }
-
-    if (!CreateDirectoryW(m_szPath.GetString(), NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+    if (!CreateDirectoryW(m_Strings.szPath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
     {
         return FALSE;
     }
 
     //if there are some files in the db folder - we're good
-    hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
+    hFind = FindFirstFileW(m_Strings.szSearchPath, &FindFileData);
     if (hFind != INVALID_HANDLE_VALUE)
     {
         FindClose(hFind);
@@ -308,12 +285,12 @@ BOOL CAvailableApps::UpdateAppsDB()
 
     CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
-    if (!ExtractFilesFromCab(m_szCabPath, m_szAppsPath))
+    if (!ExtractFilesFromCab(m_Strings.szCabPath, m_Strings.szAppsPath))
     {
         return FALSE;
     }
 
-    DeleteFileW(m_szCabPath.GetString());
+    DeleteFileW(m_Strings.szCabPath);
 
     return TRUE;
 }
@@ -330,7 +307,7 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc)
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    hFind = FindFirstFileW(m_szSearchPath.GetString(), &FindFileData);
+    hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
 
     if (hFind == INVALID_HANDLE_VALUE)
     {
@@ -387,7 +364,7 @@ skip_if_cached:
         Info->RefreshAppInfo();
 
         if (lpEnumProc)
-            lpEnumProc(Info, m_szAppsPath.GetString());
+            lpEnumProc(Info, m_Strings.szAppsPath.GetString());
 
     } while (FindNextFileW(hFind, &FindFileData) != 0);
 
@@ -432,31 +409,16 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindInfoList(const 
 
 const ATL::CStringW& CAvailableApps::GetFolderPath() const
 {
-    return m_szPath;
+    return m_Strings.szPath;
 }
 
 const ATL::CStringW& CAvailableApps::GetAppPath() const
 {
-    return m_szAppsPath;
+    return m_Strings.szAppsPath;
 }
 
 const ATL::CStringW& CAvailableApps::GetCabPath() const
 {
-    return m_szCabPath;
-}
-
-LPCWSTR CAvailableApps::GetFolderPathString() const
-{
-    return m_szPath.GetString();
-}
-
-LPCWSTR CAvailableApps::GetAppPathString() const
-{
-    return m_szPath.GetString();
-}
-
-LPCWSTR CAvailableApps::GetCabPathString() const
-{
-    return m_szPath.GetString();
+    return m_Strings.szCabPath;
 }
 // CAvailableApps

@@ -79,15 +79,19 @@ private:
 
 typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, LPCWSTR szFolderPath);
 
+struct AvailableStrings
+{
+    ATL::CStringW szPath;
+    ATL::CStringW szCabPath;
+    ATL::CStringW szAppsPath;
+    ATL::CStringW szSearchPath;
+
+    AvailableStrings();
+};
+
 class CAvailableApps
 {
-    static ATL::CStringW m_szPath;
-    static ATL::CStringW m_szCabPath;
-    static ATL::CStringW m_szAppsPath;
-    static ATL::CStringW m_szSearchPath;
-
-    static BOOL InitializeStaticStrings();
-
+    static AvailableStrings m_Strings;
     ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
 
 public:
@@ -106,7 +110,4 @@ public:
     const ATL::CStringW& GetFolderPath() const;
     const ATL::CStringW& GetAppPath() const;
     const ATL::CStringW& GetCabPath() const;
-    LPCWSTR GetFolderPathString() const;
-    LPCWSTR GetAppPathString() const;
-    LPCWSTR GetCabPathString() const;
 };
