@@ -21,6 +21,10 @@
 #ifndef __WINE_ICMPAPI_H
 #define __WINE_ICMPAPI_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 HANDLE WINAPI  IcmpCreateFile(
     VOID
     );
@@ -90,5 +94,10 @@ Icmp6ParseReplies(
     LPVOID                   ReplyBuffer,
     DWORD                    ReplySize
     );
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* __WINE_ICMPAPI_H */
