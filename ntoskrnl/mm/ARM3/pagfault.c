@@ -1780,6 +1780,17 @@ MmArmAccessFault(IN ULONG FaultCode,
                                          11);
                         }
                     }
+
+                    /* Check for execution of non-executable memory */
+                    if (MI_IS_INSTRUCTION_FETCH(FaultCode) &&
+                        !MI_IS_PAGE_EXECUTABLE(&TempPte))
+                    {
+                        KeBugCheckEx(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY,
+                                     (ULONG_PTR)Address,
+                                     (ULONG_PTR)TempPte.u.Long,
+                                     (ULONG_PTR)TrapInformation,
+                                     1);
+                    }
                 }
 
                 /* Release PFN lock and return all good */
@@ -1884,6 +1895,17 @@ _WARN("Session space stuff is not implemented yet!")
                                  (ULONG_PTR)TrapInformation,
                                  12);
                 }
+            }
+
+            /* Check for execution of non-executable memory */
+            if (MI_IS_INSTRUCTION_FETCH(FaultCode) &&
+                !MI_IS_PAGE_EXECUTABLE(&TempPte))
+            {
+                KeBugCheckEx(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY,
+                             (ULONG_PTR)Address,
+                             (ULONG_PTR)TempPte.u.Long,
+                             (ULONG_PTR)TrapInformation,
+                             2);
             }
 
             /* Check for read-only write in session space */
@@ -2196,7 +2218,14 @@ UserFault:
             }
         }
 
-        /* FIXME: Execution is ignored for now, since we don't have no-execute pages yet */
+        /* Check for execution of non-executable memory */
+        if (MI_IS_INSTRUCTION_FETCH(FaultCode) &&
+            !MI_IS_PAGE_EXECUTABLE(&TempPte))
+        {
+            /* Return the status */
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            return STATUS_ACCESS_VIOLATION;
+        }
 
         /* The fault has already been resolved by a different thread */
         MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
