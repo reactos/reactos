@@ -212,6 +212,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "无法写入磁盘。磁盘可能已满。"
     IDS_SELECT_ALL "全选/全反选"
     IDS_INSTALL_SELECTED "安装已选中的"
+    IDS_SELECTEDFORINST "Selected for installation"
 END
 
 STRINGTABLE

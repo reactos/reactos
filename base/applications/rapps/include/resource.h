@@ -13,6 +13,7 @@
 #define IDI_CATEGORY             19
 #define IDI_UPDATE_DB            20
 #define IDI_CHECK_ALL            21
+#define IDI_SELECTEDFORINST      22
 
 /* Icons for categories */
 #define IDI_CAT_AUDIO            50
@@ -108,6 +109,7 @@
 #define IDS_SELECT_ALL           126
 #define IDS_INSTALL_SELECTED     127
 #define IDS_UNABLE_TO_INSTALL    128
+#define IDS_SELECTEDFORINST      129
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

@@ -218,6 +218,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Nie można zapisać na dysku. Dysk może być pełny."
     IDS_SELECT_ALL "Zaznacz/Odznacz Wszystko"
     IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
+    IDS_SELECTEDFORINST "Selected for installation"
 END
 
 STRINGTABLE

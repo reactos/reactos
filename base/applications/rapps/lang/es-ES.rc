@@ -213,6 +213,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "No se ha podido escribir en el disco duro, es posible que no quede espacio libre."
     IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
+    IDS_SELECTEDFORINST "Selected for installation"
 END
 
 STRINGTABLE

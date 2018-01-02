@@ -210,6 +210,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Impossibile scrivere su disco: lo spazio libero potrebbe essere esaurito."
     IDS_SELECT_ALL "Seleziona/Deseleziona Tutte"
     IDS_INSTALL_SELECTED "Installa le selezionate"
+    IDS_SELECTEDFORINST "Selected for installation"
 END
 
 STRINGTABLE

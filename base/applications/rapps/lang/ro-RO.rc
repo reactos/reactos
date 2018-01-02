@@ -219,6 +219,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Eșec la scrierea pe disc. Una din cauze poate fi atingerea limitei de capacitate."
     IDS_SELECT_ALL "Selectează/Deselectează Toate"
     IDS_INSTALL_SELECTED "Instalează selecționate"
+    IDS_SELECTEDFORINST "Selected for installation"
 END
 
 STRINGTABLE

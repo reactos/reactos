@@ -19,12 +19,9 @@
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
-    : m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
+    : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_sFileName(sFileNameParam),
+    m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
-    m_LicenseType = LICENSE_NONE;
-
-    m_sFileName = sFileNameParam;
-
     RetrieveGeneralInfo();
 }
 
@@ -355,17 +352,15 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc)
         m_InfoList.AddTail(Info);
 
 skip_if_cached:
-        if (Info->m_Category == FALSE)
-            continue;
+        if (EnumType == Info->m_Category 
+            || EnumType == ENUM_ALL_AVAILABLE 
+            || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected))
+        {
+            Info->RefreshAppInfo();
 
-        if (EnumType != Info->m_Category && EnumType != ENUM_ALL_AVAILABLE)
-            continue;
-
-        Info->RefreshAppInfo();
-
-        if (lpEnumProc)
-            lpEnumProc(Info, m_Strings.szAppsPath.GetString());
-
+            if (lpEnumProc)
+                lpEnumProc(Info, m_Strings.szAppsPath.GetString());
+        }
     } while (FindNextFileW(hFind, &FindFileData) != 0);
 
     FindClose(hFind);
@@ -400,6 +395,23 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindInfoList(const 
     {
         CAvailableApplicationInfo* Info = FindInfo(arrAppsNames[i]);
         if (Info)
+        {
+            result.Add(*Info);
+        }
+    }
+    return result;
+}
+
+ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::GetSelected() const
+{
+    ATL::CSimpleArray<CAvailableApplicationInfo> result;
+    POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
+    CAvailableApplicationInfo* Info;
+
+    while (CurrentListPosition != NULL)
+    {
+        Info = m_InfoList.GetNext(CurrentListPosition);
+        if (Info->m_IsSelected)
         {
             result.Add(*Info);
         }

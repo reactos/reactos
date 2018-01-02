@@ -542,6 +542,30 @@ public:
         if (bHasCheckboxes)
         {
             SetItemState(item, INDEXTOSTATEIMAGEMASK((fCheck) ? 2 : 1), LVIS_STATEIMAGEMASK);
+            SetSelected(item, fCheck);
+        }
+    }
+
+    VOID SetSelected(INT item, BOOL value)
+    {
+        if (item < 0)
+        {
+            for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
+            {
+                CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
+                if (pAppInfo)
+                {
+                    pAppInfo->m_IsSelected = value;
+                }
+            }
+        }
+        else
+        {
+            CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(item);
+            if (pAppInfo)
+            {
+                pAppInfo->m_IsSelected = value;
+            }
         }
     }
 
@@ -734,6 +758,8 @@ private:
         hRootItemInstalled = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
         AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
         AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
+
+        AddCategory(TVI_ROOT, IDS_SELECTEDFORINST, IDI_SELECTEDFORINST);
 
         hRootItemAvailable = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
         AddCategory(hRootItemAvailable, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
@@ -1081,6 +1107,10 @@ private:
                     case IDS_CAT_VIDEO:
                         UpdateApplicationsList(ENUM_CAT_VIDEO);
                         break;
+
+                    case IDS_SELECTEDFORINST:
+                        UpdateApplicationsList(ENUM_CAT_SELECTED);
+                        break;
                     }
                 }
 
@@ -1153,7 +1183,7 @@ private:
                     /* Check if the item is checked */
                     if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
                     {
-                        BOOL checked = ListView_GetCheckState(pnic->hdr.hwndFrom, pnic->iItem);
+                        BOOL checked = m_ListView->GetCheckState(pnic->iItem);
                         /* FIXME: HAX!
                         - preventing decremention below zero as a safeguard for ReactOS
                           In ReactOS this action is triggered whenever user changes *selection*, but should be only when *checkbox* state toggled
@@ -1165,6 +1195,10 @@ private:
                             : ((nSelectedApps > 0)
                                ? -1
                                : 0);
+
+                        /* Update item's selection status */
+                        m_ListView->SetSelected(pnic->iItem, checked);
+
                         UpdateStatusBarText();
                     }
                 }
@@ -1399,7 +1433,7 @@ private:
             {
                 if (nSelectedApps > 0)
                 {
-                    CDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
+                    CDownloadManager::DownloadListOfApplications(m_AvailableApps.GetSelected());
                     UpdateApplicationsList(-1);
                 }
                 else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
@@ -1541,6 +1575,7 @@ private:
 
         ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(Info->m_szVersion.GetString()));
         ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(Info->m_szDesc.GetString()));
+        ListView_SetCheckState(hListView, Index, Info->m_IsSelected);
 
         return TRUE;
     }
@@ -1565,7 +1600,6 @@ private:
         bUpdating = TRUE;
         m_ListView->SetRedraw(FALSE);
 
-        nSelectedApps = 0;
         if (EnumType < 0)
         {
             EnumType = SelectedEnumType;

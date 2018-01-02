@@ -210,6 +210,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно, недостаточно свободного места на диске."
     IDS_SELECT_ALL "Выбрать все"
     IDS_INSTALL_SELECTED "Установить выбранное"
+    IDS_SELECTEDFORINST "Выбрано для установки"
 END
 
 STRINGTABLE
