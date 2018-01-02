@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "兼容性"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "如果您有问题在 ReactOS 中运行此程序，选择 ReactOS 应报告给应用程序的操作系统。\nPlease note that this is a work in progress.", -1, 7, 7, 210, 31
+    LTEXT "如果您在 ReactOS 中运行此程序出现问题，选择 ReactOS 应报告给应用程序的操作系统。\n请注意，这是一项正在进行的工作。", -1, 7, 7, 210, 31
     GROUPBOX "兼容模式", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "用兼容模式运行这个程序:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -16,7 +16,7 @@ BEGIN
     CHECKBOX "在 640 x 480 屏幕分辨率运行", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "禁用视觉主题", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     PUSHBUTTON "编辑兼容模式...(&D)", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
-    CONTROL "Learn more about <A>program compatibility</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
+    CONTROL "了解更多有关<A>程序兼容性</A>的信息。", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
@@ -35,8 +35,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TABTITLE "Compatibility"
-    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
-    IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
+    IDS_TABTITLE "兼容模式"
+    IDS_FAILED_NETWORK "无法在上面设置兼容模式，因为这个程序在网络驱动器上。"
+    IDS_FAILED_PROTECTED "无法在上面设置兼容模式，因为这个程序是 ReactOS 的一部分。"
+    IDS_YOU_DID_NOT_ADD "目前没有此模式，你想要新建一个吗？"
 END
