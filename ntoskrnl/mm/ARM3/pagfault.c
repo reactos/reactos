@@ -24,6 +24,7 @@ BOOLEAN UserPdeFault = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static
 NTSTATUS
 NTAPI
 MiCheckForUserStackOverflow(IN PVOID Address,
@@ -140,6 +141,7 @@ MiIsAccessAllowed(
     return (AccessAllowedMask[Write != 0][Execute != 0] >> ProtectionMask) & 1;
 }
 
+static
 NTSTATUS
 NTAPI
 MiAccessCheck(IN PMMPTE PointerPte,
@@ -208,6 +210,7 @@ MiAccessCheck(IN PMMPTE PointerPte,
     return STATUS_SUCCESS;
 }
 
+static
 PMMPTE
 NTAPI
 MiCheckVirtualAddress(IN PVOID VirtualAddress,
@@ -310,6 +313,7 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
 }
 
 #if (_MI_PAGING_LEVELS == 2)
+static
 NTSTATUS
 FASTCALL
 MiCheckPdeForSessionSpace(IN PVOID Address)
@@ -727,6 +731,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     return STATUS_PAGE_FAULT_DEMAND_ZERO;
 }
 
+static
 NTSTATUS
 NTAPI
 MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
@@ -851,6 +856,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     return STATUS_SUCCESS;
 }
 
+static
 NTSTATUS
 NTAPI
 MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
@@ -935,6 +941,7 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     return Status;
 }
 
+static
 NTSTATUS
 NTAPI
 MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
@@ -1066,6 +1073,7 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     return STATUS_PAGE_FAULT_TRANSITION;
 }
 
+static
 NTSTATUS
 NTAPI
 MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
