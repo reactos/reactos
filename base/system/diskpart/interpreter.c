@@ -69,6 +69,10 @@ InterpretCmd(int argc, LPWSTR *argv)
 {
     PCOMMAND cmdptr;
 
+    /* If no args provided */
+    if (argc < 1)
+        return TRUE;
+
     /* First, determine if the user wants to exit
        or to use a comment */
     if(wcsicmp(argv[0], L"exit") == 0)
