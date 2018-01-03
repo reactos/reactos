@@ -553,7 +553,7 @@ ShowStatusMessageThread(
     IN LPVOID lpParameter)
 {
     HWND *phWnd = (HWND *)lpParameter;
-    HWND hWnd;
+    HWND hWnd, hItem;
     MSG Msg;
 
     hWnd = CreateDialogParam(hDllInstance,
@@ -566,6 +566,12 @@ ShowStatusMessageThread(
     *phWnd = hWnd;
 
     ShowWindow(hWnd, SW_SHOW);
+
+    hItem = GetDlgItem(hWnd, IDC_STATUSPROGRESS);
+    if (hItem)
+    {
+        PostMessage(hItem, PBM_SETMARQUEE, TRUE, 40);
+    }
 
     /* Message loop for the Status window */
     while (GetMessage(&Msg, NULL, 0, 0))
