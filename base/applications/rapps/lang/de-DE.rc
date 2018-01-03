@@ -210,7 +210,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Schreibfehler. Prüfen Sie die Kapazität des Datenträgers!"
     IDS_SELECT_ALL "Alle/Keine"
     IDS_INSTALL_SELECTED "Ausgewählte Installieren"
-    IDS_SELECTEDFORINST "Selected for installation"
+    IDS_SELECTEDFORINST "Zur Installation ausgewählt"
 END
 
 STRINGTABLE
