@@ -1534,6 +1534,9 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
   HPEN   holdPen;
   INT    oldBkMode;
   HFONT  hOldFont;
+#ifdef __REACTOS__
+HTHEME    theme = GetWindowTheme (infoPtr->hwnd);
+#endif
   
 /*  if (drawRect == NULL) */
   {
@@ -1904,6 +1907,29 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
       TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%s), textlen=%d\n",
 	  debugstr_w(item->pszText), center_offset_h, center_offset_v,
           wine_dbgstr_rect(drawRect), (rcText.right-rcText.left));
+#ifdef __REACTOS__
+      if (theme && item->pszText)
+      {
+          int partIndex = iItem == infoPtr->iSelected ? TABP_TABITEM : TABP_TOPTABITEM;
+          int stateId = TIS_NORMAL;
+
+          if (iItem == infoPtr->iSelected)
+              stateId = TIS_SELECTED;
+          else if (iItem == infoPtr->iHotTracked)
+              stateId = TIS_HOT;
+          else if (iItem == infoPtr->uFocus)
+              stateId = TIS_FOCUSED;
+
+          DrawThemeText(theme, 
+                        hdc, 
+                        partIndex, 
+                        stateId,
+                        item->pszText, 
+                        lstrlenW(item->pszText), 
+                        DT_LEFT | DT_SINGLELINE, 0, drawRect);
+      }
+      else
+#endif
       if (item->pszText)
       {
         DrawTextW
