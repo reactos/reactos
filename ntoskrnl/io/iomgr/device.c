@@ -1084,7 +1084,8 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     if (DeviceName) ObjectAttributes.Attributes |= OBJ_PERMANENT;
 
     /* Align the Extension Size to 8-bytes */
-    AlignedDeviceExtensionSize = (DeviceExtensionSize + 7) &~ 7;
+    AlignedDeviceExtensionSize = ALIGN_UP_BY(DeviceExtensionSize,
+                                             MEMORY_ALLOCATION_ALIGNMENT);
 
     /* Total Size */
     TotalSize = AlignedDeviceExtensionSize +
