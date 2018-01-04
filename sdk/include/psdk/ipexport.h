@@ -66,7 +66,7 @@ typedef struct ip_option_information IP_OPTION_INFORMATION, *PIP_OPTION_INFORMAT
 
 typedef struct icmp_echo_reply ICMP_ECHO_REPLY, *PICMP_ECHO_REPLY;
 
-#if _WIN64
+#ifdef _WIN64
 struct icmp_echo_reply32
 {
     IPAddr                       Address;
