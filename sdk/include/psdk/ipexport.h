@@ -66,6 +66,21 @@ typedef struct ip_option_information IP_OPTION_INFORMATION, *PIP_OPTION_INFORMAT
 
 typedef struct icmp_echo_reply ICMP_ECHO_REPLY, *PICMP_ECHO_REPLY;
 
+#if _WIN64
+struct icmp_echo_reply32
+{
+    IPAddr                       Address;
+    ULONG                        Status;
+    ULONG                        RoundTripTime;
+    unsigned short               DataSize;
+    unsigned short               Reserved;
+    void* POINTER_32             Data;
+    struct ip_option_information Options;
+};
+
+typedef struct icmp_echo_reply32 ICMP_ECHO_REPLY32, *PICMP_ECHO_REPLY32;
+#endif
+
 
 #define IP_STATUS_BASE              11000
 
