@@ -3447,53 +3447,15 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
 }
 
 /***********************************************************************
- *		SetupDiSetDeviceRegistryPropertyA (SETUPAPI.@)
+ *		Internal for SetupDiSetDeviceRegistryPropertyA/W
  */
-BOOL WINAPI SetupDiSetDeviceRegistryPropertyA(
+BOOL WINAPI IntSetupDiSetDeviceRegistryPropertyAW(
         HDEVINFO DeviceInfoSet,
         PSP_DEVINFO_DATA DeviceInfoData,
         DWORD Property,
         const BYTE *PropertyBuffer,
-        DWORD PropertyBufferSize)
-{
-    BOOL ret = FALSE;
-    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
-
-    TRACE("%p %p %d %p %d\n", DeviceInfoSet, DeviceInfoData, Property,
-        PropertyBuffer, PropertyBufferSize);
-
-    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-    if (!DeviceInfoData || DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA)
-            || !DeviceInfoData->Reserved)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    FIXME("%p %p 0x%lx %p 0x%lx\n", DeviceInfoSet, DeviceInfoData,
-        Property, PropertyBuffer, PropertyBufferSize);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return ret;
-}
-
-/***********************************************************************
- *		SetupDiSetDeviceRegistryPropertyW (SETUPAPI.@)
- */
-BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
-        HDEVINFO DeviceInfoSet,
-        PSP_DEVINFO_DATA DeviceInfoData,
-        DWORD Property,
-        const BYTE *PropertyBuffer,
-        DWORD PropertyBufferSize)
+        DWORD PropertyBufferSize,
+        BOOL isAnsi)
 {
     BOOL ret = FALSE;
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
@@ -3518,7 +3480,8 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
         return FALSE;
     }
     if (Property < sizeof(PropertyMap) / sizeof(PropertyMap[0])
-        && PropertyMap[Property].nameW)
+        && PropertyMap[Property].nameW
+        && PropertyMap[Property].nameA)
     {
         HKEY hKey;
         LONG l;
@@ -3526,10 +3489,20 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
         if (hKey == INVALID_HANDLE_VALUE)
             return FALSE;
         /* Write new data */
-        l = RegSetValueExW(
-            hKey, PropertyMap[Property].nameW, 0,
-                PropertyMap[Property].regType, PropertyBuffer,
-                PropertyBufferSize);
+        if (isAnsi)
+        {
+            l = RegSetValueExA(
+                hKey, PropertyMap[Property].nameA, 0,
+                    PropertyMap[Property].regType, PropertyBuffer,
+                    PropertyBufferSize);
+        } 
+        else
+        {
+            l = RegSetValueExW(
+                hKey, PropertyMap[Property].nameW, 0,
+                    PropertyMap[Property].regType, PropertyBuffer,
+                    PropertyBufferSize);
+        }
         if (!l)
             ret = TRUE;
         else
@@ -3544,6 +3517,41 @@ BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
 
     TRACE("Returning %d\n", ret);
     return ret;
+}
+/***********************************************************************
+ *		SetupDiSetDeviceRegistryPropertyA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiSetDeviceRegistryPropertyA(
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        DWORD Property,
+        const BYTE *PropertyBuffer,
+        DWORD PropertyBufferSize)
+{
+    return IntSetupDiSetDeviceRegistryPropertyAW(DeviceInfoSet,
+                                                 DeviceInfoData,
+                                                 Property,
+                                                 PropertyBuffer,
+                                                 PropertyBufferSize,
+                                                 TRUE);
+}
+
+/***********************************************************************
+ *		SetupDiSetDeviceRegistryPropertyW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_DATA DeviceInfoData,
+        DWORD Property,
+        const BYTE *PropertyBuffer,
+        DWORD PropertyBufferSize)
+{
+    return IntSetupDiSetDeviceRegistryPropertyAW(DeviceInfoSet,
+                                                 DeviceInfoData,
+                                                 Property,
+                                                 PropertyBuffer,
+                                                 PropertyBufferSize,
+                                                 FALSE);
 }
 
 /***********************************************************************
