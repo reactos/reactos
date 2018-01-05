@@ -8,7 +8,7 @@ CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "欢迎使用 ReactOS 安装程序。", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "安装向导将在您的计算机上安装 ReactOS 操作系统。\n它需要搜集有关您的和计算机的信息，\n以便正确安装 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "安装程序将在您的计算机上安装 ReactOS 操作系统。\n它需要搜集有关您的和计算机的信息，\n以便正确安装 ReactOS。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "要继续，请单击“下一步”。.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -17,7 +17,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安装程序 "
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS 的开发人员就以下的自由软件项目表示感谢。在构建 ReactOS 时使用了其中的代码 :", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "ReactOS 开发者就以下的自由软件项目表示感谢。在构建 ReactOS 时使用了其中的代码 :", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS 是基于 GPL 许可证发布的，因此如果您需要二次开发或重新发布 ReactOS (或部分)必须遵循 GPL 许可证。", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "查看 GPL(&V)...", IDC_VIEWGPL, 245, 110, 65, 15
