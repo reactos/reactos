@@ -34,98 +34,95 @@
 
 typedef struct _QUEUEENTRY
 {
-    struct _QUEUEENTRY *Prev;
-    struct _QUEUEENTRY *Next;
-
+    LIST_ENTRY ListEntry;
     PWSTR SourceCabinet;    /* May be NULL if the file is not in a cabinet */
     PWSTR SourceRootPath;
     PWSTR SourcePath;
-    PWSTR SourceFilename;
+    PWSTR SourceFileName;
     PWSTR TargetDirectory;
-    PWSTR TargetFilename;
+    PWSTR TargetFileName;
 } QUEUEENTRY, *PQUEUEENTRY;
-
 
 typedef struct _FILEQUEUEHEADER
 {
-    PQUEUEENTRY CopyHead;
-    PQUEUEENTRY CopyTail;
+    LIST_ENTRY DeleteQueue; // PQUEUEENTRY entries
+    ULONG DeleteCount;
+
+    LIST_ENTRY RenameQueue; // PQUEUEENTRY entries
+    ULONG RenameCount;
+
+    LIST_ENTRY CopyQueue;   // PQUEUEENTRY entries
     ULONG CopyCount;
+
+    BOOLEAN HasCurrentCabinet;
+    CABINET_CONTEXT CabinetContext;
+    CAB_SEARCH Search;
+    WCHAR CurrentCabinetName[MAX_PATH];
 } FILEQUEUEHEADER, *PFILEQUEUEHEADER;
 
 
-/* FUNCTIONS ****************************************************************/
+/* SETUP* API COMPATIBILITY FUNCTIONS ****************************************/
 
-static BOOLEAN HasCurrentCabinet = FALSE;
-static WCHAR CurrentCabinetName[MAX_PATH];
-static CAB_SEARCH Search;
-
-// HACK: Temporary compatibility code.
-#if 1
-    static CABINET_CONTEXT CabinetContext;
-    #define CabinetInitialize() (CabinetInitialize(&CabinetContext))
-    #define CabinetSetEventHandlers(a,b,c) (CabinetSetEventHandlers(&CabinetContext,(a),(b),(c)))
-    #define CabinetSetCabinetName(a) (CabinetSetCabinetName(&CabinetContext,(a)))
-    #define CabinetOpen() (CabinetOpen(&CabinetContext))
-    #define CabinetGetCabinetName() (CabinetGetCabinetName(&CabinetContext))
-    #define CabinetGetCabinetReservedArea(a) (CabinetGetCabinetReservedArea(&CabinetContext,(a)))
-    #define CabinetFindNextFileSequential(a,b) (CabinetFindNextFileSequential(&CabinetContext,(a),(b)))
-    #define CabinetFindFirst(a,b) (CabinetFindFirst(&CabinetContext,(a),(b)))
-    #define CabinetSetDestinationPath(a) (CabinetSetDestinationPath(&CabinetContext,(a)))
-    #define CabinetExtractFile(a) (CabinetExtractFile(&CabinetContext,(a)))
-    #define CabinetCleanup() (CabinetCleanup(&CabinetContext))
-#endif
-
-NTSTATUS
+static NTSTATUS
 SetupExtractFile(
-    PWCHAR CabinetFileName,
-    PWCHAR SourceFileName,
-    PWCHAR DestinationPathName)
+    IN OUT PFILEQUEUEHEADER QueueHeader,
+    IN PCWSTR CabinetFileName,
+    IN PCWSTR SourceFileName,
+    IN PCWSTR DestinationPathName)
 {
     ULONG CabStatus;
 
-    DPRINT("SetupExtractFile(CabinetFileName %S, SourceFileName %S, DestinationPathName %S)\n",
+    DPRINT("SetupExtractFile(CabinetFileName: '%S', SourceFileName: '%S', DestinationPathName: '%S')\n",
            CabinetFileName, SourceFileName, DestinationPathName);
 
-    if (HasCurrentCabinet)
+    if (QueueHeader->HasCurrentCabinet)
     {
-        DPRINT("CurrentCabinetName: %S\n", CurrentCabinetName);
+        DPRINT("CurrentCabinetName: '%S'\n", QueueHeader->CurrentCabinetName);
     }
 
-    if ((HasCurrentCabinet) && (wcscmp(CabinetFileName, CurrentCabinetName) == 0))
+    if (QueueHeader->HasCurrentCabinet &&
+        (wcscmp(CabinetFileName, QueueHeader->CurrentCabinetName) == 0))
     {
         DPRINT("Using same cabinet as last time\n");
 
         /* Use our last location because the files should be sequential */
-        CabStatus = CabinetFindNextFileSequential(SourceFileName, &Search);
+        CabStatus = CabinetFindNextFileSequential(&QueueHeader->CabinetContext,
+                                                  SourceFileName,
+                                                  &QueueHeader->Search);
         if (CabStatus != CAB_STATUS_SUCCESS)
         {
             DPRINT("Sequential miss on file: %S\n", SourceFileName);
 
             /* Looks like we got unlucky */
-            CabStatus = CabinetFindFirst(SourceFileName, &Search);
+            CabStatus = CabinetFindFirst(&QueueHeader->CabinetContext,
+                                         SourceFileName,
+                                         &QueueHeader->Search);
         }
     }
     else
     {
         DPRINT("Using new cabinet\n");
 
-        if (HasCurrentCabinet)
+        if (QueueHeader->HasCurrentCabinet)
         {
-            CabinetCleanup();
+            QueueHeader->HasCurrentCabinet = FALSE;
+            CabinetCleanup(&QueueHeader->CabinetContext);
         }
 
-        wcscpy(CurrentCabinetName, CabinetFileName);
+        RtlStringCchCopyW(QueueHeader->CurrentCabinetName,
+                          ARRAYSIZE(QueueHeader->CurrentCabinetName),
+                          CabinetFileName);
 
-        CabinetInitialize();
-        CabinetSetEventHandlers(NULL, NULL, NULL);
-        CabinetSetCabinetName(CabinetFileName);
+        CabinetInitialize(&QueueHeader->CabinetContext);
+        CabinetSetEventHandlers(&QueueHeader->CabinetContext,
+                                NULL, NULL, NULL);
+        CabinetSetCabinetName(&QueueHeader->CabinetContext, CabinetFileName);
 
-        CabStatus = CabinetOpen();
+        CabStatus = CabinetOpen(&QueueHeader->CabinetContext);
         if (CabStatus == CAB_STATUS_SUCCESS)
         {
-            DPRINT("Opened cabinet %S\n", CabinetGetCabinetName());
-            HasCurrentCabinet = TRUE;
+            DPRINT("Opened cabinet %S\n", CabinetFileName /*CabinetGetCabinetName(&QueueHeader->CabinetContext)*/);
+            QueueHeader->HasCurrentCabinet = TRUE;
         }
         else
         {
@@ -134,17 +131,20 @@ SetupExtractFile(
         }
 
         /* We have to start at the beginning here */
-        CabStatus = CabinetFindFirst(SourceFileName, &Search);
+        CabStatus = CabinetFindFirst(&QueueHeader->CabinetContext,
+                                     SourceFileName,
+                                     &QueueHeader->Search);
     }
 
     if (CabStatus != CAB_STATUS_SUCCESS)
     {
-        DPRINT1("Unable to find '%S' in cabinet '%S'\n", SourceFileName, CabinetGetCabinetName());
+        DPRINT1("Unable to find '%S' in cabinet '%S'\n",
+                SourceFileName, CabinetGetCabinetName(&QueueHeader->CabinetContext));
         return STATUS_UNSUCCESSFUL;
     }
 
-    CabinetSetDestinationPath(DestinationPathName);
-    CabStatus = CabinetExtractFile(&Search);
+    CabinetSetDestinationPath(&QueueHeader->CabinetContext, DestinationPathName);
+    CabStatus = CabinetExtractFile(&QueueHeader->CabinetContext, &QueueHeader->Search);
     if (CabStatus != CAB_STATUS_SUCCESS)
     {
         DPRINT("Cannot extract file %S (%d)\n", SourceFileName, CabStatus);
@@ -160,27 +160,63 @@ SetupOpenFileQueue(VOID)
 {
     PFILEQUEUEHEADER QueueHeader;
 
-    /* Allocate queue header */
-    QueueHeader = (PFILEQUEUEHEADER)RtlAllocateHeap(ProcessHeap,
-                                                    0,
-                                                    sizeof(FILEQUEUEHEADER));
+    /* Allocate the queue header */
+    QueueHeader = RtlAllocateHeap(ProcessHeap, 0, sizeof(FILEQUEUEHEADER));
     if (QueueHeader == NULL)
         return NULL;
 
-    /* Initialize queue header */
-    RtlZeroMemory(QueueHeader,
-                  sizeof(FILEQUEUEHEADER));
+    RtlZeroMemory(QueueHeader, sizeof(FILEQUEUEHEADER));
+
+    /* Initialize the file queues */
+    InitializeListHead(&QueueHeader->DeleteQueue);
+    QueueHeader->DeleteCount = 0;
+    InitializeListHead(&QueueHeader->RenameQueue);
+    QueueHeader->RenameCount = 0;
+    InitializeListHead(&QueueHeader->CopyQueue);
+    QueueHeader->CopyCount = 0;
+
+    QueueHeader->HasCurrentCabinet = FALSE;
 
     return (HSPFILEQ)QueueHeader;
 }
 
+static VOID
+SetupDeleteQueueEntry(
+    IN PQUEUEENTRY Entry)
+{
+    if (Entry == NULL)
+        return;
+
+    /* Delete all strings */
+    if (Entry->SourceCabinet != NULL)
+        RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
+
+    if (Entry->SourceRootPath != NULL)
+        RtlFreeHeap(ProcessHeap, 0, Entry->SourceRootPath);
+
+    if (Entry->SourcePath != NULL)
+        RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
+
+    if (Entry->SourceFileName != NULL)
+        RtlFreeHeap(ProcessHeap, 0, Entry->SourceFileName);
+
+    if (Entry->TargetDirectory != NULL)
+        RtlFreeHeap(ProcessHeap, 0, Entry->TargetDirectory);
+
+    if (Entry->TargetFileName != NULL)
+        RtlFreeHeap(ProcessHeap, 0, Entry->TargetFileName);
+
+    /* Delete queue entry */
+    RtlFreeHeap(ProcessHeap, 0, Entry);
+}
 
 VOID
 WINAPI
 SetupCloseFileQueue(
-    HSPFILEQ QueueHandle)
+    IN HSPFILEQ QueueHandle)
 {
     PFILEQUEUEHEADER QueueHeader;
+    PLIST_ENTRY ListEntry;
     PQUEUEENTRY Entry;
 
     if (QueueHandle == NULL)
@@ -188,71 +224,53 @@ SetupCloseFileQueue(
 
     QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
 
-    /* Delete copy queue */
-    Entry = QueueHeader->CopyHead;
-    while (Entry != NULL)
+    /* Delete the delete queue */
+    while (!IsListEmpty(&QueueHeader->DeleteQueue))
     {
-        /* Delete all strings */
-        if (Entry->SourceCabinet != NULL)
-            RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
+        ListEntry = RemoveHeadList(&QueueHeader->DeleteQueue);
+        Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
+        SetupDeleteQueueEntry(Entry);
+    }
 
-        if (Entry->SourceRootPath != NULL)
-            RtlFreeHeap(ProcessHeap, 0, Entry->SourceRootPath);
+    /* Delete the rename queue */
+    while (!IsListEmpty(&QueueHeader->RenameQueue))
+    {
+        ListEntry = RemoveHeadList(&QueueHeader->RenameQueue);
+        Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
+        SetupDeleteQueueEntry(Entry);
+    }
 
-        if (Entry->SourcePath != NULL)
-            RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
-
-        if (Entry->SourceFilename != NULL)
-            RtlFreeHeap(ProcessHeap, 0, Entry->SourceFilename);
-
-        if (Entry->TargetDirectory != NULL)
-            RtlFreeHeap(ProcessHeap, 0, Entry->TargetDirectory);
-
-        if (Entry->TargetFilename != NULL)
-            RtlFreeHeap(ProcessHeap, 0, Entry->TargetFilename);
-
-        /* Unlink current queue entry */
-        if (Entry->Next != NULL)
-        {
-            QueueHeader->CopyHead = Entry->Next;
-            QueueHeader->CopyHead->Prev = NULL;
-        }
-        else
-        {
-            QueueHeader->CopyHead = NULL;
-            QueueHeader->CopyTail = NULL;
-        }
-
-        /* Delete queue entry */
-        RtlFreeHeap(ProcessHeap, 0, Entry);
-
-        /* Get next queue entry */
-        Entry = QueueHeader->CopyHead;
+    /* Delete the copy queue */
+    while (!IsListEmpty(&QueueHeader->CopyQueue))
+    {
+        ListEntry = RemoveHeadList(&QueueHeader->CopyQueue);
+        Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
+        SetupDeleteQueueEntry(Entry);
     }
 
     /* Delete queue header */
     RtlFreeHeap(ProcessHeap, 0, QueueHeader);
 }
 
-
+/* A simplified version of SetupQueueCopyW that wraps Cabinet support around */
 BOOL
-SetupQueueCopy(
-    HSPFILEQ QueueHandle,
-    PCWSTR SourceCabinet,
-    PCWSTR SourceRootPath,
-    PCWSTR SourcePath,
-    PCWSTR SourceFilename,
-    PCWSTR TargetDirectory,
-    PCWSTR TargetFilename)
+WINAPI
+SetupQueueCopyWithCab(          // SetupQueueCopyW
+    IN HSPFILEQ QueueHandle,
+    IN PCWSTR SourceCabinet OPTIONAL,
+    IN PCWSTR SourceRootPath,
+    IN PCWSTR SourcePath OPTIONAL,
+    IN PCWSTR SourceFileName,
+    IN PCWSTR TargetDirectory,
+    IN PCWSTR TargetFileName OPTIONAL)
 {
     PFILEQUEUEHEADER QueueHeader;
     PQUEUEENTRY Entry;
     ULONG Length;
 
-    /* SourceCabinet may be NULL */
     if (QueueHandle == NULL ||
         SourceRootPath == NULL ||
-        SourceFilename == NULL ||
+        SourceFileName == NULL ||
         TargetDirectory == NULL)
     {
         return FALSE;
@@ -260,193 +278,350 @@ SetupQueueCopy(
 
     QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
 
+    DPRINT("SetupQueueCopy(Cab '%S', SrcRootPath '%S', SrcPath '%S', SrcFN '%S' --> DstPath '%S', DstFN '%S')\n",
+           SourceCabinet ? SourceCabinet : L"n/a",
+           SourceRootPath, SourcePath, SourceFileName,
+           TargetDirectory, TargetFileName);
+
     /* Allocate new queue entry */
-    Entry = (PQUEUEENTRY)RtlAllocateHeap(ProcessHeap,
-                                         0,
-                                         sizeof(QUEUEENTRY));
+    Entry = RtlAllocateHeap(ProcessHeap, 0, sizeof(QUEUEENTRY));
     if (Entry == NULL)
         return FALSE;
 
-    RtlZeroMemory(Entry,
-                  sizeof(QUEUEENTRY));
+    RtlZeroMemory(Entry, sizeof(QUEUEENTRY));
 
     /* Copy source cabinet if available */
+    Entry->SourceCabinet = NULL;
     if (SourceCabinet != NULL)
     {
         Length = wcslen(SourceCabinet);
-        Entry->SourceCabinet = (WCHAR*)RtlAllocateHeap(ProcessHeap,
-                                                       0,
-                                                       (Length + 1) * sizeof(WCHAR));
+        Entry->SourceCabinet = RtlAllocateHeap(ProcessHeap,
+                                               0,
+                                               (Length + 1) * sizeof(WCHAR));
         if (Entry->SourceCabinet == NULL)
         {
             RtlFreeHeap(ProcessHeap, 0, Entry);
             return FALSE;
         }
-
-        wcsncpy(Entry->SourceCabinet, SourceCabinet, Length);
-        Entry->SourceCabinet[Length] = UNICODE_NULL;
-    }
-    else
-    {
-        Entry->SourceCabinet = NULL;
+        RtlStringCchCopyW(Entry->SourceCabinet, Length + 1, SourceCabinet);
     }
 
     /* Copy source root path */
     Length = wcslen(SourceRootPath);
-    Entry->SourceRootPath = (WCHAR*)RtlAllocateHeap(ProcessHeap,
-                                                    0,
-                                                    (Length + 1) * sizeof(WCHAR));
+    Entry->SourceRootPath = RtlAllocateHeap(ProcessHeap,
+                                            0,
+                                            (Length + 1) * sizeof(WCHAR));
     if (Entry->SourceRootPath == NULL)
     {
         if (Entry->SourceCabinet != NULL)
-        {
             RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
-        }
 
         RtlFreeHeap(ProcessHeap, 0, Entry);
         return FALSE;
     }
-
-    wcsncpy(Entry->SourceRootPath, SourceRootPath, Length);
-    Entry->SourceRootPath[Length] = UNICODE_NULL;
+    RtlStringCchCopyW(Entry->SourceRootPath, Length + 1, SourceRootPath);
 
     /* Copy source path */
+    Entry->SourcePath = NULL;
     if (SourcePath != NULL)
     {
         Length = wcslen(SourcePath);
         if ((Length > 0) && (SourcePath[Length - 1] == L'\\'))
             Length--;
-        Entry->SourcePath = (WCHAR*)RtlAllocateHeap(ProcessHeap,
-                                                    0,
-                                                    (Length + 1) * sizeof(WCHAR));
+        Entry->SourcePath = RtlAllocateHeap(ProcessHeap,
+                                            0,
+                                            (Length + 1) * sizeof(WCHAR));
         if (Entry->SourcePath == NULL)
         {
             if (Entry->SourceCabinet != NULL)
-            {
                 RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
-            }
 
             RtlFreeHeap(ProcessHeap, 0, Entry->SourceRootPath);
             RtlFreeHeap(ProcessHeap, 0, Entry);
             return FALSE;
         }
-
-        wcsncpy(Entry->SourcePath, SourcePath, Length);
-        Entry->SourcePath[Length] = UNICODE_NULL;
+        RtlStringCchCopyW(Entry->SourcePath, Length + 1, SourcePath);
     }
 
     /* Copy source file name */
-    Length = wcslen(SourceFilename);
-    Entry->SourceFilename = (WCHAR*)RtlAllocateHeap(ProcessHeap,
+    Length = wcslen(SourceFileName);
+    Entry->SourceFileName = (WCHAR*)RtlAllocateHeap(ProcessHeap,
                                                     0,
                                                     (Length + 1) * sizeof(WCHAR));
-    if (Entry->SourceFilename == NULL)
+    if (Entry->SourceFileName == NULL)
     {
-        if (Entry->SourceCabinet != NULL)
-        {
-            RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
-        }
+        if (Entry->SourcePath != NULL)
+            RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
 
         RtlFreeHeap(ProcessHeap, 0, Entry->SourceRootPath);
-        RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
+
+        if (Entry->SourceCabinet != NULL)
+            RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
+
         RtlFreeHeap(ProcessHeap, 0, Entry);
         return FALSE;
     }
-
-    wcsncpy(Entry->SourceFilename, SourceFilename, Length);
-    Entry->SourceFilename[Length] = UNICODE_NULL;
+    RtlStringCchCopyW(Entry->SourceFileName, Length + 1, SourceFileName);
 
     /* Copy target directory */
     Length = wcslen(TargetDirectory);
     if ((Length > 0) && (TargetDirectory[Length - 1] == L'\\'))
         Length--;
-    Entry->TargetDirectory = (WCHAR*)RtlAllocateHeap(ProcessHeap,
-                                                     0,
-                                                     (Length + 1) * sizeof(WCHAR));
+    Entry->TargetDirectory = RtlAllocateHeap(ProcessHeap,
+                                             0,
+                                             (Length + 1) * sizeof(WCHAR));
     if (Entry->TargetDirectory == NULL)
     {
-        if (Entry->SourceCabinet != NULL)
-        {
-            RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
-        }
+        RtlFreeHeap(ProcessHeap, 0, Entry->SourceFileName);
+
+        if (Entry->SourcePath != NULL)
+            RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
 
         RtlFreeHeap(ProcessHeap, 0, Entry->SourceRootPath);
-        RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
-        RtlFreeHeap(ProcessHeap, 0, Entry->SourceFilename);
+
+        if (Entry->SourceCabinet != NULL)
+            RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
+
         RtlFreeHeap(ProcessHeap, 0, Entry);
         return FALSE;
     }
-
-    wcsncpy(Entry->TargetDirectory, TargetDirectory, Length);
-    Entry->TargetDirectory[Length] = UNICODE_NULL;
+    RtlStringCchCopyW(Entry->TargetDirectory, Length + 1, TargetDirectory);
 
     /* Copy optional target filename */
-    if (TargetFilename != NULL)
+    Entry->TargetFileName = NULL;
+    if (TargetFileName != NULL)
     {
-        Length = wcslen(TargetFilename);
-        Entry->TargetFilename = (WCHAR*)RtlAllocateHeap(ProcessHeap,
-                                                        0,
-                                                        (Length + 1) * sizeof(WCHAR));
-        if (Entry->TargetFilename == NULL)
+        Length = wcslen(TargetFileName);
+        Entry->TargetFileName = RtlAllocateHeap(ProcessHeap,
+                                                0,
+                                                (Length + 1) * sizeof(WCHAR));
+        if (Entry->TargetFileName == NULL)
         {
-            if (Entry->SourceCabinet != NULL)
-            {
-                RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
-            }
+            RtlFreeHeap(ProcessHeap, 0, Entry->TargetDirectory);
+            RtlFreeHeap(ProcessHeap, 0, Entry->SourceFileName);
+
+            if (Entry->SourcePath != NULL)
+                RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
 
             RtlFreeHeap(ProcessHeap, 0, Entry->SourceRootPath);
-            RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
-            RtlFreeHeap(ProcessHeap, 0, Entry->SourceFilename);
-            RtlFreeHeap(ProcessHeap, 0, Entry->TargetDirectory);
+
+            if (Entry->SourceCabinet != NULL)
+                RtlFreeHeap(ProcessHeap, 0, Entry->SourceCabinet);
+
             RtlFreeHeap(ProcessHeap, 0, Entry);
             return FALSE;
         }
-
-        wcsncpy(Entry->TargetFilename, TargetFilename, Length);
-        Entry->TargetFilename[Length] = UNICODE_NULL;
+        RtlStringCchCopyW(Entry->TargetFileName, Length + 1, TargetFileName);
     }
 
     /* Append queue entry */
-    if (QueueHeader->CopyHead == NULL) // && QueueHeader->CopyTail == NULL)
-    {
-        Entry->Prev = NULL;
-        Entry->Next = NULL;
-        QueueHeader->CopyHead = Entry;
-        QueueHeader->CopyTail = Entry;
-    }
-    else
-    {
-        Entry->Prev = QueueHeader->CopyTail;
-        Entry->Next = NULL;
-        QueueHeader->CopyTail->Next = Entry;
-        QueueHeader->CopyTail = Entry;
-    }
-
-    QueueHeader->CopyCount++;
+    InsertTailList(&QueueHeader->CopyQueue, &Entry->ListEntry);
+    ++QueueHeader->CopyCount;
 
     return TRUE;
 }
 
+BOOL
+WINAPI
+SetupQueueDeleteW(
+    IN HSPFILEQ QueueHandle,
+    IN PCWSTR PathPart1,
+    IN PCWSTR PathPart2 OPTIONAL)
+{
+    PFILEQUEUEHEADER QueueHeader;
+    PQUEUEENTRY Entry;
+    ULONG Length;
+
+    if (QueueHandle == NULL || PathPart1 == NULL)
+    {
+        return FALSE;
+    }
+
+    QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
+
+    DPRINT1("SetupQueueDeleteW(PathPart1 '%S', PathPart2 '%S')\n",
+           PathPart1, PathPart2);
+
+    /* Allocate new queue entry */
+    Entry = RtlAllocateHeap(ProcessHeap, 0, sizeof(QUEUEENTRY));
+    if (Entry == NULL)
+        return FALSE;
+
+    RtlZeroMemory(Entry, sizeof(QUEUEENTRY));
+
+    Entry->SourceCabinet = NULL;
+    Entry->SourceRootPath = NULL;
+    Entry->SourcePath = NULL;
+    Entry->SourceFileName = NULL;
+
+    /* Copy first part of path */
+    Length = wcslen(PathPart1);
+    // if ((Length > 0) && (SourcePath[Length - 1] == L'\\'))
+        // Length--;
+    Entry->TargetDirectory = RtlAllocateHeap(ProcessHeap,
+                                             0,
+                                             (Length + 1) * sizeof(WCHAR));
+    if (Entry->TargetDirectory == NULL)
+    {
+        RtlFreeHeap(ProcessHeap, 0, Entry);
+        return FALSE;
+    }
+    RtlStringCchCopyW(Entry->TargetDirectory, Length + 1, PathPart1);
+
+    /* Copy optional second part of path */
+    if (PathPart2 != NULL)
+    {
+        Length = wcslen(PathPart2);
+        Entry->TargetFileName = RtlAllocateHeap(ProcessHeap,
+                                                0,
+                                                (Length + 1) * sizeof(WCHAR));
+        if (Entry->TargetFileName == NULL)
+        {
+            RtlFreeHeap(ProcessHeap, 0, Entry->TargetDirectory);
+            RtlFreeHeap(ProcessHeap, 0, Entry);
+            return FALSE;
+        }
+        RtlStringCchCopyW(Entry->TargetFileName, Length + 1, PathPart2);
+    }
+
+    /* Append the queue entry */
+    InsertTailList(&QueueHeader->DeleteQueue, &Entry->ListEntry);
+    ++QueueHeader->DeleteCount;
+
+    return TRUE;
+}
+
+BOOL
+WINAPI
+SetupQueueRenameW(
+    IN HSPFILEQ QueueHandle,
+    IN PCWSTR SourcePath,
+    IN PCWSTR SourceFileName OPTIONAL,
+    IN PCWSTR TargetPath OPTIONAL,
+    IN PCWSTR TargetFileName)
+{
+    PFILEQUEUEHEADER QueueHeader;
+    PQUEUEENTRY Entry;
+    ULONG Length;
+
+    if (QueueHandle == NULL ||
+        SourcePath  == NULL ||
+        TargetFileName == NULL)
+    {
+        return FALSE;
+    }
+
+    QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
+
+    DPRINT1("SetupQueueRenameW(SrcPath '%S', SrcFN '%S' --> DstPath '%S', DstFN '%S')\n",
+           SourcePath, SourceFileName, TargetPath, TargetFileName);
+
+    /* Allocate a new queue entry */
+    Entry = RtlAllocateHeap(ProcessHeap, 0, sizeof(QUEUEENTRY));
+    if (Entry == NULL)
+        return FALSE;
+
+    RtlZeroMemory(Entry, sizeof(QUEUEENTRY));
+
+    Entry->SourceCabinet  = NULL;
+    Entry->SourceRootPath = NULL;
+
+    /* Copy source path */
+    Length = wcslen(SourcePath);
+    if ((Length > 0) && (SourcePath[Length - 1] == L'\\'))
+        Length--;
+    Entry->SourcePath = RtlAllocateHeap(ProcessHeap,
+                                        0,
+                                        (Length + 1) * sizeof(WCHAR));
+    if (Entry->SourcePath == NULL)
+    {
+        RtlFreeHeap(ProcessHeap, 0, Entry);
+        return FALSE;
+    }
+    RtlStringCchCopyW(Entry->SourcePath, Length + 1, SourcePath);
+
+    /* Copy optional source file name */
+    Entry->SourceFileName = NULL;
+    if (SourceFileName != NULL)
+    {
+        Length = wcslen(SourceFileName);
+        Entry->SourceFileName = (WCHAR*)RtlAllocateHeap(ProcessHeap,
+                                                        0,
+                                                        (Length + 1) * sizeof(WCHAR));
+        if (Entry->SourceFileName == NULL)
+        {
+            RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
+            RtlFreeHeap(ProcessHeap, 0, Entry);
+            return FALSE;
+        }
+        RtlStringCchCopyW(Entry->SourceFileName, Length + 1, SourceFileName);
+    }
+
+    /* Copy optional target directory */
+    Entry->TargetDirectory = NULL;
+    if (TargetPath != NULL)
+    {
+        Length = wcslen(TargetPath);
+        if ((Length > 0) && (TargetPath[Length - 1] == L'\\'))
+            Length--;
+        Entry->TargetDirectory = RtlAllocateHeap(ProcessHeap,
+                                                 0,
+                                                 (Length + 1) * sizeof(WCHAR));
+        if (Entry->TargetDirectory == NULL)
+        {
+            if (Entry->SourceFileName != NULL)
+                RtlFreeHeap(ProcessHeap, 0, Entry->SourceFileName);
+
+            RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
+            RtlFreeHeap(ProcessHeap, 0, Entry);
+            return FALSE;
+        }
+        RtlStringCchCopyW(Entry->TargetDirectory, Length + 1, TargetPath);
+    }
+
+    /* Copy target filename */
+    Length = wcslen(TargetFileName);
+    Entry->TargetFileName = RtlAllocateHeap(ProcessHeap,
+                                            0,
+                                            (Length + 1) * sizeof(WCHAR));
+    if (Entry->TargetFileName == NULL)
+    {
+        if (Entry->TargetDirectory != NULL)
+            RtlFreeHeap(ProcessHeap, 0, Entry->TargetDirectory);
+
+        if (Entry->SourceFileName != NULL)
+            RtlFreeHeap(ProcessHeap, 0, Entry->SourceFileName);
+
+        RtlFreeHeap(ProcessHeap, 0, Entry->SourcePath);
+        RtlFreeHeap(ProcessHeap, 0, Entry);
+        return FALSE;
+    }
+    RtlStringCchCopyW(Entry->TargetFileName, Length + 1, TargetFileName);
+
+    /* Append the queue entry */
+    InsertTailList(&QueueHeader->RenameQueue, &Entry->ListEntry);
+    ++QueueHeader->RenameCount;
+
+    return TRUE;
+}
 
 BOOL
 WINAPI
 SetupCommitFileQueueW(
-    HWND Owner,
-    HSPFILEQ QueueHandle,
-    PSP_FILE_CALLBACK_W MsgHandler,
-    PVOID Context)
+    IN HWND Owner,
+    IN HSPFILEQ QueueHandle,
+    IN PSP_FILE_CALLBACK_W MsgHandler,
+    IN PVOID Context OPTIONAL)
 {
-    WCHAR CabinetName[MAX_PATH];
-    PFILEQUEUEHEADER QueueHeader;
-    PQUEUEENTRY Entry;
+    BOOL Success = TRUE; // Suppose success
     NTSTATUS Status;
-    PCWSTR TargetRootPath, TargetPath;
-
+    PFILEQUEUEHEADER QueueHeader;
+    PLIST_ENTRY ListEntry;
+    PQUEUEENTRY Entry;
+    FILEPATHS_W FilePathInfo;
+    WCHAR CabinetName[MAX_PATH];
     WCHAR FileSrcPath[MAX_PATH];
     WCHAR FileDstPath[MAX_PATH];
-
-    TargetRootPath = ((PCOPYCONTEXT)Context)->DestinationRootPath;
-    TargetPath = ((PCOPYCONTEXT)Context)->InstallPath;
 
     if (QueueHandle == NULL)
         return FALSE;
@@ -455,46 +630,159 @@ SetupCommitFileQueueW(
 
     MsgHandler(Context,
                SPFILENOTIFY_STARTQUEUE,
-               0,
+               (UINT_PTR)Owner,
                0);
+
+
+    /*
+     * Commit the delete queue
+     */
+
+    MsgHandler(Context,
+               SPFILENOTIFY_STARTSUBQUEUE,
+               FILEOP_DELETE,
+               QueueHeader->DeleteCount);
+
+    ListEntry = QueueHeader->DeleteQueue.Flink;
+    while (ListEntry != &QueueHeader->DeleteQueue)
+    {
+        Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
+        ListEntry = ListEntry->Flink;
+
+        /* Build the full target path */
+        CombinePaths(FileDstPath, ARRAYSIZE(FileDstPath), 2,
+                     Entry->TargetDirectory, Entry->TargetFileName);
+        // RtlStringCchCopyW(FileDstPath, ARRAYSIZE(FileDstPath), Entry->TargetDirectory);
+        // ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFileName);
+
+        DPRINT1(" -----> " "Delete: '%S'\n", FileDstPath);
+
+        FilePathInfo.Target = FileDstPath;
+        FilePathInfo.Source = NULL;
+        FilePathInfo.Win32Error = STATUS_SUCCESS;
+        FilePathInfo.Flags = 0; // FIXME: Unused yet...
+
+        MsgHandler(Context,
+                   SPFILENOTIFY_STARTDELETE,
+                   (UINT_PTR)&FilePathInfo,
+                   FILEOP_DELETE);
+
+        /* Force-delete the file */
+        Status = SetupDeleteFile(FileDstPath, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* An error happened */
+            FilePathInfo.Win32Error = (UINT)Status;
+            MsgHandler(Context,
+                       SPFILENOTIFY_DELETEERROR,
+                       (UINT_PTR)&FilePathInfo,
+                       0);
+            Success = FALSE;
+        }
+
+        /* This notification is always sent, even in case of error */
+        FilePathInfo.Win32Error = (UINT)Status;
+        MsgHandler(Context,
+                   SPFILENOTIFY_ENDDELETE,
+                   (UINT_PTR)&FilePathInfo,
+                   0);
+    }
+
+    MsgHandler(Context,
+               SPFILENOTIFY_ENDSUBQUEUE,
+               FILEOP_DELETE,
+               0);
+
+
+    /*
+     * Commit the rename queue
+     */
+
+    MsgHandler(Context,
+               SPFILENOTIFY_STARTSUBQUEUE,
+               FILEOP_RENAME,
+               QueueHeader->RenameCount);
+
+    ListEntry = QueueHeader->RenameQueue.Flink;
+    while (ListEntry != &QueueHeader->RenameQueue)
+    {
+        Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
+        ListEntry = ListEntry->Flink;
+
+        /* Build the full source path */
+        CombinePaths(FileSrcPath, ARRAYSIZE(FileSrcPath), 2,
+                     Entry->SourcePath, Entry->SourceFileName);
+
+        /* Build the full target path */
+        CombinePaths(FileDstPath, ARRAYSIZE(FileDstPath), 2,
+                     Entry->TargetDirectory, Entry->TargetFileName);
+        // RtlStringCchCopyW(FileDstPath, ARRAYSIZE(FileDstPath), Entry->TargetDirectory);
+        // ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFileName);
+
+        DPRINT1(" -----> " "Rename: '%S' ==> '%S'\n", FileSrcPath, FileDstPath);
+
+        FilePathInfo.Target = FileDstPath;
+        FilePathInfo.Source = FileSrcPath;
+        FilePathInfo.Win32Error = STATUS_SUCCESS;
+        FilePathInfo.Flags = 0; // FIXME: Unused yet...
+
+        MsgHandler(Context,
+                   SPFILENOTIFY_STARTRENAME,
+                   (UINT_PTR)&FilePathInfo,
+                   FILEOP_RENAME);
+
+        /* Move or rename the file */
+        Status = SetupMoveFile(FileSrcPath, FileDstPath,
+                               MOVEFILE_REPLACE_EXISTING
+                                    | MOVEFILE_COPY_ALLOWED
+                                    | MOVEFILE_WRITE_THROUGH);
+        if (!NT_SUCCESS(Status))
+        {
+            /* An error happened */
+            FilePathInfo.Win32Error = (UINT)Status;
+            MsgHandler(Context,
+                       SPFILENOTIFY_RENAMEERROR,
+                       (UINT_PTR)&FilePathInfo,
+                       0);
+            Success = FALSE;
+        }
+
+        /* This notification is always sent, even in case of error */
+        FilePathInfo.Win32Error = (UINT)Status;
+        MsgHandler(Context,
+                   SPFILENOTIFY_ENDRENAME,
+                   (UINT_PTR)&FilePathInfo,
+                   0);
+    }
+
+    MsgHandler(Context,
+               SPFILENOTIFY_ENDSUBQUEUE,
+               FILEOP_RENAME,
+               0);
+
+
+    /*
+     * Commit the copy queue
+     */
 
     MsgHandler(Context,
                SPFILENOTIFY_STARTSUBQUEUE,
                FILEOP_COPY,
                QueueHeader->CopyCount);
 
-    /* Commit copy queue */
-    Entry = QueueHeader->CopyHead;
-    while (Entry != NULL)
+    ListEntry = QueueHeader->CopyQueue.Flink;
+    while (ListEntry != &QueueHeader->CopyQueue)
     {
+        Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
+        ListEntry = ListEntry->Flink;
+
         /* Build the full source path */
         CombinePaths(FileSrcPath, ARRAYSIZE(FileSrcPath), 3,
                      Entry->SourceRootPath, Entry->SourcePath,
-                     Entry->SourceFilename);
+                     Entry->SourceFileName);
 
         /* Build the full target path */
-        wcscpy(FileDstPath, TargetRootPath);
-        if (Entry->TargetDirectory[0] == UNICODE_NULL)
-        {
-            /* Installation path */
-
-            /* Add the installation path */
-            ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, TargetPath);
-        }
-        else if (Entry->TargetDirectory[0] == L'\\')
-        {
-            /* Absolute path */
-            if (Entry->TargetDirectory[1] != UNICODE_NULL)
-                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetDirectory);
-        }
-        else // if (Entry->TargetDirectory[0] != L'\\')
-        {
-            /* Path relative to the installation path */
-
-            /* Add the installation path */
-            ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 2,
-                        TargetPath, Entry->TargetDirectory);
-        }
+        RtlStringCchCopyW(FileDstPath, ARRAYSIZE(FileDstPath), Entry->TargetDirectory);
 
         /*
          * If the file is in a cabinet, use only the destination path.
@@ -502,27 +790,43 @@ SetupCommitFileQueueW(
          */
         if (Entry->SourceCabinet == NULL)
         {
-            if (Entry->TargetFilename != NULL)
-                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFilename);
+            if (Entry->TargetFileName != NULL)
+                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFileName);
             else
-                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->SourceFilename);
+                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->SourceFileName);
         }
 
-        /* FIXME: Do it! */
-        DPRINT("Copy: '%S' ==> '%S'\n", FileSrcPath, FileDstPath);
+        DPRINT(" -----> " "Copy: '%S' ==> '%S'\n", FileSrcPath, FileDstPath);
+
+        //
+        // Technically, here we should create the target directory,
+        // if it does not already exist... before calling the handler!
+        //
+
+        FilePathInfo.Target = FileDstPath;
+        FilePathInfo.Source = FileSrcPath; // when SourceCabinet not NULL, use CabinetName ...
+        FilePathInfo.Win32Error = STATUS_SUCCESS;
+        FilePathInfo.Flags = 0; // FIXME: Unused yet...
 
         MsgHandler(Context,
                    SPFILENOTIFY_STARTCOPY,
-                   (UINT_PTR)Entry->SourceFilename,
+                   (UINT_PTR)&FilePathInfo,
                    FILEOP_COPY);
 
         if (Entry->SourceCabinet != NULL)
         {
-            /* Extract the file */
+            /*
+             * Extract the file from the cabinet.
+             * The cabinet must be in Entry->SourceRootPath only!
+             * (ignore Entry->SourcePath).
+             */
             CombinePaths(CabinetName, ARRAYSIZE(CabinetName), 3,
                          Entry->SourceRootPath, Entry->SourcePath,
                          Entry->SourceCabinet);
-            Status = SetupExtractFile(CabinetName, Entry->SourceFilename, FileDstPath);
+            Status = SetupExtractFile(QueueHeader,
+                                      CabinetName,
+                                      Entry->SourceFileName,
+                                      FileDstPath);
         }
         else
         {
@@ -532,20 +836,21 @@ SetupCommitFileQueueW(
 
         if (!NT_SUCCESS(Status))
         {
+            /* An error happened */
+            FilePathInfo.Win32Error = (UINT)Status;
             MsgHandler(Context,
                        SPFILENOTIFY_COPYERROR,
-                       (UINT_PTR)Entry->SourceFilename,
-                       FILEOP_COPY);
-        }
-        else
-        {
-            MsgHandler(Context,
-                       SPFILENOTIFY_ENDCOPY,
-                       (UINT_PTR)Entry->SourceFilename,
-                       FILEOP_COPY);
+                       (UINT_PTR)&FilePathInfo,
+                       (UINT_PTR)NULL); // FIXME: Unused yet...
+            Success = FALSE;
         }
 
-        Entry = Entry->Next;
+        /* This notification is always sent, even in case of error */
+        FilePathInfo.Win32Error = (UINT)Status;
+        MsgHandler(Context,
+                   SPFILENOTIFY_ENDCOPY,
+                   (UINT_PTR)&FilePathInfo,
+                   0);
     }
 
     MsgHandler(Context,
@@ -553,12 +858,14 @@ SetupCommitFileQueueW(
                FILEOP_COPY,
                0);
 
+
+    /* All the queues have been committed */
     MsgHandler(Context,
                SPFILENOTIFY_ENDQUEUE,
-               0,
+               (UINT_PTR)Success,
                0);
 
-    return TRUE;
+    return Success;
 }
 
 /* EOF */

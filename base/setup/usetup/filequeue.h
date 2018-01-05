@@ -26,54 +26,58 @@
 
 #pragma once
 
-#define SPFILENOTIFY_STARTQUEUE       0x1
-#define SPFILENOTIFY_ENDQUEUE         0x2
-#define SPFILENOTIFY_STARTSUBQUEUE    0x3
-#define SPFILENOTIFY_ENDSUBQUEUE      0x4
+#define SPFILENOTIFY_STARTQUEUE         0x00000001
+#define SPFILENOTIFY_ENDQUEUE           0x00000002
+#define SPFILENOTIFY_STARTSUBQUEUE      0x00000003
+#define SPFILENOTIFY_ENDSUBQUEUE        0x00000004
 
-#define SPFILENOTIFY_STARTCOPY        0xb
-#define SPFILENOTIFY_ENDCOPY          0xc
-#define SPFILENOTIFY_COPYERROR        0xd
+#define SPFILENOTIFY_STARTDELETE        0x00000005
+#define SPFILENOTIFY_ENDDELETE          0x00000006
+#define SPFILENOTIFY_DELETEERROR        0x00000007
 
-#define FILEOP_COPY                   0x0
-#define FILEOP_RENAME                 0x1
-#define FILEOP_DELETE                 0x2
-#define FILEOP_BACKUP                 0x3
+#define SPFILENOTIFY_STARTRENAME        0x00000008
+#define SPFILENOTIFY_ENDRENAME          0x00000009
+#define SPFILENOTIFY_RENAMEERROR        0x0000000a
 
-#define FILEOP_ABORT                  0x0
-#define FILEOP_DOIT                   0x1
-#define FILEOP_SKIP                   0x2
-#define FILEOP_RETRY                  FILEOP_DOIT
-#define FILEOP_NEWPATH                0x4
+#define SPFILENOTIFY_STARTCOPY          0x0000000b
+#define SPFILENOTIFY_ENDCOPY            0x0000000c
+#define SPFILENOTIFY_COPYERROR          0x0000000d
+
+#define SPFILENOTIFY_NEEDMEDIA          0x0000000e
+#define SPFILENOTIFY_QUEUESCAN          0x0000000f
+
+#define FILEOP_COPY                     0
+#define FILEOP_RENAME                   1
+#define FILEOP_DELETE                   2
+#define FILEOP_BACKUP                   3
+
+#define FILEOP_ABORT                    0
+#define FILEOP_DOIT                     1
+#define FILEOP_SKIP                     2
+#define FILEOP_RETRY                    FILEOP_DOIT
+#define FILEOP_NEWPATH                  4
 
 
 /* TYPES ********************************************************************/
 
 typedef PVOID HSPFILEQ;
 
-typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(
-    PVOID Context,
-    UINT Notification,
-    UINT_PTR Param1,
-    UINT_PTR Param2);
-
-typedef struct _COPYCONTEXT
+typedef struct _FILEPATHS_W
 {
-    LPCWSTR DestinationRootPath; /* Not owned by this structure */
-    LPCWSTR InstallPath;         /* Not owned by this structure */
-    ULONG TotalOperations;
-    ULONG CompletedOperations;
-    PPROGRESSBAR ProgressBar;
-    PPROGRESSBAR MemoryBars[4];
-} COPYCONTEXT, *PCOPYCONTEXT;
+    PCWSTR Target;
+    PCWSTR Source;
+    UINT   Win32Error;
+    ULONG  Flags;
+} FILEPATHS_W, *PFILEPATHS_W;
+
+typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(
+    IN PVOID Context,
+    IN UINT Notification,
+    IN UINT_PTR Param1,
+    IN UINT_PTR Param2);
+
 
 /* FUNCTIONS ****************************************************************/
-
-NTSTATUS
-SetupExtractFile(
-    PWCHAR CabinetFileName,
-    PWCHAR SourceFileName,
-    PWCHAR DestinationFileName);
 
 HSPFILEQ
 WINAPI
@@ -99,22 +103,40 @@ SetupQueueCopyWNew(
     IN DWORD CopyStyle);
 #endif
 
+/* A simplified version of SetupQueueCopyW that wraps Cabinet support around */
 BOOL
-SetupQueueCopy(
-    HSPFILEQ QueueHandle,
-    PCWSTR SourceCabinet,
-    PCWSTR SourceRootPath,
-    PCWSTR SourcePath,
-    PCWSTR SourceFilename,
-    PCWSTR TargetDirectory,
-    PCWSTR TargetFilename);
+WINAPI
+SetupQueueCopyWithCab(          // SetupQueueCopyW
+    IN HSPFILEQ QueueHandle,
+    IN PCWSTR SourceCabinet OPTIONAL,
+    IN PCWSTR SourceRootPath,
+    IN PCWSTR SourcePath OPTIONAL,
+    IN PCWSTR SourceFileName,
+    IN PCWSTR TargetDirectory,
+    IN PCWSTR TargetFileName OPTIONAL);
+
+BOOL
+WINAPI
+SetupQueueDeleteW(
+    IN HSPFILEQ QueueHandle,
+    IN PCWSTR PathPart1,
+    IN PCWSTR PathPart2 OPTIONAL);
+
+BOOL
+WINAPI
+SetupQueueRenameW(
+    IN HSPFILEQ QueueHandle,
+    IN PCWSTR SourcePath,
+    IN PCWSTR SourceFileName OPTIONAL,
+    IN PCWSTR TargetPath OPTIONAL,
+    IN PCWSTR TargetFileName);
 
 BOOL
 WINAPI
 SetupCommitFileQueueW(
-    HWND Owner,
-    HSPFILEQ QueueHandle,
-    PSP_FILE_CALLBACK_W MsgHandler,
-    PVOID Context);
+    IN HWND Owner,
+    IN HSPFILEQ QueueHandle,
+    IN PSP_FILE_CALLBACK_W MsgHandler,
+    IN PVOID Context OPTIONAL);
 
 /* EOF */
