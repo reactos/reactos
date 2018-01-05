@@ -16,7 +16,6 @@ list(APPEND SOURCE
     console.c
     consup.c
     devinst.c
-    filesup.c
     filequeue.c
     format.c
     fslist.c

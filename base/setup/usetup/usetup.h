@@ -65,7 +65,6 @@
 #include "fslist.h"
 #include "partlist.h"
 #include "cabinet.h"
-#include "filesup.h"
 #include "genlist.h"
 #include "mui.h"
 
