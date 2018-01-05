@@ -55,8 +55,16 @@ extern HANDLE ProcessHeap;
 
 /* TYPEDEFS *****************************************************************/
 
+struct _USETUP_DATA;
+
 typedef struct _USETUP_DATA
 {
+/* Setup INFs *****/
+    HINF SetupInf;
+
+/* Installation *****/
+    PVOID SetupFileQueue; // HSPFILEQ
+
 /* SOURCE Paths *****/
     UNICODE_STRING SourceRootPath;
     UNICODE_STRING SourceRootDir;
@@ -79,17 +87,28 @@ typedef struct _USETUP_DATA
     UNICODE_STRING SystemRootPath;
 
     /* Path to the installation directory inside the ReactOS boot partition */
-    UNICODE_STRING DestinationPath;     /** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
     UNICODE_STRING DestinationArcPath;  /** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
+    UNICODE_STRING DestinationPath;     /** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
     UNICODE_STRING DestinationRootPath;
+
+    // FIXME: This is only temporary!! Must be removed later!
+    UNICODE_STRING InstallPath;
 
     LONG DestinationDiskNumber;
     LONG DestinationPartitionNumber;
-    LONG MBRInstallType;
 
+    LONG MBRInstallType;
     LONG FormatPartition;
     LONG AutoPartition;
 
+/* Settings lists *****/
+    PGENERIC_LIST ComputerList;
+    PGENERIC_LIST DisplayList;
+    PGENERIC_LIST KeyboardList;
+    PGENERIC_LIST LayoutList;
+    PGENERIC_LIST LanguageList;
+
+/* Other stuff *****/
     WCHAR LocaleID[9];
     LANGID LanguageId;
 
@@ -119,7 +138,23 @@ GetSourcePaths(
 
 ERROR_NUMBER
 LoadSetupInf(
-    OUT HINF* SetupInf,
+    IN OUT PUSETUP_DATA pSetupData);
+
+NTSTATUS
+InitDestinationPaths(
+    IN OUT PUSETUP_DATA pSetupData,
+    IN PCWSTR InstallationDir,
+    IN PDISKENTRY DiskEntry,    // FIXME: HACK!
+    IN PPARTENTRY PartEntry);   // FIXME: HACK!
+
+// NTSTATUS
+ERROR_NUMBER
+InitializeSetup(
+    IN OUT PUSETUP_DATA pSetupData,
+    IN ULONG InitPhase);
+
+VOID
+FinishSetup(
     IN OUT PUSETUP_DATA pSetupData);
 
 

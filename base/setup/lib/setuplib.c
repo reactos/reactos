@@ -500,7 +500,6 @@ InitPaths:
 
 ERROR_NUMBER
 LoadSetupInf(
-    OUT HINF* SetupInf,
     IN OUT PUSETUP_DATA pSetupData)
 {
     INFCONTEXT Context;
@@ -514,17 +513,18 @@ LoadSetupInf(
 
     DPRINT("SetupInf path: '%S'\n", FileNameBuffer);
 
-    *SetupInf = SetupOpenInfFileExW(FileNameBuffer,
-                                   NULL,
-                                   /* INF_STYLE_WIN4 | */ INF_STYLE_OLDNT,
-                                   pSetupData->LanguageId,
-                                   &ErrorLine);
+    pSetupData->SetupInf =
+        SetupOpenInfFileExW(FileNameBuffer,
+                            NULL,
+                            /* INF_STYLE_WIN4 | */ INF_STYLE_OLDNT,
+                            pSetupData->LanguageId,
+                            &ErrorLine);
 
-    if (*SetupInf == INVALID_HANDLE_VALUE)
+    if (pSetupData->SetupInf == INVALID_HANDLE_VALUE)
         return ERROR_LOAD_TXTSETUPSIF;
 
     /* Open 'Version' section */
-    if (!SetupFindFirstLineW(*SetupInf, L"Version", L"Signature", &Context))
+    if (!SetupFindFirstLineW(pSetupData->SetupInf, L"Version", L"Signature", &Context))
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     /* Get pointer 'Signature' key */
@@ -541,7 +541,7 @@ LoadSetupInf(
     INF_FreeData(Value);
 
     /* Open 'DiskSpaceRequirements' section */
-    if (!SetupFindFirstLineW(*SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
+    if (!SetupFindFirstLineW(pSetupData->SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     pSetupData->RequiredPartitionDiskSpace = ~0;
@@ -553,12 +553,48 @@ LoadSetupInf(
     pSetupData->RequiredPartitionDiskSpace = (ULONG)IntValue;
 
     //
-    // TODO: Support "SetupSourceDevice" and "SetupSourcePath" in txtsetup.sif
+    // Support "SetupSourceDevice" and "SetupSourcePath" in txtsetup.sif
     // See CORE-9023
+    // Support for that should also be added in setupldr.
     //
 
+    /* Update the Setup Source paths */
+    if (SetupFindFirstLineW(pSetupData->SetupInf, L"SetupData", L"SetupSourceDevice", &Context))
+    {
+        /*
+         * Get optional pointer 'SetupSourceDevice' key, its presence
+         * will dictate whether we also need 'SetupSourcePath'.
+         */
+        if (INF_GetData(&Context, NULL, &Value))
+        {
+            /* Free the old source root path string and create the new one */
+            RtlFreeUnicodeString(&pSetupData->SourceRootPath);
+            RtlCreateUnicodeString(&pSetupData->SourceRootPath, Value);
+            INF_FreeData(Value);
+
+            if (!SetupFindFirstLineW(pSetupData->SetupInf, L"SetupData", L"SetupSourcePath", &Context))
+            {
+                /* The 'SetupSourcePath' value is mandatory! */
+                return ERROR_CORRUPT_TXTSETUPSIF;
+            }
+
+            /* Get pointer 'SetupSourcePath' key */
+            if (!INF_GetData(&Context, NULL, &Value))
+            {
+                /* The 'SetupSourcePath' value is mandatory! */
+                return ERROR_CORRUPT_TXTSETUPSIF;
+            }
+
+            /* Free the old source path string and create the new one */
+            RtlFreeUnicodeString(&pSetupData->SourceRootDir);
+            RtlCreateUnicodeString(&pSetupData->SourceRootDir, Value);
+            INF_FreeData(Value);
+        }
+    }
+
     /* Search for 'DefaultPath' in the 'SetupData' section */
-    if (SetupFindFirstLineW(*SetupInf, L"SetupData", L"DefaultPath", &Context))
+    pSetupData->InstallationDirectory[0] = 0;
+    if (SetupFindFirstLineW(pSetupData->SetupInf, L"SetupData", L"DefaultPath", &Context))
     {
         /* Get pointer 'DefaultPath' key */
         if (!INF_GetData(&Context, NULL, &Value))
@@ -572,6 +608,175 @@ LoadSetupInf(
     }
 
     return ERROR_SUCCESS;
+}
+
+NTSTATUS
+InitDestinationPaths(
+    IN OUT PUSETUP_DATA pSetupData,
+    IN PCWSTR InstallationDir,
+    IN PDISKENTRY DiskEntry,    // FIXME: HACK!
+    IN PPARTENTRY PartEntry)    // FIXME: HACK!
+{
+    WCHAR PathBuffer[MAX_PATH];
+
+    //
+    // TODO: Check return status values of the functions!
+    //
+
+    /* Create 'pSetupData->DestinationRootPath' string */
+    RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"\\Device\\Harddisk%lu\\Partition%lu\\",
+            DiskEntry->DiskNumber,
+            PartEntry->PartitionNumber);
+    RtlCreateUnicodeString(&pSetupData->DestinationRootPath, PathBuffer);
+    DPRINT("DestinationRootPath: %wZ\n", &pSetupData->DestinationRootPath);
+
+/** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
+    /* Create 'pSetupData->DestinationArcPath' */
+    RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
+            DiskEntry->BiosDiskNumber,
+            PartEntry->PartitionNumber);
+    ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallationDir);
+    RtlCreateUnicodeString(&pSetupData->DestinationArcPath, PathBuffer);
+
+/** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
+    /* Create 'pSetupData->DestinationPath' string */
+    RtlFreeUnicodeString(&pSetupData->DestinationPath);
+    CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
+                 pSetupData->DestinationRootPath.Buffer, InstallationDir);
+    RtlCreateUnicodeString(&pSetupData->DestinationPath, PathBuffer);
+
+/** Equivalent of 'NTOS_INSTALLATION::PathComponent' **/
+    // FIXME: This is only temporary!! Must be removed later!
+    /***/RtlCreateUnicodeString(&pSetupData->InstallPath, InstallationDir);/***/
+
+    return STATUS_SUCCESS;
+}
+
+// NTSTATUS
+ERROR_NUMBER
+InitializeSetup(
+    IN OUT PUSETUP_DATA pSetupData,
+    IN ULONG InitPhase)
+{
+    if (InitPhase == 0)
+    {
+        RtlZeroMemory(pSetupData, sizeof(*pSetupData));
+
+        // pSetupData->ComputerList = NULL;
+        // pSetupData->DisplayList  = NULL;
+        // pSetupData->KeyboardList = NULL;
+        // pSetupData->LayoutList   = NULL;
+        // pSetupData->LanguageList = NULL;
+
+        /* Initialize global unicode strings */
+        RtlInitUnicodeString(&pSetupData->SourcePath, NULL);
+        RtlInitUnicodeString(&pSetupData->SourceRootPath, NULL);
+        RtlInitUnicodeString(&pSetupData->SourceRootDir, NULL);
+        RtlInitUnicodeString(&pSetupData->DestinationArcPath, NULL);
+        RtlInitUnicodeString(&pSetupData->DestinationPath, NULL);
+        RtlInitUnicodeString(&pSetupData->DestinationRootPath, NULL);
+        RtlInitUnicodeString(&pSetupData->SystemRootPath, NULL);
+
+        // FIXME: This is only temporary!! Must be removed later!
+        /***/RtlInitUnicodeString(&pSetupData->InstallPath, NULL);/***/
+
+        //
+        // TODO: Load and start SetupDD, and ask it for the information
+        //
+
+        return ERROR_SUCCESS;
+    }
+    else
+    if (InitPhase == 1)
+    {
+        ERROR_NUMBER Error;
+        NTSTATUS Status;
+
+        /* Get the source path and source root path */
+        //
+        // NOTE: Sometimes the source path may not be in SystemRoot !!
+        // (and this is the case when using the 1st-stage GUI setup!)
+        //
+        Status = GetSourcePaths(&pSetupData->SourcePath,
+                                &pSetupData->SourceRootPath,
+                                &pSetupData->SourceRootDir);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("GetSourcePaths() failed (Status 0x%08lx)", Status);
+            return ERROR_NO_SOURCE_DRIVE;
+        }
+        /*
+         * Example of output:
+         *   SourcePath: '\Device\CdRom0\I386'
+         *   SourceRootPath: '\Device\CdRom0'
+         *   SourceRootDir: '\I386'
+         */
+        DPRINT1("SourcePath (1): '%wZ'\n", &pSetupData->SourcePath);
+        DPRINT1("SourceRootPath (1): '%wZ'\n", &pSetupData->SourceRootPath);
+        DPRINT1("SourceRootDir (1): '%wZ'\n", &pSetupData->SourceRootDir);
+
+        /* Load 'txtsetup.sif' from the installation media */
+        Error = LoadSetupInf(pSetupData);
+        if (Error != ERROR_SUCCESS)
+        {
+            DPRINT1("LoadSetupInf() failed (Error 0x%lx)", Error);
+            return Error;
+        }
+        DPRINT1("SourcePath (2): '%wZ'\n", &pSetupData->SourcePath);
+        DPRINT1("SourceRootPath (2): '%wZ'\n", &pSetupData->SourceRootPath);
+        DPRINT1("SourceRootDir (2): '%wZ'\n", &pSetupData->SourceRootDir);
+
+        return ERROR_SUCCESS;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+VOID
+FinishSetup(
+    IN OUT PUSETUP_DATA pSetupData)
+{
+    /* Destroy the computer settings list */
+    if (pSetupData->ComputerList != NULL)
+    {
+        DestroyGenericList(pSetupData->ComputerList, TRUE);
+        pSetupData->ComputerList = NULL;
+    }
+
+    /* Destroy the display settings list */
+    if (pSetupData->DisplayList != NULL)
+    {
+        DestroyGenericList(pSetupData->DisplayList, TRUE);
+        pSetupData->DisplayList = NULL;
+    }
+
+    /* Destroy the keyboard settings list */
+    if (pSetupData->KeyboardList != NULL)
+    {
+        DestroyGenericList(pSetupData->KeyboardList, TRUE);
+        pSetupData->KeyboardList = NULL;
+    }
+
+    /* Destroy the keyboard layout list */
+    if (pSetupData->LayoutList != NULL)
+    {
+        DestroyGenericList(pSetupData->LayoutList, TRUE);
+        pSetupData->LayoutList = NULL;
+    }
+
+    /* Destroy the languages list */
+    if (pSetupData->LanguageList != NULL)
+    {
+        DestroyGenericList(pSetupData->LanguageList, FALSE);
+        pSetupData->LanguageList = NULL;
+    }
+
+    /* Close the Setup INF */
+    SetupCloseInfFile(pSetupData->SetupInf);
 }
 
 /*

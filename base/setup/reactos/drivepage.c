@@ -70,7 +70,7 @@ MoreOptDlgProc(HWND hwndDlg,
                 case IDOK:
                     SendMessage(GetDlgItem(hwndDlg, IDC_PATH),
                                 WM_GETTEXT,
-                                (WPARAM)sizeof(pSetupData->USetupData.InstallationDirectory) / sizeof(TCHAR),
+                                (WPARAM)ARRAYSIZE(pSetupData->USetupData.InstallationDirectory),
                                 (LPARAM)pSetupData->USetupData.InstallationDirectory);
 
                     EndDialog(hwndDlg, IDOK);

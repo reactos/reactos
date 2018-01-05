@@ -555,16 +555,16 @@ DeviceDlgProc(
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
-            InitGenericComboList(hList, pSetupData->ComputerList, GetSettingDescription);
+            InitGenericComboList(hList, pSetupData->USetupData.ComputerList, GetSettingDescription);
 
             hList = GetDlgItem(hwndDlg, IDC_DISPLAY);
-            InitGenericComboList(hList, pSetupData->DisplayList, GetSettingDescription);
+            InitGenericComboList(hList, pSetupData->USetupData.DisplayList, GetSettingDescription);
 
             hList = GetDlgItem(hwndDlg, IDC_KEYBOARD);
-            InitGenericComboList(hList, pSetupData->KeyboardList, GetSettingDescription);
+            InitGenericComboList(hList, pSetupData->USetupData.KeyboardList, GetSettingDescription);
 
             // hList = GetDlgItem(hwndDlg, IDC_KEYBOARD_LAYOUT);
-            // InitGenericComboList(hList, pSetupData->LayoutList, GetSettingDescription);
+            // InitGenericComboList(hList, pSetupData->USetupData.LayoutList, GetSettingDescription);
 
             break;
         }
@@ -808,11 +808,11 @@ BOOL LoadSetupData(
 
     /* Load the hardware, language and keyboard layout lists */
 
-    pSetupData->ComputerList = CreateComputerTypeList(pSetupData->SetupInf);
-    pSetupData->DisplayList = CreateDisplayDriverList(pSetupData->SetupInf);
-    pSetupData->KeyboardList = CreateKeyboardDriverList(pSetupData->SetupInf);
+    pSetupData->USetupData.ComputerList = CreateComputerTypeList(pSetupData->USetupData.SetupInf);
+    pSetupData->USetupData.DisplayList = CreateDisplayDriverList(pSetupData->USetupData.SetupInf);
+    pSetupData->USetupData.KeyboardList = CreateKeyboardDriverList(pSetupData->USetupData.SetupInf);
 
-    pSetupData->LanguageList = CreateLanguageList(pSetupData->SetupInf, pSetupData->DefaultLanguage);
+    pSetupData->USetupData.LanguageList = CreateLanguageList(pSetupData->USetupData.SetupInf, pSetupData->DefaultLanguage);
 
     pSetupData->PartitionList = CreatePartitionList();
 
@@ -826,7 +826,7 @@ BOOL LoadSetupData(
     wcscpy(pSetupData->DefaultLanguage, pSetupData->USetupData.LocaleID);
     pSetupData->USetupData.LanguageId = (LANGID)(wcstol(pSetupData->SelectedLanguageId, NULL, 16) & 0xFFFF);
 
-    pSetupData->LayoutList = CreateKeyboardLayoutList(pSetupData->SetupInf, pSetupData->SelectedLanguageId, pSetupData->DefaultKBLayout);
+    pSetupData->USetupData.LayoutList = CreateKeyboardLayoutList(pSetupData->USetupData.SetupInf, pSetupData->SelectedLanguageId, pSetupData->DefaultKBLayout);
 
 #if 0
     // get default for keyboard and language
@@ -834,7 +834,7 @@ BOOL LoadSetupData(
     pSetupData->DefaultLang = -1;
 
     // TODO: get defaults from underlaying running system
-    if (SetupFindFirstLine(pSetupData->SetupInf, _T("NLS"), _T("DefaultLayout"), &InfContext))
+    if (SetupFindFirstLine(pSetupData->USetupData.SetupInf, _T("NLS"), _T("DefaultLayout"), &InfContext))
     {
         SetupGetStringField(&InfContext, 1, tmp, ARRAYSIZE(tmp), &LineLength);
         for (Count = 0; Count < pSetupData->KbLayoutCount; Count++)
@@ -847,7 +847,7 @@ BOOL LoadSetupData(
         }
     }
 
-    if (SetupFindFirstLine(pSetupData->SetupInf, _T("NLS"), _T("DefaultLanguage"), &InfContext))
+    if (SetupFindFirstLine(pSetupData->USetupData.SetupInf, _T("NLS"), _T("DefaultLanguage"), &InfContext))
     {
         SetupGetStringField(&InfContext, 1, tmp, ARRAYSIZE(tmp), &LineLength);
         for (Count = 0; Count < pSetupData->LangCount; Count++)
@@ -948,7 +948,6 @@ _tWinMain(HINSTANCE hInst,
           LPTSTR lpszCmdLine,
           int nCmdShow)
 {
-    NTSTATUS Status;
     ULONG Error;
     INITCOMMONCONTROLSEX iccx;
     PROPSHEETHEADER psh;
@@ -958,41 +957,23 @@ _tWinMain(HINSTANCE hInst,
 
     ProcessHeap = GetProcessHeap();
 
-    /* Initialize global unicode strings */
-    RtlInitUnicodeString(&SetupData.USetupData.SourcePath, NULL);
-    RtlInitUnicodeString(&SetupData.USetupData.SourceRootPath, NULL);
-    RtlInitUnicodeString(&SetupData.USetupData.SourceRootDir, NULL);
-    // RtlInitUnicodeString(&InstallPath, NULL);
-    RtlInitUnicodeString(&SetupData.USetupData.DestinationPath, NULL);
-    RtlInitUnicodeString(&SetupData.USetupData.DestinationArcPath, NULL);
-    RtlInitUnicodeString(&SetupData.USetupData.DestinationRootPath, NULL);
-    RtlInitUnicodeString(&SetupData.USetupData.SystemRootPath, NULL);
+    /* Initialize Setup, phase 0 */
+    InitializeSetup(&SetupData.USetupData, 0);
 
-    /* Get the source path and source root path */
-    //
-    // NOTE: Sometimes the source path may not be in SystemRoot !!
-    // (and this is the case when using the 1st-stage GUI setup!)
-    //
-    Status = GetSourcePaths(&SetupData.USetupData.SourcePath,
-                            &SetupData.USetupData.SourceRootPath,
-                            &SetupData.USetupData.SourceRootDir);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("GetSourcePaths() failed (Status 0x%08lx)", Status);
-        // MUIDisplayError(ERROR_NO_SOURCE_DRIVE, Ir, POPUP_WAIT_ENTER);
-        MessageBoxW(NULL, L"GetSourcePaths failed!", L"Error", MB_ICONERROR);
-        goto Quit;
-    }
-    DPRINT1("SourcePath: '%wZ'\n", &SetupData.USetupData.SourcePath);
-    DPRINT1("SourceRootPath: '%wZ'\n", &SetupData.USetupData.SourceRootPath);
-    DPRINT1("SourceRootDir: '%wZ'\n", &SetupData.USetupData.SourceRootDir);
-
-    /* Load 'txtsetup.sif' from the installation media */
-    Error = LoadSetupInf(&SetupData.SetupInf, &SetupData.USetupData);
+    /* Initialize Setup, phase 1 */
+    Error = InitializeSetup(&SetupData.USetupData, 1);
     if (Error != ERROR_SUCCESS)
     {
-        // MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
-        DisplayError(NULL, IDS_CAPTION, IDS_NO_TXTSETUP_SIF);
+        //
+        // TODO: Write an error mapper (much like the MUIDisplayError of USETUP)
+        //
+        if (Error == ERROR_NO_SOURCE_DRIVE)
+            MessageBoxW(NULL, L"GetSourcePaths failed!", L"Error", MB_ICONERROR);
+        else if (Error == ERROR_LOAD_TXTSETUPSIF)
+            DisplayError(NULL, IDS_CAPTION, IDS_NO_TXTSETUP_SIF);
+        else // FIXME!!
+            MessageBoxW(NULL, L"Unknown error!", L"Error", MB_ICONERROR);
+
         goto Quit;
     }
 
@@ -1003,7 +984,7 @@ _tWinMain(HINSTANCE hInst,
     SetupData.hInstance = hInst;
 
     CheckUnattendedSetup(&SetupData.USetupData);
-    SetupData.bUnattend = IsUnattendedSetup;
+    SetupData.bUnattend = IsUnattendedSetup; // FIXME :-)
 
     /* Cache commonly-used strings */
     LoadStringW(hInst, IDS_ABORTSETUP, SetupData.szAbortMessage, ARRAYSIZE(SetupData.szAbortMessage));
@@ -1124,9 +1105,9 @@ _tWinMain(HINSTANCE hInst,
     if (SetupData.hTitleFont)
         DeleteObject(SetupData.hTitleFont);
 
-    SetupCloseInfFile(SetupData.SetupInf);
-
 Quit:
+    /* Setup has finished */
+    FinishSetup(&SetupData.USetupData);
 
 #if 0 // NOTE: Disabled for testing purposes only!
     EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);

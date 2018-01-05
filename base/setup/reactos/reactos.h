@@ -55,7 +55,6 @@
 /* Setup library headers */
 // #include <reactos/rosioctl.h>
 #include <../lib/setuplib.h>
-// #include "errorcode.h"
 
 #if 0
 typedef struct _KBLAYOUT
@@ -79,7 +78,13 @@ typedef struct _SETUPDATA
     TCHAR szAbortTitle[64];
 
     USETUP_DATA USetupData;
-    HINF SetupInf;
+
+    BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
+
+    PPARTLIST PartitionList;
+    PNTOS_INSTALLATION CurrentInstallation;
+    PGENERIC_LIST NtOsInstallsList;
+
 
     /* Settings */
     LONG DestPartSize; // if partition doesn't exist, size of partition
@@ -92,25 +97,12 @@ typedef struct _SETUPDATA
     LONG SelectedDisplay; // selected display type (table index)
     LONG SelectedKeyboard; // selected keyboard type (table index)
 
-    BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
-
-
     /* txtsetup.sif data */
     // LONG DefaultLang; // default language (table index)
     // LONG DefaultKBLayout; // default keyboard layout (table index)
     PCWSTR SelectedLanguageId;
     WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
     WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
-
-    PGENERIC_LIST ComputerList;
-    PGENERIC_LIST DisplayList;
-    PGENERIC_LIST KeyboardList;
-    PGENERIC_LIST LayoutList;
-    PGENERIC_LIST LanguageList;
-
-    PPARTLIST PartitionList;
-    PNTOS_INSTALLATION CurrentInstallation;
-    PGENERIC_LIST NtOsInstallsList;
 
 } SETUPDATA, *PSETUPDATA;
 

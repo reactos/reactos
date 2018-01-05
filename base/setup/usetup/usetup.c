@@ -40,15 +40,9 @@
 /* GLOBALS & LOCALS *********************************************************/
 
 HANDLE ProcessHeap;
-
 BOOLEAN IsUnattendedSetup = FALSE;
-static USETUP_DATA USetupData;
 
-/*
- * NOTE: Technically only used for the COPYCONTEXT InstallPath member
- * for the filequeue functionality.
- */
-static UNICODE_STRING InstallPath;
+static USETUP_DATA USetupData;
 
 // FIXME: Is it really useful?? Just used for SetDefaultPagefile...
 static WCHAR DestinationDriveLetter;
@@ -71,18 +65,8 @@ static FORMATMACHINESTATE FormatState = Start;
 
 /*****************************************************/
 
-static HINF SetupInf;
-
-static HSPFILEQ SetupFileQueue = NULL;
-
 static PNTOS_INSTALLATION CurrentInstallation = NULL;
 static PGENERIC_LIST NtOsInstallsList = NULL;
-
-static PGENERIC_LIST ComputerList = NULL;
-static PGENERIC_LIST DisplayList  = NULL;
-static PGENERIC_LIST KeyboardList = NULL;
-static PGENERIC_LIST LayoutList   = NULL;
-static PGENERIC_LIST LanguageList = NULL;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -404,10 +388,10 @@ UpdateKBLayout(VOID)
 
     pszNewLayout = MUIDefaultKeyboardLayout(SelectedLanguageId);
 
-    if (LayoutList == NULL)
+    if (USetupData.LayoutList == NULL)
     {
-        LayoutList = CreateKeyboardLayoutList(SetupInf, SelectedLanguageId, DefaultKBLayout);
-        if (LayoutList == NULL)
+        USetupData.LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf, SelectedLanguageId, DefaultKBLayout);
+        if (USetupData.LayoutList == NULL)
         {
             /* FIXME: Handle error! */
             return;
@@ -417,12 +401,12 @@ UpdateKBLayout(VOID)
     /* Search for default layout (if provided) */
     if (pszNewLayout != NULL)
     {
-        for (ListEntry = GetFirstListEntry(LayoutList); ListEntry;
+        for (ListEntry = GetFirstListEntry(USetupData.LayoutList); ListEntry;
              ListEntry = GetNextListEntry(ListEntry))
         {
             if (!wcscmp(pszNewLayout, ((PGENENTRY)GetListEntryData(ListEntry))->Id))
             {
-                SetCurrentListEntry(LayoutList, ListEntry);
+                SetCurrentListEntry(USetupData.LayoutList, ListEntry);
                 break;
             }
         }
@@ -491,10 +475,10 @@ LanguagePage(PINPUT_RECORD Ir)
     BOOL RefreshPage = FALSE;
 
     /* Initialize the computer settings list */
-    if (LanguageList == NULL)
+    if (USetupData.LanguageList == NULL)
     {
-        LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
-        if (LanguageList == NULL)
+        USetupData.LanguageList = CreateLanguageList(USetupData.SetupInf, DefaultLanguage);
+        if (USetupData.LanguageList == NULL)
         {
            PopupError("Setup failed to initialize available translations", NULL, NULL, POPUP_WAIT_NONE);
            return WELCOME_PAGE;
@@ -512,13 +496,13 @@ LanguagePage(PINPUT_RECORD Ir)
      * If there is no language or just a single one in the list,
      * skip the language selection process altogether.
      */
-    if (GetNumberOfListEntries(LanguageList) <= 1)
+    if (GetNumberOfListEntries(USetupData.LanguageList) <= 1)
     {
         USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
         return WELCOME_PAGE;
     }
 
-    InitGenericListUi(&ListUi, LanguageList, GetSettingDescription);
+    InitGenericListUi(&ListUi, USetupData.LanguageList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -566,10 +550,10 @@ LanguagePage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
-            ASSERT(GetNumberOfListEntries(LanguageList) >= 1);
+            ASSERT(GetNumberOfListEntries(USetupData.LanguageList) >= 1);
 
             SelectedLanguageId =
-                ((PGENENTRY)GetListEntryData(GetCurrentListEntry(LanguageList)))->Id;
+                ((PGENENTRY)GetListEntryData(GetCurrentListEntry(USetupData.LanguageList)))->Id;
 
             USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
@@ -592,10 +576,10 @@ LanguagePage(PINPUT_RECORD Ir)
 
         if (RefreshPage)
         {
-            ASSERT(GetNumberOfListEntries(LanguageList) >= 1);
+            ASSERT(GetNumberOfListEntries(USetupData.LanguageList) >= 1);
 
             NewLanguageId =
-                ((PGENENTRY)GetListEntryData(GetCurrentListEntry(LanguageList)))->Id;
+                ((PGENENTRY)GetListEntryData(GetCurrentListEntry(USetupData.LanguageList)))->Id;
 
             if (wcscmp(SelectedLanguageId, NewLanguageId))
             {
@@ -632,7 +616,7 @@ LanguagePage(PINPUT_RECORD Ir)
  *  Init USetupData.SourcePath
  *  Init USetupData.SourceRootPath
  *  Init USetupData.SourceRootDir
- *  Init SetupInf
+ *  Init USetupData.SetupInf
  *  Init USetupData.RequiredPartitionDiskSpace
  *  Init IsUnattendedSetup
  *  If unattended, init *List and sets the Codepage
@@ -645,29 +629,14 @@ LanguagePage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SetupStartPage(PINPUT_RECORD Ir)
 {
-    NTSTATUS Status;
     ULONG Error;
     PGENERIC_LIST_ENTRY ListEntry;
     PCWSTR LocaleId;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-    /* Get the source path and source root path */
-    Status = GetSourcePaths(&USetupData.SourcePath,
-                            &USetupData.SourceRootPath,
-                            &USetupData.SourceRootDir);
-    if (!NT_SUCCESS(Status))
-    {
-        CONSOLE_PrintTextXY(6, 15, "GetSourcePaths() failed (Status 0x%08lx)", Status);
-        MUIDisplayError(ERROR_NO_SOURCE_DRIVE, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-    DPRINT1("SourcePath: '%wZ'\n", &USetupData.SourcePath);
-    DPRINT1("SourceRootPath: '%wZ'\n", &USetupData.SourceRootPath);
-    DPRINT1("SourceRootDir: '%wZ'\n", &USetupData.SourceRootDir);
-
-    /* Load 'txtsetup.sif' from the installation media */
-    Error = LoadSetupInf(&SetupInf, &USetupData);
+    /* Initialize Setup, phase 1 */
+    Error = InitializeSetup(&USetupData, 1);
     if (Error != ERROR_SUCCESS)
     {
         MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
@@ -688,41 +657,41 @@ SetupStartPage(PINPUT_RECORD Ir)
         // TODO: Read options from inf
         /* Load the hardware, language and keyboard layout lists */
 
-        ComputerList = CreateComputerTypeList(SetupInf);
-        DisplayList = CreateDisplayDriverList(SetupInf);
-        KeyboardList = CreateKeyboardDriverList(SetupInf);
+        USetupData.ComputerList = CreateComputerTypeList(USetupData.SetupInf);
+        USetupData.DisplayList = CreateDisplayDriverList(USetupData.SetupInf);
+        USetupData.KeyboardList = CreateKeyboardDriverList(USetupData.SetupInf);
 
-        LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
+        USetupData.LanguageList = CreateLanguageList(USetupData.SetupInf, DefaultLanguage);
 
         /* new part */
         SelectedLanguageId = DefaultLanguage;
         wcscpy(DefaultLanguage, USetupData.LocaleID);
         USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
-        LayoutList = CreateKeyboardLayoutList(SetupInf, SelectedLanguageId, DefaultKBLayout);
+        USetupData.LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf, SelectedLanguageId, DefaultKBLayout);
 
         /* first we hack LanguageList */
-        for (ListEntry = GetFirstListEntry(LanguageList); ListEntry;
+        for (ListEntry = GetFirstListEntry(USetupData.LanguageList); ListEntry;
              ListEntry = GetNextListEntry(ListEntry))
         {
             LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
             if (!wcsicmp(USetupData.LocaleID, LocaleId))
             {
                 DPRINT("found %S in LanguageList\n", LocaleId);
-                SetCurrentListEntry(LanguageList, ListEntry);
+                SetCurrentListEntry(USetupData.LanguageList, ListEntry);
                 break;
             }
         }
 
         /* now LayoutList */
-        for (ListEntry = GetFirstListEntry(LayoutList); ListEntry;
+        for (ListEntry = GetFirstListEntry(USetupData.LayoutList); ListEntry;
              ListEntry = GetNextListEntry(ListEntry))
         {
             LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
             if (!wcsicmp(USetupData.LocaleID, LocaleId))
             {
                 DPRINT("found %S in LayoutList\n", LocaleId);
-                SetCurrentListEntry(LayoutList, ListEntry);
+                SetCurrentListEntry(USetupData.LayoutList, ListEntry);
                 break;
             }
         }
@@ -1131,10 +1100,10 @@ OemDriverPage(PINPUT_RECORD Ir)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Init ComputerList
- *  Init DisplayList
- *  Init KeyboardList
- *  Init LayoutList
+ *  Init USetupData.ComputerList
+ *  Init USetupData.DisplayList
+ *  Init USetupData.KeyboardList
+ *  Init USetupData.LayoutList
  *
  * RETURNS
  *   Number of the next page.
@@ -1145,10 +1114,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
     static ULONG Line = 16;
 
     /* Initialize the computer settings list */
-    if (ComputerList == NULL)
+    if (USetupData.ComputerList == NULL)
     {
-        ComputerList = CreateComputerTypeList(SetupInf);
-        if (ComputerList == NULL)
+        USetupData.ComputerList = CreateComputerTypeList(USetupData.SetupInf);
+        if (USetupData.ComputerList == NULL)
         {
             MUIDisplayError(ERROR_LOAD_COMPUTER, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
@@ -1156,10 +1125,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
     }
 
     /* Initialize the display settings list */
-    if (DisplayList == NULL)
+    if (USetupData.DisplayList == NULL)
     {
-        DisplayList = CreateDisplayDriverList(SetupInf);
-        if (DisplayList == NULL)
+        USetupData.DisplayList = CreateDisplayDriverList(USetupData.SetupInf);
+        if (USetupData.DisplayList == NULL)
         {
             MUIDisplayError(ERROR_LOAD_DISPLAY, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
@@ -1167,10 +1136,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
     }
 
     /* Initialize the keyboard settings list */
-    if (KeyboardList == NULL)
+    if (USetupData.KeyboardList == NULL)
     {
-        KeyboardList = CreateKeyboardDriverList(SetupInf);
-        if (KeyboardList == NULL)
+        USetupData.KeyboardList = CreateKeyboardDriverList(USetupData.SetupInf);
+        if (USetupData.KeyboardList == NULL)
         {
             MUIDisplayError(ERROR_LOAD_KEYBOARD, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
@@ -1178,10 +1147,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
     }
 
     /* Initialize the keyboard layout list */
-    if (LayoutList == NULL)
+    if (USetupData.LayoutList == NULL)
     {
-        LayoutList = CreateKeyboardLayoutList(SetupInf, SelectedLanguageId, DefaultKBLayout);
-        if (LayoutList == NULL)
+        USetupData.LayoutList = CreateKeyboardLayoutList(USetupData.SetupInf, SelectedLanguageId, DefaultKBLayout);
+        if (USetupData.LayoutList == NULL)
         {
             /* FIXME: report error */
             MUIDisplayError(ERROR_LOAD_KBLAYOUT, Ir, POPUP_WAIT_ENTER);
@@ -1197,10 +1166,10 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
-    DrawGenericListCurrentItem(ComputerList, GetSettingDescription, 25, 11);
-    DrawGenericListCurrentItem(DisplayList , GetSettingDescription, 25, 12);
-    DrawGenericListCurrentItem(KeyboardList, GetSettingDescription, 25, 13);
-    DrawGenericListCurrentItem(LayoutList  , GetSettingDescription, 25, 14);
+    DrawGenericListCurrentItem(USetupData.ComputerList, GetSettingDescription, 25, 11);
+    DrawGenericListCurrentItem(USetupData.DisplayList , GetSettingDescription, 25, 12);
+    DrawGenericListCurrentItem(USetupData.KeyboardList, GetSettingDescription, 25, 13);
+    DrawGenericListCurrentItem(USetupData.LayoutList  , GetSettingDescription, 25, 14);
 
     CONSOLE_InvertTextXY(24, Line, 48, 1);
 
@@ -1343,7 +1312,7 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(COMPUTER_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, ComputerList, GetSettingDescription);
+    InitGenericListUi(&ListUi, USetupData.ComputerList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -1369,7 +1338,7 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(DISPLAY_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, DisplayList, GetSettingDescription);
+    InitGenericListUi(&ListUi, USetupData.DisplayList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -1395,7 +1364,7 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(KEYBOARD_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, KeyboardList, GetSettingDescription);
+    InitGenericListUi(&ListUi, USetupData.KeyboardList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -1421,7 +1390,7 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
     GENERIC_LIST_UI ListUi;
     MUIDisplayPage(LAYOUT_SETTINGS_PAGE);
 
-    InitGenericListUi(&ListUi, LayoutList, GetSettingDescription);
+    InitGenericListUi(&ListUi, USetupData.LayoutList, GetSettingDescription);
     DrawGenericList(&ListUi,
                     2, 18,
                     xScreen - 3,
@@ -3224,38 +3193,11 @@ BuildInstallPaths(PWSTR InstallDir,
                   PDISKENTRY DiskEntry,
                   PPARTENTRY PartEntry)
 {
-    WCHAR PathBuffer[MAX_PATH];
+    NTSTATUS Status;
 
-/** Equivalent of 'NTOS_INSTALLATION::PathComponent' **/
-    /* Create 'InstallPath' string */
-    RtlFreeUnicodeString(&InstallPath);
-    RtlCreateUnicodeString(&InstallPath, InstallDir);
-
-    /* Create 'USetupData.DestinationRootPath' string */
-    RtlFreeUnicodeString(&USetupData.DestinationRootPath);
-    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-            L"\\Device\\Harddisk%lu\\Partition%lu\\",
-            DiskEntry->DiskNumber,
-            PartEntry->PartitionNumber);
-    RtlCreateUnicodeString(&USetupData.DestinationRootPath, PathBuffer);
-    DPRINT("DestinationRootPath: %wZ\n", &USetupData.DestinationRootPath);
-
-/** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
-    /* Create 'USetupData.DestinationPath' string */
-    RtlFreeUnicodeString(&USetupData.DestinationPath);
-    CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
-                 USetupData.DestinationRootPath.Buffer, InstallDir);
-    RtlCreateUnicodeString(&USetupData.DestinationPath, PathBuffer);
-
-/** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
-    /* Create 'USetupData.DestinationArcPath' */
-    RtlFreeUnicodeString(&USetupData.DestinationArcPath);
-    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-            L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
-            DiskEntry->BiosDiskNumber,
-            PartEntry->PartitionNumber);
-    ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallDir);
-    RtlCreateUnicodeString(&USetupData.DestinationArcPath, PathBuffer);
+    Status = InitDestinationPaths(&USetupData, InstallDir, DiskEntry, PartEntry);
+    // TODO: Check Status
+    UNREFERENCED_PARAMETER(Status);
 
     /* Initialize DestinationDriveLetter */
     DestinationDriveLetter = (WCHAR)PartEntry->DriveLetter;
@@ -3594,7 +3536,7 @@ AddSectionToCopyQueueCab(HINF InfFile,
             break;
         }
 
-        if (!SetupQueueCopy(SetupFileQueue,
+        if (!SetupQueueCopy(USetupData.SetupFileQueue,
                             SourceCabinet,
                             USetupData.SourceRootPath.Buffer,
                             USetupData.SourceRootDir.Buffer,
@@ -3728,7 +3670,7 @@ AddSectionToCopyQueue(HINF InfFile,
             DPRINT("RelativePath(2): '%S'\n", CompleteOrigDirName);
         }
 
-        if (!SetupQueueCopy(SetupFileQueue,
+        if (!SetupQueueCopy(USetupData.SetupFileQueue,
                             SourceCabinet,
                             USetupData.SourceRootPath.Buffer,
                             CompleteOrigDirName,
@@ -3767,7 +3709,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     /* Add specific files depending of computer type */
     if (SourceCabinet == NULL)
     {
-        if (!ProcessComputerFiles(InfFile, ComputerList, &AdditionalSectionName))
+        if (!ProcessComputerFiles(InfFile, USetupData.ComputerList, &AdditionalSectionName))
             return FALSE;
 
         if (AdditionalSectionName)
@@ -3905,21 +3847,21 @@ PrepareCopyPage(PINPUT_RECORD Ir)
     MUIDisplayPage(PREPARE_COPY_PAGE);
 
     /* Create the file queue */
-    SetupFileQueue = SetupOpenFileQueue();
-    if (SetupFileQueue == NULL)
+    USetupData.SetupFileQueue = SetupOpenFileQueue();
+    if (USetupData.SetupFileQueue == NULL)
     {
         MUIDisplayError(ERROR_COPY_QUEUE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
 
-    if (!PrepareCopyPageInfFile(SetupInf, NULL, Ir))
+    if (!PrepareCopyPageInfFile(USetupData.SetupInf, NULL, Ir))
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
     /* Search for the 'Cabinets' section */
-    if (!SetupFindFirstLineW(SetupInf, L"Cabinets", NULL, &CabinetsContext))
+    if (!SetupFindFirstLineW(USetupData.SetupInf, L"Cabinets", NULL, &CabinetsContext))
     {
         return FILE_COPY_PAGE;
     }
@@ -4078,7 +4020,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 
     /* Create context for the copy process */
     CopyContext.DestinationRootPath = USetupData.DestinationRootPath.Buffer;
-    CopyContext.InstallPath = InstallPath.Buffer;
+    CopyContext.InstallPath = USetupData.InstallPath.Buffer;
     CopyContext.TotalOperations = 0;
     CopyContext.CompletedOperations = 0;
 
@@ -4128,12 +4070,12 @@ FileCopyPage(PINPUT_RECORD Ir)
 
     /* Do the file copying */
     SetupCommitFileQueueW(NULL,
-                          SetupFileQueue,
+                          USetupData.SetupFileQueue,
                           FileCopyCallback,
                           &CopyContext);
 
     /* If we get here, we're done, so cleanup the queue and progress bar */
-    SetupCloseFileQueue(SetupFileQueue);
+    SetupCloseFileQueue(USetupData.SetupFileQueue);
     DestroyProgressBar(CopyContext.ProgressBar);
     DestroyProgressBar(CopyContext.MemoryBars[0]);
     DestroyProgressBar(CopyContext.MemoryBars[1]);
@@ -4199,15 +4141,15 @@ RegistryPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(REGISTRY_PAGE);
 
-    Error = UpdateRegistry(SetupInf,
+    Error = UpdateRegistry(USetupData.SetupInf,
                            &USetupData,
                            RepairUpdateFlag,
                            PartitionList,
                            DestinationDriveLetter,
                            SelectedLanguageId,
-                           DisplayList,
-                           LayoutList,
-                           LanguageList,
+                           USetupData.DisplayList,
+                           USetupData.LayoutList,
+                           USetupData.LanguageList,
                            RegistryStatus);
     if (Error != ERROR_SUCCESS)
     {
@@ -4794,6 +4736,7 @@ QuitPage(PINPUT_RECORD Ir)
         DestroyPartitionList(PartitionList);
         PartitionList = NULL;
     }
+
     TempPartition = NULL;
     FormatState = Start;
 
@@ -4802,41 +4745,6 @@ QuitPage(PINPUT_RECORD Ir)
     {
         DestroyFileSystemList(FileSystemList);
         FileSystemList = NULL;
-    }
-
-    /* Destroy the computer settings list */
-    if (ComputerList != NULL)
-    {
-        DestroyGenericList(ComputerList, TRUE);
-        ComputerList = NULL;
-    }
-
-    /* Destroy the display settings list */
-    if (DisplayList != NULL)
-    {
-        DestroyGenericList(DisplayList, TRUE);
-        DisplayList = NULL;
-    }
-
-    /* Destroy the keyboard settings list */
-    if (KeyboardList != NULL)
-    {
-        DestroyGenericList(KeyboardList, TRUE);
-        KeyboardList = NULL;
-    }
-
-    /* Destroy the keyboard layout list */
-    if (LayoutList != NULL)
-    {
-        DestroyGenericList(LayoutList, TRUE);
-        LayoutList = NULL;
-    }
-
-    /* Destroy the languages list */
-    if (LanguageList != NULL)
-    {
-        DestroyGenericList(LanguageList, FALSE);
-        LanguageList = NULL;
     }
 
     CONSOLE_SetStatusText(MUIGetString(STRING_REBOOTCOMPUTER2));
@@ -4920,7 +4828,7 @@ RunUSetup(VOID)
                                  0,
                                  0,
                                  PnpEventThread,
-                                 &SetupInf,
+                                 &USetupData.SetupInf,
                                  &hPnpThread,
                                  NULL);
     if (!NT_SUCCESS(Status))
@@ -4936,15 +4844,8 @@ RunUSetup(VOID)
         return STATUS_APP_INIT_FAILURE;
     }
 
-    /* Initialize global unicode strings */
-    RtlInitUnicodeString(&USetupData.SourcePath, NULL);
-    RtlInitUnicodeString(&USetupData.SourceRootPath, NULL);
-    RtlInitUnicodeString(&USetupData.SourceRootDir, NULL);
-    RtlInitUnicodeString(&InstallPath, NULL);
-    RtlInitUnicodeString(&USetupData.DestinationPath, NULL);
-    RtlInitUnicodeString(&USetupData.DestinationArcPath, NULL);
-    RtlInitUnicodeString(&USetupData.DestinationRootPath, NULL);
-    RtlInitUnicodeString(&USetupData.SystemRootPath, NULL);
+    /* Initialize Setup, phase 0 */
+    InitializeSetup(&USetupData, 0);
 
     /* Hide the cursor */
     CONSOLE_SetCursorType(TRUE, FALSE);
@@ -5109,7 +5010,8 @@ RunUSetup(VOID)
         }
     }
 
-    SetupCloseInfFile(SetupInf);
+    /* Setup has finished */
+    FinishSetup(&USetupData);
 
     if (Page == RECOVERY_PAGE)
         RecoveryConsole();
