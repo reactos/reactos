@@ -91,8 +91,11 @@ MUIGetString(
 #define STRING_CONTINUE                  12
 #define STRING_QUITCONTINUE              13
 #define STRING_REBOOTCOMPUTER            14
-#define STRING_COPYING                   16
-#define STRING_SETUPCOPYINGFILES         17
+#define STRING_DELETING                  15
+#define STRING_MOVING                    16
+#define STRING_RENAMING                  17
+#define STRING_COPYING                   18
+#define STRING_SETUPCOPYINGFILES         19
 #define STRING_REGHIVEUPDATE             20
 #define STRING_IMPORTFILE                21
 #define STRING_DISPLAYSETTINGSUPDATE     22

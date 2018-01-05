@@ -1582,7 +1582,7 @@ MUI_ERROR heILErrorEntries[] =
     },
     {
         // ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
+        "Setup could not create the installation directories.",
         "ENTER = Reboot computer"
     },
     {
@@ -1599,7 +1599,7 @@ MUI_ERROR heILErrorEntries[] =
     },
     {
         // ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
+        "Setup could not create the installation directory.",
         "ENTER = Reboot computer"
     },
     {
@@ -1818,6 +1818,12 @@ MUI_STRING heILStrings[] =
     "F3 = Åàå ÑöóêÑ  ENTER = Ñéôä"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Ñîíå éáÉô Äö ÑéáôÅ"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   éíöâó óÖÅï: %S"},
     {STRING_SETUPCOPYINGFILES,
