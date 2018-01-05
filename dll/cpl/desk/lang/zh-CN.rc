@@ -3,6 +3,7 @@
  * (简体中文资源)
  * by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
  * Updated: 2009-04-26 Jingjing Fu <jingjingf AT 188.com>
+ *          2018-01-05 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -272,5 +273,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "显示设置"
     IDS_APPLY_FAILED "应用新设置失败..."
     IDS_APPLY_NEEDS_RESTART "需要重新启动计算机使更改生效。"
-    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+    IDS_TIMEOUTTEXT "%d 秒内恢复"
 END
