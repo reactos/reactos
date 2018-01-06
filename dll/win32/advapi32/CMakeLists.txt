@@ -20,6 +20,7 @@ add_rpc_files(client
 list(APPEND SOURCE
     misc/dllmain.c
     misc/efs.c
+    misc/evntrace.c
     misc/hwprofiles.c
     misc/logon.c
     misc/msi.c
