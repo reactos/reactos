@@ -432,13 +432,13 @@
 432 stdcall OpenServiceA(long str long)
 433 stdcall OpenServiceW(long wstr long)
 434 stdcall OpenThreadToken(long long long ptr)
-435 stub OpenTraceA
-436 stub OpenTraceW
+435 stdcall -ret64 OpenTraceA(ptr)
+436 stdcall -ret64 OpenTraceW(ptr)
 437 stdcall PrivilegeCheck(ptr ptr ptr)
 438 stdcall PrivilegedServiceAuditAlarmA(str str long ptr long)
 439 stdcall PrivilegedServiceAuditAlarmW(wstr wstr long ptr long)
 440 stub ProcessIdleTasks
-441 stub ProcessTrace
+441 stdcall ProcessTrace(ptr long ptr ptr)
 442 stdcall QueryAllTracesA(ptr long ptr) ntdll.EtwQueryAllTracesA
 443 stdcall QueryAllTracesW(ptr long ptr) ntdll.EtwQueryAllTracesW
 444 stdcall QueryRecoveryAgentsOnEncryptedFile(wstr ptr)
