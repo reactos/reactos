@@ -640,7 +640,7 @@ WSPCloseSocket(IN SOCKET Handle,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if(!NT_SUCCESS(Status))
@@ -883,7 +883,7 @@ WSPBind(SOCKET Handle,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if (!NT_SUCCESS(Status))
@@ -998,7 +998,7 @@ WSPListen(SOCKET Handle,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if( !NT_SUCCESS(Status) )
@@ -1145,7 +1145,7 @@ WSPSelect(IN int nfds,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if(!NT_SUCCESS(Status))
@@ -1477,7 +1477,7 @@ WSPAccept(SOCKET Handle,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if( !NT_SUCCESS(Status) )
@@ -1851,7 +1851,7 @@ WSPConnect(SOCKET Handle,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if (!NT_SUCCESS(Status))
@@ -2087,7 +2087,7 @@ WSPShutdown(SOCKET Handle,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if( !NT_SUCCESS(Status) )
@@ -2173,7 +2173,7 @@ WSPGetSockName(IN SOCKET Handle,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if( !NT_SUCCESS(Status) )
@@ -2280,7 +2280,7 @@ WSPGetPeerName(IN SOCKET s,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if( !NT_SUCCESS(Status) )
@@ -3176,7 +3176,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if( !NT_SUCCESS(Status) )
@@ -3301,7 +3301,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if( !NT_SUCCESS(Status) )
@@ -3435,7 +3435,7 @@ int CreateContext(PSOCKET_INFORMATION Socket)
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
                            NULL,
-                           1,
+                           SynchronizationEvent,
                            FALSE);
 
     if( !NT_SUCCESS(Status) )
