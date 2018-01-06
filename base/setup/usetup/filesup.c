@@ -355,9 +355,9 @@ SetupCopyFile(
         {
             FILE_BASIC_INFORMATION FileBasicInfo;
 
-            /* Reattempt to open it */
+            /* Reattempt to open it with limited access */
             Status = NtCreateFile(&FileHandleDest,
-                                  GENERIC_WRITE | SYNCHRONIZE,
+                                  FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
                                   &ObjectAttributes,
                                   &IoStatusBlock,
                                   NULL,
@@ -369,10 +369,7 @@ SetupCopyFile(
                                   FILE_SYNCHRONOUS_IO_NONALERT,
                                   NULL,
                                   0);
-            /* Fail for real if we cannot open it that way
-             * XXX: actually, we should try to refine access rights
-             * to only have write_attributes, should be enough
-             */
+            /* Fail for real if we cannot open it that way */
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtCreateFile failed: %x, %wZ\n", Status, &FileName);
