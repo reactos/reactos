@@ -20,8 +20,8 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/inffile.h
- * PURPOSE:         .inf files support functions
- * PROGRAMMERS:     Hervé Poussineau
+ * PURPOSE:         Interfacing with Setup* API .INF Files support functions
+ * PROGRAMMERS:     HervÃ© Poussineau
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
@@ -50,11 +50,11 @@ extern VOID InfSetHeap(PVOID Heap);
 
 HINF WINAPI
 INF_OpenBufferedFileA(
-    IN PSTR FileBuffer,
-    IN ULONG FileSize,
-    IN PCSTR InfClass,
-    IN DWORD InfStyle,
-    IN LCID LocaleId,
+    IN  PSTR FileBuffer,
+    IN  ULONG FileSize,
+    IN  PCSTR InfClass,
+    IN  DWORD InfStyle,
+    IN  LCID LocaleId,
     OUT PUINT ErrorLine);
 
 /* EOF */

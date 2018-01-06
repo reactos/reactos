@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/inffile.c
- * PURPOSE:         .inf files support functions
- * PROGRAMMERS:     Hervé Poussineau
+ * PROJECT:         ReactOS GUI first stage setup application
+ * FILE:            base/setup/lib/infsupp.c
+ * PURPOSE:         Interfacing with Setup* API .INF Files support functions
+ * PROGRAMMERS:     HervÃ© Poussineau
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
@@ -16,7 +16,17 @@
 
 /* SETUP* API COMPATIBILITY FUNCTIONS ****************************************/
 
-/* Functions from the INFLIB library */
+/*
+ * This function corresponds to an undocumented but exported SetupAPI function
+ * that exists since WinNT4 and is still present in Win10.
+ * The returned string pointer is a read-only pointer to a string in the
+ * maintained INF cache, and is always in UNICODE (on NT systems).
+ */
+PCWSTR
+WINAPI
+pSetupGetField(
+    IN PINFCONTEXT Context,
+    IN ULONG FieldIndex);
 
 /* SetupOpenInfFileW with support for a user-provided LCID */
 HINF
@@ -49,6 +59,20 @@ SetupOpenInfFileExW(
                              InfStyle,
                              ErrorLine);
 }
+
+
+/* GLOBALS *******************************************************************/
+
+pSpInfCloseInfFile  SpInfCloseInfFile  = SetupCloseInfFile;
+pSpInfFindFirstLine SpInfFindFirstLine = SetupFindFirstLineW;
+pSpInfFindNextLine  SpInfFindNextLine  = SetupFindNextLine;
+pSpInfGetFieldCount SpInfGetFieldCount = SetupGetFieldCount;
+pSpInfGetBinaryField  SpInfGetBinaryField  = SetupGetBinaryField;
+pSpInfGetIntField     SpInfGetIntField     = SetupGetIntField;
+pSpInfGetMultiSzField SpInfGetMultiSzField = SetupGetMultiSzFieldW;
+pSpInfGetStringField  SpInfGetStringField  = SetupGetStringFieldW;
+pSpInfGetField    SpInfGetField    = pSetupGetField;
+pSpInfOpenInfFile SpInfOpenInfFile = SetupOpenInfFileExW;
 
 
 /* HELPER FUNCTIONS **********************************************************/

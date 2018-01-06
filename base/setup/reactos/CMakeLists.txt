@@ -7,8 +7,9 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
+    spapisup/fileqsup.c
+    spapisup/infsupp.c
     drivepage.c
-    inffile.c
     reactos.c
     reactos.h)
 

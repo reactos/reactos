@@ -55,18 +55,6 @@
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 #endif
 
-#ifdef _M_IX86
-#define Architecture L"x86"
-#elif defined(_M_AMD64)
-#define Architecture L"amd64"
-#elif defined(_M_IA64)
-#define Architecture L"ia64"
-#elif defined(_M_ARM)
-#define Architecture L"arm"
-#elif defined(_M_PPC)
-#define Architecture L"ppc"
-#endif
-
 /* GLOBALS ******************************************************************/
 
 #define REGISTRY_SETUP_MACHINE  L"\\Registry\\Machine\\SYSTEM\\USetup_Machine\\"
@@ -301,13 +289,13 @@ do_reg_operation(HANDLE KeyHandle,
     }
 
   if (!(Flags & FLG_ADDREG_BINVALUETYPE) ||
-      (Type == REG_DWORD && SetupGetFieldCount (Context) == 5))
+      (Type == REG_DWORD && SpInfGetFieldCount(Context) == 5))
     {
       PWCHAR Str = NULL;
 
       if (Type == REG_MULTI_SZ)
         {
-          if (!SetupGetMultiSzFieldW (Context, 5, NULL, 0, &Size))
+          if (!SpInfGetMultiSzField(Context, 5, NULL, 0, &Size))
             Size = 0;
 
           if (Size)
@@ -316,7 +304,7 @@ do_reg_operation(HANDLE KeyHandle,
               if (Str == NULL)
                 return FALSE;
 
-              SetupGetMultiSzFieldW (Context, 5, Str, Size, NULL);
+              SpInfGetMultiSzField(Context, 5, Str, Size, NULL);
             }
 
           if (Flags & FLG_ADDREG_APPEND)
@@ -334,7 +322,7 @@ do_reg_operation(HANDLE KeyHandle,
         }
       else
         {
-          if (!SetupGetStringFieldW(Context, 5, NULL, 0, &Size))
+          if (!SpInfGetStringField(Context, 5, NULL, 0, &Size))
             Size = 0;
 
           if (Size)
@@ -343,7 +331,7 @@ do_reg_operation(HANDLE KeyHandle,
               if (Str == NULL)
                 return FALSE;
 
-              SetupGetStringFieldW(Context, 5, Str, Size, NULL);
+              SpInfGetStringField(Context, 5, Str, Size, NULL);
             }
         }
 
@@ -389,7 +377,7 @@ do_reg_operation(HANDLE KeyHandle,
     {
       PUCHAR Data = NULL;
 
-      if (!SetupGetBinaryField (Context, 5, NULL, 0, &Size))
+      if (!SpInfGetBinaryField(Context, 5, NULL, 0, &Size))
         Size = 0;
 
       if (Size)
@@ -399,7 +387,7 @@ do_reg_operation(HANDLE KeyHandle,
             return FALSE;
 
           DPRINT("setting binary data %wZ len %lu\n", ValueName, Size);
-          SetupGetBinaryField (Context, 5, Data, Size, NULL);
+          SpInfGetBinaryField(Context, 5, Data, Size, NULL);
         }
 
       NtSetValueKey (KeyHandle,
@@ -435,27 +423,27 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
     HANDLE RootKeyHandle, KeyHandle;
     BOOLEAN Ok;
 
-    Ok = SetupFindFirstLineW(hInf, Section, NULL, &Context);
+    Ok = SpInfFindFirstLine(hInf, Section, NULL, &Context);
     if (!Ok)
         return TRUE; /* Don't fail if the section isn't present */
 
-    for (;Ok; Ok = SetupFindNextLine(&Context, &Context))
+    for (;Ok; Ok = SpInfFindNextLine(&Context, &Context))
     {
         /* get root */
-        if (!SetupGetStringFieldW(&Context, 1, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL))
+        if (!SpInfGetStringField(&Context, 1, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL))
             continue;
         RootKeyHandle = GetRootKeyByName(Buffer, &RootKeyName);
         if (!RootKeyHandle)
             continue;
 
         /* get key */
-        if (!SetupGetStringFieldW(&Context, 2, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL))
+        if (!SpInfGetStringField(&Context, 2, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL))
             *Buffer = 0;
 
         DPRINT("KeyName: <%S\\%S>\n", RootKeyName, Buffer);
 
         /* get flags */
-        if (!SetupGetIntField(&Context, 4, (PINT)&Flags))
+        if (!SpInfGetIntField(&Context, 4, (PINT)&Flags))
             Flags = 0;
 
         DPRINT("Flags: %lx\n", Flags);
@@ -492,7 +480,7 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
         }
 
         /* get value name */
-        if (SetupGetStringFieldW(&Context, 3, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL))
+        if (SpInfGetStringField(&Context, 3, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL))
         {
             RtlInitUnicodeString(&Value, Buffer);
             ValuePtr = &Value;
@@ -531,14 +519,14 @@ ImportRegistryFile(
     CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2,
                  SourcePath, FileName);
 
-    hInf = SetupOpenInfFileExW(FileNameBuffer,
-                               NULL,
-                               INF_STYLE_WIN4,
-                               LocaleId,
-                               &ErrorLine);
+    hInf = SpInfOpenInfFile(FileNameBuffer,
+                            NULL,
+                            INF_STYLE_WIN4,
+                            LocaleId,
+                            &ErrorLine);
     if (hInf == INVALID_HANDLE_VALUE)
     {
-        DPRINT1("SetupOpenInfFileEx() failed\n");
+        DPRINT1("SpInfOpenInfFile() failed\n");
         return FALSE;
     }
 
@@ -546,7 +534,7 @@ ImportRegistryFile(
     if (!registry_callback(hInf, L"DelReg", FALSE))
     {
         DPRINT1("registry_callback() failed\n");
-        SetupCloseInfFile(hInf);
+        SpInfCloseInfFile(hInf);
         return FALSE;
     }
 #endif
@@ -554,18 +542,18 @@ ImportRegistryFile(
     if (!registry_callback(hInf, L"AddReg", FALSE))
     {
         DPRINT1("registry_callback() failed\n");
-        SetupCloseInfFile(hInf);
+        SpInfCloseInfFile(hInf);
         return FALSE;
     }
 
-    if (!registry_callback(hInf, L"AddReg.NT" Architecture, FALSE))
+    if (!registry_callback(hInf, L"AddReg.NT" INF_ARCH, FALSE))
     {
         DPRINT1("registry_callback() failed\n");
-        SetupCloseInfFile(hInf);
+        SpInfCloseInfFile(hInf);
         return FALSE;
     }
 
-    SetupCloseInfFile(hInf);
+    SpInfCloseInfFile(hInf);
     return TRUE;
 }
 

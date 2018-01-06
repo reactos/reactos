@@ -10,17 +10,17 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
-    cabinet.c
+    spapisup/cabinet.c
+    spapisup/fileqsup.c
+    spapisup/infsupp.c
     chkdsk.c
     cmdcons.c
     console.c
     consup.c
     devinst.c
-    filequeue.c
     format.c
     fslist.c
     genlist.c
-    inffile.c
     keytrans.c
     mui.c
     partlist.c

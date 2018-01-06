@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/infsupp.c
- * PURPOSE:         Interfacing with Setup* API .inf files support functions
+ * PURPOSE:         Interfacing with Setup* API .INF Files support functions
  * PROGRAMMERS:     Hervé Poussineau
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -15,13 +15,34 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+/*
+ * These externs should be defined by the user of this library.
+ * They are kept there for reference and ease of usage.
+ */
+#if 0
+
+pSpInfCloseInfFile  SpInfCloseInfFile  = NULL;
+pSpInfFindFirstLine SpInfFindFirstLine = NULL;
+pSpInfFindNextLine  SpInfFindNextLine  = NULL;
+pSpInfGetFieldCount SpInfGetFieldCount = NULL;
+pSpInfGetBinaryField  SpInfGetBinaryField  = NULL;
+pSpInfGetIntField     SpInfGetIntField     = NULL;
+pSpInfGetMultiSzField SpInfGetMultiSzField = NULL;
+pSpInfGetStringField  SpInfGetStringField  = NULL;
+pSpInfGetField    SpInfGetField    = NULL;
+pSpInfOpenInfFile SpInfOpenInfFile = NULL;
+
+#endif
+
 /* HELPER FUNCTIONS **********************************************************/
 
 BOOLEAN
 INF_GetDataField(
     IN PINFCONTEXT Context,
     IN ULONG FieldIndex,
-    OUT PWCHAR *Data)
+    OUT PCWSTR* Data)
 {
 #if 0
 
@@ -31,11 +52,11 @@ INF_GetDataField(
 
     *Data = NULL;
 
-    Success = SetupGetStringFieldW(Context,
-                                   FieldIndex,
-                                   NULL,
-                                   0,
-                                   &dwSize);
+    Success = SpInfGetStringField(Context,
+                                  FieldIndex,
+                                  NULL,
+                                  0,
+                                  &dwSize);
     if (!Success)
         return FALSE;
 
@@ -43,11 +64,11 @@ INF_GetDataField(
     if (!InfData)
         return FALSE;
 
-    Success = SetupGetStringFieldW(Context,
-                                   FieldIndex,
-                                   InfData,
-                                   dwSize,
-                                   NULL);
+    Success = SpInfGetStringField(Context,
+                                  FieldIndex,
+                                  InfData,
+                                  dwSize,
+                                  NULL);
     if (!Success)
     {
         RtlFreeHeap(ProcessHeap, 0, InfData);
@@ -59,7 +80,7 @@ INF_GetDataField(
 
 #else
 
-    *Data = (PWCHAR)pSetupGetField(Context, FieldIndex);
+    *Data = SpInfGetField(Context, FieldIndex);
     return !!*Data;
 
 #endif
@@ -68,11 +89,11 @@ INF_GetDataField(
 BOOLEAN
 INF_GetData(
     IN PINFCONTEXT Context,
-    OUT PWCHAR *Key,
-    OUT PWCHAR *Data)
+    OUT PCWSTR* Key,
+    OUT PCWSTR* Data)
 {
     BOOL Success;
-    PWCHAR InfData[2] = {NULL, NULL};
+    PCWSTR InfData[2] = {NULL, NULL};
 
     if (Key)
         *Key = NULL;
@@ -82,11 +103,11 @@ INF_GetData(
 
     /*
      * Verify that the INF file has only one value field, in addition to its key name.
-     * Note that SetupGetFieldCount() does not count the key name as a field.
+     * Note that SpInfGetFieldCount() does not count the key name as a field.
      */
-    if (SetupGetFieldCount(Context) != 1)
+    if (SpInfGetFieldCount(Context) != 1)
     {
-        DPRINT1("SetupGetFieldCount != 1\n");
+        DPRINT1("SpInfGetFieldCount != 1\n");
         return FALSE;
     }
 

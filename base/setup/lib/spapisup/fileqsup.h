@@ -1,30 +1,23 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/filequeue.h
- * PURPOSE:         File queue functions
- * PROGRAMMER:
+ * PROJECT:         ReactOS Setup Library
+ * FILE:            base/setup/lib/fileqsup.h
+ * PURPOSE:         Interfacing with Setup* API File Queue support functions
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once
+
+#include "spapisup.h"
+
+// FIXME: Temporary measure until all the users of this header
+// (usetup...) use or define SetupAPI-conforming APIs.
+#if defined(_SETUPAPI_H_) || defined(_INC_SETUPAPI)
+
+#include <setupapi.h>
+
+#else
 
 #define SPFILENOTIFY_STARTQUEUE         0x00000001
 #define SPFILENOTIFY_ENDQUEUE           0x00000002
@@ -76,67 +69,68 @@ typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(
     IN UINT_PTR Param1,
     IN UINT_PTR Param2);
 
+#endif
+
 
 /* FUNCTIONS ****************************************************************/
 
-HSPFILEQ
-WINAPI
-SetupOpenFileQueue(VOID);
+// #define SetupOpenFileQueue
+typedef HSPFILEQ
+(WINAPI* pSpFileQueueOpen)(VOID);
 
-VOID
-WINAPI
-SetupCloseFileQueue(
+extern pSpFileQueueOpen SpFileQueueOpen;
+
+// #define SetupCloseFileQueue
+typedef BOOL
+(WINAPI* pSpFileQueueClose)(
     IN HSPFILEQ QueueHandle);
 
-#if 0 // This is the API that is declared in setupapi.h and exported by setupapi.dll
-BOOL
-WINAPI
-SetupQueueCopyWNew(
-    IN HSPFILEQ QueueHandle,
-    IN PCWSTR SourceRootPath,
-    IN PCWSTR SourcePath,
-    IN PCWSTR SourceFileName,
-    IN PCWSTR SourceDescription,
-    IN PCWSTR SourceTagFile,
-    IN PCWSTR TargetDirectory,
-    IN PCWSTR TargetFileName,
-    IN DWORD CopyStyle);
-#endif
+extern pSpFileQueueClose SpFileQueueClose;
 
-/* A simplified version of SetupQueueCopyW that wraps Cabinet support around */
-BOOL
-WINAPI
-SetupQueueCopyWithCab(          // SetupQueueCopyW
+// #define SetupQueueCopyW
+typedef BOOL
+(WINAPI* pSpFileQueueCopy)(
     IN HSPFILEQ QueueHandle,
-    IN PCWSTR SourceCabinet OPTIONAL,
     IN PCWSTR SourceRootPath,
     IN PCWSTR SourcePath OPTIONAL,
     IN PCWSTR SourceFileName,
+    IN PCWSTR SourceDescription OPTIONAL,
+    IN PCWSTR SourceCabinet OPTIONAL,
+    IN PCWSTR SourceTagFile OPTIONAL,
     IN PCWSTR TargetDirectory,
-    IN PCWSTR TargetFileName OPTIONAL);
+    IN PCWSTR TargetFileName OPTIONAL,
+    IN ULONG CopyStyle);
 
-BOOL
-WINAPI
-SetupQueueDeleteW(
+extern pSpFileQueueCopy SpFileQueueCopy;
+
+// #define SetupQueueDeleteW
+typedef BOOL
+(WINAPI* pSpFileQueueDelete)(
     IN HSPFILEQ QueueHandle,
     IN PCWSTR PathPart1,
     IN PCWSTR PathPart2 OPTIONAL);
 
-BOOL
-WINAPI
-SetupQueueRenameW(
+extern pSpFileQueueDelete SpFileQueueDelete;
+
+// #define SetupQueueRenameW
+typedef BOOL
+(WINAPI* pSpFileQueueRename)(
     IN HSPFILEQ QueueHandle,
     IN PCWSTR SourcePath,
     IN PCWSTR SourceFileName OPTIONAL,
     IN PCWSTR TargetPath OPTIONAL,
     IN PCWSTR TargetFileName);
 
-BOOL
-WINAPI
-SetupCommitFileQueueW(
+extern pSpFileQueueRename SpFileQueueRename;
+
+// #define SetupCommitFileQueueW
+typedef BOOL
+(WINAPI* pSpFileQueueCommit)(
     IN HWND Owner,
     IN HSPFILEQ QueueHandle,
     IN PSP_FILE_CALLBACK_W MsgHandler,
     IN PVOID Context OPTIONAL);
+
+extern pSpFileQueueCommit SpFileQueueCommit;
 
 /* EOF */

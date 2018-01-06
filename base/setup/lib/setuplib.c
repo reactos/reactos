@@ -32,7 +32,7 @@ CheckUnattendedSetup(
     HINF UnattendInf;
     UINT ErrorLine;
     INT IntValue;
-    PWCHAR Value;
+    PCWSTR Value;
     WCHAR UnattendInfPath[MAX_PATH];
 
     CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
@@ -47,22 +47,21 @@ CheckUnattendedSetup(
     }
 
     /* Load 'unattend.inf' from installation media */
-    UnattendInf = SetupOpenInfFileExW(UnattendInfPath,
-                                      NULL,
-                                      INF_STYLE_OLDNT,
-                                      pSetupData->LanguageId,
-                                      &ErrorLine);
-
+    UnattendInf = SpInfOpenInfFile(UnattendInfPath,
+                                   NULL,
+                                   INF_STYLE_OLDNT,
+                                   pSetupData->LanguageId,
+                                   &ErrorLine);
     if (UnattendInf == INVALID_HANDLE_VALUE)
     {
-        DPRINT("SetupOpenInfFileExW() failed\n");
+        DPRINT("SpInfOpenInfFile() failed\n");
         return;
     }
 
     /* Open 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"Signature", &Context))
+    if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"Signature", &Context))
     {
-        DPRINT("SetupFindFirstLineW() failed for section 'Unattend'\n");
+        DPRINT("SpInfFindFirstLine() failed for section 'Unattend'\n");
         goto Quit;
     }
 
@@ -84,7 +83,7 @@ CheckUnattendedSetup(
     INF_FreeData(Value);
 
     /* Check if Unattend setup is enabled */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"UnattendSetupEnabled", &Context))
+    if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"UnattendSetupEnabled", &Context))
     {
         DPRINT("Can't find key 'UnattendSetupEnabled'\n");
         goto Quit;
@@ -106,37 +105,37 @@ CheckUnattendedSetup(
     INF_FreeData(Value);
 
     /* Search for 'DestinationDiskNumber' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
+    if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
     {
-        DPRINT("SetupFindFirstLine() failed for key 'DestinationDiskNumber'\n");
+        DPRINT("SpInfFindFirstLine() failed for key 'DestinationDiskNumber'\n");
         goto Quit;
     }
 
-    if (!SetupGetIntField(&Context, 1, &IntValue))
+    if (!SpInfGetIntField(&Context, 1, &IntValue))
     {
-        DPRINT("SetupGetIntField() failed for key 'DestinationDiskNumber'\n");
+        DPRINT("SpInfGetIntField() failed for key 'DestinationDiskNumber'\n");
         goto Quit;
     }
 
     pSetupData->DestinationDiskNumber = (LONG)IntValue;
 
     /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
+    if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
     {
-        DPRINT("SetupFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
+        DPRINT("SpInfFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
         goto Quit;
     }
 
-    if (!SetupGetIntField(&Context, 1, &IntValue))
+    if (!SpInfGetIntField(&Context, 1, &IntValue))
     {
-        DPRINT("SetupGetIntField() failed for key 'DestinationPartitionNumber'\n");
+        DPRINT("SpInfGetIntField() failed for key 'DestinationPartitionNumber'\n");
         goto Quit;
     }
 
     pSetupData->DestinationPartitionNumber = (LONG)IntValue;
 
     /* Search for 'InstallationDirectory' in the 'Unattend' section (optional) */
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
     {
         /* Get pointer 'InstallationDirectory' key */
         if (!INF_GetData(&Context, NULL, &Value))
@@ -157,9 +156,9 @@ CheckUnattendedSetup(
 
     /* Search for 'MBRInstallType' in the 'Unattend' section */
     pSetupData->MBRInstallType = -1;
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
     {
-        if (SetupGetIntField(&Context, 1, &IntValue))
+        if (SpInfGetIntField(&Context, 1, &IntValue))
         {
             pSetupData->MBRInstallType = IntValue;
         }
@@ -167,25 +166,25 @@ CheckUnattendedSetup(
 
     /* Search for 'FormatPartition' in the 'Unattend' section */
     pSetupData->FormatPartition = 0;
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"FormatPartition", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"FormatPartition", &Context))
     {
-        if (SetupGetIntField(&Context, 1, &IntValue))
+        if (SpInfGetIntField(&Context, 1, &IntValue))
         {
             pSetupData->FormatPartition = IntValue;
         }
     }
 
     pSetupData->AutoPartition = 0;
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"AutoPartition", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"AutoPartition", &Context))
     {
-        if (SetupGetIntField(&Context, 1, &IntValue))
+        if (SpInfGetIntField(&Context, 1, &IntValue))
         {
             pSetupData->AutoPartition = IntValue;
         }
     }
 
     /* Search for LocaleID in the 'Unattend' section */
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"LocaleID", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"LocaleID", &Context))
     {
         if (INF_GetData(&Context, NULL, &Value))
         {
@@ -198,7 +197,7 @@ CheckUnattendedSetup(
     }
 
 Quit:
-    SetupCloseInfFile(UnattendInf);
+    SpInfCloseInfFile(UnattendInf);
 }
 
 VOID
@@ -505,7 +504,7 @@ LoadSetupInf(
     INFCONTEXT Context;
     UINT ErrorLine;
     INT IntValue;
-    PWCHAR Value;
+    PCWSTR Value;
     WCHAR FileNameBuffer[MAX_PATH];
 
     CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2,
@@ -514,17 +513,16 @@ LoadSetupInf(
     DPRINT("SetupInf path: '%S'\n", FileNameBuffer);
 
     pSetupData->SetupInf =
-        SetupOpenInfFileExW(FileNameBuffer,
-                            NULL,
-                            /* INF_STYLE_WIN4 | */ INF_STYLE_OLDNT,
-                            pSetupData->LanguageId,
-                            &ErrorLine);
-
+        SpInfOpenInfFile(FileNameBuffer,
+                         NULL,
+                         /* INF_STYLE_WIN4 | */ INF_STYLE_OLDNT,
+                         pSetupData->LanguageId,
+                         &ErrorLine);
     if (pSetupData->SetupInf == INVALID_HANDLE_VALUE)
         return ERROR_LOAD_TXTSETUPSIF;
 
     /* Open 'Version' section */
-    if (!SetupFindFirstLineW(pSetupData->SetupInf, L"Version", L"Signature", &Context))
+    if (!SpInfFindFirstLine(pSetupData->SetupInf, L"Version", L"Signature", &Context))
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     /* Get pointer 'Signature' key */
@@ -541,13 +539,13 @@ LoadSetupInf(
     INF_FreeData(Value);
 
     /* Open 'DiskSpaceRequirements' section */
-    if (!SetupFindFirstLineW(pSetupData->SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
+    if (!SpInfFindFirstLine(pSetupData->SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     pSetupData->RequiredPartitionDiskSpace = ~0;
 
     /* Get the 'FreeSysPartDiskSpace' value */
-    if (!SetupGetIntField(&Context, 1, &IntValue))
+    if (!SpInfGetIntField(&Context, 1, &IntValue))
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     pSetupData->RequiredPartitionDiskSpace = (ULONG)IntValue;
@@ -559,7 +557,7 @@ LoadSetupInf(
     //
 
     /* Update the Setup Source paths */
-    if (SetupFindFirstLineW(pSetupData->SetupInf, L"SetupData", L"SetupSourceDevice", &Context))
+    if (SpInfFindFirstLine(pSetupData->SetupInf, L"SetupData", L"SetupSourceDevice", &Context))
     {
         /*
          * Get optional pointer 'SetupSourceDevice' key, its presence
@@ -572,7 +570,7 @@ LoadSetupInf(
             RtlCreateUnicodeString(&pSetupData->SourceRootPath, Value);
             INF_FreeData(Value);
 
-            if (!SetupFindFirstLineW(pSetupData->SetupInf, L"SetupData", L"SetupSourcePath", &Context))
+            if (!SpInfFindFirstLine(pSetupData->SetupInf, L"SetupData", L"SetupSourcePath", &Context))
             {
                 /* The 'SetupSourcePath' value is mandatory! */
                 return ERROR_CORRUPT_TXTSETUPSIF;
@@ -594,7 +592,7 @@ LoadSetupInf(
 
     /* Search for 'DefaultPath' in the 'SetupData' section */
     pSetupData->InstallationDirectory[0] = 0;
-    if (SetupFindFirstLineW(pSetupData->SetupInf, L"SetupData", L"DefaultPath", &Context))
+    if (SpInfFindFirstLine(pSetupData->SetupInf, L"SetupData", L"DefaultPath", &Context))
     {
         /* Get pointer 'DefaultPath' key */
         if (!INF_GetData(&Context, NULL, &Value))
@@ -631,6 +629,10 @@ InitDestinationPaths(
             PartEntry->PartitionNumber);
     RtlCreateUnicodeString(&pSetupData->DestinationRootPath, PathBuffer);
     DPRINT("DestinationRootPath: %wZ\n", &pSetupData->DestinationRootPath);
+
+    // FIXME! Which variable to choose?
+    if (!InstallationDir)
+        InstallationDir = pSetupData->InstallationDirectory;
 
 /** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
     /* Create 'pSetupData->DestinationArcPath' */
@@ -776,7 +778,7 @@ FinishSetup(
     }
 
     /* Close the Setup INF */
-    SetupCloseInfFile(pSetupData->SetupInf);
+    SpInfCloseInfFile(pSetupData->SetupInf);
 }
 
 /*
@@ -802,9 +804,9 @@ UpdateRegistry(
     ERROR_NUMBER ErrorNumber;
     NTSTATUS Status;
     INFCONTEXT InfContext;
-    PWSTR Action;
-    PWSTR File;
-    PWSTR Section;
+    PCWSTR Action;
+    PCWSTR File;
+    PCWSTR Section;
     BOOLEAN Success;
     BOOLEAN ShouldRepairRegistry = FALSE;
     BOOLEAN Delete;
@@ -858,13 +860,13 @@ DoUpdate:
          * "repair" (aka. recreate: ShouldRepairRegistry == TRUE).
          */
 
-        Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Fresh", NULL, &InfContext);       // Windows-compatible
+        Success = SpInfFindFirstLine(SetupInf, L"HiveInfs.Fresh", NULL, &InfContext);       // Windows-compatible
         if (!Success)
-            Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Install", NULL, &InfContext); // ReactOS-specific
+            Success = SpInfFindFirstLine(SetupInf, L"HiveInfs.Install", NULL, &InfContext); // ReactOS-specific
 
         if (!Success)
         {
-            DPRINT1("SetupFindFirstLine() failed\n");
+            DPRINT1("SpInfFindFirstLine() failed\n");
             ErrorNumber = ERROR_FIND_REGISTRY;
             goto Cleanup;
         }
@@ -877,7 +879,7 @@ DoUpdate:
          * we only update the hives.
          */
 
-        Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Upgrade", NULL, &InfContext);
+        Success = SpInfFindFirstLine(SetupInf, L"HiveInfs.Upgrade", NULL, &InfContext);
         if (!Success)
         {
             /* Nothing to do for update! */
@@ -929,7 +931,7 @@ DoUpdate:
             ErrorNumber = ERROR_IMPORT_HIVE;
             goto Cleanup;
         }
-    } while (SetupFindNextLine(&InfContext, &InfContext));
+    } while (SpInfFindNextLine(&InfContext, &InfContext));
 
     if (!RepairUpdateFlag || ShouldRepairRegistry)
     {

@@ -16,11 +16,13 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/filequeue.c
- * PURPOSE:         File queue functions
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * FILE:            base/setup/lib/fileqsup.c
+ * PURPOSE:         Interfacing with Setup* API File Queue support functions
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *****************************************************************/
@@ -30,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-/* INCLUDES *****************************************************************/
+/* DEFINITIONS **************************************************************/
 
 typedef struct _QUEUEENTRY
 {
@@ -210,7 +212,7 @@ SetupDeleteQueueEntry(
     RtlFreeHeap(ProcessHeap, 0, Entry);
 }
 
-VOID
+BOOL
 WINAPI
 SetupCloseFileQueue(
     IN HSPFILEQ QueueHandle)
@@ -220,7 +222,7 @@ SetupCloseFileQueue(
     PQUEUEENTRY Entry;
 
     if (QueueHandle == NULL)
-        return;
+        return FALSE;
 
     QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
 
@@ -250,19 +252,24 @@ SetupCloseFileQueue(
 
     /* Delete queue header */
     RtlFreeHeap(ProcessHeap, 0, QueueHeader);
+
+    return TRUE;
 }
 
 /* A simplified version of SetupQueueCopyW that wraps Cabinet support around */
 BOOL
 WINAPI
-SetupQueueCopyWithCab(          // SetupQueueCopyW
+SetupQueueCopyWithCab(
     IN HSPFILEQ QueueHandle,
-    IN PCWSTR SourceCabinet OPTIONAL,
     IN PCWSTR SourceRootPath,
     IN PCWSTR SourcePath OPTIONAL,
     IN PCWSTR SourceFileName,
+    IN PCWSTR SourceDescription OPTIONAL,
+    IN PCWSTR SourceCabinet OPTIONAL,
+    IN PCWSTR SourceTagFile OPTIONAL,
     IN PCWSTR TargetDirectory,
-    IN PCWSTR TargetFileName OPTIONAL)
+    IN PCWSTR TargetFileName OPTIONAL,
+    IN ULONG CopyStyle)
 {
     PFILEQUEUEHEADER QueueHeader;
     PQUEUEENTRY Entry;
@@ -867,5 +874,15 @@ SetupCommitFileQueueW(
 
     return Success;
 }
+
+
+/* GLOBALS *******************************************************************/
+
+pSpFileQueueOpen   SpFileQueueOpen   = SetupOpenFileQueue;
+pSpFileQueueClose  SpFileQueueClose  = SetupCloseFileQueue;
+pSpFileQueueCopy   SpFileQueueCopy   = SetupQueueCopyWithCab;
+pSpFileQueueDelete SpFileQueueDelete = SetupQueueDeleteW;
+pSpFileQueueRename SpFileQueueRename = SetupQueueRenameW;
+pSpFileQueueCommit SpFileQueueCommit = SetupCommitFileQueueW;
 
 /* EOF */

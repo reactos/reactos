@@ -71,8 +71,6 @@ static PGENERIC_LIST NtOsInstallsList = NULL;
 
 // HACK: Temporary compatibility code.
 #if 1
-    #define SetupQueueCopy SetupQueueCopyWithCab
-
     static CABINET_CONTEXT CabinetContext;
     #define CabinetInitialize() (CabinetInitialize(&CabinetContext))
     #define CabinetSetEventHandlers(a,b,c) (CabinetSetEventHandlers(&CabinetContext,(a),(b),(c)))
@@ -3485,17 +3483,17 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
 static BOOLEAN
 AddSectionToCopyQueueCab(HINF InfFile,
-                         PWCHAR SectionName,
-                         PWCHAR SourceCabinet,
+                         PCWSTR SectionName,
+                         PCWSTR SourceCabinet,
                          PCUNICODE_STRING DestinationPath,
                          PINPUT_RECORD Ir)
 {
     INFCONTEXT FilesContext;
     INFCONTEXT DirContext;
-    PWCHAR FileKeyName;
-    PWCHAR FileKeyValue;
-    PWCHAR DirKeyValue;
-    PWCHAR TargetFileName;
+    PCWSTR FileKeyName;
+    PCWSTR FileKeyValue;
+    PCWSTR DirKeyValue;
+    PCWSTR TargetFileName;
     WCHAR FileDstPath[MAX_PATH];
 
     /*
@@ -3505,7 +3503,7 @@ AddSectionToCopyQueueCab(HINF InfFile,
      */
 
     /* Search for the SectionName section */
-    if (!SetupFindFirstLineW(InfFile, SectionName, NULL, &FilesContext))
+    if (!SpInfFindFirstLine(InfFile, SectionName, NULL, &FilesContext))
     {
         MUIDisplayError(ERROR_TXTSETUP_SECTION, Ir, POPUP_WAIT_ENTER, SectionName);
         return FALSE;
@@ -3531,7 +3529,7 @@ AddSectionToCopyQueueCab(HINF InfFile,
         DPRINT("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
 
         /* Lookup target directory */
-        if (!SetupFindFirstLineW(InfFile, L"Directories", FileKeyValue, &DirContext))
+        if (!SpInfFindFirstLine(InfFile, L"Directories", FileKeyValue, &DirContext))
         {
             /* FIXME: Handle error! */
             DPRINT1("SetupFindFirstLine() failed\n");
@@ -3557,7 +3555,7 @@ AddSectionToCopyQueueCab(HINF InfFile,
         ULONG Length = wcslen(DirKeyValue);
         if ((Length > 0) && (DirKeyValue[Length - 1] == L'\\'))
             Length--;
-        DirKeyValue[Length] = UNICODE_NULL;
+        *((PWSTR)DirKeyValue + Length) = UNICODE_NULL;
         }
 
         /* Build the full target path */
@@ -3586,22 +3584,25 @@ AddSectionToCopyQueueCab(HINF InfFile,
         }
 #endif
 
-        if (!SetupQueueCopy(USetupData.SetupFileQueue,
-                            SourceCabinet,
-                            USetupData.SourceRootPath.Buffer,
-                            USetupData.SourceRootDir.Buffer,
-                            FileKeyName,
-                            FileDstPath,
-                            TargetFileName))
+        if (!SpFileQueueCopy((HSPFILEQ)USetupData.SetupFileQueue,
+                             USetupData.SourceRootPath.Buffer,
+                             USetupData.SourceRootDir.Buffer,
+                             FileKeyName,
+                             NULL,
+                             SourceCabinet,
+                             NULL,
+                             FileDstPath,
+                             TargetFileName,
+                             0 /* FIXME */))
         {
             /* FIXME: Handle error! */
-            DPRINT1("SetupQueueCopy() failed\n");
+            DPRINT1("SpFileQueueCopy() failed\n");
         }
 
         INF_FreeData(FileKeyName);
         INF_FreeData(TargetFileName);
         INF_FreeData(DirKeyValue);
-    } while (SetupFindNextLine(&FilesContext, &FilesContext));
+    } while (SpInfFindNextLine(&FilesContext, &FilesContext));
 
     return TRUE;
 }
@@ -3609,17 +3610,17 @@ AddSectionToCopyQueueCab(HINF InfFile,
 
 static BOOLEAN
 AddSectionToCopyQueue(HINF InfFile,
-                      PWCHAR SectionName,
-                      PWCHAR SourceCabinet,
+                      PCWSTR SectionName,
+                      PCWSTR SourceCabinet,
                       PCUNICODE_STRING DestinationPath,
                       PINPUT_RECORD Ir)
 {
     INFCONTEXT FilesContext;
     INFCONTEXT DirContext;
-    PWCHAR FileKeyName;
-    PWCHAR FileKeyValue;
-    PWCHAR DirKeyValue;
-    PWCHAR TargetFileName;
+    PCWSTR FileKeyName;
+    PCWSTR FileKeyValue;
+    PCWSTR DirKeyValue;
+    PCWSTR TargetFileName;
     WCHAR CompleteOrigDirName[512]; // FIXME: MAX_PATH is not enough?
     WCHAR FileDstPath[MAX_PATH];
 
@@ -3632,7 +3633,7 @@ AddSectionToCopyQueue(HINF InfFile,
      */
 
     /* Search for the SectionName section */
-    if (!SetupFindFirstLineW(InfFile, SectionName, NULL, &FilesContext))
+    if (!SpInfFindFirstLine(InfFile, SectionName, NULL, &FilesContext))
     {
         MUIDisplayError(ERROR_TXTSETUP_SECTION, Ir, POPUP_WAIT_ENTER, SectionName);
         return FALSE;
@@ -3669,7 +3670,7 @@ AddSectionToCopyQueue(HINF InfFile,
         DPRINT("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
 
         /* Lookup target directory */
-        if (!SetupFindFirstLineW(InfFile, L"Directories", FileKeyValue, &DirContext))
+        if (!SpInfFindFirstLine(InfFile, L"Directories", FileKeyValue, &DirContext))
         {
             /* FIXME: Handle error! */
             DPRINT1("SetupFindFirstLine() failed\n");
@@ -3726,7 +3727,7 @@ AddSectionToCopyQueue(HINF InfFile,
         ULONG Length = wcslen(DirKeyValue);
         if ((Length > 0) && (DirKeyValue[Length - 1] == L'\\'))
             Length--;
-        DirKeyValue[Length] = UNICODE_NULL;
+        *((PWSTR)DirKeyValue + Length) = UNICODE_NULL;
         }
 
         /* Build the full target path */
@@ -3755,22 +3756,25 @@ AddSectionToCopyQueue(HINF InfFile,
         }
 #endif
 
-        if (!SetupQueueCopy(USetupData.SetupFileQueue,
-                            SourceCabinet,
-                            USetupData.SourceRootPath.Buffer,
-                            CompleteOrigDirName,
-                            FileKeyName,
-                            FileDstPath,
-                            TargetFileName))
+        if (!SpFileQueueCopy((HSPFILEQ)USetupData.SetupFileQueue,
+                             USetupData.SourceRootPath.Buffer,
+                             CompleteOrigDirName,
+                             FileKeyName,
+                             NULL,
+                             SourceCabinet,
+                             NULL,
+                             FileDstPath,
+                             TargetFileName,
+                             0 /* FIXME */))
         {
             /* FIXME: Handle error! */
-            DPRINT1("SetupQueueCopy() failed\n");
+            DPRINT1("SpFileQueueCopy() failed\n");
         }
 
         INF_FreeData(FileKeyName);
         INF_FreeData(TargetFileName);
         INF_FreeData(DirKeyValue);
-    } while (SetupFindNextLine(&FilesContext, &FilesContext));
+    } while (SpInfFindNextLine(&FilesContext, &FilesContext));
 
     return TRUE;
 }
@@ -3778,13 +3782,13 @@ AddSectionToCopyQueue(HINF InfFile,
 
 static BOOLEAN
 PrepareCopyPageInfFile(HINF InfFile,
-                       PWCHAR SourceCabinet,
+                       PCWSTR SourceCabinet,
                        PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
     INFCONTEXT DirContext;
     PWCHAR AdditionalSectionName = NULL;
-    PWCHAR DirKeyValue;
+    PCWSTR DirKeyValue;
     WCHAR PathBuffer[MAX_PATH];
 
     /* Add common files */
@@ -3829,7 +3833,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     }
 
     /* Search for the 'Directories' section */
-    if (!SetupFindFirstLineW(InfFile, L"Directories", NULL, &DirContext))
+    if (!SpInfFindFirstLine(InfFile, L"Directories", NULL, &DirContext))
     {
         if (SourceCabinet)
             MUIDisplayError(ERROR_CABINET_SECTION, Ir, POPUP_WAIT_ENTER, L"Directories");
@@ -3898,7 +3902,7 @@ PrepareCopyPageInfFile(HINF InfFile,
         }
 
         INF_FreeData(DirKeyValue);
-    } while (SetupFindNextLine(&DirContext, &DirContext));
+    } while (SpInfFindNextLine(&DirContext, &DirContext));
 
     return TRUE;
 }
@@ -3925,14 +3929,14 @@ PrepareCopyPage(PINPUT_RECORD Ir)
     WCHAR PathBuffer[MAX_PATH];
     INFCONTEXT CabinetsContext;
     ULONG InfFileSize;
-    PWCHAR KeyValue;
+    PCWSTR KeyValue;
     UINT ErrorLine;
     PVOID InfFileData;
 
     MUIDisplayPage(PREPARE_COPY_PAGE);
 
     /* Create the file queue */
-    USetupData.SetupFileQueue = SetupOpenFileQueue();
+    USetupData.SetupFileQueue = SpFileQueueOpen();
     if (USetupData.SetupFileQueue == NULL)
     {
         MUIDisplayError(ERROR_COPY_QUEUE, Ir, POPUP_WAIT_ENTER);
@@ -3946,7 +3950,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
     }
 
     /* Search for the 'Cabinets' section */
-    if (!SetupFindFirstLineW(USetupData.SetupInf, L"Cabinets", NULL, &CabinetsContext))
+    if (!SpInfFindFirstLine(USetupData.SetupInf, L"Cabinets", NULL, &CabinetsContext))
     {
         return FILE_COPY_PAGE;
     }
@@ -4005,7 +4009,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
             /* FIXME: show an error dialog */
             return QUIT_PAGE;
         }
-    } while (SetupFindNextLine(&CabinetsContext, &CabinetsContext));
+    } while (SpInfFindNextLine(&CabinetsContext, &CabinetsContext));
 
     return FILE_COPY_PAGE;
 }
@@ -4148,7 +4152,7 @@ FileCopyCallback(PVOID Context,
  *
  * SIDEEFFECTS
  *  Calls SetupCommitFileQueueW
- *  Calls SetupCloseFileQueue
+ *  Calls SpFileQueueClose
  *
  * RETURNS
  *   Number of the next page.
@@ -4210,13 +4214,13 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   "Free Memory");
 
     /* Do the file copying */
-    SetupCommitFileQueueW(NULL,
-                          USetupData.SetupFileQueue,
-                          FileCopyCallback,
-                          &CopyContext);
+    SpFileQueueCommit(NULL,
+                      USetupData.SetupFileQueue,
+                      FileCopyCallback,
+                      &CopyContext);
 
     /* If we get here, we're done, so cleanup the queue and progress bar */
-    SetupCloseFileQueue(USetupData.SetupFileQueue);
+    SpFileQueueClose(USetupData.SetupFileQueue);
     DestroyProgressBar(CopyContext.ProgressBar);
     DestroyProgressBar(CopyContext.MemoryBars[0]);
     DestroyProgressBar(CopyContext.MemoryBars[1]);

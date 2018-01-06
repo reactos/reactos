@@ -59,14 +59,15 @@
 
 /* Internal Headers */
 #include "consup.h"
-#include "inffile.h"
 #include "progress.h"
-#include "filequeue.h"
 #include "fslist.h"
 #include "partlist.h"
-#include "cabinet.h"
 #include "genlist.h"
 #include "mui.h"
+
+#include "spapisup/inffile.h"
+#include "spapisup/cabinet.h"
+
 
 extern HANDLE ProcessHeap;
 extern BOOLEAN IsUnattendedSetup;
