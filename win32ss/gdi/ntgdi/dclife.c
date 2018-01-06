@@ -112,9 +112,6 @@ DC_InitHack(PDC pdc)
         DC_vCopyState(pdc, defaultDCstate, TRUE);
     }
 
-    TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
-    pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
-
     /* This should never fail */
     ASSERT(pdc->dclevel.ppal);
 }
@@ -371,6 +368,8 @@ DC_vCleanup(PVOID ObjectBody)
     /* Release font */
     if (pdc->dclevel.plfnt)
         LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
+    if (pdc->prfnt)
+        RFONT_vDeleteRFONT(pdc->prfnt);
 
     /*  Free regions */
     if (pdc->dclevel.prgnClip)

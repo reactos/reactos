@@ -554,12 +554,6 @@ DC_hSelectFont(
     PLFONT plfntNew;
     HFONT hlfntOld;
 
-    // Legacy crap that will die with font engine rewrite
-    if (!NT_SUCCESS(TextIntRealizeFont(hlfntNew, NULL)))
-    {
-        return NULL;
-    }
-
     /* Get the current selected font */
     hlfntOld = pdc->dclevel.plfnt->BaseObject.hHmgr;
 

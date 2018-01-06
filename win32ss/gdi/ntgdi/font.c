@@ -51,10 +51,8 @@ GreGetKerningPairs(
     LPKERNINGPAIR krnpair)
 {
   PDC dc;
-  PDC_ATTR pdcattr;
-  PTEXTOBJ TextObj;
-  PFONTGDI FontGDI;
-  DWORD Count;
+  PRFONT prfnt;
+  DWORD Count, ret = 0;
   KERNINGPAIR *pKP;
 
   dc = DC_LockDc(hDC);
@@ -64,41 +62,39 @@ GreGetKerningPairs(
      return 0;
   }
 
-  pdcattr = dc->pdcattr;
-  TextObj = RealizeFontInit(pdcattr->hlfntNew);
-  DC_UnlockDc(dc);
-
-  if (!TextObj)
+  prfnt = DC_prfnt(dc);
+  if (!prfnt)
   {
      EngSetLastError(ERROR_INVALID_HANDLE);
-     return 0;
+     goto cleanup;
   }
 
-  FontGDI = ObjToGDI(TextObj->Font, FONT);
-  TEXTOBJ_UnlockText(TextObj);
-
-  Count = ftGdiGetKerningPairs(FontGDI,0,NULL);
+  Count = ftGdiGetKerningPairs(prfnt,0,NULL);
 
   if ( Count && krnpair )
   {
      if (Count > NumPairs)
      {
         EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return 0;
+        goto cleanup;
      }
      pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), GDITAG_TEXT);
      if (!pKP)
      {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return 0;
+        goto cleanup;
      }
-     ftGdiGetKerningPairs(FontGDI,Count,pKP);
+     ftGdiGetKerningPairs(prfnt,Count,pKP);
 
      RtlCopyMemory(krnpair, pKP, Count * sizeof(KERNINGPAIR));
 
      ExFreePoolWithTag(pKP,GDITAG_TEXT);
   }
-  return Count;
+
+  ret = Count;
+cleanup:
+  DC_UnlockDc(dc);
+  return ret;
 }
 
 /*
@@ -288,9 +284,7 @@ GreGetCharacterPlacementW(
 }
 #endif
 
-ULONG
-FASTCALL
-FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
+ULONG LFONT_GetObject(PLFONT plfont, ULONG cjBuffer, PVOID pvBuffer)
 {
     ULONG cjMaxSize;
     ENUMLOGFONTEXDVW *plf = &plfont->logfont;
@@ -314,8 +308,7 @@ FASTCALL
 IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
 {
   PDC pdc;
-  PDC_ATTR pdcattr;
-  PTEXTOBJ TextObj;
+  PRFONT prfnt;
   SIZE sz;
   TMW_INTERNAL tmwi;
   BOOL Good;
@@ -328,19 +321,14 @@ IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
   if(!ftGdiGetTextMetricsW(hdc, &tmwi)) return 0;
 
   pdc = DC_LockDc(hdc);
-
   if (!pdc) return 0;
 
-  pdcattr = pdc->pdcattr;
+  prfnt = DC_prfnt(pdc);
+  if ( prfnt )
+     Good = TextIntGetTextExtentPoint(pdc, prfnt, alphabet, 52, 0, NULL, 0, &sz, 0);
+  else
+     Good = FALSE;
 
-  TextObj = RealizeFontInit(pdcattr->hlfntNew);
-  if ( !TextObj )
-  {
-     DC_UnlockDc(pdc);
-     return 0;
-  }
-  Good = TextIntGetTextExtentPoint(pdc, TextObj, alphabet, 52, 0, NULL, 0, &sz, 0);
-  TEXTOBJ_UnlockText(TextObj);
   DC_UnlockDc(pdc);
 
   if (!Good) return 0;
@@ -402,27 +390,44 @@ IntGetFontLanguageInfo(PDC Dc)
   return result;
 }
 
-PTEXTOBJ
-FASTCALL
-RealizeFontInit(HFONT hFont)
+PRFONT DC_prfnt(PDC pdc)
 {
-  NTSTATUS Status = STATUS_SUCCESS;
-  PTEXTOBJ pTextObj;
+    PRFONT prfnt = 0;
 
-  pTextObj = TEXTOBJ_LockText(hFont);
+    /* Select "current" font */
+    DC_hSelectFont(pdc, pdc->pdcattr->hlfntNew);
 
-  if ( pTextObj && !(pTextObj->fl & TEXTOBJECT_INIT))
-  {
-     Status = TextIntRealizeFont(hFont, pTextObj);
-     if (!NT_SUCCESS(Status))
-     {
-        TEXTOBJ_UnlockText(pTextObj);
-        return NULL;
-     }
-  }
-  return pTextObj;
+    /* Check if font is already realized */
+    if (pdc->hlfntCur != pdc->dclevel.plfnt->BaseObject.hHmgr)
+    {
+        prfnt = LFONT_prfntRealizeFont(pdc->dclevel.plfnt, pdc);
+
+        if (prfnt)
+        {
+            /* Dereference the old RFONT */
+            //RFONT_ShareUnlockFont(pdc->prfnt);
+            if (pdc->prfnt)
+                RFONT_vDeleteRFONT(pdc->prfnt);
+
+            pdc->prfnt = prfnt;
+
+            /* Set as new active font */
+            pdc->hlfntCur = pdc->pdcattr->hlfntNew;
+        }
+        else
+        {
+            /* Realize failed, lets keep using the previous font */
+            prfnt = pdc->prfnt;
+        }
+    }
+    else
+    {
+        prfnt = pdc->prfnt;
+    }
+
+    //ASSERT(prfnt);
+    return prfnt;
 }
-
 
 /** Functions ******************************************************************/
 
@@ -577,52 +582,43 @@ NtGdiGetFontData(
    LPVOID Buffer,
    DWORD Size)
 {
-  PDC Dc;
-  PDC_ATTR pdcattr;
-  HFONT hFont;
-  PTEXTOBJ TextObj;
-  PFONTGDI FontGdi;
+  PDC dc;
+  PRFONT prfnt;
   DWORD Result = GDI_ERROR;
-  NTSTATUS Status = STATUS_SUCCESS;
 
   if (Buffer && Size)
   {
      _SEH2_TRY
      {
          ProbeForRead(Buffer, Size, 1);
+         /* FIXME: Capture is missing!!! */
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-         Status = _SEH2_GetExceptionCode();
+         _SEH2_YIELD(return Result);
      }
      _SEH2_END
   }
 
-  if (!NT_SUCCESS(Status)) return Result;
-
-  Dc = DC_LockDc(hDC);
-  if (Dc == NULL)
-  {
-     EngSetLastError(ERROR_INVALID_HANDLE);
-     return GDI_ERROR;
-  }
-  pdcattr = Dc->pdcattr;
-
-  hFont = pdcattr->hlfntNew;
-  TextObj = RealizeFontInit(hFont);
-  DC_UnlockDc(Dc);
-
-  if (TextObj == NULL)
+  dc = DC_LockDc(hDC);
+  if (dc == NULL)
   {
      EngSetLastError(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
 
-  FontGdi = ObjToGDI(TextObj->Font, FONT);
+  prfnt = DC_prfnt(dc);
+  if (prfnt)
+  {
+    Result = ftGdiGetFontData(prfnt, Table, Offset, Buffer, Size);
+  }
+  else
+  {
+    EngSetLastError(ERROR_INVALID_HANDLE);
+    Result = GDI_ERROR;
+  }
 
-  Result = ftGdiGetFontData(FontGdi, Table, Offset, Buffer, Size);
-
-  TEXTOBJ_UnlockText(TextObj);
+  DC_UnlockDc(dc);
 
   return Result;
 }
@@ -637,13 +633,9 @@ NtGdiGetFontUnicodeRanges(
     OUT OPTIONAL LPGLYPHSET pgs)
 {
   PDC pDc;
-  PDC_ATTR pdcattr;
-  HFONT hFont;
-  PTEXTOBJ TextObj;
-  PFONTGDI FontGdi;
+  PRFONT prfnt;
   DWORD Size = 0;
   PGLYPHSET pgsSafe;
-  NTSTATUS Status = STATUS_SUCCESS;
 
   pDc = DC_LockDc(hdc);
   if (!pDc)
@@ -652,19 +644,13 @@ NtGdiGetFontUnicodeRanges(
      return 0;
   }
 
-  pdcattr = pDc->pdcattr;
-
-  hFont = pdcattr->hlfntNew;
-  TextObj = RealizeFontInit(hFont);
-
-  if ( TextObj == NULL)
+  prfnt = DC_prfnt(pDc);
+  if ( prfnt == NULL)
   {
      EngSetLastError(ERROR_INVALID_HANDLE);
      goto Exit;
   }
-  FontGdi = ObjToGDI(TextObj->Font, FONT);
-
-  Size = ftGetFontUnicodeRanges( FontGdi, NULL);
+  Size = ftGetFontUnicodeRanges( prfnt, NULL);
 
   if (Size && pgs)
   {
@@ -676,7 +662,7 @@ NtGdiGetFontUnicodeRanges(
         goto Exit;
      }
 
-     Size = ftGetFontUnicodeRanges( FontGdi, pgsSafe);
+     Size = ftGetFontUnicodeRanges( prfnt, pgsSafe);
 
      if (Size)
      {
@@ -687,16 +673,13 @@ NtGdiGetFontUnicodeRanges(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-           Status = _SEH2_GetExceptionCode();
+           Size = 0;
         }
         _SEH2_END
-
-        if (!NT_SUCCESS(Status)) Size = 0;
      }
      ExFreePoolWithTag(pgsSafe, GDITAG_TEXT);
   }
 Exit:
-  TEXTOBJ_UnlockText(TextObj);
   DC_UnlockDc(pDc);
   return Size;
 }
@@ -793,12 +776,9 @@ NtGdiGetKerningPairs(HDC  hDC,
                      LPKERNINGPAIR  krnpair)
 {
   PDC dc;
-  PDC_ATTR pdcattr;
-  PTEXTOBJ TextObj;
-  PFONTGDI FontGDI;
-  DWORD Count;
+  PRFONT prfnt;
+  DWORD Count, ret = 0;
   KERNINGPAIR *pKP;
-  NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -807,35 +787,29 @@ NtGdiGetKerningPairs(HDC  hDC,
      return 0;
   }
 
-  pdcattr = dc->pdcattr;
-  TextObj = RealizeFontInit(pdcattr->hlfntNew);
-  DC_UnlockDc(dc);
-
-  if (!TextObj)
+  prfnt = DC_prfnt(dc);
+  if (!prfnt)
   {
      EngSetLastError(ERROR_INVALID_HANDLE);
-     return 0;
+     goto cleanup;
   }
 
-  FontGDI = ObjToGDI(TextObj->Font, FONT);
-  TEXTOBJ_UnlockText(TextObj);
-
-  Count = ftGdiGetKerningPairs(FontGDI,0,NULL);
+  Count = ftGdiGetKerningPairs(prfnt,0,NULL);
 
   if ( Count && krnpair )
   {
      if (Count > NumPairs)
      {
         EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return 0;
+        goto cleanup;
      }
      pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), GDITAG_TEXT);
      if (!pKP)
      {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return 0;
+        goto cleanup;
      }
-     ftGdiGetKerningPairs(FontGDI,Count,pKP);
+     ftGdiGetKerningPairs(prfnt,Count,pKP);
      _SEH2_TRY
      {
         ProbeForWrite(krnpair, Count * sizeof(KERNINGPAIR), 1);
@@ -843,17 +817,16 @@ NtGdiGetKerningPairs(HDC  hDC,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-        Status = _SEH2_GetExceptionCode();
-     }
-     _SEH2_END
-     if (!NT_SUCCESS(Status))
-     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         Count = 0;
      }
+     _SEH2_END
      ExFreePoolWithTag(pKP,GDITAG_TEXT);
   }
-  return Count;
+  ret = Count;
+cleanup:
+  DC_UnlockDc(dc);
+  return ret;
 }
 
 /*
@@ -868,13 +841,9 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
                                    TMDIFF *Tmd)
 {
   PDC dc;
-  PDC_ATTR pdcattr;
-  PTEXTOBJ TextObj;
-  PFONTGDI FontGDI;
-  HFONT hFont = 0;
-  ULONG Size;
+  PRFONT prfnt;
+  ULONG Size, ret = 0;
   OUTLINETEXTMETRICW *potm;
-  NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -882,32 +851,33 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
      EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
-  pdcattr = dc->pdcattr;
-  hFont = pdcattr->hlfntNew;
-  TextObj = RealizeFontInit(hFont);
-  DC_UnlockDc(dc);
-  if (!TextObj)
+
+  prfnt = DC_prfnt(dc);
+  if (!prfnt)
   {
      EngSetLastError(ERROR_INVALID_HANDLE);
-     return 0;
+     goto cleanup;
   }
-  FontGDI = ObjToGDI(TextObj->Font, FONT);
-  TextIntUpdateSize(dc, TextObj, FontGDI, TRUE);
-  TEXTOBJ_UnlockText(TextObj);
-  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-  if (!otm) return Size;
+  TextIntUpdateSize(prfnt, TRUE);
+  Size = IntGetOutlineTextMetrics(prfnt, 0, NULL);
+  if (!otm)
+  {
+      ret = Size;
+      goto cleanup;
+  }
+
   if (Size > Data)
   {
       EngSetLastError(ERROR_INSUFFICIENT_BUFFER);
-      return 0;
+      goto cleanup;
   }
   potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
   if (!potm)
   {
       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return 0;
+      goto cleanup;
   }
-  IntGetOutlineTextMetrics(FontGDI, Size, potm);
+  IntGetOutlineTextMetrics(prfnt, Size, potm);
   if (otm)
   {
      _SEH2_TRY
@@ -917,18 +887,16 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-         Status = _SEH2_GetExceptionCode();
+         EngSetLastError(ERROR_INVALID_PARAMETER);
+         Size = 0;
      }
      _SEH2_END
-
-     if (!NT_SUCCESS(Status))
-     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        Size = 0;
-     }
+     ret = Size;
   }
   ExFreePoolWithTag(potm,GDITAG_TEXT);
-  return Size;
+cleanup:
+  DC_UnlockDc(dc);
+  return ret;
 }
 
 W32KAPI
@@ -1054,10 +1022,8 @@ NtGdiGetRealizationInfo(
     IN HFONT hf)
 {
   PDC pDc;
-  PTEXTOBJ pTextObj;
-  PFONTGDI pFontGdi;
-  PDC_ATTR pdcattr;
-  BOOL Ret = FALSE;
+  PRFONT prfnt;
+  BOOL Ret;
   INT i = 0;
   REALIZATION_INFO ri;
 
@@ -1067,18 +1033,23 @@ NtGdiGetRealizationInfo(
      EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
-  pdcattr = pDc->pdcattr;
-  pTextObj = RealizeFontInit(pdcattr->hlfntNew);
-  pFontGdi = ObjToGDI(pTextObj->Font, FONT);
-  TEXTOBJ_UnlockText(pTextObj);
+  
+  prfnt = DC_prfnt(pDc);
+  if (prfnt)
+  {
+     Ret = ftGdiRealizationInfo(prfnt, &ri);
+  }
+  else
+  {
+     Ret = FALSE;
+     EngSetLastError(ERROR_INVALID_HANDLE);
+  }
   DC_UnlockDc(pDc);
 
-  Ret = ftGdiRealizationInfo(pFontGdi, &ri);
   if (Ret)
   {
      if (pri)
      {
-        NTSTATUS Status = STATUS_SUCCESS;
         _SEH2_TRY
         {
             ProbeForWrite(pri, sizeof(REALIZATION_INFO), 1);
@@ -1086,15 +1057,10 @@ NtGdiGetRealizationInfo(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            SetLastNtError(_SEH2_GetExceptionCode());
+            _SEH2_YIELD(return FALSE);
         }
         _SEH2_END
-
-        if(!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            return FALSE;
-        }
      }
      do
      {
@@ -1141,7 +1107,6 @@ HfontCreate(
   plfont->lft = lft;
   plfont->fl  = fl;
   RtlCopyMemory (&plfont->logfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
-  ExInitializePushLock(&plfont->lock);
 
   if (pelfw->elfEnumLogfontEx.elfLogFont.lfEscapement !=
       pelfw->elfEnumLogfontEx.elfLogFont.lfOrientation)
