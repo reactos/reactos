@@ -728,7 +728,11 @@ VfatCreateFile(
         return Status;
     }
 
-    Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
+    Attributes = (Stack->Parameters.Create.FileAttributes & (FILE_ATTRIBUTE_ARCHIVE |
+                                                             FILE_ATTRIBUTE_SYSTEM |
+                                                             FILE_ATTRIBUTE_HIDDEN |
+                                                             FILE_ATTRIBUTE_DIRECTORY |
+                                                             FILE_ATTRIBUTE_READONLY));
 
     /* If the file open failed then create the required file */
     if (!NT_SUCCESS (Status))
@@ -750,7 +754,7 @@ VfatCreateFile(
             }
             vfatSplitPathName(&PathNameU, NULL, &FileNameU);
             Status = VfatAddEntry(DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,
-                                  (UCHAR)FlagOn(Attributes, FILE_ATTRIBUTE_VALID_FLAGS), NULL);
+                                  Attributes, NULL);
             vfatReleaseFCB(DeviceExt, ParentFcb);
             if (NT_SUCCESS(Status))
             {
@@ -921,11 +925,11 @@ VfatCreateFile(
             {
                 if (RequestedDisposition == FILE_SUPERSEDE)
                 {
-                    *pFcb->Attributes = Attributes & ~FILE_ATTRIBUTE_NORMAL;
+                    *pFcb->Attributes = Attributes;
                 }
                 else
                 {
-                    *pFcb->Attributes |= Attributes & ~FILE_ATTRIBUTE_NORMAL;
+                    *pFcb->Attributes |= Attributes;
                 }
                 *pFcb->Attributes |= FILE_ATTRIBUTE_ARCHIVE;
                 VfatUpdateEntry(pFcb, vfatVolumeIsFatX(DeviceExt));
