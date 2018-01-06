@@ -1576,12 +1576,13 @@ USBH_PdoQueryId(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
 
             if (PortExtension->PortPdoFlags & USBHUB_PDO_FLAG_INIT_PORT_FAILED)
             {
+                DPRINT("USBH_PdoQueryId: USBHUB_PDO_FLAG_INIT_PORT_FAILED\n");
                 RtlStringCbPrintfExW(Buffer,
                                      Remaining,
                                      NULL,
                                      &Remaining,
                                      0,
-                                     L"USB\\Vid_0000&Pid0000");
+                                     L"USB\\Vid_0000&Pid_0000");
             }
             else
             {
@@ -1613,6 +1614,8 @@ USBH_PdoQueryId(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
 
             if (PortExtension->PortPdoFlags & USBHUB_PDO_FLAG_INIT_PORT_FAILED)
             {
+                DPRINT("USBH_PdoQueryId: USBHUB_PDO_FLAG_INIT_PORT_FAILED\n");
+
                 RtlStringCbPrintfExW(Buffer,
                                      Remaining,
                                      NULL,
@@ -1672,6 +1675,8 @@ USBH_PdoQueryId(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
 
             if (PortExtension->PortPdoFlags & USBHUB_PDO_FLAG_INIT_PORT_FAILED)
             {
+                DPRINT("USBH_PdoQueryId: USBHUB_PDO_FLAG_INIT_PORT_FAILED\n");
+
                 RtlStringCbPrintfExW(Buffer,
                                      Remaining,
                                      NULL,
