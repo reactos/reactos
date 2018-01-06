@@ -1136,10 +1136,6 @@ EnumStart:
     {
         PortData = &HubExtension->PortData[Port - 1];
 
-        DPRINT_ENUM("USBH_FdoQueryBusRelations: Port - %x, ConnectStatus - %x\n",
-                    Port,
-                    PortData->PortStatus.PortStatus.Usb20PortStatus.CurrentConnectStatus);
-
         if (HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_FAILED)
         {
             continue;
@@ -1152,10 +1148,15 @@ EnumStart:
 
         if (!NT_SUCCESS(Status))
         {
+            DPRINT_ENUM("USBH_FdoQueryBusRelations: Status - %X\n", Status);
             HubExtension->HubFlags |= USBHUB_FDO_FLAG_DEVICE_FAILED;
             DeviceRelations->Count = 0;
             goto EnumStart;
         }
+
+        DPRINT_ENUM("USBH_FdoQueryBusRelations: Port - %x, ConnectStatus - %x\n",
+                    Port,
+                    PortData->PortStatus.PortStatus.Usb20PortStatus.CurrentConnectStatus);
 
         PdoDevice = PortData->DeviceObject;
 
