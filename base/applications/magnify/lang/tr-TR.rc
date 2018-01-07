@@ -3,7 +3,7 @@
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/magnify/lang/tr-TR.rc
  * PURPOSE:    Turkish Resource File for RecatOS Magnifier
- * TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
