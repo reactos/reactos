@@ -1349,8 +1349,8 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
     FirstTD->HwTD.gTD.CurrentBuffer = (ULONG)&FirstTdPA->HwTD.SetupPacket;
 
-    BufferEnd = (ULONG)&FirstTdPA->HwTD.SetupPacket +
-                       sizeof(USB_DEFAULT_PIPE_SETUP_PACKET) - 1;
+    BufferEnd = (ULONG_PTR)&FirstTdPA->HwTD.SetupPacket +
+                           sizeof(USB_DEFAULT_PIPE_SETUP_PACKET) - 1;
 
     FirstTD->HwTD.gTD.BufferEnd = BufferEnd;
 
