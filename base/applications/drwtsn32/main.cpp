@@ -111,7 +111,7 @@ void PrintBugreport(FILE* output, DumpData& data)
             xfprintf(output, "eip:%p esp:%p ebp:%p" NEWLINE,
                      ctx.Eip, ctx.Esp, ctx.Ebp);
 #elif defined(_M_AMD64)
-            xfprintf(output, "eip:%p esp:%p ebp:%p" NEWLINE,
+            xfprintf(output, "rip:%p rsp:%p rbp:%p" NEWLINE,
                      ctx.Rip, ctx.Rsp, ctx.Rbp);
 #else
 #error Unknown architecture
