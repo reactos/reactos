@@ -1320,7 +1320,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
     MaxTDs = OHCI_RemainTDs(OhciExtension, OhciEndpoint);
 
-    if (SGList->SgElementCount + 2 > MaxTDs)
+    if ((SGList->SgElementCount + OHCI_NON_DATA_CONTROL_TDS) > MaxTDs)
     {
         return MP_STATUS_FAILURE;
     }
