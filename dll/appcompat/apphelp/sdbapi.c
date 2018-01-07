@@ -177,15 +177,22 @@ BOOL WINAPI SdbpOpenMemMappedFile(LPCWSTR path, PMEMMAPPED mapping)
 
     RtlZeroMemory(mapping, sizeof(*mapping));
 
-    if(!RtlDosPathNameToNtPathName_U(path, &FileName, NULL, NULL))
-    {
-        RtlFreeUnicodeString(&FileName);
-        return FALSE;
-    }
+    RtlInitUnicodeString(&FileName, path);
 
     InitializeObjectAttributes(&ObjectAttributes, &FileName, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenFile(&mapping->file, GENERIC_READ | SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_NONALERT);
-    RtlFreeUnicodeString(&FileName);
+
+    if (Status == STATUS_OBJECT_NAME_INVALID || Status == STATUS_OBJECT_PATH_SYNTAX_BAD)
+    {
+        if (!RtlDosPathNameToNtPathName_U(path, &FileName, NULL, NULL))
+        {
+            SHIM_ERR("Failed to convert %S to Nt path: 0x%lx\n", path, Status);
+            return FALSE;
+        }
+        InitializeObjectAttributes(&ObjectAttributes, &FileName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+        Status = NtOpenFile(&mapping->file, GENERIC_READ | SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_NONALERT);
+        RtlFreeUnicodeString(&FileName);
+    }
 
     if (!NT_SUCCESS(Status))
     {
