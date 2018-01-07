@@ -348,7 +348,7 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
         Period >>= 1;
     }
 
-    ASSERT(PeriodIdx < (sizeof(Index) / sizeof(Index[0])));
+    ASSERT(PeriodIdx < ARRAYSIZE(Index));
 
     ScheduleOffset = EndpointProperties->ScheduleOffset;
     DPRINT_OHCI("OHCI_OpenInterruptEndpoint: InitTD. Index[PeriodIdx] - %x, ScheduleOffset - %x\n",
