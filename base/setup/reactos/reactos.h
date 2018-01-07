@@ -74,6 +74,10 @@ typedef struct _SETUPDATA
 
     HFONT hTitleFont;
 
+    HANDLE hInstallThread;
+    HANDLE hHaltInstallEvent;
+    BOOL bStopInstall;
+
     TCHAR szAbortMessage[512];
     TCHAR szAbortTitle[64];
 

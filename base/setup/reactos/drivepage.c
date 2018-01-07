@@ -48,33 +48,37 @@ MoreOptDlgProc(HWND hwndDlg,
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             /* Save pointer to the global setup data */
-            pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
+            pSetupData = (PSETUPDATA)lParam;
+            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             CheckDlgButton(hwndDlg, IDC_INSTFREELDR, BST_CHECKED);
-            SendMessage(GetDlgItem(hwndDlg, IDC_PATH),
-                        WM_SETTEXT,
-                        (WPARAM)0,
-                        (LPARAM)pSetupData->USetupData.InstallationDirectory);
+            SendMessageW(GetDlgItem(hwndDlg, IDC_PATH),
+                         WM_SETTEXT,
+                         (WPARAM)0,
+                         (LPARAM)pSetupData->USetupData.InstallationDirectory);
             break;
+        }
 
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case IDOK:
-                    SendMessage(GetDlgItem(hwndDlg, IDC_PATH),
-                                WM_GETTEXT,
-                                (WPARAM)ARRAYSIZE(pSetupData->USetupData.InstallationDirectory),
-                                (LPARAM)pSetupData->USetupData.InstallationDirectory);
+                {
+                    SendMessageW(GetDlgItem(hwndDlg, IDC_PATH),
+                                 WM_GETTEXT,
+                                 (WPARAM)ARRAYSIZE(pSetupData->USetupData.InstallationDirectory),
+                                 (LPARAM)pSetupData->USetupData.InstallationDirectory);
 
                     EndDialog(hwndDlg, IDOK);
                     return TRUE;
+                }
 
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
@@ -164,7 +168,7 @@ DriveDlgProc(
 #endif
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -172,7 +176,7 @@ DriveDlgProc(
         {
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             CreateListViewColumns(pSetupData->hInstance,
                                   GetDlgItem(hwndDlg, IDC_PARTITION),
@@ -211,7 +215,7 @@ DriveDlgProc(
                     }
                     if (buffer)
                     {
-                        SendMessage(hList, LB_ADDSTRING, (WPARAM) 0, (LPARAM) buffer);
+                        SendMessageW(hList, LB_ADDSTRING, (WPARAM) 0, (LPARAM) buffer);
                         LocalFree(buffer);
                     }
                 }
@@ -251,17 +255,24 @@ DriveDlgProc(
             switch (lpnm->code)
             {        
                 case PSN_SETACTIVE:
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLongPtr(hwndDlg,
-                                     DWLP_MSGRESULT,
-                                     MessageBox(GetParent(hwndDlg),
-                                                pSetupData->szAbortMessage,
-                                                pSetupData->szAbortTitle,
-                                                MB_YESNO | MB_ICONQUESTION) != IDYES);
+                {
+                    if (MessageBoxW(GetParent(hwndDlg),
+                                    pSetupData->szAbortMessage,
+                                    pSetupData->szAbortTitle,
+                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    {
+                        /* Go to the Terminate page */
+                        PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
+                    }
+
+                    /* Do not close the wizard too soon */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
+                }
 
                 default:
                     break;

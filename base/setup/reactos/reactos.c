@@ -25,6 +25,10 @@
  */
 
 #include "reactos.h"
+
+#define NTOS_MODE_USER
+#include <ndk/obfuncs.h>
+
 #include "resource.h"
 
 #define NDEBUG
@@ -115,6 +119,7 @@ StartDlgProc(
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
@@ -129,6 +134,7 @@ StartDlgProc(
                                (WPARAM)pSetupData->hTitleFont,
                                (LPARAM)TRUE);
             break;
+        }
 
         case WM_NOTIFY:
         {
@@ -203,17 +209,24 @@ TypeDlgProc(
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLongPtrW(hwndDlg,
-                                      DWLP_MSGRESULT,
-                                      MessageBoxW(GetParent(hwndDlg),
-                                                  pSetupData->szAbortMessage,
-                                                  pSetupData->szAbortTitle,
-                                                  MB_YESNO | MB_ICONQUESTION) != IDYES);
+                {
+                    if (MessageBoxW(GetParent(hwndDlg),
+                                    pSetupData->szAbortMessage,
+                                    pSetupData->szAbortTitle,
+                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    {
+                        /* Go to the Terminate page */
+                        PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
+                    }
+
+                    /* Do not close the wizard too soon */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
+                }
 
                 case PSN_WIZNEXT: /* Set the selected data */
                 {
@@ -501,17 +514,24 @@ UpgradeRepairDlgProc(
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLongPtrW(hwndDlg,
-                                      DWLP_MSGRESULT,
-                                      MessageBoxW(GetParent(hwndDlg),
-                                                  pSetupData->szAbortMessage,
-                                                  pSetupData->szAbortTitle,
-                                                  MB_YESNO | MB_ICONQUESTION) != IDYES);
+                {
+                    if (MessageBoxW(GetParent(hwndDlg),
+                                    pSetupData->szAbortMessage,
+                                    pSetupData->szAbortTitle,
+                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    {
+                        /* Go to the Terminate page */
+                        PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
+                    }
+
+                    /* Do not close the wizard too soon */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
+                }
 
                 case PSN_WIZNEXT: /* Set the selected data */
                     pSetupData->RepairUpdateFlag =
@@ -576,17 +596,24 @@ DeviceDlgProc(
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLongPtrW(hwndDlg,
-                                      DWLP_MSGRESULT,
-                                      MessageBoxW(GetParent(hwndDlg),
-                                                  pSetupData->szAbortMessage,
-                                                  pSetupData->szAbortTitle,
-                                                  MB_YESNO | MB_ICONQUESTION) != IDYES);
+                {
+                    if (MessageBoxW(GetParent(hwndDlg),
+                                    pSetupData->szAbortMessage,
+                                    pSetupData->szAbortTitle,
+                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    {
+                        /* Go to the Terminate page */
+                        PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
+                    }
+
+                    /* Do not close the wizard too soon */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
+                }
 
                 case PSN_WIZNEXT: /* Set the selected data */
                 {
@@ -642,17 +669,24 @@ SummaryDlgProc(
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     break;
 
                 case PSN_QUERYCANCEL:
-                    SetWindowLongPtrW(hwndDlg,
-                                      DWLP_MSGRESULT,
-                                      MessageBoxW(GetParent(hwndDlg),
-                                                  pSetupData->szAbortMessage,
-                                                  pSetupData->szAbortTitle,
-                                                  MB_YESNO | MB_ICONQUESTION) != IDYES);
+                {
+                    if (MessageBoxW(GetParent(hwndDlg),
+                                    pSetupData->szAbortMessage,
+                                    pSetupData->szAbortTitle,
+                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    {
+                        /* Go to the Terminate page */
+                        PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
+                    }
+
+                    /* Do not close the wizard too soon */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
+                }
 
                 default:
                     break;
@@ -666,6 +700,221 @@ SummaryDlgProc(
 
     return FALSE;
 }
+
+
+typedef struct _COPYCONTEXT
+{
+    PSETUPDATA pSetupData;
+    HWND hWndItem;
+    HWND hWndProgress;
+    ULONG TotalOperations;
+    ULONG CompletedOperations;
+} COPYCONTEXT, *PCOPYCONTEXT;
+
+static UINT
+CALLBACK
+FileCopyCallback(PVOID Context,
+                 UINT Notification,
+                 UINT_PTR Param1,
+                 UINT_PTR Param2)
+{
+    PCOPYCONTEXT CopyContext = (PCOPYCONTEXT)Context;
+    PFILEPATHS_W FilePathInfo;
+    PCWSTR SrcFileName, DstFileName;
+    WCHAR Status[1024];
+
+    WaitForSingleObject(CopyContext->pSetupData->hHaltInstallEvent, INFINITE);
+    if (CopyContext->pSetupData->bStopInstall)
+        return FILEOP_ABORT; // Stop committing files
+
+    switch (Notification)
+    {
+        case SPFILENOTIFY_STARTSUBQUEUE:
+        {
+            CopyContext->TotalOperations = (ULONG)Param2;
+            CopyContext->CompletedOperations = 0;
+
+            SendMessageW(CopyContext->hWndProgress,
+                         PBM_SETRANGE, 0,
+                         MAKELPARAM(0, CopyContext->TotalOperations));
+            SendMessageW(CopyContext->hWndProgress,
+                         PBM_SETSTEP, 1, 0);
+            break;
+        }
+
+        case SPFILENOTIFY_STARTDELETE:
+        case SPFILENOTIFY_STARTRENAME:
+        case SPFILENOTIFY_STARTCOPY:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            if (Notification == SPFILENOTIFY_STARTDELETE)
+            {
+                /* Display delete message */
+                ASSERT(Param2 == FILEOP_DELETE);
+
+                DstFileName = wcsrchr(FilePathInfo->Target, L'\\');
+                if (DstFileName) ++DstFileName;
+                else DstFileName = FilePathInfo->Target;
+
+                // STRING_DELETING
+                StringCchPrintfW(Status, ARRAYSIZE(Status), L"Deleting %s", DstFileName);
+                SetWindowTextW(CopyContext->hWndItem, Status);
+            }
+            else if (Notification == SPFILENOTIFY_STARTRENAME)
+            {
+                /* Display move/rename message */
+                ASSERT(Param2 == FILEOP_RENAME);
+
+                SrcFileName = wcsrchr(FilePathInfo->Source, L'\\');
+                if (SrcFileName) ++SrcFileName;
+                else SrcFileName = FilePathInfo->Source;
+
+                DstFileName = wcsrchr(FilePathInfo->Target, L'\\');
+                if (DstFileName) ++DstFileName;
+                else DstFileName = FilePathInfo->Target;
+
+                // STRING_MOVING or STRING_RENAMING
+                if (!wcsicmp(SrcFileName, DstFileName))
+                    StringCchPrintfW(Status, ARRAYSIZE(Status), L"Moving %s to %s", SrcFileName, DstFileName);
+                else
+                    StringCchPrintfW(Status, ARRAYSIZE(Status), L"Renaming %s to %s", SrcFileName, DstFileName);
+
+                SetWindowTextW(CopyContext->hWndItem, Status);
+            }
+            else if (Notification == SPFILENOTIFY_STARTCOPY)
+            {
+                /* Display copy message */
+                ASSERT(Param2 == FILEOP_COPY);
+
+                DstFileName = wcsrchr(FilePathInfo->Target, L'\\');
+                if (DstFileName) ++DstFileName;
+                else DstFileName = FilePathInfo->Target;
+
+                // STRING_COPYING
+                StringCchPrintfW(Status, ARRAYSIZE(Status), L"Copying %s", DstFileName);
+                SetWindowTextW(CopyContext->hWndItem, Status);
+            }
+            break;
+        }
+
+        case SPFILENOTIFY_ENDDELETE:
+        case SPFILENOTIFY_ENDRENAME:
+        case SPFILENOTIFY_ENDCOPY:
+        {
+            CopyContext->CompletedOperations++;
+
+            /* SYSREG checkpoint */
+            if (CopyContext->TotalOperations >> 1 == CopyContext->CompletedOperations)
+                DPRINT1("CHECKPOINT:HALF_COPIED\n");
+
+            SendMessageW(CopyContext->hWndProgress, PBM_STEPIT, 0, 0);
+            break;
+        }
+    }
+
+    return FILEOP_DOIT;
+}
+
+static DWORD
+WINAPI
+PrepareAndDoCopyThread(
+    IN LPVOID Param)
+{
+    PSETUPDATA pSetupData;
+    HWND hwndDlg = (HWND)Param;
+    HWND hWndProgress;
+    LONG_PTR dwStyle;
+    // ERROR_NUMBER ErrorNumber;
+    BOOLEAN Success;
+    COPYCONTEXT CopyContext;
+
+    /* Retrieve pointer to the global setup data */
+    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+
+    /* Set status text */
+    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing the list of files to be copied, please wait...");
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    /* Get the progress handle */
+    hWndProgress = GetDlgItem(hwndDlg, IDC_PROCESSPROGRESS);
+
+    /* Set progress marquee style */
+    dwStyle = GetWindowLongPtrW(hWndProgress, GWL_STYLE);
+    SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle | PBS_MARQUEE);
+
+    /* Start it up */
+    SendMessageW(hWndProgress, PBM_SETMARQUEE, TRUE, 0);
+
+    /* Prepare the list of files */
+    /* ErrorNumber = */ Success = PrepareFileCopy(&pSetupData->USetupData, NULL);
+    if (/*ErrorNumber != ERROR_SUCCESS*/ !Success)
+    {
+        /* Display an error only if an unexpected failure happened, and not because the user cancelled the installation */
+        if (!pSetupData->bStopInstall)
+            MessageBoxW(GetParent(hwndDlg), L"Failed to prepare the list of files!", L"Error", MB_ICONERROR);
+
+        /* Stop it */
+        SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
+
+        /* Restore progress style */
+        SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
+
+        /*
+         * If we failed due to an unexpected error, keep on the copy page to view the current state,
+         * but enable the "Next" button to allow the user to continue to the terminate page.
+         * Otherwise we have been cancelled by the user, who has already switched to the Terminate page.
+         */
+        if (!pSetupData->bStopInstall)
+            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        return 1;
+    }
+
+    /* Stop it */
+    SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
+
+    /* Restore progress style */
+    SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
+
+    /* Set status text */
+    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Copying the files...");
+
+    /* Create context for the copy process */
+    CopyContext.pSetupData = pSetupData;
+    CopyContext.hWndItem = GetDlgItem(hwndDlg, IDC_ITEM);
+    CopyContext.hWndProgress = hWndProgress;
+    CopyContext.TotalOperations = 0;
+    CopyContext.CompletedOperations = 0;
+
+    /* Do the file copying - The callback handles whether or not we should stop file copying */
+    if (!DoFileCopy(&pSetupData->USetupData, FileCopyCallback, &CopyContext))
+    {
+        /* Display an error only if an unexpected failure happened, and not because the user cancelled the installation */
+        if (!pSetupData->bStopInstall)
+            MessageBoxW(GetParent(hwndDlg), L"Failed to copy the files!", L"Error", MB_ICONERROR);
+
+        /*
+         * If we failed due to an unexpected error, keep on the copy page to view the current state,
+         * but enable the "Next" button to allow the user to continue to the terminate page.
+         * Otherwise we have been cancelled by the user, who has already switched to the Terminate page.
+         */
+        if (!pSetupData->bStopInstall)
+            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        return 1;
+    }
+
+    /* Set status text */
+    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Finalizing the installation...");
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    /* Create the $winnt$.inf file */
+    InstallSetupInfFile(&pSetupData->USetupData);
+
+    /* We are done! Switch to the Terminate page */
+    PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
+    return 0;
+}
+
 
 static INT_PTR CALLBACK
 ProcessDlgProc(
@@ -682,10 +931,31 @@ ProcessDlgProc(
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
+            NTSTATUS Status;
+            /****/
+            // FIXME: This is my disk encoding!
+            DISKENTRY DiskEntry;
+            PARTENTRY PartEntry;
+            DiskEntry.DiskNumber = 1;
+            DiskEntry.BiosDiskNumber = 1;
+            PartEntry.PartitionNumber = 4;
+            /****/
+
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
+
+            /* Reset status text */
+            SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"");
+            SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+            Status = InitDestinationPaths(&pSetupData->USetupData, NULL /*InstallDir*/, &DiskEntry, &PartEntry);
+            // TODO: Check Status
+            UNREFERENCED_PARAMETER(Status);
+
             break;
+        }
 
         case WM_NOTIFY:
         {
@@ -694,21 +964,79 @@ ProcessDlgProc(
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
-                   // disable all buttons during installation process
-                   // PropSheet_SetWizButtons(GetParent(hwndDlg), 0 );
-                   break;
+                {
+                    /* Create the file-copy halt (manual-reset) event */
+                    pSetupData->hHaltInstallEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
+                    if (!pSetupData->hHaltInstallEvent)
+                        break;
+                    pSetupData->bStopInstall = FALSE;
+
+                    /* Start the prepare-and-copy files thread */
+                    pSetupData->hInstallThread =
+                        CreateThread(NULL, 0,
+                                     PrepareAndDoCopyThread,
+                                     (PVOID)hwndDlg,
+                                     CREATE_SUSPENDED,
+                                     NULL);
+                    if (!pSetupData->hInstallThread)
+                    {
+                        CloseHandle(pSetupData->hHaltInstallEvent);
+                        pSetupData->hHaltInstallEvent = NULL;
+
+                        MessageBoxW(GetParent(hwndDlg), L"Cannot create the prepare-and-copy files thread!", L"Error", MB_ICONERROR);
+                        break;
+                    }
+
+                    /* Disable all buttons during installation process - buttons will be reenabled by the installation thread */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+
+                    /* Resume the installation thread */
+                    ResumeThread(pSetupData->hInstallThread);
+
+                    break;
+                }
+
                 case PSN_QUERYCANCEL:
-                    SetWindowLongPtrW(hwndDlg,
-                                      DWLP_MSGRESULT,
-                                      MessageBoxW(GetParent(hwndDlg),
-                                                  pSetupData->szAbortMessage,
-                                                  pSetupData->szAbortTitle,
-                                                  MB_YESNO | MB_ICONQUESTION) != IDYES);
+                {
+                    /* Halt the on-going file copy */
+                    ResetEvent(pSetupData->hHaltInstallEvent);
+
+                    if (MessageBoxW(GetParent(hwndDlg),
+                                    pSetupData->szAbortMessage,
+                                    pSetupData->szAbortTitle,
+                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    {
+                        /* Stop the file copy thread */
+                        pSetupData->bStopInstall = TRUE;
+                        SetEvent(pSetupData->hHaltInstallEvent);
+
+#if 0
+                        /* Wait for any pending installation */
+                        WaitForSingleObject(pSetupData->hInstallThread, INFINITE);
+                        CloseHandle(pSetupData->hInstallThread);
+                        pSetupData->hInstallThread = NULL;
+                        CloseHandle(pSetupData->hHaltInstallEvent);
+                        pSetupData->hHaltInstallEvent = NULL;
+#endif
+
+                        // TODO: Unwind installation?!
+
+                        /* Go to the Terminate page */
+                        PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
+                    }
+                    else
+                    {
+                        /* We don't stop installation, resume file copy */
+                        SetEvent(pSetupData->hHaltInstallEvent);
+                    }
+
+                    /* Do not close the wizard too soon */
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
+                }
 
                 default:
-                   break;
+                    break;
             }
         }
         break;
@@ -874,13 +1202,17 @@ ConvertNtPathToWin32Path(
     IN DWORD cchPathMax,
     IN PCWSTR pwszNTPath)
 {
-    WCHAR wszDrives[512];
-    WCHAR wszNTPath[512]; // MAX_PATH ?
+    BOOL FoundDrive = FALSE, RetryOnce = FALSE;
     DWORD cchDrives;
     PWCHAR pwszDrive;
+    PCWSTR pwszRemaining = NULL;
+    WCHAR wszDrives[512];
+    WCHAR wszNTPath[MAX_PATH];
+    WCHAR TargetPath[MAX_PATH] = L"";
 
     *pwszPath = UNICODE_NULL;
 
+    /* Retrieve the mounted drives (available drive letters) */
     cchDrives = GetLogicalDriveStringsW(_countof(wszDrives) - 1, wszDrives);
     if (cchDrives == 0 || cchDrives >= _countof(wszDrives))
     {
@@ -889,6 +1221,10 @@ ConvertNtPathToWin32Path(
         return FALSE;
     }
 
+
+Retry: // We go back there once if RetryOnce == TRUE
+
+    /* Enumerate the mounted drives */
     for (pwszDrive = wszDrives; *pwszDrive; pwszDrive += wcslen(pwszDrive) + 1)
     {
         /* Retrieve the NT path corresponding to the current Win32 DOS path */
@@ -896,19 +1232,108 @@ ConvertNtPathToWin32Path(
         QueryDosDeviceW(pwszDrive, wszNTPath, _countof(wszNTPath));
         pwszDrive[2] = L'\\';        // Restore the backslash
 
-        wcscat(wszNTPath, L"\\");    // Concat a backslash
+        DPRINT("Testing '%S' --> '%S'\n", pwszDrive, wszNTPath);
 
-        DPRINT1("Testing '%S' --> '%S'\n", pwszDrive, wszNTPath);
-
-        /* Check whether the NT path corresponds to the NT installation source path */
+        /* Check whether the queried NT path prefixes the user-provided NT path */
         if (!_wcsnicmp(wszNTPath, pwszNTPath, wcslen(wszNTPath)))
         {
             /* Found it! */
-            wsprintf(pwszPath, L"%s%s", // cchPathMax
-                     pwszDrive, pwszNTPath + wcslen(wszNTPath));
-            DPRINT1("ConvertNtPathToWin32Path: %S\n", pwszPath);
-            return TRUE;
+            FoundDrive = TRUE;
+            if (!RetryOnce && pwszNTPath != TargetPath)
+                pwszRemaining = pwszNTPath + wcslen(wszNTPath);
+            break;
         }
+    }
+
+    if (FoundDrive)
+    {
+        pwszDrive[2] = UNICODE_NULL; // Remove the backslash
+        StringCchPrintfW(pwszPath, cchPathMax,
+                         L"%s%s",
+                         pwszDrive,
+                         pwszRemaining);
+        DPRINT1("ConvertNtPathToWin32Path: %S\n", pwszPath);
+        return TRUE;
+    }
+
+    /*
+     * We failed, perhaps because the beginning of the NT path used a symlink.
+     * Try to see whether this is the case by attempting to resolve it.
+     * If the symlink resolution gives nothing, or we already failed once,
+     * there is no hope in converting the path to Win32.
+     * Otherwise, symlink resolution succeeds but we need to recheck again
+     * the drives list.
+     */
+
+    /*
+     * In theory we would have to parse each element in the NT path and going
+     * until finding a symlink object (otherwise we would fail straight away).
+     * However here we can use guessing instead, since we know which kind of
+     * NT paths we are likely to manipulate: \Device\HarddiskX\PartitionY\ and
+     * the like (including \Device\HarddiskVolumeX\) and the other ones that
+     * are supported in setuplib\utils\arcname.c .
+     *
+     * But actually, all the supported names in arcname.c are real devices,
+     * and only \Device\HarddiskX\PartitionY\ may refer to a symlink, so we
+     * just check for it.
+     */
+    if (!RetryOnce && !FoundDrive)
+    {
+        ULONG DiskNumber, PartitionNumber;
+        INT Length;
+
+        NTSTATUS Status;
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        HANDLE LinkHandle;
+        UNICODE_STRING SymLink, Target;
+
+        if (swscanf(pwszNTPath, L"\\Device\\Harddisk%lu\\Partition%lu%n",
+                    &DiskNumber, &PartitionNumber, &Length) != 2)
+        {
+            /* Definitively not a recognized path, bail out */
+            return FALSE;
+        }
+
+        /* Check whether \Device\HarddiskX\PartitionY is a symlink */
+        RtlInitEmptyUnicodeString(&SymLink, (PWCHAR)pwszNTPath, Length * sizeof(WCHAR));
+        SymLink.Length = SymLink.MaximumLength;
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SymLink,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = NtOpenSymbolicLinkObject(&LinkHandle,
+                                          SYMBOLIC_LINK_QUERY,
+                                          &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Not a symlink, or something else happened: bail out */
+            DPRINT1("NtOpenSymbolicLinkObject(%wZ) failed, Status 0x%08lx\n", &SymLink, Status);
+            return FALSE;
+        }
+
+        RtlInitEmptyUnicodeString(&Target, TargetPath, sizeof(TargetPath));
+
+        /* Resolve the link and close its handle */
+        Status = NtQuerySymbolicLinkObject(LinkHandle, &Target, NULL);
+        NtClose(LinkHandle);
+
+        /* Check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Not a symlink, or something else happened: bail out */
+            DPRINT1("NtQuerySymbolicLinkObject(%wZ) failed, Status 0x%08lx\n", &SymLink, Status);
+            return FALSE;
+        }
+
+        /* Set pointers */
+        pwszRemaining = pwszNTPath + Length;
+        pwszNTPath = TargetPath;
+
+        /* Retry once */
+        RetryOnce = TRUE;
+        goto Retry;
     }
 
     return FALSE;
@@ -982,6 +1407,9 @@ _tWinMain(HINSTANCE hInst,
         goto Quit;
 
     SetupData.hInstance = hInst;
+    SetupData.hInstallThread = NULL;
+    SetupData.hHaltInstallEvent = NULL;
+    SetupData.bStopInstall = FALSE;
 
     CheckUnattendedSetup(&SetupData.USetupData);
     SetupData.bUnattend = IsUnattendedSetup; // FIXME :-)
@@ -994,7 +1422,7 @@ _tWinMain(HINSTANCE hInst,
      * you must call InitCommonControlsEx() to register the classes
      * for those controls. */
     iccx.dwSize = sizeof(iccx);
-    iccx.dwICC = ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES /* | ICC_PROGRESS_CLASS */;
+    iccx.dwICC = ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_PROGRESS_CLASS;
     InitCommonControlsEx(&iccx);
 
     /* Create title font */
@@ -1106,6 +1534,13 @@ _tWinMain(HINSTANCE hInst,
         DeleteObject(SetupData.hTitleFont);
 
 Quit:
+    /* Wait for any pending installation */
+    WaitForSingleObject(SetupData.hInstallThread, INFINITE);
+    CloseHandle(SetupData.hInstallThread);
+    SetupData.hInstallThread = NULL;
+    CloseHandle(SetupData.hHaltInstallEvent);
+    SetupData.hHaltInstallEvent = NULL;
+
     /* Setup has finished */
     FinishSetup(&SetupData.USetupData);
 
