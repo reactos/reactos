@@ -1070,15 +1070,7 @@ Metadata:
             Filter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES;
             if (ByteOffset.QuadPart != OldFileSize.QuadPart) Filter |= FILE_NOTIFY_CHANGE_SIZE;
 
-            FsRtlNotifyFullReportChange(IrpContext->DeviceExt->NotifySync,
-                                        &(IrpContext->DeviceExt->NotifyList),
-                                        (PSTRING)&Fcb->PathNameU,
-                                        Fcb->PathNameU.Length - Fcb->LongNameU.Length,
-                                        NULL,
-                                        NULL,
-                                        Filter,
-                                        FILE_ACTION_MODIFIED,
-                                        NULL);
+            vfatReportChange(IrpContext->DeviceExt, Fcb, Filter, FILE_ACTION_MODIFIED);
         }
     }
 

@@ -1002,29 +1002,19 @@ VfatCreateFile(
 
     if (Irp->IoStatus.Information == FILE_CREATED)
     {
-        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                    &(DeviceExt->NotifyList),
-                                    (PSTRING)&pFcb->PathNameU,
-                                    pFcb->PathNameU.Length - pFcb->LongNameU.Length,
-                                    NULL,
-                                    NULL,
-                                    (vfatFCBIsDirectory(pFcb) ?
-                                    FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                    FILE_ACTION_ADDED,
-                                    NULL);
+        vfatReportChange(DeviceExt,
+                         pFcb,
+                         (vfatFCBIsDirectory(pFcb) ?
+                          FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                         FILE_ACTION_ADDED);
     }
     else if (Irp->IoStatus.Information == FILE_OVERWRITTEN ||
              Irp->IoStatus.Information == FILE_SUPERSEDED)
     {
-        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                    &(DeviceExt->NotifyList),
-                                    (PSTRING)&pFcb->PathNameU,
-                                    pFcb->PathNameU.Length - pFcb->LongNameU.Length,
-                                    NULL,
-                                    NULL,
-                                    FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE,
-                                    FILE_ACTION_MODIFIED,
-                                    NULL);
+        vfatReportChange(DeviceExt,
+                         pFcb,
+                         FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE,
+                         FILE_ACTION_MODIFIED);
     }
 
     pFcb->OpenHandleCount++;
