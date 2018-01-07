@@ -126,8 +126,8 @@ VfatCleanupFile(
 
             vfatReportChange(DeviceExt,
                              pFcb,
-                             vfatFCBIsDirectory(pFcb) ?
-                             FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME,
+                             (vfatFCBIsDirectory(pFcb) ?
+                              FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                              FILE_ACTION_REMOVED);
         }
 
