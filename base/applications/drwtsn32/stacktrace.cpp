@@ -104,8 +104,15 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
     }
 
     UCHAR stackData[0x10 * 10];
-    DWORD dwSizeRead;
-    if (!ReadProcessMemory(data.ProcessHandle, (LPCVOID)thread.Context.Esp, stackData, sizeof(stackData), &dwSizeRead))
+    SIZE_T sizeRead;
+#if defined(_M_IX86)
+    ULONG_PTR stackPointer = thread.Context.Esp;
+#elif defined(_M_AMD64)
+    ULONG_PTR stackPointer = thread.Context.Rsp;
+#else
+#error Unknown architecture
+#endif
+    if (!ReadProcessMemory(data.ProcessHandle, (PVOID)stackPointer, stackData, sizeof(stackData), &sizeRead))
         return;
 
     xfprintf(output, NEWLINE "*----> Raw Stack Dump <----*" NEWLINE NEWLINE);
@@ -119,14 +126,14 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
         for (size_t j = 0; j < 8; ++j)
         {
             size_t idx = j + n;
-            if (idx < dwSizeRead)
+            if (idx < sizeRead)
             {
                 HexData1[j * 3] = ToChar(stackData[idx] >> 4);
                 HexData1[j * 3 + 1] = ToChar(stackData[idx] & 0xf);
                 AsciiData1[j] = isprint(stackData[idx]) ? stackData[idx] : '.';
             }
             idx += 8;
-            if (idx < dwSizeRead)
+            if (idx < sizeRead)
             {
                 HexData2[j * 3] = ToChar(stackData[idx] >> 4);
                 HexData2[j * 3 + 1] = ToChar(stackData[idx] & 0xf);
@@ -134,6 +141,6 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
             }
         }
 
-        xfprintf(output, "%p %s - %s  %s%s" NEWLINE, thread.Context.Esp+n, HexData1, HexData2, AsciiData1, AsciiData2);
+        xfprintf(output, "%p %s - %s  %s%s" NEWLINE, stackPointer+n, HexData1, HexData2, AsciiData1, AsciiData2);
     }
 }
