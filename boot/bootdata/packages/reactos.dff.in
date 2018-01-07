@@ -17,10 +17,10 @@ Signature = "$ReactOS$"
 ; For specifying absolute directories, use the SystemPartitionFiles section,
 ; or use names starting with \.
 [Directories]
-1 = system32
-2 = system32\drivers
-3 = Fonts
-4 = "\"
+1 = "\"
+2 = system32
+3 = system32\drivers
+4 = Fonts
 5 = system32\drivers\etc
 6 = inf
 7 = bin

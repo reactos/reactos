@@ -162,14 +162,19 @@ function(add_link)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
 endfunction()
 
+#
+# WARNING!
+# Please keep the numbering in this list in sync with
+# boot/bootdata/packages/reactos.dff.in
+#
 macro(dir_to_num dir var)
-    if(${dir} STREQUAL reactos/system32)
+    if(${dir} STREQUAL reactos)
         set(${var} 1)
-    elseif(${dir} STREQUAL reactos/system32/drivers)
+    elseif(${dir} STREQUAL reactos/system32)
         set(${var} 2)
-    elseif(${dir} STREQUAL reactos/Fonts)
+    elseif(${dir} STREQUAL reactos/system32/drivers)
         set(${var} 3)
-    elseif(${dir} STREQUAL reactos)
+    elseif(${dir} STREQUAL reactos/Fonts)
         set(${var} 4)
     elseif(${dir} STREQUAL reactos/system32/drivers/etc)
         set(${var} 5)
