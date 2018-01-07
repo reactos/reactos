@@ -218,6 +218,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Записк на диск неможливий. Можливо, на диску недостатньо містця."
     IDS_SELECT_ALL "Вибрати все"
     IDS_INSTALL_SELECTED "Встановити обране"
+    IDS_SELECTEDFORINST "Обрані для встановлення"
 END
 
 STRINGTABLE

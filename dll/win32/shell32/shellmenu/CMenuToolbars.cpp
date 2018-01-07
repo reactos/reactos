@@ -206,6 +206,9 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         }
         else
         {
+            // Set the text color, will be used by the internal drawing code
+            cdraw->clrText = GetSysColor(COLOR_MENUTEXT);
+
             // Remove HOT and CHECKED flags (will restore HOT if necessary)
             cdraw->nmcd.uItemState &= ~CDIS_HOT;
 

@@ -269,12 +269,10 @@ VfatSetBasicInformation(
 
     if (NotifyFilter != 0)
     {
-        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                    &(DeviceExt->NotifyList),
-                                    (PSTRING)&FCB->PathNameU,
-                                    FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                    NULL, NULL, NotifyFilter, FILE_ACTION_MODIFIED,
-                                    NULL);
+        vfatReportChange(DeviceExt,
+                         FCB,
+                         NotifyFilter,
+                         FILE_ACTION_MODIFIED);
     }
 
     return STATUS_SUCCESS;
@@ -822,29 +820,19 @@ VfatSetRenameInformation(
 
         if (FsRtlAreNamesEqual(&SourceFile, &NewFile, TRUE, NULL))
         {
-            FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                        &(DeviceExt->NotifyList),
-                                        (PSTRING)&FCB->PathNameU,
-                                        FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                        NULL,
-                                        NULL,
-                                        (vfatFCBIsDirectory(FCB) ?
-                                        FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                        FILE_ACTION_RENAMED_OLD_NAME,
-                                        NULL);
+            vfatReportChange(DeviceExt,
+                             FCB,
+                             (vfatFCBIsDirectory(FCB) ?
+                              FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                             FILE_ACTION_RENAMED_OLD_NAME);
             Status = vfatRenameEntry(DeviceExt, FCB, &NewFile, TRUE);
             if (NT_SUCCESS(Status))
             {
-                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                            &(DeviceExt->NotifyList),
-                                            (PSTRING)&FCB->PathNameU,
-                                            FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                            NULL,
-                                            NULL,
-                                            (vfatFCBIsDirectory(FCB) ?
-                                            FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                            FILE_ACTION_RENAMED_NEW_NAME,
-                                            NULL);
+                vfatReportChange(DeviceExt,
+                                 FCB,
+                                 (vfatFCBIsDirectory(FCB) ?
+                                  FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                 FILE_ACTION_RENAMED_NEW_NAME);
             }
         }
         else
@@ -865,44 +853,29 @@ VfatSetRenameInformation(
                 goto Cleanup;
             }
 
-            FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                        &(DeviceExt->NotifyList),
-                                        (PSTRING)&FCB->PathNameU,
-                                        FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                        NULL,
-                                        NULL,
-                                        (vfatFCBIsDirectory(FCB) ?
-                                        FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                        (DeletedTarget ? FILE_ACTION_REMOVED : FILE_ACTION_RENAMED_OLD_NAME),
-                                        NULL);
+            vfatReportChange(DeviceExt,
+                             FCB,
+                             (vfatFCBIsDirectory(FCB) ?
+                              FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                             (DeletedTarget ? FILE_ACTION_REMOVED : FILE_ACTION_RENAMED_OLD_NAME));
             Status = vfatRenameEntry(DeviceExt, FCB, &NewFile, FALSE);
             if (NT_SUCCESS(Status))
             {
                 if (DeletedTarget)
                 {
-                    FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                                &(DeviceExt->NotifyList),
-                                                (PSTRING)&FCB->PathNameU,
-                                                FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                                NULL,
-                                                NULL,
-                                                FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE
-                                                | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_EA,
-                                                FILE_ACTION_MODIFIED,
-                                                NULL);
+                    vfatReportChange(DeviceExt,
+                                     FCB,
+                                     FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE
+                                     | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_EA,
+                                     FILE_ACTION_MODIFIED);
                 }
                 else
                 {
-                    FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                                &(DeviceExt->NotifyList),
-                                                (PSTRING)&FCB->PathNameU,
-                                                FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                                NULL,
-                                                NULL,
-                                                (vfatFCBIsDirectory(FCB) ?
-                                                FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                                FILE_ACTION_RENAMED_NEW_NAME,
-                                                NULL);
+                    vfatReportChange(DeviceExt,
+                                     FCB,
+                                     (vfatFCBIsDirectory(FCB) ?
+                                      FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                     FILE_ACTION_RENAMED_NEW_NAME);
                 }
             }
         }
@@ -936,44 +909,29 @@ VfatSetRenameInformation(
         UNREFERENCED_PARAMETER(NewReferences);
 #endif
 
-        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                    &(DeviceExt->NotifyList),
-                                    (PSTRING)&FCB->PathNameU,
-                                    FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                    NULL,
-                                    NULL,
-                                    (vfatFCBIsDirectory(FCB) ?
-                                    FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                    FILE_ACTION_REMOVED,
-                                    NULL);
+        vfatReportChange(DeviceExt,
+                         FCB,
+                         (vfatFCBIsDirectory(FCB) ?
+                          FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                         FILE_ACTION_REMOVED);
         Status = VfatMoveEntry(DeviceExt, FCB, &NewFile, ParentFCB);
         if (NT_SUCCESS(Status))
         {
             if (DeletedTarget)
             {
-                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                            &(DeviceExt->NotifyList),
-                                            (PSTRING)&FCB->PathNameU,
-                                            FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                            NULL,
-                                            NULL,
-                                            FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE
-                                            | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_EA,
-                                            FILE_ACTION_MODIFIED,
-                                            NULL);
+                vfatReportChange(DeviceExt,
+                                 FCB,
+                                 FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE
+                                 | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_EA,
+                                 FILE_ACTION_MODIFIED);
             }
             else
             {
-                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                            &(DeviceExt->NotifyList),
-                                            (PSTRING)&FCB->PathNameU,
-                                            FCB->PathNameU.Length - FCB->LongNameU.Length,
-                                            NULL,
-                                            NULL,
-                                            (vfatFCBIsDirectory(FCB) ?
-                                            FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                            FILE_ACTION_ADDED,
-                                            NULL);
+                vfatReportChange(DeviceExt,
+                                 FCB,
+                                 (vfatFCBIsDirectory(FCB) ?
+                                  FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                                 FILE_ACTION_ADDED);
             }
         }
     }
@@ -1450,6 +1408,8 @@ VfatSetAllocationSizeInformation(
     if (AllocSizeChanged)
     {
         VfatUpdateEntry(Fcb, vfatVolumeIsFatX(DeviceExt));
+
+        vfatReportChange(DeviceExt, Fcb, FILE_NOTIFY_CHANGE_SIZE, FILE_ACTION_MODIFIED);
     }
     return STATUS_SUCCESS;
 }

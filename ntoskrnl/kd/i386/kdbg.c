@@ -111,7 +111,7 @@ KdPortInitializeEx(
 
         /* Print message to blue screen */
         sprintf(buffer,
-                "\r\nKernel Debugger: Serial port found: COM%ld (Port 0x%lx) BaudRate %ld\r\n\r\n",
+                "\r\nKernel Debugger: Serial port found: COM%ld (Port 0x%p) BaudRate %ld\r\n\r\n",
                 ComPortNumber,
                 PortInformation->Address,
                 PortInformation->BaudRate);

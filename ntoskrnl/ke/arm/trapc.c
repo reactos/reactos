@@ -529,7 +529,7 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     //
     if (KeArmFaultStatusRegisterGet() == 21 || KeArmFaultStatusRegisterGet() == 23)
     {
-        Status = MmAccessFault(FALSE,
+        Status = MmAccessFault(KeArmFaultStatusRegisterGet(),
                                Address,
                                KiGetPreviousMode(TrapFrame),
                                TrapFrame);

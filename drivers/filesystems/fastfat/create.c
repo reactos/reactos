@@ -728,7 +728,11 @@ VfatCreateFile(
         return Status;
     }
 
-    Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
+    Attributes = (Stack->Parameters.Create.FileAttributes & (FILE_ATTRIBUTE_ARCHIVE |
+                                                             FILE_ATTRIBUTE_SYSTEM |
+                                                             FILE_ATTRIBUTE_HIDDEN |
+                                                             FILE_ATTRIBUTE_DIRECTORY |
+                                                             FILE_ATTRIBUTE_READONLY));
 
     /* If the file open failed then create the required file */
     if (!NT_SUCCESS (Status))
@@ -750,7 +754,7 @@ VfatCreateFile(
             }
             vfatSplitPathName(&PathNameU, NULL, &FileNameU);
             Status = VfatAddEntry(DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,
-                                  (UCHAR)FlagOn(Attributes, FILE_ATTRIBUTE_VALID_FLAGS), NULL);
+                                  Attributes, NULL);
             vfatReleaseFCB(DeviceExt, ParentFcb);
             if (NT_SUCCESS(Status))
             {
@@ -919,15 +923,32 @@ VfatCreateFile(
 
             if (!vfatFCBIsDirectory(pFcb))
             {
+                LARGE_INTEGER SystemTime;
+
                 if (RequestedDisposition == FILE_SUPERSEDE)
                 {
-                    *pFcb->Attributes = Attributes & ~FILE_ATTRIBUTE_NORMAL;
+                    *pFcb->Attributes = Attributes;
                 }
                 else
                 {
-                    *pFcb->Attributes |= Attributes & ~FILE_ATTRIBUTE_NORMAL;
+                    *pFcb->Attributes |= Attributes;
                 }
                 *pFcb->Attributes |= FILE_ATTRIBUTE_ARCHIVE;
+
+                KeQuerySystemTime(&SystemTime);
+                if (vfatVolumeIsFatX(DeviceExt))
+                {
+                    FsdSystemTimeToDosDateTime(DeviceExt,
+                                               &SystemTime, &pFcb->entry.FatX.UpdateDate,
+                                               &pFcb->entry.FatX.UpdateTime);
+                }
+                else
+                {
+                    FsdSystemTimeToDosDateTime(DeviceExt,
+                                               &SystemTime, &pFcb->entry.Fat.UpdateDate,
+                                               &pFcb->entry.Fat.UpdateTime);
+                }
+
                 VfatUpdateEntry(pFcb, vfatVolumeIsFatX(DeviceExt));
             }
 
@@ -981,16 +1002,19 @@ VfatCreateFile(
 
     if (Irp->IoStatus.Information == FILE_CREATED)
     {
-        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                    &(DeviceExt->NotifyList),
-                                    (PSTRING)&pFcb->PathNameU,
-                                    pFcb->PathNameU.Length - pFcb->LongNameU.Length,
-                                    NULL,
-                                    NULL,
-                                    (vfatFCBIsDirectory(pFcb) ?
-                                    FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                    FILE_ACTION_ADDED,
-                                    NULL);
+        vfatReportChange(DeviceExt,
+                         pFcb,
+                         (vfatFCBIsDirectory(pFcb) ?
+                          FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
+                         FILE_ACTION_ADDED);
+    }
+    else if (Irp->IoStatus.Information == FILE_OVERWRITTEN ||
+             Irp->IoStatus.Information == FILE_SUPERSEDED)
+    {
+        vfatReportChange(DeviceExt,
+                         pFcb,
+                         FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE,
+                         FILE_ACTION_MODIFIED);
     }
 
     pFcb->OpenHandleCount++;

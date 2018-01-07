@@ -1,6 +1,6 @@
 #pragma once
 
-typedef struct _InbvProgressState
+typedef struct _INBV_PROGRESS_STATE
 {
     ULONG Floor;
     ULONG Ceiling;
@@ -17,13 +17,20 @@ typedef struct _BT_PROGRESS_INDICATOR
 typedef enum _ROT_BAR_TYPE
 {
     RB_UNSPECIFIED,
-    RB_SQUARE_CELLS
+    RB_SQUARE_CELLS,
+    RB_PROGRESS_BAR
 } ROT_BAR_TYPE;
 
 VOID
 NTAPI
 InbvUpdateProgressBar(
     IN ULONG Progress
+);
+
+VOID
+NTAPI
+InbvRotBarInit(
+    VOID
 );
 
 BOOLEAN

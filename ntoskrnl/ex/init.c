@@ -1382,7 +1382,7 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Setup the boot driver */
     InbvEnableBootDriver(!NoGuiBoot);
-    InbvDriverInitialize(LoaderBlock, 18);
+    InbvDriverInitialize(LoaderBlock, IDB_MAX_RESOURCE);
 
     /* Check if GUI boot is enabled */
     if (!NoGuiBoot)

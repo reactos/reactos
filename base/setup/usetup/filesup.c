@@ -348,8 +348,69 @@ SetupCopyFile(
                           0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtCreateFile failed: %x, %wZ\n", Status, &FileName);
-        goto unmapsrcsec;
+        /* Open may have failed because the file to overwrite
+         * is in readonly mode
+         */
+        if (Status == STATUS_ACCESS_DENIED)
+        {
+            FILE_BASIC_INFORMATION FileBasicInfo;
+
+            /* Reattempt to open it with limited access */
+            Status = NtCreateFile(&FileHandleDest,
+                                  FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                                  &ObjectAttributes,
+                                  &IoStatusBlock,
+                                  NULL,
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  0,
+                                  FILE_OPEN,
+                                  FILE_NO_INTERMEDIATE_BUFFERING |
+                                  FILE_SEQUENTIAL_ONLY |
+                                  FILE_SYNCHRONOUS_IO_NONALERT,
+                                  NULL,
+                                  0);
+            /* Fail for real if we cannot open it that way */
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtCreateFile failed: %x, %wZ\n", Status, &FileName);
+                goto unmapsrcsec;
+            }
+
+            /* Zero our basic info, just to set attributes */
+            RtlZeroMemory(&FileBasicInfo, sizeof(FileBasicInfo));
+            /* Reset attributes to normal, no read-only */
+            FileBasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+            /* We basically don't care about whether it succeed:
+             * if it didn't, later open will fail
+             */
+            NtSetInformationFile(FileHandleDest, &IoStatusBlock, &FileBasicInfo,
+                                 sizeof(FileBasicInfo), FileBasicInformation);
+
+            /* Close file */
+            NtClose(FileHandleDest);
+
+            /* And re-attempt overwrite */
+            Status = NtCreateFile(&FileHandleDest,
+                                  GENERIC_WRITE | SYNCHRONIZE,
+                                  &ObjectAttributes,
+                                  &IoStatusBlock,
+                                  NULL,
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  0,
+                                  FILE_OVERWRITE_IF,
+                                  FILE_NO_INTERMEDIATE_BUFFERING |
+                                  FILE_SEQUENTIAL_ONLY |
+                                  FILE_SYNCHRONOUS_IO_NONALERT,
+                                  NULL,
+                                  0);
+        }
+
+        /* We failed */
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtCreateFile failed: %x, %wZ\n", Status, &FileName);
+            goto unmapsrcsec;
+        }
     }
 
     RegionSize = (ULONG)PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);

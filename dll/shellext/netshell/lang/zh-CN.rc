@@ -4,6 +4,7 @@
  * FILE:       dll/shellext/netshell/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File
  * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *             2018 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -86,44 +87,44 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Choose whether to use typical or custom settings:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Typical Settings", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Custom Settings", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "Creates network connections using the Client for ReactOS Networks, File and Print Sharing for ReactOS Networks, and the TCP/IP transport protocol with automatic addressing.", IDC_STATIC, 65, 45, 240, 30
-    LTEXT "Allows you to manually configure network components.", IDC_STATIC, 65, 90, 243, 20
+    LTEXT "选择使用典型设置还是自定义设置:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "典型设置", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "自定义设置", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    LTEXT "使用 “ReactOS 网络客户端”、“ReactOS 网络的文件和打印共享”和自动寻址的 TCP/IP 传输协议来创建网络连接。", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "允许手动配置网络组件。", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "For Device:", IDC_STATIC, 33, 2, 100, 20
+    LTEXT "设备:", IDC_STATIC, 33, 2, 100, 20
     LTEXT "n/a", IDC_NETWORK_DEVICE, 75, 2, 253, 20
-    LTEXT "Components checked are used by this connection:", IDC_STATIC, 33, 12, 253, 20
+    LTEXT "此连接使用下列选定的组件:", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
-    PUSHBUTTON "&Install...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Uninstall", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Properties", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    GROUPBOX "Description", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+    PUSHBUTTON "安装(&I)...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "卸载(&U)", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "属性(&R)", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    GROUPBOX "描述", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
 END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "Do you want this computer to be a member of a domain?\n\
-(You can obtain this information from your network administrator.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "No, this computer will be part of a workgroup.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Yes, this computer will be part of a domain.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Workgroup or Domain Name:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "您想让这个计算机成为域成员吗?\n\
+(您可能需要从网络管理员那里获得该信息。)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "不,这台计算机将成为工作组成员。", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "是,这台计算机将成为域成员。", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "工作组或域名称:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "NOTE: If this computer isn't going to be part of a network, you don't have sufficient rights to join a domain, or you don't know what to enter, then just choose workgroup for now. These options can be changed at a later time.", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "注意: 如果您的计算机选择不成为网络的一部分,您将没有权限加入域,如果您不知道应该选择什么,那么请现在加入工作组。这些选项可以在以后更改。", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
@@ -153,10 +154,10 @@ BEGIN
     IDS_STATUS_CONNECTING "正在获取网络地址"
     IDS_STATUS_CONNECTED "已连接"
     IDS_STATUS_OPERATIONAL "已连接"
-    IDS_NET_ACTIVATE "啟用"
+    IDS_NET_ACTIVATE "启用"
     IDS_NET_DEACTIVATE "停用"
     IDS_NET_STATUS "状态"
-    IDS_NET_REPAIR "修復"
+    IDS_NET_REPAIR "修复"
     IDS_NET_CREATELINK "创建快捷方式"
     IDS_NET_DELETE "删除"
     IDS_NET_RENAME "重命名"
@@ -173,12 +174,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORKSETTINGSTITLE "Network Settings"
-    IDS_NETWORKSETTINGSSUBTITLE "Installs network software used to connect to other networks, computers, and the Internet."
-    IDS_NETWORKCOMPONENTTITLE "Network Components"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determine which networking components are used on your computer. To add new components, click on Install."
-    IDS_NETWORKDOMAINTITLE "Workgroup or Computer Domain"
-    IDS_NETWORKDOMAINSUBTITLE "A domain is a group of computers defined by a network administrator. A workgroup is a group of computers sharing the same workgroup name."
-    IDS_REACTOS_SETUP "ReactOS Setup"
-    IDS_WZD_DOMAIN_NAME "Setup cannot continue until you\nenter the name of your domain\nor workgroup."
+    IDS_NETWORKSETTINGSTITLE "网络设置"
+    IDS_NETWORKSETTINGSSUBTITLE "安装用于连接其他网络、计算机和 Internet 的网络软件。 "
+    IDS_NETWORKCOMPONENTTITLE "网络组件"
+    IDS_NETWORKCOMPONENTSUBTITLE "确定计算机上使用的网络组件。若要添加新组件，请单击“安装”。"
+    IDS_NETWORKDOMAINTITLE "工作组或计算机域"
+    IDS_NETWORKDOMAINSUBTITLE "域是由网络管理员定义的一组计算机。工作组是共享相同工作组名称的计算机组。"
+    IDS_REACTOS_SETUP "ReactOS 安装程序"
+    IDS_WZD_DOMAIN_NAME "在输入域或工作组的名称之前，安装程序无法继续。"
 END

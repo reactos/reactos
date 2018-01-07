@@ -817,7 +817,7 @@ CreatePortCCB(_In_ PFLT_PORT_OBJECT PortObject)
     PPORT_CCB PortCCB;
 
     /* Allocate a CCB struct to hold the client port object info */
-    PortCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(PPORT_CCB), FM_TAG_CCB);
+    PortCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(PORT_CCB), FM_TAG_CCB);
     if (PortCCB)
     {
         /* Initialize the structure */

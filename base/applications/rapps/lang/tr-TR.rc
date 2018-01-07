@@ -212,6 +212,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
     IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
+    IDS_SELECTEDFORINST "Selected for installation"
 END
 
 STRINGTABLE

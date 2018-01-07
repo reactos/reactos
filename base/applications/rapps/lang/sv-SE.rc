@@ -217,6 +217,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
     IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
+    IDS_SELECTEDFORINST "Selected for installation"
 END
 
 STRINGTABLE

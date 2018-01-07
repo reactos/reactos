@@ -602,6 +602,21 @@ vfatVolumeIsFatX(PDEVICE_EXTENSION DeviceExt)
     return BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX);
 }
 
+FORCEINLINE
+VOID
+vfatReportChange(
+    IN PDEVICE_EXTENSION DeviceExt,
+    IN PVFATFCB Fcb,
+    IN ULONG FilterMatch,
+    IN ULONG Action)
+{
+    FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                &(DeviceExt->NotifyList),
+                                (PSTRING)&Fcb->PathNameU,
+                                Fcb->PathNameU.Length - Fcb->LongNameU.Length,
+                                NULL, NULL, FilterMatch, Action, NULL);
+}
+
 #define vfatAddToStat(Vcb, Stat, Inc)                                                                         \
 {                                                                                                             \
     PSTATISTICS Stats = &(Vcb)->Statistics[KeGetCurrentProcessorNumber() % VfatGlobalData->NumberProcessors]; \
@@ -1032,6 +1047,13 @@ BOOLEAN
 VfatCheckForDismount(
     IN PDEVICE_EXTENSION DeviceExt,
     IN BOOLEAN Create);
+
+VOID
+vfatReportChange(
+    IN PDEVICE_EXTENSION DeviceExt,
+    IN PVFATFCB Fcb,
+    IN ULONG FilterMatch,
+    IN ULONG Action);
 
 /* pnp.c */
 

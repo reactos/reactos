@@ -530,7 +530,10 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     CHAR ValueInfoBuffer[128];
     PKEY_VALUE_FULL_INFORMATION ValueInfo;
     WCHAR UnicodeBuffer[128];
-    HANDLE SelectHandle, KeyHandle, ConfigHandle = NULL, ProfileHandle = NULL;
+    HANDLE SelectHandle = NULL;
+    HANDLE KeyHandle = NULL;
+    HANDLE ConfigHandle = NULL;
+    HANDLE ProfileHandle = NULL;
     HANDLE ParentHandle = NULL;
     ULONG ControlSet, HwProfile;
     NTSTATUS Status;
@@ -538,69 +541,76 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLOADER_PARAMETER_EXTENSION LoaderExtension;
     PAGED_CODE();
 
-    /* Open the select key */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SelectName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenKey(&SelectHandle, KEY_READ, &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
+    /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
+    if (LoaderBlock->RegistryBase == NULL)
     {
-        /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
-        if (!LoaderBlock->RegistryBase)
+        /* Build the ControlSet001 key */
+        RtlInitUnicodeString(&KeyName,
+                             L"\\Registry\\Machine\\System\\ControlSet001");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = NtCreateKey(&KeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             &Disposition);
+        if (!NT_SUCCESS(Status))
         {
-            /* Build the ControlSet001 key */
-            RtlInitUnicodeString(&KeyName,
-                                 L"\\Registry\\Machine\\System\\ControlSet001");
-            InitializeObjectAttributes(&ObjectAttributes,
-                                       &KeyName,
-                                       OBJ_CASE_INSENSITIVE,
-                                       NULL,
-                                       NULL);
-            Status = NtCreateKey(&KeyHandle,
-                                 KEY_ALL_ACCESS,
-                                 &ObjectAttributes,
-                                 0,
-                                 NULL,
-                                 0,
-                                 &Disposition);
-            if (!NT_SUCCESS(Status)) return Status;
-
-            /* Create the Hardware Profile keys */
-            Status = CmpCreateHardwareProfile(KeyHandle);
-            if (!NT_SUCCESS(Status))
-                return Status;
-
-            /* Don't need the handle */
-            ZwClose(KeyHandle);
-
-            /* Use hard-coded setting */
-            ControlSet = 1;
-            goto UseSet;
+            DPRINT1("Failed to create ControlSet001 key: 0x%lx\n", Status);
+            goto Cleanup;
         }
 
-        /* Fail for real boots */
-        return Status;
+        /* Create the Hardware Profile keys */
+        Status = CmpCreateHardwareProfile(KeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to create Hardware profile keys: 0x%lx\n", Status);
+            goto Cleanup;
+        }
+
+        /* Use hard-coded setting */
+        ControlSet = 1;
+    }
+    else
+    {
+        /* Open the select key */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SelectName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = NtOpenKey(&SelectHandle, KEY_READ, &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to open select key: 0x%lx\n", Status);
+            goto Cleanup;
+        }
+
+        /* Open the current value */
+        RtlInitUnicodeString(&KeyName, L"Current");
+        Status = NtQueryValueKey(SelectHandle,
+                                 &KeyName,
+                                 KeyValueFullInformation,
+                                 ValueInfoBuffer,
+                                 sizeof(ValueInfoBuffer),
+                                 &ResultLength);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to open the Current value: 0x%lx\n", Status);
+            goto Cleanup;
+        }
+
+        /* Get the actual value pointer, and get the control set ID */
+        ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
+        ControlSet = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
     }
 
-    /* Open the current value */
-    RtlInitUnicodeString(&KeyName, L"Current");
-    Status = NtQueryValueKey(SelectHandle,
-                             &KeyName,
-                             KeyValueFullInformation,
-                             ValueInfoBuffer,
-                             sizeof(ValueInfoBuffer),
-                             &ResultLength);
-    NtClose(SelectHandle);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* Get the actual value pointer, and get the control set ID */
-    ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
-    ControlSet = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
-
     /* Create the current control set key */
-UseSet:
     RtlInitUnicodeString(&KeyName,
                          L"\\Registry\\Machine\\System\\CurrentControlSet");
     InitializeObjectAttributes(&ObjectAttributes,
@@ -615,15 +625,19 @@ UseSet:
                          NULL,
                          REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
                          &Disposition);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
     /* Sanity check */
     ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
     /* Initialize the target link name */
-    RtlStringCbPrintfW(UnicodeBuffer, sizeof(UnicodeBuffer),
-                       L"\\Registry\\Machine\\System\\ControlSet%03ld",
-                       ControlSet);
+    Status = RtlStringCbPrintfW(UnicodeBuffer, sizeof(UnicodeBuffer),
+                                L"\\Registry\\Machine\\System\\ControlSet%03ld",
+                                ControlSet);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
+
     RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
     /* Set the value */
@@ -633,7 +647,8 @@ UseSet:
                            REG_LINK,
                            KeyName.Buffer,
                            KeyName.Length);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
     /* Get the configuration database key */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -642,18 +657,17 @@ UseSet:
                                KeyHandle,
                                NULL);
     Status = NtOpenKey(&ConfigHandle, KEY_READ, &ObjectAttributes);
-    NtClose(KeyHandle);
 
     /* Check if we don't have one */
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup and exit */
-        ConfigHandle = NULL;
+        Status = STATUS_SUCCESS;
         goto Cleanup;
     }
 
     /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
-    if (!LoaderBlock->RegistryBase)
+    if (LoaderBlock->RegistryBase == NULL)
     {
         HwProfile = 0;
     }
@@ -672,7 +686,11 @@ UseSet:
         ValueInfo = (PKEY_VALUE_FULL_INFORMATION)ValueInfoBuffer;
 
         /* Check if we failed or got a non DWORD-value */
-        if (!(NT_SUCCESS(Status)) || (ValueInfo->Type != REG_DWORD)) goto Cleanup;
+        if (!(NT_SUCCESS(Status)) || (ValueInfo->Type != REG_DWORD))
+        {
+            Status = STATUS_SUCCESS;
+            goto Cleanup;
+        }
 
         /* Get the hadware profile */
         HwProfile = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
@@ -691,7 +709,7 @@ UseSet:
     if (!NT_SUCCESS(Status))
     {
         /* Exit and clean up */
-        ParentHandle = NULL;
+        Status = STATUS_SUCCESS;
         goto Cleanup;
     }
 
@@ -712,7 +730,7 @@ UseSet:
     if (!NT_SUCCESS (Status))
     {
         /* Cleanup and exit */
-        ProfileHandle = 0;
+        Status = STATUS_SUCCESS;
         goto Cleanup;
     }
 
@@ -758,19 +776,20 @@ UseSet:
                                REG_LINK,
                                KeyName.Buffer,
                                KeyName.Length);
-        NtClose(KeyHandle);
     }
 
-    /* Close every opened handle */
+    Status = STATUS_SUCCESS;
+
 Cleanup:
+    /* Close every opened handle */
+    if (SelectHandle) NtClose(SelectHandle);
+    if (KeyHandle) NtClose(KeyHandle);
     if (ConfigHandle) NtClose(ConfigHandle);
     if (ProfileHandle) NtClose(ProfileHandle);
     if (ParentHandle) NtClose(ParentHandle);
 
     DPRINT("CmpCreateControlSet() done\n");
-
-    /* Return success */
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
@@ -844,15 +863,14 @@ NTAPI
 INIT_FUNCTION
 CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    static const UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
     PVOID HiveBase;
     ANSI_STRING LoadString;
     PVOID Buffer;
     ULONG Length;
     NTSTATUS Status;
-    BOOLEAN Allocate;
     UNICODE_STRING KeyName;
     PCMHIVE SystemHive = NULL;
-    UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
@@ -872,58 +890,44 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlInitEmptyUnicodeString(&CmpLoadOptions, Buffer, (USHORT)Length);
 
     /* Add the load options and null-terminate */
-    RtlAnsiStringToUnicodeString(&CmpLoadOptions, &LoadString, FALSE);
+    Status = RtlAnsiStringToUnicodeString(&CmpLoadOptions, &LoadString, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
     CmpLoadOptions.Buffer[LoadString.Length] = UNICODE_NULL;
     CmpLoadOptions.Length += sizeof(WCHAR);
 
     /* Get the System Hive base address */
     HiveBase = LoaderBlock->RegistryBase;
-    if (HiveBase)
+
+    Status = CmpInitializeHive(&SystemHive,
+                               HiveBase ? HINIT_MEMORY : HINIT_CREATE,
+                               HIVE_NOLAZYFLUSH,
+                               HFILE_TYPE_LOG,
+                               HiveBase,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &HiveName,
+                               HiveBase ? 2 : 0);
+    if (!NT_SUCCESS(Status))
     {
-        /* Import it */
-        Status = CmpInitializeHive(&SystemHive,
-                                   HINIT_MEMORY,
-                                   HIVE_NOLAZYFLUSH,
-                                   HFILE_TYPE_LOG,
-                                   HiveBase,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &HiveName,
-                                   2);
-        if (!NT_SUCCESS(Status)) return FALSE;
-
-        /* Set the hive filename */
-        RtlCreateUnicodeString(&SystemHive->FileFullPath,
-                               L"\\SystemRoot\\System32\\Config\\SYSTEM");
-
-        /* We imported, no need to create a new hive */
-        Allocate = FALSE;
-
-        /* Manually set the hive as volatile, if in LiveCD mode */
-        if (CmpShareSystemHives) SystemHive->Hive.HiveFlags = HIVE_VOLATILE;
+        return FALSE;
     }
-    else
+
+    /* Set the hive filename */
+    Status = RtlCreateUnicodeString(&SystemHive->FileFullPath, L"\\SystemRoot\\System32\\Config\\SYSTEM");
+    if (!NT_SUCCESS(Status))
     {
-        /* Create it */
-        Status = CmpInitializeHive(&SystemHive,
-                                   HINIT_CREATE,
-                                   HIVE_NOLAZYFLUSH,
-                                   HFILE_TYPE_LOG,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &HiveName,
-                                   0);
-        if (!NT_SUCCESS(Status)) return FALSE;
+        return FALSE;
+    }
 
-        /* Set the hive filename */
-        RtlCreateUnicodeString(&SystemHive->FileFullPath,
-                               L"\\SystemRoot\\System32\\Config\\SYSTEM");
-
-        /* Tell CmpLinkHiveToMaster to allocate a hive */
-        Allocate = TRUE;
+    /* Manually set the hive as volatile, if in Live CD mode */
+    if (HiveBase && CmpShareSystemHives)
+    {
+        SystemHive->Hive.HiveFlags = HIVE_VOLATILE;
     }
 
     /* Save the boot type */
@@ -949,11 +953,12 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     SecurityDescriptor = CmpHiveRootSecurityDescriptor();
 
     /* Attach it to the system key */
+    /* Let CmpLinkHiveToMaster allocate a new hive if we got none from the LoaderBlock. */
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SYSTEM");
     Status = CmpLinkHiveToMaster(&KeyName,
                                  NULL,
                                  SystemHive,
-                                 Allocate,
+                                 !HiveBase,
                                  SecurityDescriptor);
 
     /* Free the security descriptor */
@@ -1233,6 +1238,7 @@ CmpGetRegistryPath(OUT PWCHAR ConfigPath)
     return STATUS_SUCCESS;
 }
 
+_Function_class_(KSTART_ROUTINE)
 VOID
 NTAPI
 CmpLoadHiveThread(IN PVOID StartContext)
@@ -1896,11 +1902,21 @@ CmGetSystemDriverList(VOID)
         /* Get the entry */
         DriverEntry = CONTAINING_RECORD(NextEntry, BOOT_DRIVER_LIST_ENTRY, Link);
 
-        /* Allocate the path for the caller and duplicate the registry path */
+        /* Allocate the path for the caller */
         ServicePath[i] = ExAllocatePool(NonPagedPool, sizeof(UNICODE_STRING));
-        RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-                                  &DriverEntry->RegistryPath,
-                                  ServicePath[i]);
+        if (!ServicePath[i])
+        {
+            KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 2, 1, 0, 0);
+        }
+
+        /* Duplicate the registry path */
+        Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                           &DriverEntry->RegistryPath,
+                                           ServicePath[i]);
+        if (!NT_SUCCESS(Status))
+        {
+            KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 2, 1, 0, 0);
+        }
     }
 
     /* Terminate the list */

@@ -37,6 +37,19 @@ struct ip_option_information
     unsigned char* OptionsData;
 };
 
+#if defined(_WIN64)
+
+struct ip_option_information32
+{
+    unsigned char  Ttl;
+    unsigned char  Tos;
+    unsigned char  Flags;
+    unsigned char  OptionsSize;
+    unsigned char* POINTER_32 OptionsData;
+};
+
+#endif // _WIN64
+
 #define IP_FLAG_DF      0x2
 
 #define IP_OPT_EOL      0
@@ -65,6 +78,23 @@ struct icmp_echo_reply
 typedef struct ip_option_information IP_OPTION_INFORMATION, *PIP_OPTION_INFORMATION;
 
 typedef struct icmp_echo_reply ICMP_ECHO_REPLY, *PICMP_ECHO_REPLY;
+
+#ifdef _WIN64
+struct icmp_echo_reply32
+{
+    IPAddr                       Address;
+    ULONG                        Status;
+    ULONG                        RoundTripTime;
+    unsigned short               DataSize;
+    unsigned short               Reserved;
+    void* POINTER_32             Data;
+    struct ip_option_information32 Options;
+};
+
+typedef struct ip_option_information32 IP_OPTION_INFORMATION32, *PIP_OPTION_INFORMATION32;
+
+typedef struct icmp_echo_reply32 ICMP_ECHO_REPLY32, *PICMP_ECHO_REPLY32;
+#endif
 
 
 #define IP_STATUS_BASE              11000

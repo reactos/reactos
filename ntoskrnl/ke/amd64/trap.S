@@ -503,8 +503,7 @@ FUNC KiPageFault
     sti
 
     /* Call page fault handler */
-    mov ecx, [rbp + KTRAP_FRAME_ErrorCode] // StoreInstruction
-    and ecx, 1
+    mov ecx, [rbp + KTRAP_FRAME_ErrorCode] // FaultCode
     // rdx == Address
     mov r8b, [rbp + KTRAP_FRAME_SegCs] // Mode
     and r8b, 1

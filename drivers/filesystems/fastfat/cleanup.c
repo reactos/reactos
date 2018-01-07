@@ -124,16 +124,11 @@ VfatCleanupFile(
         {
             VfatDelEntry(DeviceExt, pFcb, NULL);
 
-            FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                        &(DeviceExt->NotifyList),
-                                        (PSTRING)&pFcb->PathNameU,
-                                        pFcb->PathNameU.Length - pFcb->LongNameU.Length,
-                                        NULL,
-                                        NULL,
-                                        vfatFCBIsDirectory(pFcb) ?
-                                        FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME,
-                                        FILE_ACTION_REMOVED,
-                                        NULL);
+            vfatReportChange(DeviceExt,
+                             pFcb,
+                             vfatFCBIsDirectory(pFcb) ?
+                             FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME,
+                             FILE_ACTION_REMOVED);
         }
 
         if (pFcb->OpenHandleCount != 0)

@@ -201,7 +201,7 @@ extern BOOLEAN Mmi386MakeKernelPageTableGlobal(PVOID Address);
 
 NTSTATUS
 NTAPI
-MmAccessFault(IN BOOLEAN StoreInstruction,
+MmAccessFault(IN ULONG FaultCode,
               IN PVOID Address,
               IN KPROCESSOR_MODE Mode,
               IN PVOID TrapInformation)
@@ -226,7 +226,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
     {
         /* This is an ARM3 fault */
         DPRINT("ARM3 fault %p\n", MemoryArea);
-        return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
+        return MmArmAccessFault(FaultCode, Address, Mode, TrapInformation);
     }
 
     /* Is there a ReactOS address space yet? */
@@ -248,11 +248,11 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
     {
         /* This is an ARM3 fault */
         DPRINT("ARM3 fault %p\n", MemoryArea);
-        return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
+        return MmArmAccessFault(FaultCode, Address, Mode, TrapInformation);
     }
 
     /* Keep same old ReactOS Behaviour */
-    if (StoreInstruction)
+    if (!MI_IS_NOT_PRESENT_FAULT(FaultCode))
     {
         /* Call access fault */
         return MmpAccessFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
