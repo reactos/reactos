@@ -8,6 +8,18 @@
 
 USBPORT_REGISTRATION_PACKET RegPacket;
 
+static const UCHAR Index[8] =
+{
+    ENDPOINT_INTERRUPT_1ms - 1,
+    ENDPOINT_INTERRUPT_2ms - 1,
+    ENDPOINT_INTERRUPT_4ms - 1,
+    ENDPOINT_INTERRUPT_8ms - 1,
+    ENDPOINT_INTERRUPT_16ms - 1,
+    ENDPOINT_INTERRUPT_32ms - 1,
+    ENDPOINT_INTERRUPT_32ms - 1,
+    ENDPOINT_INTERRUPT_32ms - 1
+};
+
 VOID
 NTAPI 
 OHCI_DumpHcdED(POHCI_HCD_ED ED)
@@ -319,15 +331,6 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
     ULONG PeriodIdx = 0;
     POHCI_HCD_ED ED;
     ULONG ScheduleOffset;
-    const UCHAR Index[8] = {
-        ENDPOINT_INTERRUPT_1ms - 1,
-        ENDPOINT_INTERRUPT_2ms - 1,
-        ENDPOINT_INTERRUPT_4ms - 1,
-        ENDPOINT_INTERRUPT_8ms - 1,
-        ENDPOINT_INTERRUPT_16ms - 1,
-        ENDPOINT_INTERRUPT_32ms - 1,
-        ENDPOINT_INTERRUPT_32ms - 1,
-        ENDPOINT_INTERRUPT_32ms - 1};
 
     DPRINT_OHCI("OHCI_OpenInterruptEndpoint: ... \n");
 
