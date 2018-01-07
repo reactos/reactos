@@ -1408,6 +1408,8 @@ VfatSetAllocationSizeInformation(
     if (AllocSizeChanged)
     {
         VfatUpdateEntry(Fcb, vfatVolumeIsFatX(DeviceExt));
+
+        vfatReportChange(DeviceExt, Fcb, FILE_NOTIFY_CHANGE_SIZE, FILE_ACTION_MODIFIED);
     }
     return STATUS_SUCCESS;
 }
