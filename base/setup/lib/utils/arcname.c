@@ -616,7 +616,7 @@ ResolveArcNameNtSymLink(
                                DirectoryHandle,
                                NULL);
     Status = NtOpenSymbolicLinkObject(&LinkHandle,
-                                      SYMBOLIC_LINK_ALL_ACCESS,
+                                      SYMBOLIC_LINK_QUERY,
                                       &ObjectAttributes);
 
     /* Close the \ArcName object directory handle */
@@ -632,8 +632,9 @@ ResolveArcNameNtSymLink(
     /* Reserve one WCHAR for the NULL-termination */
     NtName->MaximumLength -= sizeof(UNICODE_NULL);
 
-    /* Resolve the link */
+    /* Resolve the link and close its handle */
     Status = NtQuerySymbolicLinkObject(LinkHandle, NtName, NULL);
+    NtClose(LinkHandle);
 
     /* Restore the NULL-termination */
     NtName->MaximumLength += sizeof(UNICODE_NULL);
@@ -650,7 +651,6 @@ ResolveArcNameNtSymLink(
         NtName->Buffer[NtName->Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
 
-    NtClose(LinkHandle);
     return Status;
 }
 

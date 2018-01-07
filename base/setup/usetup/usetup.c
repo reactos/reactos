@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/usetup.c
  * PURPOSE:         Text-mode setup
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
@@ -4300,15 +4300,11 @@ RegistryPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(REGISTRY_PAGE);
 
-    Error = UpdateRegistry(USetupData.SetupInf,
-                           &USetupData,
+    Error = UpdateRegistry(&USetupData,
                            RepairUpdateFlag,
                            PartitionList,
                            DestinationDriveLetter,
                            SelectedLanguageId,
-                           USetupData.DisplayList,
-                           USetupData.LayoutList,
-                           USetupData.LanguageList,
                            RegistryStatus);
     if (Error != ERROR_SUCCESS)
     {

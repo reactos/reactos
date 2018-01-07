@@ -176,15 +176,11 @@ typedef VOID
 
 ERROR_NUMBER
 UpdateRegistry(
-    IN HINF SetupInf,
     IN OUT PUSETUP_DATA pSetupData,
     /**/IN BOOLEAN RepairUpdateFlag,     /* HACK HACK! */
     /**/IN PPARTLIST PartitionList,      /* HACK HACK! */
     /**/IN WCHAR DestinationDriveLetter, /* HACK HACK! */
     /**/IN PCWSTR SelectedLanguageId,    /* HACK HACK! */
-    IN PGENERIC_LIST DisplayList,
-    IN PGENERIC_LIST LayoutList,
-    IN PGENERIC_LIST LanguageList,
     IN PREGISTRY_STATUS_ROUTINE StatusRoutine OPTIONAL);
 
 /* EOF */
