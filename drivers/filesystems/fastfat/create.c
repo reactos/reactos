@@ -1013,6 +1013,19 @@ VfatCreateFile(
                                     FILE_ACTION_ADDED,
                                     NULL);
     }
+    else if (Irp->IoStatus.Information == FILE_OVERWRITTEN ||
+             Irp->IoStatus.Information == FILE_SUPERSEDED)
+    {
+        FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
+                                    &(DeviceExt->NotifyList),
+                                    (PSTRING)&pFcb->PathNameU,
+                                    pFcb->PathNameU.Length - pFcb->LongNameU.Length,
+                                    NULL,
+                                    NULL,
+                                    FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE,
+                                    FILE_ACTION_MODIFIED,
+                                    NULL);
+    }
 
     pFcb->OpenHandleCount++;
     DeviceExt->OpenHandleCount++;
