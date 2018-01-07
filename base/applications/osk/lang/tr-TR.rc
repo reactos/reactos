@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/osk/lang/tr-TR.rc
  * PURPOSE:         On screen keyboard (Turkish resources).
- * TRANSLATOR:      2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR:      2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

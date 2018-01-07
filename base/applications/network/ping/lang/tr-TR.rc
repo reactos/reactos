@@ -1,7 +1,7 @@
 /*
  * FILE:        base/applications/network/ping/lang/tr-TR.rc
  * PURPOSE:     Turkish translations for ReactOS Ping Command
- * TRANSLATORS: 2015, 2016 Erdem Ersoy <erdemersoy@live.com>
+ * TRANSLATORS: 2015, 2016 Erdem Ersoy <erdemersoy [at] erdemersoy [dot] net>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
