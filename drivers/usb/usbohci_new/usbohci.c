@@ -1343,7 +1343,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
     RtlCopyMemory(&FirstTD->HwTD.SetupPacket,
                   &TransferParameters->SetupPacket,
-                  sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+                  sizeof(FirstTD->HwTD.SetupPacket));
 
     FirstTdPA = (POHCI_HCD_TD)FirstTD->PhysicalAddress;
 
@@ -1371,7 +1371,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     TD2->OhciTransfer = (ULONG)OhciTransfer;
 
     RtlZeroMemory(&TD2->HwTD.SetupPacket,
-                  sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+                  sizeof(TD2->HwTD.SetupPacket));
 
     TD2->HwTD.Padded[0] = 0;
     TD2->HwTD.Padded[1] = 0;
@@ -1429,7 +1429,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
         TD->HwTD.gTD.BufferEnd = 0;
 
         RtlZeroMemory(&TD->HwTD.SetupPacket,
-                      sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+                      sizeof(TD->HwTD.SetupPacket));
 
         TD->HwTD.Padded[0] = 0;
         TD->HwTD.Padded[1] = 0;
@@ -1535,7 +1535,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
         TD->HwTD.gTD.BufferEnd = 0;
 
         RtlZeroMemory(&TD->HwTD.SetupPacket,
-                      sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+                      sizeof(TD->HwTD.SetupPacket));
 
         TD->HwTD.Padded[0] = 0;
         TD->HwTD.Padded[1] = 0;
