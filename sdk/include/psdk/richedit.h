@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 #ifndef _RICHEDIT_VER
-#define _RICHEDIT_VER   0x0210
+#define _RICHEDIT_VER   0x0300
 #endif /* _RICHEDIT_VER */
 
 #define cchTextLimitDefault 0x7fff
@@ -298,6 +298,7 @@ typedef struct _charformat2a {
     BYTE       bUnderlineType;
     BYTE       bAnimation;
     BYTE       bRevAuthor;
+    BYTE       bReserved1;
 } CHARFORMAT2A;
 
 typedef struct _charformat2w {
@@ -320,6 +321,7 @@ typedef struct _charformat2w {
     BYTE       bUnderlineType;
     BYTE       bAnimation;
     BYTE       bRevAuthor;
+    BYTE       bReserved1;
 } CHARFORMAT2W;
 
 DECL_WINELIB_TYPE_AW(CHARFORMAT2)
