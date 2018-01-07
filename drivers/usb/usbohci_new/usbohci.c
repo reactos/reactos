@@ -397,7 +397,7 @@ OHCI_OpenEndpoint(IN PVOID ohciExtension,
 
     RtlCopyMemory(&OhciEndpoint->EndpointProperties,
                   EndpointProperties,
-                  sizeof(USBPORT_ENDPOINT_PROPERTIES));
+                  sizeof(OhciEndpoint->EndpointProperties));
 
     InitializeListHead(&OhciEndpoint->TDList);
 
@@ -452,7 +452,7 @@ OHCI_ReopenEndpoint(IN PVOID ohciExtension,
 
     RtlCopyMemory(&OhciEndpoint->EndpointProperties,
                   EndpointProperties,
-                  sizeof(USBPORT_ENDPOINT_PROPERTIES));
+                  sizeof(OhciEndpoint->EndpointProperties));
 
     ED->HwED.EndpointControl.FunctionAddress =
         OhciEndpoint->EndpointProperties.DeviceAddress;
