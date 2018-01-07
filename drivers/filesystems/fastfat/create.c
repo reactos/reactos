@@ -923,6 +923,8 @@ VfatCreateFile(
 
             if (!vfatFCBIsDirectory(pFcb))
             {
+                LARGE_INTEGER SystemTime;
+
                 if (RequestedDisposition == FILE_SUPERSEDE)
                 {
                     *pFcb->Attributes = Attributes;
@@ -932,6 +934,21 @@ VfatCreateFile(
                     *pFcb->Attributes |= Attributes;
                 }
                 *pFcb->Attributes |= FILE_ATTRIBUTE_ARCHIVE;
+
+                KeQuerySystemTime(&SystemTime);
+                if (vfatVolumeIsFatX(DeviceExt))
+                {
+                    FsdSystemTimeToDosDateTime(DeviceExt,
+                                               &SystemTime, &pFcb->entry.FatX.UpdateDate,
+                                               &pFcb->entry.FatX.UpdateTime);
+                }
+                else
+                {
+                    FsdSystemTimeToDosDateTime(DeviceExt,
+                                               &SystemTime, &pFcb->entry.Fat.UpdateDate,
+                                               &pFcb->entry.Fat.UpdateTime);
+                }
+
                 VfatUpdateEntry(pFcb, vfatVolumeIsFatX(DeviceExt));
             }
 
