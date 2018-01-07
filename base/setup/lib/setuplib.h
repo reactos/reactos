@@ -44,6 +44,8 @@ extern HANDLE ProcessHeap;
 #include "mui.h"
 #include "settings.h"
 
+// #include "install.h" // See at the end...
+
 
 /* DEFINES ******************************************************************/
 
@@ -123,6 +125,10 @@ typedef struct _USETUP_DATA
     ULONG RequiredPartitionDiskSpace;
     WCHAR InstallationDirectory[MAX_PATH];
 } USETUP_DATA, *PUSETUP_DATA;
+
+
+#include "install.h"
+
 
 // HACK!!
 extern BOOLEAN IsUnattendedSetup;
