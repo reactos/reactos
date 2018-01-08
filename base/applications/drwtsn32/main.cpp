@@ -9,9 +9,11 @@
 #include <winuser.h>
 #include <algorithm>
 #include <shlobj.h>
+#include <tchar.h>
 #include <strsafe.h>
 #include <tlhelp32.h>
 #include <conio.h>
+#include <atlbase.h>
 
 
 static const char szUsage[] = "Usage: DrWtsn32 [-i] [-g] [-p dddd] [-e dddd] [-?]\n"
@@ -143,14 +145,29 @@ int abort(FILE* output, int err)
     return err;
 }
 
+ULONG ReadOutputPathFromRegistry(WCHAR Buffer[], ULONG BufferSize)
+{
+    CRegKey key;
+    if (key.Open(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS) {
+        return 0;
+    }
+
+    ULONG charCount = BufferSize;
+    if (key.QueryStringValue(L"Dump Directory", Buffer, &charCount) != ERROR_SUCCESS) {
+        return 0;
+    }
+
+    return charCount;
+}
+
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 {
     int argc;
     WCHAR **argv = CommandLineToArgvW(cmdLine, &argc);
 
     DWORD pid = 0;
-    char Buffer[MAX_PATH+55];
-    char Filename[50];
+    WCHAR Buffer[MAX_PATH+55];
+    WCHAR Filename[50];
     FILE* output = NULL;
     SYSTEMTIME st;
     DumpData data;
@@ -203,13 +220,20 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 
     GetLocalTime(&st);
 
-    if (SHGetFolderPathA(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, Buffer) == S_OK &&
-        SUCCEEDED(StringCchPrintfA(Filename, _countof(Filename), "Appcrash_%d-%02d-%02d_%02d-%02d-%02d.txt",
+    BOOL HasPath = TRUE;
+    if (ReadOutputPathFromRegistry(Buffer, _countof(Buffer)) == 0) {
+        if (FAILED(SHGetFolderPathW(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, Buffer))) {
+            HasPath = FALSE;
+       }
+    }
+
+    if (HasPath &&
+        SUCCEEDED(StringCchPrintfW(Filename, _countof(Filename), L"Appcrash_%d-%02d-%02d_%02d-%02d-%02d.txt",
                                    st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond)))
     {
-        StringCchCatA(Buffer, _countof(Buffer), "\\");
-        StringCchCatA(Buffer, _countof(Buffer), Filename);
-        output = fopen(Buffer, "wb");
+        StringCchCatW(Buffer, _countof(Buffer), L"\\");
+        StringCchCatW(Buffer, _countof(Buffer), Filename);
+        output = _wfopen(Buffer, L"wb");
     }
     if (!output)
         output = stdout;
@@ -239,11 +263,12 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 
     TerminateProcess(data.ProcessHandle, data.ExceptionInfo.ExceptionRecord.ExceptionCode);
 
+    std::wstring FilenameW(Filename);
     std::string Message = "The application '";
     Message += data.ProcessName;
     Message += "' has just crashed :(\n";
     Message += "Information about this crash is saved to:\n";
-    Message += Filename;
+    Message += std::string(FilenameW.begin(), FilenameW.end());
     Message += "\nThis file is stored on your desktop.";
     MessageBoxA(NULL, Message.c_str(), "Sorry!", MB_OK);
 
