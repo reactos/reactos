@@ -187,6 +187,8 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
     USB_PORT_STATUS_AND_CHANGE status;
     ULONG PortMaskBits;
 
+    ASSERT(Port != 0);
+
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
 
@@ -375,6 +377,7 @@ EHCI_RH_SetFeaturePortReset(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT("EHCI_RH_SetFeaturePortReset: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -409,6 +412,7 @@ EHCI_RH_SetFeaturePortPower(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT_RH("EHCI_RH_SetFeaturePortPower: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -430,6 +434,7 @@ EHCI_RH_SetFeaturePortEnable(IN PVOID ehciExtension,
                              IN USHORT Port)
 {
     DPRINT_RH("EHCI_RH_SetFeaturePortEnable: Not supported\n");
+    ASSERT(Port != 0);
     return MP_STATUS_SUCCESS;
 }
 
@@ -443,6 +448,7 @@ EHCI_RH_SetFeaturePortSuspend(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT("EHCI_RH_SetFeaturePortSuspend: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -469,6 +475,7 @@ EHCI_RH_ClearFeaturePortEnable(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT("EHCI_RH_ClearFeaturePortEnable: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -494,6 +501,7 @@ EHCI_RH_ClearFeaturePortPower(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT("EHCI_RH_ClearFeaturePortPower: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -515,6 +523,7 @@ EHCI_RH_PortResumeComplete(IN PVOID ehciExtension,
     PUSHORT Port = Context;
 
     DPRINT("EHCI_RH_PortResumeComplete: *Port - %x\n", *Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (*Port - 1);
 
@@ -542,6 +551,7 @@ EHCI_RH_ClearFeaturePortSuspend(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT("EHCI_RH_ClearFeaturePortSuspend: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
     EhciExtension->ResetPortBits |= 1 << (Port - 1);
@@ -569,6 +579,7 @@ EHCI_RH_ClearFeaturePortEnableChange(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT("EHCI_RH_ClearFeaturePortEnableChange: Port - %p\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -593,6 +604,7 @@ EHCI_RH_ClearFeaturePortConnectChange(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT_RH("EHCI_RH_ClearFeaturePortConnectChange: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -620,6 +632,7 @@ EHCI_RH_ClearFeaturePortResetChange(IN PVOID ehciExtension,
     PEHCI_EXTENSION EhciExtension = ehciExtension;
 
     DPRINT("EHCI_RH_ClearFeaturePortConnectChange: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     EhciExtension->FinishResetPortBits &= ~(1 << (Port - 1));
     return MP_STATUS_SUCCESS;
@@ -633,6 +646,7 @@ EHCI_RH_ClearFeaturePortSuspendChange(IN PVOID ehciExtension,
     PEHCI_EXTENSION EhciExtension = ehciExtension;
 
     DPRINT("EHCI_RH_ClearFeaturePortSuspendChange: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     EhciExtension->SuspendPortBits &= ~(1 << (Port - 1));
     return MP_STATUS_SUCCESS;
@@ -648,6 +662,7 @@ EHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ehciExtension,
     EHCI_PORT_STATUS_CONTROL PortSC;
 
     DPRINT_RH("EHCI_RH_ClearFeaturePortOvercurrentChange: Port - %x\n", Port);
+    ASSERT(Port != 0);
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
