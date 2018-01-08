@@ -123,13 +123,10 @@ WINAPI
 BasepIsImageVersionOk(IN ULONG ImageMajorVersion,
                       IN ULONG ImageMinorVersion)
 {
-    /* Accept images for NT 3.1 or higher, as long as they're not newer than us */
+    /* Accept images for NT 3.1 or higher */
     return ((ImageMajorVersion >= 3) &&
             ((ImageMajorVersion != 3) ||
-             (ImageMinorVersion >= 10)) &&
-            (ImageMajorVersion <= SharedUserData->NtMajorVersion) &&
-            ((ImageMajorVersion != SharedUserData->NtMajorVersion) ||
-             (ImageMinorVersion <= SharedUserData->NtMinorVersion)));
+             (ImageMinorVersion >= 10)));
 }
 
 NTSTATUS
