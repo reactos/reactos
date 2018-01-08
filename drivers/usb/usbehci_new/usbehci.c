@@ -686,7 +686,24 @@ EHCI_CloseEndpoint(IN PVOID ehciExtension,
                    IN PVOID ehciEndpoint,
                    IN BOOLEAN IsDoDisablePeriodic)
 {
-    DPRINT1("EHCI_CloseEndpoint: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PEHCI_ENDPOINT EhciEndpoint = ehciEndpoint;
+    ULONG TransferType;
+
+    DPRINT1("EHCI_CloseEndpoint: EhciEndpoint - %p, IsDoDisablePeriodic - %X\n",
+            EhciEndpoint,
+            IsDoDisablePeriodic);
+
+    if (IsDoDisablePeriodic)
+    {
+        TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+        if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS ||
+            TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+        {
+            EHCI_DisablePeriodicList(EhciExtension);
+        }
+    }
 }
 
 PEHCI_STATIC_QH
