@@ -185,7 +185,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
         }
         else if (!wcscmp(arg, L"-?"))
         {
-            MessageBoxA(NULL, szUsage, "DrWtsn32", MB_OK);
+            MessageBoxA(NULL, szUsage, "ReactOS Crash Reporter", MB_OK);
             return abort(output, 0);
         }
         else if (!wcscmp(arg, L"/?"))
@@ -197,7 +197,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 
     if (!pid)
     {
-        MessageBoxA(NULL, szUsage, "DrWtsn32", MB_OK);
+        MessageBoxA(NULL, szUsage, "ReactOS Crash Reporter", MB_OK);
         return abort(stdout, 0);
     }
 
