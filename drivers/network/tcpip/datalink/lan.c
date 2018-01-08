@@ -637,14 +637,16 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
             if (NT_SUCCESS(Status))
             {
                 RegistryDataU.Length = KeyValueInfo->DataLength;
-                
-                RtlUnicodeStringToAnsiString(&RegistryDataA,
-                                             &RegistryDataU,
-                                             TRUE);
-                
-                AddrInitIPv4(&Interface->Unicast, inet_addr(RegistryDataA.Buffer));
-                
-                RtlFreeAnsiString(&RegistryDataA);
+
+                Status = RtlUnicodeStringToAnsiString(&RegistryDataA,
+                                                      &RegistryDataU,
+                                                      TRUE);
+                if (NT_SUCCESS(Status))
+                {
+                    AddrInitIPv4(&Interface->Unicast,
+                                 inet_addr(RegistryDataA.Buffer));
+                    RtlFreeAnsiString(&RegistryDataA);
+                }
             }
 
             Status = ZwQueryValueKey(ParameterHandle,
@@ -656,16 +658,18 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
             if (NT_SUCCESS(Status))
             {
                 RegistryDataU.Length = KeyValueInfo->DataLength;
-                
-                RtlUnicodeStringToAnsiString(&RegistryDataA,
-                                             &RegistryDataU,
-                                             TRUE);
-                
-                AddrInitIPv4(&Interface->Netmask, inet_addr(RegistryDataA.Buffer));
-                
-                RtlFreeAnsiString(&RegistryDataA);
+
+                Status = RtlUnicodeStringToAnsiString(&RegistryDataA,
+                                                      &RegistryDataU,
+                                                      TRUE);
+                if (NT_SUCCESS(Status))
+                {
+                    AddrInitIPv4(&Interface->Netmask,
+                                 inet_addr(RegistryDataA.Buffer));
+                    RtlFreeAnsiString(&RegistryDataA);
+                }
             }
-            
+
             /* We have to wait until both IP address and subnet mask
              * are read to add the interface route, but we must do it
              * before we add the default gateway */
@@ -683,24 +687,26 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
             if (NT_SUCCESS(Status))
             {
                 RegistryDataU.Length = KeyValueInfo->DataLength;
-                
-                RtlUnicodeStringToAnsiString(&RegistryDataA,
-                                             &RegistryDataU,
-                                             TRUE);
-                
-                AddrInitIPv4(&Router, inet_addr(RegistryDataA.Buffer));
-                
-                if (!AddrIsUnspecified(&Router))
-                    RouterCreateRoute(&DefaultMask, &DefaultMask, &Router, Interface, 1);
-                
-                RtlFreeAnsiString(&RegistryDataA);
+
+                Status = RtlUnicodeStringToAnsiString(&RegistryDataA,
+                                                      &RegistryDataU,
+                                                      TRUE);
+                if (NT_SUCCESS(Status))
+                {
+                    AddrInitIPv4(&Router, inet_addr(RegistryDataA.Buffer));
+
+                    if (!AddrIsUnspecified(&Router))
+                        RouterCreateRoute(&DefaultMask, &DefaultMask, &Router, Interface, 1);
+
+                    RtlFreeAnsiString(&RegistryDataA);
+                }
             }
         }
-        
+
         ExFreePoolWithTag(KeyValueInfo, KEY_VALUE_TAG);
         ZwClose(ParameterHandle);
     }
-    
+
     return TRUE;
 }
 
