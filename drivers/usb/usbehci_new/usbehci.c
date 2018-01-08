@@ -663,6 +663,25 @@ EHCI_QueryEndpointRequirements(IN PVOID ehciExtension,
 
 VOID
 NTAPI
+EHCI_DisablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
+{
+    PEHCI_HW_REGISTERS OperationalRegs;
+    EHCI_USB_COMMAND Command;
+
+    DPRINT_EHCI("EHCI_DisablePeriodicList: ... \n");
+
+    if (EhciExtension->Flags & EHCI_FLAGS_IDLE_SUPPORT)
+    {
+        OperationalRegs = EhciExtension->OperationalRegs;
+
+        Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
+        Command.PeriodicEnable = 0;
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
+    }
+}
+
+VOID
+NTAPI
 EHCI_CloseEndpoint(IN PVOID ehciExtension,
                    IN PVOID ehciEndpoint,
                    IN BOOLEAN IsDoDisablePeriodic)
@@ -1636,25 +1655,6 @@ EHCI_EnablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
     Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.PeriodicEnable = 1;
     WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
-}
-
-VOID
-NTAPI
-EHCI_DisablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
-{
-    PEHCI_HW_REGISTERS OperationalRegs;
-    EHCI_USB_COMMAND Command;
-
-    DPRINT_EHCI("EHCI_DisablePeriodicList: ... \n");
-
-    if (EhciExtension->Flags & EHCI_FLAGS_IDLE_SUPPORT)
-    {
-        OperationalRegs = EhciExtension->OperationalRegs;
-
-        Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
-        Command.PeriodicEnable = 0;
-        WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
-    }
 }
 
 VOID
