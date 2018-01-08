@@ -117,6 +117,7 @@ RtlAssert(
     #endif
 
     #define UNIMPLEMENTED         __NOTICE(WARNING, "is UNIMPLEMENTED!\n")
+    #define UNIMPLEMENTED_ONCE    do { static int bWarnedOnce = 0; if (!bWarnedOnce) { bWarnedOnce++; UNIMPLEMENTED; } } while (0)
 
     #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
@@ -151,6 +152,7 @@ RtlAssert(
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 
     #define UNIMPLEMENTED
+    #define UNIMPLEMENTED_ONCE
 
     #define ERR_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define WARN_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
