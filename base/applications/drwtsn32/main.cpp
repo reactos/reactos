@@ -9,6 +9,7 @@
 #include <winuser.h>
 #include <algorithm>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <tchar.h>
 #include <strsafe.h>
 #include <tlhelp32.h>
@@ -225,6 +226,15 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
         if (FAILED(SHGetFolderPathW(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, Buffer))) {
             HasPath = FALSE;
        }
+    }
+
+    if (!PathIsDirectoryW(Buffer)) {
+        int res = SHCreateDirectoryExW(NULL, Buffer, NULL);
+        if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS) {
+            xfprintf(stdout, "Could not create output directory, not writing dump\n");
+            MessageBoxA(NULL, "Could not create directory to write crash report.", "ReactOS Crash Reporter", MB_ICONERROR | MB_OK);
+            return abort(stdout, 0);
+        }
     }
 
     if (HasPath &&
