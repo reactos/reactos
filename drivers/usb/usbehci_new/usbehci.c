@@ -1268,8 +1268,19 @@ EHCI_StartController(IN PVOID ehciExtension,
 
     if (Resources->IsChirpHandled)
     {
-        DPRINT1("EHCI_StartController: FIXME\n");
-        DbgBreakPoint();
+        ULONG Port;
+
+        for (Port = 1; Port <= EhciExtension->NumberOfPorts; Port++)
+        {
+            EHCI_RH_SetFeaturePortPower(EhciExtension, Port);
+        }
+
+        RegPacket.UsbPortWait(EhciExtension, 200);
+
+        for (Port = 1; Port <= EhciExtension->NumberOfPorts; Port++)
+        {
+            EHCI_RH_ChirpRootPort(EhciExtension, Port++);
+        }
     }
 
     return MPStatus;
