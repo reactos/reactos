@@ -12,7 +12,7 @@ list(APPEND CPP_SOURCE
     drwtsn32.h
     precomp.h)
 
-add_executable(drwtsn32 ${CPP_SOURCE})
+add_executable(drwtsn32 ${CPP_SOURCE} drwtsn32.rc)
 add_pch(drwtsn32 precomp.h CPP_SOURCE)
 set_module_type(drwtsn32 win32gui UNICODE)
 target_link_libraries(drwtsn32 atlnew)
