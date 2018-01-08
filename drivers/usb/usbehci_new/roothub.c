@@ -6,6 +6,120 @@
 #define NDEBUG_EHCI_ROOT_HUB
 #include "dbg_ehci.h"
 
+MPSTATUS
+NTAPI
+EHCI_RH_ChirpRootPort(IN PVOID ehciExtension,
+                      IN USHORT Port)
+{
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
+    PULONG PortStatusReg;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+    ULONG PortBit;
+    ULONG ix;
+
+    DPRINT_RH("EHCI_RH_ChirpRootPort: Port - %x\n", Port);
+    ASSERT(Port != 0);
+
+    PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+    DPRINT_RH("EHCI_RH_ChirpRootPort: PortSC - %p\n", PortSC.AsULONG);
+
+    PortBit = 1 << (Port - 1);
+
+    if (PortBit & EhciExtension->ResetPortBits)
+    {
+        DPRINT_RH("EHCI_RH_ChirpRootPort: Skip port - %x\n", Port);
+        return MP_STATUS_SUCCESS;
+    }
+
+    if (PortSC.PortPower == 0)
+    {
+        DPRINT_RH("EHCI_RH_ChirpRootPort: Skip port - %x\n", Port);
+        return MP_STATUS_SUCCESS;
+    }
+
+    if (PortSC.CurrentConnectStatus == 0 ||
+        PortSC.PortEnabledDisabled == 1 ||
+        PortSC.PortOwner == 1)
+    {
+        DPRINT_RH("EHCI_RH_ChirpRootPort: No port - %x\n", Port);
+        return MP_STATUS_SUCCESS;
+    }
+
+    if (PortSC.LineStatus == 1 &&
+        PortSC.Suspend == 0 &&
+        PortSC.CurrentConnectStatus == 1)
+    {
+        /* Attached device is not a high-speed device.
+           Release ownership of the port to a selected HC.
+           Companion HC owns and controls the port. Section 4.2 */
+        PortSC.PortOwner = 1;
+        WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+
+        DPRINT_RH("EHCI_RH_ChirpRootPort: Companion HC port - %x\n", Port);
+        return MP_STATUS_SUCCESS;
+    }
+
+    DPRINT("EHCI_RH_ChirpRootPort: EhciExtension - %p, Port - %x\n",
+           EhciExtension,
+           Port);
+
+    PortSC.PortEnabledDisabled = 0;
+    PortSC.PortReset = 1;
+    WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+
+    RegPacket.UsbPortWait(EhciExtension, 10);
+
+    do
+    {
+        PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+        PortSC.ConnectStatusChange = 0;
+        PortSC.PortEnableDisableChange = 0;
+        PortSC.OverCurrentChange = 0;
+        PortSC.PortReset = 0;
+
+        WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+
+        for (ix = 0; ix <= 500; ix += 20)
+        {
+             KeStallExecutionProcessor(20);
+             PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+             DPRINT_RH("EHCI_RH_ChirpRootPort: Reset port - %x\n", Port);
+
+             if (PortSC.PortReset == 0)
+                 break;
+        }
+    }
+    while (PortSC.PortReset == 1);
+
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+    if (PortSC.PortEnabledDisabled == 1)
+    {
+        PortSC.ConnectStatusChange = 0;
+        PortSC.PortEnabledDisabled = 0;
+        PortSC.PortEnableDisableChange = 0;
+        PortSC.OverCurrentChange = 0;
+
+        RegPacket.UsbPortWait(EhciExtension, 10);
+
+        EhciExtension->ResetPortBits |= PortBit;
+
+        WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+        DPRINT_RH("EHCI_RH_ChirpRootPort: Disable port - %x\n", Port);
+    }
+    else
+    {
+        PortSC.PortOwner = 1;
+        WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+        DPRINT_RH("EHCI_RH_ChirpRootPort: Companion HC port - %x\n", Port);
+    }
+
+    return MP_STATUS_SUCCESS;
+}
+
 VOID
 NTAPI
 EHCI_RH_GetRootHubData(IN PVOID ehciExtension,

@@ -184,6 +184,12 @@ EHCI_DumpHwQH(
   IN PEHCI_HCD_QH QH);
 
 /* roothub.c */
+MPSTATUS
+NTAPI
+EHCI_RH_ChirpRootPort(
+  IN PVOID ehciExtension,
+  IN USHORT Port);
+
 VOID
 NTAPI
 EHCI_RH_GetRootHubData(

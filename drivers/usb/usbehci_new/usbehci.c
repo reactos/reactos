@@ -3731,15 +3731,6 @@ EHCI_FlushInterrupts(IN PVOID ehciExtension)
     WRITE_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG, Status.AsULONG);
 }
 
-MPSTATUS
-NTAPI
-EHCI_RH_ChirpRootPort(IN PVOID ehciExtension,
-                      IN USHORT Port)
-{
-    DPRINT1("EHCI_RH_ChirpRootPort: UNIMPLEMENTED. FIXME\n");
-    return MP_STATUS_SUCCESS;
-}
-
 VOID
 NTAPI
 EHCI_TakePortControl(IN PVOID ohciExtension)
