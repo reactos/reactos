@@ -570,6 +570,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ParameterHandle;
     PKEY_VALUE_PARTIAL_INFORMATION KeyValueInfo;
+    ULONG KeyValueInfoLength;
     WCHAR Buffer[150];
     UNICODE_STRING IPAddress = RTL_CONSTANT_STRING(L"IPAddress");
     UNICODE_STRING Netmask = RTL_CONSTANT_STRING(L"SubnetMask");
@@ -608,31 +609,34 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
     }
     else
     {
-        KeyValueInfo = ExAllocatePoolWithTag(PagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR), KEY_VALUE_TAG);
+        KeyValueInfoLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + 16 * sizeof(WCHAR);
+        KeyValueInfo = ExAllocatePoolWithTag(PagedPool,
+                                             KeyValueInfoLength,
+                                             KEY_VALUE_TAG);
         if (!KeyValueInfo)
         {
             ZwClose(ParameterHandle);
             return FALSE;
         }
-        
+
         /* Read the EnableDHCP entry */
         Status = ZwQueryValueKey(ParameterHandle,
                                  &EnableDhcp,
                                  KeyValuePartialInformation,
                                  KeyValueInfo,
-                                 sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG),
+                                 KeyValueInfoLength,
                                  &Unused);
         if (NT_SUCCESS(Status) && KeyValueInfo->DataLength == sizeof(ULONG) && (*(PULONG)KeyValueInfo->Data) == 0)
         {
-            RegistryDataU.MaximumLength = 16 + sizeof(WCHAR);
+            RegistryDataU.MaximumLength = KeyValueInfoLength - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
             RegistryDataU.Buffer = (PWCHAR)KeyValueInfo->Data;
-            
+
             /* Read the IP address */
             Status = ZwQueryValueKey(ParameterHandle,
                                      &IPAddress,
                                      KeyValuePartialInformation,
                                      KeyValueInfo,
-                                     sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
+                                     KeyValueInfoLength,
                                      &Unused);
             if (NT_SUCCESS(Status))
             {
@@ -653,7 +657,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
                                      &Netmask,
                                      KeyValuePartialInformation,
                                      KeyValueInfo,
-                                     sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
+                                     KeyValueInfoLength,
                                      &Unused);
             if (NT_SUCCESS(Status))
             {
@@ -682,7 +686,7 @@ BOOLEAN ReadIpConfiguration(PIP_INTERFACE Interface)
                                      &Gateway,
                                      KeyValuePartialInformation,
                                      KeyValueInfo,
-                                     sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
+                                     KeyValueInfoLength,
                                      &Unused);
             if (NT_SUCCESS(Status))
             {
