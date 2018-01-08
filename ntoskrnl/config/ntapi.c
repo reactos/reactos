@@ -1094,7 +1094,7 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
                            IN ULONG Length,
                            IN BOOLEAN Asynchronous)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED_ONCE;
     return STATUS_NOT_IMPLEMENTED;
 }
 
