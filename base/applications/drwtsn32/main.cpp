@@ -143,8 +143,11 @@ int abort(FILE* output, int err)
     return err;
 }
 
-int main(int argc, char* argv[])
+int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 {
+    int argc;
+    WCHAR **argv = CommandLineToArgvW(cmdLine, &argc);
+
     DWORD pid = 0;
     char Buffer[MAX_PATH+55];
     char Filename[50];
@@ -155,37 +158,37 @@ int main(int argc, char* argv[])
 
     for (int n = 0; n < argc; ++n)
     {
-        char* arg = argv[n];
+        WCHAR* arg = argv[n];
 
-        if (!strcmp(arg, "-i"))
+        if (!wcscmp(arg, L"-i"))
         {
             /* FIXME: Installs as the postmortem debugger. */
         }
-        else if (!strcmp(arg, "-g"))
+        else if (!wcscmp(arg, L"-g"))
         {
         }
-        else if (!strcmp(arg, "-p"))
-        {
-            if (n + 1 < argc)
-            {
-                pid = strtoul(argv[n+1], NULL, 10);
-                n++;
-            }
-        }
-        else if (!strcmp(arg, "-e"))
+        else if (!wcscmp(arg, L"-p"))
         {
             if (n + 1 < argc)
             {
-                data.Event = (HANDLE)strtoul(argv[n+1], NULL, 10);
+                pid = wcstoul(argv[n+1], NULL, 10);
                 n++;
             }
         }
-        else if (!strcmp(arg, "-?"))
+        else if (!wcscmp(arg, L"-e"))
+        {
+            if (n + 1 < argc)
+            {
+                data.Event = (HANDLE)wcstoul(argv[n+1], NULL, 10);
+                n++;
+            }
+        }
+        else if (!wcscmp(arg, L"-?"))
         {
             MessageBoxA(NULL, szUsage, "DrWtsn32", MB_OK);
             return abort(output, 0);
         }
-        else if (!strcmp(arg, "/?"))
+        else if (!wcscmp(arg, L"/?"))
         {
             xfprintf(stdout, "%s\n", szUsage);
             return abort(stdout, 0);
