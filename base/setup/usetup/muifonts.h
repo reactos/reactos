@@ -97,10 +97,11 @@ MUI_SUBFONT HebrewFonts[] =
     { NULL, NULL }
 };
 
-WCHAR CSF_LocalName0[] = {0x5B8B, 0x4F53, 0};
-WCHAR CSF_LocalName1[] = {0x65B0, 0x5B8B, 0x4F53, 0};
-WCHAR CSF_LocalName2[] = {0x4E2D, 0x6613, 0x5B8B, 0x4F53, 0};
-WCHAR CSF_LocalName3[] = {'M', 'S', 0x5B8B, 0x4F53, 0};
+WCHAR CSF_LocalName0[] = {0x5B8B, 0x4F53, 0};                   /* SimSun */
+WCHAR CSF_LocalName1[] = {0x4E2D, 0x6613, 0x5B8B, 0x4F53, 0};   /* SimSun */
+WCHAR CSF_LocalName2[] = {0x65B0, 0x5B8B, 0x4F53, 0};           /* NSimSun */
+WCHAR CSF_LocalName3[] = {0xFC4B, 0x91CC, 0};                   /* SimHei */
+WCHAR CSF_LocalName4[] = {'M', 'S', 0x5B8B, 0x4F53, 0};         /* MS Song */
 MUI_SUBFONT ChineseSimplifiedFonts[] =
 {
     { L"Arial",                  L"Liberation Sans" },
@@ -122,6 +123,7 @@ MUI_SUBFONT ChineseSimplifiedFonts[] =
     { L"Trebuchet MS",           L"Open Sans" },
     { L"SimSun",                 L"Droid Sans Fallback" },
     { L"NSimSun",                L"Droid Sans Fallback" },
+    { L"SimHei",                 L"Droid Sans Fallback" },
     { L"MS Song",                L"Droid Sans Fallback" },
     { L"System",                 L"Droid Sans Fallback" },
     { L"Comic Sans MS",          L"Ubuntu" },
@@ -132,13 +134,14 @@ MUI_SUBFONT ChineseSimplifiedFonts[] =
     { CSF_LocalName1,            L"Droid Sans Fallback" },
     { CSF_LocalName2,            L"Droid Sans Fallback" },
     { CSF_LocalName3,            L"Droid Sans Fallback" },
+    { CSF_LocalName4,            L"Droid Sans Fallback" },
     { NULL, NULL }
 };
 
-WCHAR CTF_LocalName0[] = {0x7D30, 0x660E, 0x9AD4, 0};
-WCHAR CTF_LocalName1[] = {0x65B0, 0x7D30, 0x660E, 0x9AD4, 0};
-WCHAR CTF_LocalName2[] = {0x83EF, 0x5EB7, 0x4E2D, 0x660E, 0x9AD4, 0};
-WCHAR CTF_LocalName3[] = {0x83EF, 0x5EB7, 0x7C97, 0x660E, 0x9AD4, 0};
+WCHAR CTF_LocalName0[] = {0x7D30, 0x660E, 0x9AD4, 0};                       /* MingLiU */
+WCHAR CTF_LocalName1[] = {0x65B0, 0x7D30, 0x660E, 0x9AD4, 0};               /* PMingLiU */
+WCHAR CTF_LocalName2[] = {0x83EF, 0x5EB7, 0x4E2D, 0x660E, 0x9AD4, 0};       /* DLCMingMedium */
+WCHAR CTF_LocalName3[] = {0x83EF, 0x5EB7, 0x7C97, 0x660E, 0x9AD4, 0};       /* DLCMingBold */
 MUI_SUBFONT ChineseTraditionalFonts[] =
 {
     { L"Arial",           L"Liberation Sans" },
@@ -173,10 +176,10 @@ MUI_SUBFONT ChineseTraditionalFonts[] =
     { NULL, NULL }
 };
 
-WCHAR JF_LocalName0[] = {0xFF2D, 0xFF33, ' ', 0x660E, 0x671D, 0};
-WCHAR JF_LocalName1[] = {0xFF2D, 0xFF33, ' ', 0xFF30, 0x660E, 0x671D, 0};
-WCHAR JF_LocalName2[] = {0xFF2D, 0xFF33, ' ', 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0};
-WCHAR JF_LocalName3[] = {0xFF2D, 0xFF33, ' ', 0xFF30, 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0};
+WCHAR JF_LocalName0[] = {0xFF2D, 0xFF33, ' ', 0x660E, 0x671D, 0};                           /* MS Mincho */
+WCHAR JF_LocalName1[] = {0xFF2D, 0xFF33, ' ', 0xFF30, 0x660E, 0x671D, 0};                   /* MS PMincho */
+WCHAR JF_LocalName2[] = {0xFF2D, 0xFF33, ' ', 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0};           /* MS Gothic */
+WCHAR JF_LocalName3[] = {0xFF2D, 0xFF33, ' ', 0xFF30, 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0};   /* MS PGothic */
 MUI_SUBFONT JapaneseFonts[] =
 {
     { L"Arial",           L"Liberation Sans" },
@@ -210,12 +213,12 @@ MUI_SUBFONT JapaneseFonts[] =
     { NULL, NULL }
 };
 
-WCHAR KF_LocalName0[] = {0xBC14, 0xD0D5, 0};
-WCHAR KF_LocalName1[] = {0xBC14, 0xD0D5, 0xCCB4, 0};
-WCHAR KF_LocalName2[] = {0xAD81, 0xC11C, 0};
-WCHAR KF_LocalName3[] = {0xAD81, 0xC11C, 0xCCB4, 0};
-WCHAR KF_LocalName4[] = {0xAD74, 0xB9BC, 0};
-WCHAR KF_LocalName5[] = {0xAD74, 0xB9BC, 0xCCB4, 0};
+WCHAR KF_LocalName0[] = {0xBC14, 0xD0D5, 0};            /* Batang */
+WCHAR KF_LocalName1[] = {0xBC14, 0xD0D5, 0xCCB4, 0};    /* BatangChe */
+WCHAR KF_LocalName2[] = {0xAD81, 0xC11C, 0};            /* Gungsuh */
+WCHAR KF_LocalName3[] = {0xAD81, 0xC11C, 0xCCB4, 0};    /* GungsuhChe */
+WCHAR KF_LocalName4[] = {0xAD74, 0xB9BC, 0};            /* Gulim */
+WCHAR KF_LocalName5[] = {0xAD74, 0xB9BC, 0xCCB4, 0};    /* GulimChe */
 MUI_SUBFONT KoreanFonts[] =
 {
     { L"Arial",           L"Liberation Sans" },
