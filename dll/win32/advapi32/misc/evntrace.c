@@ -5,6 +5,7 @@
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
+#include <advapi32.h>
 #include <wmistr.h>
 #include <evntrace.h>
 
