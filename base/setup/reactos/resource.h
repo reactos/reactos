@@ -127,6 +127,18 @@
 #define IDS_PREPARE_PARTITIONS      5208
 #define IDS_PREPARE_FILES           5209
 #define IDS_COPYING_FILES           5210
+#define IDS_CREATE_REGISTRY         5211
+#define IDS_UPDATE_REGISTRY         5212
+
+#define IDS_REG_DONE                    5220
+#define IDS_REG_REGHIVEUPDATE           5221
+#define IDS_REG_IMPORTFILE              5222
+#define IDS_REG_DISPLAYSETTINGSUPDATE   5223
+#define IDS_REG_LOCALESETTINGSUPDATE    5224
+#define IDS_REG_ADDKBLAYOUTS            5225
+#define IDS_REG_KEYBOARDSETTINGSUPDATE  5226
+#define IDS_REG_CODEPAGEINFOUPDATE      5227
+#define IDS_REG_UNKNOWN                 5228
 
 
 /* Error Strings */

@@ -221,6 +221,23 @@ BEGIN
     IDS_PREPARE_PARTITIONS "Prépare les partitions..."
     IDS_PREPARE_FILES "Prépare la liste de fichiers à copier, veuillez patienter..."
     IDS_COPYING_FILES "Copie les fichiers..."
+
+    IDS_CREATE_REGISTRY "Crée la base de registres..."
+    IDS_UPDATE_REGISTRY "Mise à jour de la base de registres..."
+END
+
+// Note to translators: please refer to the corresponding usetup/lang/*.h translations.
+STRINGTABLE
+BEGIN
+    IDS_REG_DONE "Terminé"
+    IDS_REG_REGHIVEUPDATE "Mise à jour de la base de registres"
+    IDS_REG_IMPORTFILE "Importe %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "Mise à jour des paramètres de registre pour l'écran"
+    IDS_REG_LOCALESETTINGSUPDATE "Mise à jour des paramètres régionaux"
+    IDS_REG_ADDKBLAYOUTS "Ajout des dispositions de clavier"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "Mise à jour des paramètres de disposition du clavier"
+    IDS_REG_CODEPAGEINFOUPDATE "Ajout des informations de pages de codes"
+    IDS_REG_UNKNOWN "Statut %d inconnu"
 END
 
 /* Error Strings */

@@ -1706,6 +1706,38 @@ FileCopyCallback(PVOID Context,
     return FILEOP_DOIT;
 }
 
+static VOID
+__cdecl
+RegistryStatus(IN REGISTRY_STATUS RegStatus, ...)
+{
+    /* WARNING: Please keep this lookup table in sync with the resources! */
+    static const UINT StringIDs[] =
+    {
+        IDS_REG_DONE,                   /* Success */
+        IDS_REG_REGHIVEUPDATE,          /* RegHiveUpdate */
+        IDS_REG_IMPORTFILE,             /* ImportRegHive */
+        IDS_REG_DISPLAYSETTINGSUPDATE,  /* DisplaySettingsUpdate */
+        IDS_REG_LOCALESETTINGSUPDATE,   /* LocaleSettingsUpdate */
+        IDS_REG_ADDKBLAYOUTS,           /* KeybLayouts */
+        IDS_REG_KEYBOARDSETTINGSUPDATE, /* KeybSettingsUpdate */
+        IDS_REG_CODEPAGEINFOUPDATE,     /* CodePageInfoUpdate */
+    };
+
+    if (RegStatus < _countof(StringIDs))
+    {
+        va_list args;
+        va_start(args, RegStatus);
+        SetWindowResPrintfVW(UiContext.hWndItem, SetupData.hInstance, StringIDs[RegStatus], args);
+        va_end(args);
+    }
+    else
+    {
+        SetWindowResPrintfW(UiContext.hWndItem, SetupData.hInstance, IDS_REG_UNKNOWN, RegStatus);
+    }
+
+    SendMessageW(UiContext.hWndProgress, PBM_STEPIT, 0, 0);
+}
+
 /**
  * @brief
  * Enables or disables the Cancel and the Close title-bar
@@ -1732,7 +1764,7 @@ PrepareAndDoCopyThread(
     HWND hwndDlg = (HWND)Param;
     HWND hWndProgress;
     LONG_PTR dwStyle;
-    // ERROR_NUMBER ErrorNumber;
+    ERROR_NUMBER ErrorNumber;
     BOOLEAN Success;
     NTSTATUS Status;
     FSVOL_CONTEXT FsVolContext;
@@ -1922,6 +1954,38 @@ PrepareAndDoCopyThread(
 
     /* Create the $winnt$.inf file */
     InstallSetupInfFile(&pSetupData->USetupData);
+
+
+    /*
+     * Create or update the registry hives
+     */
+
+    /* Set status text */
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      pSetupData->RepairUpdateFlag ? IDS_UPDATE_REGISTRY
+                                                   : IDS_CREATE_REGISTRY);
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    /* Set up the progress bar */
+    SendMessageW(hWndProgress,
+                 PBM_SETRANGE, 0,
+                 MAKELPARAM(0, 8)); // FIXME: hardcoded number of steps, see StringIDs[] array in RegistryStatus()
+    SendMessageW(hWndProgress,
+                 PBM_SETSTEP, 1, 0);
+    SendMessageW(hWndProgress,
+                 PBM_SETPOS, 0, 0);
+
+    ErrorNumber = UpdateRegistry(&pSetupData->USetupData,
+                                 pSetupData->RepairUpdateFlag,
+                                 pSetupData->PartitionList,
+                                 InstallVolume->Info.DriveLetter,
+                                 pSetupData->SelectedLanguageId,
+                                 RegistryStatus,
+                                 NULL /* SubstSettings */);
+    DBG_UNREFERENCED_PARAMETER(ErrorNumber);
+    SendMessageW(UiContext.hWndProgress, PBM_SETPOS, 100, 0);
+
 
     /* We are done! Switch to the Terminate page */
     PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
