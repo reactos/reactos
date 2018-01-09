@@ -1665,6 +1665,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     {
         switch (pOS2->panose[PAN_PROPORTION_INDEX])
         {
+            case PAN_PROP_EVEN_WIDTH:
             case PAN_PROP_MONOSPACED:
                 TM->tmPitchAndFamily = 0;
                 break;
