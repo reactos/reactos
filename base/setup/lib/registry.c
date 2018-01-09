@@ -67,7 +67,7 @@
 #define Architecture L"ppc"
 #endif
 
-/* FUNCTIONS ****************************************************************/
+/* GLOBALS ******************************************************************/
 
 #define REGISTRY_SETUP_MACHINE  L"\\Registry\\Machine\\SYSTEM\\USetup_Machine\\"
 #define REGISTRY_SETUP_USER     L"\\Registry\\Machine\\SYSTEM\\USetup_User\\"
@@ -89,6 +89,8 @@ ROOT_KEY RootKeys[] =
     { L"HKR", NULL, NULL },
 #endif
 };
+
+/* FUNCTIONS ****************************************************************/
 
 #define IsPredefKey(HKey)       \
     (((ULONG_PTR)(HKey) & 0xF0000000) == 0x80000000)
@@ -789,7 +791,9 @@ RegInitializeRegistry(
                          &ObjectAttributes,
                          0,
                          NULL,
-                         REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE, // FIXME!
+                    // FIXME: Using REG_OPTION_VOLATILE works OK on Windows,
+                    // but I need to check whether it works OK on ReactOS too.
+                         REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE,
                          &Disposition);
     if (!NT_SUCCESS(Status))
     {
@@ -811,7 +815,9 @@ RegInitializeRegistry(
                          &ObjectAttributes,
                          0,
                          NULL,
-                         REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE, // FIXME!
+                    // FIXME: Using REG_OPTION_VOLATILE works OK on Windows,
+                    // but I need to check whether it works OK on ReactOS too.
+                         REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE,
                          &Disposition);
     if (!NT_SUCCESS(Status))
     {
@@ -838,15 +844,18 @@ RegInitializeRegistry(
                                      /* SystemSecurity, sizeof(SystemSecurity) */);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("ConnectRegistry(%S) failed, Status 0x%08lx\n", RegistryHives[i].HiveName, Status);
+                DPRINT1("ConnectRegistry(%S) failed, Status 0x%08lx\n",
+                        RegistryHives[i].HiveName, Status);
             }
 
             /* Create the registry symlink to this key */
-            if (!CmpLinkKeyToHive(RootKeys[GetPredefKeyIndex(RegistryHives[i].PredefKeyHandle)].Handle,
-                                  RegistryHives[i].RegSymLink,
-                                  RegistryHives[i].HiveRegistryPath))
+            Status = CreateSymLinkKey(RootKeys[GetPredefKeyIndex(RegistryHives[i].PredefKeyHandle)].Handle,
+                                      RegistryHives[i].RegSymLink,
+                                      RegistryHives[i].HiveRegistryPath);
+            if (!NT_SUCCESS(Status))
             {
-                DPRINT1("CmpLinkKeyToHive(%S) failed!\n", RegistryHives[i].HiveName);
+                DPRINT1("CreateSymLinkKey(%S) failed, Status 0x%08lx\n",
+                        RegistryHives[i].RegSymLink, Status);
             }
         }
         else
@@ -865,7 +874,9 @@ RegInitializeRegistry(
                                  &ObjectAttributes,
                                  0,
                                  NULL,
-                                 REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE, // FIXME!
+                            // FIXME: Using REG_OPTION_VOLATILE works OK on Windows,
+                            // but I need to check whether it works OK on ReactOS too.
+                                 REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE,
                                  &Disposition);
             if (!NT_SUCCESS(Status))
             {
@@ -935,9 +946,9 @@ RegInitializeRegistry(
     }
     else
     {
-        DPRINT1("NtCreateKey() succeeded to %s the %wZ key (Status %lx)\n",
-                Disposition == REG_CREATED_NEW_KEY ? "create" : /* REG_OPENED_EXISTING_KEY */ "open",
-                &KeyName, Status);
+        DPRINT("NtCreateKey() succeeded to %s the %wZ key (Status %lx)\n",
+               Disposition == REG_CREATED_NEW_KEY ? "create" : /* REG_OPENED_EXISTING_KEY */ "open",
+               &KeyName, Status);
     }
     RootKeys[GetPredefKeyIndex(HKEY_CLASSES_ROOT)].Handle = KeyHandle;
 
@@ -967,18 +978,19 @@ RegInitializeRegistry(
     }
     else
     {
-        DPRINT1("NtCreateKey() succeeded to %s the ControlSet001 key (Status %lx)\n",
-                Disposition == REG_CREATED_NEW_KEY ? "create" : /* REG_OPENED_EXISTING_KEY */ "open",
-                Status);
+        DPRINT("NtCreateKey() succeeded to %s the ControlSet001 key (Status %lx)\n",
+               Disposition == REG_CREATED_NEW_KEY ? "create" : /* REG_OPENED_EXISTING_KEY */ "open",
+               Status);
     }
     NtClose(KeyHandle);
 
     /* Create the 'HKLM\SYSTEM\CurrentControlSet' symlink */
-    if (!CmpLinkKeyToHive(RootKeys[GetPredefKeyIndex(HKEY_LOCAL_MACHINE)].Handle,
-                          L"SYSTEM\\CurrentControlSet",
-                          REGISTRY_SETUP_MACHINE L"SYSTEM\\ControlSet001"))
+    Status = CreateSymLinkKey(RootKeys[GetPredefKeyIndex(HKEY_LOCAL_MACHINE)].Handle,
+                              L"SYSTEM\\CurrentControlSet",
+                              REGISTRY_SETUP_MACHINE L"SYSTEM\\ControlSet001");
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CmpLinkKeyToHive(CurrentControlSet) failed!\n");
+        DPRINT1("CreateSymLinkKey(CurrentControlSet) failed, Status 0x%08lx\n", Status);
     }
 
 
@@ -1026,15 +1038,37 @@ RegCleanupRegistry(
     }
 
     /*
-     * Note that we don't need to explicitly remove the symlinks we have created
-     * since they are created volatile, inside registry keys that will be however
-     * removed explictly in the following.
+     * To keep the running system clean we need first to remove the symlinks
+     * we have created and then unmounting the hives. Finally we delete the
+     * master registry keys.
      */
 
     for (i = 0; i < ARRAYSIZE(RegistryHives); ++i)
     {
-        if (RegistryHives[i].State != Create && RegistryHives[i].State != Repair)
+        if (RegistryHives[i].State == Create || RegistryHives[i].State == Repair)
         {
+            /* Delete the registry symlink to this key */
+            Status = DeleteSymLinkKey(RootKeys[GetPredefKeyIndex(RegistryHives[i].PredefKeyHandle)].Handle,
+                                      RegistryHives[i].RegSymLink);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("DeleteSymLinkKey(%S) failed, Status 0x%08lx\n",
+                        RegistryHives[i].RegSymLink, Status);
+            }
+
+            /* Unmount the hive */
+            Status = DisconnectRegistry(NULL,
+                                        RegistryHives[i].HiveRegistryPath,
+                                        1 /* REG_FORCE_UNLOAD */);
+            DPRINT1("Unmounting '%S' %s\n", RegistryHives[i].HiveRegistryPath, NT_SUCCESS(Status) ? "succeeded" : "failed");
+
+            /* Switch the hive state to 'Update' */
+            RegistryHives[i].State = Update;
+        }
+        else
+        {
+            /* Delete the *DUMMY* volatile hives created for the update procedure */
+
             RtlInitUnicodeString(&KeyName, RegistryHives[i].RegSymLink);
             InitializeObjectAttributes(&ObjectAttributes,
                                        &KeyName,
@@ -1053,16 +1087,6 @@ RegCleanupRegistry(
 
             NtDeleteKey(KeyHandle);
             NtClose(KeyHandle);
-        }
-        else
-        {
-            Status = DisconnectRegistry(NULL,
-                                        RegistryHives[i].HiveRegistryPath,
-                                        1 /* REG_FORCE_UNLOAD */);
-            DPRINT1("Unmounting '%S' %s\n", RegistryHives[i].HiveRegistryPath, NT_SUCCESS(Status) ? "succeeded" : "failed");
-
-            /* Switch the hive state to 'Update' */
-            RegistryHives[i].State = Update;
         }
     }
 

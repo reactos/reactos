@@ -35,18 +35,24 @@ CreateRegistryFile(
 */
     );
 
-BOOLEAN
-CmpLinkKeyToHive(
-    IN HANDLE RootLinkKeyHandle OPTIONAL,
+/* Adapted from ntoskrnl/config/cmsysini.c:CmpLinkKeyToHive() */
+NTSTATUS
+CreateSymLinkKey(
+    IN HANDLE RootKey OPTIONAL,
     IN PCWSTR LinkKeyName,
     IN PCWSTR TargetKeyName);
+
+NTSTATUS
+DeleteSymLinkKey(
+    IN HANDLE RootKey OPTIONAL,
+    IN PCWSTR LinkKeyName);
 
 /*
  * Should be called under SE_RESTORE_PRIVILEGE privilege
  */
 NTSTATUS
 ConnectRegistry(
-    IN HKEY RootKey OPTIONAL,
+    IN HANDLE RootKey OPTIONAL,
     IN PCWSTR RegMountPoint,
     // IN HANDLE RootDirectory OPTIONAL,
     IN PUNICODE_STRING NtSystemRoot,
@@ -62,7 +68,7 @@ ConnectRegistry(
  */
 NTSTATUS
 DisconnectRegistry(
-    IN HKEY RootKey OPTIONAL,
+    IN HANDLE RootKey OPTIONAL,
     IN PCWSTR RegMountPoint,
     IN ULONG Flags);
 
@@ -71,7 +77,7 @@ DisconnectRegistry(
  */
 NTSTATUS
 VerifyRegistryHive(
-    // IN HKEY RootKey OPTIONAL,
+    // IN HANDLE RootKey OPTIONAL,
     // // IN HANDLE RootDirectory OPTIONAL,
     IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey /* ,
