@@ -519,6 +519,7 @@ USBPORT_StartDevice(IN PDEVICE_OBJECT FdoDevice,
     BOOLEAN IsCompanion = FALSE;
     ULONG LegacyBIOS;
     ULONG MiniportFlags;
+    ULONG ix;
 
     DPRINT("USBPORT_StartDevice: FdoDevice - %p, UsbPortResources - %p\n",
            FdoDevice,
@@ -610,6 +611,7 @@ USBPORT_StartDevice(IN PDEVICE_OBJECT FdoDevice,
     KeInitializeSpinLock(&FdoExtension->PowerWakeSpinLock);
     KeInitializeSpinLock(&FdoExtension->SetPowerD0SpinLock);
     KeInitializeSpinLock(&FdoExtension->RootHubCallbackSpinLock);
+    KeInitializeSpinLock(&FdoExtension->TtSpinLock);
 
     KeInitializeDpc(&FdoExtension->IsrDpc, USBPORT_IsrDpc, FdoDevice);
 
@@ -752,6 +754,12 @@ USBPORT_StartDevice(IN PDEVICE_OBJECT FdoDevice,
     if (TotalBusBandwidth != FdoExtension->TotalBusBandwidth)
     {
         FdoExtension->TotalBusBandwidth = TotalBusBandwidth;
+    }
+
+    for (ix = 0; ix < USB2_FRAMES; ix++)
+    {
+        FdoExtension->Bandwidth[ix] = FdoExtension->TotalBusBandwidth -
+                                      FdoExtension->TotalBusBandwidth / 10;
     }
 
     FdoExtension->ActiveIrpTable = ExAllocatePoolWithTag(NonPagedPool,
