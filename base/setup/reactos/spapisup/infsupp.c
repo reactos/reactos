@@ -48,7 +48,8 @@ SetupOpenInfFileExW(
      * the Win32 SetupOpenInfFileW API only takes Win32 paths. We therefore
      * map the NT path to Win32 path and then call the Win32 API.
      */
-    if (!ConvertNtPathToWin32Path(Win32FileName,
+    if (!ConvertNtPathToWin32Path(&SetupData.MappingList,
+                                  Win32FileName,
                                   _countof(Win32FileName),
                                   FileName))
     {

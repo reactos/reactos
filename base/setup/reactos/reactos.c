@@ -1192,37 +1192,99 @@ BOOL LoadSetupData(
     return ret;
 }
 
+VOID
+InitNtToWin32PathMappingList(
+    IN OUT PNT_WIN32_PATH_MAPPING_LIST MappingList)
+{
+    InitializeListHead(&MappingList->List);
+    MappingList->MappingsCount = 0;
+}
+
+VOID
+FreeNtToWin32PathMappingList(
+    IN OUT PNT_WIN32_PATH_MAPPING_LIST MappingList)
+{
+    PLIST_ENTRY ListEntry;
+    PVOID Entry;
+
+    while (!IsListEmpty(&MappingList->List))
+    {
+        ListEntry = RemoveHeadList(&MappingList->List);
+        Entry = (PVOID)CONTAINING_RECORD(ListEntry, NT_WIN32_PATH_MAPPING, ListEntry);
+        HeapFree(ProcessHeap, 0, Entry);
+    }
+
+    MappingList->MappingsCount = 0;
+}
+
 /*
  * Attempts to convert a pure NT file path into a corresponding Win32 path.
  * Adapted from GetInstallSourceWin32() in dll/win32/syssetup/wizard.c
  */
 BOOL
 ConvertNtPathToWin32Path(
+    IN OUT PNT_WIN32_PATH_MAPPING_LIST MappingList,
     OUT PWSTR pwszPath,
     IN DWORD cchPathMax,
     IN PCWSTR pwszNTPath)
 {
     BOOL FoundDrive = FALSE, RetryOnce = FALSE;
+    PLIST_ENTRY ListEntry;
+    PNT_WIN32_PATH_MAPPING Entry;
+    PCWSTR pwszNtPathToMap = pwszNTPath;
+    PCWSTR pwszRemaining = NULL;
     DWORD cchDrives;
     PWCHAR pwszDrive;
-    PCWSTR pwszRemaining = NULL;
     WCHAR wszDrives[512];
     WCHAR wszNTPath[MAX_PATH];
-    WCHAR TargetPath[MAX_PATH] = L"";
+    WCHAR TargetPath[MAX_PATH];
 
     *pwszPath = UNICODE_NULL;
+
+    /*
+     * We find first a mapping inside the MappingList. If one is found, use it
+     * to build the Win32 path. If there is none, we need to create one by
+     * checking the Win32 drives (and possibly NT symlinks too).
+     * In case of success, add the newly found mapping to the list and use it
+     * to build the Win32 path.
+     */
+
+    for (ListEntry = MappingList->List.Flink;
+         ListEntry != &MappingList->List;
+         ListEntry = ListEntry->Flink)
+    {
+        Entry = CONTAINING_RECORD(ListEntry, NT_WIN32_PATH_MAPPING, ListEntry);
+
+        DPRINT("Testing '%S' --> '%S'\n", Entry->Win32Path, Entry->NtPath);
+
+        /* Check whether the queried NT path prefixes the user-provided NT path */
+        FoundDrive = !_wcsnicmp(pwszNtPathToMap, Entry->NtPath, wcslen(Entry->NtPath));
+        if (FoundDrive)
+        {
+            /* Found it! */
+
+            /* Set the pointers and go build the Win32 path */
+            pwszDrive = Entry->Win32Path;
+            pwszRemaining = pwszNTPath + wcslen(Entry->NtPath);
+            goto Quit;
+        }
+    }
+
+    /*
+     * No mapping exists for this path yet: try to find one now.
+     */
 
     /* Retrieve the mounted drives (available drive letters) */
     cchDrives = GetLogicalDriveStringsW(_countof(wszDrives) - 1, wszDrives);
     if (cchDrives == 0 || cchDrives >= _countof(wszDrives))
     {
         /* Buffer too small or failure */
-        DPRINT1("GetLogicalDriveStringsW failed\n");
+        DPRINT1("ConvertNtPathToWin32Path: GetLogicalDriveStringsW failed\n");
         return FALSE;
     }
 
-
-Retry: // We go back there once if RetryOnce == TRUE
+/* We go back there once if RetryOnce == TRUE */
+Retry:
 
     /* Enumerate the mounted drives */
     for (pwszDrive = wszDrives; *pwszDrive; pwszDrive += wcslen(pwszDrive) + 1)
@@ -1235,25 +1297,87 @@ Retry: // We go back there once if RetryOnce == TRUE
         DPRINT("Testing '%S' --> '%S'\n", pwszDrive, wszNTPath);
 
         /* Check whether the queried NT path prefixes the user-provided NT path */
-        if (!_wcsnicmp(wszNTPath, pwszNTPath, wcslen(wszNTPath)))
+        FoundDrive = !_wcsnicmp(pwszNtPathToMap, wszNTPath, wcslen(wszNTPath));
+        if (!FoundDrive)
+        {
+            PWCHAR ptr, ptr2;
+
+            /*
+             * Check whether this was a network share that has a drive letter,
+             * but the user-provided NT path points to this share without
+             * mentioning the drive letter.
+             *
+             * The format is: \Device\<network_redirector>\;X:<data>\share\path
+             * The corresponding drive letter is 'X'.
+             * A system-provided network redirector (LanManRedirector or Mup)
+             * or a 3rd-party one may be used.
+             *
+             * We check whether the user-provided NT path has the form:
+             * \Device\<network_redirector>\<data>\share\path
+             * as it obviously did not have the full form (the previous check
+             * would have been OK otherwise).
+             */
+            if (!_wcsnicmp(wszNTPath, L"\\Device\\", _countof(L"\\Device\\")-1) &&
+                (ptr = wcschr(wszNTPath + _countof(L"\\Device\\")-1, L'\\')) &&
+                wcslen(++ptr) >= 3 && ptr[0] == L';' && ptr[2] == L':')
+            {
+                /*
+                 * Normally the specified drive letter should correspond
+                 * to the one used for the mapping. But we will ignore
+                 * if it happens not to be the case.
+                 */
+                if (pwszDrive[0] != ptr[1])
+                {
+                    DPRINT1("Peculiar: expected network share drive letter %C different from actual one %C\n",
+                            pwszDrive[0], ptr[1]);
+                }
+
+                /* Remove the drive letter from the NT network share path */
+                ptr2 = ptr + 3;
+                /* Swallow as many possible consecutive backslashes as there could be */
+                while (*ptr2 == L'\\') ++ptr2;
+
+                memmove(ptr, ptr2, (wcslen(ptr2) + 1) * sizeof(WCHAR));
+
+                /* Now do the check again */
+                FoundDrive = !_wcsnicmp(pwszNtPathToMap, wszNTPath, wcslen(wszNTPath));
+            }
+        }
+        if (FoundDrive)
         {
             /* Found it! */
-            FoundDrive = TRUE;
-            if (!RetryOnce && pwszNTPath != TargetPath)
+
+            pwszDrive[2] = UNICODE_NULL; // Remove the backslash
+
+            if (pwszNtPathToMap == pwszNTPath)
+            {
+                ASSERT(!RetryOnce && pwszNTPath != TargetPath);
                 pwszRemaining = pwszNTPath + wcslen(wszNTPath);
+            }
             break;
         }
     }
 
     if (FoundDrive)
     {
-        pwszDrive[2] = UNICODE_NULL; // Remove the backslash
-        StringCchPrintfW(pwszPath, cchPathMax,
-                         L"%s%s",
-                         pwszDrive,
-                         pwszRemaining);
-        DPRINT1("ConvertNtPathToWin32Path: %S\n", pwszPath);
-        return TRUE;
+        /* A mapping was found, add it to the cache */
+        Entry = HeapAlloc(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(*Entry));
+        if (!Entry)
+        {
+            DPRINT1("ConvertNtPathToWin32Path: Cannot allocate memory\n");
+            return FALSE;
+        }
+        StringCchCopyNW(Entry->NtPath, _countof(Entry->NtPath),
+                        pwszNTPath, pwszRemaining - pwszNTPath);
+        StringCchCopyW(Entry->Win32Path, _countof(Entry->Win32Path), pwszDrive);
+
+        /* Insert it as the most recent entry */
+        InsertHeadList(&MappingList->List, &Entry->ListEntry);
+        MappingList->MappingsCount++;
+
+        /* Set the pointers and go build the Win32 path */
+        pwszDrive = Entry->Win32Path;
+        goto Quit;
     }
 
     /*
@@ -1309,10 +1433,12 @@ Retry: // We go back there once if RetryOnce == TRUE
         if (!NT_SUCCESS(Status))
         {
             /* Not a symlink, or something else happened: bail out */
-            DPRINT1("NtOpenSymbolicLinkObject(%wZ) failed, Status 0x%08lx\n", &SymLink, Status);
+            DPRINT1("ConvertNtPathToWin32Path: NtOpenSymbolicLinkObject(%wZ) failed, Status 0x%08lx\n",
+                    &SymLink, Status);
             return FALSE;
         }
 
+        *TargetPath = UNICODE_NULL;
         RtlInitEmptyUnicodeString(&Target, TargetPath, sizeof(TargetPath));
 
         /* Resolve the link and close its handle */
@@ -1323,17 +1449,31 @@ Retry: // We go back there once if RetryOnce == TRUE
         if (!NT_SUCCESS(Status))
         {
             /* Not a symlink, or something else happened: bail out */
-            DPRINT1("NtQuerySymbolicLinkObject(%wZ) failed, Status 0x%08lx\n", &SymLink, Status);
+            DPRINT1("ConvertNtPathToWin32Path: NtQuerySymbolicLinkObject(%wZ) failed, Status 0x%08lx\n",
+                    &SymLink, Status);
             return FALSE;
         }
 
-        /* Set pointers */
+        /* Set the pointers */
         pwszRemaining = pwszNTPath + Length;
-        pwszNTPath = TargetPath;
+        pwszNtPathToMap = TargetPath; // Point to our local buffer
 
         /* Retry once */
         RetryOnce = TRUE;
         goto Retry;
+    }
+
+    ASSERT(!FoundDrive);
+
+Quit:
+    if (FoundDrive)
+    {
+        StringCchPrintfW(pwszPath, cchPathMax,
+                         L"%s%s",
+                         pwszDrive,
+                         pwszRemaining);
+        DPRINT("ConvertNtPathToWin32Path: %S\n", pwszPath);
+        return TRUE;
     }
 
     return FALSE;
@@ -1341,7 +1481,9 @@ Retry: // We go back there once if RetryOnce == TRUE
 
 /* Used to enable and disable the shutdown privilege */
 /* static */ BOOL
-EnablePrivilege(LPCWSTR lpszPrivilegeName, BOOL bEnablePrivilege)
+EnablePrivilege(
+    IN LPCWSTR lpszPrivilegeName,
+    IN BOOL bEnablePrivilege)
 {
     BOOL   Success;
     HANDLE hToken;
@@ -1382,6 +1524,14 @@ _tWinMain(HINSTANCE hInst,
 
     ProcessHeap = GetProcessHeap();
 
+    SetupData.hInstance = hInst;
+    SetupData.hInstallThread = NULL;
+    SetupData.hHaltInstallEvent = NULL;
+    SetupData.bStopInstall = FALSE;
+
+    /* Initialize the NT to Win32 path prefix mapping list */
+    InitNtToWin32PathMappingList(&SetupData.MappingList);
+
     /* Initialize Setup, phase 0 */
     InitializeSetup(&SetupData.USetupData, 0);
 
@@ -1405,11 +1555,6 @@ _tWinMain(HINSTANCE hInst,
     /* Load extra setup data (HW lists etc...) */
     if (!LoadSetupData(&SetupData))
         goto Quit;
-
-    SetupData.hInstance = hInst;
-    SetupData.hInstallThread = NULL;
-    SetupData.hHaltInstallEvent = NULL;
-    SetupData.bStopInstall = FALSE;
 
     CheckUnattendedSetup(&SetupData.USetupData);
     SetupData.bUnattend = IsUnattendedSetup; // FIXME :-)
@@ -1543,6 +1688,9 @@ Quit:
 
     /* Setup has finished */
     FinishSetup(&SetupData.USetupData);
+
+    /* Free the NT to Win32 path prefix mapping list */
+    FreeNtToWin32PathMappingList(&SetupData.MappingList);
 
 #if 0 // NOTE: Disabled for testing purposes only!
     EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);

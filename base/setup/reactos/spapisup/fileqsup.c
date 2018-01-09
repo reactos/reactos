@@ -38,7 +38,8 @@ SpFileQueueCopy_NtToWin32(
      * the Win32 SetupQueueCopyW API only takes Win32 paths. We therefore
      * map the NT path to Win32 path and then call the Win32 API.
      */
-    if (!ConvertNtPathToWin32Path(Win32SourceRootPath,
+    if (!ConvertNtPathToWin32Path(&SetupData.MappingList,
+                                  Win32SourceRootPath,
                                   _countof(Win32SourceRootPath),
                                   SourceRootPath))
     {
@@ -46,7 +47,8 @@ SpFileQueueCopy_NtToWin32(
     }
     /* SourcePath, SourceFileName and SourceCabinet are appended to SourceRootPath by the SetupApi function */
 
-    if (!ConvertNtPathToWin32Path(Win32TargetDirectory,
+    if (!ConvertNtPathToWin32Path(&SetupData.MappingList,
+                                  Win32TargetDirectory,
                                   _countof(Win32TargetDirectory),
                                   TargetDirectory))
     {
@@ -64,7 +66,7 @@ SpFileQueueCopy_NtToWin32(
                            SourcePath,
                            SourceFileName,
     // Undocumented on MSDN is the fact that this parameter is mandatory *IF* one wants to take the TagFile into account!
-                           L"foobar",
+                           L"ReactOS",
     // SourceTagFile -- Special behaviour: use cabinet file present in ArchiveDir path! The API does not check for a ".cab" extension.
                            SourceCabinet,
                            Win32TargetDirectory,
@@ -88,7 +90,8 @@ SpFileQueueDelete_NtToWin32(
      * the Win32 SetupQueueDeleteW API only takes Win32 paths. We therefore
      * map the NT path to Win32 path and then call the Win32 API.
      */
-    if (!ConvertNtPathToWin32Path(Win32PathPart1,
+    if (!ConvertNtPathToWin32Path(&SetupData.MappingList,
+                                  Win32PathPart1,
                                   _countof(Win32PathPart1),
                                   PathPart1))
     {
@@ -116,7 +119,8 @@ SpFileQueueRename_NtToWin32(
      * the Win32 SetupQueueRenameW API only takes Win32 paths. We therefore
      * map the NT path to Win32 path and then call the Win32 API.
      */
-    if (!ConvertNtPathToWin32Path(Win32SourcePath,
+    if (!ConvertNtPathToWin32Path(&SetupData.MappingList,
+                                  Win32SourcePath,
                                   _countof(Win32SourcePath),
                                   SourcePath))
     {
@@ -126,7 +130,8 @@ SpFileQueueRename_NtToWin32(
 
     if (TargetPath)
     {
-        if (!ConvertNtPathToWin32Path(Win32TargetPath,
+        if (!ConvertNtPathToWin32Path(&SetupData.MappingList,
+                                      Win32TargetPath,
                                       _countof(Win32TargetPath),
                                       TargetPath))
         {

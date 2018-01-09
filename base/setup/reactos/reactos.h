@@ -66,6 +66,35 @@ typedef struct _KBLAYOUT
 #endif
 
 
+/*
+ * A mapping entry that maps an NT path to a corresponding Win32 path.
+ *
+ * Example is:
+ *   NT path:    "\Device\Harddisk0\Partition1\some\path1"
+ *   Win32 path: "C:\some\path1"
+ *
+ * Here, the NT path prefix to be cached is only
+ * "\Device\Harddisk0\Partition1\", to be mapped with "C:\".
+ *
+ * Then the same entry would be reused if one wants to convert
+ * the NT path "\Device\Harddisk0\Partition1\another\path2",
+ * which converts to the Win32 path "C:\another\path2" .
+ */
+typedef struct _NT_WIN32_PATH_MAPPING
+{
+    LIST_ENTRY ListEntry;
+    WCHAR NtPath[MAX_PATH]; // MAX_PATH for both entries should be more than enough.
+    WCHAR Win32Path[MAX_PATH];
+} NT_WIN32_PATH_MAPPING, *PNT_WIN32_PATH_MAPPING;
+
+/* The list of NT to Win32 path prefix mappings */
+typedef struct _NT_WIN32_PATH_MAPPING_LIST
+{
+    LIST_ENTRY List;
+    ULONG MappingsCount;
+} NT_WIN32_PATH_MAPPING_LIST, *PNT_WIN32_PATH_MAPPING_LIST;
+
+
 typedef struct _SETUPDATA
 {
     /* General */
@@ -80,6 +109,8 @@ typedef struct _SETUPDATA
 
     TCHAR szAbortMessage[512];
     TCHAR szAbortTitle[64];
+
+    NT_WIN32_PATH_MAPPING_LIST MappingList;
 
     USETUP_DATA USetupData;
 
@@ -113,6 +144,8 @@ typedef struct _SETUPDATA
 extern HANDLE ProcessHeap;
 extern BOOLEAN IsUnattendedSetup;
 
+extern SETUPDATA SetupData;
+
 
 typedef struct _IMGINFO
 {
@@ -128,6 +161,7 @@ typedef struct _IMGINFO
  */
 BOOL
 ConvertNtPathToWin32Path(
+    IN OUT PNT_WIN32_PATH_MAPPING_LIST MappingList,
     OUT PWSTR pwszPath,
     IN DWORD cchPathMax,
     IN PCWSTR pwszNTPath);
