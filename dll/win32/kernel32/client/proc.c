@@ -124,9 +124,24 @@ BasepIsImageVersionOk(IN ULONG ImageMajorVersion,
                       IN ULONG ImageMinorVersion)
 {
     /* Accept images for NT 3.1 or higher */
-    return ((ImageMajorVersion >= 3) &&
-            ((ImageMajorVersion != 3) ||
-             (ImageMinorVersion >= 10)));
+    if (ImageMajorVersion > 3 ||
+        (ImageMajorVersion == 3 && ImageMinorVersion >= 10))
+    {
+        /* ReactOS-specific: Accept images even if they are newer than our internal NT version. */
+        if (ImageMajorVersion > SharedUserData->NtMajorVersion ||
+            (ImageMajorVersion == SharedUserData->NtMajorVersion && ImageMinorVersion > SharedUserData->NtMinorVersion))
+        {
+            DPRINT1("Accepting image version %lu.%lu, although ReactOS is an NT %hu.%hu OS!\n",
+                ImageMajorVersion,
+                ImageMinorVersion,
+                SharedUserData->NtMajorVersion,
+                SharedUserData->NtMinorVersion);
+        }
+
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 NTSTATUS
