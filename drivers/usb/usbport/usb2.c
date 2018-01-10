@@ -10,6 +10,10 @@
 #define NDEBUG
 #include <debug.h>
 
+static const UCHAR CMASKS[USB2_MICROFRAMES] = {
+  0x1C, 0x38, 0x70, 0xE0, 0xC1, 0x83, 0x07, 0x0E 
+};
+
 BOOLEAN
 NTAPI
 USB2_AllocateCheck(IN OUT PULONG OutTimeUsed,
@@ -792,9 +796,6 @@ USB2_GetCMASK(IN PUSB2_TT_ENDPOINT TtEndpoint)
     UCHAR HcFrame;
     UCHAR HcMicroFrame;
     UCHAR MaskCS = 0;
-    static const UCHAR CMASKS[USB2_MICROFRAMES] = {
-      0x1C, 0x38, 0x70, 0xE0, 0xC1, 0x83, 0x07, 0x0E 
-    };   
 
     TransferType = TtEndpoint->TtEndpointParams.TransferType;
     DeviceSpeed = TtEndpoint->TtEndpointParams.DeviceSpeed;
