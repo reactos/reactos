@@ -1512,20 +1512,23 @@ EHCI_InterruptDpc(IN PVOID ehciExtension,
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    DPRINT_EHCI("EHCI_InterruptDpc: ... \n");
+    DPRINT_EHCI("EHCI_InterruptDpc: [%p] IsDoEnableInterrupts - %x\n",
+                EhciExtension, IsDoEnableInterrupts);
 
     iStatus = EhciExtension->InterruptStatus;
     EhciExtension->InterruptStatus.AsULONG = 0;
 
-    if ((UCHAR)iStatus.AsULONG &
-        (UCHAR)EhciExtension->InterruptMask.AsULONG & 0x23)
+    if (iStatus.Interrupt == 1 ||
+        iStatus.ErrorInterrupt == 1 ||
+        iStatus.InterruptOnAsyncAdvance == 1)
     {
+        DPRINT_EHCI("EHCI_InterruptDpc: [%p] InterruptStatus - %X\n", EhciExtension, iStatus.AsULONG);
         RegPacket.UsbPortInvalidateEndpoint(EhciExtension, NULL);
     }
 
-    if ((UCHAR)iStatus.AsULONG &
-        (UCHAR)EhciExtension->InterruptMask.AsULONG & 0x04)
+    if (iStatus.PortChangeInterrupt == 1)
     {
+        DPRINT_EHCI("EHCI_InterruptDpc: [%p] PortChangeInterrupt\n", EhciExtension);
         RegPacket.UsbPortInvalidateRootHub(EhciExtension);
     }
 
