@@ -1,6 +1,6 @@
 #include "usbehci.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define NDEBUG_EHCI_TRACE
@@ -483,7 +483,7 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
     ULONG TransferType;
     MPSTATUS MPStatus;
 
-    DPRINT_EHCI("EHCI_OpenEndpoint: ... \n");
+    DPRINT("EHCI_OpenEndpoint: ... \n");
 
     RtlCopyMemory(&EhciEndpoint->EndpointProperties,
                   EndpointProperties,
@@ -605,7 +605,7 @@ EHCI_QueryEndpointRequirements(IN PVOID ehciExtension,
 {
     ULONG TransferType;
 
-    DPRINT_EHCI("EHCI_QueryEndpointRequirements: ... \n");
+    DPRINT("EHCI_QueryEndpointRequirements: ... \n");
 
     TransferType = EndpointProperties->TransferType;
 
@@ -668,7 +668,7 @@ EHCI_DisablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
     PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
 
-    DPRINT_EHCI("EHCI_DisablePeriodicList: ... \n");
+    DPRINT("EHCI_DisablePeriodicList: ... \n");
 
     if (EhciExtension->Flags & EHCI_FLAGS_IDLE_SUPPORT)
     {
@@ -833,7 +833,7 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
       20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29,
       30, 30, 0}; 
 
-    DPRINT_EHCI("EHCI_InitializeInterruptSchedule: ... \n");
+    DPRINT("EHCI_InitializeInterruptSchedule: ... \n");
 
     for (ix = 0; ix < INTERRUPT_ENDPOINTs; ix++)
     {
@@ -886,7 +886,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     ULONG Frame;
     ULONG ix;
 
-    DPRINT_EHCI("EHCI_InitializeSchedule: BaseVA - %p, BasePA - %p\n",
+    DPRINT("EHCI_InitializeSchedule: BaseVA - %p, BasePA - %p\n",
                 resourcesStartVA,
                 resourcesStartPA);
 
@@ -979,7 +979,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     LARGE_INTEGER CurrentTime;
     EHCI_HC_STRUCTURAL_PARAMS StructuralParams;
 
-    DPRINT_EHCI("EHCI_InitializeHardware: ... \n");
+    DPRINT("EHCI_InitializeHardware: ... \n");
 
     OperationalRegs = EhciExtension->OperationalRegs;
     CapabilityRegisters = EhciExtension->CapabilityRegisters;
@@ -991,7 +991,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     KeQuerySystemTime(&EndTime);
     EndTime.QuadPart += 100 * 10000; // 100 msec
 
-    DPRINT_EHCI("EHCI_InitializeHardware: Start reset ... \n");
+    DPRINT("EHCI_InitializeHardware: Start reset ... \n");
 
     while (TRUE)
     {
@@ -1168,7 +1168,7 @@ EHCI_StartController(IN PVOID ehciExtension,
     UCHAR CapabilityRegLength;
     UCHAR Fladj;
 
-    DPRINT_EHCI("EHCI_StartController: ... \n");
+    DPRINT("EHCI_StartController: ... \n");
 
     if ((Resources->ResourcesTypes & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
                                      (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT))
@@ -1656,7 +1656,7 @@ EHCI_DisableAsyncList(IN PEHCI_EXTENSION EhciExtension)
     PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND UsbCmd;
 
-    DPRINT_EHCI("EHCI_DisableAsyncList: ... \n");
+    DPRINT("EHCI_DisableAsyncList: ... \n");
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
@@ -1672,7 +1672,7 @@ EHCI_EnablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
     PEHCI_HW_REGISTERS OperationalRegs;
     EHCI_USB_COMMAND Command;
 
-    DPRINT_EHCI("EHCI_EnablePeriodicList: ... \n");
+    DPRINT("EHCI_EnablePeriodicList: ... \n");
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
@@ -1909,11 +1909,9 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
     }
     else
     {
-        DbgBreakPoint();
-
-        DPRINT("EHCI_LinkTransferToQueue: TD - %p, HcdTailP - %p\n",
-               EhciEndpoint->HcdHeadP,
-               EhciEndpoint->HcdTailP);
+        DPRINT_EHCI("EHCI_LinkTransferToQueue: TD - %p, HcdTailP - %p\n",
+                    EhciEndpoint->HcdHeadP,
+                    EhciEndpoint->HcdTailP);
 
         LinkTD = EhciEndpoint->HcdHeadP;
 
@@ -2691,7 +2689,7 @@ EHCI_AbortTransfer(IN PVOID ehciExtension,
     PEHCI_TRANSFER EhciTransfer = ehciTransfer;
     ULONG TransferType;
 
-    DPRINT_EHCI("EHCI_AbortTransfer: EhciTransfer - %p, CompletedLength - %x\n",
+    DPRINT("EHCI_AbortTransfer: EhciTransfer - %p, CompletedLength - %x\n",
                 EhciTransfer,
                 CompletedLength);
 
@@ -2996,7 +2994,7 @@ EHCI_SetEndpointState(IN PVOID ehciExtension,
     PEHCI_ENDPOINT EhciEndpoint;
     ULONG TransferType;
 
-    DPRINT_EHCI("EHCI_SetEndpointState: ... \n");
+    DPRINT("EHCI_SetEndpointState: ... \n");
 
     EhciEndpoint = ehciEndpoint;
     TransferType = EhciEndpoint->EndpointProperties.TransferType;
@@ -3553,7 +3551,7 @@ EHCI_DisableInterrupts(IN PVOID ehciExtension)
 {
     PEHCI_EXTENSION EhciExtension = ehciExtension;
 
-    DPRINT("EHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
+    DPRINT("EHCI_DisableInterrupts: ... \n");
 
     WRITE_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_USBINTR,
                          0);
@@ -3603,7 +3601,7 @@ EHCI_SetEndpointDataToggle(IN PVOID ehciExtension,
 
     EhciEndpoint = ehciEndpoint;
 
-    DPRINT_EHCI("EHCI_SetEndpointDataToggle: EhciEndpoint - %p, DataToggle - %x\n",
+    DPRINT("EHCI_SetEndpointDataToggle: EhciEndpoint - %p, DataToggle - %x\n",
                 EhciEndpoint,
                 DataToggle);
 
@@ -3627,7 +3625,7 @@ EHCI_GetEndpointStatus(IN PVOID ehciExtension,
 
     EhciEndpoint = ehciEndpoint;
 
-    DPRINT_EHCI("EHCI_GetEndpointStatus: EhciEndpoint - %p\n", EhciEndpoint);
+    DPRINT("EHCI_GetEndpointStatus: EhciEndpoint - %p\n", EhciEndpoint);
 
     TransferType = EhciEndpoint->EndpointProperties.TransferType;
 
