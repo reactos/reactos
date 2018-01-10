@@ -7,7 +7,7 @@
 
 #include "usbport.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 BOOLEAN
@@ -2104,8 +2104,6 @@ USBPORT_FreeBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
     FdoExtension = FdoDevice->DeviceExtension;
 
     Period = Endpoint->EndpointProperties.Period;
-    ASSERT(Period != 0);
-
     ScheduleOffset = Endpoint->EndpointProperties.ScheduleOffset;
     EndpointBandwidth = Endpoint->EndpointProperties.UsbBandwidth;
 
@@ -2132,6 +2130,7 @@ USBPORT_FreeBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
 
     RtlZeroMemory(Rebalance, sizeof(USB2_REBALANCE));
 
+    ASSERT(Period != 0);
     Factor = USB2_FRAMES / Period;
     n = ScheduleOffset * Factor;
 
