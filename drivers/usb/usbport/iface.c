@@ -476,7 +476,7 @@ USBHI_GetExtendedHubInformation(IN PVOID BusContext,
             HubInfoBuffer->Port[ix].PortAttributes = USB_PORTATTR_SHARED_USB2;
 
             Packet->RH_GetPortStatus(FdoExtension->MiniPortExt,
-                                     ix,
+                                     ix + 1,
                                      &PortStatus);
 
             if (PortStatus.PortStatus.Usb20PortStatus.AsUshort16 & 0x8000)
