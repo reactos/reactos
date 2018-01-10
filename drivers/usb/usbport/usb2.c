@@ -199,10 +199,6 @@ USB2_GetHsOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint,
             *OverheadSS = HostDelay + USB2_HS_SS_INTERRUPT_IN_OVERHEAD;
             *OverheadCS = HostDelay + USB2_HS_CS_INTERRUPT_IN_OVERHEAD;
         }
-
-        //DPRINT("USB2_GetHsOverhead: *OverheadSS - %X, *OverheadCS - %X\n",
-        //       *OverheadSS,
-        //       *OverheadCS);
     }
 }
 
@@ -536,9 +532,7 @@ USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
     uframe = TtEndpoint->StartMicroframe;
 
     if (TtEndpoint->StartMicroframe == 0xFF)
-    {
         USB2_GetPrevMicroFrame(&frame, &uframe);
-    }
 
     for (ix = 0; ix < TtEndpoint->Nums.NumStarts; ix++)
     {
@@ -566,9 +560,7 @@ USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
         uframe = TtEndpoint->StartMicroframe;
 
         if (TtEndpoint->StartMicroframe == 0xFF)
-        {
             USB2_GetPrevMicroFrame(&frame, &uframe);
-        }
 
         DataTime = 0;
 
@@ -577,13 +569,9 @@ USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
             DataSize = PktSizeBitStuff - DataTime;
 
             if (DataSize <= USB2_FS_RAW_BYTES_IN_MICROFRAME)
-            {
                 CurrentDataTime = PktSizeBitStuff - DataTime;
-            }
             else
-            {
                 CurrentDataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME;
-            }
 
             HcExtension->TimeUsed[frame][uframe] -= CurrentDataTime;
             USB2_IncMicroFrame(&frame, &uframe);
@@ -598,13 +586,9 @@ USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
         for (ix = 0; ix < TtEndpoint->Nums.NumCompletes; ix++)
         {
             if (PktSizeBitStuff >= USB2_FS_RAW_BYTES_IN_MICROFRAME)
-            {
                 CurrentDataTime = USB2_FS_RAW_BYTES_IN_MICROFRAME;
-            }
             else
-            {
                 CurrentDataTime = PktSizeBitStuff;
-            }
 
             Tt->TimeCS[frame][uframe] -= CurrentDataTime;
 
@@ -727,13 +711,9 @@ USB2_CommonFrames(IN PUSB2_TT_ENDPOINT NextTtEndpoint,
     }
 
     if (NextTtEndpoint->ActualPeriod < TtEndpoint->ActualPeriod)
-    {
         Frame = TtEndpoint->StartFrame % TtEndpoint->ActualPeriod;
-    }
     else
-    {
         Frame = NextTtEndpoint->StartFrame % TtEndpoint->ActualPeriod;
-    }
 
     return (Frame == TtEndpoint->StartFrame);
 }
@@ -821,9 +801,7 @@ USB2_GetCMASK(IN PUSB2_TT_ENDPOINT TtEndpoint)
     Direction = TtEndpoint->TtEndpointParams.Direction;
 
     if (DeviceSpeed == UsbHighSpeed)
-    {
         return 0;
-    }
 
     if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
     {
@@ -837,9 +815,7 @@ USB2_GetCMASK(IN PUSB2_TT_ENDPOINT TtEndpoint)
     else
     {
         if (Direction == USBPORT_TRANSFER_DIRECTION_OUT)
-        {
             return 0;
-        }
 
         USB2_ConvertFrame(TtEndpoint->StartFrame,
                           TtEndpoint->StartMicroframe,
@@ -856,9 +832,7 @@ USB2_GetCMASK(IN PUSB2_TT_ENDPOINT TtEndpoint)
             NumCompletes--;
 
             if (!NumCompletes)
-            {
                 return MaskCS;
-            }
         }
 
         for (; NumCompletes; NumCompletes--)
@@ -926,8 +900,8 @@ USB2_RebalanceEndpoint(IN PDEVICE_OBJECT FdoDevice,
 
         if (Endpoint->EndpointProperties.Period != NewPeriod)
         {
+            ASSERT(Endpoint->EndpointProperties.Period);
             Factor = USB2_FRAMES / Endpoint->EndpointProperties.Period;
-            ASSERT(Factor);
 
             for (ix = 0; ix < Factor; ix++)
             {
@@ -940,8 +914,8 @@ USB2_RebalanceEndpoint(IN PDEVICE_OBJECT FdoDevice,
             Endpoint->EndpointProperties.ScheduleOffset = ScheduleOffset;
             Endpoint->EndpointProperties.UsbBandwidth = EndpointBandwidth;
 
+            ASSERT(NewPeriod);
             Factor = USB2_FRAMES / NewPeriod;
-            ASSERT(Factor);
 
             for (ix = 0; ix < Factor; ix++)
             {
@@ -1135,13 +1109,9 @@ USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
         }
 
         if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
-        {
             endpoint = Tt->FrameBudget[frame].IntEndpoint;
-        }
         else
-        {
             endpoint = Tt->FrameBudget[frame].IsoEndpoint;
-        }
 
         nextEndpoint = endpoint->NextTtEndpoint;
 
@@ -1481,13 +1451,9 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
     }
 
     if (Speed == UsbLowSpeed)
-    {
         TtEndpoint->CalcBusTime = TtEndpoint->MaxPacketSize * 8 + Overhead;
-    }
     else
-    {
         TtEndpoint->CalcBusTime = TtEndpoint->MaxPacketSize + Overhead;
-    }
 
     LatestStart = USB2_HUB_DELAY + USB2_FS_SOF_TIME;
 
@@ -1514,9 +1480,7 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
              nextEndpoint = nextEndpoint->NextTtEndpoint)
         {
             if (USB2_CheckTtEndpointInsert(nextEndpoint, TtEndpoint))
-            {
                 break;
-            }
 
             prevEndpoint = nextEndpoint;
         }
@@ -1526,8 +1490,7 @@ USB2_AllocateTimeForEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
                                       prevEndpoint,
                                       frame);
 
-        if (StartTime > LatestStart)
-            LatestStart = StartTime;
+        LatestStart = max(LatestStart, StartTime);
     }
 
     TtEndpoint->StartTime = LatestStart;
@@ -2026,8 +1989,8 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
         ScheduleOffset = Endpoint->TtEndpoint->StartFrame;
         EndpointProperties->ScheduleOffset = ScheduleOffset;
 
+        ASSERT(ActualPeriod);
         Factor = USB2_FRAMES / ActualPeriod;
-        ASSERT(Factor);
 
         n = ScheduleOffset * Factor;
 
@@ -2183,9 +2146,7 @@ USBPORT_FreeBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
     USB2_Rebalance(FdoDevice, &RebalanceList);
 
     if (!TtExtension)
-    {
         return;
-    }
 
     for (ix = 0; ix < USB2_FRAMES; ix++)
     {
