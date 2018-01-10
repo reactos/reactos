@@ -1,6 +1,6 @@
 #include "usbehci.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 VOID
@@ -8,15 +8,19 @@ NTAPI
 EHCI_DumpHwTD(IN PEHCI_HCD_TD TD)
 {
     if (!TD)
-    {
         return;
-    }
 
-    DPRINT(": TD                       - %p\n", TD);
-    DPRINT(": TD->PhysicalAddress      - %p\n", TD->PhysicalAddress);
-    DPRINT(": TD->HwTD.NextTD          - %p\n", TD->HwTD.NextTD);
-    DPRINT(": TD->HwTD.AlternateNextTD - %p\n", TD->HwTD.AlternateNextTD);
-    DPRINT(": TD->HwTD.Token.AsULONG   - %p\n", TD->HwTD.Token.AsULONG);
+    do
+    {
+        DPRINT(": TD                       - %p\n", TD);
+        DPRINT(": TD->PhysicalAddress      - %p\n", TD->PhysicalAddress);
+        DPRINT(": TD->HwTD.NextTD          - %p\n", TD->HwTD.NextTD);
+        DPRINT(": TD->HwTD.AlternateNextTD - %p\n", TD->HwTD.AlternateNextTD);
+        DPRINT(": TD->HwTD.Token.AsULONG   - %p\n", TD->HwTD.Token.AsULONG);
+
+        TD = TD->NextHcdTD;
+    }
+    while (TD);
 }
 
 VOID
@@ -24,9 +28,7 @@ NTAPI
 EHCI_DumpHwQH(IN PEHCI_HCD_QH QH)
 {
     if (!QH)
-    {
         return;
-    }
 
     DPRINT(": QH->sqh.HwQH.CurrentTD       - %p\n", QH->sqh.HwQH.CurrentTD);
     DPRINT(": QH->sqh.HwQH.NextTD          - %p\n", QH->sqh.HwQH.NextTD);
