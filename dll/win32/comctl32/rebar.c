@@ -612,8 +612,16 @@ REBAR_DrawBand (HDC hdc, const REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
 		    lpBand->clrFore;
 	    oldcolor = SetTextColor (hdc, new);
 	}
-	DrawTextW (hdc, lpBand->lpText, -1, &lpBand->rcCapText,
-		   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    if (!theme)
+    {
+        DrawTextW (hdc, lpBand->lpText, -1, &lpBand->rcCapText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    }
+    else
+    {
+        DrawThemeText(theme, hdc, 0, 0, lpBand->lpText, -1, DT_CENTER | DT_VCENTER | DT_SINGLELINE, 0, &lpBand->rcCapText);
+    }
+
 	if (oldBkMode != TRANSPARENT)
 	    SetBkMode (hdc, oldBkMode);
 	if (lpBand->clrFore != CLR_NONE)
