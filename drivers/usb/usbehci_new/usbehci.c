@@ -769,62 +769,55 @@ VOID
 NTAPI
 EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
 {
-    PEHCI_STATIC_QH * FrameHeader;
-    PEHCI_STATIC_QH StaticQH;
-    PEHCI_HCD_QH DummyQhVA;
+    PEHCI_HC_RESOURCES HcResourcesVA;
+    PEHCI_HCD_QH DummyQH;
     PEHCI_HCD_QH DummyQhPA;
-    EHCI_LINK_POINTER PrevPA;
     EHCI_QH_EP_PARAMS EndpointParams;
-    ULONG ix;
+    EHCI_LINK_POINTER PAddress;
+    ULONG Frame;
 
-    DPRINT_EHCI("EHCI_AddDummyQHs: ... \n");
+    DPRINT("EHCI_AddDummyQueueHeads: EhciExtension - %p\n", EhciExtension);
 
-    FrameHeader = &EhciExtension->HcResourcesVA->PeriodicFrameList[0];
+    HcResourcesVA = EhciExtension->HcResourcesVA;
 
-    DummyQhVA = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListVA;
+    DummyQH = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListVA;
     DummyQhPA = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListPA;
 
-    for (ix = 0; ix < EHCI_FRAME_LIST_MAX_ENTRIES; ix++)
+    for (Frame = 0; Frame < EHCI_FRAME_LIST_MAX_ENTRIES; Frame++)
     {
-        ASSERT(EHCI_GetDummyQhForFrame(EhciExtension, ix) == DummyQhVA);
+        RtlZeroMemory(DummyQH, sizeof(EHCI_HCD_QH));
 
-        RtlZeroMemory(DummyQhVA, sizeof(EHCI_HCD_QH));
+        PAddress.AsULONG = (ULONG)HcResourcesVA->PeriodicFrameList[Frame];
 
-        DummyQhVA->sqh.HwQH.CurrentTD = 0;
-        DummyQhVA->sqh.HwQH.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
+        DummyQH->sqh.HwQH.HorizontalLink.AsULONG = PAddress.AsULONG;
+        DummyQH->sqh.HwQH.CurrentTD = 0;
+        DummyQH->sqh.HwQH.NextTD = TERMINATE_POINTER;
+        DummyQH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
 
-        PrevPA.AsULONG = (ULONG)DummyQhVA->sqh.PhysicalAddress;
-        PrevPA.Type = 1;
-
-        DummyQhVA->sqh.PhysicalAddress = DummyQhPA;
-
-        DummyQhVA += 1;
-        DummyQhPA += 1;
-
-        DummyQhVA->sqh.HwQH.HorizontalLink.AsULONG = (ULONG_PTR)(*FrameHeader);
-
-        EndpointParams = DummyQhVA->sqh.HwQH.EndpointParams;
+        EndpointParams = DummyQH->sqh.HwQH.EndpointParams;
         EndpointParams.DeviceAddress = 0;
-        EndpointParams.EndpointNumber = 0;
         EndpointParams.EndpointSpeed = 0;
         EndpointParams.MaximumPacketLength = 64;
+        DummyQH->sqh.HwQH.EndpointParams = EndpointParams;
 
-        DummyQhVA->sqh.HwQH.EndpointParams = EndpointParams;
+        DummyQH->sqh.HwQH.EndpointCaps.AsULONG = 0;
+        DummyQH->sqh.HwQH.EndpointCaps.InterruptMask = 0;
+        DummyQH->sqh.HwQH.EndpointCaps.SplitCompletionMask = 0;
+        DummyQH->sqh.HwQH.EndpointCaps.PipeMultiplier = 1;
 
-        DummyQhVA->sqh.HwQH.EndpointCaps.AsULONG = 0;
-        DummyQhVA->sqh.HwQH.EndpointCaps.InterruptMask = 0;
-        DummyQhVA->sqh.HwQH.EndpointCaps.SplitCompletionMask = 0;
-        DummyQhVA->sqh.HwQH.EndpointCaps.PipeMultiplier = 1;
+        DummyQH->sqh.HwQH.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
 
-        DummyQhVA->sqh.HwQH.NextTD = TERMINATE_POINTER;
-        DummyQhVA->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
+        DummyQH->sqh.PhysicalAddress = DummyQhPA;
+        DummyQH->sqh.StaticQH = EHCI_GetQhForFrame(EhciExtension, Frame);
 
-        StaticQH = EHCI_GetQhForFrame(EhciExtension, ix);
-        DummyQhVA->sqh.StaticQH = StaticQH;
+        PAddress.AsULONG = (ULONG)DummyQhPA;
+        PAddress.Reserved = 0;
+        PAddress.Type = EHCI_LINK_TYPE_QH;
 
-        *FrameHeader = (PEHCI_STATIC_QH)PrevPA.AsULONG;
+        HcResourcesVA->PeriodicFrameList[Frame] = (PEHCI_STATIC_QH)PAddress.AsULONG;
 
-        FrameHeader += 1;
+        DummyQH++;
+        DummyQhPA++;
     }
 }
 
