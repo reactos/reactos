@@ -151,11 +151,11 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
                 }
             }
 
-            DPRINT("USBPORT_AllocateBandwidth: FIXME AllocedInterrupt_XXms\n");
+            DPRINT("USBPORT_AllocateBandwidth: FIXME AllocatedInterrupt_XXms\n");
         }
         else
         {
-            DPRINT("USBPORT_AllocateBandwidth: FIXME AllocedIso\n");
+            DPRINT("USBPORT_AllocateBandwidth: FIXME AllocatedIso\n");
         }
     }
 
@@ -219,11 +219,11 @@ USBPORT_FreeBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
         ASSERT(Period != 0);
 
-        DPRINT("USBPORT_AllocateBandwidth: FIXME AllocedInterrupt_XXms\n");
+        DPRINT("USBPORT_AllocateBandwidth: FIXME AllocatedInterrupt_XXms\n");
     }
     else
     {
-        DPRINT("USBPORT_AllocateBandwidth: FIXME AllocedIso\n");
+        DPRINT("USBPORT_AllocateBandwidth: FIXME AllocatedIso\n");
     }
 
     DPRINT1("USBPORT_FreeBandwidth: FIXME USBPORT_UpdateAllocatedBw\n");
