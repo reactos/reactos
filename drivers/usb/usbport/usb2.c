@@ -2107,6 +2107,8 @@ USBPORT_FreeBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
     FdoExtension = FdoDevice->DeviceExtension;
 
     Period = Endpoint->EndpointProperties.Period;
+    ASSERT(Period != 0);
+
     ScheduleOffset = Endpoint->EndpointProperties.ScheduleOffset;
     EndpointBandwidth = Endpoint->EndpointProperties.UsbBandwidth;
 
@@ -2134,8 +2136,6 @@ USBPORT_FreeBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
     RtlZeroMemory(Rebalance, sizeof(USB2_REBALANCE));
 
     Factor = USB2_FRAMES / Period;
-    ASSERT(Factor);
-
     n = ScheduleOffset * Factor;
 
     TtExtension = Endpoint->TtExtension;

@@ -96,9 +96,10 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
     TotalBusBandwidth = FdoExtension->TotalBusBandwidth;
     EndpointBandwidth = EndpointProperties->UsbBandwidth;
+
     Period = EndpointProperties->Period;
+    ASSERT(Period != 0);
     Factor = USB2_FRAMES / Period;
-    ASSERT(Factor);
 
     for (Offset = 0; Offset < Period; Offset++)
     {
@@ -197,9 +198,9 @@ USBPORT_FreeBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
     Offset = Endpoint->EndpointProperties.ScheduleOffset;
     EndpointBandwidth = Endpoint->EndpointProperties.UsbBandwidth;
-    Period = Endpoint->EndpointProperties.Period;
 
-    ASSERT(USB2_FRAMES / Period);
+    Period = Endpoint->EndpointProperties.Period;
+    ASSERT(Period != 0);
 
     for (Factor = USB2_FRAMES / Period; Factor; Factor--)
     {
