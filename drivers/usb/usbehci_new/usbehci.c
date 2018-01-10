@@ -2428,7 +2428,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
         TD->HwTD.Token.DataToggle = TRUE;
 
         TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
-                                                  EhciEndpoint->EndpointProperties.MaxPacketSize,
+                                                  EhciEndpoint->EndpointProperties.TotalMaxPacketSize,
                                                   TransferedLen,
                                                   NULL,
                                                   EhciTransfer,
@@ -2441,7 +2441,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     TD->HwTD.Token.InterruptOnComplete = 1;
 
-    DPRINT_EHCI("EHCI_InterruptTransfer: PendingTDs - %p, TD->PhysicalAddress - %p, FirstTD - %p\n",
+    DPRINT_EHCI("EHCI_InterruptTransfer: PendingTDs - %x, TD->PhysicalAddress - %p, FirstTD - %p\n",
                 EhciTransfer->PendingTDs,
                 TD->PhysicalAddress,
                 FirstTD);
