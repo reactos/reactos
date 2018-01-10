@@ -1821,11 +1821,8 @@ USBPORT_UpdateAllocatedBwTt(IN PUSB2_TT_EXTENSION TtExtension)
     {
         NewBusBandwidth = BusBandwidth - TtExtension->Bandwidth[ix];
 
-        if (NewBusBandwidth > MaxBusBandwidth)
-            MaxBusBandwidth = NewBusBandwidth;
-
-        if (NewBusBandwidth < MinBusBandwidth)
-            MinBusBandwidth = NewBusBandwidth;
+        MaxBusBandwidth = max(MaxBusBandwidth, NewBusBandwidth);
+        MinBusBandwidth = min(MinBusBandwidth, NewBusBandwidth);
     }
 
     TtExtension->MaxBandwidth = MaxBusBandwidth;
