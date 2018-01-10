@@ -146,19 +146,30 @@ int abort(FILE* output, int err)
     return err;
 }
 
-ULONG ReadOutputPathFromRegistry(WCHAR Buffer[], ULONG BufferSize)
+std::wstring Settings_GetOutputPath(void)
 {
+    WCHAR Buffer[MAX_PATH + 1];
+    ZeroMemory(Buffer, _countof(Buffer) * sizeof(WCHAR));
+    ULONG BufferSize = _countof(Buffer);
+
     CRegKey key;
     if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS) {
-        return 0;
+        goto use_default_path;
     }
 
-    ULONG charCount = BufferSize;
-    if (key.QueryStringValue(L"Dump Directory", Buffer, &charCount) != ERROR_SUCCESS) {
-        return 0;
+    if (key.QueryStringValue(L"Dump Directory", Buffer, &BufferSize) != ERROR_SUCCESS) {
+        goto use_default_path;
     }
 
-    return charCount;
+    return std::wstring(Buffer);
+
+use_default_path:
+    if (FAILED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, Buffer))) {
+        return std::wstring();
+    }
+
+    StringCchCatW(Buffer, _countof(Buffer), L"\\Crash Reports");
+    return std::wstring(Buffer);
 }
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
@@ -167,7 +178,6 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
     WCHAR **argv = CommandLineToArgvW(cmdLine, &argc);
 
     DWORD pid = 0;
-    WCHAR Buffer[MAX_PATH+55];
     WCHAR Filename[50];
     FILE* output = NULL;
     SYSTEMTIME st;
@@ -221,15 +231,11 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 
     GetLocalTime(&st);
 
-    BOOL HasPath = TRUE;
-    if (ReadOutputPathFromRegistry(Buffer, _countof(Buffer)) == 0) {
-        if (FAILED(SHGetFolderPathW(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, Buffer))) {
-            HasPath = FALSE;
-       }
-    }
+    std::wstring OutputPath = Settings_GetOutputPath();
+    BOOL HasPath = (OutputPath.size() != 0);
 
-    if (!PathIsDirectoryW(Buffer)) {
-        int res = SHCreateDirectoryExW(NULL, Buffer, NULL);
+    if (!PathIsDirectoryW(OutputPath.c_str())) {
+        int res = SHCreateDirectoryExW(NULL, OutputPath.c_str(), NULL);
         if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS) {
             xfprintf(stdout, "Could not create output directory, not writing dump\n");
             MessageBoxA(NULL, "Could not create directory to write crash report.", "ReactOS Crash Reporter", MB_ICONERROR | MB_OK);
@@ -241,9 +247,9 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
         SUCCEEDED(StringCchPrintfW(Filename, _countof(Filename), L"Appcrash_%d-%02d-%02d_%02d-%02d-%02d.txt",
                                    st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond)))
     {
-        StringCchCatW(Buffer, _countof(Buffer), L"\\");
-        StringCchCatW(Buffer, _countof(Buffer), Filename);
-        output = _wfopen(Buffer, L"wb");
+        OutputPath += L"\\";
+        OutputPath += Filename;
+        output = _wfopen(OutputPath.c_str(), L"wb");
     }
     if (!output)
         output = stdout;
