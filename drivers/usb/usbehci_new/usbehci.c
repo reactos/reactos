@@ -8,6 +8,94 @@
 
 USBPORT_REGISTRATION_PACKET RegPacket;
 
+static const UCHAR ClassicPeriod[8] = {
+    ENDPOINT_INTERRUPT_1ms - 1,
+    ENDPOINT_INTERRUPT_2ms - 1,
+    ENDPOINT_INTERRUPT_4ms - 1,
+    ENDPOINT_INTERRUPT_8ms - 1,
+    ENDPOINT_INTERRUPT_16ms - 1,
+    ENDPOINT_INTERRUPT_32ms - 1,
+    ENDPOINT_INTERRUPT_32ms - 1,
+    ENDPOINT_INTERRUPT_32ms - 1
+};
+
+static EHCI_PERIOD pTable[INTERRUPT_ENDPOINTs + 1] = {
+    { ENDPOINT_INTERRUPT_1ms, 0x00, 0xFF },
+    { ENDPOINT_INTERRUPT_2ms, 0x00, 0x55 },
+    { ENDPOINT_INTERRUPT_2ms, 0x00, 0xAA },
+    { ENDPOINT_INTERRUPT_4ms, 0x00, 0x11 },
+    { ENDPOINT_INTERRUPT_4ms, 0x00, 0x44 },
+    { ENDPOINT_INTERRUPT_4ms, 0x00, 0x22 },
+    { ENDPOINT_INTERRUPT_4ms, 0x00, 0x88 },
+    { ENDPOINT_INTERRUPT_8ms, 0x00, 0x01 },
+    { ENDPOINT_INTERRUPT_8ms, 0x00, 0x10 },
+    { ENDPOINT_INTERRUPT_8ms, 0x00, 0x04 },
+    { ENDPOINT_INTERRUPT_8ms, 0x00, 0x40 },
+    { ENDPOINT_INTERRUPT_8ms, 0x00, 0x02 },
+    { ENDPOINT_INTERRUPT_8ms, 0x00, 0x20 },
+    { ENDPOINT_INTERRUPT_8ms, 0x00, 0x08 },
+    { ENDPOINT_INTERRUPT_8ms, 0x00, 0x80 },
+    { ENDPOINT_INTERRUPT_16ms, 0x01, 0x01 },
+    { ENDPOINT_INTERRUPT_16ms, 0x02, 0x01 },
+    { ENDPOINT_INTERRUPT_16ms, 0x01, 0x10 },
+    { ENDPOINT_INTERRUPT_16ms, 0x02, 0x10 },
+    { ENDPOINT_INTERRUPT_16ms, 0x01, 0x04 },
+    { ENDPOINT_INTERRUPT_16ms, 0x02, 0x04 },
+    { ENDPOINT_INTERRUPT_16ms, 0x01, 0x40 },
+    { ENDPOINT_INTERRUPT_16ms, 0x02, 0x40 },
+    { ENDPOINT_INTERRUPT_16ms, 0x01, 0x02 },
+    { ENDPOINT_INTERRUPT_16ms, 0x02, 0x02 },
+    { ENDPOINT_INTERRUPT_16ms, 0x01, 0x20 },
+    { ENDPOINT_INTERRUPT_16ms, 0x02, 0x20 },
+    { ENDPOINT_INTERRUPT_16ms, 0x01, 0x08 },
+    { ENDPOINT_INTERRUPT_16ms, 0x02, 0x08 },
+    { ENDPOINT_INTERRUPT_16ms, 0x01, 0x80 },
+    { ENDPOINT_INTERRUPT_16ms, 0x02, 0x80 },
+    { ENDPOINT_INTERRUPT_32ms, 0x03, 0x01 },
+    { ENDPOINT_INTERRUPT_32ms, 0x05, 0x01 },
+    { ENDPOINT_INTERRUPT_32ms, 0x04, 0x01 },
+    { ENDPOINT_INTERRUPT_32ms, 0x06, 0x01 },
+    { ENDPOINT_INTERRUPT_32ms, 0x03, 0x10 },
+    { ENDPOINT_INTERRUPT_32ms, 0x05, 0x10 },
+    { ENDPOINT_INTERRUPT_32ms, 0x04, 0x10 },
+    { ENDPOINT_INTERRUPT_32ms, 0x06, 0x10 },
+    { ENDPOINT_INTERRUPT_32ms, 0x03, 0x04 },
+    { ENDPOINT_INTERRUPT_32ms, 0x05, 0x04 },
+    { ENDPOINT_INTERRUPT_32ms, 0x04, 0x04 },
+    { ENDPOINT_INTERRUPT_32ms, 0x06, 0x04 },
+    { ENDPOINT_INTERRUPT_32ms, 0x03, 0x40 },
+    { ENDPOINT_INTERRUPT_32ms, 0x05, 0x40 },
+    { ENDPOINT_INTERRUPT_32ms, 0x04, 0x40 },
+    { ENDPOINT_INTERRUPT_32ms, 0x06, 0x40 },
+    { ENDPOINT_INTERRUPT_32ms, 0x03, 0x02 },
+    { ENDPOINT_INTERRUPT_32ms, 0x05, 0x02 },
+    { ENDPOINT_INTERRUPT_32ms, 0x04, 0x02 },
+    { ENDPOINT_INTERRUPT_32ms, 0x06, 0x02 },
+    { ENDPOINT_INTERRUPT_32ms, 0x03, 0x20 },
+    { ENDPOINT_INTERRUPT_32ms, 0x05, 0x20 },
+    { ENDPOINT_INTERRUPT_32ms, 0x04, 0x20 },
+    { ENDPOINT_INTERRUPT_32ms, 0x06, 0x20 },
+    { ENDPOINT_INTERRUPT_32ms, 0x03, 0x08 },
+    { ENDPOINT_INTERRUPT_32ms, 0x05, 0x08 },
+    { ENDPOINT_INTERRUPT_32ms, 0x04, 0x08 },
+    { ENDPOINT_INTERRUPT_32ms, 0x06, 0x08 },
+    { ENDPOINT_INTERRUPT_32ms, 0x03, 0x80 },
+    { ENDPOINT_INTERRUPT_32ms, 0x05, 0x80 },
+    { ENDPOINT_INTERRUPT_32ms, 0x04, 0x80 },
+    { ENDPOINT_INTERRUPT_32ms, 0x06, 0x80 },
+    { 0x00, 0x00, 0x00 }
+};
+
+static const UCHAR Balance[EHCI_FRAMES] = {
+    0, 16, 8,  24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30, 
+    1, 17, 9,  25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31};
+
+static const UCHAR LinkTable[INTERRUPT_ENDPOINTs + 1] = {
+  255, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8,  9, 9,
+  10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19,
+  20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29,
+  30, 30, 0}; 
+
 PEHCI_HCD_TD
 NTAPI
 EHCI_AllocTd(IN PEHCI_EXTENSION EhciExtension,
@@ -247,82 +335,6 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
     ULONG ScheduleOffset;
     ULONG Idx = 0;
     UCHAR Period;
-    static UCHAR ClassicPeriod[8] = {
-        ENDPOINT_INTERRUPT_1ms - 1,
-        ENDPOINT_INTERRUPT_2ms - 1,
-        ENDPOINT_INTERRUPT_4ms - 1,
-        ENDPOINT_INTERRUPT_8ms - 1,
-        ENDPOINT_INTERRUPT_16ms - 1,
-        ENDPOINT_INTERRUPT_32ms - 1,
-        ENDPOINT_INTERRUPT_32ms - 1,
-        ENDPOINT_INTERRUPT_32ms - 1
-    };
-    static EHCI_PERIOD pTable[INTERRUPT_ENDPOINTs + 1] = {
-        { ENDPOINT_INTERRUPT_1ms, 0x00, 0xFF },
-        { ENDPOINT_INTERRUPT_2ms, 0x00, 0x55 },
-        { ENDPOINT_INTERRUPT_2ms, 0x00, 0xAA },
-        { ENDPOINT_INTERRUPT_4ms, 0x00, 0x11 },
-        { ENDPOINT_INTERRUPT_4ms, 0x00, 0x44 },
-        { ENDPOINT_INTERRUPT_4ms, 0x00, 0x22 },
-        { ENDPOINT_INTERRUPT_4ms, 0x00, 0x88 },
-        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x01 },
-        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x10 },
-        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x04 },
-        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x40 },
-        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x02 },
-        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x20 },
-        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x08 },
-        { ENDPOINT_INTERRUPT_8ms, 0x00, 0x80 },
-        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x01 },
-        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x01 },
-        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x10 },
-        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x10 },
-        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x04 },
-        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x04 },
-        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x40 },
-        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x40 },
-        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x02 },
-        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x02 },
-        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x20 },
-        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x20 },
-        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x08 },
-        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x08 },
-        { ENDPOINT_INTERRUPT_16ms, 0x01, 0x80 },
-        { ENDPOINT_INTERRUPT_16ms, 0x02, 0x80 },
-        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x01 },
-        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x01 },
-        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x01 },
-        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x01 },
-        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x10 },
-        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x10 },
-        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x10 },
-        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x10 },
-        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x04 },
-        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x04 },
-        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x04 },
-        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x04 },
-        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x40 },
-        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x40 },
-        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x40 },
-        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x40 },
-        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x02 },
-        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x02 },
-        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x02 },
-        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x02 },
-        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x20 },
-        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x20 },
-        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x20 },
-        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x20 },
-        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x08 },
-        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x08 },
-        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x08 },
-        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x08 },
-        { ENDPOINT_INTERRUPT_32ms, 0x03, 0x80 },
-        { ENDPOINT_INTERRUPT_32ms, 0x05, 0x80 },
-        { ENDPOINT_INTERRUPT_32ms, 0x04, 0x80 },
-        { ENDPOINT_INTERRUPT_32ms, 0x06, 0x80 },
-        { 0x00, 0x00, 0x00 }
-    };
 
     DPRINT("EHCI_OpenInterruptEndpoint: EhciExtension - %p, EndpointProperties - %p, EhciEndpoint - %p\n",
            EhciExtension,
@@ -711,10 +723,6 @@ NTAPI
 EHCI_GetQhForFrame(IN PEHCI_EXTENSION EhciExtension,
                    IN ULONG FrameIdx)
 {
-    static UCHAR Balance[32] = {
-        0, 16, 8,  24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30, 
-        1, 17, 9,  25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31};
-
     //DPRINT_EHCI("EHCI_GetQhForFrame: FrameIdx - %x, Balance[FrameIdx] - %x\n",
     //            FrameIdx,
     //            Balance[FrameIdx & 0x1F]);
@@ -827,11 +835,6 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
 {
     PEHCI_STATIC_QH StaticQH;
     ULONG ix;
-    static UCHAR LinkTable[INTERRUPT_ENDPOINTs + 1] = {
-      255, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8,  9, 9,
-      10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19,
-      20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29,
-      30, 30, 0}; 
 
     DPRINT("EHCI_InitializeInterruptSchedule: ... \n");
 
@@ -1485,7 +1488,7 @@ EHCI_InterruptService(IN PVOID ehciExtension)
         }
     }
 
-    FrameIndex = READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) / 8;
+    FrameIndex = READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) / EHCI_MICROFRAMES;
     FrameIndex &= EHCI_FRINDEX_FRAME_MASK;
 
     if ((FrameIndex ^ EhciExtension->FrameIndex) & EHCI_FRAME_LIST_MAX_ENTRIES)
@@ -3525,9 +3528,9 @@ EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
     FrameIdx = EhciExtension->FrameIndex;
     FrameIndex = READ_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_FRINDEX);
 
-    FrameNumber = (USHORT)FrameIdx ^ ((FrameIndex / 8) & EHCI_FRINDEX_FRAME_MASK);
+    FrameNumber = (USHORT)FrameIdx ^ ((FrameIndex / EHCI_MICROFRAMES) & EHCI_FRINDEX_FRAME_MASK);
     FrameNumber &= EHCI_FRAME_LIST_MAX_ENTRIES;
-    FrameNumber += FrameIndex | ((FrameIndex / 8) & EHCI_FRINDEX_INDEX_MASK);
+    FrameNumber += FrameIndex | ((FrameIndex / EHCI_MICROFRAMES) & EHCI_FRINDEX_INDEX_MASK);
 
     return FrameNumber;
 }

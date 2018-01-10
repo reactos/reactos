@@ -23,6 +23,9 @@ extern USBPORT_REGISTRATION_PACKET RegPacket;
 #define EHCI_MAX_INTERRUPT_TD_COUNT  4
 #define EHCI_MAX_BULK_TD_COUNT       209
 
+#define EHCI_FRAMES       32
+#define EHCI_MICROFRAMES  8
+
 typedef struct _EHCI_PERIOD {
   UCHAR Period;
   UCHAR PeriodIdx;
