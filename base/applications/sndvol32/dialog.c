@@ -104,7 +104,7 @@ AddDialogControl(
             default:
                /* FIXME */
                assert(0);
-               ClassName = 0;
+               ClassName = NULL;
         }
     }
     else
@@ -112,12 +112,15 @@ AddDialogControl(
         /* class name is encoded as string */
         ClassName = (LPWSTR)Offset;
 
-        /* adjust offset */
-        Offset += wcslen(ClassName) + 1;
+        /* move offset to the end of class string */
+        Offset += wcslen(ClassName);
 
-        /* get offset */
+        /* get window name */
         WindowName = (LPWSTR)(Offset + 1);
     }
+    
+    /* move offset past class type/string */
+    Offset++;
 
     if (DialogItem->id == MAXWORD)
     {
@@ -176,16 +179,8 @@ AddDialogControl(
 
     if (WindowName != NULL)
     {
-        /* position offset to start of name */
-        Offset++;
-
-        /* move offset past name */
-        Offset += wcslen((LPWSTR)Offset) + 1;
-    }
-    else
-    {
-        /* no name so just adjust offset */
-        Offset++;
+        /* move offset past window name */
+        Offset += wcslen(WindowName) + 1;
     }
 
     /* check if there is additional data */
@@ -196,7 +191,8 @@ AddDialogControl(
     }
     else
     {
-        /* add data offset */
+        /* FIXME: Determine whether this should be "Offset += 1 + *Offset" to explicitly skip the data count too. */
+        /* skip past additional data */
         Offset += *Offset;
     }
 
