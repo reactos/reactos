@@ -13,6 +13,7 @@
 #include <tchar.h>
 #include <strsafe.h>
 #include <tlhelp32.h>
+#include <dbghelp.h>
 #include <conio.h>
 #include <atlbase.h>
 
@@ -172,6 +173,60 @@ use_default_path:
     return std::wstring(Buffer);
 }
 
+BOOL Settings_GetShouldWriteDump(void)
+{
+    CRegKey key;
+    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS) {
+        return FALSE;
+    }
+
+    DWORD Value;
+    if (key.QueryDWORDValue(L"Minidump", Value) != ERROR_SUCCESS) {
+        return FALSE;
+    }
+
+    return (Value != 0);
+}
+
+HRESULT WriteMinidump(LPCWSTR LogFilePath, DumpData& data)
+{
+    HRESULT hr = S_OK;
+
+    WCHAR DumpFilePath[MAX_PATH + 1];
+    ZeroMemory(DumpFilePath, _countof(DumpFilePath) * sizeof(WCHAR));
+    StringCchCopyW(DumpFilePath, _countof(DumpFilePath), LogFilePath);
+    PathRemoveExtensionW(DumpFilePath);
+    PathAddExtensionW(DumpFilePath, L".dmp");
+
+    HANDLE hDumpFile = CreateFileW(DumpFilePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hDumpFile == INVALID_HANDLE_VALUE) {
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    ThreadData& Thread = data.Threads[data.ThreadID];
+    Thread.Update();
+    PCONTEXT ContextPointer = &Thread.Context;
+
+    MINIDUMP_EXCEPTION_INFORMATION DumpExceptionInfo = {0};
+    EXCEPTION_POINTERS ExceptionPointers = {0};
+    ExceptionPointers.ExceptionRecord = &data.ExceptionInfo.ExceptionRecord;
+    ExceptionPointers.ContextRecord = ContextPointer;
+
+    ZeroMemory(&DumpExceptionInfo, sizeof(DumpExceptionInfo));
+    DumpExceptionInfo.ThreadId = data.ThreadID;
+    DumpExceptionInfo.ExceptionPointers = &ExceptionPointers;
+    DumpExceptionInfo.ClientPointers = FALSE;
+
+    BOOL DumpSucceeded = MiniDumpWriteDump(data.ProcessHandle, data.ProcessID, hDumpFile, MiniDumpNormal, &DumpExceptionInfo, NULL, NULL);
+    if (!DumpSucceeded) {
+        // According to MSDN, this value is already an HRESULT, so don't convert it again.
+        hr = GetLastError();
+    }
+
+    CloseHandle(hDumpFile);
+    return hr;
+}
+
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 {
     int argc;
@@ -276,6 +331,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
     }
 
     PrintBugreport(output, data);
+    if (Settings_GetShouldWriteDump() && HasPath) WriteMinidump(OutputPath.c_str(), data);
 
     TerminateProcess(data.ProcessHandle, data.ExceptionInfo.ExceptionRecord.ExceptionCode);
 
