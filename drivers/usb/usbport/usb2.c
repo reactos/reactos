@@ -377,7 +377,7 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
     frame = TtEndpoint->StartFrame + Frame;
     uframe = TtEndpoint->StartMicroframe;
 
-    if (TtEndpoint->StartMicroframe == 0xFF)
+    if (TtEndpoint->StartMicroframe == USB2_PREV_MICROFRAME)
         USB2_GetPrevMicroFrame(&frame, &uframe);
 
     for (ix = 0; ix < TtEndpoint->Nums.NumStarts; ix++)
@@ -426,7 +426,7 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
         frame = TtEndpoint->StartFrame + Frame;
         uframe = TtEndpoint->StartMicroframe;
 
-        if (uframe == 0xFF)
+        if (uframe == USB2_PREV_MICROFRAME)
             USB2_GetPrevMicroFrame(&frame, &uframe);
 
         DataTime = 0;
@@ -535,7 +535,7 @@ USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
     frame = TtEndpoint->StartFrame + Frame;
     uframe = TtEndpoint->StartMicroframe;
 
-    if (TtEndpoint->StartMicroframe == 0xFF)
+    if (TtEndpoint->StartMicroframe == USB2_PREV_MICROFRAME)
         USB2_GetPrevMicroFrame(&frame, &uframe);
 
     for (ix = 0; ix < TtEndpoint->Nums.NumStarts; ix++)
@@ -563,7 +563,7 @@ USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
         frame = TtEndpoint->StartFrame + Frame;
         uframe = TtEndpoint->StartMicroframe;
 
-        if (TtEndpoint->StartMicroframe == 0xFF)
+        if (TtEndpoint->StartMicroframe == USB2_PREV_MICROFRAME)
             USB2_GetPrevMicroFrame(&frame, &uframe);
 
         DataTime = 0;
@@ -733,7 +733,7 @@ USB2_ConvertFrame(IN UCHAR Frame,
            Frame,
            Microframe);
 
-    if (Microframe == 0xFF)
+    if (Microframe == USB2_PREV_MICROFRAME)
     {
         *HcFrame = Frame;
         *HcMicroframe = 0;
@@ -2202,7 +2202,7 @@ USB2_InitTT(IN PUSB2_HC_EXTENSION HcExtension,
         Tt->IsoEndpoint[ix].ActualPeriod = USB2_FRAMES;
         Tt->IsoEndpoint[ix].CalcBusTime = USB2_FS_SOF_TIME + USB2_HUB_DELAY;
         Tt->IsoEndpoint[ix].StartFrame = ix;
-        Tt->IsoEndpoint[ix].StartMicroframe = 0xFF;
+        Tt->IsoEndpoint[ix].StartMicroframe = USB2_PREV_MICROFRAME;
 
         Tt->FrameBudget[ix].IntEndpoint = &Tt->IntEndpoint[ix];
 
@@ -2217,7 +2217,7 @@ USB2_InitTT(IN PUSB2_HC_EXTENSION HcExtension,
         Tt->IntEndpoint[ix].ActualPeriod = USB2_FRAMES;
         Tt->IntEndpoint[ix].CalcBusTime = USB2_FS_SOF_TIME + USB2_HUB_DELAY;
         Tt->IntEndpoint[ix].StartFrame = ix;
-        Tt->IntEndpoint[ix].StartMicroframe = 0xFF;
+        Tt->IntEndpoint[ix].StartMicroframe = USB2_PREV_MICROFRAME;
     }
 }
 

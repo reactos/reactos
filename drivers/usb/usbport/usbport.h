@@ -451,6 +451,7 @@ typedef struct _TIMER_WORK_QUEUE_ITEM {
 #define USB2_FRAMES           32
 #define USB2_MICROFRAMES      8
 #define USB2_MAX_MICROFRAMES  (USB2_FRAMES * USB2_MICROFRAMES)
+#define USB2_PREV_MICROFRAME  0xFF
 
 #define USB2_MAX_MICROFRAME_ALLOCATION         7000 // bytes
 #define USB2_CONTROLLER_DELAY                  100
