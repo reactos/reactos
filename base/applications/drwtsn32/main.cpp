@@ -149,39 +149,45 @@ int abort(FILE* output, int err)
 
 std::wstring Settings_GetOutputPath(void)
 {
-    WCHAR Buffer[MAX_PATH + 1];
-    ZeroMemory(Buffer, _countof(Buffer) * sizeof(WCHAR));
+    WCHAR Buffer[MAX_PATH] = L"";
     ULONG BufferSize = _countof(Buffer);
+    BOOL UseDefaultPath = FALSE;
 
     CRegKey key;
-    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS) {
-        goto use_default_path;
+    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS)
+    {
+        UseDefaultPath = TRUE;
     }
 
-    if (key.QueryStringValue(L"Dump Directory", Buffer, &BufferSize) != ERROR_SUCCESS) {
-        goto use_default_path;
+    if (key.QueryStringValue(L"Dump Directory", Buffer, &BufferSize) != ERROR_SUCCESS)
+    {
+        UseDefaultPath = TRUE;
     }
 
-    return std::wstring(Buffer);
+    if (UseDefaultPath)
+    {
+        if (FAILED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, Buffer)))
+        {
+            return std::wstring();
+        }
 
-use_default_path:
-    if (FAILED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, Buffer))) {
-        return std::wstring();
+        StringCchCatW(Buffer, _countof(Buffer), L"\\Crash Reports");
     }
 
-    StringCchCatW(Buffer, _countof(Buffer), L"\\Crash Reports");
     return std::wstring(Buffer);
 }
 
 BOOL Settings_GetShouldWriteDump(void)
 {
     CRegKey key;
-    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS) {
+    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS)
+    {
         return FALSE;
     }
 
     DWORD Value;
-    if (key.QueryDWORDValue(L"Minidump", Value) != ERROR_SUCCESS) {
+    if (key.QueryDWORDValue(L"Minidump", Value) != ERROR_SUCCESS)
+    {
         return FALSE;
     }
 
@@ -192,14 +198,14 @@ HRESULT WriteMinidump(LPCWSTR LogFilePath, DumpData& data)
 {
     HRESULT hr = S_OK;
 
-    WCHAR DumpFilePath[MAX_PATH + 1];
-    ZeroMemory(DumpFilePath, _countof(DumpFilePath) * sizeof(WCHAR));
+    WCHAR DumpFilePath[MAX_PATH] = L"";
     StringCchCopyW(DumpFilePath, _countof(DumpFilePath), LogFilePath);
     PathRemoveExtensionW(DumpFilePath);
     PathAddExtensionW(DumpFilePath, L".dmp");
 
     HANDLE hDumpFile = CreateFileW(DumpFilePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hDumpFile == INVALID_HANDLE_VALUE) {
+    if (hDumpFile == INVALID_HANDLE_VALUE)
+    {
         return HRESULT_FROM_WIN32(GetLastError());
     }
 
@@ -212,13 +218,13 @@ HRESULT WriteMinidump(LPCWSTR LogFilePath, DumpData& data)
     ExceptionPointers.ExceptionRecord = &data.ExceptionInfo.ExceptionRecord;
     ExceptionPointers.ContextRecord = ContextPointer;
 
-    ZeroMemory(&DumpExceptionInfo, sizeof(DumpExceptionInfo));
     DumpExceptionInfo.ThreadId = data.ThreadID;
     DumpExceptionInfo.ExceptionPointers = &ExceptionPointers;
     DumpExceptionInfo.ClientPointers = FALSE;
 
     BOOL DumpSucceeded = MiniDumpWriteDump(data.ProcessHandle, data.ProcessID, hDumpFile, MiniDumpNormal, &DumpExceptionInfo, NULL, NULL);
-    if (!DumpSucceeded) {
+    if (!DumpSucceeded)
+    {
         // According to MSDN, this value is already an HRESULT, so don't convert it again.
         hr = GetLastError();
     }
@@ -227,7 +233,7 @@ HRESULT WriteMinidump(LPCWSTR LogFilePath, DumpData& data)
     return hr;
 }
 
-int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 {
     int argc;
     WCHAR **argv = CommandLineToArgvW(cmdLine, &argc);
@@ -289,9 +295,11 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
     std::wstring OutputPath = Settings_GetOutputPath();
     BOOL HasPath = (OutputPath.size() != 0);
 
-    if (!PathIsDirectoryW(OutputPath.c_str())) {
+    if (!PathIsDirectoryW(OutputPath.c_str()))
+    {
         int res = SHCreateDirectoryExW(NULL, OutputPath.c_str(), NULL);
-        if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS) {
+        if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS)
+        {
             xfprintf(stdout, "Could not create output directory, not writing dump\n");
             MessageBoxA(NULL, "Could not create directory to write crash report.", "ReactOS Crash Reporter", MB_ICONERROR | MB_OK);
             return abort(stdout, 0);
