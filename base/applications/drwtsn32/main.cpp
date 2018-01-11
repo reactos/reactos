@@ -341,7 +341,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR cmdLine, INT)
     }
 
     PrintBugreport(output, data);
-    if (Settings_GetShouldWriteDump() && HasPath) WriteMinidump(OutputPath.c_str(), data);
+    if (Settings_GetShouldWriteDump() && HasPath)
+    {
+        WriteMinidump(OutputPath.c_str(), data);
+    }
 
     TerminateProcess(data.ProcessHandle, data.ExceptionInfo.ExceptionRecord.ExceptionCode);
 
@@ -352,7 +355,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR cmdLine, INT)
     CString DialogTitle;
     DialogTitle.LoadString(hInstance, IDS_APP_TITLE);
 
-    MessageBoxA(NULL, FormattedMessage.c_str(), DialogTitle.c_str(), MB_OK);
+    MessageBoxA(NULL, FormattedMessage.GetString(), DialogTitle.GetString(), MB_OK);
 
     return abort(output, 0);
 }
