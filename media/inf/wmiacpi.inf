@@ -33,7 +33,6 @@ AddService = , 0x00000002
 
 [Strings]
 ReactOS = "ReactOS Team"
-
 GenericMfg = "(Generic system devices)"
 *PNP0C14.DeviceDesc = "WMI for ACPI"
 
@@ -43,6 +42,11 @@ GenericMfg = "(Generická systémová zařízení)"
 [Strings.0407]
 GenericMfg = "(Generische Systemgeräte)"
 *PNP0C14.DeviceDesc = "WMI für ACPI"
+
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
+GenericMfg = "(Standardowe urządzenia systemowe)"
+*PNP0C14.DeviceDesc = "WMI dla ACPI"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
@@ -56,6 +60,5 @@ GenericMfg = "(Универсальные системные устройств�
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-
 GenericMfg = "(Umûmî Dizge Aygıtları)"
 *PNP0C14.DeviceDesc = "ACPI için WMI"
