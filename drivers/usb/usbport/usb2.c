@@ -645,7 +645,7 @@ USB2_MoveTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
 
     if (Rebalance->RebalanceEndpoint[Num] &&
         TtEndpoint->TtEndpointParams.EndpointMoved == TRUE &&
-        (TransferType != USBPORT_TRANSFER_TYPE_INTERRUPT || BusTime >= 0))
+        ((TransferType != USBPORT_TRANSFER_TYPE_INTERRUPT) || BusTime >= 0))
     {
         DPRINT("USB2_MoveTtEndpoint: result - FALSE\n");
         return FALSE;
@@ -1179,12 +1179,10 @@ USB2_DeallocateEndpointBudget(IN PUSB2_TT_ENDPOINT TtEndpoint,
                 if (Tt->FrameBudget[frame].IsoEndpoint->NextTtEndpoint)
                 {
                     endpoint = Tt->FrameBudget[frame].IsoEndpoint->NextTtEndpoint;
-                    DPRINT("USB2_DeallocateEndpointBudget: endpoint - %p\n", endpoint);
                 }
                 else if (Tt->FrameBudget[frame].AltEndpoint)
                 {
                     endpoint = Tt->FrameBudget[frame].AltEndpoint;
-                    DPRINT("USB2_DeallocateEndpointBudget: endpoint - %p\n", endpoint);
                 }
             }
         }
@@ -1705,7 +1703,7 @@ USB2_PromotePeriods(IN PUSB2_TT_ENDPOINT TtEndpoint,
 
         if (ttEndpoint->ActualPeriod != ENDPOINT_INTERRUPT_1ms &&
             TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT &&
-            ttEndpoint->StartMicroframe > 2)
+            (CHAR)ttEndpoint->StartMicroframe > 2)
         {
             USB2_DeallocateEndpointBudget(ttEndpoint,
                                           Rebalance,
@@ -1881,7 +1879,6 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
             case UsbFullSpeed:
             {
                 Tt = &TtExtension->Tt;
-
                 Period = USB2_FRAMES;
 
                 while (Period > 0 && Period > EndpointProperties->Period)
@@ -1992,7 +1989,6 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
 
         ASSERT(ActualPeriod);
         Factor = USB2_FRAMES / ActualPeriod;
-
         n = ScheduleOffset * Factor;
 
         if (TtExtension)
