@@ -149,7 +149,7 @@ int abort(FILE* output, int err)
 ULONG ReadOutputPathFromRegistry(WCHAR Buffer[], ULONG BufferSize)
 {
     CRegKey key;
-    if (key.Open(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS) {
+    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS) {
         return 0;
     }
 
