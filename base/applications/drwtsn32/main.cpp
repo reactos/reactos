@@ -61,7 +61,7 @@ void PrintBugreport(FILE* output, DumpData& data)
         {
             do
             {
-                xfprintf(output, "%5d: %s" NEWLINE, pe.th32ProcessID, pe.szExeFile);
+                xfprintf(output, "%5d: %ls" NEWLINE, pe.th32ProcessID, pe.szExeFile);
             } while (Process32Next(hSnap, &pe));
         }
         CloseHandle(hSnap);
@@ -168,12 +168,10 @@ std::wstring Settings_GetOutputPath(void)
 
     if (UseDefaultPath)
     {
-        if (FAILED(SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, Buffer)))
+        if (FAILED(SHGetFolderPathW(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, Buffer)))
         {
             return std::wstring();
         }
-
-        StringCchCatW(Buffer, _countof(Buffer), L"\\Crash Reports");
     }
 
     return std::wstring(Buffer);
@@ -355,7 +353,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR cmdLine, INT)
     CString DialogTitle;
     DialogTitle.LoadString(hInstance, IDS_APP_TITLE);
 
-    MessageBoxA(NULL, FormattedMessage.GetString(), DialogTitle.GetString(), MB_OK);
+    MessageBoxW(NULL, FormattedMessage.GetString(), DialogTitle.GetString(), MB_OK);
 
     return abort(output, 0);
 }
