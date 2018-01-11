@@ -82,7 +82,6 @@ HID_DEVICE            =  "HID-compatible Device"
 StdMfg                = "(Standard Human Interface Devices)"
 MSMice                = "Microsoft"
 
-
 USB\VID_045E&PID_0009.DeviceDesc="Microsoft IntelliMouse (USB)"
 USB\VID_045E&PID_001E.DeviceDesc="Microsoft IntelliMouse Explorer (USB)"
 USB\VID_045E&PID_0023.DeviceDesc="Microsoft Trackball Optical (USB)"
@@ -107,10 +106,20 @@ HID.DeviceDesc        = "Dispositivos de interfaz humana USB"
 HID_DEVICE            = "Dispositivo compatible con otros dispositivos de interfaz humana"
 StdMfg                = "(Dispositivos de interfaz humana estándar)"
 
+[Strings.0415]
+ReactOS               = "Ekipa ReactOS"
+HID.ClassName         = "Urządzenia interfejsu HID"
+HID.DeviceDesc        = "Urządzenie USB interfejsu HID"
+
+HID_DEVICE            = "Urządzenie zgodne z HID"
+StdMfg                = "(Standardowe urządzenia HID)"
+MSMice                = "Microsoft"
+
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 HID.ClassName = "Dispozitive de interfațare umană"
 HID.DeviceDesc = "Dispozitiv USB de interfațare umană"
+
 HID_DEVICE =  "Dispozitiv compatibil de interfațare umană"
 StdMfg = "(dispozitive generice de interfațare umană)"
 

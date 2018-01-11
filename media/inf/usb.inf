@@ -94,6 +94,7 @@ USB\CLASS_09.DeviceDesc = "標準 USBハブ"
 [Strings.0415]
 ReactOS = "Ekipa ReactOS"
 GenericMfg = "(Standardowy koncentrator USB)"
+USB\COMPOSITE.DeviceDesc = "Urządzenie kompozytowe USB"
 USB\CLASS_09.DeviceDesc = "Standardowy koncentrator USB"
 
 [Strings.0416]

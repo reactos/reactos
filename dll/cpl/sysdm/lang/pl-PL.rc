@@ -95,12 +95,12 @@ BEGIN
     PUSHBUTTON "&Kopiuj", IDC_HRDPROFCOPY, 63, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "Z&mień nazwę", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Usuń", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
-    GROUPBOX "Wybór profili sprzętu", IDC_STATIC, 7, 130, 240, 75
+    GROUPBOX "Wybór profili sprzętu", IDC_STATIC, 7, 130, 240, 80
     LTEXT "Podczas uruchamiania ReactOS:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Czekaj na wybór profilu sprzętu przez użytkownika", IDC_HRDPROFWAIT, 14, 158, 175, 8, WS_GROUP
-    AUTORADIOBUTTON "&Wybierz &pierwszy profil na liście, jeżeli użytkownik nie wybierze profilu w ciągu", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    LTEXT "s", IDC_STATIC, 65, 187, 35, 8
-    EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
+    AUTORADIOBUTTON "&Wybierz &pierwszy profil na liście, jeżeli użytkownik nie wybierze \nprofilu w ciągu", IDC_HRDPROFSELECT, 14, 173, 215, 15, BS_MULTILINE
+    LTEXT "s", IDC_STATIC, 65, 195, 35, 8
+    EDITTEXT IDC_HRDPROFEDIT, 25, 193, 35, 12
     CONTROL "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
     DEFPUSHBUTTON "OK", IDOK, 143, 213, 50, 14
@@ -159,7 +159,7 @@ CAPTION "Profile użytkownika"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Profile użytkownika przechowują ustawienia pulpitu oraz inne informacje związane z kontem użytkownika. Możesz utworzyć inny profil na każdym z używanych komputerów lub wybrać profil mobilny, który jest taki sam dla każdego z używanych komputerów.", IDC_STATIC, 40, 11, 204, 35
+    LTEXT "Profile użytkownika przechowują ustawienia pulpitu oraz inne informacje związane z kontem użytkownika. Możesz utworzyć inny profil na każdym z używanych komputerów lub wybrać profil mobilny, który jest taki sam dla każdego z używanych komputerów.", IDC_STATIC, 40, 9, 214, 39
     LTEXT "&Profile przechowywane na tym komputerze:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -180,16 +180,16 @@ BEGIN
     GROUPBOX "Uruchamianie systemu", IDC_STATIC, 7, 12, 238, 95
     LTEXT "&Domyślny system operacyjny:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
-    AUTOCHECKBOX "&Czas wyświetlania listy systemów operacyjnych:", IDC_STRECLIST, 14, 56, 150, 8
-    EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
+    AUTOCHECKBOX "&Czas wyświetlania listy systemów operacyjnych:", IDC_STRECLIST, 14, 56, 170, 8
+    EDITTEXT IDC_STRRECLISTEDIT, 204, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT "s", IDC_STATIC, 215, 56, 25, 8
-    AUTOCHECKBOX "Czas wyświetlania w razie potrzeby &opcji odzyskiwania:", IDC_STRRECREC, 14, 70, 163, 8
-    EDITTEXT IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
+    LTEXT "s", IDC_STATIC, 237, 56, 5, 8
+    AUTOCHECKBOX "Czas wyświetlania w razie potrzeby &opcji odzyskiwania:", IDC_STRRECREC, 14, 70, 188, 8
+    EDITTEXT IDC_STRRECRECEDIT, 204, 68, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT "s", IDC_STATIC, 215, 70, 25, 8
+    LTEXT "s", IDC_STATIC, 237, 70, 5, 8
     LTEXT "Aby ręcznie edytować plik opcji autostartu, kliknij przycisk Edytuj.", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON "&Edytuj", IDC_STRRECEDIT, 202, 87, 36, 14
     GROUPBOX "Awaria systemu", IDC_STATIC, 7, 111, 238, 140
