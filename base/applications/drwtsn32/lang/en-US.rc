@@ -8,5 +8,5 @@
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "ReactOS Crash Reporter"
-    IDS_USER_ALERT_MESSAGE "The application %1 has crashed. Information about this crash has been saved to:\r\n\r\n%2"
+    IDS_USER_ALERT_MESSAGE "The application %s has crashed. Information about this crash has been saved to:\r\n\r\n%ls"
 END

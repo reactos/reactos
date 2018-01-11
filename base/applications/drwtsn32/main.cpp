@@ -16,6 +16,8 @@
 #include <dbghelp.h>
 #include <conio.h>
 #include <atlbase.h>
+#include <atlstr.h>
+#include "resource.h"
 
 
 static const char szUsage[] = "Usage: DrWtsn32 [-i] [-g] [-p dddd] [-e dddd] [-?]\n"
@@ -233,7 +235,7 @@ HRESULT WriteMinidump(LPCWSTR LogFilePath, DumpData& data)
     return hr;
 }
 
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR cmdLine, INT)
 {
     int argc;
     WCHAR **argv = CommandLineToArgvW(cmdLine, &argc);
@@ -343,14 +345,14 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR cmdLine, INT)
 
     TerminateProcess(data.ProcessHandle, data.ExceptionInfo.ExceptionRecord.ExceptionCode);
 
-    std::wstring FilenameW(Filename);
-    std::string Message = "The application '";
-    Message += data.ProcessName;
-    Message += "' has just crashed :(\n";
-    Message += "Information about this crash is saved to:\n";
-    Message += std::string(FilenameW.begin(), FilenameW.end());
-    Message += "\nThis file is stored on your desktop.";
-    MessageBoxA(NULL, Message.c_str(), "Sorry!", MB_OK);
+    CString message;
+    message.LoadString(hInstance, IDS_USER_ALERT_MESSAGE);
+    CString FormattedMessage;
+    FormattedMessage.Format(message.GetString(), data.ProcessName.c_str(), OutputPath.c_str());
+    CString DialogTitle;
+    DialogTitle.LoadString(hInstance, IDS_APP_TITLE);
+
+    MessageBoxA(NULL, FormattedMessage.c_str(), DialogTitle.c_str(), MB_OK);
 
     return abort(output, 0);
 }
