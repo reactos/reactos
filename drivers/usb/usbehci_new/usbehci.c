@@ -1734,7 +1734,7 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
 VOID
 NTAPI
 EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
-            IN PEHCI_HCD_QH QueueHead,
+            IN PEHCI_HCD_QH QH,
             IN ULONG TransferType)
 {
     PEHCI_HCD_QH PrevQH;
@@ -1744,25 +1744,25 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HW_REGISTERS OperationalRegs;
     ULONG Command;
 
-    DPRINT_EHCI("EHCI_LockQH: QueueHead - %p, TransferType - %x\n",
-                QueueHead,
+    DPRINT_EHCI("EHCI_LockQH: QH - %p, TransferType - %x\n",
+                QH,
                 TransferType);
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    ASSERT((QueueHead->sqh.QhFlags & EHCI_QH_FLAG_UPDATING) == 0);
+    ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_UPDATING) == 0);
     ASSERT(EhciExtension->LockQH == NULL);
 
-    PrevQH = QueueHead->sqh.PrevHead;
-    QueueHead->sqh.QhFlags |= EHCI_QH_FLAG_UPDATING;
+    PrevQH = QH->sqh.PrevHead;
+    QH->sqh.QhFlags |= EHCI_QH_FLAG_UPDATING;
 
     ASSERT(PrevQH);
 
-    NextQH = QueueHead->sqh.NextHead;
+    NextQH = QH->sqh.NextHead;
 
     EhciExtension->PrevQH = PrevQH;
     EhciExtension->NextQH = NextQH;
-    EhciExtension->LockQH = QueueHead;
+    EhciExtension->LockQH = QH;
 
     if (NextQH)
     {
@@ -1797,21 +1797,21 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
 VOID
 NTAPI
 EHCI_UnlockQH(IN PEHCI_EXTENSION EhciExtension,
-              IN PEHCI_HCD_QH QueueHead)
+              IN PEHCI_HCD_QH QH)
 {
     ULONG_PTR QhPA;
 
-    DPRINT_EHCI("EHCI_UnlockQH: QueueHead - %p\n", QueueHead);
+    DPRINT_EHCI("EHCI_UnlockQH: QH - %p\n", QH);
 
-    ASSERT((QueueHead->sqh.QhFlags & EHCI_QH_FLAG_UPDATING) != 0);
+    ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_UPDATING) != 0);
     ASSERT(EhciExtension->LockQH != 0);
-    ASSERT(EhciExtension->LockQH == QueueHead);
+    ASSERT(EhciExtension->LockQH == QH);
 
-    QueueHead->sqh.QhFlags &= ~EHCI_QH_FLAG_UPDATING;
+    QH->sqh.QhFlags &= ~EHCI_QH_FLAG_UPDATING;
 
     EhciExtension->LockQH = NULL;
 
-    QhPA = (ULONG_PTR)QueueHead->sqh.PhysicalAddress;
+    QhPA = (ULONG_PTR)QH->sqh.PhysicalAddress;
     QhPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
     QhPA |= (EHCI_LINK_TYPE_QH << 1);
 
