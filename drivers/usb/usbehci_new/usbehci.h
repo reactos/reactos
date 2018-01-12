@@ -8,7 +8,6 @@
 #include <usbbusif.h>
 #include <usbdlib.h>
 #include <drivers/usbport/usbmport.h>
-
 #include "hardware.h"
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
@@ -44,9 +43,9 @@ struct _EHCI_ENDPOINT;
 struct _EHCI_TRANSFER;
 
 typedef struct _EHCI_HCD_TD {
-  //Hardware
+  /* Hardware*/
   EHCI_QUEUE_TD HwTD;
-  //Software
+  /* Software */
   struct _EHCI_HCD_TD * PhysicalAddress;
   ULONG TdFlags;
   struct _EHCI_ENDPOINT * EhciEndpoint;
@@ -70,9 +69,9 @@ C_ASSERT(sizeof(EHCI_HCD_TD) == 0x100);
 #define EHCI_QH_FLAG_NUKED        0x20
 
 typedef struct _EHCI_STATIC_QH {
-  //Hardware
+  /* Hardware part */
   EHCI_QUEUE_HEAD HwQH;
-  //Software
+  /* Software part */
   ULONG QhFlags;
   struct _EHCI_HCD_QH * PhysicalAddress;
   struct _EHCI_HCD_QH * PrevHead;
@@ -98,8 +97,8 @@ typedef struct _EHCI_ENDPOINT {
   ULONG EndpointStatus;
   ULONG EndpointState;
   USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
-  PVOID DmaBufferVA; //PEHCI_HCD_TD DummyTdVA
-  PVOID DmaBufferPA; // PEHCI_HCD_TD DummyTdPA
+  PVOID DmaBufferVA;
+  PVOID DmaBufferPA;
   PEHCI_HCD_TD FirstTD;
   ULONG MaxTDs;
   ULONG PendingTDs;
@@ -144,8 +143,8 @@ typedef struct _EHCI_EXTENSION {
   BOOLEAN IsStarted;
   USHORT HcSystemErrors;
   ULONG PortRoutingControl;
-  USHORT NumberOfPorts; // HCSPARAMS => N_PORTS 
-  USHORT PortPowerControl; // HCSPARAMS => Port Power Control (PPC)
+  USHORT NumberOfPorts;
+  USHORT PortPowerControl;
   EHCI_INTERRUPT_ENABLE InterruptMask;
   EHCI_INTERRUPT_ENABLE InterruptStatus;
   /* Shedule */
@@ -169,10 +168,10 @@ typedef struct _EHCI_EXTENSION {
   PEHCI_HCD_QH LockQH;
   PEHCI_HCD_QH NextQH;
   /* Registers Copy Bakup */
-  ULONG BakupPeriodiclistbase; // PERIODICLISTBASE
-  ULONG BakupAsynclistaddr; // ASYNCLISTADDR
-  ULONG BakupCtrlDSSegment; // CTRLDSSEGMENT
-  ULONG BakupUSBCmd; // USBCMD
+  ULONG BakupPeriodiclistbase;
+  ULONG BakupAsynclistaddr;
+  ULONG BakupCtrlDSSegment;
+  ULONG BakupUSBCmd;
 } EHCI_EXTENSION, *PEHCI_EXTENSION;
 
 /* debug.c */
