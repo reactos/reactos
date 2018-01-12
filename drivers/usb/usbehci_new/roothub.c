@@ -320,31 +320,29 @@ EHCI_RH_PortResetComplete(IN PVOID ehciExtension,
 
     PortStatusReg = &EhciExtension->OperationalRegs->PortControl[*Port - 1].AsULONG;
 
-START:
-
-    ix = 0;
-
-    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
-
-    PortSC.ConnectStatusChange = 0;
-    PortSC.PortEnableDisableChange = 0;
-    PortSC.OverCurrentChange = 0;
-    PortSC.PortReset = 0;
-
-    WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
-
     do
     {
-        KeStallExecutionProcessor(20);
-
-        ix += 20;
-
         PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
 
-        if (ix > 500)
-            goto START;
+        PortSC.ConnectStatusChange = 0;
+        PortSC.PortEnableDisableChange = 0;
+        PortSC.OverCurrentChange = 0;
+        PortSC.PortReset = 0;
+
+        WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+
+        for (ix = 0; ix <= 500; ix += 20)
+        {
+             KeStallExecutionProcessor(20);
+             PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+             DPRINT("EHCI_RH_PortResetComplete: Reset port - %x\n", Port);
+
+             if (PortSC.PortReset == 0)
+                 break;
+        }
     }
-    while (PortSC.PortReset && (PortSC.AsULONG != -1));
+    while (PortSC.PortReset == 1 && (PortSC.AsULONG != -1));
 
     RegPacket.UsbPortRequestAsyncCallback(EhciExtension,
                                           50, // TimerValue
