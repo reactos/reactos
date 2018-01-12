@@ -182,7 +182,6 @@ EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
     }
 
     QH->sqh.HwQH.EndpointParams.MaximumPacketLength = EndpointProperties->MaxPacketSize;
-
     QH->sqh.HwQH.EndpointCaps.PipeMultiplier = 1;
 
     if (DeviceSpeed == UsbHighSpeed)
@@ -744,7 +743,7 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
     PVOID NewPAddress;
     ULONG_PTR VAddress;
 
-    //DPRINT_EHCI("EHCI_AlignHwStructure: *PhysicalAddress - %p, *VirtualAddress - %p, Alignment - %x\n",
+    //DPRINT_EHCI("EHCI_AlignHwStructure: *PhysicalAddress - %X, *VirtualAddress - %X, Alignment - %x\n",
     //             *PhysicalAddress,
     //             *VirtualAddress,
     //             Alignment);
@@ -759,7 +758,7 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
         VAddress += (ULONG_PTR)NewPAddress - PAddress;
         PAddress = (ULONG_PTR)PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
 
-        DPRINT("EHCI_AlignHwStructure: VAddress - %p, PAddress - %p\n",
+        DPRINT("EHCI_AlignHwStructure: VAddress - %X, PAddress - %X\n",
                VAddress,
                PAddress);
     }
@@ -945,7 +944,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
         StaticHeadPA.AsULONG = (ULONG_PTR)StaticQH->PhysicalAddress;
         StaticHeadPA.Type = EHCI_LINK_TYPE_QH;
 
-        //DPRINT_EHCI("EHCI_InitializeSchedule: StaticHeadPA[%x] - %p\n",
+        //DPRINT_EHCI("EHCI_InitializeSchedule: StaticHeadPA[%x] - %X\n",
         //            Frame,
         //            StaticHeadPA);
 
@@ -1018,7 +1017,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     EhciExtension->NumberOfPorts = StructuralParams.PortCount;
     EhciExtension->PortPowerControl = StructuralParams.PortPowerControl;
 
-    DPRINT("EHCI_InitializeHardware: StructuralParams - %p\n", StructuralParams.AsULONG);
+    DPRINT("EHCI_InitializeHardware: StructuralParams - %X\n", StructuralParams.AsULONG);
     DPRINT("EHCI_InitializeHardware: PortPowerControl - %x\n", EhciExtension->PortPowerControl);
     DPRINT("EHCI_InitializeHardware: N_PORTS          - %x\n", EhciExtension->NumberOfPorts);
 
@@ -2600,8 +2599,8 @@ EHCI_AbortTransfer(IN PVOID ehciExtension,
     ULONG TransferType;
 
     DPRINT("EHCI_AbortTransfer: EhciTransfer - %p, CompletedLength - %x\n",
-                EhciTransfer,
-                CompletedLength);
+           EhciTransfer,
+           CompletedLength);
 
     TransferType = EhciEndpoint->EndpointProperties.TransferType;
 
@@ -2635,7 +2634,7 @@ EHCI_RemoveQhFromPeriodicList(IN PEHCI_EXTENSION EhciExtension,
     if ( !(QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) )
         return;
 
-    DPRINT("EHCI_RemoveQhFromPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %X\n",
+    DPRINT("EHCI_RemoveQhFromPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %p\n",
            EhciEndpoint,
            QH,
            EhciEndpoint->StaticQH);
@@ -2735,7 +2734,7 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
     QH->sqh.Period = EhciEndpoint->EndpointProperties.Period;
     QH->sqh.Ordinal = EhciEndpoint->EndpointProperties.Reserved6;
 
-    DPRINT("EHCI_InsertQhInPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %X\n",
+    DPRINT("EHCI_InsertQhInPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %p\n",
            EhciEndpoint,
            QH,
            EhciEndpoint->StaticQH);
@@ -2745,7 +2744,7 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
     if ((StaticQH->QhFlags & EHCI_QH_FLAG_STATIC) != 0 &&
         (!NextHead || (NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) != 0))
     {
-        DPRINT("EHCI_InsertQhInPeriodicList: StaticQH - %p, StaticQH->NextHead - %X\n",
+        DPRINT("EHCI_InsertQhInPeriodicList: StaticQH - %p, StaticQH->NextHead - %p\n",
                StaticQH,
                StaticQH->NextHead);
     }
@@ -2829,7 +2828,7 @@ EHCI_SetAsyncEndpointState(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HCD_QH QH;
     ULONG TransferType;
 
-    DPRINT("EHCI_SetAsyncEndpointState: EhciEndpoint - %p, EndpointState - %p\n",
+    DPRINT("EHCI_SetAsyncEndpointState: EhciEndpoint - %p, EndpointState - %x\n",
             EhciEndpoint,
             EndpointState);
 
@@ -3608,7 +3607,10 @@ VOID
 NTAPI
 EHCI_Unload(IN PDRIVER_OBJECT DriverObject)
 {
-    DPRINT1("EHCI_Unload: UNIMPLEMENTED. FIXME\n");
+#if DBG
+    DPRINT1("EHCI_Unload: Not supported\n");
+#endif
+    return;
 }
 
 NTSTATUS

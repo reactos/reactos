@@ -22,7 +22,7 @@ EHCI_RH_ChirpRootPort(IN PVOID ehciExtension,
 
     PortStatusReg = ((PULONG)EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
-    DPRINT_RH("EHCI_RH_ChirpRootPort: PortSC - %p\n", PortSC.AsULONG);
+    DPRINT_RH("EHCI_RH_ChirpRootPort: PortSC - %X\n", PortSC.AsULONG);
 
     PortBit = 1 << (Port - 1);
 
@@ -194,7 +194,7 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
 
     if (PortSC.CurrentConnectStatus)
     {
-        DPRINT_RH("EHCI_RH_GetPortStatus: Port - %x, PortSC.AsULONG - %p\n",
+        DPRINT_RH("EHCI_RH_GetPortStatus: Port - %x, PortSC.AsULONG - %X\n",
                   Port,
                   PortSC.AsULONG);
     }
@@ -248,7 +248,7 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
 
     if (status.PortStatus.Usb20PortStatus.CurrentConnectStatus)
     {
-        DPRINT_RH("EHCI_RH_GetPortStatus: Port - %x, status.AsULONG - %p\n",
+        DPRINT_RH("EHCI_RH_GetPortStatus: Port - %x, status.AsULONG - %X\n",
                   Port,
                   status.AsUlong32);
     }
@@ -284,7 +284,7 @@ EHCI_RH_FinishReset(IN PVOID ehciExtension,
     if (PortSC.AsULONG != -1)
     {
         if (!PortSC.CurrentConnectStatus)
-            DPRINT("EHCI_RH_FinishReset: PortSC.AsULONG - %p\n", PortSC.AsULONG);
+            DPRINT("EHCI_RH_FinishReset: PortSC.AsULONG - %X\n", PortSC.AsULONG);
     
         if (PortSC.PortEnabledDisabled ||
             !PortSC.CurrentConnectStatus ||
