@@ -762,7 +762,8 @@ UhciStopController(IN PVOID uhciExtension,
     KeQuerySystemTime(&EndTime);
     EndTime.QuadPart += 100 * 1000;
 
-    while (((UHCI_USB_COMMAND)READ_PORT_USHORT(CommandReg)).HcReset == 1)
+    Command.AsUSHORT = READ_PORT_USHORT(CommandReg);
+    while (Command.HcReset == 1)
     {
         KeQuerySystemTime(&CurrentTime);
 
@@ -772,6 +773,8 @@ UhciStopController(IN PVOID uhciExtension,
             DbgBreakPoint();
             break;
         }
+
+        Command.AsUSHORT = READ_PORT_USHORT(CommandReg);
     }
 }
 
