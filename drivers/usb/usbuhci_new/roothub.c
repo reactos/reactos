@@ -34,7 +34,7 @@ UhciRHGetStatus(IN PVOID uhciExtension,
                 IN PUSHORT Status)
 {
     DPRINT("UhciRHGetStatus: ...\n");
-    *Status = 1;
+    *Status = UHCI_RH_STATUS_SUCCESS;
     return MP_STATUS_SUCCESS;
 }
 
