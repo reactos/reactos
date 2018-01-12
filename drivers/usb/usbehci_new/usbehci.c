@@ -1327,9 +1327,9 @@ EHCI_SuspendController(IN PVOID ehciExtension)
     if (!Status.HCHalted)
         DbgBreakPoint();
 
-    IntrEn.AsULONG = READ_REGISTER_ULONG((PULONG)(&OperationalRegs->HcInterruptEnable.AsULONG));
+    IntrEn.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG);
     IntrEn.PortChangeInterrupt = 1;
-    WRITE_REGISTER_ULONG((PULONG)(&OperationalRegs->HcInterruptEnable.AsULONG), IntrEn.AsULONG);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG, IntrEn.AsULONG);
 
     EhciExtension->Flags |= EHCI_FLAGS_CONTROLLER_SUSPEND;
 }
@@ -1395,7 +1395,9 @@ NTAPI
 EHCI_HardwarePresent(IN PEHCI_EXTENSION EhciExtension,
                      IN BOOLEAN IsInvalidateController)
 {
-    if (READ_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs) != -1)
+    PEHCI_HW_REGISTERS OperationalRegs = EhciExtension->OperationalRegs;
+
+    if (READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG) != -1)
         return TRUE;
 
     DPRINT1("EHCI_HardwarePresent: IsInvalidateController - %x\n",
@@ -1452,7 +1454,7 @@ EHCI_InterruptService(IN PVOID ehciExtension)
         {
             //attempting reset
             Command = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
-            WRITE_REGISTER_ULONG((PULONG)OperationalRegs, Command | 1);
+            WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command | 1);
         }
     }
 
@@ -3374,7 +3376,7 @@ EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
     //DPRINT_EHCI("EHCI_Get32BitFrameNumber: EhciExtension - %p\n", EhciExtension);
 
     FrameIdx = EhciExtension->FrameIndex;
-    FrameIndex = READ_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_FRINDEX);
+    FrameIndex = READ_REGISTER_ULONG(&EhciExtension->OperationalRegs->FrameIndex);
 
     FrameNumber = (USHORT)FrameIdx ^ ((FrameIndex / EHCI_MICROFRAMES) & EHCI_FRINDEX_FRAME_MASK);
     FrameNumber &= EHCI_FRAME_LIST_MAX_ENTRIES;
@@ -3392,7 +3394,7 @@ EHCI_EnableInterrupts(IN PVOID ehciExtension)
     DPRINT("EHCI_EnableInterrupts: EhciExtension->InterruptMask - %x\n",
            EhciExtension->InterruptMask.AsULONG);
 
-    WRITE_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_USBINTR,
+    WRITE_REGISTER_ULONG(&EhciExtension->OperationalRegs->HcInterruptEnable.AsULONG,
                          EhciExtension->InterruptMask.AsULONG);
 }
 
@@ -3404,7 +3406,7 @@ EHCI_DisableInterrupts(IN PVOID ehciExtension)
 
     DPRINT("EHCI_DisableInterrupts: ... \n");
 
-    WRITE_REGISTER_ULONG((PULONG)EhciExtension->OperationalRegs + EHCI_USBINTR,
+    WRITE_REGISTER_ULONG(&EhciExtension->OperationalRegs->HcInterruptEnable.AsULONG,
                          0);
 }
 
@@ -3431,7 +3433,7 @@ EHCI_PollController(IN PVOID ehciExtension)
     {
         for (Port = 0; Port < EhciExtension->NumberOfPorts; Port++)
         {
-            PortSC.AsULONG = READ_REGISTER_ULONG(((PULONG)OperationalRegs + EHCI_PORTSC) + Port);
+            PortSC.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->PortControl[Port].AsULONG);
 
             if (PortSC.ConnectStatusChange)
                 RegPacket.UsbPortInvalidateRootHub(EhciExtension);
