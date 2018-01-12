@@ -62,9 +62,7 @@ OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
     /* Waiting time (in 2 ms intervals) */
     PowerOnToPowerGoodTime = DescriptorA.PowerOnToPowerGoodTime;
     if (PowerOnToPowerGoodTime <= OHCI_MINIMAL_POTPGT)
-    {
         PowerOnToPowerGoodTime = OHCI_MINIMAL_POTPGT;
-    }
     RootHubData->PowerOnToPowerGood = PowerOnToPowerGoodTime;
 
     HubCharacteristics.AsUSHORT = 0;
@@ -137,9 +135,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
                    OhciPortStatus.Reserved3;
 
         if (OhciPortStatus.AsULONG && !Reserved)
-        {
             break;
-        }
 
         DPRINT("OHCI_RH_GetPortStatus: OhciPortStatus - %X\n", OhciPortStatus.AsULONG);
 

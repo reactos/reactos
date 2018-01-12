@@ -87,25 +87,17 @@ OHCI_EnableList(IN POHCI_EXTENSION OhciExtension,
     CommandStatus.AsULONG = 0;
 
     if (READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcControlHeadED))
-    {
         CommandStatus.ControlListFilled = 1;
-    }
 
     if (READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcBulkHeadED))
-    {
         CommandStatus.BulkListFilled = 1;
-    }
 
     TransferType = OhciEndpoint->EndpointProperties.TransferType;
 
     if (TransferType == USBPORT_TRANSFER_TYPE_BULK)
-    {
         CommandStatus.BulkListFilled = 1;
-    }
     else if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
-    {
         CommandStatus.ControlListFilled = 1;
-    }
 
     WRITE_REGISTER_ULONG(CommandStatusReg, CommandStatus.AsULONG);
 }
@@ -204,18 +196,12 @@ OHCI_InitializeED(IN POHCI_ENDPOINT OhciEndpoint,
     }
 
     if (EndpointProperties->DeviceSpeed == UsbLowSpeed)
-    {
         EndpointControl.Speed = OHCI_ENDPOINT_LOW_SPEED;
-    }
 
     if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
-    {
         EndpointControl.Format = OHCI_ENDPOINT_ISOCHRONOUS_FORMAT;
-    }
     else
-    {
         EndpointControl.sKip = 1;
-    }
 
     ED->HwED.EndpointControl = EndpointControl;
 
@@ -564,9 +550,7 @@ OHCI_TakeControlHC(IN POHCI_EXTENSION OhciExtension,
     Control.AsULONG = READ_REGISTER_ULONG(ControlReg);
 
     if (Control.InterruptRouting == 0)
-    {
         return MP_STATUS_SUCCESS;
-    }
 
     DPRINT1("OHCI_TakeControlHC: detected Legacy BIOS\n");
 
@@ -975,9 +959,7 @@ OHCI_ResumeController(IN PVOID ohciExtension)
     control.AsULONG = READ_REGISTER_ULONG(ControlReg);
 
     if (control.HostControllerFunctionalState != OHCI_HC_STATE_SUSPEND)
-    {
         return MP_STATUS_HW_ERROR;
-    }
 
     HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
     HcHCCA->Pad1 = 0;
@@ -1012,9 +994,7 @@ OHCI_HardwarePresent(IN POHCI_EXTENSION OhciExtension,
     CommandStatusReg = (PULONG)&OperationalRegs->HcCommandStatus;
 
     if (READ_REGISTER_ULONG(CommandStatusReg) != 0xFFFFFFFF)
-    {
         return TRUE;
-    }
 
     DPRINT1("OHCI_HardwarePresent: IsInvalidateController - %x\n",
             IsInvalidateController);
@@ -1052,14 +1032,10 @@ OHCI_InterruptService(IN PVOID ohciExtension)
     IntStatus.AsULONG = READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcInterruptStatus) & IntEnable.AsULONG;
 
     if ((IntStatus.AsULONG == 0) || (IntEnable.MasterInterruptEnable == 0))
-    {
         return FALSE;
-    }
 
     if (IntStatus.UnrecoverableError)
-    {
         DPRINT1("OHCI_InterruptService: IntStatus.UnrecoverableError\n");
-    }
 
     if (IntStatus.FrameNumberOverflow)
     {
@@ -1139,9 +1115,7 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
     }
 
     if (IntStatus.ResumeDetected)
-    {
         DPRINT1("OHCI_IntDpc: ResumeDetected\n");
-    }
 
     if (IntStatus.UnrecoverableError)
     {
@@ -1231,9 +1205,7 @@ OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
         LengthThisTd = MaxPacketSize * (TransferLength / MaxPacketSize);
 
         if (TransferLength > LengthThisTd)
-        {
             BufferEnd -= (TransferLength - LengthThisTd);
-        }
     }
 
     TD->HwTD.gTD.CurrentBuffer = Buffer;
@@ -1284,9 +1256,7 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
     for (ix = 0; ix < MaxTDs; ix++)
     {
         if (!(TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED))
-        {
             RemainTDs++;
-        }
 
         TD += 1;
     }
@@ -1321,9 +1291,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     MaxTDs = OHCI_RemainTDs(OhciExtension, OhciEndpoint);
 
     if ((SGList->SgElementCount + OHCI_NON_DATA_CONTROL_TDS) > MaxTDs)
-    {
         return MP_STATUS_FAILURE;
-    }
 
     FirstTD = OhciEndpoint->HcdTailP;
     FirstTD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
@@ -1392,13 +1360,9 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
         OhciTransfer->PendingTDs++;
 
         if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
-        {
             TD->HwTD.gTD.Control.DirectionPID = OHCI_TD_DIRECTION_PID_IN;
-        }
         else
-        {
             TD->HwTD.gTD.Control.DirectionPID = OHCI_TD_DIRECTION_PID_OUT;
-        }
 
         TD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
         TD->HwTD.gTD.Control.DataToggle = DataToggle;
@@ -1505,9 +1469,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
     MaxTDs = OHCI_RemainTDs(OhciExtension, OhciEndpoint);
 
     if (SGList->SgElementCount > MaxTDs)
-    {
         return MP_STATUS_FAILURE;
-    }
 
     TD = OhciEndpoint->HcdTailP;
 
@@ -1692,18 +1654,14 @@ OHCI_ProcessDoneTD(IN POHCI_EXTENSION OhciExtension,
                 Length++;
 
                 if (Buffer >> PAGE_SHIFT != BufferEnd >> PAGE_SHIFT)
-                {
                     Length += PAGE_SIZE;
-                }
 
                 TD->TransferLen -= Length;
             }
         }
 
         if (TD->HwTD.gTD.Control.DirectionPID != OHCI_TD_DIRECTION_PID_SETUP)
-        {
             OhciTransfer->TransferLen += TD->TransferLen;
-        }
 
         if (TD->HwTD.gTD.Control.ConditionCode)
         {
@@ -1771,7 +1729,6 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
     }
 
     ED = OhciEndpoint->HcdED;
-
     NextTdPA = ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_MASK;
 
     NextTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
@@ -1794,18 +1751,13 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
             if (TD->OhciTransfer == (ULONG)OhciTransfer)
             {
                 if (IsIsoEndpoint)
-                {
                     OHCI_ProcessDoneIsoTD(OhciExtension, TD, FALSE);
-                }
                 else
-                {
                     OHCI_ProcessDoneTD(OhciExtension, TD, FALSE);
-                }
             }
         }
 
         *CompletedLength = OhciTransfer->TransferLen;
-
         return;
     }
 
@@ -1822,18 +1774,12 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
             TD = (POHCI_HCD_TD)TD->NextHcdTD;
 
             if (PrevTD == OhciEndpoint->HcdHeadP)
-            {
                 OhciEndpoint->HcdHeadP = TD;
-            }
 
             if (IsIsoEndpoint)
-            {
                 OHCI_ProcessDoneIsoTD(OhciExtension, PrevTD, FALSE);
-            }
             else
-            {
                 OHCI_ProcessDoneTD(OhciExtension, PrevTD, FALSE);
-            }
 
             IsProcessed = TRUE;
         }
@@ -1869,21 +1815,15 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
         do
         {
             if (TD == OhciEndpoint->HcdTailP)
-            {
                 break;
-            }
 
             PrevTD = TD;
             TD = (POHCI_HCD_TD)TD->NextHcdTD;
 
             if (IsIsoEndpoint)
-            {
                 OHCI_ProcessDoneIsoTD(OhciExtension, PrevTD, FALSE);
-            }
             else
-            {
                 OHCI_ProcessDoneTD(OhciExtension, PrevTD, FALSE);
-            }
         }
         while (TD->OhciTransfer == (ULONG)OhciTransfer);
 
@@ -1917,14 +1857,10 @@ OHCI_GetEndpointState(IN PVOID ohciExtension,
     ED = OhciEndpoint->HcdED;
 
     if (ED->Flags & OHCI_HCD_TD_FLAG_NOT_ACCESSED)
-    {
         return USBPORT_ENDPOINT_REMOVE;
-    }
 
     if (ED->HwED.EndpointControl.sKip)
-    {
         return USBPORT_ENDPOINT_PAUSED;
-    }
 
     return USBPORT_ENDPOINT_ACTIVE;
 }
@@ -2048,9 +1984,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
     DPRINT_OHCI("NextTD - %p\n", NextTD);
 
     if ((ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_HALT) == 0)
-    {
         goto ProcessListTDs;
-    }
 
     OHCI_DumpHcdED(ED);
 
@@ -2264,25 +2198,19 @@ OHCI_CheckController(IN PVOID ohciExtension)
     OperationalRegs = OhciExtension->OperationalRegs;
 
     if (!OHCI_HardwarePresent(OhciExtension, TRUE))
-    {
         return;
-    }
 
     HcControlReg = (PULONG)&OperationalRegs->HcControl;
     HcControl.AsULONG = READ_REGISTER_ULONG(HcControlReg);
 
     if (HcControl.HostControllerFunctionalState != OHCI_HC_STATE_OPERATIONAL)
-    {
         return;
-    }
 
     FmNumber = READ_REGISTER_ULONG(&OperationalRegs->HcFmNumber);
     FmDiff = (USHORT)(FmNumber - OhciExtension->HcdFmNumber);
 
     if (FmNumber == 0 || FmDiff < 5)
-    {
         return;
-    }
 
     HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
     OhciExtension->HcdFmNumber = FmNumber;
@@ -2417,13 +2345,9 @@ OHCI_SetEndpointDataToggle(IN PVOID ohciExtension,
     ED = OhciEndpoint->HcdED;
 
     if (DataToggle)
-    {
         ED->HwED.HeadPointer |= OHCI_ED_HEAD_POINTER_CARRY;
-    }
     else
-    {
         ED->HwED.HeadPointer &= ~OHCI_ED_HEAD_POINTER_CARRY;
-    }
 }
 
 ULONG
