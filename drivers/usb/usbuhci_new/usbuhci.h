@@ -10,10 +10,13 @@
 #include <drivers/usbport/usbmport.h>
 #include "hardware.h"
 
+extern USBPORT_REGISTRATION_PACKET RegPacket;
+
 #define UHCI_MAX_HC_SCHEDULE_ERRORS        16
 
 #define UHCI_MAX_ISO_TRANSFER_SIZE         0x10000
 #define UHCI_MAX_BULK_TRANSFER_SIZE        0x1000
+//#define UHCI_MAX_BULK_TRANSFER_SIZE        0x10000 // Hack for testing w/o Split Transfers
 #define UHCI_MAX_ISO_TD_COUNT              256
 #define UHCI_MAX_INTERRUPT_TD_COUNT        8
 
@@ -35,7 +38,7 @@ typedef struct _UHCI_HCD_TD {
   UHCI_TD HwTD;
   /* Software */
   USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
-  ULONG_PTR PhysicalAddress;
+  ULONG PhysicalAddress;
   ULONG Flags;
   struct _UHCI_HCD_TD * NextHcdTD;
   _ANONYMOUS_UNION union {
@@ -56,7 +59,7 @@ typedef struct _UHCI_HCD_QH {
   /* Hardware */
   UHCI_QH HwQH;
   /* Software */
-  ULONG_PTR PhysicalAddress;
+  ULONG PhysicalAddress;
   ULONG QhFlags;
   struct _UHCI_HCD_QH * NextHcdQH;
   struct _UHCI_HCD_QH * PrevHcdQH;
@@ -70,6 +73,7 @@ C_ASSERT(sizeof(UHCI_HCD_QH) == 0x40);
 #define UHCI_ENDPOINT_FLAG_RESERVED         2
 #define UHCI_ENDPOINT_FLAG_CONTROLL_OR_ISO  4
 
+/* UHCI Endpoint follows USBPORT Endpoint */
 typedef struct _UHCI_ENDPOINT {
   ULONG Flags;
   LONG EndpointLock;
@@ -85,6 +89,7 @@ typedef struct _UHCI_ENDPOINT {
   BOOL DataToggle;
 } UHCI_ENDPOINT, *PUHCI_ENDPOINT;
 
+/* UHCI Transfer follows USBPORT Transfer */
 typedef struct _UHCI_TRANSFER {
   PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
   PUHCI_ENDPOINT UhciEndpoint;
@@ -102,7 +107,7 @@ typedef struct _UHCI_TRANSFER {
 #define UHCI_MAX_STATIC_SOF_TDS            8
 
 typedef struct _UHCI_HC_RESOURCES {
-  ULONG_PTR FrameList[UHCI_FRAME_LIST_MAX_ENTRIES]; // The 4-Kbyte Frame List Table is aligned on a 4-Kbyte boundary
+  ULONG FrameList[UHCI_FRAME_LIST_MAX_ENTRIES]; // The 4-Kbyte Frame List Table is aligned on a 4-Kbyte boundary
   UHCI_HCD_QH StaticIntHead[INTERRUPT_ENDPOINTs];
   UHCI_HCD_QH StaticControlHead;
   UHCI_HCD_QH StaticBulkHead;
@@ -113,6 +118,7 @@ typedef struct _UHCI_HC_RESOURCES {
 
 #define UHCI_EXTENSION_FLAG_SUSPENDED  0x00000002
 
+/* UHCI Extension follows USBPORT Extension */
 typedef struct _UHCI_EXTENSION {
   PUHCI_HW_REGISTERS BaseRegister;
   USB_CONTROLLER_FLAVOR HcFlavor;
@@ -133,14 +139,11 @@ typedef struct _UHCI_EXTENSION {
   ULONG SuspendChangePortMask;
   ULONG HcScheduleError;
   LONG ExtensionLock;
-
   UHCI_USB_STATUS StatusMask;
   UHCI_USB_STATUS HcStatus;
   UCHAR SOF_Modify;
   UCHAR Padded2[3];
 } UHCI_EXTENSION, *PUHCI_EXTENSION;
-
-extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 /* roothub.c */
 VOID

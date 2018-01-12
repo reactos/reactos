@@ -33,11 +33,13 @@ typedef union _UHCI_PCI_LEGSUP {
     USHORT TrapBy64WriteStatus : 1; // (TBY64W) Trap By 64h Write Status. R/WC.
     USHORT UsbIrqStatus        : 1; // (USBIRQS) USB IRQ Status. RO.
     USHORT UsbPIRQ             : 1; // (USBPIRQDEN) USB PIRQ Enable.  R/W.
-    USHORT Reserved            : 1; // Reserved
+    USHORT Reserved            : 1;
     USHORT EndA20GateStatus    : 1; // (A20PTS) End OF A20GATE Pass Through Status. R/WC. 
   };
   USHORT AsUSHORT;
 } UHCI_PCI_LEGSUP;
+
+C_ASSERT(sizeof(UHCI_PCI_LEGSUP) == sizeof(USHORT));
 
 /* USBCMD Command register */
 typedef union _UHCI_USB_COMMAND {
@@ -55,6 +57,8 @@ typedef union _UHCI_USB_COMMAND {
   USHORT AsUSHORT;
 } UHCI_USB_COMMAND;
 
+C_ASSERT(sizeof(UHCI_USB_COMMAND) == sizeof(USHORT));
+
 /* USBSTS Status register */
 #define UHCI_USB_STATUS_MASK  0x3F
 
@@ -71,6 +75,8 @@ typedef union _UHCI_USB_STATUS {
   USHORT AsUSHORT;
 } UHCI_USB_STATUS;
 
+C_ASSERT(sizeof(UHCI_USB_STATUS) == sizeof(USHORT));
+
 /* USBINTR Interrupt enable register */
 typedef union _UHCI_INTERRUPT_ENABLE {
   struct {
@@ -82,6 +88,8 @@ typedef union _UHCI_INTERRUPT_ENABLE {
   };
   USHORT AsUSHORT;
 } UHCI_INTERRUPT_ENABLE;
+
+C_ASSERT(sizeof(UHCI_INTERRUPT_ENABLE) == sizeof(USHORT));
 
 /* FRNUM Frame Number register */
 #define UHCI_FRNUM_FRAME_MASK     0x7FF 
@@ -106,6 +114,8 @@ typedef union _UHCI_PORT_STATUS_CONTROL {
   };
   USHORT AsUSHORT;
 } UHCI_PORT_STATUS_CONTROL;
+
+C_ASSERT(sizeof(UHCI_PORT_STATUS_CONTROL) == sizeof(USHORT));
 
 typedef struct _UHCI_HW_REGISTERS {
   UHCI_USB_COMMAND HcCommand; // R/W
@@ -147,6 +157,8 @@ typedef union _UHCI_CONTROL_STATUS {
   ULONG AsULONG;
 } UHCI_CONTROL_STATUS;
 
+C_ASSERT(sizeof(UHCI_CONTROL_STATUS) == sizeof(ULONG));
+
 #define UHCI_TD_PID_IN     0x69
 #define UHCI_TD_PID_OUT    0xE1
 #define UHCI_TD_PID_SETUP  0x2D
@@ -166,6 +178,8 @@ typedef union _UHCI_TD_TOKEN {
   ULONG AsULONG;
 } UHCI_TD_TOKEN;
 
+C_ASSERT(sizeof(UHCI_TD_TOKEN) == sizeof(ULONG));
+
 #define UHCI_TD_LINK_PTR_VALID          (0 << 0)
 #define UHCI_TD_LINK_PTR_TERMINATE      (1 << 0)
 #define UHCI_TD_LINK_PTR_TD             (0 << 1)
@@ -175,11 +189,10 @@ typedef union _UHCI_TD_TOKEN {
 #define UHCI_TD_LINK_POINTER_MASK       0xFFFFFFF0
 
 typedef struct _UHCI_TD {  // Transfer Descriptors always aligned on 16-byte boundaries
-  //Hardware
-  ULONG_PTR NextElement;
+  ULONG NextElement;
   UHCI_CONTROL_STATUS ControlStatus;
   UHCI_TD_TOKEN Token;
-  ULONG_PTR Buffer;
+  ULONG Buffer;
 } UHCI_TD, *PUHCI_TD;
 
 C_ASSERT(sizeof(UHCI_TD) == 16);
@@ -198,9 +211,8 @@ C_ASSERT(sizeof(UHCI_TD) == 16);
 #define UHCI_QH_ELEMENT_LINK_POINTER_MASK   0xFFFFFFF0
 
 typedef struct _UHCI_QH { // Queue Heads must be aligned on a 16-byte boundary
-  //Hardware
-  ULONG_PTR NextQH;
-  ULONG_PTR NextElement;
+  ULONG NextQH;
+  ULONG NextElement;
 } UHCI_QH, *PUHCI_QH;
 
 C_ASSERT(sizeof(UHCI_QH) == 8);
