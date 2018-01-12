@@ -8,7 +8,6 @@
 #include <usbbusif.h>
 #include <usbdlib.h>
 #include <drivers/usbport/usbmport.h>
-
 #include "hardware.h"
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
@@ -53,9 +52,9 @@ typedef union _OHCI_HW_TRANSFER_DESCRIPTOR {
 C_ASSERT(sizeof(OHCI_HW_TRANSFER_DESCRIPTOR) == 32);
 
 typedef struct _OHCI_HCD_TD {
-  // Hardware part
+  /* Hardware part */
   OHCI_HW_TRANSFER_DESCRIPTOR HwTD; // must be aligned to a 32-byte boundary
-  // Software part
+  /* Software part */
   ULONG PhysicalAddress;
   ULONG Flags;
   ULONG OhciTransfer;
@@ -65,26 +64,26 @@ typedef struct _OHCI_HCD_TD {
   ULONG Pad[1];
 } OHCI_HCD_TD, *POHCI_HCD_TD;
 
-C_ASSERT(sizeof(OHCI_HCD_TD) == 0x40);
+C_ASSERT(sizeof(OHCI_HCD_TD) == 64);
 
 typedef struct _OHCI_HCD_ED {
-  // Hardware part
+  /* Hardware part */
   OHCI_ENDPOINT_DESCRIPTOR HwED; // must be aligned to a 16-byte boundary
-  // Software part
+  /* Software part */
   ULONG PhysicalAddress;
   ULONG Flags;
   LIST_ENTRY HcdEDLink;
   ULONG Pad[8];
 } OHCI_HCD_ED, *POHCI_HCD_ED;
 
-C_ASSERT(sizeof(OHCI_HCD_ED) == 0x40);
+C_ASSERT(sizeof(OHCI_HCD_ED) == 64);
 
 #define OHCI_STATIC_ED_TYPE_INTERRUPT  0
 #define OHCI_STATIC_ED_TYPE_CONTROL    1
 #define OHCI_STATIC_ED_TYPE_BULK       2
 
 typedef struct _OHCI_STATIC_ED {
-  // Software only part
+  /* Software only */
   POHCI_ENDPOINT_DESCRIPTOR HwED;
   ULONG PhysicalAddress;
   UCHAR HeadIndex;
@@ -102,18 +101,20 @@ typedef struct _OHCI_HC_RESOURCES {
   OHCI_ENDPOINT_DESCRIPTOR BulkHeadED; // (16 byte align)
 } OHCI_HC_RESOURCES, *POHCI_HC_RESOURCES;
 
+/* OHCI Endpoint follows USBPORT Endpoint */
 typedef struct _OHCI_ENDPOINT {
   ULONG Reserved;
   USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
   POHCI_STATIC_ED HeadED;
   POHCI_HCD_TD FirstTD;
   POHCI_HCD_ED HcdED;
-  ULONG MaxTransferDescriptors; // TdCount
+  ULONG MaxTransferDescriptors;
   POHCI_HCD_TD HcdHeadP;
   POHCI_HCD_TD HcdTailP;
   LIST_ENTRY TDList;
 } OHCI_ENDPOINT, *POHCI_ENDPOINT;
 
+/* OHCI Transfer follows USBPORT Transfer */
 typedef struct _OHCI_TRANSFER {
   ULONG Reserved;
   ULONG TransferLen;
@@ -126,6 +127,7 @@ typedef struct _OHCI_TRANSFER {
   POHCI_HCD_TD ControlStatusTD;
 } OHCI_TRANSFER, *POHCI_TRANSFER;
 
+/* OHCI Extension follows USBPORT Extension */
 typedef struct _OHCI_EXTENSION {
   ULONG Reserved;
   POHCI_OPERATIONAL_REGISTERS OperationalRegs;
@@ -135,8 +137,8 @@ typedef struct _OHCI_EXTENSION {
   POHCI_HC_RESOURCES HcResourcesVA;
   POHCI_HC_RESOURCES HcResourcesPA;
   OHCI_STATIC_ED IntStaticED[63];
-  OHCI_STATIC_ED ControlStaticED; // [64-1] ED_CONTROL
-  OHCI_STATIC_ED BulkStaticED; // [65-1] ED_BULK
+  OHCI_STATIC_ED ControlStaticED;
+  OHCI_STATIC_ED BulkStaticED;
 } OHCI_EXTENSION, *POHCI_EXTENSION;
 
 /* roothub.c */
