@@ -164,18 +164,19 @@ EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
     switch (DeviceSpeed)
     {
         case UsbLowSpeed:
-            QH->sqh.HwQH.EndpointParams.EndpointSpeed = 1;
+            QH->sqh.HwQH.EndpointParams.EndpointSpeed = EHCI_QH_EP_LOW_SPEED;
             break;
 
         case UsbFullSpeed:
-            QH->sqh.HwQH.EndpointParams.EndpointSpeed = 0;
+            QH->sqh.HwQH.EndpointParams.EndpointSpeed = EHCI_QH_EP_FULL_SPEED;
             break;
 
         case UsbHighSpeed:
-            QH->sqh.HwQH.EndpointParams.EndpointSpeed = 2;
+            QH->sqh.HwQH.EndpointParams.EndpointSpeed = EHCI_QH_EP_HIGH_SPEED;
             break;
 
         default:
+            DPRINT1("EHCI_InitializeQH: Unknown DeviceSpeed - %x\n", DeviceSpeed);
             ASSERT(FALSE);
             break;
     }

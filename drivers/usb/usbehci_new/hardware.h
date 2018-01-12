@@ -352,6 +352,10 @@ typedef struct _EHCI_QUEUE_TD { // must be aligned on 32-byte boundaries
 C_ASSERT(sizeof(EHCI_QUEUE_TD) == 52);
 
 /* Queue Head */
+#define EHCI_QH_EP_FULL_SPEED  0
+#define EHCI_QH_EP_LOW_SPEED   1
+#define EHCI_QH_EP_HIGH_SPEED  2
+
 typedef union _EHCI_QH_EP_PARAMS {
   struct {
     ULONG DeviceAddress               : 7;
