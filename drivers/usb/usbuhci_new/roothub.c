@@ -48,7 +48,7 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
     PUHCI_HW_REGISTERS BaseRegister;
     PUSHORT PortControlRegister;
     UHCI_PORT_STATUS_CONTROL PortControl;
-    ULONG port;
+    ULONG PortBit;
     USB_20_PORT_STATUS portStatus;
     USB_20_PORT_CHANGE portChange;
 
@@ -97,9 +97,9 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
     portStatus.LowSpeedDeviceAttached = PortControl.LowSpeedDevice;
     portChange.ConnectStatusChange = PortControl.ConnectStatusChange;
 
-    port = 1 << (Port - 1);
+    PortBit = 1 << (Port - 1);
 
-    if (UhciExtension->ResetPortMask & port)
+    if (UhciExtension->ResetPortMask & PortBit)
     {
         portChange.ConnectStatusChange = 0;
         portChange.PortEnableDisableChange = 0;
@@ -109,10 +109,10 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
         portChange.PortEnableDisableChange = PortControl.PortEnableDisableChange;
     }
 
-    if (UhciExtension->SuspendChangePortMask & port)
+    if (UhciExtension->SuspendChangePortMask & PortBit)
         portChange.SuspendChange = 1;
 
-    if (UhciExtension->ResetChangePortMask & port)
+    if (UhciExtension->ResetChangePortMask & PortBit)
         portChange.ResetChange = 1;
 
     PortStatus->PortStatus.Usb20PortStatus = portStatus;
@@ -247,19 +247,19 @@ UhciRHSetFeaturePortReset(IN PVOID uhciExtension,
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
     ULONG ResetPortMask;
-    ULONG port;
+    ULONG PortBit;
 
     DPRINT("UhciRHSetFeaturePortReset: ...\n");
 
     ASSERT(Port != 0);
 
     ResetPortMask = UhciExtension->ResetPortMask;
-    port = 1 << (Port - 1);
+    PortBit = 1 << (Port - 1);
 
-    if (ResetPortMask & port)
+    if (ResetPortMask & PortBit)
         return MP_STATUS_FAILURE;
 
-    UhciExtension->ResetPortMask = ResetPortMask | port;
+    UhciExtension->ResetPortMask = ResetPortMask | PortBit;
 
     if (UhciExtension->HcFlavor == UHCI_VIA &&
         UhciExtension->HcFlavor == UHCI_VIA_x01 &&
