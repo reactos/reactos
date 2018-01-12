@@ -58,23 +58,23 @@ int g_cHandles;
 
 /***********************************************************************/
 
-static BOOL CALLBACK UXTHEME_broadcast_msg_enumchild (HWND hWnd, LPARAM msg)
+static BOOL CALLBACK UXTHEME_send_theme_changed (HWND hWnd, LPARAM enable)
 {
-    SendMessageW(hWnd, msg, 0, 0);
+    SendMessageW(hWnd, WM_THEMECHANGED, enable, 0);
     return TRUE;
 }
 
-/* Broadcast a message to *all* windows, including children */
-BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg)
+/* Broadcast WM_THEMECHANGED to *all* windows, including children */
+BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable)
 {
     if (hWnd == NULL)
     {
-	EnumWindows (UXTHEME_broadcast_msg, msg);
+        EnumWindows (UXTHEME_broadcast_theme_changed, enable);
     }
     else
     {
-	SendMessageW(hWnd, msg, 0, 0);
-	EnumChildWindows (hWnd, UXTHEME_broadcast_msg_enumchild, msg);
+        UXTHEME_send_theme_changed(hWnd, enable);
+        EnumChildWindows (hWnd, UXTHEME_send_theme_changed, enable);
     }
     return TRUE;
 }
@@ -658,7 +658,7 @@ HRESULT WINAPI EnableTheming(BOOL fEnable)
             RegSetValueExW(hKey, szThemeActive, 0, REG_SZ, (LPBYTE)szEnabled, sizeof(WCHAR));
             RegCloseKey(hKey);
         }
-	UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
+	UXTHEME_broadcast_theme_changed (NULL, fEnable);
     }
     return S_OK;
 }
@@ -884,7 +884,7 @@ HRESULT WINAPI SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
     if (!SUCCEEDED(hr))
         return hr;
 
-    UXTHEME_broadcast_msg (hwnd, WM_THEMECHANGED);
+    UXTHEME_broadcast_theme_changed (hwnd, TRUE);
     return hr;
 }
 
@@ -1160,7 +1160,7 @@ HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, char *unknown, HWND hWnd)
     HRESULT hr;
     TRACE("(%p,%s,%p)\n", hThemeFile, unknown, hWnd);
     hr = UXTHEME_ApplyTheme(hThemeFile);
-    UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
+    UXTHEME_broadcast_theme_changed (NULL, (g_ActiveThemeFile != NULL));
     return hr;
 }
 

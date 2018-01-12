@@ -256,7 +256,7 @@ extern BOOL g_bThemeHooksActive;
 
 void UXTHEME_InitSystem(HINSTANCE hInst);
 void UXTHEME_LoadTheme(BOOL bLoad);
-BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg);
+BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 
 /* No alpha blending */
 #define ALPHABLEND_NONE             0
