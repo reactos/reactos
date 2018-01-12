@@ -1,6 +1,6 @@
 #include "usbuhci.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 VOID
@@ -20,9 +20,7 @@ UhciRHGetRootHubData(IN PVOID uhciExtension,
     HubCharacteristics.OverCurrentProtectionMode = TRUE;
 
     if (UhciExtension->HcFlavor != UHCI_Piix4)
-    {
         HubCharacteristics.NoOverCurrentProtection = TRUE;
-    }
 
     RootHubData->NumberOfPorts = UHCI_NUM_ROOT_HUB_PORTS;
     RootHubData->HubCharacteristics.Usb11HubCharacteristics = HubCharacteristics;
@@ -110,14 +108,10 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
     }
 
     if (UhciExtension->SuspendChangePortMask & port)
-    {
         portChange.SuspendChange = TRUE;
-    }
 
     if (UhciExtension->ResetChangePortMask & port)
-    {
         portChange.ResetChange = TRUE;
-    }
 
     PortStatus->PortStatus.Usb20PortStatus = portStatus;
     PortStatus->PortChange.Usb20PortChange = portChange;
@@ -171,9 +165,7 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
         PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
         if (PortControl.PortReset == TRUE)
-        {
             continue;
-        }
 
         for (ix = 0; ix < 10; ++ix)
         {
@@ -182,9 +174,7 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
             PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
             if (PortControl.PortEnabledDisabled == TRUE)
-            {
                 break;
-            }
 
             PortControl.PortEnabledDisabled = TRUE;
             WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
@@ -261,9 +251,7 @@ UhciRHSetFeaturePortReset(IN PVOID uhciExtension,
     port = 1 << (Port - 1);
 
     if (ResetPortMask & port)
-    {
         return MP_STATUS_FAILURE;
-    }
 
     UhciExtension->ResetPortMask = ResetPortMask | port;
 
@@ -313,13 +301,9 @@ UhciRHPortEnable(IN PVOID uhciExtension,
     PortControl.PortEnableDisableChange = FALSE;
 
     if (IsSet)
-    {
         PortControl.PortEnabledDisabled = TRUE;
-    }
     else
-    {
         PortControl.PortEnabledDisabled = FALSE;
-    }
 
     WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
 
