@@ -228,31 +228,21 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
     PortMaskBits = 1 << (Port - 1);
 
     if (status.PortStatus.Usb20PortStatus.CurrentConnectStatus)
-    {
         status.PortStatus.Usb20PortStatus.LowSpeedDeviceAttached = 0;
-    }
 
     status.PortStatus.Usb20PortStatus.HighSpeedDeviceAttached = 1;
 
     if (PortSC.ConnectStatusChange)
-    {
         EhciExtension->ConnectPortBits |= PortMaskBits;
-    }
 
     if (EhciExtension->FinishResetPortBits & PortMaskBits)
-    {
         status.PortChange.Usb20PortChange.ResetChange = 1;
-    }
 
     if (EhciExtension->ConnectPortBits & PortMaskBits)
-    {
         status.PortChange.Usb20PortChange.ConnectStatusChange = 1;
-    }
 
     if (EhciExtension->SuspendPortBits & PortMaskBits)
-    {
         status.PortChange.Usb20PortChange.SuspendChange = 1;
-    }
 
     *PortStatus = status;
 
@@ -294,9 +284,7 @@ EHCI_RH_FinishReset(IN PVOID ehciExtension,
     if (PortSC.AsULONG != -1)
     {
         if (!PortSC.CurrentConnectStatus)
-        {
             DPRINT("EHCI_RH_FinishReset: PortSC.AsULONG - %p\n", PortSC.AsULONG);
-        }
     
         if (PortSC.PortEnabledDisabled ||
             !PortSC.CurrentConnectStatus ||
@@ -354,9 +342,7 @@ START:
         PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
 
         if (ix > 500)
-        {
             goto START;
-        }
     }
     while (PortSC.PortReset && (PortSC.AsULONG != -1));
 
@@ -694,9 +680,7 @@ EHCI_RH_DisableIrq(IN PVOID ehciExtension)
     IntrSts.PortChangeInterrupt = 0;
 
     if (IntrSts.Interrupt)
-    {
         WRITE_REGISTER_ULONG(IntrStsReg, IntrSts.AsULONG);
-    }
 }
 
 VOID
@@ -716,7 +700,5 @@ EHCI_RH_EnableIrq(IN PVOID ehciExtension)
     IntrSts.PortChangeInterrupt = 1;
 
     if (IntrSts.Interrupt)
-    {
         WRITE_REGISTER_ULONG(IntrStsReg, IntrSts.AsULONG);
-    }
 }
