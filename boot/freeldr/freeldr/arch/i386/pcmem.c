@@ -351,6 +351,18 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         TRACE("Type: 0x%lx\n", PcBiosMemoryMap[PcBiosMapCount].Type);
         TRACE("ExtendedAttributesAsULONG: 0x%08lx\n", PcBiosMemoryMap[PcBiosMapCount].ExtendedAttributesAsULONG);
 
+        if (PcBiosMemoryMap[PcBiosMapCount].ExtendedAttributes.ErrorLog == 1)
+        {
+            FIXME("EA.ErrorLog = 1. Please report this to CORE-14150. "
+                   "(PcBiosMapCount = %lu, BaseAddress = 0x%llx, Length = 0x%llx, Type = 0x%lx, ExtendedAttributesAsULONG = 0x%08lx)\n",
+                  PcBiosMapCount,
+                  PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                  PcBiosMemoryMap[PcBiosMapCount].Length,
+                  PcBiosMemoryMap[PcBiosMapCount].Type,
+                  PcBiosMemoryMap[PcBiosMapCount].ExtendedAttributesAsULONG);
+            // NotWantedForPublicBuilds: ASSERTMSG("EA.ErrorLog = 1. Check/Report then CONTinue.", FALSE);
+        }
+
         if (PcBiosMemoryMap[PcBiosMapCount].Length == 0)
         {
             TRACE("Discard empty range. (would-be-PcBiosMapCount = %lu, BaseAddress = 0x%llx, Length = 0)\n",
