@@ -151,10 +151,11 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
     DPRINT("UhciRHPortResetComplete: ...\n");
 
     BaseRegister = UhciExtension->BaseRegister;
-    ASSERT(*(PUSHORT)pPort != 0);
-    Port = *(PUSHORT)pPort - 1;
 
-    PortControlRegister = &BaseRegister->PortControl[Port].AsUSHORT;
+    Port = *(PUSHORT)pPort;
+    ASSERT(Port != 0);
+
+    PortControlRegister = &BaseRegister->PortControl[Port - 1].AsUSHORT;
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
     PortControl.ConnectStatusChange = 0;
@@ -198,8 +199,8 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
             return;
         }
 
-        UhciExtension->ResetChangePortMask |= (1 << Port);
-        UhciExtension->ResetPortMask &= ~(1 << Port);
+        UhciExtension->ResetChangePortMask |= (1 << (Port - 1));
+        UhciExtension->ResetPortMask &= ~(1 << (Port - 1));
 
         RegPacket.UsbPortInvalidateRootHub(UhciExtension);
 
@@ -221,10 +222,10 @@ UhciRHSetFeaturePortResetWorker(IN PUHCI_EXTENSION UhciExtension,
 
     BaseRegister = UhciExtension->BaseRegister;
 
-    ASSERT(*pPort != 0);
-    Port = *pPort - 1;
+    Port = *(PUSHORT)pPort;
+    ASSERT(Port != 0);
 
-    PortControlRegister = &BaseRegister->PortControl[Port].AsUSHORT;
+    PortControlRegister = &BaseRegister->PortControl[Port - 1].AsUSHORT;
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
     PortControl.ConnectStatusChange = 0;
