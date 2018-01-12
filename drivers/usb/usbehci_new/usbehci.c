@@ -134,10 +134,10 @@ EHCI_AllocTd(IN PEHCI_EXTENSION EhciExtension,
 
 PEHCI_HCD_QH
 NTAPI
-EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
-                  PEHCI_ENDPOINT EhciEndpoint,
-                  PEHCI_HCD_QH QH,
-                  PEHCI_HCD_QH QhPA)
+EHCI_InitializeQH(IN PEHCI_EXTENSION EhciExtension,
+                  IN PEHCI_ENDPOINT EhciEndpoint,
+                  IN PEHCI_HCD_QH QH,
+                  IN PEHCI_HCD_QH QhPA)
 {
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG DeviceSpeed;
@@ -1820,9 +1820,9 @@ EHCI_UnlockQH(IN PEHCI_EXTENSION EhciExtension,
 
 VOID
 NTAPI
-EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
-                         PEHCI_ENDPOINT EhciEndpoint,
-                         PEHCI_HCD_TD NextTD)
+EHCI_LinkTransferToQueue(IN PEHCI_EXTENSION EhciExtension,
+                         IN PEHCI_ENDPOINT EhciEndpoint,
+                         IN PEHCI_HCD_TD NextTD)
 {
     PEHCI_HCD_QH QH;
     PEHCI_HCD_TD TD;
