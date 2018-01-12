@@ -2,7 +2,7 @@
  *  FreeLoader
  *
  * Copyright ... ... (See below.)
- * Copyright 2017 Serge Gautherie
+ * Copyright 2017 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ GetExtendedMemoryConfiguration(ULONG* pMemoryAtOneMB /* in KB */, ULONG* pMemory
     TRACE("BX = 0x%x\n", RegsOut.w.bx);
     TRACE("CX = 0x%x\n", RegsOut.w.cx);
     TRACE("DX = 0x%x\n", RegsOut.w.dx);
-    TRACE("CF set = %s\n\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
+    TRACE("CF set = %s\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
     if (INT386_SUCCESS(RegsOut))
     {
@@ -121,7 +121,7 @@ GetExtendedMemoryConfiguration(ULONG* pMemoryAtOneMB /* in KB */, ULONG* pMemory
 
     TRACE("Int15h AH=88h\n");
     TRACE("AX = 0x%x\n", RegsOut.w.ax);
-    TRACE("CF set = %s\n\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
+    TRACE("CF set = %s\n", (RegsOut.x.eflags & EFLAGS_CF) ? "TRUE" : "FALSE");
 
     if (INT386_SUCCESS(RegsOut) && RegsOut.w.ax != 0)
     {
@@ -168,7 +168,7 @@ PcMemGetConventionalMemorySize(VOID)
     Int386(0x12, &Regs, &Regs);
 
     TRACE("Int12h\n");
-    TRACE("AX = 0x%x\n\n", Regs.w.ax);
+    TRACE("AX = 0x%x\n", Regs.w.ax);
 
     return (ULONG)Regs.w.ax;
 }
@@ -180,6 +180,8 @@ GetEbdaLocation(
     PULONG Size)
 {
     REGS Regs;
+
+    TRACE("GetEbdaLocation()\n");
 
     /* Get the address of the Extended BIOS Data Area (EBDA).
      * Int 15h, AH=C1h
@@ -210,6 +212,8 @@ VOID
 PcMemCheckUsableMemorySize(VOID)
 {
     ULONG Size, RequiredSize;
+
+    TRACE("PcMemCheckUsableMemorySize()\n");
 
     /* Make sure the usable memory is large enough. To do this we check the 16
        bit value at address 0x413 inside the BDA, which gives us the usable size
@@ -287,7 +291,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
          * it doesn't support this call. */
         if (Regs.x.eax != 0x534D4150)
         {
-            WARN("BIOS doesn't support Int15h AX=E820h!\n\n");
+            WARN("BIOS doesn't support Int15h AX=E820h!\n");
             break;
         }
 
@@ -295,7 +299,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
          * then this call was past the last entry, so we're done. */
         if (!INT386_SUCCESS(Regs))
         {
-            TRACE("End of System Memory Map! (Past last)\n\n");
+            TRACE("End of System Memory Map! (Past last)\n");
             break;
         }
 
@@ -313,7 +317,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         if (Regs.x.ecx < RTL_SIZEOF_THROUGH_FIELD(BIOS_MEMORY_MAP, Type) ||
             Regs.x.ecx > sizeof(BIOS_MEMORY_MAP))
         {
-            ERR("Int 15h AX=E820h returned an invalid entry length! (would-be-PcBiosMapCount = %lu, Entry length = (%Iu <=) %lu (<= %Iu))\n\n",
+            ERR("Int 15h AX=E820h returned an invalid entry length! (would-be-PcBiosMapCount = %lu, Entry length = (%Iu <=) %lu (<= %Iu))\n",
                 PcBiosMapCount, RTL_SIZEOF_THROUGH_FIELD(BIOS_MEMORY_MAP, Type), Regs.x.ecx, sizeof(BIOS_MEMORY_MAP));
             /* Warn user, unless wrong case is "first and not too big entry", which is otherwise harmless. */
             if (PcBiosMapCount > 0 || Regs.x.ecx > sizeof(BIOS_MEMORY_MAP))
@@ -349,7 +353,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
 
         if (PcBiosMemoryMap[PcBiosMapCount].Length == 0)
         {
-            TRACE("Discard empty range. (would-be-PcBiosMapCount = %lu, BaseAddress = %lu, Length = 0)\n",
+            TRACE("Discard empty range. (would-be-PcBiosMapCount = %lu, BaseAddress = 0x%llx, Length = 0)\n",
                   PcBiosMapCount, PcBiosMemoryMap[PcBiosMapCount].BaseAddress);
             goto nextRange;
         }
@@ -373,7 +377,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             if (EndAddress <= RealBaseAddress)
             {
                 /* This doesn't span any page, so continue with next range */
-                TRACE("Skipping aligned range < PAGE_SIZE. (would-be-PcBiosMapCount = %lu, BaseAddress = %lu, Length = %lu)\n",
+                TRACE("Skipping aligned range < PAGE_SIZE. (would-be-PcBiosMapCount = %lu, BaseAddress = 0x%llx, Length = 0x%llx)\n",
                       PcBiosMapCount,
                       PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
                       PcBiosMemoryMap[PcBiosMapCount].Length);
@@ -408,7 +412,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         /* Check if we can add this descriptor */
         if (RealSize < MM_PAGE_SIZE)
         {
-            TRACE("Skipping aligned range < MM_PAGE_SIZE. (PcBiosMapCount = %lu, BaseAddress = %lu, Length = %lu)\n",
+            TRACE("Skipping aligned range < MM_PAGE_SIZE. (PcBiosMapCount = %lu, BaseAddress = 0x%llx, Length = 0x%llx)\n",
                   PcBiosMapCount,
                   PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
                   PcBiosMemoryMap[PcBiosMapCount].Length);
@@ -437,13 +441,11 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         PcBiosMapCount++;
 
 nextRange:
-        TRACE("\n");
-
         /* If the continuation value is zero,
          * then this was the last entry, so we're done. */
         if (Regs.x.ebx == 0x00000000)
         {
-            TRACE("End of System Memory Map! (Reset)\n\n");
+            TRACE("End of System Memory Map! (Reset)\n");
             break;
         }
     }
@@ -610,7 +612,7 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
         }
     }
 
-    TRACE("DiskReadBuffer=%p, DiskReadBufferSize=%lx\n",
+    TRACE("DiskReadBuffer=0x%p, DiskReadBufferSize=0x%lx\n",
           DiskReadBuffer, DiskReadBufferSize);
 
     /* Now reserve the range for the disk read buffer */
