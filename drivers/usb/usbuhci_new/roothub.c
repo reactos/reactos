@@ -15,12 +15,12 @@ UhciRHGetRootHubData(IN PVOID uhciExtension,
     DPRINT("UhciRHGetRootHubData: ...\n");
 
     HubCharacteristics.AsUSHORT = 0;
-    HubCharacteristics.PowerControlMode = TRUE;
-    HubCharacteristics.NoPowerSwitching = TRUE;
-    HubCharacteristics.OverCurrentProtectionMode = TRUE;
+    HubCharacteristics.PowerControlMode = 1;
+    HubCharacteristics.NoPowerSwitching = 1;
+    HubCharacteristics.OverCurrentProtectionMode = 1;
 
     if (UhciExtension->HcFlavor != UHCI_Piix4)
-        HubCharacteristics.NoOverCurrentProtection = TRUE;
+        HubCharacteristics.NoOverCurrentProtection = 1;
 
     RootHubData->NumberOfPorts = UHCI_NUM_ROOT_HUB_PORTS;
     RootHubData->HubCharacteristics.Usb11HubCharacteristics = HubCharacteristics;
@@ -66,14 +66,14 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
     portStatus.CurrentConnectStatus = PortControl.CurrentConnectStatus;
     portStatus.PortEnabledDisabled = PortControl.PortEnabledDisabled;
 
-    if (PortControl.Suspend == TRUE &&
-        PortControl.PortEnabledDisabled == TRUE)
+    if (PortControl.Suspend == 1 &&
+        PortControl.PortEnabledDisabled == 1)
     {
-        portStatus.Suspend = TRUE;
+        portStatus.Suspend = 1;
     }
     else
     {
-        portStatus.Suspend = FALSE;
+        portStatus.Suspend = 0;
     }
 
     // FIXME HcFlavor in usbport
@@ -86,12 +86,12 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
     }
     else
     {
-        portStatus.OverCurrent = FALSE;
-        portStatus.PortPower = TRUE;
-        portChange.OverCurrentIndicatorChange = FALSE;
+        portStatus.OverCurrent = 0;
+        portStatus.PortPower = 1;
+        portChange.OverCurrentIndicatorChange = 0;
     }
 
-    portStatus.HighSpeedDeviceAttached = FALSE;
+    portStatus.HighSpeedDeviceAttached = 0;
 
     portStatus.Reset = PortControl.PortReset;
     portStatus.LowSpeedDeviceAttached = PortControl.LowSpeedDevice;
@@ -101,8 +101,8 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
 
     if (UhciExtension->ResetPortMask & port)
     {
-        portChange.ConnectStatusChange = FALSE;
-        portChange.PortEnableDisableChange = FALSE;
+        portChange.ConnectStatusChange = 0;
+        portChange.PortEnableDisableChange = 0;
     }
     else
     {
@@ -110,10 +110,10 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
     }
 
     if (UhciExtension->SuspendChangePortMask & port)
-        portChange.SuspendChange = TRUE;
+        portChange.SuspendChange = 1;
 
     if (UhciExtension->ResetChangePortMask & port)
-        portChange.ResetChange = TRUE;
+        portChange.ResetChange = 1;
 
     PortStatus->PortStatus.Usb20PortStatus = portStatus;
     PortStatus->PortChange.Usb20PortChange = portChange;
@@ -157,9 +157,9 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
     PortControlRegister = &BaseRegister->PortControl[Port].AsUSHORT;
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
-    PortControl.ConnectStatusChange = FALSE;
-    PortControl.PortEnableDisableChange = FALSE;
-    PortControl.PortReset = FALSE;
+    PortControl.ConnectStatusChange = 0;
+    PortControl.PortEnableDisableChange = 0;
+    PortControl.PortReset = 0;
 
     WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
 
@@ -167,7 +167,7 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
     {
         PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
-        if (PortControl.PortReset == TRUE)
+        if (PortControl.PortReset == 1)
             continue;
 
         for (ix = 0; ix < 10; ++ix)
@@ -176,15 +176,15 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
 
             PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
-            if (PortControl.PortEnabledDisabled == TRUE)
+            if (PortControl.PortEnabledDisabled == 1)
                 break;
 
-            PortControl.PortEnabledDisabled = TRUE;
+            PortControl.PortEnabledDisabled = 1;
             WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
         }
 
-        PortControl.ConnectStatusChange = TRUE;
-        PortControl.PortEnableDisableChange = TRUE;
+        PortControl.ConnectStatusChange = 1;
+        PortControl.PortEnableDisableChange = 1;
         WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
 
         if (UhciExtension->HcFlavor == UHCI_VIA &&
@@ -227,9 +227,9 @@ UhciRHSetFeaturePortResetWorker(IN PUHCI_EXTENSION UhciExtension,
     PortControlRegister = &BaseRegister->PortControl[Port].AsUSHORT;
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
-    PortControl.ConnectStatusChange = FALSE;
-    PortControl.PortEnableDisableChange = FALSE;
-    PortControl.PortReset = TRUE;
+    PortControl.ConnectStatusChange = 0;
+    PortControl.PortEnableDisableChange = 0;
+    PortControl.PortReset = 1;
 
     WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
 
@@ -306,13 +306,13 @@ UhciRHPortEnable(IN PVOID uhciExtension,
 
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
-    PortControl.ConnectStatusChange = FALSE;
-    PortControl.PortEnableDisableChange = FALSE;
+    PortControl.ConnectStatusChange = 0;
+    PortControl.PortEnableDisableChange = 0;
 
     if (IsSet)
-        PortControl.PortEnabledDisabled = TRUE;
+        PortControl.PortEnabledDisabled = 1;
     else
-        PortControl.PortEnabledDisabled = FALSE;
+        PortControl.PortEnabledDisabled = 0;
 
     WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
 
@@ -389,8 +389,8 @@ UhciRHClearFeaturePortEnableChange(IN PVOID uhciExtension,
     PortControlRegister = (PUSHORT)&BaseRegister->PortControl[Port - 1];
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
-    PortControl.ConnectStatusChange = FALSE;
-    PortControl.PortEnableDisableChange = TRUE;
+    PortControl.ConnectStatusChange = 0;
+    PortControl.PortEnableDisableChange = 1;
     WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
 
     return MP_STATUS_SUCCESS;
@@ -414,11 +414,11 @@ UhciRHClearFeaturePortConnectChange(IN PVOID uhciExtension,
     PortControlRegister = (PUSHORT)&BaseRegister->PortControl[Port - 1];
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
 
-    if (PortControl.ConnectStatusChange == TRUE)
+    if (PortControl.ConnectStatusChange == 1)
     {
         /* WC (Write Clear) bits */
-        PortControl.PortEnableDisableChange = FALSE;
-        PortControl.ConnectStatusChange = TRUE;
+        PortControl.PortEnableDisableChange = 0;
+        PortControl.ConnectStatusChange = 1;
         WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
     }
 

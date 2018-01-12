@@ -586,7 +586,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
     StaticBulkTD->HwTD.NextElement = StaticBulkTdPA | UHCI_TD_LINK_PTR_TD;
 
     StaticBulkTD->HwTD.ControlStatus.AsULONG = 0;
-    StaticBulkTD->HwTD.ControlStatus.IsochronousType = TRUE;
+    StaticBulkTD->HwTD.ControlStatus.IsochronousType = 1;
 
     StaticBulkTD->HwTD.Token.AsULONG = 0;
     StaticBulkTD->HwTD.Token.Endpoint = 1;
@@ -625,7 +625,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
     PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
     StaticTD->HwTD.NextElement = PhysicalAddress | UHCI_TD_LINK_PTR_QH;
 
-    StaticTD->HwTD.ControlStatus.InterruptOnComplete = TRUE;
+    StaticTD->HwTD.ControlStatus.InterruptOnComplete = 1;
     StaticTD->HwTD.Token.PIDCode = UHCI_TD_PID_IN;
 
     UhciExtension->StaticTD = StaticTD;
@@ -643,7 +643,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
         PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
         StaticSofTD->HwTD.NextElement = PhysicalAddress | UHCI_TD_LINK_PTR_QH;
 
-        StaticSofTD->HwTD.ControlStatus.InterruptOnComplete = TRUE;
+        StaticSofTD->HwTD.ControlStatus.InterruptOnComplete = 1;
         StaticSofTD->PhysicalAddress = StaticSofTdPA;
 
         StaticSofTdPA += sizeof(UHCI_HCD_TD);
@@ -1200,7 +1200,7 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
             TD->HwTD.ControlStatus.Status = UHCI_TD_STS_ACTIVE;
             TD->HwTD.ControlStatus.ErrorCounter = 3;
             TD->HwTD.ControlStatus.ActualLength = UHCI_TD_LENGTH_NULL;
-            TD->HwTD.ControlStatus.ShortPacketDetect = TRUE;
+            TD->HwTD.ControlStatus.ShortPacketDetect = 1;
 
             TD->HwTD.Token.AsULONG = 0;
             TD->HwTD.Token.Endpoint = EndpointAddress;
@@ -1368,7 +1368,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
     }
 
     LastTD->HwTD.Buffer = 0;
-    LastTD->HwTD.ControlStatus.InterruptOnComplete = TRUE;
+    LastTD->HwTD.ControlStatus.InterruptOnComplete = 1;
 
     LastTD->HwTD.Token.DataToggle = UHCI_TD_PID_DATA1;
     LastTD->HwTD.Token.MaximumLength = UHCI_TD_LENGTH_NULL;
@@ -1469,7 +1469,7 @@ UhciBulkOrInterruptTransfer(IN PUHCI_EXTENSION UhciExtension,
     }
 
     DataLastTD->HwTD.NextElement = UHCI_TD_LINK_PTR_TERMINATE;
-    DataLastTD->HwTD.ControlStatus.InterruptOnComplete = TRUE;
+    DataLastTD->HwTD.ControlStatus.InterruptOnComplete = 1;
     DataLastTD->NextHcdTD = NULL;
 
     UhciQueueTransfer(UhciExtension,
@@ -1558,7 +1558,7 @@ UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
             return USBD_STATUS_SUCCESS;
         }
 
-        if (TD->HwTD.ControlStatus.InterruptOnComplete == TRUE)
+        if (TD->HwTD.ControlStatus.InterruptOnComplete == 1)
             return USBD_STATUS_SUCCESS;
 
         return USBD_STATUS_ERROR_SHORT_TRANSFER;
