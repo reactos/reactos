@@ -720,7 +720,7 @@ EHCI_GetQhForFrame(IN PEHCI_EXTENSION EhciExtension,
     //            FrameIdx,
     //            Balance[FrameIdx & 0x1F]);
 
-    return EhciExtension->PeriodicHead[Balance[FrameIdx & 0x1F]];
+    return EhciExtension->PeriodicHead[Balance[FrameIdx & (EHCI_FRAMES - 1)]];
 }
 
 PEHCI_HCD_QH
@@ -738,9 +738,9 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
                       IN PULONG VirtualAddress,
                       IN ULONG Alignment)
 {
-    ULONG_PTR PAddress;
+    ULONG PAddress;
     PVOID NewPAddress;
-    ULONG_PTR VAddress;
+    ULONG VAddress;
 
     //DPRINT_EHCI("EHCI_AlignHwStructure: *PhysicalAddress - %X, *VirtualAddress - %X, Alignment - %x\n",
     //             *PhysicalAddress,
@@ -754,8 +754,8 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
 
     if (NewPAddress != PAGE_ALIGN(*PhysicalAddress))
     {
-        VAddress += (ULONG_PTR)NewPAddress - PAddress;
-        PAddress = (ULONG_PTR)PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
+        VAddress += (ULONG)NewPAddress - PAddress;
+        PAddress = (ULONG)PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
 
         DPRINT("EHCI_AlignHwStructure: VAddress - %X, PAddress - %X\n",
                VAddress,
@@ -798,7 +798,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
         EndpointParams = DummyQH->sqh.HwQH.EndpointParams;
         EndpointParams.DeviceAddress = 0;
         EndpointParams.EndpointSpeed = 0;
-        EndpointParams.MaximumPacketLength = 64;
+        EndpointParams.MaximumPacketLength = EHCI_DUMMYQH_MAX_PACKET_LENGTH;
         DummyQH->sqh.HwQH.EndpointParams = EndpointParams;
 
         DummyQH->sqh.HwQH.EndpointCaps.AsULONG = 0;
@@ -854,7 +854,9 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
         StaticQH->HwQH.EndpointCaps.InterruptMask = 0xFF;
 
         StaticQH->QhFlags |= EHCI_QH_FLAG_STATIC;
-        StaticQH->QhFlags |= ix > 6 ? 0 : EHCI_QH_FLAG_STATIC_FAST;
+
+        if (ix < (ENDPOINT_INTERRUPT_8ms - 1))
+            StaticQH->QhFlags |= EHCI_QH_FLAG_STATIC_FAST;
     }
 
     EhciExtension->PeriodicHead[0]->HwQH.HorizontalLink.Terminate = 1;
@@ -1554,15 +1556,16 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
 
     SgRemain = SgList->SgElementCount - SgIdx;
 
-    if (SgRemain > 5)
+    if (SgRemain > EHCI_MAX_QTD_BUFFER_PAGES)
     {
         TD->HwTD.Buffer[0] = SgList->SgElement[SgIdx].SgPhysicalAddress.LowPart - 
                              SgList->SgElement[SgIdx].SgOffset +
                              TransferedLen;
 
-        LengthThisTD = 5 * PAGE_SIZE - (TD->HwTD.Buffer[0] & (PAGE_SIZE - 1));
+        LengthThisTD = EHCI_MAX_QTD_BUFFER_PAGES * PAGE_SIZE - 
+                       (TD->HwTD.Buffer[0] & (PAGE_SIZE - 1));
 
-        for (ix = 1; ix <= 4; ix++)
+        for (ix = 1; ix < EHCI_MAX_QTD_BUFFER_PAGES; ix++)
         {
             TD->HwTD.Buffer[ix] = SgList->SgElement[SgIdx + ix].SgPhysicalAddress.LowPart;
         }
@@ -1574,7 +1577,7 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
             LengthThisTD -= DiffLength;
 
         if (DataToggle && (NumPackets & 1))
-            *DataToggle = *DataToggle == 0;
+            *DataToggle = !(*DataToggle);
     }
     else
     {
@@ -1584,7 +1587,7 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
                              SgList->SgElement[SgIdx].SgPhysicalAddress.LowPart - 
                              SgList->SgElement[SgIdx].SgOffset;
 
-        for (ix = 1; ix < 5; ix++)
+        for (ix = 1; ix < EHCI_MAX_QTD_BUFFER_PAGES; ix++)
         {
             if ((SgIdx + ix) >= SgList->SgElementCount)
                 break;
@@ -1962,11 +1965,11 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     FirstTD->HwTD.Token.ErrorCounter = 3;
     FirstTD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_SETUP;
     FirstTD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-    FirstTD->HwTD.Token.TransferBytes = 0x8;
+    FirstTD->HwTD.Token.TransferBytes = sizeof(FirstTD->SetupPacket);
 
     RtlCopyMemory(&FirstTD->SetupPacket,
                   &TransferParameters->SetupPacket,
-                  sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
+                  sizeof(FirstTD->SetupPacket));
 
     LastTD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
 

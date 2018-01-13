@@ -312,6 +312,8 @@ typedef struct _EHCI_SPLIT_ISOCHRONOUS_TD { // must be aligned on a 32-byte boun
 C_ASSERT(sizeof(EHCI_SPLIT_ISOCHRONOUS_TD) == 36);
 
 /* Queue Element Transfer Descriptor (qTD) */
+#define	EHCI_MAX_QTD_BUFFER_PAGES  5
+
 #define	EHCI_TOKEN_STATUS_ACTIVE            (1 << 7)
 #define	EHCI_TOKEN_STATUS_HALTED            (1 << 6)
 #define	EHCI_TOKEN_STATUS_DATA_BUFFER_ERROR (1 << 5)

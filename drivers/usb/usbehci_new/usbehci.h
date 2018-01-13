@@ -87,6 +87,8 @@ typedef struct _EHCI_STATIC_QH {
 
 C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
 
+#define EHCI_DUMMYQH_MAX_PACKET_LENGTH  64
+
 typedef struct _EHCI_HCD_QH {
   struct _EHCI_STATIC_QH sqh;
   ULONG Pad[24];
