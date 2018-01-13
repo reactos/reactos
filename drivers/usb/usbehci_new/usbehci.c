@@ -1419,11 +1419,11 @@ EHCI_InterruptService(IN PVOID ehciExtension)
     PEHCI_EXTENSION EhciExtension = ehciExtension;
     PEHCI_HW_REGISTERS OperationalRegs;
     BOOLEAN Result = FALSE;
-    ULONG IntrSts;
-    ULONG IntrEn;
+    EHCI_USB_STATUS IntrSts;
+    EHCI_INTERRUPT_ENABLE IntrEn;
     EHCI_INTERRUPT_ENABLE iStatus;
+    EHCI_USB_COMMAND Command;
     ULONG FrameIndex;
-    ULONG Command;
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
@@ -1434,28 +1434,27 @@ EHCI_InterruptService(IN PVOID ehciExtension)
     if (!Result)
         return FALSE;
 
-    IntrEn = READ_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG);
-    IntrSts = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
+    IntrEn.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG);
+    IntrSts.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG);
 
-    iStatus.AsULONG = (IntrEn & IntrSts) & 0x3F;
+    iStatus.AsULONG = (IntrEn.AsULONG & IntrSts.AsULONG) & EHCI_INTERRUPT_MASK;
 
     if (!iStatus.AsULONG)
         return FALSE;
 
     EhciExtension->InterruptStatus = iStatus;
 
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG,
-                         (IntrEn & IntrSts) & 0x3F);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcStatus.AsULONG, iStatus.AsULONG);
 
     if (iStatus.HostSystemError)
     {
         EhciExtension->HcSystemErrors++;
 
-        if (EhciExtension->HcSystemErrors < 0x100)
+        if (EhciExtension->HcSystemErrors < EHCI_MAX_HC_SYSTEM_ERRORS)
         {
-            //attempting reset
-            Command = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
-            WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command | 1);
+            Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
+            Command.Run = 1;
+            WRITE_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG, Command.AsULONG);
         }
     }
 

@@ -110,6 +110,8 @@ typedef union _EHCI_USB_STATUS {
 
 C_ASSERT(sizeof(EHCI_USB_STATUS) == sizeof(ULONG));
 
+#define EHCI_INTERRUPT_MASK  0x3F 
+
 typedef union _EHCI_INTERRUPT_ENABLE {
   struct {
     ULONG Interrupt               : 1;
