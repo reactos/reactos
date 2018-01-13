@@ -1,5 +1,7 @@
 #pragma once
 
+#define NEWFILEOPENV3ORD 1553
+
 #define PD32_PRINT_TITLE        7000
 
 #define PD32_VALUE_UREADABLE                  1104
