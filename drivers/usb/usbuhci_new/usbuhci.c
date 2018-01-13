@@ -216,7 +216,7 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
     if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
         TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
     {
-        UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_CONTROLL_OR_ISO;
+        UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_CONTROL_OR_ISO;
     }
 
     BufferVA = EndpointProperties->BufferVA;
@@ -284,7 +284,7 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
                               IN PUSBPORT_ENDPOINT_REQUIREMENTS EndpointRequirements)
 {
     ULONG TransferType;
-    ULONG TdCont;
+    ULONG TdCount;
 
     DPRINT("UhciQueryEndpointRequirements: ... \n");
 
@@ -294,43 +294,43 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
     {
         case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
             DPRINT("UhciQueryEndpointRequirements: IsoTransfer\n");
-            TdCont = 2 * UHCI_MAX_ISO_TD_COUNT;
+            TdCount = 2 * UHCI_MAX_ISO_TD_COUNT;
 
             EndpointRequirements->HeaderBufferSize = 0 + // Iso queue is have not Queue Heads
-                                      TdCont * sizeof(UHCI_HCD_TD);
+                                      TdCount * sizeof(UHCI_HCD_TD);
 
             EndpointRequirements->MaxTransferSize = UHCI_MAX_ISO_TRANSFER_SIZE;
             break;
 
         case USBPORT_TRANSFER_TYPE_CONTROL:
             DPRINT("UhciQueryEndpointRequirements: ControlTransfer\n");
-            TdCont = EndpointProperties->MaxTransferSize /
+            TdCount = EndpointProperties->MaxTransferSize /
                      EndpointProperties->TotalMaxPacketSize;
-            TdCont += 2; // First + Last TDs
+            TdCount += 2; // First + Last TDs
 
             EndpointRequirements->HeaderBufferSize = sizeof(UHCI_HCD_QH) +
-                                      TdCont * sizeof(UHCI_HCD_TD);
+                                      TdCount * sizeof(UHCI_HCD_TD);
 
             EndpointRequirements->MaxTransferSize = EndpointProperties->MaxTransferSize;
             break;
 
         case USBPORT_TRANSFER_TYPE_BULK:
             DPRINT("UhciQueryEndpointRequirements: BulkTransfer\n");
-            TdCont = 2 * UHCI_MAX_BULK_TRANSFER_SIZE /
+            TdCount = 2 * UHCI_MAX_BULK_TRANSFER_SIZE /
                      EndpointProperties->TotalMaxPacketSize;
 
             EndpointRequirements->HeaderBufferSize = sizeof(UHCI_HCD_QH) +
-                                      TdCont * sizeof(UHCI_HCD_TD);
+                                      TdCount * sizeof(UHCI_HCD_TD);
 
             EndpointRequirements->MaxTransferSize = UHCI_MAX_BULK_TRANSFER_SIZE;
             break;
 
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
             DPRINT("UhciQueryEndpointRequirements: InterruptTransfer\n");
-            TdCont = 2 * UHCI_MAX_INTERRUPT_TD_COUNT;
+            TdCount = 2 * UHCI_MAX_INTERRUPT_TD_COUNT;
 
             EndpointRequirements->HeaderBufferSize = sizeof(UHCI_HCD_QH) +
-                                      TdCont * sizeof(UHCI_HCD_TD);
+                                      TdCount * sizeof(UHCI_HCD_TD);
 
             EndpointRequirements->MaxTransferSize = UHCI_MAX_INTERRUPT_TD_COUNT *
                                       EndpointProperties->TotalMaxPacketSize;
@@ -2425,7 +2425,7 @@ ProcessListTDs:
         }
     }
 
-    if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_CONTROLL_OR_ISO &&
+    if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_CONTROL_OR_ISO &&
         UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
     {
         DPRINT_UHCI("UhciPollNonIsoEndpoint: Halted periodic EP - %p\n",

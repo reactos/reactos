@@ -72,7 +72,7 @@ C_ASSERT(sizeof(UHCI_HCD_QH) == 0x40);
 
 #define UHCI_ENDPOINT_FLAG_HALTED           1
 #define UHCI_ENDPOINT_FLAG_RESERVED         2
-#define UHCI_ENDPOINT_FLAG_CONTROLL_OR_ISO  4
+#define UHCI_ENDPOINT_FLAG_CONTROL_OR_ISO   4
 
 /* UHCI Endpoint follows USBPORT Endpoint */
 typedef struct _UHCI_ENDPOINT {
