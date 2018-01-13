@@ -276,12 +276,12 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     if (IsControl)
     {
-        QH->sqh.HwQH.EndpointParams.DataToggleControl = TRUE;
+        QH->sqh.HwQH.EndpointParams.DataToggleControl = 1;
         EhciEndpoint->HcdHeadP = NULL;
     }
     else
     {
-        QH->sqh.HwQH.EndpointParams.DataToggleControl = FALSE;
+        QH->sqh.HwQH.EndpointParams.DataToggleControl = 0;
     }
 
     TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
@@ -1099,10 +1099,10 @@ EHCI_TakeControlHC(IN PEHCI_EXTENSION EhciExtension)
                                           OffsetEECP,
                                           sizeof(LegacyCapability));
 
-    if (LegacyCapability.BiosOwnedSemaphore == FALSE)
+    if (LegacyCapability.BiosOwnedSemaphore == 0)
         return MP_STATUS_SUCCESS;
 
-    LegacyCapability.OsOwnedSemaphore = TRUE;
+    LegacyCapability.OsOwnedSemaphore = 1;
 
     RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
                                           FALSE,
@@ -2043,9 +2043,9 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
 
             if (DataToggle)
-                TD->HwTD.Token.DataToggle = TRUE;
+                TD->HwTD.Token.DataToggle = 1;
             else
-                TD->HwTD.Token.DataToggle = FALSE;
+                TD->HwTD.Token.DataToggle = 0;
 
             TD->AltNextHcdTD = LastTD;
             TD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
@@ -2078,8 +2078,8 @@ End:
 
     Token.AsULONG = 0;
     Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-    Token.InterruptOnComplete = TRUE;
-    Token.DataToggle = TRUE;
+    Token.InterruptOnComplete = 1;
+    Token.DataToggle = 1;
 
     if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
         Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
@@ -2186,7 +2186,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
                 TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
 
             TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-            TD->HwTD.Token.DataToggle = TRUE;
+            TD->HwTD.Token.DataToggle = 1;
 
             TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
                                                       EhciEndpoint->EndpointProperties.MaxPacketSize,
@@ -2236,7 +2236,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         TD->HwTD.AlternateNextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
         TD->AltNextHcdTD = EhciEndpoint->HcdTailP;
 
-        TD->HwTD.Token.InterruptOnComplete = TRUE;
+        TD->HwTD.Token.InterruptOnComplete = 1;
 
         if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
             TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
@@ -2246,7 +2246,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         TD->HwTD.Buffer[0] = (ULONG_PTR)TD->PhysicalAddress;
 
         TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-        TD->HwTD.Token.DataToggle = TRUE;
+        TD->HwTD.Token.DataToggle = 1;
 
         TD->LengthThisTD = 0;
     }
@@ -2342,7 +2342,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
 
         TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-        TD->HwTD.Token.DataToggle = TRUE;
+        TD->HwTD.Token.DataToggle = 1;
 
         TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
                                                   EhciEndpoint->EndpointProperties.TotalMaxPacketSize,
@@ -2659,7 +2659,7 @@ EHCI_RemoveQhFromPeriodicList(IN PEHCI_EXTENSION EhciExtension,
     }
     else
     {
-        PrevHead->sqh.HwQH.HorizontalLink.Terminate = TRUE;
+        PrevHead->sqh.HwQH.HorizontalLink.Terminate = 1;
     }
 
     QH->sqh.QhFlags &= ~EHCI_QH_FLAG_IN_SCHEDULE;
