@@ -33,19 +33,19 @@ CcMapData (
     OUT PVOID *pBcb,
     OUT PVOID *pBuffer)
 {
-    ULONG ReadOffset;
+    LONGLONG ReadOffset;
     BOOLEAN Valid;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     PROS_VACB Vacb;
     NTSTATUS Status;
     PINTERNAL_BCB iBcb;
-    ULONG ROffset;
+    LONGLONG ROffset;
 
     DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %lu, Flags 0x%lx,"
            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
            Length, Flags, pBcb, pBuffer);
 
-    ReadOffset = (ULONG)FileOffset->QuadPart;
+    ReadOffset = FileOffset->QuadPart;
 
     ASSERT(FileObject);
     ASSERT(FileObject->SectionObjectPointer);
@@ -101,7 +101,7 @@ CcMapData (
         }
     }
 
-    *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + ReadOffset % VACB_MAPPING_GRANULARITY);
+    *pBuffer = (PUCHAR)*pBuffer + ReadOffset % VACB_MAPPING_GRANULARITY;
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
