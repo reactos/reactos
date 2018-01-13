@@ -1804,8 +1804,8 @@ EHCI_UnlockQH(IN PEHCI_EXTENSION EhciExtension,
 
     DPRINT_EHCI("EHCI_UnlockQH: QH - %p\n", QH);
 
-    ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_UPDATING) != 0);
-    ASSERT(EhciExtension->LockQH != 0);
+    ASSERT(QH->sqh.QhFlags & EHCI_QH_FLAG_UPDATING);
+    ASSERT(EhciExtension->LockQH);
     ASSERT(EhciExtension->LockQH == QH);
 
     QH->sqh.QhFlags &= ~EHCI_QH_FLAG_UPDATING;
@@ -1928,7 +1928,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
                 EhciEndpoint,
                 EhciTransfer);
 
-    if (EhciEndpoint->RemainTDs < 6)
+    if (EhciEndpoint->RemainTDs < EHCI_MAX_CONTROL_TD_COUNT)
         return MP_STATUS_FAILURE;
 
     EhciExtension->PendingTransfers++;
@@ -2098,10 +2098,6 @@ End:
     ASSERT(EhciEndpoint->HcdTailP->NextHcdTD == NULL);
     ASSERT(EhciEndpoint->HcdTailP->AltNextHcdTD == NULL);
 
-    //EHCI_DPrintHwTD(FirstTD);
-    //EHCI_DPrintHwTD(FirstTD->NextHcdTD);
-    //EHCI_DPrintHwTD(LastTD);
-
     return MP_STATUS_SUCCESS;
 }
 
@@ -2122,7 +2118,8 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
                 EhciEndpoint,
                 EhciTransfer);
 
-    if (((TransferParameters->TransferBufferLength >> 14) + 1) > EhciEndpoint->RemainTDs)
+    if (((TransferParameters->TransferBufferLength /
+        ((EHCI_MAX_QTD_BUFFER_PAGES - 1) * PAGE_SIZE)) + 1) > EhciEndpoint->RemainTDs)
     {
         DPRINT1("EHCI_BulkTransfer: return MP_STATUS_FAILURE\n");
         return MP_STATUS_FAILURE;
@@ -2730,7 +2727,7 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
     StaticQH = EhciEndpoint->StaticQH;
 
     ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) == 0);
-    ASSERT(((StaticQH->QhFlags & EHCI_QH_FLAG_STATIC)) != 0);
+    ASSERT(StaticQH->QhFlags & EHCI_QH_FLAG_STATIC);
 
     NextHead = StaticQH->NextHead;
 
@@ -2744,8 +2741,8 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
 
     PrevHead = (PEHCI_HCD_QH)StaticQH;
 
-    if ((StaticQH->QhFlags & EHCI_QH_FLAG_STATIC) != 0 &&
-        (!NextHead || (NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) != 0))
+    if ((StaticQH->QhFlags & EHCI_QH_FLAG_STATIC) &&
+        (!NextHead || (NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC)))
     {
         DPRINT("EHCI_InsertQhInPeriodicList: StaticQH - %p, StaticQH->NextHead - %p\n",
                StaticQH,
@@ -3061,7 +3058,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     QH = EhciEndpoint->QH;
 
     CurrentTDPhys = QH->sqh.HwQH.CurrentTD & LINK_POINTER_MASK;
-    ASSERT(CurrentTDPhys != 0);
+    ASSERT(CurrentTDPhys);
 
     CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTDPhys,
                                                          EhciExtension,
@@ -3197,7 +3194,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     EHCI_DumpHwQH(QH);
 
     CurrentTdPA = QH->sqh.HwQH.CurrentTD & LINK_POINTER_MASK;
-    ASSERT(CurrentTdPA != 0);
+    ASSERT(CurrentTdPA);
 
     IsSheduled = QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
 
@@ -3320,7 +3317,7 @@ EHCI_PollAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
         RemoveHeadList(DoneList);
 
         ASSERT((TD->TdFlags & (EHCI_HCD_TD_FLAG_PROCESSED |
-                               EHCI_HCD_TD_FLAG_DONE)) != 0);
+                               EHCI_HCD_TD_FLAG_DONE)));
 
         EHCI_ProcessDoneAsyncTd(EhciExtension, TD);
     }
