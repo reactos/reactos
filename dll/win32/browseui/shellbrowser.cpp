@@ -273,6 +273,12 @@ private:
     class barInfo
     {
     public:
+        barInfo()
+        {
+            memset(&borderSpace, 0, sizeof(borderSpace));
+            hwnd = NULL;
+        }
+
         RECT                                borderSpace;
         CComPtr<IUnknown>                   clientBar;
         HWND                                hwnd;
@@ -703,7 +709,6 @@ CShellBrowser::CShellBrowser()
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
     fStatusBarVisible = true;
-    memset(fClientBars, 0, sizeof(fClientBars));
     fCurrentMenuBar = NULL;
     fHistoryObject = NULL;
     fHistoryStream = NULL;
