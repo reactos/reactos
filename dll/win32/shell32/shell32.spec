@@ -464,3 +464,9 @@
 754 stub -noname SHLimitInputEditWithFlags
 755 stdcall -noname PathIsEqualOrSubFolder(wstr wstr)
 756 stub -noname DeleteFileThumbnail
+
+@ stdcall SHCreateItemFromIDList(ptr ptr ptr)
+@ stdcall SHCreateItemFromParsingName(wstr ptr ptr ptr)
+@ stdcall SHGetIDListFromObject(ptr ptr)
+@ stdcall SHGetItemFromDataObject(ptr long ptr ptr)
+@ stdcall SHGetNameFromIDList(ptr long ptr)

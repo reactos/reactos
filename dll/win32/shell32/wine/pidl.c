@@ -1403,8 +1403,6 @@ HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     return hr;
 }
 
-#ifndef __REACTOS__
-
 /*************************************************************************
  * SHGetNameFromIDList             [SHELL32.@]
  */
@@ -1541,8 +1539,6 @@ HRESULT WINAPI SHGetIDListFromObject(IUnknown *punk, PIDLIST_ABSOLUTE *ppidl)
 
     return ret;
 }
-
-#endif /* !__REACTOS__ */
 
 /**************************************************************************
  *
