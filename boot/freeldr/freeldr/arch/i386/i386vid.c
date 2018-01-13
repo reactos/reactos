@@ -181,11 +181,12 @@ USHORT BiosIsVesaSupported(VOID)
     //
     // AX = 4F00h
     // ES:DI -> buffer for SuperVGA information (see #00077)
+    //
     // Return:
     // AL = 4Fh if function supported
     // AH = status
     //   00h successful
-    // ES:DI buffer filled
+    //     ES:DI buffer filled
     //   01h failed
     //   ---VBE v2.0---
     //   02h function not supported by current hardware configuration
@@ -193,8 +194,6 @@ USHORT BiosIsVesaSupported(VOID)
     //
     // Determine whether VESA BIOS extensions are present and the
     // capabilities supported by the display adapter
-    //
-    // Installation check;VESA SuperVGA
     Regs.w.ax = 0x4F00;
     Regs.w.es = BIOSCALLBUFSEGMENT;
     Regs.w.di = BIOSCALLBUFOFFSET;
@@ -238,7 +237,6 @@ USHORT BiosIsVesaSupported(VOID)
     return SvgaInfo->VesaVersion;
 }
 
-
 BOOLEAN
 BiosIsVesaDdcSupported(VOID)
 {
@@ -246,17 +244,26 @@ BiosIsVesaDdcSupported(VOID)
 
     TRACE("BiosIsVesaDdcSupported()\n");
 
+    // Int 10h AX=4F15h BL=00h
+    // VESA VBE/DC (Display Data Channel) - INSTALLATION CHECK / CAPABILITIES
+    //
+    // AX = 4F15h
+    // BL = 00h
+    //
+    // Return:
+    // AL = 4Fh if function supported
+    // AH = status
+    //   00h successful
+    //     BX = ???
+    //   01h failed
+    //     ???
     Regs.w.ax = 0x4F15;
-    Regs.b.bl = 0;
-    Regs.w.cx = 0;
-    Regs.w.es = 0;
-    Regs.w.di = 0;
+    Regs.b.bl = 0x00;
     Int386(0x10, &Regs, &Regs);
 
     TRACE("AL = 0x%x\n", Regs.b.al);
     TRACE("AH = 0x%x\n", Regs.b.ah);
-
-    TRACE("BL = 0x%x\n", Regs.b.bl);
+    TRACE("BX = 0x%x\n", Regs.w.bx);
 
     if (Regs.w.ax != 0x004F)
     {
@@ -264,9 +271,10 @@ BiosIsVesaDdcSupported(VOID)
         return FALSE;
     }
 
-    return (Regs.b.ah == 0);
-}
+    // FIXME: Maybe process data in BL/BX?
 
+    return TRUE;
+}
 
 BOOLEAN
 BiosVesaReadEdid(VOID)
@@ -277,10 +285,25 @@ BiosVesaReadEdid(VOID)
 
     RtlZeroMemory((PVOID)BIOSCALLBUFFER, 128);
 
+    // Int 10h AX=4F15h BL=01h
+    // VESA VBE/DC (Display Data Channel) - READ EDID
+    //
+    // AX = 4F15h
+    // BL = 01h
+    // CX = 0000h
+    // DX = 0000h
+    // ES:DI -> 128-byte buffer for EDID record (see #00127)
+    //
+    // Return:
+    // AL = 4Fh if function supported
+    // AH = status
+    //   00h successful
+    //     ES:DI buffer filled
+    //   01h failed (e.g. non-DDC monitor)
     Regs.w.ax = 0x4F15;
-    Regs.b.bl = 1;
-    Regs.w.cx = 0;
-    Regs.w.dx = 0;
+    Regs.b.bl = 0x01;
+    Regs.w.cx = 0x0000;
+    Regs.w.dx = 0x0000;
     Regs.w.es = BIOSCALLBUFSEGMENT;
     Regs.w.di = BIOSCALLBUFOFFSET;
     Int386(0x10, &Regs, &Regs);
@@ -294,7 +317,11 @@ BiosVesaReadEdid(VOID)
         return FALSE;
     }
 
-    return (Regs.b.ah == 0);
+    // Format of VESA EDID record:
+    // [...]
+    // FIXME: Process data in BIOSCALLBUFFER.
+
+    return TRUE;
 }
 
 /* EOF */
