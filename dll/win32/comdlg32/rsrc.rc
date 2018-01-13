@@ -33,6 +33,8 @@
  */
 #include "cdlg_xx.rc"
 
+1 WINE_REGISTRY "res/comdlg32.res"
+
 #include <reactos/manifest_dll.rc>
 
 /*
