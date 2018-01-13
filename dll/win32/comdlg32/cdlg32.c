@@ -261,6 +261,9 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
+extern HRESULT __wine_register_resources(HINSTANCE hInstance);
+extern HRESULT __wine_unregister_resources(HINSTANCE hInstance);
+
 /***********************************************************************
  *          DllRegisterServer (COMMDLG32.@)
  */
