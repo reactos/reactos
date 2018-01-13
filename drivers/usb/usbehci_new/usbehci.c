@@ -492,7 +492,7 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
 
     RtlCopyMemory(&EhciEndpoint->EndpointProperties,
                   EndpointProperties,
-                  sizeof(USBPORT_ENDPOINT_PROPERTIES));
+                  sizeof(EhciEndpoint->EndpointProperties));
 
     TransferType = EndpointProperties->TransferType;
 
@@ -582,7 +582,7 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
             RtlCopyMemory(&EhciEndpoint->EndpointProperties,
                           EndpointProperties,
-                          sizeof(USBPORT_ENDPOINT_PROPERTIES));
+                          sizeof(EhciEndpoint->EndpointProperties));
 
             QH = EhciEndpoint->QH;
 
