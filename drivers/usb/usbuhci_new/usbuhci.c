@@ -66,8 +66,8 @@ UhciFixDataToggle(IN PUHCI_EXTENSION UhciExtension,
 
     while (TD)
     {
-        TD->HwTD.Token.DataToggle = (TD->HwTD.Token.DataToggle == FALSE);
-        DataToggle = (DataToggle == FALSE);
+        TD->HwTD.Token.DataToggle = !TD->HwTD.Token.DataToggle;
+        DataToggle = !DataToggle;
 
         TD = TD->NextHcdTD;
     }
