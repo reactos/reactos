@@ -462,7 +462,6 @@ VOID
 NTAPI
 UhciRHDisableIrq(IN PVOID uhciExtension)
 {
-    //DPRINT("UhciRHDisableIrq: \n");
     return;
 }
 
@@ -470,7 +469,6 @@ VOID
 NTAPI
 UhciRHEnableIrq(IN PVOID uhciExtension)
 {
-    //DPRINT("UhciRHEnableIrq: \n");
     return;
 }
 
