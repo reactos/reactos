@@ -544,7 +544,7 @@ public:
         case IDHK_EXPLORE:
             //FIXME: We don't support this yet:
             //ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1);
-            ShellExecuteW(0, NULL, L"explorer.exe", NULL, NULL, 1); 
+            ShellExecuteW(0, NULL, L"explorer.exe", L"/e ,", NULL, 1); 
             break;
         case IDHK_FIND:
             SHFindFiles(NULL, NULL);
