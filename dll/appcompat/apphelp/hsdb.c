@@ -12,7 +12,7 @@
 #include "ntndk.h"
 #include "strsafe.h"
 #include "apphelp.h"
-
+#include "compat_undoc.h"
 
 #define MAX_LAYER_LENGTH            256
 #define GPLK_USER                   1
@@ -25,10 +25,16 @@ typedef struct _ShimData
     DWORD dwMagic;
     SDBQUERYRESULT Query;
     WCHAR szLayer[MAX_LAYER_LENGTH];
-    DWORD unknown;  // 0x14c
+    DWORD dwRosProcessCompatVersion;  // ReactOS specific
 } ShimData;
 
 #define SHIMDATA_MAGIC  0xAC0DEDAB
+
+
+C_ASSERT(SHIMDATA_MAGIC == REACTOS_SHIMDATA_MAGIC);
+C_ASSERT(sizeof(ShimData) == sizeof(ReactOS_ShimData));
+C_ASSERT(offsetof(ShimData, dwMagic) == offsetof(ReactOS_ShimData, dwMagic));
+C_ASSERT(offsetof(ShimData, dwRosProcessCompatVersion) == offsetof(ReactOS_ShimData, dwRosProcessCompatVersion));
 
 
 static BOOL WINAPI SdbpFileExists(LPCWSTR path)
@@ -706,7 +712,7 @@ BOOL WINAPI SdbPackAppCompatData(HSDB hsdb, PSDBQUERYRESULT pQueryResult, PVOID*
     pData->dwSize = sizeof(*pData);
     pData->dwMagic = SHIMDATA_MAGIC;
     pData->Query = *pQueryResult;
-    pData->unknown = 0;
+    pData->dwRosProcessCompatVersion = 0;
     pData->szLayer[0] = UNICODE_NULL;   /* TODO */
 
     SHIM_INFO("\ndwFlags    0x%x\ndwMagic    0x%x\ntrExe      0x%x\ntrLayer    0x%x\n",

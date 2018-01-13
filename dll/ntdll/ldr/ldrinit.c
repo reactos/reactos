@@ -10,6 +10,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
+#include <compat_undoc.h>
+#include <compatguid_undoc.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1455,6 +1457,83 @@ LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry)
     UNIMPLEMENTED;
 }
 
+VOID
+NTAPI
+LdrpInitializeProcessCompat(PVOID* pOldShimData)
+{
+    static const GUID* GuidOrder[] = { &COMPAT_GUID_WIN10, &COMPAT_GUID_WIN81, &COMPAT_GUID_WIN8,
+                                       &COMPAT_GUID_WIN7, &COMPAT_GUID_VISTA };
+    static const DWORD GuidVersions[] = { WINVER_WIN10, WINVER_WIN81, WINVER_WIN8, WINVER_WIN7, WINVER_VISTA };
+
+    ULONG Buffer[(sizeof(COMPATIBILITY_CONTEXT_ELEMENT) * 10 + sizeof(ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION)) / sizeof(ULONG)];
+    ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION* ContextCompatInfo;
+    SIZE_T SizeRequired;
+    NTSTATUS Status;
+    DWORD n, cur;
+
+    C_ASSERT(RTL_NUMBER_OF(GuidOrder) == RTL_NUMBER_OF(GuidVersions));
+
+    SizeRequired = sizeof(Buffer);
+    Status = RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_NO_ADDREF,
+                                                  NULL,
+                                                  NULL,
+                                                  CompatibilityInformationInActivationContext,
+                                                  Buffer,
+                                                  sizeof(Buffer),
+                                                  &SizeRequired);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LdrpInitializeProcessCompat: Unable to query process actctx with status %x\n", Status);
+        return;
+    }
+
+    ContextCompatInfo = (ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION*)Buffer;
+    /* No Compatibility elements present, bail out */
+    if (ContextCompatInfo->ElementCount == 0)
+        return;
+
+    /* Search for known GUID's, starting from newest to oldest. */
+    for (cur = 0; cur < RTL_NUMBER_OF(GuidOrder); ++cur)
+    {
+        for (n = 0; n < ContextCompatInfo->ElementCount; ++n)
+        {
+            if (ContextCompatInfo->Elements[n].Type == ACTCX_COMPATIBILITY_ELEMENT_TYPE_OS &&
+                RtlCompareMemory(&ContextCompatInfo->Elements[n].Id, GuidOrder[cur], sizeof(GUID)) == sizeof(GUID))
+            {
+                ReactOS_ShimData* pShimData = *pOldShimData;
+
+                /* If this process did not need shim data before, allocate and store it */
+                if (pShimData == NULL)
+                {
+                    PPEB Peb = NtCurrentPeb();
+
+                    ASSERT(Peb->pShimData == NULL);
+                    pShimData = RtlAllocateHeap(Peb->ProcessHeap, HEAP_ZERO_MEMORY, sizeof(*pShimData));
+
+                    if (!pShimData)
+                    {
+                        DPRINT1("LdrpInitializeProcessCompat: Unable to allocated %u bytes\n", sizeof(*pShimData));
+                        return;
+                    }
+
+                    pShimData->dwSize = sizeof(*pShimData);
+                    pShimData->dwMagic = REACTOS_SHIMDATA_MAGIC;
+
+                    Peb->pShimData = pShimData;
+                    *pOldShimData = pShimData;
+                }
+
+                /* Store the highest found version, and bail out. */
+                pShimData->dwRosProcessCompatVersion = GuidVersions[cur];
+                DPRINT1("LdrpInitializeProcessCompat: Found guid for winver 0x%x\n", GuidVersions[cur]);
+                return;
+            }
+        }
+    }
+}
+
+
 NTSTATUS
 NTAPI
 LdrpInitializeProcess(IN PCONTEXT Context,
@@ -1542,8 +1621,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Save the old Shim Data */
     OldShimData = Peb->pShimData;
 
-    /* Clear it */
-    Peb->pShimData = NULL;
+    /* ReactOS specific: do not clear it. (Windows starts doing the same in later versions) */
+    //Peb->pShimData = NULL;
 
     /* Save the number of processors and CS Timeout */
     LdrpNumberOfProcessors = Peb->NumberOfProcessors;
@@ -1933,6 +2012,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Initialize Wine's active context implementation for the current process */
     actctx_init();
+
+    /* ReactOS specific */
+    LdrpInitializeProcessCompat(&OldShimData);
 
     /* Set the current directory */
     Status = RtlSetCurrentDirectory_U(&CurrentDirectory);
