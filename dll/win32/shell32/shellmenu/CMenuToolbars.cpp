@@ -149,7 +149,7 @@ HRESULT CMenuToolbarBase::OnPagerCalcSize(LPNMPGCALCSIZE csize)
 
 HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult)
 {
-    bool     isHot, isPopup;
+    bool     isHot, isPopup, isActive;
     TBBUTTONINFO btni;
 
     switch (cdraw->nmcd.dwDrawStage)
@@ -160,9 +160,13 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
 
     case CDDS_ITEMPREPAINT:
         
+        HWND tlw;
+        m_menuBand->_GetTopLevelWindow(&tlw);
+
         // The item with an active submenu gets the CHECKED flag.
         isHot = m_hotBar == this && (int) cdraw->nmcd.dwItemSpec == m_hotItem;
         isPopup = m_popupBar == this && (int) cdraw->nmcd.dwItemSpec == m_popupItem;
+        isActive = (GetForegroundWindow() == tlw) || (m_popupBar == this);
 
         if (m_hotItem < 0 && isPopup)
             isHot = TRUE;
@@ -207,7 +211,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         else
         {
             // Set the text color, will be used by the internal drawing code
-            cdraw->clrText = GetSysColor(COLOR_MENUTEXT);
+            cdraw->clrText = GetSysColor(isActive ? COLOR_MENUTEXT : COLOR_GRAYTEXT);
 
             // Remove HOT and CHECKED flags (will restore HOT if necessary)
             cdraw->nmcd.uItemState &= ~CDIS_HOT;

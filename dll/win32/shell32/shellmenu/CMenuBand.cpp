@@ -669,6 +669,14 @@ HRESULT STDMETHODCALLTYPE CMenuBand::IsMenuMessage(MSG *pmsg)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::TranslateMenuMessage(MSG *pmsg, LRESULT *plRet)
 {
+    if (pmsg->message == WM_ACTIVATE && _IsPopup() == S_FALSE)
+    {
+        if (m_staticToolbar)
+            m_staticToolbar->Invalidate();
+        if (m_SFToolbar)
+            m_SFToolbar->Invalidate();
+    }
+
     return S_FALSE;
 }
 
