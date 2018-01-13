@@ -1195,6 +1195,7 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
             TOOLBAR_DrawArrow(hdc, rcArrow.left+1, rcArrow.top+1 + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, comctl32_color.clrBtnHighlight);
             TOOLBAR_DrawArrow(hdc, rcArrow.left, rcArrow.top + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, comctl32_color.clr3dShadow);
         }
+#ifndef __REACTOS__
         else if (tbcd.nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED))
         {
             offset = (dwItemCDFlag & TBCDRF_NOOFFSET) ? 0 : 1;
@@ -1202,6 +1203,22 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
         }
         else
             TOOLBAR_DrawArrow(hdc, rcArrow.left, rcArrow.top + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, comctl32_color.clrBtnText);
+#else
+        else
+        {
+            COLORREF clr = comctl32_color.clrBtnText;
+            if (theme)
+                GetThemeColor(theme, TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR, &clr);
+
+            if (tbcd.nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED))
+            {
+                offset = (dwItemCDFlag & TBCDRF_NOOFFSET) ? 0 : 1;
+                TOOLBAR_DrawArrow(hdc, rcArrow.left + offset, rcArrow.top + offset + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, clr);
+            }
+            else
+                TOOLBAR_DrawArrow(hdc, rcArrow.left, rcArrow.top + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, clr);
+        }
+#endif
     }
 
     if (dwItemCustDraw & CDRF_NOTIFYPOSTPAINT)
