@@ -205,7 +205,8 @@ USHORT BiosIsVesaSupported(VOID)
 
     if (Regs.w.ax != 0x004F)
     {
-        ERR("VESA BIOS call failed\n");
+        WARN("VBE Get SuperVGA information function not supported (AL=0x%x) or failed (AH=0x%x)\n",
+             Regs.b.al, Regs.b.ah);
         return 0x0000;
     }
 
@@ -260,7 +261,8 @@ BiosIsVesaDdcSupported(VOID)
 
     if (Regs.w.ax != 0x004F)
     {
-        ERR("VESA/DDC installation check failed\n");
+        WARN("VBE/DDC Installation check function not supported (AL=0x%x) or failed (AH=0x%x)\n",
+             Regs.b.al, Regs.b.ah);
         return FALSE;
     }
 
@@ -290,7 +292,8 @@ BiosVesaReadEdid(VOID)
 
     if (Regs.w.ax != 0x004F)
     {
-        ERR("Read EDID function not supported!\n");
+        WARN("VBE/DDC Read EDID function not supported (AL=0x%x) or failed (AH=0x%x)\n",
+             Regs.b.al, Regs.b.ah);
         return FALSE;
     }
 
