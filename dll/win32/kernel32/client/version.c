@@ -131,7 +131,18 @@ VerifyVersionInfoW(IN LPOSVERSIONINFOEXW lpVersionInformation,
             return FALSE;
 
         case STATUS_REVISION_MISMATCH:
-            DPRINT1("VerifyVersionInfo -- Version mismatch\n");
+            if (lpVersionInformation)
+            {
+                DPRINT1("VerifyVersionInfo -- Version mismatch(%d.%d.%d:%d)\n",
+                        (dwTypeMask & VER_MAJORVERSION) ? lpVersionInformation->dwMajorVersion : -1,
+                        (dwTypeMask & VER_MINORVERSION) ? lpVersionInformation->dwMinorVersion : -1,
+                        (dwTypeMask & VER_BUILDNUMBER) ? lpVersionInformation->dwBuildNumber : -1,
+                        (dwTypeMask & VER_PLATFORMID) ? lpVersionInformation->dwPlatformId : -1);
+            }
+            else
+            {
+                DPRINT1("VerifyVersionInfo -- Version mismatch(NULL)\n");
+            }
             SetLastError(ERROR_OLD_WIN_VERSION);
             return FALSE;
 
