@@ -76,33 +76,41 @@ UhciFixDataToggle(IN PUHCI_EXTENSION UhciExtension,
 }
 
 VOID
-NTAPI
-UhciCleanupFrameListEntry(IN PUHCI_EXTENSION UhciExtension,
-                          IN ULONG Index)
+NTAPI 
+UhciCleanupFrameList(IN PUHCI_EXTENSION UhciExtension,
+                     IN BOOLEAN IsAllEntries)
 {
-    PUHCI_HC_RESOURCES UhciResources;
-    ULONG_PTR PhysicalAddress;
-    ULONG HeadIdx;
+    ULONG NewFrameNumber;
+    ULONG OldFrameNumber;
+    ULONG ix;
 
-    UhciResources = UhciExtension->HcResourcesVA;
+    DPRINT_UHCI("UhciCleanupFrameList: [%p] All - %x\n",
+                UhciExtension, IsAllEntries);
 
-    if (Index == 0)
+    // FIXME: using UhciExtension->LockFrameList after supporting ISOs.
+
+    NewFrameNumber = UhciGet32BitFrameNumber(UhciExtension);
+    OldFrameNumber = UhciExtension->FrameNumber;
+
+    if ((NewFrameNumber - OldFrameNumber) < UHCI_FRAME_LIST_MAX_ENTRIES &&
+        IsAllEntries == FALSE)
     {
-        PhysicalAddress = UhciExtension->StaticTD->PhysicalAddress;
-
-        UhciResources->FrameList[0] = PhysicalAddress |
-                                      UHCI_FRAME_LIST_POINTER_TD;
+        for (ix = OldFrameNumber & UHCI_FRAME_LIST_INDEX_MASK;
+             ix != (NewFrameNumber & UHCI_FRAME_LIST_INDEX_MASK);
+             ix = (ix + 1) & UHCI_FRAME_LIST_INDEX_MASK)
+        {
+            UhciCleanupFrameListEntry(UhciExtension, ix);
+        }
     }
     else
     {
-        HeadIdx = (INTERRUPT_ENDPOINTs - ENDPOINT_INTERRUPT_32ms) +
-                  (Index & (ENDPOINT_INTERRUPT_32ms - 1));
-
-        PhysicalAddress = UhciExtension->IntQH[HeadIdx]->PhysicalAddress;
-
-        UhciResources->FrameList[Index] = PhysicalAddress |
-                                          UHCI_FRAME_LIST_POINTER_QH;
+        for (ix = 0; ix < UHCI_FRAME_LIST_MAX_ENTRIES; ++ix)
+        {
+            UhciCleanupFrameListEntry(UhciExtension, ix);
+        }
     }
+
+    UhciExtension->FrameNumber = NewFrameNumber;
 }
 
 VOID
