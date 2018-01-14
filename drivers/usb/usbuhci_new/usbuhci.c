@@ -461,7 +461,7 @@ UhciInitializeHardware(IN PUHCI_EXTENSION UhciExtension)
     UHCI_USB_STATUS StatusMask;
 
     DPRINT("UhciInitializeHardware: UhciExtension - %p\n", UhciExtension);
-    DPRINT("UhciInitializeHardware: VIA HW FIXME\n");
+    DPRINT("UhciInitializeHardware: VIA HW FIXME\n"); // after supporting HcFlavor in usbport
 
     BaseRegister = UhciExtension->BaseRegister;
 

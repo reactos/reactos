@@ -76,8 +76,7 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
         portStatus.Suspend = 0;
     }
 
-    // FIXME HcFlavor in usbport
-    //if (UhciExtension->HcFlavor == UHCI_Piix4)
+    //if (UhciExtension->HcFlavor == UHCI_Piix4) // check will work after supporting HcFlavor in usbport.
     if (TRUE)
     {
         portStatus.OverCurrent = PortControl.Reserved2 & 1;
