@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -17,7 +17,7 @@ END
 STRINGTABLE
 BEGIN
     //Power related strings
-    IDS_PWR_PROPERTIES        "&Güç Husûsiyetlerini Düzenle"
+    IDS_PWR_PROPERTIES        "&Güç Özelliklerini Düzenle"
     IDS_PWR_METER             "G&üç Ölçücüsünü Aç"
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%%%1!u! kaldı."
@@ -41,7 +41,7 @@ BEGIN
 
     //Volume related strings
     IDS_VOL_VOLUME "Ses Düzeyi"
-    IDS_VOL_ADJUST "&Ses Husûsiyetlerini Düzenle"
+    IDS_VOL_ADJUST "&Ses Özelliklerini Düzenle"
     IDS_VOL_OPEN "&Ses Düzeyi Denetimini Aç"
     IDS_VOL_RUN "SNDVOL32.EXE"
     IDS_VOL_MUTED "Ses Düzeyi (Sessiz)"
