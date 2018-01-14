@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -10,7 +10,7 @@ BEGIN
     GROUPBOX "Bağdaştırıcı Türü", -1, 7, 3, 237, 50
     ICON IDC_DESK_ADAPTER, IDC_DESK_ADAPTER, 13, 11, 21, 20, SS_ICON
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
-    PUSHBUTTON "&Husûsiyetler", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+    PUSHBUTTON "&Özellikler", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Bağdaştırıcı Bilgisi", -1, 7, 56, 237, 75
     LTEXT "Yonga Türü:", -1, 13, 68, 58, 8
     LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
@@ -22,7 +22,7 @@ BEGIN
     LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
     LTEXT "BIOS Bilgisi:", -1, 13, 116, 58, 8
     LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
-    PUSHBUTTON "&Tüm Kipleri Dizelgele...", IDC_LISTALLMODES, 7, 139, 75, 14
+    PUSHBUTTON "&Tüm Kipleri Listele...", IDC_LISTALLMODES, 7, 139, 75, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
