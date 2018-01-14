@@ -1,0 +1,8 @@
+/* TRANSLATOR: 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_FONTS_FOLDER "ReactOS Yazı Tipi Klasörü"
+END
