@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2014-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2014-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -14,7 +14,7 @@ BEGIN
     LTEXT "Bu Bağlantıyla Kullanılan Seçilmiş Bileşenler:", -1, 9, 59, 217, 8
     PUSHBUTTON "&Kur", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "K&aldır", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Husûsiyetler", IDC_PROPERTIES, 174, 130, 65, 14
+    PUSHBUTTON "&Özellikler", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Tanım", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Bileşen tanımı buraya gelecek.", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
     CHECKBOX "&Bağlandığında Görev Çubuğunda Simge Göster", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -23,14 +23,14 @@ END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
 IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Umûmî"
+CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Bağlantı", -1, 9, 8, 182, 58, BS_GROUPBOX
@@ -44,8 +44,8 @@ BEGIN
     LTEXT "Çoklu:", -1, 17, 115, 32, 8
     RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
-    PUSHBUTTON "&Husûsiyetler", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "&Edilginleştir", IDC_ENDISABLE, 66, 150, 50, 14
+    PUSHBUTTON "&Özellikler", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
+    PUSHBUTTON "&Etkisizleştir", IDC_ENDISABLE, 66, 150, 50, 14
     RTEXT "", IDC_STATUS, 83, 20, 98, 8
     RTEXT "", IDC_DURATION, 83, 34, 98, 8
     RTEXT "", IDC_SPEED, 83, 48, 98, 8
@@ -86,7 +86,7 @@ BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Tipik ya da husûsî ayarlar kullanıp kullanmayacağınızı seçiniz:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Tipik Ayarlar", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Husûsî Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Özel Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
     LTEXT "ReactOS Ağları için, Kütük ve Yazdırma Paylaşımı'yla İstemci'yi kullanan ağ bağlantılarını ve kendiliğinden adreslemeli TCP/IP aktarım kuralı oluşturur.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Ağ bileşenlerini elle yapılandırmanıza olanak sağlar.", IDC_STATIC, 65, 90, 243, 20
 END
@@ -102,7 +102,7 @@ BEGIN
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
     PUSHBUTTON "&Kur...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "K&aldır", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Husûsiyetler", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Özellikler", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     GROUPBOX "Tanım", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
 END
 
@@ -131,7 +131,7 @@ BEGIN
     IDS_LEASE_EXPIRES "Kirâ Bitişi"
     IDS_DNS_SERVERS "DNS Sunucuları"
     IDS_WINS_SERVERS "WINS Sunucuları"
-    IDS_PROPERTY "Husûsiyet"
+    IDS_PROPERTY "Özellik"
     IDS_VALUE "Değer"
     IDS_NETWORKCONNECTION "Ağ Bağlantıları"
     IDS_SHV_COLUMN_NAME "Ad"
@@ -140,21 +140,21 @@ BEGIN
     IDS_SHV_COLUMN_DEVNAME "Aygıt Adı"
     IDS_SHV_COLUMN_PHONE "Telefon Numarası ya da Anabilgisayar Adresi"
     IDS_SHV_COLUMN_OWNER "İye"
-    IDS_TYPE_ETHERNET "LAN ya da Yüksek Hızlı Umûmî Ağ"
-    IDS_STATUS_NON_OPERATIONAL "Edilgin"
+    IDS_TYPE_ETHERNET "LAN ya da Yüksek Hızlı İnternet"
+    IDS_STATUS_NON_OPERATIONAL "Etkisiz"
     IDS_STATUS_UNREACHABLE "Bağlı Değil"
     IDS_STATUS_DISCONNECTED "Ağ kablosu takılmamış."
     IDS_STATUS_CONNECTING "Elde Edilen Ağ Adresi"
     IDS_STATUS_CONNECTED "Bağlı"
     IDS_STATUS_OPERATIONAL "Bağlı"
     IDS_NET_ACTIVATE "Etkinleştir"
-    IDS_NET_DEACTIVATE "Edilginleştir"
+    IDS_NET_DEACTIVATE "Etkisizleştir"
     IDS_NET_STATUS "Durum"
     IDS_NET_REPAIR "Onar"
     IDS_NET_CREATELINK "Kısayol Oluştur"
     IDS_NET_DELETE "Sil"
     IDS_NET_RENAME "Yeniden Adlandır"
-    IDS_NET_PROPERTIES "Husûsiyetler"
+    IDS_NET_PROPERTIES "Özellikler"
     IDS_FORMAT_BIT "%u Bit/s"
     IDS_FORMAT_KBIT "%u KBit/s"
     IDS_FORMAT_MBIT "%u MBit/s"
@@ -168,7 +168,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKSETTINGSTITLE "Ağ Ayarları"
-    IDS_NETWORKSETTINGSSUBTITLE "Başka ağlara, bilgisayarlara ve Umûmî Ağ'a bağlanmak için kullanılacak ağ yazılımını kurar."
+    IDS_NETWORKSETTINGSSUBTITLE "Başka ağlara, bilgisayarlara ve İnternet'e bağlanmak için kullanılacak ağ yazılımını kurar."
     IDS_NETWORKCOMPONENTTITLE "Ağ Bileşenleri"
     IDS_NETWORKCOMPONENTSUBTITLE "Bilgisayarınızda hangi ağ bileşenlerinin kullanacağını belirtir. Yeni bileşenler eklemek için Kur'a tıklayınız."
     IDS_NETWORKDOMAINTITLE "Çalışma Takımı ya da Bilgisayar Etki Alanı"
