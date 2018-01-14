@@ -56,7 +56,7 @@ BEGIN
     LTEXT "Загрузка и восстановление системы, отладочная информация", IDC_STATIC, 16, 144, 210, 20
     PUSHBUTTON "&Параметры", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "Настройки системы", IDC_SYSSETTINGS, 6, 192, 80, 15
-    PUSHBUTTON "П&еременные среды...", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "П&еременные среды", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Отчет об ошибках", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
