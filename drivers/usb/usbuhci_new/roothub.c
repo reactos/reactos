@@ -54,7 +54,7 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
 
     //DPRINT("UhciRHGetPortStatus: ...\n");
 
-    ASSERT(Port != 0);
+    ASSERT(Port);
 
     BaseRegister = UhciExtension->BaseRegister;
     PortControlRegister = &BaseRegister->PortControl[Port-1].AsUSHORT;
@@ -152,7 +152,7 @@ UhciRHPortResetComplete(IN PVOID uhciExtension,
     BaseRegister = UhciExtension->BaseRegister;
 
     Port = *(PUSHORT)pPort;
-    ASSERT(Port != 0);
+    ASSERT(Port);
 
     PortControlRegister = &BaseRegister->PortControl[Port - 1].AsUSHORT;
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
@@ -220,7 +220,7 @@ UhciRHSetFeaturePortResetWorker(IN PUHCI_EXTENSION UhciExtension,
     BaseRegister = UhciExtension->BaseRegister;
 
     Port = *(PUSHORT)pPort;
-    ASSERT(Port != 0);
+    ASSERT(Port);
 
     PortControlRegister = &BaseRegister->PortControl[Port - 1].AsUSHORT;
     PortControl.AsUSHORT = READ_PORT_USHORT(PortControlRegister);
@@ -249,7 +249,7 @@ UhciRHSetFeaturePortReset(IN PVOID uhciExtension,
 
     DPRINT("UhciRHSetFeaturePortReset: ...\n");
 
-    ASSERT(Port != 0);
+    ASSERT(Port);
 
     ResetPortMask = UhciExtension->ResetPortMask;
     PortBit = 1 << (Port - 1);
@@ -280,7 +280,7 @@ UhciRHSetFeaturePortPower(IN PVOID uhciExtension,
                           IN USHORT Port)
 {
     DPRINT("UhciRHSetFeaturePortPower: ...\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     return MP_STATUS_SUCCESS;
 }
 
@@ -297,7 +297,7 @@ UhciRHPortEnable(IN PVOID uhciExtension,
 
     DPRINT("UhciRHPortEnable: ...\n");
 
-    ASSERT(Port != 0);
+    ASSERT(Port);
 
     BaseRegister = UhciExtension->BaseRegister;
     PortControlRegister = &BaseRegister->PortControl[Port-1].AsUSHORT;
@@ -324,7 +324,7 @@ UhciRHSetFeaturePortEnable(IN PVOID uhciExtension,
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
     DPRINT("UhciRHSetFeaturePortEnable: ...\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     return UhciRHPortEnable(UhciExtension, Port, TRUE);
 }
 
@@ -334,7 +334,7 @@ UhciRHSetFeaturePortSuspend(IN PVOID uhciExtension,
                             IN USHORT Port)
 {
     DPRINT("UhciRHSetFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     return MP_STATUS_SUCCESS;
 }
 
@@ -345,7 +345,7 @@ UhciRHClearFeaturePortEnable(IN PVOID uhciExtension,
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
     DPRINT("UhciRHClearFeaturePortEnable: ...\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     return UhciRHPortEnable(UhciExtension, Port, FALSE);
 }
 
@@ -355,7 +355,7 @@ UhciRHClearFeaturePortPower(IN PVOID uhciExtension,
                             IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortPower: UNIMPLEMENTED. FIXME\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     return MP_STATUS_SUCCESS;
 }
 
@@ -365,7 +365,7 @@ UhciRHClearFeaturePortSuspend(IN PVOID uhciExtension,
                               IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     return MP_STATUS_SUCCESS;
 }
 
@@ -381,7 +381,7 @@ UhciRHClearFeaturePortEnableChange(IN PVOID uhciExtension,
 
     DPRINT("UhciRHClearFeaturePortEnableChange: ...\n");
 
-    ASSERT(Port != 0);
+    ASSERT(Port);
 
     BaseRegister = UhciExtension->BaseRegister;
     PortControlRegister = (PUSHORT)&BaseRegister->PortControl[Port - 1];
@@ -406,7 +406,7 @@ UhciRHClearFeaturePortConnectChange(IN PVOID uhciExtension,
 
     DPRINT("UhciRHClearFeaturePortConnectChange: Port - %04X\n", Port);
 
-    ASSERT(Port != 0);
+    ASSERT(Port);
 
     BaseRegister = UhciExtension->BaseRegister;
     PortControlRegister = (PUSHORT)&BaseRegister->PortControl[Port - 1];
@@ -430,7 +430,7 @@ UhciRHClearFeaturePortResetChange(IN PVOID uhciExtension,
 {
     PUHCI_EXTENSION UhciExtension = uhciExtension;
     DPRINT("UhciRHClearFeaturePortResetChange: ...\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     UhciExtension->ResetChangePortMask &= ~(1 << (Port - 1));
     return MP_STATUS_SUCCESS;
 }
@@ -441,7 +441,7 @@ UhciRHClearFeaturePortSuspendChange(IN PVOID uhciExtension,
                                     IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortSuspendChange: UNIMPLEMENTED. FIXME\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     return MP_STATUS_SUCCESS;
 }
 
@@ -451,7 +451,7 @@ UhciRHClearFeaturePortOvercurrentChange(IN PVOID uhciExtension,
                                         IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortOvercurrentChange: UNIMPLEMENTED. FIXME\n");
-    ASSERT(Port != 0);
+    ASSERT(Port);
     return MP_STATUS_SUCCESS;
 }
 

@@ -434,7 +434,7 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
     LegacyMask.A20Gate = 1;
     LegacyMask.SmiEndPassThrough = 1;
 
-    if ((LegacySupport.AsUSHORT & LegacyMask.AsUSHORT) != 0)
+    if (LegacySupport.AsUSHORT & LegacyMask.AsUSHORT)
     {
         DPRINT("UhciTakeControlHC: LegacySupport.AsUSHORT - %04X\n",
                LegacySupport.AsUSHORT);
@@ -895,7 +895,7 @@ UhciInterruptService(IN PVOID uhciExtension)
 
     BulkTailQH = UhciExtension->BulkTailQH;
 
-    if ((BulkTailQH->HwQH.NextQH & UHCI_QH_HEAD_LINK_PTR_TERMINATE) != 0)
+    if (BulkTailQH->HwQH.NextQH & UHCI_QH_HEAD_LINK_PTR_TERMINATE)
         goto NextProcess;
 
     QH = UhciExtension->BulkQH;
@@ -910,7 +910,7 @@ UhciInterruptService(IN PVOID uhciExtension)
             goto NextProcess;
         }
     }
-    while ((QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_PTR_TERMINATE) != 0);
+    while (QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_PTR_TERMINATE);
 
 NextProcess:
 
@@ -1001,7 +1001,7 @@ UhciQueueTransfer(IN PUHCI_EXTENSION UhciExtension,
                              UHCI_TD_LINK_PTR_QH |
                              UHCI_TD_LINK_PTR_DEPTH_FIRST);
 
-        if ((FirstTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE) != 0)
+        if (FirstTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE)
         {
             if (PhysicalAddress == TailTD->PhysicalAddress &&
                 !(TailTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE))
@@ -1025,8 +1025,7 @@ UhciQueueTransfer(IN PUHCI_EXTENSION UhciExtension,
             UhciEndpoint->HeadTD = NULL;
         }
 
-        if (FirstTD == NULL ||
-            (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED) != 0)
+        if (FirstTD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
         {
             PhysicalAddress = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
         }
@@ -1039,8 +1038,7 @@ UhciQueueTransfer(IN PUHCI_EXTENSION UhciExtension,
         QH->HwQH.NextElement = PhysicalAddress & ~UHCI_QH_ELEMENT_LINK_PTR_QH;
     }
 
-    if (UhciEndpoint->EndpointProperties.TransferType ==
-        USBPORT_TRANSFER_TYPE_BULK)
+    if (UhciEndpoint->EndpointProperties.TransferType == USBPORT_TRANSFER_TYPE_BULK)
     {
         BulkTailQH = UhciExtension->BulkTailQH;
         BulkTailQH->HwQH.NextQH &= ~UHCI_QH_HEAD_LINK_PTR_TERMINATE;
@@ -1124,11 +1122,8 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
     DeviceAddress = UhciEndpoint->EndpointProperties.DeviceAddress;
     TransferType = UhciEndpoint->EndpointProperties.TransferType;
 
-    if (SgList->SgElementCount != 0 ||
-        TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
-    {
+    if (SgList->SgElementCount || TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
         ZeroLengthTransfer = FALSE;
-    }
 
     if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
     {
@@ -1570,21 +1565,21 @@ UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
         return USBD_STATUS_ERROR_SHORT_TRANSFER;
     }
 
-    if ((TdStatus & UHCI_TD_STS_BABBLE_DETECTED) != 0 &&
-        (TdStatus & UHCI_TD_STS_STALLED) != 0)
+    if (TdStatus & UHCI_TD_STS_BABBLE_DETECTED &&
+        TdStatus & UHCI_TD_STS_STALLED)
     {
         DPRINT1("UhciGetErrorFromTD: USBD_STATUS_BUFFER_OVERRUN, TD - %p\n", TD);
         return USBD_STATUS_BUFFER_OVERRUN;
     }
 
-    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0 &&
-        (TdStatus & UHCI_TD_STS_STALLED) != 0)
+    if (TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR &&
+        TdStatus & UHCI_TD_STS_STALLED)
     {
         DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DEV_NOT_RESPONDING, TD - %p\n", TD);
         return USBD_STATUS_DEV_NOT_RESPONDING;
     }
 
-    if ((TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0)
+    if (TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR)
     {
         if (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL)
         {
@@ -1597,12 +1592,12 @@ UhciGetErrorFromTD(IN PUHCI_EXTENSION UhciExtension,
             return USBD_STATUS_CRC;
         }
     }
-    else if ((TdStatus & UHCI_TD_STS_DATA_BUFFER_ERROR) != 0)
+    else if (TdStatus & UHCI_TD_STS_DATA_BUFFER_ERROR)
     {
         DPRINT1("UhciGetErrorFromTD: USBD_STATUS_DATA_OVERRUN, TD - %p\n", TD);
         USBDStatus = USBD_STATUS_DATA_OVERRUN;
     }
-    else if ((TdStatus & UHCI_TD_STS_STALLED) != 0)
+    else if (TdStatus & UHCI_TD_STS_STALLED)
     {
         DPRINT1("UhciGetErrorFromTD: USBD_STATUS_STALL_PID, TD - %p\n", TD);
         USBDStatus = USBD_STATUS_STALL_PID;
@@ -1747,9 +1742,9 @@ UhciAbortNonIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
     {
         DPRINT_UHCI("UhciAbortNonIsoTransfer: TD - %p\n", TD);
 
-        if ((TD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE) != 0)
+        if (TD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE)
         {
-            if ((TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER) != 0)
+            if (TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
                 DPRINT_IMPL("UhciAbortNonIsoTransfer: UNIMPLEMENTED. FIXME\n");
 
             UhciEndpoint->AllocatedTDs--;
@@ -1785,8 +1780,7 @@ UhciAbortNonIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
             UhciEndpoint->TailTD = NULL;
         }
 
-        if (TD == NULL ||
-            (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED) != 0)
+        if (TD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
         {
             PhysicalAddress = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
         }
@@ -2150,7 +2144,7 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
             InsertTailList(&UhciEndpoint->ListTDs, &TD->TdLink);
 
             if (TD->NextHcdTD &&
-               (TD->NextHcdTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE) != 0)
+                TD->NextHcdTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE)
             {
                 if (NextTdPA == 0)   
                     break;
@@ -2205,8 +2199,8 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
         }
 
         if (NextTD->HwTD.Token.PIDCode == UHCI_TD_PID_IN &&
-            (TdStatus & UHCI_TD_STS_STALLED) != 0 &&
-            (TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR) != 0 &&
+            TdStatus & UHCI_TD_STS_STALLED &&
+            TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR &&
             !(TdStatus & UHCI_TD_STS_NAK_RECEIVED) &&
             !(TdStatus & UHCI_TD_STS_BABBLE_DETECTED) &&
             !(TdStatus & UHCI_TD_STS_BITSTUFF_ERROR))
@@ -2230,11 +2224,11 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
             }
         }
 
-        if ((TdStatus & (UHCI_TD_STS_STALLED |
-                         UHCI_TD_STS_DATA_BUFFER_ERROR |
-                         UHCI_TD_STS_BABBLE_DETECTED |
-                         UHCI_TD_STS_TIMEOUT_CRC_ERROR |
-                         UHCI_TD_STS_BITSTUFF_ERROR)) != 0)
+        if (TdStatus & (UHCI_TD_STS_STALLED |
+                        UHCI_TD_STS_DATA_BUFFER_ERROR |
+                        UHCI_TD_STS_BABBLE_DETECTED |
+                        UHCI_TD_STS_TIMEOUT_CRC_ERROR |
+                        UHCI_TD_STS_BITSTUFF_ERROR))
         {
             DPRINT("UhciPollNonIsoEndpoint: NextTD UHCI_TD_STS_ - %02X, PIDCode - %02X\n",
                    NextTD->HwTD.ControlStatus.Status,
@@ -2322,9 +2316,9 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
                    TD->UhciTransfer->TransferParameters->TransferCounter ==
                    NextTD->UhciTransfer->TransferParameters->TransferCounter)
             {
-                if ((TD->Flags & UHCI_HCD_TD_FLAG_CONTROLL) != 0 &&
-                    (NextTD->UhciTransfer->TransferParameters->TransferFlags &
-                     USBD_SHORT_TRANSFER_OK) != 0)
+                if (TD->Flags & UHCI_HCD_TD_FLAG_CONTROLL &&
+                    NextTD->UhciTransfer->TransferParameters->TransferFlags &
+                    USBD_SHORT_TRANSFER_OK)
                 {
                     break;
                 }
@@ -2369,8 +2363,7 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
             UhciEndpoint->TailTD = NULL;
         }
 
-        if (TD == NULL ||
-            (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED) != 0)
+        if (TD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
         {
             PhysicalAddress = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
         }
@@ -2396,8 +2389,7 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
     if (NextTD == NULL)
         UhciEndpoint->TailTD = NULL;
 
-    if (NextTD == NULL ||
-        (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED) != 0)
+    if (NextTD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
     {
         PhysicalAddress = UHCI_ENDPOINT_FLAG_HALTED;
     }
