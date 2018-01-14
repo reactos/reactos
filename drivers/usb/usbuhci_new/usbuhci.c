@@ -414,15 +414,13 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
     HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
     DPRINT("UhciTakeControlHC: HcStatus.AsUSHORT - %04X\n", HcStatus.AsUSHORT);
 
-    if (HcStatus.HcHalted == 0)
+    while (HcStatus.HcHalted == 0)
     {
-        do
-        {
-            HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
-            KeQuerySystemTime(&CurrentTime);
-        }
-        while (CurrentTime.QuadPart < EndTime.QuadPart &&
-               HcStatus.HcHalted == 0);
+        HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
+        KeQuerySystemTime(&CurrentTime);
+
+        if (CurrentTime.QuadPart >= EndTime.QuadPart)
+            break;
     }
 
     WRITE_PORT_USHORT(StatusRegister, UHCI_USB_STATUS_MASK);
