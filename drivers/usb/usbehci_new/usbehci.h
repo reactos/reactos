@@ -51,7 +51,7 @@ typedef struct _EHCI_HCD_TD {
   /* Hardware*/
   EHCI_QUEUE_TD HwTD;
   /* Software */
-  struct _EHCI_HCD_TD * PhysicalAddress;
+  ULONG PhysicalAddress;
   ULONG TdFlags;
   struct _EHCI_ENDPOINT * EhciEndpoint;
   struct _EHCI_TRANSFER * EhciTransfer;
@@ -78,13 +78,22 @@ typedef struct _EHCI_STATIC_QH {
   EHCI_QUEUE_HEAD HwQH;
   /* Software part */
   ULONG QhFlags;
-  struct _EHCI_HCD_QH * PhysicalAddress;
+  ULONG PhysicalAddress;
   struct _EHCI_HCD_QH * PrevHead;
+#if !defined(_M_X64)
+  ULONG Pad2;
+#endif
   struct _EHCI_HCD_QH * NextHead;
+#if !defined(_M_X64)
+  ULONG Pad3;
+#endif
   struct _EHCI_STATIC_QH * StaticQH;
+#if !defined(_M_X64)
+  ULONG Pad4;
+#endif
   ULONG Period;
   ULONG Ordinal;
-  ULONG Pad[16];
+  ULONG Pad[13];
 } EHCI_STATIC_QH, *PEHCI_STATIC_QH;
 
 C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
@@ -92,7 +101,7 @@ C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
 #define EHCI_DUMMYQH_MAX_PACKET_LENGTH  64
 
 typedef struct _EHCI_HCD_QH {
-  struct _EHCI_STATIC_QH sqh;
+  EHCI_STATIC_QH sqh;
   ULONG Pad[24];
 } EHCI_HCD_QH, *PEHCI_HCD_QH;
 
@@ -105,7 +114,7 @@ typedef struct _EHCI_ENDPOINT {
   ULONG EndpointState;
   USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
   PVOID DmaBufferVA;
-  PVOID DmaBufferPA;
+  ULONG DmaBufferPA;
   PEHCI_HCD_TD FirstTD;
   ULONG MaxTDs;
   ULONG PendingTDs;
@@ -156,11 +165,11 @@ typedef struct _EHCI_EXTENSION {
   EHCI_INTERRUPT_ENABLE InterruptStatus;
   /* Shedule */
   PEHCI_HC_RESOURCES HcResourcesVA;
-  PEHCI_HC_RESOURCES HcResourcesPA;
+  ULONG HcResourcesPA;
   PEHCI_STATIC_QH AsyncHead;
   PEHCI_STATIC_QH PeriodicHead[64];
-  ULONG_PTR IsoDummyQHListVA;
-  ULONG_PTR IsoDummyQHListPA;
+  PEHCI_HCD_QH IsoDummyQHListVA;
+  ULONG IsoDummyQHListPA;
   ULONG FrameIndex;
   ULONG FrameHighPart;
   /* Root Hub Bits */

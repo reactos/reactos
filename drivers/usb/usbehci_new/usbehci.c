@@ -137,7 +137,7 @@ NTAPI
 EHCI_InitializeQH(IN PEHCI_EXTENSION EhciExtension,
                   IN PEHCI_ENDPOINT EhciEndpoint,
                   IN PEHCI_HCD_QH QH,
-                  IN PEHCI_HCD_QH QhPA)
+                  IN ULONG QhPA)
 {
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG DeviceSpeed;
@@ -151,7 +151,7 @@ EHCI_InitializeQH(IN PEHCI_EXTENSION EhciExtension,
 
     RtlZeroMemory(QH, sizeof(EHCI_HCD_QH));
 
-    ASSERT(((ULONG)QhPA & ~LINK_POINTER_MASK) == 0);
+    ASSERT((QhPA & ~LINK_POINTER_MASK) == 0);
 
     QH->sqh.PhysicalAddress = QhPA;
 
@@ -214,9 +214,9 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
                                IN BOOLEAN IsControl)
 {
     PEHCI_HCD_QH QH;
-    PEHCI_HCD_QH QhPA; 
+    ULONG QhPA; 
     PEHCI_HCD_TD TdVA;
-    PEHCI_HCD_TD TdPA;
+    ULONG TdPA;
     PEHCI_HCD_TD TD;
     ULONG TdCount;
     ULONG ix;
@@ -228,12 +228,12 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     InitializeListHead(&EhciEndpoint->ListTDs);
 
     EhciEndpoint->DmaBufferVA = (PVOID)EndpointProperties->BufferVA;
-    EhciEndpoint->DmaBufferPA = (PVOID)EndpointProperties->BufferPA;
+    EhciEndpoint->DmaBufferPA = EndpointProperties->BufferPA;
 
     RtlZeroMemory(EhciEndpoint->DmaBufferVA, sizeof(EHCI_HCD_TD));
 
     QH = (PEHCI_HCD_QH)EhciEndpoint->DmaBufferVA + 1;
-    QhPA = (PEHCI_HCD_QH)EhciEndpoint->DmaBufferPA + 1;
+    QhPA = EhciEndpoint->DmaBufferPA + sizeof(EHCI_HCD_TD);
 
     EhciEndpoint->FirstTD = (PEHCI_HCD_TD)(QH + 1);
 
@@ -248,7 +248,7 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     EhciEndpoint->RemainTDs = TdCount;
 
     TdVA = EhciEndpoint->FirstTD;
-    TdPA = (PEHCI_HCD_TD)(QhPA + 1);
+    TdPA = QhPA + sizeof(EHCI_HCD_QH);
 
     for (ix = 0; ix < TdCount; ix++)
     {
@@ -258,13 +258,13 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
         RtlZeroMemory(TdVA, sizeof(EHCI_HCD_TD));
 
-        ASSERT(((ULONG)TdPA & ~LINK_POINTER_MASK) == 0);
+        ASSERT((TdPA & ~LINK_POINTER_MASK) == 0);
 
         TdVA->PhysicalAddress = TdPA;
         TdVA->EhciEndpoint = EhciEndpoint;
         TdVA->EhciTransfer = NULL;
 
-        TdPA += 1;
+        TdPA += sizeof(EHCI_HCD_TD);
         TdVA += 1;
     }
 
@@ -300,7 +300,7 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     EhciEndpoint->HcdTailP = TD;
     EhciEndpoint->HcdHeadP = TD;
 
-    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)TD->PhysicalAddress;
+    QH->sqh.HwQH.CurrentTD = TD->PhysicalAddress;
     QH->sqh.HwQH.NextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
 
@@ -317,9 +317,9 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
                            IN PEHCI_ENDPOINT EhciEndpoint)
 {
     PEHCI_HCD_QH QH;
-    ULONG_PTR QhPA;
+    ULONG QhPA;
     PEHCI_HCD_TD FirstTD;
-    ULONG_PTR FirstTdPA;
+    ULONG FirstTdPA;
     PEHCI_HCD_TD TD;
     PEHCI_HCD_TD DummyTD;
     ULONG TdCount;
@@ -374,7 +374,7 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
     }
 
     EhciEndpoint->DmaBufferVA = (PVOID)EndpointProperties->BufferVA;
-    EhciEndpoint->DmaBufferPA = (PVOID)EndpointProperties->BufferPA;
+    EhciEndpoint->DmaBufferPA = EndpointProperties->BufferPA;
 
     RtlZeroMemory((PVOID)EndpointProperties->BufferVA, sizeof(EHCI_HCD_TD));
 
@@ -406,7 +406,7 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
         ASSERT((FirstTdPA & ~LINK_POINTER_MASK) == 0);
 
-        TD->PhysicalAddress = (PEHCI_HCD_TD)FirstTdPA;
+        TD->PhysicalAddress = FirstTdPA;
         TD->EhciEndpoint = EhciEndpoint;
         TD->EhciTransfer = NULL;
 
@@ -418,7 +418,7 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
     EhciEndpoint->QH = EHCI_InitializeQH(EhciExtension,
                                          EhciEndpoint,
                                          QH,
-                                         (PEHCI_HCD_QH)QhPA);
+                                         QhPA);
 
     if (EhciEndpoint->EndpointProperties.DeviceSpeed == UsbHighSpeed)
     {
@@ -447,7 +447,7 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
     EhciEndpoint->HcdTailP = DummyTD;
     EhciEndpoint->HcdHeadP = DummyTD;
 
-    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)DummyTD->PhysicalAddress;
+    QH->sqh.HwQH.CurrentTD = DummyTD->PhysicalAddress;
     QH->sqh.HwQH.NextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
 
@@ -728,7 +728,8 @@ NTAPI
 EHCI_GetDummyQhForFrame(IN PEHCI_EXTENSION EhciExtension,
                         IN ULONG Idx)
 {
-    return (PEHCI_HCD_QH)(EhciExtension->IsoDummyQHListVA + Idx * sizeof(EHCI_HCD_QH));
+    return (PEHCI_HCD_QH)((ULONG_PTR)EhciExtension->IsoDummyQHListVA +
+                          Idx * sizeof(EHCI_HCD_QH));
 }
 
 VOID
@@ -772,7 +773,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
 {
     PEHCI_HC_RESOURCES HcResourcesVA;
     PEHCI_HCD_QH DummyQH;
-    PEHCI_HCD_QH DummyQhPA;
+    ULONG DummyQhPA;
     EHCI_QH_EP_PARAMS EndpointParams;
     EHCI_LINK_POINTER PAddress;
     ULONG Frame;
@@ -781,8 +782,8 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
 
     HcResourcesVA = EhciExtension->HcResourcesVA;
 
-    DummyQH = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListVA;
-    DummyQhPA = (PEHCI_HCD_QH)EhciExtension->IsoDummyQHListPA;
+    DummyQH = EhciExtension->IsoDummyQHListVA;
+    DummyQhPA = EhciExtension->IsoDummyQHListPA;
 
     for (Frame = 0; Frame < EHCI_FRAME_LIST_MAX_ENTRIES; Frame++)
     {
@@ -811,14 +812,14 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
         DummyQH->sqh.PhysicalAddress = DummyQhPA;
         DummyQH->sqh.StaticQH = EHCI_GetQhForFrame(EhciExtension, Frame);
 
-        PAddress.AsULONG = (ULONG)DummyQhPA;
+        PAddress.AsULONG = DummyQhPA;
         PAddress.Reserved = 0;
         PAddress.Type = EHCI_LINK_TYPE_QH;
 
         HcResourcesVA->PeriodicFrameList[Frame] = (PEHCI_STATIC_QH)PAddress.AsULONG;
 
         DummyQH++;
-        DummyQhPA++;
+        DummyQhPA += sizeof(EHCI_HCD_QH);
     }
 }
 
@@ -848,7 +849,7 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
         StaticQH->NextHead = (PEHCI_HCD_QH)EhciExtension->PeriodicHead[LinkTable[ix]];
 
         StaticQH->HwQH.HorizontalLink.AsULONG = 
-            (ULONG)EhciExtension->PeriodicHead[LinkTable[ix]]->PhysicalAddress;
+            EhciExtension->PeriodicHead[LinkTable[ix]]->PhysicalAddress;
 
         StaticQH->HwQH.HorizontalLink.Type = EHCI_LINK_TYPE_QH;
         StaticQH->HwQH.EndpointCaps.InterruptMask = 0xFF;
@@ -868,16 +869,16 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
 MPSTATUS
 NTAPI
 EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
-                        IN PVOID BaseVA,
-                        IN PVOID BasePA)
+                        IN ULONG_PTR BaseVA,
+                        IN ULONG BasePA)
 {
     PEHCI_HW_REGISTERS OperationalRegs;
     PEHCI_HC_RESOURCES HcResourcesVA;
     PEHCI_HC_RESOURCES HcResourcesPA;
     PEHCI_STATIC_QH AsyncHead;
-    PEHCI_STATIC_QH AsyncHeadPA;
+    ULONG AsyncHeadPA;
     PEHCI_STATIC_QH PeriodicHead;
-    PEHCI_STATIC_QH PeriodicHeadPA;
+    ULONG PeriodicHeadPA;
     PEHCI_STATIC_QH StaticQH;
     EHCI_LINK_POINTER NextLink;
     EHCI_LINK_POINTER StaticHeadPA;
@@ -885,8 +886,8 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     ULONG ix;
 
     DPRINT("EHCI_InitializeSchedule: BaseVA - %p, BasePA - %p\n",
-                BaseVA,
-                BasePA);
+           BaseVA,
+           BasePA);
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
@@ -894,16 +895,16 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     HcResourcesPA = (PEHCI_HC_RESOURCES)BasePA;
 
     EhciExtension->HcResourcesVA = HcResourcesVA;
-    EhciExtension->HcResourcesPA = HcResourcesPA;
+    EhciExtension->HcResourcesPA = BasePA;
 
     /* Asynchronous Schedule */
 
     AsyncHead = &HcResourcesVA->AsyncHead;
-    AsyncHeadPA = &HcResourcesPA->AsyncHead;
+    AsyncHeadPA = (ULONG)&HcResourcesPA->AsyncHead;
 
     RtlZeroMemory(AsyncHead, sizeof(EHCI_STATIC_QH));
 
-    NextLink.AsULONG = (ULONG_PTR)AsyncHeadPA;
+    NextLink.AsULONG = AsyncHeadPA;
     NextLink.Type = EHCI_LINK_TYPE_QH;
 
     AsyncHead->HwQH.HorizontalLink = NextLink;
@@ -912,7 +913,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     AsyncHead->HwQH.NextTD |= TERMINATE_POINTER;
     AsyncHead->HwQH.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_HALTED;
 
-    AsyncHead->PhysicalAddress = (PEHCI_HCD_QH)AsyncHeadPA;
+    AsyncHead->PhysicalAddress = AsyncHeadPA;
     AsyncHead->PrevHead = AsyncHead->NextHead = (PEHCI_HCD_QH)AsyncHead;
 
     EhciExtension->AsyncHead = AsyncHead;
@@ -920,20 +921,20 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     /* Periodic Schedule */
 
     PeriodicHead = &HcResourcesVA->PeriodicHead[0];
-    PeriodicHeadPA = &HcResourcesPA->PeriodicHead[0];
+    PeriodicHeadPA = (ULONG)&HcResourcesPA->PeriodicHead[0];
 
     for (ix = 0; ix < (INTERRUPT_ENDPOINTs + 1); ix++)
     {
         EHCI_AlignHwStructure(EhciExtension,
-                              (PULONG)&PeriodicHeadPA,
+                              &PeriodicHeadPA,
                               (PULONG)&PeriodicHead,
                               80);
 
         EhciExtension->PeriodicHead[ix] = PeriodicHead;
-        EhciExtension->PeriodicHead[ix]->PhysicalAddress = (PEHCI_HCD_QH)PeriodicHeadPA;
+        EhciExtension->PeriodicHead[ix]->PhysicalAddress = PeriodicHeadPA;
 
         PeriodicHead += 1;
-        PeriodicHeadPA += 1;
+        PeriodicHeadPA += sizeof(EHCI_STATIC_QH);
     }
 
     EHCI_InitializeInterruptSchedule(EhciExtension);
@@ -942,7 +943,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     {
         StaticQH = EHCI_GetQhForFrame(EhciExtension, Frame);
 
-        StaticHeadPA.AsULONG = (ULONG_PTR)StaticQH->PhysicalAddress;
+        StaticHeadPA.AsULONG = StaticQH->PhysicalAddress;
         StaticHeadPA.Type = EHCI_LINK_TYPE_QH;
 
         //DPRINT_EHCI("EHCI_InitializeSchedule: StaticHeadPA[%x] - %X\n",
@@ -952,13 +953,13 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
         HcResourcesVA->PeriodicFrameList[Frame] = (PEHCI_STATIC_QH)StaticHeadPA.AsULONG;
     }
 
-    EhciExtension->IsoDummyQHListVA = (ULONG_PTR)&HcResourcesVA->IsoDummyQH[0];
-    EhciExtension->IsoDummyQHListPA = (ULONG_PTR)&HcResourcesPA->IsoDummyQH[0];
+    EhciExtension->IsoDummyQHListVA = &HcResourcesVA->IsoDummyQH[0];
+    EhciExtension->IsoDummyQHListPA = (ULONG)&HcResourcesPA->IsoDummyQH[0];
 
     EHCI_AddDummyQHs(EhciExtension);
 
     WRITE_REGISTER_ULONG(&OperationalRegs->PeriodicListBase,
-                         (ULONG_PTR)EhciExtension->HcResourcesPA);
+                         EhciExtension->HcResourcesPA);
 
     WRITE_REGISTER_ULONG(&OperationalRegs->AsyncListBase,
                          NextLink.AsULONG);
@@ -1170,8 +1171,8 @@ EHCI_StartController(IN PVOID ehciExtension,
 
     CapabilityRegLength = READ_REGISTER_UCHAR(&CapabilityRegisters->RegistersLength);
 
-    OperationalRegs = (PEHCI_HW_REGISTERS)((ULONG)CapabilityRegisters +
-                                                  CapabilityRegLength);
+    OperationalRegs = (PEHCI_HW_REGISTERS)((ULONG_PTR)CapabilityRegisters +
+                                                      CapabilityRegLength);
 
     EhciExtension->OperationalRegs = OperationalRegs;
 
@@ -1740,7 +1741,7 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
 {
     PEHCI_HCD_QH PrevQH;
     PEHCI_HCD_QH NextQH;
-    ULONG_PTR QhPA;
+    ULONG QhPA;
     ULONG FrameIndexReg;
     PEHCI_HW_REGISTERS OperationalRegs;
     ULONG Command;
@@ -1767,7 +1768,7 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
 
     if (NextQH)
     {
-        QhPA = (ULONG_PTR)NextQH->sqh.PhysicalAddress;
+        QhPA = NextQH->sqh.PhysicalAddress;
         QhPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
         QhPA |= (EHCI_LINK_TYPE_QH << 1);
     }
@@ -1800,7 +1801,7 @@ NTAPI
 EHCI_UnlockQH(IN PEHCI_EXTENSION EhciExtension,
               IN PEHCI_HCD_QH QH)
 {
-    ULONG_PTR QhPA;
+    ULONG QhPA;
 
     DPRINT_EHCI("EHCI_UnlockQH: QH - %p\n", QH);
 
@@ -1812,7 +1813,7 @@ EHCI_UnlockQH(IN PEHCI_EXTENSION EhciExtension,
 
     EhciExtension->LockQH = NULL;
 
-    QhPA = (ULONG_PTR)QH->sqh.PhysicalAddress;
+    QhPA = QH->sqh.PhysicalAddress;
     QhPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
     QhPA |= (EHCI_LINK_TYPE_QH << 1);
 
@@ -1851,8 +1852,8 @@ EHCI_LinkTransferToQueue(IN PEHCI_EXTENSION EhciExtension,
                         EhciEndpoint->EndpointProperties.TransferType);
         }
 
-        QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DmaBufferPA;
-        QH->sqh.HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+        QH->sqh.HwQH.CurrentTD = EhciEndpoint->DmaBufferPA;
+        QH->sqh.HwQH.NextTD = NextTD->PhysicalAddress;
         QH->sqh.HwQH.AlternateNextTD = NextTD->HwTD.AlternateNextTD;
 
         QH->sqh.HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
@@ -1890,18 +1891,18 @@ EHCI_LinkTransferToQueue(IN PEHCI_EXTENSION EhciExtension,
             if (TD->EhciTransfer == Transfer)
             {
                 TD->AltNextHcdTD = NextTD;
-                TD->HwTD.AlternateNextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+                TD->HwTD.AlternateNextTD = NextTD->PhysicalAddress;
             }
 
             TD += 1;
         }
 
-        LinkTD->HwTD.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+        LinkTD->HwTD.NextTD = NextTD->PhysicalAddress;
         LinkTD->NextHcdTD = NextTD;
 
-        if (QH->sqh.HwQH.CurrentTD == (ULONG_PTR)LinkTD->PhysicalAddress)
+        if (QH->sqh.HwQH.CurrentTD == LinkTD->PhysicalAddress)
         {
-            QH->sqh.HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+            QH->sqh.HwQH.NextTD = NextTD->PhysicalAddress;
             QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
         }
     }
@@ -1949,7 +1950,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     FirstTD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
     FirstTD->EhciTransfer = EhciTransfer;
 
-    FirstTD->HwTD.Buffer[0] = (ULONG_PTR)&FirstTD->PhysicalAddress->SetupPacket;
+    FirstTD->HwTD.Buffer[0] = (ULONG)&((PEHCI_HCD_TD)(FirstTD->PhysicalAddress))->SetupPacket;
     FirstTD->HwTD.Buffer[1] = 0;
     FirstTD->HwTD.Buffer[2] = 0;
     FirstTD->HwTD.Buffer[3] = 0;
@@ -1997,7 +1998,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     LastTD->HwTD.Token.ErrorCounter = 3;
 
     FirstTD->AltNextHcdTD = LastTD;
-    FirstTD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
+    FirstTD->HwTD.AlternateNextTD = LastTD->PhysicalAddress;
 
     PrevTD = FirstTD;
     LinkTD = FirstTD;
@@ -2033,7 +2034,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.Token.ErrorCounter = 3;
 
             PrevTD->NextHcdTD = TD;
-            PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
+            PrevTD->HwTD.NextTD = TD->PhysicalAddress;
 
             if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
                 TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
@@ -2049,7 +2050,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
                 TD->HwTD.Token.DataToggle = 0;
 
             TD->AltNextHcdTD = LastTD;
-            TD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
+            TD->HwTD.AlternateNextTD = LastTD->PhysicalAddress;
 
             TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
                                                       EhciEndpoint->EndpointProperties.MaxPacketSize,
@@ -2072,7 +2073,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 End:
 
     LinkTD->NextHcdTD = LastTD;
-    LinkTD->HwTD.NextTD = (ULONG_PTR)LastTD->PhysicalAddress;
+    LinkTD->HwTD.NextTD = LastTD->PhysicalAddress;
 
     LastTD->HwTD.Buffer[0] = 0;
     LastTD->LengthThisTD = 0;
@@ -2090,7 +2091,7 @@ End:
     LastTD->HwTD.Token = Token;
 
     LastTD->NextHcdTD = EhciEndpoint->HcdTailP;
-    LastTD->HwTD.NextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
+    LastTD->HwTD.NextTD = EhciEndpoint->HcdTailP->PhysicalAddress;
 
     EHCI_EnableAsyncList(EhciExtension);
     EHCI_LinkTransferToQueue(EhciExtension, EhciEndpoint, FirstTD);
@@ -2169,11 +2170,11 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
             }
             else
             {
-                PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
+                PrevTD->HwTD.NextTD = TD->PhysicalAddress;
                 PrevTD->NextHcdTD = TD;
             }
 
-            TD->HwTD.AlternateNextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
+            TD->HwTD.AlternateNextTD = EhciEndpoint->HcdTailP->PhysicalAddress;
             TD->AltNextHcdTD = EhciEndpoint->HcdTailP;
 
             TD->HwTD.Token.InterruptOnComplete = 1;
@@ -2231,7 +2232,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         FirstTD = TD;
 
-        TD->HwTD.AlternateNextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
+        TD->HwTD.AlternateNextTD = EhciEndpoint->HcdTailP->PhysicalAddress;
         TD->AltNextHcdTD = EhciEndpoint->HcdTailP;
 
         TD->HwTD.Token.InterruptOnComplete = 1;
@@ -2241,7 +2242,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         else
             TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
 
-        TD->HwTD.Buffer[0] = (ULONG_PTR)TD->PhysicalAddress;
+        TD->HwTD.Buffer[0] = TD->PhysicalAddress;
 
         TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
         TD->HwTD.Token.DataToggle = 1;
@@ -2249,7 +2250,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         TD->LengthThisTD = 0;
     }
 
-    TD->HwTD.NextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
+    TD->HwTD.NextTD = EhciEndpoint->HcdTailP->PhysicalAddress;
     TD->NextHcdTD = EhciEndpoint->HcdTailP;
 
     EHCI_EnableAsyncList(EhciExtension);
@@ -2330,7 +2331,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
         }
         else if (PrevTD)
         {
-            PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
+            PrevTD->HwTD.NextTD = TD->PhysicalAddress;
             PrevTD->NextHcdTD = TD;
         }
 
@@ -2361,7 +2362,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
                 TD->PhysicalAddress,
                 FirstTD);
 
-    TD->HwTD.NextTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
+    TD->HwTD.NextTD = EhciEndpoint->HcdTailP->PhysicalAddress;
     TD->NextHcdTD = EhciEndpoint->HcdTailP;
 
     EHCI_LinkTransferToQueue(EhciExtension, EhciEndpoint, FirstTD);
@@ -2466,7 +2467,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_TRANSFER CurrentTransfer;
     PEHCI_HCD_TD FirstTD;
     PEHCI_HCD_TD LastTD;
-    PEHCI_HCD_TD NextTD;
+    ULONG NextTD;
 
     DPRINT("EHCI_AbortAsyncTransfer: ... \n");
 
@@ -2498,8 +2499,8 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
         if (TransferLength)
             EhciTransfer->TransferLen += TransferLength;
 
-        QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DmaBufferPA;
-        QH->sqh.HwQH.NextTD = (ULONG)TD->PhysicalAddress;
+        QH->sqh.HwQH.CurrentTD = EhciEndpoint->DmaBufferPA;
+        QH->sqh.HwQH.NextTD = TD->PhysicalAddress;
         QH->sqh.HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
 
         QH->sqh.HwQH.Token.TransferBytes = 0;
@@ -2510,7 +2511,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
     }
     else
     {
-        CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)QH->sqh.HwQH.CurrentTD,
+        CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress(QH->sqh.HwQH.CurrentTD,
                                                              EhciExtension,
                                                              EhciEndpoint);
 
@@ -2543,22 +2544,22 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
         while (TD);
 
         LastTD = TD;
-        NextTD = (PEHCI_HCD_TD)LastTD->PhysicalAddress->HwTD.NextTD;
+        NextTD = ((PEHCI_HCD_TD)(LastTD->PhysicalAddress))->HwTD.NextTD;
 
-        FirstTD->HwTD.NextTD = (ULONG)LastTD->PhysicalAddress;
-        FirstTD->HwTD.AlternateNextTD = (ULONG)LastTD->PhysicalAddress;
+        FirstTD->HwTD.NextTD = LastTD->PhysicalAddress;
+        FirstTD->HwTD.AlternateNextTD = LastTD->PhysicalAddress;
 
         FirstTD->NextHcdTD = LastTD;
         FirstTD->AltNextHcdTD = LastTD;
 
         if (CurrentTransfer == EhciTransfer)
         {
-            QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DmaBufferPA;
+            QH->sqh.HwQH.CurrentTD = EhciEndpoint->DmaBufferPA;
 
             QH->sqh.HwQH.Token.Status = (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
             QH->sqh.HwQH.Token.TransferBytes = 0;
 
-            QH->sqh.HwQH.NextTD = (ULONG)NextTD;
+            QH->sqh.HwQH.NextTD = NextTD;
             QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
 
             return;
@@ -2566,11 +2567,11 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         if (FirstTD->EhciTransfer == CurrentTransfer)
         {
-            if (QH->sqh.HwQH.NextTD == (ULONG)FirstTD->PhysicalAddress)
-                QH->sqh.HwQH.NextTD = (ULONG)NextTD;
+            if (QH->sqh.HwQH.NextTD == FirstTD->PhysicalAddress)
+                QH->sqh.HwQH.NextTD = NextTD;
 
-            if (QH->sqh.HwQH.AlternateNextTD == (ULONG)FirstTD->PhysicalAddress)
-                QH->sqh.HwQH.AlternateNextTD = (ULONG)NextTD;
+            if (QH->sqh.HwQH.AlternateNextTD == FirstTD->PhysicalAddress)
+                QH->sqh.HwQH.AlternateNextTD = NextTD;
 
             for (TD = EhciEndpoint->HcdHeadP;
                  TD;
@@ -2578,7 +2579,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
             {
                 if (TD->EhciTransfer == CurrentTransfer)
                 {
-                    TD->HwTD.AlternateNextTD = (ULONG)NextTD;
+                    TD->HwTD.AlternateNextTD = NextTD;
                     TD->AltNextHcdTD = LastTD;
                 }
             }
@@ -2626,7 +2627,7 @@ EHCI_RemoveQhFromPeriodicList(IN PEHCI_EXTENSION EhciExtension,
 {
     PEHCI_HCD_QH QH;
     PEHCI_HCD_QH NextHead;
-    ULONG_PTR NextQhPA;
+    ULONG NextQhPA;
     PEHCI_HCD_QH PrevHead;
 
     QH = EhciEndpoint->QH;
@@ -2649,7 +2650,7 @@ EHCI_RemoveQhFromPeriodicList(IN PEHCI_EXTENSION EhciExtension,
         if ( !(NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) )
             NextHead->sqh.PrevHead = PrevHead;
 
-        NextQhPA = (ULONG_PTR)NextHead->sqh.PhysicalAddress;
+        NextQhPA = NextHead->sqh.PhysicalAddress;
         NextQhPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
         NextQhPA |= (EHCI_LINK_TYPE_QH << 1);
 
@@ -2672,10 +2673,10 @@ EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
                            IN PEHCI_HCD_QH QH)
 {
     PEHCI_HCD_QH NextHead;
-    ULONG_PTR NextHeadPA;
+    ULONG NextHeadPA;
     PEHCI_HCD_QH PrevHead;
     PEHCI_STATIC_QH AsyncHead;
-    ULONG_PTR AsyncHeadPA;
+    ULONG AsyncHeadPA;
 
     DPRINT("EHCI_RemoveQhFromAsyncList: QH - %p\n", QH);
 
@@ -2686,11 +2687,11 @@ EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
 
         AsyncHead = EhciExtension->AsyncHead;
 
-        AsyncHeadPA = (ULONG_PTR)AsyncHead->PhysicalAddress;
+        AsyncHeadPA = AsyncHead->PhysicalAddress;
         AsyncHeadPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
         AsyncHeadPA |= (EHCI_LINK_TYPE_QH << 1);
 
-        NextHeadPA = (ULONG_PTR)NextHead->sqh.PhysicalAddress;
+        NextHeadPA = NextHead->sqh.PhysicalAddress;
         NextHeadPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
         NextHeadPA |= (EHCI_LINK_TYPE_QH << 1);
 
@@ -2702,7 +2703,7 @@ EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
         EHCI_FlushAsyncCache(EhciExtension);
 
         if (READ_REGISTER_ULONG(&EhciExtension->OperationalRegs->AsyncListBase) ==
-            (ULONG_PTR)QH->sqh.PhysicalAddress)
+            QH->sqh.PhysicalAddress)
         {
             WRITE_REGISTER_ULONG(&EhciExtension->OperationalRegs->AsyncListBase,
                                  AsyncHeadPA);
@@ -2719,7 +2720,7 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
 {
     PEHCI_STATIC_QH StaticQH;
     PEHCI_HCD_QH QH;
-    ULONG_PTR QhPA;
+    ULONG QhPA;
     PEHCI_HCD_QH NextHead;
     PEHCI_HCD_QH PrevHead;
 
@@ -2770,7 +2771,7 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
 
     PrevHead->sqh.NextHead = QH;
 
-    QhPA = (ULONG_PTR)QH->sqh.PhysicalAddress;
+    QhPA = QH->sqh.PhysicalAddress;
     QhPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
     QhPA |= (EHCI_LINK_TYPE_QH << 1);
 
@@ -2783,7 +2784,7 @@ EHCI_InsertQhInAsyncList(IN PEHCI_EXTENSION EhciExtension,
                          IN PEHCI_HCD_QH QH)
 {
     PEHCI_STATIC_QH AsyncHead;
-    ULONG_PTR QhPA;
+    ULONG QhPA;
     PEHCI_HCD_QH NextHead;
 
     DPRINT("EHCI_InsertQhInAsyncList: QH - %p\n", QH);
@@ -2801,7 +2802,7 @@ EHCI_InsertQhInAsyncList(IN PEHCI_EXTENSION EhciExtension,
 
     NextHead->sqh.PrevHead = QH;
 
-    QhPA = (ULONG_PTR)QH->sqh.PhysicalAddress;
+    QhPA = QH->sqh.PhysicalAddress;
     QhPA &= LINK_POINTER_MASK + TERMINATE_POINTER;
     QhPA |= (EHCI_LINK_TYPE_QH << 1);
 
@@ -3050,7 +3051,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HCD_QH QH;
     PEHCI_HCD_TD TD;
     PEHCI_HCD_TD CurrentTD;
-    ULONG_PTR CurrentTDPhys; 
+    ULONG CurrentTDPhys; 
     BOOLEAN IsSheduled;
 
     DPRINT_EHCI("EHCI_PollActiveAsyncEndpoint: ... \n");
@@ -3060,7 +3061,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     CurrentTDPhys = QH->sqh.HwQH.CurrentTD & LINK_POINTER_MASK;
     ASSERT(CurrentTDPhys);
 
-    CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTDPhys,
+    CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress(CurrentTDPhys, 
                                                          EhciExtension,
                                                          EhciEndpoint);
 
@@ -3082,19 +3083,16 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
             goto Next;
         }
 
-        if (TD->NextHcdTD &&
-            TD->HwTD.NextTD != (ULONG_PTR)TD->NextHcdTD->PhysicalAddress)
-        {
-            TD->HwTD.NextTD = (ULONG_PTR)TD->NextHcdTD->PhysicalAddress;
-        }
+        if (TD->NextHcdTD && TD->HwTD.NextTD != TD->NextHcdTD->PhysicalAddress)
+            TD->HwTD.NextTD = TD->NextHcdTD->PhysicalAddress;
 
         if (TD->AltNextHcdTD &&
-            TD->HwTD.AlternateNextTD != (ULONG_PTR)TD->AltNextHcdTD->PhysicalAddress)
+            TD->HwTD.AlternateNextTD != TD->AltNextHcdTD->PhysicalAddress)
         {
-            TD->HwTD.AlternateNextTD = (ULONG_PTR)TD->AltNextHcdTD->PhysicalAddress;
+            TD->HwTD.AlternateNextTD = TD->AltNextHcdTD->PhysicalAddress;
         }
 
-        if (QH->sqh.HwQH.CurrentTD == (ULONG_PTR)TD->PhysicalAddress &&
+        if (QH->sqh.HwQH.CurrentTD == TD->PhysicalAddress &&
             !(TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE) && 
             (QH->sqh.HwQH.NextTD != TD->HwTD.NextTD ||
              QH->sqh.HwQH.AlternateNextTD != TD->HwTD.AlternateNextTD))
@@ -3147,7 +3145,7 @@ Next:
                     EhciEndpoint->EndpointProperties.TransferType);
     }
 
-    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DmaBufferPA;
+    QH->sqh.HwQH.CurrentTD = EhciEndpoint->DmaBufferPA;
 
     CurrentTD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
     InsertTailList(&EhciEndpoint->ListTDs, &CurrentTD->DoneLink);
@@ -3165,7 +3163,7 @@ Next:
         }
     }
 
-    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
+    QH->sqh.HwQH.CurrentTD = EhciEndpoint->HcdTailP->PhysicalAddress;
     QH->sqh.HwQH.NextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.Token.TransferBytes = 0;
@@ -3183,7 +3181,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 {
     PEHCI_HCD_QH QH;
     PEHCI_HCD_TD CurrentTD;
-    ULONG_PTR CurrentTdPA;
+    ULONG CurrentTdPA;
     PEHCI_HCD_TD TD;
     PEHCI_TRANSFER Transfer;
     BOOLEAN IsSheduled;
@@ -3201,7 +3199,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     if (!EHCI_HardwarePresent(EhciExtension, 0))
         IsSheduled = 0;
 
-    CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTdPA,
+    CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress(CurrentTdPA,
                                                          EhciExtension,
                                                          EhciEndpoint);
 
@@ -3258,8 +3256,8 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     EhciEndpoint->HcdHeadP = TD;
 
-    QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DmaBufferVA;
-    QH->sqh.HwQH.NextTD = (ULONG)TD->PhysicalAddress;
+    QH->sqh.HwQH.CurrentTD = EhciEndpoint->DmaBufferPA;
+    QH->sqh.HwQH.NextTD = TD->PhysicalAddress;
     QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.Token.TransferBytes = 0;
 
