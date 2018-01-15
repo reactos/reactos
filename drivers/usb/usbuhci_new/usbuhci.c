@@ -291,7 +291,7 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
             TdCount = 2 * UHCI_MAX_ISO_TD_COUNT;
 
             EndpointRequirements->HeaderBufferSize = 0 + // Iso queue is have not Queue Heads
-                                      TdCount * sizeof(UHCI_HCD_TD);
+                                                     TdCount * sizeof(UHCI_HCD_TD);
 
             EndpointRequirements->MaxTransferSize = UHCI_MAX_ISO_TRANSFER_SIZE;
             break;
@@ -299,11 +299,12 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
         case USBPORT_TRANSFER_TYPE_CONTROL:
             DPRINT("UhciQueryEndpointRequirements: ControlTransfer\n");
             TdCount = EndpointProperties->MaxTransferSize /
-                     EndpointProperties->TotalMaxPacketSize;
+                      EndpointProperties->TotalMaxPacketSize;
+
             TdCount += 2; // First + Last TDs
 
             EndpointRequirements->HeaderBufferSize = sizeof(UHCI_HCD_QH) +
-                                      TdCount * sizeof(UHCI_HCD_TD);
+                                                     TdCount * sizeof(UHCI_HCD_TD);
 
             EndpointRequirements->MaxTransferSize = EndpointProperties->MaxTransferSize;
             break;
@@ -311,10 +312,10 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
         case USBPORT_TRANSFER_TYPE_BULK:
             DPRINT("UhciQueryEndpointRequirements: BulkTransfer\n");
             TdCount = 2 * UHCI_MAX_BULK_TRANSFER_SIZE /
-                     EndpointProperties->TotalMaxPacketSize;
+                      EndpointProperties->TotalMaxPacketSize;
 
             EndpointRequirements->HeaderBufferSize = sizeof(UHCI_HCD_QH) +
-                                      TdCount * sizeof(UHCI_HCD_TD);
+                                                     TdCount * sizeof(UHCI_HCD_TD);
 
             EndpointRequirements->MaxTransferSize = UHCI_MAX_BULK_TRANSFER_SIZE;
             break;
@@ -324,10 +325,10 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
             TdCount = 2 * UHCI_MAX_INTERRUPT_TD_COUNT;
 
             EndpointRequirements->HeaderBufferSize = sizeof(UHCI_HCD_QH) +
-                                      TdCount * sizeof(UHCI_HCD_TD);
+                                                     TdCount * sizeof(UHCI_HCD_TD);
 
             EndpointRequirements->MaxTransferSize = UHCI_MAX_INTERRUPT_TD_COUNT *
-                                      EndpointProperties->TotalMaxPacketSize;
+                                                    EndpointProperties->TotalMaxPacketSize;
             break;
 
         default:
@@ -703,8 +704,8 @@ UhciStartController(IN PVOID uhciExtension,
             WRITE_PORT_USHORT(PortControlRegister, PortControl.AsUSHORT);
         }
 
-        UhciExtension->HcResourcesVA->
-                       FrameList[0] = UhciExtension->StaticTD->PhysicalAddress;
+        UhciExtension->HcResourcesVA->FrameList[0] =
+            UhciExtension->StaticTD->PhysicalAddress;
     }
 
     return MP_STATUS_SUCCESS;
@@ -947,7 +948,7 @@ UhciInterruptDpc(IN PVOID uhciExtension,
     HcStatus = UhciExtension->HcStatus;
     UhciExtension->HcStatus.AsUSHORT = 0;
 
-    if ((HcStatus.Interrupt | HcStatus.ErrorInterrupt) == TRUE)
+    if ((HcStatus.Interrupt | HcStatus.ErrorInterrupt) != 0)
         RegPacket.UsbPortInvalidateEndpoint(UhciExtension, 0);
 
     if (IsDoEnableInterrupts)
@@ -2097,7 +2098,6 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
     }
 
     QH = UhciEndpoint->QH;
-    //UhciDumpHcdQH(QH);
 
     NextTdPA = QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_POINTER_MASK;
 
@@ -2121,8 +2121,6 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
         DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p, TD->NextHcdTD - %p\n",
                     TD,
                     TD->NextHcdTD);
-
-        //if (TD != NULL) UhciDumpHcdTD(TD);
 
         if (TD != NextTD && TD != NULL)
         {
@@ -2223,7 +2221,6 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
             UhciDumpHcdTD(NextTD);
 
             UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_HALTED;
-
             NextTD->Flags |= UHCI_HCD_TD_FLAG_DONE;
 
             InsertTailList(&UhciEndpoint->ListTDs, &NextTD->TdLink);
