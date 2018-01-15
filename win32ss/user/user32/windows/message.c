@@ -1455,6 +1455,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
          }
          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
+            ERR("Got exception in hooked PreWndProc, dlg:%d!\n", DlgOverride);
          }
          _SEH2_END;
       }
@@ -1487,6 +1488,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
          }
          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
+            ERR("Got exception in hooked PostWndProc, dlg:%d!\n", DlgOverride);
          }
          _SEH2_END;
       }
@@ -1509,6 +1511,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
          }
          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
+            ERR("Got exception in hooked PreWndProc, dlg:%d!\n", DlgOverride);
          }
          _SEH2_END;
       }
@@ -1541,6 +1544,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
          }
          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
+            ERR("Got exception in hooked PostWndProc, dlg:%d!\n", DlgOverride);
          }
          _SEH2_END;
       }
@@ -1601,6 +1605,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
          }
          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
+            ERR("Got exception in hooked PreWndProc, dlg:%d!\n", DlgOverride);
          }
          _SEH2_END;
       }
@@ -1633,6 +1638,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
          }
          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
+            ERR("Got exception in hooked PostWndProc, dlg:%d!\n", DlgOverride);
          }
          _SEH2_END;
       }
@@ -1662,6 +1668,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
          }
          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
+            ERR("Got exception in hooked PreWndProc, dlg:%d!\n", DlgOverride);
          }
          _SEH2_END;
       }
@@ -1694,6 +1701,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
          }
          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
+            ERR("Got exception in hooked PostWndProc, dlg:%d!\n", DlgOverride);
          }
          _SEH2_END;
       }
@@ -1870,7 +1878,6 @@ DispatchMessageA(CONST MSG *lpmsg)
     LRESULT Ret = 0;
     MSG UnicodeMsg;
     PWND Wnd;
-    BOOL Hit = FALSE;
 
     if ( lpmsg->message & ~WM_MAXIMUM )
     {
@@ -1914,7 +1921,7 @@ DispatchMessageA(CONST MSG *lpmsg)
        }
        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
-           Hit = TRUE;
+           ERR("Exception in Timer Callback!\n");
        }
        _SEH2_END;
     }
@@ -1945,10 +1952,6 @@ DispatchMessageA(CONST MSG *lpmsg)
        }
     }
 
-    if (Hit)
-    {
-       WARN("Exception in Timer Callback WndProcA!\n");
-    }
     return Ret;
 }
 

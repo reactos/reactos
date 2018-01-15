@@ -1216,6 +1216,7 @@ DefWindowProcA(HWND hWnd,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+       ERR("Got exception in hooked DefWindowProcA!\n");
    }
    _SEH2_END;
 
@@ -1255,6 +1256,7 @@ DefWindowProcW(HWND hWnd,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+       ERR("Got exception in hooked DefWindowProcW!\n");
    }
    _SEH2_END;
 

@@ -806,7 +806,7 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            WARN( "got an invalid buffer (Delphi bug?)\n" );
+            ERR( "got an invalid buffer (Delphi bug?)\n" );
             SetLastError( ERROR_INVALID_PARAMETER );
             len = LB_ERR;
         }

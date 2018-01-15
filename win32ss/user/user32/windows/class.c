@@ -234,6 +234,7 @@ VersionRegisterClass(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+       ERR("Got exception while trying to call RegisterClassNameW!\n");
     }
     _SEH2_END
 

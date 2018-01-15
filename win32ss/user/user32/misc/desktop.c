@@ -159,6 +159,7 @@ GetSystemMetrics(int nIndex)
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+       ERR("Got exception in hooked GetSystemMetrics!\n");
    }
    _SEH2_END;
 
@@ -381,6 +382,7 @@ SystemParametersInfoA(UINT uiAction,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+       ERR("Got exception in hooked SystemParametersInfoA!\n");
    }
    _SEH2_END;
 
@@ -413,6 +415,7 @@ SystemParametersInfoW(UINT uiAction,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+       ERR("Got exception in hooked SystemParametersInfoW!\n");
    }
    _SEH2_END;
 

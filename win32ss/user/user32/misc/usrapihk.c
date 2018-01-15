@@ -332,6 +332,7 @@ MDIRedrawFrame(HWND hWnd, DWORD flags)
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+       ERR("Got exception in hooked MDIRedrawFrame!\n");
    }
    _SEH2_END;
 
