@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Application compatibility module
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Shim engine core
- * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
@@ -569,7 +569,7 @@ FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
         return proc;
     }
 
-    SHIMENG_MSG("(GetProcAddress(%p!%s) => %p\n", hModule, lpPrintName, proc);
+    SHIMENG_INFO("(GetProcAddress(%p!%s) => %p\n", hModule, lpPrintName, proc);
 
     HookModuleInfo = SeiFindHookModuleInfo(NULL, hModule);
 
