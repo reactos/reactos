@@ -45,11 +45,22 @@ function(add_rpcproxy_files)
 
     foreach(FILE ${ARGN})
         get_filename_component(NAME ${FILE} NAME_WE)
-            list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
-            add_custom_command(
-                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
-                COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -p -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c -h -H ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} native-widl)
+        # Most proxy idl's have names like <proxyname>_<original>.idl
+        # We use this to create a dependency from the proxy to the original idl
+        string(REPLACE "_" ";" SPLIT_FILE ${FILE})
+        list(LENGTH SPLIT_FILE len)
+        unset(EXTRA_DEP)
+        if(len STREQUAL "2")
+            list(GET SPLIT_FILE 1 SPLIT_FILE)
+            if(EXISTS "${REACTOS_SOURCE_DIR}/sdk/include/psdk/${SPLIT_FILE}")
+                set(EXTRA_DEP ${REACTOS_SOURCE_DIR}/sdk/include/psdk/${SPLIT_FILE})
+            endif()
+        endif()
+        list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -p -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c -h -H ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${EXTRA_DEP} native-widl)
     endforeach()
 
     # Extra pass to generate dlldata
