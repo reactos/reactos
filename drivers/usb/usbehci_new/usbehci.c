@@ -868,8 +868,8 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
 MPSTATUS
 NTAPI
 EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
-                        IN PVOID resourcesStartVA,
-                        IN PVOID resourcesStartPA)
+                        IN PVOID BaseVA,
+                        IN PVOID BasePA)
 {
     PEHCI_HW_REGISTERS OperationalRegs;
     PEHCI_HC_RESOURCES HcResourcesVA;
@@ -885,13 +885,13 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     ULONG ix;
 
     DPRINT("EHCI_InitializeSchedule: BaseVA - %p, BasePA - %p\n",
-                resourcesStartVA,
-                resourcesStartPA);
+                BaseVA,
+                BasePA);
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    HcResourcesVA = (PEHCI_HC_RESOURCES)resourcesStartVA;
-    HcResourcesPA = (PEHCI_HC_RESOURCES)resourcesStartPA;
+    HcResourcesVA = (PEHCI_HC_RESOURCES)BaseVA;
+    HcResourcesPA = (PEHCI_HC_RESOURCES)BasePA;
 
     EhciExtension->HcResourcesVA = HcResourcesVA;
     EhciExtension->HcResourcesPA = HcResourcesPA;
