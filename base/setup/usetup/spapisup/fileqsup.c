@@ -621,12 +621,12 @@ SetupCommitFileQueueW(
     IN PVOID Context OPTIONAL)
 {
     BOOL Success = TRUE; // Suppose success
+    UINT Result;
     NTSTATUS Status;
     PFILEQUEUEHEADER QueueHeader;
     PLIST_ENTRY ListEntry;
     PQUEUEENTRY Entry;
     FILEPATHS_W FilePathInfo;
-    WCHAR CabinetName[MAX_PATH];
     WCHAR FileSrcPath[MAX_PATH];
     WCHAR FileDstPath[MAX_PATH];
 
@@ -635,32 +635,40 @@ SetupCommitFileQueueW(
 
     QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
 
-    MsgHandler(Context,
-               SPFILENOTIFY_STARTQUEUE,
-               (UINT_PTR)Owner,
-               0);
+    Result = MsgHandler(Context,
+                        SPFILENOTIFY_STARTQUEUE,
+                        (UINT_PTR)Owner,
+                        0);
+    if (Result == FILEOP_ABORT)
+        return FALSE;
 
 
     /*
      * Commit the delete queue
      */
 
-    MsgHandler(Context,
-               SPFILENOTIFY_STARTSUBQUEUE,
-               FILEOP_DELETE,
-               QueueHeader->DeleteCount);
+    if (!IsListEmpty(&QueueHeader->DeleteQueue))
+    {
+        Result = MsgHandler(Context,
+                            SPFILENOTIFY_STARTSUBQUEUE,
+                            FILEOP_DELETE,
+                            QueueHeader->DeleteCount);
+        if (Result == FILEOP_ABORT)
+        {
+            Success = FALSE;
+            goto Quit;
+        }
+    }
 
-    ListEntry = QueueHeader->DeleteQueue.Flink;
-    while (ListEntry != &QueueHeader->DeleteQueue)
+    for (ListEntry = QueueHeader->DeleteQueue.Flink;
+         ListEntry != &QueueHeader->DeleteQueue;
+         ListEntry = ListEntry->Flink)
     {
         Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
-        ListEntry = ListEntry->Flink;
 
         /* Build the full target path */
         CombinePaths(FileDstPath, ARRAYSIZE(FileDstPath), 2,
                      Entry->TargetDirectory, Entry->TargetFileName);
-        // RtlStringCchCopyW(FileDstPath, ARRAYSIZE(FileDstPath), Entry->TargetDirectory);
-        // ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFileName);
 
         DPRINT1(" -----> " "Delete: '%S'\n", FileDstPath);
 
@@ -669,52 +677,85 @@ SetupCommitFileQueueW(
         FilePathInfo.Win32Error = STATUS_SUCCESS;
         FilePathInfo.Flags = 0; // FIXME: Unused yet...
 
-        MsgHandler(Context,
-                   SPFILENOTIFY_STARTDELETE,
-                   (UINT_PTR)&FilePathInfo,
-                   FILEOP_DELETE);
+        Result = MsgHandler(Context,
+                            SPFILENOTIFY_STARTDELETE,
+                            (UINT_PTR)&FilePathInfo,
+                            FILEOP_DELETE);
+        if (Result == FILEOP_ABORT)
+        {
+            Success = FALSE;
+            goto EndDelete;
+        }
+        else if (Result == FILEOP_SKIP)
+            goto EndDelete;
+        // else (Result == FILEOP_DOIT)
 
+RetryDelete:
         /* Force-delete the file */
         Status = SetupDeleteFile(FileDstPath, TRUE);
         if (!NT_SUCCESS(Status))
         {
             /* An error happened */
             FilePathInfo.Win32Error = (UINT)Status;
-            MsgHandler(Context,
-                       SPFILENOTIFY_DELETEERROR,
-                       (UINT_PTR)&FilePathInfo,
-                       0);
+            Result = MsgHandler(Context,
+                                SPFILENOTIFY_DELETEERROR,
+                                (UINT_PTR)&FilePathInfo,
+                                0);
+            if (Result == FILEOP_ABORT)
+            {
+                Success = FALSE;
+                goto EndDelete;
+            }
+            else if (Result == FILEOP_SKIP)
+                goto EndDelete;
+            else if (Result == FILEOP_RETRY)
+                goto RetryDelete;
+
             Success = FALSE;
         }
 
+EndDelete:
         /* This notification is always sent, even in case of error */
         FilePathInfo.Win32Error = (UINT)Status;
         MsgHandler(Context,
                    SPFILENOTIFY_ENDDELETE,
                    (UINT_PTR)&FilePathInfo,
                    0);
+        if (Success == FALSE /* && Result == FILEOP_ABORT */)
+            goto Quit;
     }
 
-    MsgHandler(Context,
-               SPFILENOTIFY_ENDSUBQUEUE,
-               FILEOP_DELETE,
-               0);
+    if (!IsListEmpty(&QueueHeader->DeleteQueue))
+    {
+        MsgHandler(Context,
+                   SPFILENOTIFY_ENDSUBQUEUE,
+                   FILEOP_DELETE,
+                   0);
+    }
 
 
     /*
      * Commit the rename queue
      */
 
-    MsgHandler(Context,
-               SPFILENOTIFY_STARTSUBQUEUE,
-               FILEOP_RENAME,
-               QueueHeader->RenameCount);
+    if (!IsListEmpty(&QueueHeader->RenameQueue))
+    {
+        Result = MsgHandler(Context,
+                            SPFILENOTIFY_STARTSUBQUEUE,
+                            FILEOP_RENAME,
+                            QueueHeader->RenameCount);
+        if (Result == FILEOP_ABORT)
+        {
+            Success = FALSE;
+            goto Quit;
+        }
+    }
 
-    ListEntry = QueueHeader->RenameQueue.Flink;
-    while (ListEntry != &QueueHeader->RenameQueue)
+    for (ListEntry = QueueHeader->RenameQueue.Flink;
+         ListEntry != &QueueHeader->RenameQueue;
+         ListEntry = ListEntry->Flink)
     {
         Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
-        ListEntry = ListEntry->Flink;
 
         /* Build the full source path */
         CombinePaths(FileSrcPath, ARRAYSIZE(FileSrcPath), 2,
@@ -723,8 +764,6 @@ SetupCommitFileQueueW(
         /* Build the full target path */
         CombinePaths(FileDstPath, ARRAYSIZE(FileDstPath), 2,
                      Entry->TargetDirectory, Entry->TargetFileName);
-        // RtlStringCchCopyW(FileDstPath, ARRAYSIZE(FileDstPath), Entry->TargetDirectory);
-        // ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFileName);
 
         DPRINT1(" -----> " "Rename: '%S' ==> '%S'\n", FileSrcPath, FileDstPath);
 
@@ -733,11 +772,20 @@ SetupCommitFileQueueW(
         FilePathInfo.Win32Error = STATUS_SUCCESS;
         FilePathInfo.Flags = 0; // FIXME: Unused yet...
 
-        MsgHandler(Context,
-                   SPFILENOTIFY_STARTRENAME,
-                   (UINT_PTR)&FilePathInfo,
-                   FILEOP_RENAME);
+        Result = MsgHandler(Context,
+                            SPFILENOTIFY_STARTRENAME,
+                            (UINT_PTR)&FilePathInfo,
+                            FILEOP_RENAME);
+        if (Result == FILEOP_ABORT)
+        {
+            Success = FALSE;
+            goto EndRename;
+        }
+        else if (Result == FILEOP_SKIP)
+            goto EndRename;
+        // else (Result == FILEOP_DOIT)
 
+RetryRename:
         /* Move or rename the file */
         Status = SetupMoveFile(FileSrcPath, FileDstPath,
                                MOVEFILE_REPLACE_EXISTING
@@ -747,60 +795,104 @@ SetupCommitFileQueueW(
         {
             /* An error happened */
             FilePathInfo.Win32Error = (UINT)Status;
-            MsgHandler(Context,
-                       SPFILENOTIFY_RENAMEERROR,
-                       (UINT_PTR)&FilePathInfo,
-                       0);
+            Result = MsgHandler(Context,
+                                SPFILENOTIFY_RENAMEERROR,
+                                (UINT_PTR)&FilePathInfo,
+                                0);
+            if (Result == FILEOP_ABORT)
+            {
+                Success = FALSE;
+                goto EndRename;
+            }
+            else if (Result == FILEOP_SKIP)
+                goto EndRename;
+            else if (Result == FILEOP_RETRY)
+                goto RetryRename;
+
             Success = FALSE;
         }
 
+EndRename:
         /* This notification is always sent, even in case of error */
         FilePathInfo.Win32Error = (UINT)Status;
         MsgHandler(Context,
                    SPFILENOTIFY_ENDRENAME,
                    (UINT_PTR)&FilePathInfo,
                    0);
+        if (Success == FALSE /* && Result == FILEOP_ABORT */)
+            goto Quit;
     }
 
-    MsgHandler(Context,
-               SPFILENOTIFY_ENDSUBQUEUE,
-               FILEOP_RENAME,
-               0);
+    if (!IsListEmpty(&QueueHeader->RenameQueue))
+    {
+        MsgHandler(Context,
+                   SPFILENOTIFY_ENDSUBQUEUE,
+                   FILEOP_RENAME,
+                   0);
+    }
 
 
     /*
      * Commit the copy queue
      */
 
-    MsgHandler(Context,
-               SPFILENOTIFY_STARTSUBQUEUE,
-               FILEOP_COPY,
-               QueueHeader->CopyCount);
+    if (!IsListEmpty(&QueueHeader->CopyQueue))
+    {
+        Result = MsgHandler(Context,
+                            SPFILENOTIFY_STARTSUBQUEUE,
+                            FILEOP_COPY,
+                            QueueHeader->CopyCount);
+        if (Result == FILEOP_ABORT)
+        {
+            Success = FALSE;
+            goto Quit;
+        }
+    }
 
-    ListEntry = QueueHeader->CopyQueue.Flink;
-    while (ListEntry != &QueueHeader->CopyQueue)
+    for (ListEntry = QueueHeader->CopyQueue.Flink;
+         ListEntry != &QueueHeader->CopyQueue;
+         ListEntry = ListEntry->Flink)
     {
         Entry = CONTAINING_RECORD(ListEntry, QUEUEENTRY, ListEntry);
-        ListEntry = ListEntry->Flink;
+
+        //
+        // TODO: Send a SPFILENOTIFY_NEEDMEDIA notification
+        // when we switch to a new installation media.
+        // Param1 = (UINT_PTR)(PSOURCE_MEDIA)SourceMediaInfo;
+        // Param2 = (UINT_PTR)(TCHAR[MAX_PATH])NewPathInfo;
+        //
 
         /* Build the full source path */
-        CombinePaths(FileSrcPath, ARRAYSIZE(FileSrcPath), 3,
-                     Entry->SourceRootPath, Entry->SourcePath,
-                     Entry->SourceFileName);
+        if (Entry->SourceCabinet == NULL)
+        {
+            CombinePaths(FileSrcPath, ARRAYSIZE(FileSrcPath), 3,
+                         Entry->SourceRootPath, Entry->SourcePath,
+                         Entry->SourceFileName);
+        }
+        else
+        {
+            /*
+             * The cabinet must be in Entry->SourceRootPath only!
+             * (Should we ignore Entry->SourcePath?)
+             */
+            CombinePaths(FileSrcPath, ARRAYSIZE(FileSrcPath), 3,
+                         Entry->SourceRootPath, Entry->SourcePath,
+                         Entry->SourceCabinet);
+        }
 
         /* Build the full target path */
         RtlStringCchCopyW(FileDstPath, ARRAYSIZE(FileDstPath), Entry->TargetDirectory);
-
-        /*
-         * If the file is in a cabinet, use only the destination path.
-         * Otherwise possibly use a different target name.
-         */
         if (Entry->SourceCabinet == NULL)
         {
+            /* If the file is not in a cabinet, possibly use a different target name */
             if (Entry->TargetFileName != NULL)
                 ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFileName);
             else
                 ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->SourceFileName);
+        }
+        else
+        {
+            ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->SourceFileName);
         }
 
         DPRINT(" -----> " "Copy: '%S' ==> '%S'\n", FileSrcPath, FileDstPath);
@@ -811,29 +903,35 @@ SetupCommitFileQueueW(
         //
 
         FilePathInfo.Target = FileDstPath;
-        FilePathInfo.Source = FileSrcPath; // when SourceCabinet not NULL, use CabinetName ...
+        FilePathInfo.Source = FileSrcPath;
         FilePathInfo.Win32Error = STATUS_SUCCESS;
         FilePathInfo.Flags = 0; // FIXME: Unused yet...
 
-        MsgHandler(Context,
-                   SPFILENOTIFY_STARTCOPY,
-                   (UINT_PTR)&FilePathInfo,
-                   FILEOP_COPY);
+        Result = MsgHandler(Context,
+                            SPFILENOTIFY_STARTCOPY,
+                            (UINT_PTR)&FilePathInfo,
+                            FILEOP_COPY);
+        if (Result == FILEOP_ABORT)
+        {
+            Success = FALSE;
+            goto EndCopy;
+        }
+        else if (Result == FILEOP_SKIP)
+            goto EndCopy;
+        // else (Result == FILEOP_DOIT)
 
+RetryCopy:
         if (Entry->SourceCabinet != NULL)
         {
             /*
-             * Extract the file from the cabinet.
-             * The cabinet must be in Entry->SourceRootPath only!
-             * (ignore Entry->SourcePath).
+             * The file is in a cabinet, use only the destination path
+             * and keep the source name as the target name.
              */
-            CombinePaths(CabinetName, ARRAYSIZE(CabinetName), 3,
-                         Entry->SourceRootPath, Entry->SourcePath,
-                         Entry->SourceCabinet);
+            /* Extract the file from the cabinet */
             Status = SetupExtractFile(QueueHeader,
-                                      CabinetName,
+                                      FileSrcPath, // Specifies the cabinet path
                                       Entry->SourceFileName,
-                                      FileDstPath);
+                                      Entry->TargetDirectory);
         }
         else
         {
@@ -845,27 +943,46 @@ SetupCommitFileQueueW(
         {
             /* An error happened */
             FilePathInfo.Win32Error = (UINT)Status;
-            MsgHandler(Context,
-                       SPFILENOTIFY_COPYERROR,
-                       (UINT_PTR)&FilePathInfo,
-                       (UINT_PTR)NULL); // FIXME: Unused yet...
+            Result = MsgHandler(Context,
+                                SPFILENOTIFY_COPYERROR,
+                                (UINT_PTR)&FilePathInfo,
+                                (UINT_PTR)NULL); // FIXME: Unused yet...
+            if (Result == FILEOP_ABORT)
+            {
+                Success = FALSE;
+                goto EndCopy;
+            }
+            else if (Result == FILEOP_SKIP)
+                goto EndCopy;
+            else if (Result == FILEOP_RETRY)
+                goto RetryCopy;
+            else if (Result == FILEOP_NEWPATH)
+                goto RetryCopy; // TODO!
+
             Success = FALSE;
         }
 
+EndCopy:
         /* This notification is always sent, even in case of error */
         FilePathInfo.Win32Error = (UINT)Status;
         MsgHandler(Context,
                    SPFILENOTIFY_ENDCOPY,
                    (UINT_PTR)&FilePathInfo,
                    0);
+        if (Success == FALSE /* && Result == FILEOP_ABORT */)
+            goto Quit;
     }
 
-    MsgHandler(Context,
-               SPFILENOTIFY_ENDSUBQUEUE,
-               FILEOP_COPY,
-               0);
+    if (!IsListEmpty(&QueueHeader->CopyQueue))
+    {
+        MsgHandler(Context,
+                   SPFILENOTIFY_ENDSUBQUEUE,
+                   FILEOP_COPY,
+                   0);
+    }
 
 
+Quit:
     /* All the queues have been committed */
     MsgHandler(Context,
                SPFILENOTIFY_ENDQUEUE,

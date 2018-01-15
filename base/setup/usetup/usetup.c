@@ -4103,8 +4103,12 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                // TODO: Determine whether using STRING_RENAMING or STRING_MOVING
-                CONSOLE_SetStatusText(MUIGetString(STRING_MOVING),
+                if (!wcsicmp(SrcFileName, DstFileName))
+                    Param2 = STRING_MOVING;
+                else
+                    Param2 = STRING_RENAMING;
+
+                CONSOLE_SetStatusText(MUIGetString(Param2),
                                       SrcFileName, DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
@@ -4112,16 +4116,26 @@ FileCopyCallback(PVOID Context,
                 /* Display copy message */
                 ASSERT(Param2 == FILEOP_COPY);
 
-                SrcFileName = wcsrchr(FilePathInfo->Source, L'\\');
-                if (SrcFileName) ++SrcFileName;
-                else SrcFileName = FilePathInfo->Source;
+                /* NOTE: When extracting from CABs the Source is the CAB name */
+                DstFileName = wcsrchr(FilePathInfo->Target, L'\\');
+                if (DstFileName) ++DstFileName;
+                else DstFileName = FilePathInfo->Target;
 
                 CONSOLE_SetStatusText(MUIGetString(STRING_COPYING),
-                                      SrcFileName);
+                                      DstFileName);
             }
 
             SetupUpdateMemoryInfo(CopyContext, FALSE);
             break;
+        }
+
+        case SPFILENOTIFY_COPYERROR:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            DPRINT1("An error happened while trying to copy file '%S' (error 0x%08lx), skipping it...\n",
+                    FilePathInfo->Target, FilePathInfo->Win32Error);
+            return FILEOP_SKIP;
         }
 
         case SPFILENOTIFY_ENDDELETE:
