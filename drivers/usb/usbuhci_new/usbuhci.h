@@ -34,6 +34,7 @@ extern USBPORT_REGISTRATION_PACKET RegPacket;
 typedef struct _UHCI_ENDPOINT *PUHCI_ENDPOINT;
 typedef struct _UHCI_TRANSFER *PUHCI_TRANSFER;
 
+#if !defined(_M_X64)
 typedef struct _UHCI_HCD_TD {
   /* Hardware */
   UHCI_TD HwTD;
@@ -49,8 +50,32 @@ typedef struct _UHCI_HCD_TD {
   LIST_ENTRY TdLink;
   ULONG Padded[4];
 } UHCI_HCD_TD, *PUHCI_HCD_TD;
+#else
+typedef struct _UHCI_HCD_TD {
+  /* Hardware */
+  UHCI_TD HwTD;
+  /* Software */
+  USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
+  ULONG PhysicalAddress;
+  ULONG Flags;
+  struct _UHCI_HCD_TD * NextHcdTD;
+  _ANONYMOUS_UNION union {
+    PUHCI_TRANSFER UhciTransfer;
+    struct {
+      ULONG Frame; // for SOF_HcdTDs only
+      ULONG Pad;
+    }; 
+  } DUMMYUNIONNAME;
+  LIST_ENTRY TdLink;
+  ULONG Padded[9];
+} UHCI_HCD_TD, *PUHCI_HCD_TD;
+#endif
 
+#if !defined(_M_X64)
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
+#else
+C_ASSERT(sizeof(UHCI_HCD_TD) == 0x80);
+#endif
 
 /* Host Controller Driver Queue Header (HCD QH) */
 #define UHCI_HCD_QH_FLAG_ACTIVE  0x00000001
@@ -63,9 +88,18 @@ typedef struct _UHCI_HCD_QH {
   ULONG PhysicalAddress;
   ULONG QhFlags;
   struct _UHCI_HCD_QH * NextHcdQH;
+#if !defined(_M_X64)
+  ULONG Pad1;
+#endif
   struct _UHCI_HCD_QH * PrevHcdQH;
+#if !defined(_M_X64)
+  ULONG Pad2;
+#endif
   PUHCI_ENDPOINT UhciEndpoint;
-  ULONG Padded[9];
+#if !defined(_M_X64)
+  ULONG Pad3;
+#endif
+  ULONG Padded[6];
 } UHCI_HCD_QH, *PUHCI_HCD_QH;
 
 C_ASSERT(sizeof(UHCI_HCD_QH) == 0x40);
@@ -124,7 +158,7 @@ typedef struct _UHCI_EXTENSION {
   PUHCI_HW_REGISTERS BaseRegister;
   USB_CONTROLLER_FLAVOR HcFlavor;
   PUHCI_HC_RESOURCES HcResourcesVA;
-  PUHCI_HC_RESOURCES HcResourcesPA;
+  ULONG HcResourcesPA;
   PUHCI_HCD_QH IntQH[INTERRUPT_ENDPOINTs];
   PUHCI_HCD_QH ControlQH;
   PUHCI_HCD_QH BulkQH;

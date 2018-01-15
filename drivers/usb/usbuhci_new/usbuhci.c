@@ -81,7 +81,7 @@ UhciCleanupFrameListEntry(IN PUHCI_EXTENSION UhciExtension,
                           IN ULONG Index)
 {
     PUHCI_HC_RESOURCES UhciResources;
-    ULONG_PTR PhysicalAddress;
+    ULONG PhysicalAddress;
     ULONG HeadIdx;
 
     UhciResources = UhciExtension->HcResourcesVA;
@@ -184,7 +184,7 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
     PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
     ULONG TransferType;
     ULONG_PTR BufferVA;
-    ULONG_PTR BufferPA;
+    ULONG BufferPA;
     ULONG ix;
     ULONG TdCount;
     PUHCI_HCD_TD TD;
@@ -243,12 +243,12 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
     TdCount = BufferLength / sizeof(UHCI_HCD_TD);
     UhciEndpoint->MaxTDs = TdCount;
 
-    UhciEndpoint->FirstTD = (PVOID)BufferVA;
+    UhciEndpoint->FirstTD = (PUHCI_HCD_TD)BufferVA;
     UhciEndpoint->AllocatedTDs = 0;
 
     RtlZeroMemory(UhciEndpoint->FirstTD, TdCount * sizeof(UHCI_HCD_TD));
 
-    for (ix = 0; ix < UhciEndpoint->MaxTDs; ++ix)
+    for (ix = 0; ix < UhciEndpoint->MaxTDs; ix++)
     {
         TD = &UhciEndpoint->FirstTD[ix];
         TD->PhysicalAddress = BufferPA;
@@ -499,24 +499,25 @@ MPSTATUS
 NTAPI
 UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
                        IN PUHCI_HC_RESOURCES HcResourcesVA,
-                       IN PUHCI_HC_RESOURCES HcResourcesPA)
+                       IN ULONG hcResourcesPA)
 {
     PUHCI_HCD_QH IntQH;
-    ULONG_PTR IntQhPA;
+    ULONG IntQhPA;
     PUHCI_HCD_QH StaticControlHead;
-    ULONG_PTR StaticControlHeadPA;
+    ULONG StaticControlHeadPA;
     PUHCI_HCD_QH StaticBulkHead;
-    ULONG_PTR StaticBulkHeadPA;
+    ULONG StaticBulkHeadPA;
     PUHCI_HCD_TD StaticBulkTD;
-    ULONG_PTR StaticBulkTdPA;
+    ULONG StaticBulkTdPA;
     PUHCI_HCD_TD StaticTD;
-    ULONG_PTR StaticTdPA;
+    ULONG StaticTdPA;
     PUHCI_HCD_TD StaticSofTD;
-    ULONG_PTR StaticSofTdPA;
-    ULONG_PTR PhysicalAddress;
+    ULONG StaticSofTdPA;
+    ULONG PhysicalAddress;
     ULONG Idx;
     ULONG HeadIdx;
     UCHAR FrameIdx;
+    PUHCI_HC_RESOURCES HcResourcesPA = (PUHCI_HC_RESOURCES)hcResourcesPA;
 
     DPRINT("UhciInitializeSchedule: Ext[%p], VA - %p, PA - %p\n",
            UhciExtension,
@@ -528,7 +529,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
     for (FrameIdx = 0; FrameIdx < INTERRUPT_ENDPOINTs; FrameIdx++)
     {
         IntQH = &HcResourcesVA->StaticIntHead[FrameIdx];
-        IntQhPA = (ULONG_PTR)&HcResourcesPA->StaticIntHead[FrameIdx];
+        IntQhPA = (ULONG)&HcResourcesPA->StaticIntHead[FrameIdx];
 
         RtlZeroMemory(IntQH, sizeof(UHCI_HCD_QH));
 
@@ -545,7 +546,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize static QH for control transfers */
     StaticControlHead = &HcResourcesVA->StaticControlHead;
-    StaticControlHeadPA = (ULONG_PTR)&HcResourcesPA->StaticControlHead;
+    StaticControlHeadPA = (ULONG)&HcResourcesPA->StaticControlHead;
 
     RtlZeroMemory(StaticControlHead, sizeof(UHCI_HCD_QH));
 
@@ -558,7 +559,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize static QH for bulk transfers */
     StaticBulkHead = &HcResourcesVA->StaticBulkHead;
-    StaticBulkHeadPA = (ULONG_PTR)&HcResourcesPA->StaticBulkHead;
+    StaticBulkHeadPA = (ULONG)&HcResourcesPA->StaticBulkHead;
 
     RtlZeroMemory(StaticBulkHead, sizeof(UHCI_HCD_QH));
 
@@ -574,7 +575,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize static TD for bulk transfers */
     StaticBulkTD = &HcResourcesVA->StaticBulkTD;
-    StaticBulkTdPA = (ULONG_PTR)&HcResourcesPA->StaticBulkTD;
+    StaticBulkTdPA = (ULONG)&HcResourcesPA->StaticBulkTD;
 
     StaticBulkTD->HwTD.NextElement = StaticBulkTdPA | UHCI_TD_LINK_PTR_TD;
 
@@ -608,7 +609,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize static TD for first frame */
     StaticTD = &HcResourcesVA->StaticTD;
-    StaticTdPA = (ULONG_PTR)&HcResourcesPA->StaticTD;
+    StaticTdPA = (ULONG)&HcResourcesPA->StaticTD;
 
     RtlZeroMemory(StaticTD, sizeof(UHCI_HCD_TD));
 
@@ -625,7 +626,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize StaticSofTDs for UhciInterruptNextSOF() */
     UhciExtension->SOF_HcdTDs = &HcResourcesVA->StaticSofTD[0];
-    StaticSofTdPA = (ULONG_PTR)&HcResourcesPA->StaticSofTD[0];
+    StaticSofTdPA = (ULONG)&HcResourcesPA->StaticSofTD[0];
 
     for (Idx = 0; Idx < UHCI_MAX_STATIC_SOF_TDS; Idx++)
     {
@@ -673,7 +674,7 @@ UhciStartController(IN PVOID uhciExtension,
 
         if (MpStatus == MP_STATUS_SUCCESS)
         {
-            UhciExtension->HcResourcesVA = Resources->StartVA;
+            UhciExtension->HcResourcesVA = (PUHCI_HC_RESOURCES)Resources->StartVA;
             UhciExtension->HcResourcesPA = Resources->StartPA;
 
             MpStatus = UhciInitializeSchedule(UhciExtension,
@@ -685,7 +686,7 @@ UhciStartController(IN PVOID uhciExtension,
     }
 
     WRITE_PORT_ULONG(&BaseRegister->FrameAddress,
-                     (ULONG)UhciExtension->HcResourcesPA->FrameList);
+                     (ULONG)((PUHCI_HC_RESOURCES)UhciExtension->HcResourcesPA)->FrameList);
 
     if (MpStatus == MP_STATUS_SUCCESS)
     {
@@ -968,7 +969,7 @@ UhciQueueTransfer(IN PUHCI_EXTENSION UhciExtension,
     PUHCI_HCD_QH QH;
     PUHCI_HCD_QH BulkTailQH;
     PUHCI_HCD_TD TailTD;
-    ULONG_PTR PhysicalAddress;
+    ULONG PhysicalAddress;
 
     DPRINT("UhciQueueTransfer: FirstTD - %p, LastTD - %p\n", FirstTD, LastTD);
 
@@ -1085,7 +1086,7 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
 {
     PUHCI_HCD_TD TD;
     PUHCI_HCD_TD LastTD = NULL;
-    ULONG_PTR PhysicalAddress;
+    ULONG PhysicalAddress;
     USHORT TotalMaxPacketSize;
     USHORT DeviceSpeed;
     USHORT EndpointAddress;
@@ -1249,7 +1250,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
     USB_DEVICE_SPEED DeviceSpeed;
     USHORT EndpointAddress;
     USHORT DeviceAddress;
-    ULONG_PTR PhysicalAddress;
+    ULONG PhysicalAddress;
 
     DPRINT_UHCI("UhciControlTransfer: UhciTransfer - %p\n", UhciTransfer);
 
@@ -1299,7 +1300,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
                   sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
 
     FirstTdPA = (PUHCI_HCD_TD)FirstTD->PhysicalAddress;
-    FirstTD->HwTD.Buffer = (ULONG_PTR)&FirstTdPA->SetupPacket;
+    FirstTD->HwTD.Buffer = (ULONG)&FirstTdPA->SetupPacket;
 
     FirstTD->NextHcdTD = NULL;
     FirstTD->UhciTransfer = UhciTransfer;
@@ -1704,7 +1705,7 @@ UhciAbortNonIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
 {
     PUHCI_HCD_TD TD;
     PUHCI_HCD_TD PrevTD = NULL;
-    ULONG_PTR PhysicalAddress;
+    ULONG PhysicalAddress;
     BOOL DataToggle;
     BOOLEAN IsHeadTD = FALSE;
 
@@ -2081,8 +2082,8 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
     PUHCI_HCD_QH QH;
     PUHCI_HCD_TD NextTD;
     PUHCI_HCD_TD TD;
-    ULONG_PTR NextTdPA;
-    ULONG_PTR PhysicalAddress;
+    ULONG NextTdPA;
+    ULONG PhysicalAddress;
     SIZE_T TransferedLen;
     PLIST_ENTRY ListTDs;
     UCHAR TdStatus;
@@ -2103,7 +2104,7 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
 
     if (NextTdPA)
     {
-        NextTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
+        NextTD = RegPacket.UsbPortGetMappedVirtualAddress(NextTdPA,
                                                           UhciExtension,
                                                           UhciEndpoint);
     }
