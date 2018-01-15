@@ -111,17 +111,51 @@ CcInitializeCacheMap (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 CcIsThereDirtyData (
     IN PVPB Vpb)
 {
+    PROS_VACB Vacb;
+    PLIST_ENTRY Entry;
+    /* Assume no dirty data */
+    BOOLEAN Dirty = FALSE;
+
     CCTRACE(CC_API_DEBUG, "Vpb=%p\n", Vpb);
 
-    UNIMPLEMENTED;
-    return FALSE;
+    KeAcquireGuardedMutex(&ViewLock);
+
+    /* Browse dirty VACBs */
+    for (Entry = DirtyVacbListHead.Flink; Entry != &DirtyVacbListHead; Entry = Entry->Flink)
+    {
+        Vacb = CONTAINING_RECORD(Entry, ROS_VACB, DirtyVacbListEntry);
+        /* Look for these associated with our volume */
+        if (Vacb->SharedCacheMap->FileObject->Vpb != Vpb)
+        {
+            continue;
+        }
+
+        /* From now on, we are associated with our VPB */
+
+        /* Temporary files are not counted as dirty */
+        if (BooleanFlagOn(Vacb->SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
+        {
+            continue;
+        }
+
+        /* A single dirty VACB is enough to have dirty data */
+        if (Vacb->Dirty)
+        {
+            Dirty = TRUE;
+            break;
+        }
+    }
+
+    KeReleaseGuardedMutex(&ViewLock);
+
+    return Dirty;
 }
 
 /*

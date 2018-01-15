@@ -41,7 +41,7 @@
 
 /* GLOBALS *******************************************************************/
 
-static LIST_ENTRY DirtyVacbListHead;
+LIST_ENTRY DirtyVacbListHead;
 static LIST_ENTRY VacbLruListHead;
 ULONG DirtyPageCount = 0;
 

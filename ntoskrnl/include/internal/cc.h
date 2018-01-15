@@ -40,6 +40,7 @@
 // Global Cc Data
 //
 extern ULONG CcRosTraceLevel;
+extern LIST_ENTRY DirtyVacbListHead;
 
 typedef struct _PF_SCENARIO_ID
 {
