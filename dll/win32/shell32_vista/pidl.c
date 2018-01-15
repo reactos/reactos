@@ -1,5 +1,7 @@
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 HRESULT WINAPI SHGetNameFromIDList(PCIDLIST_ABSOLUTE pidl, SIGDN sigdnName, PWSTR *ppszName)
 {
     IShellFolder *psfparent;

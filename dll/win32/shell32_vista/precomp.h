@@ -18,19 +18,6 @@
 #include <shobjidl.h>
 #include <tchar.h>
 #include <strsafe.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include <atlstr.h>
-
-#include <comctl32_undoc.h>
-#include <shlguid_undoc.h>
-#include <shlobj_undoc.h>
-#include <shlwapi_undoc.h>
-#include <undocshell.h>
-#include <browseui_undoc.h>
-
-#include <shellutils.h>
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
