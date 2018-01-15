@@ -1,5 +1,6 @@
 [Version]
-Signature = "$ReactOS$"
+Signature = "$Windows NT$"
+;Signature = "$ReactOS$"
 
 ;
 ; The [SourceDisksNames] section lists all the available installation media

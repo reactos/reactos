@@ -516,7 +516,7 @@ LoadSetupInf(
     pSetupData->SetupInf =
         SpInfOpenInfFile(FileNameBuffer,
                          NULL,
-                         /* INF_STYLE_WIN4 | */ INF_STYLE_OLDNT,
+                         INF_STYLE_WIN4,
                          pSetupData->LanguageId,
                          &ErrorLine);
     if (pSetupData->SetupInf == INVALID_HANDLE_VALUE)
@@ -531,7 +531,8 @@ LoadSetupInf(
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     /* Check 'Signature' string */
-    if (_wcsicmp(Value, L"$ReactOS$") != 0)
+    if (_wcsicmp(Value, L"$ReactOS$") != 0 &&
+        _wcsicmp(Value, L"$Windows NT$") != 0)
     {
         INF_FreeData(Value);
         return ERROR_SIGNATURE_TXTSETUPSIF;

@@ -11,7 +11,8 @@
 
 .InfBegin
 [Version]
-Signature = "$ReactOS$"
+Signature = "$Windows NT$"
+;Signature = "$ReactOS$"
 
 ; Directories relative to the installation directory.
 ; For specifying absolute directories, use the SystemPartitionFiles section,

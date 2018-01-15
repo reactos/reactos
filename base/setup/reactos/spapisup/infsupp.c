@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "reactos.h"
+#include <winnls.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -38,9 +39,9 @@ SetupOpenInfFileExW(
     IN LCID LocaleId,
     OUT PUINT ErrorLine)
 {
+    HINF InfHandle;
+    LCID OldLocaleId;
     WCHAR Win32FileName[MAX_PATH];
-
-    UNREFERENCED_PARAMETER(LocaleId);
 
     /*
      * SetupOpenInfFileExW is called within setuplib with NT paths, however
@@ -54,10 +55,28 @@ SetupOpenInfFileExW(
         return INVALID_HANDLE_VALUE;
     }
 
-    return SetupOpenInfFileW(Win32FileName,
-                             InfClass,
-                             InfStyle,
-                             ErrorLine);
+    /*
+     * Because SetupAPI's SetupOpenInfFileW() function does not allow the user
+     * to specify a given LCID to use to load localized string substitutions,
+     * we temporarily change the current thread locale before calling
+     * SetupOpenInfFileW(). When we have finished we restore the original
+     * thread locale.
+     */
+    OldLocaleId = GetThreadLocale();
+    if (OldLocaleId != LocaleId)
+        SetThreadLocale(LocaleId);
+
+    /* Load the INF file */
+    InfHandle = SetupOpenInfFileW(Win32FileName,
+                                  InfClass,
+                                  InfStyle,
+                                  ErrorLine);
+
+    /* Restore the original thread locale */
+    if (OldLocaleId != LocaleId)
+        SetThreadLocale(OldLocaleId);
+
+    return InfHandle;
 }
 
 
