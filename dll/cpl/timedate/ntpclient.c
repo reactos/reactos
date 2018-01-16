@@ -121,15 +121,15 @@ ReceiveData(PINFO pInfo)
 
     if ((Ret != SOCKET_ERROR) && (Ret != 0))
     {
-
         Ret = recvfrom(pInfo->Sock,
                        (char *)&pInfo->RecvPacket,
                        sizeof(pInfo->RecvPacket),
                        0,
                        NULL,
                        NULL);
+
         if (Ret != SOCKET_ERROR)
-            ulTime = ntohl(ulTime);
+            ulTime = ntohl(pInfo->RecvPacket.TransmitTimestamp.dwInteger);
     }
 
     return ulTime;

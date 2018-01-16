@@ -39,7 +39,7 @@ extern HINSTANCE hApplet;
 
 /* dateandtime.c */
 INT_PTR CALLBACK DateTimePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL SystemSetLocalTime(LPSYSTEMTIME lpSystemTime);
+BOOL SystemSetTime(LPSYSTEMTIME lpSystemTime, BOOL SystemTime);
 
 
 /* timezone.c */
