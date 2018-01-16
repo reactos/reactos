@@ -355,7 +355,23 @@ public:
         /* FIXME: Should be delayed */
         IUnknown_Exec(punk, IID_IDeskBand, DBID_DELAYINIT, 0, NULL, NULL);
 
-        return m_BandSite->AddBand(punk);
+        HRESULT hr = m_BandSite->AddBand(punk);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        VARIANT vThemeName;
+        V_VT(&vThemeName) = VT_BSTR;
+        V_BSTR(&vThemeName) = SysAllocString(L"TaskBar");
+        IUnknown_Exec(punk,
+                      IID_IDeskBand,
+                      DBID_SETWINDOWTHEME,
+                      0,
+                      &vThemeName,
+                      NULL);
+
+        SysFreeString(V_BSTR(&vThemeName));
+
+        return S_OK;
     }
 
     virtual HRESULT STDMETHODCALLTYPE EnumBands(
