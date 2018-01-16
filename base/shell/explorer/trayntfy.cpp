@@ -77,16 +77,41 @@ public:
         return -1;
     }
 
+    int FindExistingSharedIcon(HICON handle)
+    {
+        int count = GetButtonCount();
+        for (int i = 0; i < count; i++)
+        {
+            NOTIFYICONDATA * data = GetItemData(i);
+            if (data->hIcon == handle)
+            {
+                TBBUTTON btn;
+                GetButton(i, &btn);
+                return btn.iBitmap;
+            }
+        }
+
+        return -1;
+    }
+
     BOOL AddButton(IN CONST NOTIFYICONDATA *iconData)
     {
         TBBUTTON tbBtn;
         NOTIFYICONDATA * notifyItem;
         WCHAR text[] = L"";
 
+        TRACE("Adding icon %d from hWnd %08x flags%s%s state%s%s", 
+            iconData->uID, iconData->hWnd,
+            (iconData->uFlags & NIF_ICON) ? " ICON" : "",
+            (iconData->uFlags & NIF_STATE) ? " STATE" : "",
+            (iconData->dwState & NIS_HIDDEN) ? " HIDDEN" : "",
+            (iconData->dwState & NIS_SHAREDICON) ? " SHARED" : "");
+
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index >= 0)
         {
-            return UpdateButton(iconData);
+            TRACE("Icon %d from hWnd %08x ALREADY EXISTS!", iconData->uID, iconData->hWnd);
+            return FALSE;
         }
 
         notifyItem = new NOTIFYICONDATA();
@@ -101,6 +126,11 @@ public:
         tbBtn.iString = (INT_PTR) text;
         tbBtn.idCommand = GetButtonCount();
 
+        if (iconData->uFlags & NIF_STATE)
+        {
+            notifyItem->dwState = iconData->dwState & iconData->dwStateMask;
+        }
+
         if (iconData->uFlags & NIF_MESSAGE)
         {
             notifyItem->uCallbackMessage = iconData->uCallbackMessage;
@@ -108,8 +138,22 @@ public:
 
         if (iconData->uFlags & NIF_ICON)
         {
-            notifyItem->hIcon = (HICON)CopyImage(iconData->hIcon, IMAGE_ICON, 0, 0, 0);
-            tbBtn.iBitmap = ImageList_AddIcon(m_ImageList, iconData->hIcon);
+            notifyItem->hIcon = iconData->hIcon;
+            BOOL hasSharedIcon = notifyItem->dwState & NIS_SHAREDICON;
+            if (hasSharedIcon)
+            {
+                INT iIcon = FindExistingSharedIcon(notifyItem->hIcon);
+                if (iIcon < 0)
+                {
+                    notifyItem->hIcon = NULL;
+                    TRACE("Shared icon requested, but HICON not found!!!");
+                }
+                tbBtn.iBitmap = iIcon;
+            }
+            else
+            {
+                tbBtn.iBitmap = ImageList_AddIcon(m_ImageList, notifyItem->hIcon);
+            }
         }
 
         if (iconData->uFlags & NIF_TIP)
@@ -118,15 +162,10 @@ public:
         }
 
         m_VisibleButtonCount++;
-        if (iconData->uFlags & NIF_STATE)
+        if (notifyItem->dwState & NIS_HIDDEN)
         {
-            notifyItem->dwState &= ~iconData->dwStateMask;
-            notifyItem->dwState |= (iconData->dwState & iconData->dwStateMask);
-            if (notifyItem->dwState & NIS_HIDDEN)
-            {
-                tbBtn.fsState |= TBSTATE_HIDDEN;
-                m_VisibleButtonCount--;
-            }
+            tbBtn.fsState |= TBSTATE_HIDDEN;
+            m_VisibleButtonCount--;
         }
 
         /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
@@ -142,33 +181,27 @@ public:
         NOTIFYICONDATA * notifyItem;
         TBBUTTONINFO tbbi = { 0 };
 
+        TRACE("Updating icon %d from hWnd %08x flags%s%s state%s%s",
+            iconData->uID, iconData->hWnd,
+            (iconData->uFlags & NIF_ICON) ? " ICON" : "",
+            (iconData->uFlags & NIF_STATE) ? " STATE" : "",
+            (iconData->dwState & NIS_HIDDEN) ? " HIDDEN" : "",
+            (iconData->dwState & NIS_SHAREDICON) ? " SHARED" : "");
+
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index < 0)
         {
+            WARN("Icon %d from hWnd %08x DOES NOT EXIST!", iconData->uID, iconData->hWnd);
             return AddButton(iconData);
         }
+
+        TBBUTTON btn;
+        GetButton(index, &btn);
+        int oldIconIndex = btn.iBitmap;
 
         tbbi.cbSize = sizeof(tbbi);
         tbbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
         tbbi.idCommand = index;
-
-        if (iconData->uFlags & NIF_MESSAGE)
-        {
-            notifyItem->uCallbackMessage = iconData->uCallbackMessage;
-        }
-
-        if (iconData->uFlags & NIF_ICON)
-        {
-            DestroyIcon(notifyItem->hIcon);
-            notifyItem->hIcon = (HICON)CopyImage(iconData->hIcon, IMAGE_ICON, 0, 0, 0);
-            tbbi.dwMask |= TBIF_IMAGE;
-            tbbi.iImage = ImageList_ReplaceIcon(m_ImageList, index, iconData->hIcon);
-        }
-
-        if (iconData->uFlags & NIF_TIP)
-        {
-            StringCchCopy(notifyItem->szTip, _countof(notifyItem->szTip), iconData->szTip);
-        }
 
         if (iconData->uFlags & NIF_STATE)
         {
@@ -192,6 +225,41 @@ public:
             notifyItem->dwState |= (iconData->dwState & iconData->dwStateMask);
         }
 
+        if (iconData->uFlags & NIF_MESSAGE)
+        {
+            notifyItem->uCallbackMessage = iconData->uCallbackMessage;
+        }
+
+        if (iconData->uFlags & NIF_ICON)
+        {
+            BOOL hasSharedIcon = notifyItem->dwState & NIS_SHAREDICON;
+            if (hasSharedIcon)
+            {
+                INT iIcon = FindExistingSharedIcon(iconData->hIcon);
+                if (iIcon >= 0)
+                {
+                    notifyItem->hIcon = iconData->hIcon;
+                    tbbi.dwMask |= TBIF_IMAGE;
+                    tbbi.iImage = iIcon;
+                }
+                else
+                {
+                    TRACE("Shared icon requested, but HICON not found!!! IGNORING!");
+                }
+            }
+            else
+            {
+                notifyItem->hIcon = iconData->hIcon;
+                tbbi.dwMask |= TBIF_IMAGE;
+                tbbi.iImage = ImageList_ReplaceIcon(m_ImageList, oldIconIndex, notifyItem->hIcon);
+            }
+        }
+
+        if (iconData->uFlags & NIF_TIP)
+        {
+            StringCchCopy(notifyItem->szTip, _countof(notifyItem->szTip), iconData->szTip);
+        }
+
         /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
 
         SetButtonInfo(index, &tbbi);
@@ -203,34 +271,48 @@ public:
     {
         NOTIFYICONDATA * notifyItem;
 
+        TRACE("Removing icon %d from hWnd %08x", iconData->uID, iconData->hWnd);
+
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index < 0)
+        {
+            TRACE("Icon %d from hWnd %08x ALREADY MISSING!", iconData->uID, iconData->hWnd);
+
             return FALSE;
+        }
 
         if (!(notifyItem->dwState & NIS_HIDDEN))
         {
             m_VisibleButtonCount--;
         }
 
-        DestroyIcon(notifyItem->hIcon);
-
-        delete notifyItem;
-
-        ImageList_Remove(m_ImageList, index);
-
-        int count = GetButtonCount();
-
-        /* shift all buttons one index to the left -- starting one index right
-           from item to delete -- to preserve their correct icon and tip */
-        for (int i = index; i < count - 1; i++)
+        if (!(notifyItem->dwState & NIS_SHAREDICON))
         {
-            notifyItem = GetItemData(i + 1);
-            SetItemData(i, notifyItem);
-            UpdateButton(notifyItem);
+            TBBUTTON btn;
+            GetButton(index, &btn);
+            int oldIconIndex = btn.iBitmap;
+            ImageList_Remove(m_ImageList, oldIconIndex);
+
+            // Update other icons!
+            int count = GetButtonCount();
+            for (int i = 0; i < count; i++)
+            {
+                TBBUTTON btn;
+                GetButton(i, &btn);
+
+                if (btn.iBitmap > oldIconIndex)
+                {
+                    TBBUTTONINFO tbbi2 = { 0 };
+                    tbbi2.cbSize = sizeof(tbbi2);
+                    tbbi2.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
+                    tbbi2.iImage = btn.iBitmap-1;
+                    SetButtonInfo(i, &tbbi2);
+                }
+            }
         }
 
-        /* Delete the right-most, now obsolete button */
-        DeleteButton(count - 1);
+        delete notifyItem;
+        DeleteButton(index);
 
         return TRUE;
     }
@@ -269,7 +351,10 @@ public:
         for (int i = 0; i < count; i++)
         {
             NOTIFYICONDATA * data = GetItemData(i);
-            INT iIcon = ImageList_AddIcon(iml, data->hIcon);
+            BOOL hasSharedIcon = data->dwState & NIS_SHAREDICON;
+            INT iIcon = hasSharedIcon ? FindExistingSharedIcon(data->hIcon) : -1;
+            if (iIcon < 0)
+                iIcon = ImageList_AddIcon(iml, data->hIcon);
             TBBUTTONINFO tbbi = { sizeof(tbbi), TBIF_BYINDEX | TBIF_IMAGE, 0, iIcon};
             SetButtonInfo(i, &tbbi);
         }
@@ -304,7 +389,7 @@ private:
         {
             // We detect and destroy icons with invalid handles only on mouse move over systray, same as MS does.
             // Alternatively we could search for them periodically (would waste more resources).
-            TRACE("destroying icon with invalid handle\n");
+            TRACE("Destroying icon %d with invalid handle hWnd=%08x\n", notifyItem->uID, notifyItem->hWnd);
 
             HWND parentHWND = GetParent();
             parentHWND = ::GetParent(parentHWND);
