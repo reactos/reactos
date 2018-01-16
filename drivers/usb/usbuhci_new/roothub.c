@@ -459,6 +459,7 @@ VOID
 NTAPI
 UhciRHDisableIrq(IN PVOID uhciExtension)
 {
+    /* Do nothing */
     return;
 }
 
@@ -466,6 +467,7 @@ VOID
 NTAPI
 UhciRHEnableIrq(IN PVOID uhciExtension)
 {
+    /* Do nothing */
     return;
 }
 
