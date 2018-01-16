@@ -5490,8 +5490,8 @@ FinalPath:
                       AlreadyDecommitted;
 
     ASSERT(CommitReduction >= 0);
+    ASSERT(Vad->u.VadFlags.CommitCharge >= CommitReduction);
     Vad->u.VadFlags.CommitCharge -= CommitReduction;
-    ASSERT(Vad->u.VadFlags.CommitCharge >= 0);
 
     //
     // We are done, go to the exit path without freeing the VAD as it remains
