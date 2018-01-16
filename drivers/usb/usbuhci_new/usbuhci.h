@@ -34,42 +34,32 @@ extern USBPORT_REGISTRATION_PACKET RegPacket;
 typedef struct _UHCI_ENDPOINT *PUHCI_ENDPOINT;
 typedef struct _UHCI_TRANSFER *PUHCI_TRANSFER;
 
+typedef struct _UHCI_HCD_TD {
+  /* Hardware */
+  UHCI_TD HwTD;
+  /* Software */
+  USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
+  ULONG PhysicalAddress;
+  ULONG Flags;
+  struct _UHCI_HCD_TD * NextHcdTD;
+  _ANONYMOUS_UNION union {
+    PUHCI_TRANSFER UhciTransfer;
 #if !defined(_M_X64)
-typedef struct _UHCI_HCD_TD {
-  /* Hardware */
-  UHCI_TD HwTD;
-  /* Software */
-  USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
-  ULONG PhysicalAddress;
-  ULONG Flags;
-  struct _UHCI_HCD_TD * NextHcdTD;
-  _ANONYMOUS_UNION union {
-    PUHCI_TRANSFER UhciTransfer;
     ULONG Frame; // for SOF_HcdTDs only
-  } DUMMYUNIONNAME;
-  LIST_ENTRY TdLink;
-  ULONG Padded[4];
-} UHCI_HCD_TD, *PUHCI_HCD_TD;
 #else
-typedef struct _UHCI_HCD_TD {
-  /* Hardware */
-  UHCI_TD HwTD;
-  /* Software */
-  USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
-  ULONG PhysicalAddress;
-  ULONG Flags;
-  struct _UHCI_HCD_TD * NextHcdTD;
-  _ANONYMOUS_UNION union {
-    PUHCI_TRANSFER UhciTransfer;
     struct {
-      ULONG Frame; // for SOF_HcdTDs only
-      ULONG Pad;
+      ULONG Frame;
+      ULONG Pad2;
     }; 
+#endif
   } DUMMYUNIONNAME;
   LIST_ENTRY TdLink;
-  ULONG Padded[9];
-} UHCI_HCD_TD, *PUHCI_HCD_TD;
+#if !defined(_M_X64)
+  ULONG Padded[4];
+#else
+  ULONG Padded[15];
 #endif
+} UHCI_HCD_TD, *PUHCI_HCD_TD;
 
 #if !defined(_M_X64)
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
