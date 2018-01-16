@@ -259,9 +259,9 @@ USB2_GetStartTime(IN PUSB2_TT_ENDPOINT nextTtEndpoint,
         ttEndpoint = TtEndpoint->Tt->FrameBudget[Frame].AltEndpoint;
 
         if (ttEndpoint)
-           return ttEndpoint->StartTime + ttEndpoint->CalcBusTime;
+            return ttEndpoint->StartTime + ttEndpoint->CalcBusTime;
         else
-           return USB2_FS_SOF_TIME;
+            return USB2_FS_SOF_TIME;
     }
     else
     {
