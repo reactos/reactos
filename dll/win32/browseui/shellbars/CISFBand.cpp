@@ -10,6 +10,8 @@
 
 #include <commoncontrols.h>
 #include <shellapi.h>
+#include <wingdi.h>
+#include <uxtheme.h>
 
 /*
 TODO:
@@ -431,6 +433,13 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
         if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
         {
+            if (nCmdID == DBID_SETWINDOWTHEME)
+            {
+                if (pvaIn && V_VT(pvaIn) == VT_BSTR && V_BSTR(pvaIn))
+                {
+                    SetWindowTheme(m_hWnd, V_BSTR(pvaIn), NULL);
+                }
+            }
             return S_OK;
         }
         
