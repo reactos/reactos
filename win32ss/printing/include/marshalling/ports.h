@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
  */
 
-const MARSHALLING PortInfo1Marshalling = {
+static const MARSHALLING PortInfo1Marshalling = {
     sizeof(PORT_INFO_1W),
     {
         { FIELD_OFFSET(PORT_INFO_1W, pName), RTL_FIELD_SIZE(PORT_INFO_1W, pName), RTL_FIELD_SIZE(PORT_INFO_1W, pName), TRUE },
@@ -13,7 +13,7 @@ const MARSHALLING PortInfo1Marshalling = {
     }
 };
 
-const MARSHALLING PortInfo2Marshalling = {
+static const MARSHALLING PortInfo2Marshalling = {
     sizeof(PORT_INFO_2W),
     {
         { FIELD_OFFSET(PORT_INFO_2W, pPortName), RTL_FIELD_SIZE(PORT_INFO_2W, pPortName), RTL_FIELD_SIZE(PORT_INFO_2W, pPortName), TRUE },
@@ -23,4 +23,10 @@ const MARSHALLING PortInfo2Marshalling = {
         { FIELD_OFFSET(PORT_INFO_2W, Reserved), RTL_FIELD_SIZE(PORT_INFO_2W, Reserved), RTL_FIELD_SIZE(PORT_INFO_2W, Reserved), FALSE },
         { MAXDWORD, 0, 0, FALSE }
     }
+};
+
+static const MARSHALLING* pPortInfoMarshalling[] = {
+    NULL,
+    &PortInfo1Marshalling,
+    &PortInfo2Marshalling
 };

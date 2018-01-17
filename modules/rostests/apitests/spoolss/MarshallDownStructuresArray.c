@@ -74,7 +74,7 @@ START_TEST(MarshallDownStructuresArray)
 
     // Marshall them down.
     SetLastError(0xDEADBEEF);
-    ok(MarshallDownStructuresArray(pPortInfo2, cElements, PortInfo2Marshalling.pInfo, PortInfo2Marshalling.cbStructureSize, TRUE), "MarshallDownStructuresArray returns FALSE!\n");
+    ok(MarshallDownStructuresArray(pPortInfo2, cElements, pPortInfoMarshalling[2]->pInfo, pPortInfoMarshalling[2]->cbStructureSize, TRUE), "MarshallDownStructuresArray returns FALSE!\n");
     ok(GetLastError() == 0xDEADBEEF, "GetLastError returns %lu!\n", GetLastError());
 
     // DWORD values should be unchanged.
@@ -99,13 +99,13 @@ START_TEST(MarshallDownStructuresArray)
     // Due to the implementation of PackStrings, (&pPortInfo2[0])->pPortName contains the highest offset.
     // Show that MarshallUpStructuresArray checks the offsets and bails out with ERROR_INVALID_DATA if cbSize <= highest offset.
     SetLastError(0xDEADBEEF);
-    ok(!MarshallUpStructuresArray((DWORD)(&pPortInfo2[0])->pPortName, pPortInfo2Test, cElements, PortInfo2Marshalling.pInfo, PortInfo2Marshalling.cbStructureSize, TRUE), "MarshallUpStructuresArray returns TRUE!\n");
+    ok(!MarshallUpStructuresArray((DWORD)(&pPortInfo2[0])->pPortName, pPortInfo2Test, cElements, pPortInfoMarshalling[2]->pInfo, pPortInfoMarshalling[2]->cbStructureSize, TRUE), "MarshallUpStructuresArray returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_DATA, "GetLastError returns %lu!\n", GetLastError());
 
     // It works with cbSize > highest offset.
     // In real world cases, we would use cbPortInfo2Size for cbSize.
     SetLastError(0xDEADBEEF);
-    ok(MarshallUpStructuresArray((DWORD)(&pPortInfo2[0])->pPortName + 1, pPortInfo2, cElements, PortInfo2Marshalling.pInfo, PortInfo2Marshalling.cbStructureSize, TRUE), "MarshallUpStructuresArray returns FALSE!\n");
+    ok(MarshallUpStructuresArray((DWORD)(&pPortInfo2[0])->pPortName + 1, pPortInfo2, cElements, pPortInfoMarshalling[2]->pInfo, pPortInfoMarshalling[2]->cbStructureSize, TRUE), "MarshallUpStructuresArray returns FALSE!\n");
     ok(GetLastError() == 0xDEADBEEF, "GetLastError returns %lu!\n", GetLastError());
 
     // pPortInfo2 should now be identical to the copy again.

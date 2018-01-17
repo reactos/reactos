@@ -2,29 +2,12 @@
 * PROJECT:     ReactOS Spooler API
 * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
 * PURPOSE:     Functions related to Print Processors
-* COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
+* COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
 */
 
 #include "precomp.h"
+#include <marshalling/printprocessors.h>
 #include <prtprocenv.h>
-
-static void
-_MarshallUpDatatypesInfo(PDATATYPES_INFO_1W* ppDatatypesInfo1)
-{
-    // Replace relative offset addresses in the output by absolute pointers.
-    PDATATYPES_INFO_1W pDatatypesInfo1 = *ppDatatypesInfo1;
-    pDatatypesInfo1->pName = (PWSTR)((ULONG_PTR)pDatatypesInfo1->pName + (ULONG_PTR)pDatatypesInfo1);
-    *ppDatatypesInfo1 += sizeof(DATATYPES_INFO_1W);
-}
-
-static void
-_MarshallUpPrintProcessorInfo(PPRINTPROCESSOR_INFO_1W* ppPrintProcessorInfo1)
-{
-    // Replace relative offset addresses in the output by absolute pointers.
-    PPRINTPROCESSOR_INFO_1W pPrintProcessorInfo1 = *ppPrintProcessorInfo1;
-    pPrintProcessorInfo1->pName = (PWSTR)((ULONG_PTR)pPrintProcessorInfo1->pName + (ULONG_PTR)pPrintProcessorInfo1);
-    *ppPrintProcessorInfo1 += sizeof(PRINTPROCESSOR_INFO_1W);
-}
 
 BOOL WINAPI
 AddPrintProcessorA(PSTR pName, PSTR pEnvironment, PSTR pPathName, PSTR pPrintProcessorName)
@@ -85,7 +68,7 @@ EnumPrintProcessorDatatypesW(PWSTR pName, LPWSTR pPrintProcessorName, DWORD Leve
     {
         dwErrorCode = _RpcEnumPrintProcessorDatatypes(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
     }
-        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwErrorCode = RpcExceptionCode();
         ERR("_RpcEnumPrintProcessorDatatypes failed with exception code %lu!\n", dwErrorCode);
@@ -94,11 +77,8 @@ EnumPrintProcessorDatatypesW(PWSTR pName, LPWSTR pPrintProcessorName, DWORD Leve
 
     if (dwErrorCode == ERROR_SUCCESS)
     {
-        DWORD i;
-        PDATATYPES_INFO_1W p = (PDATATYPES_INFO_1W)pDatatypes;
-
-        for (i = 0; i < *pcReturned; i++)
-            _MarshallUpDatatypesInfo(&p);
+        // Replace relative offset addresses in the output by absolute pointers.
+        MarshallUpStructuresArray(cbBuf, pDatatypes, *pcReturned, DatatypesInfo1Marshalling.pInfo, DatatypesInfo1Marshalling.cbStructureSize, TRUE);
     }
 
 Cleanup:
@@ -130,7 +110,7 @@ EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintP
     {
         dwErrorCode = _RpcEnumPrintProcessors(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
     }
-        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwErrorCode = RpcExceptionCode();
     }
@@ -138,11 +118,8 @@ EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintP
 
     if (dwErrorCode == ERROR_SUCCESS)
     {
-        DWORD i;
-        PPRINTPROCESSOR_INFO_1W p = (PPRINTPROCESSOR_INFO_1W)pPrintProcessorInfo;
-
-        for (i = 0; i < *pcReturned; i++)
-            _MarshallUpPrintProcessorInfo(&p);
+        // Replace relative offset addresses in the output by absolute pointers.
+        MarshallUpStructuresArray(cbBuf, pPrintProcessorInfo, *pcReturned, PrintProcessorInfo1Marshalling.pInfo, PrintProcessorInfo1Marshalling.cbStructureSize, TRUE);
     }
 
     SetLastError(dwErrorCode);
@@ -250,7 +227,7 @@ GetPrintProcessorDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE 
     {
         dwErrorCode = _RpcGetPrintProcessorDirectory(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
     }
-        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         dwErrorCode = RpcExceptionCode();
     }
