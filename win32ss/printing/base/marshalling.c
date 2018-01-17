@@ -9,6 +9,8 @@
 #include <windef.h>
 #include <winbase.h>
 
+#include <marshalling/marshalling.h>
+
 /**
  * @name MarshallDownStructure
  *
