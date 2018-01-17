@@ -97,9 +97,9 @@
 @ stub LoadDriverWithVersion
 @ stub LogWmiTraceEvent
 @ stdcall MarshallDownStructure(ptr ptr long long)
-@ stub MarshallDownStructuresArray
-@ stub MarshallUpStructure
-@ stub MarshallUpStructuresArray
+@ stdcall MarshallDownStructuresArray(ptr long ptr long long)
+@ stdcall MarshallUpStructure(long ptr ptr long long)
+@ stdcall MarshallUpStructuresArray(long ptr long ptr long long)
 @ stub MIDL_user_allocate1
 @ stub MIDL_user_free1
 @ stub OldGetPrinterDriverW

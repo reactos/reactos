@@ -3,6 +3,8 @@ include_directories(${REACTOS_SOURCE_DIR}/win32ss/printing/include)
 
 list(APPEND SOURCE
     AlignRpcPtr.c
+    MarshallDownStructuresArray.c
+    MarshallUpStructuresArray.c
     PackStrings.c
     ReallocSplStr.c
     SplInitializeWinSpoolDrv.c

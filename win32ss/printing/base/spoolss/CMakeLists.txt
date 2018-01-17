@@ -2,6 +2,7 @@
 spec2def(spoolss.dll spoolss.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    ../marshalling.c
     context.c
     jobs.c
     main.c
