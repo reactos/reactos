@@ -127,7 +127,7 @@ USB2_GetOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint)
 
     TransferType = TtEndpoint->TtEndpointParams.TransferType;
     Direction = TtEndpoint->TtEndpointParams.Direction;
-    DeviceSpeed = TtEndpoint->TtEndpointParams.Direction;
+    DeviceSpeed = TtEndpoint->TtEndpointParams.DeviceSpeed;
 
     HostDelay = TtEndpoint->Tt->HcExtension->HcDelayTime;
 
