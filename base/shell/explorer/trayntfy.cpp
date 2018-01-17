@@ -391,19 +391,10 @@ private:
             // Alternatively we could search for them periodically (would waste more resources).
             TRACE("Destroying icon %d with invalid handle hWnd=%08x\n", notifyItem->uID, notifyItem->hWnd);
 
-            HWND parentHWND = GetParent();
-            parentHWND = ::GetParent(parentHWND);
-
-            RECT windowRect;
-            ::GetClientRect(parentHWND, &windowRect);
-
             RemoveButton(notifyItem);
 
-            SendMessage(parentHWND,
-                WM_SIZE,
-                0,
-                MAKELONG(windowRect.right - windowRect.left,
-                         windowRect.bottom - windowRect.top));
+            HWND parentHWND = ::GetParent(::GetParent(GetParent()));
+            ::SendMessage(parentHWND, WM_SIZE, 0, 0);
 
             return;
         }
@@ -588,12 +579,7 @@ public:
         {
             SYS_PAGER_COPY_DATA * data;
             NOTIFYICONDATA *iconData;
-            HWND parentHWND;
-            RECT windowRect;
             BOOL ret = FALSE;
-            parentHWND = GetParent();
-            parentHWND = ::GetParent(parentHWND);
-            ::GetClientRect(parentHWND, &windowRect);
 
             int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
 
@@ -619,7 +605,8 @@ public:
 
             if (VisibleButtonCount != Toolbar.GetVisibleButtonCount())
             {
-                SendMessage(parentHWND, WM_SIZE, 0, 0);
+                HWND parentHWND = ::GetParent(GetParent());
+                ::SendMessage(parentHWND, WM_SIZE, 0, 0);
             }
 
             return ret;
