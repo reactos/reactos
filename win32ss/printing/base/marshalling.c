@@ -5,6 +5,9 @@
  * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
  */
 
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
 
 /**
  * @name MarshallDownStructure
