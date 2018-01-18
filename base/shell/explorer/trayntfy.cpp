@@ -122,7 +122,7 @@ public:
             {
                 IconWatcherData *Icon;
                 Icon = m_WatcherList.GetAt(Pos);
-                CloseHandle(Icon->hProcess);
+                delete Icon;
             }
         }
         m_WatcherList.RemoveAll();
