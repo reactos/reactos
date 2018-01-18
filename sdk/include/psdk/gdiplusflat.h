@@ -388,10 +388,10 @@ GpStatus WINGDIPAPI GdipWarpPath(GpPath*,GpMatrix*,GDIPCONST GpPointF*,INT,REAL,
 GpStatus WINGDIPAPI GdipWidenPath(GpPath*,GpPen*,GpMatrix*,REAL);
 
 /* HatchBrush */
-GpStatus WINGDIPAPI GdipCreateHatchBrush(HatchStyle,ARGB,ARGB,GpHatch**);
+GpStatus WINGDIPAPI GdipCreateHatchBrush(GpHatchStyle,ARGB,ARGB,GpHatch**);
 GpStatus WINGDIPAPI GdipGetHatchBackgroundColor(GpHatch*,ARGB*);
 GpStatus WINGDIPAPI GdipGetHatchForegroundColor(GpHatch*,ARGB*);
-GpStatus WINGDIPAPI GdipGetHatchStyle(GpHatch*,HatchStyle*);
+GpStatus WINGDIPAPI GdipGetHatchStyle(GpHatch*,GpHatchStyle*);
 
 /* Image */
 GpStatus WINGDIPAPI GdipCloneImage(GpImage*, GpImage**);
