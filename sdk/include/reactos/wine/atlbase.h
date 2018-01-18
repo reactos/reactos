@@ -28,7 +28,9 @@
 #define _ATL_VER_30  0x0300
 #define _ATL_VER_70  0x0700
 #define _ATL_VER_80  0x0800
+#define _ATL_VER_90  0x0900
 #define _ATL_VER_100 0x0a00
+#define _ATL_VER_110 0x0b00
 
 #ifndef _ATL_VER
 #define _ATL_VER _ATL_VER_100
@@ -92,6 +94,23 @@ typedef struct _ATL_OBJMAP_ENTRYW_TAG
     void (WINAPI *pfnObjectMain)(BOOL bStarting);
 } _ATL_OBJMAP_ENTRYW, _ATL_OBJMAP_ENTRY30, _ATL_OBJMAP_ENTRY;
 
+typedef struct _ATL_OBJMAP_CACHE
+{
+    IUnknown *pCF;
+    DWORD dwRegister;
+} _ATL_OBJMAP_CACHE;
+
+typedef struct _ATL_OBJMAP_ENTRY110
+{
+        const CLSID* pclsid;
+        HRESULT (WINAPI *pfnUpdateRegistry)(BOOL bRegister);
+        _ATL_CREATORFUNC* pfnGetClassObject;
+        _ATL_CREATORFUNC* pfnCreateInstance;
+        _ATL_OBJMAP_CACHE* pCache;
+        _ATL_DESCRIPTIONFUNCW* pfnGetObjectDescription;
+        _ATL_CATMAPFUNC* pfnGetCategoryMap;
+        void (WINAPI *pfnObjectMain)(BOOL bStarting);
+} _ATL_OBJMAP_ENTRY110, _ATL_OBJMAP_ENTRY_EX;
 
 typedef struct _ATL_TERMFUNC_ELEM_TAG
 {
@@ -184,6 +203,16 @@ typedef struct _ATL_WIN_MODULE70
     CSimpleArray /* <ATOM> */ m_rgWindowClassAtoms;
 } _ATL_WIN_MODULE70;
 
+#if _ATL_VER >= _ATL_VER_110
+typedef struct _ATL_COM_MODULE70
+{
+    UINT cbSize;
+    HINSTANCE m_hInstTypeLib;
+    _ATL_OBJMAP_ENTRY_EX **m_ppAutoObjMapFirst;
+    _ATL_OBJMAP_ENTRY_EX **m_ppAutoObjMapLast;
+    CComCriticalSection m_csObjMap;
+} _ATL_COM_MODULE70, _ATL_COM_MODULE;
+#else
 typedef struct _ATL_COM_MODULE70
 {
     UINT cbSize;
@@ -192,6 +221,7 @@ typedef struct _ATL_COM_MODULE70
     _ATL_OBJMAP_ENTRY **m_ppAutoObjMapLast;
     CComCriticalSection m_csObjMap;
 } _ATL_COM_MODULE70, _ATL_COM_MODULE;
+#endif
 
 #if _ATL_VER >= _ATL_VER_70
 typedef _ATL_MODULE70 _ATL_MODULE;
