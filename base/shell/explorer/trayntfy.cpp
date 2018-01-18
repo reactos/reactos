@@ -119,7 +119,7 @@ public:
         EnterCriticalSection(&m_ListLock);
 
         POSITION Pos;
-        for (int i = 0; i < m_WatcherList.GetCount(); i++)
+        for (size_t i = 0; i < m_WatcherList.GetCount(); i++)
         {
             Pos = m_WatcherList.FindIndex(i);
             if (Pos)
@@ -170,7 +170,7 @@ public:
 
     IconWatcherData* GetListEntry(_In_opt_ NOTIFYICONDATA *iconData, _In_opt_ HANDLE hProcess, _In_ bool Remove)
     {
-        IconWatcherData *Entry = nullptr;
+        IconWatcherData *Entry = NULL;
         POSITION NextPosition = m_WatcherList.GetHeadPosition();
         POSITION Position;
         do
@@ -188,7 +188,7 @@ public:
                     break;
                 }
             }
-            Entry = nullptr;
+            Entry = NULL;
 
         } while (NextPosition != NULL);
 
@@ -214,7 +214,7 @@ private:
             WatchList[0] = This->m_WakeUpEvent;
 
             POSITION Pos;
-            for (int i = 0; i < This->m_WatcherList.GetCount(); i++)
+            for (size_t i = 0; i < This->m_WatcherList.GetCount(); i++)
             {
                 Pos = This->m_WatcherList.FindIndex(i);
                 if (Pos)
