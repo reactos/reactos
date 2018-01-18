@@ -47,6 +47,7 @@ enum type_id
     INetFwPolicy_tid,
     INetFwPolicy2_tid,
     INetFwProfile_tid,
+    INetFwRules_tid,
     last_tid
 };
 
