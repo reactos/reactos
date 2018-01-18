@@ -923,14 +923,37 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
     int i;
     long l;
     HDC hdc;
+    BOOL cmb_selected_by_edit = FALSE;
 
     if (!lpcf) return FALSE;
+
+    if(HIWORD(wParam) == CBN_EDITCHANGE)
+    {
+        int idx;
+        WCHAR str_edit[256], str_cmb[256];
+        int cmb = LOWORD(wParam);
+
+        GetDlgItemTextW(hDlg, cmb, str_edit, sizeof(str_edit) / sizeof(str_edit[0]));
+        idx = SendDlgItemMessageW(hDlg, cmb, CB_FINDSTRING, -1, (LPARAM)str_edit);
+        if(idx != -1)
+        {
+            SendDlgItemMessageW(hDlg, cmb, CB_GETLBTEXT, idx, (LPARAM)str_cmb);
+
+            /* Select listbox entry only if we have an exact match */
+            if(lstrcmpiW(str_edit, str_cmb) == 0)
+            {
+                 SendDlgItemMessageW(hDlg, cmb, CB_SETCURSEL, idx, 0);
+                 SendDlgItemMessageW(hDlg, cmb, CB_SETEDITSEL, 0, -1); /* Remove edit field selection */
+                 cmb_selected_by_edit = TRUE;
+            }
+        }
+    }
 
     TRACE("WM_COMMAND wParam=%08X lParam=%08lX\n", (LONG)wParam, lParam);
     switch (LOWORD(wParam))
     {
     case cmb1:
-        if (HIWORD(wParam)==CBN_SELCHANGE)
+        if (HIWORD(wParam) == CBN_SELCHANGE || cmb_selected_by_edit)
         {
             INT pointsize; /* save current pointsize */
             LONG pstyle;  /* save current style */
@@ -981,7 +1004,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
     case cmb2:
     case cmb3:
     case cmb5:
-        if (HIWORD(wParam)==CBN_SELCHANGE || HIWORD(wParam)== BN_CLICKED )
+        if (HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == BN_CLICKED || cmb_selected_by_edit)
         {
             WCHAR str[256];
             WINDOWINFO wininfo;
