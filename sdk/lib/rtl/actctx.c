@@ -15,6 +15,7 @@
 /* Based on Wine Staging 1.7.37 */
 
 #include <rtl.h>
+#include <ntstrsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -694,6 +695,7 @@ static const WCHAR wildcardW[] = {'*',0};
 
 static ACTIVATION_CONTEXT_WRAPPED system_actctx = { ACTCTX_MAGIC_MARKER, { 1 } };
 static ACTIVATION_CONTEXT *process_actctx = &system_actctx.ActivationContext;
+static ACTIVATION_CONTEXT *implicit_actctx = &system_actctx.ActivationContext;
 
 static WCHAR *strdupW(const WCHAR* str)
 {
@@ -4657,6 +4659,8 @@ void actctx_init(void)
 {
     ACTCTXW ctx;
     HANDLE handle;
+    WCHAR buffer[1024];
+    NTSTATUS Status;
 
     ctx.cbSize   = sizeof(ctx);
     ctx.lpSource = NULL;
@@ -4667,6 +4671,22 @@ void actctx_init(void)
     if (NT_SUCCESS(RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle)))
     {
         process_actctx = check_actctx(handle);
+    }
+
+    ctx.dwFlags  = 0;
+    ctx.hModule  = NULL;
+    ctx.lpResourceName = NULL;
+    ctx.lpSource = buffer;
+    RtlStringCchCopyW(buffer, 1024, SharedUserData->NtSystemRoot);
+    RtlStringCchCatW(buffer, 1024, L"\\winsxs\\manifests\\systemcompatible.manifest");
+    Status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle);
+    if (NT_SUCCESS(Status))
+    {
+        implicit_actctx = check_actctx(handle);
+    }
+    else
+    {
+        DPRINT1("Failed to create the implicit act ctx. Status: 0x%x!!!\n", Status);
     }
 }
 
@@ -5350,6 +5370,9 @@ NTSTATUS NTAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *g
     if (status != STATUS_SUCCESS)
         status = find_string( process_actctx, section_kind, section_name, flags, data );
 
+    if (status != STATUS_SUCCESS)
+        status = find_string( implicit_actctx, section_kind, section_name, flags, data );
+
     DPRINT("RtlFindActivationContextSectionString() returns status %x\n", status);
     return status;
 }
@@ -5389,6 +5412,9 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
 
     if (status != STATUS_SUCCESS)
         status = find_guid( process_actctx, section_kind, guid, flags, data );
+
+    if (status != STATUS_SUCCESS)
+        status = find_guid( implicit_actctx, section_kind, guid, flags, data );
 
     return status;
 }
