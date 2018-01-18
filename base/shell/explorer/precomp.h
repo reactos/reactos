@@ -28,10 +28,12 @@
 #include <atlcom.h>
 #include <atlwin.h>
 #include <atlstr.h>
+#include <atlcoll.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <uxtheme.h>
+#include <process.h>
 #include <strsafe.h>
 
 #include <undocuser.h>
