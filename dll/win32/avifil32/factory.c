@@ -166,18 +166,12 @@ LPCWSTR AVIFILE_BasenameW(LPCWSTR szPath)
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID pclsid, REFIID piid, LPVOID *ppv)
 {
-  HRESULT hr;
-
   TRACE("(%s,%s,%p)\n", debugstr_guid(pclsid), debugstr_guid(piid), ppv);
 
   if (pclsid == NULL || piid == NULL || ppv == NULL)
     return E_FAIL;
 
-  hr = AVIFILE_CreateClassFactory(pclsid,piid,ppv);
-  if (SUCCEEDED(hr))
-    return hr;
-
-  return avifil32_DllGetClassObject(pclsid,piid,ppv);
+  return AVIFILE_CreateClassFactory(pclsid,piid,ppv);
 }
 
 /*****************************************************************************
