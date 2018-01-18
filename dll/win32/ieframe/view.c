@@ -56,7 +56,7 @@ static HRESULT WINAPI ViewObject_Draw(IViewObject2 *iface, DWORD dwDrawAspect,
     FIXME("(%p)->(%d %d %p %p %p %p %p %p %p %08lx)\n", This, dwDrawAspect, lindex,
             pvAspect, ptd, hdcTargetDev, hdcDraw, lprcBounds, lprcWBounds, pfnContinue,
             dwContinue);
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ViewObject_GetColorSet(IViewObject2 *iface, DWORD dwAspect,

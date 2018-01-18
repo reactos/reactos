@@ -329,13 +329,16 @@ TID_LIST
 } tid_t;
 
 HRESULT get_typeinfo(tid_t,ITypeInfo**) DECLSPEC_HIDDEN;
-HRESULT register_class_object(BOOL) DECLSPEC_HIDDEN;
 
 HRESULT WINAPI CUrlHistory_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI InternetExplorer_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI InternetShortcut_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI WebBrowser_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI WebBrowserV1_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
+HRESULT WINAPI InternetExplorerManager_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
+
+extern IClassFactory InternetExplorerFactory DECLSPEC_HIDDEN;
+extern IClassFactory InternetExplorerManagerFactory DECLSPEC_HIDDEN;
 
 extern LONG module_ref DECLSPEC_HIDDEN;
 extern HINSTANCE ieframe_instance DECLSPEC_HIDDEN;
