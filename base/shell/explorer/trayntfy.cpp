@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
+ * Copyright 2018 Ged Murphy <gedmurphy@reactos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,6 +34,253 @@ typedef struct _SYS_PAGER_COPY_DATA
     NOTIFYICONDATA  nicon_data;
 } SYS_PAGER_COPY_DATA, *PSYS_PAGER_COPY_DATA;
 
+
+struct IconWatcherData
+{
+    HANDLE hProcess;
+    DWORD ProcessId;
+    NOTIFYICONDATA IconData;
+
+    IconWatcherData()
+    {
+        IconWatcherData(NULL);
+    }
+
+    IconWatcherData(NOTIFYICONDATA *iconData) :
+        hProcess(NULL), ProcessId(0)
+    {
+        IconData.cbSize = sizeof(NOTIFYICONDATA);
+        IconData.hWnd = iconData->hWnd;
+        IconData.uID = iconData->uID;
+        IconData.guidItem = iconData->guidItem;
+    }
+
+    ~IconWatcherData()
+    {
+        if (hProcess)
+        {
+            CloseHandle(hProcess);
+        }
+    }
+};
+
+class CIconWatcher
+{
+    CAtlList<IconWatcherData *> m_WatcherList;
+    CRITICAL_SECTION m_ListLock;
+    HANDLE m_hWatcherThread;
+    HANDLE m_WakeUpEvent;
+    HWND m_hwndSysTray;
+    bool m_Loop;
+
+public:
+    CIconWatcher() :
+        m_hWatcherThread(NULL),
+        m_WakeUpEvent(NULL),
+        m_hwndSysTray(NULL),
+        m_Loop(false)
+    {
+    }
+    virtual ~CIconWatcher()
+    {
+        Uninitialize();
+        if (m_WakeUpEvent)
+            CloseHandle(m_WakeUpEvent);
+        if (m_hWatcherThread)
+            CloseHandle(m_hWatcherThread);
+    }
+
+    bool Initialize(_In_ HWND hWndParent)
+    {
+        m_hwndSysTray = hWndParent;
+
+        InitializeCriticalSection(&m_ListLock);
+        m_WakeUpEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+        if (m_WakeUpEvent == NULL)
+            return false;
+
+        m_hWatcherThread = (HANDLE)_beginthreadex(NULL,
+                                                  0,
+                                                  WatcherThread,
+                                                  (LPVOID)this,
+                                                  0,
+                                                  NULL);
+        if (m_hWatcherThread == NULL)
+            return false;
+
+        return true;
+    }
+
+    void Uninitialize()
+    {
+        m_Loop = false;
+        SetEvent(m_WakeUpEvent);
+
+        EnterCriticalSection(&m_ListLock);
+
+        POSITION Pos;
+        for (int i = 0; i < m_WatcherList.GetCount(); i++)
+        {
+            Pos = m_WatcherList.FindIndex(i);
+            if (Pos)
+            {
+                IconWatcherData *Icon;
+                Icon = m_WatcherList.GetAt(Pos);
+                CloseHandle(Icon->hProcess);
+            }
+        }
+        m_WatcherList.RemoveAll();
+
+        LeaveCriticalSection(&m_ListLock);
+    }
+
+    bool AddIconToWatcher(_In_ NOTIFYICONDATA *iconData)
+    {
+        IconWatcherData *Icon = new IconWatcherData(iconData);
+
+        (void)GetWindowThreadProcessId(iconData->hWnd, &Icon->ProcessId);
+
+        Icon->hProcess = OpenProcess(SYNCHRONIZE, FALSE, Icon->ProcessId);
+        if (Icon->hProcess == NULL)
+            return false;
+
+        EnterCriticalSection(&m_ListLock);
+
+        m_WatcherList.AddTail(Icon);
+        SetEvent(m_WakeUpEvent);
+
+        LeaveCriticalSection(&m_ListLock);
+
+        return true;
+    }
+
+    bool RemoveIconFromWatcher(_In_ NOTIFYICONDATA *iconData)
+    {
+        EnterCriticalSection(&m_ListLock);
+        
+        IconWatcherData *Icon;
+        Icon = GetListEntry(iconData, NULL, true);
+
+        SetEvent(m_WakeUpEvent);
+        LeaveCriticalSection(&m_ListLock);
+
+        delete Icon;
+        return true;
+    }
+
+    IconWatcherData* GetListEntry(_In_opt_ NOTIFYICONDATA *iconData, _In_opt_ HANDLE hProcess, _In_ bool Remove)
+    {
+        IconWatcherData *Entry = nullptr;
+        POSITION NextPosition = m_WatcherList.GetHeadPosition();
+        POSITION Position;
+        do
+        {
+            Position = NextPosition;
+
+            Entry = m_WatcherList.GetNext(NextPosition);
+            if (Entry)
+            {
+                if ((iconData && ((Entry->IconData.hWnd == iconData->hWnd) && (Entry->IconData.uID == iconData->uID))) ||
+                     (hProcess && (Entry->hProcess == hProcess)))
+                {
+                    if (Remove)
+                        m_WatcherList.RemoveAt(Position);
+                    break;
+                }
+            }
+            Entry = nullptr;
+
+        } while (NextPosition != NULL);
+
+        return Entry;
+    }
+
+private:
+
+    static UINT WINAPI WatcherThread(_In_opt_ LPVOID lpParam)
+    {
+        CIconWatcher* This = reinterpret_cast<CIconWatcher *>(lpParam);
+
+        This->m_Loop = true;
+        while (This->m_Loop)
+        {
+            HANDLE *WatchList;
+            DWORD Size;
+
+            EnterCriticalSection(&This->m_ListLock);
+
+            Size = This->m_WatcherList.GetCount() + 1;
+            WatchList = new HANDLE[Size];
+            WatchList[0] = This->m_WakeUpEvent;
+
+            POSITION Pos;
+            for (int i = 0; i < This->m_WatcherList.GetCount(); i++)
+            {
+                Pos = This->m_WatcherList.FindIndex(i);
+                if (Pos)
+                {
+                    IconWatcherData *Icon;
+                    Icon = This->m_WatcherList.GetAt(Pos);
+                    WatchList[i + 1] = Icon->hProcess;
+                }
+            }
+
+            LeaveCriticalSection(&This->m_ListLock);
+
+            DWORD Status;
+            Status = WaitForMultipleObjects(Size,
+                                            WatchList,
+                                            FALSE,
+                                            INFINITE);
+            if (Status == WAIT_OBJECT_0)
+            {
+                // We've been kicked, we have updates to our list (or we're exiting the thread)
+            }
+            else if ((Status >= WAIT_OBJECT_0 + 1) && (Status < Size))
+            {
+                IconWatcherData *Icon;
+                Icon = This->GetListEntry(NULL, WatchList[Status], false);
+
+                int len = FIELD_OFFSET(SYS_PAGER_COPY_DATA, nicon_data) + Icon->IconData.cbSize;
+                PSYS_PAGER_COPY_DATA pnotify_data = (PSYS_PAGER_COPY_DATA)new BYTE[len];
+                pnotify_data->cookie = 1;
+                pnotify_data->notify_code = NIM_DELETE;
+                memcpy(&pnotify_data->nicon_data, &Icon->IconData, Icon->IconData.cbSize);
+
+                COPYDATASTRUCT data;
+                data.dwData = 1;
+                data.cbData = len;
+                data.lpData = pnotify_data;
+
+                BOOL Success = FALSE;
+                HWND parentHWND = ::GetParent(GetParent(This->m_hwndSysTray));
+                if (parentHWND)
+                    Success = ::SendMessage(parentHWND, WM_COPYDATA, (WPARAM)&Icon->IconData, (LPARAM)&data);
+
+                delete pnotify_data;
+
+                if (!Success)
+                {
+                    // If we failed to handle the delete message, forcibly remove it
+                    This->RemoveIconFromWatcher(&Icon->IconData);
+                }
+            }
+            else
+            {
+                if (Status == WAIT_FAILED)
+                {
+                    Status = GetLastError();
+                }
+                ERR("Failed to wait on process handles : %lu\n", Status);
+                This->m_Loop = false;
+            }
+        }
+
+        return 0;
+    }
+};
+
+
 class CNotifyToolbar :
     public CWindowImplBaseT< CToolbar<NOTIFYICONDATA>, CControlWinTraits >
 {
@@ -55,7 +303,7 @@ public:
         return m_VisibleButtonCount;
     }
 
-    int FindItemByIconData(IN CONST NOTIFYICONDATA *iconData, NOTIFYICONDATA ** pdata)
+    int FindItem(IN HWND hWnd, IN UINT uID, NOTIFYICONDATA ** pdata)
     {
         int count = GetButtonCount();
 
@@ -65,8 +313,8 @@ public:
 
             data = GetItemData(i);
 
-            if (data->hWnd == iconData->hWnd &&
-                data->uID == iconData->uID)
+            if (data->hWnd == hWnd &&
+                data->uID == uID)
             {
                 if (pdata)
                     *pdata = data;
@@ -94,6 +342,28 @@ public:
         return -1;
     }
 
+    int FindItem(IN GUID& Guid, NOTIFYICONDATA ** pdata)
+    {
+        int count = GetButtonCount();
+
+        for (int i = 0; i < count; i++)
+        {
+            NOTIFYICONDATA * data;
+
+            data = GetItemData(i);
+
+            if (data->guidItem == Guid)
+            {
+                if (pdata)
+                    *pdata = data;
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+
     BOOL AddButton(IN CONST NOTIFYICONDATA *iconData)
     {
         TBBUTTON tbBtn;
@@ -107,7 +377,7 @@ public:
             (iconData->dwState & NIS_HIDDEN) ? " HIDDEN" : "",
             (iconData->dwState & NIS_SHAREDICON) ? " SHARED" : "");
 
-        int index = FindItemByIconData(iconData, &notifyItem);
+        int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
         if (index >= 0)
         {
             TRACE("Icon %d from hWnd %08x ALREADY EXISTS!", iconData->uID, iconData->hWnd);
@@ -188,7 +458,7 @@ public:
             (iconData->dwState & NIS_HIDDEN) ? " HIDDEN" : "",
             (iconData->dwState & NIS_SHAREDICON) ? " SHARED" : "");
 
-        int index = FindItemByIconData(iconData, &notifyItem);
+        int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
         if (index < 0)
         {
             WARN("Icon %d from hWnd %08x DOES NOT EXIST!", iconData->uID, iconData->hWnd);
@@ -273,7 +543,7 @@ public:
 
         TRACE("Removing icon %d from hWnd %08x", iconData->uID, iconData->hWnd);
 
-        int index = FindItemByIconData(iconData, &notifyItem);
+        int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
         if (index < 0)
         {
             TRACE("Icon %d from hWnd %08x ALREADY MISSING!", iconData->uID, iconData->hWnd);
@@ -529,7 +799,8 @@ public:
 
 class CSysPagerWnd :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public CWindowImpl < CSysPagerWnd, CWindow, CControlWinTraits >
+    public CWindowImpl < CSysPagerWnd, CWindow, CControlWinTraits >,
+    public CIconWatcher
 {
     CNotifyToolbar Toolbar;
 
@@ -563,12 +834,19 @@ public:
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         Toolbar.Initialize(m_hWnd);
+        CIconWatcher::Initialize(m_hWnd);
 
         // Explicitly request running applications to re-register their systray icons
         ::SendNotifyMessageW(HWND_BROADCAST,
                              RegisterWindowMessageW(L"TaskbarCreated"),
                              0, 0);
 
+        return TRUE;
+    }
+
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        CIconWatcher::Uninitialize();
         return TRUE;
     }
 
@@ -591,12 +869,20 @@ public:
             {
             case NIM_ADD:
                 ret = Toolbar.AddButton(iconData);
+                if (ret == TRUE)
+                {
+                    AddIconToWatcher(iconData);
+                }
                 break;
             case NIM_MODIFY:
                 ret = Toolbar.UpdateButton(iconData);
                 break;
             case NIM_DELETE:
                 ret = Toolbar.RemoveButton(iconData);
+                if (ret == TRUE)
+                {
+                    RemoveIconFromWatcher(iconData);
+                }
                 break;
             default:
                 TRACE("NotifyIconCmd received with unknown code %d.\n", data->notify_code);
@@ -713,6 +999,7 @@ public:
 
     BEGIN_MSG_MAP(CSysPagerWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
