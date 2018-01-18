@@ -29,11 +29,13 @@ static BOOL load_metafiles;
 
 typedef struct emfplus_record
 {
+    DWORD record_type;
+    DWORD flags; /* Used for EMF+ records only. */
     BOOL  todo;
-    ULONG record_type;
     BOOL  playback_todo;
     void (*playback_fn)(GpMetafile* metafile, EmfPlusRecordType record_type,
         unsigned int flags, unsigned int dataSize, const unsigned char *pStr);
+    DWORD broken_flags;
 } emfplus_record;
 
 typedef struct emfplus_check_state
@@ -46,10 +48,21 @@ typedef struct emfplus_check_state
 
 static void check_record(int count, const char *desc, const struct emfplus_record *expected, const struct emfplus_record *actual)
 {
+    if (actual->record_type > GDIP_EMFPLUS_RECORD_BASE)
+    {
+    todo_wine_if (expected->todo)
+        ok(expected->record_type == actual->record_type && (expected->flags == actual->flags ||
+            broken(expected->broken_flags == actual->flags)),
+            "%s.%i: Expected record type 0x%x, got 0x%x. Expected flags %#x, got %#x.\n", desc, count,
+            expected->record_type, actual->record_type, expected->flags, actual->flags);
+    }
+    else
+    {
     todo_wine_if (expected->todo)
         ok(expected->record_type == actual->record_type,
-            "%s.%i: Expected record type 0x%x, got 0x%x\n", desc, count,
+            "%s.%i: Expected record type 0x%x, got 0x%x.\n", desc, count,
             expected->record_type, actual->record_type);
+    }
 }
 
 typedef struct EmfPlusRecordHeader
@@ -124,6 +137,7 @@ static int CALLBACK enum_emf_proc(HDC hDC, HANDLETABLE *lpHTable, const ENHMETAR
                 {
                     actual.todo = FALSE;
                     actual.record_type = record->Type;
+                    actual.flags = record->Flags;
 
                     check_record(state->count, state->desc, &state->expected[state->count], &actual);
                     state->count++;
@@ -163,6 +177,7 @@ static int CALLBACK enum_emf_proc(HDC hDC, HANDLETABLE *lpHTable, const ENHMETAR
     {
         actual.todo = FALSE;
         actual.record_type = lpEMFR->iType;
+        actual.flags = 0;
 
         check_record(state->count, state->desc, &state->expected[state->count], &actual);
 
@@ -198,6 +213,7 @@ static BOOL CALLBACK enum_metafile_proc(EmfPlusRecordType record_type, unsigned 
 
     actual.todo = FALSE;
     actual.record_type = record_type;
+    actual.flags = flags;
 
     if (dataSize == 0)
         ok(pStr == NULL, "non-NULL pStr\n");
@@ -338,11 +354,11 @@ static void sync_metafile(GpMetafile **metafile, const char *filename)
 }
 
 static const emfplus_record empty_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_empty(void)
@@ -537,17 +553,17 @@ static void test_empty(void)
 }
 
 static const emfplus_record getdc_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeGetDC},
-    {0, EMR_CREATEBRUSHINDIRECT},
-    {0, EMR_SELECTOBJECT},
-    {0, EMR_RECTANGLE},
-    {0, EMR_SELECTOBJECT},
-    {0, EMR_DELETEOBJECT},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeGetDC },
+    { EMR_CREATEBRUSHINDIRECT },
+    { EMR_SELECTOBJECT },
+    { EMR_RECTANGLE },
+    { EMR_SELECTOBJECT },
+    { EMR_DELETEOBJECT },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_getdc(void)
@@ -675,34 +691,34 @@ static void test_getdc(void)
 }
 
 static const emfplus_record emfonly_records[] = {
-    {0, EMR_HEADER},
-    {0, EMR_CREATEBRUSHINDIRECT},
-    {0, EMR_SELECTOBJECT},
-    {0, EMR_RECTANGLE},
-    {0, EMR_SELECTOBJECT},
-    {0, EMR_DELETEOBJECT},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EMR_CREATEBRUSHINDIRECT },
+    { EMR_SELECTOBJECT },
+    { EMR_RECTANGLE },
+    { EMR_SELECTOBJECT },
+    { EMR_DELETEOBJECT },
+    { EMR_EOF },
+    { 0 }
 };
 
 static const emfplus_record emfonly_draw_records[] = {
-    {0, EMR_HEADER},
-    {1, EMR_SAVEDC},
-    {1, EMR_SETICMMODE},
-    {1, EMR_SETMITERLIMIT},
-    {1, EMR_MODIFYWORLDTRANSFORM},
-    {1, EMR_EXTCREATEPEN},
-    {1, EMR_SELECTOBJECT},
-    {1, EMR_SELECTOBJECT},
-    {1, EMR_POLYLINE16},
-    {1, EMR_SELECTOBJECT},
-    {1, EMR_SELECTOBJECT},
-    {1, EMR_MODIFYWORLDTRANSFORM},
-    {1, EMR_DELETEOBJECT},
-    {1, EMR_SETMITERLIMIT},
-    {1, EMR_RESTOREDC},
-    {0, EMR_EOF},
-    {1}
+    { EMR_HEADER },
+    { EMR_SAVEDC, 0, 1 },
+    { EMR_SETICMMODE, 0, 1 },
+    { EMR_SETMITERLIMIT, 0, 1 },
+    { EMR_MODIFYWORLDTRANSFORM, 0, 1 },
+    { EMR_EXTCREATEPEN, 0, 1 },
+    { EMR_SELECTOBJECT, 0, 1 },
+    { EMR_SELECTOBJECT, 0, 1 },
+    { EMR_POLYLINE16, 0, 1 },
+    { EMR_SELECTOBJECT, 0, 1 },
+    { EMR_SELECTOBJECT, 0, 1 },
+    { EMR_MODIFYWORLDTRANSFORM, 0, 1 },
+    { EMR_DELETEOBJECT, 0, 1 },
+    { EMR_SETMITERLIMIT, 0, 1 },
+    { EMR_RESTOREDC, 0, 1 },
+    { EMR_EOF },
+    { 0, 0, 1 }
 };
 
 static void test_emfonly(void)
@@ -998,12 +1014,12 @@ static void test_emfonly(void)
 }
 
 static const emfplus_record fillrect_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_fillrect(void)
@@ -1108,16 +1124,16 @@ static void test_fillrect(void)
 }
 
 static const emfplus_record clear_emf_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeClear},
-    {1, EMR_SAVEDC},
-    {1, EMR_SETICMMODE},
-    {1, EMR_BITBLT},
-    {1, EMR_RESTOREDC},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeClear },
+    { EMR_SAVEDC, 0, 1 },
+    { EMR_SETICMMODE, 0, 1 },
+    { EMR_BITBLT, 0, 1 },
+    { EMR_RESTOREDC, 0, 1 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_clear(void)
@@ -1312,20 +1328,20 @@ static void test_nullframerect(void) {
 }
 
 static const emfplus_record pagetransform_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeSetPageTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeSetPageTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeSetPageTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeSetPageTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeSetPageTransform, UnitPixel },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeSetPageTransform, UnitPixel },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeSetPageTransform, UnitInch },
+    { EmfPlusRecordTypeFillRects, 0x8000 },
+    { EmfPlusRecordTypeSetPageTransform, UnitDisplay },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_pagetransform(void)
@@ -1513,24 +1529,24 @@ static void test_pagetransform(void)
 }
 
 static const emfplus_record worldtransform_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeScaleWorldTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeResetWorldTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeMultiplyWorldTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeRotateWorldTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeSetWorldTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeTranslateWorldTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeScaleWorldTransform },
+    { EmfPlusRecordTypeFillRects, 0x8000 },
+    { EmfPlusRecordTypeResetWorldTransform },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeMultiplyWorldTransform },
+    { EmfPlusRecordTypeFillRects, 0x8000 },
+    { EmfPlusRecordTypeRotateWorldTransform, 0x2000 },
+    { EmfPlusRecordTypeFillRects, 0x8000 },
+    { EmfPlusRecordTypeSetWorldTransform },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeTranslateWorldTransform, 0x2000 },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_worldtransform(void)
@@ -1938,29 +1954,29 @@ static void test_frameunit(void)
 }
 
 static const emfplus_record container_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeBeginContainerNoParams},
-    {0, EmfPlusRecordTypeScaleWorldTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeEndContainer},
-    {0, EmfPlusRecordTypeScaleWorldTransform},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeSave},
-    {0, EmfPlusRecordTypeRestore},
-    {0, EmfPlusRecordTypeScaleWorldTransform},
-    {0, EmfPlusRecordTypeBeginContainerNoParams},
-    {0, EmfPlusRecordTypeScaleWorldTransform},
-    {0, EmfPlusRecordTypeBeginContainerNoParams},
-    {0, EmfPlusRecordTypeEndContainer},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeBeginContainer},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeEndContainer},
-    {0, EmfPlusRecordTypeBeginContainerNoParams},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeBeginContainerNoParams },
+    { EmfPlusRecordTypeScaleWorldTransform },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeEndContainer },
+    { EmfPlusRecordTypeScaleWorldTransform },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeSave },
+    { EmfPlusRecordTypeRestore },
+    { EmfPlusRecordTypeScaleWorldTransform },
+    { EmfPlusRecordTypeBeginContainerNoParams },
+    { EmfPlusRecordTypeScaleWorldTransform },
+    { EmfPlusRecordTypeBeginContainerNoParams },
+    { EmfPlusRecordTypeEndContainer },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeBeginContainer, UnitInch },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeEndContainer },
+    { EmfPlusRecordTypeBeginContainerNoParams },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_containers(void)
@@ -2142,19 +2158,19 @@ static void test_containers(void)
 }
 
 static const emfplus_record clipping_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeSave},
-    {0, EmfPlusRecordTypeSetClipRect},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeRestore},
-    {0, EmfPlusRecordTypeSetClipRect},
-    {0, EmfPlusRecordTypeFillRects},
-    {0, EmfPlusRecordTypeObject, 1},
-    {0, EmfPlusRecordTypeSetClipRegion, 1},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeSave },
+    { EmfPlusRecordTypeSetClipRect },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeRestore },
+    { EmfPlusRecordTypeSetClipRect, 0x300 },
+    { EmfPlusRecordTypeFillRects, 0xc000 },
+    { EmfPlusRecordTypeObject, ObjectTypeRegion << 8 },
+    { EmfPlusRecordTypeSetClipRegion, 0x100 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_clipping(void)
@@ -2291,14 +2307,14 @@ static void test_gditransform_cb(GpMetafile* metafile, EmfPlusRecordType record_
 }
 
 static const emfplus_record gditransform_records[] = {
-    {0, EMR_HEADER},
-    {0, EMR_CREATEBRUSHINDIRECT},
-    {0, EMR_SELECTOBJECT},
-    {0, EMR_GDICOMMENT, 0, test_gditransform_cb},
-    {0, EMR_SELECTOBJECT},
-    {0, EMR_DELETEOBJECT},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EMR_CREATEBRUSHINDIRECT },
+    { EMR_SELECTOBJECT },
+    { EMR_GDICOMMENT, 0, 0, 0, test_gditransform_cb },
+    { EMR_SELECTOBJECT },
+    { EMR_DELETEOBJECT },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_gditransform(void)
@@ -2395,45 +2411,45 @@ static void test_gditransform(void)
 }
 
 static const emfplus_record draw_image_bitmap_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeObject},
-    {0, EmfPlusRecordTypeObject},
-    {0, EmfPlusRecordTypeDrawImagePoints},
-    {1, EMR_SAVEDC},
-    {1, EMR_SETICMMODE},
-    {1, EMR_BITBLT},
-    {1, EMR_RESTOREDC},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeObject, ObjectTypeImage << 8 },
+    { EmfPlusRecordTypeObject, (ObjectTypeImageAttributes << 8) | 1 },
+    { EmfPlusRecordTypeDrawImagePoints, 0, 0, 0, NULL, 0x4000 },
+    { EMR_SAVEDC, 0, 1 },
+    { EMR_SETICMMODE, 0, 1 },
+    { EMR_BITBLT, 0, 1 },
+    { EMR_RESTOREDC, 0, 1 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static const emfplus_record draw_image_metafile_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeObject},
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeObject, ObjectTypeImage << 8 },
     /* metafile object */
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeObject},
-    {0, EmfPlusRecordTypeObject},
-    {0, EmfPlusRecordTypeDrawImagePoints},
-    {1, EMR_SAVEDC},
-    {1, EMR_SETICMMODE},
-    {1, EMR_BITBLT},
-    {1, EMR_RESTOREDC},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeObject, ObjectTypeImage << 8 },
+    { EmfPlusRecordTypeObject, (ObjectTypeImageAttributes << 8) | 1 },
+    { EmfPlusRecordTypeDrawImagePoints },
+    { EMR_SAVEDC, 0, 1 },
+    { EMR_SETICMMODE, 0, 1 },
+    { EMR_BITBLT, 0, 1 },
+    { EMR_RESTOREDC, 0, 1 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
     /* end of metafile object */
-    {0, EmfPlusRecordTypeDrawImagePoints},
-    {1, EMR_SAVEDC},
-    {1, EMR_SETICMMODE},
-    {1, EMR_BITBLT},
-    {1, EMR_RESTOREDC},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EmfPlusRecordTypeDrawImagePoints },
+    { EMR_SAVEDC, 0, 1 },
+    { EMR_SETICMMODE, 0, 1 },
+    { EMR_BITBLT, 0, 1 },
+    { EMR_RESTOREDC, 0, 1 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_drawimage(void)
@@ -2538,17 +2554,17 @@ static void test_drawimage(void)
 }
 
 static const emfplus_record properties_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeSetTextRenderingHint},
-    {0, EmfPlusRecordTypeSetPixelOffsetMode},
-    {0, EmfPlusRecordTypeSetAntiAliasMode},
-    {0, EmfPlusRecordTypeSetCompositingMode},
-    {0, EmfPlusRecordTypeSetCompositingQuality},
-    {0, EmfPlusRecordTypeSetInterpolationMode},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeSetTextRenderingHint, TextRenderingHintAntiAlias },
+    { EmfPlusRecordTypeSetPixelOffsetMode, PixelOffsetModeHighQuality },
+    { EmfPlusRecordTypeSetAntiAliasMode, (SmoothingModeAntiAlias << 1) | 1, 0, 0, NULL, 0x1 },
+    { EmfPlusRecordTypeSetCompositingMode, CompositingModeSourceCopy },
+    { EmfPlusRecordTypeSetCompositingQuality, CompositingQualityHighQuality },
+    { EmfPlusRecordTypeSetInterpolationMode, InterpolationModeHighQualityBicubic },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_properties(void)
@@ -2615,18 +2631,18 @@ static void test_properties(void)
 }
 
 static const emfplus_record draw_path_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeObject},
-    {0, EmfPlusRecordTypeObject},
-    {0, EmfPlusRecordTypeDrawPath},
-    {1, EMR_SAVEDC},
-    {1, EMR_SETICMMODE},
-    {1, EMR_BITBLT},
-    {1, EMR_RESTOREDC},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeObject, ObjectTypePen << 8 },
+    { EmfPlusRecordTypeObject, (ObjectTypePath << 8) | 1 },
+    { EmfPlusRecordTypeDrawPath, 1 },
+    { EMR_SAVEDC, 0, 1 },
+    { EMR_SETICMMODE, 0, 1 },
+    { EMR_BITBLT, 0, 1 },
+    { EMR_RESTOREDC, 0, 1 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_drawpath(void)
@@ -2681,17 +2697,17 @@ static void test_drawpath(void)
 }
 
 static const emfplus_record fill_path_records[] = {
-    {0, EMR_HEADER},
-    {0, EmfPlusRecordTypeHeader},
-    {0, EmfPlusRecordTypeObject},
-    {0, EmfPlusRecordTypeFillPath},
-    {1, EMR_SAVEDC},
-    {1, EMR_SETICMMODE},
-    {1, EMR_BITBLT},
-    {1, EMR_RESTOREDC},
-    {0, EmfPlusRecordTypeEndOfFile},
-    {0, EMR_EOF},
-    {0}
+    { EMR_HEADER },
+    { EmfPlusRecordTypeHeader },
+    { EmfPlusRecordTypeObject, ObjectTypePath << 8 },
+    { EmfPlusRecordTypeFillPath, 0x8000 },
+    { EMR_SAVEDC, 0, 1 },
+    { EMR_SETICMMODE, 0, 1 },
+    { EMR_BITBLT, 0, 1 },
+    { EMR_RESTOREDC, 0, 1 },
+    { EmfPlusRecordTypeEndOfFile },
+    { EMR_EOF },
+    { 0 }
 };
 
 static void test_fillpath(void)

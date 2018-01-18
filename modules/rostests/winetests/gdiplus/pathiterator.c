@@ -78,7 +78,8 @@ static void test_hascurve(void)
 
     GdipDeletePathIter(iter);
 
-    GdipAddPathEllipse(path, 0.0, 0.0, 35.0, 70.0);
+    stat = GdipAddPathEllipse(path, 0.0, 0.0, 35.0, 70.0);
+    expect(Ok, stat);
 
     stat = GdipCreatePathIter(&iter, path);
     expect(Ok, stat);
@@ -328,9 +329,12 @@ static void test_isvalid(void)
     GdipDeletePathIter(iter);
 
     /* no markers */
-    GdipAddPathLine(path, 50.0, 50.0, 110.0, 40.0);
-    GdipCreatePathIter(&iter, path);
-    GdipPathIterNextMarker(iter, &result, &start, &end);
+    stat = GdipAddPathLine(path, 50.0, 50.0, 110.0, 40.0);
+    expect(Ok, stat);
+    stat = GdipCreatePathIter(&iter, path);
+    expect(Ok, stat);
+    stat = GdipPathIterNextMarker(iter, &result, &start, &end);
+    expect(Ok, stat);
     isvalid = FALSE;
     stat = GdipPathIterIsValid(iter, &isvalid);
     expect(Ok, stat);
@@ -525,7 +529,8 @@ static void test_nextpathtype(void)
     todo_wine expect(0, result);
     GdipDeletePathIter(iter);
 
-    GdipAddPathEllipse(path, 0.0, 0.0, 35.0, 70.0);
+    stat = GdipAddPathEllipse(path, 0.0, 0.0, 35.0, 70.0);
+    expect(Ok, stat);
     GdipCreatePathIter(&iter, path);
     start = end = result = (INT)0xdeadbeef;
     type = 255; /* out of range */

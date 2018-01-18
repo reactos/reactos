@@ -19,7 +19,8 @@ list(APPEND SOURCE
 add_executable(gdiplus_winetest
     ${SOURCE}
     guid.c
-    testlist.c)
+    testlist.c
+    resource.rc)
 
 set_module_type(gdiplus_winetest win32cui)
 add_importlibs(gdiplus_winetest gdiplus user32 gdi32 ole32 msvcrt kernel32)

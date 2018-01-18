@@ -39,6 +39,78 @@ static void set_rect_empty(RectF *rc)
     rc->Height = 0.0;
 }
 
+static void create_testfontfile(const WCHAR *filename, int resource, WCHAR pathW[MAX_PATH])
+{
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    GetTempPathW(MAX_PATH, pathW);
+    lstrcatW(pathW, filename);
+
+    file = CreateFileW(pathW, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", wine_dbgstr_w(pathW), GetLastError());
+
+    res = FindResourceA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(resource), (LPCSTR)RT_RCDATA);
+    ok(res != 0, "couldn't find resource\n");
+    ptr = LockResource(LoadResource(GetModuleHandleA(NULL), res));
+    WriteFile(file, ptr, SizeofResource(GetModuleHandleA(NULL), res), &written, NULL);
+    ok(written == SizeofResource(GetModuleHandleA(NULL), res), "couldn't write resource\n");
+    CloseHandle(file);
+}
+
+#define DELETE_FONTFILE(filename) _delete_testfontfile(filename, __LINE__)
+static void _delete_testfontfile(const WCHAR *filename, int line)
+{
+    BOOL ret = DeleteFileW(filename);
+    ok_(__FILE__,line)(ret, "failed to delete file %s, error %d\n", wine_dbgstr_w(filename), GetLastError());
+}
+
+static void test_long_name(void)
+{
+    WCHAR path[MAX_PATH];
+    static const WCHAR path_longname[] = {'w','i','n','e','_','l','o','n','g','n','a','m','e','.','t','t','f',0};
+    GpStatus stat;
+    GpFontCollection *fonts;
+    INT num_families;
+    GpFontFamily *family;
+    WCHAR family_name[LF_FACESIZE];
+    GpFont *font;
+
+    stat = GdipNewPrivateFontCollection(&fonts);
+    ok(stat == Ok, "GdipNewPrivateFontCollection failed: %d\n", stat);
+
+    create_testfontfile(path_longname, 1, path);
+
+    stat = GdipPrivateAddFontFile(fonts, path);
+    ok(stat == Ok, "GdipPrivateAddFontFile failed: %d\n", stat);
+
+    stat = GdipGetFontCollectionFamilyCount(fonts, &num_families);
+    ok(stat == Ok, "GdipGetFontCollectionFamilyCount failed: %d\n", stat);
+
+    ok(num_families == 1, "expected num_families to be 1, got %d\n", num_families);
+
+    stat = GdipGetFontCollectionFamilyList(fonts, num_families, &family, &num_families);
+    ok(stat == Ok, "GdipGetFontCollectionFamilyList failed: %d\n", stat);
+
+    stat = GdipGetFamilyName(family, family_name, LANG_NEUTRAL);
+    ok(stat == Ok, "GdipGetFamilyName failed: %d\n", stat);
+
+    stat = GdipCreateFont(family, 256.0, FontStyleRegular, UnitPixel, &font);
+    ok(stat == Ok, "GdipCreateFont failed: %d\n", stat);
+
+    /* Cleanup */
+
+    stat = GdipDeleteFont(font);
+    ok(stat == Ok, "GdipDeleteFont failed: %d\n", stat);
+
+    stat = GdipDeletePrivateFontCollection(&fonts);
+    ok(stat == Ok, "GdipDeletePrivateFontCollection failed: %d\n", stat);
+
+    DELETE_FONTFILE(path);
+}
+
 static void test_createfont(void)
 {
     GpFontFamily* fontfamily = NULL, *fontfamily2;
@@ -79,7 +151,8 @@ static void test_createfont(void)
     for (i = UnitWorld; i <=UnitMillimeter; i++)
     {
         if (i == UnitDisplay) continue; /* Crashes WindowsXP, wtf? */
-        GdipCreateFont(fontfamily, 24, FontStyleRegular, i, &font);
+        stat = GdipCreateFont(fontfamily, 24, FontStyleRegular, i, &font);
+        expect(Ok, stat);
         GdipGetFontSize (font, &size);
         ok (size == 24, "Expected 24, got %f (with unit: %d)\n", size, i);
         GdipGetFontUnit (font, &unit);
@@ -103,7 +176,8 @@ static void test_logfont(void)
     UINT16 em_height, line_spacing;
     Unit unit;
 
-    GdipCreateFromHDC(hdc, &graphics);
+    stat = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, stat);
 
     memset(&lfa, 0, sizeof(LOGFONTA));
     memset(&lfa2, 0xff, sizeof(LOGFONTA));
@@ -1106,6 +1180,60 @@ todo_wine
     DeleteDC(hdc);
 }
 
+static void test_GdipGetFontCollectionFamilyList(void)
+{
+    GpFontFamily *family, *family2;
+    GpFontCollection *collection;
+    INT found, count;
+    GpStatus status;
+
+    status = GdipNewInstalledFontCollection(&collection);
+    ok(status == Ok, "Failed to get system collection, status %d.\n", status);
+
+    count = 0;
+    status = GdipGetFontCollectionFamilyCount(collection, &count);
+    ok(status == Ok, "Failed to get family count, status %d.\n", status);
+    ok(count > 0, "Unexpected empty collection.\n");
+
+    status = GdipGetFontCollectionFamilyList(NULL, 0, NULL, NULL);
+    ok(status == InvalidParameter, "Unexpected status %d.\n", status);
+
+    found = 123;
+    status = GdipGetFontCollectionFamilyList(NULL, 0, NULL, &found);
+    ok(status == InvalidParameter, "Unexpected status %d.\n", status);
+    ok(found == 123, "Unexpected list count %d.\n", found);
+
+    status = GdipGetFontCollectionFamilyList(collection, 0, NULL, NULL);
+    ok(status == InvalidParameter, "Unexpected status %d.\n", status);
+
+    found = 123;
+    status = GdipGetFontCollectionFamilyList(collection, 0, NULL, &found);
+    ok(status == InvalidParameter, "Unexpected status %d.\n", status);
+    ok(found == 123, "Unexpected list count %d.\n", found);
+
+    found = 123;
+    status = GdipGetFontCollectionFamilyList(collection, 1, NULL, &found);
+    ok(status == InvalidParameter, "Unexpected status %d.\n", status);
+    ok(found == 123, "Unexpected list count %d.\n", found);
+
+    family = NULL;
+    found = 0;
+    status = GdipGetFontCollectionFamilyList(collection, 1, &family, &found);
+    ok(status == Ok, "Failed to get family list, status %d.\n", status);
+    ok(found == 1, "Unexpected list count %d.\n", found);
+    ok(family != NULL, "Expected family instance.\n");
+
+    family = NULL;
+    found = 0;
+    status = GdipGetFontCollectionFamilyList(collection, 1, &family2, &found);
+    ok(status == Ok, "Failed to get family list, status %d.\n", status);
+    ok(found == 1, "Unexpected list count %d.\n", found);
+    ok(family2 != family, "Unexpected family instance.\n");
+
+    GdipDeleteFontFamily(family);
+    GdipDeleteFontFamily(family2);
+}
+
 START_TEST(font)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -1125,6 +1253,7 @@ START_TEST(font)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    test_long_name();
     test_font_transform();
     if (!winetest_interactive)
         skip("ROSTESTS-154: Skipping test_font_substitution because of improper error handling\n");
@@ -1138,6 +1267,7 @@ START_TEST(font)
     test_getgenerics();
     test_installedfonts();
     test_heightgivendpi();
+    test_GdipGetFontCollectionFamilyList();
 
     GdiplusShutdown(gdiplusToken);
 }
