@@ -481,25 +481,33 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
 
     if (SUCCEEDED(r))
     {
-        IBindCtx *bcxt;
+        IBindCtx *bcxt = NULL;
         IUnknown *unk = NULL;
         IHlinkTarget *target;
 
-        CreateBindCtx(0, &bcxt);
-
-        RegisterBindStatusCallback(bcxt, pbsc, NULL, 0);
-
-        r = IMoniker_BindToObject(mon, bcxt, NULL, &IID_IUnknown, (void**)&unk);
-        if (r == S_OK)
+        if (phbc)
         {
-            r = IUnknown_QueryInterface(unk, &IID_IHlinkTarget, (void**)&target);
-            IUnknown_Release(unk);
-        }
-        if (r == S_OK)
-        {
-            IHlinkTarget_SetBrowseContext(target, phbc);
-            r = IHlinkTarget_Navigate(target, grfHLNF, This->Location);
-            IHlinkTarget_Release(target);
+            r = IHlinkBrowseContext_GetObject(phbc, mon, TRUE, &unk);
+            if (r == S_FALSE)
+            {
+                CreateBindCtx(0, &bcxt);
+                RegisterBindStatusCallback(bcxt, pbsc, NULL, 0);
+                r = IMoniker_BindToObject(mon, bcxt, NULL, &IID_IUnknown, (void**)&unk);
+            }
+            if (r == S_OK)
+            {
+                r = IUnknown_QueryInterface(unk, &IID_IHlinkTarget, (void **)&target);
+                IUnknown_Release(unk);
+            }
+            if (r == S_OK)
+            {
+                if (bcxt) IHlinkTarget_SetBrowseContext(target, phbc);
+                r = IHlinkTarget_Navigate(target, grfHLNF, This->Location);
+                IHlinkTarget_Release(target);
+            }
+
+            RevokeBindStatusCallback(bcxt, pbsc);
+            if (bcxt) IBindCtx_Release(bcxt);
         }
         else
         {
@@ -511,12 +519,9 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
             {
                 ShellExecuteW(NULL, szOpen, target, NULL, NULL, SW_SHOW);
                 CoTaskMemFree(target);
+                r = DRAGDROP_S_DROP;
             }
         }
-
-        RevokeBindStatusCallback(bcxt, pbsc);
-
-        IBindCtx_Release(bcxt);
         IMoniker_Release(mon);
     }
 
