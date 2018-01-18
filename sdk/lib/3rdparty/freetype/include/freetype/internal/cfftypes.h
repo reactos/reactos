@@ -5,7 +5,7 @@
 /*    Basic OpenType/CFF type definitions and interface (specification     */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,6 +27,7 @@
 #include FT_INTERNAL_SERVICE_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_INTERNAL_POSTSCRIPT_HINTS_H
+#include FT_INTERNAL_TYPE1_TYPES_H
 
 
 FT_BEGIN_HEADER
@@ -381,6 +382,9 @@ FT_BEGIN_HEADER
     /* interface to Postscript Names service */
     FT_Service_PsCMaps  psnames;
 
+    /* interface to CFFLoad service */
+    const void*  cffload;
+
     /* since version 2.3.0 */
     PS_FontInfoRec*  font_info;   /* font info dictionary */
 
@@ -393,6 +397,9 @@ FT_BEGIN_HEADER
 
     /* since version 2.7.1 */
     CFF_VStoreRec    vstore;        /* parsed vstore structure */
+
+    /* since version 2.9 */
+    PS_FontExtraRec*  font_extra;
 
   } CFF_FontRec;
 

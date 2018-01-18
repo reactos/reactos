@@ -1,8 +1,8 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2glue.h                                                              */
+/*  psstack.h                                                              */
 /*                                                                         */
-/*    Adobe's code for shared stuff (specification only).                  */
+/*    Adobe's code for emulating a CFF stack (specification).              */
 /*                                                                         */
 /*  Copyright 2007-2013 Adobe Systems Incorporated.                        */
 /*                                                                         */
@@ -36,109 +36,86 @@
 /***************************************************************************/
 
 
-#ifndef CF2GLUE_H_
-#define CF2GLUE_H_
-
-
-/* common includes for other modules */
-#include "cf2error.h"
-#include "cf2fixed.h"
-#include "cf2arrst.h"
-#include "cf2read.h"
+#ifndef PSSTACK_H_
+#define PSSTACK_H_
 
 
 FT_BEGIN_HEADER
 
 
-  /* rendering parameters */
-
-  /* apply hints to rendered glyphs */
-#define CF2_FlagsHinted    1
-  /* for testing */
-#define CF2_FlagsDarkened  2
-
-  /* type for holding the flags */
-  typedef CF2_Int  CF2_RenderingFlags;
-
-
-  /* elements of a glyph outline */
-  typedef enum  CF2_PathOp_
+  /* CFF operand stack; specified maximum of 48 or 192 values */
+  typedef struct  CF2_StackNumber_
   {
-    CF2_PathOpMoveTo = 1,     /* change the current point */
-    CF2_PathOpLineTo = 2,     /* line                     */
-    CF2_PathOpQuadTo = 3,     /* quadratic curve          */
-    CF2_PathOpCubeTo = 4      /* cubic curve              */
+    union
+    {
+      CF2_Fixed  r;      /* 16.16 fixed point */
+      CF2_Frac   f;      /* 2.30 fixed point (for font matrix) */
+      CF2_Int    i;
+    } u;
 
-  } CF2_PathOp;
+    CF2_NumberType  type;
+
+  } CF2_StackNumber;
 
 
-  /* a matrix of fixed point values */
-  typedef struct  CF2_Matrix_
+  typedef struct  CF2_StackRec_
   {
-    CF2_F16Dot16  a;
-    CF2_F16Dot16  b;
-    CF2_F16Dot16  c;
-    CF2_F16Dot16  d;
-    CF2_F16Dot16  tx;
-    CF2_F16Dot16  ty;
+    FT_Memory         memory;
+    FT_Error*         error;
+    CF2_StackNumber*  buffer;
+    CF2_StackNumber*  top;
+    FT_UInt           stackSize;
 
-  } CF2_Matrix;
-
-
-  /* these typedefs are needed by more than one header file */
-  /* and gcc compiler doesn't allow redefinition            */
-  typedef struct CF2_FontRec_  CF2_FontRec, *CF2_Font;
-  typedef struct CF2_HintRec_  CF2_HintRec, *CF2_Hint;
+  } CF2_StackRec, *CF2_Stack;
 
 
-  /* A common structure for all callback parameters.                       */
-  /*                                                                       */
-  /* Some members may be unused.  For example, `pt0' is not used for       */
-  /* `moveTo' and `pt3' is not used for `quadTo'.  The initial point `pt0' */
-  /* is included for each path element for generality; curve conversions   */
-  /* need it.  The `op' parameter allows one function to handle multiple   */
-  /* element types.                                                        */
+  FT_LOCAL( CF2_Stack )
+  cf2_stack_init( FT_Memory  memory,
+                  FT_Error*  error,
+                  FT_UInt    stackSize );
+  FT_LOCAL( void )
+  cf2_stack_free( CF2_Stack  stack );
 
-  typedef struct  CF2_CallbackParamsRec_
-  {
-    FT_Vector  pt0;
-    FT_Vector  pt1;
-    FT_Vector  pt2;
-    FT_Vector  pt3;
+  FT_LOCAL( CF2_UInt )
+  cf2_stack_count( CF2_Stack  stack );
 
-    CF2_Int  op;
+  FT_LOCAL( void )
+  cf2_stack_pushInt( CF2_Stack  stack,
+                     CF2_Int    val );
+  FT_LOCAL( void )
+  cf2_stack_pushFixed( CF2_Stack  stack,
+                       CF2_Fixed  val );
 
-  } CF2_CallbackParamsRec, *CF2_CallbackParams;
+  FT_LOCAL( CF2_Int )
+  cf2_stack_popInt( CF2_Stack  stack );
+  FT_LOCAL( CF2_Fixed )
+  cf2_stack_popFixed( CF2_Stack  stack );
 
+  FT_LOCAL( CF2_Fixed )
+  cf2_stack_getReal( CF2_Stack  stack,
+                     CF2_UInt   idx );
+  FT_LOCAL( void )
+  cf2_stack_setReal( CF2_Stack  stack,
+                     CF2_UInt   idx,
+                     CF2_Fixed  val );
 
-  /* forward reference */
-  typedef struct CF2_OutlineCallbacksRec_  CF2_OutlineCallbacksRec,
-                                           *CF2_OutlineCallbacks;
+  FT_LOCAL( void )
+  cf2_stack_pop( CF2_Stack  stack,
+                 CF2_UInt   num );
 
-  /* callback function pointers */
-  typedef void
-  (*CF2_Callback_Type)( CF2_OutlineCallbacks      callbacks,
-                        const CF2_CallbackParams  params );
+  FT_LOCAL( void )
+  cf2_stack_roll( CF2_Stack  stack,
+                  CF2_Int    count,
+                  CF2_Int    idx );
 
-
-  struct  CF2_OutlineCallbacksRec_
-  {
-    CF2_Callback_Type  moveTo;
-    CF2_Callback_Type  lineTo;
-    CF2_Callback_Type  quadTo;
-    CF2_Callback_Type  cubeTo;
-
-    CF2_Int  windingMomentum;    /* for winding order detection */
-
-    FT_Memory  memory;
-    FT_Error*  error;
-  };
+  FT_LOCAL( void )
+  cf2_stack_clear( CF2_Stack  stack );
 
 
 FT_END_HEADER
 
 
-#endif /* CF2GLUE_H_ */
+#endif /* PSSTACK_H_ */
 
 
 /* END */

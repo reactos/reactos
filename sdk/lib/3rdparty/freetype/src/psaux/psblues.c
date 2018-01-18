@@ -1,6 +1,6 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2blues.c                                                             */
+/*  psblues.c                                                              */
 /*                                                                         */
 /*    Adobe's code for handling Blue Zones (body).                         */
 /*                                                                         */
@@ -36,12 +36,12 @@
 /***************************************************************************/
 
 
-#include "cf2ft.h"
+#include "psft.h"
 #include FT_INTERNAL_DEBUG_H
 
-#include "cf2blues.h"
-#include "cf2hints.h"
-#include "cf2font.h"
+#include "psblues.h"
+#include "pshints.h"
+#include "psfont.h"
 
 
   /*************************************************************************/
@@ -67,7 +67,7 @@
                   CF2_Font   font )
   {
     /* pointer to parsed font object */
-    CFF_Decoder*  decoder = font->decoder;
+    PS_Decoder*  decoder = font->decoder;
 
     CF2_Fixed  zoneHeight;
     CF2_Fixed  maxZoneHeight = 0;

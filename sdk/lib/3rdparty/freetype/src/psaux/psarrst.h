@@ -1,8 +1,8 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2font.h                                                              */
+/*  psarrst.h                                                              */
 /*                                                                         */
-/*    Adobe's CFF Interpreter (specification).                             */
+/*    Adobe's code for Array Stacks (specification).                       */
 /*                                                                         */
 /*  Copyright 2007-2013 Adobe Systems Incorporated.                        */
 /*                                                                         */
@@ -36,48 +36,65 @@
 /***************************************************************************/
 
 
-#ifndef CF2INTRP_H_
-#define CF2INTRP_H_
+#ifndef PSARRST_H_
+#define PSARRST_H_
 
 
-#include "cf2ft.h"
-#include "cf2hints.h"
+#include "pserror.h"
 
 
 FT_BEGIN_HEADER
 
 
-  FT_LOCAL( void )
-  cf2_hintmask_init( CF2_HintMask  hintmask,
-                     FT_Error*     error );
-  FT_LOCAL( FT_Bool )
-  cf2_hintmask_isValid( const CF2_HintMask  hintmask );
-  FT_LOCAL( FT_Bool )
-  cf2_hintmask_isNew( const CF2_HintMask  hintmask );
-  FT_LOCAL( void )
-  cf2_hintmask_setNew( CF2_HintMask  hintmask,
-                       FT_Bool       val );
-  FT_LOCAL( FT_Byte* )
-  cf2_hintmask_getMaskPtr( CF2_HintMask  hintmask );
-  FT_LOCAL( void )
-  cf2_hintmask_setAll( CF2_HintMask  hintmask,
-                       size_t        bitCount );
+  /* need to define the struct here (not opaque) so it can be allocated by */
+  /* clients                                                               */
+  typedef struct  CF2_ArrStackRec_
+  {
+    FT_Memory  memory;
+    FT_Error*  error;
+
+    size_t  sizeItem;       /* bytes per element             */
+    size_t  allocated;      /* items allocated               */
+    size_t  chunk;          /* allocation increment in items */
+    size_t  count;          /* number of elements allocated  */
+    size_t  totalSize;      /* total bytes allocated         */
+
+    void*  ptr;             /* ptr to data                   */
+
+  } CF2_ArrStackRec, *CF2_ArrStack;
+
 
   FT_LOCAL( void )
-  cf2_interpT2CharString( CF2_Font              font,
-                          CF2_Buffer            charstring,
-                          CF2_OutlineCallbacks  callbacks,
-                          const FT_Vector*      translation,
-                          FT_Bool               doingSeac,
-                          CF2_Fixed             curX,
-                          CF2_Fixed             curY,
-                          CF2_Fixed*            width );
+  cf2_arrstack_init( CF2_ArrStack  arrstack,
+                     FT_Memory     memory,
+                     FT_Error*     error,
+                     size_t        sizeItem );
+  FT_LOCAL( void )
+  cf2_arrstack_finalize( CF2_ArrStack  arrstack );
+
+  FT_LOCAL( void )
+  cf2_arrstack_setCount( CF2_ArrStack  arrstack,
+                         size_t        numElements );
+  FT_LOCAL( void )
+  cf2_arrstack_clear( CF2_ArrStack  arrstack );
+  FT_LOCAL( size_t )
+  cf2_arrstack_size( const CF2_ArrStack  arrstack );
+
+  FT_LOCAL( void* )
+  cf2_arrstack_getBuffer( const CF2_ArrStack  arrstack );
+  FT_LOCAL( void* )
+  cf2_arrstack_getPointer( const CF2_ArrStack  arrstack,
+                           size_t              idx );
+
+  FT_LOCAL( void )
+  cf2_arrstack_push( CF2_ArrStack  arrstack,
+                     const void*   ptr );
 
 
 FT_END_HEADER
 
 
-#endif /* CF2INTRP_H_ */
+#endif /* PSARRST_H_ */
 
 
 /* END */

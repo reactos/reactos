@@ -1,6 +1,6 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2hints.h                                                             */
+/*  pshints.h                                                              */
 /*                                                                         */
 /*    Adobe's code for handling CFF hints (body).                          */
 /*                                                                         */
@@ -36,9 +36,8 @@
 /***************************************************************************/
 
 
-#ifndef CF2HINTS_H_
-#define CF2HINTS_H_
-
+#ifndef PSHINT_H_
+#define PSHINT_H_
 
 FT_BEGIN_HEADER
 
@@ -283,7 +282,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* CF2HINTS_H_ */
+#endif /* PSHINT_H_ */
 
 
 /* END */

@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2types.h                                                             */
+/*  psread.h                                                               */
 /*                                                                         */
-/*    Adobe's code for defining data types (specification only).           */
+/*    Adobe's code for stream handling (specification).                    */
 /*                                                                         */
-/*  Copyright 2011-2013 Adobe Systems Incorporated.                        */
+/*  Copyright 2007-2013 Adobe Systems Incorporated.                        */
 /*                                                                         */
 /*  This software, and all works of authorship, whether in source or       */
 /*  object code form as indicated by the copyright notice(s) included      */
@@ -36,43 +36,33 @@
 /***************************************************************************/
 
 
-#ifndef CF2TYPES_H_
-#define CF2TYPES_H_
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#ifndef PSREAD_H_
+#define PSREAD_H_
 
 
 FT_BEGIN_HEADER
 
 
-  /*
-   * The data models that we expect to support are as follows:
-   *
-   *   name  char short int long long-long pointer example
-   *  -----------------------------------------------------
-   *   ILP32  8    16    32  32     64*      32    32-bit MacOS, x86
-   *   LLP64  8    16    32  32     64       64    x64
-   *   LP64   8    16    32  64     64       64    64-bit MacOS
-   *
-   *    *) type may be supported by emulation on a 32-bit architecture
-   *
-   */
+  typedef struct  CF2_BufferRec_
+  {
+    FT_Error*       error;
+    const FT_Byte*  start;
+    const FT_Byte*  end;
+    const FT_Byte*  ptr;
+
+  } CF2_BufferRec, *CF2_Buffer;
 
 
-  /* integers at least 32 bits wide */
-#define CF2_UInt  FT_UFast
-#define CF2_Int   FT_Fast
-
-
-  /* fixed-float numbers */
-  typedef FT_Int32  CF2_F16Dot16;
+  FT_LOCAL( CF2_Int )
+  cf2_buf_readByte( CF2_Buffer  buf );
+  FT_LOCAL( FT_Bool )
+  cf2_buf_isEnd( CF2_Buffer  buf );
 
 
 FT_END_HEADER
 
 
-#endif /* CF2TYPES_H_ */
+#endif /* PSREAD_H_ */
 
 
 /* END */

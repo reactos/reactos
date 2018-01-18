@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2stack.h                                                             */
+/*  pstypes.h                                                              */
 /*                                                                         */
-/*    Adobe's code for emulating a CFF stack (specification).              */
+/*    Adobe's code for defining data types (specification only).           */
 /*                                                                         */
-/*  Copyright 2007-2013 Adobe Systems Incorporated.                        */
+/*  Copyright 2011-2013 Adobe Systems Incorporated.                        */
 /*                                                                         */
 /*  This software, and all works of authorship, whether in source or       */
 /*  object code form as indicated by the copyright notice(s) included      */
@@ -36,86 +36,43 @@
 /***************************************************************************/
 
 
-#ifndef CF2STACK_H_
-#define CF2STACK_H_
+#ifndef PSTYPES_H_
+#define PSTYPES_H_
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 
 FT_BEGIN_HEADER
 
 
-  /* CFF operand stack; specified maximum of 48 or 192 values */
-  typedef struct  CF2_StackNumber_
-  {
-    union
-    {
-      CF2_Fixed  r;      /* 16.16 fixed point */
-      CF2_Frac   f;      /* 2.30 fixed point (for font matrix) */
-      CF2_Int    i;
-    } u;
-
-    CF2_NumberType  type;
-
-  } CF2_StackNumber;
-
-
-  typedef struct  CF2_StackRec_
-  {
-    FT_Memory         memory;
-    FT_Error*         error;
-    CF2_StackNumber*  buffer;
-    CF2_StackNumber*  top;
-    FT_UInt           stackSize;
-
-  } CF2_StackRec, *CF2_Stack;
+  /*
+   * The data models that we expect to support are as follows:
+   *
+   *   name  char short int long long-long pointer example
+   *  -----------------------------------------------------
+   *   ILP32  8    16    32  32     64*      32    32-bit MacOS, x86
+   *   LLP64  8    16    32  32     64       64    x64
+   *   LP64   8    16    32  64     64       64    64-bit MacOS
+   *
+   *    *) type may be supported by emulation on a 32-bit architecture
+   *
+   */
 
 
-  FT_LOCAL( CF2_Stack )
-  cf2_stack_init( FT_Memory  memory,
-                  FT_Error*  error,
-                  FT_UInt    stackSize );
-  FT_LOCAL( void )
-  cf2_stack_free( CF2_Stack  stack );
+  /* integers at least 32 bits wide */
+#define CF2_UInt  FT_UFast
+#define CF2_Int   FT_Fast
 
-  FT_LOCAL( CF2_UInt )
-  cf2_stack_count( CF2_Stack  stack );
 
-  FT_LOCAL( void )
-  cf2_stack_pushInt( CF2_Stack  stack,
-                     CF2_Int    val );
-  FT_LOCAL( void )
-  cf2_stack_pushFixed( CF2_Stack  stack,
-                       CF2_Fixed  val );
-
-  FT_LOCAL( CF2_Int )
-  cf2_stack_popInt( CF2_Stack  stack );
-  FT_LOCAL( CF2_Fixed )
-  cf2_stack_popFixed( CF2_Stack  stack );
-
-  FT_LOCAL( CF2_Fixed )
-  cf2_stack_getReal( CF2_Stack  stack,
-                     CF2_UInt   idx );
-  FT_LOCAL( void )
-  cf2_stack_setReal( CF2_Stack  stack,
-                     CF2_UInt   idx,
-                     CF2_Fixed  val );
-
-  FT_LOCAL( void )
-  cf2_stack_pop( CF2_Stack  stack,
-                 CF2_UInt   num );
-
-  FT_LOCAL( void )
-  cf2_stack_roll( CF2_Stack  stack,
-                  CF2_Int    count,
-                  CF2_Int    idx );
-
-  FT_LOCAL( void )
-  cf2_stack_clear( CF2_Stack  stack );
+  /* fixed-float numbers */
+  typedef FT_Int32  CF2_F16Dot16;
 
 
 FT_END_HEADER
 
 
-#endif /* CF2STACK_H_ */
+#endif /* PSTYPES_H_ */
 
 
 /* END */

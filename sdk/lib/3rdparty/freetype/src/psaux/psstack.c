@@ -1,6 +1,6 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2stack.c                                                             */
+/*  psstack.c                                                              */
 /*                                                                         */
 /*    Adobe's code for emulating a CFF stack (body).                       */
 /*                                                                         */
@@ -36,14 +36,14 @@
 /***************************************************************************/
 
 
-#include "cf2ft.h"
+#include "psft.h"
 #include FT_INTERNAL_DEBUG_H
 
-#include "cf2glue.h"
-#include "cf2font.h"
-#include "cf2stack.h"
+#include "psglue.h"
+#include "psfont.h"
+#include "psstack.h"
 
-#include "cf2error.h"
+#include "pserror.h"
 
 
   /* Allocate and initialize an instance of CF2_Stack.       */
