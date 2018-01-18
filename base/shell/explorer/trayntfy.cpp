@@ -80,6 +80,8 @@ public:
     virtual ~CIconWatcher()
     {
         Uninitialize();
+        DeleteCriticalSection(&m_ListLock);
+
         if (m_WakeUpEvent)
             CloseHandle(m_WakeUpEvent);
         if (m_hWatcherThread)
