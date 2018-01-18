@@ -2,7 +2,8 @@
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/dll/win32/dhcpcsvc/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/tdilib)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/tdilib
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers/tcpip)
 
 spec2def(iphlpapi.dll iphlpapi.spec ADD_IMPORTLIB)
 
