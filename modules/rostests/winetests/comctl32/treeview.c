@@ -207,6 +207,9 @@ static const struct message test_right_click_seq[] = {
     { WM_RBUTTONDOWN, sent|wparam, MK_RBUTTON },
     { WM_CAPTURECHANGED, sent|defwinproc },
     { TVM_GETNEXTITEM, sent|wparam|lparam|defwinproc, TVGN_CARET, 0 },
+    { WM_NCHITTEST, sent|optional },
+    { WM_SETCURSOR, sent|optional },
+    { WM_MOUSEMOVE, sent|optional },
     { 0 }
 };
 
@@ -354,6 +357,8 @@ static const struct message parent_vk_return_seq[] = {
 static const struct message parent_right_click_seq[] = {
     { WM_NOTIFY, sent|id, 0, 0, NM_RCLICK },
     { WM_CONTEXTMENU, sent },
+    { WM_NOTIFY, sent|optional },
+    { WM_SETCURSOR, sent|optional },
     { 0 }
 };
 

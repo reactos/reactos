@@ -187,6 +187,12 @@ static const struct message empty_seq[] = {
     { 0 }
 };
 
+static const struct message parent_focus_change_ownerdata_seq[] = {
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGED },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_GETDISPINFOA },
+    { 0 }
+};
+
 static const struct message forward_erasebkgnd_parent_seq[] = {
     { WM_ERASEBKGND, sent },
     { 0 }
@@ -627,14 +633,6 @@ static LRESULT WINAPI listview_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
-
-    /* some debug output for style changing */
-    if ((message == WM_STYLECHANGING ||
-         message == WM_STYLECHANGED) && lParam)
-    {
-        STYLESTRUCT *style = (STYLESTRUCT*)lParam;
-        trace("\told style: 0x%08x, new style: 0x%08x\n", style->styleOld, style->styleNew);
-    }
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
@@ -1517,6 +1515,8 @@ static LRESULT CALLBACK create_test_wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 static void test_create(void)
 {
+    static const WCHAR testtextW[] = {'t','e','s','t',' ','t','e','x','t',0};
+    char buff[16];
     HWND hList;
     HWND hHeader;
     LONG_PTR ret;
@@ -1537,15 +1537,6 @@ static void test_create(void)
     hList = CreateWindowA("MyListView32", "Test", WS_VISIBLE, 0, 0, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0);
     ok((HIMAGELIST)SendMessageA(hList, LVM_GETIMAGELIST, 0, 0) == test_create_imagelist, "Image list not obtained\n");
     hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-
-    if (!IsWindow(hHeader))
-    {
-        /* version 4.0 */
-        win_skip("LVM_GETHEADER not implemented. Skipping.\n");
-        DestroyWindow(hList);
-        return;
-    }
-
     ok(IsWindow(hHeader) && IsWindowVisible(hHeader), "Listview not in report mode\n");
     ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
     DestroyWindow(hList);
@@ -1728,6 +1719,23 @@ static void test_create(void)
     ok_sequence(sequences, PARENT_SEQ_INDEX, create_ownerdrawfixed_parent_seq,
                 "created with LVS_OWNERDRAWFIXED|LVS_REPORT - parent seq", FALSE);
     DestroyWindow(hList);
+
+    /* Test that window text is preserved. */
+    hList = CreateWindowExA(0, WC_LISTVIEWA, "test text", WS_CHILD | WS_BORDER | WS_VISIBLE,
+        0, 0, 100, 100, hwndparent, NULL, GetModuleHandleA(NULL), NULL);
+    ok(hList != NULL, "Failed to create ListView window.\n");
+    *buff = 0;
+    GetWindowTextA(hList, buff, sizeof(buff));
+    ok(!strcmp(buff, "test text"), "Unexpected window text %s.\n", buff);
+    DestroyWindow(hList);
+
+    hList = CreateWindowExW(0, WC_LISTVIEWW, testtextW, WS_CHILD | WS_BORDER | WS_VISIBLE,
+        0, 0, 100, 100, hwndparent, NULL, GetModuleHandleA(NULL), NULL);
+    ok(hList != NULL, "Failed to create ListView window.\n");
+    *buff = 0;
+    GetWindowTextA(hList, buff, sizeof(buff));
+    ok(!strcmp(buff, "test text"), "Unexpected window text %s.\n", buff);
+    DestroyWindow(hList);
 }
 
 static void test_redraw(void)
@@ -1826,16 +1834,12 @@ static LRESULT WINAPI cd_wndproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
                 ok(nmlvcd->clrTextBk == CLR_DEFAULT, "got 0x%x\n", nmlvcd->clrTextBk);
                 ok(nmlvcd->clrText == RGB(0, 255, 0), "got 0x%x\n", nmlvcd->clrText);
-                if (!(GetWindowLongW(nmhdr->hwndFrom, GWL_STYLE) & LVS_SHOWSELALWAYS))
-                {
-                    todo_wine_if(nmlvcd->iSubItem)
-                        ok(clr == c0ffee, "clr=%.8x\n", clr);
-                }
+                todo_wine_if(nmlvcd->iSubItem)
+                    ok(clr == c0ffee, "clr=%.8x\n", clr);
                 return CDRF_NOTIFYPOSTPAINT;
             case CDDS_ITEMPOSTPAINT | CDDS_SUBITEM:
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
-                if (!(GetWindowLongW(nmhdr->hwndFrom, GWL_STYLE) & LVS_SHOWSELALWAYS))
-                    todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
+                todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
                 ok(nmlvcd->clrTextBk == CLR_DEFAULT, "got 0x%x\n", nmlvcd->clrTextBk);
                 ok(nmlvcd->clrText == RGB(0, 255, 0), "got 0x%x\n", nmlvcd->clrText);
                 return CDRF_DODEFAULT;
@@ -1851,7 +1855,6 @@ static void test_customdraw(void)
 {
     HWND hwnd;
     WNDPROC oldwndproc;
-    LVITEMA item;
 
     hwnd = create_listview_control(LVS_REPORT);
 
@@ -1870,18 +1873,6 @@ static void test_customdraw(void)
     InvalidateRect(hwnd, NULL, TRUE);
     UpdateWindow(hwnd);
     ok_sequence(sequences, PARENT_CD_SEQ_INDEX, parent_report_cd_seq, "parent customdraw, LVS_REPORT", FALSE);
-
-    /* check colors when item is selected */
-    SetWindowLongW(hwnd, GWL_STYLE, GetWindowLongW(hwnd, GWL_STYLE) | LVS_SHOWSELALWAYS);
-    item.mask = LVIF_STATE;
-    item.stateMask = LVIS_SELECTED;
-    item.state = LVIS_SELECTED;
-    SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
-
-    flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    InvalidateRect(hwnd, NULL, TRUE);
-    UpdateWindow(hwnd);
-    ok_sequence(sequences, PARENT_CD_SEQ_INDEX, parent_report_cd_seq, "parent customdraw, LVS_REPORT, selection", FALSE);
 
     DestroyWindow(hwnd);
 
@@ -1931,13 +1922,6 @@ static void test_icon_spacing(void)
        "Expected %d, got %d\n", MAKELONG(w, h), r);
 
     r = SendMessageA(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(25, 35));
-    if (r == 0)
-    {
-        /* version 4.0 */
-        win_skip("LVM_SETICONSPACING unimplemented. Skipping.\n");
-        DestroyWindow(hwnd);
-        return;
-    }
     expect(MAKELONG(20,30), r);
 
     r = SendMessageA(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(-1,-1));
@@ -4386,19 +4370,11 @@ static void test_notifyformat(void)
     r = SendMessageA(hwnd, LVM_SETUNICODEFORMAT, 1, 0);
     expect(0, r);
     r = SendMessageA(hwnd, LVM_GETUNICODEFORMAT, 0, 0);
-    if (r == 1)
-    {
-        r = SendMessageA(hwnd, LVM_SETUNICODEFORMAT, 0, 0);
-        expect(1, r);
-        r = SendMessageA(hwnd, LVM_GETUNICODEFORMAT, 0, 0);
-        expect(0, r);
-    }
-    else
-    {
-        win_skip("LVM_GETUNICODEFORMAT is unsupported\n");
-        DestroyWindow(hwnd);
-        return;
-    }
+    ok(r == 1, "Unexpected return value %d.\n", r);
+    r = SendMessageA(hwnd, LVM_SETUNICODEFORMAT, 0, 0);
+    expect(1, r);
+    r = SendMessageA(hwnd, LVM_GETUNICODEFORMAT, 0, 0);
+    expect(0, r);
 
     DestroyWindow(hwnd);
 
@@ -4978,13 +4954,18 @@ static void test_LVS_EX_TRANSPARENTBKGND(void)
 
 static void test_approximate_viewrect(void)
 {
-    HWND hwnd;
-    DWORD ret;
-    HIMAGELIST himl;
-    HBITMAP hbmp;
-    LVITEMA itema;
     static CHAR test[] = "abracadabra, a very long item label";
+    DWORD item_width, item_height, header_height;
+    static CHAR column_header[] = "Header";
+    unsigned const column_width = 100;
+    DWORD ret, item_count;
+    HIMAGELIST himl;
+    LVITEMA itema;
+    LVCOLUMNA col;
+    HBITMAP hbmp;
+    HWND hwnd;
 
+    /* LVS_ICON */
     hwnd = create_listview_control(LVS_ICON);
     himl = ImageList_Create(40, 40, 0, 4, 4);
     ok(himl != NULL, "failed to create imagelist\n");
@@ -5003,12 +4984,7 @@ static void test_approximate_viewrect(void)
     expect(0, ret);
 
     ret = SendMessageA(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(75, 75));
-    if (ret == 0)
-    {
-        /* version 4.0 */
-        win_skip("LVM_SETICONSPACING unimplemented. Skipping.\n");
-        return;
-    }
+    ok(ret != 0, "Unexpected return value %#x.\n", ret);
 
     ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 11, MAKELPARAM(100,100));
     expect(MAKELONG(77,827), ret);
@@ -5046,6 +5022,129 @@ static void test_approximate_viewrect(void)
     expect(MAKELONG(152,152), ret);
 
     DestroyWindow(hwnd);
+
+    /* LVS_REPORT */
+    hwnd = create_listview_control(LVS_REPORT);
+
+    /* Empty control without columns */
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 0, MAKELPARAM(100, 100));
+todo_wine
+    ok(LOWORD(ret) == 0, "Unexpected width %d.\n", LOWORD(ret));
+    ok(HIWORD(ret) != 0, "Unexpected height %d.\n", HIWORD(ret));
+
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 0, 0);
+    ok(LOWORD(ret) == 0, "Unexpected width %d.\n", LOWORD(ret));
+todo_wine
+    ok(HIWORD(ret) != 0, "Unexpected height %d.\n", HIWORD(ret));
+
+    header_height = HIWORD(ret);
+
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 1, 0);
+    ok(LOWORD(ret) == 0, "Unexpected width %d.\n", LOWORD(ret));
+todo_wine
+    ok(HIWORD(ret) > header_height, "Unexpected height %d.\n", HIWORD(ret));
+
+    item_height = HIWORD(ret) - header_height;
+
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, -2, 0);
+    ok(LOWORD(ret) == 0, "Unexpected width %d.\n", LOWORD(ret));
+    ok(HIWORD(ret) == (header_height - 2 * item_height), "Unexpected height %d.\n", HIWORD(ret)) ;
+
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, -1, 0);
+    ok(LOWORD(ret) == 0, "Unexpected width %d.\n", LOWORD(ret));
+    ok(HIWORD(ret) == header_height, "Unexpected height.\n");
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 2, 0);
+    ok(LOWORD(ret) == 0, "Unexpected width %d.\n", LOWORD(ret));
+    ok(HIWORD(ret) == header_height + 2 * item_height, "Unexpected height %d.\n", HIWORD(ret));
+
+    /* Insert column */
+    col.mask = LVCF_TEXT | LVCF_WIDTH;
+    col.pszText = column_header;
+    col.cx = column_width;
+    ret = SendMessageA(hwnd, LVM_INSERTCOLUMNA, 0, (LPARAM)&col);
+    ok(ret == 0, "Unexpected return value %d.\n", ret);
+
+    /* Empty control with column */
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 0, 0);
+todo_wine {
+    ok(LOWORD(ret) >= column_width, "Unexpected width %d.\n", LOWORD(ret));
+    ok(HIWORD(ret) != 0, "Unexpected height %d.\n", HIWORD(ret));
+}
+    header_height = HIWORD(ret);
+    item_width = LOWORD(ret);
+
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 1, 0);
+    ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+todo_wine
+    ok(HIWORD(ret) > header_height, "Unexpected height %d.\n", HIWORD(ret));
+
+    item_height = HIWORD(ret) - header_height;
+
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, -2, 0);
+    ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+    ok(HIWORD(ret) == header_height - 2 * item_height, "Unexpected height %d.\n", HIWORD(ret));
+
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, -1, 0);
+    ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+    ok(HIWORD(ret) == header_height, "Unexpected height %d.\n", HIWORD(ret));
+
+    ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 2, 0);
+    ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+    ok(HIWORD(ret) == header_height + 2 * item_height, "Unexpected height %d.\n", HIWORD(ret));
+
+    for (item_count = 1; item_count <= 2; ++item_count)
+    {
+        itema.mask = LVIF_TEXT;
+        itema.iItem = 0;
+        itema.iSubItem = 0;
+        itema.pszText = test;
+        ret = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&itema);
+        ok(ret == 0, "Unexpected return value %d.\n", ret);
+
+        ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 0, 0);
+        ok(LOWORD(ret) >= column_width, "Unexpected width %d.\n", LOWORD(ret));
+    todo_wine
+        ok(HIWORD(ret) != 0, "Unexpected height %d.\n", HIWORD(ret));
+
+        header_height = HIWORD(ret);
+        item_width = LOWORD(ret);
+
+        ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 1, 0);
+        ok(LOWORD(ret) == item_width, "Unexpected width %d, item %d\n", LOWORD(ret), item_count - 1);
+        ok(HIWORD(ret) > header_height, "Unexpected height %d. item %d.\n", HIWORD(ret),  item_count - 1);
+
+        item_height = HIWORD(ret) - header_height;
+
+        ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, -2, 0);
+        ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+    todo_wine
+        ok(HIWORD(ret) == header_height - 2 * item_height, "Unexpected height %d.\n", HIWORD(ret));
+
+        ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, -1, 0);
+        ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+        ok(HIWORD(ret) == header_height + item_count * item_height, "Unexpected height %d.\n", HIWORD(ret));
+
+        ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 2, 0);
+        ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+        ok(HIWORD(ret) == header_height + 2 * item_height, "Unexpected height %d.\n", HIWORD(ret));
+
+        ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, 2, MAKELONG(item_width * 2, header_height + 3 * item_height));
+        ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+        ok(HIWORD(ret) == header_height + 2 * item_height, "Unexpected height %d.\n", HIWORD(ret));
+
+        ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, -2, MAKELONG(item_width * 2, 0));
+        ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+    todo_wine
+        ok(HIWORD(ret) == header_height - 2 * item_height, "Unexpected height %d.\n", HIWORD(ret));
+
+        ret = SendMessageA(hwnd, LVM_APPROXIMATEVIEWRECT, -2, MAKELONG(-1, -1));
+        ok(LOWORD(ret) == item_width, "Unexpected width %d.\n", LOWORD(ret));
+    todo_wine
+        ok(HIWORD(ret) == header_height - 2 * item_height, "Unexpected height %d.\n", HIWORD(ret));
+    }
+
+    DestroyWindow(hwnd);
+
 }
 
 static void test_finditem(void)
@@ -5102,12 +5201,6 @@ static void test_finditem(void)
     fi.flags = LVFI_SUBSTRING;
     fi.psz = f;
     r = SendMessageA(hwnd, LVM_FINDITEMA, -1, (LPARAM)&fi);
-    if (r == -1)
-    {
-        win_skip("LVFI_SUBSTRING not supported\n");
-        DestroyWindow(hwnd);
-        return;
-    }
     expect(0, r);
     strcpy(f, "f");
     fi.flags = LVFI_SUBSTRING;
@@ -5895,6 +5988,7 @@ static void test_oneclickactivate(void)
 
 static void test_callback_mask(void)
 {
+    LVITEMA item;
     DWORD mask;
     HWND hwnd;
     BOOL ret;
@@ -5911,6 +6005,209 @@ static void test_callback_mask(void)
     ok(mask == ~0u, "got 0x%08x\n", mask);
 
     DestroyWindow(hwnd);
+
+    /* LVS_OWNERDATA, mask LVIS_FOCUSED */
+    hwnd = create_listview_control(LVS_REPORT | LVS_OWNERDATA);
+
+    mask = SendMessageA(hwnd, LVM_GETCALLBACKMASK, 0, 0);
+    ok(mask == 0, "Unexpected callback mask %#x.\n", mask);
+
+    ret = SendMessageA(hwnd, LVM_SETCALLBACKMASK, LVIS_FOCUSED, 0);
+    ok(ret, "Failed to set callback mask, %d\n", ret);
+
+    mask = SendMessageA(hwnd, LVM_GETCALLBACKMASK, 0, 0);
+    ok(mask == LVIS_FOCUSED, "Unexpected callback mask %#x.\n", mask);
+
+    ret = SendMessageA(hwnd, LVM_SETITEMCOUNT, 1, 0);
+    ok(ret, "Failed to set item count.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    ok(ret == -1, "Unexpected selection mark, %d\n", ret);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state = LVIS_FOCUSED;
+    ret = SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+    ok(ret, "Failed to set item state.\n");
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageA(hwnd, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+todo_wine
+    ok(ret == 0, "Unexpected focused item, ret %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+todo_wine
+    ok(ret == 0, "Unexpected selection mark, %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_SETITEMCOUNT, 0, 0);
+    ok(ret, "Failed to set item count.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    ok(ret == -1, "Unexpected focused item, ret %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    ok(ret == -1, "Unexpected selection mark, %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_SETITEMCOUNT, 1, 0);
+    ok(ret, "Failed to set item count.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    ok(ret == -1, "Unexpected focused item, ret %d\n", ret);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "parent seq, owner data/focus 1", FALSE);
+
+    /* LVS_OWNDERDATA, empty mask */
+    ret = SendMessageA(hwnd, LVM_SETCALLBACKMASK, 0, 0);
+    ok(ret, "Failed to set callback mask, %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_SETITEMCOUNT, 1, 0);
+    ok(ret, "Failed to set item count.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    ok(ret == -1, "Unexpected selection mark, %d\n", ret);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state = LVIS_FOCUSED;
+    ret = SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+    ok(ret, "Failed to set item state.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    ok(ret == 0, "Unexpected selection mark, %d\n", ret);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageA(hwnd, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    ok(ret == 0, "Unexpected focused item, ret %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_SETITEMCOUNT, 0, 0);
+    ok(ret, "Failed to set item count.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    ok(ret == -1, "Unexpected focused item, ret %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+todo_wine
+    ok(ret == -1, "Unexpected selection mark, %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_SETITEMCOUNT, 1, 0);
+    ok(ret, "Failed to set item count.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    ok(ret == -1, "Unexpected focused item, ret %d\n", ret);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "parent seq, owner data/focus 2", FALSE);
+
+    /* 2 items, focus on index 0, reduce to 1 item. */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageA(hwnd, LVM_SETITEMCOUNT, 2, 0);
+    ok(ret, "Failed to set item count.\n");
+
+    ret = SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+    ok(ret, "Failed to set item state.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    ok(ret == 0, "Unexpected focused item, ret %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_SETITEMCOUNT, 1, 0);
+    ok(ret, "Failed to set item count.\n");
+
+    ret = SendMessageA(hwnd, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+    ok(ret == 0, "Unexpected focused item, ret %d\n", ret);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_focus_change_ownerdata_seq,
+        "parent seq, owner data/focus 3", TRUE);
+
+    DestroyWindow(hwnd);
+}
+
+static void test_state_image(void)
+{
+    static const DWORD styles[] =
+    {
+        LVS_ICON,
+        LVS_REPORT,
+        LVS_SMALLICON,
+        LVS_LIST,
+    };
+    int i;
+
+    for (i = 0; i < sizeof(styles)/sizeof(styles[0]); i++)
+    {
+        static char text[] = "Item";
+        static char subtext[] = "Subitem";
+        char buff[16];
+        LVITEMA item;
+        HWND hwnd;
+        int r;
+
+        hwnd = create_listview_control(styles[i]);
+
+        insert_column(hwnd, 0);
+        insert_column(hwnd, 1);
+
+        item.mask = LVIF_TEXT;
+        item.iItem = 0;
+        item.iSubItem = 0;
+        item.pszText = text;
+        r = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&item);
+        ok(r == 0, "Failed to insert an item.\n");
+
+        item.mask = LVIF_STATE;
+        item.state = INDEXTOSTATEIMAGEMASK(1) | LVIS_SELECTED;
+        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED;
+        item.iItem = 0;
+        item.iSubItem = 0;
+        r = SendMessageA(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
+        ok(r, "Failed to set item state.\n");
+
+        item.mask = LVIF_TEXT;
+        item.iItem = 0;
+        item.iSubItem = 1;
+        item.pszText = subtext;
+        r = SendMessageA(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
+        ok(r, "Failed to set subitem text.\n");
+
+        item.mask = LVIF_STATE;
+        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED;
+        item.state = 0;
+        item.iItem = 0;
+        item.iSubItem = 0;
+        r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM)&item);
+        ok(r, "Failed to get item state.\n");
+        ok(item.state == (INDEXTOSTATEIMAGEMASK(1) | LVIS_SELECTED), "Unexpected item state %#x.\n", item.state);
+
+        item.mask = LVIF_STATE;
+        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED;
+        item.state = INDEXTOSTATEIMAGEMASK(2);
+        item.iItem = 0;
+        item.iSubItem = 1;
+        r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM)&item);
+        ok(r, "Failed to get subitem state.\n");
+    todo_wine
+        ok(item.state == 0, "Unexpected state %#x.\n", item.state);
+
+        item.mask = LVIF_STATE;
+        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED;
+        item.state = INDEXTOSTATEIMAGEMASK(2);
+        item.iItem = 0;
+        item.iSubItem = 2;
+        r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM)&item);
+        ok(r, "Failed to get subitem state.\n");
+    todo_wine
+        ok(item.state == 0, "Unexpected state %#x.\n", item.state);
+
+        item.mask = LVIF_TEXT;
+        item.iItem = 0;
+        item.iSubItem = 1;
+        item.pszText = buff;
+        item.cchTextMax = sizeof(buff);
+        r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM)&item);
+        ok(r, "Failed to get subitem text %d.\n", r);
+        ok(!strcmp(buff, subtext), "Unexpected subitem text %s.\n", buff);
+
+        DestroyWindow(hwnd);
+    }
 }
 
 START_TEST(listview)
@@ -5985,6 +6282,7 @@ START_TEST(listview)
     test_header_proc();
     test_oneclickactivate();
     test_callback_mask();
+    test_state_image();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
@@ -6003,6 +6301,26 @@ START_TEST(listview)
     test_multiselect();
     test_insertitem();
     test_header_proc();
+    test_images();
+    test_checkboxes();
+    test_items();
+    test_color();
+    test_columns();
+    test_sorting();
+    test_ownerdata();
+    test_norecompute();
+    test_nosortheader();
+    test_columnscreation();
+    test_indentation();
+    test_finditem();
+    test_hover();
+    test_destroynotify();
+    test_createdragimage();
+    test_dispinfo();
+    test_LVM_SETITEMTEXT();
+    test_LVM_REDRAWITEMS();
+    test_oneclickactivate();
+    test_state_image();
 
     unload_v6_module(ctx_cookie, hCtx);
 

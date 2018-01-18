@@ -189,7 +189,7 @@ static void test_Alloc(void)
 
     /* reallocate a NULL ptr */
     p = pReAlloc(NULL, 2);
-    ok(p != NULL, "Expectd non-NULL ptr\n");
+    ok(p != NULL, "Expected non-NULL ptr\n");
 
     res = pFree(p);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);

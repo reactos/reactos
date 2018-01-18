@@ -288,10 +288,15 @@ static HWND create_updown_control(DWORD style, HWND buddy)
     RECT rect;
 
     GetClientRect(parent_wnd, &rect);
-    updown = CreateUpDownControl(WS_CHILD | WS_BORDER | WS_VISIBLE | style,
-                                 0, 0, rect.right, rect.bottom, parent_wnd, 1, GetModuleHandleA(NULL), buddy,
-                                 100, 0, 50);
+    updown = CreateWindowExA(0, UPDOWN_CLASSA, NULL, WS_CHILD | WS_BORDER | WS_VISIBLE | style,
+                           0, 0, rect.right, rect.bottom,
+                           parent_wnd, (HMENU)1, GetModuleHandleA(NULL), NULL);
+    ok(updown != NULL, "Failed to create UpDown control.\n");
     if (!updown) return NULL;
+
+    SendMessageA(updown, UDM_SETBUDDY, (WPARAM)buddy, 0);
+    SendMessageA(updown, UDM_SETRANGE, 0, MAKELONG(100, 0));
+    SendMessageA(updown, UDM_SETPOS, 0, MAKELONG(50, 0));
 
     oldproc = (WNDPROC)SetWindowLongPtrA(updown, GWLP_WNDPROC,
                                          (LONG_PTR)updown_subclass_proc);
@@ -512,6 +517,7 @@ static void test_updown_pos32(void)
 static void test_updown_buddy(void)
 {
     HWND updown, buddyReturn, buddy;
+    RECT rect, rect2;
     WNDPROC proc;
     DWORD style;
 
@@ -558,8 +564,82 @@ static void test_updown_buddy(void)
     }
 
     DestroyWindow(updown);
-
     DestroyWindow(buddy);
+
+    /* Create with buddy and UDS_HORZ, reset buddy. */
+    updown = create_updown_control(UDS_HORZ, g_edit);
+
+    buddyReturn = (HWND)SendMessageA(updown, UDM_GETBUDDY, 0, 0);
+    ok(buddyReturn == g_edit, "Unexpected buddy window.\n");
+
+    GetClientRect(updown, &rect);
+
+    buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, 0, 0);
+    ok(buddyReturn == g_edit, "Unexpected buddy window.\n");
+
+    GetClientRect(updown, &rect2);
+    ok(EqualRect(&rect, &rect2), "Unexpected window rect.\n");
+
+    /* Remove UDS_HORZ, reset buddy again. */
+    style = GetWindowLongA(updown, GWL_STYLE);
+    SetWindowLongA(updown, GWL_STYLE, style & ~UDS_HORZ);
+    style = GetWindowLongA(updown, GWL_STYLE);
+    ok(!(style & UDS_HORZ), "Unexpected style.\n");
+
+    buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, 0, 0);
+    ok(buddyReturn == NULL, "Unexpected buddy window.\n");
+
+    GetClientRect(updown, &rect2);
+    ok(EqualRect(&rect, &rect2), "Unexpected window rect.\n");
+
+    DestroyWindow(updown);
+
+    /* Without UDS_HORZ. */
+    updown = create_updown_control(0, g_edit);
+
+    buddyReturn = (HWND)SendMessageA(updown, UDM_GETBUDDY, 0, 0);
+    ok(buddyReturn == g_edit, "Unexpected buddy window.\n");
+
+    GetClientRect(updown, &rect);
+
+    buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, 0, 0);
+    ok(buddyReturn == g_edit, "Unexpected buddy window.\n");
+
+    GetClientRect(updown, &rect2);
+    ok(EqualRect(&rect, &rect2), "Unexpected window rect.\n");
+
+    DestroyWindow(updown);
+
+    /* Create without buddy. */
+    GetClientRect(parent_wnd, &rect);
+    updown = CreateWindowExA(0, UPDOWN_CLASSA, NULL, WS_CHILD | WS_BORDER | WS_VISIBLE | UDS_HORZ,
+        0, 0, rect.right, rect.bottom, parent_wnd, (HMENU)1, GetModuleHandleA(NULL), NULL);
+    ok(updown != NULL, "Failed to create UpDown control.\n");
+
+    GetClientRect(updown, &rect);
+    buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, 0, 0);
+    ok(buddyReturn == NULL, "Unexpected buddy window.\n");
+    GetClientRect(updown, &rect2);
+
+    ok(EqualRect(&rect, &rect2), "Unexpected window rect.\n");
+
+    style = GetWindowLongA(updown, GWL_STYLE);
+    SetWindowLongA(updown, GWL_STYLE, style & ~UDS_HORZ);
+
+    GetClientRect(updown, &rect2);
+    ok(EqualRect(&rect, &rect2), "Unexpected window rect.\n");
+
+    buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, (WPARAM)g_edit, 0);
+    ok(buddyReturn == NULL, "Unexpected buddy window.\n");
+    GetClientRect(updown, &rect);
+
+    buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, 0, 0);
+    ok(buddyReturn == g_edit, "Unexpected buddy window.\n");
+    GetClientRect(updown, &rect2);
+todo_wine
+    ok(EqualRect(&rect, &rect2), "Unexpected window rect.\n");
+
+    DestroyWindow(updown);
 }
 
 static void test_updown_base(void)
@@ -790,6 +870,29 @@ static void test_UDS_SETBUDDYINT(void)
     DestroyWindow(updown);
 }
 
+static void test_CreateUpDownControl(void)
+{
+    HWND updown, buddy;
+    DWORD range, pos;
+    RECT rect;
+
+    GetClientRect(parent_wnd, &rect);
+    updown = CreateUpDownControl(WS_CHILD | WS_BORDER | WS_VISIBLE,
+        0, 0, rect.right, rect.bottom, parent_wnd, 1, GetModuleHandleA(NULL), g_edit, 100, 10, 50);
+    ok(updown != NULL, "Failed to create control.\n");
+
+    buddy = (HWND)SendMessageA(updown, UDM_GETBUDDY, 0, 0);
+    ok(buddy == g_edit, "Unexpected buddy window.\n");
+
+    range = SendMessageA(updown, UDM_GETRANGE, 0, 0);
+    ok(range == MAKELONG(100, 10), "Unexpected range.\n");
+
+    pos = SendMessageA(updown, UDM_GETPOS, 0, 0);
+    ok(pos == MAKELONG(50, 1), "Unexpected position.\n");
+
+    DestroyWindow(updown);
+}
+
 START_TEST(updown)
 {
     HMODULE mod = GetModuleHandleA("comctl32.dll");
@@ -811,6 +914,7 @@ START_TEST(updown)
     test_updown_base();
     test_updown_unicode();
     test_UDS_SETBUDDYINT();
+    test_CreateUpDownControl();
 
     DestroyWindow(g_edit);
     DestroyWindow(parent_wnd);
