@@ -1596,7 +1596,7 @@ static LRESULT CALLBACK Help_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
 static BOOL HH_CreateHelpWindow(HHInfo *info)
 {
-    HWND hWnd, parent = 0;
+    HWND hWnd;
     RECT winPos = info->WinType.rcWindowPos;
     WNDCLASSEXW wcex;
     DWORD dwStyles, dwExStyles;
@@ -1670,11 +1670,8 @@ static BOOL HH_CreateHelpWindow(HHInfo *info)
     caption = info->WinType.pszCaption;
     if (!*caption) caption = info->pCHMInfo->defTitle;
 
-    if (info->WinType.dwStyles & WS_CHILD)
-        parent = info->WinType.hwndCaller;
-
-    hWnd = CreateWindowExW(dwExStyles, windowClassW, caption,
-                           dwStyles, x, y, width, height, parent, NULL, hhctrl_hinstance, NULL);
+    hWnd = CreateWindowExW(dwExStyles, windowClassW, caption, dwStyles, x, y, width, height,
+                           info->WinType.hwndCaller, NULL, hhctrl_hinstance, NULL);
     if (!hWnd)
         return FALSE;
 
