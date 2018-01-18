@@ -744,7 +744,7 @@ static void test_FDIIsCabinet(void)
 
 static INT_PTR __cdecl CopyProgress(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
 {
-    return 0;
+    return 37;  /* doc says 0, but anything != -1 apparently means success as well */
 }
 
 static INT_PTR CDECL fdi_mem_open(char *name, int oflag, int pmode)
