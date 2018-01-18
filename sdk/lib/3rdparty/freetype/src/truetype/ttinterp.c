@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType bytecode interpreter (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,7 +25,7 @@
 #include FT_INTERNAL_CALC_H
 #include FT_TRIGONOMETRY_H
 #include FT_SYSTEM_H
-#include FT_TRUETYPE_DRIVER_H
+#include FT_DRIVER_H
 #include FT_MULTIPLE_MASTERS_H
 
 #include "ttinterp.h"
@@ -5690,7 +5690,11 @@
                    ( B1 & 63 ) != 0                                           &&
                    ( B2 & 63 ) != 0                                           &&
                    B1 != B2                                                   )
-                Move_Zp2_Point( exc, point, -dx, -dy, TRUE );
+                Move_Zp2_Point( exc,
+                                point,
+                                NEG_LONG( dx ),
+                                NEG_LONG( dy ),
+                                TRUE );
             }
           }
           else if ( exc->face->sph_compatibility_mode )
@@ -5722,7 +5726,7 @@
               if ( ( B1 & 63 ) == 0 &&
                    ( B2 & 63 ) != 0 &&
                    B1 != B2         )
-                Move_Zp2_Point( exc, point, 0, -dy, TRUE );
+                Move_Zp2_Point( exc, point, 0, NEG_LONG( dy ), TRUE );
             }
           }
           else if ( exc->sph_in_func_flags & SPH_FDEF_TYPEMAN_DIAGENDCTRL )
@@ -5991,7 +5995,7 @@
                                     exc->tt_metrics.compensations[0] );
     }
 
-    exc->func_move( exc, &exc->zp0, point, distance - org_dist );
+    exc->func_move( exc, &exc->zp0, point, SUB_LONG( distance, org_dist ) );
 
   Fail:
     exc->GS.rp0 = point;
@@ -6074,8 +6078,12 @@
 
     /* single width cut-in test */
 
-    if ( FT_ABS( org_dist - exc->GS.single_width_value ) <
-         exc->GS.single_width_cutin )
+    /* |org_dist - single_width_value| < single_width_cutin */
+    if ( exc->GS.single_width_cutin > 0          &&
+         org_dist < exc->GS.single_width_value +
+                      exc->GS.single_width_cutin &&
+         org_dist > exc->GS.single_width_value -
+                      exc->GS.single_width_cutin )
     {
       if ( org_dist >= 0 )
         org_dist = exc->GS.single_width_value;
@@ -7153,7 +7161,7 @@
                          SPH_TWEAK_SKIP_NONPIXEL_Y_MOVES_DELTAP ) &&
                        ( B1 & 63 ) != 0                           &&
                        ( B2 & 63 ) != 0                           ) ) )
-                exc->func_move( exc, &exc->zp0, A, -B );
+                exc->func_move( exc, &exc->zp0, A, NEG_LONG( B ) );
             }
           }
           else
@@ -8478,7 +8486,9 @@
     } while ( !exc->instruction_trap );
 
   LNo_Error_:
-    FT_TRACE4(( "  %d instructions executed\n", ins_counter ));
+    FT_TRACE4(( "  %d instruction%s executed\n",
+                ins_counter == 1 ? "" : "s",
+                ins_counter ));
     return FT_Err_Ok;
 
   LErrorCodeOverflow_:

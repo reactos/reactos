@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType character mapping table (cmap) support (body).              */
 /*                                                                         */
-/*  Copyright 2002-2017 by                                                 */
+/*  Copyright 2002-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -518,7 +518,11 @@
 
 
         if ( offset == 0 )
+        {
+          if ( charcode == 0x100 )
+            goto Exit; /* this happens only for a malformed cmap */
           goto Next_SubHeader;
+        }
 
         if ( char_lo < start )
         {
@@ -547,9 +551,19 @@
         }
       }
 
-      /* jump to next sub-header, i.e. higher byte value */
+      /* If `charcode' is <= 0xFF, retry with `charcode + 1'.  If        */
+      /* `charcode' is 0x100 after the loop, do nothing since we have    */
+      /* just reached the first sub-header for two-byte character codes. */
+      /*                                                                 */
+      /* For all other cases, we jump to the next sub-header and adjust  */
+      /* `charcode' accordingly.                                         */
     Next_SubHeader:
-      charcode = FT_PAD_FLOOR( charcode, 256 ) + 256;
+      if ( charcode <= 0xFF )
+        charcode++;
+      else if ( charcode == 0x100 )
+        ;
+      else
+        charcode = FT_PAD_FLOOR( charcode, 0x100 ) + 0x100;
     }
 
   Exit:

@@ -1,6 +1,6 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2hints.c                                                             */
+/*  pshints.c                                                              */
 /*                                                                         */
 /*    Adobe's code for handling CFF hints (body).                          */
 /*                                                                         */
@@ -36,13 +36,13 @@
 /***************************************************************************/
 
 
-#include "cf2ft.h"
+#include "psft.h"
 #include FT_INTERNAL_DEBUG_H
 
-#include "cf2glue.h"
-#include "cf2font.h"
-#include "cf2hints.h"
-#include "cf2intrp.h"
+#include "psglue.h"
+#include "psfont.h"
+#include "pshints.h"
+#include "psintrp.h"
 
 
   /*************************************************************************/
@@ -296,6 +296,36 @@
   cf2_hintmap_isValid( const CF2_HintMap  hintmap )
   {
     return hintmap->isValid;
+  }
+
+
+  static void
+  cf2_hintmap_dump( CF2_HintMap  hintmap )
+  {
+#ifdef FT_DEBUG_LEVEL_TRACE
+    CF2_UInt  i;
+
+
+    FT_TRACE6(( "  index  csCoord  dsCoord  scale  flags\n" ));
+
+    for ( i = 0; i < hintmap->count; i++ )
+    {
+      CF2_Hint  hint = &hintmap->edge[i];
+
+
+      FT_TRACE6(( "  %3d    %7.2f  %7.2f  %5d  %s%s%s%s\n",
+                  hint->index,
+                  hint->csCoord / 65536.0,
+                  hint->dsCoord / ( hint->scale * 1.0 ),
+                  hint->scale,
+                  ( cf2_hint_isPair( hint ) ? "p" : "g" ),
+                  ( cf2_hint_isTop( hint ) ? "t" : "b" ),
+                  ( cf2_hint_isLocked( hint ) ? "L" : ""),
+                  ( cf2_hint_isSynthetic( hint ) ? "S" : "" ) ));
+    }
+#else
+    FT_UNUSED( hintmap );
+#endif
   }
 
 
@@ -612,6 +642,14 @@
         break;
     }
 
+    FT_TRACE7(( "  Got hint at %.2f (%.2f)\n",
+                firstHintEdge->csCoord / 65536.0,
+                firstHintEdge->dsCoord / 65536.0 ));
+    if ( isPair )
+      FT_TRACE7(( "  Got hint at %.2f (%.2f)\n",
+                  secondHintEdge->csCoord / 65536.0,
+                  secondHintEdge->dsCoord / 65536.0 ));
+
     /*
      * Discard any hints that overlap in character space.  Most often, this
      * is while building the initial map, where captured hints from all
@@ -731,11 +769,20 @@
       hintmap->edge[indexInsert] = *firstHintEdge;         /* copy struct */
       hintmap->count            += 1;
 
+      FT_TRACE7(( "  Inserting hint %.2f (%.2f)\n",
+                  firstHintEdge->csCoord / 65536.0,
+                  firstHintEdge->dsCoord / 65536.0 ));
+
       if ( isPair )
       {
         /* insert second edge */
         hintmap->edge[indexInsert + 1] = *secondHintEdge;  /* copy struct */
         hintmap->count                += 1;
+
+        FT_TRACE7(( "  Inserting hint %.2f (%.2f)\n",
+                    secondHintEdge->csCoord / 65536.0,
+                    secondHintEdge->dsCoord / 65536.0 ));
+
       }
     }
 
@@ -795,7 +842,15 @@
                            cf2_arrstack_size( hStemHintArray ) +
                              cf2_arrstack_size( vStemHintArray ) );
       if ( !cf2_hintmask_isValid( hintMask ) )
+      {
+        if ( font->isT1 )
+        {
+          /* no error, just continue unhinted */
+          *hintMask->error = FT_Err_Ok;
+          hintmap->hinted  = FALSE;
+        }
         return;                   /* too many stem hints */
+      }
     }
 
     /* begin by clearing the map */
@@ -970,6 +1025,12 @@
       }
     }
 
+    FT_TRACE6(( initialMap ? "flags: [p]air [g]host [t]op "
+                             "[b]ottom [L]ocked [S]ynthetic\n"
+                             "Initial hintmap\n"
+                           : "Hints:\n" ));
+    cf2_hintmap_dump( hintmap );
+
     /*
      * Note: The following line is a convenient place to break when
      *       debugging hinting.  Examine `hintmap->edge' for the list of
@@ -981,6 +1042,9 @@
 
     /* adjust positions of hint edges that are not locked to blue zones */
     cf2_hintmap_adjustHints( hintmap );
+
+    FT_TRACE6(( "(adjusted)\n" ));
+    cf2_hintmap_dump( hintmap );
 
     /* save the position of all hints that were used in this hint map; */
     /* if we use them again, we'll locate them in the same position    */
@@ -1146,7 +1210,7 @@
      * second segment.
      * Let `w 'be the zero-based vector from `u1' to `v1'.
      * `perp' is the `perpendicular dot product'; see
-     * http://mathworld.wolfram.com/PerpDotProduct.html.
+     * https://mathworld.wolfram.com/PerpDotProduct.html.
      * `s' is the parameter for the parametric line for the first segment
      * (`u').
      *

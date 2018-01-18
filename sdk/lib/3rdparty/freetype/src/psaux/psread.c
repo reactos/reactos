@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2error.h                                                             */
+/*  psread.c                                                               */
 /*                                                                         */
-/*    Adobe's code for error handling (specification).                     */
+/*    Adobe's code for stream handling (body).                             */
 /*                                                                         */
-/*  Copyright 2006-2013 Adobe Systems Incorporated.                        */
+/*  Copyright 2007-2013 Adobe Systems Incorporated.                        */
 /*                                                                         */
 /*  This software, and all works of authorship, whether in source or       */
 /*  object code form as indicated by the copyright notice(s) included      */
@@ -36,84 +36,77 @@
 /***************************************************************************/
 
 
-#ifndef CF2ERROR_H_
-#define CF2ERROR_H_
+#include "psft.h"
+#include FT_INTERNAL_DEBUG_H
+
+#include "psglue.h"
+
+#include "pserror.h"
 
 
-#include FT_MODULE_ERRORS_H
-
-#undef FTERRORS_H_
-
-#undef  FT_ERR_PREFIX
-#define FT_ERR_PREFIX  CF2_Err_
-#define FT_ERR_BASE    FT_Mod_Err_CF2
+  /* Define CF2_IO_FAIL as 1 to enable random errors and random */
+  /* value errors in I/O.                                       */
+#define CF2_IO_FAIL  0
 
 
-#include FT_ERRORS_H
-#include "cf2ft.h"
+#if CF2_IO_FAIL
+
+  /* set the .00 value to a nonzero probability */
+  static int
+  randomError2( void )
+  {
+    /* for region buffer ReadByte (interp) function */
+    return (double)rand() / RAND_MAX < .00;
+  }
+
+  /* set the .00 value to a nonzero probability */
+  static CF2_Int
+  randomValue()
+  {
+    return (double)rand() / RAND_MAX < .00 ? rand() : 0;
+  }
+
+#endif /* CF2_IO_FAIL */
 
 
-FT_BEGIN_HEADER
+  /* Region Buffer                                      */
+  /*                                                    */
+  /* Can be constructed from a copied buffer managed by */
+  /* `FCM_getDatablock'.                                */
+  /* Reads bytes with check for end of buffer.          */
+
+  /* reading past the end of the buffer sets error and returns zero */
+  FT_LOCAL_DEF( CF2_Int )
+  cf2_buf_readByte( CF2_Buffer  buf )
+  {
+    if ( buf->ptr < buf->end )
+    {
+#if CF2_IO_FAIL
+      if ( randomError2() )
+      {
+        CF2_SET_ERROR( buf->error, Invalid_Stream_Operation );
+        return 0;
+      }
+
+      return *(buf->ptr)++ + randomValue();
+#else
+      return *(buf->ptr)++;
+#endif
+    }
+    else
+    {
+      CF2_SET_ERROR( buf->error, Invalid_Stream_Operation );
+      return 0;
+    }
+  }
 
 
-  /*
-   * A poor-man error facility.
-   *
-   * This code being written in vanilla C, doesn't have the luxury of a
-   * language-supported exception mechanism such as the one available in
-   * Java.  Instead, we are stuck with using error codes that must be
-   * carefully managed and preserved.  However, it is convenient for us to
-   * model our error mechanism on a Java-like exception mechanism.
-   * When we assign an error code we are thus `throwing' an error.
-   *
-   * The preservation of an error code is done by coding convention.
-   * Upon a function call if the error code is anything other than
-   * `FT_Err_Ok', which is guaranteed to be zero, we
-   * will return without altering that error.  This will allow the
-   * error to propagate and be handled at the appropriate location in
-   * the code.
-   *
-   * This allows a style of code where the error code is initialized
-   * up front and a block of calls are made with the error code only
-   * being checked after the block.  If a new error occurs, the original
-   * error will be preserved and a functional no-op should result in any
-   * subsequent function that has an initial error code not equal to
-   * `FT_Err_Ok'.
-   *
-   * Errors are encoded by calling the `FT_THROW' macro.  For example,
-   *
-   * {
-   *   FT_Error  e;
-   *
-   *
-   *   ...
-   *   e = FT_THROW( Out_Of_Memory );
-   * }
-   *
-   */
-
-
-  /* Set error code to a particular value. */
-  FT_LOCAL( void )
-  cf2_setError( FT_Error*  error,
-                FT_Error   value );
-
-
-  /*
-   * A macro that conditionally sets an error code.
-   *
-   * This macro will first check whether `error' is set;
-   * if not, it will set it to `e'.
-   *
-  */
-#define CF2_SET_ERROR( error, e )              \
-          cf2_setError( error, FT_THROW( e ) )
-
-
-FT_END_HEADER
-
-
-#endif /* CF2ERROR_H_ */
+  /* note: end condition can occur without error */
+  FT_LOCAL_DEF( FT_Bool )
+  cf2_buf_isEnd( CF2_Buffer  buf )
+  {
+    return (FT_Bool)( buf->ptr >= buf->end );
+  }
 
 
 /* END */

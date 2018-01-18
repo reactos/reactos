@@ -1,8 +1,8 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2read.h                                                              */
+/*  psglue.h                                                               */
 /*                                                                         */
-/*    Adobe's code for stream handling (specification).                    */
+/*    Adobe's code for shared stuff (specification only).                  */
 /*                                                                         */
 /*  Copyright 2007-2013 Adobe Systems Incorporated.                        */
 /*                                                                         */
@@ -36,33 +36,109 @@
 /***************************************************************************/
 
 
-#ifndef CF2READ_H_
-#define CF2READ_H_
+#ifndef PSGLUE_H_
+#define PSGLUE_H_
+
+
+/* common includes for other modules */
+#include "pserror.h"
+#include "psfixed.h"
+#include "psarrst.h"
+#include "psread.h"
 
 
 FT_BEGIN_HEADER
 
 
-  typedef struct  CF2_BufferRec_
+  /* rendering parameters */
+
+  /* apply hints to rendered glyphs */
+#define CF2_FlagsHinted    1
+  /* for testing */
+#define CF2_FlagsDarkened  2
+
+  /* type for holding the flags */
+  typedef CF2_Int  CF2_RenderingFlags;
+
+
+  /* elements of a glyph outline */
+  typedef enum  CF2_PathOp_
   {
-    FT_Error*       error;
-    const FT_Byte*  start;
-    const FT_Byte*  end;
-    const FT_Byte*  ptr;
+    CF2_PathOpMoveTo = 1,     /* change the current point */
+    CF2_PathOpLineTo = 2,     /* line                     */
+    CF2_PathOpQuadTo = 3,     /* quadratic curve          */
+    CF2_PathOpCubeTo = 4      /* cubic curve              */
 
-  } CF2_BufferRec, *CF2_Buffer;
+  } CF2_PathOp;
 
 
-  FT_LOCAL( CF2_Int )
-  cf2_buf_readByte( CF2_Buffer  buf );
-  FT_LOCAL( FT_Bool )
-  cf2_buf_isEnd( CF2_Buffer  buf );
+  /* a matrix of fixed point values */
+  typedef struct  CF2_Matrix_
+  {
+    CF2_F16Dot16  a;
+    CF2_F16Dot16  b;
+    CF2_F16Dot16  c;
+    CF2_F16Dot16  d;
+    CF2_F16Dot16  tx;
+    CF2_F16Dot16  ty;
+
+  } CF2_Matrix;
+
+
+  /* these typedefs are needed by more than one header file */
+  /* and gcc compiler doesn't allow redefinition            */
+  typedef struct CF2_FontRec_  CF2_FontRec, *CF2_Font;
+  typedef struct CF2_HintRec_  CF2_HintRec, *CF2_Hint;
+
+
+  /* A common structure for all callback parameters.                       */
+  /*                                                                       */
+  /* Some members may be unused.  For example, `pt0' is not used for       */
+  /* `moveTo' and `pt3' is not used for `quadTo'.  The initial point `pt0' */
+  /* is included for each path element for generality; curve conversions   */
+  /* need it.  The `op' parameter allows one function to handle multiple   */
+  /* element types.                                                        */
+
+  typedef struct  CF2_CallbackParamsRec_
+  {
+    FT_Vector  pt0;
+    FT_Vector  pt1;
+    FT_Vector  pt2;
+    FT_Vector  pt3;
+
+    CF2_Int  op;
+
+  } CF2_CallbackParamsRec, *CF2_CallbackParams;
+
+
+  /* forward reference */
+  typedef struct CF2_OutlineCallbacksRec_  CF2_OutlineCallbacksRec,
+                                           *CF2_OutlineCallbacks;
+
+  /* callback function pointers */
+  typedef void
+  (*CF2_Callback_Type)( CF2_OutlineCallbacks      callbacks,
+                        const CF2_CallbackParams  params );
+
+
+  struct  CF2_OutlineCallbacksRec_
+  {
+    CF2_Callback_Type  moveTo;
+    CF2_Callback_Type  lineTo;
+    CF2_Callback_Type  quadTo;
+    CF2_Callback_Type  cubeTo;
+
+    CF2_Int  windingMomentum;    /* for winding order detection */
+
+    FT_Memory  memory;
+    FT_Error*  error;
+  };
 
 
 FT_END_HEADER
 
 
-#endif /* CF2READ_H_ */
+#endif /* PSGLUE_H_ */
 
 
 /* END */

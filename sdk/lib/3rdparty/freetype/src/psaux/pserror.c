@@ -1,6 +1,6 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2error.c                                                             */
+/*  pserror.c                                                              */
 /*                                                                         */
 /*    Adobe's code for error handling (body).                              */
 /*                                                                         */
@@ -36,8 +36,8 @@
 /***************************************************************************/
 
 
-#include "cf2ft.h"
-#include "cf2error.h"
+#include "psft.h"
+#include "pserror.h"
 
 
   FT_LOCAL_DEF( void )

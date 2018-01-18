@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    SFNT object management (base).                                       */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -962,8 +962,6 @@
       FT_Byte*  instance_values = NULL;
 
 
-      face->is_default_instance = 1;
-
       instance_index = FT_ABS( face_instance_index ) >> 16;
 
       /* test whether current face is a GX font with named instances */
@@ -1686,9 +1684,9 @@
           (FT_Short)( face->vertical_info ? face->vertical.advance_Height_Max
                                           : root->height );
 
-        /* See http://www.microsoft.com/OpenType/OTSpec/post.htm -- */
-        /* Adjust underline position from top edge to centre of     */
-        /* stroke to convert TrueType meaning to FreeType meaning.  */
+        /* See https://www.microsoft.com/typography/otspec/post.htm -- */
+        /* Adjust underline position from top edge to centre of        */
+        /* stroke to convert TrueType meaning to FreeType meaning.     */
         root->underline_position  = face->postscript.underlinePosition -
                                     face->postscript.underlineThickness / 2;
         root->underline_thickness = face->postscript.underlineThickness;

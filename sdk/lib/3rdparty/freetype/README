@@ -1,7 +1,7 @@
-  FreeType 2.8.1
-  ==============
+  FreeType 2.9
+  ============
 
-  Homepage: http://www.freetype.org
+  Homepage: https://www.freetype.org
 
   FreeType is a freely available software library to render fonts.
 
@@ -20,17 +20,17 @@
   documentation is available as a separate package from our sites.  Go
   to
 
-    http://download.savannah.gnu.org/releases/freetype/
+    https://download.savannah.gnu.org/releases/freetype/
 
   and download one of the following files.
 
-    freetype-doc-2.8.1.tar.bz2
-    freetype-doc-2.8.1.tar.gz
-    ftdoc281.zip
+    freetype-doc-2.9.tar.bz2
+    freetype-doc-2.9.tar.gz
+    ftdoc29.zip
 
   To view the documentation online, go to
 
-    http://www.freetype.org/freetype2/documentation.html
+    https://www.freetype.org/freetype2/documentation.html
 
 
   Mailing Lists
@@ -46,7 +46,7 @@
 
   The lists are moderated; see
 
-    http://www.freetype.org/contact.html
+    https://www.freetype.org/contact.html
 
   how to subscribe.
 
@@ -71,7 +71,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006-2017 by
+Copyright 2006-2018 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

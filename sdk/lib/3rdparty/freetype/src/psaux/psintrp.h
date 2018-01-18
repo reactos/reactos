@@ -1,8 +1,8 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2fixed.h                                                             */
+/*  psintrp.h                                                              */
 /*                                                                         */
-/*    Adobe's code for Fixed Point Mathematics (specification only).       */
+/*    Adobe's CFF Interpreter (specification).                             */
 /*                                                                         */
 /*  Copyright 2007-2013 Adobe Systems Incorporated.                        */
 /*                                                                         */
@@ -36,60 +36,48 @@
 /***************************************************************************/
 
 
-#ifndef CF2FIXED_H_
-#define CF2FIXED_H_
+#ifndef PSINTRP_H_
+#define PSINTRP_H_
+
+
+#include "psft.h"
+#include "pshints.h"
 
 
 FT_BEGIN_HEADER
 
 
-  /* rasterizer integer and fixed point arithmetic must be 32-bit */
+  FT_LOCAL( void )
+  cf2_hintmask_init( CF2_HintMask  hintmask,
+                     FT_Error*     error );
+  FT_LOCAL( FT_Bool )
+  cf2_hintmask_isValid( const CF2_HintMask  hintmask );
+  FT_LOCAL( FT_Bool )
+  cf2_hintmask_isNew( const CF2_HintMask  hintmask );
+  FT_LOCAL( void )
+  cf2_hintmask_setNew( CF2_HintMask  hintmask,
+                       FT_Bool       val );
+  FT_LOCAL( FT_Byte* )
+  cf2_hintmask_getMaskPtr( CF2_HintMask  hintmask );
+  FT_LOCAL( void )
+  cf2_hintmask_setAll( CF2_HintMask  hintmask,
+                       size_t        bitCount );
 
-#define   CF2_Fixed  CF2_F16Dot16
-  typedef FT_Int32   CF2_Frac;   /* 2.30 fixed point */
-
-
-#define CF2_FIXED_MAX      ( (CF2_Fixed)0x7FFFFFFFL )
-#define CF2_FIXED_MIN      ( (CF2_Fixed)0x80000000L )
-#define CF2_FIXED_ONE      ( (CF2_Fixed)0x10000L )
-#define CF2_FIXED_EPSILON  ( (CF2_Fixed)0x0001 )
-
-  /* in C 89, left and right shift of negative numbers is  */
-  /* implementation specific behaviour in the general case */
-
-#define cf2_intToFixed( i )                                              \
-          ( (CF2_Fixed)( (FT_UInt32)(i) << 16 ) )
-#define cf2_fixedToInt( x )                                              \
-          ( (FT_Short)( ( (FT_UInt32)(x) + 0x8000U ) >> 16 ) )
-#define cf2_fixedRound( x )                                              \
-          ( (CF2_Fixed)( ( (FT_UInt32)(x) + 0x8000U ) & 0xFFFF0000UL ) )
-#define cf2_doubleToFixed( f )                                           \
-          ( (CF2_Fixed)( (f) * 65536.0 + 0.5 ) )
-#define cf2_fixedAbs( x )                                                \
-          ( (x) < 0 ? NEG_INT32( x ) : (x) )
-#define cf2_fixedFloor( x )                                              \
-          ( (CF2_Fixed)( (FT_UInt32)(x) & 0xFFFF0000UL ) )
-#define cf2_fixedFraction( x )                                           \
-          ( (x) - cf2_fixedFloor( x ) )
-#define cf2_fracToFixed( x )                                             \
-          ( (x) < 0 ? -( ( -(x) + 0x2000 ) >> 14 )                       \
-                    :  ( (  (x) + 0x2000 ) >> 14 ) )
-
-
-  /* signed numeric types */
-  typedef enum  CF2_NumberType_
-  {
-    CF2_NumberFixed,    /* 16.16 */
-    CF2_NumberFrac,     /*  2.30 */
-    CF2_NumberInt       /* 32.0  */
-
-  } CF2_NumberType;
+  FT_LOCAL( void )
+  cf2_interpT2CharString( CF2_Font              font,
+                          CF2_Buffer            charstring,
+                          CF2_OutlineCallbacks  callbacks,
+                          const FT_Vector*      translation,
+                          FT_Bool               doingSeac,
+                          CF2_Fixed             curX,
+                          CF2_Fixed             curY,
+                          CF2_Fixed*            width );
 
 
 FT_END_HEADER
 
 
-#endif /* CF2FIXED_H_ */
+#endif /* PSINTRP_H_ */
 
 
 /* END */

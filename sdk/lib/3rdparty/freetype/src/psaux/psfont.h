@@ -1,6 +1,6 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cf2font.h                                                              */
+/*  psfont.h                                                               */
 /*                                                                         */
 /*    Adobe's code for font instances (specification).                     */
 /*                                                                         */
@@ -36,13 +36,14 @@
 /***************************************************************************/
 
 
-#ifndef CF2FONT_H_
-#define CF2FONT_H_
+#ifndef PSFONT_H_
+#define PSFONT_H_
 
 
-#include "cf2ft.h"
-#include "cf2blues.h"
-#include "cffload.h"
+#include FT_SERVICE_CFF_TABLE_LOAD_H
+
+#include "psft.h"
+#include "psblues.h"
 
 
 FT_BEGIN_HEADER
@@ -64,6 +65,7 @@ FT_BEGIN_HEADER
     FT_Memory  memory;
     FT_Error   error;     /* shared error for this instance */
 
+    FT_Bool             isT1;
     FT_Bool             isCFF2;
     CF2_RenderingFlags  renderingFlags;
 
@@ -89,7 +91,7 @@ FT_BEGIN_HEADER
 
     /* FreeType related members */
     CF2_OutlineRec  outline;       /* freetype glyph outline functions */
-    CFF_Decoder*    decoder;
+    PS_Decoder*     decoder;
     CFF_SubFont     lastSubfont;              /* FreeType parsed data; */
                                               /* top font or subfont   */
 
@@ -111,6 +113,8 @@ FT_BEGIN_HEADER
                                            /* counterclockwise winding */
 
     CF2_BluesRec  blues;                         /* computed zone data */
+
+    FT_Service_CFFLoad  cffload;           /* pointer to cff functions */
   };
 
 
@@ -124,7 +128,7 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 
-#endif /* CF2FONT_H_ */
+#endif /* PSFONT_H_ */
 
 
 /* END */
