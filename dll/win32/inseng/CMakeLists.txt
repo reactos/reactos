@@ -7,16 +7,12 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(inseng.dll inseng.spec)
 
 list(APPEND SOURCE
-    icif.c
-    inf.c
     inseng_main.c
-    inseng_private.h
     ${CMAKE_CURRENT_BINARY_DIR}/inseng_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inseng.def)
 
-add_library(inseng SHARED ${SOURCE} guid.c inseng.rc)
+add_library(inseng SHARED ${SOURCE} inseng.rc)
 set_module_type(inseng win32dll)
 target_link_libraries(inseng uuid wine)
-add_importlibs(inseng ole32 urlmon kernel32_vista msvcrt kernel32 ntdll)
-add_pch(inseng inseng_private.h SOURCE)
+add_importlibs(inseng ole32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET inseng DESTINATION reactos/system32 FOR all)
