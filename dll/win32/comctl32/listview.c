@@ -1001,7 +1001,7 @@ static BOOL notify_dispinfoT(const LISTVIEW_INFO *infoPtr, UINT code, LPNMLVDISP
         return ret;
     }
 
-    /* if dipsinfo holder changed notification code then convert */
+    /* if dispinfo holder changed notification code then convert */
     if (!isW && (pdi->hdr.code == LVN_GETDISPINFOW) && (pdi->item.mask & LVIF_TEXT))
     {
         length = WideCharToMultiByte(CP_ACP, 0, pdi->item.pszText, -1, NULL, 0, NULL, NULL);
@@ -1055,7 +1055,7 @@ static void prepaint_setup (const LISTVIEW_INFO *infoPtr, HDC hdc, NMLVCUSTOMDRA
     COLORREF backcolor, textcolor;
 
     /* apparently, for selected items, we have to override the returned values */
-    if (!SubItem || (infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT))
+    if (!SubItem)
     {
         if (lpnmlvcd->nmcd.uItemState & CDIS_SELECTED)
         {
@@ -3843,33 +3843,44 @@ static LRESULT LISTVIEW_MouseHover(LISTVIEW_INFO *infoPtr, INT x, INT y)
  *   None.
  */
 static void LISTVIEW_MarqueeHighlight(LISTVIEW_INFO *infoPtr, const POINT *coords_orig,
-                                      const POINT *coords_offs, const POINT *offset,
                                       INT scroll)
 {
     BOOL controlDown = FALSE;
     LVITEMW item;
     ITERATOR old_elems, new_elems;
     RECT rect;
+    POINT coords_offs, offset;
 
-    if (coords_offs->x > infoPtr->marqueeOrigin.x)
+    /* Ensure coordinates are within client bounds */
+    coords_offs.x = max(min(coords_orig->x, infoPtr->rcList.right), 0);
+    coords_offs.y = max(min(coords_orig->y, infoPtr->rcList.bottom), 0);
+
+    /* Get offset */
+    LISTVIEW_GetOrigin(infoPtr, &offset);
+
+    /* Offset coordinates by the appropriate amount */
+    coords_offs.x -= offset.x;
+    coords_offs.y -= offset.y;
+
+    if (coords_offs.x > infoPtr->marqueeOrigin.x)
     {
         rect.left = infoPtr->marqueeOrigin.x;
-        rect.right = coords_offs->x;
+        rect.right = coords_offs.x;
     }
     else
     {
-        rect.left = coords_offs->x;
+        rect.left = coords_offs.x;
         rect.right = infoPtr->marqueeOrigin.x;
     }
 
-    if (coords_offs->y > infoPtr->marqueeOrigin.y)
+    if (coords_offs.y > infoPtr->marqueeOrigin.y)
     {
         rect.top = infoPtr->marqueeOrigin.y;
-        rect.bottom = coords_offs->y;
+        rect.bottom = coords_offs.y;
     }
     else
     {
-        rect.top = coords_offs->y;
+        rect.top = coords_offs.y;
         rect.bottom = infoPtr->marqueeOrigin.y;
     }
 
@@ -3895,7 +3906,7 @@ static void LISTVIEW_MarqueeHighlight(LISTVIEW_INFO *infoPtr, const POINT *coord
 
     infoPtr->marqueeRect = rect;
     infoPtr->marqueeDrawRect = rect;
-    OffsetRect(&infoPtr->marqueeDrawRect, offset->x, offset->y);
+    OffsetRect(&infoPtr->marqueeDrawRect, offset.x, offset.y);
 
     iterator_frameditems_absolute(&new_elems, infoPtr, &infoPtr->marqueeRect);
     iterator_remove_common_items(&old_elems, &new_elems);
@@ -3960,9 +3971,7 @@ static VOID CALLBACK LISTVIEW_ScrollTimer(HWND hWnd, UINT uMsg, UINT_PTR idEvent
 {
     LISTVIEW_INFO *infoPtr;
     SCROLLINFO scrollInfo;
-    POINT coords_orig;
-    POINT coords_offs;
-    POINT offset;
+    POINT coords;
     INT scroll = 0;
 
     infoPtr = (LISTVIEW_INFO *) idEvent;
@@ -3971,19 +3980,8 @@ static VOID CALLBACK LISTVIEW_ScrollTimer(HWND hWnd, UINT uMsg, UINT_PTR idEvent
         return;
 
     /* Get the current cursor position and convert to client coordinates */
-    GetCursorPos(&coords_orig);
-    ScreenToClient(hWnd, &coords_orig);
-
-    /* Ensure coordinates are within client bounds */
-    coords_offs.x = max(min(coords_orig.x, infoPtr->rcList.right), 0);
-    coords_offs.y = max(min(coords_orig.y, infoPtr->rcList.bottom), 0);
-
-    /* Get offset */
-    LISTVIEW_GetOrigin(infoPtr, &offset);
-
-    /* Offset coordinates by the appropriate amount */
-    coords_offs.x -= offset.x;
-    coords_offs.y -= offset.y;
+    GetCursorPos(&coords);
+    ScreenToClient(hWnd, &coords);
 
     scrollInfo.cbSize = sizeof(SCROLLINFO);
     scrollInfo.fMask = SIF_ALL;
@@ -4007,12 +4005,12 @@ static VOID CALLBACK LISTVIEW_ScrollTimer(HWND hWnd, UINT uMsg, UINT_PTR idEvent
             scroll |= SCROLL_RIGHT;
     }
 
-    if (((coords_orig.x <= 0) && (scroll & SCROLL_LEFT)) ||
-        ((coords_orig.y <= 0) && (scroll & SCROLL_UP))   ||
-        ((coords_orig.x >= infoPtr->rcList.right) && (scroll & SCROLL_RIGHT)) ||
-        ((coords_orig.y >= infoPtr->rcList.bottom) && (scroll & SCROLL_DOWN)))
+    if (((coords.x <= 0) && (scroll & SCROLL_LEFT)) ||
+        ((coords.y <= 0) && (scroll & SCROLL_UP))   ||
+        ((coords.x >= infoPtr->rcList.right) && (scroll & SCROLL_RIGHT)) ||
+        ((coords.y >= infoPtr->rcList.bottom) && (scroll & SCROLL_DOWN)))
     {
-        LISTVIEW_MarqueeHighlight(infoPtr, &coords_orig, &coords_offs, &offset, scroll);
+        LISTVIEW_MarqueeHighlight(infoPtr, &coords, scroll);
     }
 }
 
@@ -4034,6 +4032,9 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
     RECT rect;
     POINT pt;
 
+    pt.x = x;
+    pt.y = y;
+
     if (!(fwKeys & MK_LBUTTON))
         infoPtr->bLButtonDown = FALSE;
 
@@ -4046,24 +4047,6 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
 
         if (infoPtr->bMarqueeSelect)
         {
-            POINT coords_orig;
-            POINT coords_offs;
-            POINT offset;
-
-            coords_orig.x = x;
-            coords_orig.y = y;
-
-            /* Get offset */
-            LISTVIEW_GetOrigin(infoPtr, &offset);
-
-            /* Ensure coordinates are within client bounds */
-            coords_offs.x = max(min(x, infoPtr->rcList.right), 0);
-            coords_offs.y = max(min(y, infoPtr->rcList.bottom), 0);
-
-            /* Offset coordinates by the appropriate amount */
-            coords_offs.x -= offset.x;
-            coords_offs.y -= offset.y;
-
             /* Enable the timer if we're going outside our bounds, in case the user doesn't
                move the mouse again */
 
@@ -4082,12 +4065,9 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
                 KillTimer(infoPtr->hwndSelf, (UINT_PTR) infoPtr);
             }
 
-            LISTVIEW_MarqueeHighlight(infoPtr, &coords_orig, &coords_offs, &offset, 0);
+            LISTVIEW_MarqueeHighlight(infoPtr, &pt, 0);
             return 0;
         }
-
-        pt.x = x;
-        pt.y = y;
 
         ht.pt = pt;
         LISTVIEW_HitTest(infoPtr, &ht, TRUE, TRUE);
@@ -4808,7 +4788,6 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, ITERAT
         while (iterator_next(subitems))
         {
             DWORD subitemstage = CDRF_DODEFAULT;
-            NMLVCUSTOMDRAW temp_nmlvcd;
 
             /* We need to query for each subitem, item's data (subitem == 0) is already here at this point */
             if (subitems->nItem)
@@ -4835,16 +4814,19 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, ITERAT
 
             if (cdsubitemmode & CDRF_NOTIFYSUBITEMDRAW)
                 subitemstage = notify_customdraw(infoPtr, CDDS_SUBITEM | CDDS_ITEMPREPAINT, &nmlvcd);
+            else
+            {
+                nmlvcd.clrTextBk = infoPtr->clrTextBk;
+                nmlvcd.clrText   = infoPtr->clrText;
+            }
 
-            /*
-             * A selection should neither affect the colors in the post paint notification nor
-             * affect the colors of the next drawn subitem. Copy the structure to prevent this.
-             */
-            temp_nmlvcd = nmlvcd;
-            prepaint_setup(infoPtr, hdc, &temp_nmlvcd, subitems->nItem);
+            if (subitems->nItem == 0 || (cdmode & CDRF_NOTIFYITEMDRAW))
+                prepaint_setup(infoPtr, hdc, &nmlvcd, FALSE);
+            else if (!(infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT))
+                prepaint_setup(infoPtr, hdc, &nmlvcd, TRUE);
 
             if (!(subitemstage & CDRF_SKIPDEFAULT))
-                LISTVIEW_DrawItemPart(infoPtr, &lvItem, &temp_nmlvcd, &pos);
+                LISTVIEW_DrawItemPart(infoPtr, &lvItem, &nmlvcd, &pos);
 
             if (subitemstage & CDRF_NOTIFYPOSTPAINT)
                 subitemstage = notify_customdraw(infoPtr, CDDS_SUBITEM | CDDS_ITEMPOSTPAINT, &nmlvcd);
@@ -8864,6 +8846,7 @@ static BOOL LISTVIEW_SetItemCount(LISTVIEW_INFO *infoPtr, INT nItems, DWORD dwFl
 	    if (infoPtr->nFocusedItem >= nItems)
 	    {
 		LISTVIEW_SetItemFocus(infoPtr, -1);
+                infoPtr->nFocusedItem = -1;
 		SetRectEmpty(&infoPtr->rcFocus);
 	    }
 	}
@@ -9483,7 +9466,7 @@ static VOID CALLBACK LISTVIEW_DelayedEditItem(HWND hwnd, UINT uMsg, UINT_PTR idE
  *   Success: TRUE
  *   Failure: FALSE
  */
-static LRESULT LISTVIEW_NCCreate(HWND hwnd, const CREATESTRUCTW *lpcs)
+static LRESULT LISTVIEW_NCCreate(HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
 {
   LISTVIEW_INFO *infoPtr;
   LOGFONTW logFont;
@@ -9545,7 +9528,8 @@ static LRESULT LISTVIEW_NCCreate(HWND hwnd, const CREATESTRUCTW *lpcs)
   if (!(infoPtr->hdpaPosX  = DPA_Create(10))) goto fail;
   if (!(infoPtr->hdpaPosY  = DPA_Create(10))) goto fail;
   if (!(infoPtr->hdpaColumns = DPA_Create(10))) goto fail;
-  return TRUE;
+
+  return DefWindowProcW(hwnd, WM_NCCREATE, wParam, (LPARAM)lpcs);
 
 fail:
     DestroyWindow(infoPtr->hwndHeader);
@@ -11711,7 +11695,7 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return LISTVIEW_Command(infoPtr, wParam, lParam);
 
   case WM_NCCREATE:
-    return LISTVIEW_NCCreate(hwnd, (LPCREATESTRUCTW)lParam);
+    return LISTVIEW_NCCreate(hwnd, wParam, (LPCREATESTRUCTW)lParam);
 
   case WM_CREATE:
     return LISTVIEW_Create(hwnd, (LPCREATESTRUCTW)lParam);

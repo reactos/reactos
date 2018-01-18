@@ -1463,7 +1463,7 @@ static BOOL SYSLINK_NoNextLink (const SYSLINK_INFO *infoPtr, BOOL Prev)
  *           SYSLINK_GetIdealSize
  * Calculates the ideal size of a link control at a given maximum width.
  */
-static VOID SYSLINK_GetIdealSize (const SYSLINK_INFO *infoPtr, int cxMaxWidth, LPSIZE lpSize)
+static LONG SYSLINK_GetIdealSize (const SYSLINK_INFO *infoPtr, int cxMaxWidth, SIZE *lpSize)
 {
     RECT rc;
     HDC hdc;
@@ -1484,6 +1484,8 @@ static VOID SYSLINK_GetIdealSize (const SYSLINK_INFO *infoPtr, int cxMaxWidth, L
         lpSize->cx = rc.right;
         lpSize->cy = rc.bottom;
     }
+
+    return rc.bottom;
 }
 
 /***********************************************************************
@@ -1655,11 +1657,9 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 
     case LM_GETIDEALHEIGHT:
         if (lParam)
-        {
-            /* LM_GETIDEALSIZE */
-            SYSLINK_GetIdealSize(infoPtr, (int)wParam, (LPSIZE)lParam);
-        }
-        return SYSLINK_GetIdealHeight(infoPtr);
+            return SYSLINK_GetIdealSize(infoPtr, (int)wParam, (SIZE *)lParam);
+        else
+            return SYSLINK_GetIdealHeight(infoPtr);
 
     case WM_SETFOCUS:
         return SYSLINK_SetFocus(infoPtr);

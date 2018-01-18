@@ -613,6 +613,7 @@ REBAR_DrawBand (HDC hdc, const REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
 	    oldcolor = SetTextColor (hdc, new);
 	}
 
+#ifdef __REACTOS__
     if (!theme)
     {
         DrawTextW (hdc, lpBand->lpText, -1, &lpBand->rcCapText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -621,6 +622,10 @@ REBAR_DrawBand (HDC hdc, const REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
     {
         DrawThemeText(theme, hdc, 0, 0, lpBand->lpText, -1, DT_CENTER | DT_VCENTER | DT_SINGLELINE, 0, &lpBand->rcCapText);
     }
+#else
+	DrawTextW (hdc, lpBand->lpText, -1, &lpBand->rcCapText,
+		   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+#endif
 
 	if (oldBkMode != TRANSPARENT)
 	    SetBkMode (hdc, oldBkMode);
@@ -1843,7 +1848,6 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
     oldrow = -1;
     for(i=0; i<infoPtr->uNumBands; i++) {
         RECT rcBand;
-
         lpBand = REBAR_GetBand(infoPtr, i);
 	if (HIDDENBAND(lpBand)) continue;
         translate_rect(infoPtr, &rcBand, &lpBand->rcBand);
