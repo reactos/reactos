@@ -79,4 +79,3 @@ add_rostests_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/shell32.dll" SUBDIR testdata
 add_rostests_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/test.dll" SUBDIR testdata)
 
 add_rostests_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/ntdlltest.manifest" SUBDIR testdata)
-add_rostests_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/Microsoft.Windows.GdiPlus.manifest" SUBDIR testdata)
