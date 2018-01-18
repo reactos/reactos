@@ -922,15 +922,10 @@ static UInt64 _chm_parse_cword(UChar **pEntry)
 /* parse a utf-8 string into an ASCII char buffer */
 static BOOL _chm_parse_UTF8(UChar **pEntry, UInt64 count, WCHAR *path)
 {
-    /* MJM - Modified to return real Unicode strings */ 
-    while (count != 0)
-    {
-        *path++ = (*(*pEntry)++);
-        --count;
-    }
-
-    *path = '\0';
-    return TRUE;
+    DWORD length = MultiByteToWideChar(CP_UTF8, 0, (char *)*pEntry, count, path, CHM_MAX_PATHLEN);
+    path[length] = '\0';
+    *pEntry += count;
+    return !!length;
 }
 
 /* parse a PMGL entry into a chmUnitInfo struct; return 1 on success. */
