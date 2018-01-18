@@ -1867,12 +1867,13 @@ static BOOL alloc_variable(compiler_ctx_t *ctx, const WCHAR *name)
     return alloc_local(ctx, ident, ctx->func->var_cnt++);
 }
 
-static BOOL visit_function_expression(compiler_ctx_t *ctx, function_expression_t *expr)
+static HRESULT visit_function_expression(compiler_ctx_t *ctx, function_expression_t *expr)
 {
     expr->func_id = ctx->func->func_cnt++;
     ctx->func_tail = ctx->func_tail ? (ctx->func_tail->next = expr) : (ctx->func_head = expr);
 
-    return !expr->identifier || expr->event_target || alloc_variable(ctx, expr->identifier);
+    return !expr->identifier || expr->event_target || alloc_variable(ctx, expr->identifier)
+        ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT visit_expression(compiler_ctx_t *ctx, expression_t *expr)
@@ -1985,7 +1986,7 @@ static HRESULT visit_expression(compiler_ctx_t *ctx, expression_t *expr)
         break;
     }
     case EXPR_FUNC:
-        visit_function_expression(ctx, (function_expression_t*)expr);
+        hres = visit_function_expression(ctx, (function_expression_t*)expr);
         break;
     case EXPR_MEMBER:
         hres = visit_expression(ctx, ((member_expression_t*)expr)->expression);

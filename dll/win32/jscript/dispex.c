@@ -1096,6 +1096,8 @@ HRESULT disp_call(script_ctx_t *ctx, IDispatch *disp, DISPID id, WORD flags, uns
             return E_FAIL;
         }
 
+        if(ctx != jsdisp->ctx)
+            flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
         hres = jsdisp_call(jsdisp, id, flags, argc, argv, ret);
         jsdisp_release(jsdisp);
         return hres;
@@ -1184,6 +1186,8 @@ HRESULT disp_call_value(script_ctx_t *ctx, IDispatch *disp, IDispatch *jsthis, W
 
     jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
+        if(ctx != jsdisp->ctx)
+            flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
         hres = jsdisp_call_value(jsdisp, jsthis, flags, argc, argv, r);
         jsdisp_release(jsdisp);
         return hres;
