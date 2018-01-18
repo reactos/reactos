@@ -615,7 +615,7 @@
 615 stub GdipGetEffectParameterSize
 616 stub GdipGetEffectParameters
 617 stdcall GdipSetEffectParameters(ptr ptr long)
-618 stdcall GdipInitializePalette(ptr long long long ptr)
+618 stdcall -stub GdipInitializePalette(ptr long long long ptr)
 619 stdcall GdipBitmapCreateApplyEffect(ptr long ptr ptr ptr ptr long ptr ptr)
 620 stdcall GdipBitmapApplyEffect(ptr ptr ptr long ptr ptr)
 621 stdcall GdipBitmapGetHistogram(ptr long long ptr ptr ptr ptr)
