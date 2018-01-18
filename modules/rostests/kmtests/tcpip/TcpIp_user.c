@@ -57,7 +57,7 @@ AcceptProc(
     ok(Error == 0, "");
 
     ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    ok_bool_true(ListenSocket != INVALID_SOCKET, "socket failed");
+    ok(ListenSocket != INVALID_SOCKET, "socket failed");
 
     ZeroMemory(&ListenAddress, sizeof(ListenAddress));
     ListenAddress.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
@@ -77,7 +77,7 @@ AcceptProc(
     ok(AcceptSocket != INVALID_SOCKET, "\n");
     ok_eq_long(AcceptAddressLength, sizeof(AcceptAddress));
     ok_eq_hex(AcceptAddress.sin_addr.S_un.S_addr, inet_addr("127.0.0.1"));
-    ok_eq_hex(AcceptAddress.sin_port, ntohs(TEST_CONNECT_CLIENT_PORT));
+    ok_eq_hex(AcceptAddress.sin_port, htons(TEST_CONNECT_CLIENT_PORT));
 
     return 0;
 }
