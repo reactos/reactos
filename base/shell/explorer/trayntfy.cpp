@@ -41,11 +41,6 @@ struct IconWatcherData
     DWORD ProcessId;
     NOTIFYICONDATA IconData;
 
-    IconWatcherData()
-    {
-        IconWatcherData(NULL);
-    }
-
     IconWatcherData(NOTIFYICONDATA *iconData) :
         hProcess(NULL), ProcessId(0)
     {
@@ -81,6 +76,7 @@ public:
         m_Loop(false)
     {
     }
+
     virtual ~CIconWatcher()
     {
         Uninitialize();
@@ -235,11 +231,15 @@ private:
             if (Status == WAIT_OBJECT_0)
             {
                 // We've been kicked, we have updates to our list (or we're exiting the thread)
+                if (This->m_Loop)
+                    TRACE("Updating watched icon list");
             }
             else if ((Status >= WAIT_OBJECT_0 + 1) && (Status < Size))
             {
                 IconWatcherData *Icon;
                 Icon = This->GetListEntry(NULL, WatchList[Status], false);
+
+                TRACE("Pid %lu owns a notification icon and has stopped without deleting it. We'll cleanup on its behalf", Icon->ProcessId);
 
                 int len = FIELD_OFFSET(SYS_PAGER_COPY_DATA, nicon_data) + Icon->IconData.cbSize;
                 PSYS_PAGER_COPY_DATA pnotify_data = (PSYS_PAGER_COPY_DATA)new BYTE[len];
@@ -341,28 +341,6 @@ public:
 
         return -1;
     }
-
-    int FindItem(IN GUID& Guid, NOTIFYICONDATA ** pdata)
-    {
-        int count = GetButtonCount();
-
-        for (int i = 0; i < count; i++)
-        {
-            NOTIFYICONDATA * data;
-
-            data = GetItemData(i);
-
-            if (data->guidItem == Guid)
-            {
-                if (pdata)
-                    *pdata = data;
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
 
     BOOL AddButton(IN CONST NOTIFYICONDATA *iconData)
     {
