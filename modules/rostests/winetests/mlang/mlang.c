@@ -226,6 +226,318 @@ static const info_table_entry  info_table[] = {
 
 };
 
+struct cpinfo_test_data
+{
+    MIMECPINFO cpinfo;
+
+    BOOL todo_GetCodePageInfo;
+    BOOL todo_dwFlags;
+    BOOL todo_uiFamilyCodePage;
+    BOOL todo_wszDescription;
+    BOOL todo_wszWebCharset;
+    BOOL todo_wszHeaderCharset;
+    BOOL todo_wszBodyCharset;
+    BOOL todo_wszFixedWidthFont;
+    BOOL todo_wszProportionalFont;
+};
+
+static const struct cpinfo_test_data iml2_cpinfo_data[] =
+{
+    /* 0. Chinese Simplified (Auto-Select) */
+    {
+        {
+            MIMECONTF_IMPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+            50936, 936, {'C','h','i','n','e','s','e',' ','S','i','m','p','l','i','f','i','e','d',' ','(','A','u','t','o','-','S','e','l','e','c','t',')',0},
+            {'_','a','u','t','o','d','e','t','e','c','t','_','c','h','s',0},
+            {'_','a','u','t','o','d','e','t','e','c','t','_','c','h','s',0},
+            {'_','a','u','t','o','d','e','t','e','c','t','_','c','h','s',0},
+            {'S','i','m','s','u','n',0},
+            {'S','i','m','s','u','n',0}, 134
+        },
+    },
+    /* 1. Chinese Simplified (GB2312) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
+            936, 936, {'C','h','i','n','e','s','e',' ','S','i','m','p','l','i','f','i','e','d',' ','(','G','B','2','3','1','2',')',0},
+            {'g','b','2','3','1','2',0},
+            {'g','b','2','3','1','2',0},
+            {'g','b','2','3','1','2',0},
+            {'S','i','m','s','u','n',0},
+            {'S','i','m','s','u','n',0}, 134
+        },
+    },
+    /* 2. Chinese Simplified (GB2312-80) */
+    {
+        {
+            MIMECONTF_IMPORT | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_LATEST,
+            20936, 936, {'C','h','i','n','e','s','e',' ','S','i','m','p','l','i','f','i','e','d',' ','(','G','B','2','3','1','2','-','8','0',')',0},
+            {'x','-','c','p','2','0','9','3','6',0},
+            {'x','-','c','p','2','0','9','3','6',0},
+            {'x','-','c','p','2','0','9','3','6',0},
+            {'S','i','m','s','u','n',0},
+            {'S','i','m','s','u','n',0}, 134
+        },
+    },
+    /* 3. Chinese Simplified (HZ) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
+            52936, 936, {'C','h','i','n','e','s','e',' ','S','i','m','p','l','i','f','i','e','d',' ','(','H','Z',')',0},
+            {'h','z','-','g','b','-','2','3','1','2',0},
+            {'h','z','-','g','b','-','2','3','1','2',0},
+            {'h','z','-','g','b','-','2','3','1','2',0},
+            {'S','i','m','s','u','n',0},
+            {'S','i','m','s','u','n',0}, 134
+        },
+    },
+    /* 4. Chinese Simplified (GB18030) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+            54936, 936, {'C','h','i','n','e','s','e',' ','S','i','m','p','l','i','f','i','e','d',' ','(','G','B','1','8','0','3','0',')',0},
+            {'G','B','1','8','0','3','0',0},
+            {'G','B','1','8','0','3','0',0},
+            {'G','B','1','8','0','3','0',0},
+            {'S','i','m','s','u','n',0},
+            {'S','i','m','s','u','n',0}, 134
+        },
+    },
+    /* 5. Chinese Traditional (Auto-Select) */
+    {
+        {
+            MIMECONTF_IMPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+            50950, 950, {'C','h','i','n','e','s','e',' ','T','r','a','d','i','t','i','o','n','a','l',' ','(','A','u','t','o','-','S','e','l','e','c','t',')',0},
+            {'_','a','u','t','o','d','e','t','e','c','t','_','c','h','t',0},
+            {'_','a','u','t','o','d','e','t','e','c','t','_','c','h','t',0},
+            {'_','a','u','t','o','d','e','t','e','c','t','_','c','h','t',0},
+            {'M','i','n','g','L','i','u',0},
+            {'N','e','w',' ','M','i','n','g','L','i','u',0}, 136
+        },
+    },
+    /* 6. Chinese Traditional (Big5) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
+            950, 950, {'C','h','i','n','e','s','e',' ','T','r','a','d','i','t','i','o','n','a','l',' ','(','B','i','g','5',')',0},
+            {'b','i','g','5',0},
+            {'b','i','g','5',0},
+            {'b','i','g','5',0},
+            {'M','i','n','g','L','i','u',0},
+            {'N','e','w',' ','M','i','n','g','L','i','u',0}, 136
+        },
+    },
+    /* 7. Chinese Traditional (CNS) */
+    {
+        {
+            MIMECONTF_IMPORT | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_LATEST,
+            20000, 950, {'C','h','i','n','e','s','e',' ','T','r','a','d','i','t','i','o','n','a','l',' ','(','C','N','S',')',0},
+            {'x','-','C','h','i','n','e','s','e','-','C','N','S',0},
+            {'x','-','C','h','i','n','e','s','e','-','C','N','S',0},
+            {'x','-','C','h','i','n','e','s','e','-','C','N','S',0},
+            {'M','i','n','g','L','i','u',0},
+            {'N','e','w',' ','M','i','n','g','L','i','u',0}, 136
+        },
+    },
+    /* 8. Arabic (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_LATEST,
+            1256, 1256, {'A','r','a','b','i','c',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','6',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','6',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','6',0},
+            {'S','i','m','p','l','i','f','i','e','d',' ','A','r','a','b','i','c',' ','F','i','x','e','d',0},
+            {'S','i','m','p','l','i','f','i','e','d',' ','A','r','a','b','i','c',0}, 178
+        },
+    },
+    /* 9. Baltic (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+            1257, 1257, {'B','a','l','t','i','c',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','7',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','7',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','7',0},
+            {'C','o','u','r','i','e','r',' ','N','e','w',0},
+            {'A','r','i','a','l',0}, 186
+        },
+    },
+    /* 10. Central European (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_LATEST,
+            1250, 1250, {'C','e','n','t','r','a','l',' ','E','u','r','o','p','e','a','n',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','0',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','0',0},
+            {'i','s','o','-','8','8','5','9','-','2',0},
+            {'C','o','u','r','i','e','r',' ','N','e','w',0},
+            {'A','r','i','a','l',0}, 238
+        },
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE
+    },
+    /* 11. Cyrillic (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_LATEST,
+            1251, 1251, {'C','y','r','i','l','l','i','c',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','1',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','1',0},
+            {'k','o','i','8','-','r',0},
+            {'C','o','u','r','i','e','r',' ','N','e','w',0},
+            {'A','r','i','a','l',0}, 204
+        },
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE
+    },
+    /* 12. Greek (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_LATEST,
+            1253, 1253, {'G','r','e','e','k',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','3',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','3',0},
+            {'i','s','o','-','8','8','5','9','-','7',0},
+            {'C','o','u','r','i','e','r',' ','N','e','w',0},
+            {'A','r','i','a','l',0}, 161
+        },
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE
+    },
+    /* 13. Hebrew (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_LATEST,
+            1255, 1255, {'H','e','b','r','e','w',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','5',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','5',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','5',0},
+            {'M','i','r','i','a','m',' ','F','i','x','e','d',0},
+            {'D','a','v','i','d',0}, 177
+        },
+    },
+    /* 14. Japanese (Shift-JIS) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
+            932, 932, {'J','a','p','a','n','e','s','e',' ','(','S','h','i','f','t','-','J','I','S',')',0},
+            {'s','h','i','f','t','_','j','i','s',0},
+            {'i','s','o','-','2','0','2','2','-','j','p',0},
+            {'i','s','o','-','2','0','2','2','-','j','p',0},
+            {'M','S',' ','G','o','t','h','i','c',0},
+            {'M','S',' ','P','G','o','t','h','i','c',0}, 128
+        }
+    },
+    /* 15. Korean */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+            949, 949, {'K','o','r','e','a','n',0},
+            {'k','s','_','c','_','5','6','0','1','-','1','9','8','7',0},
+            {'k','s','_','c','_','5','6','0','1','-','1','9','8','7',0},
+            {'k','s','_','c','_','5','6','0','1','-','1','9','8','7',0},
+            {'G','u','l','i','m','C','h','e',0},
+            {'G','u','l','i','m',0}, 129
+        },
+    },
+    /* 16. Thai (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+            874, 874, {'T','h','a','i',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','8','7','4',0},
+            {'w','i','n','d','o','w','s','-','8','7','4',0},
+            {'w','i','n','d','o','w','s','-','8','7','4',0},
+            {'T','a','h','o','m','a',0},
+            {'T','a','h','o','m','a',0}, 222
+        },
+        FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE
+    },
+    /* 17. Turkish (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+            1254, 1254, {'T','u','r','k','i','s','h',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','4',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','4',0},
+            {'i','s','o','-','8','8','5','9','-','9',0},
+            {'C','o','u','r','i','e','r',' ','N','e','w',0},
+            {'A','r','i','a','l',0}, 162
+        },
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE
+    },
+    /* 18. Vietnamese (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+            MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
+            1258, 1258, {'V','i','e','t','n','a','m','e','s','e',' ','(','W','i','n','d','o','w','s',')',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','8',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','8',0},
+            {'w','i','n','d','o','w','s','-','1','2','5','8',0},
+            {'C','o','u','r','i','e','r',' ','N','e','w',0},
+            {'A','r','i','a','l',0}, 163
+        },
+    },
+    /* 19. Western European (Windows) */
+    {
+        {
+            MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL | MIMECONTF_IMPORT |
+            MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
+            MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+            1252, 1252, {'W','e','s','t','e','r','n',' ','E','u','r','o','p','e','a','n',' ','(','W','i','n','d','o','w','s',')',0},
+            {'W','i','n','d','o','w','s','-','1','2','5','2',0},
+            {'W','i','n','d','o','w','s','-','1','2','5','2',0},
+            {'i','s','o','-','8','8','5','9','-','1',0},
+            {'C','o','u','r','i','e','r',' ','N','e','w',0},
+            {'A','r','i','a','l',0}, 0
+        },
+        FALSE, FALSE, FALSE, FALSE, TRUE, TRUE
+    },
+    /* 20. Unicode */
+    {
+        {
+            MIMECONTF_MINIMAL | MIMECONTF_IMPORT | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT |
+            MIMECONTF_VALID | MIMECONTF_VALID_NLS | MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
+            1200, 1200, {'U','n','i','c','o','d','e',0},
+            {'u','n','i','c','o','d','e',0},
+            {'u','n','i','c','o','d','e',0},
+            {'u','n','i','c','o','d','e',0},
+            {'C','o','u','r','i','e','r',' ','N','e','w',0},
+            {'A','r','i','a','l',0}, 1
+        },
+    }
+};
+
 static BOOL init_function_ptrs(void)
 {
     HMODULE hMlang;
@@ -2212,6 +2524,177 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     todo_wine ok(detected[2] == 1200, "got %u\n", detected[2]);
 }
 
+static void test_GetCodePageInfo(IMultiLanguage2 *iML2)
+{
+    static const DWORD VALID_MASK = (DWORD)(~(MIMECONTF_VALID_NLS | MIMECONTF_VALID));
+
+    const struct cpinfo_test_data *test_data = NULL;
+    UINT test_data_num;
+    MIMECPINFO cpinfo_cmp;
+    MIMECPINFO cpinfo;
+    UINT i;
+    HRESULT ret;
+
+    test_data = iml2_cpinfo_data;
+    test_data_num = sizeof(iml2_cpinfo_data) / sizeof(iml2_cpinfo_data[0]);
+    for (i = 0; i < test_data_num; i++)
+    {
+        ret = IMultiLanguage2_GetCodePageInfo(iML2, test_data[i].cpinfo.uiCodePage, LANG_NEUTRAL, &cpinfo);
+        todo_wine_if(test_data[i].todo_GetCodePageInfo)
+        ok(ret == S_OK, "%d: IMultiLanguage2_GetCodePageInfo failed: 0x%08x.\n", i, ret);
+
+        if (ret == S_OK)
+        {
+            cpinfo_cmp = test_data[i].cpinfo;
+            todo_wine_if(test_data[i].todo_dwFlags)
+            ok((cpinfo.dwFlags == cpinfo_cmp.dwFlags ) ||
+               /* some code pages are not installed on the Wine Test Bot */
+               ((cpinfo.dwFlags & VALID_MASK) == (cpinfo_cmp.dwFlags & VALID_MASK)),
+               "%d: got wrong dwFlags expected 0x%x return 0x%x.\n",
+               i, cpinfo_cmp.dwFlags, cpinfo.dwFlags);
+            ok(cpinfo.uiCodePage == cpinfo_cmp.uiCodePage,
+               "%d: got wrong uiCodePage expected %u return %u.\n",
+               i, cpinfo_cmp.uiCodePage, cpinfo.uiCodePage);
+            todo_wine_if(test_data[i].todo_uiFamilyCodePage)
+            ok(cpinfo.uiFamilyCodePage == cpinfo_cmp.uiFamilyCodePage,
+               "%d: got wrong uiFamilyCodePage expected %u return %u.\n",
+               i, cpinfo_cmp.uiFamilyCodePage, cpinfo.uiFamilyCodePage);
+
+            todo_wine_if(test_data[i].todo_wszWebCharset)
+            ok(!lstrcmpW(cpinfo.wszWebCharset, cpinfo_cmp.wszWebCharset),
+               "%d: got wrong wszWebCharset expected %s return %s.\n",
+               i, wine_dbgstr_w(cpinfo_cmp.wszWebCharset), wine_dbgstr_w(cpinfo.wszWebCharset));
+            todo_wine_if(test_data[i].todo_wszHeaderCharset)
+            ok(!lstrcmpW(cpinfo.wszHeaderCharset, cpinfo_cmp.wszHeaderCharset),
+               "%d: got wrong wszHeaderCharset expected %s return %s.\n",
+               i, wine_dbgstr_w(cpinfo_cmp.wszHeaderCharset), wine_dbgstr_w(cpinfo.wszHeaderCharset));
+            todo_wine_if(test_data[i].todo_wszBodyCharset)
+            ok(!lstrcmpW(cpinfo.wszBodyCharset, cpinfo_cmp.wszBodyCharset),
+                   "%d: got wrong wszBodyCharset expected %s return %s.\n",
+               i, wine_dbgstr_w(cpinfo_cmp.wszBodyCharset), wine_dbgstr_w(cpinfo.wszBodyCharset));
+
+            if ((PRIMARYLANGID(LANGIDFROMLCID(GetSystemDefaultLCID())) != LANG_ENGLISH) ||
+                (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH))
+            {
+                /* FIXME: Windows returns description and font name in system's language */
+                skip("Non-English locale\n");
+            }
+            else
+            {
+                todo_wine_if(test_data[i].todo_wszDescription)
+                ok(!lstrcmpW(cpinfo.wszDescription, cpinfo_cmp.wszDescription),
+                   "%d: got wrong wszDescription expected %s return %s.\n",
+                   i, wine_dbgstr_w(cpinfo_cmp.wszDescription), wine_dbgstr_w(cpinfo.wszDescription));
+                todo_wine_if(test_data[i].todo_wszFixedWidthFont)
+                ok(!lstrcmpW(cpinfo.wszFixedWidthFont, cpinfo_cmp.wszFixedWidthFont),
+                    "%d: got wrong wszFixedWidthFont expected %s return %s.\n",
+                    i, wine_dbgstr_w(cpinfo_cmp.wszFixedWidthFont), wine_dbgstr_w(cpinfo.wszFixedWidthFont));
+                todo_wine_if(test_data[i].todo_wszProportionalFont)
+                ok(!lstrcmpW(cpinfo.wszProportionalFont, cpinfo_cmp.wszProportionalFont),
+                    "%d: got wrong wszProportionalFont expected %s return %s.\n",
+                    i, wine_dbgstr_w(cpinfo_cmp.wszProportionalFont), wine_dbgstr_w(cpinfo.wszProportionalFont));
+            }
+        }
+    }
+}
+
+static void test_MapFont(IMLangFontLink *font_link, IMLangFontLink2 *font_link2)
+{
+    HFONT old_font = NULL;
+    HFONT new_font = NULL;
+    HFONT last_font = NULL;
+    HFONT font1 = NULL;
+    HFONT font2 = NULL;
+    DWORD codepages;
+    DWORD font_codepages;
+    HRESULT ret;
+    HDC hdc;
+    WCHAR ch;
+
+    hdc = GetDC(NULL);
+    codepages = FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC | FS_GREEK | FS_TURKISH |
+                FS_HEBREW | FS_ARABIC | FS_BALTIC | FS_VIETNAMESE | FS_THAI |
+                FS_JISJAPAN | FS_CHINESESIMP | FS_WANSUNG | FS_CHINESETRAD;
+    old_font = GetCurrentObject(hdc, OBJ_FONT);
+    ch = 0xfeed;
+
+    /* Tests for IMLangFontLink */
+
+    ret = IMLangFontLink_ResetFontMapping(font_link);
+    ok(ret == S_OK, "IMLangFontLink_ResetFontMapping: expected S_OK, got %08x\n", ret);
+
+    ret = IMLangFontLink_MapFont(font_link, NULL, 0, NULL, NULL);
+    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08x\n", ret);
+    ret = IMLangFontLink_MapFont(font_link, NULL, codepages, old_font, &new_font);
+    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08x\n", ret);
+    ret = IMLangFontLink_MapFont(font_link, hdc, codepages, NULL, &new_font);
+    ok(ret == E_FAIL, "IMLangFontLink_MapFont: expected E_FAIL, got %08x\n", ret);
+
+    ret = IMLangFontLink_MapFont(font_link, hdc, codepages, old_font, NULL);
+    ok(ret == S_OK, "IMLangFontLink_MapFont: expected S_OK, got %08x\n", ret);
+    ret = IMLangFontLink_MapFont(font_link, hdc, codepages, old_font, &new_font);
+    ok(ret == S_OK && new_font != NULL, "IMLangFontLink_MapFont: expected S_OK/!NULL, got %08x/%p\n", ret, new_font);
+    last_font = new_font;
+    ret = IMLangFontLink_MapFont(font_link, hdc, codepages, old_font, &new_font);
+    ok(ret == S_OK && new_font == last_font, "IMLangFontLink_MapFont: expected S_OK/%p, got %08x/%p\n", last_font, ret, new_font);
+
+    ret = IMLangFontLink_ReleaseFont(font_link, NULL);
+    ok(ret == E_FAIL, "IMLangFontLink_ReleaseFont: expected E_FAIL, got %08x\n", ret);
+    ret = IMLangFontLink_ReleaseFont(font_link, new_font);
+    ok(ret == S_OK, "IMLangFontLink_ReleaseFont: expected S_OK, got %08x\n", ret);
+    ret = IMLangFontLink_ResetFontMapping(font_link);
+    ok(ret == S_OK, "IMLangFontLink_ResetFontMapping: expected S_OK, got %08x\n", ret);
+
+    /* Tests for IMLangFontLink2 */
+
+    ret = IMLangFontLink2_ResetFontMapping(font_link2);
+    ok(ret == S_OK, "IMLangFontLink2_ResetFontMapping: expected S_OK, got %08x\n", ret);
+
+    ret = IMLangFontLink2_MapFont(font_link2, NULL, 0, 0, NULL);
+    ok(ret == E_FAIL, "IMLangFontLink2_MapFont: expected E_FAIL, got %08x\n", ret);
+    ret = IMLangFontLink2_MapFont(font_link2, NULL, codepages, ch, &new_font);
+    ok(ret == E_FAIL, "IMLangFontLink2_MapFont: expected E_FAIL, got %08x\n", ret);
+    ret = IMLangFontLink2_MapFont(font_link2, hdc, 0, 0, NULL);
+    ok(ret == E_INVALIDARG, "IMLangFontLink2_MapFont: expected E_INVALIDARG, got %08x\n", ret);
+    ret = IMLangFontLink2_MapFont(font_link2, hdc, 0, ch, NULL);
+    ok(ret == E_INVALIDARG, "IMLangFontLink2_MapFont: expected E_INVALIDARG, got %08x\n", ret);
+
+    ret = IMLangFontLink2_MapFont(font_link2, hdc, 0, ch, &new_font);
+    todo_wine
+    ok(ret == S_OK || broken(ret == E_FAIL), /* got E_FAIL on winxp and win2k */
+       "IMLangFontLink2_MapFont: expected S_OK || E_FAIL, got %08x\n", ret);
+    ret = IMLangFontLink2_MapFont(font_link2, hdc, codepages, 0, NULL);
+    ok(ret == S_OK, "IMLangFontLink2_MapFont: expected S_OK, got %08x\n", ret);
+    ret = IMLangFontLink2_MapFont(font_link2, hdc, codepages, 0, &new_font);
+    ok(ret == S_OK && new_font != NULL, "IMLangFontLink2_MapFont: expected S_OK/!NULL, got %08x/%p\n", ret, new_font);
+    last_font = new_font;
+    ret = IMLangFontLink2_MapFont(font_link2, hdc, codepages, 0, &new_font);
+    ok(ret == S_OK && new_font == last_font, "IMLangFontLink2_MapFont: expected S_OK/%p, got %08x/%p\n", last_font, ret, new_font);
+
+    ret = IMLangFontLink2_ReleaseFont(font_link2, NULL);
+    ok(ret == E_FAIL, "IMLangFontLink2_ReleaseFont: expected E_FAIL, got %08x\n", ret);
+    ret = IMLangFontLink2_ReleaseFont(font_link2, new_font);
+    ok(ret == S_OK, "IMLangFontLink2_ReleaseFont: expected S_OK, got %08x\n", ret);
+    ret = IMLangFontLink2_ResetFontMapping(font_link2);
+    ok(ret == S_OK, "IMLangFontLink2_ResetFontMapping: expected S_OK, got %08x\n", ret);
+
+    /* Show that the font cache is global */
+    ret = IMLangFontLink_MapFont(font_link, hdc, codepages, old_font, &font1);
+    ok(ret == S_OK, "MapFont() failed, hr %#x.\n", ret);
+    ret = IMLangFontLink2_MapFont(font_link2, hdc, codepages, 0, &font2);
+    ok(ret == S_OK, "MapFont() failed, hr %#x.\n", ret);
+    ok(font1 != NULL && font2 != NULL, "expected !NULL/!NULL, got %p/%p\n", font1, font2);
+    ok(font1 == font2, "expected equal, got not equal\n");
+
+    IMLangFontLink_GetFontCodePages(font_link, hdc, font1, &font_codepages);
+    ok((codepages & (~font_codepages)) != 0 && (codepages & font_codepages) != 0,
+       "code pages of font is incorrect\n");
+
+    IMLangFontLink_ResetFontMapping(font_link);
+    IMLangFontLink2_ResetFontMapping(font_link2);
+    ReleaseDC(NULL, hdc);
+}
+
 START_TEST(mlang)
 {
     IMultiLanguage  *iML = NULL;
@@ -2255,6 +2738,7 @@ START_TEST(mlang)
     test_GetRfc1766FromLcid(iML2);
     test_GetRfc1766Info(iML2);
     test_GetNumberOfCodePageInfo(iML2);
+    test_GetCodePageInfo(iML2);
 
     test_EnumCodePages(iML2, 0);
     test_EnumCodePages(iML2, MIMECONTF_MIME_LATEST);
@@ -2287,7 +2771,6 @@ START_TEST(mlang)
     if (ret != S_OK || !iMLFL) return;
 
     IMLangFontLink_Test(iMLFL);
-    IMLangFontLink_Release(iMLFL);
 
     /* IMLangFontLink2 */
     ret = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
@@ -2297,6 +2780,9 @@ START_TEST(mlang)
     test_GetScriptFontInfo(iMLFL2);
     test_GetFontUnicodeRanges(iMLFL2);
     test_CodePageToScriptID(iMLFL2);
+    test_MapFont(iMLFL, iMLFL2);
+
+    IMLangFontLink_Release(iMLFL);
     IMLangFontLink2_Release(iMLFL2);
 
     trace("IMultiLanguage3\n");
