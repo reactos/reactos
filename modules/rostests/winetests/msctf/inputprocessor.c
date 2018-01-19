@@ -1901,7 +1901,7 @@ TfEditCookie ec)
     ok(SUCCEEDED(hr),"ITfContext_GetSelection failed\n");
     ok(fetched == 1,"fetched incorrect\n");
     ok(selection.range != NULL,"NULL range\n");
-    sink_check_ok(&test_ACP_GetSelection,"ACP_GetSepection");
+    sink_check_ok(&test_ACP_GetSelection,"GetSelection");
     ITfRange_Release(selection.range);
 
     test_InsertAtSelection(ec, cxt);
