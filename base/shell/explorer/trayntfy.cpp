@@ -34,6 +34,12 @@ typedef struct _SYS_PAGER_COPY_DATA
     NOTIFYICONDATA  nicon_data;
 } SYS_PAGER_COPY_DATA, *PSYS_PAGER_COPY_DATA;
 
+struct InternalIconData : NOTIFYICONDATA
+{
+    // Must keep a separate copy since the original is unioned with uTimeout.
+    UINT uVersionCopy;
+};
+
 
 struct IconWatcherData
 {
@@ -310,15 +316,22 @@ private:
 
 
 class CNotifyToolbar :
-    public CWindowImplBaseT< CToolbar<NOTIFYICONDATA>, CControlWinTraits >
+    public CWindowImplBaseT< CToolbar<InternalIconData>, CControlWinTraits >
 {
     HIMAGELIST m_ImageList;
     int m_VisibleButtonCount;
 
+    HWND m_BalloonsParent;
+    CTooltips * m_Balloons;
+    InternalIconData * m_currentTooltip;
+
 public:
     CNotifyToolbar() :
         m_ImageList(NULL),
-        m_VisibleButtonCount(0)
+        m_VisibleButtonCount(0),
+        m_BalloonsParent(NULL),
+        m_Balloons(NULL),
+        m_currentTooltip(NULL)
     {
     }
 
@@ -331,15 +344,13 @@ public:
         return m_VisibleButtonCount;
     }
 
-    int FindItem(IN HWND hWnd, IN UINT uID, NOTIFYICONDATA ** pdata)
+    int FindItem(IN HWND hWnd, IN UINT uID, InternalIconData ** pdata)
     {
         int count = GetButtonCount();
 
         for (int i = 0; i < count; i++)
         {
-            NOTIFYICONDATA * data;
-
-            data = GetItemData(i);
+            InternalIconData * data = GetItemData(i);
 
             if (data->hWnd == hWnd &&
                 data->uID == uID)
@@ -358,7 +369,7 @@ public:
         int count = GetButtonCount();
         for (int i = 0; i < count; i++)
         {
-            NOTIFYICONDATA * data = GetItemData(i);
+            InternalIconData * data = GetItemData(i);
             if (data->hIcon == handle)
             {
                 TBBUTTON btn;
@@ -373,7 +384,7 @@ public:
     BOOL AddButton(IN CONST NOTIFYICONDATA *iconData)
     {
         TBBUTTON tbBtn;
-        NOTIFYICONDATA * notifyItem;
+        InternalIconData * notifyItem;
         WCHAR text[] = L"";
 
         TRACE("Adding icon %d from hWnd %08x flags%s%s state%s%s", 
@@ -390,7 +401,7 @@ public:
             return FALSE;
         }
 
-        notifyItem = new NOTIFYICONDATA();
+        notifyItem = new InternalIconData();
         ZeroMemory(notifyItem, sizeof(*notifyItem));
 
         notifyItem->hWnd = iconData->hWnd;
@@ -437,6 +448,16 @@ public:
             StringCchCopy(notifyItem->szTip, _countof(notifyItem->szTip), iconData->szTip);
         }
 
+        if (iconData->uFlags & NIF_INFO)
+        {
+            // NOTE: In Vista+, the uTimeout value is disregarded, and the accessibility settings are used always.
+            StrNCpy(notifyItem->szInfo, iconData->szInfo, _countof(notifyItem->szInfo));
+            StrNCpy(notifyItem->szInfoTitle, iconData->szInfoTitle, _countof(notifyItem->szInfo));
+            notifyItem->dwInfoFlags = iconData->dwInfoFlags;
+            notifyItem->uTimeout = iconData->uTimeout;
+
+        }
+
         m_VisibleButtonCount++;
         if (notifyItem->dwState & NIS_HIDDEN)
         {
@@ -444,17 +465,45 @@ public:
             m_VisibleButtonCount--;
         }
 
-        /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
+        /* TODO: support VERSION_4 (NIF_GUID, NIF_REALTIME, NIF_SHOWTIP) */
 
         CToolbar::AddButton(&tbBtn);
         SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
+
+        if (iconData->uFlags & NIF_INFO)
+        {
+            UpdateBalloonTip(notifyItem);
+        }
+
+        return TRUE;
+    }
+
+    BOOL SwitchVersion(IN CONST NOTIFYICONDATA *iconData)
+    {
+        InternalIconData * notifyItem;
+        int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
+        if (index < 0)
+        {
+            WARN("Icon %d from hWnd %08x DOES NOT EXIST!", iconData->uID, iconData->hWnd);
+            return FALSE;
+        }
+
+        if (iconData->uVersion != 0 && iconData->uVersion != NOTIFYICON_VERSION)
+        {
+            WARN("Tried to set the version of icon %d from hWnd %08x, to an unknown value %d. Vista+ program?", iconData->uID, iconData->hWnd, iconData->uVersion);
+            return FALSE;
+        }
+
+        // We can not store the version in the uVersion field, because it's union'd with uTimeout,
+        // which we also need to keep track of.
+        notifyItem->uVersionCopy = iconData->uVersion;
 
         return TRUE;
     }
 
     BOOL UpdateButton(IN CONST NOTIFYICONDATA *iconData)
     {
-        NOTIFYICONDATA * notifyItem;
+        InternalIconData * notifyItem;
         TBBUTTONINFO tbbi = { 0 };
 
         TRACE("Updating icon %d from hWnd %08x flags%s%s state%s%s",
@@ -536,16 +585,30 @@ public:
             StringCchCopy(notifyItem->szTip, _countof(notifyItem->szTip), iconData->szTip);
         }
 
-        /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
+        if (iconData->uFlags & NIF_INFO)
+        {
+            // NOTE: In Vista+, the uTimeout value is disregarded, and the accessibility settings are used always.
+            StrNCpy(notifyItem->szInfo, iconData->szInfo, _countof(notifyItem->szInfo));
+            StrNCpy(notifyItem->szInfoTitle, iconData->szInfoTitle, _countof(notifyItem->szInfo));
+            notifyItem->dwInfoFlags = iconData->dwInfoFlags;
+            notifyItem->uTimeout = iconData->uTimeout;
+        }
+
+        /* TODO: support VERSION_4 (NIF_GUID, NIF_REALTIME, NIF_SHOWTIP) */
 
         SetButtonInfo(index, &tbbi);
+
+        if (iconData->uFlags & NIF_INFO)
+        {
+            UpdateBalloonTip(notifyItem);
+        }
 
         return TRUE;
     }
 
     BOOL RemoveButton(IN CONST NOTIFYICONDATA *iconData)
     {
-        NOTIFYICONDATA * notifyItem;
+        InternalIconData * notifyItem;
 
         TRACE("Removing icon %d from hWnd %08x", iconData->uID, iconData->hWnd);
 
@@ -587,16 +650,86 @@ public:
             }
         }
 
-        delete notifyItem;
+        HideBalloonTip(notifyItem);
+
         DeleteButton(index);
+
+        delete notifyItem;
 
         return TRUE;
     }
 
+    void UpdateBalloonTip(InternalIconData* notifyItem)
+    {
+        size_t len = 0;
+        if (SUCCEEDED(StringCchLength(notifyItem->szInfo, _countof(notifyItem->szInfo), &len)) && len > 0)
+        {
+            ShowBalloonTip(notifyItem);
+        }
+        else
+        {
+            HideBalloonTip(notifyItem);
+        }
+    }
+
+    static WPARAM GetTitleIcon(DWORD dwFlags, HICON hIcon)
+    {
+        if (dwFlags & NIIF_USER)
+            return reinterpret_cast<WPARAM>(hIcon);
+
+        return dwFlags & 3;
+    }
+
+    BOOL ShowBalloonTip(IN OUT InternalIconData *notifyItem)
+    {
+        DbgPrint("ShowBalloonTip called for flags=%x text=%ws; title=%ws", notifyItem->dwInfoFlags, notifyItem->szInfo, notifyItem->szInfoTitle);
+
+        // TODO: Queueing -> NIF_REALTIME? (Vista+)
+        // TODO: NIIF_NOSOUND, Vista+ flags
+        
+        const WPARAM icon = GetTitleIcon(notifyItem->dwInfoFlags, notifyItem->hIcon);
+        BOOL ret = m_Balloons->SetTitle(notifyItem->szInfoTitle, icon);
+        if (!ret)
+            DbgPrint("SetTitle failed, GetLastError=%d", GetLastError());
+
+        const int index = FindItem(notifyItem->hWnd, notifyItem->uID, NULL);
+        RECT rc;
+        GetItemRect(index, &rc);
+        ClientToScreen(&rc); // I have no idea why this is needed! >_<
+        WORD x = (rc.left + rc.right) / 2;
+        WORD y = (rc.top + rc.bottom) / 2;
+        DbgPrint("ClientToScreen returned (%d, %d, %d, %d) x=%d, y=%d",
+            rc.left, rc.top,
+            rc.right, rc.bottom, x, y);
+        m_Balloons->TrackPosition(x, y);
+        m_Balloons->UpdateTipText(m_BalloonsParent, reinterpret_cast<LPARAM>(m_hWnd), notifyItem->szInfo);
+        m_Balloons->TrackActivate(m_BalloonsParent, reinterpret_cast<LPARAM>(m_hWnd));
+        m_currentTooltip = notifyItem;
+
+        return TRUE;
+    }
+
+    VOID HideBalloonTip(IN OUT InternalIconData *notifyItem)
+    {
+        DbgPrint("HideBalloonTip called");
+
+        if (m_currentTooltip == notifyItem)
+        {
+            // Prevent Re-entry
+            m_currentTooltip = NULL;
+            m_Balloons->TrackDeactivate();
+        }
+    }
+
+    VOID HideCurrentBalloon()
+    {
+        if (m_currentTooltip != NULL)
+            HideBalloonTip(m_currentTooltip);
+    }
+
     VOID GetTooltipText(int index, LPTSTR szTip, DWORD cchTip)
     {
-        NOTIFYICONDATA * notifyItem;
-        notifyItem = GetItemData(index);
+        InternalIconData * notifyItem = GetItemData(index);
 
         if (notifyItem)
         {
@@ -626,7 +759,7 @@ public:
         int count = GetButtonCount();
         for (int i = 0; i < count; i++)
         {
-            NOTIFYICONDATA * data = GetItemData(i);
+            InternalIconData * data = GetItemData(i);
             BOOL hasSharedIcon = data->dwState & NIS_SHAREDICON;
             INT iIcon = hasSharedIcon ? FindExistingSharedIcon(data->hIcon) : -1;
             if (iIcon < 0)
@@ -659,7 +792,7 @@ private:
             L"WM_XBUTTONDBLCLK"
         };
 
-        NOTIFYICONDATA * notifyItem = GetItemData(wIndex);
+        InternalIconData * notifyItem = GetItemData(wIndex);
 
         if (!::IsWindow(notifyItem->hWnd))
         {
@@ -770,21 +903,30 @@ private:
         return 0;
     }
 
-
 public:
     BEGIN_MSG_MAP(CNotifyToolbar)
         MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
         NOTIFY_CODE_HANDLER(TTN_SHOW, OnTooltipShow)
     END_MSG_MAP()
 
-    void Initialize(HWND hWndParent)
+    void Initialize(HWND hWndParent, CTooltips * tooltips)
     {
+        m_BalloonsParent = hWndParent;
+        m_Balloons = tooltips;
+
         DWORD styles =
             WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
             TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
             CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
 
         SubclassWindow(CToolbar::Create(hWndParent, styles));
+
+        // Force the toolbar tooltips window to always show tooltips even if not foreground
+        HWND tooltipsWnd = (HWND)SendMessageW(TB_GETTOOLTIPS);
+        if (tooltipsWnd)
+        {
+            ::SetWindowLong(tooltipsWnd, GWL_STYLE, ::GetWindowLong(tooltipsWnd, GWL_STYLE) | TTS_ALWAYSTIP);
+        }
 
         SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
@@ -809,6 +951,8 @@ class CSysPagerWnd :
     public CIconWatcher
 {
     CNotifyToolbar Toolbar;
+
+    CTooltips m_Balloons;
 
 public:
     CSysPagerWnd() {}
@@ -839,8 +983,26 @@ public:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        Toolbar.Initialize(m_hWnd);
+        Toolbar.Initialize(m_hWnd, &m_Balloons);
         CIconWatcher::Initialize(m_hWnd);
+
+        HWND hWndTop = GetAncestor(m_hWnd, GA_ROOT);
+
+        m_Balloons.Create(hWndTop, TTS_NOPREFIX | TTS_BALLOON | TTS_CLOSE);
+        
+        TOOLINFOW ti = { 0 };
+        ti.cbSize = TTTOOLINFOW_V1_SIZE;
+        ti.uFlags = TTF_TRACK | TTF_IDISHWND;
+        ti.uId = reinterpret_cast<UINT_PTR>(Toolbar.m_hWnd);
+        ti.hwnd = m_hWnd;
+        ti.lpszText = NULL;
+        ti.lParam = NULL;
+
+        BOOL ret = m_Balloons.AddTool(&ti);
+        if (!ret)
+        {
+            DbgPrint("AddTool failed, LastError=%d (probably meaningless unless non-zero)", GetLastError());
+        }
 
         // Explicitly request running applications to re-register their systray icons
         ::SendNotifyMessageW(HWND_BROADCAST,
@@ -890,6 +1052,11 @@ public:
                     (void)RemoveIconFromWatcher(iconData);
                 }
                 break;
+            case NIM_SETFOCUS:
+                Toolbar.SetFocus();
+                ret = TRUE;
+            case NIM_SETVERSION:
+                ret = Toolbar.SwitchVersion(iconData);
             default:
                 TRACE("NotifyIconCmd received with unknown code %d.\n", data->notify_code);
                 return FALSE;
@@ -996,6 +1163,13 @@ public:
         return 0;
     }
 
+    LRESULT OnBalloonPop(UINT uCode, LPNMHDR hdr , BOOL& bHandled)
+    {
+        Toolbar.HideCurrentBalloon();
+        bHandled = TRUE;
+        return 0;
+    }
+
     void ResizeImagelist()
     {
         Toolbar.ResizeImagelist();
@@ -1009,6 +1183,7 @@ public:
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
+        NOTIFY_CODE_HANDLER(TTN_POP, OnBalloonPop)
         NOTIFY_CODE_HANDLER(TBN_GETINFOTIPW, OnGetInfoTip)
         NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
     END_MSG_MAP()

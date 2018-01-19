@@ -581,3 +581,228 @@ public:
     }
 
 };
+
+class CTooltips :
+    public CWindow
+{
+public: // Configuration methods
+
+    HWND Create(HWND hWndParent, DWORD dwStyles = WS_POPUP | TTS_NOPREFIX, DWORD dwExStyles = WS_EX_TOPMOST)
+    {
+        RECT r = { 0 };
+        return CWindow::Create(TOOLTIPS_CLASS, hWndParent, r, L"", dwStyles, dwExStyles);
+    }
+
+public: // Relay event
+
+    // Win7+: Can use GetMessageExtraInfo to provide the WPARAM value.
+    VOID RelayEvent(MSG * pMsg, WPARAM extraInfo = 0)
+    {
+        SendMessageW(TTM_RELAYEVENT, extraInfo, reinterpret_cast<LPARAM>(pMsg));
+    }
+
+public: // Helpers
+
+    INT GetToolCount()
+    {
+        return SendMessageW(TTM_GETTOOLCOUNT, 0, 0);
+    }
+
+    BOOL AddTool(IN CONST TTTOOLINFOW * pInfo)
+    {
+        return SendMessageW(TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(pInfo));
+    }
+
+    VOID DelTool(IN HWND hwndToolOwner, IN UINT uId)
+    {
+        TTTOOLINFOW info = { sizeof(TTTOOLINFOW), 0 };
+        info.hwnd = hwndToolOwner;
+        info.uId = uId;
+        SendMessageW(TTM_DELTOOL, 0, reinterpret_cast<LPARAM>(&info));
+    }
+
+    VOID NewToolRect(IN HWND hwndToolOwner, IN UINT uId, IN RECT rect)
+    {
+        TTTOOLINFOW info = { sizeof(TTTOOLINFOW), 0 };
+        info.hwnd = hwndToolOwner;
+        info.uId = uId;
+        info.rect = rect;
+        SendMessageW(TTM_NEWTOOLRECT, 0, reinterpret_cast<LPARAM>(&info));
+    }
+
+    BOOL GetToolInfo(IN HWND hwndToolOwner, IN UINT uId, IN OUT TTTOOLINFOW * pInfo)
+    {
+        pInfo->hwnd = hwndToolOwner;
+        pInfo->uId = uId;
+        return SendMessageW(TTM_GETTOOLINFO, 0, reinterpret_cast<LPARAM>(pInfo));
+    }
+
+    VOID SetToolInfo(IN CONST TTTOOLINFOW * pInfo)
+    {
+        SendMessageW(TTM_SETTOOLINFO, 0, reinterpret_cast<LPARAM>(pInfo));
+    }
+
+    BOOL HitTest(IN CONST TTHITTESTINFOW * pInfo)
+    {
+        return SendMessageW(TTM_HITTEST, 0, reinterpret_cast<LPARAM>(pInfo));
+    }
+
+    VOID GetText(IN HWND hwndToolOwner, IN UINT uId, OUT PWSTR pBuffer, IN DWORD cchBuffer)
+    {
+        TTTOOLINFOW info = { sizeof(TTTOOLINFOW), 0 };
+        info.hwnd = hwndToolOwner;
+        info.uId = uId;
+        info.lpszText = pBuffer;
+        SendMessageW(TTM_GETTEXT, cchBuffer, reinterpret_cast<LPARAM>(&info));
+    }
+
+    VOID UpdateTipText(IN HWND hwndToolOwner, IN UINT uId, IN PCWSTR szText, IN HINSTANCE hinstResourceOwner = NULL)
+    {
+        TTTOOLINFOW info = { sizeof(TTTOOLINFOW), 0 };
+        info.hwnd = hwndToolOwner;
+        info.uId = uId;
+        info.lpszText = const_cast<PWSTR>(szText);
+        info.hinst = hinstResourceOwner;
+        SendMessageW(TTM_UPDATETIPTEXT, 0, reinterpret_cast<LPARAM>(&info));
+    }
+
+    BOOL EnumTools(IN CONST TTTOOLINFOW * pInfo)
+    {
+        return SendMessageW(TTM_ENUMTOOLS, 0, reinterpret_cast<LPARAM>(pInfo));
+    }
+
+    BOOL GetCurrentTool(OUT OPTIONAL TTTOOLINFOW * pInfo = NULL)
+    {
+        return SendMessageW(TTM_GETCURRENTTOOL, 0, reinterpret_cast<LPARAM>(pInfo));
+    }
+
+    VOID GetTitle(TTGETTITLE * pTitleInfo)
+    {
+        SendMessageW(TTM_GETTITLE, 0, reinterpret_cast<LPARAM>(pTitleInfo));
+    }
+
+    BOOL SetTitle(PCWSTR szTitleText, WPARAM icon = 0)
+    {
+        return SendMessageW(TTM_SETTITLE, icon, reinterpret_cast<LPARAM>(szTitleText));
+    }
+
+    VOID TrackActivate(IN HWND hwndToolOwner, IN UINT uId)
+    {
+        TTTOOLINFOW info = { sizeof(TTTOOLINFOW), 0 };
+        info.hwnd = hwndToolOwner;
+        info.uId = uId;
+        SendMessageW(TTM_TRACKACTIVATE, TRUE, reinterpret_cast<LPARAM>(&info));
+    }
+
+    VOID TrackDeactivate()
+    {
+        SendMessageW(TTM_TRACKACTIVATE, FALSE, NULL);
+    }
+
+    VOID TrackPosition(IN WORD x, IN WORD y)
+    {
+        SendMessageW(TTM_TRACKPOSITION, 0, MAKELPARAM(x, y));
+    }
+
+    // Opens the tooltip
+    VOID Popup()
+    {
+        SendMessageW(TTM_POPUP);
+    }
+
+    // Closes the tooltip - Pressing the [X] for a TTF_CLOSE balloon is equivalent to calling this
+    VOID Pop()
+    {
+        SendMessageW(TTM_POP);
+    }
+
+    // Delay times for AUTOMATIC tooltips (they don't affect balloons)
+    INT GetDelayTime(UINT which)
+    {
+        return SendMessageW(TTM_GETDELAYTIME, which);
+    }
+
+    VOID SetDelayTime(UINT which, WORD time)
+    {
+        SendMessageW(TTM_SETDELAYTIME, which, MAKELPARAM(time, 0));
+    }
+
+    // Activates or deactivates the automatic tooltip display when hovering a control
+    VOID Activate(IN BOOL bActivate = TRUE)
+    {
+        SendMessageW(TTM_ACTIVATE, bActivate);
+    }
+
+    // Adjusts the position of a tooltip when used to display trimmed text
+    VOID AdjustRect(IN BOOL bTextToWindow, IN OUT RECT * pRect)
+    {
+        SendMessageW(TTM_ADJUSTRECT, bTextToWindow, reinterpret_cast<LPARAM>(pRect));
+    }
+
+    // Useful for TTF_ABSOLUTE|TTF_TRACK tooltip positioning
+    SIZE GetBubbleSize(IN TTTOOLINFOW * pInfo)
+    {
+        DWORD ret = SendMessageW(TTM_GETBUBBLESIZE, 0, reinterpret_cast<LPARAM>(pInfo));
+        const SIZE sz = { LOWORD(ret), HIWORD(ret) };
+        return sz;
+    }
+
+    // Fills the RECT with the margin size previously set. Default is 0 margins.
+    VOID GetMargin(OUT RECT * pRect)
+    {
+        SendMessageW(TTM_GETMARGIN, 0, reinterpret_cast<LPARAM>(pRect));
+    }
+
+    VOID SetMargin(IN RECT * pRect)
+    {
+        SendMessageW(TTM_SETMARGIN, 0, reinterpret_cast<LPARAM>(pRect));
+    }
+
+    // Gets a previously established max width. Returns -1 if no limit is set
+    INT GetMaxTipWidth()
+    {
+        return SendMessageW(TTM_GETMAXTIPWIDTH);
+    }
+
+    INT SetMaxTipWidth(IN OPTIONAL INT width = -1)
+    {
+        return SendMessageW(TTM_SETMAXTIPWIDTH, 0, width);
+    }
+
+    // Get the color of the tooltip text
+    COLORREF GetTipTextColor()
+    {
+        return SendMessageW(TTM_GETTIPTEXTCOLOR);
+    }
+
+    VOID SetTipTextColor(IN COLORREF textColor)
+    {
+        SendMessageW(TTM_SETTIPTEXTCOLOR, textColor);
+    }
+
+    COLORREF GetTipBkColor()
+    {
+        return SendMessageW(TTM_GETTIPBKCOLOR);
+    }
+
+    VOID SetTipBkColor(IN COLORREF textColor)
+    {
+        SendMessageW(TTM_SETTIPBKCOLOR, textColor);
+    }
+
+    VOID SetWindowTheme(IN PCWSTR szThemeName)
+    {
+        SendMessageW(TTM_SETWINDOWTHEME, 0, reinterpret_cast<LPARAM>(szThemeName));
+    }
+
+    // Forces redraw
+    VOID Update()
+    {
+        SendMessageW(TTM_UPDATE);
+    }
+
+    HWND WindowFromPoint(IN POINT * pPoint)
+    {
+        return reinterpret_cast<HWND>(SendMessageW(TTM_WINDOWFROMPOINT, 0, reinterpret_cast<LPARAM>(pPoint)));
+    }
+};
