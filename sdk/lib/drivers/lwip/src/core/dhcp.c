@@ -1377,7 +1377,7 @@ again:
   offset_max = options_idx_max;
   options = (u8_t*)q->payload;
   /* at least 1 byte to read and no end marker, then at least 3 bytes to read? */
-  while((q != NULL) && (options[offset] != DHCP_OPTION_END) && (offset < offset_max)) {
+  while ((q != NULL) && (offset < offset_max) && (options[offset] != DHCP_OPTION_END)) {
     u8_t op = options[offset];
     u8_t len;
     u8_t decode_len = 0;
