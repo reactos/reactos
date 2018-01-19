@@ -32,6 +32,7 @@ void xfprintf(FILE* stream, const char *fmt, ...)
     va_start(ap, fmt);
     vfprintf(stream, fmt, ap);
     vDbgPrintEx(-1, DPFLTR_ERROR_LEVEL, fmt, ap);
+    va_end(ap);
 }
 
 
