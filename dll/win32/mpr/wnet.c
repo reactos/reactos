@@ -2577,7 +2577,7 @@ DWORD WINAPI WNetGetUniversalNameA ( LPCSTR lpLocalPath, DWORD dwInfoLevel,
         break;
     }
     case REMOTE_NAME_INFO_LEVEL:
-        err = WN_NOT_CONNECTED;
+        err = WN_NO_NETWORK;
         break;
 
     default:
