@@ -164,15 +164,37 @@ void PrintUsage(void)
     /* FIXME */
 }
 
-void AddToCache(PWSTR Name, DWORD Length, ULONGLONG MftId)
+PNAME_CACHE_ENTRY FindInCache(ULONGLONG MftId)
 {
     PNAME_CACHE_ENTRY CacheEntry;
+
+    for (CacheEntry = CacheHead; CacheEntry != NULL; CacheEntry = CacheEntry->Next)
+    {
+        if (MftId == CacheEntry->MftId)
+        {
+            return CacheEntry;
+        }
+    }
+
+    return NULL;
+}
+
+PNAME_CACHE_ENTRY AddToCache(PWSTR Name, DWORD Length, ULONGLONG MftId)
+{
+    PNAME_CACHE_ENTRY CacheEntry;
+
+    /* Don't add in cache if already there! */
+    CacheEntry = FindInCache(MftId);
+    if (CacheEntry != NULL)
+    {
+        return CacheEntry;
+    }
 
     /* Allocate an entry big enough to store name and cache info */
     CacheEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(NAME_CACHE_ENTRY) + Length);
     if (CacheEntry == NULL)
     {
-        return;
+        return NULL;
     }
 
     /* Insert in head (likely more perf) */
@@ -182,28 +204,34 @@ void AddToCache(PWSTR Name, DWORD Length, ULONGLONG MftId)
     CacheEntry->MftId = MftId;
     CacheEntry->NameLen = Length;
     CopyMemory(CacheEntry->Name, Name, Length);
+
+    return CacheEntry;
 }
 
-void PrintPrettyName(PNTFS_ATTR_RECORD Attributes, PNTFS_ATTR_RECORD AttributesEnd, ULONGLONG MftId)
+PNAME_CACHE_ENTRY HandleFile(HANDLE VolumeHandle, PNTFS_VOLUME_DATA_BUFFER VolumeInfo, ULONGLONG Id, PNTFS_FILE_RECORD_OUTPUT_BUFFER OutputBuffer, BOOLEAN Silent);
+
+PNAME_CACHE_ENTRY PrintPrettyName(HANDLE VolumeHandle, PNTFS_VOLUME_DATA_BUFFER VolumeInfo, PNTFS_ATTR_RECORD Attributes, PNTFS_ATTR_RECORD AttributesEnd, ULONGLONG MftId, BOOLEAN Silent)
 {
-    BOOLEAN FirstRun, Found;
+    BOOLEAN FirstRun;
     PNTFS_ATTR_RECORD Attribute;
 
     FirstRun = TRUE;
-    Found = FALSE;
 
     /* Setup name for "standard" files */
     if (MftId <= NTFS_FILE_EXTEND)
     {
-        _tprintf(_T("%s\n"), KnownEntries[MftId]);
+        if (!Silent)
+        {
+            _tprintf(_T("%s\n"), KnownEntries[MftId]);
+        }
 
         /* $Extend can contain entries, add it in cache */
         if (MftId == NTFS_FILE_EXTEND)
         {
-            AddToCache(L"\\$Extend", sizeof(L"\\$Extend") - sizeof(UNICODE_NULL), NTFS_FILE_EXTEND);
+            return AddToCache(L"\\$Extend", sizeof(L"\\$Extend") - sizeof(UNICODE_NULL), NTFS_FILE_EXTEND);
         }
 
-        return;
+        return NULL;
     }
 
     /* We'll first try to use the Win32 name
@@ -218,6 +246,7 @@ TryAgain:
         PFILENAME_ATTRIBUTE Name;
         ULONGLONG ParentId;
         ULONG Length;
+        PNAME_CACHE_ENTRY CacheEntry;
 
         /* Move to the next arg if:
          * - Not a file name
@@ -251,19 +280,25 @@ TryAgain:
         /* Default case */
         else
         {
-            PNAME_CACHE_ENTRY CacheEntry;
-
             /* Did we already cache the name? */
-            for (CacheEntry = CacheHead; CacheEntry != NULL; CacheEntry = CacheEntry->Next)
+            CacheEntry = FindInCache(ParentId);
+
+            /* It wasn't in cache? Try to get it in! */
+            if (CacheEntry == NULL)
             {
-                if (ParentId == CacheEntry->MftId)
+                PNTFS_FILE_RECORD_OUTPUT_BUFFER OutputBuffer;
+
+                OutputBuffer = HeapAlloc(GetProcessHeap(), 0, VolumeInfo->BytesPerFileRecordSegment + sizeof(NTFS_FILE_RECORD_OUTPUT_BUFFER));
+                if (OutputBuffer != NULL)
                 {
-                    break;
+                    CacheEntry = HandleFile(VolumeHandle, VolumeInfo, ParentId, OutputBuffer, TRUE);
+                    HeapFree(GetProcessHeap(), 0, OutputBuffer);
                 }
             }
 
             /* Nothing written yet */
             Length = 0;
+
             /* We cached it */
             if (CacheEntry != NULL)
             {
@@ -275,7 +310,6 @@ TryAgain:
             }
             else
             {
-                /* FIXME: Do something, like trying to read parent... */
                 _tprintf(_T("Parent: %I64d\n"), ParentId);
             }
 
@@ -285,20 +319,25 @@ TryAgain:
             Display[Length] = UNICODE_NULL;
         }
 
-        /* Display the name */
-        _tprintf(_T("%s\n"), Display);
+        if (!Silent)
+        {
+            /* Display the name */
+            _tprintf(_T("%s\n"), Display);
+        }
+
+        /* Reset cache entry */
+        CacheEntry = NULL;
 
         /* If that's a directory, put it in the cache */
         if (Name->FileAttributes & NTFS_FILE_TYPE_DIRECTORY)
         {
-            AddToCache(Display, Length * sizeof(WCHAR), MftId);
+            CacheEntry = AddToCache(Display, Length * sizeof(WCHAR), MftId);
         }
 
         /* Now, just quit */
         FirstRun = FALSE;
-        Found = TRUE;
 
-        break;
+        return CacheEntry;
     }
 
     /* If was first run (Win32 search), retry with other names */
@@ -309,10 +348,12 @@ TryAgain:
     }
 
     /* If we couldn't find a name, print unknown */
-    if (!Found)
+    if (!Silent)
     {
         _tprintf(_T("(unknown/unnamed)\n"));
     }
+
+    return NULL;
 }
 
 PUCHAR DecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *DataRunLength)
@@ -463,6 +504,65 @@ void PrintAttributeInfo(PNTFS_ATTR_RECORD Attribute, DWORD MaxSize)
     }
 }
 
+PNAME_CACHE_ENTRY HandleFile(HANDLE VolumeHandle, PNTFS_VOLUME_DATA_BUFFER VolumeInfo, ULONGLONG Id, PNTFS_FILE_RECORD_OUTPUT_BUFFER OutputBuffer, BOOLEAN Silent)
+{
+    NTFS_FILE_RECORD_INPUT_BUFFER InputBuffer;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_RECORD Attribute, AttributesEnd;
+    DWORD LengthReturned;
+    PNAME_CACHE_ENTRY CacheEntry;
+
+    /* Get the file record */
+    InputBuffer.FileReferenceNumber.QuadPart = Id;
+    if (!DeviceIoControl(VolumeHandle, FSCTL_GET_NTFS_FILE_RECORD, &InputBuffer, sizeof(InputBuffer),
+                         OutputBuffer, VolumeInfo->BytesPerFileRecordSegment  + sizeof(NTFS_FILE_RECORD_OUTPUT_BUFFER),
+                         &LengthReturned, NULL))
+    {
+        return NULL;
+    }
+
+    /* Don't deal with it if we already browsed it
+     * FSCTL_GET_NTFS_FILE_RECORD always returns previous record if demanded
+     * isn't allocated
+     */
+    if (OutputBuffer->FileReferenceNumber.QuadPart != Id)
+    {
+        return NULL;
+    }
+
+    /* Sanity check */
+    FileRecord = (PFILE_RECORD_HEADER)OutputBuffer->FileRecordBuffer;
+    if (FileRecord->Ntfs.Type != NRH_FILE_TYPE)
+    {
+        return NULL;
+    }
+
+    if (!Silent)
+    {
+        /* Print ID */
+        _tprintf(_T("\nFile %I64d\n"), OutputBuffer->FileReferenceNumber.QuadPart);
+    }
+
+    /* Get attributes list */
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    AttributesEnd = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse);
+
+    /* Print the file name */
+    CacheEntry = PrintPrettyName(VolumeHandle, VolumeInfo, Attribute, AttributesEnd, Id, Silent);
+
+    if (!Silent)
+    {
+        /* And print attributes information for each attribute */
+        while (Attribute < AttributesEnd && Attribute->Type != AttributeEnd)
+        {
+            PrintAttributeInfo(Attribute, VolumeInfo->BytesPerFileRecordSegment);
+            Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+        }
+    }
+
+    return CacheEntry;
+}
+
 int
 __cdecl
 _tmain(int argc, const TCHAR *argv[])
@@ -526,51 +626,7 @@ _tmain(int argc, const TCHAR *argv[])
     /* Forever loop, extract all the files! */
     for (File = 0;; ++File)
     {
-        NTFS_FILE_RECORD_INPUT_BUFFER InputBuffer;
-        PFILE_RECORD_HEADER FileRecord;
-        PNTFS_ATTR_RECORD Attribute, AttributesEnd;
-
-        /* Get the file record */
-        InputBuffer.FileReferenceNumber.QuadPart = File;
-        if (!DeviceIoControl(VolumeHandle, FSCTL_GET_NTFS_FILE_RECORD, &InputBuffer, sizeof(InputBuffer),
-                             OutputBuffer, VolumeInfo.BytesPerFileRecordSegment  + sizeof(NTFS_FILE_RECORD_OUTPUT_BUFFER),
-                             &LengthReturned, NULL))
-        {
-            continue;
-        }
-
-        /* Don't deal with it if we already browsed it
-         * FSCTL_GET_NTFS_FILE_RECORD always returns previous record if demanded
-         * isn't allocated
-         */
-        if (OutputBuffer->FileReferenceNumber.QuadPart != File)
-        {
-            continue;
-        }
-
-        /* Sanity check */
-        FileRecord = (PFILE_RECORD_HEADER)OutputBuffer->FileRecordBuffer;
-        if (FileRecord->Ntfs.Type != NRH_FILE_TYPE)
-        {
-            continue;
-        }
-
-        /* Print ID */
-        _tprintf(_T("\nFile %I64d\n"), OutputBuffer->FileReferenceNumber.QuadPart);
-
-        /* Get attributes list */
-        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
-        AttributesEnd = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse);
-
-        /* Print the file name */
-        PrintPrettyName(Attribute, AttributesEnd, File);
-
-        /* And print attributes information for each attribute */
-        while (Attribute < AttributesEnd && Attribute->Type != AttributeEnd)
-        {
-            PrintAttributeInfo(Attribute, VolumeInfo.BytesPerFileRecordSegment);
-            Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
-        }
+        HandleFile(VolumeHandle, &VolumeInfo, File, OutputBuffer, FALSE);
     }
 
     /* Free memory! */
