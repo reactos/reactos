@@ -668,11 +668,11 @@ static void test_color_formats(void)
         { 24, 2, NULL, NULL, NULL },
         { 32, 2, NULL, NULL, NULL },
         /* 0 - PNG_COLOR_TYPE_GRAY */
-        { 1, 0, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormat1bppIndexed, TRUE },
-        { 2, 0, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppIndexed, TRUE },
-        { 4, 0, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppIndexed, TRUE },
-        { 8, 0, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppIndexed, TRUE },
-        { 16, 0, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat64bppRGBA, TRUE },
+        { 1, 0, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormat1bppIndexed },
+        { 2, 0, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppIndexed },
+        { 4, 0, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppIndexed },
+        { 8, 0, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppIndexed },
+        { 16, 0, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat64bppRGBA },
         { 24, 0, NULL, NULL, NULL },
         { 32, 0, NULL, NULL, NULL },
         /* 3 - PNG_COLOR_TYPE_PALETTE */
@@ -720,6 +720,7 @@ static void test_color_formats(void)
 
         hr = create_decoder(buf, sizeof(buf), &decoder);
         if (!is_valid_png_type_depth(td[i].color_type, td[i].bit_depth, TRUE))
+todo_wine
             ok(hr == WINCODEC_ERR_UNKNOWNIMAGEFORMAT, "%d: wrong error %#x\n", i, hr);
         else
 todo_wine_if(td[i].todo_load)
@@ -748,6 +749,7 @@ next_1:
 
         hr = create_decoder(buf, sizeof(buf), &decoder);
         if (!is_valid_png_type_depth(td[i].color_type, td[i].bit_depth, TRUE))
+todo_wine
             ok(hr == WINCODEC_ERR_UNKNOWNIMAGEFORMAT, "%d: wrong error %#x\n", i, hr);
         else
 todo_wine_if(td[i].todo_load)
@@ -776,6 +778,7 @@ next_2:
 
         hr = create_decoder(buf, sizeof(buf), &decoder);
         if (!is_valid_png_type_depth(td[i].color_type, td[i].bit_depth, FALSE))
+todo_wine
             ok(hr == WINCODEC_ERR_UNKNOWNIMAGEFORMAT, "%d: wrong error %#x\n", i, hr);
         else
 todo_wine_if(td[i].todo_load)
@@ -803,6 +806,7 @@ next_3:
 
         hr = create_decoder(buf, sizeof(buf), &decoder);
         if (!is_valid_png_type_depth(td[i].color_type, td[i].bit_depth, FALSE))
+todo_wine
             ok(hr == WINCODEC_ERR_UNKNOWNIMAGEFORMAT, "%d: wrong error %#x\n", i, hr);
         else
 todo_wine_if(td[i].todo_load)
