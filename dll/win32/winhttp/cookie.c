@@ -140,7 +140,7 @@ static cookie_t *parse_cookie( const WCHAR *string )
 
     if (*p++ == '=')
     {
-        while (*p && *p == ' ') p++;
+        while (*p == ' ') p++;
         len = strlenW( p );
         while (len && p[len - 1] == ' ') len--;
 

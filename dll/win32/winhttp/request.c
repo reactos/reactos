@@ -29,6 +29,7 @@
 #include <winuser.h>
 #include <httprequest.h>
 #include <httprequestid.h>
+#include <schannel.h>
 
 #include "inet_ntop.c"
 
@@ -390,7 +391,7 @@ static BOOL delete_header( request_t *request, DWORD index )
     return TRUE;
 }
 
-BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only )
+static BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only )
 {
     int index;
     header_t hdr;
@@ -507,7 +508,7 @@ BOOL WINAPI WinHttpAddRequestHeaders( HINTERNET hrequest, LPCWSTR headers, DWORD
     BOOL ret;
     request_t *request;
 
-    TRACE("%p, %s, 0x%x, 0x%08x\n", hrequest, debugstr_w(headers), len, flags);
+    TRACE("%p, %s, %u, 0x%08x\n", hrequest, debugstr_wn(headers, len), len, flags);
 
     if (!headers || !len)
     {
@@ -838,6 +839,520 @@ BOOL WINAPI WinHttpQueryHeaders( HINTERNET hrequest, DWORD level, LPCWSTR name, 
     return ret;
 }
 
+#undef ARRAYSIZE
+#define ARRAYSIZE(array) (sizeof(array) / sizeof((array)[0]))
+
+static const WCHAR basicW[]     = {'B','a','s','i','c',0};
+static const WCHAR ntlmW[]      = {'N','T','L','M',0};
+static const WCHAR passportW[]  = {'P','a','s','s','p','o','r','t',0};
+static const WCHAR digestW[]    = {'D','i','g','e','s','t',0};
+static const WCHAR negotiateW[] = {'N','e','g','o','t','i','a','t','e',0};
+
+static const struct
+{
+    const WCHAR *str;
+    unsigned int len;
+    DWORD scheme;
+}
+auth_schemes[] =
+{
+    { basicW,     ARRAYSIZE(basicW) - 1,     WINHTTP_AUTH_SCHEME_BASIC },
+    { ntlmW,      ARRAYSIZE(ntlmW) - 1,      WINHTTP_AUTH_SCHEME_NTLM },
+    { passportW,  ARRAYSIZE(passportW) - 1,  WINHTTP_AUTH_SCHEME_PASSPORT },
+    { digestW,    ARRAYSIZE(digestW) - 1,    WINHTTP_AUTH_SCHEME_DIGEST },
+    { negotiateW, ARRAYSIZE(negotiateW) - 1, WINHTTP_AUTH_SCHEME_NEGOTIATE }
+};
+static const unsigned int num_auth_schemes = sizeof(auth_schemes)/sizeof(auth_schemes[0]);
+
+static enum auth_scheme scheme_from_flag( DWORD flag )
+{
+    int i;
+
+    for (i = 0; i < num_auth_schemes; i++) if (flag == auth_schemes[i].scheme) return i;
+    return SCHEME_INVALID;
+}
+
+static DWORD auth_scheme_from_header( WCHAR *header )
+{
+    unsigned int i;
+
+    for (i = 0; i < num_auth_schemes; i++)
+    {
+        if (!strncmpiW( header, auth_schemes[i].str, auth_schemes[i].len ) &&
+            (header[auth_schemes[i].len] == ' ' || !header[auth_schemes[i].len])) return auth_schemes[i].scheme;
+    }
+    return 0;
+}
+
+static BOOL query_auth_schemes( request_t *request, DWORD level, LPDWORD supported, LPDWORD first )
+{
+    DWORD index = 0, supported_schemes = 0, first_scheme = 0;
+    BOOL ret = FALSE;
+
+    for (;;)
+    {
+        WCHAR *buffer;
+        DWORD size, scheme;
+
+        size = 0;
+        query_headers( request, level, NULL, NULL, &size, &index );
+        if (get_last_error() != ERROR_INSUFFICIENT_BUFFER) break;
+
+        index--;
+        if (!(buffer = heap_alloc( size ))) return FALSE;
+        if (!query_headers( request, level, NULL, buffer, &size, &index ))
+        {
+            heap_free( buffer );
+            return FALSE;
+        }
+        scheme = auth_scheme_from_header( buffer );
+        heap_free( buffer );
+        if (!scheme) continue;
+
+        if (!first_scheme) first_scheme = scheme;
+        supported_schemes |= scheme;
+
+        ret = TRUE;
+    }
+
+    if (ret)
+    {
+        *supported = supported_schemes;
+        *first = first_scheme;
+    }
+    return ret;
+}
+
+/***********************************************************************
+ *          WinHttpQueryAuthSchemes (winhttp.@)
+ */
+BOOL WINAPI WinHttpQueryAuthSchemes( HINTERNET hrequest, LPDWORD supported, LPDWORD first, LPDWORD target )
+{
+    BOOL ret = FALSE;
+    request_t *request;
+
+    TRACE("%p, %p, %p, %p\n", hrequest, supported, first, target);
+
+    if (!(request = (request_t *)grab_object( hrequest )))
+    {
+        set_last_error( ERROR_INVALID_HANDLE );
+        return FALSE;
+    }
+    if (request->hdr.type != WINHTTP_HANDLE_TYPE_REQUEST)
+    {
+        release_object( &request->hdr );
+        set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
+        return FALSE;
+    }
+    if (!supported || !first || !target)
+    {
+        release_object( &request->hdr );
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+
+    }
+
+    if (query_auth_schemes( request, WINHTTP_QUERY_WWW_AUTHENTICATE, supported, first ))
+    {
+        *target = WINHTTP_AUTH_TARGET_SERVER;
+        ret = TRUE;
+    }
+    else if (query_auth_schemes( request, WINHTTP_QUERY_PROXY_AUTHENTICATE, supported, first ))
+    {
+        *target = WINHTTP_AUTH_TARGET_PROXY;
+        ret = TRUE;
+    }
+
+    release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
+    return ret;
+}
+
+static UINT encode_base64( const char *bin, unsigned int len, WCHAR *base64 )
+{
+    UINT n = 0, x;
+    static const char base64enc[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    while (len > 0)
+    {
+        /* first 6 bits, all from bin[0] */
+        base64[n++] = base64enc[(bin[0] & 0xfc) >> 2];
+        x = (bin[0] & 3) << 4;
+
+        /* next 6 bits, 2 from bin[0] and 4 from bin[1] */
+        if (len == 1)
+        {
+            base64[n++] = base64enc[x];
+            base64[n++] = '=';
+            base64[n++] = '=';
+            break;
+        }
+        base64[n++] = base64enc[x | ((bin[1] & 0xf0) >> 4)];
+        x = (bin[1] & 0x0f) << 2;
+
+        /* next 6 bits 4 from bin[1] and 2 from bin[2] */
+        if (len == 2)
+        {
+            base64[n++] = base64enc[x];
+            base64[n++] = '=';
+            break;
+        }
+        base64[n++] = base64enc[x | ((bin[2] & 0xc0) >> 6)];
+
+        /* last 6 bits, all from bin [2] */
+        base64[n++] = base64enc[bin[2] & 0x3f];
+        bin += 3;
+        len -= 3;
+    }
+    base64[n] = 0;
+    return n;
+}
+
+static inline char decode_char( WCHAR c )
+{
+    if (c >= 'A' && c <= 'Z') return c - 'A';
+    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if (c >= '0' && c <= '9') return c - '0' + 52;
+    if (c == '+') return 62;
+    if (c == '/') return 63;
+    return 64;
+}
+
+static unsigned int decode_base64( const WCHAR *base64, unsigned int len, char *buf )
+{
+    unsigned int i = 0;
+    char c0, c1, c2, c3;
+    const WCHAR *p = base64;
+
+    while (len > 4)
+    {
+        if ((c0 = decode_char( p[0] )) > 63) return 0;
+        if ((c1 = decode_char( p[1] )) > 63) return 0;
+        if ((c2 = decode_char( p[2] )) > 63) return 0;
+        if ((c3 = decode_char( p[3] )) > 63) return 0;
+
+        if (buf)
+        {
+            buf[i + 0] = (c0 << 2) | (c1 >> 4);
+            buf[i + 1] = (c1 << 4) | (c2 >> 2);
+            buf[i + 2] = (c2 << 6) |  c3;
+        }
+        len -= 4;
+        i += 3;
+        p += 4;
+    }
+    if (p[2] == '=')
+    {
+        if ((c0 = decode_char( p[0] )) > 63) return 0;
+        if ((c1 = decode_char( p[1] )) > 63) return 0;
+
+        if (buf) buf[i] = (c0 << 2) | (c1 >> 4);
+        i++;
+    }
+    else if (p[3] == '=')
+    {
+        if ((c0 = decode_char( p[0] )) > 63) return 0;
+        if ((c1 = decode_char( p[1] )) > 63) return 0;
+        if ((c2 = decode_char( p[2] )) > 63) return 0;
+
+        if (buf)
+        {
+            buf[i + 0] = (c0 << 2) | (c1 >> 4);
+            buf[i + 1] = (c1 << 4) | (c2 >> 2);
+        }
+        i += 2;
+    }
+    else
+    {
+        if ((c0 = decode_char( p[0] )) > 63) return 0;
+        if ((c1 = decode_char( p[1] )) > 63) return 0;
+        if ((c2 = decode_char( p[2] )) > 63) return 0;
+        if ((c3 = decode_char( p[3] )) > 63) return 0;
+
+        if (buf)
+        {
+            buf[i + 0] = (c0 << 2) | (c1 >> 4);
+            buf[i + 1] = (c1 << 4) | (c2 >> 2);
+            buf[i + 2] = (c2 << 6) |  c3;
+        }
+        i += 3;
+    }
+    return i;
+}
+
+static struct authinfo *alloc_authinfo(void)
+{
+    struct authinfo *ret;
+
+    if (!(ret = heap_alloc( sizeof(*ret) ))) return NULL;
+
+    SecInvalidateHandle( &ret->cred );
+    SecInvalidateHandle( &ret->ctx );
+    memset( &ret->exp, 0, sizeof(ret->exp) );
+    ret->scheme    = 0;
+    ret->attr      = 0;
+    ret->max_token = 0;
+    ret->data      = NULL;
+    ret->data_len  = 0;
+    ret->finished  = FALSE;
+    return ret;
+}
+
+void destroy_authinfo( struct authinfo *authinfo )
+{
+    if (!authinfo) return;
+
+    if (SecIsValidHandle( &authinfo->ctx ))
+        DeleteSecurityContext( &authinfo->ctx );
+    if (SecIsValidHandle( &authinfo->cred ))
+        FreeCredentialsHandle( &authinfo->cred );
+
+    heap_free( authinfo->data );
+    heap_free( authinfo );
+}
+
+static BOOL get_authvalue( request_t *request, DWORD level, DWORD scheme, WCHAR *buffer, DWORD len )
+{
+    DWORD size, index = 0;
+    for (;;)
+    {
+        size = len;
+        if (!query_headers( request, level, NULL, buffer, &size, &index )) return FALSE;
+        if (auth_scheme_from_header( buffer ) == scheme) break;
+    }
+    return TRUE;
+}
+
+static BOOL do_authorization( request_t *request, DWORD target, DWORD scheme_flag )
+{
+    struct authinfo *authinfo, **auth_ptr;
+    enum auth_scheme scheme = scheme_from_flag( scheme_flag );
+    const WCHAR *auth_target, *username, *password;
+    WCHAR auth_value[2048], *auth_reply;
+    DWORD len = sizeof(auth_value), len_scheme, flags;
+    BOOL ret, has_auth_value;
+
+    if (scheme == SCHEME_INVALID) return FALSE;
+
+    switch (target)
+    {
+    case WINHTTP_AUTH_TARGET_SERVER:
+        has_auth_value = get_authvalue( request, WINHTTP_QUERY_WWW_AUTHENTICATE, scheme_flag, auth_value, len );
+        auth_ptr = &request->authinfo;
+        auth_target = attr_authorization;
+        if (request->creds[TARGET_SERVER][scheme].username)
+        {
+            if (scheme != SCHEME_BASIC && !has_auth_value) return FALSE;
+            username = request->creds[TARGET_SERVER][scheme].username;
+            password = request->creds[TARGET_SERVER][scheme].password;
+        }
+        else
+        {
+            if (!has_auth_value) return FALSE;
+            username = request->connect->username;
+            password = request->connect->password;
+        }
+        break;
+
+    case WINHTTP_AUTH_TARGET_PROXY:
+        if (!get_authvalue( request, WINHTTP_QUERY_PROXY_AUTHENTICATE, scheme_flag, auth_value, len ))
+            return FALSE;
+        auth_ptr = &request->proxy_authinfo;
+        auth_target = attr_proxy_authorization;
+        if (request->creds[TARGET_PROXY][scheme].username)
+        {
+            username = request->creds[TARGET_PROXY][scheme].username;
+            password = request->creds[TARGET_PROXY][scheme].password;
+        }
+        else
+        {
+            username = request->connect->session->proxy_username;
+            password = request->connect->session->proxy_password;
+        }
+        break;
+
+    default:
+        WARN("unknown target %x\n", target);
+        return FALSE;
+    }
+    authinfo = *auth_ptr;
+
+    switch (scheme)
+    {
+    case SCHEME_BASIC:
+    {
+        int userlen, passlen;
+
+        if (!username || !password) return FALSE;
+        if ((!authinfo && !(authinfo = alloc_authinfo())) || authinfo->finished) return FALSE;
+
+        userlen = WideCharToMultiByte( CP_UTF8, 0, username, strlenW( username ), NULL, 0, NULL, NULL );
+        passlen = WideCharToMultiByte( CP_UTF8, 0, password, strlenW( password ), NULL, 0, NULL, NULL );
+
+        authinfo->data_len = userlen + 1 + passlen;
+        if (!(authinfo->data = heap_alloc( authinfo->data_len ))) return FALSE;
+
+        WideCharToMultiByte( CP_UTF8, 0, username, -1, authinfo->data, userlen, NULL, NULL );
+        authinfo->data[userlen] = ':';
+        WideCharToMultiByte( CP_UTF8, 0, password, -1, authinfo->data + userlen + 1, passlen, NULL, NULL );
+
+        authinfo->scheme   = SCHEME_BASIC;
+        authinfo->finished = TRUE;
+        break;
+    }
+    case SCHEME_NTLM:
+    case SCHEME_NEGOTIATE:
+    {
+        SECURITY_STATUS status;
+        SecBufferDesc out_desc, in_desc;
+        SecBuffer out, in;
+        ULONG flags = ISC_REQ_CONNECTION|ISC_REQ_USE_DCE_STYLE|ISC_REQ_MUTUAL_AUTH|ISC_REQ_DELEGATE;
+        const WCHAR *p;
+        BOOL first = FALSE;
+
+        if (!authinfo)
+        {
+            TimeStamp exp;
+            SEC_WINNT_AUTH_IDENTITY_W id;
+            WCHAR *domain, *user;
+
+            if (!username || !password || !(authinfo = alloc_authinfo())) return FALSE;
+
+            first = TRUE;
+            domain = (WCHAR *)username;
+            user = strchrW( username, '\\' );
+
+            if (user) user++;
+            else
+            {
+                user = (WCHAR *)username;
+                domain = NULL;
+            }
+            id.Flags          = SEC_WINNT_AUTH_IDENTITY_UNICODE;
+            id.User           = user;
+            id.UserLength     = strlenW( user );
+            id.Domain         = domain;
+            id.DomainLength   = domain ? user - domain - 1 : 0;
+            id.Password       = (WCHAR *)password;
+            id.PasswordLength = strlenW( password );
+
+            status = AcquireCredentialsHandleW( NULL, (SEC_WCHAR *)auth_schemes[scheme].str,
+                                                SECPKG_CRED_OUTBOUND, NULL, &id, NULL, NULL,
+                                                &authinfo->cred, &exp );
+            if (status == SEC_E_OK)
+            {
+                PSecPkgInfoW info;
+                status = QuerySecurityPackageInfoW( (SEC_WCHAR *)auth_schemes[scheme].str, &info );
+                if (status == SEC_E_OK)
+                {
+                    authinfo->max_token = info->cbMaxToken;
+                    FreeContextBuffer( info );
+                }
+            }
+            if (status != SEC_E_OK)
+            {
+                WARN("AcquireCredentialsHandleW for scheme %s failed with error 0x%08x\n",
+                     debugstr_w(auth_schemes[scheme].str), status);
+                heap_free( authinfo );
+                return FALSE;
+            }
+            authinfo->scheme = scheme;
+        }
+        else if (authinfo->finished) return FALSE;
+
+        if ((strlenW( auth_value ) < auth_schemes[authinfo->scheme].len ||
+            strncmpiW( auth_value, auth_schemes[authinfo->scheme].str, auth_schemes[authinfo->scheme].len )))
+        {
+            ERR("authentication scheme changed from %s to %s\n",
+                debugstr_w(auth_schemes[authinfo->scheme].str), debugstr_w(auth_value));
+            destroy_authinfo( authinfo );
+            *auth_ptr = NULL;
+            return FALSE;
+        }
+        in.BufferType = SECBUFFER_TOKEN;
+        in.cbBuffer   = 0;
+        in.pvBuffer   = NULL;
+
+        in_desc.ulVersion = 0;
+        in_desc.cBuffers  = 1;
+        in_desc.pBuffers  = &in;
+
+        p = auth_value + auth_schemes[scheme].len;
+        if (*p == ' ')
+        {
+            int len = strlenW( ++p );
+            in.cbBuffer = decode_base64( p, len, NULL );
+            if (!(in.pvBuffer = heap_alloc( in.cbBuffer ))) {
+                destroy_authinfo( authinfo );
+                *auth_ptr = NULL;
+                return FALSE;
+            }
+            decode_base64( p, len, in.pvBuffer );
+        }
+        out.BufferType = SECBUFFER_TOKEN;
+        out.cbBuffer   = authinfo->max_token;
+        if (!(out.pvBuffer = heap_alloc( authinfo->max_token )))
+        {
+            heap_free( in.pvBuffer );
+            destroy_authinfo( authinfo );
+            *auth_ptr = NULL;
+            return FALSE;
+        }
+        out_desc.ulVersion = 0;
+        out_desc.cBuffers  = 1;
+        out_desc.pBuffers  = &out;
+
+        status = InitializeSecurityContextW( first ? &authinfo->cred : NULL, first ? NULL : &authinfo->ctx,
+                                             first ? request->connect->servername : NULL, flags, 0,
+                                             SECURITY_NETWORK_DREP, in.pvBuffer ? &in_desc : NULL, 0,
+                                             &authinfo->ctx, &out_desc, &authinfo->attr, &authinfo->exp );
+        heap_free( in.pvBuffer );
+        if (status == SEC_E_OK)
+        {
+            heap_free( authinfo->data );
+            authinfo->data     = out.pvBuffer;
+            authinfo->data_len = out.cbBuffer;
+            authinfo->finished = TRUE;
+            TRACE("sending last auth packet\n");
+        }
+        else if (status == SEC_I_CONTINUE_NEEDED)
+        {
+            heap_free( authinfo->data );
+            authinfo->data     = out.pvBuffer;
+            authinfo->data_len = out.cbBuffer;
+            TRACE("sending next auth packet\n");
+        }
+        else
+        {
+            ERR("InitializeSecurityContextW failed with error 0x%08x\n", status);
+            heap_free( out.pvBuffer );
+            destroy_authinfo( authinfo );
+            *auth_ptr = NULL;
+            return FALSE;
+        }
+        break;
+    }
+    default:
+        ERR("invalid scheme %u\n", scheme);
+        return FALSE;
+    }
+    *auth_ptr = authinfo;
+
+    len_scheme = auth_schemes[authinfo->scheme].len;
+    len = len_scheme + 1 + ((authinfo->data_len + 2) * 4) / 3;
+    if (!(auth_reply = heap_alloc( (len + 1) * sizeof(WCHAR) ))) return FALSE;
+
+    memcpy( auth_reply, auth_schemes[authinfo->scheme].str, len_scheme * sizeof(WCHAR) );
+    auth_reply[len_scheme] = ' ';
+    encode_base64( authinfo->data, authinfo->data_len, auth_reply + len_scheme + 1 );
+
+    flags = WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE;
+    ret = process_header( request, auth_target, auth_reply, flags, TRUE );
+    heap_free( auth_reply );
+    return ret;
+}
+
 static LPWSTR concatenate_string_list( LPCWSTR *list, int len )
 {
     LPCWSTR *t;
@@ -1081,6 +1596,37 @@ static void cache_connection( netconn_t *netconn )
     LeaveCriticalSection( &connection_pool_cs );
 }
 
+static DWORD map_secure_protocols( DWORD mask )
+{
+    DWORD ret = 0;
+    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_SSL2) ret |= SP_PROT_SSL2_CLIENT;
+    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_SSL3) ret |= SP_PROT_SSL3_CLIENT;
+    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1) ret |= SP_PROT_TLS1_CLIENT;
+    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1) ret |= SP_PROT_TLS1_1_CLIENT;
+    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2) ret |= SP_PROT_TLS1_2_CLIENT;
+    return ret;
+}
+
+static BOOL ensure_cred_handle( session_t *session )
+{
+    SCHANNEL_CRED cred;
+    SECURITY_STATUS status;
+
+    if (session->cred_handle_initialized) return TRUE;
+
+    memset( &cred, 0, sizeof(cred) );
+    cred.dwVersion             = SCHANNEL_CRED_VERSION;
+    cred.grbitEnabledProtocols = map_secure_protocols( session->secure_protocols );
+    if ((status = AcquireCredentialsHandleW( NULL, (WCHAR *)UNISP_NAME_W, SECPKG_CRED_OUTBOUND, NULL, &cred,
+                                             NULL, NULL, &session->cred_handle, NULL )) != SEC_E_OK)
+    {
+        WARN( "AcquireCredentialsHandleW failed: 0x%08x\n", status );
+        return FALSE;
+    }
+    session->cred_handle_initialized = TRUE;
+    return TRUE;
+}
+
 static BOOL open_connection( request_t *request )
 {
     BOOL is_secure = request->hdr.flags & WINHTTP_FLAG_SECURE;
@@ -1208,7 +1754,9 @@ static BOOL open_connection( request_t *request )
                     return FALSE;
                 }
             }
-            if (!netconn_secure_connect( netconn, connect->hostname, request->security_flags ))
+            if (!ensure_cred_handle( connect->session ) ||
+                !netconn_secure_connect( netconn, connect->hostname, request->security_flags,
+                                         &connect->session->cred_handle ))
             {
                 heap_free( addressW );
                 netconn_close( netconn );
@@ -1512,16 +2060,24 @@ static BOOL send_request( request_t *request, LPCWSTR headers, DWORD headers_len
     WCHAR *req = NULL;
     char *req_ascii;
     int bytes_sent;
-    DWORD len;
+    DWORD len, i, flags;
 
     clear_response_headers( request );
     drain_content( request );
 
+    flags = WINHTTP_ADDREQ_FLAG_ADD|WINHTTP_ADDREQ_FLAG_COALESCE_WITH_COMMA;
+    for (i = 0; i < request->num_accept_types; i++)
+    {
+        process_header( request, attr_accept, request->accept_types[i], flags, TRUE );
+    }
     if (session->agent)
         process_header( request, attr_user_agent, session->agent, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
 
     if (connect->hostname)
         add_host_header( request, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW );
+
+    if (request->creds[TARGET_SERVER][SCHEME_BASIC].username)
+        do_authorization( request, WINHTTP_AUTH_TARGET_SERVER, WINHTTP_AUTH_SCHEME_BASIC );
 
     if (total_len || (request->verb && !strcmpW( request->verb, postW )))
     {
@@ -1605,8 +2161,8 @@ BOOL WINAPI WinHttpSendRequest( HINTERNET hrequest, LPCWSTR headers, DWORD heade
     BOOL ret;
     request_t *request;
 
-    TRACE("%p, %s, 0x%x, %u, %u, %lx\n",
-          hrequest, debugstr_w(headers), headers_len, optional_len, total_len, context);
+    TRACE("%p, %s, %u, %u, %u, %lx\n", hrequest, debugstr_wn(headers, headers_len), headers_len, optional_len,
+          total_len, context);
 
     if (!(request = (request_t *)grab_object( hrequest )))
     {
@@ -1644,519 +2200,6 @@ BOOL WINAPI WinHttpSendRequest( HINTERNET hrequest, LPCWSTR headers, DWORD heade
 
     release_object( &request->hdr );
     if (ret) set_last_error( ERROR_SUCCESS );
-    return ret;
-}
-
-#undef ARRAYSIZE
-#define ARRAYSIZE(array) (sizeof(array) / sizeof((array)[0]))
-
-static const WCHAR basicW[]     = {'B','a','s','i','c',0};
-static const WCHAR ntlmW[]      = {'N','T','L','M',0};
-static const WCHAR passportW[]  = {'P','a','s','s','p','o','r','t',0};
-static const WCHAR digestW[]    = {'D','i','g','e','s','t',0};
-static const WCHAR negotiateW[] = {'N','e','g','o','t','i','a','t','e',0};
-
-static const struct
-{
-    const WCHAR *str;
-    unsigned int len;
-    DWORD scheme;
-}
-auth_schemes[] =
-{
-    { basicW,     ARRAYSIZE(basicW) - 1,     WINHTTP_AUTH_SCHEME_BASIC },
-    { ntlmW,      ARRAYSIZE(ntlmW) - 1,      WINHTTP_AUTH_SCHEME_NTLM },
-    { passportW,  ARRAYSIZE(passportW) - 1,  WINHTTP_AUTH_SCHEME_PASSPORT },
-    { digestW,    ARRAYSIZE(digestW) - 1,    WINHTTP_AUTH_SCHEME_DIGEST },
-    { negotiateW, ARRAYSIZE(negotiateW) - 1, WINHTTP_AUTH_SCHEME_NEGOTIATE }
-};
-static const unsigned int num_auth_schemes = sizeof(auth_schemes)/sizeof(auth_schemes[0]);
-
-static enum auth_scheme scheme_from_flag( DWORD flag )
-{
-    int i;
-
-    for (i = 0; i < num_auth_schemes; i++) if (flag == auth_schemes[i].scheme) return i;
-    return SCHEME_INVALID;
-}
-
-static DWORD auth_scheme_from_header( WCHAR *header )
-{
-    unsigned int i;
-
-    for (i = 0; i < num_auth_schemes; i++)
-    {
-        if (!strncmpiW( header, auth_schemes[i].str, auth_schemes[i].len ) &&
-            (header[auth_schemes[i].len] == ' ' || !header[auth_schemes[i].len])) return auth_schemes[i].scheme;
-    }
-    return 0;
-}
-
-static BOOL query_auth_schemes( request_t *request, DWORD level, LPDWORD supported, LPDWORD first )
-{
-    DWORD index = 0, supported_schemes = 0, first_scheme = 0;
-    BOOL ret = FALSE;
-
-    for (;;)
-    {
-        WCHAR *buffer;
-        DWORD size, scheme;
-
-        size = 0;
-        query_headers( request, level, NULL, NULL, &size, &index );
-        if (get_last_error() != ERROR_INSUFFICIENT_BUFFER) break;
-
-        index--;
-        if (!(buffer = heap_alloc( size ))) return FALSE;
-        if (!query_headers( request, level, NULL, buffer, &size, &index ))
-        {
-            heap_free( buffer );
-            return FALSE;
-        }
-        scheme = auth_scheme_from_header( buffer );
-        heap_free( buffer );
-        if (!scheme) continue;
-
-        if (!first_scheme) first_scheme = scheme;
-        supported_schemes |= scheme;
-
-        ret = TRUE;
-    }
-
-    if (ret)
-    {
-        *supported = supported_schemes;
-        *first = first_scheme;
-    }
-    return ret;
-}
-
-/***********************************************************************
- *          WinHttpQueryAuthSchemes (winhttp.@)
- */
-BOOL WINAPI WinHttpQueryAuthSchemes( HINTERNET hrequest, LPDWORD supported, LPDWORD first, LPDWORD target )
-{
-    BOOL ret = FALSE;
-    request_t *request;
-
-    TRACE("%p, %p, %p, %p\n", hrequest, supported, first, target);
-
-    if (!(request = (request_t *)grab_object( hrequest )))
-    {
-        set_last_error( ERROR_INVALID_HANDLE );
-        return FALSE;
-    }
-    if (request->hdr.type != WINHTTP_HANDLE_TYPE_REQUEST)
-    {
-        release_object( &request->hdr );
-        set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
-        return FALSE;
-    }
-    if (!supported || !first || !target)
-    {
-        release_object( &request->hdr );
-        set_last_error( ERROR_INVALID_PARAMETER );
-        return FALSE;
-
-    }
-
-    if (query_auth_schemes( request, WINHTTP_QUERY_WWW_AUTHENTICATE, supported, first ))
-    {
-        *target = WINHTTP_AUTH_TARGET_SERVER;
-        ret = TRUE;
-    }
-    else if (query_auth_schemes( request, WINHTTP_QUERY_PROXY_AUTHENTICATE, supported, first ))
-    {
-        *target = WINHTTP_AUTH_TARGET_PROXY;
-        ret = TRUE;
-    }
-
-    release_object( &request->hdr );
-    if (ret) set_last_error( ERROR_SUCCESS );
-    return ret;
-}
-
-static UINT encode_base64( const char *bin, unsigned int len, WCHAR *base64 )
-{
-    UINT n = 0, x;
-    static const char base64enc[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    while (len > 0)
-    {
-        /* first 6 bits, all from bin[0] */
-        base64[n++] = base64enc[(bin[0] & 0xfc) >> 2];
-        x = (bin[0] & 3) << 4;
-
-        /* next 6 bits, 2 from bin[0] and 4 from bin[1] */
-        if (len == 1)
-        {
-            base64[n++] = base64enc[x];
-            base64[n++] = '=';
-            base64[n++] = '=';
-            break;
-        }
-        base64[n++] = base64enc[x | ((bin[1] & 0xf0) >> 4)];
-        x = (bin[1] & 0x0f) << 2;
-
-        /* next 6 bits 4 from bin[1] and 2 from bin[2] */
-        if (len == 2)
-        {
-            base64[n++] = base64enc[x];
-            base64[n++] = '=';
-            break;
-        }
-        base64[n++] = base64enc[x | ((bin[2] & 0xc0) >> 6)];
-
-        /* last 6 bits, all from bin [2] */
-        base64[n++] = base64enc[bin[2] & 0x3f];
-        bin += 3;
-        len -= 3;
-    }
-    base64[n] = 0;
-    return n;
-}
-
-static inline char decode_char( WCHAR c )
-{
-    if (c >= 'A' && c <= 'Z') return c - 'A';
-    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
-    if (c >= '0' && c <= '9') return c - '0' + 52;
-    if (c == '+') return 62;
-    if (c == '/') return 63;
-    return 64;
-}
-
-static unsigned int decode_base64( const WCHAR *base64, unsigned int len, char *buf )
-{
-    unsigned int i = 0;
-    char c0, c1, c2, c3;
-    const WCHAR *p = base64;
-
-    while (len > 4)
-    {
-        if ((c0 = decode_char( p[0] )) > 63) return 0;
-        if ((c1 = decode_char( p[1] )) > 63) return 0;
-        if ((c2 = decode_char( p[2] )) > 63) return 0;
-        if ((c3 = decode_char( p[3] )) > 63) return 0;
-
-        if (buf)
-        {
-            buf[i + 0] = (c0 << 2) | (c1 >> 4);
-            buf[i + 1] = (c1 << 4) | (c2 >> 2);
-            buf[i + 2] = (c2 << 6) |  c3;
-        }
-        len -= 4;
-        i += 3;
-        p += 4;
-    }
-    if (p[2] == '=')
-    {
-        if ((c0 = decode_char( p[0] )) > 63) return 0;
-        if ((c1 = decode_char( p[1] )) > 63) return 0;
-
-        if (buf) buf[i] = (c0 << 2) | (c1 >> 4);
-        i++;
-    }
-    else if (p[3] == '=')
-    {
-        if ((c0 = decode_char( p[0] )) > 63) return 0;
-        if ((c1 = decode_char( p[1] )) > 63) return 0;
-        if ((c2 = decode_char( p[2] )) > 63) return 0;
-
-        if (buf)
-        {
-            buf[i + 0] = (c0 << 2) | (c1 >> 4);
-            buf[i + 1] = (c1 << 4) | (c2 >> 2);
-        }
-        i += 2;
-    }
-    else
-    {
-        if ((c0 = decode_char( p[0] )) > 63) return 0;
-        if ((c1 = decode_char( p[1] )) > 63) return 0;
-        if ((c2 = decode_char( p[2] )) > 63) return 0;
-        if ((c3 = decode_char( p[3] )) > 63) return 0;
-
-        if (buf)
-        {
-            buf[i + 0] = (c0 << 2) | (c1 >> 4);
-            buf[i + 1] = (c1 << 4) | (c2 >> 2);
-            buf[i + 2] = (c2 << 6) |  c3;
-        }
-        i += 3;
-    }
-    return i;
-}
-
-static struct authinfo *alloc_authinfo(void)
-{
-    struct authinfo *ret;
-
-    if (!(ret = heap_alloc( sizeof(*ret) ))) return NULL;
-
-    SecInvalidateHandle( &ret->cred );
-    SecInvalidateHandle( &ret->ctx );
-    memset( &ret->exp, 0, sizeof(ret->exp) );
-    ret->scheme    = 0;
-    ret->attr      = 0;
-    ret->max_token = 0;
-    ret->data      = NULL;
-    ret->data_len  = 0;
-    ret->finished  = FALSE;
-    return ret;
-}
-
-void destroy_authinfo( struct authinfo *authinfo )
-{
-    if (!authinfo) return;
-
-    if (SecIsValidHandle( &authinfo->ctx ))
-        DeleteSecurityContext( &authinfo->ctx );
-    if (SecIsValidHandle( &authinfo->cred ))
-        FreeCredentialsHandle( &authinfo->cred );
-
-    heap_free( authinfo->data );
-    heap_free( authinfo );
-}
-
-static BOOL get_authvalue( request_t *request, DWORD level, DWORD scheme, WCHAR *buffer, DWORD len )
-{
-    DWORD size, index = 0;
-    for (;;)
-    {
-        size = len;
-        if (!query_headers( request, level, NULL, buffer, &size, &index )) return FALSE;
-        if (auth_scheme_from_header( buffer ) == scheme) break;
-    }
-    return TRUE;
-}
-
-static BOOL do_authorization( request_t *request, DWORD target, DWORD scheme_flag )
-{
-    struct authinfo *authinfo, **auth_ptr;
-    enum auth_scheme scheme = scheme_from_flag( scheme_flag );
-    const WCHAR *auth_target, *username, *password;
-    WCHAR auth_value[2048], *auth_reply;
-    DWORD len = sizeof(auth_value), len_scheme, flags;
-    BOOL ret;
-
-    if (scheme == SCHEME_INVALID) return FALSE;
-
-    switch (target)
-    {
-    case WINHTTP_AUTH_TARGET_SERVER:
-        if (!get_authvalue( request, WINHTTP_QUERY_WWW_AUTHENTICATE, scheme_flag, auth_value, len ))
-            return FALSE;
-        auth_ptr = &request->authinfo;
-        auth_target = attr_authorization;
-        if (request->creds[TARGET_SERVER][scheme].username)
-        {
-            username = request->creds[TARGET_SERVER][scheme].username;
-            password = request->creds[TARGET_SERVER][scheme].password;
-        }
-        else
-        {
-            username = request->connect->username;
-            password = request->connect->password;
-        }
-        break;
-
-    case WINHTTP_AUTH_TARGET_PROXY:
-        if (!get_authvalue( request, WINHTTP_QUERY_PROXY_AUTHENTICATE, scheme_flag, auth_value, len ))
-            return FALSE;
-        auth_ptr = &request->proxy_authinfo;
-        auth_target = attr_proxy_authorization;
-        if (request->creds[TARGET_PROXY][scheme].username)
-        {
-            username = request->creds[TARGET_PROXY][scheme].username;
-            password = request->creds[TARGET_PROXY][scheme].password;
-        }
-        else
-        {
-            username = request->connect->session->proxy_username;
-            password = request->connect->session->proxy_password;
-        }
-        break;
-
-    default:
-        WARN("unknown target %x\n", target);
-        return FALSE;
-    }
-    authinfo = *auth_ptr;
-
-    switch (scheme)
-    {
-    case SCHEME_BASIC:
-    {
-        int userlen, passlen;
-
-        if (!username || !password) return FALSE;
-        if ((!authinfo && !(authinfo = alloc_authinfo())) || authinfo->finished) return FALSE;
-
-        userlen = WideCharToMultiByte( CP_UTF8, 0, username, strlenW( username ), NULL, 0, NULL, NULL );
-        passlen = WideCharToMultiByte( CP_UTF8, 0, password, strlenW( password ), NULL, 0, NULL, NULL );
-
-        authinfo->data_len = userlen + 1 + passlen;
-        if (!(authinfo->data = heap_alloc( authinfo->data_len ))) return FALSE;
-
-        WideCharToMultiByte( CP_UTF8, 0, username, -1, authinfo->data, userlen, NULL, NULL );
-        authinfo->data[userlen] = ':';
-        WideCharToMultiByte( CP_UTF8, 0, password, -1, authinfo->data + userlen + 1, passlen, NULL, NULL );
-
-        authinfo->scheme   = SCHEME_BASIC;
-        authinfo->finished = TRUE;
-        break;
-    }
-    case SCHEME_NTLM:
-    case SCHEME_NEGOTIATE:
-    {
-        SECURITY_STATUS status;
-        SecBufferDesc out_desc, in_desc;
-        SecBuffer out, in;
-        ULONG flags = ISC_REQ_CONNECTION|ISC_REQ_USE_DCE_STYLE|ISC_REQ_MUTUAL_AUTH|ISC_REQ_DELEGATE;
-        const WCHAR *p;
-        BOOL first = FALSE;
-
-        if (!authinfo)
-        {
-            TimeStamp exp;
-            SEC_WINNT_AUTH_IDENTITY_W id;
-            WCHAR *domain, *user;
-
-            if (!username || !password || !(authinfo = alloc_authinfo())) return FALSE;
-
-            first = TRUE;
-            domain = (WCHAR *)username;
-            user = strchrW( username, '\\' );
-
-            if (user) user++;
-            else
-            {
-                user = (WCHAR *)username;
-                domain = NULL;
-            }
-            id.Flags          = SEC_WINNT_AUTH_IDENTITY_UNICODE;
-            id.User           = user;
-            id.UserLength     = strlenW( user );
-            id.Domain         = domain;
-            id.DomainLength   = domain ? user - domain - 1 : 0;
-            id.Password       = (WCHAR *)password;
-            id.PasswordLength = strlenW( password );
-
-            status = AcquireCredentialsHandleW( NULL, (SEC_WCHAR *)auth_schemes[scheme].str,
-                                                SECPKG_CRED_OUTBOUND, NULL, &id, NULL, NULL,
-                                                &authinfo->cred, &exp );
-            if (status == SEC_E_OK)
-            {
-                PSecPkgInfoW info;
-                status = QuerySecurityPackageInfoW( (SEC_WCHAR *)auth_schemes[scheme].str, &info );
-                if (status == SEC_E_OK)
-                {
-                    authinfo->max_token = info->cbMaxToken;
-                    FreeContextBuffer( info );
-                }
-            }
-            if (status != SEC_E_OK)
-            {
-                WARN("AcquireCredentialsHandleW for scheme %s failed with error 0x%08x\n",
-                     debugstr_w(auth_schemes[scheme].str), status);
-                heap_free( authinfo );
-                return FALSE;
-            }
-            authinfo->scheme = scheme;
-        }
-        else if (authinfo->finished) return FALSE;
-
-        if ((strlenW( auth_value ) < auth_schemes[authinfo->scheme].len ||
-            strncmpiW( auth_value, auth_schemes[authinfo->scheme].str, auth_schemes[authinfo->scheme].len )))
-        {
-            ERR("authentication scheme changed from %s to %s\n",
-                debugstr_w(auth_schemes[authinfo->scheme].str), debugstr_w(auth_value));
-            destroy_authinfo( authinfo );
-            *auth_ptr = NULL;
-            return FALSE;
-        }
-        in.BufferType = SECBUFFER_TOKEN;
-        in.cbBuffer   = 0;
-        in.pvBuffer   = NULL;
-
-        in_desc.ulVersion = 0;
-        in_desc.cBuffers  = 1;
-        in_desc.pBuffers  = &in;
-
-        p = auth_value + auth_schemes[scheme].len;
-        if (*p == ' ')
-        {
-            int len = strlenW( ++p );
-            in.cbBuffer = decode_base64( p, len, NULL );
-            if (!(in.pvBuffer = heap_alloc( in.cbBuffer ))) {
-                destroy_authinfo( authinfo );
-                *auth_ptr = NULL;
-                return FALSE;
-            }
-            decode_base64( p, len, in.pvBuffer );
-        }
-        out.BufferType = SECBUFFER_TOKEN;
-        out.cbBuffer   = authinfo->max_token;
-        if (!(out.pvBuffer = heap_alloc( authinfo->max_token )))
-        {
-            heap_free( in.pvBuffer );
-            destroy_authinfo( authinfo );
-            *auth_ptr = NULL;
-            return FALSE;
-        }
-        out_desc.ulVersion = 0;
-        out_desc.cBuffers  = 1;
-        out_desc.pBuffers  = &out;
-
-        status = InitializeSecurityContextW( first ? &authinfo->cred : NULL, first ? NULL : &authinfo->ctx,
-                                             first ? request->connect->servername : NULL, flags, 0,
-                                             SECURITY_NETWORK_DREP, in.pvBuffer ? &in_desc : NULL, 0,
-                                             &authinfo->ctx, &out_desc, &authinfo->attr, &authinfo->exp );
-        heap_free( in.pvBuffer );
-        if (status == SEC_E_OK)
-        {
-            heap_free( authinfo->data );
-            authinfo->data     = out.pvBuffer;
-            authinfo->data_len = out.cbBuffer;
-            authinfo->finished = TRUE;
-            TRACE("sending last auth packet\n");
-        }
-        else if (status == SEC_I_CONTINUE_NEEDED)
-        {
-            heap_free( authinfo->data );
-            authinfo->data     = out.pvBuffer;
-            authinfo->data_len = out.cbBuffer;
-            TRACE("sending next auth packet\n");
-        }
-        else
-        {
-            ERR("InitializeSecurityContextW failed with error 0x%08x\n", status);
-            heap_free( out.pvBuffer );
-            destroy_authinfo( authinfo );
-            *auth_ptr = NULL;
-            return FALSE;
-        }
-        break;
-    }
-    default:
-        ERR("invalid scheme %u\n", scheme);
-        return FALSE;
-    }
-    *auth_ptr = authinfo;
-
-    len_scheme = auth_schemes[authinfo->scheme].len;
-    len = len_scheme + 1 + ((authinfo->data_len + 2) * 4) / 3;
-    if (!(auth_reply = heap_alloc( (len + 1) * sizeof(WCHAR) ))) return FALSE;
-
-    memcpy( auth_reply, auth_schemes[authinfo->scheme].str, len_scheme * sizeof(WCHAR) );
-    auth_reply[len_scheme] = ' ';
-    encode_base64( authinfo->data, authinfo->data_len, auth_reply + len_scheme + 1 );
-
-    flags = WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE;
-    ret = process_header( request, auth_target, auth_reply, flags, TRUE );
-    heap_free( auth_reply );
     return ret;
 }
 
