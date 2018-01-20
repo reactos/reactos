@@ -1930,6 +1930,11 @@ static void test_VarNumFromParseNum(void)
 
   /* Currency is preferred over decimal */
   SETRGB(0, 1); CONVERT(1,0,0,1,0,0, VTBIT_CY|VTBIT_DECIMAL); EXPECT_CY(1);
+
+  /* Underflow test */
+  SETRGB(0, 1); CONVERT(1,0,NUMPRS_EXPONENT,1,0,-94938484, VTBIT_R4); EXPECT_R4(0.0);
+  SETRGB(0, 1); CONVERT(1,0,NUMPRS_EXPONENT,1,0,-94938484, VTBIT_R8); EXPECT_R8(0.0);
+  SETRGB(0, 1); CONVERT(1,0,NUMPRS_EXPONENT,1,0,-94938484, VTBIT_CY); EXPECT_CY(0);
 }
 
 
