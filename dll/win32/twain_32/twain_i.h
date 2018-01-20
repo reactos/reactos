@@ -32,7 +32,15 @@
 #include <twain.h>
 
 #include <wine/debug.h>
+#include <wine/list.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(twain);
+
+struct pending_message
+{
+    struct list entry;
+    TW_UINT16 msg;
+};
 
 /* internal information about an active data source */
 typedef struct tagActiveDS
@@ -41,11 +49,16 @@ typedef struct tagActiveDS
     TW_IDENTITY		identity;		/* identity */
     HMODULE		hmod;
     DSENTRYPROC		dsEntry;
+    struct list         pending_messages;
+    HWND                ui_window;
+    HWND                event_window;
 } activeDS;
 
 TW_UINT16 DSM_twCC DECLSPEC_HIDDEN;             /* current condition code of Source Manager */
 
 activeDS *activeSources DECLSPEC_HIDDEN;	/* list of active data sources */
+
+HINSTANCE DSM_hinstance DECLSPEC_HIDDEN;
 
 /* Implementation of operation triplets (From Application to Source Manager) */
 extern TW_UINT16 TWAIN_CloseDS
@@ -66,5 +79,9 @@ extern TW_UINT16 TWAIN_OpenDSM
            (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
 extern TW_UINT16 TWAIN_GetDSMStatus
            (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
+extern TW_UINT16 TWAIN_ControlNull
+           (pTW_IDENTITY pOrigin, pTW_IDENTITY pDest, activeDS *pSource, TW_UINT16 MSG, TW_MEMREF pData) DECLSPEC_HIDDEN;
+extern TW_UINT16 TWAIN_ProcessEvent
+           (pTW_IDENTITY pOrigin, activeDS *pSource, TW_MEMREF pData) DECLSPEC_HIDDEN;
 
 #endif /* _TWAIN32_H */

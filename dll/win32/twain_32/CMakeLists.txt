@@ -15,6 +15,6 @@ add_library(twain_32 SHARED
 
 set_module_type(twain_32 win32dll)
 target_link_libraries(twain_32 wine)
-add_importlibs(twain_32 msvcrt kernel32 ntdll)
+add_importlibs(twain_32 user32 msvcrt kernel32 ntdll)
 add_pch(twain_32 twain_i.h SOURCE)
 add_cd_file(TARGET twain_32 DESTINATION reactos FOR all)

@@ -3,3 +3,6 @@
 #define REACTOS_STR_INTERNAL_NAME     "twain_32"
 #define REACTOS_STR_ORIGINAL_FILENAME "twain_32.dll"
 #include <reactos/version.rc>
+
+#include "twain.rc"
+
