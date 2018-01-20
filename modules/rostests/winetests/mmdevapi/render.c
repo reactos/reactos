@@ -320,11 +320,7 @@ static void test_audioclient(void)
     hr = IAudioClient_Initialize(ac, AUDCLNT_SHAREMODE_SHARED, 0, 5000000, 0, pwfx, NULL);
     ok(hr == S_OK, "Valid Initialize returns %08x\n", hr);
     if (hr != S_OK)
-    {
-        IAudioClient_Release(ac);
-        CoTaskMemFree(pwfx);
-        return;
-    }
+        goto cleanup;
 
     hr = IAudioClient_GetStreamLatency(ac, NULL);
     ok(hr == E_POINTER, "GetStreamLatency(NULL) call returns %08x\n", hr);
@@ -369,8 +365,8 @@ static void test_audioclient(void)
     hr = IAudioClient_Start(ac);
     ok(hr == AUDCLNT_E_NOT_STOPPED, "Start twice returns %08x\n", hr);
 
+cleanup:
     IAudioClient_Release(ac);
-
     CloseHandle(handle);
     CoTaskMemFree(pwfx);
 }
@@ -949,9 +945,8 @@ static void test_clock(int share)
     ok(gbsize == bufsize,
        "BufferSize %u at rate %u\n", gbsize, pwfx->nSamplesPerSec);
     else
-        todo_wine
-        ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
-           "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
+    ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
+       "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
 
     /* In shared mode, GetCurrentPadding decreases in multiples of
      * fragment size (i.e. updated only at period ticks), whereas

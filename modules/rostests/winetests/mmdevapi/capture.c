@@ -556,8 +556,7 @@ static void test_audioclient(void)
     if (hr != S_OK)
     {
         skip("Cannot initialize %08x, remainder of tests is useless\n", hr);
-        CoTaskMemFree(pwfx);
-        return;
+        goto cleanup;
     }
 
     hr = IAudioClient_GetStreamLatency(ac, NULL);
@@ -592,6 +591,7 @@ static void test_audioclient(void)
 
     test_capture(ac, handle, pwfx);
 
+cleanup:
     IAudioClient_Release(ac);
     CloseHandle(handle);
     CoTaskMemFree(pwfx);
