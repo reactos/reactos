@@ -1,5 +1,6 @@
 /*
  *      Updated by Saibamen (July, 2015)
+ *      Updated by BlackDragonDv (January, 2018)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -841,8 +842,8 @@ BEGIN
     IDS_EXE_DESCRIPTION "Opis:"
 
     IDS_MENU_EMPTY "(Puste)"
-    IDS_OBJECTS "%d Objekty"
-    IDS_OBJECTS_SELECTED "%d Wybrane objekty"
+    IDS_OBJECTS "%d Obiekty"
+    IDS_OBJECTS_SELECTED "%d Wybrane obiekty"
 
     IDS_ADVANCED_FOLDER "Pliki i Foldery"
     IDS_ADVANCED_NET_CRAWLER "Automatycznie wyszukuj foldery sieciowe i drukarki"
