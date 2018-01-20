@@ -2955,6 +2955,12 @@ static HRESULT WINAPI local_server_GetClassID(IPersist *iface, CLSID *clsid)
     hr = CoDisconnectObject((IUnknown *)iface, 0);
     ok(hr == S_OK, "got %08x\n", hr);
 
+    /* Initialize and uninitialize the apartment to show that we
+     * remain in the autojoined mta */
+    hr = pCoInitializeEx( NULL, COINIT_MULTITHREADED );
+    ok( hr == S_FALSE, "got %08x\n", hr );
+    CoUninitialize();
+
     return S_OK;
 }
 
@@ -3736,7 +3742,7 @@ START_TEST(marshal)
     argc = winetest_get_mainargs( &argv );
     if (argc > 2 && (!strcmp(argv[2], "-Embedding")))
     {
-        pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+        pCoInitializeEx(NULL, COINIT_MULTITHREADED);
         test_register_local_server();
         CoUninitialize();
 
