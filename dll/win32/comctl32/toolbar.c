@@ -3382,6 +3382,7 @@ TOOLBAR_DeleteButton (TOOLBAR_INFO *infoPtr, INT nIndex)
 
     TOOLBAR_TooltipDelTool(infoPtr, &infoPtr->buttons[nIndex]);
 
+    infoPtr->nHotItem = -1;
     if (infoPtr->nNumButtons == 1) {
 	TRACE(" simple delete\n");
         free_string( infoPtr->buttons );
