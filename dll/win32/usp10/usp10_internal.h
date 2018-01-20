@@ -37,6 +37,7 @@
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#include <wine/list.h>
 
 #define MS_MAKE_TAG( _x1, _x2, _x3, _x4 ) \
           ( ( (ULONG)_x4 << 24 ) |     \
@@ -194,6 +195,8 @@ typedef struct {
 } CacheGlyphPage;
 
 typedef struct {
+    struct list entry;
+    DWORD refcount;
     LOGFONTW lf;
     TEXTMETRICW tm;
     OUTLINETEXTMETRICW *otm;

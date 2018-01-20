@@ -664,6 +664,16 @@ static const SCRIPT_PROPERTIES *script_props[] =
     &scriptInformation[80].props, &scriptInformation[81].props
 };
 
+static CRITICAL_SECTION cs_script_cache;
+static CRITICAL_SECTION_DEBUG cs_script_cache_dbg =
+{
+    0, 0, &cs_script_cache,
+    { &cs_script_cache_dbg.ProcessLocksList, &cs_script_cache_dbg.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": script_cache") }
+};
+static CRITICAL_SECTION cs_script_cache = { &cs_script_cache_dbg, -1, 0, 0, 0, 0 };
+static struct list script_cache_list = LIST_INIT(script_cache_list);
+
 typedef struct {
     ScriptCache *sc;
     int numGlyphs;
@@ -838,11 +848,33 @@ static inline BOOL set_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *ab
 static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
 {
     ScriptCache *sc;
-    int size;
+    unsigned size;
+    LOGFONTW lf;
 
     if (!psc) return E_INVALIDARG;
     if (*psc) return S_OK;
     if (!hdc) return E_PENDING;
+
+    if (!GetObjectW(GetCurrentObject(hdc, OBJ_FONT), sizeof(lf), &lf))
+    {
+        return E_INVALIDARG;
+    }
+    /* Ensure canonical result by zeroing extra space in lfFaceName */
+    size = strlenW(lf.lfFaceName);
+    memset(lf.lfFaceName + size, 0, sizeof(lf.lfFaceName) - size * sizeof(WCHAR));
+
+    EnterCriticalSection(&cs_script_cache);
+    LIST_FOR_EACH_ENTRY(sc, &script_cache_list, ScriptCache, entry)
+    {
+        if (!memcmp(&sc->lf, &lf, sizeof(lf)))
+        {
+            sc->refcount++;
+            LeaveCriticalSection(&cs_script_cache);
+            *psc = sc;
+            return S_OK;
+        }
+    }
+    LeaveCriticalSection(&cs_script_cache);
 
     if (!(sc = heap_alloc_zero(sizeof(ScriptCache)))) return E_OUTOFMEMORY;
     if (!GetTextMetricsW(hdc, &sc->tm))
@@ -857,18 +889,32 @@ static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
         sc->otm->otmSize = size;
         GetOutlineTextMetricsW(hdc, size, sc->otm);
     }
-    if (!GetObjectW(GetCurrentObject(hdc, OBJ_FONT), sizeof(LOGFONTW), &sc->lf))
-    {
-        heap_free(sc);
-        return E_INVALIDARG;
-    }
     sc->sfnt = (GetFontData(hdc, MS_MAKE_TAG('h','e','a','d'), 0, NULL, 0)!=GDI_ERROR);
     if (!set_cache_font_properties(hdc, sc))
     {
         heap_free(sc);
         return E_INVALIDARG;
     }
+    sc->lf = lf;
+    sc->refcount = 1;
     *psc = sc;
+
+    EnterCriticalSection(&cs_script_cache);
+    list_add_head(&script_cache_list, &sc->entry);
+    LIST_FOR_EACH_ENTRY(sc, &script_cache_list, ScriptCache, entry)
+    {
+        if (sc != *psc && !memcmp(&sc->lf, &lf, sizeof(lf)))
+        {
+            /* Another thread won the race. Use their cache instead of ours */
+            list_remove(&sc->entry);
+            sc->refcount++;
+            LeaveCriticalSection(&cs_script_cache);
+            heap_free(*psc);
+            *psc = sc;
+            return S_OK;
+        }
+    }
+    LeaveCriticalSection(&cs_script_cache);
     TRACE("<- %p\n", sc);
     return S_OK;
 }
@@ -1021,6 +1067,17 @@ HRESULT WINAPI ScriptFreeCache(SCRIPT_CACHE *psc)
     {
         unsigned int i;
         INT n;
+
+        EnterCriticalSection(&cs_script_cache);
+        if (--((ScriptCache *)*psc)->refcount > 0)
+        {
+            LeaveCriticalSection(&cs_script_cache);
+            *psc = NULL;
+            return S_OK;
+        }
+        list_remove(&((ScriptCache *)*psc)->entry);
+        LeaveCriticalSection(&cs_script_cache);
+
         for (i = 0; i < GLYPH_MAX / GLYPH_BLOCK_SIZE; i++)
         {
             heap_free(((ScriptCache *)*psc)->widths[i]);
@@ -3355,35 +3412,41 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
     if (pABC) memset(pABC, 0, sizeof(ABC));
     for (i = 0; i < cGlyphs; i++)
     {
+        WORD glyph;
         ABC abc;
+
+        /* FIXME: set to more reasonable values */
+        pGoffset[i].du = pGoffset[i].dv = 0;
+
         if (pGlyphProps[i].sva.fZeroWidth)
         {
             abc.abcA = abc.abcB = abc.abcC = 0;
+            if (piAdvance) piAdvance[i] = 0;
+            continue;
         }
-        else if (!get_cache_glyph_widths(psc, pwGlyphs[i], &abc))
+
+        if (psa->fNoGlyphIndex)
         {
-            BOOL ret;
+            if (FAILED(hr = ScriptGetCMap(hdc, psc, &pwGlyphs[i], 1, 0, &glyph))) return hr;
+        }
+        else
+            glyph = pwGlyphs[i];
+
+        if (!get_cache_glyph_widths(psc, glyph, &abc))
+        {
             if (!hdc) return E_PENDING;
             if (get_cache_pitch_family(psc) & TMPF_TRUETYPE)
             {
-                if (psa->fNoGlyphIndex)
-                    ret = GetCharABCWidthsW(hdc, pwGlyphs[i], pwGlyphs[i], &abc);
-                else
-                    ret = GetCharABCWidthsI(hdc, 0, 1, (WORD *)&pwGlyphs[i], &abc);
-                if (!ret) return S_FALSE;
+                if (!GetCharABCWidthsI(hdc, glyph, 1, NULL, &abc)) return S_FALSE;
             }
             else
             {
                 INT width;
-                if (psa->fNoGlyphIndex)
-                    ret = GetCharWidth32W(hdc, pwGlyphs[i], pwGlyphs[i], &width);
-                else
-                    ret = GetCharWidthI(hdc, 0, 1, (WORD *)&pwGlyphs[i], &width);
-                if (!ret) return S_FALSE;
+                if (!GetCharWidthI(hdc, glyph, 1, NULL, &width)) return S_FALSE;
                 abc.abcB = width;
                 abc.abcA = abc.abcC = 0;
             }
-            set_cache_glyph_widths(psc, pwGlyphs[i], &abc);
+            set_cache_glyph_widths(psc, glyph, &abc);
         }
         if (pABC)
         {
@@ -3391,8 +3454,6 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
             pABC->abcB += abc.abcB;
             pABC->abcC += abc.abcC;
         }
-        /* FIXME: set to more reasonable values */
-        pGoffset[i].du = pGoffset[i].dv = 0;
         if (piAdvance) piAdvance[i] = abc.abcA + abc.abcB + abc.abcC;
     }
 
@@ -3648,14 +3709,14 @@ HRESULT WINAPI ScriptGetGlyphABCWidth(HDC hdc, SCRIPT_CACHE *psc, WORD glyph, AB
     if (!get_cache_glyph_widths(psc, glyph, abc))
     {
         if (!hdc) return E_PENDING;
-        if ((get_cache_pitch_family(psc) & TMPF_TRUETYPE))
+        if (get_cache_pitch_family(psc) & TMPF_TRUETYPE)
         {
             if (!GetCharABCWidthsI(hdc, 0, 1, &glyph, abc)) return S_FALSE;
         }
         else
         {
             INT width;
-            if (!GetCharWidth32W(hdc, glyph, glyph, &width)) return S_FALSE;
+            if (!GetCharWidthI(hdc, glyph, 1, NULL, &width)) return S_FALSE;
             abc->abcB = width;
             abc->abcA = abc->abcC = 0;
         }
