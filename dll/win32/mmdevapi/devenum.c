@@ -595,7 +595,7 @@ static HRESULT WINAPI MMDevice_Activate(IMMDevice *iface, REFIID riid, DWORD cls
         if (SUCCEEDED(hr))
         {
             IPersistPropertyBag *ppb;
-            hr = IUnknown_QueryInterface((IUnknown*)*ppv, &IID_IPersistPropertyBag, (void*)&ppb);
+            hr = IUnknown_QueryInterface((IUnknown*)*ppv, &IID_IPersistPropertyBag, (void **)&ppb);
             if (SUCCEEDED(hr))
             {
                 /* ::Load cannot assume the interface stays alive after the function returns,
