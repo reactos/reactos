@@ -215,7 +215,6 @@ static void MPEG3_Reset(PACMDRVSTREAMINSTANCE adsi, AcmMpeg3Data* aad)
  */
 static	LRESULT	MPEG3_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
 {
-    LRESULT error = MMSYSERR_NOTSUPPORTED;
     AcmMpeg3Data*	aad;
     int err;
 
@@ -239,18 +238,6 @@ static	LRESULT	MPEG3_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
               adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MPEG) &&
              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_PCM)
     {
-        if (adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MPEGLAYER3)
-        {
-            MPEGLAYER3WAVEFORMAT *formatmp3 = (MPEGLAYER3WAVEFORMAT *)adsi->pwfxSrc;
-
-            if (adsi->pwfxSrc->cbSize < MPEGLAYER3_WFX_EXTRA_BYTES ||
-                formatmp3->wID != MPEGLAYER3_ID_MPEG)
-            {
-                error = ACMERR_NOTPOSSIBLE;
-                goto theEnd;
-            }
-        }
-
 	/* resampling or mono <=> stereo not available
          * MPEG3 algo only define 16 bit per sample output
          */
@@ -271,10 +258,13 @@ static	LRESULT	MPEG3_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
         mpg123_param(aad->mh, MPG123_ADD_FLAGS, MPG123_IGNORE_INFOFRAME, 0);
 #endif
     }
-    /* no encoding yet
     else if (adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_PCM &&
-             adsi->pwfxDst->wFormatTag == WAVE_FORMAT_MPEGLAYER3)
-    */
+             (adsi->pwfxDst->wFormatTag == WAVE_FORMAT_MPEGLAYER3 ||
+              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_MPEG))
+    {
+        WARN("Encoding to MPEG is not supported\n");
+        goto theEnd;
+    }
     else goto theEnd;
     MPEG3_Reset(adsi, aad);
 
@@ -283,7 +273,7 @@ static	LRESULT	MPEG3_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
  theEnd:
     HeapFree(GetProcessHeap(), 0, aad);
     adsi->dwDriver = 0L;
-    return error;
+    return MMSYSERR_NOTSUPPORTED;
 }
 
 /***********************************************************************
@@ -749,52 +739,17 @@ static	LRESULT	MPEG3_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
     case 1:
 	aftd->dwFormatTag = WAVE_FORMAT_MPEGLAYER3;
 	aftd->cbFormatSize = sizeof(MPEGLAYER3WAVEFORMAT);
-	aftd->cStandardFormats = NUM_MPEG3_FORMATS;
+        aftd->cStandardFormats = 0;
         lstrcpyW(aftd->szFormatTag, szMpeg3);
 	break;
     case 2:
 	aftd->dwFormatTag = WAVE_FORMAT_MPEG;
 	aftd->cbFormatSize = sizeof(MPEG1WAVEFORMAT);
-	aftd->cStandardFormats = NUM_MPEG3_FORMATS;
+        aftd->cStandardFormats = 0;
         lstrcpyW(aftd->szFormatTag, szMpeg);
 	break;
     }
     return MMSYSERR_NOERROR;
-}
-
-static void fill_in_mp3(unsigned cbwfx, WAVEFORMATEX* wfx, unsigned bit_rate)
-{
-    MPEGLAYER3WAVEFORMAT*   mp3wfx = (MPEGLAYER3WAVEFORMAT*)wfx;
-
-    wfx->nAvgBytesPerSec = bit_rate / 8;
-    if (cbwfx >= sizeof(WAVEFORMATEX))
-        wfx->cbSize = sizeof(MPEGLAYER3WAVEFORMAT) - sizeof(WAVEFORMATEX);
-    if (cbwfx >= sizeof(MPEGLAYER3WAVEFORMAT))
-    {
-        mp3wfx->wID = MPEGLAYER3_ID_MPEG;
-        mp3wfx->fdwFlags = MPEGLAYER3_FLAG_PADDING_OFF;
-        mp3wfx->nBlockSize = (bit_rate * 144) / wfx->nSamplesPerSec;
-        mp3wfx->nFramesPerBlock = 1;
-        mp3wfx->nCodecDelay = 0x0571;
-    }
-}
-
-static void fill_in_mpeg(unsigned cbwfx, WAVEFORMATEX* wfx, unsigned bit_rate)
-{
-    MPEG1WAVEFORMAT*   mp3wfx = (MPEG1WAVEFORMAT*)wfx;
-
-    wfx->nAvgBytesPerSec = bit_rate / 8;
-    if (cbwfx >= sizeof(WAVEFORMATEX))
-        wfx->cbSize = sizeof(MPEG1WAVEFORMAT) - sizeof(WAVEFORMATEX);
-    if (cbwfx >= sizeof(MPEG1WAVEFORMAT))
-    {
-        mp3wfx->fwHeadLayer = ACM_MPEG_LAYER3;
-        mp3wfx->dwHeadBitrate = wfx->nAvgBytesPerSec * 8;
-        mp3wfx->fwHeadMode = ACM_MPEG_JOINTSTEREO;
-        mp3wfx->fwHeadModeExt = 0xf;
-        mp3wfx->wHeadEmphasis = 1;
-        mp3wfx->fwHeadFlags = ACM_MPEG_ID_MPEG1;
-    }
 }
 
 /***********************************************************************
@@ -827,16 +782,8 @@ static	LRESULT	MPEG3_FormatDetails(PACMFORMATDETAILSW afd, DWORD dwQuery)
 	    break;
 	case WAVE_FORMAT_MPEGLAYER3:
 	case WAVE_FORMAT_MPEG:
-	    if (afd->dwFormatIndex >= NUM_MPEG3_FORMATS) return ACMERR_NOTPOSSIBLE;
-	    afd->pwfx->nChannels = MPEG3_Formats[afd->dwFormatIndex].nChannels;
-	    afd->pwfx->nSamplesPerSec = MPEG3_Formats[afd->dwFormatIndex].rate;
-	    afd->pwfx->wBitsPerSample = MPEG3_Formats[afd->dwFormatIndex].nBits;
-	    afd->pwfx->nBlockAlign = 1;
-	    if (afd->dwFormatTag == WAVE_FORMAT_MPEGLAYER3)
-		fill_in_mp3(afd->cbwfx, afd->pwfx, 192000);
-	    else
-		fill_in_mpeg(afd->cbwfx, afd->pwfx, 192000);
-	    break;
+            WARN("Encoding to MPEG is not supported\n");
+            return ACMERR_NOTPOSSIBLE;
 	default:
             WARN("Unsupported tag %08x\n", afd->dwFormatTag);
 	    return MMSYSERR_INVALPARAM;
@@ -869,18 +816,15 @@ static	LRESULT	MPEG3_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
 	adfs->pwfxDst->nChannels = adfs->pwfxSrc->nChannels;
     if (!(adfs->fdwSuggest & ACM_FORMATSUGGESTF_NSAMPLESPERSEC))
         adfs->pwfxDst->nSamplesPerSec = adfs->pwfxSrc->nSamplesPerSec;
-
     if (!(adfs->fdwSuggest & ACM_FORMATSUGGESTF_WBITSPERSAMPLE))
-    {
-	if (adfs->pwfxSrc->wFormatTag == WAVE_FORMAT_PCM)
-            adfs->pwfxDst->wBitsPerSample = 4;
-        else
-            adfs->pwfxDst->wBitsPerSample = 16;
-    }
+        adfs->pwfxDst->wBitsPerSample = 16;
     if (!(adfs->fdwSuggest & ACM_FORMATSUGGESTF_WFORMATTAG))
     {
 	if (adfs->pwfxSrc->wFormatTag == WAVE_FORMAT_PCM)
-            adfs->pwfxDst->wFormatTag = WAVE_FORMAT_MPEGLAYER3;
+        {
+            WARN("Encoding to MPEG is not supported\n");
+            return ACMERR_NOTPOSSIBLE;
+        }
         else
             adfs->pwfxDst->wFormatTag = WAVE_FORMAT_PCM;
     }
@@ -896,12 +840,9 @@ static	LRESULT	MPEG3_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
         adfs->pwfxDst->nAvgBytesPerSec = adfs->pwfxDst->nSamplesPerSec * adfs->pwfxDst->nBlockAlign;
         break;
     case WAVE_FORMAT_MPEG:
-        adfs->pwfxDst->nBlockAlign = 1;
-        fill_in_mpeg(adfs->cbwfxDst, adfs->pwfxDst, 192000);
-        break;
     case WAVE_FORMAT_MPEGLAYER3:
-        adfs->pwfxDst->nBlockAlign = 1;
-        fill_in_mp3(adfs->cbwfxDst, adfs->pwfxDst, 192000);
+        WARN("Encoding to MPEG is not supported\n");
+        return ACMERR_NOTPOSSIBLE;
         break;
     default:
         FIXME("\n");
