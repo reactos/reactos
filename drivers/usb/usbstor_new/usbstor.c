@@ -66,11 +66,18 @@ USBSTOR_AddDevice(
     DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
     DeviceExtension->LowerDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
 
+    DeviceExtension->SystemState = PowerSystemWorking;
+    DeviceExtension->DeviceState = PowerDeviceD0;
+
     //FIXME RemoveLock
 
     KeInitializeSpinLock(&DeviceExtension->StorSpinLock);
 
     KeInitializeEvent(&DeviceExtension->TimeOutEvent,
+                      SynchronizationEvent,
+                      FALSE);
+
+    KeInitializeEvent(&DeviceExtension->PowerEvent,
                       SynchronizationEvent,
                       FALSE);
 

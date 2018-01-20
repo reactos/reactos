@@ -193,6 +193,10 @@ typedef struct
     ULONG DriverFlags;                                                                   // 1 - BulkOnly
     KSPIN_LOCK StorSpinLock;
     KEVENT TimeOutEvent;
+    SYSTEM_POWER_STATE SystemState;
+    DEVICE_POWER_STATE DeviceState;
+    PIRP CurrentPowerIrp;
+    KEVENT PowerEvent;
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
