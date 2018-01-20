@@ -164,6 +164,26 @@ void PrintUsage(void)
     /* FIXME */
 }
 
+void AddToCache(PWSTR Name, DWORD Length, ULONGLONG MftId)
+{
+    PNAME_CACHE_ENTRY CacheEntry;
+
+    /* Allocate an entry big enough to store name and cache info */
+    CacheEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(NAME_CACHE_ENTRY) + Length);
+    if (CacheEntry == NULL)
+    {
+        return;
+    }
+
+    /* Insert in head (likely more perf) */
+    CacheEntry->Next = CacheHead;
+    CacheHead = CacheEntry;
+    /* Set up entry with full path */
+    CacheEntry->MftId = MftId;
+    CacheEntry->NameLen = Length;
+    CopyMemory(CacheEntry->Name, Name, Length);
+}
+
 void PrintPrettyName(PNTFS_ATTR_RECORD Attributes, PNTFS_ATTR_RECORD AttributesEnd, ULONGLONG MftId)
 {
     BOOLEAN FirstRun, Found;
@@ -176,6 +196,13 @@ void PrintPrettyName(PNTFS_ATTR_RECORD Attributes, PNTFS_ATTR_RECORD AttributesE
     if (MftId <= NTFS_FILE_EXTEND)
     {
         _tprintf(_T("%s\n"), KnownEntries[MftId]);
+
+        /* $Extend can contain entries, add it in cache */
+        if (MftId == NTFS_FILE_EXTEND)
+        {
+            AddToCache(L"\\$Extend", sizeof(L"\\$Extend") - sizeof(UNICODE_NULL), NTFS_FILE_EXTEND);
+        }
+
         return;
     }
 
@@ -221,21 +248,6 @@ TryAgain:
             Length = Name->NameLength + 1;
             Display[Length] = UNICODE_NULL;
         }
-        /* Specific case for $Extend\ files
-         * FIXME: Should be made more generic?
-         */
-        else if (ParentId == NTFS_FILE_EXTEND)
-        {
-            Display[0] = L'\\';
-            Length = wcslen(L"$Extend");
-            CopyMemory(&Display[1], L"$Extend", Length * sizeof(WCHAR));
-            ++Length;
-            Display[Length] = L'\\';
-            ++Length;
-            CopyMemory(Display + Length, Name->Name, Name->NameLength * sizeof(WCHAR));
-            Length += Name->NameLength;
-            Display[Length] = UNICODE_NULL;
-        }
         /* Default case */
         else
         {
@@ -279,20 +291,7 @@ TryAgain:
         /* If that's a directory, put it in the cache */
         if (Name->FileAttributes & NTFS_FILE_TYPE_DIRECTORY)
         {
-            PNAME_CACHE_ENTRY CacheEntry;
-
-            /* Allocate an entry big enough to store name and cache info */
-            CacheEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(NAME_CACHE_ENTRY) + Length * sizeof(WCHAR));
-            if (CacheEntry != NULL)
-            {
-                /* Insert in head (likely more perf) */
-                CacheEntry->Next = CacheHead;
-                CacheHead = CacheEntry;
-                /* Set up entry with full path */
-                CacheEntry->MftId = MftId;
-                CacheEntry->NameLen = Length * sizeof(WCHAR);
-                CopyMemory(CacheEntry->Name, Display, Length * sizeof(WCHAR));
-            }
+            AddToCache(Display, Length * sizeof(WCHAR), MftId);
         }
 
         /* Now, just quit */
