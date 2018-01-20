@@ -151,6 +151,10 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
     if (pipe != INVALID_HANDLE_VALUE) break;
     err = GetLastError();
     if (err == ERROR_PIPE_BUSY) {
+      if (WaitNamedPipeA(pname, NMPWAIT_USE_DEFAULT_WAIT)) {
+        TRACE("retrying busy server\n");
+        continue;
+      }
       TRACE("connection failed, error=%x\n", err);
       return RPC_S_SERVER_TOO_BUSY;
     }
