@@ -78,12 +78,6 @@ HANDLE WINAPI SHMapHandle(HANDLE hShared, DWORD dwSrcProcId, DWORD dwDstProcId,
   TRACE("(%p,%d,%d,%08x,%08x)\n", hShared, dwDstProcId, dwSrcProcId,
         dwAccess, dwOptions);
 
-  if (!hShared)
-  {
-    TRACE("Returning handle NULL\n");
-    return NULL;
-  }
-
   /* Get dest process handle */
   if (dwDstProcId == dwMyProcId)
     hDst = GetCurrentProcess();

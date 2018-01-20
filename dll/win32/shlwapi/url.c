@@ -154,7 +154,7 @@ HRESULT WINAPI ParseURLA(LPCSTR x, PARSEDURLA *y)
     if(y->cbSize != sizeof(*y))
         return E_INVALIDARG;
 
-    while(*ptr && (isalnum(*ptr) || *ptr == '-'))
+    while(*ptr && (isalnum(*ptr) || *ptr == '-' || *ptr == '+' || *ptr == '.'))
         ptr++;
 
     if (*ptr != ':' || ptr <= x+1) {
@@ -188,7 +188,7 @@ HRESULT WINAPI ParseURLW(LPCWSTR x, PARSEDURLW *y)
     if(y->cbSize != sizeof(*y))
         return E_INVALIDARG;
 
-    while(*ptr && (isalnumW(*ptr) || *ptr == '-'))
+    while(*ptr && (isalnumW(*ptr) || *ptr == '-' || *ptr == '+' || *ptr == '.'))
         ptr++;
 
     if (*ptr != ':' || ptr <= x+1) {
@@ -902,10 +902,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	work = preliminary + base.cchProtocol+1+base.cchSuffix - 1;
         if (*work++ != '/')
             *(work++) = '/';
-        if (relative.pszSuffix[0] == '.' && relative.pszSuffix[1] == 0)
-            *work = 0;
-        else
-            strcpyW(work, relative.pszSuffix);
+	strcpyW(work, relative.pszSuffix);
 	break;
 
     default:
