@@ -525,8 +525,13 @@
     CF2_ArrStackRec  vStemHintArray;
 
     CF2_HintMaskRec   hintMask;
+#ifdef __REACTOS__
+    CF2_GlyphPathRec *glyphPath = malloc(sizeof(CF2_GlyphPathRec));
+/* Ugly but it allows us to reduce the diff */
+#define glyphPath (*glyphPath)
+#else
     CF2_GlyphPathRec  glyphPath;
-
+#endif
 
     FT_ZERO( &storage );
     FT_ZERO( &results );
@@ -2606,7 +2611,13 @@
            * discard `counterMask' and `counterHintMap'.
            *
            */
+#ifdef __REACTOS__
+          CF2_HintMapRec *counterHintMap = malloc(sizeof(CF2_HintMapRec));
+/* Ugly but it allows us to reduce the diff */
+#define counterHintMap (*counterHintMap)
+#else
           CF2_HintMapRec   counterHintMap;
+#endif
           CF2_HintMaskRec  counterMask;
 
 
@@ -2627,6 +2638,9 @@
                              &counterMask,
                              0,
                              FALSE );
+#ifdef __REACTOS__
+          free(&counterHintMap);
+#endif
         }
         break;
 
@@ -3030,6 +3044,12 @@
     cf2_stack_free( opStack );
 
     FT_TRACE4(( "\n" ));
+
+#ifdef __REACTOS__
+    free(&glyphPath);
+#undef counterHintMap
+#undef glyphPath
+#endif
 
     return;
   }
