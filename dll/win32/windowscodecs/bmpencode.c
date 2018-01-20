@@ -1,6 +1,5 @@
 /*
  * Copyright 2009 Vincent Povirk for CodeWeavers
- * Copyright 2016 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +23,6 @@
 struct bmp_pixelformat {
     const WICPixelFormatGUID *guid;
     UINT bpp;
-    UINT colors; /* palette size */
     DWORD compression;
     DWORD redmask;
     DWORD greenmask;
@@ -33,18 +31,13 @@ struct bmp_pixelformat {
 };
 
 static const struct bmp_pixelformat formats[] = {
-    {&GUID_WICPixelFormat24bppBGR, 24, 0, BI_RGB},
-    {&GUID_WICPixelFormatBlackWhite, 1, 2, BI_RGB},
-    {&GUID_WICPixelFormat1bppIndexed, 1, 2, BI_RGB},
-    {&GUID_WICPixelFormat2bppIndexed, 2, 4, BI_RGB},
-    {&GUID_WICPixelFormat4bppIndexed, 4, 16, BI_RGB},
-    {&GUID_WICPixelFormat8bppIndexed, 8, 256, BI_RGB},
-    {&GUID_WICPixelFormat16bppBGR555, 16, 0, BI_RGB},
-    {&GUID_WICPixelFormat16bppBGR565, 16, 0, BI_BITFIELDS, 0xf800, 0x7e0, 0x1f, 0},
-    {&GUID_WICPixelFormat32bppBGR, 32, 0, BI_RGB},
+    {&GUID_WICPixelFormat24bppBGR, 24, BI_RGB},
+    {&GUID_WICPixelFormat16bppBGR555, 16, BI_RGB},
+    {&GUID_WICPixelFormat16bppBGR565, 16, BI_BITFIELDS, 0xf800, 0x7e0, 0x1f, 0},
+    {&GUID_WICPixelFormat32bppBGR, 32, BI_RGB},
 #if 0
     /* Windows doesn't seem to support this one. */
-    {&GUID_WICPixelFormat32bppBGRA, 32, 0, BI_BITFIELDS, 0xff0000, 0xff00, 0xff, 0xff000000},
+    {&GUID_WICPixelFormat32bppBGRA, 32, BI_BITFIELDS, 0xff0000, 0xff00, 0xff, 0xff000000},
 #endif
     {NULL}
 };
@@ -172,13 +165,11 @@ static HRESULT WINAPI BmpFrameEncode_SetPixelFormat(IWICBitmapFrameEncode *iface
 
     for (i=0; formats[i].guid; i++)
     {
-        if (IsEqualGUID(formats[i].guid, pPixelFormat))
+        if (memcmp(formats[i].guid, pPixelFormat, sizeof(GUID)) == 0)
             break;
     }
 
     if (!formats[i].guid) i = 0;
-    else if (IsEqualGUID(pPixelFormat, &GUID_WICPixelFormatBlackWhite))
-        i = 2; /* GUID_WICPixelFormat1bppIndexed */
 
     This->format = &formats[i];
     memcpy(pPixelFormat, This->format->guid, sizeof(GUID));
@@ -197,7 +188,6 @@ static HRESULT WINAPI BmpFrameEncode_SetPalette(IWICBitmapFrameEncode *iface,
     IWICPalette *palette)
 {
     BmpFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
-    HRESULT hr;
 
     TRACE("(%p,%p)\n", iface, palette);
 
@@ -206,14 +196,7 @@ static HRESULT WINAPI BmpFrameEncode_SetPalette(IWICBitmapFrameEncode *iface,
     if (!This->initialized)
         return WINCODEC_ERR_NOTINITIALIZED;
 
-    hr = IWICPalette_GetColors(palette, 256, This->palette, &This->colors);
-    if (hr == S_OK)
-    {
-        UINT i;
-        for (i = 0; i < This->colors; i++)
-            This->palette[i] |= 0xff000000; /* BMP palette has no alpha */
-    }
-    return hr;
+    return IWICPalette_GetColors(palette, 256, This->palette, &This->colors);
 }
 
 static HRESULT WINAPI BmpFrameEncode_SetThumbnail(IWICBitmapFrameEncode *iface,
@@ -295,11 +278,10 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
     BmpFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     BITMAPFILEHEADER bfh;
     BITMAPV5HEADER bih;
-    UINT info_size, i;
+    UINT info_size;
     LARGE_INTEGER pos;
     ULONG byteswritten;
     HRESULT hr;
-    const BYTE *bits;
 
     TRACE("(%p)\n", iface);
 
@@ -312,15 +294,15 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
 
     bih.bV5Size = info_size = sizeof(BITMAPINFOHEADER);
     bih.bV5Width = This->width;
-    bih.bV5Height = This->height; /* bottom-top bitmap */
+    bih.bV5Height = -This->height; /* top-down bitmap */
     bih.bV5Planes = 1;
     bih.bV5BitCount = This->format->bpp;
     bih.bV5Compression = This->format->compression;
     bih.bV5SizeImage = This->stride*This->height;
     bih.bV5XPelsPerMeter = (This->xres+0.0127) / 0.0254;
     bih.bV5YPelsPerMeter = (This->yres+0.0127) / 0.0254;
-    bih.bV5ClrUsed = (This->format->bpp <= 8) ? This->colors : 0;
-    bih.bV5ClrImportant = bih.bV5ClrUsed;
+    bih.bV5ClrUsed = 0;
+    bih.bV5ClrImportant = 0;
 
     if (This->format->compression == BI_BITFIELDS)
     {
@@ -337,7 +319,6 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
 
     bfh.bfSize = sizeof(BITMAPFILEHEADER) + info_size + bih.bV5SizeImage;
     bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + info_size;
-    bfh.bfOffBits += bih.bV5ClrUsed * sizeof(WICColor);
 
     pos.QuadPart = 0;
     hr = IStream_Seek(This->stream, pos, STREAM_SEEK_SET, NULL);
@@ -351,23 +332,9 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
     if (FAILED(hr)) return hr;
     if (byteswritten != info_size) return E_FAIL;
 
-    /* write the palette */
-    if (This->format->colors)
-    {
-        hr = IStream_Write(This->stream, This->palette, This->colors * sizeof(WICColor), &byteswritten);
-        if (FAILED(hr)) return hr;
-        if (byteswritten != This->colors * sizeof(WICColor)) return E_FAIL;
-    }
-
-    /* write the image bits as a bottom-top array */
-    bits = This->bits + bih.bV5SizeImage;
-    for (i = 0; i < This->height; i++)
-    {
-        bits -= This->stride;
-        hr = IStream_Write(This->stream, bits, This->stride, &byteswritten);
-        if (FAILED(hr)) return hr;
-        if (byteswritten != This->stride) return E_FAIL;
-    }
+    hr = IStream_Write(This->stream, This->bits, bih.bV5SizeImage, &byteswritten);
+    if (FAILED(hr)) return hr;
+    if (byteswritten != bih.bV5SizeImage) return E_FAIL;
 
     This->committed = TRUE;
 
@@ -480,22 +447,11 @@ static HRESULT WINAPI BmpEncoder_GetContainerFormat(IWICBitmapEncoder *iface,
     return S_OK;
 }
 
-static HRESULT WINAPI BmpEncoder_GetEncoderInfo(IWICBitmapEncoder *iface, IWICBitmapEncoderInfo **info)
+static HRESULT WINAPI BmpEncoder_GetEncoderInfo(IWICBitmapEncoder *iface,
+    IWICBitmapEncoderInfo **ppIEncoderInfo)
 {
-    IWICComponentInfo *comp_info;
-    HRESULT hr;
-
-    TRACE("%p,%p\n", iface, info);
-
-    if (!info) return E_INVALIDARG;
-
-    hr = CreateComponentInfo(&CLSID_WICBmpEncoder, &comp_info);
-    if (hr == S_OK)
-    {
-        hr = IWICComponentInfo_QueryInterface(comp_info, &IID_IWICBitmapEncoderInfo, (void **)info);
-        IWICComponentInfo_Release(comp_info);
-    }
-    return hr;
+    FIXME("(%p,%p): stub\n", iface, ppIEncoderInfo);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI BmpEncoder_SetColorContexts(IWICBitmapEncoder *iface,

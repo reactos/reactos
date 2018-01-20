@@ -23,6 +23,7 @@ spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
 add_rpcproxy_files(windowscodecs_wincodec.idl)
 
 list(APPEND SOURCE
+    bitmap.c
     bmpdecode.c
     bmpencode.c
     clipper.c
@@ -51,16 +52,6 @@ list(APPEND SOURCE
     tiffformat.c
     ungif.c
     wincodecs_private.h)
-
-if(MSVC)
-    if(ARCH STREQUAL "i386")
-        list(APPEND SOURCE msvc-thiscall.c)
-    endif()
-    set_source_files_properties(bitmap.c PROPERTIES COMPILE_FLAGS "/FImsvc.h")
-    list(APPEND ADDITIONAL_SOURCE bitmap.c)
-else()
-    list(APPEND SOURCE bitmap.c)
-endif()
 
 list(APPEND ADDITIONAL_SOURCE
     guid.c

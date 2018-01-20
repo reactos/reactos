@@ -853,12 +853,8 @@ static HRESULT WINAPI BitmapEncoderInfo_GetMimeTypes(IWICBitmapEncoderInfo *ifac
 static HRESULT WINAPI BitmapEncoderInfo_GetFileExtensions(IWICBitmapEncoderInfo *iface,
     UINT cchFileExtensions, WCHAR *wzFileExtensions, UINT *pcchActual)
 {
-    BitmapEncoderInfo *This = impl_from_IWICBitmapEncoderInfo(iface);
-
-    TRACE("(%p,%u,%p,%p)\n", iface, cchFileExtensions, wzFileExtensions, pcchActual);
-
-    return ComponentInfo_GetStringValue(This->classkey, fileextensions_valuename,
-        cchFileExtensions, wzFileExtensions, pcchActual);
+    FIXME("(%p,%u,%p,%p): stub\n", iface, cchFileExtensions, wzFileExtensions, pcchActual);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI BitmapEncoderInfo_DoesSupportAnimation(IWICBitmapEncoderInfo *iface,
@@ -2269,12 +2265,6 @@ HRESULT CreateComponentEnumerator(DWORD componentTypes, DWORD options, IEnumUnkn
     return hr;
 }
 
-static BOOL is_1bpp_format(const WICPixelFormatGUID *format)
-{
-    return IsEqualGUID(format, &GUID_WICPixelFormatBlackWhite) ||
-           IsEqualGUID(format, &GUID_WICPixelFormat1bppIndexed);
-}
-
 HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitmapSource *pISrc, IWICBitmapSource **ppIDst)
 {
     HRESULT res;
@@ -2287,12 +2277,10 @@ HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitma
     BOOL canconvert;
     ULONG num_fetched;
 
-    TRACE("%s,%p,%p\n", debugstr_guid(dstFormat), pISrc, ppIDst);
-
     res = IWICBitmapSource_GetPixelFormat(pISrc, &srcFormat);
     if (FAILED(res)) return res;
 
-    if (IsEqualGUID(&srcFormat, dstFormat) || (is_1bpp_format(&srcFormat) && is_1bpp_format(dstFormat)))
+    if (IsEqualGUID(&srcFormat, dstFormat))
     {
         IWICBitmapSource_AddRef(pISrc);
         *ppIDst = pISrc;
@@ -2329,7 +2317,7 @@ HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitma
 
                     if (SUCCEEDED(res) && canconvert)
                         res = IWICFormatConverter_Initialize(converter, pISrc, dstFormat, WICBitmapDitherTypeNone,
-                            NULL, 0.0, WICBitmapPaletteTypeMedianCut);
+                            NULL, 0.0, WICBitmapPaletteTypeCustom);
 
                     if (FAILED(res) || !canconvert)
                     {
