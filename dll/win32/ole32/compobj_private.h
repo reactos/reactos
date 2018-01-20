@@ -233,8 +233,8 @@ static inline HRESULT apartment_getoxid(const struct apartment *apt, OXID *oxid)
 }
 HRESULT apartment_createwindowifneeded(struct apartment *apt) DECLSPEC_HIDDEN;
 HWND apartment_getwindow(const struct apartment *apt) DECLSPEC_HIDDEN;
-void apartment_joinmta(void) DECLSPEC_HIDDEN;
-
+HRESULT enter_apartment(struct oletls *info, DWORD model) DECLSPEC_HIDDEN;
+void leave_apartment(struct oletls *info) DECLSPEC_HIDDEN;
 
 /* DCOM messages used by the apartment window (not compatible with native) */
 #define DM_EXECUTERPC   (WM_USER + 0) /* WPARAM = 0, LPARAM = (struct dispatch_params *) */

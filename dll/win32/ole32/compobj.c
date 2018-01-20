@@ -1702,12 +1702,6 @@ HWND apartment_getwindow(const struct apartment *apt)
     return apt->win;
 }
 
-void apartment_joinmta(void)
-{
-    apartment_addref(MTA);
-    COM_CurrentInfo()->apt = MTA;
-}
-
 static void COM_TlsDestroy(void)
 {
     struct oletls *info = NtCurrentTeb()->ReservedForOle;
@@ -1812,6 +1806,40 @@ HRESULT WINAPI CoRevokeInitializeSpy(ULARGE_INTEGER cookie)
     return S_OK;
 }
 
+HRESULT enter_apartment( struct oletls *info, DWORD model )
+{
+    HRESULT hr = S_OK;
+
+    if (!info->apt)
+    {
+        if (!apartment_get_or_create( model ))
+            return E_OUTOFMEMORY;
+    }
+    else if (!apartment_is_model( info->apt, model ))
+    {
+        WARN( "Attempt to change threading model of this apartment from %s to %s\n",
+              info->apt->multi_threaded ? "multi-threaded" : "apartment threaded",
+              model & COINIT_APARTMENTTHREADED ? "apartment threaded" : "multi-threaded" );
+        return RPC_E_CHANGED_MODE;
+    }
+    else
+        hr = S_FALSE;
+
+    info->inits++;
+
+    return hr;
+}
+
+void leave_apartment( struct oletls *info )
+{
+    if (!--info->inits)
+    {
+        if (info->ole_inits)
+            WARN( "Uninitializing apartment while Ole is still initialized\n" );
+        apartment_release( info->apt );
+        info->apt = NULL;
+    }
+}
 
 /******************************************************************************
  *		CoInitialize	[OLE32.@]
@@ -1870,8 +1898,7 @@ HRESULT WINAPI CoInitialize(LPVOID lpReserved)
 HRESULT WINAPI DECLSPEC_HOTPATCH CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
 {
   struct oletls *info = COM_CurrentInfo();
-  HRESULT hr = S_OK;
-  APARTMENT *apt;
+  HRESULT hr;
 
   TRACE("(%p, %x)\n", lpReserved, (int)dwCoInit);
 
@@ -1900,24 +1927,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoInitializeEx(LPVOID lpReserved, DWORD dwCoIni
   if (info->spy)
       IInitializeSpy_PreInitialize(info->spy, dwCoInit, info->inits);
 
-  if (!(apt = info->apt))
-  {
-    apt = apartment_get_or_create(dwCoInit);
-    if (!apt) return E_OUTOFMEMORY;
-  }
-  else if (!apartment_is_model(apt, dwCoInit))
-  {
-    /* Changing the threading model after it's been set is illegal. If this warning is triggered by Wine
-       code then we are probably using the wrong threading model to implement that API. */
-    ERR("Attempt to change threading model of this apartment from %s to %s\n",
-        apt->multi_threaded ? "multi-threaded" : "apartment threaded",
-        dwCoInit & COINIT_APARTMENTTHREADED ? "apartment threaded" : "multi-threaded");
-    return RPC_E_CHANGED_MODE;
-  }
-  else
-    hr = S_FALSE;
-
-  info->inits++;
+  hr = enter_apartment( info, dwCoInit );
 
   if (info->spy)
       IInitializeSpy_PostInitialize(info->spy, hr, dwCoInit, info->inits);
@@ -1964,13 +1974,7 @@ void WINAPI DECLSPEC_HOTPATCH CoUninitialize(void)
     return;
   }
 
-  if (!--info->inits)
-  {
-    if (info->ole_inits)
-      WARN("uninitializing apartment while Ole is still initialized\n");
-    apartment_release(info->apt);
-    info->apt = NULL;
-  }
+  leave_apartment( info );
 
   /*
    * Decrease the reference count.

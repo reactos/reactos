@@ -1474,16 +1474,17 @@ static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
     else
     {
         BOOL joined = FALSE;
-        if (!COM_CurrentInfo()->apt)
+        struct oletls *info = COM_CurrentInfo();
+
+        if (!info->apt)
         {
-            apartment_joinmta();
+            enter_apartment(info, COINIT_MULTITHREADED);
             joined = TRUE;
         }
         RPC_ExecuteCall(params);
         if (joined)
         {
-            apartment_release(COM_CurrentInfo()->apt);
-            COM_CurrentInfo()->apt = NULL;
+            leave_apartment(info);
         }
     }
 
