@@ -556,6 +556,7 @@ static void test_alloc_shared_remote(DWORD procid, HANDLE hmem)
     SetLastError(0xdeadbeef);
     hmem2 = pSHMapHandle(NULL, procid, GetCurrentProcessId(), 0, 0);
     ok(hmem2 == NULL, "expected NULL, got new handle\n");
+todo_wine
     ok(GetLastError() == 0xdeadbeef, "last error should not have changed, got %u\n", GetLastError());
 
     hmem2 = pSHMapHandle(hmem, procid, GetCurrentProcessId(), 0, 0);

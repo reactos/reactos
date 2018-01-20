@@ -1421,6 +1421,11 @@ static void test_PathGetDriveNumber(void)
     static const CHAR test2A[] = "file:////b:\\test.file";
     static const CHAR test3A[] = "file:///c:\\test.file";
     static const CHAR test4A[] = "file:\\\\c:\\test.file";
+    static const CHAR test5A[] = "\\\\?\\C:\\dir\\file.txt";
+    static const WCHAR test1W[] =
+        {'a',':','\\',0};
+    static const WCHAR test5W[] =
+        {'\\','\\','?','\\','C',':','\\','d','i','r','\\','f','i','l','e',0};
     int ret;
 
     SetLastError(0xdeadbeef);
@@ -1430,12 +1435,19 @@ static void test_PathGetDriveNumber(void)
 
     ret = PathGetDriveNumberA(test1A);
     ok(ret == 0, "got %d\n", ret);
+    ret = PathGetDriveNumberW(test1W);
+    ok(ret == 0, "got %d\n", ret);
     ret = PathGetDriveNumberA(test2A);
     ok(ret == -1, "got %d\n", ret);
     ret = PathGetDriveNumberA(test3A);
     ok(ret == -1, "got %d\n", ret);
     ret = PathGetDriveNumberA(test4A);
     ok(ret == -1, "got %d\n", ret);
+
+    ret = PathGetDriveNumberA(test5A);
+    ok(ret == -1, "got %d\n", ret);
+    ret = PathGetDriveNumberW(test5W);
+    ok(ret == 2 || broken(ret == -1) /* winxp */, "got = %d\n", ret);
 }
 
 static void test_PathUnExpandEnvStrings(void)

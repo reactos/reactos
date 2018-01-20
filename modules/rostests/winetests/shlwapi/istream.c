@@ -654,8 +654,10 @@ static void test_SHCreateStreamOnFileEx_CopyTo(void)
     static const WCHAR prefix[] = { 'T', 'S', 'T', 0 };
 
     GetTempPathW(MAX_PATH, tmpPath);
-    GetTempFileNameW(tmpPath, prefix, 0, srcFileName);
-    GetTempFileNameW(tmpPath, prefix, 0, dstFileName);
+    ret = GetTempFileNameW(tmpPath, prefix, 0, srcFileName);
+    ok(ret != 0, "GetTempFileName failed, got error %d\n", GetLastError());
+    ret = GetTempFileNameW(tmpPath, prefix, 0, dstFileName);
+    ok(ret != 0, "GetTempFileName failed, got error %d\n", GetLastError());
 
     ret = SHCreateStreamOnFileEx(srcFileName, STGM_CREATE | STGM_READWRITE | STGM_DELETEONRELEASE, FILE_ATTRIBUTE_TEMPORARY, FALSE, NULL, &src);
     ok(SUCCEEDED(ret), "SHCreateStreamOnFileEx failed with ret=0x%08x\n", ret);
