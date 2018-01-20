@@ -1,0 +1,5 @@
+list(APPEND SOURCE nfi.c nfi.rc)
+add_executable(nfi ${SOURCE})
+set_module_type(nfi win32cui UNICODE)
+add_importlibs(nfi msvcrt kernel32 ntdll)
+add_cd_file(TARGET nfi DESTINATION reactos/system32 FOR all)
