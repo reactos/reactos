@@ -551,6 +551,10 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
       ME_DisplayItem *tp, *end_run, *run, *prev;
       int eol_len = 0;
 
+      /* Check if new line is allowed for this control */
+      if (!(editor->styleFlags & ES_MULTILINE))
+        break;
+
       /* Find number of CR and LF in end of paragraph run */
       if (*pos =='\r')
       {

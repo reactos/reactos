@@ -176,7 +176,7 @@
   + ES_DISABLENOSCROLL (scrollbar is always visible)
   - ES_EX_NOCALLOLEINIT
   + ES_LEFT
-  - ES_MULTILINE (currently single line controls aren't supported)
+  + ES_MULTILINE
   - ES_NOIME
   - ES_READONLY (I'm not sure if beeping is the proper behaviour)
   + ES_RIGHT
@@ -2291,6 +2291,14 @@ static BOOL paste_special(ME_TextEditor *editor, UINT cf, REPASTESPECIAL *ps, BO
     struct paste_format *format;
     IDataObject *data;
 
+    /* Protect read-only edit control from modification */
+    if (editor->styleFlags & ES_READONLY)
+    {
+        if (!check_only)
+            MessageBeep(MB_ICONERROR);
+        return FALSE;
+    }
+
     init_paste_formats();
 
     if (ps && ps->dwAspect != DVASPECT_CONTENT)
@@ -2346,6 +2354,30 @@ static BOOL ME_Copy(ME_TextEditor *editor, const ME_Cursor *start, int nChars)
     IDataObject_Release(dataObj);
   }
   return SUCCEEDED(hr);
+}
+
+static BOOL copy_or_cut(ME_TextEditor *editor, BOOL cut)
+{
+    BOOL result;
+    int offs, num_chars;
+    int start_cursor = ME_GetSelectionOfs(editor, &offs, &num_chars);
+    ME_Cursor *sel_start = &editor->pCursors[start_cursor];
+
+    if (cut && (editor->styleFlags & ES_READONLY))
+    {
+        MessageBeep(MB_ICONERROR);
+        return FALSE;
+    }
+
+    num_chars -= offs;
+    result = ME_Copy(editor, sel_start, num_chars);
+    if (result && cut)
+    {
+        ME_InternalDeleteText(editor, sel_start, num_chars, FALSE);
+        ME_CommitUndo(editor);
+        ME_UpdateRepaint(editor, TRUE);
+    }
+    return result;
 }
 
 /* helper to send a msg filter notification */
@@ -2642,22 +2674,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
     case 'C':
     case 'X':
       if (ctrl_is_down)
-      {
-        BOOL result;
-        int nOfs, nChars;
-        int nStartCur = ME_GetSelectionOfs(editor, &nOfs, &nChars);
-        ME_Cursor *selStart = &editor->pCursors[nStartCur];
-
-        nChars -= nOfs;
-        result = ME_Copy(editor, selStart, nChars);
-        if (result && nKey == 'X')
-        {
-          ME_InternalDeleteText(editor, selStart, nChars, FALSE);
-          ME_CommitUndo(editor);
-          ME_UpdateRepaint(editor, TRUE);
-        }
-        return result;
-      }
+        return copy_or_cut(editor, nKey == 'X');
       break;
     case 'Z':
       if (ctrl_is_down)
@@ -3401,21 +3418,7 @@ static void ME_SetText(ME_TextEditor *editor, void *text, BOOL unicode)
   int textLen;
 
   LPWSTR wszText = ME_ToUnicode(codepage, text, &textLen);
-
-  if (textLen > 0)
-  {
-    int len = -1;
-
-    /* uses default style! */
-    if (!(editor->styleFlags & ES_MULTILINE))
-    {
-      WCHAR *p = wszText;
-
-      while (*p != '\0' && *p != '\r' && *p != '\n') p++;
-      len = p - wszText;
-    }
-    ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
-  }
+  ME_InsertTextFromCursor(editor, 0, wszText, textLen, editor->pBuffer->pDefaultStyle);
   ME_EndToUnicode(codepage, wszText);
 }
 
@@ -4065,19 +4068,8 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     return 0;
   case WM_CUT:
   case WM_COPY:
-  {
-    int nFrom, nTo, nStartCur = ME_GetSelectionOfs(editor, &nFrom, &nTo);
-    int nChars = nTo - nFrom;
-    ME_Cursor *selStart = &editor->pCursors[nStartCur];
-
-    if (ME_Copy(editor, selStart, nChars) && msg == WM_CUT)
-    {
-      ME_InternalDeleteText(editor, selStart, nChars, FALSE);
-      ME_CommitUndo(editor);
-      ME_UpdateRepaint(editor, TRUE);
-    }
+    copy_or_cut(editor, msg == WM_CUT);
     return 0;
-  }
   case WM_GETTEXTLENGTH:
   {
     GETTEXTLENGTHEX how;

@@ -400,7 +400,7 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, ME_Cursor *c, int *nC
       }
     }
     if (*nChars < 0)
-      nChars = 0;
+      *nChars = 0;
   }
 }
 

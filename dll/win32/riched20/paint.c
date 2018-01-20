@@ -481,7 +481,7 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
   }
 
   if (run->nFlags & MERF_GRAPHICS)
-    ME_DrawOLE(c, x, y, run, para, (runofs >= nSelFrom) && (runofs < nSelTo));
+    ME_DrawOLE(c, x, y, run, (runofs >= nSelFrom) && (runofs < nSelTo));
   else
   {
     ME_DrawTextWithStyle(c, run, x, y, nSelFrom - runofs, nSelTo - runofs,
