@@ -1486,10 +1486,48 @@ static HRESULT WINAPI domdoc_get_baseName(
 static HRESULT WINAPI domdoc_transformNodeToObject(
     IXMLDOMDocument3 *iface,
     IXMLDOMNode* stylesheet,
-    VARIANT outputObject)
+    VARIANT output)
 {
     domdoc *This = impl_from_IXMLDOMDocument3( iface );
-    FIXME("(%p)->(%p %s)\n", This, stylesheet, debugstr_variant(&outputObject));
+
+    TRACE("(%p)->(%p %s)\n", This, stylesheet, debugstr_variant(&output));
+
+    switch (V_VT(&output))
+    {
+    case VT_UNKNOWN:
+    case VT_DISPATCH:
+    {
+        IXMLDOMDocument *doc;
+        HRESULT hr;
+
+        if (!V_UNKNOWN(&output))
+            return E_INVALIDARG;
+
+        /* FIXME: we're not supposed to query for document interface, should use IStream
+           which we don't support currently. */
+        if (IUnknown_QueryInterface(V_UNKNOWN(&output), &IID_IXMLDOMDocument, (void **)&doc) == S_OK)
+        {
+            VARIANT_BOOL b;
+            BSTR str;
+
+            if (FAILED(hr = node_transform_node(&This->node, stylesheet, &str)))
+                return hr;
+
+            hr = IXMLDOMDocument_loadXML(doc, str, &b);
+            SysFreeString(str);
+            return hr;
+        }
+        else
+        {
+            FIXME("Unsupported destination type.\n");
+            return E_INVALIDARG;
+        }
+    }
+    default:
+        FIXME("Output type %d not handled.\n", V_VT(&output));
+        return E_NOTIMPL;
+    }
+
     return E_NOTIMPL;
 }
 

@@ -789,7 +789,7 @@ static inline schema_cache* impl_from_IXMLDOMSchemaCollection2(IXMLDOMSchemaColl
 
 static inline schema_cache* impl_from_IXMLDOMSchemaCollection(IXMLDOMSchemaCollection* iface)
 {
-    return CONTAINING_RECORD((IXMLDOMSchemaCollection2 *)iface, schema_cache, IXMLDOMSchemaCollection2_iface);
+    return CONTAINING_RECORD(iface, schema_cache, IXMLDOMSchemaCollection2_iface);
 }
 
 static inline schema_cache* unsafe_impl_from_IXMLDOMSchemaCollection(IXMLDOMSchemaCollection *iface)

@@ -1950,6 +1950,7 @@ static BSTR saxreader_get_cdata_chunk(const xmlChar *str, int len)
     BSTR bstr = bstr_from_xmlCharN(str, len), ret;
     WCHAR *ptr;
 
+    len = SysStringLen(bstr);
     ptr = bstr + len - 1;
     while ((*ptr == '\r' || *ptr == '\n') && ptr >= bstr)
         ptr--;
@@ -2016,7 +2017,7 @@ static void libxml_cdatablock(void *ctx, const xmlChar *value, int len)
             while (i < len)
             {
                 if (value[i] != '\r' && value[i] != '\n') break;
-                    i++;
+                i++;
             }
             end = &value[i];
 
