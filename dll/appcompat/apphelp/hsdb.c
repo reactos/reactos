@@ -692,7 +692,7 @@ BOOL WINAPI SdbPackAppCompatData(HSDB hsdb, PSDBQUERYRESULT pQueryResult, PVOID*
         return FALSE;
     }
 
-    GetWindowsDirectoryW(pData->szModule, _countof(pData->szModule));
+    GetSystemWindowsDirectoryW(pData->szModule, _countof(pData->szModule));
     hr = StringCchCatW(pData->szModule, _countof(pData->szModule), L"\\system32\\apphelp.dll");
     if (!SUCCEEDED(hr))
     {
