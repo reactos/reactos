@@ -112,7 +112,8 @@ public:
     void Uninitialize()
     {
         m_Loop = false;
-        SetEvent(m_WakeUpEvent);
+        if (m_WakeUpEvent)
+            SetEvent(m_WakeUpEvent);
 
         EnterCriticalSection(&m_ListLock);
 
@@ -134,22 +135,41 @@ public:
 
     bool AddIconToWatcher(_In_ NOTIFYICONDATA *iconData)
     {
-        IconWatcherData *Icon = new IconWatcherData(iconData);
+        DWORD ProcessId;
+        (void)GetWindowThreadProcessId(iconData->hWnd, &ProcessId);
 
-        (void)GetWindowThreadProcessId(iconData->hWnd, &Icon->ProcessId);
-
-        Icon->hProcess = OpenProcess(SYNCHRONIZE, FALSE, Icon->ProcessId);
-        if (Icon->hProcess == NULL)
+        HANDLE hProcess;
+        hProcess = OpenProcess(SYNCHRONIZE, FALSE, ProcessId);
+        if (hProcess == NULL)
+        {
             return false;
+        }
 
+        IconWatcherData *Icon = new IconWatcherData(iconData);
+        Icon->hProcess = hProcess;
+        Icon->ProcessId;
+
+        bool Added = false;
         EnterCriticalSection(&m_ListLock);
 
-        m_WatcherList.AddTail(Icon);
-        SetEvent(m_WakeUpEvent);
+        // The likelyhood of someone having more than 64 icons in their tray is
+        // pretty slim. We could spin up a new thread for each multiple of 64, but
+        // it's not worth the effort, so we just won't bother watching those icons
+        if (m_WatcherList.GetCount() <= MAXIMUM_WAIT_OBJECTS)
+        {
+            m_WatcherList.AddTail(Icon);
+            SetEvent(m_WakeUpEvent);
+            Added = true;
+        }
 
         LeaveCriticalSection(&m_ListLock);
 
-        return true;
+        if (!Added)
+        {
+            delete Icon;
+        }
+
+        return Added;
     }
 
     bool RemoveIconFromWatcher(_In_ NOTIFYICONDATA *iconData)
@@ -198,16 +218,19 @@ private:
     static UINT WINAPI WatcherThread(_In_opt_ LPVOID lpParam)
     {
         CIconWatcher* This = reinterpret_cast<CIconWatcher *>(lpParam);
+        HANDLE *WatchList = NULL;
 
         This->m_Loop = true;
         while (This->m_Loop)
         {
-            HANDLE *WatchList;
-            DWORD Size;
-
             EnterCriticalSection(&This->m_ListLock);
 
+            DWORD Size;
             Size = This->m_WatcherList.GetCount() + 1;
+            ASSERT(Size <= MAXIMUM_WAIT_OBJECTS);
+
+            if (WatchList)
+                delete WatchList;
             WatchList = new HANDLE[Size];
             WatchList[0] = This->m_WakeUpEvent;
 
@@ -274,9 +297,12 @@ private:
                     Status = GetLastError();
                 }
                 ERR("Failed to wait on process handles : %lu\n", Status);
-                This->m_Loop = false;
+                This->Uninitialize();
             }
         }
+
+        if (WatchList)
+            delete WatchList;
 
         return 0;
     }
@@ -851,7 +877,7 @@ public:
                 ret = Toolbar.AddButton(iconData);
                 if (ret == TRUE)
                 {
-                    AddIconToWatcher(iconData);
+                    (void)AddIconToWatcher(iconData);
                 }
                 break;
             case NIM_MODIFY:
@@ -861,7 +887,7 @@ public:
                 ret = Toolbar.RemoveButton(iconData);
                 if (ret == TRUE)
                 {
-                    RemoveIconFromWatcher(iconData);
+                    (void)RemoveIconFromWatcher(iconData);
                 }
                 break;
             default:
