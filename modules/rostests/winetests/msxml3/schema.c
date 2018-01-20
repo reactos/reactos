@@ -656,25 +656,25 @@ static void test_collection_refs(void)
     LONG length;
 
     schema1 = create_document(&IID_IXMLDOMDocument2);
+    ok(schema1 != NULL, "Failed to create a document.\n");
+
+    cache1 = create_cache(&IID_IXMLDOMSchemaCollection);
+    ok(cache1 != NULL, "Failed to create schema collection.\n");
+
+    if (!schema1 || !cache1)
+    {
+        if (schema1)
+            IXMLDOMDocument2_Release(schema1);
+        if (cache1)
+            IXMLDOMSchemaCollection_Release(cache1);
+        return;
+    }
+
     schema2 = create_document(&IID_IXMLDOMDocument2);
     schema3 = create_document(&IID_IXMLDOMDocument2);
 
-    cache1 = create_cache(&IID_IXMLDOMSchemaCollection);
     cache2 = create_cache(&IID_IXMLDOMSchemaCollection);
     cache3 = create_cache(&IID_IXMLDOMSchemaCollection);
-
-    if (!schema1 || !schema2 || !schema3 || !cache1 || !cache2 || !cache3)
-    {
-        if (schema1) IXMLDOMDocument2_Release(schema1);
-        if (schema2) IXMLDOMDocument2_Release(schema2);
-        if (schema3) IXMLDOMDocument2_Release(schema3);
-
-        if (cache1) IXMLDOMSchemaCollection_Release(cache1);
-        if (cache2) IXMLDOMSchemaCollection_Release(cache2);
-        if (cache3) IXMLDOMSchemaCollection_Release(cache2);
-
-        return;
-    }
 
     ole_check(IXMLDOMDocument2_loadXML(schema1, _bstr_(xdr_schema1_xml), &b));
     ok(b == VARIANT_TRUE, "failed to load XML\n");

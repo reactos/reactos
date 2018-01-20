@@ -29,6 +29,7 @@
 #undef CLSID_DOMDocument
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+DEFINE_GUID(IID_transformdest_unknown,0xf5078f3a,0xc551,0x11d3,0x89,0xb9,0x00,0x00,0xf8,0x1f,0xe2,0x21);
 
 static int g_unexpectedcall, g_expectedcall;
 
@@ -6475,7 +6476,8 @@ static void test_save(void)
     hr = IXMLDOMDocument_loadXML(doc, _bstr_(win1252xml), &b);
     EXPECT_HR(hr, S_OK);
 
-    CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     V_VT(&dest) = VT_UNKNOWN;
     V_UNKNOWN(&dest) = (IUnknown*)stream;
     hr = IXMLDOMDocument_save(doc, dest);
@@ -7482,6 +7484,7 @@ static void test_XSLPattern(void)
             ok(hr == S_OK, "query=%s, failed with 0x%08x\n", ptr->query, hr);
             len = 0;
             hr = IXMLDOMNodeList_get_length(list, &len);
+            ok(hr == S_OK, "Failed to get list length, hr %#x.\n", hr);
             if (*ptr->list)
             {
                 ok(len != 0, "query=%s, empty list\n", ptr->query);
@@ -10168,16 +10171,20 @@ static void write_to_file(const char *name, const char *data)
 static void test_load(void)
 {
     IXMLDOMDocument *doc, *doc2;
+    BSTR pathW, bstr1, bstr2;
     IXMLDOMNodeList *list;
     IXMLDOMElement *elem;
+    char path[MAX_PATH];
     VARIANT_BOOL b;
     VARIANT src;
     HRESULT hr;
-    BSTR path, bstr1, bstr2;
     void* ptr;
 
+    GetTempPathA(MAX_PATH, path);
+    strcat(path, "winetest.xml");
+
     /* prepare a file */
-    write_to_file("test.xml", win1252xml);
+    write_to_file(path, win1252xml);
 
     doc = create_document(&IID_IXMLDOMDocument);
 
@@ -10188,11 +10195,11 @@ static void test_load(void)
     EXPECT_HR(hr, E_INVALIDARG);
     ok(b == VARIANT_FALSE, "got %d\n", b);
 
-    path = _bstr_("test.xml");
+    pathW = _bstr_(path);
 
     /* load from path: VT_BSTR */
     V_VT(&src) = VT_BSTR;
-    V_BSTR(&src) = path;
+    V_BSTR(&src) = pathW;
     hr = IXMLDOMDocument_load(doc, src, &b);
     EXPECT_HR(hr, S_OK);
     ok(b == VARIANT_TRUE, "got %d\n", b);
@@ -10204,7 +10211,7 @@ static void test_load(void)
 
     /* load from a path: VT_BSTR|VT_BYREF */
     V_VT(&src) = VT_BSTR | VT_BYREF;
-    V_BSTRREF(&src) = &path;
+    V_BSTRREF(&src) = &pathW;
     hr = IXMLDOMDocument_load(doc, src, &b);
     EXPECT_HR(hr, S_OK);
     ok(b == VARIANT_TRUE, "got %d\n", b);
@@ -10242,13 +10249,13 @@ static void test_load(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     SysFreeString(bstr1);
 
-    DeleteFileA("test.xml");
+    DeleteFileA(path);
 
     /* load from existing path, no xml content */
-    write_to_file("test.xml", nocontent);
+    write_to_file(path, nocontent);
 
     V_VT(&src) = VT_BSTR;
-    V_BSTR(&src) = path;
+    V_BSTR(&src) = pathW;
     b = VARIANT_TRUE;
     hr = IXMLDOMDocument_load(doc, src, &b);
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
@@ -10259,7 +10266,7 @@ static void test_load(void)
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
     ok(bstr1 == NULL, "got %p\n", bstr1);
 
-    DeleteFileA("test.xml");
+    DeleteFileA(path);
     IXMLDOMDocument_Release(doc);
 
     doc = create_document(&IID_IXMLDOMDocument);
@@ -10964,7 +10971,8 @@ static void test_dispex(void)
     /* IXMLDOMNodeList */
     hr = IXMLDOMDocument_getElementsByTagName(doc, _bstr_("*"), &node_list);
     EXPECT_HR(hr, S_OK);
-    IXMLDOMNodeList_QueryInterface(node_list, &IID_IUnknown, (void**)&unk);
+    hr = IXMLDOMNodeList_QueryInterface(node_list, &IID_IUnknown, (void**)&unk);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     test_domobj_dispex(unk);
     IUnknown_Release(unk);
     IXMLDOMNodeList_Release(node_list);
@@ -12005,7 +12013,7 @@ static void test_get_namespaces(void)
     free_bstrs();
 }
 
-static DOMNodeType put_data_types[] = {
+static const DOMNodeType put_data_types[] = {
     NODE_TEXT,
     NODE_CDATA_SECTION,
     NODE_PROCESSING_INSTRUCTION,
@@ -12018,7 +12026,7 @@ static void test_put_data(void)
     static const WCHAR test_data[] = {'t','e','s','t',' ','n','o','d','e',' ','d','a','t','a',0};
     WCHAR buff[100], *data;
     IXMLDOMDocument *doc;
-    DOMNodeType *type;
+    const DOMNodeType *type;
     IXMLDOMText *text;
     IXMLDOMNode *node;
     VARIANT v;
@@ -12576,6 +12584,81 @@ static void test_merging_text(void)
     free_bstrs();
 }
 
+static HRESULT WINAPI transformdest_QueryInterface(IUnknown *iface, REFIID riid, void **obj)
+{
+    BOOL known_iid = IsEqualIID(riid, &IID_IHTMLObjectElement) ||
+        IsEqualIID(riid, &IID_transformdest_unknown) ||
+        IsEqualIID(riid, &IID_IServiceProvider) ||
+        IsEqualIID(riid, &IID_IStream) ||
+        IsEqualIID(riid, &IID_ISequentialStream) ||
+        IsEqualIID(riid, &IID_IRequestDictionary);
+
+todo_wine_if(IsEqualIID(riid, &IID_IXMLDOMDocument))
+    ok(known_iid, "Unexpected riid %s\n", wine_dbgstr_guid(riid));
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI transformdest_AddRef(IUnknown *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI transformdest_Release(IUnknown *iface)
+{
+    return 1;
+}
+
+static const IUnknownVtbl transformdestvtbl =
+{
+    transformdest_QueryInterface,
+    transformdest_AddRef,
+    transformdest_Release,
+};
+
+static void test_transformNodeToObject(void)
+{
+    IUnknown transformdest = { &transformdestvtbl };
+    IXMLDOMDocument *doc, *doc2, *doc3;
+    VARIANT_BOOL b;
+    HRESULT hr;
+    VARIANT v;
+
+    doc = create_document(&IID_IXMLDOMDocument);
+    doc2 = create_document(&IID_IXMLDOMDocument);
+    doc3 = create_document(&IID_IXMLDOMDocument);
+
+    hr = IXMLDOMDocument_loadXML(doc, _bstr_(szTransformXML), &b);
+    ok(hr == S_OK, "Failed to load document, hr %#x.\n", hr);
+    hr = IXMLDOMDocument_loadXML(doc2, _bstr_(szTransformSSXML), &b);
+    ok(hr == S_OK, "Failed to load document, hr %#x.\n", hr);
+
+    V_VT(&v) = VT_UNKNOWN;
+    V_UNKNOWN(&v) = &transformdest;
+    hr = IXMLDOMDocument_transformNodeToObject(doc, (IXMLDOMNode *)doc2, v);
+    ok(hr == E_INVALIDARG, "Failed to transform node, hr %#x.\n", hr);
+
+    V_VT(&v) = VT_UNKNOWN;
+    V_UNKNOWN(&v) = NULL;
+    hr = IXMLDOMDocument_transformNodeToObject(doc, (IXMLDOMNode *)doc2, v);
+    ok(hr == E_INVALIDARG, "Failed to transform node, hr %#x.\n", hr);
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = NULL;
+    hr = IXMLDOMDocument_transformNodeToObject(doc, (IXMLDOMNode *)doc2, v);
+    ok(hr == E_INVALIDARG, "Failed to transform node, hr %#x.\n", hr);
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch *)doc3;
+    hr = IXMLDOMDocument_transformNodeToObject(doc, (IXMLDOMNode *)doc2, v);
+    ok(hr == S_OK, "Failed to transform node, hr %#x.\n", hr);
+
+    IXMLDOMDocument_Release(doc3);
+    IXMLDOMDocument_Release(doc2);
+    IXMLDOMDocument_Release(doc);
+    free_bstrs();
+}
+
 START_TEST(domdoc)
 {
     HRESULT hr;
@@ -12657,6 +12740,7 @@ START_TEST(domdoc)
     test_xmlns_attribute();
     test_url();
     test_merging_text();
+    test_transformNodeToObject();
 
     test_xsltemplate();
     test_xsltext();
