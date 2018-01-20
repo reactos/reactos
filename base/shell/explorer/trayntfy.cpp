@@ -155,7 +155,7 @@ public:
         // The likelyhood of someone having more than 64 icons in their tray is
         // pretty slim. We could spin up a new thread for each multiple of 64, but
         // it's not worth the effort, so we just won't bother watching those icons
-        if (m_WatcherList.GetCount() <= MAXIMUM_WAIT_OBJECTS)
+        if (m_WatcherList.GetCount() < MAXIMUM_WAIT_OBJECTS)
         {
             m_WatcherList.AddTail(Icon);
             SetEvent(m_WakeUpEvent);
