@@ -10,6 +10,7 @@ list(APPEND SOURCE
     lex.c
     parser.tab.c
     regexp.c
+    utils.c
     vbdisp.c
     vbregexp.c
     vbscript.c
