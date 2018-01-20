@@ -3179,13 +3179,13 @@ static LONGLONG msi_vcl_get_cost( msi_dialog *dialog )
                 MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &each_cost)))
         {
             /* each_cost is in 512-byte units */
-            total_cost += ((LONGLONG)each_cost) * 512;
+            total_cost += each_cost * 512;
         }
         if (ERROR_SUCCESS == (MSI_GetFeatureCost(dialog->package, feature,
                 MSICOSTTREE_SELFONLY, INSTALLSTATE_ABSENT, &each_cost)))
         {
             /* each_cost is in 512-byte units */
-            total_cost -= ((LONGLONG)each_cost) * 512;
+            total_cost -= each_cost * 512;
         }
     }
     return total_cost;
@@ -4288,7 +4288,7 @@ static UINT event_end_dialog( msi_dialog *dialog, const WCHAR *argument )
 static UINT pending_event_end_dialog( msi_dialog *dialog, const WCHAR *argument )
 {
     dialog->pending_event = event_end_dialog;
-    if (dialog->pending_argument) msi_free( dialog->pending_argument );
+    msi_free( dialog->pending_argument );
     dialog->pending_argument = strdupW( argument );
     return ERROR_SUCCESS;
 }
@@ -4306,7 +4306,7 @@ static UINT event_new_dialog( msi_dialog *dialog, const WCHAR *argument )
 static UINT pending_event_new_dialog( msi_dialog *dialog, const WCHAR *argument )
 {
     dialog->pending_event = event_new_dialog;
-    if (dialog->pending_argument) msi_free( dialog->pending_argument );
+    msi_free( dialog->pending_argument );
     dialog->pending_argument = strdupW( argument );
     return ERROR_SUCCESS;
 }
@@ -4331,7 +4331,7 @@ static UINT event_spawn_dialog( msi_dialog *dialog, const WCHAR *argument )
 static UINT pending_event_spawn_dialog( msi_dialog *dialog, const WCHAR *argument )
 {
     dialog->pending_event = event_spawn_dialog;
-    if (dialog->pending_argument) msi_free( dialog->pending_argument );
+    msi_free( dialog->pending_argument );
     dialog->pending_argument = strdupW( argument );
     return ERROR_SUCCESS;
 }

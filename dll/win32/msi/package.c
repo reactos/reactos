@@ -103,17 +103,18 @@ static void free_assembly( MSIASSEMBLY *assembly )
 void msi_free_action_script( MSIPACKAGE *package, UINT script )
 {
     UINT i;
-    for (i = 0; i < package->script->ActionCount[script]; i++)
-        msi_free( package->script->Actions[script][i] );
+    for (i = 0; i < package->script_actions_count[script]; i++)
+        msi_free( package->script_actions[script][i] );
 
-    msi_free( package->script->Actions[script] );
-    package->script->Actions[script] = NULL;
-    package->script->ActionCount[script] = 0;
+    msi_free( package->script_actions[script] );
+    package->script_actions[script] = NULL;
+    package->script_actions_count[script] = 0;
 }
 
 static void free_package_structures( MSIPACKAGE *package )
 {
     struct list *item, *cursor;
+    int i;
 
     LIST_FOR_EACH_SAFE( item, cursor, &package->features )
     {
@@ -249,20 +250,12 @@ static void free_package_structures( MSIPACKAGE *package )
         msi_free( info );
     }
 
-    if (package->script)
-    {
-        INT i;
-        UINT j;
+    for (i = 0; i < SCRIPT_MAX; i++)
+        msi_free_action_script( package, i );
 
-        for (i = 0; i < SCRIPT_MAX; i++)
-            msi_free_action_script( package, i );
-
-        for (j = 0; j < package->script->UniqueActionsCount; j++)
-            msi_free( package->script->UniqueActions[j] );
-
-        msi_free( package->script->UniqueActions );
-        msi_free( package->script );
-    }
+    for (i = 0; i < package->unique_actions_count; i++)
+        msi_free( package->unique_actions[i] );
+    msi_free( package->unique_actions);
 
     LIST_FOR_EACH_SAFE( item, cursor, &package->binaries )
     {
@@ -1061,7 +1054,6 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
         msi_adjust_privilege_properties( package );
 
         package->ProductCode = msi_dup_property( package->db, szProductCode );
-        package->script = msi_alloc_zero( sizeof(MSISCRIPT) );
 
         set_installer_properties( package );
 
@@ -1737,6 +1729,8 @@ static INT internal_ui_handler(MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     case INSTALLMESSAGE_INFO:
     case INSTALLMESSAGE_INITIALIZE:
     case INSTALLMESSAGE_TERMINATE:
+    case INSTALLMESSAGE_INSTALLSTART:
+    case INSTALLMESSAGE_INSTALLEND:
         return 0;
     case INSTALLMESSAGE_SHOWDIALOG:
     {
@@ -1858,42 +1852,14 @@ LPWSTR msi_get_error_message(MSIDATABASE *db, int error)
 INT MSI_ProcessMessageVerbatim(MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIRECORD *record)
 {
     LPWSTR message = {0};
-    DWORD len, log_type = 0;
+    DWORD len;
+    DWORD log_type = 1 << (eMessageType >> 24);
     UINT res;
     INT rc = 0;
     char *msg;
 
     TRACE("%x\n", eMessageType);
     if (TRACE_ON(msi)) dump_record(record);
-
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_FATALEXIT)
-        log_type |= INSTALLLOGMODE_FATALEXIT;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_ERROR)
-        log_type |= INSTALLLOGMODE_ERROR;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_WARNING)
-        log_type |= INSTALLLOGMODE_WARNING;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_USER)
-        log_type |= INSTALLLOGMODE_USER;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_INFO)
-        log_type |= INSTALLLOGMODE_INFO;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_RESOLVESOURCE)
-        log_type |= INSTALLLOGMODE_RESOLVESOURCE;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_OUTOFDISKSPACE)
-        log_type |= INSTALLLOGMODE_OUTOFDISKSPACE;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_COMMONDATA)
-        log_type |= INSTALLLOGMODE_COMMONDATA;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_ACTIONSTART)
-        log_type |= INSTALLLOGMODE_ACTIONSTART;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_ACTIONDATA)
-        log_type |= INSTALLLOGMODE_ACTIONDATA;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_PROGRESS)
-        log_type |= INSTALLLOGMODE_PROGRESS;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_INITIALIZE)
-        log_type |= INSTALLLOGMODE_INITIALIZE;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_TERMINATE)
-        log_type |= INSTALLLOGMODE_TERMINATE;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_SHOWDIALOG)
-        log_type |= INSTALLLOGMODE_SHOWDIALOG;
 
     if (!package || !record)
         message = NULL;
@@ -2293,7 +2259,10 @@ static MSIRECORD *msi_get_property_row( MSIDATABASE *db, LPCWSTR name )
 
         row = MSI_CreateRecord(1);
         if (!row)
+        {
+            msi_free(buffer);
             return NULL;
+        }
         MSI_RecordSetStringW(row, 1, buffer);
         msi_free(buffer);
         return row;
@@ -2308,7 +2277,10 @@ static MSIRECORD *msi_get_property_row( MSIDATABASE *db, LPCWSTR name )
 
         row = MSI_CreateRecord(1);
         if (!row)
+        {
+            msi_free(buffer);
             return NULL;
+        }
         MSI_RecordSetStringW(row, 1, buffer);
         msi_free(buffer);
         return row;

@@ -90,7 +90,7 @@ UINT WINAPI MsiDoActionW( MSIHANDLE hInstall, LPCWSTR szAction )
         return ERROR_SUCCESS;
     }
  
-    ret = ACTION_PerformUIAction( package, szAction, SCRIPT_NONE );
+    ret = ACTION_PerformAction( package, szAction, SCRIPT_NONE );
     msiobj_release( &package->hdr );
 
     return ret;

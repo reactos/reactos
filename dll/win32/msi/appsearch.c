@@ -493,7 +493,7 @@ static LPWSTR get_ini_field(LPWSTR buf, int field)
     while ((end = strchrW(beg, ',')) && i < field)
     {
         beg = end + 1;
-        while (*beg && *beg == ' ')
+        while (*beg == ' ')
             beg++;
 
         i++;
