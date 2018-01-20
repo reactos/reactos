@@ -333,8 +333,20 @@ BOOL LoadShimDLL(PCWSTR ShimDll, HMODULE* module, tGETHOOKAPIS* ppGetHookAPIs)
     dll = LoadLibraryW(buf);
     if (!dll)
     {
-        skip("Unable to load shim dll\n");
-        return FALSE;
+        skip("Unable to load shim dll from AppPatch\n");
+        GetSystemWindowsDirectoryW(buf, _countof(buf));
+
+        if (SUCCEEDED(StringCchCatW(buf, _countof(buf), L"\\System32\\")) &&
+            SUCCEEDED(StringCchCatW(buf, _countof(buf), ShimDll)))
+        {
+            dll = LoadLibraryW(buf);
+        }
+
+        if (!dll)
+        {
+            skip("Unable to load shim dll from System32 (Recent Win10)\n");
+            return FALSE;
+        }
     }
     *module = dll;
     *ppGetHookAPIs = (tGETHOOKAPIS)GetProcAddress(dll, "GetHookAPIs");
