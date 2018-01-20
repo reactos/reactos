@@ -337,7 +337,6 @@ CcUninitializeCacheMap (
         FileObject, TruncateSize, UninitializeCompleteEvent);
 
     if (TruncateSize != NULL &&
-        FileObject->SectionObjectPointer != NULL &&
         FileObject->SectionObjectPointer->SharedCacheMap != NULL)
     {
         SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;

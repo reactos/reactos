@@ -1501,7 +1501,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     if (!PoInitSystem(0)) KeBugCheck(INTERNAL_POWER_ERROR);
 
     /* Check for Y2K hack */
-    Y2KHackRequired = strstr(CommandLine, "YEAR");
+    Y2KHackRequired = CommandLine ? strstr(CommandLine, "YEAR") : NULL;
     if (Y2KHackRequired) Y2KHackRequired = strstr(Y2KHackRequired, "=");
     if (Y2KHackRequired) YearHack = atol(Y2KHackRequired + 1);
 
