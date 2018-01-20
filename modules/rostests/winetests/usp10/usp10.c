@@ -1836,6 +1836,7 @@ static void test_ScriptShape(HDC hdc)
     static const WCHAR test3[] = {0x30b7};
     HRESULT hr;
     SCRIPT_CACHE sc = NULL;
+    SCRIPT_CACHE sc2 = NULL;
     WORD glyphs[4], glyphs2[4], logclust[4], glyphs3[4];
     SCRIPT_VISATTR attrs[4];
     SCRIPT_ITEM items[4];
@@ -1865,6 +1866,10 @@ static void test_ScriptShape(HDC hdc)
     ok(hr == S_OK, "ScriptShape should return S_OK not %08x\n", hr);
     ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
 
+    hr = ScriptShape(hdc, &sc2, test1, 4, 4, &items[0].a, glyphs, logclust, attrs, &nb);
+    ok(hr == S_OK, "ScriptShape should return S_OK not %08x\n", hr);
+    ok(sc2 == sc, "caches %p, %p not identical\n", sc, sc2);
+    ScriptFreeCache(&sc2);
 
     memset(glyphs,-1,sizeof(glyphs));
     memset(logclust,-1,sizeof(logclust));
@@ -2090,6 +2095,7 @@ static void test_ScriptPlace(HDC hdc)
     BOOL ret;
     HRESULT hr;
     SCRIPT_CACHE sc = NULL;
+    SCRIPT_CACHE sc2 = NULL;
     WORD glyphs[4], logclust[4];
     SCRIPT_VISATTR attrs[4];
     SCRIPT_ITEM items[2];
@@ -2126,6 +2132,11 @@ static void test_ScriptPlace(HDC hdc)
     hr = ScriptPlace(hdc, &sc, glyphs, 4, attrs, &items[0].a, widths, offset, NULL);
     ok(hr == S_OK, "ScriptPlace should return S_OK not %08x\n", hr);
     ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
+
+    hr = ScriptPlace(hdc, &sc2, glyphs, 4, attrs, &items[0].a, widths, offset, NULL);
+    ok(hr == S_OK, "ScriptPlace should return S_OK not %08x\n", hr);
+    ok(sc2 == sc, "caches %p, %p not identical\n", sc, sc2);
+    ScriptFreeCache(&sc2);
 
     if (widths[0] != 0)
     {
@@ -4112,6 +4123,112 @@ static void test_ScriptString_pSize(HDC hdc)
     ok(hr == S_OK, "Failed to free ssa, hr %#x.\n", hr);
 }
 
+static void test_script_cache_reuse(void)
+{
+    HRESULT hr;
+    HWND hwnd1, hwnd2;
+    HDC hdc1, hdc2;
+    LOGFONTA lf;
+    HFONT hfont1, hfont2;
+    HFONT prev_hfont1, prev_hfont2;
+    SCRIPT_CACHE sc = NULL;
+    SCRIPT_CACHE sc2;
+    LONG height;
+
+    hwnd1 = create_test_window();
+    hwnd2 = create_test_window();
+
+    hdc1 = GetDC(hwnd1);
+    hdc2 = GetDC(hwnd2);
+    ok(hdc1 != NULL && hdc2 != NULL, "Failed to get window dc.\n");
+
+    memset(&lf, 0, sizeof(LOGFONTA));
+    lstrcpyA(lf.lfFaceName, "Tahoma");
+
+    lf.lfHeight = 10;
+    hfont1 = CreateFontIndirectA(&lf);
+    ok(hfont1 != NULL, "CreateFontIndirectA failed\n");
+    hfont2 = CreateFontIndirectA(&lf);
+    ok(hfont2 != NULL, "CreateFontIndirectA failed\n");
+    ok(hfont1 != hfont2, "Expected fonts %p and %p to differ\n", hfont1, hfont2);
+
+    prev_hfont1 = SelectObject(hdc1, hfont1);
+    ok(prev_hfont1 != NULL, "SelectObject failed: %p\n", prev_hfont1);
+    prev_hfont2 = SelectObject(hdc2, hfont1);
+    ok(prev_hfont2 != NULL, "SelectObject failed: %p\n", prev_hfont2);
+
+    /* Get a script cache */
+    hr = ScriptCacheGetHeight(hdc1, &sc, &height);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(sc != NULL, "Script cache is NULL\n");
+
+    /* Same font, same DC -> same SCRIPT_CACHE */
+    sc2 = NULL;
+    hr = ScriptCacheGetHeight(hdc1, &sc2, &height);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(sc2 != NULL, "Script cache is NULL\n");
+    ok(sc == sc2, "Expected caches %p, %p to be identical\n", sc, sc2);
+    ScriptFreeCache(&sc2);
+
+    /* Same font in different DC -> same SCRIPT_CACHE */
+    sc2 = NULL;
+    hr = ScriptCacheGetHeight(hdc2, &sc2, &height);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(sc2 != NULL, "Script cache is NULL\n");
+    ok(sc == sc2, "Expected caches %p, %p to be identical\n", sc, sc2);
+    ScriptFreeCache(&sc2);
+
+    /* Same font face & size, but different font handle */
+    ok(SelectObject(hdc1, hfont2) != NULL, "SelectObject failed\n");
+    ok(SelectObject(hdc2, hfont2) != NULL, "SelectObject failed\n");
+
+    sc2 = NULL;
+    hr = ScriptCacheGetHeight(hdc1, &sc2, &height);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(sc2 != NULL, "Script cache is NULL\n");
+    ok(sc == sc2, "Expected caches %p, %p to be identical\n", sc, sc2);
+    ScriptFreeCache(&sc2);
+
+    sc2 = NULL;
+    hr = ScriptCacheGetHeight(hdc2, &sc2, &height);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(sc2 != NULL, "Script cache is NULL\n");
+    ok(sc == sc2, "Expected caches %p, %p to be identical\n", sc, sc2);
+    ScriptFreeCache(&sc2);
+
+    /* Different font size -- now we get a different SCRIPT_CACHE */
+    SelectObject(hdc1, prev_hfont1);
+    SelectObject(hdc2, prev_hfont2);
+    DeleteObject(hfont2);
+    lf.lfHeight = 20;
+    hfont2 = CreateFontIndirectA(&lf);
+    ok(hfont2 != NULL, "CreateFontIndirectA failed\n");
+    ok(SelectObject(hdc1, hfont2) != NULL, "SelectObject failed\n");
+    ok(SelectObject(hdc2, hfont2) != NULL, "SelectObject failed\n");
+
+    sc2 = NULL;
+    hr = ScriptCacheGetHeight(hdc1, &sc2, &height);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(sc2 != NULL, "Script cache is NULL\n");
+    ok(sc != sc2, "Expected caches %p, %p to be different\n", sc, sc2);
+    ScriptFreeCache(&sc2);
+
+    sc2 = NULL;
+    hr = ScriptCacheGetHeight(hdc2, &sc2, &height);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(sc2 != NULL, "Script cache is NULL\n");
+    ok(sc != sc2, "Expected caches %p, %p to be different\n", sc, sc2);
+    ScriptFreeCache(&sc2);
+
+    ScriptFreeCache(&sc);
+    SelectObject(hdc1, prev_hfont1);
+    SelectObject(hdc2, prev_hfont2);
+    DeleteObject(hfont1);
+    DeleteObject(hfont2);
+    DestroyWindow(hwnd1);
+    DestroyWindow(hwnd2);
+}
+
 static void init_tests(void)
 {
     HMODULE module = GetModuleHandleA("usp10.dll");
@@ -4185,6 +4302,7 @@ START_TEST(usp10)
     test_ScriptGetLogicalWidths();
 
     test_ScriptIsComplex();
+    test_script_cache_reuse();
 
     ReleaseDC(hwnd, hdc);
     DestroyWindow(hwnd);
