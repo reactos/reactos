@@ -672,15 +672,21 @@ typedef struct {
     int* piAdvance;
     SCRIPT_VISATTR* psva;
     GOFFSET* pGoffset;
-    ABC* abc;
+    ABC abc;
     int iMaxPosX;
     HFONT fallbackFont;
 } StringGlyphs;
 
+enum stringanalysis_flags
+{
+    SCRIPT_STRING_ANALYSIS_FLAGS_SIZE    = 0x1,
+    SCRIPT_STRING_ANALYSIS_FLAGS_INVALID = 0x2,
+};
+
 typedef struct {
     HDC hdc;
-    DWORD dwFlags;
-    BOOL invalid;
+    DWORD ssa_flags;
+    DWORD flags;
     int clip_len;
     int cItems;
     int cMaxGlyphs;
@@ -688,7 +694,7 @@ typedef struct {
     int numItems;
     StringGlyphs* glyphs;
     SCRIPT_LOGATTR* logattrs;
-    SIZE* sz;
+    SIZE sz;
     int* logical2visual;
 } StringAnalysis;
 
@@ -730,6 +736,8 @@ BOOL usp10_array_reserve(void **elements, SIZE_T *capacity, SIZE_T count, SIZE_T
 /* TODO Fix font properties on Arabic locale */
 static inline BOOL set_cache_font_properties(const HDC hdc, ScriptCache *sc)
 {
+    sc->sfp.cBytes = sizeof(sc->sfp);
+
     if (!sc->sfnt)
     {
         sc->sfp.wgBlank = sc->tm.tmBreakChar;
@@ -777,11 +785,7 @@ static inline BOOL set_cache_font_properties(const HDC hdc, ScriptCache *sc)
 
 static inline void get_cache_font_properties(SCRIPT_FONTPROPERTIES *sfp, ScriptCache *sc)
 {
-    sfp->wgBlank = sc->sfp.wgBlank;
-    sfp->wgDefault = sc->sfp.wgDefault;
-    sfp->wgInvalid = sc->sfp.wgInvalid;
-    sfp->wgKashida = sc->sfp.wgKashida;
-    sfp->iKashidaWidth = sc->sfp.iKashidaWidth;
+    *sfp = sc->sfp;
 }
 
 static inline LONG get_cache_height(SCRIPT_CACHE *psc)
@@ -1945,7 +1949,7 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
     /* FIXME: handle clipping */
     analysis->clip_len = cString;
     analysis->hdc = hdc;
-    analysis->dwFlags = dwFlags;
+    analysis->ssa_flags = dwFlags;
 
     if (psState)
         sState = *psState;
@@ -2020,7 +2024,6 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
             int *piAdvance = heap_alloc_zero(sizeof(int) * numGlyphs);
             SCRIPT_VISATTR *psva = heap_alloc_zero(sizeof(SCRIPT_VISATTR) * numGlyphs);
             GOFFSET *pGoffset = heap_alloc_zero(sizeof(GOFFSET) * numGlyphs);
-            ABC *abc = heap_alloc_zero(sizeof(ABC));
             int numGlyphsReturned;
             HFONT originalFont = 0x0;
 
@@ -2028,7 +2031,7 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
             const WCHAR* pStr = (const WCHAR*)pString;
             analysis->glyphs[i].fallbackFont = NULL;
 
-            if (!glyphs || !pwLogClust || !piAdvance || !psva || !pGoffset || !abc)
+            if (!glyphs || !pwLogClust || !piAdvance || !psva || !pGoffset)
             {
                 heap_free (BidiLevel);
                 heap_free (glyphs);
@@ -2036,7 +2039,6 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
                 heap_free (piAdvance);
                 heap_free (psva);
                 heap_free (pGoffset);
-                heap_free (abc);
                 hr = E_OUTOFMEMORY;
                 goto error;
             }
@@ -2069,7 +2071,7 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
             ScriptShape(hdc, sc, &pStr[analysis->pItem[i].iCharPos], cChar, numGlyphs,
                         &analysis->pItem[i].a, glyphs, pwLogClust, psva, &numGlyphsReturned);
             hr = ScriptPlace(hdc, sc, glyphs, numGlyphsReturned, psva, &analysis->pItem[i].a,
-                             piAdvance, pGoffset, abc);
+                        piAdvance, pGoffset, &analysis->glyphs[i].abc);
             if (originalFont)
                 SelectObject(hdc,originalFont);
 
@@ -2090,7 +2092,6 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
             analysis->glyphs[i].piAdvance = piAdvance;
             analysis->glyphs[i].psva = psva;
             analysis->glyphs[i].pGoffset = pGoffset;
-            analysis->glyphs[i].abc = abc;
             analysis->glyphs[i].iMaxPosX= -1;
 
             BidiLevel[i] = analysis->pItem[i].a.s.uBidiLevel;
@@ -2313,7 +2314,7 @@ HRESULT WINAPI ScriptStringOut(SCRIPT_STRING_ANALYSIS ssa,
          ssa, iX, iY, uOptions, wine_dbgstr_rect(prc), iMinSel, iMaxSel, fDisabled);
 
     if (!(analysis = ssa)) return E_INVALIDARG;
-    if (!(analysis->dwFlags & SSA_GLYPHS)) return E_INVALIDARG;
+    if (!(analysis->ssa_flags & SSA_GLYPHS)) return E_INVALIDARG;
 
     for (item = 0; item < analysis->numItems; item++)
     {
@@ -2350,12 +2351,12 @@ HRESULT WINAPI ScriptStringCPtoX(SCRIPT_STRING_ANALYSIS ssa, int icp, BOOL fTrai
     TRACE("(%p), %d, %d, (%p)\n", ssa, icp, fTrailing, pX);
 
     if (!ssa || !pX) return S_FALSE;
-    if (!(analysis->dwFlags & SSA_GLYPHS)) return S_FALSE;
+    if (!(analysis->ssa_flags & SSA_GLYPHS)) return S_FALSE;
 
     /* icp out of range */
     if(icp < 0)
     {
-        analysis->invalid = TRUE;
+        analysis->flags |= SCRIPT_STRING_ANALYSIS_FLAGS_INVALID;
         return E_INVALIDARG;
     }
 
@@ -2396,7 +2397,7 @@ HRESULT WINAPI ScriptStringCPtoX(SCRIPT_STRING_ANALYSIS ssa, int icp, BOOL fTrai
     }
 
     /* icp out of range */
-    analysis->invalid = TRUE;
+    analysis->flags |= SCRIPT_STRING_ANALYSIS_FLAGS_INVALID;
     return E_INVALIDARG;
 }
 
@@ -2412,7 +2413,7 @@ HRESULT WINAPI ScriptStringXtoCP(SCRIPT_STRING_ANALYSIS ssa, int iX, int* piCh, 
     TRACE("(%p), %d, (%p), (%p)\n", ssa, iX, piCh, piTrailing);
 
     if (!ssa || !piCh || !piTrailing) return S_FALSE;
-    if (!(analysis->dwFlags & SSA_GLYPHS)) return S_FALSE;
+    if (!(analysis->ssa_flags & SSA_GLYPHS)) return S_FALSE;
 
     /* out of range */
     if(iX < 0)
@@ -2496,7 +2497,7 @@ HRESULT WINAPI ScriptStringFree(SCRIPT_STRING_ANALYSIS *pssa)
 
     if (!pssa || !(analysis = *pssa)) return E_INVALIDARG;
 
-    invalid = analysis->invalid;
+    invalid = analysis->flags & SCRIPT_STRING_ANALYSIS_FLAGS_INVALID;
 
     if (analysis->glyphs)
     {
@@ -2507,7 +2508,6 @@ HRESULT WINAPI ScriptStringFree(SCRIPT_STRING_ANALYSIS *pssa)
             heap_free(analysis->glyphs[i].piAdvance);
             heap_free(analysis->glyphs[i].psva);
             heap_free(analysis->glyphs[i].pGoffset);
-            heap_free(analysis->glyphs[i].abc);
             if (analysis->glyphs[i].fallbackFont)
                 DeleteObject(analysis->glyphs[i].fallbackFont);
             ScriptFreeCache((SCRIPT_CACHE *)&analysis->glyphs[i].sc);
@@ -2518,7 +2518,6 @@ HRESULT WINAPI ScriptStringFree(SCRIPT_STRING_ANALYSIS *pssa)
 
     heap_free(analysis->pItem);
     heap_free(analysis->logattrs);
-    heap_free(analysis->sz);
     heap_free(analysis->logical2visual);
     heap_free(analysis);
 
@@ -2631,7 +2630,7 @@ HRESULT WINAPI ScriptCPtoX(int iCP,
     iPosX = 0.0;
     for (item=0; item < iCP && item < cChars; item++)
     {
-        if (iSpecial == -1 && (iCluster == -1 || (iCluster != -1 && iCluster+clust_size <= item)))
+        if (iSpecial == -1 && (iCluster == -1 || iCluster+clust_size <= item))
         {
             int check;
             int clust = pwLogClust[item];
@@ -3018,9 +3017,6 @@ HRESULT WINAPI ScriptIsComplex(const WCHAR *chars, int len, DWORD flag)
 
     for (i = 0; i < len; i+=consumed)
     {
-        if (i >= len)
-            break;
-
         if ((flag & SIC_ASCIIDIGIT) && chars[i] >= 0x30 && chars[i] <= 0x39)
             return S_OK;
 
@@ -3741,7 +3737,7 @@ HRESULT WINAPI ScriptStringGetLogicalWidths(SCRIPT_STRING_ANALYSIS ssa, int *piD
     TRACE("%p, %p\n", ssa, piDx);
 
     if (!analysis) return S_FALSE;
-    if (!(analysis->dwFlags & SSA_GLYPHS)) return S_FALSE;
+    if (!(analysis->ssa_flags & SSA_GLYPHS)) return S_FALSE;
 
     for (i = 0; i < analysis->numItems; i++)
     {
@@ -3790,7 +3786,7 @@ HRESULT WINAPI ScriptStringValidate(SCRIPT_STRING_ANALYSIS ssa)
     TRACE("(%p)\n", ssa);
 
     if (!analysis) return E_INVALIDARG;
-    return (analysis->invalid) ? S_FALSE : S_OK;
+    return analysis->flags & SCRIPT_STRING_ANALYSIS_FLAGS_INVALID ? S_FALSE : S_OK;
 }
 
 /***********************************************************************
@@ -3813,23 +3809,22 @@ const SIZE * WINAPI ScriptString_pSize(SCRIPT_STRING_ANALYSIS ssa)
     TRACE("(%p)\n", ssa);
 
     if (!analysis) return NULL;
-    if (!(analysis->dwFlags & SSA_GLYPHS)) return NULL;
+    if (!(analysis->ssa_flags & SSA_GLYPHS)) return NULL;
 
-    if (!analysis->sz)
+    if (!(analysis->flags & SCRIPT_STRING_ANALYSIS_FLAGS_SIZE))
     {
-        if (!(analysis->sz = heap_alloc(sizeof(SIZE)))) return NULL;
-        analysis->sz->cy = analysis->glyphs[0].sc->tm.tmHeight;
+        analysis->sz.cy = analysis->glyphs[0].sc->tm.tmHeight;
 
-        analysis->sz->cx = 0;
+        analysis->sz.cx = 0;
         for (i = 0; i < analysis->numItems; i++)
         {
-            if (analysis->glyphs[i].sc->tm.tmHeight > analysis->sz->cy)
-                analysis->sz->cy = analysis->glyphs[i].sc->tm.tmHeight;
+            if (analysis->glyphs[i].sc->tm.tmHeight > analysis->sz.cy)
+                analysis->sz.cy = analysis->glyphs[i].sc->tm.tmHeight;
             for (j = 0; j < analysis->glyphs[i].numGlyphs; j++)
-                analysis->sz->cx += analysis->glyphs[i].piAdvance[j];
+                analysis->sz.cx += analysis->glyphs[i].piAdvance[j];
         }
     }
-    return analysis->sz;
+    return &analysis->sz;
 }
 
 /***********************************************************************
@@ -3851,7 +3846,7 @@ const SCRIPT_LOGATTR * WINAPI ScriptString_pLogAttr(SCRIPT_STRING_ANALYSIS ssa)
     TRACE("(%p)\n", ssa);
 
     if (!analysis) return NULL;
-    if (!(analysis->dwFlags & SSA_BREAK)) return NULL;
+    if (!(analysis->ssa_flags & SSA_BREAK)) return NULL;
     return analysis->logattrs;
 }
 
@@ -3899,7 +3894,7 @@ HRESULT WINAPI ScriptStringGetOrder(SCRIPT_STRING_ANALYSIS ssa, UINT *order)
     TRACE("(%p)\n", ssa);
 
     if (!analysis) return S_FALSE;
-    if (!(analysis->dwFlags & SSA_GLYPHS)) return S_FALSE;
+    if (!(analysis->ssa_flags & SSA_GLYPHS)) return S_FALSE;
 
     /* FIXME: handle RTL scripts */
     for (i = 0, k = 0; i < analysis->numItems; i++)
