@@ -705,12 +705,7 @@ DWORD WINAPI GetFileVersionInfoSizeExW( DWORD flags, LPCWSTR filename, LPDWORD h
         return (len * 2) + 4;
 
     default:
-        if (lzfd == HFILE_ERROR)
-            SetLastError(ofs.nErrCode);
-        else if (GetVersion() & 0x80000000)
-            SetLastError(ERROR_FILE_NOT_FOUND);
-        else
-            SetLastError(ERROR_RESOURCE_DATA_NOT_FOUND);
+        SetLastError( lzfd == HFILE_ERROR ? ofs.nErrCode : ERROR_RESOURCE_DATA_NOT_FOUND );
         return 0;
     }
 }
@@ -1015,6 +1010,7 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
         BOOL ret, isText;
         INT len;
         LPWSTR lpSubBlockW;
+        UINT value_len;
 
         len  = MultiByteToWideChar(CP_ACP, 0, lpSubBlock, -1, NULL, 0);
         lpSubBlockW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
@@ -1024,7 +1020,8 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
 
         MultiByteToWideChar(CP_ACP, 0, lpSubBlock, -1, lpSubBlockW, len);
 
-        ret = VersionInfo32_QueryValue(pBlock, lpSubBlockW, lplpBuffer, puLen, &isText);
+        ret = VersionInfo32_QueryValue(pBlock, lpSubBlockW, lplpBuffer, &value_len, &isText);
+        if (puLen) *puLen = value_len;
 
         HeapFree(GetProcessHeap(), 0, lpSubBlockW);
 
@@ -1035,8 +1032,7 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
              */
             LPSTR lpBufferA = (LPSTR)pBlock + info->wLength + 4;
             DWORD pos = (LPCSTR)*lplpBuffer - (LPCSTR)pBlock;
-
-            len = WideCharToMultiByte(CP_ACP, 0, *lplpBuffer, -1,
+            len = WideCharToMultiByte(CP_ACP, 0, *lplpBuffer, value_len,
                                       lpBufferA + pos, info->wLength - pos, NULL, NULL);
             *lplpBuffer = lpBufferA + pos;
             if (puLen) *puLen = len;
@@ -1128,22 +1124,16 @@ static int testFileExistenceA( char const * path, char const * file, BOOL excl )
 
     fileinfo.cBytes = sizeof(OFSTRUCT);
 
-    if (path)
-    {
-        strcpy(filename, path);
-        filenamelen = strlen(filename);
+    strcpy(filename, path);
+    filenamelen = strlen(filename);
 
-        /* Add a trailing \ if necessary */
-        if(filenamelen)
-        {
-            if(filename[filenamelen - 1] != '\\')
-                strcat(filename, "\\");
-        }
-        else /* specify the current directory */
-            strcpy(filename, ".\\");
+    /* Add a trailing \ if necessary */
+    if(filenamelen) {
+	if(filename[filenamelen - 1] != '\\')
+	    strcat(filename, "\\");
     }
-    else
-        filename[0] = 0;
+    else /* specify the current directory */
+	strcpy(filename, ".\\");
 
     /* Create the full pathname */
     strcat(filename, file);
@@ -1233,10 +1223,10 @@ DWORD WINAPI VerFindFileA(
         {
             if(testFileExistenceA(destDir, lpszFilename, FALSE)) curDir = destDir;
             else if(lpszAppDir && testFileExistenceA(lpszAppDir, lpszFilename, FALSE))
+            {
                 curDir = lpszAppDir;
-
-            if(!testFileExistenceA(systemDir, lpszFilename, FALSE))
                 retval |= VFF_CURNEDEST;
+            }
         }
     }
     else /* not a shared file */
@@ -1247,17 +1237,15 @@ DWORD WINAPI VerFindFileA(
             GetWindowsDirectoryA( winDir, MAX_PATH );
             if(testFileExistenceA(destDir, lpszFilename, FALSE)) curDir = destDir;
             else if(testFileExistenceA(winDir, lpszFilename, FALSE))
-                curDir = winDir;
-            else if(testFileExistenceA(systemDir, lpszFilename, FALSE))
-                curDir = systemDir;
-
-            if (lpszAppDir && lpszAppDir[0])
             {
-                if(!testFileExistenceA(lpszAppDir, lpszFilename, FALSE))
-                    retval |= VFF_CURNEDEST;
-            }
-            else if(testFileExistenceA(NULL, lpszFilename, FALSE))
+                curDir = winDir;
                 retval |= VFF_CURNEDEST;
+            }
+            else if(testFileExistenceA(systemDir, lpszFilename, FALSE))
+            {
+                curDir = systemDir;
+                retval |= VFF_CURNEDEST;
+            }
         }
     }
 
