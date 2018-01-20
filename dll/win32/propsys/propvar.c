@@ -212,6 +212,66 @@ HRESULT WINAPI PropVariantToUInt64(REFPROPVARIANT propvarIn, ULONGLONG *ret)
     return hr;
 }
 
+HRESULT WINAPI PropVariantToBoolean(REFPROPVARIANT propvarIn, BOOL *ret)
+{
+    static const WCHAR trueW[] = {'t','r','u','e',0};
+    static const WCHAR falseW[] = {'f','a','l','s','e',0};
+    static const WCHAR true2W[] = {'#','T','R','U','E','#',0};
+    static const WCHAR false2W[] = {'#','F','A','L','S','E','#',0};
+    LONGLONG res;
+    HRESULT hr;
+
+    TRACE("%p,%p\n", propvarIn, ret);
+
+    *ret = FALSE;
+
+    switch (propvarIn->vt)
+    {
+        case VT_BOOL:
+            *ret = propvarIn->u.boolVal == VARIANT_TRUE;
+            return S_OK;
+
+        case VT_LPWSTR:
+        case VT_BSTR:
+            if (!propvarIn->u.pwszVal)
+                return DISP_E_TYPEMISMATCH;
+
+            if (!lstrcmpiW(propvarIn->u.pwszVal, trueW) || !lstrcmpW(propvarIn->u.pwszVal, true2W))
+            {
+                *ret = TRUE;
+                return S_OK;
+            }
+
+            if (!lstrcmpiW(propvarIn->u.pwszVal, falseW) || !lstrcmpW(propvarIn->u.pwszVal, false2W))
+            {
+                *ret = FALSE;
+                return S_OK;
+            }
+            break;
+
+         case VT_LPSTR:
+            if (!propvarIn->u.pszVal)
+                return DISP_E_TYPEMISMATCH;
+
+            if (!lstrcmpiA(propvarIn->u.pszVal, "true") || !lstrcmpA(propvarIn->u.pszVal, "#TRUE#"))
+            {
+                *ret = TRUE;
+                return S_OK;
+            }
+
+            if (!lstrcmpiA(propvarIn->u.pszVal, "false") || !lstrcmpA(propvarIn->u.pszVal, "#FALSE#"))
+            {
+                *ret = FALSE;
+                return S_OK;
+            }
+            break;
+    }
+
+    hr = PROPVAR_ConvertNumber(propvarIn, 64, TRUE, &res);
+    *ret = !!res;
+    return hr;
+}
+
 HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret)
 {
     WCHAR *res = NULL;
