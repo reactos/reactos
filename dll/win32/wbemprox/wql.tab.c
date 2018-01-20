@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.2"
+#define YYBISON_VERSION "3.0"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -243,13 +243,13 @@ static int wql_lex( void *val, struct parser *parser );
     result = current_view
 
 
-#line 259 "wql.tab.c" /* yacc.c:339  */
+#line 247 "wql.tab.c" /* yacc.c:339  */
 
-# ifndef YY_NULLPTR
+# ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
+#   define YY_NULL nullptr
 #  else
-#   define YY_NULLPTR 0
+#   define YY_NULL 0
 #  endif
 # endif
 
@@ -261,7 +261,10 @@ static int wql_lex( void *val, struct parser *parser );
 # define YYERROR_VERBOSE 1
 #endif
 
-
+/* In a future release of Bison, this section will be replaced
+   by #include "wql.tab.h".  */
+#ifndef YY_WQL_E_REACTOSSYNC3_0_GCC_DLL_WIN32_WBEMPROX_WQL_TAB_H_INCLUDED
+# define YY_WQL_E_REACTOSSYNC3_0_GCC_DLL_WIN32_WBEMPROX_WQL_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -312,7 +315,7 @@ extern int wql_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 194 "wql.y" /* yacc.c:355  */
+#line 182 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:355  */
 
     struct string str;
     WCHAR *string;
@@ -321,7 +324,7 @@ union YYSTYPE
     struct expr *expr;
     int integer;
 
-#line 337 "wql.tab.c" /* yacc.c:355  */
+#line 328 "wql.tab.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -331,11 +334,11 @@ union YYSTYPE
 
 int wql_parse (struct parser *ctx);
 
-
+#endif /* !YY_WQL_E_REACTOSSYNC3_0_GCC_DLL_WIN32_WBEMPROX_WQL_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 351 "wql.tab.c" /* yacc.c:358  */
+#line 342 "wql.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -392,30 +395,11 @@ typedef short int yytype_int16;
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE
-# if (defined __GNUC__                                               \
-      && (2 < __GNUC__ || (__GNUC__ == 2 && 96 <= __GNUC_MINOR__)))  \
-     || defined __SUNPRO_C && 0x5110 <= __SUNPRO_C
-#  define YY_ATTRIBUTE(Spec) __attribute__(Spec)
-# else
-#  define YY_ATTRIBUTE(Spec) /* empty */
-# endif
-#endif
-
-#ifndef YY_ATTRIBUTE_PURE
-# define YY_ATTRIBUTE_PURE   YY_ATTRIBUTE ((__pure__))
-#endif
-
-#ifndef YY_ATTRIBUTE_UNUSED
-# define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
-#endif
-
-#if !defined _Noreturn \
-     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
-# if defined _MSC_VER && 1200 <= _MSC_VER
-#  define _Noreturn __declspec (noreturn)
-# else
-#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
+#ifndef __attribute__
+/* This feature is available in gcc versions 2.5 and later.  */
+# if (! defined __GNUC__ || __GNUC__ < 2 \
+      || (__GNUC__ == 2 && __GNUC_MINOR__ < 5))
+#  define __attribute__(Spec) /* empty */
 # endif
 #endif
 
@@ -577,16 +561,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  9
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   68
+#define YYLAST   85
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  32
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  10
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  36
+#define YYNRULES  40
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  67
+#define YYNSTATES  74
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
@@ -635,10 +619,11 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   221,   221,   233,   245,   260,   261,   265,   272,   278,
-     287,   296,   303,   309,   315,   321,   327,   333,   339,   345,
-     351,   357,   363,   369,   375,   381,   387,   393,   399,   405,
-     411,   420,   429,   438,   444,   450,   456
+       0,   209,   209,   221,   233,   248,   249,   253,   260,   266,
+     275,   284,   291,   297,   303,   309,   315,   321,   327,   333,
+     339,   345,   351,   357,   363,   369,   375,   381,   387,   393,
+     399,   405,   411,   417,   423,   432,   441,   450,   456,   462,
+     468
 };
 #endif
 
@@ -653,7 +638,7 @@ static const char *const yytname[] =
   "TK_ILLEGAL", "TK_BY", "TK_STRING", "TK_ID", "TK_OR", "TK_AND", "TK_NOT",
   "TK_EQ", "TK_NE", "TK_LT", "TK_GT", "TK_LE", "TK_GE", "TK_LIKE",
   "$accept", "select", "proplist", "prop", "id", "number", "expr",
-  "string_val", "prop_val", "const_val", YY_NULLPTR
+  "string_val", "prop_val", "const_val", YY_NULL
 };
 #endif
 
@@ -669,10 +654,10 @@ static const yytype_uint16 yytoknum[] =
 };
 # endif
 
-#define YYPACT_NINF -18
+#define YYPACT_NINF -23
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-18)))
+  (!!((Yystate) == (-23)))
 
 #define YYTABLE_NINF -1
 
@@ -683,13 +668,14 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-       7,     3,    12,    -5,   -18,   -18,    24,    29,    35,   -18,
-     -18,    -5,     4,    -5,    21,   -18,   -18,    17,    17,   -18,
-     -18,   -18,   -18,    17,   -18,   -18,    11,    -8,    25,    22,
-     -18,    17,    17,    16,    -9,    -9,    -9,    -9,    -9,    -9,
-      23,    -5,    -5,    -5,    -5,    -5,    -5,   -18,    45,   -18,
-     -18,    37,   -18,   -18,   -18,   -18,   -18,   -18,   -18,   -18,
-     -18,   -18,   -18,   -18,   -18,   -18,   -18
+      -2,    10,    34,    14,   -23,   -23,    29,    48,    46,   -23,
+     -23,    14,    11,    14,    42,   -23,   -23,    28,    28,   -16,
+     -23,   -23,   -23,   -23,    28,   -23,   -23,    22,    -8,   -22,
+      33,    14,    14,   -23,    28,    28,    27,    50,    54,    59,
+      59,    59,    59,    39,    14,    14,    14,    14,    14,    14,
+     -23,   -23,   -23,    52,   -23,   -23,    58,   -23,   -23,   -23,
+     -23,   -23,   -23,   -23,   -23,   -23,   -23,   -23,   -23,   -23,
+     -23,   -23,   -23,   -23
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -698,24 +684,25 @@ static const yytype_int8 yypact[] =
 static const yytype_uint8 yydefact[] =
 {
        0,     0,     0,     0,     7,    10,     0,     5,     9,     1,
-       2,     0,     0,     0,     3,     6,     8,     0,     0,    36,
-      35,    11,    34,     0,    32,    33,     4,     0,     0,     0,
-      15,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,    12,    14,    13,
-      29,     0,    16,    21,    18,    17,    19,    20,    31,    28,
-      22,    27,    24,    23,    25,    26,    30
+       2,     0,     0,     0,     3,     6,     8,     0,     0,     0,
+      40,    39,    11,    38,     0,    36,    37,     4,     0,     0,
+       0,     0,     0,    15,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+      12,    32,    34,    14,    13,    29,     0,    31,    16,    33,
+      21,    18,    17,    19,    20,    35,    28,    22,    27,    24,
+      23,    25,    26,    30
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -18,   -18,    34,     1,    36,   -18,   -17,   -18,    15,    28
+     -23,   -23,    64,     1,    47,   -23,    12,   -23,   -20,    43
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     2,     6,    24,     8,    25,    26,    59,    27,    28
+      -1,     2,     6,    25,     8,    26,    27,    66,    28,    29
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -723,24 +710,28 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-      33,    29,     7,    19,    20,    21,    30,     3,     4,     4,
-       1,    22,     9,     7,    48,    49,     5,    34,    35,    36,
-      37,    38,    39,    40,     5,     5,    18,    50,    11,    19,
-      20,    21,    47,    31,    32,    12,    17,    22,     5,    10,
-      51,    23,    13,    58,    31,    32,    15,    14,    66,    16,
-      41,    42,    43,    44,    45,    46,    60,    61,    62,    63,
-      64,    65,    52,    53,    54,    55,    56,    57,    32
+      36,     1,     7,    44,    45,    46,    47,    48,    49,    31,
+      32,    51,    52,     7,     3,     4,     4,    37,    38,    39,
+      40,    41,    42,    43,    67,    68,    69,    70,    71,    72,
+      30,     5,     5,    11,     9,     5,    33,    18,    55,    19,
+      20,    21,    22,    50,    34,    35,    53,    54,    23,     5,
+      10,    56,    24,    13,    12,    34,    35,    17,    14,    65,
+      16,    57,    20,    21,    22,    59,    20,    21,    22,    73,
+      23,    20,    21,    22,    23,    35,    15,     0,     0,    23,
+      58,    60,    61,    62,    63,    64
 };
 
-static const yytype_uint8 yycheck[] =
+static const yytype_int8 yycheck[] =
 {
-       8,    18,     1,    12,    13,    14,    23,     4,     5,     5,
-       3,    20,     0,    12,    31,    32,    21,    25,    26,    27,
-      28,    29,    30,    31,    21,    21,     9,    11,     4,    12,
-      13,    14,    10,    22,    23,     6,    15,    20,    21,     3,
-      24,    24,     7,    20,    22,    23,    12,    11,    11,    13,
-      25,    26,    27,    28,    29,    30,    41,    42,    43,    44,
-      45,    46,    34,    35,    36,    37,    38,    39,    23
+       8,     3,     1,    25,    26,    27,    28,    29,    30,    25,
+      26,    31,    32,    12,     4,     5,     5,    25,    26,    27,
+      28,    29,    30,    31,    44,    45,    46,    47,    48,    49,
+      18,    21,    21,     4,     0,    21,    24,     9,    11,    11,
+      12,    13,    14,    10,    22,    23,    34,    35,    20,    21,
+       3,    24,    24,     7,     6,    22,    23,    15,    11,    20,
+      13,    11,    12,    13,    14,    11,    12,    13,    14,    11,
+      20,    12,    13,    14,    20,    23,    12,    -1,    -1,    20,
+      37,    38,    39,    40,    41,    42
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -748,12 +739,13 @@ static const yytype_uint8 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,     3,    33,     4,     5,    21,    34,    35,    36,     0,
-      36,     4,     6,     7,    36,    34,    36,    15,     9,    12,
-      13,    14,    20,    24,    35,    37,    38,    40,    41,    38,
-      38,    22,    23,     8,    25,    26,    27,    28,    29,    30,
-      31,    25,    26,    27,    28,    29,    30,    10,    38,    38,
-      11,    24,    41,    41,    41,    41,    41,    41,    20,    39,
-      40,    40,    40,    40,    40,    40,    11
+      36,     4,     6,     7,    36,    34,    36,    15,     9,    11,
+      12,    13,    14,    20,    24,    35,    37,    38,    40,    41,
+      38,    25,    26,    38,    22,    23,     8,    25,    26,    27,
+      28,    29,    30,    31,    25,    26,    27,    28,    29,    30,
+      10,    40,    40,    38,    38,    11,    24,    11,    41,    11,
+      41,    41,    41,    41,    41,    20,    39,    40,    40,    40,
+      40,    40,    40,    11
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
@@ -762,7 +754,8 @@ static const yytype_uint8 yyr1[] =
        0,    32,    33,    33,    33,    34,    34,    34,    35,    35,
       36,    37,    38,    38,    38,    38,    38,    38,    38,    38,
       38,    38,    38,    38,    38,    38,    38,    38,    38,    38,
-      38,    39,    40,    41,    41,    41,    41
+      38,    38,    38,    38,    38,    39,    40,    41,    41,    41,
+      41
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -771,7 +764,8 @@ static const yytype_uint8 yyr2[] =
        0,     2,     3,     4,     6,     1,     3,     1,     3,     1,
        1,     1,     3,     3,     3,     2,     3,     3,     3,     3,
        3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       4,     1,     1,     1,     1,     1,     1
+       4,     3,     3,     3,     3,     1,     1,     1,     1,     1,
+       1
 };
 
 
@@ -1056,11 +1050,11 @@ static int
 yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yytype_int16 *yyssp, int yytoken)
 {
-  YYSIZE_T yysize0 = yytnamerr (YY_NULLPTR, yytname[yytoken]);
+  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
   YYSIZE_T yysize = yysize0;
   enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
   /* Internationalized format string. */
-  const char *yyformat = YY_NULLPTR;
+  const char *yyformat = YY_NULL;
   /* Arguments of yyformat. */
   char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
   /* Number of reported tokens (one for the "unexpected", one per
@@ -1117,7 +1111,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                   }
                 yyarg[yycount++] = yytname[yyx];
                 {
-                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
+                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
                   if (! (yysize <= yysize1
                          && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
                     return 2;
@@ -1454,7 +1448,7 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 222 "wql.y" /* yacc.c:1646  */
+#line 210 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             HRESULT hr;
             struct parser *parser = ctx;
@@ -1466,11 +1460,11 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( parser, (yyval.view), view );
         }
-#line 1482 "wql.tab.c" /* yacc.c:1646  */
+#line 1464 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 234 "wql.y" /* yacc.c:1646  */
+#line 222 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             HRESULT hr;
             struct parser *parser = ctx;
@@ -1482,11 +1476,11 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( parser, (yyval.view), view );
         }
-#line 1498 "wql.tab.c" /* yacc.c:1646  */
+#line 1480 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 246 "wql.y" /* yacc.c:1646  */
+#line 234 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             HRESULT hr;
             struct parser *parser = ctx;
@@ -1498,315 +1492,355 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( parser, (yyval.view), view );
         }
-#line 1514 "wql.tab.c" /* yacc.c:1646  */
+#line 1496 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 262 "wql.y" /* yacc.c:1646  */
+#line 250 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyvsp[-2].proplist)->next = (yyvsp[0].proplist);
         }
-#line 1522 "wql.tab.c" /* yacc.c:1646  */
+#line 1504 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 266 "wql.y" /* yacc.c:1646  */
+#line 254 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.proplist) = NULL;
         }
-#line 1530 "wql.tab.c" /* yacc.c:1646  */
+#line 1512 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 273 "wql.y" /* yacc.c:1646  */
+#line 261 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.proplist) = alloc_property( ctx, (yyvsp[-2].string), (yyvsp[0].string) );
             if (!(yyval.proplist))
                 YYABORT;
         }
-#line 1540 "wql.tab.c" /* yacc.c:1646  */
+#line 1522 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 279 "wql.y" /* yacc.c:1646  */
+#line 267 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.proplist) = alloc_property( ctx, NULL, (yyvsp[0].string) );
             if (!(yyval.proplist))
                 YYABORT;
         }
-#line 1550 "wql.tab.c" /* yacc.c:1646  */
+#line 1532 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 288 "wql.y" /* yacc.c:1646  */
+#line 276 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.string) = get_string( ctx, &(yyvsp[0].str) );
             if (!(yyval.string))
                 YYABORT;
         }
-#line 1560 "wql.tab.c" /* yacc.c:1646  */
+#line 1542 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 297 "wql.y" /* yacc.c:1646  */
+#line 285 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.integer) = get_int( ctx );
         }
-#line 1568 "wql.tab.c" /* yacc.c:1646  */
+#line 1550 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 304 "wql.y" /* yacc.c:1646  */
+#line 292 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = (yyvsp[-1].expr);
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1578 "wql.tab.c" /* yacc.c:1646  */
+#line 1560 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 310 "wql.y" /* yacc.c:1646  */
+#line 298 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_AND, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1588 "wql.tab.c" /* yacc.c:1646  */
+#line 1570 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 316 "wql.y" /* yacc.c:1646  */
+#line 304 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_OR, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1598 "wql.tab.c" /* yacc.c:1646  */
+#line 1580 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 322 "wql.y" /* yacc.c:1646  */
+#line 310 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_unary( ctx, (yyvsp[0].expr), OP_NOT );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1608 "wql.tab.c" /* yacc.c:1646  */
+#line 1590 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 328 "wql.y" /* yacc.c:1646  */
+#line 316 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_EQ, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1618 "wql.tab.c" /* yacc.c:1646  */
+#line 1600 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 334 "wql.y" /* yacc.c:1646  */
+#line 322 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_GT, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1628 "wql.tab.c" /* yacc.c:1646  */
+#line 1610 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 340 "wql.y" /* yacc.c:1646  */
+#line 328 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_LT, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1638 "wql.tab.c" /* yacc.c:1646  */
+#line 1620 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 346 "wql.y" /* yacc.c:1646  */
+#line 334 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_LE, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1648 "wql.tab.c" /* yacc.c:1646  */
+#line 1630 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 352 "wql.y" /* yacc.c:1646  */
+#line 340 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_GE, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1658 "wql.tab.c" /* yacc.c:1646  */
+#line 1640 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 358 "wql.y" /* yacc.c:1646  */
+#line 346 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_NE, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1668 "wql.tab.c" /* yacc.c:1646  */
+#line 1650 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 364 "wql.y" /* yacc.c:1646  */
+#line 352 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_EQ, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1678 "wql.tab.c" /* yacc.c:1646  */
+#line 1660 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 370 "wql.y" /* yacc.c:1646  */
+#line 358 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_GT, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1688 "wql.tab.c" /* yacc.c:1646  */
+#line 1670 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 376 "wql.y" /* yacc.c:1646  */
+#line 364 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_LT, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1698 "wql.tab.c" /* yacc.c:1646  */
+#line 1680 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 382 "wql.y" /* yacc.c:1646  */
+#line 370 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_LE, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1708 "wql.tab.c" /* yacc.c:1646  */
+#line 1690 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 388 "wql.y" /* yacc.c:1646  */
+#line 376 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_GE, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1718 "wql.tab.c" /* yacc.c:1646  */
+#line 1700 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 394 "wql.y" /* yacc.c:1646  */
+#line 382 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_NE, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1728 "wql.tab.c" /* yacc.c:1646  */
+#line 1710 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 400 "wql.y" /* yacc.c:1646  */
+#line 388 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_complex( ctx, (yyvsp[-2].expr), OP_LIKE, (yyvsp[0].expr) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1738 "wql.tab.c" /* yacc.c:1646  */
+#line 1720 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 406 "wql.y" /* yacc.c:1646  */
+#line 394 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_unary( ctx, (yyvsp[-2].expr), OP_ISNULL );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1748 "wql.tab.c" /* yacc.c:1646  */
+#line 1730 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 412 "wql.y" /* yacc.c:1646  */
+#line 400 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_unary( ctx, (yyvsp[-3].expr), OP_NOTNULL );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1758 "wql.tab.c" /* yacc.c:1646  */
+#line 1740 "wql.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 421 "wql.y" /* yacc.c:1646  */
+#line 406 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
+    {
+            (yyval.expr) = expr_unary( ctx, (yyvsp[-2].expr), OP_ISNULL );
+            if (!(yyval.expr))
+                YYABORT;
+        }
+#line 1750 "wql.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 32:
+#line 412 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
+    {
+            (yyval.expr) = expr_unary( ctx, (yyvsp[0].expr), OP_ISNULL );
+            if (!(yyval.expr))
+                YYABORT;
+        }
+#line 1760 "wql.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 33:
+#line 418 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
+    {
+            (yyval.expr) = expr_unary( ctx, (yyvsp[-2].expr), OP_NOTNULL );
+            if (!(yyval.expr))
+                YYABORT;
+        }
+#line 1770 "wql.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 34:
+#line 424 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
+    {
+            (yyval.expr) = expr_unary( ctx, (yyvsp[0].expr), OP_NOTNULL );
+            if (!(yyval.expr))
+                YYABORT;
+        }
+#line 1780 "wql.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 35:
+#line 433 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_sval( ctx, &(yyvsp[0].str) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1768 "wql.tab.c" /* yacc.c:1646  */
+#line 1790 "wql.tab.c" /* yacc.c:1646  */
     break;
 
-  case 32:
-#line 430 "wql.y" /* yacc.c:1646  */
+  case 36:
+#line 442 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_propval( ctx, (yyvsp[0].proplist) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1778 "wql.tab.c" /* yacc.c:1646  */
+#line 1800 "wql.tab.c" /* yacc.c:1646  */
     break;
 
-  case 33:
-#line 439 "wql.y" /* yacc.c:1646  */
+  case 37:
+#line 451 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_ival( ctx, (yyvsp[0].integer) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1788 "wql.tab.c" /* yacc.c:1646  */
+#line 1810 "wql.tab.c" /* yacc.c:1646  */
     break;
 
-  case 34:
-#line 445 "wql.y" /* yacc.c:1646  */
+  case 38:
+#line 457 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_sval( ctx, &(yyvsp[0].str) );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1798 "wql.tab.c" /* yacc.c:1646  */
+#line 1820 "wql.tab.c" /* yacc.c:1646  */
     break;
 
-  case 35:
-#line 451 "wql.y" /* yacc.c:1646  */
+  case 39:
+#line 463 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_bval( ctx, -1 );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1808 "wql.tab.c" /* yacc.c:1646  */
+#line 1830 "wql.tab.c" /* yacc.c:1646  */
     break;
 
-  case 36:
-#line 457 "wql.y" /* yacc.c:1646  */
+  case 40:
+#line 469 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1646  */
     {
             (yyval.expr) = expr_bval( ctx, 0 );
             if (!(yyval.expr))
                 YYABORT;
         }
-#line 1818 "wql.tab.c" /* yacc.c:1646  */
+#line 1840 "wql.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1822 "wql.tab.c" /* yacc.c:1646  */
+#line 1844 "wql.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2034,7 +2068,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 464 "wql.y" /* yacc.c:1906  */
+#line 476 "e:/reactosSync3.0/dll/win32/wbemprox/wql.y" /* yacc.c:1906  */
 
 
 HRESULT parse_query( const WCHAR *str, struct view **view, struct list *mem )
