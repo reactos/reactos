@@ -1504,8 +1504,11 @@ static BOOL com_class_add_progid(const xmlstr_t *progid, struct entity *entity)
 
     if (progids->allocated == progids->num)
     {
+        WCHAR **new_progids = RtlReAllocateHeap(RtlGetProcessHeap(), 0, progids->progids,
+                                                2 * progids->allocated * sizeof(WCHAR*));
+        if (!new_progids) return FALSE;
         progids->allocated *= 2;
-        progids->progids = RtlReAllocateHeap(RtlGetProcessHeap(), 0, progids->progids, progids->allocated * sizeof(WCHAR*));
+        progids->progids = new_progids;
     }
 
     if (!(progids->progids[progids->num] = xmlstrdupW(progid))) return FALSE;
