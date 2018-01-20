@@ -190,7 +190,7 @@ sub testThrow
     next
     call ok(x = 2, "x = " & x)
     call ok(y = 1, "y = " & y)
-    'todo_wine call ok(Err.Number = VB_E_OBJNOTCOLLECTION, "Err.Number = " & Err.Number)
+    call todo_wine_ok(Err.Number = VB_E_OBJNOTCOLLECTION, "Err.Number = " & Err.Number)
 
     Err.clear()
     y = 0
@@ -202,19 +202,19 @@ sub testThrow
     next
     call ok(y = 1, "y = " & y)
     call ok(x = 6, "x = " & x)
-    'todo_wine call ok(Err.Number = VB_E_FORLOOPNOTINITIALIZED, "Err.Number = " & Err.Number)
+    call todo_wine_ok(Err.Number = VB_E_FORLOOPNOTINITIALIZED, "Err.Number = " & Err.Number)
 
     Err.clear()
     y = 0
     x = 6
     for x = 100 to throwInt(E_TESTERROR)
         call ok(Err.Number = E_TESTERROR, "Err.Number = " & Err.Number)
-        'todo_wine call ok(x = 6, "x = " & x)
+        call todo_wine_ok(x = 6, "x = " & x)
         y = y+1
     next
     call ok(y = 1, "y = " & y)
-    'todo_wine call ok(x = 6, "x = " & x)
-    'todo_wine call ok(Err.Number = VB_E_FORLOOPNOTINITIALIZED, "Err.Number = " & Err.Number)
+    call todo_wine_ok(x = 6, "x = " & x)
+    call todo_wine_ok(Err.Number = VB_E_FORLOOPNOTINITIALIZED, "Err.Number = " & Err.Number)
 
     select case throwInt(E_TESTERROR)
     case true
@@ -308,7 +308,7 @@ sub testForEachError()
         y = true
     next
     call ok(y, "for each not executed")
-    'todo_wine call ok(Err.Number = VB_E_OBJNOTCOLLECTION, "Err.Number = " & Err.Number)
+    call todo_wine_ok(Err.Number = VB_E_OBJNOTCOLLECTION, "Err.Number = " & Err.Number)
 end sub
 
 call testForEachError()
