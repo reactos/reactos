@@ -106,8 +106,14 @@ static void test_select( IWbemServices *services )
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          'W','i','n','3','2','_','V','i','d','e','o','C','o','n','t','r','o','l','l','e','r',' ','w','h','e','r','e',' ',
          'a','v','a','i','l','a','b','i','l','i','t','y',' ','=',' ','\'','3','\'',0};
+    static const WCHAR query12[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','W','i','n','3','2','_','B','I','O','S',
+         ' ','W','H','E','R','E',' ','N','A','M','E',' ','<','>',' ','N','U','L','L', 0};
+    static const WCHAR query13[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','W','i','n','3','2','_','B','I','O','S',
+         ' ','W','H','E','R','E',' ','N','U','L','L',' ','=',' ','N','A','M','E', 0};
     static const WCHAR *test[] = { query1, query2, query3, query4, query5, query6, query7, query8, query9, query10,
-                                   query11 };
+                                   query11, query12, query13 };
     HRESULT hr;
     IEnumWbemClassObject *result;
     BSTR wql = SysAllocString( wqlW );
@@ -1012,6 +1018,7 @@ static void test_SystemSecurity( IWbemServices *services )
         win_skip( "__SystemSecurity not available\n" );
         return;
     }
+    IWbemClassObject_Release( reg );
 
     sid_size = sizeof(sid_admin_buffer);
     ret = CreateWellKnownSid( WinBuiltinAdministratorsSid, NULL, sid_admin, &sid_size );
@@ -1297,6 +1304,7 @@ static void test_PhysicalMemory( IWbemServices *services )
     VariantClear( &val );
 
     IWbemClassObject_Release( obj );
+    IEnumWbemClassObject_Release( result );
     SysFreeString( query );
     SysFreeString( wql );
 }
