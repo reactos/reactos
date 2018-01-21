@@ -1185,7 +1185,7 @@ static void test_xcvt(void)
         win_skip("_fcvt_s not available\n");
 }
 
-static int __cdecl _vsnwprintf_wrapper(wchar_t *str, size_t len, const wchar_t *format, ...)
+static int WINAPIV _vsnwprintf_wrapper(wchar_t *str, size_t len, const wchar_t *format, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1219,7 +1219,7 @@ static void test_vsnwprintf(void)
     ok( ret == 11 || broken(ret == -1 /* Win2k */), "got %d, expected 11\n", ret );
 }
 
-static int __cdecl vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)
+static int WINAPIV vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1229,7 +1229,7 @@ static int __cdecl vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)
     return ret;
 }
 
-static int __cdecl _vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)
+static int WINAPIV _vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1239,7 +1239,7 @@ static int __cdecl _vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)
     return ret;
 }
 
-static int __cdecl _vswprintf_l_wrapper(wchar_t *str, const wchar_t *format, void *locale, ...)
+static int WINAPIV _vswprintf_l_wrapper(wchar_t *str, const wchar_t *format, void *locale, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1249,7 +1249,7 @@ static int __cdecl _vswprintf_l_wrapper(wchar_t *str, const wchar_t *format, voi
     return ret;
 }
 
-static int __cdecl _vswprintf_c_wrapper(wchar_t *str, size_t size, const wchar_t *format, ...)
+static int WINAPIV _vswprintf_c_wrapper(wchar_t *str, size_t size, const wchar_t *format, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1259,7 +1259,7 @@ static int __cdecl _vswprintf_c_wrapper(wchar_t *str, size_t size, const wchar_t
     return ret;
 }
 
-static int __cdecl _vswprintf_c_l_wrapper(wchar_t *str, size_t size, const wchar_t *format, void *locale, ...)
+static int WINAPIV _vswprintf_c_l_wrapper(wchar_t *str, size_t size, const wchar_t *format, void *locale, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1269,7 +1269,7 @@ static int __cdecl _vswprintf_c_l_wrapper(wchar_t *str, size_t size, const wchar
     return ret;
 }
 
-static int __cdecl _vswprintf_p_l_wrapper(wchar_t *str, size_t size, const wchar_t *format, void *locale, ...)
+static int WINAPIV _vswprintf_p_l_wrapper(wchar_t *str, size_t size, const wchar_t *format, void *locale, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1325,7 +1325,7 @@ static void test_vswprintf(void)
     ok(!memcmp(buf, out, sizeof(out)), "buf = %s\n", wine_dbgstr_w(buf));
 }
 
-static int __cdecl _vscprintf_wrapper(const char *format, ...)
+static int WINAPIV _vscprintf_wrapper(const char *format, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1349,7 +1349,7 @@ static void test_vscprintf(void)
     ok( ret == 8, "got %d expected 8\n", ret );
 }
 
-static int __cdecl _vscwprintf_wrapper(const wchar_t *format, ...)
+static int WINAPIV _vscwprintf_wrapper(const wchar_t *format, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -1376,7 +1376,7 @@ static void test_vscwprintf(void)
     ok( ret == 8, "got %d expected 8\n", ret );
 }
 
-static int __cdecl _vsnwprintf_s_wrapper(wchar_t *str, size_t sizeOfBuffer,
+static int WINAPIV _vsnwprintf_s_wrapper(wchar_t *str, size_t sizeOfBuffer,
                                  size_t count, const wchar_t *format, ...)
 {
     int ret;
@@ -1434,7 +1434,7 @@ static void test_vsnwprintf_s(void)
     ok( !wcscmp(out1, buffer), "buffer wrong, got=%s\n", wine_dbgstr_w(buffer));
 }
 
-static int __cdecl _vsprintf_p_wrapper(char *str, size_t sizeOfBuffer,
+static int WINAPIV _vsprintf_p_wrapper(char *str, size_t sizeOfBuffer,
                                  const char *format, ...)
 {
     int ret;

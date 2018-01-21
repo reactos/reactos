@@ -257,7 +257,7 @@ static void test_sscanf( void )
 
 static void test_sscanf_s(void)
 {
-    int (__cdecl *psscanf_s)(const char*,const char*,...);
+    int (WINAPIV *psscanf_s)(const char*,const char*,...);
     HMODULE hmod = GetModuleHandleA("msvcrt.dll");
     int i, ret;
     char buf[100];
@@ -322,9 +322,43 @@ static void test_swscanf( void )
     ok(c == 'b', "c = %x\n", c);
 }
 
+static void test_swscanf_s(void)
+{
+    static const wchar_t fmt1[] = {'%','c',0};
+    static const wchar_t fmt2[] = {'%','[','a','-','z',']',0};
+
+    int (WINAPIV *pswscanf_s)(const wchar_t*,const wchar_t*,...);
+    HMODULE hmod = GetModuleHandleA("msvcrt.dll");
+    wchar_t buf[2], out[2];
+    int ret;
+
+    pswscanf_s = (void*)GetProcAddress(hmod, "swscanf_s");
+    if(!pswscanf_s) {
+        win_skip("swscanf_s not available\n");
+        return;
+    }
+
+    buf[0] = 'a';
+    buf[1] = '1';
+    out[1] = 'b';
+    ret = pswscanf_s(buf, fmt1, out, 1);
+    ok(ret == 1, "swscanf_s returned %d\n", ret);
+    ok(out[0] == 'a', "out[0] = %x\n", out[0]);
+    ok(out[1] == 'b', "out[1] = %x\n", out[1]);
+
+    ret = pswscanf_s(buf, fmt2, out, 1);
+    ok(!ret, "swscanf_s returned %d\n", ret);
+
+    ret = pswscanf_s(buf, fmt2, out, 2);
+    ok(ret == 1, "swscanf_s returned %d\n", ret);
+    ok(out[0] == 'a', "out[0] = %x\n", out[0]);
+    ok(!out[1], "out[1] = %x\n", out[1]);
+}
+
 START_TEST(scanf)
 {
     test_sscanf();
     test_sscanf_s();
     test_swscanf();
+    test_swscanf_s();
 }

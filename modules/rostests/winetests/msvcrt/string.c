@@ -86,6 +86,10 @@ static double (__cdecl *p__atof_l)(const char*,_locale_t);
 static double (__cdecl *p__strtod_l)(const char *,char**,_locale_t);
 static int (__cdecl *p__strnset_s)(char*,size_t,int,size_t);
 static int (__cdecl *p__wcsset_s)(wchar_t*,size_t,wchar_t);
+static size_t (__cdecl *p__mbsnlen)(const unsigned char*, size_t);
+static int (__cdecl *p__mbccpy_s)(unsigned char*, size_t, int*, const unsigned char*);
+static int (__cdecl *p__memicmp)(const char*, const char*, size_t);
+static int (__cdecl *p__memicmp_l)(const char*, const char*, size_t, _locale_t);
 
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hMsvcrt,y)
 #define SET(x,y) SETNOFAIL(x,y); ok(x != NULL, "Export '%s' not found\n", y)
@@ -306,6 +310,20 @@ static void test_mbcp(void)
     expect_eq(_mbslen(mbsonlylead), 0, int, "%d");          /* lead + NUL not counted as character */
     expect_eq(_mbslen(mbstring), 4, int, "%d");             /* lead + invalid trail counted */
 
+    if(!p__mbsnlen) {
+        win_skip("_mbsnlen tests\n");
+    }else {
+        expect_eq(p__mbsnlen(mbstring, 8), 8, int, "%d");
+        expect_eq(p__mbsnlen(mbstring, 9), 4, int, "%d");
+        expect_eq(p__mbsnlen(mbstring, 10), 4, int, "%d");
+        expect_eq(p__mbsnlen(mbsonlylead, 0), 0, int, "%d");
+        expect_eq(p__mbsnlen(mbsonlylead, 1), 1, int, "%d");
+        expect_eq(p__mbsnlen(mbsonlylead, 2), 0, int, "%d");
+        expect_eq(p__mbsnlen(mbstring2, 7), 7, int, "%d");
+        expect_eq(p__mbsnlen(mbstring2, 8), 4, int, "%d");
+        expect_eq(p__mbsnlen(mbstring2, 9), 4, int, "%d");
+    }
+
     /* mbrlen */
     if(!setlocale(LC_ALL, ".936") || !p_mbrlen) {
         win_skip("mbrlen tests\n");
@@ -347,6 +365,40 @@ static void test_mbcp(void)
     memset(buf, 0xff, sizeof(buf));
     _mbccpy(buf, mbstring);
     expect_bin(buf, "\xb0\xb1\xff", 3);
+
+    if(!p__mbccpy_s) {
+        win_skip("_mbccpy_s tests\n");
+    }else {
+        int err, copied;
+
+        memset(buf, 0xff, sizeof(buf));
+        copied = -1;
+        err = p__mbccpy_s(buf, 0, &copied, mbstring);
+        ok(err == EINVAL, "_mbccpy_s returned %d\n", err);
+        ok(!copied, "copied = %d\n", copied);
+        ok(buf[0] == 0xff, "buf[0] = %x\n", buf[0]);
+
+        memset(buf, 0xff, sizeof(buf));
+        copied = -1;
+        err = p__mbccpy_s(buf, 1, &copied, mbstring);
+        ok(err == ERANGE, "_mbccpy_s returned %d\n", err);
+        ok(!copied, "copied = %d\n", copied);
+        ok(!buf[0], "buf[0] = %x\n", buf[0]);
+
+        memset(buf, 0xff, sizeof(buf));
+        copied = -1;
+        err = p__mbccpy_s(buf, 2, &copied, mbstring);
+        ok(!err, "_mbccpy_s returned %d\n", err);
+        ok(copied == 2, "copied = %d\n", copied);
+        expect_bin(buf, "\xb0\xb1\xff", 3);
+
+        memset(buf, 0xff, sizeof(buf));
+        copied = -1;
+        err = p__mbccpy_s(buf, 2, &copied, (unsigned char *)"\xb0");
+        ok(err == EILSEQ, "_mbccpy_s returned %d\n", err);
+        ok(copied == 1, "copied = %d\n", copied);
+        expect_bin(buf, "\x00\xff", 2);
+    }
 
     memset(buf, 0xff, sizeof(buf));
     _mbsncpy(buf, mbstring, 1);
@@ -3206,6 +3258,84 @@ static void test__ismbclx(void)
     _setmbcp(cp);
 }
 
+static void test__memicmp(void)
+{
+    static const char *s1 = "abc";
+    static const char *s2 = "aBd";
+    int ret;
+
+    ret = p__memicmp(NULL, NULL, 0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = p__memicmp(s1, s2, 2);
+    ok(!ret, "got %d\n", ret);
+
+    ret = p__memicmp(s1, s2, 3);
+    ok(ret == -1, "got %d\n", ret);
+
+    if (!p__memicmp_l)
+        return;
+
+    /* Following calls crash on WinXP/W2k3. */
+    errno = 0xdeadbeef;
+    ret = p__memicmp(NULL, NULL, 1);
+    ok(ret == _NLSCMPERROR, "got %d\n", ret);
+    ok(errno == EINVAL, "errno is %d, expected EINVAL\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p__memicmp(s1, NULL, 1);
+    ok(ret == _NLSCMPERROR, "got %d\n", ret);
+    ok(errno == EINVAL, "errno is %d, expected EINVAL\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p__memicmp(NULL, s2, 1);
+    ok(ret == _NLSCMPERROR, "got %d\n", ret);
+    ok(errno == EINVAL, "errno is %d, expected EINVAL\n", errno);
+}
+
+static void test__memicmp_l(void)
+{
+    static const char *s1 = "abc";
+    static const char *s2 = "aBd";
+    int ret;
+
+    if (!p__memicmp_l)
+    {
+        win_skip("_memicmp_l not found.\n");
+        return;
+    }
+
+    errno = 0xdeadbeef;
+    ret = p__memicmp_l(NULL, NULL, 0, NULL);
+    ok(!ret, "got %d\n", ret);
+    ok(errno == 0xdeadbeef, "errno is %d, expected 0xdeadbeef\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p__memicmp_l(NULL, NULL, 1, NULL);
+    ok(ret == _NLSCMPERROR, "got %d\n", ret);
+    ok(errno == EINVAL, "errno is %d, expected EINVAL\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p__memicmp_l(s1, NULL, 1, NULL);
+    ok(ret == _NLSCMPERROR, "got %d\n", ret);
+    ok(errno == EINVAL, "errno is %d, expected EINVAL\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p__memicmp_l(NULL, s2, 1, NULL);
+    ok(ret == _NLSCMPERROR, "got %d\n", ret);
+    ok(errno == EINVAL, "errno is %d, expected EINVAL\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p__memicmp_l(s1, s2, 2, NULL);
+    ok(!ret, "got %d\n", ret);
+    ok(errno == 0xdeadbeef, "errno is %d, expected 0xdeadbeef\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = p__memicmp_l(s1, s2, 3, NULL);
+    ok(ret == -1, "got %d\n", ret);
+    ok(errno == 0xdeadbeef, "errno is %d, expected 0xdeadbeef\n", errno);
+}
+
 START_TEST(string)
 {
     char mem[100];
@@ -3260,6 +3390,10 @@ START_TEST(string)
     p__strtod_l = (void*)GetProcAddress(hMsvcrt, "_strtod_l");
     p__strnset_s = (void*)GetProcAddress(hMsvcrt, "_strnset_s");
     p__wcsset_s = (void*)GetProcAddress(hMsvcrt, "_wcsset_s");
+    p__mbsnlen = (void*)GetProcAddress(hMsvcrt, "_mbsnlen");
+    p__mbccpy_s = (void*)GetProcAddress(hMsvcrt, "_mbccpy_s");
+    p__memicmp = (void*)GetProcAddress(hMsvcrt, "_memicmp");
+    p__memicmp_l = (void*)GetProcAddress(hMsvcrt, "_memicmp_l");
 
     /* MSVCRT memcpy behaves like memmove for overlapping moves,
        MFC42 CString::Insert seems to rely on that behaviour */
@@ -3322,4 +3456,6 @@ START_TEST(string)
     test__wcsset_s();
     test__mbscmp();
     test__ismbclx();
+    test__memicmp();
+    test__memicmp_l();
 }

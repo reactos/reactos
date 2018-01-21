@@ -21,6 +21,7 @@
 
 #include "precomp.h"
 
+#include <winreg.h>
 #include <fcntl.h>
 #include <share.h>
 #include <sys/stat.h>
@@ -212,7 +213,7 @@ static void test_readmode( BOOL ascii_mode )
     static const char outbuffer[] = "0,1,2,3,4,5,6,7,8,9\r\n\r\nA,B,C,D,E\r\nX,Y,Z";
     static const char padbuffer[] = "ghjghjghjghj";
     static const char nlbuffer[] = "\r\n";
-    char buffer[2*BUFSIZ+256];
+    static char buffer[8192];
     const char *optr;
     int fd;
     FILE *file;
@@ -317,7 +318,7 @@ static void test_readmode( BOOL ascii_mode )
     ok(feof(file)==0,"feof failure in %s\n", IOMODE);
     ok(fread(buffer,2,1,file)==0,"fread failure in %s\n",IOMODE);
     ok(feof(file)!=0,"feof failure in %s\n", IOMODE);
-    
+
     /* test some additional functions */
     rewind(file);
     ok(ftell(file) == 0,"Did not start at beginning of file in %s\n", IOMODE);
@@ -340,6 +341,30 @@ static void test_readmode( BOOL ascii_mode )
 
     fclose (file);
     unlink ("fdopen.tst");
+
+    /* test INTERNAL_BUFSIZ read containing 0x1a character (^Z) */
+    fd = open("fdopen.tst", O_WRONLY | O_CREAT | O_BINARY, _S_IREAD |_S_IWRITE);
+    ok(fd != -1, "open failed\n");
+    memset(buffer, 'a', sizeof(buffer));
+    buffer[1] = 0x1a;
+    ok(write(fd, buffer, sizeof(buffer)) == sizeof(buffer), "write failed\n");
+    ok(close(fd) != -1, "close failed\n");
+
+    fd = open("fdopen.tst", O_RDONLY);
+    ok(fd != -1, "open failed\n");
+    file = fdopen(fd, ascii_mode ? "r" : "rb");
+    ok(file != NULL, "fdopen failed\n");
+
+    memset(buffer, 0, sizeof(buffer));
+    i = fread(buffer, 4096, 1, file);
+    ok(!i, "fread succeeded\n");
+    ok(file->_bufsiz == 4096, "file->_bufsiz = %d\n", file->_bufsiz);
+    for(i=0; i<4096; i++)
+        if(buffer[i] != (i==1 ? 0x1a : 'a')) break;
+    ok(i==4096, "buffer[%d] = %d\n", i, buffer[i]);
+
+    fclose(file);
+    unlink("fdopen.tst");
 }
 
 static void test_asciimode(void)
@@ -1513,6 +1538,113 @@ static void test_file_inherit( const char* selfname )
     DeleteFileA("fdopen.tst");
 }
 
+static void test_invalid_stdin_child( void )
+{
+    HANDLE handle;
+    ioinfo *info;
+    int ret;
+    char c;
+
+    errno = 0xdeadbeef;
+    handle = (HANDLE)_get_osfhandle(STDIN_FILENO);
+    ok(handle == (HANDLE)-2, "handle = %p\n", handle);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+
+    info = &__pioinfo[STDIN_FILENO/MSVCRT_FD_BLOCK_SIZE][STDIN_FILENO%MSVCRT_FD_BLOCK_SIZE];
+    ok(info->handle == (HANDLE)-2, "info->handle = %p\n", info->handle);
+    ok(info->wxflag == 0xc1, "info->wxflag = %x\n", info->wxflag);
+
+    ok(stdin->_file == -2, "stdin->_file = %d\n", stdin->_file);
+
+    errno = 0xdeadbeef;
+    ret = fread(&c, 1, 1, stdin);
+    ok(!ret, "fread(stdin) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = read(-2, &c, 1);
+    ok(ret == -1, "read(-2) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = read(STDIN_FILENO, &c, 1);
+    ok(ret == -1, "read(STDIN_FILENO) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = _flsbuf('a', stdin);
+    ok(ret == EOF, "_flsbuf(stdin) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = fwrite(&c, 1, 1, stdin);
+    ok(!ret, "fwrite(stdin) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = write(-2, &c, 1);
+    ok(ret == -1, "write(-2) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = write(STDIN_FILENO, &c, 1);
+    ok(ret == -1, "write(STDIN_FILENO) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = fclose(stdin);
+    ok(ret == -1, "fclose(stdin) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = close(-2);
+    ok(ret == -1, "close(-2) returned %d\n", ret);
+    ok(errno == EBADF, "errno = %d\n", errno);
+
+    errno = 0xdeadbeef;
+    ret = close(STDIN_FILENO);
+    ok(ret==-1 || !ret, "close(STDIN_FILENO) returned %d\n", ret);
+    ok((ret==-1 && errno==EBADF) || (!ret && errno==0xdeadbeef), "errno = %d\n", errno);
+}
+
+static void test_invalid_stdin( const char* selfname )
+{
+    char cmdline[MAX_PATH];
+    PROCESS_INFORMATION proc;
+    SECURITY_ATTRIBUTES sa;
+    STARTUPINFOA startup;
+    HKEY key;
+    LONG ret;
+
+    if(!p_fopen_s) {
+        /* Behaviour of the dll has changed in newer version */
+        win_skip("skipping invalid stdin tests\n");
+        return;
+    }
+
+    ret = RegOpenCurrentUser(KEY_READ, &key);
+    ok(!ret, "RegOpenCurrentUser failed: %x\n", ret);
+
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+
+    memset(&startup, 0, sizeof(startup));
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESTDHANDLES;
+    startup.hStdInput = key;
+    startup.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    startup.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+
+    sprintf(cmdline, "%s file stdin", selfname);
+    CreateProcessA(NULL, cmdline, NULL, NULL, TRUE,
+            CREATE_DEFAULT_ERROR_MODE|NORMAL_PRIORITY_CLASS, NULL, NULL, &startup, &proc);
+    winetest_wait_child_process(proc.hProcess);
+
+    ret = RegCloseKey(key);
+    ok(!ret, "RegCloseKey failed: %x\n", ret);
+}
+
 static void test_tmpnam( void )
 {
   char name[MAX_PATH] = "abc";
@@ -1601,10 +1733,13 @@ static void test_fopen_fclose_fcloseall( void )
     ok(ret == 0, "The file '%s' was not closed\n", fname2);
     ret = fclose(stream3);
     ok(ret == 0, "The file '%s' was not closed\n", fname3);
+    errno = 0xdeadbeef;
     ret = fclose(stream2);
     ok(ret == EOF, "Closing file '%s' returned %d\n", fname2, ret);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
     ret = fclose(stream3);
     ok(ret == EOF, "Closing file '%s' returned %d\n", fname3, ret);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
 
     /* testing fcloseall() */
     numclosed = _fcloseall();
@@ -2349,6 +2484,12 @@ static void test_close(void)
     ok(!GetHandleInformation(h, &flags), "GetHandleInformation succeeded\n");
     ok(close(fd2), "close(fd2) succeeded\n");
 
+    /* test close on already closed fd */
+    errno = 0xdeadbeef;
+    ret1 = close(fd1);
+    ok(ret1 == -1, "close(fd1) succeeded\n");
+    ok(errno == 9, "errno = %d\n", errno);
+
     /* test close on stdout and stderr that use the same handle */
     h = CreateFileA("fdopen.tst", GENERIC_READ|GENERIC_WRITE,
             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
@@ -2452,12 +2593,15 @@ START_TEST(file)
             test_file_inherit_child_no(arg_v[3]);
         else if (strcmp(arg_v[2], "pipes") == 0)
             test_pipes_child(arg_c, arg_v);
+        else if (strcmp(arg_v[2], "stdin") == 0)
+            test_invalid_stdin_child();
         else
             ok(0, "invalid argument '%s'\n", arg_v[2]);
         return;
     }
     test_dup2();
     test_file_inherit(arg_v[0]);
+    test_invalid_stdin(arg_v[0]);
     test_file_write_read();
     test_chsize();
     test_stat();
