@@ -232,7 +232,7 @@ reactos/base/applications/cmdutils/schtasks # Synced to WineStaging-2.9
 reactos/base/applications/cmdutils/taskkill # Synced to Wine-3.0
 reactos/base/applications/cmdutils/wmic     # Synced to WineStaging-2.9
 reactos/base/applications/cmdutils/wscript  # Synced to WineStaging-2.9
-reactos/base/applications/cmdutils/xcopy    # Synced to WineStaging-2.9
+reactos/base/applications/cmdutils/xcopy    # Synced to Wine-3.0
 reactos/base/applications/games/winmine     # Synced to WineStaging-2.16 with our own resources.
 reactos/base/applications/extrac32          # Synced to WineStaging-2.9
 reactos/base/applications/iexplore          # Synced to WineStaging-2.9

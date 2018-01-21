@@ -99,7 +99,7 @@ static WCHAR *XCOPY_LoadMessage(UINT id) {
  *  and hence required WriteConsoleW to output it, however if file i/o is
  *  redirected, it needs to be WriteFile'd using OEM (not ANSI) format
  * ========================================================================= */
-static int __cdecl XCOPY_wprintf(const WCHAR *format, ...) {
+static int WINAPIV XCOPY_wprintf(const WCHAR *format, ...) {
 
     static WCHAR *output_bufW = NULL;
     static char  *output_bufA = NULL;
