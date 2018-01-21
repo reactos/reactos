@@ -557,6 +557,16 @@ USBSTOR_StartIo(
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
+    // get current irp stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    if ( IoStack->MajorFunction == IRP_MJ_POWER )
+    {
+        KeSetEvent(&FDODeviceExtension->PowerEvent, IO_NO_INCREMENT, FALSE);
+        return;
+    }
+
+    //
     // acquire cancel spinlock
     //
     IoAcquireCancelSpinLock(&OldLevel);
@@ -623,11 +633,6 @@ USBSTOR_StartIo(
     // release lock
     //
     KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
-
-    //
-    // get current irp stack location
-    //
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     Srb = IoStack->Parameters.Scsi.Srb;
     FDODeviceExtension->CurrentSrb = Srb;
