@@ -42,6 +42,31 @@ typedef struct TestFilterImpl
 static const WCHAR avifile[] = {'t','e','s','t','.','a','v','i',0};
 static const WCHAR mpegfile[] = {'t','e','s','t','.','m','p','g',0};
 
+static WCHAR *load_resource(const WCHAR *name)
+{
+    static WCHAR pathW[MAX_PATH];
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    lstrcatW(pathW, name);
+
+    file = CreateFileW(pathW, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", wine_dbgstr_w(pathW),
+        GetLastError());
+
+    res = FindResourceW(NULL, name, (LPCWSTR)RT_RCDATA);
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+
+    return pathW;
+}
+
 static IGraphBuilder *pgraph;
 
 static int createfiltergraph(void)
@@ -53,7 +78,7 @@ static int createfiltergraph(void)
 static void test_basic_video(void)
 {
     IBasicVideo* pbv;
-    LONG video_width, video_height;
+    LONG video_width, video_height, window_width;
     LONG left, top, width, height;
     HRESULT hr;
 
@@ -158,6 +183,8 @@ static void test_basic_video(void)
     ok(height == video_height/4+1, "expected %d, got %d\n", video_height/4+1, height);
 
     /* test destination rectangle */
+    window_width = max(video_width, GetSystemMetrics(SM_CXMIN) - 2 * GetSystemMetrics(SM_CXFRAME));
+
     hr = IBasicVideo_GetDestinationPosition(pbv, NULL, NULL, NULL, NULL);
     ok(hr == E_POINTER, "IBasicVideo_GetDestinationPosition returned: %x\n", hr);
     hr = IBasicVideo_GetDestinationPosition(pbv, &left, &top, NULL, NULL);
@@ -168,7 +195,7 @@ static void test_basic_video(void)
     ok(hr == S_OK, "Cannot get destination position returned: %x\n", hr);
     ok(left == 0, "expected 0, got %d\n", left);
     ok(top == 0, "expected 0, got %d\n", top);
-    todo_wine ok(width == video_width, "expected %d, got %d\n", video_width, width);
+    todo_wine ok(width == window_width, "expected %d, got %d\n", window_width, width);
     todo_wine ok(height == video_height, "expected %d, got %d\n", video_height, height);
 
     hr = IBasicVideo_SetDestinationPosition(pbv, 0, 0, 0, 0);
@@ -328,8 +355,7 @@ static void rungraph(void)
     hr = IMediaEvent_GetEventHandle(pme, (OAEVENT*)&hEvent);
     ok(hr==S_OK, "Cannot get event handle returned: %x\n", hr);
 
-    /* WaitForSingleObject(hEvent, INFINITE); */
-    Sleep(20000);
+    ok(WaitForSingleObject(hEvent, 2000) == WAIT_OBJECT_0, "Wait failed\n");
 
     hr = IMediaEvent_Release(pme);
     ok(hr==2, "Releasing mediaevent returned: %x\n", hr);
@@ -354,26 +380,39 @@ static void test_render_run(const WCHAR *file)
     HANDLE h;
     HRESULT hr;
 
-    h = CreateFileW(file, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
+    WCHAR *filename = load_resource(file);
+
+    h = CreateFileW(filename, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (h == INVALID_HANDLE_VALUE) {
         skip("Could not read test file %s, skipping test\n", wine_dbgstr_w(file));
+        DeleteFileW(filename);
         return;
     }
     CloseHandle(h);
 
     if (!createfiltergraph())
+    {
+        DeleteFileW(filename);
         return;
+    }
 
-    hr = IGraphBuilder_RenderFile(pgraph, file, NULL);
-    ok(hr == S_OK, "RenderFile returned: %x\n", hr);
-    rungraph();
+    hr = IGraphBuilder_RenderFile(pgraph, filename, NULL);
+    if (hr == VFW_E_CANNOT_RENDER)
+        skip("%s: codec not supported; skipping test\n", wine_dbgstr_w(file));
+    else
+    {
+        ok(hr == S_OK || hr == VFW_S_AUDIO_NOT_RENDERED, "RenderFile failed: %x\n", hr);
+        rungraph();
+    }
 
     releasefiltergraph();
 
     /* check reference leaks */
-    h = CreateFileW(file, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    h = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
     ok(h != INVALID_HANDLE_VALUE, "CreateFile failed: err=%d\n", GetLastError());
     CloseHandle(h);
+
+    DeleteFileW(filename);
 }
 
 static DWORD WINAPI call_RenderFile_multithread(LPVOID lParam)
@@ -392,8 +431,9 @@ static DWORD WINAPI call_RenderFile_multithread(LPVOID lParam)
     CloseHandle(handle);
 
     hr = IFilterGraph2_RenderFile(filter_graph, mp3file, NULL);
-    todo_wine ok(hr == VFW_E_CANNOT_RENDER || /* xp or older */
-                 hr == VFW_E_NO_TRANSPORT, /* win7 or newer */
+    todo_wine ok(hr == VFW_E_CANNOT_RENDER || /* xp or older + DirectX 9 */
+                 hr == VFW_E_NO_TRANSPORT || /* win7 or newer */
+                 broken(hr == CLASS_E_CLASSNOTAVAILABLE), /* xp or older + DirectX 8 or older */
                  "Expected 0x%08x or 0x%08x, returned 0x%08x\n", VFW_E_CANNOT_RENDER, VFW_E_NO_TRANSPORT, hr);
 
     DeleteFileW(mp3file);
@@ -446,6 +486,7 @@ static void test_render_with_multithread(void)
     IFilterGraph2_Release(filter_graph);
     IGraphBuilder_Release(graph_builder);
     IClassFactory_Release(classfactory);
+    CloseHandle(thread);
     CoUninitialize();
     return;
 }
