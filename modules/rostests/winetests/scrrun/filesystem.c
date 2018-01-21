@@ -46,6 +46,7 @@ static inline ULONG get_refcount(IUnknown *iface)
 
 static const WCHAR crlfW[] = {'\r','\n',0};
 static const char utf16bom[] = {0xff,0xfe,0};
+static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
 
 #define GET_REFCOUNT(iface) \
     get_refcount((IUnknown*)iface)
@@ -239,7 +240,6 @@ static void test_createfolder(void)
 
 static void test_textstream(void)
 {
-    static const WCHAR testfileW[] = {'t','e','s','t','f','i','l','e','.','t','x','t',0};
     ITextStream *stream;
     VARIANT_BOOL b;
     DWORD written;
@@ -1451,10 +1451,18 @@ static void test_DriveCollection(void)
     IDriveCollection_Release(drives);
 }
 
-static void test_CreateTextFile(void)
+static void get_temp_filepath(const WCHAR *filename, WCHAR *path, WCHAR *dir)
 {
     static const WCHAR scrrunW[] = {'s','c','r','r','u','n','\\',0};
-    static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
+
+    GetTempPathW(MAX_PATH, path);
+    lstrcatW(path, scrrunW);
+    lstrcpyW(dir, path);
+    lstrcatW(path, filename);
+}
+
+static void test_CreateTextFile(void)
+{
     WCHAR pathW[MAX_PATH], dirW[MAX_PATH], buffW[10];
     ITextStream *stream;
     BSTR nameW, str;
@@ -1462,10 +1470,7 @@ static void test_CreateTextFile(void)
     HRESULT hr;
     BOOL ret;
 
-    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
-    lstrcatW(pathW, scrrunW);
-    lstrcpyW(dirW, pathW);
-    lstrcatW(pathW, testfileW);
+    get_temp_filepath(testfileW, pathW, dirW);
 
     /* dir doesn't exist */
     nameW = SysAllocString(pathW);
@@ -1533,8 +1538,6 @@ static void test_CreateTextFile(void)
 
 static void test_WriteLine(void)
 {
-    static const WCHAR scrrunW[] = {'s','c','r','r','u','n','\\',0};
-    static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
     WCHAR pathW[MAX_PATH], dirW[MAX_PATH];
     WCHAR buffW[MAX_PATH], buff2W[MAX_PATH];
     char buffA[MAX_PATH];
@@ -1545,10 +1548,7 @@ static void test_WriteLine(void)
     HRESULT hr;
     BOOL ret;
 
-    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
-    lstrcatW(pathW, scrrunW);
-    lstrcpyW(dirW, pathW);
-    lstrcatW(pathW, testfileW);
+    get_temp_filepath(testfileW, pathW, dirW);
 
     ret = CreateDirectoryW(dirW, NULL);
     ok(ret, "got %d, %d\n", ret, GetLastError());
@@ -1607,8 +1607,6 @@ static void test_WriteLine(void)
 
 static void test_ReadAll(void)
 {
-    static const WCHAR scrrunW[] = {'s','c','r','r','u','n','\\',0};
-    static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
     static const WCHAR secondlineW[] = {'s','e','c','o','n','d',0};
     static const WCHAR aW[] = {'A',0};
     WCHAR pathW[MAX_PATH], dirW[MAX_PATH], buffW[500];
@@ -1618,10 +1616,7 @@ static void test_ReadAll(void)
     BOOL ret;
     BSTR str;
 
-    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
-    lstrcatW(pathW, scrrunW);
-    lstrcpyW(dirW, pathW);
-    lstrcatW(pathW, testfileW);
+    get_temp_filepath(testfileW, pathW, dirW);
 
     ret = CreateDirectoryW(dirW, NULL);
     ok(ret, "got %d, %d\n", ret, GetLastError());
@@ -1741,8 +1736,6 @@ todo_wine
 
 static void test_Read(void)
 {
-    static const WCHAR scrrunW[] = {'s','c','r','r','u','n','\\',0};
-    static const WCHAR testfileW[] = {'t','e','s','t','.','t','x','t',0};
     static const WCHAR secondlineW[] = {'s','e','c','o','n','d',0};
     static const WCHAR aW[] = {'A',0};
     WCHAR pathW[MAX_PATH], dirW[MAX_PATH], buffW[500];
@@ -1752,10 +1745,7 @@ static void test_Read(void)
     BOOL ret;
     BSTR str;
 
-    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
-    lstrcatW(pathW, scrrunW);
-    lstrcpyW(dirW, pathW);
-    lstrcatW(pathW, testfileW);
+    get_temp_filepath(testfileW, pathW, dirW);
 
     ret = CreateDirectoryW(dirW, NULL);
     ok(ret, "got %d, %d\n", ret, GetLastError());
