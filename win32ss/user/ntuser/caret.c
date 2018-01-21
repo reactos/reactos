@@ -22,7 +22,6 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
 {
     HDC hdc, hdcMem;
     HBITMAP hbmOld;
-    RECT rcClient;
     BOOL bDone = FALSE;
 
     if (pWnd == NULL)
@@ -31,21 +30,17 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
        return;
     }
 
-    hdc = UserGetDCEx(pWnd, NULL, DCX_USESTYLE);
+    hdc = UserGetDCEx(pWnd, NULL, DCX_CACHE | DCX_USESTYLE);
     if (!hdc)
     {
         ERR("GetDC failed\n");
         return;
     }
 
-    NtGdiSaveDC(hdc);
-
-    IntGetClientRect(pWnd, &rcClient);
-    NtGdiIntersectClipRect(hdc,
-        rcClient.left,
-        rcClient.top,
-        rcClient.right,
-        rcClient.bottom);
+    if (pWnd->hrgnUpdate)
+    {
+       NtGdiSaveDC(hdc);
+    }
 
     if (CaretInfo->Bitmap)
     {
@@ -86,7 +81,10 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
     }
 
 cleanup:
-    NtGdiRestoreDC(hdc, -1);
+    if (pWnd->hrgnUpdate)
+    {
+       NtGdiRestoreDC(hdc, -1);
+    }
 
     UserReleaseDC(pWnd, hdc, FALSE);
 }
