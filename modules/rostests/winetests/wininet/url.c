@@ -816,9 +816,9 @@ static void InternetCrackUrlW_test(void)
     comp.lpszUrlPath = urlpart;
     comp.dwUrlPathLength = sizeof(urlpart)/sizeof(urlpart[0]);
     r = InternetCrackUrlW(url3, 0, ICU_DECODE, &comp);
-    ok(r, "InternetCrackUrlW failed unexpectedly\n");
-    ok(!strcmp_wa(host, "x.org"), "host is %s, should be x.org\n", wine_dbgstr_w(host));
-    todo_wine ok(urlpart[0] == 0, "urlpart should be empty\n");
+    todo_wine ok(r, "InternetCrackUrlW failed unexpectedly\n");
+    todo_wine ok(!strcmp_wa(host, "x.org"), "host is %s, should be x.org\n", wine_dbgstr_w(host));
+    ok(urlpart[0] == 0, "urlpart should be empty\n");
 }
 
 static void fill_url_components(URL_COMPONENTSA *lpUrlComponents)

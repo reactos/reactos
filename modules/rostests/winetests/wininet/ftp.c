@@ -115,6 +115,7 @@ static void test_connect(HINTERNET hInternet)
     ok ( hFtp != NULL, "InternetConnect failed : %d\n", GetLastError());
     ok ( GetLastError() == ERROR_SUCCESS,
         "ERROR_SUCCESS, got %d\n", GetLastError());
+    InternetCloseHandle(hFtp);
 
     SetLastError(0xdeadbeef);
     hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "", NULL,
@@ -128,6 +129,7 @@ static void test_connect(HINTERNET hInternet)
     {
         ok(GetLastError() == ERROR_SUCCESS,
                 "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+        InternetCloseHandle(hFtp);
     }
 }
 
