@@ -36,11 +36,6 @@ static IDxDiagContainer *pddc;
 
 static const WCHAR DxDiag_SystemInfo[] = {'D','x','D','i','a','g','_','S','y','s','t','e','m','I','n','f','o',0};
 static const WCHAR DxDiag_DisplayDevices[] = {'D','x','D','i','a','g','_','D','i','s','p','l','a','y','D','e','v','i','c','e','s',0};
-static const WCHAR DxDiag_SoundDevices[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','S','o','u','n','d','.',
-                                            'D','x','D','i','a','g','_','S','o','u','n','d','D','e','v','i','c','e','s',0};
-static const WCHAR DxDiag_SoundCaptureDevices[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','S','o','u','n','d','.',
-                                                   'D','x','D','i','a','g','_','S','o','u','n','d','C','a','p','t','u','r','e',
-                                                   'D','e','v','i','c','e','s',0};
 
 /* Based on debugstr_variant in dlls/jscript/jsutils.c. */
 static const char *debugstr_variant(const VARIANT *var)
@@ -901,8 +896,7 @@ static void test_DxDiag_SystemInfo(void)
         {szProcessorEnglish, VT_BSTR},
     };
 
-    IDxDiagContainer *container, *container2;
-    static const WCHAR empty[] = {0};
+    IDxDiagContainer *container;
     HRESULT hr;
 
     if (!create_root_IDxDiagContainer())
@@ -911,9 +905,6 @@ static void test_DxDiag_SystemInfo(void)
         return;
     }
 
-    hr = IDxDiagContainer_GetChildContainer(pddc, empty, &container2);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
-
     hr = IDxDiagContainer_GetChildContainer(pddc, DxDiag_SystemInfo, &container);
     ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
 
@@ -921,14 +912,6 @@ static void test_DxDiag_SystemInfo(void)
     {
         trace("Testing container DxDiag_SystemInfo\n");
         test_container_properties(container, property_tests, sizeof(property_tests)/sizeof(property_tests[0]));
-
-        container2 = NULL;
-        hr = IDxDiagContainer_GetChildContainer(container, empty, &container2);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-        ok(container2 != NULL, "Expected container2 != NULL\n");
-        ok(container2 != container, "Expected container != container2\n");
-        if (hr == S_OK) IDxDiagContainer_Release(container2);
-
         IDxDiagContainer_Release(container);
     }
 
@@ -959,7 +942,6 @@ static void test_DxDiag_DisplayDevices(void)
     static const WCHAR b3DAccelerationExists[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','x','i','s','t','s',0};
     static const WCHAR b3DAccelerationEnabled[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
     static const WCHAR bDDAccelerationEnabled[] = {'b','D','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
-    static const WCHAR iAdapter[] = {'i','A','d','a','p','t','e','r',0};
 
     static const struct property_test property_tests[] =
     {
@@ -984,7 +966,6 @@ static void test_DxDiag_DisplayDevices(void)
         {b3DAccelerationExists, VT_BOOL},
         {b3DAccelerationEnabled, VT_BOOL},
         {bDDAccelerationEnabled, VT_BOOL},
-        {iAdapter, VT_UI4},
     };
 
     IDxDiagContainer *display_cont = NULL;
@@ -1039,149 +1020,6 @@ cleanup:
     IDxDiagProvider_Release(pddp);
 }
 
-static void test_DxDiag_SoundDevices(void)
-{
-    static const WCHAR szDescription[] = {'s','z','D','e','s','c','r','i','p','t','i','o','n',0};
-    static const WCHAR szGuidDeviceID[] = {'s','z','G','u','i','d','D','e','v','i','c','e','I','D',0};
-    static const WCHAR szDriverPath[] = {'s','z','D','r','i','v','e','r','P','a','t','h',0};
-    static const WCHAR szDriverName[] = {'s','z','D','r','i','v','e','r','N','a','m','e',0};
-    static const WCHAR empty[] = {0};
-
-    static const struct property_test property_tests[] =
-    {
-        {szDescription, VT_BSTR},
-        {szGuidDeviceID, VT_BSTR},
-        {szDriverName, VT_BSTR},
-        {szDriverPath, VT_BSTR},
-    };
-
-    IDxDiagContainer *sound_cont = NULL;
-    DWORD count, i;
-    HRESULT hr;
-
-    if (!create_root_IDxDiagContainer())
-    {
-        skip("Unable to create the root IDxDiagContainer\n");
-        return;
-    }
-
-    hr = IDxDiagContainer_GetChildContainer(pddc, DxDiag_SoundDevices, &sound_cont);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-
-    if (hr != S_OK)
-        goto cleanup;
-
-    hr = IDxDiagContainer_GetNumberOfProps(sound_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08x\n", hr);
-    if (hr == S_OK)
-        ok(count == 0, "Expected count to be 0, got %u\n", count);
-
-    hr = IDxDiagContainer_GetNumberOfChildContainers(sound_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
-
-    if (hr != S_OK)
-        goto cleanup;
-
-    for (i = 0; i < count; i++)
-    {
-        WCHAR child_container[256];
-        IDxDiagContainer *child, *child2;
-
-        hr = IDxDiagContainer_EnumChildContainerNames(sound_cont, i, child_container, sizeof(child_container)/sizeof(WCHAR));
-        ok(hr == S_OK, "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
-
-        hr = IDxDiagContainer_GetChildContainer(sound_cont, child_container, &child);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-
-        if (hr == S_OK)
-        {
-            trace("Testing container %s\n", wine_dbgstr_w(child_container));
-            test_container_properties(child, property_tests, sizeof(property_tests)/sizeof(property_tests[0]));
-        }
-
-        child2 = NULL;
-        hr = IDxDiagContainer_GetChildContainer(child, empty, &child2);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-        ok(child2 != NULL, "Expected child2 != NULL\n");
-        ok(child2 != child, "Expected child != child2\n");
-        if (hr == S_OK) IDxDiagContainer_Release(child2);
-
-        IDxDiagContainer_Release(child);
-    }
-
-cleanup:
-    if (sound_cont) IDxDiagContainer_Release(sound_cont);
-    IDxDiagContainer_Release(pddc);
-    IDxDiagProvider_Release(pddp);
-}
-
-static void test_DxDiag_SoundCaptureDevices(void)
-{
-    static const WCHAR szDescription[] = {'s','z','D','e','s','c','r','i','p','t','i','o','n',0};
-    static const WCHAR szGuidDeviceID[] = {'s','z','G','u','i','d','D','e','v','i','c','e','I','D',0};
-    static const WCHAR szDriverPath[] = {'s','z','D','r','i','v','e','r','P','a','t','h',0};
-    static const WCHAR szDriverName[] = {'s','z','D','r','i','v','e','r','N','a','m','e',0};
-
-    static const struct property_test property_tests[] =
-    {
-        {szDescription, VT_BSTR},
-        {szGuidDeviceID, VT_BSTR},
-        {szDriverName, VT_BSTR},
-        {szDriverPath, VT_BSTR},
-    };
-
-    IDxDiagContainer *sound_cont = NULL;
-    DWORD count, i;
-    HRESULT hr;
-
-    if (!create_root_IDxDiagContainer())
-    {
-        skip("Unable to create the root IDxDiagContainer\n");
-        return;
-    }
-
-    hr = IDxDiagContainer_GetChildContainer(pddc, DxDiag_SoundCaptureDevices, &sound_cont);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-
-    if (hr != S_OK)
-        goto cleanup;
-
-    hr = IDxDiagContainer_GetNumberOfProps(sound_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08x\n", hr);
-    if (hr == S_OK)
-        ok(count == 0, "Expected count to be 0, got %u\n", count);
-
-    hr = IDxDiagContainer_GetNumberOfChildContainers(sound_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
-
-    if (hr != S_OK)
-        goto cleanup;
-
-    for (i = 0; i < count; i++)
-    {
-        WCHAR child_container[256];
-        IDxDiagContainer *child;
-
-        hr = IDxDiagContainer_EnumChildContainerNames(sound_cont, i, child_container, sizeof(child_container)/sizeof(WCHAR));
-        ok(hr == S_OK, "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
-
-        hr = IDxDiagContainer_GetChildContainer(sound_cont, child_container, &child);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-
-        if (hr == S_OK)
-        {
-            trace("Testing container %s\n", wine_dbgstr_w(child_container));
-            test_container_properties(child, property_tests, sizeof(property_tests)/sizeof(property_tests[0]));
-        }
-        IDxDiagContainer_Release(child);
-    }
-
-cleanup:
-    if (sound_cont) IDxDiagContainer_Release(sound_cont);
-    IDxDiagContainer_Release(pddc);
-    IDxDiagProvider_Release(pddp);
-}
-
 START_TEST(container)
 {
     CoInitialize(NULL);
@@ -1196,7 +1034,5 @@ START_TEST(container)
     test_root_children();
     test_DxDiag_SystemInfo();
     test_DxDiag_DisplayDevices();
-    test_DxDiag_SoundDevices();
-    test_DxDiag_SoundCaptureDevices();
     CoUninitialize();
 }
