@@ -70,11 +70,8 @@ static CRITICAL_SECTION wined3d_wndproc_cs = {&wined3d_wndproc_cs_debug, -1, 0, 
  * where appropriate. */
 struct wined3d_settings wined3d_settings =
 {
-#if !defined(STAGING_CSMT)
     FALSE,          /* No multithreaded CS by default. */
-#else  /* STAGING_CSMT */
-    TRUE,           /* Multithreaded CS by default. */
-#endif /* STAGING_CSMT */
+    FALSE,          /* explicit_gl_version */
     MAKEDWORD_VERSION(1, 0), /* Default to legacy OpenGL */
     TRUE,           /* Use of GLSL enabled by default */
     ORM_FBO,        /* Use FBOs to do offscreen rendering */
@@ -217,12 +214,10 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             ERR_(winediag)("Setting multithreaded command stream to %#x.\n", wined3d_settings.cs_multithreaded);
         if (!get_config_key_dword(hkey, appkey, "MaxVersionGL", &tmpvalue))
         {
-            if (tmpvalue != wined3d_settings.max_gl_version)
-            {
-                ERR_(winediag)("Setting maximum allowed wined3d GL version to %u.%u.\n",
-                        tmpvalue >> 16, tmpvalue & 0xffff);
-                wined3d_settings.max_gl_version = tmpvalue;
-            }
+            ERR_(winediag)("Setting maximum allowed wined3d GL version to %u.%u.\n",
+                    tmpvalue >> 16, tmpvalue & 0xffff);
+            wined3d_settings.explicit_gl_version = TRUE;
+            wined3d_settings.max_gl_version = tmpvalue;
         }
         if ( !get_config_key( hkey, appkey, "UseGLSL", buffer, size) )
         {
@@ -326,8 +321,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
 
-    wined3d_dxtn_init();
-
     return TRUE;
 }
 
@@ -359,9 +352,6 @@ static BOOL wined3d_dll_destroy(HINSTANCE hInstDLL)
 
     DeleteCriticalSection(&wined3d_wndproc_cs);
     DeleteCriticalSection(&wined3d_cs);
-
-    wined3d_dxtn_free();
-
     return TRUE;
 }
 
@@ -514,11 +504,6 @@ void wined3d_unregister_window(HWND window)
     if (entry != last) *entry = *last;
 
     wined3d_wndproc_mutex_unlock();
-}
-
-void CDECL wined3d_strictdrawing_set(int value)
-{
-    wined3d_settings.strict_draw_ordering = value;
 }
 
 /* At process attach */

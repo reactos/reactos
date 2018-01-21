@@ -37,7 +37,6 @@
 #define COBJMACROS
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
 #include <wingdi.h>
 
 #include <wine/debug.h>
@@ -103,6 +102,8 @@ struct d3d9_device
     BOOL in_destruction;
     BOOL in_scene;
     BOOL has_vertex_declaration;
+
+    unsigned int max_user_clip_planes;
 
     UINT implicit_swapchain_count;
     struct d3d9_swapchain **implicit_swapchains;

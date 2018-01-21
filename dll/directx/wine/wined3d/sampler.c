@@ -95,8 +95,8 @@ static void wined3d_sampler_cs_init(void *object)
     GL_EXTCALL(glSamplerParameterf(sampler->name, GL_TEXTURE_LOD_BIAS, desc->lod_bias));
     GL_EXTCALL(glSamplerParameterf(sampler->name, GL_TEXTURE_MIN_LOD, desc->min_lod));
     GL_EXTCALL(glSamplerParameterf(sampler->name, GL_TEXTURE_MAX_LOD, desc->max_lod));
-    if (gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC])
-        GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_MAX_ANISOTROPY_EXT, desc->max_anisotropy));
+    if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
+        GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_MAX_ANISOTROPY, desc->max_anisotropy));
     if (desc->compare)
         GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE));
     GL_EXTCALL(glSamplerParameteri(sampler->name, GL_TEXTURE_COMPARE_FUNC,

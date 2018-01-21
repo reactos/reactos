@@ -294,6 +294,7 @@ enum wined3d_sm4_opcode
     WINED3D_SM5_OP_IMM_ATOMIC_UMAX                  = 0xbc,
     WINED3D_SM5_OP_IMM_ATOMIC_UMIN                  = 0xbd,
     WINED3D_SM5_OP_SYNC                             = 0xbe,
+    WINED3D_SM5_OP_EVAL_SAMPLE_INDEX                = 0xcc,
     WINED3D_SM5_OP_DCL_GS_INSTANCES                 = 0xce,
 };
 
@@ -337,7 +338,7 @@ enum wined3d_sm4_register_type
 enum wined3d_sm4_output_primitive_type
 {
     WINED3D_SM4_OUTPUT_PT_POINTLIST     = 0x1,
-    WINED3D_SM4_OUTPUT_PT_LINELIST      = 0x3,
+    WINED3D_SM4_OUTPUT_PT_LINESTRIP     = 0x3,
     WINED3D_SM4_OUTPUT_PT_TRIANGLESTRIP = 0x5,
 };
 
@@ -466,7 +467,7 @@ static const enum wined3d_primitive_type output_primitive_type_table[] =
     /* UNKNOWN */                               WINED3D_PT_UNDEFINED,
     /* WINED3D_SM4_OUTPUT_PT_POINTLIST */       WINED3D_PT_POINTLIST,
     /* UNKNOWN */                               WINED3D_PT_UNDEFINED,
-    /* WINED3D_SM4_OUTPUT_PT_LINELIST */        WINED3D_PT_LINELIST,
+    /* WINED3D_SM4_OUTPUT_PT_LINESTRIP */       WINED3D_PT_LINESTRIP,
     /* UNKNOWN */                               WINED3D_PT_UNDEFINED,
     /* WINED3D_SM4_OUTPUT_PT_TRIANGLESTRIP */   WINED3D_PT_TRIANGLESTRIP,
 };
@@ -891,7 +892,8 @@ static const struct wined3d_sm4_opcode_info opcode_table[] =
     {WINED3D_SM4_OP_DEFAULT,                          WINED3DSIH_DEFAULT,                          "",     ""},
     {WINED3D_SM4_OP_DERIV_RTX,                        WINED3DSIH_DSX,                              "f",    "f"},
     {WINED3D_SM4_OP_DERIV_RTY,                        WINED3DSIH_DSY,                              "f",    "f"},
-    {WINED3D_SM4_OP_DISCARD,                          WINED3DSIH_TEXKILL,                          "",     "u"},
+    {WINED3D_SM4_OP_DISCARD,                          WINED3DSIH_TEXKILL,                          "",     "u",
+            shader_sm4_read_conditional_op},
     {WINED3D_SM4_OP_DIV,                              WINED3DSIH_DIV,                              "f",    "ff"},
     {WINED3D_SM4_OP_DP2,                              WINED3DSIH_DP2,                              "f",    "ff"},
     {WINED3D_SM4_OP_DP3,                              WINED3DSIH_DP3,                              "f",    "ff"},
@@ -1103,6 +1105,7 @@ static const struct wined3d_sm4_opcode_info opcode_table[] =
     {WINED3D_SM5_OP_IMM_ATOMIC_UMIN,                  WINED3DSIH_IMM_ATOMIC_UMIN,                  "uU",   "iu"},
     {WINED3D_SM5_OP_SYNC,                             WINED3DSIH_SYNC,                             "",     "",
             shader_sm5_read_sync},
+    {WINED3D_SM5_OP_EVAL_SAMPLE_INDEX,                WINED3DSIH_EVAL_SAMPLE_INDEX,                "f",    "fi"},
     {WINED3D_SM5_OP_DCL_GS_INSTANCES,                 WINED3DSIH_DCL_GS_INSTANCES,                 "",     "",
             shader_sm4_read_declaration_count},
 };
@@ -1147,15 +1150,15 @@ static const enum wined3d_shader_register_type register_type_table[] =
     /* WINED3D_SM5_RT_COVERAGE */                WINED3DSPR_COVERAGE,
     /* WINED3D_SM5_RT_LOCAL_THREAD_INDEX */      WINED3DSPR_LOCALTHREADINDEX,
     /* WINED3D_SM5_RT_GS_INSTANCE_ID */          WINED3DSPR_GSINSTID,
-    /* WINED3D_SM5_RT_DEPTHOUT_GREATER_EQUAL */  WINED3DSPR_DEPTHOUT_GREATER_EQUAL,
-    /* WINED3D_SM5_RT_DEPTHOUT_LESS_EQUAL*/      WINED3DSPR_DEPTHOUT_LESS_EQUAL,
+    /* WINED3D_SM5_RT_DEPTHOUT_GREATER_EQUAL */  WINED3DSPR_DEPTHOUTGE,
+    /* WINED3D_SM5_RT_DEPTHOUT_LESS_EQUAL */     WINED3DSPR_DEPTHOUTLE,
 };
 
 static const struct wined3d_sm4_opcode_info *get_opcode_info(enum wined3d_sm4_opcode opcode)
 {
     unsigned int i;
 
-    for (i = 0; i < sizeof(opcode_table) / sizeof(*opcode_table); ++i)
+    for (i = 0; i < ARRAY_SIZE(opcode_table); ++i)
     {
         if (opcode == opcode_table[i].opcode) return &opcode_table[i];
     }
@@ -1383,7 +1386,7 @@ static BOOL shader_sm4_read_param(struct wined3d_sm4_data *priv, const DWORD **p
     token = *(*ptr)++;
 
     register_type = (token & WINED3D_SM4_REGISTER_TYPE_MASK) >> WINED3D_SM4_REGISTER_TYPE_SHIFT;
-    if (register_type >= sizeof(register_type_table) / sizeof(*register_type_table)
+    if (register_type >= ARRAY_SIZE(register_type_table)
             || register_type_table[register_type] == ~0u)
     {
         FIXME("Unhandled register type %#x.\n", register_type);
