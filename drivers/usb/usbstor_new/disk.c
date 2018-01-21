@@ -223,12 +223,25 @@ USBSTOR_HandleInternalDeviceControl(
             Status = STATUS_SUCCESS;
             break;
         }
-
         case SRB_FUNCTION_SHUTDOWN:
+        {
+            // handle this case only for current storage stack
+            // for proper storage stack it not need
+            DPRINT1("SRB_FUNCTION_SHUTDOWN - STATUS_SUCCESS FIXME\n");
+            Status = STATUS_SUCCESS;
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+            break;
+        }
         case SRB_FUNCTION_FLUSH:
+        {
+            DPRINT1("SRB_FUNCTION_FLUSH \n");
+            Status = STATUS_SUCCESS;
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+            break;
+        }
         case SRB_FUNCTION_FLUSH_QUEUE:
         {
-            DPRINT1("SRB_FUNCTION_FLUSH / SRB_FUNCTION_FLUSH_QUEUE / SRB_FUNCTION_SHUTDOWN\n");
+            DPRINT1("SRB_FUNCTION_FLUSH_QUEUE\n");
 
             // HACK: don't flush pending requests
 #if 0       // we really need a proper storage stack
