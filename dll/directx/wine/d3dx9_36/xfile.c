@@ -19,9 +19,7 @@
 
 #include "d3dx9_36_private.h"
 
-#include "d3dx9xof.h"
-#undef MAKE_DDHRESULT
-#include "dxfile.h"
+#include <dxfile.h>
 
 static HRESULT error_dxfile_to_d3dxfile(HRESULT error)
 {

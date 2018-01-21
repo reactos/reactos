@@ -18,8 +18,6 @@
 
 #include "d3dx9_36_private.h"
 
-#include <assert.h>
-
 /* ReactOS FIXME: Insect */
 #define fmin min
 #define fmax max
@@ -537,6 +535,8 @@ static HRESULT get_ctab_constant_desc(ID3DXConstantTable *ctab, D3DXHANDLE hc, D
     if (!constant)
     {
         FIXME("Could not get constant desc.\n");
+        if (constantinfo_reserved)
+            *constantinfo_reserved = 0;
         return D3DERR_INVALIDCALL;
     }
     *desc = constant->desc;

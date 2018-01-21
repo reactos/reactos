@@ -204,7 +204,7 @@ static void set_states(struct d3dx9_sprite *object)
     IDirect3DDevice9_SetRenderState(object->device, D3DRS_ALPHATESTENABLE, object->alphacmp_caps);
     IDirect3DDevice9_SetRenderState(object->device, D3DRS_BLENDOP, D3DBLENDOP_ADD);
     IDirect3DDevice9_SetRenderState(object->device, D3DRS_CLIPPING, TRUE);
-    IDirect3DDevice9_SetRenderState(object->device, D3DRS_CLIPPLANEENABLE, FALSE);
+    IDirect3DDevice9_SetRenderState(object->device, D3DRS_CLIPPLANEENABLE, 0);
     IDirect3DDevice9_SetRenderState(object->device, D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_ALPHA | D3DCOLORWRITEENABLE_BLUE |
                                     D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_RED);
     IDirect3DDevice9_SetRenderState(object->device, D3DRS_CULLMODE, D3DCULL_NONE);

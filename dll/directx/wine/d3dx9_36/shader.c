@@ -1,7 +1,6 @@
 /*
  * Copyright 2008 Luis Busquets
  * Copyright 2009 Matteo Bruni
- * Copyright 2010, 2013, 2016 Christian Costa
  * Copyright 2011 Travis Athougies
  *
  * This library is free software; you can redistribute it and/or
@@ -438,41 +437,6 @@ HRESULT WINAPI D3DXCompileShader(const char *data, UINT length, const D3DXMACRO 
         {
             ID3DXBuffer_Release(*shader);
             *shader = NULL;
-        }
-    }
-
-    /* Filter out D3DCompile warning messages that are not present with D3DCompileShader */
-    if (SUCCEEDED(hr) && error_msgs && *error_msgs)
-    {
-        char *messages = ID3DXBuffer_GetBufferPointer(*error_msgs);
-        DWORD size     = ID3DXBuffer_GetBufferSize(*error_msgs);
-
-        /* Ensure messages are null terminated for safe processing */
-        if (size) messages[size - 1] = 0;
-
-        while (size > 1)
-        {
-            char *prev, *next;
-
-            /* Warning has the form "warning X3206: ... implicit truncation of vector type"
-               but we only search for "X3206:" in case d3dcompiler_43 has localization */
-            prev = next = strstr(messages, "X3206:");
-            if (!prev) break;
-
-            /* get pointer to beginning and end of current line */
-            while (prev > messages && *(prev - 1) != '\n') prev--;
-            while (next < messages + size - 1 && *next != '\n') next++;
-            if (next < messages + size - 1 && *next == '\n') next++;
-
-            memmove(prev, next, messages + size - next);
-            size -= (next - prev);
-        }
-
-        /* Only return a buffer if the resulting string is not empty as some apps depend on that */
-        if (size <= 1)
-        {
-            ID3DXBuffer_Release(*error_msgs);
-            *error_msgs = NULL;
         }
     }
 
@@ -2177,334 +2141,10 @@ HRESULT WINAPI D3DXGetShaderSamplers(const DWORD *byte_code, const char **sample
     return D3D_OK;
 }
 
-
-static const char *decl_usage[] = { "position", "blendweight", "blendindices", "normal", "psize", "texcoord",
-                                    "tangent", "binormal", "tessfactor", "positiont", "color" };
-
-static const char *tex_type[] = { "", "1d", "2d", "cube", "volume" };
-
-static int add_modifier(char *buffer, DWORD param)
-{
-    char *buf = buffer;
-    DWORD dst_mod = param & D3DSP_DSTMOD_MASK;
-
-    if (dst_mod & D3DSPDM_SATURATE)
-        buf += sprintf(buf, "_sat");
-    if (dst_mod & D3DSPDM_PARTIALPRECISION)
-        buf += sprintf(buf, "_pp");
-    if (dst_mod & D3DSPDM_MSAMPCENTROID)
-        buf += sprintf(buf, "_centroid");
-
-    return buf - buffer;
-}
-
-static int add_register(char *buffer, DWORD param, BOOL dst, BOOL ps)
-{
-    char *buf = buffer;
-    DWORD reg_type = ((param & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2)
-                   | ((param & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT);
-    DWORD reg_num = param & D3DSP_REGNUM_MASK;
-
-    if (reg_type == D3DSPR_INPUT)
-        buf += sprintf(buf, "v%d", reg_num);
-    else if (reg_type == D3DSPR_CONST)
-        buf += sprintf(buf, "c%d", reg_num);
-    else if (reg_type == D3DSPR_TEMP)
-        buf += sprintf(buf, "r%d", reg_num);
-    else if (reg_type == D3DSPR_ADDR)
-        buf += sprintf(buf, "%s%d", ps ? "t" : "a", reg_num);
-    else if (reg_type == D3DSPR_SAMPLER)
-        buf += sprintf(buf, "s%d", reg_num);
-    else if (reg_type == D3DSPR_RASTOUT)
-        buf += sprintf(buf, "oPos");
-    else if (reg_type == D3DSPR_COLOROUT)
-        buf += sprintf(buf, "oC%d", reg_num);
-    else if (reg_type == D3DSPR_TEXCRDOUT)
-        buf += sprintf(buf, "oT%d", reg_num);
-    else if (reg_type == D3DSPR_ATTROUT)
-        buf += sprintf(buf, "oD%d", reg_num);
-    else
-        buf += sprintf(buf, "? (%d)", reg_type);
-
-    if (dst)
-    {
-        if ((param & D3DSP_WRITEMASK_ALL) != D3DSP_WRITEMASK_ALL)
-        {
-            buf += sprintf(buf, ".%s%s%s%s", param & D3DSP_WRITEMASK_0 ? "x" : "",
-                                             param & D3DSP_WRITEMASK_1 ? "y" : "",
-                                             param & D3DSP_WRITEMASK_2 ? "z" : "",
-                                             param & D3DSP_WRITEMASK_3 ? "w" : "");
-        }
-    }
-    else
-    {
-        if ((param & D3DVS_SWIZZLE_MASK) != D3DVS_NOSWIZZLE)
-        {
-            if ( ((param & D3DSP_SWIZZLE_MASK) == (D3DVS_X_X | D3DVS_Y_X | D3DVS_Z_X | D3DVS_W_X)) ||
-                 ((param & D3DSP_SWIZZLE_MASK) == (D3DVS_X_Y | D3DVS_Y_Y | D3DVS_Z_Y | D3DVS_W_Y)) ||
-                 ((param & D3DSP_SWIZZLE_MASK) == (D3DVS_X_Z | D3DVS_Y_Z | D3DVS_Z_Z | D3DVS_W_Z)) ||
-                 ((param & D3DSP_SWIZZLE_MASK) == (D3DVS_X_W | D3DVS_Y_W | D3DVS_Z_W | D3DVS_W_W)) )
-                buf += sprintf(buf, ".%c", 'w' + (((param >> D3DVS_SWIZZLE_SHIFT) + 1) & 0x3));
-            else
-                buf += sprintf(buf, ".%c%c%c%c", 'w' + (((param >> (D3DVS_SWIZZLE_SHIFT+0)) + 1) & 0x3),
-                                                 'w' + (((param >> (D3DVS_SWIZZLE_SHIFT+2)) + 1) & 0x3),
-                                                 'w' + (((param >> (D3DVS_SWIZZLE_SHIFT+4)) + 1) & 0x3),
-                                                 'w' + (((param >> (D3DVS_SWIZZLE_SHIFT+6)) + 1) & 0x3));
-        }
-    }
-
-    return buf - buffer;
-}
-
-struct instr_info
-{
-    DWORD opcode;
-    const char *name;
-    int length;
-    int (*function)(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps);
-    WORD min_version;
-    WORD max_version;
-};
-
-static int instr_comment(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps)
-{
-    *ptr += 1 + ((**ptr & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT);
-    return 0;
-}
-
-static int instr_def(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps)
-{
-    int len = sprintf(buffer, "    def c%d, %g, %g, %g, %g\n", *(*ptr+1) & D3DSP_REGNUM_MASK,
-                      (double)*(float*)(*ptr+2), (double)*(float*)(*ptr+3),
-                      (double)*(float*)(*ptr+4), (double)*(float*)(*ptr+5));
-    *ptr += 6;
-    return len;
-}
-
-static int instr_dcl(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps)
-{
-    DWORD param1 = *++*ptr;
-    DWORD param2 = *++*ptr;
-    DWORD usage = (param1 & D3DSP_DCL_USAGE_MASK) >> D3DSP_DCL_USAGE_SHIFT;
-    DWORD usage_index = (param1 & D3DSP_DCL_USAGEINDEX_MASK) >> D3DSP_DCL_USAGEINDEX_SHIFT;
-    char *buf = buffer;
-
-    buf += sprintf(buf, "    dcl");
-    if (ps)
-    {
-        if (param1 & D3DSP_TEXTURETYPE_MASK)
-            buf += sprintf(buf, "_%s", (usage <= D3DSTT_VOLUME) ?
-                tex_type[(param1 & D3DSP_TEXTURETYPE_MASK) >> D3DSP_TEXTURETYPE_SHIFT] : "???");
-    }
-    else
-    {
-        buf += sprintf(buf, "_%s", (usage <= D3DDECLUSAGE_COLOR) ? decl_usage[usage] : "???");
-        if (usage_index)
-            buf += sprintf(buf, "%d", usage_index);
-    }
-
-    buf += add_modifier(buf, param2);
-    buf += sprintf(buf, " ");
-    buf += add_register(buf, param2, TRUE, TRUE);
-    buf += sprintf(buf, "\n");
-    (*ptr)++;
-    return buf - buffer;
-}
-
-static int instr_generic(const struct instr_info *info, DWORD **ptr, char *buffer, BOOL ps)
-{
-    char *buf = buffer;
-    int j;
-
-    buf += sprintf(buf, "    %s", info->name);
-    (*ptr)++;
-
-    if (info->length)
-    {
-        buf += add_modifier(buf, **ptr);
-
-        for (j = 0; j < info->length; j++)
-        {
-            buf += sprintf(buf, "%s ", j ? "," : "");
-
-            if ((j != 0) && ((**ptr & D3DSP_SRCMOD_MASK) != D3DSPSM_NONE))
-            {
-                if ((**ptr & D3DSP_SRCMOD_MASK) == D3DSPSM_NEG)
-                    buf += sprintf(buf, "-");
-                else
-                    buf += sprintf(buf, "*");
-            }
-
-            buf += add_register(buf, **ptr, j == 0, ps);
-
-            if (*(*ptr)++ & D3DVS_ADDRESSMODE_MASK)
-            {
-                buf += sprintf(buf, "[");
-                buf += add_register(buf, **ptr, FALSE, FALSE);
-                buf += sprintf(buf, "]");
-                (*ptr)++;
-            }
-        }
-    }
-    buf += sprintf(buf, "\n");
-    return buf - buffer;
-}
-
-const struct instr_info instructions[] =
-{
-    { D3DSIO_NOP,          "nop",           0, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_MOV,          "mov",           2, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_ADD,          "add",           3, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_SUB,          "sub",           3, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_MAD,          "mad",           4, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_MUL,          "mul",           3, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_RCP,          "rcp",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_RSQ,          "rsq",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_DP3,          "dp3",           3, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_DP4,          "dp4",           3, instr_generic, 0x0100, 0xFFFF }, /* >= 1.2 for PS */
-    { D3DSIO_MIN,          "min",           3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_MAX,          "max",           3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_SLT,          "slt",           3, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_SGE,          "sge",           3, instr_generic, 0x0100, 0xFFFF }, /* VS only */
-    { D3DSIO_EXP,          "exp",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_LOG,          "log",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_LIT,          "lit",           2, instr_generic, 0x0100, 0xFFFF }, /* VS only */
-    { D3DSIO_DST,          "dst",           3, instr_generic, 0x0100, 0xFFFF }, /* VS only */
-    { D3DSIO_LRP,          "lrp",           4, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for VS */
-    { D3DSIO_FRC,          "frc",           2, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_M4x4,         "m4x4",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_M4x3,         "m4x3",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_M3x4,         "m3x4",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_M3x3,         "m3x3",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_M3x2,         "m3x2",          3, instr_generic, 0x0100, 0xFFFF }, /* >= 2.0 for PS */
-    { D3DSIO_CALL,         "call",          1, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_CALLNZ,       "callnz",        2, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_LOOP,         "loop",          2, instr_generic, 0x0200, 0xFFFF }, /* >= 3.0 for PS */
-    { D3DSIO_RET,          "ret",           0, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_ENDLOOP,      "endloop",       1, instr_generic, 0x0200, 0xFFFF }, /* >= 3.0 for PS */
-    { D3DSIO_LABEL,        "label",         1, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_DCL,          "dcl",           1, instr_dcl,     0x0100, 0xFFFF },
-    { D3DSIO_POW,          "pow",           3, instr_generic, 0x0200, 0xFFFF },
-    { D3DSIO_CRS,          "crs",           3, instr_generic, 0x0200, 0xFFFF },
-    { D3DSIO_SGN,          "sgn",           4, instr_generic, 0x0200, 0xFFFF }, /* VS only */
-    { D3DSIO_ABS,          "abs",           2, instr_generic, 0x0200, 0xFFFF },
-    { D3DSIO_NRM,          "nrm",           2, instr_generic, 0x0200, 0xFFFF },
-    { D3DSIO_SINCOS,       "sincos",        4, instr_generic, 0x0200, 0x02FF },
-    { D3DSIO_SINCOS,       "sincos",        2, instr_generic, 0x0300, 0xFFFF },
-    { D3DSIO_REP,          "rep",           1, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_ENDREP,       "endrep",        0, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_IF,           "if",            1, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_IFC,          "if_comp",       2, instr_generic, 0x0200, 0xFFFF },
-    { D3DSIO_ELSE,         "else",          0, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_ENDIF,        "endif",         0, instr_generic, 0x0200, 0xFFFF }, /* >= 2.a for PS */
-    { D3DSIO_BREAK,        "break",         0, instr_generic, 0x0201, 0xFFFF },
-    { D3DSIO_BREAKC,       "break_comp",    2, instr_generic, 0x0201, 0xFFFF },
-    { D3DSIO_MOVA,         "mova",          2, instr_generic, 0x0200, 0xFFFF }, /* VS only */
-    { D3DSIO_DEFB,         "defb",          2, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_DEFI,         "defi",          2, instr_generic, 0x0100, 0xFFFF },
-    { D3DSIO_TEXCOORD,     "texcoord",      1, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXCOORD,     "texcrd",        2, instr_generic, 0x0104, 0x0104 }, /* PS only */
-    { D3DSIO_TEXKILL,      "texkill",       1, instr_generic, 0x0100, 0xFFFF }, /* PS only */
-    { D3DSIO_TEX,          "tex",           1, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEX,          "texld",         2, instr_generic, 0x0104, 0x0104 }, /* PS only */
-    { D3DSIO_TEX,          "texld",         3, instr_generic, 0x0200, 0xFFFF }, /* PS only */
-    { D3DSIO_TEXBEM,       "texbem",        2, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXBEML,      "texbeml",       2, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXREG2AR,    "texreg2ar",     2, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXREG2GB,    "texreg2gb",     2, instr_generic, 0x0102, 0x0103 }, /* PS only */
-    { D3DSIO_TEXM3x2PAD,   "texm3x2pad",    2, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXM3x2TEX,   "texm3x2tex",    2, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXM3x3PAD,   "texm3x3pad",    2, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXM3x3TEX,   "texm3x3tex",    2, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXM3x3DIFF,  "texm3x3diff",   2, instr_generic, 0x0100, 0xFFFF }, /* PS only - Not documented */
-    { D3DSIO_TEXM3x3SPEC,  "texm3x3spec",   3, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_TEXM3x3VSPEC, "texm3x3vspec",  2, instr_generic, 0x0100, 0x0103 }, /* PS only */
-    { D3DSIO_EXPP,         "expp",          2, instr_generic, 0x0100, 0xFFFF }, /* VS only */
-    { D3DSIO_LOGP,         "logp",          2, instr_generic, 0x0100, 0xFFFF }, /* VS only */
-    { D3DSIO_CND,          "cnd",           4, instr_generic, 0x0100, 0x0104 }, /* PS only */
-    { D3DSIO_DEF,          "def",           5, instr_def,     0x0100, 0xFFFF },
-    { D3DSIO_TEXREG2RGB,   "texreg2rgb",    2, instr_generic, 0x0102, 0x0103 }, /* PS only */
-    { D3DSIO_TEXDP3TEX,    "texdp3tex",     2, instr_generic, 0x0102, 0x0103 }, /* PS only */
-    { D3DSIO_TEXM3x2DEPTH, "texm3x2depth",  2, instr_generic, 0x0103, 0x0103 }, /* PS only */
-    { D3DSIO_TEXDP3,       "texdp3",        2, instr_generic, 0x0102, 0x0103 }, /* PS only */
-    { D3DSIO_TEXM3x3,      "texm3x3",       2, instr_generic, 0x0102, 0x0103 }, /* PS only */
-    { D3DSIO_TEXDEPTH,     "texdepth",      1, instr_generic, 0x0104, 0x0104 }, /* PS only */
-    { D3DSIO_CMP,          "cmp",           4, instr_generic, 0x0102, 0xFFFF }, /* PS only */
-    { D3DSIO_BEM,          "bem",           3, instr_generic, 0x0104, 0x0104 }, /* PS only */
-    { D3DSIO_DP2ADD,       "dp2add",        4, instr_generic, 0x0200, 0xFFFF }, /* PS only */
-    { D3DSIO_DSX,          "dsx",           2, instr_generic, 0x0201, 0xFFFF }, /* PS only */
-    { D3DSIO_DSY,          "dsy",           2, instr_generic, 0x0201, 0xFFFF }, /* PS only */
-    { D3DSIO_TEXLDD,       "texldd",        5, instr_generic, 0x0201, 0xFFFF }, /* PS only - not existing for 2.b */
-    { D3DSIO_SETP,         "setp_comp",     3, instr_generic, 0x0201, 0xFFFF },
-    { D3DSIO_TEXLDL,       "texldl",        3, instr_generic, 0x0300, 0xFFFF },
-    { D3DSIO_BREAKP,       "breakp",        1, instr_generic, 0x0201, 0xFFFF },
-    { D3DSIO_PHASE,        "phase",         0, instr_generic, 0x0104, 0x0104 },  /* PS only */
-    { D3DSIO_COMMENT,      "",              0, instr_comment, 0x0100, 0xFFFF }
-};
-
 HRESULT WINAPI D3DXDisassembleShader(const DWORD *shader, BOOL colorcode, const char *comments, ID3DXBuffer **disassembly)
 {
-    DWORD *ptr = (DWORD *)shader;
-    char *buffer, *buf;
-    UINT capacity = 4096;
-    BOOL ps;
-    WORD version;
-    HRESULT hr;
-
-    TRACE("%p %d %s %p\n", shader, colorcode, debugstr_a(comments), disassembly);
-
-    if (!shader || !disassembly)
-        return D3DERR_INVALIDCALL;
-
-    buf = buffer = HeapAlloc(GetProcessHeap(), 0, capacity);
-    if (!buffer)
-        return E_OUTOFMEMORY;
-
-    ps = (*ptr >> 16) & 1;
-    version = *ptr & 0xFFFF;
-    buf += sprintf(buf, "    %s_%d_%d\n", ps ? "ps" : "vs", D3DSHADER_VERSION_MAJOR(*ptr), D3DSHADER_VERSION_MINOR(*ptr));
-    ptr++;
-
-    while (*ptr != D3DSIO_END)
-    {
-        DWORD index;
-
-        if ((buf - buffer + 128) > capacity)
-        {
-            UINT count = buf - buffer;
-            char *new_buffer = HeapReAlloc(GetProcessHeap(), 0, buffer, capacity * 2);
-            if (!new_buffer)
-            {
-                HeapFree(GetProcessHeap(), 0, buffer);
-                return E_OUTOFMEMORY;
-            }
-            capacity *= 2;
-            buffer = new_buffer;
-            buf = buffer + count;
-        }
-
-        for (index = 0; index < sizeof(instructions)/sizeof(instructions[0]); index++)
-            if (((*ptr & D3DSI_OPCODE_MASK) == instructions[index].opcode) &&
-                (version >= instructions[index].min_version) && (version <= instructions[index].max_version))
-                break;
-
-        if (index != sizeof(instructions)/sizeof(instructions[0]))
-        {
-            buf += instructions[index].function(&(instructions[index]), &ptr, buf, ps);
-        }
-        else
-        {
-            buf += sprintf(buf, "    ??? (Unknown opcode %x)\n", *ptr);
-            while (*++ptr & (1u << 31));
-        }
-    }
-
-    hr = D3DXCreateBuffer(buf - buffer + 1 , disassembly);
-    if (SUCCEEDED(hr))
-        strcpy(ID3DXBuffer_GetBufferPointer(*disassembly), buffer);
-    HeapFree(GetProcessHeap(), 0, buffer);
-
-    return hr;
+   FIXME("%p %d %s %p: stub\n", shader, colorcode, debugstr_a(comments), disassembly);
+   return E_OUTOFMEMORY;
 }
 
 struct d3dx9_texture_shader
@@ -2774,112 +2414,248 @@ HRESULT WINAPI D3DXCreateTextureShader(const DWORD *function, ID3DXTextureShader
     return D3D_OK;
 }
 
-static const DWORD* skip_instruction(const DWORD *byte_code, UINT shader_model)
+static unsigned int get_instr_length(const DWORD *byte_code, unsigned int major, unsigned int minor)
 {
-    TRACE("Shader model %u\n", shader_model);
+    unsigned int len = 0;
 
-    /* Handle all special instructions whose arguments may contain D3DSIO_DCL */
-    if ((*byte_code & D3DSI_OPCODE_MASK) == D3DSIO_COMMENT)
+    if (major > 1)
+        return (*byte_code & D3DSI_INSTLENGTH_MASK) >> D3DSI_INSTLENGTH_SHIFT;
+
+    switch (*byte_code & 0xffff)
     {
-        byte_code += 1 + ((*byte_code & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT);
-    }
-    else if (shader_model >= 2)
-    {
-        byte_code += 1 + ((*byte_code & D3DSI_INSTLENGTH_MASK) >> D3DSI_INSTLENGTH_SHIFT);
-    }
-    else if ((*byte_code & D3DSI_OPCODE_MASK) == D3DSIO_DEF)
-    {
-        byte_code += 1 + 5;
-    }
-    else
-    {
-        /* Handle remaining safe instructions */
-        while (*++byte_code & (1u << 31));
+        case D3DSIO_END:
+            ERR("Unexpected END token.\n");
+            return 0;
+        case D3DSIO_COMMENT:
+            return (*byte_code & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
+        case D3DSIO_DEF:
+        case D3DSIO_DEFI:
+            return 5;
+        case D3DSIO_DEFB:
+            return 2;
+        default:
+            ++byte_code;
+            while (*byte_code & 0x80000000)
+            {
+                ++byte_code;
+                ++len;
+            }
     }
 
-    return byte_code;
+    return len;
 }
 
-static UINT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, DWORD type)
+static HRESULT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count, BOOL output)
 {
-    const DWORD *ptr = byte_code;
-    UINT shader_model = (*ptr >> 8) & 0xff;
-    UINT i = 0;
-
-    TRACE("Shader version: %#x\n", *ptr);
-    ptr++;
-
-    while (*ptr != D3DSIO_END)
+    static const D3DDECLUSAGE regtype_usage[] =
     {
-        if (*ptr & (1u << 31))
-        {
-            FIXME("Opcode expected but got %#x\n", *ptr);
-            return 0;
-        }
-        else if ((*ptr & D3DSI_OPCODE_MASK) == D3DSIO_DCL)
-        {
-            DWORD param1 = *++ptr;
-            DWORD param2 = *++ptr;
-            DWORD usage = (param1 & D3DSP_DCL_USAGE_MASK) >> D3DSP_DCL_USAGE_SHIFT;
-            DWORD usage_index = (param1 & D3DSP_DCL_USAGEINDEX_MASK) >> D3DSP_DCL_USAGEINDEX_SHIFT;
-            DWORD reg_type = ((param2 & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2)
-                    | ((param2 & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT);
+        D3DDECLUSAGE_COLOR,
+        D3DDECLUSAGE_COLOR,
+        0,
+        D3DDECLUSAGE_TEXCOORD,
+        0,
+        D3DDECLUSAGE_COLOR,
+        D3DDECLUSAGE_TEXCOORD,
+        0,
+        0,
+        D3DDECLUSAGE_DEPTH
+    };
+    static const D3DDECLUSAGE rast_usage[] =
+    {
+        D3DDECLUSAGE_POSITION,
+        D3DDECLUSAGE_FOG,
+        D3DDECLUSAGE_PSIZE
+    };
+    DWORD reg_type, usage, index, version_token = *byte_code;
+    BOOL is_ps = version_token >> 16 == 0xffff;
+    unsigned int major, minor, i = 0, j;
+    BYTE colors = 0, rastout = 0;
+    BOOL has_dcl, depth = 0;
+    WORD texcoords = 0;
 
-            TRACE("D3DSIO_DCL param1: %#x, param2: %#x, usage: %u, usage_index: %u, reg_type: %u\n",
-                   param1, param2, usage, usage_index, reg_type);
+    if ((version_token & 0xffff0000) != 0xfffe0000 && (version_token & 0xffff0000) != 0xffff0000)
+        return D3DXERR_INVALIDDATA;
 
-            if (reg_type == type)
+    major = version_token >> 8 & 0xff;
+    minor = version_token & 0xff;
+
+    TRACE("%s shader, version %u.%u.\n", is_ps ? "Pixel" : "Vertex", major, minor);
+    ++byte_code;
+
+    has_dcl = (!is_ps && (!output || major == 3)) || (is_ps && !output && major >= 2);
+
+    while (*byte_code != D3DSIO_END)
+    {
+        if (has_dcl && (*byte_code & 0xffff) == D3DSIO_DCL)
+        {
+            DWORD usage_token = byte_code[1];
+            DWORD reg = byte_code[2];
+
+            reg_type = ((reg & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT)
+                    | ((reg & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2);
+
+            if (is_ps && !output && major == 2)
             {
+                /* dcl with no explicit usage, look at the register. */
+                reg_type = ((reg & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT)
+                        | ((reg & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2);
+                index = reg & D3DSP_REGNUM_MASK;
+                if (reg_type >= ARRAY_SIZE(regtype_usage))
+                {
+                    WARN("Invalid register type %u.\n", reg_type);
+                    reg_type = 0;
+                }
+                usage = regtype_usage[reg_type];
                 if (semantics)
                 {
                     semantics[i].Usage = usage;
-                    semantics[i].UsageIndex = usage_index;
+                    semantics[i].UsageIndex = index;
                 }
-                i++;
+                ++i;
             }
+            else if ((!output && reg_type == D3DSPR_INPUT) || (output && reg_type == D3DSPR_OUTPUT))
+            {
+                if (semantics)
+                {
+                    semantics[i].Usage =
+                            (usage_token & D3DSP_DCL_USAGE_MASK) >> D3DSP_DCL_USAGE_SHIFT;
+                    semantics[i].UsageIndex =
+                            (usage_token & D3DSP_DCL_USAGEINDEX_MASK) >> D3DSP_DCL_USAGEINDEX_SHIFT;
+                }
+                ++i;
+            }
+            byte_code += 3;
+        }
+        else if (!has_dcl)
+        {
+            unsigned int len = get_instr_length(byte_code, major, minor) + 1;
 
-            ptr++;
+            switch (*byte_code & 0xffff)
+            {
+                case D3DSIO_COMMENT:
+                case D3DSIO_DEF:
+                case D3DSIO_DEFB:
+                case D3DSIO_DEFI:
+                    byte_code += len;
+                    break;
+                default:
+                    ++byte_code;
+                    while (*byte_code & 0x80000000)
+                    {
+                        reg_type = ((*byte_code & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT)
+                                | ((*byte_code & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2);
+                        index = *byte_code & D3DSP_REGNUM_MASK;
+
+                        if ((reg_type == D3DSPR_TEMP && is_ps && major == 1)
+                                || (reg_type == D3DSPR_INPUT && is_ps)
+                                || (reg_type == D3DSPR_TEXTURE && is_ps && !output)
+                                || reg_type == D3DSPR_RASTOUT
+                                || reg_type == D3DSPR_ATTROUT
+                                || reg_type == D3DSPR_OUTPUT
+                                || reg_type == D3DSPR_DEPTHOUT)
+                        {
+                            if (reg_type == D3DSPR_RASTOUT)
+                                rastout |= 1u << index;
+                            else if (reg_type == D3DSPR_DEPTHOUT)
+                                depth = TRUE;
+                            else if (reg_type == D3DSPR_TEXTURE || reg_type == D3DSPR_OUTPUT)
+                                texcoords |= 1u << index;
+                            else
+                                colors |= 1u << index;
+                        }
+                        ++byte_code;
+                    }
+            }
         }
         else
         {
-            ptr = skip_instruction(ptr, shader_model);
+            byte_code += get_instr_length(byte_code, major, minor) + 1;
         }
     }
 
-    return i;
+    if (!has_dcl)
+    {
+        i = j = 0;
+        while (texcoords)
+        {
+            if (texcoords & 1)
+            {
+                if (semantics)
+                {
+                    semantics[i].Usage = D3DDECLUSAGE_TEXCOORD;
+                    semantics[i].UsageIndex = j;
+                }
+                ++i;
+            }
+            texcoords >>= 1;
+            ++j;
+        }
+        j = 0;
+        while (colors)
+        {
+            if (colors & 1)
+            {
+                if (semantics)
+                {
+                    semantics[i].Usage = D3DDECLUSAGE_COLOR;
+                    semantics[i].UsageIndex = j;
+                }
+                ++i;
+            }
+            colors >>= 1;
+            ++j;
+        }
+        j = 0;
+        while (rastout)
+        {
+            if (rastout & 1)
+            {
+                if (j >= ARRAY_SIZE(rast_usage))
+                {
+                    WARN("Invalid RASTOUT register index.\n");
+                    usage = 0;
+                }
+                else
+                {
+                    usage = rast_usage[j];
+                }
+                if (semantics)
+                {
+                    semantics[i].Usage = usage;
+                    semantics[i].UsageIndex = 0;
+                }
+                ++i;
+            }
+            rastout >>= 1;
+            ++j;
+        }
+        if (depth)
+        {
+            if (semantics)
+            {
+                semantics[i].Usage = D3DDECLUSAGE_DEPTH;
+                semantics[i].UsageIndex = 0;
+            }
+            ++i;
+        }
+    }
+
+    if (count)
+        *count = i;
+
+    return D3D_OK;
 }
 
 HRESULT WINAPI D3DXGetShaderInputSemantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count)
 {
-    UINT nb_semantics;
+    TRACE("byte_code %p, semantics %p, count %p.\n", byte_code, semantics, count);
 
-    TRACE("byte_code %p, semantics %p, count %p\n", byte_code, semantics, count);
-
-    if (!byte_code)
-        return D3DERR_INVALIDCALL;
-
-    nb_semantics = get_shader_semantics(byte_code, semantics, D3DSPR_INPUT);
-
-    if (count)
-        *count = nb_semantics;
-
-    return D3D_OK;
+    return get_shader_semantics(byte_code, semantics, count, FALSE);
 }
-
 
 HRESULT WINAPI D3DXGetShaderOutputSemantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count)
 {
-    UINT nb_semantics;
+    TRACE("byte_code %p, semantics %p, count %p.\n", byte_code, semantics, count);
 
-    TRACE("byte_code %p, semantics %p, count %p\n", byte_code, semantics, count);
-
-    if (!byte_code)
-        return D3DERR_INVALIDCALL;
-
-    nb_semantics = get_shader_semantics(byte_code, semantics, D3DSPR_OUTPUT);
-
-    if (count)
-        *count = nb_semantics;
-
-    return D3D_OK;
+    return get_shader_semantics(byte_code, semantics, count, TRUE);
 }
