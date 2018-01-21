@@ -168,7 +168,8 @@ static void run_wkstatransportenum_tests(void)
     /* 4th check: is param 6 passed? */
     apiReturn = pNetWkstaTransportEnum(NULL, 0, &bufPtr, MAX_PREFERRED_LENGTH,
         &entriesRead, NULL, NULL);
-    ok(apiReturn == RPC_X_NULL_REF_POINTER, "null pointer\n");
+    ok(apiReturn == RPC_X_NULL_REF_POINTER,
+       "NetWkstaTransportEnum returned %d\n", apiReturn);
 
     /* final check: valid return, actually get data back */
     apiReturn = pNetWkstaTransportEnum(NULL, 0, &bufPtr, MAX_PREFERRED_LENGTH,
