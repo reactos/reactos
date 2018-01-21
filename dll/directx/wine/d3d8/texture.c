@@ -20,17 +20,17 @@
 
 static inline struct d3d8_texture *impl_from_IDirect3DTexture8(IDirect3DTexture8 *iface)
 {
-    return CONTAINING_RECORD((IDirect3DBaseTexture8 *)iface, struct d3d8_texture, IDirect3DBaseTexture8_iface);
+    return CONTAINING_RECORD(iface, struct d3d8_texture, IDirect3DBaseTexture8_iface);
 }
 
 static inline struct d3d8_texture *impl_from_IDirect3DCubeTexture8(IDirect3DCubeTexture8 *iface)
 {
-    return CONTAINING_RECORD((IDirect3DBaseTexture8 *)iface, struct d3d8_texture, IDirect3DBaseTexture8_iface);
+    return CONTAINING_RECORD(iface, struct d3d8_texture, IDirect3DBaseTexture8_iface);
 }
 
 static inline struct d3d8_texture *impl_from_IDirect3DVolumeTexture8(IDirect3DVolumeTexture8 *iface)
 {
-    return CONTAINING_RECORD((IDirect3DBaseTexture8 *)iface, struct d3d8_texture, IDirect3DBaseTexture8_iface);
+    return CONTAINING_RECORD(iface, struct d3d8_texture, IDirect3DBaseTexture8_iface);
 }
 
 static HRESULT WINAPI d3d8_texture_2d_QueryInterface(IDirect3DTexture8 *iface, REFIID riid, void **out)

@@ -734,6 +734,8 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
     {
         present_parameters->BackBufferCount = swapchain_desc.backbuffer_count;
         wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_POINTSIZE_MIN, 0);
+        wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_ZENABLE,
+                !!swapchain_desc.enable_auto_depth_stencil);
         device->device_state = D3D8_DEVICE_STATE_OK;
     }
     else
@@ -3258,8 +3260,7 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
         return D3DERR_INVALIDCALL;
     }
 
-    hr = wined3d_device_init_3d(device->wined3d_device, &swapchain_desc);
-    if (FAILED(hr))
+    if (FAILED(hr = wined3d_device_init_3d(device->wined3d_device, &swapchain_desc)))
     {
         WARN("Failed to initialize 3D, hr %#x.\n", hr);
         wined3d_device_release_focus_window(device->wined3d_device);
@@ -3269,6 +3270,8 @@ HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wine
         return hr;
     }
 
+    wined3d_device_set_render_state(device->wined3d_device,
+            WINED3D_RS_ZENABLE, !!swapchain_desc.enable_auto_depth_stencil);
     wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_POINTSIZE_MIN, 0);
     wined3d_mutex_unlock();
 
