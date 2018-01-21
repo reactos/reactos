@@ -487,6 +487,33 @@ USBSTOR_FdoHandlePnp(
     return Status;
 }
 
+VOID
+NTAPI
+USBSTOR_FdoSetPowerCompletion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR MinorFunction,
+    IN POWER_STATE PowerState,
+    IN PVOID Context,
+    IN PIO_STATUS_BLOCK IoStatus)
+{
+    PDEVICE_OBJECT FdoDevice;
+    PFDO_DEVICE_EXTENSION FdoExtension;
+    PIRP CurrentPowerIrp;
+
+    FdoDevice = Context;
+    FdoExtension = FdoDevice->DeviceExtension;
+
+    CurrentPowerIrp = FdoExtension->CurrentPowerIrp;
+    FdoExtension->CurrentPowerIrp = NULL;
+
+    PoStartNextPowerIrp(CurrentPowerIrp);
+
+    IoCopyCurrentIrpStackLocationToNext(CurrentPowerIrp);
+    IoMarkIrpPending(CurrentPowerIrp);
+
+    PoCallDriver(FdoExtension->LowerDeviceObject, CurrentPowerIrp);
+}
+
 NTSTATUS
 NTAPI
 USBSTOR_FdoSetPower(
