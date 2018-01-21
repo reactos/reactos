@@ -1272,11 +1272,81 @@ static HRESULT WINAPI WshShell3_Run(IWshShell3 *iface, BSTR cmd, VARIANT *style,
     }
 }
 
-static HRESULT WINAPI WshShell3_Popup(IWshShell3 *iface, BSTR Text, VARIANT* SecondsToWait, VARIANT *Title, VARIANT *Type, int *button)
+struct popup_thread_param
 {
-    FIXME("(%s %s %s %s %p): stub\n", debugstr_w(Text), debugstr_variant(SecondsToWait),
-        debugstr_variant(Title), debugstr_variant(Type), button);
-    return E_NOTIMPL;
+    WCHAR *text;
+    VARIANT title;
+    VARIANT type;
+    INT button;
+};
+
+static DWORD WINAPI popup_thread_proc(void *arg)
+{
+    static const WCHAR defaulttitleW[] = {'W','i','n','d','o','w','s',' ','S','c','r','i','p','t',' ','H','o','s','t',0};
+    struct popup_thread_param *param = (struct popup_thread_param *)arg;
+
+    param->button = MessageBoxW(NULL, param->text, is_optional_argument(&param->title) ?
+            defaulttitleW : V_BSTR(&param->title), V_I4(&param->type));
+    return 0;
+}
+
+static HRESULT WINAPI WshShell3_Popup(IWshShell3 *iface, BSTR text, VARIANT *seconds_to_wait, VARIANT *title,
+        VARIANT *type, int *button)
+{
+    struct popup_thread_param param;
+    DWORD tid, status;
+    VARIANT timeout;
+    HANDLE hthread;
+    HRESULT hr;
+
+    TRACE("(%s %s %s %s %p)\n", debugstr_w(text), debugstr_variant(seconds_to_wait), debugstr_variant(title),
+        debugstr_variant(type), button);
+
+    if (!seconds_to_wait || !title || !type || !button)
+        return E_POINTER;
+
+    VariantInit(&timeout);
+    if (!is_optional_argument(seconds_to_wait))
+    {
+        hr = VariantChangeType(&timeout, seconds_to_wait, 0, VT_I4);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    VariantInit(&param.type);
+    if (!is_optional_argument(type))
+    {
+        hr = VariantChangeType(&param.type, type, 0, VT_I4);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    if (is_optional_argument(title))
+        param.title = *title;
+    else
+    {
+        VariantInit(&param.title);
+        hr = VariantChangeType(&param.title, title, 0, VT_BSTR);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    param.text = text;
+    param.button = -1;
+    hthread = CreateThread(NULL, 0, popup_thread_proc, &param, 0, &tid);
+    status = MsgWaitForMultipleObjects(1, &hthread, FALSE, V_I4(&timeout) ? V_I4(&timeout) * 1000: INFINITE, 0);
+    if (status == WAIT_TIMEOUT)
+    {
+        PostThreadMessageW(tid, WM_QUIT, 0, 0);
+        MsgWaitForMultipleObjects(1, &hthread, FALSE, INFINITE, 0);
+        param.button = -1;
+    }
+    *button = param.button;
+
+    VariantClear(&param.title);
+    CloseHandle(hthread);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI WshShell3_CreateShortcut(IWshShell3 *iface, BSTR PathLink, IDispatch** Shortcut)
