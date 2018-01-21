@@ -123,6 +123,15 @@ static void test_ldap_set_optionW( LDAP *ld )
     ok( !ret, "ldap_set_optionW failed 0x%08x\n", ret );
 }
 
+static void test_ldap_get_optionW( LDAP *ld )
+{
+    ULONG ret, version;
+
+    ret = ldap_get_optionW( ld, LDAP_OPT_PROTOCOL_VERSION, &version );
+    ok( !ret, "ldap_get_optionW failed 0x%08x\n", ret );
+    ok( version == LDAP_VERSION3, "got %u\n", version );
+}
+
 START_TEST (parse)
 {
     LDAP *ld;
@@ -132,6 +141,7 @@ START_TEST (parse)
 
     test_ldap_parse_sort_control( ld );
     test_ldap_search_extW( ld );
+    test_ldap_get_optionW( ld );
     test_ldap_set_optionW( ld );
     ldap_unbind( ld );
 }
