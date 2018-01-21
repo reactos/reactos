@@ -478,38 +478,38 @@ START_TEST(GetTextMetrics)
 
             if (test->cxText > 0)
             {
-                ok_(__FILE__, test->line)(labs(test->cxText - siz.cx) <= 1, "%s: labs(test->cxText - siz.cx) == labs(%ld - %ld) > 1\n", font->entry_name, test->cxText, siz.cx);
-                ok_(__FILE__, test->line)(labs(test->cxText - siz.cx) == 0, "%s: labs(test->cxText - siz.cx) == labs(%ld - %ld) != 0\n", font->entry_name, test->cxText, siz.cx);
+                ok_(__FILE__, test->line)(labs(test->cxText - siz.cx) <= 1, "%s (%ld): cxText: labs(%ld - %ld) > 1\n", font->entry_name, test->lfHeight, test->cxText, siz.cx);
+                ok_(__FILE__, test->line)(labs(test->cxText - siz.cx) == 0, "%s (%ld): cxText: labs(%ld - %ld) != 0\n", font->entry_name, test->lfHeight, test->cxText, siz.cx);
             }
             if (test->cyText > 0)
             {
-                ok_(__FILE__, test->line)(labs(test->cyText - siz.cy) <= 1, "%s: labs(test->cyText - siz.cy) == labs(%ld - %ld) > 1\n", font->entry_name, test->cyText, siz.cy);
-                ok_(__FILE__, test->line)(labs(test->cyText - siz.cy) == 0, "%s: labs(test->cyText - siz.cy) == labs(%ld - %ld) != 0\n", font->entry_name, test->cyText, siz.cy);
+                ok_(__FILE__, test->line)(labs(test->cyText - siz.cy) <= 1, "%s (%ld): cyText: labs(%ld - %ld) > 1\n", font->entry_name, test->lfHeight, test->cyText, siz.cy);
+                ok_(__FILE__, test->line)(labs(test->cyText - siz.cy) == 0, "%s (%ld): cyText: labs(%ld - %ld) != 0\n", font->entry_name, test->lfHeight, test->cyText, siz.cy);
             }
             if (test->tmHeight > 0)
             {
-                ok_(__FILE__, test->line)(labs(test->tmHeight - tm.tmHeight) <= 1, "%s: labs(test->tmHeight - tm.tmHeight) == labs(%ld - %ld) > 1\n", font->entry_name, test->tmHeight, tm.tmHeight);
-                ok_(__FILE__, test->line)(labs(test->tmHeight - tm.tmHeight) == 0, "%s: labs(test->tmHeight - tm.tmHeight) == labs(%ld - %ld) != 0\n", font->entry_name, test->tmHeight, tm.tmHeight);
+                ok_(__FILE__, test->line)(labs(test->tmHeight - tm.tmHeight) <= 1, "%s (%ld): tmHeight: labs(%ld - %ld) > 1\n", font->entry_name, test->lfHeight, test->tmHeight, tm.tmHeight);
+                ok_(__FILE__, test->line)(labs(test->tmHeight - tm.tmHeight) == 0, "%s (%ld): tmHeight: labs(%ld - %ld) != 0\n", font->entry_name, test->lfHeight, test->tmHeight, tm.tmHeight);
             }
             if (test->tmAscent > 0)
             {
-                ok_(__FILE__, test->line)(labs(test->tmAscent - tm.tmAscent) <= 1, "%s: labs(test->tmAscent - tm.tmAscent) == labs(%ld - %ld) > 1\n", font->entry_name, test->tmAscent, tm.tmAscent);
-                ok_(__FILE__, test->line)(labs(test->tmAscent - tm.tmAscent) == 0, "%s: labs(test->tmAscent - tm.tmAscent) == labs(%ld - %ld) != 0\n", font->entry_name, test->tmAscent, tm.tmAscent);
+                ok_(__FILE__, test->line)(labs(test->tmAscent - tm.tmAscent) <= 1, "%s (%ld): tmAscent: labs(%ld - %ld) > 1\n", font->entry_name, test->lfHeight, test->tmAscent, tm.tmAscent);
+                ok_(__FILE__, test->line)(labs(test->tmAscent - tm.tmAscent) == 0, "%s (%ld): tmAscent: labs(%ld - %ld) != 0\n", font->entry_name, test->lfHeight, test->tmAscent, tm.tmAscent);
             }
             if (test->tmDescent > 0)
             {
-                ok_(__FILE__, test->line)(labs(test->tmDescent - tm.tmDescent) <= 1, "%s: labs(test->tmDescent - tm.tmDescent) == labs(%ld - %ld) > 1\n", font->entry_name, test->tmDescent, tm.tmDescent);
-                ok_(__FILE__, test->line)(labs(test->tmDescent - tm.tmDescent) == 0, "%s: labs(test->tmDescent - tm.tmDescent) == labs(%ld - %ld) != 0\n", font->entry_name, test->tmDescent, tm.tmDescent);
+                ok_(__FILE__, test->line)(labs(test->tmDescent - tm.tmDescent) <= 1, "%s (%ld): tmDescent: labs(%ld - %ld) > 1\n", font->entry_name, test->lfHeight, test->tmDescent, tm.tmDescent);
+                ok_(__FILE__, test->line)(labs(test->tmDescent - tm.tmDescent) == 0, "%s (%ld): tmDescent: labs(%ld - %ld) != 0\n", font->entry_name, test->lfHeight, test->tmDescent, tm.tmDescent);
             }
             if (test->tmInternalLeading > 0)
             {
-                ok_(__FILE__, test->line)(labs(test->tmInternalLeading - tm.tmInternalLeading) <= 1, "%s: labs(test->tmInternalLeading - tm.tmInternalLeading) == labs(%ld - %ld) > 1\n", font->entry_name, test->tmInternalLeading, tm.tmInternalLeading);
-                ok_(__FILE__, test->line)(labs(test->tmInternalLeading - tm.tmInternalLeading) == 0, "%s: labs(test->tmInternalLeading - tm.tmInternalLeading) == labs(%ld - %ld) != 0\n", font->entry_name, test->tmInternalLeading, tm.tmInternalLeading);
+                ok_(__FILE__, test->line)(labs(test->tmInternalLeading - tm.tmInternalLeading) <= 1, "%s (%ld): tmInternalLeading: labs(%ld - %ld) > 1\n", font->entry_name, test->lfHeight, test->tmInternalLeading, tm.tmInternalLeading);
+                ok_(__FILE__, test->line)(labs(test->tmInternalLeading - tm.tmInternalLeading) == 0, "%s (%ld): tmInternalLeading: labs(%ld - %ld) != 0\n", font->entry_name, test->lfHeight, test->tmInternalLeading, tm.tmInternalLeading);
             }
             if (test->tmExternalLeading > 0)
             {
-                ok_(__FILE__, test->line)(labs(test->tmExternalLeading - tm.tmExternalLeading) <= 1, "%s: labs(test->tmExternalLeading - tm.tmExternalLeading) == labs(%ld - %ld) > 1\n", font->entry_name, test->tmExternalLeading, tm.tmExternalLeading);
-                ok_(__FILE__, test->line)(labs(test->tmExternalLeading - tm.tmExternalLeading) == 0, "%s: labs(test->tmExternalLeading - tm.tmExternalLeading) == labs(%ld - %ld) != 0\n", font->entry_name, test->tmExternalLeading, tm.tmExternalLeading);
+                ok_(__FILE__, test->line)(labs(test->tmExternalLeading - tm.tmExternalLeading) <= 1, "%s (%ld): tmExternalLeading: labs(%ld - %ld) > 1\n", font->entry_name, test->lfHeight, test->tmExternalLeading, tm.tmExternalLeading);
+                ok_(__FILE__, test->line)(labs(test->tmExternalLeading - tm.tmExternalLeading) == 0, "%s (%ld): tmExternalLeading: labs(%ld - %ld) != 0\n", font->entry_name, test->lfHeight, test->tmExternalLeading, tm.tmExternalLeading);
             }
         }
 #endif
