@@ -2511,11 +2511,11 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             if (!(lpitem->fState & MF_HILITE) )
             {
                 ++rect.left; ++rect.top; ++rect.right; ++rect.bottom;
-                IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_HIGHLIGHTTEXT));
+                IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
                 DrawTextW( hdc, Text, i, &rect, uFormat );
                 --rect.left; --rect.top; --rect.right; --rect.bottom;
             }
-            IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_GRAYTEXT));
+            IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNSHADOW));
         }
         DrawTextW( hdc, Text, i, &rect, uFormat);
 
@@ -2538,11 +2538,11 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
                 if (!(lpitem->fState & MF_HILITE) )
                 {
                     ++rect.left; ++rect.top; ++rect.right; ++rect.bottom;
-                    IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_HIGHLIGHTTEXT));
+                    IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
                     DrawTextW( hdc, Text + i + 1, -1, &rect, uFormat);
                     --rect.left; --rect.top; --rect.right; --rect.bottom;
                 }
-                IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_GRAYTEXT));
+                IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNSHADOW));
             }
             DrawTextW( hdc, Text + i + 1, -1, &rect, uFormat );
         }
