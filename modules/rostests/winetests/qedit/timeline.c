@@ -106,11 +106,49 @@ static void test_timeline(void)
     hr = IAMTimelineObj_GetTimelineNoRef(obj, &timeline2);
     ok(hr == E_NOINTERFACE, "Expected E_NOINTERFACE got %08x\n", hr);
     ok(!timeline2, "Expected NULL got %p\n", timeline2);
+
+    IAMTimelineObj_Release(obj);
+    IAMTimeline_Release(timeline);
+}
+
+static void test_timelineobj_interfaces(void)
+{
+    HRESULT hr;
+    IAMTimeline *timeline = NULL;
+    IAMTimelineObj *obj;
+
+    hr = CoCreateInstance(&CLSID_AMTimeline, NULL, CLSCTX_INPROC_SERVER, &IID_IAMTimeline, (void **)&timeline);
+    ok(hr == S_OK || broken(hr == REGDB_E_CLASSNOTREG), "CoCreateInstance failed: %08x\n", hr);
+    if (!timeline)
+        return;
+
+    hr = IAMTimeline_CreateEmptyNode(timeline, &obj, TIMELINE_MAJOR_TYPE_GROUP);
+    ok(hr == S_OK, "CreateEmptyNode failed: %08x\n", hr);
+    if(hr == S_OK)
+    {
+        IAMTimelineGroup *group;
+        IAMTimelineObj *obj2;
+
+        hr = IAMTimelineObj_QueryInterface(obj, &IID_IAMTimelineGroup, (void **)&group);
+        ok(hr == S_OK, "got %08x\n", hr);
+
+        hr = IAMTimelineGroup_QueryInterface(group, &IID_IAMTimelineObj, (void **)&obj2);
+        ok(hr == S_OK, "got %08x\n", hr);
+        ok(obj == obj2, "Different pointers\n");
+        IAMTimelineObj_Release(obj2);
+
+        IAMTimelineGroup_Release(group);
+
+        IAMTimelineObj_Release(obj);
+    }
+
+    IAMTimeline_Release(timeline);
 }
 
 START_TEST(timeline)
 {
     CoInitialize(NULL);
     test_timeline();
+    test_timelineobj_interfaces();
     CoUninitialize();
 }
