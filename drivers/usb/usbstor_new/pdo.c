@@ -1267,3 +1267,14 @@ USBSTOR_CreatePDO(
     //
     return Status;
 }
+
+NTSTATUS
+NTAPI
+USBSTOR_PdoSetPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    DPRINT1("USBSTOR_PdoSetPower: UNIMPLEMENTED\n");
+    ASSERT(FALSE);
+    return STATUS_SUCCESS;
+}

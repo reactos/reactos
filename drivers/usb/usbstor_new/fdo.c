@@ -486,3 +486,14 @@ USBSTOR_FdoHandlePnp(
     //
     return Status;
 }
+
+NTSTATUS
+NTAPI
+USBSTOR_FdoSetPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    DPRINT1("USBSTOR_FdoSetPower: UNIMPLEMENTED\n");
+    ASSERT(FALSE);
+    return STATUS_SUCCESS;
+}

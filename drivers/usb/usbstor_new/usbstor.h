@@ -440,6 +440,12 @@ USBSTOR_FdoHandlePnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp);
 
+NTSTATUS
+NTAPI
+USBSTOR_FdoSetPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
 //---------------------------------------------------------------------
 //
 // pdo.c routines
@@ -453,6 +459,12 @@ NTSTATUS
 USBSTOR_CreatePDO(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR LUN);
+
+NTSTATUS
+NTAPI
+USBSTOR_PdoSetPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
 
 //---------------------------------------------------------------------
 //
