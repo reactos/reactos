@@ -1098,8 +1098,7 @@ static HRESULT AVISplitter_InputPin_PreConnect(IPin * iface, IPin * pConnectPin,
         pos += sizeof(RIFFCHUNK) + list.cb;
         hr = IAsyncReader_SyncRead(This->pReader, pos, sizeof(list), (BYTE *)&list);
     }
-    while (hr == S_OK && (list.fcc != FOURCC_LIST ||
-           (list.fcc == FOURCC_LIST && list.fccListType != listtypeAVIMOVIE)));
+    while (hr == S_OK && (list.fcc != FOURCC_LIST || list.fccListType != listtypeAVIMOVIE));
 
     if (hr != S_OK)
     {
