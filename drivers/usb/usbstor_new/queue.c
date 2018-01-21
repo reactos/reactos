@@ -560,7 +560,7 @@ USBSTOR_StartIo(
     // get current irp stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    if ( IoStack->MajorFunction == IRP_MJ_POWER )
+    if (IoStack->MajorFunction == IRP_MJ_POWER)
     {
         KeSetEvent(&FDODeviceExtension->PowerEvent, IO_NO_INCREMENT, FALSE);
         return;
