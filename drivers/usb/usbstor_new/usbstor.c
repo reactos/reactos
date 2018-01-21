@@ -235,23 +235,47 @@ USBSTOR_DispatchPower(
     PIRP Irp)
 {
     PFDO_DEVICE_EXTENSION DeviceExtension;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
 
     // get common device extension
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     if (DeviceExtension->Common.IsFDO)
     {
-        PoStartNextPowerIrp(Irp);
-        IoSkipCurrentIrpStackLocation(Irp);
-        return PoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+        if (IoStack->MinorFunction == IRP_MN_SET_POWER)
+        {
+            Status = USBSTOR_FdoSetPower(DeviceObject, Irp);
+        }
+        else
+        {
+            PoStartNextPowerIrp(Irp);
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = PoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+        }
     }
     else
     {
+        if (IoStack->MinorFunction == IRP_MN_SET_POWER)
+        {
+            Status = USBSTOR_PdoSetPower(DeviceObject, Irp);
+        }
+        else if (IoStack->MinorFunction == IRP_MN_QUERY_POWER)
+        {
+            Status = STATUS_SUCCESS;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            Status = Irp->IoStatus.Status;
+        }
+
         PoStartNextPowerIrp(Irp);
-        Irp->IoStatus.Status = STATUS_SUCCESS;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
     }
+
+    return Status;
 }
 
 
