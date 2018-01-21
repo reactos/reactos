@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for GetTextExtentPoint32 and GetTextExtentPoint32
- * PROGRAMMERS:     Katayama Hirofumi MZ
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Test for GetTextMetrics and GetTextExtentPoint32
+ * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
