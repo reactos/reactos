@@ -540,7 +540,95 @@ USBSTOR_FdoSetPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    DPRINT1("USBSTOR_FdoSetPower: UNIMPLEMENTED\n");
-    ASSERT(FALSE);
-    return STATUS_SUCCESS;
+    PFDO_DEVICE_EXTENSION FdoExtension;
+    PIO_STACK_LOCATION IoStack;
+    POWER_STATE_TYPE Type;
+    POWER_STATE State;
+    POWER_STATE NewState;
+    POWER_STATE OldState;
+
+    DPRINT("USBSTOR_FdoSetPower: DeviceObject %p, Irp %p\n", DeviceObject, Irp);
+
+    FdoExtension = DeviceObject->DeviceExtension;
+
+    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    Type = IoStack->Parameters.Power.Type;
+    State = IoStack->Parameters.Power.State;
+
+    switch (Type)
+    {
+        case SystemPowerState:
+            FdoExtension->SystemState = State.SystemState;
+
+            if (State.SystemState == PowerSystemWorking)
+                NewState.DeviceState = PowerDeviceD0;
+            else
+                NewState.DeviceState = PowerDeviceD3;
+
+            if (FdoExtension->DeviceState != NewState.DeviceState)
+            {
+                FdoExtension->CurrentPowerIrp = Irp;
+
+                DPRINT("USBSTOR_FdoSetPower: State.SystemState - %x\n",
+                       State.SystemState);
+
+                return PoRequestPowerIrp(FdoExtension->PhysicalDeviceObject,
+                                         IRP_MN_SET_POWER,
+                                         NewState,
+                                         USBSTOR_FdoSetPowerCompletion,
+                                         DeviceObject,
+                                         NULL);
+            }
+            break;
+
+        case DevicePowerState:
+            OldState.DeviceState = FdoExtension->DeviceState;
+            FdoExtension->DeviceState = State.DeviceState;
+
+            DPRINT("USBSTOR_FdoSetPower: State.DeviceState - %x, OldState.DeviceState - %x\n",
+                   State.DeviceState,
+                   OldState.DeviceState);
+
+            if (OldState.DeviceState == PowerDeviceD0)
+            {
+                if (State.DeviceState > PowerDeviceD0)
+                {
+                    ULONG Key = 0;
+                    IoStartPacket(DeviceObject, Irp, &Key, NULL);
+
+                    KeWaitForSingleObject(&FdoExtension->PowerEvent,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+                }
+            }
+            else
+            {
+                if (OldState.DeviceState > PowerDeviceD0 &&
+                    State.DeviceState == PowerDeviceD0)
+                {
+                    IoCopyCurrentIrpStackLocationToNext(Irp);
+
+                    IoSetCompletionRoutine(Irp,
+                                           USBSTOR_FdoSetD0Completion,
+                                           NULL,
+                                           TRUE,
+                                           TRUE,
+                                           TRUE);
+
+                    return PoCallDriver(FdoExtension->LowerDeviceObject, Irp);
+                }
+            }
+            break;
+
+        default:
+            ASSERT(FALSE);
+            break;
+    }
+
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+
+    return PoCallDriver(FdoExtension->LowerDeviceObject, Irp);
 }
