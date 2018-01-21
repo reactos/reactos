@@ -151,7 +151,7 @@ USBSTOR_IsRequestTimeOut(
 
         DPRINT1("USBSTOR_IsRequestTimeOut: Irp - %p, Srb - %p\n", Irp, Srb);
 
-        IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+        IoStack = IoGetCurrentIrpStackLocation(Irp);
         IoStack->Parameters.Scsi.Srb = Srb;
 
         Irp->IoStatus.Status = STATUS_IO_TIMEOUT;
@@ -436,7 +436,7 @@ USBSTOR_CswCompletion(
     DPRINT("USBSTOR_CswCompletion: ... \n");
 
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     Srb = IoStack->Parameters.Scsi.Srb;
 
     FdoDevice = PDODeviceExtension->LowerDeviceObject;
@@ -612,7 +612,7 @@ USBSTOR_DataCompletion(
     FdoDevice = PDODeviceExtension->LowerDeviceObject;
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
 
-    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     Srb = IoStack->Parameters.Scsi.Srb;
 
     if (Srb == FDODeviceExtension->CurrentSrb &&
@@ -688,7 +688,7 @@ USBSTOR_DataTransfer(
 
     DPRINT("USBSTOR_DataTransfer: ... \n");
 
-    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     Srb = IoStack->Parameters.Scsi.Srb;
 
     if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) == SRB_FLAGS_DATA_IN)
@@ -789,7 +789,7 @@ USBSTOR_CbwCompletion(
     FdoDevice = PDODeviceExtension->LowerDeviceObject;
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
 
-    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     Srb = IoStack->Parameters.Scsi.Srb;
 
     if (USBSTOR_IsRequestTimeOut(FdoDevice, Irp, &Status))
@@ -859,7 +859,7 @@ USBSTOR_CbwTransfer(
 
     FDODeviceExtension->RetryCount = 0;
 
-    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     PDODeviceExtension = IoStack->DeviceObject->DeviceExtension;
     Srb = IoStack->Parameters.Scsi.Srb;
 
@@ -904,7 +904,7 @@ USBSTOR_IssueRequestSense(
 
     CurrentSrb = FDODeviceExtension->CurrentSrb;
     SenseSrb = &FDODeviceExtension->SenseSrb;
-    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     IoStack->Parameters.Scsi.Srb = SenseSrb;
 
     RtlZeroMemory(SenseSrb, sizeof(FDODeviceExtension->SenseSrb));

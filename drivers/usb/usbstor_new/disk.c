@@ -24,7 +24,7 @@ IsRequestValid(PIRP Irp)
 
     DPRINT("IsRequestValid: ... \n");
 
-    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     Srb = IoStack->Parameters.Scsi.Srb;
 
     if (Srb->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))

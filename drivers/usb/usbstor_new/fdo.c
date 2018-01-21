@@ -551,7 +551,7 @@ USBSTOR_FdoSetPower(
 
     FdoExtension = DeviceObject->DeviceExtension;
 
-    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     Type = IoStack->Parameters.Power.Type;
     State = IoStack->Parameters.Power.State;
 

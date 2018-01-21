@@ -146,7 +146,7 @@ USBSTOR_ResetDeviceWorkItem(
         {
             PIO_STACK_LOCATION IoStack;
 
-            IoStack = FDODeviceExtension->CurrentIrp->Tail.Overlay.CurrentStackLocation;
+            IoStack = IoGetCurrentIrpStackLocation(FDODeviceExtension->CurrentIrp);
             PDODeviceExtension = IoStack->Parameters.Others.Argument2;
         }
 
