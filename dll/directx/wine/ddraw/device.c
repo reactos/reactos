@@ -1166,7 +1166,7 @@ static HRESULT WINAPI d3d_device3_EnumTextureFormats(IDirect3DDevice3 *iface,
  * IDirect3DDevice2::EnumTextureformats
  *
  * EnumTextureFormats for Version 1 and 2, see
- * IDirect3DDevice7::EnumTexureFormats for a more detailed description.
+ * IDirect3DDevice7::EnumTextureFormats for a more detailed description.
  *
  * This version has a different callback and does not enumerate FourCC
  * formats
@@ -1852,7 +1852,7 @@ static HRESULT d3d_device7_SetRenderTarget(IDirect3DDevice7 *iface,
         return DDERR_INVALIDCAPS;
     }
 
-    if (device->hw && !(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
     {
         WARN("Surface %p is not in video memory.\n", target_impl);
         wined3d_mutex_unlock();
@@ -1928,7 +1928,7 @@ static HRESULT WINAPI d3d_device3_SetRenderTarget(IDirect3DDevice3 *iface,
         return DDERR_INVALIDPIXELFORMAT;
     }
 
-    if (device->hw && !(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
     {
         WARN("Surface %p is not in video memory.\n", target_impl);
         IDirectDrawSurface4_AddRef(target);
@@ -1977,7 +1977,7 @@ static HRESULT WINAPI d3d_device2_SetRenderTarget(IDirect3DDevice2 *iface,
         return DDERR_INVALIDPIXELFORMAT;
     }
 
-    if (device->hw && !(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    if (!(target_impl->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
     {
         WARN("Surface %p is not in video memory.\n", target_impl);
         IDirectDrawSurface_AddRef(target);
@@ -6453,6 +6453,7 @@ static HRESULT WINAPI d3d_device7_GetLightEnable_FPUPreserve(IDirect3DDevice7 *i
 static HRESULT d3d_device7_SetClipPlane(IDirect3DDevice7 *iface, DWORD idx, D3DVALUE *plane)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
+    const struct wined3d_vec4 *wined3d_plane;
     HRESULT hr;
 
     TRACE("iface %p, idx %u, plane %p.\n", iface, idx, plane);
@@ -6460,8 +6461,19 @@ static HRESULT d3d_device7_SetClipPlane(IDirect3DDevice7 *iface, DWORD idx, D3DV
     if (!plane)
         return DDERR_INVALIDPARAMS;
 
+    wined3d_plane = (struct wined3d_vec4 *)plane;
+
     wined3d_mutex_lock();
-    hr = wined3d_device_set_clip_plane(device->wined3d_device, idx, (struct wined3d_vec4 *)plane);
+    hr = wined3d_device_set_clip_plane(device->wined3d_device, idx, wined3d_plane);
+    if (idx < ARRAY_SIZE(device->user_clip_planes))
+    {
+        device->user_clip_planes[idx] = *wined3d_plane;
+        if (hr == WINED3DERR_INVALIDCALL)
+        {
+            WARN("Clip plane %u is not supported.\n", idx);
+            hr = D3D_OK;
+        }
+    }
     wined3d_mutex_unlock();
 
     return hr;
@@ -6501,6 +6513,7 @@ static HRESULT WINAPI d3d_device7_SetClipPlane_FPUPreserve(IDirect3DDevice7 *ifa
 static HRESULT d3d_device7_GetClipPlane(IDirect3DDevice7 *iface, DWORD idx, D3DVALUE *plane)
 {
     struct d3d_device *device = impl_from_IDirect3DDevice7(iface);
+    struct wined3d_vec4 *wined3d_plane;
     HRESULT hr;
 
     TRACE("iface %p, idx %u, plane %p.\n", iface, idx, plane);
@@ -6508,8 +6521,16 @@ static HRESULT d3d_device7_GetClipPlane(IDirect3DDevice7 *iface, DWORD idx, D3DV
     if (!plane)
         return DDERR_INVALIDPARAMS;
 
+    wined3d_plane = (struct wined3d_vec4 *)plane;
+
     wined3d_mutex_lock();
-    hr = wined3d_device_get_clip_plane(device->wined3d_device, idx, (struct wined3d_vec4 *)plane);
+    hr = wined3d_device_get_clip_plane(device->wined3d_device, idx, wined3d_plane);
+    if (hr == WINED3DERR_INVALIDCALL && idx < ARRAY_SIZE(device->user_clip_planes))
+    {
+        WARN("Clip plane %u is not supported.\n", idx);
+        *wined3d_plane = device->user_clip_planes[idx];
+        hr = D3D_OK;
+    }
     wined3d_mutex_unlock();
 
     return hr;
@@ -6866,7 +6887,7 @@ enum wined3d_depth_buffer_type d3d_device_update_depth_stencil(struct d3d_device
     return WINED3D_ZB_TRUE;
 }
 
-static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw, BOOL hw,
+static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw,
         struct ddraw_surface *target, IUnknown *rt_iface, UINT version, IUnknown *outer_unknown)
 {
     static const D3DMATRIX ident =
@@ -6889,7 +6910,6 @@ static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw, B
     device->IUnknown_inner.lpVtbl = &d3d_device_inner_vtbl;
     device->ref = 1;
     device->version = version;
-    device->hw = hw;
 
     if (outer_unknown)
         device->outer_unknown = outer_unknown;
@@ -6940,18 +6960,14 @@ static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw, B
     return D3D_OK;
 }
 
-HRESULT d3d_device_create(struct ddraw *ddraw, const GUID *guid, struct ddraw_surface *target, IUnknown *rt_iface,
+HRESULT d3d_device_create(struct ddraw *ddraw, struct ddraw_surface *target, IUnknown *rt_iface,
         UINT version, struct d3d_device **device, IUnknown *outer_unknown)
 {
     struct d3d_device *object;
-    BOOL hw = TRUE;
     HRESULT hr;
 
-    TRACE("ddraw %p, guid %s, target %p, version %u, device %p, outer_unknown %p.\n",
-            ddraw, debugstr_guid(guid), target, version, device, outer_unknown);
-
-    if (IsEqualGUID(guid, &IID_IDirect3DRGBDevice))
-        hw = FALSE;
+    TRACE("ddraw %p, target %p, version %u, device %p, outer_unknown %p.\n",
+            ddraw, target, version, device, outer_unknown);
 
     if (!(target->surface_desc.ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
             || (target->surface_desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER))
@@ -6966,7 +6982,7 @@ HRESULT d3d_device_create(struct ddraw *ddraw, const GUID *guid, struct ddraw_su
         return DDERR_NOPALETTEATTACHED;
     }
 
-    if (hw && !(target->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    if (!(target->surface_desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
     {
         WARN("Surface %p is not in video memory.\n", target);
         return D3DERR_SURFACENOTINVIDMEM;
@@ -6993,7 +7009,7 @@ HRESULT d3d_device_create(struct ddraw *ddraw, const GUID *guid, struct ddraw_su
         return DDERR_OUTOFMEMORY;
     }
 
-    if (FAILED(hr = d3d_device_init(object, ddraw, hw, target, rt_iface, version, outer_unknown)))
+    if (FAILED(hr = d3d_device_init(object, ddraw, target, rt_iface, version, outer_unknown)))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);
         HeapFree(GetProcessHeap(), 0, object);
