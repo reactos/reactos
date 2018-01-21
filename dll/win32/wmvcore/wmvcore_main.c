@@ -1490,7 +1490,7 @@ static HRESULT WINAPI headerinfo_AddScript(IWMHeaderInfo3 *iface, LPCWSTR_WMSDK_
         LPCWSTR_WMSDK_TYPE_SAFE command, QWORD script_time)
 {
     WMReader *This = impl_from_IWMHeaderInfo3(iface);
-    FIXME("%p, %s, %p, %s\n", This, debugstr_w(type), debugstr_w(command), wine_dbgstr_longlong(script_time));
+    FIXME("%p, %s, %s, %s\n", This, debugstr_w(type), debugstr_w(command), wine_dbgstr_longlong(script_time));
     return E_NOTIMPL;
 }
 
