@@ -516,6 +516,26 @@ USBSTOR_FdoSetPowerCompletion(
 
 NTSTATUS
 NTAPI
+USBSTOR_FdoSetD0Completion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    NTSTATUS Status;
+    KIRQL OldIrql;
+
+    Status = Irp->IoStatus.Status;
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    IoStartNextPacket(DeviceObject, TRUE);
+    KeLowerIrql(OldIrql);
+
+    PoStartNextPowerIrp(Irp);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 USBSTOR_FdoSetPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
