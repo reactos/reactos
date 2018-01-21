@@ -14,7 +14,7 @@ typedef struct tagHOOKAPI {
     PVOID Unk2;
 } HOOKAPI, *PHOOKAPI;
 
-typedef BOOL (WINAPI* tSDBGETAPPPATCHDIR)(PVOID hsdb, LPWSTR path, DWORD size);
+typedef HRESULT (WINAPI* tSDBGETAPPPATCHDIR)(PVOID hsdb, LPWSTR path, DWORD size);
 typedef PHOOKAPI (WINAPI* tGETHOOKAPIS)(LPCSTR szCommandLine, LPCWSTR wszShimName, PDWORD pdwHookCount);
 
 

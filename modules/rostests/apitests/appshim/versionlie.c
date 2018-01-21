@@ -309,7 +309,7 @@ BOOL LoadShimDLL(PCWSTR ShimDll, HMODULE* module, tGETHOOKAPIS* ppGetHookAPIs)
         }
     }
 
-    if (!pSdbGetAppPatchDir || !pSdbGetAppPatchDir(NULL, buf, MAX_PATH))
+    if (!pSdbGetAppPatchDir || !SUCCEEDED(pSdbGetAppPatchDir(NULL, buf, MAX_PATH)))
     {
         skip("Unable to retrieve AppPatch dir, building manually\n");
         if (!GetSystemWindowsDirectoryW(buf, MAX_PATH))
