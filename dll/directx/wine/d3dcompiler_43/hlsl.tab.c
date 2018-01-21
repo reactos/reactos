@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.2"
+#define YYBISON_VERSION "3.0"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -72,6 +72,7 @@
 
 /* Copy the first part of user declarations.  */
 #line 21 "hlsl.y" /* yacc.c:339  */
+
 
 #include "d3dcompiler_private.h"
 
@@ -950,13 +951,13 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
 }
 
 
-#line 959 "hlsl.tab.c" /* yacc.c:339  */
+#line 955 "hlsl.tab.c" /* yacc.c:339  */
 
-# ifndef YY_NULLPTR
+# ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
+#   define YY_NULL nullptr
 #  else
-#   define YY_NULLPTR 0
+#   define YY_NULL 0
 #  endif
 # endif
 
@@ -968,7 +969,10 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
 # define YYERROR_VERBOSE 1
 #endif
 
-
+/* In a future release of Bison, this section will be replaced
+   by #include "hlsl.tab.h".  */
+#ifndef YY_HLSL_E_REACTOSSYNC3_0_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED
+# define YY_HLSL_E_REACTOSSYNC3_0_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -1092,7 +1096,7 @@ extern int hlsl_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 910 "hlsl.y" /* yacc.c:355  */
+#line 906 "hlsl.y" /* yacc.c:355  */
 
     struct hlsl_type *type;
     INT intval;
@@ -1112,7 +1116,7 @@ union YYSTYPE
     struct reg_reservation *reg_reservation;
     struct parse_colon_attribute colon_attribute;
 
-#line 1121 "hlsl.tab.c" /* yacc.c:355  */
+#line 1120 "hlsl.tab.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -1137,11 +1141,11 @@ extern YYSTYPE hlsl_lval;
 extern YYLTYPE hlsl_lloc;
 int hlsl_parse (void);
 
-
+#endif /* !YY_HLSL_E_REACTOSSYNC3_0_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 1150 "hlsl.tab.c" /* yacc.c:358  */
+#line 1149 "hlsl.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -1198,30 +1202,11 @@ typedef short int yytype_int16;
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE
-# if (defined __GNUC__                                               \
-      && (2 < __GNUC__ || (__GNUC__ == 2 && 96 <= __GNUC_MINOR__)))  \
-     || defined __SUNPRO_C && 0x5110 <= __SUNPRO_C
-#  define YY_ATTRIBUTE(Spec) __attribute__(Spec)
-# else
-#  define YY_ATTRIBUTE(Spec) /* empty */
-# endif
-#endif
-
-#ifndef YY_ATTRIBUTE_PURE
-# define YY_ATTRIBUTE_PURE   YY_ATTRIBUTE ((__pure__))
-#endif
-
-#ifndef YY_ATTRIBUTE_UNUSED
-# define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
-#endif
-
-#if !defined _Noreturn \
-     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
-# if defined _MSC_VER && 1200 <= _MSC_VER
-#  define _Noreturn __declspec (noreturn)
-# else
-#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
+#ifndef __attribute__
+/* This feature is available in gcc versions 2.5 and later.  */
+# if (! defined __GNUC__ || __GNUC__ < 2 \
+      || (__GNUC__ == 2 && __GNUC_MINOR__ < 5))
+#  define __attribute__(Spec) /* empty */
 # endif
 #endif
 
@@ -1450,24 +1435,24 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,  1095,  1095,  1097,  1134,  1138,  1141,  1146,  1168,  1185,
-    1186,  1188,  1214,  1224,  1225,  1226,  1229,  1233,  1252,  1256,
-    1261,  1268,  1275,  1305,  1310,  1317,  1321,  1322,  1325,  1329,
-    1334,  1340,  1346,  1351,  1360,  1365,  1370,  1384,  1398,  1409,
-    1412,  1423,  1427,  1431,  1436,  1440,  1459,  1479,  1483,  1488,
-    1493,  1498,  1503,  1508,  1516,  1534,  1535,  1536,  1547,  1555,
-    1564,  1570,  1576,  1584,  1590,  1593,  1598,  1604,  1610,  1619,
-    1632,  1635,  1643,  1646,  1650,  1654,  1658,  1662,  1666,  1670,
-    1674,  1678,  1682,  1686,  1691,  1697,  1701,  1706,  1711,  1717,
-    1723,  1727,  1732,  1736,  1743,  1744,  1745,  1746,  1747,  1748,
-    1751,  1774,  1798,  1803,  1809,  1824,  1839,  1847,  1859,  1864,
-    1872,  1886,  1900,  1914,  1925,  1930,  1944,  1948,  1967,  1986,
-    2040,  2100,  2136,  2140,  2156,  2172,  2192,  2224,  2228,  2232,
-    2236,  2241,  2245,  2252,  2259,  2267,  2271,  2278,  2286,  2290,
-    2294,  2299,  2303,  2310,  2317,  2324,  2332,  2336,  2343,  2351,
-    2355,  2360,  2364,  2369,  2373,  2378,  2382,  2387,  2391,  2396,
-    2400,  2405,  2409,  2426,  2430,  2434,  2438,  2442,  2446,  2450,
-    2454,  2458,  2462,  2466,  2471,  2475
+       0,  1091,  1091,  1093,  1130,  1134,  1137,  1142,  1164,  1181,
+    1182,  1184,  1210,  1220,  1221,  1222,  1225,  1229,  1248,  1252,
+    1257,  1264,  1271,  1301,  1306,  1313,  1317,  1318,  1321,  1325,
+    1330,  1336,  1342,  1347,  1356,  1361,  1366,  1380,  1394,  1405,
+    1408,  1419,  1423,  1427,  1432,  1436,  1455,  1475,  1479,  1484,
+    1489,  1494,  1499,  1504,  1512,  1530,  1531,  1532,  1543,  1551,
+    1560,  1566,  1572,  1580,  1586,  1589,  1594,  1600,  1606,  1615,
+    1628,  1631,  1639,  1642,  1646,  1650,  1654,  1658,  1662,  1666,
+    1670,  1674,  1678,  1682,  1687,  1693,  1697,  1702,  1707,  1713,
+    1719,  1723,  1728,  1732,  1739,  1740,  1741,  1742,  1743,  1744,
+    1747,  1770,  1794,  1799,  1805,  1820,  1835,  1843,  1855,  1860,
+    1868,  1882,  1896,  1910,  1921,  1926,  1940,  1944,  1963,  1982,
+    2036,  2096,  2132,  2136,  2152,  2168,  2188,  2220,  2224,  2228,
+    2232,  2237,  2241,  2248,  2255,  2263,  2267,  2274,  2282,  2286,
+    2290,  2295,  2299,  2306,  2313,  2320,  2328,  2332,  2339,  2347,
+    2351,  2356,  2360,  2365,  2369,  2374,  2378,  2383,  2387,  2392,
+    2396,  2401,  2405,  2422,  2426,  2430,  2434,  2438,  2442,  2446,
+    2450,  2454,  2458,  2462,  2467,  2471
 };
 #endif
 
@@ -1518,7 +1503,7 @@ static const char *const yytname[] =
   "mul_expr", "add_expr", "shift_expr", "relational_expr", "equality_expr",
   "bitand_expr", "bitxor_expr", "bitor_expr", "logicand_expr",
   "logicor_expr", "conditional_expr", "assignment_expr", "assign_op",
-  "expr", YY_NULLPTR
+  "expr", YY_NULL
 };
 #endif
 
@@ -2004,7 +1989,7 @@ do {                                            \
 
 /* Print *YYLOCP on YYO.  Private, do not rely on its existence. */
 
-YY_ATTRIBUTE_UNUSED
+__attribute__((__unused__))
 static unsigned
 yy_location_print_ (FILE *yyo, YYLTYPE const * const yylocp)
 {
@@ -2267,11 +2252,11 @@ static int
 yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yytype_int16 *yyssp, int yytoken)
 {
-  YYSIZE_T yysize0 = yytnamerr (YY_NULLPTR, yytname[yytoken]);
+  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
   YYSIZE_T yysize = yysize0;
   enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
   /* Internationalized format string. */
-  const char *yyformat = YY_NULLPTR;
+  const char *yyformat = YY_NULL;
   /* Arguments of yyformat. */
   char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
   /* Number of reported tokens (one for the "unexpected", one per
@@ -2328,7 +2313,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                   }
                 yyarg[yycount++] = yytname[yyx];
                 {
-                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
+                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
                   if (! (yysize <= yysize1
                          && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
                     return 2;
@@ -2685,14 +2670,14 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 1095 "hlsl.y" /* yacc.c:1646  */
+#line 1091 "hlsl.y" /* yacc.c:1646  */
     {
                             }
-#line 2697 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2677 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 1098 "hlsl.y" /* yacc.c:1646  */
+#line 1094 "hlsl.y" /* yacc.c:1646  */
     {
                                 const struct hlsl_ir_function_decl *decl;
 
@@ -2729,34 +2714,34 @@ yyreduce:
                                 TRACE("Adding function '%s' to the function list.\n", (yyvsp[0].function).name);
                                 add_function_decl(&hlsl_ctx.functions, (yyvsp[0].function).name, (yyvsp[0].function).decl, FALSE);
                             }
-#line 2738 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2718 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 1135 "hlsl.y" /* yacc.c:1646  */
+#line 1131 "hlsl.y" /* yacc.c:1646  */
     {
                                 TRACE("Declaration statement parsed.\n");
                             }
-#line 2746 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2726 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 1139 "hlsl.y" /* yacc.c:1646  */
+#line 1135 "hlsl.y" /* yacc.c:1646  */
     {
                             }
-#line 2753 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2733 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 1142 "hlsl.y" /* yacc.c:1646  */
+#line 1138 "hlsl.y" /* yacc.c:1646  */
     {
                                 TRACE("Skipping stray semicolon.\n");
                             }
-#line 2761 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2741 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 1147 "hlsl.y" /* yacc.c:1646  */
+#line 1143 "hlsl.y" /* yacc.c:1646  */
     {
                                 const char **new_array = NULL;
 
@@ -2764,7 +2749,7 @@ yyreduce:
                                 hlsl_ctx.line_no = (yyvsp[-1].intval);
                                 if (strcmp((yyvsp[0].name), hlsl_ctx.source_file))
                                     new_array = d3dcompiler_realloc(hlsl_ctx.source_files,
-                                            sizeof(*hlsl_ctx.source_files) * hlsl_ctx.source_files_count + 1);
+                                            sizeof(*hlsl_ctx.source_files) * (hlsl_ctx.source_files_count + 1));
 
                                 if (new_array)
                                 {
@@ -2777,11 +2762,11 @@ yyreduce:
                                     d3dcompiler_free((yyvsp[0].name));
                                 }
                             }
-#line 2786 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2766 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 1169 "hlsl.y" /* yacc.c:1646  */
+#line 1165 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -2797,11 +2782,11 @@ yyreduce:
                                 }
                                 (yyval.list) = declare_vars((yyvsp[-2].type), 0, (yyvsp[-1].list));
                             }
-#line 2806 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2786 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 1189 "hlsl.y" /* yacc.c:1646  */
+#line 1185 "hlsl.y" /* yacc.c:1646  */
     {
                                 BOOL ret;
                                 struct source_location loc;
@@ -2826,11 +2811,11 @@ yyreduce:
                                     return 1;
                                 }
                             }
-#line 2835 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2815 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 1215 "hlsl.y" /* yacc.c:1646  */
+#line 1211 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -2839,20 +2824,20 @@ yyreduce:
                                 check_invalid_matrix_modifiers((yyvsp[-4].modifiers), &loc);
                                 (yyval.type) = new_struct_type(NULL, (yyvsp[-4].modifiers), (yyvsp[-1].list));
                             }
-#line 2848 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2828 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 1229 "hlsl.y" /* yacc.c:1646  */
+#line 1225 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                             }
-#line 2857 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2837 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 1234 "hlsl.y" /* yacc.c:1646  */
+#line 1230 "hlsl.y" /* yacc.c:1646  */
     {
                                 BOOL ret;
                                 struct hlsl_struct_field *field, *next;
@@ -2870,48 +2855,48 @@ yyreduce:
                                 }
                                 d3dcompiler_free((yyvsp[0].list));
                             }
-#line 2879 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2859 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 1253 "hlsl.y" /* yacc.c:1646  */
+#line 1249 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = gen_struct_fields((yyvsp[-2].type), (yyvsp[-3].modifiers), (yyvsp[-1].list));
                             }
-#line 2887 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2867 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 1257 "hlsl.y" /* yacc.c:1646  */
+#line 1253 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = gen_struct_fields((yyvsp[-2].type), 0, (yyvsp[-1].list));
                             }
-#line 2895 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2875 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 1262 "hlsl.y" /* yacc.c:1646  */
+#line 1258 "hlsl.y" /* yacc.c:1646  */
     {
                                 TRACE("Function %s parsed.\n", (yyvsp[-1].function).name);
                                 (yyval.function) = (yyvsp[-1].function);
                                 (yyval.function).decl->body = (yyvsp[0].list);
                                 pop_scope(&hlsl_ctx);
                             }
-#line 2906 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2886 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 1269 "hlsl.y" /* yacc.c:1646  */
+#line 1265 "hlsl.y" /* yacc.c:1646  */
     {
                                 TRACE("Function prototype for %s.\n", (yyvsp[-1].function).name);
                                 (yyval.function) = (yyvsp[-1].function);
                                 pop_scope(&hlsl_ctx);
                             }
-#line 2916 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2896 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 1276 "hlsl.y" /* yacc.c:1646  */
+#line 1272 "hlsl.y" /* yacc.c:1646  */
     {
                                 if (get_variable(hlsl_ctx.globals, (yyvsp[-4].name)))
                                 {
@@ -2940,81 +2925,81 @@ yyreduce:
                                 (yyval.function).decl->semantic = (yyvsp[0].colon_attribute).semantic;
                                 set_location(&(yyval.function).decl->node.loc, &(yylsp[-4]));
                             }
-#line 2949 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2929 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 1306 "hlsl.y" /* yacc.c:1646  */
+#line 1302 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                             }
-#line 2958 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2938 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 1311 "hlsl.y" /* yacc.c:1646  */
+#line 1307 "hlsl.y" /* yacc.c:1646  */
     {
                                 pop_scope(&hlsl_ctx);
                                 (yyval.list) = (yyvsp[-1].list);
                             }
-#line 2967 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2947 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 1317 "hlsl.y" /* yacc.c:1646  */
+#line 1313 "hlsl.y" /* yacc.c:1646  */
     {
                                 push_scope(&hlsl_ctx);
                             }
-#line 2975 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2955 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 1325 "hlsl.y" /* yacc.c:1646  */
+#line 1321 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.colon_attribute).semantic = NULL;
                                 (yyval.colon_attribute).reg_reservation = NULL;
                             }
-#line 2984 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2964 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 1330 "hlsl.y" /* yacc.c:1646  */
+#line 1326 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.colon_attribute).semantic = (yyvsp[0].name);
                                 (yyval.colon_attribute).reg_reservation = NULL;
                             }
-#line 2993 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2973 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 1335 "hlsl.y" /* yacc.c:1646  */
+#line 1331 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.colon_attribute).semantic = NULL;
                                 (yyval.colon_attribute).reg_reservation = (yyvsp[0].reg_reservation);
                             }
-#line 3002 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2982 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 1341 "hlsl.y" /* yacc.c:1646  */
+#line 1337 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.name) = (yyvsp[0].name);
                             }
-#line 3010 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2990 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 1347 "hlsl.y" /* yacc.c:1646  */
+#line 1343 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.reg_reservation) = parse_reg_reservation((yyvsp[-1].name));
                                 d3dcompiler_free((yyvsp[-1].name));
                             }
-#line 3019 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2999 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 1352 "hlsl.y" /* yacc.c:1646  */
+#line 1348 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("Ignoring shader target %s in a register reservation.\n", debugstr_a((yyvsp[-3].name)));
                                 d3dcompiler_free((yyvsp[-3].name));
@@ -3022,28 +3007,28 @@ yyreduce:
                                 (yyval.reg_reservation) = parse_reg_reservation((yyvsp[-1].name));
                                 d3dcompiler_free((yyvsp[-1].name));
                             }
-#line 3031 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3011 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 1361 "hlsl.y" /* yacc.c:1646  */
+#line 1357 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                             }
-#line 3040 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3020 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 1366 "hlsl.y" /* yacc.c:1646  */
+#line 1362 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[0].list);
                             }
-#line 3048 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3028 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 1371 "hlsl.y" /* yacc.c:1646  */
+#line 1367 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -3057,11 +3042,11 @@ yyreduce:
                                     return -1;
                                 }
                             }
-#line 3066 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3046 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 1385 "hlsl.y" /* yacc.c:1646  */
+#line 1381 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -3074,11 +3059,11 @@ yyreduce:
                                     return 1;
                                 }
                             }
-#line 3083 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3063 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 1399 "hlsl.y" /* yacc.c:1646  */
+#line 1395 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.parameter).modifiers = (yyvsp[-4].modifiers) ? (yyvsp[-4].modifiers) : HLSL_MODIFIER_IN;
                                 (yyval.parameter).modifiers |= (yyvsp[-3].modifiers);
@@ -3087,19 +3072,19 @@ yyreduce:
                                 (yyval.parameter).semantic = (yyvsp[0].colon_attribute).semantic;
                                 (yyval.parameter).reg_reservation = (yyvsp[0].colon_attribute).reg_reservation;
                             }
-#line 3096 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3076 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 1409 "hlsl.y" /* yacc.c:1646  */
+#line 1405 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = 0;
                             }
-#line 3104 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3084 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 1413 "hlsl.y" /* yacc.c:1646  */
+#line 1409 "hlsl.y" /* yacc.c:1646  */
     {
                                 if ((yyvsp[-1].modifiers) & (yyvsp[0].modifiers))
                                 {
@@ -3109,43 +3094,43 @@ yyreduce:
                                 }
                                 (yyval.modifiers) = (yyvsp[-1].modifiers) | (yyvsp[0].modifiers);
                             }
-#line 3118 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3098 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 1424 "hlsl.y" /* yacc.c:1646  */
+#line 1420 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = HLSL_MODIFIER_IN;
                             }
-#line 3126 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3106 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 1428 "hlsl.y" /* yacc.c:1646  */
+#line 1424 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = HLSL_MODIFIER_OUT;
                             }
-#line 3134 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3114 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 1432 "hlsl.y" /* yacc.c:1646  */
+#line 1428 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = HLSL_MODIFIER_IN | HLSL_MODIFIER_OUT;
                             }
-#line 3142 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3122 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 1437 "hlsl.y" /* yacc.c:1646  */
+#line 1433 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.type) = (yyvsp[0].type);
                             }
-#line 3150 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3130 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 1441 "hlsl.y" /* yacc.c:1646  */
+#line 1437 "hlsl.y" /* yacc.c:1646  */
     {
                                 if ((yyvsp[-3].type)->type != HLSL_CLASS_SCALAR)
                                 {
@@ -3164,11 +3149,11 @@ yyreduce:
 
                                 (yyval.type) = new_hlsl_type(NULL, HLSL_CLASS_VECTOR, (yyvsp[-3].type)->base_type, (yyvsp[-1].intval), 1);
                             }
-#line 3173 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3153 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 1460 "hlsl.y" /* yacc.c:1646  */
+#line 1456 "hlsl.y" /* yacc.c:1646  */
     {
                                 if ((yyvsp[-5].type)->type != HLSL_CLASS_SCALAR)
                                 {
@@ -3187,64 +3172,64 @@ yyreduce:
 
                                 (yyval.type) = new_hlsl_type(NULL, HLSL_CLASS_MATRIX, (yyvsp[-5].type)->base_type, (yyvsp[-3].intval), (yyvsp[-1].intval));
                             }
-#line 3196 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3176 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 1480 "hlsl.y" /* yacc.c:1646  */
+#line 1476 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("void"), HLSL_CLASS_OBJECT, HLSL_TYPE_VOID, 1, 1);
                             }
-#line 3204 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3184 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 1484 "hlsl.y" /* yacc.c:1646  */
+#line 1480 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("sampler"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_GENERIC;
                             }
-#line 3213 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3193 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 1489 "hlsl.y" /* yacc.c:1646  */
+#line 1485 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("sampler1D"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_1D;
                             }
-#line 3222 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3202 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 1494 "hlsl.y" /* yacc.c:1646  */
+#line 1490 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("sampler2D"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_2D;
                             }
-#line 3231 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3211 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 1499 "hlsl.y" /* yacc.c:1646  */
+#line 1495 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("sampler3D"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_3D;
                             }
-#line 3240 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3220 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 1504 "hlsl.y" /* yacc.c:1646  */
+#line 1500 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("samplerCUBE"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_CUBE;
                             }
-#line 3249 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3229 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 1509 "hlsl.y" /* yacc.c:1646  */
+#line 1505 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_type *type;
 
@@ -3252,11 +3237,11 @@ yyreduce:
                                 (yyval.type) = type;
                                 d3dcompiler_free((yyvsp[0].name));
                             }
-#line 3261 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3241 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 1517 "hlsl.y" /* yacc.c:1646  */
+#line 1513 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_type *type;
 
@@ -3273,11 +3258,11 @@ yyreduce:
                                 }
                                 d3dcompiler_free((yyvsp[0].name));
                             }
-#line 3282 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3262 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 1537 "hlsl.y" /* yacc.c:1646  */
+#line 1533 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 if (!(yyval.list))
@@ -3287,11 +3272,11 @@ yyreduce:
                                 }
                                 list_init((yyval.list));
                             }
-#line 3296 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3276 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 1548 "hlsl.y" /* yacc.c:1646  */
+#line 1544 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -3299,11 +3284,11 @@ yyreduce:
                                 if (!add_typedef((yyvsp[-3].modifiers), (yyvsp[-2].type), (yyvsp[-1].list), &loc))
                                     return 1;
                             }
-#line 3308 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3288 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 1556 "hlsl.y" /* yacc.c:1646  */
+#line 1552 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -3311,84 +3296,84 @@ yyreduce:
                                 if (!add_typedef(0, (yyvsp[-2].type), (yyvsp[-1].list), &loc))
                                     return 1;
                             }
-#line 3320 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3300 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 1565 "hlsl.y" /* yacc.c:1646  */
+#line 1561 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &(yyvsp[0].variable_def)->entry);
                             }
-#line 3330 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3310 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 1571 "hlsl.y" /* yacc.c:1646  */
+#line 1567 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[-2].list);
                                 list_add_tail((yyval.list), &(yyvsp[0].variable_def)->entry);
                             }
-#line 3339 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3319 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 1577 "hlsl.y" /* yacc.c:1646  */
+#line 1573 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.variable_def) = d3dcompiler_alloc(sizeof(*(yyval.variable_def)));
                                 set_location(&(yyval.variable_def)->loc, &(yylsp[-1]));
                                 (yyval.variable_def)->name = (yyvsp[-1].name);
                                 (yyval.variable_def)->array_size = (yyvsp[0].intval);
                             }
-#line 3350 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3330 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 1585 "hlsl.y" /* yacc.c:1646  */
+#line 1581 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = declare_vars((yyvsp[-2].type), (yyvsp[-3].modifiers), (yyvsp[-1].list));
                             }
-#line 3358 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3338 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 1590 "hlsl.y" /* yacc.c:1646  */
+#line 1586 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = NULL;
                             }
-#line 3366 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3346 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 1594 "hlsl.y" /* yacc.c:1646  */
+#line 1590 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[0].list);
                             }
-#line 3374 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3354 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 1599 "hlsl.y" /* yacc.c:1646  */
+#line 1595 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &(yyvsp[0].variable_def)->entry);
                             }
-#line 3384 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3364 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 1605 "hlsl.y" /* yacc.c:1646  */
+#line 1601 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[-2].list);
                                 list_add_tail((yyval.list), &(yyvsp[0].variable_def)->entry);
                             }
-#line 3393 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3373 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 1611 "hlsl.y" /* yacc.c:1646  */
+#line 1607 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.variable_def) = d3dcompiler_alloc(sizeof(*(yyval.variable_def)));
                                 set_location(&(yyval.variable_def)->loc, &(yylsp[-2]));
@@ -3397,11 +3382,11 @@ yyreduce:
                                 (yyval.variable_def)->semantic = (yyvsp[0].colon_attribute).semantic;
                                 (yyval.variable_def)->reg_reservation = (yyvsp[0].colon_attribute).reg_reservation;
                             }
-#line 3406 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3386 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 1620 "hlsl.y" /* yacc.c:1646  */
+#line 1616 "hlsl.y" /* yacc.c:1646  */
     {
                                 TRACE("Declaration with initializer.\n");
                                 (yyval.variable_def) = d3dcompiler_alloc(sizeof(*(yyval.variable_def)));
@@ -3412,212 +3397,212 @@ yyreduce:
                                 (yyval.variable_def)->reg_reservation = (yyvsp[-2].colon_attribute).reg_reservation;
                                 (yyval.variable_def)->initializer = (yyvsp[0].list);
                             }
-#line 3421 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3401 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 1632 "hlsl.y" /* yacc.c:1646  */
+#line 1628 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.intval) = 0;
                             }
-#line 3429 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3409 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 1636 "hlsl.y" /* yacc.c:1646  */
+#line 1632 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("Array.\n");
                                 (yyval.intval) = 0;
                                 free_instr((yyvsp[-1].instr));
                             }
-#line 3439 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3419 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 1643 "hlsl.y" /* yacc.c:1646  */
+#line 1639 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = 0;
                             }
-#line 3447 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3427 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 1647 "hlsl.y" /* yacc.c:1646  */
+#line 1643 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_EXTERN, &(yylsp[-1]));
                             }
-#line 3455 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3435 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 1651 "hlsl.y" /* yacc.c:1646  */
+#line 1647 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_NOINTERPOLATION, &(yylsp[-1]));
                             }
-#line 3463 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3443 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 1655 "hlsl.y" /* yacc.c:1646  */
+#line 1651 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_MODIFIER_PRECISE, &(yylsp[-1]));
                             }
-#line 3471 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3451 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 1659 "hlsl.y" /* yacc.c:1646  */
+#line 1655 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_SHARED, &(yylsp[-1]));
                             }
-#line 3479 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3459 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 1663 "hlsl.y" /* yacc.c:1646  */
+#line 1659 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_GROUPSHARED, &(yylsp[-1]));
                             }
-#line 3487 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3467 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 1667 "hlsl.y" /* yacc.c:1646  */
+#line 1663 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_STATIC, &(yylsp[-1]));
                             }
-#line 3495 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3475 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 1671 "hlsl.y" /* yacc.c:1646  */
+#line 1667 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_UNIFORM, &(yylsp[-1]));
                             }
-#line 3503 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3483 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 1675 "hlsl.y" /* yacc.c:1646  */
+#line 1671 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_VOLATILE, &(yylsp[-1]));
                             }
-#line 3511 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3491 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 1679 "hlsl.y" /* yacc.c:1646  */
+#line 1675 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_MODIFIER_CONST, &(yylsp[-1]));
                             }
-#line 3519 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3499 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 1683 "hlsl.y" /* yacc.c:1646  */
+#line 1679 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_MODIFIER_ROW_MAJOR, &(yylsp[-1]));
                             }
-#line 3527 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3507 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 1687 "hlsl.y" /* yacc.c:1646  */
+#line 1683 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_MODIFIER_COLUMN_MAJOR, &(yylsp[-1]));
                             }
-#line 3535 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3515 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 1692 "hlsl.y" /* yacc.c:1646  */
+#line 1688 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &(yyvsp[0].instr)->entry);
                             }
-#line 3545 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3525 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 1698 "hlsl.y" /* yacc.c:1646  */
+#line 1694 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[-1].list);
                             }
-#line 3553 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3533 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 1702 "hlsl.y" /* yacc.c:1646  */
+#line 1698 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[-2].list);
                             }
-#line 3561 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3541 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 1707 "hlsl.y" /* yacc.c:1646  */
+#line 1703 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 3569 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3549 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 1712 "hlsl.y" /* yacc.c:1646  */
+#line 1708 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &(yyvsp[0].instr)->entry);
                             }
-#line 3579 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3559 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 1718 "hlsl.y" /* yacc.c:1646  */
+#line 1714 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[-2].list);
                                 list_add_tail((yyval.list), &(yyvsp[0].instr)->entry);
                             }
-#line 3588 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3568 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 1724 "hlsl.y" /* yacc.c:1646  */
+#line 1720 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.boolval) = TRUE;
                             }
-#line 3596 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3576 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 1728 "hlsl.y" /* yacc.c:1646  */
+#line 1724 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.boolval) = FALSE;
                             }
-#line 3604 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3584 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 1733 "hlsl.y" /* yacc.c:1646  */
+#line 1729 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[0].list);
                             }
-#line 3612 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3592 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 1737 "hlsl.y" /* yacc.c:1646  */
+#line 1733 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = (yyvsp[-1].list);
                                 list_move_tail((yyval.list), (yyvsp[0].list));
                                 d3dcompiler_free((yyvsp[0].list));
                             }
-#line 3622 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3602 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 1752 "hlsl.y" /* yacc.c:1646  */
+#line 1748 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_jump *jump = d3dcompiler_alloc(sizeof(*jump));
                                 if (!jump)
@@ -3639,11 +3624,11 @@ yyreduce:
                                 list_init((yyval.list));
                                 list_add_tail((yyval.list), &jump->node.entry);
                             }
-#line 3648 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3628 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 1775 "hlsl.y" /* yacc.c:1646  */
+#line 1771 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_if *instr = d3dcompiler_alloc(sizeof(*instr));
                                 if (!instr)
@@ -3666,29 +3651,29 @@ yyreduce:
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &instr->node.entry);
                             }
-#line 3675 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3655 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 1799 "hlsl.y" /* yacc.c:1646  */
+#line 1795 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.if_body).then_instrs = (yyvsp[0].list);
                                 (yyval.if_body).else_instrs = NULL;
                             }
-#line 3684 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3664 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 1804 "hlsl.y" /* yacc.c:1646  */
+#line 1800 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.if_body).then_instrs = (yyvsp[-2].list);
                                 (yyval.if_body).else_instrs = (yyvsp[0].list);
                             }
-#line 3693 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3673 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 1810 "hlsl.y" /* yacc.c:1646  */
+#line 1806 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
                                 struct list *cond = d3dcompiler_alloc(sizeof(*cond));
@@ -3703,11 +3688,11 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-4]));
                                 (yyval.list) = create_loop(LOOP_WHILE, NULL, cond, NULL, (yyvsp[0].list), &loc);
                             }
-#line 3712 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3692 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 1825 "hlsl.y" /* yacc.c:1646  */
+#line 1821 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
                                 struct list *cond = d3dcompiler_alloc(sizeof(*cond));
@@ -3722,11 +3707,11 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-6]));
                                 (yyval.list) = create_loop(LOOP_DO_WHILE, NULL, cond, NULL, (yyvsp[-5].list), &loc);
                             }
-#line 3731 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3711 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 1840 "hlsl.y" /* yacc.c:1646  */
+#line 1836 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -3734,11 +3719,11 @@ yyreduce:
                                 (yyval.list) = create_loop(LOOP_FOR, (yyvsp[-4].list), (yyvsp[-3].list), (yyvsp[-2].instr), (yyvsp[0].list), &loc);
                                 pop_scope(&hlsl_ctx);
                             }
-#line 3743 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3723 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 1848 "hlsl.y" /* yacc.c:1646  */
+#line 1844 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -3749,31 +3734,31 @@ yyreduce:
                                 (yyval.list) = create_loop(LOOP_FOR, (yyvsp[-4].list), (yyvsp[-3].list), (yyvsp[-2].instr), (yyvsp[0].list), &loc);
                                 pop_scope(&hlsl_ctx);
                             }
-#line 3758 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3738 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 1860 "hlsl.y" /* yacc.c:1646  */
+#line 1856 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                             }
-#line 3767 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3747 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 1865 "hlsl.y" /* yacc.c:1646  */
+#line 1861 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                                 if ((yyvsp[-1].instr))
                                     list_add_head((yyval.list), &(yyvsp[-1].instr)->entry);
                             }
-#line 3778 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3758 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 1873 "hlsl.y" /* yacc.c:1646  */
+#line 1869 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_constant *c = d3dcompiler_alloc(sizeof(*c));
                                 if (!c)
@@ -3787,11 +3772,11 @@ yyreduce:
                                 c->v.value.f[0] = (yyvsp[0].floatval);
                                 (yyval.instr) = &c->node;
                             }
-#line 3796 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3776 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 1887 "hlsl.y" /* yacc.c:1646  */
+#line 1883 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_constant *c = d3dcompiler_alloc(sizeof(*c));
                                 if (!c)
@@ -3805,11 +3790,11 @@ yyreduce:
                                 c->v.value.i[0] = (yyvsp[0].intval);
                                 (yyval.instr) = &c->node;
                             }
-#line 3814 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3794 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 1901 "hlsl.y" /* yacc.c:1646  */
+#line 1897 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_constant *c = d3dcompiler_alloc(sizeof(*c));
                                 if (!c)
@@ -3823,11 +3808,11 @@ yyreduce:
                                 c->v.value.b[0] = (yyvsp[0].boolval);
                                 (yyval.instr) = &c->node;
                             }
-#line 3832 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3812 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 1915 "hlsl.y" /* yacc.c:1646  */
+#line 1911 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_deref *deref = new_var_deref((yyvsp[0].var));
                                 if (deref)
@@ -3838,19 +3823,19 @@ yyreduce:
                                 else
                                     (yyval.instr) = NULL;
                             }
-#line 3847 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3827 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 1926 "hlsl.y" /* yacc.c:1646  */
+#line 1922 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[-1].instr);
                             }
-#line 3855 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3835 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 1931 "hlsl.y" /* yacc.c:1646  */
+#line 1927 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_var *var;
                                 var = get_variable(hlsl_ctx.cur_scope, (yyvsp[0].name));
@@ -3863,19 +3848,19 @@ yyreduce:
                                 }
                                 (yyval.var) = var;
                             }
-#line 3872 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3852 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 1945 "hlsl.y" /* yacc.c:1646  */
+#line 1941 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 3880 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3860 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 1949 "hlsl.y" /* yacc.c:1646  */
+#line 1945 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
@@ -3894,11 +3879,11 @@ yyreduce:
                                 (yyval.instr)->data_type = clone_hlsl_type((yyval.instr)->data_type);
                                 (yyval.instr)->data_type->modifiers |= HLSL_MODIFIER_CONST;
                             }
-#line 3903 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3883 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 1968 "hlsl.y" /* yacc.c:1646  */
+#line 1964 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
@@ -3917,11 +3902,11 @@ yyreduce:
                                 (yyval.instr)->data_type = clone_hlsl_type((yyval.instr)->data_type);
                                 (yyval.instr)->data_type->modifiers |= HLSL_MODIFIER_CONST;
                             }
-#line 3926 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3906 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 1987 "hlsl.y" /* yacc.c:1646  */
+#line 1983 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -3975,11 +3960,11 @@ yyreduce:
                                     return 1;
                                 }
                             }
-#line 3984 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3964 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 2041 "hlsl.y" /* yacc.c:1646  */
+#line 2037 "hlsl.y" /* yacc.c:1646  */
     {
                                 /* This may be an array dereference or a vector/matrix
                                  * subcomponent access.
@@ -4037,11 +4022,11 @@ yyreduce:
 
                                 (yyval.instr) = &deref->node;
                             }
-#line 4046 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4026 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 2101 "hlsl.y" /* yacc.c:1646  */
+#line 2097 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_constructor *constructor;
 
@@ -4076,19 +4061,19 @@ yyreduce:
 
                                 (yyval.instr) = &constructor->node;
                             }
-#line 4085 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4065 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 2137 "hlsl.y" /* yacc.c:1646  */
+#line 2133 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4093 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4073 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 2141 "hlsl.y" /* yacc.c:1646  */
+#line 2137 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
@@ -4104,11 +4089,11 @@ yyreduce:
                                 operands[1] = operands[2] = NULL;
                                 (yyval.instr) = &new_expr(HLSL_IR_UNOP_PREINC, operands, &loc)->node;
                             }
-#line 4113 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4093 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 2157 "hlsl.y" /* yacc.c:1646  */
+#line 2153 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_node *operands[3];
                                 struct source_location loc;
@@ -4124,11 +4109,11 @@ yyreduce:
                                 operands[1] = operands[2] = NULL;
                                 (yyval.instr) = &new_expr(HLSL_IR_UNOP_PREDEC, operands, &loc)->node;
                             }
-#line 4133 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4113 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 2173 "hlsl.y" /* yacc.c:1646  */
+#line 2169 "hlsl.y" /* yacc.c:1646  */
     {
                                 enum hlsl_ir_expr_op ops[] = {0, HLSL_IR_UNOP_NEG,
                                         HLSL_IR_UNOP_LOGIC_NOT, HLSL_IR_UNOP_BIT_NOT};
@@ -4147,11 +4132,11 @@ yyreduce:
                                     (yyval.instr) = &new_expr(ops[(yyvsp[-1].unary_op)], operands, &loc)->node;
                                 }
                             }
-#line 4156 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4136 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 2193 "hlsl.y" /* yacc.c:1646  */
+#line 2189 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct hlsl_ir_expr *expr;
                                 struct hlsl_type *src_type = (yyvsp[0].instr)->data_type;
@@ -4182,324 +4167,324 @@ yyreduce:
                                 expr = new_cast((yyvsp[0].instr), dst_type, &loc);
                                 (yyval.instr) = expr ? &expr->node : NULL;
                             }
-#line 4191 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4171 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 2225 "hlsl.y" /* yacc.c:1646  */
+#line 2221 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.unary_op) = UNARY_OP_PLUS;
                             }
-#line 4199 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4179 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 2229 "hlsl.y" /* yacc.c:1646  */
+#line 2225 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.unary_op) = UNARY_OP_MINUS;
                             }
-#line 4207 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4187 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 2233 "hlsl.y" /* yacc.c:1646  */
+#line 2229 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.unary_op) = UNARY_OP_LOGICNOT;
                             }
-#line 4215 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4195 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 130:
-#line 2237 "hlsl.y" /* yacc.c:1646  */
+#line 2233 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.unary_op) = UNARY_OP_BITNOT;
                             }
-#line 4223 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4203 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 2242 "hlsl.y" /* yacc.c:1646  */
+#line 2238 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4231 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4211 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 2246 "hlsl.y" /* yacc.c:1646  */
+#line 2242 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_mul((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4242 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4222 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 2253 "hlsl.y" /* yacc.c:1646  */
+#line 2249 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_div((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4253 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4233 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 2260 "hlsl.y" /* yacc.c:1646  */
+#line 2256 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_mod((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4264 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4244 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 2268 "hlsl.y" /* yacc.c:1646  */
+#line 2264 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4272 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4252 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 2272 "hlsl.y" /* yacc.c:1646  */
+#line 2268 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_add((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4283 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4263 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 2279 "hlsl.y" /* yacc.c:1646  */
+#line 2275 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_sub((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4294 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4274 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 2287 "hlsl.y" /* yacc.c:1646  */
+#line 2283 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4302 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4282 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 2291 "hlsl.y" /* yacc.c:1646  */
+#line 2287 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("Left shift\n");
                             }
-#line 4310 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4290 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 2295 "hlsl.y" /* yacc.c:1646  */
+#line 2291 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("Right shift\n");
                             }
-#line 4318 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4298 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 2300 "hlsl.y" /* yacc.c:1646  */
+#line 2296 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4326 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4306 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 2304 "hlsl.y" /* yacc.c:1646  */
+#line 2300 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_lt((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4337 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4317 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 2311 "hlsl.y" /* yacc.c:1646  */
+#line 2307 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_gt((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4348 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4328 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 2318 "hlsl.y" /* yacc.c:1646  */
+#line 2314 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_le((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4359 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4339 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 2325 "hlsl.y" /* yacc.c:1646  */
+#line 2321 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_ge((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4370 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4350 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 146:
-#line 2333 "hlsl.y" /* yacc.c:1646  */
+#line 2329 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4378 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4358 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 147:
-#line 2337 "hlsl.y" /* yacc.c:1646  */
+#line 2333 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_eq((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4389 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4369 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 148:
-#line 2344 "hlsl.y" /* yacc.c:1646  */
+#line 2340 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_ne((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4400 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4380 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 2352 "hlsl.y" /* yacc.c:1646  */
+#line 2348 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4408 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4388 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 150:
-#line 2356 "hlsl.y" /* yacc.c:1646  */
+#line 2352 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("bitwise AND\n");
                             }
-#line 4416 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4396 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 151:
-#line 2361 "hlsl.y" /* yacc.c:1646  */
+#line 2357 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4424 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4404 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 152:
-#line 2365 "hlsl.y" /* yacc.c:1646  */
+#line 2361 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("bitwise XOR\n");
                             }
-#line 4432 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4412 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 153:
-#line 2370 "hlsl.y" /* yacc.c:1646  */
+#line 2366 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4440 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4420 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 154:
-#line 2374 "hlsl.y" /* yacc.c:1646  */
+#line 2370 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("bitwise OR\n");
                             }
-#line 4448 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4428 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 155:
-#line 2379 "hlsl.y" /* yacc.c:1646  */
+#line 2375 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4456 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4436 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 156:
-#line 2383 "hlsl.y" /* yacc.c:1646  */
+#line 2379 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("logic AND\n");
                             }
-#line 4464 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4444 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 157:
-#line 2388 "hlsl.y" /* yacc.c:1646  */
+#line 2384 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4472 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4452 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 158:
-#line 2392 "hlsl.y" /* yacc.c:1646  */
+#line 2388 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("logic OR\n");
                             }
-#line 4480 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4460 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 159:
-#line 2397 "hlsl.y" /* yacc.c:1646  */
+#line 2393 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4488 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4468 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 160:
-#line 2401 "hlsl.y" /* yacc.c:1646  */
+#line 2397 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("ternary operator\n");
                             }
-#line 4496 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4476 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 161:
-#line 2406 "hlsl.y" /* yacc.c:1646  */
+#line 2402 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4504 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4484 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 162:
-#line 2410 "hlsl.y" /* yacc.c:1646  */
+#line 2406 "hlsl.y" /* yacc.c:1646  */
     {
                                 struct source_location loc;
 
@@ -4515,115 +4500,115 @@ yyreduce:
                                     return 1;
                                 (yyval.instr)->loc = loc;
                             }
-#line 4524 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4504 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 163:
-#line 2427 "hlsl.y" /* yacc.c:1646  */
+#line 2423 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_ASSIGN;
                             }
-#line 4532 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4512 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 164:
-#line 2431 "hlsl.y" /* yacc.c:1646  */
+#line 2427 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_ADD;
                             }
-#line 4540 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4520 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 2435 "hlsl.y" /* yacc.c:1646  */
+#line 2431 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_SUB;
                             }
-#line 4548 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4528 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 166:
-#line 2439 "hlsl.y" /* yacc.c:1646  */
+#line 2435 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_MUL;
                             }
-#line 4556 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4536 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 167:
-#line 2443 "hlsl.y" /* yacc.c:1646  */
+#line 2439 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_DIV;
                             }
-#line 4564 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4544 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 168:
-#line 2447 "hlsl.y" /* yacc.c:1646  */
+#line 2443 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_MOD;
                             }
-#line 4572 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4552 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 169:
-#line 2451 "hlsl.y" /* yacc.c:1646  */
+#line 2447 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_LSHIFT;
                             }
-#line 4580 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4560 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 170:
-#line 2455 "hlsl.y" /* yacc.c:1646  */
+#line 2451 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_RSHIFT;
                             }
-#line 4588 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4568 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 171:
-#line 2459 "hlsl.y" /* yacc.c:1646  */
+#line 2455 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_AND;
                             }
-#line 4596 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4576 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 172:
-#line 2463 "hlsl.y" /* yacc.c:1646  */
+#line 2459 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_OR;
                             }
-#line 4604 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4584 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 173:
-#line 2467 "hlsl.y" /* yacc.c:1646  */
+#line 2463 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.assign_op) = ASSIGN_OP_XOR;
                             }
-#line 4612 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4592 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 174:
-#line 2472 "hlsl.y" /* yacc.c:1646  */
+#line 2468 "hlsl.y" /* yacc.c:1646  */
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4620 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4600 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 175:
-#line 2476 "hlsl.y" /* yacc.c:1646  */
+#line 2472 "hlsl.y" /* yacc.c:1646  */
     {
                                 FIXME("Comma expression\n");
                             }
-#line 4628 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4608 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 4632 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4612 "hlsl.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4858,7 +4843,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 2480 "hlsl.y" /* yacc.c:1906  */
+#line 2476 "hlsl.y" /* yacc.c:1906  */
 
 
 static void set_location(struct source_location *loc, const struct YYLTYPE *l)

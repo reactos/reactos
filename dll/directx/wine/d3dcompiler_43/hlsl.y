@@ -19,10 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 %{
-#include "config.h"
-#include "wine/debug.h"
-
-#include <stdio.h>
 
 #include "d3dcompiler_private.h"
 
@@ -1151,7 +1147,7 @@ preproc_directive:        PRE_LINE STRING
                                 hlsl_ctx.line_no = $1;
                                 if (strcmp($2, hlsl_ctx.source_file))
                                     new_array = d3dcompiler_realloc(hlsl_ctx.source_files,
-                                            sizeof(*hlsl_ctx.source_files) * hlsl_ctx.source_files_count + 1);
+                                            sizeof(*hlsl_ctx.source_files) * (hlsl_ctx.source_files_count + 1));
 
                                 if (new_array)
                                 {
