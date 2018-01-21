@@ -87,7 +87,7 @@ LPCWSTR WINAPI SdbTagToString(TAG tag);
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type);
 void WINAPI SdbCloseDatabase(PDB);
 BOOL WINAPI SdbIsNullGUID(CONST GUID *Guid);
-BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size);
+HRESULT WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size);
 LPWSTR WINAPI SdbGetStringTagPtr(PDB pdb, TAGID tagid);
 TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name);
 

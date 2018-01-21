@@ -1040,7 +1040,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
                 continue;
             }
 
-            if (!SdbGetAppPatchDir(NULL, FullNameBuffer, ARRAYSIZE(FullNameBuffer)))
+            if (!SUCCEEDED(SdbGetAppPatchDir(NULL, FullNameBuffer, ARRAYSIZE(FullNameBuffer))))
             {
                 SHIMENG_WARN("Failed to get the AppPatch dir\n");
                 continue;
