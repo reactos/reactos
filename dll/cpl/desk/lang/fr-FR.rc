@@ -111,6 +111,8 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Cacher les lettres soulignées pour la navigation du clavier jusqu'à ce que j'appuie sur la touche Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
+    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Annuler", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Accepter", IDOK, 172, 165, 50, 14
 END
