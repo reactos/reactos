@@ -47,7 +47,7 @@ USBPORT_CalculateUsbBandwidth(IN PDEVICE_OBJECT FdoDevice,
     }
     else
     {
-        Bandwidth = (EndpointProperties->TotalMaxPacketSize + Overhead) * 8 * 7 / 6;
+        Bandwidth = (EndpointProperties->TotalMaxPacketSize + Overhead) * USB2_BIT_STUFFING_OVERHEAD;
     }
 
     if (EndpointProperties->DeviceSpeed == UsbLowSpeed)

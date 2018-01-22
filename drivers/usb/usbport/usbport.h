@@ -479,6 +479,8 @@ typedef struct _TIMER_WORK_QUEUE_ITEM {
 #define USB2_HS_SS_ISOCHRONOUS_IN_OVERHEAD     39
 #define USB2_HS_CS_ISOCHRONOUS_IN_OVERHEAD     38
 
+#define USB2_BIT_STUFFING_OVERHEAD  (8 * (7/6)) // 7.1.9 Bit Stuffing
+
 typedef union _USB2_TT_ENDPOINT_PARAMS {
   struct {
     ULONG TransferType           : 4;
