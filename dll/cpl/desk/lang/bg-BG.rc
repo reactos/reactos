@@ -109,6 +109,8 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "С&криване на подчертаването за клавиатурното насочване, до натискане на Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
+    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Отказ", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Добре", IDOK, 172, 165, 50, 14
 END

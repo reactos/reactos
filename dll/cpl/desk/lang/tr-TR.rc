@@ -111,6 +111,8 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "S&eçenek Düğmesine Basana Dek Düğme Takımıyla Gezinme İçin Altı Çizili Harfleri Gizle",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
+    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "İptal", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Tamam", IDOK, 172, 165, 50, 14
 END
