@@ -14,7 +14,7 @@
 #include "guisettings.h"
 #include "conwnd.h"
 
-extern inline
+FORCEINLINE
 VOID
 GetScreenBufferSizeUnits(IN PCONSOLE_SCREEN_BUFFER Buffer,
                          IN PGUI_CONSOLE_DATA GuiData,
@@ -35,7 +35,7 @@ GetScreenBufferSizeUnits(IN PCONSOLE_SCREEN_BUFFER Buffer,
     }
 }
 
-extern inline
+FORCEINLINE
 VOID
 SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
 {
