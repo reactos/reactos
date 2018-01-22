@@ -40,10 +40,9 @@ typedef struct
     HANDLE     hFile;              /* Handle for disk based MetaFile */
     HBRUSH     dc_brush;
     HPEN       dc_pen;
-    HDC        ref_dc;             /* Reference device */
-    HDC        screen_dc;          /* Screen DC if no reference device specified */
     INT        restoring;          /* RestoreDC counter */
     BOOL       path;
+    INT        dev_caps[COLORMGMTCAPS + 1];
 } EMFDRV_PDEVICE;
 
 static inline EMFDRV_PDEVICE *get_emf_physdev( PHYSDEV dev )

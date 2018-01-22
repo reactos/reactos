@@ -213,7 +213,7 @@ static inline PHYSDEV get_physdev_entry_point( PHYSDEV dev, size_t offset )
 
 #define GET_NEXT_PHYSDEV(dev,func) \
     get_physdev_entry_point( (dev)->next, FIELD_OFFSET(struct gdi_dc_funcs,func))
-/*
+
 static inline void push_dc_driver( PHYSDEV *dev, PHYSDEV physdev, const struct gdi_dc_funcs *funcs )
 {
     while ((*dev)->funcs->priority > funcs->priority) dev = &(*dev)->next;
@@ -222,7 +222,7 @@ static inline void push_dc_driver( PHYSDEV *dev, PHYSDEV physdev, const struct g
     physdev->hdc = (*dev)->hdc;
     *dev = physdev;
 }
-*/
+
 /* support for window surfaces */
 
 struct window_surface;

@@ -20,9 +20,67 @@ struct path_physdev
     BOOL HasPathHook;
 };
 
+
 static inline struct path_physdev *get_path_physdev( PHYSDEV dev )
 {
     return CONTAINING_RECORD( dev, struct path_physdev, dev );
+}
+
+struct gdi_path
+{
+    int count;
+    POINT* points;
+    BYTE* flags;
+};
+
+/* retrieve a flattened path in device coordinates, and optionally its region */
+/* the DC path is deleted; the returned data must be freed by caller using free_gdi_path() */
+/* helper for stroke_and_fill_path in the DIB driver */
+struct gdi_path *get_gdi_flat_path( DC *dc, HRGN *rgn )
+{
+    INT PathSize;
+    struct gdi_path* ret = NULL;
+
+    ASSERT(rgn == NULL);
+
+    /* Flatten it */
+    if (!NtGdiFlattenPath(dc->hdc))
+    {
+        DPRINT1("NtGdiFlattenPath failed.\n");
+        return NULL;
+    }
+
+    /* Allocate space */
+    PathSize = NtGdiGetPath(dc->hdc, NULL, NULL, 0);
+    if (PathSize <= 0)
+    {
+        DPRINT1("NtGdiGetPath failed.\n");
+        return NULL;
+    }
+
+    ret = HEAP_alloc(sizeof(*ret) + PathSize * (sizeof(POINT) + sizeof(BYTE)));
+    if (!ret)
+        return NULL;
+
+    ret->count = PathSize;
+    ret->points = (POINT*)(ret +1);
+    ret->flags = (BYTE*)(ret->points + PathSize);
+
+    NtGdiGetPath(dc->hdc, ret->points, ret->flags, ret->count);
+
+    return ret;
+}
+
+int get_gdi_path_data( struct gdi_path *path, POINT **pts, BYTE **flags )
+{
+    *pts = path->points;
+    *flags = path->flags;
+    return path->count;
+}
+
+void free_gdi_path( struct gdi_path *path )
+{
+    HEAP_free(path);
 }
 
 /***********************************************************************
@@ -391,7 +449,7 @@ BOOL nulldrv_FillPath( PHYSDEV dev )
 
 BOOL nulldrv_StrokeAndFillPath( PHYSDEV dev )
 {
-    DPRINT("nulldrv_StrokeAndFillPath dev %p\n",dev);
+    DPRINT1("nulldrv_StrokeAndFillPath dev %p\n",dev);
     //if (GetPath( dev->hdc, NULL, NULL, 0 ) == -1) return FALSE;
     //AbortPath( dev->hdc );
     return TRUE;

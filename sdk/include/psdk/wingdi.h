@@ -20,6 +20,49 @@ extern "C" {
 #define SYSPAL_NOSTATIC     2
 #define SYSPAL_NOSTATIC256  3
 
+/* GetDeviceCaps values */
+#define DRIVERVERSION 0
+#define TECHNOLOGY 2
+#define HORZSIZE 4
+#define VERTSIZE 6
+#define HORZRES 8
+#define VERTRES 10
+#define BITSPIXEL 12
+#define PLANES 14
+#define NUMBRUSHES 16
+#define NUMPENS 18
+#define NUMMARKERS 20
+#define NUMFONTS 22
+#define NUMCOLORS 24
+#define PDEVICESIZE 26
+#define CURVECAPS 28
+#define LINECAPS 30
+#define POLYGONALCAPS 32
+#define TEXTCAPS 34
+#define CLIPCAPS 36
+#define RASTERCAPS 38
+#define ASPECTX 40
+#define ASPECTY 42
+#define ASPECTXY 44
+#define LOGPIXELSX 88
+#define LOGPIXELSY 90
+#define CAPS1 94
+#define SIZEPALETTE 104
+#define NUMRESERVED 106
+#define COLORRES 108
+#define PHYSICALWIDTH 110
+#define PHYSICALHEIGHT 111
+#define PHYSICALOFFSETX 112
+#define PHYSICALOFFSETY 113
+#define SCALINGFACTORX 114
+#define SCALINGFACTORY 115
+#define VREFRESH 116
+#define BLTALIGNMENT 119
+#if _WIN32_WINNT >= 0x0500
+#define SHADEBLENDCAPS    120
+#define COLORMGMTCAPS     121
+#endif
+
 #define WINGDIAPI
 
 #define NTM_NONNEGATIVE_AC  0x00010000
@@ -700,8 +743,6 @@ extern "C" {
 #define OBJ_ENHMETAFILE 13
 #define OBJ_ENHMETADC 12
 #define OBJ_COLORSPACE 14
-#define DRIVERVERSION 0
-#define TECHNOLOGY 2
 #define DT_PLOTTER 0
 #define DT_RASDISPLAY 1
 #define DT_RASPRINTER 2
@@ -709,38 +750,8 @@ extern "C" {
 #define DT_CHARSTREAM 4
 #define DT_METAFILE 5
 #define DT_DISPFILE 6
-#define HORZSIZE 4
-#define VERTSIZE 6
-#define HORZRES 8
-#define VERTRES 10
-#define LOGPIXELSX 88
-#define LOGPIXELSY 90
-#define BITSPIXEL 12
-#define PLANES 14
-#define NUMBRUSHES 16
-#define NUMPENS 18
-#define NUMFONTS 22
-#define NUMCOLORS 24
-#define NUMMARKERS 20
-#define ASPECTX 40
-#define ASPECTY 42
-#define ASPECTXY 44
-#define PDEVICESIZE 26
-#define CLIPCAPS 36
-#define SIZEPALETTE 104
-#define NUMRESERVED 106
-#define COLORRES 108
-#define PHYSICALWIDTH 110
-#define PHYSICALHEIGHT 111
-#define PHYSICALOFFSETX 112
-#define PHYSICALOFFSETY 113
-#define SCALINGFACTORX 114
-#define SCALINGFACTORY 115
-#define VREFRESH 116
 #define DESKTOPHORZRES 118
 #define DESKTOPVERTRES 117
-#define BLTALIGNMENT 119
-#define RASTERCAPS 38
 #define RC_BANDING 2
 #define RC_BITBLT 1
 #define RC_BITMAP64 8
@@ -754,7 +765,6 @@ extern "C" {
 #define RC_STRETCHDIB 8192
 #define RC_DEVBITS 0x8000
 #define RC_OP_DX_OUTPUT 0x4000
-#define CURVECAPS 28
 #define CC_NONE 0
 #define CC_CIRCLES 1
 #define CC_PIE 2
@@ -765,7 +775,6 @@ extern "C" {
 #define CC_WIDESTYLED 64
 #define CC_INTERIORS 128
 #define CC_ROUNDRECT 256
-#define LINECAPS 30
 #define LC_NONE 0
 #define LC_POLYLINE 2
 #define LC_MARKER 4
@@ -774,7 +783,6 @@ extern "C" {
 #define LC_STYLED 32
 #define LC_WIDESTYLED 64
 #define LC_INTERIORS 128
-#define POLYGONALCAPS 32
 #define RC_BANDING 2
 #define RC_BIGFONT 1024
 #define RC_BITBLT 1
@@ -801,7 +809,6 @@ extern "C" {
 #define PC_WIDESTYLED 64
 #define PC_INTERIORS 128
 #define PC_PATHS 512
-#define TEXTCAPS 34
 #define TC_OP_CHARACTER 1
 #define TC_OP_STROKE 2
 #define TC_CP_STROKE 4
@@ -961,8 +968,7 @@ extern "C" {
 #define TCI_SRCFONTSIG 3
 #define TCI_SRCLOCALE 4096
 #if (_WIN32_WINNT >= 0x0500)
-#define SHADEBLENDCAPS    120
-#define COLORMGMTCAPS     121
+
 /* SHADEBLENDCAPS */
 #define SB_NONE           0x00000000
 #define SB_CONST_ALPHA    0x00000001

@@ -51,15 +51,19 @@
 #include <string.h>
 #include <fcntl.h>
 
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#endif
+
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
 #include "winreg.h"
 #include "winnls.h"
-#ifdef __REACTOS__
-#include "wine/winternl.h"
-#else
+#ifndef __REACTOS__
 #include "winternl.h"
+#else
+#include <rtlfuncs.h>
 #endif
 #include "gdi_private.h"
 #include "wine/debug.h"

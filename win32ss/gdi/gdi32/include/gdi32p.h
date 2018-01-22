@@ -590,7 +590,6 @@ typedef enum _DCFUNC
     DCFUNC_OffsetClipRgn,
     DCFUNC_OffsetViewportOrgEx,
     DCFUNC_OffsetWindowOrgEx,
-    DCFUNC_PathToRegion, // UNIMPLEMENTED
     DCFUNC_PatBlt,
     DCFUNC_Pie,
     DCFUNC_PlgBlt, // UNIMPLEMENTED

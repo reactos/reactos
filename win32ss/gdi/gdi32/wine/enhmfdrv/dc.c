@@ -477,24 +477,23 @@ BOOL EMFDRV_FlattenPath( PHYSDEV dev )
 
 BOOL EMFDRV_SelectClipPath( PHYSDEV dev, INT iMode )
 {
- //   PHYSDEV next = GET_NEXT_PHYSDEV( dev, pSelectClipPath ); This HACK breaks test_emf_clipping
+    PHYSDEV next = GET_NEXT_PHYSDEV( dev, pSelectClipPath );
     EMRSELECTCLIPPATH emr;
- //   BOOL ret = FALSE;
- //   HRGN hrgn;
+    BOOL ret = FALSE;
+    HRGN hrgn;
 
     emr.emr.iType = EMR_SELECTCLIPPATH;
     emr.emr.nSize = sizeof(emr);
     emr.iMode = iMode;
 
     if (!EMFDRV_WriteRecord( dev, &emr.emr )) return FALSE;
-/*    hrgn = PathToRegion( dev->hdc );
+    hrgn = PathToRegion( dev->hdc );
     if (hrgn)
     {
         ret = next->funcs->pExtSelectClipRgn( next, hrgn, iMode );
         DeleteObject( hrgn );
-    } ERR("EMFDRV_SelectClipPath ret %d\n",ret);
-    return ret;*/
-    return TRUE;
+    }
+    return ret;
 }
 
 BOOL EMFDRV_WidenPath( PHYSDEV dev )
@@ -511,7 +510,9 @@ INT EMFDRV_GetDeviceCaps(PHYSDEV dev, INT cap)
 {
     EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
 
-    return GetDeviceCaps( physDev->ref_dc, cap );
+    if (cap >= 0 && cap < sizeof(physDev->dev_caps) / sizeof(physDev->dev_caps[0]))
+        return physDev->dev_caps[cap];
+    return 0;
 }
 
 
@@ -819,6 +820,7 @@ static BOOL emfpathdrv_RoundRect( PHYSDEV dev, INT x1, INT y1, INT x2, INT y2,
             next->funcs->pRoundRect( next, x1, y1, x2, y2, ell_width, ell_height ));
 }
 
+
 static const struct gdi_dc_funcs emfpath_driver =
 {
     NULL,                               /* pAbortDoc */
@@ -858,11 +860,7 @@ static const struct gdi_dc_funcs emfpath_driver =
     NULL,                               /* pGetCharABCWidths */
     NULL,                               /* pGetCharABCWidthsI */
     NULL,                               /* pGetCharWidth */
-#ifdef __REACTOS__
-    EMFDRV_GetDeviceCaps, //// Work around HACK.
-#else
     NULL,                               /* pGetDeviceCaps */
-#endif
     NULL,                               /* pGetDeviceGammaRamp */
     NULL,                               /* pGetFontData */
     NULL,                               /* pGetFontRealizationInfo */

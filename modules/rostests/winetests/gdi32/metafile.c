@@ -2735,6 +2735,7 @@ static void test_emf_clipping(void)
     BeginPath(hdc);
     Rectangle(hdc, rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
     EndPath(hdc);
+    SetLastError(0xdeadbeef);
     ret = SelectClipPath(hdc, RGN_AND);
     ok(ret, "SelectClipPath error %d\n", GetLastError());
 

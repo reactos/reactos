@@ -176,11 +176,7 @@ INT16 MFDRV_CreateBrushIndirect(PHYSDEV dev, HBRUSH hBrush )
     case BS_PATTERN:
     case BS_DIBPATTERN:
         {
-#ifdef __REACTOS__
-            char buffer[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)]; // ros
-#else
             char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
-#endif
             BITMAPINFO *dst_info, *src_info = (BITMAPINFO *)buffer;
             DWORD info_size;
             char *dst_ptr;
