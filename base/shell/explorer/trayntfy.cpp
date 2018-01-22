@@ -40,7 +40,6 @@ struct InternalIconData : NOTIFYICONDATA
     UINT uVersionCopy;
 };
 
-
 struct IconWatcherData
 {
     HANDLE hProcess;
@@ -314,6 +313,203 @@ private:
     }
 };
 
+class CBalloonQueue
+{
+public:
+    static const int TimerInterval = 2000;
+    static const int BalloonsTimerId = 1;
+    static const int MinTimeout = 10000;
+    static const int MaxTimeout = 30000;
+    static const int CooldownBetweenBalloons = 2000;
+
+private:
+    struct Info
+    {
+        InternalIconData * pSource;
+        WCHAR szInfo[256];
+        WCHAR szInfoTitle[64];
+        WPARAM uIcon;
+        UINT uTimeout;
+
+        Info(InternalIconData * source)
+        {
+            pSource = source;
+            StrNCpy(szInfo, source->szInfo, _countof(szInfo));
+            StrNCpy(szInfoTitle, source->szInfoTitle, _countof(szInfoTitle));
+            uIcon = source->dwInfoFlags & NIIF_ICON_MASK;
+            if (source->dwInfoFlags == NIIF_USER)
+                uIcon = reinterpret_cast<WPARAM>(source->hIcon);
+            uTimeout = source->uTimeout;
+        }
+    };
+
+    HWND m_hwndParent;
+
+    CTooltips * m_tooltips;
+
+    CAtlList<Info> m_queue;
+
+    CToolbar<InternalIconData> * m_toolbar;
+
+    InternalIconData * m_current;
+    bool m_currentClosed;
+
+    int m_timer;
+
+public:
+    CBalloonQueue() :
+        m_hwndParent(NULL),
+        m_tooltips(NULL),
+        m_toolbar(NULL),
+        m_current(NULL),
+        m_currentClosed(false),
+        m_timer(-1)
+    {
+    }
+
+    void Init(HWND hwndParent, CToolbar<InternalIconData> * toolbar, CTooltips * balloons)
+    {
+        m_hwndParent = hwndParent;
+        m_toolbar = toolbar;
+        m_tooltips = balloons;
+    }
+
+    void Deinit()
+    {
+        if (m_timer >= 0)
+        {
+            ::KillTimer(m_hwndParent, m_timer);
+        }
+    }
+
+    bool OnTimer(int timerId)
+    {
+        if (timerId != m_timer)
+            return false;
+
+        ::KillTimer(m_hwndParent, m_timer);
+        m_timer = -1;
+
+        if (m_current && !m_currentClosed)
+        {
+            Close(m_current);
+        }
+        else
+        {
+            m_current = NULL;
+            m_currentClosed = false;
+            if (!m_queue.IsEmpty())
+            {
+                Info info = m_queue.RemoveHead();
+                Show(info);
+            }
+        }
+
+        return true;
+    }
+
+    void UpdateInfo(InternalIconData * notifyItem)
+    {
+        size_t len = 0;
+        HRESULT hr = StringCchLength(notifyItem->szInfo, _countof(notifyItem->szInfo), &len);
+        if (SUCCEEDED(hr) && len > 0)
+        {
+            Info info(notifyItem);
+
+            // If m_current == notifyItem, we want to replace the previous balloon even if there is a queue.
+            if (m_current != notifyItem && (m_current != NULL || !m_queue.IsEmpty()))
+            {
+                m_queue.AddTail(info);
+            }
+            else
+            {
+                Show(info);
+            }
+        }
+        else
+        {
+            Close(notifyItem);
+        }
+    }
+
+    void RemoveInfo(InternalIconData * notifyItem)
+    {
+        Close(notifyItem);
+
+        POSITION position = m_queue.GetHeadPosition();
+        while(position != NULL)
+        {
+            Info& info = m_queue.GetNext(position);
+            if (info.pSource == notifyItem)
+            {
+                m_queue.RemoveAt(position);
+            }
+        }
+    }
+
+    void CloseCurrent()
+    {
+        if (m_current != NULL)
+            Close(m_current);
+    }
+
+private:
+
+    int IndexOf(InternalIconData * pdata)
+    {
+        int count = m_toolbar->GetButtonCount();
+        for (int i = 0; i < count; i++)
+        {
+            if (m_toolbar->GetItemData(i) == pdata)
+                return i;
+        }
+        return -1;
+    }
+
+    void SetTimer(int length)
+    {
+        m_timer = ::SetTimer(m_hwndParent, BalloonsTimerId, length, NULL);
+    }
+
+    void Show(Info& info)
+    {
+        TRACE("ShowBalloonTip called for flags=%x text=%ws; title=%ws\n", info.uIcon, info.szInfo, info.szInfoTitle);
+
+        // TODO: NIF_REALTIME, NIIF_NOSOUND, other Vista+ flags
+
+        const int index = IndexOf(info.pSource);
+        RECT rc;
+        m_toolbar->GetItemRect(index, &rc);
+        m_toolbar->ClientToScreen(&rc);
+        const WORD x = (rc.left + rc.right) / 2;
+        const WORD y = (rc.top + rc.bottom) / 2;
+
+        m_tooltips->SetTitle(info.szInfoTitle, info.uIcon);
+        m_tooltips->TrackPosition(x, y);
+        m_tooltips->UpdateTipText(m_hwndParent, reinterpret_cast<LPARAM>(m_toolbar->m_hWnd), info.szInfo);
+        m_tooltips->TrackActivate(m_hwndParent, reinterpret_cast<LPARAM>(m_toolbar->m_hWnd));
+
+        m_current = info.pSource;
+        int timeout = info.uTimeout;
+        if (timeout < MinTimeout) timeout = MinTimeout;
+        if (timeout > MaxTimeout) timeout = MaxTimeout;
+
+        SetTimer(timeout);
+    }
+
+    void Close(IN OUT InternalIconData * notifyItem)
+    {
+        TRACE("HideBalloonTip called\n");
+
+        if (m_current == notifyItem && !m_currentClosed)
+        {
+            // Prevent Re-entry
+            m_currentClosed = true;
+            m_tooltips->TrackDeactivate();
+            SetTimer(CooldownBetweenBalloons);
+        }
+    }
+};
 
 class CNotifyToolbar :
     public CWindowImplBaseT< CToolbar<InternalIconData>, CControlWinTraits >
@@ -321,17 +517,13 @@ class CNotifyToolbar :
     HIMAGELIST m_ImageList;
     int m_VisibleButtonCount;
 
-    HWND m_BalloonsParent;
-    CTooltips * m_Balloons;
-    InternalIconData * m_currentTooltip;
+    CBalloonQueue * m_BalloonQueue;
 
 public:
     CNotifyToolbar() :
         m_ImageList(NULL),
         m_VisibleButtonCount(0),
-        m_BalloonsParent(NULL),
-        m_Balloons(NULL),
-        m_currentTooltip(NULL)
+        m_BalloonQueue(NULL)
     {
     }
 
@@ -455,14 +647,15 @@ public:
             StrNCpy(notifyItem->szInfoTitle, iconData->szInfoTitle, _countof(notifyItem->szInfo));
             notifyItem->dwInfoFlags = iconData->dwInfoFlags;
             notifyItem->uTimeout = iconData->uTimeout;
-
         }
 
-        m_VisibleButtonCount++;
         if (notifyItem->dwState & NIS_HIDDEN)
         {
             tbBtn.fsState |= TBSTATE_HIDDEN;
-            m_VisibleButtonCount--;
+        }
+        else
+        {
+            m_VisibleButtonCount++;
         }
 
         /* TODO: support VERSION_4 (NIF_GUID, NIF_REALTIME, NIF_SHOWTIP) */
@@ -472,7 +665,7 @@ public:
 
         if (iconData->uFlags & NIF_INFO)
         {
-            UpdateBalloonTip(notifyItem);
+            m_BalloonQueue->UpdateInfo(notifyItem);
         }
 
         return TRUE;
@@ -600,7 +793,7 @@ public:
 
         if (iconData->uFlags & NIF_INFO)
         {
-            UpdateBalloonTip(notifyItem);
+            m_BalloonQueue->UpdateInfo(notifyItem);
         }
 
         return TRUE;
@@ -650,7 +843,7 @@ public:
             }
         }
 
-        HideBalloonTip(notifyItem);
+        m_BalloonQueue->RemoveInfo(notifyItem);
 
         DeleteButton(index);
 
@@ -659,73 +852,6 @@ public:
         return TRUE;
     }
 
-    void UpdateBalloonTip(InternalIconData* notifyItem)
-    {
-        size_t len = 0;
-        if (SUCCEEDED(StringCchLength(notifyItem->szInfo, _countof(notifyItem->szInfo), &len)) && len > 0)
-        {
-            ShowBalloonTip(notifyItem);
-        }
-        else
-        {
-            HideBalloonTip(notifyItem);
-        }
-    }
-
-    static WPARAM GetTitleIcon(DWORD dwFlags, HICON hIcon)
-    {
-        if (dwFlags & NIIF_USER)
-            return reinterpret_cast<WPARAM>(hIcon);
-
-        return dwFlags & 3;
-    }
-
-    BOOL ShowBalloonTip(IN OUT InternalIconData *notifyItem)
-    {
-        DbgPrint("ShowBalloonTip called for flags=%x text=%ws; title=%ws", notifyItem->dwInfoFlags, notifyItem->szInfo, notifyItem->szInfoTitle);
-
-        // TODO: Queueing -> NIF_REALTIME? (Vista+)
-        // TODO: NIIF_NOSOUND, Vista+ flags
-        
-        const WPARAM icon = GetTitleIcon(notifyItem->dwInfoFlags, notifyItem->hIcon);
-        BOOL ret = m_Balloons->SetTitle(notifyItem->szInfoTitle, icon);
-        if (!ret)
-            DbgPrint("SetTitle failed, GetLastError=%d", GetLastError());
-
-        const int index = FindItem(notifyItem->hWnd, notifyItem->uID, NULL);
-        RECT rc;
-        GetItemRect(index, &rc);
-        ClientToScreen(&rc); // I have no idea why this is needed! >_<
-        WORD x = (rc.left + rc.right) / 2;
-        WORD y = (rc.top + rc.bottom) / 2;
-        DbgPrint("ClientToScreen returned (%d, %d, %d, %d) x=%d, y=%d",
-            rc.left, rc.top,
-            rc.right, rc.bottom, x, y);
-        m_Balloons->TrackPosition(x, y);
-        m_Balloons->UpdateTipText(m_BalloonsParent, reinterpret_cast<LPARAM>(m_hWnd), notifyItem->szInfo);
-        m_Balloons->TrackActivate(m_BalloonsParent, reinterpret_cast<LPARAM>(m_hWnd));
-        m_currentTooltip = notifyItem;
-
-        return TRUE;
-    }
-
-    VOID HideBalloonTip(IN OUT InternalIconData *notifyItem)
-    {
-        DbgPrint("HideBalloonTip called");
-
-        if (m_currentTooltip == notifyItem)
-        {
-            // Prevent Re-entry
-            m_currentTooltip = NULL;
-            m_Balloons->TrackDeactivate();
-        }
-    }
-
-    VOID HideCurrentBalloon()
-    {
-        if (m_currentTooltip != NULL)
-            HideBalloonTip(m_currentTooltip);
-    }
 
     VOID GetTooltipText(int index, LPTSTR szTip, DWORD cchTip)
     {
@@ -909,10 +1035,9 @@ public:
         NOTIFY_CODE_HANDLER(TTN_SHOW, OnTooltipShow)
     END_MSG_MAP()
 
-    void Initialize(HWND hWndParent, CTooltips * tooltips)
+    void Initialize(HWND hWndParent, CBalloonQueue * queue)
     {
-        m_BalloonsParent = hWndParent;
-        m_Balloons = tooltips;
+        m_BalloonQueue = queue;
 
         DWORD styles =
             WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN |
@@ -951,8 +1076,8 @@ class CSysPagerWnd :
     public CIconWatcher
 {
     CNotifyToolbar Toolbar;
-
     CTooltips m_Balloons;
+    CBalloonQueue m_BalloonQueue;
 
 public:
     CSysPagerWnd() {}
@@ -983,7 +1108,7 @@ public:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        Toolbar.Initialize(m_hWnd, &m_Balloons);
+        Toolbar.Initialize(m_hWnd, &m_BalloonQueue);
         CIconWatcher::Initialize(m_hWnd);
 
         HWND hWndTop = GetAncestor(m_hWnd, GA_ROOT);
@@ -1001,8 +1126,10 @@ public:
         BOOL ret = m_Balloons.AddTool(&ti);
         if (!ret)
         {
-            DbgPrint("AddTool failed, LastError=%d (probably meaningless unless non-zero)", GetLastError());
+            WARN("AddTool failed, LastError=%d (probably meaningless unless non-zero)\n", GetLastError());
         }
+
+        m_BalloonQueue.Init(m_hWnd, &Toolbar, &m_Balloons);
 
         // Explicitly request running applications to re-register their systray icons
         ::SendNotifyMessageW(HWND_BROADCAST,
@@ -1014,6 +1141,7 @@ public:
 
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        m_BalloonQueue.Deinit();
         CIconWatcher::Uninitialize();
         return TRUE;
     }
@@ -1165,8 +1293,18 @@ public:
 
     LRESULT OnBalloonPop(UINT uCode, LPNMHDR hdr , BOOL& bHandled)
     {
-        Toolbar.HideCurrentBalloon();
+        m_BalloonQueue.CloseCurrent();
         bHandled = TRUE;
+        return 0;
+    }
+
+    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (m_BalloonQueue.OnTimer(wParam))
+        {
+            bHandled = TRUE;
+        }
+
         return 0;
     }
 
@@ -1183,6 +1321,7 @@ public:
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
         NOTIFY_CODE_HANDLER(TTN_POP, OnBalloonPop)
         NOTIFY_CODE_HANDLER(TBN_GETINFOTIPW, OnGetInfoTip)
         NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
