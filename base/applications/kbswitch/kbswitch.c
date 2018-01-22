@@ -396,11 +396,28 @@ GetNextLayout(VOID)
     return -1;
 }
 
+LRESULT
+UpdateLanguageDisplay(HWND hwnd, HKL hKl)
+{
+    static TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
+
+    GetLayoutIDByHkl(hKl, szLCID, ARRAYSIZE(szLCID));
+    GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, ARRAYSIZE(szLangName));
+    UpdateTrayIcon(hwnd, szLCID, szLangName);
+
+    return 0;
+}
+
+LRESULT
+UpdateLanguageDisplayCurrent(HWND hwnd, WPARAM wParam)
+{
+    return UpdateLanguageDisplay(hwnd, GetKeyboardLayout(GetWindowThreadProcessId((HWND)wParam, 0)));
+}
+
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     static HMENU hRightPopupMenu;
-    static TCHAR szLCID[MAX_PATH], szLangName[MAX_PATH];
     static UINT s_uTaskbarRestart;
 
     switch (Message)
@@ -419,11 +436,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_LANG_CHANGED:
         {
-            GetLayoutIDByHkl((HKL)lParam, szLCID, ARRAYSIZE(szLCID));
-            GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, ARRAYSIZE(szLangName));
-            UpdateTrayIcon(hwnd, szLCID, szLangName);
-
-            return 0;
+            return UpdateLanguageDisplay(hwnd, (HKL)lParam);
         }
 
         case WM_LOAD_LAYOUT:
@@ -435,11 +448,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_WINDOW_ACTIVATE:
         {
-            GetLayoutIDByHkl(GetKeyboardLayout(GetWindowThreadProcessId((HWND)wParam, 0)), szLCID, ARRAYSIZE(szLCID));
-            GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, ARRAYSIZE(szLangName));
-            UpdateTrayIcon(hwnd, szLCID, szLangName);
-
-            return 0;
+            return UpdateLanguageDisplayCurrent(hwnd, wParam);
         }
 
         case WM_NOTIFYICONMSG:
@@ -507,6 +516,10 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             if (wParam == SPI_SETDEFAULTINPUTLANG)
             {
                 //FIXME: Should detect default language changes by CPL applet or by other tools and update UI
+            }
+            if (wParam == SPI_SETNONCLIENTMETRICS)
+            {
+                return UpdateLanguageDisplayCurrent(hwnd, wParam);
             }
         }
         break;
