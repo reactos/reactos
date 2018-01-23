@@ -160,6 +160,9 @@ typedef struct __COMMON_DEVICE_EXTENSION__
 #define USBSTOR_FDO_FLAGS_DEVICE_RESETTING   0x00000008
 #define USBSTOR_FDO_FLAGS_DEVICE_ERROR       0x00000010
 
+#define USBSTOR_DRIVER_FLAGS_BULKONLY        0x00000001
+#define USBSTOR_DRIVER_FLAGS_UNKNOWN         0x00000003
+
 typedef struct
 {
     USBSTOR_COMMON_DEVICE_EXTENSION Common;                                                      // common device extension
@@ -197,7 +200,7 @@ typedef struct
     USBSTOR_BULK_ONLY_BUFFER BulkBuffer;                                                 // Transfer Buffer CBW/CSW
     PIO_WORKITEM ResetDeviceWorkItem;
     ULONG Flags;
-    ULONG DriverFlags;                                                                   // 1 - BulkOnly
+    ULONG DriverFlags;
     KSPIN_LOCK StorSpinLock;
     KEVENT TimeOutEvent;
     SYSTEM_POWER_STATE SystemState;

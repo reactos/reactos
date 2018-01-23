@@ -233,7 +233,7 @@ USBSTOR_FdoHandleStartDevice(
         InterfaceDesc->bInterfaceProtocol == USB_PROTOCOL_BULK &&
         !DeviceExtension->DriverFlags)
     {
-        DeviceExtension->DriverFlags = 1;
+        DeviceExtension->DriverFlags = USBSTOR_DRIVER_FLAGS_BULKONLY;
     }
     else
     {

@@ -180,7 +180,7 @@ USBSTOR_ResetDeviceWorkItem(
     KeReleaseSpinLock(&FDODeviceExtension->StorSpinLock, OldIrql);
 
     if (!FDODeviceExtension->DriverFlags)
-        FDODeviceExtension->DriverFlags = 1;
+        FDODeviceExtension->DriverFlags = USBSTOR_DRIVER_FLAGS_BULKONLY;
 
     if (PDODeviceExtension)
         USBSTOR_QueueNextRequest(FdoDevice);

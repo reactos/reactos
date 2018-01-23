@@ -975,7 +975,7 @@ USBSTOR_HandleExecuteSCSI(
         return;
     }
 
-    if (FDODeviceExtension->DriverFlags == 1) // BulkOnly (FIXME const)
+    if (FDODeviceExtension->DriverFlags == USBSTOR_DRIVER_FLAGS_BULKONLY)
     {
         Status = USBSTOR_CbwTransfer(FDODeviceExtension, Irp);
         DPRINT("USBSTOR_HandleExecuteSCSI: Status - %08X\n", Status);

@@ -1139,8 +1139,8 @@ USBSTOR_GetInquiryData(
 
     if (NT_SUCCESS(Status) && !FDODeviceExtension->DriverFlags)
     {
-        DPRINT("USBSTOR_GetInquiryData: DriverFlags = 3 \n");
-        FDODeviceExtension->DriverFlags = 3;
+        DPRINT("USBSTOR_GetInquiryData: DriverFlags = USBSTOR_DRIVER_FLAGS_UNKNOWN\n");
+        FDODeviceExtension->DriverFlags = USBSTOR_DRIVER_FLAGS_UNKNOWN;
     }
 
     Response = (PUFI_INQUIRY_RESPONSE)&PDODeviceExtension->InquiryData;
