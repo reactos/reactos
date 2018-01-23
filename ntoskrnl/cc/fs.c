@@ -13,14 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifndef VACB_MAPPING_GRANULARITY
-#define VACB_MAPPING_GRANULARITY (256 * 1024)
-#endif
-
 /* GLOBALS   *****************************************************************/
 
 extern KGUARDED_MUTEX ViewLock;
-extern ULONG CcTotalDirtyPages;
 
 NTSTATUS CcRosInternalFreeVacb(PROS_VACB Vacb);
 
