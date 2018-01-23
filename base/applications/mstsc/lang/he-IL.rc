@@ -2,6 +2,7 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 IDD_GENERAL DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
+EXSTYLE WS_EX_LAYOUTRTL
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "הגדרות כניסה", IDC_STATIC, 7, 7, 228, 89
@@ -21,6 +22,7 @@ END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
+EXSTYLE WS_EX_LAYOUTRTL
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "תצורת תצוגה", IDC_STATIC, 7, 7, 228, 68
@@ -39,6 +41,7 @@ END
 
 IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "חיבור לשולחן עבודה מרוחק"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
@@ -55,10 +58,10 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 צבעים (15 סיביות)"
     IDS_HIGHCOLOR16 "65,536 צבעים (16 סיביות)"
     IDS_HIGHCOLOR24 "16,777,216 צבעים (24 סיביות)"
-    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
+    IDS_HIGHCOLOR32 "איכות הכי גבוהה (32 סיביות)"
     IDS_PIXEL "%lux%lu פיקסלים"
     IDS_FULLSCREEN "מסך מלא"
     IDS_BROWSESERVER "<Browse for more...>"
     IDS_HEADERTEXT1 "שולחן עבודה מרוחק"
-    IDS_HEADERTEXT2 "חיבור"
+    IDS_HEADERTEXT2 "חיבור" //fix: text gets reversed for some reason...
 END

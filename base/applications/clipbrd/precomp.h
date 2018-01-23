@@ -14,6 +14,7 @@
 #include <shellapi.h>
 #include <htmlhelp.h>
 #include <commdlg.h>
+#include <winnls.h>
 
 #include "resources.h"
 #include "cliputils.h"
