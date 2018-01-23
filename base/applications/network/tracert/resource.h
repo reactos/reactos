@@ -6,6 +6,7 @@
 #define IDS_TRACE_COMPLETE          103
 #define IDS_UNABLE_RESOLVE          104
 #define IDS_GEN_FAILURE             105
+#define IDS_TRANSMIT_FAILED         106
 
 #define IDS_HOP_COUNT               107
 #define IDS_HOP_TIME                108
@@ -14,3 +15,7 @@
 #define IDS_HOP_RES_INFO            111
 #define IDS_HOP_IP_INFO             112
 #define IDS_REQ_TIMED_OUT           113
+#define IDS_LINEBREAK               114
+#define IDS_HOP_RESPONSE            115
+#define IDS_DEST_HOST_UNREACHABLE   116
+#define IDS_DEST_NET_UNREACHABLE    117
