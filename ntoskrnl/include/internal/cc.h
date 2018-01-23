@@ -41,6 +41,10 @@
 //
 extern ULONG CcRosTraceLevel;
 extern LIST_ENTRY DirtyVacbListHead;
+extern ULONG CcDirtyPageThreshold;
+extern ULONG CcTotalDirtyPages;
+extern LIST_ENTRY CcDeferredWrites;
+extern KSPIN_LOCK CcDeferredWriteSpinLock;
 
 typedef struct _PF_SCENARIO_ID
 {
@@ -192,6 +196,17 @@ typedef struct _ROS_VACB
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     /* Pointer to the next VACB in a chain. */
 } ROS_VACB, *PROS_VACB;
+
+typedef struct _ROS_DEFERRED_WRITE_CONTEXT
+{
+    LIST_ENTRY CcDeferredWritesEntry;
+    PFILE_OBJECT FileObject;
+    PCC_POST_DEFERRED_WRITE PostRoutine;
+    PVOID Context1;
+    PVOID Context2;
+    ULONG BytesToWrite;
+    BOOLEAN Retrying;
+} ROS_DEFERRED_WRITE_CONTEXT, *PROS_DEFERRED_WRITE_CONTEXT;
 
 typedef struct _INTERNAL_BCB
 {

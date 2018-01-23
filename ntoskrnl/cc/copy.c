@@ -378,6 +378,22 @@ CcCanIWrite (
     CCTRACE(CC_API_DEBUG, "FileObject=%p BytesToWrite=%lu Wait=%d Retrying=%d\n",
         FileObject, BytesToWrite, Wait, Retrying);
 
+    /* We cannot write if dirty pages count is above threshold */
+    if (CcTotalDirtyPages > CcDirtyPageThreshold)
+    {
+        return FALSE;
+    }
+
+    /* We cannot write if dirty pages count will bring use above
+     * XXX: Might not be accurate
+     */
+    if (CcTotalDirtyPages + (BytesToWrite / PAGE_SIZE) > CcDirtyPageThreshold)
+    {
+        return FALSE;
+    }
+
+    /* FIXME: Handle per-file threshold */
+
     return TRUE;
 }
 
@@ -442,7 +458,7 @@ CcCopyWrite (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -454,10 +470,43 @@ CcDeferWrite (
     IN ULONG BytesToWrite,
     IN BOOLEAN Retrying)
 {
+    PROS_DEFERRED_WRITE_CONTEXT Context;
+
     CCTRACE(CC_API_DEBUG, "FileObject=%p PostRoutine=%p Context1=%p Context2=%p BytesToWrite=%lu Retrying=%d\n",
         FileObject, PostRoutine, Context1, Context2, BytesToWrite, Retrying);
 
-    PostRoutine(Context1, Context2);
+    /* Try to allocate a context for queueing the write operation */
+    Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(ROS_DEFERRED_WRITE_CONTEXT), 'CcDw');
+    /* If it failed, immediately execute the operation! */
+    if (Context == NULL)
+    {
+        PostRoutine(Context1, Context2);
+        return;
+    }
+
+    /* Otherwise, initialize the context */
+    Context->FileObject = FileObject;
+    Context->PostRoutine = PostRoutine;
+    Context->Context1 = Context1;
+    Context->Context2 = Context2;
+    Context->BytesToWrite = BytesToWrite;
+    Context->Retrying = Retrying;
+
+    /* And queue it */
+    if (Retrying)
+    {
+        /* To the top, if that's a retry */
+        ExInterlockedInsertHeadList(&CcDeferredWrites,
+                                    &Context->CcDeferredWritesEntry,
+                                    &CcDeferredWriteSpinLock);
+    }
+    else
+    {
+        /* To the bottom, if that's a first time */
+        ExInterlockedInsertTailList(&CcDeferredWrites,
+                                    &Context->CcDeferredWritesEntry,
+                                    &CcDeferredWriteSpinLock);
+    }
 }
 
 /*

@@ -60,9 +60,13 @@ ULONG CcLazyWriteIos = 0;
 /* Internal vars (MS):
  * - Threshold above which lazy writer will start action
  * - Amount of dirty pages
+ * - List for deferred writes
+ * - Spinlock when dealing with the deferred list
  */
 ULONG CcDirtyPageThreshold = 0;
 ULONG CcTotalDirtyPages = 0;
+LIST_ENTRY CcDeferredWrites;
+KSPIN_LOCK CcDeferredWriteSpinLock;
 
 /* Internal vars (ROS):
  * - Event to notify lazy writer to shutdown
@@ -308,6 +312,7 @@ CciLazyWriter(PVOID Unused)
     while (TRUE)
     {
         NTSTATUS Status;
+        PLIST_ENTRY ListEntry;
         ULONG Target, Count = 0;
 
         /* One per second or until we have to stop */
@@ -342,6 +347,34 @@ CciLazyWriter(PVOID Unused)
 
         /* Inform people waiting on us that we're done */
         KeSetEvent(&iLazyWriterNotify, IO_DISK_INCREMENT, FALSE);
+
+        /* Likely not optimal, but let's handle one deferred write now! */
+        ListEntry = ExInterlockedRemoveHeadList(&CcDeferredWrites, &CcDeferredWriteSpinLock);
+        if (ListEntry != NULL)
+        {
+            PROS_DEFERRED_WRITE_CONTEXT Context;
+
+            /* Extract the context */
+            Context = CONTAINING_RECORD(ListEntry, ROS_DEFERRED_WRITE_CONTEXT, CcDeferredWritesEntry);
+
+            /* Can we write now? */
+            if (CcCanIWrite(Context->FileObject, Context->BytesToWrite, FALSE, Context->Retrying))
+            {
+                /* Yes! Do it, and destroy the associated context */
+                Context->PostRoutine(Context->Context1, Context->Context2);
+                ExFreePoolWithTag(Context, 'CcDw');
+            }
+            else
+            {
+                /* Otherwise, requeue it, but in tail, so that it doesn't block others
+                 * This is clearly to improve, but given the poor algorithm used now
+                 * It's better than nothing!
+                 */
+                ExInterlockedInsertTailList(&CcDeferredWrites,
+                                            &Context->CcDeferredWritesEntry,
+                                            &CcDeferredWriteSpinLock);
+            }
+        }
     }
 }
 
@@ -1358,6 +1391,8 @@ CcInitView (
 
     InitializeListHead(&DirtyVacbListHead);
     InitializeListHead(&VacbLruListHead);
+    InitializeListHead(&CcDeferredWrites);
+    KeInitializeSpinLock(&CcDeferredWriteSpinLock);
     KeInitializeGuardedMutex(&ViewLock);
     ExInitializeNPagedLookasideList(&iBcbLookasideList,
                                     NULL,
