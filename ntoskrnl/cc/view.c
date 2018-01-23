@@ -565,25 +565,15 @@ CcRosLookupVacb (
     return NULL;
 }
 
-NTSTATUS
+VOID
 NTAPI
 CcRosMarkDirtyVacb (
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    LONGLONG FileOffset)
+    PROS_VACB Vacb)
 {
-    PROS_VACB Vacb;
     KIRQL oldIrql;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
 
-    ASSERT(SharedCacheMap);
-
-    DPRINT("CcRosMarkDirtyVacb(SharedCacheMap 0x%p, FileOffset %I64u)\n",
-           SharedCacheMap, FileOffset);
-
-    Vacb = CcRosLookupVacb(SharedCacheMap, FileOffset);
-    if (Vacb == NULL)
-    {
-        KeBugCheck(CACHE_MANAGER);
-    }
+    SharedCacheMap = Vacb->SharedCacheMap;
 
     KeAcquireGuardedMutex(&ViewLock);
     KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
@@ -606,6 +596,30 @@ CcRosMarkDirtyVacb (
 
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
+}
+
+NTSTATUS
+NTAPI
+CcRosMarkDirtyFile (
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    LONGLONG FileOffset)
+{
+    PROS_VACB Vacb;
+
+    ASSERT(SharedCacheMap);
+
+    DPRINT("CcRosMarkDirtyVacb(SharedCacheMap 0x%p, FileOffset %I64u)\n",
+           SharedCacheMap, FileOffset);
+
+    Vacb = CcRosLookupVacb(SharedCacheMap, FileOffset);
+    if (Vacb == NULL)
+    {
+        KeBugCheck(CACHE_MANAGER);
+    }
+
+    CcRosMarkDirtyVacb(Vacb);
+
+
     CcRosReleaseVacbLock(Vacb);
 
     return STATUS_SUCCESS;

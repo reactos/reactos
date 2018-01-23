@@ -281,10 +281,15 @@ CcInitCacheZeroPage(VOID);
 
 NTSTATUS
 NTAPI
-CcRosMarkDirtyVacb(
+CcRosMarkDirtyFile(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset
 );
+
+VOID
+NTAPI
+CcRosMarkDirtyVacb(
+    PROS_VACB Vacb);
 
 NTSTATUS
 NTAPI

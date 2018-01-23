@@ -247,6 +247,7 @@ CcSetDirtyPinnedData (
         Bcb, Lsn);
 
     iBcb->Dirty = TRUE;
+    CcRosMarkDirtyVacb(iBcb->Vacb);
 }
 
 
