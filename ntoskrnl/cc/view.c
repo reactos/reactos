@@ -326,23 +326,18 @@ CciLazyWriter(PVOID Unused)
         /* We're not sleeping anymore */
         KeClearEvent(&iLazyWriterNotify);
 
-        /* Only start operations if above threshold */
-        DPRINT("TS: %lu, Count: %lu\n", CcDirtyPageThreshold, CcTotalDirtyPages);
-        if (CcTotalDirtyPages > CcDirtyPageThreshold)
+        /* Our target is one-eighth of the dirty pages */
+        Target = CcTotalDirtyPages / 8;
+        if (Target != 0)
         {
-            /* Our target is one-eighth of the dirty pages */
-            Target = CcTotalDirtyPages / 8;
-            if (Target != 0)
-            {
-                /* Flush! */
-                DPRINT("Lazy writer starting (%d)\n", Target);
-                CcRosFlushDirtyPages(Target, &Count, FALSE, TRUE);
+            /* Flush! */
+            DPRINT("Lazy writer starting (%d)\n", Target);
+            CcRosFlushDirtyPages(Target, &Count, FALSE, TRUE);
 
-                /* And update stats */
-                CcLazyWritePages += Count;
-                ++CcLazyWriteIos;
-                DPRINT("Lazy writer done (%d)\n", Count);
-            }
+            /* And update stats */
+            CcLazyWritePages += Count;
+            ++CcLazyWriteIos;
+            DPRINT("Lazy writer done (%d)\n", Count);
         }
 
         /* Inform people waiting on us that we're done */
