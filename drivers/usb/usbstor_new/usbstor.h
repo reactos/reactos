@@ -53,7 +53,7 @@
 #define USB_PROTOCOL_KARMA        0xF5    /* Rio Karma */
 #define USB_PROTOCOL_VENDOR       0xFF    /* Use vendor specific */
 
-/* Correspond constants from scsi.h - Inquiry defines, DeviceType field. */
+/* Corresponding constants from scsi.h - Inquiry defines, DeviceType field. */
 
 #define USBSTOR_SCSI_DEVICE_TYPE_DIRECT         0x00  /* disks */
 #define USBSTOR_SCSI_DEVICE_TYPE_SEQUENTIAL     0x01  /* tapes */
@@ -97,7 +97,7 @@ typedef struct
     UCHAR Vendor[8];                                                 // vendor identification string
     UCHAR Product[16];                                               // product identification string
     UCHAR Revision[4];                                               // product revision code
-}UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
+} UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
 
 C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
 
@@ -106,7 +106,8 @@ C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
 #define CBW_SIGNATURE 0x43425355
 #define CSW_SIGNATURE 0x53425355
 
-typedef struct {
+typedef struct
+{
    ULONG Signature;                                                 // CBW signature
    ULONG Tag;                                                       // CBW Tag of operation
    ULONG DataTransferLength;                                        // data transfer length
@@ -122,19 +123,23 @@ C_ASSERT(sizeof(CBW) == 31);
 #define CSW_STATUS_COMMAND_FAILED 0x01
 #define CSW_STATUS_PHASE_ERROR    0x02
 
-typedef struct {
+typedef struct
+{
     ULONG Signature;                                                 // CSW signature
     ULONG Tag;                                                       // CSW tag
     ULONG DataResidue;                                               // CSW data transfer diff
     UCHAR Status;                                                    // CSW status
 } CSW, *PCSW;
 
-typedef union _USBSTOR_BULK_ONLY_BUFFER {
-    struct {
+typedef union _USBSTOR_BULK_ONLY_BUFFER
+{
+    struct
+    {
         CBW Cbw;
         UCHAR Pad1[512 - sizeof(CBW)];
     };
-    struct {
+    struct
+    {
         CSW Csw;
         UCHAR Pad2[512 - sizeof(CSW)];
     };
@@ -625,7 +630,7 @@ VOID
 NTAPI
 USBSTOR_TimerRoutine(
     PDEVICE_OBJECT DeviceObject,
-     PVOID Context);
+    PVOID Context);
 
 VOID
 NTAPI

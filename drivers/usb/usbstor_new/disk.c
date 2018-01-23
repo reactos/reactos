@@ -32,7 +32,7 @@ IsRequestValid(PIRP Irp)
         if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) ==
                              SRB_FLAGS_UNSPECIFIED_DIRECTION)
         {
-            DPRINT("IsRequestValid: Not valid Srb! Srb->SrbFlags - %p\n", Srb->SrbFlags);
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->SrbFlags - %X\n", Srb->SrbFlags);
             return FALSE;
         }
 
@@ -40,19 +40,19 @@ IsRequestValid(PIRP Irp)
 
         if (Irp->MdlAddress == NULL)
         {
-            DPRINT("IsRequestValid: Not valid Srb. Irp->MdlAddress == NULL\n");
+            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress == NULL\n");
             return FALSE;
         }
 
         if (TransferLength == 0)
         {
-            DPRINT("IsRequestValid: Not valid Srb. TransferLength == 0\n");
+            DPRINT1("IsRequestValid: Invalid Srb. TransferLength == 0\n");
             return FALSE;
         }
 
         if (TransferLength > 0x10000) // FIXME consatnt (default MaximumTransferLength)
         {
-            DPRINT("IsRequestValid: Not valid Srb. TransferLength > 0x10000\n");
+            DPRINT1("IsRequestValid: Invalid Srb. TransferLength > 0x10000\n");
             return FALSE;
         }
     }
@@ -60,19 +60,19 @@ IsRequestValid(PIRP Irp)
     {
         if (Srb->DataTransferLength)
         {
-            DPRINT("IsRequestValid: Not valid Srb. Srb->DataTransferLength != 0\n");
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataTransferLength != 0\n");
             return FALSE;
         }
 
         if (Srb->DataBuffer)
         {
-            DPRINT("IsRequestValid: Not valid Srb. Srb->DataBuffer != NULL\n");
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataBuffer != NULL\n");
             return FALSE;
         }
 
         if (Irp->MdlAddress)
         {
-            DPRINT("IsRequestValid: Not valid Srb. Irp->MdlAddress != NULL\n");
+            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress != NULL\n");
             return FALSE;
         }
     }
