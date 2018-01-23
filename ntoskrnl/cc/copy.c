@@ -4,7 +4,8 @@
  * FILE:            ntoskrnl/cc/copy.c
  * PURPOSE:         Implements cache managers copy interface
  *
- * PROGRAMMERS:
+ * PROGRAMMERS:     Some people?
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -375,6 +376,12 @@ CcCanIWrite (
     IN BOOLEAN Wait,
     IN BOOLEAN Retrying)
 {
+    KIRQL OldIrql;
+    ULONG DirtyPages;
+    PLIST_ENTRY ListEntry;
+    PFSRTL_COMMON_FCB_HEADER Fcb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+
     CCTRACE(CC_API_DEBUG, "FileObject=%p BytesToWrite=%lu Wait=%d Retrying=%d\n",
         FileObject, BytesToWrite, Wait, Retrying);
 
@@ -392,7 +399,48 @@ CcCanIWrite (
         return FALSE;
     }
 
-    /* FIXME: Handle per-file threshold */
+    /* Is there a limit per file object? */
+    Fcb = FileObject->FsContext;
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    if (!BooleanFlagOn(Fcb->Flags, FSRTL_FLAG_LIMIT_MODIFIED_PAGES) ||
+        SharedCacheMap->DirtyPageThreshold == 0)
+    {
+        /* Nope, so that's fine, allow write operation */
+        return TRUE;
+    }
+
+    /* There's a limit, start counting dirty pages */
+    DirtyPages = 0;
+    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+    for (ListEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
+         ListEntry != &SharedCacheMap->CacheMapVacbListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        PROS_VACB Vacb;
+
+        Vacb = CONTAINING_RECORD(ListEntry,
+                                 ROS_VACB,
+                                 CacheMapVacbListEntry);
+        if (Vacb->Dirty)
+        {
+            DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        }
+    }
+    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+
+    /* Is dirty page count above local threshold? */
+    if (DirtyPages > SharedCacheMap->DirtyPageThreshold)
+    {
+        return FALSE;
+    }
+
+    /* We cannot write if dirty pages count will bring use above
+     * XXX: Might not be accurate
+     */
+    if (DirtyPages + (BytesToWrite / PAGE_SIZE) > SharedCacheMap->DirtyPageThreshold)
+    {
+        return FALSE;
+    }
 
     return TRUE;
 }

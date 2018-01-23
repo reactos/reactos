@@ -5,6 +5,7 @@
  * PURPOSE:         Cache manager
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -140,7 +141,7 @@ CcSetBcbOwnerPointer (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -149,10 +150,23 @@ CcSetDirtyPageThreshold (
 	IN	ULONG		DirtyPageThreshold
 	)
 {
+    PFSRTL_COMMON_FCB_HEADER Fcb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+
     CCTRACE(CC_API_DEBUG, "FileObject=%p DirtyPageThreshold=%lu\n",
         FileObject, DirtyPageThreshold);
 
-	UNIMPLEMENTED;
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    if (SharedCacheMap != NULL)
+    {
+        SharedCacheMap->DirtyPageThreshold = DirtyPageThreshold;
+    }
+
+    Fcb = FileObject->FsContext;
+    if (!BooleanFlagOn(Fcb->Flags, FSRTL_FLAG_LIMIT_MODIFIED_PAGES))
+    {
+        SetFlag(Fcb->Flags, FSRTL_FLAG_LIMIT_MODIFIED_PAGES);
+    }
 }
 
 /*

@@ -159,6 +159,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     PVOID LazyWriteContext;
     KSPIN_LOCK CacheMapLock;
     ULONG OpenCount;
+    ULONG DirtyPageThreshold;
 #if DBG
     BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif

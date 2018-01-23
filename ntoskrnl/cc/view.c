@@ -5,6 +5,7 @@
  * PURPOSE:         Cache manager
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* NOTES **********************************************************************
@@ -1333,6 +1334,7 @@ CcRosInitializeFileCache (
         SharedCacheMap->SectionSize = FileSizes->AllocationSize;
         SharedCacheMap->FileSize = FileSizes->FileSize;
         SharedCacheMap->PinAccess = PinAccess;
+        SharedCacheMap->DirtyPageThreshold = 0;
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
