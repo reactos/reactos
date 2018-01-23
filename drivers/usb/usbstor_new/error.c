@@ -157,9 +157,7 @@ USBSTOR_ResetDeviceWorkItem(
         FDODeviceExtension->CurrentIrp = NULL;
     }
 
-    nx = 0;
-
-    do
+    for (nx = 0; nx < 3; ++nx)
     {
         Status = USBSTOR_IsDeviceConnected(FdoDevice);
 
@@ -174,10 +172,7 @@ USBSTOR_ResetDeviceWorkItem(
         {
             break;
         }
-
-        ++nx;
     }
-    while (nx < 3);
 
     KeAcquireSpinLock(&FDODeviceExtension->StorSpinLock, &OldIrql);
 
