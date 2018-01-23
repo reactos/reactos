@@ -50,7 +50,7 @@ IsRequestValid(PIRP Irp)
             return FALSE;
         }
 
-        if (TransferLength > 0x10000) // FIXME consatnt (default MaximumTransferLength)
+        if (TransferLength > USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH)
         {
             DPRINT1("IsRequestValid: Invalid Srb. TransferLength > 0x10000\n");
             return FALSE;
@@ -568,8 +568,8 @@ USBSTOR_HandleQueryProperty(
         //
         AdapterDescriptor->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
         AdapterDescriptor->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-        AdapterDescriptor->MaximumTransferLength = 0x10000; // FIXME
-        AdapterDescriptor->MaximumPhysicalPages = 17; // See CORE-10515 and CORE-10755
+        AdapterDescriptor->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
+        AdapterDescriptor->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
         AdapterDescriptor->AlignmentMask = 0;
         AdapterDescriptor->AdapterUsesPio = FALSE;
         AdapterDescriptor->AdapterScansDown = FALSE;
@@ -660,8 +660,8 @@ USBSTOR_HandleDeviceControl(
 
         if (Capabilities)
         {
-            Capabilities->MaximumTransferLength = 0x10000; // FIXME 
-            Capabilities->MaximumPhysicalPages = 17; // See CORE-10515 and CORE-10755
+            Capabilities->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
+            Capabilities->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
             Capabilities->SupportedAsynchronousEvents = 0;
             Capabilities->AlignmentMask = 0;
             Capabilities->TaggedQueuing = FALSE;

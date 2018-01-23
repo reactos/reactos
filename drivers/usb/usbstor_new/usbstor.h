@@ -66,6 +66,8 @@
 #define USBSTOR_SCSI_DEVICE_TYPE_MEDIA_CHANGER  0x08  /* jukebox */
 #define USBSTOR_SCSI_DEVICE_TYPE_UNKNOWN        0x1F 
 
+#define USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH  0x10000
+
 #define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 #define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 
