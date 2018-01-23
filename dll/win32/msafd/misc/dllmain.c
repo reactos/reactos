@@ -579,6 +579,9 @@ TranslateNtStatusError(NTSTATUS Status)
        case STATUS_NETWORK_UNREACHABLE:
           return WSAENETUNREACH;
 
+       case STATUS_HOST_UNREACHABLE:
+          return WSAEHOSTUNREACH;
+
        case STATUS_INVALID_PARAMETER:
           return WSAEINVAL;
 

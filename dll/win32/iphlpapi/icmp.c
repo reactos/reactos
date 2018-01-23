@@ -496,6 +496,40 @@ static DWORD system_icmp(
 }
 #endif
 
+BOOL
+GetIPv4ByIndex(
+    _In_  DWORD              Index,
+    _Out_ IPAddr *           Address
+)
+{
+    PMIB_IPADDRTABLE pIpAddrTable;
+    ULONG dwSize = 0;
+    BOOL result = FALSE;
+
+    if (GetIpAddrTable(NULL, &dwSize, FALSE) != ERROR_INSUFFICIENT_BUFFER)
+    {
+        return result;
+    }
+    pIpAddrTable = HeapAlloc(GetProcessHeap(), 0, dwSize);
+
+    if (GetIpAddrTable(pIpAddrTable, &dwSize, FALSE) == NO_ERROR)
+    {
+        INT i;
+
+        for (i = 0; i < (*pIpAddrTable).dwNumEntries; i++)
+        {
+            if ((*pIpAddrTable).table[i].dwIndex == Index)
+            {
+                *Address = (IPAddr)(*pIpAddrTable).table[i].dwAddr;
+                result = TRUE;
+                break;
+            }
+        }
+    }
+    HeapFree(GetProcessHeap(), 0, pIpAddrTable);
+    return result;
+}
+
 /***********************************************************************
  *		IcmpSendEcho (IPHLPAPI.@)
  */
@@ -671,22 +705,34 @@ DWORD WINAPI IcmpSendEcho(
     res=sendto(icp->sid, (const char*)reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
     HeapFree(GetProcessHeap (), 0, reqbuf);
     if (res<0) {
+        DWORD dwBestIfIndex;
+        IPAddr IP4Addr;
+
+        ZeroMemory(&ier->Address, sizeof(ier->Address));
+
+        if (GetBestInterface(addr.sin_addr.s_addr, &dwBestIfIndex) == NO_ERROR &&
+            GetIPv4ByIndex(dwBestIfIndex, &IP4Addr))
+        {
+            memcpy(&ier->Address, &IP4Addr, sizeof(IP4Addr));
+        }
+
         if (WSAGetLastError()==WSAEMSGSIZE)
-            SetLastError(IP_PACKET_TOO_BIG);
+            ier->Status = IP_PACKET_TOO_BIG;
         else {
             switch (WSAGetLastError()) {
             case WSAENETUNREACH:
-                SetLastError(IP_DEST_NET_UNREACHABLE);
+                ier->Status = IP_DEST_NET_UNREACHABLE;
                 break;
             case WSAEHOSTUNREACH:
-                SetLastError(IP_DEST_HOST_UNREACHABLE);
+                ier->Status = IP_DEST_HOST_UNREACHABLE;
                 break;
             default:
                 TRACE("unknown error: errno=%d\n",WSAGetLastError());
-                SetLastError(IP_GENERAL_FAILURE);
+                ier->Status = IP_GENERAL_FAILURE;
+                ZeroMemory(&ier->Address, sizeof(ier->Address));
             }
         }
-        return 0;
+        return 1;
     }
 
     /* Get the reply */
@@ -848,7 +894,10 @@ DWORD WINAPI IcmpSendEcho(
     HeapFree(GetProcessHeap(), 0, ip_header);
     res=ier-(ICMP_ECHO_REPLY*)ReplyBuffer;
     if (res==0)
+    {
+        ier->Status = IP_REQ_TIMED_OUT;
         SetLastError(IP_REQ_TIMED_OUT);
+    }
     TRACE("received %d replies\n",res);
     return res;
 }

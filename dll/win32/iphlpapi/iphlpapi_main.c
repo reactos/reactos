@@ -767,18 +767,19 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
 
   AllocateAndGetIpForwardTableFromStack(&table, FALSE, GetProcessHeap(), 0);
   if (table) {
-    DWORD ndx, matchedBits, matchedNdx = 0;
+    DWORD ndx, minMaskSize, matchedNdx = 0;
 
-    for (ndx = 0, matchedBits = 0; ndx < table->dwNumEntries; ndx++) {
+    for (ndx = 0, minMaskSize = 255; ndx < table->dwNumEntries; ndx++) {
       if ((dwDestAddr & table->table[ndx].dwForwardMask) ==
        (table->table[ndx].dwForwardDest & table->table[ndx].dwForwardMask)) {
-        DWORD numShifts, mask;
+        DWORD hostMaskSize;
 
-        for (numShifts = 0, mask = table->table[ndx].dwForwardMask;
-         mask && !(mask & 1); mask >>= 1, numShifts++)
-          ;
-        if (numShifts > matchedBits) {
-          matchedBits = numShifts;
+        if (!_BitScanForward(&hostMaskSize, ntohl(table->table[ndx].dwForwardMask)))
+        {
+            hostMaskSize = 32;
+        }
+        if (hostMaskSize < minMaskSize) {
+          minMaskSize = hostMaskSize;
           matchedNdx = ndx;
         }
       }
