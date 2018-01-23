@@ -20,7 +20,7 @@
 /* GLOBALS   *****************************************************************/
 
 extern KGUARDED_MUTEX ViewLock;
-extern ULONG DirtyPageCount;
+extern ULONG CcTotalDirtyPages;
 
 NTSTATUS CcRosInternalFreeVacb(PROS_VACB Vacb);
 
@@ -239,7 +239,7 @@ CcPurgeCacheSection (
         if (Vacb->Dirty)
         {
             RemoveEntryList(&Vacb->DirtyVacbListEntry);
-            DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+            CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
         }
         RemoveEntryList(&Vacb->CacheMapVacbListEntry);
         InsertHeadList(&FreeList, &Vacb->CacheMapVacbListEntry);

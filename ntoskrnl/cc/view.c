@@ -43,13 +43,33 @@
 
 LIST_ENTRY DirtyVacbListHead;
 static LIST_ENTRY VacbLruListHead;
-ULONG DirtyPageCount = 0;
 
 KGUARDED_MUTEX ViewLock;
 
 NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 static NPAGED_LOOKASIDE_LIST SharedCacheMapLookasideList;
 static NPAGED_LOOKASIDE_LIST VacbLookasideList;
+
+/* Counters:
+ * - Amount of pages flushed by lazy writer
+ * - Number of times lazy writer ran
+ */
+ULONG CcLazyWritePages = 0;
+ULONG CcLazyWriteIos = 0;
+
+/* Internal vars (MS):
+ * - Threshold above which lazy writer will start action
+ * - Amount of dirty pages
+ */
+ULONG CcDirtyPageThreshold = 0;
+ULONG CcTotalDirtyPages = 0;
+
+/* Internal vars (ROS):
+ * - Event to notify lazy writer to shutdown
+ * - Event to inform watchers lazy writer is done for this loop
+ */
+KEVENT iLazyWriterShutdown;
+KEVENT iLazyWriterNotify;
 
 #if DBG
 static void CcRosVacbIncRefCount_(PROS_VACB vacb, const char* file, int line)
@@ -145,7 +165,7 @@ CcRosFlushVacb (
 
         Vacb->Dirty = FALSE;
         RemoveEntryList(&Vacb->DirtyVacbListEntry);
-        DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
         CcRosVacbDecRefCount(Vacb);
 
         KeReleaseSpinLock(&Vacb->SharedCacheMap->CacheMapLock, oldIrql);
@@ -160,7 +180,8 @@ NTAPI
 CcRosFlushDirtyPages (
     ULONG Target,
     PULONG Count,
-    BOOLEAN Wait)
+    BOOLEAN Wait,
+    BOOLEAN CalledFromLazy)
 {
     PLIST_ENTRY current_entry;
     PROS_VACB current;
@@ -190,6 +211,14 @@ CcRosFlushDirtyPages (
         current_entry = current_entry->Flink;
 
         CcRosVacbIncRefCount(current);
+
+        /* When performing lazy write, don't handle temporary files */
+        if (CalledFromLazy &&
+            BooleanFlagOn(current->SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
+        {
+            CcRosVacbDecRefCount(current);
+            continue;
+        }
 
         Locked = current->SharedCacheMap->Callbacks->AcquireForLazyWrite(
                      current->SharedCacheMap->LazyWriteContext, Wait);
@@ -239,8 +268,22 @@ CcRosFlushDirtyPages (
         }
         else
         {
-            (*Count) += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-            Target -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+            ULONG PagesFreed;
+
+            /* How many pages did we free? */
+            PagesFreed = VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+            (*Count) += PagesFreed;
+
+            /* Make sure we don't overflow target! */
+            if (Target < PagesFreed)
+            {
+                /* If we would have, jump to zero directly */
+                Target = 0;
+            }
+            else
+            {
+                Target -= PagesFreed;
+            }
         }
 
         current_entry = DirtyVacbListHead.Flink;
@@ -251,6 +294,60 @@ CcRosFlushDirtyPages (
 
     DPRINT("CcRosFlushDirtyPages() finished\n");
     return STATUS_SUCCESS;
+}
+
+/* FIXME: Someday this could somewhat implement write-behind/read-ahead */
+VOID
+NTAPI
+CciLazyWriter(PVOID Unused)
+{
+    LARGE_INTEGER OneSecond;
+
+    OneSecond.QuadPart = (LONGLONG)-1*1000*1000*10;
+
+    while (TRUE)
+    {
+        NTSTATUS Status;
+        ULONG Target, Count = 0;
+
+        /* One per second or until we have to stop */
+        Status = KeWaitForSingleObject(&iLazyWriterShutdown,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       &OneSecond);
+
+        /* If we succeeed, we've to stop running! */
+        if (Status == STATUS_SUCCESS)
+        {
+            break;
+        }
+
+        /* We're not sleeping anymore */
+        KeClearEvent(&iLazyWriterNotify);
+
+        /* Only start operations if above threshold */
+        DPRINT("TS: %lu, Count: %lu\n", CcDirtyPageThreshold, CcTotalDirtyPages);
+        if (CcTotalDirtyPages > CcDirtyPageThreshold)
+        {
+            /* Our target is one-eighth of the dirty pages */
+            Target = CcTotalDirtyPages / 8;
+            if (Target != 0)
+            {
+                /* Flush! */
+                DPRINT("Lazy writer starting (%d)\n", Target);
+                CcRosFlushDirtyPages(Target, &Count, FALSE, TRUE);
+
+                /* And update stats */
+                CcLazyWritePages += Count;
+                ++CcLazyWriteIos;
+                DPRINT("Lazy writer done (%d)\n", Count);
+            }
+        }
+
+        /* Inform people waiting on us that we're done */
+        KeSetEvent(&iLazyWriterNotify, IO_DISK_INCREMENT, FALSE);
+    }
 }
 
 NTSTATUS
@@ -346,7 +443,7 @@ retry:
     if ((Target > 0) && !FlushedPages)
     {
         /* Flush dirty pages to disk */
-        CcRosFlushDirtyPages(Target, &PagesFreed, FALSE);
+        CcRosFlushDirtyPages(Target, &PagesFreed, FALSE, FALSE);
         FlushedPages = TRUE;
 
         /* We can only swap as many pages as we flushed */
@@ -403,7 +500,7 @@ CcRosReleaseVacb (
     if (!WasDirty && Vacb->Dirty)
     {
         InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-        DirtyPageCount += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
 
     if (Mapped)
@@ -499,7 +596,7 @@ CcRosMarkDirtyVacb (
     if (!Vacb->Dirty)
     {
         InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-        DirtyPageCount += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
     else
     {
@@ -552,7 +649,7 @@ CcRosUnmapVacb (
     if (!WasDirty && NowDirty)
     {
         InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-        DirtyPageCount += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
 
     CcRosVacbDecRefCount(Vacb);
@@ -1014,7 +1111,7 @@ CcRosDeleteFileCache (
             if (current->Dirty)
             {
                 RemoveEntryList(&current->DirtyVacbListEntry);
-                DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+                CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
                 DPRINT1("Freeing dirty VACB\n");
             }
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
@@ -1230,11 +1327,24 @@ CcGetFileObjectFromSectionPtrs (
 }
 
 VOID
+NTAPI
+CcShutdownLazyWriter (
+    VOID)
+{
+    /* Simply set the event, lazy writer will stop when it's done */
+    KeSetEvent(&iLazyWriterShutdown, IO_DISK_INCREMENT, FALSE);
+}
+
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 CcInitView (
     VOID)
 {
+    HANDLE LazyWriter;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
     DPRINT("CcInitView()\n");
 
     InitializeListHead(&DirtyVacbListHead);
@@ -1264,7 +1374,50 @@ CcInitView (
 
     MmInitializeMemoryConsumer(MC_CACHE, CcRosTrimCache);
 
+    /* Initialize lazy writer events */
+    KeInitializeEvent(&iLazyWriterShutdown, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&iLazyWriterNotify, NotificationEvent, FALSE);
+
+    /* Define lazy writer threshold, depending on system type */
+    switch (MmQuerySystemSize())
+    {
+        case MmSmallSystem:
+            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8;
+            break;
+
+        case MmMediumSystem:
+            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 4;
+            break;
+
+        case MmLargeSystem:
+            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8 + MmNumberOfPhysicalPages / 4;
+            break;
+    }
+
+    /* Start the lazy writer thread */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = PsCreateSystemThread(&LazyWriter,
+                                  THREAD_ALL_ACCESS,
+                                  &ObjectAttributes,
+                                  NULL,
+                                  NULL,
+                                  CciLazyWriter,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    /* Handle is not needed */
+    ObCloseHandle(LazyWriter, KernelMode);
+
     CcInitCacheZeroPage();
+
+    return TRUE;
 }
 
 /* EOF */

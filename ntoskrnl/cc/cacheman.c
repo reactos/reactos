@@ -41,8 +41,15 @@ NTAPI
 INIT_FUNCTION
 CcInitializeCacheManager(VOID)
 {
-    CcInitView();
-    return TRUE;
+    return CcInitView();
+}
+
+VOID
+NTAPI
+CcShutdownSystem(VOID)
+{
+    /* Inform the lazy writer it has to stop activity */
+    CcShutdownLazyWriter();
 }
 
 /*

@@ -53,7 +53,7 @@ CcMdlWriteComplete2(IN PFILE_OBJECT FileObject,
                     IN PLARGE_INTEGER FileOffset,
                     IN PMDL MdlChain);
 
-VOID
+BOOLEAN
 NTAPI
 CcInitView(VOID);
 

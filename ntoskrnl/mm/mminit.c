@@ -19,9 +19,6 @@
 
 VOID NTAPI MiInitializeUserPfnBitmap(VOID);
 
-HANDLE MpwThreadHandle;
-KEVENT MpwThreadEvent;
-
 BOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
 //
@@ -169,76 +166,6 @@ MiDbgDumpAddressSpace(VOID)
             "Non Paged Pool Expansion PTE Space");
 }
 
-VOID
-NTAPI
-MmMpwThreadMain(PVOID Parameter)
-{
-    NTSTATUS Status;
-#ifndef NEWCC
-    ULONG PagesWritten;
-#endif
-    LARGE_INTEGER Timeout;
-
-    UNREFERENCED_PARAMETER(Parameter);
-
-    Timeout.QuadPart = -50000000;
-
-    for(;;)
-    {
-        Status = KeWaitForSingleObject(&MpwThreadEvent,
-                                       0,
-                                       KernelMode,
-                                       FALSE,
-                                       &Timeout);
-        if (!NT_SUCCESS(Status))
-        {
-            DbgPrint("MpwThread: Wait failed\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
-            return;
-        }
-
-#ifndef NEWCC
-        PagesWritten = 0;
-
-        // XXX arty -- we flush when evicting pages or destorying cache
-        // sections.
-        CcRosFlushDirtyPages(128, &PagesWritten, FALSE);
-#endif
-    }
-}
-
-NTSTATUS
-NTAPI
-INIT_FUNCTION
-MmInitMpwThread(VOID)
-{
-    KPRIORITY Priority;
-    NTSTATUS Status;
-    CLIENT_ID MpwThreadId;
-
-    KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
-
-    Status = PsCreateSystemThread(&MpwThreadHandle,
-                                  THREAD_ALL_ACCESS,
-                                  NULL,
-                                  NULL,
-                                  &MpwThreadId,
-                                  MmMpwThreadMain,
-                                  NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        return(Status);
-    }
-
-    Priority = 27;
-    NtSetInformationThread(MpwThreadHandle,
-                           ThreadPriority,
-                           &Priority,
-                           sizeof(Priority));
-
-    return(STATUS_SUCCESS);
-}
-
 NTSTATUS
 NTAPI
 INIT_FUNCTION
@@ -337,11 +264,6 @@ MmInitSystem(IN ULONG Phase,
      * Unmap low memory
      */
     MiInitBalancerThread();
-
-    /*
-     * Initialise the modified page writer.
-     */
-    MmInitMpwThread();
 
     /* Initialize the balance set manager */
     MmInitBsmThread();

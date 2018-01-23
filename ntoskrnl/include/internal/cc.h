@@ -240,9 +240,13 @@ CcRosGetVacb(
     PROS_VACB *Vacb
 );
 
-VOID
+BOOLEAN
 NTAPI
 CcInitView(VOID);
+
+VOID
+NTAPI
+CcShutdownLazyWriter(VOID);
 
 NTSTATUS
 NTAPI
@@ -287,7 +291,8 @@ NTAPI
 CcRosFlushDirtyPages(
     ULONG Target,
     PULONG Count,
-    BOOLEAN Wait
+    BOOLEAN Wait,
+    BOOLEAN CalledFromLazy
 );
 
 VOID
@@ -341,6 +346,10 @@ CcRosReleaseFileCache(
 NTSTATUS
 NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
+
+VOID
+NTAPI
+CcShutdownSystem(VOID);
 
 FORCEINLINE
 NTSTATUS
