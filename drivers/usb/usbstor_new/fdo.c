@@ -558,6 +558,7 @@ USBSTOR_FdoSetPower(
     switch (Type)
     {
         case SystemPowerState:
+        {
             FdoExtension->SystemState = State.SystemState;
 
             if (State.SystemState == PowerSystemWorking)
@@ -579,9 +580,11 @@ USBSTOR_FdoSetPower(
                                          DeviceObject,
                                          NULL);
             }
-            break;
 
+            break;
+        }
         case DevicePowerState:
+        {
             OldState.DeviceState = FdoExtension->DeviceState;
             FdoExtension->DeviceState = State.DeviceState;
 
@@ -620,11 +623,14 @@ USBSTOR_FdoSetPower(
                     return PoCallDriver(FdoExtension->LowerDeviceObject, Irp);
                 }
             }
-            break;
 
+            break;
+        }
         default:
+        {
             ASSERT(FALSE);
             break;
+        }
     }
 
     PoStartNextPowerIrp(Irp);
