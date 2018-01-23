@@ -289,7 +289,7 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
             if (!(pcontext->wi.dwStyle & WS_MINIMIZEBOX))
                 return;
             else
-                iStateId = BUTTON_DISABLED;
+                iStateId = (pcontext->Active ? BUTTON_DISABLED : BUTTON_INACTIVE_DISABLED);
         }
 
         iPartId = pcontext->wi.dwStyle & WS_MAXIMIZE ? WP_RESTOREBUTTON : WP_MAXBUTTON;
@@ -301,7 +301,7 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
             if (!(pcontext->wi.dwStyle & WS_MAXIMIZEBOX))
                 return;
             else
-                iStateId = BUTTON_DISABLED;
+                iStateId = (pcontext->Active ? BUTTON_DISABLED : BUTTON_INACTIVE_DISABLED);
         }
  
         iPartId = pcontext->wi.dwStyle & WS_MINIMIZE ? WP_RESTOREBUTTON : WP_MINBUTTON;
@@ -322,13 +322,11 @@ static DWORD
 ThemeGetButtonState(DWORD htCurrect, DWORD htHot, DWORD htDown, BOOL Active)
 {
     if (htHot == htCurrect)
-        return BUTTON_HOT;
-    if (!Active)
-        return BUTTON_INACTIVE;
+        return (Active ? BUTTON_HOT : BUTTON_INACTIVE_HOT);
     if (htDown == htCurrect)
-        return BUTTON_PRESSED;
+        return (Active ? BUTTON_PRESSED : BUTTON_INACTIVE_PRESSED);
 
-    return BUTTON_NORMAL;
+    return (Active ? BUTTON_NORMAL : BUTTON_INACTIVE);
 }
 
 /* Used only from mouse event handlers */
