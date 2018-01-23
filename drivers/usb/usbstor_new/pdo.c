@@ -1092,9 +1092,7 @@ USBSTOR_SendInternalCdb(
             while (ix < 3);
 
             if (Mdl)
-            {
                 IoFreeMdl(Mdl);
-            }
 
             ExFreePool(SenseBuffer);
         }
@@ -1102,9 +1100,7 @@ USBSTOR_SendInternalCdb(
         ExFreePool(Srb);
 
         if (Irp)
-        {
             IoFreeIrp(Irp);
-        }
     }
 
     return Status;

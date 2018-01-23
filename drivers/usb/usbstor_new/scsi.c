@@ -139,9 +139,7 @@ USBSTOR_IsRequestTimeOut(
     FDODeviceExtension->Flags &= ~USBSTOR_FDO_FLAGS_TRANSFER_FINISHED;
 
     if (FDODeviceExtension->Flags & USBSTOR_FDO_FLAGS_DEVICE_RESETTING)
-    {
         IsTimeOut = TRUE;
-    }
 
     KeReleaseSpinLock(&FDODeviceExtension->StorSpinLock, OldIrql);
 
@@ -529,9 +527,7 @@ USBSTOR_CswCompletion(
     USBSTOR_QueueNextRequest(FdoDevice);
 
     if (Status)
-    {
         DPRINT("USBSTOR_CswCompletion: Status -%p\n", Status);
-    }
 
     return Status;
 
@@ -629,13 +625,9 @@ USBSTOR_DataCompletion(
     if (NT_SUCCESS(Irp->IoStatus.Status))
     {
         if (FDODeviceExtension->Urb.TransferBufferLength < Srb->DataTransferLength)
-        {
             Srb->SrbStatus = SRB_STATUS_DATA_OVERRUN;
-        }
         else
-        {
             Srb->SrbStatus = SRB_STATUS_SUCCESS;
-        }
 
         Srb->DataTransferLength = FDODeviceExtension->Urb.TransferBufferLength;
 

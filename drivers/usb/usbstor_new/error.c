@@ -162,16 +162,12 @@ USBSTOR_ResetDeviceWorkItem(
         Status = USBSTOR_IsDeviceConnected(FdoDevice);
 
         if (!NT_SUCCESS(Status))
-        {
             break;
-        }
 
         Status = USBSTOR_ResetDevice(FdoDevice);
 
         if (NT_SUCCESS(Status))
-        {
             break;
-        }
     }
 
     KeAcquireSpinLock(&FDODeviceExtension->StorSpinLock, &OldIrql);
@@ -179,21 +175,15 @@ USBSTOR_ResetDeviceWorkItem(
     FDODeviceExtension->Flags &= ~USBSTOR_FDO_FLAGS_DEVICE_RESETTING;
 
     if (!NT_SUCCESS(Status))
-    {
         FDODeviceExtension->Flags |= USBSTOR_FDO_FLAGS_DEVICE_ERROR;
-    }
 
     KeReleaseSpinLock(&FDODeviceExtension->StorSpinLock, OldIrql);
 
     if (!FDODeviceExtension->DriverFlags)
-    {
         FDODeviceExtension->DriverFlags = 1;
-    }
 
     if (PDODeviceExtension)
-    {
         USBSTOR_QueueNextRequest(FdoDevice);
-    }
 
     //FIXME RemoveLock
 }
