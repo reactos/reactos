@@ -853,13 +853,16 @@ public:
     }
 
 
-    VOID GetTooltipText(int index, LPTSTR szTip, DWORD cchTip)
+    VOID GetTooltipText(LPARAM data, LPTSTR szTip, DWORD cchTip)
     {
-        InternalIconData * notifyItem = GetItemData(index);
-
+        InternalIconData * notifyItem = reinterpret_cast<InternalIconData *>(data);
         if (notifyItem)
         {
             StringCchCopy(szTip, cchTip, notifyItem->szTip);
+        }
+        else
+        {
+            StringCchCopy(szTip, cchTip, L"");
         }
     }
 
@@ -1240,7 +1243,7 @@ public:
     LRESULT OnGetInfoTip(INT uCode, LPNMHDR hdr, BOOL& bHandled)
     {
         NMTBGETINFOTIPW * nmtip = (NMTBGETINFOTIPW *) hdr;
-        Toolbar.GetTooltipText(nmtip->iItem, nmtip->pszText, nmtip->cchTextMax);
+        Toolbar.GetTooltipText(nmtip->lParam, nmtip->pszText, nmtip->cchTextMax);
         return TRUE;
     }
 
