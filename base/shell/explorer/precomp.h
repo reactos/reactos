@@ -384,4 +384,16 @@ Tray_OnStartMenuDismissed(ITrayWindow* Tray);
 HRESULT
 IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2);
 
+/*
+* syspager.c
+*/
+
+#include "syspager.h"
+
+/*
+* trayclock.c
+*/
+
+#include "trayclock.h"
+
 #endif /* _EXPLORER_PRECOMP__H_ */
