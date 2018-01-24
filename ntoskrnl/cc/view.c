@@ -1493,6 +1493,7 @@ CcInitView (
     return TRUE;
 }
 
+#if DBG && defined(KDBG)
 BOOLEAN
 ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
 {
@@ -1547,5 +1548,6 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
 
     return TRUE;
 }
+#endif
 
 /* EOF */
