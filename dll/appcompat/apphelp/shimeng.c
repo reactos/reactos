@@ -368,9 +368,17 @@ static DWORD SeiGetDWORD(PDB pdb, TAGID tag, TAG type)
     if (tagEntry == TAGID_NULL)
         return 0;
 
-    return SdbReadDWORDTag(pdb, tagEntry, TAGID_NULL);
+    return SdbReadDWORDTag(pdb, tagEntry, 0);
 }
 
+static QWORD SeiGetQWORD(PDB pdb, TAGID tag, TAG type)
+{
+    TAGID tagEntry = SdbFindFirstTag(pdb, tag, type);
+    if (tagEntry == TAGID_NULL)
+        return 0;
+
+    return SdbReadQWORDTag(pdb, tagEntry, 0);
+}
 
 static VOID SeiAddShim(TAGREF trShimRef, PARRAY pShimRef)
 {
@@ -381,6 +389,22 @@ static VOID SeiAddShim(TAGREF trShimRef, PARRAY pShimRef)
         return;
 
     *Data = trShimRef;
+}
+
+static VOID SeiAddFlag(PDB pdb, TAGID tiFlagRef, PFLAGINFO pFlagInfo)
+{
+    ULARGE_INTEGER Flag;
+
+    /* Resolve the FLAG_REF to the real FLAG node */
+    TAGID FlagTag = SeiGetDWORD(pdb, tiFlagRef, TAG_FLAG_TAGID);
+
+    if (FlagTag == TAGID_NULL)
+        return;
+
+    pFlagInfo->AppCompatFlags.QuadPart |= SeiGetQWORD(pdb, FlagTag, TAG_FLAG_MASK_KERNEL);
+    pFlagInfo->AppCompatFlagsUser.QuadPart |= SeiGetQWORD(pdb, FlagTag, TAG_FLAG_MASK_USER);
+    Flag.QuadPart = SeiGetQWORD(pdb, FlagTag, TAG_FLAG_PROCESSPARAM);
+    pFlagInfo->ProcessParameters_Flags |= Flag.LowPart;
 }
 
 /* Propagate layers to child processes */
@@ -402,7 +426,7 @@ static VOID SeiSetLayerEnvVar(LPCWSTR wszLayer)
 #define MAX_LAYER_LENGTH            256
 
 /* Translate all Exe and Layer entries to Shims, and propagate all layers */
-static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShimRef)
+static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShimRef, PFLAGINFO pFlagInfo)
 {
     WCHAR wszLayerEnvVar[MAX_LAYER_LENGTH] = { 0 };
     DWORD n;
@@ -415,6 +439,7 @@ static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShim
         {
             LPCWSTR ExeName = SeiGetStringPtr(pdb, tag, TAG_NAME);
             TAGID ShimRef = SdbFindFirstTag(pdb, tag, TAG_SHIM_REF);
+            TAGID FlagRef = SdbFindFirstTag(pdb, tag, TAG_FLAG_REF);
 
             if (ExeName)
                 SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(Exe(%S))\n", ExeName);
@@ -425,11 +450,15 @@ static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShim
                 if (SdbTagIDToTagRef(hsdb, pdb, ShimRef, &trShimRef))
                     SeiAddShim(trShimRef, pShimRef);
 
-
                 ShimRef = SdbFindNextTag(pdb, tag, ShimRef);
             }
 
-            /* Handle FLAG_REF */
+            while (FlagRef != TAGID_NULL)
+            {
+                SeiAddFlag(pdb, FlagRef, pFlagInfo);
+
+                FlagRef = SdbFindNextTag(pdb, tag, FlagRef);
+            }
         }
     }
 
@@ -442,6 +471,8 @@ static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShim
         {
             LPCWSTR LayerName = SeiGetStringPtr(pdb, tag, TAG_NAME);
             TAGID ShimRef = SdbFindFirstTag(pdb, tag, TAG_SHIM_REF);
+            TAGID FlagRef = SdbFindFirstTag(pdb, tag, TAG_FLAG_REF);
+
             if (LayerName)
             {
                 HRESULT hr;
@@ -464,7 +495,12 @@ static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShim
                 ShimRef = SdbFindNextTag(pdb, tag, ShimRef);
             }
 
-            /* Handle FLAG_REF */
+            while (FlagRef != TAGID_NULL)
+            {
+                SeiAddFlag(pdb, FlagRef, pFlagInfo);
+
+                FlagRef = SdbFindNextTag(pdb, tag, FlagRef);
+            }
         }
     }
     if (wszLayerEnvVar[0])
@@ -954,15 +990,12 @@ VOID SeiInitPaths(VOID)
 #undef WINSXS
 }
 
-/*
-Level(INFO) Using USER apphack flags 0x2080000
-*/
-
 VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
 {
     DWORD n;
     ARRAY ShimRefArray;
     DWORD dwTotalHooks = 0;
+    FLAGINFO ShimFlags;
 
     PPEB Peb = NtCurrentPeb();
 
@@ -973,6 +1006,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     ARRAY_Init(&g_pShimInfo, PSHIMMODULE);
     ARRAY_Init(&g_pHookArray, HOOKMODULEINFO);
     ARRAY_Init(&g_InExclude, INEXCLUDE);
+    RtlZeroMemory(&ShimFlags, sizeof(ShimFlags));
 
     SeiInitPaths();
 
@@ -984,7 +1018,22 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     */
 
     SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(ExePath(%wZ))\n", ProcessImage);
-    SeiBuildShimRefArray(hsdb, pQuery, &ShimRefArray);
+    SeiBuildShimRefArray(hsdb, pQuery, &ShimRefArray, &ShimFlags);
+    if (ShimFlags.AppCompatFlags.QuadPart)
+    {
+        SeiDbgPrint(SEI_MSG, NULL, "Using KERNEL apphack flags 0x%I64x\n", ShimFlags.AppCompatFlags.QuadPart);
+        Peb->AppCompatFlags.QuadPart |= ShimFlags.AppCompatFlags.QuadPart;
+    }
+    if (ShimFlags.AppCompatFlagsUser.QuadPart)
+    {
+        SeiDbgPrint(SEI_MSG, NULL, "Using USER apphack flags 0x%I64x\n", ShimFlags.AppCompatFlagsUser.QuadPart);
+        Peb->AppCompatFlagsUser.QuadPart |= ShimFlags.AppCompatFlagsUser.QuadPart;
+    }
+    if (ShimFlags.ProcessParameters_Flags)
+    {
+        SeiDbgPrint(SEI_MSG, NULL, "Using ProcessParameters flags 0x%x\n", ShimFlags.ProcessParameters_Flags);
+        Peb->ProcessParameters->Flags |= ShimFlags.ProcessParameters_Flags;
+    }
     SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(Complete)\n");
 
     SHIMENG_INFO("Got %d shims\n", ARRAY_Size(&ShimRefArray));
