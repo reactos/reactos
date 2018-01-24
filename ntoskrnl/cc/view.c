@@ -1493,4 +1493,59 @@ CcInitView (
     return TRUE;
 }
 
+BOOLEAN
+ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
+{
+    PLIST_ENTRY ListEntry;
+    UNICODE_STRING NoName = RTL_CONSTANT_STRING(L"No name for File");
+
+    KdbpPrint("Control\t\tValid\tDirty\tName\n");
+    /* No need to lock the spin lock here, we're in DBG */
+    for (ListEntry = CcCleanSharedCacheMapList.Flink;
+         ListEntry != &CcCleanSharedCacheMapList;
+         ListEntry = ListEntry->Flink)
+    {
+        PLIST_ENTRY Vacbs;
+        ULONG Valid = 0, Dirty = 0;
+        PROS_SHARED_CACHE_MAP SharedCacheMap;
+        PUNICODE_STRING FileName;
+
+        SharedCacheMap = CONTAINING_RECORD(ListEntry, ROS_SHARED_CACHE_MAP, SharedCacheMapLinks);
+
+        /* First, count for all the associated VACB */
+        for (Vacbs = SharedCacheMap->CacheMapVacbListHead.Flink;
+             Vacbs != &SharedCacheMap->CacheMapVacbListHead;
+             Vacbs = Vacbs->Flink)
+        {
+            PROS_VACB Vacb;
+
+            Vacb = CONTAINING_RECORD(Vacbs, ROS_VACB, CacheMapVacbListEntry);
+            if (Vacb->Dirty)
+            {
+                Dirty += VACB_MAPPING_GRANULARITY / 1024;
+            }
+            if (Vacb->Valid)
+            {
+                Valid += VACB_MAPPING_GRANULARITY / 1024;
+            }
+        }
+
+        /* Setup name */
+        if (SharedCacheMap->FileObject != NULL &&
+            SharedCacheMap->FileObject->FileName.Length != 0)
+        {
+            FileName = &SharedCacheMap->FileObject->FileName;
+        }
+        else
+        {
+            FileName = &NoName;
+        }
+
+        /* And print */
+        KdbpPrint("%p\t%d\t%d\t%wZ\n", SharedCacheMap, Valid, Dirty, FileName);
+    }
+
+    return TRUE;
+}
+
 /* EOF */
