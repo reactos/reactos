@@ -11,6 +11,7 @@
 
 #include <commctrl.h>
 #include <richedit.h>
+#include <winnls.h>
 
 #define REMOVE_ADVANCED
 
@@ -593,6 +594,17 @@ wWinMain(HINSTANCE hInst,
     HINSTANCE hGetUName = NULL;
 
     hInstance = hInst;
+    
+    /* Mirroring code for the titlebar */
+    switch (GetUserDefaultUILanguage())
+    {
+        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
+
+        default:
+            break;
+    }
 
     iccx.dwSize = sizeof(INITCOMMONCONTROLSEX);
     iccx.dwICC = ICC_TAB_CLASSES;

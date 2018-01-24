@@ -10,6 +10,7 @@
 
 #include <commctrl.h>
 #include <commdlg.h>
+#include <winnls.h>
 
 #include "sndrec32.h"
 #include "shellapi.h"
@@ -117,6 +118,16 @@ _tWinMain(HINSTANCE hInstance,
     s_info.cbSize = sizeof( NONCLIENTMETRICS );
 
     InitCommonControls();
+	
+	switch (GetUserDefaultUILanguage())
+    {
+        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
+
+        default:
+            break;
+    }
 
     win_first = wout_first = FALSE;
 

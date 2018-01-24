@@ -9,23 +9,23 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&יציאה", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "&הפעלה"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
-        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM "נגינה/&השהייה\tCtrl+P", IDC_PLAY
+        MENUITEM "&עצירה\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "&חזרה\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&תצוגה"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "&מצב חלון יחיד", IDM_SWITCHVIEW
     END
-    POPUP "&Device"
+    POPUP "&התקן"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "&מאפיינים", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "&בקרת עוצמה", IDM_VOLUMECTL
     END
     POPUP "&עזרה"
     BEGIN
@@ -44,14 +44,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
-    IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
-    IDS_MODE_NOT_READY "Not ready"
+    IDS_MODE_UNKNOWN "לא ידוע"
+    IDS_MODE_OPEN "נפתח"
+    IDS_MODE_STOP "נעצר"
+    IDS_MODE_PLAY "מנגן"
+    IDS_MODE_PAUSE "מושהה"
+    IDS_MODE_RECORD "מקליט"
+    IDS_MODE_SEEK "מחפש"
+    IDS_MODE_NOT_READY "לא מוכן"
     IDS_ALL_TYPES_FILTER "כל הקבצים הנתמכים"
     IDS_TOOLTIP_PLAY "נגן"
     IDS_TOOLTIP_STOP "עצור"
@@ -60,8 +60,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "חפש אחורנית"
     IDS_TOOLTIP_SEEKFORW "חפש קדימה"
     IDS_TOOLTIP_FORWARD "דלג קדימה"
-    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_TOOLTIP_PAUSE "השהה"
     IDS_APPTITLE "נגן המולטימדיה של ReactOS"
     IDS_PLAY "נגן"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error."
+    IDS_DEFAULTMCIERRMSG "אין תיאור זמין עבור שגיאה זו."
 END
