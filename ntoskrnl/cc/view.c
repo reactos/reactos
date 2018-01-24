@@ -1387,6 +1387,7 @@ CcInitView (
 {
     HANDLE LazyWriter;
     NTSTATUS Status;
+    KPRIORITY Priority;
     OBJECT_ATTRIBUTES ObjectAttributes;
 
     DPRINT("CcInitView()\n");
@@ -1457,6 +1458,13 @@ CcInitView (
     {
         return FALSE;
     }
+
+    Priority = 27;
+    Status = NtSetInformationThread(LazyWriter,
+                                   ThreadPriority,
+                                   &Priority,
+                                   sizeof(Priority));
+    ASSERT(NT_SUCCESS(Status));
 
     /* Handle is not needed */
     ObCloseHandle(LazyWriter, KernelMode);
