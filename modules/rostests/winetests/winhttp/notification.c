@@ -1043,6 +1043,7 @@ if (!winetest_interactive)
 {
     skip("Skipping test_persistent_connection due to hang. See ROSTESTS-295.\n");
 }
+else
 #endif
     test_persistent_connection( si.port );
 
