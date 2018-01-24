@@ -63,18 +63,22 @@ ULONG CcLazyWriteIos = 0;
  * - Amount of dirty pages
  * - List for deferred writes
  * - Spinlock when dealing with the deferred list
+ * - List for "clean" shared cache maps
  */
 ULONG CcDirtyPageThreshold = 0;
 ULONG CcTotalDirtyPages = 0;
 LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
+LIST_ENTRY CcCleanSharedCacheMapList;
 
 /* Internal vars (ROS):
  * - Event to notify lazy writer to shutdown
  * - Event to inform watchers lazy writer is done for this loop
+ * - Lock for the CcCleanSharedCacheMapList list
  */
 KEVENT iLazyWriterShutdown;
 KEVENT iLazyWriterNotify;
+KSPIN_LOCK iSharedCacheMapLock;
 
 #if DBG
 static void CcRosVacbIncRefCount_(PROS_VACB vacb, const char* file, int line)
@@ -1139,6 +1143,8 @@ CcRosDeleteFileCache (
     SharedCacheMap->OpenCount--;
     if (SharedCacheMap->OpenCount == 0)
     {
+        KIRQL OldIrql;
+
         FileObject->SectionObjectPointer->SharedCacheMap = NULL;
 
         /*
@@ -1173,6 +1179,11 @@ CcRosDeleteFileCache (
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
             CcRosInternalFreeVacb(current);
         }
+
+        KeAcquireSpinLock(&iSharedCacheMapLock, &OldIrql);
+        RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
+        KeReleaseSpinLock(&iSharedCacheMapLock, OldIrql);
+
         ExFreeToNPagedLookasideList(&SharedCacheMapLookasideList, SharedCacheMap);
         KeAcquireGuardedMutex(&ViewLock);
     }
@@ -1317,6 +1328,8 @@ CcRosInitializeFileCache (
     KeAcquireGuardedMutex(&ViewLock);
     if (SharedCacheMap == NULL)
     {
+        KIRQL OldIrql;
+
         SharedCacheMap = ExAllocateFromNPagedLookasideList(&SharedCacheMapLookasideList);
         if (SharedCacheMap == NULL)
         {
@@ -1338,6 +1351,10 @@ CcRosInitializeFileCache (
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
+
+        KeAcquireSpinLock(&iSharedCacheMapLock, &OldIrql);
+        InsertTailList(&CcCleanSharedCacheMapList, &SharedCacheMap->SharedCacheMapLinks);
+        KeReleaseSpinLock(&iSharedCacheMapLock, OldIrql);
     }
     if (FileObject->PrivateCacheMap == NULL)
     {
@@ -1395,7 +1412,9 @@ CcInitView (
     InitializeListHead(&DirtyVacbListHead);
     InitializeListHead(&VacbLruListHead);
     InitializeListHead(&CcDeferredWrites);
+    InitializeListHead(&CcCleanSharedCacheMapList);
     KeInitializeSpinLock(&CcDeferredWriteSpinLock);
+    KeInitializeSpinLock(&iSharedCacheMapLock);
     KeInitializeGuardedMutex(&ViewLock);
     ExInitializeNPagedLookasideList(&iBcbLookasideList,
                                     NULL,
