@@ -1165,7 +1165,7 @@ VOID NTAPI SE_InstallBeforeInit(PUNICODE_STRING ProcessImage, PVOID pShimData)
 {
     HSDB hsdb = NULL;
     SDBQUERYRESULT QueryResult = { { 0 } };
-    SHIMENG_MSG("(%wZ, %p)\n", ProcessImage, pShimData);
+    SHIMENG_INFO("(%wZ, %p)\n", ProcessImage, pShimData);
 
     if (!SeiGetShimData(ProcessImage, pShimData, &hsdb, &QueryResult))
     {
