@@ -1500,7 +1500,8 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
     PLIST_ENTRY ListEntry;
     UNICODE_STRING NoName = RTL_CONSTANT_STRING(L"No name for File");
 
-    KdbpPrint("Control\t\tValid\tDirty\tName\n");
+    KdbpPrint("  Usage Summary (in kb)\n");
+    KdbpPrint("Shared\t\tValid\tDirty\tName\n");
     /* No need to lock the spin lock here, we're in DBG */
     for (ListEntry = CcCleanSharedCacheMapList.Flink;
          ListEntry != &CcCleanSharedCacheMapList;
