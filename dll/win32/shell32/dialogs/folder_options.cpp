@@ -1341,7 +1341,6 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile,
 
     /* allocate file type entry */
     Entry = (PFOLDER_FILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FOLDER_FILE_TYPE_ENTRY));
-
     if (!Entry)
         return;
 
@@ -1398,8 +1397,7 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile,
     /* get icon */
     HKEY hDefIconKey;
     Entry->IconLocation[0] = UNICODE_NULL;
-    Entry->hIconLarge = NULL;
-    Entry->hIconSmall = NULL;
+    Entry->hIconLarge = Entry->hIconSmall = NULL;
     if (RegOpenKeyExW(hKey, L"DefaultIcon", 0, KEY_READ, &hDefIconKey) == ERROR_SUCCESS)
     {
         WCHAR sz[MAX_PATH + 64];
@@ -1451,8 +1449,8 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile,
     {
         iLargeImage = ImageList_AddIcon(himlLarge, Entry->hIconLarge);
         iSmallImage = ImageList_AddIcon(himlSmall, Entry->hIconSmall);
-        assert(iLargeImage == iSmallImage);
     }
+    assert(iLargeImage == iSmallImage);
 
     /* Do not add excluded entries */
     if (Entry->EditFlags & 0x00000001) //FTA_Exclude
@@ -1481,10 +1479,7 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile,
     lvItem.pszText = &Entry->FileExtension[1];
     lvItem.iItem = *iItem;
     lvItem.lParam = (LPARAM)Entry;
-    if (Entry->hIconLarge && Entry->hIconSmall && iLargeImage == iSmallImage)
-    {
-        lvItem.iImage = iSmallImage;
-    }
+    lvItem.iImage = iSmallImage;
     (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
@@ -1538,11 +1533,6 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
                                  GetSystemMetrics(SM_CYSMICON),
                                  ILC_COLOR32 | ILC_MASK,
                                  256, 20);
-
-    HICON hNilIcon = LoadIcon(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_NIL));
-    ImageList_AddIcon(himlLarge, hNilIcon);
-    ImageList_AddIcon(himlSmall, hNilIcon);
-    DestroyIcon(hNilIcon);
 
     ListView_SetImageList(hDlgCtrl, himlLarge, LVSIL_NORMAL);
     ListView_SetImageList(hDlgCtrl, himlSmall, LVSIL_SMALL);
