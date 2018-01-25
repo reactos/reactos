@@ -250,7 +250,8 @@ CcRosFlushDirtyPages (
         ASSERT(current->Dirty);
 
         /* One reference is added above */
-        if (current->ReferenceCount > 2)
+        if ((current->ReferenceCount > 2 && current->PinCount == 0) ||
+            (current->ReferenceCount > 3 && current->PinCount > 1))
         {
             CcRosReleaseVacbLock(current);
             current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
@@ -883,7 +884,7 @@ CcRosCreateVacb (
 #if MI_TRACE_PFNS
     if ((SharedCacheMap->FileObject) && (SharedCacheMap->FileObject->FileName.Buffer))
     {
-        PWCHAR pos = NULL;
+        PWCHAR pos;
         ULONG len = 0;
         pos = wcsrchr(SharedCacheMap->FileObject->FileName.Buffer, '\\');
         if (pos)
