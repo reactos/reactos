@@ -616,6 +616,7 @@
 #define IDI_SHELL_DELETE4 16718
 #define IDI_SHELL_DELETE5 16721
 
+#define IDI_SHELL_NIL 16723
 /*
  * AVI resources
  *

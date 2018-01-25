@@ -1413,10 +1413,23 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile,
                 if (pch)
                 {
                     *pch = UNICODE_NULL;
-                    INT Index = abs(_wtoi(pch + 1));
-                    ExtractIconExW(Entry->IconLocation, Index,
-                                   &Entry->hIconLarge, &Entry->hIconSmall,
-                                   1);
+                    INT Index = _wtoi(pch + 1);
+                    if (Index < 0)
+                    {
+                        // A negative value will be interpreted as a resource ID.
+                        Index = -Index;
+                        HINSTANCE hDLL = LoadLibraryExW(Entry->IconLocation, NULL, LOAD_LIBRARY_AS_DATAFILE);
+                        Entry->hIconLarge = LoadIconW(hDLL, MAKEINTRESOURCEW(Index));
+                        Entry->hIconSmall = (HICON)LoadImageW(hDLL, MAKEINTRESOURCEW(Index), IMAGE_ICON,
+                                                              16, 16, 0);
+                        FreeLibrary(hDLL);
+                    }
+                    else
+                    {
+                        ExtractIconExW(Entry->IconLocation, Index,
+                                       &Entry->hIconLarge, &Entry->hIconSmall,
+                                       1);
+                    }
                     *pch = L',';
                 }
                 else
@@ -1430,15 +1443,16 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile,
         RegCloseKey(hDefIconKey);
     }
 
-    INT iSmallImage = -1;
-    if (Entry->hIconLarge && Entry->hIconSmall)
-    {
-        ImageList_AddIcon(himlLarge, Entry->hIconLarge);
-        iSmallImage = ImageList_AddIcon(himlSmall, Entry->hIconSmall);
-    }
-
     /* close key */
     RegCloseKey(hKey);
+
+    INT iLargeImage = -1, iSmallImage = -1;
+    if (Entry->hIconLarge && Entry->hIconSmall)
+    {
+        iLargeImage = ImageList_AddIcon(himlLarge, Entry->hIconLarge);
+        iSmallImage = ImageList_AddIcon(himlSmall, Entry->hIconSmall);
+        assert(iLargeImage == iSmallImage);
+    }
 
     /* Do not add excluded entries */
     if (Entry->EditFlags & 0x00000001) //FTA_Exclude
@@ -1462,16 +1476,15 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile,
     }
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
-    lvItem.mask = LVIF_TEXT | LVIF_PARAM;
-    if (iSmallImage != -1)
-    {
-        lvItem.mask |= LVIF_IMAGE;
-    }
+    lvItem.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     lvItem.iSubItem = 0;
     lvItem.pszText = &Entry->FileExtension[1];
     lvItem.iItem = *iItem;
     lvItem.lParam = (LPARAM)Entry;
-    lvItem.iImage = iSmallImage;
+    if (Entry->hIconLarge && Entry->hIconSmall && iLargeImage == iSmallImage)
+    {
+        lvItem.iImage = iSmallImage;
+    }
     (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
@@ -1525,6 +1538,12 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
                                  GetSystemMetrics(SM_CYSMICON),
                                  ILC_COLOR32 | ILC_MASK,
                                  256, 20);
+
+    HICON hNilIcon = LoadIcon(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_NIL));
+    ImageList_AddIcon(himlLarge, hNilIcon);
+    ImageList_AddIcon(himlSmall, hNilIcon);
+    DestroyIcon(hNilIcon);
+
     ListView_SetImageList(hDlgCtrl, himlLarge, LVSIL_NORMAL);
     ListView_SetImageList(hDlgCtrl, himlSmall, LVSIL_SMALL);
 
