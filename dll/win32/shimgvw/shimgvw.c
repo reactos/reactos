@@ -48,54 +48,51 @@ static const UINT ZoomSteps[] =
     10, 25, 50, 100, 200, 400, 800, 1600
 };
 
-static void ZoomIn(void)
+static void ZoomInOrOut(BOOL bZoomIn)
 {
     INT i;
 
-    /* find next step */
-    for (i = 0; i < ARRAYSIZE(ZoomSteps); ++i)
+    if (bZoomIn)    /* zoom in */
     {
-        if (ZoomPercents < ZoomSteps[i])
-            break;
-    }
-    if (i == ARRAYSIZE(ZoomSteps))
-        ZoomPercents = MAX_ZOOM;
-    else
-        ZoomPercents = ZoomSteps[i];
+        /* find next step */
+        for (i = 0; i < ARRAYSIZE(ZoomSteps); ++i)
+        {
+            if (ZoomPercents < ZoomSteps[i])
+                break;
+        }
+        if (i == ARRAYSIZE(ZoomSteps))
+            ZoomPercents = MAX_ZOOM;
+        else
+            ZoomPercents = ZoomSteps[i];
 
-    /* update tool bar buttons */
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, TRUE);
-    if (ZoomPercents >= MAX_ZOOM)
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, FALSE);
-    else
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, TRUE);
-
-    /* redraw */
-    InvalidateRect(hDispWnd, NULL, TRUE);
-}
-
-static void ZoomOut(void)
-{
-    INT i;
-
-    /* find previous step */
-    for (i = ARRAYSIZE(ZoomSteps); i > 0; )
-    {
-        --i;
-        if (ZoomSteps[i] < ZoomPercents)
-            break;
-    }
-    if (i < 0)
-        ZoomPercents = MIN_ZOOM;
-    else
-        ZoomPercents = ZoomSteps[i];
-
-    /* update tool bar buttons */
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, TRUE);
-    if (ZoomPercents <= MIN_ZOOM)
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, FALSE);
-    else
+        /* update tool bar buttons */
         SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, TRUE);
+        if (ZoomPercents >= MAX_ZOOM)
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, FALSE);
+        else
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, TRUE);
+    }
+    else            /* zoom out */
+    {
+        /* find previous step */
+        for (i = ARRAYSIZE(ZoomSteps); i > 0; )
+        {
+            --i;
+            if (ZoomSteps[i] < ZoomPercents)
+                break;
+        }
+        if (i < 0)
+            ZoomPercents = MIN_ZOOM;
+        else
+            ZoomPercents = ZoomSteps[i];
+
+        /* update tool bar buttons */
+        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, TRUE);
+        if (ZoomPercents <= MIN_ZOOM)
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, FALSE);
+        else
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, TRUE);
+    }
 
     /* redraw */
     InvalidateRect(hDispWnd, NULL, TRUE);
@@ -633,13 +630,9 @@ ImageView_InitControls(HWND hwnd)
 static VOID
 ImageView_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
 {
-    if (zDelta < 0)
+    if (zDelta != 0)
     {
-        ZoomOut();
-    }
-    else if (zDelta > 0)
-    {
-        ZoomIn();
+        ZoomInOrOut(zDelta > 0);
     }
 }
 
@@ -687,12 +680,12 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 break;
                 case IDC_ZOOMP:
                 {
-                    ZoomIn();
+                    ZoomInOrOut(TRUE);
                 }
                 break;
                 case IDC_ZOOMM:
                 {
-                    ZoomOut();
+                    ZoomInOrOut(FALSE);
                 }
                 break;
                 case IDC_SAVE:
