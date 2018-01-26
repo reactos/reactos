@@ -317,8 +317,19 @@ DecodeResponse(
         break;
 
     case IP_DEST_HOST_UNREACHABLE:
-        OutputText(IDS_TIMEOUT);
-        break;
+    case IP_DEST_NET_UNREACHABLE:
+        FoundTarget = true;
+        PrintHopInfo(AddressInfo);
+        OutputText(IDS_HOP_RESPONSE);
+        if (Status == IP_DEST_HOST_UNREACHABLE)
+        {
+            OutputText(IDS_DEST_HOST_UNREACHABLE);
+        }
+        else if (Status == IP_DEST_NET_UNREACHABLE)
+        {
+            OutputText(IDS_DEST_NET_UNREACHABLE);
+        }
+        return true;
 
     case IP_REQ_TIMED_OUT:
         OutputText(IDS_TIMEOUT);
@@ -329,6 +340,7 @@ DecodeResponse(
         return false;
 
     default:
+        OutputText(IDS_TRANSMIT_FAILED, Status);
         return false;
     }
 
@@ -341,6 +353,7 @@ DecodeResponse(
         if (Status == IP_TTL_EXPIRED_TRANSIT || Status == IP_SUCCESS)
         {
             PrintHopInfo(AddressInfo);
+            OutputText(IDS_LINEBREAK);
         }
         else if (Status == IP_REQ_TIMED_OUT)
         {
