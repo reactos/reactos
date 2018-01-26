@@ -2272,7 +2272,7 @@ VIETNAMESE = "Vietnamese"
 
 ; Services names and descriptions
 AUDIO_SERVICE="Usługa Audio"
-AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio"
+AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio."
 
 BITS_SERVICE="Usługa inteligentnego transferu w tle"
 BITS_SERVICE_DESCRIPTION="Przenosi dane pomiędzy klientami a serwerami w tle."
@@ -2308,7 +2308,7 @@ TELNETD_SERVICE="Usługa ReactOS Telnet"
 TELNETD_SERVICE_DESCRIPTION="Usługa ReactOS Telnet"
 
 THEMES_SERVICE="Motywy"
-THEMES_SERVICE_DESCRIPTION="Oferuje wsparcie dla motywów"
+THEMES_SERVICE_DESCRIPTION="Oferuje wsparcie dla motywów."
 
 WINMGMT_SERVICE="Infrastruktura zarządzania ReactOS"
 WINMGMT_SERVICE_DESCRIPTION="Dostarcza interfejs w celu uzyskiwania dostępu do informacji zarządzania o systemie operacyjnym, urządzeniach, aplikacjach i usługach."
