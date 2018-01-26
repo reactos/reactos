@@ -28,7 +28,10 @@ PsReferenceProcessFilePointer(IN PEPROCESS Process,
     PAGED_CODE();
 
     /* Lock the process */
-    ExAcquireRundownProtection(&Process->RundownProtect);
+    if (!ExAcquireRundownProtection(&Process->RundownProtect))
+    {
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
 
     /* Get the section */
     Section = Process->SectionObject;
