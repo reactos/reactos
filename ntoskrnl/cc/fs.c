@@ -235,6 +235,7 @@ CcPurgeCacheSection (
         {
             RemoveEntryList(&Vacb->DirtyVacbListEntry);
             CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+            Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
         }
         RemoveEntryList(&Vacb->CacheMapVacbListEntry);
         InsertHeadList(&FreeList, &Vacb->CacheMapVacbListEntry);

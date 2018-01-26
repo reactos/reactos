@@ -175,6 +175,7 @@ CcRosFlushVacb (
         Vacb->Dirty = FALSE;
         RemoveEntryList(&Vacb->DirtyVacbListEntry);
         CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
         CcRosVacbDecRefCount(Vacb);
 
         KeReleaseSpinLock(&Vacb->SharedCacheMap->CacheMapLock, oldIrql);
@@ -535,6 +536,7 @@ CcRosReleaseVacb (
     {
         InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
         CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
 
     if (Mapped)
@@ -621,6 +623,7 @@ CcRosMarkDirtyVacb (
     {
         InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
         CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
     else
     {
@@ -698,6 +701,7 @@ CcRosUnmapVacb (
     {
         InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
         CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
 
     CcRosVacbDecRefCount(Vacb);
@@ -1162,6 +1166,7 @@ CcRosDeleteFileCache (
             {
                 RemoveEntryList(&current->DirtyVacbListEntry);
                 CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+                current->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
                 DPRINT1("Freeing dirty VACB\n");
             }
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
@@ -1349,6 +1354,7 @@ CcRosInitializeFileCache (
         SharedCacheMap->FileSize = FileSizes->FileSize;
         SharedCacheMap->PinAccess = PinAccess;
         SharedCacheMap->DirtyPageThreshold = 0;
+        SharedCacheMap->DirtyPages = 0;
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
