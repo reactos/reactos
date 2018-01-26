@@ -376,9 +376,6 @@ CcCanIWrite (
     IN BOOLEAN Wait,
     IN BOOLEAN Retrying)
 {
-    KIRQL OldIrql;
-    ULONG DirtyPages;
-    PLIST_ENTRY ListEntry;
     PFSRTL_COMMON_FCB_HEADER Fcb;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
@@ -409,27 +406,8 @@ CcCanIWrite (
         return TRUE;
     }
 
-    /* There's a limit, start counting dirty pages */
-    DirtyPages = 0;
-    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
-    for (ListEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
-         ListEntry != &SharedCacheMap->CacheMapVacbListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        PROS_VACB Vacb;
-
-        Vacb = CONTAINING_RECORD(ListEntry,
-                                 ROS_VACB,
-                                 CacheMapVacbListEntry);
-        if (Vacb->Dirty)
-        {
-            DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-        }
-    }
-    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
-
     /* Is dirty page count above local threshold? */
-    if (DirtyPages > SharedCacheMap->DirtyPageThreshold)
+    if (SharedCacheMap->DirtyPages > SharedCacheMap->DirtyPageThreshold)
     {
         return FALSE;
     }
@@ -437,7 +415,7 @@ CcCanIWrite (
     /* We cannot write if dirty pages count will bring use above
      * XXX: Might not be accurate
      */
-    if (DirtyPages + (BytesToWrite / PAGE_SIZE) > SharedCacheMap->DirtyPageThreshold)
+    if (SharedCacheMap->DirtyPages + (BytesToWrite / PAGE_SIZE) > SharedCacheMap->DirtyPageThreshold)
     {
         return FALSE;
     }

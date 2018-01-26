@@ -1521,6 +1521,9 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
 
         SharedCacheMap = CONTAINING_RECORD(ListEntry, ROS_SHARED_CACHE_MAP, SharedCacheMapLinks);
 
+        /* Dirty size */
+        Dirty = (SharedCacheMap->DirtyPages * PAGE_SIZE) / 1024;
+
         /* First, count for all the associated VACB */
         for (Vacbs = SharedCacheMap->CacheMapVacbListHead.Flink;
              Vacbs != &SharedCacheMap->CacheMapVacbListHead;
@@ -1529,10 +1532,6 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
             PROS_VACB Vacb;
 
             Vacb = CONTAINING_RECORD(Vacbs, ROS_VACB, CacheMapVacbListEntry);
-            if (Vacb->Dirty)
-            {
-                Dirty += VACB_MAPPING_GRANULARITY / 1024;
-            }
             if (Vacb->Valid)
             {
                 Valid += VACB_MAPPING_GRANULARITY / 1024;
