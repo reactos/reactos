@@ -21,13 +21,13 @@
 voidpf MSZipAlloc(voidpf opaque, uInt items, uInt size)
 {
     DPRINT(DEBUG_MEMORY, ("items = (%d)  size = (%d)\n", items, size));
-    return AllocateMemory(items * size);
+    return malloc(items * size);
 }
 
 void MSZipFree (voidpf opaque, voidpf address)
 {
     DPRINT(DEBUG_MEMORY, ("\n"));
-    FreeMemory(address);
+    free(address);
 }
 
 

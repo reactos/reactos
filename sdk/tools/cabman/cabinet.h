@@ -8,16 +8,17 @@
 #pragma once
 
 #if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
 #else
+    #include <typedefs.h>
+    #include <unistd.h>
+#endif
+
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#include <typedefs.h>
-#include <unistd.h>
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -34,20 +35,23 @@
 
 #define strcasecmp _stricmp
 #define strdup _strdup
-
-#define AllocateMemory(size) HeapAlloc(GetProcessHeap(), 0, size)
-#define FreeMemory(buffer) HeapFree(GetProcessHeap(), 0, buffer)
-#define FILEHANDLE HANDLE
-#define CloseFile(handle) CloseHandle(handle)
 #else
 #define DIR_SEPARATOR_CHAR '/'
 #define DIR_SEPARATOR_STRING "/"
+#endif // _WIN32
 
-#define AllocateMemory(size) malloc(size)
-#define FreeMemory(buffer) free(buffer)
-#define CloseFile(handle) fclose(handle)
-#define FILEHANDLE FILE*
-#endif
+inline LONG GetSizeOfFile(FILE* handle)
+{
+    LONG size;
+    LONG currentPos = ftell(handle);
+
+    if (fseek(handle, 0, SEEK_END) != 0)
+        return (LONG)-1;
+
+    size = ftell(handle);
+    fseek(handle, 0, SEEK_SET);
+    return size;
+}
 
 /* Debugging */
 
@@ -309,8 +313,7 @@ public:
     ULONG WriteBlock(PCFDATA Data, void* Buffer, PULONG BytesWritten);
 private:
     char FullName[PATH_MAX];
-    bool FileCreated;
-    FILEHANDLE FileHandle;
+    FILE* FileHandle;
 };
 
 #endif /* CAB_READ_ONLY */
@@ -437,7 +440,7 @@ private:
     ULONG WriteDataBlock();
     ULONG GetAttributesOnFile(PCFFILE_NODE File);
     ULONG SetAttributesOnFile(char* FileName, USHORT FileAttributes);
-    ULONG GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File);
+    ULONG GetFileTimes(FILE* FileHandle, PCFFILE_NODE File);
 #if !defined(_WIN32)
     void ConvertDateAndTime(time_t* Time, PUSHORT DosDate, PUSHORT DosTime);
 #endif
@@ -459,7 +462,7 @@ private:
     char CabinetReservedFile[PATH_MAX];
     void* CabinetReservedFileBuffer;
     ULONG CabinetReservedFileSize;
-    FILEHANDLE FileHandle;
+    FILE* FileHandle;
     bool FileOpen;
     CFHEADER CABHeader;
     ULONG CabinetReserved;
@@ -495,7 +498,7 @@ private:
     bool CreateNewFolder;
 
     CCFDATAStorage *ScratchFile;
-    FILEHANDLE SourceFile;
+    FILE* SourceFile;
     bool ContinueFile;
     ULONG TotalBytesLeft;
     bool BlockIsSplit;                  // true if current data block is split
