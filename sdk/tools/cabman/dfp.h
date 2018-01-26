@@ -99,7 +99,7 @@ private:
     void NextToken();
     /* Parsing */
     bool FileLoaded;
-    FILEHANDLE FileHandle;
+    FILE* FileHandle;
     char* FileBuffer;
     ULONG FileBufferSize;
     ULONG CurrentOffset;
@@ -140,7 +140,7 @@ private:
     ULONG ReservePerDataBlockSize;
     ULONG ReservePerFolderSize;
     char SourceDir[256];
-    FILEHANDLE InfFileHandle;
+    FILE* InfFileHandle;
     bool InfModeEnabled;
 };
 
