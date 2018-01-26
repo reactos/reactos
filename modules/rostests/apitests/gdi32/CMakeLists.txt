@@ -53,6 +53,7 @@ list(APPEND SOURCE
     GetStockObject.c
     GetTextExtentExPoint.c
     GetTextFace.c
+    GetTextMetrics.c
     MaskBlt.c
     NtGdiAddFontResource.c
     OffsetClipRgn.c
