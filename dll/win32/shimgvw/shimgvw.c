@@ -838,7 +838,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
     WndClass.hCursor        = LoadCursor(hInstance, IDC_ARROW);
-    WndClass.hbrBackground  = (HBRUSH)GetStockObject(NULL_BRUSH);   /* less flicker */
+    WndClass.hbrBackground  = NULL;   /* less flicker */
 
     if (!RegisterClass(&WndClass)) return -1;
 
