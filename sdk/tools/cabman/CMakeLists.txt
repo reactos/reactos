@@ -4,7 +4,8 @@ list(APPEND SOURCE
     dfp.cxx
     main.cxx
     mszip.cxx
-    raw.cxx)
+    raw.cxx
+    CCFDATAStorage.cxx)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 add_host_tool(cabman ${SOURCE})
