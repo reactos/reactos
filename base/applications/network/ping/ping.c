@@ -479,14 +479,6 @@ Ping(void)
         Status = GetLastError();
         switch (Status)
         {
-        case IP_DEST_HOST_UNREACHABLE:
-            ConResPrintf(StdOut, IDS_DEST_HOST_UNREACHABLE);
-            break;
-
-        case IP_DEST_NET_UNREACHABLE:
-            ConResPrintf(StdOut, IDS_DEST_NET_UNREACHABLE);
-            break;
-
         case IP_REQ_TIMED_OUT:
             ConResPrintf(StdOut, IDS_REQUEST_TIMED_OUT);
             break;
@@ -498,15 +490,39 @@ Ping(void)
     }
     else
     {
+        SOCKADDR_IN6 SockAddrIn6;
+        SOCKADDR_IN SockAddrIn;
+        PSOCKADDR SockAddr;
+        socklen_t Size;
+
         EchosReceived++;
 
-        ConResPrintf(StdOut, IDS_REPLY_FROM, Address);
+        ZeroMemory(&SockAddrIn, sizeof(SockAddrIn));
+        ZeroMemory(&SockAddrIn6, sizeof(SockAddrIn6));
 
         if (Family == AF_INET6)
         {
             PICMPV6_ECHO_REPLY pEchoReply;
+            PIPV6_ADDRESS_EX Ipv6Addr;
 
             pEchoReply = (PICMPV6_ECHO_REPLY)ReplyBuffer;
+
+            Ipv6Addr = (PIPV6_ADDRESS_EX)&pEchoReply->Address;
+            SockAddrIn6.sin6_family = AF_INET6;
+            CopyMemory(SockAddrIn6.sin6_addr.u.Word, Ipv6Addr->sin6_addr, sizeof(SockAddrIn6.sin6_addr));
+            //SockAddrIn6.sin6_addr = Ipv6Addr->sin6_addr;
+            SockAddr = (PSOCKADDR)&SockAddrIn6;
+            Size = sizeof(SOCKADDR_IN6);
+
+            GetNameInfoW(SockAddr,
+                         Size,
+                         Address,
+                         NI_MAXHOST,
+                         NULL,
+                         0,
+                         NI_NUMERICHOST);
+
+            ConResPrintf(StdOut, IDS_REPLY_FROM, Address);
 
             switch (pEchoReply->Status)
             {
@@ -531,6 +547,14 @@ Ping(void)
                 break;
             }
 
+            case IP_DEST_NET_UNREACHABLE:
+                ConResPrintf(StdOut, IDS_DEST_NET_UNREACHABLE);
+                break;
+
+            case IP_DEST_HOST_UNREACHABLE:
+                ConResPrintf(StdOut, IDS_DEST_HOST_UNREACHABLE);
+                break;
+
             case IP_TTL_EXPIRED_TRANSIT:
                 ConResPrintf(StdOut, IDS_TTL_EXPIRED);
                 break;
@@ -543,8 +567,25 @@ Ping(void)
         else
         {
             PICMP_ECHO_REPLY pEchoReply;
+            IPAddr *IP4Addr;
 
             pEchoReply = (PICMP_ECHO_REPLY)ReplyBuffer;
+
+            IP4Addr = (IPAddr *)&pEchoReply->Address;
+            SockAddrIn.sin_family = AF_INET;
+            SockAddrIn.sin_addr.S_un.S_addr = *IP4Addr;
+            SockAddr = (PSOCKADDR)&SockAddrIn;
+            Size = sizeof(SOCKADDR_IN);
+
+            GetNameInfoW(SockAddr,
+                         Size,
+                         Address,
+                         NI_MAXHOST,
+                         NULL,
+                         0,
+                         NI_NUMERICHOST);
+
+            ConResPrintf(StdOut, IDS_REPLY_FROM, Address);
 
             switch (pEchoReply->Status)
             {
@@ -570,6 +611,14 @@ Ping(void)
                 RTTTotal += pEchoReply->RoundTripTime;
                 break;
             }
+
+            case IP_DEST_NET_UNREACHABLE:
+                ConResPrintf(StdOut, IDS_DEST_NET_UNREACHABLE);
+                break;
+
+            case IP_DEST_HOST_UNREACHABLE:
+                ConResPrintf(StdOut, IDS_DEST_HOST_UNREACHABLE);
+                break;
 
             case IP_TTL_EXPIRED_TRANSIT:
                 ConResPrintf(StdOut, IDS_TTL_EXPIRED);
