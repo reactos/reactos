@@ -93,7 +93,7 @@ void CIconWatcher::Uninitialize()
     LeaveCriticalSection(&m_ListLock);
 }
 
-bool CIconWatcher::AddIconToWatcher(_In_ NOTIFYICONDATA *iconData)
+bool CIconWatcher::AddIconToWatcher(_In_ CONST NOTIFYICONDATA *iconData)
 {
     DWORD ProcessId;
     (void)GetWindowThreadProcessId(iconData->hWnd, &ProcessId);
@@ -132,7 +132,7 @@ bool CIconWatcher::AddIconToWatcher(_In_ NOTIFYICONDATA *iconData)
     return Added;
 }
 
-bool CIconWatcher::RemoveIconFromWatcher(_In_ NOTIFYICONDATA *iconData)
+bool CIconWatcher::RemoveIconFromWatcher(_In_ CONST NOTIFYICONDATA *iconData)
 {
     EnterCriticalSection(&m_ListLock);
         
@@ -146,7 +146,7 @@ bool CIconWatcher::RemoveIconFromWatcher(_In_ NOTIFYICONDATA *iconData)
     return true;
 }
 
-IconWatcherData* CIconWatcher::GetListEntry(_In_opt_ NOTIFYICONDATA *iconData, _In_opt_ HANDLE hProcess, _In_ bool Remove)
+IconWatcherData* CIconWatcher::GetListEntry(_In_opt_ CONST NOTIFYICONDATA *iconData, _In_opt_ HANDLE hProcess, _In_ bool Remove)
 {
     IconWatcherData *Entry = NULL;
     POSITION NextPosition = m_WatcherList.GetHeadPosition();
@@ -236,9 +236,7 @@ UINT WINAPI CIconWatcher::WatcherThread(_In_opt_ LPVOID lpParam)
             data.lpData = pnotify_data;
 
             BOOL Success = FALSE;
-            HWND parentHWND = ::GetParent(GetParent(This->m_hwndSysTray));
-            if (parentHWND)
-                Success = ::SendMessage(parentHWND, WM_COPYDATA, (WPARAM)&Icon->IconData, (LPARAM)&data);
+            ::SendMessage(This->m_hwndSysTray, WM_COPYDATA, (WPARAM)&Icon->IconData, (LPARAM)&data);
 
             delete pnotify_data;
 
@@ -477,7 +475,7 @@ int CNotifyToolbar::FindExistingSharedIcon(HICON handle)
     return -1;
 }
 
-BOOL CNotifyToolbar::AddButton(IN CONST NOTIFYICONDATA *iconData)
+BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
 {
     TBBUTTON tbBtn;
     InternalIconData * notifyItem;
@@ -575,7 +573,7 @@ BOOL CNotifyToolbar::AddButton(IN CONST NOTIFYICONDATA *iconData)
     return TRUE;
 }
 
-BOOL CNotifyToolbar::SwitchVersion(IN CONST NOTIFYICONDATA *iconData)
+BOOL CNotifyToolbar::SwitchVersion(_In_ CONST NOTIFYICONDATA *iconData)
 {
     InternalIconData * notifyItem;
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
@@ -598,7 +596,7 @@ BOOL CNotifyToolbar::SwitchVersion(IN CONST NOTIFYICONDATA *iconData)
     return TRUE;
 }
 
-BOOL CNotifyToolbar::UpdateButton(IN CONST NOTIFYICONDATA *iconData)
+BOOL CNotifyToolbar::UpdateButton(_In_ CONST NOTIFYICONDATA *iconData)
 {
     InternalIconData * notifyItem;
     TBBUTTONINFO tbbi = { 0 };
@@ -703,7 +701,7 @@ BOOL CNotifyToolbar::UpdateButton(IN CONST NOTIFYICONDATA *iconData)
     return TRUE;
 }
 
-BOOL CNotifyToolbar::RemoveButton(IN CONST NOTIFYICONDATA *iconData)
+BOOL CNotifyToolbar::RemoveButton(_In_ CONST NOTIFYICONDATA *iconData)
 {
     InternalIconData * notifyItem;
 
@@ -819,8 +817,9 @@ VOID CNotifyToolbar::SendMouseEvent(IN WORD wIndex, IN UINT uMsg, IN WPARAM wPar
 
         RemoveButton(notifyItem);
 
-        HWND parentHWND = ::GetParent(::GetParent(GetParent()));
-        ::SendMessage(parentHWND, WM_SIZE, 0, 0);
+        /* Ask the parent to resize */
+        NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
+        GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
 
         return;
     }
@@ -975,16 +974,6 @@ const WCHAR szSysPagerWndClass[] = L"SysPager";
 CSysPagerWnd::CSysPagerWnd() {}
 CSysPagerWnd::~CSysPagerWnd() {}
 
-LRESULT CSysPagerWnd::DrawBackground(HDC hdc)
-{
-    RECT rect;
-
-    GetClientRect(&rect);
-    DrawThemeParentBackground(m_hWnd, hdc, &rect);
-
-    return TRUE;
-}
-
 LRESULT CSysPagerWnd::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HDC hdc = (HDC) wParam;
@@ -995,7 +984,11 @@ LRESULT CSysPagerWnd::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam,
         return 0;
     }
 
-    return DrawBackground(hdc);
+    RECT rect;
+    GetClientRect(&rect);
+    DrawThemeParentBackground(m_hWnd, hdc, &rect);
+
+    return TRUE;
 }
 
 LRESULT CSysPagerWnd::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1038,60 +1031,50 @@ LRESULT CSysPagerWnd::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     return TRUE;
 }
 
-BOOL CSysPagerWnd::NotifyIconCmd(WPARAM wParam, LPARAM lParam)
+BOOL CSysPagerWnd::NotifyIcon(DWORD notify_code, _In_ CONST NOTIFYICONDATA *iconData)
 {
-    PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT) lParam;
-    if (cpData->dwData == 1)
+    BOOL ret = FALSE;
+
+    int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
+
+    TRACE("NotifyIcon received. Code=%d\n", notify_code);
+    switch (notify_code)
     {
-        SYS_PAGER_COPY_DATA * data;
-        NOTIFYICONDATA *iconData;
-        BOOL ret = FALSE;
-
-        int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
-
-        data = (PSYS_PAGER_COPY_DATA) cpData->lpData;
-        iconData = &data->nicon_data;
-
-        TRACE("NotifyIconCmd received. Code=%d\n", data->notify_code);
-        switch (data->notify_code)
+    case NIM_ADD:
+        ret = Toolbar.AddButton(iconData);
+        if (ret == TRUE)
         {
-        case NIM_ADD:
-            ret = Toolbar.AddButton(iconData);
-            if (ret == TRUE)
-            {
-                (void)AddIconToWatcher(iconData);
-            }
-            break;
-        case NIM_MODIFY:
-            ret = Toolbar.UpdateButton(iconData);
-            break;
-        case NIM_DELETE:
-            ret = Toolbar.RemoveButton(iconData);
-            if (ret == TRUE)
-            {
-                (void)RemoveIconFromWatcher(iconData);
-            }
-            break;
-        case NIM_SETFOCUS:
-            Toolbar.SetFocus();
-            ret = TRUE;
-        case NIM_SETVERSION:
-            ret = Toolbar.SwitchVersion(iconData);
-        default:
-            TRACE("NotifyIconCmd received with unknown code %d.\n", data->notify_code);
-            return FALSE;
+            (void)AddIconToWatcher(iconData);
         }
-
-        if (VisibleButtonCount != Toolbar.GetVisibleButtonCount())
+        break;
+    case NIM_MODIFY:
+        ret = Toolbar.UpdateButton(iconData);
+        break;
+    case NIM_DELETE:
+        ret = Toolbar.RemoveButton(iconData);
+        if (ret == TRUE)
         {
-            HWND parentHWND = ::GetParent(GetParent());
-            ::SendMessage(parentHWND, WM_SIZE, 0, 0);
+            (void)RemoveIconFromWatcher(iconData);
         }
-
-        return ret;
+        break;
+    case NIM_SETFOCUS:
+        Toolbar.SetFocus();
+        ret = TRUE;
+    case NIM_SETVERSION:
+        ret = Toolbar.SwitchVersion(iconData);
+    default:
+        TRACE("NotifyIcon received with unknown code %d.\n", notify_code);
+        return FALSE;
     }
 
-    return TRUE;
+    if (VisibleButtonCount != Toolbar.GetVisibleButtonCount())
+    {
+        /* Ask the parent to resize */
+        NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
+        GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
+    }
+
+    return ret;
 }
 
 void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
@@ -1200,20 +1183,34 @@ LRESULT CSysPagerWnd::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     return 0;
 }
 
-void CSysPagerWnd::ResizeImagelist()
+LRESULT CSysPagerWnd::OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    Toolbar.ResizeImagelist();
+    PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT)lParam;
+    if (cpData->dwData == 1)
+    {
+        PSYS_PAGER_COPY_DATA pData = (PSYS_PAGER_COPY_DATA)cpData->lpData;
+        return NotifyIcon(pData->notify_code, &pData->nicon_data);
+    }
+
+    return FALSE;
 }
 
-HWND CSysPagerWnd::_Init(IN HWND hWndParent, IN BOOL bVisible)
+LRESULT CSysPagerWnd::OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam == SPI_SETNONCLIENTMETRICS)
+    {
+        Toolbar.ResizeImagelist();
+    }
+    return 0;
+}
+
+HWND CSysPagerWnd::_Init(IN HWND hWndParent)
 {
     DWORD dwStyle;
 
     /* Create the window. The tray window is going to move it to the correct
         position and resize it as needed. */
-    dwStyle = WS_CHILD | WS_CLIPSIBLINGS;
-    if (bVisible)
-        dwStyle |= WS_VISIBLE;
+    dwStyle = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE;
 
     Create(hWndParent, 0, NULL, dwStyle);
 

@@ -34,7 +34,6 @@ const WCHAR szTrayClockWndClass[] = L"TrayClockWClass";
 #define TRAY_CLOCK_WND_SPACING_Y    0
 
 CTrayClockWnd::CTrayClockWnd() :
-        hWndNotify(NULL),
         hFont(NULL),
         dwFlags(0),
         LineSpacing(0),
@@ -265,20 +264,12 @@ VOID CTrayClockWnd::UpdateWnd()
     {
         InvalidateRect(NULL, TRUE);
 
-        if (hWndNotify != NULL &&
-            (szPrevCurrent.cx != CurrentSize.cx ||
-            szPrevCurrent.cy != CurrentSize.cy))
+        if (szPrevCurrent.cx != CurrentSize.cx ||
+            szPrevCurrent.cy != CurrentSize.cy)
         {
-            NMHDR nmh;
-
-            nmh.hwndFrom = m_hWnd;
-            nmh.idFrom = GetWindowLongPtr(GWLP_ID);
-            nmh.code = NTNWM_REALIGN;
-
-            ::SendMessage(hWndNotify,
-                WM_NOTIFY,
-                (WPARAM) nmh.idFrom,
-                (LPARAM) &nmh);
+            /* Ask the parent to resize */
+            NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
+            GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
         }
     }
 }
@@ -518,11 +509,6 @@ LRESULT CTrayClockWnd::OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
     return (LRESULT) GetMinimumSize((BOOL) wParam, (PSIZE) lParam) != 0;
 }
 
-LRESULT CTrayClockWnd::OnUpdateTime(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    return (LRESULT) ResetTime();
-}
-
 LRESULT CTrayClockWnd::OnNcHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     return HTTRANSPARENT;
@@ -554,16 +540,52 @@ LRESULT CTrayClockWnd::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     return TRUE;
 }
 
-HWND CTrayClockWnd::_Init(IN HWND hWndParent, IN BOOL bVisible)
+LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
+    if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
+    {
+        g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
+        /* TODO: Toggle showing seconds */
+    }
+
+    if (newSettings->sr.HideClock != g_TaskbarSettings.sr.HideClock)
+    {
+        g_TaskbarSettings.sr.HideClock = newSettings->sr.HideClock;
+        /* TODO: Toggle hiding the clock */
+    }
+
+    return 0;
+}
+
+LRESULT CTrayClockWnd::OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (IsWindowVisible())
+    {
+        RECT rcClock;
+        if (GetWindowRect(&rcClock))
+        {
+            POINT ptClick;
+            ptClick.x = MAKEPOINTS(lParam).x;
+            ptClick.y = MAKEPOINTS(lParam).y;
+            if (PtInRect(&rcClock, ptClick))
+            {
+                //FIXME: use SHRunControlPanel
+                ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
+            }
+        }
+    }
+    return TRUE;
+}
+
+HWND CTrayClockWnd::_Init(IN HWND hWndParent)
 {
     IsHorizontal = TRUE;
-
-    hWndNotify = hWndParent;
 
     /* Create the window. The tray window is going to move it to the correct
         position and resize it as needed. */
     DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS;
-    if (bVisible)
+    if (!g_TaskbarSettings.sr.HideClock)
         dwStyle |= WS_VISIBLE;
 
     Create(hWndParent, 0, NULL, dwStyle);

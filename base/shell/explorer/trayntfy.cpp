@@ -34,12 +34,8 @@ class CTrayNotifyWnd :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl < CTrayNotifyWnd, CWindow, CControlWinTraits >
 {
-    HWND hWndNotify;
-
     CSysPagerWnd * m_pager;
     CTrayClockWnd * m_clock;
-
-    CComPtr<ITrayWindow> TrayWindow;
 
     HTHEME TrayTheme;
     SIZE szTrayClockMin;
@@ -49,7 +45,6 @@ class CTrayNotifyWnd :
 
 public:
     CTrayNotifyWnd() :
-        hWndNotify(NULL),
         m_pager(NULL),
         m_clock(NULL),
         TrayTheme(NULL),
@@ -104,10 +99,10 @@ public:
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         m_clock = new CTrayClockWnd();
-        m_clock->_Init(m_hWnd, !g_TaskbarSettings.sr.HideClock);
+        m_clock->_Init(m_hWnd);
 
         m_pager = new CSysPagerWnd();
-        m_pager->_Init(m_hWnd, !g_TaskbarSettings.sr.HideClock);
+        m_pager->_Init(m_hWnd);
 
         return TRUE;
     }
@@ -231,26 +226,6 @@ public:
         }
     }
 
-    LRESULT DrawBackground(HDC hdc)
-    {
-        HRESULT res;
-        RECT rect;
-
-        GetClientRect(&rect);
-
-        if (TrayTheme)
-        {
-            if (IsThemeBackgroundPartiallyTransparent(TrayTheme, TNP_BACKGROUND, 0))
-            {
-                DrawThemeParentBackground(m_hWnd, hdc, &rect);
-            }
-
-            res = DrawThemeBackground(TrayTheme, hdc, TNP_BACKGROUND, 0, &rect, 0);
-        }
-
-        return res;
-    }
-
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HDC hdc = (HDC) wParam;
@@ -261,25 +236,14 @@ public:
             return 0;
         }
 
-        return DrawBackground(hdc);
-    }
+        RECT rect;
+        GetClientRect(&rect);
+        if (IsThemeBackgroundPartiallyTransparent(TrayTheme, TNP_BACKGROUND, 0))
+            DrawThemeParentBackground(m_hWnd, hdc, &rect);
 
-    BOOL NotifyIconCmd(WPARAM wParam, LPARAM lParam)
-    {
-        if (m_pager)
-        {
-            return m_pager->NotifyIconCmd(wParam, lParam);
-        }
+        DrawThemeBackground(TrayTheme, hdc, TNP_BACKGROUND, 0, &rect, 0);
 
         return TRUE;
-    }
-
-    BOOL GetClockRect(OUT PRECT rcClock)
-    {
-        if (!m_clock->IsWindowVisible())
-            return FALSE;
-
-        return m_clock->GetWindowRect(rcClock);
     }
 
     LRESULT OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -296,16 +260,6 @@ public:
         }
 
         return (LRESULT) GetMinimumSize((PSIZE) lParam);
-    }
-
-    LRESULT OnUpdateTime(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        if (m_clock != NULL)
-        {
-            /* Forward the message to the tray clock window procedure */
-            return m_clock->OnUpdateTime(uMsg, wParam, lParam, bHandled);
-        }
-        return FALSE;
     }
 
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -325,74 +279,30 @@ public:
         return HTTRANSPARENT;
     }
 
-    LRESULT OnShowClock(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        BOOL PrevHidden = g_TaskbarSettings.sr.HideClock;
-        g_TaskbarSettings.sr.HideClock = (wParam == 0);
-
-        if (m_clock != NULL && PrevHidden != g_TaskbarSettings.sr.HideClock)
-        {
-            m_clock->ShowWindow(g_TaskbarSettings.sr.HideClock ? SW_HIDE : SW_SHOW);
-        }
-
-        return (LRESULT) (!PrevHidden);
-    }
-
-    LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
-        if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
-        {
-            g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
-            /* TODO: Toggle showing seconds */
-        }
-
-        if (newSettings->sr.HideClock != g_TaskbarSettings.sr.HideClock)
-        {
-            g_TaskbarSettings.sr.HideClock = newSettings->sr.HideClock;
-            /* TODO: Toggle hiding the clock */
-        }
-
-        return 0;
-    }
-
-    LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        const NMHDR *nmh = (const NMHDR *) lParam;
-
-        if (nmh->hwndFrom == m_clock->m_hWnd)
-        {
-            /* Pass down notifications */
-            return m_clock->SendMessage(WM_NOTIFY, wParam, lParam);
-        }
-
-        return FALSE;
-    }
-
-    LRESULT OnSetFont(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        if (m_clock != NULL)
-        {
-            m_clock->SendMessageW(WM_SETFONT, wParam, lParam);
-        }
-
-        bHandled = FALSE;
-        return FALSE;
-    }
-
     LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         bHandled = TRUE;
         return 0;
     }
 
-    LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT OnClockMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (wParam == SPI_SETNONCLIENTMETRICS)
-        {
-            m_pager->ResizeImagelist();
-        }
-        return 0;
+        if (m_clock != NULL)
+            return m_clock->SendMessageW(uMsg, wParam, lParam);
+        return TRUE;
+    }
+
+    LRESULT OnPagerMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (m_pager)
+            return m_pager->SendMessage(uMsg, wParam, lParam);
+        return TRUE;
+    }
+
+    LRESULT OnRealign(INT uCode, LPNMHDR hdr, BOOL& bHandled)
+    {
+        hdr->hwndFrom = m_hWnd;
+        return GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM)hdr);
     }
 
     DECLARE_WND_CLASS_EX(szTrayNotifyWndClass, CS_DBLCLKS, COLOR_3DFACE)
@@ -401,51 +311,30 @@ public:
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_THEMECHANGED, OnThemeChanged)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
-        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
-        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-        MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu) // FIXME: This handler is not necessary in Windows
+        MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnClockMessage)
+        MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnClockMessage)
+        MESSAGE_HANDLER(WM_SETFONT, OnClockMessage)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnPagerMessage)
+        MESSAGE_HANDLER(WM_COPYDATA, OnPagerMessage)
+        NOTIFY_CODE_HANDLER(NTNWM_REALIGN, OnRealign)
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
-        MESSAGE_HANDLER(TNWM_UPDATETIME, OnUpdateTime)
-        MESSAGE_HANDLER(TNWM_SHOWCLOCK, OnShowClock)
-        MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
     END_MSG_MAP()
 
-    HWND _Init(IN OUT ITrayWindow *TrayWindow)
+    HWND _Init(IN HWND hwndParent)
     {
-        HWND hWndTrayWindow;
-
-        hWndTrayWindow = TrayWindow->GetHWND();
-        if (hWndTrayWindow == NULL)
-            return NULL;
-
-        this->TrayWindow = TrayWindow;
-        this->hWndNotify = hWndTrayWindow;
-
         DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-        return Create(hWndTrayWindow, 0, NULL, dwStyle, WS_EX_STATICEDGE);
+        return Create(hwndParent, 0, NULL, dwStyle, WS_EX_STATICEDGE);
     }
 };
 
-HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, CTrayNotifyWnd** ppinstance)
+HWND CreateTrayNotifyWnd(IN HWND hwndParent, CTrayNotifyWnd** ppinstance)
 {
     CTrayNotifyWnd * pTrayNotify = new CTrayNotifyWnd();
     // TODO: Destroy after the window is destroyed
     *ppinstance = pTrayNotify;
 
-    return pTrayNotify->_Init(Tray);
-}
-
-BOOL
-TrayNotify_NotifyIconCmd(CTrayNotifyWnd* pTrayNotify, WPARAM wParam, LPARAM lParam)
-{
-    return pTrayNotify->NotifyIconCmd(wParam, lParam);
-}
-
-BOOL
-TrayNotify_GetClockRect(CTrayNotifyWnd* pTrayNotify, OUT PRECT rcClock)
-{
-    return pTrayNotify->GetClockRect(rcClock);
+    return pTrayNotify->_Init(hwndParent);
 }

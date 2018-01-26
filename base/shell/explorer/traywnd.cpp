@@ -2061,7 +2061,7 @@ ChangePos:
         SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
         /* Create the tray notification window */
-        m_TrayNotify = CreateTrayNotifyWnd(this, &m_TrayNotifyInstance);
+        m_TrayNotify = CreateTrayNotifyWnd(m_hWnd, &m_TrayNotifyInstance);
 
         UpdateFonts();
 
@@ -2150,10 +2150,7 @@ ChangePos:
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (m_TrayNotify)
-        {
-            TRACE("WM_COPYDATA notify message received. Handling...\n");
-            return TrayNotify_NotifyIconCmd(m_TrayNotifyInstance, wParam, lParam);
-        }
+            ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
         return TRUE;
     }
 
@@ -2556,23 +2553,11 @@ HandleTrayContextMenu:
 
     LRESULT OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        /* Let the clock handle the double click */
+        ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
+
         /* We "handle" this message so users can't cause a weird maximize/restore
         window animation when double-clicking the tray window! */
-
-        /* We should forward mouse messages to child windows here.
-        Right now, this is only clock double-click */
-        RECT rcClock;
-        if (TrayNotify_GetClockRect(m_TrayNotifyInstance, &rcClock))
-        {
-            POINT ptClick;
-            ptClick.x = MAKEPOINTS(lParam).x;
-            ptClick.y = MAKEPOINTS(lParam).y;
-            if (PtInRect(&rcClock, ptClick))
-            {
-                //FIXME: use SHRunControlPanel
-                ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
-            }
-        }
         return TRUE;
     }
 

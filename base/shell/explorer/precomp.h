@@ -337,8 +337,6 @@ CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /* TrayNotifyWnd */
 #define TNWM_GETMINIMUMSIZE (WM_USER + 0x100)
-#define TNWM_UPDATETIME     (WM_USER + 0x101)
-#define TNWM_SHOWCLOCK      (WM_USER + 0x102)
 #define TNWM_SHOWTRAY       (WM_USER + 0x103)
 #define TNWM_CHANGETRAYPOS  (WM_USER + 0x104)
 
@@ -346,20 +344,7 @@ CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 class CTrayNotifyWnd;
 
-BOOL
-RegisterTrayNotifyWndClass(VOID);
-
-VOID
-UnregisterTrayNotifyWndClass(VOID);
-
-HWND
-CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow, CTrayNotifyWnd** ppTrayNotify);
-
-BOOL
-TrayNotify_NotifyIconCmd(CTrayNotifyWnd* pTrayNotify, IN WPARAM wParam, IN LPARAM lParam);
-
-BOOL
-TrayNotify_GetClockRect(CTrayNotifyWnd* pTrayNotify, OUT PRECT rcClock);
+HWND CreateTrayNotifyWnd(IN HWND hwndParent, CTrayNotifyWnd** ppinstance);
 
 /*
  * taskswnd.c
@@ -368,15 +353,8 @@ TrayNotify_GetClockRect(CTrayNotifyWnd* pTrayNotify, OUT PRECT rcClock);
 #define TSWM_ENABLEGROUPING     (WM_USER + 1)
 #define TSWM_UPDATETASKBARPOS   (WM_USER + 2)
 
-BOOL
-RegisterTaskSwitchWndClass(VOID);
-
-VOID
-UnregisterTaskSwitchWndClass(VOID);
-
 HWND
-CreateTaskSwitchWnd(IN HWND hWndParent,
-IN OUT ITrayWindow *Tray);
+CreateTaskSwitchWnd(IN HWND hWndParent, IN OUT ITrayWindow *Tray);
 
 HRESULT
 Tray_OnStartMenuDismissed(ITrayWindow* Tray);

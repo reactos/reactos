@@ -12,7 +12,7 @@ struct IconWatcherData
     DWORD ProcessId;
     NOTIFYICONDATA IconData;
 
-    IconWatcherData(NOTIFYICONDATA *iconData) :
+    IconWatcherData(CONST NOTIFYICONDATA *iconData) :
         hProcess(NULL), ProcessId(0)
     {
         IconData.cbSize = sizeof(NOTIFYICONDATA);
@@ -47,10 +47,10 @@ public:
     bool Initialize(_In_ HWND hWndParent);
     void Uninitialize();
 
-    bool AddIconToWatcher(_In_ NOTIFYICONDATA *iconData);
-    bool RemoveIconFromWatcher(_In_ NOTIFYICONDATA *iconData);
+    bool AddIconToWatcher(_In_ CONST NOTIFYICONDATA *iconData);
+    bool RemoveIconFromWatcher(_In_ CONST NOTIFYICONDATA *iconData);
 
-    IconWatcherData* GetListEntry(_In_opt_ NOTIFYICONDATA *iconData, _In_opt_ HANDLE hProcess, _In_ bool Remove);
+    IconWatcherData* GetListEntry(_In_opt_ CONST NOTIFYICONDATA *iconData, _In_opt_ HANDLE hProcess, _In_ bool Remove);
 
 private:
 
@@ -179,11 +179,13 @@ public:
     LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnBalloonPop(UINT uCode, LPNMHDR hdr, BOOL& bHandled);
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
-    BOOL NotifyIconCmd(WPARAM wParam, LPARAM lParam);
+
+    BOOL NotifyIcon(DWORD notify_code, _In_ CONST NOTIFYICONDATA *iconData);
     void GetSize(IN BOOL IsHorizontal, IN PSIZE size);
-    void ResizeImagelist();
 
     DECLARE_WND_CLASS_EX(szSysPagerWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
@@ -194,10 +196,12 @@ public:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
+        MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         NOTIFY_CODE_HANDLER(TTN_POP, OnBalloonPop)
         NOTIFY_CODE_HANDLER(TBN_GETINFOTIPW, OnGetInfoTip)
         NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
     END_MSG_MAP()
 
-    HWND _Init(IN HWND hWndParent, IN BOOL bVisible);
+    HWND _Init(IN HWND hWndParent);
 };
