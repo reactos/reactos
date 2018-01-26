@@ -25,7 +25,6 @@
 #include <freeldr.h>
 #include <arch/pc/x86common.h>
 
-#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(MEMORY);

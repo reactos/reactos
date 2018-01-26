@@ -48,7 +48,6 @@
 #undef ScsiPortReadRegisterUlong
 #undef ScsiPortReadRegisterUshort
 
-#define NDEBUG
 #include <debug.h>
 
 #define SCSI_PORT_NEXT_REQUEST_READY  0x0008

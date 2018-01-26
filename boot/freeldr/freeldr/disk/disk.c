@@ -20,7 +20,6 @@
 #ifndef _M_ARM
 #include <freeldr.h>
 
-#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(DISK);

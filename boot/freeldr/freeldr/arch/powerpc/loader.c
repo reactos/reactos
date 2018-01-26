@@ -20,7 +20,6 @@
 #define _NTSYSTEM_
 #include <freeldr.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define DbgPrint printf

@@ -19,7 +19,6 @@
 
 #include <freeldr.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define TAG_PXE_FILE 'FexP'
