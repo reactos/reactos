@@ -637,8 +637,8 @@ USBPORT_InvalidateControllerHandler(IN PDEVICE_OBJECT FdoDevice,
 {
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
 
-    DPRINT("USBPORT_InvalidateControllerHandler: Invalidate Type - %x\n",
-           Type);
+    DPRINT_CORE("USBPORT_InvalidateControllerHandler: Invalidate Type - %x\n",
+                Type);
 
     FdoExtension = FdoDevice->DeviceExtension;
 
@@ -869,7 +869,7 @@ USBPORT_DpcHandler(IN PDEVICE_OBJECT FdoDevice)
     LIST_ENTRY List;
     LONG LockCounter;
 
-    DPRINT("USBPORT_DpcHandler: ... \n");
+    DPRINT_CORE("USBPORT_DpcHandler: ... \n");
 
     FdoExtension = FdoDevice->DeviceExtension;
 
@@ -1953,7 +1953,7 @@ USBPORT_Unload(IN PDRIVER_OBJECT DriverObject)
 
     if (!MiniPortInterface)
     {
-        DPRINT("USBPORT_Unload: CRITICAL ERROR!!! USBPORT_FindMiniPort not found MiniPortInterface\n");
+        DPRINT("USBPORT_Unload: CRITICAL ERROR!!! Not found MiniPortInterface\n");
         KeBugCheckEx(BUGCODE_USB_DRIVER, 1, 0, 0, 0);
     }
 

@@ -1279,7 +1279,7 @@ USBPORT_FlushClosedEndpointList(IN PDEVICE_OBJECT FdoDevice)
     PLIST_ENTRY ClosedList;
     PUSBPORT_ENDPOINT Endpoint;
 
-    DPRINT("USBPORT_FlushClosedEndpointList: ... \n");
+    DPRINT_CORE("USBPORT_FlushClosedEndpointList: ... \n");
 
     FdoExtension = FdoDevice->DeviceExtension;
 
