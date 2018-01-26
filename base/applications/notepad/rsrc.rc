@@ -56,6 +56,9 @@ IDI_NPICON ICON "res/notepad.ico"
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
 #endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/et-EE.rc"
+#endif
 #ifdef LANGUAGE_EU_ES
     #include "lang/eu-ES.rc"
 #endif
