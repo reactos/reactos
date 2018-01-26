@@ -16,7 +16,7 @@ BEGIN
         MENUITEM "&Sea kuupäeva/kellaaeg", ID_SHELL_CMD_ADJUST_DAT
         MENUITEM "Kohanda &teatised...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
-        MENUITEM "Vi&rnasta Aknaid", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Vi&rnasta aknaid", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "Tee aknad &horisontaalpaanideks", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Tee aknad v&ertikaalpaanideks", ID_SHELL_CMD_TILE_WND_V
         MENUITEM "&Kuva töölaud", ID_SHELL_CMD_SHOW_DESKTOP
@@ -63,10 +63,10 @@ BEGIN
         MENUITEM "&Käivita...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "S&ünkrooni", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Logi %s Välja...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "Ka&tkesta Ühendus...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Dokki A&rvuti Lahti", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "Lülita Väl&ja...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Logi %s välja...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Ka&tkesta ühendus...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Dokki a&rvuti lahti", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "Lülita väl&ja...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -197,8 +197,8 @@ STRINGTABLE
 BEGIN
     IDS_START "Start"
     IDS_PROPERTIES "&Atribuudid"
-    IDS_OPEN_ALL_USERS "&Ava Kõik Kasutajad"
-    IDS_EXPLORE_ALL_USERS "&Uuri Kõiki Kasutajaid"
+    IDS_OPEN_ALL_USERS "&Ava kaust Kõik Kasutajad"
+    IDS_EXPLORE_ALL_USERS "&Uuri Exploreris kaust Kõiki Kasutajaid"
     IDS_STARTUP_ERROR "Süsteem ei suuda explorer'it käivitada, sest register on kas korrupteerinud või ei ole saadaval."
 END
 

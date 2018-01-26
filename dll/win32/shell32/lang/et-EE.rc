@@ -724,10 +724,10 @@ BEGIN
     IDS_SHUTDOWN_PROMPT "Kas soovite arvuti välja lülitada?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION "Browse"
-    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Ei saanud kuvada Run faili dialoogiboksi (sisemine viga)"
+    IDS_RUNDLG_BROWSE_ERROR "Ei saanud kuvada Sirvi dialoogiboksi (sisemine viga)"
+    IDS_RUNDLG_BROWSE_CAPTION "Sirvi"
+    IDS_RUNDLG_BROWSE_FILTER "Rakendatavad failid (*.exe)\0*.exe\0Kõik failid (*.*)\0*.*\0"
 
     /* shell folder path default values */
     IDS_PROGRAMS "Start Menu\\Programs"
@@ -795,7 +795,7 @@ BEGIN
 
     IDS_DIRECTORY "Kaust"
     IDS_BAT_FILE "ReactOS Batch Fail"
-    IDS_CMD_FILE "ReactOS Command Script"
+    IDS_CMD_FILE "ReactOS Command Skript"
     IDS_COM_FILE "DOS Rakendus"
     IDS_CPL_FILE "Juhtpaneeli üksus"
     IDS_CUR_FILE "Kursor"
@@ -809,7 +809,7 @@ BEGIN
     IDS_ICO_FILE "Ikoon"
     IDS_INI_FILE "Konfiguratsiooni seaded"
     IDS_LNK_FILE "Otsetee"
-    IDS_PIF_FILE "NT VDM Program Information File"
+    IDS_PIF_FILE "NT VDM programmi informatsiooni fail"
     IDS_SCR_FILE "Ekraanisäästja"
     IDS_SYS_FILE "Süsteemi fail"
     IDS_VXD_FILE "Virtuaalseadme draiver"
@@ -856,7 +856,7 @@ BEGIN
     IDS_ADVANCED_WEB_VIEW_BARRICADE "Kuva süsteemikaustade sisu"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Kuva aadressiribal täistee"
     IDS_ADVANCED_SHOW_FULL_PATH "Kuba tiitliribal täistee"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "*ra talleta pisipilte vahemällu"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Ära talleta pisipilte vahemällu"
     IDS_ADVANCED_HIDDEN "Peitfailid ja -kaustad"
     IDS_ADVANCED_DONT_SHOW_HIDDEN "Ära näita peitfaile ja -kaustu"
     IDS_ADVANCED_SHOW_HIDDEN "Näita peitfaile ja -kaustu"
