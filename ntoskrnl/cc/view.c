@@ -517,26 +517,25 @@ CcRosReleaseVacb (
     BOOLEAN Mapped)
 {
     BOOLEAN WasDirty;
-    KIRQL oldIrql;
 
     ASSERT(SharedCacheMap);
 
     DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p, Valid %u)\n",
            SharedCacheMap, Vacb, Valid);
 
-    KeAcquireGuardedMutex(&ViewLock);
-    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
-
     Vacb->Valid = Valid;
 
-    WasDirty = Vacb->Dirty;
-    Vacb->Dirty = Vacb->Dirty || Dirty;
-
-    if (!WasDirty && Vacb->Dirty)
+    WasDirty = FALSE;
+    if (Dirty)
     {
-        InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-        CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-        Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        if (!Vacb->Dirty && Dirty)
+        {
+            CcRosMarkDirtyVacb(Vacb);
+        }
+        else
+        {
+            WasDirty = TRUE;
+        }
     }
 
     if (Mapped)
@@ -553,8 +552,6 @@ CcRosReleaseVacb (
         CcRosVacbIncRefCount(Vacb);
     }
 
-    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
-    KeReleaseGuardedMutex(&ViewLock);
     CcRosReleaseVacbLock(Vacb);
 
     return STATUS_SUCCESS;
@@ -676,7 +673,6 @@ CcRosUnmapVacb (
 {
     PROS_VACB Vacb;
     BOOLEAN WasDirty;
-    KIRQL oldIrql;
 
     ASSERT(SharedCacheMap);
 
@@ -689,20 +685,20 @@ CcRosUnmapVacb (
         return STATUS_UNSUCCESSFUL;
     }
 
-    KeAcquireGuardedMutex(&ViewLock);
-    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
-
-    WasDirty = Vacb->Dirty;
-    Vacb->Dirty = Vacb->Dirty || NowDirty;
+    WasDirty = FALSE;
+    if (NowDirty)
+    {
+        if (!Vacb->Dirty && NowDirty)
+        {
+            CcRosMarkDirtyVacb(Vacb);
+        }
+        else
+        {
+            WasDirty = TRUE;
+        }
+    }
 
     Vacb->MappedCount--;
-
-    if (!WasDirty && NowDirty)
-    {
-        InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-        CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-        Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-    }
 
     CcRosVacbDecRefCount(Vacb);
     if (!WasDirty && NowDirty)
@@ -714,8 +710,6 @@ CcRosUnmapVacb (
         CcRosVacbDecRefCount(Vacb);
     }
 
-    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
-    KeReleaseGuardedMutex(&ViewLock);
     CcRosReleaseVacbLock(Vacb);
 
     return STATUS_SUCCESS;
