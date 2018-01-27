@@ -5,7 +5,7 @@
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMERS:     Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *                  Copyright 2016-2017 Katayama Hirofumi MZ.
+ *                  Copyright 2016-2018 Katayama Hirofumi MZ.
  */
 
 /** Includes ******************************************************************/
@@ -2989,10 +2989,6 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
     if (Width < 0)
         Width = -Width;
 
-    if (Height < 0)
-    {
-        Height = -Height;
-    }
     if (Height == 0)
     {
         Height = dc->ppdev->devinfo.lfDefaultFont.lfHeight;
@@ -3000,6 +2996,17 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
     if (Height == 0)
     {
         Height = Width;
+    }
+
+    if (Height < 0)
+    {
+        /* case (A): lfHeight is negative: the character height */
+        Height = -Height;
+    }
+    else if (Height > 0)
+    {
+        /* case (B): lfHeight is positive: the cell height */
+        Height = Height * face->units_per_EM / face->height;
     }
 
     if (Height < 1)
