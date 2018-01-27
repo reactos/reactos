@@ -71,7 +71,11 @@ ULONG CcTotalDirtyPages = 0;
 LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
+#ifndef _MSC_VER
 LARGE_INTEGER CcIdleDelay = {.QuadPart = (LONGLONG)-1*1000*1000*10};
+#else
+LARGE_INTEGER CcIdleDelay = {(LONGLONG)-1*1000*1000*10};
+#endif
 
 /* Internal vars (ROS):
  * - Event to notify lazy writer to shutdown
