@@ -26,7 +26,7 @@ Opzioni:\r\n\
     IDS_UNABLE_RESOLVE  "Impossibile risolvere il nome bersaglio di sistema %1.\r\n"
 
     IDS_GEN_FAILURE     "Fallimento generale.\r\n"
-    IDS_TRANSMIT_FAILED "Transmissione fallita. (Error %1!u!)\r\n"
+    IDS_TRANSMIT_FAILED "Transmissione fallita. (Errore %1!u!)\r\n"
 
     IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
     IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
