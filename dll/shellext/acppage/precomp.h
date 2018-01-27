@@ -28,6 +28,8 @@ extern LONG g_ModuleRefCnt;
 
 EXTERN_C BOOL WINAPI GetExeFromLnk(PCWSTR pszLnk, PWSTR pszExe, size_t cchSize);
 
+BOOL IsBuiltinLayer(PCWSTR Name);
+
 #include "resource.h"
 #include "CLayerStringList.hpp"
 #include "CLayerUIPropPage.hpp"

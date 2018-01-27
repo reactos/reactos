@@ -67,6 +67,28 @@ static const WCHAR* g_AllowedExtensions[] = {
     0
 };
 
+BOOL IsBuiltinLayer(PCWSTR Name)
+{
+    size_t n;
+
+    for (n = 0; g_Layers[n].Name; ++n)
+    {
+        if (!wcsicmp(g_Layers[n].Name, Name))
+        {
+            return TRUE;
+        }
+    }
+
+    for (n = 0; g_CompatModes[n].Name; ++n)
+    {
+        if (!wcsicmp(g_CompatModes[n].Name, Name))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 
 void ACDBG_FN(PCSTR FunctionName, PCWSTR Format, ...)
 {
