@@ -528,7 +528,7 @@ CcRosReleaseVacb (
     WasDirty = FALSE;
     if (Dirty)
     {
-        if (!Vacb->Dirty && Dirty)
+        if (!Vacb->Dirty)
         {
             CcRosMarkDirtyVacb(Vacb);
         }
@@ -658,7 +658,6 @@ CcRosMarkDirtyFile (
 
     CcRosMarkDirtyVacb(Vacb);
 
-
     CcRosReleaseVacbLock(Vacb);
 
     return STATUS_SUCCESS;
@@ -688,7 +687,7 @@ CcRosUnmapVacb (
     WasDirty = FALSE;
     if (NowDirty)
     {
-        if (!Vacb->Dirty && NowDirty)
+        if (!Vacb->Dirty)
         {
             CcRosMarkDirtyVacb(Vacb);
         }
@@ -1154,7 +1153,10 @@ CcRosDeleteFileCache (
         while (!IsListEmpty(&SharedCacheMap->CacheMapVacbListHead))
         {
             current_entry = RemoveTailList(&SharedCacheMap->CacheMapVacbListHead);
+            KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
+
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
+            CcRosAcquireVacbLock(current, NULL);
             RemoveEntryList(&current->VacbLruListEntry);
             if (current->Dirty)
             {
@@ -1164,6 +1166,9 @@ CcRosDeleteFileCache (
                 DPRINT1("Freeing dirty VACB\n");
             }
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
+            CcRosReleaseVacbLock(current);
+
+            KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
         }
 #if DBG
         SharedCacheMap->Trace = FALSE;
