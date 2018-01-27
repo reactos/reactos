@@ -2987,6 +2987,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
     FT_Size_RequestRec  req;
 
     ASSERT(face != NULL);
+    ASSERT(face->height > 0);
 
     if (Width < 0)
         Width = -Width;
