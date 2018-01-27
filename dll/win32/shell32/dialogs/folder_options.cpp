@@ -1449,8 +1449,8 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile,
     {
         iLargeImage = ImageList_AddIcon(himlLarge, Entry->hIconLarge);
         iSmallImage = ImageList_AddIcon(himlSmall, Entry->hIconSmall);
+        ASSERT(iLargeImage == iSmallImage);
     }
-    ASSERT(iLargeImage == iSmallImage);
 
     /* Do not add excluded entries */
     if (Entry->EditFlags & 0x00000001) //FTA_Exclude
