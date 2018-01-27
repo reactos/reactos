@@ -64,12 +64,14 @@ ULONG CcLazyWriteIos = 0;
  * - List for deferred writes
  * - Spinlock when dealing with the deferred list
  * - List for "clean" shared cache maps
+ * - One second delay for lazy writer
  */
 ULONG CcDirtyPageThreshold = 0;
 ULONG CcTotalDirtyPages = 0;
 LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
+LARGE_INTEGER CcIdleDelay = {.QuadPart = (LONGLONG)-1*1000*1000*10};
 
 /* Internal vars (ROS):
  * - Event to notify lazy writer to shutdown
@@ -312,10 +314,6 @@ VOID
 NTAPI
 CciLazyWriter(PVOID Unused)
 {
-    LARGE_INTEGER OneSecond;
-
-    OneSecond.QuadPart = (LONGLONG)-1*1000*1000*10;
-
     while (TRUE)
     {
         NTSTATUS Status;
@@ -327,7 +325,7 @@ CciLazyWriter(PVOID Unused)
                                        Executive,
                                        KernelMode,
                                        FALSE,
-                                       &OneSecond);
+                                       &CcIdleDelay);
 
         /* If we succeeed, we've to stop running! */
         if (Status == STATUS_SUCCESS)
