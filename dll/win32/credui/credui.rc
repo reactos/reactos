@@ -43,6 +43,9 @@ IDB_BANNER BITMAP "res/banner.bmp"
 #ifdef LANGUAGE_ES_ES
     #include "lang/credui_Es.rc"
 #endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/credui_Et.rc"
+#endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/credui_Fr.rc"
 #endif
