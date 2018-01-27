@@ -1,0 +1,309 @@
+/*
+ * PROJECT:     ReactOS browseui.dll
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        dll/win32/browseui/lang/et-EE.rc
+ * PURPOSE:     Estonian Language resource file
+ * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
+ */
+
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+/* Menus */
+
+IDM_CABINET_CONTEXTMENU MENUEX
+BEGIN
+    POPUP "", 264,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "&Standardsed nupud", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Aaddresiriba", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Lingid", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "L&ukusta tegumiribad", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Kohanda...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Tekstitähised", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Mine nupp", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDM_CABINET_MAINMENU MENUEX
+BEGIN
+    POPUP "&Fail", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Sule", IDM_FILE_CLOSE
+    END
+    POPUP "&Redigeeri", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+    END
+    POPUP "&Vaade", FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "&Tööriistaribad", IDM_VIEW_TOOLBARS
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "Olekuriba", IDM_VIEW_STATUSBAR
+        POPUP "&Exploreri riba", IDM_VIEW_EXPLORERBAR
+        BEGIN
+            MENUITEM "&Otsi\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Lemmikud\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Meedia", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Ajalugu\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "&Kaustad", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
+        END
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "&Mine", FCIDM_MENU_EXPLORE
+        BEGIN
+            MENUITEM "&Tagasi\tAlt+Left Arrow", IDM_GOTO_BACK
+            MENUITEM "&Edasi\tAlt+Right Arrow", IDM_GOTO_FORWARD
+            MENUITEM "&Taseme võrra üles", IDM_GOTO_UPONELEVEL
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Avalehele\tAlt+Home", IDM_GOTO_HOMEPAGE
+        END
+        MENUITEM "&Värskenda", IDM_VIEW_REFRESH
+    END
+    POPUP "&Lemmikud", FCIDM_MENU_FAVORITES
+    BEGIN
+        MENUITEM "&Lisa kausta Lemmikud...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Korralda kausta Lemmikud sisu...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(Tühi)", IDM_FAVORITES_EMPTY
+    END
+    POPUP "&Tööriistad", FCIDM_MENU_TOOLS
+    BEGIN
+        MENUITEM "Ühenda &võrgudraiv...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "Ühenda võrgudraiv &lahti...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Sünkrooni...", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Kaustasuvandid...", IDM_TOOLS_FOLDEROPTIONS
+    END
+    POPUP "&Spikker", FCIDM_MENU_HELP
+    BEGIN
+        MENUITEM "&Teave ReactOSi kohta", IDM_HELP_ABOUT
+    END
+END
+
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+	POPUP "&Tööriistaribad", -1, MFT_STRING, MFS_ENABLED, 0
+	BEGIN
+		MENUITEM "&Töölaud", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+		MENUITEM "&Kiirkäivitus", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
+		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+		MENUITEM "&Uus tööriistariba...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
+	END
+END
+
+IDM_BAND_MENU MENUEX
+BEGIN
+	MENUITEM "Näita tiitlid", IDM_BAND_TITLE
+	MENUITEM "&Sule tööriistariba", IDM_BAND_CLOSE
+END
+
+IDM_POPUPMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "&Vaade", IDM_VIEW_MENU
+        BEGIN
+            MENUITEM "&Suured ikoonid", IDM_LARGE_ICONS
+            MENUITEM "&Väikesed ikoonid", IDM_SMALL_ICONS
+        END
+        MENUITEM "&Ava kaust", IDM_OPEN_FOLDER
+        MENUITEM "&Näita teksti", IDM_SHOW_TEXT
+    END    
+END
+
+/* Dialogs */
+
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 30 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "Loobu", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+}
+
+IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "&Tekstisuvandid:", -1, 4, 2, 48, 15
+    COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Ikoonisuvandid:", -1, 4, 20, 48, 15
+    COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+/* Accelerators */
+
+IDR_ACCELERATORS ACCELERATORS
+BEGIN
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+    "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    VK_UP, IDM_GOTO_UPONELEVEL, VIRTKEY, ALT
+    VK_BACK, 41010, NOINVERT, VIRTKEY
+    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+    "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CANCELLING "Loobun..."
+    IDS_REMAINING  "Jäänud"
+END
+
+STRINGTABLE
+BEGIN
+    800 "Sisaldab käske valitud üksuste manipuleerimiseks."
+END
+
+STRINGTABLE
+BEGIN
+    864 "Sisaldab redigeerimiskäske."
+END
+
+STRINGTABLE
+BEGIN
+    928 "Sisaldab vaate manipuleerimis käske."
+END
+
+STRINGTABLE
+BEGIN
+    992 "Sisaldab tööriista käske."
+END
+
+STRINGTABLE
+BEGIN
+    1056 "Sisaldab spikrite näitamise käske."
+END
+
+STRINGTABLE
+BEGIN
+    9025 "Sulgeb akna."
+    9026 "Läheb ühe taseme võrra üles."
+END
+
+STRINGTABLE
+BEGIN
+    9121 "Ühendab võrgudraiviga."
+    9122 "Ühendab võrgudraivist lahti."
+END
+
+STRINGTABLE
+BEGIN
+    9250 "Kuvab programmi informatsiooni, versiooni numbrit ja autoriõigust."
+    9252 "Kuvab informatsiooni silumiseks."
+END
+
+STRINGTABLE
+BEGIN
+    9281 "Läheb eelmisele lehele."
+    9282 "Läheb järgmisele lehele."
+    9283 "Lubab teil muuta seadeid."
+    9285 "Läheb teie avalehele."
+END
+
+STRINGTABLE
+BEGIN
+    9362 "Avab Lemmikud kausta."
+    9363 "Lisab praeguse lehe Lemmikud kausta."
+END
+
+STRINGTABLE
+BEGIN
+    9505 "Näitab või peidab tööriistaribu."
+    9506 "Näitab või peidab olekuriba."
+    9508 "Näitab standardnupude tööriistariba."
+    9509 "Kuvab aadressivälja."
+    9510 "Kuvab kiirkäivituse riba."
+    9516 "Lukustab tööriistaribade asukohad ja suurused."
+END
+
+STRINGTABLE
+BEGIN
+    9533 "Kohanda tööriistariba."
+END
+
+STRINGTABLE
+BEGIN
+    9552 "Näitab või peidab Exploreri riba."
+    9553 "Näitab otsingu riba."
+    9554 "Näitab lemmikute riba."
+    9555 "Näitab ajaloo riba."
+    9557 "Näitab kaustade riba."
+    9559 "Näitab meedia riba."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMALLICONS "Väikesed ikoonid"
+    IDS_LARGEICONS "Suured ikoonid"
+    IDS_SHOWTEXTLABELS "Näitab tekstitähiseid"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTEXTLABELS "Ei ole tekstitähiseid"
+    IDS_SELECTIVETEXTONRIGHT "Valikuline tekst paremal"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GOBUTTONLABEL "|Mine||"
+    IDS_GOBUTTONTIPTEMPLATE "Mine ""%s"""
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHLABEL "Otsing"
+    IDS_ADDRESSBANDLABEL "Aa&dress"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FOLDERSLABEL "Kaustad"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HISTORYTEXT "&Ajalugu\tCtrl+H"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UP "Üles"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BACK "Tagasi lehele %s"
+    IDS_FORWARD "Edasi lehele %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Tagasi|Edasi|Üles|Otsing|Kaustad|Teiselda kausta|Kopeeri kausta|Kustuta|Võta tagasi|Vaated|Peatu|Värskenda|Kodu|Ühenda võrgudraiv|Ühenda lahti|Lemmikud|Ajalugu|Täisekraan|Atribuudid|Lõika|Kopeeri|Kleebi|Kaustasuvandid||"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BROWSEFORNEWTOOLAR "Vali kaust"
+    IDS_TOOLBAR_ERR_TITLE "Tööriistariba"
+    IDS_TOOLBAR_ERR_TEXT "Ei saa tööriistariba luua."
+END
