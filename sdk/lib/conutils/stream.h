@@ -117,11 +117,12 @@ do { \
  * (not many terminals support UTF16 on the contrary).
  */
 #define ConInitStdStreams() \
-    ConInitStdStreamsAndMode(UTF8Text, INVALID_CP); // Cache code page unused
+    ConInitStdStreamsAndMode(UTF8Text, INVALID_CP)
+    /* Note that here the cache code page is unused */
 #else
 /* Use ANSI by default for file output */
 #define ConInitStdStreams() \
-    ConInitStdStreamsAndMode(AnsiText, INVALID_CP);
+    ConInitStdStreamsAndMode(AnsiText, INVALID_CP)
 #endif /* defined(_UNICODE) */
 
 /* Stream translation modes */
