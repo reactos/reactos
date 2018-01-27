@@ -36,24 +36,24 @@ public:
         while (celt && m_layer)
         {
             TAGID nameid = SdbFindFirstTag(m_db, m_layer, TAG_NAME);
-            if (!nameid)
-                return S_FALSE;
+            if (nameid)
+            {
+                LPWSTR name = SdbGetStringTagPtr(m_db, nameid);
+                if (name && !IsBuiltinLayer(name))
+                {
+                    ULONG Size = wcslen(name) + 1;
 
-            LPWSTR name = SdbGetStringTagPtr(m_db, nameid);
-            if (!name)
-                return S_FALSE;
+                    *rgelt = (LPOLESTR)::CoTaskMemAlloc(Size * sizeof(WCHAR));
+                    StringCchCopyW(*rgelt, Size, name);
 
-            ULONG Size = wcslen(name) + 1;
+                    if (pceltFetched)
+                        (*pceltFetched)++;
 
-            *rgelt = (LPOLESTR)::CoTaskMemAlloc(Size * sizeof(WCHAR));
-            StringCchCopyW(*rgelt, Size, name);
-
-            if (pceltFetched)
-                (*pceltFetched)++;
-
+                    celt--;
+                    rgelt++;
+                }
+            }
             m_layer = SdbFindNextTag(m_db, m_root, m_layer);
-            celt--;
-            rgelt++;
         }
         return celt ? S_FALSE : S_OK;
     }
