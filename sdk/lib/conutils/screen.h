@@ -15,6 +15,10 @@
 #error The ConUtils library at the moment only supports compilation with _UNICODE defined!
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #if 0
 
@@ -53,4 +57,7 @@ VOID
 ConClearScreen(IN PCON_SCREEN Screen);
 
 
+#ifdef __cplusplus
+}
+#endif
 #endif  /* __SCREEN_H__ */

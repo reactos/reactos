@@ -15,6 +15,10 @@
 #error The ConUtils library at the moment only supports compilation with _UNICODE defined!
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 // #include <wincon.h>
 
@@ -71,4 +75,7 @@ ConResPaging(
     IN BOOL StartPaging,
     IN UINT uID);
 
+#ifdef __cplusplus
+}
+#endif
 #endif  /* __PAGER_H__ */

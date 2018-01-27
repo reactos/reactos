@@ -16,6 +16,10 @@
 #error The ConUtils library at the moment only supports compilation with _UNICODE defined!
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * General-purpose utility functions (wrappers around,
  * or reimplementations of, Win32 APIs).
@@ -50,4 +54,7 @@ IsConsoleHandle(IN HANDLE hHandle);
 // #include <wincon.h>
 
 
+#ifdef __cplusplus
+}
+#endif
 #endif  /* __UTILS_H__ */

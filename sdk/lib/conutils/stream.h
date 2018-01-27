@@ -25,6 +25,10 @@
 #error The ConUtils library at the moment only supports compilation with _UNICODE defined!
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Console I/O streams
  */
@@ -264,4 +268,7 @@ VOID
 ConClearLine(IN PCON_STREAM Stream);
 
 
+#ifdef __cplusplus
+}
+#endif
 #endif  /* __STREAM_H__ */
