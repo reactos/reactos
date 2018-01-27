@@ -992,7 +992,8 @@ RCloseServiceHandle(
         if (lpService->dwRefCount == 0)
         {
             /* If this service has been marked for deletion */
-            if (lpService->bDeleted)
+            if (lpService->bDeleted &&
+                lpService->Status.dwCurrentState == SERVICE_STOPPED)
             {
                 /* Open the Services Reg key */
                 dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
