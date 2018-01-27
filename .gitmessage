@@ -1,0 +1,23 @@
+# [MODULE] A short but descriptive summary (#pr-num)
+
+# A comprehensible description of WHY you did this work.
+
+# CORE-XXXX CIDXXXXX
+
+#--------------------------------------------------------------------^
+#                                                                  70^
+# * [MODULE] should usually be the name of the CMake module, written
+#   in all caps.
+#
+# * Summary should be imperative (not past tense), 70 characters or
+#   less, and not end with a period.
+#
+# * Description of commit should explain WHY a change was made and
+#   lines should be also wrapped to 70 characters.
+#
+# * JIRA, Coverity ID references should be placed at the bottom and
+#   preceded by the newline.
+#
+# * Pull request should always be referenced in the summary in parens
+#   unless it doesn't fit In this case it should be placed after bug
+#   IDs if any.

@@ -57,6 +57,10 @@ A __[patch]__ is a set of changes to existing source code. The changes in a patc
 
 See [Submitting Patches] for details.
 
+### Commit style
+
+Our commit style is defined in a __[commit template]__. Use it as a reference or turn it on using `git config commit.template .gitmessage`. This will set this template as an initial commit message for the new commits in your local repository.
+
 ### Rules and Recommendations
 
 - *Use your __real name__ and __real email__.* We do not accept anonymous contributions!
@@ -96,3 +100,4 @@ Finding a good project to start with can be a challenge, because when starting o
   [README.FSD]:                                                  /media/doc/README.FSD
   [Coverity]:                                                    https://scan.coverity.com/projects/reactos
   [request-coverity]:                                            https://scan.coverity.com/memberships/new?project_id=reactos
+  [commit template]:                                             .gitmessage
