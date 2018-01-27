@@ -2986,6 +2986,8 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
 {
     FT_Size_RequestRec  req;
 
+    ASSERT(face != NULL);
+
     if (Width < 0)
         Width = -Width;
 
@@ -3003,7 +3005,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
         /* case (A): lfHeight is negative: the character height */
         Height = -Height;
     }
-    else if (Height > 0)
+    else if (Height > 0 && face->height > 0)
     {
         /* case (B): lfHeight is positive: the cell height */
         Height = Height * face->units_per_EM / face->height;
