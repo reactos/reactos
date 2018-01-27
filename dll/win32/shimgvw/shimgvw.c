@@ -17,6 +17,7 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <wingdi.h>
+#include <windowsx.h>
 #include <objbase.h>
 #include <commctrl.h>
 #include <commdlg.h>
@@ -715,7 +716,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_MOUSEWHEEL:
             ImageView_OnMouseWheel(hwnd,
-                (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam),
+                GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
                 (SHORT)HIWORD(wParam), (UINT)LOWORD(wParam));
             break;
 
@@ -838,7 +839,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
     WndClass.hCursor        = LoadCursor(hInstance, IDC_ARROW);
-    WndClass.hbrBackground  = (HBRUSH)GetStockObject(NULL_BRUSH);   /* less flicker */
+    WndClass.hbrBackground  = NULL;   /* less flicker */
 
     if (!RegisterClass(&WndClass)) return -1;
 
