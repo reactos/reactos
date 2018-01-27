@@ -35,7 +35,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TABTITLE "Zgodność"
+    IDS_COMPAT_TITLE "Zgodność"
     IDS_FAILED_NETWORK "Nie można ustawić trybu zgodnośći dla tego programu, ponieważ znajduje się na dysku sieciowym."
     IDS_FAILED_PROTECTED "Nie można ustawić trybu zgodnośći dla tego programu, ponieważ jest częścią systemu ReactOS."
     IDS_YOU_DID_NOT_ADD "Nie dodałeś trybu zgodności, czy chcesz to zrobić teraz?"

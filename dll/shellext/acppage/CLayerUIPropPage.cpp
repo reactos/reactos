@@ -95,10 +95,16 @@ CLayerUIPropPage::CLayerUIPropPage()
 , m_RegistryEnabledLayers(0)
 , m_EnabledLayers(0)
 {
+    CComBSTR title;
+    title.LoadString(g_hModule, IDS_COMPAT_TITLE);
+    m_psp.pszTitle = title.Detach();
+    m_psp.dwFlags |= PSP_USETITLE;
 }
 
 CLayerUIPropPage::~CLayerUIPropPage()
 {
+    CComBSTR title;
+    title.Attach((BSTR)m_psp.pszTitle);
 }
 
 HRESULT CLayerUIPropPage::InitFile(PCWSTR Filename)
@@ -371,7 +377,7 @@ LRESULT CLayerUIPropPage::OnCtrlCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl
 
 LRESULT CLayerUIPropPage::OnEditModes(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    if (DialogBoxParam(g_hModule, MAKEINTRESOURCE(IDD_EDITCOMPATIBILITYMODES), m_hWnd, EditModesProc, (LPARAM)this) == IDOK)
+    if (DialogBoxParamW(g_hModule, MAKEINTRESOURCEW(IDD_EDITCOMPATIBILITYMODES), m_hWnd, EditModesProc, (LPARAM)this) == IDOK)
         UpdateControls();
     return 0;
 }
@@ -499,7 +505,7 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
             if (ComboHasData(hWnd))
             {
                 CComBSTR question, title;
-                title.LoadString(g_hModule, IDS_TABTITLE);
+                title.LoadString(g_hModule, IDS_COMPAT_TITLE);
                 question.LoadString(g_hModule, IDS_YOU_DID_NOT_ADD);
                 int result = ::MessageBoxW(hWnd, question, title, MB_YESNOCANCEL | MB_ICONQUESTION);
                 switch (result)
