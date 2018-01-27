@@ -20,7 +20,7 @@ BEGIN
         MENUITEM "Tee aknad &horisontaalpaanideks", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Tee aknad v&ertikaalpaanideks", ID_SHELL_CMD_TILE_WND_V
         MENUITEM "&Kuva töölaud", ID_SHELL_CMD_SHOW_DESKTOP
-        MENUITEM "&Võta Tagasi", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM "&Võta tagasi", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "&Tegumihaldur", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR

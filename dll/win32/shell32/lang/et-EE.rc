@@ -10,8 +10,8 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Suured Ikoonid", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Väikesed Ikoonid", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Suured ikoonid", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Väikesed ikoonid", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Loetle", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Üksikasjad", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
@@ -29,8 +29,8 @@ BEGIN
     BEGIN
         POPUP "&Vaade", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Suured Ikoonid", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Väikesed Ikoonid", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Suured ikoonid", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Väikesed ikoonid", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Loetle", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Üksikasjad", FCIDM_SHVIEW_REPORTVIEW
         END
@@ -385,7 +385,7 @@ BEGIN
     GROUPBOX "Seaded valitud asukohale", -1, 10, 72, 220, 70
     RADIOBUTTON "&Kohandatud maht:", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "M&aksimaalne maht(MB):", -1, 20, 105, 70, 10
+    LTEXT "M&aksimaalne maht(MB):", -1, 20, 105, 80, 10
     RADIOBUTTON "Ära teiselda faile prügikasti. Eemalda failid kohe kustutamisel", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "&Kuva kustutuskinnituse dialoogiboks", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
@@ -435,9 +435,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Kaustavaated", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "selle kausta puhul kasutatud vaadet (nt Üksikasjad\nvõi Paanid) võite rakendada kõigile kaustadele.", -1, 60, 20, 180, 20
-    PUSHBUTTON "&Rakenda kõigile kaustadele", 14001, 60, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "&Lähtesta kõik kaustad", 14002, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "Selle kausta puhul kasutatud vaadet (nt Üksikasjad\nvõi Paanid) võite rakendada kõigile kaustadele.", -1, 60, 20, 180, 20
+    PUSHBUTTON "&Rakenda kõigile kaustadele", 14001, 60, 50, 90, 14, WS_TABSTOP
+    PUSHBUTTON "&Lähtesta kõik kaustad", 14002, 160, 50, 80, 14, WS_TABSTOP
     LTEXT "Täpsemad sätted:", -1, 7, 80, 100, 10
     CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "&Taasta vaikesätted", 14004, 177, 215, 80, 14, WS_TABSTOP
@@ -453,7 +453,7 @@ BEGIN
     PUSHBUTTON "&Uus", 14001, 120, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Kustuta", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Failitüübi '%s' üksikasjad", 14003, 7, 130, 249, 70
-    LTEXT "Avamisprogramm:", -1, 12, 140, 40, 10
+    LTEXT "Avamisprogramm:", -1, 12, 140, 60, 10
     //ICON
     LTEXT "Appname", 14005, 100, 140, 40, 10
     PUSHBUTTON "&Muuda...", 14006, 180, 140, 50, 14, WS_TABSTOP
@@ -731,25 +731,25 @@ BEGIN
 
     /* shell folder path default values */
     IDS_PROGRAMS "Start Menu\\Programs"
-    IDS_PERSONAL "My Documents"
-    IDS_FAVORITES "Favorites"
+    IDS_PERSONAL "Minu dokumendid"
+    IDS_FAVORITES "Lemmikud"
     IDS_STARTUP "Start Menu\\Programs\\StartUp"
-    IDS_RECENT "Recent"
+    IDS_RECENT "Hiljutised"
     IDS_SENDTO "SendTo"
     IDS_STARTMENU "Start Menu"
-    IDS_MYMUSIC "My Music"
-    IDS_MYVIDEO "My Videos"
-    IDS_DESKTOPDIRECTORY "Desktop"
+    IDS_MYMUSIC "Minu muusika"
+    IDS_MYVIDEO "Minu videod"
+    IDS_DESKTOPDIRECTORY "Töölaud"
     IDS_NETHOOD "NetHood"
-    IDS_TEMPLATES "Templates"
-    IDS_APPDATA "Application Data"
+    IDS_TEMPLATES "Mallid"
+    IDS_APPDATA "Rakendusted Andmed"
     IDS_PRINTHOOD "PrintHood"
     IDS_LOCAL_APPDATA "Local Settings\\Application Data"
     IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
-    IDS_COOKIES "Cookies"
+    IDS_COOKIES "Küpsised"
     IDS_HISTORY "Local Settings\\History"
-    IDS_PROGRAM_FILES "Program Files"
-    IDS_MYPICTURES "My Pictures"
+    IDS_PROGRAM_FILES "Programmifailid"
+    IDS_MYPICTURES "Minu pildid"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS "Documents"
     IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
@@ -757,7 +757,7 @@ BEGIN
     IDS_COMMON_PICTURES "Documents\\My Pictures"
     IDS_COMMON_VIDEO "Documents\\My Videos"
     IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
-    IDS_NETWORKPLACE "My Network Places"
+    IDS_NETWORKPLACE "Minu võrgukohad"
 
     IDS_NEWFOLDER "Uus kaust"
 
@@ -833,7 +833,7 @@ BEGIN
     IDS_SHLEXEC_NOASSOC "There is no ReactOS program configured to open this type of file."
 
     IDS_FILE_DETAILS "Üksikasjad '%s' laienduse kohta"
-    IDS_FILE_DETAILSADV "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
+    IDS_FILE_DETAILSADV "Faili, mille laiend on '%s', on tüübiga '%s'. Kõiki '%s'-tüüpi faile mõjutavate sätete muutmiseks klõpsake nuppu Täpsemalt."
     IDS_FILE_TYPES "Failitüübid"
     IDS_COLUMN_EXTENSION "Laiendused"
 
