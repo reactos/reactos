@@ -51,6 +51,36 @@ Your contribution can be of numerous forms. We currently accept two ways to cont
 
 Since our [migration to GitHub] we gladly accept __[Pull Requests]__. Pull requests let you tell others about changes you have pushed to a repository on GitHub. Once a pull request is opened, you can discuss and review the potential changes with collaborators and add follow-up commits before the changes are merged into the repository. __Pull request is a prefered way to submit your work__ - it makes reviewing and merging your contribution much easier.
 
+#### Commit style
+
+When doing commits, use the following format:
+```
+[MODULE] Short summary of your commit
+
+Optional description that may include:
+- Lists like this one
+- JIRA bug ID
+- Coverity scan ID 
+- 'Quoted text'
+- etc.
+
+CORE-XXXX CIDXXXXX #pr-num
+```
+Note that you don't need a full stop in the summary. Also, prefer shorter summaries - 70 chars total - unless it can't be broken down. 
+
+If you edited only one file `foo.c`, you may include that too:
+
+```
+[MODULE] foo.c: Short summary of your commit
+``` 
+
+JIRA, Coverity, Pull Request IDs should be placed at the bottom of the summary
+unless it is shorter than 70 chars and your commit doesn't contain any description.
+
+```
+[MODULE] A short summary example. CORE-XXXX #pr-num
+```
+
 ### Patches
 
 A __[patch]__ is a set of changes to existing source code. The changes in a patch can be merged into existing source code. This process is referred to as applying a patch (to source code). Which changes a patch contains and the way the patch is structured can have significant impact on the consequences that can happen from applying the patch. 
