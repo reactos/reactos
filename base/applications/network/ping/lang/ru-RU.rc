@@ -49,7 +49,7 @@ BEGIN
     IDS_REPLY_TIME_MS "время=%luмс "
     IDS_REPLY_TIME_0MS "время<1мс "
     IDS_REPLY_TTL "TTL=%d\n"
-    IDS_REPLY_STATUS "Ответ от %lu.\n"
+    IDS_REPLY_STATUS "Получен код %lu.\n"
     IDS_DEST_HOST_UNREACHABLE "Заданный узел недоступен.\n"
     IDS_DEST_NET_UNREACHABLE "Заданная сеть недоступна.\n"
     IDS_REQUEST_TIMED_OUT "Превышен интервал ожидания для запроса.\n"
