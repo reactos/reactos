@@ -253,6 +253,8 @@
 #define IDS_ADVANCED_SHOW_COMP_COLOR                30512
 #define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
+#define IDS_CANT_DELETE_FILE_TYPE                   30600
+
 /* Dialogs */
 
 /* Run dialog */

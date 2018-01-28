@@ -880,4 +880,6 @@ BEGIN
     IDS_MENU_EMPTY "(Prázdné)"
     IDS_OBJECTS "Položek: %d"
     IDS_OBJECTS_SELECTED "Položek vybráno: %d"
+
+    IDS_CANT_DELETE_FILE_TYPE "Unable to delete the file type."
 END

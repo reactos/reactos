@@ -1655,6 +1655,45 @@ void FileTypesDlg_OnChange(HWND hwndDlg, HWND hListView)
     }
 }
 
+LONG DeleteFileTypeRegistry(PFOLDER_FILE_TYPE_ENTRY pItem)
+{
+    // For example:
+    //    [.txt]
+    //    @=txtfile
+    //    ...
+    //
+    //    [txtfile]
+    //    ...
+
+    // Open [.txt]
+    HKEY hKey = NULL;
+    LONG Result = RegOpenKeyExW(HKEY_CLASSES_ROOT, pItem->FileExtension, 0, KEY_READ, &hKey);
+    if (Result == ERROR_SUCCESS && hKey)
+    {
+        // Read @=txtfile
+        WCHAR szValue[64] = { 0 };
+        DWORD cbValue = sizeof(szValue);
+        Result = RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)szValue, &cbValue);
+        if (Result == ERROR_SUCCESS && szValue[0] != UNICODE_NULL)
+        {
+            // delete [txtfile]
+            RegDeleteTreeW(HKEY_CLASSES_ROOT, szValue);
+        }
+    }
+    // Close [.txt]
+    if (hKey)
+    {
+        RegCloseKey(hKey);
+    }
+
+    if (Result == ERROR_SUCCESS)
+    {
+        // Delete [.txt]
+        Result = RegDeleteTreeW(HKEY_CLASSES_ROOT, pItem->FileExtension);
+    }
+    return Result;
+}
+
 void FileTypesDlg_OnDelete(HWND hwndDlg, HWND hListView)
 {
     const UINT Flags = LVNI_ALL | LVNI_SELECTED;
@@ -1663,15 +1702,18 @@ void FileTypesDlg_OnDelete(HWND hwndDlg, HWND hListView)
         return;
 
     PFOLDER_FILE_TYPE_ENTRY pItem = FindSelectedItem(hListView, iItem);
-    if (pItem == NULL)
+    if (pItem == NULL && pItem->FileExtension[0] == UNICODE_NULL)
         return;
 
-    // FIXME: registry
-    LONG Result = RegDeleteTreeW(HKEY_CLASSES_ROOT, pItem->FileExtension);
+    LONG Result = DeleteFileTypeRegistry(pItem);
     if (Result != ERROR_SUCCESS)
     {
-        // FIXME: error message
-        return;
+        // Failed to delete. Show error message.
+        WCHAR szMsg[128];
+        if (LoadStringW(shell32_hInstance, IDS_CANT_DELETE_FILE_TYPE, szMsg, _countof(szMsg)))
+        {
+            MessageBoxW(hwndDlg, szMsg, NULL, MB_ICONERROR);
+        }
     }
 
     ListView_DeleteItem(hListView, iItem);

@@ -896,4 +896,6 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Bilgisayarım'da Denetim Masası'nı göster"
     IDS_ADVANCED_SHOW_COMP_COLOR "Şifrelenmiş veyâ sıkıştırılmış NTFS kütüklerini renkli göster"
     IDS_ADVANCED_SHOW_INFO_TIP "Dizin ve masaüstü ögeleri için açılan tanım göster"
+
+    IDS_CANT_DELETE_FILE_TYPE "Unable to delete the file type."
 END
