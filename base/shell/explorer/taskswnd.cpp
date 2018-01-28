@@ -1718,19 +1718,6 @@ public:
         return Ret;
     }
 
-    LRESULT OnEnableGrouping(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        LRESULT Ret = m_IsGroupingEnabled;
-        if ((BOOL)wParam != m_IsGroupingEnabled)
-        {
-            m_IsGroupingEnabled = (BOOL)wParam;
-
-            /* Collapse or expand groups if necessary */
-            UpdateButtonsSize(FALSE);
-        }
-        return Ret;
-    }
-
     LRESULT OnUpdateTaskbarPos(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         /* Update the button spacing */
@@ -1743,8 +1730,12 @@ public:
         TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
         if (newSettings->bGroupButtons != g_TaskbarSettings.bGroupButtons)
         {
-            /* TODO: Toggle grouping */
             g_TaskbarSettings.bGroupButtons = newSettings->bGroupButtons;
+            m_IsGroupingEnabled = g_TaskbarSettings.bGroupButtons;
+
+            /* Collapse or expand groups if necessary */
+            RefreshWindowList();
+            UpdateButtonsSize(FALSE);
         }
 
         return 0;
@@ -1833,7 +1824,7 @@ public:
     HRESULT Initialize(IN HWND hWndParent, IN OUT ITrayWindow *tray)
     {
         m_Tray = tray;
-        m_IsGroupingEnabled = TRUE; /* FIXME */
+        m_IsGroupingEnabled = g_TaskbarSettings.bGroupButtons;
         Create(hWndParent, 0, szRunningApps, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP);
         if (!m_hWnd)
             return E_FAIL;
@@ -1864,7 +1855,6 @@ public:
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-        MESSAGE_HANDLER(TSWM_ENABLEGROUPING, OnEnableGrouping)
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
