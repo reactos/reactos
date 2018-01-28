@@ -2168,6 +2168,10 @@ ChangePos:
             bHandled = FALSE;
             return 0;
         }
+        else if (g_TaskbarSettings.bLock)
+        {
+            return 0;
+        }
 
         return DrawSizerWithTheme((HRGN) wParam);
     }
