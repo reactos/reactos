@@ -43,6 +43,19 @@
 #include <strsafe.h>
 
 #include <commctrl.h>
+#include <windowsx.h>
+
+/* These are public names and values determined from MFC, and compatible with Windows */
+// Property Sheet control id's (determined with Spy++)
+#define IDC_TAB_CONTROL                 0x3020
+#define ID_APPLY_NOW                    0x3021
+#define ID_WIZBACK                      0x3023
+#define ID_WIZNEXT                      0x3024
+#define ID_WIZFINISH                    0x3025
+
+
+#include "treelist.h"
+
 /**/#include <setupapi.h>/**/
 #include <devguid.h>
 
@@ -123,17 +136,13 @@ typedef struct _SETUPDATA
 
     /* Settings */
     LONG DestPartSize; // if partition doesn't exist, size of partition
-    LONG FSType; // file system type on partition 
-    LONG FormatPart; // type of format the partition
+    LONG FSType;       // file system type on partition
+    LONG FormatPart;   // type of format the partition
 
     LONG SelectedLangId; // selected language (table index)
-    LONG SelectedKBLayout; // selected keyboard layout (table index)
-    LONG SelectedComputer; // selected computer type (table index)
-    LONG SelectedDisplay; // selected display type (table index)
-    LONG SelectedKeyboard; // selected keyboard type (table index)
 
     /* txtsetup.sif data */
-    // LONG DefaultLang; // default language (table index)
+    // LONG DefaultLang;     // default language (table index)
     // LONG DefaultKBLayout; // default keyboard layout (table index)
     PCWSTR SelectedLanguageId;
     WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
@@ -145,14 +154,6 @@ extern HANDLE ProcessHeap;
 extern BOOLEAN IsUnattendedSetup;
 
 extern SETUPDATA SetupData;
-
-
-typedef struct _IMGINFO
-{
-    HBITMAP hBitmap;
-    INT cxSource;
-    INT cySource;
-} IMGINFO, *PIMGINFO;
 
 
 /*
