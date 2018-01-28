@@ -1779,6 +1779,8 @@ MiBuildPagedPool(VOID)
     TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 #endif
+
+#ifdef _M_IX86
     //
     // Let's get back to paged pool work: size it up.
     // By default, it should be twice as big as nonpaged pool.
@@ -1795,6 +1797,7 @@ MiBuildPagedPool(VOID)
         MmSizeOfPagedPoolInBytes = (ULONG_PTR)MmNonPagedSystemStart -
                                    (ULONG_PTR)MmPagedPoolStart;
     }
+#endif // _M_IX86
 
     //
     // Get the size in pages and make sure paged pool is at least 32MB.
@@ -1814,11 +1817,13 @@ MiBuildPagedPool(VOID)
     MmSizeOfPagedPoolInBytes = Size * PAGE_SIZE * 1024;
     MmSizeOfPagedPoolInPages = MmSizeOfPagedPoolInBytes >> PAGE_SHIFT;
 
+#ifdef _M_IX86
     //
     // Let's be really sure this doesn't overflow into nonpaged system VA
     //
     ASSERT((MmSizeOfPagedPoolInBytes + (ULONG_PTR)MmPagedPoolStart) <=
            (ULONG_PTR)MmNonPagedSystemStart);
+#endif // _M_IX86
 
     //
     // This is where paged pool ends
