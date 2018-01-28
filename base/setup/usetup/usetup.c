@@ -439,7 +439,7 @@ GetNTOSInstallationName(
     {
         /* We have retrieved a partition that is mounted */
         return RtlStringCchPrintfA(Buffer, cchBufferSize,
-                                   "%c:%S  \"%S\"",
+                                   "%C:%S  \"%S\"",
                                    PartEntry->DriveLetter,
                                    NtOsInstall->PathComponent,
                                    NtOsInstall->InstallationName);
@@ -2480,7 +2480,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     {
         CONSOLE_PrintTextXY(6, 10,
                             MUIGetString(STRING_HDDINFOUNK2),
-                            (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+                            (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
                             (PartEntry->DriveLetter == 0) ? '-' : ':',
                             PartEntry->PartitionType,
                             PartSize,
@@ -2490,7 +2490,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     {
         CONSOLE_PrintTextXY(6, 10,
                             "   %c%c  %s    %I64u %s",
-                            (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+                            (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
                             (PartEntry->DriveLetter == 0) ? '-' : ':',
                             PartTypeString,
                             PartSize,
@@ -2795,7 +2795,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         {
             CONSOLE_PrintTextXY(8, 10,
                                 MUIGetString(STRING_HDDINFOUNK4),
-                                (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+                                (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
                                 (PartEntry->DriveLetter == 0) ? '-' : ':',
                                 PartEntry->PartitionType,
                                 PartSize,
@@ -2805,7 +2805,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         {
             CONSOLE_PrintTextXY(8, 10,
                                 "%c%c  %s    %I64u %s",
-                                (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+                                (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
                                 (PartEntry->DriveLetter == 0) ? '-' : ':',
                                 PartTypeString,
                                 PartSize,
@@ -3200,7 +3200,7 @@ BuildInstallPaths(PWSTR InstallDir,
     UNREFERENCED_PARAMETER(Status);
 
     /* Initialize DestinationDriveLetter */
-    DestinationDriveLetter = (WCHAR)PartEntry->DriveLetter;
+    DestinationDriveLetter = PartEntry->DriveLetter;
 }
 
 

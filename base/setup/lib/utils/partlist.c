@@ -27,6 +27,185 @@ typedef struct _REG_DISK_MOUNT_INFO
 #include <poppack.h>
 
 
+/* HELPERS FOR PARTITION TYPES **********************************************/
+
+/*
+ * This partition type list was ripped from the kernelDisk.c module of
+ * the Visopsys Operating System (see license below), and completed with
+ * information from Paragon Hard-Disk Manager, and the following websites:
+ * http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
+ * https://en.wikipedia.org/wiki/Partition_type#List_of_partition_IDs
+ */
+/*
+ * kernelDisk.c
+ *
+ * Visopsys Operating System
+ * Copyright (C) 1998-2015 J. Andrew McLaughlin
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+/* This is a table for keeping known partition type codes and descriptions */
+PARTITION_TYPE PartitionTypes[NUM_PARTITION_TYPE_ENTRIES] =
+{
+    { 0x00, "(Empty)" },
+    { 0x01, "FAT12" },
+    { 0x02, "XENIX root" },
+    { 0x03, "XENIX usr" },
+    { 0x04, "FAT16 (< 32 MB)" },
+    { 0x05, "Extended" },
+    { 0x06, "FAT16" },
+    { 0x07, "NTFS/HPFS/exFAT" },
+    { 0x08, "OS/2 or AIX boot" },
+    { 0x09, "AIX data" },
+    { 0x0A, "OS/2 Boot Manager" },
+    { 0x0B, "FAT32" },
+    { 0x0C, "FAT32 (LBA)" },
+    { 0x0E, "FAT16 (LBA)" },
+    { 0x0F, "Extended (LBA)" },
+    { 0x10, "OPUS" },
+    { 0x11, "Hidden FAT12" },
+    { 0x12, "FAT diagnostic (Compaq)" },
+    { 0x13, "BTRON" },
+    { 0x14, "Hidden FAT16 (< 32 MB)" },
+    { 0x16, "Hidden FAT16" },
+    { 0x17, "Hidden HPFS or NTFS" },
+    { 0x18, "AST SmartSleep" },
+    { 0x1B, "Hidden FAT32" },
+    { 0x1C, "Hidden FAT32 (LBA)" },
+    { 0x1E, "Hidden FAT16 (LBA)" },
+    { 0x24, "NEC DOS 3.x" },
+    { 0x27, "Hidden WinRE NTFS" },
+    { 0x2A, "AtheOS File System (AFS)" },
+    { 0x2B, "SyllableSecure (SylStor)" },
+    { 0x32, "NOS" },
+    { 0x35, "JFS on OS/2 or eCS" },
+    { 0x38, "THEOS v3.2 2GB partition" },
+    { 0x39, "Plan 9" },
+    { 0x3A, "THEOS v4 4GB partition" },
+    { 0x3B, "THEOS v4 extended partition" },
+    { 0x3C, "PartitionMagic recovery partition" },
+    { 0x3D, "Hidden NetWare" },
+    { 0x40, "Lynx" },
+    { 0x41, "PowerPC PReP boot" },
+    { 0x42, "Win2K Dynamic Volume extended" },
+    { 0x43, "Old Linux" },
+    { 0x44, "GoBack" },
+    { 0x45, "Priam or Boot-US Boot Manager" },
+    { 0x4D, "QNX4.x" },
+    { 0x4E, "QNX4.x 2nd partition" },
+    { 0x4F, "QNX4.x 3rd partition" },
+    { 0x50, "OnTrack Disk Manager R/O" },
+    { 0x51, "OnTrack Disk Manager R/W or Novell" },
+    { 0x52, "CP/M" },
+    { 0x53, "OnTrack DM6 Aux3" },
+    { 0x54, "OnTrack DM6 Dynamic Drive Overlay" },
+    { 0x55, "EZ-Drive" },
+    { 0x56, "Golden Bow VFeature Partitioned Volume" },
+    { 0x5C, "Priam EDisk" },
+    { 0x61, "SpeedStor" },
+    { 0x62, "Pick" },
+    { 0x63, "GNU HURD or Unix System V (SCO, ISC Unix, UnixWare)" },
+    { 0x64, "Novell NetWare 286, 2.xx" },
+    { 0x65, "Novell NetWare 386, 3.xx or 4.xx" },
+    { 0x66, "Novell NetWare SMS Partition" },
+    { 0x67, "Novell" },
+    { 0x68, "Novell" },
+    { 0x69, "Novell NetWare 5+" },
+    { 0x70, "DiskSecure Multi-Boot" },
+    { 0x75, "IBM PC/IX" },
+    { 0x7E, "Veritas VxVM public" },
+    { 0x7F, "Veritas VxVM private" },
+    { 0x80, "Old MINIX" },
+    { 0x81, "Linux or MINIX" },
+    { 0x82, "Linux swap or Solaris" },
+    { 0x83, "Linux Native" },
+    { 0x84, "Hibernate" },
+    { 0x85, "Extended Linux" },
+    { 0x86, "FAT16 mirrored" },
+    { 0x87, "HPFS or NTFS mirrored" },
+    { 0x88, "Linux plaintext partition table" },
+    { 0x8B, "FAT32 mirrored" },
+    { 0x8C, "FAT32 (LBA) mirrored" },
+    { 0x8E, "Linux LVM" },
+    { 0x93, "Hidden Linux" },
+    { 0x94, "Amoeba BBT" },
+    { 0x96, "CDFS/ISO-9660" },
+    { 0x9F, "BSD/OS" },
+    { 0xA0, "Laptop Hibernate" },
+    { 0xA1, "Laptop Hibernate (NEC 6000H)" },
+    { 0xA5, "BSD, NetBSD, FreeBSD" },
+    { 0xA6, "OpenBSD" },
+    { 0xA7, "NeXTStep" },
+    { 0xA8, "Darwin UFS" },      // Also known as "OS-X"
+    { 0xA9, "NetBSD" },
+    { 0xAB, "Darwin boot" },
+    { 0xAF, "Apple HFS" },
+    { 0xB6, "NT FAT16 corrupt mirror" },
+    { 0xB7, "BSDI BSD/386 FS" }, // Alternatively, "NT NTFS corrupt mirror"
+    { 0xB8, "BSDI BSD/386 swap" },
+    { 0xBB, "Boot Wizard hidden" },
+    { 0xBC, "Paragon Backup capsule" },
+    { 0xBE, "Solaris 8 boot partition" },
+    { 0xBF, "Solaris 10 x86" },
+    { 0xC0, "NTFT" },            // Alternatively, "CTOS" or "REAL/32 or DR-DOS or Novell-DOS secure partition"
+    { 0xC1, "DR-DOS FAT12" },
+    { 0xC2, "Hidden Linux" },
+    { 0xC3, "Hidden Linux swap" },
+    { 0xC4, "DR-DOS FAT16 (< 32 MB)" },
+    { 0xC5, "DR-DOS Extended" },
+    { 0xC6, "DR-DOS FAT16" },
+    { 0xC7, "HPFS mirrored" },   // Alternatively, "Syrinx boot"
+    { 0xCB, "DR-DOS FAT32" },
+    { 0xCC, "DR-DOS FAT32 (LBA)" },
+    { 0xCE, "DR-DOS FAT16 (LBA)" },
+    { 0xD0, "MDOS" },
+    { 0xD1, "MDOS FAT12" },
+    { 0xD4, "MDOS FAT16 (< 32 MB)" },
+    { 0xD5, "MDOS Extended" },
+    { 0xD6, "MDOS FAT16" },
+    { 0xD8, "CP/M-86" },
+    { 0xDB, "Digital Research CP/M" },
+    { 0xDE, "Dell OEM" },
+    { 0xDF, "BootIt EMBRM (FAT16/32)" },
+    { 0xE1, "SpeedStor FAT12" },
+    { 0xE3, "SpeedStor (0xE3)" },
+    { 0xE4, "SpeedStor FAT16" },
+    { 0xE5, "Tandy MSDOS" },
+    { 0xE6, "SpeedStor (0xE6)" },
+    { 0xE8, "Linux Unified Key Setup partition" },
+    { 0xEA, "Rufus private partition" },
+    { 0xEB, "BeOS BFS" },
+    { 0xEC, "SkyOS SkyFS" },
+    { 0xEE, "EFI GPT protective" },
+    { 0xEF, "EFI System partition" },
+    { 0xF0, "Linux/PA-RISC boot loader" },
+    { 0xF1, "SpeedStor (0xF1)" },
+    { 0xF2, "DOS 3.3+ second" },
+    { 0xF4, "SpeedStor (0xF4)" },
+    { 0xF5, "SpeedStor (0xF5)" },
+    { 0xF6, "SpeedStor (0xF6)" },
+    { 0xFA, "Bochs" },
+    { 0xFB, "VMware FS" },
+    { 0xFC, "VMware swap" },
+    { 0xFD, "Linux RAID auto" },
+    { 0xFE, "NT hidden partition" },
+    { 0xFF, "XENIX Bad Block Table" },
+};
+
+
 /* FUNCTIONS ****************************************************************/
 
 #ifdef DUMP_PARTITION_TABLE
@@ -119,6 +298,7 @@ GetDriverName(
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[0].EntryContext = &DiskEntry->DriverName;
 
+    /* This will allocate DiskEntry->DriverName if needed */
     Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
                                     KeyName,
                                     QueryTable,
@@ -139,9 +319,9 @@ AssignDriveLetters(
     PPARTENTRY PartEntry;
     PLIST_ENTRY Entry1;
     PLIST_ENTRY Entry2;
-    CHAR Letter;
+    WCHAR Letter;
 
-    Letter = 'C';
+    Letter = L'C';
 
     /* Assign drive letters to primary partitions */
     Entry1 = List->DiskListHead.Flink;
@@ -163,7 +343,7 @@ AssignDriveLetters(
                     (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED &&
                      PartEntry->SectorCount.QuadPart != 0LL))
                 {
-                    if (Letter <= 'Z')
+                    if (Letter <= L'Z')
                     {
                         PartEntry->DriveLetter = Letter;
                         Letter++;
@@ -196,7 +376,7 @@ AssignDriveLetters(
                     (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED &&
                      PartEntry->SectorCount.QuadPart != 0LL))
                 {
-                    if (Letter <= 'Z')
+                    if (Letter <= L'Z')
                     {
                         PartEntry->DriveLetter = Letter;
                         Letter++;
@@ -331,8 +511,6 @@ SystemConfigurationDataQueryRoutine(
 }
 
 
-#define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
-
 static VOID
 EnumerateBiosDiskEntries(
     IN PPARTLIST PartList)
@@ -344,6 +522,8 @@ EnumerateBiosDiskEntries(
     NTSTATUS Status;
     PCM_INT13_DRIVE_PARAMETER Int13Drives;
     PBIOSDISKENTRY BiosDiskEntry;
+
+#define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
 
     memset(QueryTable, 0, sizeof(QueryTable));
 
@@ -480,6 +660,8 @@ EnumerateBiosDiskEntries(
     }
 
     RtlFreeHeap(ProcessHeap, 0, Int13Drives);
+
+#undef ROOT_NAME
 }
 
 static
@@ -490,8 +672,16 @@ AddPartitionToDisk(
     IN ULONG PartitionIndex,
     IN BOOLEAN LogicalPartition)
 {
+    NTSTATUS Status;
     PPARTITION_INFORMATION PartitionInfo;
     PPARTENTRY PartEntry;
+    HANDLE FileHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    WCHAR Buffer[MAX_PATH];
+    UNICODE_STRING Name;
+    UCHAR LabelBuffer[sizeof(FILE_FS_VOLUME_INFORMATION) + 256 * sizeof(WCHAR)];
+    PFILE_FS_VOLUME_INFORMATION LabelInfo = (PFILE_FS_VOLUME_INFORMATION)LabelBuffer;
 
     PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartitionIndex];
 
@@ -542,6 +732,55 @@ AddPartitionToDisk(
     {
         /* Unknown partition, hence unknown partition format (may or may not be actually formatted) */
         PartEntry->FormatState = UnknownFormat;
+    }
+
+    /* Initialize the partition volume label */
+    RtlZeroMemory(PartEntry->VolumeLabel, sizeof(PartEntry->VolumeLabel));
+
+    /* Open the volume, ignore any errors */
+    RtlStringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
+                        L"\\Device\\Harddisk%lu\\Partition%lu",
+                        DiskEntry->DiskNumber, PartEntry->PartitionNumber);
+    RtlInitUnicodeString(&Name, Buffer);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        FILE_READ_DATA | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (NT_SUCCESS(Status))
+    {
+        /* Retrieve the partition volume label */
+        Status = NtQueryVolumeInformationFile(FileHandle,
+                                              &IoStatusBlock,
+                                              &LabelBuffer,
+                                              sizeof(LabelBuffer),
+                                              FileFsVolumeInformation);
+        /* Close the handle */
+        NtClose(FileHandle);
+
+        /* Check for success */
+        if (NT_SUCCESS(Status))
+        {
+            /* Copy the (possibly truncated) volume label and NULL-terminate it */
+            RtlStringCbCopyNW(PartEntry->VolumeLabel, sizeof(PartEntry->VolumeLabel),
+                              LabelInfo->VolumeLabel, LabelInfo->VolumeLabelLength);
+        }
+        else
+        {
+            DPRINT1("NtQueryVolumeInformationFile() failed, Status 0x%08lx\n", Status);
+        }
+    }
+    else
+    {
+        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
     }
 
     if (LogicalPartition)
@@ -912,6 +1151,7 @@ AddDiskToList(
     ULONG LayoutBufferSize;
     PDRIVE_LAYOUT_INFORMATION NewLayoutBuffer;
 
+    /* Retrieve the drive geometry */
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
                                    NULL,
@@ -921,7 +1161,7 @@ AddDiskToList(
                                    NULL,
                                    0,
                                    &DiskGeometry,
-                                   sizeof(DISK_GEOMETRY));
+                                   sizeof(DiskGeometry));
     if (!NT_SUCCESS(Status))
         return;
 
@@ -931,6 +1171,11 @@ AddDiskToList(
         return;
     }
 
+    /*
+     * FIXME: Here we suppose the disk is always SCSI. What if it is
+     * of another type? To check this we need to retrieve the name of
+     * the driver the disk device belongs to.
+     */
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
                                    NULL,
@@ -940,7 +1185,7 @@ AddDiskToList(
                                    NULL,
                                    0,
                                    &ScsiAddress,
-                                   sizeof(SCSI_ADDRESS));
+                                   sizeof(ScsiAddress));
     if (!NT_SUCCESS(Status))
         return;
 
@@ -991,6 +1236,8 @@ AddDiskToList(
                                 sizeof(DISKENTRY));
     if (DiskEntry == NULL)
     {
+        RtlFreeHeap(ProcessHeap, 0, Mbr);
+        DPRINT1("Failed to allocate a new disk entry.\n");
         return;
     }
 
@@ -1034,6 +1281,7 @@ AddDiskToList(
             }
             else
             {
+                // FIXME: What to do?
             }
         }
         ListEntry = ListEntry->Flink;
@@ -1097,6 +1345,11 @@ AddDiskToList(
 
     InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
+
+    /*
+     * We now retrieve the disk partition layout
+     */
+
     /* Allocate a layout buffer with 4 partition entries first */
     LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
                        ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
@@ -1109,6 +1362,7 @@ AddDiskToList(
         return;
     }
 
+    /* Keep looping while the drive layout buffer is too small */
     for (;;)
     {
         DPRINT1("Buffer size: %lu\n", LayoutBufferSize);
@@ -1227,8 +1481,13 @@ CreatePartitionList(VOID)
     InitializeListHead(&List->DiskListHead);
     InitializeListHead(&List->BiosDiskListHead);
 
+    /*
+     * Enumerate the disks seen by the BIOS; this will be used later
+     * to map drives seen by NTOS with their corresponding BIOS names.
+     */
     EnumerateBiosDiskEntries(List);
 
+    /* Enumerate disks seen by NTOS */
     Status = NtQuerySystemInformation(SystemDeviceInformation,
                                       &Sdi,
                                       sizeof(Sdi),
@@ -1257,7 +1516,7 @@ CreatePartitionList(VOID)
                             FILE_READ_DATA | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
                             &ObjectAttributes,
                             &Iosb,
-                            FILE_SHARE_READ,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
                             FILE_SYNCHRONOUS_IO_NONALERT);
         if (NT_SUCCESS(Status))
         {
@@ -2553,10 +2812,10 @@ CheckActiveSystemPartition(
     if (List->SystemPartition != NULL)
     {
         /* We already have an active system partition */
-        DPRINT1("Use the current system partition %lu in disk %lu, drive letter %c\n",
+        DPRINT1("Use the current system partition %lu in disk %lu, drive letter %C\n",
                 List->SystemPartition->PartitionNumber,
                 List->SystemPartition->DiskEntry->DiskNumber,
-                (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+                (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
         return;
     }
 
@@ -2586,10 +2845,10 @@ CheckActiveSystemPartition(
 
             List->OriginalSystemPartition = List->SystemPartition;
 
-            DPRINT1("Use new first active system partition %lu in disk %lu, drive letter %c\n",
+            DPRINT1("Use new first active system partition %lu in disk %lu, drive letter %C\n",
                     List->SystemPartition->PartitionNumber,
                     List->SystemPartition->DiskEntry->DiskNumber,
-                    (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+                    (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
 
             goto SetSystemPartition;
         }
@@ -2630,10 +2889,10 @@ CheckActiveSystemPartition(
         ASSERT(DiskEntry == List->SystemPartition->DiskEntry);
         List->OriginalSystemPartition = List->SystemPartition; // First PartEntry
 
-        DPRINT1("Use first active system partition %lu in disk %lu, drive letter %c\n",
+        DPRINT1("Use first active system partition %lu in disk %lu, drive letter %C\n",
                 List->SystemPartition->PartitionNumber,
                 List->SystemPartition->DiskEntry->DiskNumber,
-                (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+                (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
 
         goto SetSystemPartition;
     }
@@ -2664,10 +2923,10 @@ CheckActiveSystemPartition(
                 ASSERT(DiskEntry == PartEntry->DiskEntry);
                 List->SystemPartition = PartEntry;
 
-                DPRINT1("Found active system partition %lu in disk %lu, drive letter %c\n",
+                DPRINT1("Found active system partition %lu in disk %lu, drive letter %C\n",
                         PartEntry->PartitionNumber,
                         DiskEntry->DiskNumber,
-                        (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter);
+                        (PartEntry->DriveLetter == 0) ? L'-' : PartEntry->DriveLetter);
                 break;
             }
         }
@@ -2718,10 +2977,10 @@ CheckActiveSystemPartition(
         goto FindAndUseAlternativeSystemPartition;
     }
 
-    DPRINT1("Use existing active system partition %lu in disk %lu, drive letter %c\n",
+    DPRINT1("Use existing active system partition %lu in disk %lu, drive letter %C\n",
             List->SystemPartition->PartitionNumber,
             List->SystemPartition->DiskEntry->DiskNumber,
-            (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+            (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
 
     return;
 
@@ -2744,10 +3003,10 @@ FindAndUseAlternativeSystemPartition:
 UseAlternativeSystemPartition:
     List->SystemPartition = List->CurrentPartition;
 
-    DPRINT1("Use alternative active system partition %lu in disk %lu, drive letter %c\n",
+    DPRINT1("Use alternative active system partition %lu in disk %lu, drive letter %C\n",
             List->SystemPartition->PartitionNumber,
             List->SystemPartition->DiskEntry->DiskNumber,
-            (List->SystemPartition->DriveLetter == 0) ? '-' : List->SystemPartition->DriveLetter);
+            (List->SystemPartition->DriveLetter == 0) ? L'-' : List->SystemPartition->DriveLetter);
 
 SetSystemPartition:
     /* Set the new active system partition */
@@ -2799,6 +3058,12 @@ WritePartitions(
 #ifdef DUMP_PARTITION_TABLE
     DumpPartitionTable(DiskEntry);
 #endif
+
+    //
+    // FIXME: We first *MUST* use IOCTL_DISK_CREATE_DISK to initialize
+    // the disk in MBR or GPT format in case the disk was not initialized!!
+    // For this we must ask the user which format to use.
+    //
 
     BufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
                  ((DiskEntry->LayoutBuffer->PartitionCount - 1) * sizeof(PARTITION_INFORMATION));
@@ -2862,7 +3127,7 @@ WritePartitionsToDisk(
 
 BOOLEAN
 SetMountedDeviceValue(
-    IN CHAR Letter,
+    IN WCHAR Letter,
     IN ULONG Signature,
     IN LARGE_INTEGER StartingOffset)
 {
@@ -2875,7 +3140,7 @@ SetMountedDeviceValue(
     HANDLE KeyHandle;
 
     RtlStringCchPrintfW(ValueNameBuffer, ARRAYSIZE(ValueNameBuffer),
-                        L"\\DosDevices\\%C:", Letter);
+                        L"\\DosDevices\\%c:", Letter);
     RtlInitUnicodeString(&ValueName, ValueNameBuffer);
 
     InitializeObjectAttributes(&ObjectAttributes,
