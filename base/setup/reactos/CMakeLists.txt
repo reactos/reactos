@@ -11,6 +11,7 @@ list(APPEND SOURCE
     spapisup/infsupp.c
     drivepage.c
     reactos.c
+    treelist.c
     reactos.h)
 
 file(GLOB reactos_rc_deps res/*.*)
