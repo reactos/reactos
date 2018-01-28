@@ -381,18 +381,18 @@ typedef struct {
 /* we then get 0x40 bytes worth of 0xffff or small numbers followed by
    nrOfFileBlks - 2 of these */
 typedef struct {
-	WORD small_no;
 	SLTG_Name index_name; /* This refers to a name in the directory */
 	SLTG_Name other_name; /* Another one of these weird names */
 	WORD res1a;	      /* 0xffff */
 	WORD name_offs;	      /* offset to name in name table */
-	WORD more_bytes;      /* if this is non-zero we get this many
+	WORD hlpstr_len;      /* if this is non-zero we get this many
 				 bytes before the next element, which seem
 				 to reference the docstring of the type ? */
 	WORD res20;	      /* 0xffff */
 	DWORD helpcontext;
 	WORD res26;	      /* 0xffff */
         GUID uuid;
+        WORD typekind;
 } SLTG_OtherTypeInfo;
 
 /* Next we get WORD 0x0003 followed by a DWORD which if we add to
@@ -612,7 +612,7 @@ static inline BOOL heap_free( LPVOID mem )
 
 HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc ) DECLSPEC_HIDDEN;
 
-extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) DECLSPEC_HIDDEN;
+extern DWORD _invoke(FARPROC func, CALLCONV callconv, int nrargs, DWORD_PTR *args) DECLSPEC_HIDDEN;
 
 HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
 
