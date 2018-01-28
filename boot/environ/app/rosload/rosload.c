@@ -9761,6 +9761,75 @@ ConvertBmpToGopBlt (
     return EFI_SUCCESS;
 }
 
+NTSTATUS
+OslPrepareTarget (
+    _Out_ PULONG ReturnFlags,
+    _Out_ PBOOLEAN Jump
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+OslExecuteTransition (
+    VOID
+    )
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+OslpMain (
+    _Out_ PULONG ReturnFlags
+    )
+{
+    INT CpuInfo[4];
+    BOOLEAN NxDisabled;
+    NTSTATUS Status;
+    BOOLEAN ExecuteJump;
+
+    /* Check if the CPU supports NX */
+    BlArchCpuId(0x80000001, 0, CpuInfo);
+    if (!(CpuInfo[3] & 0x10000))
+    {
+        /* It doesn't, check if this is Intel */
+        EfiPrintf(L"NX disabled: %d\r\n");
+        if (BlArchGetCpuVendor() == CPU_INTEL)
+        {
+            /* Then turn off the MSR feature for it */
+            EfiPrintf(L"NX being turned off\r\n");
+            __writemsr(MSR_IA32_MISC_ENABLE,
+                       __readmsr(MSR_IA32_MISC_ENABLE) & MSR_XD_ENABLE_MASK);
+            NxDisabled = TRUE;
+        }
+    }
+
+    /* Turn on NX support with the CPU-generic MSR */
+    __writemsr(MSR_EFER, __readmsr(MSR_EFER) | MSR_NXE);
+
+    /* Load the kernel */
+    Status = OslPrepareTarget(ReturnFlags, &ExecuteJump);
+    if (NT_SUCCESS(Status) && (ExecuteJump))
+    {
+        /* Jump to the kernel */
+        Status = OslExecuteTransition();
+    }
+
+    /* Retore NX support */
+    __writemsr(MSR_EFER, __readmsr(MSR_EFER) ^ MSR_NXE);
+
+    /* Did we disable NX? */
+    if (NxDisabled)
+    {
+        /* Turn it back on */
+        __writemsr(MSR_IA32_MISC_ENABLE,
+                   __readmsr(MSR_IA32_MISC_ENABLE) | ~MSR_XD_ENABLE_MASK);
+    }
+
+    /* Go back */
+    return Status;
+}
+
 /*++
  * @name OslMain
  *
@@ -9782,6 +9851,11 @@ OslMain (
 {
     BL_LIBRARY_PARAMETERS LibraryParameters;
     NTSTATUS Status;
+    PBL_RETURN_ARGUMENTS ReturnArguments;
+    PBL_APPLICATION_ENTRY AppEntry;
+    INT CpuInfo[4];
+    ULONG Flags;
+#ifdef DRAW_LOGO
     EFI_GRAPHICS_OUTPUT_BLT_PIXEL* gopBlt;
     UINTN gopBltSize, bmpHeight, bmpWidth, CoordinateY, CoordinateX;
     PBL_GRAPHICS_CONSOLE GraphicsConsole;
@@ -9790,6 +9864,37 @@ OslMain (
     EFI_GRAPHICS_OUTPUT_PROTOCOL* GraphicsOutput;
     extern EFI_BOOT_SERVICES* EfiBS;
     extern EFI_SYSTEM_TABLE* EfiST;
+#endif
+
+    /* Get the return arguments structure, and set our version */
+    ReturnArguments = (PBL_RETURN_ARGUMENTS)((ULONG_PTR)BootParameters +
+                                             BootParameters->ReturnArgumentsOffset);
+    ReturnArguments->Version = BL_RETURN_ARGUMENTS_VERSION;
+
+    /* Get the application entry, and validate it */
+    AppEntry = (PBL_APPLICATION_ENTRY)((ULONG_PTR)BootParameters +
+                                       BootParameters->AppEntryOffset);
+    if (!RtlEqualMemory(AppEntry->Signature,
+                        BL_APP_ENTRY_SIGNATURE,
+                        sizeof(AppEntry->Signature)))
+    {
+        /* Unrecognized, bail out */
+        Status = STATUS_INVALID_PARAMETER_9;
+        goto Quickie;
+    }
+
+    /* Check if CPUID 01h is supported */
+    if (BlArchIsCpuIdFunctionSupported(1))
+    {
+        /* Query CPU features */
+        BlArchCpuId(1, 0, CpuInfo);
+
+        /* Check if PAE is supported */
+        if (CpuInfo[4] & 0x40)
+        {
+            EfiPrintf(L"PAE Supported, but won't be used\r\n");
+        }
+    }
 
     /* Setup the boot library parameters for this application */
     BlSetupDefaultParameters(&LibraryParameters);
@@ -9801,34 +9906,50 @@ OslMain (
     LibraryParameters.HeapAllocationAttributes = BlMemoryKernelRange;
     LibraryParameters.FontBaseDirectory = L"\\Reactos\\Boot\\Fonts";
     LibraryParameters.DescriptorCount = 512;
+
+    /* Initialize the boot library */
     Status = BlInitializeLibrary(BootParameters, &LibraryParameters);
+    if (NT_SUCCESS(Status))
+    {
+#ifdef DRAW_LOGO
+        /* Display ReactOS Logo */
+        Status = ConvertBmpToGopBlt(g_Logo, sizeof(g_Logo), (PVOID*)&gopBlt, &gopBltSize, &bmpHeight, &bmpWidth);
+        GraphicsConsole = DspGraphicalConsole;
+        CoordinateX = (GraphicsConsole->DisplayMode.HRes / 2) - (bmpWidth / 2);
+        CoordinateY = (GraphicsConsole->DisplayMode.VRes / 2) - (bmpHeight / 2);
+        BlMmTranslateVirtualAddress(gopBlt, &gopBltPhys);
+        gopBlt = (PVOID)gopBltPhys.LowPart;
+        RtlFillMemory(GraphicsConsole->FrameBuffer, GraphicsConsole->FrameBufferSize, 0x00);
+        BlpArchSwitchContext(BlRealMode);
+        Status = EfiBS->HandleProtocol(EfiST->ConsoleOutHandle, &EfiGraphicsOutputProtocol, (VOID **)&GraphicsOutput);
+        GraphicsOutput->Blt(GraphicsOutput,
+                            gopBlt,
+                            EfiBltBufferToVideo,
+                            0,
+                            0,
+                            CoordinateX,
+                            CoordinateY,
+                            bmpWidth,
+                            bmpHeight,
+                            bmpWidth * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+        BlpArchSwitchContext(BlProtectedMode);
 
-    Status = ConvertBmpToGopBlt(g_Logo, sizeof(g_Logo), (PVOID*)&gopBlt, &gopBltSize, &bmpHeight, &bmpWidth);
-  
-    GraphicsConsole = DspGraphicalConsole;
-    CoordinateX = (GraphicsConsole->DisplayMode.HRes / 2) - (bmpWidth / 2);
-    CoordinateY = (GraphicsConsole->DisplayMode.VRes / 2) - (bmpHeight / 2);
+        /* Display text below */
+        EfiPrintf(L"\n\n\n\n\nReactOS UEFI OS Loader Initializing... %lx\r\n", Status);
+        EfiStall(1000000);
+        BlDisplayClearScreen();
+#endif
+        /* Call the main routine */
+        Status = OslpMain(&Flags);
 
-    BlMmTranslateVirtualAddress(gopBlt, &gopBltPhys);
-    gopBlt = (PVOID)gopBltPhys.LowPart;
-    RtlFillMemory(GraphicsConsole->FrameBuffer, GraphicsConsole->FrameBufferSize, 0x00);
+        /* Return the flags, and destroy the boot library */
+        ReturnArguments->Flags = Flags;
+        BlDestroyLibrary();
+    }
 
-    BlpArchSwitchContext(BlRealMode);
-    Status = EfiBS->HandleProtocol(EfiST->ConsoleOutHandle, &EfiGraphicsOutputProtocol, (VOID **) &GraphicsOutput);
-    GraphicsOutput->Blt(GraphicsOutput,
-                                   gopBlt,
-                                   EfiBltBufferToVideo,
-                                   0,
-                                   0,
-                                   CoordinateX,
-                                   CoordinateY,
-                                   bmpWidth,
-                                   bmpHeight,
-                                   bmpWidth * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
-    BlpArchSwitchContext(BlProtectedMode);
-
-    EfiPrintf(L"\n\nReactOS UEFI OS Loader Initializing...\r\n");
-    EfiStall(1000000);
+Quickie:
+    /* Return back to boot manager */
+    ReturnArguments->Status = Status;
     return Status;
 }
 

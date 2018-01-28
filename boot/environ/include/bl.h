@@ -1669,6 +1669,11 @@ BlArchCpuId (
     _Out_ INT* Result
     );
 
+CPU_VENDORS
+BlArchGetCpuVendor (
+    VOID
+    );
+
 BOOLEAN
 BlArchIsCpuIdFunctionSupported (
     _In_ ULONG Function

@@ -932,3 +932,47 @@ BlArchCpuId (
     __cpuidex(Result, Function, SubFunction);
 #endif
 }
+
+CPU_VENDORS
+BlArchGetCpuVendor (
+    VOID
+    )
+{
+    INT CpuInfo[4];
+    INT Temp;
+
+    /* Get the CPU Vendor */
+    BlArchCpuId(0, 0, CpuInfo);
+    Temp = CpuInfo[2];
+    CpuInfo[2] = CpuInfo[3];
+    CpuInfo[3] = Temp;
+
+    /* Check against supported values */
+    if (!strncmp((PCHAR)&CpuInfo[1], "GenuineIntel", 12))
+    {
+        return CPU_INTEL;
+    }
+    if (!strncmp((PCHAR)&CpuInfo[1], "AuthenticAMD", 12))
+    {
+        return CPU_AMD;
+    }
+    if (!strncmp((PCHAR)&CpuInfo[1], "CentaurHauls", 12))
+    {
+        return CPU_VIA;
+    }
+    if (!strncmp((PCHAR)&CpuInfo[1], "CyrixInstead", 12))
+    {
+        return CPU_CYRIX;
+    }
+    if (!strncmp((PCHAR)&CpuInfo[1], "GenuineTMx86", 12))
+    {
+        return CPU_TRANSMETA;
+    }
+    if (!strncmp((PCHAR)&CpuInfo[1], "RiseRiseRise", 12))
+    {
+        return CPU_RISE;
+    }
+
+    /* Other */
+    return CPU_UNKNOWN;
+}
