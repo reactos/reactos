@@ -5,22 +5,28 @@
 
 #define _MI_PAGING_LEVELS                   4
 
-/* Memory layout base addresses */
+/* Memory layout base addresses (This is based on Vista!) */
 #define MI_USER_PROBE_ADDRESS           (PVOID)0x000007FFFFFF0000ULL
 #define MI_DEFAULT_SYSTEM_RANGE_START   (PVOID)0xFFFF080000000000ULL
 #define MI_REAL_SYSTEM_RANGE_START             0xFFFF800000000000ULL
-#define HYPER_SPACE                            0xFFFFF70000000000ULL
+//#define MI_PAGE_TABLE_BASE                   0xFFFFF68000000000ULL // 512 GB page tables
+#define HYPER_SPACE                            0xFFFFF70000000000ULL // 512 GB hyper space [MiVaProcessSpace]
 #define HYPER_SPACE_END                        0xFFFFF77FFFFFFFFFULL
-#define MI_SYSTEM_CACHE_WS_START               0xFFFFF78000001000ULL
-#define MI_PAGED_POOL_START             (PVOID)0xFFFFF8A000000000ULL
-//#define MI_PAGED_POOL_END                      0xFFFFF8BFFFFFFFFFULL
-//#define MI_SESSION_SPACE_START                 0xFFFFF90000000000ULL
+//#define MI_SHARED_SYSTEM_PAGE                0xFFFFF78000000000ULL
+#define MI_SYSTEM_CACHE_WS_START               0xFFFFF78000001000ULL // 512 GB - 4 KB system cache working set
+//#define MI_LOADER_MAPPINGS                   0xFFFFF80000000000ULL // 512 GB loader mappings aka KSEG0_BASE (NDK) [MiVaBootLoaded]
+#define MM_SYSTEM_SPACE_START                  0xFFFFF88000000000ULL // 128 GB system PTEs [MiVaSystemPtes]
+#define MI_DEBUG_MAPPING                (PVOID)0xFFFFF89FFFFFF000ULL // FIXME should be allocated from System PTEs
+#define MI_PAGED_POOL_START             (PVOID)0xFFFFF8A000000000ULL // 128 GB paged pool [MiVaPagedPool]
+//#define MI_PAGED_POOL_END                    0xFFFFF8BFFFFFFFFFULL
+//#define MI_SESSION_SPACE_START               0xFFFFF90000000000ULL // 512 GB session space [MiVaSessionSpace]
 #define MI_SESSION_VIEW_END                    0xFFFFF97FFF000000ULL
 #define MI_SESSION_SPACE_END                   0xFFFFF97FFFFFFFFFULL
-#define MM_SYSTEM_SPACE_START                  0xFFFFF98000000000ULL
-#define MI_PFN_DATABASE                        0xFFFFFA8000000000ULL
-#define MI_DEBUG_MAPPING                (PVOID)0xFFFFFFFF80000000ULL // FIXME
+#define MI_SYSTEM_CACHE_START                  0xFFFFF98000000000ULL // 1 TB system cache (on Vista+ this is dynamic VA space) [MiVaSystemCache,MiVaSpecialPoolPaged,MiVaSpecialPoolNonPaged]
+#define MI_SYSTEM_CACHE_END                    0xFFFFFA7FFFFFFFFFULL
+#define MI_PFN_DATABASE                        0xFFFFFA8000000000ULL // up to 5.5 TB PFN database followed by non paged pool [MiVaPfnDatabase/MiVaNonPagedPool]
 #define MI_NONPAGED_POOL_END            (PVOID)0xFFFFFFFFFFBFFFFFULL
+//#define MM_HAL_VA_START                      0xFFFFFFFFFFC00000ULL // 4 MB HAL mappings, defined in NDK [MiVaHal]
 #define MI_HIGHEST_SYSTEM_ADDRESS       (PVOID)0xFFFFFFFFFFFFFFFFULL
 #define MmSystemRangeStart              ((PVOID)MI_REAL_SYSTEM_RANGE_START)
 
