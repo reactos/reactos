@@ -173,6 +173,7 @@ public:
                 pSize->cx += TRAY_NOTIFY_WND_SPACING_X + szTrayClockMin.cx;
 
             pSize->cx += szTray.cx;
+            pSize->cx += ContentMargin.cxLeftWidth + ContentMargin.cxRightWidth;
         }
         else
         {
@@ -182,10 +183,8 @@ public:
                 pSize->cy += TRAY_NOTIFY_WND_SPACING_Y + szTrayClockMin.cy;
 
             pSize->cy += szTray.cy;
+            pSize->cy += ContentMargin.cyTopHeight + ContentMargin.cyBottomHeight;
         }
-
-        pSize->cy += ContentMargin.cyTopHeight + ContentMargin.cyBottomHeight;
-        pSize->cx += ContentMargin.cxLeftWidth + ContentMargin.cxRightWidth;
 
         return TRUE;
     }
