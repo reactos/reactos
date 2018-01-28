@@ -200,17 +200,6 @@ typedef struct _ROS_VACB
     /* Pointer to the next VACB in a chain. */
 } ROS_VACB, *PROS_VACB;
 
-typedef struct _ROS_DEFERRED_WRITE_CONTEXT
-{
-    LIST_ENTRY CcDeferredWritesEntry;
-    PFILE_OBJECT FileObject;
-    PCC_POST_DEFERRED_WRITE PostRoutine;
-    PVOID Context1;
-    PVOID Context2;
-    ULONG BytesToWrite;
-    BOOLEAN Retrying;
-} ROS_DEFERRED_WRITE_CONTEXT, *PROS_DEFERRED_WRITE_CONTEXT;
-
 typedef struct _INTERNAL_BCB
 {
     /* Lock */
@@ -221,6 +210,8 @@ typedef struct _INTERNAL_BCB
     BOOLEAN Pinned;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
 } INTERNAL_BCB, *PINTERNAL_BCB;
+
+#define NODE_TYPE_DEFERRED_WRITE 0x02FC
 
 VOID
 NTAPI

@@ -362,13 +362,14 @@ CciLazyWriter(PVOID Unused)
         ListEntry = ExInterlockedRemoveHeadList(&CcDeferredWrites, &CcDeferredWriteSpinLock);
         if (ListEntry != NULL)
         {
-            PROS_DEFERRED_WRITE_CONTEXT Context;
+            PDEFERRED_WRITE Context;
 
             /* Extract the context */
-            Context = CONTAINING_RECORD(ListEntry, ROS_DEFERRED_WRITE_CONTEXT, CcDeferredWritesEntry);
+            Context = CONTAINING_RECORD(ListEntry, DEFERRED_WRITE, DeferredWriteLinks);
+            ASSERT(Context->NodeTypeCode == NODE_TYPE_DEFERRED_WRITE);
 
             /* Can we write now? */
-            if (CcCanIWrite(Context->FileObject, Context->BytesToWrite, FALSE, Context->Retrying))
+            if (CcCanIWrite(Context->FileObject, Context->BytesToWrite, FALSE, TRUE))
             {
                 /* Yes! Do it, and destroy the associated context */
                 Context->PostRoutine(Context->Context1, Context->Context2);
@@ -381,7 +382,7 @@ CciLazyWriter(PVOID Unused)
                  * It's better than nothing!
                  */
                 ExInterlockedInsertTailList(&CcDeferredWrites,
-                                            &Context->CcDeferredWritesEntry,
+                                            &Context->DeferredWriteLinks,
                                             &CcDeferredWriteSpinLock);
             }
         }
