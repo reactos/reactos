@@ -508,9 +508,11 @@ LanguagePage(PINPUT_RECORD Ir)
     SetConsoleCodePage();
     UpdateKBLayout();
 
-    /* If there's just a single language in the list skip
-     * the language selection process altogether! */
-    if (GenericListHasSingleEntry(LanguageList))
+    /*
+     * If there is no language or just a single one in the list,
+     * skip the language selection process altogether.
+     */
+    if (GetNumberOfListEntries(LanguageList) <= 1)
     {
         USetupData.LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
         return WELCOME_PAGE;
@@ -564,9 +566,8 @@ LanguagePage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
-            //
-            // FIXME: That stuff crashes when the list is empty!!
-            //
+            ASSERT(GetNumberOfListEntries(LanguageList) >= 1);
+
             SelectedLanguageId =
                 ((PGENENTRY)GetListEntryData(GetCurrentListEntry(LanguageList)))->Id;
 
@@ -591,9 +592,8 @@ LanguagePage(PINPUT_RECORD Ir)
 
         if (RefreshPage)
         {
-            //
-            // FIXME: That stuff crashes when the list is empty!!
-            //
+            ASSERT(GetNumberOfListEntries(LanguageList) >= 1);
+
             NewLanguageId =
                 ((PGENENTRY)GetListEntryData(GetCurrentListEntry(LanguageList)))->Id;
 
@@ -897,6 +897,11 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
     NtOsInstallsList = CreateNTOSInstallationsList(PartitionList);
     if (!NtOsInstallsList)
         DPRINT1("Failed to get a list of NTOS installations; continue installation...\n");
+
+    /*
+     * If there is no available installation (or just a single one??) that can
+     * be updated in the list, just continue with the regular installation.
+     */
     if (!NtOsInstallsList || GetNumberOfListEntries(NtOsInstallsList) == 0)
     {
         RepairUpdateFlag = FALSE;
@@ -961,9 +966,8 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
             if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'U')  /* U */
             {
                 /* Retrieve the current installation */
-                //
-                // FIXME: That stuff crashes when the list is empty!!
-                //
+                ASSERT(GetNumberOfListEntries(NtOsInstallsList) >= 1);
+
                 CurrentInstallation =
                     (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(NtOsInstallsList));
 

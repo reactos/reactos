@@ -761,10 +761,7 @@ ProcessComputerFiles(
 
     Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
-    {
-        DPRINT("GetCurrentListEntry() failed\n");
         return FALSE;
-    }
 
     RtlStringCchPrintfW(SectionName, ARRAYSIZE(SectionName),
                         L"Files.%s", ((PGENENTRY)GetListEntryData(Entry))->Id);
@@ -794,10 +791,7 @@ ProcessDisplayRegistry(
 
     Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
-    {
-        DPRINT1("GetCurrentListEntry() failed\n");
         return FALSE;
-    }
 
     if (!SetupFindFirstLineW(InfFile, L"Display",
                              ((PGENENTRY)GetListEntryData(Entry))->Id,

@@ -66,8 +66,4 @@ ULONG
 GetNumberOfListEntries(
     IN PGENERIC_LIST List);
 
-BOOLEAN
-GenericListHasSingleEntry(
-    IN PGENERIC_LIST List);
-
 /* EOF */
