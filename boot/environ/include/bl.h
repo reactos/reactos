@@ -1666,7 +1666,7 @@ VOID
 BlArchCpuId (
     _In_ ULONG Function,
     _In_ ULONG SubFunction,
-    _Out_ INT* Result
+    _Out_ PCPU_INFO Result
     );
 
 CPU_VENDORS

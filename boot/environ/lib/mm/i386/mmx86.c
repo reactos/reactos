@@ -1101,7 +1101,7 @@ MmArchInitialize (
 {
     NTSTATUS Status;
     ULONGLONG IncreaseUserVa, PerfCounter, CpuRandom;
-    INT CpuInfo[4];
+    CPU_INFO CpuInfo;
 
     /* For phase 2, just map deferred regions */
     if (Phase != 1)
@@ -1157,10 +1157,10 @@ MmArchInitialize (
             if (BlArchIsCpuIdFunctionSupported(1))
             {
                 /* Call it */
-                BlArchCpuId(1, 0, CpuInfo);
+                BlArchCpuId(1, 0, &CpuInfo);
 
                 /* Check if RDRAND is supported */
-                if (CpuInfo[2] & 0x40000000)
+                if (CpuInfo.Ecx & 0x40000000)
                 {
                     EfiPrintf(L"Your CPU can do RDRAND! Good for you!\r\n");
                     CpuRandom = 0;

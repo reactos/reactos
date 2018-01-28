@@ -9783,24 +9783,26 @@ OslpMain (
     _Out_ PULONG ReturnFlags
     )
 {
-    INT CpuInfo[4];
-    BOOLEAN NxDisabled;
+    CPU_INFO CpuInfo;
+    BOOLEAN NxEnabled;
     NTSTATUS Status;
     BOOLEAN ExecuteJump;
+    LARGE_INTEGER miscMsr;
 
     /* Check if the CPU supports NX */
-    BlArchCpuId(0x80000001, 0, CpuInfo);
-    if (!(CpuInfo[3] & 0x10000))
+    BlArchCpuId(0x80000001, 0, &CpuInfo);
+    if (!(CpuInfo.Edx & 0x10000))
     {
         /* It doesn't, check if this is Intel */
-        EfiPrintf(L"NX disabled: %d\r\n");
+        EfiPrintf(L"NX disabled: %lx\r\n", CpuInfo.Edx);
         if (BlArchGetCpuVendor() == CPU_INTEL)
         {
-            /* Then turn off the MSR feature for it */
-            EfiPrintf(L"NX being turned off\r\n");
-            __writemsr(MSR_IA32_MISC_ENABLE,
-                       __readmsr(MSR_IA32_MISC_ENABLE) & MSR_XD_ENABLE_MASK);
-            NxDisabled = TRUE;
+            /* Then turn off the MSR disable feature for it, enabling NX */
+            EfiPrintf(L"NX being turned on\r\n");
+            miscMsr.QuadPart = __readmsr(MSR_IA32_MISC_ENABLE);
+            miscMsr.HighPart &= MSR_XD_ENABLE_MASK;
+            __writemsr(MSR_IA32_MISC_ENABLE, miscMsr.QuadPart);
+            NxEnabled = TRUE;
         }
     }
 
@@ -9818,12 +9820,13 @@ OslpMain (
     /* Retore NX support */
     __writemsr(MSR_EFER, __readmsr(MSR_EFER) ^ MSR_NXE);
 
-    /* Did we disable NX? */
-    if (NxDisabled)
+    /* Did we manually enable NX? */
+    if (NxEnabled)
     {
-        /* Turn it back on */
-        __writemsr(MSR_IA32_MISC_ENABLE,
-                   __readmsr(MSR_IA32_MISC_ENABLE) | ~MSR_XD_ENABLE_MASK);
+        /* Turn it back off */
+        miscMsr.QuadPart = __readmsr(MSR_IA32_MISC_ENABLE);
+        miscMsr.HighPart |= ~MSR_XD_ENABLE_MASK;
+        __writemsr(MSR_IA32_MISC_ENABLE, miscMsr.QuadPart);
     }
 
     /* Go back */
@@ -9853,7 +9856,7 @@ OslMain (
     NTSTATUS Status;
     PBL_RETURN_ARGUMENTS ReturnArguments;
     PBL_APPLICATION_ENTRY AppEntry;
-    INT CpuInfo[4];
+    CPU_INFO CpuInfo;
     ULONG Flags;
 #ifdef DRAW_LOGO
     EFI_GRAPHICS_OUTPUT_BLT_PIXEL* gopBlt;
@@ -9887,10 +9890,10 @@ OslMain (
     if (BlArchIsCpuIdFunctionSupported(1))
     {
         /* Query CPU features */
-        BlArchCpuId(1, 0, CpuInfo);
+        BlArchCpuId(1, 0, &CpuInfo);
 
         /* Check if PAE is supported */
-        if (CpuInfo[4] & 0x40)
+        if (CpuInfo.Edx & 0x40)
         {
             EfiPrintf(L"PAE Supported, but won't be used\r\n");
         }
