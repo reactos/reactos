@@ -1335,12 +1335,13 @@ PdoStartDevice(
 
     /* TODO: Assign the other resources we get to the card */
 
-    for (i = 0; i < RawResList->Count; i++)
+    RawFullDesc = &RawResList->List[0];
+    for (i = 0; i < RawResList->Count; i++, RawFullDesc = CmiGetNextResourceDescriptor(RawFullDesc))
     {
-        RawFullDesc = &RawResList->List[i];
-
         for (ii = 0; ii < RawFullDesc->PartialResourceList.Count; ii++)
         {
+            /* Partial resource descriptors can be of variable size (CmResourceTypeDeviceSpecific),
+               but only one is allowed and it must be the last one in the list! */
             RawPartialDesc = &RawFullDesc->PartialResourceList.PartialDescriptors[ii];
 
             if (RawPartialDesc->Type == CmResourceTypeInterrupt)
