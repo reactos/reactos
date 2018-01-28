@@ -47,7 +47,6 @@ class CTrayClockWnd :
     public CWindowImpl < CTrayClockWnd, CWindow, CControlWinTraits >,
     public IOleWindow
 {
-    HWND hWndNotify;
     HFONT hFont;
     COLORREF textColor;
     RECT rcText;
@@ -659,19 +658,29 @@ LRESULT CTrayClockWnd::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    BOOL bRealign = FALSE;
+
     TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
     if (newSettings->bShowSeconds != g_TaskbarSettings.bShowSeconds)
     {
         g_TaskbarSettings.bShowSeconds = newSettings->bShowSeconds;
-        /* TODO: Toggle showing seconds */
+        bRealign = TRUE;
     }
 
     if (newSettings->sr.HideClock != g_TaskbarSettings.sr.HideClock)
     {
         g_TaskbarSettings.sr.HideClock = newSettings->sr.HideClock;
-        /* TODO: Toggle hiding the clock */
+        ShowWindow(g_TaskbarSettings.sr.HideClock ? SW_HIDE : SW_SHOW);
+        bRealign = TRUE;
     }
 
+    if (bRealign)
+    {
+        /* Ask the parent to resize */
+        NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
+        GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
+        Update();
+    }
     return 0;
 }
 
@@ -679,6 +688,7 @@ LRESULT CTrayClockWnd::OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lPar
 {
     if (IsWindowVisible())
     {
+        /* We get all WM_NCLBUTTONDBLCLK for the taskbar so we need to check if it is on the clock*/
         RECT rcClock;
         if (GetWindowRect(&rcClock))
         {
