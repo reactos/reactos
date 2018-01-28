@@ -218,28 +218,28 @@ public:
                 szClock.cx,
                 szClock.cy,
                 SWP_NOZORDER);
-
-            POINT ptPager;
-
-            if (IsHorizontal)
-            {
-                ptPager.x = ContentMargin.cxLeftWidth;
-                ptPager.y = (pszClient->cy - szTrayNotify.cy)/2;
-            }
-            else
-            {
-                ptPager.x = (pszClient->cx - szTrayNotify.cx)/2;
-                ptPager.y = ContentMargin.cyTopHeight;
-            }
-
-            ::SetWindowPos(m_hwndPager,
-                NULL,
-                ptPager.x,
-                ptPager.y,
-                szTrayNotify.cx,
-                szTrayNotify.cy,
-                SWP_NOZORDER);
         }
+
+        POINT ptPager;
+
+        if (IsHorizontal)
+        {
+            ptPager.x = ContentMargin.cxLeftWidth;
+            ptPager.y = (pszClient->cy - szTrayNotify.cy)/2;
+        }
+        else
+        {
+            ptPager.x = (pszClient->cx - szTrayNotify.cx)/2;
+            ptPager.y = ContentMargin.cyTopHeight;
+        }
+
+        ::SetWindowPos(m_hwndPager,
+            NULL,
+            ptPager.x,
+            ptPager.y,
+            szTrayNotify.cx,
+            szTrayNotify.cy,
+            SWP_NOZORDER);
     }
 
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
