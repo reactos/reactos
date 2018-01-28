@@ -247,7 +247,10 @@ CcSetDirtyPinnedData (
         Bcb, Lsn);
 
     iBcb->Dirty = TRUE;
-    CcRosMarkDirtyVacb(iBcb->Vacb);
+    if (!iBcb->Vacb->Dirty)
+    {
+        CcRosMarkDirtyVacb(iBcb->Vacb);
+    }
 }
 
 
@@ -284,14 +287,14 @@ CcUnpinDataForThread (
         iBcb->Vacb->PinCount--;
     }
 
-    CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
-                     iBcb->Vacb,
-                     TRUE,
-                     iBcb->Dirty,
-                     FALSE);
-
     if (--iBcb->RefCount == 0)
     {
+        CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
+                         iBcb->Vacb,
+                         TRUE,
+                         iBcb->Dirty,
+                         FALSE);
+
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
     }

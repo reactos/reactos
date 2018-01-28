@@ -99,6 +99,7 @@ static void CcRosVacbIncRefCount_(PROS_VACB vacb, const char* file, int line)
 static void CcRosVacbDecRefCount_(PROS_VACB vacb, const char* file, int line)
 {
     --vacb->ReferenceCount;
+    ASSERT(!(vacb->ReferenceCount == 0 && vacb->Dirty));
     if (vacb->SharedCacheMap->Trace)
     {
         DbgPrint("(%s:%i) VACB %p --RefCount=%lu, Dirty %u, PageOut %lu\n",
@@ -518,8 +519,6 @@ CcRosReleaseVacb (
     BOOLEAN Dirty,
     BOOLEAN Mapped)
 {
-    BOOLEAN WasDirty;
-
     ASSERT(SharedCacheMap);
 
     DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p, Valid %u)\n",
@@ -527,17 +526,9 @@ CcRosReleaseVacb (
 
     Vacb->Valid = Valid;
 
-    WasDirty = FALSE;
-    if (Dirty)
+    if (Dirty && !Vacb->Dirty)
     {
-        if (!Vacb->Dirty)
-        {
-            CcRosMarkDirtyVacb(Vacb);
-        }
-        else
-        {
-            WasDirty = TRUE;
-        }
+        CcRosMarkDirtyVacb(Vacb);
     }
 
     if (Mapped)
@@ -546,10 +537,6 @@ CcRosReleaseVacb (
     }
     CcRosVacbDecRefCount(Vacb);
     if (Mapped && (Vacb->MappedCount == 1))
-    {
-        CcRosVacbIncRefCount(Vacb);
-    }
-    if (!WasDirty && Vacb->Dirty)
     {
         CcRosVacbIncRefCount(Vacb);
     }
@@ -618,16 +605,12 @@ CcRosMarkDirtyVacb (
     KeAcquireGuardedMutex(&ViewLock);
     KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
 
-    if (!Vacb->Dirty)
-    {
-        InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-        CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-        Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-    }
-    else
-    {
-        CcRosVacbDecRefCount(Vacb);
-    }
+    ASSERT(!Vacb->Dirty);
+
+    InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
+    CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+    Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+    CcRosVacbIncRefCount(Vacb);
 
     /* Move to the tail of the LRU list */
     RemoveEntryList(&Vacb->VacbLruListEntry);
@@ -658,7 +641,10 @@ CcRosMarkDirtyFile (
         KeBugCheck(CACHE_MANAGER);
     }
 
-    CcRosMarkDirtyVacb(Vacb);
+    if (!Vacb->Dirty)
+    {
+        CcRosMarkDirtyVacb(Vacb);
+    }
 
     CcRosReleaseVacbLock(Vacb);
 
@@ -673,7 +659,6 @@ CcRosUnmapVacb (
     BOOLEAN NowDirty)
 {
     PROS_VACB Vacb;
-    BOOLEAN WasDirty;
 
     ASSERT(SharedCacheMap);
 
@@ -686,26 +671,14 @@ CcRosUnmapVacb (
         return STATUS_UNSUCCESSFUL;
     }
 
-    WasDirty = FALSE;
-    if (NowDirty)
+    if (NowDirty && !Vacb->Dirty)
     {
-        if (!Vacb->Dirty)
-        {
-            CcRosMarkDirtyVacb(Vacb);
-        }
-        else
-        {
-            WasDirty = TRUE;
-        }
+        CcRosMarkDirtyVacb(Vacb);
     }
 
     Vacb->MappedCount--;
 
     CcRosVacbDecRefCount(Vacb);
-    if (!WasDirty && NowDirty)
-    {
-        CcRosVacbIncRefCount(Vacb);
-    }
     if (Vacb->MappedCount == 0)
     {
         CcRosVacbDecRefCount(Vacb);
