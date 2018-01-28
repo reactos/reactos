@@ -332,19 +332,18 @@ CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
  */
 
 /* TrayClockWnd */
-#define TCWM_GETMINIMUMSIZE (WM_USER + 0x100)
-#define TCWM_UPDATETIME     (WM_USER + 0x101)
+HRESULT CTrayClockWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
 
 /* TrayNotifyWnd */
 #define TNWM_GETMINIMUMSIZE (WM_USER + 0x100)
-#define TNWM_SHOWTRAY       (WM_USER + 0x103)
 #define TNWM_CHANGETRAYPOS  (WM_USER + 0x104)
 
 #define NTNWM_REALIGN   (0x1)
 
-class CTrayNotifyWnd;
+HRESULT CTrayNotifyWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
 
-HWND CreateTrayNotifyWnd(IN HWND hwndParent, CTrayNotifyWnd** ppinstance);
+/* SysPagerWnd */
+HRESULT CSysPagerWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
 
 /*
  * taskswnd.c
@@ -353,25 +352,12 @@ HWND CreateTrayNotifyWnd(IN HWND hwndParent, CTrayNotifyWnd** ppinstance);
 #define TSWM_ENABLEGROUPING     (WM_USER + 1)
 #define TSWM_UPDATETASKBARPOS   (WM_USER + 2)
 
-HWND
-CreateTaskSwitchWnd(IN HWND hWndParent, IN OUT ITrayWindow *Tray);
+HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv);
 
 HRESULT
 Tray_OnStartMenuDismissed(ITrayWindow* Tray);
 
 HRESULT
 IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2);
-
-/*
-* syspager.c
-*/
-
-#include "syspager.h"
-
-/*
-* trayclock.c
-*/
-
-#include "trayclock.h"
 
 #endif /* _EXPLORER_PRECOMP__H_ */

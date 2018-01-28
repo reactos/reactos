@@ -193,7 +193,10 @@ public:
 };
 
 class CTaskSwitchWnd :
-    public CWindowImpl < CTaskSwitchWnd, CWindow, CControlWinTraits >
+    public CComCoClass<CTaskSwitchWnd>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public CWindowImpl < CTaskSwitchWnd, CWindow, CControlWinTraits >,
+    public IOleWindow
 {
     CTaskToolbar m_TaskBar;
 
@@ -1827,6 +1830,29 @@ public:
         return 0;
     }
 
+    HRESULT Initialize(IN HWND hWndParent, IN OUT ITrayWindow *tray)
+    {
+        m_Tray = tray;
+        m_IsGroupingEnabled = TRUE; /* FIXME */
+        Create(hWndParent, 0, szRunningApps, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP);
+        if (!m_hWnd)
+            return E_FAIL;
+        return S_OK;
+    }
+
+    HRESULT WINAPI GetWindow(HWND* phwnd)
+    {
+        if (!phwnd)
+            return E_INVALIDARG;
+        *phwnd = m_hWnd;
+        return S_OK;
+    }
+
+    HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode)
+    {
+        return E_NOTIMPL;
+    }
+
     DECLARE_WND_CLASS_EX(szTaskSwitchWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTaskSwitchWnd)
@@ -1850,21 +1876,15 @@ public:
         MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
     END_MSG_MAP()
 
-    HWND _Init(IN HWND hWndParent, IN OUT ITrayWindow *tray)
-    {
-        m_Tray = tray;
-        m_IsGroupingEnabled = TRUE; /* FIXME */
-        return Create(hWndParent, 0, szRunningApps, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP);
-    }
+    DECLARE_NOT_AGGREGATABLE(CTaskSwitchWnd)
+
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    BEGIN_COM_MAP(CTaskSwitchWnd)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+    END_COM_MAP()
 };
 
-HWND
-CreateTaskSwitchWnd(IN HWND hWndParent, IN OUT ITrayWindow *Tray)
+HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv)
 {
-    CTaskSwitchWnd * instance;
-
-    // TODO: Destroy after the window is destroyed
-    instance = new CTaskSwitchWnd();
-
-    return instance->_Init(hWndParent, Tray);
+    return ShellObjectCreatorInit<CTaskSwitchWnd>(hWndParent, Tray, riid, ppv);
 }

@@ -31,11 +31,16 @@ static const WCHAR szTrayNotifyWndClass [] = TEXT("TrayNotifyWnd");
 #define TRAY_NOTIFY_WND_SPACING_Y   1
 
 class CTrayNotifyWnd :
+    public CComCoClass<CTrayNotifyWnd>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public CWindowImpl < CTrayNotifyWnd, CWindow, CControlWinTraits >
+    public CWindowImpl < CTrayNotifyWnd, CWindow, CControlWinTraits >,
+    public IOleWindow
 {
-    CSysPagerWnd * m_pager;
-    CTrayClockWnd * m_clock;
+    CComPtr<IUnknown> m_clock;
+    CComPtr<IUnknown> m_pager;
+
+    HWND m_hwndClock;
+    HWND m_hwndPager;
 
     HTHEME TrayTheme;
     SIZE szTrayClockMin;
@@ -45,8 +50,8 @@ class CTrayNotifyWnd :
 
 public:
     CTrayNotifyWnd() :
-        m_pager(NULL),
-        m_clock(NULL),
+        m_hwndClock(NULL),
+        m_hwndPager(NULL),
         TrayTheme(NULL),
         IsHorizontal(FALSE)
     {
@@ -98,11 +103,23 @@ public:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        m_clock = new CTrayClockWnd();
-        m_clock->_Init(m_hWnd);
+        HRESULT hr;
 
-        m_pager = new CSysPagerWnd();
-        m_pager->_Init(m_hWnd);
+        hr = CTrayClockWnd_CreateInstance(m_hWnd, IID_PPV_ARG(IUnknown, &m_clock));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
+
+        hr = IUnknown_GetWindow(m_clock, &m_hwndClock);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
+
+        hr = CSysPagerWnd_CreateInstance(m_hWnd, IID_PPV_ARG(IUnknown, &m_pager));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
+
+        hr = IUnknown_GetWindow(m_pager, &m_hwndPager);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
 
         return TRUE;
     }
@@ -127,7 +144,7 @@ public:
                     goto NoClock;
             }
 
-            m_clock->SendMessage(TCWM_GETMINIMUMSIZE, (WPARAM) IsHorizontal, (LPARAM) &szClock);
+            ::SendMessage(m_hwndClock, TNWM_GETMINIMUMSIZE, (WPARAM) IsHorizontal, (LPARAM) &szClock);
 
             szTrayClockMin = szClock;
         }
@@ -144,7 +161,7 @@ public:
             szTray.cx = pSize->cx - 2 * TRAY_NOTIFY_WND_SPACING_X;
         }
 
-        m_pager->GetSize(IsHorizontal, &szTray);
+        ::SendMessage(m_hwndPager, TNWM_GETMINIMUMSIZE, (WPARAM) IsHorizontal, (LPARAM) &szTray);
 
         szTrayNotify = szTray;
 
@@ -195,7 +212,7 @@ public:
                 szClock.cy = szTrayClockMin.cy;
             }
 
-            m_clock->SetWindowPos(
+            ::SetWindowPos(m_hwndClock,
                 NULL,
                 ptClock.x,
                 ptClock.y,
@@ -216,7 +233,7 @@ public:
                 ptPager.y = ContentMargin.cyTopHeight;
             }
 
-            m_pager->SetWindowPos(
+            ::SetWindowPos(m_hwndPager,
                 NULL,
                 ptPager.x,
                 ptPager.y,
@@ -287,16 +304,12 @@ public:
 
     LRESULT OnClockMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (m_clock != NULL)
-            return m_clock->SendMessageW(uMsg, wParam, lParam);
-        return TRUE;
+        return SendMessageW(m_hwndClock, uMsg, wParam, lParam);
     }
 
     LRESULT OnPagerMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (m_pager)
-            return m_pager->SendMessage(uMsg, wParam, lParam);
-        return TRUE;
+        return SendMessageW(m_hwndPager, uMsg, wParam, lParam);
     }
 
     LRESULT OnRealign(INT uCode, LPNMHDR hdr, BOOL& bHandled)
@@ -304,6 +317,26 @@ public:
         hdr->hwndFrom = m_hWnd;
         return GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM)hdr);
     }
+
+    HRESULT WINAPI GetWindow(HWND* phwnd)
+    {
+        if (!phwnd)
+            return E_INVALIDARG;
+        *phwnd = m_hWnd;
+        return S_OK;
+    }
+
+    HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode)
+    {
+        return E_NOTIMPL;
+    }
+
+    DECLARE_NOT_AGGREGATABLE(CTrayNotifyWnd)
+
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    BEGIN_COM_MAP(CTrayNotifyWnd)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+    END_COM_MAP()
 
     DECLARE_WND_CLASS_EX(szTrayNotifyWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
@@ -323,18 +356,17 @@ public:
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
     END_MSG_MAP()
 
-    HWND _Init(IN HWND hwndParent)
+    HRESULT Initialize(IN HWND hwndParent)
     {
         DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-        return Create(hwndParent, 0, NULL, dwStyle, WS_EX_STATICEDGE);
+        Create(hwndParent, 0, NULL, dwStyle, WS_EX_STATICEDGE);
+        if (!m_hWnd)
+            return E_FAIL;
+        return S_OK;
     }
 };
 
-HWND CreateTrayNotifyWnd(IN HWND hwndParent, CTrayNotifyWnd** ppinstance)
+HRESULT CTrayNotifyWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv)
 {
-    CTrayNotifyWnd * pTrayNotify = new CTrayNotifyWnd();
-    // TODO: Destroy after the window is destroyed
-    *ppinstance = pTrayNotify;
-
-    return pTrayNotify->_Init(hwndParent);
+    return ShellObjectCreatorInit<CTrayNotifyWnd>(hwndParent, riid, ppv);
 }

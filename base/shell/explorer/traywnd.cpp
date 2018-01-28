@@ -209,7 +209,7 @@ class CTrayWindow :
     HWND m_TaskSwitch;
     HWND m_TrayNotify;
 
-    CTrayNotifyWnd* m_TrayNotifyInstance;
+    CComPtr<IUnknown> m_TrayNotifyInstance;
 
     DWORD    m_Position;
     HMONITOR m_Monitor;
@@ -2048,6 +2048,11 @@ ChangePos:
         if (FAILED_UNEXPECTEDLY(hRet))
             return FALSE;
 
+        /* Create the tray notification window */
+        hRet = CTrayNotifyWnd_CreateInstance(m_hWnd, IID_PPV_ARG(IUnknown, &m_TrayNotifyInstance));
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return FALSE;
+
         /* Get the hwnd of the rebar */
         hRet = IUnknown_GetWindow(m_TrayBandSite, &m_Rebar);
         if (FAILED_UNEXPECTEDLY(hRet))
@@ -2058,10 +2063,12 @@ ChangePos:
         if (FAILED_UNEXPECTEDLY(hRet))
             return FALSE;
 
-        SetWindowTheme(m_Rebar, L"TaskBar", NULL);
+        /* Get the hwnd of the tray notification window */
+        hRet = IUnknown_GetWindow(m_TrayNotifyInstance, &m_TrayNotify);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return FALSE;
 
-        /* Create the tray notification window */
-        m_TrayNotify = CreateTrayNotifyWnd(m_hWnd, &m_TrayNotifyInstance);
+        SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
         UpdateFonts();
 
