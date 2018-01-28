@@ -12,13 +12,15 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Icons */
-IDI_MAIN    ICON "res/setup.ico"
-IDI_ROSICON ICON "res/roslogo.ico"
-IDI_WINICON ICON "res/winlogo.ico"
+IDI_MAIN        ICON "res/setup.ico"
+IDI_ROSICON     ICON "res/roslogo.ico"
+IDI_WINICON     ICON "res/winlogo.ico"
+IDI_DISKDRIVE   ICON "res/drive_disk.ico"
+IDI_PARTITION   ICON "res/partition.ico"
 
 /* Bitmaps */
-IDB_WATERMARK BITMAP "res/watermark.bmp"
-IDB_HEADER BITMAP "res/header.bmp"
+IDB_WATERMARK   BITMAP "res/watermark.bmp"
+IDB_HEADER      BITMAP "res/header.bmp"
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "reactos.exe.manifest"
 

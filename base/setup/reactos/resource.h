@@ -8,6 +8,8 @@
 #define IDI_MAIN            3000
 #define IDI_ROSICON         3001
 #define IDI_WINICON         3002
+#define IDI_DISKDRIVE       3003
+#define IDI_PARTITION       3004
 
 
 #define IDC_STATIC          -1
