@@ -13,6 +13,16 @@
 #include <debug.h>
 
 static
+ULONG
+IopGetDescriptorSize(
+    PCM_FULL_RESOURCE_DESCRIPTOR ResourceDescriptor)
+{
+    ULONG Count = ResourceDescriptor->PartialResourceList.Count;
+    return FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR,
+        PartialResourceList.PartialDescriptors[Count]);
+}
+
+static
 BOOLEAN
 IopCheckDescriptorForConflict(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc,
@@ -546,12 +556,17 @@ IopCheckResourceDescriptor(
     IN BOOLEAN Silent,
     OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor)
 {
-    ULONG i, ii;
+    ULONG i, ii, DescriptorSize;
     BOOLEAN Result = FALSE;
+    PCM_FULL_RESOURCE_DESCRIPTOR FullDesc;
 
+    FullDesc = &ResourceList->List[0];
     for (i = 0; i < ResourceList->Count; i++)
     {
-        PCM_PARTIAL_RESOURCE_LIST ResList = &ResourceList->List[i].PartialResourceList;
+        PCM_PARTIAL_RESOURCE_LIST ResList = &FullDesc->PartialResourceList;
+        DescriptorSize = IopGetDescriptorSize(FullDesc);
+        FullDesc = (PCM_FULL_RESOURCE_DESCRIPTOR)((PUCHAR)FullDesc + DescriptorSize);
+
         for (ii = 0; ii < ResList->Count; ii++)
         {
             PCM_PARTIAL_RESOURCE_DESCRIPTOR ResDesc2 = &ResList->PartialDescriptors[ii];
@@ -1182,12 +1197,17 @@ IopCheckForResourceConflict(
    IN BOOLEAN Silent,
    OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor)
 {
-   ULONG i, ii;
+   ULONG i, ii, DescriptorSize;
    BOOLEAN Result = FALSE;
+   PCM_FULL_RESOURCE_DESCRIPTOR FullDesc;
 
+   FullDesc = &ResourceList1->List[0];
    for (i = 0; i < ResourceList1->Count; i++)
    {
-      PCM_PARTIAL_RESOURCE_LIST ResList = &ResourceList1->List[i].PartialResourceList;
+      PCM_PARTIAL_RESOURCE_LIST ResList = &FullDesc->PartialResourceList;
+      DescriptorSize = IopGetDescriptorSize(FullDesc);
+      FullDesc = (PCM_FULL_RESOURCE_DESCRIPTOR)((PUCHAR)FullDesc + DescriptorSize);
+
       for (ii = 0; ii < ResList->Count; ii++)
       {
          PCM_PARTIAL_RESOURCE_DESCRIPTOR ResDesc = &ResList->PartialDescriptors[ii];
