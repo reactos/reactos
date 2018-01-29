@@ -70,6 +70,11 @@ MiInitSystemMemoryAreas(VOID)
     // Create all the static memory areas.
     //
 
+#ifdef _M_AMD64
+    // Reserved range FFFF800000000000 - FFFFF68000000000
+    MiCreateArm3StaticMemoryArea((PVOID)MI_REAL_SYSTEM_RANGE_START, PTE_BASE - MI_REAL_SYSTEM_RANGE_START, FALSE);
+#endif /* _M_AMD64 */
+
     // The loader mappings. The only Executable area.
     MiCreateArm3StaticMemoryArea((PVOID)KSEG0_BASE, MmBootImageSize, TRUE);
 
