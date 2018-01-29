@@ -469,7 +469,7 @@ elseif(ARCH STREQUAL "amd64")
         math/amd64/log.S
         math/amd64/log10.S
         math/amd64/pow.S
-        math/amd64/sqrt.S
+        # math/amd64/sqrt.S
         # math/amd64/sqrtf.S
         math/amd64/tan.S
         setjmp/amd64/setjmp.s)
