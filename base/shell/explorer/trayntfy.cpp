@@ -27,7 +27,7 @@
 
 static const WCHAR szTrayNotifyWndClass [] = TEXT("TrayNotifyWnd");
 
-#define TRAY_NOTIFY_WND_SPACING_X   0
+#define TRAY_NOTIFY_WND_SPACING_X   1
 #define TRAY_NOTIFY_WND_SPACING_Y   1
 
 class CTrayNotifyWnd :

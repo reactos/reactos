@@ -534,9 +534,7 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
         hPrevFont = (HFONT) SelectObject(hDC, hFont);
 
-        rcClient.left = (rcClient.right / 2) - (CurrentSize.cx / 2);
         rcClient.top = (rcClient.bottom / 2) - (CurrentSize.cy / 2);
-        rcClient.right = rcClient.left + CurrentSize.cx;
         rcClient.bottom = rcClient.top + CurrentSize.cy;
 
         for (i = 0, line = 0;
@@ -546,8 +544,7 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (LineSizes[i].cx != 0)
             {
                 TextOut(hDC,
-                    rcClient.left + (CurrentSize.cx / 2) - (LineSizes[i].cx / 2) +
-                    TRAY_CLOCK_WND_SPACING_X,
+                    (rcClient.right - LineSizes[i].cx) / 2,
                     rcClient.top + TRAY_CLOCK_WND_SPACING_Y,
                     szLines[i],
                     wcslen(szLines[i]));
