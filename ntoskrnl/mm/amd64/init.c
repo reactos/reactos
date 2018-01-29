@@ -424,8 +424,9 @@ MiSetupPfnForPageTable(
     Pfn->u2.ShareCount++;
 }
 
+static
 VOID
-NTAPI
+INIT_FUNCTION
 MiBuildPfnDatabaseFromPageTables(VOID)
 {
     PVOID Address = NULL;
@@ -525,15 +526,14 @@ MiBuildPfnDatabaseFromPageTables(VOID)
 }
 
 INIT_FUNCTION
+static
 VOID
-NTAPI
 MiAddDescriptorToDatabase(
     PFN_NUMBER BasePage,
     PFN_NUMBER PageCount,
     TYPE_OF_MEMORY MemoryType)
 {
     PMMPFN Pfn;
-    KIRQL OldIrql;
 
     ASSERT(!MiIsMemoryTypeInvisible(MemoryType));
 
@@ -543,22 +543,16 @@ MiAddDescriptorToDatabase(
         /* Get the last pfn of this descriptor. Note we loop backwards */
         Pfn = &MmPfnDatabase[BasePage + PageCount - 1];
 
-        /* Lock the PFN Database */
-        OldIrql = MiAcquirePfnLock();
-
         /* Loop all pages */
         while (PageCount--)
         {
             /* Add it to the free list */
-            Pfn->u3.e1.CacheAttribute = MiNonCached;
+            Pfn->u3.e1.CacheAttribute = MiNonCached; // FIXME: Windows ASSERTs MiChached, but why not MiNotMapped?
             MiInsertPageInFreeList(BasePage + PageCount);
 
             /* Go to the previous page */
             Pfn--;
         }
-
-        /* Release PFN database */
-        MiReleasePfnLock(OldIrql);
     }
     else if (MemoryType == LoaderXIPRom)
     {
@@ -589,8 +583,6 @@ MiAddDescriptorToDatabase(
     else
     {
         /* For now skip it */
-        DbgPrint("Skipping BasePage=0x%lx, PageCount=0x%lx, MemoryType=%lx\n",
-                 BasePage, PageCount, MemoryType);
         Pfn = &MmPfnDatabase[BasePage];
         while (PageCount--)
         {
@@ -611,6 +603,10 @@ MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
     PFN_NUMBER BasePage, PageCount;
+    KIRQL OldIrql;
+
+    /* Lock the PFN Database */
+    OldIrql = MiAcquirePfnLock();
 
     /* Map the PDEs and PPEs for the pfn database (ignore holes) */
 #if (_MI_PAGING_LEVELS >= 3)
@@ -668,6 +664,15 @@ MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Reset the descriptor back so we can create the correct memory blocks */
     *MxFreeDescriptor = MxOldFreeDescriptor;
+
+    /* Now process the page tables */
+    MiBuildPfnDatabaseFromPageTables();
+
+    /* PFNs are initialized now! */
+    MiPfnsInitialized = TRUE;
+
+    /* Release PFN database */
+    MiReleasePfnLock(OldIrql);
 }
 
 INIT_FUNCTION
@@ -675,6 +680,9 @@ NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    NTSTATUS Status;
+    ULONG Flags;
+
     ASSERT(MxPfnAllocation != 0);
 
     /* Set some hardcoded addresses */
@@ -701,14 +709,17 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Map the PFN database pages */
     MiBuildPfnDatabase(LoaderBlock);
 
-    /* Now process the page tables */
-    MiBuildPfnDatabaseFromPageTables();
-
-    /* PFNs are initialized now! */
-    MiPfnsInitialized = TRUE;
-
     /* Initialize the nonpaged pool */
     InitializePool(NonPagedPool, 0);
+
+    /* Initialize the bogus address space */
+    Flags = 0;
+    Status = MmInitializeProcessAddressSpace(PsGetCurrentProcess(), NULL, NULL, &Flags, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MmInitializeProcessAddressSpace(9 failed: 0x%lx\n", Status);
+        return Status;
+    }
 
     /* Initialize the balancer */
     MmInitializeBalancer((ULONG)MmAvailablePages, 0);
