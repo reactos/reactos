@@ -1818,7 +1818,7 @@ IopValidateID(IN PWCHAR Id,
       {
          *PtrSymbol = '_';
       }
-      else if (Symbol == '\')
+      else if (Symbol == '\\')
       {
          SeparatorsCount++;
 
