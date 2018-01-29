@@ -56,7 +56,7 @@ MENU_003 MENU
 BEGIN
     MENUITEM "撤消(&U)\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "剪下(&T)\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "剪切(&T)\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "复制(&C)\tCtrl+C", FCIDM_SHVIEW_COPY
     MENUITEM "粘贴(&P)\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "粘贴快捷方式(&S)", FCIDM_SHVIEW_INSERTLINK
@@ -238,7 +238,7 @@ BEGIN
     EDITTEXT 14015, 68, 128, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "属性：", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "只读模式(&R)", 14021, 56, 152, 70, 10
+    AUTOCHECKBOX "只读(&R)", 14021, 56, 152, 70, 10
     AUTOCHECKBOX "隐藏(&H)", 14022, 56, 166, 70, 10
     AUTOCHECKBOX "存档(&A)", 14023, 56, 180, 70, 10
     PUSHBUTTON "高级...(&D)", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -338,16 +338,16 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     GROUPBOX "查错", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "该选项将检查卷\n错误。", -1, 40, 25, 160, 20
-    PUSHBUTTON "现在检查...", 14000, 130, 45, 90, 15, WS_TABSTOP
+    LTEXT "该选项将检查卷\n中的错误。", -1, 40, 25, 160, 20
+    PUSHBUTTON "开始检查...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "碎片整理", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "此选项将对容量上的文件进行碎片整理", -1, 40, 85, 160, 20
-    PUSHBUTTON "立即进行碎片整理...", 14001, 130, 105, 90, 15, WS_TABSTOP
+    LTEXT "该选项将整理卷中的文件。", -1, 40, 85, 160, 20
+    PUSHBUTTON "开始整理...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "备份", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "此选项将备份卷上的文件。", -1, 40, 150, 160, 20
-    PUSHBUTTON "现在备份...", 14002, 130, 170, 90, 15, WS_TABSTOP
+    LTEXT "该选项将备份卷中的文件。", -1, 40, 150, 160, 20
+    PUSHBUTTON "开始备份...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
@@ -362,10 +362,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "运行方式"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "你想要使用来运行这个程序哪一个用户帐户？", -1, 10, 20, 220, 20
+    LTEXT "您想使用哪个用户帐户运行这个程序?", -1, 10, 20, 220, 20
     CHECKBOX "当前用户 %s", 14000, 10, 45, 150, 10
-    LTEXT "保护我的计算机和数据不受未授权的程序的活动", -1, 25, 57, 200, 10, WS_DISABLED
-    CHECKBOX "此选项可防止计算机病毒危害您的计算机或个人数据，但选择它可能会引起程序工作不正常。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+    LTEXT "保护我的计算机和数据不受未授权程序的活动影响", -1, 25, 57, 200, 10, WS_DISABLED
+    CHECKBOX "这个选项可以保护您的计算机或个人数据不受病毒损害，但是选择这项可能会引起程序工作不正确。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "下列用户:", 14002, 10, 100, 90, 10
     LTEXT "用户名：", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
