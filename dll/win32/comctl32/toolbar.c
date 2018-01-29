@@ -256,7 +256,7 @@ static inline int default_top_margin(const TOOLBAR_INFO *infoPtr)
 {
 #ifdef __REACTOS__
     if (infoPtr->iVersion == 6)
-        return 0;
+        return infoPtr->szBarPadding.cy;
 #endif
     return (infoPtr->dwStyle & TBSTYLE_FLAT ? 0 : TOP_BORDER);
 }
