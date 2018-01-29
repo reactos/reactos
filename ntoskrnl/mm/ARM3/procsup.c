@@ -88,7 +88,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     *BaseAddress = 0;
     Status = MiInsertVadEx((PMMVAD)Vad,
                            BaseAddress,
-                           BYTES_TO_PAGES(Size),
+                           Size,
                            HighestAddress,
                            PAGE_SIZE,
                            MEM_TOP_DOWN);
