@@ -269,8 +269,6 @@ int CLayerUIPropPage::OnSetActive()
 
     m_CustomLayers = m_RegistryCustomLayers;
 
-    /* TODO: visualize 'custom' layers! */
-
     UpdateControls();
 
     return 0;
@@ -387,6 +385,15 @@ void CLayerUIPropPage::UpdateControls()
         m_EnabledLayers |= IsDlgButtonChecked(g_Layers[n].Id) ? (1<<n) : 0;
         ::ShowWindow(GetDlgItem(g_Layers[n].Id), SW_SHOW);
     }
+
+    CStringW customLayers;
+    for (int j = 0; j < m_CustomLayers.GetSize(); ++j)
+    {
+        if (j > 0)
+            customLayers += L", ";
+        customLayers += m_CustomLayers[j];
+    }
+    SetDlgItemTextW(IDC_ENABLED_LAYERS, customLayers);
 
     SetModified(HasChanges());
 }
