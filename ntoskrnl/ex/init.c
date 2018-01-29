@@ -1589,7 +1589,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                 sizeof(InitBuffer->VersionBuffer),
                                 NT_SUCCESS(MsgStatus) ?
                                 (PCHAR)MsgEntry->Text :
-                                "%u System Processor [%u MB Memory] %Z\r\n",
+                                "%u System Processor [%Iu MB Memory] %Z\r\n",
                                 KeNumberProcessors,
                                 Size,
                                 &TempString);

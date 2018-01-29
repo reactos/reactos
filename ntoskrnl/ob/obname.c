@@ -834,7 +834,7 @@ ReparseObject:
                 Directory = NULL;
 
                 /* Increment the pointer count */
-                InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+                InterlockedExchangeAddSizeT(&ObjectHeader->PointerCount, 1);
 
                 /* Cleanup from the first lookup */
                 ObpReleaseLookupContext(LookupContext);
