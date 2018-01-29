@@ -34,7 +34,7 @@ HalpReboot(VOID)
     PHARDWARE_PTE Pte;
 
     /* Get a PTE in the HAL reserved region */
-    ZeroPageMapping = (PVOID)(0xFFC00000 + PAGE_SIZE);
+    ZeroPageMapping = UlongToPtr(0xFFC00000 + PAGE_SIZE);
     Pte = GetPteAddress(ZeroPageMapping);
 
     /* Make it valid and map it to the first physical page */
