@@ -146,7 +146,7 @@ const WCHAR szTrayClockWndClass[] = L"TrayClockWClass";
 #define ID_TRAYCLOCK_TIMER  0
 #define ID_TRAYCLOCK_TIMER_INIT 1
 
-#define TRAY_CLOCK_WND_SPACING_X    0
+#define TRAY_CLOCK_WND_SPACING_X    3
 #define TRAY_CLOCK_WND_SPACING_Y    0
 
 CTrayClockWnd::CTrayClockWnd() :
