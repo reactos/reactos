@@ -1189,6 +1189,8 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
     tbm.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING | TBMF_PAD;
     tbm.cxPad = 1;
     tbm.cyPad = 1;
+    tbm.cxBarPad = 1;
+    tbm.cyBarPad = 1;
     tbm.cxButtonSpacing = 1;
     tbm.cyButtonSpacing = 1;
     SetMetrics(&tbm);
