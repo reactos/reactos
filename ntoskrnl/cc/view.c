@@ -71,10 +71,10 @@ ULONG CcTotalDirtyPages = 0;
 LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
 LARGE_INTEGER CcIdleDelay = {.QuadPart = (LONGLONG)-1*1000*1000*10};
 #else
-LARGE_INTEGER CcIdleDelay = {(LONGLONG)-1*1000*1000*10};
+LARGE_INTEGER CcIdleDelay = { { -1*1000*1000*10, -1 } };
 #endif
 
 /* Internal vars (ROS):
