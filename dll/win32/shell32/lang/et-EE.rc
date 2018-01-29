@@ -1,0 +1,870 @@
+/*
+ * PROJECT:     shell32 for ReactOS
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Estonian Language resource file
+ * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
+ */
+
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+MENU_001 MENUEX
+BEGIN
+    MENUITEM "&Suured ikoonid", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Väikesed ikoonid", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Loetle", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "&Üksikasjad", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "K&orralda ikoonid", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Automaatkorralda", FCIDM_SHVIEW_AUTOARRANGE
+    END
+END
+
+/* shellview background menu */
+MENU_002 MENUEX
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "&Vaade", FCIDM_SHVIEW_VIEW
+        BEGIN
+            MENUITEM "&Suured ikoonid", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Väikesed ikoonid", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Loetle", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "&Üksikasjad", FCIDM_SHVIEW_REPORTVIEW
+        END
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "K&orralda ikoonid", FCIDM_SHVIEW_ARRANGE
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Automaatkorralda", FCIDM_SHVIEW_AUTOARRANGE
+        END
+        MENUITEM "Joonda koordinaatvõrguga", FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Värskenda", FCIDM_SHVIEW_REFRESH
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Kleebi", FCIDM_SHVIEW_INSERT
+        MENUITEM "Kleebi otsetee", FCIDM_SHVIEW_INSERTLINK
+    END
+END
+
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Võta tagasi\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "&Lõika\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Kopeeri\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "Klee&bi\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Kleebi &otseteena", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Ko&peeri kausta...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "L&iiguta kausta...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Vali k&õik\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Inverteeri valik", FCIDM_SHVIEW_INVERTSELECTION
+END
+
+/* shellview item menu */
+MENU_SHV_FILE MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Lõika", IDM_CUT
+        MENUITEM "&Kopeeri", IDM_COPY
+        MENUITEM "Kleebi", IDM_INSERT
+        MENUITEM SEPARATOR
+        MENUITEM "Koo&sta link", IDM_CREATELINK
+        MENUITEM "Kus&tuta", IDM_DELETE
+        MENUITEM "Nimeta &ümber", IDM_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Atribuudid", IDM_PROPERTIES
+    END
+END
+
+IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Browse for Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Loobu", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
+    LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 12
+    LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+END
+
+IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Browse for Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
+    LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
+    LTEXT "Kaust:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Loo uus kaust", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Loobu", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Sõnum"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&Jah", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Jah &kõigele", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Ei", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Loobu", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
+    LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
+END
+
+IDD_ABOUT DIALOGEX 0, 0, 275, 198
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "%s kohta"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
+    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
+    LTEXT "Versioon ", IDC_STATIC, 35, 65, 28, 10
+    LTEXT KERNEL_VERSION_STR, IDC_STATIC, 63, 65, 27, 10
+    LTEXT " (", IDC_STATIC, 90, 65, 5, 10
+    LTEXT KERNEL_VERSION_BUILD_STR, IDC_STATIC, 95, 65, 58, 10
+    LTEXT ")", IDC_STATIC, 153, 65, 5, 10
+    LTEXT "Autoriõigus 1998-", IDC_STATIC, 35, 75, 53, 10
+    LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
+    LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
+    LTEXT "See ReactOS versioon on registreeritud järgmisele:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
+    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
+    LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
+    LTEXT "Paigaldatud füüsiline mälu:", IDC_STATIC, 35, 152, 130, 10
+    LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
+    DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
+    PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
+END
+
+IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS'i on teile toonud:", IDC_STATIC, 0, 0, 180, 10
+    LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
+END
+
+IDD_RUN DIALOGEX 0, 0, 227, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Käivitus"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
+    LTEXT "Tippige programmi, kausta, dokumendi või Interneti-ressursi nimi ja ReactOS avab selle.", 12289, 36, 11, 182, 18
+    LTEXT "&Ava:", 12305, 7, 39, 24, 10
+    CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+    DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
+    PUSHBUTTON "Loobu", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
+    PUSHBUTTON "&Sirvi...", 12288, 160, 63, 59, 14, WS_TABSTOP
+END
+
+IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Otsetee"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON "", 14000, 8, 8, 21, 20, WS_VISIBLE
+    EDITTEXT 14001, 49, 10, 180, 14, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Sihiüksuse t&üüp:", 14004, 8, 38, 68, 10
+    EDITTEXT 14005, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Sihtüksuse &asukoht:", 14006, 8, 55, 68, 10
+    EDITTEXT 14007, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Sihtüksus:", 14008, 8, 71, 68, 10
+    EDITTEXT 14009, 79, 69, 150, 14, ES_AUTOHSCROLL
+    LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Käi&vituskoht:", 14010, 8, 98, 68, 10
+    EDITTEXT 14011, 79, 96, 150, 14, ES_AUTOHSCROLL
+    LTEXT "Kiirkla&hv:", 14014, 8, 117, 68, 10
+    CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
+    LTEXT "&Käivita:", 14016, 8, 136, 68, 10
+    COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    LTEXT "K&ommentaar:", 14018, 8, 154, 68, 10
+    EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
+    PUSHBUTTON "&Otsi sihtüksus...", 14020, 9, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&Muuda ikoon...", 14021, 84, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&Täpsemalt...", 14022, 159, 172, 70, 14, ES_LEFT
+END
+
+IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Laiendatud atribuudid"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
+    LTEXT "Valige selle otsetee jaoks soovitud täpsemad atribuudid.", -1, 5, 30, 210, 10
+    CHECKBOX "Käivita teistsuguse mandaadiga", 14000, 25, 50, 150, 10
+    LTEXT "Sellse suvandi abil saate käivitada otsetee teise kasutajana või jätkata oma kasutajanime all, kaitstes samal ajal oma arvutit ja andmeid volitamata programmitegevuse eest.", -1, 50, 60, 175, 40
+    CHECKBOX "Käivita eraldi mäluruumis", 14001, 25, 100, 150, 10, WS_DISABLED
+    PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Loobu", 2, 120, 124, 50, 15, WS_VISIBLE
+END
+
+IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Üldist"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON "", 14000, 10, 3, 32, 32, WS_VISIBLE
+    EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT
+    LTEXT "Faili tüüp:", 14004, 8, 40, 55, 10
+    CONTROL "Kaust", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 68, 40, 160, 10
+    LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Asukoht:", 14008, 8, 56, 55, 10
+    EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    LTEXT "Maht:", 14010, 8, 72, 55, 10
+    EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Maht kettal:", 140101, 8, 88, 55, 10
+    EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Sisaldab:", 14026, 8, 104, 55, 10
+    EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Loodud:", 14014, 8, 128, 55, 10
+    EDITTEXT 14015, 68, 128, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Atribuudid:", 14020, 8, 152, 46, 10
+    AUTOCHECKBOX "&Kirjutuskaitstud", 14021, 56, 152, 70, 10
+    AUTOCHECKBOX "&Peidetud", 14022, 56, 166, 70, 10
+    AUTOCHECKBOX "&Arhiveeri", 14023, 56, 180, 70, 10
+    PUSHBUTTON "&Täpsemalt...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Üldist"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON "", 14000, 10, 3, 32, 32, WS_VISIBLE
+    EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | WS_TABSTOP
+    LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Faili tüüp:", 14004, 8, 35, 50, 10
+    CONTROL "Fail", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
+    LTEXT "Avab programmiga:", 14006, 8, 53, 50, 10
+    ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
+    PUSHBUTTON "&Muuda...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Asukoht:", 14008, 8, 75, 45, 10
+    EDITTEXT 14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
+    LTEXT "Maht:", 14010, 8, 91, 45, 10
+    EDITTEXT 14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Maht kettal:", 140112, 8, 107, 55, 10
+    EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Loodud:", 14014, 8, 131, 45, 10
+    EDITTEXT 14015, 68, 131, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Muudetud:", 14016, 8, 147, 45, 10
+    EDITTEXT 14017, 68, 147, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Ligipääsetud:", 14018, 8, 163, 45, 10
+    EDITTEXT 14019, 68, 163, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Atribuudid:", 14020, 8, 189, 45, 10
+    AUTOCHECKBOX "&Kirjutuskaitstud", 14021, 58, 189, 67, 10
+    AUTOCHECKBOX "&Peidetud", 14022, 126, 189, 50, 10
+    AUTOCHECKBOX "&Arhiveeri", 14023, 181, 189, 49, 10
+    PUSHBUTTON "&Täpsemalt...", 14028, 180, 185, 50, 15, WS_TABSTOP
+END
+
+IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Versioon"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Faili versioon: ", 14000, 10, 10, 55, 10
+    EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+    LTEXT "Kirjeldus: ", 14002, 10, 27, 45, 10
+    EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+    LTEXT "Autoriõigus: ", 14004, 10, 46, 66, 10
+    EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
+    GROUPBOX "Teiste versioonide informatsioon: ", 14006, 6, 70, 222, 115
+    LTEXT "Üksikasja nimi: ", 14007, 13, 82, 50, 10
+    LTEXT "Väärtus: ", 14008, 112, 82, 45, 10
+    LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
+    EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
+END
+
+IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 230
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Üldist"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
+    EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
+    LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Tüüp:", -1, 8, 38, 95, 10
+    EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Failisüsteem:", -1, 8, 51, 95, 10
+    EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
+    LTEXT "Kasutatud ruumi:", -1, 25, 69, 80, 10
+    EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
+    LTEXT "Vaba ruumi:", -1, 25, 82, 80, 10
+    EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    LTEXT "Maht:", -1, 25, 103, 80, 10
+    EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
+    LTEXT "Draiv %c", 14009, 100, 150, 70, 10
+    PUSHBUTTON "&Kettapuhastus", 14010, 160, 154, 70, 15, WS_TABSTOP
+    LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
+    CHECKBOX "Tihenda draiv kettaruumi säästmiseks", 14011, 8, 191, 222, 10, WS_DISABLED
+    CHECKBOX "Luba indekseerimisteenusel ketas failiotsinguks indekseerida", 14012, 8, 205, 222, 10, WS_DISABLED
+END
+
+IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Tööriistad"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "Tõrkekontroll", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
+    LTEXT "See funktsioon otsib draivist tõrkeid.", -1, 40, 25, 160, 20
+    PUSHBUTTON "Kontrolli kohe...", 14000, 130, 45, 90, 15, WS_TABSTOP
+    GROUPBOX "Defragmentimine", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
+    LTEXT "See funktsioon defragmendib draivi faile.", -1, 40, 85, 160, 20
+    PUSHBUTTON "Defragmendi kohe...", 14001, 130, 105, 90, 15, WS_TABSTOP
+    GROUPBOX "Varundus", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
+    LTEXT "See funktsioon varundab draivi faile.", -1, 40, 150, 160, 20
+    PUSHBUTTON "Varunda kohe...", 14002, 130, 170, 90, 15, WS_TABSTOP
+END
+
+IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Riistvara"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+END
+
+IDD_RUN_AS DIALOGEX 0, 0, 240, 190
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Käivita teise kasutajana"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Millise kasutajakonto abil soovite selle programmi käivitada?", -1, 10, 20, 220, 20
+    CHECKBOX "Praegune kasutaja %s", 14000, 10, 45, 150, 10
+    LTEXT "Kaitse minu arvutit ja andmeid volitamata programmitegevuse eest", -1, 25, 57, 200, 10, WS_DISABLED
+    CHECKBOX "See suvand võib takistada arvutiviirusi teie arvutit või andmeid kahjustamast, kuid selle valimine võib põhjustada programmi valesti töötamist.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+    CHECKBOX "Järgmine kasutaja:", 14002, 10, 100, 90, 10
+    LTEXT "Kasutajanimi:", -1, 20, 118, 54, 10
+    COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
+    LTEXT "Parool:", -1, 20, 143, 53, 10
+    EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
+    PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
+    PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "Loobu", 14008, 122, 170, 60, 14, WS_TABSTOP
+END
+
+IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Prügikasti atribuudid"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
+    GROUPBOX "Seaded valitud asukohale", -1, 10, 72, 220, 70
+    RADIOBUTTON "&Kohandatud maht:", 14001, 20, 90, 80, 10, WS_TABSTOP
+    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    LTEXT "M&aksimaalne maht(MB):", -1, 20, 105, 80, 10
+    RADIOBUTTON "Ära teiselda faile prügikasti. Eemalda failid kohe kustutamisel", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    AUTOCHECKBOX "&Kuva kustutuskinnituse dialoogiboks", 14004, 20, 155, 140, 10, WS_TABSTOP
+END
+
+IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Programmiga avamine"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
+    LTEXT "Vali programm, mille abil soovite selle faili avada:", -1, 44, 12, 211, 10
+    LTEXT "Fail:    ", 14001, 44, 25, 188, 20
+    GROUPBOX "&Programmid", -1, 7, 42, 249, 187
+    CONTROL "Programmid", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    AUTOCHECKBOX "&Ava seda tüüpi fail alati valitud programmiga", 14003, 20, 193, 225, 10
+    PUSHBUTTON "&Sirvi...", 14004, 198, 207, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 206, 236, 50, 14
+END
+
+IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Üldist"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "Toimingud", -1, 7, 10, 249, 45
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "Näita kaustades tavalisi &toiminguid", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Kasuta Windowsi klassikalisi &kaustu", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
+    GROUPBOX "Kaustade sirvimine", -1, 7, 60, 249, 45, WS_TABSTOP
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Ava iga kaust &samas aknas", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Ava iga kaust &eraldi aknas", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
+    GROUPBOX "Üksuste klõpsamine", -1, 7, 110, 249, 60
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "Kl&õps avab üksuse (osutamine valib)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Kriipsuta ikoonitiitlid &brauseri eeskujul alla", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
+    AUTORADIOBUTTON "Kriipsuta ikoonitiitlid alla ainult neile &osutamisel", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    AUTORADIOBUTTON "Topeltklõps avab &üksuse (klõps valib)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
+    PUSHBUTTON "&Taasta vaikesätted", 14011, 180, 180, 60, 14, WS_TABSTOP
+END
+
+IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Vaade"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "Kaustavaated", -1, 7, 10, 249, 60
+    ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
+    LTEXT "Selle kausta puhul kasutatud vaadet (nt Üksikasjad\nvõi Paanid) võite rakendada kõigile kaustadele.", -1, 60, 20, 180, 20
+    PUSHBUTTON "&Rakenda kõigile kaustadele", 14001, 60, 50, 90, 14, WS_TABSTOP
+    PUSHBUTTON "&Lähtesta kõik kaustad", 14002, 160, 50, 80, 14, WS_TABSTOP
+    LTEXT "Täpsemad sätted:", -1, 7, 80, 100, 10
+    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "&Taasta vaikesätted", 14004, 177, 215, 80, 14, WS_TABSTOP
+END
+
+IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Failitüübid"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Registreeritud faili&tüübid:", -1, 7, 10, 70, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    PUSHBUTTON "&Uus", 14001, 120, 110, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Kustuta", 14002, 180, 110, 50, 14, WS_TABSTOP
+    GROUPBOX "Failitüübi '%s' üksikasjad", 14003, 7, 130, 249, 70
+    LTEXT "Avamisprogramm:", -1, 12, 140, 60, 10
+    //ICON
+    LTEXT "Appname", 14005, 100, 140, 40, 10
+    PUSHBUTTON "&Muuda...", 14006, 180, 140, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 155, 160, 30
+    PUSHBUTTON "&Täpsemalt", 14008, 180, 175, 50, 14, WS_TABSTOP
+END
+
+IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Failiasenduse kinnitamine"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&Jah", IDYES, 20, 122, 60, 14
+    PUSHBUTTON "Jah &kõigele", 12807, 85, 122, 60, 14
+    PUSHBUTTON "&Ei", IDNO, 150, 122, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 215, 122, 60, 14
+    ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
+    LTEXT "See kaust sisaldab juba faili nimega '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+    LTEXT "See kaust sisaldab juba kirjutuskaitstud faili nimega '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "See kaust sisaldab juba süsteemi faili nimega '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+    LTEXT "Kas soovite asendada olemasoleva faili", -1, 44, 35, 228, 10, SS_NOPREFIX
+    LTEXT "(tundmatu kuupäev ja maht)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+    ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
+    LTEXT "sellega?", -1, 44, 75, 228, 10, SS_NOPREFIX
+    LTEXT "(tundmatu kuupäev ja maht)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+    ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
+END
+
+IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Logi ReactOS'ist välja"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Kas soovite kindlasti välja logida?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "&Logi välja", IDOK, 49, 38, 43, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 99, 38, 43, 14
+END
+
+IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Ühenda ReactOS lahti"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Kas soovite kindlasti lahti ühendada?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "&Ühenda lahti", IDOK, 47, 38, 47, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 99, 38, 47, 14
+END
+
+IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
+CAPTION "Automaatesitus"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Valige sisutüüp. Seejärel valige toiming, mille ReactOS automaatselt sooritab, kui selles seadmes kasutatakse seda tüüpi:", 1000, 7, 7, 215, 20
+    CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
+    GROUPBOX "Toimingud", -1, 7, 45, 212, 146
+    AUTORADIOBUTTON "Valige sooritatav &toiming:", 1005, 14, 54, 202, 10, WS_GROUP
+    CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
+    AUTORADIOBUTTON "&Küsi alati toimingu valimise kohta", 1006, 14, 177, 202, 10
+    PUSHBUTTON "&Taasta vaikeolekud", 1008, 108, 197, 110, 14, WS_DISABLED
+END
+
+IDD_MIXED_CONTENT1 DIALOGEX 0, 0, 227, 207
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
+CAPTION "Segasisu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", 1000, 5, 7, 21, 20
+    LTEXT "See plaat või seaded sisladab rohkem kui üht tüüpi faile.", 1001, 32, 7, 191, 20
+    LTEXT "Mida soovite ReactOSil teha lasta?", 1002, 32, 31, 188, 8
+    CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
+    DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 160, 186, 60, 14
+END
+
+IDD_MIXED_CONTENT2 DIALOGEX 0, 0, 227, 206
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
+CAPTION "Segasisu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", 1000, 5, 7, 21, 20
+    LTEXT "ReactOS saab sooritada sama toinigut, kui selles seadmes kasutatakse seda tüüpi:", 1001, 30, 7, 193, 20
+    ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
+    EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Mida soovite ReactOSil teha lasta?", 1002, 32, 41, 190, 8
+    CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
+    AUTOCHECKBOX "Valige sooritav toiming.", 1004, 32, 171, 190, 10
+    DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 160, 185, 60, 14
+END
+
+IDD_AUTOPLAY2 DIALOGEX 0, 0, 227, 181
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
+CAPTION "Automaatesitus"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", 1000, 5, 7, 21, 20
+    LTEXT "ReactOS saab automaatselt sooritada sama toimingut iga kord kui ühendate seda seadet.", 1001, 32, 7, 190, 22
+    LTEXT "&Mida soovite ReactOSil teha lasta?", 1002, 32, 31, 190, 8
+    CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
+    AUTOCHECKBOX "&Valige sooritav toiming", 1004, 32, 143, 190, 8
+    DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 159, 160, 60, 14
+END
+
+IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Sulge ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
+    LTEXT "Mida tahate arvutil teha lasta?", -1, 39, 7, 167, 10
+    COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
+    LTEXT "Säilitab teie sessiooni hoides arvuti vähese mäluga koos andmetega üleval. Arvuti ärkab klahvivajutusele või hiire liigutusele üles.", 8225, 39, 40, 167, 37
+    DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
+    PUSHBUTTON "Loobu", IDCANCEL, 75, 82, 60, 14
+    PUSHBUTTON "&Abi", IDHELP, 144, 82, 60, 14
+END
+
+IDD_FORMAT_DRIVE DIALOGEX 50, 50, 184, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Vormindamine"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&Alusta", IDOK, 53, 198, 60, 14
+    PUSHBUTTON "S&ule", IDCANCEL, 118, 198, 60, 14
+    LTEXT "&Maht:", -1, 7, 6, 169, 9
+    COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "&Failisüsteem", -1, 7, 35, 170, 9
+    COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
+    LTEXT "&Jaotusühiku maht", -1, 7, 64, 170, 9
+    COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT "Draivi &silt", -1, 7, 93, 170, 9
+    EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
+    GROUPBOX "&Vormindussuvandid", 4610, 7, 121, 170, 49
+    AUTOCHECKBOX "Kii&rvorminuds", 28674, 16, 135, 155, 10
+    AUTOCHECKBOX "L&uba tihendamine", 28675, 16, 152, 155, 10
+END
+
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Kontrolli ketast"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "Alusta", IDOK, 63, 95, 60, 14
+    GROUPBOX "Ketta kontrollimise suvandid", -1, 7, 6, 179, 40
+    PUSHBUTTON "Loobu", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Paranda failisüsteemi rikked &automaatselt", 14000, 12, 15, 155, 10
+    AUTOCHECKBOX "&Otsi vigased sektorid ja proovi need taastada", 14001, 12, 30, 165, 10
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
+    LTEXT "", 14003, 60, 80, 170, 10
+END
+
+IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Muuda ikooni"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT "Otsi ikoone sellest failist:", -1, 7, 7, 179, 10
+    PUSHBUTTON "Sirvi...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    LTEXT "Vali ikoon alltoodud loendist:", -1, 7, 36, 179, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 135, 179, 50, 14
+END
+
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ettevaatust!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "Seda faili kasutavad operatsioonisüsteem ja paljud\n\
+programmid. Selle redigeerimine või muutmine võib teie\n\
+süsteemi kahjustada..\n\n\
+Kas olete kindel et soovite seda faili avada?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Jah", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "Ei", IDNO, 180, 55, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    /* columns in the shellview */
+    IDS_SHV_COLUMN_NAME "Nimi"
+    IDS_SHV_COLUMN_SIZE "Maht"
+    IDS_SHV_COLUMN_TYPE "Tüüp"
+    IDS_SHV_COLUMN_MODIFIED "Muutmiskuupäev"
+    IDS_SHV_COLUMN_ATTRIBUTES "Atribuudid"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Kogumaht"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Vaba ruumi"
+    IDS_SHV_COLUMN_OWNER "Omanik"
+    IDS_SHV_COLUMN_GROUP "Grupp"
+    IDS_SHV_COLUMN_FILENAME "Failinimi"
+    IDS_SHV_COLUMN_CATEGORY "Kategooria"
+    IDS_SHV_COLUMN_DELFROM "Algne asukoht"
+    IDS_SHV_COLUMN_DELDATE "Kustutamise kuupäev"
+    IDS_SHV_COLUMN_FONTTYPE "Fonditüüp"
+    IDS_SHV_COLUMN_WORKGROUP "Töögrupp"
+    IDS_SHV_COLUMN_NETLOCATION "Võrguasukoht"
+    IDS_SHV_COLUMN_DOCUMENTS "Dokumendid"
+    IDS_SHV_COLUMN_STATUS "Olek"
+    IDS_SHV_COLUMN_COMMENTS "Kommentaarid"
+    IDS_SHV_COLUMN_LOCATION "Asukoht"
+    IDS_SHV_COLUMN_MODEL "Mudel"
+
+    /* special folders */
+    IDS_DESKTOP "Töölaud"
+    IDS_MYCOMPUTER "Minu arvuti"
+    IDS_RECYCLEBIN_FOLDER_NAME "Prügikast"
+    IDS_CONTROLPANEL "Juhtpaneel"
+    IDS_ADMINISTRATIVETOOLS "Haldusriistad"
+
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Saate konfigureerida oma arvuti haldussätted."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Saate kohandada failide ja kaustada kuvamisviisi, muuta failiseoseid."
+    IDS_FONTS_DESCRIPTION "Saate lisada, muuta ja  hallata oma arvutis fonte."
+    IDS_PRINTERS_DESCRIPTION "Kuvab installitud printerid ja faksprinterid ja aitab teil uusi lisada."
+
+    /* context menus */
+    IDS_VIEW_LARGE "&Suured ikoonid"
+    IDS_VIEW_SMALL "&Väikesed ikoonid"
+    IDS_VIEW_LIST "&Loend"
+    IDS_VIEW_DETAILS "&Üksikasjad"
+    IDS_SELECT "Vali"
+    IDS_OPEN "Ava"
+    IDS_CREATELINK "Loo &otsetee"
+    IDS_COPY "&Kopeeri"
+    IDS_DELETE "Kustuta"
+    IDS_PROPERTIES "Atribuudid"
+    IDS_CUT "&Lõika"
+    IDS_RESTORE "Taasta"
+    IDS_FORMATDRIVE "Vorminda..."
+    IDS_RENAME "Nimeta ümber"
+    IDS_PASTE "Kleebi"
+    IDS_EJECT "Väljuta"
+    IDS_DISCONNECT "Ühenda lahti"
+
+    IDS_CREATEFOLDER_DENIED "Ei saa luua kausta '%1'"
+    IDS_CREATEFOLDER_CAPTION "Ei saa kausta luua"
+    IDS_DELETEITEM_CAPTION "Kinnita faili kustutamine"
+    IDS_DELETEFOLDER_CAPTION "Kinnita kausta kustutamine"
+    IDS_DELETEITEM_TEXT "Kas soovite kindlasti kustutada üksust '%1'?"
+    IDS_DELETEMULTIPLE_TEXT "Kas soovite kindlasti kustutada need %1 üksust?"
+    IDS_DELETESELECTED_TEXT "Kas soovite kindlasti kustutada need valitud üksused?"
+    IDS_TRASHITEM_TEXT "Kas soovite kindlasti saata üksuse '%1' prügikasti?"
+    IDS_TRASHFOLDER_TEXT "Kas soovite kindlasti eemaldada kausta '%1' ja teiseldada kogu selle sisu prügikasti?"
+    IDS_TRASHMULTIPLE_TEXT "Kas soovite kindlasti saata need %1 üksust prügikasti?"
+    IDS_CANTTRASH_TEXT "Üksust '%1' ei saa teiseldada prügikasti. Kas soovite seda kustutada?"
+    IDS_OVERWRITEFILE_TEXT "See kaust sisaldab juba faili nimega '%1'.\n\nKas soovite asendada olemasoleva faili?"
+    IDS_OVERWRITEFILE_CAPTION "Kinnita faili ülekirjutamine"
+    IDS_OVERWRITEFOLDER_TEXT "See kaust sisaldab juba kausta nimega '%1'.\n\nKui olemasoleva kausta failidel on sama nimi nagu teiseldatava või kopeeritava kausta failidel, siis need asendatakse. Kas soovite kausta ikkagi teiseldada või kopeerida?"
+
+    IDS_FILEOOP_COPYING "Kopeerimine..."
+    IDS_FILEOOP_MOVING "Liigutamine..."
+    IDS_FILEOOP_DELETING "Kustutamine..."
+    IDS_FILEOOP_FROM_TO "Asukohast %1 asukohta %2"
+    IDS_FILEOOP_FROM "Asukohast %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
+
+    /* message box strings */
+    IDS_RESTART_TITLE "Taaskäivita"
+    IDS_RESTART_PROMPT "Kas soovite taaskäivitada süsteemi?"
+    IDS_SHUTDOWN_TITLE "Lülita välja"
+    IDS_SHUTDOWN_PROMPT "Kas soovite arvuti välja lülitada?"
+
+    /* Run File dialog */
+    IDS_RUNDLG_ERROR "Ei saanud kuvada Run faili dialoogiboksi (sisemine viga)"
+    IDS_RUNDLG_BROWSE_ERROR "Ei saanud kuvada Sirvi dialoogiboksi (sisemine viga)"
+    IDS_RUNDLG_BROWSE_CAPTION "Sirvi"
+    IDS_RUNDLG_BROWSE_FILTER "Rakendatavad failid (*.exe)\0*.exe\0Kõik failid (*.*)\0*.*\0"
+
+    /* shell folder path default values */
+    IDS_PROGRAMS "Start Menu\\Programs"
+    IDS_PERSONAL "Minu dokumendid"
+    IDS_FAVORITES "Lemmikud"
+    IDS_STARTUP "Start Menu\\Programs\\StartUp"
+    IDS_RECENT "Hiljutised"
+    IDS_SENDTO "SendTo"
+    IDS_STARTMENU "Start Menu"
+    IDS_MYMUSIC "Minu muusika"
+    IDS_MYVIDEO "Minu videod"
+    IDS_DESKTOPDIRECTORY "Töölaud"
+    IDS_NETHOOD "NetHood"
+    IDS_TEMPLATES "Mallid"
+    IDS_APPDATA "Rakendusted Andmed"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
+    IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
+    IDS_COOKIES "Küpsised"
+    IDS_HISTORY "Local Settings\\History"
+    IDS_PROGRAM_FILES "Programmifailid"
+    IDS_MYPICTURES "Minu pildid"
+    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
+    IDS_COMMON_DOCUMENTS "Documents"
+    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
+    IDS_COMMON_MUSIC "Documents\\My Music"
+    IDS_COMMON_PICTURES "Documents\\My Pictures"
+    IDS_COMMON_VIDEO "Documents\\My Videos"
+    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
+    IDS_NETWORKPLACE "Minu võrgukohad"
+
+    IDS_NEWFOLDER "Uus kaust"
+
+    IDS_DRIVE_FIXED "Kohalik ketas"
+    IDS_DRIVE_CDROM "CD-draiv"
+    IDS_DRIVE_NETWORK "Võrgudraiv"
+    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_REMOVABLE "Irdmäluga seade"
+    IDS_FS_UNKNOWN "Tundmatu"
+
+    /* Open With */
+    IDS_OPEN_WITH "Ava programmiga..."
+    IDS_OPEN_WITH_CHOOSE "Vali programm..."
+    IDS_OPEN_WITH_RECOMMENDED "Soovitatavad programmid"
+    IDS_OPEN_WITH_OTHER "Muud programmid:"
+
+    IDS_SHELL_ABOUT_AUTHORS "&Autorid"
+    IDS_SHELL_ABOUT_BACK "< &Tagasi"
+    FCIDM_SHVIEW_NEW "Uus"
+    FCIDM_SHVIEW_NEWFOLDER "Uus &kaust"
+    FCIDM_SHVIEW_NEWLINK "Uus &otsetee"
+    IDS_FOLDER_OPTIONS "Kaustasuvandid"
+    IDS_RECYCLEBIN_LOCATION "Prügikasti asukoht"
+    IDS_RECYCLEBIN_DISKSPACE "Vaba ruumi"
+    IDS_EMPTY_BITBUCKET "Tühjenda prügikast"
+    IDS_PICK_ICON_TITLE "Vali ikoon"
+    IDS_PICK_ICON_FILTER "Ikoonifailid (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Kõik failid (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Rakendatavad failid (*.exe)\0*.exe\0Kõik failid (*.*)\0*.*\0"
+
+    IDS_CANTLOCKVOLUME "Ei saa ketast lukustada (Veateade: %lu)."
+    IDS_CANTDISMOUNTVOLUME "Ei saa ketast väljutada (Veateade: %lu)."
+    IDS_CANTEJECTMEDIA "Ei saa meediumit väljutada (Veateade: %lu)."
+    IDS_CANTSHOWPROPERTIES "Ei saa atribuute näidata (Veateade: %lu)."
+    IDS_CANTDISCONNECT "Ei saa lahti ühendada (Veateade: %lu)."
+
+    IDS_DIRECTORY "Kaust"
+    IDS_BAT_FILE "ReactOS Batch Fail"
+    IDS_CMD_FILE "ReactOS Command Skript"
+    IDS_COM_FILE "DOS Rakendus"
+    IDS_CPL_FILE "Juhtpaneeli üksus"
+    IDS_CUR_FILE "Kursor"
+    IDS_DLL_FILE "Rakenduse laiendus"
+    IDS_DRV_FILE "Seadme draiver"
+    IDS_EXE_FILE "Rakendus"
+    IDS_FON_FILE "Fondi fail"
+    IDS_TTF_FILE "TrueType Fondi fail"
+    IDS_OTF_FILE "OpenType Fondi fail"
+    IDS_HLP_FILE "Abifail"
+    IDS_ICO_FILE "Ikoon"
+    IDS_INI_FILE "Konfiguratsiooni seaded"
+    IDS_LNK_FILE "Otsetee"
+    IDS_PIF_FILE "NT VDM programmi informatsiooni fail"
+    IDS_SCR_FILE "Ekraanisäästja"
+    IDS_SYS_FILE "Süsteemi fail"
+    IDS_VXD_FILE "Virtuaalseadme draiver"
+    IDS_ANY_FILE "%s-file"
+
+    IDS_OPEN_VERB "Ava"
+    IDS_EXPLORE_VERB "Uuri"
+    IDS_RUNAS_VERB "Käivita kasutajana..."
+    IDS_EDIT_VERB "Muuda"
+    IDS_FIND_VERB "Leia"
+    IDS_PRINT_VERB "Prindi"
+
+    IDS_FILE_FOLDER "%u Faili, %u Kausta"
+    IDS_PRINTERS "Printerid"
+    IDS_FONTS "Fondid"
+    IDS_INSTALLNEWFONT "Paigalda uus font..."
+
+    IDS_DEFAULT_CLUSTER_SIZE "Vaikimisi jaotusühik"
+    IDS_COPY_OF "Koopia üksusest"
+
+    IDS_SHLEXEC_NOASSOC "There is no ReactOS program configured to open this type of file."
+
+    IDS_FILE_DETAILS "Üksikasjad '%s' laienduse kohta"
+    IDS_FILE_DETAILSADV "Faili, mille laiend on '%s', on tüübiga '%s'. Kõiki '%s'-tüüpi faile mõjutavate sätete muutmiseks klõpsake nuppu Täpsemalt."
+    IDS_FILE_TYPES "Failitüübid"
+    IDS_COLUMN_EXTENSION "Laiendused"
+
+    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
+       used in the _File type_ tab of the _Folder Options_ dialog */
+    IDS_FILE_EXT_TYPE "%s Fail"
+
+    IDS_BYTES_FORMAT "baiti"
+    IDS_UNKNOWN_APP "Tundmatu rakendus"
+    IDS_EXE_DESCRIPTION "Kirjeldus:"
+
+    IDS_MENU_EMPTY "(Tühi)"
+    IDS_OBJECTS "%d objekti"
+    IDS_OBJECTS_SELECTED "%d objekti valitud"
+
+    IDS_ADVANCED_FOLDER "Failid ja kaustad"
+    IDS_ADVANCED_NET_CRAWLER "Otsi automaatselt võrgukaustu ja -printereid"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Kuva kausta kohtspikrites teave failimahu kohta"
+    IDS_ADVANCED_FRIENDLY_TREE "Kuva Exploreri kaustaloendis lihtkaustavaade"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Kuva süsteemikaustade sisu"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Kuva aadressiribal täistee"
+    IDS_ADVANCED_SHOW_FULL_PATH "Kuba tiitliribal täistee"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Ära talleta pisipilte vahemällu"
+    IDS_ADVANCED_HIDDEN "Peitfailid ja -kaustad"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Ära näita peitfaile ja -kaustu"
+    IDS_ADVANCED_SHOW_HIDDEN "Näita peitfaile ja -kaustu"
+    IDS_ADVANCED_HIDE_FILE_EXT "Peida tuntud failitüüpide laiendid"
+    IDS_ADVANCED_SUPER_HIDDEN "Peida kaitstud operatsioonisüsteemifailid (soovitav)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Käivita kaustaaknad eraldi protsessina"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Pea iga kauta vaatesätted meeles"
+    IDS_ADVANCED_PERSIST_BROWSERS "Taasta sisselogimisel eelmised kaustaaknad"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Näita juhtpaneeli kaustas Minu aruvti"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Näita krüptitud või tihendatud NTFS-faile värvilisena"
+    IDS_ADVANCED_SHOW_INFO_TIP "Näita kausta- ja töölauaüksuste hüpikkirjeldusi"
+END

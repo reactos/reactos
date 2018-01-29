@@ -119,6 +119,9 @@ END
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
 #endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/et-EE.rc"
+#endif
 #ifdef LANGUAGE_FI_FI
     #include "lang/fi-FI.rc"
 #endif
