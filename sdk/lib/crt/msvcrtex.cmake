@@ -66,7 +66,6 @@ if(ARCH STREQUAL "i386")
         math/i386/cisqrt.c)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND MSVCRTEX_ASM_SOURCE
-        except/amd64/chkstk_asm.s
         except/amd64/chkstk_ms.s)
 elseif(ARCH STREQUAL "arm")
     list(APPEND MSVCRTEX_SOURCE
