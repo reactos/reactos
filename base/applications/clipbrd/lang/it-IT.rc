@@ -1,0 +1,72 @@
+/*
+ * PROJECT:     ReactOS Clipboard Viewer
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Implementation of Italian language for Clipboard Viewer
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Apri...", CMD_OPEN
+        MENUITEM "Salva &Come...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "U&scire", CMD_EXIT
+    END
+    POPUP "&Modifica"
+    BEGIN
+        MENUITEM "&Cancella\tDel", CMD_DELETE
+    END
+    POPUP "&Display"
+    BEGIN
+        MENUITEM "&Automatico", CMD_AUTOMATIC
+    END
+    POPUP "&Aiuto"
+    BEGIN
+        MENUITEM "&Argomenti Guida", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Informazioni", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Visualizzatore di Clipboard"
+    STRING_CLIPFILE  "Elemento Clipboard"
+    STRING_DELETE_MSG "Cancella i contenuti del Clipboard?"
+    STRING_DELETE_TITLE "Cancella Clipboard"
+    STRING_FORMAT_NT "I file del Clipboard di ReactOS (*.clp)"
+    STRING_FORMAT_GEN "I file Clipboard (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Formato Sconosciuto"
+    STRING_CF_TEXT "Testo"
+    STRING_CF_BITMAP "Bitmap"
+    STRING_CF_OEMTEXT "Testo OEM"
+    STRING_CF_UNICODETEXT "Testo Unicode"
+    STRING_CF_DIB "DIB Bitmap"
+    STRING_CF_LOCALE "Data Locale"
+    STRING_CF_ENHMETAFILE "Metafile Arricchito"
+    STRING_CF_METAFILEPICT "Metafile"
+    STRING_CF_PALETTE "Palette di Colori"
+    STRING_CF_DIBV5 "DIB Bitmap (Versione 5)"
+    STRING_CF_SYLK "Formato a Collegamento Simbolico"
+    STRING_CF_DIF "Formato di Data di Interscambio"
+    STRING_CF_HDROP "Abbandona le Informazioni"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "Il Clipboard contiene informazioni in formato data, che non può essere visualizzato."
+    ERROR_INVALID_FILE_FORMAT "Il file selezionato non è un file di tipo clipboard valido."
+END
