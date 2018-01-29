@@ -16,6 +16,7 @@
 #define IDC_ADD                    1010
 #define IDC_EDIT                   1011
 #define IDC_DELETE                 1012
+#define IDC_ENABLED_LAYERS         1013
 
 #define IDS_DESCRIPTION 101
 
