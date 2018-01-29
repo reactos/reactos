@@ -1470,3 +1470,10 @@ XIPInit(
 
 #define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \
    (ULONGLONG)ExfInterlockedCompareExchange64((PLONGLONG)(Destination), (PLONGLONG)(Exchange), (PLONGLONG)(Comperand))
+
+__forceinline
+SIZE_T
+InterlockedCompareExchangeSizeT(PSIZE_T Destination, SIZE_T Exchange, SIZE_T Comperand)
+{
+    return (SIZE_T)InterlockedCompareExchangePointer((PVOID*)Destination, (PVOID)Exchange, (PVOID)Comperand);
+}
