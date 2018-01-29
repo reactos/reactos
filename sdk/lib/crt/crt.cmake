@@ -563,7 +563,6 @@ if(NOT ARCH STREQUAL "i386")
         math/modff.c
         math/sin.c
         math/sinhf.c
-        math/sqrt.c
         math/sqrtf.c
         math/tanf.c
         math/tanhf.c
