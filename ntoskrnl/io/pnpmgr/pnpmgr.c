@@ -1766,7 +1766,7 @@ cleanup:
 }
 
 static
-ULONG
+BOOLEAN
 IopValidateID(IN PWCHAR Id,
               IN SIZE_T MaxIdLen,
               IN ULONG MaxSeparators,
@@ -1793,14 +1793,14 @@ IopValidateID(IN PWCHAR Id,
             if (MaxSeparators == SeparatorsCount ||
                 MaxSeparators == MAX_SEPARATORS_MULTISZ)
             {
-               return (ULONG)(PtrSymbol - Id) + 1;
+               return TRUE;
             }
 
             DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
                    SeparatorsCount, MaxSeparators);
 
             // FIXME logging
-            return 0;
+            return FALSE;
          }
 
          StringEnd += MaxIdLen;
@@ -1811,7 +1811,7 @@ IopValidateID(IN PWCHAR Id,
          DPRINT("IopValidateID: Invalid character - %04X\n", Symbol);
 
          // FIXME logging
-         return 0;
+         return FALSE;
       }
       else if (Symbol == ' ')
       {
@@ -1827,7 +1827,7 @@ IopValidateID(IN PWCHAR Id,
                    SeparatorsCount, MaxSeparators);
 
             // FIXME logging
-            return 0;
+            return FALSE;
          }
       }
    }
@@ -1835,7 +1835,7 @@ IopValidateID(IN PWCHAR Id,
    DPRINT("IopValidateID: Not terminated ID\n");
 
    // FIXME logging
-   return 0;
+   return FALSE;
 }
  
 NTSTATUS
@@ -1848,6 +1848,7 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
    UNICODE_STRING ValueName;
    NTSTATUS Status;
    ULONG Length, TotalLength;
+   BOOLEAN IsValideID;
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
 
@@ -1859,12 +1860,12 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                               &Stack);
    if (NT_SUCCESS(Status))
    {
-      TotalLength = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                  MAX_DEVICE_ID_LEN,
-                                  MAX_SEPARATORS_MULTISZ,
-                                  TRUE);
+      IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
+                                 MAX_DEVICE_ID_LEN,
+                                 MAX_SEPARATORS_MULTISZ,
+                                 TRUE);
 
-      if (!TotalLength)
+      if (!IsValideID)
          DPRINT1("Invalid HardwareIDs. DeviceNode - %p\n", DeviceNode);
 
       TotalLength = 0;
@@ -1912,6 +1913,7 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
    UNICODE_STRING ValueName;
    NTSTATUS Status;
    ULONG Length, TotalLength;
+   BOOLEAN IsValideID;
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryCompatibleIDs to device stack\n");
 
@@ -1924,12 +1926,12 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
       &Stack);
    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
-      TotalLength = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                  MAX_DEVICE_ID_LEN,
-                                  MAX_SEPARATORS_MULTISZ,
-                                  TRUE);
+      IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
+                                 MAX_DEVICE_ID_LEN,
+                                 MAX_SEPARATORS_MULTISZ,
+                                 TRUE);
 
-      if (!TotalLength)
+      if (!IsValideID)
          DPRINT1("Invalid CompatibleIDs. DeviceNode - %p\n", DeviceNode);
 
       TotalLength = 0;
@@ -1979,7 +1981,7 @@ IopCreateDeviceInstancePath(
     NTSTATUS Status;
     UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
     DEVICE_CAPABILITIES DeviceCapabilities;
-    ULONG TotalLength;
+    BOOLEAN IsValideID;
 
     DPRINT("Sending IRP_MN_QUERY_ID.BusQueryDeviceID to device stack\n");
 
@@ -1994,11 +1996,11 @@ IopCreateDeviceInstancePath(
         return Status;
     }
 
-    TotalLength = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                MAX_DEVICE_ID_LEN,
-                                MAX_SEPARATORS_DEVICEID,
-                                FALSE);
-    if (!TotalLength)
+    IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
+                               MAX_DEVICE_ID_LEN,
+                               MAX_SEPARATORS_DEVICEID,
+                               FALSE);
+    if (!IsValideID)
         DPRINT1("Invalid DeviceID. DeviceNode - %p\n", DeviceNode);
 
     /* Save the device id string */
@@ -2055,11 +2057,11 @@ IopCreateDeviceInstancePath(
 
     if (IoStatusBlock.Information)
     {
-        TotalLength = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                    MAX_DEVICE_ID_LEN,
-                                    MAX_SEPARATORS_INSTANCEID,
-                                    FALSE);
-        if (!TotalLength)
+        IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
+                                   MAX_DEVICE_ID_LEN,
+                                   MAX_SEPARATORS_INSTANCEID,
+                                   FALSE);
+        if (!IsValideID)
             DPRINT1("Invalid InstanceID. DeviceNode - %p\n", DeviceNode);
     }
 
