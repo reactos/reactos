@@ -197,7 +197,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NET_CONNECT "Network connection"
+    IDS_NET_CONNECT "Network Connection"
     IDS_NO_IPADDR_SET "The adapter requires at least one IP address. Please enter one."
     IDS_NO_SUBMASK_SET "You have entered an address that is missing its subnet mask. Please add a subnet mask."
     IDS_TCPFILTERDESC "TCP/IP filtering allows you to control the type of TCP/IP network traffic that reaches your computer."
