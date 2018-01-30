@@ -1,26 +1,30 @@
 /* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+
+/* ATTENTION: If there is no special situation, please DO NOT change 
+English folder names into Chinese, or it may cause problems in the system. */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_PROFILEPATH "%SystemDrive%\\文档和设置"
-    IDS_APPDATA "应用程序数据"
+    IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
+    IDS_APPDATA "Application Data"
     IDS_DESKTOP "桌面"
     IDS_FAVORITES "收藏夹"
     IDS_MYDOCUMENTS "我的文档"
     IDS_NETHOOD "NetHood"
     IDS_PRINTHOOD "PrintHood"
-    IDS_RECENT "最近"
-    IDS_SENDTO "为必填项"
-    IDS_TEMPLATES "模板"
-    IDS_STARTMENU "开始菜单"
-    IDS_PROGRAMS "开始菜单\\应用程序"
-    IDS_STARTUP "开始菜单\\应用程序\\启动"
-    IDS_LOCALSETTINGS "本地设置"
-    IDS_LOCALAPPDATA "本地设置\\应用程序数据"
-    IDS_TEMP "本地设置\\Temp"
-    IDS_CACHE "本地设置\\互联网临时文件"
-    IDS_HISTORY "本地设置\\历史"
-    IDS_COOKIES "小型文字檔案"
+    IDS_RECENT "Recent"
+    IDS_SENDTO "SendTo"
+    IDS_TEMPLATES "Templates"
+    IDS_STARTMENU "「开始」菜单"
+    IDS_PROGRAMS "「开始」菜单\\程序"
+    IDS_STARTUP "「开始」菜单\\程序\\启动"
+    IDS_LOCALSETTINGS "Local Settings"
+    IDS_LOCALAPPDATA "Local Settings\\Application Data"
+    IDS_TEMP "Local Settings\\Temp"
+    IDS_CACHE "Local Settings\\Temporary Internet Files"
+    IDS_HISTORY "Local Settings\\History"
+    IDS_COOKIES "Cookies"
 END
