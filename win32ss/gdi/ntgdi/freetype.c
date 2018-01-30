@@ -1931,74 +1931,76 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     return Cache->OutlineRequiredSize;
 }
 
-static PFONTGDI FASTCALL
-FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
-{
-    PLIST_ENTRY Entry;
-    PFONT_ENTRY CurrentEntry;
-    ANSI_STRING EntryFaceNameA;
-    UNICODE_STRING EntryFaceNameW;
-    FONTGDI *FontGDI;
-    NTSTATUS status;
-
-    Entry = Head->Flink;
-    while (Entry != Head)
+#if 0
+    static PFONTGDI FASTCALL
+    FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
     {
-        CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+        PLIST_ENTRY Entry;
+        PFONT_ENTRY CurrentEntry;
+        ANSI_STRING EntryFaceNameA;
+        UNICODE_STRING EntryFaceNameW;
+        FONTGDI *FontGDI;
+        NTSTATUS status;
 
-        FontGDI = CurrentEntry->Font;
-        ASSERT(FontGDI);
-
-        RtlInitAnsiString(&EntryFaceNameA, FontGDI->SharedFace->Face->family_name);
-        status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
-        if (!NT_SUCCESS(status))
+        Entry = Head->Flink;
+        while (Entry != Head)
         {
-            break;
-        }
+            CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
 
-        if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
-        {
-            EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
-            EntryFaceNameW.Buffer[LF_FACESIZE - 1] = L'\0';
-        }
+            FontGDI = CurrentEntry->Font;
+            ASSERT(FontGDI);
 
-        if (RtlEqualUnicodeString(FaceName, &EntryFaceNameW, TRUE))
-        {
+            RtlInitAnsiString(&EntryFaceNameA, FontGDI->SharedFace->Face->family_name);
+            status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+            if (!NT_SUCCESS(status))
+            {
+                break;
+            }
+
+            if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
+            {
+                EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
+                EntryFaceNameW.Buffer[LF_FACESIZE - 1] = L'\0';
+            }
+
+            if (RtlEqualUnicodeString(FaceName, &EntryFaceNameW, TRUE))
+            {
+                RtlFreeUnicodeString(&EntryFaceNameW);
+                return FontGDI;
+            }
+
             RtlFreeUnicodeString(&EntryFaceNameW);
-            return FontGDI;
+            Entry = Entry->Flink;
         }
 
-        RtlFreeUnicodeString(&EntryFaceNameW);
-        Entry = Entry->Flink;
+        return NULL;
     }
 
-    return NULL;
-}
-
-static PFONTGDI FASTCALL
-FindFaceNameInLists(PUNICODE_STRING FaceName)
-{
-    PPROCESSINFO Win32Process;
-    PFONTGDI Font;
-
-    /* Search the process local list.
-       We do not have to search the 'Mem' list, since those fonts are linked in the PrivateFontListHead */
-    Win32Process = PsGetCurrentProcessWin32Process();
-    IntLockProcessPrivateFonts(Win32Process);
-    Font = FindFaceNameInList(FaceName, &Win32Process->PrivateFontListHead);
-    IntUnLockProcessPrivateFonts(Win32Process);
-    if (NULL != Font)
+    static PFONTGDI FASTCALL
+    FindFaceNameInLists(PUNICODE_STRING FaceName)
     {
+        PPROCESSINFO Win32Process;
+        PFONTGDI Font;
+
+        /* Search the process local list.
+           We do not have to search the 'Mem' list, since those fonts are linked in the PrivateFontListHead */
+        Win32Process = PsGetCurrentProcessWin32Process();
+        IntLockProcessPrivateFonts(Win32Process);
+        Font = FindFaceNameInList(FaceName, &Win32Process->PrivateFontListHead);
+        IntUnLockProcessPrivateFonts(Win32Process);
+        if (NULL != Font)
+        {
+            return Font;
+        }
+
+        /* Search the global list */
+        IntLockGlobalFonts;
+        Font = FindFaceNameInList(FaceName, &FontListHead);
+        IntUnLockGlobalFonts;
+
         return Font;
     }
-
-    /* Search the global list */
-    IntLockGlobalFonts;
-    Font = FindFaceNameInList(FaceName, &FontListHead);
-    IntUnLockGlobalFonts;
-
-    return Font;
-}
+#endif
 
 /* See https://msdn.microsoft.com/en-us/library/bb165625(v=vs.90).aspx */
 static BYTE
@@ -2321,13 +2323,13 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
 
 
     /* face name */
-    if (!FaceName)
+    if (!FaceName || FaceName[0] == UNICODE_NULL)
         FaceName = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
 
     RtlStringCbCopyW(Lf->lfFaceName, sizeof(Lf->lfFaceName), FaceName);
 
     /* full name */
-    if (!FullName)
+    if (!FullName || FullName[0] == UNICODE_NULL)
         FullName = (WCHAR*)((ULONG_PTR) Otm + (ULONG_PTR)Otm->otmpFaceName);
     
     RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
@@ -2452,24 +2454,27 @@ FontFamilyInclude(LPLOGFONTW LogFont, PUNICODE_STRING FaceName,
 
 static BOOL FASTCALL
 FontFamilyFound(PFONTFAMILYINFO InfoEntry,
-                PFONTFAMILYINFO Info, DWORD InfoCount)
+                PFONTFAMILYINFO Info, DWORD InfoCount, WCHAR *pszSubstName)
 {
     LPLOGFONTW plf1 = &InfoEntry->EnumLogFontEx.elfLogFont;
+    LPLOGFONTW plf2;
     LPWSTR pFullName1 = InfoEntry->EnumLogFontEx.elfFullName;
     LPWSTR pFullName2;
     DWORD i;
 
+    if (!pszSubstName)
+        pszSubstName = plf1->lfFaceName;
+
     for (i = 0; i < InfoCount; ++i)
     {
-        LPLOGFONTW plf2 = &Info[i].EnumLogFontEx.elfLogFont;
-        if (plf1->lfCharSet != plf2->lfCharSet)
-            continue;
-
+        plf2 = &Info[i].EnumLogFontEx.elfLogFont;
         pFullName2 = Info[i].EnumLogFontEx.elfFullName;
-        if (_wcsicmp(pFullName1, pFullName2) != 0)
-            continue;
-
-        return TRUE;
+        if (plf1->lfCharSet == plf2->lfCharSet &&
+            _wcsicmp(pszSubstName, plf2->lfFaceName) == 0 &&
+            _wcsicmp(pFullName1, pFullName2) == 0)
+        {
+            return TRUE;
+        }
     }
     return FALSE;
 }
@@ -2479,6 +2484,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
                          PFONTFAMILYINFO Info,
                          DWORD *pCount,
                          DWORD MaxCount,
+                         WCHAR *pszSubstName,
                          PLIST_ENTRY Head)
 {
     PLIST_ENTRY Entry;
@@ -2503,13 +2509,13 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         {
             if (Count < MaxCount)
             {
-                FontFamilyFillInfo(&Info[Count], NULL, NULL, FontGDI);
+                FontFamilyFillInfo(&Info[Count], pszSubstName, NULL, FontGDI);
             }
             Count++;
             continue;
         }
 
-        FontFamilyFillInfo(&InfoEntry, NULL, NULL, FontGDI);
+        FontFamilyFillInfo(&InfoEntry, pszSubstName, NULL, FontGDI);
 
         if (_wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName) != 0 &&
             _wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName) != 0)
@@ -2517,7 +2523,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
             continue;
         }
 
-        if (!FontFamilyFound(&InfoEntry, Info, min(Count, MaxCount)))
+        if (!FontFamilyFound(&InfoEntry, Info, min(Count, MaxCount), pszSubstName))
         {
             if (Count < MaxCount)
             {
@@ -2541,9 +2547,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
     PLIST_ENTRY pEntry, pHead = &FontSubstListHead;
     PFONTSUBST_ENTRY pCurrentEntry;
     PUNICODE_STRING pFromW;
-    FONTGDI *FontGDI;
     LOGFONTW lf = *LogFont;
-    UNICODE_STRING NameW;
 
     for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
     {
@@ -2559,18 +2563,9 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
         RtlStringCchCopyW(lf.lfFaceName, LF_FACESIZE, pFromW->Buffer);
         SubstituteFontRecurse(&lf);
 
-        RtlInitUnicodeString(&NameW, lf.lfFaceName);
-        FontGDI = FindFaceNameInLists(&NameW);
-        if (FontGDI == NULL)
-        {
-            continue;   /* no real font */
-        }
-
-        if (*pCount < MaxCount)
-        {
-            FontFamilyFillInfo(&Info[*pCount], pFromW->Buffer, NULL, FontGDI);
-        }
-        (*pCount)++;
+        IntLockGlobalFonts;
+        GetFontFamilyInfoForList(&lf, Info, pCount, MaxCount, pFromW->Buffer, &FontListHead);
+        IntUnLockGlobalFonts;
     }
 
     return TRUE;
@@ -4990,7 +4985,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     /* Enumerate font families in the global list */
     IntLockGlobalFonts;
     Count = 0;
-    if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, &FontListHead) )
+    if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, NULL, &FontListHead) )
     {
         IntUnLockGlobalFonts;
         ExFreePoolWithTag(Info, GDITAG_TEXT);
@@ -5001,7 +4996,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     /* Enumerate font families in the process local list */
     Win32Process = PsGetCurrentProcessWin32Process();
     IntLockProcessPrivateFonts(Win32Process);
-    if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size,
+    if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, NULL,
                                    &Win32Process->PrivateFontListHead))
     {
         IntUnLockProcessPrivateFonts(Win32Process);
