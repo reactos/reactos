@@ -112,8 +112,6 @@ HalpCalibrateStallExecution(VOID)
 
     /* Stage 1:  Coarse calibration                                   */
 
-    WaitFor8254Wraparound();
-
     delay_count = 1;
 
     do

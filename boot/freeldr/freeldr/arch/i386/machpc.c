@@ -343,7 +343,7 @@ DetectSerialMouse(PUCHAR Port)
     TimeOut = 200;
     for (i = 0; i < 4; i++)
     {
-        while (((READ_PORT_UCHAR(Port + 5) & 1) == 0) && (TimeOut > 0))
+        while ((READ_PORT_UCHAR(Port + 5) & 1) == 0)
         {
             StallExecutionProcessor(1000);
             --TimeOut;
