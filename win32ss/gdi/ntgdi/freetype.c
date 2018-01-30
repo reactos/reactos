@@ -4914,7 +4914,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     /* Enumerate font families in the global list */
     IntLockGlobalFonts;
     Count = 0;
-    if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, NULL, &FontListHead) )
+    if (!GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, NULL, &FontListHead) )
     {
         IntUnLockGlobalFonts;
         ExFreePoolWithTag(Info, GDITAG_TEXT);
@@ -4925,8 +4925,8 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     /* Enumerate font families in the process local list */
     Win32Process = PsGetCurrentProcessWin32Process();
     IntLockProcessPrivateFonts(Win32Process);
-    if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, NULL,
-                                   &Win32Process->PrivateFontListHead))
+    if (!GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, NULL,
+                                  &Win32Process->PrivateFontListHead))
     {
         IntUnLockProcessPrivateFonts(Win32Process);
         ExFreePoolWithTag(Info, GDITAG_TEXT);
@@ -4935,7 +4935,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Enumerate font families in the registry */
-    if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
+    if (!GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
     {
         ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
