@@ -1773,16 +1773,16 @@ IopValidateID(IN PWCHAR Id,
               IN BOOLEAN IsMultiSz)
 {
    PWCHAR PtrSymbol;
-   ULONG_PTR StringEnd;
+   PWCHAR StringEnd;
    WCHAR Symbol;
    ULONG SeparatorsCount = 0;
    PWCHAR PtrPrevSymbol = NULL;
 
    PAGED_CODE();
 
-   StringEnd = (ULONG_PTR)Id + MaxIdLen * sizeof(WCHAR);
+   StringEnd = Id + MaxIdLen;
 
-   for (PtrSymbol = Id; (ULONG_PTR)PtrSymbol < StringEnd; PtrSymbol++)
+   for (PtrSymbol = Id; PtrSymbol < StringEnd; PtrSymbol++)
    {
       Symbol = *PtrSymbol;
 
@@ -1793,7 +1793,7 @@ IopValidateID(IN PWCHAR Id,
             if (MaxSeparators == SeparatorsCount ||
                 MaxSeparators == MAX_SEPARATORS_MULTISZ)
             {
-               return ((ULONG_PTR)PtrSymbol - (ULONG_PTR)Id) / 2 + 1;
+               return (ULONG)(PtrSymbol - Id) + 1;
             }
 
             DPRINT("IopValidateID: SeparatorsCount - %d, MaxSeparators - %d\n",
@@ -1804,7 +1804,7 @@ IopValidateID(IN PWCHAR Id,
             return 0;
          }
 
-         StringEnd += MaxIdLen * sizeof(WCHAR);
+         StringEnd += MaxIdLen;
          PtrPrevSymbol = PtrSymbol;
       }
       else if (Symbol < ' ' || Symbol > 0x7F || Symbol == ',')
