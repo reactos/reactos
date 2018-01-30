@@ -2,10 +2,8 @@
  * PROJECT:         ReactOS Picture and Fax Viewer
  * FILE:            dll/win32/shimgvw/shimgvw.c
  * PURPOSE:         shimgvw.dll
- * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
- *
- * UPDATE HISTORY:
- *      28/05/2008  Created
+ * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #define WIN32_NO_STATUS
@@ -19,6 +17,7 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <wingdi.h>
+#include <windowsx.h>
 #include <objbase.h>
 #include <commctrl.h>
 #include <commdlg.h>
@@ -41,6 +40,105 @@ WNDPROC PrevProc = NULL;
 
 HWND hDispWnd, hToolBar;
 
+/* zooming */
+#define MIN_ZOOM 10
+#define MAX_ZOOM 1600
+UINT ZoomPercents = 100;
+static const UINT ZoomSteps[] =
+{
+    10, 25, 50, 100, 200, 400, 800, 1600
+};
+
+static void ZoomInOrOut(BOOL bZoomIn)
+{
+    INT i;
+
+    if (bZoomIn)    /* zoom in */
+    {
+        /* find next step */
+        for (i = 0; i < ARRAYSIZE(ZoomSteps); ++i)
+        {
+            if (ZoomPercents < ZoomSteps[i])
+                break;
+        }
+        if (i == ARRAYSIZE(ZoomSteps))
+            ZoomPercents = MAX_ZOOM;
+        else
+            ZoomPercents = ZoomSteps[i];
+
+        /* update tool bar buttons */
+        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, TRUE);
+        if (ZoomPercents >= MAX_ZOOM)
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, FALSE);
+        else
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, TRUE);
+    }
+    else            /* zoom out */
+    {
+        /* find previous step */
+        for (i = ARRAYSIZE(ZoomSteps); i > 0; )
+        {
+            --i;
+            if (ZoomSteps[i] < ZoomPercents)
+                break;
+        }
+        if (i < 0)
+            ZoomPercents = MIN_ZOOM;
+        else
+            ZoomPercents = ZoomSteps[i];
+
+        /* update tool bar buttons */
+        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, TRUE);
+        if (ZoomPercents <= MIN_ZOOM)
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, FALSE);
+        else
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, TRUE);
+    }
+
+    /* redraw */
+    InvalidateRect(hDispWnd, NULL, TRUE);
+}
+
+static void ResetZoom(void)
+{
+    RECT Rect;
+    UINT ImageWidth, ImageHeight;
+
+    /* get disp window size and image size */
+    GetClientRect(hDispWnd, &Rect);
+    GdipGetImageWidth(image, &ImageWidth);
+    GdipGetImageHeight(image, &ImageHeight);
+
+    /* compare two aspect rates. same as
+       (ImageHeight / ImageWidth < Rect.bottom / Rect.right) in real */
+    if (ImageHeight * Rect.right < Rect.bottom * ImageWidth)
+    {
+        if (Rect.right < ImageWidth)
+        {
+            /* it's large, shrink it */
+            ZoomPercents = (Rect.right * 100) / ImageWidth;
+        }
+        else
+        {
+            /* it's small. show as original size */
+            ZoomPercents = 100;
+        }
+    }
+    else
+    {
+        if (Rect.bottom < ImageHeight)
+        {
+            /* it's large, shrink it */
+            ZoomPercents = (Rect.bottom * 100) / ImageHeight;
+        }
+        else
+        {
+            /* it's small. show as original size */
+            ZoomPercents = 100;
+        }
+    }
+}
+
 /* ToolBar Buttons */
 static const TBBUTTON Buttons [] =
 {   /* iBitmap,     idCommand,   fsState,         fsStyle,     bReserved[2], dwData, iString */
@@ -59,17 +157,26 @@ static const TBBUTTON Buttons [] =
 
 static void pLoadImage(LPWSTR szOpenFileName)
 {
+    /* check file presence */
     if (GetFileAttributesW(szOpenFileName) == 0xFFFFFFFF)
     {
         DPRINT1("File %s not found!\n", szOpenFileName);
         return;
     }
 
+    /* load now */
     GdipLoadImageFromFile(szOpenFileName, &image);
     if (!image)
     {
         DPRINT1("GdipLoadImageFromFile() failed\n");
+        return;
     }
+
+    /* reset zoom */
+    ResetZoom();
+
+    /* redraw */
+    InvalidateRect(hDispWnd, NULL, TRUE);
 }
 
 static void pSaveImageAs(HWND hwnd)
@@ -185,8 +292,6 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
         }
 
         pLoadImage(node->FileName);
-        InvalidateRect(hDispWnd, NULL, TRUE);
-        UpdateWindow(hDispWnd);
     }
 }
 
@@ -330,8 +435,8 @@ static VOID
 ImageView_DrawImage(HWND hwnd)
 {
     GpGraphics *graphics;
-    UINT uImgWidth, uImgHeight;
-    UINT height = 0, width = 0, x = 0, y = 0;
+    UINT ImageWidth, ImageHeight;
+    INT ZoomedWidth, ZoomedHeight, x, y;
     PAINTSTRUCT ps;
     RECT rect;
     HDC hdc;
@@ -350,38 +455,37 @@ ImageView_DrawImage(HWND hwnd)
         return;
     }
 
-    GdipGetImageWidth(image, &uImgWidth);
-    GdipGetImageHeight(image, &uImgHeight);
+    GdipGetImageWidth(image, &ImageWidth);
+    GdipGetImageHeight(image, &ImageHeight);
 
     if (GetClientRect(hwnd, &rect))
     {
         FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
 
-        if ((rect.right >= uImgWidth)&&(rect.bottom >= uImgHeight))
+        ZoomedWidth = (ImageWidth * ZoomPercents) / 100;
+        ZoomedHeight = (ImageHeight * ZoomPercents) / 100;
+
+        x = (rect.right - ZoomedWidth) / 2;
+        y = (rect.bottom - ZoomedHeight) / 2;
+
+        DPRINT("x = %d, y = %d, ImageWidth = %u, ImageHeight = %u\n");
+        DPRINT("rect.right = %ld, rect.bottom = %ld\n", rect.right, rect.bottom);
+        DPRINT("ZoomPercents = %d, ZoomedWidth = %d, ZoomedHeight = %d\n",
+               ZoomPercents, ZoomedWidth, ZoomedWidth);
+
+        if (ZoomPercents % 100 == 0)
         {
-            width = uImgWidth;
-            height = uImgHeight;
+            GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
+            GdipSetSmoothingMode(graphics, SmoothingModeNone);
         }
         else
         {
-            height = uImgHeight * (UINT)rect.right / uImgWidth;
-            if (height <= rect.bottom)
-            {
-                width = rect.right;
-            }
-            else
-            {
-                width = uImgWidth * (UINT)rect.bottom / uImgHeight;
-                height = rect.bottom;
-            }
+            GdipSetInterpolationMode(graphics, InterpolationModeHighQualityBilinear);
+            GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
 
-        y = (rect.bottom / 2) - (height / 2);
-        x = (rect.right / 2) - (width / 2);
-
-        DPRINT("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d\n", x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
-        Rectangle(hdc, x - 1, y - 1, x + width + 1, y + height + 1);
-        GdipDrawImageRect(graphics, image, x, y, width, height);
+        Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+        GdipDrawImageRectI(graphics, image, x, y, ZoomedWidth, ZoomedHeight);
     }
     GdipDeleteGraphics(graphics);
     EndPaint(hwnd, &ps);
@@ -524,6 +628,15 @@ ImageView_InitControls(HWND hwnd)
     ImageView_CreateToolBar(hwnd);
 }
 
+static VOID
+ImageView_OnMouseWheel(HWND hwnd, INT x, INT y, INT zDelta, UINT fwKeys)
+{
+    if (zDelta != 0)
+    {
+        ZoomInOrOut(zDelta > 0);
+    }
+}
+
 LRESULT CALLBACK
 ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -567,10 +680,14 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 break;
                 case IDC_ZOOMP:
-
+                {
+                    ZoomInOrOut(TRUE);
+                }
                 break;
                 case IDC_ZOOMM:
-
+                {
+                    ZoomInOrOut(FALSE);
+                }
                 break;
                 case IDC_SAVE:
                     pSaveImageAs(hwnd);
@@ -596,6 +713,12 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+
+        case WM_MOUSEWHEEL:
+            ImageView_OnMouseWheel(hwnd,
+                GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
+                (SHORT)HIWORD(wParam), (UINT)LOWORD(wParam));
+            break;
 
         case WM_NOTIFY:
         {
@@ -660,6 +783,12 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
             GetWindowRect(hToolBar, &rc);
             MoveWindow(hDispWnd, 1, 1, LOWORD(lParam) - 1, HIWORD(lParam) - (rc.bottom - rc.top) - 1, TRUE);
+            /* is it maximized or restored? */
+            if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED)
+            {
+                /* reset zoom */
+                ResetZoom();
+            }
             return 0L;
         }
         case WM_DESTROY:
@@ -710,7 +839,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
     WndClass.hCursor        = LoadCursor(hInstance, IDC_ARROW);
-    WndClass.hbrBackground  = (HBRUSH)COLOR_WINDOW;
+    WndClass.hbrBackground  = NULL;   /* less flicker */
 
     if (!RegisterClass(&WndClass)) return -1;
 
