@@ -340,12 +340,12 @@ DetectSerialMouse(PUCHAR Port)
     StallExecutionProcessor(10000);
 
     /* Read first four bytes, which contains Microsoft Mouse signs */
-    TimeOut = 200;
+    TimeOut = 20;
     for (i = 0; i < 4; i++)
     {
         while ((READ_PORT_UCHAR(Port + 5) & 1) == 0)
         {
-            StallExecutionProcessor(1000);
+            StallExecutionProcessor(100);
             --TimeOut;
             if (TimeOut == 0)
                 return MOUSE_TYPE_NONE;
