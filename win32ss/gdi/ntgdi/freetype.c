@@ -2383,7 +2383,7 @@ FontFamilyInclude(LPLOGFONTW LogFont, PUNICODE_STRING FaceName,
 
 static BOOL FASTCALL
 FontFamilyFound(PFONTFAMILYINFO InfoEntry,
-                PFONTFAMILYINFO Info, DWORD InfoCount, WCHAR *pszSubstName)
+                PFONTFAMILYINFO Info, DWORD InfoCount, LPCWSTR pszSubstName)
 {
     LPLOGFONTW plf1 = &InfoEntry->EnumLogFontEx.elfLogFont;
     LPLOGFONTW plf2;
@@ -2413,7 +2413,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
                          PFONTFAMILYINFO Info,
                          DWORD *pCount,
                          DWORD MaxCount,
-                         WCHAR *pszSubstName,
+                         LPCWSTR pszSubstName,
                          PLIST_ENTRY Head)
 {
     PLIST_ENTRY Entry;
