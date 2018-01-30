@@ -794,6 +794,8 @@ LoadAndBootWindowsCommon(
     SystemRoot = strstr(BootPath, "\\");
 
     /* Detect hardware */
+    UiDrawBackdrop();
+    UiDrawProgressBarCenter(20, 100, "Detecting hardware...");
     LoaderBlock->ConfigurationRoot = MachHwDetect();
 
     if (OperatingSystemVersion == 0)
