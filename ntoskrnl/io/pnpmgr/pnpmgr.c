@@ -1796,9 +1796,8 @@ IopValidateID(IN PWCHAR Id,
                return (ULONG)(PtrSymbol - Id) + 1;
             }
 
-            DPRINT("IopValidateID: SeparatorsCount - %d, MaxSeparators - %d\n",
-                   SeparatorsCount,
-                   MaxSeparators);
+            DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
+                   SeparatorsCount, MaxSeparators);
 
             // FIXME logging
             return 0;
@@ -1824,9 +1823,8 @@ IopValidateID(IN PWCHAR Id,
 
          if (SeparatorsCount > MaxSeparators)
          {
-            DPRINT("IopValidateID: SeparatorsCount - %d, MaxSeparators - %d\n",
-                   SeparatorsCount,
-                   MaxSeparators);
+            DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
+                   SeparatorsCount, MaxSeparators);
 
             // FIXME logging
             return 0;
