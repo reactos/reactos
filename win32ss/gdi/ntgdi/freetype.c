@@ -2333,14 +2333,17 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
             {
                 CharSetInfo.ciCharset = DEFAULT_CHARSET;
             }
-            if (DEFAULT_CHARSET != CharSetInfo.ciCharset)
+            if (Lf->lfCharSet == CharSetInfo.ciCharset)
             {
                 if (ElfScripts[i])
+                {
                     wcscpy(Info->EnumLogFontEx.elfScript, ElfScripts[i]);
+                }
                 else
                 {
                     DPRINT1("Unknown elfscript for bit %u\n", i);
                 }
+                break;
             }
         }
     }
