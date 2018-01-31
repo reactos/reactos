@@ -142,7 +142,6 @@ CcWriteVirtualAddress (
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
 
-    Vacb->Dirty = FALSE;
     Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
     if (Size > VACB_MAPPING_GRANULARITY)
     {
@@ -193,7 +192,6 @@ CcWriteVirtualAddress (
     if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
     {
         DPRINT1("IoPageWrite failed, Status %x\n", Status);
-        Vacb->Dirty = TRUE;
         return Status;
     }
 
