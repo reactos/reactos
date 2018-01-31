@@ -1767,75 +1767,76 @@ cleanup:
 
 static
 BOOLEAN
-IopValidateID(IN PWCHAR Id,
-              IN SIZE_T MaxIdLen,
-              IN ULONG MaxSeparators,
-              IN BOOLEAN IsMultiSz)
+IopValidateID(
+    _In_ PWCHAR Id,
+    _In_ SIZE_T MaxIdLen,
+    _In_ ULONG MaxSeparators,
+    _In_ BOOLEAN IsMultiSz)
 {
-   PWCHAR PtrSymbol;
-   PWCHAR StringEnd;
-   WCHAR Symbol;
-   ULONG SeparatorsCount = 0;
-   PWCHAR PtrPrevSymbol = NULL;
+    PWCHAR PtrSymbol;
+    PWCHAR StringEnd;
+    WCHAR Symbol;
+    ULONG SeparatorsCount = 0;
+    PWCHAR PtrPrevSymbol = NULL;
 
-   PAGED_CODE();
+    PAGED_CODE();
 
-   StringEnd = Id + MaxIdLen;
+    StringEnd = Id + MaxIdLen;
 
-   for (PtrSymbol = Id; PtrSymbol < StringEnd; PtrSymbol++)
-   {
-      Symbol = *PtrSymbol;
+    for (PtrSymbol = Id; PtrSymbol < StringEnd; PtrSymbol++)
+    {
+        Symbol = *PtrSymbol;
 
-      if (Symbol == UNICODE_NULL)
-      {
-         if (!IsMultiSz || (PtrPrevSymbol && PtrSymbol == PtrPrevSymbol + 1))
-         {
-            if (MaxSeparators == SeparatorsCount ||
-                MaxSeparators == MAX_SEPARATORS_MULTISZ)
+        if (Symbol == UNICODE_NULL)
+        {
+            if (!IsMultiSz || (PtrPrevSymbol && PtrSymbol == PtrPrevSymbol + 1))
             {
-               return TRUE;
+                if (MaxSeparators == SeparatorsCount ||
+                    MaxSeparators == MAX_SEPARATORS_MULTISZ)
+                {
+                    return TRUE;
+                }
+
+                DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
+                       SeparatorsCount, MaxSeparators);
+
+                // FIXME logging
+                return FALSE;
             }
 
-            DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
-                   SeparatorsCount, MaxSeparators);
+            StringEnd += MaxIdLen;
+            PtrPrevSymbol = PtrSymbol;
+        }
+        else if (Symbol < ' ' || Symbol > 0x7F || Symbol == ',')
+        {
+            DPRINT("IopValidateID: Invalid character - %04X\n", Symbol);
 
             // FIXME logging
             return FALSE;
-         }
+        }
+        else if (Symbol == ' ')
+        {
+            *PtrSymbol = '_';
+        }
+        else if (Symbol == '\\')
+        {
+            SeparatorsCount++;
 
-         StringEnd += MaxIdLen;
-         PtrPrevSymbol = PtrSymbol;
-      }
-      else if (Symbol < ' ' || Symbol > 0x7F || Symbol == ',')
-      {
-         DPRINT("IopValidateID: Invalid character - %04X\n", Symbol);
+            if (SeparatorsCount > MaxSeparators)
+            {
+                DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
+                       SeparatorsCount, MaxSeparators);
 
-         // FIXME logging
-         return FALSE;
-      }
-      else if (Symbol == ' ')
-      {
-         *PtrSymbol = '_';
-      }
-      else if (Symbol == '\\')
-      {
-         SeparatorsCount++;
+                // FIXME logging
+               return FALSE;
+            }
+        }
+    }
 
-         if (SeparatorsCount > MaxSeparators)
-         {
-            DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
-                   SeparatorsCount, MaxSeparators);
+    DPRINT("IopValidateID: Not terminated ID\n");
 
-            // FIXME logging
-            return FALSE;
-         }
-      }
-   }
-
-   DPRINT("IopValidateID: Not terminated ID\n");
-
-   // FIXME logging
-   return FALSE;
+    // FIXME logging
+    return FALSE;
 }
  
 NTSTATUS
