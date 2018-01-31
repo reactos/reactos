@@ -323,6 +323,7 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
     BYTE                            CharSets[FONTSUBST_FROM_AND_TO];
     LPWSTR                          pch;
     PFONTSUBST_ENTRY                pEntry;
+    BOOLEAN                         Success;
 
     /* the FontSubstitutes registry key */
     static UNICODE_STRING FontSubstKey =
@@ -367,10 +368,11 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
         Length = pInfo->NameLength / sizeof(WCHAR);
         pInfo->Name[Length] = UNICODE_NULL;   /* truncate */
-        Status = RtlCreateUnicodeString(&FromW, pInfo->Name);
-        if (!NT_SUCCESS(Status))
+        Success = RtlCreateUnicodeString(&FromW, pInfo->Name);
+        if (!Success)
         {
-            DPRINT("RtlCreateUnicodeString failed: 0x%08X\n", Status);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            DPRINT("RtlCreateUnicodeString failed\n");
             break;      /* failure */
         }
 
