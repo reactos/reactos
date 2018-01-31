@@ -403,6 +403,18 @@ extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 
 #endif /* NTOS_MODE_USER */
 
+//
+// Constant Large Integer Macro
+//
+#ifdef NONAMELESSUNION
+C_ASSERT(FIELD_OFFSET(LARGE_INTEGER, u.LowPart) == 0);
+#else
+C_ASSERT(FIELD_OFFSET(LARGE_INTEGER, LowPart) == 0);
+#endif
+#define RTL_CONSTANT_LARGE_INTEGER(quad_part) { { (quad_part), (quad_part)>>32 } }
+#define RTL_MAKE_LARGE_INTEGER(low_part, high_part) { { (low_part), (high_part) } }
+
+
 #ifdef NTOS_MODE_USER
 
 //
