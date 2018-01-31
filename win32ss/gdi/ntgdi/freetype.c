@@ -2347,40 +2347,6 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     Info->NewTextMetricEx.ntmFontSig = fs;
 }
 
-static int FASTCALL
-FindFaceNameInInfo(PUNICODE_STRING FaceName, PFONTFAMILYINFO Info, DWORD InfoEntries)
-{
-    DWORD i;
-    UNICODE_STRING InfoFaceName;
-
-    for (i = 0; i < InfoEntries; i++)
-    {
-        RtlInitUnicodeString(&InfoFaceName, Info[i].EnumLogFontEx.elfLogFont.lfFaceName);
-        if (RtlEqualUnicodeString(&InfoFaceName, FaceName, TRUE))
-        {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-static BOOLEAN FASTCALL
-FontFamilyInclude(LPLOGFONTW LogFont, PUNICODE_STRING FaceName,
-                  PFONTFAMILYINFO Info, DWORD InfoEntries)
-{
-    UNICODE_STRING LogFontFaceName;
-
-    RtlInitUnicodeString(&LogFontFaceName, LogFont->lfFaceName);
-    if (0 != LogFontFaceName.Length &&
-        !RtlEqualUnicodeString(&LogFontFaceName, FaceName, TRUE))
-    {
-        return FALSE;
-    }
-
-    return FindFaceNameInInfo(FaceName, Info, InfoEntries) < 0;
-}
-
 static BOOL FASTCALL
 FontFamilyFound(PFONTFAMILYINFO InfoEntry,
                 PFONTFAMILYINFO Info, DWORD InfoCount, PCWSTR pszSubstName)
@@ -2483,10 +2449,11 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
         pCurrentEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
 
         pFromW = &pCurrentEntry->FontNames[FONTSUBST_FROM];
+
         if (LogFont->lfFaceName[0] != UNICODE_NULL)
         {
-            if (!FontFamilyInclude(LogFont, pFromW, Info, min(*pCount, MaxCount)))
-                continue;   /* mismatch */
+            if (_wcsicmp(LogFont->lfFaceName, pFromW->Buffer) != 0)
+                continue;
         }
 
         RtlStringCchCopyW(lf.lfFaceName, LF_FACESIZE, pFromW->Buffer);
