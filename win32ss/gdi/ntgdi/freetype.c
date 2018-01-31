@@ -391,10 +391,11 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         pch = (LPWSTR)((PUCHAR)pInfo + pInfo->DataOffset);
         Length = pInfo->DataLength / sizeof(WCHAR);
         pch[Length] = UNICODE_NULL; /* truncate */
-        Status = RtlCreateUnicodeString(&ToW, pch);
-        if (!NT_SUCCESS(Status))
+        Success = RtlCreateUnicodeString(&ToW, pch);
+        if (!Success)
         {
-            DPRINT("RtlCreateUnicodeString failed: 0x%08X\n", Status);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            DPRINT("RtlCreateUnicodeString failed\n");
             RtlFreeUnicodeString(&FromW);
             break;      /* failure */
         }
@@ -2193,7 +2194,14 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
             /* Convert UTF-16 big endian to little endian */
             SwapEndian(Buf, Name.string_len);
 
-            Status = RtlCreateUnicodeString(pNameW, Buf);
+            if (RtlCreateUnicodeString(pNameW, Buf))
+            {
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
         }
     }
 
