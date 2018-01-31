@@ -2442,13 +2442,22 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
     PLIST_ENTRY pEntry, pHead = &FontSubstListHead;
     PFONTSUBST_ENTRY pCurrentEntry;
     PUNICODE_STRING pFromW;
-    LOGFONTW lf = *LogFont;
+    LOGFONTW lf;
+    BYTE CharSetFrom;
 
     for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
     {
         pCurrentEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
 
         pFromW = &pCurrentEntry->FontNames[FONTSUBST_FROM];
+        CharSetFrom = pCurrentEntry->CharSets[FONTSUBST_FROM];
+
+        if (LogFont->lfCharSet != DEFAULT_CHARSET &&
+            LogFont->lfCharSet != CharSetFrom &&
+            CharSetFrom != DEFAULT_CHARSET)
+        {
+            continue;
+        }
 
         if (LogFont->lfFaceName[0] != UNICODE_NULL)
         {
@@ -2456,6 +2465,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
                 continue;
         }
 
+        lf = *LogFont;
         RtlStringCchCopyW(lf.lfFaceName, LF_FACESIZE, pFromW->Buffer);
         SubstituteFontRecurse(&lf);
 
