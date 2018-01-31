@@ -2400,22 +2400,15 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
             continue;
         }
 
-        if (LogFont->lfFaceName[0] == UNICODE_NULL)
-        {
-            if (Count < MaxCount)
-            {
-                FontFamilyFillInfo(&Info[Count], pszSubstName, NULL, FontGDI);
-            }
-            Count++;
-            continue;
-        }
-
         FontFamilyFillInfo(&InfoEntry, pszSubstName, NULL, FontGDI);
 
-        if (_wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName) != 0 &&
-            _wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName) != 0)
+        if (LogFont->lfFaceName[0] != UNICODE_NULL)
         {
-            continue;
+            if (_wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName) != 0 &&
+                _wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName) != 0)
+            {
+                continue;
+            }
         }
 
         if (!FontFamilyFound(&InfoEntry, Info, min(Count, MaxCount), pszSubstName))
@@ -2442,13 +2435,22 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
     PLIST_ENTRY pEntry, pHead = &FontSubstListHead;
     PFONTSUBST_ENTRY pCurrentEntry;
     PUNICODE_STRING pFromW;
-    LOGFONTW lf = *LogFont;
+    LOGFONTW lf;
+    BYTE CharSetFrom;
 
     for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
     {
         pCurrentEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
 
         pFromW = &pCurrentEntry->FontNames[FONTSUBST_FROM];
+        CharSetFrom = pCurrentEntry->CharSets[FONTSUBST_FROM];
+
+        if (LogFont->lfCharSet != DEFAULT_CHARSET &&
+            LogFont->lfCharSet != CharSetFrom &&
+            CharSetFrom != DEFAULT_CHARSET)
+        {
+            continue;
+        }
 
         if (LogFont->lfFaceName[0] != UNICODE_NULL)
         {
@@ -2456,6 +2458,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
                 continue;
         }
 
+        lf = *LogFont;
         RtlStringCchCopyW(lf.lfFaceName, LF_FACESIZE, pFromW->Buffer);
         SubstituteFontRecurse(&lf);
 
