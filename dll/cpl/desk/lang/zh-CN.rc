@@ -165,10 +165,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Display Settings"
 FONT 8, "宋体"
 BEGIN
-    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "是否保留这些设置？", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
-    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
-    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+    PUSHBUTTON "是(&Y)", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "否(&N)", IDNO, 175, 36, 50, 14
 END
 
 IDR_PREVIEW_MENU MENU
@@ -217,8 +217,8 @@ BEGIN
     IDS_CENTER "居中"
     IDS_STRETCH "拉伸"
     IDS_TILE "平铺"
-    IDS_FIT "Fit"
-    IDS_FILL "Fill"
+    IDS_FIT "匹配"
+    IDS_FILL "充满"
 END
 
 STRINGTABLE

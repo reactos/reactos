@@ -1,4 +1,5 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -36,7 +37,7 @@ IDR_BROWSE_MAIN_MENU MENU
     }
     POPUP "帮助(&H)"
     {
-        MENUITEM "关于互联网浏览器(&A)", ID_BROWSE_ABOUT
+        MENUITEM "关于 Internet Explorer(&A)", ID_BROWSE_ABOUT
     }
 }
 
@@ -57,7 +58,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_FINDINGRESOURCE     "搜索 %s 中"
+    IDS_FINDINGRESOURCE     "正在搜索 %s"
     IDS_BEGINDOWNLOADDATA   "开始下载 %s"
     IDS_ENDDOWNLOADDATA     "下载 %s 中"
     IDS_SENDINGREQUEST      "要求 %s"
