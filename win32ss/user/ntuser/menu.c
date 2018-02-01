@@ -598,6 +598,7 @@ BOOL FASTCALL
 IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
 {
     PITEM item;
+    PITEM newItems;
 
     TRACE("(menu=%p pos=%04x flags=%04x)\n",pMenu, nPos, wFlags);
     if (!(item = MENU_FindItem( &pMenu, &nPos, wFlags ))) return FALSE;
@@ -617,13 +618,17 @@ IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
     }
     else
     {
-	while(nPos < pMenu->cItems)
-	{
-	    *item = *(item+1);
-	    item++;
-	    nPos++;
-	}
-	pMenu->rgItems = DesktopHeapReAlloc(pMenu->head.rpdesk, pMenu->rgItems, pMenu->cItems * sizeof(ITEM));
+        while (nPos < pMenu->cItems)
+        {
+            *item = *(item+1);
+            item++;
+            nPos++;
+        }
+        newItems = DesktopHeapReAlloc(pMenu->head.rpdesk, pMenu->rgItems, pMenu->cItems * sizeof(ITEM));
+        if (newItems)
+        {
+            pMenu->rgItems = newItems;
+        }
     }
     return TRUE;
 }
