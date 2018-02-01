@@ -778,10 +778,10 @@ IntCloneMenuItems(PMENU Destination, PMENU Source)
    if(!Source->cItems)
       return FALSE;
 
-   NewMenuItem = DesktopHeapAlloc(Destination->head.rpdesk, (Source->cItems+1) * sizeof(ITEM));
+   NewMenuItem = DesktopHeapAlloc(Destination->head.rpdesk, Source->cItems * sizeof(ITEM));
    if(!NewMenuItem) return FALSE;
 
-   RtlZeroMemory(NewMenuItem, (Source->cItems+1) * sizeof(ITEM));
+   RtlZeroMemory(NewMenuItem, Source->cItems * sizeof(ITEM));
 
    Destination->rgItems = NewMenuItem;
 
