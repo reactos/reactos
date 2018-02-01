@@ -300,6 +300,12 @@ NTAPI
 CcRosMarkDirtyVacb(
     PROS_VACB Vacb);
 
+VOID
+NTAPI
+CcRosUnmarkDirtyVacb(
+    PROS_VACB Vacb,
+    BOOLEAN LockViews);
+
 NTSTATUS
 NTAPI
 CcRosFlushDirtyPages(

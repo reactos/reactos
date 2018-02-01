@@ -167,22 +167,11 @@ CcRosFlushVacb (
     PROS_VACB Vacb)
 {
     NTSTATUS Status;
-    KIRQL oldIrql;
 
     Status = CcWriteVirtualAddress(Vacb);
     if (NT_SUCCESS(Status))
     {
-        KeAcquireGuardedMutex(&ViewLock);
-        KeAcquireSpinLock(&Vacb->SharedCacheMap->CacheMapLock, &oldIrql);
-
-        Vacb->Dirty = FALSE;
-        RemoveEntryList(&Vacb->DirtyVacbListEntry);
-        CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-        Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-        CcRosVacbDecRefCount(Vacb);
-
-        KeReleaseSpinLock(&Vacb->SharedCacheMap->CacheMapLock, oldIrql);
-        KeReleaseGuardedMutex(&ViewLock);
+        CcRosUnmarkDirtyVacb(Vacb, TRUE);
     }
 
     return Status;
@@ -617,6 +606,39 @@ CcRosMarkDirtyVacb (
 
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
+}
+
+VOID
+NTAPI
+CcRosUnmarkDirtyVacb (
+    PROS_VACB Vacb,
+    BOOLEAN LockViews)
+{
+    KIRQL oldIrql;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+
+    SharedCacheMap = Vacb->SharedCacheMap;
+
+    if (LockViews)
+    {
+        KeAcquireGuardedMutex(&ViewLock);
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
+    }
+
+    ASSERT(Vacb->Dirty);
+
+    Vacb->Dirty = FALSE;
+
+    RemoveEntryList(&Vacb->DirtyVacbListEntry);
+    CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+    Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+    CcRosVacbDecRefCount(Vacb);
+
+    if (LockViews)
+    {
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
+        KeReleaseGuardedMutex(&ViewLock);
+    }
 }
 
 NTSTATUS
@@ -1132,9 +1154,9 @@ CcRosDeleteFileCache (
             RemoveEntryList(&current->VacbLruListEntry);
             if (current->Dirty)
             {
-                RemoveEntryList(&current->DirtyVacbListEntry);
-                CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-                current->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+                KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
+                CcRosUnmarkDirtyVacb(current, FALSE);
+                KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
                 DPRINT1("Freeing dirty VACB\n");
             }
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);

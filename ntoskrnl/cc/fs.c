@@ -233,9 +233,7 @@ CcPurgeCacheSection (
         RemoveEntryList(&Vacb->VacbLruListEntry);
         if (Vacb->Dirty)
         {
-            RemoveEntryList(&Vacb->DirtyVacbListEntry);
-            CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-            Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+            CcRosUnmarkDirtyVacb(Vacb, FALSE);
         }
         RemoveEntryList(&Vacb->CacheMapVacbListEntry);
         InsertHeadList(&FreeList, &Vacb->CacheMapVacbListEntry);
