@@ -815,6 +815,7 @@ IntCloneMenuItems(PMENU Destination, PMENU Source)
          NewMenuItem->Xlpstr = NewMenuItem->lpstr.Buffer;
       }
       NewMenuItem->hbmp = MenuItem->hbmp;
+      Destination->cItems = i + 1;
    }
    return TRUE;
 }
@@ -847,7 +848,7 @@ IntCloneMenu(PMENU Source)
    Menu->spwndNotify = NULL;
    Menu->cyMenu = 0;
    Menu->cxMenu = 0;
-   Menu->cItems = Source->cItems;
+   Menu->cItems = 0;
    Menu->iTop = 0;
    Menu->iMaxTop = 0;
    Menu->cxTextAlign = 0;
