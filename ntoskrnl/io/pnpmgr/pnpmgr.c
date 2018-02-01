@@ -1801,7 +1801,7 @@ IopValidateID(
             return FALSE;
     }
 
-    StringEnd = Id + MAX_SEPARATORS_MULTISZ;
+    StringEnd = Id + MAX_DEVICE_ID_LEN;
 
     for (PtrChar = Id; PtrChar < StringEnd; PtrChar++)
     {
@@ -1823,7 +1823,7 @@ IopValidateID(
                 return FALSE;
             }
 
-            StringEnd += MAX_SEPARATORS_MULTISZ;
+            StringEnd += MAX_DEVICE_ID_LEN;
             PtrPrevChar = PtrChar;
         }
         else if (Char < ' ' || Char > 0x7F || Char == ',')
