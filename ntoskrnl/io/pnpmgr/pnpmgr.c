@@ -1863,7 +1863,7 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
    UNICODE_STRING ValueName;
    NTSTATUS Status;
    ULONG Length, TotalLength;
-   BOOLEAN IsValideID;
+   BOOLEAN IsValidID;
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
 
@@ -1875,9 +1875,9 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                               &Stack);
    if (NT_SUCCESS(Status))
    {
-      IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryHardwareIDs);
+      IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryHardwareIDs);
 
-      if (!IsValideID)
+      if (!IsValidID)
       {
          DPRINT1("Invalid HardwareIDs. DeviceNode - %p\n", DeviceNode);
       }
@@ -1927,7 +1927,7 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
    UNICODE_STRING ValueName;
    NTSTATUS Status;
    ULONG Length, TotalLength;
-   BOOLEAN IsValideID;
+   BOOLEAN IsValidID;
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryCompatibleIDs to device stack\n");
 
@@ -1940,9 +1940,9 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
       &Stack);
    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
-      IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryCompatibleIDs);
+      IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryCompatibleIDs);
 
-      if (!IsValideID)
+      if (!IsValidID)
       {
          DPRINT1("Invalid CompatibleIDs. DeviceNode - %p\n", DeviceNode);
       }
@@ -1994,7 +1994,7 @@ IopCreateDeviceInstancePath(
     NTSTATUS Status;
     UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
     DEVICE_CAPABILITIES DeviceCapabilities;
-    BOOLEAN IsValideID;
+    BOOLEAN IsValidID;
 
     DPRINT("Sending IRP_MN_QUERY_ID.BusQueryDeviceID to device stack\n");
 
@@ -2009,9 +2009,9 @@ IopCreateDeviceInstancePath(
         return Status;
     }
 
-    IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryDeviceID);
+    IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryDeviceID);
 
-    if (!IsValideID)
+    if (!IsValidID)
     {
         DPRINT1("Invalid DeviceID. DeviceNode - %p\n", DeviceNode);
     }
@@ -2070,9 +2070,9 @@ IopCreateDeviceInstancePath(
 
     if (IoStatusBlock.Information)
     {
-        IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryInstanceID);
+        IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryInstanceID);
 
-        if (!IsValideID)
+        if (!IsValidID)
         {
             DPRINT1("Invalid InstanceID. DeviceNode - %p\n", DeviceNode);
         }
