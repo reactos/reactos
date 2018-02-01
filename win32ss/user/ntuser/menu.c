@@ -4436,6 +4436,10 @@ PopupMenuWndProc(
         }
         Wnd->fnid = FNID_MENU;
         pPopupMenu = DesktopHeapAlloc( Wnd->head.rpdesk, sizeof(POPUPMENU) );
+        if (pPopupMenu == NULL)
+        {
+            return TRUE;
+        }
         pPopupMenu->posSelectedItem = NO_SELECTED_ITEM;
         pPopupMenu->spwndPopupMenu = Wnd;
         ((PMENUWND)Wnd)->ppopupmenu = pPopupMenu;
