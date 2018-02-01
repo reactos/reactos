@@ -1812,7 +1812,9 @@ IopValidateID(
             if (!IsMultiSz || (PtrPrevChar && PtrChar == PtrPrevChar + 1))
             {
                 if (MaxSeparators == SeparatorsCount || IsMultiSz)
+                {
                     return TRUE;
+                }
 
                 DPRINT1("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
                         SeparatorsCount, MaxSeparators);
