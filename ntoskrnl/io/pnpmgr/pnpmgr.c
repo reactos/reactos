@@ -1797,7 +1797,7 @@ IopValidateID(
             break;
 
         default:
-            DPRINT("IopValidateID: Not handled QueryType - %x\n", QueryType);
+            DPRINT1("IopValidateID: Not handled QueryType - %x\n", QueryType);
             return FALSE;
     }
 
@@ -1812,15 +1812,11 @@ IopValidateID(
             if (!IsMultiSz || (PtrPrevChar && PtrChar == PtrPrevChar + 1))
             {
                 if (MaxSeparators == SeparatorsCount || IsMultiSz)
-                {
                     return TRUE;
-                }
 
-                DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
-                       SeparatorsCount, MaxSeparators);
-
-                // FIXME logging
-                return FALSE;
+                DPRINT1("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
+                        SeparatorsCount, MaxSeparators);
+                goto ErrorExit;
             }
 
             StringEnd = PtrChar + MAX_DEVICE_ID_LEN + 1;
@@ -1828,10 +1824,8 @@ IopValidateID(
         }
         else if (Char < ' ' || Char > 0x7F || Char == ',')
         {
-            DPRINT("IopValidateID: Invalid character - %04X\n", Char);
-
-            // FIXME logging
-            return FALSE;
+            DPRINT1("IopValidateID: Invalid character - %04X\n", Char);
+            goto ErrorExit;
         }
         else if (Char == ' ')
         {
@@ -1843,17 +1837,16 @@ IopValidateID(
 
             if (SeparatorsCount > MaxSeparators)
             {
-                DPRINT("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
-                       SeparatorsCount, MaxSeparators);
-
-                // FIXME logging
-               return FALSE;
+                DPRINT1("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
+                        SeparatorsCount, MaxSeparators);
+                goto ErrorExit;
             }
         }
     }
 
-    DPRINT("IopValidateID: Not terminated ID\n");
+    DPRINT1("IopValidateID: Not terminated ID\n");
 
+ErrorExit:
     // FIXME logging
     return FALSE;
 }
@@ -1883,7 +1876,9 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
       IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryHardwareIDs);
 
       if (!IsValideID)
+      {
          DPRINT1("Invalid HardwareIDs. DeviceNode - %p\n", DeviceNode);
+      }
 
       TotalLength = 0;
 
@@ -1946,7 +1941,9 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
       IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryCompatibleIDs);
 
       if (!IsValideID)
+      {
          DPRINT1("Invalid CompatibleIDs. DeviceNode - %p\n", DeviceNode);
+      }
 
       TotalLength = 0;
 
@@ -2013,7 +2010,9 @@ IopCreateDeviceInstancePath(
     IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryDeviceID);
 
     if (!IsValideID)
+    {
         DPRINT1("Invalid DeviceID. DeviceNode - %p\n", DeviceNode);
+    }
 
     /* Save the device id string */
     RtlInitUnicodeString(&DeviceId, (PWSTR)IoStatusBlock.Information);
@@ -2072,7 +2071,9 @@ IopCreateDeviceInstancePath(
         IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryInstanceID);
 
         if (!IsValideID)
+        {
             DPRINT1("Invalid InstanceID. DeviceNode - %p\n", DeviceNode);
+        }
     }
 
     RtlInitUnicodeString(&InstanceId,
