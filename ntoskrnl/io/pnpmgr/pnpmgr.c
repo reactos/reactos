@@ -1823,7 +1823,7 @@ IopValidateID(
                 return FALSE;
             }
 
-            StringEnd += MAX_DEVICE_ID_LEN;
+            StringEnd = PtrChar + MAX_DEVICE_ID_LEN + 1;
             PtrPrevChar = PtrChar;
         }
         else if (Char < ' ' || Char > 0x7F || Char == ',')
