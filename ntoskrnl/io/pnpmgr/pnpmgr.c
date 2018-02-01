@@ -1769,7 +1769,6 @@ static
 BOOLEAN
 IopValidateID(
     _In_ PWCHAR Id,
-    _In_ SIZE_T MaxIdLen,
     _In_ ULONG MaxSeparators,
     _In_ BOOLEAN IsMultiSz)
 {
@@ -1781,7 +1780,7 @@ IopValidateID(
 
     PAGED_CODE();
 
-    StringEnd = Id + MaxIdLen;
+    StringEnd = Id + MAX_SEPARATORS_MULTISZ;
 
     for (PtrChar = Id; PtrChar < StringEnd; PtrChar++)
     {
@@ -1804,7 +1803,7 @@ IopValidateID(
                 return FALSE;
             }
 
-            StringEnd += MaxIdLen;
+            StringEnd += MAX_SEPARATORS_MULTISZ;
             PtrPrevChar = PtrChar;
         }
         else if (Char < ' ' || Char > 0x7F || Char == ',')
@@ -1862,7 +1861,6 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
    if (NT_SUCCESS(Status))
    {
       IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                 MAX_DEVICE_ID_LEN,
                                  MAX_SEPARATORS_MULTISZ,
                                  TRUE);
 
@@ -1928,7 +1926,6 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
       IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                 MAX_DEVICE_ID_LEN,
                                  MAX_SEPARATORS_MULTISZ,
                                  TRUE);
 
@@ -1998,7 +1995,6 @@ IopCreateDeviceInstancePath(
     }
 
     IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                               MAX_DEVICE_ID_LEN,
                                MAX_SEPARATORS_DEVICEID,
                                FALSE);
     if (!IsValideID)
@@ -2059,7 +2055,6 @@ IopCreateDeviceInstancePath(
     if (IoStatusBlock.Information)
     {
         IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                   MAX_DEVICE_ID_LEN,
                                    MAX_SEPARATORS_INSTANCEID,
                                    FALSE);
         if (!IsValideID)
