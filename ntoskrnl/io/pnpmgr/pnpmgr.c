@@ -27,9 +27,8 @@ extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 
 #define MAX_DEVICE_ID_LEN          200
-#define MAX_SEPARATORS_INSTANCEID  0x00000000
-#define MAX_SEPARATORS_DEVICEID    0x00000001
-#define MAX_SEPARATORS_MULTISZ     0xFFFFFFFF
+#define MAX_SEPARATORS_INSTANCEID  0
+#define MAX_SEPARATORS_DEVICEID    1
 
 /* DATA **********************************************************************/
 
@@ -1769,16 +1768,38 @@ static
 BOOLEAN
 IopValidateID(
     _In_ PWCHAR Id,
-    _In_ ULONG MaxSeparators,
-    _In_ BOOLEAN IsMultiSz)
+    _In_ BUS_QUERY_ID_TYPE QueryType)
 {
     PWCHAR PtrChar;
     PWCHAR StringEnd;
     WCHAR Char;
     ULONG SeparatorsCount = 0;
     PWCHAR PtrPrevChar = NULL;
+    ULONG MaxSeparators;
+    BOOLEAN IsMultiSz;
 
     PAGED_CODE();
+
+    switch (QueryType)
+    {
+        case BusQueryDeviceID:
+            MaxSeparators = MAX_SEPARATORS_DEVICEID;
+            IsMultiSz = FALSE;
+            break;
+        case BusQueryInstanceID:
+            MaxSeparators = MAX_SEPARATORS_INSTANCEID;
+            IsMultiSz = FALSE;
+            break;
+
+        case BusQueryHardwareIDs:
+        case BusQueryCompatibleIDs:
+            IsMultiSz = TRUE;
+            break;
+
+        default:
+            DPRINT("IopValidateID: Not handled QueryType - %x\n", QueryType);
+            return FALSE;
+    }
 
     StringEnd = Id + MAX_SEPARATORS_MULTISZ;
 
@@ -1790,8 +1811,7 @@ IopValidateID(
         {
             if (!IsMultiSz || (PtrPrevChar && PtrChar == PtrPrevChar + 1))
             {
-                if (MaxSeparators == SeparatorsCount ||
-                    MaxSeparators == MAX_SEPARATORS_MULTISZ)
+                if (MaxSeparators == SeparatorsCount || IsMultiSz)
                 {
                     return TRUE;
                 }
@@ -1860,9 +1880,7 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                               &Stack);
    if (NT_SUCCESS(Status))
    {
-      IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                 MAX_SEPARATORS_MULTISZ,
-                                 TRUE);
+      IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryHardwareIDs);
 
       if (!IsValideID)
          DPRINT1("Invalid HardwareIDs. DeviceNode - %p\n", DeviceNode);
@@ -1925,9 +1943,7 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
       &Stack);
    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
-      IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                 MAX_SEPARATORS_MULTISZ,
-                                 TRUE);
+      IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryCompatibleIDs);
 
       if (!IsValideID)
          DPRINT1("Invalid CompatibleIDs. DeviceNode - %p\n", DeviceNode);
@@ -1994,9 +2010,8 @@ IopCreateDeviceInstancePath(
         return Status;
     }
 
-    IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                               MAX_SEPARATORS_DEVICEID,
-                               FALSE);
+    IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryDeviceID);
+
     if (!IsValideID)
         DPRINT1("Invalid DeviceID. DeviceNode - %p\n", DeviceNode);
 
@@ -2054,9 +2069,8 @@ IopCreateDeviceInstancePath(
 
     if (IoStatusBlock.Information)
     {
-        IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information,
-                                   MAX_SEPARATORS_INSTANCEID,
-                                   FALSE);
+        IsValideID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryInstanceID);
+
         if (!IsValideID)
             DPRINT1("Invalid InstanceID. DeviceNode - %p\n", DeviceNode);
     }
