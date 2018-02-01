@@ -1773,23 +1773,23 @@ IopValidateID(
     _In_ ULONG MaxSeparators,
     _In_ BOOLEAN IsMultiSz)
 {
-    PWCHAR PtrSymbol;
+    PWCHAR PtrChar;
     PWCHAR StringEnd;
-    WCHAR Symbol;
+    WCHAR Char;
     ULONG SeparatorsCount = 0;
-    PWCHAR PtrPrevSymbol = NULL;
+    PWCHAR PtrPrevChar = NULL;
 
     PAGED_CODE();
 
     StringEnd = Id + MaxIdLen;
 
-    for (PtrSymbol = Id; PtrSymbol < StringEnd; PtrSymbol++)
+    for (PtrChar = Id; PtrChar < StringEnd; PtrChar++)
     {
-        Symbol = *PtrSymbol;
+        Char = *PtrChar;
 
-        if (Symbol == UNICODE_NULL)
+        if (Char == UNICODE_NULL)
         {
-            if (!IsMultiSz || (PtrPrevSymbol && PtrSymbol == PtrPrevSymbol + 1))
+            if (!IsMultiSz || (PtrPrevChar && PtrChar == PtrPrevChar + 1))
             {
                 if (MaxSeparators == SeparatorsCount ||
                     MaxSeparators == MAX_SEPARATORS_MULTISZ)
@@ -1805,20 +1805,20 @@ IopValidateID(
             }
 
             StringEnd += MaxIdLen;
-            PtrPrevSymbol = PtrSymbol;
+            PtrPrevChar = PtrChar;
         }
-        else if (Symbol < ' ' || Symbol > 0x7F || Symbol == ',')
+        else if (Char < ' ' || Char > 0x7F || Char == ',')
         {
-            DPRINT("IopValidateID: Invalid character - %04X\n", Symbol);
+            DPRINT("IopValidateID: Invalid character - %04X\n", Char);
 
             // FIXME logging
             return FALSE;
         }
-        else if (Symbol == ' ')
+        else if (Char == ' ')
         {
-            *PtrSymbol = '_';
+            *PtrChar = '_';
         }
-        else if (Symbol == '\\')
+        else if (Char == '\\')
         {
             SeparatorsCount++;
 
