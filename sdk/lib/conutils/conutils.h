@@ -8,6 +8,21 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    conutils.h
+ * @ingroup ConUtils
+ *
+ * @defgroup ConUtils   ReactOS Console Utilities Library
+ *
+ * @brief   This library contains common functions used in many places inside
+ *          the ReactOS console utilities and the ReactOS Command-Line Interpreter.
+ *          Most of these functions are related with internationalisation and
+ *          the problem of correctly displaying Unicode text on the console.
+ *          Besides those, helpful functions for retrieving strings and messages
+ *          from application resources are provided, together with printf-like
+ *          functionality.
+ **/
+
 #ifndef __CONUTILS_H__
 #define __CONUTILS_H__
 

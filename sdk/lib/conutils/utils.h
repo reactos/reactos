@@ -7,6 +7,14 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    utils.h
+ * @ingroup ConUtils
+ *
+ * @brief   General-purpose utility functions (wrappers around
+ *          or reimplementations of Win32 APIs).
+ **/
+
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
@@ -20,10 +28,14 @@
 extern "C" {
 #endif
 
-/*
- * General-purpose utility functions (wrappers around,
- * or reimplementations of, Win32 APIs).
- */
+INT
+WINAPI
+K32LoadStringExW(
+    IN  HINSTANCE hInstance OPTIONAL,
+    IN  UINT   uID,
+    IN  LANGID LanguageId,
+    OUT LPWSTR lpBuffer,
+    IN  INT    nBufferMax);
 
 INT
 WINAPI

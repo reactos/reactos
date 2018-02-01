@@ -7,6 +7,14 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    utils.c
+ * @ingroup ConUtils
+ *
+ * @brief   General-purpose utility functions (wrappers around
+ *          or reimplementations of Win32 APIs).
+ **/
+
 /* FIXME: Temporary HACK before we cleanly support UNICODE functions */
 #define UNICODE
 #define _UNICODE
@@ -23,11 +31,6 @@
 
 // #include "conutils.h"
 #include "utils.h"
-
-/*
- * General-purpose utility functions (wrappers around,
- * or reimplementations of, Win32 APIs).
- */
 
 #if 0 // The following function may be useful in the future...
 
@@ -55,9 +58,10 @@ MultiByteToMultiByte(
  */
 INT
 WINAPI
-K32LoadStringW(
+K32LoadStringExW(
     IN  HINSTANCE hInstance OPTIONAL,
     IN  UINT   uID,
+    IN  LANGID LanguageId,
     OUT LPWSTR lpBuffer,
     IN  INT    nBufferMax)
 {
@@ -71,11 +75,10 @@ K32LoadStringW(
 
     /* Use LOWORD (incremented by 1) as ResourceID */
     /* There are always blocks of 16 strings */
-    // FindResourceExW(hInstance, RT_STRING, name, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
-    // NOTE: Instead of using LANG_NEUTRAL, one might use LANG_USER_DEFAULT...
-    hrsrc = FindResourceW(hInstance,
-                          MAKEINTRESOURCEW((LOWORD(uID) >> 4) + 1),
-                          (LPWSTR)RT_STRING);
+    hrsrc = FindResourceExW(hInstance,
+                            (LPCWSTR)RT_STRING,
+                            MAKEINTRESOURCEW((LOWORD(uID) >> 4) + 1),
+                            LanguageId);
     if (!hrsrc) return 0;
 
     hmem = LoadResource(hInstance, hrsrc);
@@ -116,6 +119,20 @@ K32LoadStringW(
     }
 
     return i;
+}
+
+INT
+WINAPI
+K32LoadStringW(
+    IN  HINSTANCE hInstance OPTIONAL,
+    IN  UINT   uID,
+    OUT LPWSTR lpBuffer,
+    IN  INT    nBufferMax)
+{
+    // NOTE: Instead of using LANG_NEUTRAL, one might use LANG_USER_DEFAULT...
+    return K32LoadStringExW(hInstance, uID,
+                            MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+                            lpBuffer, nBufferMax);
 }
 
 /*
@@ -194,18 +211,50 @@ FormatMessageSafeW(
     return dwLength;
 }
 
+/**
+ * @name IsTTYHandle
+ *     Checks whether a handle refers to a valid TTY object.
+ *     A TTY object may be a console or a "communications" (e.g. serial) port.
+ *
+ * @param[in]   hHandle
+ *     Handle to the TTY object to check for.
+ *
+ * @return
+ *     @b@c TRUE when the handle refers to a valid TTY object,
+ *     @b@c FALSE if it does not.
+ *
+ * @remark
+ *     This test is more general than IsConsoleHandle() as it is not limited
+ *     to Win32 console objects only.
+ *
+ * @see IsConsoleHandle()
+ **/
 BOOL
 IsTTYHandle(IN HANDLE hHandle)
 {
     /*
-     * More general test than IsConsoleHandle. Consoles, as well as
-     * serial ports, etc... verify this test, but only consoles verify
-     * the IsConsoleHandle test: indeed the latter checks whether
+     * More general test than IsConsoleHandle(). Consoles, as well as serial
+     * (communications) ports, etc... verify this test, but only consoles
+     * verify the IsConsoleHandle() test: indeed the latter checks whether
      * the handle is really handled by the console subsystem.
      */
     return ((GetFileType(hHandle) & ~FILE_TYPE_REMOTE) == FILE_TYPE_CHAR);
 }
 
+/**
+ * @name IsConsoleHandle
+ *     Checks whether a handle refers to a valid Win32 console object.
+ *
+ * @param[in]   hHandle
+ *     Handle to the Win32 console object to check for:
+ *     console input buffer, console output buffer.
+ *
+ * @return
+ *     @b@c TRUE when the handle refers to a valid Win32 console object,
+ *     @b@c FALSE if it does not.
+ *
+ * @see IsTTYHandle()
+ **/
 BOOL
 IsConsoleHandle(IN HANDLE hHandle)
 {

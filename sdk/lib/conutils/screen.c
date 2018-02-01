@@ -6,6 +6,13 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    screen.c
+ * @ingroup ConUtils
+ *
+ * @brief   Console/terminal screen management.
+ **/
+
 /* FIXME: Temporary HACK before we cleanly support UNICODE functions */
 #define UNICODE
 #define _UNICODE

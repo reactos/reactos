@@ -6,6 +6,13 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    pager.h
+ * @ingroup ConUtils
+ *
+ * @brief   Console/terminal paging functionality.
+ **/
+
 #ifndef __PAGER_H__
 #define __PAGER_H__
 

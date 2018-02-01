@@ -6,6 +6,13 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    pager.c
+ * @ingroup ConUtils
+ *
+ * @brief   Console/terminal paging functionality.
+ **/
+
 /* FIXME: Temporary HACK before we cleanly support UNICODE functions */
 #define UNICODE
 #define _UNICODE

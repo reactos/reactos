@@ -6,6 +6,13 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    screen.h
+ * @ingroup ConUtils
+ *
+ * @brief   Console/terminal screen management.
+ **/
+
 #ifndef __SCREEN_H__
 #define __SCREEN_H__
 

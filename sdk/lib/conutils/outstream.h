@@ -8,6 +8,13 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    outstream.h
+ * @ingroup ConUtils
+ *
+ * @brief   Console I/O utility API -- Output
+ **/
+
 #ifndef __OUTSTREAM_H__
 #define __OUTSTREAM_H__
 
@@ -37,22 +44,18 @@ typedef struct _CON_STREAM CON_STREAM, *PCON_STREAM;
 typedef INT (__stdcall *CON_WRITE_FUNC)(IN PCON_STREAM, IN PTCHAR, IN DWORD);
 
 
-/*
- * Console I/O utility API -- Output
- */
-
 INT
 __stdcall
 ConWrite(
     IN PCON_STREAM Stream,
     IN PTCHAR szStr,
-    IN DWORD len);
+    IN DWORD  len);
 
 INT
 ConStreamWrite(
     IN PCON_STREAM Stream,
     IN PTCHAR szStr,
-    IN DWORD len);
+    IN DWORD  len);
 
 INT
 ConPuts(
@@ -63,7 +66,7 @@ INT
 ConPrintfV(
     IN PCON_STREAM Stream,
     IN LPWSTR  szStr,
-    IN va_list args); // arg_ptr
+    IN va_list args);
 
 INT
 __cdecl
@@ -76,7 +79,8 @@ INT
 ConResPutsEx(
     IN PCON_STREAM Stream,
     IN HINSTANCE hInstance OPTIONAL,
-    IN UINT uID);
+    IN UINT   uID,
+    IN LANGID LanguageId);
 
 INT
 ConResPuts(
@@ -88,20 +92,22 @@ ConResPrintfExV(
     IN PCON_STREAM Stream,
     IN HINSTANCE hInstance OPTIONAL,
     IN UINT    uID,
-    IN va_list args); // arg_ptr
+    IN LANGID  LanguageId,
+    IN va_list args);
 
 INT
 ConResPrintfV(
     IN PCON_STREAM Stream,
     IN UINT    uID,
-    IN va_list args); // arg_ptr
+    IN va_list args);
 
 INT
 __cdecl
 ConResPrintfEx(
     IN PCON_STREAM Stream,
     IN HINSTANCE hInstance OPTIONAL,
-    IN UINT uID,
+    IN UINT   uID,
+    IN LANGID LanguageId,
     ...);
 
 INT
@@ -126,7 +132,7 @@ ConMsgPrintf2V(
     IN LPCVOID lpSource OPTIONAL,
     IN DWORD   dwMessageId,
     IN DWORD   dwLanguageId,
-    IN va_list args); // arg_ptr
+    IN va_list args);
 
 INT
 ConMsgPrintfV(
@@ -135,7 +141,7 @@ ConMsgPrintfV(
     IN LPCVOID lpSource OPTIONAL,
     IN DWORD   dwMessageId,
     IN DWORD   dwLanguageId,
-    IN va_list args); // arg_ptr
+    IN va_list *Arguments OPTIONAL);
 
 INT
 __cdecl
@@ -145,6 +151,40 @@ ConMsgPrintf(
     IN LPCVOID lpSource OPTIONAL,
     IN DWORD   dwMessageId,
     IN DWORD   dwLanguageId,
+    ...);
+
+INT
+ConResMsgPrintfExV(
+    IN PCON_STREAM Stream,
+    IN HINSTANCE hInstance OPTIONAL,
+    IN DWORD   dwFlags,
+    IN UINT    uID,
+    IN LANGID  LanguageId,
+    IN va_list *Arguments OPTIONAL);
+
+INT
+ConResMsgPrintfV(
+    IN PCON_STREAM Stream,
+    IN DWORD   dwFlags,
+    IN UINT    uID,
+    IN va_list *Arguments OPTIONAL);
+
+INT
+__cdecl
+ConResMsgPrintfEx(
+    IN PCON_STREAM Stream,
+    IN HINSTANCE hInstance OPTIONAL,
+    IN DWORD  dwFlags,
+    IN UINT   uID,
+    IN LANGID LanguageId,
+    ...);
+
+INT
+__cdecl
+ConResMsgPrintf(
+    IN PCON_STREAM Stream,
+    IN DWORD dwFlags,
+    IN UINT  uID,
     ...);
 
 

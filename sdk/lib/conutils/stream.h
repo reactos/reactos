@@ -8,6 +8,13 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    stream.h
+ * @ingroup ConUtils
+ *
+ * @brief   Console I/O streams
+ **/
+
 #ifndef __STREAM_H__
 #define __STREAM_H__
 
@@ -28,10 +35,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/*
- * Console I/O streams
- */
 
 /*
  * See http://archives.miloush.net/michkap/archive/2009/08/14/9869928.html

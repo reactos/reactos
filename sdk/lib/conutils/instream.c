@@ -8,6 +8,13 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    instream.c
+ * @ingroup ConUtils
+ *
+ * @brief   Console I/O utility API -- Input
+ **/
+
 /*
  * Enable this define if you want to only use CRT functions to output
  * UNICODE stream to the console, as in the way explained by
@@ -41,9 +48,5 @@
 #include "stream.h"
 #include "stream_private.h"
 
-
-/*
- * Console I/O utility API -- Input
- */
 
 /* EOF */

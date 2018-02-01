@@ -8,6 +8,13 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+/**
+ * @file    instream.h
+ * @ingroup ConUtils
+ *
+ * @brief   Console I/O utility API -- Input
+ **/
+
 #ifndef __INSTREAM_H__
 #define __INSTREAM_H__
 
@@ -31,10 +38,6 @@ extern "C" {
 
 // Shadow type, implementation-specific
 typedef struct _CON_STREAM CON_STREAM, *PCON_STREAM;
-
-/*
- * Console I/O utility API -- Input
- */
 
 
 #ifdef __cplusplus
