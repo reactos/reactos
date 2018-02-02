@@ -74,12 +74,8 @@ KdpPrintBanner(IN SIZE_T MemSizeMBs)
     DPRINT1("-----------------------------------------------------\n");
     DPRINT1("ReactOS " KERNEL_VERSION_STR " (Build " KERNEL_VERSION_BUILD_STR ") (Commit " KERNEL_VERSION_COMMIT_HASH ")\n");
     DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
-
-    if (KeLoaderBlock)
-    {
-        DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
-        DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtHalPathName, KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtBootPathName);
-    }
+    DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
+    DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtHalPathName, KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtBootPathName);
 }
 
 /* FUNCTIONS *****************************************************************/
