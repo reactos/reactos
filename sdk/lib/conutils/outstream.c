@@ -795,10 +795,10 @@ ConResPrintf(
  *
  * @param[in]   dwFlags
  *     The formatting options, and how to interpret the @p lpSource parameter.
- *     See FormatMessage() for more details. The @b@c FORMAT_MESSAGE_ALLOCATE_BUFFER
- *     and @b@c FORMAT_MESSAGE_ARGUMENT_ARRAY flags are always ignored.
- *     The function implicitly uses the @b@c FORMAT_MESSAGE_IGNORE_INSERTS and
- *     @b@c FORMAT_MESSAGE_MAX_WIDTH_MASK flags to implement its behaviour.
+ *     See FormatMessage() for more details. The @b FORMAT_MESSAGE_ALLOCATE_BUFFER
+ *     and @b FORMAT_MESSAGE_ARGUMENT_ARRAY flags are always ignored.
+ *     The function implicitly uses the @b FORMAT_MESSAGE_IGNORE_INSERTS and
+ *     @b FORMAT_MESSAGE_MAX_WIDTH_MASK flags to implement its behaviour.
  *
  * @param[in]   lpSource
  *     The location of the message definition. The type of this parameter
@@ -806,11 +806,11 @@ ConResPrintf(
  *
  * @param[in]   dwMessageId
  *     The message identifier for the requested message. This parameter
- *     is ignored if @p dwFlags includes @b@c FORMAT_MESSAGE_FROM_STRING.
+ *     is ignored if @p dwFlags includes @b FORMAT_MESSAGE_FROM_STRING.
  *
  * @param[in]   dwLanguageId
  *     The language identifier for the requested message. This parameter
- *     is ignored if @p dwFlags includes @b@c FORMAT_MESSAGE_FROM_STRING.
+ *     is ignored if @p dwFlags includes @b FORMAT_MESSAGE_FROM_STRING.
  *
  * @return
  *     Numbers of characters successfully written to @p Stream.
@@ -819,7 +819,7 @@ ConResPrintf(
  *     Similarly to ConPuts(), no terminating new-line character is appended.
  *
  * @see ConPuts(), ConResPuts() and associated functions,
- *      <a href="FormatMessage() (on MSDN)">https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx</a>
+ *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
  **/
 INT
 ConMsgPuts(
@@ -976,9 +976,9 @@ ConMsgPrintf2V(
  *
  * @param[in]   dwFlags
  *     The formatting options, and how to interpret the @p lpSource parameter.
- *     See FormatMessage() for more details. The @b@c FORMAT_MESSAGE_ALLOCATE_BUFFER
+ *     See FormatMessage() for more details. The @b FORMAT_MESSAGE_ALLOCATE_BUFFER
  *     flags is always ignored. The function implicitly uses the
- *     @b@c FORMAT_MESSAGE_MAX_WIDTH_MASK flag to implement its behaviour.
+ *     @b FORMAT_MESSAGE_MAX_WIDTH_MASK flag to implement its behaviour.
  *
  * @param[in]   lpSource
  *     The location of the message definition. The type of this parameter
@@ -986,11 +986,11 @@ ConMsgPrintf2V(
  *
  * @param[in]   dwMessageId
  *     The message identifier for the requested message. This parameter
- *     is ignored if @p dwFlags includes @b@c FORMAT_MESSAGE_FROM_STRING.
+ *     is ignored if @p dwFlags includes @b FORMAT_MESSAGE_FROM_STRING.
  *
  * @param[in]   dwLanguageId
  *     The language identifier for the requested message. This parameter
- *     is ignored if @p dwFlags includes @b@c FORMAT_MESSAGE_FROM_STRING.
+ *     is ignored if @p dwFlags includes @b FORMAT_MESSAGE_FROM_STRING.
  *
  * @param[in]   Arguments
  *     Optional pointer to an array of values describing a variable number of
@@ -1001,7 +1001,7 @@ ConMsgPrintf2V(
  *     return from the function. To use the @c va_list again, destroy the variable
  *     argument list pointer using va_end() and reinitialize it with va_start().
  *     If you do not have a pointer of type @c va_list*, then specify the
- *     @b@c FORMAT_MESSAGE_ARGUMENT_ARRAY flag and pass a pointer to an array
+ *     @b FORMAT_MESSAGE_ARGUMENT_ARRAY flag and pass a pointer to an array
  *     of @c DWORD_PTR values; those values are input to the message formatted
  *     as the insert values. Each insert must have a corresponding element in
  *     the array.
@@ -1017,7 +1017,7 @@ ConMsgPrintf2V(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="FormatMessage() (on MSDN)">https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx</a>
+ *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
  **/
 INT
 ConMsgPrintfV(
@@ -1089,9 +1089,9 @@ ConMsgPrintfV(
  *
  * @param[in]   dwFlags
  *     The formatting options, and how to interpret the @p lpSource parameter.
- *     See FormatMessage() for more details. The @b@c FORMAT_MESSAGE_ALLOCATE_BUFFER
- *     and @b@c FORMAT_MESSAGE_ARGUMENT_ARRAY flags are always ignored.
- *     The function implicitly uses the @b@c FORMAT_MESSAGE_MAX_WIDTH_MASK flag
+ *     See FormatMessage() for more details. The @b FORMAT_MESSAGE_ALLOCATE_BUFFER
+ *     and @b FORMAT_MESSAGE_ARGUMENT_ARRAY flags are always ignored.
+ *     The function implicitly uses the @b FORMAT_MESSAGE_MAX_WIDTH_MASK flag
  *     to implement its behaviour.
  *
  * @param[in]   lpSource
@@ -1100,11 +1100,11 @@ ConMsgPrintfV(
  *
  * @param[in]   dwMessageId
  *     The message identifier for the requested message. This parameter
- *     is ignored if @p dwFlags includes @b@c FORMAT_MESSAGE_FROM_STRING.
+ *     is ignored if @p dwFlags includes @b FORMAT_MESSAGE_FROM_STRING.
  *
  * @param[in]   dwLanguageId
  *     The language identifier for the requested message. This parameter
- *     is ignored if @p dwFlags includes @b@c FORMAT_MESSAGE_FROM_STRING.
+ *     is ignored if @p dwFlags includes @b FORMAT_MESSAGE_FROM_STRING.
  *
  * @param[in]   ...
  *     Additional arguments that can be expected by the function, depending
@@ -1122,7 +1122,7 @@ ConMsgPrintfV(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintfV(),
- *      <a href="FormatMessage() (on MSDN)">https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx</a>
+ *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
  **/
 INT
 __cdecl
@@ -1170,8 +1170,8 @@ ConMsgPrintf(
  *
  * @param[in]   dwFlags
  *     The formatting options, see FormatMessage() for more details.
- *     The only valid flags are @b@c FORMAT_MESSAGE_ARGUMENT_ARRAY and
- *     @b@c FORMAT_MESSAGE_IGNORE_INSERTS. All the other flags are internally
+ *     The only valid flags are @b FORMAT_MESSAGE_ARGUMENT_ARRAY and
+ *     @b FORMAT_MESSAGE_IGNORE_INSERTS. All the other flags are internally
  *     overridden by the function to implement its behaviour.
  *
  * @param[in]   uID
@@ -1185,11 +1185,19 @@ ConMsgPrintf(
  *     than the current language, use the @c MAKELANGID macro to create this
  *     parameter.
  *
- * @param[in]   args
- *     Parameter describing a variable number of arguments, initialized
- *     with va_start(), that can be expected by the function, depending
- *     on the message string. Each argument is used to replace an
- *     <em>insert sequence</em> in the message string.
+ * @param[in]   Arguments
+ *     Optional pointer to an array of values describing a variable number of
+ *     arguments, depending on the message string. Each argument is used to
+ *     replace an <em>insert sequence</em> in the message string.
+ *     By default, the @p Arguments parameter is of type @c va_list*, initialized
+ *     with va_start(). The state of the @c va_list argument is undefined upon
+ *     return from the function. To use the @c va_list again, destroy the variable
+ *     argument list pointer using va_end() and reinitialize it with va_start().
+ *     If you do not have a pointer of type @c va_list*, then specify the
+ *     @b FORMAT_MESSAGE_ARGUMENT_ARRAY flag and pass a pointer to an array
+ *     of @c DWORD_PTR values; those values are input to the message formatted
+ *     as the insert values. Each insert must have a corresponding element in
+ *     the array.
  *
  * @remark
  *     Contrary to printf(), ConPrintf(), ConResPrintf() and associated functions,
@@ -1202,7 +1210,7 @@ ConMsgPrintf(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="FormatMessage() (on MSDN)">https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx</a>
+ *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
  **/
 INT
 ConResMsgPrintfExV(
@@ -1283,8 +1291,8 @@ ConResMsgPrintfExV(
  *
  * @param[in]   dwFlags
  *     The formatting options, see FormatMessage() for more details.
- *     The only valid flags are @b@c FORMAT_MESSAGE_ARGUMENT_ARRAY and
- *     @b@c FORMAT_MESSAGE_IGNORE_INSERTS. All the other flags are internally
+ *     The only valid flags are @b FORMAT_MESSAGE_ARGUMENT_ARRAY and
+ *     @b FORMAT_MESSAGE_IGNORE_INSERTS. All the other flags are internally
  *     overridden by the function to implement its behaviour.
  *
  * @param[in]   uID
@@ -1300,7 +1308,7 @@ ConResMsgPrintfExV(
  *     return from the function. To use the @c va_list again, destroy the variable
  *     argument list pointer using va_end() and reinitialize it with va_start().
  *     If you do not have a pointer of type @c va_list*, then specify the
- *     @b@c FORMAT_MESSAGE_ARGUMENT_ARRAY flag and pass a pointer to an array
+ *     @b FORMAT_MESSAGE_ARGUMENT_ARRAY flag and pass a pointer to an array
  *     of @c DWORD_PTR values; those values are input to the message formatted
  *     as the insert values. Each insert must have a corresponding element in
  *     the array.
@@ -1316,7 +1324,7 @@ ConResMsgPrintfExV(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="FormatMessage() (on MSDN)">https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx</a>
+ *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
  **/
 INT
 ConResMsgPrintfV(
@@ -1349,7 +1357,7 @@ ConResMsgPrintfV(
  *
  * @param[in]   dwFlags
  *     The formatting options, see FormatMessage() for more details.
- *     The only valid flag is @b@c FORMAT_MESSAGE_IGNORE_INSERTS.
+ *     The only valid flag is @b FORMAT_MESSAGE_IGNORE_INSERTS.
  *     All the other flags are internally overridden by the function
  *     to implement its behaviour.
  *
@@ -1380,7 +1388,7 @@ ConResMsgPrintfV(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="FormatMessage() (on MSDN)">https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx</a>
+ *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
  **/
 INT
 __cdecl
@@ -1423,7 +1431,7 @@ ConResMsgPrintfEx(
  *
  * @param[in]   dwFlags
  *     The formatting options, see FormatMessage() for more details.
- *     The only valid flag is @b@c FORMAT_MESSAGE_IGNORE_INSERTS.
+ *     The only valid flag is @b FORMAT_MESSAGE_IGNORE_INSERTS.
  *     All the other flags are internally overridden by the function
  *     to implement its behaviour.
  *
@@ -1447,7 +1455,7 @@ ConResMsgPrintfEx(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="FormatMessage() (on MSDN)">https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx</a>
+ *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
  **/
 INT
 __cdecl

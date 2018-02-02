@@ -52,10 +52,48 @@ MultiByteToMultiByte(
 
 #endif
 
-/*
- * 'LoadStringW' API ripped from user32.dll to remove
- * any dependency of this library from user32.dll
- */
+/**
+ * @name K32LoadStringExW
+ *     Loads a string resource from the executable file associated with a
+ *     specified module, copies the string into a buffer, and appends a
+ *     terminating null character.
+ *     This is basically the LoadString() API ripped from user32.dll to
+ *     remove any dependency of ConUtils from user32.dll, and to add support
+ *     for loading strings from other languages than the current one.
+ *
+ * @param[in]   hInstance
+ *     Optional handle to an instance of the module whose executable file
+ *     contains the string resource. Can be set to NULL to get the handle
+ *     to the application itself.
+ *
+ * @param[in]   uID
+ *     The identifier of the string to be loaded.
+ *
+ * @param[in]   LanguageId
+ *     The language identifier of the resource. If this parameter is
+ *     <tt>MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)</tt>, the current language
+ *     associated with the calling thread is used. To specify a language other
+ *     than the current language, use the @c MAKELANGID macro to create this
+ *     parameter.
+ *
+ * @param[out]  lpBuffer
+ *     The buffer that receives the string. Must be of sufficient length
+ *     to hold a pointer (8 bytes).
+ *
+ * @param[in]   nBufferMax
+ *     The size of the buffer, in characters. The string is truncated and
+ *     NULL-terminated if it is longer than the number of characters specified.
+ *     If this parameter is 0, then @p lpBuffer receives a read-only pointer
+ *     to the resource itself.
+ *
+ * @return
+ *     If the function succeeds, the return value is the number of characters
+ *     copied into the buffer, not including the terminating null character,
+ *     or zero if the string resource does not exist. To get extended error
+ *     information, call GetLastError().
+ *
+ * @see LoadString(), K32LoadStringW()
+ **/
 INT
 WINAPI
 K32LoadStringExW(
@@ -121,6 +159,15 @@ K32LoadStringExW(
     return i;
 }
 
+/**
+ * @name K32LoadStringW
+ *     Loads a string resource from the executable file associated with a
+ *     specified module, copies the string into a buffer, and appends a
+ *     terminating null character.
+ *     This is a restricted version of K32LoadStringExW().
+ *
+ * @see LoadString(), K32LoadStringExW()
+ **/
 INT
 WINAPI
 K32LoadStringW(
@@ -135,11 +182,73 @@ K32LoadStringW(
                             lpBuffer, nBufferMax);
 }
 
-/*
- * "Safe" version of FormatMessageW, that does not crash if a malformed
- * source string is retrieved and then being used for formatting.
- * It basically wraps calls to FormatMessageW within SEH.
- */
+/**
+ * @name FormatMessageSafeW
+ *     Loads and formats a message string. The function requires a message
+ *     definition as input. The message definition can come from a buffer
+ *     passed to the function. It can come from a message table resource in
+ *     an already-loaded module, or the caller can ask the function to search
+ *     the system's message table resource(s) for the message definition.
+ *     Please refer to the Win32 FormatMessage() function for more details.
+ *
+ * @param[in]   dwFlags
+ *     The formatting options, and how to interpret the @p lpSource parameter.
+ *     See FormatMessage() for more details.
+ *
+ * @param[in]   lpSource
+ *     The location of the message definition. The type of this parameter
+ *     depends upon the settings in the @p dwFlags parameter.
+ *
+ * @param[in]   dwMessageId
+ *     The message identifier for the requested message. This parameter
+ *     is ignored if @p dwFlags includes @b FORMAT_MESSAGE_FROM_STRING.
+ *
+ * @param[in]   dwLanguageId
+ *     The language identifier for the requested message. This parameter
+ *     is ignored if @p dwFlags includes @b FORMAT_MESSAGE_FROM_STRING.
+ *
+ * @param[out]  lpBuffer
+ *     A pointer to a buffer that receives the null-terminated string that
+ *     specifies the formatted message. If @p dwFlags includes
+ *     @b FORMAT_MESSAGE_ALLOCATE_BUFFER, the function allocates a buffer
+ *     using the LocalAlloc() function, and places the pointer to the buffer
+ *     at the address specified in @p lpBuffer.
+ *     This buffer cannot be larger than 64kB.
+ *
+ * @param[in]   nSize
+ *     If the @b FORMAT_MESSAGE_ALLOCATE_BUFFER flag is not set, this parameter
+ *     specifies the size of the output buffer, in @b TCHARs.
+ *     If @b FORMAT_MESSAGE_ALLOCATE_BUFFER is set, this parameter specifies
+ *     the minimum number of @b TCHARs to allocate for an output buffer.
+ *     The output buffer cannot be larger than 64kB.
+ *
+ * @param[in]   Arguments
+ *     Optional pointer to an array of values describing a variable number of
+ *     arguments, depending on the message string. Each argument is used to
+ *     replace an <em>insert sequence</em> in the message string.
+ *     By default, the @p Arguments parameter is of type @c va_list*, initialized
+ *     with va_start(). The state of the @c va_list argument is undefined upon
+ *     return from the function. To use the @c va_list again, destroy the variable
+ *     argument list pointer using va_end() and reinitialize it with va_start().
+ *     If you do not have a pointer of type @c va_list*, then specify the
+ *     @b FORMAT_MESSAGE_ARGUMENT_ARRAY flag and pass a pointer to an array
+ *     of @c DWORD_PTR values; those values are input to the message formatted
+ *     as the insert values. Each insert must have a corresponding element in
+ *     the array.
+ *
+ * @return
+ *     If the function succeeds, the return value is the number of characters
+ *     copied into the buffer, not including the terminating null character,
+ *     or zero if the string resource does not exist. To get extended error
+ *     information, call GetLastError().
+ *
+ * @remark
+ *     This function is a "safe" version of FormatMessage(), that does not
+ *     crash if a malformed source string is retrieved and then being used
+ *     for formatting. It basically wraps calls to FormatMessage() within SEH.
+ *
+ * @see <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ **/
 DWORD
 WINAPI
 FormatMessageSafeW(
@@ -220,8 +329,8 @@ FormatMessageSafeW(
  *     Handle to the TTY object to check for.
  *
  * @return
- *     @b@c TRUE when the handle refers to a valid TTY object,
- *     @b@c FALSE if it does not.
+ *     @b TRUE when the handle refers to a valid TTY object,
+ *     @b FALSE if it does not.
  *
  * @remark
  *     This test is more general than IsConsoleHandle() as it is not limited
@@ -250,8 +359,8 @@ IsTTYHandle(IN HANDLE hHandle)
  *     console input buffer, console output buffer.
  *
  * @return
- *     @b@c TRUE when the handle refers to a valid Win32 console object,
- *     @b@c FALSE if it does not.
+ *     @b TRUE when the handle refers to a valid Win32 console object,
+ *     @b FALSE if it does not.
  *
  * @see IsTTYHandle()
  **/
