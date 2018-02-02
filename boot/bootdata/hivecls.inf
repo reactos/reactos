@@ -17,6 +17,7 @@ HKCR,"Folder\shell\open\command","",0x00000000,"explorer.exe ""%1"""
 HKCR,"Folder\shell\explore","BrowserFlags",0x00010001,"0x00000022"
 HKCR,"Folder\shell\explore","ExplorerFlags",0x00010001,"0x00000021"
 HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
+HKCR,"Folder\shell\Command Prompt Here...\command","",0x00000000,"cmd.exe /k ""cd /d ^""%1^"""""
 
 ; Clipboard Element
 HKCR,".clp","",0x00000000,"clpfile"
