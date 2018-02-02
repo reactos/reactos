@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "AutoUpdate Service Stub"
+#define REACTOS_STR_INTERNAL_NAME     "wuauserv"
+#define REACTOS_STR_ORIGINAL_FILENAME "wuauserv.dll"
+#include <reactos/version.rc>
