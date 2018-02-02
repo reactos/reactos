@@ -62,7 +62,8 @@ KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
     }
 
-    return NumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+    /* Round size up. Assumed to better match actual physical RAM size */
+    return ALIGN_UP_BY(NumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
 }
 
 /* See also: kd\kdio.c */
