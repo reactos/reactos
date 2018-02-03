@@ -35,7 +35,7 @@ list(APPEND SOURCE
 add_definitions(
     -DUSE_CERT_PINNING
     -D_ATL_NO_EXCEPTIONS)
-    
+
 file(GLOB_RECURSE rapps_rc_deps res/*.*)
 add_rc_deps(rapps.rc ${rapps_rc_deps})
 add_executable(rapps ${SOURCE} rapps.rc)

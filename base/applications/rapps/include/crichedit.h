@@ -22,7 +22,7 @@ class CRichEdit :
             if ((dwEffects == CFM_LINK) && !PathIsURLW(lpszText))
             {
                 // if text is not an URL, no styling is used
-                SetRangeFormatting(Len, Len + InsertedTextLen, 0); 
+                SetRangeFormatting(Len, Len + InsertedTextLen, 0);
             }
             else
             {

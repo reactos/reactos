@@ -204,7 +204,7 @@ inline BOOL CAvailableApplicationInfo::GetString(LPCWSTR lpKeyName, ATL::CString
     }
     return TRUE;
 }
-// CAvailableApplicationInfo 
+// CAvailableApplicationInfo
 
 // AvailableStrings
 AvailableStrings::AvailableStrings()
@@ -352,8 +352,8 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc)
         m_InfoList.AddTail(Info);
 
 skip_if_cached:
-        if (EnumType == Info->m_Category 
-            || EnumType == ENUM_ALL_AVAILABLE 
+        if (EnumType == Info->m_Category
+            || EnumType == ENUM_ALL_AVAILABLE
             || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected))
         {
             Info->RefreshAppInfo();

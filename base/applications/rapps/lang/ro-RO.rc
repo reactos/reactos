@@ -212,7 +212,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu poate fi descărcat! Verificați conexiunea de Internet!"
     IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu au putut fi eliminate!"
     IDS_UNABLE_TO_INSTALL "Programul de instalare nu poate fi executat!"
-    IDS_CERT_DOES_NOT_MATCH "Verificarea certificatului SSL a eșuat."    
+    IDS_CERT_DOES_NOT_MATCH "Verificarea certificatului SSL a eșuat."
     IDS_INTEG_CHECK_TITLE "Integritatea pachetului în verificare…"
     IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
     IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."

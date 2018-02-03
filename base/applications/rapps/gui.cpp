@@ -668,7 +668,7 @@ public:
     const INT m_Width;
     const INT m_Height;
 
-    CSearchBar() : m_Width(200), m_Height(22) 
+    CSearchBar() : m_Width(200), m_Height(22)
     {
     }
 
@@ -1613,7 +1613,7 @@ private:
 
         m_ListView->DeleteAllItems();
 
-        // Create new ImageList 
+        // Create new ImageList
         hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
                                           LISTVIEW_ICON_SIZE,
                                           GetSystemColorDepth() | ILC_MASK,

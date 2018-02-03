@@ -215,7 +215,7 @@ BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
     SESSION Dest;
     HRESULT Result;
     fnExtract pfnExtract;
-    
+
     hCabinetDll = LoadLibraryW(L"cabinet.dll");
     if (hCabinetDll)
     {

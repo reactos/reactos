@@ -428,7 +428,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         if (Item)
         {
             // initialize the default values for our nifty progress bar
-            // and subclass it so that it learns to print a status text 
+            // and subclass it so that it learns to print a status text
             SendMessageW(Item, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
             SendMessageW(Item, PBM_SETPOS, 0, 0);
 
@@ -705,7 +705,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         case 0: // preconfig
             hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
             break;
-        case 1: // direct (no proxy) 
+        case 1: // direct (no proxy)
             hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
             break;
         case 2: // use proxy

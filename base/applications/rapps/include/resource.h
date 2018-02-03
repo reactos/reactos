@@ -173,7 +173,7 @@
 #define IDS_CAT_VIDEO            714
 
 /* App installation status */
-#define IDS_STATUS_INSTALLED          800     
+#define IDS_STATUS_INSTALLED          800
 #define IDS_STATUS_NOTINSTALLED       801
 #define IDS_STATUS_DOWNLOADED         802
 #define IDS_STATUS_UPDATE_AVAILABLE   803
