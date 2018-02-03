@@ -1221,7 +1221,7 @@ MmPapFreePages (
 NTSTATUS
 BlMmGetMemoryMap (
     _In_ PLIST_ENTRY MemoryMap,
-    _In_ PBL_IMAGE_PARAMETERS MemoryParameters,
+    _In_ PBL_BUFFER_DESCRIPTOR MemoryParameters,
     _In_ ULONG WhichTypes,
     _In_ ULONG Flags
     )

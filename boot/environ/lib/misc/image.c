@@ -1654,7 +1654,7 @@ ImgpCopyApplicationBootDevice (
 
 NTSTATUS
 ImgpInitializeBootApplicationParameters (
-    _In_ PBL_IMAGE_PARAMETERS ImageParameters,
+    _In_ PBL_BUFFER_DESCRIPTOR ImageParameters,
     _In_ PBL_APPLICATION_ENTRY AppEntry,
     _In_ PVOID ImageBase, 
     _In_ ULONG ImageSize
@@ -1662,7 +1662,7 @@ ImgpInitializeBootApplicationParameters (
 {
     NTSTATUS Status;
     PIMAGE_NT_HEADERS NtHeaders;
-    BL_IMAGE_PARAMETERS MemoryParameters;
+    BL_BUFFER_DESCRIPTOR MemoryParameters;
     LIST_ENTRY MemoryList;
     PBL_FIRMWARE_DESCRIPTOR FirmwareParameters;
     PBL_DEVICE_DESCRIPTOR BootDevice;
@@ -1841,7 +1841,7 @@ ImgArchEfiStartBootApplication (
     PVOID BootData;
     PIMAGE_NT_HEADERS NtHeaders;
     PVOID NewStack, NewGdt, NewIdt;
-    BL_IMAGE_PARAMETERS Parameters;
+    BL_BUFFER_DESCRIPTOR Parameters;
 
     /* Read the current IDT and GDT */
     _sgdt(&Gdt.Limit);

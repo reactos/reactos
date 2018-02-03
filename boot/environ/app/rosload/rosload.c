@@ -18,7 +18,7 @@ OslArchTransferToKernel (
 
 /* DATA VARIABLES ************************************************************/
 
-LOADER_PARAMETER_BLOCK OslLoaderBlock;
+PLOADER_PARAMETER_BLOCK OslLoaderBlock;
 PVOID OslEntryPoint;
 PVOID UserSharedAddress;
 ULONGLONG ArchXCr0BitsToClear;
@@ -27,7 +27,141 @@ BOOLEAN BdDebugAfterExitBootServices;
 KDESCRIPTOR OslKernelGdt;
 KDESCRIPTOR OslKernelIdt;
 
+ULONG_PTR OslImcHiveHandle;
+ULONG_PTR OslMachineHiveHandle;
+ULONG_PTR OslElamHiveHandle;
+ULONG_PTR OslSystemHiveHandle;
+
+PBL_DEVICE_DESCRIPTOR OslLoadDevice;
+PCHAR OslLoadOptions;
+PWCHAR OslSystemRoot;
+
+LIST_ENTRY OslFreeMemoryDesctiptorsList;
+LIST_ENTRY OslFinalMemoryMap;
+LIST_ENTRY OslCoreExtensionSubGroups[2];
+LIST_ENTRY OslLoadedFirmwareDriverList;
+
+BL_BUFFER_DESCRIPTOR OslFinalMemoryMapDescriptorsBuffer;
+
+GUID OslApplicationIdentifier;
+
+ULONG OslResetBootStatus;
+BOOLEAN OslImcProcessingValid;
+ULONG OslFreeMemoryDesctiptorsListSize;
+PVOID OslMemoryDescriptorBuffer;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+OslFatalErrorEx (
+    _In_ ULONG ErrorCode,
+    _In_ ULONG Parameter1,
+    _In_ ULONG_PTR Parameter2,
+    _In_ ULONG_PTR Parameter3
+    )
+{
+    /* For now just do this */
+    BlStatusPrint(L"FATAL ERROR IN ROSLOAD: %lx\n", ErrorCode);
+}
+
+VOID
+OslAbortBoot (
+    _In_ NTSTATUS Status
+    )
+{
+    /* For now just do this */
+    BlStatusPrint(L"BOOT ABORTED: %lx\n", Status);
+}
+
+NTSTATUS
+OslBlStatusErrorHandler (
+    _In_ ULONG ErrorCode,
+    _In_ ULONG Parameter1,
+    _In_ ULONG_PTR Parameter2,
+    _In_ ULONG_PTR Parameter3,
+    _In_ ULONG_PTR Parameter4
+    )
+{
+    /* We only filter error code 4 */
+    if (ErrorCode != 4)
+    {
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Handle error 4 as a fatal error 3 internally */
+    OslFatalErrorEx(3, Parameter1, Parameter2, Parameter3);
+    return STATUS_SUCCESS;
+}
+
+VOID
+OslpSanitizeLoadOptionsString (
+    _In_ PWCHAR OptionString,
+    _In_ PWCHAR SanitizeString
+    )
+{
+    /* TODO */
+    return;
+}
+
+VOID
+OslpSanitizeStringOptions (
+    _In_ PBL_BCD_OPTION BcdOptions
+    )
+{
+    /* TODO */
+    return;
+}
+
+NTSTATUS
+OslpRemoveInternalApplicationOptions (
+    VOID
+    )
+{
+    PWCHAR LoadString;
+    NTSTATUS Status;
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Remove attempts to disable integrity checks or ELAM driver load */
+    BlRemoveBootOption(BlpApplicationEntry.BcdData, 
+                       BcdLibraryBoolean_DisableIntegrityChecks);
+    BlRemoveBootOption(BlpApplicationEntry.BcdData,
+                       BcdOSLoaderBoolean_DisableElamDrivers);
+
+    /* Get the command-line parameters, if any */
+    Status = BlGetBootOptionString(BlpApplicationEntry.BcdData,
+                                   BcdLibraryString_LoadOptionsString,
+                                   &LoadString);
+    if (NT_SUCCESS(Status))
+    {
+        /* Conver to upper case */
+        _wcsupr(LoadString);
+
+        /* Remove the existing one */
+        //BlRemoveBootOption(BlpApplicationEntry.BcdData,
+        //                   BcdLibraryString_LoadOptionsString);
+
+        /* Sanitize strings we don't want */
+        OslpSanitizeLoadOptionsString(LoadString, L"DISABLE_INTEGRITY_CHECKS");
+        OslpSanitizeLoadOptionsString(LoadString, L"NOINTEGRITYCHECKS");
+        OslpSanitizeLoadOptionsString(LoadString, L"DISABLEELAMDRIVERS");
+
+        /* Add the sanitized one back */
+        //Status = BlAppendBootOptionsString(&BlpApplicationEntry,
+        //                                   BcdLibraryString_LoadOptionsString,
+        //                                   LoadString);
+
+        /* Free the original BCD one */
+        BlMmFreeHeap(LoadString);
+    }
+
+    /* One more pass for secure-boot options */
+    OslpSanitizeStringOptions(BlpApplicationEntry.BcdData);
+
+    /* All good */
+    return Status;
+}
 
 NTSTATUS
 OslPrepareTarget (
@@ -35,7 +169,154 @@ OslPrepareTarget (
     _Out_ PBOOLEAN Jump
     )
 {
-    return STATUS_NOT_IMPLEMENTED;
+    PGUID AppId;
+    NTSTATUS Status;
+    PBL_DEVICE_DESCRIPTOR OsDevice;
+    PWCHAR SystemRoot;
+    SIZE_T RootLength, RootLengthWithSep;
+    ULONG i;
+    ULONG64 StartPerf, EndPerf;
+
+    /* Assume no flags */
+    *ReturnFlags = 0;
+
+    /* Make all registry handles invalid */
+    OslImcHiveHandle = -1;
+    OslMachineHiveHandle = -1;
+    OslElamHiveHandle = -1;
+    OslSystemHiveHandle = -1;
+
+    /* Initialize memory lists */
+    InitializeListHead(&OslFreeMemoryDesctiptorsList);
+    InitializeListHead(&OslFinalMemoryMap);
+    InitializeListHead(&OslLoadedFirmwareDriverList);
+    for (i = 0; i < RTL_NUMBER_OF(OslCoreExtensionSubGroups); i++)
+    {
+        InitializeListHead(&OslCoreExtensionSubGroups[i]);
+    }
+
+    /* Initialize the memory map descriptor buffer */
+    RtlZeroMemory(&OslFinalMemoryMapDescriptorsBuffer,
+                  sizeof(OslFinalMemoryMapDescriptorsBuffer));
+
+    /* Initialize general pointers */
+    OslLoadDevice = NULL;
+    OslLoadOptions = NULL;
+    OslSystemRoot = NULL;
+    OslLoaderBlock = NULL;
+    OslMemoryDescriptorBuffer = NULL;
+
+    /* Initialize general variables */
+    OslResetBootStatus = 0;
+    OslImcProcessingValid = FALSE;
+    OslFreeMemoryDesctiptorsListSize = 0;
+
+    /* Capture the current TSC */
+    StartPerf = BlArchGetPerformanceCounter();
+
+#ifdef BL_TPM_SUPPORT
+    BlpSbdiCurrentApplicationType = 0x10200003;
+#endif
+
+    /* Register an error handler */
+    BlpStatusErrorHandler = OslBlStatusErrorHandler;
+
+    /* Get the application identifier and save it */
+    AppId = BlGetApplicationIdentifier();
+    if (AppId)
+    {
+        OslApplicationIdentifier = *AppId;
+    }
+
+    /* Enable tracing */
+#ifdef BL_ETW_SUPPORT
+    TraceLoggingRegister(&TlgOslBootProviderProv);
+#endif
+
+    /* Remove dangerous BCD options */
+    Status = OslpRemoveInternalApplicationOptions();
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Get the OS device */
+    Status = BlGetBootOptionDevice(BlpApplicationEntry.BcdData,
+                                   BcdOSLoaderDevice_OSDevice,
+                                   &OsDevice,
+                                   0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* If the OS device is the boot device, use the one provided by bootlib */
+    if (OsDevice->DeviceType == BootDevice)
+    {
+        OsDevice = BlpBootDevice;
+    }
+
+    /* Save it as a global for later */
+    OslLoadDevice = OsDevice;
+
+    /* Get the system root */
+    Status = BlGetBootOptionString(BlpApplicationEntry.BcdData,
+                                   BcdOSLoaderString_SystemRoot,
+                                   &SystemRoot);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    EfiPrintf(L"System root: %s\r\n", SystemRoot);
+
+    /* Get the system root length and make sure it's slash-terminated */
+    RootLength = wcslen(SystemRoot);
+    if (SystemRoot[RootLength - 1] == OBJ_NAME_PATH_SEPARATOR)
+    {
+        /* Perfect, set it */
+        OslSystemRoot = SystemRoot;
+    }
+    else
+    {
+        /* Allocate a new buffer large enough to contain the slash */
+        RootLengthWithSep = RootLength + sizeof(OBJ_NAME_PATH_SEPARATOR);
+        OslSystemRoot = BlMmAllocateHeap(RootLengthWithSep * sizeof(WCHAR));
+        if (!OslSystemRoot)
+        {
+            /* Bail out if we're out of memory */
+            Status = STATUS_NO_MEMORY;
+            goto Quickie;
+        }
+
+        /* Make a copy of the path, adding the separator */
+        wcscpy(OslSystemRoot, SystemRoot);
+        wcscat(OslSystemRoot, L"\\");
+
+        /* Free the original one from the BCD library */
+        BlMmFreeHeap(SystemRoot);
+    }
+
+    Status = STATUS_NOT_IMPLEMENTED;
+
+    /* Printf perf */
+    EndPerf = BlArchGetPerformanceCounter();
+    EfiPrintf(L"Delta: %lld\r\n", EndPerf - StartPerf);
+
+Quickie:
+#if BL_BITLOCKER_SUPPORT
+    /* Destroy the RNG/AES library for BitLocker */
+    SymCryptRngAesUninstantiate();
+#endif
+
+    /* Abort the boot */
+    OslAbortBoot(Status);
+
+    /* This is a failure path, so never do the jump */
+    *Jump = FALSE;
+
+    /* Return error code */
+    return Status;
 }
 
 NTSTATUS
@@ -132,11 +413,11 @@ OslExecuteTransition (
     }
 
     /* Setup Firmware for Phase 1 */
-    Status = OslFwpKernelSetupPhase1(&OslLoaderBlock);
+    Status = OslFwpKernelSetupPhase1(OslLoaderBlock);
     if (NT_SUCCESS(Status))
     {
         /* Setup kernel for Phase 2 */
-        Status = OslArchKernelSetup(2, &OslLoaderBlock);
+        Status = OslArchKernelSetup(2, OslLoaderBlock);
         if (NT_SUCCESS(Status))
         {
 #ifdef BL_KD_SUPPORT
@@ -144,7 +425,7 @@ OslExecuteTransition (
             BlBdStop();
 #endif
             /* Jump to the kernel entrypoint */
-            OslArchTransferToKernel(&OslLoaderBlock, OslEntryPoint);
+            OslArchTransferToKernel(OslLoaderBlock, OslEntryPoint);
 
             /* Infinite loop if we got here */
             for (;;);
