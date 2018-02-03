@@ -30,7 +30,7 @@
 #include <bcd.h>
 
 /* ARC Headers */
-#include <arc\arc.h>
+#include <arc/arc.h>
 
 /* STRUCTURES ****************************************************************/
 
