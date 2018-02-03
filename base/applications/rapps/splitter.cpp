@@ -147,7 +147,6 @@ CreateHSplitBar(HWND hwnd)
                                  hInst,
                                  NULL);
 
-
     if (hHSplitter == NULL)
     {
         /* TODO: Show error message */
@@ -287,7 +286,6 @@ CreateVSplitBar(HWND hwnd)
                                  NULL,
                                  hInst,
                                  NULL);
-
 
     if (!hVSplitter)
     {

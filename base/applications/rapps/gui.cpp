@@ -145,7 +145,6 @@ class CAvailableAppView
 
         szLoadedAInfoText.LoadStringW(IDS_AINFO_LANGUAGES);
 
-        //TODO: replace those hardcoded strings
         if (Info->HasNativeLanguage())
         {
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_AVAILABLE_TRANSLATION);

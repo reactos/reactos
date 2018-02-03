@@ -47,7 +47,7 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
             WCHAR szName[MAX_PATH];
             do
             {
-                if (SetupGetStringFieldW(&Context, 1, szName, MAX_PATH, NULL))
+                if (SetupGetStringFieldW(&Context, 1, szName, _countof(szName), NULL))
                 {
                     arrNames.Add(szName);
                 }

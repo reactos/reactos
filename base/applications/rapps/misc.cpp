@@ -225,7 +225,7 @@ BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
             ZeroMemory(&Dest, sizeof(Dest));
 
             WideCharToMultiByte(CP_ACP, 0, lpOutputPath, -1, Dest.Destination, MAX_PATH, NULL, NULL);
-            WideCharToMultiByte(CP_ACP, 0, lpCabName, -1, szCabName, MAX_PATH, NULL, NULL);
+            WideCharToMultiByte(CP_ACP, 0, lpCabName, -1, szCabName, _countof(szCabName), NULL, NULL);
             Dest.Operation = EXTRACT_FILLFILELIST;
 
             Result = pfnExtract(&Dest, szCabName);

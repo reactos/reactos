@@ -444,7 +444,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         DownloadsListView.LoadList(AppsToInstallList);
 
         // Get a dlg string for later use
-        GetWindowTextW(Dlg, szCaption, MAX_PATH);
+        GetWindowTextW(Dlg, szCaption, _countof(szCaption));
 
         // Hide a placeholder from displaying
         szTempCaption = szCaption;
