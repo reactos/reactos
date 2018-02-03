@@ -1,6 +1,6 @@
 #include "usbehci.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define NDEBUG_EHCI_ROOT_HUB

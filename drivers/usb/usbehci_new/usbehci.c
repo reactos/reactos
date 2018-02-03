@@ -2465,15 +2465,19 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
     ULONG TransferLength;
     PEHCI_HCD_TD CurrentTD;
     PEHCI_TRANSFER CurrentTransfer;
-    PEHCI_HCD_TD FirstTD;
+    ULONG FirstTdPA;
     PEHCI_HCD_TD LastTD;
+    PEHCI_HCD_TD PrevTD;
     ULONG NextTD;
 
-    DPRINT("EHCI_AbortAsyncTransfer: ... \n");
+    DPRINT("EHCI_AbortAsyncTransfer: EhciEndpoint - %p, EhciTransfer - %p\n",
+           EhciEndpoint,
+           EhciTransfer);
 
     QH = EhciEndpoint->QH;
     TD = EhciEndpoint->HcdHeadP;
 
+    ASSERT(EhciEndpoint->PendingTDs);
     EhciEndpoint->PendingTDs--;
 
     if (TD->EhciTransfer == EhciTransfer)
@@ -2485,15 +2489,15 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
         {
             TransferLength += TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
 
-            TD = TD->NextHcdTD;
-
-            TD->TdFlags = 0;
             TD->HwTD.NextTD = 0;
             TD->HwTD.AlternateNextTD = 0;
 
+            TD->TdFlags = 0;
+            TD->EhciTransfer = NULL;
+
             EhciEndpoint->RemainTDs++;
 
-            TD->EhciTransfer = NULL;
+            TD = TD->NextHcdTD;
         }
 
         if (TransferLength)
@@ -2511,46 +2515,44 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
     }
     else
     {
+        DPRINT("EHCI_AbortAsyncTransfer: TD->EhciTransfer - %p\n", TD->EhciTransfer);
+
         CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress(QH->sqh.HwQH.CurrentTD,
                                                              EhciExtension,
                                                              EhciEndpoint);
 
         CurrentTransfer = CurrentTD->EhciTransfer;
-
         TD = EhciEndpoint->HcdHeadP;
 
         while (TD && TD->EhciTransfer != EhciTransfer)
         {
+            PrevTD = TD;
             TD = TD->NextHcdTD;
         }
 
-        FirstTD = TD;
+        FirstTdPA = TD->PhysicalAddress;
 
-        do
+        while (TD && TD->EhciTransfer == EhciTransfer);
         {
-            if (TD->EhciTransfer != EhciTransfer)
-                break;
-
-            TD->TdFlags = 0;
             TD->HwTD.NextTD = 0;
             TD->HwTD.AlternateNextTD = 0;
 
-            EhciEndpoint->RemainTDs++;
-
+            TD->TdFlags = 0;
             TD->EhciTransfer = NULL;
+
+            EhciEndpoint->RemainTDs++;
 
             TD = TD->NextHcdTD;
         }
-        while (TD);
 
         LastTD = TD;
         NextTD = ((PEHCI_HCD_TD)(LastTD->PhysicalAddress))->HwTD.NextTD;
 
-        FirstTD->HwTD.NextTD = LastTD->PhysicalAddress;
-        FirstTD->HwTD.AlternateNextTD = LastTD->PhysicalAddress;
+        PrevTD->HwTD.NextTD = LastTD->PhysicalAddress;
+        PrevTD->HwTD.AlternateNextTD = LastTD->PhysicalAddress;
 
-        FirstTD->NextHcdTD = LastTD;
-        FirstTD->AltNextHcdTD = LastTD;
+        PrevTD->NextHcdTD = LastTD;
+        PrevTD->AltNextHcdTD = LastTD;
 
         if (CurrentTransfer == EhciTransfer)
         {
@@ -2565,12 +2567,12 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
             return;
         }
 
-        if (FirstTD->EhciTransfer == CurrentTransfer)
+        if (PrevTD->EhciTransfer == CurrentTransfer)
         {
-            if (QH->sqh.HwQH.NextTD == FirstTD->PhysicalAddress)
+            if (QH->sqh.HwQH.NextTD == FirstTdPA)
                 QH->sqh.HwQH.NextTD = NextTD;
 
-            if (QH->sqh.HwQH.AlternateNextTD == FirstTD->PhysicalAddress)
+            if (QH->sqh.HwQH.AlternateNextTD == FirstTdPA)
                 QH->sqh.HwQH.AlternateNextTD = NextTD;
 
             for (TD = EhciEndpoint->HcdHeadP;
