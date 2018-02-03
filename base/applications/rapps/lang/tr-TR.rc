@@ -76,7 +76,7 @@ BEGIN
     LTEXT "Şunun İçin Vekil Sunucu Yok", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Ön Tanımlılar", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "Tamam", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 116, 195, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -88,7 +88,7 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Bir Diskten (CD'den veyâ DVD'den) Kur", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&İndir ve Kur", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "Tamam", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 86, 78, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 150, 78, 60, 14
 END
 
@@ -107,9 +107,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Üzerine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Uygulama Yöneticisi\nTelif Hakkı: 2009\nDmitry Chapyshev (dmitry@reactos.org) ile.", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Tamam", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "ReactOS Uygulama Yöneticisi\nTelif Hakkı: 2009\nDmitry Chapyshev (dmitry@reactos.org) ile.", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Tamam", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE

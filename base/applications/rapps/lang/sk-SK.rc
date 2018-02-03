@@ -79,7 +79,7 @@ BEGIN
     LTEXT "No proxy for", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Predvolené", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
     PUSHBUTTON "Zrušiť", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -91,7 +91,7 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Inštalovať z disku (CD alebo DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Stiahnuť a inštalovať", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
     PUSHBUTTON "Zrušiť", IDCANCEL, 150, 78, 60, 14
 END
 
@@ -110,9 +110,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Čo je Manažér aplikácií systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Manažér aplikácií systému ReactOS\nAutorské práva (C) 2009\nod Dmitry Chapyshev (dmitry@reactos.org)\nPreklad: Mário Kačmár (kario@szm.sk)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Zavrieť", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Manažér aplikácií systému ReactOS\nAutorské práva (C) 2009\nod Dmitry Chapyshev (dmitry@reactos.org)\nPreklad: Mário Kačmár (kario@szm.sk)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Zavrieť", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE

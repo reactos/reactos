@@ -74,7 +74,7 @@ BEGIN
     LTEXT "Pas de proxy pour", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Par défaut", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "Accepter", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "Accepter", IDOK, 116, 195, 60, 14
     PUSHBUTTON "Annuler", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -86,7 +86,7 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Installer à partir d'un disque (CD ou DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Télécharger et installer", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "Accepter", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "Accepter", IDOK, 86, 78, 60, 14
     PUSHBUTTON "Annuler", IDCANCEL, 150, 78, 60, 14
 END
 
@@ -105,9 +105,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "À propos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\npar Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Fermer", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\npar Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Fermer", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -209,8 +209,8 @@ BEGIN
     IDS_INTERRUPTED_DOWNLOAD "Le téléchargement a été interrompu. Vérifiez votre connexion à Internet."
     IDS_UNABLE_TO_WRITE "Impossible d'écrire sur le disque. Votre disque pourrait être plein."
     IDS_SELECT_ALL "Sélectionner/Désélectionner tout"
-    IDS_INSTALL_SELECTED "Installer les sélectionnés"
-    IDS_SELECTEDFORINST "Selected for installation"
+    IDS_INSTALL_SELECTED "Installer la sélection"
+    IDS_SELECTEDFORINST "Sélectionnées pour installation"
 END
 
 STRINGTABLE
@@ -238,8 +238,8 @@ BEGIN
     IDS_LANGUAGE_NO_TRANSLATION "Supporte d'autres langues"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Supporte l'Anglais"
     IDS_LANGUAGE_SINGLE "Langue unique"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+ %d de plus)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+ %d disponibles)"
 END
 
 STRINGTABLE
