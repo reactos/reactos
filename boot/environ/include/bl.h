@@ -675,6 +675,73 @@ NTSTATUS
     VOID
     );
 
+typedef VOID
+(*PBL_MM_FLUSH_TLB) (
+    VOID
+    );
+
+typedef VOID
+(*PBL_MM_RELOCATE_SELF_MAP) (
+    VOID
+    );
+
+typedef NTSTATUS
+(*PBL_MM_MOVE_VIRTUAL_ADDRESS_RANGE) (
+    _In_ PVOID DestinationAddress,
+    _In_ PVOID SourceAddress,
+    _In_ ULONGLONG Size
+    );
+
+typedef NTSTATUS
+(*PBL_MM_ZERO_VIRTUAL_ADDRESS_RANGE) (
+    _In_ PVOID DestinationAddress,
+    _In_ ULONGLONG Size
+    );
+
+typedef VOID
+(*PBL_MM_DESTROY_SELF_MAP) (
+    VOID
+    );
+
+typedef VOID
+(*PBL_MM_FLUSH_TLB_ENTRY) (
+    _In_ PVOID VirtualAddress
+    );
+
+typedef VOID
+(*PBL_MM_FLUSH_TLB) (
+    VOID
+    );
+
+typedef NTSTATUS
+(*PBL_MM_UNMAP_VIRTUAL_ADDRESS) (
+    _In_ PVOID VirtualAddress,
+    _In_ ULONG Size
+    );
+
+typedef NTSTATUS
+(*PBL_MM_REMAP_VIRTUAL_ADDRESS) (
+    _In_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_ PVOID VirtualAddress,
+    _In_ ULONG Size,
+    _In_ ULONG CacheAttributes
+    );
+
+typedef NTSTATUS
+(*PBL_MM_MAP_PHYSICAL_ADDRESS) (
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _Out_ PVOID VirtualAddress,
+    _In_ ULONG Size,
+    _In_ ULONG CacheAttributes
+    );
+
+typedef BOOLEAN
+(*PBL_MM_TRANSLATE_VIRTUAL_ADDRESS) (
+    _In_ PVOID VirtualAddress,
+    _Out_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_opt_ PULONG CacheAttributes
+    );
+
 /* DATA STRUCTURES ***********************************************************/
 
 typedef struct _BL_LIBRARY_PARAMETERS
@@ -1632,7 +1699,6 @@ EtfsMount (
 
 /* DEBUG ROUTINES ************************************************************/
 
-
 BOOLEAN
 BlBdDebuggerEnabled (
     VOID
@@ -2179,6 +2245,7 @@ MmPaReserveSelfMapPages (
     _In_ ULONG Alignment,
     _In_ ULONG PageCount
     );
+
 NTSTATUS
 BlMmFreePhysicalPages (
     _In_ PHYSICAL_ADDRESS Address
@@ -2760,5 +2827,9 @@ extern ULONGLONG BlpTimePerformanceFrequency;
 extern LIST_ENTRY RegisteredFileSystems;
 extern BL_ADDRESS_RANGE MmArchKsegAddressRange;
 extern ULONG_PTR MmArchTopOfApplicationAddressSpace;
+extern PBL_MM_RELOCATE_SELF_MAP BlMmRelocateSelfMap;
+extern PBL_MM_FLUSH_TLB BlMmFlushTlb;
+extern PBL_MM_MOVE_VIRTUAL_ADDRESS_RANGE BlMmMoveVirtualAddressRange;
+extern PBL_MM_ZERO_VIRTUAL_ADDRESS_RANGE BlMmZeroVirtualAddressRange;
 
 #endif

@@ -29,8 +29,17 @@
 /* BCD Headers */
 #include <bcd.h>
 
+/* ARC Headers */
+#include <arc\arc.h>
+
 /* STRUCTURES ****************************************************************/
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+OslDrawLogo (
+    VOID
+);
 
 #endif
