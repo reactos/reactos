@@ -889,26 +889,7 @@ void set_pointer(mpg123_handle *fr, long backstep)
 
 double compute_bpf(mpg123_handle *fr)
 {
-	double bpf;
-
-	switch(fr->lay) 
-	{
-		case 1:
-			bpf = tabsel_123[fr->lsf][0][fr->bitrate_index];
-			bpf *= 12000.0 * 4.0;
-			bpf /= freqs[fr->sampling_frequency] <<(fr->lsf);
-		break;
-		case 2:
-		case 3:
-			bpf = tabsel_123[fr->lsf][fr->lay-1][fr->bitrate_index];
-			bpf *= 144000;
-			bpf /= freqs[fr->sampling_frequency] << (fr->lsf);
-		break;
-		default:
-			bpf = 1.0;
-	}
-
-	return bpf;
+	return (fr->framesize > 0) ? fr->framesize + 4.0 : 1.0;
 }
 
 int attribute_align_arg mpg123_spf(mpg123_handle *mh)

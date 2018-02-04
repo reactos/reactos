@@ -78,7 +78,7 @@
 #define HDR_CMPMASK (HDR_SYNC|HDR_VERSION|HDR_LAYER|HDR_SAMPLERATE)
 
 /* A stricter mask, for matching free format headers. */
-#define HDR_SAMEMASK (HDR_SYNC|HDR_VERSION|HDR_LAYER|HDR_BITRATE|HDR_SAMPLERATE|HDR_CHANNEL|HDR_CHANEX)
+#define HDR_SAMEMASK (HDR_SYNC|HDR_VERSION|HDR_LAYER|HDR_BITRATE|HDR_SAMPLERATE|HDR_CHANNEL)
 
 /* Free format headers have zero bitrate value. */
 #define HDR_FREE_FORMAT(head) (!(head & HDR_BITRATE))
