@@ -15,11 +15,11 @@
 #include <debug.h>
 
 #include <mm/ARM3/miarm.h>
+#include <fltkernel.h>
 
 extern PMMPTE MmDebugPte;
 
 /* Helper macros */
-#define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
 #define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
 
 /* GLOBALS *****************************************************************/
@@ -62,28 +62,31 @@ NTAPI
 INIT_FUNCTION
 MiInitializeSessionSpaceLayout(VOID)
 {
+    /* This is the entire size */
     MmSessionSize = MI_SESSION_SIZE;
-    MmSessionViewSize = MI_SESSION_VIEW_SIZE;
-    MmSessionPoolSize = MI_SESSION_POOL_SIZE;
-    MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
-    MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
 
-    /* Set up session space */
+    /* Start with session space end */
     MiSessionSpaceEnd = (PVOID)MI_SESSION_SPACE_END;
 
-    /* This is where we will load Win32k.sys and the video driver */
+    /* The highest range is the session image range */
+    MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
     MiSessionImageEnd = MiSessionSpaceEnd;
-    MiSessionImageStart = (PCHAR)MiSessionImageEnd - MmSessionImageSize;
+    MiSessionImageStart = (PUCHAR)MiSessionImageEnd - MmSessionImageSize;
+    ASSERT(IS_PAGE_ALIGNED(MiSessionImageStart));
 
-    /* The view starts right below the session working set (itself below
-     * the image area) */
-    MiSessionViewEnd = (PVOID)MI_SESSION_VIEW_END;
-    MiSessionViewStart = (PCHAR)MiSessionViewEnd - MmSessionViewSize;
+    /* Session working set is below the session image range */
+    MiSessionSpaceWs = (PUCHAR)MiSessionImageStart - MI_SESSION_WORKING_SET_SIZE;
+
+    /* Session view is below the session working set */
+    MmSessionViewSize = MI_SESSION_VIEW_SIZE;
+    MiSessionViewEnd = MiSessionSpaceWs;
+    MiSessionViewStart = (PUCHAR)MiSessionViewEnd - MmSessionViewSize;
     ASSERT(IS_PAGE_ALIGNED(MiSessionViewStart));
 
-    /* Session pool follows */
+    /* Session pool is below session view */
+    MmSessionPoolSize = MI_SESSION_POOL_SIZE;
     MiSessionPoolEnd = MiSessionViewStart;
-    MiSessionPoolStart = (PCHAR)MiSessionPoolEnd - MmSessionPoolSize;
+    MiSessionPoolStart = (PUCHAR)MiSessionPoolEnd - MmSessionPoolSize;
     ASSERT(IS_PAGE_ALIGNED(MiSessionPoolStart));
 
     /* And it all begins here */
@@ -91,12 +94,23 @@ MiInitializeSessionSpaceLayout(VOID)
 
     /* System view space ends at session space, so now that we know where
      * this is, we can compute the base address of system view space itself. */
-    MiSystemViewStart = (PCHAR)MmSessionBase - MmSystemViewSize;
+    MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
+    MiSystemViewStart = (PUCHAR)MmSessionBase - MmSystemViewSize;
     ASSERT(IS_PAGE_ALIGNED(MiSystemViewStart));
 
     /* Sanity checks */
+    ASSERT(Add2Ptr(MmSessionBase, MmSessionSize) == MiSessionSpaceEnd);
     ASSERT(MiSessionViewEnd <= MiSessionImageStart);
     ASSERT(MmSessionBase <= MiSessionPoolStart);
+
+    /* Compute the PTE addresses for all the addresses we carved out */
+    MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
+    MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
+    MiSessionBasePte = MiAddressToPte(MmSessionBase);
+    MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
+
+    /* Initialize the pointer to the session space structure */
+    MmSessionSpace = (PMM_SESSION_SPACE)Add2Ptr(MiSessionImageStart, 0x10000);
 }
 
 VOID

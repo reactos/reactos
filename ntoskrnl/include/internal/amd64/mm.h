@@ -21,8 +21,8 @@
 #define MI_PAGED_POOL_START             (PVOID)0xFFFFF8A000000000ULL // 128 GB paged pool [MiVaPagedPool]
 //#define MI_PAGED_POOL_END                    0xFFFFF8BFFFFFFFFFULL
 //#define MI_SESSION_SPACE_START               0xFFFFF90000000000ULL // 512 GB session space [MiVaSessionSpace]
-#define MI_SESSION_VIEW_END                    0xFFFFF97FFF000000ULL
-#define MI_SESSION_SPACE_END                   0xFFFFF97FFFFFFFFFULL
+//#define MI_SESSION_VIEW_END                    0xFFFFF97FFF000000ULL
+#define MI_SESSION_SPACE_END                   0xFFFFF98000000000ULL
 #define MI_SYSTEM_CACHE_START                  0xFFFFF98000000000ULL // 1 TB system cache (on Vista+ this is dynamic VA space) [MiVaSystemCache,MiVaSpecialPoolPaged,MiVaSpecialPoolNonPaged]
 #define MI_SYSTEM_CACHE_END                    0xFFFFFA7FFFFFFFFFULL
 #define MI_PFN_DATABASE                        0xFFFFFA8000000000ULL // up to 5.5 TB PFN database followed by non paged pool [MiVaPfnDatabase/MiVaNonPagedPool]
@@ -55,11 +55,11 @@
 #define MI_MIN_INIT_PAGED_POOLSIZE              (32 * _1MB)
 #define MI_MAX_INIT_NONPAGED_POOL_SIZE          (128ULL * 1024 * 1024 * 1024)
 #define MI_MAX_NONPAGED_POOL_SIZE               (128ULL * 1024 * 1024 * 1024)
-#define MI_SYSTEM_VIEW_SIZE                     (16 * _1MB)
-#define MI_SESSION_VIEW_SIZE                    (20 * _1MB)
-#define MI_SESSION_POOL_SIZE                    (16 * _1MB)
-#define MI_SESSION_IMAGE_SIZE                   (8 * _1MB)
-#define MI_SESSION_WORKING_SET_SIZE             (4 * _1MB)
+#define MI_SYSTEM_VIEW_SIZE                     (104 * _1MB)
+#define MI_SESSION_VIEW_SIZE                    (104 * _1MB)
+#define MI_SESSION_POOL_SIZE                    (64 * _1MB)
+#define MI_SESSION_IMAGE_SIZE                   (16 * _1MB)
+#define MI_SESSION_WORKING_SET_SIZE             (16 * _1MB)
 #define MI_SESSION_SIZE                         (MI_SESSION_VIEW_SIZE + \
                                                  MI_SESSION_POOL_SIZE + \
                                                  MI_SESSION_IMAGE_SIZE + \
@@ -285,9 +285,10 @@ FORCEINLINE
 BOOLEAN
 MI_IS_MAPPED_PTE(PMMPTE PointerPte)
 {
-    /// FIXME
-    __debugbreak();
-    return ((PointerPte->u.Long & 0xFFFFFC01) != 0);
+    return ((PointerPte->u.Hard.Valid != 0) ||
+            (PointerPte->u.Proto.Prototype != 0) ||
+            (PointerPte->u.Trans.Transition != 0) ||
+            (PointerPte->u.Hard.PageFrameNumber != 0));
 }
 
 INIT_FUNCTION
