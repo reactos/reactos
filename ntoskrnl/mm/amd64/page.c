@@ -144,55 +144,40 @@ MiGetPteForProcess(
     PVOID Address,
     BOOLEAN Create)
 {
-    MMPTE TmplPte, *Pte;
+    PMMPTE Pte;
 
-    /* Check if we need hypersapce mapping */
-    if (Address < MmSystemRangeStart &&
-        Process && Process != PsGetCurrentProcess())
+    /* Make sure the process is correct */
+    if (Address < MmSystemRangeStart)
     {
-        UNIMPLEMENTED;
-        __debugbreak();
-        return NULL;
+        ASSERT(Process == PsGetCurrentProcess());
     }
-    else if (Create)
+    else
     {
-        KIRQL OldIrql;
-        TmplPte.u.Long = 0;
-        TmplPte.u.Flush.Valid = 1;
-        TmplPte.u.Flush.Write = 1;
+        ASSERT((Process == NULL) || (Process == PsGetCurrentProcess()));
+    }
 
-        /* All page table levels of user pages are user owned */
-        TmplPte.u.Flush.Owner = (Address < MmHighestUserAddress) ? 1 : 0;
-
-        /* Lock the PFN database */
-        OldIrql = MiAcquirePfnLock();
-
+    if (Create)
+    {
         /* Get the PXE */
         Pte = MiAddressToPxe(Address);
-        if (!Pte->u.Hard.Valid)
+        if (Pte->u.Long == 0)
         {
-            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(0);
-            MI_WRITE_VALID_PTE(Pte, TmplPte);
+            MI_WRITE_INVALID_PTE(Pte, DemandZeroPde);
         }
 
         /* Get the PPE */
         Pte = MiAddressToPpe(Address);
-        if (!Pte->u.Hard.Valid)
+        if (Pte->u.Long == 0)
         {
-            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(1);
-            MI_WRITE_VALID_PTE(Pte, TmplPte);
+            MI_WRITE_INVALID_PTE(Pte, DemandZeroPde);
         }
 
         /* Get the PDE */
         Pte = MiAddressToPde(Address);
-        if (!Pte->u.Hard.Valid)
+        if (Pte->u.Long == 0)
         {
-            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(2);
-            MI_WRITE_VALID_PTE(Pte, TmplPte);
+            MI_WRITE_INVALID_PTE(Pte, DemandZeroPte);
         }
-
-        /* Unlock PFN database */
-        MiReleasePfnLock(OldIrql);
     }
     else
     {
@@ -327,33 +312,6 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
     return Pte.u.Hard.Valid && Pte.u.Soft.Transition;
 }
 
-static PMMPTE
-MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
-{
-    __debugbreak();
-    return 0;
-}
-
-BOOLEAN MmUnmapPageTable(PMMPTE Pt)
-{
-    ASSERT(FALSE);
-    return 0;
-}
-
-static ULONG64 MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
-{
-    MMPTE Pte, *PointerPte;
-
-    PointerPte = MmGetPageTableForProcess(Process, Address, FALSE);
-    if (PointerPte)
-    {
-        Pte = *PointerPte;
-        MmUnmapPageTable(PointerPte);
-        return Pte.u.Long;
-    }
-    return 0;
-}
-
 VOID
 NTAPI
 MmGetPageFileMapping(
@@ -361,8 +319,12 @@ MmGetPageFileMapping(
     PVOID Address,
     SWAPENTRY* SwapEntry)
 {
-	ULONG64 Entry = MmGetPageEntryForProcess(Process, Address);
-	*SwapEntry = Entry >> 1;
+    PMMPTE PointerPte;
+
+    ASSERT(Process == PsGetCurrentProcess());
+
+    PointerPte = MiAddressToPte(Address);
+    *SwapEntry = PointerPte->u.Long >> 1;
 }
 
 BOOLEAN
