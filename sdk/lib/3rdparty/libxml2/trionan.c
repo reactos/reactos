@@ -327,7 +327,7 @@ trio_nan(TRIO_NOARGS)
 
   if (result == 0.0) {
 
-#if defined(TRIO_COMPILER_SUPPORTS_C99) && !defined(__clang__)
+#if defined(TRIO_COMPILER_SUPPORTS_C99)
     result = nan("");
 
 #elif defined(NAN) && defined(__STDC_IEC_559__)

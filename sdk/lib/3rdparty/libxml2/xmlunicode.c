@@ -29,14 +29,14 @@ typedef struct {
 } xmlUnicodeRange;
 
 typedef struct {
-    xmlUnicodeRange *table;
+    const xmlUnicodeRange *table;
     int		    numentries;
 } xmlUnicodeNameTable;
 
 
 static xmlIntFunc *xmlUnicodeLookup(xmlUnicodeNameTable *tptr, const char *tname);
 
-static xmlUnicodeRange xmlUnicodeBlocks[] = {
+static const xmlUnicodeRange xmlUnicodeBlocks[] = {
   {"AegeanNumbers", xmlUCSIsAegeanNumbers},
   {"AlphabeticPresentationForms", xmlUCSIsAlphabeticPresentationForms},
   {"Arabic", xmlUCSIsArabic},
@@ -945,7 +945,7 @@ static xmlUnicodeNameTable xmlUnicodeCatTbl = {xmlUnicodeCats, 36};
 static xmlIntFunc
 *xmlUnicodeLookup(xmlUnicodeNameTable *tptr, const char *tname) {
     int low, high, mid, cmp;
-    xmlUnicodeRange *sptr;
+    const xmlUnicodeRange *sptr;
 
     if ((tptr == NULL) || (tname == NULL)) return(NULL);
 

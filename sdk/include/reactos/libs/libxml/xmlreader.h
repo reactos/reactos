@@ -393,7 +393,7 @@ typedef void *  xmlTextReaderLocatorPtr;
  * @arg: the user argument
  * @msg: the message
  * @severity: the severity of the error
- * @locator: a locator indicating where the error occured
+ * @locator: a locator indicating where the error occurred
  *
  * Signature of an error callback from a reader parser
  */

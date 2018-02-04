@@ -853,7 +853,7 @@ xmlParserValidityWarning(void *ctx, const char *msg, ...)
  * Get the last global error registered. This is per thread if compiled
  * with thread support.
  *
- * Returns NULL if no error occured or a pointer to the error
+ * Returns NULL if no error occurred or a pointer to the error
  */
 xmlErrorPtr
 xmlGetLastError(void)
@@ -910,7 +910,7 @@ xmlResetLastError(void)
  *
  * Get the last parsing error registered.
  *
- * Returns NULL if no error occured or a pointer to the error
+ * Returns NULL if no error occurred or a pointer to the error
  */
 xmlErrorPtr
 xmlCtxtGetLastError(void *ctx)

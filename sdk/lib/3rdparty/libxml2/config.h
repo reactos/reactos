@@ -275,8 +275,7 @@
 /* Define as const if the declaration of iconv() needs const. */
 /* #undef ICONV_CONST */
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 /* #undef LT_OBJDIR */
 
 /* Name of package */
@@ -322,9 +321,6 @@
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
    #define below would cause a syntax error. */
 /* #undef _UINT32_T */
-
-/* Using the Win32 Socket implementation */
-//#define _WINSOCKAPI_ 1
 
 /* ss_family is not defined here, use __ss_family instead */
 /* #undef ss_family */

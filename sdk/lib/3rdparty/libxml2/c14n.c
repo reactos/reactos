@@ -1375,13 +1375,6 @@ xmlC14NCheckForRelativeNamespaces(xmlC14NCtxPtr ctx, xmlNodePtr cur)
                 xmlFreeURI(uri);
                 return (-1);
             }
-            if ((xmlStrcasecmp((const xmlChar *) uri->scheme, BAD_CAST "urn") != 0)
-                && (xmlStrcasecmp((const xmlChar *) uri->scheme, BAD_CAST "dav") !=0)
-                && (xmlStrlen((const xmlChar *) uri->server) == 0)) {
-                xmlC14NErrRelativeNamespace(uri->scheme);
-                xmlFreeURI(uri);
-                return (-1);
-            }
             xmlFreeURI(uri);
         }
         ns = ns->next;

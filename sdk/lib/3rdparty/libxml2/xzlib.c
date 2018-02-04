@@ -408,7 +408,7 @@ xz_head(xz_statep state)
         state->strm = init;
         state->strm.avail_in = 0;
         state->strm.next_in = NULL;
-        if (lzma_auto_decoder(&state->strm, UINT64_MAX, 0) != LZMA_OK) {
+        if (lzma_auto_decoder(&state->strm, 100000000, 0) != LZMA_OK) {
             xmlFree(state->out);
             xmlFree(state->in);
             state->size = 0;
@@ -797,6 +797,8 @@ __libxml2_xzclose(xzFile file)
         xmlFree(state->in);
     }
     xmlFree(state->path);
+    if ((state->msg != NULL) && (state->err != LZMA_MEM_ERROR))
+        xmlFree(state->msg);
     ret = close(state->fd);
     xmlFree(state);
     return ret ? ret : LZMA_OK;
