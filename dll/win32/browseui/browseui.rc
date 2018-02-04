@@ -22,6 +22,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #include <shlobj.h>
+#undef DECLSPEC_IMPORT
 
 #include "resource.h"
 
