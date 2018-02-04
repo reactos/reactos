@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu [at] gmail [dot] com), 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
  
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -37,7 +37,7 @@ BEGIN
     MENUITEM "&Taşı", SC_MOVE
     MENUITEM "&Yeniden Boyutlandır", SC_SIZE
     MENUITEM "&Simge Durumuna Küçült", SC_MINIMIZE
-    MENUITEM "&Görüntülüğü Kaplat", SC_MAXIMIZE
+    MENUITEM "&Ekranı Kaplat", SC_MAXIMIZE
     MENUITEM SEPARATOR
     MENUITEM "&Kapat\tSeçenek+F4", SC_CLOSE
 END
@@ -48,7 +48,7 @@ BEGIN
     MENUITEM "&Taşı", SC_MOVE
     MENUITEM "&Yeniden Boyutlandır", SC_SIZE
     MENUITEM "&Simge Durumuna Küçült", SC_MINIMIZE
-    MENUITEM "&Görüntülüğü Kaplat", SC_MAXIMIZE
+    MENUITEM "&Ekranı Kaplat", SC_MAXIMIZE
     MENUITEM SEPARATOR
     MENUITEM "&Kapat\tDenetim+F4", SC_CLOSE
     MENUITEM SEPARATOR
