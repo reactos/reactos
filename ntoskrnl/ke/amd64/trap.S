@@ -20,6 +20,7 @@ EXTERN KiGeneralProtectionFaultHandler:PROC
 EXTERN KiXmmExceptionHandler:PROC
 EXTERN KiDeliverApc:PROC
 EXTERN KiDpcInterruptHandler:PROC
+EXTERN PsConvertToGuiThread:PROC
 
 #ifdef _WINKD_
 EXTERN KdSetOwedBreakpoints:PROC
@@ -884,6 +885,28 @@ FUNC KiZwSystemService
 
 ENDFUNC
 
+PUBLIC KiConvertToGuiThread
+FUNC KiConvertToGuiThread
+
+    push rbp
+    .pushreg rbp
+    sub rsp, 32
+    .allocstack 32
+    .endprolog
+
+    /* Call the worker function */
+    call PsConvertToGuiThread
+
+    /* Adjust rsp */
+    add rsp, 32
+
+    /* Restore rbp */
+    pop rbp
+
+    /* return to the caller */
+    ret
+
+ENDFUNC
 
 KiExitToUserApc:
     int 3
@@ -925,6 +948,28 @@ KiInitializeSegments:
     swapgs
     mov gs, ax
     ret
+
+/*!
+ * VOID
+ * KiSwitchKernelStackHelper(
+ *     LONG_PTR StackOffset,
+ *     PVOID OldStackBase);
+ */
+PUBLIC KiSwitchKernelStackHelper
+KiSwitchKernelStackHelper:
+    
+    /* Pop return address from the current stack */
+    pop rax
+
+    /* Switch to new stack */
+    lea rsp, [rsp + rcx]
+
+    /* Push return address on the new stack */
+    push rax
+
+    /* Return on new stack */
+    mov rax, rdx
+    ret;
 
 
 #ifdef _MSC_VER

@@ -8,6 +8,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <fltkernel.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -16,6 +17,10 @@ VOID
 KiRetireDpcListInDpcStack(
     PKPRCB Prcb,
     PVOID DpcStack);
+
+NTSTATUS
+KiConvertToGuiThread(
+    VOID);
 
 VOID
 NTAPI
@@ -87,12 +92,65 @@ KeZeroPages(IN PVOID Address,
 }
 
 PVOID
+KiSwitchKernelStackHelper(
+    LONG_PTR StackOffset,
+    PVOID OldStackBase);
+
+PVOID
 NTAPI
 KeSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
 {
-    UNIMPLEMENTED;
-    __debugbreak();
-    return NULL;
+    PKTHREAD CurrentThread;
+    PVOID OldStackBase;
+    LONG_PTR StackOffset;
+    SIZE_T StackSize;
+
+    /* Get the current thread */
+    CurrentThread = KeGetCurrentThread();
+
+    /* Save the old stack base */
+    OldStackBase = CurrentThread->StackBase;
+
+    /* Get the size of the current stack */
+    StackSize = (ULONG_PTR)CurrentThread->StackBase - CurrentThread->StackLimit;
+    ASSERT(StackSize <= (ULONG_PTR)StackBase - (ULONG_PTR)StackLimit);
+
+    /* Copy the current stack contents to the new stack */
+    RtlCopyMemory((PUCHAR)StackBase - StackSize,
+                  (PVOID)CurrentThread->StackLimit,
+                  StackSize);
+
+    /* Calculate the offset between the old and the new stack */
+    StackOffset = (PUCHAR)StackBase - (PUCHAR)CurrentThread->StackBase;
+
+    /* Disable interrupts while messing with the stack */
+    _disable();
+
+    /* Set the new trap frame */
+    CurrentThread->TrapFrame = (PKTRAP_FRAME)Add2Ptr(CurrentThread->TrapFrame,
+                                                     StackOffset);
+
+    /* Set the new initial stack */
+    CurrentThread->InitialStack = Add2Ptr(CurrentThread->InitialStack,
+                                          StackOffset);
+
+    /* Set the new stack limits */
+    CurrentThread->StackBase = StackBase;
+    CurrentThread->StackLimit = (ULONG_PTR)StackLimit;
+    CurrentThread->LargeStack = TRUE;
+
+    /* Adjust the PCR fields */
+    __addgsqword(FIELD_OFFSET(KPCR, NtTib.StackBase), StackOffset);
+    __addgsqword(FIELD_OFFSET(KIPCR, Prcb.RspBase), StackOffset);
+
+    /* Finally switch RSP to the new stack.
+       We pass OldStackBase to make sure it is not lost. */
+    OldStackBase = KiSwitchKernelStackHelper(StackOffset, OldStackBase);
+
+    /* Reenable interrupts */
+    _enable();
+
+    return OldStackBase;
 }
 
 NTSTATUS
@@ -313,9 +371,7 @@ KiSystemCallHandler(
     PULONG64 KernelParams, UserParams;
     ULONG ServiceNumber, Offset, Count;
     ULONG64 UserRsp;
-
-    DPRINT("Syscall #%ld\n", TrapFrame->Rax);
-    //__debugbreak();
+    NTSTATUS Status;
 
     /* Increase system call count */
     __addgsdword(FIELD_OFFSET(KIPCR, Prcb.KeSystemCalls), 1);
@@ -351,6 +407,40 @@ KiSystemCallHandler(
 
     /* Get descriptor table */
     DescriptorTable = (PVOID)((ULONG_PTR)Thread->ServiceTable + Offset);
+
+    /* Validate the system call number */
+    if (ServiceNumber >= DescriptorTable->Limit)
+    {
+        /* Check if this is a GUI call */
+        if (!(Offset & SERVICE_TABLE_TEST))
+        {
+            /* Fail the call */
+            TrapFrame->Rax = STATUS_INVALID_SYSTEM_SERVICE;
+            return (PVOID)NtSyscallFailure;
+        }
+
+        /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */
+        Status = KiConvertToGuiThread();
+
+        /* Reload trap frame and descriptor table pointer from new stack */
+        TrapFrame = *(volatile PVOID*)&Thread->TrapFrame;
+        DescriptorTable = (PVOID)(*(volatile ULONG_PTR*)&Thread->ServiceTable + Offset);
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* Set the last error and fail */
+            TrapFrame->Rax = Status;
+            return (PVOID)NtSyscallFailure;
+        }
+
+        /* Validate the system call number again */
+        if (ServiceNumber >= DescriptorTable->Limit)
+        {
+            /* Fail the call */
+            TrapFrame->Rax = STATUS_INVALID_SYSTEM_SERVICE;
+            return (PVOID)NtSyscallFailure;
+        }
+    }
 
     /* Get stack bytes and calculate argument count */
     Count = DescriptorTable->Number[ServiceNumber] / 8;
