@@ -101,7 +101,8 @@ HRESULT EnumHotpluggedDevices(CSimpleArray<DEVINST> &devList)
 HRESULT NotifyBalloon(CSysTray* pSysTray, LPCWSTR szTitle = NULL, LPCWSTR szInfo = NULL, UINT uId = ID_ICON_HOTPLUG)
 {
     NOTIFYICONDATA nim = { 0 };
-    nim.cbSize = sizeof(NOTIFYICONDATA);
+
+    nim.cbSize = sizeof(nim);
     nim.uID = uId;
     nim.hWnd = pSysTray->GetHWnd();
 
