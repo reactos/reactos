@@ -1,4 +1,4 @@
-/* $Id: tif_dirwrite.c,v 1.85 2017-01-11 16:09:02 erouault Exp $ */
+/* $Id: tif_dirwrite.c,v 1.89 2017-08-23 13:33:42 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -29,7 +29,6 @@
  *
  * Directory Write Support Routines.
  */
-
 #include <precomp.h>
 #include <float.h>
 
@@ -822,7 +821,12 @@ TIFFWriteDirectorySec(TIFF* tif, int isimage, int imagedone, uint64* pdiroff)
 			TIFFDirEntry* nb;
 			for (na=0, nb=dir; ; na++, nb++)
 			{
-				assert(na<ndir);
+				if( na == ndir )
+                                {
+                                    TIFFErrorExt(tif->tif_clientdata,module,
+                                                 "Cannot find SubIFD tag");
+                                    goto bad;
+                                }
 				if (nb->tdir_tag==TIFFTAG_SUBIFD)
 					break;
 			}
@@ -1945,7 +1949,14 @@ TIFFWriteDirectoryTagSubifd(TIFF* tif, uint32* ndir, TIFFDirEntry* dir)
 		for (p=0; p < tif->tif_dir.td_nsubifd; p++)
 		{
                         assert(pa != 0);
-			assert(*pa <= 0xFFFFFFFFUL);
+
+                        /* Could happen if an classicTIFF has a SubIFD of type LONG8 (which is illegal) */
+                        if( *pa > 0xFFFFFFFFUL)
+                        {
+                            TIFFErrorExt(tif->tif_clientdata,module,"Illegal value for SubIFD tag");
+                            _TIFFfree(o);
+                            return(0);
+                        }
 			*pb++=(uint32)(*pa++);
 		}
 		n=TIFFWriteDirectoryTagCheckedIfdArray(tif,ndir,dir,TIFFTAG_SUBIFD,tif->tif_dir.td_nsubifd,o);
@@ -2112,7 +2123,10 @@ TIFFWriteDirectoryTagCheckedLong8(TIFF* tif, uint32* ndir, TIFFDirEntry* dir, ui
 {
 	uint64 m;
 	assert(sizeof(uint64)==8);
-	assert(tif->tif_flags&TIFF_BIGTIFF);
+	if( !(tif->tif_flags&TIFF_BIGTIFF) ) {
+		TIFFErrorExt(tif->tif_clientdata,"TIFFWriteDirectoryTagCheckedLong8","LONG8 not allowed for ClassicTIFF");
+		return(0);
+	}
 	m=value;
 	if (tif->tif_flags&TIFF_SWAB)
 		TIFFSwabLong8(&m);
@@ -2125,7 +2139,10 @@ TIFFWriteDirectoryTagCheckedLong8Array(TIFF* tif, uint32* ndir, TIFFDirEntry* di
 {
 	assert(count<0x20000000);
 	assert(sizeof(uint64)==8);
-	assert(tif->tif_flags&TIFF_BIGTIFF);
+	if( !(tif->tif_flags&TIFF_BIGTIFF) ) {
+		TIFFErrorExt(tif->tif_clientdata,"TIFFWriteDirectoryTagCheckedLong8Array","LONG8 not allowed for ClassicTIFF");
+		return(0);
+	}
 	if (tif->tif_flags&TIFF_SWAB)
 		TIFFSwabArrayOfLong8(value,count);
 	return(TIFFWriteDirectoryTagData(tif,ndir,dir,tag,TIFF_LONG8,count,count*8,value));
@@ -2137,7 +2154,10 @@ TIFFWriteDirectoryTagCheckedSlong8(TIFF* tif, uint32* ndir, TIFFDirEntry* dir, u
 {
 	int64 m;
 	assert(sizeof(int64)==8);
-	assert(tif->tif_flags&TIFF_BIGTIFF);
+	if( !(tif->tif_flags&TIFF_BIGTIFF) ) {
+		TIFFErrorExt(tif->tif_clientdata,"TIFFWriteDirectoryTagCheckedSlong8","SLONG8 not allowed for ClassicTIFF");
+		return(0);
+	}
 	m=value;
 	if (tif->tif_flags&TIFF_SWAB)
 		TIFFSwabLong8((uint64*)(&m));
@@ -2150,7 +2170,10 @@ TIFFWriteDirectoryTagCheckedSlong8Array(TIFF* tif, uint32* ndir, TIFFDirEntry* d
 {
 	assert(count<0x20000000);
 	assert(sizeof(int64)==8);
-	assert(tif->tif_flags&TIFF_BIGTIFF);
+	if( !(tif->tif_flags&TIFF_BIGTIFF) ) {
+		TIFFErrorExt(tif->tif_clientdata,"TIFFWriteDirectoryTagCheckedSlong8Array","SLONG8 not allowed for ClassicTIFF");
+		return(0);
+	}
 	if (tif->tif_flags&TIFF_SWAB)
 		TIFFSwabArrayOfLong8((uint64*)value,count);
 	return(TIFFWriteDirectoryTagData(tif,ndir,dir,tag,TIFF_SLONG8,count,count*8,value));

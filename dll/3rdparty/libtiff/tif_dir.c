@@ -1,4 +1,4 @@
-/* $Id: tif_dir.c,v 1.130 2017-05-17 21:54:05 erouault Exp $ */
+/* $Id: tif_dir.c,v 1.131 2017-07-11 21:38:04 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -30,7 +30,6 @@
  * Directory Tag Get & Set Routines.
  * (and also some miscellaneous stuff)
  */
-
 #include <precomp.h>
 #include <float.h>
 
@@ -873,6 +872,8 @@ _TIFFVGetField(TIFF* tif, uint32 tag, va_list ap)
                 TIFFTagValue *tv = td->td_customValues + i;
                 if (tv->info->field_tag != tag)
                     continue;
+                if( tv->value == NULL )
+                    return 0;
                 val = *(uint16 *)tv->value;
                 /* Truncate to SamplesPerPixel, since the */
                 /* setting code for INKNAMES assume that there are SamplesPerPixel */

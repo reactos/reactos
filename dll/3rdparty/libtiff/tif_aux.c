@@ -1,4 +1,4 @@
-/* $Id: tif_aux.c,v 1.29 2016-11-11 20:45:53 erouault Exp $ */
+/* $Id: tif_aux.c,v 1.31 2017-11-17 20:21:00 erouault Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler
@@ -31,7 +31,7 @@
  */
 
 #include <precomp.h>
-#include <tif_predict.h>
+#include "tif_predict.h"
 #include <math.h>
 
 uint32
@@ -358,6 +358,13 @@ _TIFFUInt64ToDouble(uint64 ui64)
 		df += 18446744073709551616.0; /* adding 2**64 */
 		return (double)df;
 	}
+}
+
+int _TIFFSeekOK(TIFF* tif, toff_t off)
+{
+    /* Huge offsets, especially -1 / UINT64_MAX, can cause issues */
+    /* See http://bugzilla.maptools.org/show_bug.cgi?id=2726 */
+    return off <= (~(uint64)0)/2 && TIFFSeekFile(tif,off,SEEK_SET)==off;
 }
 
 /* vim: set ts=8 sts=8 sw=8 noet: */

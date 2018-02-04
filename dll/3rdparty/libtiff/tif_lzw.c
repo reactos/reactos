@@ -1,4 +1,4 @@
-/* $Id: tif_lzw.c,v 1.55 2017-05-17 09:38:58 erouault Exp $ */
+/* $Id: tif_lzw.c,v 1.57 2017-07-11 10:54:29 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -25,7 +25,6 @@
  */
 
 #include <precomp.h>
-
 #ifdef LZW_SUPPORT
 /*
  * TIFF Library.  
@@ -276,7 +275,8 @@ LZWPreDecode(TIFF* tif, uint16 s)
 	/*
 	 * Check for old bit-reversed codes.
 	 */
-	if (tif->tif_rawdata[0] == 0 && (tif->tif_rawdata[1] & 0x1)) {
+	if (tif->tif_rawcc >= 2 &&
+	    tif->tif_rawdata[0] == 0 && (tif->tif_rawdata[1] & 0x1)) {
 #ifdef LZW_COMPAT
 		if (!sp->dec_decode) {
 			TIFFWarningExt(tif->tif_clientdata, module,
@@ -656,6 +656,9 @@ LZWDecodeCompat(TIFF* tif, uint8* op0, tmsize_t occ0, uint16 s)
 	}
 
 	bp = (unsigned char *)tif->tif_rawcp;
+#ifdef LZW_CHECKEOS
+	sp->dec_bitsleft = (((uint64)tif->tif_rawcc) << 3);
+#endif
 	nbits = sp->lzw_nbits;
 	nextdata = sp->lzw_nextdata;
 	nextbits = sp->lzw_nextbits;
@@ -765,6 +768,7 @@ LZWDecodeCompat(TIFF* tif, uint8* op0, tmsize_t occ0, uint16 s)
 		}
 	}
 
+	tif->tif_rawcc -= (tmsize_t)( (uint8*) bp - tif->tif_rawcp );
 	tif->tif_rawcp = (uint8*) bp;
 	sp->lzw_nbits = (unsigned short)nbits;
 	sp->lzw_nextdata = nextdata;

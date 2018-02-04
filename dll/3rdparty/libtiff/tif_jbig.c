@@ -1,4 +1,4 @@
-/* $Id: tif_jbig.c,v 1.15 2010-03-10 18:56:48 bfriesen Exp $ */
+/* $Id: tif_jbig.c,v 1.16 2017-06-26 15:20:00 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -94,6 +94,7 @@ static int JBIGDecode(TIFF* tif, uint8* buffer, tmsize_t size, uint16 s)
 			     jbg_strerror(decodeStatus)
 #endif
 			     );
+		jbg_dec_free(&decoder);
 		return 0;
 	}
 

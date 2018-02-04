@@ -96,9 +96,12 @@ typedef void* tdata_t;          /* image data ref */
 
 #if defined(USE_WIN32_FILEIO)
 # define VC_EXTRALEAN
-//# include <windows.h>
+#ifdef __REACTOS__
 # define WIN32_NO_STATUS
 # include <windef.h>
+#else /* __REACTOS__ */
+# include <windows.h>
+#endif /* __REACTOS__ */
 # ifdef __WIN32__
 DECLARE_HANDLE(thandle_t);     /* Win32 file handle */
 # else
