@@ -125,7 +125,7 @@ BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
     {
         WARN("Invalid cbSize (%d) - using only Win95 fields (size=%d)\n",
             pnid->cbSize, NOTIFYICONDATAW_V1_SIZE);
-        cbSize = NOTIFYICONDATAA_V1_SIZE;
+        cbSize = NOTIFYICONDATAW_V1_SIZE;
     }
     else
         cbSize = pnid->cbSize;
