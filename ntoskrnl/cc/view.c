@@ -696,6 +696,7 @@ CcRosUnmapVacb (
         CcRosMarkDirtyVacb(Vacb);
     }
 
+    ASSERT(Vacb->MappedCount != 0);
     Vacb->MappedCount--;
 
     CcRosVacbDecRefCount(Vacb);
