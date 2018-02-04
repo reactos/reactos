@@ -1809,12 +1809,12 @@ MiBuildPagedPool(VOID)
     //
     // Now check how many PTEs will be required for these many pages.
     //
-    Size = (Size + (1024 - 1)) / 1024;
+    Size = (Size + (PTE_COUNT - 1)) / PTE_COUNT;
 
     //
     // Recompute the page-aligned size of the paged pool, in bytes and pages.
     //
-    MmSizeOfPagedPoolInBytes = Size * PAGE_SIZE * 1024;
+    MmSizeOfPagedPoolInBytes = Size * PAGE_SIZE * PTE_COUNT;
     MmSizeOfPagedPoolInPages = MmSizeOfPagedPoolInBytes >> PAGE_SHIFT;
 
 #ifdef _M_IX86
@@ -1850,6 +1850,9 @@ MiBuildPagedPool(VOID)
             /* It is not, so map a fresh zeroed page */
             TempPpe.u.Hard.PageFrameNumber = MiRemoveZeroPage(0);
             MI_WRITE_VALID_PPE(PointerPpe, TempPpe);
+            MiInitializePfnForOtherProcess(TempPpe.u.Hard.PageFrameNumber,
+                                           (PMMPTE)PointerPpe,
+                                            PFN_FROM_PTE(MiAddressToPte(PointerPpe)));
         }
     }
 #endif
@@ -1911,7 +1914,7 @@ MiBuildPagedPool(VOID)
     //
     // We'll also allocate the bitmap header itself part of the same buffer.
     //
-    Size = Size * 1024;
+    Size = Size * PTE_COUNT;
     ASSERT(Size == MmSizeOfPagedPoolInPages);
     BitMapSize = (ULONG)Size;
     Size = sizeof(RTL_BITMAP) + (((Size + 31) / 32) * sizeof(ULONG));
@@ -1933,7 +1936,7 @@ MiBuildPagedPool(VOID)
                         (PULONG)(MmPagedPoolInfo.PagedPoolAllocationMap + 1),
                         BitMapSize);
     RtlSetAllBits(MmPagedPoolInfo.PagedPoolAllocationMap);
-    RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap, 0, 1024);
+    RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap, 0, PTE_COUNT);
 
     //
     // We have a second bitmap, which keeps track of where allocations end.
