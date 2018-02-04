@@ -94,6 +94,7 @@ static void CcRosVacbIncRefCount_(PROS_VACB vacb, const char* file, int line)
 }
 static void CcRosVacbDecRefCount_(PROS_VACB vacb, const char* file, int line)
 {
+    ASSERT(vacb->ReferenceCount != 0);
     --vacb->ReferenceCount;
     ASSERT(!(vacb->ReferenceCount == 0 && vacb->Dirty));
     if (vacb->SharedCacheMap->Trace)
