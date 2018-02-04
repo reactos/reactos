@@ -23,21 +23,21 @@ extern "C" {
  *
  * the version string like "1.2.3"
  */
-#define LIBXSLT_DOTTED_VERSION "1.1.28"
+#define LIBXSLT_DOTTED_VERSION "1.1.32"
 
 /**
  * LIBXSLT_VERSION:
  *
  * the version number: 1.2.3 value is 1002003
  */
-#define LIBXSLT_VERSION 10128
+#define LIBXSLT_VERSION 10132
 
 /**
  * LIBXSLT_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "1002003"
  */
-#define LIBXSLT_VERSION_STRING "10128"
+#define LIBXSLT_VERSION_STRING "10132"
 
 /**
  * LIBXSLT_VERSION_EXTRA:
@@ -53,7 +53,7 @@ extern "C" {
  * is insignifiant and being able to run xsltpoc -v is useful. On
  * by default
  */
-#if 0
+#if 1
 #define WITH_XSLT_DEBUG
 #endif
 
@@ -62,7 +62,7 @@ extern "C" {
  *
  * Whether module support is configured into libxslt
  */
-#if 0
+#if 1
 #ifndef WITH_MODULES
 #define WITH_MODULES
 #endif

@@ -372,8 +372,7 @@ xsltExtModuleRegisterDynamic(const xmlChar * URI)
 
     /* build the module filename, and confirm the module exists */
     xmlStrPrintf((xmlChar *) module_filename, sizeof(module_filename),
-                 BAD_CAST "%s/%s%s",
-                 ext_directory, ext_name, LIBXML_MODULE_EXTENSION);
+                 "%s/%s%s", ext_directory, ext_name, LIBXML_MODULE_EXTENSION);
 
 #ifdef WITH_XSLT_DEBUG_EXTENSIONS
     xsltGenericDebug(xsltGenericDebugContext,

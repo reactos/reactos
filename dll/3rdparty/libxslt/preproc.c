@@ -1394,9 +1394,6 @@ xsltNumberComp(xsltStylesheetPtr style, xmlNodePtr cur) {
 	return;
     cur->psvi = comp;
 
-    if ((style == NULL) || (cur == NULL))
-	return;
-
     comp->numdata.doc = cur->doc;
     comp->numdata.node = cur;
     comp->numdata.value = xsltGetCNsProp(style, cur, (const xmlChar *)"value",
@@ -2319,7 +2316,7 @@ xsltStylePreCompute(xsltStylesheetPtr style, xmlNodePtr inst) {
 	    xsltCheckInstructionElement(style, inst);
 	    inst->psvi = (void *) xsltDocumentComp(style, inst,
 				(xsltTransformFunction) xsltDocumentElem);
-	} else {
+	} else if ((style == NULL) || (style->forwards_compatible == 0)) {
 	    xsltTransformError(NULL, style, inst,
 		 "xsltStylePreCompute: unknown xsl:%s\n", inst->name);
 	    if (style != NULL) style->warnings++;
