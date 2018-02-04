@@ -833,7 +833,7 @@ Version 1.0.7beta11 [May 7, 2000]
   Removed the new PNG_CREATED_READ_STRUCT and PNG_CREATED_WRITE_STRUCT modes
     which are no longer used.
   Eliminated the three new members of png_text when PNG_LEGACY_SUPPORTED is
-    defined or when neither PNG_READ_iTXt_SUPPORTED nor PNG_WRITE_iTXT_SUPPORTED
+    defined or when neither PNG_READ_iTXt_SUPPORTED nor PNG_WRITE_iTXt_SUPPORTED
     is defined.
   Made PNG_NO_READ|WRITE_iTXt the default setting, to avoid memory
     overrun when old applications fill the info_ptr->text structure directly.
@@ -5939,7 +5939,7 @@ Version 1.6.32beta06 [August 2, 2017]
 
 Version 1.6.32beta07 [August 3, 2017]
   Check length of all chunks except IDAT against user limit to fix an
-    OSS-fuzz issue.
+    OSS-fuzz issue (Fixes CVE-2017-12652).
 
 Version 1.6.32beta08 [August 3, 2017]
   Check length of IDAT against maximum possible IDAT size, accounting
@@ -5993,6 +5993,53 @@ Version 1.6.32rc02 [August 22, 2017]
 
 Version 1.6.32 [August 24, 2017]
   No changes.
+
+Version 1.6.33beta01 [August 28, 2017]
+  Added PNGMINUS_UNUSED macro to contrib/pngminus/p*.c and added missing
+    parenthesis in contrib/pngminus/pnm2png.c (bug report by Christian Hesse).
+  Fixed off-by-one error in png_do_check_palette_indexes() (Bug report
+    by Mick P., Source Forge Issue #269).
+
+Version 1.6.33beta02 [September 3, 2017]
+  Initialize png_handler.row_ptr in contrib/oss-fuzz/libpng_read_fuzzer.cc
+    to fix shortlived oss-fuzz issue 3234.
+  Compute a larger limit on IDAT because some applications write a deflate
+    buffer for each row (Bug report by Andrew Church).
+  Use current date (DATE) instead of release-date (RDATE) in last
+    changed date of contrib/oss-fuzz files.
+  Enabled ARM support in CMakeLists.txt (Bernd Kuhls).
+
+Version 1.6.33beta03 [September 14, 2017]
+  Fixed incorrect typecast of some arguments to png_malloc() and
+    png_calloc() that were png_uint_32 instead of png_alloc_size_t
+    (Bug report by "irwir" in Github libpng issue #175).
+  Use pnglibconf.h.prebuilt when building for ANDROID with cmake (Github
+    issue 162, by rcdailey).
+
+Version 1.6.33rc01 [September 20, 2017]
+  Initialize memory allocated by png_inflate to zero, using memset, to
+    stop an oss-fuzz "use of uninitialized value" detection in png_set_text_2()
+    due to truncated iTXt or zTXt chunk.
+  Initialize memory allocated by png_read_buffer to zero, using memset, to
+    stop an oss-fuzz "use of uninitialized value" detection in
+    png_icc_check_tag_table() due to truncated iCCP chunk.
+  Removed a redundant test (suggested by "irwir" in Github issue #180).
+
+Version 1.6.33rc02 [September 23, 2017]
+  Added an interlaced version of each file in contrib/pngsuite.
+  Relocate new memset() call in pngrutil.c.
+  Removed more redundant tests (suggested by "irwir" in Github issue #180).
+  Add support for loading images with associated alpha in the Simplified
+    API (Samuel Williams).
+
+Version 1.6.33 [September 28, 2017]
+  Revert contrib/oss-fuzz/libpng_read_fuzzer.cc to libpng-1.6.32 state.
+  Initialize png_handler.row_ptr in contrib/oss-fuzz/libpng_read_fuzzer.cc
+  Add end_info structure and png_read_end() to the libpng fuzzer.
+
+Version 1.6.34 [September 29, 2017]
+  Removed contrib/pngsuite/i*.png; some of these were incorrect and caused
+    test failures.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

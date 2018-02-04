@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.32 - August 24, 2017
+ libpng version 1.6.34 - September 29, 2017
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2017 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.32 - August 24, 2017
+ libpng versions 0.97, January 1998, through 1.6.34 - September 29, 2017
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2017 Glenn Randers-Pehrson
 
@@ -986,8 +986,17 @@ premultiplication.
 
     png_set_alpha_mode(pp, PNG_ALPHA_PNG, PNG_DEFAULT_sRGB);
 
-This is the default libpng handling of the alpha channel - it is not
-pre-multiplied into the color components.  In addition the call states
+Choices for the alpha_mode are
+
+    PNG_ALPHA_PNG           0 /* according to the PNG standard */
+    PNG_ALPHA_STANDARD      1 /* according to Porter/Duff */
+    PNG_ALPHA_ASSOCIATED    1 /* as above; this is the normal practice */
+    PNG_ALPHA_PREMULTIPLIED 1 /* as above */
+    PNG_ALPHA_OPTIMIZED     2 /* 'PNG' for opaque pixels, else 'STANDARD' */
+    PNG_ALPHA_BROKEN        3 /* the alpha channel is gamma encoded */
+
+PNG_ALPHA_PNG is the default libpng handling of the alpha channel. It is not
+pre-multiplied into the color components. In addition the call states
 that the output is for a sRGB system and causes all PNG files without gAMA
 chunks to be assumed to be encoded using sRGB.
 
@@ -1002,7 +1011,7 @@ early Mac systems behaved.
 This is the classic Jim Blinn approach and will work in academic
 environments where everything is done by the book.  It has the shortcoming
 of assuming that input PNG data with no gamma information is linear - this
-is unlikely to be correct unless the PNG files where generated locally.
+is unlikely to be correct unless the PNG files were generated locally.
 Most of the time the output precision will be so low as to show
 significant banding in dark areas of the image.
 
@@ -5405,7 +5414,7 @@ Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.32 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.34 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer
