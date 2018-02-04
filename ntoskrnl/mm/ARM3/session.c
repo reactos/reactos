@@ -603,10 +603,14 @@ NTAPI
 MiSessionCreateInternal(OUT PULONG SessionId)
 {
     PEPROCESS Process = PsGetCurrentProcess();
-    ULONG NewFlags, Flags, Size, i, Color;
+    ULONG NewFlags, Flags, i, Color;
+#if (_MI_PAGING_LEVELS < 3)
+    ULONG Size;
+    PMMPDE PageTables;
+#endif // (_MI_PAGING_LEVELS < 3)
     KIRQL OldIrql;
     PMMPTE PointerPte, SessionPte;
-    PMMPDE PointerPde, PageTables;
+    PMMPDE PointerPde;
     PMM_SESSION_SPACE SessionGlobal;
     MMPTE TempPte;
     MMPDE TempPde;
@@ -644,6 +648,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     /* Now we should own the flag */
     ASSERT(Process->Flags & PSF_SESSION_CREATION_UNDERWAY_BIT);
 
+#if (_MI_PAGING_LEVELS < 3)
     /*
      * Session space covers everything from 0xA0000000 to 0xC0000000.
      * Allocate enough page tables to describe the entire region
@@ -652,6 +657,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     PageTables = ExAllocatePoolWithTag(NonPagedPool, Size, 'tHmM');
     ASSERT(PageTables != NULL);
     RtlZeroMemory(PageTables, Size);
+#endif // (_MI_PAGING_LEVELS < 3)
 
     /* Lock the session ID creation mutex */
     KeAcquireGuardedMutex(&MiSessionIdMutex);
@@ -662,7 +668,9 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     {
         /* We ran out of session IDs, we should expand */
         DPRINT1("Too many sessions created. Expansion not yet supported\n");
+#if (_MI_PAGING_LEVELS < 3)
         ExFreePoolWithTag(PageTables, 'tHmM');
+#endif // (_MI_PAGING_LEVELS < 3)
         return STATUS_NO_MEMORY;
     }
 
@@ -786,8 +794,11 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     MmSessionSpace->PageTables[PointerPde - MiAddressToPde(MmSessionBase)] = *PointerPde;
 #endif
     InitializeListHead(&MmSessionSpace->ImageList);
+
+#if (_MI_PAGING_LEVELS < 3)
     DPRINT1("Session %lu is ready to go: 0x%p 0x%p, %lx 0x%p\n",
             *SessionId, MmSessionSpace, SessionGlobal, SessionPageDirIndex, PageTables);
+#endif // (_MI_PAGING_LEVELS < 3)
 
     /* Initialize session pool */
     //Status = MiInitializeSessionPool();
