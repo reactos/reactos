@@ -29,11 +29,13 @@ typedef xmlChar xsltLocaleChar;
 
 #elif defined(XSLT_LOCALE_WINAPI)
 
-//#include <windows.h>
-
+#ifdef __REACTOS__
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+#else /* __REACTOS__ */
+#include <windows.h>
+#endif /* __REACTOS__ */
 #include <winnls.h>
 
 typedef LCID xsltLocale;
