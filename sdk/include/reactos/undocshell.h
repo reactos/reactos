@@ -30,10 +30,29 @@ extern "C" {
 #define DBIMF_NOMARGINS         0x2000
 #endif  // NTDDI_LONGHORN
 
+#if defined (_SHELLAPI_H) || defined (_INC_SHELLAPI)
+
+/****************************************************************************
+ * Taskbar interface WM_COPYDATA structures
+ * See http://www.geoffchappell.com/studies/windows/shell/shell32/api/shlnot/copydata.htm
+ */
+/* Data structure for Shell_NotifyIcon messages */
+typedef struct _TRAYNOTIFYDATAW
+{
+    DWORD dwSignature;
+    DWORD dwMessage;
+    NOTIFYICONDATAW nid; // Always use the latest NOTIFYICONDATAW structure version.
+} TRAYNOTIFYDATAW, *PTRAYNOTIFYDATAW;
+// Note: One could also introduce TRAYNOTIFYDATAA
+
+#define NI_NOTIFY_SIG 0x34753423 /* TRAYNOTIFYDATA */
+
+#endif /* defined (_SHELLAPI_H) || defined (_INC_SHELLAPI) */
+
+
 /****************************************************************************
  * Taskbar WM_COMMAND identifiers
  */
-
 #define TWM_DOEXITWINDOWS (WM_USER + 342)
 #define TWM_CYCLEFOCUS (WM_USER + 348)
 
@@ -79,8 +98,8 @@ BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 
 
 /****************************************************************************
-* SHChangeNotifyRegister API
-*/
+ * SHChangeNotifyRegister API
+ */
 #define SHCNRF_InterruptLevel       0x0001
 #define SHCNRF_ShellLevel           0x0002
 #define SHCNRF_RecursiveInterrupt   0x1000  /* Must be combined with SHCNRF_InterruptLevel */
@@ -580,7 +599,7 @@ BOOL WINAPI GUIDFromStringW(
     _In_   PCWSTR psz,
     _Out_  LPGUID pguid
     );
-    
+
 static inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {
@@ -838,7 +857,7 @@ typedef struct tagSHELL_LINK_INFOW
 
 /*****************************************************************************
  * SHELL_LINK_INFO_VOLUME_IDA/W
- * If cbVolumeLabelOffset != 0x00000014 (should be 0x00000010) then use 
+ * If cbVolumeLabelOffset != 0x00000014 (should be 0x00000010) then use
  * SHELL_LINK_INFO_VOLUME_IDA
  * If cbVolumeLabelOffset == 0x00000014 then use SHELL_LINK_INFO_VOLUME_IDW
  */
@@ -958,7 +977,7 @@ typedef struct tagEXP_VISTA_ID_LIST
 {
     /* .cbSize >= 0x0000000a, .dwSignature = 0xa000000c */
     DATABLOCK_HEADER dbh;
-    /* Specifies an alternate IDList that can be used instead 
+    /* Specifies an alternate IDList that can be used instead
        of the "normal" IDList (SLDF_HAS_ID_LIST) */
     /* LPITEMIDLIST pIDList; (variable) */
 } EXP_VISTA_ID_LIST, *LPEXP_VISTA_ID_LIST;
