@@ -98,7 +98,7 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
 CAPTION "Pobierz %ls…"
 FONT 8, "MS Shell Dlg"
@@ -160,13 +160,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nWersja: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\nDostępna wersja: "
     IDS_AINFO_DESCRIPTION "\nOpis: "
     IDS_AINFO_SIZE "\nRozmiar: "
     IDS_AINFO_URLSITE "\nStrona: "
     IDS_AINFO_LICENSE "\nLicencja: "
     IDS_AINFO_URLDOWNLOAD "\nPobieranie: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nJęzyki: "
 END
 
 STRINGTABLE
@@ -218,7 +218,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Nie można zapisać na dysku. Dysk może być pełny."
     IDS_SELECT_ALL "Zaznacz/Odznacz Wszystko"
     IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
-    IDS_SELECTEDFORINST "Selected for installation"
+    IDS_SELECTEDFORINST "Wybrane do instalacji"
 END
 
 STRINGTABLE
@@ -228,7 +228,7 @@ BEGIN
     IDS_STATUS_DOWNLOADED "Pobrane"
     IDS_STATUS_UPDATE_AVAILABLE "Dostępna aktualizacja"
     IDS_STATUS_DOWNLOADING "Pobieranie…"
-    IDS_STATUS_INSTALLING "Instalowanie……"
+    IDS_STATUS_INSTALLING "Instalowanie…"
     IDS_STATUS_WAITING "Oczekiwanie na instalację…"
     IDS_STATUS_FINISHED "Gotowe"
 END
@@ -252,6 +252,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Baza Programów"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aktualizowanie bazy Programów…"
+    IDS_DL_DIALOG_DB_DISP "Baza programów"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aktualizowanie bazy programów…"
 END
