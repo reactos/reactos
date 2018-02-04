@@ -121,12 +121,11 @@ HRESULT CSysTray::ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LR
 *--*/
 HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip, DWORD dwstate)
 {
-    NOTIFYICONDATA nim;
+    NOTIFYICONDATA nim = { 0 };
 
     TRACE("NotifyIcon code=%d, uId=%d, hIcon=%p, szTip=%S\n", code, uId, hIcon, szTip);
 
-    ZeroMemory(&nim, sizeof(nim));
-    nim.cbSize = sizeof(nim);
+    nim.cbSize = sizeof(NOTIFYICONDATA);
     nim.uFlags = NIF_MESSAGE | NIF_ICON | NIF_STATE | NIF_TIP;
     nim.hIcon = hIcon;
     nim.uID = uId;
