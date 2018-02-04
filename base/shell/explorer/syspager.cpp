@@ -21,14 +21,6 @@
 
 #include "precomp.h"
 
-// Data comes from shell32/systray.cpp -> TrayNotifyCDS_Dummy
-typedef struct _SYS_PAGER_COPY_DATA
-{
-    DWORD           cookie;
-    DWORD           notify_code;
-    NOTIFYICONDATA  nicon_data;
-} SYS_PAGER_COPY_DATA, *PSYS_PAGER_COPY_DATA;
-
 struct InternalIconData : NOTIFYICONDATA
 {
     // Must keep a separate copy since the original is unioned with uTimeout.
@@ -107,8 +99,8 @@ private:
         Info(InternalIconData * source)
         {
             pSource = source;
-            StrNCpy(szInfo, source->szInfo, _countof(szInfo));
-            StrNCpy(szInfoTitle, source->szInfoTitle, _countof(szInfoTitle));
+            StringCchCopy(szInfo, _countof(szInfo), source->szInfo);
+            StringCchCopy(szInfoTitle, _countof(szInfoTitle), source->szInfoTitle);
             uIcon = source->dwInfoFlags & NIIF_ICON_MASK;
             if (source->dwInfoFlags == NIIF_USER)
                 uIcon = reinterpret_cast<WPARAM>(source->hIcon);
@@ -236,7 +228,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
     END_COM_MAP()
 
-    BOOL NotifyIcon(DWORD notify_code, _In_ CONST NOTIFYICONDATA *iconData);
+    BOOL NotifyIcon(DWORD dwMessage, _In_ CONST NOTIFYICONDATA *iconData);
     void GetSize(IN BOOL IsHorizontal, IN PSIZE size);
 
     DECLARE_WND_CLASS_EX(szSysPagerWndClass, CS_DBLCLKS, COLOR_3DFACE)
@@ -454,22 +446,18 @@ UINT WINAPI CIconWatcher::WatcherThread(_In_opt_ LPVOID lpParam)
 
             TRACE("Pid %lu owns a notification icon and has stopped without deleting it. We'll cleanup on its behalf", Icon->ProcessId);
 
-            int len = FIELD_OFFSET(SYS_PAGER_COPY_DATA, nicon_data) + Icon->IconData.cbSize;
-            PSYS_PAGER_COPY_DATA pnotify_data = (PSYS_PAGER_COPY_DATA)new BYTE[len];
-            pnotify_data->cookie = 1;
-            pnotify_data->notify_code = NIM_DELETE;
-            memcpy(&pnotify_data->nicon_data, &Icon->IconData, Icon->IconData.cbSize);
+            TRAYNOTIFYDATAW tnid = {0};
+            tnid.dwSignature = NI_NOTIFY_SIG;
+            tnid.dwMessage   = NIM_DELETE;
+            CopyMemory(&tnid.nid, &Icon->IconData, Icon->IconData.cbSize);
 
             COPYDATASTRUCT data;
             data.dwData = 1;
-            data.cbData = len;
-            data.lpData = pnotify_data;
+            data.cbData = sizeof(tnid);
+            data.lpData = &tnid;
 
-            BOOL Success = FALSE;
-            ::SendMessage(This->m_hwndSysTray, WM_COPYDATA, (WPARAM)&Icon->IconData, (LPARAM)&data);
-
-            delete pnotify_data;
-
+            BOOL Success = ::SendMessage(This->m_hwndSysTray, WM_COPYDATA,
+                                         (WPARAM)&Icon->IconData, (LPARAM)&data);
             if (!Success)
             {
                 // If we failed to handle the delete message, forcibly remove it
@@ -775,8 +763,8 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     if (iconData->uFlags & NIF_INFO)
     {
         // NOTE: In Vista+, the uTimeout value is disregarded, and the accessibility settings are used always.
-        StrNCpy(notifyItem->szInfo, iconData->szInfo, _countof(notifyItem->szInfo));
-        StrNCpy(notifyItem->szInfoTitle, iconData->szInfoTitle, _countof(notifyItem->szInfo));
+        StringCchCopy(notifyItem->szInfo, _countof(notifyItem->szInfo), iconData->szInfo);
+        StringCchCopy(notifyItem->szInfoTitle, _countof(notifyItem->szInfoTitle), iconData->szInfoTitle);
         notifyItem->dwInfoFlags = iconData->dwInfoFlags;
         notifyItem->uTimeout = iconData->uTimeout;
     }
@@ -913,8 +901,8 @@ BOOL CNotifyToolbar::UpdateButton(_In_ CONST NOTIFYICONDATA *iconData)
     if (iconData->uFlags & NIF_INFO)
     {
         // NOTE: In Vista+, the uTimeout value is disregarded, and the accessibility settings are used always.
-        StrNCpy(notifyItem->szInfo, iconData->szInfo, _countof(notifyItem->szInfo));
-        StrNCpy(notifyItem->szInfoTitle, iconData->szInfoTitle, _countof(notifyItem->szInfo));
+        StringCchCopy(notifyItem->szInfo, _countof(notifyItem->szInfo), iconData->szInfo);
+        StringCchCopy(notifyItem->szInfoTitle, _countof(notifyItem->szInfoTitle), iconData->szInfoTitle);
         notifyItem->dwInfoFlags = iconData->dwInfoFlags;
         notifyItem->uTimeout = iconData->uTimeout;
     }
@@ -1263,14 +1251,14 @@ LRESULT CSysPagerWnd::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     return TRUE;
 }
 
-BOOL CSysPagerWnd::NotifyIcon(DWORD notify_code, _In_ CONST NOTIFYICONDATA *iconData)
+BOOL CSysPagerWnd::NotifyIcon(DWORD dwMessage, _In_ CONST NOTIFYICONDATA *iconData)
 {
     BOOL ret = FALSE;
 
     int VisibleButtonCount = Toolbar.GetVisibleButtonCount();
 
-    TRACE("NotifyIcon received. Code=%d\n", notify_code);
-    switch (notify_code)
+    TRACE("NotifyIcon received. Code=%d\n", dwMessage);
+    switch (dwMessage)
     {
     case NIM_ADD:
         ret = Toolbar.AddButton(iconData);
@@ -1295,7 +1283,7 @@ BOOL CSysPagerWnd::NotifyIcon(DWORD notify_code, _In_ CONST NOTIFYICONDATA *icon
     case NIM_SETVERSION:
         ret = Toolbar.SwitchVersion(iconData);
     default:
-        TRACE("NotifyIcon received with unknown code %d.\n", notify_code);
+        TRACE("NotifyIcon received with unknown code %d.\n", dwMessage);
         return FALSE;
     }
 
@@ -1420,9 +1408,12 @@ LRESULT CSysPagerWnd::OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT)lParam;
     if (cpData->dwData == 1)
     {
-        PSYS_PAGER_COPY_DATA pData = (PSYS_PAGER_COPY_DATA)cpData->lpData;
-        return NotifyIcon(pData->notify_code, &pData->nicon_data);
+        /* A taskbar NotifyIcon notification */
+        PTRAYNOTIFYDATAW pData = (PTRAYNOTIFYDATAW)cpData->lpData;
+        if (pData->dwSignature == NI_NOTIFY_SIG)
+            return NotifyIcon(pData->dwMessage, &pData->nid);
     }
+    // TODO: Handle other types of taskbar notifications
 
     return FALSE;
 }

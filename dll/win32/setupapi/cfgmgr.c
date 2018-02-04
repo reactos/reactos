@@ -740,6 +740,7 @@ CM_Add_Empty_Log_Conf(
 {
     TRACE("CM_Add_Empty_Log_Conf(%p %p %lu %lx)\n",
           plcLogConf, dnDevInst, Priority, ulFlags);
+
     return CM_Add_Empty_Log_Conf_Ex(plcLogConf, dnDevInst, Priority,
                                     ulFlags, NULL);
 }
@@ -847,7 +848,8 @@ CM_Add_IDA(
     _In_ ULONG ulFlags)
 {
     TRACE("CM_Add_IDA(%p %s %lx)\n",
-          dnDevInst, pszID, ulFlags);
+          dnDevInst, debugstr_a(pszID), ulFlags);
+
     return CM_Add_ID_ExA(dnDevInst, pszID, ulFlags, NULL);
 }
 
@@ -864,6 +866,7 @@ CM_Add_IDW(
 {
     TRACE("CM_Add_IDW(%p %s %lx)\n",
           dnDevInst, debugstr_w(pszID), ulFlags);
+
     return CM_Add_ID_ExW(dnDevInst, pszID, ulFlags, NULL);
 }
 
@@ -883,7 +886,7 @@ CM_Add_ID_ExA(
     CONFIGRET ret;
 
     TRACE("CM_Add_ID_ExA(%p %s %lx %p)\n",
-          dnDevInst, pszID, ulFlags, hMachine);
+          dnDevInst, debugstr_a(pszID), ulFlags, hMachine);
 
     if (pSetupCaptureAndConvertAnsiArg(pszID, &pszIDW))
         return CR_INVALID_DATA;
@@ -1034,12 +1037,13 @@ CM_Add_Res_Des(
     _Out_opt_ PRES_DES prdResDes,
     _In_ LOG_CONF lcLogConf,
     _In_ RESOURCEID ResourceID,
-    _In_ PCVOID ResourceData,
+    _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
     _In_ ULONG ResourceLen,
     _In_ ULONG ulFlags)
 {
     TRACE("CM_Add_Res_Des(%p %p %lu %p %lu %lx)\n",
           prdResDes, lcLogConf, ResourceID, ResourceData, ResourceLen, ulFlags);
+
     return CM_Add_Res_Des_Ex(prdResDes, lcLogConf, ResourceID, ResourceData,
                              ResourceLen, ulFlags, NULL);
 }
@@ -1054,7 +1058,7 @@ CM_Add_Res_Des_Ex(
     _Out_opt_ PRES_DES prdResDes,
     _In_ LOG_CONF lcLogConf,
     _In_ RESOURCEID ResourceID,
-    _In_ PCVOID ResourceData,
+    _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
     _In_ ULONG ResourceLen,
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
@@ -1080,7 +1084,7 @@ CM_Connect_MachineA(
     CONFIGRET ret;
 
     TRACE("CM_Connect_MachineA(%s %p)\n",
-          UNCServerName, phMachine);
+          debugstr_a(UNCServerName), phMachine);
 
     if (UNCServerName == NULL || *UNCServerName == 0)
         return CM_Connect_MachineW(NULL, phMachine);
@@ -1178,6 +1182,7 @@ CM_Create_DevNodeA(
 {
     TRACE("CM_Create_DevNodeA(%p %s %p %lx)\n",
           pdnDevInst, debugstr_a(pDeviceID), dnParent, ulFlags);
+
     return CM_Create_DevNode_ExA(pdnDevInst, pDeviceID, dnParent,
                                  ulFlags, NULL);
 }
@@ -1196,6 +1201,7 @@ CM_Create_DevNodeW(
 {
     TRACE("CM_Create_DevNodeW(%p %s %p %lx)\n",
           pdnDevInst, debugstr_w(pDeviceID), dnParent, ulFlags);
+
     return CM_Create_DevNode_ExW(pdnDevInst, pDeviceID, dnParent,
                                  ulFlags, NULL);
 }
@@ -1327,7 +1333,8 @@ CM_Create_Range_List(
 {
     PINTERNAL_RANGE_LIST pRangeList = NULL;
 
-    FIXME("CM_Create_Range_List(%p %lx)\n", prlh, ulFlags);
+    FIXME("CM_Create_Range_List(%p %lx)\n",
+          prlh, ulFlags);
 
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
@@ -1370,6 +1377,7 @@ CM_Delete_Class_Key(
 {
     TRACE("CM_Delete_Class_Key(%p %lx)\n",
           ClassGuid, ulFlags);
+
     return CM_Delete_Class_Key_Ex(ClassGuid, ulFlags, NULL);
 }
 
@@ -1440,6 +1448,7 @@ CM_Delete_DevNode_Key(
 {
     TRACE("CM_Delete_DevNode_Key(%p %lu %lx)\n",
           dnDevNode, ulHardwareProfile, ulFlags);
+
     return CM_Delete_DevNode_Key_Ex(dnDevNode, ulHardwareProfile, ulFlags,
                                     NULL);
 }
@@ -1476,6 +1485,7 @@ CM_Delete_Range(
 {
     FIXME("CM_Delete_Range(%I64u %I64u %p %lx)\n",
           ullStartValue, ullEndValue, rlh, ulFlags);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -1483,10 +1493,15 @@ CM_Delete_Range(
 /***********************************************************************
  * CM_Disable_DevNode [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Disable_DevNode(
-    DEVINST dnDevInst, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Disable_DevNode(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lx\n", dnDevInst, ulFlags);
+    TRACE("CM_Disable_DevNode(%p %lx)\n",
+          dnDevInst, ulFlags);
+
     return CM_Disable_DevNode_Ex(dnDevInst, ulFlags, NULL);
 }
 
@@ -1494,15 +1509,20 @@ CONFIGRET WINAPI CM_Disable_DevNode(
 /***********************************************************************
  * CM_Disable_DevNode_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Disable_DevNode_Ex(
-    DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Disable_DevNode_Ex(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    FIXME("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
+    FIXME("CM_Disable_DevNode_Ex(%p %lx %p)\n",
+          dnDevInst, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
@@ -1554,11 +1574,14 @@ CONFIGRET WINAPI CM_Disable_DevNode_Ex(
 /***********************************************************************
  * CM_Disconnect_Machine [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Disconnect_Machine(
+    _In_opt_ HMACHINE hMachine)
 {
     PMACHINE_INFO pMachine;
 
-    TRACE("%lx\n", hMachine);
+    TRACE("CM_Disconnect_Machine(%lx)\n", hMachine);
 
     pMachine = (PMACHINE_INFO)hMachine;
     if (pMachine == NULL)
@@ -1591,6 +1614,7 @@ CM_Dup_Range_List(
 {
     FIXME("CM_Dup_Range_List(%p %p %lx)\n",
           rlhOld, rlhNew, ulFlags);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -1598,10 +1622,15 @@ CM_Dup_Range_List(
 /***********************************************************************
  * CM_Enable_DevNode [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Enable_DevNode(
-    DEVINST dnDevInst, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Enable_DevNode(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lx\n", dnDevInst, ulFlags);
+    TRACE("CM_Enable_DevNode(%p %lx)\n",
+          dnDevInst, ulFlags);
+
     return CM_Enable_DevNode_Ex(dnDevInst, ulFlags, NULL);
 }
 
@@ -1609,15 +1638,20 @@ CONFIGRET WINAPI CM_Enable_DevNode(
 /***********************************************************************
  * CM_Enable_DevNode_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Enable_DevNode_Ex(
-    DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Enable_DevNode_Ex(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("%p %lx %p\n", dnDevInst, ulFlags, hMachine);
+    TRACE("CM_Enable_DevNode_Ex(%p %lx %p)\n",
+          dnDevInst, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
@@ -1669,10 +1703,16 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
 /***********************************************************************
  * CM_Enumerate_Classes [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Enumerate_Classes(
-    ULONG ulClassIndex, LPGUID ClassGuid, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Enumerate_Classes(
+    _In_ ULONG ulClassIndex,
+    _Out_ LPGUID ClassGuid,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %p %lx\n", ulClassIndex, ClassGuid, ulFlags);
+    TRACE("CM_Enumerate_Classes(%lx %p %lx)\n",
+          ulClassIndex, ClassGuid, ulFlags);
+
     return CM_Enumerate_Classes_Ex(ulClassIndex, ClassGuid, ulFlags, NULL);
 }
 
@@ -1680,15 +1720,21 @@ CONFIGRET WINAPI CM_Enumerate_Classes(
 /***********************************************************************
  * CM_Enumerate_Classes_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
-    ULONG ulClassIndex, LPGUID ClassGuid, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Enumerate_Classes_Ex(
+    _In_ ULONG ulClassIndex,
+    _Out_ LPGUID ClassGuid,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR szBuffer[MAX_GUID_STRING_LEN];
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret = CR_SUCCESS;
     ULONG ulLength = MAX_GUID_STRING_LEN;
 
-    TRACE("%lx %p %lx %p\n", ulClassIndex, ClassGuid, ulFlags, hMachine);
+    TRACE("CM_Enumerate_Classes_Ex(%lx %p %lx %p)\n",
+          ulClassIndex, ClassGuid, ulFlags, hMachine);
 
     if (ClassGuid == NULL)
         return CR_INVALID_POINTER;
@@ -1741,10 +1787,17 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
 /***********************************************************************
  * CM_Enumerate_EnumeratorsA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Enumerate_EnumeratorsA(
-    ULONG ulEnumIndex, PCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Enumerate_EnumeratorsA(
+    _In_ ULONG ulEnumIndex,
+    _Out_writes_(*pulLength) PCHAR Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lu %p %p %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags);
+    TRACE("CM_Enumerate_EnumeratorsA(%lu %p %p %lx)\n",
+          ulEnumIndex, Buffer, pulLength, ulFlags);
+
     return CM_Enumerate_Enumerators_ExA(ulEnumIndex, Buffer, pulLength,
                                         ulFlags, NULL);
 }
@@ -1753,10 +1806,17 @@ CONFIGRET WINAPI CM_Enumerate_EnumeratorsA(
 /***********************************************************************
  * CM_Enumerate_EnumeratorsW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Enumerate_EnumeratorsW(
-    ULONG ulEnumIndex, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Enumerate_EnumeratorsW(
+    _In_ ULONG ulEnumIndex,
+    _Out_writes_(*pulLength) PWCHAR Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lu %p %p %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags);
+    TRACE("CM_Enumerate_EnumeratorsW(%lu %p %p %lx)\n",
+          ulEnumIndex, Buffer, pulLength, ulFlags);
+
     return CM_Enumerate_Enumerators_ExW(ulEnumIndex, Buffer, pulLength,
                                         ulFlags, NULL);
 }
@@ -1765,17 +1825,22 @@ CONFIGRET WINAPI CM_Enumerate_EnumeratorsW(
 /***********************************************************************
  * CM_Enumerate_Enumerators_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Enumerate_Enumerators_ExA(
-    ULONG ulEnumIndex, PCHAR Buffer, PULONG pulLength, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Enumerate_Enumerators_ExA(
+    _In_ ULONG ulEnumIndex,
+    _Out_writes_(*pulLength) PCHAR Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR szBuffer[MAX_DEVICE_ID_LEN];
     ULONG ulOrigLength;
     ULONG ulLength;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
-          hMachine);
+    TRACE("CM_Enumerate_Enumerators_ExA(%lu %p %p %lx %lx)\n",
+          ulEnumIndex, Buffer, pulLength, ulFlags, hMachine);
 
     if (Buffer == NULL || pulLength == NULL)
         return CR_INVALID_POINTER;
@@ -1811,15 +1876,20 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExA(
 /***********************************************************************
  * CM_Enumerate_Enumerators_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
-    ULONG ulEnumIndex, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Enumerate_Enumerators_ExW(
+    _In_ ULONG ulEnumIndex,
+    _Out_writes_(*pulLength) PWCHAR Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    TRACE("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
-          hMachine);
+    TRACE("CM_Enumerate_Enumerators_ExW(%lu %p %p %lx %lx)\n",
+          ulEnumIndex, Buffer, pulLength, ulFlags, hMachine);
 
     if (Buffer == NULL || pulLength == NULL)
         return CR_INVALID_POINTER;
@@ -1877,6 +1947,7 @@ CM_Find_Range(
 {
     FIXME("CM_Find_Range(%p %I64u %lu %I64u %I64u %p %lx)\n",
           pullStart, ullStart, ulLength, ullAlignment, ullEnd, rlh, ulFlags);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -1942,10 +2013,15 @@ done:
 /***********************************************************************
  * CM_Free_Log_Conf [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Free_Log_Conf(
-    LOG_CONF lcLogConfToBeFreed, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Free_Log_Conf(
+    _In_ LOG_CONF lcLogConfToBeFreed,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %lx\n", lcLogConfToBeFreed, ulFlags);
+    TRACE("CM_Free_Log_Conf(%lx %lx)\n",
+          lcLogConfToBeFreed, ulFlags);
+
     return CM_Free_Log_Conf_Ex(lcLogConfToBeFreed, ulFlags, NULL);
 }
 
@@ -1953,8 +2029,12 @@ CONFIGRET WINAPI CM_Free_Log_Conf(
 /***********************************************************************
  * CM_Free_Log_Conf_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Free_Log_Conf_Ex(
-    LOG_CONF lcLogConfToBeFreed, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Free_Log_Conf_Ex(
+    _In_ LOG_CONF lcLogConfToBeFreed,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
@@ -1962,7 +2042,8 @@ CONFIGRET WINAPI CM_Free_Log_Conf_Ex(
     PLOG_CONF_INFO pLogConfInfo;
     CONFIGRET ret;
 
-    TRACE("%lx %lx %lx\n", lcLogConfToBeFreed, ulFlags, hMachine);
+    TRACE("CM_Free_Log_Conf_Ex(%lx %lx %lx)\n",
+          lcLogConfToBeFreed, ulFlags, hMachine);
 
     if (!pSetupIsUserAdmin())
         return CR_ACCESS_DENIED;
@@ -2012,12 +2093,14 @@ CONFIGRET WINAPI CM_Free_Log_Conf_Ex(
 /***********************************************************************
  * CM_Free_Log_Conf_Handle [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Free_Log_Conf_Handle(
-    LOG_CONF lcLogConf)
+CONFIGRET
+WINAPI
+CM_Free_Log_Conf_Handle(
+    _In_ LOG_CONF lcLogConf)
 {
     PLOG_CONF_INFO pLogConfInfo;
 
-    TRACE("%lx\n", lcLogConf);
+    TRACE("CM_Free_Log_Conf_Handle(%lx)\n", lcLogConf);
 
     pLogConfInfo = (PLOG_CONF_INFO)lcLogConf;
     if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
@@ -2080,10 +2163,16 @@ CM_Free_Range_List(
 /***********************************************************************
  * CM_Free_Res_Des [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Free_Res_Des(
-   PRES_DES prdResDes, RES_DES rdResDes, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Free_Res_Des(
+    _Out_ PRES_DES prdResDes,
+    _In_ RES_DES rdResDes,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %lx\n", prdResDes, rdResDes, ulFlags);
+    TRACE("CM_Free_Res_Des(%p %p %lx)\n",
+          prdResDes, rdResDes, ulFlags);
+
     return CM_Free_Res_Des_Ex(prdResDes, rdResDes, ulFlags, NULL);
 }
 
@@ -2091,11 +2180,16 @@ CONFIGRET WINAPI CM_Free_Res_Des(
 /***********************************************************************
  * CM_Free_Res_Des_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Free_Res_Des_Ex(
-    PRES_DES prdResDes, RES_DES rdResDes, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Free_Res_Des_Ex(
+    _Out_ PRES_DES prdResDes,
+    _In_ RES_DES rdResDes,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
-    FIXME("%p %p %lx %lx\n", prdResDes, rdResDes, ulFlags, hMachine);
+    FIXME("CM_Free_Res_Des_Ex(%p %p %lx %lx)\n",
+          prdResDes, rdResDes, ulFlags, hMachine);
 
     return CR_CALL_NOT_IMPLEMENTED;
 }
@@ -2104,10 +2198,12 @@ CONFIGRET WINAPI CM_Free_Res_Des_Ex(
 /***********************************************************************
  * CM_Free_Res_Des_Handle [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Free_Res_Des_Handle(
-    RES_DES rdResDes)
+CONFIGRET
+WINAPI
+CM_Free_Res_Des_Handle(
+    _In_ RES_DES rdResDes)
 {
-    FIXME("%p\n", rdResDes);
+    FIXME("CM_Free_Res_Des_Handle(%p)\n", rdResDes);
 
     return CR_CALL_NOT_IMPLEMENTED;
 }
@@ -2116,10 +2212,16 @@ CONFIGRET WINAPI CM_Free_Res_Des_Handle(
 /***********************************************************************
  * CM_Get_Child [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Child(
-    PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Child(
+    _Out_ PDEVINST pdnDevInst,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %lx\n", pdnDevInst, dnDevInst, ulFlags);
+    TRACE("CM_Get_Child(%p %p %lx)\n",
+          pdnDevInst, dnDevInst, ulFlags);
+
     return CM_Get_Child_Ex(pdnDevInst, dnDevInst, ulFlags, NULL);
 }
 
@@ -2127,8 +2229,13 @@ CONFIGRET WINAPI CM_Get_Child(
 /***********************************************************************
  * CM_Get_Child_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Child_Ex(
-    PDEVINST pdnDevInst, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Child_Ex(
+    _Out_ PDEVINST pdnDevInst,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR szRelatedDevInst[MAX_DEVICE_ID_LEN];
     RPC_BINDING_HANDLE BindingHandle = NULL;
@@ -2137,7 +2244,8 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
     DWORD dwIndex, dwLength = MAX_DEVICE_ID_LEN;
     CONFIGRET ret;
 
-    TRACE("%p %lx %lx %lx\n", pdnDevInst, dnDevInst, ulFlags, hMachine);
+    TRACE("CM_Get_Child_Ex(%p %lx %lx %lx)\n",
+          pdnDevInst, dnDevInst, ulFlags, hMachine);
 
     if (pdnDevInst == NULL)
         return CR_INVALID_POINTER;
@@ -2203,11 +2311,17 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
 /***********************************************************************
  * CM_Get_Class_Key_NameA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_Key_NameA(
-    LPGUID ClassGuid, LPSTR pszKeyName, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Class_Key_NameA(
+    _In_ LPGUID ClassGuid,
+    _Out_writes_opt_(*pulLength) LPSTR pszKeyName,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %p %lx\n",
+    TRACE("CM_Get_Class_Key_NameA(%p %p %p %lx)\n",
           ClassGuid, pszKeyName, pulLength, ulFlags);
+
     return CM_Get_Class_Key_Name_ExA(ClassGuid, pszKeyName, pulLength,
                                      ulFlags, NULL);
 }
@@ -2216,11 +2330,17 @@ CONFIGRET WINAPI CM_Get_Class_Key_NameA(
 /***********************************************************************
  * CM_Get_Class_Key_NameW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_Key_NameW(
-    LPGUID ClassGuid, LPWSTR pszKeyName, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Class_Key_NameW(
+    _In_ LPGUID ClassGuid,
+    _Out_writes_opt_(*pulLength) LPWSTR pszKeyName,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %p %lx\n",
+    TRACE("CM_Get_Class_Key_NameW(%p %p %p %lx)\n",
           ClassGuid, pszKeyName, pulLength, ulFlags);
+
     return CM_Get_Class_Key_Name_ExW(ClassGuid, pszKeyName, pulLength,
                                      ulFlags, NULL);
 }
@@ -2229,16 +2349,21 @@ CONFIGRET WINAPI CM_Get_Class_Key_NameW(
 /***********************************************************************
  * CM_Get_Class_Key_Name_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_Key_Name_ExA(
-    LPGUID ClassGuid, LPSTR pszKeyName, PULONG pulLength, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Class_Key_Name_ExA(
+    _In_ LPGUID ClassGuid,
+    _Out_writes_opt_(*pulLength) LPSTR pszKeyName,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR szBuffer[MAX_GUID_STRING_LEN];
     CONFIGRET ret = CR_SUCCESS;
     ULONG ulLength;
     ULONG ulOrigLength;
 
-    TRACE("%p %p %p %lx %lx\n",
+    TRACE("CM_Get_Class_Key_Name_ExA(%p %p %p %lx %lx)\n",
           ClassGuid, pszKeyName, pulLength, ulFlags, hMachine);
 
     if (ClassGuid == NULL || pszKeyName == NULL || pulLength == NULL)
@@ -2272,11 +2397,16 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExA(
 /***********************************************************************
  * CM_Get_Class_Key_Name_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_Key_Name_ExW(
-    LPGUID ClassGuid, LPWSTR pszKeyName, PULONG pulLength, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Class_Key_Name_ExW(
+    _In_ LPGUID ClassGuid,
+    _Out_writes_opt_(*pulLength) LPWSTR pszKeyName,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
-    TRACE("%p %p %p %lx %lx\n",
+    TRACE("CM_Get_Class_Key_Name_ExW(%p %p %p %lx %lx)\n",
           ClassGuid, pszKeyName, pulLength, ulFlags, hMachine);
 
     if (ClassGuid == NULL || pszKeyName == NULL || pulLength == NULL)
@@ -2303,10 +2433,17 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExW(
 /***********************************************************************
  * CM_Get_Class_NameA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_NameA(
-    LPGUID ClassGuid, PCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Class_NameA(
+    _In_ LPGUID ClassGuid,
+    _Out_writes_opt_(*pulLength) PCHAR Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %p %lx\n", ClassGuid, Buffer, pulLength, ulFlags);
+    TRACE("CM_Get_Class_NameA(%p %p %p %lx)\n",
+          ClassGuid, Buffer, pulLength, ulFlags);
+
     return CM_Get_Class_Name_ExA(ClassGuid, Buffer, pulLength, ulFlags,
                                  NULL);
 }
@@ -2315,10 +2452,17 @@ CONFIGRET WINAPI CM_Get_Class_NameA(
 /***********************************************************************
  * CM_Get_Class_NameW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_NameW(
-    LPGUID ClassGuid, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Class_NameW(
+    _In_ LPGUID ClassGuid,
+    _Out_writes_opt_(*pulLength) PWCHAR Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %p %lx\n", ClassGuid, Buffer, pulLength, ulFlags);
+    TRACE("CM_Get_Class_NameW(%p %p %p %lx)\n",
+          ClassGuid, Buffer, pulLength, ulFlags);
+
     return CM_Get_Class_Name_ExW(ClassGuid, Buffer, pulLength, ulFlags,
                                  NULL);
 }
@@ -2327,16 +2471,21 @@ CONFIGRET WINAPI CM_Get_Class_NameW(
 /***********************************************************************
  * CM_Get_Class_Name_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_Name_ExA(
-    LPGUID ClassGuid, PCHAR Buffer, PULONG pulLength, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Class_Name_ExA(
+    _In_ LPGUID ClassGuid,
+    _Out_writes_opt_(*pulLength) PCHAR Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR szBuffer[MAX_CLASS_NAME_LEN];
     CONFIGRET ret = CR_SUCCESS;
     ULONG ulLength;
     ULONG ulOrigLength;
 
-    TRACE("%p %p %p %lx %lx\n",
+    TRACE("CM_Get_Class_Name_ExA(%p %p %p %lx %lx)\n",
           ClassGuid, Buffer, pulLength, ulFlags, hMachine);
 
     if (ClassGuid == NULL || Buffer == NULL || pulLength == NULL)
@@ -2370,16 +2519,20 @@ CONFIGRET WINAPI CM_Get_Class_Name_ExA(
 /***********************************************************************
  * CM_Get_Class_Name_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI
+CONFIGRET
+WINAPI
 CM_Get_Class_Name_ExW(
-    LPGUID ClassGuid, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags,
-    HMACHINE hMachine)
+    _In_ LPGUID ClassGuid,
+    _Out_writes_opt_(*pulLength) PWCHAR Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR szGuidString[MAX_GUID_STRING_LEN];
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    TRACE("%p %p %p %lx %lx\n",
+    TRACE("CM_Get_Class_Name_ExW(%p %p %p %lx %lx\n",
           ClassGuid, Buffer, pulLength, ulFlags, hMachine);
 
     if (ClassGuid == NULL || Buffer == NULL || pulLength == NULL)
@@ -2426,16 +2579,23 @@ CM_Get_Class_Name_ExW(
 /***********************************************************************
  * CM_Get_Class_Registry_PropertyA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_Registry_PropertyA(
-    LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Class_Registry_PropertyA(
+    LPGUID ClassGuid,
+    ULONG ulProperty,
+    PULONG pulRegDataType,
+    PVOID Buffer,
+    PULONG pulLength,
+    ULONG ulFlags,
+    HMACHINE hMachine)
 {
     PWSTR BufferW = NULL;
     ULONG ulLength = 0;
     ULONG ulType;
     CONFIGRET ret;
 
-    TRACE("%p %lu %p %p %p %lx %lx\n",
+    TRACE("CM_Get_Class_Registry_PropertyA(%p %lu %p %p %p %lx %lx)\n",
           ClassGuid, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
 
@@ -2498,9 +2658,16 @@ CONFIGRET WINAPI CM_Get_Class_Registry_PropertyA(
 /***********************************************************************
  * CM_Get_Class_Registry_PropertyW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Class_Registry_PropertyW(
-    LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Class_Registry_PropertyW(
+    LPGUID ClassGuid,
+    ULONG ulProperty,
+    PULONG pulRegDataType,
+    PVOID Buffer,
+    PULONG pulLength,
+    ULONG ulFlags,
+    HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     WCHAR szGuidString[PNP_MAX_GUID_STRING_LEN + 1];
@@ -2508,7 +2675,7 @@ CONFIGRET WINAPI CM_Get_Class_Registry_PropertyW(
     ULONG ulTransferLength = 0;
     CONFIGRET ret;
 
-    TRACE("%p %lu %p %p %p %lx %lx\n",
+    TRACE("CM_Get_Class_Registry_PropertyW(%p %lu %p %p %p %lx %lx)\n",
           ClassGuid, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
 
@@ -2570,10 +2737,16 @@ CONFIGRET WINAPI CM_Get_Class_Registry_PropertyW(
 /***********************************************************************
  * CM_Get_Depth [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Depth(
-    PULONG pulDepth, DEVINST dnDevInst, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Depth(
+    _Out_ PULONG pulDepth,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lx %lx\n", pulDepth, dnDevInst, ulFlags);
+    TRACE("CM_Get_Depth(%p %lx %lx)\n",
+          pulDepth, dnDevInst, ulFlags);
+
     return CM_Get_Depth_Ex(pulDepth, dnDevInst, ulFlags, NULL);
 }
 
@@ -2581,15 +2754,20 @@ CONFIGRET WINAPI CM_Get_Depth(
 /***********************************************************************
  * CM_Get_Depth_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Depth_Ex(
-    PULONG pulDepth, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Depth_Ex(
+    _Out_ PULONG pulDepth,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("%p %lx %lx %lx\n",
+    TRACE("CM_Get_Depth_Ex(%p %lx %lx %lx)\n",
           pulDepth, dnDevInst, ulFlags, hMachine);
 
     if (pulDepth == NULL)
@@ -2641,12 +2819,20 @@ CONFIGRET WINAPI CM_Get_Depth_Ex(
 /***********************************************************************
  * CM_Get_DevNode_Custom_PropertyA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Custom_PropertyA(
-    DEVINST dnDevInst, PCSTR pszCustomPropertyName, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Custom_PropertyA(
+    _In_ DEVINST dnDevInst,
+    _In_ PCSTR pszCustomPropertyName,
+    _Out_opt_ PULONG pulRegDataType,
+    _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %s %p %p %p %lx\n", dnDevInst, pszCustomPropertyName,
-          pulRegDataType, Buffer, pulLength, ulFlags);
+    TRACE("CM_Get_DevNode_Custom_PropertyA(%lx %s %p %p %p %lx)\n",
+          dnDevInst, pszCustomPropertyName, pulRegDataType,
+          Buffer, pulLength, ulFlags);
+
     return CM_Get_DevNode_Custom_Property_ExA(dnDevInst, pszCustomPropertyName,
                                               pulRegDataType, Buffer,
                                               pulLength, ulFlags, NULL);
@@ -2656,12 +2842,20 @@ CONFIGRET WINAPI CM_Get_DevNode_Custom_PropertyA(
 /***********************************************************************
  * CM_Get_DevNode_Custom_PropertyW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Custom_PropertyW(
-    DEVINST dnDevInst, PCWSTR pszCustomPropertyName, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Custom_PropertyW(
+    _In_ DEVINST dnDevInst,
+    _In_ PCWSTR pszCustomPropertyName,
+    _Out_opt_ PULONG pulRegDataType,
+    _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %s %p %p %p %lx\n", dnDevInst, debugstr_w(pszCustomPropertyName),
-          pulRegDataType, Buffer, pulLength, ulFlags);
+    TRACE("CM_Get_DevNode_Custom_PropertyW(%lx %s %p %p %p %lx)\n",
+          dnDevInst, debugstr_w(pszCustomPropertyName), pulRegDataType,
+          Buffer, pulLength, ulFlags);
+
     return CM_Get_DevNode_Custom_Property_ExW(dnDevInst, pszCustomPropertyName,
                                               pulRegDataType, Buffer,
                                               pulLength, ulFlags, NULL);
@@ -2671,9 +2865,16 @@ CONFIGRET WINAPI CM_Get_DevNode_Custom_PropertyW(
 /***********************************************************************
  * CM_Get_DevNode_Custom_Property_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Custom_Property_ExA(
-    DEVINST dnDevInst, PCSTR pszCustomPropertyName, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Custom_Property_ExA(
+    _In_ DEVINST dnDevInst,
+    _In_ PCSTR pszCustomPropertyName,
+    _Out_opt_ PULONG pulRegDataType,
+    _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     LPWSTR pszPropertyNameW = NULL;
     PVOID BufferW;
@@ -2681,8 +2882,9 @@ CONFIGRET WINAPI CM_Get_DevNode_Custom_Property_ExA(
     ULONG ulDataType = REG_NONE;
     CONFIGRET ret;
 
-    TRACE("%lx %s %p %p %p %lx %p\n", dnDevInst, pszCustomPropertyName,
-          pulRegDataType, Buffer, pulLength, ulFlags, hMachine);
+    TRACE("CM_Get_DevNode_Custom_Property_ExA(%lx %s %p %p %p %lx %p)\n",
+          dnDevInst, pszCustomPropertyName, pulRegDataType,
+          Buffer, pulLength, ulFlags, hMachine);
 
     if (!pulLength)
         return CR_INVALID_POINTER;
@@ -2751,9 +2953,16 @@ CONFIGRET WINAPI CM_Get_DevNode_Custom_Property_ExA(
 /***********************************************************************
  * CM_Get_DevNode_Custom_Property_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Custom_Property_ExW(
-    DEVINST dnDevInst, PCWSTR pszCustomPropertyName, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Custom_Property_ExW(
+    _In_ DEVINST dnDevInst,
+    _In_ PCWSTR pszCustomPropertyName,
+    _Out_opt_ PULONG pulRegDataType,
+    _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
@@ -2762,9 +2971,9 @@ CONFIGRET WINAPI CM_Get_DevNode_Custom_Property_ExW(
     ULONG ulTransferLength;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%lx %s %p %p %p %lx %p\n", dnDevInst,
-          debugstr_w(pszCustomPropertyName), pulRegDataType, Buffer,
-          pulLength, ulFlags, hMachine);
+    TRACE("CM_Get_DevNode_Custom_Property_ExW(%lx %s %p %p %p %lx %p)\n",
+          dnDevInst, debugstr_w(pszCustomPropertyName), pulRegDataType,
+          Buffer, pulLength, ulFlags, hMachine);
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVNODE;
@@ -2829,11 +3038,17 @@ CONFIGRET WINAPI CM_Get_DevNode_Custom_Property_ExW(
 /***********************************************************************
  * CM_Get_DevNode_Registry_PropertyA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Registry_PropertyA(
-    DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Registry_PropertyA(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulProperty,
+    _Out_opt_ PULONG pulRegDataType,
+    _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %lu %p %p %p %lx\n",
+    TRACE("CM_Get_DevNode_Registry_PropertyA(%lx %lu %p %p %p %lx)\n",
           dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength, ulFlags);
 
     return CM_Get_DevNode_Registry_Property_ExA(dnDevInst, ulProperty,
@@ -2845,11 +3060,17 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_PropertyA(
 /***********************************************************************
  * CM_Get_DevNode_Registry_PropertyW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Registry_PropertyW(
-    DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Registry_PropertyW(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulProperty,
+    _Out_opt_ PULONG pulRegDataType,
+    _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %lu %p %p %p %lx\n",
+    TRACE("CM_Get_DevNode_Registry_PropertyW(%lx %lu %p %p %p %lx)\n",
           dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength, ulFlags);
 
     return CM_Get_DevNode_Registry_Property_ExW(dnDevInst, ulProperty,
@@ -2861,16 +3082,23 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_PropertyW(
 /***********************************************************************
  * CM_Get_DevNode_Registry_Property_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
-    DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Registry_Property_ExA(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulProperty,
+    _Out_opt_ PULONG pulRegDataType,
+    _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     PVOID BufferW;
     ULONG LengthW;
     ULONG ulDataType = REG_NONE;
     CONFIGRET ret;
 
-    TRACE("%lx %lu %p %p %p %lx %lx\n",
+    TRACE("CM_Get_DevNode_Registry_Property_ExA(%lx %lu %p %p %p %lx %lx)\n",
           dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
 
@@ -2934,9 +3162,16 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
 /***********************************************************************
  * CM_Get_DevNode_Registry_Property_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
-    DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
-    PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Registry_Property_ExW(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulProperty,
+    _Out_opt_ PULONG pulRegDataType,
+    _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
@@ -2945,7 +3180,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
     ULONG ulDataType = REG_NONE;
     ULONG ulTransferLength = 0;
 
-    TRACE("%lx %lu %p %p %p %lx %lx\n",
+    TRACE("CM_Get_DevNode_Registry_Property_ExW(%lx %lu %p %p %p %lx %lx)\n",
           dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
 
@@ -3020,12 +3255,17 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
 /***********************************************************************
  * CM_Get_DevNode_Status [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_DevNode_Status(
-    PULONG pulStatus, PULONG pulProblemNumber, DEVINST dnDevInst,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_DevNode_Status(
+    _Out_ PULONG pulStatus,
+    _Out_ PULONG pulProblemNumber,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %lx %lx\n",
+    TRACE("CM_Get_DevNode_Status(%p %p %lx %lx)\n",
           pulStatus, pulProblemNumber, dnDevInst, ulFlags);
+
     return CM_Get_DevNode_Status_Ex(pulStatus, pulProblemNumber, dnDevInst,
                                     ulFlags, NULL);
 }
@@ -3034,17 +3274,21 @@ CONFIGRET WINAPI CM_Get_DevNode_Status(
 /***********************************************************************
  * CM_Get_DevNode_Status_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI
+CONFIGRET
+WINAPI
 CM_Get_DevNode_Status_Ex(
-    PULONG pulStatus, PULONG pulProblemNumber, DEVINST dnDevInst,
-    ULONG ulFlags, HMACHINE hMachine)
+    _Out_ PULONG pulStatus,
+    _Out_ PULONG pulProblemNumber,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("%p %p %lx %lx %lx\n",
+    TRACE("CM_Get_DevNode_Status_Ex(%p %p %lx %lx %lx)\n",
           pulStatus, pulProblemNumber, dnDevInst, ulFlags, hMachine);
 
     if (pulStatus == NULL || pulProblemNumber == NULL)
@@ -3097,11 +3341,17 @@ CM_Get_DevNode_Status_Ex(
 /***********************************************************************
  * CM_Get_Device_IDA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_IDA(
-    DEVINST dnDevInst, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_IDA(
+    _In_ DEVINST dnDevInst,
+    _Out_writes_(BufferLen) PCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %p %ld %ld\n",
+    TRACE("CM_Get_Device_IDA(%lx %p %ld %lx)\n",
           dnDevInst, Buffer, BufferLen, ulFlags);
+
     return CM_Get_Device_ID_ExA(dnDevInst, Buffer, BufferLen, ulFlags, NULL);
 }
 
@@ -3109,11 +3359,17 @@ CONFIGRET WINAPI CM_Get_Device_IDA(
 /***********************************************************************
  * CM_Get_Device_IDW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_IDW(
-    DEVINST dnDevInst, PWCHAR Buffer, ULONG BufferLen, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_IDW(
+    _In_ DEVINST dnDevInst,
+    _Out_writes_(BufferLen) PWCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %p %ld %ld\n",
+    TRACE("CM_Get_Device_IDW(%lx %p %ld %lx)\n",
           dnDevInst, Buffer, BufferLen, ulFlags);
+
     return CM_Get_Device_ID_ExW(dnDevInst, Buffer, BufferLen, ulFlags, NULL);
 }
 
@@ -3121,14 +3377,19 @@ CONFIGRET WINAPI CM_Get_Device_IDW(
 /***********************************************************************
  * CM_Get_Device_ID_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_ExA(
-    DEVINST dnDevInst, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_ExA(
+    _In_ DEVINST dnDevInst,
+    _Out_writes_(BufferLen) PCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     WCHAR szBufferW[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%lx %p %ld %ld %lx\n",
+    TRACE("CM_Get_Device_ID_ExA(%lx %p %ld %ld %lx)\n",
           dnDevInst, Buffer, BufferLen, ulFlags, hMachine);
 
     if (Buffer == NULL)
@@ -3159,13 +3420,18 @@ CONFIGRET WINAPI CM_Get_Device_ID_ExA(
 /***********************************************************************
  * CM_Get_Device_ID_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_ExW(
-    DEVINST dnDevInst, PWCHAR Buffer, ULONG BufferLen, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_ExW(
+    _In_ DEVINST dnDevInst,
+    _Out_writes_(BufferLen) PWCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     HSTRING_TABLE StringTable = NULL;
 
-    TRACE("%lx %p %ld %ld %lx\n",
+    TRACE("CM_Get_Device_ID_ExW(%lx %p %ld %lx %lx)\n",
           dnDevInst, Buffer, BufferLen, ulFlags, hMachine);
 
     if (dnDevInst == 0)
@@ -3202,10 +3468,17 @@ CONFIGRET WINAPI CM_Get_Device_ID_ExW(
 /***********************************************************************
  * CM_Get_Device_ID_ListA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_ListA(
-    PCSTR pszFilter, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_ListA(
+    _In_ PCSTR pszFilter,
+    _Out_writes_(BufferLen) PCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %ld %ld\n", pszFilter, Buffer, BufferLen, ulFlags);
+    TRACE("CM_Get_Device_ID_ListA(%p %p %ld %lx)\n",
+          pszFilter, Buffer, BufferLen, ulFlags);
+
     return CM_Get_Device_ID_List_ExA(pszFilter, Buffer, BufferLen,
                                      ulFlags, NULL);
 }
@@ -3214,10 +3487,17 @@ CONFIGRET WINAPI CM_Get_Device_ID_ListA(
 /***********************************************************************
  * CM_Get_Device_ID_ListW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_ListW(
-    PCWSTR pszFilter, PWCHAR Buffer, ULONG BufferLen, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_ListW(
+    _In_ PCWSTR pszFilter,
+    _Out_writes_(BufferLen) PWCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %ld %ld\n", pszFilter, Buffer, BufferLen, ulFlags);
+    TRACE("CM_Get_Device_ID_ListW(%p %p %ld %lx)\n",
+          pszFilter, Buffer, BufferLen, ulFlags);
+
     return CM_Get_Device_ID_List_ExW(pszFilter, Buffer, BufferLen,
                                      ulFlags, NULL);
 }
@@ -3226,15 +3506,20 @@ CONFIGRET WINAPI CM_Get_Device_ID_ListW(
 /***********************************************************************
  * CM_Get_Device_ID_List_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_List_ExA(
-    PCSTR pszFilter, PCHAR Buffer, ULONG BufferLen, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_List_ExA(
+    _In_ PCSTR pszFilter,
+    _Out_writes_(BufferLen) PCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     LPWSTR BufferW = NULL;
     LPWSTR pszFilterW = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%p %p %ld %ld %lx\n",
+    TRACE("CM_Get_Device_ID_List_ExA(%p %p %ld %lx %lx)\n",
           pszFilter, Buffer, BufferLen, ulFlags, hMachine);
 
     BufferW = MyMalloc(BufferLen * sizeof(WCHAR));
@@ -3286,14 +3571,19 @@ Done:
 /***********************************************************************
  * CM_Get_Device_ID_List_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_List_ExW(
-    PCWSTR pszFilter, PWCHAR Buffer, ULONG BufferLen, ULONG ulFlags,
-    HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_List_ExW(
+    _In_ PCWSTR pszFilter,
+    _Out_writes_(BufferLen) PWCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    TRACE("%p %p %ld %ld %lx\n",
+    TRACE("CM_Get_Device_ID_List_ExW(%p %p %ld %lx %lx)\n",
           pszFilter, Buffer, BufferLen, ulFlags, hMachine);
 
     if (Buffer == NULL || BufferLen == 0)
@@ -3337,10 +3627,16 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_ExW(
 /***********************************************************************
  * CM_Get_Device_ID_List_SizeA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_List_SizeA(
-    PULONG pulLen, PCSTR pszFilter, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_List_SizeA(
+    _Out_ PULONG pulLen,
+    _In_opt_ PCSTR pszFilter,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %ld\n", pulLen, pszFilter, ulFlags);
+    TRACE("CM_Get_Device_ID_List_SizeA(%p %s %lx)\n",
+          pulLen, debugstr_a(pszFilter), ulFlags);
+
     return CM_Get_Device_ID_List_Size_ExA(pulLen, pszFilter, ulFlags, NULL);
 }
 
@@ -3348,10 +3644,16 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_SizeA(
 /***********************************************************************
  * CM_Get_Device_ID_List_SizeW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_List_SizeW(
-    PULONG pulLen, PCWSTR pszFilter, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_List_SizeW(
+    _Out_ PULONG pulLen,
+    _In_opt_ PCWSTR pszFilter,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %s %ld\n", pulLen, debugstr_w(pszFilter), ulFlags);
+    TRACE("CM_Get_Device_ID_List_SizeW(%p %s %lx)\n",
+          pulLen, debugstr_w(pszFilter), ulFlags);
+
     return CM_Get_Device_ID_List_Size_ExW(pulLen, pszFilter, ulFlags, NULL);
 }
 
@@ -3359,13 +3661,19 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_SizeW(
 /***********************************************************************
  * CM_Get_Device_ID_List_Size_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExA(
-    PULONG pulLen, PCSTR pszFilter, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_List_Size_ExA(
+    _Out_ PULONG pulLen,
+    _In_opt_ PCSTR pszFilter,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     LPWSTR pszFilterW = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    FIXME("%p %s %lx %lx\n", pulLen, pszFilter, ulFlags, hMachine);
+    FIXME("CM_Get_Device_ID_List_Size_ExA(%p %s %lx %lx)\n",
+          pulLen, debugstr_a(pszFilter), ulFlags, hMachine);
 
     if (pszFilter == NULL)
     {
@@ -3394,13 +3702,19 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExA(
 /***********************************************************************
  * CM_Get_Device_ID_List_Size_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExW(
-    PULONG pulLen, PCWSTR pszFilter, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_List_Size_ExW(
+    _Out_ PULONG pulLen,
+    _In_opt_ PCWSTR pszFilter,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    FIXME("%p %s %ld %lx\n", pulLen, debugstr_w(pszFilter), ulFlags, hMachine);
+    FIXME("CM_Get_Device_ID_List_Size_ExW(%p %s %lx %lx)\n",
+          pulLen, debugstr_w(pszFilter), ulFlags, hMachine);
 
     if (pulLen == NULL)
         return CR_INVALID_POINTER;
@@ -3442,10 +3756,16 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExW(
 /***********************************************************************
  * CM_Get_Device_ID_Size [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_Size(
-    PULONG pulLen, DEVINST dnDevInst, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_Size(
+    _Out_ PULONG pulLen,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lx %lx\n", pulLen, dnDevInst, ulFlags);
+    TRACE("CM_Get_Device_ID_Size(%p %lx %lx)\n",
+          pulLen, dnDevInst, ulFlags);
+
     return CM_Get_Device_ID_Size_Ex(pulLen, dnDevInst, ulFlags, NULL);
 }
 
@@ -3453,13 +3773,19 @@ CONFIGRET WINAPI CM_Get_Device_ID_Size(
 /***********************************************************************
  * CM_Get_Device_ID_Size_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_ID_Size_Ex(
-    PULONG pulLen, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_ID_Size_Ex(
+    _Out_ PULONG pulLen,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     HSTRING_TABLE StringTable = NULL;
     LPWSTR DeviceId;
 
-    TRACE("%p %lx %lx %lx\n", pulLen, dnDevInst, ulFlags, hMachine);
+    TRACE("CM_Get_Device_ID_Size_Ex(%p %lx %lx %lx)\n",
+          pulLen, dnDevInst, ulFlags, hMachine);
 
     if (pulLen == NULL)
         return CR_INVALID_POINTER;
@@ -3498,11 +3824,17 @@ CONFIGRET WINAPI CM_Get_Device_ID_Size_Ex(
 /***********************************************************************
  * CM_Get_Device_Interface_AliasA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_AliasA(
-    LPCSTR pszDeviceInterface, LPGUID AliasInterfaceGuid,
-    LPSTR pszAliasDeviceInterface, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_AliasA(
+    _In_ LPCSTR pszDeviceInterface,
+    _In_ LPGUID AliasInterfaceGuid,
+    _Out_writes_(*pulLength) LPSTR pszAliasDeviceInterface,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %p %p %lu\n", pszDeviceInterface, AliasInterfaceGuid,
+    TRACE("CM_Get_Device_Interface_AliasA(%p %p %p %p %lx)\n",
+          pszDeviceInterface, AliasInterfaceGuid,
           pszAliasDeviceInterface, pulLength, ulFlags);
 
     return CM_Get_Device_Interface_Alias_ExA(pszDeviceInterface,
@@ -3514,11 +3846,17 @@ CONFIGRET WINAPI CM_Get_Device_Interface_AliasA(
 /***********************************************************************
  * CM_Get_Device_Interface_AliasW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_AliasW(
-    LPCWSTR pszDeviceInterface, LPGUID AliasInterfaceGuid,
-    LPWSTR pszAliasDeviceInterface, PULONG pulLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_AliasW(
+    _In_ LPCWSTR pszDeviceInterface,
+    _In_ LPGUID AliasInterfaceGuid,
+    _Out_writes_(*pulLength) LPWSTR pszAliasDeviceInterface,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %p %p %lu\n", pszDeviceInterface, AliasInterfaceGuid,
+    TRACE("CM_Get_Device_Interface_AliasW(%p %p %p %p %lx)\n",
+          pszDeviceInterface, AliasInterfaceGuid,
           pszAliasDeviceInterface, pulLength, ulFlags);
 
     return CM_Get_Device_Interface_Alias_ExW(pszDeviceInterface,
@@ -3530,11 +3868,18 @@ CONFIGRET WINAPI CM_Get_Device_Interface_AliasW(
 /***********************************************************************
  * CM_Get_Device_Interface_Alias_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_Alias_ExA(
-    LPCSTR pszDeviceInterface, LPGUID AliasInterfaceGuid, LPSTR pszAliasDeviceInterface,
-    PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_Alias_ExA(
+    _In_ LPCSTR pszDeviceInterface,
+    _In_ LPGUID AliasInterfaceGuid,
+    _Out_writes_(*pulLength) LPSTR pszAliasDeviceInterface,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
-    FIXME("%p %p %p %p %lu %lx\n", pszDeviceInterface, AliasInterfaceGuid,
+    FIXME("CM_Get_Device_Interface_Alias_ExA(%p %p %p %p %lx %lx)\n",
+          pszDeviceInterface, AliasInterfaceGuid,
           pszAliasDeviceInterface, pulLength, ulFlags, hMachine);
 
     return CR_CALL_NOT_IMPLEMENTED;
@@ -3544,15 +3889,22 @@ CONFIGRET WINAPI CM_Get_Device_Interface_Alias_ExA(
 /***********************************************************************
  * CM_Get_Device_Interface_Alias_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_Alias_ExW(
-    LPCWSTR pszDeviceInterface, LPGUID AliasInterfaceGuid, LPWSTR pszAliasDeviceInterface,
-    PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_Alias_ExW(
+    _In_ LPCWSTR pszDeviceInterface,
+    _In_ LPGUID AliasInterfaceGuid,
+    _Out_writes_(*pulLength) LPWSTR pszAliasDeviceInterface,
+    _Inout_ PULONG pulLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     ULONG ulTransferLength;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%p %p %p %p %lu %lx\n", pszDeviceInterface, AliasInterfaceGuid,
+    TRACE("CM_Get_Device_Interface_Alias_ExW(%p %p %p %p %lx %lx)\n",
+          pszDeviceInterface, AliasInterfaceGuid,
           pszAliasDeviceInterface, pulLength, ulFlags, hMachine);
 
     if (pszDeviceInterface == NULL ||
@@ -3601,12 +3953,18 @@ CONFIGRET WINAPI CM_Get_Device_Interface_Alias_ExW(
 /***********************************************************************
  *      CM_Get_Device_Interface_ListA (SETUPAPI.@)
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_ListA(
-    LPGUID InterfaceClassGuid, DEVINSTID_A pDeviceID, PCHAR Buffer,
-    ULONG BufferLen, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_ListA(
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_A pDeviceID,
+    _Out_writes_(BufferLen) PCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%s %s %p %lu 0x%08lx\n", debugstr_guid(InterfaceClassGuid),
-          pDeviceID, Buffer, BufferLen, ulFlags);
+    TRACE("CM_Get_Device_Interface_ListA(%s %s %p %lu 0x%08lx)\n",
+          debugstr_guid(InterfaceClassGuid), debugstr_a(pDeviceID),
+          Buffer, BufferLen, ulFlags);
 
     return CM_Get_Device_Interface_List_ExA(InterfaceClassGuid, pDeviceID,
                                             Buffer, BufferLen, ulFlags, NULL);
@@ -3616,12 +3974,18 @@ CONFIGRET WINAPI CM_Get_Device_Interface_ListA(
 /***********************************************************************
  *      CM_Get_Device_Interface_ListW (SETUPAPI.@)
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_ListW(
-    LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, PWCHAR Buffer,
-    ULONG BufferLen, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_ListW(
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_W pDeviceID,
+    _Out_writes_(BufferLen) PWCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%s %s %p %lu 0x%08lx\n", debugstr_guid(InterfaceClassGuid),
-          debugstr_w(pDeviceID), Buffer, BufferLen, ulFlags);
+    TRACE("CM_Get_Device_Interface_ListW(%s %s %p %lu 0x%08lx)\n",
+          debugstr_guid(InterfaceClassGuid), debugstr_w(pDeviceID),
+          Buffer, BufferLen, ulFlags);
 
     return CM_Get_Device_Interface_List_ExW(InterfaceClassGuid, pDeviceID,
                                             Buffer, BufferLen, ulFlags, NULL);
@@ -3631,16 +3995,23 @@ CONFIGRET WINAPI CM_Get_Device_Interface_ListW(
 /***********************************************************************
  *      CM_Get_Device_Interface_List_ExA (SETUPAPI.@)
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_List_ExA(
-    LPGUID InterfaceClassGuid, DEVINSTID_A pDeviceID, PCHAR Buffer,
-    ULONG BufferLen, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_List_ExA(
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_A pDeviceID,
+    _Out_writes_(BufferLen) PCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     DEVINSTID_W pDeviceIdW = NULL;
     PWCHAR BufferW = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%s %s %p %lu 0x%08lx %p\n", debugstr_guid(InterfaceClassGuid),
-          pDeviceID, Buffer, BufferLen, ulFlags, hMachine);
+    TRACE("CM_Get_Device_Interface_List_ExA(%s %s %p %lu 0x%08lx %p)\n",
+          debugstr_guid(InterfaceClassGuid), debugstr_a(pDeviceID),
+          Buffer, BufferLen, ulFlags, hMachine);
 
     if (Buffer == NULL ||
         BufferLen == 0)
@@ -3689,16 +4060,23 @@ Done:
 /***********************************************************************
  *      CM_Get_Device_Interface_List_ExW (SETUPAPI.@)
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_List_ExW(
-    LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceID, PWCHAR Buffer,
-    ULONG BufferLen, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_List_ExW(
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_W pDeviceID,
+    _Out_writes_(BufferLen) PWCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     PNP_RPC_BUFFER_SIZE BufferSize = 0;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%s %s %p %lu 0x%08lx %p\n", debugstr_guid(InterfaceClassGuid),
-          debugstr_w(pDeviceID), Buffer, BufferLen, ulFlags, hMachine);
+    TRACE("CM_Get_Device_Interface_List_ExW(%s %s %p %lu 0x%08lx %p)\n",
+          debugstr_guid(InterfaceClassGuid), debugstr_w(pDeviceID),
+          Buffer, BufferLen, ulFlags, hMachine);
 
     if (Buffer == NULL ||
         BufferLen == 0)
@@ -3744,52 +4122,65 @@ CONFIGRET WINAPI CM_Get_Device_Interface_List_ExW(
 /***********************************************************************
  *      CM_Get_Device_Interface_List_SizeA (SETUPAPI.@)
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_List_SizeA(
-    PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_A pDeviceId,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_List_SizeA(
+    _Out_ PULONG pulLen,
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_A pDeviceID,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %s 0x%08lx\n", pulLen, InterfaceClassGuid,
-          pDeviceId, ulFlags);
+    TRACE("CM_Get_Device_Interface_List_SizeA(%p %p %s 0x%08lx)\n",
+          pulLen, InterfaceClassGuid, debugstr_a(pDeviceID), ulFlags);
 
     return CM_Get_Device_Interface_List_Size_ExA(pulLen, InterfaceClassGuid,
-                                                 pDeviceId, ulFlags, NULL);
+                                                 pDeviceID, ulFlags, NULL);
 }
 
 
 /***********************************************************************
  *      CM_Get_Device_Interface_List_SizeW (SETUPAPI.@)
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_List_SizeW(
-    PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceId,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_List_SizeW(
+    _Out_ PULONG pulLen,
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_W pDeviceID,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %p %s 0x%08lx\n", pulLen, InterfaceClassGuid,
-          debugstr_w(pDeviceId), ulFlags);
+    TRACE("CM_Get_Device_Interface_List_SizeW(%p %p %s 0x%08lx)\n",
+          pulLen, InterfaceClassGuid, debugstr_w(pDeviceID), ulFlags);
 
     return CM_Get_Device_Interface_List_Size_ExW(pulLen, InterfaceClassGuid,
-                                                 pDeviceId, ulFlags, NULL);
+                                                 pDeviceID, ulFlags, NULL);
 }
 
 
 /***********************************************************************
  *      CM_Get_Device_Interface_List_Size_ExA (SETUPAPI.@)
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExA(
-    PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_A pDeviceId,
-    ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_List_Size_ExA(
+    _Out_ PULONG pulLen,
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_A pDeviceID,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     DEVINSTID_W pDeviceIdW = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%p %p %s 0x%08lx %p\n", pulLen, InterfaceClassGuid,
-          pDeviceId, ulFlags, hMachine);
+    TRACE("CM_Get_Device_Interface_List_Size_ExA(%p %p %s 0x%08lx %p)\n",
+          pulLen, InterfaceClassGuid, debugstr_a(pDeviceID), ulFlags, hMachine);
 
     if (pulLen == NULL)
         return CR_INVALID_POINTER;
 
-    if (pDeviceId != NULL)
+    if (pDeviceID != NULL)
     {
-        if (!pSetupCaptureAndConvertAnsiArg(pDeviceId, &pDeviceIdW))
+        if (!pSetupCaptureAndConvertAnsiArg(pDeviceID, &pDeviceIdW))
             return CR_INVALID_DEVICE_ID;
     }
 
@@ -3808,15 +4199,20 @@ CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExA(
 /***********************************************************************
  *      CM_Get_Device_Interface_List_Size_ExW (SETUPAPI.@)
  */
-CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExW(
-    PULONG pulLen, LPGUID InterfaceClassGuid, DEVINSTID_W pDeviceId,
-    ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_List_Size_ExW(
+    _Out_ PULONG pulLen,
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_W pDeviceID,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%p %p %s 0x%08lx %p\n", pulLen, InterfaceClassGuid,
-          debugstr_w(pDeviceId), ulFlags, hMachine);
+    TRACE("CM_Get_Device_Interface_List_Size_ExW(%p %p %s 0x%08lx %p)\n",
+          pulLen, InterfaceClassGuid, debugstr_w(pDeviceID), ulFlags, hMachine);
 
     if (pulLen == NULL)
         return CR_INVALID_POINTER;
@@ -3843,7 +4239,7 @@ CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExW(
         ret = PNP_GetInterfaceDeviceListSize(BindingHandle,
                                              pulLen,
                                              InterfaceClassGuid,
-                                             pDeviceId,
+                                             pDeviceID,
                                              ulFlags);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -3859,10 +4255,16 @@ CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExW(
 /***********************************************************************
  * CM_Get_First_Log_Conf [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_First_Log_Conf(
-    PLOG_CONF plcLogConf, DEVINST dnDevInst, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_First_Log_Conf(
+    _Out_opt_ PLOG_CONF plcLogConf,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lx %lx\n", plcLogConf, dnDevInst, ulFlags);
+    TRACE("CM_Get_First_Log_Conf(%p %lx %lx)\n",
+          plcLogConf, dnDevInst, ulFlags);
+
     return CM_Get_First_Log_Conf_Ex(plcLogConf, dnDevInst, ulFlags, NULL);
 }
 
@@ -3870,8 +4272,13 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf(
 /***********************************************************************
  * CM_Get_First_Log_Conf_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
-    PLOG_CONF plcLogConf, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_First_Log_Conf_Ex(
+    _Out_opt_ PLOG_CONF plcLogConf,
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
@@ -3880,7 +4287,8 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
     ULONG ulTag;
     PLOG_CONF_INFO pLogConfInfo;
 
-    FIXME("%p %lx %lx %lx\n", plcLogConf, dnDevInst, ulFlags, hMachine);
+    FIXME("CM_Get_First_Log_Conf_Ex(%p %lx %lx %lx)\n",
+          plcLogConf, dnDevInst, ulFlags, hMachine);
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVINST;
@@ -3949,10 +4357,15 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
 /***********************************************************************
  * CM_Get_Global_State [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Global_State(
-    PULONG pulState, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_Global_State(
+    _Out_ PULONG pulState,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lx\n", pulState, ulFlags);
+    TRACE("CM_Get_Global_State(%p %lx)\n",
+          pulState, ulFlags);
+
     return CM_Get_Global_State_Ex(pulState, ulFlags, NULL);
 }
 
@@ -3960,13 +4373,18 @@ CONFIGRET WINAPI CM_Get_Global_State(
 /***********************************************************************
  * CM_Get_Global_State_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_Global_State_Ex(
-    PULONG pulState, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_Global_State_Ex(
+    _Out_ PULONG pulState,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    TRACE("%p %lx %lx\n", pulState, ulFlags, hMachine);
+    TRACE("CM_Get_Global_State_Ex(%p %lx %lx)\n",
+          pulState, ulFlags, hMachine);
 
     if (pulState == NULL)
         return CR_INVALID_POINTER;
@@ -4003,12 +4421,16 @@ CONFIGRET WINAPI CM_Get_Global_State_Ex(
 /***********************************************************************
  * CM_Get_HW_Prof_FlagsA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_HW_Prof_FlagsA(
-    DEVINSTID_A szDevInstName, ULONG ulHardwareProfile, PULONG pulValue,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_HW_Prof_FlagsA(
+    _In_ DEVINSTID_A szDevInstName,
+    _In_ ULONG ulHardwareProfile,
+    _Out_ PULONG pulValue,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%s %lu %p %lx\n", szDevInstName,
-          ulHardwareProfile, pulValue, ulFlags);
+    TRACE("CM_Get_HW_Prof_FlagsA(%s %lu %p %lx)\n",
+          debugstr_a(szDevInstName), ulHardwareProfile, pulValue, ulFlags);
 
     return CM_Get_HW_Prof_Flags_ExA(szDevInstName, ulHardwareProfile,
                                     pulValue, ulFlags, NULL);
@@ -4018,12 +4440,16 @@ CONFIGRET WINAPI CM_Get_HW_Prof_FlagsA(
 /***********************************************************************
  * CM_Get_HW_Prof_FlagsW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_HW_Prof_FlagsW(
-    DEVINSTID_W szDevInstName, ULONG ulHardwareProfile, PULONG pulValue,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Get_HW_Prof_FlagsW(
+    _In_ DEVINSTID_W szDevInstName,
+    _In_ ULONG ulHardwareProfile,
+    _Out_ PULONG pulValue,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%s %lu %p %lx\n", debugstr_w(szDevInstName),
-          ulHardwareProfile, pulValue, ulFlags);
+    TRACE("CM_Get_HW_Prof_FlagsW(%s %lu %p %lx)\n",
+          debugstr_w(szDevInstName), ulHardwareProfile, pulValue, ulFlags);
 
     return CM_Get_HW_Prof_Flags_ExW(szDevInstName, ulHardwareProfile,
                                     pulValue, ulFlags, NULL);
@@ -4033,15 +4459,20 @@ CONFIGRET WINAPI CM_Get_HW_Prof_FlagsW(
 /***********************************************************************
  * CM_Get_HW_Prof_Flags_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExA(
-    DEVINSTID_A szDevInstName, ULONG ulHardwareProfile, PULONG pulValue,
-    ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_HW_Prof_Flags_ExA(
+    _In_ DEVINSTID_A szDevInstName,
+    _In_ ULONG ulHardwareProfile,
+    _Out_ PULONG pulValue,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     DEVINSTID_W pszDevIdW = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("%s %lu %p %lx %lx\n", szDevInstName,
-          ulHardwareProfile, pulValue, ulFlags, hMachine);
+    TRACE("CM_Get_HW_Prof_Flags_ExA(%s %lu %p %lx %lx)\n",
+          debugstr_a(szDevInstName), ulHardwareProfile, pulValue, ulFlags, hMachine);
 
     if (szDevInstName != NULL)
     {
@@ -4062,15 +4493,20 @@ CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExA(
 /***********************************************************************
  * CM_Get_HW_Prof_Flags_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExW(
-    DEVINSTID_W szDevInstName, ULONG ulHardwareProfile, PULONG pulValue,
-    ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Get_HW_Prof_Flags_ExW(
+    _In_ DEVINSTID_W szDevInstName,
+    _In_ ULONG ulHardwareProfile,
+    _Out_ PULONG pulValue,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    FIXME("%s %lu %p %lx %lx\n", debugstr_w(szDevInstName),
-          ulHardwareProfile, pulValue, ulFlags, hMachine);
+    FIXME("CM_Get_HW_Prof_Flags_ExW(%s %lu %p %lx %lx)\n",
+          debugstr_w(szDevInstName), ulHardwareProfile, pulValue, ulFlags, hMachine);
 
     if ((szDevInstName == NULL) || (pulValue == NULL))
         return CR_INVALID_POINTER;
@@ -4694,6 +5130,7 @@ CM_Intersect_Range_List(
 {
     FIXME("CM_Intersect_Range_List(%p %p %p %lx)\n",
           rlhOld1, rlhOld2, rlhNew, ulFlags);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -4711,6 +5148,7 @@ CM_Invert_Range_List(
 {
     FIXME("CM_Invert_Range_List(%p %p %I64u %lx)\n",
           rlhOld, rlhNew, ullMaxValue, ulFlags);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -4725,6 +5163,7 @@ CM_Is_Dock_Station_Present(
 {
     TRACE("CM_Is_Dock_Station_Present(%p)\n",
           pbPresent);
+
     return CM_Is_Dock_Station_Present_Ex(pbPresent, NULL);
 }
 
@@ -4786,6 +5225,7 @@ CM_Is_Version_Available(
 {
     TRACE("CM_Is_Version_Available(%hu)\n",
           wVersion);
+
     return CM_Is_Version_Available_Ex(wVersion, NULL);
 }
 
@@ -4850,6 +5290,7 @@ CM_Locate_DevNodeA(
 {
     TRACE("CM_Locate_DevNodeA(%p %s %lu)\n",
           pdnDevInst, pDeviceID, ulFlags);
+
     return CM_Locate_DevNode_ExA(pdnDevInst, pDeviceID, ulFlags, NULL);
 }
 
@@ -4866,6 +5307,7 @@ CM_Locate_DevNodeW(
 {
     TRACE("CM_Locate_DevNodeW(%p %s %lu)\n",
           pdnDevInst, debugstr_w(pDeviceID), ulFlags);
+
     return CM_Locate_DevNode_ExW(pdnDevInst, pDeviceID, ulFlags, NULL);
 }
 
@@ -5004,6 +5446,7 @@ CM_Merge_Range_List(
 {
     FIXME("CM_Merge_Range_List(%p %p %p %lx)\n",
           rlhOld1, rlhOld2, rlhNew, ulFlags);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -5024,6 +5467,7 @@ CM_Modify_Res_Des(
     TRACE("CM_Modify_Res_Des(%p %p %lx %p %lu %lx)\n",
           prdResDes, rdResDes, ResourceID, ResourceData,
           ResourceLen, ulFlags);
+
     return CM_Modify_Res_Des_Ex(prdResDes, rdResDes, ResourceID, ResourceData,
                                 ResourceLen, ulFlags, NULL);
 }
@@ -5046,6 +5490,7 @@ CM_Modify_Res_Des_Ex(
     FIXME("CM_Modify_Res_Des_Ex(%p %p %lx %p %lu %lx %lx)\n",
           prdResDes, rdResDes, ResourceID, ResourceData,
           ResourceLen, ulFlags, hMachine);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -5062,6 +5507,7 @@ CM_Move_DevNode(
 {
     TRACE("CM_Move_DevNode(%lx %lx %lx)\n",
           dnFromDevInst, dnToDevInst, ulFlags);
+
     return CM_Move_DevNode_Ex(dnFromDevInst, dnToDevInst, ulFlags, NULL);
 }
 
@@ -5150,6 +5596,7 @@ CM_Next_Range(
 {
     FIXME("CM_Next_Range(%p %p %p %lx)\n",
           preElement, pullStart, pullEnd, ulFlags);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -5353,6 +5800,7 @@ CM_Open_DevNode_Key(
 {
     TRACE("CM_Open_DevNode_Key(%lx %lx %lu %lx %p %lx)\n",
           dnDevNode, samDesired, ulHardwareProfile, Disposition, phkDevice, ulFlags);
+
     return CM_Open_DevNode_Key_Ex(dnDevNode, samDesired, ulHardwareProfile,
                                   Disposition, phkDevice, ulFlags, NULL);
 }
@@ -5509,12 +5957,17 @@ done:
 /***********************************************************************
  * CM_Query_And_Remove_SubTreeA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Query_And_Remove_SubTreeA(
-    DEVINST dnAncestor, PPNP_VETO_TYPE pVetoType, LPSTR pszVetoName,
-    ULONG ulNameLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Query_And_Remove_SubTreeA(
+    _In_ DEVINST dnAncestor,
+    _Out_opt_ PPNP_VETO_TYPE pVetoType,
+    _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+    _In_ ULONG ulNameLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %p %s %lu %lx\n", dnAncestor, pVetoType, pszVetoName,
-          ulNameLength, ulFlags);
+    TRACE("CM_Query_And_Remove_SubTreeA(%lx %p %s %lu %lx)\n",
+          dnAncestor, pVetoType, pszVetoName, ulNameLength, ulFlags);
 
     return CM_Query_And_Remove_SubTree_ExA(dnAncestor, pVetoType, pszVetoName,
                                            ulNameLength, ulFlags, NULL);
@@ -5524,12 +5977,17 @@ CONFIGRET WINAPI CM_Query_And_Remove_SubTreeA(
 /***********************************************************************
  * CM_Query_And_Remove_SubTreeW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Query_And_Remove_SubTreeW(
-    DEVINST dnAncestor, PPNP_VETO_TYPE pVetoType, LPWSTR pszVetoName,
-    ULONG ulNameLength, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Query_And_Remove_SubTreeW(
+    _In_ DEVINST dnAncestor,
+    _Out_opt_ PPNP_VETO_TYPE pVetoType,
+    _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
+    _In_ ULONG ulNameLength,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %p %s %lu %lx\n", dnAncestor, pVetoType,
-          debugstr_w(pszVetoName), ulNameLength, ulFlags);
+    TRACE("CM_Query_And_Remove_SubTreeW(%lx %p %s %lu %lx)\n",
+          dnAncestor, pVetoType, debugstr_w(pszVetoName), ulNameLength, ulFlags);
 
     return CM_Query_And_Remove_SubTree_ExW(dnAncestor, pVetoType, pszVetoName,
                                            ulNameLength, ulFlags, NULL);
@@ -5539,15 +5997,22 @@ CONFIGRET WINAPI CM_Query_And_Remove_SubTreeW(
 /***********************************************************************
  * CM_Query_And_Remove_SubTree_ExA [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Query_And_Remove_SubTree_ExA(
-    DEVINST dnAncestor, PPNP_VETO_TYPE pVetoType, LPSTR pszVetoName,
-    ULONG ulNameLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Query_And_Remove_SubTree_ExA(
+    _In_ DEVINST dnAncestor,
+    _Out_opt_ PPNP_VETO_TYPE pVetoType,
+    _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+    _In_ ULONG ulNameLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     LPWSTR lpLocalVetoName;
     CONFIGRET ret;
 
-    TRACE("%lx %p %s %lu %lx %lx\n", dnAncestor, pVetoType, pszVetoName,
-          ulNameLength, ulFlags, hMachine);
+    TRACE("CM_Query_And_Remove_SubTree_ExA(%lx %p %s %lu %lx %lx)\n",
+          dnAncestor, pVetoType, debugstr_a(pszVetoName), ulNameLength,
+          ulFlags, hMachine);
 
     if (pszVetoName == NULL && ulNameLength == 0)
         return CR_INVALID_POINTER;
@@ -5580,17 +6045,24 @@ CONFIGRET WINAPI CM_Query_And_Remove_SubTree_ExA(
 /***********************************************************************
  * CM_Query_And_Remove_SubTree_ExW [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Query_And_Remove_SubTree_ExW(
-    DEVINST dnAncestor, PPNP_VETO_TYPE pVetoType, LPWSTR pszVetoName,
-    ULONG ulNameLength, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Query_And_Remove_SubTree_ExW(
+    _In_ DEVINST dnAncestor,
+    _Out_opt_ PPNP_VETO_TYPE pVetoType,
+    _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
+    _In_ ULONG ulNameLength,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("%lx %p %s %lu %lx %lx\n", dnAncestor, pVetoType,
-          debugstr_w(pszVetoName), ulNameLength, ulFlags, hMachine);
+    TRACE("CM_Query_And_Remove_SubTree_ExW(%lx %p %s %lu %lx %lx)\n",
+          dnAncestor, pVetoType, debugstr_w(pszVetoName), ulNameLength,
+          ulFlags, hMachine);
 
     if (dnAncestor == 0)
         return CR_INVALID_DEVNODE;
@@ -5643,12 +6115,17 @@ CONFIGRET WINAPI CM_Query_And_Remove_SubTree_ExW(
 /***********************************************************************
  * CM_Query_Arbitrator_Free_Data [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Query_Arbitrator_Free_Data(
-    PVOID pData, ULONG DataLen, DEVINST dnDevInst, RESOURCEID ResourceID,
-    ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Query_Arbitrator_Free_Data(
+    _Out_writes_bytes_(DataLen) PVOID pData,
+    _In_ ULONG DataLen,
+    _In_ DEVINST dnDevInst,
+    _In_ RESOURCEID ResourceID,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lu %lx %lu 0x%08lx\n", pData, DataLen, dnDevInst,
-          ResourceID, ulFlags);
+    TRACE("CM_Query_Arbitrator_Free_Data(%p %lu %lx %lu 0x%08lx)\n",
+          pData, DataLen, dnDevInst, ResourceID, ulFlags);
 
     return CM_Query_Arbitrator_Free_Data_Ex(pData, DataLen, dnDevInst,
                                             ResourceID, ulFlags, NULL);
@@ -5658,21 +6135,23 @@ CONFIGRET WINAPI CM_Query_Arbitrator_Free_Data(
 /***********************************************************************
  * CM_Query_Arbitrator_Free_Data_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Query_Arbitrator_Free_Data_Ex(
-  OUT PVOID pData,
-  IN ULONG DataLen,
-  IN DEVINST dnDevInst,
-  IN RESOURCEID ResourceID,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Query_Arbitrator_Free_Data_Ex(
+    _Out_writes_bytes_(DataLen) PVOID pData,
+    _In_ ULONG DataLen,
+    _In_ DEVINST dnDevInst,
+    _In_ RESOURCEID ResourceID,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("%p %lu %lx %lu 0x%08lx %p\n", pData, DataLen, dnDevInst,
-          ResourceID, ulFlags, hMachine);
+    TRACE("CM_Query_Arbitrator_Free_Data_Ex(%p %lu %lx %lu 0x%08lx %p)\n",
+          pData, DataLen, dnDevInst, ResourceID, ulFlags, hMachine);
 
     if (pData == NULL || DataLen == 0)
         return CR_INVALID_POINTER;
@@ -5725,10 +6204,16 @@ CONFIGRET WINAPI CM_Query_Arbitrator_Free_Data_Ex(
 /***********************************************************************
  * CM_Query_Arbitrator_Free_Size [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Query_Arbitrator_Free_Size(
-    PULONG pulSize, DEVINST dnDevInst, RESOURCEID ResourceID, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Query_Arbitrator_Free_Size(
+    _Out_ PULONG pulSize,
+    _In_ DEVINST dnDevInst,
+    _In_ RESOURCEID ResourceID,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%p %lu %lx 0x%08lx\n", pulSize, dnDevInst,ResourceID, ulFlags);
+    TRACE("CM_Query_Arbitrator_Free_Size(%p %lu %lx 0x%08lx)\n",
+          pulSize, dnDevInst,ResourceID, ulFlags);
 
     return CM_Query_Arbitrator_Free_Size_Ex(pulSize, dnDevInst, ResourceID,
                                             ulFlags, NULL);
@@ -5738,17 +6223,22 @@ CONFIGRET WINAPI CM_Query_Arbitrator_Free_Size(
 /***********************************************************************
  * CM_Query_Arbitrator_Free_Size_Ex [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Query_Arbitrator_Free_Size_Ex(
-      PULONG pulSize, DEVINST dnDevInst, RESOURCEID ResourceID,
-      ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Query_Arbitrator_Free_Size_Ex(
+    _Out_ PULONG pulSize,
+    _In_ DEVINST dnDevInst,
+    _In_ RESOURCEID ResourceID,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    TRACE("%p %lu %lx 0x%08lx %p\n", pulSize, dnDevInst,ResourceID, ulFlags,
-          hMachine);
+    TRACE("CM_Query_Arbitrator_Free_Size_Ex(%p %lu %lx 0x%08lx %p)\n",
+          pulSize, dnDevInst,ResourceID, ulFlags, hMachine);
 
     if (pulSize == NULL)
         return CR_INVALID_POINTER;
@@ -5802,10 +6292,15 @@ CONFIGRET WINAPI CM_Query_Arbitrator_Free_Size_Ex(
  *
  * This function is obsolete in Windows XP and above.
  */
-CONFIGRET WINAPI CM_Query_Remove_SubTree(
-    DEVINST dnAncestor, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Query_Remove_SubTree(
+    _In_ DEVINST dnAncestor,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %lx\n", dnAncestor, ulFlags);
+    TRACE("CM_Query_Remove_SubTree(%lx %lx)\n",
+          dnAncestor, ulFlags);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -5815,10 +6310,16 @@ CONFIGRET WINAPI CM_Query_Remove_SubTree(
  *
  * This function is obsolete in Windows XP and above.
  */
-CONFIGRET WINAPI CM_Query_Remove_SubTree_Ex(
-    DEVINST dnAncestor, ULONG ulFlags, HMACHINE hMachine)
+CONFIGRET
+WINAPI
+CM_Query_Remove_SubTree_Ex(
+    _In_ DEVINST dnAncestor,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
-    TRACE("%lx %lx %lx\n", dnAncestor, ulFlags, hMachine);
+    TRACE("CM_Query_Remove_SubTree_Ex(%lx %lx %lx)\n",
+          dnAncestor, ulFlags, hMachine);
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -5826,10 +6327,15 @@ CONFIGRET WINAPI CM_Query_Remove_SubTree_Ex(
 /***********************************************************************
  * CM_Reenumerate_DevNode [SETUPAPI.@]
  */
-CONFIGRET WINAPI CM_Reenumerate_DevNode(
-    DEVINST dnDevInst, ULONG ulFlags)
+CONFIGRET
+WINAPI
+CM_Reenumerate_DevNode(
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags)
 {
-    TRACE("%lx %lx\n", dnDevInst, ulFlags);
+    TRACE("CM_Reenumerate_DevNode(%lx %lx)\n",
+          dnDevInst, ulFlags);
+
     return CM_Reenumerate_DevNode_Ex(dnDevInst, ulFlags, NULL);
 }
 
@@ -5839,14 +6345,17 @@ CONFIGRET WINAPI CM_Reenumerate_DevNode(
  */
 CONFIGRET WINAPI
 CM_Reenumerate_DevNode_Ex(
-    DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+    _In_ DEVINST dnDevInst,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
     LPWSTR lpDevInst;
     CONFIGRET ret;
 
-    FIXME("%lx %lx %lx\n", dnDevInst, ulFlags, hMachine);
+    FIXME("CM_Reenumerate_DevNode_Ex(%lx %lx %lx)\n",
+          dnDevInst, ulFlags, hMachine);
 
     if (dnDevInst == 0)
         return CR_INVALID_DEVNODE;
