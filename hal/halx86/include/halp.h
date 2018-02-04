@@ -648,6 +648,22 @@ HalpAllocPhysicalMemory(
 
 PVOID
 NTAPI
+HalpMapPhysicalMemory64Vista(
+    IN PHYSICAL_ADDRESS PhysicalAddress,
+    IN PFN_COUNT PageCount,
+    IN BOOLEAN FlushCurrentTLB
+);
+
+VOID
+NTAPI
+HalpUnmapVirtualAddressVista(
+    IN PVOID VirtualAddress,
+    IN PFN_COUNT NumberPages,
+    IN BOOLEAN FlushCurrentTLB
+);
+
+PVOID
+NTAPI
 HalpMapPhysicalMemory64(
     IN PHYSICAL_ADDRESS PhysicalAddress,
     IN PFN_COUNT PageCount
