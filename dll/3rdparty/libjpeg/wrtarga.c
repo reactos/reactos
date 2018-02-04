@@ -2,7 +2,7 @@
  * wrtarga.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * Modified 2015 by Guido Vollbeding.
+ * Modified 2015-2017 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -212,8 +212,8 @@ METHODDEF(void)
 finish_output_tga (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo)
 {
   /* Make sure we wrote the output file OK */
-  fflush(dinfo->output_file);
-  if (ferror(dinfo->output_file))
+  JFFLUSH(dinfo->output_file);
+  if (JFERROR(dinfo->output_file))
     ERREXIT(cinfo, JERR_FILE_WRITE);
 }
 

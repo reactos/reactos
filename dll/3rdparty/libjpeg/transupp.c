@@ -1,7 +1,7 @@
 /*
  * transupp.c
  *
- * Copyright (C) 1997-2013, Thomas G. Lane, Guido Vollbeding.
+ * Copyright (C) 1997-2017, Thomas G. Lane, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -198,25 +198,76 @@ do_wipe (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
 	 JDIMENSION drop_width, JDIMENSION drop_height)
 /* Wipe - drop content of specified area, fill with zero (neutral gray) */
 {
-  JDIMENSION comp_width, comp_height;
-  JDIMENSION blk_y, x_wipe_blocks, y_wipe_blocks;
+  JDIMENSION x_wipe_blocks, wipe_width;
+  JDIMENSION y_wipe_blocks, wipe_bottom;
   int ci, offset_y;
   JBLOCKARRAY buffer;
   jpeg_component_info *compptr;
 
   for (ci = 0; ci < dstinfo->num_components; ci++) {
     compptr = dstinfo->comp_info + ci;
-    comp_width = drop_width * compptr->h_samp_factor;
-    comp_height = drop_height * compptr->v_samp_factor;
     x_wipe_blocks = x_crop_offset * compptr->h_samp_factor;
+    wipe_width = drop_width * compptr->h_samp_factor;
     y_wipe_blocks = y_crop_offset * compptr->v_samp_factor;
-    for (blk_y = 0; blk_y < comp_height; blk_y += compptr->v_samp_factor) {
+    wipe_bottom = drop_height * compptr->v_samp_factor + y_wipe_blocks;
+    for (; y_wipe_blocks < wipe_bottom;
+	 y_wipe_blocks += compptr->v_samp_factor) {
       buffer = (*srcinfo->mem->access_virt_barray)
-	((j_common_ptr) srcinfo, src_coef_arrays[ci], blk_y + y_wipe_blocks,
+	((j_common_ptr) srcinfo, src_coef_arrays[ci], y_wipe_blocks,
 	 (JDIMENSION) compptr->v_samp_factor, TRUE);
       for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
 	FMEMZERO(buffer[offset_y] + x_wipe_blocks,
-		 comp_width * SIZEOF(JBLOCK));
+		 wipe_width * SIZEOF(JBLOCK));
+      }
+    }
+  }
+}
+
+
+LOCAL(void)
+do_flatten (j_decompress_ptr srcinfo, j_compress_ptr dstinfo,
+	    JDIMENSION x_crop_offset, JDIMENSION y_crop_offset,
+	    jvirt_barray_ptr *src_coef_arrays,
+	    JDIMENSION drop_width, JDIMENSION drop_height)
+/* Flatten - drop content of specified area, similar to wipe,
+ * but fill with average of adjacent blocks, instead of zero.
+ */
+{
+  JDIMENSION x_wipe_blocks, wipe_width, wipe_right;
+  JDIMENSION y_wipe_blocks, wipe_bottom, blk_x;
+  int ci, offset_y, dc_left_value, dc_right_value, average;
+  JBLOCKARRAY buffer;
+  jpeg_component_info *compptr;
+
+  for (ci = 0; ci < dstinfo->num_components; ci++) {
+    compptr = dstinfo->comp_info + ci;
+    x_wipe_blocks = x_crop_offset * compptr->h_samp_factor;
+    wipe_width = drop_width * compptr->h_samp_factor;
+    wipe_right = wipe_width + x_wipe_blocks;
+    y_wipe_blocks = y_crop_offset * compptr->v_samp_factor;
+    wipe_bottom = drop_height * compptr->v_samp_factor + y_wipe_blocks;
+    for (; y_wipe_blocks < wipe_bottom;
+	 y_wipe_blocks += compptr->v_samp_factor) {
+      buffer = (*srcinfo->mem->access_virt_barray)
+	((j_common_ptr) srcinfo, src_coef_arrays[ci], y_wipe_blocks,
+	 (JDIMENSION) compptr->v_samp_factor, TRUE);
+      for (offset_y = 0; offset_y < compptr->v_samp_factor; offset_y++) {
+	FMEMZERO(buffer[offset_y] + x_wipe_blocks,
+		 wipe_width * SIZEOF(JBLOCK));
+	if (x_wipe_blocks > 0) {
+	  dc_left_value = buffer[offset_y][x_wipe_blocks - 1][0];
+	  if (wipe_right < compptr->width_in_blocks) {
+	    dc_right_value = buffer[offset_y][wipe_right][0];
+	    average = (dc_left_value + dc_right_value) >> 1;
+	  } else {
+	    average = dc_left_value;
+	  }
+	} else if (wipe_right < compptr->width_in_blocks) {
+	  average = buffer[offset_y][wipe_right][0];
+	} else continue;
+	for (blk_x = x_wipe_blocks; blk_x < wipe_right; blk_x++) {
+	  buffer[offset_y][blk_x][0] = (JCOEF) average;
+	}
       }
     }
   }
@@ -1626,8 +1677,12 @@ jtransform_execute_transform (j_decompress_ptr srcinfo,
 	       src_coef_arrays, dst_coef_arrays);
     break;
   case JXFORM_WIPE:
-    do_wipe(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
-	    src_coef_arrays, info->drop_width, info->drop_height);
+    if (info->crop_width_set != JCROP_FORCE)
+      do_wipe(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
+	      src_coef_arrays, info->drop_width, info->drop_height);
+    else
+      do_flatten(srcinfo, dstinfo, info->x_crop_offset, info->y_crop_offset,
+		 src_coef_arrays, info->drop_width, info->drop_height);
     break;
   }
 }

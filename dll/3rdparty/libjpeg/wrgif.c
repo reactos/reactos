@@ -2,7 +2,7 @@
  * wrgif.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 2015 by Guido Vollbeding.
+ * Modified 2015-2017 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -347,8 +347,8 @@ finish_output_gif (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo)
   /* Write the GIF terminator mark */
   putc(';', dest->pub.output_file);
   /* Make sure we wrote the output file OK */
-  fflush(dest->pub.output_file);
-  if (ferror(dest->pub.output_file))
+  JFFLUSH(dest->pub.output_file);
+  if (JFERROR(dest->pub.output_file))
     ERREXIT(cinfo, JERR_FILE_WRITE);
 }
 
