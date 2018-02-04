@@ -344,7 +344,7 @@ ArchRestoreProcessorFeatures (
     if (ArchXCr0BitsToClear)
     {
         /* Clear them */
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
         __xsetbv(0, __xgetbv(0) & ~ArchXCr0BitsToClear);
 #endif
         ArchXCr0BitsToClear = 0;
