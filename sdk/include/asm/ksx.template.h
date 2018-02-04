@@ -125,7 +125,7 @@ RAW("#else"),
 {TYPE_CONSTANT, "SYNCH_LEVEL", (IPI_LEVEL - 2)},
 RAW("#endif"),
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN8)
 HEADER("Entropy Timing Constants"),
 CONSTANT(KENTROPY_TIMING_INTERRUPTS_PER_BUFFER),
 CONSTANT(KENTROPY_TIMING_BUFFER_MASK),
@@ -797,7 +797,9 @@ SIZE(KernelThreadObjectLength, KTHREAD),
 HEADER("KTIMER"),
 OFFSET(TiType, KTIMER, Header.Type),
 OFFSET(TiSize, KTIMER, Header.Size),
-OFFSET(TiInserted, KTIMER, Header.Inserted), // not in win 10
+#if (NTDDI_VERSION < NTDDI_WIN7)
+OFFSET(TiInserted, KTIMER, Header.Inserted),
+#endif
 OFFSET(TiSignalState, KTIMER, Header.SignalState),
 OFFSET(TiDueTime, KTIMER, DueTime),
 OFFSET(TiTimerListEntry, KTIMER, TimerListEntry),

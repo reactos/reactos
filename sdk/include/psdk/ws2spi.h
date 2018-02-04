@@ -880,7 +880,7 @@ WSCGetProviderInfo(
   _In_ LPGUID lpProviderId,
   _In_ WSC_PROVIDER_INFO_TYPE InfoType,
   _Out_writes_bytes_to_(*InfoSize, *InfoSize) PBYTE Info,
-  _Inout_ *InfoSize,
+  _Inout_ size_t *InfoSize,
   _In_ DWORD Flags,
   _Out_ LPINT lpErrno);
 

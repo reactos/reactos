@@ -4352,7 +4352,7 @@ typedef HBITMAP
 #endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
     _Out_ HANDLE* phSharedSurface);
 typedef FN_DrvCreateDeviceBitmapEx *PFN_DrvCreateDeviceBitmapEx;
-extern DrvCreateDeviceBitmapEx DrvCreateDeviceBitmapEx
+extern FN_DrvCreateDeviceBitmapEx DrvCreateDeviceBitmapEx;
 
 typedef VOID
 (APIENTRY FN_DrvDeleteDeviceBitmapEx)(

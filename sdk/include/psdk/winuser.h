@@ -3446,6 +3446,14 @@ typedef struct tagSOUNDSENTRYW {
 	DWORD iWindowsEffectOrdinal;
 } SOUNDSENTRYW,*LPSOUNDSENTRYW;
 
+#if (_WIN32_WINNT >= 0x0600)
+typedef struct tagAUDIODESCRIPTION {
+	UINT cbSize;
+	BOOL Enabled;
+	LCID Locale;
+} AUDIODESCRIPTION, *LPAUDIODESCRIPTION;
+#endif
+
 typedef struct tagSTICKYKEYS {
 	DWORD cbSize;
 	DWORD dwFlags;

@@ -344,7 +344,7 @@ typedef struct STRUCT(_TEB)
 #endif
     PTR(PVOID)             WinSockData;
     ULONG                  GdiBatchCount;
-#if (NTDDI_VERSION >= NTDDI_WIN10)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
     union
     {
         PROCESSOR_NUMBER   CurrentIdealProcessor;
