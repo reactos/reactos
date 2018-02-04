@@ -232,7 +232,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     nid.cbSize = sizeof(nid);
     nid.uID = pContext->uID;
     nid.hWnd = pContext->hwndStatusDlg;
-    nid.uVersion = 3;
+    nid.uVersion = NOTIFYICON_VERSION;
 
     if (pContext->pNet->GetProperties(&pProperties) == S_OK)
     {
@@ -1041,7 +1041,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
                 nid.cbSize = sizeof(nid);
                 nid.uID = Index++;
                 nid.uFlags = NIF_MESSAGE;
-                nid.uVersion = 3;
+                nid.uVersion = NOTIFYICON_VERSION;
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
 
