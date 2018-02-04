@@ -107,8 +107,8 @@ private:
         Info(InternalIconData * source)
         {
             pSource = source;
-            StrNCpy(szInfo, source->szInfo, _countof(szInfo));
-            StrNCpy(szInfoTitle, source->szInfoTitle, _countof(szInfoTitle));
+            StringCchCopy(szInfo, _countof(szInfo), source->szInfo);
+            StringCchCopy(szInfoTitle, _countof(szInfoTitle), source->szInfoTitle);
             uIcon = source->dwInfoFlags & NIIF_ICON_MASK;
             if (source->dwInfoFlags == NIIF_USER)
                 uIcon = reinterpret_cast<WPARAM>(source->hIcon);
@@ -775,8 +775,8 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     if (iconData->uFlags & NIF_INFO)
     {
         // NOTE: In Vista+, the uTimeout value is disregarded, and the accessibility settings are used always.
-        StrNCpy(notifyItem->szInfo, iconData->szInfo, _countof(notifyItem->szInfo));
-        StrNCpy(notifyItem->szInfoTitle, iconData->szInfoTitle, _countof(notifyItem->szInfo));
+        StringCchCopy(notifyItem->szInfo, _countof(notifyItem->szInfo), iconData->szInfo);
+        StringCchCopy(notifyItem->szInfoTitle, _countof(notifyItem->szInfoTitle), iconData->szInfoTitle);
         notifyItem->dwInfoFlags = iconData->dwInfoFlags;
         notifyItem->uTimeout = iconData->uTimeout;
     }
@@ -913,8 +913,8 @@ BOOL CNotifyToolbar::UpdateButton(_In_ CONST NOTIFYICONDATA *iconData)
     if (iconData->uFlags & NIF_INFO)
     {
         // NOTE: In Vista+, the uTimeout value is disregarded, and the accessibility settings are used always.
-        StrNCpy(notifyItem->szInfo, iconData->szInfo, _countof(notifyItem->szInfo));
-        StrNCpy(notifyItem->szInfoTitle, iconData->szInfoTitle, _countof(notifyItem->szInfo));
+        StringCchCopy(notifyItem->szInfo, _countof(notifyItem->szInfo), iconData->szInfo);
+        StringCchCopy(notifyItem->szInfoTitle, _countof(notifyItem->szInfoTitle), iconData->szInfoTitle);
         notifyItem->dwInfoFlags = iconData->dwInfoFlags;
         notifyItem->uTimeout = iconData->uTimeout;
     }
