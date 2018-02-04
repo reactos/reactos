@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Spider Solitaire
- * LICENSE:    See COPYING in top level directory
- * FILE:       base/applications/games/spider/lang/tr-TR.rc
- * PURPOSE:    Turkish Resource File for ReactOS Spider Solitaire
- * TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ * PROJECT:     ReactOS Spider Solitaire
+ * LICENSE:     See COPYING in top level directory
+ * FILE:        base/applications/games/spider/lang/tr-TR.rc
+ * PURPOSE:     Turkish Resource File for ReactOS Spider Solitaire
+ * TRANSLATORS: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -11,7 +11,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Kâğıt Arkalığı Seç"
+CAPTION "Kağıt Arkalığı Seç"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -47,8 +47,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME "Örümcek Solitaire"
-    IDS_SPI_ABOUT "Örümcek Solitaire, Gregor Schneider eliyle yapılmıştır.\n\nCardLib sürümü: 1.0"
+    IDS_SPI_NAME "Spider Solitaire"
+    IDS_SPI_ABOUT "Spider Solitaire, Gregor Schneider tarafından yapılmıştır.\n\nCardLib sürümü: 1.0"
     IDS_SPI_QUIT "Bu oyundan çıkılsın mı?"
     IDS_SPI_WIN "Tebrikler, kazandınız!"
     IDS_SPI_DEAL "Yine dağıtılsın mı?"
@@ -62,14 +62,14 @@ BEGIN
     BEGIN
         MENUITEM "&Dağıt\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "D&esteler...", IDM_GAME_DECK
+        MENUITEM "D&esteler", IDM_GAME_DECK
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_GAME_EXIT
     END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&İçindekiler\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&Hakkında", IDM_HELP_ABOUT
     END
 END
 
