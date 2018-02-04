@@ -163,8 +163,16 @@
 
 /* Import and Export Specifiers */
 
-/* Done the same way as in windef.h for now */
-#define DECLSPEC_IMPORT __declspec(dllimport) // MIDL?
+#ifndef DECLSPEC_IMPORT
+ #define DECLSPEC_IMPORT __declspec(dllimport) // MIDL?
+#endif /* DECLSPEC_IMPORT */
+
+#ifndef DECLSPEC_EXPORT
+ #if defined(__REACTOS__) || defined(__WINESRC__)
+  #define DECLSPEC_EXPORT __declspec(dllexport)
+ #endif
+#endif /* DECLSPEC_EXPORT */
+
 #define DECLSPEC_NORETURN __declspec(noreturn)
 
 #ifndef DECLSPEC_ADDRSAFE
