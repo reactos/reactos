@@ -341,7 +341,7 @@ done:
 
 BOOL
 IsValidRangeList(
-    _In_ PINTERNAL_RANGE_LIST pRangeList)
+    _In_opt_ PINTERNAL_RANGE_LIST pRangeList)
 {
     BOOL bValid = TRUE;
 
@@ -351,6 +351,30 @@ IsValidRangeList(
     _SEH2_TRY
     {
         if (pRangeList->ulMagic != RANGE_LIST_MAGIC)
+            bValid = FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bValid = FALSE;
+    }
+    _SEH2_END;
+
+    return bValid;
+}
+
+
+BOOL
+IsValidLogConf(
+    _In_opt_ PLOG_CONF_INFO pLogConfInfo)
+{
+    BOOL bValid = TRUE;
+
+    if (pLogConfInfo == NULL)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        if (pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
             bValid = FALSE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2049,7 +2073,7 @@ CM_Free_Log_Conf_Ex(
         return CR_ACCESS_DENIED;
 
     pLogConfInfo = (PLOG_CONF_INFO)lcLogConfToBeFreed;
-    if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+    if (!IsValidLogConf(pLogConfInfo))
         return CR_INVALID_LOG_CONF;
 
     if (ulFlags != 0)
@@ -2103,7 +2127,7 @@ CM_Free_Log_Conf_Handle(
     TRACE("CM_Free_Log_Conf_Handle(%lx)\n", lcLogConf);
 
     pLogConfInfo = (PLOG_CONF_INFO)lcLogConf;
-    if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+    if (!IsValidLogConf(pLogConfInfo))
         return CR_INVALID_LOG_CONF;
 
     HeapFree(GetProcessHeap(), 0, pLogConfInfo);
@@ -4709,7 +4733,7 @@ CM_Get_Log_Conf_Priority_Ex(
           lcLogConf, pPriority, ulFlags, hMachine);
 
     pLogConfInfo = (PLOG_CONF_INFO)lcLogConf;
-    if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+    if (!IsValidLogConf(pLogConfInfo))
         return CR_INVALID_LOG_CONF;
 
     if (pPriority == NULL)
@@ -4800,7 +4824,7 @@ CM_Get_Next_Log_Conf_Ex(
         *plcLogConf = 0;
 
     pLogConfInfo = (PLOG_CONF_INFO)lcLogConf;
-    if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+    if (!IsValidLogConf(pLogConfInfo))
         return CR_INVALID_LOG_CONF;
 
     if (ulFlags != 0)
