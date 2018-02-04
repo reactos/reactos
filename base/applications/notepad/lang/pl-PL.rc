@@ -177,5 +177,5 @@ BEGIN
     STRING_LINE_COLUMN "Linia %d, kolumna %d"
     STRING_PRINTERROR "Nie można wydrukować pliku '%s'.\n\nUpewnij się, że drukarka jest włączona i poprawnie skonfigurowana."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Dokument tekstowy"
 END
