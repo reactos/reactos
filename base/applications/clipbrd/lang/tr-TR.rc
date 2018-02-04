@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -9,10 +9,10 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
         MENUITEM "&Aç...", CMD_OPEN
-        MENUITEM "A&yrı Sakla...", CMD_SAVE_AS
+        MENUITEM "Farklı &Kaydet...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", CMD_EXIT
     END
@@ -28,7 +28,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları", CMD_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine", CMD_ABOUT
+        MENUITEM "&Hakkında", CMD_ABOUT
     END
 END
 
@@ -52,7 +52,7 @@ BEGIN
     STRING_CF_DIB "DIB Bit Eşlem"
     STRING_CF_LOCALE "Yerli Veri"
     STRING_CF_ENHMETAFILE "Geliştirilmiş Metafile"
-    STRING_CF_METAFILEPICT "Metafile"
+    STRING_CF_METAFILEPICT "Meta dosyası"
     STRING_CF_PALETTE "Renklik"
     STRING_CF_DIBV5 "DIB Bit Eşlem (Sürüm 5)"
     STRING_CF_SYLK "Simgelik Bağlantı Biçimi"
@@ -63,5 +63,5 @@ END
 STRINGTABLE
 BEGIN
     ERROR_UNSUPPORTED_FORMAT "Pano görüntülenemeyen bir biçimdeki veri içeriyor."
-    ERROR_INVALID_FILE_FORMAT "Seçili kütük geçerli bir pano kütüğü değil."
+    ERROR_INVALID_FILE_FORMAT "Seçili dosya geçerli bir pano dosyası değil."
 END
