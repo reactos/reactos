@@ -81,8 +81,8 @@ extern "C" {
 #define NIF_MESSAGE	1
 #define NIF_ICON	2
 #define NIF_TIP	4
-#define NIF_STATE	8
 #if _WIN32_IE >= 0x0500
+#define NIF_STATE	8
 #define NIF_INFO	16
 #define NIS_HIDDEN	1
 #define NIS_SHAREDICON	2
@@ -92,6 +92,7 @@ extern "C" {
 #define NIIF_ERROR	3
 #define NIIF_USER	4
 #if _WIN32_IE >= 0x0600
+#define NIF_GUID	32
 #define NIIF_ICON_MASK	0xf
 #define NIIF_NOSOUND	0x10
 #endif /* _WIN32_IE >= 0x0600 */
