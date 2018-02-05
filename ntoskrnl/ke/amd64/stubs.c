@@ -167,20 +167,6 @@ KiSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
     return OldStackBase;
 }
 
-
-NTSTATUS
-NTAPI
-KeUserModeCallback(IN ULONG RoutineIndex,
-                   IN PVOID Argument,
-                   IN ULONG ArgumentLength,
-                   OUT PVOID *Result,
-                   OUT PULONG ResultLength)
-{
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
-}
-
 VOID
 FASTCALL
 KiIdleLoop(VOID)
@@ -426,17 +412,6 @@ KiSystemService(IN PKTHREAD Thread,
     __debugbreak();
 }
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-NtCallbackReturn
-( IN PVOID Result OPTIONAL, IN ULONG ResultLength, IN NTSTATUS Status )
-{
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
-}
-
 NTSTATUS
 NTAPI
 NtSetLdtEntries
@@ -455,19 +430,5 @@ NtVdmControl(IN ULONG ControlCode,
     /* Not supported */
     return STATUS_NOT_IMPLEMENTED;
 }
-
-NTSTATUS
-NTAPI
-KiCallUserMode(
-    IN PVOID *OutputBuffer,
-    IN PULONG OutputLength)
-{
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
-}
-
-ULONG ProcessCount;
-BOOLEAN CcPfEnablePrefetcher;
 
 

@@ -106,3 +106,293 @@ KiInitializeUserApc(
     TrapFrame->EFlags &= EFLAGS_USER_SANITIZE;
     TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
 }
+
+/*
+ * Stack layout for KiUserModeCallout:
+ * ----------------------------------
+ * KCALLOUT_FRAME.ResultLength    <= 2nd Parameter to KiCallUserMode
+ * KCALLOUT_FRAME.Result          <= 1st Parameter to KiCallUserMode
+ * KCALLOUT_FRAME.ReturnAddress   <= Return address of KiCallUserMode
+ * KCALLOUT_FRAME.Ebp             \
+ * KCALLOUT_FRAME.Ebx              | = non-volatile registers, pushed
+ * KCALLOUT_FRAME.Esi              |   by KiCallUserMode
+ * KCALLOUT_FRAME.Edi             /
+ * KCALLOUT_FRAME.CallbackStack
+ * KCALLOUT_FRAME.TrapFrame
+ * KCALLOUT_FRAME.InitialStack    <= CalloutFrame points here
+ * ----------------------------------
+ * ~~ optional alignment ~~
+ * ----------------------------------
+ * FX_SAVE_AREA
+ * ----------------------------------
+ * KTRAP_FRAME
+ * ----------------------------------
+ * ~~ begin of stack frame for KiUserModeCallout ~~
+ *
+ */
+NTSTATUS
+FASTCALL
+KiUserModeCallout(
+    _Out_ PKCALLOUT_FRAME CalloutFrame)
+{
+    PKTHREAD CurrentThread;
+    PKTRAP_FRAME TrapFrame;
+    KTRAP_FRAME CallbackTrapFrame;
+    PKIPCR Pcr;
+    ULONG_PTR InitialStack;
+    NTSTATUS Status;
+
+    /* Get the current thread */
+    CurrentThread = KeGetCurrentThread();
+
+    /* Check if we are at pasive level */
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    /* Check if we are attached or APCs are disabled */
+    ASSERT((CurrentThread->ApcStateIndex == OriginalApcEnvironment) &&
+        (CurrentThread->CombinedApcDisable == 0));
+
+    /* Align stack on a 16-byte boundary */
+    InitialStack = (ULONG_PTR)ALIGN_DOWN_POINTER_BY(CalloutFrame, 16);
+
+    /* Check if we have enough space on the stack */
+    if ((InitialStack - KERNEL_STACK_SIZE) < CurrentThread->StackLimit)
+    {
+        /* We don't, we'll have to grow our stack */
+        Status = MmGrowKernelStack((PVOID)InitialStack);
+
+        /* Quit if we failed */
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    /* Save the current callback stack and initial stack */
+    CalloutFrame->CallbackStack = (ULONG_PTR)CurrentThread->CallbackStack;
+    CalloutFrame->InitialStack = (ULONG_PTR)CurrentThread->InitialStack;
+
+    /* Get and save the trap frame */
+    TrapFrame = CurrentThread->TrapFrame;
+    CalloutFrame->TrapFrame = (ULONG_PTR)TrapFrame;
+
+    /* Set the new callback stack */
+    CurrentThread->CallbackStack = CalloutFrame;
+
+    /* Disable interrupts so we can fill the NPX State */
+    _disable();
+
+    /* Set the stack address */
+    CurrentThread->InitialStack = (PVOID)InitialStack;
+
+    /* Copy the trap frame to the new location */
+    CallbackTrapFrame = *TrapFrame;
+
+    /* Get PCR */
+    Pcr = (PKIPCR)KeGetPcr();
+
+    /* Set user-mode dispatcher address as EIP */
+    Pcr->TssBase->Rsp0 = InitialStack;
+    Pcr->Prcb.RspBase = InitialStack;
+    CallbackTrapFrame.Rip = (ULONG_PTR)KeUserCallbackDispatcher;
+
+    /* Bring interrupts back */
+    _enable();
+
+    /* Exit to user-mode */
+    KiServiceExit(&CallbackTrapFrame, 0);
+}
+
+VOID
+KiSetupUserCalloutFrame(
+    _Out_ PUCALLOUT_FRAME UserCalloutFrame,
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ ULONG ApiNumber,
+    _In_ PVOID Buffer,
+    _In_ ULONG BufferLength)
+{
+#ifdef _M_IX86
+    CalloutFrame->Reserved = 0;
+    CalloutFrame->ApiNumber = ApiNumber;
+    CalloutFrame->Buffer = (ULONG_PTR)NewStack;
+    CalloutFrame->Length = ArgumentLength;
+#elif defined(_M_AMD64)
+    UserCalloutFrame->Buffer = (PVOID)(UserCalloutFrame + 1);
+    UserCalloutFrame->Length = BufferLength;
+    UserCalloutFrame->ApiNumber = ApiNumber;
+    UserCalloutFrame->MachineFrame.Rip = TrapFrame->Rip;
+    UserCalloutFrame->MachineFrame.Rsp = TrapFrame->Rsp;
+#else
+#error "KiSetupUserCalloutFrame not implemented!"
+#endif
+}
+
+NTSTATUS
+NTAPI
+KeUserModeCallback(
+    IN ULONG RoutineIndex,
+    IN PVOID Argument,
+    IN ULONG ArgumentLength,
+    OUT PVOID *Result,
+    OUT PULONG ResultLength)
+{
+    ULONG_PTR OldStack;
+    PUCHAR UserArguments;
+    PUCALLOUT_FRAME CalloutFrame;
+    PULONG_PTR UserStackPointer;
+    NTSTATUS CallbackStatus;
+#ifdef _M_IX86
+    PEXCEPTION_REGISTRATION_RECORD ExceptionList;
+#endif // _M_IX86
+    PTEB Teb;
+    ULONG GdiBatchCount = 0;
+    ASSERT(KeGetCurrentThread()->ApcState.KernelApcInProgress == FALSE);
+    ASSERT(KeGetPreviousMode() == UserMode);
+
+    /* Get the current user-mode stack */
+    UserStackPointer = KiGetUserModeStackAddress();
+    OldStack = *UserStackPointer;
+
+    /* Enter a SEH Block */
+    _SEH2_TRY
+    {
+        /* Calculate and align the stack size */
+        UserArguments = (PUCHAR)ALIGN_DOWN_POINTER_BY(OldStack - ArgumentLength, sizeof(PVOID));
+
+        /* The callout frame is below the arguments */
+        CalloutFrame = ((PUCALLOUT_FRAME)UserArguments) - 1;
+
+        /* Make sure it's all writable */
+        ProbeForWrite(CalloutFrame,
+                      sizeof(PUCALLOUT_FRAME) + ArgumentLength,
+                      sizeof(PVOID));
+
+        /* Copy the buffer into the stack */
+        RtlCopyMemory(UserArguments, Argument, ArgumentLength);
+
+        /* Write the arguments */
+        KiSetupUserCalloutFrame(CalloutFrame,
+                                KeGetCurrentThread()->TrapFrame,
+                                RoutineIndex,
+                                UserArguments,
+                                ArgumentLength);
+
+        /* Save the exception list */
+        Teb = KeGetCurrentThread()->Teb;
+#ifdef _M_IX86
+        ExceptionList = Teb->NtTib.ExceptionList;
+#endif // _M_IX86
+
+        /* Jump to user mode */
+        *UserStackPointer = (ULONG_PTR)CalloutFrame;
+        CallbackStatus = KiCallUserMode(Result, ResultLength);
+        if (CallbackStatus != STATUS_CALLBACK_POP_STACK)
+        {
+#ifdef _M_IX86
+            /* Only restore the exception list if we didn't crash in ring 3 */
+            Teb->NtTib.ExceptionList = ExceptionList;
+#endif // _M_IX86
+        }
+        else
+        {
+            /* Otherwise, pop the stack */
+            OldStack = *UserStackPointer;
+        }
+
+        /* Read the GDI Batch count */
+        GdiBatchCount = Teb->GdiBatchCount;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Get the SEH exception */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    /* Check if we have GDI Batch operations */
+    if (GdiBatchCount)
+    {
+        *UserStackPointer -= 256;
+        KeGdiFlushUserBatch();
+    }
+
+    /* Restore stack and return */
+    *UserStackPointer = OldStack;
+#ifdef _M_AMD64 // could probably  move the update to TrapFrame->Rsp from the C handler to the asm code
+    __writegsqword(FIELD_OFFSET(KIPCR, UserRsp), OldStack);
+#endif
+    return CallbackStatus;
+}
+
+NTSTATUS
+NTAPI
+NtCallbackReturn(
+    _In_ PVOID Result,
+    _In_ ULONG ResultLength,
+    _In_ NTSTATUS CallbackStatus)
+{
+    PKTHREAD CurrentThread;
+    PKCALLOUT_FRAME CalloutFrame;
+    PKTRAP_FRAME CallbackTrapFrame, TrapFrame;
+    PKIPCR Pcr;
+
+    /* Get the current thread and make sure we have a callback stack */
+    CurrentThread = KeGetCurrentThread();
+    CalloutFrame = CurrentThread->CallbackStack;
+    if (CalloutFrame == NULL)
+    {
+        return STATUS_NO_CALLBACK_ACTIVE;
+    }
+
+    /* Store the results in the callback stack */
+    *((PVOID*)CalloutFrame->OutputBuffer) = Result;
+    *((ULONG*)CalloutFrame->OutputLength) = ResultLength;
+
+    /* Get the trap frame */
+    CallbackTrapFrame = CurrentThread->TrapFrame;
+
+    /* Disable interrupts for NPX save and stack switch */
+    _disable();
+
+    /* Restore the exception list */
+    Pcr = (PKIPCR)KeGetPcr();
+
+    /* Get the previous trap frame */
+    TrapFrame = (PKTRAP_FRAME)CalloutFrame->TrapFrame;
+
+    /* Check if we failed in user mode */
+    if (CallbackStatus == STATUS_CALLBACK_POP_STACK)
+    {
+        *TrapFrame = *CallbackTrapFrame;
+    }
+
+    /* Clear DR7 */
+    TrapFrame->Dr7 = 0;
+
+    /* Check if debugging was active */
+    if (CurrentThread->Header.DebugActive & 0xFF)
+    {
+        /* Copy debug registers data from it */
+        TrapFrame->Dr0 = CallbackTrapFrame->Dr0;
+        TrapFrame->Dr1 = CallbackTrapFrame->Dr1;
+        TrapFrame->Dr2 = CallbackTrapFrame->Dr2;
+        TrapFrame->Dr3 = CallbackTrapFrame->Dr3;
+        TrapFrame->Dr6 = CallbackTrapFrame->Dr6;
+        TrapFrame->Dr7 = CallbackTrapFrame->Dr7;
+    }
+
+    /* Switch the stack back to the previous value */
+    Pcr->TssBase->Rsp0 = CalloutFrame->InitialStack;
+    Pcr->Prcb.RspBase = CalloutFrame->InitialStack;
+
+    /* Get the initial stack and restore it */
+    CurrentThread->InitialStack = (PVOID)CalloutFrame->InitialStack;
+
+    /* Restore the trap frame and the previous callback stack */
+    CurrentThread->TrapFrame = TrapFrame;
+    CurrentThread->CallbackStack = (PVOID)CalloutFrame->CallbackStack;
+
+    /* Bring interrupts back */
+    _enable();
+
+    /* Now switch back to the old stack */
+    KiCallbackReturn(CalloutFrame, CallbackStatus);
+}
+
