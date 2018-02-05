@@ -841,6 +841,10 @@ FUNC KiZwSystemService
     /* Get current thread */
     mov r11, gs:[PcCurrentThread]
 
+    /* Save PreviousMode in the trap frame */
+    mov dil, byte ptr [r11 + KTHREAD_PreviousMode]
+    mov byte ptr [rbp + KTRAP_FRAME_PreviousMode], dil
+
     /* Save the old trap frame in TrapFrame.Rdx */
     mov rdi, [r11 + KTHREAD_TrapFrame]
     mov [rbp + KTRAP_FRAME_Rdx], rdi
@@ -871,8 +875,12 @@ FUNC KiZwSystemService
 
     /* Restore the old trap frame */
     mov r11, gs:[PcCurrentThread]
-    mov rsi, [rsp + KTRAP_FRAME_Rdx]
+    mov rsi, [rbp + KTRAP_FRAME_Rdx]
     mov [r11 + KTHREAD_TrapFrame], rsi
+
+    /* Restore PreviousMode from the trap frame */
+    mov dil, byte ptr [rbp + KTRAP_FRAME_PreviousMode]
+    mov byte ptr [r11 + KTHREAD_PreviousMode], dil
 
     /* Restore rdi and rsi */
     mov rsi, [rbp + KTRAP_FRAME_Rsi]
