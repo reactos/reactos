@@ -59,7 +59,8 @@ if(ARCH STREQUAL "i386")
     add_subdirectory(minihal)
 
     # hal
-    add_hal(hal SOURCES up/halup.rc COMPONENTS generic legacy up pic)
+#    add_hal(hal SOURCES up/halup.rc COMPONENTS generic legacy up pic)
+    add_hal(hal SOURCES acpi/halacpi.rc COMPONENTS generic acpi up pic)
     add_hal(halacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up pic)
     add_hal(halapic SOURCES acpi/halacpi.rc COMPONENTS generic legacy up apic)
     add_hal(halaacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up apic)

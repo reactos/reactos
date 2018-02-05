@@ -981,7 +981,7 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
     ULONG Interrupt;
     PAGED_CODE();
     ASSERT(ResourceList != NULL);
-
+   // __debugbreak();
     /* Initialize the list */
     ResourceList->BusNumber = -1;
     ResourceList->AlternativeLists = 1;
@@ -1000,8 +1000,8 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
 
         /* Get the interrupt number */
         Interrupt = HalpPicVectorRedirect[HalpFixedAcpiDescTable.sci_int_vector];
-        ResourceList->List[0].Descriptors[0].u.Interrupt.MinimumVector = Interrupt;
-        ResourceList->List[0].Descriptors[0].u.Interrupt.MaximumVector = Interrupt;
+        ResourceList->List[0].Descriptors[0].u.Interrupt.MinimumVector = Interrupt + PRIMARY_VECTOR_BASE;
+        ResourceList->List[0].Descriptors[0].u.Interrupt.MaximumVector = Interrupt + PRIMARY_VECTOR_BASE;
 
         /* One more */
         ++ResourceList->List[0].Count;
@@ -1019,7 +1019,7 @@ HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requiremen
     ULONG Count = 0, ListSize;
     NTSTATUS Status;
     PAGED_CODE();
-
+    //__debugbreak();
     /* Get ACPI resources */
     HalpAcpiDetectResourceListSize(&Count);
     DPRINT("Resource count: %d\n", Count);
