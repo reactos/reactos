@@ -1,0 +1,40 @@
+/*
+ * PROJECT:     ReactOS Timeout Utility
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Timeout Utility in Romanian language
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+ 
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+ 
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Utilitatea Timeout de ReactOS\n\
+\n\
+TIMEOUT [/?] [/T] timp [/NOBREAK]\n\
+\n\
+Descriere:\n\
+    Această utilitate așteaptă până când perioada de timp specificată (în secunde) a scurs,\n\
+    sau după ce orice tastă a fost apăsată. Un parametru de a ignora o tastă apăsată este de asemenea\n\
+    acceptată.\n\
+\n\
+Parametri:\n\
+    /?        Afișează această ecrană de ajutor.\n\
+\n\
+    /T timp   Specifică un număr în secunde pentru așteptare (-1 la 99999).\n\
+              O valoare de -1 înseamnă că programul va aștepta până când o tastă va fi apăsată.\n\
+              Rețineți că specificația ""/T"" este opțională, puteți să\n\
+              specificați o valoare în timp fără aceasta.\n\
+\n\
+    /NOBREAK  Ignoră orice input de către tastatură cu excepția Ctrl+C.\n\
+"
+    IDS_ERROR_OUT_OF_RANGE "EROARE: Valoarea de timp trebuie să fie în acest câmp (-1 la 99999).\n"
+    IDS_ERROR_INVALID_HANDLE_VALUE "EROARE: Imposibil obținerea unui handle standard pentru consolă (eroare %lu).\n"
+    IDS_ERROR_READ_INPUT "EROARE: Imposibil citirea inputu-lui de către consolă (eroare %lu).\n"
+    IDS_ERROR_NO_TIMER_VALUE "EROARE: O valoare de timp trebuie să fie specificată (-1 la 99999).\n"
+    IDS_ERROR_ONE_TIME "EROARE: Doar o valoare de timp este necesară.\n"
+    IDS_NOBREAK_INPUT "Apasă Ctrl+C pentru a ieși..."
+    IDS_USER_INPUT "Apasă orice tastă pentru a continua..."
+    IDS_NOBREAK_INPUT_COUNT "Așteptând %d secunde, apasă Ctrl+C pentru a ieși..."
+    IDS_USER_INPUT_COUNT "Așteptând %d secunde, apasă orice tastă pentru a continua..."
+END
