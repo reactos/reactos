@@ -210,7 +210,12 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     UINT idCmd = LOWORD(lpcmi->lpVerb);
     if(HIWORD(lpcmi->lpVerb) != 0 || idCmd < m_LastFolderCMId)
     {
-        return m_folderCM->InvokeCommand(lpcmi);
+        if (m_folderCM)
+        {
+            return m_folderCM->InvokeCommand(lpcmi);
+        }
+        WARN("m_folderCM is NULL!\n");
+        return E_NOTIMPL;
     }
 
     /* The default part of the background menu doesn't have shifted ids so we need to convert the id offset to the real id */
@@ -221,8 +226,13 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
     case FCIDM_SHVIEW_INSERT:
     case FCIDM_SHVIEW_INSERTLINK:
-        lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd);
-        return m_folderCM->InvokeCommand(lpcmi);
+        if (m_folderCM)
+        {
+            lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd);
+            return m_folderCM->InvokeCommand(lpcmi);
+        }
+        WARN("m_folderCM is NULL!\n");
+        return E_NOTIMPL;
     case FCIDM_SHVIEW_BIGICON:
     case FCIDM_SHVIEW_SMALLICON:
     case FCIDM_SHVIEW_LISTVIEW:
