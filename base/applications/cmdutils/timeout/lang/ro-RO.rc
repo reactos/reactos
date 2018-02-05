@@ -16,7 +16,7 @@ TIMEOUT [/?] [/T] timp [/NOBREAK]\n\
 Descriere:\n\
     Această utilitate așteaptă până când perioada de timp specificată (în secunde) a scurs,\n\
     sau după ce orice tastă a fost apăsată. Un parametru de a ignora o tastă apăsată este de asemenea\n\
-    aceptată.\n\
+    acceptată.\n\
 \n\
 Parametri:\n\
     /?        Afișează această ecrană de ajutor.\n\
