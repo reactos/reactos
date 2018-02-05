@@ -427,7 +427,7 @@ CardImageWndProc(HWND hwnd,
                  LPARAM lParam)
 {
     PCARDBACK pCardBack = (PCARDBACK)GetWindowLongPtr(hwnd,
-                                                      GWL_USERDATA);
+                                                      GWLP_USERDATA);
     static WNDPROC hOldProc = NULL;
 
     if (!hOldProc && pCardBack)
@@ -528,7 +528,7 @@ INT_PTR CALLBACK CardBackDlgProc(HWND hDlg,
                                                                (LONG_PTR)CardImageWndProc);
 
             SetWindowLongPtr(pCardBacks[i].hSelf,
-                             GWL_USERDATA,
+                             GWLP_USERDATA,
                              (LONG_PTR)&pCardBacks[i]);
         }
 

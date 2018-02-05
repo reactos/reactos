@@ -56,12 +56,12 @@ EditVariableDlgProc(HWND hwndDlg,
     DWORD dwNameLength;
     DWORD dwValueLength;
 
-    VarData = (PVARIABLE_DATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    VarData = (PVARIABLE_DATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (LONG_PTR)lParam);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
             VarData = (PVARIABLE_DATA)lParam;
 
             if (VarData->lpName != NULL)

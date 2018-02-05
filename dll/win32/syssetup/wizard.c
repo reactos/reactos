@@ -943,7 +943,7 @@ LocalePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -951,7 +951,7 @@ LocalePageDlgProc(HWND hwndDlg,
         {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
             WriteUserLocale();
 
             SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
@@ -1529,14 +1529,14 @@ DateTimePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
 
             CreateTimeZoneList(SetupData);
 
@@ -1616,7 +1616,7 @@ ThemePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -1626,7 +1626,7 @@ ThemePageDlgProc(HWND hwndDlg,
 
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
 
             imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_CLASSIC), 0, 0, 0x00FF00FF, IMAGE_BITMAP, LR_CREATEDIBSECTION);
             SendDlgItemMessage(hwndDlg, IDC_CLASSICSTYLE, BCM_SETIMAGELIST, 0, (LPARAM)&imldata);
@@ -1963,7 +1963,7 @@ ProcessPageDlgProc(HWND hwndDlg,
     WCHAR Title[64];
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -1971,7 +1971,7 @@ ProcessPageDlgProc(HWND hwndDlg,
         {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
         }
         break;
 

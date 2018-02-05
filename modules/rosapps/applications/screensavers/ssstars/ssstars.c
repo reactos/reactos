@@ -100,7 +100,7 @@ static HBITMAP CreateStarBitmap(HWND hWnd, HDC hDC)
     HINSTANCE  hInstance;
 
     // Get instance for loading the texture
-    hInstance = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
+    hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 
     // Load the texture
     hFileBmp = (HBITMAP)

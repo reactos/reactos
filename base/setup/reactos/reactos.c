@@ -92,14 +92,14 @@ StartDlgProc(HWND hwndDlg,
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Center the wizard window */
             CenterWindow(GetParent(hwndDlg));
@@ -145,14 +145,14 @@ TypeDlgProc(HWND hwndDlg,
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Check the 'install' radio button */
             CheckDlgButton(hwndDlg, IDC_INSTALL, BST_CHECKED);
@@ -213,14 +213,14 @@ DeviceDlgProc(HWND hwndDlg,
     HWND hList;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
 
@@ -328,14 +328,14 @@ SummaryDlgProc(HWND hwndDlg,
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
             break;
 
         case WM_NOTIFY:
@@ -378,14 +378,14 @@ ProcessDlgProc(HWND hwndDlg,
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
             break;
 
         case WM_NOTIFY:
@@ -430,14 +430,14 @@ RestartDlgProc(HWND hwndDlg,
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,

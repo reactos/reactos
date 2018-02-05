@@ -101,7 +101,7 @@ static void OnSize(ChildWnd* pChildWnd, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static int last_split;
-    ChildWnd* pChildWnd = (ChildWnd*)GetWindowLong(hWnd, GWL_USERDATA);
+    ChildWnd* pChildWnd = (ChildWnd*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
     ASSERT(pChildWnd);
 
     switch(message) {
@@ -121,7 +121,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         return 0;
 
     case WM_NCDESTROY:
-        // SetWindowLong(hWnd, GWL_USERDATA, 0);
+        // SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
         break;
 
     case WM_SETCURSOR:

@@ -74,17 +74,17 @@ WinMain(HINSTANCE hInstance,
   printf("GetWindowTextA returned Ansi string \"%s\"\n", WindowTextA);
   printf("\n");
 
-  SavedWndProcW = (WNDPROC) GetWindowLongW(hWnd, GWL_WNDPROC);
+  SavedWndProcW = (WNDPROC) GetWindowLongPtrW(hWnd, GWLP_WNDPROC);
   printf("GetWindowLongW returned 0x%p\n", SavedWndProcW);
-  SavedWndProcA = (WNDPROC) GetWindowLongA(hWnd, GWL_WNDPROC);
+  SavedWndProcA = (WNDPROC) GetWindowLongPtrA(hWnd, GWLP_WNDPROC);
   printf("GetWindowLongA returned 0x%p\n", SavedWndProcA);
   printf("\n");
 
   printf("Subclassing window using SetWindowLongW, new WndProc 0x%p\n", UnicodeSubclassProc);
-  SetWindowLongW(hWnd, GWL_WNDPROC, (LONG) UnicodeSubclassProc);
+  SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR) UnicodeSubclassProc);
   printf("After subclass, IsWindowUnicode %s, WndProcA 0x%lx, WndProcW 0x%lx\n",
-         IsWindowUnicode(hWnd) ? "TRUE" : "FALSE", GetWindowLongA(hWnd, GWL_WNDPROC),
-         GetWindowLongW(hWnd, GWL_WNDPROC));
+         IsWindowUnicode(hWnd) ? "TRUE" : "FALSE", GetWindowLongPtrA(hWnd, GWLP_WNDPROC),
+         GetWindowLongPtrW(hWnd, GWLP_WNDPROC));
 
   printf("Calling GetWindowTextW\n");
   if (! GetWindowTextW(hWnd, WindowTextW, sizeof(WindowTextW) / sizeof(WindowTextW[0])))
@@ -96,10 +96,10 @@ WinMain(HINSTANCE hInstance,
   printf("\n");
 
   printf("Subclassing window using SetWindowLongA, new WndProc 0x%p\n", AnsiSubclassProc);
-  SetWindowLongA(hWnd, GWL_WNDPROC, (LONG) AnsiSubclassProc);
+  SetWindowLongPtrA(hWnd, GWLP_WNDPROC, (LONG_PTR) AnsiSubclassProc);
   printf("After subclass, IsWindowUnicode %s, WndProcA 0x%lx, WndProcW 0x%lx\n",
-         IsWindowUnicode(hWnd) ? "TRUE" : "FALSE", GetWindowLongA(hWnd, GWL_WNDPROC),
-         GetWindowLongW(hWnd, GWL_WNDPROC));
+         IsWindowUnicode(hWnd) ? "TRUE" : "FALSE", GetWindowLongPtrA(hWnd, GWLP_WNDPROC),
+         GetWindowLongPtrW(hWnd, GWLP_WNDPROC));
 
   printf("Calling GetWindowTextW\n");
   if (! GetWindowTextW(hWnd, WindowTextW, sizeof(WindowTextW) / sizeof(WindowTextW[0])))
