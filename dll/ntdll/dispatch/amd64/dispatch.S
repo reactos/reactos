@@ -14,6 +14,8 @@
 
 EXTERN NtContinue:PROC
 EXTERN LdrpInit:PROC
+EXTERN ZwCallbackReturn:PROC
+EXTERN RtlRaiseStatus:PROC
 
 .code
 
@@ -59,8 +61,49 @@ PUBLIC KiRaiseUserExceptionDispatcher
 
 PUBLIC KiUserCallbackDispatcher
 .PROC KiUserCallbackDispatcher
-    .endprolog
-    int 3
+
+    ; The stack is set up with a UCALLOUT_FRAME
+    ; The frame ends with a MACHINE_FRAME.
+    .PUSHFRAME
+
+    ; This is for the Home space, Buffer, Length and ApiNumber
+    .ALLOCSTACK 6 * 8
+    .ENDPROLOG
+
+#if DBG
+    ; We enter the function with a fully setup stack, so it must be aligned!
+    test rsp, 15
+    jz AlignmentOk
+    int HEX(2C)
+AlignmentOk:
+#endif
+
+    ; Get the parameters from the callout frame
+    mov rcx, [rsp + CkBuffer]
+    mov edx, [rsp + CkLength]
+    mov r8d, [rsp + CkApiNumber]
+
+    ; Get the callback table
+    mov rax, gs:[TePeb]
+    mov r9, [rax + PeKernelCallbackTable]
+
+    ; Call the routine
+    call qword ptr [r9 + r8 * 8]
+
+    ; Return from callback
+    xor ecx, ecx
+    xor edx, edx
+    mov r8d, eax
+    call ZwCallbackReturn
+
+    ; Save callback return value
+    mov esi, eax
+
+    ; Raise status
+StatusRaise:
+    mov ecx, esi
+    call RtlRaiseStatus
+    jmp StatusRaise
 
 .ENDP
 

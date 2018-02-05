@@ -9,7 +9,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
 #include <ksamd64.inc>
 
 EXTERN KiSwapContextResume:PROC
@@ -202,66 +201,17 @@ PUBLIC KiSwapContextInternal
 PUBLIC KiSwapContext
 .PROC KiSwapContext
 
-    /* Allocate a KEXCEPTION_FRAME on the stack (+8 for proper alignment) */
-    sub rsp, KEXCEPTION_FRAME_LENGTH + 8
-    .allocstack KEXCEPTION_FRAME_LENGTH + 8
-
-    /* save non-volatiles in KEXCEPTION_FRAME */
-    mov [rsp + KEXCEPTION_FRAME_Rbp], rbp
-    .savereg rbp, KEXCEPTION_FRAME_Rbp
-    mov [rsp + KEXCEPTION_FRAME_Rbx], rbx
-    .savereg rbx, KEXCEPTION_FRAME_Rbx
-    mov [rsp + KEXCEPTION_FRAME_Rdi], rdi
-    .savereg rdi, KEXCEPTION_FRAME_Rdi
-    mov [rsp + KEXCEPTION_FRAME_Rsi], rsi
-    .savereg rsi, KEXCEPTION_FRAME_Rsi
-    mov [rsp + KEXCEPTION_FRAME_R12], r12
-    .savereg r12, KEXCEPTION_FRAME_R12
-    mov [rsp + KEXCEPTION_FRAME_R13], r13
-    .savereg r13, KEXCEPTION_FRAME_R13
-    mov [rsp + KEXCEPTION_FRAME_R14], r14
-    .savereg r14, KEXCEPTION_FRAME_R14
-    mov [rsp + KEXCEPTION_FRAME_R15], r15
-    .savereg r15, KEXCEPTION_FRAME_R15
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm6], xmm6
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm7], xmm7
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm8], xmm8
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm9], xmm9
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm10], xmm10
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm11], xmm11
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm12], xmm12
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm13], xmm13
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm14], xmm14
-    movdqa [rsp + KEXCEPTION_FRAME_Xmm15], xmm15
-    // KEXCEPTION_FRAME_MxCsr
-    .endprolog
+    /* Generate a KEXCEPTION_FRAME on the stack */
+    GENERATE_EXCEPTION_FRAME
 
     /* Do the swap with the registers correctly setup */
     mov rcx, gs:[PcCurrentThread] /* Pointer to the new thread */
     call KiSwapContextInternal
 
-    /* restore non-volatile registers */
-    mov rbp, [rsp + KEXCEPTION_FRAME_Rbp]
-    mov rbx, [rsp + KEXCEPTION_FRAME_Rbx]
-    mov rdi, [rsp + KEXCEPTION_FRAME_Rdi]
-    mov rsi, [rsp + KEXCEPTION_FRAME_Rsi]
-    mov r12, [rsp + KEXCEPTION_FRAME_R12]
-    mov r13, [rsp + KEXCEPTION_FRAME_R13]
-    mov r14, [rsp + KEXCEPTION_FRAME_R14]
-    mov r15, [rsp + KEXCEPTION_FRAME_R15]
-    movdqa xmm6, [rsp + KEXCEPTION_FRAME_Xmm6]
-    movdqa xmm7, [rsp + KEXCEPTION_FRAME_Xmm7]
-    movdqa xmm8, [rsp + KEXCEPTION_FRAME_Xmm8]
-    movdqa xmm9, [rsp + KEXCEPTION_FRAME_Xmm9]
-    movdqa xmm10, [rsp + KEXCEPTION_FRAME_Xmm10]
-    movdqa xmm11, [rsp + KEXCEPTION_FRAME_Xmm11]
-    movdqa xmm12, [rsp + KEXCEPTION_FRAME_Xmm12]
-    movdqa xmm13, [rsp + KEXCEPTION_FRAME_Xmm13]
-    movdqa xmm14, [rsp + KEXCEPTION_FRAME_Xmm14]
-    movdqa xmm15, [rsp + KEXCEPTION_FRAME_Xmm15]
+    /* Restore the registers from the KEXCEPTION_FRAME */
+    RESTORE_EXCEPTION_STATE
 
-    /* Clean stack and return */
-    add rsp, KEXCEPTION_FRAME_LENGTH + 8
+    /* Return */
     ret
 .ENDP
 
