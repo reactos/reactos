@@ -82,7 +82,7 @@ static void OnPaint(HWND hWnd, ChildWnd* pChildWnd)
 LRESULT CALLBACK PanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 //  Pane* pane;
-//  ChildWnd* pChildWnd = (ChildWnd*)GetWindowLong(hWnd, GWL_USERDATA);
+//  ChildWnd* pChildWnd = (ChildWnd*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 //  ChildWnd* new_child;
 //  ASSERT(pChildWnd);
 

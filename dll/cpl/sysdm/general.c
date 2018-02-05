@@ -516,7 +516,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             }
 
             InitLogo(hwndDlg);
-            SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_ROSIMG), GWL_WNDPROC, (LONG)RosImageProc);
+            SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_ROSIMG), GWLP_WNDPROC, (LONG_PTR)RosImageProc);
             GetSystemInformation(hwndDlg);
             break;
 

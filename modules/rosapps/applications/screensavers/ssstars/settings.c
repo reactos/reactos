@@ -176,7 +176,7 @@ static void SetupControls(HWND hWnd)
     SIZE      sizeStarfield;
     BITMAP    bm;
 
-    hInstance = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
+    hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 
     SendDlgItemMessage(hWnd, IDC_SLIDER_NUM_OF_STARS, TBM_SETRANGE, FALSE, MAKELPARAM(MIN_STARS, MAX_STARS));
 
@@ -273,7 +273,7 @@ static BOOL OnCommandAbout(HWND hWnd)
     TCHAR     szAuthor[256];
     TCHAR     szLicense[1024];
 
-    hInstance = (HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE);
+    hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 
     hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_STARFIELD));
 
