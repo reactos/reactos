@@ -387,6 +387,13 @@ HalAllocateAdapterChannel(
   IN ULONG  NumberOfMapRegisters,
   IN PDRIVER_CONTROL  ExecutionRoutine);
 
+FORCEINLINE
+PULONG_PTR
+KiGetUserModeStackAddress(void)
+{
+    return &PsGetCurrentThread()->Tcb.TrapFrame->Rsp;
+}
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 
 /* EOF */
