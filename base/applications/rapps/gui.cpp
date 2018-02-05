@@ -939,6 +939,8 @@ private:
 
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
+        if (wParam == SIZE_MINIMIZED)
+            return;
 
         /* Size status bar */
         m_StatusBar->SendMessage(WM_SIZE, 0, 0);
