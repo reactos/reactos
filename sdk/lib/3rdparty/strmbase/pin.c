@@ -329,7 +329,7 @@ HRESULT WINAPI BasePinImpl_NewSegment(IPin * iface, REFERENCE_TIME tStart, REFER
 {
     BasePin *This = impl_from_IPin(iface);
 
-    TRACE("(%x%08x, %x%08x, %e)\n", (ULONG)(tStart >> 32), (ULONG)tStart, (ULONG)(tStop >> 32), (ULONG)tStop, dRate);
+    TRACE("(%s, %s, %e)\n", wine_dbgstr_longlong(tStart), wine_dbgstr_longlong(tStop), dRate);
 
     This->tStart = tStart;
     This->tStop = tStop;
@@ -387,10 +387,8 @@ ULONG WINAPI BaseOutputPinImpl_Release(IPin * iface)
     TRACE("(%p)->() Release from %d\n", iface, refCount + 1);
 
     if (!refCount)
-    {
         BaseOutputPin_Destroy(This);
-        return 0;
-    }
+
     return refCount;
 }
 
@@ -1009,7 +1007,7 @@ HRESULT WINAPI BaseInputPinImpl_NewSegment(IPin * iface, REFERENCE_TIME tStart, 
     BaseInputPin *This = impl_BaseInputPin_from_IPin(iface);
     newsegmentargs args;
 
-    TRACE("(%x%08x, %x%08x, %e)\n", (ULONG)(tStart >> 32), (ULONG)tStart, (ULONG)(tStop >> 32), (ULONG)tStop, dRate);
+    TRACE("(%s, %s, %e)\n", wine_dbgstr_longlong(tStart), wine_dbgstr_longlong(tStop), dRate);
 
     args.tStart = This->pin.tStart = tStart;
     args.tStop = This->pin.tStop = tStop;
@@ -1202,7 +1200,7 @@ HRESULT BaseInputPin_Construct(const IPinVtbl *InputPin_Vtbl, LONG inputpin_size
 
     if (SUCCEEDED(InputPin_Init(InputPin_Vtbl, pPinInfo, vtbl, pCritSec, allocator, pPinImpl)))
     {
-        *ppPin = (IPin *)pPinImpl;
+        *ppPin = &pPinImpl->pin.IPin_iface;
         return S_OK;
     }
 

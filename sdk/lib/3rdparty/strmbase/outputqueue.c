@@ -40,7 +40,7 @@ static DWORD WINAPI OutputQueue_InitialThreadProc(LPVOID data)
 static void OutputQueue_FreeSamples(OutputQueue *pOutputQueue)
 {
     struct list *cursor, *cursor2;
-    LIST_FOR_EACH_SAFE(cursor, cursor2, pOutputQueue->SampleList)
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &pOutputQueue->SampleList)
     {
         QueuedEvent *qev = LIST_ENTRY(cursor, QueuedEvent, entry);
         list_remove(cursor);
@@ -77,14 +77,7 @@ HRESULT WINAPI OutputQueue_Construct(
     This->bBatchExact = bBatchExact;
     InitializeCriticalSection(&This->csQueue);
     This->csQueue.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": OutputQueue.csQueue");
-    This->SampleList = HeapAlloc(GetProcessHeap(),0,sizeof(struct list));
-    if (!This->SampleList)
-    {
-        OutputQueue_Destroy(This);
-        *ppOutputQueue = NULL;
-        return E_OUTOFMEMORY;
-    }
-    list_init(This->SampleList);
+    list_init(&This->SampleList);
 
     This->pInputPin = pInputPin;
     IPin_AddRef(&pInputPin->pin.IPin_iface);
@@ -120,8 +113,6 @@ HRESULT WINAPI OutputQueue_Destroy(OutputQueue *pOutputQueue)
     pOutputQueue->csQueue.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&pOutputQueue->csQueue);
     CloseHandle(pOutputQueue->hProcessQueue);
-
-    HeapFree(GetProcessHeap(),0,pOutputQueue->SampleList);
 
     IPin_Release(&pOutputQueue->pInputPin->pin.IPin_iface);
     HeapFree(GetProcessHeap(),0,pOutputQueue);
@@ -159,11 +150,11 @@ HRESULT WINAPI OutputQueue_ReceiveMultiple(OutputQueue *pOutputQueue, IMediaSamp
             qev->type = SAMPLE_PACKET;
             qev->pSample = ppSamples[i];
             IMediaSample_AddRef(ppSamples[i]);
-            list_add_tail(pOutputQueue->SampleList, &qev->entry);
+            list_add_tail(&pOutputQueue->SampleList, &qev->entry);
             (*nSamplesProcessed)++;
         }
 
-        if (!pOutputQueue->bBatchExact || list_count(pOutputQueue->SampleList) >= pOutputQueue->lBatchSize)
+        if (!pOutputQueue->bBatchExact || list_count(&pOutputQueue->SampleList) >= pOutputQueue->lBatchSize)
             SetEvent(pOutputQueue->hProcessQueue);
         LeaveCriticalSection(&pOutputQueue->csQueue);
     }
@@ -181,7 +172,7 @@ VOID WINAPI OutputQueue_SendAnyway(OutputQueue *pOutputQueue)
     if (pOutputQueue->hThread)
     {
         EnterCriticalSection(&pOutputQueue->csQueue);
-        if (!list_empty(pOutputQueue->SampleList))
+        if (!list_empty(&pOutputQueue->SampleList))
         {
             pOutputQueue->bSendAnyway = TRUE;
             SetEvent(pOutputQueue->hProcessQueue);
@@ -204,7 +195,7 @@ VOID WINAPI OutputQueue_EOS(OutputQueue *pOutputQueue)
         }
         qev->type = EOS_PACKET;
         qev->pSample = NULL;
-        list_add_tail(pOutputQueue->SampleList, &qev->entry);
+        list_add_tail(&pOutputQueue->SampleList, &qev->entry);
     }
     else
     {
@@ -226,14 +217,14 @@ DWORD WINAPI OutputQueueImpl_ThreadProc(OutputQueue *pOutputQueue)
     do
     {
         EnterCriticalSection(&pOutputQueue->csQueue);
-        if (!list_empty(pOutputQueue->SampleList) &&
+        if (!list_empty(&pOutputQueue->SampleList) &&
             (!pOutputQueue->bBatchExact ||
-            list_count(pOutputQueue->SampleList) >= pOutputQueue->lBatchSize ||
+            list_count(&pOutputQueue->SampleList) >= pOutputQueue->lBatchSize ||
             pOutputQueue->bSendAnyway
             )
            )
         {
-            while (!list_empty(pOutputQueue->SampleList))
+            while (!list_empty(&pOutputQueue->SampleList))
             {
                 IMediaSample **ppSamples;
                 LONG nSamples;
@@ -242,10 +233,10 @@ DWORD WINAPI OutputQueueImpl_ThreadProc(OutputQueue *pOutputQueue)
                 int i = 0;
 
                 /* First Pass Process Samples */
-                i = list_count(pOutputQueue->SampleList);
+                i = list_count(&pOutputQueue->SampleList);
                 ppSamples = HeapAlloc(GetProcessHeap(),0,sizeof(IMediaSample*) * i);
                 nSamples = 0;
-                LIST_FOR_EACH_SAFE(cursor, cursor2, pOutputQueue->SampleList)
+                LIST_FOR_EACH_SAFE(cursor, cursor2, &pOutputQueue->SampleList)
                 {
                     QueuedEvent *qev = LIST_ENTRY(cursor, QueuedEvent, entry);
                     if (qev->type == SAMPLE_PACKET)
@@ -269,7 +260,7 @@ DWORD WINAPI OutputQueueImpl_ThreadProc(OutputQueue *pOutputQueue)
                 HeapFree(GetProcessHeap(),0,ppSamples);
 
                 /* Process Non-Samples */
-                LIST_FOR_EACH_SAFE(cursor, cursor2, pOutputQueue->SampleList)
+                LIST_FOR_EACH_SAFE(cursor, cursor2, &pOutputQueue->SampleList)
                 {
                     QueuedEvent *qev = LIST_ENTRY(cursor, QueuedEvent, entry);
                     if (qev->type == EOS_PACKET)

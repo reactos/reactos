@@ -285,7 +285,7 @@ HRESULT WINAPI BaseControlWindowImpl_put_WindowStyle(IVideoWindow *iface, LONG W
 
     TRACE("(%p/%p)->(%x -> %x)\n", This, iface, old, WindowStyle);
 
-    if (WindowStyle & (WS_DISABLED|WS_HSCROLL|WS_ICONIC|WS_MAXIMIZE|WS_MINIMIZE|WS_VSCROLL))
+    if (WindowStyle & (WS_DISABLED|WS_HSCROLL|WS_MAXIMIZE|WS_MINIMIZE|WS_VSCROLL))
         return E_INVALIDARG;
 
     SetWindowLongW(This->baseWindow.hWnd, GWL_STYLE, WindowStyle);
