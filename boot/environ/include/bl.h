@@ -923,7 +923,7 @@ typedef struct _BL_HARDDISK_DEVICE
 
 typedef struct _BL_LOCAL_DEVICE
 {
-    ULONG Type;
+    BL_LOCAL_DEVICE_TYPE Type;
     union
     {
         struct
@@ -932,6 +932,8 @@ typedef struct _BL_LOCAL_DEVICE
         } FloppyDisk;
 
         BL_HARDDISK_DEVICE HardDisk;
+
+        BL_HARDDISK_DEVICE VirtualHardDisk;
 
         struct
         {
@@ -2008,7 +2010,8 @@ BlCopyBootOptions (
 NTSTATUS
 BlAppendBootOptionBoolean (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
-    _In_ ULONG OptionId
+    _In_ ULONG OptionId,
+    _In_ BOOLEAN Value
     );
 
 NTSTATUS
@@ -2021,6 +2024,7 @@ BlAppendBootOptionInteger (
 NTSTATUS
 BlAppendBootOptionString (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ ULONG OptionId,
     _In_ PWCHAR OptionString
     );
 
@@ -2428,6 +2432,12 @@ BlpIoRegisterDestroyRoutine (
 NTSTATUS
 BlDeviceClose (
     _In_ ULONG DeviceId
+    );
+
+BOOLEAN
+BlDeviceIsVirtualPartitionDevice (
+    _In_ PBL_DEVICE_DESCRIPTOR InputDevice,
+    _Outptr_ PBL_DEVICE_DESCRIPTOR* VirtualDevice
     );
 
 NTSTATUS

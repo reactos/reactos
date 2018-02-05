@@ -1357,7 +1357,9 @@ BmpPopulateBootEntryList (
                                      L"\\Windows\\System32\\winload.efi";
 
                         /* Add the path to the boot entry */
-                        Status = BlAppendBootOptionString(BootEntry, LoaderPath);
+                        Status = BlAppendBootOptionString(BootEntry,
+                                                          BcdLibraryString_ApplicationPath,
+                                                          LoaderPath);
                         if (!NT_SUCCESS(Status))
                         {
                             goto Quickie;
@@ -2511,7 +2513,8 @@ TryAgain:
             {
                 /* Set the option this once */
                 BlAppendBootOptionBoolean(BootEntry,
-                                          BcdLibraryBoolean_DisplayAdvancedOptions);
+                                          BcdLibraryBoolean_DisplayAdvancedOptions,
+                                          TRUE);
             }
             else
             {
@@ -2536,7 +2539,8 @@ TryAgain:
             {
                 /* Set the option this once */
                 BlAppendBootOptionBoolean(BootEntry,
-                                          BcdLibraryBoolean_DisplayOptionsEdit);
+                                          BcdLibraryBoolean_DisplayOptionsEdit,
+                                          TRUE);
             }
             else
             {
@@ -2686,12 +2690,16 @@ Quickie:
 
             case AdvancedOptions:
                 /* Show the advanced options next iteration */
-                BlAppendBootOptionBoolean(BootEntry, BcdOSLoaderBoolean_AdvancedOptionsOneTime);
+                BlAppendBootOptionBoolean(BootEntry,
+                                          BcdOSLoaderBoolean_AdvancedOptionsOneTime,
+                                          TRUE);
                 goto TryAgain;
 
             case BootOptions:
                 /* Show the options editor next iteration */
-                BlAppendBootOptionBoolean(BootEntry, BcdOSLoaderBoolean_OptionsEditOneTime);
+                BlAppendBootOptionBoolean(BootEntry,
+                                          BcdOSLoaderBoolean_OptionsEditOneTime,
+                                          TRUE);
                 goto TryAgain;
 
             case Recover:

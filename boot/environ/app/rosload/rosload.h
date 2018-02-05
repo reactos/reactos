@@ -34,6 +34,12 @@
 
 /* STRUCTURES ****************************************************************/
 
+typedef struct _OSL_BSD_ITEM_TABLE_ENTRY
+{
+    ULONG Offset;
+    ULONG Size;
+} OSL_BSD_ITEM_TABLE_ENTRY;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID

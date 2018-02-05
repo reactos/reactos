@@ -50,6 +50,88 @@ BOOLEAN OslImcProcessingValid;
 ULONG OslFreeMemoryDesctiptorsListSize;
 PVOID OslMemoryDescriptorBuffer;
 
+BcdObjectType BlpSbdiCurrentApplicationType;
+
+PRTL_BSD_DATA BsdBootStatusData;
+
+OSL_BSD_ITEM_TABLE_ENTRY OslpBootStatusFields[RtlBsdItemMax] =
+{
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, Version),
+        sizeof(&BsdBootStatusData->Version)
+    },  // RtlBsdItemVersionNumber
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, ProductType),
+        sizeof(&BsdBootStatusData->ProductType)
+    },  // RtlBsdItemProductType
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, AabEnabled),
+        sizeof(&BsdBootStatusData->AabEnabled)
+    },  // RtlBsdItemAabEnabled
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, AabTimeout),
+        sizeof(&BsdBootStatusData->AabTimeout)
+    },  // RtlBsdItemAabTimeout
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, LastBootSucceeded),
+        sizeof(&BsdBootStatusData->LastBootSucceeded)
+    },  // RtlBsdItemBootGood
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, LastBootShutdown),
+        sizeof(&BsdBootStatusData->LastBootShutdown)
+    },  // RtlBsdItemBootShutdown
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, SleepInProgress),
+        sizeof(&BsdBootStatusData->SleepInProgress)
+    },  // RtlBsdSleepInProgress
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, PowerTransition),
+        sizeof(&BsdBootStatusData->PowerTransition)
+    },  // RtlBsdPowerTransition
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, BootAttemptCount),
+        sizeof(&BsdBootStatusData->BootAttemptCount)
+    },  // RtlBsdItemBootAttemptCount
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, LastBootCheckpoint),
+        sizeof(&BsdBootStatusData->LastBootCheckpoint)
+    },  // RtlBsdItemBootCheckpoint
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, LastBootId),
+        sizeof(&BsdBootStatusData->LastBootId)
+    },  // RtlBsdItemBootId
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, LastSuccessfulShutdownBootId),
+        sizeof(&BsdBootStatusData->LastSuccessfulShutdownBootId)
+    },  // RtlBsdItemShutdownBootId
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, LastReportedAbnormalShutdownBootId),
+        sizeof(&BsdBootStatusData->LastReportedAbnormalShutdownBootId)
+    },  // RtlBsdItemReportedAbnormalShutdownBootId
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, ErrorInfo),
+        sizeof(&BsdBootStatusData->ErrorInfo)
+    },  // RtlBsdItemErrorInfo
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, PowerButtonPressInfo),
+        sizeof(&BsdBootStatusData->PowerButtonPressInfo)
+    },  // RtlBsdItemPowerButtonPressInfo
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, Checksum),
+        sizeof(&BsdBootStatusData->Checksum)
+    },  // RtlBsdItemChecksum
+};
+
+ULONG OslBootAttemptCount;
+ULONG OslBootCountUpdateRequestForAbort;
+ULONG OslBootAttemptMaximum;
+
+ULONG OslBootCountUpdateIncrement;
+
+BOOLEAN OslCurrentBootCheckpoint;
+BOOLEAN OslCurrentBootSucceeded;
+BOOLEAN OslCurrentBootShutdown;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -139,8 +221,8 @@ OslpRemoveInternalApplicationOptions (
         _wcsupr(LoadString);
 
         /* Remove the existing one */
-        //BlRemoveBootOption(BlpApplicationEntry.BcdData,
-        //                   BcdLibraryString_LoadOptionsString);
+        BlRemoveBootOption(BlpApplicationEntry.BcdData,
+                           BcdLibraryString_LoadOptionsString);
 
         /* Sanitize strings we don't want */
         OslpSanitizeLoadOptionsString(LoadString, L"DISABLE_INTEGRITY_CHECKS");
@@ -148,9 +230,9 @@ OslpRemoveInternalApplicationOptions (
         OslpSanitizeLoadOptionsString(LoadString, L"DISABLEELAMDRIVERS");
 
         /* Add the sanitized one back */
-        //Status = BlAppendBootOptionsString(&BlpApplicationEntry,
-        //                                   BcdLibraryString_LoadOptionsString,
-        //                                   LoadString);
+        Status = BlAppendBootOptionString(&BlpApplicationEntry,
+                                          BcdLibraryString_LoadOptionsString,
+                                          LoadString);
 
         /* Free the original BCD one */
         BlMmFreeHeap(LoadString);
@@ -161,6 +243,288 @@ OslpRemoveInternalApplicationOptions (
 
     /* All good */
     return Status;
+}
+
+NTSTATUS
+OslpCheckForcedFailure (
+    VOID
+    )
+{
+    ULONG64 ForceReason;
+    NTSTATUS Status;
+
+    /* Read the option */
+    Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
+                                    BcdOSLoaderInteger_ForceFailure,
+                                    &ForceReason);
+    if (NT_SUCCESS(Status) && (ForceReason < 4))
+    {
+        /* For reasons above 3, don't actually do anything */
+        if (ForceReason > 3)
+        {
+            return STATUS_SUCCESS;
+        }
+    }
+
+    /* If the option isn't there or invalid, always return success */
+    return STATUS_SUCCESS;
+}
+
+VOID
+OslpInitializeBootStatusDataLog (
+    VOID
+    )
+{
+    /* TODO */
+    return;
+}
+
+NTSTATUS
+OslpReadWriteBootStatusData (
+    _In_ BOOLEAN WriteAccess
+    )
+{
+    /* Are you trying to write? */
+    if (WriteAccess)
+    {
+        /* Have we already read? */
+        if (!BsdBootStatusData)
+        {
+            /* No -- fail */
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+    else if (BsdBootStatusData)
+    {
+        /* No -- you're trying to read and we already have the data: no-op */
+        return STATUS_SUCCESS;
+    }
+
+    /* TODO */
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+OslpGetSetBootStatusData (
+    _In_ BOOLEAN Read,
+    _In_ RTL_BSD_ITEM_TYPE DataClass,
+    _Out_ PVOID Buffer,
+    _Inout_ PULONG Size
+    )
+{
+    NTSTATUS Status;
+    ULONG Length, Offset;
+
+    /* No data has been read yet, fail */
+    if (!BsdBootStatusData)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Invalid data item, fail */
+    if (DataClass >= RtlBsdItemMax)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Capture the length and offset */
+    Length = OslpBootStatusFields[DataClass].Size;
+    Offset = OslpBootStatusFields[DataClass].Offset;
+
+    /* Make sure it doesn't overflow past the structure we've read */
+    if ((Length + Offset) > BsdBootStatusData->Version)
+    {
+        return STATUS_REVISION_MISMATCH;
+    }
+
+    /* Make sure we have enough space */
+    if (*Size >= Length)
+    {
+        /* We do -- is this a read? */
+        if (Read)
+        {
+            /* Yes, copy into the caller's buffer */
+            RtlCopyMemory(Buffer,
+                          (PVOID)((ULONG_PTR)BsdBootStatusData + Offset),
+                          Length);
+        }
+        else
+        {
+            /* It's a write, copy from caller's buffer */
+            RtlCopyMemory((PVOID)((ULONG_PTR)BsdBootStatusData + Offset),
+                          Buffer,
+                          Length);
+        }
+
+        /* Set success */
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Return size needed and failure code */
+        *Size = Length;
+        Status = STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* All good */
+    return Status;
+}
+
+NTSTATUS
+OslSetBootStatusData (
+    _In_ BOOLEAN LastBootGood,
+    _In_ BOOLEAN LastBootShutdown,
+    _In_ BOOLEAN LastBootCheckpoint,
+    _In_ ULONG UpdateIncrement,
+    _In_ ULONG BootAttemptCount
+    )
+{
+    NTSTATUS Status;
+    ULONG Size;
+
+    /* Capture the BSD data in our globals, if needed */
+    Status = OslpReadWriteBootStatusData(FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Write last boot shutdown */
+    Size = sizeof(LastBootShutdown);
+    Status = OslpGetSetBootStatusData(FALSE,
+                                      RtlBsdItemBootShutdown,
+                                      &LastBootShutdown,
+                                      &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Write last boot good */
+    Size = sizeof(LastBootGood);
+    Status = OslpGetSetBootStatusData(FALSE,
+                                      RtlBsdItemBootGood,
+                                      &LastBootGood,
+                                      &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Write last boot checkpoint */
+    Size = sizeof(LastBootCheckpoint);
+    Status = OslpGetSetBootStatusData(FALSE,
+                                      RtlBsdItemBootCheckpoint,
+                                      &LastBootCheckpoint,
+                                      &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Write boot attempt count */
+    Size = sizeof(BootAttemptCount);
+    Status = OslpGetSetBootStatusData(FALSE,
+                                      RtlBsdItemBootAttemptCount,
+                                      &BootAttemptCount,
+                                      &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* TODO: Update Boot ID*/
+
+    /* Now write the data */
+    Status = OslpReadWriteBootStatusData(TRUE);
+
+Quickie:
+    return Status;
+}
+
+NTSTATUS
+OslGetBootStatusData (
+    _Out_ PBOOLEAN LastBootGood,
+    _Out_ PBOOLEAN LastBootShutdown,
+    _Out_ PBOOLEAN LastBootCheckpoint,
+    _Out_ PULONG LastBootId,
+    _Out_ PBOOLEAN BootGood,
+    _Out_ PBOOLEAN BootShutdown
+    )
+{
+    NTSTATUS Status;
+    ULONG Size;
+    ULONG64 BootStatusPolicy;
+    BOOLEAN localBootShutdown, localBootGood;
+
+    /* Capture the BSD data in our globals, if needed */
+    Status = OslpReadWriteBootStatusData(FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Read the last boot ID */
+    Size = sizeof(*LastBootId);
+    Status = OslpGetSetBootStatusData(TRUE, RtlBsdItemBootId, LastBootId, &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Set to zero if we couldn't find it */
+        *LastBootId = 0;
+    }
+
+    /* Get the boot status policy */
+    Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
+                                    BcdOSLoaderInteger_BootStatusPolicy,
+                                    &BootStatusPolicy);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Apply a default if none exists */
+        BootStatusPolicy = IgnoreShutdownFailures;
+    }
+
+    /* Check if this was a good shutdown */
+    Size = sizeof(localBootShutdown);
+    Status = OslpGetSetBootStatusData(TRUE,
+                                      RtlBsdItemBootShutdown,
+                                      &localBootShutdown,
+                                      &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Tell the caller */
+    *BootShutdown = localBootShutdown;
+
+    /* Check if this was a good boot */
+    Size = sizeof(localBootGood);
+    Status = OslpGetSetBootStatusData(TRUE,
+                                      RtlBsdItemBootGood,
+                                      &localBootGood,
+                                      &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Tell the caller*/
+    *BootGood = localBootGood;
+
+    /* TODO: Additional logic for checkpoints and such */
+    Status = STATUS_NOT_IMPLEMENTED;
+
+Quickie:
+    return Status;
+}
+
+BOOLEAN
+OslpAdvancedOptionsRequested (
+    VOID
+    )
+{
+    /* TODO */
+    return FALSE;
 }
 
 NTSTATUS
@@ -176,6 +540,16 @@ OslPrepareTarget (
     SIZE_T RootLength, RootLengthWithSep;
     ULONG i;
     ULONG64 StartPerf, EndPerf;
+    RTL_BSD_DATA_POWER_TRANSITION PowerTransitionData;
+    PRTL_BSD_DATA_POWER_TRANSITION PowerBuffer;
+    ULONG OsDeviceHandle;
+    BOOLEAN LastBootGood, LastBootShutdown, LastBootCheckpoint;
+    ULONG BootId;
+    BOOLEAN BootGood, BootShutdown;
+    ULONG BsdSize;
+
+    /* Initialize locals */
+    PowerBuffer = NULL;
 
     /* Assume no flags */
     *ReturnFlags = 0;
@@ -214,9 +588,14 @@ OslPrepareTarget (
     /* Capture the current TSC */
     StartPerf = BlArchGetPerformanceCounter();
 
-#ifdef BL_TPM_SUPPORT
-    BlpSbdiCurrentApplicationType = 0x10200003;
-#endif
+    /* Set our application type for SecureBoot/TPM purposes */
+    BlpSbdiCurrentApplicationType.Application.ObjectCode =
+        BCD_OBJECT_TYPE_APPLICATION;
+    BlpSbdiCurrentApplicationType.Application.ImageCode =
+        BCD_IMAGE_TYPE_BOOT_APP;
+    BlpSbdiCurrentApplicationType.Application.ApplicationCode =
+        BCD_APPLICATION_TYPE_OSLOADER;
+    BlpSbdiCurrentApplicationType.Application.Reserved = 0;
 
     /* Register an error handler */
     BlpStatusErrorHandler = OslBlStatusErrorHandler;
@@ -237,6 +616,7 @@ OslPrepareTarget (
     Status = OslpRemoveInternalApplicationOptions();
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"Fail here: %d\r\n", __LINE__);
         goto Quickie;
     }
 
@@ -247,6 +627,7 @@ OslPrepareTarget (
                                    0);
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"Fail here: %d\r\n", __LINE__);
         goto Quickie;
     }
 
@@ -265,6 +646,7 @@ OslPrepareTarget (
                                    &SystemRoot);
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"Fail here: %d\r\n", __LINE__);
         goto Quickie;
     }
 
@@ -286,6 +668,7 @@ OslPrepareTarget (
         {
             /* Bail out if we're out of memory */
             Status = STATUS_NO_MEMORY;
+            EfiPrintf(L"Fail here: %d\r\n", __LINE__);
             goto Quickie;
         }
 
@@ -297,7 +680,162 @@ OslPrepareTarget (
         BlMmFreeHeap(SystemRoot);
     }
 
+    /* Initialize access to the BSD */
+    OslpInitializeBootStatusDataLog();
+
+    /* Check if we're supposed to fail on purpose */
+    Status = OslpCheckForcedFailure();
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"Fail here: %d\r\n", __LINE__);
+        goto Quickie;
+    }
+
+    /* Always disable VGA mode */
+    Status = BlAppendBootOptionBoolean(&BlpApplicationEntry,
+                                       BcdOSLoaderBoolean_DisableVgaMode,
+                                       TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"Fail here: %d\r\n", __LINE__);
+        goto Quickie;
+    }
+
+    /* Get telemetry data from the last boot */
+    Status = OslGetBootStatusData(&LastBootGood,
+                                  &LastBootShutdown,
+                                  &LastBootCheckpoint,
+                                  &BootId,
+                                  &BootGood,
+                                  &BootShutdown);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Assume this is the very first boot and everything went well */
+        BootId = 0;
+        LastBootGood = TRUE;
+        LastBootShutdown = TRUE;
+        LastBootCheckpoint = TRUE;
+        BootGood = TRUE;
+        BootShutdown = TRUE;
+
+        /* Set 0 boot attempts */
+        OslBootAttemptCount = 0;
+    }
+
+    /* Set more attempt variables to their initial state */
+    OslResetBootStatus = TRUE;
+    OslBootCountUpdateRequestForAbort = 0;
+
+    /* Read the current BSD data into the global buffer */
+    Status = OslpReadWriteBootStatusData(FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Get the power transition buffer from the BSD */
+        BsdSize = sizeof(PowerTransitionData);
+        Status = OslpGetSetBootStatusData(TRUE,
+                                          RtlBsdPowerTransition,
+                                          &PowerTransitionData,
+                                          &BsdSize);
+        if (NT_SUCCESS(Status))
+        {
+            /* Save the buffer */
+            PowerBuffer = &PowerTransitionData;
+        }
+    }
+
+    /* Check if this is VHD boot, which gets 3 boot attempts instead of 2 */
+    OslBootAttemptMaximum = 2;
+    OslBootAttemptMaximum += BlDeviceIsVirtualPartitionDevice(OslLoadDevice, NULL);
+
+    /* Check if the user wants to see the advanced menu */
+    if (!OslpAdvancedOptionsRequested())
+    {
+        /* The last boot failed more than the maximum */
+        if (!(LastBootGood) &&
+            (OslBootAttemptCount >= OslBootAttemptMaximum))
+        {
+            /* Return failure due to boot -- launch recovery */
+            *ReturnFlags |= 8;
+
+            /* Update the attempt count and status variables */
+            OslBootAttemptCount = OslBootAttemptMaximum - 1;
+            OslCurrentBootCheckpoint = LastBootCheckpoint;
+            OslCurrentBootSucceeded = FALSE;
+            OslCurrentBootShutdown = LastBootShutdown;
+
+            /* Crash with code 15 and abort boot */
+            OslFatalErrorEx(15, 0, 0, 0);
+            Status = STATUS_UNSUCCESSFUL;
+            EfiPrintf(L"Fail here: %d\r\n", __LINE__);
+            goto Quickie;
+        }
+
+        /* We never made it far enough, more than the maximum */
+        if (!(LastBootCheckpoint) &&
+            (OslBootAttemptCount >= OslBootAttemptMaximum))
+        {
+            /* Return crash/dirty shutdown during boot attempt */
+            *ReturnFlags |= 0x10;
+
+            /* Update the attempt count and status variables */
+            OslBootAttemptCount = OslBootAttemptMaximum - 1;
+            OslCurrentBootSucceeded = LastBootGood;
+            OslCurrentBootShutdown = LastBootShutdown;
+            OslCurrentBootCheckpoint = FALSE;
+
+            /* Crash with code 16 and abort boot */
+            OslFatalErrorEx(16, 0, 0, 0);
+            Status = STATUS_UNSUCCESSFUL;
+            EfiPrintf(L"Fail here: %d\r\n", __LINE__);
+            goto Quickie;
+        }
+
+        /* We failed to shutdown cleanly, and haven't booted yet */
+        if (!(LastBootShutdown) && !(OslBootAttemptCount))
+        {
+            /* Return crash/dirty shutdown */
+            *ReturnFlags |= 0x10;
+
+            /* There's no boot attempt, so only update shutdown variables */
+            OslCurrentBootSucceeded = LastBootGood;
+            OslCurrentBootShutdown = TRUE;
+            OslCurrentBootCheckpoint = LastBootCheckpoint;
+
+            /* Crash with code 16 and abort boot */
+            OslFatalErrorEx(16, 0, 0, 0);
+            Status = STATUS_UNSUCCESSFUL;
+            EfiPrintf(L"Fail here: %d\r\n", __LINE__);
+            goto Quickie;
+        }
+    }
+
+    /* Officially increment the number of boot attempts */
+    OslBootAttemptCount++;
+
+    /* No success yet, write to boot status file */
+    OslCurrentBootCheckpoint = FALSE;
+    OslCurrentBootSucceeded = FALSE;
+    OslCurrentBootShutdown = FALSE;
+    OslSetBootStatusData(FALSE,
+                         FALSE,
+                         FALSE,
+                         OslBootCountUpdateIncrement,
+                         OslBootAttemptCount);
+
+    /* Open the OS Loader Device for Read/Write access */
+    Status = BlpDeviceOpen(OslLoadDevice,
+                           BL_DEVICE_READ_ACCESS | BL_DEVICE_WRITE_ACCESS,
+                           0,
+                           &OsDeviceHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"Fail here: %d\r\n", __LINE__);
+        goto Quickie;
+    }
+
+    /* That's all for now, folks */
     Status = STATUS_NOT_IMPLEMENTED;
+    DBG_UNREFERENCED_LOCAL_VARIABLE(PowerBuffer);
 
     /* Printf perf */
     EndPerf = BlArchGetPerformanceCounter();
