@@ -240,8 +240,9 @@ PMMPTE MiHighestUserPxe;
 #endif
 
 /* These variables define the system cache address space */
-PVOID MmSystemCacheStart;
+PVOID MmSystemCacheStart = MI_SYSTEM_CACHE_START;
 PVOID MmSystemCacheEnd;
+ULONG MmSizeOfSystemCacheInPages;
 MMSUPPORT MmSystemCacheWs;
 
 //
@@ -2493,6 +2494,14 @@ MmArmInitSystem(IN ULONG Phase,
             DPRINT1("System cache working set too big\n");
             return FALSE;
         }
+
+        /* Define limits for system cache */
+#ifdef _M_AMD64
+        MmSizeOfSystemCacheInPages = (MI_SYSTEM_CACHE_END - MI_SYSTEM_CACHE_START) / PAGE_SIZE;
+#else
+        MmSizeOfSystemCacheInPages = ((ULONG_PTR)MI_PAGED_POOL_START - (ULONG_PTR)MI_SYSTEM_CACHE_START) / PAGE_SIZE;
+#endif
+        MmSystemCacheEnd = (PVOID)((ULONG_PTR)MmSystemCacheStart + (MmSizeOfSystemCacheInPages * PAGE_SIZE) - 1);
 
         /* Initialize the system cache */
         //MiInitializeSystemCache(MmSystemCacheWsMinimum, MmAvailablePages);

@@ -155,6 +155,9 @@ MiDbgDumpAddressSpace(VOID)
             HYPER_SPACE, HYPER_SPACE_END,
             "Hyperspace");
     DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmSystemCacheStart, MmSystemCacheEnd,
+            "System Cache");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPagedPoolStart,
             (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
             "ARM3 Paged Pool");
