@@ -1852,7 +1852,7 @@ MiBuildPagedPool(VOID)
             MI_WRITE_VALID_PPE(PointerPpe, TempPpe);
             MiInitializePfnForOtherProcess(TempPpe.u.Hard.PageFrameNumber,
                                            (PMMPTE)PointerPpe,
-                                            PFN_FROM_PTE(MiAddressToPte(PointerPpe)));
+                                           PFN_FROM_PTE(MiAddressToPte(PointerPpe)));
         }
     }
 #endif
