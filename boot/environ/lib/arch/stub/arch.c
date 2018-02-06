@@ -13,6 +13,9 @@
 /* DATA VARIABLES ************************************************************/
 
 PBL_ARCH_CONTEXT CurrentExecutionContext;
+PBL_MM_RELOCATE_SELF_MAP BlMmRelocateSelfMap;
+PBL_MM_MOVE_VIRTUAL_ADDRESS_RANGE BlMmMoveVirtualAddressRange;
+PBL_MM_ZERO_VIRTUAL_ADDRESS_RANGE BlMmZeroVirtualAddressRange;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -48,5 +51,15 @@ VOID
 Archx86TransferTo32BitApplicationAsm (VOID)
 {
     EfiPrintf(L" Archx86TransferTo32BitApplicationAsm NOT IMPLEMENTED for this platform\r\n");
+}
+
+NTSTATUS
+OslArchTransferToKernel(
+    _In_ struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    _In_ PVOID KernelEntrypoint
+    )
+{
+    EfiPrintf(L" OslArchTransferToKernel NOT IMPLEMENTED for this platform\r\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
