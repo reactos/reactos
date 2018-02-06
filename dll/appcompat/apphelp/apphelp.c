@@ -4,7 +4,7 @@
  * PURPOSE:     apphelp entrypoint / generic interface functions
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blaževic
- *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
@@ -42,7 +42,7 @@ void ApphelppInitDebugLevel(void)
     if (NT_SUCCESS(Status))
     {
         if (!NT_SUCCESS(RtlUnicodeStringToInteger(&DebugValue, 10, &NewLevel)))
-            NewLevel = 0;
+            NewLevel = SHIM_ERR;
     }
     g_ShimDebugLevel = NewLevel;
 }
@@ -52,10 +52,6 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
 {
     switch (reason)
     {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* prefer native version */
-#endif
         case DLL_PROCESS_ATTACH:
             g_hInstance = hinst;
             DisableThreadLibraryCalls( hinst );
@@ -243,5 +239,4 @@ ApphelpCheckRunAppEx(
     /* We should _ALWAYS_ return TRUE here, unless we want to block an application from starting! */
     return TRUE;
 }
-
 
