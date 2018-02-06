@@ -960,6 +960,7 @@ BlArchGetCpuVendor (
     {
         return CPU_VIA;
     }
+#ifdef _M_IX86
     if (!strncmp((PCHAR)&CpuInfo.Ebx, "CyrixInstead", 12))
     {
         return CPU_CYRIX;
@@ -972,7 +973,7 @@ BlArchGetCpuVendor (
     {
         return CPU_RISE;
     }
-
+#endif // _M_IX86
     /* Other */
     return CPU_UNKNOWN;
 }

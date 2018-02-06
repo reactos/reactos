@@ -304,7 +304,7 @@ BlImgAllocateImageBuffer (
         }
 
         /* Now map the physical buffer at the address requested */
-        MappedBase = (PVOID)PhysicalAddress.LowPart;
+        MappedBase = (PVOID)(ULONG_PTR)PhysicalAddress.QuadPart;
         Status = BlMmMapPhysicalAddressEx(&MappedBase,
                                           BlMemoryFixed,
                                           Size,
@@ -976,9 +976,9 @@ ImgpLoadPEImage (
         }
 
         /* Make sure that the section doesn't overflow in memory */
-        Status = RtlULongAdd(Section->VirtualAddress,
-                             SectionSize,
-                             &SectionEnd);
+        Status = RtlULongPtrAdd(Section->VirtualAddress,
+                                SectionSize,
+                                &SectionEnd);
         if (!NT_SUCCESS(Status))
         {
             EfiPrintf(L"fail 21\r\n");
@@ -994,9 +994,9 @@ ImgpLoadPEImage (
         }
 
         /* Make sure it doesn't overflow on disk */
-        Status = RtlULongAdd(Section->VirtualAddress,
-                             AlignSize,
-                             &SectionEnd);
+        Status = RtlULongPtrAdd(Section->VirtualAddress,
+                                AlignSize,
+                                &SectionEnd);
         if (!NT_SUCCESS(Status))
         {
             EfiPrintf(L"fail 31\r\n");
@@ -1834,7 +1834,7 @@ ImgArchEfiStartBootApplication (
     _In_ PBL_RETURN_ARGUMENTS ReturnArguments
     )
 {
-#ifndef _M_ARM
+#ifdef _M_IX64
     KDESCRIPTOR Gdt, Idt;
     ULONG BootSizeNeeded;
     NTSTATUS Status;
