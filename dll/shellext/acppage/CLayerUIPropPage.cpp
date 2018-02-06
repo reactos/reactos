@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Compatibility Layer Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CLayerUIPropPage implementation
- * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -33,13 +33,11 @@ static struct {
     { L"Windows XP (SP2)", L"WINXPSP2" },
     { L"Windows XP (SP3)", L"WINXPSP3" },
     { L"Windows Server 2003 (SP1)", L"WINSRV03SP1" },
-#if 0
     { L"Windows Server 2008 (SP1)", L"WINSRV08SP1" },
     { L"Windows Vista", L"VISTARTM" },
     { L"Windows Vista (SP1)", L"VISTASP1" },
     { L"Windows Vista (SP2)", L"VISTASP2" },
     { L"Windows 7", L"WIN7RTM" },
-#endif
     { NULL, NULL }
 };
 
