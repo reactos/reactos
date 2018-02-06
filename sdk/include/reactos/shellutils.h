@@ -351,7 +351,7 @@ HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCSTR pstrValue)
 
 HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCWSTR pwstrValue)
 {
-    ULONG cchr = wcslen(pwstrValue);
+    SIZE_T cchr = wcslen(pwstrValue);
     LPWSTR buffer = static_cast<LPWSTR>(CoTaskMemAlloc((cchr + 1) * sizeof(WCHAR)));
     if (buffer == NULL)
         return E_OUTOFMEMORY;

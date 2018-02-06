@@ -70,20 +70,20 @@ LogToFile(LPCWSTR lpMsg,
           UINT flags)
 {
     LPWSTR lpFullMsg = NULL;
-    DWORD msgLen;
+    SIZE_T msgLen;
 
     msgLen = wcslen(lpMsg) + 1;
 
     if (flags & LOG_ERROR)
     {
-        LPVOID lpSysMsg;
+        LPWSTR lpSysMsg;
         DWORD eMsgLen;
 
         eMsgLen = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                                  NULL,
                                  errNum,
                                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                 (LPTSTR)&lpSysMsg,
+                                 (LPWSTR)&lpSysMsg,
                                  0,
                                  NULL);
 
@@ -130,7 +130,7 @@ LogToFile(LPCWSTR lpMsg,
 
         bRet = WriteFile(hLogFile,
                          lpFullMsg,
-                         wcslen(lpFullMsg) * sizeof(WCHAR),
+                         (DWORD)wcslen(lpFullMsg) * sizeof(WCHAR),
                          &bytesWritten,
                          &olWrite);
         if (!bRet)

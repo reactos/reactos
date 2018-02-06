@@ -174,7 +174,7 @@ static DWORD WINAPI UserLoginThread(LPVOID data)
   gethostname(hostname, sizeof(hostname));
   sprintf(welcome, "\r\nWelcome to %s, please identify yourself\r\n\r\nuser:", hostname);
 
-  if (send(client->socket, welcome, strlen(welcome), 0) < 0) {   
+  if (send(client->socket, welcome, (int)strlen(welcome), 0) < 0) {   
     closesocket(client->socket);
     free(client);
     return 0;
@@ -190,7 +190,7 @@ static DWORD WINAPI UserLoginThread(LPVOID data)
     }
   }
 
-  if (send(client->socket, pwdPrompt, strlen(pwdPrompt), 0) < 0) {   
+  if (send(client->socket, pwdPrompt, (int)strlen(pwdPrompt), 0) < 0) {   
     closesocket(client->socket);
     free(client);
     return 0;

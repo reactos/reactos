@@ -529,13 +529,13 @@ void help(int argc, const char *argv[])
 	struct cmd *c;
 
 	if (argc == 1) {
-		register int i, j, w, k;
-		int columns, width = 0, lines;
+		register int i, j, k;
+		size_t columns, width = 0, w, lines;
 		extern int NCMDS;
 
 		printf("Commands may be abbreviated.  Commands are:\n\n");
 		for (c = cmdtab; c < &cmdtab[NCMDS]; c++) {
-			int len = strlen(c->c_name);
+			size_t len = strlen(c->c_name);
 
 			if (len > width)
 				width = len;

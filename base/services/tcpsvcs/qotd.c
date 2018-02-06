@@ -16,7 +16,7 @@ static WCHAR szFilePath[] = L"\\drivers\\etc\\quotes";
 static BOOL
 SendQuote(SOCKET sock, char* Quote)
 {
-    INT strSize = strlen(Quote);
+    INT strSize = (INT)strlen(Quote);
     if (send(sock, Quote, strSize, 0) == SOCKET_ERROR)
         return FALSE;
 

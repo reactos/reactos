@@ -334,7 +334,7 @@ InfpAddKeyToLine(
     if (Line->Key != NULL)
         return NULL;
 
-    Line->Key = FrLdrTempAlloc(strlen(Key) + 1, TAG_INF_KEY);
+    Line->Key = FrLdrTempAlloc((ULONG)strlen(Key) + 1, TAG_INF_KEY);
     if (Line->Key == NULL)
         return NULL;
 
