@@ -21,6 +21,9 @@ EXTERN KiXmmExceptionHandler:PROC
 EXTERN KiDeliverApc:PROC
 EXTERN KiDpcInterruptHandler:PROC
 EXTERN PsConvertToGuiThread:PROC
+EXTERN MmCreateKernelStack:PROC
+EXTERN KeSwitchKernelStack:PROC
+EXTERN MmDeleteKernelStack:PROC
 
 #ifdef _WINKD_
 EXTERN KdSetOwedBreakpoints:PROC
@@ -720,8 +723,6 @@ ENDFUNC
 
 
 #define MAX_SYSCALL_PARAM_SIZE (16 * 8)
-#define HOME_SIZE 6*8
-#define SYSCALL_ALLOCATION (MAX_SYSCALL_PARAM_SIZE + HOME_SIZE)
 
 EXTERN KiSystemCallHandler:PROC
 
@@ -752,41 +753,44 @@ PUBLIC KiSystemCallEntry64
     mov rsp, gs:[PcRspBase]
 
     /* Allocate a TRAP_FRAME and space for parameters */
-    sub rsp, (KTRAP_FRAME_LENGTH + MAX_SYSCALL_PARAM_SIZE + HOME_SIZE)
+    sub rsp, (KTRAP_FRAME_LENGTH + MAX_SYSCALL_PARAM_SIZE)
 #if DBG
     /* Save rbp and load it with the old stack pointer */
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + HOME_SIZE + KTRAP_FRAME_Rbp], rbp
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbp], rbp
     mov rbp, gs:[PcUserRsp]
 #endif
 
-    /* Save important volatiles in the trap frame */
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rax], rax
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx], rcx
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R10], r10
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R11], r11
+    /* Save important registers in the trap frame */
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rax], rax
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx], r10
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags], r11
 
     /* Set sane segments */
     mov ax, (KGDT64_R3_DATA or RPL_MASK)
     mov ds, ax
     mov es, ax
 
+.ENDP
+
+.PROC KiSystemCall64Again
+
+   /* Old stack pointer is in rcx, lie and say we saved it in rbp */
+    .setframe rbp, 0
+    .endprolog
+
     /* Call the C-handler (will enable interrupts) */
-    lea rcx, [rsp + SYSCALL_ALLOCATION]
     call KiSystemCallHandler
 
-    /* Deallocate the handlers home stack frame */
-    add rsp, HOME_SIZE
-
-    /* The return value is the address of the Nt-function */
-    mov rcx, [rsp + 0]
-    mov rdx, [rsp + 8]
-    mov r8, [rsp + 16]
-    mov r9, [rsp + 24]
+    /* The return value from KiSystemCallHandler is the address of the Nt-function */
+    mov rcx, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx]
+    mov rdx, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rdx]
+    mov r8, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R8]
+    mov r9, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R9]
     call rax
 
 #if DBG
     /* Restore rbp */
-    mov rbp, [rsp + SYSCALL_ALLOCATION + KTRAP_FRAME_Rbp]
+    mov rbp, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbp]
 
     test dword ptr [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags], HEX(200)
     jnz IntsEnabled
@@ -803,8 +807,8 @@ IntsEnabled:
     mov [rcx + KTHREAD_TrapFrame], rdx
 
     /* Prepare user mode return address (rcx) and eflags (r11) for sysret */
-    mov rcx, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx]
-    mov r11, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R11]
+    mov rcx, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rip]
+    mov r11, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags]
 
     /* Load user mode stack (It was copied to the trap frame) */
     mov rsp, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rsp]
@@ -815,6 +819,7 @@ IntsEnabled:
     /* return to user mode */
     .byte HEX(48) // REX prefix to return to long mode
     sysret
+
 .ENDP
 
 
@@ -896,22 +901,61 @@ ENDFUNC
 PUBLIC KiConvertToGuiThread
 FUNC KiConvertToGuiThread
 
-    push rbp
-    .pushreg rbp
-    sub rsp, 32
-    .allocstack 32
+    sub rsp, 40
+    .allocstack 40
     .endprolog
+
+    // NewStack = (ULONG_PTR)MmCreateKernelStack(TRUE, 0);
+    mov cl, 1
+    xor rdx, rdx
+    call MmCreateKernelStack
+
+    /* Check for failure */
+    test rax, rax
+    jz KiConvertToGuiThreadFailed
+
+    ; OldStack = KeSwitchKernelStack((PVOID)NewStack, (PVOID)(NewStack - KERNEL_STACK_SIZE));
+    mov rcx, rax
+    mov rdx, rax
+    sub rdx, KERNEL_STACK_SIZE
+    call KeSwitchKernelStack
+
+    // MmDeleteKernelStack(OldStack, FALSE);
+    mov rcx, rax
+    xor rdx, rdx
+    call MmDeleteKernelStack
 
     /* Call the worker function */
     call PsConvertToGuiThread
 
-    /* Adjust rsp */
-    add rsp, 32
+    /* Check for failure */
+    test rax, rax
+    js KiConvertToGuiThreadFailed
 
-    /* Restore rbp */
-    pop rbp
+    /* Disable interrupts for return */
+    cli
 
-    /* return to the caller */
+    // FIXME: should just do the trap frame switch in KiSystemCallHandler64
+    /* Restore old trap frame */
+    mov rcx, gs:[PcCurrentThread]
+    mov rdx, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_TrapFrame]
+    mov [rcx + KTHREAD_TrapFrame], rdx
+
+    // Restore register parameters
+    mov rcx, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rip]
+    mov rdx, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rdx]
+    mov r8, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R8]
+    mov r9, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R9]
+
+    /* Run KiSystemCallHandler again */
+    add rsp, 48
+    jmp KiSystemCall64Again
+
+KiConvertToGuiThreadFailed:
+
+    /* Clean up the stack and return failure */
+    add rsp, 40
+    mov eax, HEX(C0000017) // STATUS_NO_MEMORY
     ret
 
 ENDFUNC
@@ -977,7 +1021,7 @@ KiSwitchKernelStackHelper:
 
     /* Return on new stack */
     mov rax, rdx
-    ret;
+    ret
 
 
 #ifdef _MSC_VER

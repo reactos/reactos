@@ -433,22 +433,31 @@ NTSTATUS
 NtSyscallFailure(void)
 {
     /* This is the failure function */
-    return STATUS_ACCESS_VIOLATION;
+    return (NTSTATUS)KeGetCurrentThread()->TrapFrame->Rax;
 }
 
 PVOID
 KiSystemCallHandler(
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG64 P2,
-    IN ULONG64 P3,
-    IN ULONG64 P4)
+    _In_ ULONG64 ReturnAddress,
+    _In_ ULONG64 P2,
+    _In_ ULONG64 P3,
+    _In_ ULONG64 P4)
 {
+    PKTRAP_FRAME TrapFrame;
     PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
     PKTHREAD Thread;
     PULONG64 KernelParams, UserParams;
     ULONG ServiceNumber, Offset, Count;
     ULONG64 UserRsp;
-    NTSTATUS Status;
+
+    /* Get a pointer to the trap frame */
+    TrapFrame = (PKTRAP_FRAME)((PULONG64)_AddressOfReturnAddress() + 1 + MAX_SYSCALL_PARAMS);
+
+    /* Save some values in the trap frame */
+    TrapFrame->Rip = ReturnAddress;
+    TrapFrame->Rdx = P2;
+    TrapFrame->R8 = P3;
+    TrapFrame->R9 = P4;
 
     /* Increase system call count */
     __addgsdword(FIELD_OFFSET(KIPCR, Prcb.KeSystemCalls), 1);
@@ -496,27 +505,12 @@ KiSystemCallHandler(
             return (PVOID)NtSyscallFailure;
         }
 
-        /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */
-        Status = KiConvertToGuiThread();
-
-        /* Reload trap frame and descriptor table pointer from new stack */
-        TrapFrame = *(volatile PVOID*)&Thread->TrapFrame;
-        DescriptorTable = (PVOID)(*(volatile ULONG_PTR*)&Thread->ServiceTable + Offset);
-
-        if (!NT_SUCCESS(Status))
-        {
-            /* Set the last error and fail */
-            TrapFrame->Rax = Status;
-            return (PVOID)NtSyscallFailure;
-        }
-
-        /* Validate the system call number again */
-        if (ServiceNumber >= DescriptorTable->Limit)
-        {
-            /* Fail the call */
-            TrapFrame->Rax = STATUS_INVALID_SYSTEM_SERVICE;
-            return (PVOID)NtSyscallFailure;
-        }
+        /* Convert us to a GUI thread 
+           To be entirely correct. we return KiConvertToGuiThread,
+           which allocates a new stack, switches to it, calls
+           PsConvertToGuiThread and resumes in the middle of
+           KiSystemCallEntry64 to restart the system call handling. */
+        return (PVOID)KiConvertToGuiThread;
     }
 
     /* Get stack bytes and calculate argument count */
@@ -538,10 +532,10 @@ KiSystemCallHandler(
             case 7: KernelParams[6] = UserParams[6];
             case 6: KernelParams[5] = UserParams[5];
             case 5: KernelParams[4] = UserParams[4];
-            case 4: KernelParams[3] = P4;
-            case 3: KernelParams[2] = P3;
-            case 2: KernelParams[1] = P2;
-            case 1: KernelParams[0] = TrapFrame->R10;
+            case 4:
+            case 3:
+            case 2:
+            case 1:
             case 0:
                 break;
 
