@@ -1835,7 +1835,7 @@ BlockIoEfiHashFunction (
     )
 {
     /* Get rid of the alignment bits to have a more unique number */
-    return ((ULONG)Entry->Value >> 3) % TableSize;
+    return ((ULONG_PTR)Entry->Value >> 3) % TableSize;
 }
 
 NTSTATUS

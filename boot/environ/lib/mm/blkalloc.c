@@ -48,7 +48,7 @@ MmBapCompareBlockAllocatorTableEntry (
     )
 {
     PBL_BLOCK_DESCRIPTOR BlockInfo = (PBL_BLOCK_DESCRIPTOR)Entry;
-    ULONG BlockId = (ULONG)Argument1;
+    ULONG BlockId = PtrToUlong(Argument1);
 
     /* Check if the block ID matches */
     return BlockInfo->BlockId == BlockId;
@@ -67,7 +67,7 @@ MmBapFindBlockInformation (
                           MmBlockAllocatorTableEntries,
                           &EntryId,
                           MmBapCompareBlockAllocatorTableEntry,
-                          (PVOID)EntryId,
+                          UlongToPtr(EntryId),
                           NULL,
                           NULL,
                           NULL);

@@ -61,7 +61,8 @@ DsppLoadFontFile (
 {
     PBL_DEVICE_DESCRIPTOR FontDevice;
     NTSTATUS Status;
-    ULONG NameLength, DirectoryLength, TotalLength;
+    SIZE_T NameLength, DirectoryLength, TotalLength;
+    ULONG AllocationLength;
     PWCHAR FontPath, FontDirectory;
     BL_LIBRARY_PARAMETERS LibraryParameters;
     BOOLEAN CustomDirectory, CustomDevice;
@@ -114,28 +115,35 @@ DsppLoadFontFile (
     DirectoryLength = wcslen(FontDirectory);
 
     /* Safely add them up*/
-    Status = RtlULongAdd(NameLength, DirectoryLength, &TotalLength);
+    Status = RtlSizeTAdd(NameLength, DirectoryLength, &TotalLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Convert to bytes */
-    Status = RtlULongLongToULong(TotalLength * sizeof(WCHAR), &TotalLength);
+    Status = RtlSizeTMult(TotalLength, sizeof(WCHAR), &TotalLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Add a terminating NUL */
-    Status = RtlULongAdd(TotalLength, sizeof(UNICODE_NULL), &TotalLength);
+    Status = RtlSizeTAdd(TotalLength, sizeof(UNICODE_NULL), &TotalLength);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Convert to ULONG */
+    Status = RtlULongLongToULong(TotalLength, &AllocationLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Allocate the final buffer for it */
-    FontPath = BlMmAllocateHeap(TotalLength);
+    FontPath = BlMmAllocateHeap(AllocationLength);
     if (!FontPath)
     {
         Status = STATUS_NO_MEMORY;

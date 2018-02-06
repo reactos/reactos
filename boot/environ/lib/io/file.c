@@ -41,7 +41,7 @@ FileIoCopyParentDirectoryPath (
     _In_ PWCHAR FilePath
     )
 {
-    ULONG PathSize, PathSizeWithNull;
+    SIZE_T PathSize, PathSizeWithNull;
     PWCHAR Backslash, ParentCopy;
 
     PathSize = wcslen(FilePath) * sizeof(WCHAR);
@@ -81,7 +81,7 @@ FileIoCopyFileName (
     )
 {
     PWCHAR Separator, FileCopy;
-    ULONG PathSize;
+    SIZE_T PathSize;
 
     Separator = wcsrchr(FilePath, '\\');
     if (!Separator)

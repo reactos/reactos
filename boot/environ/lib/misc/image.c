@@ -304,7 +304,7 @@ BlImgAllocateImageBuffer (
         }
 
         /* Now map the physical buffer at the address requested */
-        MappedBase = (PVOID)PhysicalAddress.LowPart;
+        MappedBase = PhysicalAddressToPtr(PhysicalAddress);
         Status = BlMmMapPhysicalAddressEx(&MappedBase,
                                           BlMemoryFixed,
                                           Size,
@@ -976,9 +976,9 @@ ImgpLoadPEImage (
         }
 
         /* Make sure that the section doesn't overflow in memory */
-        Status = RtlULongAdd(Section->VirtualAddress,
-                             SectionSize,
-                             &SectionEnd);
+        Status = RtlULongPtrAdd(Section->VirtualAddress,
+                                SectionSize,
+                                &SectionEnd);
         if (!NT_SUCCESS(Status))
         {
             EfiPrintf(L"fail 21\r\n");
@@ -994,9 +994,9 @@ ImgpLoadPEImage (
         }
 
         /* Make sure it doesn't overflow on disk */
-        Status = RtlULongAdd(Section->VirtualAddress,
-                             AlignSize,
-                             &SectionEnd);
+        Status = RtlULongPtrAdd(Section->VirtualAddress,
+                                AlignSize,
+                                &SectionEnd);
         if (!NT_SUCCESS(Status))
         {
             EfiPrintf(L"fail 31\r\n");
@@ -1848,7 +1848,7 @@ ImgArchEfiStartBootApplication (
     __sidt(&Idt.Limit);
 
     /* Allocate space for the IDT, GDT, and 24 pages of stack */
-    BootSizeNeeded = (ULONG)PAGE_ALIGN(Idt.Limit + Gdt.Limit + 1 + 25 * PAGE_SIZE);
+    BootSizeNeeded = (ULONG_PTR)PAGE_ALIGN(Idt.Limit + Gdt.Limit + 1 + 25 * PAGE_SIZE);
     Status = MmPapAllocatePagesInRange(&BootData,
                                        BlLoaderArchData,
                                        BootSizeNeeded >> PAGE_SHIFT,
