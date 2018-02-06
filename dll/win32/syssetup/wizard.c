@@ -2491,25 +2491,6 @@ ProcessUnattendSetup(
 
 typedef DWORD(WINAPI *PFNREQUESTWIZARDPAGES)(PDWORD, HPROPSHEETPAGE *, PSETUPDATA);
 
-BOOL ActivateComctl32v6ActCtx(ULONG_PTR *cookie, HANDLE* hActCtx)
-{
-    ACTCTXW ActCtx = {sizeof(ACTCTX), ACTCTX_FLAG_RESOURCE_NAME_VALID};
-    WCHAR fileBuffer[MAX_PATH];
-
-    *hActCtx = INVALID_HANDLE_VALUE;
-
-    if (!GetModuleFileName(hDllInstance, fileBuffer, MAX_PATH))
-        return FALSE;
-
-    ActCtx.lpSource = fileBuffer;
-    ActCtx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
-    *hActCtx = CreateActCtx(&ActCtx);
-    if (*hActCtx == INVALID_HANDLE_VALUE)
-        return FALSE;
-
-    return ActivateActCtx(*hActCtx, cookie);
-}
-
 VOID
 InstallWizard(VOID)
 {
@@ -2523,9 +2504,6 @@ InstallWizard(VOID)
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
     DWORD dwPageCount = 8, dwNetworkPageCount = 0;
-    BOOL bActCtxActivated;
-    ULONG_PTR cookie;
-    HANDLE hActCtx;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2542,11 +2520,6 @@ InstallWizard(VOID)
                     MB_ICONERROR | MB_OK);
         goto done;
     }
-
-    /* Load and activate the act ctx for comctl32v6 now manually. 
-     *  Even if the exe of the process had a manifest, at the point of its launch
-     *  the manifest of comctl32 wouldn't be installed so it wouldn't be loaded at all */
-    bActCtxActivated = ActivateComctl32v6ActCtx(&cookie, &hActCtx);
 
     hNetShell = LoadLibraryW(L"netshell.dll");
     if (hNetShell != NULL)
@@ -2700,12 +2673,6 @@ done:
 
     if (hNetShell != NULL)
         FreeLibrary(hNetShell);
-
-    if (bActCtxActivated)
-    {
-        DeactivateActCtx(0, cookie);
-        ReleaseActCtx(hActCtx);
-    }
 
     if (pSetupData != NULL)
     {
