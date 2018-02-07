@@ -33,6 +33,7 @@ ULONG CcLazyWriteIos = 0;
  * - Lookaside list where to allocate work items
  * - Queue for regular work items
  * - Available worker threads
+ * - Queue for stuff to be queued after lazy writer is done
  * - Marker for throttling queues
  * - Number of ongoing workers
  * - Three seconds delay for lazy writer 
@@ -44,16 +45,13 @@ LAZY_WRITER LazyWriter;
 NPAGED_LOOKASIDE_LIST CcTwilightLookasideList;
 LIST_ENTRY CcRegularWorkQueue;
 LIST_ENTRY CcIdleWorkerThreadList;
+LIST_ENTRY CcPostTickWorkQueue;
 BOOLEAN CcQueueThrottle = FALSE;
 ULONG CcNumberActiveWorkerThreads = 0;
 LARGE_INTEGER CcFirstDelay = RTL_CONSTANT_LARGE_INTEGER((LONGLONG)-1*3000*1000*10);
 LARGE_INTEGER CcIdleDelay = RTL_CONSTANT_LARGE_INTEGER((LONGLONG)-1*1000*1000*10);
 LARGE_INTEGER CcNoDelay = RTL_CONSTANT_LARGE_INTEGER((LONGLONG)0);
 ULONG CcNumberWorkerThreads;
-
-/* Internal vars (ROS):
- */
-KEVENT iLazyWriterNotify;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -127,10 +125,25 @@ CcLazyWriteScan(VOID)
 {
     ULONG Target;
     ULONG Count;
+    KIRQL OldIrql;
     PLIST_ENTRY ListEntry;
+    LIST_ENTRY ToPost;
+    PWORK_QUEUE_ENTRY WorkItem;
 
-    /* We're not sleeping anymore */
-    KeClearEvent(&iLazyWriterNotify);
+    /* Do we have entries to queue after we're done? */
+    InitializeListHead(&ToPost);
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    if (LazyWriter.OtherWork)
+    {
+        while (!IsListEmpty(&CcPostTickWorkQueue))
+        {
+            ListEntry = RemoveHeadList(&CcPostTickWorkQueue);
+            WorkItem = CONTAINING_RECORD(ListEntry, WORK_QUEUE_ENTRY, WorkQueueLinks);
+            InsertTailList(&ToPost, &WorkItem->WorkQueueLinks);
+        }
+        LazyWriter.OtherWork = FALSE;
+    }
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
     /* Our target is one-eighth of the dirty pages */
     Target = CcTotalDirtyPages / 8;
@@ -145,9 +158,6 @@ CcLazyWriteScan(VOID)
         ++CcLazyWriteIos;
         DPRINT1("Lazy writer done (%d)\n", Count);
     }
-
-    /* Inform people waiting on us that we're done */
-    KeSetEvent(&iLazyWriterNotify, IO_DISK_INCREMENT, FALSE);
 
     /* Likely not optimal, but let's handle one deferred write now! */
     ListEntry = ExInterlockedRemoveHeadList(&CcDeferredWrites, &CcDeferredWriteSpinLock);
@@ -176,6 +186,13 @@ CcLazyWriteScan(VOID)
                                         &Context->DeferredWriteLinks,
                                         &CcDeferredWriteSpinLock);
         }
+    }
+
+    while (!IsListEmpty(&ToPost))
+    {
+        ListEntry = RemoveHeadList(&ToPost);
+        WorkItem = CONTAINING_RECORD(ListEntry, WORK_QUEUE_ENTRY, WorkQueueLinks);
+        CcPostWorkQueue(WorkItem, &CcRegularWorkQueue);
     }
 
     /* We're no longer active */
@@ -280,4 +297,48 @@ CcWorkerThread(
     /* One less worker */
     --CcNumberActiveWorkerThreads;
     KeReleaseQueuedSpinLock(LockQueueWorkQueueLock, OldIrql);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+CcWaitForCurrentLazyWriterActivity (
+    VOID)
+{
+    KIRQL OldIrql;
+    KEVENT WaitEvent;
+    PWORK_QUEUE_ENTRY WorkItem;
+
+    /* Allocate a work item */
+    WorkItem = ExAllocateFromNPagedLookasideList(&CcTwilightLookasideList);
+    if (WorkItem == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* We want lazy writer to set our event */
+    WorkItem->Function = SetDone;
+    KeInitializeEvent(&WaitEvent, NotificationEvent, FALSE);
+    WorkItem->Parameters.Event.Event = &WaitEvent;
+
+    /* Use the post tick queue */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    InsertTailList(&CcPostTickWorkQueue, &WorkItem->WorkQueueLinks);
+
+    /* Inform the lazy writer it will have to handle the post tick queue */
+    LazyWriter.OtherWork = TRUE;
+    /* And if it's not running, queue a lazy writer run
+     * And start it NOW, we want the response now
+     */
+    if (!LazyWriter.ScanActive)
+    {
+        CcScheduleLazyWriteScan(TRUE);
+    }
+
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+    /* And now, wait until lazy writer replies */
+    return KeWaitForSingleObject(&WaitEvent, Executive, KernelMode, FALSE, NULL);
 }

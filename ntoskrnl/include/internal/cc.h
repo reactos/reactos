@@ -48,8 +48,8 @@ extern KSPIN_LOCK CcDeferredWriteSpinLock;
 extern ULONG CcNumberWorkerThreads;
 extern LIST_ENTRY CcIdleWorkerThreadList;
 extern LIST_ENTRY CcRegularWorkQueue;
+extern LIST_ENTRY CcPostTickWorkQueue;
 extern NPAGED_LOOKASIDE_LIST CcTwilightLookasideList;
-extern KEVENT iLazyWriterNotify;
 
 typedef struct _PF_SCENARIO_ID
 {

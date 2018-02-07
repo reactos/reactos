@@ -35,8 +35,6 @@ ULONG CcFastReadWait;
 ULONG CcFastReadNoWait;
 ULONG CcFastReadResourceMiss;
 
-extern KEVENT iLazyWriterNotify;
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -596,30 +594,6 @@ CcFastCopyWrite (
                           TRUE,
                           Buffer);
     ASSERT(Success == TRUE);
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-CcWaitForCurrentLazyWriterActivity (
-    VOID)
-{
-    NTSTATUS Status;
-
-    /* Lazy writer is done when its event is set */
-    Status = KeWaitForSingleObject(&iLazyWriterNotify,
-                                   Executive,
-                                   KernelMode,
-                                   FALSE,
-                                   NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    return STATUS_SUCCESS;
 }
 
 /*

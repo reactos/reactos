@@ -52,6 +52,7 @@ CcInitializeCacheManager(VOID)
     /* Initialize lazy-writer lists */
     InitializeListHead(&CcIdleWorkerThreadList);
     InitializeListHead(&CcRegularWorkQueue);
+    InitializeListHead(&CcPostTickWorkQueue);
 
     /* Define lazy writer threshold and the amount of workers,
       * depending on the system type
@@ -105,9 +106,6 @@ CcInitializeCacheManager(VOID)
 
     /* Lookaside list for our work items */
     ExInitializeNPagedLookasideList(&CcTwilightLookasideList, NULL, NULL, 0, sizeof(WORK_QUEUE_ENTRY), 'KWcC', 0);
-
-    /* HACK: for lazy writer watching */
-    KeInitializeEvent(&iLazyWriterNotify, NotificationEvent, FALSE);
 
     return TRUE;
 }
