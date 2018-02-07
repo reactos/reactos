@@ -613,6 +613,14 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0xc,   &IID_IServiceProvider },
         }
     },
+    {
+        ID_NAME(CLSID_UserNotification),
+        {
+            {    0x0,   &IID_IUserNotification },
+            {    0x0,       &IID_IUnknown },
+//          {    0x4,   &IID_IUserNotification2 },  // On Vista+
+        }
+    },
 };
 static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 
