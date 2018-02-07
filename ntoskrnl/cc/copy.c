@@ -361,6 +361,80 @@ CcCopyData (
     return TRUE;
 }
 
+VOID
+CcPostDeferredWrites(VOID)
+{
+    ULONG WrittenBytes;
+
+    /* We'll try to write as much as we can */
+    WrittenBytes = 0;
+    while (TRUE)
+    {
+        KIRQL OldIrql;
+        PLIST_ENTRY ListEntry;
+        PDEFERRED_WRITE DeferredWrite;
+
+        DeferredWrite = NULL;
+
+        /* Lock our deferred writes list */
+        KeAcquireSpinLock(&CcDeferredWriteSpinLock, &OldIrql);
+        for (ListEntry = CcDeferredWrites.Flink;
+             ListEntry != &CcDeferredWrites;
+             ListEntry = ListEntry->Flink)
+        {
+            /* Extract an entry */
+            DeferredWrite = CONTAINING_RECORD(ListEntry, DEFERRED_WRITE, DeferredWriteLinks);
+
+            /* Compute the modified bytes, based on what we already wrote */
+            WrittenBytes += DeferredWrite->BytesToWrite;
+            /* We overflowed, give up */
+            if (WrittenBytes < DeferredWrite->BytesToWrite)
+            {
+                DeferredWrite = NULL;
+                break;
+            }
+
+            /* Check we can write */
+            if (CcCanIWrite(DeferredWrite->FileObject, WrittenBytes, FALSE, TRUE))
+            {
+                /* We can, so remove it from the list and stop looking for entry */
+                RemoveEntryList(&DeferredWrite->DeferredWriteLinks);
+                break;
+            }
+
+            /* If we don't accept modified pages, stop here */
+            if (!DeferredWrite->LimitModifiedPages)
+            {
+                DeferredWrite = NULL;
+                break;
+            }
+
+            /* Reset count as nothing was written yet */
+            WrittenBytes -= DeferredWrite->BytesToWrite;
+            DeferredWrite = NULL;
+        }
+        KeReleaseSpinLock(&CcDeferredWriteSpinLock, OldIrql);
+
+        /* Nothing to write found, give up */
+        if (DeferredWrite == NULL)
+        {
+            break;
+        }
+
+        /* If we have an event, set it and quit */
+        if (DeferredWrite->Event)
+        {
+            KeSetEvent(DeferredWrite->Event, IO_NO_INCREMENT, FALSE);
+        }
+        /* Otherwise, call the write routine and free the context */
+        else
+        {
+            DeferredWrite->PostRoutine(DeferredWrite->Context1, DeferredWrite->Context2);
+            ExFreePoolWithTag(DeferredWrite, 'CcDw');
+        }
+    }
+}
+
 /*
  * @unimplemented
  */
@@ -531,6 +605,9 @@ CcDeferWrite (
                                     &Context->DeferredWriteLinks,
                                     &CcDeferredWriteSpinLock);
     }
+
+    /* Try to execute the posted writes */
+    CcPostDeferredWrites();
 
     /* FIXME: lock master */
     if (!LazyWriter.ScanActive)

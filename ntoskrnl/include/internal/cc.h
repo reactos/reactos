@@ -428,6 +428,9 @@ CcScanDpc(
 VOID
 CcScheduleLazyWriteScan(BOOLEAN NoDelay);
 
+VOID
+CcPostDeferredWrites(VOID);
+
 FORCEINLINE
 NTSTATUS
 CcRosAcquireVacbLock(

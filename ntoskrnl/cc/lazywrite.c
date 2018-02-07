@@ -159,33 +159,10 @@ CcLazyWriteScan(VOID)
         DPRINT1("Lazy writer done (%d)\n", Count);
     }
 
-    /* Likely not optimal, but let's handle one deferred write now! */
-    ListEntry = ExInterlockedRemoveHeadList(&CcDeferredWrites, &CcDeferredWriteSpinLock);
-    if (ListEntry != NULL)
+    /* If we have deferred writes, try them now! */
+    if (!IsListEmpty(&CcDeferredWrites))
     {
-        PDEFERRED_WRITE Context;
-
-        /* Extract the context */
-        Context = CONTAINING_RECORD(ListEntry, DEFERRED_WRITE, DeferredWriteLinks);
-        ASSERT(Context->NodeTypeCode == NODE_TYPE_DEFERRED_WRITE);
-
-        /* Can we write now? */
-        if (CcCanIWrite(Context->FileObject, Context->BytesToWrite, FALSE, TRUE))
-        {
-            /* Yes! Do it, and destroy the associated context */
-            Context->PostRoutine(Context->Context1, Context->Context2);
-            ExFreePoolWithTag(Context, 'CcDw');
-        }
-        else
-        {
-            /* Otherwise, requeue it, but in tail, so that it doesn't block others
-             * This is clearly to improve, but given the poor algorithm used now
-             * It's better than nothing!
-             */
-            ExInterlockedInsertTailList(&CcDeferredWrites,
-                                        &Context->DeferredWriteLinks,
-                                        &CcDeferredWriteSpinLock);
-        }
+        CcPostDeferredWrites();
     }
 
     while (!IsListEmpty(&ToPost))
