@@ -1,4 +1,5 @@
 /* Simplified Chinese translation by zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn> */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -18,7 +19,7 @@ CAPTION "用户界面失败"
 FONT 9, "宋体"
 BEGIN
     LTEXT "加载登录用户界面的 DLL 文件 %s 失败。", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "请与系统管理员联系，以替换 DLL 文件，或还原原 DLL。", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "请与系统管理员联系，以替换 DLL 文件，或还原初始的 DLL。", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "重新启动(&R)", 1, 80, 91, 68, 14
 END
 
