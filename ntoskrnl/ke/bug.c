@@ -1070,8 +1070,8 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     if ((BugCheckCode != MANUALLY_INITIATED_CRASH) && (KdDebuggerEnabled))
     {
         /* Crash on the debugger console */
-        DbgPrint("\n*** Fatal System Error: 0x%08lx\n"
-                 "                       (0x%p,0x%p,0x%p,0x%p)\n\n",
+        DbgPrint("\n*** BugCheck: 0x%08lx\n"
+                 "             (0x%p,0x%p,0x%p,0x%p)\n\n",
                  KiBugCheckData[0],
                  KiBugCheckData[1],
                  KiBugCheckData[2],
