@@ -53,7 +53,7 @@ Options:\n\
     IDS_DEST_NET_UNREACHABLE "Destination network unreachable.\n"
     IDS_REQUEST_TIMED_OUT "请求超时。\n"
     IDS_TTL_EXPIRED "TTL 传输中过期。\n"
-    IDS_TRANSMIT_FAILED "PING:传输失败。(Error %u)\n"
+    IDS_TRANSMIT_FAILED "PING: 传输失败。(Error %u)\n"
 
     IDS_STATISTICS "\n\
 %s 的 Ping 统计信息:\n\
