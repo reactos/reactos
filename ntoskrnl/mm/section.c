@@ -3758,17 +3758,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     Section->SectionPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
 
-#ifndef NEWCC
-    /*
-     * Initialized caching for this file object if previously caching
-     * was initialized for the same on disk file
-     */
-    Status = CcTryToInitializeFileCache(FileObject);
-#else
-    Status = STATUS_SUCCESS;
-#endif
-
-    if (!NT_SUCCESS(Status) || FileObject->SectionObjectPointer->ImageSectionObject == NULL)
+    if (FileObject->SectionObjectPointer->ImageSectionObject == NULL)
     {
         NTSTATUS StatusExeFmt;
 

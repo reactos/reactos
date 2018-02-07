@@ -406,10 +406,6 @@ CcRosReleaseFileCache(
     PFILE_OBJECT FileObject
 );
 
-NTSTATUS
-NTAPI
-CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
-
 VOID
 NTAPI
 CcShutdownSystem(VOID);

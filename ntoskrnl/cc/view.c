@@ -1199,37 +1199,6 @@ CcRosReleaseFileCache (
 
 NTSTATUS
 NTAPI
-CcTryToInitializeFileCache (
-    PFILE_OBJECT FileObject)
-{
-    PROS_SHARED_CACHE_MAP SharedCacheMap;
-    NTSTATUS Status;
-
-    KeAcquireGuardedMutex(&ViewLock);
-
-    ASSERT(FileObject->SectionObjectPointer);
-    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-    if (SharedCacheMap == NULL)
-    {
-        Status = STATUS_UNSUCCESSFUL;
-    }
-    else
-    {
-        if (FileObject->PrivateCacheMap == NULL)
-        {
-            FileObject->PrivateCacheMap = SharedCacheMap;
-            SharedCacheMap->OpenCount++;
-        }
-        Status = STATUS_SUCCESS;
-    }
-    KeReleaseGuardedMutex(&ViewLock);
-
-    return Status;
-}
-
-
-NTSTATUS
-NTAPI
 CcRosInitializeFileCache (
     PFILE_OBJECT FileObject,
     PCC_FILE_SIZES FileSizes,
