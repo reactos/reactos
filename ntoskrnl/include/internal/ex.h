@@ -28,6 +28,8 @@ extern LIST_ENTRY ExpNonPagedLookasideListHead;
 extern LIST_ENTRY ExpPagedLookasideListHead;
 extern KSPIN_LOCK ExpNonPagedLookasideListLock;
 extern KSPIN_LOCK ExpPagedLookasideListLock;
+extern ULONG ExCriticalWorkerThreads;
+extern ULONG ExDelayedWorkerThreads;
 
 /*
  * NT/Cm Version Info variables

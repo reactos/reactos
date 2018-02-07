@@ -35,8 +35,8 @@
 EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
 
 /* Accounting of the total threads and registry hacked threads */
-ULONG ExpCriticalWorkerThreads;
-ULONG ExpDelayedWorkerThreads;
+ULONG ExCriticalWorkerThreads;
+ULONG ExDelayedWorkerThreads;
 ULONG ExpAdditionalCriticalWorkerThreads;
 ULONG ExpAdditionalDelayedWorkerThreads;
 
@@ -566,7 +566,7 @@ ExpInitializeWorkerThreads(VOID)
     {
         /* Create the thread */
         ExpCreateWorkerThread(CriticalWorkQueue, FALSE);
-        ExpCriticalWorkerThreads++;
+        ExCriticalWorkerThreads++;
     }
 
     /* Create the built-in worker threads for the delayed queue */
@@ -574,7 +574,7 @@ ExpInitializeWorkerThreads(VOID)
     {
         /* Create the thread */
         ExpCreateWorkerThread(DelayedWorkQueue, FALSE);
-        ExpDelayedWorkerThreads++;
+        ExDelayedWorkerThreads++;
     }
 
     /* Create the built-in worker thread for the hypercritical queue */
