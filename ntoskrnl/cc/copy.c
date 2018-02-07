@@ -629,6 +629,7 @@ CcDeferWrite (
     IN BOOLEAN Retrying)
 {
     PDEFERRED_WRITE Context;
+    PFSRTL_COMMON_FCB_HEADER Fcb;
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p PostRoutine=%p Context1=%p Context2=%p BytesToWrite=%lu Retrying=%d\n",
         FileObject, PostRoutine, Context1, Context2, BytesToWrite, Retrying);
@@ -642,6 +643,8 @@ CcDeferWrite (
         return;
     }
 
+    Fcb = FileObject->FsContext;
+
     /* Otherwise, initialize the context */
     RtlZeroMemory(Context, sizeof(DEFERRED_WRITE));
     Context->NodeTypeCode = NODE_TYPE_DEFERRED_WRITE;
@@ -651,6 +654,7 @@ CcDeferWrite (
     Context->Context1 = Context1;
     Context->Context2 = Context2;
     Context->BytesToWrite = BytesToWrite;
+    Context->LimitModifiedPages = BooleanFlagOn(Fcb->Flags, FSRTL_FLAG_LIMIT_MODIFIED_PAGES);
 
     /* And queue it */
     if (Retrying)
