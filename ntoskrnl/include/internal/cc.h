@@ -45,6 +45,11 @@ extern ULONG CcDirtyPageThreshold;
 extern ULONG CcTotalDirtyPages;
 extern LIST_ENTRY CcDeferredWrites;
 extern KSPIN_LOCK CcDeferredWriteSpinLock;
+extern ULONG CcNumberWorkerThreads;
+extern LIST_ENTRY CcIdleWorkerThreadList;
+extern LIST_ENTRY CcRegularWorkQueue;
+extern NPAGED_LOOKASIDE_LIST CcTwilightLookasideList;
+extern KEVENT iLazyWriterNotify;
 
 typedef struct _PF_SCENARIO_ID
 {
@@ -211,6 +216,43 @@ typedef struct _INTERNAL_BCB
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
+typedef struct _LAZY_WRITER
+{
+    LIST_ENTRY WorkQueue;
+    KDPC ScanDpc;
+    KTIMER ScanTimer;
+    BOOLEAN ScanActive;
+    BOOLEAN OtherWork;
+    BOOLEAN PendingTeardown;
+} LAZY_WRITER, *PLAZY_WRITER;
+
+typedef struct _WORK_QUEUE_ENTRY
+{
+    LIST_ENTRY WorkQueueLinks;
+    union
+    {
+        struct
+        {
+            FILE_OBJECT *FileObject;
+        } Read;
+        struct
+        {
+            SHARED_CACHE_MAP *SharedCacheMap;
+        } Write;
+        struct
+        {
+            KEVENT *Event;
+        } Event;
+        struct
+        {
+            unsigned long Reason;
+        } Notification;
+    } Parameters;
+    unsigned char Function;
+} WORK_QUEUE_ENTRY, *PWORK_QUEUE_ENTRY;
+
+extern LAZY_WRITER LazyWriter;
+
 #define NODE_TYPE_DEFERRED_WRITE 0x02FC
 
 VOID
@@ -249,7 +291,7 @@ CcRosGetVacb(
     PROS_VACB *Vacb
 );
 
-BOOLEAN
+VOID
 NTAPI
 CcInitView(VOID);
 
@@ -371,6 +413,21 @@ VOID
 NTAPI
 CcShutdownSystem(VOID);
 
+VOID
+NTAPI
+CcWorkerThread(PVOID Parameter);
+
+VOID
+NTAPI
+CcScanDpc(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2);
+
+VOID
+CcScheduleLazyWriteScan(BOOLEAN NoDelay);
+
 FORCEINLINE
 NTSTATUS
 CcRosAcquireVacbLock(
@@ -418,3 +475,5 @@ IsPointInRange(
 {
     return DoRangesIntersect(Offset1, Length1, Point, 1);
 }
+
+#define CcBugCheck(A, B, C) KeBugCheckEx(CACHE_MANAGER, BugCheckFileId | ((ULONG)(__LINE__)), A, B, C)

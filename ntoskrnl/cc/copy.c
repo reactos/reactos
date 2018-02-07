@@ -533,6 +533,12 @@ CcDeferWrite (
                                     &Context->DeferredWriteLinks,
                                     &CcDeferredWriteSpinLock);
     }
+
+    /* FIXME: lock master */
+    if (!LazyWriter.ScanActive)
+    {
+        CcScheduleLazyWriteScan(FALSE);
+    }
 }
 
 /*

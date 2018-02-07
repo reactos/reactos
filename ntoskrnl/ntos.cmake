@@ -33,6 +33,7 @@ else()
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/cacheman.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/copy.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/fs.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/lazywrite.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/mdl.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/pin.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/view.c)

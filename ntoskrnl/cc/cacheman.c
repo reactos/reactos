@@ -16,6 +16,9 @@
 
 BOOLEAN CcPfEnablePrefetcher;
 PFSN_PREFETCHER_GLOBALS CcPfGlobals;
+MM_SYSTEMSIZE CcCapturedSystemSize;
+
+static ULONG BugCheckFileId = 0x4 << 16;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -42,15 +45,78 @@ NTAPI
 INIT_FUNCTION
 CcInitializeCacheManager(VOID)
 {
-    return CcInitView();
+    ULONG Thread;
+
+    CcInitView();
+
+    /* Initialize lazy-writer lists */
+    InitializeListHead(&CcIdleWorkerThreadList);
+    InitializeListHead(&CcRegularWorkQueue);
+
+    /* Define lazy writer threshold and the amount of workers,
+      * depending on the system type
+      */
+    CcCapturedSystemSize = MmQuerySystemSize();
+    switch (CcCapturedSystemSize)
+    {
+        case MmSmallSystem:
+            CcNumberWorkerThreads = ExCriticalWorkerThreads - 1;
+            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8;
+            break;
+
+        case MmMediumSystem:
+            CcNumberWorkerThreads = ExCriticalWorkerThreads - 1;
+            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 4;
+            break;
+
+        case MmLargeSystem:
+            CcNumberWorkerThreads = ExCriticalWorkerThreads - 2;
+            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8 + MmNumberOfPhysicalPages / 4;
+            break;
+
+        default:
+            CcNumberWorkerThreads = 1;
+            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8;
+            break;
+    }
+
+    /* Allocate a work item for all our threads */
+    for (Thread = 0; Thread < CcNumberWorkerThreads; ++Thread)
+    {
+        PWORK_QUEUE_ITEM Item;
+
+        Item = ExAllocatePoolWithTag(NonPagedPool, sizeof(WORK_QUEUE_ITEM), 'qWcC');
+        if (Item == NULL)
+        {
+            CcBugCheck(0, 0, 0);
+        }
+
+        /* By default, it's obviously idle */
+        ExInitializeWorkItem(Item, CcWorkerThread, Item);
+        InsertTailList(&CcIdleWorkerThreadList, &Item->List);
+    }
+
+    /* Initialize our lazy writer */
+    RtlZeroMemory(&LazyWriter, sizeof(LazyWriter));
+    InitializeListHead(&LazyWriter.WorkQueue);
+    /* Delay activation of the lazy writer */
+    KeInitializeDpc(&LazyWriter.ScanDpc, CcScanDpc, NULL);
+    KeInitializeTimer(&LazyWriter.ScanTimer);
+
+    /* Lookaside list for our work items */
+    ExInitializeNPagedLookasideList(&CcTwilightLookasideList, NULL, NULL, 0, sizeof(WORK_QUEUE_ENTRY), 'KWcC', 0);
+
+    /* HACK: for lazy writer watching */
+    KeInitializeEvent(&iLazyWriterNotify, NotificationEvent, FALSE);
+
+    return TRUE;
 }
 
 VOID
 NTAPI
 CcShutdownSystem(VOID)
 {
-    /* Inform the lazy writer it has to stop activity */
-    CcShutdownLazyWriter();
+    /* NOTHING TO DO */
 }
 
 /*

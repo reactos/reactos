@@ -51,39 +51,22 @@ NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 static NPAGED_LOOKASIDE_LIST SharedCacheMapLookasideList;
 static NPAGED_LOOKASIDE_LIST VacbLookasideList;
 
-/* Counters:
- * - Amount of pages flushed by lazy writer
- * - Number of times lazy writer ran
- */
-ULONG CcLazyWritePages = 0;
-ULONG CcLazyWriteIos = 0;
-
 /* Internal vars (MS):
  * - Threshold above which lazy writer will start action
  * - Amount of dirty pages
  * - List for deferred writes
  * - Spinlock when dealing with the deferred list
  * - List for "clean" shared cache maps
- * - One second delay for lazy writer
- * - System size when system started
- * - Number of worker threads
  */
 ULONG CcDirtyPageThreshold = 0;
 ULONG CcTotalDirtyPages = 0;
 LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
-LARGE_INTEGER CcIdleDelay = RTL_CONSTANT_LARGE_INTEGER((LONGLONG)-1*1000*1000*10);
-MM_SYSTEMSIZE CcCapturedSystemSize;
-ULONG CcNumberWorkerThreads;
 
 /* Internal vars (ROS):
- * - Event to notify lazy writer to shutdown
- * - Event to inform watchers lazy writer is done for this loop
  * - Lock for the CcCleanSharedCacheMapList list
  */
-KEVENT iLazyWriterShutdown;
-KEVENT iLazyWriterNotify;
 KSPIN_LOCK iSharedCacheMapLock;
 
 #if DBG
@@ -302,81 +285,6 @@ CcRosFlushDirtyPages (
 
     DPRINT("CcRosFlushDirtyPages() finished\n");
     return STATUS_SUCCESS;
-}
-
-/* FIXME: Someday this could somewhat implement write-behind/read-ahead */
-VOID
-NTAPI
-CciLazyWriter(PVOID Unused)
-{
-    while (TRUE)
-    {
-        NTSTATUS Status;
-        PLIST_ENTRY ListEntry;
-        ULONG Target, Count = 0;
-
-        /* One per second or until we have to stop */
-        Status = KeWaitForSingleObject(&iLazyWriterShutdown,
-                                       Executive,
-                                       KernelMode,
-                                       FALSE,
-                                       &CcIdleDelay);
-
-        /* If we succeeed, we've to stop running! */
-        if (Status == STATUS_SUCCESS)
-        {
-            break;
-        }
-
-        /* We're not sleeping anymore */
-        KeClearEvent(&iLazyWriterNotify);
-
-        /* Our target is one-eighth of the dirty pages */
-        Target = CcTotalDirtyPages / 8;
-        if (Target != 0)
-        {
-            /* Flush! */
-            DPRINT("Lazy writer starting (%d)\n", Target);
-            CcRosFlushDirtyPages(Target, &Count, FALSE, TRUE);
-
-            /* And update stats */
-            CcLazyWritePages += Count;
-            ++CcLazyWriteIos;
-            DPRINT("Lazy writer done (%d)\n", Count);
-        }
-
-        /* Inform people waiting on us that we're done */
-        KeSetEvent(&iLazyWriterNotify, IO_DISK_INCREMENT, FALSE);
-
-        /* Likely not optimal, but let's handle one deferred write now! */
-        ListEntry = ExInterlockedRemoveHeadList(&CcDeferredWrites, &CcDeferredWriteSpinLock);
-        if (ListEntry != NULL)
-        {
-            PDEFERRED_WRITE Context;
-
-            /* Extract the context */
-            Context = CONTAINING_RECORD(ListEntry, DEFERRED_WRITE, DeferredWriteLinks);
-            ASSERT(Context->NodeTypeCode == NODE_TYPE_DEFERRED_WRITE);
-
-            /* Can we write now? */
-            if (CcCanIWrite(Context->FileObject, Context->BytesToWrite, FALSE, TRUE))
-            {
-                /* Yes! Do it, and destroy the associated context */
-                Context->PostRoutine(Context->Context1, Context->Context2);
-                ExFreePoolWithTag(Context, 'CcDw');
-            }
-            else
-            {
-                /* Otherwise, requeue it, but in tail, so that it doesn't block others
-                 * This is clearly to improve, but given the poor algorithm used now
-                 * It's better than nothing!
-                 */
-                ExInterlockedInsertTailList(&CcDeferredWrites,
-                                            &Context->DeferredWriteLinks,
-                                            &CcDeferredWriteSpinLock);
-            }
-        }
-    }
 }
 
 NTSTATUS
@@ -611,6 +519,12 @@ CcRosMarkDirtyVacb (
 
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
+
+    /* FIXME: lock master */
+    if (!LazyWriter.ScanActive)
+    {
+        CcScheduleLazyWriteScan(FALSE);
+    }
 }
 
 VOID
@@ -1394,25 +1308,11 @@ CcGetFileObjectFromSectionPtrs (
 }
 
 VOID
-NTAPI
-CcShutdownLazyWriter (
-    VOID)
-{
-    /* Simply set the event, lazy writer will stop when it's done */
-    KeSetEvent(&iLazyWriterShutdown, IO_DISK_INCREMENT, FALSE);
-}
-
-BOOLEAN
 INIT_FUNCTION
 NTAPI
 CcInitView (
     VOID)
 {
-    HANDLE LazyWriter;
-    NTSTATUS Status;
-    KPRIORITY Priority;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-
     DPRINT("CcInitView()\n");
 
     InitializeListHead(&DirtyVacbListHead);
@@ -1446,68 +1346,7 @@ CcInitView (
 
     MmInitializeMemoryConsumer(MC_CACHE, CcRosTrimCache);
 
-    /* Initialize lazy writer events */
-    KeInitializeEvent(&iLazyWriterShutdown, SynchronizationEvent, FALSE);
-    KeInitializeEvent(&iLazyWriterNotify, NotificationEvent, FALSE);
-
-    /* Define lazy writer threshold and the amount of workers,
-      * depending on the system type
-      */
-    CcCapturedSystemSize = MmQuerySystemSize();
-    switch (CcCapturedSystemSize)
-    {
-        case MmSmallSystem:
-            CcNumberWorkerThreads = ExCriticalWorkerThreads - 1;
-            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8;
-            break;
-
-        case MmMediumSystem:
-            CcNumberWorkerThreads = ExCriticalWorkerThreads - 1;
-            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 4;
-            break;
-
-        case MmLargeSystem:
-            CcNumberWorkerThreads = ExCriticalWorkerThreads - 2;
-            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8 + MmNumberOfPhysicalPages / 4;
-            break;
-
-        default:
-            CcNumberWorkerThreads = 1;
-            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8;
-            break;
-    }
-
-    /* Start the lazy writer thread */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               NULL,
-                               OBJ_KERNEL_HANDLE,
-                               NULL,
-                               NULL);
-    Status = PsCreateSystemThread(&LazyWriter,
-                                  THREAD_ALL_ACCESS,
-                                  &ObjectAttributes,
-                                  NULL,
-                                  NULL,
-                                  CciLazyWriter,
-                                  NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        return FALSE;
-    }
-
-    Priority = 27;
-    Status = NtSetInformationThread(LazyWriter,
-                                   ThreadPriority,
-                                   &Priority,
-                                   sizeof(Priority));
-    ASSERT(NT_SUCCESS(Status));
-
-    /* Handle is not needed */
-    ObCloseHandle(LazyWriter, KernelMode);
-
     CcInitCacheZeroPage();
-
-    return TRUE;
 }
 
 #if DBG && defined(KDBG)
