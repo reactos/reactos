@@ -28,7 +28,7 @@ DxDdCanCreateSurface(
     // assign out DirectDrawGlobal to SurfaceData
     SurfaceData->lpDD = (PDD_DIRECTDRAW_GLOBAL)peDdGl;
 
-    if (peDdGl->ddCallbacks.dwFlags && DDHAL_CB32_CANCREATESURFACE)
+    if (peDdGl->ddCallbacks.dwFlags & DDHAL_CB32_CANCREATESURFACE)
     {
         RetVal = peDdGl->ddCallbacks.CanCreateSurface(SurfaceData);
     }
