@@ -520,11 +520,13 @@ CcRosMarkDirtyVacb (
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
 
-    /* FIXME: lock master */
+    /* Schedule a lazy writer run to now that we have dirty VACB */
+    oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
     if (!LazyWriter.ScanActive)
     {
         CcScheduleLazyWriteScan(FALSE);
     }
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 }
 
 VOID

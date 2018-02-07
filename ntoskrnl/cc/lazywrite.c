@@ -119,7 +119,6 @@ CcScanDpc(
     CcPostWorkQueue(WorkItem, &CcRegularWorkQueue);
 }
 
-/* FIXME: handle master lock */
 VOID
 CcLazyWriteScan(VOID)
 {
@@ -165,6 +164,7 @@ CcLazyWriteScan(VOID)
         CcPostDeferredWrites();
     }
 
+    /* Post items that were due for end of run */
     while (!IsListEmpty(&ToPost))
     {
         ListEntry = RemoveHeadList(&ToPost);
@@ -173,7 +173,9 @@ CcLazyWriteScan(VOID)
     }
 
     /* We're no longer active */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
     LazyWriter.ScanActive = FALSE;
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 }
 
 VOID CcScheduleLazyWriteScan(

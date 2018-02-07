@@ -628,6 +628,7 @@ CcDeferWrite (
     IN ULONG BytesToWrite,
     IN BOOLEAN Retrying)
 {
+    KIRQL OldIrql;
     PDEFERRED_WRITE Context;
     PFSRTL_COMMON_FCB_HEADER Fcb;
 
@@ -675,11 +676,13 @@ CcDeferWrite (
     /* Try to execute the posted writes */
     CcPostDeferredWrites();
 
-    /* FIXME: lock master */
+    /* Schedule a lazy writer run to handle deferred writes */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
     if (!LazyWriter.ScanActive)
     {
         CcScheduleLazyWriteScan(FALSE);
     }
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 }
 
 /*
