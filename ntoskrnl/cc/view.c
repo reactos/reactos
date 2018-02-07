@@ -66,6 +66,7 @@ ULONG CcLazyWriteIos = 0;
  * - List for "clean" shared cache maps
  * - One second delay for lazy writer
  * - System size when system started
+ * - Number of worker threads
  */
 ULONG CcDirtyPageThreshold = 0;
 ULONG CcTotalDirtyPages = 0;
@@ -74,6 +75,7 @@ KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
 LARGE_INTEGER CcIdleDelay = RTL_CONSTANT_LARGE_INTEGER((LONGLONG)-1*1000*1000*10);
 MM_SYSTEMSIZE CcCapturedSystemSize;
+ULONG CcNumberWorkerThreads;
 
 /* Internal vars (ROS):
  * - Event to notify lazy writer to shutdown
@@ -1448,20 +1450,30 @@ CcInitView (
     KeInitializeEvent(&iLazyWriterShutdown, SynchronizationEvent, FALSE);
     KeInitializeEvent(&iLazyWriterNotify, NotificationEvent, FALSE);
 
-    /* Define lazy writer threshold, depending on system type */
+    /* Define lazy writer threshold and the amount of workers,
+      * depending on the system type
+      */
     CcCapturedSystemSize = MmQuerySystemSize();
     switch (CcCapturedSystemSize)
     {
         case MmSmallSystem:
+            CcNumberWorkerThreads = ExCriticalWorkerThreads - 1;
             CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8;
             break;
 
         case MmMediumSystem:
+            CcNumberWorkerThreads = ExCriticalWorkerThreads - 1;
             CcDirtyPageThreshold = MmNumberOfPhysicalPages / 4;
             break;
 
         case MmLargeSystem:
+            CcNumberWorkerThreads = ExCriticalWorkerThreads - 2;
             CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8 + MmNumberOfPhysicalPages / 4;
+            break;
+
+        default:
+            CcNumberWorkerThreads = 1;
+            CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8;
             break;
     }
 
