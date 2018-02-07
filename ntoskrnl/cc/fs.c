@@ -346,6 +346,25 @@ CcUninitializeCacheMap (
                             FALSE);
     }
 
+    /* Closing the handle, so kill the private cache map */
+    if (FileObject->SectionObjectPointer->SharedCacheMap != NULL &&
+        FileObject->PrivateCacheMap != NULL)
+    {
+        PPRIVATE_CACHE_MAP PrivateMap;
+
+        PrivateMap = FileObject->PrivateCacheMap;
+        SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+
+        /* Remove it from the file */
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+        RemoveEntryList(&PrivateMap->PrivateLinks);
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+
+        /* And free it */
+        FileObject->PrivateCacheMap = NULL;
+        ExFreePoolWithTag(PrivateMap, 'cPcC');
+    }
+
     Status = CcRosReleaseFileCache(FileObject);
     if (UninitializeCompleteEvent)
     {

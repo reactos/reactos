@@ -1209,17 +1209,19 @@ CcRosInitializeFileCache (
  * FUNCTION: Initializes a shared cache map for a file object
  */
 {
+    KIRQL OldIrql;
+    BOOLEAN Allocated;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     DPRINT("CcRosInitializeFileCache(FileObject 0x%p, SharedCacheMap 0x%p)\n",
            FileObject, SharedCacheMap);
 
+    Allocated = FALSE;
     KeAcquireGuardedMutex(&ViewLock);
     if (SharedCacheMap == NULL)
     {
-        KIRQL OldIrql;
-
+        Allocated = TRUE;
         SharedCacheMap = ExAllocateFromNPagedLookasideList(&SharedCacheMapLookasideList);
         if (SharedCacheMap == NULL)
         {
@@ -1239,6 +1241,7 @@ CcRosInitializeFileCache (
         SharedCacheMap->PinAccess = PinAccess;
         SharedCacheMap->DirtyPageThreshold = 0;
         SharedCacheMap->DirtyPages = 0;
+        InitializeListHead(&SharedCacheMap->PrivateList);
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
@@ -1249,7 +1252,40 @@ CcRosInitializeFileCache (
     }
     if (FileObject->PrivateCacheMap == NULL)
     {
-        FileObject->PrivateCacheMap = SharedCacheMap;
+        PPRIVATE_CACHE_MAP PrivateMap;
+
+        /* Allocate the private cache map for this handle */
+        PrivateMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(PRIVATE_CACHE_MAP), 'cPcC');
+        if (PrivateMap == NULL)
+        {
+            /* If we also allocated the shared cache map for this file, kill it */
+            if (Allocated)
+            {
+                KeAcquireSpinLock(&iSharedCacheMapLock, &OldIrql);
+                RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
+                KeReleaseSpinLock(&iSharedCacheMapLock, OldIrql);
+
+                FileObject->SectionObjectPointer->SharedCacheMap = NULL;
+                ObDereferenceObject(FileObject);
+                ExFreeToNPagedLookasideList(&SharedCacheMapLookasideList, SharedCacheMap);
+            }
+
+            KeReleaseGuardedMutex(&ViewLock);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Initialize it */
+        RtlZeroMemory(PrivateMap, sizeof(PRIVATE_CACHE_MAP));
+        PrivateMap->NodeTypeCode = NODE_TYPE_PRIVATE_MAP;
+        PrivateMap->ReadAheadMask = 0xFFF;
+        PrivateMap->FileObject = FileObject;
+
+        /* Link it to the file */
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+        InsertTailList(&SharedCacheMap->PrivateList, &PrivateMap->PrivateLinks);
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+
+        FileObject->PrivateCacheMap = PrivateMap;
         SharedCacheMap->OpenCount++;
     }
     KeReleaseGuardedMutex(&ViewLock);
