@@ -81,7 +81,7 @@ MiInitializeSessionSpaceLayout(VOID)
 
     /* Session view is below the session working set */
     MmSessionViewSize = MI_SESSION_VIEW_SIZE;
-    MiSessionViewEnd = (PUCHAR)MiSessionImageStart - MI_SESSION_WORKING_SET_SIZE;
+    MiSessionViewEnd = MiSessionSpaceWs;
     MiSessionViewStart = (PUCHAR)MiSessionViewEnd - MmSessionViewSize;
     ASSERT(IS_PAGE_ALIGNED(MiSessionViewStart));
 
