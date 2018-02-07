@@ -446,6 +446,8 @@ CcCanIWrite (
     IN BOOLEAN Wait,
     IN BOOLEAN Retrying)
 {
+    KEVENT WaitEvent;
+    DEFERRED_WRITE Context;
     PFSRTL_COMMON_FCB_HEADER Fcb;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
@@ -455,7 +457,8 @@ CcCanIWrite (
     /* We cannot write if dirty pages count is above threshold */
     if (CcTotalDirtyPages > CcDirtyPageThreshold)
     {
-        return FALSE;
+        /* Can the caller wait till it's possible to write? */
+        goto CanIWait;
     }
 
     /* We cannot write if dirty pages count will bring use above
@@ -463,7 +466,8 @@ CcCanIWrite (
      */
     if (CcTotalDirtyPages + (BytesToWrite / PAGE_SIZE) > CcDirtyPageThreshold)
     {
-        return FALSE;
+        /* Can the caller wait till it's possible to write? */
+        goto CanIWait;
     }
 
     /* Is there a limit per file object? */
@@ -479,7 +483,8 @@ CcCanIWrite (
     /* Is dirty page count above local threshold? */
     if (SharedCacheMap->DirtyPages > SharedCacheMap->DirtyPageThreshold)
     {
-        return FALSE;
+        /* Can the caller wait till it's possible to write? */
+        goto CanIWait;
     }
 
     /* We cannot write if dirty pages count will bring use above
@@ -487,8 +492,65 @@ CcCanIWrite (
      */
     if (SharedCacheMap->DirtyPages + (BytesToWrite / PAGE_SIZE) > SharedCacheMap->DirtyPageThreshold)
     {
+        /* Can the caller wait till it's possible to write? */
+        goto CanIWait;
+    }
+
+    return TRUE;
+
+CanIWait:
+    /* If we reached that point, it means caller cannot write
+     * If he cannot wait, then fail and deny write
+     */
+    if (!Wait)
+    {
         return FALSE;
     }
+
+    /* Otherwise, if there are no deferred writes yet, start the lazy writer */
+    if (IsListEmpty(&CcDeferredWrites))
+    {
+        KIRQL OldIrql;
+
+        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+        CcScheduleLazyWriteScan(TRUE);
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+    }
+
+    /* Initialize our wait event */
+    KeInitializeEvent(&WaitEvent, NotificationEvent, FALSE);
+
+    /* And prepare a dummy context */
+    Context.NodeTypeCode = NODE_TYPE_DEFERRED_WRITE;
+    Context.NodeByteSize = sizeof(DEFERRED_WRITE);
+    Context.FileObject = FileObject;
+    Context.BytesToWrite = BytesToWrite;
+    Context.LimitModifiedPages = BooleanFlagOn(Fcb->Flags, FSRTL_FLAG_LIMIT_MODIFIED_PAGES);
+    Context.Event = &WaitEvent;
+
+    /* And queue it */
+    if (Retrying)
+    {
+        /* To the top, if that's a retry */
+        ExInterlockedInsertHeadList(&CcDeferredWrites,
+                                    &Context.DeferredWriteLinks,
+                                    &CcDeferredWriteSpinLock);
+    }
+    else
+    {
+        /* To the bottom, if that's a first time */
+        ExInterlockedInsertTailList(&CcDeferredWrites,
+                                    &Context.DeferredWriteLinks,
+                                    &CcDeferredWriteSpinLock);
+    }
+
+    /* Now, we'll loop until our event is set. When it is set, it means that caller
+     * can immediately write, and has to
+     */
+    do
+    {
+        CcPostDeferredWrites();
+    } while (KeWaitForSingleObject(&WaitEvent, Executive, KernelMode, FALSE, &CcIdleDelay) != STATUS_SUCCESS);
 
     return TRUE;
 }

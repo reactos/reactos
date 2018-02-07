@@ -50,6 +50,7 @@ extern LIST_ENTRY CcIdleWorkerThreadList;
 extern LIST_ENTRY CcRegularWorkQueue;
 extern LIST_ENTRY CcPostTickWorkQueue;
 extern NPAGED_LOOKASIDE_LIST CcTwilightLookasideList;
+extern LARGE_INTEGER CcIdleDelay;
 
 typedef struct _PF_SCENARIO_ID
 {
