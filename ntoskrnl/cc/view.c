@@ -65,6 +65,7 @@ ULONG CcLazyWriteIos = 0;
  * - Spinlock when dealing with the deferred list
  * - List for "clean" shared cache maps
  * - One second delay for lazy writer
+ * - System size when system started
  */
 ULONG CcDirtyPageThreshold = 0;
 ULONG CcTotalDirtyPages = 0;
@@ -72,6 +73,7 @@ LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
 LARGE_INTEGER CcIdleDelay = RTL_CONSTANT_LARGE_INTEGER((LONGLONG)-1*1000*1000*10);
+MM_SYSTEMSIZE CcCapturedSystemSize;
 
 /* Internal vars (ROS):
  * - Event to notify lazy writer to shutdown
@@ -1447,7 +1449,8 @@ CcInitView (
     KeInitializeEvent(&iLazyWriterNotify, NotificationEvent, FALSE);
 
     /* Define lazy writer threshold, depending on system type */
-    switch (MmQuerySystemSize())
+    CcCapturedSystemSize = MmQuerySystemSize();
+    switch (CcCapturedSystemSize)
     {
         case MmSmallSystem:
             CcDirtyPageThreshold = MmNumberOfPhysicalPages / 8;
