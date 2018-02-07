@@ -642,7 +642,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     PdePte.u.Hard.PageFrameNumber = HyperPfn;
     *SystemPte = PdePte;
     __invlpg(PageTablePointer);
- 
+
     /* Write the hyperspace entry for the first PD */
     TempPte.u.Hard.PageFrameNumber = HyperPdPfn;
     PageTablePointer[0] = TempPte;
