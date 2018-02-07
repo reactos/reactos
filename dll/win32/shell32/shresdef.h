@@ -689,4 +689,5 @@
 #define IDR_QUERYASSOCIATIONS   152
 #define IDR_MERGEDFOLDER        153
 #define IDR_REBARBANDSITE       154
-#define IDR_SHELL               155
+#define IDR_USERNOTIFICATION    155
+#define IDR_SHELL               156

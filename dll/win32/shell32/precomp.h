@@ -84,6 +84,7 @@
 #include "shellmenu/CMenuSite.h"
 #include "shellmenu/CMergedFolder.h"
 #include "shellmenu/shellmenu.h"
+#include "CUserNotification.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>

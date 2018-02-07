@@ -22,7 +22,7 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
+WINE_DEFAULT_DEBUG_CHANNEL(shell_notify);
 
 /*************************************************************************
  * Shell_NotifyIcon             [SHELL32.296]
