@@ -1180,7 +1180,21 @@ CcRosReleaseFileCache (
         SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
         if (FileObject->PrivateCacheMap != NULL)
         {
+            KIRQL OldIrql;
+            PPRIVATE_CACHE_MAP PrivateMap;
+
+            /* Closing the handle, so kill the private cache map */
+            PrivateMap = FileObject->PrivateCacheMap;
+
+            /* Remove it from the file */
+            KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+            RemoveEntryList(&PrivateMap->PrivateLinks);
+            KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+
+            /* And free it */
             FileObject->PrivateCacheMap = NULL;
+            ExFreePoolWithTag(PrivateMap, TAG_PRIVATE_CACHE_MAP);
+
             if (SharedCacheMap->OpenCount > 0)
             {
                 SharedCacheMap->OpenCount--;
