@@ -1233,6 +1233,8 @@ CcRosInitializeFileCache (
                                    FILE_ALL_ACCESS,
                                    NULL,
                                    KernelMode);
+        SharedCacheMap->NodeTypeCode = NODE_TYPE_SHARED_MAP;
+        SharedCacheMap->NodeByteSize = sizeof(*SharedCacheMap);
         SharedCacheMap->FileObject = FileObject;
         SharedCacheMap->Callbacks = CallBacks;
         SharedCacheMap->LazyWriteContext = LazyWriterContext;
@@ -1255,7 +1257,7 @@ CcRosInitializeFileCache (
         PPRIVATE_CACHE_MAP PrivateMap;
 
         /* Allocate the private cache map for this handle */
-        PrivateMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(PRIVATE_CACHE_MAP), 'cPcC');
+        PrivateMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(PRIVATE_CACHE_MAP), TAG_PRIVATE_CACHE_MAP);
         if (PrivateMap == NULL)
         {
             /* If we also allocated the shared cache map for this file, kill it */

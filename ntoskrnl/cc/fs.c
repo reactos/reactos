@@ -362,7 +362,7 @@ CcUninitializeCacheMap (
 
         /* And free it */
         FileObject->PrivateCacheMap = NULL;
-        ExFreePoolWithTag(PrivateMap, 'cPcC');
+        ExFreePoolWithTag(PrivateMap, TAG_PRIVATE_CACHE_MAP);
     }
 
     Status = CcRosReleaseFileCache(FileObject);

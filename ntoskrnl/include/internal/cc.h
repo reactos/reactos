@@ -155,20 +155,24 @@ typedef struct _PFSN_PREFETCHER_GLOBALS
 
 typedef struct _ROS_SHARED_CACHE_MAP
 {
-    LIST_ENTRY CacheMapVacbListHead;
-    ULONG TimeStamp;
-    PFILE_OBJECT FileObject;
-    LARGE_INTEGER SectionSize;
+    CSHORT NodeTypeCode;
+    CSHORT NodeByteSize;
+    ULONG OpenCount;
     LARGE_INTEGER FileSize;
-    BOOLEAN PinAccess;
+    LARGE_INTEGER SectionSize;
+    PFILE_OBJECT FileObject;
+    ULONG DirtyPages;
+    LIST_ENTRY SharedCacheMapLinks;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
     LIST_ENTRY PrivateList;
-    KSPIN_LOCK CacheMapLock;
-    ULONG OpenCount;
-    ULONG DirtyPages;
-    LIST_ENTRY SharedCacheMapLinks;
     ULONG DirtyPageThreshold;
+
+    /* ROS specific */
+    LIST_ENTRY CacheMapVacbListHead;
+    ULONG TimeStamp;
+    BOOLEAN PinAccess;
+    KSPIN_LOCK CacheMapLock;
 #if DBG
     BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
@@ -257,6 +261,7 @@ extern LAZY_WRITER LazyWriter;
 
 #define NODE_TYPE_DEFERRED_WRITE 0x02FC
 #define NODE_TYPE_PRIVATE_MAP    0x02FE
+#define NODE_TYPE_SHARED_MAP     0x02FF
 
 VOID
 NTAPI
