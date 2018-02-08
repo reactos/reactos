@@ -388,14 +388,17 @@ class CAppsListView :
     };
 
     BOOL bHasAllChecked;
-    BOOL bAscending;
+    BOOL bIsAscending;
     BOOL bHasCheckboxes;
+
+    INT nLastHeaderID;
 
 public:
     CAppsListView() :
         bHasAllChecked(FALSE),
-        bAscending(TRUE),
-        bHasCheckboxes(FALSE)
+        bIsAscending(TRUE),
+        bHasCheckboxes(FALSE),
+        nLastHeaderID(-1)
     {
     }
 
@@ -415,11 +418,40 @@ public:
 
     VOID ColumnClick(LPNMLISTVIEW pnmv)
     {
-        SortContext ctx = {this, pnmv->iSubItem};
+        HWND hHeader;
+        HDITEMW hColumn;
+        INT nHeaderID = pnmv->iSubItem;
 
+        if ((GetWindowLongPtr(GWL_STYLE) & ~LVS_NOSORTHEADER) == 0)
+            return;
+
+        hHeader = (HWND) SendMessage(LVM_GETHEADER, 0, 0);
+        ZeroMemory(&hColumn, sizeof(hColumn));
+
+        /* If the sorting column changed, remove the sorting style from the old column */
+        if ((nLastHeaderID != -1) && (nLastHeaderID != nHeaderID))
+        {
+            hColumn.mask = HDI_FORMAT;
+            Header_GetItem(hHeader, nLastHeaderID, &hColumn);
+            hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+            Header_SetItem(hHeader, nLastHeaderID, &hColumn);
+        }
+
+        /* Set the sorting style to the new column */
+        hColumn.mask = HDI_FORMAT;
+        Header_GetItem(hHeader, nHeaderID, &hColumn);
+
+        hColumn.fmt &= (bIsAscending ? ~HDF_SORTDOWN : ~HDF_SORTUP);
+        hColumn.fmt |= (bIsAscending ? HDF_SORTUP : HDF_SORTDOWN);
+        Header_SetItem(hHeader, nHeaderID, &hColumn);
+
+        /* Sort the list, using the current values of nHeaderID and bIsAscending */
+        SortContext ctx = {this, nHeaderID};
         SortItems(s_CompareFunc, &ctx);
 
-        bAscending = !bAscending;
+        /* Save new values */
+        nLastHeaderID = nHeaderID;
+        bIsAscending = !bIsAscending;
     }
 
     PVOID GetLParam(INT Index)
@@ -507,7 +539,7 @@ public:
         GetItemText(Index, iSubItem, Item2.GetBuffer(MAX_STR_LEN), MAX_STR_LEN);
         Item2.ReleaseBuffer();
 
-        if (bAscending)
+        if (bIsAscending)
             return Item2 == Item1;
         else
             return Item1 == Item2;
