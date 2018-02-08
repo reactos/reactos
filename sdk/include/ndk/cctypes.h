@@ -75,10 +75,13 @@ typedef struct _PRIVATE_CACHE_MAP
     LARGE_INTEGER BeyondLastByte1;
     LARGE_INTEGER FileOffset2;
     LARGE_INTEGER BeyondLastByte2;
-    LARGE_INTEGER ReadAheadOffset[2];
-    ULONG ReadAheadLength[2];
+    ULONG SequentialReadCount;
+    ULONG ReadAheadLength;
+    LARGE_INTEGER ReadAheadOffset;
+    LARGE_INTEGER ReadAheadBeyondLastByte;
     KSPIN_LOCK ReadAheadSpinLock;
     LIST_ENTRY PrivateLinks;
+    PVOID ReadAheadWorkItem;
 } PRIVATE_CACHE_MAP, *PPRIVATE_CACHE_MAP;
 
 typedef struct _BITMAP_RANGE

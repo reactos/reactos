@@ -1280,6 +1280,7 @@ CcRosInitializeFileCache (
         PrivateMap->NodeTypeCode = NODE_TYPE_PRIVATE_MAP;
         PrivateMap->ReadAheadMask = PAGE_SIZE - 1;
         PrivateMap->FileObject = FileObject;
+        KeInitializeSpinLock(&PrivateMap->ReadAheadSpinLock);
 
         /* Link it to the file */
         KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
