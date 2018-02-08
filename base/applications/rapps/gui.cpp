@@ -539,12 +539,7 @@ public:
         GetItemText(Index, iSubItem, Item2.GetBuffer(MAX_STR_LEN), MAX_STR_LEN);
         Item2.ReleaseBuffer();
 
-        if (bIsAscending)
-            return Item2 == Item1;
-        else
-            return Item1 == Item2;
-
-        return 0;
+        return bIsAscending ? Item1.Compare(Item2) : Item2.Compare(Item1);
     }
 
     HWND Create(HWND hwndParent)
