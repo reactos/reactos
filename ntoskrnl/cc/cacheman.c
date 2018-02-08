@@ -164,7 +164,7 @@ CcScheduleReadAhead (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -174,10 +174,35 @@ CcSetAdditionalCacheAttributes (
 	IN	BOOLEAN		DisableWriteBehind
 	)
 {
+    KIRQL OldIrql;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+
     CCTRACE(CC_API_DEBUG, "FileObject=%p DisableReadAhead=%d DisableWriteBehind=%d\n",
         FileObject, DisableReadAhead, DisableWriteBehind);
 
-	UNIMPLEMENTED;
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
+    if (DisableReadAhead)
+    {
+        SetFlag(SharedCacheMap->Flags, READAHEAD_DISABLED);
+    }
+    else
+    {
+        ClearFlag(SharedCacheMap->Flags, READAHEAD_DISABLED);
+    }
+
+    if (DisableWriteBehind)
+    {
+        /* FIXME: also set flag 0x200 */
+        SetFlag(SharedCacheMap->Flags, WRITEBEHIND_DISABLED);
+    }
+    else
+    {
+        ClearFlag(SharedCacheMap->Flags, WRITEBEHIND_DISABLED);
+    }
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 }
 
 /*
@@ -234,7 +259,7 @@ CcSetDirtyPageThreshold (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI

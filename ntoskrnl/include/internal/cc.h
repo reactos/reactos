@@ -163,6 +163,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     PFILE_OBJECT FileObject;
     ULONG DirtyPages;
     LIST_ENTRY SharedCacheMapLinks;
+    ULONG Flags;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
     LIST_ENTRY PrivateList;
@@ -177,6 +178,9 @@ typedef struct _ROS_SHARED_CACHE_MAP
     BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
 } ROS_SHARED_CACHE_MAP, *PROS_SHARED_CACHE_MAP;
+
+#define READAHEAD_DISABLED 0x1
+#define WRITEBEHIND_DISABLED 0x2
 
 typedef struct _ROS_VACB
 {
