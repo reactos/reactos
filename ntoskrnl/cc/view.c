@@ -1277,7 +1277,7 @@ CcRosInitializeFileCache (
         /* Initialize it */
         RtlZeroMemory(PrivateMap, sizeof(PRIVATE_CACHE_MAP));
         PrivateMap->NodeTypeCode = NODE_TYPE_PRIVATE_MAP;
-        PrivateMap->ReadAheadMask = 0xFFF;
+        PrivateMap->ReadAheadMask = PAGE_SIZE - 1;
         PrivateMap->FileObject = FileObject;
 
         /* Link it to the file */
