@@ -243,10 +243,11 @@ CcSetReadAheadGranularity (
 	IN	ULONG		Granularity
 	)
 {
-    static ULONG Warn;
+    PPRIVATE_CACHE_MAP PrivateMap;
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p Granularity=%lu\n",
         FileObject, Granularity);
 
-    if (!Warn++) UNIMPLEMENTED;
+    PrivateMap = FileObject->PrivateCacheMap;
+    PrivateMap->ReadAheadMask = Granularity - 1;
 }
