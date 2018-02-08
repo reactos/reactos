@@ -231,8 +231,7 @@ CcRosFlushDirtyPages (
         ASSERT(current->Dirty);
 
         /* One reference is added above */
-        if ((current->ReferenceCount > 2 && current->PinCount == 0) ||
-            (current->ReferenceCount > 3 && current->PinCount > 1))
+        if (current->ReferenceCount > 2)
         {
             CcRosReleaseVacbLock(current);
             current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
