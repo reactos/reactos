@@ -622,6 +622,12 @@ CcCanIWrite (
     CCTRACE(CC_API_DEBUG, "FileObject=%p BytesToWrite=%lu Wait=%d Retrying=%d\n",
         FileObject, BytesToWrite, Wait, Retrying);
 
+    /* Write through is always OK */
+    if (BooleanFlagOn(FileObject->Flags, FO_WRITE_THROUGH))
+    {
+        return TRUE;
+    }
+
     /* We cannot write if dirty pages count is above threshold */
     if (CcTotalDirtyPages > CcDirtyPageThreshold)
     {
