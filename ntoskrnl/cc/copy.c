@@ -248,8 +248,10 @@ CcCopyData (
     ULONG PartialLength;
     PVOID BaseAddress;
     BOOLEAN Valid;
+    PPRIVATE_CACHE_MAP PrivateCacheMap;
 
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    PrivateCacheMap = FileObject->PrivateCacheMap;
     CurrentOffset = FileOffset;
     BytesCopied = 0;
 
@@ -356,6 +358,23 @@ CcCopyData (
         if (Operation != CcOperationZero)
             Buffer = (PVOID)((ULONG_PTR)Buffer + PartialLength);
     }
+
+    /* If that was a successful sync read operation, let's handle read ahead */
+    if (Operation == CcOperationRead && Length == 0 && Wait)
+    {
+        /* If file isn't random access, schedule next read */
+        if (!BooleanFlagOn(FileObject->Flags, FO_RANDOM_ACCESS))
+        {
+            CcScheduleReadAhead(FileObject, (PLARGE_INTEGER)&FileOffset, BytesCopied);
+        }
+
+        /* And update read history in private cache map */
+        PrivateCacheMap->FileOffset1.QuadPart = PrivateCacheMap->FileOffset2.QuadPart;
+        PrivateCacheMap->BeyondLastByte1.QuadPart = PrivateCacheMap->BeyondLastByte2.QuadPart;
+        PrivateCacheMap->FileOffset2.QuadPart = FileOffset;
+        PrivateCacheMap->BeyondLastByte2.QuadPart = FileOffset + BytesCopied;
+    }
+
     IoStatus->Status = STATUS_SUCCESS;
     IoStatus->Information = BytesCopied;
     return TRUE;
@@ -433,6 +452,155 @@ CcPostDeferredWrites(VOID)
             ExFreePoolWithTag(DeferredWrite, 'CcDw');
         }
     }
+}
+
+VOID
+CcPerformReadAhead(
+    IN PFILE_OBJECT FileObject)
+{
+    NTSTATUS Status;
+    LONGLONG CurrentOffset;
+    KIRQL OldIrql;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    PROS_VACB Vacb;
+    ULONG PartialLength;
+    PVOID BaseAddress;
+    BOOLEAN Valid;
+    ULONG Length;
+    PPRIVATE_CACHE_MAP PrivateCacheMap;
+    BOOLEAN Locked;
+
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+
+    /* Critical:
+     * PrivateCacheMap might disappear in-between if the handle
+     * to the file is closed (private is attached to the handle not to
+     * the file), so we need to lock the master lock while we deal with
+     * it. It won't disappear without attempting to lock such lock.
+     */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    PrivateCacheMap = FileObject->PrivateCacheMap;
+    /* If the handle was closed since the read ahead was scheduled, just quit */
+    if (PrivateCacheMap == NULL)
+    {
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+        ObDereferenceObject(FileObject);
+        return;
+    }
+    /* Otherwise, extract read offset and length and release private map */
+    else
+    {
+        KeAcquireSpinLockAtDpcLevel(&PrivateCacheMap->ReadAheadSpinLock);
+        CurrentOffset = PrivateCacheMap->ReadAheadOffset[1].QuadPart;
+        Length = PrivateCacheMap->ReadAheadLength[1];
+        KeReleaseSpinLockFromDpcLevel(&PrivateCacheMap->ReadAheadSpinLock);
+    }
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+    /* Time to go! */
+    DPRINT("Doing ReadAhead for %p\n", FileObject);
+    /* Lock the file, first */
+    if (!SharedCacheMap->Callbacks->AcquireForReadAhead(SharedCacheMap->LazyWriteContext, FALSE))
+    {
+        Locked = FALSE;
+        goto Clear;
+    }
+
+    /* Remember it's locked */
+    Locked = TRUE;
+
+    /* Next of the algorithm will lock like CcCopyData with the slight
+     * difference that we don't copy data back to an user-backed buffer
+     * We just bring data into Cc
+     */
+    PartialLength = CurrentOffset % VACB_MAPPING_GRANULARITY;
+    if (PartialLength != 0)
+    {
+        PartialLength = min(Length, VACB_MAPPING_GRANULARITY - PartialLength);
+        Status = CcRosRequestVacb(SharedCacheMap,
+                                  ROUND_DOWN(CurrentOffset,
+                                             VACB_MAPPING_GRANULARITY),
+                                  &BaseAddress,
+                                  &Valid,
+                                  &Vacb);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to request VACB: %lx!\n", Status);
+            goto Clear;
+        }
+
+        if (!Valid)
+        {
+            Status = CcReadVirtualAddress(Vacb);
+            if (!NT_SUCCESS(Status))
+            {
+                CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
+                DPRINT1("Failed to read data: %lx!\n", Status);
+                goto Clear;
+            }
+        }
+
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+
+        Length -= PartialLength;
+        CurrentOffset += PartialLength;
+    }
+
+    while (Length > 0)
+    {
+        ASSERT(CurrentOffset % VACB_MAPPING_GRANULARITY == 0);
+        PartialLength = min(VACB_MAPPING_GRANULARITY, Length);
+        Status = CcRosRequestVacb(SharedCacheMap,
+                                  CurrentOffset,
+                                  &BaseAddress,
+                                  &Valid,
+                                  &Vacb);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to request VACB: %lx!\n", Status);
+            goto Clear;
+        }
+
+        if (!Valid)
+        {
+            Status = CcReadVirtualAddress(Vacb);
+            if (!NT_SUCCESS(Status))
+            {
+                CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
+                DPRINT1("Failed to read data: %lx!\n", Status);
+                goto Clear;
+            }
+        }
+
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+
+        Length -= PartialLength;
+        CurrentOffset += PartialLength;
+    }
+
+Clear:
+    /* See previous comment about private cache map */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    PrivateCacheMap = FileObject->PrivateCacheMap;
+    if (PrivateCacheMap != NULL)
+    {
+        /* Mark read ahead as unactive */
+        KeAcquireSpinLockAtDpcLevel(&PrivateCacheMap->ReadAheadSpinLock);
+        InterlockedAnd((volatile long *)&PrivateCacheMap->UlongFlags, 0xFFFEFFFF);
+        KeReleaseSpinLockFromDpcLevel(&PrivateCacheMap->ReadAheadSpinLock);
+    }
+    KeReleaseSpinLock(&PrivateCacheMap->ReadAheadSpinLock, OldIrql);
+
+    /* If file was locked, release it */
+    if (Locked)
+    {
+        SharedCacheMap->Callbacks->ReleaseFromReadAhead(SharedCacheMap->LazyWriteContext);
+    }
+
+    /* And drop our extra reference (See: CcScheduleReadAhead) */
+    ObDereferenceObject(FileObject);
+
+    return;
 }
 
 /*

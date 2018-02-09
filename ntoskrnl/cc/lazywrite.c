@@ -13,14 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef enum _WORK_QUEUE_FUNCTIONS
-{
-    ReadAhead = 1,
-    WriteBehind = 2,
-    LazyWrite = 3,
-    SetDone = 4,
-} WORK_QUEUE_FUNCTIONS, *PWORK_QUEUE_FUNCTIONS;
-
 /* Counters:
  * - Amount of pages flushed by lazy writer
  * - Number of times lazy writer ran
@@ -31,6 +23,7 @@ ULONG CcLazyWriteIos = 0;
 /* Internal vars (MS):
  * - Lazy writer status structure
  * - Lookaside list where to allocate work items
+ * - Queue for high priority work items (read ahead)
  * - Queue for regular work items
  * - Available worker threads
  * - Queue for stuff to be queued after lazy writer is done
@@ -43,6 +36,7 @@ ULONG CcLazyWriteIos = 0;
  */
 LAZY_WRITER LazyWriter;
 NPAGED_LOOKASIDE_LIST CcTwilightLookasideList;
+LIST_ENTRY CcExpressWorkQueue;
 LIST_ENTRY CcRegularWorkQueue;
 LIST_ENTRY CcIdleWorkerThreadList;
 LIST_ENTRY CcPostTickWorkQueue;
@@ -231,10 +225,22 @@ CcWorkerThread(
             DropThrottle = FALSE;
         }
 
-        /* If no work to do, we're done */
-        if (IsListEmpty(&CcRegularWorkQueue))
+        /* Check first if we have read ahead to do */
+        if (IsListEmpty(&CcExpressWorkQueue))
         {
-            break;
+            /* If not, check regular queue */
+            if (IsListEmpty(&CcRegularWorkQueue))
+            {
+                break;
+            }
+            else
+            {
+                WorkItem = CONTAINING_RECORD(CcRegularWorkQueue.Flink, WORK_QUEUE_ENTRY, WorkQueueLinks);
+            }
+        }
+        else
+        {
+            WorkItem = CONTAINING_RECORD(CcExpressWorkQueue.Flink, WORK_QUEUE_ENTRY, WorkQueueLinks);
         }
 
         /* Get our work item, if someone is waiting for us to finish
@@ -242,7 +248,6 @@ CcWorkerThread(
          * then, quit running to let the others do
          * and throttle so that noone starts till current activity is over
          */
-        WorkItem = CONTAINING_RECORD(CcRegularWorkQueue.Flink, WORK_QUEUE_ENTRY, WorkQueueLinks);
         if (WorkItem->Function == SetDone && CcNumberActiveWorkerThreads > 1)
         {
             CcQueueThrottle = TRUE;
@@ -256,7 +261,10 @@ CcWorkerThread(
         /* And handle it */
         switch (WorkItem->Function)
         {
-            /* We only support lazy write now */
+            case ReadAhead:
+                CcPerformReadAhead(WorkItem->Parameters.Read.FileObject);
+                break;
+
             case LazyWrite:
                 CcLazyWriteScan();
                 break;
@@ -264,6 +272,10 @@ CcWorkerThread(
             case SetDone:
                 KeSetEvent(WorkItem->Parameters.Event.Event, IO_NO_INCREMENT, FALSE);
                 DropThrottle = TRUE;
+                break;
+
+            default:
+                DPRINT1("Ignored item: %p (%d)\n", WorkItem, WorkItem->Function);
                 break;
         }
 

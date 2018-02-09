@@ -1191,8 +1191,14 @@ CcRosReleaseFileCache (
             RemoveEntryList(&PrivateMap->PrivateLinks);
             KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
 
-            /* And free it */
+            /* And free it.
+             * Before you event try to remove it from FO, always
+             * lock the master lock, to be sure not to race
+             * with a potential read ahead ongoing!
+             */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
             FileObject->PrivateCacheMap = NULL;
+            KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
             ExFreePoolWithTag(PrivateMap, TAG_PRIVATE_CACHE_MAP);
 
             if (SharedCacheMap->OpenCount > 0)

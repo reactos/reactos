@@ -47,6 +47,7 @@ extern LIST_ENTRY CcDeferredWrites;
 extern KSPIN_LOCK CcDeferredWriteSpinLock;
 extern ULONG CcNumberWorkerThreads;
 extern LIST_ENTRY CcIdleWorkerThreadList;
+extern LIST_ENTRY CcExpressWorkQueue;
 extern LIST_ENTRY CcRegularWorkQueue;
 extern LIST_ENTRY CcPostTickWorkQueue;
 extern NPAGED_LOOKASIDE_LIST CcTwilightLookasideList;
@@ -261,6 +262,14 @@ typedef struct _WORK_QUEUE_ENTRY
     unsigned char Function;
 } WORK_QUEUE_ENTRY, *PWORK_QUEUE_ENTRY;
 
+typedef enum _WORK_QUEUE_FUNCTIONS
+{
+    ReadAhead = 1,
+    WriteBehind = 2,
+    LazyWrite = 3,
+    SetDone = 4,
+} WORK_QUEUE_FUNCTIONS, *PWORK_QUEUE_FUNCTIONS;
+
 extern LAZY_WRITER LazyWriter;
 
 #define NODE_TYPE_DEFERRED_WRITE 0x02FC
@@ -438,6 +447,15 @@ CcScheduleLazyWriteScan(BOOLEAN NoDelay);
 
 VOID
 CcPostDeferredWrites(VOID);
+
+VOID
+CcPostWorkQueue(
+    IN PWORK_QUEUE_ENTRY WorkItem,
+    IN PLIST_ENTRY WorkQueue);
+
+VOID
+CcPerformReadAhead(
+    IN PFILE_OBJECT FileObject);
 
 FORCEINLINE
 NTSTATUS

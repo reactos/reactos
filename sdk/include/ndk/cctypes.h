@@ -75,10 +75,8 @@ typedef struct _PRIVATE_CACHE_MAP
     LARGE_INTEGER BeyondLastByte1;
     LARGE_INTEGER FileOffset2;
     LARGE_INTEGER BeyondLastByte2;
-    ULONG SequentialReadCount;
-    ULONG ReadAheadLength;
-    LARGE_INTEGER ReadAheadOffset;
-    LARGE_INTEGER ReadAheadBeyondLastByte;
+    LARGE_INTEGER ReadAheadOffset[2];
+    ULONG ReadAheadLength[2];
     KSPIN_LOCK ReadAheadSpinLock;
     LIST_ENTRY PrivateLinks;
     PVOID ReadAheadWorkItem;

@@ -51,6 +51,7 @@ CcInitializeCacheManager(VOID)
 
     /* Initialize lazy-writer lists */
     InitializeListHead(&CcIdleWorkerThreadList);
+    InitializeListHead(&CcExpressWorkQueue);
     InitializeListHead(&CcRegularWorkQueue);
     InitializeListHead(&CcPostTickWorkQueue);
 
@@ -160,7 +161,99 @@ CcScheduleReadAhead (
 	IN	ULONG			Length
 	)
 {
-	UNIMPLEMENTED;
+    KIRQL OldIrql;
+    LARGE_INTEGER NewOffset;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    PPRIVATE_CACHE_MAP PrivateCacheMap;
+
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    PrivateCacheMap = FileObject->PrivateCacheMap;
+
+    /* If file isn't cached, or if read ahead is disabled, this is no op */
+    if (SharedCacheMap == NULL || PrivateCacheMap == NULL ||
+        BooleanFlagOn(SharedCacheMap->Flags, READAHEAD_DISABLED))
+    {
+        return;
+    }
+
+    /* Round read length with read ahead mask */
+    Length = ROUND_UP(Length, PrivateCacheMap->ReadAheadMask + 1);
+    /* Compute the offset we'll reach */
+    NewOffset.QuadPart = FileOffset->QuadPart + Length;
+
+    /* Lock read ahead spin lock */
+    KeAcquireSpinLock(&PrivateCacheMap->ReadAheadSpinLock, &OldIrql);
+    /* Easy case: the file is sequentially read */
+    if (BooleanFlagOn(FileObject->Flags, FO_SEQUENTIAL_ONLY))
+    {
+        /* If we went backward, this is no go! */
+        if (NewOffset.QuadPart < PrivateCacheMap->ReadAheadOffset[1].QuadPart)
+        {
+            KeReleaseSpinLock(&PrivateCacheMap->ReadAheadSpinLock, OldIrql);
+            return;
+        }
+
+        /* FIXME: hackish, but will do the job for now */
+        PrivateCacheMap->ReadAheadOffset[1].QuadPart = NewOffset.QuadPart;
+        PrivateCacheMap->ReadAheadLength[1] = Length;
+    }
+    /* Other cases: try to find some logic in that mess... */
+    else
+    {
+        /* Let's check if we always read the same way (like going down in the file)
+         * and pretend it's enough for now
+         */
+        if (PrivateCacheMap->FileOffset2.QuadPart >= PrivateCacheMap->FileOffset1.QuadPart &&
+            FileOffset->QuadPart >= PrivateCacheMap->FileOffset2.QuadPart)
+        {
+            /* FIXME: hackish, but will do the job for now */
+            PrivateCacheMap->ReadAheadOffset[1].QuadPart = NewOffset.QuadPart;
+            PrivateCacheMap->ReadAheadLength[1] = Length;
+        }
+        else
+        {
+            /* FIXME: handle the other cases */
+            KeReleaseSpinLock(&PrivateCacheMap->ReadAheadSpinLock, OldIrql);
+	        UNIMPLEMENTED;
+            return;
+        }
+    }
+
+    /* If read ahead isn't active yet */
+    if (!PrivateCacheMap->Flags.ReadAheadActive)
+    {
+        PWORK_QUEUE_ENTRY WorkItem;
+
+        /* It's active now!
+         * Be careful with the mask, you don't want to mess with node code
+         */
+        InterlockedOr((volatile long *)&PrivateCacheMap->UlongFlags, 0x10000);
+        KeReleaseSpinLock(&PrivateCacheMap->ReadAheadSpinLock, OldIrql);
+
+        /* Get a work item */
+        WorkItem = ExAllocateFromNPagedLookasideList(&CcTwilightLookasideList);
+        if (WorkItem != NULL)
+        {
+            /* Reference our FO so that it doesn't go in between */
+            ObReferenceObject(FileObject);
+
+            /* We want to do read ahead! */
+            WorkItem->Function = ReadAhead;
+            WorkItem->Parameters.Read.FileObject = FileObject;
+
+            /* Queue in the read ahead dedicated queue */
+            CcPostWorkQueue(WorkItem, &CcExpressWorkQueue);
+
+            return;
+        }
+
+        /* Fail path: lock again, and revert read ahead active */
+        KeAcquireSpinLock(&PrivateCacheMap->ReadAheadSpinLock, &OldIrql);
+        InterlockedAnd((volatile long *)&PrivateCacheMap->UlongFlags, 0xFFFEFFFF);
+    }
+
+    /* Done (fail) */
+    KeReleaseSpinLock(&PrivateCacheMap->ReadAheadSpinLock, OldIrql);
 }
 
 /*
