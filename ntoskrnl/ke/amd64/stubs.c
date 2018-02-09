@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+ULONG ProcessCount;
+BOOLEAN CcPfEnablePrefetcher;
+SIZE_T KeXStateLength = sizeof(XSAVE_FORMAT);
+
 VOID
 KiRetireDpcListInDpcStack(
     PKPRCB Prcb,
@@ -96,14 +100,28 @@ KiSwitchKernelStackHelper(
     LONG_PTR StackOffset,
     PVOID OldStackBase);
 
+/*
+ * Kernel stack layout (example pointers):
+ * 0xFFFFFC0F'2D008000 KTHREAD::StackBase
+ *    [XSAVE_AREA size == KeXStateLength = 0x440]
+ * 0xFFFFFC0F'2D007BC0 KTHREAD::StateSaveArea _XSAVE_FORMAT
+ * 0xFFFFFC0F'2D007B90 KTHREAD::InitialStack
+ *    [0x190 bytes KTRAP_FRAME]
+ * 0xFFFFFC0F'2D007A00 KTHREAD::TrapFrame
+ *    [KSTART_FRAME] or ...
+ *    [KSWITCH_FRAME]
+ * 0xFFFFFC0F'2D007230 KTHREAD::KernelStack
+ */
+
 PVOID
 NTAPI
-KeSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
+KiSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
 {
     PKTHREAD CurrentThread;
     PVOID OldStackBase;
     LONG_PTR StackOffset;
     SIZE_T StackSize;
+    PKIPCR Pcr;
 
     /* Get the current thread */
     CurrentThread = KeGetCurrentThread();
@@ -139,19 +157,16 @@ KeSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
     CurrentThread->StackLimit = (ULONG_PTR)StackLimit;
     CurrentThread->LargeStack = TRUE;
 
-    /* Adjust the PCR fields */
-    __addgsqword(FIELD_OFFSET(KPCR, NtTib.StackBase), StackOffset);
-    __addgsqword(FIELD_OFFSET(KIPCR, Prcb.RspBase), StackOffset);
+    /* Adjust RspBase in the PCR */
+    Pcr = (PKIPCR)KeGetPcr();
+    Pcr->Prcb.RspBase += StackOffset;
 
-    /* Finally switch RSP to the new stack.
-       We pass OldStackBase to make sure it is not lost. */
-    OldStackBase = KiSwitchKernelStackHelper(StackOffset, OldStackBase);
-
-    /* Reenable interrupts */
-    _enable();
+    /* Adjust Rsp0 in the TSS */
+    Pcr->TssBase->Rsp0 += StackOffset;
 
     return OldStackBase;
 }
+
 
 NTSTATUS
 NTAPI
