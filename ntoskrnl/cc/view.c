@@ -1171,6 +1171,8 @@ CcRosReleaseFileCache (
  * has been closed.
  */
 {
+    KIRQL OldIrql;
+    PPRIVATE_CACHE_MAP PrivateMap;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
     KeAcquireGuardedMutex(&ViewLock);
@@ -1178,27 +1180,25 @@ CcRosReleaseFileCache (
     if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
     {
         SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-        if (FileObject->PrivateCacheMap != NULL)
+
+        /* Closing the handle, so kill the private cache map
+         * Before you event try to remove it from FO, always
+         * lock the master lock, to be sure not to race
+         * with a potential read ahead ongoing!
+         */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+        PrivateMap = FileObject->PrivateCacheMap;
+        FileObject->PrivateCacheMap = NULL;
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+        if (PrivateMap != NULL)
         {
-            KIRQL OldIrql;
-            PPRIVATE_CACHE_MAP PrivateMap;
-
-            /* Closing the handle, so kill the private cache map */
-            PrivateMap = FileObject->PrivateCacheMap;
-
             /* Remove it from the file */
             KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
             RemoveEntryList(&PrivateMap->PrivateLinks);
             KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
 
-            /* And free it.
-             * Before you event try to remove it from FO, always
-             * lock the master lock, to be sure not to race
-             * with a potential read ahead ongoing!
-             */
-            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-            FileObject->PrivateCacheMap = NULL;
-            KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+            /* And free it. */
             ExFreePoolWithTag(PrivateMap, TAG_PRIVATE_CACHE_MAP);
 
             if (SharedCacheMap->OpenCount > 0)
