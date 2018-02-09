@@ -64,11 +64,6 @@ LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
 
-/* Internal vars (ROS):
- * - Lock for the CcCleanSharedCacheMapList list
- */
-KSPIN_LOCK iSharedCacheMapLock;
-
 #if DBG
 static void CcRosVacbIncRefCount_(PROS_VACB vacb, const char* file, int line)
 {
@@ -1100,9 +1095,9 @@ CcRosDeleteFileCache (
             CcRosInternalFreeVacb(current);
         }
 
-        KeAcquireSpinLock(&iSharedCacheMapLock, &OldIrql);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
         RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
-        KeReleaseSpinLock(&iSharedCacheMapLock, OldIrql);
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
         ExFreeToNPagedLookasideList(&SharedCacheMapLookasideList, SharedCacheMap);
         KeAcquireGuardedMutex(&ViewLock);
@@ -1267,9 +1262,9 @@ CcRosInitializeFileCache (
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
 
-        KeAcquireSpinLock(&iSharedCacheMapLock, &OldIrql);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
         InsertTailList(&CcCleanSharedCacheMapList, &SharedCacheMap->SharedCacheMapLinks);
-        KeReleaseSpinLock(&iSharedCacheMapLock, OldIrql);
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
     }
     if (FileObject->PrivateCacheMap == NULL)
     {
@@ -1282,9 +1277,9 @@ CcRosInitializeFileCache (
             /* If we also allocated the shared cache map for this file, kill it */
             if (Allocated)
             {
-                KeAcquireSpinLock(&iSharedCacheMapLock, &OldIrql);
+                OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
                 RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
-                KeReleaseSpinLock(&iSharedCacheMapLock, OldIrql);
+                KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
                 FileObject->SectionObjectPointer->SharedCacheMap = NULL;
                 ObDereferenceObject(FileObject);
@@ -1349,7 +1344,6 @@ CcInitView (
     InitializeListHead(&CcDeferredWrites);
     InitializeListHead(&CcCleanSharedCacheMapList);
     KeInitializeSpinLock(&CcDeferredWriteSpinLock);
-    KeInitializeSpinLock(&iSharedCacheMapLock);
     KeInitializeGuardedMutex(&ViewLock);
     ExInitializeNPagedLookasideList(&iBcbLookasideList,
                                     NULL,
