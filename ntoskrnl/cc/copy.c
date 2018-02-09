@@ -697,10 +697,16 @@ CcCanIWrite (
     /* So, now allow write if:
      * - Not the first try or we have no throttling yet
      * AND:
-     * - We don't execeed threshold!
+     * - We don't exceed threshold!
+     * - We don't exceed what Mm can allow us to use
+     *   + If we're above top, that's fine
+     *   + If we're above bottom with limited modified pages, that's fine
+     *   + Otherwise, throttle!
      */
     if ((TryContext != FirstTry || IsListEmpty(&CcDeferredWrites)) &&
         CcTotalDirtyPages + Pages < CcDirtyPageThreshold &&
+        (MmAvailablePages > MmThrottleTop ||
+         (MmModifiedPageListHead.Total < 1000 && MmAvailablePages > MmThrottleBottom)) &&
         !PerFileDefer)
     {
         return TRUE;
