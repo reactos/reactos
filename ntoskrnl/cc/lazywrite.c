@@ -143,13 +143,13 @@ CcLazyWriteScan(VOID)
     if (Target != 0)
     {
         /* Flush! */
-        DPRINT1("Lazy writer starting (%d)\n", Target);
+        DPRINT("Lazy writer starting (%d)\n", Target);
         CcRosFlushDirtyPages(Target, &Count, FALSE, TRUE);
 
         /* And update stats */
         CcLazyWritePages += Count;
         ++CcLazyWriteIos;
-        DPRINT1("Lazy writer done (%d)\n", Count);
+        DPRINT("Lazy writer done (%d)\n", Count);
     }
 
     /* If we have deferred writes, try them now! */
