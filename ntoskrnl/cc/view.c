@@ -1437,6 +1437,12 @@ ExpKdbgExtDefWrites(ULONG Argc, PCHAR Argv[])
               (CcDirtyPageThreshold * PAGE_SIZE) / 1024);
     KdbpPrint("MmAvailablePages:\t%lu (%lu Kb)\n", MmAvailablePages,
               (MmAvailablePages * PAGE_SIZE) / 1024);
+    KdbpPrint("MmThrottleTop:\t\t%lu (%lu Kb)\n", MmThrottleTop,
+              (MmThrottleTop * PAGE_SIZE) / 1024);
+    KdbpPrint("MmThrottleBottom:\t%lu (%lu Kb)\n", MmThrottleBottom,
+              (MmThrottleBottom * PAGE_SIZE) / 1024);
+    KdbpPrint("MmModifiedPageListHead.Total:\t%lu (%lu Kb)\n", MmModifiedPageListHead.Total,
+              (MmModifiedPageListHead.Total * PAGE_SIZE) / 1024);
 
     if (CcTotalDirtyPages >= CcDirtyPageThreshold)
     {
