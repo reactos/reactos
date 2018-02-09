@@ -22,7 +22,6 @@ EXTERN KiDeliverApc:PROC
 EXTERN KiDpcInterruptHandler:PROC
 EXTERN PsConvertToGuiThread:PROC
 EXTERN MmCreateKernelStack:PROC
-EXTERN KeSwitchKernelStack:PROC
 EXTERN MmDeleteKernelStack:PROC
 
 #ifdef _WINKD_
@@ -774,7 +773,7 @@ PUBLIC KiSystemCallEntry64
 
 .PROC KiSystemCall64Again
 
-   /* Old stack pointer is in rcx, lie and say we saved it in rbp */
+    /* Old stack pointer is in rcx, lie and say we saved it in rbp */
     .setframe rbp, 0
     .endprolog
 
@@ -1022,6 +1021,37 @@ KiSwitchKernelStackHelper:
     /* Return on new stack */
     mov rax, rdx
     ret
+
+EXTERN KiSwitchKernelStack:PROC
+
+PUBLIC KeSwitchKernelStack
+FUNC KeSwitchKernelStack
+
+    sub rsp, 40
+    .allocstack 40
+
+    ; Save rcx
+    mov [rsp], rcx
+    .savereg rcx, 0
+    .endprolog
+
+    ; Call the C handler, which returns the old stack in rax
+   call KiSwitchKernelStack
+
+    ; Restore rcx (StackBase)
+    mov rcx, [rsp]
+
+    ; Switch to new stack: RSP += (StackBase - OldStackBase)
+    sub rcx, rax
+    add rsp, rcx
+
+    ; Deallocate the home frame
+    add rsp, 40
+    ret
+
+ENDFUNC
+
+
 
 
 #ifdef _MSC_VER
