@@ -1,5 +1,8 @@
 
-RAW("include kxamd64.inc"),
+RAW("#include <kxamd64.inc>"),
+
+SIZE(SizeofPointer, PVOID),
+
 
 HEADER("CPU type"),
 CONSTANT(CPU_AMD),
@@ -37,6 +40,8 @@ CONSTANT(DEBUG_ACTIVE_DR7),
 CONSTANT(DEBUG_ACTIVE_INSTRUMENTED),
 CONSTANT(DEBUG_ACTIVE_DBG_INSTRUMENTED),
 CONSTANT(DEBUG_ACTIVE_MINIMAL_THREAD),
+//CONSTANT(DEBUG_ACTIVE_SET_CONTEXT_STATE_LOCK_BIT),
+//CONSTANT(DEBUG_ACTIVE_SET_CONTEXT_STATE_LOCK),
 
 CONSTANT(DEBUG_ACTIVE_PRIMARY_THREAD),
 CONSTANT(DEBUG_ACTIVE_PRIMARY_THREAD_BIT),
@@ -58,7 +63,7 @@ CONSTANT(EFLAGS_TF_SHIFT),
 CONSTANT(EFLAGS_IF_MASK),
 CONSTANT(EFLAGS_IF_SHIFT),
 CONSTANT(EFLAGS_ID_MASK),
-CONSTANTX(EFLAGS_IF_BIT, EFLAGS_IF_MASK),
+CONSTANTX(EFLAGS_IF_BIT, EFLAGS_IF_SHIFT),
 
 HEADER("Exception codes"),
 CONSTANT(EXCEPTION_DIVIDED_BY_ZERO),
@@ -77,6 +82,7 @@ CONSTANT(EXCEPTION_GP_FAULT),
 CONSTANT(EXCEPTION_RESERVED_TRAP),
 CONSTANT(EXCEPTION_NPX_ERROR),
 CONSTANT(EXCEPTION_ALIGNMENT_CHECK),
+//CONSTANT(EXCEPTION_VIRTUALIZATION_FAULT),
 
 HEADER("Legacy Floating Status Bit Masks"),
 CONSTANT(FSW_INVALID_OPERATION),
@@ -105,6 +111,9 @@ HEADER("Hypervisor Enlightenment Definitions"),
 //CONSTANT(HV_VIRTUAL_APIC_NO_EOI_REQUIRED), // win 10
 //CONSTANT(HV_VIRTUAL_APIC_NO_EOI_REQUIRED_V), // not win 10
 //CONSTANT(HvApicFlags),
+//HvVirtualFaultCode equ 00044H
+//HvVirtualFaultParam equ 00048H
+//HvExtVirtualizationFaultEpf equ 00001H
 
 CONSTANT(KEXCEPTION_ACTIVE_INTERRUPT_FRAME),
 CONSTANT(KEXCEPTION_ACTIVE_EXCEPTION_FRAME),
@@ -122,6 +131,8 @@ CONSTANT(KF_XSTATE), // win 10
 CONSTANT(KF_XSAVEOPT_BIT), // win 10
 CONSTANT(KF_XSTATE_BIT), // win 10
 CONSTANT(KF_RDWRFSGSBASE_BIT), // win 10
+//CONSTANT(KF_XSAVES_BIT),
+//CONSTANT(KF_FPU_LEAKAGE_BIT),
 
 HEADER("KGDT selectors"),
 CONSTANT(KGDT64_NULL),
@@ -157,6 +168,11 @@ CONSTANT(MSR_GS_SWAP),
 CONSTANT(MSR_MCG_STATUS),
 CONSTANT(MSR_AMD_ACCESS),
 CONSTANT(MSR_IA32_MISC_ENABLE),
+CONSTANT(MSR_DEBUG_CTL),
+CONSTANT(MSR_LAST_BRANCH_FROM), // not win 10
+CONSTANT(MSR_LAST_BRANCH_TO), // not win 10
+CONSTANT(MSR_LAST_EXCEPTION_FROM), // not win 10
+CONSTANT(MSR_LAST_EXCEPTION_TO), // not win 10
 
 HEADER("Flags for MSR_EFER"),
 CONSTANT(MSR_LMA),
@@ -164,11 +180,6 @@ CONSTANT(MSR_LME),
 CONSTANT(MSR_SCE),
 CONSTANT(MSR_NXE),
 CONSTANT(MSR_PAT),
-CONSTANT(MSR_DEBUG_CTL),
-CONSTANT(MSR_LAST_BRANCH_FROM), // not win 10
-CONSTANT(MSR_LAST_BRANCH_TO), // not win 10
-CONSTANT(MSR_LAST_EXCEPTION_FROM), // not win 10
-CONSTANT(MSR_LAST_EXCEPTION_TO), // not win 10
 
 HEADER("Flags for MSR_DEBUG_CTL"),
 //CONSTANT(MSR_DEBUG_CTL_LBR),
@@ -241,6 +252,7 @@ CONSTANT(EVENT_INCREMENT),
 //CONSTANT(KUMS_UCH_VOLATILE_MASK),
 CONSTANT(PF_COMPARE_EXCHANGE128),
 //CONSTANT(PF_RDWRFSGSBASE_AVAILABLE),
+//CONSTANT(PF_RDTSCP_INSTRUCTION_AVAILABLE),
 //CONSTANT(UMS_TLS_THREAD_CONTEXT),
 //CONSTANT(XHF_NOEXECUTE),
 
@@ -362,6 +374,8 @@ OFFSET(ExXmm12, KEXCEPTION_FRAME, Xmm12),
 OFFSET(ExXmm13, KEXCEPTION_FRAME, Xmm13),
 OFFSET(ExXmm14, KEXCEPTION_FRAME, Xmm14),
 OFFSET(ExXmm15, KEXCEPTION_FRAME, Xmm15),
+OFFSET(ExOutputBuffer, KEXCEPTION_FRAME, OutputBuffer), // not Win 10
+OFFSET(ExOutputLength, KEXCEPTION_FRAME, OutputLength), // not Win 10
 OFFSET(ExMxCsr, KEXCEPTION_FRAME, MxCsr),
 OFFSET(ExRbp, KEXCEPTION_FRAME, Rbp),
 OFFSET(ExRbx, KEXCEPTION_FRAME, Rbx),
@@ -413,15 +427,21 @@ OFFSET(LfMxCsr, XSAVE_FORMAT, MxCsr),
 OFFSET(LfMxCsr_Mask, XSAVE_FORMAT, MxCsr_Mask),
 OFFSET(LfFloatRegisters, XSAVE_FORMAT, FloatRegisters),
 OFFSET(LfXmmRegisters, XSAVE_FORMAT, XmmRegisters),
+//OFFSET(LfFloatSaveLength, XSAVE_FORMAT, FloatSaveLength),
+
+//X87ErrorOffset equ 0000CH
+//X87FloatSaveLength equ 0006CH
 
 HEADER("KGDTENTRY64 offsets"),
 OFFSET(KgdtBaseLow, KGDTENTRY64, BaseLow),
 OFFSET(KgdtBaseMiddle, KGDTENTRY64, Bytes.BaseMiddle),
 OFFSET(KgdtBaseHigh, KGDTENTRY64, Bytes.BaseHigh),
 OFFSET(KgdtBaseUpper, KGDTENTRY64, BaseUpper),
+//OFFSET(KgdtFlags1, KGDTENTRY64, Flags1),
 OFFSET(KgdtLimitHigh, KGDTENTRY64, Bytes.Flags2),
 OFFSET(KgdtLimitLow, KGDTENTRY64, LimitLow),
 //CONSTANT(KGDT_LIMIT_ENCODE_MASK),
+//CONSTANT(KGDT_ENTRY_PRESENT),
 
 HEADER("MACHINE_FRAME offsets"),
 OFFSET(MfRip, MACHINE_FRAME, Rip),
@@ -450,7 +470,7 @@ OFFSET(PbPrcbLock, KPRCB, PrcbLock),
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 OFFSET(PbPriorityState, KPRCB, PriorityState),
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-OFFSET(PbSetMember, KPRCB, SetMember),
+OFFSET(PbSetMember, KPRCB, SetMember), // not Win 10
 OFFSET(PbProcessorState, KPRCB, ProcessorState),
 OFFSET(PbCpuType, KPRCB, CpuType),
 OFFSET(PbCpuID, KPRCB, CpuID),
@@ -468,7 +488,7 @@ OFFSET(PbApicMask, KPRCB, ApicMask),
 OFFSET(PbCFlushSize, KPRCB, CFlushSize),
 OFFSET(PbAcpiReserved, KPRCB, AcpiReserved),
 OFFSET(PbInitialApicId, KPRCB, InitialApicId),
-//OFFSET(PbStride, KPRCB, Stride),
+//OFFSET(PbStride, KPRCB, Stride), // not Win 10
 OFFSET(PbLockQueue, KPRCB, LockQueue),
 OFFSET(PbPPLookasideList, KPRCB, PPLookasideList),
 OFFSET(PbPPNPagedLookasideList, KPRCB, PPNPagedLookasideList),
@@ -484,16 +504,16 @@ OFFSET(PbLookasideIrpFloat, KPRCB, LookasideIrpFloat),
 //OFFSET(PbWriteTransferCount, KPRCB, IoWriteTransferCount),
 //OFFSET(PbOtherTransferCount, KPRCB, IoOtherTransferCount),
 //OFFSET(PbContextSwitches, KPRCB, KeContextSwitches),
-//OFFSET(PbLdtSelector, KPRCB, LdtSelector),
-OFFSET(PbTargetSet, KPRCB, TargetSet),
+//OFFSET(PbLdtSelector, KPRCB, LdtSelector), // not Win 10
+OFFSET(PbTargetSet, KPRCB, TargetSet), // not Win 10
 //OFFSET(PbTargetCount, KPRCB, TargetCount),
 OFFSET(PbIpiFrozen, KPRCB, IpiFrozen),
 OFFSET(PbRequestMailbox, KPRCB, RequestMailbox),
-OFFSET(PbSenderSummary, KPRCB, SenderSummary),
-//OFFSET(PbDpcListHead, KPRCB, DpcListHead),
+OFFSET(PbSenderSummary, KPRCB, SenderSummary), // not Win 10
+//OFFSET(PbDpcListHead, KPRCB, DpcListHead), // not Win 10
 //OFFSET(PbDpcList, KPRCB, DpcList),
 //OFFSET(PbDpcLock, KPRCB, DpcLock),
-//OFFSET(PbDpcQueueDepth, KPRCB, DpcQueueDepth),
+//OFFSET(PbDpcQueueDepth, KPRCB, DpcQueueDepth), // not Win 10
 //OFFSET(PbDpcCount, KPRCB, DpcCount),
 OFFSET(PbDpcStack, KPRCB, DpcStack),
 OFFSET(PbMaximumDpcQueueDepth, KPRCB, MaximumDpcQueueDepth),
@@ -501,18 +521,18 @@ OFFSET(PbDpcRequestRate, KPRCB, DpcRequestRate),
 OFFSET(PbMinimumDpcRate, KPRCB, MinimumDpcRate),
 //OFFSET(PbDpcRequestSummary, KPRCB, DpcRequestSummary),
 //OFFSET(PbNormalDpcState, KPRCB, NormalDpcState),
-OFFSET(PbDpcInterruptRequested, KPRCB, DpcInterruptRequested),
-OFFSET(PbDpcThreadRequested, KPRCB, DpcThreadRequested),
+OFFSET(PbDpcInterruptRequested, KPRCB, DpcInterruptRequested), // not Win 10
+OFFSET(PbDpcThreadRequested, KPRCB, DpcThreadRequested), // not Win 10
 OFFSET(PbDpcRoutineActive, KPRCB, DpcRoutineActive),
-OFFSET(PbDpcThreadActive, KPRCB, DpcThreadActive),
-OFFSET(PbTimerHand, KPRCB, TimerHand),
-OFFSET(PbTimerRequest, KPRCB, TimerRequest),
-OFFSET(PbTickOffset, KPRCB, TickOffset),
+OFFSET(PbDpcThreadActive, KPRCB, DpcThreadActive), // not Win 10
+OFFSET(PbTimerHand, KPRCB, TimerHand), // not Win 10
+OFFSET(PbTimerRequest, KPRCB, TimerRequest), // not Win 10
+OFFSET(PbTickOffset, KPRCB, TickOffset), // not Win 10
 //OFFSET(PbInterruptObject, KPRCB, InterruptObject),
-OFFSET(PbMasterOffset, KPRCB, MasterOffset),
+OFFSET(PbMasterOffset, KPRCB, MasterOffset), // not Win 10
 OFFSET(PbDpcLastCount, KPRCB, DpcLastCount),
 OFFSET(PbQuantumEnd, KPRCB, QuantumEnd),
-OFFSET(PbDpcSetEventRequest, KPRCB, DpcSetEventRequest),
+OFFSET(PbDpcSetEventRequest, KPRCB, DpcSetEventRequest), // not Win 10
 OFFSET(PbIdleSchedule, KPRCB, IdleSchedule),
 OFFSET(PbReadySummary, KPRCB, ReadySummary),
 OFFSET(PbDispatcherReadyListHead, KPRCB, DispatcherReadyListHead),
@@ -522,17 +542,17 @@ OFFSET(PbUserTime, KPRCB, UserTime),
 OFFSET(PbDpcTime, KPRCB, DpcTime),
 OFFSET(PbInterruptTime, KPRCB, InterruptTime),
 OFFSET(PbAdjustDpcThreshold, KPRCB, AdjustDpcThreshold),
-OFFSET(PbSkipTick, KPRCB, SkipTick),
-OFFSET(PbPollSlot, KPRCB, PollSlot),
+OFFSET(PbSkipTick, KPRCB, SkipTick), // not Win 10
+OFFSET(PbPollSlot, KPRCB, PollSlot), // not Win 10
 OFFSET(PbParentNode, KPRCB, ParentNode),
 OFFSET(PbMultiThreadProcessorSet, KPRCB, MultiThreadProcessorSet),
-OFFSET(PbMultiThreadSetMaster, KPRCB, MultiThreadSetMaster),
+OFFSET(PbMultiThreadSetMaster, KPRCB, MultiThreadSetMaster), // not Win 10
 //OFFSET(PbStartCycles, KPRCB, StartCycles),
 OFFSET(PbPageColor, KPRCB, PageColor),
 OFFSET(PbNodeColor, KPRCB, NodeColor),
 OFFSET(PbNodeShiftedColor, KPRCB,NodeShiftedColor),
 OFFSET(PbSecondaryColorMask, KPRCB, SecondaryColorMask),
-OFFSET(PbSleeping, KPRCB, Sleeping),
+OFFSET(PbSleeping, KPRCB, Sleeping), // not Win 10
 //OFFSET(PbCycleTime, KPRCB, CycleTime),
 //OFFSET(PbFastReadNoWait, KPRCB, FastReadNoWait),
 //OFFSET(PbFastReadWait, KPRCB, FastReadWait),
@@ -544,12 +564,13 @@ OFFSET(PbSleeping, KPRCB, Sleeping),
 //OFFSET(PbExceptionDispatchCount, KPRCB, ExceptionDispatchCount),
 //OFFSET(PbKeSpinLockOrdering, KPRCB, KeSpinLockOrdering),
 OFFSET(PbVendorString, KPRCB, VendorString),
-OFFSET(PbPowerState, KPRCB, PowerState),
+OFFSET(PbPowerState, KPRCB, PowerState), // not Win 10
 //OFFSET(PbContext, KPRCB, Context),
 //OFFSET(PbIsrStack, KPRCB, IsrStack),
-//OFFSET(PbEntropyCount, KPRCB, EntropyTimingState.EntropyCount),
-//OFFSET(PbEntropyBuffer, KPRCB, EntropyTimingState.Buffer),
+//OFFSET(PbEntropyCount, KPRCB, EntropyTimingState.EntropyCount), // not Win 10
+//OFFSET(PbEntropyBuffer, KPRCB, EntropyTimingState.Buffer), // not Win 10
 //OFFSET(PbMailbox, KPRCB, Mailbox),
+//OFFSET(PbBamFlags, KPRCB, BamFlags),
 SIZE(ProcessorBlockLength, KPRCB),
 
 HEADER("KPCR"),
@@ -559,8 +580,8 @@ OFFSET(PcUserRsp, KPCR, UserRsp),
 OFFSET(PcSelf, KPCR, Self),
 OFFSET(PcCurrentPrcb, KPCR, CurrentPrcb),
 OFFSET(PcLockArray, KPCR, LockArray),
-//OFFSET(PcTeb, KPCR, Teb),
-//OFFSET(PcIdt, KPCR, Idt),
+//OFFSET(PcTeb, KPCR, Used_Self),
+//OFFSET(PcIdt, KPCR, IdtBase),
 OFFSET(PcIrql, KPCR, Irql),
 OFFSET(PcStallScaleFactor, KPCR, StallScaleFactor),
 OFFSET(PcHalReserved, KPCR, HalReserved),
@@ -576,7 +597,7 @@ OFFSET(PcCurrentThread, KIPCR, Prcb.CurrentThread),
 //OFFSET(PcNestingLevel, KPCR, NestingLevel),
 OFFSET(PcRspBase, KIPCR, Prcb.RspBase),
 //OFFSET(PcPrcbLock, KPCR, PrcbLock),
-OFFSET(PcSetMember, KIPCR, Prcb.SetMember),
+OFFSET(PcSetMember, KIPCR, Prcb.SetMember), // not Win 10
 #if 0
 OFFSET(PcCr0, KIPCR, Prcb.Cr0),
 OFFSET(PcCr2, KIPCR, Prcb.Cr2),
@@ -610,9 +631,9 @@ OFFSET(PcSystemCalls, KIPCR, Prcb.KeSystemCalls),
 OFFSET(PcDpcRoutineActive, KIPCR, Prcb.DpcRoutineActive),
 OFFSET(PcInterruptCount, KIPCR, Prcb.InterruptCount),
 OFFSET(PcDebuggerSavedIRQL, KIPCR, Prcb.DebuggerSavedIRQL),
-OFFSET(PcTickOffset, KIPCR, Prcb.TickOffset),
+OFFSET(PcTickOffset, KIPCR, Prcb.TickOffset), // not Win 10
 OFFSET(PcMasterOffset, KIPCR, Prcb.MasterOffset),
-OFFSET(PcSkipTick, KIPCR, Prcb.SkipTick),
+OFFSET(PcSkipTick, KIPCR, Prcb.SkipTick), // not Win 10
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 OFFSET(PcVirtualApicAssist, KIPCR, Prcb.VirtualApicAssist),
 OFFSET(PcStartCycles, KIPCR, Prcb.StartCycles),
@@ -620,6 +641,8 @@ OFFSET(PcStartCycles, KIPCR, Prcb.StartCycles),
 //OFFSET(PcFeatureBits, KIPCR, Prcb.FeatureBits),
 //OFFSET(PcNmiActive, KIPCR, Prcb.NmiActive),
 //OFFSET(PcDeepSleep, KIPCR, Prcb.DeepSleep),
+//OFFSET(PcSfCode equ 066A8H, KIPCR, Prcb.SfCode),
+//OFFSET(PcSfVa equ 066B0H, KIPCR, Prcb.SfVa),
 SIZE(ProcessorControlRegisterLength, KIPCR),
 
 HEADER("KPROCESSOR_START_BLOCK offsets"),
@@ -663,6 +686,7 @@ OFFSET(PsMxCsr, KPROCESSOR_STATE, SpecialRegisters.MxCsr),
 //OFFSET(PsMsrCStar, KPROCESSOR_STATE, MsrCStar),
 //OFFSET(PsMsrSyscallMask, KPROCESSOR_STATE, MsrSyscallMask),
 //OFFSET(PsXcr0, KPROCESSOR_STATE, Xcr0),
+//OFFSET(PsMsrFsBase, KPROCESSOR_STATE, MsrFsBase),
 OFFSET(PsContextFrame, KPROCESSOR_STATE, ContextFrame),
 OFFSET(PsDebugControl, KPROCESSOR_STATE, SpecialRegisters.DebugControl),
 OFFSET(PsLastBranchToRip, KPROCESSOR_STATE, SpecialRegisters.LastBranchToRip),
@@ -698,6 +722,7 @@ OFFSET(SrMsrLStar, KSPECIAL_REGISTERS, MsrLStar),
 OFFSET(SrMsrCStar, KSPECIAL_REGISTERS, MsrCStar),
 OFFSET(SrMsrSyscallMask, KSPECIAL_REGISTERS, MsrSyscallMask),
 //OFFSET(SrXcr0, KSPECIAL_REGISTERS, Xcr0),
+//OFFSET(SrMsrFsBase, KSPECIAL_REGISTERS, MsrFsBase),
 
 HEADER("KSYSTEM_TIME"), // obsolete in win 10
 OFFSET(StLowTime, KSYSTEM_TIME, LowPart),
@@ -709,7 +734,7 @@ OFFSET(SwP5Home, KSWITCH_FRAME, P5Home),
 OFFSET(SwApcBypass, KSWITCH_FRAME, ApcBypass),
 OFFSET(SwRbp, KSWITCH_FRAME, Rbp),
 OFFSET(SwReturn, KSWITCH_FRAME, Return),
-SIZE(SwitchFrameLength, KSWITCH_FRAME),
+SIZE(SwitchFrameLength, KSWITCH_FRAME), // not in Win 10
 SIZE(KSWITCH_FRAME_LENGTH, KSWITCH_FRAME),
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
@@ -724,60 +749,60 @@ SIZE(KTIMER_TABLE_SIZE, KTIMER_TABLE),
 #if 0 // FIXME: reloffset???
 HEADER("KTRAP_FRAME offsets"),
 OFFSET(TrP1Home, KTRAP_FRAME, TrP1Home),
-TrP2Home, KTRAP_FRAME, TrP1Home),
-TrP3Home, KTRAP_FRAME, TrP1Home),
-TrP4Home, KTRAP_FRAME, TrP1Home),
-TrP5, KTRAP_FRAME, TrP1Home),
-TrPreviousMode, KTRAP_FRAME, TrP1Home),
-TrPreviousIrql, KTRAP_FRAME, TrP1Home),
-TrFaultIndicator, KTRAP_FRAME, TrP1Home),
-TrExceptionActive, KTRAP_FRAME, TrP1Home),
-TrMxCsr, KTRAP_FRAME, TrP1Home),
-TrRax equ 0FFFFFFB0H
-TrRcx equ 0FFFFFFB8H
-TrRdx equ 0FFFFFFC0H
-TrR8 equ 0FFFFFFC8H
-TrR9 equ 0FFFFFFD0H
-TrR10 equ 0FFFFFFD8H
-TrR11 equ 0FFFFFFE0H
-TrGsBase equ 0FFFFFFE8H
-TrGsSwap equ 0FFFFFFE8H
-TrXmm0 equ 0FFFFFFF0H
-TrXmm1 equ 00000H
-TrXmm2 equ 00010H
-TrXmm3 equ 00020H
-TrXmm4 equ 00030H
-TrXmm5 equ 00040H
-TrFaultAddress equ 00050H
-TrDr0 equ 00058H
-TrDr1 equ 00060H
-TrDr2 equ 00068H
-TrDr3 equ 00070H
-TrDr6 equ 00078H
-TrDr7 equ 00080H
-TrDebugControl equ 00088H
-TrLastBranchToRip equ 00090H
-TrLastBranchFromRip equ 00098H
-TrLastExceptionToRip equ 000A0H
-TrLastExceptionFromRip equ 000A8H
-TrSegDs equ 000B0H
-TrSegEs equ 000B2H
-TrSegFs equ 000B4H
-TrSegGs equ 000B6H
-TrTrapFrame equ 000B8H
-TrRbx equ 000C0H
-TrRdi equ 000C8H
-TrRsi equ 000D0H
-TrRbp equ 000D8H
-TrErrorCode equ 000E0H
-TrRip equ 000E8H
-TrSegCs equ 000F0H
-TrLogging equ 000F3H
-TrEFlags equ 000F8H
-TrRsp equ 00100H
-TrSegSs equ 00108H
-SIZE(KTRAP_FRAME_LENGTH, KTRAP_FRAME),
+OFFSET(TrP2Home, KTRAP_FRAME, TrP2Home),
+OFFSET(TrP3Home, KTRAP_FRAME, TrP3Home),
+OFFSET(TrP4Home, KTRAP_FRAME, TrP4Home),
+OFFSET(TrP5, KTRAP_FRAME, P5),
+OFFSET(TrPreviousMode, KTRAP_FRAME, PreviousMode),
+OFFSET(TrPreviousIrql, KTRAP_FRAME, PreviousIrql),
+OFFSET(TrFaultIndicator, KTRAP_FRAME, TrP1Home),
+OFFSET(TrExceptionActive, KTRAP_FRAME, TrP1Home),
+OFFSET(TrMxCsr, KTRAP_FRAME, TrP1Home),
+OFFSET(TrRax equ 0FFFFFFB0H
+OFFSET(TrRcx equ 0FFFFFFB8H
+OFFSET(TrRdx equ 0FFFFFFC0H
+OFFSET(TrR8 equ 0FFFFFFC8H
+OFFSET(TrR9 equ 0FFFFFFD0H
+OFFSET(TrR10 equ 0FFFFFFD8H
+OFFSET(TrR11 equ 0FFFFFFE0H
+OFFSET(TrGsBase equ 0FFFFFFE8H
+OFFSET(TrGsSwap equ 0FFFFFFE8H
+OFFSET(TrXmm0 equ 0FFFFFFF0H
+OFFSET(TrXmm1 equ 00000H
+OFFSET(TrXmm2 equ 00010H
+OFFSET(TrXmm3 equ 00020H
+OFFSET(TrXmm4 equ 00030H
+OFFSET(TrXmm5 equ 00040H
+OFFSET(TrFaultAddress equ 00050H
+OFFSET(TrDr0 equ 00058H
+OFFSET(TrDr1 equ 00060H
+OFFSET(TrDr2 equ 00068H
+OFFSET(TrDr3 equ 00070H
+OFFSET(TrDr6 equ 00078H
+OFFSET(TrDr7 equ 00080H
+OFFSET(TrDebugControl equ 00088H
+OFFSET(TrLastBranchToRip equ 00090H
+OFFSET(TrLastBranchFromRip equ 00098H
+OFFSET(TrLastExceptionToRip equ 000A0H
+OFFSET(TrLastExceptionFromRip equ 000A8H
+OFFSET(TrSegDs equ 000B0H
+OFFSET(TrSegEs equ 000B2H
+OFFSET(TrSegFs equ 000B4H
+OFFSET(TrSegGs equ 000B6H
+OFFSET(TrTrapFrame equ 000B8H
+OFFSET(TrRbx equ 000C0H
+OFFSET(TrRdi equ 000C8H
+OFFSET(TrRsi equ 000D0H
+OFFSET(TrRbp equ 000D8H
+OFFSET(TrErrorCode equ 000E0H
+OFFSET(TrRip equ 000E8H
+OFFSET(TrSegCs equ 000F0H
+OFFSET(TrLogging equ 000F3H
+OFFSET(TrEFlags equ 000F8H
+OFFSET(TrRsp equ 00100H
+OFFSET(TrSegSs equ 00108H
 #endif
+SIZE(KTRAP_FRAME_LENGTH, KTRAP_FRAME),
 
 HEADER("KTSS offsets"),
 OFFSET(TssRsp0, KTSS64, Rsp0),
@@ -818,6 +843,7 @@ HEADER("XSTATE_CONFIGURATION offsets"),
 OFFSET(XcfgEnabledFeatures, XSTATE_CONFIGURATION, EnabledFeatures),
 #if (NTDDI_VERSION >= NTDDI_WIN10)
 OFFSET(XcfgEnabledVolatileFeatures, XSTATE_CONFIGURATION, EnabledFeatures),
+OFFSET(XcfgEnabledSupervisorFeatures, XSTATE_CONFIGURATION, EnabledSupervisorFeaturestures),
 #endif
 
 HEADER("XSTATE_CONTEXT offsets"),
@@ -834,7 +860,7 @@ CONSTANTX(XSAVE_ALIGN, _alignof(XSAVE_AREA)),
 
 HEADER("KTHREAD offsets"),
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-OFFSET(ThTebMappedLowVa, KTHREAD, TebMappedLowVa),
+OFFSET(ThTebMappedLowVa, KTHREAD, TebMappedLowVa), // not Win 10
 OFFSET(ThUcb, KTHREAD, Ucb),
 //OFFSET(ThBase, KTHREAD, Base?),
 //OFFSET(ThLimit, KTHREAD, Limit?),
@@ -842,8 +868,8 @@ OFFSET(ThUcb, KTHREAD, Ucb),
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 HEADER("KPROCESS offsets"),
-OFFSET(PrLdtSystemDescriptor, KPROCESS, LdtSystemDescriptor),
-OFFSET(PrLdtBaseAddress, KPROCESS, LdtBaseAddress),
+OFFSET(PrLdtSystemDescriptor, KPROCESS, LdtSystemDescriptor), // not Win 10
+OFFSET(PrLdtBaseAddress, KPROCESS, LdtBaseAddress), // not Win 10
 #endif
 
 
@@ -996,6 +1022,7 @@ OFFSET(KTRAP_FRAME_Rdi, KTRAP_FRAME, Rdi),
 OFFSET(KTRAP_FRAME_Rsi, KTRAP_FRAME, Rsi),
 OFFSET(KTRAP_FRAME_Rbp, KTRAP_FRAME, Rbp),
 OFFSET(KTRAP_FRAME_ErrorCode, KTRAP_FRAME, ErrorCode),
+OFFSET(KTRAP_FRAME_ExceptionFrame, KTRAP_FRAME, ExceptionFrame),
 OFFSET(KTRAP_FRAME_TimeStampKlog, KTRAP_FRAME, TimeStampKlog),
 OFFSET(KTRAP_FRAME_Rip, KTRAP_FRAME, Rip),
 OFFSET(KTRAP_FRAME_SegCs, KTRAP_FRAME, SegCs),
