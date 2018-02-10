@@ -289,7 +289,7 @@ GetSyncSetting(HWND hwnd)
     DWORD dwSize;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Parameters",
+                      L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
                       0,
                       KEY_QUERY_VALUE,
                       &hKey) == ERROR_SUCCESS)
@@ -303,7 +303,9 @@ GetSyncSetting(HWND hwnd)
                              &dwSize) == ERROR_SUCCESS)
         {
             if (wcscmp(szData, L"NTP") == 0)
-                SendDlgItemMessageW(hwnd, IDC_AUTOSYNC, BM_SETCHECK, 0, 0);
+                SendDlgItemMessageW(hwnd, IDC_AUTOSYNC, BM_SETCHECK, BST_CHECKED, 0);
+            else
+                SendDlgItemMessageW(hwnd, IDC_AUTOSYNC, BM_SETCHECK, BST_UNCHECKED, 0);
         }
 
         RegCloseKey(hKey);
@@ -319,6 +321,41 @@ OnInitDialog(HWND hwnd)
     CreateNTPServerList(hwnd);
 }
 
+static VOID
+OnAutoSync(BOOL Sync)
+{
+    HKEY hKey;
+    LONG lRet;
+    WCHAR szAuto[7];
+
+    if (Sync)
+        wcscpy(szAuto, L"NTP\0");
+    else
+        wcscpy(szAuto, L"NoSync\0");
+
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
+                         0,
+                         KEY_SET_VALUE,
+                         &hKey);
+        if (lRet != ERROR_SUCCESS)
+        {
+            DisplayWin32Error(lRet);
+            return;
+        }
+
+        lRet = RegSetValueExW(hKey,
+                          L"Type",
+                          0,
+                          REG_SZ,
+                          (LPBYTE)szAuto,
+                          (wcslen(szAuto) + 1) * sizeof(WCHAR));
+        if (lRet != ERROR_SUCCESS)
+            DisplayWin32Error(lRet);
+
+        RegCloseKey(hKey);
+
+}
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -379,6 +416,12 @@ InetTimePageProc(HWND hwndDlg,
             {
                 case PSN_APPLY:
                     SetNTPServer(hwndDlg);
+
+                    if (SendDlgItemMessage(hwndDlg, IDC_AUTOSYNC, BM_GETCHECK,0,0) == BST_CHECKED)
+                        OnAutoSync(TRUE);
+                    else
+                        OnAutoSync(FALSE);
+
                     return TRUE;
 
                 default:

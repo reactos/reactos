@@ -1393,6 +1393,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Test","StopSc
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Test","Unlock",0x00000000,"TestUnlockEvent"
 
 ; Time Zone Servers
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers",,0x00000000,"1"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","1",0x00000000,"pool.ntp.org"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","2",0x00000000,"asia.pool.ntp.org"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","3",0x00000000,"europe.pool.ntp.org"
