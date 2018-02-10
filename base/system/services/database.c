@@ -27,6 +27,7 @@ LIST_ENTRY ServiceListHead;
 
 static RTL_RESOURCE DatabaseLock;
 static DWORD ResumeCount = 1;
+static DWORD NoInteractiveServices = 0;
 
 /* The critical section synchronizes service control requests */
 static CRITICAL_SECTION ControlServiceCriticalSection;
@@ -832,6 +833,33 @@ ScmDeleteMarkedServices(VOID)
 }
 
 
+static
+VOID
+ScmGetNoInteractiveServicesValue(VOID)
+{
+    HKEY hKey;
+    DWORD dwKeySize;
+    LONG lError;
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SYSTEM\\CurrentControlSet\\Control\\Windows",
+                           0,
+                           KEY_READ,
+                           &hKey);
+    if (lError == ERROR_SUCCESS)
+    {
+        dwKeySize = sizeof(NoInteractiveServices);
+        lError = RegQueryValueExW(hKey,
+                                  L"NoInteractiveServices",
+                                  0,
+                                  NULL,
+                                  (LPBYTE)&NoInteractiveServices,
+                                  &dwKeySize);
+        RegCloseKey(hKey);
+    }
+}
+
+
 DWORD
 ScmCreateServiceDatabase(VOID)
 {
@@ -845,11 +873,15 @@ ScmCreateServiceDatabase(VOID)
 
     DPRINT("ScmCreateServiceDatabase() called\n");
 
+    /* Retrieve the NoInteractiveServies value */
+    ScmGetNoInteractiveServicesValue();
+
+    /* Create the service group list */
     dwError = ScmCreateGroupList();
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
-    /* Initialize basic variables */
+    /* Initialize image and service lists */
     InitializeListHead(&ImageListHead);
     InitializeListHead(&ServiceListHead);
 
@@ -1637,10 +1669,8 @@ ScmStartUserModeService(PSERVICE Service,
     ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
     /* Use the interactive desktop if the service is interactive */
-    // TODO: We should also check the value "NoInteractiveServices ":
-    // See https://msdn.microsoft.com/en-us/library/windows/desktop/ms683502(v=vs.85).aspx
-    // for more details.
-    if (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS)
+    if ((NoInteractiveServices == 0) &&
+        (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS))
         StartupInfo.lpDesktop = L"WinSta0\\Default";
 
     if (Service->lpImage->hToken)
@@ -1920,9 +1950,7 @@ ScmAutoStartServices(VOID)
      */
     ASSERT(ScmInitialize);
 
-    /*
-     * Retrieve the SafeBoot parameter.
-     */
+    /* Retrieve the SafeBoot parameter */
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot\\Option",
                             0,
