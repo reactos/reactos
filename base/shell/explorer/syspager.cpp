@@ -78,6 +78,8 @@ private:
     static UINT WINAPI WatcherThread(_In_opt_ LPVOID lpParam);
 };
 
+class CNotifyToolbar;
+
 class CBalloonQueue
 {
 public:
@@ -114,7 +116,7 @@ private:
 
     CAtlList<Info> m_queue;
 
-    CToolbar<InternalIconData> * m_toolbar;
+    CNotifyToolbar * m_toolbar;
 
     InternalIconData * m_current;
     bool m_currentClosed;
@@ -124,7 +126,7 @@ private:
 public:
     CBalloonQueue();
 
-    void Init(HWND hwndParent, CToolbar<InternalIconData> * toolbar, CTooltips * balloons);
+    void Init(HWND hwndParent, CNotifyToolbar * toolbar, CTooltips * balloons);
     void Deinit();
 
     bool OnTimer(int timerId);
@@ -137,7 +139,7 @@ private:
     int IndexOf(InternalIconData * pdata);
     void SetTimer(int length);
     void Show(Info& info);
-    void Close(IN OUT InternalIconData * notifyItem);
+    void Close(IN OUT InternalIconData * notifyItem, IN UINT uReason);
 };
 
 class CNotifyToolbar :
@@ -160,6 +162,7 @@ public:
     BOOL UpdateButton(IN CONST NOTIFYICONDATA *iconData);
     BOOL RemoveButton(IN CONST NOTIFYICONDATA *iconData);
     VOID ResizeImagelist();
+    bool SendNotifyCallback(InternalIconData* notifyItem, UINT uMsg);
 
 private:
     VOID SendMouseEvent(IN WORD wIndex, IN UINT uMsg, IN WPARAM wParam);
@@ -495,7 +498,7 @@ CBalloonQueue::CBalloonQueue() :
 {
 }
 
-void CBalloonQueue::Init(HWND hwndParent, CToolbar<InternalIconData> * toolbar, CTooltips * balloons)
+void CBalloonQueue::Init(HWND hwndParent, CNotifyToolbar * toolbar, CTooltips * balloons)
 {
     m_hwndParent = hwndParent;
     m_toolbar = toolbar;
@@ -520,7 +523,7 @@ bool CBalloonQueue::OnTimer(int timerId)
 
     if (m_current && !m_currentClosed)
     {
-        Close(m_current);
+        Close(m_current, NIN_BALLOONTIMEOUT);
     }
     else
     {
@@ -556,13 +559,13 @@ void CBalloonQueue::UpdateInfo(InternalIconData * notifyItem)
     }
     else
     {
-        Close(notifyItem);
+        Close(notifyItem, NIN_BALLOONHIDE);
     }
 }
 
 void CBalloonQueue::RemoveInfo(InternalIconData * notifyItem)
 {
-    Close(notifyItem);
+    Close(notifyItem, NIN_BALLOONHIDE);
 
     POSITION position = m_queue.GetHeadPosition();
     while(position != NULL)
@@ -578,7 +581,9 @@ void CBalloonQueue::RemoveInfo(InternalIconData * notifyItem)
 void CBalloonQueue::CloseCurrent()
 {
     if (m_current != NULL)
-        Close(m_current);
+    {
+        Close(m_current, NIN_BALLOONTIMEOUT);
+    }
 }
 
 int CBalloonQueue::IndexOf(InternalIconData * pdata)
@@ -621,14 +626,18 @@ void CBalloonQueue::Show(Info& info)
     if (timeout > MaxTimeout) timeout = MaxTimeout;
 
     SetTimer(timeout);
+
+    m_toolbar->SendNotifyCallback(m_current, NIN_BALLOONSHOW);
 }
 
-void CBalloonQueue::Close(IN OUT InternalIconData * notifyItem)
+void CBalloonQueue::Close(IN OUT InternalIconData * notifyItem, IN UINT uReason)
 {
     TRACE("HideBalloonTip called\n");
 
     if (m_current == notifyItem && !m_currentClosed)
     {
+        m_toolbar->SendNotifyCallback(m_current, uReason);
+
         // Prevent Re-entry
         m_currentClosed = true;
         m_tooltips->TrackDeactivate();
@@ -695,7 +704,7 @@ int CNotifyToolbar::FindExistingSharedIcon(HICON handle)
 
 BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
 {
-    TBBUTTON tbBtn;
+    TBBUTTON tbBtn = { 0 };
     InternalIconData * notifyItem;
     WCHAR text[] = L"";
 
@@ -1006,6 +1015,44 @@ VOID CNotifyToolbar::ResizeImagelist()
     SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
 }
 
+bool CNotifyToolbar::SendNotifyCallback(InternalIconData* notifyItem, UINT uMsg)
+{
+    if (!::IsWindow(notifyItem->hWnd))
+    {
+        // We detect and destroy icons with invalid handles only on mouse move over systray, same as MS does.
+        // Alternatively we could search for them periodically (would waste more resources).
+        TRACE("Destroying icon %d with invalid handle hWnd=%08x\n", notifyItem->uID, notifyItem->hWnd);
+
+        RemoveButton(notifyItem);
+
+        /* Ask the parent to resize */
+        NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
+        GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
+
+        return true;
+    }
+
+    DWORD pid;
+    GetWindowThreadProcessId(notifyItem->hWnd, &pid);
+
+    if (pid == GetCurrentProcessId() ||
+        (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST))
+    {
+        ::PostMessage(notifyItem->hWnd,
+                      notifyItem->uCallbackMessage,
+                      notifyItem->uID,
+                      uMsg);
+    }
+    else
+    {
+        SendMessage(notifyItem->hWnd,
+                    notifyItem->uCallbackMessage,
+                    notifyItem->uID,
+                    uMsg);
+    }
+    return false;
+}
+
 VOID CNotifyToolbar::SendMouseEvent(IN WORD wIndex, IN UINT uMsg, IN WPARAM wParam)
 {
     static LPCWSTR eventNames [] = {
@@ -1027,46 +1074,14 @@ VOID CNotifyToolbar::SendMouseEvent(IN WORD wIndex, IN UINT uMsg, IN WPARAM wPar
 
     InternalIconData * notifyItem = GetItemData(wIndex);
 
-    if (!::IsWindow(notifyItem->hWnd))
-    {
-        // We detect and destroy icons with invalid handles only on mouse move over systray, same as MS does.
-        // Alternatively we could search for them periodically (would waste more resources).
-        TRACE("Destroying icon %d with invalid handle hWnd=%08x\n", notifyItem->uID, notifyItem->hWnd);
-
-        RemoveButton(notifyItem);
-
-        /* Ask the parent to resize */
-        NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
-        GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
-
-        return;
-    }
-
     if (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST)
     {
         TRACE("Sending message %S from button %d to %p (msg=%x, w=%x, l=%x)...\n",
-                    eventNames[uMsg - WM_MOUSEFIRST], wIndex,
-                    notifyItem->hWnd, notifyItem->uCallbackMessage, notifyItem->uID, uMsg);
+            eventNames[uMsg - WM_MOUSEFIRST], wIndex,
+            notifyItem->hWnd, notifyItem->uCallbackMessage, notifyItem->uID, uMsg);
     }
 
-    DWORD pid;
-    GetWindowThreadProcessId(notifyItem->hWnd, &pid);
-
-    if (pid == GetCurrentProcessId() ||
-        (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST))
-    {
-        ::PostMessage(notifyItem->hWnd,
-                        notifyItem->uCallbackMessage,
-                        notifyItem->uID,
-                        uMsg);
-    }
-    else
-    {
-        SendMessage(notifyItem->hWnd,
-                    notifyItem->uCallbackMessage,
-                    notifyItem->uID,
-                    uMsg);
-    }
+    SendNotifyCallback(notifyItem, uMsg);
 }
 
 LRESULT CNotifyToolbar::OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
