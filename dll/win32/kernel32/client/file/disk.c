@@ -115,8 +115,8 @@ GetLogicalDrives(VOID)
     /* Get the Device Map for this Process */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessDeviceMap,
-                                       &ProcessDeviceMapInfo,
-                                       sizeof(ProcessDeviceMapInfo),
+                                       &ProcessDeviceMapInfo.Query,
+                                       sizeof(ProcessDeviceMapInfo.Query),
                                        NULL);
 
     /* Return the Drive Map */
@@ -557,9 +557,10 @@ GetDriveTypeW(IN LPCWSTR lpRootPathName)
         PROCESS_DEVICEMAP_INFORMATION DeviceMap;
 
         /* Query the device map */
-        Status = NtQueryInformationProcess(NtCurrentProcess(), ProcessDeviceMap,
-                                           &DeviceMap,
-                                           sizeof(PROCESS_DEVICEMAP_INFORMATION),
+        Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                           ProcessDeviceMap,
+                                           &DeviceMap.Query,
+                                           sizeof(DeviceMap.Query),
                                            NULL);
         /* Zero output if we failed */
         if (!NT_SUCCESS(Status))
