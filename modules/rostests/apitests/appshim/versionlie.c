@@ -196,7 +196,7 @@ static void verify_shim_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR shi
         return;
     }
     ver = ((GETVERSIONPROC)hook->ReplacementFunction)();
-    winetest_ok(info->FullVersion == ver, "Expected GetVersion to return %u, was: %u for %s\n", info->FullVersion, ver, shim);
+    winetest_ok(info->FullVersion == ver, "Expected GetVersion to return 0x%x, was: 0x%x for %s\n", info->FullVersion, ver, shim);
 }
 
 
@@ -281,6 +281,10 @@ VersionLieInfo g_WinVistaSP1 = { 0x17710006, 6, 0, 6001, VER_PLATFORM_WIN32_NT, 
 VersionLieInfo g_WinVistaSP2 = { 0x17720006, 6, 0, 6002, VER_PLATFORM_WIN32_NT, 2, 0 };
 
 VersionLieInfo g_Win7RTM = { 0x1db00106, 6, 1, 7600, VER_PLATFORM_WIN32_NT, 0, 0 };
+
+VersionLieInfo g_Win8RTM = { 0x23f00206, 6, 2, 9200, VER_PLATFORM_WIN32_NT, 0, 0 };
+VersionLieInfo g_Win81RTM = { 0x25800306, 6, 3, 9600, VER_PLATFORM_WIN32_NT, 0, 0 };
+
 
 DWORD get_host_winver(void)
 {
@@ -396,4 +400,6 @@ START_TEST(versionlie)
     run_test("VistaSP1VersionLie", &g_WinVistaSP1);
     run_test("VistaSP2VersionLie", &g_WinVistaSP2);
     run_test("Win7RTMVersionLie", &g_Win7RTM);
+    run_test("Win8RTMVersionLie", &g_Win8RTM);
+    run_test("Win81RTMVersionLie", &g_Win81RTM);
 }
