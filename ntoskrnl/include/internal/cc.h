@@ -169,6 +169,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     PVOID LazyWriteContext;
     LIST_ENTRY PrivateList;
     ULONG DirtyPageThreshold;
+    PRIVATE_CACHE_MAP PrivateCacheMap;
 
     /* ROS specific */
     LIST_ENTRY CacheMapVacbListHead;

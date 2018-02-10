@@ -170,8 +170,11 @@ INT_PTR CALLBACK GeneralPageProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             return TRUE;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_RENDERER || IDC_DEBUG_OUTPUT)
+            if (LOWORD(wParam) == IDC_RENDERER ||
+                LOWORD(wParam) == IDC_DEBUG_OUTPUT)
+            {
                 PropSheet_Changed(GetParent(hWndDlg), hWndDlg);
+            }
             break;
 
         case WM_NOTIFY:

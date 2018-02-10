@@ -306,8 +306,16 @@ ScmControlDriver(PSERVICE lpService,
             dwError = ScmUnloadDriver(lpService);
             if (dwError == ERROR_SUCCESS)
             {
-                lpService->Status.dwControlsAccepted = 0;
                 lpService->Status.dwCurrentState = SERVICE_STOPPED;
+                lpService->Status.dwControlsAccepted = 0;
+                lpService->Status.dwWin32ExitCode = ERROR_SUCCESS;
+
+                if (lpServiceStatus != NULL)
+                {
+                    RtlCopyMemory(lpServiceStatus,
+                                  &lpService->Status,
+                                  sizeof(SERVICE_STATUS));
+                }
             }
             break;
 

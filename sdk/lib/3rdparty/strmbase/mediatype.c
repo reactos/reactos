@@ -118,18 +118,23 @@ HRESULT WINAPI EnumMediaTypes_Construct(BasePin *basePin, BasePin_GetMediaType e
     pEnumMediaTypes->basePin = basePin;
 
     i = 0;
-    while (enumFunc(basePin, i, &amt) == S_OK) i++;
+    while (enumFunc(basePin, i, &amt) == S_OK)
+    {
+        FreeMediaType(&amt);
+        i++;
+    }
 
     pEnumMediaTypes->enumMediaDetails.cMediaTypes = i;
     pEnumMediaTypes->enumMediaDetails.pMediaTypes = CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE) * i);
     memset(pEnumMediaTypes->enumMediaDetails.pMediaTypes, 0, sizeof(AM_MEDIA_TYPE) * i);
     for (i = 0; i < pEnumMediaTypes->enumMediaDetails.cMediaTypes; i++)
     {
-        enumFunc(basePin,i,&amt);
-        if (FAILED(CopyMediaType(&pEnumMediaTypes->enumMediaDetails.pMediaTypes[i], &amt)))
+        HRESULT hr;
+
+        if (FAILED(hr = enumFunc(basePin, i, &pEnumMediaTypes->enumMediaDetails.pMediaTypes[i])))
         {
             IEnumMediaTypes_Release(&pEnumMediaTypes->IEnumMediaTypes_iface);
-            return E_OUTOFMEMORY;
+            return hr;
         }
     }
     *ppEnum = &pEnumMediaTypes->IEnumMediaTypes_iface;

@@ -525,6 +525,7 @@ RxGetFileSizeWithLock(
     _Out_ PLONGLONG FileSize);
 
 #if (_WIN32_WINNT >= 0x0600)
+PFCB
 RxCreateNetFcb(
     _In_ PRX_CONTEXT RxContext,
     _In_ PIRP Irp,

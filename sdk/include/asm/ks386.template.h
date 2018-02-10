@@ -556,7 +556,7 @@ HEADER("Data access macros"),
 RAW("#define USERDATA ds:[HEX(0FFDF0000)]"),
 RAW("#define PCR fs:"),
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN8)
 HEADER("KNODE offsets"),
 OFFSET(NdIdleCpuSet, KNODE, IdleCpuSet),
 #endif

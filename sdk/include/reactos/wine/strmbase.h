@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wine/list.h"
+
 HRESULT WINAPI CopyMediaType(AM_MEDIA_TYPE * pDest, const AM_MEDIA_TYPE *pSrc);
 void WINAPI FreeMediaType(AM_MEDIA_TYPE * pMediaType);
 AM_MEDIA_TYPE * WINAPI CreateMediaType(AM_MEDIA_TYPE const * pSrc);
@@ -351,7 +353,7 @@ typedef struct tagOutputQueue {
     BOOL bTerminate;
     BOOL bSendAnyway;
 
-    struct list *SampleList;
+    struct list SampleList;
 
     const struct OutputQueueFuncTable* pFuncsTable;
 } OutputQueue;

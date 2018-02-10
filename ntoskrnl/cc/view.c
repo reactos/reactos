@@ -1194,7 +1194,14 @@ CcRosReleaseFileCache (
             KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
 
             /* And free it. */
-            ExFreePoolWithTag(PrivateMap, TAG_PRIVATE_CACHE_MAP);
+            if (PrivateMap != &SharedCacheMap->PrivateCacheMap)
+            {
+                ExFreePoolWithTag(PrivateMap, TAG_PRIVATE_CACHE_MAP);
+            }
+            else
+            {
+                PrivateMap->NodeTypeCode = 0;
+            }
 
             if (SharedCacheMap->OpenCount > 0)
             {
@@ -1271,7 +1278,15 @@ CcRosInitializeFileCache (
         PPRIVATE_CACHE_MAP PrivateMap;
 
         /* Allocate the private cache map for this handle */
-        PrivateMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(PRIVATE_CACHE_MAP), TAG_PRIVATE_CACHE_MAP);
+        if (SharedCacheMap->PrivateCacheMap.NodeTypeCode != 0)
+        {
+            PrivateMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(PRIVATE_CACHE_MAP), TAG_PRIVATE_CACHE_MAP);
+        }
+        else
+        {
+            PrivateMap = &SharedCacheMap->PrivateCacheMap;
+        }
+
         if (PrivateMap == NULL)
         {
             /* If we also allocated the shared cache map for this file, kill it */

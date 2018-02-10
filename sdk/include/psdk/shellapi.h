@@ -70,13 +70,34 @@ extern "C" {
 #define ABN_POSCHANGED		1
 #define ABN_FULLSCREENAPP	2
 #define ABN_WINDOWARRANGE	3
+
+#if (_WIN32_IE >= 0x0500)
+#define NIN_SELECT          (WM_USER + 0)
+#define NINF_KEY            1
+#define NIN_KEYSELECT       (NIN_SELECT | NINF_KEY)
+#endif
+
+#if (_WIN32_IE >= 0x0501)
+#define NIN_BALLOONSHOW         (WM_USER + 2)
+#define NIN_BALLOONHIDE         (WM_USER + 3)
+#define NIN_BALLOONTIMEOUT      (WM_USER + 4)
+#define NIN_BALLOONUSERCLICK    (WM_USER + 5)
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define NIN_POPUPOPEN           (WM_USER + 6)
+#define NIN_POPUPCLOSE          (WM_USER + 7)
+#endif
+
 #define NIM_ADD	0
 #define NIM_MODIFY	1
 #define NIM_DELETE	2
 #if _WIN32_IE >= 0x0500
-#define NOTIFYICON_VERSION 3
 #define NIM_SETFOCUS	3
 #define NIM_SETVERSION	4
+#define NOTIFYICON_VERSION      3
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define NOTIFYICON_VERSION_4    4
+#endif
 #endif
 #define NIF_MESSAGE	1
 #define NIF_ICON	2
@@ -97,6 +118,7 @@ extern "C" {
 #define NIIF_NOSOUND	0x10
 #endif /* _WIN32_IE >= 0x0600 */
 #endif /* _WIN32_IE >= 0x0500 */
+
 #define SE_ERR_FNF	2
 #define SE_ERR_PNF	3
 #define SE_ERR_ACCESSDENIED	5

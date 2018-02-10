@@ -628,6 +628,15 @@ Author:
 #define EXCEPTION_ALIGNMENT_CHECK               0x011
 
 //
+// Hypervisor Enlightenment Definitions
+//
+#define HV_MMU_USE_HYPERCALL_FOR_ADDRESS_SWITCH 0x01
+#define HV_MMU_USE_HYPERCALL_FOR_LOCAL_FLUSH    0x02
+#define HV_MMU_USE_HYPERCALL_FOR_REMOTE_FLUSH   0x04
+#define HV_APIC_ENLIGHTENED                     0x10
+#define HV_KE_USE_HYPERCALL_FOR_LONG_SPIN_WAIT  0x40
+
+//
 // VDM State Pointer
 //
 #define FIXED_NTVDMSTATE_LINEAR_PC_AT           0x714
