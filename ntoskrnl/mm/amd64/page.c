@@ -457,7 +457,7 @@ NTAPI
 MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
                         SWAPENTRY* SwapEntry)
 {
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -466,7 +466,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
                         PVOID Address,
                         SWAPENTRY SwapEntry)
 {
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
