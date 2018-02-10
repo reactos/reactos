@@ -8,6 +8,7 @@
  */
 
 #include "timedate.h"
+#include <stdlib.h>
 
 DWORD WINAPI W32TimeSyncNow(LPCWSTR cmdline, UINT blocking, UINT flags);
 
@@ -95,11 +96,39 @@ SetNTPServer(HWND hwnd)
     UINT uSel;
     WCHAR szSel[4];
     LONG lRet;
+    WCHAR buffer[256];
 
     hList = GetDlgItem(hwnd,
                        IDC_SERVERLIST);
 
     uSel = (UINT)SendMessageW(hList, CB_GETCURSEL, 0, 0);
+
+    SendDlgItemMessageW(hwnd, IDC_SERVERLIST, WM_GETTEXT, _countof(buffer), (LPARAM)buffer);
+
+    /* If there is new data entered then save it in the registry 
+       The same key name of "0" is used to store all user entered values
+    */
+    if (uSel == -1)
+    {
+        lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                             L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+                             0,
+                             KEY_SET_VALUE,
+                             &hKey);
+        if (lRet != ERROR_SUCCESS)
+        {
+            DisplayWin32Error(lRet);
+            return;
+        }
+        lRet = RegSetValueExW(hKey,
+                              L"0",
+                              0,
+                              REG_SZ,
+                              (LPBYTE)buffer,
+                              (wcslen(buffer) + 1) * sizeof(WCHAR));
+        if (lRet != ERROR_SUCCESS)
+            DisplayWin32Error(lRet);
+    }
 
     /* Server reg entries count from 1,
      * Combo boxes count from 0 */
@@ -255,7 +284,7 @@ InetTimePageProc(HWND hwndDlg,
                 break;
 
                 case IDC_SERVERLIST:
-                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    if ((HIWORD(wParam) == CBN_SELCHANGE) || (HIWORD(wParam) == CBN_EDITCHANGE))
                     {
                         /* Enable the 'Apply' button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
