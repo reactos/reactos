@@ -741,12 +741,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_DESTROY:
-            if(AppBarConfig.uEdge>=0) DoAppBarStuff(ABM_REMOVE);
+        {
+            if (AppBarConfig.uEdge >= 0)
+                DoAppBarStuff(ABM_REMOVE);
+
+            KillTimer(hWnd, 1);
 
             /* Save settings to registry */
             SaveSettings();
-            KillTimer(hWnd , 1);
-            PostQuitMessage(0);
 
             /* Cleanup notification icon */
             ZeroMemory(&nid, sizeof(nid));
@@ -755,11 +757,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             nid.hWnd = hWnd;
             nid.uCallbackMessage = APPMSG_NOTIFYICON;
             Shell_NotifyIcon(NIM_DELETE, &nid);
-
             DestroyIcon(notifyIcon);
 
             DestroyWindow(hOptionsDialog);
+
+            PostQuitMessage(0);
             return 0;
+        }
 
         case WM_CREATE:
         {
@@ -769,7 +773,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             hDesktopWindow = GetDesktopWindow();
 
             /* Set the timer */
-            SetTimer (hWnd , 1, TIMER_SPEED , NULL);
+            SetTimer(hWnd, 1, TIMER_SPEED, NULL);
 
             /* Notification icon */
             notifyIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 16, 16, 0);
@@ -781,7 +785,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             nid.uCallbackMessage = APPMSG_NOTIFYICON;
             nid.hIcon = notifyIcon;
             Shell_NotifyIcon(NIM_ADD, &nid);
-            
+
             tempMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_MAGNIFIER));
             notifyMenu = GetSubMenu(tempMenu, 0);
             RemoveMenu(tempMenu, 0, MF_BYPOSITION);
