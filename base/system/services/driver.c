@@ -309,7 +309,7 @@ ScmControlDriver(PSERVICE lpService,
                 lpService->Status.dwControlsAccepted = 0;
                 lpService->Status.dwCurrentState = SERVICE_STOPPED;
             }
-            break;
+            // Fallthrough, to update lpServiceStatus.
 
         case SERVICE_CONTROL_INTERROGATE:
             dwError = ScmGetDriverStatus(lpService,
