@@ -1988,7 +1988,7 @@ typedef struct _KPROCESS
     UCHAR Iopl;
     UCHAR Unused;
 #endif
-    volatile ULONG ActiveProcessors;
+    volatile KAFFINITY ActiveProcessors;
     ULONG KernelTime;
     ULONG UserTime;
     LIST_ENTRY ReadyListHead;
