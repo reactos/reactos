@@ -15,9 +15,10 @@
 #include "..\..\..\dll\cpl\timedate\ntpclient.c"
 
 SERVICE_STATUS ServiceStatus; 
-SERVICE_STATUS_HANDLE hStatus; 
+SERVICE_STATUS_HANDLE hStatus;
+static WCHAR ServiceName[] = L"W32Time";
  
-void  ServiceMain(int argc, char** argv); 
+static VOID CALLBACK ServiceMain(int argc, char** argv); 
 void  ControlHandler(DWORD request); 
 int InitService();
 ULONG GetServerTime(LPWSTR lpAddress);
@@ -251,26 +252,16 @@ int set_time()
     return 0;
 }
 
-int wmain() 
-{ 
-    SERVICE_TABLE_ENTRY ServiceTable[2];
-    ServiceTable[0].lpServiceName = L"W32Time";
-    ServiceTable[0].lpServiceProc = (LPSERVICE_MAIN_FUNCTION)ServiceMain;
-
-    ServiceTable[1].lpServiceName = NULL;
-    ServiceTable[1].lpServiceProc = NULL;
-    // Start the control dispatcher thread for our service
-    StartServiceCtrlDispatcher(ServiceTable);
-    return 0; 
-}
-
-
-void ServiceMain(int argc, char** argv) 
-{ 
+static VOID CALLBACK
+ServiceMain(int argc, char** argv) 
+{
     int   error;
     int   result;
     DWORD dwPollInterval;
  
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
     ServiceStatus.dwServiceType             = SERVICE_WIN32; 
     ServiceStatus.dwCurrentState            = SERVICE_START_PENDING; 
     ServiceStatus.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
@@ -279,7 +270,7 @@ void ServiceMain(int argc, char** argv)
     ServiceStatus.dwCheckPoint              = 0; 
     ServiceStatus.dwWaitHint                = 0; 
  
-    hStatus = RegisterServiceCtrlHandler(L"W32Time",
+    hStatus = RegisterServiceCtrlHandler(ServiceName,
 		                         (LPHANDLER_FUNCTION)ControlHandler); 
     if (hStatus == (SERVICE_STATUS_HANDLE)0) 
     { 
@@ -315,6 +306,30 @@ void ServiceMain(int argc, char** argv)
             Sleep(dwPollInterval);
         }
     return; 
+}
+
+int wmain(int argc, WCHAR *argv[]) 
+{
+
+    SERVICE_TABLE_ENTRYW ServiceTable[2] =
+    {
+        {ServiceName, (LPSERVICE_MAIN_FUNCTION)ServiceMain},
+        {NULL, NULL}
+    };
+
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
+    DPRINT("W32Time: main() started\n");
+
+    // Start the control dispatcher thread for our service
+    StartServiceCtrlDispatcher(ServiceTable);
+
+    DPRINT("W32Time: main() done\n");
+
+    ExitThread(0);
+
+    return 0; 
 }
  
 // Service initialization
