@@ -599,8 +599,6 @@ MiAddDescriptorToDatabase(
     else
     {
         /* For now skip it */
-        DbgPrint("Skipping BasePage=0x%lx, PageCount=0x%lx, MemoryType=%lx\n",
-                 BasePage, PageCount, MemoryType);
         Pfn = &MmPfnDatabase[BasePage];
         while (PageCount--)
         {
