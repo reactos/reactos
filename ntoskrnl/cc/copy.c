@@ -27,6 +27,14 @@ typedef enum _CC_COPY_OPERATION
     CcOperationZero
 } CC_COPY_OPERATION;
 
+typedef enum _CC_CAN_WRITE_RETRY
+{
+    FirstTry = 0,
+    RetryAllowRemote = 253,
+    RetryForceCheckPerFile = 254,
+    RetryMasterLocked = 255,
+} CC_CAN_WRITE_RETRY;
+
 ULONG CcRosTraceLevel = 0;
 ULONG CcFastMdlReadWait;
 ULONG CcFastMdlReadNotPossible;
@@ -414,7 +422,7 @@ CcPostDeferredWrites(VOID)
             }
 
             /* Check we can write */
-            if (CcCanIWrite(DeferredWrite->FileObject, WrittenBytes, FALSE, TRUE))
+            if (CcCanIWrite(DeferredWrite->FileObject, WrittenBytes, FALSE, RetryForceCheckPerFile))
             {
                 /* We can, so remove it from the list and stop looking for entry */
                 RemoveEntryList(&DeferredWrite->DeferredWriteLinks);
@@ -614,61 +622,98 @@ CcCanIWrite (
     IN BOOLEAN Wait,
     IN BOOLEAN Retrying)
 {
+    KIRQL OldIrql;
     KEVENT WaitEvent;
+    ULONG Length, Pages;
+    BOOLEAN PerFileDefer;
     DEFERRED_WRITE Context;
     PFSRTL_COMMON_FCB_HEADER Fcb;
+    CC_CAN_WRITE_RETRY TryContext;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p BytesToWrite=%lu Wait=%d Retrying=%d\n",
         FileObject, BytesToWrite, Wait, Retrying);
 
-    /* We cannot write if dirty pages count is above threshold */
-    if (CcTotalDirtyPages > CcDirtyPageThreshold)
+    /* Write through is always OK */
+    if (BooleanFlagOn(FileObject->Flags, FO_WRITE_THROUGH))
     {
-        /* Can the caller wait till it's possible to write? */
-        goto CanIWait;
-    }
-
-    /* We cannot write if dirty pages count will bring use above
-     * XXX: Might not be accurate
-     */
-    if (CcTotalDirtyPages + (BytesToWrite / PAGE_SIZE) > CcDirtyPageThreshold)
-    {
-        /* Can the caller wait till it's possible to write? */
-        goto CanIWait;
-    }
-
-    /* Is there a limit per file object? */
-    Fcb = FileObject->FsContext;
-    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-    if (!BooleanFlagOn(Fcb->Flags, FSRTL_FLAG_LIMIT_MODIFIED_PAGES) ||
-        SharedCacheMap->DirtyPageThreshold == 0)
-    {
-        /* Nope, so that's fine, allow write operation */
         return TRUE;
     }
 
-    /* Is dirty page count above local threshold? */
-    if (SharedCacheMap->DirtyPages > SharedCacheMap->DirtyPageThreshold)
+    TryContext = Retrying;
+    /* Allow remote file if not from posted */
+    if (IoIsFileOriginRemote(FileObject) && TryContext < RetryAllowRemote)
     {
-        /* Can the caller wait till it's possible to write? */
-        goto CanIWait;
+        return TRUE;
     }
 
-    /* We cannot write if dirty pages count will bring use above
-     * XXX: Might not be accurate
+    /* Don't exceed max tolerated size */
+    Length = MAX_ZERO_LENGTH;
+    if (BytesToWrite < MAX_ZERO_LENGTH)
+    {
+        Length = BytesToWrite;
+    }
+
+    /* Convert it to pages count */
+    Pages = (Length + PAGE_SIZE - 1) >> PAGE_SHIFT;
+
+    /* By default, assume limits per file won't be hit */
+    PerFileDefer = FALSE;
+    Fcb = FileObject->FsContext;
+    /* Do we have to check for limits per file? */
+    if (TryContext >= RetryForceCheckPerFile ||
+        BooleanFlagOn(Fcb->Flags, FSRTL_FLAG_LIMIT_MODIFIED_PAGES))
+    {
+        /* If master is not locked, lock it now */
+        if (TryContext != RetryMasterLocked)
+        {
+            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+        }
+
+        /* Let's not assume the file is cached... */
+        if (FileObject->SectionObjectPointer != NULL &&
+            FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+        {
+            SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+            /* Do we have limits per file set? */
+            if (SharedCacheMap->DirtyPageThreshold != 0 &&
+                SharedCacheMap->DirtyPages != 0)
+            {
+                /* Yes, check whether they are blocking */
+                if (Pages + SharedCacheMap->DirtyPages > SharedCacheMap->DirtyPageThreshold)
+                {
+                    PerFileDefer = TRUE;
+                }
+            }
+        }
+
+        /* And don't forget to release master */
+        if (TryContext != RetryMasterLocked)
+        {
+            KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+        }
+    }
+
+    /* So, now allow write if:
+     * - Not the first try or we have no throttling yet
+     * AND:
+     * - We don't exceed threshold!
+     * - We don't exceed what Mm can allow us to use
+     *   + If we're above top, that's fine
+     *   + If we're above bottom with limited modified pages, that's fine
+     *   + Otherwise, throttle!
      */
-    if (SharedCacheMap->DirtyPages + (BytesToWrite / PAGE_SIZE) > SharedCacheMap->DirtyPageThreshold)
+    if ((TryContext != FirstTry || IsListEmpty(&CcDeferredWrites)) &&
+        CcTotalDirtyPages + Pages < CcDirtyPageThreshold &&
+        (MmAvailablePages > MmThrottleTop ||
+         (MmModifiedPageListHead.Total < 1000 && MmAvailablePages > MmThrottleBottom)) &&
+        !PerFileDefer)
     {
-        /* Can the caller wait till it's possible to write? */
-        goto CanIWait;
+        return TRUE;
     }
 
-    return TRUE;
-
-CanIWait:
-    /* If we reached that point, it means caller cannot write
-     * If he cannot wait, then fail and deny write
+    /* If we can wait, we'll start the wait loop for waiting till we can
+     * write for real
      */
     if (!Wait)
     {

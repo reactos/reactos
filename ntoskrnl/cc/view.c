@@ -1427,6 +1427,38 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
 
     return TRUE;
 }
+
+BOOLEAN
+ExpKdbgExtDefWrites(ULONG Argc, PCHAR Argv[])
+{
+    KdbpPrint("CcTotalDirtyPages:\t%lu (%lu Kb)\n", CcTotalDirtyPages,
+              (CcTotalDirtyPages * PAGE_SIZE) / 1024);
+    KdbpPrint("CcDirtyPageThreshold:\t%lu (%lu Kb)\n", CcDirtyPageThreshold,
+              (CcDirtyPageThreshold * PAGE_SIZE) / 1024);
+    KdbpPrint("MmAvailablePages:\t%lu (%lu Kb)\n", MmAvailablePages,
+              (MmAvailablePages * PAGE_SIZE) / 1024);
+    KdbpPrint("MmThrottleTop:\t\t%lu (%lu Kb)\n", MmThrottleTop,
+              (MmThrottleTop * PAGE_SIZE) / 1024);
+    KdbpPrint("MmThrottleBottom:\t%lu (%lu Kb)\n", MmThrottleBottom,
+              (MmThrottleBottom * PAGE_SIZE) / 1024);
+    KdbpPrint("MmModifiedPageListHead.Total:\t%lu (%lu Kb)\n", MmModifiedPageListHead.Total,
+              (MmModifiedPageListHead.Total * PAGE_SIZE) / 1024);
+
+    if (CcTotalDirtyPages >= CcDirtyPageThreshold)
+    {
+        KdbpPrint("CcTotalDirtyPages above the threshold, writes should be throttled\n");
+    }
+    else if (CcTotalDirtyPages + 64 >= CcDirtyPageThreshold)
+    {
+        KdbpPrint("CcTotalDirtyPages within 64 (max charge) pages of the threshold, writes may be throttled\n");
+    }
+    else
+    {
+        KdbpPrint("CcTotalDirtyPages below the threshold, writes should not be throttled\n");
+    }
+
+    return TRUE;
+}
 #endif
 
 /* EOF */

@@ -387,6 +387,15 @@ PFN_NUMBER MiNumberOfFreePages = 0;
 ULONG MmCritsectTimeoutSeconds = 150; // NT value: 720 * 60 * 60; (30 days)
 LARGE_INTEGER MmCriticalSectionTimeout;
 
+//
+// Throttling limits for Cc (in pages)
+// Above top, we don't throttle
+// Above bottom, we throttle depending on the amount of modified pages
+// Otherwise, we throttle!
+//
+ULONG MmThrottleTop;
+ULONG MmThrottleBottom;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -2075,6 +2084,13 @@ MmArmInitSystem(IN ULONG Phase,
         MiHighNonPagedPoolEvent = &MiTempEvent;
 
         //
+        // Default throttling limits for Cc
+        // May be ajusted later on depending on system type
+        //
+        MmThrottleTop = 450;
+        MmThrottleBottom = 127;
+
+        //
         // Define the basic user vs. kernel address space separation
         //
         MmSystemRangeStart = (PVOID)MI_DEFAULT_SYSTEM_RANGE_START;
@@ -2461,6 +2477,10 @@ MmArmInitSystem(IN ULONG Phase,
             /* Set Windows NT Workstation product type */
             SharedUserData->NtProductType = NtProductWinNt;
             MmProductType = 0;
+
+            /* For this product, we wait till the last moment to throttle */
+            MmThrottleTop = 250;
+            MmThrottleBottom = 30;
         }
         else
         {
@@ -2479,6 +2499,10 @@ MmArmInitSystem(IN ULONG Phase,
             /* Set the product type, and make the system more aggressive with low memory */
             MmProductType = 1;
             MmMinimumFreePages = 81;
+
+            /* We will throttle earlier to preserve memory */
+            MmThrottleTop = 450;
+            MmThrottleBottom = 80;
         }
 
         /* Update working set tuning parameters */
