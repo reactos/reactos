@@ -310,7 +310,8 @@ elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/boot.S
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/ctxswitch.S
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/trap.S)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/trap.S
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall_asm.S)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/i386/cmhardwr.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/context.c

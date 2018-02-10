@@ -167,97 +167,6 @@ KiSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
     return OldStackBase;
 }
 
-
-NTSTATUS
-NTAPI
-KeUserModeCallback(
-    IN ULONG RoutineIndex,
-    IN PVOID Argument,
-    IN ULONG ArgumentLength,
-    OUT PVOID *Result,
-    OUT PULONG ResultLength)
-{
-    ULONG_PTR OldStack;
-    PULONG_PTR NewStack;
-    PULONG_PTR UserStackPointer;
-    NTSTATUS CallbackStatus;
-#ifdef _M_IX86
-    PEXCEPTION_REGISTRATION_RECORD ExceptionList;
-#endif // _M_IX86
-    PTEB Teb;
-    ULONG GdiBatchCount = 0;
-    ASSERT(KeGetCurrentThread()->ApcState.KernelApcInProgress == FALSE);
-    ASSERT(KeGetPreviousMode() == UserMode);
-
-    /* Get the current user-mode stack */
-    UserStackPointer = KiGetUserModeStackAddress();
-    OldStack = *UserStackPointer;
-
-    /* Enter a SEH Block */
-    _SEH2_TRY
-    {
-        /* Calculate and align the stack size */
-        NewStack = (PULONG_PTR)ALIGN_DOWN_POINTER_BY(OldStack - ArgumentLength, sizeof(PVOID));
-
-        /* Make sure it's writable */
-        ProbeForWrite((PVOID)(NewStack - 6 * sizeof(ULONG_PTR)),
-                      ArgumentLength + 6 * sizeof(ULONG_PTR),
-                      sizeof(ULONG_PTR));
-
-        /* Copy the buffer into the stack */
-        RtlCopyMemory(NewStack, Argument, ArgumentLength);
-
-        /* Write the arguments */
-        NewStack -= 6;
-        NewStack[0] = 0;
-        NewStack[1] = RoutineIndex;
-        NewStack[2] = (ULONG_PTR)(NewStack + 6);
-        NewStack[3] = ArgumentLength;
-
-        /* Save the exception list */
-        Teb = KeGetCurrentThread()->Teb;
-#ifdef _M_IX86
-        ExceptionList = Teb->NtTib.ExceptionList;
-#endif // _M_IX86
-
-        /* Jump to user mode */
-        *UserStackPointer = (ULONG_PTR)NewStack;
-        CallbackStatus = KiCallUserMode(Result, ResultLength);
-        if (CallbackStatus != STATUS_CALLBACK_POP_STACK)
-        {
-#ifdef _M_IX86
-            /* Only restore the exception list if we didn't crash in ring 3 */
-            Teb->NtTib.ExceptionList = ExceptionList;
-#endif // _M_IX86
-        }
-        else
-        {
-            /* Otherwise, pop the stack */
-            OldStack = *UserStackPointer;
-        }
-
-        /* Read the GDI Batch count */
-        GdiBatchCount = Teb->GdiBatchCount;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the SEH exception */
-        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
-
-    /* Check if we have GDI Batch operations */
-    if (GdiBatchCount)
-    {
-        *UserStackPointer -= 256;
-        KeGdiFlushUserBatch();
-    }
-
-    /* Restore stack and return */
-    *UserStackPointer = OldStack;
-    return CallbackStatus;
-}
-
 VOID
 FASTCALL
 KiIdleLoop(VOID)
@@ -478,17 +387,6 @@ KiSystemService(IN PKTHREAD Thread,
     __debugbreak();
 }
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-NtCallbackReturn
-( IN PVOID Result OPTIONAL, IN ULONG ResultLength, IN NTSTATUS Status )
-{
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
-}
-
 NTSTATUS
 NTAPI
 NtSetLdtEntries
@@ -507,19 +405,5 @@ NtVdmControl(IN ULONG ControlCode,
     /* Not supported */
     return STATUS_NOT_IMPLEMENTED;
 }
-
-NTSTATUS
-NTAPI
-KiCallUserMode(
-    IN PVOID *OutputBuffer,
-    IN PULONG OutputLength)
-{
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
-}
-
-ULONG ProcessCount;
-BOOLEAN CcPfEnablePrefetcher;
 
 
