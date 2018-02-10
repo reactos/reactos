@@ -1,8 +1,12 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite test framework declarations
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Kernel-Mode Test Suite test framework declarations
+ * COPYRIGHT:   Copyright 2011 Thomas Faber <thomas.faber@reactos.org>
+ *              Copyright 2013 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2014 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2017 Ged Murphy <gedmurphy@reactos.org>
+ *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 /* Inspired by Wine C unit tests, Copyright (C) 2002 Alexandre Julliard
@@ -228,9 +232,9 @@ PVOID KmtAllocateGuarded(SIZE_T SizeRequested);
 VOID KmtFreeGuarded(PVOID Pointer);
 
 #ifdef KMT_KERNEL_MODE
-#define ok_irql(irql)                       ok(KeGetCurrentIrql() == irql, "IRQL is %d, expected %d\n", KeGetCurrentIrql(), irql)
+#define ok_irql(irql)                       ok(KeGetCurrentIrql() == irql, "IRQL is %d, expected %d", KeGetCurrentIrql(), irql)
 #endif /* defined KMT_KERNEL_MODE */
-#define ok_eq_print(value, expected, spec)  ok((value) == (expected), #value " = " spec ", expected " spec "\n", value, expected)
+#define ok_eq_print(value, expected, spec)  ok((value) == (expected), #value " = " spec ", expected " spec, value, expected)
 #define ok_eq_pointer(value, expected)      ok_eq_print(value, expected, "%p")
 #define ok_eq_int(value, expected)          ok_eq_print(value, expected, "%d")
 #define ok_eq_uint(value, expected)         ok_eq_print(value, expected, "%u")
@@ -250,13 +254,13 @@ VOID KmtFreeGuarded(PVOID Pointer);
 #define ok_eq_ulongptr(value, expected)     ok_eq_print(value, (ULONG_PTR)(expected), "%I64u")
 #endif /* defined _WIN64 */
 #define ok_eq_hex(value, expected)          ok_eq_print(value, expected, "0x%08lx")
-#define ok_bool_true(value, desc)           ok((value) == TRUE, desc " FALSE, expected TRUE\n")
-#define ok_bool_false(value, desc)          ok((value) == FALSE, desc " TRUE, expected FALSE\n")
-#define ok_eq_bool(value, expected)         ok((value) == (expected), #value " = %s, expected %s\n",    \
+#define ok_bool_true(value, desc)           ok((value) == TRUE, desc " FALSE, expected TRUE")
+#define ok_bool_false(value, desc)          ok((value) == FALSE, desc " TRUE, expected FALSE")
+#define ok_eq_bool(value, expected)         ok((value) == (expected), #value " = %s, expected %s",    \
                                                 (value) ? "TRUE" : "FALSE",                             \
                                                 (expected) ? "TRUE" : "FALSE")
-#define ok_eq_str(value, expected)          ok(!strcmp(value, expected), #value " = \"%s\", expected \"%s\"\n", value, expected)
-#define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"\n", value, expected)
+#define ok_eq_str(value, expected)          ok(!strcmp(value, expected), #value " = \"%s\", expected \"%s\"", value, expected)
+#define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"", value, expected)
 #define ok_eq_tag(value, expected)          ok_eq_print(value, expected, "0x%08lx")
 
 #define KMT_MAKE_CODE(ControlCode)  CTL_CODE(FILE_DEVICE_UNKNOWN,           \
@@ -292,10 +296,10 @@ VOID KmtFreeGuarded(PVOID Pointer);
     if (!p##RoutineName)                                            \
     {                                                               \
         p##RoutineName = RoutineName;                               \
-        trace("Using embedded routine for " #RoutineName "\n");     \
+        trace("Using embedded routine for " #RoutineName);          \
     }                                                               \
     else                                                            \
-        trace("Using system routine for " #RoutineName "\n");
+        trace("Using system routine for " #RoutineName);
 
 #if defined KMT_DEFINE_TEST_FUNCTIONS
 
@@ -329,8 +333,14 @@ static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Len
 KMT_FORMAT(ms_printf, 5, 0)
 static SIZE_T KmtXVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR FileAndLine, PCSTR Prepend, PCSTR Format, va_list Arguments)
 {
-    SIZE_T BufferLength = 0;
+    PSTR BufferStart = Buffer;
     SIZE_T Length;
+
+    if (BufferMaxLength == 0)
+        return 0;
+
+    // Reserve the last char.
+    --BufferMaxLength;
 
     if (FileAndLine)
     {
@@ -345,24 +355,28 @@ static SIZE_T KmtXVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR FileAndLi
         Length = min(BufferMaxLength, strlen(FileAndLine));
         memcpy(Buffer, FileAndLine, Length);
         Buffer += Length;
-        BufferLength += Length;
         BufferMaxLength -= Length;
     }
+
     if (Prepend)
     {
         Length = min(BufferMaxLength, strlen(Prepend));
         memcpy(Buffer, Prepend, Length);
         Buffer += Length;
-        BufferLength += Length;
         BufferMaxLength -= Length;
     }
+
     if (Format)
     {
         Length = KmtVSNPrintF(Buffer, BufferMaxLength, Format, Arguments);
         /* vsnprintf can return more than maxLength, we don't want to do that */
-        BufferLength += min(Length, BufferMaxLength);
+        Buffer += min(Length, BufferMaxLength);
     }
-    return BufferLength;
+
+    // Always end with a new line char.
+    *(Buffer++) = '\n';
+
+    return Buffer - BufferStart;
 }
 
 KMT_FORMAT(ms_printf, 5, 6)
@@ -385,7 +399,7 @@ VOID KmtFinishTest(PCSTR TestName)
         return;
 
     MessageLength = KmtXSNPrintF(MessageBuffer, sizeof MessageBuffer, NULL, NULL,
-                                    "%s: %ld tests executed (0 marked as todo, %ld failures), %ld skipped.\n",
+                                    "%s: %ld tests executed (0 marked as todo, %ld failures), %ld skipped.",
                                     TestName,
                                     ResultBuffer->Successes + ResultBuffer->Failures,
                                     ResultBuffer->Failures,
@@ -407,7 +421,7 @@ BOOLEAN KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments
 
         if (0/*KmtReportSuccess*/)
         {
-            MessageLength = KmtXSNPrintF(MessageBuffer, sizeof MessageBuffer, FileAndLine, ": Test succeeded\n", NULL);
+            MessageLength = KmtXSNPrintF(MessageBuffer, sizeof MessageBuffer, FileAndLine, ": Test succeeded", NULL);
             KmtAddToLogBuffer(ResultBuffer, MessageBuffer, MessageLength);
         }
     }

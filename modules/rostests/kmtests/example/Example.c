@@ -11,11 +11,11 @@ START_TEST(Example)
 {
     KIRQL Irql;
 
-    ok(1, "This test should succeed.\n");
-    ok(0, "This test should fail.\n");
-    trace("Message from kernel, low-irql. %s. %ls.\n", "Format strings work", L"Even with Unicode");
+    ok(1, "This test should succeed.");
+    ok(0, "This test should fail.");
+    trace("Message from kernel, low-irql. %s. %ls.", "Format strings work", L"Even with Unicode");
     KeRaiseIrql(HIGH_LEVEL, &Irql);
-    trace("Message from kernel, high-irql. %s. %ls.\n", "Format strings work", L"Even with Unicode");
+    trace("Message from kernel, high-irql. %s. %ls.", "Format strings work", L"Even with Unicode");
 
     ok_irql(DISPATCH_LEVEL);
     ok_eq_int(5, 6);
@@ -33,10 +33,10 @@ START_TEST(Example)
     ok_eq_str("Hello", "world");
     ok_eq_wstr(L"ABC", L"DEF");
 
-    if (!skip(KeGetCurrentIrql() == HIGH_LEVEL, "This should only work on HIGH_LEVEL\n"))
+    if (!skip(KeGetCurrentIrql() == HIGH_LEVEL, "This should only work on HIGH_LEVEL"))
     {
         /* do tests depending on HIGH_LEVEL here */
-        ok(1, "This is fine\n");
+        ok(1, "This is fine");
     }
 
     KeLowerIrql(Irql);

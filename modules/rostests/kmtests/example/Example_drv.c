@@ -65,7 +65,7 @@ TestEntry(
 
     *DeviceName = L"Example";
 
-    trace("Hi, this is the example driver\n");
+    trace("Hi, this is the example driver");
 
     KmtRegisterIrpHandler(IRP_MJ_CREATE, NULL, TestIrpHandler);
     KmtRegisterIrpHandler(IRP_MJ_CLOSE, NULL, TestIrpHandler);
@@ -100,7 +100,7 @@ TestUnload(
     ok_irql(PASSIVE_LEVEL);
     ok_eq_pointer(DriverObject, TestDriverObject);
 
-    trace("Unloading example driver\n");
+    trace("Unloading example driver");
 }
 
 /**
@@ -142,7 +142,7 @@ TestMessageHandler(
             static int TimesReceived = 0;
 
             ++TimesReceived;
-            ok(TimesReceived == 1, "Received control code 1 %d times\n", TimesReceived);
+            ok(TimesReceived == 1, "Received control code 1 %d times", TimesReceived);
             ok_eq_pointer(Buffer, NULL);
             ok_eq_ulong((ULONG)InLength, 0LU);
             ok_eq_ulong((ULONG)*OutLength, 0LU);
@@ -155,13 +155,13 @@ TestMessageHandler(
             ANSI_STRING ReceivedString;
 
             ++TimesReceived;
-            ok(TimesReceived == 1, "Received control code 2 %d times\n", TimesReceived);
-            ok(Buffer != NULL, "Buffer is NULL\n");
+            ok(TimesReceived == 1, "Received control code 2 %d times", TimesReceived);
+            ok(Buffer != NULL, "Buffer is NULL");
             ok_eq_ulong((ULONG)InLength, (ULONG)ExpectedString.Length);
             ok_eq_ulong((ULONG)*OutLength, 0LU);
             ReceivedString.MaximumLength = ReceivedString.Length = (USHORT)InLength;
             ReceivedString.Buffer = Buffer;
-            ok(RtlCompareString(&ExpectedString, &ReceivedString, FALSE) == 0, "Received string: %Z\n", &ReceivedString);
+            ok(RtlCompareString(&ExpectedString, &ReceivedString, FALSE) == 0, "Received string: %Z", &ReceivedString);
             break;
         }
         case IOCTL_SEND_MYSTRUCT:
@@ -171,14 +171,14 @@ TestMessageHandler(
             MY_STRUCT ResultStruct = { 456, "!!!" };
 
             ++TimesReceived;
-            ok(TimesReceived == 1, "Received control code 3 %d times\n", TimesReceived);
-            ok(Buffer != NULL, "Buffer is NULL\n");
+            ok(TimesReceived == 1, "Received control code 3 %d times", TimesReceived);
+            ok(Buffer != NULL, "Buffer is NULL");
             ok_eq_ulong((ULONG)InLength, (ULONG)sizeof ExpectedStruct);
             ok_eq_ulong((ULONG)*OutLength, 2LU * sizeof ExpectedStruct);
-            if (!skip(Buffer && InLength >= sizeof ExpectedStruct, "Cannot read from buffer!\n"))
-                ok(RtlCompareMemory(&ExpectedStruct, Buffer, sizeof ExpectedStruct) == sizeof ExpectedStruct, "Buffer does not contain expected values\n");
+            if (!skip(Buffer && InLength >= sizeof ExpectedStruct, "Cannot read from buffer!"))
+                ok(RtlCompareMemory(&ExpectedStruct, Buffer, sizeof ExpectedStruct) == sizeof ExpectedStruct, "Buffer does not contain expected values");
 
-            if (!skip(Buffer && *OutLength >= 2 * sizeof ExpectedStruct, "Cannot write to buffer!\n"))
+            if (!skip(Buffer && *OutLength >= 2 * sizeof ExpectedStruct, "Cannot write to buffer!"))
             {
                 RtlCopyMemory((PCHAR)Buffer + sizeof ExpectedStruct, &ResultStruct, sizeof ResultStruct);
                 *OutLength = 2 * sizeof ExpectedStruct;
@@ -186,7 +186,7 @@ TestMessageHandler(
             break;
         }
         default:
-            ok(0, "Got an unknown message! DeviceObject=%p, ControlCode=%lu, Buffer=%p, In=%lu, Out=%lu bytes\n",
+            ok(0, "Got an unknown message! DeviceObject=%p, ControlCode=%lu, Buffer=%p, In=%lu, Out=%lu bytes",
                     DeviceObject, ControlCode, Buffer, InLength, *OutLength);
             break;
     }
@@ -230,11 +230,11 @@ TestIrpHandler(
     ok_eq_pointer(DeviceObject->DriverObject, TestDriverObject);
 
     if (IoStackLocation->MajorFunction == IRP_MJ_CREATE)
-        trace("Got IRP_MJ_CREATE!\n");
+        trace("Got IRP_MJ_CREATE!");
     else if (IoStackLocation->MajorFunction == IRP_MJ_CLOSE)
-        trace("Got IRP_MJ_CLOSE!\n");
+        trace("Got IRP_MJ_CLOSE!");
     else
-        trace("Got an IRP!\n");
+        trace("Got an IRP!");
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
