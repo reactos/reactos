@@ -204,11 +204,25 @@ CcWorkerThread(
     KIRQL OldIrql;
     BOOLEAN DropThrottle;
     PWORK_QUEUE_ITEM Item;
+#if DBG
+    PIRP TopLevel;
+#endif
 
     /* Get back our thread item */
     Item = Parameter;
     /* And by default, don't touch throttle */
     DropThrottle = FALSE;
+
+#if DBG
+    /* Top level IRP should be clean when started
+     * Save it to catch buggy drivers (or bugs!)
+     */
+    TopLevel = IoGetTopLevelIrp();
+    if (TopLevel != NULL)
+    {
+        DPRINT1("(%p) TopLevel IRP for this thread: %p\n", PsGetCurrentThread(), TopLevel);
+    }
+#endif
 
     /* Loop till we have jobs */
     while (TRUE)
@@ -288,6 +302,14 @@ CcWorkerThread(
     /* One less worker */
     --CcNumberActiveWorkerThreads;
     KeReleaseQueuedSpinLock(LockQueueWorkQueueLock, OldIrql);
+
+#if DBG
+    /* Top level shouldn't have changed */
+    if (TopLevel != IoGetTopLevelIrp())
+    {
+        DPRINT1("(%p) Mismatching TopLevel: %p, %p\n", PsGetCurrentThread(), TopLevel, IoGetTopLevelIrp());
+    }
+#endif
 }
 
 /*
