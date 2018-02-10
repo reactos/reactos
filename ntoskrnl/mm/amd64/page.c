@@ -462,7 +462,23 @@ NTAPI
 MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
                         SWAPENTRY* SwapEntry)
 {
-    UNIMPLEMENTED;
+    PMMPTE Pte;
+
+    Pte = MiGetPteForProcess(Process, Address, FALSE);
+    if (Pte == NULL)
+    {
+        *SwapEntry = 0;
+        return;
+    }
+
+    if (Pte->u.Trans.Valid || !Pte->u.Trans.Transition)
+    {
+        DPRINT1("Pte %x (want not 1 and 0x800)\n", Pte);
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    *SwapEntry = Pte->u.Long >> 1;
+    MI_ERASE_PTE(Pte);
 }
 
 NTSTATUS
@@ -471,7 +487,36 @@ MmCreatePageFileMapping(PEPROCESS Process,
                         PVOID Address,
                         SWAPENTRY SwapEntry)
 {
-    UNIMPLEMENTED;
+    PMMPTE Pte;
+    MMPTE PteValue;
+
+    if (Process == NULL && Address < MmSystemRangeStart)
+    {
+        DPRINT1("No process\n");
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+    if (Process != NULL && Address >= MmSystemRangeStart)
+    {
+        DPRINT1("Setting kernel address with process context\n");
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    if (SwapEntry & (1ull << 63))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    /* Allocate a PTE */
+    Pte = MiGetPteForProcess(Process, Address, TRUE);
+    if (Pte == NULL)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    NT_ASSERT(Pte->u.Long == 0);
+    PteValue.u.Long = SwapEntry << 1;
+    MI_WRITE_INVALID_PTE(Pte, PteValue);
+
     return STATUS_UNSUCCESSFUL;
 }
 
