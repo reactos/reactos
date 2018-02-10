@@ -874,6 +874,15 @@ PUBLIC KiSystemCallEntry64
     mov r9, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R9]
     call rax
 
+.ENDP
+
+PUBLIC KiSystemServiceExit
+.PROC KiSystemServiceExit
+
+    /* Old stack pointer is in rcx, lie and say we saved it in rbp */
+    .setframe rbp, 0
+    .endprolog
+
 #if DBG
     /* Restore rbp */
     mov rbp, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbp]
@@ -901,6 +910,38 @@ PUBLIC KiSystemCallEntry64
     .byte HEX(48) // REX prefix to return to long mode
     sysret
 
+.ENDP
+
+
+/*!
+ * VOID
+ * DECLSPEC_NORETURN
+ * KiServiceExit(IN PKTRAP_FRAME TrapFrame, IN NTSTATUS Status));
+ */
+PUBLIC KiServiceExit
+.PROC KiServiceExit
+    .endprolog
+
+    lea rsp, [rcx - MAX_SYSCALL_PARAM_SIZE]
+    jmp KiSystemServiceExit
+
+.ENDP
+
+
+/*!
+ * VOID
+ * DECLSPEC_NORETURN
+ * KiServiceExit2(IN PKTRAP_FRAME TrapFrame);
+ */
+PUBLIC KiServiceExit2
+.PROC KiServiceExit2
+    .ENDPROLOG
+
+    mov rbp, rcx
+    mov rsp, rcx
+
+    /* Return */
+    ExitTrap TF_SAVE_ALL
 .ENDP
 
 
@@ -1044,35 +1085,6 @@ ENDFUNC
 KiExitToUserApc:
     int 3
 
-/*!
- * VOID
- * DECLSPEC_NORETURN
- * KiServiceExit(IN PKTRAP_FRAME TrapFrame, IN NTSTATUS Status));
- */
-PUBLIC KiServiceExit
-KiServiceExit:
-    mov [rcx + KTRAP_FRAME_Rax], rdx
-    mov rbp, rcx
-    mov rsp, rcx
-
-    /* Return */
-    //ExitTrap TF_SAVE_ALL
-
-/*!
- * VOID
- * DECLSPEC_NORETURN
- * KiServiceExit2(IN PKTRAP_FRAME TrapFrame);
- */
-PUBLIC KiServiceExit2
-.PROC KiServiceExit2
-    .ENDPROLOG
-
-    mov rbp, rcx
-    mov rsp, rcx
-
-    /* Return */
-    ExitTrap TF_SAVE_ALL
-.ENDP
 
 PUBLIC KiInitializeSegments
 KiInitializeSegments:
