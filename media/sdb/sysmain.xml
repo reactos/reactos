@@ -173,6 +173,24 @@
                 <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
+            <SHIM NAME="Win8RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
+            <SHIM NAME="Win81RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
 
             <!-- Display mode shims -->
 
@@ -291,6 +309,16 @@
             <SHIM_REF NAME="Win7RTMVersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
+        <LAYER NAME="WIN8RTM">
+            <SHIM_REF NAME="Win8RTMVersionLie" />
+            <!-- TODO: Add more fixes! -->
+        </LAYER>
+        <LAYER NAME="WIN81RTM">
+            <SHIM_REF NAME="Win81RTMVersionLie" />
+            <!-- TODO: Add more fixes! -->
+        </LAYER>
+
+
 
         <!-- Display mode layers -->
 
