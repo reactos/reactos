@@ -62,7 +62,7 @@ static void verify_shima_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
 
     while (v1.dwOSVersionInfoSize)
     {
-        ok1 = GetVersionExA((LPOSVERSIONINFOA)&v1), ok2;
+        ok1 = GetVersionExA((LPOSVERSIONINFOA)&v1);
         hook->OriginalFunction = GetVersionExA;
 
         ok2 = ((GETVERSIONEXAPROC)hook->ReplacementFunction)(&v2);
@@ -127,7 +127,7 @@ static void verify_shimw_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
 
     while (v1.dwOSVersionInfoSize)
     {
-        ok1 = GetVersionExW((LPOSVERSIONINFOW)&v1), ok2;
+        ok1 = GetVersionExW((LPOSVERSIONINFOW)&v1);
         hook->OriginalFunction = GetVersionExW;
 
         ok2 = ((GETVERSIONEXWPROC)hook->ReplacementFunction)(&v2);
