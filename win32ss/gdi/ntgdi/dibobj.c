@@ -1814,7 +1814,7 @@ DIB_CreateDIBSection(
         if (mapBits) bm.bmBits = (char *)mapBits + (offset - mapOffset);
     }
     else if (ovr_pitch && offset)
-        bm.bmBits = (LPVOID) offset;
+        bm.bmBits = UlongToPtr(offset);
     else
     {
         offset = 0;

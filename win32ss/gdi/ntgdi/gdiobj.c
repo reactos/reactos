@@ -1515,7 +1515,7 @@ GDI_MapHandleTable(PEPROCESS pProcess)
     PVOID pvMappedView = NULL;
     NTSTATUS Status;
     LARGE_INTEGER liOffset;
-    ULONG cjViewSize = sizeof(GDI_HANDLE_TABLE);
+    SIZE_T cjViewSize = sizeof(GDI_HANDLE_TABLE);
 
     liOffset.QuadPart = 0;
 

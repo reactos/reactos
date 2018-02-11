@@ -156,7 +156,7 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     }
 
     /* Read filename of layout DLL */
-    cbSize = sizeof(wszLayoutPath) - wcslen(wszLayoutPath)*sizeof(WCHAR);
+    cbSize = (ULONG)(sizeof(wszLayoutPath) - wcslen(wszLayoutPath)*sizeof(WCHAR));
     Status = RegQueryValue(hKey,
                            L"Layout File",
                            REG_SZ,
@@ -632,7 +632,7 @@ NtUserLoadKeyboardLayoutEx(
     UserEnterExclusive();
 
     /* If hklUnload is specified, unload it and load new layput as default */
-    if (hklUnload && hklUnload != (HKL)hkl)
+    if (hklUnload && (hklUnload != UlongToHandle(hkl)))
     {
         pKl = UserHklToKbl(hklUnload);
         if (pKl)
@@ -640,11 +640,11 @@ NtUserLoadKeyboardLayoutEx(
     }
 
     /* Let's see if layout was already loaded. */
-    pKl = UserHklToKbl((HKL)hkl);
+    pKl = UserHklToKbl(UlongToHandle(hkl));
     if (!pKl)
     {
         /* It wasn't, so load it. */
-        pKl = UserLoadKbdLayout(&ustrSafeKLID, (HKL)hkl);
+        pKl = UserLoadKbdLayout(&ustrSafeKLID, UlongToHandle(hkl));
         if (!pKl)
             goto cleanup;
 
@@ -682,7 +682,7 @@ NtUserLoadKeyboardLayoutEx(
         co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hkl);
 
     /* Return hkl on success */
-    hklRet = (HKL)hkl;
+    hklRet = UlongToHandle(hkl);
 
     /* FIXME: KLF_REPLACELANG
               KLF_REORDER */

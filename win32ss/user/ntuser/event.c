@@ -388,14 +388,14 @@ NtUserSetWinEventHook(
       if (hmodWinEventProc != NULL)
       {
          pEH->offPfn = (ULONG_PTR)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);
-         pEH->ihmod = (INT)hmodWinEventProc;
+         pEH->ihmod = (INT_PTR)hmodWinEventProc;
          pEH->Proc = lpfnWinEventProc;
       }
       else
       {
          pEH->Proc = lpfnWinEventProc;
          pEH->offPfn = 0;
-         pEH->ihmod = (INT)hmodWinEventProc;
+         pEH->ihmod = (INT_PTR)hmodWinEventProc;
       }
 
       UserDereferenceObject(pEH);

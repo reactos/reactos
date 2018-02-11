@@ -219,7 +219,7 @@ typedef struct tagHOOK
     int HookId; /* Hook table index */
     ULONG_PTR offPfn;
     ULONG flags; /* Some internal flags */
-    INT ihmod;
+    INT_PTR ihmod;
     struct _THREADINFO *ptiHooked;
     struct _DESKTOP *rpdesk;
     /* ReactOS */
@@ -692,7 +692,7 @@ typedef struct _WND
     HMENU SystemMenu;
     //PMENU spmenuSys;
     /* Window menu handle or window id */
-    UINT IDMenu; // Use spmenu
+    UINT_PTR IDMenu; // Use spmenu
     //PMENU spmenu;
     HRGN hrgnClip;
     HRGN hrgnNewFrame;
@@ -1662,14 +1662,14 @@ DWORD
 NTAPI
 NtUserCallHwndParam(
     HWND hWnd,
-    DWORD Param,
+    DWORD_PTR Param,
     DWORD Routine);
 
 DWORD
 NTAPI
 NtUserCallHwndParamLock(
     HWND hWnd,
-    DWORD Param,
+    DWORD_PTR Param,
     DWORD Routine);
 
 BOOL

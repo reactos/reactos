@@ -1081,7 +1081,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     PVOID Buffer = NULL;
     IO_STATUS_BLOCK Iosb;
     PVOID SectionObject;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     LARGE_INTEGER SectionSize;
     OBJECT_ATTRIBUTES ObjectAttributes;
     GDI_LOAD_FONT   LoadFont;
@@ -1168,7 +1168,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
         Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
         if (NT_SUCCESS(Status))
         {
-            ULONG DataSize;
+            SIZE_T DataSize;
             LPWSTR pFileName = wcsrchr(FileName->Buffer, L'\\');
             if (pFileName)
             {
@@ -1302,7 +1302,7 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_COLL_MEM, ListEntry);
 
-        if (CurrentEntry->Handle == (UINT)hMMFont)
+        if (CurrentEntry->Handle == (UINT_PTR)hMMFont)
         {
             EntryCollection = CurrentEntry;
             UnlinkFontMemCollection(CurrentEntry);

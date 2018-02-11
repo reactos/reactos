@@ -1170,7 +1170,12 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
       {
          UNICODE_STRING Source;
 
-         Source.Length = Source.MaximumLength = lpmii->cch * sizeof(WCHAR);
+         if (!NT_VERIFY(lpmii->cch <= UNICODE_STRING_MAX_CHARS))
+         {
+             return FALSE;
+         }
+
+         Source.Length = Source.MaximumLength = (USHORT)(lpmii->cch * sizeof(WCHAR));
          Source.Buffer = lpmii->dwTypeData;
 
          MenuItem->lpstr.Buffer = DesktopHeapAlloc( MenuObject->head.rpdesk, Source.Length + sizeof(WCHAR));
@@ -5288,7 +5293,7 @@ IntSetMenu(
 
    }
 
-   Wnd->IDMenu = (UINT) Menu;
+   Wnd->IDMenu = (UINT_PTR) Menu;
    if (NULL != NewMenu)
    {
       NewMenu->hWnd = UserHMGetHandle(Wnd);

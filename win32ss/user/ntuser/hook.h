@@ -23,7 +23,7 @@ typedef struct tagEVENTHOOK
   WINEVENTPROC   Proc;       /* Event function */
   ULONG          Flags;      /* Some internal flags */
   ULONG_PTR      offPfn;
-  INT            ihmod;
+  INT_PTR        ihmod;
 } EVENTHOOK, *PEVENTHOOK;
 
 typedef struct tagEVENTTABLE

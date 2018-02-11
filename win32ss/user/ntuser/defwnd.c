@@ -967,7 +967,7 @@ IntDefWindowProc(
          if (!hBrush) return 0;
          if (hBrush <= (HBRUSH)COLOR_MENUBAR)
          {
-            hBrush = IntGetSysColorBrush((INT)hBrush);
+            hBrush = IntGetSysColorBrush(HandleToUlong(hBrush));
          }
          if (Wnd->pcls->style & CS_PARENTDC)
          {

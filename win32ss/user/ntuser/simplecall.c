@@ -725,7 +725,7 @@ DWORD
 APIENTRY
 NtUserCallHwndParam(
     HWND hWnd,
-    DWORD Param,
+    DWORD_PTR Param,
     DWORD Routine)
 {
 
@@ -834,7 +834,7 @@ DWORD
 APIENTRY
 NtUserCallHwndParamLock(
     HWND hWnd,
-    DWORD Param,
+    DWORD_PTR Param,
     DWORD Routine)
 {
     DWORD Ret = FALSE;

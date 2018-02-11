@@ -18,7 +18,7 @@ typedef struct _FONT_ENTRY_MEM
 typedef struct _FONT_ENTRY_COLL_MEM
 {
     LIST_ENTRY ListEntry;
-    UINT Handle;
+    UINT_PTR Handle;
     FONT_ENTRY_MEM *Entry;
 } FONT_ENTRY_COLL_MEM, *PFONT_ENTRY_COLL_MEM;
 
