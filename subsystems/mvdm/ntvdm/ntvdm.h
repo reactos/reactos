@@ -67,6 +67,7 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 #define ADVANCED_DEBUGGING_LEVEL    1
 #endif
 
+#define NULL32 0
 
 /* VARIABLES ******************************************************************/
 

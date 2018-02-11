@@ -830,7 +830,7 @@ BOOLEAN EmsDrvInitialize(USHORT Segment, ULONG TotalPages)
         return FALSE;
     }
 
-    MemInstallFastMemoryHook((PVOID)TO_LINEAR(EmsSegment, 0),
+    MemInstallFastMemoryHook(UlongToPtr(TO_LINEAR(EmsSegment, 0)),
                              EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE,
                              EmsReadMemory,
                              EmsWriteMemory);
@@ -852,7 +852,7 @@ VOID EmsDrvCleanup(VOID)
     /* Delete the device */
     DosDeleteDevice(Node);
 
-    MemRemoveFastMemoryHook((PVOID)TO_LINEAR(EmsSegment, 0),
+    MemRemoveFastMemoryHook(UlongToPtr(TO_LINEAR(EmsSegment, 0)),
                             EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE);
 
     if (EmsMemory)
