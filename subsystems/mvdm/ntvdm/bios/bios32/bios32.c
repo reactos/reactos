@@ -1017,16 +1017,16 @@ static VOID InitializeBiosInt32(VOID)
     // They don't have any default handler at the moment.
 
     /* Some vectors are in fact addresses to tables */
-    ((PULONG)BaseAddress)[0x1D] = (ULONG)NULL; // Video Parameter Tables
-    ((PULONG)BaseAddress)[0x1E] = (ULONG)NULL; // Diskette Parameters
-    ((PULONG)BaseAddress)[0x1F] = (ULONG)NULL; // 8x8 Graphics Font
-    ((PULONG)BaseAddress)[0x41] = (ULONG)NULL; // Hard Disk 0 Parameter Table Address
-    ((PULONG)BaseAddress)[0x43] = (ULONG)NULL; // Character Table (EGA, MCGA, VGA)
-    ((PULONG)BaseAddress)[0x46] = (ULONG)NULL; // Hard Disk 1 Drive Parameter Table Address
+    ((PULONG)BaseAddress)[0x1D] = NULL32; // Video Parameter Tables
+    ((PULONG)BaseAddress)[0x1E] = NULL32; // Diskette Parameters
+    ((PULONG)BaseAddress)[0x1F] = NULL32; // 8x8 Graphics Font
+    ((PULONG)BaseAddress)[0x41] = NULL32; // Hard Disk 0 Parameter Table Address
+    ((PULONG)BaseAddress)[0x43] = NULL32; // Character Table (EGA, MCGA, VGA)
+    ((PULONG)BaseAddress)[0x46] = NULL32; // Hard Disk 1 Drive Parameter Table Address
     /* Tables that are always uninitialized */
-    ((PULONG)BaseAddress)[0x44] = (ULONG)NULL; // ROM BIOS Character Font, Characters 00h-7Fh (PCjr)
-    ((PULONG)BaseAddress)[0x48] = (ULONG)NULL; // Cordless Keyboard Translation (PCjr)
-    ((PULONG)BaseAddress)[0x49] = (ULONG)NULL; // Non-Keyboard Scan-code Translation Table (PCJr)
+    ((PULONG)BaseAddress)[0x44] = NULL32; // ROM BIOS Character Font, Characters 00h-7Fh (PCjr)
+    ((PULONG)BaseAddress)[0x48] = NULL32; // Cordless Keyboard Translation (PCjr)
+    ((PULONG)BaseAddress)[0x49] = NULL32; // Non-Keyboard Scan-code Translation Table (PCJr)
 }
 
 static VOID InitializeBiosData(VOID)

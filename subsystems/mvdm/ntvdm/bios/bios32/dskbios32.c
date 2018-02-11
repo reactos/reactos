@@ -654,12 +654,12 @@ VOID DiskBios32Post(VOID)
     // Diskette Parameters
     ((PULONG)BaseAddress)[0x1E] = MAKELONG(0xEFC7, BIOS_SEGMENT);
     // Hard Disk 0 Parameter Table Address
-    ((PULONG)BaseAddress)[0x41] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x41] = NULL32;
     // Hard Disk 1 Drive Parameter Table Address
-    ((PULONG)BaseAddress)[0x46] = (ULONG)NULL;
+    ((PULONG)BaseAddress)[0x46] = NULL32;
 
     /* Relocated services by the BIOS (when needed) */
-    ((PULONG)BaseAddress)[0x40] = (ULONG)NULL; // ROM BIOS Diskette Handler relocated by Hard Disk BIOS
+    ((PULONG)BaseAddress)[0x40] = NULL32; // ROM BIOS Diskette Handler relocated by Hard Disk BIOS
     // RegisterBiosInt32(0x40, NULL); // ROM BIOS Diskette Handler relocated by Hard Disk BIOS
 
     /* Register the BIOS 32-bit Interrupts */

@@ -147,7 +147,7 @@ LONG CpuExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
             Fast486Rewind(&EmulatorContext);
 
             /* Call the memory handler */
-            MemExceptionHandler((ULONG)PHYS_TO_REAL(Address), Writing);
+            MemExceptionHandler((ULONG_PTR)PHYS_TO_REAL(Address), Writing);
 
             /* The execution of the CPU opcode handler MUST NOT continue */
             return EXCEPTION_EXECUTE_HANDLER;
