@@ -689,7 +689,7 @@ ByeBye:
                       sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
     }
 
-    return Result;
+    return Silent ? Result: FALSE;//Result;
 }
 
 static
