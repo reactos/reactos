@@ -24,8 +24,8 @@ extern PfnDliHook __pfnDliNotifyHook2;
 extern PfnDliHook __pfnDliFailureHook2;
 
 /* The fallback symbols */
-extern PfnDliHook __pfnDliNotifyHook2Default = NULL;
-extern PfnDliHook __pfnDliFailureHook2Default = NULL;
+PfnDliHook __pfnDliNotifyHook2Default = NULL;
+PfnDliHook __pfnDliFailureHook2Default = NULL;
 
 /* Tell the linker to use the fallback symbols */
 #if defined (_M_IX86)
