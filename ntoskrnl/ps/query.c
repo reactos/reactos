@@ -1880,8 +1880,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Only supported on x86 */
 #if defined (_X86_)
             Ke386SetIOPL();
-#else
-            Status = STATUS_NOT_IMPLEMENTED;
 #endif
             /* Done */
             break;
