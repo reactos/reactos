@@ -150,7 +150,6 @@ IntInitializeVideoAddressSpace(VOID)
 }
 #endif
 
-#if defined(_M_IX86)
 VP_STATUS
 NTAPI
 IntInt10AllocateBuffer(
@@ -163,16 +162,18 @@ IntInt10AllocateBuffer(
     NTSTATUS Status;
     PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     KAPC_STATE ApcState;
+    SIZE_T Size;
 
     TRACE_(VIDEOPRT, "IntInt10AllocateBuffer\n");
 
     IntAttachToCSRSS(&CallingProcess, &ApcState);
 
+    Size = *Length;
     MemoryAddress = (PVOID)0x20000;
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                      &MemoryAddress,
                                      0,
-                                     Length,
+                                     &Size,
                                      MEM_COMMIT,
                                      PAGE_EXECUTE_READWRITE);
     if (!NT_SUCCESS(Status))
@@ -182,20 +183,23 @@ IntInt10AllocateBuffer(
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    if (MemoryAddress > (PVOID)(0x100000 - *Length))
+    if (MemoryAddress > (PVOID)(0x100000 - Size))
     {
-        ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, Length,
-            MEM_RELEASE);
+        ZwFreeVirtualMemory(NtCurrentProcess(),
+                            &MemoryAddress,
+                            &Size,
+                            MEM_RELEASE);
         WARN_(VIDEOPRT, "- Unacceptable memory allocated\n");
         IntDetachFromCSRSS(&CallingProcess, &ApcState);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    *Seg = (USHORT)((ULONG)MemoryAddress >> 4);
-    *Off = (USHORT)((ULONG)MemoryAddress & 0xF);
+    *Length = (ULONG)Size;
+    *Seg = (USHORT)((ULONG_PTR)MemoryAddress >> 4);
+    *Off = (USHORT)((ULONG_PTR)MemoryAddress & 0xF);
 
-    INFO_(VIDEOPRT, "- Segment: %x\n", (ULONG)MemoryAddress >> 4);
-    INFO_(VIDEOPRT, "- Offset: %x\n", (ULONG)MemoryAddress & 0xF);
+    INFO_(VIDEOPRT, "- Segment: %x\n", (ULONG_PTR)MemoryAddress >> 4);
+    INFO_(VIDEOPRT, "- Offset: %x\n", (ULONG_PTR)MemoryAddress & 0xF);
     INFO_(VIDEOPRT, "- Length: %x\n", *Length);
 
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
@@ -210,7 +214,7 @@ IntInt10FreeBuffer(
     IN USHORT Seg,
     IN USHORT Off)
 {
-    PVOID MemoryAddress = (PVOID)((Seg << 4) | Off);
+    PVOID MemoryAddress = (PVOID)((ULONG_PTR)(Seg << 4) | Off);
     NTSTATUS Status;
     PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     KAPC_STATE ApcState;
@@ -250,7 +254,7 @@ IntInt10ReadMemory(
     INFO_(VIDEOPRT, "- Length: %x\n", Length);
 
     IntAttachToCSRSS(&CallingProcess, &ApcState);
-    RtlCopyMemory(Buffer, (PVOID)((Seg << 4) | Off), Length);
+    RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)(Seg << 4) | Off), Length);
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
     return NO_ERROR;
@@ -275,12 +279,13 @@ IntInt10WriteMemory(
     INFO_(VIDEOPRT, "- Length: %x\n", Length);
 
     IntAttachToCSRSS(&CallingProcess, &ApcState);
-    RtlCopyMemory((PVOID)((Seg << 4) | Off), Buffer, Length);
+    RtlCopyMemory((PVOID)((ULONG_PTR)(Seg << 4) | Off), Buffer, Length);
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
     return NO_ERROR;
 }
 
+#if defined(_M_IX86)
 VP_STATUS
 NTAPI
 IntInt10CallBios(
@@ -341,6 +346,16 @@ IntInt10CallBios(
 
     return ERROR_INVALID_PARAMETER;
 }
+#else
+VP_STATUS
+NTAPI
+IntInt10CallBios(
+    IN PVOID Context,
+    IN OUT PINT10_BIOS_ARGUMENTS BiosArguments)
+{
+    DPRINT1("Int10 not available on non-x86!\n");
+    return ERROR_INVALID_FUNCTION;
+}
 #endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -348,24 +363,16 @@ IntInt10CallBios(
 /*
  * @implemented
  */
-
 VP_STATUS
 NTAPI
 VideoPortInt10(
     IN PVOID HwDeviceExtension,
     IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments)
 {
-#if defined(_M_IX86)
-
     if (!CsrssInitialized)
     {
         return ERROR_INVALID_PARAMETER;
     }
 
     return IntInt10CallBios(NULL, BiosArguments);
-#else
-    /* Not implemented for anything else than X86*/
-    DPRINT1("Int10 not available on non-x86!\n");
-    return ERROR_INVALID_FUNCTION;
-#endif
 }
