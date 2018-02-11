@@ -225,7 +225,7 @@ SetTime(VOID)
             /* Get date from selected reg value */
             if (wcscmp(szValName, szDefault) == 0) // if (Index == Default)
             {
-                wcscpy(szDefault, szData);
+                StringCbCopy(szDefault, wcslen(szData), szData);
                 dwIndex++;
             }
             else
