@@ -282,7 +282,7 @@ InitVideo(VOID)
 
     InitSysParams();
 
-    return 1;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
