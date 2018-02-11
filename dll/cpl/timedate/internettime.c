@@ -9,6 +9,7 @@
 
 #include "timedate.h"
 #include <stdlib.h>
+#include <strsafe.h>
 
 static VOID
 CreateNTPServerList(HWND hwnd)
@@ -358,9 +359,9 @@ OnAutoSync(BOOL Sync)
     WCHAR szAuto[7];
 
     if (Sync)
-        wcscpy(szAuto, L"NTP\0");
+        StringCbCopy(szAuto, wcslen(L"NTP\0"), L"NTP\0");
     else
-        wcscpy(szAuto, L"NoSync\0");
+        StringCbCopy(szAuto, wcslen(L"NoSync\0"), L"NoSync\0");
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                          L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
