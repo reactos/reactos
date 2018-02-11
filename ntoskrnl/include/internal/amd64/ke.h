@@ -229,11 +229,7 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
-#ifndef CONFIG_SMP
-    DbgPrint("KiRundownThread is unimplemented\n");
-#else
     /* Nothing to do */
-#endif
 }
 
 /* Registers an interrupt handler with an IDT vector */
