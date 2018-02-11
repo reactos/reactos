@@ -7,7 +7,7 @@
 
 #include<windows.h>
 #include <debug.h>
-#include <Strsafe.h>
+#include <strsafe.h>
 
 #include "timedate.h"
 
