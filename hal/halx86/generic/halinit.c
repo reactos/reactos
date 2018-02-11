@@ -155,6 +155,10 @@ HalInitSystem(IN ULONG BootPhase,
 
         /* Do some HAL-specific initialization */
         HalpInitPhase1();
+
+#ifdef _M_AMD64
+        HalInitializeBios(0, LoaderBlock);
+#endif
     }
 
     /* All done, return */
