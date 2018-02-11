@@ -413,7 +413,7 @@ UINT WINAPI CIconWatcher::WatcherThread(_In_opt_ LPVOID lpParam)
         ASSERT(Size <= MAXIMUM_WAIT_OBJECTS);
 
         if (WatchList)
-            delete WatchList;
+            delete[] WatchList;
         WatchList = new HANDLE[Size];
         WatchList[0] = This->m_WakeUpEvent;
 
@@ -479,7 +479,7 @@ UINT WINAPI CIconWatcher::WatcherThread(_In_opt_ LPVOID lpParam)
     }
 
     if (WatchList)
-        delete WatchList;
+        delete[] WatchList;
 
     return 0;
 }
