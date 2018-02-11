@@ -22,6 +22,7 @@
 #include "videoprt.h"
 
 #include <ndk/kefuncs.h>
+#include <ndk/halfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -158,8 +159,9 @@ IntInt10AllocateBuffer(
     OUT PUSHORT Off,
     IN OUT PULONG Length)
 {
-    PVOID MemoryAddress;
     NTSTATUS Status;
+#ifdef _M_IX86
+    PVOID MemoryAddress;
     PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     KAPC_STATE ApcState;
     SIZE_T Size;
@@ -205,6 +207,10 @@ IntInt10AllocateBuffer(
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
     return NO_ERROR;
+#else
+    Status = x86BiosAllocateBuffer(Length, Seg, Off);
+    return NT_SUCCESS(Status) ? NO_ERROR : ERROR_NOT_ENOUGH_MEMORY;
+#endif
 }
 
 VP_STATUS
@@ -214,8 +220,9 @@ IntInt10FreeBuffer(
     IN USHORT Seg,
     IN USHORT Off)
 {
-    PVOID MemoryAddress = (PVOID)((ULONG_PTR)(Seg << 4) | Off);
     NTSTATUS Status;
+#ifdef _M_IX86
+    PVOID MemoryAddress = (PVOID)((ULONG_PTR)(Seg << 4) | Off);
     PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     KAPC_STATE ApcState;
     SIZE_T Size = 0;
@@ -233,6 +240,10 @@ IntInt10FreeBuffer(
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
     return Status;
+#else
+    Status = x86BiosFreeBuffer(Seg, Off);
+    return NT_SUCCESS(Status) ? NO_ERROR : ERROR_INVALID_PARAMETER;
+#endif
 }
 
 VP_STATUS
@@ -244,6 +255,7 @@ IntInt10ReadMemory(
     OUT PVOID Buffer,
     IN ULONG Length)
 {
+#ifdef _M_IX86
     PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     KAPC_STATE ApcState;
 
@@ -258,6 +270,12 @@ IntInt10ReadMemory(
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
     return NO_ERROR;
+#else
+    NTSTATUS Status;
+
+    Status = x86BiosReadMemory(Seg, Off, Buffer, Length);
+    return NT_SUCCESS(Status) ? NO_ERROR : ERROR_INVALID_PARAMETER;
+#endif
 }
 
 VP_STATUS
@@ -269,6 +287,7 @@ IntInt10WriteMemory(
     IN PVOID Buffer,
     IN ULONG Length)
 {
+#ifdef _M_IX86
     PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     KAPC_STATE ApcState;
 
@@ -283,16 +302,25 @@ IntInt10WriteMemory(
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
     return NO_ERROR;
+#else
+    NTSTATUS Status;
+
+    Status = x86BiosWriteMemory(Seg, Off, Buffer, Length);
+    return NT_SUCCESS(Status) ? NO_ERROR : ERROR_INVALID_PARAMETER;
+#endif
 }
 
-#if defined(_M_IX86)
 VP_STATUS
 NTAPI
 IntInt10CallBios(
     IN PVOID Context,
     IN OUT PINT10_BIOS_ARGUMENTS BiosArguments)
 {
+#ifdef _M_AMD64
+    X86_BIOS_REGISTERS BiosContext;
+#else
     CONTEXT BiosContext;
+#endif
     NTSTATUS Status;
     PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     KAPC_STATE ApcState;
@@ -321,7 +349,11 @@ IntInt10CallBios(
                                FALSE,
                                NULL);
 
+#ifdef _M_AMD64
+    Status = x86BiosCall(0x10, &BiosContext) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;;
+#else
     Status = Ke386CallBios(0x10, &BiosContext);
+#endif
 
     KeReleaseMutex(&VideoPortInt10Mutex, FALSE);
 
@@ -346,17 +378,6 @@ IntInt10CallBios(
 
     return ERROR_INVALID_PARAMETER;
 }
-#else
-VP_STATUS
-NTAPI
-IntInt10CallBios(
-    IN PVOID Context,
-    IN OUT PINT10_BIOS_ARGUMENTS BiosArguments)
-{
-    DPRINT1("Int10 not available on non-x86!\n");
-    return ERROR_INVALID_FUNCTION;
-}
-#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -369,10 +390,24 @@ VideoPortInt10(
     IN PVOID HwDeviceExtension,
     IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments)
 {
+    INT10_BIOS_ARGUMENTS Int10BiosArguments;
+    VP_STATUS Status;
+
     if (!CsrssInitialized)
     {
         return ERROR_INVALID_PARAMETER;
     }
 
-    return IntInt10CallBios(NULL, BiosArguments);
+    /* Copy arguments to other format */
+    RtlCopyMemory(&Int10BiosArguments, BiosArguments, sizeof(BiosArguments));
+    Int10BiosArguments.SegDs = 0;
+    Int10BiosArguments.SegEs = 0;
+
+    /* Do the BIOS call */
+    Status = IntInt10CallBios(NULL, &Int10BiosArguments);
+
+    /* Copy results back */
+    RtlCopyMemory(BiosArguments, &Int10BiosArguments,sizeof(BiosArguments));
+
+    return Status;
 }
