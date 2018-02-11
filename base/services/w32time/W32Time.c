@@ -8,11 +8,7 @@
 #include<windows.h>
 #include <debug.h>
 
-/* Copy of dll\cpl\timedate.h file */
-#include "..\..\..\dll\cpl\timedate\timedate.h"
-
-/* Copy of dll\cpl\timedate\ntpclient.c file */
-#include "..\..\..\dll\cpl\timedate\ntpclient.c"
+#include "timedate.h"
 
 SERVICE_STATUS ServiceStatus; 
 SERVICE_STATUS_HANDLE hStatus;
