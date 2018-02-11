@@ -479,7 +479,7 @@ UINT WINAPI CIconWatcher::WatcherThread(_In_opt_ LPVOID lpParam)
     }
 
     if (WatchList)
-        delete WatchList;
+        delete[] WatchList;
 
     return 0;
 }
