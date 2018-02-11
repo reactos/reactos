@@ -332,7 +332,7 @@ bool CIconWatcher::AddIconToWatcher(_In_ CONST NOTIFYICONDATA *iconData)
 
     IconWatcherData *Icon = new IconWatcherData(iconData);
     Icon->hProcess = hProcess;
-    Icon->ProcessId;
+    Icon->ProcessId = ProcessId;
 
     bool Added = false;
     EnterCriticalSection(&m_ListLock);
