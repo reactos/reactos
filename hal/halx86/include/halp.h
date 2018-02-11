@@ -871,6 +871,14 @@ HalpInitProcessor(
 );
 
 #ifdef _M_AMD64
+
+VOID
+NTAPI
+HalInitializeBios(
+    _In_ ULONG Unknown,
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 #define KfLowerIrql KeLowerIrql
 #define KiEnterInterruptTrap(TrapFrame) /* We do all neccessary in asm code */
 #define KiEoiHelper(TrapFrame) return /* Just return to the caller */

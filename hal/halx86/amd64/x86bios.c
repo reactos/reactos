@@ -12,7 +12,7 @@
 //#define NDEBUG
 #include <debug.h>
 
-//#include "x86emu.h"
+#include <fast486.h>
 
 /* This page serves as fallback for pages used by Mm */
 #define DEFAULT_PAGE 0x21
@@ -43,7 +43,9 @@ DbgDumpPage(PUCHAR MemBuffer, USHORT Segment)
 
 VOID
 NTAPI
-HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalInitializeBios(
+    _In_ ULONG Unknown,
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PPFN_NUMBER PfnArray;
     PFN_NUMBER Pfn, Last;
@@ -112,12 +114,12 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock)
 NTSTATUS
 NTAPI
 x86BiosAllocateBuffer(
-    ULONG *Size,
-    USHORT *Segment,
-    USHORT *Offset)
+    _In_ ULONG *Size,
+    _In_ USHORT *Segment,
+    _In_ USHORT *Offset)
 {
     /* Check if the system is initialized and the buffer is large enough */
-    if (!x86BiosIsInitialized || *Size > PAGE_SIZE)
+    if (!x86BiosIsInitialized || (*Size > PAGE_SIZE))
     {
         /* Something was wrong, fail! */
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -141,11 +143,11 @@ x86BiosAllocateBuffer(
 NTSTATUS
 NTAPI
 x86BiosFreeBuffer(
-    USHORT Segment,
-    USHORT Offset)
+    _In_ USHORT Segment,
+    _In_ USHORT Offset)
 {
     /* Check if the system is initialized and if the address matches */
-    if (!x86BiosIsInitialized || Segment != 0x2000 || Offset != 0)
+    if (!x86BiosIsInitialized || (Segment != 0x2000) || (Offset != 0))
     {
         /* Something was wrong, fail */
         return STATUS_INVALID_PARAMETER;
@@ -165,10 +167,10 @@ x86BiosFreeBuffer(
 NTSTATUS
 NTAPI
 x86BiosReadMemory(
-    USHORT Segment,
-    USHORT Offset,
-    PVOID Buffer,
-    ULONG Size)
+    _In_ USHORT Segment,
+    _In_ USHORT Offset,
+    _Out_writes_bytes_(Size) PVOID Buffer,
+    _In_ ULONG Size)
 {
     ULONG_PTR Address;
 
@@ -176,7 +178,7 @@ x86BiosReadMemory(
     Address = (Segment << 4) + Offset;
 
     /* Check if it's valid */
-    if (!x86BiosIsInitialized || Address + Size > 0x100000)
+    if (!x86BiosIsInitialized || ((Address + Size) > 0x100000))
     {
         /* Invalid */
         return STATUS_INVALID_PARAMETER;
@@ -192,10 +194,10 @@ x86BiosReadMemory(
 NTSTATUS
 NTAPI
 x86BiosWriteMemory(
-    USHORT Segment,
-    USHORT Offset,
-    PVOID Buffer,
-    ULONG Size)
+    _In_ USHORT Segment,
+    _In_ USHORT Offset,
+    _In_reads_bytes_(Size) PVOID Buffer,
+    _In_ ULONG Size)
 {
     ULONG_PTR Address;
 
@@ -203,7 +205,7 @@ x86BiosWriteMemory(
     Address = (Segment << 4) + Offset;
 
     /* Check if it's valid */
-    if (!x86BiosIsInitialized || Address + Size > 0x100000)
+    if (!x86BiosIsInitialized || ((Address + Size) > 0x100000))
     {
         /* Invalid */
         return STATUS_INVALID_PARAMETER;
@@ -216,53 +218,237 @@ x86BiosWriteMemory(
     return STATUS_SUCCESS;
 }
 
-#if 0
+static
+VOID
+FASTCALL 
+x86MemRead(
+    PFAST486_STATE State,
+    ULONG Address,
+    PVOID Buffer,
+    ULONG Size)
+{
+    /* Validate the address range */
+    if (((ULONG64)Address + Size) < 0x100000)
+    {
+        RtlCopyMemory(Buffer, x86BiosMemoryMapping + Address, Size);
+    }
+    else
+    {
+        RtlFillMemory(Buffer, Size, 0xCC);
+        DPRINT1("x86MemRead: invalid read at 0x%lx (size 0x%lx)", Address, Size);
+    }
+}
+
+static
+VOID
+FASTCALL
+x86MemWrite(
+    PFAST486_STATE State,
+    ULONG Address,
+    PVOID Buffer,
+    ULONG Size)
+{
+    /* Validate the address range */
+    if (((ULONG64)Address + Size) < 0x100000)
+    {
+        RtlCopyMemory(x86BiosMemoryMapping + Address, Buffer, Size);
+    }
+    else
+    {
+        DPRINT1("x86MemWrite: invalid write at 0x%lx (size 0x%lx)", Address, Size);
+    }
+}
+
+static
+BOOLEAN
+ValidatePort(
+    USHORT Port,
+    UCHAR Size,
+    BOOLEAN IsWrite)
+{
+    switch (Port)
+    {
+        // VGA: https://wiki.osdev.org/VGA_Hardware#Port_0x3C0
+        case 0x3C0: return (Size == 1) && IsWrite;
+        case 0x3C1: return (Size == 1) && !IsWrite;
+        case 0x3C2: return (Size == 1) && IsWrite;
+        case 0x3C4: return IsWrite;
+        case 0x3C5: return (Size <= 2);
+        case 0x3C7: return (Size == 1) && IsWrite;
+        case 0x3CC: return (Size == 1) && !IsWrite;
+        case 0x3CE: return IsWrite;
+        case 0x3CF: return (Size <= 2);
+        case 0x3D4: return IsWrite;
+        case 0x3D5: return (Size <= 2);
+        case 0x3C6: return (Size == 1);
+        case 0x3C8: return (Size == 1) && IsWrite;
+        case 0x3C9: return (Size == 1);
+        case 0x3DA: return (Size == 1) && !IsWrite;
+
+        // CHECKME!
+        case 0x1CE: return (Size == 1) && IsWrite;
+        case 0x1CF: return (Size == 1);
+        case 0x3B6: return (Size <= 2);
+    }
+
+    return FALSE;
+}
+
+static
+VOID
+FASTCALL
+x86IoRead(
+    PFAST486_STATE State,
+    USHORT Port,
+    PVOID Buffer,
+    ULONG DataCount,
+    UCHAR DataSize)
+{
+    /* Validate the port */
+    if (!ValidatePort(Port, DataSize, FALSE))
+    {
+        DPRINT1("Invalid IO port read access (port: 0x%x, count: 0x%x)\n", Port, DataSize);
+    }
+
+    switch (DataSize)
+    {
+        case 1: READ_PORT_BUFFER_UCHAR((PUCHAR)(ULONG_PTR)Port, Buffer, DataCount); return;
+        case 2: READ_PORT_BUFFER_USHORT((PUSHORT)(ULONG_PTR)Port, Buffer, DataCount); return;
+        case 4: READ_PORT_BUFFER_ULONG((PULONG)(ULONG_PTR)Port, Buffer, DataCount); return;
+    }
+}
+
+static
+VOID
+FASTCALL
+x86IoWrite(
+    PFAST486_STATE State,
+    USHORT Port,
+    PVOID Buffer,
+    ULONG DataCount,
+    UCHAR DataSize)
+{
+    /* Validate the port */
+    if (!ValidatePort(Port, DataSize, TRUE))
+    {
+        DPRINT1("Invalid IO port write access (port: 0x%x, count: 0x%x)\n", Port, DataSize);
+    }
+
+    switch (DataSize)
+    {
+        case 1: WRITE_PORT_BUFFER_UCHAR((PUCHAR)(ULONG_PTR)Port, Buffer, DataCount); return;
+        case 2: WRITE_PORT_BUFFER_USHORT((PUSHORT)(ULONG_PTR)Port, Buffer, DataCount); return;
+        case 4: WRITE_PORT_BUFFER_ULONG((PULONG)(ULONG_PTR)Port, Buffer, DataCount); return;
+    }
+}
+
+static
+VOID
+FASTCALL
+x86BOP(
+    PFAST486_STATE State,
+    UCHAR BopCode)
+{
+    ASSERT(FALSE);
+}
+
+static
+UCHAR
+FASTCALL
+x86IntAck (
+    PFAST486_STATE State)
+{
+    ASSERT(FALSE);
+    return 0;
+}
+
 BOOLEAN
 NTAPI
 x86BiosCall(
-    ULONG InterruptNumber,
-    X86_BIOS_REGISTERS *Registers)
+    _In_ ULONG InterruptNumber,
+    _Inout_ PX86_BIOS_REGISTERS Registers)
 {
-    X86_VM_STATE VmState;
+    FAST486_STATE EmulatorContext;
     struct
     {
         USHORT Ip;
         USHORT SegCs;
-    } *InterrupTable;
+    } *Ivt;
+    ULONG FlatIp;
+    PUCHAR InstructionPointer;
 
-    /* Zero the VmState */
-    RtlZeroMemory(&VmState, sizeof(VmState));
+    /* Initialize the emulator context */
+    Fast486Initialize(&EmulatorContext,
+                      x86MemRead,
+                      x86MemWrite,
+                      x86IoRead,
+                      x86IoWrite,
+                      x86BOP,
+                      x86IntAck,
+                      NULL,  // FpuCallback,
+                      NULL); // Tlb
+
+//RegisterBop(BOP_UNSIMULATE, CpuUnsimulateBop);
 
     /* Copy the registers */
-    VmState.BiosRegisters = *Registers;
-
-    /* Set the physical memory buffer */
-    VmState.MemBuffer = x86BiosMemoryMapping;
+    EmulatorContext.GeneralRegs[FAST486_REG_EAX].Long = Registers->Eax;
+    EmulatorContext.GeneralRegs[FAST486_REG_EBX].Long = Registers->Ebx;
+    EmulatorContext.GeneralRegs[FAST486_REG_ECX].Long = Registers->Ecx;
+    EmulatorContext.GeneralRegs[FAST486_REG_EDX].Long = Registers->Edx;
+    EmulatorContext.GeneralRegs[FAST486_REG_ESI].Long = Registers->Esi;
+    EmulatorContext.GeneralRegs[FAST486_REG_EDI].Long = Registers->Edi;
+    EmulatorContext.SegmentRegs[FAST486_REG_DS].Selector = Registers->SegDs;
+    EmulatorContext.SegmentRegs[FAST486_REG_ES].Selector = Registers->SegEs;
 
     /* Set Eflags */
-    VmState.Registers.Eflags.Long = 0; // FIXME
+    EmulatorContext.Flags.Long = 0;
+    EmulatorContext.Flags.AlwaysSet = 1;
+    EmulatorContext.Flags.If = 1;
 
-    /* Setup stack */
-    VmState.Registers.SegSs = 0; // FIXME
-    VmState.Registers.Sp = 0x2000 - 2; // FIXME
+    /* Set the stack pointer */
+    Fast486SetStack(&EmulatorContext, 0, 0x2000 - 2); // FIXME
 
-    /* Initialize IP from the interrupt vector table */
-    InterrupTable = (PVOID)x86BiosMemoryMapping;
-    VmState.Registers.SegCs = InterrupTable[InterruptNumber].SegCs;
-    VmState.Registers.Eip = InterrupTable[InterruptNumber].Ip;
-    
-    /* Make the function return on IRET */
-    VmState.Flags.ReturnOnIret = 1;
+    /* Set CS:EIP from the IVT entry */
+    Ivt = (PVOID)x86BiosMemoryMapping;
+    Fast486ExecuteAt(&EmulatorContext,
+                     Ivt[InterruptNumber].SegCs,
+                     Ivt[InterruptNumber].Ip);
 
-    /* Call the x86 emulator */
-    x86Emulator(&VmState);
+    while (TRUE)
+    {
+        /* Step one instruction */
+        Fast486StepInto(&EmulatorContext);
 
-    /* Copy registers back to caller */
-    *Registers = VmState.BiosRegisters;
+        /* Check for iret */
+        FlatIp = (EmulatorContext.SegmentRegs[FAST486_REG_CS].Selector << 4) +
+                 EmulatorContext.InstPtr.Long;
+        if (FlatIp >= 0x100000)
+        {
+            DPRINT1("x86BiosCall: invalid IP (0x%lx) during BIOS execution", FlatIp);
+            return FALSE;
+        }
+
+        /* Read the next instruction and check if it's IRET */
+        InstructionPointer = x86BiosMemoryMapping + FlatIp;
+        if (*InstructionPointer == 0xCF)
+        {
+            /* We are done! */
+            break;
+        }
+    }
+
+    /* Copy the registers back */
+    Registers->Eax = EmulatorContext.GeneralRegs[FAST486_REG_EAX].Long;
+    Registers->Ebx = EmulatorContext.GeneralRegs[FAST486_REG_EBX].Long;
+    Registers->Ecx = EmulatorContext.GeneralRegs[FAST486_REG_ECX].Long;
+    Registers->Edx = EmulatorContext.GeneralRegs[FAST486_REG_EDX].Long;
+    Registers->Esi = EmulatorContext.GeneralRegs[FAST486_REG_ESI].Long;
+    Registers->Edi = EmulatorContext.GeneralRegs[FAST486_REG_EDI].Long;
+    Registers->SegDs = EmulatorContext.SegmentRegs[FAST486_REG_DS].Selector;
+    Registers->SegEs = EmulatorContext.SegmentRegs[FAST486_REG_ES].Selector;
 
     return TRUE;
 }
-#endif
 
 BOOLEAN
 NTAPI
