@@ -677,7 +677,7 @@ HalClearSoftwareInterrupt(IN KIRQL Irql)
 }
 
 PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY
-NTAPI
+FASTCALL
 HalpEndSoftwareInterrupt2(IN KIRQL OldIrql,
                           IN PKTRAP_FRAME TrapFrame)
 {

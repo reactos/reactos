@@ -11,7 +11,7 @@
 
 #include <ks386.inc>
 
-EXTERN _HalpEndSoftwareInterrupt2@8:PROC
+EXTERN @HalpEndSoftwareInterrupt2@8:PROC
 
 /* GLOBALS *******************************************************************/
 
@@ -26,9 +26,9 @@ PUBLIC _HalpEndSoftwareInterrupt@8
     FPO 0, 2, 0, 0, 0, FRAME_FPO
 
     /* Call the C function with the same arguments we got */
-    push [esp+8]
-    push [esp+8]
-    call _HalpEndSoftwareInterrupt2@8
+    mov ecx, [esp+4]
+    mov edx, [esp+8]
+    call @HalpEndSoftwareInterrupt2@8
 
     /* Check if we got a pointer back */
     test eax, eax
@@ -39,7 +39,8 @@ PUBLIC _HalpEndSoftwareInterrupt@8
 
 CallIntHandler:
     /* We got a pointer to call. Since it won't return, free up our stack
-       space, or we could end up with some nasty deep recursion */
+       space. Otherwise we could end up with some nasty deep recursion.
+       The next function takes the trap frame as its (fastcall) argument. */
     mov ecx, [esp+8]
     add esp, 12
     jmp eax
