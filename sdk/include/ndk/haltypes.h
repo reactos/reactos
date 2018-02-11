@@ -275,6 +275,26 @@ extern PUCHAR NTHALAPI KdComPortInUse;
 //
 #define HAL_IRQ_TRANSLATOR_VERSION 0x0
 
+//
+// BIOS call structure
+//
+#ifdef _M_AMD64
+
+typedef struct _X86_BIOS_REGISTERS
+{
+    ULONG Eax;
+    ULONG Ecx;
+    ULONG Edx;
+    ULONG Ebx;
+    ULONG Ebp;
+    ULONG Esi;
+    ULONG Edi;
+    USHORT SegDs;
+    USHORT SegEs;
+} X86_BIOS_REGISTERS, *PX86_BIOS_REGISTERS;
+
+#endif // _M_AMD64
+
 #endif
 #endif
 
