@@ -1902,6 +1902,15 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Only supported on x86 */
 #if defined (_X86_)
             Ke386SetIOPL();
+#elif defined(_M_AMD64)
+            /* On x64 this function isn't implemented.
+               On Windows 2003 it returns success.
+               On Vista+ it returns STATUS_NOT_IMPLEMENTED. */
+            if ((ExGetPreviousMode() != KernelMode) &&
+                (RtlRosGetAppcompatVersion() > _WIN32_WINNT_WS03))
+            {
+                Status = STATUS_NOT_IMPLEMENTED;
+            }
 #else
             Status = STATUS_NOT_IMPLEMENTED;
 #endif
