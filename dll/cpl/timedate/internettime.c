@@ -8,6 +8,7 @@
  */
 
 #include "timedate.h"
+#include <stdlib.h>
 
 static VOID
 CreateNTPServerList(HWND hwnd)
@@ -100,7 +101,7 @@ SetNTPServer(HWND hwnd)
 
     uSel = (UINT)SendMessageW(hList, CB_GETCURSEL, 0, 0);
 
-    SendDlgItemMessage (hwnd, IDC_SERVERLIST, WM_GETTEXT, 256 * sizeof(WCHAR), (LPARAM) buffer);
+    SendDlgItemMessage (hwnd, IDC_SERVERLIST, WM_GETTEXT, _countof(buffer), (LPARAM) buffer);
 
     /* If there is new data entered then save it in the registry 
        The same key name of "0" is used to store all user entered values

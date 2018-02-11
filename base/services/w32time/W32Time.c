@@ -7,6 +7,7 @@
 
 #include<windows.h>
 #include <debug.h>
+#include <Strsafe.h>
 
 #include "timedate.h"
 
@@ -14,9 +15,7 @@ SERVICE_STATUS ServiceStatus;
 SERVICE_STATUS_HANDLE hStatus;
 static WCHAR ServiceName[] = L"W32Time";
  
-static VOID CALLBACK ServiceMain(int argc, char** argv); 
-void  ControlHandler(DWORD request); 
-int InitService();
+int InitService(VOID);
 ULONG GetServerTime(LPWSTR lpAddress);
 
 /* Copied from internettime.c */
@@ -151,7 +150,9 @@ GetIntervalSetting()
     return dwData;
 }
 
-int set_time()
+
+int
+SetTime(VOID)
 {
     ULONG ulTime;
     LONG lRet;
@@ -170,9 +171,9 @@ int set_time()
                         KEY_QUERY_VALUE,
                         &hKey);
     if (lRet != ERROR_SUCCESS)
-        {
+    {
         return 1;
-        }
+    }
 
     while (TRUE)
     {
@@ -189,9 +190,9 @@ int set_time()
         if (lRet == ERROR_SUCCESS)
         {
             /* Get data from default reg value */
-            if (wcscmp(szValName, L"") == 0) // if (Index == 0)
+            if (szValName[0] == UNICODE_NULL) // if this is the "(Default)" key
             {
-                wcscpy(szDefault, szData);
+                StringCbCopy(szDefault, wcslen(szData), szData);
                 dwIndex++;
             }
             else
@@ -248,97 +249,9 @@ int set_time()
     return 0;
 }
 
-static VOID CALLBACK
-ServiceMain(int argc, char** argv) 
-{
-    int   error;
-    int   result;
-    DWORD dwPollInterval;
- 
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
-
-    ServiceStatus.dwServiceType             = SERVICE_WIN32; 
-    ServiceStatus.dwCurrentState            = SERVICE_START_PENDING; 
-    ServiceStatus.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
-    ServiceStatus.dwWin32ExitCode           = 0; 
-    ServiceStatus.dwServiceSpecificExitCode = 0; 
-    ServiceStatus.dwCheckPoint              = 0; 
-    ServiceStatus.dwWaitHint                = 0; 
- 
-    hStatus = RegisterServiceCtrlHandler(ServiceName,
-		                         (LPHANDLER_FUNCTION)ControlHandler); 
-    if (hStatus == (SERVICE_STATUS_HANDLE)0) 
-    { 
-        // Registering Control Handler failed
-        return; 
-    }  
-    // Initialize Service 
-    error = InitService(); 
-    if (error) 
-    {
-        // Initialization failed
-        ServiceStatus.dwCurrentState       = SERVICE_STOPPED; 
-        ServiceStatus.dwWin32ExitCode      = -1; 
-        SetServiceStatus(hStatus, &ServiceStatus); 
-        return; 
-    } 
-    // We report the running status to SCM. 
-    ServiceStatus.dwCurrentState = SERVICE_RUNNING; 
-    SetServiceStatus (hStatus, &ServiceStatus);
- 
-    // The worker loop of a service
-    while (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
-        {
-            dwPollInterval = GetIntervalSetting();
-            result = set_time();
-            if (result)
-                {
-                    ServiceStatus.dwCurrentState       = SERVICE_STOPPED; 
-                    ServiceStatus.dwWin32ExitCode      = -1; 
-                    SetServiceStatus(hStatus, &ServiceStatus);
-                    return;
-                }
-            Sleep(dwPollInterval);
-        }
-    return; 
-}
-
-int wmain(int argc, WCHAR *argv[]) 
-{
-
-    SERVICE_TABLE_ENTRYW ServiceTable[2] =
-    {
-        {ServiceName, (LPSERVICE_MAIN_FUNCTION)ServiceMain},
-        {NULL, NULL}
-    };
-
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
-
-    DPRINT("W32Time: main() started\n");
-
-    // Start the control dispatcher thread for our service
-    StartServiceCtrlDispatcher(ServiceTable);
-
-    DPRINT("W32Time: main() done\n");
-
-    ExitThread(0);
-
-    return 0; 
-}
- 
-// Service initialization
-int InitService() 
-{ 
-    int result;
-    result = set_time();
-    DPRINT1("W32Time Service started.\n");
-    return(result); 
-} 
-
 // Control handler function
-void ControlHandler(DWORD request) 
+VOID WINAPI
+ControlHandler(DWORD request) 
 { 
     switch(request) 
     { 
@@ -366,5 +279,96 @@ void ControlHandler(DWORD request)
     SetServiceStatus (hStatus,  &ServiceStatus);
  
     return; 
+}
+
+static VOID CALLBACK
+ServiceMain(DWORD argc, LPWSTR *argv)
+{
+    int   error;
+    int   result;
+    DWORD dwPollInterval;
+ 
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
+    ServiceStatus.dwServiceType             = SERVICE_WIN32; 
+    ServiceStatus.dwCurrentState            = SERVICE_START_PENDING; 
+    ServiceStatus.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+    ServiceStatus.dwWin32ExitCode           = 0; 
+    ServiceStatus.dwServiceSpecificExitCode = 0; 
+    ServiceStatus.dwCheckPoint              = 0; 
+    ServiceStatus.dwWaitHint                = 0; 
+ 
+    hStatus = RegisterServiceCtrlHandler(ServiceName,
+		                         ControlHandler);  // (LPHANDLER_FUNCTION)
+    if (hStatus == (SERVICE_STATUS_HANDLE)0) 
+    { 
+        // Registering Control Handler failed
+        return; 
+    }  
+    // Initialize Service 
+    error = InitService(); 
+    if (error) 
+    {
+        // Initialization failed
+        ServiceStatus.dwCurrentState       = SERVICE_STOPPED; 
+        ServiceStatus.dwWin32ExitCode      = -1; 
+        SetServiceStatus(hStatus, &ServiceStatus); 
+        return; 
+    } 
+    // We report the running status to SCM. 
+    ServiceStatus.dwCurrentState = SERVICE_RUNNING; 
+    SetServiceStatus (hStatus, &ServiceStatus);
+ 
+    // The worker loop of a service
+    while (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
+        {
+            dwPollInterval = GetIntervalSetting();
+            result = SetTime();
+            if (result)
+            {
+                ServiceStatus.dwCurrentState       = SERVICE_STOPPED; 
+                ServiceStatus.dwWin32ExitCode      = -1; 
+                SetServiceStatus(hStatus, &ServiceStatus);
+                return;
+            }
+            Sleep(dwPollInterval);
+        }
+    return; 
+}
+
+int wmain(int argc, WCHAR *argv[]) 
+{
+
+    SERVICE_TABLE_ENTRYW ServiceTable[2] =
+    {
+        {ServiceName, ServiceMain},
+        {NULL, NULL}
+    };
+
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
+    DPRINT("W32Time: main() started\n");
+
+    // Start the control dispatcher thread for our service
+    StartServiceCtrlDispatcher(ServiceTable);
+
+    DPRINT("W32Time: main() done\n");
+
+    ExitThread(0);
+
+    return 0; 
+}
+ 
+// Service initialization
+int InitService(VOID) 
+{ 
+    int result;
+    result = SetTime();
+    DPRINT1("W32Time Service started.\n");
+    return(result); 
 } 
+
+
 
