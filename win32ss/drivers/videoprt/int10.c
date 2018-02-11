@@ -356,58 +356,13 @@ VideoPortInt10(
     IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments)
 {
 #if defined(_M_IX86)
-    CONTEXT BiosContext;
-    NTSTATUS Status;
-    PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
-    KAPC_STATE ApcState;
 
     if (!CsrssInitialized)
     {
         return ERROR_INVALID_PARAMETER;
     }
 
-    /* Attach to CSRSS */
-    IntAttachToCSRSS(&CallingProcess, &ApcState);
-
-    /* Clear the context */
-    RtlZeroMemory(&BiosContext, sizeof(CONTEXT));
-
-    /* Fill out the bios arguments */
-    BiosContext.Eax = BiosArguments->Eax;
-    BiosContext.Ebx = BiosArguments->Ebx;
-    BiosContext.Ecx = BiosArguments->Ecx;
-    BiosContext.Edx = BiosArguments->Edx;
-    BiosContext.Esi = BiosArguments->Esi;
-    BiosContext.Edi = BiosArguments->Edi;
-    BiosContext.Ebp = BiosArguments->Ebp;
-
-    /* Do the ROM BIOS call */
-    (void)KeWaitForMutexObject(&VideoPortInt10Mutex,
-                               Executive,
-                               KernelMode,
-                               FALSE,
-                               NULL);
-    Status = Ke386CallBios(0x10, &BiosContext);
-    KeReleaseMutex(&VideoPortInt10Mutex, FALSE);
-
-    /* Return the arguments */
-    BiosArguments->Eax = BiosContext.Eax;
-    BiosArguments->Ebx = BiosContext.Ebx;
-    BiosArguments->Ecx = BiosContext.Ecx;
-    BiosArguments->Edx = BiosContext.Edx;
-    BiosArguments->Esi = BiosContext.Esi;
-    BiosArguments->Edi = BiosContext.Edi;
-    BiosArguments->Ebp = BiosContext.Ebp;
-
-    /* Detach from CSRSS */
-    IntDetachFromCSRSS(&CallingProcess, &ApcState);
-
-    if (NT_SUCCESS(Status))
-    {
-        return NO_ERROR;
-    }
-
-    return ERROR_INVALID_PARAMETER;
+    return IntInt10CallBios(NULL, BiosArguments);
 #else
     /* Not implemented for anything else than X86*/
     DPRINT1("Int10 not available on non-x86!\n");
