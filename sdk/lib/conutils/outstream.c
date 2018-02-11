@@ -331,7 +331,7 @@ ConWrite(
 
 
 #define CON_STREAM_WRITE_CALL(Stream, Str, Len) \
-    (Stream)->WriteFunc((Stream), (Str), (Len));
+    (Stream)->WriteFunc((Stream), (Str), (Len))
 
 /* Lock the stream only in non-USE_CRT mode (otherwise use the CRT stream lock) */
 #ifndef USE_CRT
@@ -358,9 +358,7 @@ do { \
 } while(0)
 
 #define CON_STREAM_WRITE(Stream, Str, Len) \
-do { \
-    CON_STREAM_WRITE_CALL((Stream), (Str), (Len)); \
-} while(0)
+    CON_STREAM_WRITE_CALL((Stream), (Str), (Len))
 
 #endif
 
@@ -797,8 +795,8 @@ ConResPrintf(
  *     The formatting options, and how to interpret the @p lpSource parameter.
  *     See FormatMessage() for more details. The @b FORMAT_MESSAGE_ALLOCATE_BUFFER
  *     and @b FORMAT_MESSAGE_ARGUMENT_ARRAY flags are always ignored.
- *     The function implicitly uses the @b FORMAT_MESSAGE_IGNORE_INSERTS and
- *     @b FORMAT_MESSAGE_MAX_WIDTH_MASK flags to implement its behaviour.
+ *     The function implicitly uses the @b FORMAT_MESSAGE_IGNORE_INSERTS flag
+ *     to implement its behaviour.
  *
  * @param[in]   lpSource
  *     The location of the message definition. The type of this parameter
@@ -840,8 +838,6 @@ ConMsgPuts(
     dwFlags |= FORMAT_MESSAGE_ALLOCATE_BUFFER; // Always allocate an internal buffer.
     dwFlags |= FORMAT_MESSAGE_IGNORE_INSERTS;  // Ignore inserts for FormatMessage.
     dwFlags &= ~FORMAT_MESSAGE_ARGUMENT_ARRAY;
-
-    dwFlags |= FORMAT_MESSAGE_MAX_WIDTH_MASK;
 
     /*
      * Retrieve the message string without appending extra newlines.
@@ -916,8 +912,6 @@ ConMsgPrintf2V(
     dwFlags |= FORMAT_MESSAGE_IGNORE_INSERTS;  // Ignore inserts for FormatMessage.
     dwFlags &= ~FORMAT_MESSAGE_ARGUMENT_ARRAY;
 
-    dwFlags |= FORMAT_MESSAGE_MAX_WIDTH_MASK;
-
     /*
      * Retrieve the message string without appending extra newlines.
      * Wrap in SEH to protect from invalid string parameters.
@@ -976,9 +970,8 @@ ConMsgPrintf2V(
  *
  * @param[in]   dwFlags
  *     The formatting options, and how to interpret the @p lpSource parameter.
- *     See FormatMessage() for more details. The @b FORMAT_MESSAGE_ALLOCATE_BUFFER
- *     flags is always ignored. The function implicitly uses the
- *     @b FORMAT_MESSAGE_MAX_WIDTH_MASK flag to implement its behaviour.
+ *     See FormatMessage() for more details.
+ *     The @b FORMAT_MESSAGE_ALLOCATE_BUFFER flag is always ignored.
  *
  * @param[in]   lpSource
  *     The location of the message definition. The type of this parameter
@@ -1034,10 +1027,6 @@ ConMsgPrintfV(
 
     /* Sanitize dwFlags */
     dwFlags |= FORMAT_MESSAGE_ALLOCATE_BUFFER; // Always allocate an internal buffer.
-    //
-    // NOTE: Technique taken from eventvwr.c!GetMessageStringFromDll()
-    //
-    dwFlags |= FORMAT_MESSAGE_MAX_WIDTH_MASK;
 
     /*
      * Retrieve the message string without appending extra newlines.
@@ -1091,8 +1080,6 @@ ConMsgPrintfV(
  *     The formatting options, and how to interpret the @p lpSource parameter.
  *     See FormatMessage() for more details. The @b FORMAT_MESSAGE_ALLOCATE_BUFFER
  *     and @b FORMAT_MESSAGE_ARGUMENT_ARRAY flags are always ignored.
- *     The function implicitly uses the @b FORMAT_MESSAGE_MAX_WIDTH_MASK flag
- *     to implement its behaviour.
  *
  * @param[in]   lpSource
  *     The location of the message definition. The type of this parameter
@@ -1170,9 +1157,10 @@ ConMsgPrintf(
  *
  * @param[in]   dwFlags
  *     The formatting options, see FormatMessage() for more details.
- *     The only valid flags are @b FORMAT_MESSAGE_ARGUMENT_ARRAY and
- *     @b FORMAT_MESSAGE_IGNORE_INSERTS. All the other flags are internally
- *     overridden by the function to implement its behaviour.
+ *     The only valid flags are @b FORMAT_MESSAGE_ARGUMENT_ARRAY,
+ *     @b FORMAT_MESSAGE_IGNORE_INSERTS and @b FORMAT_MESSAGE_MAX_WIDTH_MASK.
+ *     All the other flags are internally overridden by the function
+ *     to implement its behaviour.
  *
  * @param[in]   uID
  *     The identifier of the message string. The format string follows the
@@ -1234,10 +1222,6 @@ ConResMsgPrintfExV(
 
     /* Sanitize dwFlags */
     dwFlags |= FORMAT_MESSAGE_ALLOCATE_BUFFER; // Always allocate an internal buffer.
-    //
-    // NOTE: Technique taken from eventvwr.c!GetMessageStringFromDll()
-    //
-    dwFlags |= FORMAT_MESSAGE_MAX_WIDTH_MASK;
 
     /* The string has already been manually loaded */
     dwFlags &= ~(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM);
@@ -1291,9 +1275,10 @@ ConResMsgPrintfExV(
  *
  * @param[in]   dwFlags
  *     The formatting options, see FormatMessage() for more details.
- *     The only valid flags are @b FORMAT_MESSAGE_ARGUMENT_ARRAY and
- *     @b FORMAT_MESSAGE_IGNORE_INSERTS. All the other flags are internally
- *     overridden by the function to implement its behaviour.
+ *     The only valid flags are @b FORMAT_MESSAGE_ARGUMENT_ARRAY,
+ *     @b FORMAT_MESSAGE_IGNORE_INSERTS and @b FORMAT_MESSAGE_MAX_WIDTH_MASK.
+ *     All the other flags are internally overridden by the function
+ *     to implement its behaviour.
  *
  * @param[in]   uID
  *     The identifier of the message string. The format string follows the
@@ -1357,9 +1342,9 @@ ConResMsgPrintfV(
  *
  * @param[in]   dwFlags
  *     The formatting options, see FormatMessage() for more details.
- *     The only valid flag is @b FORMAT_MESSAGE_IGNORE_INSERTS.
- *     All the other flags are internally overridden by the function
- *     to implement its behaviour.
+ *     The only valid flags are @b FORMAT_MESSAGE_IGNORE_INSERTS and
+ *     @b FORMAT_MESSAGE_MAX_WIDTH_MASK. All the other flags are internally
+ *     overridden by the function to implement its behaviour.
  *
  * @param[in]   uID
  *     The identifier of the message string. The format string follows the
@@ -1431,9 +1416,9 @@ ConResMsgPrintfEx(
  *
  * @param[in]   dwFlags
  *     The formatting options, see FormatMessage() for more details.
- *     The only valid flag is @b FORMAT_MESSAGE_IGNORE_INSERTS.
- *     All the other flags are internally overridden by the function
- *     to implement its behaviour.
+ *     The only valid flags are @b FORMAT_MESSAGE_IGNORE_INSERTS and
+ *     @b FORMAT_MESSAGE_MAX_WIDTH_MASK. All the other flags are internally
+ *     overridden by the function to implement its behaviour.
  *
  * @param[in]   uID
  *     The identifier of the message string. The format string follows the
