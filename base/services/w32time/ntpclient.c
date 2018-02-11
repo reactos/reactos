@@ -1,14 +1,11 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/timedate/ntpclient.c
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Queries the NTP server
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
- *
  */
 
 #include "timedate.h"
-
 #include <winsock2.h>
 
 #define TIMEOUT 4000 /* 4 second timeout */
@@ -24,15 +21,13 @@ typedef struct _INFO
 
 
 static BOOL
-InitConnection(PINFO pInfo,
-               LPSTR lpAddress)
+InitConnection(PINFO pInfo, LPSTR lpAddress)
 {
     WSADATA wsaData;
     HOSTENT *he;
     INT Ret;
 
-    Ret = WSAStartup(MAKEWORD(2, 2),
-                     &wsaData);
+    Ret = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (Ret != 0)
         return FALSE;
 
@@ -144,9 +139,9 @@ GetServerTime(LPWSTR lpAddress)
     DWORD dwSize = wcslen(lpAddress) + 1;
     ULONG ulTime = 0;
 
-    pInfo = (PINFO)HeapAlloc(GetProcessHeap(),
-                             0,
-                             sizeof(INFO));
+    pInfo = HeapAlloc(GetProcessHeap(),
+                      0,
+                      sizeof(INFO));
     lpAddr = (LPSTR)HeapAlloc(GetProcessHeap(),
                               0,
                               dwSize);
@@ -169,7 +164,6 @@ GetServerTime(LPWSTR lpAddress)
                     ulTime = ReceiveData(pInfo);
                 }
             }
-
             DestroyConnection();
         }
     }
