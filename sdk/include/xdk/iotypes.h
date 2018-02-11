@@ -2741,9 +2741,6 @@ typedef struct _ACPI_INTERFACE_STANDARD2 {
   PUNREGISTER_FOR_DEVICE_NOTIFICATIONS2 UnregisterForDeviceNotifications;
 } ACPI_INTERFACE_STANDARD2, *PACPI_INTERFACE_STANDARD2;
 
-#if !defined(_AMD64_) && !defined(_IA64_)
-#include <pshpack4.h>
-#endif
 typedef struct _IO_STACK_LOCATION {
   UCHAR MajorFunction;
   UCHAR MinorFunction;
@@ -2813,8 +2810,8 @@ typedef struct _IO_STACK_LOCATION {
     } SetVolume;
     struct {
       ULONG OutputBufferLength;
-      ULONG InputBufferLength;
-      ULONG FsControlCode;
+      ULONG POINTER_ALIGNMENT InputBufferLength;
+      ULONG POINTER_ALIGNMENT FsControlCode;
       PVOID Type3InputBuffer;
     } FileSystemControl;
     struct {
@@ -2927,9 +2924,6 @@ typedef struct _IO_STACK_LOCATION {
   PIO_COMPLETION_ROUTINE CompletionRoutine;
   PVOID Context;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
-#if !defined(_AMD64_) && !defined(_IA64_)
-#include <poppack.h>
-#endif
 
 /* IO_STACK_LOCATION.Control */
 
