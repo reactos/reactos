@@ -85,6 +85,8 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                              CONTEXT_AMD64 | ContextFlags,
                              UserMode);
 
+        Thread->Header.DebugActive = ((TrapFrame->Dr7 & 0x355) != 0);
+
         /* Set SS, DS, ES's RPL Mask properly */
         TrapFrame->SegSs |= RPL_MASK;
         TrapFrame->SegDs |= RPL_MASK;
