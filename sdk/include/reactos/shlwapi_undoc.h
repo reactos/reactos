@@ -92,11 +92,11 @@ HRESULT WINAPI SHGetPerScreenResName(OUT LPWSTR lpResName,
 
 HRESULT WINAPI SHPropertyBag_ReadStream(IPropertyBag*,LPCWSTR,IStream**);
 
-HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle,
-                        DWORD dwStyle, HMENU hMenu, LONG z);
+HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
+                                  DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
 
-HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle,
-                        DWORD dwStyle, HMENU hMenu, LONG z);
+HWND WINAPI SHCreateWorkerWindowW(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
+                                  DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
 #ifdef UNICODE
 #define SHCreateWorkerWindow SHCreateWorkerWindowW
 #else

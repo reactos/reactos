@@ -2555,8 +2555,13 @@ HRESULT WINAPI IUnknown_GetSite(LPUNKNOWN lpUnknown, REFIID iid, PVOID *lppSite)
  *  Success: The window handle of the newly created window.
  *  Failure: 0.
  */
+#ifndef __REACTOS__
 HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle,
                                   DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra)
+#else
+HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
+                                  DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra)
+#endif
 {
   static const char szClass[] = "WorkerA";
   WNDCLASSA wc;
@@ -2584,8 +2589,12 @@ HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   if (hWnd)
   {
     SetWindowLongPtrW(hWnd, 0, wnd_extra);
+#ifndef __REACTOS__
 
     if (wndProc) SetWindowLongPtrA(hWnd, GWLP_WNDPROC, wndProc);
+#else
+    if (wndProc) SetWindowLongPtrA(hWnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+#endif
   }
 
   return hWnd;
@@ -2844,28 +2853,45 @@ DWORD WINAPI WhichPlatform(void)
  *
  * Unicode version of SHCreateWorkerWindowA.
  */
+#ifndef __REACTOS__
 HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle,
                         DWORD dwStyle, HMENU hMenu, LONG msg_result)
+#else
+HWND WINAPI SHCreateWorkerWindowW(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
+                                  DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra)
+#endif
 {
   static const WCHAR szClass[] = { 'W', 'o', 'r', 'k', 'e', 'r', 'W', 0 };
   WNDCLASSW wc;
   HWND hWnd;
 
   TRACE("(0x%08x, %p, 0x%08x, 0x%08x, %p, 0x%08x)\n",
+#ifndef __REACTOS__
          wndProc, hWndParent, dwExStyle, dwStyle, hMenu, msg_result);
+#else
+         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, wnd_extra);
+#endif
 
   /* If our OS is natively ANSI, use the ANSI version */
   if (GetVersion() & 0x80000000)  /* not NT */
   {
     TRACE("fallback to ANSI, ver 0x%08x\n", GetVersion());
+#ifndef __REACTOS__
     return SHCreateWorkerWindowA(wndProc, hWndParent, dwExStyle, dwStyle, hMenu, msg_result);
+#else
+    return SHCreateWorkerWindowA(wndProc, hWndParent, dwExStyle, dwStyle, hMenu, wnd_extra);
+#endif
   }
 
   /* Create Window class */
   wc.style         = 0;
   wc.lpfnWndProc   = DefWindowProcW;
   wc.cbClsExtra    = 0;
+#ifndef __REACTOS__
   wc.cbWndExtra    = 4;
+#else
+  wc.cbWndExtra    = sizeof(LONG_PTR);
+#endif
   wc.hInstance     = shlwapi_hInstance;
   wc.hIcon         = NULL;
   wc.hCursor       = LoadCursorW(NULL, (LPWSTR)IDC_ARROW);
@@ -2879,9 +2905,14 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
                          hWndParent, hMenu, shlwapi_hInstance, 0);
   if (hWnd)
   {
+#ifndef __REACTOS__
     SetWindowLongPtrW(hWnd, DWLP_MSGRESULT, msg_result);
 
     if (wndProc) SetWindowLongPtrW(hWnd, GWLP_WNDPROC, wndProc);
+#else
+    SetWindowLongPtrW(hWnd, 0, wnd_extra);
+    if (wndProc) SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
+#endif
   }
 
   return hWnd;

@@ -254,7 +254,7 @@
 254 stub -noname StopWatchExW
 255 stub -noname EventTraceHandler
 256 stdcall -noname IUnknown_GetSite(ptr ptr ptr)
-257 stdcall -noname SHCreateWorkerWindowA(long ptr long long ptr long)
+257 stdcall -noname SHCreateWorkerWindowA(ptr ptr long long ptr long)
 258 stub -noname SHRegisterWaitForSingleObject
 259 stub -noname SHUnregisterWait
 260 stdcall -noname SHQueueUserWorkItem(long long long long long long long)
@@ -275,7 +275,7 @@
 275 stub -noname RegisterGlobalHotkeyA
 276 stdcall -noname WhichPlatform()
 277 stub -noname SHDialogBox
-278 stdcall -noname SHCreateWorkerWindowW(long long long long long long)
+278 stdcall -noname SHCreateWorkerWindowW(ptr ptr long long ptr long)
 279 stdcall -noname SHInvokeDefaultCommand(ptr ptr ptr)
 280 stdcall -noname SHRegGetIntW(ptr wstr long)
 281 stdcall -noname SHPackDispParamsV(ptr ptr long ptr)
