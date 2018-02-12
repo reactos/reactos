@@ -168,7 +168,9 @@ PSERVICE ScmGetServiceEntryByName(LPCWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPCWSTR lpDisplayName);
 PSERVICE ScmGetServiceEntryByResumeCount(DWORD dwResumeCount);
 DWORD ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
-                                PSERVICE *lpServiceRecord);
+                                PSERVICE *lpServiceRecord,
+                                DWORD dwServiceType,
+                                DWORD dwStartType);
 VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
@@ -185,8 +187,7 @@ VOID ScmDeleteNamedPipeCriticalSection(VOID);
 
 /* driver.c */
 
-DWORD ScmLoadDriver(PSERVICE lpService);
-DWORD ScmUnloadDriver(PSERVICE lpService);
+DWORD ScmStartDriver(PSERVICE lpService);
 DWORD ScmControlDriver(PSERVICE lpService,
                        DWORD dwControl,
                        LPSERVICE_STATUS lpServiceStatus);

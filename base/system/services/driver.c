@@ -19,6 +19,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
+static
 DWORD
 ScmLoadDriver(PSERVICE lpService)
 {
@@ -70,7 +71,7 @@ done:
     return RtlNtStatusToDosError(Status);
 }
 
-
+static
 DWORD
 ScmUnloadDriver(PSERVICE lpService)
 {
@@ -123,6 +124,7 @@ done:
 }
 
 
+static
 DWORD
 ScmGetDriverStatus(PSERVICE lpService,
                    LPSERVICE_STATUS lpServiceStatus)
@@ -286,6 +288,27 @@ ScmGetDriverStatus(PSERVICE lpService,
 
 
 DWORD
+ScmStartDriver(PSERVICE pService)
+{
+    DWORD dwError;
+
+    DPRINT("ScmStartDriver(%p)\n", pService);
+
+    dwError = ScmLoadDriver(pService);
+    if (dwError == ERROR_SUCCESS)
+    {
+        pService->Status.dwCurrentState = SERVICE_RUNNING;
+        pService->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+        pService->Status.dwWin32ExitCode = ERROR_SUCCESS;
+    }
+
+    DPRINT("ScmStartDriver returns %lu\n", dwError);
+
+    return dwError;
+}
+
+
+DWORD
 ScmControlDriver(PSERVICE lpService,
                  DWORD dwControl,
                  LPSERVICE_STATUS lpServiceStatus)
@@ -328,7 +351,7 @@ ScmControlDriver(PSERVICE lpService,
             dwError = ERROR_INVALID_SERVICE_CONTROL;
     }
 
-done:;
+done:
     DPRINT("ScmControlDriver() done (Erorr: %lu)\n", dwError);
 
     return dwError;

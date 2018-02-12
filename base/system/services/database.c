@@ -559,7 +559,9 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
 
 DWORD
 ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
-                          PSERVICE* lpServiceRecord)
+                          PSERVICE *lpServiceRecord,
+                          DWORD dwServiceType,
+                          DWORD dwStartType)
 {
     PSERVICE lpService = NULL;
 
@@ -579,6 +581,9 @@ ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
     lpService->lpServiceName = lpService->szServiceName;
     lpService->lpDisplayName = lpService->lpServiceName;
 
+    /* Set the start type */
+    lpService->dwStartType = dwStartType;
+
     /* Set the resume count */
     lpService->dwResumeCount = ResumeCount++;
 
@@ -587,12 +592,15 @@ ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                    &lpService->ServiceListEntry);
 
     /* Initialize the service status */
+    lpService->Status.dwServiceType = dwServiceType;
     lpService->Status.dwCurrentState = SERVICE_STOPPED;
     lpService->Status.dwControlsAccepted = 0;
-    lpService->Status.dwWin32ExitCode = ERROR_SERVICE_NEVER_STARTED;
+    lpService->Status.dwWin32ExitCode =
+        (dwStartType == SERVICE_DISABLED) ? ERROR_SERVICE_DISABLED : ERROR_SERVICE_NEVER_STARTED;
     lpService->Status.dwServiceSpecificExitCode = 0;
     lpService->Status.dwCheckPoint = 0;
-    lpService->Status.dwWaitHint = 2000; /* 2 seconds */
+    lpService->Status.dwWaitHint =
+        (dwServiceType & SERVICE_DRIVER) ? 0 : 2000; /* 2 seconds */
 
     return ERROR_SUCCESS;
 }
@@ -719,12 +727,12 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
     DPRINT("Display name: %S\n", lpDisplayName);
 
     dwError = ScmCreateNewServiceRecord(lpServiceName,
-                                        &lpService);
+                                        &lpService,
+                                        dwServiceType,
+                                        dwStartType);
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    lpService->Status.dwServiceType = dwServiceType;
-    lpService->dwStartType = dwStartType;
     lpService->dwErrorControl = dwErrorControl;
     lpService->dwTag = dwTagId;
 
@@ -1801,13 +1809,8 @@ ScmLoadService(PSERVICE Service,
 
     if (Service->Status.dwServiceType & SERVICE_DRIVER)
     {
-        /* Load driver */
-        dwError = ScmLoadDriver(Service);
-        if (dwError == ERROR_SUCCESS)
-        {
-            Service->Status.dwCurrentState = SERVICE_RUNNING;
-            Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
-        }
+        /* Start the driver */
+        dwError = ScmStartDriver(Service);
     }
     else // if (Service->Status.dwServiceType & (SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS))
     {
