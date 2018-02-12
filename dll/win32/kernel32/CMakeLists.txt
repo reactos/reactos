@@ -90,8 +90,7 @@ if(ARCH STREQUAL "i386")
         client/i386/thread.S)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
-        client/amd64/fiber.S
-        client/amd64/thread.S)
+        client/amd64/fiber.S)
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE
         client/arm/fiber.S

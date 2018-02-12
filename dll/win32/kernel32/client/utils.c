@@ -580,12 +580,14 @@ BaseInitializeContext(IN PCONTEXT Context,
 
 #elif defined(_M_AMD64)
     DPRINT("BaseInitializeContext: %p\n", Context);
+    ASSERT(((ULONG_PTR)StackAddress & 15) == 0);
+
+    RtlZeroMemory(Context, sizeof(*Context));
 
     /* Setup the Initial Win32 Thread Context */
-    Context->Rax = (ULONG_PTR)StartAddress;
-    Context->Rbx = (ULONG_PTR)Parameter;
-    Context->Rsp = (ULONG_PTR)StackAddress;
-    /* The other registers are undefined */
+    Context->Rcx = (ULONG_PTR)StartAddress;
+    Context->Rdx = (ULONG_PTR)Parameter;
+    Context->Rsp = (ULONG_PTR)StackAddress - 5 * sizeof(PVOID);
 
     /* Setup the Segments */
     Context->SegGs = KGDT64_R3_DATA | RPL_MASK;
@@ -596,11 +598,11 @@ BaseInitializeContext(IN PCONTEXT Context,
     Context->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
 
     /* Set the EFLAGS */
-    Context->EFlags = 0x3000; /* IOPL 3 */
+    Context->EFlags = 0x3000 | EFLAGS_INTERRUPT_MASK; /* IOPL 3 */
 
     if (ContextType == 1)      /* For Threads */
     {
-        Context->Rip = (ULONG_PTR)BaseThreadStartupThunk;
+        Context->Rip = (ULONG_PTR)BaseThreadStartup;
     }
     else if (ContextType == 2) /* For Fibers */
     {
@@ -608,14 +610,11 @@ BaseInitializeContext(IN PCONTEXT Context,
     }
     else                       /* For first thread in a Process */
     {
-        Context->Rip = (ULONG_PTR)BaseProcessStartThunk;
+        Context->Rip = (ULONG_PTR)BaseProcessStartup;
     }
 
     /* Set the Context Flags */
     Context->ContextFlags = CONTEXT_FULL;
-
-    /* Give it some room for the Parameter */
-    Context->Rsp -= sizeof(PVOID);
 #elif defined(_M_ARM)
     DPRINT("BaseInitializeContext: %p\n", Context);
 
