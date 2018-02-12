@@ -11,6 +11,11 @@
 
 #include <ksamd64.inc>
 
+; BOOLEAN
+; KiSwapContextResume(
+;    _In_ KIRQL WaitIrql,
+;    _In_ PKTHREAD OldThread,
+;    _In_ PKTHREAD NewThread)
 EXTERN KiSwapContextResume:PROC
 
 /* FUNCTIONS ****************************************************************/
@@ -118,23 +123,22 @@ PUBLIC KiThreadStartup
  * \brief
  *     The KiSwapContextInternal routine switches context to another thread.
  *
- * \param rcx
- *     Pointer to the KTHREAD to which the caller wishes to switch to.
+ * \param cl
+ *     The IRQL at wich the old thread is suspended
  *
  * \param rdx
  *     Pointer to the KTHREAD to which the caller wishes to switch from.
  *
- * \param r8b
- *     APC bypass
+ * \param r8
+ *     Pointer to the KTHREAD to which the caller wishes to switch to.
  *
  * \return
- *     None.
+ *     The WaitStatus of the Target Thread.
  *
  * \remarks
  *     ...
  *
  *--*/
-PUBLIC KiSwapContextInternal
 .PROC KiSwapContextInternal
 
     push rbp
@@ -143,22 +147,17 @@ PUBLIC KiSwapContextInternal
     .allocstack 6 * 8
     .endprolog
 
-    /* Save APC bypass */
-    mov [rsp + SwApcBypass], r8b
+    /* Save WaitIrql as KSWITCH_FRAME::ApcBypass */
+    mov [rsp + SwApcBypass], cl
 
     /* Save kernel stack of old thread */
     mov [rdx + KTHREAD_KernelStack], rsp
 
-    /* Save new thread in rbp */
-    mov rbp, rcx
-
-    //call KiSwapContextSuspend
-
     /* Load stack of new thread */
-    mov rsp, [rbp + KTHREAD_KernelStack]
+    mov rsp, [r8 + KTHREAD_KernelStack]
 
     /* Reload APC bypass */
-    mov r8b, [rsp + SwApcBypass]
+    mov cl, [rsp + SwApcBypass]
 
     call KiSwapContextResume
 
@@ -178,13 +177,13 @@ PUBLIC KiSwapContextInternal
  *     The KiSwapContext routine switches context to another thread.
  *
  * BOOLEAN
- * KiSwapContext(KIRQL WaitIrql, PKTHREAD CurrentThread);
+ * KiSwapContext(KIRQL WaitIrql, PKTHREAD OldThread);
  *
- * \param WaitIrql <rcx>
- *     ...
+ * \param WaitIrql <cl>
+ *     The IRQL at wich the old thread is suspended
  *
- * \param CurrentThread <rdx>
- *     Pointer to the KTHREAD of the current thread.
+ * \param OldThread <rdx>
+ *     Pointer to the KTHREAD of the previous thread.
  *
  * \return
  *     The WaitStatus of the Target Thread.
@@ -205,7 +204,7 @@ PUBLIC KiSwapContext
     GENERATE_EXCEPTION_FRAME
 
     /* Do the swap with the registers correctly setup */
-    mov rcx, gs:[PcCurrentThread] /* Pointer to the new thread */
+    mov r8, gs:[PcCurrentThread] /* Pointer to the new thread */
     call KiSwapContextInternal
 
     /* Restore the registers from the KEXCEPTION_FRAME */

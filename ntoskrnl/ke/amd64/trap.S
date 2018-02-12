@@ -592,7 +592,7 @@ PUBLIC KiApcInterrupt
     mov cl, [rbp + KTRAP_FRAME_SegCs] // ProcessorMode
     and cl, 1
     mov rdx, 0                        // ExceptionFrame
-    mov r8, rdx                       // TrapFrame
+    mov r8, rbp                       // TrapFrame
     call KiDeliverApc
 
     /* Disable interrupts */
@@ -1000,8 +1000,47 @@ KiConvertToGuiThreadFailed:
 
 ENDFUNC
 
-KiExitToUserApc:
-    int 3
+;
+; VOID
+; KiDeliverApc(
+;     _In_ KPROCESSOR_MODE DeliveryMode,
+;     _In_ PKEXCEPTION_FRAME ExceptionFrame,
+;     _In_ PKTRAP_FRAME TrapFrame);
+;
+EXTERN KiDeliverApc:PROC
+
+PUBLIC KiInitiateUserApc
+.PROC KiInitiateUserApc
+
+    ; Generate a KEXCEPTION_FRAME on the stack
+    GENERATE_EXCEPTION_FRAME
+
+    ; Raise IRQL to APC_LEVEL
+    mov rax, APC_LEVEL
+    mov cr8, rax
+
+    ; Enable interrupts
+    sti
+
+    ; Get the current trap frame
+    mov rax, gs:[PcCurrentThread]
+    mov r8, [rax + KTHREAD_TrapFrame]
+
+    ; Call the C function
+    mov ecx, 1
+    mov rdx, rsp
+    call KiDeliverApc
+
+    ; Disable interrupts again
+    cli
+
+    ; Restore the registers from the KEXCEPTION_FRAME
+    RESTORE_EXCEPTION_STATE
+
+    ; Return
+    ret
+
+.ENDP
 
 
 PUBLIC KiInitializeSegments
