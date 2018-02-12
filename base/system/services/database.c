@@ -1040,6 +1040,11 @@ ScmCheckDriver(PSERVICE Service)
 
             /* Mark service as 'running' */
             Service->Status.dwCurrentState = SERVICE_RUNNING;
+            Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+            Service->Status.dwWin32ExitCode = ERROR_SUCCESS;
+            Service->Status.dwServiceSpecificExitCode = 0;
+            Service->Status.dwCheckPoint = 0;
+            Service->Status.dwWaitHint = 0;
 
             /* Mark the service group as 'running' */
             if (Service->lpGroup != NULL)
