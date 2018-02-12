@@ -192,13 +192,9 @@ SetTime(VOID)
             /* Get data from default reg value */
             if (szValName[0] == UNICODE_NULL) // if this is the "(Default)" key
             {
-                StringCbCopy(szDefault, wcslen(szData), szData);
-                dwIndex++;
+                StringCbCopy(szDefault, wcslen(szDefault), szData);
             }
-            else
-            {
-                dwIndex++;
-            }
+            dwIndex++;
         }
         else if (lRet != ERROR_MORE_DATA)
         {
@@ -225,13 +221,9 @@ SetTime(VOID)
             /* Get date from selected reg value */
             if (wcscmp(szValName, szDefault) == 0) // if (Index == Default)
             {
-                StringCbCopy(szDefault, wcslen(szData), szData);
-                dwIndex++;
+                StringCbCopy(szDefault, wcslen(szDefault), szData);
             }
-            else
-            {
-                dwIndex++;
-            }
+            dwIndex++;
         }
         else if (lRet != ERROR_MORE_DATA)
         {
@@ -256,7 +248,7 @@ ControlHandler(DWORD request)
     switch(request) 
     { 
         case SERVICE_CONTROL_STOP: 
-             DPRINT1("W32Time Service stopped.\n");
+            DPRINT("W32Time Service stopped.\n");
 
             ServiceStatus.dwWin32ExitCode = 0; 
             ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 

@@ -359,7 +359,7 @@ OnAutoSync(BOOL Sync)
     WCHAR szAuto[7];
 
     if (Sync)
-        StringCbCopy(szAuto, wcslen(L"NTP\0"), L"NTP\0");
+        StringCbCopy(szAuto, wcslen(L"NTP"), L"NTP");
     else
         StringCbCopy(szAuto, wcslen(L"NoSync\0"), L"NoSync\0");
 
@@ -447,7 +447,7 @@ InetTimePageProc(HWND hwndDlg,
                 case PSN_APPLY:
                     SetNTPServer(hwndDlg);
 
-                    if (SendDlgItemMessage(hwndDlg, IDC_AUTOSYNC, BM_GETCHECK,0,0) == BST_CHECKED)
+                    if (SendDlgItemMessage(hwndDlg, IDC_AUTOSYNC, BM_GETCHECK, 0, 0) == BST_CHECKED)
                         OnAutoSync(TRUE);
                     else
                         OnAutoSync(FALSE);
