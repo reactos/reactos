@@ -142,6 +142,7 @@ ENDM
  */
 MACRO(ExitTrap, Flags)
     LOCAL kernel_mode_return
+    LOCAL IntsEnabled
 
 #if DBG
         /* Check previous irql */
@@ -176,6 +177,14 @@ MACRO(ExitTrap, Flags)
         jne KiExitToUserApc
 
     endif
+
+#if DBG
+    /*Make sure interrupts are enabled */
+    test dword ptr [rbp + KTRAP_FRAME_EFlags], HEX(200)
+    jnz IntsEnabled
+    int HEX(2c)
+IntsEnabled:
+#endif
 
     /* Swap gs to user mode */
     swapgs
