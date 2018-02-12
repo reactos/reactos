@@ -873,6 +873,11 @@ PUBLIC KiSystemCallEntry64
 #if DBG
     /* Restore rbp */
     mov rbp, [rsp + SYSCALL_ALLOCATION + KTRAP_FRAME_Rbp]
+
+    test dword ptr [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags], HEX(200)
+    jnz IntsEnabled
+    int 3
+IntsEnabled:
 #endif
 
     /* Disable interrupts for return */
