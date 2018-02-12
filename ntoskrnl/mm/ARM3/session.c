@@ -606,8 +606,8 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     ULONG NewFlags, Flags, i, Color;
 #if (_MI_PAGING_LEVELS < 3)
     ULONG Size;
-    PMMPDE PageTables;
 #endif // (_MI_PAGING_LEVELS < 3)
+    PMMPDE PageTables = NULL;
     KIRQL OldIrql;
     PMMPTE PointerPte, SessionPte;
     PMMPDE PointerPde;
@@ -795,10 +795,8 @@ MiSessionCreateInternal(OUT PULONG SessionId)
 #endif
     InitializeListHead(&MmSessionSpace->ImageList);
 
-#if (_MI_PAGING_LEVELS < 3)
     DPRINT1("Session %lu is ready to go: 0x%p 0x%p, %lx 0x%p\n",
             *SessionId, MmSessionSpace, SessionGlobal, SessionPageDirIndex, PageTables);
-#endif // (_MI_PAGING_LEVELS < 3)
 
     /* Initialize session pool */
     //Status = MiInitializeSessionPool();
