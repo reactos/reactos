@@ -713,6 +713,8 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     ASSERT(Process->AddressSpaceInitialized == 0);
     Process->AddressSpaceInitialized = 1;
 
+    /* Add the process to the session */
+    MiSessionAddProcess(Process);
     return TRUE;
 }
 
