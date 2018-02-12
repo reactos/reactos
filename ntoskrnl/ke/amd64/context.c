@@ -56,8 +56,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Handle floating point registers */
-    if ((ContextFlags & CONTEXT_FLOATING_POINT) &&
-        ((Context->SegCs & MODE_MASK) != KernelMode))
+    if ((ContextFlags & CONTEXT_FLOATING_POINT))
     {
         TrapFrame->MxCsr = Context->MxCsr;
         TrapFrame->Xmm0 = Context->Xmm0;
@@ -84,24 +83,35 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     /* Handle control registers */
     if (ContextFlags & CONTEXT_CONTROL)
     {
-        /* Check if this was a Kernel Trap */
+        /* RIP, RSP, EFLAGS */
+        TrapFrame->Rip = Context->Rip;
+        TrapFrame->Rsp = Context->Rsp;
+        TrapFrame->EFlags = Context->EFlags;
+
         if ((Context->SegCs & MODE_MASK) == KernelMode)
         {
             /* Set valid selectors */
             TrapFrame->SegCs = KGDT64_R0_CODE;
             TrapFrame->SegSs = KGDT64_R0_DATA;
+
+            /* Set valid EFLAGS */
+            TrapFrame->EFlags &= (EFLAGS_USER_SANITIZE | EFLAGS_INTERRUPT_MASK);
         }
         else
         {
             /* Copy selectors */
             TrapFrame->SegCs = Context->SegCs;
-            TrapFrame->SegSs = Context->SegSs;
-        }
+            if (TrapFrame->SegCs != (KGDT64_R3_CODE | RPL_MASK))
+            {
+                TrapFrame->SegCs = (KGDT64_R3_CMCODE | RPL_MASK);
+            }
 
-        /* RIP, RSP, EFLAGS */
-        TrapFrame->Rip = Context->Rip;
-        TrapFrame->Rsp = Context->Rsp;
-        TrapFrame->EFlags = Context->EFlags;
+            TrapFrame->SegSs = Context->SegSs;
+
+            /* Set valid EFLAGS */
+            TrapFrame->EFlags &= EFLAGS_USER_SANITIZE;
+            TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
+        }
     }
 
     /* Handle segment selectors */
@@ -136,6 +146,18 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         TrapFrame->Dr3 = Context->Dr3;
         TrapFrame->Dr6 = Context->Dr6;
         TrapFrame->Dr7 = Context->Dr7;
+
+        if ((Context->SegCs & MODE_MASK) != KernelMode)
+        {
+            if (TrapFrame->Dr0 > (ULONG64)MmHighestUserAddress)
+                TrapFrame->Dr0 = 0;
+            if (TrapFrame->Dr1 > (ULONG64)MmHighestUserAddress)
+                TrapFrame->Dr1 = 0;
+            if (TrapFrame->Dr2 > (ULONG64)MmHighestUserAddress)
+                TrapFrame->Dr2 = 0;
+            if (TrapFrame->Dr3 > (ULONG64)MmHighestUserAddress)
+                TrapFrame->Dr3 = 0;
+        }
     }
 
     /* Restore IRQL */
