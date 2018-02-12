@@ -150,6 +150,7 @@ ENDM
 MACRO(ExitTrap, Flags)
     LOCAL kernel_mode_return
     LOCAL IntsEnabled
+    LOCAL NoUserApc
 
 #if DBG
         /* Check previous irql */
@@ -181,8 +182,9 @@ MACRO(ExitTrap, Flags)
         /* Load current thread into r10 */
         mov r10, gs:[PcCurrentThread]
         cmp byte ptr [r10 + KTHREAD_UserApcPending], 0
-        jne KiExitToUserApc
-
+        je NoUserApc
+        call KiInitiateUserApc
+    NoUserApc:
     endif
 
 #if DBG
