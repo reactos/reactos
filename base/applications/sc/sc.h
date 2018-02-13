@@ -14,7 +14,8 @@
 #include <ndk/setypes.h>
 
 
-#define SCDBG
+// Uncomment to enable debug messages on user interface.
+// #define SCDBG
 
 typedef struct
 {
