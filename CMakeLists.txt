@@ -68,6 +68,9 @@ endif()
 include(sdk/cmake/compilerflags.cmake)
 
 add_definitions(-D__REACTOS__)
+add_definitions(-DREACTOS_SOURCE_DIR="\\"${REACTOS_SOURCE_DIR}\\"")
+add_definitions(-DREACTOS_BINARY_DIR="\\"${REACTOS_BINARY_DIR}\\"")
+add_compile_flags(-D__RELFILE__="&__FILE__[sizeof REACTOS_SOURCE_DIR]")
 
 if(MSVC_IDE)
     add_compile_flags("/MP")
