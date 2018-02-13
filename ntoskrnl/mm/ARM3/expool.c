@@ -1814,7 +1814,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             // than a hundred pages, that's a bogus caller
             // and we are not out of memory
             //
-            if (NumberOfBytes < 100 * PAGE_SIZE)
+            if (NumberOfBytes <= 100 * PAGE_SIZE)
             {
                 MiDumpPoolConsumers(FALSE, 0, 0, 0);
             }
@@ -2153,7 +2153,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         // than a hundred pages, that's a bogus caller
         // and we are not out of memory
         //
-        if (NumberOfBytes < 100 * PAGE_SIZE)
+        if (NumberOfBytes <= 100 * PAGE_SIZE)
         {
             MiDumpPoolConsumers(FALSE, 0, 0, 0);
         }
