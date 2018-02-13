@@ -395,7 +395,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
      * NOTE: Unless it's a symbolic link (Caz Yokoyama [MSFT])
      */
     if ((Header->Type != ObjectType) && ((AccessMode != KernelMode) ||
-        (ObjectType == ObSymbolicLinkType)))
+        (ObjectType == ObpSymbolicLinkObjectType)))
     {
         /* Invalid type */
         return STATUS_OBJECT_TYPE_MISMATCH;

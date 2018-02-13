@@ -282,8 +282,8 @@ ObInitSystem(VOID)
     ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
     ObjectTypeInitializer.DeleteProcedure = NULL;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObDirectoryType);
-    ObDirectoryType->TypeInfo.ValidAccessMask &= ~SYNCHRONIZE;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObpDirectoryObjectType);
+    ObpDirectoryObjectType->TypeInfo.ValidAccessMask &= ~SYNCHRONIZE;
 
     /* Create 'symbolic link' object type */
     RtlInitUnicodeString(&Name, L"SymbolicLink");
@@ -292,8 +292,8 @@ ObInitSystem(VOID)
     ObjectTypeInitializer.ValidAccessMask = SYMBOLIC_LINK_ALL_ACCESS;
     ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
     ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObSymbolicLinkType);
-    ObSymbolicLinkType->TypeInfo.ValidAccessMask &= ~SYNCHRONIZE;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObpSymbolicLinkObjectType);
+    ObpSymbolicLinkObjectType->TypeInfo.ValidAccessMask &= ~SYNCHRONIZE;
 
     /* Phase 0 initialization complete */
     ObpInitializationPhase++;
@@ -321,7 +321,7 @@ ObPostPhase0:
     /* Get a handle to it */
     Status = ObReferenceObjectByHandle(Handle,
                                        0,
-                                       ObDirectoryType,
+                                       ObpDirectoryObjectType,
                                        KernelMode,
                                        (PVOID*)&ObpRootDirectoryObject,
                                        NULL);
@@ -372,7 +372,7 @@ ObPostPhase0:
     /* Get a handle to it */
     Status = ObReferenceObjectByHandle(Handle,
                                        0,
-                                       ObDirectoryType,
+                                       ObpDirectoryObjectType,
                                        KernelMode,
                                        (PVOID*)&ObpTypeDirectoryObject,
                                        NULL);
