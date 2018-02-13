@@ -113,6 +113,11 @@ HRESULT
 CDefViewBckgrndMenu::Initialize(IShellFolder* psf)
 {
     m_psf = psf;
+
+    /* Get the context menu of the folder. Do it here because someone may call
+       InvokeCommand without calling QueryContextMenu. It is fine if this fails */
+    m_psf->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &m_folderCM));
+
     return S_OK;
 }
 
@@ -154,9 +159,8 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
        but as stated above, its sole user is CDefView and should really be that way. */
     m_idCmdFirst = idCmdFirst;
 
-    /* Query the shell folder to add any items it wants to add in the background context menu */
-    hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &m_folderCM));
-    if (SUCCEEDED(hr))
+    /* Let the shell folder add any items it wants to add in the background context menu */
+    if (m_folderCM)
     {
         hr = m_folderCM->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
         if (SUCCEEDED(hr))
