@@ -25,7 +25,7 @@ ObpCreateDeviceMap(IN HANDLE DirectoryHandle)
 
     Status = ObReferenceObjectByHandle(DirectoryHandle,
                                        DIRECTORY_TRAVERSE,
-                                       ObDirectoryType,
+                                       ObpDirectoryObjectType,
                                        KeGetPreviousMode(),
                                        (PVOID*)&DirectoryObject,
                                        NULL);

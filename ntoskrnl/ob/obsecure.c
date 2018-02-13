@@ -561,7 +561,7 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
     Status = SeAssignSecurity(SecurityDescriptor,
                               AccessState->SecurityDescriptor,
                               &NewDescriptor,
-                              (Type == ObDirectoryType),
+                              (Type == ObpDirectoryObjectType),
                               &AccessState->SubjectSecurityContext,
                               &Type->TypeInfo.GenericMapping,
                               PagedPool);
