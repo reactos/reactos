@@ -197,30 +197,6 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* For the moment, we won't fail */
     Status = STATUS_SUCCESS;
 
-    /* Browse all the ARC devices trying to find the one matching boot device */
-    for (NextEntry = ArcDiskInformation->DiskSignatureListHead.Flink;
-         NextEntry != &ArcDiskInformation->DiskSignatureListHead;
-         NextEntry = NextEntry->Flink)
-    {
-        ArcDiskSignature = CONTAINING_RECORD(NextEntry,
-                                             ARC_DISK_SIGNATURE,
-                                             ListEntry);
-
-        if (strcmp(LoaderBlock->ArcBootDeviceName, ArcDiskSignature->ArcName) == 0)
-        {
-            break;
-        }
-
-        ArcDiskSignature = NULL;
-    }
-
-    /* Not found... Not booting from a Cd */
-    if (!ArcDiskSignature)
-    {
-        DPRINT("Failed finding a cd that could match current boot device\n");
-        goto Cleanup;
-    }
-
     /* Allocate needed space for reading Cd */
     PartitionBuffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned, 2048, TAG_IO);
     if (!PartitionBuffer)
@@ -303,14 +279,23 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 goto Cleanup;
             }
 
-            /* Finally, build proper device name */
-            sprintf(Buffer, "\\Device\\CdRom%lu", DeviceNumber.DeviceNumber);
-            RtlInitAnsiString(&DeviceStringA, Buffer);
-            Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
-            if (!NT_SUCCESS(Status))
+            /* End of enabled disks enumeration */
+            if (NotEnabledPresent && *lSymbolicLinkList == UNICODE_NULL)
             {
-                ObDereferenceObject(FileObject);
-                goto Cleanup;
+                /* No enabled disk worked, reset field */
+                if (DeviceNumber.DeviceNumber == ULONG_MAX)
+                {
+                    DeviceNumber.DeviceNumber = 0;
+                }
+
+                /* Update disk number to enable the following not enabled disks */
+                if (DeviceNumber.DeviceNumber > DiskNumber)
+                {
+                    DiskNumber = DeviceNumber.DeviceNumber;
+                }
+
+                /* Increase a bit more */
+                CdRomCount = DiskNumber + 20;
             }
         }
         else
@@ -329,11 +314,16 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                               FILE_READ_ATTRIBUTES,
                                               &FileObject,
                                               &DeviceObject);
-            if (!NT_SUCCESS(Status))
-            {
-                RtlFreeUnicodeString(&DeviceStringW);
-                goto Cleanup;
-            }
+
+            RtlFreeUnicodeString(&DeviceStringW);
+            /* This is a security measure, to ensure DiskNumber will be used */
+            DeviceNumber.DeviceNumber = ULONG_MAX;
+        }
+
+        /* Something failed somewhere earlier, just skip the disk */
+        if (!NT_SUCCESS(Status))
+        {
+            continue;
         }
 
         /* Initiate data for reading cd and compute checksum */
@@ -370,29 +360,66 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Dereference file object */
         ObDereferenceObject(FileObject);
 
-        /* If checksums are matching, we have the proper cd */
-        if (CheckSum + ArcDiskSignature->CheckSum == 0)
+        /* Browse each ARC disk */
+        for (NextEntry = ArcDiskInformation->DiskSignatureListHead.Flink;
+             NextEntry != &ArcDiskInformation->DiskSignatureListHead;
+             NextEntry = NextEntry->Flink)
         {
-            /* Create ARC name */
-            sprintf(ArcBuffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
-            RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
-            Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
-            if (NT_SUCCESS(Status))
+            ArcDiskSignature = CONTAINING_RECORD(NextEntry,
+                                                 ARC_DISK_SIGNATURE,
+                                                 ListEntry);
+
+            /* Check if this is a cdrom */
+            if (strstr(ArcDiskSignature->ArcName, "cdrom") == NULL)
             {
-                /* Create symbolic link */
-                IoAssignArcName(&ArcNameStringW, &DeviceStringW);
-                RtlFreeUnicodeString(&ArcNameStringW);
-                DPRINT("Boot device found\n");
+                continue;
             }
 
-            /* And quit, whatever happens */
-            RtlFreeUnicodeString(&DeviceStringW);
-            goto Cleanup;
-        }
+            /* Check if the cheksum is correct */
+            if (ArcDiskSignature->CheckSum + CheckSum == 0)
+            {
+                /* Create device name */
+                sprintf(Buffer, "\\Device\\CdRom%lu", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
+                RtlInitAnsiString(&DeviceStringA, Buffer);
+                Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
+                if (!NT_SUCCESS(Status))
+                {
+                    goto Cleanup;
+                }
 
-        /* Free string before trying another disk */
-        RtlFreeUnicodeString(&DeviceStringW);
+                /* Create ARC name */
+                sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskSignature->ArcName);
+                RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
+                Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
+                if (!NT_SUCCESS(Status))
+                {
+                    RtlFreeUnicodeString(&DeviceStringW);
+                    goto Cleanup;
+                }
+
+                /* Link both */
+                IoAssignArcName(&ArcNameStringW, &DeviceStringW);
+
+                /* And release resources */
+                RtlFreeUnicodeString(&ArcNameStringW);
+                RtlFreeUnicodeString(&DeviceStringW);
+            }
+            else
+            {
+                /* In case there's a valid partition, a matching signature,
+                   BUT a none matching checksum, or there's a duplicate
+                   signature, or even worse a virus played with partition
+                   table */
+                if ((ArcDiskSignature->CheckSum + CheckSum != 0) &&
+                    ArcDiskSignature->ValidPartitionTable)
+                {
+                    DPRINT("Be careful, or you have a duplicate disk signature, or a virus altered your MBR!\n");
+                }
+            }
+        }
     }
+
+    Status = STATUS_SUCCESS;
 
 Cleanup:
     if (PartitionBuffer)
