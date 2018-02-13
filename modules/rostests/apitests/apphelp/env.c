@@ -718,7 +718,7 @@ static void Test_Shimdata(SDBQUERYRESULT_VISTA* result, const WCHAR* szLayer)
             output->dwCustomSDBMap = input->dwCustomSDBMap;
             output->rgGuidDB[0] = input->rgGuidDB[0];
         }
-        ok(!memcmp(&result2, result, sizeof(result)), "Expected result2 to equal result for %s\n", wine_dbgstr_w(szLayer));
+        ok(!memcmp(&result2, result, sizeof(*result)), "Expected result2 to equal result for %s\n", wine_dbgstr_w(szLayer));
 
         RtlFreeHeap(GetProcessHeap(), 0, pData);
     }
