@@ -29,8 +29,6 @@
 
 #if DBG
 
-    #include <builddir.h>
-
     #if !defined(__RELFILE__)
         #define __RELFILE__ __FILE__
     #endif
