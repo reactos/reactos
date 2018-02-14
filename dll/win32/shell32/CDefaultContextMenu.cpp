@@ -376,6 +376,9 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
         return hr;
     }
 
+    if (m_site)
+        IUnknown_SetSite(pcm, m_site);
+
     PDynamicShellEntry pEntry = (DynamicShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DynamicShellEntry));
     if (!pEntry)
         return E_OUTOFMEMORY;
