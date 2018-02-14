@@ -126,6 +126,10 @@ WINAPI
 CDefViewBckgrndMenu::SetSite(IUnknown *pUnkSite)
 {
     m_site = pUnkSite;
+
+    if(m_folderCM)
+        IUnknown_SetSite(m_folderCM, pUnkSite);
+
     return S_OK;
 }
 
@@ -212,13 +216,24 @@ WINAPI
 CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     UINT idCmd = LOWORD(lpcmi->lpVerb);
-    if(HIWORD(lpcmi->lpVerb) != 0 || idCmd < m_LastFolderCMId)
+
+    if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, CMDSTR_VIEWLISTA))
+    {
+        idCmd = FCIDM_SHVIEW_LISTVIEW;
+    }
+    else if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, CMDSTR_VIEWDETAILSA))
+    {
+        idCmd = FCIDM_SHVIEW_REPORTVIEW;
+    }
+    else if(HIWORD(lpcmi->lpVerb) != 0 || idCmd < m_LastFolderCMId)
     {
         return m_folderCM->InvokeCommand(lpcmi);
     }
-
-    /* The default part of the background menu doesn't have shifted ids so we need to convert the id offset to the real id */
-    idCmd += m_idCmdFirst;
+    else
+    {
+        /* The default part of the background menu doesn't have shifted ids so we need to convert the id offset to the real id */
+        idCmd += m_idCmdFirst;
+    }
 
     /* The commands that are handled by the def view are forwarded to it */
     switch (idCmd)

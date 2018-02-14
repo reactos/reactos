@@ -47,9 +47,7 @@ struct _StaticInvokeCommandMap_
     { "Print", 0 },  // Unimplemented
     { "Preview", 0 }, // Unimplemented
     { "Open", FCIDM_SHVIEW_OPEN },
-    { CMDSTR_NEWFOLDERA, FCIDM_SHVIEW_NEWFOLDER },
-    { CMDSTR_VIEWLISTA, FCIDM_SHVIEW_LISTVIEW },
-    { CMDSTR_VIEWDETAILSA, FCIDM_SHVIEW_REPORTVIEW }
+    { CMDSTR_NEWFOLDERA, FCIDM_SHVIEW_NEWFOLDER }
 };
 
 

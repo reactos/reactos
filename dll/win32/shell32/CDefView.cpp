@@ -1110,8 +1110,6 @@ HRESULT CDefView::FillFileMenu()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    IUnknown_SetSite(m_pCM, (IShellView *)this);
-
     HMENU hmenu = CreatePopupMenu();
 
     hr = m_pCM->QueryContextMenu(hmenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, 0);
@@ -1274,8 +1272,6 @@ HRESULT CDefView::OpenSelectedItems()
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
 
-    IUnknown_SetSite(m_pCM, (IShellView *)this);
-
     hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_DEFAULTONLY);
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
@@ -1327,8 +1323,6 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
 
-    IUnknown_SetSite(m_pCM, (IShellView *)this);
-
     /* Use 1 as the first id as we want 0 the mean that the user canceled the menu */
     hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, FCIDM_SHVIEWLAST, CMF_NORMAL);
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -1373,8 +1367,6 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
     hResult = GetItemObject( bUseSelection ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pCM));
     if (FAILED_UNEXPECTEDLY( hResult))
         goto cleanup;
-
-    IUnknown_SetSite(m_pCM, (IShellView *)this);
 
     hResult = m_pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
     if (FAILED_UNEXPECTEDLY( hResult))
@@ -2286,6 +2278,7 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
 
+                IUnknown_SetSite(*((IUnknown**)ppvOut), (IShellView *)this);
             }
             else if (IsEqualIID(riid, IID_IDispatch))
             {
@@ -2304,6 +2297,10 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
             hr = m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, m_apidl, riid, 0, ppvOut);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
+
+            if (IsEqualIID(riid, IID_IContextMenu))
+                IUnknown_SetSite(*((IUnknown**)ppvOut), (IShellView *)this);
+
             break;
     }
 
