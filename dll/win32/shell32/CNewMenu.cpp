@@ -404,7 +404,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::FindItemFromIdOffset(UINT IdOffset)
     return pItem;
 }
 
-HRESULT CNewMenu::SelectNewItem(LPCMINVOKECOMMANDINFO lpici, LONG wEventId, UINT uFlags, LPWSTR pszName)
+HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName)
 {
     CComPtr<IShellBrowser> lpSB;
     CComPtr<IShellView> lpSV;
@@ -415,16 +415,13 @@ HRESULT CNewMenu::SelectNewItem(LPCMINVOKECOMMANDINFO lpici, LONG wEventId, UINT
     /* Notify the view object about the new item */
     SHChangeNotify(wEventId, uFlags, (LPCVOID) pszName, NULL);
 
-    /* FIXME: I think that this can be implemented using callbacks to the shell folder */
+    if (!m_pSite)
+        return S_OK;
 
-    /* Note: CWM_GETISHELLBROWSER returns shell browser without adding reference */
-    lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-    if (!lpSB)
-        return E_FAIL;
-
-    hr = lpSB->QueryActiveShellView(&lpSV);
-    if (FAILED(hr))
-        return hr;
+    /* Get a pointer to the shell view */
+    hr = IUnknown_QueryService(m_pSite, SID_IFolderView, IID_PPV_ARG(IShellView, &lpSV));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return S_OK;
 
     /* Attempt to get the pidl of the new item */
     hr = SHILCreateFromPathW(pszName, &pidl, NULL);
@@ -466,7 +463,7 @@ HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
         return E_FAIL;
 
     /* Show and select the new item in the def view */
-    SelectNewItem(lpici, SHCNE_MKDIR, SHCNF_PATHW, wszName);
+    SelectNewItem(SHCNE_MKDIR, SHCNF_PATHW, wszName);
 
     return S_OK;
 }
@@ -572,7 +569,7 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             if (bSuccess)
             {
                 TRACE("Notifying fs %s\n", debugstr_w(wszName));
-                SelectNewItem(lpcmi, SHCNE_CREATE, SHCNF_PATHW, wszName);
+                SelectNewItem(SHCNE_CREATE, SHCNF_PATHW, wszName);
             }
             else
             {
