@@ -45,6 +45,8 @@
 #include <ndk/setypes.h>
 #include <ndk/umfuncs.h>
 
+#include <ntstrsafe.h>
+
 /* CSRSS Headers */
 #include <csr/csr.h>
 #include <win/base.h>
