@@ -158,17 +158,20 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PFILE_OBJECT FileObject;
     PDEVICE_OBJECT DeviceObject;
     LARGE_INTEGER StartingOffset;
-    IO_STATUS_BLOCK IoStatusBlock;
     PULONG PartitionBuffer = NULL;
+    IO_STATUS_BLOCK IoStatusBlock;
     CHAR Buffer[128], ArcBuffer[128];
     BOOLEAN NotEnabledPresent = FALSE;
     STORAGE_DEVICE_NUMBER DeviceNumber;
+    PARC_DISK_SIGNATURE ArcDiskSignature;
     ANSI_STRING DeviceStringA, ArcNameStringA;
     PWSTR SymbolicLinkList, lSymbolicLinkList;
-    PARC_DISK_SIGNATURE ArcDiskSignature = NULL;
     UNICODE_STRING DeviceStringW, ArcNameStringW;
     ULONG DiskNumber, CdRomCount, CheckSum, i, EnabledDisks = 0;
     PARC_DISK_INFORMATION ArcDiskInformation = LoaderBlock->ArcDiskInformation;
+
+    /* Initialise device number */
+    DeviceNumber.DeviceNumber = ULONG_MAX;
 
     /* Get all the Cds present in the system */
     CdRomCount = IoGetConfigurationInformation()->CdRomCount;
@@ -273,10 +276,12 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
                 Status = IoStatusBlock.Status;
             }
+
+            /* If we didn't get the appriopriate data, just skip that disk */
             if (!NT_SUCCESS(Status))
             {
                 ObDereferenceObject(FileObject);
-                goto Cleanup;
+                continue;
             }
 
             /* End of enabled disks enumeration */
@@ -326,9 +331,8 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             continue;
         }
 
-        /* Initiate data for reading cd and compute checksum */
+        /* Read a sector for computing checksum */
         StartingOffset.QuadPart = 0x8000;
-        CheckSum = 0;
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
                                            DeviceObject,
                                            PartitionBuffer,
@@ -336,29 +340,35 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                            &StartingOffset,
                                            &Event,
                                            &IoStatusBlock);
-        if (Irp)
+        if (!Irp)
         {
-            /* Call the driver, and wait for it if needed */
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            Status = IoCallDriver(DeviceObject, Irp);
-            if (Status == STATUS_PENDING)
-            {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = IoStatusBlock.Status;
-            }
+            ObDereferenceObject(FileObject);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
+        }
 
-            /* Reading succeed, compute checksum by adding data, 2048 bytes checksum */
-            if (NT_SUCCESS(Status))
-            {
-                for (i = 0; i < 2048 / sizeof(ULONG); i++)
-                {
-                    CheckSum += PartitionBuffer[i];
-                }
-            }
+        /* Call the driver to perform reading */
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
+        Status = IoCallDriver(DeviceObject, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            Status = IoStatusBlock.Status;
+        }
+        if (!NT_SUCCESS(Status))
+        {
+            ObDereferenceObject(FileObject);
+            continue;
         }
 
         /* Dereference file object */
         ObDereferenceObject(FileObject);
+
+        /* Calculate checksum, that's an easy computation, just adds read data */
+        for (i = 0, CheckSum = 0; i < 2048 / sizeof(ULONG) ; i++)
+        {
+            CheckSum += PartitionBuffer[i];
+        }
 
         /* Browse each ARC disk */
         for (NextEntry = ArcDiskInformation->DiskSignatureListHead.Flink;
@@ -412,9 +422,9 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                    table */
                 if ((ArcDiskSignature->CheckSum + CheckSum != 0) &&
                     ArcDiskSignature->ValidPartitionTable)
-                {
-                    DPRINT("Be careful, or you have a duplicate disk signature, or a virus altered your MBR!\n");
-                }
+                 {
+                     DPRINT("Be careful, or you have a duplicate disk signature, or a virus altered your MBR!\n");
+                 }
             }
         }
     }
@@ -422,14 +432,14 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Status = STATUS_SUCCESS;
 
 Cleanup:
-    if (PartitionBuffer)
-    {
-        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
-    }
-
     if (SymbolicLinkList)
     {
         ExFreePool(SymbolicLinkList);
+    }
+
+    if (PartitionBuffer)
+    {
+        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
     }
 
     return Status;
@@ -552,8 +562,8 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 /* If we didn't get the appriopriate data, just skip that disk */
                 if (!NT_SUCCESS(Status))
                 {
-                   ObDereferenceObject(FileObject);
-                   continue;
+                    ObDereferenceObject(FileObject);
+                    continue;
                 }
             }
 
