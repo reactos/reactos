@@ -56,8 +56,6 @@ enum
     RXactSetValueKey = 2,
 };
 
-#define ALIGN_UP_BY ROUND_UP
-
 /* FUNCTIONS *****************************************************************/
 
 static
