@@ -404,7 +404,7 @@ GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
     PVOID hMapped;
     ULONG Ordinal = 0;
 
-    if (HIWORD(lpProcName) != 0)
+    if ((ULONG_PTR)lpProcName > MAXUSHORT)
     {
         /* Look up by name */
         RtlInitAnsiString(&ProcedureName, (LPSTR)lpProcName);
@@ -413,7 +413,7 @@ GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
     else
     {
         /* Look up by ordinal */
-        Ordinal = (ULONG)lpProcName;
+        Ordinal = PtrToUlong(lpProcName);
     }
 
     /* Map provided handle */

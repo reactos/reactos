@@ -118,7 +118,7 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
                         IN LPVOID Environment)
 {
     PWCHAR PathBuffer, Buffer, AppNameEnd, PathCurrent;
-    ULONG PathLengthInBytes;
+    SIZE_T PathLengthInBytes;
     NTSTATUS Status;
     UNICODE_STRING EnvPath;
     PBASE_SEARCH_PATH_TYPE Order;
@@ -1040,7 +1040,7 @@ GetFullPathNameA(IN LPCSTR lpFileName,
                 /* Yep, so in this case get the length of the file part too */
                 Status = RtlUnicodeToMultiByteSize(&FilePartSize,
                                                    Buffer,
-                                                   (LocalFilePart - Buffer) *
+                                                   (ULONG)(LocalFilePart - Buffer) *
                                                    sizeof(WCHAR));
                 if (!NT_SUCCESS(Status))
                 {
@@ -1231,7 +1231,7 @@ SearchPathA(IN LPCSTR lpPath OPTIONAL,
                 /* Yep, so in this case get the length of the file part too */
                 Status = RtlUnicodeToMultiByteSize(&FilePartSize,
                                                    Buffer,
-                                                   (LocalFilePart - Buffer) *
+                                                   (ULONG)(LocalFilePart - Buffer) *
                                                    sizeof(WCHAR));
                 if (!NT_SUCCESS(Status))
                 {
@@ -1302,7 +1302,8 @@ SearchPathW(IN LPCWSTR lpPath OPTIONAL,
             OUT LPWSTR *lpFilePart OPTIONAL)
 {
     UNICODE_STRING FileNameString, ExtensionString, PathString, CallerBuffer;
-    ULONG Flags, LengthNeeded, FilePartSize;
+    ULONG Flags;
+    SIZE_T LengthNeeded, FilePartSize;
     NTSTATUS Status;
     DWORD Result = 0;
 
@@ -1456,10 +1457,9 @@ GetLongPathNameW(IN LPCWSTR lpszShortPath,
                  IN DWORD cchBuffer)
 {
     PWCHAR Path, Original, First, Last, Buffer, Src, Dst;
-    ULONG Length;
+    SIZE_T Length, ReturnLength;
     WCHAR LastChar;
     HANDLE FindHandle;
-    DWORD ReturnLength;
     ULONG ErrorMode;
     BOOLEAN Found = FALSE;
     WIN32_FIND_DATAW FindFileData;
@@ -1834,10 +1834,9 @@ GetShortPathNameW(IN LPCWSTR lpszLongPath,
                   IN DWORD cchBuffer)
 {
     PWCHAR Path, Original, First, Last, Buffer, Src, Dst;
-    ULONG Length;
+    SIZE_T Length, ReturnLength;
     WCHAR LastChar;
     HANDLE FindHandle;
-    DWORD ReturnLength;
     ULONG ErrorMode;
     BOOLEAN Found = FALSE;
     WIN32_FIND_DATAW FindFileData;
