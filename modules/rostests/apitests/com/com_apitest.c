@@ -413,8 +413,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
 
     { ID_NAME(IID_IQueryContinue)                    },
     { ID_NAME(IID_IUserNotification)                 },
-//  { ID_NAME(IID_IUserNotificationCallback)         }, // On Vista+
-//  { ID_NAME(IID_IUserNotification2)                }, // On Vista+
+    { ID_NAME(IID_IUserNotificationCallback)         }, // On Vista+
+    { ID_NAME(IID_IUserNotification2)                }, // On Vista+
 
     { ID_NAME(IID_IAggregateFilterCondition),   TRUE },
     { ID_NAME(IID_IAliasRegistrationCallback),  TRUE },
