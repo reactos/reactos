@@ -160,11 +160,10 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     LARGE_INTEGER StartingOffset;
     PULONG PartitionBuffer = NULL;
     IO_STATUS_BLOCK IoStatusBlock;
-    CHAR Buffer[128], ArcBuffer[128];
+    WCHAR Buffer[128], ArcBuffer[128];
     BOOLEAN NotEnabledPresent = FALSE;
     STORAGE_DEVICE_NUMBER DeviceNumber;
     PARC_DISK_SIGNATURE ArcDiskSignature;
-    ANSI_STRING DeviceStringA, ArcNameStringA;
     PWSTR SymbolicLinkList, lSymbolicLinkList;
     UNICODE_STRING DeviceStringW, ArcNameStringW;
     ULONG DiskNumber, CdRomCount, CheckSum, i, EnabledDisks = 0;
@@ -306,13 +305,16 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         else
         {
             /* Create device name for the cd */
-            sprintf(Buffer, "\\Device\\CdRom%lu", EnabledDisks++);
-            RtlInitAnsiString(&DeviceStringA, Buffer);
-            Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
-            if (!NT_SUCCESS(Status))
+            Status = RtlStringCchPrintfW(Buffer,
+                                         ARRAYSIZE(Buffer),
+                                         L"\\Device\\CdRom%lu",
+                                         EnabledDisks++);
+            if (!NT_VERIFY(NT_SUCCESS(Status)))
             {
                 goto Cleanup;
             }
+
+            RtlInitUnicodeString(&DeviceStringW, Buffer);
 
             /* Get its device object */
             Status = IoGetDeviceObjectPointer(&DeviceStringW,
@@ -320,7 +322,6 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                               &FileObject,
                                               &DeviceObject);
 
-            RtlFreeUnicodeString(&DeviceStringW);
             /* This is a security measure, to ensure DiskNumber will be used */
             DeviceNumber.DeviceNumber = ULONG_MAX;
         }
@@ -389,30 +390,32 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             if (ArcDiskSignature->CheckSum + CheckSum == 0)
             {
                 /* Create device name */
-                sprintf(Buffer, "\\Device\\CdRom%lu", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
-                RtlInitAnsiString(&DeviceStringA, Buffer);
-                Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
-                if (!NT_SUCCESS(Status))
+                Status = RtlStringCchPrintfW(Buffer,
+                                             ARRAYSIZE(Buffer),
+                                             L"\\Device\\CdRom%lu",
+                                             (DeviceNumber.DeviceNumber != ULONG_MAX) ? 
+                                                 DeviceNumber.DeviceNumber : DiskNumber);
+                if (!NT_VERIFY(NT_SUCCESS(Status)))
                 {
                     goto Cleanup;
                 }
 
+                RtlInitUnicodeString(&DeviceStringW, Buffer);
+
                 /* Create ARC name */
-                sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskSignature->ArcName);
-                RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
-                Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
-                if (!NT_SUCCESS(Status))
+                Status = RtlStringCchPrintfW(ArcBuffer,
+                                             ARRAYSIZE(ArcBuffer),
+                                             L"\\ArcName\\%hs",
+                                             ArcDiskSignature->ArcName);
+                if (!NT_VERIFY(NT_SUCCESS(Status)))
                 {
-                    RtlFreeUnicodeString(&DeviceStringW);
                     goto Cleanup;
                 }
+
+                RtlInitUnicodeString(&ArcNameStringW, ArcBuffer);
 
                 /* Link both */
                 IoAssignArcName(&ArcNameStringW, &DeviceStringW);
-
-                /* And release resources */
-                RtlFreeUnicodeString(&ArcNameStringW);
-                RtlFreeUnicodeString(&DeviceStringW);
             }
             else
             {
@@ -463,7 +466,8 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     LARGE_INTEGER StartingOffset;
     PULONG PartitionBuffer = NULL;
     IO_STATUS_BLOCK IoStatusBlock;
-    CHAR Buffer[128], ArcBuffer[128];
+    CHAR ArcBufferA[128];
+    WCHAR Buffer[128], ArcBuffer[128];
     BOOLEAN NotEnabledPresent = FALSE;
     STORAGE_DEVICE_NUMBER DeviceNumber;
     PARC_DISK_SIGNATURE ArcDiskSignature;
@@ -472,7 +476,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     UNICODE_STRING DeviceStringW, ArcNameStringW, HalPathStringW;
     ULONG DiskNumber, DiskCount, CheckSum, i, Signature, EnabledDisks = 0;
     PARC_DISK_INFORMATION ArcDiskInformation = LoaderBlock->ArcDiskInformation;
-    ANSI_STRING ArcBootString, ArcSystemString, DeviceStringA, ArcNameStringA, HalPathStringA;
+    ANSI_STRING ArcBootString, ArcSystemString, ArcNameStringA, HalPathStringA;
 
     /* Initialise device number */
     DeviceNumber.DeviceNumber = ULONG_MAX;
@@ -589,13 +593,16 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         else
         {
             /* Create device name for the disk */
-            sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", DiskNumber);
-            RtlInitAnsiString(&DeviceStringA, Buffer);
-            Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
-            if (!NT_SUCCESS(Status))
+            Status = RtlStringCchPrintfW(Buffer,
+                                         ARRAYSIZE(Buffer),
+                                         L"\\Device\\Harddisk%lu\\Partition0",
+                                         DiskNumber);
+            if (!NT_VERIFY(NT_SUCCESS(Status)))
             {
                 goto Cleanup;
             }
+
+            RtlInitUnicodeString(&DeviceStringW, Buffer);
 
             /* Get its device object */
             Status = IoGetDeviceObjectPointer(&DeviceStringW,
@@ -603,7 +610,6 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                               &FileObject,
                                               &DeviceObject);
 
-            RtlFreeUnicodeString(&DeviceStringW);
             /* This is a security measure, to ensure DiskNumber will be used */
             DeviceNumber.DeviceNumber = ULONG_MAX;
         }
@@ -741,46 +747,53 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
             {
                 /* Create device name */
-                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
-                RtlInitAnsiString(&DeviceStringA, Buffer);
-                Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
-                if (!NT_SUCCESS(Status))
+                Status = RtlStringCchPrintfW(Buffer,
+                                             ARRAYSIZE(Buffer),
+                                             L"\\Device\\Harddisk%lu\\Partition0",
+                                             (DeviceNumber.DeviceNumber != ULONG_MAX) ? 
+                                                 DeviceNumber.DeviceNumber : DiskNumber);
+                if (!NT_VERIFY(NT_SUCCESS(Status)))
                 {
                     goto Cleanup;
                 }
 
+                RtlInitUnicodeString(&DeviceStringW, Buffer);
+
                 /* Create ARC name */
-                sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskSignature->ArcName);
-                RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
-                Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
-                if (!NT_SUCCESS(Status))
+                Status = RtlStringCchPrintfW(ArcBuffer,
+                                             ARRAYSIZE(ArcBuffer),
+                                             L"\\ArcName\\%hs",
+                                             ArcDiskSignature->ArcName);
+                if (!NT_VERIFY(NT_SUCCESS(Status)))
                 {
-                    RtlFreeUnicodeString(&DeviceStringW);
                     goto Cleanup;
                 }
+
+                RtlInitUnicodeString(&ArcNameStringW, ArcBuffer);
 
                 /* Link both */
                 IoAssignArcName(&ArcNameStringW, &DeviceStringW);
-
-                /* And release resources */
-                RtlFreeUnicodeString(&ArcNameStringW);
-                RtlFreeUnicodeString(&DeviceStringW);
 
                 /* Now, browse for every partition */
                 for (i = 1; i <= DriveLayout->PartitionCount; i++)
                 {
                     /* Create device name */
-                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
-                    RtlInitAnsiString(&DeviceStringA, Buffer);
-                    Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
-                    if (!NT_SUCCESS(Status))
+                    Status = RtlStringCchPrintfW(Buffer,
+                                                 ARRAYSIZE(Buffer),
+                                                 L"\\Device\\Harddisk%lu\\Partition%lu",
+                                                 (DeviceNumber.DeviceNumber != ULONG_MAX) ? 
+                                                     DeviceNumber.DeviceNumber : DiskNumber,
+                                                 i);
+                    if (!NT_VERIFY(NT_SUCCESS(Status)))
                     {
                         goto Cleanup;
                     }
 
+                    RtlInitUnicodeString(&DeviceStringW, Buffer);
+
                     /* Create partial ARC name */
-                    sprintf(ArcBuffer, "%spartition(%lu)", ArcDiskSignature->ArcName, i);
-                    RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
+                    sprintf(ArcBufferA, "%spartition(%lu)", ArcDiskSignature->ArcName, i);
+                    RtlInitAnsiString(&ArcNameStringA, ArcBufferA);
 
                     /* Is that boot device? */
                     if (RtlEqualString(&ArcNameStringA, &ArcBootString, TRUE))
@@ -797,7 +810,6 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                         Status = RtlAnsiStringToUnicodeString(&HalPathStringW, &HalPathStringA, TRUE);
                         if (!NT_SUCCESS(Status))
                         {
-                            RtlFreeUnicodeString(&DeviceStringW);
                             goto Cleanup;
                         }
 
@@ -807,21 +819,20 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     }
 
                     /* Create complete ARC name */
-                    sprintf(ArcBuffer, "\\ArcName\\%spartition(%lu)", ArcDiskSignature->ArcName, i);
-                    RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
-                    Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
-                    if (!NT_SUCCESS(Status))
+                    Status = RtlStringCchPrintfW(ArcBuffer,
+                                                 ARRAYSIZE(ArcBuffer),
+                                                 L"\\ArcName\\%hspartition(%lu)",
+                                                 ArcDiskSignature->ArcName,
+                                                 i);
+                    if (!NT_VERIFY(NT_SUCCESS(Status)))
                     {
-                        RtlFreeUnicodeString(&DeviceStringW);
                         goto Cleanup;
                     }
 
+                    RtlInitUnicodeString(&ArcNameStringW, ArcBuffer);
+
                     /* Link device name & ARC name */
                     IoAssignArcName(&ArcNameStringW, &DeviceStringW);
-
-                    /* Release strings */
-                    RtlFreeUnicodeString(&ArcNameStringW);
-                    RtlFreeUnicodeString(&DeviceStringW);
                 }
             }
             else
