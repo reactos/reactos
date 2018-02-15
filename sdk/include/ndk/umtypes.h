@@ -73,17 +73,29 @@ Author:
 //
 // Alignment Macros
 //
-#define ALIGN_DOWN(s, t) \
-    ((ULONG)(s) & ~(sizeof(t) - 1))
+#define ALIGN_DOWN_BY(size, align) \
+    ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))
 
-#define ALIGN_UP(s, t) \
-    (ALIGN_DOWN(((ULONG)(s) + sizeof(t) - 1), t))
+#define ALIGN_UP_BY(size, align) \
+    (ALIGN_DOWN_BY(((ULONG_PTR)(size) + align - 1), align))
 
-#define ALIGN_DOWN_POINTER(p, t) \
-    ((PVOID)((ULONG_PTR)(p) & ~((ULONG_PTR)sizeof(t) - 1)))
+#define ALIGN_DOWN_POINTER_BY(ptr, align) \
+    ((PVOID)ALIGN_DOWN_BY(ptr, align))
 
-#define ALIGN_UP_POINTER(p, t) \
-    (ALIGN_DOWN_POINTER(((ULONG_PTR)(p) + sizeof(t) - 1), t))
+#define ALIGN_UP_POINTER_BY(ptr, align) \
+    ((PVOID)ALIGN_UP_BY(ptr, align))
+
+#define ALIGN_DOWN(size, type) \
+    ALIGN_DOWN_BY(size, sizeof(type))
+
+#define ALIGN_UP(size, type) \
+    ALIGN_UP_BY(size, sizeof(type))
+
+#define ALIGN_DOWN_POINTER(ptr, type) \
+    ALIGN_DOWN_POINTER_BY(ptr, sizeof(type))
+
+#define ALIGN_UP_POINTER(ptr, type) \
+    ALIGN_UP_POINTER_BY(ptr, sizeof(type))
 
 //
 // Native API Return Value Macros
