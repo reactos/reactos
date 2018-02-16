@@ -25,18 +25,24 @@
 
 class CFSDropTarget :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IDropTarget
+    public IDropTarget,
+    public IObjectWithSite
 {
     private:
         UINT cfShellIDList;    /* clipboardformat for IDropTarget */
         BOOL fAcceptFmt;       /* flag for pending Drop */
         LPWSTR sPathTarget;
+        HWND m_hwndSite;
+        DWORD m_grfKeyState;
+        CComPtr<IUnknown> m_site;
 
         BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
         virtual HRESULT WINAPI _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
         virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
         BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
         static DWORD WINAPI _DoDropThreadProc(LPVOID lpParameter);
+        HRESULT _GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect);
+        HRESULT _RepositionItems(IShellFolderView *psfv, IDataObject *pDataObject, POINTL pt);
 
     public:
         CFSDropTarget();
@@ -49,12 +55,17 @@ class CFSDropTarget :
         virtual HRESULT WINAPI DragLeave();
         virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
 
+        // IObjectWithSite
+        virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
+        virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+
         DECLARE_NOT_AGGREGATABLE(CFSDropTarget)
 
         DECLARE_PROTECT_FINAL_CONSTRUCT()
 
         BEGIN_COM_MAP(CFSDropTarget)
         COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
         END_COM_MAP()
 
 };
