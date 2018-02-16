@@ -685,6 +685,44 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
 }
 
 BOOLEAN
+InsertInBootDriverList(
+    LIST_ENTRY *BootDriverListHead,
+    PBOOT_DRIVER_LIST_ENTRY BootDriverEntry)
+{
+    PBOOT_DRIVER_LIST_ENTRY DriverEntry;
+    PLIST_ENTRY ListEntry;
+
+    for (ListEntry = BootDriverListHead->Flink;
+         ListEntry != BootDriverListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        DriverEntry = CONTAINING_RECORD(ListEntry,
+                                        BOOT_DRIVER_LIST_ENTRY,
+                                        Link);
+        if ((BootDriverEntry->FilePath.Buffer != NULL) &&
+            (DriverEntry->FilePath.Buffer != NULL) &&
+            RtlEqualUnicodeString(&BootDriverEntry->FilePath,
+                                  &DriverEntry->FilePath,
+                                  TRUE))
+        {
+            return FALSE;
+        }
+
+        if ((BootDriverEntry->RegistryPath.Buffer != NULL) &&
+            (DriverEntry->RegistryPath.Buffer != NULL) &&
+            RtlEqualUnicodeString(&BootDriverEntry->RegistryPath,
+                                  &DriverEntry->RegistryPath,
+                                  TRUE))
+        {
+            return FALSE;
+        }
+    }
+
+    InsertTailList(BootDriverListHead, &BootDriverEntry->Link);
+    return TRUE;
+}
+
+BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
                       LPWSTR RegistryPath,
                       LPWSTR ImagePath,
@@ -782,8 +820,14 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    // Insert entry at top of the list
-    InsertTailList(BootDriverListHead, &BootDriverEntry->Link);
+    // Insert entry into the list 
+    if (!InsertInBootDriverList(BootDriverListHead, BootDriverEntry))
+    {
+        // It was already there, so delete our entry
+        if (BootDriverEntry->FilePath.Buffer) FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
+        if (BootDriverEntry->RegistryPath.Buffer) FrLdrHeapFree(BootDriverEntry->RegistryPath.Buffer, TAG_WLDR_NAME);
+        //FrLdrHeapFree(BootDriverEntry, TAG_WLDR_NAME);
+    }
 
     return TRUE;
 }
