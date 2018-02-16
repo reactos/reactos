@@ -1272,6 +1272,11 @@ typedef enum _FILE_INFORMATION_CLASS {
   FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
+typedef enum _DIRECTORY_NOTIFY_INFORMATION_CLASS {
+  DirectoryNotifyInformation = 1,
+  DirectoryNotifyExtendedInformation
+} DIRECTORY_NOTIFY_INFORMATION_CLASS, *PDIRECTORY_NOTIFY_INFORMATION_CLASS;
+
 typedef struct _FILE_POSITION_INFORMATION {
   LARGE_INTEGER CurrentByteOffset;
 } FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
@@ -2755,6 +2760,20 @@ typedef struct _IO_STACK_LOCATION {
       ULONG POINTER_ALIGNMENT EaLength;
     } Create;
     struct {
+      struct _IO_SECURITY_CONTEXT *SecurityContext;
+      ULONG Options;
+      USHORT POINTER_ALIGNMENT Reserved;
+      USHORT ShareAccess;
+      struct _NAMED_PIPE_CREATE_PARAMETERS *Parameters;
+    } CreatePipe;
+    struct {
+      PIO_SECURITY_CONTEXT SecurityContext;
+      ULONG Options;
+      USHORT POINTER_ALIGNMENT Reserved;
+      USHORT ShareAccess;
+      struct _MAILSLOT_CREATE_PARAMETERS *Parameters;
+    } CreateMailslot;
+    struct {
       ULONG Length;
       ULONG POINTER_ALIGNMENT Key;
       LARGE_INTEGER ByteOffset;
@@ -2768,12 +2787,17 @@ typedef struct _IO_STACK_LOCATION {
       ULONG Length;
       PUNICODE_STRING FileName;
       FILE_INFORMATION_CLASS FileInformationClass;
-      ULONG FileIndex;
+      ULONG POINTER_ALIGNMENT FileIndex;
     } QueryDirectory;
     struct {
       ULONG Length;
-      ULONG CompletionFilter;
+      ULONG POINTER_ALIGNMENT CompletionFilter;
     } NotifyDirectory;
+    struct {
+      ULONG Length;
+      ULONG POINTER_ALIGNMENT CompletionFilter;
+      DIRECTORY_NOTIFY_INFORMATION_CLASS POINTER_ALIGNMENT DirectoryNotifyInformationClass;
+    } NotifyDirectoryEx;
     struct {
       ULONG Length;
       FILE_INFORMATION_CLASS POINTER_ALIGNMENT FileInformationClass;
@@ -2795,7 +2819,7 @@ typedef struct _IO_STACK_LOCATION {
       ULONG Length;
       PVOID EaList;
       ULONG EaListLength;
-      ULONG EaIndex;
+      ULONG POINTER_ALIGNMENT EaIndex;
     } QueryEa;
     struct {
       ULONG Length;
@@ -2806,7 +2830,7 @@ typedef struct _IO_STACK_LOCATION {
     } QueryVolume;
     struct {
       ULONG Length;
-      FS_INFORMATION_CLASS FsInformationClass;
+      FS_INFORMATION_CLASS POINTER_ALIGNMENT FsInformationClass;
     } SetVolume;
     struct {
       ULONG OutputBufferLength;
@@ -2816,7 +2840,7 @@ typedef struct _IO_STACK_LOCATION {
     } FileSystemControl;
     struct {
       PLARGE_INTEGER Length;
-      ULONG Key;
+      ULONG POINTER_ALIGNMENT Key;
       LARGE_INTEGER ByteOffset;
     } LockControl;
     struct {
@@ -2897,7 +2921,12 @@ typedef struct _IO_STACK_LOCATION {
       PPOWER_SEQUENCE PowerSequence;
     } PowerSequence;
     struct {
-      ULONG SystemContext;
+      union {
+        ULONG SystemContext;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        SYSTEM_POWER_STATE_CONTEXT SystemPowerStateContext;
+#endif // (NTDDI_VERSION >= NTDDI_VISTA)
+      };
       POWER_STATE_TYPE POINTER_ALIGNMENT Type;
       POWER_STATE POINTER_ALIGNMENT State;
       POWER_ACTION POINTER_ALIGNMENT ShutdownType;
