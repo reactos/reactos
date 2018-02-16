@@ -59,26 +59,26 @@ void FormatOutput(UINT uID, ...)
     }
 
     va_start(valist, uID);
-
     DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING, Format, 0, 0, Buf,\
-                  sizeof(Buf) / sizeof(WCHAR), &valist);
+                               sizeof(Buf) / sizeof(WCHAR), &valist);
+    va_end(valist);
 
     if(!DataLength)
     {
         if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         {
-            va_end(valist);
             return;
         }
 
+        va_start(valist, uID);
         DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING |\
                                     FORMAT_MESSAGE_ALLOCATE_BUFFER,\
-                                    Format, 0, 0, (LPWSTR)&pBuf, 0, &valist);
+                                   Format, 0, 0, (LPWSTR)&pBuf, 0, &valist);
+        va_end(valist);
     }
 
     if(!DataLength)
     {
-        va_end(valist);
         return;
     }
 

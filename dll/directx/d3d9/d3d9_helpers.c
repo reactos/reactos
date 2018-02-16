@@ -48,6 +48,7 @@ HRESULT SafeFormatString(OUT LPSTR Buffer, IN DWORD BufferSize, IN LPCSTR Format
 
     va_start(vargs, FormatString);
     BytesWritten = _vsnprintf(Buffer, BufferSize-1, FormatString, vargs);
+    va_end(vargs);
 
     if (BytesWritten < BufferSize)
         return DDERR_GENERIC;
