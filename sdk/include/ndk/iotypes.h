@@ -940,9 +940,6 @@ typedef struct _EXTENDED_DRIVER_EXTENSION
 //
 // Extended I/O Stack Location Structure
 //
-#if !defined(_ALPHA_)
-#include <pshpack4.h>
-#endif
 typedef struct _EXTENDED_IO_STACK_LOCATION
 {
     UCHAR MajorFunction;
@@ -955,15 +952,15 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
         {
             PIO_SECURITY_CONTEXT SecurityContext;
             ULONG Options;
-            USHORT FileAttributes;
+            USHORT POINTER_ALIGNMENT FileAttributes;
             USHORT ShareAccess;
-            ULONG EaLength;
+            ULONG POINTER_ALIGNMENT EaLength;
         } Create;
         struct
         {
             PIO_SECURITY_CONTEXT SecurityContext;
             ULONG Options;
-            USHORT Reserved;
+            USHORT POINTER_ALIGNMENT Reserved;
             USHORT ShareAccess;
             struct _NAMED_PIPE_CREATE_PARAMETERS *Parameters;
         } CreatePipe;
@@ -971,20 +968,20 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
         {
             PIO_SECURITY_CONTEXT SecurityContext;
             ULONG Options;
-            USHORT Reserved;
+            USHORT POINTER_ALIGNMENT Reserved;
             USHORT ShareAccess;
             struct _MAILSLOT_CREATE_PARAMETERS *Parameters;
         } CreateMailslot;
         struct
         {
             ULONG Length;
-            ULONG Key;
+            ULONG POINTER_ALIGNMENT Key;
             LARGE_INTEGER ByteOffset;
         } Read;
         struct
         {
             ULONG Length;
-            ULONG Key;
+            ULONG POINTER_ALIGNMENT Key;
             LARGE_INTEGER ByteOffset;
         } Write;
         struct
@@ -992,23 +989,29 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
             ULONG Length;
             PUNICODE_STRING FileName;
             FILE_INFORMATION_CLASS FileInformationClass;
-            ULONG FileIndex;
+            ULONG POINTER_ALIGNMENT FileIndex;
         } QueryDirectory;
         struct
         {
             ULONG Length;
-            ULONG CompletionFilter;
+            ULONG POINTER_ALIGNMENT CompletionFilter;
         } NotifyDirectory;
         struct
         {
             ULONG Length;
-            FILE_INFORMATION_CLASS FileInformationClass;
+            ULONG POINTER_ALIGNMENT CompletionFilter;
+            enum _DIRECTORY_NOTIFY_INFORMATION_CLASS POINTER_ALIGNMENT DirectoryNotifyInformationClass;
+        } NotifyDirectoryEx;
+        struct
+        {
+            ULONG Length;
+            FILE_INFORMATION_CLASS POINTER_ALIGNMENT FileInformationClass;
         } QueryFile;
         struct
         {
             ULONG Length;
-            FILE_INFORMATION_CLASS FileInformationClass;
-            PFILE_OBJECT  FileObject;
+            FILE_INFORMATION_CLASS POINTER_ALIGNMENT FileInformationClass;
+            PFILE_OBJECT FileObject;
             union
             {
                 struct
@@ -1025,7 +1028,7 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
             ULONG Length;
             PVOID EaList;
             ULONG EaListLength;
-            ULONG EaIndex;
+            ULONG POINTER_ALIGNMENT EaIndex;
         } QueryEa;
         struct
         {
@@ -1034,31 +1037,31 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
         struct
         {
             ULONG Length;
-            FS_INFORMATION_CLASS FsInformationClass;
+            FS_INFORMATION_CLASS POINTER_ALIGNMENT FsInformationClass;
         } QueryVolume;
         struct
         {
             ULONG Length;
-            FS_INFORMATION_CLASS FsInformationClass;
+            FS_INFORMATION_CLASS POINTER_ALIGNMENT FsInformationClass;
         } SetVolume;
         struct
         {
             ULONG OutputBufferLength;
-            ULONG InputBufferLength;
-            ULONG FsControlCode;
+            ULONG POINTER_ALIGNMENT InputBufferLength;
+            ULONG POINTER_ALIGNMENT FsControlCode;
             PVOID Type3InputBuffer;
         } FileSystemControl;
         struct
         {
             PLARGE_INTEGER Length;
-            ULONG Key;
+            ULONG POINTER_ALIGNMENT Key;
             LARGE_INTEGER ByteOffset;
         } LockControl;
         struct
         {
             ULONG OutputBufferLength;
-            ULONG InputBufferLength;
-            ULONG IoControlCode;
+            ULONG POINTER_ALIGNMENT InputBufferLength;
+            ULONG POINTER_ALIGNMENT IoControlCode;
             PVOID Type3InputBuffer;
         } DeviceIoControl;
         struct
@@ -1121,7 +1124,7 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
             ULONG WhichSpace;
             PVOID Buffer;
             ULONG Offset;
-            ULONG Length;
+            ULONG POINTER_ALIGNMENT Length;
         } ReadWriteConfig;
         struct
         {
@@ -1134,28 +1137,34 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
         struct
         {
             DEVICE_TEXT_TYPE DeviceTextType;
-            LCID LocaleId;
+            LCID POINTER_ALIGNMENT LocaleId;
         } QueryDeviceText;
         struct
         {
             BOOLEAN InPath;
             BOOLEAN Reserved[3];
-            DEVICE_USAGE_NOTIFICATION_TYPE Type;
+            DEVICE_USAGE_NOTIFICATION_TYPE POINTER_ALIGNMENT Type;
         } UsageNotification;
         struct
         {
-            SYSTEM_POWER_STATE  PowerState;
+            SYSTEM_POWER_STATE PowerState;
         } WaitWake;
         struct
         {
-            PPOWER_SEQUENCE  PowerSequence;
+            PPOWER_SEQUENCE PowerSequence;
         } PowerSequence;
         struct
         {
-            ULONG SystemContext;
-            POWER_STATE_TYPE Type;
-            POWER_STATE State;
-            POWER_ACTION ShutdownType;
+            union
+            {
+                ULONG SystemContext;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+                SYSTEM_POWER_STATE_CONTEXT SystemPowerStateContext;
+#endif // (NTDDI_VERSION >= NTDDI_VISTA)
+            };
+            POWER_STATE_TYPE POINTER_ALIGNMENT Type;
+            POWER_STATE POINTER_ALIGNMENT State;
+            POWER_ACTION POINTER_ALIGNMENT ShutdownType;
         } Power;
         struct
         {
@@ -1182,9 +1191,6 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
     PIO_COMPLETION_ROUTINE CompletionRoutine;
     PVOID Context;
 } EXTENDED_IO_STACK_LOCATION, *PEXTENDED_IO_STACK_LOCATION;
-#if !defined(_ALPHA_)
-#include <poppack.h>
-#endif
 #endif
 
 //
