@@ -18,25 +18,25 @@ HKCR
 			}
 			val AppID = s '{0010890E-8789-413C-ADBC-48F5B511B3AF}'
 		}
-		NoRemove Interface
+	}
+	NoRemove Interface
+	{
+		ForceRemove {7307055C-B24A-486B-9F25-163E597A28A9} = s 'IQueryContinue'
 		{
-			ForceRemove {7307055C-B24A-486B-9F25-163E597A28A9} = s 'IQueryContinue'
+			NumMethods = s '4'
 			{
-				NumMethods = s '4'
-				{
-				}
-				ProxyStubClsid32 = s '{B8DA6310-E19B-11D0-933C-00A0C90DCAA9}'
-				{
-				}
 			}
-			ForceRemove {BA9711BA-5893-4787-A7E1-41277151550B} = s 'IUserNotification'
+			ProxyStubClsid32 = s '{B8DA6310-E19B-11D0-933C-00A0C90DCAA9}'
 			{
-				NumMethods = s '8'
-				{
-				}
-				ProxyStubClsid32 = s '{B8DA6310-E19B-11D0-933C-00A0C90DCAA9}'
-				{
-				}
+			}
+		}
+		ForceRemove {BA9711BA-5893-4787-A7E1-41277151550B} = s 'IUserNotification'
+		{
+			NumMethods = s '8'
+			{
+			}
+			ProxyStubClsid32 = s '{B8DA6310-E19B-11D0-933C-00A0C90DCAA9}'
+			{
 			}
 		}
 	}
