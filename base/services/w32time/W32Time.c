@@ -167,9 +167,9 @@ SetTime(VOID)
     DWORD dwIndex = 0;
     DWORD dwValSize;
     WCHAR szValName[MAX_VALUE_NAME];
-    WCHAR szData[256];
+    WCHAR szData[MAX_VALUE_NAME];
     DWORD cbName = sizeof(szData);
-    WCHAR szDefault[256] = L"";
+    WCHAR szDefault[MAX_VALUE_NAME] = L"";
     size_t Size;
 
 DPRINT1("Entered SetTime().\n");
@@ -199,7 +199,7 @@ DPRINT1("Entered SetTime().\n");
         if (lRet == ERROR_SUCCESS)
         {
             /* Get data from default registry value */
-            if (szValName[0] == UNICODE_NULL) // if this is the "(Default)" key
+            if (szValName[0] == UNICODE_NULL) /* if this is the "(Default)" key */
             {
                 StringCbCopyNW(szDefault, sizeof(szDefault), szData, cbName);
             }
@@ -259,7 +259,7 @@ DPRINT1("Time Server is %S.\n", szDefault);
         return 1;
 }
 
-// Control handler function
+/* Control handler function */
 VOID WINAPI
 ControlHandler(DWORD request) 
 { 
@@ -309,7 +309,7 @@ ServiceMain(DWORD argc, LPWSTR *argv)
     ServiceStatus.dwWaitHint                = 0; 
  
     hStatus = RegisterServiceCtrlHandlerW(ServiceName,
-                                          ControlHandler);  // (LPHANDLER_FUNCTION)
+                                          ControlHandler);  /* (LPHANDLER_FUNCTION) */
     if (!hStatus) 
     { 
         /* Registering Control Handler failed */
@@ -370,7 +370,7 @@ int wmain(int argc, WCHAR *argv[])
 
     DPRINT("W32Time: main() started\n");
 
-    // Start the control dispatcher thread for our service
+    /* Start the control dispatcher thread for our service */
     StartServiceCtrlDispatcherW(ServiceTable);
 
     DPRINT("W32Time: main() done\n");
@@ -378,7 +378,7 @@ int wmain(int argc, WCHAR *argv[])
     return 0; 
 }
  
-// Service initialization
+/* Service initialization */
 int InitService(VOID) 
 { 
     int result;
