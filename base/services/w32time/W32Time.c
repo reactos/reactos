@@ -77,7 +77,7 @@ SystemSetTime(LPSYSTEMTIME lpSystemTime,
         priv.PrivilegeCount = 1;
         priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-        if (LookupPrivilegeValue(NULL,
+        if (LookupPrivilegeValueW(NULL,
                                   SE_SYSTEMTIME_NAME,
                                   &priv.Privileges[0].Luid))
         {
@@ -94,6 +94,8 @@ SystemSetTime(LPSYSTEMTIME lpSystemTime,
                  * Check the second parameter for SystemTime and if TRUE set System Time.
                  * Otherwise, if FALSE set the Local Time.
                  * Call SetLocalTime twice to ensure correct results.
+                 * See MSDN https://msdn.microsoft.com/en-us/library/ms724936(VS.85).aspx
+                 * First time sets correct DST and second time uses correct DST.
                  */
                 if (SystemTime)
                 {
@@ -126,11 +128,12 @@ SystemSetTime(LPSYSTEMTIME lpSystemTime,
 }
 
 static DWORD
-GetIntervalSetting()
+GetIntervalSetting(VOID)
 {
     HKEY hKey;
     DWORD dwData;
-    DWORD dwSize = sizeof(DWORD);
+    DWORD dwSize = sizeof(dwData);
+    LONG lRet;
 
     dwData = 0;
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -139,15 +142,19 @@ GetIntervalSetting()
                       KEY_QUERY_VALUE,
                       &hKey) == ERROR_SUCCESS)
     {
-        RegQueryValueExW(hKey,
-                             L"SpecialPollInterval",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&dwData,
-                             &dwSize);
+        lRet = RegQueryValueExW(hKey,
+                                L"SpecialPollInterval",
+                                NULL,
+                                NULL,
+                                (LPBYTE)&dwData,
+                                &dwSize);
         RegCloseKey(hKey);
     }
-    return dwData;
+
+    if (lRet != ERROR_SUCCESS)
+        return 0;
+    else
+        return dwData;
 }
 
 
@@ -159,17 +166,19 @@ SetTime(VOID)
     HKEY hKey;
     DWORD dwIndex = 0;
     DWORD dwValSize;
-    DWORD dwNameSize;
     WCHAR szValName[MAX_VALUE_NAME];
     WCHAR szData[256];
-    WCHAR szDefault[256];
+    DWORD cbName = sizeof(szData);
+    WCHAR szDefault[256] = L"";
+    size_t Size;
 
+DPRINT1("Entered SetTime().\n");
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
-                        0,
-                        KEY_QUERY_VALUE,
-                        &hKey);
+                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
     if (lRet != ERROR_SUCCESS)
     {
         return 1;
@@ -177,8 +186,8 @@ SetTime(VOID)
 
     while (TRUE)
     {
-        dwValSize = MAX_VALUE_NAME * sizeof(WCHAR);
-        szValName[0] = L'\0';
+        dwValSize = sizeof(szValName);
+        szValName[0] = UNICODE_NULL;
         lRet = RegEnumValueW(hKey,
                              dwIndex,
                              szValName,
@@ -186,13 +195,13 @@ SetTime(VOID)
                              NULL,
                              NULL,
                              (LPBYTE)szData,
-                             &dwNameSize);
+                             &cbName);
         if (lRet == ERROR_SUCCESS)
         {
-            /* Get data from default reg value */
+            /* Get data from default registry value */
             if (szValName[0] == UNICODE_NULL) // if this is the "(Default)" key
             {
-                StringCbCopy(szDefault, wcslen(szDefault), szData);
+                StringCbCopyNW(szDefault, sizeof(szDefault), szData, cbName);
             }
             dwIndex++;
         }
@@ -206,8 +215,8 @@ SetTime(VOID)
     dwIndex = 0;
     while (TRUE)
     {
-        dwValSize = MAX_VALUE_NAME * sizeof(WCHAR);
-        szValName[0] = L'\0';
+        dwValSize = sizeof(szValName);
+        szValName[0] = UNICODE_NULL;
         lRet = RegEnumValueW(hKey,
                              dwIndex,
                              szValName,
@@ -215,13 +224,17 @@ SetTime(VOID)
                              NULL,
                              NULL,
                              (LPBYTE)szData,
-                             &dwNameSize);
+                             &cbName);
         if (lRet == ERROR_SUCCESS)
         {
-            /* Get date from selected reg value */
-            if (wcscmp(szValName, szDefault) == 0) // if (Index == Default)
+            /* Get data from selected registry value */
+            if (StringCchLength(szValName, MAX_VALUE_NAME, &Size) == S_OK &&
+                 StringCchLength(szData, MAX_VALUE_NAME, &Size) == S_OK)
             {
-                StringCbCopy(szDefault, wcslen(szDefault), szData);
+                if (wcscmp(szValName, szDefault) == 0)
+                {
+                    StringCbCopyNW(szDefault, sizeof(szDefault), szData, cbName);
+                }
             }
             dwIndex++;
         }
@@ -233,26 +246,31 @@ SetTime(VOID)
 
     RegCloseKey(hKey);
 
+DPRINT1("Time Server is %S.\n", szDefault);
+
     ulTime = GetServerTime(szDefault);
 
     if (ulTime != 0)
+    {
         UpdateSystemTime(ulTime);
-
-    return 0;
+        return 0;
+    }
+    else
+        return 1;
 }
 
 // Control handler function
 VOID WINAPI
 ControlHandler(DWORD request) 
 { 
-    switch(request) 
+    switch (request) 
     { 
         case SERVICE_CONTROL_STOP: 
             DPRINT("W32Time Service stopped.\n");
 
             ServiceStatus.dwWin32ExitCode = 0; 
             ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 
-            SetServiceStatus (hStatus, &ServiceStatus);
+            SetServiceStatus(hStatus, &ServiceStatus);
             return; 
  
         case SERVICE_CONTROL_SHUTDOWN: 
@@ -260,15 +278,15 @@ ControlHandler(DWORD request)
 
             ServiceStatus.dwWin32ExitCode = 0; 
             ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 
-            SetServiceStatus (hStatus, &ServiceStatus);
+            SetServiceStatus(hStatus, &ServiceStatus);
             return; 
         
         default:
             break;
     } 
  
-    // Report current status
-    SetServiceStatus (hStatus,  &ServiceStatus);
+    /* Report current status */
+    SetServiceStatus(hStatus, &ServiceStatus);
  
     return; 
 }
@@ -276,7 +294,6 @@ ControlHandler(DWORD request)
 static VOID CALLBACK
 ServiceMain(DWORD argc, LPWSTR *argv)
 {
-    int   error;
     int   result;
     DWORD dwPollInterval;
  
@@ -291,48 +308,58 @@ ServiceMain(DWORD argc, LPWSTR *argv)
     ServiceStatus.dwCheckPoint              = 0; 
     ServiceStatus.dwWaitHint                = 0; 
  
-    hStatus = RegisterServiceCtrlHandler(ServiceName,
-		                         ControlHandler);  // (LPHANDLER_FUNCTION)
-    if (hStatus == (SERVICE_STATUS_HANDLE)0) 
+    hStatus = RegisterServiceCtrlHandlerW(ServiceName,
+                                          ControlHandler);  // (LPHANDLER_FUNCTION)
+    if (!hStatus) 
     { 
-        // Registering Control Handler failed
+        /* Registering Control Handler failed */
         return; 
     }  
-    // Initialize Service 
-    error = InitService(); 
-    if (error) 
+    /* Initialize Service */
+    result = InitService();
+
+    if (result) 
     {
-        // Initialization failed
-        ServiceStatus.dwCurrentState       = SERVICE_STOPPED; 
-        ServiceStatus.dwWin32ExitCode      = -1; 
+        /* In general we do not want to stop this service for a single Internet read failure
+        but there may be other reasons for which we really might want to stop it.
+        Therefore this code is left here to make it easy to stop this service
+        when the correct conditions can be determined, but it is left commented out.
+
+        ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 
+        ServiceStatus.dwWin32ExitCode = -1; 
         SetServiceStatus(hStatus, &ServiceStatus); 
-        return; 
-    } 
-    // We report the running status to SCM. 
+        return;
+        */
+    }
+
+    /* We report the running status to SCM. */
     ServiceStatus.dwCurrentState = SERVICE_RUNNING; 
-    SetServiceStatus (hStatus, &ServiceStatus);
+    SetServiceStatus(hStatus, &ServiceStatus);
  
-    // The worker loop of a service
+    /* The worker loop of a service */
     while (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
+    {
+        dwPollInterval = GetIntervalSetting();
+        result = SetTime();
+
+        if (result)
         {
-            dwPollInterval = GetIntervalSetting();
-            result = SetTime();
-            if (result)
-            {
-                ServiceStatus.dwCurrentState       = SERVICE_STOPPED; 
-                ServiceStatus.dwWin32ExitCode      = -1; 
-                SetServiceStatus(hStatus, &ServiceStatus);
-                return;
-            }
-            Sleep(dwPollInterval);
+            /* Commented out for the reasons given above about stopping this service.
+            ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 
+            ServiceStatus.dwWin32ExitCode = -1; 
+            SetServiceStatus(hStatus, &ServiceStatus);
+            return;
+            */
         }
+
+        Sleep(dwPollInterval);
+    }
     return; 
 }
 
 int wmain(int argc, WCHAR *argv[]) 
 {
-
-    SERVICE_TABLE_ENTRYW ServiceTable[2] =
+    SERVICE_TABLE_ENTRYW ServiceTable[] =
     {
         {ServiceName, ServiceMain},
         {NULL, NULL}
@@ -344,11 +371,9 @@ int wmain(int argc, WCHAR *argv[])
     DPRINT("W32Time: main() started\n");
 
     // Start the control dispatcher thread for our service
-    StartServiceCtrlDispatcher(ServiceTable);
+    StartServiceCtrlDispatcherW(ServiceTable);
 
     DPRINT("W32Time: main() done\n");
-
-    ExitThread(0);
 
     return 0; 
 }
@@ -358,9 +383,9 @@ int InitService(VOID)
 { 
     int result;
     result = SetTime();
-    DPRINT1("W32Time Service started.\n");
-    return(result); 
+    if (result)
+        DPRINT1("W32Time Service failed to start successfully and clock not set.\n");
+    else
+        DPRINT1("W32Time Service started successfully and clock set.\n");
+    return result; 
 } 
-
-
-

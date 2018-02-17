@@ -102,7 +102,7 @@ SetNTPServer(HWND hwnd)
 
     uSel = (UINT)SendMessageW(hList, CB_GETCURSEL, 0, 0);
 
-    SendDlgItemMessage (hwnd, IDC_SERVERLIST, WM_GETTEXT, _countof(buffer), (LPARAM) buffer);
+    SendDlgItemMessageW(hwnd, IDC_SERVERLIST, WM_GETTEXT, _countof(buffer), (LPARAM)buffer);
 
     /* If there is new data entered then save it in the registry 
        The same key name of "0" is used to store all user entered values
@@ -356,12 +356,12 @@ OnAutoSync(BOOL Sync)
 {
     HKEY hKey;
     LONG lRet;
-    WCHAR szAuto[7];
+    LPCWSTR szAuto;
 
     if (Sync)
-        StringCbCopy(szAuto, wcslen(L"NTP"), L"NTP");
+        szAuto = L"NTP\0";
     else
-        StringCbCopy(szAuto, wcslen(L"NoSync\0"), L"NoSync\0");
+        szAuto = L"NoSync\0";
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                          L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
@@ -375,11 +375,11 @@ OnAutoSync(BOOL Sync)
         }
 
         lRet = RegSetValueExW(hKey,
-                          L"Type",
-                          0,
-                          REG_SZ,
-                          (LPBYTE)szAuto,
-                          (wcslen(szAuto) + 1) * sizeof(WCHAR));
+                              L"Type",
+                              0,
+                              REG_SZ,
+                              (LPBYTE)szAuto,
+                              (wcslen(szAuto) + 1) * sizeof(WCHAR));
         if (lRet != ERROR_SUCCESS)
             DisplayWin32Error(lRet);
 
@@ -447,7 +447,7 @@ InetTimePageProc(HWND hwndDlg,
                 case PSN_APPLY:
                     SetNTPServer(hwndDlg);
 
-                    if (SendDlgItemMessage(hwndDlg, IDC_AUTOSYNC, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    if (SendDlgItemMessageW(hwndDlg, IDC_AUTOSYNC, BM_GETCHECK, 0, 0) == BST_CHECKED)
                         OnAutoSync(TRUE);
                     else
                         OnAutoSync(FALSE);

@@ -39,16 +39,14 @@ InitConnection(PINFO pInfo, LPSTR lpAddress)
 
     /* Setup server info */
     he = gethostbyname(lpAddress);
-    if (he != NULL)
-    {
+    if (he == NULL)
+        return FALSE;
+
         /* Setup server socket info */
         ZeroMemory(&pInfo->ntpAddr, sizeof(SOCKADDR_IN));
         pInfo->ntpAddr.sin_family = AF_INET; // he->h_addrtype;
         pInfo->ntpAddr.sin_port = htons(NTPPORT);
         pInfo->ntpAddr.sin_addr = *((struct in_addr *)he->h_addr);
-    }
-    else
-        return FALSE;
 
     return TRUE;
 }
@@ -76,7 +74,7 @@ SendData(PINFO pInfo)
     INT Ret;
 
     ZeroMemory(&pInfo->SendPacket, sizeof(pInfo->SendPacket));
-    pInfo->SendPacket.LiVnMode = 27;
+    pInfo->SendPacket.LiVnMode = 0x1b;        /* 0x1b = 011 011 - version 3 , mode 3 (client) */
     if (!GetTransmitTime(&tp))
         return FALSE;
     pInfo->SendPacket.TransmitTimestamp = tp;
@@ -142,9 +140,9 @@ GetServerTime(LPWSTR lpAddress)
     pInfo = HeapAlloc(GetProcessHeap(),
                       0,
                       sizeof(INFO));
-    lpAddr = (LPSTR)HeapAlloc(GetProcessHeap(),
-                              0,
-                              dwSize);
+    lpAddr = HeapAlloc(GetProcessHeap(),
+                       0,
+                       dwSize);
 
     if (pInfo && lpAddr)
     {
