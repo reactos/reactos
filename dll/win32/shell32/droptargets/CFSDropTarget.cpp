@@ -164,7 +164,7 @@ BOOL CFSDropTarget::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
     /* TODO Windows does different drop effects if dragging across drives. 
     i.e., it will copy instead of move if the directories are on different disks. */
 
-    DWORD dwEffect = DROPEFFECT_MOVE;
+    DWORD dwEffect = m_dwDefaultEffect;
 
     *pdwEffect = DROPEFFECT_NONE;
 
@@ -182,16 +182,32 @@ BOOL CFSDropTarget::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
     return FALSE;
 }
 
-HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect)
+HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect, DWORD dwAvailableEffects)
 {
     HMENU hmenu = LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_DRAGFILE));
     if (!hmenu)
         return E_OUTOFMEMORY;
 
+    HMENU hpopupmenu = GetSubMenu(hmenu, 0);
+
+    if ((dwAvailableEffects & DROPEFFECT_COPY) == 0)
+        DeleteMenu(hpopupmenu, IDM_COPYHERE, MF_BYCOMMAND);
+    else if ((dwAvailableEffects & DROPEFFECT_MOVE) == 0)
+        DeleteMenu(hpopupmenu, IDM_MOVEHERE, MF_BYCOMMAND);
+    else if ((dwAvailableEffects & DROPEFFECT_LINK) == 0)
+        DeleteMenu(hpopupmenu, IDM_LINKHERE, MF_BYCOMMAND);
+
+    if ((*pdwEffect & DROPEFFECT_COPY))
+        SetMenuDefaultItem(hpopupmenu, IDM_COPYHERE, FALSE);
+    else if ((*pdwEffect & DROPEFFECT_MOVE))
+        SetMenuDefaultItem(hpopupmenu, IDM_MOVEHERE, FALSE);
+    else if ((*pdwEffect & DROPEFFECT_LINK))
+        SetMenuDefaultItem(hpopupmenu, IDM_LINKHERE, FALSE);
+
     /* FIXME: We need to support shell extensions here */
 
-    UINT uCommand = TrackPopupMenu(GetSubMenu(hmenu, 0),
-                                   TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+    UINT uCommand = TrackPopupMenu(hpopupmenu,
+                                   TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY,
                                    pt.x, pt.y, 0, m_hwndSite, NULL);
     if (uCommand == 0)
         return S_FALSE;
@@ -263,6 +279,22 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
         fAcceptFmt = TRUE;
 
     m_grfKeyState = dwKeyState;
+    m_dwDefaultEffect = DROPEFFECT_MOVE;
+
+    STGMEDIUM medium;
+    if (SUCCEEDED(pDataObject->GetData(&fmt2, &medium)))
+    {
+        WCHAR wstrFirstFile[MAX_PATH];
+        if (DragQueryFileW((HDROP)medium.hGlobal, 0, wstrFirstFile, _countof(wstrFirstFile)))
+        {
+            /* Check if the drive letter is different */
+            if (wstrFirstFile[0] != sPathTarget[0])
+            {
+                m_dwDefaultEffect = DROPEFFECT_COPY;
+            }
+        }
+        ReleaseStgMedium(&medium);
+    }
 
     QueryDrop(dwKeyState, pdwEffect);
     return S_OK;
@@ -302,11 +334,15 @@ HRESULT WINAPI CFSDropTarget::Drop(IDataObject *pDataObject,
 
     IUnknown_GetWindow(m_site, &m_hwndSite);
 
+    DWORD dwAvailableEffects = *pdwEffect;
+
     QueryDrop(dwKeyState, pdwEffect);
+
+    TRACE("pdwEffect: 0x%x, m_dwDefaultEffect: 0x%x, dwAvailableEffects: 0x%x\n", *pdwEffect, m_dwDefaultEffect, dwAvailableEffects);
 
     if (m_grfKeyState & MK_RBUTTON)
     {
-        HRESULT hr = _GetEffectFromMenu(pDataObject, pt, pdwEffect);
+        HRESULT hr = _GetEffectFromMenu(pDataObject, pt, pdwEffect, dwAvailableEffects);
         if (FAILED_UNEXPECTEDLY(hr) || hr == S_FALSE)
             return hr;
     }

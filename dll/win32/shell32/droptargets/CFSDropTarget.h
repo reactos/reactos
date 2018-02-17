@@ -34,6 +34,7 @@ class CFSDropTarget :
         LPWSTR sPathTarget;
         HWND m_hwndSite;
         DWORD m_grfKeyState;
+        DWORD m_dwDefaultEffect;
         CComPtr<IUnknown> m_site;
 
         BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
@@ -41,7 +42,7 @@ class CFSDropTarget :
         virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
         BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
         static DWORD WINAPI _DoDropThreadProc(LPVOID lpParameter);
-        HRESULT _GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect);
+        HRESULT _GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect, DWORD dwAvailableEffects);
         HRESULT _RepositionItems(IShellFolderView *psfv, IDataObject *pDataObject, POINTL pt);
 
     public:
