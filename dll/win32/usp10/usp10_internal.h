@@ -204,6 +204,7 @@ typedef struct {
     BOOL sfnt;
     CacheGlyphPage *page[NUM_PAGES];
     ABC *widths[GLYPH_MAX / GLYPH_BLOCK_SIZE];
+    ABC *glyph_widths[GLYPH_MAX / GLYPH_BLOCK_SIZE];
     void *GSUB_Table;
     void *GDEF_Table;
     void *CMAP_Table;
