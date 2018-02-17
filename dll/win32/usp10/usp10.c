@@ -842,19 +842,23 @@ static inline WORD set_cache_glyph(SCRIPT_CACHE *psc, WCHAR c, WORD glyph)
     return ((*block)[(c % 0x10000) & GLYPH_BLOCK_MASK] = glyph);
 }
 
-static inline BOOL get_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *abc)
+static inline BOOL get_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *abc, BOOL no_glyph_index)
 {
     static const ABC nil;
-    ABC *block = ((ScriptCache *)*psc)->widths[glyph >> GLYPH_BLOCK_SHIFT];
+    ABC *block = no_glyph_index ?
+             ((ScriptCache *)*psc)->widths[glyph >> GLYPH_BLOCK_SHIFT] :
+             ((ScriptCache *)*psc)->glyph_widths[glyph >> GLYPH_BLOCK_SHIFT];
 
     if (!block || !memcmp(&block[glyph & GLYPH_BLOCK_MASK], &nil, sizeof(ABC))) return FALSE;
     memcpy(abc, &block[glyph & GLYPH_BLOCK_MASK], sizeof(ABC));
     return TRUE;
 }
 
-static inline BOOL set_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *abc)
+static inline BOOL set_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *abc, BOOL no_glyph_index)
 {
-    ABC **block = &((ScriptCache *)*psc)->widths[glyph >> GLYPH_BLOCK_SHIFT];
+    ABC **block = no_glyph_index ?
+             &((ScriptCache *)*psc)->widths[glyph >> GLYPH_BLOCK_SHIFT] :
+             &((ScriptCache *)*psc)->glyph_widths[glyph >> GLYPH_BLOCK_SHIFT];
 
     if (!*block && !(*block = heap_alloc_zero(sizeof(ABC) * GLYPH_BLOCK_SIZE))) return FALSE;
     memcpy(&(*block)[glyph & GLYPH_BLOCK_MASK], abc, sizeof(ABC));
@@ -3425,7 +3429,7 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
         {
             abc.abcA = abc.abcB = abc.abcC = 0;
         }
-        else if (!get_cache_glyph_widths(psc, pwGlyphs[i], &abc))
+        else if (!get_cache_glyph_widths(psc, pwGlyphs[i], &abc, psa->fNoGlyphIndex))
         {
             BOOL ret;
             if (!hdc) return E_PENDING;
@@ -3448,7 +3452,7 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
                 abc.abcB = width;
                 abc.abcA = abc.abcC = 0;
             }
-            set_cache_glyph_widths(psc, pwGlyphs[i], &abc);
+            set_cache_glyph_widths(psc, pwGlyphs[i], &abc, psa->fNoGlyphIndex);
         }
         if (pABC)
         {
@@ -3709,7 +3713,7 @@ HRESULT WINAPI ScriptGetGlyphABCWidth(HDC hdc, SCRIPT_CACHE *psc, WORD glyph, AB
     if (!abc) return E_INVALIDARG;
     if ((hr = init_script_cache(hdc, psc)) != S_OK) return hr;
 
-    if (!get_cache_glyph_widths(psc, glyph, abc))
+    if (!get_cache_glyph_widths(psc, glyph, abc, FALSE))
     {
         if (!hdc) return E_PENDING;
         if ((get_cache_pitch_family(psc) & TMPF_TRUETYPE))
@@ -3723,7 +3727,7 @@ HRESULT WINAPI ScriptGetGlyphABCWidth(HDC hdc, SCRIPT_CACHE *psc, WORD glyph, AB
             abc->abcB = width;
             abc->abcA = abc->abcC = 0;
         }
-        set_cache_glyph_widths(psc, glyph, abc);
+        set_cache_glyph_widths(psc, glyph, abc, FALSE);
     }
     return S_OK;
 }
