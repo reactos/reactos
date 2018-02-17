@@ -56,7 +56,7 @@ BOOL GetKeyName(LPCTSTR ServiceName);
 BOOL EnumDepend(LPCTSTR ServiceName);
 
 /* print and error functions */
-VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus, BOOL bExtended);
+VOID PrintService(LPCTSTR ServiceName, LPCTSTR DisplayName, LPSERVICE_STATUS_PROCESS pStatus, BOOL bExtended);
 VOID PrintServiceStatus(LPSERVICE_STATUS pStatus);
 VOID ReportLastError(VOID);
 

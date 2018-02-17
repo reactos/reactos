@@ -96,6 +96,7 @@ Control(DWORD Control,
     StatusEx.dwServiceFlags = 0;
 
     PrintService(ServiceName,
+                 NULL,
                  &StatusEx,
                  FALSE);
 

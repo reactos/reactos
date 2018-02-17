@@ -11,10 +11,14 @@
 
 VOID
 PrintService(LPCTSTR lpServiceName,
+             LPCTSTR lpDisplayName,
              LPSERVICE_STATUS_PROCESS pStatus,
              BOOL bExtended)
 {
     _tprintf(_T("SERVICE_NAME: %s\n"), lpServiceName);
+
+    if (lpDisplayName)
+        _tprintf(_T("DISPLAY_NAME: %s\n"), lpDisplayName);
 
     // Re-use PrintServiceStatus(), as SERVICE_STATUS_PROCESS is in fact an extension of SERVICE_STATUS.
     PrintServiceStatus((LPSERVICE_STATUS)pStatus);

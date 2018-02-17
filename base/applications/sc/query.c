@@ -4,24 +4,10 @@
  * FILE:        base/applications/sc/query.c
  * PURPOSE:     queries service info
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
- *
- */
-/*
- * TODO:
- * Allow calling of 2 options e.g.:
- *    type= driver state= inactive
+ *              Copyright 2018 Eric Kohl <eric.kohl@reactos.org>
  */
 
 #include "sc.h"
-
-LPTSTR QueryOpts[] = {
-    _T("type="),
-    _T("state="),
-    _T("bufsize="),
-    _T("ri="),
-    _T("group="),
-};
-
 
 LPSERVICE_STATUS_PROCESS
 QueryService(LPCTSTR ServiceName)
@@ -84,17 +70,20 @@ fail:
 }
 
 
-static BOOL
+static
+DWORD
 EnumServices(ENUM_SERVICE_STATUS_PROCESS **pServiceStatus,
-             DWORD ServiceType,
-             DWORD ServiceState)
+             DWORD dwServiceType,
+             DWORD dwServiceState,
+             DWORD dwBufferSize,
+             DWORD dwResumeIndex,
+             LPCTSTR pszGroupName)
 {
     SC_HANDLE hSCManager;
-    DWORD BufSize = 0;
     DWORD BytesNeeded = 0;
-    DWORD ResumeHandle = 0;
+    DWORD ResumeHandle = dwResumeIndex;
     DWORD NumServices = 0;
-    DWORD Ret;
+    BOOL Ret;
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
@@ -102,42 +91,49 @@ EnumServices(ENUM_SERVICE_STATUS_PROCESS **pServiceStatus,
     if (hSCManager == NULL)
     {
         ReportLastError();
-        return FALSE;
+        return 0;
     }
 
-    Ret = EnumServicesStatusEx(hSCManager,
-                               SC_ENUM_PROCESS_INFO,
-                               ServiceType,
-                               ServiceState,
-                               (LPBYTE)*pServiceStatus,
-                               BufSize,
-                               &BytesNeeded,
-                               &NumServices,
-                               &ResumeHandle,
-                               0);
-
-    if ((Ret == 0) && (GetLastError() == ERROR_MORE_DATA))
+    if (dwBufferSize == 0)
     {
-        *pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *)
-                          HeapAlloc(GetProcessHeap(),
-                                    0,
-                                    BytesNeeded);
-        if (*pServiceStatus != NULL)
+        Ret = EnumServicesStatusEx(hSCManager,
+                                   SC_ENUM_PROCESS_INFO,
+                                   dwServiceType,
+                                   dwServiceState,
+                                   (LPBYTE)*pServiceStatus,
+                                   dwBufferSize,
+                                   &BytesNeeded,
+                                   &NumServices,
+                                   &ResumeHandle,
+                                   pszGroupName);
+        if ((Ret == 0) && (GetLastError() != ERROR_MORE_DATA))
         {
-            if (EnumServicesStatusEx(hSCManager,
-                                     SC_ENUM_PROCESS_INFO,
-                                     ServiceType,
-                                     ServiceState,
-                                     (LPBYTE)*pServiceStatus,
-                                     BytesNeeded,
-                                     &BytesNeeded,
-                                     &NumServices,
-                                     &ResumeHandle,
-                                     0))
-            {
-                CloseServiceHandle(hSCManager);
-                return NumServices;
-            }
+            ReportLastError();
+            return 0;
+        }
+
+        dwBufferSize = BytesNeeded;
+    }
+
+    *pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *)
+                      HeapAlloc(GetProcessHeap(),
+                                0,
+                                dwBufferSize);
+    if (*pServiceStatus != NULL)
+    {
+        if (EnumServicesStatusEx(hSCManager,
+                                 SC_ENUM_PROCESS_INFO,
+                                 dwServiceType,
+                                 dwServiceState,
+                                 (LPBYTE)*pServiceStatus,
+                                 dwBufferSize,
+                                 &BytesNeeded,
+                                 &NumServices,
+                                 &ResumeHandle,
+                                 pszGroupName))
+        {
+            CloseServiceHandle(hSCManager);
+            return NumServices;
         }
     }
 
@@ -151,6 +147,147 @@ EnumServices(ENUM_SERVICE_STATUS_PROCESS **pServiceStatus,
 }
 
 
+static
+BOOL
+ParseQueryArguments(
+    IN LPCTSTR *ServiceArgs,
+    IN INT ArgCount,
+    OUT PDWORD pdwServiceType,
+    OUT PDWORD pdwServiceState,
+    OUT PDWORD pdwBufferSize,
+    OUT PDWORD pdwResumeIndex,
+    OUT LPCTSTR *ppszGroupName,
+    OUT LPCTSTR *ppszServiceName)
+{
+    INT TmpCount, TmpIndex;
+    DWORD dwValue;
+
+    TmpCount = ArgCount;
+    TmpIndex = 0;
+    while (TmpCount > 0)
+    {
+        if (!lstrcmpi(ServiceArgs[TmpIndex], _T("type=")))
+        {
+            TmpIndex++;
+            TmpCount--;
+
+            if (TmpCount > 0)
+            {
+                if (!lstrcmpi(ServiceArgs[TmpIndex], _T("service")))
+                {
+                    *pdwServiceType = SERVICE_WIN32;
+                }
+                else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("driver")))
+                {
+                    *pdwServiceType = SERVICE_DRIVER;
+                }
+                else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("all")))
+                {
+                    *pdwServiceType = SERVICE_TYPE_ALL;
+                }
+                else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("interact")))
+                {
+                    *pdwServiceType |= SERVICE_INTERACTIVE_PROCESS;
+                }
+                else
+                {
+                    _tprintf(_T("ERROR following \"type=\"!\nMust be \"driver\" or \"service\"\n"));
+                    return FALSE;
+                }
+
+                TmpIndex++;
+                TmpCount--;
+            }
+        }
+        else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("state=")))
+        {
+            TmpIndex++;
+            TmpCount--;
+
+            if (TmpCount > 0)
+            {
+                if (!lstrcmpi(ServiceArgs[TmpIndex], _T("active")))
+                {
+                    *pdwServiceState = SERVICE_ACTIVE;
+                }
+                else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("inactive")))
+                {
+                    *pdwServiceState = SERVICE_INACTIVE;
+                }
+                else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("all")))
+                {
+                    *pdwServiceState = SERVICE_STATE_ALL;
+                }
+                else
+                {
+                    _tprintf(_T("ERROR following \"state=\"!\nMust be \"inactive\" or \"all\"\n"));
+                    return FALSE;
+                }
+
+                TmpIndex++;
+                TmpCount--;
+            }
+        }
+        else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("bufsize=")))
+        {
+            TmpIndex++;
+            TmpCount--;
+
+            if (TmpCount > 0)
+            {
+                dwValue = _tcstoul(ServiceArgs[TmpIndex], NULL, 10);
+                if (dwValue > 0)
+                {
+                    *pdwBufferSize = dwValue;
+                }
+
+                TmpIndex++;
+                TmpCount--;
+            }
+        }
+        else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("ri=")))
+        {
+            TmpIndex++;
+            TmpCount--;
+
+            if (TmpCount >= 0)
+            {
+                dwValue = _tcstoul(ServiceArgs[TmpIndex], NULL, 10);
+                if (dwValue > 0)
+                {
+                    *pdwResumeIndex = dwValue;
+                }
+
+                TmpIndex++;
+                TmpCount--;
+            }
+        }
+        else if (!lstrcmpi(ServiceArgs[TmpIndex], _T("group=")))
+        {
+            TmpIndex++;
+            TmpCount--;
+
+            if (TmpCount > 0)
+            {
+                *ppszGroupName = ServiceArgs[TmpIndex];
+
+                TmpIndex++;
+                TmpCount--;
+            }
+        }
+        else
+        {
+            *ppszServiceName = ServiceArgs[TmpIndex];
+
+            TmpIndex++;
+            TmpCount--;
+        }
+    }
+
+    return TRUE;
+}
+
+
 BOOL
 Query(LPCTSTR *ServiceArgs,
       DWORD ArgCount,
@@ -158,17 +295,18 @@ Query(LPCTSTR *ServiceArgs,
 {
     LPENUM_SERVICE_STATUS_PROCESS pServiceStatus = NULL;
     DWORD NumServices = 0;
-    //DWORD ServiceType;
-    //DWORD ServiceState;
-    BOOL bServiceName = TRUE;
-    DWORD OptSize, i;
-
-    LPCTSTR *TmpArgs;
-    INT TmpCnt;
+    DWORD dwServiceType = SERVICE_WIN32;
+    DWORD dwServiceState = SERVICE_ACTIVE;
+    DWORD dwBufferSize = 0;
+    DWORD dwResumeIndex = 0;
+    LPCTSTR pszGroupName = NULL;
+    LPCTSTR pszServiceName = NULL;
+    DWORD i;
 
 #ifdef SCDBG
-    TmpArgs = ServiceArgs;
-    TmpCnt = ArgCount;
+    LPCTSTR *TmpArgs = ServiceArgs;
+    INT TmpCnt = ArgCount;
+
     _tprintf(_T("Arguments:\n"));
     while (TmpCnt)
     {
@@ -179,65 +317,68 @@ Query(LPCTSTR *ServiceArgs,
     _tprintf(_T("\n"));
 #endif /* SCDBG */
 
-    /* display all running services and drivers */
-    if (ArgCount == 0)
-    {
-        NumServices = EnumServices(&pServiceStatus,
-                                   SERVICE_WIN32,
-                                   SERVICE_ACTIVE);
-
-        if (NumServices != 0)
-        {
-            for (i=0; i < NumServices; i++)
-            {
-                PrintService(pServiceStatus[i].lpServiceName,
-                             &pServiceStatus[i].ServiceStatusProcess,
-                             bExtended);
-            }
-
-            _tprintf(_T("number : %lu\n"), NumServices);
-
-            if (pServiceStatus)
-                HeapFree(GetProcessHeap(), 0, pServiceStatus);
-
-            return TRUE;
-        }
-
+    /* Parse arguments */
+    if (!ParseQueryArguments(ServiceArgs,
+                             ArgCount,
+                             &dwServiceType,
+                             &dwServiceState,
+                             &dwBufferSize,
+                             &dwResumeIndex,
+                             &pszGroupName,
+                             &pszServiceName))
         return FALSE;
-    }
 
-    TmpArgs = ServiceArgs;
-    TmpCnt = ArgCount;
-    OptSize = sizeof(QueryOpts) / sizeof(QueryOpts[0]);
-    while (TmpCnt--)
+#ifdef SCDBG
+    _tprintf(_T("Service type: %lx\n"), dwServiceType);
+    _tprintf(_T("Service state: %lx\n"), dwServiceState);
+    _tprintf(_T("Buffer size: %lu\n"), dwBufferSize);
+    _tprintf(_T("Resume index: %lu\n"), dwResumeIndex);
+    _tprintf(_T("Group name: %s\n"), pszGroupName);
+    _tprintf(_T("Service name: %s\n"), pszServiceName);
+#endif
+
+    if (pszServiceName)
     {
-        for (i=0; i < OptSize; i++)
-        {
-            if (!lstrcmpi(*TmpArgs, QueryOpts[i]))
-            {
-                bServiceName = FALSE;
-            }
-        }
-        TmpArgs++;
-    }
+        /* Print only the requested service */
 
-
-    /* FIXME: parse options */
-
-
-    /* print only the service requested */
-    if (bServiceName)
-    {
         LPSERVICE_STATUS_PROCESS pStatus;
-        LPCTSTR ServiceName = *ServiceArgs;
 
-        pStatus = QueryService(ServiceName);
+        pStatus = QueryService(pszServiceName);
         if (pStatus)
         {
-            PrintService(ServiceName,
+            PrintService(pszServiceName,
+                         NULL,
                          pStatus,
                          bExtended);
         }
+    }
+    else
+    {
+        /* Print all matching services */
+
+        NumServices = EnumServices(&pServiceStatus,
+                                   dwServiceType,
+                                   dwServiceState,
+                                   dwBufferSize,
+                                   dwResumeIndex,
+                                   pszGroupName);
+        if (NumServices == 0)
+            return FALSE;
+
+        for (i = 0; i < NumServices; i++)
+        {
+            PrintService(pServiceStatus[i].lpServiceName,
+                         pServiceStatus[i].lpDisplayName,
+                         &pServiceStatus[i].ServiceStatusProcess,
+                         bExtended);
+        }
+
+#ifdef SCDBG
+        _tprintf(_T("number : %lu\n"), NumServices);
+#endif
+
+        if (pServiceStatus)
+            HeapFree(GetProcessHeap(), 0, pServiceStatus);
     }
 
     return TRUE;
