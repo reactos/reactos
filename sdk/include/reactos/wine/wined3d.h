@@ -30,7 +30,7 @@
 # error You must include config.h to use this header
 #endif
 
-#include <wine/list.h>
+#include "wine/list.h"
 
 #define WINED3D_OK                                              S_OK
 

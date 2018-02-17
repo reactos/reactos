@@ -2161,7 +2161,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         multiplier10, divisor10);
 
   if (dwVtBits & (INTEGER_VTBITS|VTBIT_DECIMAL) &&
-      (!fractionalDigits || !(dwVtBits & (REAL_VTBITS|VTBIT_CY|VTBIT_DECIMAL))))
+      (!fractionalDigits || !(dwVtBits & (REAL_VTBITS|VTBIT_DECIMAL))))
   {
     /* We have one or more integer output choices, and either:
      *  1) An integer input value, or
@@ -2275,7 +2275,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
           V_I8(pVarDst) = -ul64;
           return S_OK;
         }
-        else if ((dwVtBits & REAL_VTBITS) == VTBIT_DECIMAL)
+        else if ((dwVtBits & (REAL_VTBITS|VTBIT_DECIMAL)) == VTBIT_DECIMAL)
         {
           /* Decimal is only output choice left - fast path */
           V_VT(pVarDst) = VT_DECIMAL;
@@ -2337,7 +2337,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         V_UI8(pVarDst) = ul64;
         return S_OK;
       }
-      else if ((dwVtBits & REAL_VTBITS) == VTBIT_DECIMAL)
+      else if ((dwVtBits & (REAL_VTBITS|VTBIT_DECIMAL)) == VTBIT_DECIMAL)
       {
         /* Decimal is only output choice left - fast path */
         V_VT(pVarDst) = VT_DECIMAL;
@@ -2392,8 +2392,8 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     {
       if (whole < dblMinimums[10] && whole != 0)
       {
-        dwVtBits &= ~(VTBIT_R4|VTBIT_R8|VTBIT_CY); /* Underflow */
-        bOverflow = TRUE;
+        whole = 0; /* ignore underflow */
+        divisor10 = 0;
         break;
       }
       whole = whole / dblMultipliers[10];
@@ -2403,8 +2403,8 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     {
       if (whole < dblMinimums[divisor10] && whole != 0)
       {
-        dwVtBits &= ~(VTBIT_R4|VTBIT_R8|VTBIT_CY); /* Underflow */
-        bOverflow = TRUE;
+        whole = 0; /* ignore underflow */
+        divisor10 = 0;
       }
       else
         whole = whole / dblMultipliers[divisor10];

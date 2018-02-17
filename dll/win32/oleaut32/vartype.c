@@ -5372,7 +5372,7 @@ static HRESULT VARIANT_DI_normalize(VARIANT_DI * val, int exponent2, BOOL isDoub
        end of the bit representation, down to the precision guaranteed by the
        floating point number. */
     if (isDouble) {
-        while (exponent10 < 0 && (val->bitsnum[2] != 0 || (val->bitsnum[2] == 0 && (val->bitsnum[1] & 0xFFE00000) != 0))) {
+        while (exponent10 < 0 && (val->bitsnum[2] != 0 || (val->bitsnum[1] & 0xFFE00000) != 0)) {
             int rem10;
 
             rem10 = VARIANT_int_divbychar(val->bitsnum, 3, 10);

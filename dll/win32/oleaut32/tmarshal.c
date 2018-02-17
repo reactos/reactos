@@ -529,7 +529,7 @@ typedef struct _TMAsmProxy {
 } TMAsmProxy;
 #include "poppack.h"
 
-#else /* __i386__ */
+#else
 #ifdef _MSC_VER
 #pragma message("You need to implement stubless proxies for your architecture")
 #else
