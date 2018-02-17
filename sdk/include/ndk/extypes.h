@@ -142,7 +142,7 @@ extern ULONG NTSYSAPI NtBuildNumber;
 //
 // NtRaiseHardError-related parameters
 //
-#define MAXIMUM_HARDERROR_PARAMETERS        4
+#define MAXIMUM_HARDERROR_PARAMETERS        5
 #define HARDERROR_OVERRIDE_ERRORMODE        0x10000000
 
 //
