@@ -101,6 +101,7 @@ class CDefView :
         UINT                      m_cScrollDelay;       /* Send a WM_*SCROLL msg every 250 ms during drag-scroll */
         POINT                     m_ptLastMousePos;     /* Mouse position at last DragOver call */
         POINT                     m_ptFirstMousePos;    /* Mouse position when the drag operation started */
+        DWORD                     m_grfKeyState;
         //
         CComPtr<IContextMenu>     m_pCM;
 
@@ -1765,8 +1766,8 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             if (GetSelections())
             {
                 CComPtr<IDataObject> pda;
-                DWORD dwAttributes = SFGAO_CANLINK;
-                DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE;
+                DWORD dwAttributes = SFGAO_CANCOPY | SFGAO_CANLINK;
+                DWORD dwEffect = DROPEFFECT_MOVE;
 
                 if (SUCCEEDED(m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, m_apidl, IID_NULL_PPV_ARG(IDataObject, &pda))))
                 {
@@ -1774,10 +1775,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                     if (SUCCEEDED(m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &dwAttributes)))
                     {
-                        if (dwAttributes & SFGAO_CANLINK)
-                        {
-                            dwEffect |= DROPEFFECT_LINK;
-                        }
+                        dwEffect |= dwAttributes & (SFGAO_CANCOPY | SFGAO_CANLINK);
                     }
                     
                     CComPtr<IAsyncOperation> piaso;
@@ -2423,7 +2421,12 @@ HRESULT STDMETHODCALLTYPE CDefView::GetFocusedItem(int *piItem)
 
 HRESULT STDMETHODCALLTYPE CDefView::GetItemPosition(PCUITEMID_CHILD pidl, POINT *ppt)
 {
-    return E_NOTIMPL;
+    int lvIndex = LV_FindItemByPidl(pidl);
+    if (lvIndex == -1 || ppt == NULL)
+        return E_INVALIDARG;
+
+    m_ListView.GetItemPosition(lvIndex, ppt);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetSpacing(POINT *ppt)
@@ -2488,7 +2491,21 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 
 HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, POINT *apt, DWORD dwFlags)
 {
-    return E_NOTIMPL;
+    /* Reset the selection */
+    m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
+
+    int lvIndex;
+    for (UINT i = 0 ; i < m_cidl; i++)
+    {
+        lvIndex = LV_FindItemByPidl(apidl[i]);
+        if (lvIndex != -1)
+        {
+            SelectItem(lvIndex, dwFlags);
+            m_ListView.SetItemPosition(lvIndex, &apt[i]);
+        }
+    }
+
+    return S_OK;
 }
 
 /**********************************************************
@@ -2717,14 +2734,22 @@ HRESULT STDMETHODCALLTYPE CDefView::GetSelectedObjects(PCUITEMID_CHILD **pidl, U
 
 HRESULT STDMETHODCALLTYPE CDefView::IsDropOnSource(IDropTarget *drop_target)
 {
-    FIXME("(%p)->(%p) stub\n", this, drop_target);
-    return E_NOTIMPL;
+    if ((m_iDragOverItem == -1 || m_pCurDropTarget == NULL) && 
+        (m_pSourceDataObject.p))
+    {
+        return S_OK;
+    }
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetDragPoint(POINT *pt)
 {
-    FIXME("(%p)->(%p) stub\n", this, pt);
-    return E_NOTIMPL;
+    if (!pt)
+        return E_INVALIDARG;
+
+    *pt = m_ptFirstMousePos;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetDropPoint(POINT *pt)
@@ -2887,6 +2912,11 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
     HRESULT hr;
     RECT clientRect;
 
+    /* The key state on drop doesn't have MK_LBUTTON or MK_RBUTTON because it
+       reflects the key state after the user released the button, so we need
+       to remember the last key state when the button was pressed */
+    m_grfKeyState = grfKeyState;
+
     /* Map from global to client coordinates and query the index of the listview-item, which is
      * currently under the mouse cursor. */
     LVHITTESTINFO htinfo = {{pt.x, pt.y}, LVHT_ONITEM};
@@ -2972,6 +3002,8 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
         hr = m_pSFParent->GetUIObjectOf(m_ListView, 1, &pidl, IID_NULL_PPV_ARG(IDropTarget, &m_pCurDropTarget));
     }
 
+    IUnknown_SetSite(m_pCurDropTarget, (IShellView *)this);
+
     /* If anything failed, m_pCurDropTarget should be NULL now, which ought to be a save state. */
     if (FAILED(hr))
     {
@@ -3039,11 +3071,9 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
     ImageList_DragLeave(m_hWnd);
     ImageList_EndDrag();
 
-    if ((m_iDragOverItem == -1 || m_pCurDropTarget == NULL) && 
+    if ((IsDropOnSource(NULL) == S_OK) && 
         (*pdwEffect & DROPEFFECT_MOVE) && 
-        /*(GetKeyState(VK_LBUTTON) != 0) &&*/
-        (m_pSourceDataObject.p) && 
-        (SHIsSameObject(pDataObject, m_pSourceDataObject)))
+        (m_grfKeyState & MK_LBUTTON))
     {
         if (m_pCurDropTarget)
         {
