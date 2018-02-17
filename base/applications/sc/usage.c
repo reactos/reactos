@@ -83,7 +83,7 @@ VOID MainUsage(VOID)
         _T("sc query state= all     - Enumerates all services & drivers\n")
         _T("sc query bufsize= 50    - Enumerates with a 50 byte buffer.\n")
         _T("sc query ri= 14         - Enumerates with resume index = 14\n")
-        _T("sc queryex group= ""    - Enumerates active services not in a group\n")
+        _T("sc queryex group= \"\"    - Enumerates active services not in a group\n")
         _T("sc query type= service type= interact - Enumerates all interactive services\n")
         _T("sc query type= driver group= NDIS     - Enumerates all NDIS drivers\n"));
     }
