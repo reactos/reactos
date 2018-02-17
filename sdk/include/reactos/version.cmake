@@ -39,7 +39,7 @@ if(EXISTS "${REACTOS_SOURCE_DIR}/.git")
         endif()
 
         execute_process(
-            COMMAND "${GIT_EXECUTABLE}" describe --abbrev=7
+            COMMAND "${GIT_EXECUTABLE}" describe --abbrev=7 --long
             WORKING_DIRECTORY ${REACTOS_SOURCE_DIR}
             OUTPUT_VARIABLE GIT_DESCRIBE_REVISION
             RESULT_VARIABLE GIT_CALL_RESULT
