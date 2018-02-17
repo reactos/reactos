@@ -171,9 +171,39 @@ TestNotification(void)
     ok_hr(hr, S_FALSE);
 }
 
+DWORD
+CALLBACK
+TestThread(LPVOID lpParam)
+{
+    /* Initialize COM */
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    /* Start the test */
+    TestNotification();
+
+    /* Cleanup and return */
+    CoUninitialize();
+    return 0;
+}
+
 START_TEST(CUserNotification)
 {
-    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-    TestNotification();
-    CoUninitialize();
+    HANDLE hThread;
+    DWORD dwWait;
+
+    /* We create a test thread, because the notification tests can hang */
+    hThread = CreateThread(NULL, 0, TestThread, NULL, 0, NULL);
+    ok(hThread != NULL, "CreateThread failed with error 0x%lu\n", GetLastError());
+    if (!hThread)
+    {
+        skip("Could not create the CUserNotification test thread!");
+        return;
+    }
+
+    /* Wait a maximum of 1:30 for the thread to finish (the timeout tests take some time) */
+    dwWait = WaitForSingleObject(hThread, 90 * 1000);
+    ok(dwWait == WAIT_OBJECT_0, "WaitForSingleObject returned %lu, expected WAIT_OBJECT_0\n", dwWait);
+
+    /* Cleanup and return */
+    CloseHandle(hThread);
 }
