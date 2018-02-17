@@ -29,18 +29,18 @@ class CFSDropTarget :
     public IObjectWithSite
 {
     private:
-        UINT cfShellIDList;    /* clipboardformat for IDropTarget */
-        BOOL fAcceptFmt;       /* flag for pending Drop */
-        LPWSTR sPathTarget;
+        UINT m_cfShellIDList;    /* clipboardformat for IDropTarget */
+        BOOL m_fAcceptFmt;       /* flag for pending Drop */
+        LPWSTR m_sPathTarget;
         HWND m_hwndSite;
         DWORD m_grfKeyState;
         DWORD m_dwDefaultEffect;
         CComPtr<IUnknown> m_site;
 
-        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
-        virtual HRESULT WINAPI _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
-        BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
+        BOOL _QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
+        HRESULT _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        HRESULT _CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
+        BOOL _GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
         static DWORD WINAPI _DoDropThreadProc(LPVOID lpParameter);
         HRESULT _GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect, DWORD dwAvailableEffects);
         HRESULT _RepositionItems(IShellFolderView *psfv, IDataObject *pDataObject, POINTL pt);
@@ -48,7 +48,7 @@ class CFSDropTarget :
     public:
         CFSDropTarget();
         ~CFSDropTarget();
-        HRESULT WINAPI Initialize(LPWSTR PathTarget);
+        HRESULT Initialize(LPWSTR PathTarget);
 
         // IDropTarget
         virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
