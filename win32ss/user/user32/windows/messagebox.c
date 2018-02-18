@@ -783,6 +783,20 @@ MessageBoxA(
     return MessageBoxExA(hWnd, lpText, lpCaption, uType, LANG_NEUTRAL);
 }
 
+/*
+ * @implemented
+ */
+int
+WINAPI
+MessageBoxW(
+    IN HWND hWnd,
+    IN LPCWSTR lpText,
+    IN LPCWSTR lpCaption,
+    IN UINT uType)
+{
+    return MessageBoxExW(hWnd, lpText, lpCaption, uType, LANG_NEUTRAL);
+}
+
 
 /*
  * @implemented
@@ -811,7 +825,6 @@ MessageBoxExA(
 
     return MessageBoxIndirectA(&msgbox);
 }
-
 
 /*
  * @implemented
@@ -920,7 +933,6 @@ MessageBoxIndirectA(
     return ret;
 }
 
-
 /*
  * @implemented
  */
@@ -938,27 +950,13 @@ MessageBoxIndirectW(
  */
 int
 WINAPI
-MessageBoxW(
-    IN HWND hWnd,
-    IN LPCWSTR lpText,
-    IN LPCWSTR lpCaption,
-    IN UINT uType)
-{
-    return MessageBoxExW(hWnd, lpText, lpCaption, uType, LANG_NEUTRAL);
-}
-
-/*
- * @implemented
- */
-int
-WINAPI
 MessageBoxTimeoutA(
     IN HWND hWnd,
     IN LPCSTR lpText,
     IN LPCSTR lpCaption,
     IN UINT uType,
     IN WORD wLanguageId,
-    IN DWORD dwTime)
+    IN DWORD dwTimeout)
 {
     MSGBOXPARAMSW msgboxW;
     UNICODE_STRING textW, captionW;
@@ -985,7 +983,7 @@ MessageBoxTimeoutA(
     msgboxW.lpfnMsgBoxCallback = NULL;
     msgboxW.dwLanguageId = wLanguageId;
 
-    ret = MessageBoxTimeoutIndirectW(&msgboxW, (UINT)dwTime);
+    ret = MessageBoxTimeoutIndirectW(&msgboxW, (UINT)dwTimeout);
 
     if (!IS_INTRESOURCE(textW.Buffer))
         RtlFreeUnicodeString(&textW);
@@ -1007,7 +1005,7 @@ MessageBoxTimeoutW(
     IN LPCWSTR lpCaption,
     IN UINT uType,
     IN WORD wLanguageId,
-    IN DWORD dwTime)
+    IN DWORD dwTimeout)
 {
     MSGBOXPARAMSW msgbox;
 
@@ -1022,7 +1020,7 @@ MessageBoxTimeoutW(
     msgbox.lpfnMsgBoxCallback = NULL;
     msgbox.dwLanguageId = wLanguageId;
 
-    return MessageBoxTimeoutIndirectW(&msgbox, (UINT)dwTime);
+    return MessageBoxTimeoutIndirectW(&msgbox, (UINT)dwTimeout);
 }
 
 
