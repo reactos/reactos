@@ -597,7 +597,7 @@ Clear:
         InterlockedAnd((volatile long *)&PrivateCacheMap->UlongFlags, 0xFFFEFFFF);
         KeReleaseSpinLockFromDpcLevel(&PrivateCacheMap->ReadAheadSpinLock);
     }
-    KeReleaseSpinLock(&PrivateCacheMap->ReadAheadSpinLock, OldIrql);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
     /* If file was locked, release it */
     if (Locked)
