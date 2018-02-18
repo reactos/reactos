@@ -75,5 +75,6 @@ DEFINE_END_INTERRUPT_WRAPPER HalpEndSoftwareInterrupt, HalpEndSoftwareInterrupt2
 DEFINE_END_INTERRUPT_WRAPPER HalEndSystemInterrupt, HalEndSystemInterrupt2
 
 DEFINE_INTERRUPT_WRAPPER HalpDispatchInterrupt, HalpDispatchInterrupt2
+DEFINE_INTERRUPT_WRAPPER HalpHardwareInterruptLevel, HalpHardwareInterruptLevel2
 
 END

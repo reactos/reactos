@@ -1015,9 +1015,9 @@ HalpDismissIrq07Level(IN KIRQL Irql,
     return _HalpDismissIrqLevel(Irql, Irq, OldIrql);
 }
 
-VOID
+PHAL_SW_INTERRUPT_HANDLER
 __cdecl
-HalpHardwareInterruptLevel(VOID)
+HalpHardwareInterruptLevel2(VOID)
 {
     PKPCR Pcr = KeGetPcr();
     ULONG PendingIrqlMask, PendingIrql;
@@ -1027,7 +1027,7 @@ HalpHardwareInterruptLevel(VOID)
     if (PendingIrqlMask)
     {
         /* Check for in-service delayed interrupt */
-        if (Pcr->IrrActive & 0xFFFFFFF0) return;
+        if (Pcr->IrrActive & 0xFFFFFFF0) return NULL;
 
         /* Check if pending IRQL affects hardware state */
         BitScanReverse(&PendingIrql, PendingIrqlMask);
@@ -1036,8 +1036,10 @@ HalpHardwareInterruptLevel(VOID)
         Pcr->IRR ^= (1 << PendingIrql);
 
         /* Now handle pending interrupt */
-        SWInterruptHandlerTable[PendingIrql]();
+        return SWInterruptHandlerTable[PendingIrql];
     }
+
+    return NULL;
 }
 
 /* SYSTEM INTERRUPTS **********************************************************/
