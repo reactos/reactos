@@ -211,7 +211,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Неможливо завантажити додаток! Перевірте підключення до мережі Інтернет!"
     IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
     IDS_UNABLE_TO_INSTALL "Не вдалося завершити інсталювання!"
-    IDS_CERT_DOES_NOT_MATCH "Помилка перевіки сертифікату SSL."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Перевірка цілістності додатку…"
     IDS_INTEG_CHECK_FAIL "Додаток не пройшов перевірку цілістності, його молги пошкодити чи замінити. Запуск додатку не рекомендується."
     IDS_INTERRUPTED_DOWNLOAD "Завантаження перервано. Перевірте підключення до мережі Інтернет."
@@ -219,6 +219,7 @@ BEGIN
     IDS_SELECT_ALL "Вибрати все"
     IDS_INSTALL_SELECTED "Встановити обране"
     IDS_SELECTEDFORINST "Обрані для встановлення"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

@@ -205,7 +205,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! Umûmî Ağ bağlantınızı yoklayınız!"
     IDS_UNABLE_TO_REMOVE "İzlencenin girişi değer defterinden silinemiyor."
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_CERT_DOES_NOT_MATCH "SSL onay belgesi doğrulaması başarısız."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor…"
     IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veyâ indirme esnâsında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
     IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. Umûmî Ağ bağlantınızı denetleyiniz."
@@ -213,6 +213,7 @@ BEGIN
     IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

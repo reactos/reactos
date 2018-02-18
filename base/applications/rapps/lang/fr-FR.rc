@@ -203,7 +203,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Impossible de télécharger le paquet : vérifiez votre connexion à Internet !"
     IDS_UNABLE_TO_REMOVE "Impossible de supprimer du registre les données du programme !"
     IDS_UNABLE_TO_INSTALL "Impossible d'ouvrir l'installeur !"
-    IDS_CERT_DOES_NOT_MATCH "La vérification du certificat SSL a échoué."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Vérification de l'intégrité du paquet…"
     IDS_INTEG_CHECK_FAIL "Le contrôle d'intégrité du paquet a échoué, il se peut qu'il ait été corrompu ou altéré au cours du téléchargement. L'exécution du programme n'est pas recommandée."
     IDS_INTERRUPTED_DOWNLOAD "Le téléchargement a été interrompu. Vérifiez votre connexion à Internet."
@@ -211,6 +211,7 @@ BEGIN
     IDS_SELECT_ALL "Sélectionner/Désélectionner tout"
     IDS_INSTALL_SELECTED "Installer la sélection"
     IDS_SELECTEDFORINST "Sélectionnées pour installation"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

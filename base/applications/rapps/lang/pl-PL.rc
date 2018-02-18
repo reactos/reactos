@@ -211,7 +211,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Nie można pobrać pakietu! Sprawdź połączenie z siecią!"
     IDS_UNABLE_TO_REMOVE "Nie można było usunąć wpisu z rejestru!"
     IDS_UNABLE_TO_INSTALL "Nie można uruchomić instalatora!"
-    IDS_CERT_DOES_NOT_MATCH "Weryfikacja certyfikatu SSL nieudana."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Weryfikowanie integralności pakietu…"
     IDS_INTEG_CHECK_FAIL "Pakiet nie przeszedł kontroli integralności, mógł zostać uszkodzony lub naruszony podczas pobierania. Uruchamianie tego programu nie jest zalecane."
     IDS_INTERRUPTED_DOWNLOAD "Pobieranie zostało przerwane. Sprawdź połączenie z siecią"
@@ -219,6 +219,7 @@ BEGIN
     IDS_SELECT_ALL "Zaznacz/Odznacz Wszystko"
     IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
     IDS_SELECTEDFORINST "Wybrane do instalacji"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
