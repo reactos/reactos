@@ -11,8 +11,6 @@
 
 #include <ks386.inc>
 
-EXTERN @HalpEndSoftwareInterrupt2@8:PROC
-
 /* GLOBALS *******************************************************************/
 
 .data
@@ -21,23 +19,26 @@ ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 /* FUNCTIONS *****************************************************************/
 
 .code
-PUBLIC _HalpEndSoftwareInterrupt@8
-.PROC _HalpEndSoftwareInterrupt@8
+
+MACRO(DEFINE_END_INTERRUPT_WRAPPER, WrapperName, HandlerName)
+EXTERN @&HandlerName&@8:PROC
+PUBLIC _&WrapperName&@8
+.PROC _&WrapperName&@8
     FPO 0, 2, 0, 0, 0, FRAME_FPO
 
     /* Call the C function with the same arguments we got */
     mov ecx, [esp+4]
     mov edx, [esp+8]
-    call @HalpEndSoftwareInterrupt2@8
+    call @&HandlerName&@8
 
     /* Check if we got a pointer back */
     test eax, eax
-    jnz CallIntHandler
+    jnz WrapperName&_CallIntHandler
 
     /* No? Just return */
     ret 8
 
-CallIntHandler:
+WrapperName&_CallIntHandler:
     /* We got a pointer to call. Since it won't return, free up our stack
        space. Otherwise we could end up with some nasty deep recursion.
        The next function takes the trap frame as its (fastcall) argument. */
@@ -45,5 +46,9 @@ CallIntHandler:
     add esp, 12
     jmp eax
 .ENDP
+ENDM
+
+
+DEFINE_END_INTERRUPT_WRAPPER HalpEndSoftwareInterrupt, HalpEndSoftwareInterrupt2
 
 END
