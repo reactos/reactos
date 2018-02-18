@@ -73,7 +73,7 @@ TestAllInformation(VOID)
     PFILE_ALL_INFORMATION FileAllInfo;
     SIZE_T Length;
     ULONG NameLength;
-    PWCHAR Name = NULL;
+    PWCHAR Name;
     UNICODE_STRING NamePart;
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -161,6 +161,7 @@ TestAllInformation(VOID)
                 ok(RtlEqualUnicodeString(&NamePart, &Ntoskrnl, TRUE),
                    "Name ends in '%wZ', expected %wZ\n", &NamePart, &Ntoskrnl);
             }
+            ExFreePoolWithTag(Name, 'sFmK');
         }
         ok(FileAllInfo->NameInformation.FileName[NameLength / sizeof(WCHAR)] == 0xdddd,
            "Char past FileName is %x\n",
@@ -208,8 +209,6 @@ TestAllInformation(VOID)
     ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength);
     if (FileAllInfo)
         KmtFreeGuarded(FileAllInfo);
-
-    ExFreePoolWithTag(Name, 'sFmK');
 
     Status = ObCloseHandle(FileHandle, KernelMode);
     ok_eq_hex(Status, STATUS_SUCCESS);
