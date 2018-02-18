@@ -165,6 +165,7 @@ CcScheduleReadAhead (
     LARGE_INTEGER NewOffset;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     PPRIVATE_CACHE_MAP PrivateCacheMap;
+    static ULONG Warn;
 
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     PrivateCacheMap = FileObject->PrivateCacheMap;
@@ -214,7 +215,7 @@ CcScheduleReadAhead (
         {
             /* FIXME: handle the other cases */
             KeReleaseSpinLock(&PrivateCacheMap->ReadAheadSpinLock, OldIrql);
-	        UNIMPLEMENTED;
+	        if (!Warn++) UNIMPLEMENTED;
             return;
         }
     }
