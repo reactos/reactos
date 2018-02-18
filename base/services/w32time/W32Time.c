@@ -172,7 +172,7 @@ SetTime(VOID)
     WCHAR szDefault[MAX_VALUE_NAME] = L"";
     size_t Size;
 
-DPRINT1("Entered SetTime().\n");
+    DPRINT("Entered SetTime.\n");
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
@@ -246,7 +246,7 @@ DPRINT1("Entered SetTime().\n");
 
     RegCloseKey(hKey);
 
-DPRINT1("Time Server is %S.\n", szDefault);
+    DPRINT("Time Server is '%S'.\n", szDefault);
 
     ulTime = GetServerTime(szDefault);
 
@@ -274,7 +274,7 @@ ControlHandler(DWORD request)
             return; 
  
         case SERVICE_CONTROL_SHUTDOWN: 
-            DPRINT1("W32Time Service stopped.\n");
+            DPRINT("W32Time Service stopped.\n");
 
             ServiceStatus.dwWin32ExitCode = 0; 
             ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 
@@ -343,6 +343,11 @@ ServiceMain(DWORD argc, LPWSTR *argv)
         result = SetTime();
 
         if (result)
+            DPRINT("W32Time Service failed to set clock.\n");
+        else
+            DPRINT("W32Time Service successfully set clock.\n");
+
+        if (result)
         {
             /* Commented out for the reasons given above about stopping this service.
             ServiceStatus.dwCurrentState  = SERVICE_STOPPED; 
@@ -368,12 +373,12 @@ int wmain(int argc, WCHAR *argv[])
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
-    DPRINT("W32Time: main() started\n");
+    DPRINT("W32Time: main starting.\n");
 
     /* Start the control dispatcher thread for our service */
     StartServiceCtrlDispatcherW(ServiceTable);
 
-    DPRINT("W32Time: main() done\n");
+    DPRINT("W32Time: main done.\n");
 
     return 0; 
 }
@@ -384,8 +389,8 @@ int InitService(VOID)
     int result;
     result = SetTime();
     if (result)
-        DPRINT1("W32Time Service failed to start successfully and clock not set.\n");
+        DPRINT("W32Time Service failed to start successfully and clock not set.\n");
     else
-        DPRINT1("W32Time Service started successfully and clock set.\n");
+        DPRINT("W32Time Service started successfully and clock set.\n");
     return result; 
 } 
