@@ -1546,6 +1546,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","MaxSize",0x00010003,52
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","Retention",0x00010003,604800
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","TypesSupported",0x00010001,0x00000007
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Application Popup","EventMessageFile",0x00020000,"%SystemRoot%\system32\ntdll.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Application Popup","TypesSupported",0x00010001,0x00000007
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","TypesSupported",0x00010001,0x00000007
 
