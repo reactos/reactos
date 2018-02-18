@@ -382,7 +382,7 @@ PHAL_SW_INTERRUPT_HANDLER SWInterruptHandlerTable[20] =
 {
     (PHAL_SW_INTERRUPT_HANDLER)KiUnexpectedInterrupt,
     HalpApcInterrupt,
-    HalpDispatchInterrupt2,
+    HalpDispatchInterrupt,
     (PHAL_SW_INTERRUPT_HANDLER)KiUnexpectedInterrupt,
     HalpHardwareInterrupt0,
     HalpHardwareInterrupt1,
@@ -1297,7 +1297,7 @@ HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
     KiEoiHelper(TrapFrame);
 }
 
-VOID
+PHAL_SW_INTERRUPT_HANDLER
 __cdecl
 HalpDispatchInterrupt2(VOID)
 {
@@ -1330,8 +1330,10 @@ HalpDispatchInterrupt2(VOID)
         }
 
         /* Now handle pending interrupt */
-        SWInterruptHandlerTable[PendingIrql]();
+        return SWInterruptHandlerTable[PendingIrql];
     }
+
+    return NULL;
 }
 
 #else

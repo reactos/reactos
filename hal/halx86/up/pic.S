@@ -48,8 +48,32 @@ WrapperName&_CallIntHandler:
 .ENDP
 ENDM
 
+MACRO(DEFINE_INTERRUPT_WRAPPER, WrapperName, HandlerName)
+EXTERN _&HandlerName:PROC
+PUBLIC _&WrapperName
+.PROC _&WrapperName
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
+
+    /* Call the C function */
+    call _&HandlerName
+
+    /* Check if we got a pointer back */
+    test eax, eax
+    jnz WrapperName&_CallIntHandler
+
+    /* No? Just return */
+    ret
+
+WrapperName&_CallIntHandler:
+    /* Optimize the tail call to avoid stack overflow */
+    jmp eax
+.ENDP
+ENDM
+
 
 DEFINE_END_INTERRUPT_WRAPPER HalpEndSoftwareInterrupt, HalpEndSoftwareInterrupt2
 DEFINE_END_INTERRUPT_WRAPPER HalEndSystemInterrupt, HalEndSystemInterrupt2
+
+DEFINE_INTERRUPT_WRAPPER HalpDispatchInterrupt, HalpDispatchInterrupt2
 
 END
