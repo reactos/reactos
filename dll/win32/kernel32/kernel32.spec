@@ -1,3 +1,5 @@
+@ stdcall -stub -version=0x600+ AcquireSRWLockExclusive(ptr) NTDLL.RtlAcquireSRWLockExclusive
+@ stdcall -stub -version=0x600+ AcquireSRWLockShared(ptr) NTDLL.RtlAcquireSRWLockShared
 @ stdcall ActivateActCtx(ptr ptr)
 @ stdcall AddAtomA(str)
 @ stdcall AddAtomW(wstr)
@@ -6,10 +8,16 @@
 @ stdcall AddLocalAlternateComputerNameA(str ptr)
 @ stdcall AddLocalAlternateComputerNameW(wstr ptr)
 @ stdcall AddRefActCtx(ptr)
+@ stdcall -stub -version=0x600+ AddSIDToBoundaryDescriptor(ptr ptr)
+@ stdcall -stub -version=0x600+ AddSecureMemoryCacheCallback(ptr)
 @ stdcall AddVectoredContinueHandler(long ptr) ntdll.RtlAddVectoredContinueHandler
 @ stdcall AddVectoredExceptionHandler(long ptr) ntdll.RtlAddVectoredExceptionHandler
+@ stdcall -stub -version=0x600+ AdjustCalendarDate(ptr long long)
 @ stdcall AllocConsole()
 @ stdcall AllocateUserPhysicalPages(long ptr ptr)
+@ stdcall -stub -version=0x600+ AllocateUserPhysicalPagesNuma(ptr ptr ptr long)
+@ stdcall -stub -version=0x600+ ApplicationRecoveryFinished(long)
+@ stdcall -stub -version=0x600+ ApplicationRecoveryInProgress(ptr)
 @ stdcall AreFileApisANSI()
 @ stdcall AssignProcessToJobObject(ptr ptr)
 @ stdcall AttachConsole(long)
@@ -21,12 +29,14 @@
 @ stdcall BaseCleanupAppcompatCacheSupport(ptr)
 @ stdcall BaseDumpAppcompatCache()
 @ stdcall BaseFlushAppcompatCache()
+@ stub -version=0x600+ BaseGenerateAppCompatData
 @ stdcall BaseInitAppcompatCacheSupport()
 @ stdcall BaseIsAppcompatInfrastructureDisabled() IsShimInfrastructureDisabled
-@ stdcall BaseProcessInitPostImport() ; missing in Win 7
-;@ stdcall -arch=x86_64 BaseProcessStart()
+@ stdcall -version=0x501-0x502 BaseProcessInitPostImport()
+;@ stdcall -version=0x502 -arch=x86_64 BaseProcessStart()
 @ stdcall BaseQueryModuleData(str str ptr ptr ptr) ;check
-;@ stdcall -arch=x86_64 BaseThreadStart()
+@ stub -version=0x600+ BaseThreadInitThunk
+;@ stdcall -version=0x502 -arch=x86_64 BaseThreadStart()
 @ stdcall BaseUpdateAppcompatCache(long long long)
 @ stdcall BasepCheckBadapp(long ptr long long long long long long long)
 @ stdcall BasepCheckWinSaferRestrictions(long long long long long long)
@@ -41,11 +51,18 @@
 @ stdcall BuildCommDCBW(wstr ptr)
 @ stdcall CallNamedPipeA(str ptr long ptr long ptr long)
 @ stdcall CallNamedPipeW(wstr ptr long ptr long ptr long)
+@ stdcall -stub -version=0x600+ CallbackMayRunLong(ptr)
 @ stdcall CancelDeviceWakeupRequest(long)
 @ stdcall CancelIo(long)
+@ stdcall -stub -version=0x600+ CancelIoEx(ptr ptr)
+@ stdcall -stub -version=0x600+ CancelSynchronousIo(ptr)
+@ stdcall -stub -version=0x600+ CancelThreadpoolIo(ptr)
 @ stdcall CancelTimerQueueTimer(long long)
 @ stdcall CancelWaitableTimer(long)
 @ stdcall ChangeTimerQueueTimer(ptr ptr long long)
+@ stdcall -stub -version=0x600+ CheckElevation(ptr ptr ptr ptr ptr)
+@ stdcall -stub -version=0x600+ CheckElevationEnabled(ptr)
+@ stub -version=0x600+ CheckForReadOnlyResource
 @ stdcall CheckNameLegalDOS8Dot3A(str str long long long)
 @ stdcall CheckNameLegalDOS8Dot3W(wstr str long long long)
 @ stdcall CheckRemoteDebuggerPresent(long ptr)
@@ -53,42 +70,70 @@
 @ stdcall ClearCommError(long ptr ptr)
 @ stdcall CloseConsoleHandle(long)
 @ stdcall CloseHandle(long)
+@ stdcall -stub -version=0x600+ ClosePrivateNamespace(ptr long)
 @ stdcall CloseProfileUserMapping()
+@ stdcall -stub -version=0x600+ CloseThreadpool(ptr)
+@ stdcall -stub -version=0x600+ CloseThreadpoolCleanupGroup(ptr)
+@ stdcall -stub -version=0x600+ CloseThreadpoolCleanupGroupMembers(ptr long ptr)
+@ stdcall -stub -version=0x600+ CloseThreadpoolIo(ptr)
+@ stdcall -stub -version=0x600+ CloseThreadpoolTimer(pti)
+@ stdcall -stub -version=0x600+ CloseThreadpoolWait(pwa)
+@ stdcall -stub -version=0x600+ CloseThreadpoolWork(ptr)
 @ stdcall CmdBatNotification(long)
 @ stdcall CommConfigDialogA(str long ptr)
 @ stdcall CommConfigDialogW(wstr long ptr)
+@ stdcall -stub -version=0x600+ CompareCalendarDates(ptr ptr ptr)
 @ stdcall CompareFileTime(ptr ptr)
 @ stdcall CompareStringA(long long str long str long)
+@ stdcall -stub -version=0x600+ CompareStringEx(wstr long wstr long wstr long ptr ptr ptr)
+@ stdcall -stub -version=0x600+ CompareStringOrdinal(wstr long wstr long long)
 @ stdcall CompareStringW(long long wstr long wstr long)
 @ stdcall ConnectNamedPipe(long ptr)
 ;@ stdcall -arch=x86_64 ConsoleIMERoutine()
 @ stdcall ConsoleMenuControl(long long long)
 @ stdcall ContinueDebugEvent(long long long)
+@ stdcall -stub -version=0x600+ ConvertCalDateTimeToSystemTime
 @ stdcall ConvertDefaultLocale (long)
 @ stdcall ConvertFiberToThread()
+@ stdcall -stub -version=0x600+ ConvertNLSDayOfWeekToWin32DayOfWeek(long)
+@ stdcall -stub -version=0x600+ ConvertSystemTimeToCalDateTime
 @ stdcall ConvertThreadToFiber(ptr)
 @ stdcall ConvertThreadToFiberEx(ptr long)
 @ stdcall CopyFileA(str str long)
 @ stdcall CopyFileExA (str str ptr ptr ptr long)
 @ stdcall CopyFileExW (wstr wstr ptr ptr ptr long)
+@ stdcall -stub -version=0x600+ CopyFileTransactedA(str str ptr ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ CopyFileTransactedW(wstr wstr ptr ptr ptr long ptr)
 @ stdcall CopyFileW(wstr wstr long)
 @ stdcall CopyLZFile(long long) LZCopy
 @ stdcall CreateActCtxA(ptr)
 @ stdcall CreateActCtxW(ptr)
+@ stdcall -stub -version=0x600+ CreateBoundaryDescriptorA(str long)
+@ stdcall -stub -version=0x600+ CreateBoundaryDescriptorW(wstr long)
 @ stdcall CreateConsoleScreenBuffer(long long ptr long ptr)
 @ stdcall CreateDirectoryA(str ptr)
 @ stdcall CreateDirectoryExA(str str ptr)
 @ stdcall CreateDirectoryExW(wstr wstr ptr)
+@ stdcall -stub -version=0x600+ CreateDirectoryTransactedA(str str ptr ptr)
+@ stdcall -stub -version=0x600+ CreateDirectoryTransactedW(wstr wstr ptr ptr)
 @ stdcall CreateDirectoryW(wstr ptr)
 @ stdcall CreateEventA(ptr long long str)
+@ stdcall -stub -version=0x600+ CreateEventExA(ptr str long long)
+@ stdcall -stub -version=0x600+ CreateEventExW(ptr wstr long long)
 @ stdcall CreateEventW(ptr long long wstr)
 @ stdcall CreateFiber(long ptr ptr)
 @ stdcall CreateFiberEx(long long long ptr ptr)
 @ stdcall CreateFileA(str long long ptr long long long)
 @ stdcall CreateFileMappingA(long ptr long long long str)
+@ stdcall -stub -version=0x600+ CreateFileMappingNumaA(ptr ptr long long long str long)
+@ stdcall -stub -version=0x600+ CreateFileMappingNumaW(ptr ptr long long long wstr long)
 @ stdcall CreateFileMappingW(long ptr long long long wstr)
+@ stdcall -stub -version=0x600+ CreateFileTransactedA(str long long ptr long long ptr ptr ptr ptr)
+@ stdcall -stub -version=0x600+ CreateFileTransactedW(wstr long long ptr long long ptr ptr ptr ptr)
 @ stdcall CreateFileW(wstr long long ptr long long long)
 @ stdcall CreateHardLinkA(str str ptr)
+@ stdcall -stub -version=0x600+ CreateHardLinkTransactedA(str str ptr ptr)
+@ stdcall -stub -version=0x600+ CreateHardLinkTransactedW(wstr wstr ptr ptr)
 @ stdcall CreateHardLinkW(wstr wstr ptr)
 @ stdcall CreateIoCompletionPort(long long long long)
 @ stdcall CreateJobObjectA(ptr str)
@@ -98,25 +143,43 @@
 @ stdcall CreateMailslotW(ptr long long ptr)
 @ stdcall CreateMemoryResourceNotification(long)
 @ stdcall CreateMutexA(ptr long str)
+@ stdcall -stub -version=0x600+ CreateMutexExA(ptr str long long)
+@ stdcall -stub -version=0x600+ CreateMutexExW(ptr wstr long long)
 @ stdcall CreateMutexW(ptr long wstr)
 @ stdcall CreateNamedPipeA(str long long long long long long ptr)
 @ stdcall CreateNamedPipeW(wstr long long long long long long ptr)
-@ stdcall CreateNlsSecurityDescriptor(ptr long long) ; missing in Win 7
+@ stdcall -version=0x501-0x502 CreateNlsSecurityDescriptor(ptr long long)
 @ stdcall CreatePipe(ptr ptr ptr long)
+@ stdcall -stub -version=0x600+ CreatePrivateNamespaceA(ptr ptr str)
+@ stdcall -stub -version=0x600+ CreatePrivateNamespaceW(ptr prt wstr)
 @ stdcall CreateProcessA(str str ptr ptr long long ptr str ptr ptr)
 @ stdcall CreateProcessInternalA(ptr str str ptr ptr long long ptr str ptr ptr long)
 @ stdcall CreateProcessInternalW(ptr wstr wstr ptr ptr long long ptr wstr ptr ptr long)
 @ stdcall CreateProcessW(wstr wstr ptr ptr long long ptr wstr ptr ptr)
 @ stdcall CreateRemoteThread(long ptr long ptr long long ptr)
 @ stdcall CreateSemaphoreA(ptr long long str)
+@ stdcall -stub -version=0x600+ CreateSemaphoreExA(ptr long long str long long)
+@ stdcall -stub -version=0x600+ CreateSemaphoreExW(ptr long long wstr long long)
 @ stdcall CreateSemaphoreW(ptr long long wstr)
 @ stdcall -i386 CreateSocketHandle()
+@ stdcall -stub -version=0x600+ CreateSymbolicLinkA(str str long)
+@ stdcall -stub -version=0x600+ CreateSymbolicLinkTransactedA(str str long ptr)
+@ stdcall -stub -version=0x600+ CreateSymbolicLinkTransactedW(wstr wstr long ptr)
+@ stdcall -stub -version=0x600+ CreateSymbolicLinkW(wstr wstr long)
 @ stdcall CreateTapePartition(long long long long)
 @ stdcall CreateThread(ptr long ptr long long ptr)
+@ stub -version=0x600+ CreateThreadpool
+@ stub -version=0x600+ CreateThreadpoolCleanupGroup
+@ stub -version=0x600+ CreateThreadpoolIo
+@ stub -version=0x600+ CreateThreadpoolTimer
+@ stub -version=0x600+ CreateThreadpoolWait
+@ stub -version=0x600+ CreateThreadpoolWork
 @ stdcall CreateTimerQueue ()
 @ stdcall CreateTimerQueueTimer(ptr long ptr ptr long long long)
 @ stdcall CreateToolhelp32Snapshot(long long)
 @ stdcall CreateWaitableTimerA(ptr long str)
+@ stub -version=0x600+ CreateWaitableTimerExA
+@ stub -version=0x600+ CreateWaitableTimerExW
 @ stdcall CreateWaitableTimerW(ptr long wstr)
 ;@ stdcall -arch=x86_64 CtrlRoutine()
 @ stdcall DeactivateActCtx(long ptr)
@@ -131,10 +194,14 @@
 @ stdcall DefineDosDeviceW(long wstr wstr)
 @ stdcall DelayLoadFailureHook(str str)
 @ stdcall DeleteAtom(long)
+@ stub -version=0x600+ DeleteBoundaryDescriptor
 @ stdcall DeleteCriticalSection(ptr) ntdll.RtlDeleteCriticalSection
 @ stdcall DeleteFiber(ptr)
 @ stdcall DeleteFileA(str)
+@ stub -version=0x600+ DeleteFileTransactedA
+@ stub -version=0x600+ DeleteFileTransactedW
 @ stdcall DeleteFileW(wstr)
+@ stub -version=0x600+ DeleteProcThreadAttributeList
 @ stdcall DeleteTimerQueue(long)
 @ stdcall DeleteTimerQueueEx (long long)
 @ stdcall DeleteTimerQueueTimer(long long long)
@@ -142,6 +209,7 @@
 @ stdcall DeleteVolumeMountPointW(wstr) ;check
 @ stdcall DeviceIoControl(long long ptr long ptr long ptr ptr)
 @ stdcall DisableThreadLibraryCalls(long)
+@ stub -version=0x600+ DisassociateCurrentThreadFromCallback
 @ stdcall DisconnectNamedPipe(long)
 @ stdcall DnsHostnameToComputerNameA (str ptr ptr)
 @ stdcall DnsHostnameToComputerNameW (wstr ptr ptr)
@@ -157,19 +225,27 @@
 @ stdcall EnterCriticalSection(ptr) ntdll.RtlEnterCriticalSection
 @ stdcall EnumCalendarInfoA(ptr long long long)
 @ stdcall EnumCalendarInfoExA(ptr long long long)
+@ stub -version=0x600+ EnumCalendarInfoExEx
 @ stdcall EnumCalendarInfoExW(ptr long long long)
 @ stdcall EnumCalendarInfoW(ptr long long long)
 @ stdcall EnumDateFormatsA(ptr long long)
 @ stdcall EnumDateFormatsExA(ptr long long)
+@ stub -version=0x600+ EnumDateFormatsExEx
 @ stdcall EnumDateFormatsExW(ptr long long)
 @ stdcall EnumDateFormatsW(ptr long long)
 @ stdcall EnumLanguageGroupLocalesA(ptr long long ptr)
 @ stdcall EnumLanguageGroupLocalesW(ptr long long ptr)
 @ stdcall EnumResourceLanguagesA(long str str ptr long)
+@ stub -version=0x600+ EnumResourceLanguagesExA
+@ stub -version=0x600+ EnumResourceLanguagesExW
 @ stdcall EnumResourceLanguagesW(long wstr wstr ptr long)
 @ stdcall EnumResourceNamesA(long str ptr long)
+@ stub -version=0x600+ EnumResourceNamesExA
+@ stub -version=0x600+ EnumResourceNamesExW
 @ stdcall EnumResourceNamesW(long wstr ptr long)
 @ stdcall EnumResourceTypesA(long ptr long)
+@ stub -version=0x600+ EnumResourceTypesExA
+@ stub -version=0x600+ EnumResourceTypesExW
 @ stdcall EnumResourceTypesW(long ptr long)
 @ stdcall EnumSystemCodePagesA(ptr long)
 @ stdcall EnumSystemCodePagesW(ptr long)
@@ -178,8 +254,10 @@
 @ stdcall EnumSystemLanguageGroupsA(ptr long ptr)
 @ stdcall EnumSystemLanguageGroupsW(ptr long ptr)
 @ stdcall EnumSystemLocalesA(ptr long)
+@ stub -version=0x600+ EnumSystemLocalesEx
 @ stdcall EnumSystemLocalesW(ptr long)
 @ stdcall EnumTimeFormatsA(ptr long long)
+@ stub -version=0x600+ EnumTimeFormatsEx
 @ stdcall EnumTimeFormatsW(ptr long long)
 @ stdcall EnumUILanguagesA(ptr long long)
 @ stdcall EnumUILanguagesW(ptr long long)
@@ -215,14 +293,22 @@
 @ stdcall FindFirstFileA(str ptr)
 @ stdcall FindFirstFileExA(str long ptr long ptr long)
 @ stdcall FindFirstFileExW(wstr long ptr long ptr long)
+@ stub -version=0x600+ FindFirstFileNameTransactedW
+@ stub -version=0x600+ FindFirstFileNameW
+@ stub -version=0x600+ FindFirstFileTransactedA
+@ stub -version=0x600+ FindFirstFileTransactedW
 @ stdcall FindFirstFileW(wstr ptr)
+@ stub -version=0x600+ FindFirstStreamTransactedW
 @ stdcall FindFirstStreamW(wstr ptr ptr long)
 @ stdcall FindFirstVolumeA(ptr long)
 @ stdcall FindFirstVolumeMountPointA(str ptr long)
 @ stdcall FindFirstVolumeMountPointW(wstr ptr long)
 @ stdcall FindFirstVolumeW(ptr long)
+@ stub -version=0x600+ FindNLSString
+@ stub -version=0x600+ FindNLSStringEx
 @ stdcall FindNextChangeNotification(long)
 @ stdcall FindNextFileA(long ptr)
+@ stub -version=0x600+ FindNextFileNameW
 @ stdcall FindNextFileW(long ptr)
 @ stdcall FindNextStreamW(ptr ptr)
 @ stdcall FindNextVolumeA(long ptr long)
@@ -242,6 +328,7 @@
 @ stdcall FlushConsoleInputBuffer(long)
 @ stdcall FlushFileBuffers(long)
 @ stdcall FlushInstructionCache(long long long)
+@ stub -version=0x600+ FlushProcessWriteBuffers
 @ stdcall FlushViewOfFile(ptr long)
 @ stdcall FoldStringA(long str long ptr long)
 @ stdcall FoldStringW(long wstr long ptr long)
@@ -252,21 +339,32 @@
 @ stdcall FreeEnvironmentStringsW(ptr)
 @ stdcall FreeLibrary(long)
 @ stdcall FreeLibraryAndExitThread(long long)
+@ stub -version=0x600+ FreeLibraryWhenCallbackReturns
 @ stdcall FreeResource(long)
 @ stdcall FreeUserPhysicalPages(long long long)
 @ stdcall GenerateConsoleCtrlEvent(long long)
 @ stdcall GetACP()
+@ stub -version=0x600+ GetApplicationRecoveryCallback
+@ stub -version=0x600+ GetApplicationRestartSettings
 @ stdcall GetAtomNameA(long ptr long)
 @ stdcall GetAtomNameW(long ptr long)
 @ stdcall GetBinaryType(str ptr) GetBinaryTypeA
 @ stdcall GetBinaryTypeA(str ptr)
 @ stdcall GetBinaryTypeW(wstr ptr)
-@ stdcall GetCPFileNameFromRegistry(long wstr long) ;check missing in Win 7
+@ stdcall -version=0x501-0x600 GetCPFileNameFromRegistry(long wstr long)
 @ stdcall GetCPInfo(long ptr)
 @ stdcall GetCPInfoExA(long long ptr)
 @ stdcall GetCPInfoExW(long long ptr)
+@ stub -version=0x600+ GetCalendarDateFormat
+@ stub -version=0x600+ GetCalendarDateFormatEx
+@ stub -version=0x600+ GetCalendarDaysInMonth
+@ stub -version=0x600+ GetCalendarDifferenceInDays
 @ stdcall GetCalendarInfoA(long long long ptr long ptr)
+@ stub -version=0x600+ GetCalendarInfoEx
 @ stdcall GetCalendarInfoW(long long long ptr long ptr)
+@ stub -version=0x600+ GetCalendarMonthsInYear
+@ stub -version=0x600+ GetCalendarSupportedDateRange
+@ stub -version=0x600+ GetCalendarWeekNumber
 @ stdcall GetComPlusPackageInstallStatus()
 @ stdcall GetCommConfig(long ptr long)
 @ stdcall GetCommMask(long ptr)
@@ -277,6 +375,8 @@
 @ stdcall GetCommandLineA()
 @ stdcall GetCommandLineW()
 @ stdcall GetCompressedFileSizeA(long ptr)
+@ stub -version=0x600+ GetCompressedFileSizeTransactedA
+@ stub -version=0x600+ GetCompressedFileSizeTransactedW
 @ stdcall GetCompressedFileSizeW(long ptr)
 @ stdcall GetComputerNameA(ptr ptr)
 @ stdcall GetComputerNameExA(long ptr ptr)
@@ -304,6 +404,7 @@
 @ stdcall GetConsoleFontInfo(long long long ptr)
 @ stdcall GetConsoleFontSize(long long)
 @ stdcall GetConsoleHardwareState(long long ptr)
+@ stub -version=0x600+ GetConsoleHistoryInfo
 @ stdcall GetConsoleInputExeNameA(long ptr)
 @ stdcall GetConsoleInputExeNameW(long ptr)
 @ stdcall GetConsoleInputWaitHandle()
@@ -311,17 +412,22 @@
 @ stdcall GetConsoleKeyboardLayoutNameW(ptr)
 @ stdcall GetConsoleMode(long ptr)
 @ stdcall GetConsoleNlsMode(long ptr)
+@ stub -version=0x600+ GetConsoleOriginalTitleA
+@ stub -version=0x600+ GetConsoleOriginalTitleW
 @ stdcall GetConsoleOutputCP()
 @ stdcall GetConsoleProcessList(ptr long) ; missing in XP SP3
 @ stdcall GetConsoleScreenBufferInfo(long ptr)
+@ stub -version=0x600+ GetConsoleScreenBufferInfoEx
 @ stdcall GetConsoleSelectionInfo(ptr)
 @ stdcall GetConsoleTitleA(ptr long)
 @ stdcall GetConsoleTitleW(ptr long)
 @ stdcall GetConsoleWindow()
 @ stdcall GetCurrencyFormatA(long long str ptr str long)
+@ stub -version=0x600+ GetCurrencyFormatEx
 @ stdcall GetCurrencyFormatW(long long str ptr str long)
 @ stdcall GetCurrentActCtx(ptr)
 @ stdcall GetCurrentConsoleFont(long long ptr)
+@ stub -version=0x600+ GetCurrentConsoleFontEx
 @ stdcall GetCurrentDirectoryA(long ptr)
 @ stdcall GetCurrentDirectoryW(long ptr)
 @ stdcall -norelay GetCurrentProcess()
@@ -330,10 +436,11 @@
 @ stdcall -norelay GetCurrentThread()
 @ stdcall -norelay GetCurrentThreadId()
 @ stdcall GetDateFormatA(long long ptr str ptr long)
+@ stub -version=0x600+ GetDateFormatEx
 @ stdcall GetDateFormatW(long long ptr wstr ptr long)
 @ stdcall GetDefaultCommConfigA(str ptr long)
 @ stdcall GetDefaultCommConfigW(wstr ptr long)
-@ stdcall GetDefaultSortkeySize(ptr) ; missing in Win 7
+@ stdcall -version=0x501-0x502 GetDefaultSortkeySize(ptr)
 @ stdcall GetDevicePowerState(long ptr)
 @ stdcall GetDiskFreeSpaceA(str ptr ptr ptr ptr)
 @ stdcall GetDiskFreeSpaceExA (str ptr ptr ptr)
@@ -343,11 +450,15 @@
 @ stdcall GetDllDirectoryW(long ptr)
 @ stdcall GetDriveTypeA(str)
 @ stdcall GetDriveTypeW(wstr)
+@ stub -version=0x600+ GetDurationFormat
+@ stub -version=0x600+ GetDurationFormatEx
+@ stub -version=0x600+ GetDynamicTimeZoneInformation
 @ stdcall GetEnvironmentStrings()
 @ stdcall GetEnvironmentStringsA() GetEnvironmentStrings
 @ stdcall GetEnvironmentStringsW()
 @ stdcall GetEnvironmentVariableA(str ptr long)
 @ stdcall GetEnvironmentVariableW(wstr ptr long)
+@ stub -version=0x600+ GetErrorMode
 @ stdcall GetExitCodeProcess(long ptr)
 @ stdcall GetExitCodeThread(long ptr)
 @ stdcall GetExpandedNameA(str ptr)
@@ -355,15 +466,25 @@
 @ stdcall GetFileAttributesA(str)
 @ stdcall GetFileAttributesExA(str long ptr)
 @ stdcall GetFileAttributesExW(wstr long ptr)
+@ stub -version=0x600+ GetFileAttributesTransactedA
+@ stub -version=0x600+ GetFileAttributesTransactedW
 @ stdcall GetFileAttributesW(wstr)
+@ stub -version=0x600+ GetFileBandwidthReservation
 @ stdcall GetFileInformationByHandle(long ptr)
+@ stub -version=0x600+ GetFileInformationByHandleEx
+@ stub -version=0x600+ GetFileMUIInfo
+@ stub -version=0x600+ GetFileMUIPath
 @ stdcall GetFileSize(long ptr)
 @ stdcall GetFileSizeEx(long ptr)
 @ stdcall GetFileTime(long ptr ptr ptr)
 @ stdcall GetFileType(long)
+@ stub -version=0x600+ GetFinalPathNameByHandleA
+@ stub -version=0x600+ GetFinalPathNameByHandleW
 @ stdcall GetFirmwareEnvironmentVariableA(str str ptr long)
 @ stdcall GetFirmwareEnvironmentVariableW(wstr wstr ptr long)
 @ stdcall GetFullPathNameA(str long ptr ptr)
+@ stub -version=0x600+ GetFullPathNameTransactedA
+@ stub -version=0x600+ GetFullPathNameTransactedW
 @ stdcall GetFullPathNameW(wstr long ptr ptr)
 @ stdcall GetGeoInfoA(long long ptr long long)
 @ stdcall GetGeoInfoW(long long ptr long long)
@@ -372,15 +493,18 @@
 @ stdcall GetLargePageMinimum()
 @ stdcall GetLargestConsoleWindowSize(long)
 @ stdcall GetLastError() ntdll.RtlGetLastWin32Error
-@ stdcall GetLinguistLangSize(ptr) ; missing in Win 7
+@ stdcall -version=0x500-0x502 GetLinguistLangSize(ptr)
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
+@ stub -version=0x600+ GetLocaleInfoEx
 @ stdcall GetLocaleInfoW(long long ptr long)
 @ stdcall GetLogicalDriveStringsA(long ptr)
 @ stdcall GetLogicalDriveStringsW(long ptr)
 @ stdcall GetLogicalDrives()
 @ stdcall GetLogicalProcessorInformation(ptr ptr)
 @ stdcall GetLongPathNameA (str long long)
+@ stub -version=0x600+ GetLongPathNameTransactedA
+@ stub -version=0x600+ GetLongPathNameTransactedW
 @ stdcall GetLongPathNameW (wstr long long)
 @ stdcall GetMailslotInfo(long ptr ptr ptr ptr)
 @ stdcall GetModuleFileNameA(long ptr long)
@@ -390,23 +514,34 @@
 @ stdcall GetModuleHandleExW(long ptr ptr)
 @ stdcall GetModuleHandleW(wstr)
 @ stdcall GetNLSVersion(long long ptr)
+@ stub -version=0x600+ GetNLSVersionEx
+@ stub -version=0x600+ GetNamedPipeAttribute
+@ stub -version=0x600+ GetNamedPipeClientComputerNameA
+@ stub -version=0x600+ GetNamedPipeClientComputerNameW
+@ stub -version=0x600+ GetNamedPipeClientProcessId
+@ stub -version=0x600+ GetNamedPipeClientSessionId
 @ stdcall GetNamedPipeHandleStateA(long ptr ptr ptr ptr str long)
 @ stdcall GetNamedPipeHandleStateW(long ptr ptr ptr ptr wstr long)
 @ stdcall GetNamedPipeInfo(long ptr ptr ptr ptr)
+@ stub -version=0x600+ GetNamedPipeServerProcessId
+@ stub -version=0x600+ GetNamedPipeServerSessionId
 @ stdcall GetNativeSystemInfo(ptr)
 @ stdcall GetNextVDMCommand(long)
-@ stdcall GetNlsSectionName(long long long str str long) ; missing in Win 7
+@ stdcall -version=0x500-0x502 GetNlsSectionName(long long long str str long)
 @ stdcall GetNumaAvailableMemoryNode(long ptr)
 @ stdcall GetNumaHighestNodeNumber(ptr)
 @ stdcall GetNumaNodeProcessorMask(long ptr)
 @ stdcall GetNumaProcessorNode(long ptr)
+@ stub -version=0x600+ GetNumaProximityNode
 @ stdcall GetNumberFormatA(long long str ptr ptr long)
+@ stub -version=0x600+ GetNumberFormatEx
 @ stdcall GetNumberFormatW(long long wstr ptr ptr long)
 @ stdcall GetNumberOfConsoleFonts()
 @ stdcall GetNumberOfConsoleInputEvents(long ptr)
 @ stdcall GetNumberOfConsoleMouseButtons(ptr)
 @ stdcall GetOEMCP()
 @ stdcall GetOverlappedResult(long ptr ptr long)
+@ stub -version=0x600+ GetPhysicallyInstalledSystemMemory
 @ stdcall GetPriorityClass(long)
 @ stdcall GetPrivateProfileIntA(str str long str)
 @ stdcall GetPrivateProfileIntW(wstr wstr long wstr)
@@ -420,6 +555,7 @@
 @ stdcall GetPrivateProfileStructW(wstr wstr ptr long wstr)
 @ stdcall GetProcAddress(long str)
 @ stdcall GetProcessAffinityMask(long ptr ptr)
+@ stub -version=0x600+ GetProcessDEPPolicy
 @ stdcall GetProcessHandleCount(long ptr)
 @ stdcall -norelay GetProcessHeap()
 @ stdcall GetProcessHeaps(long ptr)
@@ -432,6 +568,7 @@
 @ stdcall GetProcessVersion(long)
 @ stdcall GetProcessWorkingSetSize(long ptr ptr)
 @ stdcall GetProcessWorkingSetSizeEx(long ptr ptr long)
+@ stub -version=0x600+ GetProductInfo
 @ stdcall GetProfileIntA(str str long)
 @ stdcall GetProfileIntW(wstr wstr long)
 @ stdcall GetProfileSectionA(str ptr long)
@@ -439,17 +576,21 @@
 @ stdcall GetProfileStringA(str str str ptr long)
 @ stdcall GetProfileStringW(wstr wstr wstr ptr long)
 @ stdcall GetQueuedCompletionStatus(long ptr ptr ptr long)
+@ stub -version=0x600+ GetQueuedCompletionStatusEx
 @ stdcall GetShortPathNameA(str ptr long)
 @ stdcall GetShortPathNameW(wstr ptr long)
 @ stdcall GetStartupInfoA(ptr)
 @ stdcall GetStartupInfoW(ptr)
 @ stdcall GetStdHandle(long)
+@ stub -version=0x600+ GetStringScripts
 @ stdcall GetStringTypeA(long long str long ptr)
 @ stdcall GetStringTypeExA(long long str long ptr)
 @ stdcall GetStringTypeExW(long long wstr long ptr)
 @ stdcall GetStringTypeW(long wstr long ptr)
+@ stub -version=0x600+ GetSystemDEPPolicy
 @ stdcall GetSystemDefaultLCID()
 @ stdcall GetSystemDefaultLangID()
+@ stub -version=0x600+ GetSystemDefaultLocaleName
 @ stdcall GetSystemDefaultUILanguage()
 @ stdcall GetSystemDirectoryA(ptr long)
 @ stdcall GetSystemDirectoryW(ptr long)
@@ -457,6 +598,7 @@
 @ stdcall GetSystemFirmwareTable(long long ptr long)
 @ stdcall GetSystemInfo(ptr)
 @ stdcall GetSystemPowerStatus(ptr)
+@ stub -version=0x600+ GetSystemPreferredUILanguages
 @ stdcall GetSystemRegistryQuota(ptr ptr)
 @ stdcall GetSystemTime(ptr)
 @ stdcall GetSystemTimeAdjustment(ptr ptr ptr)
@@ -477,23 +619,32 @@
 @ stdcall GetThreadIOPendingFlag(long ptr)
 @ stdcall GetThreadId(ptr)
 @ stdcall GetThreadLocale()
+@ stub -version=0x600+ GetThreadPreferredUILanguages
 @ stdcall GetThreadPriority(long)
 @ stdcall GetThreadPriorityBoost(long ptr)
 @ stdcall GetThreadSelectorEntry(long long ptr)
 @ stdcall GetThreadTimes(long ptr ptr ptr ptr)
+@ stub -version=0x600+ GetThreadUILanguage
 @ stdcall GetTickCount()
+@ stub -version=0x600+ GetTickCount64
 @ stdcall GetTimeFormatA(long long ptr str ptr long)
+@ stub -version=0x600+ GetTimeFormatEx
 @ stdcall GetTimeFormatW(long long ptr wstr ptr long)
 @ stdcall GetTimeZoneInformation(ptr)
+@ stub -version=0x600+ GetTimeZoneInformationForYear
+@ stub -version=0x600+ GetUILanguageInfo
 @ stdcall GetUserDefaultLCID()
 @ stdcall GetUserDefaultLangID()
+@ stub -version=0x600+ GetUserDefaultLocaleName
 @ stdcall GetUserDefaultUILanguage()
 @ stdcall GetUserGeoID(long)
+@ stub -version=0x600+ GetUserPreferredUILanguages
 @ stdcall GetVDMCurrentDirectories(long long)
 @ stdcall GetVersion()
 @ stdcall GetVersionExA(ptr)
 @ stdcall GetVersionExW(ptr)
 @ stdcall GetVolumeInformationA(str ptr long ptr ptr ptr ptr long)
+@ stub -version=0x600+ GetVolumeInformationByHandleW
 @ stdcall GetVolumeInformationW(wstr ptr long ptr ptr ptr ptr long)
 @ stdcall GetVolumeNameForVolumeMountPointA(str ptr long)
 @ stdcall GetVolumeNameForVolumeMountPointW(wstr ptr long)
@@ -533,25 +684,36 @@
 @ stdcall HeapAlloc(long long long) ntdll.RtlAllocateHeap
 @ stdcall HeapCompact(long long)
 @ stdcall HeapCreate(long long long)
-@ stdcall HeapCreateTagsW(long long wstr wstr) ; missing in Win 7
+@ stdcall -version=0x351-0x502 HeapCreateTagsW(long long wstr wstr)
 @ stdcall HeapDestroy(long)
-@ stdcall HeapExtend(long long ptr long) ; missing in Win 7
+@ stdcall -version=0x351-0x502 HeapExtend(long long ptr long)
 @ stdcall HeapFree(long long long) ntdll.RtlFreeHeap
 @ stdcall HeapLock(long)
 @ stdcall HeapQueryInformation(long long ptr long ptr)
-@ stdcall HeapQueryTagW(long long long long ptr) ; missing in Win 7
+@ stdcall -version=0x351-0x502 HeapQueryTagW(long long long long ptr)
 @ stdcall HeapReAlloc(long long ptr long) ntdll.RtlReAllocateHeap
 @ stdcall HeapSetInformation(ptr long ptr long)
 @ stdcall HeapSize(long long ptr) ntdll.RtlSizeHeap
 @ stdcall HeapSummary(long long ptr)
 @ stdcall HeapUnlock(long)
-@ stdcall HeapUsage(long long long long ptr) ; missing in Win 7
+@ stdcall -version=0x351-0x502 HeapUsage(long long long long ptr)
 @ stdcall HeapValidate(long long ptr)
 @ stdcall HeapWalk(long ptr)
+@ stub -version=0x600+ IdnToAscii
+@ stub -version=0x600+ IdnToNameprepUnicode
+@ stub -version=0x600+ IdnToUnicode
 @ stdcall InitAtomTable(long)
+@ stub -version=0x600+ InitOnceBeginInitialize
+@ stub -version=0x600+ InitOnceComplete
+@ stub -version=0x600+ InitOnceExecuteOnce
+@ stub -version=0x600+ InitOnceInitialize
+@ stub -version=0x600+ InitializeConditionVariable
 @ stdcall InitializeCriticalSection(ptr)
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)
+@ stub -version=0x600+ InitializeCriticalSectionEx
+@ stub -version=0x600+ InitializeProcThreadAttributeList
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
+@ stub -version=0x600+ InitializeSRWLock
 @ stdcall -arch=i386 -ret64 InterlockedCompareExchange64(ptr double double) ntdll.RtlInterlockedCompareExchange64
 @ stdcall -arch=i386 InterlockedCompareExchange (ptr long long)
 @ stdcall -arch=i386 InterlockedDecrement(ptr)
@@ -561,6 +723,7 @@
 @ stdcall -arch=i386 InterlockedIncrement(ptr)
 @ stdcall InterlockedPopEntrySList(ptr) ntdll.RtlInterlockedPopEntrySList
 @ stdcall InterlockedPushEntrySList(ptr ptr) ntdll.RtlInterlockedPushEntrySList
+@ stub -version=0x600+ InterlockedPushListSList
 @ stdcall InvalidateConsoleDIBits(long long)
 @ stdcall IsBadCodePtr(ptr)
 @ stdcall IsBadHugeReadPtr(ptr long)
@@ -569,20 +732,29 @@
 @ stdcall IsBadStringPtrA(ptr long)
 @ stdcall IsBadStringPtrW(ptr long)
 @ stdcall IsBadWritePtr(ptr long)
+@ stub -version=0x600+ IsCalendarLeapDay
+@ stub -version=0x600+ IsCalendarLeapMonth
+@ stub -version=0x600+ IsCalendarLeapYear
 @ stdcall IsDBCSLeadByte(long)
 @ stdcall IsDBCSLeadByteEx(long long)
 @ stdcall IsDebuggerPresent()
 @ stdcall IsNLSDefinedString(long long ptr long long)
+@ stub -version=0x600+ IsNormalizedString
 @ stdcall IsProcessInJob(long long ptr)
 @ stdcall IsProcessorFeaturePresent(long)
 @ stdcall IsSystemResumeAutomatic()
+@ stub -version=0x600+ IsThreadAFiber
+@ stub -version=0x600+ IsThreadpoolTimerSet
 @ stdcall IsTimeZoneRedirectionEnabled()
+@ stub -version=0x600+ IsValidCalDateTime
 @ stdcall IsValidCodePage(long)
 @ stdcall IsValidLanguageGroup(long long)
 @ stdcall IsValidLocale(long long)
-@ stdcall IsValidUILanguage(long) ; missing in Win 7
+@ stdcall -version=0x501-0x502 IsValidUILanguage(long)
 @ stdcall IsWow64Process(ptr ptr)
+@ stub -version=0x600+ LCIDToLocaleName
 @ stdcall LCMapStringA(long long str long ptr long)
+@ stub -version=0x600+ LCMapStringEx
 @ stdcall LCMapStringW(long long wstr long ptr long)
 @ stdcall LZClose(long)
 @ stdcall LZCloseFile(long)
@@ -596,12 +768,15 @@
 @ stdcall LZSeek(long long long)
 @ stdcall LZStart()
 @ stdcall LeaveCriticalSection(ptr) ntdll.RtlLeaveCriticalSection
+@ stub -version=0x600+ LeaveCriticalSectionWhenCallbackReturns
 @ stdcall LoadLibraryA(str)
 @ stdcall LoadLibraryExA( str long long)
 @ stdcall LoadLibraryExW(wstr long long)
 @ stdcall LoadLibraryW(wstr)
 @ stdcall LoadModule(str ptr)
 @ stdcall LoadResource(long long)
+@ stub -version=0x600+ LoadStringBaseExW
+@ stub -version=0x600+ LoadStringBaseW
 @ stdcall LocalAlloc(long long)
 @ stdcall LocalCompact(long)
 @ stdcall LocalFileTimeToFileTime(ptr ptr)
@@ -613,6 +788,7 @@
 @ stdcall LocalShrink(long long)
 @ stdcall LocalSize(long)
 @ stdcall LocalUnlock(long)
+@ stub -version=0x600+ LocaleNameToLCID
 @ stdcall LockFile(long long long long long)
 @ stdcall LockFileEx(long long long long long ptr)
 @ stdcall LockResource(long)
@@ -620,6 +796,7 @@
 @ stdcall MapUserPhysicalPagesScatter(ptr long ptr)
 @ stdcall MapViewOfFile(long long long long long)
 @ stdcall MapViewOfFileEx(long long long long long ptr)
+@ stub -version=0x600+ MapViewOfFileExNuma
 @ stdcall Module32First(long ptr)
 @ stdcall Module32FirstW(long ptr)
 @ stdcall Module32Next(long ptr)
@@ -627,6 +804,8 @@
 @ stdcall MoveFileA(str str)
 @ stdcall MoveFileExA(str str long)
 @ stdcall MoveFileExW(wstr wstr long)
+@ stub -version=0x600+ MoveFileTransactedA
+@ stub -version=0x600+ MoveFileTransactedW
 @ stdcall MoveFileW(wstr wstr)
 @ stdcall MoveFileWithProgressA(str str ptr ptr long)
 @ stdcall MoveFileWithProgressW(wstr wstr ptr ptr long)
@@ -634,20 +813,30 @@
 @ stdcall MultiByteToWideChar(long long str long ptr long)
 @ stdcall NeedCurrentDirectoryForExePathA(str)
 @ stdcall NeedCurrentDirectoryForExePathW(wstr)
-@ stdcall NlsConvertIntegerToString(long long long wstr long) ; missing in Win 7
+@ stub -version=0x600+ NlsCheckPolicy
+@ stdcall -version=0x500-0x600 NlsConvertIntegerToString(long long long wstr long)
+@ stub -version=0x600+ NlsEventDataDescCreate
 @ stdcall NlsGetCacheUpdateCount()
-@ stdcall NlsResetProcessLocale()
+@ stdcall -version=0x500-0x502 NlsResetProcessLocale()
+@ stub -version=0x600+ NlsUpdateLocale
+@ stub -version=0x600+ NlsUpdateSystemLocale
+@ stub -version=0x600+ NlsWriteEtwEvent
+@ stub -version=0x600+ NormalizeString
+@ stub -version=0x600+ NotifyUILanguageChange
 @ stdcall OpenConsoleW(wstr long long long)
-@ stdcall OpenDataFile(long long) ; missing in Win 7
+@ stdcall -version=0x500-0x502 OpenDataFile(long long)
 @ stdcall OpenEventA(long long str)
 @ stdcall OpenEventW(long long wstr)
 @ stdcall OpenFile(str ptr long)
+@ stub -version=0x600+ OpenFileById
 @ stdcall OpenFileMappingA(long long str)
 @ stdcall OpenFileMappingW(long long wstr)
 @ stdcall OpenJobObjectA(long long str)
 @ stdcall OpenJobObjectW(long long wstr)
 @ stdcall OpenMutexA(long long str)
 @ stdcall OpenMutexW(long long wstr)
+@ stub -version=0x600+ OpenPrivateNamespaceA
+@ stub -version=0x600+ OpenPrivateNamespaceW
 @ stdcall OpenProcess(long long long)
 @ stdcall OpenProfileUserMapping()
 @ stdcall OpenSemaphoreA(long long str)
@@ -671,14 +860,21 @@
 @ stdcall ProcessIdToSessionId(long ptr)
 @ stdcall PulseEvent(long)
 @ stdcall PurgeComm(long long)
+@ stub -version=0x600+ QueryActCtxSettingsW
 @ stdcall QueryActCtxW(long ptr ptr long ptr long ptr)
 @ stdcall QueryDepthSList(ptr) ntdll.RtlQueryDepthSList
 @ stdcall QueryDosDeviceA(str ptr long)
 @ stdcall QueryDosDeviceW(wstr ptr long)
+@ stub -version=0x600+ QueryFullProcessImageNameA
+@ stub -version=0x600+ QueryFullProcessImageNameW
+@ stub -version=0x600+ QueryIdleProcessorCycleTime
 @ stdcall QueryInformationJobObject(long long ptr long ptr)
 @ stdcall QueryMemoryResourceNotification(ptr ptr)
 @ stdcall QueryPerformanceCounter(ptr)
 @ stdcall QueryPerformanceFrequency(ptr)
+@ stub -version=0x600+ QueryProcessAffinityUpdateMode
+@ stub -version=0x600+ QueryProcessCycleTime
+@ stub -version=0x600+ QueryThreadCycleTime
 @ stdcall QueueUserAPC(ptr long long)
 @ stdcall QueueUserWorkItem(ptr ptr long)
 @ stdcall -norelay RaiseException(long long long ptr)
@@ -699,6 +895,8 @@
 @ stdcall ReadFileEx(long ptr long ptr ptr)
 @ stdcall ReadFileScatter(long ptr long ptr ptr)
 @ stdcall ReadProcessMemory(long ptr ptr long ptr)
+@ stub -version=0x600+ RegisterApplicationRecoveryCallback
+@ stub -version=0x600+ RegisterApplicationRestart
 @ stdcall RegisterConsoleIME(ptr ptr)
 @ stdcall RegisterConsoleOS2(long)
 @ stdcall RegisterConsoleVDM(long long long long long long long long long long long)
@@ -709,16 +907,24 @@
 @ stdcall RegisterWowExec(long)
 @ stdcall ReleaseActCtx(ptr)
 @ stdcall ReleaseMutex(long)
+@ stub -version=0x600+ ReleaseMutexWhenCallbackReturns
+@ stub -version=0x600+ ReleaseSRWLockExclusive
+@ stub -version=0x600+ ReleaseSRWLockShared
 @ stdcall ReleaseSemaphore(long long ptr)
+@ stub -version=0x600+ ReleaseSemaphoreWhenCallbackReturns
 @ stdcall RemoveDirectoryA(str)
+@ stub -version=0x600+ RemoveDirectoryTransactedA
+@ stub -version=0x600+ RemoveDirectoryTransactedW
 @ stdcall RemoveDirectoryW(wstr)
 @ stdcall RemoveLocalAlternateComputerNameA(str long)
 @ stdcall RemoveLocalAlternateComputerNameW(wstr long)
+@ stub -version=0x600+ RemoveSecureMemoryCacheCallback
 @ stdcall RemoveVectoredContinueHandler(ptr) ntdll.RtlRemoveVectoredContinueHandler
 @ stdcall RemoveVectoredExceptionHandler(ptr) ntdll.RtlRemoveVectoredExceptionHandler
 @ stdcall ReplaceFile(wstr wstr wstr long ptr ptr) ReplaceFileW
 @ stdcall ReplaceFileA(str str str long ptr ptr)
 @ stdcall ReplaceFileW(wstr wstr wstr long ptr ptr)
+@ stub -version=0x600+ ReplacePartitionUnit
 @ stdcall RequestDeviceWakeup(long)
 @ stdcall RequestWakeupLatency(long)
 @ stdcall ResetEvent(long)
@@ -746,7 +952,7 @@
 @ stdcall ScrollConsoleScreenBufferW(long ptr ptr ptr ptr)
 @ stdcall SearchPathA(str str str long ptr ptr)
 @ stdcall SearchPathW(wstr wstr wstr long ptr ptr)
-@ stdcall SetCPGlobal(long) ; missing in Win 7
+@ stdcall -version=0x500-0x502 SetCPGlobal(long)
 @ stdcall SetCalendarInfoA(long long long str)
 @ stdcall SetCalendarInfoW(long long long wstr)
 @ stdcall SetClientTimeZoneInformation(ptr)
@@ -762,7 +968,7 @@
 @ stdcall SetComputerNameW(wstr)
 @ stdcall SetConsoleActiveScreenBuffer(long)
 @ stdcall SetConsoleCP(long)
-@ stdcall SetConsoleCommandHistoryMode(long) ; missing in win 7
+@ stdcall -version=0x351-0x502 SetConsoleCommandHistoryMode(long)
 @ stdcall SetConsoleCtrlHandler(ptr long)
 @ stdcall SetConsoleCursor(long long)
 @ stdcall SetConsoleCursorInfo(long ptr)
@@ -771,6 +977,7 @@
 @ stdcall SetConsoleDisplayMode(long long ptr)
 @ stdcall SetConsoleFont(long long)
 @ stdcall SetConsoleHardwareState(long long long)
+@ stub -version=0x600+ SetConsoleHistoryInfo
 @ stdcall SetConsoleIcon(ptr)
 @ stdcall SetConsoleInputExeNameA(ptr)
 @ stdcall SetConsoleInputExeNameW(ptr)
@@ -785,18 +992,21 @@
 @ stdcall SetConsoleOS2OemFormat(long)
 @ stdcall SetConsoleOutputCP(long)
 @ stdcall SetConsolePalette(long long long)
+@ stub -version=0x600+ SetConsoleScreenBufferInfoEx
 @ stdcall SetConsoleScreenBufferSize(long long)
 @ stdcall SetConsoleTextAttribute(long long)
 @ stdcall SetConsoleTitleA(str)
 @ stdcall SetConsoleTitleW(wstr)
 @ stdcall SetConsoleWindowInfo(long long ptr)
 @ stdcall SetCriticalSectionSpinCount(ptr long) ntdll.RtlSetCriticalSectionSpinCount
+@ stub -version=0x600+ SetCurrentConsoleFontEx
 @ stdcall SetCurrentDirectoryA(str)
 @ stdcall SetCurrentDirectoryW(wstr)
 @ stdcall SetDefaultCommConfigA(str ptr long)
 @ stdcall SetDefaultCommConfigW(wstr ptr long)
 @ stdcall SetDllDirectoryA(str)
 @ stdcall SetDllDirectoryW(wstr)
+@ stub -version=0x600+ SetDynamicTimeZoneInformation
 @ stdcall SetEndOfFile(long)
 @ stdcall SetEnvironmentStringsA(ptr)
 @ stdcall SetEnvironmentStringsW(ptr)
@@ -804,11 +1014,17 @@
 @ stdcall SetEnvironmentVariableW(wstr wstr)
 @ stdcall SetErrorMode(long)
 @ stdcall SetEvent(long)
+@ stub -version=0x600+ SetEventWhenCallbackReturns
 @ stdcall SetFileApisToANSI()
 @ stdcall SetFileApisToOEM()
 @ stdcall SetFileAttributesA(str long)
+@ stub -version=0x600+ SetFileAttributesTransactedA
+@ stub -version=0x600+ SetFileAttributesTransactedW
 @ stdcall SetFileAttributesW(wstr long)
+@ stub -version=0x600+ SetFileBandwidthReservation
 @ stdcall SetFileCompletionNotificationModes(ptr long)
+@ stub -version=0x600+ SetFileInformationByHandle
+@ stub -version=0x600+ SetFileIoOverlappedRange
 @ stdcall SetFilePointer(long long ptr long)
 @ stdcall SetFilePointerEx(long double ptr long)
 @ stdcall SetFileShortNameA(long str)
@@ -817,7 +1033,7 @@
 @ stdcall SetFileValidData(long double)
 @ stdcall SetFirmwareEnvironmentVariableA(str str ptr long)
 @ stdcall SetFirmwareEnvironmentVariableW(wstr wstr ptr long)
-@ stdcall -i386 SetHandleContext(long long) ; missing in Win 7 x64
+@ stdcall -i386 SetHandleContext(long long)
 @ stdcall SetHandleCount(long)
 @ stdcall SetHandleInformation(long long long)
 @ stdcall SetInformationJobObject(long long ptr long)
@@ -830,14 +1046,18 @@
 @ stdcall SetLocaleInfoW(long long wstr)
 @ stdcall SetMailslotInfo(long long)
 @ stdcall SetMessageWaitingIndicator(ptr long)
+@ stub -version=0x600+ SetNamedPipeAttribute
 @ stdcall SetNamedPipeHandleState(long ptr ptr ptr)
 @ stdcall SetPriorityClass(long long)
 @ stdcall SetProcessAffinityMask(long long)
+@ stub -version=0x600+ SetProcessAffinityUpdateMode
+@ stub -version=0x600+ SetProcessDEPPolicy
 @ stdcall SetProcessPriorityBoost(long long)
 @ stdcall SetProcessShutdownParameters(long long)
 @ stdcall SetProcessWorkingSetSize(long long long)
 @ stdcall SetProcessWorkingSetSizeEx(long long long long)
 @ stdcall SetStdHandle(long long)
+@ stub -version=0x600+ SetStdHandleEx
 @ stdcall SetSystemFileCacheSize(long long long)
 @ stdcall SetSystemPowerState(long long)
 @ stdcall SetSystemTime(ptr)
@@ -850,10 +1070,15 @@
 @ stdcall SetThreadExecutionState(long)
 @ stdcall SetThreadIdealProcessor(long long)
 @ stdcall SetThreadLocale(long)
+@ stub -version=0x600+ SetThreadPreferredUILanguages
 @ stdcall SetThreadPriority(long long)
 @ stdcall SetThreadPriorityBoost(long long)
 @ stdcall SetThreadStackGuarantee(ptr)
 @ stdcall SetThreadUILanguage(long)
+@ stub -version=0x600+ SetThreadpoolThreadMaximum
+@ stub -version=0x600+ SetThreadpoolThreadMinimum
+@ stub -version=0x600+ SetThreadpoolTimer
+@ stub -version=0x600+ SetThreadpoolWait
 @ stdcall SetTimeZoneInformation(ptr)
 @ stdcall SetTimerQueueTimer(long ptr ptr long long long)
 @ stdcall SetUnhandledExceptionFilter(ptr)
@@ -869,7 +1094,11 @@
 @ stdcall SignalObjectAndWait(long long long long)
 @ stdcall SizeofResource(long long)
 @ stdcall Sleep(long)
+@ stub -version=0x600+ SleepConditionVariableCS
+@ stub -version=0x600+ SleepConditionVariableSRW
 @ stdcall SleepEx(long long)
+@ stub -version=0x600+ StartThreadpoolIo
+@ stub -version=0x600+ SubmitThreadpoolWork
 @ stdcall SuspendThread(long)
 @ stdcall SwitchToFiber(ptr)
 @ stdcall SwitchToThread()
@@ -889,6 +1118,7 @@
 @ stdcall TransactNamedPipe(long ptr long ptr long ptr ptr)
 @ stdcall TransmitCommChar(long long)
 @ stdcall TryEnterCriticalSection(ptr) ntdll.RtlTryEnterCriticalSection
+@ stub -version=0x600+ TrySubmitThreadpoolCallback
 @ stdcall TzSpecificLocalTimeToSystemTime(ptr ptr ptr)
 @ stdcall UTRegister(long str str str ptr ptr ptr)
 @ stdcall UTUnRegister(long)
@@ -896,23 +1126,29 @@
 @ stdcall UnlockFile(long long long long long)
 @ stdcall UnlockFileEx(long long long long ptr)
 @ stdcall UnmapViewOfFile(ptr)
+@ stub -version=0x600+ UnregisterApplicationRecoveryCallback
+@ stub -version=0x600+ UnregisterApplicationRestart
 @ stdcall UnregisterConsoleIME()
 @ stdcall UnregisterWait(long)
 @ stdcall UnregisterWaitEx(long long)
+@ stub -version=0x600+ UpdateCalendarDayOfWeek
+@ stub -version=0x600+ UpdateProcThreadAttribute
 @ stdcall UpdateResourceA(long str str long ptr long)
 @ stdcall UpdateResourceW(long wstr wstr long ptr long)
 @ stdcall VDMConsoleOperation(long long)
 @ stdcall VDMOperationStarted(long)
-@ stdcall ValidateLCType(long long ptr ptr)
-@ stdcall ValidateLocale(long)
+@ stdcall -version=0x500-0x502 ValidateLCType(long long ptr ptr)
+@ stdcall -version=0x500-0x502 ValidateLocale(long)
 @ stdcall VerLanguageNameA(long str long)
 @ stdcall VerLanguageNameW(long wstr long)
 @ stdcall -ret64 VerSetConditionMask(long long long long) ntdll.VerSetConditionMask
 @ stdcall VerifyConsoleIoHandle(long)
+@ stub -version=0x600+ VerifyScripts
 @ stdcall VerifyVersionInfoA(long long double)
 @ stdcall VerifyVersionInfoW(long long double)
 @ stdcall VirtualAlloc(ptr long long long)
 @ stdcall VirtualAllocEx(long ptr long long long)
+@ stub -version=0x600+ VirtualAllocExNuma
 @ stdcall VirtualFree(ptr long long)
 @ stdcall VirtualFreeEx(long ptr long long)
 @ stdcall VirtualLock(ptr long)
@@ -928,13 +1164,34 @@
 @ stdcall WaitForMultipleObjectsEx(long ptr long long long)
 @ stdcall WaitForSingleObject(long long)
 @ stdcall WaitForSingleObjectEx(long long long)
+@ stub -version=0x600+ WaitForThreadpoolIoCallbacks
+@ stub -version=0x600+ WaitForThreadpoolTimerCallbacks
+@ stub -version=0x600+ WaitForThreadpoolWaitCallbacks
+@ stub -version=0x600+ WaitForThreadpoolWorkCallbacks
 @ stdcall WaitNamedPipeA (str long)
 @ stdcall WaitNamedPipeW (wstr long)
+@ stub -version=0x600+ WakeAllConditionVariable
+@ stub -version=0x600+ WakeConditionVariable
+@ stub -version=0x600+ WerGetFlags
+@ stub -version=0x600+ WerRegisterFile
+@ stub -version=0x600+ WerRegisterMemoryBlock
+@ stub -version=0x600+ WerSetFlags
+@ stub -version=0x600+ WerUnregisterFile
+@ stub -version=0x600+ WerUnregisterMemoryBlock
+@ stub -version=0x600+ WerpCleanupMessageMapping
+@ stub -version=0x600+ WerpInitiateRemoteRecovery
+@ stub -version=0x600+ WerpNotifyLoadStringResource
+@ stub -version=0x600+ WerpNotifyLoadStringResourceEx
+@ stub -version=0x600+ WerpNotifyUseStringResource
+@ stub -version=0x600+ WerpStringLookup
 @ stdcall WideCharToMultiByte(long long wstr long ptr long ptr ptr)
 @ stdcall WinExec(str long)
 @ stdcall Wow64DisableWow64FsRedirection(ptr)
 @ stdcall Wow64EnableWow64FsRedirection(long)
+@ stub -version=0x600+ Wow64GetThreadContext
 @ stdcall Wow64RevertWow64FsRedirection(ptr)
+@ stub -version=0x600+ Wow64SetThreadContext
+@ stub -version=0x600+ Wow64SuspendThread
 @ stdcall WriteConsoleA(long ptr long ptr ptr)
 @ stdcall WriteConsoleInputA(long ptr long ptr)
 @ stdcall WriteConsoleInputVDMA(long long long long)
