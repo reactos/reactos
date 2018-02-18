@@ -205,7 +205,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "无法下载该软件包！请检查网络连接！"
     IDS_UNABLE_TO_REMOVE "无法从注册表删除该程序的数据！"
     IDS_UNABLE_TO_INSTALL "无法打开安装程序！"
-    IDS_CERT_DOES_NOT_MATCH "SSL 证书验证失败。"
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "正在验证包完整性…"
     IDS_INTEG_CHECK_FAIL "这个包没有通过完整性验证，它可能在下载过程中损坏或被人为篡改了。不推荐运行这个程序。"
     IDS_INTERRUPTED_DOWNLOAD "下载中断。请检查网络连接。"
@@ -213,6 +213,7 @@ BEGIN
     IDS_SELECT_ALL "全选/全反选"
     IDS_INSTALL_SELECTED "安装已选中的"
     IDS_SELECTEDFORINST "Selected for installation"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
