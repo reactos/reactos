@@ -172,6 +172,8 @@ TestIrpHandler(
 
     if (IoStack->MajorFunction == IRP_MJ_CREATE)
     {
+        ok(KeGetCurrentIrql() == PASSIVE_LEVEL, "Wrong IRQL: %d\n", KeGetCurrentIrql());
+
         if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR))
         {
             TestDeviceObject = DeviceObject;
@@ -235,6 +237,7 @@ TestIrpHandler(
 
         if (!FlagOn(Irp->Flags, IRP_NOCACHE))
         {
+            ok(KeGetCurrentIrql() == PASSIVE_LEVEL, "Wrong IRQL: %d\n", KeGetCurrentIrql());
             ok(Offset.QuadPart % PAGE_SIZE != 0, "Offset is aligned: %I64i\n", Offset.QuadPart);
             ok(Length % PAGE_SIZE != 0, "Length is aligned: %I64i\n", Length);
 
@@ -271,6 +274,7 @@ TestIrpHandler(
         {
             PMDL Mdl;
 
+            ok(KeGetCurrentIrql() == APC_LEVEL, "Wrong IRQL: %d\n", KeGetCurrentIrql());
             ok((Offset.QuadPart % PAGE_SIZE == 0 || Offset.QuadPart == 0), "Offset is not aligned: %I64i\n", Offset.QuadPart);
             ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
 
@@ -301,6 +305,7 @@ TestIrpHandler(
     }
     else if (IoStack->MajorFunction == IRP_MJ_CLEANUP)
     {
+        ok(KeGetCurrentIrql() == PASSIVE_LEVEL, "Wrong IRQL: %d\n", KeGetCurrentIrql());
         KeInitializeEvent(&CacheUninitEvent.Event, NotificationEvent, FALSE);
         CcUninitializeCacheMap(IoStack->FileObject, NULL, &CacheUninitEvent);
         KeWaitForSingleObject(&CacheUninitEvent.Event, Executive, KernelMode, FALSE, NULL);
