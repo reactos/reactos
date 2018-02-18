@@ -49,6 +49,7 @@ char *pszSourceFileName = NULL;
 char *pszDllName = NULL;
 char *gpszUnderscore = "";
 int gbDebug;
+unsigned guOsVersion = 0x502;
 #define DbgPrint(...) (!gbDebug || fprintf(stderr, __VA_ARGS__))
 
 enum
@@ -129,6 +130,7 @@ CompareToken(const char *token, const char *comparand)
         token++;
         comparand++;
     }
+    if (IsSeparator(comparand[-1])) return 1;
     if (!IsSeparator(*token)) return 0;
     return 1;
 }
@@ -709,7 +711,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
     char *pc, *pcLine;
     int nLine;
     EXPORT exp;
-    int included;
+    int included, version_included;
     char namebuffer[16];
     unsigned int i;
 
@@ -726,21 +728,12 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         exp.uFlags = 0;
         exp.nNumber++;
 
-        //if (!strncmp(pcLine, "22 stdcall @(long) MPR_Alloc",28))
-        //    gbDebug = 1;
-
-        //fprintf(stderr, "info: line %d, token:'%d, %.20s'\n",
-        //        nLine, TokenLength(pcLine), pcLine);
-
         /* Skip white spaces */
         while (*pc == ' ' || *pc == '\t') pc++;
 
         /* Skip empty lines, stop at EOF */
         if (*pc == ';' || *pc <= '#') continue;
         if (*pc == 0) return 0;
-
-        //fprintf(stderr, "info: line %d, token:'%.*s'\n",
-        //        nLine, TokenLength(pc), pc);
 
         /* Now we should get either an ordinal or @ */
         if (*pc == '@')
@@ -795,8 +788,6 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             return -11;
         }
 
-        //fprintf(stderr, "info: nCallingConvention: %d\n", exp.nCallingConvention);
-
         /* Go to next token (options or name) */
         if (!(pc = NextToken(pc)))
         {
@@ -806,16 +797,17 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
 
         /* Handle options */
         included = 1;
+        version_included = 1;
         while (*pc == '-')
         {
-            if (CompareToken(pc, "-arch"))
+            if (CompareToken(pc, "-arch="))
             {
                 /* Default to not included */
                 included = 0;
                 pc += 5;
 
                 /* Look if we are included */
-                while (*pc == '=' || *pc == ',')
+                do
                 {
                     pc++;
                     if (CompareToken(pc, pszArchString) ||
@@ -826,11 +818,62 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
 
                     /* Skip to next arch or end */
                     while (*pc > ',') pc++;
-                }
+                } while (*pc == ',');
             }
             else if (CompareToken(pc, "-i386"))
             {
                 if (giArch != ARCH_X86) included = 0;
+            }
+            else if (CompareToken(pc, "-version="))
+            {
+                /* Default to not included */
+                version_included = 0;
+                pc += 8;
+
+                /* Look if we are included */
+                do
+                {
+                    unsigned version, endversion;
+
+                    /* Optionally skip leading '0x' */
+                    pc++;
+                    if ((pc[0] == '0') && (pc[1] == 'x')) pc += 2;
+
+                    /* Now get the version number */
+                    endversion = version = strtoul(pc, &pc, 16);
+
+                    /* Check if it's a range */
+                    if (pc[0] == '+')
+                    {
+                        endversion = 0xFFF;
+                        pc++;
+                    }
+                    else if (pc[0] == '-')
+                    {
+                        /* Optionally skip leading '0x' */
+                        pc++;
+                        if ((pc[0] == '0') && (pc[1] == 'x')) pc += 2;
+                        endversion = strtoul(pc, &pc, 16);
+                    }
+
+                    /* Check for degenerate range */
+                    if (version > endversion)
+                    {
+                        fprintf(stderr, "%s line %d: error: invalid version rangen\n", pszSourceFileName, nLine);
+                        return -1;
+                    }
+
+                    /* Now compare the range with our version */
+                    if ((guOsVersion >= version) &&
+                        (guOsVersion <= endversion))
+                    {
+                        version_included = 1;
+                    }
+
+                    /* Skip to next arch or end */
+                    while (*pc > ',') pc++;
+
+                } while (*pc == ',');
             }
             else if (CompareToken(pc, "-private"))
             {
@@ -877,7 +920,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         //fprintf(stderr, "info: Name:'%.10s'\n", pc);
 
         /* If arch didn't match ours, skip this entry */
-        if (!included) continue;
+        if (!included || !version_included) continue;
 
         /* Get name */
         exp.strName.buf = pc;
@@ -1117,6 +1160,10 @@ int main(int argc, char *argv[])
         else if (argv[i][1] == 'n' && argv[i][2] == '=')
         {
             pszDllName = argv[i] + 3;
+        }
+        else if (strcasecmp(argv[i], "--version=0x") == 0)
+        {
+            guOsVersion = strtoul(argv[i] + sizeof("--version=0x"), NULL, 16);
         }
         else if (strcasecmp(argv[i], "--implib") == 0)
         {
