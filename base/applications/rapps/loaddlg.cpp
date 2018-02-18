@@ -47,8 +47,8 @@
 #include "misc.h"
 
 #ifdef USE_CERT_PINNING
-#define CERT_ISSUER_INFO "BE\r\nGlobalSign nv-sa\r\nGlobalSign Domain Validation CA - SHA256 - G2"
-#define CERT_SUBJECT_INFO "Domain Control Validated\r\n*.reactos.org"
+#define CERT_ISSUER_INFO "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
+#define CERT_SUBJECT_INFO "svn.reactos.org"
 #endif
 
 enum DownloadStatus
@@ -331,55 +331,42 @@ HRESULT WINAPI CDownloadDialog_Constructor(HWND Dlg, BOOL *pbCancelled, REFIID r
 }
 
 #ifdef USE_CERT_PINNING
-static BOOL CertIsValid(HINTERNET hInternet, LPWSTR lpszHostName)
+static BOOL CertIsValid(HINTERNET hFile, LPWSTR lpszHostName)
 {
-    HINTERNET hConnect;
-    HINTERNET hRequest;
     DWORD certInfoLength;
-    BOOL Ret = FALSE;
-    INTERNET_CERTIFICATE_INFOW certInfo;
+    INTERNET_CERTIFICATE_INFOA certInfo;
+    int ValidFlags = 0;
 
-    hConnect = InternetConnectW(hInternet, lpszHostName, INTERNET_DEFAULT_HTTPS_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, INTERNET_FLAG_SECURE, 0);
-    if (hConnect)
+    /* Despite what the header indicates, the implementation of INTERNET_CERTIFICATE_INFO is not Unicode-aware. */
+    certInfoLength = sizeof(certInfo);
+    if (!InternetQueryOptionA(hFile,
+                              INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT,
+                              &certInfo,
+                              &certInfoLength))
     {
-        hRequest = HttpOpenRequestW(hConnect, L"HEAD", NULL, NULL, NULL, NULL, INTERNET_FLAG_SECURE, 0);
-        if (hRequest != NULL)
-        {
-            Ret = HttpSendRequestW(hRequest, L"", 0, NULL, 0);
-            if (Ret)
-            {
-                certInfoLength = sizeof(certInfo);
-                Ret = InternetQueryOptionW(hRequest,
-                                           INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT,
-                                           &certInfo,
-                                           &certInfoLength);
-                if (Ret)
-                {
-                    if (certInfo.lpszEncryptionAlgName)
-                        LocalFree(certInfo.lpszEncryptionAlgName);
-                    if (certInfo.lpszIssuerInfo)
-                    {
-                        if (strcmp((LPSTR) certInfo.lpszIssuerInfo, CERT_ISSUER_INFO) != 0)
-                            Ret = FALSE;
-                        LocalFree(certInfo.lpszIssuerInfo);
-                    }
-                    if (certInfo.lpszProtocolName)
-                        LocalFree(certInfo.lpszProtocolName);
-                    if (certInfo.lpszSignatureAlgName)
-                        LocalFree(certInfo.lpszSignatureAlgName);
-                    if (certInfo.lpszSubjectInfo)
-                    {
-                        if (strcmp((LPSTR) certInfo.lpszSubjectInfo, CERT_SUBJECT_INFO) != 0)
-                            Ret = FALSE;
-                        LocalFree(certInfo.lpszSubjectInfo);
-                    }
-                }
-            }
-            InternetCloseHandle(hRequest);
-        }
-        InternetCloseHandle(hConnect);
+        return FALSE;
     }
-    return Ret;
+
+    if (certInfo.lpszSubjectInfo)
+    {
+        if (strcmp(certInfo.lpszSubjectInfo, CERT_SUBJECT_INFO) == 0)
+            ValidFlags |= 1;
+        LocalFree(certInfo.lpszSubjectInfo);
+    }
+    if (certInfo.lpszIssuerInfo)
+    {
+        if (strcmp(certInfo.lpszIssuerInfo, CERT_ISSUER_INFO) == 0)
+            ValidFlags |= 2;
+        LocalFree(certInfo.lpszIssuerInfo);
+    }
+    if (certInfo.lpszProtocolName)
+        LocalFree(certInfo.lpszProtocolName);
+    if (certInfo.lpszSignatureAlgName)
+        LocalFree(certInfo.lpszSignatureAlgName);
+    if (certInfo.lpszEncryptionAlgName)
+        LocalFree(certInfo.lpszEncryptionAlgName);
+
+    return ValidFlags == 3;
 }
 #endif
 
@@ -768,7 +755,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // are we using HTTPS to download the RAPPS update package? check if the certificate is original
         if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
             (wcscmp(InfoArray[iAppId].szUrl, APPLICATION_DATABASE_URL) == 0) &&
-            (!CertIsValid(hOpen, urlComponents.lpszHostName)))
+            (!CertIsValid(hFile, urlComponents.lpszHostName)))
         {
             MessageBox_LoadString(hMainWnd, IDS_CERT_DOES_NOT_MATCH);
             goto end;
