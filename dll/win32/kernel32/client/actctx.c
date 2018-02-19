@@ -374,6 +374,8 @@ QueryActCtxW(IN DWORD dwFlags,
     {
         case ActivationContextBasicInformation:
         case ActivationContextDetailedInformation:
+        case CompatibilityInformationInActivationContext:
+        case RunlevelInformationInActivationContext:
 
             /* Nothing to check */
             break;
