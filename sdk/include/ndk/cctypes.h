@@ -61,6 +61,9 @@ typedef struct _PRIVATE_CACHE_MAP_FLAGS
     ULONG Available:14;
 } PRIVATE_CACHE_MAP_FLAGS;
 
+#define PRIVATE_CACHE_MAP_READ_AHEAD_ACTIVE     (1 << 16)
+#define PRIVATE_CACHE_MAP_READ_AHEAD_ENABLED    (1 << 17)
+
 typedef struct _PRIVATE_CACHE_MAP
 {
     union

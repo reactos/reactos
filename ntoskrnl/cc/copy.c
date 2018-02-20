@@ -594,7 +594,7 @@ Clear:
     {
         /* Mark read ahead as unactive */
         KeAcquireSpinLockAtDpcLevel(&PrivateCacheMap->ReadAheadSpinLock);
-        InterlockedAnd((volatile long *)&PrivateCacheMap->UlongFlags, 0xFFFEFFFF);
+        InterlockedAnd((volatile long *)&PrivateCacheMap->UlongFlags, ~PRIVATE_CACHE_MAP_READ_AHEAD_ACTIVE);
         KeReleaseSpinLockFromDpcLevel(&PrivateCacheMap->ReadAheadSpinLock);
     }
     KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);

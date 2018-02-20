@@ -228,7 +228,7 @@ CcScheduleReadAhead (
         /* It's active now!
          * Be careful with the mask, you don't want to mess with node code
          */
-        InterlockedOr((volatile long *)&PrivateCacheMap->UlongFlags, 0x10000);
+        InterlockedOr((volatile long *)&PrivateCacheMap->UlongFlags, PRIVATE_CACHE_MAP_READ_AHEAD_ACTIVE);
         KeReleaseSpinLock(&PrivateCacheMap->ReadAheadSpinLock, OldIrql);
 
         /* Get a work item */
@@ -250,7 +250,7 @@ CcScheduleReadAhead (
 
         /* Fail path: lock again, and revert read ahead active */
         KeAcquireSpinLock(&PrivateCacheMap->ReadAheadSpinLock, &OldIrql);
-        InterlockedAnd((volatile long *)&PrivateCacheMap->UlongFlags, 0xFFFEFFFF);
+        InterlockedAnd((volatile long *)&PrivateCacheMap->UlongFlags, ~PRIVATE_CACHE_MAP_READ_AHEAD_ACTIVE);
     }
 
     /* Done (fail) */
