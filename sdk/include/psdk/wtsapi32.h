@@ -23,6 +23,16 @@
 extern "C" {
 #endif
 
+/*
+ * pResponse values from WTSSendMessage(), in addition
+ * to those from the standard MessageBox() API.
+ */
+#ifndef IDTIMEOUT
+#define IDTIMEOUT 32000
+#endif
+#ifndef IDASYNC
+#define IDASYNC   32001
+#endif
 
 typedef enum _WTS_VIRTUAL_CLASS
 {
