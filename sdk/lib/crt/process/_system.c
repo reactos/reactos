@@ -14,110 +14,85 @@
 #include <process.h>
 
 
-/*
- * @implemented
- */
-int system(const char *command)
+wchar_t *msvcrt_wstrdupa(const char *); //file.c
+intptr_t do_spawnW(int mode, const wchar_t* cmdname, const wchar_t* args, const wchar_t* envp); //process.c
+
+/* INTERNAL: retrieve COMSPEC environment variable */
+static wchar_t *get_comspec(void)
 {
-  char *szCmdLine = NULL;
-  char *szComSpec = NULL;
+  static const wchar_t cmd[] = {'c','m','d',0};
+  static const wchar_t comspec[] = {'C','O','M','S','P','E','C',0};
+  wchar_t *ret;
+  unsigned int len;
 
-  PROCESS_INFORMATION ProcessInformation;
-  STARTUPINFOA StartupInfo;
-  char *s;
-  BOOL result;
-
-  int nStatus;
-
-  szComSpec = getenv("COMSPEC");
-
-// system should return 0 if command is null and the shell is found
-
-  if (command == NULL) {
-    if (szComSpec == NULL)
-      return 0;
-    else
-      return 1;
-  }
-
-  if (szComSpec == NULL)
-    return -1;
-
-// should return 127 or 0 ( MS ) if the shell is not found
-// _set_errno(ENOENT);
-
-  if (szComSpec == NULL)
+  if (!(len = GetEnvironmentVariableW(comspec, NULL, 0))) len = sizeof(cmd)/sizeof(wchar_t);
+  if ((ret = HeapAlloc(GetProcessHeap(), 0, len * sizeof(wchar_t))))
   {
-    szComSpec = "cmd.exe";
+    if (!GetEnvironmentVariableW(comspec, ret, len)) strcpyW(ret, cmd);
   }
-
-  /* split the path from shell command */
-  s = max(strrchr(szComSpec, '\\'), strrchr(szComSpec, '/'));
-  if (s == NULL)
-    s = szComSpec;
-  else
-    s++;
-
-  szCmdLine = malloc(strlen(s) + 4 + strlen(command) + 1);
-  if (szCmdLine == NULL)
-  {
-     _set_errno(ENOMEM);
-     return -1;
-  }
-
-  strcpy(szCmdLine, s);
-  s = strrchr(szCmdLine, '.');
-  if (s)
-    *s = 0;
-  strcat(szCmdLine, " /C ");
-  strcat(szCmdLine, command);
-
-//command file has invalid format ENOEXEC
-
-  memset (&StartupInfo, 0, sizeof(StartupInfo));
-  StartupInfo.cb = sizeof(StartupInfo);
-  StartupInfo.lpReserved= NULL;
-  StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-  StartupInfo.wShowWindow = SW_SHOWDEFAULT;
-  StartupInfo.lpReserved2 = NULL;
-  StartupInfo.cbReserved2 = 0;
-
-// According to ansi standards the new process should ignore  SIGINT and SIGQUIT
-// In order to disable ctr-c the process is created with CREATE_NEW_PROCESS_GROUP,
-// thus SetConsoleCtrlHandler(NULL,TRUE) is made on behalf of the new process.
-
-
-//SIGCHILD should be blocked aswell
-
-  result = CreateProcessA(szComSpec,
-	                  szCmdLine,
-			  NULL,
-			  NULL,
-			  TRUE,
-			  CREATE_NEW_PROCESS_GROUP,
-			  NULL,
-			  NULL,
-			  &StartupInfo,
-			  &ProcessInformation);
-  free(szCmdLine);
-
-  if (result == FALSE)
-  {
-	_dosmaperr(GetLastError());
-     return -1;
-  }
-
-  CloseHandle(ProcessInformation.hThread);
-
-// system should wait untill the calling process is finished
-  _cwait(&nStatus,(intptr_t)ProcessInformation.hProcess,0);
-  CloseHandle(ProcessInformation.hProcess);
-
-  return nStatus;
+  return ret;
 }
 
 int CDECL _wsystem(const wchar_t* cmd)
 {
-    FIXME("_wsystem stub\n");
+  int res;
+  wchar_t *comspec, *fullcmd;
+  unsigned int len, comspecLen, flagLen, cmdLen;
+  static const wchar_t flag[] = {' ','/','c',' ',0};
+
+  comspec = get_comspec();
+
+  if (cmd == NULL)
+  {
+    if (comspec == NULL)
+    {
+        *_errno() = ENOENT;
+        return 0;
+    }
+    HeapFree(GetProcessHeap(), 0, comspec);
+    return 1;
+  }
+
+  if ( comspec == NULL)
     return -1;
+
+  comspecLen = wcslen(comspec);
+  flagLen  = wcslen(flag);
+  cmdLen = wcslen(cmd);
+  
+  len = comspecLen + flagLen + cmdLen + 1;
+
+  if (!(fullcmd = HeapAlloc(GetProcessHeap(), 0, len * sizeof(wchar_t))))
+  {
+    HeapFree(GetProcessHeap(), 0, comspec);
+    return -1;
+  }
+  wcsncat(fullcmd, comspec, comspecLen);
+  wcsncat(fullcmd, flag, flagLen);
+  wcsncat(fullcmd, cmd, cmdLen);
+
+  res = do_spawnW(_P_WAIT, comspec, fullcmd, NULL);
+
+  HeapFree(GetProcessHeap(), 0, comspec);
+  HeapFree(GetProcessHeap(), 0, fullcmd);
+  return res;
+}
+
+/*
+ * @implemented
+ */
+int CDECL system(const char* cmd)
+{
+  int res = -1;
+  wchar_t *cmdW;
+
+  if (cmd == NULL)
+    return _wsystem(NULL);
+
+  if ((cmdW = msvcrt_wstrdupa(cmd)))
+  {
+    res = _wsystem(cmdW);
+    HeapFree(GetProcessHeap(), 0, cmdW);
+  }
+  return res;
 }
