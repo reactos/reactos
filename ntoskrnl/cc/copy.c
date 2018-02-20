@@ -517,6 +517,16 @@ CcPerformReadAhead(
     /* Remember it's locked */
     Locked = TRUE;
 
+    /* Don't read past the end of the file */
+    if (CurrentOffset >= SharedCacheMap->FileSize.QuadPart)
+    {
+        goto Clear;
+    }
+    if (CurrentOffset + Length > SharedCacheMap->FileSize.QuadPart)
+    {
+        Length = SharedCacheMap->FileSize.QuadPart - CurrentOffset;
+    }
+
     /* Next of the algorithm will lock like CcCopyData with the slight
      * difference that we don't copy data back to an user-backed buffer
      * We just bring data into Cc
