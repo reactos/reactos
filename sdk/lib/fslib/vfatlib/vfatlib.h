@@ -27,9 +27,7 @@
 #include <pshpack1.h>
 typedef struct _FAT16_BOOT_SECTOR
 {
-    unsigned char  magic0;                      // 0
-    unsigned char  res0;                        // 1
-    unsigned char  magic1;                      // 2
+    unsigned char  Jump[3];                     // 0
     unsigned char  OEMName[8];                  // 3
     unsigned short BytesPerSector;              // 11
     unsigned char  SectorsPerCluster;           // 13
@@ -55,9 +53,7 @@ typedef struct _FAT16_BOOT_SECTOR
 
 typedef struct _FAT32_BOOT_SECTOR
 {
-    unsigned char  magic0;                      // 0
-    unsigned char  res0;                        // 1
-    unsigned char  magic1;                      // 2
+    unsigned char  Jump[3];                     // 0
     unsigned char  OEMName[8];                  // 3
     unsigned short BytesPerSector;              // 11
     unsigned char  SectorsPerCluster;           // 13
