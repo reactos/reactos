@@ -191,7 +191,7 @@ ParseQueryArguments(
                 }
                 else
                 {
-                    _tprintf(_T("ERROR following \"type=\"!\nMust be \"driver\" or \"service\"\n"));
+                    _tprintf(_T("ERROR following \"type=\"!\nMust be one of: all, driver, interact, service.\n"));
                     return FALSE;
                 }
 
@@ -220,7 +220,7 @@ ParseQueryArguments(
                 }
                 else
                 {
-                    _tprintf(_T("ERROR following \"state=\"!\nMust be \"inactive\" or \"all\"\n"));
+                    _tprintf(_T("ERROR following \"state=\"!\nMust be one of: active, all, inactive.\n"));
                     return FALSE;
                 }
 
