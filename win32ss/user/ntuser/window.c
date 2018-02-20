@@ -5,7 +5,7 @@
  * FILE:             win32ss/user/ntuser/window.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
-//
+
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserWnd);
 
@@ -581,7 +581,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    MsqRemoveWindowMessagesFromQueue(Window);
 
    /* from now on no messages can be sent to this window anymore */
-   //Window->state |= WNDS_DESTROYED;
+   Window->state |= WNDS_DESTROYED;
    Window->fnid |= FNID_FREED;
 
    /* don't remove the WINDOWSTATUS_DESTROYING bit */
@@ -2599,7 +2599,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    {
       if ((Window->style & (WS_POPUP|WS_CHILD)) != WS_CHILD)
       {
-         if (VerifyWnd(Window->spwndOwner))
+         if (Window->spwndOwner)
          {
             //ERR("DestroyWindow Owner out.\n");
             UserAttachThreadInput(Window->head.pti, Window->spwndOwner->head.pti, FALSE);
@@ -2635,7 +2635,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    // Adjust last active.
    if ((pwndTemp = Window->spwndOwner))
    {
-      while (VerifyWnd(pwndTemp->spwndOwner))
+      while (pwndTemp->spwndOwner)
          pwndTemp = pwndTemp->spwndOwner;
 
       if (pwndTemp->spwndLastActive == Window)
@@ -2752,8 +2752,6 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    {
       return TRUE;
    }
-
-   Window->state |= WNDS_DESTROYED;
 
    /* Destroy the window storage */
    co_UserFreeWindow(Window, PsGetCurrentProcessWin32Process(), PsGetCurrentThreadWin32Thread(), TRUE);
