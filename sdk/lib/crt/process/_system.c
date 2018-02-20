@@ -60,6 +60,7 @@ int CDECL _wsystem(const wchar_t* cmd)
   if (!(fullcmd = HeapAlloc(GetProcessHeap(), 0, len * sizeof(wchar_t))))
   {
     HeapFree(GetProcessHeap(), 0, comspec);
+	_set_errno(ENOMEM);
     return -1;
   }
   strcpyW(fullcmd, comspec);
