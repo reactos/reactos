@@ -46,7 +46,7 @@ int CDECL _wsystem(const wchar_t* cmd)
   {
     if (comspec == NULL)
     {
-        *_errno() = ENOENT;
+        _set_errno(ENOENT);
         return 0;
     }
     HeapFree(GetProcessHeap(), 0, comspec);
