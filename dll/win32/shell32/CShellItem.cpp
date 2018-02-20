@@ -199,9 +199,13 @@ HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
         }
     }
 
-    if (SUCCEEDED(hr))
+    if(FAILED(hr))
+        return hr;
+
+    if(*piOrder)
+        return S_FALSE;
+    else
         return S_OK;
-    return hr;
 }
 
 HRESULT WINAPI CShellItem::GetClassID(CLSID *pClassID)
