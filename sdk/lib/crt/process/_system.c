@@ -19,7 +19,7 @@ wchar_t *msvcrt_wstrdupa(const char *); //file.c
 /* INTERNAL: retrieve COMSPEC environment variable */
 static wchar_t *get_comspec(void)
 {
-  static const wchar_t cmd[] = {'c','m','d',0};
+  static const wchar_t cmd[] = {'c','m','d','.','e','x','e',0};
   static const wchar_t comspec[] = {'C','O','M','S','P','E','C',0};
   wchar_t *ret;
   unsigned int len;

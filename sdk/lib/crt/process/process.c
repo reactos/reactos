@@ -319,11 +319,11 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
          GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
          CloseHandle(ProcessInformation.hProcess);
          CloseHandle(ProcessInformation.hThread);
-         return ProcessInformation.dwProcessId;	   
+         return ProcessInformation.dwProcessId;
       case _P_DETACH:
          CloseHandle(ProcessInformation.hProcess);	
-		 ProcessInformation.hProcess = 0;
-		/* fall through */		 
+         ProcessInformation.hProcess = 0;
+         /* fall through */
       case _P_NOWAIT:
       case _P_NOWAITO:
          CloseHandle(ProcessInformation.hThread);
