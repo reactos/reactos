@@ -159,52 +159,7 @@ HRESULT WINAPI CShellItem::GetParent(IShellItem **ppsi)
 
 HRESULT WINAPI CShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
 {
-    HRESULT hr;
-    CComPtr<IShellFolder>        parent_folder;
-    STRRET name;
-    DWORD uFlags;
-
-    TRACE("(%p,%x,%p)\n", this, sigdnName, ppszName);
-
-    if (sigdnName & SIGDN_URL)
-        return E_NOTIMPL;
-
-    if (ppszName == NULL)
-        return E_POINTER;
-
-    *ppszName = NULL;
-
-    hr = get_parent_shellfolder(&parent_folder);
-    if (SUCCEEDED(hr))
-    {
-        switch (sigdnName)
-        {
-        case SIGDN_PARENTRELATIVEEDITING:
-            uFlags = SHGDN_FOREDITING | SHGDN_INFOLDER;
-            break;
-        case SIGDN_DESKTOPABSOLUTEEDITING:
-            uFlags = SHGDN_FOREDITING;
-            break;
-        case SIGDN_PARENTRELATIVEPARSING:
-            uFlags = SHGDN_FORPARSING | SHGDN_INFOLDER;
-            break;
-        case SIGDN_DESKTOPABSOLUTEPARSING:
-            uFlags = SHGDN_FORPARSING;
-            break;
-        default:
-            uFlags = SHGDN_NORMAL;
-            break;
-        }
-
-        hr = parent_folder->GetDisplayNameOf(m_pidl, uFlags, &name);
-        if (SUCCEEDED(hr))
-        {
-            StrRetToStrW(&name, m_pidl, ppszName);
-            return S_OK;
-        }
-    }
-
-    return hr;
+    return SHGetNameFromIDList(m_pidl, sigdnName, ppszName);
 }
 
 HRESULT WINAPI CShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs)
@@ -237,7 +192,7 @@ HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
 {
     HRESULT hr;
     CComPtr<IPersistIDList>      pIDList;
-    CComPtr<IShellFolder>        parent_folder;
+    CComPtr<IShellFolder>        psfDesktop;
     LPITEMIDLIST pidl;
 
     TRACE("(%p,%p,%x,%p)\n", this, oth, hint, piOrder);
@@ -251,11 +206,11 @@ HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
         hr = pIDList->GetIDList(&pidl);
         if (SUCCEEDED(hr))
         {
-            hr = get_parent_shellfolder(&parent_folder);
+            hr = SHGetDesktopFolder(&psfDesktop);
             if (SUCCEEDED(hr))
             {
-                hr = parent_folder->CompareIDs(hint, m_pidl, pidl);
-                *piOrder = static_cast<int>(SCODE_CODE(hr));
+                hr = psfDesktop->CompareIDs(hint, m_pidl, pidl);
+                *piOrder = (int)(short)SCODE_CODE(hr);
             }
             ILFree(pidl);
         }
