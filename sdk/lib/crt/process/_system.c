@@ -15,7 +15,6 @@
 
 
 wchar_t *msvcrt_wstrdupa(const char *); //file.c
-intptr_t do_spawnW(int mode, const wchar_t* cmdname, const wchar_t* args, const wchar_t* envp); //process.c
 
 /* INTERNAL: retrieve COMSPEC environment variable */
 static wchar_t *get_comspec(void)
@@ -37,7 +36,7 @@ int CDECL _wsystem(const wchar_t* cmd)
 {
   int res;
   wchar_t *comspec, *fullcmd;
-  unsigned int len, comspecLen, flagLen, cmdLen;
+  unsigned int len;
   static const wchar_t flag[] = {' ','/','c',' ',0};
 
   comspec = get_comspec();
@@ -53,25 +52,21 @@ int CDECL _wsystem(const wchar_t* cmd)
     return 1;
   }
 
-  if ( comspec == NULL)
+  if (comspec == NULL)
     return -1;
 
-  comspecLen = wcslen(comspec);
-  flagLen  = wcslen(flag);
-  cmdLen = wcslen(cmd);
+  len = strlenW(comspec) + strlenW(flag) + strlenW(cmd) + 1;
   
-  len = comspecLen + flagLen + cmdLen + 1;
-
   if (!(fullcmd = HeapAlloc(GetProcessHeap(), 0, len * sizeof(wchar_t))))
   {
     HeapFree(GetProcessHeap(), 0, comspec);
     return -1;
   }
-  wcsncat(fullcmd, comspec, comspecLen);
-  wcsncat(fullcmd, flag, flagLen);
-  wcsncat(fullcmd, cmd, cmdLen);
+  strcpyW(fullcmd, comspec);
+  strcatW(fullcmd, flag);
+  strcatW(fullcmd, cmd);
 
-  res = do_spawnW(_P_WAIT, comspec, fullcmd, NULL);
+  res = _wspawnl(_P_WAIT, comspec, fullcmd, NULL);
 
   HeapFree(GetProcessHeap(), 0, comspec);
   HeapFree(GetProcessHeap(), 0, fullcmd);
