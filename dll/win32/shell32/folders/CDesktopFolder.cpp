@@ -819,6 +819,9 @@ HRESULT WINAPI CDesktopFolder::Initialize(LPCITEMIDLIST pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
+    if (!pidl)
+        return S_OK;
+
     return E_INVALIDARG;
 }
 
