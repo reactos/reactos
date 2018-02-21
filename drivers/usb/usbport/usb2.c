@@ -145,7 +145,7 @@ USB2_GetOverhead(IN PUSB2_TT_ENDPOINT TtEndpoint)
             if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
                 Overhead = HostDelay + USB2_HS_ISOCHRONOUS_IN_OVERHEAD;
             else
-                Overhead = HostDelay + USB2_HS_ISOCHRONOUS_OUT_OVERHEAD;
+                Overhead = HostDelay + USB2_HS_INTERRUPT_IN_OVERHEAD;
         }
     }
     else if (DeviceSpeed == UsbFullSpeed)
