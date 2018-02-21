@@ -397,6 +397,7 @@ DWORD getNumRoutes(void)
 
     TRACE("numRoutes: %d\n", (int)numRoutes);
 
+    tdiFreeThingSet( entitySet );
     closeTcpFile( tcpFile );
 
     return numRoutes;
