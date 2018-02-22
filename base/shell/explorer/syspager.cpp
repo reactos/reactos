@@ -1207,6 +1207,7 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
 const WCHAR szSysPagerWndClass[] = L"SysPager";
 
 CSysPagerWnd::CSysPagerWnd() {}
+
 CSysPagerWnd::~CSysPagerWnd() {}
 
 LRESULT CSysPagerWnd::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
