@@ -699,18 +699,18 @@ static VOID FsRtlLargeMcbTestsFastFat()
     Lbn = -1;
     SectorCount = -1;
     Result = FsRtlLookupLargeMcbEntry(&FirstMcb, 8388607LL, &Lbn, &SectorCount, NULL, NULL, NULL);
-    ok(Result = TRUE, "Expected TRUE, got FALSE\n");
-    ok(Lbn == -1, "Expected Lbn 44, got: %I64d\n", Lbn);
-    ok(SectorCount == -1, "Expected SectorCount 44, got: %I64d\n", SectorCount);
+    ok_bool_false(Result, "FsRtlLookupLargeMcbEntry returned");
+    ok_eq_longlong(Lbn, -1);
+    ok_eq_longlong(SectorCount, -1);
 
     Vbn = -1;
     Lbn = -1;
-    Index = -1;
+    Index = (ULONG) -1;
     Result = FsRtlLookupLastLargeMcbEntryAndIndex(&FirstMcb, &Vbn, &Lbn, &Index);
-    ok(Result = TRUE, "Expected TRUE, got FALSE\n");
-    ok(Vbn == -1, "Expected Vbn 0, got: %I64d\n", Vbn);
-    ok(Lbn == -1, "Expected Lbn 0, got: %I64d\n", Lbn);
-    ok(Index == -1, "Expected Index 0, got: %d\n", Index);
+    ok_bool_false(Result, "FsRtlLookupLastLargeMcbEntryAndIndex returned");
+    ok_eq_longlong(Vbn, -1);
+    ok_eq_longlong(Lbn, -1);
+    ok_eq_ulong(Index, (ULONG) -1);
 
     FsRtlUninitializeLargeMcb(&FirstMcb);
 }
