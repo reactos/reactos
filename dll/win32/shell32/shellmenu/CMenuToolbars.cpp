@@ -1321,7 +1321,11 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
     {
         if (m_menuBand->_CallCBWithItemPidl(item, 0x10000000, 0, 0) == S_FALSE)
         {
-            DPA_AppendPtr(dpaSort, ILClone(item));
+            DPA_AppendPtr(dpaSort, item);
+        }
+        else
+        {
+            CoTaskMemFree(item);
         }
 
         hr = eidl->Next(1, &item, NULL);
