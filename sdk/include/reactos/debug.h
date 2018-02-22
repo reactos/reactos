@@ -132,11 +132,11 @@ RtlAssert(
 #else /* not DBG */
 
     /* On non-debug builds, we never show these */
+    #define UNIMPLEMENTED
+    #define UNIMPLEMENTED_ONCE
 #if defined(_MSC_VER)
     #define DPRINT1   __noop
     #define DPRINT    __noop
-
-    #define UNIMPLEMENTED
 
     #define ERR_(ch, ...)      __noop
     #define WARN_(ch, ...)     __noop
@@ -150,9 +150,6 @@ RtlAssert(
 #else
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-
-    #define UNIMPLEMENTED
-    #define UNIMPLEMENTED_ONCE
 
     #define ERR_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define WARN_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
