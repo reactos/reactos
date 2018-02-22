@@ -315,6 +315,11 @@ PHOOKMODULEINFO SeiFindHookModuleInfo(PUNICODE_STRING ModuleName, PVOID BaseAddr
 {
     DWORD n;
 
+    if (ModuleName == NULL && BaseAddress == NULL)
+    {
+        BaseAddress = NtCurrentPeb()->ImageBaseAddress;
+    }
+
     for (n = 0; n < ARRAY_Size(&g_pHookArray); ++n)
     {
         PHOOKMODULEINFO pModuleInfo = ARRAY_At(&g_pHookArray, HOOKMODULEINFO, n);
