@@ -439,6 +439,69 @@ UserpFormatMessages(
     return Status;
 }
 
+static BOOL
+UserpShowInformationBalloon(PWSTR Text, 
+                            PWSTR Caption,
+                            PHARDERROR_MSG Message)
+{
+    HWND hwnd;
+    COPYDATASTRUCT CopyData;
+    PBALLOON_HARD_ERROR_DATA pdata;
+    DWORD dwSize, cchText, cchCaption;
+    PWCHAR pText, pCaption;
+    DWORD ret, dwResult;
+
+    hwnd = GetTaskmanWindow();
+    if (!hwnd)
+    {
+        DPRINT1("Failed to find Shell_TrayWnd\n");
+        return FALSE;
+    }
+
+    cchText = wcslen(Text);
+    cchCaption = wcslen(Caption);
+
+    dwSize = sizeof(BALLOON_HARD_ERROR_DATA);
+    dwSize += (cchText + 1) * sizeof(WCHAR);
+    dwSize += (cchCaption + 1) * sizeof(WCHAR);
+
+    pdata = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+    if (!pdata)
+    {
+        DPRINT1("Failed to allocate balloon package\n");
+        return FALSE;
+    }
+
+    pdata->cbHeaderSize = sizeof(BALLOON_HARD_ERROR_DATA);
+    pdata->Status = Message->Status;
+    if (NT_SUCCESS(Message->Status))
+        pdata->dwType = MB_OK;
+    else if (Message->Status == STATUS_SERVICE_NOTIFICATION)
+        pdata->dwType = Message->Parameters[2];
+    else
+        pdata->dwType = MB_ICONINFORMATION;
+    pdata->TitleOffset = pdata->cbHeaderSize;
+    pdata->MessageOffset = pdata->TitleOffset;
+    pdata->MessageOffset += (cchCaption + 1) * sizeof(WCHAR);
+    pCaption = (PWCHAR)((ULONG_PTR)pdata + pdata->TitleOffset);
+    pText = (PWCHAR)((ULONG_PTR)pdata + pdata->MessageOffset);
+    wcscpy(pCaption, Caption);
+    wcscpy(pText, Text);
+
+    CopyData.dwData = RegisterWindowMessageW(L"HardError");
+    CopyData.cbData = dwSize;
+    CopyData.lpData = pdata;
+
+    dwResult = FALSE;
+
+    ret = SendMessageTimeoutW(hwnd, WM_COPYDATA, 0, (LPARAM)&CopyData,
+                              SMTO_NORMAL | SMTO_ABORTIFHUNG, 3000, &dwResult);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pdata);
+
+    return (ret && dwResult) ? TRUE : FALSE;
+}
+
 static
 ULONG
 UserpMessageBox(
@@ -475,10 +538,9 @@ UserpMessageBox(
             break;
         case OptionOkNoWait:
             /*
-             * This gives a balloon notification.
-             * See rostests/kmtests/ntos_ex/ExHardError.c
+             * At that point showing the balloon failed. Is that correct?
              */
-            Type = MB_YESNO; // FIXME!
+            Type = MB_OK; // FIXME!
             break;
         case OptionCancelTryContinue:
             Type = MB_CANCELTRYCONTINUE;
@@ -583,6 +645,20 @@ UserServerHardError(
         return;
     }
 
+    if (Message->ValidResponseOptions == OptionOkNoWait)
+    {
+        /* Display the balloon */
+        if (UserpShowInformationBalloon(TextU.Buffer, 
+                                        CaptionU.Buffer, 
+                                        Message))
+        {
+            Message->Response = ResponseOk;
+            RtlFreeUnicodeString(&TextU);
+            RtlFreeUnicodeString(&CaptionU);
+            return;
+        }
+    }
+
     /* Display the message box */
     Message->Response = UserpMessageBox(TextU.Buffer,
                                         CaptionU.Buffer,
@@ -591,7 +667,6 @@ UserServerHardError(
 
     RtlFreeUnicodeString(&TextU);
     RtlFreeUnicodeString(&CaptionU);
-
     return;
 }
 
