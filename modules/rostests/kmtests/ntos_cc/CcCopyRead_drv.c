@@ -64,7 +64,6 @@ TestEntry(
     TestFastIoDispatch.FastIoRead = FastIoRead;
     DriverObject->FastIoDispatch = &TestFastIoDispatch;
 
-
     return Status;
 }
 
@@ -242,13 +241,14 @@ TestIrpHandler(
             ok(Length % PAGE_SIZE != 0, "Length is aligned: %I64i\n", Length);
 
             Buffer = Irp->AssociatedIrp.SystemBuffer;
-            ok(Buffer != NULL, "Null pointer!\n");
+            ok(Buffer != NULL, "No SystemBuffer was allocated!\n");
 
+            // Even if there is no buffer, call CcCopyRead and let it fail.
             _SEH2_TRY
             {
                 Ret = CcCopyRead(IoStack->FileObject, &Offset, Length, TRUE, Buffer,
                                  &Irp->IoStatus);
-                ok_bool_true(Ret, "CcCopyRead");
+                ok_bool_true(Ret, "CcCopyRead returned");
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -275,12 +275,12 @@ TestIrpHandler(
             PMDL Mdl;
 
             ok_irql(APC_LEVEL);
-            ok((Offset.QuadPart % PAGE_SIZE == 0 || Offset.QuadPart == 0), "Offset is not aligned: %I64i\n", Offset.QuadPart);
+            ok(Offset.QuadPart % PAGE_SIZE == 0, "Offset is not aligned: %I64i\n", Offset.QuadPart); // Revert the useless change from r72182.
             ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
 
             ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
             Buffer = MapAndLockUserBuffer(Irp, Length);
-            ok(Buffer != NULL, "Null pointer!\n");
+            ok(Buffer != NULL, "MapAndLockUserBuffer returned NULL!\n");
             RtlFillMemory(Buffer, Length, 0xBA);
 
             Status = STATUS_SUCCESS;
@@ -293,7 +293,7 @@ TestIrpHandler(
             ok(Mdl != NULL, "Null pointer for MDL!\n");
             ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) != 0, "MDL not locked\n");
             ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
-            ok((Mdl->MdlFlags & MDL_IO_PAGE_READ) != 0, "Non paging IO\n");
+            ok((Mdl->MdlFlags & MDL_IO_PAGE_READ) != 0, "Paging IO not for reading\n"); // r75845 copypasta.
             ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
         }
 
@@ -327,5 +327,6 @@ TestIrpHandler(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
+    trace("TestIrpHandler returns: Status = 0x%08x", Status);
     return Status;
 }
