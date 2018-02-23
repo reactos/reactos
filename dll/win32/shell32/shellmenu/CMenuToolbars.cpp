@@ -287,6 +287,8 @@ CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
 
 CMenuToolbarBase::~CMenuToolbarBase()
 {
+    ClearToolbar();
+
     if (m_hWnd)
         DestroyWindow();
 
