@@ -18,6 +18,9 @@
 
 extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 
+ULONG CcMapDataWait = 0;
+ULONG CcMapDataNoWait = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -44,6 +47,15 @@ CcMapData (
     DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %lu, Flags 0x%lx,"
            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
            Length, Flags, pBcb, pBuffer);
+
+    if (Flags & MAP_WAIT)
+    {
+        ++CcMapDataWait;
+    }
+    else
+    {
+        ++CcMapDataNoWait;
+    }
 
     ReadOffset = FileOffset->QuadPart;
 
