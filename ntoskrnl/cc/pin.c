@@ -21,9 +21,13 @@ extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 /* Counters:
  * - Number of calls to CcMapData that could wait
  * - Number of calls to CcMapData that couldn't wait
+ * - Number of calls to CcPinRead that could wait
+ * - Number of calls to CcPinRead that couldn't wait
  */
 ULONG CcMapDataWait = 0;
 ULONG CcMapDataNoWait = 0;
+ULONG CcPinReadWait = 0;
+ULONG CcPinReadNoWait = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -191,6 +195,15 @@ CcPinRead (
 
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
         FileObject, FileOffset, Length, Flags);
+
+    if (Flags & PIN_WAIT)
+    {
+        ++CcPinReadWait;
+    }
+    else
+    {
+        ++CcPinReadNoWait;
+    }
 
     if (CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
     {

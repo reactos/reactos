@@ -60,6 +60,8 @@ extern ULONG CcLazyWritePages;
 extern ULONG CcLazyWriteIos;
 extern ULONG CcMapDataWait;
 extern ULONG CcMapDataNoWait;
+extern ULONG CcPinReadWait;
+extern ULONG CcPinReadNoWait;
 
 typedef struct _PF_SCENARIO_ID
 {

@@ -693,8 +693,8 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->CcMapDataWaitMiss = 0; /* FIXME */
 
     Spi->CcPinMappedDataCount = 0; /* FIXME */
-    Spi->CcPinReadNoWait = 0; /* FIXME */
-    Spi->CcPinReadWait = 0; /* FIXME */
+    Spi->CcPinReadNoWait = CcPinReadNoWait;
+    Spi->CcPinReadWait = CcPinReadWait;
     Spi->CcPinReadNoWaitMiss = 0; /* FIXME */
     Spi->CcPinReadWaitMiss = 0; /* FIXME */
     Spi->CcCopyReadNoWait = 0; /* FIXME */
