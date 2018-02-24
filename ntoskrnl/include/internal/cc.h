@@ -62,6 +62,8 @@ extern ULONG CcMapDataWait;
 extern ULONG CcMapDataNoWait;
 extern ULONG CcPinReadWait;
 extern ULONG CcPinReadNoWait;
+extern ULONG CcDataPages;
+extern ULONG CcDataFlushes;
 
 typedef struct _PF_SCENARIO_ID
 {

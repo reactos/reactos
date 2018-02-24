@@ -43,6 +43,13 @@ ULONG CcFastReadWait;
 ULONG CcFastReadNoWait;
 ULONG CcFastReadResourceMiss;
 
+/* Counters:
+ * - Amount of pages flushed to the disk
+ * - Number of flush operations
+ */
+ULONG CcDataPages = 0;
+ULONG CcDataFlushes = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID

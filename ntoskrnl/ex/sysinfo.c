@@ -709,8 +709,8 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->CcReadAheadIos = 0; /* FIXME */
     Spi->CcLazyWriteIos = CcLazyWriteIos;
     Spi->CcLazyWritePages = CcLazyWritePages;
-    Spi->CcDataFlushes = 0; /* FIXME */
-    Spi->CcDataPages = 0; /* FIXME */
+    Spi->CcDataFlushes = CcDataFlushes;
+    Spi->CcDataPages = CcDataPages;
     Spi->ContextSwitches = 0; /* FIXME */
     Spi->FirstLevelTbFills = 0; /* FIXME */
     Spi->SecondLevelTbFills = 0; /* FIXME */

@@ -1039,6 +1039,14 @@ IoSynchronousPageWrite(IN PFILE_OBJECT FileObject,
     IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
             FileObject, Mdl, Offset);
 
+    /* Is the write originating from Cc? */
+    if (FileObject->SectionObjectPointer != NULL &&
+        FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+    {
+        ++CcDataFlushes;
+        CcDataPages += BYTES_TO_PAGES(MmGetMdlByteCount(Mdl));
+    }
+
     /* Get the Device Object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
