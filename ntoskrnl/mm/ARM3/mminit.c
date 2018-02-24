@@ -240,7 +240,7 @@ PMMPTE MiHighestUserPxe;
 #endif
 
 /* These variables define the system cache address space */
-PVOID MmSystemCacheStart = MI_SYSTEM_CACHE_START;
+PVOID MmSystemCacheStart = (PVOID)MI_SYSTEM_CACHE_START;
 PVOID MmSystemCacheEnd;
 ULONG MmSizeOfSystemCacheInPages;
 MMSUPPORT MmSystemCacheWs;
