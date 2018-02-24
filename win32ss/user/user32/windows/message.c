@@ -2587,7 +2587,7 @@ SendMessageTimeoutA(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
-  MSG AnsiMsg, UcMsg;
+  MSG AnsiMsg, UcMsg, KMMsg;
   LRESULT Result;
   DOSENDMESSAGE dsm;
 
@@ -2618,14 +2618,21 @@ SendMessageTimeoutA(
       return FALSE;
   }
 
+  if (!MsgiUMToKMMessage(&UcMsg, &KMMsg, FALSE))
+  {
+      MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+      return FALSE;
+  }
+
   Result = NtUserMessageCall( hWnd,
-                              UcMsg.message,
-                              UcMsg.wParam,
-                              UcMsg.lParam,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam,
                              (ULONG_PTR)&dsm,
                               FNID_SENDMESSAGEWTOOPTION,
                               TRUE);
 
+  MsgiUMToKMCleanup(&UcMsg, &KMMsg);
   MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result);
 
   if (lpdwResult) *lpdwResult = dsm.Result;
@@ -2652,6 +2659,7 @@ SendMessageTimeoutW(
 {
   LRESULT Result;
   DOSENDMESSAGE dsm;
+  MSG UMMsg, KMMsg;
 
   if ( Msg & ~WM_MAXIMUM || fuFlags & ~(SMTO_NOTIMEOUTIFNOTHUNG|SMTO_ABORTIFHUNG|SMTO_BLOCK))
   {
@@ -2667,13 +2675,27 @@ SendMessageTimeoutW(
   dsm.uTimeout = uTimeout;
   dsm.Result = 0;
 
+  UMMsg.hwnd = hWnd;
+  UMMsg.message = Msg;
+  UMMsg.wParam = wParam;
+  UMMsg.lParam = lParam;
+  UMMsg.time = 0;
+  UMMsg.pt.x = 0;
+  UMMsg.pt.y = 0;
+  if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
+  {
+     return FALSE;
+  }
+
   Result = NtUserMessageCall( hWnd,
-                              Msg,
-                              wParam,
-                              lParam,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam,
                              (ULONG_PTR)&dsm,
                               FNID_SENDMESSAGEWTOOPTION,
                               FALSE);
+
+  MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
   if (lpdwResult) *lpdwResult = dsm.Result;
 
@@ -2731,7 +2753,6 @@ SendNotifyMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
-  MSG UMMsg, KMMsg;
   LRESULT Result;
 
   if (is_pointer_message(Msg))
@@ -2740,26 +2761,13 @@ SendNotifyMessageW(
      return FALSE;
   }
 
-  UMMsg.hwnd = hWnd;
-  UMMsg.message = Msg;
-  UMMsg.wParam = wParam;
-  UMMsg.lParam = lParam;
-  UMMsg.time = 0;
-  UMMsg.pt.x = 0;
-  UMMsg.pt.y = 0;
-  if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
-  {
-     return FALSE;
-  }
   Result = NtUserMessageCall( hWnd,
-                              KMMsg.message,
-                              KMMsg.wParam,
-                              KMMsg.lParam,
+                              Msg,
+                              wParam,
+                              lParam,
                               0,
                               FNID_SENDNOTIFYMESSAGE,
                               FALSE);
-
-  MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
   return Result;
 }
