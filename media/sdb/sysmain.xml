@@ -361,5 +361,20 @@
             <FLAG_REF NAME="GetDiskFreeSpace2GB" />
         </LAYER>
 
+        <!-- Applications -->
+
+        <!-- Globulation 2 -->
+        <EXE NAME="glob2.exe" APP_NAME="Globulation 2" VENDOR="Globulation 2 authors">
+            <MATCHING_FILE NAME="*">
+                <SIZE>0x471e00</SIZE>
+                <CHECKSUM>0x89bf7c2a</CHECKSUM>
+                <MODULE_TYPE>0x3</MODULE_TYPE>
+                <PE_CHECKSUM>0x4793cf</PE_CHECKSUM>
+                <LINKER_VERSION>0x10000</LINKER_VERSION>
+                <LINK_DATE>0x4a9b2979</LINK_DATE>
+            </MATCHING_FILE>
+            <SHIM_REF NAME="IgnoreFreeLibrary" COMMAND_LINE="libpng12.dll" />
+        </EXE>
+
     </DATABASE>
 </SDB>
