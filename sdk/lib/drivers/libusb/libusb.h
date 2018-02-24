@@ -22,7 +22,16 @@ extern "C"
 // the following includes are required to get kcom to compile
 //
 #include <portcls.h>
+#define _NEW_DELETE_OPERATORS_
 #include <kcom.h>
+
+PVOID
+__cdecl
+operator new(
+    size_t iSize,
+    POOL_TYPE poolType,
+    ULONG tag);
+
 
 #include "common_interfaces.h"
 

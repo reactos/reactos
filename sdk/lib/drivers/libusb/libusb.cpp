@@ -18,6 +18,36 @@
 //
 DRIVER_ADD_DEVICE USBLIB_AddDevice;
 
+PVOID
+__cdecl
+operator new(
+    size_t iSize,
+    POOL_TYPE poolType,
+    ULONG tag)
+{
+    PVOID result = ExAllocatePoolWithTag(poolType, iSize, tag);
+    if (result) {
+        RtlZeroMemory(result, iSize);
+    }
+    return result;
+}
+
+void
+__cdecl
+operator delete(
+    PVOID pVoid)
+{
+    if (pVoid) ExFreePool(pVoid);
+}
+
+void
+__cdecl
+operator delete(
+    PVOID pVoid, UINT_PTR)
+{
+    if (pVoid) ExFreePool(pVoid);
+}
+
 extern
 "C"
 {
