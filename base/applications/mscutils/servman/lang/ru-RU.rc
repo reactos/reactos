@@ -18,7 +18,7 @@ BEGIN
         MENUITEM "Продол&жить", ID_RESUME, GRAYED
         MENUITEM "Пере&запустить", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "О&бновить", ID_REFRESH
+        MENUITEM "О&бновить\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "&Изменить...", ID_EDIT, GRAYED
         MENUITEM "С&оздать...", ID_CREATE, GRAYED
@@ -61,6 +61,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Справка", ID_HELP
     END
+END
+
+IDA_SERVMAN ACCELERATORS
+BEGIN
+    VK_F5, ID_REFRESH, VIRTKEY
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
