@@ -544,7 +544,7 @@ ScServiceDispatcher(HANDLE hPipe,
 {
     DWORD Count;
     BOOL bResult;
-    DWORD dwRunningServices = 0;
+    BOOL bRunning = TRUE;
     LPWSTR lpServiceName;
     PACTIVE_SERVICE lpService;
     SCM_REPLY_PACKET ReplyPacket;
@@ -555,7 +555,7 @@ ScServiceDispatcher(HANDLE hPipe,
     if (ControlPacket == NULL || dwBufferSize < sizeof(SCM_CONTROL_PACKET))
         return FALSE;
 
-    while (TRUE)
+    while (bRunning)
     {
         /* Read command from the control pipe */
         bResult = ReadFile(hPipe,
@@ -572,39 +572,44 @@ ScServiceDispatcher(HANDLE hPipe,
         lpServiceName = (LPWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
         TRACE("Service: %S\n", lpServiceName);
 
-        if (ControlPacket->dwControl == SERVICE_CONTROL_START_OWN)
-            lpActiveServices[0].bOwnProcess = TRUE;
-
-        lpService = ScLookupServiceByServiceName(lpServiceName);
-        if (lpService != NULL)
+        if (lpServiceName[0] == UNICODE_NULL)
         {
-            /* Execute command */
-            switch (ControlPacket->dwControl)
-            {
-                case SERVICE_CONTROL_START_SHARE:
-                case SERVICE_CONTROL_START_OWN:
-                    TRACE("Start command - received SERVICE_CONTROL_START\n");
-                    dwError = ScStartService(lpService, ControlPacket);
-                    if (dwError == ERROR_SUCCESS)
-                        dwRunningServices++;
-                    break;
-
-                case SERVICE_CONTROL_STOP:
-                    TRACE("Stop command - received SERVICE_CONTROL_STOP\n");
-                    dwError = ScControlService(lpService, ControlPacket);
-                    if (dwError == ERROR_SUCCESS)
-                        dwRunningServices--;
-                    break;
-
-                default:
-                    TRACE("Command %lu received", ControlPacket->dwControl);
-                    dwError = ScControlService(lpService, ControlPacket);
-                    break;
-            }
+            ERR("Stop dispatcher thread\n");
+            bRunning = FALSE;
+            dwError = ERROR_SUCCESS;
         }
         else
         {
-            dwError = ERROR_SERVICE_DOES_NOT_EXIST;
+            if (ControlPacket->dwControl == SERVICE_CONTROL_START_OWN)
+                lpActiveServices[0].bOwnProcess = TRUE;
+
+            lpService = ScLookupServiceByServiceName(lpServiceName);
+            if (lpService != NULL)
+            {
+                /* Execute command */
+                switch (ControlPacket->dwControl)
+                {
+                    case SERVICE_CONTROL_START_SHARE:
+                    case SERVICE_CONTROL_START_OWN:
+                        TRACE("Start command - received SERVICE_CONTROL_START\n");
+                        dwError = ScStartService(lpService, ControlPacket);
+                        break;
+
+                    case SERVICE_CONTROL_STOP:
+                        TRACE("Stop command - received SERVICE_CONTROL_STOP\n");
+                        dwError = ScControlService(lpService, ControlPacket);
+                        break;
+
+                    default:
+                        TRACE("Command %lu received", ControlPacket->dwControl);
+                        dwError = ScControlService(lpService, ControlPacket);
+                        break;
+                }
+            }
+            else
+            {
+                dwError = ERROR_SERVICE_DOES_NOT_EXIST;
+            }
         }
 
         ReplyPacket.dwError = dwError;
@@ -620,9 +625,6 @@ ScServiceDispatcher(HANDLE hPipe,
             ERR("Pipe write failed (Error: %lu)\n", GetLastError());
             return FALSE;
         }
-
-        if (dwRunningServices == 0)
-            break;
     }
 
     return TRUE;

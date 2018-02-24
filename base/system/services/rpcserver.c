@@ -1228,7 +1228,9 @@ RControlService(
         }
 
         /* Send control code to the service */
-        dwError = ScmControlService(lpService,
+        dwError = ScmControlService(lpService->lpImage->hControlPipe,
+                                    lpService->lpServiceName,
+                                    (SERVICE_STATUS_HANDLE)lpService,
                                     dwControl);
 
         /* Return service status information */
@@ -1725,6 +1727,28 @@ RSetServiceStatus(
     /* Restore the previous service type */
     lpService->Status.dwServiceType = dwPreviousType;
 
+    /* Handle a stopped service */
+    if ((lpServiceStatus->dwServiceType & SERVICE_WIN32) &&
+        (lpServiceStatus->dwCurrentState == SERVICE_STOPPED))
+    {
+        /* Decrement the image run counter */
+        lpService->lpImage->dwImageRunCount--;
+
+        /* If we just stopped the last running service... */
+        if (lpService->lpImage->dwImageRunCount == 0)
+        {
+            /* Stop the dispatcher thread */
+            ScmControlService(lpService->lpImage->hControlPipe,
+                              L"",
+                              (SERVICE_STATUS_HANDLE)lpService,
+                              SERVICE_CONTROL_STOP);
+
+            /* Remove the service image */
+            ScmRemoveServiceImage(lpService->lpImage);
+            lpService->lpImage = NULL;
+        }
+    }
+
     /* Unlock the service database */
     ScmUnlockDatabase();
 
@@ -1772,6 +1796,8 @@ RSetServiceStatus(
                     2,
                     lpLogStrings);
     }
+
+
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
     DPRINT("RSetServiceStatus() done\n");

@@ -164,6 +164,7 @@ DWORD ScmStartService(PSERVICE Service,
                       DWORD argc,
                       LPWSTR *argv);
 
+VOID ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage);
 PSERVICE ScmGetServiceEntryByName(LPCWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPCWSTR lpDisplayName);
 PSERVICE ScmGetServiceEntryByResumeCount(DWORD dwResumeCount);
@@ -174,7 +175,9 @@ DWORD ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
 VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
-DWORD ScmControlService(PSERVICE Service,
+DWORD ScmControlService(HANDLE hControlPipe,
+                        PWSTR pServiceName,
+                        SERVICE_STATUS_HANDLE hServiceStatus,
                         DWORD dwControl);
 
 BOOL ScmLockDatabaseExclusive(VOID);
