@@ -687,8 +687,8 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->CcFastMdlReadResourceMiss = 0; /* FIXME */
     Spi->CcFastMdlReadNotPossible = 0; /* FIXME */
 
-    Spi->CcMapDataNoWait = 0; /* FIXME */
-    Spi->CcMapDataWait = 0; /* FIXME */
+    Spi->CcMapDataNoWait = CcMapDataNoWait;
+    Spi->CcMapDataWait = CcMapDataWait;
     Spi->CcMapDataNoWaitMiss = 0; /* FIXME */
     Spi->CcMapDataWaitMiss = 0; /* FIXME */
 
@@ -707,8 +707,8 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->CcMdlReadNoWaitMiss = 0; /* FIXME */
     Spi->CcMdlReadWaitMiss = 0; /* FIXME */
     Spi->CcReadAheadIos = 0; /* FIXME */
-    Spi->CcLazyWriteIos = 0; /* FIXME */
-    Spi->CcLazyWritePages = 0; /* FIXME */
+    Spi->CcLazyWriteIos = CcLazyWriteIos;
+    Spi->CcLazyWritePages = CcLazyWritePages;
     Spi->CcDataFlushes = 0; /* FIXME */
     Spi->CcDataPages = 0; /* FIXME */
     Spi->ContextSwitches = 0; /* FIXME */

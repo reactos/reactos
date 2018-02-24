@@ -18,6 +18,10 @@
 
 extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 
+/* Counters:
+ * - Number of calls to CcMapData that could wait
+ * - Number of calls to CcMapData that couldn't wait
+ */
 ULONG CcMapDataWait = 0;
 ULONG CcMapDataNoWait = 0;
 

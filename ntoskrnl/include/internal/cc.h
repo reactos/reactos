@@ -53,6 +53,14 @@ extern LIST_ENTRY CcPostTickWorkQueue;
 extern NPAGED_LOOKASIDE_LIST CcTwilightLookasideList;
 extern LARGE_INTEGER CcIdleDelay;
 
+//
+// Counters
+//
+extern ULONG CcLazyWritePages;
+extern ULONG CcLazyWriteIos;
+extern ULONG CcMapDataWait;
+extern ULONG CcMapDataNoWait;
+
 typedef struct _PF_SCENARIO_ID
 {
     WCHAR ScenName[30];
