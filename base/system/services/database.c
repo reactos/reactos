@@ -2164,10 +2164,11 @@ ScmAutoShutdownServices(VOID)
     {
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-        if (CurrentService->Status.dwCurrentState == SERVICE_RUNNING ||
-            CurrentService->Status.dwCurrentState == SERVICE_START_PENDING)
+        if ((CurrentService->Status.dwControlsAccepted & SERVICE_ACCEPT_SHUTDOWN) &&
+            (CurrentService->Status.dwCurrentState == SERVICE_RUNNING ||
+             CurrentService->Status.dwCurrentState == SERVICE_START_PENDING))
         {
-            /* shutdown service */
+            /* Send the shutdown notification */
             DPRINT("Shutdown service: %S\n", CurrentService->lpServiceName);
             ScmControlService(CurrentService->lpImage->hControlPipe,
                               CurrentService->lpServiceName,
