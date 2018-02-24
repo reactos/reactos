@@ -1,0 +1,12 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICE_START   "démarrer"
+    IDS_SERVICE_STOP    "arrêt"
+    IDS_SERVICE_PAUSE   "pause"
+    IDS_SERVICE_RESUME  "continuer"
+    IDS_SERVICE_RUNNING "En cours d'exécution"
+    IDS_SERVICE_STOPPED "Arrêté"
+    IDS_SERVICE_PAUSED  "En pause"
+END
