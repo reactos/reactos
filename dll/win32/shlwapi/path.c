@@ -4120,7 +4120,6 @@ BOOL WINAPI PathUnExpandEnvStringsA(LPCSTR path, LPSTR buffer, UINT buf_len)
 
 static const WCHAR allusersprofileW[] = {'%','A','L','L','U','S','E','R','S','P','R','O','F','I','L','E','%',0};
 static const WCHAR appdataW[] = {'%','A','P','P','D','A','T','A','%',0};
-static const WCHAR computernameW[] = {'%','C','O','M','P','U','T','E','R','N','A','M','E','%',0};
 static const WCHAR programfilesW[] = {'%','P','r','o','g','r','a','m','F','i','l','e','s','%',0};
 static const WCHAR systemrootW[] = {'%','S','y','s','t','e','m','R','o','o','t','%',0};
 static const WCHAR systemdriveW[] = {'%','S','y','s','t','e','m','D','r','i','v','e','%',0};
@@ -4157,7 +4156,6 @@ BOOL WINAPI PathUnExpandEnvStringsW(LPCWSTR path, LPWSTR buffer, UINT buf_len)
     struct envvars_map envvars[] = {
         { allusersprofileW, sizeof(allusersprofileW)/sizeof(WCHAR) },
         { appdataW,         sizeof(appdataW)/sizeof(WCHAR)         },
-        { computernameW,    sizeof(computernameW)/sizeof(WCHAR)    },
         { programfilesW,    sizeof(programfilesW)/sizeof(WCHAR)    },
         { systemrootW,      sizeof(systemrootW)/sizeof(WCHAR)      },
         { systemdriveW,     sizeof(systemdriveW)/sizeof(WCHAR)     },
