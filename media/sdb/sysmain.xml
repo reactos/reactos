@@ -206,6 +206,9 @@
             <SHIM NAME="DisableThemes">
                 <DLLFILE>acgenral.dll</DLLFILE>
             </SHIM>
+            <SHIM NAME="IgnoreFreeLibrary">
+                <DLLFILE>acgenral.dll</DLLFILE>
+            </SHIM>
             <SHIM NAME="VMHorizonSetup">
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
