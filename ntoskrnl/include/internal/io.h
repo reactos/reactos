@@ -514,6 +514,18 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
 
 //
+// Reserve IRP allocator
+// Used for read paging IOs in low-memory situations
+//
+typedef struct _RESERVE_IRP_ALLOCATOR
+{
+    PIRP ReserveIrp;
+    volatile LONG ReserveIrpInUse;
+    KEVENT WaitEvent;
+    CCHAR StackSize;
+} RESERVE_IRP_ALLOCATOR, *PRESERVE_IRP_ALLOCATOR;
+
+//
 // Resource code
 //
 ULONG
@@ -920,6 +932,18 @@ IopAllocateIrpMustSucceed(
     IN CCHAR StackSize
 );
 
+BOOLEAN
+NTAPI
+IopInitializeReserveIrp(
+    IN PRESERVE_IRP_ALLOCATOR ReserveIrpAllocator
+);
+
+PIRP
+NTAPI
+IopAllocateReserveIrp(
+    IN CCHAR StackSize
+);
+
 //
 // Shutdown routines
 //
@@ -1317,6 +1341,7 @@ extern PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
 extern PDRIVER_OBJECT IopRootDriverObject;
 extern KSPIN_LOCK IopDeviceRelationsSpinLock;
 extern LIST_ENTRY IopDeviceRelationsRequestList;
+extern RESERVE_IRP_ALLOCATOR IopReserveIrpAllocator;
 
 //
 // Inlined Functions

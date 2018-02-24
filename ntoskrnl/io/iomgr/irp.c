@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gunnar Dalsnes
  *                  Filip Navara (navaraf@reactos.org)
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES ****************************************************************/
@@ -15,6 +16,7 @@
 #include <debug.h>
 
 PIRP IopDeadIrp;
+RESERVE_IRP_ALLOCATOR IopReserveIrpAllocator;
 
 /* PRIVATE FUNCTIONS  ********************************************************/
 
@@ -540,6 +542,67 @@ IopCompleteRequest(IN PKAPC Apc,
         /* Free the IRP as well */
         IoFreeIrp(Irp);
     }
+}
+
+BOOLEAN
+NTAPI
+IopInitializeReserveIrp(IN PRESERVE_IRP_ALLOCATOR ReserveIrpAllocator)
+{
+    /* Our allocated stack size */
+    ReserveIrpAllocator->StackSize = 20;
+
+    /* Allocate the IRP now */
+    ReserveIrpAllocator->ReserveIrp = IoAllocateIrp(ReserveIrpAllocator->StackSize, FALSE);
+    /* If we cannot, abort system boot */
+    if (ReserveIrpAllocator->ReserveIrp == NULL)
+    {
+        return FALSE;
+    }
+
+    /* It's not in use */
+    ReserveIrpAllocator->ReserveIrpInUse = 0;
+    /* And init the event */
+    KeInitializeEvent(&ReserveIrpAllocator->WaitEvent, SynchronizationEvent, FALSE);
+
+    /* All good, keep booting */
+    return TRUE;
+}
+
+PIRP
+NTAPI
+IopAllocateReserveIrp(IN CCHAR StackSize)
+{
+    /* If we need a stack size higher than what was allocated, then fail */
+    if (StackSize > IopReserveIrpAllocator.StackSize)
+    {
+        return NULL;
+    }
+
+    /* Now, wait until the IRP becomes available and reserve it immediately */
+    while (InterlockedExchange(&IopReserveIrpAllocator.ReserveIrpInUse, 1) == 1)
+    {
+        KeWaitForSingleObject(&IopReserveIrpAllocator.WaitEvent,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+    }
+
+    /* It's ours! Initialize it */
+    IoInitializeIrp(IopReserveIrpAllocator.ReserveIrp, IoSizeOfIrp(StackSize), StackSize);
+
+    /* And return it to the caller */
+    return IopReserveIrpAllocator.ReserveIrp;
+}
+
+VOID
+IopFreeReserveIrp(IN CCHAR PriorityBoost)
+{
+    /* Mark we don't use the IRP anymore */
+    InterlockedExchange(&IopReserveIrpAllocator.ReserveIrpInUse, 0);
+
+    /* And set the event if someone is waiting on the IRP */
+    KeSetEvent(&IopReserveIrpAllocator.WaitEvent, PriorityBoost, FALSE);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -1423,7 +1486,21 @@ IofCompleteRequest(IN PIRP Irp,
             KeSetEvent(Irp->UserEvent, PriorityBoost, FALSE);
 
             /* Free the IRP for a Paging I/O Only, Close is handled by us */
-            if (Flags) IoFreeIrp(Irp);
+            if (Flags)
+            {
+                /* If we were using the reserve IRP, then call the appropriate
+                 * free function (to make the IRP available again)
+                 */
+                if (Irp == IopReserveIrpAllocator.ReserveIrp)
+                {
+                    IopFreeReserveIrp(PriorityBoost);
+                }
+                /* Otherwise, free for real! */
+                else
+                {
+                    IoFreeIrp(Irp);
+                }
+            }
         }
         else
         {

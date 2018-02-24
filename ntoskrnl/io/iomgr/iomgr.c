@@ -502,6 +502,13 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeInitializeSpinLock(&ShutdownListLock);
     KeInitializeSpinLock(&IopLogListLock);
 
+    /* Initialize the reserve IRP */
+    if (!IopInitializeReserveIrp(&IopReserveIrpAllocator))
+    {
+        DPRINT1("IopInitializeReserveIrp failed!\n");
+        return FALSE;
+    }
+
     /* Initialize Timer List Lock */
     KeInitializeSpinLock(&IopTimerLock);
 
