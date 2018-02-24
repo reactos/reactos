@@ -56,11 +56,7 @@ struct Imports {
     } ibn;
     char dllname[0x10];
 };
-#ifdef __REACTOS__
 #define EXIT_PROCESS (VA_START+RVA_IDATA+FIELD_OFFSET(struct Imports, thunks))
-#else
-#define EXIT_PROCESS (VA_START+RVA_IDATA+FIELD_OFFSET(struct Imports, thunks[0]))
-#endif
 
 static struct _PeImage {
     IMAGE_DOS_HEADER dos_header;
@@ -223,12 +219,8 @@ static const struct expected_blob b1[] = {
     {FILE_IDATA-FILE_TEXT, &bin.text_section},
     {sizeof(bin.idata_section.descriptors[0].u.OriginalFirstThunk),
         &bin.idata_section.descriptors[0].u.OriginalFirstThunk},
-#ifdef __REACTOS__
     {FIELD_OFFSET(struct Imports, thunks)-
         (FIELD_OFFSET(struct Imports, descriptors)+FIELD_OFFSET(IMAGE_IMPORT_DESCRIPTOR, Name)),
-#else
-    {FIELD_OFFSET(struct Imports, thunks)-FIELD_OFFSET(struct Imports, descriptors[0].Name),
-#endif
         &bin.idata_section.descriptors[0].Name},
     {FILE_TOTAL-FILE_IDATA-FIELD_OFFSET(struct Imports, ibn),
         &bin.idata_section.ibn}
