@@ -2420,6 +2420,19 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             break;
 
+        case ThreadHideFromDebugger:
+
+            /* Check buffer length */
+            if (ThreadInformationLength != 0)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Set the flag */
+            PspSetCrossThreadFlag(Thread, CT_HIDE_FROM_DEBUGGER_BIT);
+            break;
+
         default:
             /* We don't implement it yet */
             DPRINT1("Not implemented: %d\n", ThreadInformationClass);
