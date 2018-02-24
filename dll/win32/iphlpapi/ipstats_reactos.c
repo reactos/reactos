@@ -81,8 +81,8 @@ NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
     }
 
     if( numRoutes == index && i < numEntities ) {
-        TRACE("Index %d is entity #%d - %04x:%08x\n", index, i,
-               entitySet[i].tei_entity, entitySet[i].tei_instance );
+        TRACE("Index %lu is entity #%d - %04x:%08x\n", index, i,
+              entitySet[i].tei_entity, entitySet[i].tei_instance);
         memcpy( ent, &entitySet[i], sizeof(*ent) );
         tdiFreeThingSet( entitySet );
         return STATUS_SUCCESS;
@@ -100,8 +100,8 @@ NTSTATUS tdiGetMibForIpEntity
 
     memset( entry, 0, sizeof( *entry ) );
 
-    TRACE("TdiGetMibForIpEntity(tcpFile %x,entityId %x)\n",
-           (DWORD)tcpFile, ent->tei_instance);
+    TRACE("TdiGetMibForIpEntity(tcpFile 0x%p, entityId 0x%x)\n",
+          tcpFile, ent->tei_instance);
 
     req.ID.toi_class                = INFO_CLASS_PROTOCOL;
     req.ID.toi_type                 = INFO_TYPE_PROVIDER;
@@ -117,31 +117,31 @@ NTSTATUS tdiGetMibForIpEntity
                               &returnSize,
                               NULL );
 
-    TRACE("TdiGetMibForIpEntity() => {\n"
-           "  ipsi_forwarding ............ %d\n"
-           "  ipsi_defaultttl ............ %d\n"
-           "  ipsi_inreceives ............ %d\n"
-           "  ipsi_indelivers ............ %d\n"
-           "  ipsi_outrequests ........... %d\n"
-           "  ipsi_routingdiscards ....... %d\n"
-           "  ipsi_outdiscards ........... %d\n"
-           "  ipsi_outnoroutes ........... %d\n"
-           "  ipsi_numif ................. %d\n"
-           "  ipsi_numaddr ............... %d\n"
-           "  ipsi_numroutes ............. %d\n"
-           "} status %08x\n",
-           entry->ipsi_forwarding,
-           entry->ipsi_defaultttl,
-           entry->ipsi_inreceives,
-           entry->ipsi_indelivers,
-           entry->ipsi_outrequests,
-           entry->ipsi_routingdiscards,
-           entry->ipsi_outdiscards,
-           entry->ipsi_outnoroutes,
-           entry->ipsi_numif,
-           entry->ipsi_numaddr,
-           entry->ipsi_numroutes,
-           status);
+    TRACE("TdiGetMibForIpEntity() => status = 0x%08lx, entry = {\n"
+           "  ipsi_forwarding ............ %lu\n"
+           "  ipsi_defaultttl ............ %lu\n"
+           "  ipsi_inreceives ............ %lu\n"
+           "  ipsi_indelivers ............ %lu\n"
+           "  ipsi_outrequests ........... %lu\n"
+           "  ipsi_routingdiscards ....... %lu\n"
+           "  ipsi_outdiscards ........... %lu\n"
+           "  ipsi_outnoroutes ........... %lu\n"
+           "  ipsi_numif ................. %lu\n"
+           "  ipsi_numaddr ............... %lu\n"
+           "  ipsi_numroutes ............. %lu\n"
+           "}\n",
+          status,
+          entry->ipsi_forwarding,
+          entry->ipsi_defaultttl,
+          entry->ipsi_inreceives,
+          entry->ipsi_indelivers,
+          entry->ipsi_outrequests,
+          entry->ipsi_routingdiscards,
+          entry->ipsi_outdiscards,
+          entry->ipsi_outnoroutes,
+          entry->ipsi_numif,
+          entry->ipsi_numaddr,
+          entry->ipsi_numroutes);
 
     return status;
 }
@@ -150,8 +150,8 @@ NTSTATUS tdiGetRoutesForIpEntity
 ( HANDLE tcpFile, TDIEntityID *ent, IPRouteEntry **routes, PDWORD numRoutes ) {
     NTSTATUS status = STATUS_SUCCESS;
 
-    TRACE("TdiGetRoutesForIpEntity(tcpFile %x,entityId %x)\n",
-           (DWORD)tcpFile, ent->tei_instance);
+    TRACE("TdiGetRoutesForIpEntity(tcpFile 0x%p, entityId 0x%x)\n",
+          tcpFile, ent->tei_instance);
 
     status = tdiGetSetOfThings( tcpFile,
                                 INFO_CLASS_PROTOCOL,
@@ -171,8 +171,8 @@ NTSTATUS tdiGetIpAddrsForIpEntity
 ( HANDLE tcpFile, TDIEntityID *ent, IPAddrEntry **addrs, PDWORD numAddrs ) {
     NTSTATUS status;
 
-    TRACE("TdiGetIpAddrsForIpEntity(tcpFile %x,entityId %x)\n",
-           (DWORD)tcpFile, ent->tei_instance);
+    TRACE("TdiGetIpAddrsForIpEntity(tcpFile 0x%p, entityId 0x%x)\n",
+          tcpFile, ent->tei_instance);
 
     status = tdiGetSetOfThings( tcpFile,
                                 INFO_CLASS_PROTOCOL,
@@ -367,16 +367,14 @@ DWORD getNumRoutes(void)
     TRACE("called.\n");
 
     status = openTcpFile( &tcpFile, FILE_READ_DATA );
-
     if( !NT_SUCCESS(status) ) {
-        TRACE("failure: %08x\n", (int)status );
+        ERR("openTcpFile returned 0x%08lx\n", status);
         return 0;
     }
 
     status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
-
     if( !NT_SUCCESS(status) ) {
-        TRACE("failure: %08x\n", (int)status );
+        ERR("tdiGetEntityIDSet returned 0x%08lx\n", status);
         closeTcpFile( tcpFile );
         return 0;
     }
@@ -387,7 +385,7 @@ DWORD getNumRoutes(void)
             memset( &isnmp, 0, sizeof( isnmp ) );
             status = tdiGetMibForIpEntity( tcpFile, &entitySet[i], &isnmp );
             if( !NT_SUCCESS(status) ) {
-                WARN("tdiGetMibForIpEntity failed for i = %d", i);
+                ERR("tdiGetMibForIpEntity returned 0x%08lx, for i = %d", status, i);
                 numRoutes = 0;
                 break;
             }
@@ -395,7 +393,7 @@ DWORD getNumRoutes(void)
         }
     }
 
-    TRACE("numRoutes: %d\n", (int)numRoutes);
+    TRACE("numRoutes = %lu\n", numRoutes);
 
     tdiFreeThingSet( entitySet );
     closeTcpFile( tcpFile );
@@ -454,7 +452,7 @@ RouteTable *getRouteTable(void)
             return 0;
         }
 
-        TRACE( "%d routes in instance %d\n", numRoutes, i );
+        TRACE("%lu routes in instance %d\n", numRoutes, i);
 #if 0
         HexDump( route_set,
                  sizeof( IPRouteEntry ) *
@@ -482,7 +480,7 @@ RouteTable *getRouteTable(void)
 
     closeTcpFile( tcpFile );
 
-    TRACE("Return: %08x, %08x\n", status, out_route_table);
+    TRACE("status = 0x%08lx, out_route_table = 0x%p\n", status, out_route_table);
 
     return out_route_table;
 }
@@ -500,9 +498,8 @@ DWORD getNumArpEntries(void)
     TRACE("called.\n");
 
     status = openTcpFile( &tcpFile, FILE_READ_DATA );
-
     if( !NT_SUCCESS(status) ) {
-        TRACE("failure: %08x\n", (int)status );
+        ERR("openTcpFile returned 0x%08lx\n", status);
         return 0;
     }
 
@@ -552,9 +549,8 @@ PMIB_IPNETTABLE getArpTable(void)
     totalNumber = getNumArpEntries();
 
     status = openTcpFile( &tcpFile, FILE_READ_DATA );
-
     if( !NT_SUCCESS(status) ) {
-        TRACE("failure: %08x\n", (int)status );
+        ERR("openTcpFile returned 0x%08lx\n", status);
         return 0;
     }
 
