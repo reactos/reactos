@@ -15,6 +15,7 @@
 #include "services.h"
 
 #include <userenv.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -88,7 +89,8 @@ ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
     }
 
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
-    swprintf(szControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%lu", ServiceCurrent);
+    StringCchPrintfW(szControlPipeName, ARRAYSIZE(szControlPipeName),
+                     L"\\\\.\\pipe\\net\\NtControlPipe%lu", ServiceCurrent);
 
     DPRINT("PipeName: %S\n", szControlPipeName);
 
@@ -1861,7 +1863,8 @@ ScmLoadService(PSERVICE Service,
         if (Service->dwErrorControl != SERVICE_ERROR_IGNORE)
         {
             /* Log a failed service start */
-            swprintf(szLogBuffer, L"%lu", dwError);
+            StringCchPrintfW(szLogBuffer, ARRAYSIZE(szLogBuffer),
+                             L"%lu", dwError);
             lpLogStrings[0] = Service->lpServiceName;
             lpLogStrings[1] = szLogBuffer;
             ScmLogEvent(EVENT_SERVICE_START_FAILED,
@@ -1990,19 +1993,21 @@ ScmAutoStartServices(VOID)
         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
         /* Build the safe boot path */
-        wcscpy(szSafeBootServicePath,
-               L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot");
+        StringCchCopyW(szSafeBootServicePath, ARRAYSIZE(szSafeBootServicePath),
+                       L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot");
 
         switch (SafeBootEnabled)
         {
             /* NOTE: Assumes MINIMAL (1) and DSREPAIR (3) load same items */
             case 1:
             case 3:
-                wcscat(szSafeBootServicePath, L"\\Minimal\\");
+                StringCchCatW(szSafeBootServicePath, ARRAYSIZE(szSafeBootServicePath),
+                              L"\\Minimal\\");
                 break;
 
             case 2:
-                wcscat(szSafeBootServicePath, L"\\Network\\");
+                StringCchCatW(szSafeBootServicePath, ARRAYSIZE(szSafeBootServicePath),
+                              L"\\Network\\");
                 break;
         }
 
@@ -2019,9 +2024,8 @@ ScmAutoStartServices(VOID)
                 RegCloseKey(hKey);
 
                 /* Finish Safe Boot path off */
-                wcsncat(szSafeBootServicePath,
-                        CurrentService->lpServiceName,
-                        MAX_PATH - wcslen(szSafeBootServicePath));
+                StringCchCatW(szSafeBootServicePath, ARRAYSIZE(szSafeBootServicePath),
+                              CurrentService->lpServiceName);
 
                 /* Check that the key is in the Safe Boot path */
                 dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
