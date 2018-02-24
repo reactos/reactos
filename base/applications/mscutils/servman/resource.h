@@ -2,6 +2,8 @@
 
 #define IDC_STATIC -1
 
+#define IDA_SERVMAN 20
+
 /* about box info */
 #define IDD_ABOUTBOX     200
 #define IDC_LICENSE_EDIT 201
