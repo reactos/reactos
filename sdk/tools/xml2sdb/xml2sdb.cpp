@@ -503,12 +503,12 @@ bool MatchingFile::fromXml(XMLHandle dbNode)
     ProductVersion = ReadStringNode(dbNode, "PRODUCT_VERSION");
     FileVersion = ReadStringNode(dbNode, "FILE_VERSION");
     BinFileVersion = ReadStringNode(dbNode, "BIN_FILE_VERSION");
-    LinkDate = ReadStringNode(dbNode, "LINK_DATE");
+    LinkDate = ReadDWordNode(dbNode, "LINK_DATE");
     VerLanguage = ReadStringNode(dbNode, "VER_LANGUAGE");
     FileDescription = ReadStringNode(dbNode, "FILE_DESCRIPTION");
     OriginalFilename = ReadStringNode(dbNode, "ORIGINAL_FILENAME");
     UptoBinFileVersion = ReadStringNode(dbNode, "UPTO_BIN_FILE_VERSION");
-    LinkerVersion = ReadStringNode(dbNode, "LINKER_VERSION");
+    LinkerVersion = ReadDWordNode(dbNode, "LINKER_VERSION");
     return true;
 }
 
@@ -526,17 +526,14 @@ bool MatchingFile::toSdb(PDB pdb, Database& db)
     db.WriteString(pdb, TAG_FILE_VERSION, FileVersion);
     if (!BinFileVersion.empty())
         SHIM_ERR("TAG_BIN_FILE_VERSION Unimplemented\n"); //db.WriteQWord(pdb, TAG_BIN_FILE_VERSION, BinFileVersion);
-    if (!LinkDate.empty())
-        SHIM_ERR("TAG_LINK_DATE Unimplemented\n"); //db.WriteDWord(pdb, TAG_LINK_DATE, LinkDate);
+    db.WriteDWord(pdb, TAG_LINK_DATE, LinkDate);
     if (!VerLanguage.empty())
         SHIM_ERR("TAG_VER_LANGUAGE Unimplemented\n"); //db.WriteDWord(pdb, TAG_VER_LANGUAGE, VerLanguage);
     db.WriteString(pdb, TAG_FILE_DESCRIPTION, FileDescription);
     db.WriteString(pdb, TAG_ORIGINAL_FILENAME, OriginalFilename);
     if (!UptoBinFileVersion.empty())
         SHIM_ERR("TAG_UPTO_BIN_FILE_VERSION Unimplemented\n"); //db.WriteQWord(pdb, TAG_UPTO_BIN_FILE_VERSION, UptoBinFileVersion);
-    if (!LinkerVersion.empty())
-        SHIM_ERR("TAG_LINKER_VERSION Unimplemented\n"); //db.WriteDWord(pdb, TAG_LINKER_VERSION, LinkerVersion);
-
+    db.WriteDWord(pdb, TAG_LINKER_VERSION, LinkerVersion);
 
     return !!db.EndWriteListTag(pdb, tagid);
 }
