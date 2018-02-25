@@ -169,9 +169,13 @@ VOID CreateUsage(VOID)
 VOID ControlUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
-             _T("        Sends a CONTROL control request to a service.\n")
+             _T("        Sends a CONTROL code to a service.\n")
              _T("USAGE:\n")
-             _T("        sc <server> control [service name] <value>\n"));
+             _T("        sc <server> control [service name] <value>\n")
+             _T("            <value> = user-defined control code\n")
+             _T("            <value> = <paramchange|\n")
+             _T("                       netbindadd|netbindremove|\n")
+             _T("                       netbindenable|netbinddisable>\n"));
 }
 
 VOID SdShowUsage(VOID)
