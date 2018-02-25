@@ -472,16 +472,20 @@ LDEVOBJ_pLoadDriver(
             goto leave;
         }
 
-        /* Load the driver */
-        if (!LDEVOBJ_bEnableDriver(pldev, pldev->pGdiDriverInfo->EntryPoint))
+        /* Shall we load a driver? */
+        if (ldevtype != LDEV_IMAGE)
         {
-            ERR("LDEVOBJ_bEnableDriver failed\n");
+            /* Load the driver */
+            if (!LDEVOBJ_bEnableDriver(pldev, pldev->pGdiDriverInfo->EntryPoint))
+            {
+                ERR("LDEVOBJ_bEnableDriver failed\n");
 
-            /* Unload the image. */
-            LDEVOBJ_bUnloadImage(pldev);
-            LDEVOBJ_vFreeLDEV(pldev);
-            pldev = NULL;
-            goto leave;
+                /* Unload the image and free the LDEVOBJ. */
+                LDEVOBJ_bUnloadImage(pldev);
+                LDEVOBJ_vFreeLDEV(pldev);
+                pldev = NULL;
+                goto leave;
+            }
         }
 
         /* Insert the LDEV into the global list */

@@ -342,7 +342,7 @@ EngLoadModuleEx(
     _In_ ULONG cjSizeOfModule,
     _In_ FLONG fl)
 {
-    PFILEVIEW pFileView = NULL;
+    PFILEVIEW pFileView;
     PFONTFILEVIEW pffv;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hRootDir;
@@ -408,13 +408,7 @@ EngLoadModuleEx(
                           0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open file, hFile=%p, Status=0x%x\n", hFile, Status);
-        EngFreeMem(pFileView);
-        return NULL;
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
+        DPRINT1("Failed to open file, Status=0x%x\n", Status);
         pFileView = NULL;
         goto cleanup;
     }
