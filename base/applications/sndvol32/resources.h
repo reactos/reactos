@@ -28,3 +28,4 @@
 
 #define IDD_VOLUME_CTRL 200
 #define IDD_PREFERENCES 201
+#define IDD_TRAY_CTRL   202

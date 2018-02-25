@@ -1136,6 +1136,61 @@ CreateApplicationWindow(VOID)
     return hWnd;
 }
 
+static
+BOOL
+HandleCommandLine(LPTSTR cmdline,
+                  PBOOL pTray)
+{
+    TCHAR option;
+
+    while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
+    {
+        if (*cmdline++ == _T(' '))
+            continue;
+
+        option = *cmdline;
+        if (option)
+            cmdline++;
+        while (*cmdline == _T(' '))
+            cmdline++;
+
+        switch (option)
+        {
+            case 'd': /* Device */
+            case 'D':
+                break;
+
+            case 'n': /* Normal size */
+            case 'N':
+                *pTray = FALSE;
+                break;
+
+            case 's': /* Small size */
+            case 'S':
+                *pTray = FALSE;
+                break;
+
+            case 't': /* Tray size */
+            case 'T':
+                *pTray = TRUE;
+                break;
+
+            case 'p': /* Play mode */
+            case 'P':
+                break;
+
+            case 'r': /* Record mode */
+            case 'R':
+                break;
+
+            default:
+                return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 int WINAPI
 _tWinMain(HINSTANCE hInstance,
           HINSTANCE hPrevInstance,
@@ -1145,13 +1200,15 @@ _tWinMain(HINSTANCE hInstance,
     MSG Msg;
     int Ret = 1;
     INITCOMMONCONTROLSEX Controls;
+    BOOL bTray = FALSE;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpszCmdLine);
-	UNREFERENCED_PARAMETER(nCmdShow);
+    UNREFERENCED_PARAMETER(nCmdShow);
 
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
+
+    HandleCommandLine(lpszCmdLine, &bTray);
 
     if (InitAppConfig())
     {
@@ -1168,37 +1225,48 @@ _tWinMain(HINSTANCE hInstance,
 
         InitCommonControlsEx(&Controls);
 
-        if (RegisterApplicationClasses())
+        if (bTray)
         {
-            hMainWnd = CreateApplicationWindow();
-            if (hMainWnd != NULL)
-            {
-                BOOL bRet;
-                while ((bRet =GetMessage(&Msg,
-                                         NULL,
-                                         0,
-                                         0)) != 0)
-                {
-                    if (bRet != -1)
-                    {
-                        TranslateMessage(&Msg);
-                        DispatchMessage(&Msg);
-                    }
-                }
-
-                DestroyWindow(hMainWnd);
-                Ret = 0;
-            }
-            else
-            {
-                DPRINT("Failed to create application window (LastError: %d)!\n", GetLastError());
-            }
-
-            UnregisterApplicationClasses();
+            DialogBoxParam(hAppInstance,
+                           MAKEINTRESOURCE(IDD_TRAY_CTRL),
+                           NULL,
+                           TrayDlgProc,
+                           0);
         }
         else
         {
-            DPRINT("Failed to register application classes (LastError: %d)!\n", GetLastError());
+            if (RegisterApplicationClasses())
+            {
+                hMainWnd = CreateApplicationWindow();
+                if (hMainWnd != NULL)
+                {
+                    BOOL bRet;
+                    while ((bRet =GetMessage(&Msg,
+                                             NULL,
+                                             0,
+                                             0)) != 0)
+                    {
+                        if (bRet != -1)
+                        {
+                            TranslateMessage(&Msg);
+                            DispatchMessage(&Msg);
+                        }
+                    }
+
+                    DestroyWindow(hMainWnd);
+                    Ret = 0;
+                }
+                else
+                {
+                    DPRINT("Failed to create application window (LastError: %d)!\n", GetLastError());
+                }
+
+                UnregisterApplicationClasses();
+            }
+            else
+            {
+                DPRINT("Failed to register application classes (LastError: %d)!\n", GetLastError());
+            }
         }
 
         if (lpAppTitle != NULL)

@@ -164,4 +164,14 @@ WriteLineConfig(IN LPTSTR szDeviceName,
                 IN PSNDVOL_REG_LINESTATE LineState,
                 IN DWORD cbSize);
 
+/* tray.c */
+
+INT_PTR
+CALLBACK
+TrayDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam);
+
 #endif /* __SNDVOL32_H */
