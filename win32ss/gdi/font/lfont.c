@@ -93,6 +93,17 @@ LFONT_prfntFindRFONT(
     return NULL;
 }
 
+HFONT
+NTAPI
+GreCreateFontIndirectW(
+    _In_ const LOGFONTW *plfw)
+{
+    return GreHfontCreate((PENUMLOGFONTEXDVW)plfw,
+                          sizeof(*plfw),
+                          0, // FIXME: lft
+                          0, // fl
+                          NULL); // pvCliData
+}
 
 HFONT
 NTAPI

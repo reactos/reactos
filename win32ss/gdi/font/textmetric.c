@@ -240,6 +240,16 @@ NtGdiGetOutlineTextMetricsInternalW(
 }
 
 BOOL
+WINAPI
+GreGetTextMetricsW(
+    _In_ HDC hdc,
+    _Out_ LPTEXTMETRICW lptm)
+{
+    ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOL
 NTAPI
 GreGetTextExtentW(
     HDC hdc,

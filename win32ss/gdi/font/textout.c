@@ -50,6 +50,26 @@ GreExtTextOutW(
     return FALSE;
 }
 
+BOOL
+NTAPI
+GreTextOutW(
+    _In_ HDC hdc,
+    _In_ int xStart,
+    _In_ int yStart,
+    _In_ LPCWSTR pwcString,
+    _In_ int cwc)
+{
+    return GreExtTextOutW(hdc,
+                          xStart,
+                          yStart,
+                          0, // fuOptions
+                          NULL, // lprc
+                          pwcString,
+                          cwc,
+                          NULL, // Dx
+                          0); // dwCodePage
+}
+
 W32KAPI
 BOOL
 APIENTRY
