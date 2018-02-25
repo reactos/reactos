@@ -130,7 +130,6 @@ FONTOBJ_pvTrueTypeFontFile(
 }
 
 #undef XFORMOBJ
-WIN32KAPI
 XFORMOBJ*
 APIENTRY
 FONTOBJ_pxoGetXform(
