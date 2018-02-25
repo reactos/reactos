@@ -435,6 +435,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
      case GdiBCSelObj:
      {
         PGDIBSOBJECT pgO;
+        __debugbreak();
 
         if (!dc) break;
         pgO = (PGDIBSOBJECT) pHdr;

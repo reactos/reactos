@@ -261,7 +261,7 @@ IntValidateWindowStationHandle(
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)
 {
-    //TEXTMETRICW tmw;
+    TEXTMETRICW tmw;
     UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
     PDESKTOP pdesk;
 
@@ -312,6 +312,7 @@ co_IntInitializeDesktopGraphics(VOID)
     }
     // Font is realized and this dc was previously set to internal DC_ATTR.
     ERR("HACK HACK HACK HACK HACK HACK HACK HACK HACK \n");
+    __debugbreak();
 #if 0
     gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
     gpsi->tmSysFont     = tmw;
