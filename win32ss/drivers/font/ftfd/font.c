@@ -458,7 +458,7 @@ FtfdCreateFace(
 {
     PFTFD_FACE pface;
     FT_Error fterror;
-    ULONG ulEncoding, ulAccumCharWidth = 0;
+    ULONG ulEncoding; // , ulAccumCharWidth = 0;
 
     /* Try to load a unicode charmap */
     ulEncoding = FT_ENCODING_UNICODE;
