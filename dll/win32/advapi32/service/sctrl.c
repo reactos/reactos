@@ -432,9 +432,9 @@ ScStartService(PACTIVE_SERVICE lpService,
     if (lpService == NULL || ControlPacket == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    TRACE("ScStartService() called\n");
-    TRACE("Size: %lu\n", ControlPacket->dwSize);
-    TRACE("Service: %S\n", (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset));
+    TRACE("ScStartService(Size: %lu, Service: '%S') called\n",
+          ControlPacket->dwSize,
+          (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset));
 
     /* Set the service status handle */
     lpService->hServiceStatus = ControlPacket->hServiceStatus;
@@ -458,18 +458,20 @@ ScStartService(PACTIVE_SERVICE lpService,
                                     0,
                                     ScServiceMainStubW,
                                     ThreadParamsW,
-                                    CREATE_SUSPENDED,
+                                    0,
                                     &ThreadId);
         if (ThreadHandle == NULL)
         {
             if (ThreadParamsW->lpArgVector != NULL)
             {
-                HeapFree(GetProcessHeap(),
-                         0,
-                         ThreadParamsW->lpArgVector);
+                HeapFree(GetProcessHeap(), 0, ThreadParamsW->lpArgVector);
             }
             HeapFree(GetProcessHeap(), 0, ThreadParamsW);
+
+            return ERROR_SERVICE_NO_THREAD;
         }
+
+        CloseHandle(ThreadHandle);
     }
     else
     {
@@ -489,22 +491,21 @@ ScStartService(PACTIVE_SERVICE lpService,
                                     0,
                                     ScServiceMainStubA,
                                     ThreadParamsA,
-                                    CREATE_SUSPENDED,
+                                    0,
                                     &ThreadId);
         if (ThreadHandle == NULL)
         {
             if (ThreadParamsA->lpArgVector != NULL)
             {
-                HeapFree(GetProcessHeap(),
-                         0,
-                         ThreadParamsA->lpArgVector);
+                HeapFree(GetProcessHeap(), 0, ThreadParamsA->lpArgVector);
             }
             HeapFree(GetProcessHeap(), 0, ThreadParamsA);
-        }
-    }
 
-    ResumeThread(ThreadHandle);
-    CloseHandle(ThreadHandle);
+            return ERROR_SERVICE_NO_THREAD;
+        }
+
+        CloseHandle(ThreadHandle);
+    }
 
     return ERROR_SUCCESS;
 }
