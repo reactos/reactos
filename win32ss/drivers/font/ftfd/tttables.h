@@ -1,3 +1,11 @@
+/*
+* PROJECT:         ReactOS win32 subsystem
+* LICENSE:         GPL - See COPYING in the top level directory
+* PURPOSE:         OpenType support for GDI font driver header
+* PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
+*/
+
+#pragma once
 
 /* We need these to access unaligned big endian data */
 FORCEINLINE
