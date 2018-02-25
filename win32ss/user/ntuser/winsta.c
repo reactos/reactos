@@ -311,7 +311,7 @@ co_IntInitializeDesktopGraphics(VOID)
         gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
     }
     // Font is realized and this dc was previously set to internal DC_ATTR.
-    DPRINT1("HACK HACK HACK HACK HACK HACK HACK HACK HACK \n");
+    ERR("HACK HACK HACK HACK HACK HACK HACK HACK HACK \n");
 #if 0
     gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
     gpsi->tmSysFont     = tmw;

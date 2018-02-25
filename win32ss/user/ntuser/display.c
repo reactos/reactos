@@ -879,7 +879,9 @@ UserChangeDisplaySettings(
                 gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
             }
             // Font is realized and this dc was previously set to internal DC_ATTR.
-            gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
+            //gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
+            __debugbreak();
+            RtlZeroMemory(&tmw, sizeof(tmw));
             gpsi->tmSysFont     = tmw;
         }
 

@@ -1810,7 +1810,9 @@ IntGetDialogBaseUnits(VOID)
 
         if ((hdc = UserGetDCEx(NULL, NULL, DCX_CACHE)))
         {
-            size.cx = IntGetCharDimensions( hdc, NULL, (PDWORD)&size.cy );
+            //size.cx = IntGetCharDimensions( hdc, NULL, (PDWORD)&size.cy );
+            __debugbreak();
+            size.cx = size.cy = 0;
             if (size.cx) units = MAKELONG( size.cx, size.cy );
             UserReleaseDC( 0, hdc, FALSE);
         }
@@ -1837,7 +1839,8 @@ static void FASTCALL MENU_CalcItemSize( HDC hdc, PITEM lpitem, PMENU Menu, PWND 
 
     arrow_bitmap_width = gpsi->oembmi[OBI_MNARROW].cx;
 
-    MenuCharSize.cx = IntGetCharDimensions( hdc, NULL, (PDWORD)&MenuCharSize.cy );
+    //MenuCharSize.cx = IntGetCharDimensions( hdc, NULL, (PDWORD)&MenuCharSize.cy );
+    __debugbreak();
 
     RECTL_vSetRect( &Rect, orgX, orgY, orgX, orgY );
 

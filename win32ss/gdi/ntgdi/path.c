@@ -2383,10 +2383,10 @@ PATH_ExtTextOut(
 
     for (idx = 0; idx < count; idx++)
     {
-        MAT2 identity = { {0, 1}, {0, 0}, {0, 0}, {0, 1} };
+        //MAT2 identity = { {0, 1}, {0, 0}, {0, 0}, {0, 1} };
         GLYPHMETRICS gm = {0};
         DWORD dwSize;
-        void *outline;
+        //void *outline;
 
         __debugbreak();
 #if 0
