@@ -5,9 +5,6 @@
  * PURPOSE:         Service control manager functions
  * PROGRAMMER:      Emanuele Aliberti
  *                  Eric Kohl
- * UPDATE HISTORY:
- *  19990413 EA created
- *  19990515 EA
  */
 
 /* INCLUDES ******************************************************************/
@@ -22,35 +19,35 @@ handle_t __RPC_USER
 SVCCTL_HANDLEA_bind(SVCCTL_HANDLEA szMachineName)
 {
     handle_t hBinding = NULL;
-    UCHAR *pszStringBinding;
-    RPC_STATUS status;
+    RPC_CSTR pszStringBinding;
+    RPC_STATUS Status;
 
     TRACE("SVCCTL_HANDLEA_bind() called\n");
 
-    status = RpcStringBindingComposeA(NULL,
-                                      (UCHAR *)"ncacn_np",
-                                      (UCHAR *)szMachineName,
-                                      (UCHAR *)"\\pipe\\ntsvcs",
+    Status = RpcStringBindingComposeA(NULL,
+                                      (RPC_CSTR)"ncacn_np",
+                                      (RPC_CSTR)szMachineName,
+                                      (RPC_CSTR)"\\pipe\\ntsvcs",
                                       NULL,
-                                      (UCHAR **)&pszStringBinding);
-    if (status != RPC_S_OK)
+                                      &pszStringBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcStringBindingCompose returned 0x%x\n", status);
+        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
         return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
-    status = RpcBindingFromStringBindingA(pszStringBinding,
+    Status = RpcBindingFromStringBindingA(pszStringBinding,
                                           &hBinding);
-    if (status != RPC_S_OK)
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
     }
 
-    status = RpcStringFreeA(&pszStringBinding);
-    if (status != RPC_S_OK)
+    Status = RpcStringFreeA(&pszStringBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcStringFree returned 0x%x\n", status);
+        ERR("RpcStringFree returned 0x%x\n", Status);
     }
 
     return hBinding;
@@ -61,14 +58,14 @@ void __RPC_USER
 SVCCTL_HANDLEA_unbind(SVCCTL_HANDLEA szMachineName,
                       handle_t hBinding)
 {
-    RPC_STATUS status;
+    RPC_STATUS Status;
 
     TRACE("SVCCTL_HANDLEA_unbind() called\n");
 
-    status = RpcBindingFree(&hBinding);
-    if (status != RPC_S_OK)
+    Status = RpcBindingFree(&hBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFree returned 0x%x\n", status);
+        ERR("RpcBindingFree returned 0x%x\n", Status);
     }
 }
 
@@ -77,35 +74,35 @@ handle_t __RPC_USER
 SVCCTL_HANDLEW_bind(SVCCTL_HANDLEW szMachineName)
 {
     handle_t hBinding = NULL;
-    LPWSTR pszStringBinding;
-    RPC_STATUS status;
+    RPC_WSTR pszStringBinding;
+    RPC_STATUS Status;
 
     TRACE("SVCCTL_HANDLEW_bind() called\n");
 
-    status = RpcStringBindingComposeW(NULL,
+    Status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
                                       szMachineName,
                                       L"\\pipe\\ntsvcs",
                                       NULL,
                                       &pszStringBinding);
-    if (status != RPC_S_OK)
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcStringBindingCompose returned 0x%x\n", status);
+        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
         return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
-    status = RpcBindingFromStringBindingW(pszStringBinding,
+    Status = RpcBindingFromStringBindingW(pszStringBinding,
                                           &hBinding);
-    if (status != RPC_S_OK)
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
     }
 
-    status = RpcStringFreeW(&pszStringBinding);
-    if (status != RPC_S_OK)
+    Status = RpcStringFreeW(&pszStringBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcStringFree returned 0x%x\n", status);
+        ERR("RpcStringFree returned 0x%x\n", Status);
     }
 
     return hBinding;
@@ -116,18 +113,19 @@ void __RPC_USER
 SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
                       handle_t hBinding)
 {
-    RPC_STATUS status;
+    RPC_STATUS Status;
 
     TRACE("SVCCTL_HANDLEW_unbind() called\n");
 
-    status = RpcBindingFree(&hBinding);
-    if (status != RPC_S_OK)
+    Status = RpcBindingFree(&hBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFree returned 0x%x\n", status);
+        ERR("RpcBindingFree returned 0x%x\n", Status);
     }
 }
 
 
+/* HACK: because of a problem with rpcrt4, rpcserver is hacked to return 6 for ERROR_SERVICE_DOES_NOT_EXIST */
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status)
 {
@@ -332,7 +330,6 @@ ChangeServiceConfigA(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RChangeServiceConfigA((SC_RPC_HANDLE)hService,
                                         dwServiceType,
                                         dwStartType,
@@ -417,7 +414,6 @@ ChangeServiceConfigW(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RChangeServiceConfigW((SC_RPC_HANDLE)hService,
                                         dwServiceType,
                                         dwStartType,
@@ -469,7 +465,6 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RCloseServiceHandle((LPSC_RPC_HANDLE)&hSCObject);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -508,7 +503,6 @@ ControlService(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RControlService((SC_RPC_HANDLE)hService,
                                   dwControl,
                                   lpServiceStatus);
@@ -628,7 +622,6 @@ CreateServiceA(SC_HANDLE hSCManager,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RCreateServiceA((SC_RPC_HANDLE)hSCManager,
                                   (LPSTR)lpServiceName,
                                   (LPSTR)lpDisplayName,
@@ -727,7 +720,6 @@ CreateServiceW(SC_HANDLE hSCManager,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RCreateServiceW((SC_RPC_HANDLE)hSCManager,
                                   lpServiceName,
                                   lpDisplayName,
@@ -776,7 +768,6 @@ DeleteService(SC_HANDLE hService)
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RDeleteService((SC_RPC_HANDLE)hService);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1494,7 +1485,6 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* HACK: because of a problem with rpcrt4, rpcserver is hacked to return 6 for ERROR_SERVICE_DOES_NOT_EXIST */
         dwError = ScmRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
@@ -1732,7 +1722,6 @@ LockServiceDatabase(SC_HANDLE hSCManager)
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RLockServiceDatabase((SC_RPC_HANDLE)hSCManager,
                                        (SC_RPC_LOCK *)&hLock);
     }
@@ -1801,7 +1790,6 @@ OpenSCManagerA(LPCSTR lpMachineName,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = ROpenSCManagerA((LPSTR)lpMachineName,
                                   (LPSTR)lpDatabaseName,
                                   dwDesiredAccess,
@@ -1846,7 +1834,6 @@ OpenSCManagerW(LPCWSTR lpMachineName,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = ROpenSCManagerW((LPWSTR)lpMachineName,
                                   (LPWSTR)lpDatabaseName,
                                   dwDesiredAccess,
@@ -1895,7 +1882,6 @@ OpenServiceA(SC_HANDLE hSCManager,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = ROpenServiceA((SC_RPC_HANDLE)hSCManager,
                                 (LPSTR)lpServiceName,
                                 dwDesiredAccess,
@@ -1944,7 +1930,6 @@ OpenServiceW(SC_HANDLE hSCManager,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = ROpenServiceW((SC_RPC_HANDLE)hSCManager,
                                 (LPWSTR)lpServiceName,
                                 dwDesiredAccess,
@@ -2002,7 +1987,6 @@ QueryServiceConfigA(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceConfigA((SC_RPC_HANDLE)hService,
                                        (LPBYTE)lpConfigPtr,
                                        dwBufferSize,
@@ -2086,7 +2070,6 @@ QueryServiceConfigW(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceConfigW((SC_RPC_HANDLE)hService,
                                        (LPBYTE)lpConfigPtr,
                                        dwBufferSize,
@@ -2190,7 +2173,6 @@ QueryServiceConfig2A(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceConfig2A((SC_RPC_HANDLE)hService,
                                         dwInfoLevel,
                                         lpTempBuffer,
@@ -2308,7 +2290,6 @@ QueryServiceConfig2W(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceConfig2W((SC_RPC_HANDLE)hService,
                                         dwInfoLevel,
                                         lpTempBuffer,
@@ -2404,7 +2385,6 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceLockStatusA((SC_RPC_HANDLE)hSCManager,
                                            (LPBYTE)lpStatusPtr,
                                            dwBufferSize,
@@ -2466,7 +2446,6 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceLockStatusW((SC_RPC_HANDLE)hSCManager,
                                            (LPBYTE)lpStatusPtr,
                                            dwBufferSize,
@@ -2516,7 +2495,6 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceObjectSecurity((SC_RPC_HANDLE)hService,
                                               dwSecurityInformation,
                                               (LPBYTE)lpSecurityDescriptor,
@@ -2583,7 +2561,6 @@ SetServiceObjectSecurity(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RSetServiceObjectSecurity((SC_RPC_HANDLE)hService,
                                             dwSecurityInformation,
                                             (LPBYTE)SelfRelativeSD,
@@ -2630,7 +2607,6 @@ QueryServiceStatus(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceStatus((SC_RPC_HANDLE)hService,
                                       lpServiceStatus);
     }
@@ -2682,7 +2658,6 @@ QueryServiceStatusEx(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RQueryServiceStatusEx((SC_RPC_HANDLE)hService,
                                         InfoLevel,
                                         lpBuffer,
@@ -2790,7 +2765,6 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RUnlockServiceDatabase((LPSC_RPC_LOCK)&ScLock);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -2827,7 +2801,6 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RNotifyBootConfigStatus(NULL,
                                           BootAcceptable);
     }
