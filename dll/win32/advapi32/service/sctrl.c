@@ -12,7 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <advapi32.h>
-WINE_DEFAULT_DEBUG_CHANNEL(advapi);
+WINE_DEFAULT_DEBUG_CHANNEL(advapi_service);
 
 
 /* TYPES *********************************************************************/
@@ -514,26 +514,31 @@ static DWORD
 ScControlService(PACTIVE_SERVICE lpService,
                  PSCM_CONTROL_PACKET ControlPacket)
 {
+    DWORD dwError;
+
     if (lpService == NULL || ControlPacket == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    TRACE("ScControlService() called\n");
-    TRACE("Size: %lu\n", ControlPacket->dwSize);
-    TRACE("Service: %S\n", (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset));
+    TRACE("ScControlService(Size: %lu, Service: '%S') called\n",
+          ControlPacket->dwSize,
+          (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset));
 
     if (lpService->HandlerFunction)
     {
         (lpService->HandlerFunction)(ControlPacket->dwControl);
+        dwError = ERROR_SUCCESS;
     }
     else if (lpService->HandlerFunctionEx)
     {
-        /* FIXME: send correct params */
-        (lpService->HandlerFunctionEx)(ControlPacket->dwControl, 0, NULL, NULL);
+        /* FIXME: Send correct 2nd and 3rd parameters */
+        dwError = (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
+                                                 0, NULL,
+                                                 lpService->HandlerContext);
     }
 
-    TRACE("ScControlService() done\n");
+    TRACE("ScControlService() done (error %lu)\n", dwError);
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 
