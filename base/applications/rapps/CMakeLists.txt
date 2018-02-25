@@ -9,6 +9,7 @@ include_directories(include)
 list(APPEND SOURCE
     aboutdlg.cpp
     available.cpp
+    cabinet.cpp
     gui.cpp
     installed.cpp
     integrity.cpp
@@ -22,7 +23,6 @@ list(APPEND SOURCE
     include/gui.h
     include/dialogs.h
     include/installed.h
-    include/cabinet.h
     include/crichedit.h
     include/defines.h
     include/misc.h
