@@ -77,8 +77,8 @@ static void Test_LockUnlockServiceDatabase(void)
 
     SetLastError(0xdeadbeef);
     hLock = LockServiceDatabase(hScm);
-    ok(hLock != NULL, "hLock = 0x%p, expected non-zero\n", hLock);
     ok_err(ERROR_SUCCESS);
+    ok(hLock != NULL, "hLock = 0x%p, expected non-zero\n", hLock);
 
     /* Now unlock it */
     if (hLock)
