@@ -163,8 +163,6 @@ UserInitialize(VOID)
     return STATUS_SUCCESS;
 }
 
-PEPROCESS gpepCSRSS;
-
 VOID NTAPI GreStartupFontDrivers(VOID);
 /*
  * Called from usersrv.

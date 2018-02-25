@@ -559,19 +559,6 @@ NtGdiClearBitmapAttributes(
 /*
  * @unimplemented
  */
-HBRUSH
-APIENTRY
-NtGdiClearBrushAttributes(
-    IN HBRUSH hbm,
-    IN DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
 ULONG
 APIENTRY
 NtGdiColorCorrectPalette(

@@ -11,41 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-static
-HFONT
-DC_hSelectFont(PDC pdc, HFONT hlfntNew)
-{
-    PLFONT plfntNew;
-    HFONT hlfntOld;
-
-    /* Get the current selected font */
-    hlfntOld = pdc->dclevel.plfnt->baseobj.hHmgr;
-
-    /* Check if a new font should be selected */
-    if (hlfntNew !=  hlfntOld)
-    {
-        /* Lock the new font */
-        plfntNew = LFONT_ShareLockFont(hlfntNew);
-        if (plfntNew)
-        {
-            /* Success, dereference the old font */
-            LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
-
-            /* Select the new font */
-            pdc->dclevel.plfnt = plfntNew;
-            pdc->pdcattr->hlfntNew = hlfntNew;
-        }
-        else
-        {
-            /* Failed, restore old, return NULL */
-            pdc->pdcattr->hlfntNew = hlfntOld;
-            hlfntOld = NULL;
-        }
-    }
-
-    return hlfntOld;
-}
-
 PRFONT
 NTAPI
 DC_prfnt(PDC pdc)
@@ -160,27 +125,4 @@ NtGdiSetTextJustification(
     return FALSE;
 }
 
-W32KAPI
-HFONT
-APIENTRY
-NtGdiSelectFont(
-    IN HDC hdc,
-    IN HFONT hlfnt)
-{
-    PDC pdc;
-    HFONT hlfntOld;
 
-    /* Lock the DC */
-    pdc = DC_LockDc(hdc);
-    if (!pdc)
-    {
-        return NULL;
-    }
-
-    /* Call the internal function */
-    hlfntOld = DC_hSelectFont(pdc, hlfnt);
-
-    /* Unlock DC and return result */
-    DC_UnlockDc(pdc);
-    return hlfntOld;
-}
