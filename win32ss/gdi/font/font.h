@@ -1,12 +1,5 @@
 #pragma once
 
-// FIXME: duplicated from ntoskrnl, should got to NDK or something
-#define InterlockedIncrementUL(Addend) \
-    (ULONG)InterlockedIncrement((PLONG)(Addend))
-
-#define InterlockedDecrementUL(Addend) \
-    (ULONG)InterlockedDecrement((PLONG)(Addend))
-
 #define LFONT_GetObject FontGetObject
 
 #define ENGAPI
