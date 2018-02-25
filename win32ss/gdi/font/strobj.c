@@ -21,7 +21,7 @@ ESTROBJ_vInit(
     IN PWSTR pwsz,
     IN ULONG cwc)
 {
-
+    __debugbreak();
 }
 
 
