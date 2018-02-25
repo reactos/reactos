@@ -44,10 +44,12 @@ Control(DWORD Control,
             break;
 
         case SERVICE_CONTROL_PAUSE:
-            dwDesiredAccess = SERVICE_PAUSE_CONTINUE;
-            break;
-
         case SERVICE_CONTROL_CONTINUE:
+        case SERVICE_CONTROL_PARAMCHANGE:
+        case SERVICE_CONTROL_NETBINDADD:
+        case SERVICE_CONTROL_NETBINDREMOVE:
+        case SERVICE_CONTROL_NETBINDENABLE:
+        case SERVICE_CONTROL_NETBINDDISABLE:
             dwDesiredAccess = SERVICE_PAUSE_CONTINUE;
             break;
 
@@ -55,10 +57,12 @@ Control(DWORD Control,
             dwDesiredAccess = SERVICE_INTERROGATE;
             break;
 
-        case SERVICE_CONTROL_SHUTDOWN:
-            dwDesiredAccess = 0;
+        default:
+            if (Control >= 128 && Control <= 255)
+                dwDesiredAccess = SERVICE_USER_DEFINED_CONTROL;
+            else
+                dwDesiredAccess = 0;
             break;
-
     }
 
     hSCManager = OpenSCManager(NULL,

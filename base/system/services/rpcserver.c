@@ -1112,6 +1112,11 @@ RControlService(
 
         case SERVICE_CONTROL_PAUSE:
         case SERVICE_CONTROL_CONTINUE:
+        case SERVICE_CONTROL_PARAMCHANGE:
+        case SERVICE_CONTROL_NETBINDADD:
+        case SERVICE_CONTROL_NETBINDREMOVE:
+        case SERVICE_CONTROL_NETBINDENABLE:
+        case SERVICE_CONTROL_NETBINDDISABLE:
             DesiredAccess = SERVICE_PAUSE_CONTINUE;
             break;
 
@@ -1224,6 +1229,19 @@ RControlService(
             case SERVICE_CONTROL_PAUSE:
             case SERVICE_CONTROL_CONTINUE:
                 if ((dwControlsAccepted & SERVICE_ACCEPT_PAUSE_CONTINUE) == 0)
+                    return ERROR_INVALID_SERVICE_CONTROL;
+                break;
+
+            case SERVICE_CONTROL_PARAMCHANGE:
+                if ((dwControlsAccepted & SERVICE_ACCEPT_PARAMCHANGE) == 0)
+                    return ERROR_INVALID_SERVICE_CONTROL;
+                break;
+
+            case SERVICE_CONTROL_NETBINDADD:
+            case SERVICE_CONTROL_NETBINDREMOVE:
+            case SERVICE_CONTROL_NETBINDENABLE:
+            case SERVICE_CONTROL_NETBINDDISABLE:
+                if ((dwControlsAccepted & SERVICE_ACCEPT_NETBINDCHANGE) == 0)
                     return ERROR_INVALID_SERVICE_CONTROL;
                 break;
         }
@@ -1728,7 +1746,7 @@ RSetServiceStatus(
     /* Restore the previous service type */
     lpService->Status.dwServiceType = dwPreviousType;
 
-    /* Handle a stopped service */
+    /* Dereference a stopped service */
     if ((lpServiceStatus->dwServiceType & SERVICE_WIN32) &&
         (lpServiceStatus->dwCurrentState == SERVICE_STOPPED))
     {
