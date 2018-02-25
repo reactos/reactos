@@ -229,7 +229,6 @@ ScConnectControlPipe(HANDLE *hPipe)
                                     QueryTable,
                                     NULL,
                                     NULL);
-
     if (!NT_SUCCESS(Status))
     {
         ERR("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
@@ -638,7 +637,7 @@ ScServiceDispatcher(HANDLE hPipe,
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerA
+ *  RegisterServiceCtrlHandlerA
  *
  * @implemented
  */
@@ -667,7 +666,7 @@ RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerW
+ *  RegisterServiceCtrlHandlerW
  *
  * @implemented
  */
@@ -693,7 +692,7 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerExA
+ *  RegisterServiceCtrlHandlerExA
  *
  * @implemented
  */
@@ -724,7 +723,7 @@ RegisterServiceCtrlHandlerExA(LPCSTR lpServiceName,
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerExW
+ *  RegisterServiceCtrlHandlerExW
  *
  * @implemented
  */
@@ -752,7 +751,7 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
 
 
 /**********************************************************************
- *	I_ScIsSecurityProcess
+ *  I_ScIsSecurityProcess
  *
  * Undocumented
  *
@@ -766,7 +765,7 @@ I_ScIsSecurityProcess(VOID)
 
 
 /**********************************************************************
- *	I_ScPnPGetServiceName
+ *  I_ScPnPGetServiceName
  *
  * Undocumented
  *
@@ -794,7 +793,7 @@ I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	I_ScSetServiceBitsA
+ *  I_ScSetServiceBitsA
  *
  * Undocumented
  *
@@ -811,7 +810,6 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         bResult = RI_ScSetServiceBitsA((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                        dwServiceBits,
                                        bSetBitsOn,
@@ -830,7 +828,7 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	I_ScSetServiceBitsW
+ *  I_ScSetServiceBitsW
  *
  * Undocumented
  *
@@ -847,7 +845,6 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         bResult = RI_ScSetServiceBitsW((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                        dwServiceBits,
                                        bSetBitsOn,
@@ -866,7 +863,7 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	SetServiceBits
+ *  SetServiceBits
  *
  * @implemented
  */
@@ -885,7 +882,7 @@ SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	SetServiceStatus
+ *  SetServiceStatus
  *
  * @implemented
  */
@@ -895,12 +892,10 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     DWORD dwError;
 
-    TRACE("SetServiceStatus() called\n");
-    TRACE("hServiceStatus %lu\n", hServiceStatus);
+    TRACE("SetServiceStatus(hServiceStatus %lu) called\n", hServiceStatus);
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RSetServiceStatus((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                     lpServiceStatus);
     }
@@ -912,7 +907,7 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ScmrSetServiceStatus() failed (Error %lu)\n", dwError);
+        ERR("RSetServiceStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -924,7 +919,7 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	StartServiceCtrlDispatcherA
+ *  StartServiceCtrlDispatcherA
  *
  * @implemented
  */
@@ -1011,7 +1006,7 @@ done:
 
 
 /**********************************************************************
- *	StartServiceCtrlDispatcherW
+ *  StartServiceCtrlDispatcherW
  *
  * @implemented
  */
