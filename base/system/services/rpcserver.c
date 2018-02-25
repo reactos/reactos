@@ -1187,8 +1187,8 @@ RControlService(
         /* Send control code to the service */
         dwError = ScmControlService(lpService->lpImage->hControlPipe,
                                     lpService->lpServiceName,
-                                    (SERVICE_STATUS_HANDLE)lpService,
-                                    dwControl);
+                                    dwControl,
+                                    (SERVICE_STATUS_HANDLE)lpService);
 
         /* Return service status information */
         RtlCopyMemory(lpServiceStatus,
@@ -1626,8 +1626,8 @@ ScmStopThread(PVOID pParam)
         DPRINT("Stopping the dispatcher thread for service %S\n", lpService->lpServiceName);
         ScmControlService(lpService->lpImage->hControlPipe,
                           L"",
-                          (SERVICE_STATUS_HANDLE)lpService,
-                          SERVICE_CONTROL_STOP);
+                          SERVICE_CONTROL_STOP,
+                          (SERVICE_STATUS_HANDLE)lpService);
     }
 
     /* Lock the service database exclusively */
