@@ -1,7 +1,5 @@
 #pragma once
 
-#define LFONT_GetObject FontGetObject
-
 #define ENGAPI
 
 #define PENALTY_Max                    127979

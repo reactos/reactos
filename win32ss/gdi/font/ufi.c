@@ -6,7 +6,7 @@
  */
 
 #include <win32k.h>
-#include <include/font.h>
+#include "font.h"
 
 #define NDEBUG
 #include "font.h"

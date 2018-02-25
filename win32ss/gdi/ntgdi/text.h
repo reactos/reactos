@@ -1,13 +1,10 @@
 #pragma once
 
 /* GDI logical font object */
-typedef struct _LFONT TEXTOBJ, *PTEXTOBJ;
-
 typedef struct _LFONT LFONT, *PLFONT;
 
 /*  Internal interface  */
 
-#define  TEXTOBJ_UnlockText(pBMObj) GDIOBJ_vUnlockObject ((POBJ)pBMObj)
 /* dwFlags for IntGdiAddFontResourceEx */
 #define AFRX_WRITE_REGISTRY 0x1
 #define AFRX_ALTERNATIVE_PATH 0x2
@@ -16,10 +13,17 @@ typedef struct _LFONT LFONT, *PLFONT;
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
 BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage);
 BOOL FASTCALL InitFontSupport(VOID);
-ULONG FASTCALL FontGetObject(PTEXTOBJ TextObj, ULONG Count, PVOID Buffer);
+#define FontGetObject LFONT_GetObject
 BOOL FASTCALL IntLoadFontsInRegistry(VOID);
 INT FASTCALL IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
                                      DWORD dwFlags);
+
+ULONG
+FASTCALL
+LFONT_GetObject(
+    PLFONT plfont,
+    ULONG Count,
+    PVOID Buffer);
 
 HFONT
 NTAPI

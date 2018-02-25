@@ -7,6 +7,7 @@
  */
 
 #include <win32k.h>
+#include "../font/font.h"
 
 #define NDEBUG
 #include <debug.h>
