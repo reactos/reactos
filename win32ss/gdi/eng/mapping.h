@@ -28,6 +28,7 @@ typedef struct _FONTFILEVIEW : FILEVIEW
 typedef struct _FONTFILEVIEW
 {
     FILEVIEW;
+#endif
     SIZE_T         ulRegionSize;
     ULONG          cKRefCount;
     ULONG          cRefCountFD;
