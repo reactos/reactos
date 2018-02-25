@@ -258,7 +258,7 @@ if (USE_DIBLIB)
     target_link_libraries(win32k diblib)
 endif()
 
-add_importlibs(win32k ntoskrnl hal ftfd)
+add_importlibs(win32k ntoskrnl hal)
 add_pch(win32k pch.h SOURCE)
 add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 
@@ -267,3 +267,8 @@ add_asm_files(win32ksys_asm sys-stubs.S)
 add_library(win32ksys ${win32ksys_asm})
 set_target_properties(win32ksys PROPERTIES LINKER_LANGUAGE "C")
 add_dependencies(win32ksys asm)
+
+if (USE_DIBLIB)
+    add_subdirectory(diblib)
+endif()
+
