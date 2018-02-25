@@ -46,7 +46,7 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
 
     /* Dereference the old font, reference the new one */
     if (pdcDst->dclevel.plfnt) LFONT_ShareUnlockFont(pdcDst->dclevel.plfnt); /// @todo should aways be != NULL
-    GDIOBJ_vReferenceObjectByPointer(&pdcSrc->dclevel.plfnt->BaseObject);
+    GDIOBJ_vReferenceObjectByPointer(&pdcSrc->dclevel.plfnt->baseobj);
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
     /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */

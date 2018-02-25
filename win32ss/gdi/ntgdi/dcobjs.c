@@ -562,7 +562,7 @@ DC_hSelectFont(
     }
 
     /* Get the current selected font */
-    hlfntOld = pdc->dclevel.plfnt->BaseObject.hHmgr;
+    hlfntOld = pdc->dclevel.plfnt->baseobj.hHmgr;
 
     /* Check if a new font should be selected */
     if (hlfntNew != hlfntOld)
