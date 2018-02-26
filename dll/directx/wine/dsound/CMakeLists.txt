@@ -4,6 +4,10 @@ add_definitions(
     -D_USE_MATH_DEFINES
     -D__WINESRC__)
 
+if(MSVC)
+    add_definitions(/wd4305)
+endif()
+
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(dsound.dll dsound.spec ADD_IMPORTLIB)
 
@@ -14,6 +18,7 @@ add_library(dsound SHARED
     dsound_convert.c
     dsound_main.c
     duplex.c
+    eax.c
     mixer.c
     primary.c
     propset.c
@@ -24,5 +29,5 @@ add_library(dsound SHARED
 
 set_module_type(dsound win32dll)
 target_link_libraries(dsound dxguid uuid wine)
-add_importlibs(dsound winmm advapi32 msvcrt kernel32 ntdll)
+add_importlibs(dsound winmm ole32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET dsound DESTINATION reactos/system32 FOR all)

@@ -20,76 +20,38 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <math.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winternl.h"
+#include "mmddk.h"
+#include "wingdi.h"
+#include "mmreg.h"
+#include "ks.h"
+#include "ksmedia.h"
+#include "wine/debug.h"
+#include "dsound.h"
 #include "dsound_private.h"
 
-/*****************************************************************************
- * IDirectSound COM components
- */
-struct IDirectSound_IUnknown {
-    const IUnknownVtbl         *lpVtbl;
-    LONG                        ref;
-    LPDIRECTSOUND8              pds;
-};
+WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 
-static HRESULT IDirectSound_IUnknown_Create(LPDIRECTSOUND8 pds, LPUNKNOWN * ppunk);
+typedef struct IDirectSoundImpl {
+    IUnknown            IUnknown_inner;
+    IDirectSound8       IDirectSound8_iface;
+    IUnknown           *outer_unk;      /* internal */
+    LONG                ref, refds, numIfaces;
+    DirectSoundDevice  *device;
+    BOOL                has_ds8;
+} IDirectSoundImpl;
 
-struct IDirectSound_IDirectSound {
-    const IDirectSoundVtbl     *lpVtbl;
-    LONG                        ref;
-    LPDIRECTSOUND8              pds;
-};
-
-static HRESULT IDirectSound_IDirectSound_Create(LPDIRECTSOUND8 pds, LPDIRECTSOUND * ppds);
-
-/*****************************************************************************
- * IDirectSound8 COM components
- */
-struct IDirectSound8_IUnknown {
-    const IUnknownVtbl         *lpVtbl;
-    LONG                        ref;
-    LPDIRECTSOUND8              pds;
-};
-
-static HRESULT IDirectSound8_IUnknown_Create(LPDIRECTSOUND8 pds, LPUNKNOWN * ppunk);
-static ULONG WINAPI IDirectSound8_IUnknown_AddRef(LPUNKNOWN iface);
-
-struct IDirectSound8_IDirectSound {
-    const IDirectSoundVtbl     *lpVtbl;
-    LONG                        ref;
-    LPDIRECTSOUND8              pds;
-};
-
-static HRESULT IDirectSound8_IDirectSound_Create(LPDIRECTSOUND8 pds, LPDIRECTSOUND * ppds);
-static ULONG WINAPI IDirectSound8_IDirectSound_AddRef(LPDIRECTSOUND iface);
-
-struct IDirectSound8_IDirectSound8 {
-    const IDirectSound8Vtbl    *lpVtbl;
-    LONG                        ref;
-    LPDIRECTSOUND8              pds;
-};
-
-static HRESULT IDirectSound8_IDirectSound8_Create(LPDIRECTSOUND8 pds, LPDIRECTSOUND8 * ppds);
-static ULONG WINAPI IDirectSound8_IDirectSound8_AddRef(LPDIRECTSOUND8 iface);
-
-/*****************************************************************************
- * IDirectSound implementation structure
- */
-struct IDirectSoundImpl
-{
-    LONG                        ref;
-
-    DirectSoundDevice          *device;
-    LPUNKNOWN                   pUnknown;
-    LPDIRECTSOUND               pDS;
-    LPDIRECTSOUND8              pDS8;
-};
-
-static HRESULT IDirectSoundImpl_Create(LPDIRECTSOUND8 * ppds);
-
-static ULONG WINAPI IDirectSound_IUnknown_AddRef(LPUNKNOWN iface);
-static ULONG WINAPI IDirectSound_IDirectSound_AddRef(LPDIRECTSOUND iface);
-
-const char * dumpCooperativeLevel(DWORD level)
+static const char * dumpCooperativeLevel(DWORD level)
 {
 #define LE(x) case x: return #x
     switch (level) {
@@ -157,985 +119,6 @@ static void _dump_DSBCAPS(DWORD xmask) {
 }
 
 /*******************************************************************************
- *		IDirectSoundImpl_DirectSound
- */
-static HRESULT DSOUND_QueryInterface(
-    LPDIRECTSOUND8 iface,
-    REFIID riid,
-    LPVOID * ppobj)
-{
-    IDirectSoundImpl *This = (IDirectSoundImpl *)iface;
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
-
-    if (ppobj == NULL) {
-        WARN("invalid parameter\n");
-        return E_INVALIDARG;
-    }
-
-    if (IsEqualIID(riid, &IID_IUnknown)) {
-        if (!This->pUnknown) {
-            IDirectSound_IUnknown_Create(iface, &This->pUnknown);
-            if (!This->pUnknown) {
-                WARN("IDirectSound_IUnknown_Create() failed\n");
-                *ppobj = NULL;
-                return E_NOINTERFACE;
-            }
-        }
-        IDirectSound_IUnknown_AddRef(This->pUnknown);
-        *ppobj = This->pUnknown;
-        return S_OK;
-    } else if (IsEqualIID(riid, &IID_IDirectSound)) {
-        if (!This->pDS) {
-            IDirectSound_IDirectSound_Create(iface, &This->pDS);
-            if (!This->pDS) {
-                WARN("IDirectSound_IDirectSound_Create() failed\n");
-                *ppobj = NULL;
-                return E_NOINTERFACE;
-            }
-        }
-        IDirectSound_IDirectSound_AddRef(This->pDS);
-        *ppobj = This->pDS;
-        return S_OK;
-    }
-
-    *ppobj = NULL;
-    WARN("Unknown IID %s\n",debugstr_guid(riid));
-    return E_NOINTERFACE;
-}
-
-static HRESULT DSOUND_QueryInterface8(
-    LPDIRECTSOUND8 iface,
-    REFIID riid,
-    LPVOID * ppobj)
-{
-    IDirectSoundImpl *This = (IDirectSoundImpl *)iface;
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
-
-    if (ppobj == NULL) {
-        WARN("invalid parameter\n");
-        return E_INVALIDARG;
-    }
-
-    if (IsEqualIID(riid, &IID_IUnknown)) {
-        if (!This->pUnknown) {
-            IDirectSound8_IUnknown_Create(iface, &This->pUnknown);
-            if (!This->pUnknown) {
-                WARN("IDirectSound8_IUnknown_Create() failed\n");
-                *ppobj = NULL;
-                return E_NOINTERFACE;
-            }
-        }
-        IDirectSound8_IUnknown_AddRef(This->pUnknown);
-        *ppobj = This->pUnknown;
-        return S_OK;
-    } else if (IsEqualIID(riid, &IID_IDirectSound)) {
-        if (!This->pDS) {
-            IDirectSound8_IDirectSound_Create(iface, &This->pDS);
-            if (!This->pDS) {
-                WARN("IDirectSound8_IDirectSound_Create() failed\n");
-                *ppobj = NULL;
-                return E_NOINTERFACE;
-            }
-        }
-        IDirectSound8_IDirectSound_AddRef(This->pDS);
-        *ppobj = This->pDS;
-        return S_OK;
-    } else if (IsEqualIID(riid, &IID_IDirectSound8)) {
-        if (!This->pDS8) {
-            IDirectSound8_IDirectSound8_Create(iface, &This->pDS8);
-            if (!This->pDS8) {
-                WARN("IDirectSound8_IDirectSound8_Create() failed\n");
-                *ppobj = NULL;
-                return E_NOINTERFACE;
-            }
-        }
-        IDirectSound8_IDirectSound8_AddRef(This->pDS8);
-        *ppobj = This->pDS8;
-        return S_OK;
-    }
-
-    *ppobj = NULL;
-    WARN("Unknown IID %s\n",debugstr_guid(riid));
-    return E_NOINTERFACE;
-}
-
-static ULONG IDirectSoundImpl_AddRef(
-    LPDIRECTSOUND8 iface)
-{
-    IDirectSoundImpl *This = (IDirectSoundImpl *)iface;
-    ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref - 1);
-    return ref;
-}
-
-static ULONG IDirectSoundImpl_Release(
-    LPDIRECTSOUND8 iface)
-{
-    IDirectSoundImpl *This = (IDirectSoundImpl *)iface;
-    ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref + 1);
-
-    if (!ref) {
-        if (This->device)
-            DirectSoundDevice_Release(This->device);
-        HeapFree(GetProcessHeap(),0,This);
-        TRACE("(%p) released\n", This);
-    }
-    return ref;
-}
-
-static HRESULT IDirectSoundImpl_Create(
-    LPDIRECTSOUND8 * ppDS)
-{
-    IDirectSoundImpl* pDS;
-    TRACE("(%p)\n",ppDS);
-
-    /* Allocate memory */
-    pDS = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(IDirectSoundImpl));
-    if (pDS == NULL) {
-        WARN("out of memory\n");
-        *ppDS = NULL;
-        return DSERR_OUTOFMEMORY;
-    }
-
-    pDS->ref    = 0;
-    pDS->device = NULL;
-
-    *ppDS = (LPDIRECTSOUND8)pDS;
-
-    return DS_OK;
-}
-
-/*******************************************************************************
- *		IDirectSound_IUnknown
- */
-static HRESULT WINAPI IDirectSound_IUnknown_QueryInterface(
-    LPUNKNOWN iface,
-    REFIID riid,
-    LPVOID * ppobj)
-{
-    IDirectSound_IUnknown *This = (IDirectSound_IUnknown *)iface;
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    return DSOUND_QueryInterface(This->pds, riid, ppobj);
-}
-
-static ULONG WINAPI IDirectSound_IUnknown_AddRef(
-    LPUNKNOWN iface)
-{
-    IDirectSound_IUnknown *This = (IDirectSound_IUnknown *)iface;
-    ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref - 1);
-    return ref;
-}
-
-static ULONG WINAPI IDirectSound_IUnknown_Release(
-    LPUNKNOWN iface)
-{
-    IDirectSound_IUnknown *This = (IDirectSound_IUnknown *)iface;
-    ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref + 1);
-    if (!ref) {
-        ((IDirectSoundImpl*)This->pds)->pUnknown = NULL;
-        IDirectSoundImpl_Release(This->pds);
-        HeapFree(GetProcessHeap(), 0, This);
-        TRACE("(%p) released\n", This);
-    }
-    return ref;
-}
-
-static const IUnknownVtbl DirectSound_Unknown_Vtbl =
-{
-    IDirectSound_IUnknown_QueryInterface,
-    IDirectSound_IUnknown_AddRef,
-    IDirectSound_IUnknown_Release
-};
-
-static HRESULT IDirectSound_IUnknown_Create(
-    LPDIRECTSOUND8 pds,
-    LPUNKNOWN * ppunk)
-{
-    IDirectSound_IUnknown * pdsunk;
-    TRACE("(%p,%p)\n",pds,ppunk);
-
-    if (ppunk == NULL) {
-        ERR("invalid parameter: ppunk == NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
-
-    if (pds == NULL) {
-        ERR("invalid parameter: pds == NULL\n");
-        *ppunk = NULL;
-        return DSERR_INVALIDPARAM;
-    }
-
-    pdsunk = HeapAlloc(GetProcessHeap(),0,sizeof(*pdsunk));
-    if (pdsunk == NULL) {
-        WARN("out of memory\n");
-        *ppunk = NULL;
-        return DSERR_OUTOFMEMORY;
-    }
-
-    pdsunk->lpVtbl = &DirectSound_Unknown_Vtbl;
-    pdsunk->ref = 0;
-    pdsunk->pds = pds;
-
-    IDirectSoundImpl_AddRef(pds);
-    *ppunk = (LPUNKNOWN)pdsunk;
-
-    return DS_OK;
-}
-
-/*******************************************************************************
- *		IDirectSound_IDirectSound
- */
-static HRESULT WINAPI IDirectSound_IDirectSound_QueryInterface(
-    LPDIRECTSOUND iface,
-    REFIID riid,
-    LPVOID * ppobj)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    return DSOUND_QueryInterface(This->pds, riid, ppobj);
-}
-
-static ULONG WINAPI IDirectSound_IDirectSound_AddRef(
-    LPDIRECTSOUND iface)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref - 1);
-    return ref;
-}
-
-static ULONG WINAPI IDirectSound_IDirectSound_Release(
-    LPDIRECTSOUND iface)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref + 1);
-    if (!ref) {
-        ((IDirectSoundImpl*)This->pds)->pDS = NULL;
-        IDirectSoundImpl_Release(This->pds);
-        HeapFree(GetProcessHeap(), 0, This);
-        TRACE("(%p) released\n", This);
-    }
-    return ref;
-}
-
-static HRESULT WINAPI IDirectSound_IDirectSound_CreateSoundBuffer(
-    LPDIRECTSOUND iface,
-    LPCDSBUFFERDESC dsbd,
-    LPLPDIRECTSOUNDBUFFER ppdsb,
-    LPUNKNOWN lpunk)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p,%p,%p,%p)\n",This,dsbd,ppdsb,lpunk);
-    return DirectSoundDevice_CreateSoundBuffer(((IDirectSoundImpl *)This->pds)->device,dsbd,ppdsb,lpunk,FALSE);
-}
-
-static HRESULT WINAPI IDirectSound_IDirectSound_GetCaps(
-    LPDIRECTSOUND iface,
-    LPDSCAPS lpDSCaps)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p,%p)\n",This,lpDSCaps);
-    return DirectSoundDevice_GetCaps(((IDirectSoundImpl *)This->pds)->device, lpDSCaps);
-}
-
-static HRESULT WINAPI IDirectSound_IDirectSound_DuplicateSoundBuffer(
-    LPDIRECTSOUND iface,
-    LPDIRECTSOUNDBUFFER psb,
-    LPLPDIRECTSOUNDBUFFER ppdsb)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p,%p,%p)\n",This,psb,ppdsb);
-    return DirectSoundDevice_DuplicateSoundBuffer(((IDirectSoundImpl *)This->pds)->device,psb,ppdsb);
-}
-
-static HRESULT WINAPI IDirectSound_IDirectSound_SetCooperativeLevel(
-    LPDIRECTSOUND iface,
-    HWND hwnd,
-    DWORD level)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p,%p,%s)\n",This,hwnd,dumpCooperativeLevel(level));
-    return DirectSoundDevice_SetCooperativeLevel(((IDirectSoundImpl *)This->pds)->device, hwnd, level);
-}
-
-static HRESULT WINAPI IDirectSound_IDirectSound_Compact(
-    LPDIRECTSOUND iface)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p)\n", This);
-    return DirectSoundDevice_Compact(((IDirectSoundImpl *)This->pds)->device);
-}
-
-static HRESULT WINAPI IDirectSound_IDirectSound_GetSpeakerConfig(
-    LPDIRECTSOUND iface,
-    LPDWORD lpdwSpeakerConfig)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p, %p)\n", This, lpdwSpeakerConfig);
-    return DirectSoundDevice_GetSpeakerConfig(((IDirectSoundImpl *)This->pds)->device,lpdwSpeakerConfig);
-}
-
-static HRESULT WINAPI IDirectSound_IDirectSound_SetSpeakerConfig(
-    LPDIRECTSOUND iface,
-    DWORD config)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p,0x%08x)\n",This,config);
-    return DirectSoundDevice_SetSpeakerConfig(((IDirectSoundImpl *)This->pds)->device,config);
-}
-
-static HRESULT WINAPI IDirectSound_IDirectSound_Initialize(
-    LPDIRECTSOUND iface,
-    LPCGUID lpcGuid)
-{
-    IDirectSound_IDirectSound *This = (IDirectSound_IDirectSound *)iface;
-    TRACE("(%p, %s)\n", This, debugstr_guid(lpcGuid));
-    return DirectSoundDevice_Initialize(&((IDirectSoundImpl *)This->pds)->device,lpcGuid);
-}
-
-static const IDirectSoundVtbl DirectSound_DirectSound_Vtbl =
-{
-    IDirectSound_IDirectSound_QueryInterface,
-    IDirectSound_IDirectSound_AddRef,
-    IDirectSound_IDirectSound_Release,
-    IDirectSound_IDirectSound_CreateSoundBuffer,
-    IDirectSound_IDirectSound_GetCaps,
-    IDirectSound_IDirectSound_DuplicateSoundBuffer,
-    IDirectSound_IDirectSound_SetCooperativeLevel,
-    IDirectSound_IDirectSound_Compact,
-    IDirectSound_IDirectSound_GetSpeakerConfig,
-    IDirectSound_IDirectSound_SetSpeakerConfig,
-    IDirectSound_IDirectSound_Initialize
-};
-
-static HRESULT IDirectSound_IDirectSound_Create(
-    LPDIRECTSOUND8  pds,
-    LPDIRECTSOUND * ppds)
-{
-    IDirectSound_IDirectSound * pdsds;
-    TRACE("(%p,%p)\n",pds,ppds);
-
-    if (ppds == NULL) {
-        ERR("invalid parameter: ppds == NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
-
-    if (pds == NULL) {
-        ERR("invalid parameter: pds == NULL\n");
-        *ppds = NULL;
-        return DSERR_INVALIDPARAM;
-    }
-
-    pdsds = HeapAlloc(GetProcessHeap(),0,sizeof(*pdsds));
-    if (pdsds == NULL) {
-        WARN("out of memory\n");
-        *ppds = NULL;
-        return DSERR_OUTOFMEMORY;
-    }
-
-    pdsds->lpVtbl = &DirectSound_DirectSound_Vtbl;
-    pdsds->ref = 0;
-    pdsds->pds = pds;
-
-    IDirectSoundImpl_AddRef(pds);
-    *ppds = (LPDIRECTSOUND)pdsds;
-
-    return DS_OK;
-}
-
-/*******************************************************************************
- *		IDirectSound8_IUnknown
- */
-static HRESULT WINAPI IDirectSound8_IUnknown_QueryInterface(
-    LPUNKNOWN iface,
-    REFIID riid,
-    LPVOID * ppobj)
-{
-    IDirectSound_IUnknown *This = (IDirectSound_IUnknown *)iface;
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    return DSOUND_QueryInterface8(This->pds, riid, ppobj);
-}
-
-static ULONG WINAPI IDirectSound8_IUnknown_AddRef(
-    LPUNKNOWN iface)
-{
-    IDirectSound_IUnknown *This = (IDirectSound_IUnknown *)iface;
-    ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref - 1);
-    return ref;
-}
-
-static ULONG WINAPI IDirectSound8_IUnknown_Release(
-    LPUNKNOWN iface)
-{
-    IDirectSound_IUnknown *This = (IDirectSound_IUnknown *)iface;
-    ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref + 1);
-    if (!ref) {
-        ((IDirectSoundImpl*)This->pds)->pUnknown = NULL;
-        IDirectSoundImpl_Release(This->pds);
-        HeapFree(GetProcessHeap(), 0, This);
-        TRACE("(%p) released\n", This);
-    }
-    return ref;
-}
-
-static const IUnknownVtbl DirectSound8_Unknown_Vtbl =
-{
-    IDirectSound8_IUnknown_QueryInterface,
-    IDirectSound8_IUnknown_AddRef,
-    IDirectSound8_IUnknown_Release
-};
-
-static HRESULT IDirectSound8_IUnknown_Create(
-    LPDIRECTSOUND8 pds,
-    LPUNKNOWN * ppunk)
-{
-    IDirectSound8_IUnknown * pdsunk;
-    TRACE("(%p,%p)\n",pds,ppunk);
-
-    if (ppunk == NULL) {
-        ERR("invalid parameter: ppunk == NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
-
-    if (pds == NULL) {
-        ERR("invalid parameter: pds == NULL\n");
-        *ppunk = NULL;
-        return DSERR_INVALIDPARAM;
-    }
-
-    pdsunk = HeapAlloc(GetProcessHeap(),0,sizeof(*pdsunk));
-    if (pdsunk == NULL) {
-        WARN("out of memory\n");
-        *ppunk = NULL;
-        return DSERR_OUTOFMEMORY;
-    }
-
-    pdsunk->lpVtbl = &DirectSound8_Unknown_Vtbl;
-    pdsunk->ref = 0;
-    pdsunk->pds = pds;
-
-    IDirectSoundImpl_AddRef(pds);
-    *ppunk = (LPUNKNOWN)pdsunk;
-
-    return DS_OK;
-}
-
-/*******************************************************************************
- *		IDirectSound8_IDirectSound
- */
-static HRESULT WINAPI IDirectSound8_IDirectSound_QueryInterface(
-    LPDIRECTSOUND iface,
-    REFIID riid,
-    LPVOID * ppobj)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    return DSOUND_QueryInterface8(This->pds, riid, ppobj);
-}
-
-static ULONG WINAPI IDirectSound8_IDirectSound_AddRef(
-    LPDIRECTSOUND iface)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref - 1);
-    return ref;
-}
-
-static ULONG WINAPI IDirectSound8_IDirectSound_Release(
-    LPDIRECTSOUND iface)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref + 1);
-    if (!ref) {
-        ((IDirectSoundImpl*)This->pds)->pDS = NULL;
-        IDirectSoundImpl_Release(This->pds);
-        HeapFree(GetProcessHeap(), 0, This);
-        TRACE("(%p) released\n", This);
-    }
-    return ref;
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound_CreateSoundBuffer(
-    LPDIRECTSOUND iface,
-    LPCDSBUFFERDESC dsbd,
-    LPLPDIRECTSOUNDBUFFER ppdsb,
-    LPUNKNOWN lpunk)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p,%p,%p,%p)\n",This,dsbd,ppdsb,lpunk);
-    return DirectSoundDevice_CreateSoundBuffer(((IDirectSoundImpl *)This->pds)->device,dsbd,ppdsb,lpunk,TRUE);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound_GetCaps(
-    LPDIRECTSOUND iface,
-    LPDSCAPS lpDSCaps)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p,%p)\n",This,lpDSCaps);
-    return DirectSoundDevice_GetCaps(((IDirectSoundImpl *)This->pds)->device, lpDSCaps);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound_DuplicateSoundBuffer(
-    LPDIRECTSOUND iface,
-    LPDIRECTSOUNDBUFFER psb,
-    LPLPDIRECTSOUNDBUFFER ppdsb)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p,%p,%p)\n",This,psb,ppdsb);
-    return DirectSoundDevice_DuplicateSoundBuffer(((IDirectSoundImpl *)This->pds)->device,psb,ppdsb);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound_SetCooperativeLevel(
-    LPDIRECTSOUND iface,
-    HWND hwnd,
-    DWORD level)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p,%p,%s)\n",This,hwnd,dumpCooperativeLevel(level));
-    return DirectSoundDevice_SetCooperativeLevel(((IDirectSoundImpl *)This->pds)->device, hwnd, level);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound_Compact(
-    LPDIRECTSOUND iface)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p)\n", This);
-    return DirectSoundDevice_Compact(((IDirectSoundImpl *)This->pds)->device);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound_GetSpeakerConfig(
-    LPDIRECTSOUND iface,
-    LPDWORD lpdwSpeakerConfig)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p, %p)\n", This, lpdwSpeakerConfig);
-    return DirectSoundDevice_GetSpeakerConfig(((IDirectSoundImpl *)This->pds)->device,lpdwSpeakerConfig);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound_SetSpeakerConfig(
-    LPDIRECTSOUND iface,
-    DWORD config)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p,0x%08x)\n",This,config);
-    return DirectSoundDevice_SetSpeakerConfig(((IDirectSoundImpl *)This->pds)->device,config);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound_Initialize(
-    LPDIRECTSOUND iface,
-    LPCGUID lpcGuid)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p, %s)\n", This, debugstr_guid(lpcGuid));
-    return DirectSoundDevice_Initialize(&((IDirectSoundImpl *)This->pds)->device,lpcGuid);
-}
-
-static const IDirectSoundVtbl DirectSound8_DirectSound_Vtbl =
-{
-    IDirectSound8_IDirectSound_QueryInterface,
-    IDirectSound8_IDirectSound_AddRef,
-    IDirectSound8_IDirectSound_Release,
-    IDirectSound8_IDirectSound_CreateSoundBuffer,
-    IDirectSound8_IDirectSound_GetCaps,
-    IDirectSound8_IDirectSound_DuplicateSoundBuffer,
-    IDirectSound8_IDirectSound_SetCooperativeLevel,
-    IDirectSound8_IDirectSound_Compact,
-    IDirectSound8_IDirectSound_GetSpeakerConfig,
-    IDirectSound8_IDirectSound_SetSpeakerConfig,
-    IDirectSound8_IDirectSound_Initialize
-};
-
-static HRESULT IDirectSound8_IDirectSound_Create(
-    LPDIRECTSOUND8 pds,
-    LPDIRECTSOUND * ppds)
-{
-    IDirectSound8_IDirectSound * pdsds;
-    TRACE("(%p,%p)\n",pds,ppds);
-
-    if (ppds == NULL) {
-        ERR("invalid parameter: ppds == NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
-
-    if (pds == NULL) {
-        ERR("invalid parameter: pds == NULL\n");
-        *ppds = NULL;
-        return DSERR_INVALIDPARAM;
-    }
-
-    pdsds = HeapAlloc(GetProcessHeap(),0,sizeof(*pdsds));
-    if (pdsds == NULL) {
-        WARN("out of memory\n");
-        *ppds = NULL;
-        return DSERR_OUTOFMEMORY;
-    }
-
-    pdsds->lpVtbl = &DirectSound8_DirectSound_Vtbl;
-    pdsds->ref = 0;
-    pdsds->pds = pds;
-
-    IDirectSoundImpl_AddRef(pds);
-    *ppds = (LPDIRECTSOUND)pdsds;
-
-    return DS_OK;
-}
-
-/*******************************************************************************
- *		IDirectSound8_IDirectSound8
- */
-static HRESULT WINAPI IDirectSound8_IDirectSound8_QueryInterface(
-    LPDIRECTSOUND8 iface,
-    REFIID riid,
-    LPVOID * ppobj)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    return DSOUND_QueryInterface8(This->pds, riid, ppobj);
-}
-
-static ULONG WINAPI IDirectSound8_IDirectSound8_AddRef(
-    LPDIRECTSOUND8 iface)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref - 1);
-    return ref;
-}
-
-static ULONG WINAPI IDirectSound8_IDirectSound8_Release(
-    LPDIRECTSOUND8 iface)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref + 1);
-    if (!ref) {
-        ((IDirectSoundImpl*)This->pds)->pDS8 = NULL;
-        IDirectSoundImpl_Release(This->pds);
-        HeapFree(GetProcessHeap(), 0, This);
-        TRACE("(%p) released\n", This);
-    }
-    return ref;
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_CreateSoundBuffer(
-    LPDIRECTSOUND8 iface,
-    LPCDSBUFFERDESC dsbd,
-    LPLPDIRECTSOUNDBUFFER ppdsb,
-    LPUNKNOWN lpunk)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p,%p,%p,%p)\n",This,dsbd,ppdsb,lpunk);
-    return DirectSoundDevice_CreateSoundBuffer(((IDirectSoundImpl *)This->pds)->device,dsbd,ppdsb,lpunk,TRUE);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_GetCaps(
-    LPDIRECTSOUND8 iface,
-    LPDSCAPS lpDSCaps)
-{
-    IDirectSound8_IDirectSound *This = (IDirectSound8_IDirectSound *)iface;
-    TRACE("(%p,%p)\n",This,lpDSCaps);
-    return DirectSoundDevice_GetCaps(((IDirectSoundImpl *)This->pds)->device, lpDSCaps);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_DuplicateSoundBuffer(
-    LPDIRECTSOUND8 iface,
-    LPDIRECTSOUNDBUFFER psb,
-    LPLPDIRECTSOUNDBUFFER ppdsb)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p,%p,%p)\n",This,psb,ppdsb);
-    return DirectSoundDevice_DuplicateSoundBuffer(((IDirectSoundImpl *)This->pds)->device,psb,ppdsb);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_SetCooperativeLevel(
-    LPDIRECTSOUND8 iface,
-    HWND hwnd,
-    DWORD level)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p,%p,%s)\n",This,hwnd,dumpCooperativeLevel(level));
-    return DirectSoundDevice_SetCooperativeLevel(((IDirectSoundImpl *)This->pds)->device, hwnd, level);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_Compact(
-    LPDIRECTSOUND8 iface)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p)\n", This);
-    return DirectSoundDevice_Compact(((IDirectSoundImpl *)This->pds)->device);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_GetSpeakerConfig(
-    LPDIRECTSOUND8 iface,
-    LPDWORD lpdwSpeakerConfig)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p, %p)\n", This, lpdwSpeakerConfig);
-    return DirectSoundDevice_GetSpeakerConfig(((IDirectSoundImpl *)This->pds)->device,lpdwSpeakerConfig);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_SetSpeakerConfig(
-    LPDIRECTSOUND8 iface,
-    DWORD config)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p,0x%08x)\n",This,config);
-    return DirectSoundDevice_SetSpeakerConfig(((IDirectSoundImpl *)This->pds)->device,config);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_Initialize(
-    LPDIRECTSOUND8 iface,
-    LPCGUID lpcGuid)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p, %s)\n", This, debugstr_guid(lpcGuid));
-    return DirectSoundDevice_Initialize(&((IDirectSoundImpl *)This->pds)->device,lpcGuid);
-}
-
-static HRESULT WINAPI IDirectSound8_IDirectSound8_VerifyCertification(
-    LPDIRECTSOUND8 iface,
-    LPDWORD pdwCertified)
-{
-    IDirectSound8_IDirectSound8 *This = (IDirectSound8_IDirectSound8 *)iface;
-    TRACE("(%p, %p)\n", This, pdwCertified);
-    return DirectSoundDevice_VerifyCertification(((IDirectSoundImpl *)This->pds)->device,pdwCertified);
-}
-
-static const IDirectSound8Vtbl DirectSound8_DirectSound8_Vtbl =
-{
-    IDirectSound8_IDirectSound8_QueryInterface,
-    IDirectSound8_IDirectSound8_AddRef,
-    IDirectSound8_IDirectSound8_Release,
-    IDirectSound8_IDirectSound8_CreateSoundBuffer,
-    IDirectSound8_IDirectSound8_GetCaps,
-    IDirectSound8_IDirectSound8_DuplicateSoundBuffer,
-    IDirectSound8_IDirectSound8_SetCooperativeLevel,
-    IDirectSound8_IDirectSound8_Compact,
-    IDirectSound8_IDirectSound8_GetSpeakerConfig,
-    IDirectSound8_IDirectSound8_SetSpeakerConfig,
-    IDirectSound8_IDirectSound8_Initialize,
-    IDirectSound8_IDirectSound8_VerifyCertification
-};
-
-static HRESULT IDirectSound8_IDirectSound8_Create(
-    LPDIRECTSOUND8 pds,
-    LPDIRECTSOUND8 * ppds)
-{
-    IDirectSound8_IDirectSound8 * pdsds;
-    TRACE("(%p,%p)\n",pds,ppds);
-
-    if (ppds == NULL) {
-        ERR("invalid parameter: ppds == NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
-
-    if (pds == NULL) {
-        ERR("invalid parameter: pds == NULL\n");
-        *ppds = NULL;
-        return DSERR_INVALIDPARAM;
-    }
-
-    pdsds = HeapAlloc(GetProcessHeap(),0,sizeof(*pdsds));
-    if (pdsds == NULL) {
-        WARN("out of memory\n");
-        *ppds = NULL;
-        return DSERR_OUTOFMEMORY;
-    }
-
-    pdsds->lpVtbl = &DirectSound8_DirectSound8_Vtbl;
-    pdsds->ref = 0;
-    pdsds->pds = pds;
-
-    IDirectSoundImpl_AddRef(pds);
-    *ppds = (LPDIRECTSOUND8)pdsds;
-
-    return DS_OK;
-}
-
-HRESULT DSOUND_Create(
-    REFIID riid,
-    LPDIRECTSOUND *ppDS)
-{
-    LPDIRECTSOUND8 pDS;
-    HRESULT hr;
-    TRACE("(%s, %p)\n", debugstr_guid(riid), ppDS);
-
-    if (!IsEqualIID(riid, &IID_IUnknown) &&
-        !IsEqualIID(riid, &IID_IDirectSound)) {
-        *ppDS = 0;
-        return E_NOINTERFACE;
-    }
-
-    /* Get dsound configuration */
-    setup_dsound_options();
-
-    hr = IDirectSoundImpl_Create(&pDS);
-    if (hr == DS_OK) {
-        hr = IDirectSound_IDirectSound_Create(pDS, ppDS);
-        if (*ppDS)
-            IDirectSound_IDirectSound_AddRef(*ppDS);
-        else {
-            WARN("IDirectSound_IDirectSound_Create failed\n");
-            IDirectSound8_Release(pDS);
-        }
-    } else {
-        WARN("IDirectSoundImpl_Create failed\n");
-        *ppDS = 0;
-    }
-
-    return hr;
-}
-
-/*******************************************************************************
- *		DirectSoundCreate (DSOUND.1)
- *
- *  Creates and initializes a DirectSound interface.
- *
- *  PARAMS
- *     lpcGUID   [I] Address of the GUID that identifies the sound device.
- *     ppDS      [O] Address of a variable to receive the interface pointer.
- *     pUnkOuter [I] Must be NULL.
- *
- *  RETURNS
- *     Success: DS_OK
- *     Failure: DSERR_ALLOCATED, DSERR_INVALIDPARAM, DSERR_NOAGGREGATION,
- *              DSERR_NODRIVER, DSERR_OUTOFMEMORY
- */
-HRESULT WINAPI DirectSoundCreate(
-    LPCGUID lpcGUID,
-    LPDIRECTSOUND *ppDS,
-    IUnknown *pUnkOuter)
-{
-    HRESULT hr;
-    LPDIRECTSOUND pDS;
-
-    TRACE("(%s,%p,%p)\n",debugstr_guid(lpcGUID),ppDS,pUnkOuter);
-
-    if (ppDS == NULL) {
-        WARN("invalid parameter: ppDS == NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
-
-    if (pUnkOuter != NULL) {
-        WARN("invalid parameter: pUnkOuter != NULL\n");
-        *ppDS = 0;
-        return DSERR_INVALIDPARAM;
-    }
-
-    hr = DSOUND_Create(&IID_IDirectSound, &pDS);
-    if (hr == DS_OK) {
-        hr = IDirectSound_Initialize(pDS, lpcGUID);
-        if (hr != DS_OK) {
-            if (hr != DSERR_ALREADYINITIALIZED) {
-                IDirectSound_Release(pDS);
-                pDS = 0;
-            } else
-                hr = DS_OK;
-        }
-    }
-
-    *ppDS = pDS;
-
-    return hr;
-}
-
-HRESULT DSOUND_Create8(
-    REFIID riid,
-    LPDIRECTSOUND8 *ppDS)
-{
-    LPDIRECTSOUND8 pDS;
-    HRESULT hr;
-    TRACE("(%s, %p)\n", debugstr_guid(riid), ppDS);
-
-    if (!IsEqualIID(riid, &IID_IUnknown) &&
-        !IsEqualIID(riid, &IID_IDirectSound) &&
-        !IsEqualIID(riid, &IID_IDirectSound8)) {
-        *ppDS = 0;
-        return E_NOINTERFACE;
-    }
-
-    /* Get dsound configuration */
-    setup_dsound_options();
-
-    hr = IDirectSoundImpl_Create(&pDS);
-    if (hr == DS_OK) {
-        hr = IDirectSound8_IDirectSound8_Create(pDS, ppDS);
-        if (*ppDS)
-            IDirectSound8_IDirectSound8_AddRef(*ppDS);
-        else {
-            WARN("IDirectSound8_IDirectSound8_Create failed\n");
-            IDirectSound8_Release(pDS);
-        }
-    } else {
-        WARN("IDirectSoundImpl_Create failed\n");
-        *ppDS = 0;
-    }
-
-    return hr;
-}
-
-/*******************************************************************************
- *        DirectSoundCreate8 (DSOUND.11)
- *
- *  Creates and initializes a DirectSound8 interface.
- *
- *  PARAMS
- *     lpcGUID   [I] Address of the GUID that identifies the sound device.
- *     ppDS      [O] Address of a variable to receive the interface pointer.
- *     pUnkOuter [I] Must be NULL.
- *
- *  RETURNS
- *     Success: DS_OK
- *     Failure: DSERR_ALLOCATED, DSERR_INVALIDPARAM, DSERR_NOAGGREGATION,
- *              DSERR_NODRIVER, DSERR_OUTOFMEMORY
- */
-HRESULT WINAPI DirectSoundCreate8(
-    LPCGUID lpcGUID,
-    LPDIRECTSOUND8 *ppDS,
-    IUnknown *pUnkOuter)
-{
-    HRESULT hr;
-    LPDIRECTSOUND8 pDS;
-
-    TRACE("(%s,%p,%p)\n",debugstr_guid(lpcGUID),ppDS,pUnkOuter);
-
-    if (ppDS == NULL) {
-        WARN("invalid parameter: ppDS == NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
-
-    if (pUnkOuter != NULL) {
-        WARN("invalid parameter: pUnkOuter != NULL\n");
-        *ppDS = 0;
-        return DSERR_INVALIDPARAM;
-    }
-
-    hr = DSOUND_Create8(&IID_IDirectSound8, &pDS);
-    if (hr == DS_OK) {
-        hr = IDirectSound8_Initialize(pDS, lpcGUID);
-        if (hr != DS_OK) {
-            if (hr != DSERR_ALREADYINITIALIZED) {
-                IDirectSound8_Release(pDS);
-                pDS = 0;
-            } else
-                hr = DS_OK;
-        }
-    }
-
-    *ppDS = pDS;
-
-    return hr;
-}
-
-/*******************************************************************************
  *        DirectSoundDevice
  */
 static HRESULT DirectSoundDevice_Create(DirectSoundDevice ** ppDevice)
@@ -1152,8 +135,10 @@ static HRESULT DirectSoundDevice_Create(DirectSoundDevice ** ppDevice)
 
     device->ref            = 1;
     device->priolevel      = DSSCL_NORMAL;
-    device->state          = STATE_STOPPED;
-    device->speaker_config = DSSPEAKER_STEREO | (DSSPEAKER_GEOMETRY_NARROW << 16);
+    device->stopped        = 1;
+    device->speaker_config = DSSPEAKER_COMBINED(DSSPEAKER_STEREO, DSSPEAKER_GEOMETRY_WIDE);
+
+    DSOUND_ParseSpeakerConfig(device);
 
     /* 3D listener initial parameters */
     device->ds3dl.dwSize   = sizeof(DS3DLISTENER);
@@ -1173,33 +158,30 @@ static HRESULT DirectSoundDevice_Create(DirectSoundDevice ** ppDevice)
     device->ds3dl.flRolloffFactor = DS3D_DEFAULTROLLOFFFACTOR;
     device->ds3dl.flDopplerFactor = DS3D_DEFAULTDOPPLERFACTOR;
 
-    device->prebuf = ds_snd_queue_max;
     device->guid = GUID_NULL;
 
     /* Set default wave format (may need it for waveOutOpen) */
-    device->pwfx = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(WAVEFORMATEX));
-    if (device->pwfx == NULL) {
+    device->primary_pwfx = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(WAVEFORMATEXTENSIBLE));
+    if (!device->primary_pwfx) {
         WARN("out of memory\n");
         HeapFree(GetProcessHeap(),0,device);
         return DSERR_OUTOFMEMORY;
     }
 
-    /* We rely on the sound driver to return the actual sound format of
-     * the device if it does not support 22050x8x2 and is given the
-     * WAVE_DIRECTSOUND flag.
-     */
-    device->pwfx->wFormatTag = WAVE_FORMAT_PCM;
-    device->pwfx->nSamplesPerSec = ds_default_sample_rate;
-    device->pwfx->wBitsPerSample = ds_default_bits_per_sample;
-    device->pwfx->nChannels = 2;
-    device->pwfx->nBlockAlign = device->pwfx->wBitsPerSample * device->pwfx->nChannels / 8;
-    device->pwfx->nAvgBytesPerSec = device->pwfx->nSamplesPerSec * device->pwfx->nBlockAlign;
-    device->pwfx->cbSize = 0;
+    device->primary_pwfx->wFormatTag = WAVE_FORMAT_PCM;
+    device->primary_pwfx->nSamplesPerSec = 22050;
+    device->primary_pwfx->wBitsPerSample = 8;
+    device->primary_pwfx->nChannels = 2;
+    device->primary_pwfx->nBlockAlign = device->primary_pwfx->wBitsPerSample * device->primary_pwfx->nChannels / 8;
+    device->primary_pwfx->nAvgBytesPerSec = device->primary_pwfx->nSamplesPerSec * device->primary_pwfx->nBlockAlign;
+    device->primary_pwfx->cbSize = 0;
 
     InitializeCriticalSection(&(device->mixlock));
     device->mixlock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": DirectSoundDevice.mixlock");
 
     RtlInitializeResource(&(device->buffer_list_lock));
+
+    init_eax_device(device);
 
    *ppDevice = device;
 
@@ -1213,53 +195,52 @@ static ULONG DirectSoundDevice_AddRef(DirectSoundDevice * device)
     return ref;
 }
 
-ULONG DirectSoundDevice_Release(DirectSoundDevice * device)
+static ULONG DirectSoundDevice_Release(DirectSoundDevice * device)
 {
     HRESULT hr;
     ULONG ref = InterlockedDecrement(&(device->ref));
     TRACE("(%p) ref was %u\n", device, ref + 1);
     if (!ref) {
         int i;
-        timeKillEvent(device->timerID);
-        timeEndPeriod(DS_TIME_RES);
 
-        /* The kill event should have allowed the timer process to expire
-         * but try to grab the lock just in case. Can't hold lock because
-         * IDirectSoundBufferImpl_Destroy also grabs the lock */
-        RtlAcquireResourceShared(&(device->buffer_list_lock), TRUE);
-        RtlReleaseResource(&(device->buffer_list_lock));
+        SetEvent(device->sleepev);
+        if (device->thread) {
+            WaitForSingleObject(device->thread_finished, INFINITE);
+            CloseHandle(device->thread);
+            CloseHandle(device->thread_finished);
+        }
+        CloseHandle(device->sleepev);
+
+        EnterCriticalSection(&DSOUND_renderers_lock);
+        list_remove(&device->entry);
+        LeaveCriticalSection(&DSOUND_renderers_lock);
 
         /* It is allowed to release this object even when buffers are playing */
         if (device->buffers) {
             WARN("%d secondary buffers not released\n", device->nrofbuffers);
             for( i=0;i<device->nrofbuffers;i++)
-                IDirectSoundBufferImpl_Destroy(device->buffers[i]);
-        }
-
-        if (device->primary) {
-            WARN("primary buffer not released\n");
-            IDirectSoundBuffer8_Release((LPDIRECTSOUNDBUFFER8)device->primary);
+                secondarybuffer_destroy(device->buffers[i]);
         }
 
         hr = DSOUND_PrimaryDestroy(device);
         if (hr != DS_OK)
             WARN("DSOUND_PrimaryDestroy failed\n");
 
-        if (device->driver)
-            IDsDriver_Close(device->driver);
+        if(device->client) {
+            IAudioClient_Stop(device->client);
+            IAudioClient_Release(device->client);
+        }
+        if(device->render)
+            IAudioRenderClient_Release(device->render);
+        if(device->volume)
+            IAudioStreamVolume_Release(device->volume);
+        if(device->mmdevice)
+            IMMDevice_Release(device->mmdevice);
 
-        if (device->drvdesc.dwFlags & DSDDESC_DOMMSYSTEMOPEN)
-            waveOutClose(device->hwo);
-
-        if (device->driver)
-            IDsDriver_Release(device->driver);
-
-        DSOUND_renderer[device->drvdesc.dnDevNode] = NULL;
-
+        HeapFree(GetProcessHeap(), 0, device->dsp_buffer);
         HeapFree(GetProcessHeap(), 0, device->tmp_buffer);
-        HeapFree(GetProcessHeap(), 0, device->mix_buffer);
-        if (device->drvdesc.dwFlags & DSDDESC_USESYSTEMMEMORY)
-            HeapFree(GetProcessHeap(), 0, device->buffer);
+        HeapFree(GetProcessHeap(), 0, device->cp_buffer);
+        HeapFree(GetProcessHeap(), 0, device->buffer);
         RtlDeleteResource(&device->buffer_list_lock);
         device->mixlock.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&device->mixlock);
@@ -1269,67 +250,34 @@ ULONG DirectSoundDevice_Release(DirectSoundDevice * device)
     return ref;
 }
 
-HRESULT DirectSoundDevice_GetCaps(
-    DirectSoundDevice * device,
-    LPDSCAPS lpDSCaps)
+BOOL DSOUND_check_supported(IAudioClient *client, DWORD rate,
+        DWORD depth, WORD channels)
 {
-    TRACE("(%p,%p)\n",device,lpDSCaps);
+    WAVEFORMATEX fmt, *junk;
+    HRESULT hr;
 
-    if (device == NULL) {
-        WARN("not initialized\n");
-        return DSERR_UNINITIALIZED;
-    }
+    fmt.wFormatTag = WAVE_FORMAT_PCM;
+    fmt.nChannels = channels;
+    fmt.nSamplesPerSec = rate;
+    fmt.wBitsPerSample = depth;
+    fmt.nBlockAlign = (channels * depth) / 8;
+    fmt.nAvgBytesPerSec = rate * fmt.nBlockAlign;
+    fmt.cbSize = 0;
 
-    if (lpDSCaps == NULL) {
-        WARN("invalid parameter: lpDSCaps = NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
+    hr = IAudioClient_IsFormatSupported(client, AUDCLNT_SHAREMODE_SHARED, &fmt, &junk);
+    if(SUCCEEDED(hr))
+        CoTaskMemFree(junk);
 
-    /* check if there is enough room */
-    if (lpDSCaps->dwSize < sizeof(*lpDSCaps)) {
-        WARN("invalid parameter: lpDSCaps->dwSize = %d\n", lpDSCaps->dwSize);
-        return DSERR_INVALIDPARAM;
-    }
-
-    lpDSCaps->dwFlags                           = device->drvcaps.dwFlags;
-    if (TRACE_ON(dsound)) {
-        TRACE("(flags=0x%08x:\n",lpDSCaps->dwFlags);
-        _dump_DSCAPS(lpDSCaps->dwFlags);
-        TRACE(")\n");
-    }
-    lpDSCaps->dwMinSecondarySampleRate          = device->drvcaps.dwMinSecondarySampleRate;
-    lpDSCaps->dwMaxSecondarySampleRate          = device->drvcaps.dwMaxSecondarySampleRate;
-    lpDSCaps->dwPrimaryBuffers                  = device->drvcaps.dwPrimaryBuffers;
-    lpDSCaps->dwMaxHwMixingAllBuffers           = device->drvcaps.dwMaxHwMixingAllBuffers;
-    lpDSCaps->dwMaxHwMixingStaticBuffers        = device->drvcaps.dwMaxHwMixingStaticBuffers;
-    lpDSCaps->dwMaxHwMixingStreamingBuffers     = device->drvcaps.dwMaxHwMixingStreamingBuffers;
-    lpDSCaps->dwFreeHwMixingAllBuffers          = device->drvcaps.dwFreeHwMixingAllBuffers;
-    lpDSCaps->dwFreeHwMixingStaticBuffers       = device->drvcaps.dwFreeHwMixingStaticBuffers;
-    lpDSCaps->dwFreeHwMixingStreamingBuffers    = device->drvcaps.dwFreeHwMixingStreamingBuffers;
-    lpDSCaps->dwMaxHw3DAllBuffers               = device->drvcaps.dwMaxHw3DAllBuffers;
-    lpDSCaps->dwMaxHw3DStaticBuffers            = device->drvcaps.dwMaxHw3DStaticBuffers;
-    lpDSCaps->dwMaxHw3DStreamingBuffers         = device->drvcaps.dwMaxHw3DStreamingBuffers;
-    lpDSCaps->dwFreeHw3DAllBuffers              = device->drvcaps.dwFreeHw3DAllBuffers;
-    lpDSCaps->dwFreeHw3DStaticBuffers           = device->drvcaps.dwFreeHw3DStaticBuffers;
-    lpDSCaps->dwFreeHw3DStreamingBuffers        = device->drvcaps.dwFreeHw3DStreamingBuffers;
-    lpDSCaps->dwTotalHwMemBytes                 = device->drvcaps.dwTotalHwMemBytes;
-    lpDSCaps->dwFreeHwMemBytes                  = device->drvcaps.dwFreeHwMemBytes;
-    lpDSCaps->dwMaxContigFreeHwMemBytes         = device->drvcaps.dwMaxContigFreeHwMemBytes;
-
-    /* driver doesn't have these */
-    lpDSCaps->dwUnlockTransferRateHwBuffers     = 4096; /* But we have none... */
-    lpDSCaps->dwPlayCpuOverheadSwBuffers        = 1;    /* 1% */
-
-    return DS_OK;
+    return hr == S_OK;
 }
 
-HRESULT DirectSoundDevice_Initialize(DirectSoundDevice ** ppDevice, LPCGUID lpcGUID)
+static HRESULT DirectSoundDevice_Initialize(DirectSoundDevice ** ppDevice, LPCGUID lpcGUID)
 {
     HRESULT hr = DS_OK;
-    unsigned wod, wodn;
-    BOOLEAN found = FALSE;
     GUID devGUID;
-    DirectSoundDevice * device = *ppDevice;
+    DirectSoundDevice *device;
+    IMMDevice *mmdevice;
+
     TRACE("(%p,%s)\n",ppDevice,debugstr_guid(lpcGUID));
 
     if (*ppDevice != NULL) {
@@ -1341,145 +289,117 @@ HRESULT DirectSoundDevice_Initialize(DirectSoundDevice ** ppDevice, LPCGUID lpcG
     if (!lpcGUID || IsEqualGUID(lpcGUID, &GUID_NULL))
         lpcGUID = &DSDEVID_DefaultPlayback;
 
+    if(IsEqualGUID(lpcGUID, &DSDEVID_DefaultCapture) ||
+            IsEqualGUID(lpcGUID, &DSDEVID_DefaultVoiceCapture))
+        return DSERR_NODRIVER;
+
     if (GetDeviceID(lpcGUID, &devGUID) != DS_OK) {
         WARN("invalid parameter: lpcGUID\n");
         return DSERR_INVALIDPARAM;
     }
 
-    /* Enumerate WINMM audio devices and find the one we want */
-    wodn = waveOutGetNumDevs();
-    if (!wodn) {
-        WARN("no driver\n");
-        return DSERR_NODRIVER;
-    }
+    hr = get_mmdevice(eRender, &devGUID, &mmdevice);
+    if(FAILED(hr))
+        return hr;
 
-    for (wod=0; wod<wodn; wod++) {
-        if (IsEqualGUID( &devGUID, &DSOUND_renderer_guids[wod])) {
-            found = TRUE;
-            break;
-        }
-    }
+    EnterCriticalSection(&DSOUND_renderers_lock);
 
-    if (found == FALSE) {
-        WARN("No device found matching given ID!\n");
-        return DSERR_NODRIVER;
-    }
-
-    if (DSOUND_renderer[wod]) {
-        if (IsEqualGUID(&devGUID, &DSOUND_renderer[wod]->guid)) {
-            device = DSOUND_renderer[wod];
+    LIST_FOR_EACH_ENTRY(device, &DSOUND_renderers, DirectSoundDevice, entry){
+        if(IsEqualGUID(&device->guid, &devGUID)){
+            IMMDevice_Release(mmdevice);
             DirectSoundDevice_AddRef(device);
             *ppDevice = device;
+            LeaveCriticalSection(&DSOUND_renderers_lock);
             return DS_OK;
-        } else {
-            ERR("device GUID doesn't match\n");
-            hr = DSERR_GENERIC;
-            return hr;
-        }
-    } else {
-        hr = DirectSoundDevice_Create(&device);
-        if (hr != DS_OK) {
-            WARN("DirectSoundDevice_Create failed\n");
-            return hr;
         }
     }
 
-    *ppDevice = device;
-    device->guid = devGUID;
-    device->driver = NULL;
+    hr = DirectSoundDevice_Create(&device);
+    if(FAILED(hr)){
+        WARN("DirectSoundDevice_Create failed\n");
+        IMMDevice_Release(mmdevice);
+        LeaveCriticalSection(&DSOUND_renderers_lock);
+        return hr;
+    }
 
-    device->drvdesc.dnDevNode = wod;
+    device->mmdevice = mmdevice;
+    device->guid = devGUID;
+    device->sleepev = CreateEventW(0, 0, 0, 0);
+    device->buflen = ds_hel_buflen;
+
     hr = DSOUND_ReopenDevice(device, FALSE);
     if (FAILED(hr))
     {
+        HeapFree(GetProcessHeap(), 0, device);
+        LeaveCriticalSection(&DSOUND_renderers_lock);
+        IMMDevice_Release(mmdevice);
         WARN("DSOUND_ReopenDevice failed: %08x\n", hr);
         return hr;
     }
 
-    if (device->driver) {
-        /* the driver is now open, so it's now allowed to call GetCaps */
-        hr = IDsDriver_GetCaps(device->driver,&(device->drvcaps));
-        if (hr != DS_OK) {
-            WARN("IDsDriver_GetCaps failed\n");
-            return hr;
-        }
-    } else {
-        WAVEOUTCAPSA woc;
-        hr = mmErr(waveOutGetDevCapsA(device->drvdesc.dnDevNode, &woc, sizeof(woc)));
-        if (hr != DS_OK) {
-            WARN("waveOutGetDevCaps failed\n");
-            return hr;
-        }
-        ZeroMemory(&device->drvcaps, sizeof(device->drvcaps));
-        if ((woc.dwFormats & WAVE_FORMAT_1M08) ||
-            (woc.dwFormats & WAVE_FORMAT_2M08) ||
-            (woc.dwFormats & WAVE_FORMAT_4M08) ||
-            (woc.dwFormats & WAVE_FORMAT_48M08) ||
-            (woc.dwFormats & WAVE_FORMAT_96M08)) {
-            device->drvcaps.dwFlags |= DSCAPS_PRIMARY8BIT;
-            device->drvcaps.dwFlags |= DSCAPS_PRIMARYMONO;
-        }
-        if ((woc.dwFormats & WAVE_FORMAT_1M16) ||
-            (woc.dwFormats & WAVE_FORMAT_2M16) ||
-            (woc.dwFormats & WAVE_FORMAT_4M16) ||
-            (woc.dwFormats & WAVE_FORMAT_48M16) ||
-            (woc.dwFormats & WAVE_FORMAT_96M16)) {
-            device->drvcaps.dwFlags |= DSCAPS_PRIMARY16BIT;
-            device->drvcaps.dwFlags |= DSCAPS_PRIMARYMONO;
-        }
-        if ((woc.dwFormats & WAVE_FORMAT_1S08) ||
-            (woc.dwFormats & WAVE_FORMAT_2S08) ||
-            (woc.dwFormats & WAVE_FORMAT_4S08) ||
-            (woc.dwFormats & WAVE_FORMAT_48S08) ||
-            (woc.dwFormats & WAVE_FORMAT_96S08)) {
-            device->drvcaps.dwFlags |= DSCAPS_PRIMARY8BIT;
-            device->drvcaps.dwFlags |= DSCAPS_PRIMARYSTEREO;
-        }
-        if ((woc.dwFormats & WAVE_FORMAT_1S16) ||
-            (woc.dwFormats & WAVE_FORMAT_2S16) ||
-            (woc.dwFormats & WAVE_FORMAT_4S16) ||
-            (woc.dwFormats & WAVE_FORMAT_48S16) ||
-            (woc.dwFormats & WAVE_FORMAT_96S16)) {
-            device->drvcaps.dwFlags |= DSCAPS_PRIMARY16BIT;
-            device->drvcaps.dwFlags |= DSCAPS_PRIMARYSTEREO;
-        }
-        if (ds_emuldriver)
-            device->drvcaps.dwFlags |= DSCAPS_EMULDRIVER;
-        device->drvcaps.dwMinSecondarySampleRate = DSBFREQUENCY_MIN;
-        device->drvcaps.dwMaxSecondarySampleRate = DSBFREQUENCY_MAX;
-        ZeroMemory(&device->volpan, sizeof(device->volpan));
-    }
+    ZeroMemory(&device->drvcaps, sizeof(device->drvcaps));
 
-    hr = DSOUND_PrimaryCreate(device);
-    if (hr == DS_OK) {
-        UINT triggertime = DS_TIME_DEL, res = DS_TIME_RES, id;
-        TIMECAPS time;
+    if(DSOUND_check_supported(device->client, 11025, 8, 1) ||
+            DSOUND_check_supported(device->client, 22050, 8, 1) ||
+            DSOUND_check_supported(device->client, 44100, 8, 1) ||
+            DSOUND_check_supported(device->client, 48000, 8, 1) ||
+            DSOUND_check_supported(device->client, 96000, 8, 1))
+        device->drvcaps.dwFlags |= DSCAPS_PRIMARY8BIT | DSCAPS_PRIMARYMONO;
 
-        DSOUND_renderer[device->drvdesc.dnDevNode] = device;
-        timeGetDevCaps(&time, sizeof(TIMECAPS));
-        TRACE("Minimum timer resolution: %u, max timer: %u\n", time.wPeriodMin, time.wPeriodMax);
-        if (triggertime < time.wPeriodMin)
-            triggertime = time.wPeriodMin;
-        if (res < time.wPeriodMin)
-            res = time.wPeriodMin;
-        if (timeBeginPeriod(res) == TIMERR_NOCANDO)
-            WARN("Could not set minimum resolution, don't expect sound\n");
-        id = timeSetEvent(triggertime, res, DSOUND_timer, (DWORD_PTR)device, TIME_PERIODIC | TIME_KILL_SYNCHRONOUS);
-        if (!id)
-        {
-            WARN("Timer not created! Retrying without TIME_KILL_SYNCHRONOUS\n");
-            id = timeSetEvent(triggertime, res, DSOUND_timer, (DWORD_PTR)device, TIME_PERIODIC);
-            if (!id) ERR("Could not create timer, sound playback will not occur\n");
-        }
-        DSOUND_renderer[device->drvdesc.dnDevNode]->timerID = id;
-    } else {
-        WARN("DSOUND_PrimaryCreate failed\n");
-    }
+    if(DSOUND_check_supported(device->client, 11025, 16, 1) ||
+            DSOUND_check_supported(device->client, 22050, 16, 1) ||
+            DSOUND_check_supported(device->client, 44100, 16, 1) ||
+            DSOUND_check_supported(device->client, 48000, 16, 1) ||
+            DSOUND_check_supported(device->client, 96000, 16, 1))
+        device->drvcaps.dwFlags |= DSCAPS_PRIMARY16BIT | DSCAPS_PRIMARYMONO;
+
+    if(DSOUND_check_supported(device->client, 11025, 8, 2) ||
+            DSOUND_check_supported(device->client, 22050, 8, 2) ||
+            DSOUND_check_supported(device->client, 44100, 8, 2) ||
+            DSOUND_check_supported(device->client, 48000, 8, 2) ||
+            DSOUND_check_supported(device->client, 96000, 8, 2))
+        device->drvcaps.dwFlags |= DSCAPS_PRIMARY8BIT | DSCAPS_PRIMARYSTEREO;
+
+    if(DSOUND_check_supported(device->client, 11025, 16, 2) ||
+            DSOUND_check_supported(device->client, 22050, 16, 2) ||
+            DSOUND_check_supported(device->client, 44100, 16, 2) ||
+            DSOUND_check_supported(device->client, 48000, 16, 2) ||
+            DSOUND_check_supported(device->client, 96000, 16, 2))
+        device->drvcaps.dwFlags |= DSCAPS_PRIMARY16BIT | DSCAPS_PRIMARYSTEREO;
+
+    /* the dsound mixer supports all of the following */
+    device->drvcaps.dwFlags |= DSCAPS_SECONDARY8BIT | DSCAPS_SECONDARY16BIT;
+    device->drvcaps.dwFlags |= DSCAPS_SECONDARYMONO | DSCAPS_SECONDARYSTEREO;
+    device->drvcaps.dwFlags |= DSCAPS_CONTINUOUSRATE;
+
+    /* pretend that the driver is certified */
+    device->drvcaps.dwFlags |= DSCAPS_CERTIFIED;
+
+    device->drvcaps.dwPrimaryBuffers = 1;
+    device->drvcaps.dwMinSecondarySampleRate = DSBFREQUENCY_MIN;
+    device->drvcaps.dwMaxSecondarySampleRate = DSBFREQUENCY_MAX;
+    device->drvcaps.dwMaxHwMixingAllBuffers = 16;
+    device->drvcaps.dwMaxHwMixingStaticBuffers = device->drvcaps.dwMaxHwMixingAllBuffers;
+    device->drvcaps.dwMaxHwMixingStreamingBuffers = device->drvcaps.dwMaxHwMixingAllBuffers;
+    device->drvcaps.dwFreeHwMixingAllBuffers = device->drvcaps.dwMaxHwMixingAllBuffers;
+    device->drvcaps.dwFreeHwMixingStaticBuffers = device->drvcaps.dwMaxHwMixingStaticBuffers;
+    device->drvcaps.dwFreeHwMixingStreamingBuffers = device->drvcaps.dwMaxHwMixingStreamingBuffers;
+
+    ZeroMemory(&device->volpan, sizeof(device->volpan));
+
+    device->thread_finished = CreateEventW(0, 0, 0, 0);
+    device->thread = CreateThread(0, 0, DSOUND_mixthread, device, 0, 0);
+    SetThreadPriority(device->thread, THREAD_PRIORITY_TIME_CRITICAL);
+
+    *ppDevice = device;
+    list_add_tail(&DSOUND_renderers, &device->entry);
+
+    LeaveCriticalSection(&DSOUND_renderers_lock);
 
     return hr;
 }
 
-HRESULT DirectSoundDevice_CreateSoundBuffer(
+static HRESULT DirectSoundDevice_CreateSoundBuffer(
     DirectSoundDevice * device,
     LPCDSBUFFERDESC dsbd,
     LPLPDIRECTSOUNDBUFFER ppdsb,
@@ -1520,6 +440,14 @@ HRESULT DirectSoundDevice_CreateSoundBuffer(
         TRACE("(lpwfxFormat=%p)\n",dsbd->lpwfxFormat);
     }
 
+    if (!(dsbd->dwFlags & DSBCAPS_PRIMARYBUFFER) &&
+        dsbd->dwFlags & DSBCAPS_LOCHARDWARE &&
+        device->drvcaps.dwFreeHwMixingAllBuffers == 0)
+    {
+        WARN("ran out of emulated hardware buffers\n");
+        return DSERR_ALLOCATED;
+    }
+
     if (dsbd->dwFlags & DSBCAPS_PRIMARYBUFFER) {
         if (dsbd->lpwfxFormat != NULL) {
             WARN("invalid parameter: dsbd->lpwfxFormat must be NULL for "
@@ -1529,38 +457,45 @@ HRESULT DirectSoundDevice_CreateSoundBuffer(
 
         if (device->primary) {
             WARN("Primary Buffer already created\n");
-            IDirectSoundBuffer_AddRef((LPDIRECTSOUNDBUFFER8)(device->primary));
-            *ppdsb = (LPDIRECTSOUNDBUFFER)(device->primary);
+            IDirectSoundBuffer8_AddRef(&device->primary->IDirectSoundBuffer8_iface);
+            *ppdsb = (IDirectSoundBuffer *)&device->primary->IDirectSoundBuffer8_iface;
         } else {
             hres = primarybuffer_create(device, &device->primary, dsbd);
             if (device->primary) {
                 *ppdsb = (IDirectSoundBuffer*)&device->primary->IDirectSoundBuffer8_iface;
                 device->primary->dsbd.dwFlags &= ~(DSBCAPS_LOCHARDWARE | DSBCAPS_LOCSOFTWARE);
-                if (device->hwbuf)
-                    device->primary->dsbd.dwFlags |= DSBCAPS_LOCHARDWARE;
-                else
-                    device->primary->dsbd.dwFlags |= DSBCAPS_LOCSOFTWARE;
+                device->primary->dsbd.dwFlags |= DSBCAPS_LOCSOFTWARE;
             } else
                 WARN("primarybuffer_create() failed\n");
         }
     } else {
         IDirectSoundBufferImpl * dsb;
-        WAVEFORMATEXTENSIBLE *pwfxe;
 
         if (dsbd->lpwfxFormat == NULL) {
             WARN("invalid parameter: dsbd->lpwfxFormat can't be NULL for "
                  "secondary buffer\n");
             return DSERR_INVALIDPARAM;
         }
-        pwfxe = (WAVEFORMATEXTENSIBLE*)dsbd->lpwfxFormat;
 
-        if (pwfxe->Format.wBitsPerSample != 16 && pwfxe->Format.wBitsPerSample != 8 && pwfxe->Format.wFormatTag != WAVE_FORMAT_EXTENSIBLE)
-        {
-            WARN("wBitsPerSample=%d needs a WAVEFORMATEXTENSIBLE\n", dsbd->lpwfxFormat->wBitsPerSample);
-            return DSERR_CONTROLUNAVAIL;
+        if(dsbd->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM &&
+                dsbd->lpwfxFormat->wFormatTag != WAVE_FORMAT_IEEE_FLOAT &&
+                dsbd->lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+            WARN("We can't mix this format: 0x%x\n", dsbd->lpwfxFormat->wFormatTag);
+            return E_NOTIMPL;
         }
-        if (pwfxe->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+
+        if(dsbd->lpwfxFormat->wBitsPerSample < 8 || dsbd->lpwfxFormat->wBitsPerSample % 8 != 0 ||
+                dsbd->lpwfxFormat->nChannels == 0 || dsbd->lpwfxFormat->nSamplesPerSec == 0 ||
+                dsbd->lpwfxFormat->nAvgBytesPerSec == 0 ||
+                dsbd->lpwfxFormat->nBlockAlign != dsbd->lpwfxFormat->nChannels * dsbd->lpwfxFormat->wBitsPerSample / 8) {
+            WARN("Format inconsistency\n");
+            return DSERR_INVALIDPARAM;
+        }
+
+        if (dsbd->lpwfxFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
         {
+            WAVEFORMATEXTENSIBLE *pwfxe = (WAVEFORMATEXTENSIBLE*)dsbd->lpwfxFormat;
+
             /* check if cbSize is at least 22 bytes */
             if (pwfxe->Format.cbSize < (sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX)))
             {
@@ -1590,8 +525,7 @@ HRESULT DirectSoundDevice_CreateSoundBuffer(
             }
             if (pwfxe->Samples.wValidBitsPerSample && pwfxe->Samples.wValidBitsPerSample < dsbd->lpwfxFormat->wBitsPerSample)
             {
-                FIXME("Non-packed formats not supported right now: %d/%d\n", pwfxe->Samples.wValidBitsPerSample, dsbd->lpwfxFormat->wBitsPerSample);
-                return DSERR_CONTROLUNAVAIL;
+                WARN("Non-packed formats may not function : %d/%d\n", pwfxe->Samples.wValidBitsPerSample, dsbd->lpwfxFormat->wBitsPerSample);
             }
         }
 
@@ -1608,17 +542,24 @@ HRESULT DirectSoundDevice_CreateSoundBuffer(
             return DSERR_INVALIDPARAM;
         }
 
+        if (from8 && (dsbd->dwFlags & DSBCAPS_CTRL3D) && (dsbd->dwFlags & DSBCAPS_CTRLPAN)) {
+            WARN("invalid parameter: DSBCAPS_CTRL3D and DSBCAPS_CTRLPAN cannot be used together\n");
+            return DSERR_INVALIDPARAM;
+        }
+
         hres = IDirectSoundBufferImpl_Create(device, &dsb, dsbd);
-        if (dsb)
+        if (dsb) {
             *ppdsb = (IDirectSoundBuffer*)&dsb->IDirectSoundBuffer8_iface;
-        else
+            if (dsbd->dwFlags & DSBCAPS_LOCHARDWARE)
+                device->drvcaps.dwFreeHwMixingAllBuffers--;
+        } else
             WARN("IDirectSoundBufferImpl_Create failed\n");
    }
 
    return hres;
 }
 
-HRESULT DirectSoundDevice_DuplicateSoundBuffer(
+static HRESULT DirectSoundDevice_DuplicateSoundBuffer(
     DirectSoundDevice * device,
     LPDIRECTSOUNDBUFFER psb,
     LPLPDIRECTSOUNDBUFFER ppdsb)
@@ -1657,101 +598,6 @@ HRESULT DirectSoundDevice_DuplicateSoundBuffer(
         WARN("IDirectSoundBufferImpl_Duplicate failed\n");
 
     return hres;
-}
-
-HRESULT DirectSoundDevice_SetCooperativeLevel(
-    DirectSoundDevice * device,
-    HWND hwnd,
-    DWORD level)
-{
-    TRACE("(%p,%p,%s)\n",device,hwnd,dumpCooperativeLevel(level));
-
-    if (device == NULL) {
-        WARN("not initialized\n");
-        return DSERR_UNINITIALIZED;
-    }
-
-    if (level==DSSCL_PRIORITY || level==DSSCL_EXCLUSIVE) {
-        WARN("level=%s not fully supported\n",
-             level==DSSCL_PRIORITY ? "DSSCL_PRIORITY" : "DSSCL_EXCLUSIVE");
-    }
-
-    device->priolevel = level;
-    return DS_OK;
-}
-
-HRESULT DirectSoundDevice_Compact(
-    DirectSoundDevice * device)
-{
-    TRACE("(%p)\n", device);
-
-    if (device == NULL) {
-        WARN("not initialized\n");
-        return DSERR_UNINITIALIZED;
-    }
-
-    if (device->priolevel < DSSCL_PRIORITY) {
-        WARN("incorrect priority level\n");
-        return DSERR_PRIOLEVELNEEDED;
-    }
-
-    return DS_OK;
-}
-
-HRESULT DirectSoundDevice_GetSpeakerConfig(
-    DirectSoundDevice * device,
-    LPDWORD lpdwSpeakerConfig)
-{
-    TRACE("(%p, %p)\n", device, lpdwSpeakerConfig);
-
-    if (device == NULL) {
-        WARN("not initialized\n");
-        return DSERR_UNINITIALIZED;
-    }
-
-    if (lpdwSpeakerConfig == NULL) {
-        WARN("invalid parameter: lpdwSpeakerConfig == NULL\n");
-        return DSERR_INVALIDPARAM;
-    }
-
-    WARN("not fully functional\n");
-    *lpdwSpeakerConfig = device->speaker_config;
-    return DS_OK;
-}
-
-HRESULT DirectSoundDevice_SetSpeakerConfig(
-    DirectSoundDevice * device,
-    DWORD config)
-{
-    TRACE("(%p,0x%08x)\n",device,config);
-
-    if (device == NULL) {
-        WARN("not initialized\n");
-        return DSERR_UNINITIALIZED;
-    }
-
-    device->speaker_config = config;
-    WARN("not fully functional\n");
-    return DS_OK;
-}
-
-HRESULT DirectSoundDevice_VerifyCertification(
-    DirectSoundDevice * device,
-    LPDWORD pdwCertified)
-{
-    TRACE("(%p, %p)\n",device,pdwCertified);
-
-    if (device == NULL) {
-        WARN("not initialized\n");
-        return DSERR_UNINITIALIZED;
-    }
-
-    if (device->drvcaps.dwFlags & DSCAPS_CERTIFIED)
-        *pdwCertified = DS_CERTIFIED;
-    else
-        *pdwCertified = DS_UNCERTIFIED;
-
-    return DS_OK;
 }
 
 /*
@@ -1793,35 +639,564 @@ HRESULT DirectSoundDevice_AddBuffer(
  * Remove secondary buffer from buffer list.
  * Gets exclusive access to buffer for writing.
  */
-HRESULT DirectSoundDevice_RemoveBuffer(
-    DirectSoundDevice * device,
-    IDirectSoundBufferImpl * pDSB)
+void DirectSoundDevice_RemoveBuffer(DirectSoundDevice * device, IDirectSoundBufferImpl * pDSB)
 {
     int i;
-    HRESULT hr = DS_OK;
 
     TRACE("(%p, %p)\n", device, pDSB);
 
     RtlAcquireResourceExclusive(&(device->buffer_list_lock), TRUE);
 
-    for (i = 0; i < device->nrofbuffers; i++)
-        if (device->buffers[i] == pDSB)
-            break;
-
-    if (i < device->nrofbuffers) {
-        /* Put the last buffer of the list in the (now empty) position */
-        device->buffers[i] = device->buffers[device->nrofbuffers - 1];
-        device->nrofbuffers--;
-        device->buffers = HeapReAlloc(GetProcessHeap(),0,device->buffers,sizeof(LPDIRECTSOUNDBUFFER8)*device->nrofbuffers);
-        TRACE("buffer count is now %d\n", device->nrofbuffers);
-    }
-
-    if (device->nrofbuffers == 0) {
-        HeapFree(GetProcessHeap(),0,device->buffers);
+    if (device->nrofbuffers == 1) {
+        assert(device->buffers[0] == pDSB);
+        HeapFree(GetProcessHeap(), 0, device->buffers);
         device->buffers = NULL;
+    } else {
+        for (i = 0; i < device->nrofbuffers; i++) {
+            if (device->buffers[i] == pDSB) {
+                /* Put the last buffer of the list in the (now empty) position */
+                device->buffers[i] = device->buffers[device->nrofbuffers - 1];
+                break;
+            }
+        }
     }
+    device->nrofbuffers--;
+    TRACE("buffer count is now %d\n", device->nrofbuffers);
 
     RtlReleaseResource(&(device->buffer_list_lock));
+}
+
+/*******************************************************************************
+ *      IUnknown Implementation for DirectSound
+ */
+
+static void directsound_destroy(IDirectSoundImpl *This)
+{
+    if (This->device)
+        DirectSoundDevice_Release(This->device);
+    HeapFree(GetProcessHeap(),0,This);
+    TRACE("(%p) released\n", This);
+}
+
+static inline IDirectSoundImpl *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, IDirectSoundImpl, IUnknown_inner);
+}
+
+static HRESULT WINAPI IUnknownImpl_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    IDirectSoundImpl *This = impl_from_IUnknown(iface);
+
+    TRACE("(%p,%s,%p)\n", This, debugstr_guid(riid), ppv);
+
+    if (!ppv) {
+        WARN("invalid parameter\n");
+        return E_INVALIDARG;
+    }
+    *ppv = NULL;
+
+    if (IsEqualIID(riid, &IID_IUnknown))
+        *ppv = &This->IUnknown_inner;
+    else if (IsEqualIID(riid, &IID_IDirectSound) ||
+            (IsEqualIID(riid, &IID_IDirectSound8) && This->has_ds8))
+        *ppv = &This->IDirectSound8_iface;
+    else {
+        WARN("unknown IID %s\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI IUnknownImpl_AddRef(IUnknown *iface)
+{
+    IDirectSoundImpl *This = impl_from_IUnknown(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(ref == 1)
+        InterlockedIncrement(&This->numIfaces);
+
+    return ref;
+}
+
+static ULONG WINAPI IUnknownImpl_Release(IUnknown *iface)
+{
+    IDirectSoundImpl *This = impl_from_IUnknown(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if (!ref && !InterlockedDecrement(&This->numIfaces))
+        directsound_destroy(This);
+
+    return ref;
+}
+
+static const IUnknownVtbl unk_vtbl =
+{
+    IUnknownImpl_QueryInterface,
+    IUnknownImpl_AddRef,
+    IUnknownImpl_Release
+};
+
+/*******************************************************************************
+ *      IDirectSound and IDirectSound8 Implementation
+ */
+static inline IDirectSoundImpl *impl_from_IDirectSound8(IDirectSound8 *iface)
+{
+    return CONTAINING_RECORD(iface, IDirectSoundImpl, IDirectSound8_iface);
+}
+
+static HRESULT WINAPI IDirectSound8Impl_QueryInterface(IDirectSound8 *iface, REFIID riid,
+        void **ppv)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+    TRACE("(%p,%s,%p)\n", This, debugstr_guid(riid), ppv);
+    return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
+}
+
+static ULONG WINAPI IDirectSound8Impl_AddRef(IDirectSound8 *iface)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+    ULONG ref = InterlockedIncrement(&This->refds);
+
+    TRACE("(%p) refds=%d\n", This, ref);
+
+    if(ref == 1)
+        InterlockedIncrement(&This->numIfaces);
+
+    return ref;
+}
+
+static ULONG WINAPI IDirectSound8Impl_Release(IDirectSound8 *iface)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+    ULONG ref = InterlockedDecrement(&(This->refds));
+
+    TRACE("(%p) refds=%d\n", This, ref);
+
+    if (!ref && !InterlockedDecrement(&This->numIfaces))
+        directsound_destroy(This);
+
+    return ref;
+}
+
+static HRESULT WINAPI IDirectSound8Impl_CreateSoundBuffer(IDirectSound8 *iface,
+        const DSBUFFERDESC *dsbd, IDirectSoundBuffer **ppdsb, IUnknown *lpunk)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+    TRACE("(%p,%p,%p,%p)\n", This, dsbd, ppdsb, lpunk);
+    return DirectSoundDevice_CreateSoundBuffer(This->device, dsbd, ppdsb, lpunk, This->has_ds8);
+}
+
+static HRESULT WINAPI IDirectSound8Impl_GetCaps(IDirectSound8 *iface, DSCAPS *dscaps)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+
+    TRACE("(%p, %p)\n", This, dscaps);
+
+    if (!This->device) {
+        WARN("not initialized\n");
+        return DSERR_UNINITIALIZED;
+    }
+    if (!dscaps) {
+        WARN("invalid parameter: dscaps = NULL\n");
+        return DSERR_INVALIDPARAM;
+    }
+    if (dscaps->dwSize < sizeof(*dscaps)) {
+        WARN("invalid parameter: dscaps->dwSize = %d\n", dscaps->dwSize);
+        return DSERR_INVALIDPARAM;
+    }
+
+    dscaps->dwFlags                        = This->device->drvcaps.dwFlags;
+    dscaps->dwMinSecondarySampleRate       = This->device->drvcaps.dwMinSecondarySampleRate;
+    dscaps->dwMaxSecondarySampleRate       = This->device->drvcaps.dwMaxSecondarySampleRate;
+    dscaps->dwPrimaryBuffers               = This->device->drvcaps.dwPrimaryBuffers;
+    dscaps->dwMaxHwMixingAllBuffers        = This->device->drvcaps.dwMaxHwMixingAllBuffers;
+    dscaps->dwMaxHwMixingStaticBuffers     = This->device->drvcaps.dwMaxHwMixingStaticBuffers;
+    dscaps->dwMaxHwMixingStreamingBuffers  = This->device->drvcaps.dwMaxHwMixingStreamingBuffers;
+    dscaps->dwFreeHwMixingAllBuffers       = This->device->drvcaps.dwFreeHwMixingAllBuffers;
+    dscaps->dwFreeHwMixingStaticBuffers    = This->device->drvcaps.dwFreeHwMixingAllBuffers;
+    dscaps->dwFreeHwMixingStreamingBuffers = This->device->drvcaps.dwFreeHwMixingAllBuffers;
+
+    dscaps->dwMaxHw3DAllBuffers            = This->device->drvcaps.dwMaxHw3DAllBuffers;
+    dscaps->dwMaxHw3DStaticBuffers         = This->device->drvcaps.dwMaxHw3DStaticBuffers;
+    dscaps->dwMaxHw3DStreamingBuffers      = This->device->drvcaps.dwMaxHw3DStreamingBuffers;
+    dscaps->dwFreeHw3DAllBuffers           = This->device->drvcaps.dwFreeHw3DAllBuffers;
+    dscaps->dwFreeHw3DStaticBuffers        = This->device->drvcaps.dwFreeHw3DStaticBuffers;
+    dscaps->dwFreeHw3DStreamingBuffers     = This->device->drvcaps.dwFreeHw3DStreamingBuffers;
+    dscaps->dwTotalHwMemBytes              = This->device->drvcaps.dwTotalHwMemBytes;
+    dscaps->dwFreeHwMemBytes               = This->device->drvcaps.dwFreeHwMemBytes;
+    dscaps->dwMaxContigFreeHwMemBytes      = This->device->drvcaps.dwMaxContigFreeHwMemBytes;
+    dscaps->dwUnlockTransferRateHwBuffers  = This->device->drvcaps.dwUnlockTransferRateHwBuffers;
+    dscaps->dwPlayCpuOverheadSwBuffers     = This->device->drvcaps.dwPlayCpuOverheadSwBuffers;
+
+    if (TRACE_ON(dsound)) {
+        TRACE("(flags=0x%08x:\n", dscaps->dwFlags);
+        _dump_DSCAPS(dscaps->dwFlags);
+        TRACE(")\n");
+    }
+
+    return DS_OK;
+}
+
+static HRESULT WINAPI IDirectSound8Impl_DuplicateSoundBuffer(IDirectSound8 *iface,
+        IDirectSoundBuffer *psb, IDirectSoundBuffer **ppdsb)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+    TRACE("(%p,%p,%p)\n", This, psb, ppdsb);
+    return DirectSoundDevice_DuplicateSoundBuffer(This->device, psb, ppdsb);
+}
+
+static HRESULT WINAPI IDirectSound8Impl_SetCooperativeLevel(IDirectSound8 *iface, HWND hwnd,
+        DWORD level)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+    DirectSoundDevice *device = This->device;
+    HRESULT hr = S_OK;
+
+    TRACE("(%p,%p,%s)\n", This, hwnd, dumpCooperativeLevel(level));
+
+    if (!device) {
+        WARN("not initialized\n");
+        return DSERR_UNINITIALIZED;
+    }
+
+    if (level == DSSCL_PRIORITY || level == DSSCL_EXCLUSIVE) {
+        WARN("level=%s not fully supported\n",
+             level==DSSCL_PRIORITY ? "DSSCL_PRIORITY" : "DSSCL_EXCLUSIVE");
+    }
+
+    RtlAcquireResourceExclusive(&device->buffer_list_lock, TRUE);
+    EnterCriticalSection(&device->mixlock);
+    if ((level == DSSCL_WRITEPRIMARY) != (device->priolevel == DSSCL_WRITEPRIMARY))
+        hr = DSOUND_ReopenDevice(device, level == DSSCL_WRITEPRIMARY);
+    if (SUCCEEDED(hr))
+        device->priolevel = level;
+    LeaveCriticalSection(&device->mixlock);
+    RtlReleaseResource(&device->buffer_list_lock);
+    return hr;
+}
+
+static HRESULT WINAPI IDirectSound8Impl_Compact(IDirectSound8 *iface)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+
+    TRACE("(%p)\n", This);
+
+    if (!This->device) {
+        WARN("not initialized\n");
+        return DSERR_UNINITIALIZED;
+    }
+
+    if (This->device->priolevel < DSSCL_PRIORITY) {
+        WARN("incorrect priority level\n");
+        return DSERR_PRIOLEVELNEEDED;
+    }
+    return DS_OK;
+}
+
+static HRESULT WINAPI IDirectSound8Impl_GetSpeakerConfig(IDirectSound8 *iface, DWORD *config)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+
+    TRACE("(%p, %p)\n", This, config);
+
+    if (!This->device) {
+        WARN("not initialized\n");
+        return DSERR_UNINITIALIZED;
+    }
+    if (!config) {
+        WARN("invalid parameter: config == NULL\n");
+        return DSERR_INVALIDPARAM;
+    }
+
+    WARN("not fully functional\n");
+    *config = This->device->speaker_config;
+    return DS_OK;
+}
+
+static HRESULT WINAPI IDirectSound8Impl_SetSpeakerConfig(IDirectSound8 *iface, DWORD config)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+
+    TRACE("(%p,0x%08x)\n", This, config);
+
+    if (!This->device) {
+        WARN("not initialized\n");
+        return DSERR_UNINITIALIZED;
+    }
+
+    /* NOP on Vista and above */
+
+    return DS_OK;
+}
+
+static HRESULT WINAPI IDirectSound8Impl_Initialize(IDirectSound8 *iface, const GUID *lpcGuid)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+    TRACE("(%p, %s)\n", This, debugstr_guid(lpcGuid));
+    return DirectSoundDevice_Initialize(&This->device, lpcGuid);
+}
+
+static HRESULT WINAPI IDirectSound8Impl_VerifyCertification(IDirectSound8 *iface, DWORD *certified)
+{
+    IDirectSoundImpl *This = impl_from_IDirectSound8(iface);
+
+    TRACE("(%p, %p)\n", This, certified);
+
+    if (!This->device) {
+        WARN("not initialized\n");
+        return DSERR_UNINITIALIZED;
+    }
+
+    if (This->device->drvcaps.dwFlags & DSCAPS_CERTIFIED)
+        *certified = DS_CERTIFIED;
+    else
+        *certified = DS_UNCERTIFIED;
+
+    return DS_OK;
+}
+
+static const IDirectSound8Vtbl ds8_vtbl =
+{
+    IDirectSound8Impl_QueryInterface,
+    IDirectSound8Impl_AddRef,
+    IDirectSound8Impl_Release,
+    IDirectSound8Impl_CreateSoundBuffer,
+    IDirectSound8Impl_GetCaps,
+    IDirectSound8Impl_DuplicateSoundBuffer,
+    IDirectSound8Impl_SetCooperativeLevel,
+    IDirectSound8Impl_Compact,
+    IDirectSound8Impl_GetSpeakerConfig,
+    IDirectSound8Impl_SetSpeakerConfig,
+    IDirectSound8Impl_Initialize,
+    IDirectSound8Impl_VerifyCertification
+};
+
+HRESULT IDirectSoundImpl_Create(IUnknown *outer_unk, REFIID riid, void **ppv, BOOL has_ds8)
+{
+    IDirectSoundImpl *obj;
+    HRESULT hr;
+
+    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
+
+    *ppv = NULL;
+    obj = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*obj));
+    if (!obj) {
+        WARN("out of memory\n");
+        return DSERR_OUTOFMEMORY;
+    }
+
+    setup_dsound_options();
+
+    obj->IUnknown_inner.lpVtbl = &unk_vtbl;
+    obj->IDirectSound8_iface.lpVtbl = &ds8_vtbl;
+    obj->ref = 1;
+    obj->refds = 0;
+    obj->numIfaces = 1;
+    obj->device = NULL;
+    obj->has_ds8 = has_ds8;
+
+    /* COM aggregation supported only internally */
+    if (outer_unk)
+        obj->outer_unk = outer_unk;
+    else
+        obj->outer_unk = &obj->IUnknown_inner;
+
+    hr = IUnknown_QueryInterface(&obj->IUnknown_inner, riid, ppv);
+    IUnknown_Release(&obj->IUnknown_inner);
 
     return hr;
+}
+
+HRESULT DSOUND_Create(REFIID riid, void **ppv)
+{
+    return IDirectSoundImpl_Create(NULL, riid, ppv, FALSE);
+}
+
+HRESULT DSOUND_Create8(REFIID riid, void **ppv)
+{
+    return IDirectSoundImpl_Create(NULL, riid, ppv, TRUE);
+}
+
+/*******************************************************************************
+ *		DirectSoundCreate (DSOUND.1)
+ *
+ *  Creates and initializes a DirectSound interface.
+ *
+ *  PARAMS
+ *     lpcGUID   [I] Address of the GUID that identifies the sound device.
+ *     ppDS      [O] Address of a variable to receive the interface pointer.
+ *     pUnkOuter [I] Must be NULL.
+ *
+ *  RETURNS
+ *     Success: DS_OK
+ *     Failure: DSERR_ALLOCATED, DSERR_INVALIDPARAM, DSERR_NOAGGREGATION,
+ *              DSERR_NODRIVER, DSERR_OUTOFMEMORY
+ */
+HRESULT WINAPI DirectSoundCreate(
+    LPCGUID lpcGUID,
+    LPDIRECTSOUND *ppDS,
+    IUnknown *pUnkOuter)
+{
+    HRESULT hr;
+    LPDIRECTSOUND pDS;
+
+    TRACE("(%s,%p,%p)\n",debugstr_guid(lpcGUID),ppDS,pUnkOuter);
+
+    if (ppDS == NULL) {
+        WARN("invalid parameter: ppDS == NULL\n");
+        return DSERR_INVALIDPARAM;
+    }
+
+    if (pUnkOuter != NULL) {
+        WARN("invalid parameter: pUnkOuter != NULL\n");
+        *ppDS = 0;
+        return DSERR_INVALIDPARAM;
+    }
+
+    hr = DSOUND_Create(&IID_IDirectSound, (void **)&pDS);
+    if (hr == DS_OK) {
+        hr = IDirectSound_Initialize(pDS, lpcGUID);
+        if (hr != DS_OK) {
+            if (hr != DSERR_ALREADYINITIALIZED) {
+                IDirectSound_Release(pDS);
+                pDS = 0;
+            } else
+                hr = DS_OK;
+        }
+    }
+
+    *ppDS = pDS;
+
+    return hr;
+}
+
+/*******************************************************************************
+ *        DirectSoundCreate8 (DSOUND.11)
+ *
+ *  Creates and initializes a DirectSound8 interface.
+ *
+ *  PARAMS
+ *     lpcGUID   [I] Address of the GUID that identifies the sound device.
+ *     ppDS      [O] Address of a variable to receive the interface pointer.
+ *     pUnkOuter [I] Must be NULL.
+ *
+ *  RETURNS
+ *     Success: DS_OK
+ *     Failure: DSERR_ALLOCATED, DSERR_INVALIDPARAM, DSERR_NOAGGREGATION,
+ *              DSERR_NODRIVER, DSERR_OUTOFMEMORY
+ */
+HRESULT WINAPI DirectSoundCreate8(
+    LPCGUID lpcGUID,
+    LPDIRECTSOUND8 *ppDS,
+    IUnknown *pUnkOuter)
+{
+    HRESULT hr;
+    LPDIRECTSOUND8 pDS;
+
+    TRACE("(%s,%p,%p)\n",debugstr_guid(lpcGUID),ppDS,pUnkOuter);
+
+    if (ppDS == NULL) {
+        WARN("invalid parameter: ppDS == NULL\n");
+        return DSERR_INVALIDPARAM;
+    }
+
+    if (pUnkOuter != NULL) {
+        WARN("invalid parameter: pUnkOuter != NULL\n");
+        *ppDS = 0;
+        return DSERR_INVALIDPARAM;
+    }
+
+    hr = DSOUND_Create8(&IID_IDirectSound8, (void **)&pDS);
+    if (hr == DS_OK) {
+        hr = IDirectSound8_Initialize(pDS, lpcGUID);
+        if (hr != DS_OK) {
+            if (hr != DSERR_ALREADYINITIALIZED) {
+                IDirectSound8_Release(pDS);
+                pDS = 0;
+            } else
+                hr = DS_OK;
+        }
+    }
+
+    *ppDS = pDS;
+
+    return hr;
+}
+
+void DSOUND_ParseSpeakerConfig(DirectSoundDevice *device)
+{
+    switch (DSSPEAKER_CONFIG(device->speaker_config)) {
+        case DSSPEAKER_MONO:
+            device->speaker_angles[0] = M_PI/180.0f * 0.0f;
+            device->speaker_num[0] = 0;
+            device->num_speakers = 1;
+            device->lfe_channel = -1;
+        break;
+
+        case DSSPEAKER_STEREO:
+        case DSSPEAKER_HEADPHONE:
+            device->speaker_angles[0] = M_PI/180.0f * -90.0f;
+            device->speaker_angles[1] = M_PI/180.0f *  90.0f;
+            device->speaker_num[0] = 0; /* Left */
+            device->speaker_num[1] = 1; /* Right */
+            device->num_speakers = 2;
+            device->lfe_channel = -1;
+        break;
+
+        case DSSPEAKER_QUAD:
+            device->speaker_angles[0] = M_PI/180.0f * -135.0f;
+            device->speaker_angles[1] = M_PI/180.0f *  -45.0f;
+            device->speaker_angles[2] = M_PI/180.0f *   45.0f;
+            device->speaker_angles[3] = M_PI/180.0f *  135.0f;
+            device->speaker_num[0] = 2; /* Rear left */
+            device->speaker_num[1] = 0; /* Front left */
+            device->speaker_num[2] = 1; /* Front right */
+            device->speaker_num[3] = 3; /* Rear right */
+            device->num_speakers = 4;
+            device->lfe_channel = -1;
+        break;
+
+        case DSSPEAKER_5POINT1_BACK:
+            device->speaker_angles[0] = M_PI/180.0f * -135.0f;
+            device->speaker_angles[1] = M_PI/180.0f *  -45.0f;
+            device->speaker_angles[2] = M_PI/180.0f *    0.0f;
+            device->speaker_angles[3] = M_PI/180.0f *   45.0f;
+            device->speaker_angles[4] = M_PI/180.0f *  135.0f;
+            device->speaker_angles[5] = 9999.0f;
+            device->speaker_num[0] = 4; /* Rear left */
+            device->speaker_num[1] = 0; /* Front left */
+            device->speaker_num[2] = 2; /* Front centre */
+            device->speaker_num[3] = 1; /* Front right */
+            device->speaker_num[4] = 5; /* Rear right */
+            device->speaker_num[5] = 3; /* LFE */
+            device->num_speakers = 6;
+            device->lfe_channel = 3;
+        break;
+
+        case DSSPEAKER_5POINT1_SURROUND:
+            device->speaker_angles[0] = M_PI/180.0f *  -90.0f;
+            device->speaker_angles[1] = M_PI/180.0f *  -30.0f;
+            device->speaker_angles[2] = M_PI/180.0f *    0.0f;
+            device->speaker_angles[3] = M_PI/180.0f *   30.0f;
+            device->speaker_angles[4] = M_PI/180.0f *   90.0f;
+            device->speaker_angles[5] = 9999.0f;
+            device->speaker_num[0] = 4; /* Rear left */
+            device->speaker_num[1] = 0; /* Front left */
+            device->speaker_num[2] = 2; /* Front centre */
+            device->speaker_num[3] = 1; /* Front right */
+            device->speaker_num[4] = 5; /* Rear right */
+            device->speaker_num[5] = 3; /* LFE */
+            device->num_speakers = 6;
+            device->lfe_channel = 3;
+        break;
+
+        default:
+            WARN("unknown speaker_config %u\n", device->speaker_config);
+    }
 }
