@@ -95,7 +95,7 @@ void    INSTRUCTION_BREAKPOINT4(unsigned long addr);
 void    MEMORY_READWRITE_BREAKPOINT4(unsigned long addr);
 void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
-#endif // defined __i386__
+#endif // defined(__i386__)
 
 #else
 
@@ -118,7 +118,7 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
     #define DbgDumpBuffer(mask, buf, len)
     #define DbgParseDebugChannels(val)
 
-#endif // DBG
+#endif // else, DBG && !defined(_M_ARM)
 
 void
 NTAPI
@@ -144,4 +144,4 @@ enum _FRLDR_BUGCHECK_CODES
 extern char *BugCodeStrings[];
 extern ULONG_PTR BugCheckInfo[5];
 
-#endif // defined __DEBUG_H
+#endif // !defined(__DEBUG_H)
