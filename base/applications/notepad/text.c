@@ -85,12 +85,12 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
     /* Look for Byte Order Marks */
     if ((dwSize >= 2) && (pBytes[0] == 0xFF) && (pBytes[1] == 0xFE))
     {
-        encFile = ENCODING_UNICODE;
+        encFile = ENCODING_UTF16LE;
         dwPos += 2;
     }
     else if ((dwSize >= 2) && (pBytes[0] == 0xFE) && (pBytes[1] == 0xFF))
     {
-        encFile = ENCODING_UNICODE_BE;
+        encFile = ENCODING_UTF16BE;
         dwPos += 2;
     }
     else if ((dwSize >= 3) && (pBytes[0] == 0xEF) && (pBytes[1] == 0xBB) && (pBytes[2] == 0xBF))
@@ -101,7 +101,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
 
     switch(encFile)
     {
-    case ENCODING_UNICODE_BE:
+    case ENCODING_UTF16BE:
         for (i = dwPos; i < dwSize-1; i += 2)
         {
             b = pBytes[i+0];
@@ -110,7 +110,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, 
         }
         /* fall through */
 
-    case ENCODING_UNICODE:
+    case ENCODING_UTF16LE:
         pszText = (LPWSTR) &pBytes[dwPos];
         dwCharCount = (dwSize - dwPos) / sizeof(WCHAR);
         break;
@@ -239,13 +239,13 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENC
     {
         switch(encFile)
         {
-            case ENCODING_UNICODE:
+            case ENCODING_UTF16LE:
                 pBytes = (LPBYTE) &pszText[dwPos];
                 dwByteCount = (dwTextLen - dwPos) * sizeof(WCHAR);
                 dwPos = dwTextLen;
                 break;
 
-            case ENCODING_UNICODE_BE:
+            case ENCODING_UTF16BE:
                 dwByteCount = (dwTextLen - dwPos) * sizeof(WCHAR);
                 if (dwByteCount > sizeof(buffer))
                     dwByteCount = sizeof(buffer);

@@ -1095,7 +1095,7 @@ DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch(uMsg) {
     case WM_INITDIALOG:
         hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
-        _sntprintf(szText, ARRAY_SIZE(szText), _T("%ld"), lParam);
+        _sntprintf(szText, ARRAY_SIZE(szText), _T("%Id"), lParam);
         SetWindowText(hTextBox, szText);
         break;
     case WM_COMMAND:
