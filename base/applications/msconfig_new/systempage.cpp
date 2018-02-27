@@ -728,9 +728,9 @@ CommonWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                          * to the message.
                          *
                          * If the dialog box procedure processes a message that requires a specific return value, the dialog box procedure
-                         * should set the desired return value by calling SetWindowLong(hwndDlg, DWL_MSGRESULT, lResult) immediately before
+                         * should set the desired return value by calling SetWindowLong(hwndDlg, DWLP_MSGRESULT, lResult) immediately before
                          * returning TRUE. Note that you must call SetWindowLong immediately before returning TRUE; doing so earlier may result
-                         * in the DWL_MSGRESULT value being overwritten by a nested dialog box message.
+                         * in the DWLP_MSGRESULT value being overwritten by a nested dialog box message.
                          *
                          * [...]
                          *

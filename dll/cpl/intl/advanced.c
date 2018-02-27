@@ -496,9 +496,9 @@ AdvancedPageProc(HWND hwndDlg,
             else if (((LPNMHDR)lParam)->idFrom == IDC_CONV_TABLES &&
                      ((LPNMHDR)lParam)->code == NM_CUSTOMDRAW)
             {
-                SetWindowLong(hwndDlg,
-                              DWL_MSGRESULT,
-                              (LONG)ListViewCustomDraw(lParam));
+                SetWindowLongPtr(hwndDlg,
+                                 DWLP_MSGRESULT,
+                                 (LONG_PTR)ListViewCustomDraw(lParam));
                 return TRUE;
             }
             break;

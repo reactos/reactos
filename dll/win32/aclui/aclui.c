@@ -1242,8 +1242,7 @@ SecurityPageProc(IN HWND hwndDlg,
     PSECURITY_PAGE sp;
     INT_PTR Ret = FALSE;
 
-    sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
-                                          DWL_USER);
+    sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg, DWLP_USER);
     if (sp != NULL || uMsg == WM_INITDIALOG)
     {
         switch (uMsg)
@@ -1382,9 +1381,7 @@ SecurityPageProc(IN HWND hwndDlg,
                     sp->SpecialPermCheckIndex = -1;
 
                     /* save the pointer to the structure */
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_USER,
-                                     (DWORD_PTR)sp);
+                    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)sp);
 
                     (void)ListView_SetExtendedListViewStyleEx(sp->hWndPrincipalsList,
                                                               LVS_EX_FULLROWSELECT,

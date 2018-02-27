@@ -100,7 +100,7 @@ SetLocalSystemTime(HWND hwnd)
         SystemSetTime(&Time, FALSE);
 
         SetWindowLongPtrW(hwnd,
-                          DWL_MSGRESULT,
+                          DWLP_MSGRESULT,
                           PSNRET_NOERROR);
 
         SendMessageW(GetDlgItem(hwnd,

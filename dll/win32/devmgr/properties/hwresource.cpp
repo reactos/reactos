@@ -344,8 +344,7 @@ ResourcesProcDriverDlgProc(IN HWND hwndDlg,
     HWND hWndDevList;
     INT_PTR Ret = FALSE;
 
-    hpd = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
-                                                DWL_USER);
+    hpd = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     if (hpd != NULL || uMsg == WM_INITDIALOG)
     {
@@ -360,13 +359,7 @@ ResourcesProcDriverDlgProc(IN HWND hwndDlg,
                 hpd = (PDEVADVPROP_INFO)((LPPROPSHEETPAGE)lParam)->lParam;
                 if (hpd != NULL)
                 {
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_USER,
-                                     (DWORD_PTR)hpd);
-
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_USER,
-                                     (DWORD_PTR)hpd);
+                    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)hpd);
 
                     UpdateDriverResourceDlg(hwndDlg, hpd);
                     AddResourceItems(hpd, hWndDevList);

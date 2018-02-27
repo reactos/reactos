@@ -778,7 +778,7 @@ SearchDrvDlgProc(
                 case PSN_KILLACTIVE:
                     if (hThread != 0)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
                         return TRUE;
                     }
                     break;
@@ -889,7 +889,7 @@ InstallDrvDlgProc(
                 case PSN_KILLACTIVE:
                     if (hThread != 0)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
                         return TRUE;
                     }
                     break;

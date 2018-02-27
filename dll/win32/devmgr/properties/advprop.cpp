@@ -310,8 +310,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
     PDEVADVPROP_INFO dap;
     INT_PTR Ret = FALSE;
 
-    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
-                                             DWL_USER);
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     if (dap != NULL || uMsg == WM_INITDIALOG)
     {
@@ -348,9 +347,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                 dap = (PDEVADVPROP_INFO)lParam;
                 if (dap != NULL)
                 {
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_USER,
-                                     (DWORD_PTR)dap);
+                    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)dap);
 
                     hDriversListView = GetDlgItem(hwndDlg,
                                                   IDC_DRIVERFILES);
@@ -572,8 +569,7 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
     PDEVADVPROP_INFO dap;
     INT_PTR Ret = FALSE;
 
-    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
-                                             DWL_USER);
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     if (dap != NULL || uMsg == WM_INITDIALOG)
     {
@@ -614,9 +610,7 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
                 dap = (PDEVADVPROP_INFO)((LPPROPSHEETPAGE)lParam)->lParam;
                 if (dap != NULL)
                 {
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_USER,
-                                     (DWORD_PTR)dap);
+                    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)dap);
 
                     UpdateDriverDlg(hwndDlg,
                                     dap);
@@ -1768,8 +1762,7 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
     PDEVADVPROP_INFO dap;
     INT_PTR Ret = FALSE;
 
-    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
-                                             DWL_USER);
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     if (dap != NULL || uMsg == WM_INITDIALOG)
     {
@@ -1807,9 +1800,7 @@ AdvProcDetailsDlgProc(IN HWND hwndDlg,
                 dap = (PDEVADVPROP_INFO)((LPPROPSHEETPAGE)lParam)->lParam;
                 if (dap != NULL)
                 {
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_USER,
-                                     (DWORD_PTR)dap);
+                    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)dap);
 
                     UpdateDetailsDlg(hwndDlg,
                                      dap);
@@ -2609,8 +2600,7 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
     PDEVADVPROP_INFO dap;
     INT_PTR Ret = FALSE;
 
-    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
-                                             DWL_USER);
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     if (dap != NULL || uMsg == WM_INITDIALOG)
     {
@@ -2669,9 +2659,7 @@ AdvPropGeneralDlgProc(IN HWND hwndDlg,
 
                     dap->hWndGeneralPage = hwndDlg;
 
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_USER,
-                                     (DWORD_PTR)dap);
+                    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)dap);
 
                     /* subclass the parent window to always receive
                        WM_DEVICECHANGE messages */

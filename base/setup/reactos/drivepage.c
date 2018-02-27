@@ -245,7 +245,7 @@ DriveDlgProc(
 
                 case PSN_QUERYCANCEL:
                     SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
+                                     DWLP_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
                                                 pSetupData->szAbortMessage,
                                                 pSetupData->szAbortTitle,
