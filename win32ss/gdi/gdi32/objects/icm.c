@@ -182,7 +182,7 @@ GetICMProfileW(
 {
     if (!hdc || !size || !filename) return FALSE;
 
-    UNIMPLEMENTED;
+    UNIMPLEMENTED_ONCE;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
