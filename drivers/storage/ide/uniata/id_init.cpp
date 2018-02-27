@@ -350,10 +350,17 @@ UniataChipDetect(
     ULONG ChipFlags;
     ULONG tmp32;
     UCHAR tmp8;
+#ifdef __REACTOS__
+    ULONG_PTR BaseMemAddress;
+    ULONG_PTR BaseIoAddress1;
+    ULONG_PTR BaseIoAddress2;
+    ULONG_PTR BaseIoAddressBM;
+#else
     ULONG BaseMemAddress;
     ULONG BaseIoAddress1;
     ULONG BaseIoAddress2;
     ULONG BaseIoAddressBM;
+#endif
     BOOLEAN MemIo = FALSE;
     BOOLEAN IsPata = FALSE;
 
@@ -1203,7 +1210,11 @@ for_ugly_chips:
                     tmp8 = AtapiReadPortEx1(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),IDX_BM_Status);
                     KdPrint2((PRINT_PREFIX "BM status: %x\n", tmp8));
                     /* cleanup */
+#ifdef __REACTOS__
+                    ScsiPortFreeDeviceBase(HwDeviceExtension, (PCHAR)(ULONG_PTR)BaseIoAddressBM);
+#else
                     ScsiPortFreeDeviceBase(HwDeviceExtension, (PCHAR)BaseIoAddressBM);
+#endif
                     UniataInitIoResEx(&deviceExtension->BaseIoAddressBM_0, 0, 0, FALSE);
 
                     if(tmp8 == 0xff) {
