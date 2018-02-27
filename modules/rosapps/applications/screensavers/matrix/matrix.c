@@ -288,12 +288,12 @@ void DestroyMatrix(MATRIX *matrix)
 
 MATRIX *GetMatrix(HWND hwnd)
 {
-	return (MATRIX *)GetWindowLong(hwnd, 0);
+	return (MATRIX *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 }
 
 void SetMatrix(HWND hwnd, MATRIX *matrix)
 {
-	SetWindowLong(hwnd, 0, (LONG)matrix);
+	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)matrix);
 }
 
 //

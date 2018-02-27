@@ -1240,7 +1240,7 @@ FolderOptionsViewDlg(
                 case NM_CUSTOMDRAW:     // custom draw (for graying)
                     Draw = (NMTVCUSTOMDRAW *)lParam;
                     Result = ViewDlg_OnTreeCustomDraw(hwndDlg, Draw);
-                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, Result);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, Result);
                     return Result;
                 case TVN_KEYDOWN:       // key is down
                     ViewDlg_OnTreeViewKeyDown(hwndDlg, (TV_KEYDOWN *)lParam);

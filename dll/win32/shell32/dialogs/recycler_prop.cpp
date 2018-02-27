@@ -334,7 +334,7 @@ RecycleBinDlg(
                 }
                 if (StoreDriveSettings(hwndDlg))
                 {
-                    SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+                    SetWindowLongPtr( hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR );
                     return TRUE;
                 }
             }

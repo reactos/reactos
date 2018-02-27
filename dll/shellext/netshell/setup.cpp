@@ -83,7 +83,7 @@ NetworkSettingsPageDlgProc(
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NETWORKCOMPONENTPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_NETWORKCOMPONENTPAGE);
                         return TRUE;
                     }
                     break;
@@ -95,7 +95,7 @@ NetworkSettingsPageDlgProc(
                     if (IsDlgButtonChecked(hwndDlg, IDC_NETWORK_TYPICAL) == BST_CHECKED)
                     {
                         pNetworkSetupData->bTypicalNetworkSetup = TRUE;
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NETWORKDOMAINPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_NETWORKDOMAINPAGE);
                         return TRUE;
                     }
                     break;
@@ -163,7 +163,7 @@ NetworkComponentPageDlgProc(
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NETWORKDOMAINPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_NETWORKDOMAINPAGE);
                         return TRUE;
                     }
                     break;
@@ -251,7 +251,7 @@ NetworkDomainPageDlgProc(
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, pSetupData->uPostNetworkWizardPage);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, pSetupData->uPostNetworkWizardPage);
                         return TRUE;
                     }
                     break;
@@ -271,7 +271,7 @@ NetworkDomainPageDlgProc(
                         MessageBoxW(hwndDlg, ErrorName, Title, MB_ICONERROR | MB_OK);
 
                         SetFocus(GetDlgItem(hwndDlg, IDC_DOMAIN_NAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
 
                         //TODO: Implement setting the Domain/Workgroup
 
@@ -285,7 +285,7 @@ NetworkDomainPageDlgProc(
                     /* If the Typical setup chosen, then skip back to the Settings Page */
                     if (pNetworkSetupData->bTypicalNetworkSetup == TRUE)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_NETWORKSETTINGSPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_NETWORKSETTINGSPAGE);
                         return TRUE;
                     }
                     break;

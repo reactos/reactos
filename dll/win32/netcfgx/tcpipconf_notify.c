@@ -1319,7 +1319,7 @@ TcpipAdvancedIpDlg(
                 if (!This->pCurrentConfig->DhcpEnabled && ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_IPLIST)) == 0)
                 {
                     DisplayError(IDS_NO_IPADDR_SET, IDS_TCPIP, MB_ICONWARNING);
-                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
                 }
             }
@@ -1332,7 +1332,7 @@ TcpipAdvancedIpDlg(
                 This->pCurrentConfig->Ip = NULL;
                 StoreIPSettings(GetDlgItem(hwndDlg, IDC_IPLIST), This, TRUE);
                 StoreIPSettings(GetDlgItem(hwndDlg, IDC_GWLIST), This, FALSE);
-                SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
             break;
@@ -1848,7 +1848,7 @@ TcpipAdvancedDnsDlg(
                     SendDlgItemMessageW(hwndDlg, IDC_DNSSUFFIXLIST, LB_GETCOUNT, 0, 0) == 0)
                 {
                     DisplayError(IDS_NO_SUFFIX, IDS_TCPIP, MB_ICONWARNING);
-                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
                 }
                 if (SendDlgItemMessageW(hwndDlg, IDC_SUFFIX, WM_GETTEXT, sizeof(szSuffix)/sizeof(WCHAR), (LPARAM)szSuffix))
@@ -1866,7 +1866,7 @@ TcpipAdvancedDnsDlg(
                                 szFormat[0] = L'\0';
 
                             MessageBoxW(hwndDlg, szBuffer, szFormat, MB_ICONWARNING);
-                            SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
                             SetFocus(GetDlgItem(hwndDlg, IDC_SUFFIX));
                             return TRUE;
                         }
@@ -2502,9 +2502,9 @@ TcpipBasicDlg(
             {
                 This = (TcpipConfNotifyImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                 if (SUCCEEDED(StoreTcpipBasicSettings(hwndDlg, This, TRUE)))
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
                 else
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID);
 
                 return TRUE;
             }

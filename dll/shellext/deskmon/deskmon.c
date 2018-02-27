@@ -485,8 +485,7 @@ MonitorDlgProc(HWND hwndDlg,
 
     if (uMsg != WM_INITDIALOG)
     {
-        This = (PDESKMONITOR)GetWindowLongPtr(hwndDlg,
-                                              DWL_USER);
+        This = (PDESKMONITOR)GetWindowLongPtr(hwndDlg, DWLP_USER);
     }
 
     switch (uMsg)
@@ -494,9 +493,7 @@ MonitorDlgProc(HWND hwndDlg,
         case WM_INITDIALOG:
             This = (PDESKMONITOR)((LPCPROPSHEETPAGE)lParam)->lParam;
             This->hwndDlg = hwndDlg;
-            SetWindowLongPtr(hwndDlg,
-                             DWL_USER,
-                             (LONG_PTR)This);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)This);
 
             InitMonitorDialog(This);
             Ret = TRUE;
@@ -535,7 +532,7 @@ MonitorDlgProc(HWND hwndDlg,
                 case PSN_APPLY:
                 {
                     SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
+                                     DWLP_MSGRESULT,
                                      ApplyMonitorChanges(This));
                     break;
                 }

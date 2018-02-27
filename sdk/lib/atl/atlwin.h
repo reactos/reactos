@@ -28,6 +28,7 @@
 #define Unused(x)    (x);
 #endif // __GNUC__
 
+#if !defined(_WIN64)
 #ifdef SetWindowLongPtr
 #undef SetWindowLongPtr
 inline LONG_PTR SetWindowLongPtr(HWND hWnd, int nIndex, LONG_PTR dwNewLong)
@@ -43,6 +44,7 @@ inline LONG_PTR GetWindowLongPtr(HWND hWnd, int nIndex)
     return (LONG_PTR)GetWindowLong(hWnd, nIndex);
 }
 #endif
+#endif // !_WIN64
 
 #pragma push_macro("SubclassWindow")
 #undef SubclassWindow
