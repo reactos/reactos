@@ -961,7 +961,7 @@ USBPORT_ParseResources(IN PDEVICE_OBJECT FdoDevice,
         {
             if (PortDescriptor->Flags & CM_RESOURCE_PORT_IO)
             {
-                UsbPortResources->ResourceBase = (PVOID)PortDescriptor->u.Port.Start.LowPart;
+                UsbPortResources->ResourceBase = (PVOID)(ULONG_PTR)PortDescriptor->u.Port.Start.QuadPart;
             }
             else
             {
@@ -1413,7 +1413,7 @@ USBPORT_GetDeviceHwIds(IN PDEVICE_OBJECT FdoDevice,
     PUSBPORT_REGISTRATION_PACKET Packet;
     PVOID Id;
     WCHAR Buffer[300] = {0};
-    ULONG Length = 0;
+    SIZE_T Length = 0;
     size_t Remaining = sizeof(Buffer);
     PWCHAR EndBuffer;
 

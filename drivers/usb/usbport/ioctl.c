@@ -210,7 +210,7 @@ NTSTATUS
 NTAPI
 USBPORT_GetUnicodeName(IN PDEVICE_OBJECT FdoDevice,
                        IN PIRP Irp,
-                       IN PULONG Information)
+                       IN PULONG_PTR Information)
 {
     PUSB_HCD_DRIVERKEY_NAME DriverKey;
     PIO_STACK_LOCATION IoStack;

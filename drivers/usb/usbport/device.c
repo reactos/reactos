@@ -479,7 +479,7 @@ USBPORT_InitInterfaceInfo(IN PUSBD_INTERFACE_INFORMATION InterfaceInfo,
 {
     PUSB_INTERFACE_DESCRIPTOR Descriptor;
     PUSBD_PIPE_INFORMATION Pipe;
-    USHORT Length;
+    SIZE_T Length;
     ULONG PipeFlags;
     ULONG NumberOfPipes;
     USBD_STATUS USBDStatus = USBD_STATUS_SUCCESS;
@@ -971,8 +971,8 @@ USBPORT_CreateDevice(IN OUT PUSB_DEVICE_HANDLE *pUsbdDeviceHandle,
     BOOL IsOpenedPipe;
     PVOID DeviceDescriptor;
     USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
-    SIZE_T TransferedLen;
-    SIZE_T DescriptorMinSize;
+    ULONG TransferedLen;
+    ULONG DescriptorMinSize;
     UCHAR MaxPacketSize;
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     PUSBPORT_REGISTRATION_PACKET Packet;
