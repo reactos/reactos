@@ -2299,7 +2299,7 @@ USBPORT_MapTransfer(IN PDEVICE_OBJECT FdoDevice,
     BOOLEAN WriteToDevice;
     PHYSICAL_ADDRESS PhAddr = {{0, 0}};
     PHYSICAL_ADDRESS PhAddress = {{0, 0}};
-    SIZE_T TransferLength;
+    ULONG TransferLength;
     SIZE_T SgCurrentLength;
     SIZE_T ElementLength;
     PUSBPORT_DEVICE_HANDLE DeviceHandle;
