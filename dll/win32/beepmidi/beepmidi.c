@@ -95,7 +95,7 @@ typedef struct _DeviceInfo
 
     HANDLE thread_handle;
     BOOL terminate_thread;
-    HANDLE thread_termination_complete;
+    HANDLE work_available;
 } DeviceInfo;
 
 DeviceInfo* the_device;
@@ -127,7 +127,7 @@ ProcessPlayingNotes(
     /* We lock the note list only while accessing it */
 
 #ifdef CONTINUOUS_NOTES
-    while ( ! device_info->terminate_thread )
+    while ( WaitForSingleObject(the_device->work_available, INFINITE), !device_info->terminate_thread )
 #endif
     {
         NoteNode* node;
@@ -197,10 +197,6 @@ ProcessPlayingNotes(
 
         LeaveCriticalSection(&device_lock);
     }
-
-#ifdef CONTINUOUS_NOTES
-    SetEvent(device_info->thread_termination_complete);
-#endif
 
     return 0;
 }
@@ -346,9 +342,9 @@ OpenDevice(
 
     /* This is threading-related code */
 #ifdef CONTINUOUS_NOTES
-    the_device->thread_termination_complete = CreateEvent(NULL, FALSE, FALSE, NULL);
+    the_device->work_available = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-    if ( ! the_device->thread_termination_complete )
+    if ( ! the_device->work_available )
     {
         DPRINT("CreateEvent failed\n");
         HeapFree(heap, 0, the_device);
@@ -365,7 +361,7 @@ OpenDevice(
     if ( ! the_device->thread_handle )
     {
         DPRINT("CreateThread failed\n");
-        CloseHandle(the_device->thread_termination_complete);
+        CloseHandle(the_device->work_available);
         HeapFree(heap, 0, the_device);
         return MMSYSERR_NOMEM;
     }
@@ -391,10 +387,11 @@ CloseDevice(DeviceInfo* device_info)
     /* If we're working in threaded mode we need to wait for thread to die */
 #ifdef CONTINUOUS_NOTES
     the_device->terminate_thread = TRUE;
+    SetEvent(device_info->work_available);
 
-    WaitForSingleObject(the_device->thread_termination_complete, INFINITE);
-
-    CloseHandle(the_device->thread_termination_complete);
+    WaitForSingleObject(the_device->thread_handle, INFINITE);
+    CloseHandle(the_device->thread_handle);
+    CloseHandle(the_device->work_available);
 #endif
 
     /* Let the client application know the device is closing */
@@ -450,6 +447,11 @@ StopNote(
             device_info->playing_notes_count --;
 
             DPRINT("Note stopped - now playing %d notes\n", (int) device_info->playing_notes_count);
+
+#ifdef CONTINUOUS_NOTES
+            if (device_info->playing_notes_count == 0)
+                ResetEvent(device_info->work_available);
+#endif
 
             LeaveCriticalSection(&device_lock);
             device_info->refresh_notes = TRUE;
@@ -560,6 +562,10 @@ PlayNote(
             device_info->playing_notes_count --;
         }
 */
+
+#ifdef CONTINUOUS_NOTES
+        SetEvent(device_info->work_available);
+#endif
 
         LeaveCriticalSection(&device_lock);
 
