@@ -90,13 +90,15 @@ add_compile_flags("/wd4018")
 # - C4098: void function returning a value
 # - C4113: parameter lists differ
 # - C4129: unrecognized escape sequence
-# - TODO: C4133: incompatible types
+# - C4133: incompatible types - from '<x> *' to '<y> *'
 # - C4163: 'identifier': not available as an intrinsic function
 # - C4229: modifiers on data are ignored
-# - C4700: uninitialized variable usage
+# - C4311: pointer truncation from '<pointer>' to '<integer>'
+# - C4312: conversion from '<integer>' to '<pointer>' of greater size
 # - C4603: macro is not defined or definition is different after precompiled header use
+# - C4700: uninitialized variable usage
 # - C4716: function must return a value
-add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603 /we4716")
+add_compile_flags("/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4603 /we4700 /we4716")
 # TODO: Check and fix other architectures.
 if(ARCH STREQUAL "i386")
     add_compile_flags("/we4028")
