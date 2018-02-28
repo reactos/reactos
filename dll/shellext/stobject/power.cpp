@@ -374,19 +374,28 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
             }
             return S_FALSE;
 
+        case WM_TIMER:
+            if (wParam == POWER_TIMER_ID)
+            {
+                KillTimer(pSysTray->GetHWnd(), POWER_TIMER_ID);
+                ShowPowerSchemesPopupMenu(pSysTray);
+            }
+            break;
+
         case ID_ICON_POWER:
             Power_Update(pSysTray);
 
             switch (lParam)
             {
                 case WM_LBUTTONDOWN:
+                    SetTimer(pSysTray->GetHWnd(), POWER_TIMER_ID, 500, NULL);
                     break;
 
                 case WM_LBUTTONUP:
-                    ShowPowerSchemesPopupMenu(pSysTray);
                     break;
 
                 case WM_LBUTTONDBLCLK:
+                    KillTimer(pSysTray->GetHWnd(), POWER_TIMER_ID);
                     _RunPower();
                     break;
 

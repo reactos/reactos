@@ -280,19 +280,28 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
             }
             return S_FALSE;
 
+        case WM_TIMER:
+            if (wParam == HOTPLUG_TIMER_ID)
+            {
+                KillTimer(pSysTray->GetHWnd(), HOTPLUG_TIMER_ID);
+                _ShowContextMenu(pSysTray);
+            }
+            break;
+
         case ID_ICON_HOTPLUG:
             Hotplug_Update(pSysTray);
 
             switch (lParam)
             {
                 case WM_LBUTTONDOWN:
+                    SetTimer(pSysTray->GetHWnd(), HOTPLUG_TIMER_ID, 500, NULL);
                     break;
 
                 case WM_LBUTTONUP:
-                    _ShowContextMenu(pSysTray);
                     break;
 
                 case WM_LBUTTONDBLCLK:
+                    KillTimer(pSysTray->GetHWnd(), HOTPLUG_TIMER_ID);
                     _RunHotplug(pSysTray);
                     break;
 
