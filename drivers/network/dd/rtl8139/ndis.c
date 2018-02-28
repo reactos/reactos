@@ -320,6 +320,12 @@ MiniportInitialize (
                 NDIS_DbgPrint(MID_TRACE, ("IRQ vector is %d\n", adapter->InterruptVector));
                 break;
 
+            case CmResourceTypeMemory:
+                NDIS_DbgPrint(MID_TRACE, ("Ignoring Memory resource type: Start = 0x%llx, Length = 0x%lx\n",
+                                          resourceList->PartialDescriptors[i].u.Memory.Start.QuadPart,
+                                          resourceList->PartialDescriptors[i].u.Memory.Length));
+                break;
+
             default:
                 NDIS_DbgPrint(MIN_TRACE, ("Unrecognized resource type: 0x%x\n", resourceList->PartialDescriptors[i].Type));
                 break;
