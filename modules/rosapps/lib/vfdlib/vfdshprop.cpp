@@ -237,7 +237,11 @@ void OnControl(
 	CHAR			module_path[MAX_PATH];
 	CHAR			full_path[MAX_PATH];
 	PSTR			file_name;
+#ifndef __REACTOS__
 	DWORD			ret;
+#else
+	DWORD_PTR		ret;
+#endif
 
 	ret = GetModuleFileName(
 		g_hDllModule, module_path, sizeof(module_path));
@@ -258,8 +262,13 @@ void OnControl(
 
 	VFDTRACE(0, ("Starting %s\n", full_path));
 
+#ifndef __REACTOS__
 	ret = (DWORD)ShellExecute(
 		hDlg, NULL, full_path, NULL, NULL, SW_SHOW);
+#else
+	ret = (DWORD_PTR)ShellExecute(
+		hDlg, NULL, full_path, NULL, NULL, SW_SHOW);
+#endif
 
 	if (ret > 32) {
 		PropSheet_PressButton(GetParent(hDlg), PSBTN_CANCEL);
