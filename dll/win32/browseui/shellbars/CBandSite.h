@@ -54,6 +54,8 @@ private:
     struct BandObject                       *m_bands;
     HWND                                    m_hwndRebar;
     CComPtr<IOleWindow>                     m_site;
+    DWORD                                   m_dwState; /* BSSF_ flags */
+    DWORD                                   m_dwStyle; /* BSIS_ flags */
 public:
     CBandSiteBase();
     ~CBandSiteBase();

@@ -40,7 +40,9 @@ CBandSiteBase::CBandSiteBase():
     m_cBands(0),
     m_cBandsAllocated(0),
     m_bands(NULL),
-    m_hwndRebar(NULL)
+    m_hwndRebar(NULL),
+    m_dwState(0),
+    m_dwStyle(0)
 {
 }
 
@@ -146,13 +148,13 @@ VOID CBandSiteBase::_BuildBandInfo(struct BandObject *Band, REBARBANDINFOW *prbi
             prbi->fStyle |= RBBS_BREAK;
         if (Band->dbi.dwModeFlags & DBIMF_TOPALIGN)
             prbi->fStyle |= RBBS_TOPALIGN;
-        if (Band->dbi.dwModeFlags & DBIMF_NOGRIPPER)
+        if ((Band->dbi.dwModeFlags & DBIMF_NOGRIPPER) || (m_dwStyle & BSIS_NOGRIPPER))
             prbi->fStyle |= RBBS_NOGRIPPER;
-        if (Band->dbi.dwModeFlags & DBIMF_ALWAYSGRIPPER)
+        if ((Band->dbi.dwModeFlags & DBIMF_ALWAYSGRIPPER) || (m_dwStyle & BSIS_ALWAYSGRIPPER))
             prbi->fStyle |= RBBS_GRIPPERALWAYS;
     }
 
-    if (Band->bHiddenTitle)
+    if (Band->bHiddenTitle  || (m_dwStyle & BSIS_NOCAPTION))
     {
         prbi->fMask |= RBBIM_STYLE;
         prbi->fStyle |= RBBS_HIDETITLE;
@@ -295,27 +297,30 @@ HRESULT CBandSiteBase::_OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         }
     }
 
-    /* Load the static part of the menu */
-    HMENU hMenuStatic = LoadMenuW(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCEW(IDM_BAND_MENU));
-
-    if (hMenuStatic)
+    if (!(m_dwStyle & BSIS_LOCKED))
     {
-        Shell_MergeMenus(hMenu, hMenuStatic, UINT_MAX, 0, UINT_MAX, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
+        /* Load the static part of the menu */
+        HMENU hMenuStatic = LoadMenuW(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCEW(IDM_BAND_MENU));
 
-        ::DestroyMenu(hMenuStatic);
+        if (hMenuStatic)
+        {
+            Shell_MergeMenus(hMenu, hMenuStatic, UINT_MAX, 0, UINT_MAX, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
 
-        hr = _IsBandDeletable(dwBandID);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+            ::DestroyMenu(hMenuStatic);
 
-        /* Remove the close item if it is not deletable */
-        if (hr == S_FALSE || (Band->dbi.dwModeFlags & DBIMF_UNDELETEABLE) != 0)
-            DeleteMenu(hMenu, IDM_BAND_CLOSE, MF_BYCOMMAND);
+            hr = _IsBandDeletable(dwBandID);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
 
-        if ((Band->dbi.dwMask & DBIM_TITLE) == 0)
-            DeleteMenu(hMenu, IDM_BAND_TITLE, MF_BYCOMMAND);
-        else
-            CheckMenuItem(hMenu, IDM_BAND_TITLE, Band->bHiddenTitle ? MF_UNCHECKED : MF_CHECKED);
+            /* Remove the close item if it is not deletable */
+            if (hr == S_FALSE || (Band->dbi.dwModeFlags & DBIMF_UNDELETEABLE) != 0)
+                DeleteMenu(hMenu, IDM_BAND_CLOSE, MF_BYCOMMAND);
+
+            if ((Band->dbi.dwMask & DBIM_TITLE) == 0)
+                DeleteMenu(hMenu, IDM_BAND_TITLE, MF_BYCOMMAND);
+            else
+                CheckMenuItem(hMenu, IDM_BAND_TITLE, Band->bHiddenTitle ? MF_UNCHECKED : MF_CHECKED);
+        }
     }
 
     /* TODO: Query the menu of our site */
@@ -412,19 +417,21 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         return E_FAIL;
 
     hRet = punk->QueryInterface(IID_PPV_ARG(IDeskBand, &DeskBand));
-    if (!SUCCEEDED(hRet) || DeskBand == NULL)
-        goto Cleanup;
-    hRet = punk->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ObjWithSite));
-    if (!SUCCEEDED(hRet) || ObjWithSite == NULL)
-        goto Cleanup;
-    hRet = punk->QueryInterface(IID_PPV_ARG(IOleWindow, &OleWindow));
-    if (!SUCCEEDED(hRet) || OleWindow == NULL)
-        goto Cleanup;
-    hRet = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &WndEvtHandler));
-    if (!SUCCEEDED(hRet) || WndEvtHandler == NULL)
-        goto Cleanup;
+    if (FAILED_UNEXPECTEDLY(hRet))
+        return hRet;
 
-    hRet = S_OK;
+    hRet = punk->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ObjWithSite));
+    if (FAILED_UNEXPECTEDLY(hRet))
+        return hRet;
+
+    hRet = punk->QueryInterface(IID_PPV_ARG(IOleWindow, &OleWindow));
+    if (FAILED_UNEXPECTEDLY(hRet))
+        return hRet;
+
+    hRet = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &WndEvtHandler));
+    if (FAILED_UNEXPECTEDLY(hRet))
+        return hRet;
+
     if (m_cBandsAllocated > m_cBands)
     {
         /* Search for a free band object */
@@ -447,16 +454,14 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
             NewAllocated = 0xFFFF;
         if (NewAllocated == m_cBandsAllocated)
         {
-            hRet = E_OUTOFMEMORY;
-            goto Cleanup;
+            return E_OUTOFMEMORY;
         }
 
 
         NewBand = static_cast<struct BandObject *>(CoTaskMemAlloc(NewAllocated * sizeof(struct BandObject)));
         if (NewBand == NULL)
         {
-            hRet = E_OUTOFMEMORY;
-            goto Cleanup;
+            return E_OUTOFMEMORY;
         }
 
         /* Copy the old array */
@@ -479,8 +484,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         m_bands = static_cast<struct BandObject *>(CoTaskMemAlloc(8 * sizeof(struct BandObject)));
         if (m_bands == NULL)
         {
-            hRet = E_OUTOFMEMORY;
-            goto Cleanup;
+            return E_OUTOFMEMORY;
         }
 
         /* Initialize the added bands */
@@ -490,67 +494,65 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         NewBand = &m_bands[0];
     }
 
+    ASSERT(NewBand != NULL);
+
+    m_cBands++;
+    NewBand->DeskBand = DeskBand.Detach();
+    NewBand->OleWindow = OleWindow.Detach();
+    NewBand->WndEvtHandler = WndEvtHandler.Detach();
+
+    /* Create the ReBar band */
+    hRet = ObjWithSite->SetSite(static_cast<IOleWindow *>(this));
     if (SUCCEEDED(hRet))
     {
-        ASSERT(NewBand != NULL);
-
-        m_cBands++;
-        NewBand->DeskBand = DeskBand.Detach();
-        NewBand->OleWindow = OleWindow.Detach();
-        NewBand->WndEvtHandler = WndEvtHandler.Detach();
-
-        /* Create the ReBar band */
-        hRet = ObjWithSite->SetSite(static_cast<IOleWindow *>(this));
-        if (SUCCEEDED(hRet))
+        uBand = 0xffffffff;
+        if (SUCCEEDED(_UpdateBand(NewBand)))
         {
-            uBand = 0xffffffff;
-            if (SUCCEEDED(_UpdateBand(NewBand)))
+            if (NewBand->dbi.dwMask & DBIM_MODEFLAGS)
             {
-                if (NewBand->dbi.dwMask & DBIM_MODEFLAGS)
-                {
-                    if (NewBand->dbi.dwModeFlags & DBIMF_ADDTOFRONT)
-                        uBand = 0;
-                }
+                if (NewBand->dbi.dwModeFlags & DBIMF_ADDTOFRONT)
+                    uBand = 0;
             }
+        }
 
-            _BuildBandInfo(NewBand, &rbi);
+        _BuildBandInfo(NewBand, &rbi);
 
-            if (SUCCEEDED(NewBand->OleWindow->GetWindow(&rbi.hwndChild)) &&
-                rbi.hwndChild != NULL)
+        if (SUCCEEDED(NewBand->OleWindow->GetWindow(&rbi.hwndChild)) &&
+            rbi.hwndChild != NULL)
+        {
+            rbi.fMask |= RBBIM_CHILD;
+            WARN ("ReBar band uses child window 0x%p\n", rbi.hwndChild);
+        }
+
+        if (!SendMessageW(m_hwndRebar, RB_INSERTBANDW, (WPARAM)uBand, reinterpret_cast<LPARAM>(&rbi)))
+            return E_FAIL;
+
+        hRet = (HRESULT)((USHORT)_GetBandID(NewBand));
+
+        _UpdateAllBands();
+    }
+    else
+    {
+        WARN("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
+
+        /* Remove the band from the ReBar control */
+        _BuildBandInfo(NewBand, &rbi);
+        uBand = (UINT)SendMessageW(m_hwndRebar, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
+        if (uBand != (UINT)-1)
+        {
+            if (!SendMessageW(m_hwndRebar, RB_DELETEBAND, (WPARAM)uBand, 0))
             {
-                rbi.fMask |= RBBIM_CHILD;
-                WARN ("ReBar band uses child window 0x%p\n", rbi.hwndChild);
+                ERR("Failed to delete band!\n");
             }
-
-            if (!SendMessageW(m_hwndRebar, RB_INSERTBANDW, (WPARAM)uBand, reinterpret_cast<LPARAM>(&rbi)))
-                return E_FAIL;
-
-            hRet = (HRESULT)((USHORT)_GetBandID(NewBand));
         }
         else
-        {
-            WARN("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
+            ERR("Failed to map band id to index!\n");
 
-            /* Remove the band from the ReBar control */
-            _BuildBandInfo(NewBand, &rbi);
-            uBand = (UINT)SendMessageW(m_hwndRebar, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
-            if (uBand != (UINT)-1)
-            {
-                if (!SendMessageW(m_hwndRebar, RB_DELETEBAND, (WPARAM)uBand, 0))
-                {
-                    ERR("Failed to delete band!\n");
-                }
-            }
-            else
-                ERR("Failed to map band id to index!\n");
+        _FreeBand(NewBand);
 
-            _FreeBand(NewBand);
-
-            hRet = E_FAIL;
-            /* goto Cleanup; */
-        }
+        hRet = E_FAIL;
     }
-Cleanup:
+
     return hRet;
 }
 
@@ -675,14 +677,29 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::GetBandObject(DWORD dwBandID, REFIID ri
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::SetBandSiteInfo(const BANDSITEINFO *pbsinfo)
 {
-    FIXME("(%p, %p)\n", this, pbsinfo);
-    return E_NOTIMPL;
+    if (!pbsinfo)
+        return E_INVALIDARG;
+
+    if ((pbsinfo->dwMask & BSIM_STATE))
+        m_dwState = pbsinfo->dwState;
+    if ((pbsinfo->dwMask & BSIM_STYLE))
+        m_dwStyle = pbsinfo->dwStyle;
+
+    _UpdateAllBands();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::GetBandSiteInfo(BANDSITEINFO *pbsinfo)
 {
-    FIXME("(%p, %p)\n", this, pbsinfo);
-    return E_NOTIMPL;
+    if (!pbsinfo)
+        return E_INVALIDARG;
+
+    if ((pbsinfo->dwMask & BSIM_STATE))
+        pbsinfo->dwState = m_dwState;
+    if ((pbsinfo->dwMask & BSIM_STYLE))
+        pbsinfo->dwStyle = m_dwStyle;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
