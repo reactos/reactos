@@ -2080,6 +2080,9 @@ ChangePos:
             SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
         }
 
+        /* Set the initial lock state in the band site */
+        m_TrayBandSite->Lock(g_TaskbarSettings.bLock);
+
         RegisterHotKey(m_hWnd, IDHK_RUN, MOD_WIN, 'R');
         RegisterHotKey(m_hWnd, IDHK_MINIMIZE_ALL, MOD_WIN, 'M');
         RegisterHotKey(m_hWnd, IDHK_RESTORE_ALL, MOD_WIN|MOD_SHIFT, 'M');
