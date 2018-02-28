@@ -377,8 +377,11 @@ CcCopyData (
     /* If that was a successful sync read operation, let's handle read ahead */
     if (Operation == CcOperationRead && Length == 0 && Wait)
     {
-        /* If file isn't random access, schedule next read */
-        if (!BooleanFlagOn(FileObject->Flags, FO_RANDOM_ACCESS))
+        /* If file isn't random access and next read may get us cross VACB boundary,
+         * schedule next read
+         */
+        if (!BooleanFlagOn(FileObject->Flags, FO_RANDOM_ACCESS) &&
+            (CurrentOffset - 1) / VACB_MAPPING_GRANULARITY != (CurrentOffset + BytesCopied - 1) / VACB_MAPPING_GRANULARITY)
         {
             CcScheduleReadAhead(FileObject, (PLARGE_INTEGER)&FileOffset, BytesCopied);
         }
