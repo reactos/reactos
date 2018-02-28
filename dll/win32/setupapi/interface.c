@@ -454,7 +454,7 @@ SetupDiInstallDeviceInterfaces(
         if (!Result)
             goto cleanup;
 
-        SelectedDriver = (struct DriverInfoElement *)InstallParams.Reserved;
+        SelectedDriver = (struct DriverInfoElement *)InstallParams.ClassInstallReserved;
         if (SelectedDriver == NULL)
         {
             SetLastError(ERROR_NO_DRIVER_SELECTED);
