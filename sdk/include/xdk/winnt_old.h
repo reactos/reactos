@@ -1416,6 +1416,12 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
     } DUMMYUNIONNAME2;
 } KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
 
+#define UNW_FLAG_NHANDLER 0x0
+#define UNW_FLAG_EHANDLER 0x1
+#define UNW_FLAG_UHANDLER 0x2
+#define UNW_FLAG_CHAININFO 0x4
+#define UNW_FLAG_NO_EPILOGUE  0x80000000UL
+
 #define RUNTIME_FUNCTION_INDIRECT 0x1
 
 typedef struct _RUNTIME_FUNCTION {
@@ -1435,7 +1441,10 @@ typedef struct _UNWIND_HISTORY_TABLE_ENTRY
 typedef struct _UNWIND_HISTORY_TABLE
 {
     DWORD Count;
-    UCHAR Search;
+    BYTE  LocalHint;
+    BYTE  GlobalHint;
+    BYTE  Search;
+    BYTE  Once;
     ULONG64 LowAddress;
     ULONG64 HighAddress;
     UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
@@ -1444,19 +1453,61 @@ typedef struct _UNWIND_HISTORY_TABLE
 typedef
 _Function_class_(GET_RUNTIME_FUNCTION_CALLBACK)
 PRUNTIME_FUNCTION
-(*PGET_RUNTIME_FUNCTION_CALLBACK)(
-  _In_ DWORD64 ControlPc,
-  _In_opt_ PVOID Context);
+GET_RUNTIME_FUNCTION_CALLBACK(
+    _In_ DWORD64 ControlPc,
+    _In_opt_ PVOID Context);
+typedef GET_RUNTIME_FUNCTION_CALLBACK *PGET_RUNTIME_FUNCTION_CALLBACK;
 
 typedef
 _Function_class_(OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)
-_Must_inspect_result_
 DWORD
-(*POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)(
-  _In_ HANDLE Process,
-  _In_ PVOID TableAddress,
-  _Out_ PDWORD Entries,
-  _Out_ PRUNTIME_FUNCTION *Functions);
+OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK(
+    _In_ HANDLE Process,
+    _In_ PVOID TableAddress,
+    _Out_ PDWORD Entries,
+    _Out_ PRUNTIME_FUNCTION* Functions);
+typedef OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK *POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK;
+
+struct _EXCEPTION_POINTERS;
+typedef
+LONG
+(*PEXCEPTION_FILTER) (
+    struct _EXCEPTION_POINTERS *ExceptionPointers,
+    PVOID EstablisherFrame);
+
+typedef
+VOID
+(*PTERMINATION_HANDLER) (
+    BOOLEAN AbnormalTermination,
+    PVOID EstablisherFrame);
+
+typedef struct _DISPATCHER_CONTEXT
+{
+    ULONG64 ControlPc;
+    PVOID ImageBase;
+    PVOID FunctionEntry;
+    PVOID EstablisherFrame;
+    ULONG64 TargetIp;
+    PVOID ContextRecord;
+    PEXCEPTION_ROUTINE LanguageHandler;
+    PVOID HandlerData;
+    PUNWIND_HISTORY_TABLE HistoryTable;
+    ULONG ScopeIndex;
+    ULONG Fill0;
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
+typedef struct _SCOPE_TABLE_AMD64
+{
+    DWORD Count;
+    struct
+    {
+        DWORD BeginAddress;
+        DWORD EndAddress;
+        DWORD HandlerAddress;
+        DWORD JumpTarget;
+    } ScopeRecord[1];
+} SCOPE_TABLE_AMD64, *PSCOPE_TABLE_AMD64;
+typedef SCOPE_TABLE_AMD64 SCOPE_TABLE, *PSCOPE_TABLE;
 
 #define OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK_EXPORT_NAME "OutOfProcessFunctionTableCallback"
 
@@ -1508,6 +1559,17 @@ RtlVirtualUnwind(
     _Out_ PVOID *HandlerData,
     _Out_ PDWORD64 EstablisherFrame,
     _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlUnwindEx(
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_opt_ struct _EXCEPTION_RECORD *ExceptionRecord,
+    _In_ PVOID ReturnValue,
+    _In_ struct _CONTEXT *ContextRecord,
+    _In_opt_ PUNWIND_HISTORY_TABLE HistoryTable);
 
 #elif defined(_PPC_)
 #define CONTEXT_CONTROL    1L
