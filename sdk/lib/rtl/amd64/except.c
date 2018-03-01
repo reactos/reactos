@@ -88,15 +88,49 @@ RtlpGetExceptionAddress(VOID)
     return NULL;
 }
 
+BOOLEAN
+NTAPI
+RtplUnwindInternal(
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue,
+    _In_ PCONTEXT ContextRecord,
+    _In_opt_ struct _UNWIND_HISTORY_TABLE *HistoryTable,
+    _In_ ULONG Flags);
+
 /*
  * @unimplemented
  */
 BOOLEAN
 NTAPI
-RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
-                     IN PCONTEXT Context)
+RtlDispatchException(
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PCONTEXT ContextRecord)
 {
-    __debugbreak();
-    UNIMPLEMENTED;
-    return FALSE;
+    BOOLEAN Handled;
+
+    /* Perform vectored exception handling for user mode */
+    if (RtlCallVectoredExceptionHandlers(ExceptionRecord, ContextRecord))
+    {
+        /* Exception handled, now call vectored continue handlers */
+        RtlCallVectoredContinueHandlers(ExceptionRecord, ContextRecord);
+
+        /* Continue execution */
+        return TRUE;
+    }
+
+    /* Call the internal unwind routine */
+    Handled = RtplUnwindInternal(NULL, // TargetFrame
+                                 NULL, // TargetIp
+                                 ExceptionRecord,
+                                 0, // ReturnValue
+                                 ContextRecord,
+                                 NULL, // HistoryTable
+                                 UNW_FLAG_EHANDLER);
+
+    /* In user mode, call any registered vectored continue handlers */
+    RtlCallVectoredContinueHandlers(ExceptionRecord, ContextRecord);
+
+    return Handled;
 }
