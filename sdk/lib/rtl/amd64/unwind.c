@@ -22,8 +22,13 @@
 #define UWOP_SET_FPREG 3
 #define UWOP_SAVE_NONVOL 4
 #define UWOP_SAVE_NONVOL_FAR 5
+#if 0 // These are deprecated / not for x64
 #define UWOP_SAVE_XMM 6
 #define UWOP_SAVE_XMM_FAR 7
+#else
+#define UWOP_EPILOG 6
+#define UWOP_SPARE_CODE 7
+#endif
 #define UWOP_SAVE_XMM128 8
 #define UWOP_SAVE_XMM128_FAR 9
 #define UWOP_PUSH_MACHFRAME 10
@@ -193,27 +198,121 @@ RtlInstallFunctionTableCallback(
     return FALSE;
 }
 
+static
+__inline
+ULONG
+UnwindOpSlots(
+    _In_ UNWIND_CODE UnwindCode)
+{
+    static const UCHAR UnwindOpExtraSlotTable[] =
+    {
+        0, // UWOP_PUSH_NONVOL
+        1, // UWOP_ALLOC_LARGE (or 3, special cased in lookup code)
+        0, // UWOP_ALLOC_SMALL
+        0, // UWOP_SET_FPREG
+        1, // UWOP_SAVE_NONVOL
+        2, // UWOP_SAVE_NONVOL_FAR
+        1, // UWOP_EPILOG // previously UWOP_SAVE_XMM
+        2, // UWOP_SPARE_CODE // previously UWOP_SAVE_XMM_FAR
+        1, // UWOP_SAVE_XMM128
+        2, // UWOP_SAVE_XMM128_FAR
+        0, // UWOP_PUSH_MACHFRAME
+        2, // UWOP_SET_FPREG_LARGE
+    };
+
+    if ((UnwindCode.UnwindOp == UWOP_ALLOC_LARGE) && 
+        (UnwindCode.OpInfo != 0))
+    {
+        return 3;
+    }
+    else
+    {
+        return UnwindOpExtraSlotTable[UnwindCode.UnwindOp] + 1;
+    }    
+}
+
+static
+__inline
 void
-FORCEINLINE
-SetReg(PCONTEXT Context, BYTE Reg, DWORD64 Value)
+SetReg(
+    _Inout_ PCONTEXT Context,
+    _In_ BYTE Reg,
+    _In_ DWORD64 Value)
 {
     ((DWORD64*)(&Context->Rax))[Reg] = Value;
 }
 
+static
+__inline
+void
+SetRegFromStackValue(
+    _Inout_ PCONTEXT Context,
+    _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers,
+    _In_ BYTE Reg,
+    _In_ PDWORD64 ValuePointer)
+{
+    SetReg(Context, Reg, *ValuePointer);
+    if (ContextPointers != NULL)
+    {
+        ContextPointers->IntegerContext[Reg] = ValuePointer;
+    }
+}
+
+static
+__inline
 DWORD64
-FORCEINLINE
-GetReg(PCONTEXT Context, BYTE Reg)
+GetReg(
+    _In_ PCONTEXT Context,
+    _In_ BYTE Reg)
 {
     return ((DWORD64*)(&Context->Rax))[Reg];
 }
 
+static
+__inline
 void
-FORCEINLINE
-PopReg(PCONTEXT Context, BYTE Reg)
+PopReg(
+    _Inout_ PCONTEXT Context,
+    _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers,
+    _In_ BYTE Reg)
 {
-    DWORD64 Value = *(DWORD64*)Context->Rsp;
-    Context->Rsp += 8;
-    SetReg(Context, Reg, Value);
+    SetRegFromStackValue(Context, ContextPointers, Reg, (PDWORD64)Context->Rsp);
+    Context->Rsp += sizeof(DWORD64);
+}
+
+static
+__inline
+void
+SetXmmReg(
+    _Inout_ PCONTEXT Context,
+    _In_ BYTE Reg,
+    _In_ M128A Value)
+{
+    ((M128A*)(&Context->Xmm0))[Reg] = Value;
+}
+
+static
+__inline
+void
+SetXmmRegFromStackValue(
+    _Out_ PCONTEXT Context,
+    _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers,
+    _In_ BYTE Reg,
+    _In_ M128A *ValuePointer)
+{
+    SetXmmReg(Context, Reg, *ValuePointer);
+    if (ContextPointers != NULL)
+    {
+        ContextPointers->FloatingContext[Reg] = ValuePointer;
+    }
+}
+
+static
+__inline
+M128A
+GetXmmReg(PCONTEXT Context, BYTE Reg)
+{
+    return ((M128A*)(&Context->Xmm0))[Reg];
 }
 
 /*! RtlpTryToUnwindEpilog
@@ -221,18 +320,19 @@ PopReg(PCONTEXT Context, BYTE Reg)
  * \return TRUE if we have been in an epilog and it could be unwound.
  *         FALSE if the instructions were not allowed for an epilog.
  * \ref
- *  http://msdn.microsoft.com/en-us/library/8ydc79k6(VS.80).aspx
- *  http://msdn.microsoft.com/en-us/library/tawsa7cb.aspx
+ *  https://docs.microsoft.com/en-us/cpp/build/unwind-procedure
+ *  https://docs.microsoft.com/en-us/cpp/build/prolog-and-epilog
  * \todo
  *  - Test and compare with Windows behaviour
  */
-BOOLEAN
 static
 __inline
+BOOLEAN
 RtlpTryToUnwindEpilog(
-    PCONTEXT Context,
-    ULONG64 ImageBase,
-    PRUNTIME_FUNCTION FunctionEntry)
+    _Inout_ PCONTEXT Context,
+    _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers,
+    _In_ ULONG64 ImageBase,
+    _In_ PRUNTIME_FUNCTION FunctionEntry)
 {
     CONTEXT LocalContext;
     BYTE *InstrPtr;
@@ -302,7 +402,7 @@ RtlpTryToUnwindEpilog(
         {
             /* Opcode pops a basic register from stack */
             Reg = Instr & 0x7;
-            PopReg(&LocalContext, Reg);
+            PopReg(&LocalContext, ContextPointers, Reg);
             InstrPtr++;
             continue;
         }
@@ -312,7 +412,7 @@ RtlpTryToUnwindEpilog(
         {
             /* Opcode is pop r8 .. r15 */
             Reg = ((Instr >> 8) & 0x7) + 8;
-            PopReg(&LocalContext, Reg);
+            PopReg(&LocalContext, ContextPointers, Reg);
             InstrPtr += 2;
             continue;
         }
@@ -320,6 +420,10 @@ RtlpTryToUnwindEpilog(
         /* Opcode not allowed for Epilog */
         return FALSE;
     }
+
+    // check for popfq
+
+    // also allow end with jmp imm, jmp [target], iretq
 
     /* Check if we are at the ret instruction */
     if ((DWORD64)InstrPtr != EndAddress)
@@ -344,6 +448,49 @@ RtlpTryToUnwindEpilog(
     return TRUE;
 }
 
+/*!
+
+    \ref https://docs.microsoft.com/en-us/cpp/build/unwind-data-definitions-in-c
+*/
+static
+ULONG64
+GetEstablisherFrame(
+    _In_ PCONTEXT Context,
+    _In_ PUNWIND_INFO UnwindInfo,
+    _In_ ULONG_PTR CodeOffset)
+{
+    ULONG i;
+
+    /* Check if we have a frame register */
+    if (UnwindInfo->FrameRegister == 0)
+    {
+        /* No frame register means we use Rsp */
+        return Context->Rsp;
+    }
+
+    if ((CodeOffset >= UnwindInfo->SizeOfProlog) ||
+        ((UnwindInfo->Flags & UNW_FLAG_CHAININFO) != 0))
+    {
+        return GetReg(Context, UnwindInfo->FrameRegister) - 
+               UnwindInfo->FrameOffset * 16;
+    }
+
+    /* Loop all unwind ops */
+    for (i = 0;
+         i < UnwindInfo->CountOfCodes;
+         i += UnwindOpSlots(UnwindInfo->UnwindCode[i]))
+    {
+        /* Check for SET_FPREG */
+        if (UnwindInfo->UnwindCode[i].UnwindOp == UWOP_SET_FPREG)
+        {
+            return GetReg(Context, UnwindInfo->FrameRegister) -
+                   UnwindInfo->FrameOffset * 16;
+        }
+    }
+
+    return Context->Rsp;
+}
+
 PEXCEPTION_ROUTINE
 NTAPI
 RtlVirtualUnwind(
@@ -354,13 +501,14 @@ RtlVirtualUnwind(
     _Inout_ PCONTEXT Context,
     _Outptr_ PVOID *HandlerData,
     _Out_ PULONG64 EstablisherFrame,
-    _Inout_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers)
+    _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers)
 {
     PUNWIND_INFO UnwindInfo;
     ULONG_PTR CodeOffset;
-    ULONG i;
+    ULONG i, Offset;
     UNWIND_CODE UnwindCode;
     BYTE Reg;
+    PULONG LanguageHandler;
 
     /* Use relative virtual address */
     ControlPc -= ImageBase;
@@ -375,13 +523,29 @@ RtlVirtualUnwind(
     /* Get a pointer to the unwind info */
     UnwindInfo = RVA(ImageBase, FunctionEntry->UnwindData);
 
+    /* Check for chained info */
+    if (UnwindInfo->Flags & UNW_FLAG_CHAININFO)
+    {
+        UNIMPLEMENTED_DBGBREAK();
+
+        /* See https://docs.microsoft.com/en-us/cpp/build/chained-unwind-info-structures */
+        FunctionEntry = (PRUNTIME_FUNCTION)&(UnwindInfo->UnwindCode[(UnwindInfo->CountOfCodes + 1) & ~1]);
+        UnwindInfo = RVA(ImageBase, FunctionEntry->UnwindData);
+    }
+
+    /* The language specific handler data follows the unwind info */
+    LanguageHandler = ALIGN_UP_POINTER_BY(&UnwindInfo->UnwindCode[UnwindInfo->CountOfCodes], sizeof(ULONG));
+    *HandlerData = (LanguageHandler + 1);
+
     /* Calculate relative offset to function start */
     CodeOffset = ControlPc - FunctionEntry->BeginAddress;
+
+    *EstablisherFrame = GetEstablisherFrame(Context, UnwindInfo, CodeOffset);
 
     /* Check if we are in the function epilog and try to finish it */
     if (CodeOffset > UnwindInfo->SizeOfProlog)
     {
-        if (RtlpTryToUnwindEpilog(Context, ImageBase, FunctionEntry))
+        if (RtlpTryToUnwindEpilog(Context, ContextPointers, ImageBase, FunctionEntry))
         {
             /* There's no exception routine */
             return NULL;
@@ -390,31 +554,10 @@ RtlVirtualUnwind(
 
     /* Skip all Ops with an offset greater than the current Offset */
     i = 0;
-    while (i < UnwindInfo->CountOfCodes &&
-           CodeOffset < UnwindInfo->UnwindCode[i].CodeOffset)
+    while ((i < UnwindInfo->CountOfCodes) &&
+           (UnwindInfo->UnwindCode[i].CodeOffset > CodeOffset))
     {
-        UnwindCode = UnwindInfo->UnwindCode[i];
-        switch (UnwindCode.UnwindOp)
-        {
-            case UWOP_SAVE_NONVOL:
-            case UWOP_SAVE_XMM:
-            case UWOP_SAVE_XMM128:
-                i += 2;
-                break;
-
-            case UWOP_SAVE_NONVOL_FAR:
-            case UWOP_SAVE_XMM_FAR:
-            case UWOP_SAVE_XMM128_FAR:
-                i += 3;
-                break;
-
-            case UWOP_ALLOC_LARGE:
-                i += UnwindCode.OpInfo ? 3 : 2;
-                break;
-
-            default:
-                i++;
-        }
+        i += UnwindOpSlots(UnwindInfo->UnwindCode[i]);
     }
 
     /* Process the remaining unwind ops */
@@ -425,21 +568,20 @@ RtlVirtualUnwind(
         {
             case UWOP_PUSH_NONVOL:
                 Reg = UnwindCode.OpInfo;
-                SetReg(Context, Reg, *(DWORD64*)Context->Rsp);
-                Context->Rsp += sizeof(DWORD64);
+                PopReg(Context, ContextPointers, Reg);
                 i++;
                 break;
 
             case UWOP_ALLOC_LARGE:
                 if (UnwindCode.OpInfo)
                 {
-                    ULONG Offset = *(ULONG*)(&UnwindInfo->UnwindCode[i+1]);
+                    Offset = *(ULONG*)(&UnwindInfo->UnwindCode[i+1]);
                     Context->Rsp += Offset;
                     i += 3;
                 }
                 else
                 {
-                    USHORT Offset = UnwindInfo->UnwindCode[i+1].FrameOffset;
+                    Offset = UnwindInfo->UnwindCode[i+1].FrameOffset;
                     Context->Rsp += Offset * 8;
                     i += 2;
                 }
@@ -451,44 +593,79 @@ RtlVirtualUnwind(
                 break;
 
             case UWOP_SET_FPREG:
+                Reg = UnwindInfo->FrameRegister;
+                Context->Rsp = GetReg(Context, Reg) - UnwindInfo->FrameOffset * 16;
                 i++;
                 break;
 
             case UWOP_SAVE_NONVOL:
+                Reg = UnwindCode.OpInfo;
+                Offset = *(USHORT*)(&UnwindInfo->UnwindCode[i + 1]);
+                SetRegFromStackValue(Context, ContextPointers, Reg, (DWORD64*)Context->Rsp + Offset);
                 i += 2;
                 break;
 
             case UWOP_SAVE_NONVOL_FAR:
+                Reg = UnwindCode.OpInfo;
+                Offset = *(ULONG*)(&UnwindInfo->UnwindCode[i + 1]);
+                SetRegFromStackValue(Context, ContextPointers, Reg, (DWORD64*)Context->Rsp + Offset);
                 i += 3;
                 break;
 
-            case UWOP_SAVE_XMM:
+            case UWOP_EPILOG:
+                i += 1;
+                break;
+
+            case UWOP_SPARE_CODE:
+                ASSERT(FALSE);
                 i += 2;
                 break;
 
-            case UWOP_SAVE_XMM_FAR:
-                i += 3;
-                break;
-
             case UWOP_SAVE_XMM128:
+                Reg = UnwindCode.OpInfo;
+                Offset = *(USHORT*)(&UnwindInfo->UnwindCode[i + 1]);
+                SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)(Context->Rsp + Offset));
                 i += 2;
                 break;
 
             case UWOP_SAVE_XMM128_FAR:
+                Reg = UnwindCode.OpInfo;
+                Offset = *(ULONG*)(&UnwindInfo->UnwindCode[i + 1]);
+                SetXmmRegFromStackValue(Context, ContextPointers, Reg, (M128A*)(Context->Rsp + Offset));
                 i += 3;
                 break;
 
             case UWOP_PUSH_MACHFRAME:
-                i += 1;
-                break;
+                /* OpInfo is 1, when an error code was pushed, otherwise 0. */
+                Context->Rsp += UnwindCode.OpInfo * sizeof(DWORD64);
+
+                /* Now pop the MACHINE_FRAME (Yes, "magic numbers", deal with it) */
+                Context->Rip = *(PDWORD64)(Context->Rsp + 0x00);
+                Context->SegCs = *(PDWORD64)(Context->Rsp + 0x08);
+                Context->EFlags = *(PDWORD64)(Context->Rsp + 0x10);
+                Context->SegSs = *(PDWORD64)(Context->Rsp + 0x20);
+                Context->Rsp = *(PDWORD64)(Context->Rsp + 0x18);
+                ASSERT((i + 1) == UnwindInfo->CountOfCodes);
+                goto Exit;
         }
     }
 
     /* Unwind is finished, pop new Rip from Stack */
-    Context->Rip = *(DWORD64*)Context->Rsp;
-    Context->Rsp += sizeof(DWORD64);
+    if (Context->Rsp != 0)
+    {
+        Context->Rip = *(DWORD64*)Context->Rsp;
+        Context->Rsp += sizeof(DWORD64);
+    }
 
-    return 0;
+Exit:
+
+    /* Check if we have a handler and return it */
+    if (UnwindInfo->Flags & (UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER))
+    {
+        return RVA(ImageBase, *LanguageHandler);
+    }
+
+    return NULL;
 }
 
 VOID
