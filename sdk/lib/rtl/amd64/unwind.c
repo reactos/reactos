@@ -198,6 +198,39 @@ RtlInstallFunctionTableCallback(
     return FALSE;
 }
 
+static
+__inline
+ULONG
+UnwindOpSlots(
+    _In_ UNWIND_CODE UnwindCode)
+{
+    static const UCHAR UnwindOpExtraSlotTable[] =
+    {
+        0, // UWOP_PUSH_NONVOL
+        1, // UWOP_ALLOC_LARGE (or 3, special cased in lookup code)
+        0, // UWOP_ALLOC_SMALL
+        0, // UWOP_SET_FPREG
+        1, // UWOP_SAVE_NONVOL
+        2, // UWOP_SAVE_NONVOL_FAR
+        1, // UWOP_EPILOG // previously UWOP_SAVE_XMM
+        2, // UWOP_SPARE_CODE // previously UWOP_SAVE_XMM_FAR
+        1, // UWOP_SAVE_XMM128
+        2, // UWOP_SAVE_XMM128_FAR
+        0, // UWOP_PUSH_MACHFRAME
+        2, // UWOP_SET_FPREG_LARGE
+    };
+
+    if ((UnwindCode.UnwindOp == UWOP_ALLOC_LARGE) && 
+        (UnwindCode.OpInfo != 0))
+    {
+        return 3;
+    }
+    else
+    {
+        return UnwindOpExtraSlotTable[UnwindCode.UnwindOp] + 1;
+    }    
+}
+
 inline
 void
 SetReg(
@@ -227,7 +260,7 @@ static
 __inline
 DWORD64
 GetReg(
-    _Inout_ PCONTEXT Context,
+    _In_ PCONTEXT Context,
     _In_ BYTE Reg)
 {
     return ((DWORD64*)(&Context->Rax))[Reg];
@@ -433,25 +466,23 @@ GetEstablisherFrame(
         return Context->Rsp;
     }
 
-    // FIXME
-    if (UnwindInfo->Flags & UNW_FLAG_CHAININFO)
+    if ((CodeOffset >= UnwindInfo->SizeOfProlog) ||
+        ((UnwindInfo->Flags & UNW_FLAG_CHAININFO) != 0))
     {
-        __debugbreak();
+        return GetReg(Context, UnwindInfo->FrameRegister) - 
+               UnwindInfo->FrameOffset * 16;
     }
 
     /* Loop all unwind ops */
-    for (i = 0; i < UnwindInfo->CountOfCodes; i++)
+    for (i = 0;
+         i < UnwindInfo->CountOfCodes;
+         i += UnwindOpSlots(UnwindInfo->UnwindCode[i]))
     {
-        /* Bail out, if the Unwind code is ahead of Rip */
-        if (UnwindInfo->UnwindCode[i].CodeOffset > CodeOffset)
-        {
-            break;
-        }
-
         /* Check for SET_FPREG */
         if (UnwindInfo->UnwindCode[i].UnwindOp == UWOP_SET_FPREG)
         {
-            return GetReg(Context, UnwindInfo->FrameRegister) - UnwindInfo->FrameOffset * 16;
+            return GetReg(Context, UnwindInfo->FrameRegister) -
+                   UnwindInfo->FrameOffset * 16;
         }
     }
 
@@ -520,31 +551,10 @@ RtlVirtualUnwind(
 
     /* Skip all Ops with an offset greater than the current Offset */
     i = 0;
-    while (i < UnwindInfo->CountOfCodes &&
-           CodeOffset < UnwindInfo->UnwindCode[i].CodeOffset)
+    while ((i < UnwindInfo->CountOfCodes) &&
+           (UnwindInfo->UnwindCode[i].CodeOffset > CodeOffset))
     {
-        UnwindCode = UnwindInfo->UnwindCode[i];
-        switch (UnwindCode.UnwindOp)
-        {
-            case UWOP_SAVE_NONVOL:
-            case UWOP_EPILOG:
-            case UWOP_SAVE_XMM128:
-                i += 2;
-                break;
-
-            case UWOP_SAVE_NONVOL_FAR:
-            case UWOP_SPARE_CODE:
-            case UWOP_SAVE_XMM128_FAR:
-                i += 3;
-                break;
-
-            case UWOP_ALLOC_LARGE:
-                i += UnwindCode.OpInfo ? 3 : 2;
-                break;
-
-            default:
-                i++;
-        }
+        i += UnwindOpSlots(UnwindInfo->UnwindCode[i]);
     }
 
     /* Process the remaining unwind ops */
@@ -568,7 +578,7 @@ RtlVirtualUnwind(
                 }
                 else
                 {
-                    USHORT Offset = UnwindInfo->UnwindCode[i+1].FrameOffset;
+                    Offset = UnwindInfo->UnwindCode[i+1].FrameOffset;
                     Context->Rsp += Offset * 8;
                     i += 2;
                 }
@@ -580,7 +590,7 @@ RtlVirtualUnwind(
                 break;
 
             case UWOP_SET_FPREG:
-                Reg = UnwindCode.OpInfo;
+                Reg = UnwindInfo->FrameRegister;
                 Context->Rsp = GetReg(Context, Reg) - UnwindInfo->FrameOffset * 16;
                 i++;
                 break;
@@ -623,9 +633,11 @@ RtlVirtualUnwind(
                 break;
 
             case UWOP_PUSH_MACHFRAME:
-                __debugbreak();
-                i += 1;
-                break;
+                Offset = UnwindCode.OpInfo * sizeof(DWORD64);
+                Context->Rip = *(PDWORD64)(Context->Rsp + Offset);
+                Context->Rsp = *(PDWORD64)(Context->Rsp + Offset + 24);
+                ASSERT((i + 1) == UnwindInfo->CountOfCodes);
+                goto Exit;
         }
     }
 
@@ -636,6 +648,8 @@ RtlVirtualUnwind(
         Context->Rsp += sizeof(DWORD64);
     }
 
+Exit:
+
     /* Check if we have a handler and return it */
     if (UnwindInfo->Flags & (UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER))
     {
@@ -643,6 +657,218 @@ RtlVirtualUnwind(
     }
 
     return NULL;
+}
+
+/*!
+    \remark The implementation is based on the description in this blog: http://www.nynaeve.net/?p=106
+        The numbers in the comments correspond to the section in the article.
+
+        Differences to the desciption:
+        - Instead of using 2 pointers to the unwind context and previous context,
+          that are being swapped and the context copied, the unwind context is
+          kept in the local context and copied back into the context passed in
+          by the caller.
+          
+
+    \see http://www.nynaeve.net/?p=106
+*/
+BOOLEAN
+NTAPI
+RtplUnwindInternal(
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue,
+    _In_ PCONTEXT ContextRecord,
+    _In_opt_ struct _UNWIND_HISTORY_TABLE *HistoryTable,
+    _In_ ULONG HandlerType)
+{
+    DISPATCHER_CONTEXT DispatcherContext;
+    PEXCEPTION_ROUTINE ExceptionRoutine;
+    EXCEPTION_DISPOSITION Disposition;
+    PRUNTIME_FUNCTION FunctionEntry;
+    ULONG_PTR StackLow, StackHigh;
+    ULONG64 ImageBase, EstablisherFrame;
+    CONTEXT UnwindContext;
+
+    /* Get the current stack limits and registration frame */
+    RtlpGetStackLimits(&StackLow, &StackHigh);
+
+    /* If we have a target frame, then this is our high limit */
+    if (TargetFrame != NULL)
+    {
+        StackHigh = (ULONG64)TargetFrame + 1;
+    }
+
+    /* Copy the context */
+    UnwindContext = *ContextRecord;
+
+    /* Set up the constant fields of the dispatcher context */
+    DispatcherContext.ContextRecord = ContextRecord;
+    DispatcherContext.HistoryTable = HistoryTable;
+    DispatcherContext.TargetIp = (ULONG64)TargetIp;
+
+
+    /* Start looping */
+    while (TRUE)
+    {
+        /* Lookup the FunctionEntry for the current RIP */
+        FunctionEntry = RtlLookupFunctionEntry(UnwindContext.Rip, &ImageBase, NULL);
+        if (FunctionEntry == NULL)
+        {
+            /* No function entry, so this must be a leaf function. Pop the return address from the stack.
+               Note: this can happen after the first frame as the result of an exception */
+            UnwindContext.Rip = *(DWORD64*)UnwindContext.Rsp;
+            UnwindContext.Rsp += sizeof(DWORD64);
+            continue;
+        }
+
+        /* Do a virtual unwind to get the next frame */
+        ExceptionRoutine = RtlVirtualUnwind(HandlerType,
+                                            ImageBase,
+                                            UnwindContext.Rip,
+                                            FunctionEntry,
+                                            &UnwindContext,
+                                            &DispatcherContext.HandlerData,
+                                            &EstablisherFrame,
+                                            NULL);
+
+        /* Check, if the resulting stack frame is valid */
+        if ((EstablisherFrame < StackLow) ||
+            (EstablisherFrame > StackHigh) ||
+            (EstablisherFrame & 7))
+        {
+            /// TODO: Handle DPC stack
+            __debugbreak();
+            RtlRaiseStatus(STATUS_BAD_STACK);
+        }
+
+        /* Check if we have an exception routine */
+        if (ExceptionRoutine != NULL)
+        {
+            /* Check if this is the target frame */
+            if (EstablisherFrame == (ULONG64)TargetFrame)
+            {
+                /* Set flag to inform the language handler */
+                ExceptionRecord->ExceptionFlags |= EXCEPTION_TARGET_UNWIND;
+            }
+
+            /* Log the exception if it's enabled */
+            RtlpCheckLogException(ExceptionRecord,
+                                  ContextRecord,
+                                  &DispatcherContext,
+                                  sizeof(DispatcherContext));
+
+            /* Set up the variable fields of the dispatcher context */
+            DispatcherContext.ControlPc = ContextRecord->Rip;
+            DispatcherContext.ImageBase = ImageBase;
+            DispatcherContext.FunctionEntry = FunctionEntry;
+            DispatcherContext.LanguageHandler = ExceptionRoutine;
+            DispatcherContext.EstablisherFrame = EstablisherFrame;
+            DispatcherContext.ScopeIndex = 0;
+
+            /* Store the return value in the unwind context */
+            UnwindContext.Rax = (ULONG64)ReturnValue;
+
+            /// TODO: call RtlpExecuteHandlerForUnwind instead
+
+            /* Call the language specific handler */
+            Disposition = ExceptionRoutine(ExceptionRecord,
+                                           (PVOID)EstablisherFrame,
+                                           &UnwindContext,
+                                           &DispatcherContext);
+
+            /* Clear exception flags for the next iteration */
+            ExceptionRecord->ExceptionFlags &= ~(EXCEPTION_TARGET_UNWIND |
+                                                 EXCEPTION_COLLIDED_UNWIND);
+
+            /* Check if we do exception handling */
+            if (HandlerType == UNW_FLAG_EHANDLER)
+            {
+                if (Disposition == ExceptionContinueExecution)
+                {
+                    /* Check if it was non-continuable */
+                    if (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
+                    {
+                        __debugbreak();
+                        RtlRaiseStatus(EXCEPTION_NONCONTINUABLE_EXCEPTION);
+                    }
+
+                    /* In user mode, call any registered vectored continue handlers */
+                    RtlCallVectoredContinueHandlers(ExceptionRecord, ContextRecord);
+
+                    /* Execution continues */
+                    return TRUE;
+                }
+                else if (Disposition == ExceptionNestedException)
+                {
+                    /* Turn the nested flag on */
+                    ExceptionRecord->ExceptionFlags |= EXCEPTION_NESTED_CALL;
+
+                    /* Update the current nested frame */
+                    //if (DispatcherContext.RegistrationPointer > NestedFrame)
+                    //{
+                    /* Get the frame from the dispatcher context */
+                    //NestedFrame = DispatcherContext.RegistrationPointer;
+                    //}
+                    __debugbreak();
+                }
+            }
+
+            if (Disposition == ExceptionCollidedUnwind)
+            {
+                /// TODO
+                __debugbreak();
+            }
+
+            /* This must be ExceptionContinueSearch now */
+            if (Disposition != ExceptionContinueSearch)
+            {
+                __debugbreak();
+                RtlRaiseStatus(STATUS_INVALID_DISPOSITION);
+            }
+        }
+
+        /* Check, if we have left our stack (8.) */
+        if ((EstablisherFrame < StackLow) ||
+            (EstablisherFrame > StackHigh) ||
+            (EstablisherFrame & 7))
+        {
+            // Check for DPC stack
+
+            __debugbreak();
+
+            if (UnwindContext.Rip == ContextRecord->Rip)
+            {
+                RtlRaiseStatus(STATUS_BAD_FUNCTION_TABLE);
+            }
+            else
+            {
+                ZwRaiseException(ExceptionRecord, ContextRecord, FALSE);
+            }
+        }
+
+        if (EstablisherFrame == (ULONG64)TargetFrame)
+        {
+            break;
+        }
+
+        /* We have successfully unwound a frame. Copy the unwind context back. */
+        *ContextRecord = UnwindContext;
+    }
+
+    if (ExceptionRecord->ExceptionCode != STATUS_UNWIND_CONSOLIDATE)
+    {
+        ContextRecord->Rip = (ULONG64)TargetIp;
+    }
+
+    /* Set the return value */
+    ContextRecord->Rax = (ULONG64)ReturnValue;
+
+    /* Restore the context */
+    RtlRestoreContext(ContextRecord, ExceptionRecord);
+    __debugbreak();
+    return FALSE;
 }
 
 VOID
@@ -655,8 +881,30 @@ RtlUnwindEx(
     _In_ PCONTEXT ContextRecord,
     _In_opt_ struct _UNWIND_HISTORY_TABLE *HistoryTable)
 {
-    __debugbreak();
-    return;
+    EXCEPTION_RECORD LocalExceptionRecord;
+
+    /* Capture the current context */
+    RtlCaptureContext(ContextRecord);
+
+    /* Check if we have an exception record */
+    if (ExceptionRecord == NULL)
+    {
+        /* No exception record was passed, so set up a local one */
+        LocalExceptionRecord.ExceptionCode = STATUS_UNWIND;
+        LocalExceptionRecord.ExceptionAddress = (PVOID)ContextRecord->Rip;
+        LocalExceptionRecord.ExceptionRecord = NULL;
+        LocalExceptionRecord.NumberParameters = 0;
+        ExceptionRecord = &LocalExceptionRecord;
+    }
+
+    /* Call the internal function */
+    RtplUnwindInternal(TargetFrame,
+                       TargetIp,
+                       ExceptionRecord,
+                       ReturnValue,
+                       ContextRecord,
+                       HistoryTable,
+                       UNW_FLAG_UHANDLER);
 }
 
 VOID
