@@ -81,29 +81,6 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
     return;
 }
 
-/*
- * @unimplemented
- */
-PVOID
-NTAPI
-RtlpGetExceptionAddress(VOID)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-NTAPI
-RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
-                     IN PCONTEXT Context)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 NTSYSAPI
 VOID
 RtlRestoreContext(
