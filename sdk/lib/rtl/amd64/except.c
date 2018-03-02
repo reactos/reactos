@@ -14,6 +14,7 @@
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+#if 0
 VOID
 NTAPI
 RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
@@ -49,9 +50,6 @@ RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
         /* Save the exception address */
         ExceptionRecord->ExceptionAddress = (PVOID)Context.Rip;
 
-        /* Write the context flag */
-        Context.ContextFlags = CONTEXT_FULL;
-
         /* Check if user mode debugger is active */
         if (RtlpCheckForActiveDebugger())
         {
@@ -77,6 +75,7 @@ RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
     /* If we returned, raise a status */
     RtlRaiseStatus(Status);
 }
+#endif
 
 /*
 * @unimplemented
