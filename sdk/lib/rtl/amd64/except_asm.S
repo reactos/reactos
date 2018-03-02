@@ -76,22 +76,22 @@ PUBLIC RtlCaptureContext
     mov [rcx + CONTEXT_Rip], rax
 
     /* Safe xmm registers */
-    movdqa [rcx + CONTEXT_Xmm0], xmm0
-    movdqa [rcx + CONTEXT_Xmm1], xmm1
-    movdqa [rcx + CONTEXT_Xmm2], xmm2
-    movdqa [rcx + CONTEXT_Xmm3], xmm3
-    movdqa [rcx + CONTEXT_Xmm4], xmm4
-    movdqa [rcx + CONTEXT_Xmm5], xmm5
-    movdqa [rcx + CONTEXT_Xmm6], xmm6
-    movdqa [rcx + CONTEXT_Xmm7], xmm7
-    movdqa [rcx + CONTEXT_Xmm8], xmm8
-    movdqa [rcx + CONTEXT_Xmm9], xmm9
-    movdqa [rcx + CONTEXT_Xmm10], xmm10
-    movdqa [rcx + CONTEXT_Xmm11], xmm11
-    movdqa [rcx + CONTEXT_Xmm12], xmm12
-    movdqa [rcx + CONTEXT_Xmm13], xmm13
-    movdqa [rcx + CONTEXT_Xmm14], xmm14
-    movdqa [rcx + CONTEXT_Xmm15], xmm15
+    movaps [rcx + CONTEXT_Xmm0], xmm0
+    movaps [rcx + CONTEXT_Xmm1], xmm1
+    movaps [rcx + CONTEXT_Xmm2], xmm2
+    movaps [rcx + CONTEXT_Xmm3], xmm3
+    movaps [rcx + CONTEXT_Xmm4], xmm4
+    movaps [rcx + CONTEXT_Xmm5], xmm5
+    movaps [rcx + CONTEXT_Xmm6], xmm6
+    movaps [rcx + CONTEXT_Xmm7], xmm7
+    movaps [rcx + CONTEXT_Xmm8], xmm8
+    movaps [rcx + CONTEXT_Xmm9], xmm9
+    movaps [rcx + CONTEXT_Xmm10], xmm10
+    movaps [rcx + CONTEXT_Xmm11], xmm11
+    movaps [rcx + CONTEXT_Xmm12], xmm12
+    movaps [rcx + CONTEXT_Xmm13], xmm13
+    movaps [rcx + CONTEXT_Xmm14], xmm14
+    movaps [rcx + CONTEXT_Xmm15], xmm15
 
     /* Cleanup stack and return */
     add rsp, 8
