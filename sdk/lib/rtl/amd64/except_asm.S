@@ -106,6 +106,134 @@ PUBLIC RtlCaptureContext
     ret
 .ENDP
 
+;
+; VOID NTAPI
+; RtlRestoreContext(
+;     PCONTEXT ContextRecord, <rcx>
+;     PEXCEPTION_RECORD *ExceptionRecord); <rdx>
+;
+PUBLIC RtlRestoreContext
+.PROC RtlRestoreContext
+
+    ; Allocate space
+    sub rsp, HEX(8)
+    .ALLOCSTACK 8
+    .ENDPROLOG
+
+    ; Restore legacy floating point registers (It's slow, so do it first)
+    ldmxcsr [rcx + CxMxCsr]
+    fxrstor [rcx + CxFltSave]
+
+    ; Load the target stack pointer into rdx
+    mov rdx, [rcx + CxRsp]
+
+    ; Load EFlags into rax (zero extended)
+    mov eax, [rcx + CxEFlags]
+
+    ; Load the return address into r8
+    mov r8, [rcx + CxRip]
+
+    ; Load rdx restore value into r9
+    mov r9, [rcx + CxRdx]
+
+    ; Restore xmm registers
+    movaps xmm0, [rcx + CxXmm0]
+    movaps xmm1, [rcx + CxXmm1]
+    movaps xmm2, [rcx + CxXmm2]
+    movaps xmm3, [rcx + CxXmm3]
+    movaps xmm4, [rcx + CxXmm4]
+    movaps xmm5, [rcx + CxXmm5]
+    movaps xmm6, [rcx + CxXmm6]
+    movaps xmm7, [rcx + CxXmm7]
+    movaps xmm8, [rcx + CxXmm8]
+    movaps xmm9, [rcx + CxXmm9]
+    movaps xmm10, [rcx + CxXmm10]
+    movaps xmm11, [rcx + CxXmm11]
+    movaps xmm12, [rcx + CxXmm12]
+    movaps xmm13, [rcx + CxXmm13]
+    movaps xmm14, [rcx + CxXmm14]
+    movaps xmm15, [rcx + CxXmm15]
+
+    ; Copy Return address (now in r8) to the target stack
+    mov [rdx - 2 * 8], r8
+
+    ; Copy Eflags (now in rax) to the target stack
+    mov [rdx - 3 * 8], rax
+
+    ; Copy the value for rdx (now in r9) to the target stack
+    mov [rdx - 4 * 8], r9
+
+    ; Restore the integer registers
+    mov rbx, [rcx + CxRbx]
+    mov rsi, [rcx + CxRsi]
+    mov rdi, [rcx + CxRdi]
+    mov rbp, [rcx + CxRbp]
+    mov r10, [rcx + CxR10]
+    mov r11, [rcx + CxR11]
+    mov r12, [rcx + CxR12]
+    mov r13, [rcx + CxR13]
+    mov r14, [rcx + CxR14]
+    mov r15, [rcx + CxR15]
+
+    ; Restore segment selectors
+    mov ds, [rcx + CxSegDs] ; FIXME: WOW64 context?
+    mov es, [rcx + CxSegEs]
+    mov fs, [rcx + CxSegFs]
+    //mov gs, [rcx + CxSegGs]
+    //mov ss, [rcx + CxSegSs]
+
+    ; Restore the registers we used
+    mov r8,  [rcx + CxR8]
+    mov r9,  [rcx + CxR9]
+
+    ; Check if we go to a different cs
+    mov ax, cs
+    cmp [rcx + CxSegCs], ax
+    jne ReturnFar
+
+    ; Restore rax and rcx
+    mov rax, [rcx + CxRax]
+    mov rcx, [rcx + CxRcx]
+
+    ; Switch to the target stack
+    lea rsp, [rdx - 4 * 8]
+
+    ; Pop rdx from the stack
+    pop rdx
+
+    ; Pop Eflags from the stack
+    popfq
+
+    ; return and fix up the stack
+    ret 8
+
+ReturnFar:
+
+    ; Put cs on the stack for the far return
+    mov ax, [rcx + CxSegCs]
+    mov [rdx - 1 * 8], ax
+
+    ; Load ss
+    mov ss, [rcx + CxSegSs]
+
+    ; Restore rax and rcx
+    mov rax, [rcx + CxRax]
+    mov rcx, [rcx + CxRcx]
+
+    ; Switch to the target stack
+    lea rsp, [rdx - 4 * 8]
+
+    ; Pop rdx from the stack
+    pop rdx
+
+    ; Pop Eflags from the stack
+    popfq
+
+    ; Return far
+   retf
+
+.ENDP
+
 EXTERN RtlpCheckForActiveDebugger:PROC
 EXTERN RtlDispatchException:PROC
 EXTERN ZwContinue:PROC
