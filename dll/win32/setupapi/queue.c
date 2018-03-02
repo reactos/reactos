@@ -1067,6 +1067,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
     OFSTRUCT OfStruct;
     WCHAR TempPath[MAX_PATH];
     WCHAR TempFile[MAX_PATH];
+    LONG lRes;
 #endif
 
     TRACE("copy %s to %s style 0x%x\n",debugstr_w(source),debugstr_w(target),style);
@@ -1078,11 +1079,6 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
         ERR("GetTempPathW error\n");
         return FALSE;
     }
-    if (!GetTempFileNameW(TempPath, L"", 0, TempFile))
-    {
-        ERR("GetTempFileNameW(%s) error\n", debugstr_w(TempPath));
-        return FALSE;
-    }
 
     /* Try to open the source file */
     hSource = LZOpenFileW((LPWSTR)source, &OfStruct, OF_READ);
@@ -1092,25 +1088,45 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
         return FALSE;
     }
 
+    if (!GetTempFileNameW(TempPath, L"", 0, TempFile))
+    {
+        ERR("GetTempFileNameW(%s) error\n", debugstr_w(TempPath));
+
+        /* Close the source handle */
+        LZClose(hSource);
+
+        return FALSE;
+    }
+
     /* Extract the compressed file to a temp location */
     hTemp = LZOpenFileW(TempFile, &OfStruct, OF_CREATE);
     if (hTemp < 0)
     {
-        DWORD dwLastError = GetLastError();
-
         ERR("LZOpenFileW(2) error %d %s\n", (int)hTemp, debugstr_w(TempFile));
 
         /* Close the source handle */
         LZClose(hSource);
 
-        /* Restore error condition triggered by LZOpenFileW */
-        SetLastError(dwLastError);
+        /* Delete temp file if an error is signaled */
+        DeleteFileW(TempFile);
+
         return FALSE;
     }
 
-    LZCopy(hSource, hTemp);
+    lRes = LZCopy(hSource, hTemp);
+
     LZClose(hSource);
     LZClose(hTemp);
+
+    if (lRes < 0)
+    {
+        ERR("LZCopy error %d (%s, %s)\n", (int)lRes, debugstr_w(source), debugstr_w(TempFile));
+
+        /* Delete temp file if copy was not successful */
+        DeleteFileW(TempFile);
+
+        return FALSE;
+    }
 #endif
 
     /* before copy processing */
