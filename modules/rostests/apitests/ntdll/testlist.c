@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <apitest.h>
 
+#ifndef _RTL_TEST
 extern void func_LdrEnumResources(void);
 extern void func_load_notifications(void);
 extern void func_NtAcceptConnectPort(void);
@@ -36,6 +37,7 @@ extern void func_NtSetVolumeInformationFile(void);
 extern void func_NtSystemInformation(void);
 extern void func_NtUnloadDriver(void);
 extern void func_NtWriteFile(void);
+#endif // _RTL_TEST
 extern void func_RtlAllocateHeap(void);
 extern void func_RtlBitmap(void);
 extern void func_RtlComputePrivatizedDllName_U(void);
@@ -64,11 +66,14 @@ extern void func_RtlQueryTimeZoneInformation(void);
 extern void func_RtlReAllocateHeap(void);
 extern void func_RtlUnicodeStringToAnsiString(void);
 extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
+#ifndef _RTL_TEST
 extern void func_StackOverflow(void);
 extern void func_TimerResolution(void);
+#endif
 
 const struct test winetest_testlist[] =
 {
+#ifndef _RTL_TEST
     { "LdrEnumResources",               func_LdrEnumResources },
     { "load_notifications",             func_load_notifications },
     { "NtAcceptConnectPort",            func_NtAcceptConnectPort },
@@ -102,6 +107,7 @@ const struct test winetest_testlist[] =
     { "NtSystemInformation",            func_NtSystemInformation },
     { "NtUnloadDriver",                 func_NtUnloadDriver },
     { "NtWriteFile",                    func_NtWriteFile },
+#endif // _RTL_TEST
     { "RtlAllocateHeap",                func_RtlAllocateHeap },
     { "RtlBitmapApi",                   func_RtlBitmap },
     { "RtlComputePrivatizedDllName_U",  func_RtlComputePrivatizedDllName_U },
@@ -130,8 +136,10 @@ const struct test winetest_testlist[] =
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
     { "RtlUnicodeStringToAnsiString",   func_RtlUnicodeStringToAnsiString },
     { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },
+#ifndef _RTL_TEST
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
+#endif
 
     { 0, 0 }
 };
