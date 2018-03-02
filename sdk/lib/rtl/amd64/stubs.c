@@ -97,15 +97,6 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     return FALSE;
 }
 
-NTSYSAPI
-VOID
-RtlRestoreContext(
-    PCONTEXT ContextRecord,
-    PEXCEPTION_RECORD ExceptionRecord)
-{
-    UNIMPLEMENTED;
-}
-
 NTSTATUS
 NTAPI
 RtlQueueApcWow64Thread(
