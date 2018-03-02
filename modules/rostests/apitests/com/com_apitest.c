@@ -48,7 +48,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IAccessibleHandler)                },
     { ID_NAME(IID_IAccessControl),              TRUE },
     { ID_NAME(IID_IAccessor)                         },
-    { ID_NAME(IID_IACLCustomMRU)                     },
+    { ID_NAME(IID_IACLCustomMRU),               TRUE },
     { ID_NAME(IID_IActiveDesktop),              TRUE },
     { ID_NAME(IID_IActiveDesktopP),             TRUE },
     { ID_NAME(IID_IActionProgress)                   },
@@ -129,7 +129,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IDockingWindowSite),          TRUE },
     { ID_NAME(IID_IDocViewSite),                TRUE },
     { ID_NAME(IID_IDragSourceHelper),           TRUE },
-    { ID_NAME(IID_IDriveFolderExt)                   },
+    { ID_NAME(IID_IDriveFolderExt),             TRUE },
     { ID_NAME(IID_IDropSource)                       },
     { ID_NAME(IID_IDropTarget)                       },
     { ID_NAME(IID_IDropTargetHelper),           TRUE },
@@ -416,7 +416,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IUserNotificationCallback)         }, // On Vista+
     { ID_NAME(IID_IUserNotification2)                }, // On Vista+
 
-    { ID_NAME(IID_IAggregateFilterCondition),   TRUE },
+    { ID_NAME(IID_IAggregateFilterCondition)         },
     { ID_NAME(IID_IAliasRegistrationCallback),  TRUE },
     { ID_NAME(IID_IAssociationArrayInitialize), TRUE },
     { ID_NAME(IID_IAssociationList),            TRUE },
@@ -429,7 +429,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IEnumAssociationElements),    TRUE },
     { ID_NAME(IID_IEnumerateAssociationElements),TRUE },
     { ID_NAME(IID_IExecuteCommand),             TRUE },
-    { ID_NAME(IID_IFilterCondition),            TRUE },
+    { ID_NAME(IID_IFilterCondition)                  },
     { ID_NAME(IID_IFolderNotify),               TRUE },
     { ID_NAME(IID_IFolderProperties),           TRUE },
     { ID_NAME(IID_IFolderType),                 TRUE },
@@ -460,15 +460,16 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_ITaskConditionCombiner),      TRUE },
     { ID_NAME(IID_ITaskConditionInit),          TRUE },
     { ID_NAME(IID_ITransferProvider),           TRUE },
-    { ID_NAME(IID_IUserEventTimer),             TRUE },
-    { ID_NAME(IID_IUserEventTimerCallback),     TRUE },
+    { ID_NAME(IID_IUserEventTimer)                   },
+    { ID_NAME(IID_IUserEventTimerCallback)           },
     { ID_NAME(IID_IAssociationArrayOld),        TRUE },
     { ID_NAME(IID_IAssociationArray),           TRUE },
-    { ID_NAME(IID_IDriveFolderExtOld),          TRUE },
-    { ID_NAME(IID_IDriveFolderExt),             TRUE },
+#define IID_IDriveFolderExt IID_IDriveFolderExtOld
+    { ID_NAME(IID_IDriveFolderExt)                   },
+#undef IID_IDriveFolderExt
     { ID_NAME(IID_IPinnedListOld),              TRUE },
     { ID_NAME(IID_IPinnedList),                 TRUE },
-    { ID_NAME(IID_IAttachmentExecute),          TRUE }
+    { ID_NAME(IID_IAttachmentExecute),          TRUE },
 };
 static const INT KnownInterfaceCount = RTL_NUMBER_OF(KnownInterfaces);
 

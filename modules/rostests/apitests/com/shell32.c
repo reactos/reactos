@@ -27,7 +27,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x24,   &IID_ICDBurn },
             {   0x28,   &IID_ICDBurnPriv },
             {   0x2c,   &IID_IPersistPropertyBag },
-            {   0x30,   &IID_IDriveFolderExt },
+            {   0x30,   &IID_IDriveFolderExtOld },
             {   0x34,   &IID_INamespaceWalkCB },
             {   0x3c,   &IID_IServiceProvider },
             {   0x40,   &IID_ITransferAdviseSinkPriv },
