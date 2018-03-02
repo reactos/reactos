@@ -15,85 +15,93 @@
 
 .code64
 
-/*
- * VOID NTAPI
- * RtlCaptureContext(
- *     PCONTEXT ContextRecord); <rcx>
- */
+;
+; VOID NTAPI
+; RtlCaptureContext(
+;     _In_ PCONTEXT ContextRecord); <rcx>
+;
 PUBLIC RtlCaptureContext
 .PROC RtlCaptureContext
 
-    /* Push rflags */
+    ; Push rflags
     pushfq
     .ALLOCSTACK 8
     .ENDPROLOG
 
-    /* Save the basic register context */
-    mov [rcx + CONTEXT_Rax], rax
-    mov [rcx + CONTEXT_Rcx], rcx
-    mov [rcx + CONTEXT_Rdx], rdx
+    ; Save rax first, we use it later to copy some data
+    mov [rcx + CxRax], rax
 
-    /* Load rflags into rax */
-    mov rax, [rsp]
+    ; Set ContextFlags
+    mov dword ptr [rcx + CxContextFlags], (CONTEXT_FULL or CONTEXT_SEGMENTS)
 
-    mov [rcx + CONTEXT_Rbx], rbx
-    mov [rcx + CONTEXT_Rsi], rsi
-    mov [rcx + CONTEXT_Rdi], rdi
+    ; Store the basic register context
+    mov [rcx + CxRcx], rcx
+    mov [rcx + CxRdx], rdx
+    mov [rcx + CxRbx], rbx
+    mov [rcx + CxRsi], rsi
 
-    /* Store rflags */
-    mov [rcx + CONTEXT_EFlags], rax
-
-    mov [rcx + CONTEXT_Rbp], rbp
-    mov [rcx + CONTEXT_R8], r8
-    mov [rcx + CONTEXT_R9], r9
-
-    /* Load former stack pointer in rax */
-    lea rax, [rsp + 16]
-
-    mov [rcx + CONTEXT_R10], r10
-    mov [rcx + CONTEXT_R11], r11
-    mov [rcx + CONTEXT_R12], r12
-
-    /* Store stack pointer */
-    mov [rcx + CONTEXT_Rsp], rax
-
-    mov [rcx + CONTEXT_R13], r13
-    mov [rcx + CONTEXT_R14], r14
-    mov [rcx + CONTEXT_R15], r15
-
-    /* Load return address in rax */
+    ; Load return address in rax
     mov rax, [rsp + 8]
 
-    /* Safe segment selectors */
-    mov [rcx + CONTEXT_SegCs], cs
-    mov [rcx + CONTEXT_SegDs], ds
-    mov [rcx + CONTEXT_SegEs], es
-    mov [rcx + CONTEXT_SegFs], fs
-    mov [rcx + CONTEXT_SegGs], gs
-    mov [rcx + CONTEXT_SegSs], ss
+    mov [rcx + CxRdi], rdi
+    mov [rcx + CxRbp], rbp
+    mov [rcx + CxR8], r8
+    mov [rcx + CxR9], r9
+    mov [rcx + CxR10], r10
 
-    /* Store return address */
-    mov [rcx + CONTEXT_Rip], rax
+    ; Store the return address
+    mov [rcx + CxRip], rax
 
-    /* Safe xmm registers */
-    movaps [rcx + CONTEXT_Xmm0], xmm0
-    movaps [rcx + CONTEXT_Xmm1], xmm1
-    movaps [rcx + CONTEXT_Xmm2], xmm2
-    movaps [rcx + CONTEXT_Xmm3], xmm3
-    movaps [rcx + CONTEXT_Xmm4], xmm4
-    movaps [rcx + CONTEXT_Xmm5], xmm5
-    movaps [rcx + CONTEXT_Xmm6], xmm6
-    movaps [rcx + CONTEXT_Xmm7], xmm7
-    movaps [rcx + CONTEXT_Xmm8], xmm8
-    movaps [rcx + CONTEXT_Xmm9], xmm9
-    movaps [rcx + CONTEXT_Xmm10], xmm10
-    movaps [rcx + CONTEXT_Xmm11], xmm11
-    movaps [rcx + CONTEXT_Xmm12], xmm12
-    movaps [rcx + CONTEXT_Xmm13], xmm13
-    movaps [rcx + CONTEXT_Xmm14], xmm14
-    movaps [rcx + CONTEXT_Xmm15], xmm15
+    mov [rcx + CxR11], r11
+    mov [rcx + CxR12], r12
+    mov [rcx + CxR13], r13
+    mov [rcx + CxR14], r14
+    mov [rcx + CxR15], r15
 
-    /* Cleanup stack and return */
+    ; Load former stack pointer in rax
+    lea rax, [rsp + 16]
+
+    ; Store segment selectors
+    mov [rcx + CxSegCs], cs
+    mov [rcx + CxSegDs], ds
+    mov [rcx + CxSegEs], es
+    mov [rcx + CxSegFs], fs
+    mov [rcx + CxSegGs], gs
+    mov [rcx + CxSegSs], ss
+
+    ; Store stack pointer
+    mov [rcx + CxRsp], rax
+
+    ; Store xmm registers
+    movaps [rcx + CxXmm0], xmm0
+    movaps [rcx + CxXmm1], xmm1
+    movaps [rcx + CxXmm2], xmm2
+    movaps [rcx + CxXmm3], xmm3
+    movaps [rcx + CxXmm4], xmm4
+    movaps [rcx + CxXmm5], xmm5
+    movaps [rcx + CxXmm6], xmm6
+    movaps [rcx + CxXmm7], xmm7
+
+    ; Load rflags into eax
+    mov eax, [rsp]
+
+    movaps [rcx + CxXmm8], xmm8
+    movaps [rcx + CxXmm9], xmm9
+    movaps [rcx + CxXmm10], xmm10
+    movaps [rcx + CxXmm11], xmm11
+    movaps [rcx + CxXmm12], xmm12
+    movaps [rcx + CxXmm13], xmm13
+    movaps [rcx + CxXmm14], xmm14
+    movaps [rcx + CxXmm15], xmm15
+
+    ; Store legacy floating point registers
+    fxsave [rcx + CxFltSave]
+    stmxcsr [rcx + CxMxCsr]
+
+    ; Store rflags
+    mov [rcx + CxEFlags], eax
+
+    ; Cleanup stack and return
     add rsp, 8
     ret
 .ENDP
