@@ -5,7 +5,7 @@
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMERS:     Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *                  Copyright 2016-2017 Katayama Hirofumi MZ.
+ *                  Copyright 2016-2018 Katayama Hirofumi MZ.
  */
 
 /** Includes ******************************************************************/
@@ -1491,14 +1491,13 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
     return TRUE;
 }
 
-
-static BOOL face_has_symbol_charmap(FT_Face ft_face)
+static BOOL face_has_encoding(FT_Face ft_face, FT_Encoding encoding)
 {
     int i;
 
     for(i = 0; i < ft_face->num_charmaps; i++)
     {
-        if(ft_face->charmaps[i]->encoding == FT_ENCODING_MS_SYMBOL)
+        if(ft_face->charmaps[i]->encoding == encoding)
             return TRUE;
     }
     return FALSE;
@@ -1612,7 +1611,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     TM->tmOverhang = 0;
     TM->tmDigitizedAspectX = 96;
     TM->tmDigitizedAspectY = 96;
-    if (face_has_symbol_charmap(Face) ||
+    if (face_has_encoding(Face, FT_ENCODING_MS_SYMBOL) ||
         (pOS2->usFirstCharIndex >= 0xf000 && pOS2->usFirstCharIndex < 0xf100))
     {
         USHORT cpOEM, cpAnsi;
@@ -2994,38 +2993,103 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
 static INT
 IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
 {
-    FT_Size_RequestRec  req;
+    FT_Error error;
+    ULONG TargetHeight, TargetWidth, RealHeight;
 
-    if (Width < 0)
-        Width = -Width;
+    ASSERT(face != NULL);
+    ASSERT(face->height > 0);
+    ASSERT(face->units_per_EM > 0);
 
-    if (Height < 0)
-    {
-        Height = -Height;
-    }
     if (Height == 0)
     {
         Height = dc->ppdev->devinfo.lfDefaultFont.lfHeight;
     }
-    if (Height == 0)
+
+    if (Height < 0)
     {
-        Height = Width;
+        /* case (A): lfHeight is negative: the character height */
+        Height = -Height << 6;
+    }
+    else if (Height > 0)
+    {
+        /* case (B): lfHeight is positive: the cell height */
+        Height <<= 6;
+        Height = (Height * face->units_per_EM) / face->height;
     }
 
-    if (Height < 1)
-        Height = 1;
+    TargetHeight = (Height * face->height) / face->units_per_EM;
+    TargetWidth = Width = Width << 6;
 
-    if (Width > 0xFFFFU)
-        Width = 0xFFFFU;
-    if (Height > 0xFFFFU)
-        Height = 0xFFFFU;
+    if (Width && FT_IS_SCALABLE(face))
+    {
+        if (face_has_encoding(face, FT_ENCODING_SJIS) ||
+            face_has_encoding(face, FT_ENCODING_PRC) ||
+            face_has_encoding(face, FT_ENCODING_BIG5) ||
+            face_has_encoding(face, FT_ENCODING_WANSUNG) ||
+            face_has_encoding(face, FT_ENCODING_JOHAB))
+        {
+            /* Case (i). Likely, the face has many fullwidth characters.
+               The width value was same as fullwidth character width. */
+        }
+        else
+        {
+            /* Case (ii). It's a Latin-like simple face.
+               The width value was same as halfwidth character width. */
+            Width *= 2;
+            TargetWidth *= 2;
+        }
+    }
 
-    req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
-    req.width          = (FT_Long)(Width << 6);
-    req.height         = (FT_Long)(Height << 6);
-    req.horiResolution = 0;
-    req.vertResolution = 0;
-    return FT_Request_Size(face, &req);
+    error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+    RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+
+    /* FIXME: Optimize speed */
+#define DELTA1 64
+#define DELTA2 1
+    if (TargetHeight < RealHeight)
+    {
+        do
+        {
+            Height -= DELTA1;
+            if (Width != 0)
+                Width -= MulDiv(DELTA1, TargetWidth, TargetHeight);
+            error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+            RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+        } while (Height > DELTA1 && TargetHeight < RealHeight);
+
+        while (TargetHeight > RealHeight)
+        {
+            Height += DELTA2;
+            if (Width != 0)
+                Width += MulDiv(DELTA2, TargetWidth, TargetHeight);
+            error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+            RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+        }
+    }
+    else if (TargetHeight > RealHeight)
+    {
+        do
+        {
+            Height += DELTA1;
+            if (Width != 0)
+                Width += MulDiv(DELTA1, TargetWidth, TargetHeight);
+            error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+            RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+        } while (TargetHeight > RealHeight);
+
+        while (Height > DELTA2 && TargetHeight < RealHeight)
+        {
+            Height -= DELTA2;
+            if (Width != 0)
+                Width -= MulDiv(DELTA2, TargetWidth, TargetHeight);
+            error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+            RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+        }
+    }
+#undef DELTA1
+#undef DELTA2
+
+    return error;
 }
 
 BOOL
