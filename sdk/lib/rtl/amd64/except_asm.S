@@ -236,6 +236,81 @@ ReturnFar:
 
 .ENDP
 
+EXTERN RtlpCheckForActiveDebugger:PROC
+EXTERN RtlDispatchException:PROC
+EXTERN ZwContinue:PROC
+EXTERN ZwRaiseException:PROC
+EXTERN RtlRaiseStatus:PROC
+
+/*
+ * VOID
+ * RtlRaiseException (
+ *     _In_ PEXCEPTION_RECORD ExceptionRecord);
+ */
+PUBLIC RtlRaiseException
+.PROC RtlRaiseException
+
+    /* Allocate stack space for a CONTEXT record */
+    sub rsp, CONTEXT_FRAME_LENGTH + 8
+    .allocstack CONTEXT_FRAME_LENGTH + 8
+
+    /* Save the ExceptionRecord pointer */
+    mov [rsp + CONTEXT_FRAME_LENGTH + 8 + P1Home], rcx
+
+    .endprolog
+
+    /* Save the return address in EXCEPTION_RECORD.ExceptionAddress */
+    mov rdx, [rsp + CONTEXT_FRAME_LENGTH + 8]
+    mov [rcx + ErExceptionAddress], rdx
+
+    /* Capture the current context */
+    mov rcx, rsp
+    call RtlCaptureContext
+
+    /* Fix up CONTEXT.Rip for the caller (RtlCaptureContext doesn't change rdx!) */
+    mov [rsp + CxRip], rdx
+
+    /* Fix up CONTEXT.Rsp for the caller (+8 for the return address) */
+    lea rdx, [rsp + CONTEXT_FRAME_LENGTH + 8 + 8]
+    mov [rsp + CxRsp], rdx
+
+    /* Check if a user mode debugger is active */
+    call RtlpCheckForActiveDebugger
+    test al, al
+    mov r8b, 1
+    jnz RaiseException
+
+    /* Dispatch the exception */
+    mov rcx, [rsp + CONTEXT_FRAME_LENGTH + 8 + P1Home]
+    mov rdx, rsp
+    call RtlDispatchException
+
+    /* Check if it was handled */
+    test al, al
+    mov r8b, 0
+    jz RaiseException
+
+    /* It was handled, continue with the updated context */
+    mov rcx, rsp
+    mov dl, 0
+    call  ZwContinue
+    jmp RaiseStatus
+
+RaiseException:
+
+    mov rcx, [rsp + CxP1Home]
+    mov rdx, rsp
+    call ZwRaiseException
+
+RaiseStatus:
+
+    mov rcx, rax
+    mov rdx, rsp
+    call RtlRaiseStatus
+
+.ENDP
+
+
 END
 
 
