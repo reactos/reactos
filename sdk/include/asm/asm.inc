@@ -313,6 +313,10 @@ ENDM
     jmp far ptr \segment:\offset
 .endm
 
+.macro retf
+    lret
+.endm
+
 /* MASM compatible EXTERN */
 .macro EXTERN name
 .endm
