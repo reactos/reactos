@@ -36,7 +36,9 @@ list(APPEND SOURCE
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
     NtUnloadDriver.c
-    NtWriteFile.c
+    NtWriteFile.c)
+
+list(APPEND RTL_SOURCE
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlComputePrivatizedDllName_U.c
@@ -78,6 +80,7 @@ endif()
 add_rc_deps(testdata.rc ${CMAKE_CURRENT_BINARY_DIR}/load_notifications/load_notifications.dll)
 add_executable(ntdll_apitest
     ${SOURCE}
+    ${RTL_SOURCE}
     ${ntdll_apitest_asm}
     testdata.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll_apitest.def
@@ -85,7 +88,7 @@ add_executable(ntdll_apitest
 target_link_libraries(ntdll_apitest wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
-add_pch(ntdll_apitest precomp.h SOURCE)
+#add_pch(ntdll_apitest precomp.h SOURCE)
 
 if(NOT MSVC)
     set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_FLAGS "-Wno-format")
@@ -117,3 +120,11 @@ if(MSVC_IDE)
                        COMMAND "${CMAKE_COMMAND}" -E copy fil1.txt ${NTDLL_APITEST_DATADIR}
                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
+
+# RTL tests with static linkage
+add_executable(rtl_apitest ${RTL_SOURCE} ${ntdll_apitest_asm} testlist.c rtl/libsupp.c)
+add_target_compile_flags(rtl_apitest "-D_RTL_TEST -D_NTSYSTEM_")
+target_link_libraries(rtl_apitest wine uuid ${PSEH_LIB} rtl)
+set_module_type(rtl_apitest win32cui)
+add_importlibs(rtl_apitest msvcrt advapi32 kernel32 ntdll)
+
