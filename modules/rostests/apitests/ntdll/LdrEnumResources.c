@@ -169,7 +169,7 @@ InitializeTestImage(
     TestImage->NtHeaders.FileHeader.Characteristics = 0;
 
     TestImage->NtHeaders.OptionalHeader.Magic = IMAGE_NT_OPTIONAL_HDR32_MAGIC;
-    TestImage->NtHeaders.OptionalHeader.ImageBase = (DWORD)TestImage;
+    TestImage->NtHeaders.OptionalHeader.ImageBase = (DWORD_PTR)TestImage;
     TestImage->NtHeaders.OptionalHeader.SizeOfImage = sizeof(TEST_IMAGE);
     TestImage->NtHeaders.OptionalHeader.SizeOfHeaders = sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS);
 

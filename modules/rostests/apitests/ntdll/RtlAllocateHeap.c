@@ -62,7 +62,7 @@ START_TEST(RtlAllocateHeap)
 
     _SEH2_TRY
     {
-        hHeap = RtlCreateHeap(HEAP_CREATE_ALIGN_16, NULL, 0, 0, NULL, (PRTL_HEAP_PARAMETERS)0xdeadbeef);
+        hHeap = RtlCreateHeap(HEAP_CREATE_ALIGN_16, NULL, 0, 0, NULL, (PRTL_HEAP_PARAMETERS)(ULONG_PTR)0xdeadbeefdeadbeefULL);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
