@@ -5092,15 +5092,13 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
       if (!hNewMenu)
       {
          ERR("No Menu!!\n");
-         IntReleaseMenuObject(SysMenu);
-         UserDestroyMenu(hSysMenu);
+         IntDestroyMenuObject(SysMenu, FALSE);
          return NULL;
       }
       Menu = UserGetMenuObject(hNewMenu);
       if (!Menu)
       {
-         IntReleaseMenuObject(SysMenu);
-         UserDestroyMenu(hSysMenu);
+         IntDestroyMenuObject(SysMenu, FALSE);
          return NULL;
       }
 
