@@ -379,6 +379,7 @@ SetArcDirection(
     _In_ HDC hdc,
     _In_ INT nDirection)
 {
+    HANDLE_METADC(INT, SetArcDirection, 0, hdc, nDirection);
     return GetAndSetDCDWord(hdc, GdiGetSetArcDirection, nDirection, 0, 0, 0);
 }
 
@@ -743,7 +744,7 @@ GetAndSetDCDWord(
     DWORD dwResult;
 
     /* This is a special API, handle it appropriately */
-    if (dwIn != GdiGetSetMapMode)
+    if ((dwIn != GdiGetSetMapMode) && (dwIn != GdiGetSetArcDirection))
         HANDLE_METADC2(DWORD, GetAndSetDCDWord, hdc, u, dwIn, ulMFId, usMF16Id, dwError);
 
     /* Call win32k to do the real work */

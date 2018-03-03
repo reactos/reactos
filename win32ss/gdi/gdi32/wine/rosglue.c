@@ -56,6 +56,7 @@ static INT   NULL_ExtSelectClipRgn(PHYSDEV dev, HRGN hrgn, INT iMode)
 static INT   NULL_SaveDC(PHYSDEV dev) { return 1; }
 static BOOL  NULL_RestoreDC(PHYSDEV dev, INT level) { return TRUE; }
 static HFONT NULL_SelectFont(PHYSDEV dev, HFONT hFont, UINT *aa_flags) { return NULL; }
+static INT   NULL_SetArcDirection(PHYSDEV dev, INT iMode) { return 0; }
 static BOOL  NULL_SetWindowExtEx(PHYSDEV dev, INT cx, INT cy, SIZE *size) { return TRUE; }
 static BOOL  NULL_SetViewportExtEx(PHYSDEV dev, INT cx, INT cy, SIZE *size) { return TRUE; }
 static BOOL  NULL_SetWindowOrgEx(PHYSDEV dev, INT x, INT y, POINT *pt) { return TRUE; }
@@ -145,7 +146,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //BOOL     (*pPolyBezierTo)(PHYSDEV,const POINT*,DWORD);
     (PVOID)NULL_Unused, //BOOL     (*pPolyDraw)(PHYSDEV,const POINT*,const BYTE *,DWORD);
     (PVOID)NULL_Unused, //BOOL     (*pPolyPolygon)(PHYSDEV,const POINT*,const INT*,UINT);
-    NULL_PolyPolyline, //BOOL     (*pPolyPolyline)(PHYSDEV,const POINT*,const DWORD*,DWORD);
+    NULL_PolyPolyline,  //BOOL     (*pPolyPolyline)(PHYSDEV,const POINT*,const DWORD*,DWORD);
     (PVOID)NULL_Unused, //BOOL     (*pPolygon)(PHYSDEV,const POINT*,INT);
     (PVOID)NULL_Unused, //BOOL     (*pPolyline)(PHYSDEV,const POINT*,INT);
     (PVOID)NULL_Unused, //BOOL     (*pPolylineTo)(PHYSDEV,const POINT*,INT);
@@ -165,7 +166,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     NULL_SelectFont,    //HFONT    (*pSelectFont)(PHYSDEV,HFONT,UINT*);
     (PVOID)NULL_Unused, //HPALETTE (*pSelectPalette)(PHYSDEV,HPALETTE,BOOL);
     (PVOID)NULL_Unused, //HPEN     (*pSelectPen)(PHYSDEV,HPEN,const struct brush_pattern*);
-    (PVOID)NULL_Unused, //INT      (*pSetArcDirection)(PHYSDEV,INT);
+    NULL_SetArcDirection, //INT      (*pSetArcDirection)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //COLORREF (*pSetBkColor)(PHYSDEV,COLORREF);
     (PVOID)NULL_Unused, //INT      (*pSetBkMode)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //UINT     (*pSetBoundsRect)(PHYSDEV,RECT*,UINT);
@@ -1008,6 +1009,7 @@ DRIVER_Dispatch(
         }
         case DCFUNC_SelectPen:
             return (DWORD_PTR)DRIVER_SelectPen(pWineDc, va_arg(argptr, HPEN));
+        HANDLE_FUNC1(SetArcDirection, INT)
         HANDLE_FUNC1(SetDCBrushColor, COLORREF)
         HANDLE_FUNC1(SetDCPenColor, COLORREF)
         HANDLE_FUNC11(SetDIBitsToDevice, INT, INT, DWORD, DWORD, INT, INT, UINT, UINT, LPCVOID, BITMAPINFO*, UINT)
