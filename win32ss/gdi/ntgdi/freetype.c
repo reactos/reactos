@@ -47,6 +47,9 @@ extern const MATRIX gmxWorldToPageDefault;
 /* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
 
+/* dots per inch */
+#define DEFAULT_DPI  96
+
 FT_Library  library;
 
 /* special font names */
@@ -1609,8 +1612,8 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     }
 
     TM->tmOverhang = 0;
-    TM->tmDigitizedAspectX = 96;
-    TM->tmDigitizedAspectY = 96;
+    TM->tmDigitizedAspectX = DEFAULT_DPI;
+    TM->tmDigitizedAspectY = DEFAULT_DPI;
     if (face_has_encoding(Face, FT_ENCODING_MS_SYMBOL) ||
         (pOS2->usFirstCharIndex >= 0xf000 && pOS2->usFirstCharIndex < 0xf100))
     {
@@ -3040,7 +3043,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
         }
     }
 
-    error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+    error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
     RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
 
     /* FIXME: Optimize speed */
@@ -3053,7 +3056,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             Height -= DELTA1;
             if (Width != 0)
                 Width -= MulDiv(DELTA1, TargetWidth, TargetHeight);
-            error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+            error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
             RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
         }
 
@@ -3062,7 +3065,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             Height += DELTA2;
             if (Width != 0)
                 Width += MulDiv(DELTA2, TargetWidth, TargetHeight);
-            error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+            error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
             RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
         }
     }
@@ -3073,7 +3076,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             Height += DELTA1;
             if (Width != 0)
                 Width += MulDiv(DELTA1, TargetWidth, TargetHeight);
-            error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+            error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
             RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
         }
 
@@ -3082,7 +3085,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             Height -= DELTA2;
             if (Width != 0)
                 Width -= MulDiv(DELTA2, TargetWidth, TargetHeight);
-            error = FT_Set_Char_Size(face, Width, Height, 96, 96);
+            error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
             RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
         }
     }
