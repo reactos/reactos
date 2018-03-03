@@ -74,7 +74,14 @@ list(APPEND RTL_SOURCE
     precomp.h)
 
 if(ARCH STREQUAL "i386")
-    add_asm_files(ntdll_apitest_asm i386/NtContinue.S)
+    add_asm_files(ntdll_apitest_asm
+        i386/NtContinue.S)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND RTL_SOURCE
+        amd64/RtlCaptureContext.c)
+    add_asm_files(ntdll_apitest_asm
+        amd64/UnwindStubs.S
+        amd64/RtlCaptureContext.S)
 endif()
 
 add_rc_deps(testdata.rc ${CMAKE_CURRENT_BINARY_DIR}/load_notifications/load_notifications.dll)
