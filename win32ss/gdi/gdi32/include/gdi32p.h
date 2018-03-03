@@ -651,25 +651,4 @@ METADC_Dispatch(
     _In_ HDC hdc,
     ...);
 
-#define HANDLE_METADC2(_RetType, _Func, hdc, ...) \
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) \
-    { \
-        _RetType result; \
-        if (METADC_##_Func(&result, hdc, __VA_ARGS__)) \
-        { \
-            return result; \
-        } \
-    }
-
-BOOL
-WINAPI
-METADC_GetAndSetDCDWord(
-    _Out_ PDWORD pdwResult,
-    _In_ HDC hdc,
-    _In_ UINT u,
-    _In_ DWORD dwIn,
-    _In_ ULONG ulMFId,
-    _In_ USHORT usMF16Id,
-    _In_ DWORD dwError);
-
 /* EOF */

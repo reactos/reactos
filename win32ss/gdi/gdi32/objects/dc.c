@@ -744,10 +744,6 @@ GetAndSetDCDWord(
 {
     DWORD dwResult;
 
-    /* This is a special API, handle it appropriately */
-    if ((dwIn != GdiGetSetMapMode) && (dwIn != GdiGetSetArcDirection))
-        HANDLE_METADC2(DWORD, GetAndSetDCDWord, hdc, u, dwIn, ulMFId, usMF16Id, dwError);
-
     /* Call win32k to do the real work */
     if (!NtGdiGetAndSetDCDword(hdc, u, dwIn, &dwResult))
     {

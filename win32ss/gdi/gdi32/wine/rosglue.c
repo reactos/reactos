@@ -1140,65 +1140,6 @@ METADC_Dispatch(
             (eFunction == DCFUNC_SelectClipPath));
 }
 
-BOOL
-WINAPI
-METADC_GetAndSetDCDWord(
-    _Out_ DWORD* pdwResult,
-    _In_ HDC hdc,
-    _In_ UINT uFunction,
-    _In_ DWORD dwIn,
-    _In_ ULONG ulMFId,
-    _In_ USHORT usMF16Id,
-    _In_ DWORD dwError)
-{
-    PHYSDEV physdev;
-
-    /* Ignore these, we let wine code handle this */
-    UNREFERENCED_PARAMETER(ulMFId);
-    UNREFERENCED_PARAMETER(usMF16Id);
-
-    physdev = GetPhysDev(hdc);
-    if (physdev == NULL)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        *pdwResult = dwError;
-        return TRUE;
-    }
-
-    /* Check the function */
-    switch (uFunction)
-    {
-        case GdiGetSetMapMode:
-            *pdwResult = physdev->funcs->pSetMapMode(physdev, dwIn);
-            break;
-
-        case GdiGetSetArcDirection:
-            if (GDI_HANDLE_GET_TYPE(physdev->hdc) == GDILoObjType_LO_METADC16_TYPE)
-                *pdwResult = 0;
-            else
-                *pdwResult = physdev->funcs->pSetArcDirection(physdev, dwIn);
-            break;
-
-        case GdiGetSetRelAbs:
-            if (GDI_HANDLE_GET_TYPE(physdev->hdc) == GDILoObjType_LO_METADC16_TYPE)
-                *pdwResult = physdev->funcs->pSetRelAbs(physdev, dwIn);
-            else
-            {
-                UNIMPLEMENTED;
-                *pdwResult = 0;
-            }
-            break;
-
-
-        default:
-            __debugbreak();
-    }
-
-    /* Return TRUE to indicate that we want to return from the parent  */
-    return ((GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) ||
-            (*pdwResult == dwError));
-}
-
 VOID
 WINAPI
 METADC_DeleteObject(HGDIOBJ hobj)
