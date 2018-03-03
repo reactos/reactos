@@ -136,7 +136,11 @@ DWORD EMFDRV_CreateBrushIndirect( PHYSDEV dev, HBRUSH hBrush )
     case BS_DIBPATTERN:
       {
         EMRCREATEDIBPATTERNBRUSHPT *emr;
+#ifndef __REACTOS__
         char buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+#else
+        char buffer[sizeof(BITMAPINFO) + sizeof(RGBQUAD) * 255];
+#endif
         BITMAPINFO *info = (BITMAPINFO *)buffer;
         DWORD info_size;
         void *bits;
