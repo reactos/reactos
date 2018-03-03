@@ -3044,20 +3044,20 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
     RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
 
     /* FIXME: Optimize speed */
-#define DELTA1 64
+#define DELTA1 32
 #define DELTA2 1
     if (TargetHeight < RealHeight)
     {
-        do
+        while (!error && Height > DELTA1 && TargetHeight < RealHeight)
         {
             Height -= DELTA1;
             if (Width != 0)
                 Width -= MulDiv(DELTA1, TargetWidth, TargetHeight);
             error = FT_Set_Char_Size(face, Width, Height, 96, 96);
             RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
-        } while (Height > DELTA1 && TargetHeight < RealHeight);
+        }
 
-        while (TargetHeight > RealHeight)
+        while (!error && TargetHeight > RealHeight)
         {
             Height += DELTA2;
             if (Width != 0)
@@ -3068,16 +3068,16 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
     }
     else if (TargetHeight > RealHeight)
     {
-        do
+        while (!error && TargetHeight > RealHeight)
         {
             Height += DELTA1;
             if (Width != 0)
                 Width += MulDiv(DELTA1, TargetWidth, TargetHeight);
             error = FT_Set_Char_Size(face, Width, Height, 96, 96);
             RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
-        } while (TargetHeight > RealHeight);
+        }
 
-        while (Height > DELTA2 && TargetHeight < RealHeight)
+        while (!error && Height > DELTA2 && TargetHeight < RealHeight)
         {
             Height -= DELTA2;
             if (Width != 0)
