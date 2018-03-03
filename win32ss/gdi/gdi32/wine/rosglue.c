@@ -807,272 +807,178 @@ DRIVER_Dispatch(
 {
     PHYSDEV physdev;
 
-/* Note that this is a hack that relies on some assumptions regarding the
-   Windows ABI. It relies on the fact that all vararg functions put their
-   parameters on the stack in the correct order. Additionally it relies
-   on the fact that none of the functions we handle here, pass any 64
-   bit arguments on a 32 bit architecture. */
-#define _va_arg_n(p,t,i) (*(t*)((intptr_t*)(p) + i))
-
     switch (eFunction)
     {
-        case DCFUNC_AbortPath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pAbortPath);
-            return physdev->funcs->pAbortPath(physdev);
-        case DCFUNC_Arc:
-            physdev = GET_DC_PHYSDEV(pWineDc, pArc);
-            return physdev->funcs->pArc(physdev,
-                                        _va_arg_n(argptr, INT, 0), // left
-                                        _va_arg_n(argptr, INT, 1), // top
-                                        _va_arg_n(argptr, INT, 2), // right
-                                        _va_arg_n(argptr, INT, 3), // bottom
-                                        _va_arg_n(argptr, INT, 4), // xstart
-                                        _va_arg_n(argptr, INT, 5), // ystart
-                                        _va_arg_n(argptr, INT, 6), // xend
-                                        _va_arg_n(argptr, INT, 7)); // yend
-        case DCFUNC_BeginPath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pBeginPath);
-            return physdev->funcs->pBeginPath(physdev);
-        case DCFUNC_Chord:
-            physdev = GET_DC_PHYSDEV(pWineDc, pChord);
-            return physdev->funcs->pChord(physdev,
-                                          _va_arg_n(argptr, INT, 0),
-                                          _va_arg_n(argptr, INT, 1),
-                                          _va_arg_n(argptr, INT, 2),
-                                          _va_arg_n(argptr, INT, 3),
-                                          _va_arg_n(argptr, INT, 4),
-                                          _va_arg_n(argptr, INT, 5),
-                                          _va_arg_n(argptr, INT, 6),
-                                          _va_arg_n(argptr, INT, 7));
-        case DCFUNC_CloseFigure:
-            physdev = GET_DC_PHYSDEV(pWineDc, pCloseFigure);
-            return physdev->funcs->pCloseFigure(physdev);
-        case DCFUNC_Ellipse:
-            physdev = GET_DC_PHYSDEV(pWineDc, pEllipse);
-            return physdev->funcs->pEllipse(physdev,
-                                            _va_arg_n(argptr, INT, 0),
-                                            _va_arg_n(argptr, INT, 1),
-                                            _va_arg_n(argptr, INT, 2),
-                                            _va_arg_n(argptr, INT, 3));
-        case DCFUNC_EndPath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pEndPath);
-            return physdev->funcs->pEndPath(physdev);
-        case DCFUNC_ExcludeClipRect:
-            physdev = GET_DC_PHYSDEV(pWineDc, pExcludeClipRect);
-            return physdev->funcs->pExcludeClipRect(physdev,
-                                              _va_arg_n(argptr, INT, 0),
-                                              _va_arg_n(argptr, INT, 1),
-                                              _va_arg_n(argptr, INT, 2),
-                                              _va_arg_n(argptr, INT, 3));
-        case DCFUNC_ExtEscape:
-            physdev = GET_DC_PHYSDEV(pWineDc, pExtEscape);
-            return physdev->funcs->pExtEscape(physdev,
-                                              _va_arg_n(argptr, INT, 0),
-                                              _va_arg_n(argptr, INT, 1),
-                                              _va_arg_n(argptr, LPCVOID, 2),
-                                              _va_arg_n(argptr, INT, 3),
-                                              _va_arg_n(argptr, LPVOID, 4));
-        case DCFUNC_ExtFloodFill:
-            physdev = GET_DC_PHYSDEV(pWineDc, pExtFloodFill);
-            return physdev->funcs->pExtFloodFill(physdev,
-                                                 _va_arg_n(argptr, INT, 0),
-                                                 _va_arg_n(argptr, INT, 1),
-                                                 _va_arg_n(argptr, COLORREF, 2),
-                                                 _va_arg_n(argptr, UINT, 3));
-        case DCFUNC_ExtSelectClipRgn:
-            physdev = GET_DC_PHYSDEV(pWineDc, pExtSelectClipRgn);
-            return physdev->funcs->pExtSelectClipRgn(physdev,
-                                                     _va_arg_n(argptr, HRGN, 0), // hrgn
-                                                     _va_arg_n(argptr, INT, 1)); // iMode
-        case DCFUNC_ExtTextOut:
-            physdev = GET_DC_PHYSDEV(pWineDc, pExtTextOut);
-            return physdev->funcs->pExtTextOut(physdev,
-                                               _va_arg_n(argptr, INT, 0),// x
-                                               _va_arg_n(argptr, INT, 1),// y
-                                               _va_arg_n(argptr, UINT, 2),// fuOptions
-                                               _va_arg_n(argptr, const RECT *, 3),// lprc,
-                                               _va_arg_n(argptr, LPCWSTR, 4),// lpString,
-                                               _va_arg_n(argptr, UINT, 5),// cchString,
-                                               _va_arg_n(argptr, const INT *, 6));// lpDx);
-        case DCFUNC_FillPath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pFillPath);
-            return physdev->funcs->pFillPath(physdev);
-        case DCFUNC_FillRgn:
-            physdev = GET_DC_PHYSDEV(pWineDc, pFillRgn);
-            return physdev->funcs->pFillRgn(physdev,
-                                            _va_arg_n(argptr, HRGN, 0),
-                                            _va_arg_n(argptr, HBRUSH, 1));
-        case DCFUNC_FlattenPath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pFlattenPath);
-            return physdev->funcs->pFlattenPath(physdev);
-        case DCFUNC_FrameRgn:
-            physdev = GET_DC_PHYSDEV(pWineDc, pFrameRgn);
-            return physdev->funcs->pFrameRgn(physdev,
-                                             _va_arg_n(argptr, HRGN, 0),
-                                             _va_arg_n(argptr, HBRUSH, 1),
-                                             _va_arg_n(argptr, INT, 2),
-                                             _va_arg_n(argptr, INT, 3));
-        case DCFUNC_GetDeviceCaps:
-            physdev = GET_DC_PHYSDEV(pWineDc, pGetDeviceCaps);
-            return physdev->funcs->pGetDeviceCaps(physdev, va_arg(argptr, INT));
-        case DCFUNC_GdiComment:
-            physdev = GET_DC_PHYSDEV(pWineDc, pGdiComment);
-            return physdev->funcs->pGdiComment(physdev,
-                                               _va_arg_n(argptr, UINT, 0),
-                                               _va_arg_n(argptr, const BYTE*, 1));
-        case DCFUNC_IntersectClipRect:
-            physdev = GET_DC_PHYSDEV(pWineDc, pIntersectClipRect);
-            return physdev->funcs->pIntersectClipRect(physdev,
-                                                      _va_arg_n(argptr, INT, 0),
-                                                      _va_arg_n(argptr, INT, 1),
-                                                      _va_arg_n(argptr, INT, 2),
-                                                      _va_arg_n(argptr, INT, 3));
-        case DCFUNC_InvertRgn:
-            physdev = GET_DC_PHYSDEV(pWineDc, pInvertRgn);
-            return physdev->funcs->pInvertRgn(physdev,
-                                              va_arg(argptr, HRGN));
-        case DCFUNC_LineTo:
-            physdev = GET_DC_PHYSDEV(pWineDc, pLineTo);
-            return physdev->funcs->pLineTo(physdev,
-                                           _va_arg_n(argptr, INT, 0),
-                                           _va_arg_n(argptr, INT, 1));
-        case DCFUNC_ModifyWorldTransform:
-            physdev = GET_DC_PHYSDEV(pWineDc, pModifyWorldTransform);
-            return physdev->funcs->pModifyWorldTransform(physdev,
-                                                         _va_arg_n(argptr, const XFORM*, 0),
-                                                         _va_arg_n(argptr, DWORD, 1));
-        case DCFUNC_MoveTo:
-            physdev = GET_DC_PHYSDEV(pWineDc, pMoveTo);
-            return physdev->funcs->pMoveTo(physdev,
-                                           _va_arg_n(argptr, INT, 0),
-                                           _va_arg_n(argptr, INT, 1));
-        case DCFUNC_OffsetClipRgn:
-            physdev = GET_DC_PHYSDEV(pWineDc, pOffsetClipRgn);
-            return physdev->funcs->pOffsetClipRgn(physdev,
-                                                  _va_arg_n(argptr, INT, 0), // hrgn
-                                                  _va_arg_n(argptr, INT, 1)); // iMode
-        case DCFUNC_OffsetViewportOrgEx:
-            physdev = GET_DC_PHYSDEV(pWineDc, pOffsetViewportOrgEx);
-            return physdev->funcs->pOffsetViewportOrgEx(physdev,
-                                                        _va_arg_n(argptr, INT, 0), // X
-                                                        _va_arg_n(argptr, INT, 1), // Y
-                                                        _va_arg_n(argptr, LPPOINT, 2)); // lpPoint
-        case DCFUNC_OffsetWindowOrgEx:
-            physdev = GET_DC_PHYSDEV(pWineDc, pOffsetWindowOrgEx);
-            return physdev->funcs->pOffsetWindowOrgEx(physdev,
-                                                        _va_arg_n(argptr, INT, 0), // X
-                                                        _va_arg_n(argptr, INT, 1), // Y
-                                                        _va_arg_n(argptr, LPPOINT, 2)); // lpPoint
+#define HANDLE_FUNC0(__func)                            \
+    case DCFUNC_##__func:                               \
+    {                                                   \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);   \
+        return physdev->funcs->p##__func(physdev);      \
+    }
+#define HANDLE_FUNC1(__func, __type1)                                                                   \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1);                                                \
+    }
+#define HANDLE_FUNC2(__func, __type1, __type2)                                                          \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        __type2 arg2 = va_arg(argptr, __type2);                                                         \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1, arg2);                                          \
+    }
+#define HANDLE_FUNC3(__func, __type1, __type2, __type3)                                                 \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        __type2 arg2 = va_arg(argptr, __type2);                                                         \
+        __type3 arg3 = va_arg(argptr, __type3);                                                         \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1, arg2, arg3);                                    \
+    }
+#define HANDLE_FUNC4(__func, __type1, __type2, __type3, __type4)                                        \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        __type2 arg2 = va_arg(argptr, __type2);                                                         \
+        __type3 arg3 = va_arg(argptr, __type3);                                                         \
+        __type4 arg4 = va_arg(argptr, __type4);                                                         \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1, arg2, arg3, arg4);                              \
+    }
+#define HANDLE_FUNC5(__func, __type1, __type2, __type3, __type4, __type5)                               \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        __type2 arg2 = va_arg(argptr, __type2);                                                         \
+        __type3 arg3 = va_arg(argptr, __type3);                                                         \
+        __type4 arg4 = va_arg(argptr, __type4);                                                         \
+        __type5 arg5 = va_arg(argptr, __type5);                                                         \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1, arg2, arg3, arg4, arg5);                        \
+    }
+#define HANDLE_FUNC6(__func, __type1, __type2, __type3, __type4, __type5, __type6)                      \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        __type2 arg2 = va_arg(argptr, __type2);                                                         \
+        __type3 arg3 = va_arg(argptr, __type3);                                                         \
+        __type4 arg4 = va_arg(argptr, __type4);                                                         \
+        __type5 arg5 = va_arg(argptr, __type5);                                                         \
+        __type6 arg6 = va_arg(argptr, __type6);                                                         \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1, arg2, arg3, arg4, arg5, arg6);                  \
+    }
+#define HANDLE_FUNC7(__func, __type1, __type2, __type3, __type4, __type5, __type6, __type7)             \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        __type2 arg2 = va_arg(argptr, __type2);                                                         \
+        __type3 arg3 = va_arg(argptr, __type3);                                                         \
+        __type4 arg4 = va_arg(argptr, __type4);                                                         \
+        __type5 arg5 = va_arg(argptr, __type5);                                                         \
+        __type6 arg6 = va_arg(argptr, __type6);                                                         \
+        __type7 arg7 = va_arg(argptr, __type7);                                                         \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1, arg2, arg3, arg4, arg5, arg6, arg7);            \
+    }
+#define HANDLE_FUNC8(__func, __type1, __type2, __type3, __type4, __type5, __type6, __type7, __type8)    \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        __type2 arg2 = va_arg(argptr, __type2);                                                         \
+        __type3 arg3 = va_arg(argptr, __type3);                                                         \
+        __type4 arg4 = va_arg(argptr, __type4);                                                         \
+        __type5 arg5 = va_arg(argptr, __type5);                                                         \
+        __type6 arg6 = va_arg(argptr, __type6);                                                         \
+        __type7 arg7 = va_arg(argptr, __type7);                                                         \
+        __type8 arg8 = va_arg(argptr, __type8);                                                         \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);      \
+    }
+#define HANDLE_FUNC11(__func, __type1, __type2, __type3, __type4, __type5, __type6, __type7, __type8,   \
+        __type9, __type10, __type11)                                                                    \
+    case DCFUNC_##__func:                                                                               \
+    {                                                                                                   \
+        __type1 arg1 = va_arg(argptr, __type1);                                                         \
+        __type2 arg2 = va_arg(argptr, __type2);                                                         \
+        __type3 arg3 = va_arg(argptr, __type3);                                                         \
+        __type4 arg4 = va_arg(argptr, __type4);                                                         \
+        __type5 arg5 = va_arg(argptr, __type5);                                                         \
+        __type6 arg6 = va_arg(argptr, __type6);                                                         \
+        __type7 arg7 = va_arg(argptr, __type7);                                                         \
+        __type8 arg8 = va_arg(argptr, __type8);                                                         \
+        __type9 arg9 = va_arg(argptr, __type9);                                                         \
+        __type10 arg10 = va_arg(argptr, __type10);                                                      \
+        __type11 arg11 = va_arg(argptr, __type11);                                                      \
+        physdev = GET_DC_PHYSDEV(pWineDc, p##__func);                                                   \
+        return physdev->funcs->p##__func(physdev, arg1, arg2, arg3, arg4, arg5,                         \
+            arg6, arg7, arg8, arg9, arg10, arg11);                                                      \
+    }
+
+
+        HANDLE_FUNC0(AbortPath)
+        HANDLE_FUNC8(Arc, INT, INT, INT, INT, INT, INT, INT, INT)
+        HANDLE_FUNC0(BeginPath)
+        HANDLE_FUNC8(Chord, INT, INT, INT, INT, INT, INT, INT, INT)
+        HANDLE_FUNC0(CloseFigure)
+        HANDLE_FUNC4(Ellipse, INT, INT, INT, INT)
+        HANDLE_FUNC0(EndPath)
+        HANDLE_FUNC4(ExcludeClipRect, INT, INT, INT, INT)
+        HANDLE_FUNC5(ExtEscape, INT, INT, LPCVOID, INT, LPVOID)
+        HANDLE_FUNC4(ExtFloodFill, INT, INT, COLORREF, INT)
+        HANDLE_FUNC2(ExtSelectClipRgn, HRGN, INT)
+        HANDLE_FUNC7(ExtTextOut, INT, INT, UINT, const RECT*, LPCWSTR, UINT, const INT *)
+        HANDLE_FUNC0(FillPath)
+        HANDLE_FUNC2(FillRgn, HRGN, HBRUSH)
+        HANDLE_FUNC0(FlattenPath)
+        HANDLE_FUNC4(FrameRgn, HRGN, HBRUSH, INT, INT)
+        HANDLE_FUNC1(GetDeviceCaps, INT)
+        HANDLE_FUNC2(GdiComment, INT, const BYTE *)
+        HANDLE_FUNC4(IntersectClipRect, INT, INT, INT, INT)
+        HANDLE_FUNC1(InvertRgn, HRGN)
+        HANDLE_FUNC2(LineTo, INT, INT)
+        HANDLE_FUNC2(ModifyWorldTransform, const XFORM*, DWORD)
+        HANDLE_FUNC2(MoveTo, INT, INT)
+        HANDLE_FUNC2(OffsetClipRgn, INT, INT)
+        HANDLE_FUNC3(OffsetViewportOrgEx, INT, INT, LPPOINT)
+        HANDLE_FUNC3(OffsetWindowOrgEx, INT, INT, LPPOINT)
         case DCFUNC_PatBlt:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPatBlt);
-            return DRIVER_PatBlt(physdev,
-                                 physdev->hdc,
-                                 _va_arg_n(argptr, INT, 0),
-                                 _va_arg_n(argptr, INT, 1),
-                                 _va_arg_n(argptr, INT, 2),
-                                 _va_arg_n(argptr, INT, 3),
-                                 _va_arg_n(argptr, DWORD, 4));
-        case DCFUNC_Pie:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPie);
-            return physdev->funcs->pPie(physdev,
-                                        _va_arg_n(argptr, INT, 0),
-                                        _va_arg_n(argptr, INT, 1),
-                                        _va_arg_n(argptr, INT, 2),
-                                        _va_arg_n(argptr, INT, 3),
-                                        _va_arg_n(argptr, INT, 4),
-                                        _va_arg_n(argptr, INT, 5),
-                                        _va_arg_n(argptr, INT, 6),
-                                        _va_arg_n(argptr, INT, 7));
-        case DCFUNC_PolyBezier:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPolyBezier);
-            return physdev->funcs->pPolyBezier(physdev,
-                                               _va_arg_n(argptr, const POINT*, 0),
-                                               _va_arg_n(argptr, DWORD, 1));
-        case DCFUNC_PolyBezierTo:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPolyBezierTo);
-            return physdev->funcs->pPolyBezierTo(physdev,
-                                                 _va_arg_n(argptr, const POINT*, 0),
-                                                 _va_arg_n(argptr, DWORD, 1));
-        case DCFUNC_PolyDraw:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPolyDraw);
-           return physdev->funcs->pPolyDraw(physdev,
-                                             _va_arg_n(argptr, const POINT*, 0),
-                                             _va_arg_n(argptr, const BYTE*, 1),
-                                             _va_arg_n(argptr, DWORD, 2));
-        case DCFUNC_Polygon:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPolygon);
-            return physdev->funcs->pPolygon(physdev,
-                                            _va_arg_n(argptr, const POINT*, 0),
-                                            _va_arg_n(argptr, INT, 1));
-        case DCFUNC_Polyline:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPolyline);
-            return physdev->funcs->pPolyline(physdev,
-                                             _va_arg_n(argptr, const POINT*, 0),
-                                             _va_arg_n(argptr, INT, 1));
-        case DCFUNC_PolylineTo:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPolylineTo);
-            return physdev->funcs->pPolylineTo(physdev,
-                                               _va_arg_n(argptr, const POINT*, 0),
-                                               _va_arg_n(argptr, INT, 1));
-        case DCFUNC_PolyPolygon:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPolyPolygon);
-            return physdev->funcs->pPolyPolygon(physdev,
-                                                _va_arg_n(argptr, const POINT*, 0),
-                                                _va_arg_n(argptr, const INT*, 1),
-                                                _va_arg_n(argptr, DWORD, 2));
-        case DCFUNC_PolyPolyline:
-            physdev = GET_DC_PHYSDEV(pWineDc, pPolyPolyline);
-            return physdev->funcs->pPolyPolyline(physdev,
-                                                 _va_arg_n(argptr, const POINT*, 0),
-                                                 _va_arg_n(argptr, const DWORD*, 1),
-                                                 _va_arg_n(argptr, DWORD, 2));
+        {
+            INT xLeft = va_arg(argptr, INT);
+            INT yTop = va_arg(argptr, INT);
+            INT cx = va_arg(argptr, INT);
+            INT cy = va_arg(argptr, INT);
+            DWORD dwRop = va_arg(argptr, DWORD);
+            physdev = GET_DC_PHYSDEV(pWineDc, pStretchBlt);
+            return DRIVER_PatBlt(physdev, physdev->hdc, xLeft, yTop, cx, cy, dwRop);
+        }
+        HANDLE_FUNC8(Pie, INT, INT, INT, INT, INT, INT, INT, INT)
+        HANDLE_FUNC2(PolyBezier, const POINT *, DWORD)
+        HANDLE_FUNC2(PolyBezierTo, const POINT *, DWORD)
+        HANDLE_FUNC3(PolyDraw, const POINT*, const BYTE*, DWORD)
+        HANDLE_FUNC2(Polygon, const POINT *, INT)
+        HANDLE_FUNC2(Polyline, const POINT *, INT)
+        HANDLE_FUNC2(PolylineTo, const POINT *, INT)
+        HANDLE_FUNC3(PolyPolygon, const POINT*, const INT*, DWORD)
+        HANDLE_FUNC3(PolyPolyline, const POINT*, const DWORD*, DWORD)
         case DCFUNC_RealizePalette:
             physdev = GET_DC_PHYSDEV(pWineDc, pRealizePalette);
             return physdev->funcs->pRealizePalette(physdev, NULL, FALSE);
-        case DCFUNC_Rectangle:
-            physdev = GET_DC_PHYSDEV(pWineDc, pRectangle);
-            return physdev->funcs->pRectangle(physdev,
-                                              _va_arg_n(argptr, INT, 0),
-                                              _va_arg_n(argptr, INT, 1),
-                                              _va_arg_n(argptr, INT, 2),
-                                              _va_arg_n(argptr, INT, 3));
+        HANDLE_FUNC4(Rectangle, INT, INT, INT, INT)
         case DCFUNC_RestoreDC:
             physdev = GET_DC_PHYSDEV(pWineDc, pRestoreDC);
             return DRIVER_RestoreDC(physdev, va_arg(argptr, INT));
-        case DCFUNC_RoundRect:
-            physdev = GET_DC_PHYSDEV(pWineDc, pRoundRect);
-            return physdev->funcs->pRoundRect(physdev,
-                                              _va_arg_n(argptr, INT, 0),
-                                              _va_arg_n(argptr, INT, 1),
-                                              _va_arg_n(argptr, INT, 2),
-                                              _va_arg_n(argptr, INT, 3),
-                                              _va_arg_n(argptr, INT, 4),
-                                              _va_arg_n(argptr, INT, 5));
-
-        case DCFUNC_SaveDC:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSaveDC);
-            return physdev->funcs->pSaveDC(physdev);
-        case DCFUNC_ScaleViewportExtEx:
-            physdev = GET_DC_PHYSDEV(pWineDc, pScaleViewportExtEx);
-            return physdev->funcs->pScaleViewportExtEx(physdev,
-                                                     _va_arg_n(argptr, INT, 0), // xNum
-                                                     _va_arg_n(argptr, INT, 1), // xDenom
-                                                     _va_arg_n(argptr, INT, 2), // yNum
-                                                     _va_arg_n(argptr, INT, 3), // yDenom
-                                                     _va_arg_n(argptr, LPSIZE, 4)); // lpSize
-        case DCFUNC_ScaleWindowExtEx:
-            physdev = GET_DC_PHYSDEV(pWineDc, pScaleWindowExtEx);
-            return physdev->funcs->pScaleWindowExtEx(physdev,
-                                                     _va_arg_n(argptr, INT, 0), // xNum
-                                                     _va_arg_n(argptr, INT, 1), // xDenom
-                                                     _va_arg_n(argptr, INT, 2), // yNum
-                                                     _va_arg_n(argptr, INT, 3), // yDenom
-                                                     _va_arg_n(argptr, LPSIZE, 4)); // lpSize
+        HANDLE_FUNC6(RoundRect, INT, INT, INT, INT, INT, INT)
+        HANDLE_FUNC0(SaveDC)
+        HANDLE_FUNC5(ScaleViewportExtEx, INT, INT, INT, INT, LPSIZE)
+        HANDLE_FUNC5(ScaleWindowExtEx, INT, INT, INT, INT, LPSIZE)
         case DCFUNC_SelectBrush:
             return (DWORD_PTR)DRIVER_SelectBrush(pWineDc, va_arg(argptr, HBRUSH));
-        case DCFUNC_SelectClipPath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSelectClipPath);
-            return physdev->funcs->pSelectClipPath(physdev, va_arg(argptr, INT));
+        HANDLE_FUNC1(SelectClipPath, INT)
         case DCFUNC_SelectFont:
             return (DWORD_PTR)DRIVER_SelectFont(pWineDc, va_arg(argptr, HFONT));
         case DCFUNC_SelectPalette:
@@ -1083,149 +989,57 @@ DRIVER_Dispatch(
         }
         case DCFUNC_SelectPen:
             return (DWORD_PTR)DRIVER_SelectPen(pWineDc, va_arg(argptr, HPEN));
-        case DCFUNC_SetDCBrushColor:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetDCBrushColor);
-            return physdev->funcs->pSetDCBrushColor(physdev, va_arg(argptr, COLORREF));
-        case DCFUNC_SetDCPenColor:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetDCPenColor);
-            return physdev->funcs->pSetDCPenColor(physdev, va_arg(argptr, COLORREF));
-        case DCFUNC_SetDIBitsToDevice:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetDIBitsToDevice);
-            return physdev->funcs->pSetDIBitsToDevice(physdev,
-                                                      _va_arg_n(argptr, INT, 0),
-                                                      _va_arg_n(argptr, INT, 1),
-                                                      _va_arg_n(argptr, DWORD, 2),
-                                                      _va_arg_n(argptr, DWORD, 3),
-                                                      _va_arg_n(argptr, INT, 4),
-                                                      _va_arg_n(argptr, INT, 5),
-                                                      _va_arg_n(argptr, UINT, 6),
-                                                      _va_arg_n(argptr, UINT, 7),
-                                                      _va_arg_n(argptr, LPCVOID, 8),
-                                                      _va_arg_n(argptr, BITMAPINFO*, 9),
-                                                      _va_arg_n(argptr, UINT, 10));
-        case DCFUNC_SetBkColor:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetBkColor);
-            return physdev->funcs->pSetBkColor(physdev, va_arg(argptr, COLORREF));
-        case DCFUNC_SetBkMode:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetBkMode);
-            return physdev->funcs->pSetBkMode(physdev, va_arg(argptr, INT));
-        case DCFUNC_SetLayout:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetLayout);
-            // FIXME: MF16 is UNIMPLEMENTED
-            return physdev->funcs->pSetLayout(physdev,
-                                              _va_arg_n(argptr, DWORD, 0));
+        HANDLE_FUNC1(SetDCBrushColor, COLORREF)
+        HANDLE_FUNC1(SetDCPenColor, COLORREF)
+        HANDLE_FUNC11(SetDIBitsToDevice, INT, INT, DWORD, DWORD, INT, INT, UINT, UINT, LPCVOID, BITMAPINFO*, UINT)
+        HANDLE_FUNC1(SetBkColor, COLORREF)
+        HANDLE_FUNC1(SetBkMode, INT)
+        HANDLE_FUNC1(SetLayout, DWORD)
         //case DCFUNC_SetMapMode:
         //    return physdev->funcs->pSetMapMode(physdev, va_arg(argptr, INT));
-        case DCFUNC_SetPixel:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetPixel);
-            return physdev->funcs->pSetPixel(physdev,
-                                             _va_arg_n(argptr, INT, 0),
-                                             _va_arg_n(argptr, INT, 1),
-                                             _va_arg_n(argptr, COLORREF, 2));
-        case DCFUNC_SetPolyFillMode:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetPolyFillMode);
-            return physdev->funcs->pSetPolyFillMode(physdev, va_arg(argptr, INT));
-        case DCFUNC_SetROP2:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetROP2);
-            return physdev->funcs->pSetROP2(physdev, va_arg(argptr, INT));
-        case DCFUNC_SetStretchBltMode:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetStretchBltMode);
-            return physdev->funcs->pSetStretchBltMode(physdev, va_arg(argptr, INT));
-        case DCFUNC_SetTextAlign:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetTextAlign);
-            return physdev->funcs->pSetTextAlign(physdev, va_arg(argptr, UINT));
-        case DCFUNC_SetTextCharacterExtra:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetTextCharacterExtra);
-            return physdev->funcs->pSetTextCharacterExtra(physdev, va_arg(argptr, INT));
-        case DCFUNC_SetTextColor:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetTextColor);
-            return physdev->funcs->pSetTextColor(physdev, va_arg(argptr, COLORREF));
-        case DCFUNC_SetTextJustification:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetTextJustification);
-            return physdev->funcs->pSetTextJustification(physdev,
-                                                         _va_arg_n(argptr, INT, 0),
-                                                         _va_arg_n(argptr, INT, 1));
-        case DCFUNC_SetViewportExtEx:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetViewportExtEx);
-            return physdev->funcs->pSetViewportExtEx(physdev,
-                                                     _va_arg_n(argptr, INT, 0), // nXExtent
-                                                     _va_arg_n(argptr, INT, 1), // nYExtent
-                                                     _va_arg_n(argptr, LPSIZE, 2)); // lpSize
-        case DCFUNC_SetViewportOrgEx:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetViewportOrgEx);
-            return physdev->funcs->pSetViewportOrgEx(physdev,
-                                                     _va_arg_n(argptr, INT, 0), // X
-                                                     _va_arg_n(argptr, INT, 1), // Y
-                                                     _va_arg_n(argptr, LPPOINT, 2)); // lpPoint
-        case DCFUNC_SetWindowExtEx:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetWindowExtEx);
-            return physdev->funcs->pSetWindowExtEx(physdev,
-                                                   _va_arg_n(argptr, INT, 0), // nXExtent
-                                                   _va_arg_n(argptr, INT, 1), // nYExtent
-                                                   _va_arg_n(argptr, LPSIZE, 2)); // lpSize
-        case DCFUNC_SetWindowOrgEx:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetWindowOrgEx);
-            return physdev->funcs->pSetWindowOrgEx(physdev,
-                                                   _va_arg_n(argptr, INT, 0), // X
-                                                   _va_arg_n(argptr, INT, 1), // Y
-                                                   _va_arg_n(argptr, LPPOINT, 2)); // lpPoint
-
-        case DCFUNC_SetWorldTransform:
-            physdev = GET_DC_PHYSDEV(pWineDc, pSetWorldTransform);
-            return physdev->funcs->pSetWorldTransform(physdev,
-                                                      va_arg(argptr, const XFORM*));
-
+        HANDLE_FUNC3(SetPixel, INT, INT, COLORREF)
+        HANDLE_FUNC1(SetPolyFillMode, INT)
+        HANDLE_FUNC1(SetROP2, INT)
+        HANDLE_FUNC1(SetStretchBltMode, INT)
+        HANDLE_FUNC1(SetTextAlign, UINT)
+        HANDLE_FUNC1(SetTextCharacterExtra, INT)
+        HANDLE_FUNC1(SetTextColor, COLORREF)
+        HANDLE_FUNC2(SetTextJustification, INT, INT)
+        HANDLE_FUNC3(SetViewportExtEx, INT, INT, LPSIZE)
+        HANDLE_FUNC3(SetViewportOrgEx, INT, INT, LPPOINT)
+        HANDLE_FUNC3(SetWindowExtEx, INT, INT, LPSIZE)
+        HANDLE_FUNC3(SetWindowOrgEx, INT, INT, LPPOINT)
+        HANDLE_FUNC1(SetWorldTransform, const XFORM *)
         case DCFUNC_StretchBlt:
+        {
+            INT xDst = va_arg(argptr, INT);
+            INT yDst = va_arg(argptr, INT);
+            INT cxDst = va_arg(argptr, INT);
+            INT cyDst = va_arg(argptr, INT);
+            HDC hdcSrc = va_arg(argptr, HDC);
+            INT xSrc = va_arg(argptr, INT);
+            INT ySrc = va_arg(argptr, INT);
+            INT cxSrc = va_arg(argptr, INT);
+            INT cySrc = va_arg(argptr, INT);
+            DWORD dwRop = va_arg(argptr, DWORD);
             physdev = GET_DC_PHYSDEV(pWineDc, pStretchBlt);
-            return DRIVER_StretchBlt(physdev,
-                                     physdev->hdc,
-                                     _va_arg_n(argptr, INT, 0),
-                                     _va_arg_n(argptr, INT, 1),
-                                     _va_arg_n(argptr, INT, 2),
-                                     _va_arg_n(argptr, INT, 3),
-                                     _va_arg_n(argptr, HDC, 4),
-                                     _va_arg_n(argptr, INT, 5),
-                                     _va_arg_n(argptr, INT, 6),
-                                     _va_arg_n(argptr, INT, 7),
-                                     _va_arg_n(argptr, INT, 8),
-                                     _va_arg_n(argptr, DWORD, 9));
-        case DCFUNC_StrokeAndFillPath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pStrokeAndFillPath);
-            return physdev->funcs->pStrokeAndFillPath(physdev);
-        case DCFUNC_StrokePath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pStrokePath);
-            return physdev->funcs->pStrokePath(physdev);
-        case DCFUNC_WidenPath:
-            physdev = GET_DC_PHYSDEV(pWineDc, pWidenPath);
-            return physdev->funcs->pWidenPath(physdev);
+            return DRIVER_StretchBlt(physdev, physdev->hdc, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, dwRop);
+        }
+        HANDLE_FUNC0(StrokeAndFillPath)
+        HANDLE_FUNC0(StrokePath)
+        HANDLE_FUNC0(WidenPath)
         case DCFUNC_AngleArc:
+        {
+            INT x = va_arg(argptr, INT);
+            INT y = va_arg(argptr, INT);
+            DWORD Radius = va_arg(argptr, INT);
+            DWORD StartAngle = va_arg(argptr, DWORD);
+            DWORD SweepAngle = va_arg(argptr, DWORD);
             physdev = GET_DC_PHYSDEV(pWineDc, pAngleArc);
-            return physdev->funcs->pAngleArc(physdev,
-                                             _va_arg_n(argptr, INT, 0),
-                                             _va_arg_n(argptr, INT, 1),
-                                             _va_arg_n(argptr, DWORD, 2),
-                                             _va_arg_n(argptr, FLOAT, 3),
-                                             _va_arg_n(argptr, FLOAT, 4 ));
-        case DCFUNC_ArcTo:
-            physdev = GET_DC_PHYSDEV(pWineDc, pArcTo);
-            return physdev->funcs->pArcTo(physdev,
-                                          _va_arg_n(argptr, INT, 0),
-                                          _va_arg_n(argptr, INT, 1),
-                                          _va_arg_n(argptr, INT, 2),
-                                          _va_arg_n(argptr, INT, 3),
-                                          _va_arg_n(argptr, INT, 4),
-                                          _va_arg_n(argptr, INT, 5),
-                                          _va_arg_n(argptr, INT, 6),
-                                          _va_arg_n(argptr, INT, 7));
-        case DCFUNC_GradientFill:
-            physdev = GET_DC_PHYSDEV(pWineDc, pGradientFill);
-            return physdev->funcs->pGradientFill(physdev,
-                                                 _va_arg_n(argptr, TRIVERTEX *, 0), 
-                                                 _va_arg_n(argptr, ULONG, 1),
-                                                 _va_arg_n(argptr, void *, 2),
-                                                 _va_arg_n(argptr, ULONG , 3),
-                                                 _va_arg_n(argptr, ULONG , 4));
-
+            return physdev->funcs->pAngleArc(physdev, x, y, Radius, RCAST(FLOAT, StartAngle), RCAST(FLOAT, SweepAngle));
+        }
+        HANDLE_FUNC8(ArcTo, INT, INT, INT, INT, INT, INT, INT, INT)
+        HANDLE_FUNC5(GradientFill, TRIVERTEX*, ULONG, void *, ULONG, ULONG)
         /* These are not implemented in wine */
         case DCFUNC_AlphaBlend:
         case DCFUNC_MaskBlt:
