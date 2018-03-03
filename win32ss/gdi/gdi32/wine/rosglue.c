@@ -30,18 +30,36 @@ NULL_Unused()
     return 0;
 }
 
+static INT NULL_SetMapMode(PHYSDEV dev, INT iMode)
+{
+    WINEDC* pWineDc = get_dc_ptr(dev->hdc);
+
+    if(!pWineDc)
+        return 0;
+
+    if (GDI_HANDLE_GET_TYPE(dev->hdc) == GDILoObjType_LO_METADC16_TYPE)
+    {
+        INT ret = pWineDc->MapMode;
+        pWineDc->MapMode = iMode;
+        return ret;
+    }
+
+    /* This lets regular GDI handle it for Enhanced Metafile DCs */
+    return 1;
+}
+
+static INT   NULL_ExtSelectClipRgn(PHYSDEV dev, HRGN hrgn, INT iMode)
+{
+    return NtGdiExtSelectClipRgn(dev->hdc, hrgn, iMode);
+}
+
 static INT   NULL_SaveDC(PHYSDEV dev) { return 1; }
 static BOOL  NULL_RestoreDC(PHYSDEV dev, INT level) { return TRUE; }
-static INT   NULL_SetMapMode(PHYSDEV dev, INT iMode) { return 1; }
 static HFONT NULL_SelectFont(PHYSDEV dev, HFONT hFont, UINT *aa_flags) { return NULL; }
 static BOOL  NULL_SetWindowExtEx(PHYSDEV dev, INT cx, INT cy, SIZE *size) { return TRUE; }
 static BOOL  NULL_SetViewportExtEx(PHYSDEV dev, INT cx, INT cy, SIZE *size) { return TRUE; }
 static BOOL  NULL_SetWindowOrgEx(PHYSDEV dev, INT x, INT y, POINT *pt) { return TRUE; }
 static BOOL  NULL_SetViewportOrgEx(PHYSDEV dev, INT x, INT y, POINT *pt) { return TRUE; }
-static INT   NULL_ExtSelectClipRgn(PHYSDEV dev, HRGN hrgn, INT iMode)
-{
-    return NtGdiExtSelectClipRgn(dev->hdc, hrgn, iMode);
-}
 static INT   NULL_IntersectClipRect(PHYSDEV dev, INT left, INT top, INT right, INT bottom) { return 1; }
 static INT   NULL_OffsetClipRgn(PHYSDEV dev, INT x, INT y) { return SIMPLEREGION; }
 static INT   NULL_ExcludeClipRect(PHYSDEV dev, INT left, INT top, INT right, INT bottom) { return 1; }
@@ -354,6 +372,7 @@ alloc_dc_ptr(WORD magic)
         pWineDc->hBrush = GetStockObject(WHITE_BRUSH);
         pWineDc->hPen = GetStockObject(BLACK_PEN);
         pWineDc->hPalette = GetStockObject(DEFAULT_PALETTE);
+        pWineDc->MapMode = MM_TEXT;
     }
     else
     {
@@ -995,8 +1014,7 @@ DRIVER_Dispatch(
         HANDLE_FUNC1(SetBkColor, COLORREF)
         HANDLE_FUNC1(SetBkMode, INT)
         HANDLE_FUNC1(SetLayout, DWORD)
-        //case DCFUNC_SetMapMode:
-        //    return physdev->funcs->pSetMapMode(physdev, va_arg(argptr, INT));
+        HANDLE_FUNC1(SetMapMode, INT)
         HANDLE_FUNC3(SetPixel, INT, INT, COLORREF)
         HANDLE_FUNC1(SetPolyFillMode, INT)
         HANDLE_FUNC1(SetROP2, INT)

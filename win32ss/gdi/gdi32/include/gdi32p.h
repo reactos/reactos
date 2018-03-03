@@ -619,7 +619,7 @@ typedef enum _DCFUNC
     DCFUNC_SetBkColor,
     DCFUNC_SetBkMode,
     DCFUNC_SetLayout,
-    //DCFUNC_SetMapMode,
+    DCFUNC_SetMapMode,
     DCFUNC_SetPixel,
     DCFUNC_SetPolyFillMode,
     DCFUNC_SetROP2,

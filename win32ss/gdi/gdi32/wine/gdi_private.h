@@ -65,10 +65,20 @@ typedef struct tagWINEDC
     HFONT hFont;
     HPALETTE hPalette;
 
-    POINT cur_pos;
-    int GraphicsMode;
-    DWORD layout;
-    UINT textAlign;
+    union
+    {
+        struct
+        {
+            POINT cur_pos;
+            int GraphicsMode;
+            DWORD layout;
+            UINT textAlign;
+        } /* enh */ ;
+        struct
+        {
+            INT MapMode;
+        } /* META */;
+    };
 } WINEDC, DC;
 
 WINEDC* get_physdev_dc( PHYSDEV dev );

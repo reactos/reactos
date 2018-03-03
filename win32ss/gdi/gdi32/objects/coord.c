@@ -139,11 +139,7 @@ SetMapMode(
 {
     PDC_ATTR pdcattr;
 
-    /* Handle METADC16 here, since we don't have a DCATTR. */
-    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) \
-    {
-        return GetAndSetDCDWord(hdc, GdiGetSetMapMode, iMode, 0, 0, 0 );
-    }
+    HANDLE_METADC(INT, SetMapMode, 0, hdc, iMode);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
