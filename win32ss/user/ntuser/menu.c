@@ -5120,6 +5120,12 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
       IntMenuItemInfo(Menu, SC_MINIMIZE, FALSE, &ItemInfoSet, TRUE, NULL);
 
       NewMenu = IntCloneMenu(Menu);
+      if (NewMenu == NULL)
+      {
+         IntDestroyMenuObject(Menu, FALSE);
+         IntDestroyMenuObject(SysMenu, FALSE);
+         return NULL;
+      }
 
       IntReleaseMenuObject(NewMenu);
       UserSetMenuDefaultItem(NewMenu, SC_CLOSE, FALSE);
