@@ -44,7 +44,13 @@ static INT NULL_SetMapMode(PHYSDEV dev, INT iMode)
         return ret;
     }
 
-    /* This lets regular GDI handle it for Enhanced Metafile DCs */
+    /* Do not fail to let regular GDI32 go on with the call */
+    return 1;
+}
+
+static INT NULL_SetRelAbs(PHYSDEV dev, INT iMode)
+{
+    /* Do not fail to let regular GDI32 go on with the call */
     return 1;
 }
 
@@ -181,7 +187,7 @@ static const struct gdi_dc_funcs DummyPhysDevFuncs =
     (PVOID)NULL_Unused, //COLORREF (*pSetPixel)(PHYSDEV,INT,INT,COLORREF);
     (PVOID)NULL_Unused, //INT      (*pSetPolyFillMode)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //INT      (*pSetROP2)(PHYSDEV,INT);
-    (PVOID)NULL_Unused, //INT      (*pSetRelAbs)(PHYSDEV,INT);
+    NULL_SetRelAbs,     //INT      (*pSetRelAbs)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //INT      (*pSetStretchBltMode)(PHYSDEV,INT);
     (PVOID)NULL_Unused, //UINT     (*pSetTextAlign)(PHYSDEV,UINT);
     (PVOID)NULL_Unused, //INT      (*pSetTextCharacterExtra)(PHYSDEV,INT);
@@ -374,6 +380,7 @@ alloc_dc_ptr(WORD magic)
         pWineDc->hPen = GetStockObject(BLACK_PEN);
         pWineDc->hPalette = GetStockObject(DEFAULT_PALETTE);
         pWineDc->MapMode = MM_TEXT;
+        pWineDc->RelAbsMode = ABSOLUTE;
     }
     else
     {
@@ -818,6 +825,19 @@ DRIVER_SelectPalette(WINEDC* pWineDc, HPALETTE Palette, BOOL ForceBackground)
     return Palette;
 }
 
+static INT DRIVER_SetRelAbs(WINEDC* pWineDc, INT Mode)
+{
+    INT ret;
+    PHYSDEV physdev = GET_DC_PHYSDEV(pWineDc, pSetRelAbs);
+    ret = physdev->funcs->pSetRelAbs(physdev, Mode);
+    if (ret && (GDI_HANDLE_GET_TYPE(pWineDc->hdc) == GDILoObjType_LO_METADC16_TYPE))
+    {
+        ret = pWineDc->RelAbsMode;
+        pWineDc->RelAbsMode = Mode;
+    }
+    return ret;
+}
+
 static
 DWORD_PTR
 DRIVER_Dispatch(
@@ -1020,6 +1040,11 @@ DRIVER_Dispatch(
         HANDLE_FUNC3(SetPixel, INT, INT, COLORREF)
         HANDLE_FUNC1(SetPolyFillMode, INT)
         HANDLE_FUNC1(SetROP2, INT)
+        case DCFUNC_SetRelAbs:
+        {
+            INT Mode = va_arg(argptr, INT);
+            return DRIVER_SetRelAbs(pWineDc, Mode);
+        }
         HANDLE_FUNC1(SetStretchBltMode, INT)
         HANDLE_FUNC1(SetTextAlign, UINT)
         HANDLE_FUNC1(SetTextCharacterExtra, INT)

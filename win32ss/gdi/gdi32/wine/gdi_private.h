@@ -77,6 +77,7 @@ typedef struct tagWINEDC
         struct
         {
             INT MapMode;
+            INT RelAbsMode;
         } /* META */;
     };
 } WINEDC, DC;

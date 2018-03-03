@@ -724,6 +724,7 @@ SetRelAbs(
     HDC hdc,
     INT Mode)
 {
+    HANDLE_METADC(INT, SetRelAbs, 0, hdc, Mode);
     return GetAndSetDCDWord(hdc, GdiGetSetRelAbs, Mode, 0, 0, 0);
 }
 
