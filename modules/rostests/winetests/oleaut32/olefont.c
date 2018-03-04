@@ -20,7 +20,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <math.h>
+#include <float.h>
+
+#define COBJMACROS
+
+#include <wine/test.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winerror.h>
+#include <winnt.h>
+#include <initguid.h>
+#include <wtypes.h>
+#include <olectl.h>
+#include <ocidl.h>
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 

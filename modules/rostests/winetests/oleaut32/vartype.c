@@ -18,9 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define CONST_VTABLE
+#define COBJMACROS
 
-#include <initguid.h>
+#include "wine/test.h"
+#include "oleauto.h"
+#include <math.h>
+#include <stdio.h>
+#include "test_tlb.h"
+
+#include "initguid.h"
 
 DEFINE_GUID(UUID_test_struct, 0x4029f190, 0xca4a, 0x4611, 0xae,0xb9,0x67,0x39,0x83,0xcb,0x96,0xdd);
 
@@ -6067,6 +6074,7 @@ static void test_recinfo(void)
     IRecordInfo_Release(recinfo);
 
     ITypeInfo_Release(typeinfo);
+    ITypeLib_Release(typelib2);
     ITypeLib_Release(typelib);
     DeleteFileW(filenameW);
     DeleteFileW(filename2W);
