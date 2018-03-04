@@ -291,7 +291,8 @@ ControlHandler(DWORD request)
     return; 
 }
 
-static VOID CALLBACK
+VOID
+WINAPI
 ServiceMain(DWORD argc, LPWSTR *argv)
 {
     int   result;
@@ -362,27 +363,43 @@ ServiceMain(DWORD argc, LPWSTR *argv)
     return; 
 }
 
-int wmain(int argc, WCHAR *argv[]) 
+
+
+BOOL WINAPI
+DllMain(HINSTANCE hinstDLL,
+        DWORD fdwReason,
+        LPVOID lpvReserved)
 {
-    SERVICE_TABLE_ENTRYW ServiceTable[] =
+    switch (fdwReason)
     {
-        {ServiceName, ServiceMain},
-        {NULL, NULL}
-    };
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            break;
 
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
+        case DLL_PROCESS_DETACH:
+            break;
+    }
 
-    DPRINT("W32Time: main starting.\n");
-
-    /* Start the control dispatcher thread for our service */
-    StartServiceCtrlDispatcherW(ServiceTable);
-
-    DPRINT("W32Time: main done.\n");
-
-    return 0; 
+    return TRUE;
 }
- 
+
+
+HRESULT WINAPI W32TimeSyncNow(LPCWSTR cmdline, UINT blocking, UINT flags)
+{
+    int result;
+    result = SetTime();
+    if (result)
+    {
+        DPRINT("W32TimeSyncNow failed and clock not set.\n");
+        return 1;
+    }
+    else
+    {
+        DPRINT("W32TimeSyncNow succeeded and clock set.\n");
+        return 0;
+    }
+}
+
 /* Service initialization */
 int InitService(VOID) 
 { 

@@ -1,4 +1,4 @@
-[Version]
+﻿[Version]
 Signature = "$ReactOS$"
 
 [AddReg]
@@ -1970,10 +1970,11 @@ HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","DisplayName",0x00000000,%W32TI
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Description",0x00000000,%W32TIME_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Group",0x00000000,"Time"
-HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ImagePath",0x00020000,"%SystemRoot%\system32\W32Time.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\w32time.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\Parameters","Type",0x00010000,"NTP"
 HKLM,"SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient","SpecialPollInterval",0x00010001,0x00093a80
 
