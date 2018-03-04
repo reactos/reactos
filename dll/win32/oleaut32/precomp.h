@@ -1,3 +1,4 @@
+
 #ifndef _OLEAUT32_PCH_
 #define _OLEAUT32_PCH_
 
@@ -28,4 +29,4 @@
 #include "variant.h"
 #include "resource.h"
 
-#endif /* _OLEAUT32_PCH_ */
+#endif /* !_OLEAUT32_PCH_ */

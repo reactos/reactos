@@ -19,9 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
 
-#include <oledlg.h>
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "ole2.h"
+#include "olectl.h"
+#include "oledlg.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -177,7 +186,7 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
             lpParams->lplpUnk, lpParams->cPages, lpParams->lpPages,
             lpParams->lcid, lpParams->dispidInitialProperty);
 
-    if(!lpParams->lplpUnk || !lpParams->lpPages)
+    if(!lpParams->lpPages)
         return E_POINTER;
 
     if(lpParams->cbStructSize != sizeof(OCPFIPARAMS)) {
@@ -279,7 +288,7 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
         res = IPropertyPage_SetObjects(property_page[i],
                 lpParams->cObjects, lpParams->lplpUnk);
         if(FAILED(res))
-            continue;
+            WARN("SetObjects() failed, hr %#x.\n", res);
 
         res = IPropertyPage_GetPageInfo(property_page[i], &page_info);
         if(FAILED(res))
@@ -299,10 +308,8 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
     PropertySheetW(&property_sheet);
 
     for(i=0; i<lpParams->cPages; i++) {
-        if(property_page[i]) {
-            IPropertyPage_SetPageSite(property_page[i], NULL);
+        if(property_page[i])
             IPropertyPage_Release(property_page[i]);
-        }
     }
 
     HeapFree(GetProcessHeap(), 0, dialogs);

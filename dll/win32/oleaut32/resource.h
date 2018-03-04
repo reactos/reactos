@@ -17,9 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
 #ifndef WINE_OLEAUT32_RESOURCE_H
 #define WINE_OLEAUT32_RESOURCE_H
+
+#include <windef.h>
 
 /* Localised boolean text */
 #define IDS_TRUE  100
