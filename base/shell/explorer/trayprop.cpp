@@ -50,6 +50,7 @@ private:
     HBITMAP m_hbmpTaskbar;
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
+    IUnknown *m_TrayNotify;
 
     void UpdateDialog()
     {
@@ -123,10 +124,11 @@ public:
         CHAIN_MSG_MAP(CPropertyPageImpl<CTaskBarSettingsPage>)
     END_MSG_MAP()
 
-    CTaskBarSettingsPage(HWND hwnd):
+    CTaskBarSettingsPage(HWND hwnd, IUnknown *Tray):
         m_hbmpTaskbar(NULL),
         m_hbmpTray(NULL),
-        m_hwndTaskbar(hwnd)
+        m_hwndTaskbar(hwnd),
+        m_TrayNotify(Tray)
     {
     }
     
@@ -155,7 +157,7 @@ public:
 
     LRESULT OnCustomizeTrayIcons(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
     {
-        ShowCustomizeNotifyIcons(hExplorerInstance, m_hWnd);
+        ShowCustomizeNotifyIcons(hExplorerInstance, m_hWnd, m_TrayNotify);
         return 0;
     }
 
@@ -246,11 +248,11 @@ public:
 };
 
 VOID
-DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
+DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar, IN IUnknown *Tray)
 {
     PROPSHEETHEADER psh;
     HPROPSHEETPAGE hpsp[2];
-    CTaskBarSettingsPage tbSettingsPage(hwndTaskbar);
+    CTaskBarSettingsPage tbSettingsPage(hwndTaskbar, Tray);
     CStartMenuSettingsPage smSettingsPage;
     CStringW caption;
     

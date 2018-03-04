@@ -24,6 +24,10 @@
 #include <wingdi.h>
 #include <winnls.h>
 #include <wincon.h>
+#include <windowsx.h>
+
+#undef SubclassWindow
+
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
@@ -238,7 +242,7 @@ ProcessStartupItems(VOID);
  */
 
 VOID
-DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar);
+DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar, IN IUnknown *Tray);
 
 /*
  * desktop.cpp
@@ -254,7 +258,7 @@ DesktopDestroyShellWindow(IN HANDLE hDesktop);
  * notifyiconscust.cpp
  */
 VOID
-ShowCustomizeNotifyIcons(HINSTANCE, HWND);
+ShowCustomizeNotifyIcons(HINSTANCE, HWND, IUnknown*);
 
 /*
  * taskband.cpp
@@ -340,10 +344,18 @@ HRESULT CTrayClockWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
 
 #define NTNWM_REALIGN   (0x1)
 
+struct InternalIconData : NOTIFYICONDATA
+{
+    // Must keep a separate copy since the original is unioned with uTimeout.
+    UINT uVersionCopy;
+};
+
 HRESULT CTrayNotifyWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
+CToolbar<InternalIconData>* CTrayNotifyWnd_GetTrayToolbar(IUnknown *pTray);
 
 /* SysPagerWnd */
 HRESULT CSysPagerWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
+CToolbar<InternalIconData>* CSysPagerWnd_GetTrayToolbar(IUnknown *pPager);
 
 /*
  * taskswnd.c

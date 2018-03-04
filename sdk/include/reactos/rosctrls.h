@@ -400,6 +400,11 @@ public: // Image list management methods
         return SendMessageW(TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(himl));
     }
 
+    HIMAGELIST GetImageList()
+    {
+        return (HIMAGELIST)SendMessageW(TB_GETIMAGELIST, 0, 0);
+    }
+
 public: // Other methods
     INT HitTest(PPOINT ppt)
     {

@@ -102,6 +102,15 @@
 #define IDS_HELP_COMMAND                   732
 #define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
 
+#define IDS_NOTIF_BEH_NAME                 1000
+#define IDS_NOTIF_BEH_BEHAVIOR             1001
+#define IDS_NOTIF_BEH_HIDE_INACTIVE        1002
+#define IDS_NOTIF_BEH_HIDE                 1003
+#define IDS_NOTIF_BEH_SHOW                 1004
+
+#define IDS_NOTIF_BEH_CURRENT              1403
+#define IDS_NOTIF_BEH_PAST                 1404
+
 /*******************************************************************************\
 |*                              Control Resources                              *|
 \*******************************************************************************/

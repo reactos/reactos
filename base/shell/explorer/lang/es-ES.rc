@@ -208,3 +208,18 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Propiedades de la Barra de tareas y del Menú Inicio"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTIF_BEH_NAME          "Name"
+    IDS_NOTIF_BEH_BEHAVIOR      "Behavior"
+    IDS_NOTIF_BEH_HIDE_INACTIVE "Hide when inactive"
+    IDS_NOTIF_BEH_HIDE          "Always hide"
+    IDS_NOTIF_BEH_SHOW          "Always show"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTIF_BEH_CURRENT "Current Items"
+    IDS_NOTIF_BEH_PAST    "Past Items"
+END

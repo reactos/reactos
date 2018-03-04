@@ -330,6 +330,11 @@ public:
         return E_NOTIMPL;
     }
 
+    IUnknown* GetPager()
+    {
+        return m_pager;
+    }
+
     DECLARE_NOT_AGGREGATABLE(CTrayNotifyWnd)
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -368,4 +373,16 @@ public:
 HRESULT CTrayNotifyWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv)
 {
     return ShellObjectCreatorInit<CTrayNotifyWnd>(hwndParent, riid, ppv);
+}
+
+CToolbar<InternalIconData>* CTrayNotifyWnd_GetTrayToolbar(IUnknown* pTray)
+{
+    CTrayNotifyWnd *tray = static_cast<CTrayNotifyWnd*>(pTray);
+
+    if (tray != NULL)
+    {
+        return CSysPagerWnd_GetTrayToolbar(tray->GetPager());
+    }
+
+    return NULL;
 }
