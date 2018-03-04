@@ -23,7 +23,7 @@ typedef PGDI_TABLE_ENTRY (CALLBACK * GDIQUERYPROC) (void);
 
 /* Handle macros */
 #define GDI_HANDLE_CREATE(i, t)    \
-    ((HANDLE)(((i) & GDI_HANDLE_INDEX_MASK) | ((t) << 16)))
+    ((HANDLE)(((ULONG_PTR)(i) & GDI_HANDLE_INDEX_MASK) | ((t) << 16)))
 
 #define GDI_HANDLE_GET_INDEX(h)    \
     (((ULONG_PTR)(h)) & GDI_HANDLE_INDEX_MASK)
