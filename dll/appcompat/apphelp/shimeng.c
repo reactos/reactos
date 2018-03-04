@@ -597,9 +597,9 @@ FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
     PHOOKMODULEINFO HookModuleInfo;
     FARPROC proc = ((GETPROCADDRESSPROC)g_IntHookEx[0].OriginalFunction)(hModule, lpProcName);
 
-    if (!HIWORD(lpProcName))
+    if ((DWORD_PTR)lpProcName <= MAXUSHORT)
     {
-        sprintf(szOrdProcName, "#%lu", (DWORD)lpProcName);
+        sprintf(szOrdProcName, "#%Iu", (DWORD_PTR)lpProcName);
         lpPrintName = szOrdProcName;
     }
 
@@ -676,7 +676,7 @@ VOID SeiPatchNewImport(PIMAGE_THUNK_DATA FirstThunk, PHOOKAPIEX HookApi, PLDR_DA
 {
     ULONG OldProtection = 0;
     PVOID Ptr;
-    ULONG Size;
+    SIZE_T Size;
     NTSTATUS Status;
 
     SHIMENG_INFO("Hooking API \"%s!%s\" for DLL \"%wZ\"\n", HookApi->LibraryName, HookApi->FunctionName, &LdrEntry->BaseDllName);
