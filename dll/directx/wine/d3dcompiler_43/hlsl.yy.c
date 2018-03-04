@@ -28,7 +28,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 35
+#define YY_FLEX_SUBMINOR_VERSION 37
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -161,15 +161,7 @@ typedef unsigned int flex_uint32_t;
 
 /* Size of default input buffer. */
 #ifndef YY_BUF_SIZE
-#ifdef __ia64__
-/* On IA-64, the buffer size is 16k, not 8k.
- * Moreover, YY_BUF_SIZE is 2*YY_READ_BUF_SIZE in the general case.
- * Ditto for the __ia64__ case accordingly.
- */
-#define YY_BUF_SIZE 32768
-#else
 #define YY_BUF_SIZE 16384
-#endif /* __ia64__ */
 #endif
 
 /* The state buf must be large enough to hold one state per character in the main buffer.
@@ -181,7 +173,12 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-extern int hlsl_leng;
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
+
+extern yy_size_t hlsl_leng;
 
 extern FILE *hlsl_in, *hlsl_out;
 
@@ -207,11 +204,6 @@ extern FILE *hlsl_in, *hlsl_out;
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
-
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
 struct yy_buffer_state
@@ -229,7 +221,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	int yy_n_chars;
+	yy_size_t yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -299,8 +291,8 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
 
 /* yy_hold_char holds the character lost when hlsl_text is formed. */
 static char yy_hold_char;
-static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int hlsl_leng;
+static yy_size_t yy_n_chars;		/* number of characters read into yy_ch_buf */
+yy_size_t hlsl_leng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = (char *) 0;
@@ -328,7 +320,7 @@ static void hlsl__init_buffer (YY_BUFFER_STATE b,FILE *file  );
 
 YY_BUFFER_STATE hlsl__scan_buffer (char *base,yy_size_t size  );
 YY_BUFFER_STATE hlsl__scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE hlsl__scan_bytes (yyconst char *bytes,int len  );
+YY_BUFFER_STATE hlsl__scan_bytes (yyconst char *bytes,yy_size_t len  );
 
 void *hlsl_alloc (yy_size_t  );
 void *hlsl_realloc (void *,yy_size_t  );
@@ -360,7 +352,7 @@ void hlsl_free (void *  );
 
 /* Begin user sect3 */
 
-#define hlsl_wrap(n) 1
+#define hlsl_wrap() 1
 #define YY_SKIP_YYWRAP
 
 typedef unsigned char YY_CHAR;
@@ -980,7 +972,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(hlsl_parser);
 
 #define YY_NO_INPUT 1
 
-#line 984 "hlsl.yy.c"
+#line 976 "hlsl.yy.c"
 
 #define INITIAL 0
 #define pp 1
@@ -995,7 +987,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(hlsl_parser);
  */
 #include <unistd.h>
 #endif
-
+    
 #ifndef YY_EXTRA_TYPE
 #define YY_EXTRA_TYPE void *
 #endif
@@ -1023,7 +1015,7 @@ FILE *hlsl_get_out (void );
 
 void hlsl_set_out  (FILE * out_str  );
 
-int hlsl_get_leng (void );
+yy_size_t hlsl_get_leng (void );
 
 char *hlsl_get_text (void );
 
@@ -1063,12 +1055,7 @@ static int input (void );
 
 /* Amount of stuff to slurp up with each read. */
 #ifndef YY_READ_BUF_SIZE
-#ifdef __ia64__
-/* On IA-64, the buffer size is 16k, not 8k */
-#define YY_READ_BUF_SIZE 16384
-#else
 #define YY_READ_BUF_SIZE 8192
-#endif /* __ia64__ */
 #endif
 
 /* Copy whatever the last rule matched to the standard output. */
@@ -1174,7 +1161,7 @@ YY_DECL
     
 #line 60 "hlsl.l"
 
-#line 1178 "hlsl.yy.c"
+#line 1165 "hlsl.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -1965,7 +1952,7 @@ YY_RULE_SETUP
 #line 276 "hlsl.l"
 ECHO;
 	YY_BREAK
-#line 1969 "hlsl.yy.c"
+#line 1956 "hlsl.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(pp):
 case YY_STATE_EOF(pp_line):
@@ -2156,21 +2143,21 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			int num_to_read =
+			yy_size_t num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
 			{ /* Not enough room in the buffer - grow it. */
 
 			/* just a shorter name for the current buffer */
-			YY_BUFFER_STATE b = YY_CURRENT_BUFFER;
+			YY_BUFFER_STATE b = YY_CURRENT_BUFFER_LVALUE;
 
 			int yy_c_buf_p_offset =
 				(int) ((yy_c_buf_p) - b->yy_ch_buf);
 
 			if ( b->yy_is_our_buffer )
 				{
-				int new_size = b->yy_buf_size * 2;
+				yy_size_t new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -2201,7 +2188,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), (size_t) num_to_read );
+			(yy_n_chars), num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -2297,7 +2284,7 @@ static int yy_get_next_buffer (void)
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 	yy_is_jam = (yy_current_state == 716);
 
-	return yy_is_jam ? 0 : yy_current_state;
+		return yy_is_jam ? 0 : yy_current_state;
 }
 
 #ifndef YY_NO_INPUT
@@ -2324,7 +2311,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -2598,7 +2585,7 @@ void hlsl_pop_buffer_state (void)
  */
 static void hlsl_ensure_buffer_stack (void)
 {
-	int num_to_alloc;
+	yy_size_t num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -2695,12 +2682,12 @@ YY_BUFFER_STATE hlsl__scan_string (yyconst char * yystr )
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE hlsl__scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE hlsl__scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
 	yy_size_t n;
-	int i;
+	yy_size_t i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
@@ -2782,7 +2769,7 @@ FILE *hlsl_get_out  (void)
 /** Get the length of the current token.
  * 
  */
-int hlsl_get_leng  (void)
+yy_size_t hlsl_get_leng  (void)
 {
         return hlsl_leng;
 }
@@ -2930,7 +2917,7 @@ void hlsl_free (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 276 "hlsl.l"
+#line 275 "hlsl.l"
 
 
 
