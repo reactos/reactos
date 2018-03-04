@@ -23,15 +23,38 @@
  *
  */
 
-#include "precomp.h"
-
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
-#include <ws2tcpip.h>
+#ifdef __REACTOS__
+#define NONAMELESSUNION
+#endif
+#include "ws2tcpip.h"
 
-#include <wininet.h>
-#include <winioctl.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
 
+
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "wininet.h"
+#include "wine/winternl.h"
+#include "winioctl.h"
+#include "wine/unicode.h"
+
+#include "rpc.h"
+#include "rpcndr.h"
+
+#include "wine/debug.h"
+
+#include "rpc_binding.h"
+#include "rpc_assoc.h"
+#include "rpc_message.h"
+#include "rpc_server.h"
 #include "epm_towers.h"
 
 #define DEFAULT_NCACN_HTTP_TIMEOUT (60 * 1000)

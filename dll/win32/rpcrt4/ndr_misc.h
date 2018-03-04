@@ -21,6 +21,13 @@
 #ifndef __WINE_NDR_MISC_H
 #define __WINE_NDR_MISC_H
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "rpc.h"
+#include "rpcndr.h"
+
 struct IPSFactoryBuffer;
 
 PFORMAT_STRING ComputeConformanceOrVariance(

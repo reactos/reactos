@@ -19,7 +19,10 @@
  *
  */
 
+#pragma once
+
 #include "rpc_binding.h"
+#include "wine/list.h"
 
 typedef struct _RpcAssoc
 {

@@ -21,6 +21,8 @@
 #ifndef __WINE_RPC_MESSAGE_H
 #define __WINE_RPC_MESSAGE_H
 
+#include "rpc_defs.h"
+
 typedef unsigned int NCA_STATUS;
 
 RpcPktHdr *RPCRT4_BuildFaultHeader(ULONG DataRepresentation, RPC_STATUS Status) DECLSPEC_HIDDEN;

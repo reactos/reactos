@@ -18,9 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <midles.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "rpc.h"
+#include "midles.h"
+#include "ndrtypes.h"
+
+#include "ndr_misc.h"
+#include "ndr_stubless.h"
+
+#include "wine/debug.h"
+#include "wine/rpcfc.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

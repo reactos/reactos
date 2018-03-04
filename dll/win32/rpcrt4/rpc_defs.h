@@ -22,7 +22,7 @@
 #ifndef __WINE_RPC_DEFS_H
 #define __WINE_RPC_DEFS_H
 
-#include <pshpack1.h>
+#include "pshpack1.h"
 typedef struct
 {
   unsigned char rpc_ver;          /* RPC major version (5) */
@@ -168,7 +168,7 @@ typedef struct
   unsigned char auth_reserved;   /* reserved, must be zero */
   unsigned int  auth_context_id; /* unique value for the authenticated connection */
 } RpcAuthVerifier;
-#include <poppack.h>
+#include "poppack.h"
 
 #define RPC_AUTH_VERIFIER_LEN(common_hdr) \
     ((common_hdr)->auth_len ? (common_hdr)->auth_len + sizeof(RpcAuthVerifier) : 0)
