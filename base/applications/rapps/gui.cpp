@@ -348,7 +348,7 @@ public:
             return FALSE;
         }
 
-        ImageList_Destroy((HIMAGELIST) SetImageList(hImageList));
+        ImageList_Destroy(SetImageList(hImageList));
 
         AddButtons(_countof(Buttons), Buttons);
 
