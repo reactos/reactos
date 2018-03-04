@@ -3043,12 +3043,14 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
         }
     }
 
+#define DELTA1 32
+#define DELTA2 1
+#define GETREALHEIGHT(face) ((face)->size->metrics.ascender + (-(face)->size->metrics.descender))
+
     error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
     RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
 
     /* FIXME: Optimize speed */
-#define DELTA1 32
-#define DELTA2 1
     if (TargetHeight < RealHeight)
     {
         while (!error && Height > DELTA1 && TargetHeight < RealHeight)
@@ -3057,7 +3059,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             if (Width != 0)
                 Width -= MulDiv(DELTA1, TargetWidth, TargetHeight);
             error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
-            RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+            RealHeight = GETREALHEIGHT(face);
         }
 
         while (!error && TargetHeight > RealHeight)
@@ -3066,7 +3068,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             if (Width != 0)
                 Width += MulDiv(DELTA2, TargetWidth, TargetHeight);
             error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
-            RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+            RealHeight = GETREALHEIGHT(face);
         }
     }
     else if (TargetHeight > RealHeight)
@@ -3077,7 +3079,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             if (Width != 0)
                 Width += MulDiv(DELTA1, TargetWidth, TargetHeight);
             error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
-            RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+            RealHeight = GETREALHEIGHT(face);
         }
 
         while (!error && Height > DELTA2 && TargetHeight < RealHeight)
@@ -3086,11 +3088,13 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             if (Width != 0)
                 Width -= MulDiv(DELTA2, TargetWidth, TargetHeight);
             error = FT_Set_Char_Size(face, Width, Height, DEFAULT_DPI, DEFAULT_DPI);
-            RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
+            RealHeight = GETREALHEIGHT(face);
         }
     }
+
 #undef DELTA1
 #undef DELTA2
+#undef GETREALHEIGHT
 
     return error;
 }
