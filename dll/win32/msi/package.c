@@ -18,9 +18,35 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#define COBJMACROS
 
-#include <wininet.h>
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "shlwapi.h"
+#include "wingdi.h"
+#include "wine/debug.h"
+#include "msi.h"
+#include "msiquery.h"
+#include "objidl.h"
+#include "wincrypt.h"
+#include "winuser.h"
+#include "wininet.h"
+#include "winver.h"
+#include "urlmon.h"
+#include "shlobj.h"
+#include "wine/unicode.h"
+#include "objbase.h"
+#include "msidefs.h"
+#include "sddl.h"
+
+#include "msipriv.h"
+#include "msiserver.h"
+#include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -502,71 +528,73 @@ done:
 
 static LPWSTR get_fusion_filename(MSIPACKAGE *package)
 {
-    HKEY netsetup;
+    static const WCHAR fusion[] =
+        {'f','u','s','i','o','n','.','d','l','l',0};
+    static const WCHAR subkey[] =
+        {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+         'N','E','T',' ','F','r','a','m','e','w','o','r','k',' ','S','e','t','u','p','\\','N','D','P',0};
+    static const WCHAR subdir[] =
+        {'M','i','c','r','o','s','o','f','t','.','N','E','T','\\','F','r','a','m','e','w','o','r','k','\\',0};
+    static const WCHAR v2050727[] =
+        {'v','2','.','0','.','5','0','7','2','7',0};
+    static const WCHAR v4client[] =
+        {'v','4','\\','C','l','i','e','n','t',0};
+    static const WCHAR installpath[] =
+        {'I','n','s','t','a','l','l','P','a','t','h',0};
+    HKEY netsetup, hkey;
     LONG res;
-    LPWSTR file = NULL;
-    DWORD index = 0, size;
-    WCHAR ver[MAX_PATH];
-    WCHAR name[MAX_PATH];
-    WCHAR windir[MAX_PATH];
+    DWORD size, len, type;
+    WCHAR windir[MAX_PATH], path[MAX_PATH], *filename = NULL;
 
-    static const WCHAR fusion[] = {'f','u','s','i','o','n','.','d','l','l',0};
-    static const WCHAR sub[] = {
-        'S','o','f','t','w','a','r','e','\\',
-        'M','i','c','r','o','s','o','f','t','\\',
-        'N','E','T',' ','F','r','a','m','e','w','o','r','k',' ','S','e','t','u','p','\\',
-        'N','D','P',0
-    };
-    static const WCHAR subdir[] = {
-        'M','i','c','r','o','s','o','f','t','.','N','E','T','\\',
-        'F','r','a','m','e','w','o','r','k','\\',0
-    };
-
-    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, sub, 0, KEY_ENUMERATE_SUB_KEYS, &netsetup);
+    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey, 0, KEY_CREATE_SUB_KEY, &netsetup);
     if (res != ERROR_SUCCESS)
         return NULL;
 
-    GetWindowsDirectoryW(windir, MAX_PATH);
-
-    ver[0] = '\0';
-    size = MAX_PATH;
-    while (RegEnumKeyExW(netsetup, index, name, &size, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+    if (!RegCreateKeyExW(netsetup, v4client, 0, NULL, 0, KEY_QUERY_VALUE, NULL, &hkey, NULL))
     {
-        index++;
-
-        /* verify existence of fusion.dll .Net 3.0 does not install a new one */
-        if (strcmpW( ver, name ) < 0)
+        size = sizeof(path)/sizeof(path[0]);
+        if (!RegQueryValueExW(hkey, installpath, NULL, &type, (BYTE *)path, &size))
         {
-            LPWSTR check;
-            size = lstrlenW(windir) + lstrlenW(subdir) + lstrlenW(name) +lstrlenW(fusion) + 3;
-            check = msi_alloc(size * sizeof(WCHAR));
+            len = strlenW(path) + strlenW(fusion) + 2;
+            if (!(filename = msi_alloc(len * sizeof(WCHAR)))) return NULL;
 
-            if (!check)
+            strcpyW(filename, path);
+            strcatW(filename, szBackSlash);
+            strcatW(filename, fusion);
+            if (GetFileAttributesW(filename) != INVALID_FILE_ATTRIBUTES)
             {
-                msi_free(file);
-                return NULL;
+                TRACE( "found %s\n", debugstr_w(filename) );
+                RegCloseKey(hkey);
+                RegCloseKey(netsetup);
+                return filename;
             }
+        }
+        RegCloseKey(hkey);
+    }
 
-            lstrcpyW(check, windir);
-            lstrcatW(check, szBackSlash);
-            lstrcatW(check, subdir);
-            lstrcatW(check, name);
-            lstrcatW(check, szBackSlash);
-            lstrcatW(check, fusion);
+    if (!RegCreateKeyExW(netsetup, v2050727, 0, NULL, 0, KEY_QUERY_VALUE, NULL, &hkey, NULL))
+    {
+        RegCloseKey(hkey);
+        GetWindowsDirectoryW(windir, MAX_PATH);
+        len = strlenW(windir) + strlenW(subdir) + strlenW(v2050727) + strlenW(fusion) + 3;
+        if (!(filename = msi_alloc(len * sizeof(WCHAR)))) return NULL;
 
-            if(GetFileAttributesW(check) != INVALID_FILE_ATTRIBUTES)
-            {
-                msi_free(file);
-                file = check;
-                lstrcpyW(ver, name);
-            }
-            else
-                msi_free(check);
+        strcpyW(filename, windir);
+        strcatW(filename, szBackSlash);
+        strcatW(filename, subdir);
+        strcatW(filename, v2050727);
+        strcatW(filename, szBackSlash);
+        strcatW(filename, fusion);
+        if (GetFileAttributesW(filename) != INVALID_FILE_ATTRIBUTES)
+        {
+            TRACE( "found %s\n", debugstr_w(filename) );
+            RegCloseKey(netsetup);
+            return filename;
         }
     }
 
     RegCloseKey(netsetup);
-    return file;
+    return filename;
 }
 
 typedef struct tagLANGANDCODEPAGE

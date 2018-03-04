@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-
+#include "windef.h"
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -50,6 +49,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION 4,5,6001,22308
 #define WINE_PRODUCTVERSION_STR "4.5.6001.22308"
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"
 
 #include "rsrc.rc"

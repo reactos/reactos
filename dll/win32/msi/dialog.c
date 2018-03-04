@@ -19,11 +19,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+#define COBJMACROS
+#define NONAMELESSUNION
 
-#include <olectl.h>
-#include <richedit.h>
-#include <shellapi.h>
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "msi.h"
+#include "msidefs.h"
+#include "ocidl.h"
+#include "olectl.h"
+#include "richedit.h"
+#include "commctrl.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "shellapi.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+#include "msipriv.h"
+#include "msiserver.h"
+#include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -3179,13 +3200,13 @@ static LONGLONG msi_vcl_get_cost( msi_dialog *dialog )
                 MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &each_cost)))
         {
             /* each_cost is in 512-byte units */
-            total_cost += each_cost * 512;
+            total_cost += ((LONGLONG)each_cost) * 512;
         }
         if (ERROR_SUCCESS == (MSI_GetFeatureCost(dialog->package, feature,
                 MSICOSTTREE_SELFONLY, INSTALLSTATE_ABSENT, &each_cost)))
         {
             /* each_cost is in 512-byte units */
-            total_cost -= each_cost * 512;
+            total_cost -= ((LONGLONG)each_cost) * 512;
         }
     }
     return total_cost;
