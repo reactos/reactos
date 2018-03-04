@@ -1,4 +1,5 @@
 /* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) 2018 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -7,8 +8,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "参数个数不正确 - %s\n"
     IDS_INVALID_PARAMETER "参数个数不正确 - %s\n"
     IDS_INVALID_PARAMETER2 "无效参数 - %s\n"
-    IDS_PATH_NOT_FOUND "Path not found - %s\n"
-    IDS_ACCESS_DENIED "Access denied - %s\n"
+    IDS_PATH_NOT_FOUND "找不到文件夹 - %s\n"
+    IDS_ACCESS_DENIED "拒绝访问 - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "驱动器已经运行过 SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "操作失败！错误码 0x%x：%s\n"
     IDS_USAGE "将一个路径用驱动器号关联。\n\n\
