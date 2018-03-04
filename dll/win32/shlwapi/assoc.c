@@ -17,8 +17,21 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdarg.h>
+#include <assert.h>
 
-#include "precomp.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "objbase.h"
+#include "shlguid.h"
+#include "shlobj.h"
+#include "shlwapi.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /* Default IQueryAssociations::Init() flags */
 #define SHLWAPI_DEF_ASSOCF (ASSOCF_INIT_BYEXENAME|ASSOCF_INIT_DEFAULTTOSTAR| \
@@ -89,7 +102,6 @@ HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
   return SHCoCreateInstance( NULL, &clsid, NULL, refiid, lpInterface );
 }
 
-#ifdef __REACTOS__
 
 struct AssocPerceivedInfo
 {
@@ -257,8 +269,6 @@ static const struct AssocPerceivedInfo* AssocFindByType(LPCWSTR pszType)
     return NULL;
 }
 
-#endif
-
 
 /*************************************************************************
  * AssocGetPerceivedType  [SHLWAPI.@]
@@ -281,26 +291,10 @@ static const struct AssocPerceivedInfo* AssocFindByType(LPCWSTR pszType)
  *  lppszType is optional and it can be NULL.
  *  if lpType or lpFlag are NULL, the function will crash.
  *  if lpszExt is NULL, an error is returned.
- *
-#ifndef __REACTOS__
- * BUGS
- *   Unimplemented.
-#endif
  */
 HRESULT WINAPI AssocGetPerceivedType(LPCWSTR lpszExt, PERCEIVED *lpType,
                                      INT *lpFlag, LPWSTR *lppszType)
 {
-#ifndef __REACTOS__
-
-  FIXME("(%s, %p, %p, %p) not supported\n", debugstr_w(lpszExt), lpType, lpFlag, lppszType);
-
-  if (lpszExt == NULL)
-    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-
-  return E_NOTIMPL;
-
-#else
-
     static const WCHAR PerceivedTypeKey[] = {'P','e','r','c','e','i','v','e','d','T','y','p','e',0};
     static const WCHAR SystemFileAssociationsKey[] = {'S','y','s','t','e','m','F','i','l','e',
         'A','s','s','o','c','i','a','t','i','o','n','s','\\','%','s',0};
@@ -355,8 +349,6 @@ HRESULT WINAPI AssocGetPerceivedType(LPCWSTR lpszExt, PERCEIVED *lpType,
         *lpFlag = 0;
     }
     return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-
-#endif
 }
 
 /*************************************************************************

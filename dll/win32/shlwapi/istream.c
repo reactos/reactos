@@ -17,8 +17,22 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdarg.h>
+#include <string.h>
 
-#include "precomp.h"
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winnls.h"
+#define NO_SHLWAPI_REG
+#define NO_SHLWAPI_PATH
+#include "shlwapi.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define STGM_ACCESS_MODE(stgm)   ((stgm)&0x0000f)
 #define STGM_SHARE_MODE(stgm)    ((stgm)&0x000f0)

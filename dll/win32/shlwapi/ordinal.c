@@ -20,18 +20,38 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
-#include <winver.h>
-#include <winnetwk.h>
-#include <mmsystem.h>
-#include <shdeprecated.h>
-#include <shellapi.h>
-#include <commdlg.h>
-#include <mlang.h>
-#include <mshtmhst.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winver.h"
+#include "winnetwk.h"
+#include "mmsystem.h"
+#include "objbase.h"
+#include "exdisp.h"
+#include "shdeprecated.h"
+#include "shlobj.h"
+#include "shlwapi.h"
+#include "shellapi.h"
+#include "commdlg.h"
+#include "mlang.h"
+#include "mshtmhst.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /* DLL handles for late bound calls */
 extern HINSTANCE shlwapi_hInstance;
@@ -77,6 +97,12 @@ HANDLE WINAPI SHMapHandle(HANDLE hShared, DWORD dwSrcProcId, DWORD dwDstProcId,
 
   TRACE("(%p,%d,%d,%08x,%08x)\n", hShared, dwDstProcId, dwSrcProcId,
         dwAccess, dwOptions);
+
+  if (!hShared)
+  {
+    TRACE("Returning handle NULL\n");
+    return NULL;
+  }
 
   /* Get dest process handle */
   if (dwDstProcId == dwMyProcId)

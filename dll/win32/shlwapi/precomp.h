@@ -1,3 +1,4 @@
+
 #ifndef _SHLWAPI_PCH_
 #define _SHLWAPI_PCH_
 
@@ -29,6 +30,4 @@
 
 #include "resource.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-#endif /* _SHLWAPI_PCH_ */
+#endif /* !_SHLWAPI_PCH_ */
