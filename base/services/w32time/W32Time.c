@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2018 Doug Lyons
  */
 
-#include<windows.h>
+#include <windows.h>
 #include <debug.h>
 #include <strsafe.h>
 
@@ -17,6 +17,7 @@ static WCHAR ServiceName[] = L"W32Time";
  
 int InitService(VOID);
 ULONG GetServerTime(LPWSTR lpAddress);
+
 
 /* Copied from internettime.c */
 static VOID
@@ -55,6 +56,7 @@ UpdateSystemTime(ULONG ulTime)
     /* Use SystemSetTime with SystemTime = TRUE to set System Time */
     SystemSetTime(&stNew, TRUE);
 }
+
 
 /* Copied from dateandtime.c */
 BOOL
@@ -127,6 +129,7 @@ SystemSetTime(LPSYSTEMTIME lpSystemTime,
     return Ret;
 }
 
+
 static DWORD
 GetIntervalSetting(VOID)
 {
@@ -142,6 +145,11 @@ GetIntervalSetting(VOID)
                       KEY_QUERY_VALUE,
                       &hKey) == ERROR_SUCCESS)
     {
+        /* This key holds the update interval in milliseconds
+         * It it useful for testing to set it to a value of 10000 (Decimal)
+         * This will cause the clock to try and update every 10 seconds
+         * So you can change the time and expect it to be set back correctly in 10-20 seconds
+         */ 
         lRet = RegQueryValueExW(hKey,
                                 L"SpecialPollInterval",
                                 NULL,
@@ -211,7 +219,6 @@ SetTime(VOID)
         }
     }
 
-
     dwIndex = 0;
     while (TRUE)
     {
@@ -259,6 +266,7 @@ SetTime(VOID)
         return 1;
 }
 
+
 /* Control handler function */
 VOID WINAPI
 ControlHandler(DWORD request) 
@@ -290,6 +298,7 @@ ControlHandler(DWORD request)
  
     return; 
 }
+
 
 VOID
 WINAPI
@@ -384,21 +393,23 @@ DllMain(HINSTANCE hinstDLL,
 }
 
 
-HRESULT WINAPI W32TimeSyncNow(LPCWSTR cmdline, UINT blocking, UINT flags)
+HRESULT WINAPI
+W32TimeSyncNow(LPCWSTR cmdline, UINT blocking, UINT flags)
 {
     int result;
     result = SetTime();
     if (result)
     {
         DPRINT("W32TimeSyncNow failed and clock not set.\n");
-        return 1;
+        return E_FAIL;
     }
     else
     {
         DPRINT("W32TimeSyncNow succeeded and clock set.\n");
-        return 0;
+        return S_OK;
     }
 }
+
 
 /* Service initialization */
 int InitService(VOID) 
