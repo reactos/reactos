@@ -359,6 +359,9 @@ CreateTreeImageList(VOID)
 static ADVANCED_ENTRY *
 Advanced_GetItem(DWORD dwID)
 {
+    if (dwID == DWORD(-1))
+        return NULL;
+
     for (INT i = 0; i < s_AdvancedCount; ++i)
     {
         ADVANCED_ENTRY *pEntry = &s_Advanced[i];
@@ -701,24 +704,67 @@ Advanced_Compare(const void *x, const void *y)
 {
     ADVANCED_ENTRY *pEntry1 = (ADVANCED_ENTRY *)x;
     ADVANCED_ENTRY *pEntry2 = (ADVANCED_ENTRY *)y;
+
     DWORD dwParentID1 = pEntry1->dwParentID;
     DWORD dwParentID2 = pEntry2->dwParentID;
-    while (dwParentID1 != dwParentID2)
+
+    if (dwParentID1 == dwParentID2)
+        return lstrcmpi(pEntry1->szText, pEntry2->szText);
+
+    DWORD i, m, n;
+    const UINT MAX_DEPTH = 32;
+    ADVANCED_ENTRY *pArray1[MAX_DEPTH];
+    ADVANCED_ENTRY *pArray2[MAX_DEPTH];
+
+    // Make ancestor lists
+    for (i = m = n = 0; i < MAX_DEPTH; ++i)
     {
         ADVANCED_ENTRY *pParent1 = Advanced_GetItem(dwParentID1);
         ADVANCED_ENTRY *pParent2 = Advanced_GetItem(dwParentID2);
         if (!pParent1 && !pParent2)
             break;
-        if (!pParent1 && pParent2)
-            return -1;
-        if (pParent1 && !pParent2)
-            return 1;
-        INT nCompare = lstrcmpi(pParent1->szText, pParent2->szText);
-        if (nCompare)
-            return nCompare;
-        dwParentID1 = pParent1->dwParentID;
-        dwParentID2 = pParent2->dwParentID;
+
+        if (pParent1)
+        {
+            pArray1[m++] = pParent1;
+            dwParentID1 = pParent1->dwParentID;
+        }
+        if (pParent2)
+        {
+            pArray2[n++] = pParent2;
+            dwParentID2 = pParent2->dwParentID;
+        }
     }
+
+    // std::reverse(&pArray1[0], &pArray1[m]);
+    for (i = 0; i < m / 2; ++i)
+    {
+        ADVANCED_ENTRY *pEntry = pArray1[i];
+        pArray1[i] = pArray1[m - i - 1];
+        pArray1[m - i - 1] = pEntry;
+    }
+    // std::reverse(&pArray2[0], &pArray2[n]);
+    for (i = 0; i < n / 2; ++i)
+    {
+        ADVANCED_ENTRY *pEntry = pArray2[i];
+        pArray2[i] = pArray2[n - i - 1];
+        pArray2[n - i - 1] = pEntry;
+    }
+
+    UINT k = (m < n) ? m : n;
+    for (i = 0; i < k; ++i)
+    {
+        INT nCompare = lstrcmpi(pArray1[i]->szText, pArray2[i]->szText);
+        if (nCompare < 0)
+            return -1;
+        if (nCompare > 0)
+            return 1;
+    }
+
+    if (m < n)
+        return -1;
+    if (m > n)
+        return 1;
     return lstrcmpi(pEntry1->szText, pEntry2->szText);
 }
 
