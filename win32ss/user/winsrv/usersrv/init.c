@@ -114,7 +114,7 @@ ULONG
 NTAPI
 CreateSystemThreads(PVOID pParam)
 {
-    NtUserCallOneParam((DWORD)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    NtUserCallOneParam((DWORD_PTR)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
     RtlExitUserThread(0);
     return 0;
 }
@@ -292,9 +292,15 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
         for (i = 0; i < 2; ++i)
         {
             Status = RtlCreateUserThread(NtCurrentProcess(),
-                                         NULL, TRUE, 0, 0, 0,
+                                         NULL,
+                                         TRUE,
+                                         0,
+                                         0,
+                                         0,
                                          CreateSystemThreads,
-                                         (PVOID)i, &ServerThread, &ClientId);
+                                         UlongToPtr(i),
+                                         &ServerThread,
+                                         &ClientId);
             if (NT_SUCCESS(Status))
             {
                 NtResumeThread(ServerThread, NULL);
