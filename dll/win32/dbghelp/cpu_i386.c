@@ -18,10 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "dbghelp_private.h"
+#include <assert.h>
 
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "dbghelp_private.h"
 #ifndef DBGHELP_STATIC_LIB
-#include <wine/winbase16.h>
+#include "wine/winbase16.h"
+#include "winternl.h"
+#include "wine/debug.h"
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
@@ -215,16 +220,16 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
         /* Init done */
         set_curr_mode((frame->AddrPC.Mode == AddrModeFlat) ? stm_32bit : stm_16bit);
 
-        /* cur_switch holds address of WOW32Reserved field in TEB in debuggee
+        /* cur_switch holds address of SystemReserved1[0] field in TEB in debuggee
          * address space
          */
         if (NtQueryInformationThread(csw->hThread, ThreadBasicInformation, &info,
                                      sizeof(info), NULL) == STATUS_SUCCESS)
         {
-            curr_switch = (DWORD_PTR)info.TebBaseAddress + FIELD_OFFSET(TEB, WOW32Reserved);
+            curr_switch = (DWORD_PTR)info.TebBaseAddress + FIELD_OFFSET(TEB, SystemReserved1[0]);
             if (!sw_read_mem(csw, curr_switch, &p, sizeof(p)))
             {
-                WARN("Can't read TEB:WOW32Reserved\n");
+                WARN("Can't read TEB:SystemReserved1[0]\n");
                 goto done_err;
             }
             next_switch = p;

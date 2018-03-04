@@ -96,6 +96,8 @@
  * types, they are not completely linked together.
  */
 
+#pragma once
+
 #include "pshpack1.h"
 
 /* ======================================== *

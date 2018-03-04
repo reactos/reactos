@@ -8,6 +8,7 @@
 #include "dbghelp_private.h"
 #include <reactos/rossym.h>
 
+#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_rsym);
 
 

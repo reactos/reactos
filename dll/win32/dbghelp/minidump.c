@@ -18,9 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "dbghelp_private.h"
-
 #include <time.h>
+
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "dbghelp_private.h"
+#include "winternl.h"
+#include "psapi.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
