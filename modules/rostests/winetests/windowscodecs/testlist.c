@@ -9,6 +9,7 @@ extern void func_converter(void);
 extern void func_gifformat(void);
 extern void func_icoformat(void);
 extern void func_info(void);
+extern void func_jpegformat(void);
 extern void func_metadata(void);
 extern void func_palette(void);
 extern void func_pngformat(void);
@@ -24,6 +25,7 @@ const struct test winetest_testlist[] =
     { "gifformat", func_gifformat },
     { "icoformat", func_icoformat },
     { "info", func_info },
+    { "jpegformat", func_jpegformat },
     { "metadata", func_metadata },
     { "palette", func_palette },
     { "pngformat", func_pngformat },

@@ -16,7 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <math.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "initguid.h"
+#include "objbase.h"
+#include "wincodec.h"
+#include "wincodecsdk.h"
+#include "wine/test.h"
 
 static const char testbmp_24bpp[] = {
     /* BITMAPFILEHEADER */
