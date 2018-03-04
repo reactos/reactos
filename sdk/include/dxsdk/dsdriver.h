@@ -100,10 +100,18 @@ typedef struct _DSDRIVERCAPS
     DWORD	dwMaxContigFreeHwMemBytes;
 } DSDRIVERCAPS,*PDSDRIVERCAPS;
 
+#define DS_MAX_CHANNELS 6
 typedef struct _DSVOLUMEPAN
 {
-    DWORD	dwTotalLeftAmpFactor;
-    DWORD	dwTotalRightAmpFactor;
+    union
+    {
+        DWORD	dwTotalAmpFactor[DS_MAX_CHANNELS];
+        struct
+        {
+            DWORD	dwTotalLeftAmpFactor;
+            DWORD	dwTotalRightAmpFactor;
+        };
+    };
     LONG	lVolume;
     DWORD	dwVolAmpFactor;
     LONG	lPan;
