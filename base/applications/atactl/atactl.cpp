@@ -445,7 +445,7 @@ ata_str_to_mode(
     )
 {
     int mode;
-    int len;
+    size_t len;
 
     if(!_stricmp(str, "SATA600"))
         return ATA_SA600;
@@ -1688,7 +1688,8 @@ main (
     )
 {
     //ULONG Flags = 0;
-    int i, j;
+    int i;
+    uintptr_t j;
     char a;
     int bus_id = -1;
     int dev_id = -1;
