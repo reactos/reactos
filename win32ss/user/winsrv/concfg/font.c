@@ -28,7 +28,7 @@ CodePageToCharSet(
     IN UINT CodePage)
 {
     CHARSETINFO CharInfo;
-    if (TranslateCharsetInfo((LPDWORD)CodePage, &CharInfo, TCI_SRCCODEPAGE))
+    if (TranslateCharsetInfo(UlongToPtr(CodePage), &CharInfo, TCI_SRCCODEPAGE))
         return CharInfo.ciCharset;
     else
         return DEFAULT_CHARSET;
