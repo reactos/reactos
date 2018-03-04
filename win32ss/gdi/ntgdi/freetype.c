@@ -3038,8 +3038,8 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
         {
             /* Case (ii). It's a Latin-like simple face.
                The width value was same as halfwidth character width. */
-            Width <<= 1;
-            TargetWidth <<= 1;
+            Width *= 2;
+            TargetWidth *= 2;
         }
     }
 
