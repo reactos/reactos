@@ -359,9 +359,9 @@ OnAutoSync(BOOL Sync)
     LPCWSTR szAuto;
 
     if (Sync)
-        szAuto = L"NTP\0";
+        szAuto = L"NTP";
     else
-        szAuto = L"NoSync\0";
+        szAuto = L"NoSync";
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                          L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
