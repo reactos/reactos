@@ -2532,7 +2532,7 @@ IsDialogMessageW(
                             WCHAR *buffer = HeapAlloc (GetProcessHeap(), 0, maxlen * sizeof(WCHAR));
                             if (buffer)
                             {
-                                INT length;
+                                SIZE_T length;
                                 SendMessageW (hwndNext, WM_GETTEXT, maxlen, (LPARAM) buffer);
                                 length = strlenW (buffer);
                                 HeapFree (GetProcessHeap(), 0, buffer);
