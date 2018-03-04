@@ -33,4 +33,12 @@ extern HANDLE UserServerHeap;
 extern ULONG_PTR ServicesProcessId;
 extern ULONG_PTR LogonProcessId;
 
+BOOL CALLBACK
+FindTopLevelWnd(
+    IN HWND hWnd,
+    IN LPARAM lParam);
+
+VOID
+UserInitHardErrorsCache(VOID);
+
 #endif /* __USERSRV_H__ */

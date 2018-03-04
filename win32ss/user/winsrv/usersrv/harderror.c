@@ -18,13 +18,48 @@
 #include <undocelfapi.h>
 #include <ntstrsafe.h>
 
+#include "resource.h"
+
 #define NDEBUG
 #include <debug.h>
 
-#define IDTRYAGAIN 10
-#define IDCONTINUE 11
 
 /* FUNCTIONS ******************************************************************/
+
+/* Cache for the localized hard-error message box strings */
+LANGID g_CurrentUserLangId = 0;
+UNICODE_STRING g_SuccessU = {0, 0, NULL};
+UNICODE_STRING g_InformationU = {0, 0, NULL};
+UNICODE_STRING g_WarningU = {0, 0, NULL};
+UNICODE_STRING g_ErrorU = {0, 0, NULL};
+UNICODE_STRING g_SystemProcessU = {0, 0, NULL};
+UNICODE_STRING g_OKTerminateU = {0, 0, NULL};
+UNICODE_STRING g_CancelDebugU = {0, 0, NULL};
+
+VOID
+RtlLoadUnicodeString(
+    IN HINSTANCE hInstance OPTIONAL,
+    IN UINT uID,
+    OUT PUNICODE_STRING pUnicodeString,
+    IN PCWSTR pDefaultString)
+{
+    UINT Length;
+
+    /* Try to load the string from the resource */
+    Length = LoadStringW(hInstance, uID, (LPWSTR)&pUnicodeString->Buffer, 0);
+    if (Length == 0)
+    {
+        /* If the resource string was not found, use the fallback default one */
+        RtlInitUnicodeString(pUnicodeString, pDefaultString);
+    }
+    else
+    {
+        /* Set the string length (not NULL-terminated!) */
+        pUnicodeString->MaximumLength = (USHORT)(Length * sizeof(WCHAR));
+        pUnicodeString->Length = pUnicodeString->MaximumLength;
+    }
+}
+
 
 /* FIXME */
 int
@@ -133,15 +168,15 @@ static
 VOID
 UserpFreeStringParameters(
     IN OUT PULONG_PTR Parameters,
-    IN PHARDERROR_MSG HardErrorMessage)
+    IN PHARDERROR_MSG Message)
 {
     ULONG nParam;
 
     /* Loop all parameters */
-    for (nParam = 0; nParam < HardErrorMessage->NumberOfParameters; nParam++)
+    for (nParam = 0; nParam < Message->NumberOfParameters; ++nParam)
     {
         /* Check if the current parameter is a string */
-        if ((HardErrorMessage->UnicodeStringParameterMask & (1 << nParam)) && (Parameters[nParam] != 0))
+        if ((Message->UnicodeStringParameterMask & (1 << nParam)) && (Parameters[nParam] != 0))
         {
             /* Free the string buffer */
             RtlFreeHeap(RtlGetProcessHeap(), 0, (PVOID)Parameters[nParam]);
@@ -150,14 +185,14 @@ UserpFreeStringParameters(
 }
 
 static
-NTSTATUS
+VOID
 UserpCaptureStringParameters(
     OUT PULONG_PTR Parameters,
     OUT PULONG SizeOfAllUnicodeStrings,
-    IN PHARDERROR_MSG HardErrorMessage,
+    IN PHARDERROR_MSG Message,
     IN HANDLE hProcess OPTIONAL)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ULONG nParam, Size = 0;
     UNICODE_STRING TempStringU, ParamStringU;
     ANSI_STRING TempStringA;
@@ -166,12 +201,12 @@ UserpCaptureStringParameters(
         *SizeOfAllUnicodeStrings = 0;
 
     /* Read all strings from client space */
-    for (nParam = 0; nParam < HardErrorMessage->NumberOfParameters; nParam++)
+    for (nParam = 0; nParam < Message->NumberOfParameters; ++nParam)
     {
         Parameters[nParam] = 0;
 
         /* Check if the current parameter is a unicode string */
-        if (HardErrorMessage->UnicodeStringParameterMask & (1 << nParam))
+        if (Message->UnicodeStringParameterMask & (1 << nParam))
         {
             /* Skip this string if we do not have a client process */
             if (!hProcess)
@@ -179,14 +214,14 @@ UserpCaptureStringParameters(
 
             /* Read the UNICODE_STRING from the process memory */
             Status = NtReadVirtualMemory(hProcess,
-                                         (PVOID)HardErrorMessage->Parameters[nParam],
+                                         (PVOID)Message->Parameters[nParam],
                                          &ParamStringU,
                                          sizeof(ParamStringU),
                                          NULL);
             if (!NT_SUCCESS(Status))
             {
                 /* We failed, skip this string */
-                DPRINT1("NtReadVirtualMemory(HardErrorMessage->Parameters) failed, Status 0x%lx\n", Status);
+                DPRINT1("NtReadVirtualMemory(Message->Parameters) failed, Status 0x%lx, skipping.\n", Status);
                 continue;
             }
 
@@ -199,8 +234,7 @@ UserpCaptureStringParameters(
             if (!TempStringU.Buffer)
             {
                 /* We failed, skip this string */
-                DPRINT1("Cannot allocate memory with size %u\n", TempStringU.MaximumLength);
-                Status = STATUS_NO_MEMORY;
+                DPRINT1("Cannot allocate memory with size %u, skipping.\n", TempStringU.MaximumLength);
                 continue;
             }
 
@@ -213,7 +247,7 @@ UserpCaptureStringParameters(
             if (!NT_SUCCESS(Status))
             {
                 /* We failed, skip this string */
-                DPRINT1("NtReadVirtualMemory(ParamStringU) failed, Status 0x%lx\n", Status);
+                DPRINT1("NtReadVirtualMemory(ParamStringU) failed, Status 0x%lx, skipping.\n", Status);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
                 continue;
             }
@@ -228,9 +262,8 @@ UserpCaptureStringParameters(
             if (!TempStringA.Buffer)
             {
                 /* We failed, skip this string */
-                DPRINT1("Cannot allocate memory with size %u\n", TempStringA.MaximumLength);
+                DPRINT1("Cannot allocate memory with size %u, skipping.\n", TempStringA.MaximumLength);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
-                Status = STATUS_NO_MEMORY;
                 continue;
             }
 
@@ -240,6 +273,7 @@ UserpCaptureStringParameters(
             if (!NT_SUCCESS(Status))
             {
                 /* We failed, skip this string */
+                DPRINT1("RtlUnicodeStringToAnsiString() failed, Status 0x%lx, skipping.\n", Status);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringA.Buffer);
                 continue;
             }
@@ -251,22 +285,12 @@ UserpCaptureStringParameters(
         else
         {
             /* It's not a unicode string, just copy the parameter */
-            Parameters[nParam] = HardErrorMessage->Parameters[nParam];
+            Parameters[nParam] = Message->Parameters[nParam];
         }
     }
 
-#if 0
-    if (!NT_SUCCESS(Status))
-    {
-        UserpFreeStringParameters(Parameters, HardErrorMessage);
-        return Status;
-    }
-#endif
-
     if (SizeOfAllUnicodeStrings)
         *SizeOfAllUnicodeStrings = Size;
-
-    return Status;
 }
 
 static
@@ -280,11 +304,13 @@ UserpFormatMessages(
     IN  HANDLE hProcess OPTIONAL)
 {
     NTSTATUS Status;
-    UNICODE_STRING FileNameU, TempStringU, FormatU, Format2U;
+    UNICODE_STRING FileNameU, TempStringU, WindowTitleU, FormatU, Format2U;
     ANSI_STRING FormatA, Format2A;
+    HWND hwndOwner;
     PMESSAGE_RESOURCE_ENTRY MessageResource;
     ULONG_PTR CapturedParameters[MAXIMUM_HARDERROR_PARAMETERS];
-    PWSTR FormatString;
+    PWSTR FormatString, pszBuffer;
+    size_t cchBuffer;
     ULONG ExceptionCode, Severity;
     ULONG Size;
 
@@ -302,8 +328,8 @@ UserpFormatMessages(
      */
     if (!hProcess || !NT_SUCCESS(Status) || !FileNameU.Buffer)
     {
-        RtlInitUnicodeString(&FileNameU, L"System Process");
-        hProcess = NULL;
+        hProcess  = NULL;
+        FileNameU = g_SystemProcessU;
     }
 
     Severity = (ULONG)(Message->Status) >> 30;
@@ -324,7 +350,7 @@ UserpFormatMessages(
         else
         {
             RtlInitAnsiString(&FormatA, (PCHAR)MessageResource->Text);
-            RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
+            /* Status = */ RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
         }
     }
     else
@@ -354,23 +380,52 @@ UserpFormatMessages(
     }
     else
     {
-        /* FIXME: Use localized strings! */
-
         if (Severity == STATUS_SEVERITY_SUCCESS)
-            RtlInitUnicodeString(&TempStringU, L"Success");
+            TempStringU = g_SuccessU;
         else if (Severity == STATUS_SEVERITY_INFORMATIONAL)
-            RtlInitUnicodeString(&TempStringU, L"System Information");
+            TempStringU = g_InformationU;
         else if (Severity == STATUS_SEVERITY_WARNING)
-            RtlInitUnicodeString(&TempStringU, L"System Warning");
+            TempStringU = g_WarningU;
         else if (Severity == STATUS_SEVERITY_ERROR)
-            RtlInitUnicodeString(&TempStringU, L"System Error");
+            TempStringU = g_ErrorU;
         else
             RtlInitEmptyUnicodeString(&TempStringU, NULL, 0);
     }
 
+    /* Retrieve the window title of the client, if it has one */
+    RtlInitEmptyUnicodeString(&WindowTitleU, NULL, 0);
+    hwndOwner = NULL;
+    EnumThreadWindows(HandleToUlong(Message->h.ClientId.UniqueThread),
+                      FindTopLevelWnd, (LPARAM)&hwndOwner);
+    if (hwndOwner)
+    {
+        cchBuffer = GetWindowTextLengthW(hwndOwner);
+        if (cchBuffer != 0)
+        {
+            cchBuffer += 3; // 2 characters for ": " and a NULL terminator.
+            WindowTitleU.MaximumLength = (USHORT)(cchBuffer * sizeof(WCHAR));
+            WindowTitleU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                  HEAP_ZERO_MEMORY,
+                                                  WindowTitleU.MaximumLength);
+            if (WindowTitleU.Buffer)
+            {
+                cchBuffer = GetWindowTextW(hwndOwner,
+                                           WindowTitleU.Buffer,
+                                           WindowTitleU.MaximumLength / sizeof(WCHAR));
+                WindowTitleU.Length = (USHORT)(cchBuffer * sizeof(WCHAR));
+                RtlAppendUnicodeToString(&WindowTitleU, L": ");
+            }
+            else
+            {
+                RtlInitEmptyUnicodeString(&WindowTitleU, NULL, 0);
+            }
+        }
+    }
+
     /* Calculate buffer length for the caption */
-    CaptionStringU->MaximumLength = FileNameU.Length + TempStringU.Length +
-                                    4 * sizeof(WCHAR);
+    CaptionStringU->MaximumLength = WindowTitleU.Length +
+                                    FileNameU.Length + TempStringU.Length +
+                                    3 * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
     /* Allocate a buffer for the caption */
     CaptionStringU->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -382,17 +437,16 @@ UserpFormatMessages(
         Status = STATUS_NO_MEMORY;
     }
 
-    /* Append the file name, seperator and the caption text */
-    CaptionStringU->Length = 0;
-    RtlAppendUnicodeStringToString(CaptionStringU, &FileNameU);
-    RtlAppendUnicodeToString(CaptionStringU, L" - ");
-    RtlAppendUnicodeStringToString(CaptionStringU, &TempStringU);
+    /* Append the file name, the separator and the caption text */
+    RtlStringCbPrintfW(CaptionStringU->Buffer,
+                       CaptionStringU->MaximumLength,
+                       L"%wZ%wZ - %wZ",
+                       &WindowTitleU, &FileNameU, &TempStringU);
+    CaptionStringU->Length = wcslen(CaptionStringU->Buffer) * sizeof(WCHAR);
 
-    /* Zero terminate the buffer */
-    CaptionStringU->Buffer[CaptionStringU->Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-    /* Free the file name buffer */
-    RtlFreeUnicodeString(&FileNameU);
+    /* Free string buffers if needed */
+    if (WindowTitleU.Buffer) RtlFreeUnicodeString(&WindowTitleU);
+    if (hProcess) RtlFreeUnicodeString(&FileNameU);
 
     // FIXME: What is 42 == ??
     Size = 42;
@@ -418,7 +472,7 @@ UserpFormatMessages(
             else
             {
                 RtlInitAnsiString(&Format2A, (PCHAR)MessageResource->Text);
-                RtlAnsiStringToUnicodeString(&Format2U, &Format2A, TRUE);
+                /* Status = */ RtlAnsiStringToUnicodeString(&Format2U, &Format2A, TRUE);
             }
 
             /* Handle special cases */
@@ -440,25 +494,23 @@ UserpFormatMessages(
             }
             else
             {
-                PWSTR pTmp;
-
                 /* Keep the existing FormatString */
                 CapturedParameters[2] = CapturedParameters[1];
                 CapturedParameters[1] = CapturedParameters[0];
 
-                pTmp = Format2U.Buffer;
-                if (!_wcsnicmp(pTmp, L"{EXCEPTION}", 11))
+                pszBuffer = Format2U.Buffer;
+                if (!_wcsnicmp(pszBuffer, L"{EXCEPTION}", 11))
                 {
                     /*
                      * This is a named exception. Skip the mark and
                      * retrieve the exception name that follows it.
                      */
-                    pTmp += 11;
+                    pszBuffer += 11;
 
                     /* Skip '\r', '\n' */
-                    pTmp += 2;
+                    pszBuffer += 2;
 
-                    CapturedParameters[0] = (ULONG_PTR)pTmp;
+                    CapturedParameters[0] = (ULONG_PTR)pszBuffer;
                 }
                 else
                 {
@@ -475,18 +527,16 @@ UserpFormatMessages(
             CapturedParameters[0] = (ULONG_PTR)L"unknown software exception";
         }
 
-        /* FIXME: Use localized strings! */
         if (Message->ValidResponseOptions == OptionOk ||
             Message->ValidResponseOptions == OptionOkCancel)
         {
-            // Tmp = FormatString + wcslen(FormatString);
-            // *++Tmp = L'\n';
-            // *++Tmp = L'\n';
-            Size += 1 + wcslen(L"Click on OK to terminate the program.");
+            /* Reserve space for one newline and the OK-terminate-program string */
+            Size += 1 + (g_OKTerminateU.Length / sizeof(WCHAR));
         }
         if (Message->ValidResponseOptions == OptionOkCancel)
         {
-            Size += 1 + wcslen(L"Click on CANCEL to debug the program.");
+            /* Reserve space for one newline and the CANCEL-debug-program string */
+            Size += 1 + (g_CancelDebugU.Length / sizeof(WCHAR));
         }
     }
 
@@ -505,50 +555,50 @@ UserpFormatMessages(
         Status = STATUS_NO_MEMORY;
     }
 
+    Status = STATUS_SUCCESS;
+
     /* Wrap in SEH to protect from invalid string parameters */
     _SEH2_TRY
     {
         /* Print the string into the buffer */
-        RtlStringCbPrintfW(TextStringU->Buffer,
-                           TextStringU->MaximumLength,
-                           FormatString,
-                           CapturedParameters[0],
-                           CapturedParameters[1],
-                           CapturedParameters[2],
-                           CapturedParameters[3]);
+        pszBuffer = TextStringU->Buffer;
+        cchBuffer = TextStringU->MaximumLength;
+        RtlStringCbPrintfExW(pszBuffer, cchBuffer,
+                             &pszBuffer, &cchBuffer,
+                             STRSAFE_IGNORE_NULLS,
+                             FormatString,
+                             CapturedParameters[0],
+                             CapturedParameters[1],
+                             CapturedParameters[2],
+                             CapturedParameters[3]);
 
         if (Message->Status == STATUS_UNHANDLED_EXCEPTION)
         {
-            /* FIXME: Use localized strings! */
             if (Message->ValidResponseOptions == OptionOk ||
                 Message->ValidResponseOptions == OptionOkCancel)
             {
-                // Tmp = FormatString + wcslen(FormatString);
-                // *++Tmp = L'\n';
-                // *++Tmp = L'\n';
-                RtlStringCbCatW(TextStringU->Buffer,
-                                TextStringU->MaximumLength,
-                                L"\n");
-                RtlStringCbCatW(TextStringU->Buffer,
-                                TextStringU->MaximumLength,
-                                L"Click on OK to terminate the program.");
+                RtlStringCbPrintfExW(pszBuffer, cchBuffer,
+                                     &pszBuffer, &cchBuffer,
+                                     STRSAFE_IGNORE_NULLS,
+                                     L"\n%wZ",
+                                     &g_OKTerminateU);
             }
             if (Message->ValidResponseOptions == OptionOkCancel)
             {
-                RtlStringCbCatW(TextStringU->Buffer,
-                                TextStringU->MaximumLength,
-                                L"\n");
-                RtlStringCbCatW(TextStringU->Buffer,
-                                TextStringU->MaximumLength,
-                                L"Click on CANCEL to debug the program.");
+                RtlStringCbPrintfExW(pszBuffer, cchBuffer,
+                                     &pszBuffer, &cchBuffer,
+                                     STRSAFE_IGNORE_NULLS,
+                                     L"\n%wZ",
+                                     &g_CancelDebugU);
             }
         }
-
-        Status = STATUS_SUCCESS;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* An exception occurred, use a default string */
+        DPRINT1("Exception 0x%08lx occurred while building hard-error message, fall back to default message.\n",
+                _SEH2_GetExceptionCode());
+
         RtlStringCbPrintfW(TextStringU->Buffer,
                            TextStringU->MaximumLength,
                            L"Exception processing message 0x%08lx\n"
@@ -559,8 +609,6 @@ UserpFormatMessages(
 
         /* Set error and free buffers */
         // Status = _SEH2_GetExceptionCode();
-        // RtlFreeHeap(RtlGetProcessHeap(), 0, TextStringU->Buffer);
-        // RtlFreeHeap(RtlGetProcessHeap(), 0, CaptionStringU->Buffer);
     }
     _SEH2_END;
 
@@ -569,7 +617,7 @@ UserpFormatMessages(
         TextStringU->Length = wcslen(TextStringU->Buffer) * sizeof(WCHAR);
     }
 
-    /* Free converted Unicode strings if the original format strings were Ansi */
+    /* Free converted Unicode strings */
     if (Format2A.Buffer) RtlFreeUnicodeString(&Format2U);
     if (FormatA.Buffer) RtlFreeUnicodeString(&FormatU);
 
@@ -863,13 +911,11 @@ UserServerHardError(
         hProcess = NULL;
     }
 
+    /* Re-initialize the hard errors cache */
+    UserInitHardErrorsCache();
+
     /* Capture all string parameters from the process memory */
-    Status = UserpCaptureStringParameters(Parameters, &Size, Message, hProcess);
-    if (!NT_SUCCESS(Status))
-    {
-        if (hProcess) NtClose(hProcess);
-        return;
-    }
+    UserpCaptureStringParameters(Parameters, &Size, Message, hProcess);
 
     /* Format the message caption and text */
     Status = UserpFormatMessages(&TextU,
@@ -928,6 +974,47 @@ Quit:
     RtlFreeUnicodeString(&CaptionU);
 
     return;
+}
+
+VOID
+UserInitHardErrorsCache(VOID)
+{
+    NTSTATUS Status;
+    LCID CurrentUserLCID = 0;
+
+    Status = NtQueryDefaultLocale(TRUE, &CurrentUserLCID);
+    if (!NT_SUCCESS(Status) || CurrentUserLCID == 0)
+    {
+        /* Fall back to english locale */
+        DPRINT1("NtQueryDefaultLocale failed with Status = 0x%08lx\n", Status);
+        // LOCALE_SYSTEM_DEFAULT;
+        CurrentUserLCID = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
+    }
+    if (g_CurrentUserLangId == LANGIDFROMLCID(CurrentUserLCID))
+    {
+        /* The current lang ID and the hard error strings have already been cached */
+        return;
+    }
+
+    /* Load the strings using the current system locale */
+    RtlLoadUnicodeString(UserServerDllInstance, IDS_SEVERITY_SUCCESS,
+                         &g_SuccessU, L"Success");
+    RtlLoadUnicodeString(UserServerDllInstance, IDS_SEVERITY_INFORMATIONAL,
+                         &g_InformationU, L"System Information");
+    RtlLoadUnicodeString(UserServerDllInstance, IDS_SEVERITY_WARNING,
+                         &g_WarningU, L"System Warning");
+    RtlLoadUnicodeString(UserServerDllInstance, IDS_SEVERITY_ERROR,
+                         &g_ErrorU, L"System Error");
+    // "unknown software exception"
+    RtlLoadUnicodeString(UserServerDllInstance, IDS_SYSTEM_PROCESS,
+                         &g_SystemProcessU, L"System Process");
+    RtlLoadUnicodeString(UserServerDllInstance, IDS_OK_TERMINATE_PROGRAM,
+                         &g_OKTerminateU, L"Click on OK to terminate the program.");
+    RtlLoadUnicodeString(UserServerDllInstance, IDS_CANCEL_DEBUG_PROGRAM,
+                         &g_CancelDebugU, L"Click on CANCEL to debug the program.");
+
+    /* Remember that we cached the hard error strings */
+    g_CurrentUserLangId = LANGIDFROMLCID(CurrentUserLCID);
 }
 
 /* EOF */

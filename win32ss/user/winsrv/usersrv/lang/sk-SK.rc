@@ -27,3 +27,20 @@ BEGIN
     LTEXT "Pre návrat do systému ReactOS a overenie stavu programu kliknite na tlačidlo Zrušiť.", IDC_STATIC, 7, 26, 178, 16
     LTEXT "Ak zvolíte okamžité ukončenie programu, stratíte všetky neuložené údaje. Ak chcete program ukončiť okamžite, kliknite na tlačidlo Ukončiť ihneď.", IDC_STATIC, 7, 53, 178, 26
 END
+
+
+STRINGTABLE
+BEGIN
+    IDS_SEVERITY_SUCCESS        "Success"
+    IDS_SEVERITY_INFORMATIONAL  "System Information"
+    IDS_SEVERITY_WARNING        "System Warning"
+    IDS_SEVERITY_ERROR          "System Error"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SYSTEM_PROCESS          "System Process"
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "unknown software exception"
+    IDS_OK_TERMINATE_PROGRAM    "Click on OK to terminate the program."
+    IDS_CANCEL_DEBUG_PROGRAM    "Click on CANCEL to debug the program."
+END

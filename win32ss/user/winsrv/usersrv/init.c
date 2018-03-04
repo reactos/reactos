@@ -90,6 +90,19 @@ PCHAR UserServerApiNameTable[UserpMaxApiNumber - USERSRV_FIRST_API_NUMBER] =
 
 /* FUNCTIONS ******************************************************************/
 
+BOOL CALLBACK
+FindTopLevelWnd(
+    IN HWND hWnd,
+    IN LPARAM lParam)
+{
+    if (GetWindow(hWnd, GW_OWNER) == NULL)
+    {
+        *(HWND*)lParam = hWnd;
+        return FALSE;
+    }
+    return TRUE;
+}
+
 // PUSER_SOUND_SENTRY. Used in basesrv.dll
 BOOL NTAPI _UserSoundSentry(VOID)
 {
@@ -255,6 +268,9 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
 
     /* Set the process creation notify routine for BASE */
     BaseSetProcessCreateNotify(NtUserNotifyProcessCreate);
+
+    /* Initialize the hard errors cache */
+    UserInitHardErrorsCache();
 
     /* Initialize the kernel mode subsystem */
     Status = NtUserInitialize(USER_VERSION,

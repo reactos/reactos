@@ -22,3 +22,20 @@ BEGIN
     LTEXT "若要返回至 ReactOS 并检查该程序的状态，请点击“取消”。", IDC_STATIC, 7, 26, 178, 16
     LTEXT "如果您选择立即终止程序，您将失去所有未保存的数据。若要立即结束程序，单击“立即终止”。", IDC_STATIC, 7, 53, 178, 26
 END
+
+
+STRINGTABLE
+BEGIN
+    IDS_SEVERITY_SUCCESS        "Success"
+    IDS_SEVERITY_INFORMATIONAL  "System Information"
+    IDS_SEVERITY_WARNING        "System Warning"
+    IDS_SEVERITY_ERROR          "System Error"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SYSTEM_PROCESS          "System Process"
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "unknown software exception"
+    IDS_OK_TERMINATE_PROGRAM    "Click on OK to terminate the program."
+    IDS_CANCEL_DEBUG_PROGRAM    "Click on CANCEL to debug the program."
+END

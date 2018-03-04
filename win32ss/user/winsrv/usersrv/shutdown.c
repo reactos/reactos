@@ -413,18 +413,6 @@ ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeou
 /************************************************/
 
 
-static BOOL CALLBACK
-FindTopLevelWnd(IN HWND hWnd,
-                IN LPARAM lParam)
-{
-    if (GetWindow(hWnd, GW_OWNER) == NULL)
-    {
-        *(HWND*)lParam = hWnd;
-        return FALSE;
-    }
-    return TRUE;
-}
-
 static VOID
 ThreadShutdownNotify(IN PCSR_THREAD CsrThread,
                      IN ULONG Flags,

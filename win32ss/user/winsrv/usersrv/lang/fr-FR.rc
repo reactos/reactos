@@ -22,3 +22,20 @@ BEGIN
     LTEXT "Pour retourner à ReactOS et vérifier l'état du programme, cliquez sur Annuler.", IDC_STATIC, 7, 26, 178, 16
     LTEXT "Si vous choisissez de terminer le programme immédiatement, vous perdrez toutes les données non sauvegardées. Pour terminer le programme maintenant, cliquez sur Terminer maintenant.", IDC_STATIC, 7, 53, 178, 26
 END
+
+
+STRINGTABLE
+BEGIN
+    IDS_SEVERITY_SUCCESS        "Succès"
+    IDS_SEVERITY_INFORMATIONAL  "Information système"
+    IDS_SEVERITY_WARNING        "Avertissement système"
+    IDS_SEVERITY_ERROR          "Erreur système"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SYSTEM_PROCESS          "Processus système"
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "Exception logicielle inconnue"
+    IDS_OK_TERMINATE_PROGRAM    "Cliquez sur OK pour terminer le programme."
+    IDS_CANCEL_DEBUG_PROGRAM    "Cliquez sur Annuler pour déboguer le programme."
+END
