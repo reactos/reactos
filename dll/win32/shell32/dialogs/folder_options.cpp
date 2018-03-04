@@ -751,7 +751,7 @@ Advanced_Compare(const void *x, const void *y)
         pArray2[n - i - 1] = pEntry;
     }
 
-    UINT k = (m < n) ? m : n;
+    UINT k = min(m, n);
     for (i = 0; i < k; ++i)
     {
         INT nCompare = lstrcmpi(pArray1[i]->szText, pArray2[i]->szText);
