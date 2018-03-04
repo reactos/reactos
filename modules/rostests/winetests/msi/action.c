@@ -19,7 +19,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define _WIN32_MSI 300
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <windows.h>
+#include <msiquery.h>
+#include <msidefs.h>
+#include <msi.h>
+#include <fci.h>
+#include <srrestoreptapi.h>
+#include <wtypes.h>
+#include <shellapi.h>
+#include <winsvc.h>
+
+#include "wine/test.h"
 
 static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE *);
@@ -492,7 +506,22 @@ static const char wrv_component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
     "s72\tS38\ts72\ti2\tS255\tS72\n"
     "Component\tComponent\n"
-    "augustus\t\tMSITESTDIR\t0\t\taugustus\n";
+    "augustus\t\tMSITESTDIR\t0\t\taugustus\n"
+    "caesar\t\tMSITESTDIR\t1\t\t\n";
+
+static const char wrv_feature_dat[] =
+    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
+    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
+    "Feature\tFeature\n"
+    "feature\t\tFeature\tFeature\t2\t1\tTARGETDIR\t0\n"
+    "feature2\t\tFeature2\tFeature2\t2\t1\tTARGETDIR\t1";
+
+static const char wrv_feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "feature\taugustus\n"
+    "feature2\tcaesar";
 
 static const char wrv_registry_dat[] =
     "Registry\tRoot\tKey\tName\tValue\tComponent_\n"
@@ -513,7 +542,8 @@ static const char wrv_registry_dat[] =
     "regdata12\t2\tSOFTWARE\\Wine\\msitest\tValue8\t#1\taugustus\n"
     "regdata13\t2\tSOFTWARE\\Wine\\msitest\tValue9\t#x1\taugustus\n"
     "regdata14\t2\tSOFTWARE\\Wine\\msitest\tValue10\t#x01\taugustus\n"
-    "regdata15\t2\tSOFTWARE\\Wine\\msitest\tValue11\t[regdata15]\taugustus\n";
+    "regdata15\t2\tSOFTWARE\\Wine\\msitest\tValue11\t[regdata15]\taugustus\n"
+    "regdata16\t2\tSOFTWARE\\Wine\\msitest\tValue12\t#1\tcaesar\n";
 
 static const char cf_directory_dat[] =
     "Directory\tDirectory_Parent\tDefaultDir\n"
@@ -1738,8 +1768,8 @@ static const msi_table wrv_tables[] =
 {
     ADD_TABLE(wrv_component),
     ADD_TABLE(directory),
-    ADD_TABLE(rof_feature),
-    ADD_TABLE(ci2_feature_comp),
+    ADD_TABLE(wrv_feature),
+    ADD_TABLE(wrv_feature_comp),
     ADD_TABLE(ci2_file),
     ADD_TABLE(install_exec_seq),
     ADD_TABLE(rof_media),
@@ -4974,7 +5004,7 @@ static void test_write_registry_values(void)
         goto error;
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(delete_pf("msitest\\augustus", TRUE), "File installed\n");
+    ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
     if (is_64bit)
@@ -5097,6 +5127,15 @@ static void test_write_registry_values(void)
     ok(size == 1, "got %u\n", size);
     ok(type == REG_BINARY, "got %u\n", type);
 
+    size = sizeof(buf);
+    type = 0xdeadbeef;
+    memset(buf, 0, size);
+    res = RegQueryValueExA(hkey, "Value12", NULL, &type, buf, &size);
+    ok(res == ERROR_SUCCESS, "got %u\n", res);
+    ok(*(DWORD *)buf == 1, "got %u\n", *(DWORD *)buf);
+    ok(size == 4, "got %u\n", size);
+    ok(type == REG_DWORD, "got %u\n", type);
+
     RegDeleteValueA(hkey, "Value");
     RegDeleteValueA(hkey, "Value1");
     RegDeleteValueA(hkey, "Value2");
@@ -5109,6 +5148,7 @@ static void test_write_registry_values(void)
     RegDeleteValueA(hkey, "Value9");
     RegDeleteValueA(hkey, "Value10");
     RegDeleteValueA(hkey, "Value11");
+    RegDeleteValueA(hkey, "Value12");
     RegCloseKey(hkey);
     RegDeleteKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wine\\msitest");
 

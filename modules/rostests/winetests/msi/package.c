@@ -19,10 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
 
 #include <assert.h>
+#include <stdio.h>
+#include <windows.h>
+#include <msidefs.h>
+#include <msi.h>
+#include <msiquery.h>
+#include <srrestoreptapi.h>
 #include <shlobj.h>
+
+#include "wine/test.h"
 
 static BOOL is_wow64;
 static const char msifile[] = "winetest-package.msi";
@@ -5643,6 +5651,11 @@ static void test_installprops(void)
     r = MsiGetPropertyA(hpkg, "ScreenY", buf, &size);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS got %d\n", r);
     ok(atol(buf) == res, "Expected %d, got %ld\n", res, atol(buf));
+
+    buf[0] = 0;
+    size = MAX_PATH;
+    r = MsiGetPropertyA(hpkg, "MsiNetAssemblySupport", buf, &size);
+    if (r == ERROR_SUCCESS) trace( "MsiNetAssemblySupport \"%s\"\n", buf );
 
     if (pGetSystemInfo && pSHGetFolderPathA)
     {

@@ -1,3 +1,4 @@
+
 #ifndef _MSI_WINETEST_PRECOMP_H_
 #define _MSI_WINETEST_PRECOMP_H_
 

@@ -19,7 +19,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
+#include <windows.h>
+#include <shlwapi.h>
+#include <msi.h>
+#include <msiquery.h>
+
+#include "wine/test.h"
 
 static const char msifile[] = "winetest-format.msi";
 

@@ -18,9 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define _WIN32_MSI 300
 
+#include <stdio.h>
+
+#include <windows.h>
+#include <msiquery.h>
+#include <msidefs.h>
+#include <msi.h>
+#include <sddl.h>
 #include <secext.h>
+#include <objbase.h>
+
+#include "wine/test.h"
 
 static BOOL is_wow64;
 
