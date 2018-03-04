@@ -8,7 +8,6 @@
 #include <windows.h>
 #include <debug.h>
 #include <strsafe.h>
-
 #include "timedate.h"
 
 SERVICE_STATUS ServiceStatus; 
