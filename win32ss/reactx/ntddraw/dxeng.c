@@ -357,7 +357,7 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_ldev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_ldev\n");
-        retVal = (DWORD) PDev->pldev;
+        retVal = (DWORD_PTR) PDev->pldev;
         break;
       case DxEGShDevData_GDev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_GDev\n");

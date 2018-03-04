@@ -11,7 +11,7 @@
 #define NT_BUILD_ENVIRONMENT
 
 #define DDHMG_HANDLE_LIMIT 0x200000
-#define DDHMG_HTOI(DdHandle) ((DWORD)DdHandle & (DDHMG_HANDLE_LIMIT-1))
+#define DDHMG_HTOI(DdHandle) ((DWORD_PTR)DdHandle & (DDHMG_HANDLE_LIMIT-1))
 
 
 #include <windef.h>
