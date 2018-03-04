@@ -3089,6 +3089,7 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
             RealHeight = face->size->metrics.ascender - face->size->metrics.descender;
         }
     }
+    ASSERT(error || RealHeight <= TargetHeight);
 #undef DELTA1
 #undef DELTA2
 
