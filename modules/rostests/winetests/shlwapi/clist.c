@@ -17,7 +17,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#include <stdarg.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
 
 typedef struct tagSHLWAPI_CLIST
 {
@@ -212,7 +218,7 @@ static IStreamVtbl iclvt =
 static HMODULE SHLWAPI_hshlwapi = 0;
 
 static VOID    (WINAPI *pSHLWAPI_19)(LPSHLWAPI_CLIST);
-static HRESULT (WINAPI *pSHLWAPI_20)(LPSHLWAPI_CLIST*,LPCSHLWAPI_CLIST);
+static BOOL    (WINAPI *pSHLWAPI_20)(LPSHLWAPI_CLIST*,LPCSHLWAPI_CLIST);
 static BOOL    (WINAPI *pSHLWAPI_21)(LPSHLWAPI_CLIST*,ULONG);
 static LPSHLWAPI_CLIST (WINAPI *pSHLWAPI_22)(LPSHLWAPI_CLIST,ULONG);
 static HRESULT (WINAPI *pSHLWAPI_17)(IStream*, SHLWAPI_CLIST*);
@@ -286,6 +292,7 @@ static void test_CList(void)
   struct dummystream streamobj;
   LPSHLWAPI_CLIST list = NULL;
   LPCSHLWAPI_CLIST item = SHLWAPI_CLIST_items;
+  BOOL bRet;
   HRESULT hRet;
   LPSHLWAPI_CLIST inserted;
   BYTE buff[64];
@@ -306,10 +313,10 @@ static void test_CList(void)
       buff[sizeof(SHLWAPI_CLIST)+i] = i*2;
 
     /* Add it */
-    hRet = pSHLWAPI_20(&list, inserted);
-    ok(hRet > S_OK, "failed list add\n");
+    bRet = pSHLWAPI_20(&list, inserted);
+    ok(bRet == TRUE, "failed list add\n");
 
-    if (hRet > S_OK)
+    if (bRet == TRUE)
     {
       ok(list && list->ulSize, "item not added\n");
 
@@ -384,11 +391,8 @@ static void test_CList(void)
   inserted = (LPSHLWAPI_CLIST)buff;
   inserted->ulSize = sizeof(SHLWAPI_CLIST) -1;
   inserted->ulId = 33;
-
-  /* The call succeeds but the item is not inserted, except on some early
-   * versions which return failure. Wine behaves like later versions.
-   */
-  pSHLWAPI_20(&list, inserted);
+  bRet = pSHLWAPI_20(&list, inserted);
+  ok(bRet == FALSE, "Expected failure\n");
 
   inserted = pSHLWAPI_22(list, 33);
   ok(inserted == NULL, "inserted bad element size\n");
@@ -396,9 +400,8 @@ static void test_CList(void)
   inserted = (LPSHLWAPI_CLIST)buff;
   inserted->ulSize = 44;
   inserted->ulId = ~0U;
-
-  /* See comment above, some early versions fail this call */
-  pSHLWAPI_20(&list, inserted);
+  bRet = pSHLWAPI_20(&list, inserted);
+  ok(bRet == FALSE, "Expected failure\n");
 
   item = SHLWAPI_CLIST_items;
 

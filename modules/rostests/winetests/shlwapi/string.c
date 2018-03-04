@@ -17,7 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
+
+#include "wine/test.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winnls.h"
+#define NO_SHLWAPI_REG
+#define NO_SHLWAPI_PATH
+#define NO_SHLWAPI_GDI
+#define NO_SHLWAPI_STREAM
+#include "shlwapi.h"
+#include "shtypes.h"
 
 #define expect_eq(expr, val, type, fmt) do { \
     type ret = expr; \
