@@ -1431,7 +1431,7 @@ bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
     }
 
     /* Create the object */
-    pSurface->hDDSurface = (DWORD)NtGdiDdCreateSurfaceObject(GetDdHandle(pSurface->lpGbl->lpDD->hDD),
+    pSurface->hDDSurface = (DWORD_PTR)NtGdiDdCreateSurfaceObject(GetDdHandle(pSurface->lpGbl->lpDD->hDD),
                            (HANDLE)pSurface->hDDSurface,
                            &SurfaceLocal,
                            &SurfaceMore,
