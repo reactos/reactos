@@ -736,25 +736,10 @@ Advanced_Compare(const void *x, const void *y)
         }
     }
 
-    // std::reverse(&pArray1[0], &pArray1[m]);
-    for (i = 0; i < m / 2; ++i)
-    {
-        ADVANCED_ENTRY *pEntry = pArray1[i];
-        pArray1[i] = pArray1[m - i - 1];
-        pArray1[m - i - 1] = pEntry;
-    }
-    // std::reverse(&pArray2[0], &pArray2[n]);
-    for (i = 0; i < n / 2; ++i)
-    {
-        ADVANCED_ENTRY *pEntry = pArray2[i];
-        pArray2[i] = pArray2[n - i - 1];
-        pArray2[n - i - 1] = pEntry;
-    }
-
     UINT k = min(m, n);
     for (i = 0; i < k; ++i)
     {
-        INT nCompare = lstrcmpi(pArray1[i]->szText, pArray2[i]->szText);
+        INT nCompare = lstrcmpi(pArray1[m - i - 1]->szText, pArray2[n - i - 1]->szText);
         if (nCompare < 0)
             return -1;
         if (nCompare > 0)
