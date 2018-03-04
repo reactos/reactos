@@ -21,6 +21,12 @@
 #ifndef _WINE_TYPELIB_H
 #define _WINE_TYPELIB_H
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "oleauto.h"
+
 #define HELPDLLFLAG (0x0100)
 #define DO_NOT_SEEK (-1)
 
@@ -381,18 +387,18 @@ typedef struct {
 /* we then get 0x40 bytes worth of 0xffff or small numbers followed by
    nrOfFileBlks - 2 of these */
 typedef struct {
+	WORD small_no;
 	SLTG_Name index_name; /* This refers to a name in the directory */
 	SLTG_Name other_name; /* Another one of these weird names */
 	WORD res1a;	      /* 0xffff */
 	WORD name_offs;	      /* offset to name in name table */
-	WORD hlpstr_len;      /* if this is non-zero we get this many
+	WORD more_bytes;      /* if this is non-zero we get this many
 				 bytes before the next element, which seem
 				 to reference the docstring of the type ? */
 	WORD res20;	      /* 0xffff */
 	DWORD helpcontext;
 	WORD res26;	      /* 0xffff */
         GUID uuid;
-        WORD typekind;
 } SLTG_OtherTypeInfo;
 
 /* Next we get WORD 0x0003 followed by a DWORD which if we add to
@@ -589,26 +595,6 @@ WORD typeofarray
 */
 
 #include "poppack.h"
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc( SIZE_T size )
-{
-    return HeapAlloc( GetProcessHeap(), 0, size );
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero( SIZE_T size )
-{
-    return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, size );
-}
-
-static inline void* __WINE_ALLOC_SIZE(2) heap_realloc( LPVOID mem, SIZE_T size )
-{
-    return HeapReAlloc( GetProcessHeap(), 0, mem, size );
-}
-
-static inline BOOL heap_free( LPVOID mem )
-{
-    return HeapFree( GetProcessHeap(), 0, mem );
-}
 
 HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc ) DECLSPEC_HIDDEN;
 

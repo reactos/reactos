@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-
 #include "resource.h"
 
 /* UTF-8 */
@@ -114,6 +112,8 @@
  *  I expect Chinese etc are localised in Asian Editions also.
  */
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 /* @makedep: oleaut32.rgs */
 1 WINE_REGISTRY oleaut32.rgs
 
@@ -126,4 +126,4 @@
 #define WINE_FILEVERSION_STR "6.0.6001.18000"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"
