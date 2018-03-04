@@ -1530,7 +1530,7 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
     {
         fileEntry = &flFrom->feFiles[i];
 
-        if ((HANDLE)fileEntry->attributes == INVALID_HANDLE_VALUE)
+        if (fileEntry->attributes == (ULONG)-1)
         {
             // This is a windows 2003 server specific value which has been removed.
             // Later versions of windows return ERROR_FILE_NOT_FOUND.
