@@ -26,7 +26,9 @@
 
 #define COBJMACROS
 #define CONST_VTABLE
+#ifndef __REACTOS__
 #define NONAMELESSUNION
+#endif
 
 #include "wine/test.h"
 #include <windef.h>
