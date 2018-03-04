@@ -113,3 +113,7 @@ GenericMfg = "(Стандартні мережеві адаптери)"
 [Strings.0427]
 GenericMfg = "(Standartinės tinklo plokštės)"
 *PNP80D6.DeviceDesc = "Su NE2000 suderinama tinklo plokštė"
+
+[Strings.0804]
+GenericMfg = "(通用网卡)"
+*PNP80D6.DeviceDesc = "NE2000 兼容"

@@ -248,3 +248,10 @@ Pin.Name.IPV4="IPv4"
 Pin.Name.MPE="MPE"
 Pin.Name.NABTS="NABTS"
 
+[Strings.0804]
+Category_BdaTuner="BDA 源过滤器"
+Category_BdaComponent="BDA 接受组件"
+Category_BdaRenderer="BDA 回放过滤器"
+PlugIn_BdaDevice="BDA 设备控制插件"
+PlugIn_BdaCA="BDA 条件接入插件"
+Pin.Name.AtscTS="MPEG2 传输"

@@ -160,3 +160,7 @@ DisplayClassName = "Vaizdo adapteriai"
 
 StdMfg = "(Standartinis vaizdo adapteris)"
 VGA.DeviceDesc = "Su VGA suderinama vaizdo plokštė"
+
+[Strings.0804]
+StdMfg = "(标准显示适配器)"
+VGA.DeviceDesc = "VGA 兼容显示卡"

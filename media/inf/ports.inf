@@ -221,3 +221,10 @@ StdMfg = "(Standartinė jungtis)"
 *PNP0501.DeviceDesc = "Nuoseklaus ryšio jungtis"
 *PNP0400.DeviceDesc = "Standartinė LPT spausdintuvo jungtis"
 *PNP0401.DeviceDesc = "ECP spausdintuvo jungtis"
+
+[Strings.0804]
+StdMfg = "(标准端口)"
+*PNP0500.DeviceDesc = "串行通信端口"
+*PNP0501.DeviceDesc = "串行通信端口"
+*PNP0400.DeviceDesc = "标准 LPT 打印机端口"
+*PNP0401.DeviceDesc = "ECP 打印机端口"
