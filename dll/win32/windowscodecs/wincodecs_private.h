@@ -19,33 +19,9 @@
 #ifndef WINCODECS_PRIVATE_H
 #define WINCODECS_PRIVATE_H
 
-#include <wine/config.h>
-#include <wine/port.h>
-
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winreg.h>
-#include <objbase.h>
-#include <oleauto.h>
-#include <wincodec.h>
-#include <wincodecsdk.h>
-
-#include <wine/debug.h>
-#include <wine/library.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
+#include "wincodec.h"
+#include "wincodecsdk.h"
+#include "wine/unicode.h"
 
 DEFINE_GUID(CLSID_WineTgaDecoder, 0xb11fc79a,0x67cc,0x43e6,0xa9,0xce,0xe3,0xd5,0x49,0x45,0xd3,0x04);
 
@@ -55,7 +31,13 @@ DEFINE_GUID(GUID_WineContainerFormatTga, 0x0c44fda1,0xa5c5,0x4298,0x96,0x85,0x47
 
 DEFINE_GUID(GUID_VendorWine, 0xddf46da1,0x7dc1,0x404e,0x98,0xf2,0xef,0xa4,0x8d,0xfc,0x95,0x0a);
 
+DEFINE_GUID(IID_IMILBitmap,0xb1784d3f,0x8115,0x4763,0x13,0xaa,0x32,0xed,0xdb,0x68,0x29,0x4a);
 DEFINE_GUID(IID_IMILBitmapSource,0x7543696a,0xbc8d,0x46b0,0x5f,0x81,0x8d,0x95,0x72,0x89,0x72,0xbe);
+DEFINE_GUID(IID_IMILBitmapLock,0xa67b2b53,0x8fa1,0x4155,0x8f,0x64,0x0c,0x24,0x7a,0x8f,0x84,0xcd);
+DEFINE_GUID(IID_IMILBitmapScaler,0xa767b0f0,0x1c8c,0x4aef,0x56,0x8f,0xad,0xf9,0x6d,0xcf,0xd5,0xcb);
+DEFINE_GUID(IID_IMILFormatConverter,0x7e2a746f,0x25c5,0x4851,0xb3,0xaf,0x44,0x3b,0x79,0x63,0x9e,0xc0);
+DEFINE_GUID(IID_IMILPalette,0xca8e206f,0xf22c,0x4af7,0x6f,0xba,0x7b,0xed,0x5e,0xb1,0xc9,0x2f);
+
 #define INTERFACE IMILBitmapSource
 DECLARE_INTERFACE_(IMILBitmapSource,IUnknown)
 {
@@ -63,15 +45,57 @@ DECLARE_INTERFACE_(IMILBitmapSource,IUnknown)
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IWICBitmapSource methods ***/
+    STDMETHOD_(HRESULT,GetSize)(THIS_ UINT *,UINT *) PURE;
+    STDMETHOD_(HRESULT,GetPixelFormat)(THIS_ int *) PURE;
+    STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *) PURE;
+    STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *) PURE;
+    STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *) PURE;
     /*** IMILBitmapSource methods ***/
-    STDMETHOD_(HRESULT,GetSize)(THIS_ UINT *,UINT *);
-    STDMETHOD_(HRESULT,GetPixelFormat)(THIS_ int *);
-    STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *);
-    STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *);
-    STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *);
-    STDMETHOD_(HRESULT,UnknownMethod1)(THIS_ void **);
+    STDMETHOD_(HRESULT,unknown1)(THIS_ void **) PURE;
+    STDMETHOD_(HRESULT,Lock)(THIS_ const WICRect *,DWORD,IWICBitmapLock **) PURE;
+    STDMETHOD_(HRESULT,Unlock)(THIS_ IWICBitmapLock *) PURE;
+    STDMETHOD_(HRESULT,SetPalette)(THIS_ IWICPalette *) PURE;
+    STDMETHOD_(HRESULT,SetResolution)(THIS_ double,double) PURE;
+    STDMETHOD_(HRESULT,AddDirtyRect)(THIS_ const WICRect *) PURE;
 };
 #undef INTERFACE
+
+#define INTERFACE IMILBitmapScaler
+DECLARE_INTERFACE_(IMILBitmapScaler,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IWICBitmapSource methods ***/
+    STDMETHOD_(HRESULT,GetSize)(THIS_ UINT *,UINT *) PURE;
+    STDMETHOD_(HRESULT,GetPixelFormat)(THIS_ int *) PURE;
+    STDMETHOD_(HRESULT,GetResolution)(THIS_ double *,double *) PURE;
+    STDMETHOD_(HRESULT,CopyPalette)(THIS_ IWICPalette *) PURE;
+    STDMETHOD_(HRESULT,CopyPixels)(THIS_ const WICRect *,UINT,UINT,BYTE *) PURE;
+    /*** IMILBitmapScaler methods ***/
+    STDMETHOD_(HRESULT,unknown1)(THIS_ void **) PURE;
+    STDMETHOD_(HRESULT,Initialize)(THIS_ IMILBitmapSource *,UINT,UINT,WICBitmapInterpolationMode);
+};
+#undef INTERFACE
+
+#ifdef __i386__  /* thiscall functions are i386-specific */
+
+#define THISCALL(func) __thiscall_ ## func
+#define DEFINE_THISCALL_WRAPPER(func,args) \
+    extern typeof(func) THISCALL(func); \
+    __ASM_STDCALL_FUNC(__thiscall_ ## func, args, \
+                    "popl %eax\n\t" \
+                    "pushl %ecx\n\t" \
+                    "pushl %eax\n\t" \
+                    "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
+#else /* __i386__ */
+
+#define THISCALL(func) func
+#define DEFINE_THISCALL_WRAPPER(func,args) /* nothing */
+
+#endif /* __i386__ */
 
 #define INTERFACE IMILUnknown1
 DECLARE_INTERFACE_(IMILUnknown1,IUnknown)
@@ -80,6 +104,19 @@ DECLARE_INTERFACE_(IMILUnknown1,IUnknown)
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID,void **) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** thiscall method ***/
+    STDMETHOD_(void,unknown1)(THIS_ void*) PURE;
+    /*** stdcall ***/
+    STDMETHOD_(HRESULT,unknown2)(THIS_ void*, void*) PURE;
+    /*** thiscall method ***/
+    STDMETHOD_(HRESULT,unknown3)(THIS_ void*) PURE;
+     /*** stdcall ***/
+    STDMETHOD_(HRESULT,unknown4)(THIS_ void*) PURE;
+    STDMETHOD_(HRESULT,unknown5)(THIS_ void*) PURE;
+    STDMETHOD_(HRESULT,unknown6)(THIS_ DWORD64) PURE;
+    STDMETHOD_(HRESULT,unknown7)(THIS_ void*) PURE;
+    /*** thiscall method ***/
+    STDMETHOD_(HRESULT,unknown8)(THIS) PURE;
 };
 #undef INTERFACE
 
@@ -91,7 +128,9 @@ DECLARE_INTERFACE_(IMILUnknown2,IUnknown)
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** unknown methods ***/
-    STDMETHOD_(HRESULT,UnknownMethod1)(THIS_ void *, void *) PURE;
+    STDMETHOD_(HRESULT,unknown1)(THIS_ void *,void **) PURE;
+    STDMETHOD_(HRESULT,unknown2)(THIS_ void *,void *) PURE;
+    STDMETHOD_(HRESULT,unknown3)(THIS_ void *) PURE;
 };
 #undef INTERFACE
 
@@ -106,6 +145,7 @@ extern HRESULT PngEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN
 extern HRESULT BmpEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT DibDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT GifDecoder_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT GifEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT IcoDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT JpegDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT JpegEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
@@ -144,7 +184,7 @@ extern void reverse_bgr8(UINT bytesperpixel, LPBYTE bits, UINT width, UINT heigh
 
 extern HRESULT get_pixelformat_bpp(const GUID *pixelformat, UINT *bpp) DECLSPEC_HIDDEN;
 
-extern HRESULT CreatePropertyBag2(PROPBAG2 *options, UINT count,
+extern HRESULT CreatePropertyBag2(const PROPBAG2 *options, UINT count,
                                   IPropertyBag2 **property) DECLSPEC_HIDDEN;
 
 extern HRESULT CreateComponentInfo(REFCLSID clsid, IWICComponentInfo **ppIInfo) DECLSPEC_HIDDEN;

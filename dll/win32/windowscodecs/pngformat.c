@@ -17,11 +17,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wincodecs_private.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdarg.h>
 
 #ifdef HAVE_PNG_H
 #include <png.h>
 #endif
+
+#define NONAMELESSUNION
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+
+#include "wincodecs_private.h"
+
+#include "wine/debug.h"
+#include "wine/library.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 static inline ULONG read_ulong_be(BYTE* data)
 {
@@ -605,7 +622,7 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
         ppng_destroy_read_struct(&This->png_ptr, &This->info_ptr, &This->end_info);
         HeapFree(GetProcessHeap(), 0, row_pointers);
         This->png_ptr = NULL;
-        hr = E_FAIL;
+        hr = WINCODEC_ERR_UNKNOWNIMAGEFORMAT;
         goto end;
     }
     ppng_set_error_fn(This->png_ptr, jmpbuf, user_error_fn, user_warning_fn);
@@ -836,10 +853,14 @@ static HRESULT WINAPI PngDecoder_CopyPalette(IWICBitmapDecoder *iface,
 }
 
 static HRESULT WINAPI PngDecoder_GetMetadataQueryReader(IWICBitmapDecoder *iface,
-    IWICMetadataQueryReader **ppIMetadataQueryReader)
+    IWICMetadataQueryReader **reader)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIMetadataQueryReader);
-    return E_NOTIMPL;
+    FIXME("(%p,%p): stub\n", iface, reader);
+
+    if (!reader) return E_INVALIDARG;
+
+    *reader = NULL;
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
 }
 
 static HRESULT WINAPI PngDecoder_GetPreview(IWICBitmapDecoder *iface,
@@ -1969,11 +1990,22 @@ static HRESULT WINAPI PngEncoder_GetContainerFormat(IWICBitmapEncoder *iface,
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI PngEncoder_GetEncoderInfo(IWICBitmapEncoder *iface,
-    IWICBitmapEncoderInfo **ppIEncoderInfo)
+static HRESULT WINAPI PngEncoder_GetEncoderInfo(IWICBitmapEncoder *iface, IWICBitmapEncoderInfo **info)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIEncoderInfo);
-    return E_NOTIMPL;
+    IWICComponentInfo *comp_info;
+    HRESULT hr;
+
+    TRACE("%p,%p\n", iface, info);
+
+    if (!info) return E_INVALIDARG;
+
+    hr = CreateComponentInfo(&CLSID_WICPngEncoder, &comp_info);
+    if (hr == S_OK)
+    {
+        hr = IWICComponentInfo_QueryInterface(comp_info, &IID_IWICBitmapEncoderInfo, (void **)info);
+        IWICComponentInfo_Release(comp_info);
+    }
+    return hr;
 }
 
 static HRESULT WINAPI PngEncoder_SetColorContexts(IWICBitmapEncoder *iface,
@@ -2016,7 +2048,11 @@ static HRESULT WINAPI PngEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 {
     PngEncoder *This = impl_from_IWICBitmapEncoder(iface);
     HRESULT hr;
-    PROPBAG2 opts[2]= {{0}};
+    static const PROPBAG2 opts[2] =
+    {
+        { PROPBAG2_TYPE_DATA, VT_BOOL, 0, 0, (LPOLESTR)wszPngInterlaceOption },
+        { PROPBAG2_TYPE_DATA, VT_UI1,  0, 0, (LPOLESTR)wszPngFilterOption },
+    };
 
     TRACE("(%p,%p,%p)\n", iface, ppIFrameEncode, ppIEncoderOptions);
 
@@ -2034,18 +2070,14 @@ static HRESULT WINAPI PngEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
         return WINCODEC_ERR_NOTINITIALIZED;
     }
 
-    opts[0].pstrName = (LPOLESTR)wszPngInterlaceOption;
-    opts[0].vt = VT_BOOL;
-    opts[0].dwType = PROPBAG2_TYPE_DATA;
-    opts[1].pstrName = (LPOLESTR)wszPngFilterOption;
-    opts[1].vt = VT_UI1;
-    opts[1].dwType = PROPBAG2_TYPE_DATA;
-
-    hr = CreatePropertyBag2(opts, sizeof(opts)/sizeof(opts[0]), ppIEncoderOptions);
-    if (FAILED(hr))
+    if (ppIEncoderOptions)
     {
-        LeaveCriticalSection(&This->lock);
-        return hr;
+        hr = CreatePropertyBag2(opts, sizeof(opts)/sizeof(opts[0]), ppIEncoderOptions);
+        if (FAILED(hr))
+        {
+            LeaveCriticalSection(&This->lock);
+            return hr;
+        }
     }
 
     This->frame_count = 1;

@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdarg.h>
+
 #ifdef HAVE_APPLICATIONSERVICES_APPLICATIONSERVICES_H
 #define GetCurrentProcess GetCurrentProcess_Mac
 #define GetCurrentThread GetCurrentThread_Mac
@@ -73,7 +78,18 @@
 #undef DPRINTF
 #endif
 
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+
 #include "wincodecs_private.h"
+
+#include "wine/debug.h"
+#include "wine/library.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 #if defined(HAVE_APPLICATIONSERVICES_APPLICATIONSERVICES_H) && \
     MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_4
@@ -601,9 +617,12 @@ static HRESULT WINAPI IcnsEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
         goto end;
     }
 
-    hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
-    if (FAILED(hr))
-        goto end;
+    if (ppIEncoderOptions)
+    {
+        hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
+        if (FAILED(hr))
+            goto end;
+    }
 
     frameEncode = HeapAlloc(GetProcessHeap(), 0, sizeof(IcnsFrameEncode));
     if (frameEncode == NULL)

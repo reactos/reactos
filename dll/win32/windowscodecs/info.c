@@ -17,9 +17,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "objbase.h"
+
 #include "wincodecs_private.h"
 
-#include <wine/list.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "wine/list.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 static const WCHAR mimetypes_valuename[] = {'M','i','m','e','T','y','p','e','s',0};
 static const WCHAR author_valuename[] = {'A','u','t','h','o','r',0};
@@ -853,8 +868,12 @@ static HRESULT WINAPI BitmapEncoderInfo_GetMimeTypes(IWICBitmapEncoderInfo *ifac
 static HRESULT WINAPI BitmapEncoderInfo_GetFileExtensions(IWICBitmapEncoderInfo *iface,
     UINT cchFileExtensions, WCHAR *wzFileExtensions, UINT *pcchActual)
 {
-    FIXME("(%p,%u,%p,%p): stub\n", iface, cchFileExtensions, wzFileExtensions, pcchActual);
-    return E_NOTIMPL;
+    BitmapEncoderInfo *This = impl_from_IWICBitmapEncoderInfo(iface);
+
+    TRACE("(%p,%u,%p,%p)\n", iface, cchFileExtensions, wzFileExtensions, pcchActual);
+
+    return ComponentInfo_GetStringValue(This->classkey, fileextensions_valuename,
+        cchFileExtensions, wzFileExtensions, pcchActual);
 }
 
 static HRESULT WINAPI BitmapEncoderInfo_DoesSupportAnimation(IWICBitmapEncoderInfo *iface,
@@ -2265,6 +2284,12 @@ HRESULT CreateComponentEnumerator(DWORD componentTypes, DWORD options, IEnumUnkn
     return hr;
 }
 
+static BOOL is_1bpp_format(const WICPixelFormatGUID *format)
+{
+    return IsEqualGUID(format, &GUID_WICPixelFormatBlackWhite) ||
+           IsEqualGUID(format, &GUID_WICPixelFormat1bppIndexed);
+}
+
 HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitmapSource *pISrc, IWICBitmapSource **ppIDst)
 {
     HRESULT res;
@@ -2277,10 +2302,12 @@ HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitma
     BOOL canconvert;
     ULONG num_fetched;
 
+    TRACE("%s,%p,%p\n", debugstr_guid(dstFormat), pISrc, ppIDst);
+
     res = IWICBitmapSource_GetPixelFormat(pISrc, &srcFormat);
     if (FAILED(res)) return res;
 
-    if (IsEqualGUID(&srcFormat, dstFormat))
+    if (IsEqualGUID(&srcFormat, dstFormat) || (is_1bpp_format(&srcFormat) && is_1bpp_format(dstFormat)))
     {
         IWICBitmapSource_AddRef(pISrc);
         *ppIDst = pISrc;
@@ -2317,7 +2344,7 @@ HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitma
 
                     if (SUCCEEDED(res) && canconvert)
                         res = IWICFormatConverter_Initialize(converter, pISrc, dstFormat, WICBitmapDitherTypeNone,
-                            NULL, 0.0, WICBitmapPaletteTypeCustom);
+                            NULL, 0.0, WICBitmapPaletteTypeMedianCut);
 
                     if (FAILED(res) || !canconvert)
                     {
