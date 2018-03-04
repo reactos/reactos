@@ -47,7 +47,7 @@ public:
 
     virtual INT OnCompareItems(T * p1, T * p2)
     {
-        INT t = (reinterpret_cast<INT>(p2) - reinterpret_cast<INT>(p1));
+        INT_PTR t = (reinterpret_cast<INT_PTR>(p2) - reinterpret_cast<INT_PTR>(p1));
         if (t > 0)
             return 1;
         if (t < 0)

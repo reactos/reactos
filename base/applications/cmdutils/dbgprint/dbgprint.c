@@ -17,9 +17,9 @@
 int _tmain(int argc, TCHAR ** argv)
 {
     TCHAR * buf;
-    int bufsize;
+    size_t bufsize;
     int i;
-    int offset;
+    size_t offset;
 
     bufsize = 0;
     for(i = 1; i < argc; i++)
@@ -106,7 +106,7 @@ int _tmain(int argc, TCHAR ** argv)
         offset = 0;
         for(i = 1; i < argc; i++)
         {
-            int length = _tcslen(argv[i]);
+            size_t length = _tcslen(argv[i]);
             _tcsncpy(&buf[offset], argv[i], length);
             offset += length;
             if (i + 1 < argc)

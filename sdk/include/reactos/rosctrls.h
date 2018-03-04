@@ -395,9 +395,9 @@ public: // Layout management methods
     }
 
 public: // Image list management methods
-    DWORD SetImageList(HIMAGELIST himl)
+    HIMAGELIST SetImageList(HIMAGELIST himl)
     {
-        return SendMessageW(TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(himl));
+        return (HIMAGELIST)SendMessageW(TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(himl));
     }
 
 public: // Other methods
