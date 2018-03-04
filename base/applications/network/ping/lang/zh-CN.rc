@@ -14,8 +14,8 @@ BEGIN
 \n\
 Options:\n\
     -t          Ping 指定的主机，直到停止。\n\
-                若要查看统计信息并继续操作，请键入 Ctrl+Break；\n\
-                若要停止，请键入 Ctrl+C。\n\
+                若要查看统计信息并继续操作，请键入 Control-Break；\n\
+                若要停止，请键入 Control-C。\n\
     -a          将地址解析为主机名。\n\
     -n count    要发送的回显请求数。\n\
     -l size     发送缓冲区大小。\n\
@@ -32,35 +32,35 @@ Options:\n\
     IDS_CTRL_BREAK "Control-Break\n"
     IDS_CTRL_C "Control-C\n"
     IDS_NO_RESOURCES "没有足够的可用资源。\n"
-    IDS_MISSING_ADDRESS "必须指定 IP 地址\n"
+    IDS_MISSING_ADDRESS "必须指定 IP 地址。\n"
     IDS_MISSING_VALUE "必须为选项 %s 提供值。\n"
-    IDS_BAD_OPTION "选项 %s 不正确。\n"
-    IDS_BAD_PARAMETER "错误的参数 %s.\n"
-    IDS_BAD_VALUE "Bad value for option %s, valid range is from %u to %u.\n"
-    IDS_WRONG_FAMILY "The option %s is only supported for %s.\n"
+    IDS_BAD_OPTION "错误的选项 %s。\n"
+    IDS_BAD_PARAMETER "错误的参数 %s。\n"
+    IDS_BAD_VALUE "选项 %s 的值有误，有效范围从 %u 到 %u。\n"
+    IDS_WRONG_FAMILY "选项 %s 只支持 %s。\n"
     IDS_UNKNOWN_HOST "Ping 请求找不到主机 %s. 请检查该名称，然后重试。\n"
     IDS_PINGING_ADDRESS "\nPinging %s "
     IDS_PINGING_HOSTNAME "\nPinging %s [%s] "
-    IDS_SOURCE_ADDRESS "from %s %s"
+    IDS_SOURCE_ADDRESS "从 %s %s"
     IDS_PING_SIZE "具有 %lu 字节的数据:\n\n"
     IDS_REPLY_FROM "来自 %s 的回复: "
     IDS_REPLY_BYTES "字节=%d "
     IDS_REPLY_TIME_MS "时间=%lums "
     IDS_REPLY_TIME_0MS "时间<1ms "
     IDS_REPLY_TTL "TTL=%d\n"
-    IDS_REPLY_STATUS "Echo reply returned %lu.\n"
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
-    IDS_DEST_NET_UNREACHABLE "Destination network unreachable.\n"
+    IDS_REPLY_STATUS "回显返回 %lu。\n"
+    IDS_DEST_HOST_UNREACHABLE "目标主机不可达。\n"
+    IDS_DEST_NET_UNREACHABLE "目标网络不可达。\n"
     IDS_REQUEST_TIMED_OUT "请求超时。\n"
-    IDS_TTL_EXPIRED "TTL 传输中过期。\n"
+    IDS_TTL_EXPIRED "TTL 再传输中过期。\n"
     IDS_TRANSMIT_FAILED "PING: 传输失败。(Error %u)\n"
 
     IDS_STATISTICS "\n\
 %s 的 Ping 统计信息:\n\
     数据包: 已发送 = %d, 已接收 = %d, 丢失 %d (%d%% 丢失),\n"
 
-    IDS_APPROXIMATE_RTT "往返行程的估计时间(以毫秒为单位):\n\
-    最短 = %lums, 最长 = %lums, 平均 = %lums\n"
+    IDS_APPROXIMATE_RTT "预计往返时间(以毫秒为单位):\n\
+    最小 = %lums, 最大 = %lums, 平均 = %lums\n"
 
-    IDS_WINSOCK_FAIL "无法初始化 Windows Sockets 接口: %i\n"
+    IDS_WINSOCK_FAIL "无法初始化 WinSock: %i\n"
 END

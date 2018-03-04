@@ -20,7 +20,7 @@ BEGIN
     END
     POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "关于 ReactOS 控制台(&A)", IDM_HELP_ABOUT
+        MENUITEM "关于 ReactOS 管理控制台(&A)", IDM_HELP_ABOUT
     END
 END
 
@@ -30,8 +30,8 @@ BEGIN
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
         MENUITEM "打开(&O)\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "保存", IDM_FILE_SAVE
-        MENUITEM "另存为...", IDM_FILE_SAVEAS
+        MENUITEM "保存(&S)", IDM_FILE_SAVE
+        MENUITEM "另存为(&A)...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)\tAlt+F4", IDM_FILE_EXIT
     END
@@ -41,12 +41,12 @@ BEGIN
     END
     POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "关于 ReactOS 控制台(&A)", IDM_HELP_ABOUT
+        MENUITEM "关于 ReactOS 管理控制台(&A)", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS 控制台"
+    IDS_APPTITLE "ReactOS 管理控制台"
     IDS_CONSOLETITLE "控制台%1!u!"
 END

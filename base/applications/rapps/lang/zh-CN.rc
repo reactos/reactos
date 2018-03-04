@@ -24,7 +24,7 @@ BEGIN
     END
     POPUP "帮助"
     BEGIN
-        MENUITEM "帮助内容\tF1", ID_HELP, GRAYED
+        MENUITEM "帮助\tF1", ID_HELP, GRAYED
         MENUITEM "关于", ID_ABOUT
     END
 END
@@ -64,18 +64,18 @@ BEGIN
     AUTOCHECKBOX "启动时更新可获得的程序列表(&U)", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "将程序的安装和卸载记录到日志(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "正在下载", -1, 4, 65, 240, 51
-    LTEXT "下载文件夹：", -1, 16, 75, 100, 9
+    LTEXT "下载文件夹: ", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "选择(&C)", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "在安装完程序后删除安装程序(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "代理服务器", -1, 4, 116, 240, 76
-    CONTROL "系统代理设置", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "直接 （无代理）", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "使用系统代理设置", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "直连 (无代理）", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
     CONTROL "代理服务器", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "没有代理", -1, 27, 175, 64, 10
+    LTEXT "为...不使用代理", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "缺省", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "默认", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
     DEFPUSHBUTTON "确定", IDOK, 116, 195, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 181, 195, 60, 14
 END
@@ -108,7 +108,7 @@ CAPTION "关于"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "ReactOS 程序管理器 版权所有 (C) 2009\n作者 Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    LTEXT "ReactOS 程序管理器\n版权所有 (C) 2009\n作者 Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
     DEFPUSHBUTTON "关闭", IDOK, 133, 46, 50, 14
 END
 
@@ -132,34 +132,34 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INFO_VERSION "版本："
-    IDS_INFO_DESCRIPTION "描述："
-    IDS_INFO_PUBLISHER "\n发布者："
-    IDS_INFO_HELPLINK "\n帮助链接："
-    IDS_INFO_HELPPHONE "\n帮助电话："
-    IDS_INFO_README "\n必读："
-    IDS_INFO_REGOWNER "\n注册所有者："
-    IDS_INFO_PRODUCTID "\n产品 ID："
-    IDS_INFO_CONTACT "\n联系方式："
-    IDS_INFO_UPDATEINFO "\n更新信息："
-    IDS_INFO_INFOABOUT "\n关于信息："
-    IDS_INFO_COMMENTS "\n注释："
-    IDS_INFO_INSTLOCATION "\n安装位置："
-    IDS_INFO_INSTALLSRC "\n安装源："
-    IDS_INFO_UNINSTALLSTR "\n卸载字符串："
-    IDS_INFO_MODIFYPATH "\n修改路径："
-    IDS_INFO_INSTALLDATE "\n安装日期："
+    IDS_INFO_VERSION "版本: "
+    IDS_INFO_DESCRIPTION "描述: "
+    IDS_INFO_PUBLISHER "\n发布者: "
+    IDS_INFO_HELPLINK "\n帮助链接: "
+    IDS_INFO_HELPPHONE "\n帮助电话: "
+    IDS_INFO_README "\n说明文档: "
+    IDS_INFO_REGOWNER "\n注册所有者: "
+    IDS_INFO_PRODUCTID "\n产品 ID: "
+    IDS_INFO_CONTACT "\n联系方式: "
+    IDS_INFO_UPDATEINFO "\n更新信息: "
+    IDS_INFO_INFOABOUT "\n关于信息: "
+    IDS_INFO_COMMENTS "\n注释: "
+    IDS_INFO_INSTLOCATION "\n安装位置: "
+    IDS_INFO_INSTALLSRC "\n安装源: "
+    IDS_INFO_UNINSTALLSTR "\n卸载字符串: "
+    IDS_INFO_MODIFYPATH "\n修改路径: "
+    IDS_INFO_INSTALLDATE "\n安装日期: "
 END
 
 STRINGTABLE
 BEGIN
-    IDS_AINFO_VERSION "\n版本："
+    IDS_AINFO_VERSION "\n版本: "
     IDS_AINFO_AVAILABLEVERSION "\n可用版本: "
-    IDS_AINFO_DESCRIPTION "\n描述："
-    IDS_AINFO_SIZE "\n大小："
-    IDS_AINFO_URLSITE "\n主页："
-    IDS_AINFO_LICENSE "\n协议："
-    IDS_AINFO_URLDOWNLOAD "\n下载:"
+    IDS_AINFO_DESCRIPTION "\n描述: "
+    IDS_AINFO_SIZE "\n大小: "
+    IDS_AINFO_URLSITE "\n主页: "
+    IDS_AINFO_LICENSE "\n协议: "
+    IDS_AINFO_URLDOWNLOAD "\n下载: "
     IDS_AINFO_LANGUAGES "\n语言: "
 END
 
@@ -170,7 +170,7 @@ BEGIN
     IDS_CAT_DRIVERS "驱动程序"
     IDS_CAT_EDU "教育与娱乐"
     IDS_CAT_ENGINEER "工程"
-    IDS_CAT_FINANCE "经济"
+    IDS_CAT_FINANCE "金融"
     IDS_CAT_GAMES "游戏与娱乐"
     IDS_CAT_GRAPHICS "图形"
     IDS_CAT_INTERNET "互联网与网络"
@@ -197,7 +197,7 @@ BEGIN
     IDS_AVAILABLEFORINST "可安装"
     IDS_UPDATES "更新"
     IDS_APPLICATIONS "应用程序"
-    IDS_CHOOSE_FOLDER_TEXT "请选择用来保存下载文件的文件夹："
+    IDS_CHOOSE_FOLDER_TEXT "请选择用来保存下载文件的文件夹: "
     IDS_CHOOSE_FOLDER_ERROR "您选择的文件夹不存在。是否创建？"
     IDS_APP_REG_REMOVE "您确定要从注册表删除该程序的数据吗？"
     IDS_INFORMATION "信息"
@@ -205,15 +205,15 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "无法下载该软件包！请检查网络连接！"
     IDS_UNABLE_TO_REMOVE "无法从注册表删除该程序的数据！"
     IDS_UNABLE_TO_INSTALL "无法打开安装程序！"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_QUERY_CERT "无法获取证书信息。\n\n您是否仍然想继续？"
     IDS_INTEG_CHECK_TITLE "正在验证包完整性…"
     IDS_INTEG_CHECK_FAIL "这个包没有通过完整性验证，它可能在下载过程中损坏或被人为篡改了。不推荐运行这个程序。"
     IDS_INTERRUPTED_DOWNLOAD "下载中断。请检查网络连接。"
     IDS_UNABLE_TO_WRITE "无法写入磁盘。磁盘可能已满。"
     IDS_SELECT_ALL "全选/全反选"
     IDS_INSTALL_SELECTED "安装已选中的"
-    IDS_SELECTEDFORINST "Selected for installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_SELECTEDFORINST "选中以安装"
+    IDS_MISMATCH_CERT_INFO "使用的证书是未知的:\n主题: %s\n发行方: %s\n您是否仍然想继续？"
 END
 
 STRINGTABLE

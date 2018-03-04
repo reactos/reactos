@@ -39,14 +39,14 @@ END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "放大镜设定"
+CAPTION "放大镜选项"
 FONT 9, "宋体", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "退出", IDOK, 96, 161, 50, 14
+    DEFPUSHBUTTON "确定", IDOK, 96, 161, 50, 14
     PUSHBUTTON "帮助(&H)", IDC_BUTTON_HELP, 38, 161, 50, 14
-    LTEXT "放大倍数：(&L)", IDC_STATIC, 6, 8, 68, 8
+    LTEXT "放大倍数(&L):", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "跟踪", IDC_STATIC, 7, 25, 139, 59
+    GROUPBOX "跟随", IDC_STATIC, 7, 25, 139, 59
     GROUPBOX "显示", IDC_STATIC, 7, 87, 139, 57
     CONTROL "跟随鼠标指针(&M)", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
@@ -69,8 +69,8 @@ FONT 9, "宋体", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "确定", IDOK, 193, 76, 50, 14
     ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "放大镜是为有轻微视觉障碍的用户提供的一个最低限度的功能。大多数有视觉障碍的用户需要一个较高功能性的放大镜作日常使用。", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "不要再次显示此讯息", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "放大镜为有轻微视觉障碍的用户提供最低限度的功能。大多数有视觉障碍的用户需要一个更多功能的放大镜工具作日常使用。", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "不再显示此信息", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
