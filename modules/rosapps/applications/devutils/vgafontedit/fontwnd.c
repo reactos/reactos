@@ -98,7 +98,7 @@ FontWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PFONT_WND_INFO Info;
 
-    Info = (PFONT_WND_INFO) GetWindowLongW(hwnd, GWLP_USERDATA);
+    Info = (PFONT_WND_INFO) GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
     if(Info || uMsg == WM_CREATE)
     {
@@ -114,7 +114,7 @@ FontWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 Info = (PFONT_WND_INFO)( ( (LPMDICREATESTRUCT) ( (LPCREATESTRUCT)lParam )->lpCreateParams )->lParam );
                 Info->hSelf = hwnd;
 
-                SetWindowLongW(hwnd, GWLP_USERDATA, (LONG)Info);
+                SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)Info);
 
                 CreateFontBoxesWindow(Info);
 
@@ -198,7 +198,7 @@ FontWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 HeapFree(hProcessHeap, 0, Info->OpenInfo);
                 HeapFree(hProcessHeap, 0, Info);
 
-                SetWindowLongW(hwnd, GWLP_USERDATA, 0);
+                SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
                 return 0;
 
             case WM_SETFOCUS:
