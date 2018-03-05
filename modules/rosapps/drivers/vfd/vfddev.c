@@ -62,10 +62,17 @@ VfdCreateDevice(
 	physical_num = 0;
 
 	do {
+#ifndef __REACTOS__
 		name_buffer[sizeof(name_buffer) - 1] = UNICODE_NULL;
 
 		_snwprintf(name_buffer, sizeof(name_buffer) - 1,
 			L"\\Device\\Floppy%lu", physical_num);
+#else
+		name_buffer[ARRAYSIZE(name_buffer) - 1] = UNICODE_NULL;
+
+		_snwprintf(name_buffer, ARRAYSIZE(name_buffer) - 1,
+			L"\\Device\\Floppy%lu", physical_num);
+#endif
 
 		RtlInitUnicodeString(&unicode_name, name_buffer);
 
@@ -130,11 +137,19 @@ VfdCreateDevice(
 
 	//	Create the interface link (\??\VirtualFD<n>)
 
+#ifndef __REACTOS__
 	name_buffer[sizeof(name_buffer) - 1] = UNICODE_NULL;
 
 	_snwprintf(name_buffer, sizeof(name_buffer) - 1,
 		L"\\??\\" VFD_DEVICE_BASENAME L"%lu",
 		device_extension->DeviceNumber);
+#else
+	name_buffer[ARRAYSIZE(name_buffer) - 1] = UNICODE_NULL;
+
+	_snwprintf(name_buffer, ARRAYSIZE(name_buffer) - 1,
+		L"\\??\\" VFD_DEVICE_BASENAME L"%lu",
+		device_extension->DeviceNumber);
+#endif
 
 	RtlInitUnicodeString(&unicode_name, name_buffer);
 
@@ -352,11 +367,19 @@ VfdDeleteDevice(
 
 	//	Remove the interface symbolic link
 
+#ifndef __REACTOS__
 	name_buffer[sizeof(name_buffer) - 1] = UNICODE_NULL;
 
 	_snwprintf(name_buffer, sizeof(name_buffer) - 1,
 		L"\\??\\" VFD_DEVICE_BASENAME L"%lu",
 		device_extension->DeviceNumber);
+#else
+	name_buffer[ARRAYSIZE(name_buffer) - 1] = UNICODE_NULL;
+
+	_snwprintf(name_buffer, ARRAYSIZE(name_buffer) - 1,
+		L"\\??\\" VFD_DEVICE_BASENAME L"%lu",
+		device_extension->DeviceNumber);
+#endif
 
 	RtlInitUnicodeString(&unicode_name, name_buffer);
 
