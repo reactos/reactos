@@ -1,6 +1,6 @@
 ## efisys.bin
 
-# EFI platform ID, used in environ/CMakelists.txt for bootmgfw filename naming also.
+# EFI platform ID, used in environ/CMakelists.txt for bootmgfw filename naming as well.
 if(ARCH STREQUAL "amd64")
     set(EFI_PLATFORM_ID "x64")
 elseif(ARCH STREQUAL "i386")
