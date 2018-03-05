@@ -67,7 +67,7 @@ public:
         return E_NOTIMPL;
     }
 
-    static HRESULT WINAPI FuncBlind(void* pv, REFIID riid, LPVOID* ppv, DWORD dw)
+    static HRESULT WINAPI FuncBlind(void* pv, REFIID riid, LPVOID* ppv, DWORD_PTR dw)
     {
         InterlockedIncrement(&g_BLIND);
         return E_FAIL;
