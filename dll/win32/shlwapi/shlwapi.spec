@@ -545,7 +545,7 @@
 545 stdcall -noname SHForwardContextMenuMsg(ptr long long long ptr long)
 546 stub -noname IUnknown_DoContextMenuPopup
 547 stdcall DelayLoadFailureHook(str str) kernel32.DelayLoadFailureHook
-548 stub -noname SHAreIconsEqual
+548 stdcall -noname SHAreIconsEqual(ptr ptr)
 549 stdcall -noname SHCoCreateInstanceAC(ptr ptr long ptr ptr)
 550 stub -noname GetTemplateInfoFromHandle
 551 stub -noname IShellFolder_CompareIDs
