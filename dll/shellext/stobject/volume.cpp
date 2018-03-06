@@ -300,7 +300,7 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
             switch (lParam)
             {
                 case WM_LBUTTONDOWN:
-                    SetTimer(pSysTray->GetHWnd(), VOLUME_TIMER_ID, 500, NULL);
+                    SetTimer(pSysTray->GetHWnd(), VOLUME_TIMER_ID, GetDoubleClickTime(), NULL);
                     break;
 
                 case WM_LBUTTONUP:

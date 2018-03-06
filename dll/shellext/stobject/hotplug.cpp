@@ -294,7 +294,7 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
             switch (lParam)
             {
                 case WM_LBUTTONDOWN:
-                    SetTimer(pSysTray->GetHWnd(), HOTPLUG_TIMER_ID, 500, NULL);
+                    SetTimer(pSysTray->GetHWnd(), HOTPLUG_TIMER_ID, GetDoubleClickTime(), NULL);
                     break;
 
                 case WM_LBUTTONUP:
