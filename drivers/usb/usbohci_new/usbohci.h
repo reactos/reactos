@@ -38,7 +38,7 @@ extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 typedef struct _OHCI_TRANSFER *POHCI_TRANSFER;
 
-typedef union _OHCI_HW_TRANSFER_DESCRIPTOR {
+typedef union DECLSPEC_ALIGN(32) _OHCI_HW_TRANSFER_DESCRIPTOR {
   struct {
     OHCI_TRANSFER_DESCRIPTOR gTD; // must be aligned to a 16-byte boundary
     USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
@@ -50,6 +50,7 @@ typedef union _OHCI_HW_TRANSFER_DESCRIPTOR {
 } OHCI_HW_TRANSFER_DESCRIPTOR, *POHCI_HW_TRANSFER_DESCRIPTOR;
 
 C_ASSERT(sizeof(OHCI_HW_TRANSFER_DESCRIPTOR) == 32);
+C_ASSERT(_alignof(OHCI_HW_TRANSFER_DESCRIPTOR) == 32);
 
 typedef struct _OHCI_HCD_TD {
   /* Hardware part */
@@ -64,7 +65,11 @@ typedef struct _OHCI_HCD_TD {
   ULONG Pad[1];
 } OHCI_HCD_TD, *POHCI_HCD_TD;
 
+#ifdef _WIN64
+C_ASSERT(sizeof(OHCI_HCD_TD) == 96);
+#else
 C_ASSERT(sizeof(OHCI_HCD_TD) == 64);
+#endif
 
 typedef struct _OHCI_HCD_ED {
   /* Hardware part */
@@ -73,7 +78,11 @@ typedef struct _OHCI_HCD_ED {
   ULONG PhysicalAddress;
   ULONG Flags;
   LIST_ENTRY HcdEDLink;
+#ifdef _WIN64
+  ULONG Pad[6]; 
+#else
   ULONG Pad[8];
+#endif
 } OHCI_HCD_ED, *POHCI_HCD_ED;
 
 C_ASSERT(sizeof(OHCI_HCD_ED) == 64);
