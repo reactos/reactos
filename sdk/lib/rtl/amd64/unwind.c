@@ -956,52 +956,73 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     {
     }
 
-    /* Loop the frames */
-    for (i = 0; i < FramesToSkip + Count; i++)
+    _SEH2_TRY
     {
-        /* Lookup the FunctionEntry for the current ControlPc */
-        FunctionEntry = RtlLookupFunctionEntry(ControlPc, &ImageBase, NULL);
-
-        /* Is this a leaf function? */
-        if (!FunctionEntry)
+        /* Loop the frames */
+        for (i = 0; i < FramesToSkip + Count; i++)
         {
-            Context.Rip = *(DWORD64*)Context.Rsp;
-            Context.Rsp += sizeof(DWORD64);
-            DPRINT("leaf funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
-        }
-        else
-        {
-            RtlVirtualUnwind(0,
-                             ImageBase,
-                             ControlPc,
-                             FunctionEntry,
-                             &Context,
-                             &HandlerData,
-                             &EstablisherFrame,
-                             NULL);
-            DPRINT("normal funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
-        }
+            /* Lookup the FunctionEntry for the current ControlPc */
+            FunctionEntry = RtlLookupFunctionEntry(ControlPc, &ImageBase, NULL);
 
-        /* Check if new Rip is valid */
-        if (!Context.Rip)
-        {
-            break;
-        }
+            /* Is this a leaf function? */
+            if (!FunctionEntry)
+            {
+                Context.Rip = *(DWORD64*)Context.Rsp;
+                Context.Rsp += sizeof(DWORD64);
+                DPRINT("leaf funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
+            }
+            else
+            {
+                RtlVirtualUnwind(0,
+                                 ImageBase,
+                                 ControlPc,
+                                 FunctionEntry,
+                                 &Context,
+                                 &HandlerData,
+                                 &EstablisherFrame,
+                                 NULL);
+                DPRINT("normal funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
+            }
 
-        /* Check, if we have left our stack */
-        if ((Context.Rsp < StackLow) || (Context.Rsp > StackHigh))
-        {
-            break;
-        }
+            /* Check if we are in kernel mode */
+            if (RtlpGetMode() == KernelMode)
+            {
+                /* Check if we left the kernel range */
+                if (!(Flags & 1) && (Context.Rip < 0xFFFF800000000000ULL))
+                {
+                    break;
+                }
+            }
+            else
+            {
+                /* Check if we left the user range */
+                if ((Context.Rip < 0x10000) ||
+                    (Context.Rip > 0x000007FFFFFEFFFFULL))
+                {
+                    break;
+                }
+            }
 
-        /* Continue with new Rip */
-        ControlPc = Context.Rip;
+            /* Check, if we have left our stack */
+            if ((Context.Rsp < StackLow) || (Context.Rsp > StackHigh))
+            {
+                break;
+            }
 
-        /* Save value, if we are past the frames to skip */
-        if (i >= FramesToSkip)
-        {
-            Callers[i - FramesToSkip] = (PVOID)ControlPc;
+            /* Continue with new Rip */
+            ControlPc = Context.Rip;
+
+            /* Save value, if we are past the frames to skip */
+            if (i >= FramesToSkip)
+            {
+                Callers[i - FramesToSkip] = (PVOID)ControlPc;
+            }
         }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Exception while getting callers!\n");
+        i = 0;
     }
 
     DPRINT("RtlWalkFrameChain returns %ld\n", i);
