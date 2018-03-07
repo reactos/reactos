@@ -313,7 +313,8 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
     while (PageCount)
     {
         /* Make sure there's some data about the page */
-        if (PointerPte->u.Long)
+        if (MmIsAddressValid(PointerPte) &&
+            (PointerPte->u.Long != 0))
         {
             /* As always, only handle current ARM3 scenarios */
             ASSERT(PointerPte->u.Soft.Prototype == 0);
