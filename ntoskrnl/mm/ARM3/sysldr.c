@@ -1503,7 +1503,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
             InitFound = FALSE;
 
             /* Is this the INIT section or a discardable section? */
-            if ((*(PULONG)Section->Name == 'TINI') ||
+            if ((strncmp((PCCH)Section->Name, "INIT", 5) == 0) ||
                 ((Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)))
             {
                 /* Remember this */
@@ -1518,10 +1518,13 @@ MiFindInitializationCode(OUT PVOID *StartVa,
                 /* Read the section alignment */
                 Alignment = NtHeader->OptionalHeader.SectionAlignment;
 
-                /* Align the start and end addresses appropriately */
+                /* Get the start and end addresses */
                 InitStart = DllBase + Section->VirtualAddress;
-                InitEnd = ((Alignment + InitStart + Size - 2) & 0xFFFFF000) - 1;
-                InitStart = (InitStart + (PAGE_SIZE - 1)) & 0xFFFFF000;
+                InitEnd = (ULONG_PTR)ALIGN_UP_POINTER_BY(InitStart + Size, Alignment);
+
+                /* Align the addresses to PAGE_SIZE */
+                InitStart = (ULONG_PTR)ALIGN_DOWN_POINTER_BY(InitStart, PAGE_SIZE);
+                InitEnd = (ULONG_PTR)ALIGN_DOWN_POINTER_BY(InitEnd, PAGE_SIZE);
 
                 /* Have we reached the last section? */
                 if (SectionCount == 1)
