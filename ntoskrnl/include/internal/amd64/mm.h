@@ -234,6 +234,8 @@ MiPxeToAddress(PMMPTE PointerPxe)
 /* Translate between P*Es */
 #define MiPdeToPte(_Pde) ((PMMPTE)MiPteToAddress(_Pde))
 #define MiPteToPde(_Pte) ((PMMPDE)MiAddressToPte(_Pte))
+#define MiPteToPpe(_Pte) ((PMMPPE)MiAddressToPde(_Pte))
+#define MiPteToPxe(_Pte) ((PMMPPE)MiAddressToPpe(_Pte))
 #define MiPdeToPpe(_Pde) ((PMMPPE)MiAddressToPte(_Pde))
 
 /* Check P*E boundaries */

@@ -313,7 +313,15 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
     while (PageCount)
     {
         /* Make sure there's some data about the page */
-        if (PointerPte->u.Long)
+        if (
+#if _MI_PAGING_LEVELS >= 4
+            MiPteToPxe(PointerPte)->u.Hard.Valid &&
+#endif
+#if _MI_PAGING_LEVELS >= 3
+            MiPteToPpe(PointerPte)->u.Hard.Valid &&
+#endif
+            MiPteToPde(PointerPte)->u.Hard.Valid &&
+            (PointerPte->u.Long != 0))
         {
             /* Normally this is one possibility -- freeing a valid page */
             if (PointerPte->u.Hard.Valid)
