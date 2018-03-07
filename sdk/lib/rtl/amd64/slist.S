@@ -83,17 +83,18 @@ PUBLIC ExpInterlockedPopEntrySListEnd16
 PUBLIC ExpInterlockedPushEntrySList
 PUBLIC ExpInterlockedFlushSList
 
-PUBLIC RtlInterlockedFlushSList
 PUBLIC RtlInterlockedPopEntrySList
 PUBLIC RtlInterlockedPushEntrySList
+PUBLIC RtlInterlockedFlushSList
 
 /* PSLIST_ENTRY
  * NTAPI
  * RtlInterlockedPopEntrySList(
  *     IN PSLIST_HEADER ListHead);
  */
-RtlInterlockedPopEntrySList:
 ExpInterlockedPopEntrySList:
+FUNC RtlInterlockedPopEntrySList
+    .ENDPROLOG
 
     /* Load ListHead->Region into rdx */
     mov rdx, [rcx + 8]
@@ -106,8 +107,7 @@ ExpInterlockedPopEntrySList:
     jne RtlInterlockedPopEntrySList16
 
     /* Use the 8 byte header */
-
-ExpInterlockedPopEntrySListResume:
+GLOBAL_LABEL ExpInterlockedPopEntrySListResume
 
     /* Check if ListHead->NextEntry is NULL */
     mov r9, rax
@@ -128,7 +128,7 @@ ExpInterlockedPopEntrySListResume:
     /* Combine to new pointer in rdx */
     or rdx, r9
 
-ExpInterlockedPopEntrySListFault:
+GLOBAL_LABEL ExpInterlockedPopEntrySListFault
 
     /* Load the next NextEntry pointer to r9 */
     mov r9, [rdx]
@@ -139,7 +139,7 @@ ExpInterlockedPopEntrySListFault:
     /* Combine into r8 */
     or r8, r9
 
-ExpInterlockedPopEntrySListEnd:
+GLOBAL_LABEL ExpInterlockedPopEntrySListEnd
 
     /* If [rcx] equals rax, exchange it with r8 */
     lock cmpxchg [rcx], r8
@@ -160,29 +160,34 @@ ExpInterlockedPopEntrySListEnd:
     ret
 
 RtlInterlockedPopEntrySListEmpty:
+
     xor rax, rax
     ret
 
-RtlInterlockedPopEntrySList16:
+ENDFUNC
+
+
+FUNC RtlInterlockedPopEntrySList16
+    mov [rsp + P3Home], rbx
+    .SAVEREG rbx, P3Home
+    .ENDPROLOG
+
     /* This is a 16 byte header
        rcx == ListHead
        rdx == ListHead->Region
        rax == ListHead->Alignment */
 
-    /* Save rbx */
-    push rbx
-
     /* Copy rcx to r8, as we need rcx for the exchange */
     mov r8, rcx
 
-ExpInterlockedPopEntrySListResume16:
+GLOBAL_LABEL ExpInterlockedPopEntrySListResume16
 
     /* Set r9 = ListHead->NextEntry and check if it is NULL */
     mov r9, rdx
     and r9, SLIST16B_NEXTENTRY_MASK
     jz RtlInterlockedPopEntrySListEmpty16
 
-ExpInterlockedPopEntrySListFault16:
+GLOBAL_LABEL ExpInterlockedPopEntrySListFault16
 
     /* Set NewListHead.Next = ListHead->NextEntry->Next */
     mov rcx, [r9]
@@ -193,7 +198,7 @@ ExpInterlockedPopEntrySListFault16:
     /* Copy Depth and Sequence number and adjust Depth */
     lea rbx, [rax - SLIST16A_DEPTH_INC]
 
-ExpInterlockedPopEntrySListEnd16:
+GLOBAL_LABEL ExpInterlockedPopEntrySListEnd16
 
     /* If [r8] equals rdx:rax, exchange it with rcx:rbx */
     lock cmpxchg16b [r8]
@@ -206,13 +211,15 @@ ExpInterlockedPopEntrySListEnd16:
     and rax, SLIST16B_NEXTENTRY_MASK
 
     /* Return */
-    pop rbx
+    mov rbx, [rsp + P3Home]
     ret
 
 RtlInterlockedPopEntrySListEmpty16:
+
     xor rax, rax
-    pop rbx
+    mov rbx, [rsp + P3Home]
     ret
+ENDFUNC
 
 
 /* PSLIST_ENTRY
@@ -221,8 +228,9 @@ RtlInterlockedPopEntrySListEmpty16:
  *     IN PSLIST_HEADER ListHead,
  *     IN PSLIST_ENTRY ListEntry);
  */
-RtlInterlockedPushEntrySList:
 ExpInterlockedPushEntrySList:
+FUNC RtlInterlockedPushEntrySList
+    .ENDPROLOG
 
 #if DBG
     /* Make sure the ListEntry is 16 bytes aligned */
@@ -298,15 +306,18 @@ RtlInterlockedPushEntrySListEmpty:
     mov rax, r9
     ret
 
-RtlInterlockedPushEntrySList16:
+ENDFUNC
+
+FUNC RtlInterlockedPushEntrySList16
+    mov [rsp + P3Home], rbx
+    .SAVEREG rbx, P3Home
+    .ENDPROLOG
+
     /* This is a 16 byte header
        rcx = ListHead
        rdx = ListEntry
        rax = ListHead->Alignment
        r9 = ListHead->Region */
-
-    /* Save rbx */
-    push rbx
 
     /* Copy rcx/rdx to r8/r9, as we need rcx/rdx for the exchange */
     mov r8, rcx
@@ -349,8 +360,10 @@ RtlInterlockedPushEntrySListLoop16:
     and rax, SLIST16B_NEXTENTRY_MASK
 
     /* Return */
-    pop rbx
+    mov rbx, [rsp + P3Home]
     ret
+
+ENDFUNC
 
 
 /* PSLIST_ENTRY
@@ -358,8 +371,12 @@ RtlInterlockedPushEntrySListLoop16:
  * RtlInterlockedFlushSList(
  *     IN PSLIST_HEADER ListHead);
  */
-RtlInterlockedFlushSList:
 ExpInterlockedFlushSList:
+FUNC RtlInterlockedFlushSList
+    
+    mov [rsp + P3Home], rbx
+    .SAVEREG rbx, P3Home
+    .ENDPROLOG
 
     /* Load ListHead->Region into rdx */
     mov rdx, [rcx + 8]
@@ -403,9 +420,6 @@ RtlInterlockedFlushSList16:
         rdx = ListHead->Region
     */
 
-    /* Save rbx */
-    push rbx
-
     /* Load ListHead into r8, as we need rcx for the exchange */
     mov r8, rcx
 
@@ -426,8 +440,10 @@ RtlInterlockedFlushSListLoop16:
     and rax, SLIST16B_NEXTENTRY_MASK
 
     /* Return */
-    pop rbx
+    mov rbx, [rsp + P3Home]
     ret
+
+ENDFUNC
 
 END
 
