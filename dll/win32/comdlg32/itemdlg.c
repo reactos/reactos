@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __REACTOS__ /* Win 7 */
-
 #include <stdarg.h>
 
 #define COBJMACROS
@@ -47,8 +45,6 @@
 /* This seems to be another version of IID_IFileDialogCustomize. If
  * there is any difference I have yet to find it. */
 DEFINE_GUID(IID_IFileDialogCustomizeAlt, 0x8016B7B3, 0x3D49, 0x4504, 0xA0,0xAA, 0x2A,0x37,0x49,0x4E,0x60,0x6F);
-
-WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 static const WCHAR notifysink_childW[] = {'n','f','s','_','c','h','i','l','d',0};
 static const WCHAR floatnotifysinkW[] = {'F','l','o','a','t','N','o','t','i','f','y','S','i','n','k',0};
@@ -4680,5 +4676,3 @@ HRESULT FileSaveDialog_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv)
 {
     return FileDialog_constructor(pUnkOuter, riid, ppv, ITEMDLG_TYPE_SAVE);
 }
-
-#endif /* Win 7 */

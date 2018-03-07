@@ -157,8 +157,6 @@ DWORD WINAPI CommDlgExtendedError(void)
 	  return 0; /* we never set an error, so there isn't one */
 }
 
-#ifndef __REACTOS__ /* Win 7 */
-
 /*************************************************************************
  * Implement the CommDlg32 class factory
  *
@@ -263,16 +261,15 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
+extern HRESULT __wine_register_resources(HINSTANCE hInstance);
+extern HRESULT __wine_unregister_resources(HINSTANCE hInstance);
+
 /***********************************************************************
  *          DllRegisterServer (COMMDLG32.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-#ifdef __REACTOS__
-    return E_FAIL; // FIXME: __wine_register_resources(COMDLG32_hInstance);
-#else
     return __wine_register_resources(COMDLG32_hInstance);
-#endif
 }
 
 /***********************************************************************
@@ -280,11 +277,5 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-#ifdef __REACTOS__
-    return E_FAIL; // FIXME: __wine_unregister_resources(COMDLG32_hInstance);
-#else
     return __wine_unregister_resources(COMDLG32_hInstance);
-#endif
 }
-
-#endif /* Win 7 */

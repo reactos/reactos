@@ -50,6 +50,7 @@ AddReg=Classes
 11,,avifil32.dll,1
 11,,browseui.dll,1
 11,,comcat.dll,1
+11,,comdlg32.dll,1
 11,,cryptdlg.dll,1
 11,,cryptnet.dll,1
 11,,d3dxof.dll,1

@@ -1,0 +1,10 @@
+@ stdcall DllCanUnloadNow()
+@ stdcall DllGetClassObject(ptr ptr ptr)
+@ stdcall DllRegisterServer()
+@ stdcall DllUnregisterServer()
+
+@ stdcall SHCreateItemFromIDList(ptr ptr ptr)
+@ stdcall SHCreateItemFromParsingName(wstr ptr ptr ptr)
+@ stdcall SHGetIDListFromObject(ptr ptr)
+@ stdcall SHGetItemFromDataObject(ptr long ptr ptr)
+@ stdcall SHGetNameFromIDList(ptr long ptr)

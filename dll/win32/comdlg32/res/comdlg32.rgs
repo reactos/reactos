@@ -1,0 +1,21 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        '{dc1c5a9c-e88a-4dde-a5a1-60f82a20aef7}' = s 'File Open Dialog'
+        {
+            InProcServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+        }
+
+        '{c0b4e2f3-ba21-4773-8dba-335ec946eb8b}' = s 'File Save Dialog'
+        {
+            InProcServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+        }
+    }
+}
