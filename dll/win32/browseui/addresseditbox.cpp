@@ -256,7 +256,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
 {
     LPNMHDR hdr;
 
-    *theResult = 0;
+    if (theResult)
+        *theResult = 0;
 
     switch (uMsg)
     {
