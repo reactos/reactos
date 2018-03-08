@@ -85,6 +85,9 @@ Signature = "$Windows NT$"
 64 = Resources\Themes\Lunar
 65 = Resources\Themes\Mizu
 66 = system32\spool\prtprocs\x64
+67 = winsxs\amd64_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef
+68 = winsxs\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef
+69 = winsxs\amd64_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
 
 .InfEnd
 
