@@ -24,16 +24,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include <assert.h>
 #ifdef HAVE_FLOAT_H
 # include <float.h>
 #endif
 
+#include "d3dx9_private.h"
+#undef MAKE_DDHRESULT
+#include "dxfile.h"
 #include "rmxfguid.h"
 #include "rmxftmpl.h"
-
+#include "wine/unicode.h"
 #include "wine/list.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 struct d3dx9_mesh
 {
@@ -1688,11 +1695,7 @@ static HRESULT WINAPI d3dx9_mesh_OptimizeInplace(ID3DXMesh *iface, DWORD flags, 
         if (FAILED(hr)) goto cleanup;
     } else if (flags & D3DXMESHOPT_ATTRSORT) {
         if (!(flags & D3DXMESHOPT_IGNOREVERTS))
-        {
             FIXME("D3DXMESHOPT_ATTRSORT vertex reordering not implemented.\n");
-            hr = E_NOTIMPL;
-            goto cleanup;
-        }
 
         hr = iface->lpVtbl->LockAttributeBuffer(iface, 0, &attrib_buffer);
         if (FAILED(hr)) goto cleanup;
@@ -2333,7 +2336,7 @@ UINT WINAPI D3DXGetDeclVertexSize(const D3DVERTEXELEMENT9 *decl, DWORD stream_id
 
         if (element->Stream != stream_idx) continue;
 
-        if (element->Type >= sizeof(d3dx_decltype_size) / sizeof(*d3dx_decltype_size))
+        if (element->Type >= ARRAY_SIZE(d3dx_decltype_size))
         {
             FIXME("Unhandled element type %#x, size will be incorrect.\n", element->Type);
             continue;
@@ -3323,6 +3326,13 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
              nb_skin_weights_info, mesh_data->nb_bones);
         hr = E_FAIL;
         goto end;
+    }
+
+    if ((provide_flags & PROVIDE_SKININFO) && !mesh_data->skin_info)
+    {
+        hr = create_dummy_skin(&mesh_data->skin_info);
+        if (FAILED(hr))
+            goto end;
     }
 
     hr = D3D_OK;
@@ -5159,7 +5169,7 @@ HRESULT WINAPI D3DXCreateTeapot(struct IDirect3DDevice9 *device,
 {
     FIXME("(%p, %p, %p): stub\n", device, mesh, adjacency);
 
-    return E_NOTIMPL;
+    return D3DXCreateSphere(device, 1.0f, 4, 4, mesh, adjacency);
 }
 
 HRESULT WINAPI D3DXCreateTextA(struct IDirect3DDevice9 *device, HDC hdc, const char *text, float deviation,
@@ -7177,6 +7187,33 @@ cleanup:
     return hr;
 }
 
+
+/*************************************************************************
+ * D3DXOptimizeVertices    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXOptimizeVertices(const void *indices, UINT num_faces,
+        UINT num_vertices, BOOL indices_are_32bit, DWORD *vertex_remap)
+{
+    UINT i;
+
+    FIXME("indices %p, num_faces %u, num_vertices %u, indices_are_32bit %#x, vertex_remap %p semi-stub.\n",
+            indices, num_faces, num_vertices, indices_are_32bit, vertex_remap);
+
+    if (!vertex_remap)
+    {
+        WARN("vertex remap pointer is NULL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    for (i = 0; i < num_vertices; i++)
+    {
+        vertex_remap[i] = i;
+    }
+
+    return D3D_OK;
+}
+
+
 /*************************************************************************
  * D3DXOptimizeFaces    (D3DX9_36.@)
  *
@@ -7501,6 +7538,24 @@ done:
 }
 
 /*************************************************************************
+ * D3DXComputeTangent    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXComputeTangent(ID3DXMesh *mesh, DWORD stage_idx, DWORD tangent_idx,
+        DWORD binorm_idx, DWORD wrap, const DWORD *adjacency)
+{
+    TRACE("mesh %p, stage_idx %d, tangent_idx %d, binorm_idx %d, wrap %d, adjacency %p.\n",
+           mesh, stage_idx, tangent_idx, binorm_idx, wrap, adjacency);
+
+    return D3DXComputeTangentFrameEx( mesh, D3DDECLUSAGE_TEXCOORD, stage_idx,
+            ( binorm_idx == D3DX_DEFAULT ) ? D3DX_DEFAULT : D3DDECLUSAGE_BINORMAL,
+            binorm_idx,
+            ( tangent_idx == D3DX_DEFAULT ) ? D3DX_DEFAULT : D3DDECLUSAGE_TANGENT,
+            tangent_idx, D3DX_DEFAULT, 0,
+            ( wrap ? D3DXTANGENT_WRAP_UV : 0 ) | D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_ORTHOGONALIZE_FROM_U,
+            adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
+}
+
+/*************************************************************************
  * D3DXComputeNormals    (D3DX9_36.@)
  */
 HRESULT WINAPI D3DXComputeNormals(struct ID3DXBaseMesh *mesh, const DWORD *adjacency)
@@ -7517,6 +7572,18 @@ HRESULT WINAPI D3DXComputeNormals(struct ID3DXBaseMesh *mesh, const DWORD *adjac
             D3DX_DEFAULT, 0, D3DX_DEFAULT, 0, D3DDECLUSAGE_NORMAL, 0,
             D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_CALCULATE_NORMALS,
             adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
+}
+
+/*************************************************************************
+ * D3DXComputeNormalMap    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXComputeNormalMap(IDirect3DTexture9 *texture, IDirect3DTexture9 *src_texture,
+        const PALETTEENTRY *src_palette, DWORD flags, DWORD channel, FLOAT amplitude)
+{
+    FIXME("texture %p, src_texture %p, src_palette %p, flags %#x, channel %u, amplitude %f stub.\n",
+            texture, src_texture, src_palette, flags, channel, amplitude);
+
+    return D3D_OK;
 }
 
 /*************************************************************************

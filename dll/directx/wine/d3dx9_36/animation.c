@@ -18,7 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include "d3dx9_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 struct d3dx9_animation_controller
 {
@@ -392,7 +397,7 @@ static HRESULT WINAPI d3dx9_animation_controller_CloneAnimationController(ID3DXA
     return E_NOTIMPL;
 }
 
-static /* const */ struct ID3DXAnimationControllerVtbl d3dx9_animation_controller_vtbl =
+static const struct ID3DXAnimationControllerVtbl d3dx9_animation_controller_vtbl =
 {
     d3dx9_animation_controller_QueryInterface,
     d3dx9_animation_controller_AddRef,
@@ -463,4 +468,16 @@ HRESULT WINAPI D3DXCreateAnimationController(UINT max_outputs, UINT max_sets,
     *controller = &object->ID3DXAnimationController_iface;
 
     return D3D_OK;
+}
+
+HRESULT WINAPI D3DXCreateKeyframedAnimationSet(const char *name, double ticks_per_second,
+        D3DXPLAYBACK_TYPE playback_type, UINT animation_count, UINT callback_key_count,
+        const D3DXKEY_CALLBACK *callback_keys, ID3DXKeyframedAnimationSet **animation_set)
+{
+    FIXME("name %s, ticks_per_second %.16e, playback_type %u, animation_count %u, "
+            "callback_key_count %u, callback_keys %p, animation_set %p stub.\n",
+            debugstr_a(name), ticks_per_second, playback_type, animation_count,
+            callback_key_count, callback_keys, animation_set);
+
+    return E_NOTIMPL;
 }
