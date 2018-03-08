@@ -15,14 +15,9 @@ _vscprintf(
    const char *format,
    va_list argptr)
 {
-    int ret;
-    FILE* nulfile = fopen("nul", "w");
-    if(nulfile == NULL)
-    {
-        /* This should never happen... */
-        return -1;
-    }
-    ret = streamout(nulfile, format, argptr);
-    fclose(nulfile);
-    return ret;
+    FILE nulfile;
+    nulfile._tmpfname = nulfile._ptr = nulfile._base = NULL;
+    nulfile._bufsiz = nulfile._charbuf = nulfile._cnt = 0;
+    nulfile._flag = _IOSTRG | _IOWRT;
+    return streamout(&nulfile, format, argptr);
 }

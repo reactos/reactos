@@ -22,15 +22,11 @@ _vscwprintf(
 {
     int ret;
 #ifndef _LIBCNT_
-    FILE* nulfile;
-    nulfile = fopen("nul", "w");
-    if(nulfile == NULL)
-    {
-        /* This should never happen... */
-        return -1;
-    }
-    ret = wstreamout(nulfile, format, argptr);
-    fclose(nulfile);
+    FILE nulfile;
+    nulfile._tmpfname = nulfile._ptr = nulfile._base = NULL;
+    nulfile._bufsiz = nulfile._charbuf = nulfile._cnt = 0;
+    nulfile._flag = _IOSTRG | _IOWRT;
+    ret = wstreamout(&nulfile, format, argptr);
 #else
     ret = -1;
 #endif
