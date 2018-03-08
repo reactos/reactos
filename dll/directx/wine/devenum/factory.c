@@ -21,6 +21,10 @@
 
 #include "devenum_private.h"
 
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(devenum);
+
 /**********************************************************************
  * DEVENUM_IClassFactory_QueryInterface (also IUnknown)
  */
