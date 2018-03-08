@@ -17,9 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "d3drm_private.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <math.h>
+#include "d3drm_private.h"
 
 /* Create a RGB color from its components */
 D3DCOLOR WINAPI D3DRMCreateColorRGB(D3DVALUE red, D3DVALUE green, D3DVALUE blue)
