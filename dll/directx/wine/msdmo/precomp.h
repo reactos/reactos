@@ -1,3 +1,4 @@
+
 #ifndef _MSDMO_PCH_
 #define _MSDMO_PCH_
 
@@ -15,6 +16,5 @@
 #include <objbase.h>
 
 #include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(msdmo);
 
 #endif /* _MSDMO_PCH_ */
