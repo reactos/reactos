@@ -2537,7 +2537,7 @@ extern "C" {
 #define IDHOT_SNAPWINDOW (-1)
 #define IDHOT_SNAPDESKTOP (-2)
 #define DBWF_LPARAMPOINTER 0x8000
-#define DLGWINDOWEXTRA 30
+#define DLGWINDOWEXTRA 48 // HACK (wtf is _MAC?)
 #define MNC_IGNORE 0
 #define MNC_CLOSE 1
 #define MNC_EXECUTE 2
