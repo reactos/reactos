@@ -17,13 +17,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
 #include "d3d8_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
 static void STDMETHODCALLTYPE d3d8_vertexshader_wined3d_object_destroyed(void *parent)
 {
     struct d3d8_vertex_shader *shader = parent;
     d3d8_vertex_declaration_destroy(shader->vertex_declaration);
-    HeapFree(GetProcessHeap(), 0, shader);
+    heap_free(shader);
 }
 
 void d3d8_vertex_shader_destroy(struct d3d8_vertex_shader *shader)
@@ -56,15 +59,14 @@ static HRESULT d3d8_vertexshader_create_vertexdeclaration(struct d3d8_device *de
     TRACE("device %p, declaration %p, shader_handle %#x, decl_ptr %p.\n",
             device, declaration, shader_handle, decl_ptr);
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
-    if (!object)
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
     hr = d3d8_vertex_declaration_init(object, device, declaration, shader_handle);
     if (FAILED(hr))
     {
         WARN("Failed to initialize vertex declaration, hr %#x.\n", hr);
-        HeapFree(GetProcessHeap(), 0, object);
+        heap_free(object);
         return hr;
     }
 
@@ -140,7 +142,7 @@ HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_d
 
 static void STDMETHODCALLTYPE d3d8_pixelshader_wined3d_object_destroyed(void *parent)
 {
-    HeapFree(GetProcessHeap(), 0, parent);
+    heap_free(parent);
 }
 
 void d3d8_pixel_shader_destroy(struct d3d8_pixel_shader *shader)

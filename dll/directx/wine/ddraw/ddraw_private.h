@@ -19,30 +19,25 @@
 #ifndef __WINE_DLLS_DDRAW_DDRAW_PRIVATE_H
 #define __WINE_DLLS_DDRAW_DDRAW_PRIVATE_H
 
-#include <config.h>
-#include <wine/port.h>
-
 #include <assert.h>
-#include <stdarg.h>
-
-#define _INC_WINDOWS
-#define COM_NO_WINDOW_H
-
+#include <limits.h>
 #define COBJMACROS
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
+#include "wine/debug.h"
+#include "wine/heap.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <d3d.h>
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
 
-#include <wine/debug.h>
-#include <wine/list.h>
-#include <wine/wined3d.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
+#include "d3d.h"
+#include "ddraw.h"
+#ifdef DDRAW_INIT_GUID
+#include "initguid.h"
+#endif
+#include "wine/list.h"
+#include "wine/wined3d.h"
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
@@ -64,13 +59,14 @@ struct FvfToDecl
 #define DDRAW_NO3D              0x00000008
 #define DDRAW_SCL_DDRAW1        0x00000010
 #define DDRAW_SCL_RECURSIVE     0x00000020
+#define DDRAW_GDI_FLIP          0x00000040
 
 #define DDRAW_STRIDE_ALIGNMENT  8
 
 #define DDRAW_WINED3D_FLAGS     (WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING \
         | WINED3D_RESTORE_MODE_ON_ACTIVATE | WINED3D_FOCUS_MESSAGES | WINED3D_PIXEL_CENTER_INTEGER \
         | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR | WINED3D_NO_PRIMITIVE_RESTART \
-        | WINED3D_LEGACY_CUBEMAP_FILTERING)
+        | WINED3D_LEGACY_CUBEMAP_FILTERING | WINED3D_LIMIT_VIEWPORT)
 
 enum ddraw_device_state
 {
@@ -309,6 +305,7 @@ struct d3d_device
     IUnknown IUnknown_inner;
     LONG ref;
     UINT version;
+    BOOL hw;
 
     IUnknown *outer_unknown;
     struct wined3d_device *wined3d_device;
@@ -353,7 +350,7 @@ struct d3d_device
     struct wined3d_vec4 user_clip_planes[D3DMAXUSERCLIPPLANES];
 };
 
-HRESULT d3d_device_create(struct ddraw *ddraw, struct ddraw_surface *target, IUnknown *rt_iface,
+HRESULT d3d_device_create(struct ddraw *ddraw, const GUID *guid, struct ddraw_surface *target, IUnknown *rt_iface,
         UINT version, struct d3d_device **device, IUnknown *outer_unknown) DECLSPEC_HIDDEN;
 enum wined3d_depth_buffer_type d3d_device_update_depth_stencil(struct d3d_device *device) DECLSPEC_HIDDEN;
 
@@ -592,6 +589,7 @@ void ddrawformat_from_wined3dformat(DDPIXELFORMAT *ddraw_format,
 BOOL wined3d_colour_from_ddraw_colour(const DDPIXELFORMAT *pf, const struct ddraw_palette *palette,
         DWORD colour, struct wined3d_color *wined3d_colour) DECLSPEC_HIDDEN;
 enum wined3d_format_id wined3dformat_from_ddrawformat(const DDPIXELFORMAT *format) DECLSPEC_HIDDEN;
+unsigned int wined3dmapflags_from_ddrawmapflags(unsigned int flags) DECLSPEC_HIDDEN;
 void DDRAW_dump_surface_desc(const DDSURFACEDESC2 *lpddsd) DECLSPEC_HIDDEN;
 void dump_D3DMATRIX(const D3DMATRIX *mat) DECLSPEC_HIDDEN;
 void DDRAW_dump_DDCAPS(const DDCAPS *lpcaps) DECLSPEC_HIDDEN;
