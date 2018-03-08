@@ -23,12 +23,12 @@
 
 #include <stdarg.h>
 
-#include <windef.h>
-#include <winbase.h>
+#include "windef.h"
+#include "winbase.h"
+
+#include "wine/debug.h"
 
 #include "mszip.h"
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dxof);
 
