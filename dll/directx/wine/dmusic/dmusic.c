@@ -19,10 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdio.h>
+
 #include "dmusic_private.h"
 
-#include <winuser.h>
-#include <winreg.h>
+WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
 static inline IDirectMusic8Impl *impl_from_IDirectMusic8(IDirectMusic8 *iface)
 {
