@@ -18,9 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "quartz_private.h"
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#define COBJMACROS
+#include <stdarg.h>
+#include <string.h>
 
-#include <uuids.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winerror.h"
+
+#include "ole2.h"
+#include "uuids.h"
+#include "strmif.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 /*
  * Near the bottom of this file are the exported DllRegisterServer and
