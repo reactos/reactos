@@ -20,5 +20,7 @@
 
 #pragma once
 
+#include <windef.h>
+
 #define IDS_REGIONAL_SETTING 1
 #define IDS_PAGE_FILE_FORMAT 2
