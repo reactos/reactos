@@ -48,6 +48,54 @@ static bool SortModules(const ModuleData& left, const ModuleData& right)
     return left.BaseAddress < right.BaseAddress;
 }
 
+static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thread)
+{
+    thread.Update();
+
+    xfprintf(output, NEWLINE "State Dump for Thread Id 0x%x%s" NEWLINE NEWLINE, tid,
+             (tid == data.ThreadID) ? " (CRASH)" : "");
+
+    const CONTEXT& ctx = thread.Context;
+    if ((ctx.ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+    {
+#if defined(_M_IX86)
+        xfprintf(output, "eax:%p ebx:%p ecx:%p edx:%p esi:%p edi:%p" NEWLINE,
+                 ctx.Eax, ctx.Ebx, ctx.Ecx, ctx.Edx, ctx.Esi, ctx.Edi);
+#elif defined(_M_AMD64)
+        xfprintf(output, "rax:%p rbx:%p rcx:%p rdx:%p rsi:%p rdi:%p" NEWLINE,
+                 ctx.Rax, ctx.Rbx, ctx.Rcx, ctx.Rdx, ctx.Rsi, ctx.Rdi);
+        xfprintf(output, "r8:%p r9:%p r10:%p r11:%p r12:%p r13:%p r14:%p r15:%p" NEWLINE,
+                 ctx.R8, ctx.R9, ctx.R10, ctx.R11, ctx.R12, ctx.R13, ctx.R14, ctx.R15);
+#else
+#error Unknown architecture
+#endif
+    }
+
+    if ((ctx.ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+    {
+#if defined(_M_IX86)
+        xfprintf(output, "eip:%p esp:%p ebp:%p" NEWLINE,
+                 ctx.Eip, ctx.Esp, ctx.Ebp);
+#elif defined(_M_AMD64)
+        xfprintf(output, "rip:%p rsp:%p rbp:%p" NEWLINE,
+                 ctx.Rip, ctx.Rsp, ctx.Rbp);
+#else
+#error Unknown architecture
+#endif
+    }
+
+    if ((ctx.ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+    {
+#if defined(_M_IX86) || defined(_M_AMD64)
+        xfprintf(output, "dr0:%p dr1:%p dr2:%p dr3:%p dr6:%p dr7:%p" NEWLINE,
+                 ctx.Dr0, ctx.Dr1, ctx.Dr2, ctx.Dr3, ctx.Dr6, ctx.Dr7);
+#else
+#error Unknown architecture
+#endif
+    }
+
+    PrintStackBacktrace(output, data, thread);
+}
 
 void PrintBugreport(FILE* output, DumpData& data)
 {
@@ -92,49 +140,17 @@ void PrintBugreport(FILE* output, DumpData& data)
     }
 
     BeginStackBacktrace(data);
+
+    // First print the thread that crashed
+    ThreadMap::iterator crash = data.Threads.find(data.ThreadID);
+    if (crash != data.Threads.end())
+        PrintThread(output, data, crash->first, crash->second);
+
+    // Print the other threads
     for (ThreadMap::iterator it = data.Threads.begin(); it != data.Threads.end(); ++it)
     {
-        it->second.Update();
-
-        xfprintf(output, NEWLINE "State Dump for Thread Id 0x%x" NEWLINE NEWLINE, it->first);
-        const CONTEXT& ctx = it->second.Context;
-        if ((ctx.ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
-        {
-#if defined(_M_IX86)
-            xfprintf(output, "eax:%p ebx:%p ecx:%p edx:%p esi:%p edi:%p" NEWLINE,
-                     ctx.Eax, ctx.Ebx, ctx.Ecx, ctx.Edx, ctx.Esi, ctx.Edi);
-#elif defined(_M_AMD64)
-            xfprintf(output, "rax:%p rbx:%p rcx:%p rdx:%p rsi:%p rdi:%p" NEWLINE,
-                     ctx.Rax, ctx.Rbx, ctx.Rcx, ctx.Rdx, ctx.Rsi, ctx.Rdi);
-            xfprintf(output, "r8:%p r9:%p r10:%p r11:%p r12:%p r13:%p r14:%p r15:%p" NEWLINE,
-                     ctx.R8, ctx.R9, ctx.R10, ctx.R11, ctx.R12, ctx.R13, ctx.R14, ctx.R15);
-#else
-#error Unknown architecture
-#endif
-        }
-        if ((ctx.ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
-        {
-#if defined(_M_IX86)
-            xfprintf(output, "eip:%p esp:%p ebp:%p" NEWLINE,
-                     ctx.Eip, ctx.Esp, ctx.Ebp);
-#elif defined(_M_AMD64)
-            xfprintf(output, "rip:%p rsp:%p rbp:%p" NEWLINE,
-                     ctx.Rip, ctx.Rsp, ctx.Rbp);
-#else
-#error Unknown architecture
-#endif
-        }
-        if ((ctx.ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
-        {
-#if defined(_M_IX86) || defined(_M_AMD64)
-            xfprintf(output, "dr0:%p dr1:%p dr2:%p dr3:%p dr6:%p dr7:%p" NEWLINE,
-                     ctx.Dr0, ctx.Dr1, ctx.Dr2, ctx.Dr3, ctx.Dr6, ctx.Dr7);
-#else
-#error Unknown architecture
-#endif
-        }
-
-        PrintStackBacktrace(output, data, it->second);
+        if (it->first != data.ThreadID)
+            PrintThread(output, data, it->first, it->second);
     }
     EndStackBacktrace(data);
 }
