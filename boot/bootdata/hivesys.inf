@@ -1328,6 +1328,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86","Direc
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86\Print Processors",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86\Print Processors\winprint","Driver",,"winprint.dll"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows x64","Directory",,"x64"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows x64\Print Processors",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows x64\Print Processors\winprint","Driver",,"winprint.dll"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors\Local Port","Driver",,"localmon.dll"
 
