@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
 /* All definitions here are packed structures of on-disk formats */
 #include <pshpack2.h>
 
