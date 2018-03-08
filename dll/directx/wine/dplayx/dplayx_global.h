@@ -19,33 +19,12 @@
 #ifndef __WINE_DPLAYX_GLOBAL
 #define __WINE_DPLAYX_GLOBAL
 
-#include <wine/config.h>
-
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <dplay.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-#include "dplaysp.h"
-#include "lobbysp.h"
-#include "dplayx_queue.h"
-#include "dplay_global.h"
-#include "dplayx_messages.h"
-#include "name_server.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dplay);
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "dplay.h"
 
 BOOL DPLAYX_ConstructData(void) DECLSPEC_HIDDEN;
 BOOL DPLAYX_DestructData(void) DECLSPEC_HIDDEN;

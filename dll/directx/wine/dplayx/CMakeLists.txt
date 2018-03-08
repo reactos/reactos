@@ -16,7 +16,7 @@ list(APPEND SOURCE
     dplobby.c
     lobbysp.c
     name_server.c
-    dplayx_global.h)
+    precomp.h)
 
 add_library(dplayx SHARED
     ${SOURCE}
@@ -26,5 +26,5 @@ add_library(dplayx SHARED
 set_module_type(dplayx win32dll)
 target_link_libraries(dplayx dxguid uuid wine)
 add_importlibs(dplayx winmm ole32 user32 advapi32 msvcrt kernel32 ntdll)
-add_pch(dplayx dplayx_global.h SOURCE)
+add_pch(dplayx precomp.h SOURCE)
 add_cd_file(TARGET dplayx DESTINATION reactos/system32 FOR all)
