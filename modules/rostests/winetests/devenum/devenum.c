@@ -18,20 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 
-//#include <stdio.h>
+#include <stdio.h>
 
-#include <wine/test.h>
-#include <wingdi.h>
-#include <initguid.h>
-#include <ole2.h>
-#include <strmif.h>
-#include <uuids.h>
+#include "wine/test.h"
+#include "initguid.h"
+#include "ole2.h"
+#include "strmif.h"
+#include "uuids.h"
 
 static const WCHAR friendly_name[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
 static const WCHAR fcc_handlerW[] = {'F','c','c','H','a','n','d','l','e','r',0};
