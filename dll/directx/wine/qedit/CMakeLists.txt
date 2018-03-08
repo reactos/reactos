@@ -8,7 +8,7 @@ list(APPEND SOURCE
     mediadet.c
     samplegrabber.c
     timeline.c
-    qedit_private.h)
+    precomp.h)
 
 add_library(qedit SHARED
     ${SOURCE}
@@ -18,5 +18,5 @@ add_library(qedit SHARED
 set_module_type(qedit win32dll)
 target_link_libraries(qedit strmbase strmiids uuid wine)
 add_importlibs(qedit ole32 oleaut32 msvcrt kernel32 ntdll)
-add_pch(qedit qedit_private.h SOURCE)
+add_pch(qedit precomp.h SOURCE)
 add_cd_file(TARGET qedit DESTINATION reactos/system32 FOR all)
