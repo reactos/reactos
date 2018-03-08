@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef TAG_IO
+#define TAG_IO '__oI'
+
 /* GLOBALS *******************************************************************/
 
 UNICODE_STRING IoArcHalDeviceName, IoArcBootDeviceName;

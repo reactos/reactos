@@ -67,6 +67,9 @@
 #define IOC_CPU             'PcpI'
 #define TAG_APC             'CPAK'
 #define TAG_IO              '  oI'
+#define TAG_IO2             '__oI'
+#define TAG_IO_EVENT        'vEoI'
+
 #define TAG_ERROR_LOG       'rEoI'
 #define TAG_EA              'aEoI'
 #define TAG_IO_NAME         'mNoI'
