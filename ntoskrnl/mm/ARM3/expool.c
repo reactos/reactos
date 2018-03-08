@@ -22,6 +22,10 @@
 
 #define POOL_BIG_TABLE_ENTRY_FREE 0x1
 
+/* DEBUGGING ******************************************************************/
+
+//#define DBG_NUMBER_OF_FRAMES_TO_CAPTURE 5
+
 typedef struct _POOL_DPC_CONTEXT
 {
     PPOOL_TRACKER_TABLE PoolTrackTable;
@@ -1845,11 +1849,12 @@ ExReturnPoolQuota(IN PVOID P)
 /*
  * @implemented
  */
+FORCEINLINE
 PVOID
-NTAPI
-ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
-                      IN SIZE_T NumberOfBytes,
-                      IN ULONG Tag)
+ExAllocatePoolWithTagInternal(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG Tag)
 {
     PPOOL_DESCRIPTOR PoolDesc;
     PLIST_ENTRY ListHead;
@@ -2401,6 +2406,39 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     ExpCheckPoolBlocks(Entry);
     Entry->PoolTag = Tag;
     return POOL_FREE_BLOCK(Entry);
+}
+
+PVOID
+NTAPI
+ExAllocatePoolWithTag(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG Tag)
+{
+    SIZE_T FullSize = NumberOfBytes;
+    PVOID Allocation;
+#ifdef DBG_NUMBER_OF_FRAMES_TO_CAPTURE
+    PVOID *DbgData;
+
+    /* Allocate a larger chunk to add the debug data */
+    FullSize = NumberOfBytes + (DBG_NUMBER_OF_FRAMES_TO_CAPTURE + 2) * sizeof(PVOID);
+#endif
+
+    /* Do the actual allocation */
+    Allocation = ExAllocatePoolWithTagInternal(PoolType, FullSize, Tag);
+    if (Allocation == NULL)
+    {
+        return NULL;
+    }
+
+#ifdef DBG_NUMBER_OF_FRAMES_TO_CAPTURE
+    /* Append the debug data, separated by a '####' */
+    DbgData = ALIGN_UP_POINTER_BY((PUCHAR)Allocation + NumberOfBytes, sizeof(PVOID));
+    DbgData[0] = (PVOID)(ULONG_PTR)'####';
+    RtlWalkFrameChain(&DbgData[1], DBG_NUMBER_OF_FRAMES_TO_CAPTURE, 0);
+#endif
+
+    return Allocation;
 }
 
 /*
