@@ -24,8 +24,22 @@
 
    It also contains all the helper functions.
 */
+#include "config.h"
 
+#include <stdarg.h>
+#include <string.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "winerror.h"
+#include "dinput.h"
+#include "device_private.h"
 #include "dinput_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
 static inline IDirectInputDeviceImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
 {
@@ -976,9 +990,9 @@ HRESULT WINAPI IDirectInputDevice2WImpl_Acquire(LPDIRECTINPUTDEVICE8W iface)
     EnterCriticalSection(&This->crit);
     res = This->acquired ? S_FALSE : DI_OK;
     This->acquired = 1;
-    if (res == DI_OK)
-        check_dinput_hooks(iface);
     LeaveCriticalSection(&This->crit);
+    if (res == DI_OK)
+        check_dinput_hooks(iface, TRUE);
 
     return res;
 }
@@ -1004,9 +1018,9 @@ HRESULT WINAPI IDirectInputDevice2WImpl_Unacquire(LPDIRECTINPUTDEVICE8W iface)
     EnterCriticalSection(&This->crit);
     res = !This->acquired ? DI_NOEFFECT : DI_OK;
     This->acquired = 0;
-    if (res == DI_OK)
-        check_dinput_hooks(iface);
     LeaveCriticalSection(&This->crit);
+    if (res == DI_OK)
+        check_dinput_hooks(iface, FALSE);
 
     return res;
 }
