@@ -9,9 +9,15 @@
 #include <winuser.h>
 #include <algorithm>
 #include <shlobj.h>
+#include <shlwapi.h>
+#include <tchar.h>
 #include <strsafe.h>
 #include <tlhelp32.h>
+#include <dbghelp.h>
 #include <conio.h>
+#include <atlbase.h>
+#include <atlstr.h>
+#include "resource.h"
 
 
 static const char szUsage[] = "Usage: DrWtsn32 [-i] [-g] [-p dddd] [-e dddd] [-?]\n"
@@ -56,7 +62,7 @@ void PrintBugreport(FILE* output, DumpData& data)
         {
             do
             {
-                xfprintf(output, "%5d: %s" NEWLINE, pe.th32ProcessID, pe.szExeFile);
+                xfprintf(output, "%5d: %ls" NEWLINE, pe.th32ProcessID, pe.szExeFile);
             } while (Process32Next(hSnap, &pe));
         }
         CloseHandle(hSnap);
@@ -67,7 +73,7 @@ void PrintBugreport(FILE* output, DumpData& data)
 
     ModuleData mainModule(NULL);
     mainModule.Update(data.ProcessHandle);
-    xfprintf(output, "(%p - %p) %s" NEWLINE,
+    xfprintf(output, "(%p - %p) %ls" NEWLINE,
              mainModule.BaseAddress,
              (PBYTE)mainModule.BaseAddress + mainModule.Size,
              data.ProcessPath.c_str());
@@ -144,11 +150,41 @@ int abort(FILE* output, int err)
     return err;
 }
 
-int main(int argc, char* argv[])
+std::wstring Settings_GetOutputPath(void)
 {
+    WCHAR Buffer[MAX_PATH] = L"";
+    ULONG BufferSize = _countof(Buffer);
+    BOOL UseDefaultPath = FALSE;
+
+    CRegKey key;
+    if (key.Open(HKEY_CURRENT_USER, L"SOFTWARE\\ReactOS\\Crash Reporter", KEY_READ) != ERROR_SUCCESS)
+    {
+        UseDefaultPath = TRUE;
+    }
+
+    if (key.QueryStringValue(L"Dump Directory", Buffer, &BufferSize) != ERROR_SUCCESS)
+    {
+        UseDefaultPath = TRUE;
+    }
+
+    if (UseDefaultPath)
+    {
+        if (FAILED(SHGetFolderPathW(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, Buffer)))
+        {
+            return std::wstring();
+        }
+    }
+
+    return std::wstring(Buffer);
+}
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR cmdLine, INT)
+{
+    int argc;
+    WCHAR **argv = CommandLineToArgvW(cmdLine, &argc);
+
     DWORD pid = 0;
-    char Buffer[MAX_PATH+55];
-    char Filename[50];
+    WCHAR Filename[50];
     FILE* output = NULL;
     SYSTEMTIME st;
     DumpData data;
@@ -156,37 +192,37 @@ int main(int argc, char* argv[])
 
     for (int n = 0; n < argc; ++n)
     {
-        char* arg = argv[n];
+        WCHAR* arg = argv[n];
 
-        if (!strcmp(arg, "-i"))
+        if (!wcscmp(arg, L"-i"))
         {
             /* FIXME: Installs as the postmortem debugger. */
         }
-        else if (!strcmp(arg, "-g"))
+        else if (!wcscmp(arg, L"-g"))
         {
         }
-        else if (!strcmp(arg, "-p"))
+        else if (!wcscmp(arg, L"-p"))
         {
             if (n + 1 < argc)
             {
-                pid = strtoul(argv[n+1], NULL, 10);
+                pid = wcstoul(argv[n+1], NULL, 10);
                 n++;
             }
         }
-        else if (!strcmp(arg, "-e"))
+        else if (!wcscmp(arg, L"-e"))
         {
             if (n + 1 < argc)
             {
-                data.Event = (HANDLE)strtoul(argv[n+1], NULL, 10);
+                data.Event = (HANDLE)wcstoul(argv[n+1], NULL, 10);
                 n++;
             }
         }
-        else if (!strcmp(arg, "-?"))
+        else if (!wcscmp(arg, L"-?"))
         {
-            MessageBoxA(NULL, szUsage, "DrWtsn32", MB_OK);
+            MessageBoxA(NULL, szUsage, "ReactOS Crash Reporter", MB_OK);
             return abort(output, 0);
         }
-        else if (!strcmp(arg, "/?"))
+        else if (!wcscmp(arg, L"/?"))
         {
             xfprintf(stdout, "%s\n", szUsage);
             return abort(stdout, 0);
@@ -195,19 +231,33 @@ int main(int argc, char* argv[])
 
     if (!pid)
     {
-        MessageBoxA(NULL, szUsage, "DrWtsn32", MB_OK);
+        MessageBoxA(NULL, szUsage, "ReactOS Crash Reporter", MB_OK);
         return abort(stdout, 0);
     }
 
     GetLocalTime(&st);
 
-    if (SHGetFolderPathA(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, Buffer) == S_OK &&
-        SUCCEEDED(StringCchPrintfA(Filename, _countof(Filename), "Appcrash_%d-%02d-%02d_%02d-%02d-%02d.txt",
+    std::wstring OutputPath = Settings_GetOutputPath();
+    BOOL HasPath = (OutputPath.size() != 0);
+
+    if (!PathIsDirectoryW(OutputPath.c_str()))
+    {
+        int res = SHCreateDirectoryExW(NULL, OutputPath.c_str(), NULL);
+        if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS)
+        {
+            xfprintf(stdout, "Could not create output directory, not writing dump\n");
+            MessageBoxA(NULL, "Could not create directory to write crash report.", "ReactOS Crash Reporter", MB_ICONERROR | MB_OK);
+            return abort(stdout, 0);
+        }
+    }
+
+    if (HasPath &&
+        SUCCEEDED(StringCchPrintfW(Filename, _countof(Filename), L"Appcrash_%d-%02d-%02d_%02d-%02d-%02d.txt",
                                    st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond)))
     {
-        StringCchCatA(Buffer, _countof(Buffer), "\\");
-        StringCchCatA(Buffer, _countof(Buffer), Filename);
-        output = fopen(Buffer, "wb");
+        OutputPath += L"\\";
+        OutputPath += Filename;
+        output = _wfopen(OutputPath.c_str(), L"wb");
     }
     if (!output)
         output = stdout;
@@ -237,13 +287,12 @@ int main(int argc, char* argv[])
 
     TerminateProcess(data.ProcessHandle, data.ExceptionInfo.ExceptionRecord.ExceptionCode);
 
-    std::string Message = "The application '";
-    Message += data.ProcessName;
-    Message += "' has just crashed :(\n";
-    Message += "Information about this crash is saved to:\n";
-    Message += Filename;
-    Message += "\nThis file is stored on your desktop.";
-    MessageBoxA(NULL, Message.c_str(), "Sorry!", MB_OK);
+    CStringW FormattedMessage;
+    FormattedMessage.Format(IDS_USER_ALERT_MESSAGE, data.ProcessName.c_str(), OutputPath.c_str());
+    CStringW DialogTitle;
+    DialogTitle.LoadString(hInstance, IDS_APP_TITLE);
+
+    MessageBoxW(NULL, FormattedMessage.GetString(), DialogTitle.GetString(), MB_OK);
 
     return abort(output, 0);
 }

@@ -1,0 +1,12 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     en-US resource file
+ * COPYRIGHT:   Copyright 2018 William Kent (wjk011 [at] gmail [dot] com)
+ */
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "ReactOS Crash Reporter"
+    IDS_USER_ALERT_MESSAGE "The application %ls has crashed. Information about this crash has been saved to:\r\n\r\n%ls"
+END
