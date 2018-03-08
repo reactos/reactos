@@ -84,6 +84,7 @@ Signature = "$Windows NT$"
 63 = 3rdParty
 64 = Resources\Themes\Lunar
 65 = Resources\Themes\Mizu
+66 = system32\spool\prtprocs\x64
 
 .InfEnd
 
