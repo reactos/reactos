@@ -85,6 +85,16 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     ASSERT(Interrupt->Vector <= MAXIMUM_IDTVECTOR);
     ASSERT(Interrupt->Number < KeNumberProcessors);
     ASSERT(Interrupt->Irql <= HIGH_LEVEL);
+    ASSERT(Interrupt->SynchronizeIrql >= Interrupt->Irql);
+    ASSERT(Interrupt->Irql == (Interrupt->Vector >> 4));
+
+    /* Make sure the vector is within the allowed range */
+    if (Interrupt->Vector < PRIMARY_VECTOR_BASE)
+    {
+        DPRINT1("FIXME: KeConnectInterrupt() with invalid vector 0x%lx!\n", Interrupt->Vector);
+        //__debugbreak();
+        //return FALSE;
+    }
 
     /* Check if its already connected */
     if (Interrupt->Connected) return TRUE;
@@ -92,7 +102,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     /* Query the current handler */
     CurrentHandler = KeQueryInterruptHandler(Interrupt->Vector);
 
-    /* Check if the vector is already unused */
+    /* Check if the vector is unused */
     if ((CurrentHandler >= (PVOID)KiUnexpectedRange) &&
         (CurrentHandler <= (PVOID)KiUnexpectedRangeEnd))
     {
@@ -122,7 +132,9 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     else
     {
         // later
-        __debugbreak();
+        //__debugbreak();
+        DPRINT1("FIXME: KeConnectInterrupt() with used vector 0x%lx!\n", Interrupt->Vector);
+        return FALSE;
     }
 
     return TRUE;
@@ -132,9 +144,15 @@ BOOLEAN
 NTAPI
 KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
 {
+    /* If the interrupt wasn't connected, there's nothing to do */
+    if (!Interrupt->Connected)
+    {
+        return FALSE;
+    }
+
     UNIMPLEMENTED;
     __debugbreak();
-    return FALSE;
+    return TRUE;
 }
 
 BOOLEAN
