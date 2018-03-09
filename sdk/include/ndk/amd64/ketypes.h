@@ -223,8 +223,8 @@ typedef enum
 //
 //  Flags in MSR_DEBUG_CTL
 //
-#define MSR_DEBUG_CTL_LBR equ   0x0001
-#define MSR_DEBUG_CTL_BTF equ   0x0002
+#define MSR_DEBUG_CTL_LBR       0x0001
+#define MSR_DEBUG_CTL_BTF       0x0002
 
 //
 // IPI Types
