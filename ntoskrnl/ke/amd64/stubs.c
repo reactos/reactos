@@ -71,9 +71,9 @@ KiDpcInterruptHandler(VOID)
         KiSwapContext(APC_LEVEL, OldThread);
     }
 
-    /* Go back to old irql and disable interrupts */
-    KeLowerIrql(OldIrql);
+    /* Disable interrupts and go back to old irql */
     _disable();
+    KeLowerIrql(OldIrql);
 }
 
 
