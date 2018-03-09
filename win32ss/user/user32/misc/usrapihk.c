@@ -113,7 +113,7 @@ BeginIfHookedUserApiHook(VOID)
 }
 
 BOOL
-FASTCALL
+WINAPI
 ForceResetUserApiHook(HINSTANCE hInstance)
 {
   if ( ghmodUserApiHook == hInstance &&
