@@ -19,16 +19,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-
 #include <stdarg.h>
-//#include <stdio.h> 
+#include <stdio.h> 
 
-#include <windef.h>
-#include <winbase.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#ifdef __REACTOS__
 #include <wingdi.h>
-#include <dciman.h>
-#include <wine/debug.h>
+#endif
+#include "dciman.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dciman);
 
