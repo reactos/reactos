@@ -16,26 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 
-//#include <stdio.h>
-#include <stdarg.h>
+#include <stdio.h>
 
-//#include <windows.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <objbase.h>
-//#include <mscoree.h>
+#include <windows.h>
+#include <mscoree.h>
 #include <fusion.h>
 #include <corerror.h>
 #include <strsafe.h>
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 /* ok-like statement which takes two unicode strings or one unicode and one ANSI string as arguments */
 static CHAR string1[MAX_PATH];

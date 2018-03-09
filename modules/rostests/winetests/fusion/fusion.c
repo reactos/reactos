@@ -16,20 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <windows.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <objbase.h>
+#include <windows.h>
 #include <fusion.h>
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 static HMODULE hmscoree;
 
