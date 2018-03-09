@@ -12,7 +12,6 @@
 #include <trapamd64.inc>
 
 EXTERN KiDispatchException:PROC
-EXTERN FrLdrDbgPrint:DWORD
 EXTERN KeBugCheckWithTf:PROC
 EXTERN MmAccessFault:PROC
 EXTERN KiSystemFatalException:PROC
@@ -26,64 +25,6 @@ EXTERN KiDpcInterruptHandler:PROC
 EXTERN KdSetOwedBreakpoints:PROC
 #endif
 
-
-/* GLOBALS *******************************************************************/
-
-.data
-
-PUBLIC MsgUnimplemented
-MsgUnimplemented:
-.asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
-
-MsgPageFault:
-.asciz "Page fault! Code = 0x%x, RIP = %p, FaultingAddress = %p\n"
-
-MsgGeneralProtFault:
-.asciz "General protection fault at %p!\n"
-
-MsgBreakpointTrap:
-.asciz "BreakpointTrap at %p\n"
-
-MsgUnexpectedInterrupt:
-.asciz "UnexpectedInterrupt Vector=0x%02lx\n"
-
-MsgInvalidOpcodeFault:
-.asciz "Invalid opcode fault at %p!\n"
-
-MsgDoubleFault:
-.asciz "Double fault at %p, rbp=%p!\n"
-
-MsgTrapInfo:
-.asciz "Trap: %s at %p\n"
-
-MACRO(TRAPINFO, func)
-LOCAL label1, label2
-#if 0
-    jmp label2
-label1:  .asciz "\func"
-label2:
-    push rax
-    push rcx
-    push rdx
-    push r8
-    push r9
-    push r10
-    push r11
-    sub rsp, 32
-    lea rcx, MsgTrapInfo[rip]
-    lea rdx, 1b[rip]
-    mov r8, [rbp + KTRAP_FRAME_Rip]
-    call qword ptr FrLdrDbgPrint[rip]
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rdx
-    pop rcx
-    pop rax
-    add rsp, 32
-#endif
-ENDM
 
 /* Helper Macros *************************************************************/
 
@@ -235,8 +176,6 @@ FUNC KiDebugTrapOrFault
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
 
-    TRAPINFO KiDebugTrapOrFault
-
     /* Check if the frame was from kernelmode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
     jz KiDebugTrapOrFaultKMode
@@ -332,12 +271,6 @@ FUNC KiInvalidOpcodeFault
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
 
-    TRAPINFO KiInvalidOpcodeFault
-
-    mov rdx, [rbp + KTRAP_FRAME_Rip]
-    lea rcx, MsgInvalidOpcodeFault[rip]
-    call qword ptr FrLdrDbgPrint[rip]
-
     /* Enable interrupts */
     sti
 
@@ -385,10 +318,7 @@ FUNC KiDoubleFaultAbort
     /* A zero error code is pushed */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
 
-    lea rcx, MsgDoubleFault[rip]
-    mov rdx, [rbp + KTRAP_FRAME_FaultAddress]
-    mov r8, rbp
-    call qword ptr FrLdrDbgPrint[rip]
+    int 3
 
     /* Bugcheck */
     Fatal 8 // EXCEPTION_DOUBLE_FAULT
@@ -446,11 +376,6 @@ FUNC KiGeneralProtectionFault
     /* We have an error code */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
 
-    //TRAPINFO KiGeneralProtectionFault
-    //mov rdx, [rbp + KTRAP_FRAME_Rip]
-    //lea rcx, MsgGeneralProtFault[rip]
-    //call qword ptr FrLdrDbgPrint[rip]
-
     /* Call the C handler */
     mov rcx, rbp
     call KiGeneralProtectionFaultHandler
@@ -484,16 +409,6 @@ PUBLIC KiPageFault
 FUNC KiPageFault
     /* We have an error code */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
-
-    TRAPINFO KiPageFault
-
-#if 0
-    lea rcx, MsgPageFault[rip]
-    mov rdx, [rbp + KTRAP_FRAME_ErrorCode]
-    mov r8, [rbp + KTRAP_FRAME_Rip]
-    mov r9, [rbp + KTRAP_FRAME_FaultAddress]
-    call qword ptr FrLdrDbgPrint[rip]
-#endif
 
     /* Save page fault address */
     mov rdx, cr2
@@ -643,8 +558,6 @@ PUBLIC KiDebugServiceTrap
 FUNC KiDebugServiceTrap
    /* No error code */
     EnterTrap TF_SAVE_ALL
-
-    TRAPINFO KiDebugServiceTrap
 
     /* Increase Rip to skip the int3 */
     inc qword ptr [rbp + KTRAP_FRAME_Rip]
