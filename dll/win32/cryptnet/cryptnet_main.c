@@ -18,27 +18,24 @@
  *
  */
 
-#define WIN32_NO_STATUS
-
-#include <config.h>
-//#include "wine/port.h"
+#include "config.h"
+#include "wine/port.h"
 
 #define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
 
 #include <stdio.h>
-//#include <stdarg.h>
+#include <stdarg.h>
 
-#include <windef.h>
-#include <winbase.h>
-//#include "winnt.h"
-#include <winnls.h>
-#include <wininet.h>
-//#include "objbase.h"
-#include <wincrypt.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "winnls.h"
+#include "wininet.h"
+#include "objbase.h"
+#include "wincrypt.h"
 
-#include <wine/debug.h>
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptnet);
 
