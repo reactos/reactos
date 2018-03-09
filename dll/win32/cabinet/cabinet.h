@@ -18,24 +18,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
 #ifndef __WINE_CABINET_H
 #define __WINE_CABINET_H
 
-#include <wine/config.h>
-
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <windef.h>
-#include <winbase.h>
-#include <fdi.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "fdi.h"
+#include "fci.h"
 
 /* from msvcrt/sys/stat.h */
 #define _S_IWRITE 0x0080
