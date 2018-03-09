@@ -4599,7 +4599,7 @@ static HRESULT FileDialog_constructor(IUnknown *pUnkOuter, REFIID riid, void **p
     if(pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    fdimpl = HeapAlloc(GetProcessHeap(), 0, sizeof(FileDialogImpl));
+    fdimpl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FileDialogImpl));
     if(!fdimpl)
         return E_OUTOFMEMORY;
 
@@ -4630,27 +4630,7 @@ static HRESULT FileDialog_constructor(IUnknown *pUnkOuter, REFIID riid, void **p
         fdimpl->custom_okbutton = StrDupW(buf);
     }
 
-    fdimpl->filterspecs = NULL;
-    fdimpl->filterspec_count = 0;
-    fdimpl->filetypeindex = 0;
-
-    fdimpl->psia_selection = fdimpl->psia_results = NULL;
-    fdimpl->psi_setfolder = fdimpl->psi_folder = NULL;
-
     list_init(&fdimpl->events_clients);
-    fdimpl->events_next_cookie = 0;
-
-    fdimpl->dlg_hwnd = NULL;
-    fdimpl->peb = NULL;
-
-    fdimpl->set_filename = NULL;
-    fdimpl->default_ext = NULL;
-    fdimpl->custom_cancelbutton = fdimpl->custom_filenamelabel = NULL;
-
-    fdimpl->client_guid = GUID_NULL;
-
-    fdimpl->hmenu_opendropdown = NULL;
-    fdimpl->hfont_opendropdown = NULL;
 
     /* FIXME: The default folder setting should be restored for the
      * application if it was previously set. */

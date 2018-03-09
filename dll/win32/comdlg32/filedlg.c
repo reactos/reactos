@@ -45,9 +45,43 @@
  *
  */
 
-#include "cdlg.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <shellapi.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+#include "winnls.h"
+#include "wingdi.h"
+#ifdef __REACTOS__
+/* RegGetValueW is supported by Win2k3 SP1 but headers need Win Vista */
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#endif
+#include "winreg.h"
+#include "winuser.h"
+#include "commdlg.h"
+#include "dlgs.h"
+#include "cdlg.h"
+#include "cderr.h"
+#include "shellapi.h"
+#include "shlobj.h"
+#include "filedlgbrowser.h"
+#include "shlwapi.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 #define UNIMPLEMENTED_FLAGS \
 (OFN_DONTADDTORECENT |\
@@ -440,6 +474,23 @@ static BOOL GetFileDialog95(FileOpenDlgInfos *info, UINT dlg_type)
         break;
     default:
         ret = FALSE;
+    }
+
+    /* set the lpstrFileTitle */
+    if (ret && info->ofnInfos->lpstrFile && info->ofnInfos->lpstrFileTitle)
+    {
+        if (info->unicode)
+        {
+            LPOPENFILENAMEW ofn = info->ofnInfos;
+            WCHAR *file_title = PathFindFileNameW(ofn->lpstrFile);
+            lstrcpynW(ofn->lpstrFileTitle, file_title, ofn->nMaxFileTitle);
+        }
+        else
+        {
+            LPOPENFILENAMEA ofn = (LPOPENFILENAMEA)info->ofnInfos;
+            char *file_title = PathFindFileNameA(ofn->lpstrFile);
+            lstrcpynA(ofn->lpstrFileTitle, file_title, ofn->nMaxFileTitle);
+        }
     }
 
     if (current_dir)
@@ -2659,23 +2710,6 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
               lpszTemp = PathFindExtensionA(tempFileA);
               fodInfos->ofnInfos->nFileExtension = (*lpszTemp) ? (lpszTemp - tempFileA) + 1 : 0;
           }
-
-          /* set the lpstrFileTitle */
-          if(fodInfos->ofnInfos->lpstrFileTitle)
-	  {
-            LPWSTR lpstrFileTitle = PathFindFileNameW(lpstrPathAndFile);
-            if(fodInfos->unicode)
-            {
-              LPOPENFILENAMEW ofn = fodInfos->ofnInfos;
-	      lstrcpynW(ofn->lpstrFileTitle, lpstrFileTitle, ofn->nMaxFileTitle);
-            }
-            else
-            {
-              LPOPENFILENAMEA ofn = (LPOPENFILENAMEA)fodInfos->ofnInfos;
-              WideCharToMultiByte(CP_ACP, 0, lpstrFileTitle, -1,
-                    ofn->lpstrFileTitle, ofn->nMaxFileTitle, NULL, NULL);
-            }
-	  }
 
           /* copy currently selected filter to lpstrCustomFilter */
           if (fodInfos->ofnInfos->lpstrCustomFilter)
