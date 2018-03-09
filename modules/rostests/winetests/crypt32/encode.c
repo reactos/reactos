@@ -17,8 +17,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdio.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winerror.h>
+#include <wincrypt.h>
+#include <snmp.h>
 
-#include "precomp.h"
+#include "wine/test.h"
+
 
 static BOOL (WINAPI *pCryptDecodeObjectEx)(DWORD,LPCSTR,const BYTE*,DWORD,DWORD,PCRYPT_DECODE_PARA,void*,DWORD*);
 static BOOL (WINAPI *pCryptEncodeObjectEx)(DWORD,LPCSTR,const void*,DWORD,PCRYPT_ENCODE_PARA,void*,DWORD*);
@@ -1952,80 +1960,138 @@ static void test_decodeUnicodeNameValue(DWORD dwEncoding)
     }
 }
 
-struct encodedOctets
-{
-    const BYTE *val;
-    const BYTE *encoded;
-};
-
-static const unsigned char bin46[] = { 'h','i',0 };
-static const unsigned char bin47[] = { 0x04,0x02,'h','i',0 };
-static const unsigned char bin48[] = {
-     's','o','m','e','l','o','n','g',0xff,'s','t','r','i','n','g',0 };
-static const unsigned char bin49[] = {
-     0x04,0x0f,'s','o','m','e','l','o','n','g',0xff,'s','t','r','i','n','g',0 };
-static const unsigned char bin50[] = { 0 };
-static const unsigned char bin51[] = { 0x04,0x00,0 };
-
-static const struct encodedOctets octets[] = {
-    { bin46, bin47 },
-    { bin48, bin49 },
-    { bin50, bin51 },
-};
+static const unsigned char decoded_hi_octet[] = { 'h','i' };
+static const unsigned char encoded_hi_octet[] = { ASN_OCTETSTRING,2,'h','i' };
+static const unsigned char decoded_something_long_octet[] = {
+     's','o','m','e','l','o','n','g',0xff,'s','t','r','i','n','g' };
+static const unsigned char encoded_something_long_octet[] = {
+     ASN_OCTETSTRING,15,'s','o','m','e','l','o','n','g',0xff,'s','t','r','i','n','g' };
+static const unsigned char encoded_empty_octet[] = { ASN_OCTETSTRING,0 };
 
 static void test_encodeOctets(DWORD dwEncoding)
 {
     CRYPT_DATA_BLOB blob;
     DWORD i;
 
-    for (i = 0; i < sizeof(octets) / sizeof(octets[0]); i++)
+    static const struct {
+        const BYTE *decoded;
+        UINT decoded_size;
+        const BYTE *encoded;
+        UINT encoded_size;
+    } tests[] = {
+        {
+            decoded_hi_octet, sizeof(decoded_hi_octet),
+            encoded_hi_octet, sizeof(encoded_hi_octet)
+        },{
+            decoded_something_long_octet, sizeof(decoded_something_long_octet),
+            encoded_something_long_octet, sizeof(encoded_something_long_octet)
+        },{
+            encoded_empty_octet, 0,
+            encoded_empty_octet, sizeof(encoded_empty_octet)
+        }
+    };
+
+    for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
     {
         BYTE *buf = NULL;
         BOOL ret;
         DWORD bufSize = 0;
 
-        blob.cbData = strlen((const char*)octets[i].val);
-        blob.pbData = (BYTE*)octets[i].val;
+        blob.cbData = tests[i].decoded_size;
+        blob.pbData = (BYTE*)tests[i].decoded;
         ret = pCryptEncodeObjectEx(dwEncoding, X509_OCTET_STRING, &blob,
          CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &bufSize);
         ok(ret, "CryptEncodeObjectEx failed: %d\n", GetLastError());
         if (ret)
         {
-            ok(buf[0] == 4,
-             "Got unexpected type %d for octet string (expected 4)\n", buf[0]);
-            ok(buf[1] == octets[i].encoded[1], "Got length %d, expected %d\n",
-             buf[1], octets[i].encoded[1]);
-            ok(!memcmp(buf + 1, octets[i].encoded + 1,
-             octets[i].encoded[1] + 1), "Got unexpected value\n");
+            ok(bufSize == tests[i].encoded_size, "[%u] buf size %u expected %u\n",
+               i, bufSize, tests[i].encoded_size);
+            ok(buf[0] == 4, "Got unexpected type %d for octet string (expected 4)\n", buf[0]);
+            ok(buf[1] == tests[i].decoded_size, "[%u] Got length %d, expected %d\n",
+               i, buf[1], tests[i].decoded_size);
+            ok(!memcmp(buf, tests[i].encoded, tests[i].encoded_size), "[%u] Got unexpected value\n", i);
             LocalFree(buf);
         }
     }
 }
 
+static const unsigned char encoded_constructed_hi_octet[] =
+    { ASN_CONSTRUCTOR|ASN_OCTETSTRING,0x80, ASN_OCTETSTRING,2,'h','i', 0,0 };
+static const unsigned char encoded_constructed_hi_octet2[] =
+    { ASN_CONSTRUCTOR|ASN_OCTETSTRING,4, ASN_OCTETSTRING,2,'h','i', 1,2,3 };
+static const unsigned char encoded_constructed_hi_octet3[] =
+    { ASN_CONSTRUCTOR|ASN_OCTETSTRING,8, ASN_CONSTRUCTOR|ASN_OCTETSTRING,0x80, ASN_OCTETSTRING,2,'h','i', 0,0, 0,0 };
+static const unsigned char encoded_constructed_hi_octet_invalid_end[] =
+    { ASN_CONSTRUCTOR|ASN_OCTETSTRING,0x80, ASN_OCTETSTRING,2,'h','i', 0,1 };
+
 static void test_decodeOctets(DWORD dwEncoding)
 {
     DWORD i;
 
-    for (i = 0; i < sizeof(octets) / sizeof(octets[0]); i++)
+    static const struct {
+        const BYTE *encoded;
+        UINT encoded_size;
+        const BYTE *decoded;
+        UINT decoded_size;
+        DWORD error;
+    } tests[] = {
+        {
+            encoded_hi_octet, sizeof(encoded_hi_octet),
+            decoded_hi_octet, sizeof(decoded_hi_octet)
+        },{
+            encoded_something_long_octet, sizeof(encoded_something_long_octet),
+            decoded_something_long_octet, sizeof(decoded_something_long_octet)
+        },{
+            encoded_constructed_hi_octet, sizeof(encoded_constructed_hi_octet),
+            decoded_hi_octet, sizeof(decoded_hi_octet)
+        },{
+            encoded_constructed_hi_octet2, sizeof(encoded_constructed_hi_octet2),
+            decoded_hi_octet, sizeof(decoded_hi_octet)
+        },{
+            encoded_constructed_hi_octet3, sizeof(encoded_constructed_hi_octet3),
+            decoded_hi_octet, sizeof(decoded_hi_octet)
+        },{
+            encoded_empty_octet, sizeof(encoded_empty_octet),
+            encoded_empty_octet, 0
+        },{
+            encoded_hi_octet, sizeof(encoded_hi_octet) - 1,
+            NULL, 0, CRYPT_E_ASN1_EOD
+        },{
+            encoded_constructed_hi_octet, sizeof(encoded_constructed_hi_octet) - 1,
+            NULL, 0, CRYPT_E_ASN1_EOD
+        },{
+            encoded_constructed_hi_octet_invalid_end, sizeof(encoded_constructed_hi_octet_invalid_end),
+            NULL, 0, CRYPT_E_ASN1_CORRUPT
+        }
+    };
+
+    for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
     {
         BYTE *buf = NULL;
         BOOL ret;
         DWORD bufSize = 0;
 
         ret = pCryptDecodeObjectEx(dwEncoding, X509_OCTET_STRING,
-         octets[i].encoded, octets[i].encoded[1] + 2,
+         tests[i].encoded, tests[i].encoded_size,
          CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &bufSize);
-        ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
-        ok(bufSize >= sizeof(CRYPT_DATA_BLOB) + octets[i].encoded[1],
-         "Expected size >= %d, got %d\n",
-           (int)sizeof(CRYPT_DATA_BLOB) + octets[i].encoded[1], bufSize);
+        if (tests[i].error)
+        {
+            ok(!ret && GetLastError() == tests[i].error,
+               "[%u] CryptDecodeObjectEx returned %x(%x)\n", i, ret, GetLastError());
+            continue;
+        }
+        ok(ret, "[%u] CryptDecodeObjectEx failed: %08x\n", i, GetLastError());
+        ok(bufSize >= sizeof(CRYPT_DATA_BLOB) + tests[i].decoded_size,
+           "[%u] Expected size >= %d, got %d\n", i,
+           (int)sizeof(CRYPT_DATA_BLOB) + tests[i].decoded_size, bufSize);
         ok(buf != NULL, "Expected allocated buffer\n");
         if (ret)
         {
             CRYPT_DATA_BLOB *blob = (CRYPT_DATA_BLOB *)buf;
 
+            ok (blob->cbData == tests[i].decoded_size, "[%u] cbData = %u\n", i, blob->cbData);
             if (blob->cbData)
-                ok(!memcmp(blob->pbData, octets[i].val, blob->cbData),
+                ok(!memcmp(blob->pbData, tests[i].decoded, blob->cbData),
                  "Unexpected value\n");
             LocalFree(buf);
         }
@@ -3302,18 +3368,76 @@ static const BYTE hash[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc, 0xd,
  0xe, 0xf };
 
 static const BYTE signedBigCert[] = {
- 0x30, 0x81, 0x93, 0x30, 0x7a, 0x02, 0x01, 0x01, 0x30, 0x02, 0x06, 0x00, 0x30,
- 0x15, 0x31, 0x13, 0x30, 0x11, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13, 0x0a, 0x4a,
- 0x75, 0x61, 0x6e, 0x20, 0x4c, 0x61, 0x6e, 0x67, 0x00, 0x30, 0x22, 0x18, 0x0f,
- 0x31, 0x36, 0x30, 0x31, 0x30, 0x31, 0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30,
- 0x30, 0x5a, 0x18, 0x0f, 0x31, 0x36, 0x30, 0x31, 0x30, 0x31, 0x30, 0x31, 0x30,
- 0x30, 0x30, 0x30, 0x30, 0x30, 0x5a, 0x30, 0x15, 0x31, 0x13, 0x30, 0x11, 0x06,
- 0x03, 0x55, 0x04, 0x03, 0x13, 0x0a, 0x4a, 0x75, 0x61, 0x6e, 0x20, 0x4c, 0x61,
- 0x6e, 0x67, 0x00, 0x30, 0x07, 0x30, 0x02, 0x06, 0x00, 0x03, 0x01, 0x00, 0xa3,
- 0x16, 0x30, 0x14, 0x30, 0x12, 0x06, 0x03, 0x55, 0x1d, 0x13, 0x01, 0x01, 0xff,
- 0x04, 0x08, 0x30, 0x06, 0x01, 0x01, 0xff, 0x02, 0x01, 0x01, 0x30, 0x02, 0x06,
- 0x00, 0x03, 0x11, 0x00, 0x0f, 0x0e, 0x0d, 0x0c, 0x0b, 0x0a, 0x09, 0x08, 0x07,
- 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 };
+ ASN_SEQUENCE,0x81,147,
+   ASN_SEQUENCE,122,
+     ASN_INTEGER,1, 0x01,
+     ASN_SEQUENCE,2,
+       ASN_OBJECTIDENTIFIER,0,
+     ASN_SEQUENCE,21,
+       0x31,19,
+         ASN_SEQUENCE,17,
+           ASN_OBJECTIDENTIFIER,3, 0x55,0x04,0x03,
+           0x13,10, 0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,
+     ASN_SEQUENCE,34,
+       0x18,15, 0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,
+       0x18,15, 0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,
+     ASN_SEQUENCE,21,
+       0x31,19,
+         ASN_SEQUENCE,17,
+           ASN_OBJECTIDENTIFIER,3, 0x55,0x04,0x03,
+           0x13,10, 0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,
+     ASN_SEQUENCE,7,
+       ASN_SEQUENCE,2,
+         ASN_OBJECTIDENTIFIER,0,
+       ASN_BITS,1, 0x00,
+   0xa3,22,
+     ASN_SEQUENCE,20,
+       ASN_SEQUENCE,18,
+         ASN_OBJECTIDENTIFIER,3, 0x55,0x1d,0x13,
+         0x01,1, 0xff,
+         ASN_OCTETSTRING,8, 0x30,0x06,0x01,0x01,0xff,0x02,0x01,0x01,
+     ASN_SEQUENCE,2,
+       ASN_OBJECTIDENTIFIER,0,
+ ASN_BITS,17, 0x00,0x0f,0x0e,0x0d,0x0c,0x0b,0x0a,0x09,0x08,
+              0x07,0x06,0x05,0x04,0x03,0x02,0x01,0x00
+};
+
+static const BYTE signedBigCertWithIndefiniteSeq[] = {
+ ASN_SEQUENCE,0x81,151,
+   ASN_SEQUENCE,126,
+     ASN_INTEGER,1, 0x01,
+     ASN_SEQUENCE,2,
+       ASN_OBJECTIDENTIFIER,0,
+     ASN_SEQUENCE,21,
+       0x31,19,
+         ASN_SEQUENCE,17,
+           ASN_OBJECTIDENTIFIER,3, 0x55,0x04,0x03,
+           0x13,10, 0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,
+     ASN_SEQUENCE,0x80,
+       0x18,15, 0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,
+       0x18,15, 0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,
+     0,0,
+     ASN_SEQUENCE,21,
+       0x31,19,
+         ASN_SEQUENCE,17,
+           ASN_OBJECTIDENTIFIER,3, 0x55,0x04,0x03,
+           0x13,10, 0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,
+     ASN_SEQUENCE,0x80,
+       ASN_SEQUENCE,2,
+         ASN_OBJECTIDENTIFIER,0,
+       ASN_BITS,1, 0x00,
+     0,0,
+   0xa3,22,
+     ASN_SEQUENCE,20,
+       ASN_SEQUENCE,18,
+         ASN_OBJECTIDENTIFIER,3, 0x55,0x1d,0x13,
+         0x01,1, 0xff,
+         ASN_OCTETSTRING,8, 0x30,0x06,0x01,0x01,0xff,0x02,0x01,0x01,
+     ASN_SEQUENCE,2,
+       ASN_OBJECTIDENTIFIER,0,
+ ASN_BITS,17, 0x00,0x0f,0x0e,0x0d,0x0c,0x0b,0x0a,0x09,0x08,
+              0x07,0x06,0x05,0x04,0x03,0x02,0x01,0x00
+};
 
 static void test_encodeCert(DWORD dwEncoding)
 {
@@ -3364,6 +3488,29 @@ static void test_decodeCert(DWORD dwEncoding)
     /* A signed cert decodes as a CERT_INFO too */
     ret = pCryptDecodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED, signedBigCert,
      sizeof(signedBigCert), CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
+    ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        CERT_INFO *info = (CERT_INFO *)buf;
+
+        ok(size >= sizeof(CERT_INFO), "Wrong size %d\n", size);
+        ok(info->SerialNumber.cbData == 1,
+         "Expected serial number size 1, got %d\n", info->SerialNumber.cbData);
+        ok(*info->SerialNumber.pbData == *serialNum,
+         "Expected serial number %d, got %d\n", *serialNum,
+         *info->SerialNumber.pbData);
+        ok(info->Issuer.cbData == sizeof(encodedCommonName),
+         "Wrong size %d\n", info->Issuer.cbData);
+        ok(!memcmp(info->Issuer.pbData, encodedCommonName, info->Issuer.cbData),
+         "Unexpected issuer\n");
+        ok(info->Subject.cbData == sizeof(encodedCommonName),
+         "Wrong size %d\n", info->Subject.cbData);
+        ok(!memcmp(info->Subject.pbData, encodedCommonName,
+         info->Subject.cbData), "Unexpected subject\n");
+        LocalFree(buf);
+    }
+    ret = pCryptDecodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED, signedBigCertWithIndefiniteSeq,
+     sizeof(signedBigCertWithIndefiniteSeq), CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -5909,32 +6056,79 @@ static const BYTE indefiniteSignedPKCSContent[] = {
 0xe3,0x55,0x71,0x91,0xf9,0x2a,0xd1,0xb8,0xaa,0x52,0xb8,0x22,0x3a,0xeb,0x61,
 0x00,0x00,0x00,0x00,0x00,0x00 };
 
+static const BYTE content_abcd[] = {
+    ASN_SEQUENCE, 0x80,
+        ASN_OBJECTIDENTIFIER, 2, 42,3,
+        ASN_CONTEXT|ASN_CONSTRUCTOR, 0x80,
+            ASN_OCTETSTRING, 4, 'a','b','c','d',
+        0,0,
+    0,0,
+};
+
+static const BYTE encoded_abcd[] = {
+    ASN_OCTETSTRING, 4, 'a','b','c','d',
+};
+
+static const BYTE content_constructed_abcd[] = {
+    ASN_SEQUENCE, 0x80,
+        ASN_OBJECTIDENTIFIER, 2, 42,3,
+        ASN_CONTEXT|ASN_CONSTRUCTOR, 0x80,
+            ASN_CONSTRUCTOR|ASN_OCTETSTRING,0x80,
+                ASN_OCTETSTRING, 4, 'a','b','0','0',
+            0,0,
+        0,0,
+    0,0,
+    1,2,3,4,5,6,7 /* extra garbage */
+};
+
 static void test_decodePKCSContentInfo(DWORD dwEncoding)
 {
     BOOL ret;
     LPBYTE buf = NULL;
-    DWORD size = 0;
+    DWORD size = 0, i;
     CRYPT_CONTENT_INFO *info;
 
-    ret = pCryptDecodeObjectEx(dwEncoding, PKCS_CONTENT_INFO,
-     emptyPKCSContentInfo, sizeof(emptyPKCSContentInfo),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
-    ok(ret, "CryptDecodeObjectEx failed: %x\n", GetLastError());
-    if (ret)
+    const struct {
+        const BYTE *encoded;
+        UINT encoded_size;
+        const char *obj_id;
+        const BYTE *content;
+        UINT content_size;
+    } tests[] = {
+        { emptyPKCSContentInfo, sizeof(emptyPKCSContentInfo),
+          "1.2.3", NULL, 0 },
+        { emptyPKCSContentInfoExtraBytes, sizeof(emptyPKCSContentInfoExtraBytes),
+          "1.2.3", NULL, 0 },
+        { intPKCSContentInfo, sizeof(intPKCSContentInfo),
+          "1.2.3", ints[0].encoded, ints[0].encoded[1] + 2 },
+        { indefiniteSignedPKCSContent, sizeof(indefiniteSignedPKCSContent),
+          "1.2.840.113549.1.7.2", NULL, 392 },
+        { content_abcd, sizeof(content_abcd),
+          "1.2.3", encoded_abcd, 6 },
+        { content_constructed_abcd, sizeof(content_constructed_abcd),
+          "1.2.3", content_constructed_abcd + 8, 10 }
+    };
+
+    for (i = 0; i < sizeof(tests)/sizeof(*tests); i++)
     {
+        ret = pCryptDecodeObjectEx(dwEncoding, PKCS_CONTENT_INFO, tests[i].encoded,
+            tests[i].encoded_size, CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
+        ok(ret, "[%u] CryptDecodeObjectEx failed: %x\n", i, GetLastError());
+        if (!ret) continue;
+
         info = (CRYPT_CONTENT_INFO *)buf;
 
-        ok(!strcmp(info->pszObjId, "1.2.3"), "Expected 1.2.3, got %s\n",
-         info->pszObjId);
-        ok(info->Content.cbData == 0, "Expected no data, got %d\n",
-         info->Content.cbData);
+        ok(!strcmp(info->pszObjId, tests[i].obj_id), "[%u] Expected %s, got %s\n",
+           i, tests[i].obj_id, info->pszObjId);
+        ok(info->Content.cbData == tests[i].content_size,
+           "[%u] Unexpected size %d expected %d\n", i, info->Content.cbData,
+           tests[i].content_size);
+        if (tests[i].content)
+            ok(!memcmp(info->Content.pbData, tests[i].content, tests[i].content_size),
+               "[%u] Unexpected value\n", i);
         LocalFree(buf);
     }
-    ret = pCryptDecodeObjectEx(dwEncoding, PKCS_CONTENT_INFO,
-     emptyPKCSContentInfoExtraBytes, sizeof(emptyPKCSContentInfoExtraBytes),
-     0, NULL, NULL, &size);
-    ok(ret, "CryptDecodeObjectEx failed: %x\n", GetLastError());
-    SetLastError(0xdeadbeef);
+
     ret = pCryptDecodeObjectEx(dwEncoding, PKCS_CONTENT_INFO,
      bogusPKCSContentInfo, sizeof(bogusPKCSContentInfo),
      CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
@@ -5945,36 +6139,6 @@ static void test_decodePKCSContentInfo(DWORD dwEncoding)
      GetLastError() == CRYPT_E_ASN1_CORRUPT)) || broken(ret),
      "Expected CRYPT_E_ASN1_EOD or CRYPT_E_ASN1_CORRUPT, got %x\n",
      GetLastError());
-    ret = pCryptDecodeObjectEx(dwEncoding, PKCS_CONTENT_INFO,
-     intPKCSContentInfo, sizeof(intPKCSContentInfo),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
-    ok(ret, "CryptDecodeObjectEx failed: %x\n", GetLastError());
-    if (ret)
-    {
-        info = (CRYPT_CONTENT_INFO *)buf;
-
-        ok(!strcmp(info->pszObjId, "1.2.3"), "Expected 1.2.3, got %s\n",
-         info->pszObjId);
-        ok(info->Content.cbData == ints[0].encoded[1] + 2,
-         "Unexpected size %d\n", info->Content.cbData);
-        ok(!memcmp(info->Content.pbData, ints[0].encoded,
-         info->Content.cbData), "Unexpected value\n");
-        LocalFree(buf);
-    }
-    ret = pCryptDecodeObjectEx(dwEncoding, PKCS_CONTENT_INFO,
-     indefiniteSignedPKCSContent, sizeof(indefiniteSignedPKCSContent),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
-    ok(ret, "CryptDecodeObjectEx failed: %x\n", GetLastError());
-    if (ret)
-    {
-        info = (CRYPT_CONTENT_INFO *)buf;
-
-        ok(!strcmp(info->pszObjId, szOID_RSA_signedData),
-         "Expected %s, got %s\n", szOID_RSA_signedData, info->pszObjId);
-        ok(info->Content.cbData == 392, "Expected 392, got %d\n",
-         info->Content.cbData);
-        LocalFree(buf);
-    }
 }
 
 static const BYTE emptyPKCSAttr[] = { 0x30,0x06,0x06,0x02,0x2a,0x03,0x31,
@@ -8345,6 +8509,173 @@ static void testPortPublicKeyInfo(void)
     ok(ret,"CryptAcquireContextA failed\n");
 }
 
+static const BYTE eccCert[] = {
+0x30,0x82,0x01,0x46,0x30,0x81,0xec,0x02,0x09,0x00,0xe7,0x6b,
+0x26,0x86,0x0a,0x82,0xff,0xe9,0x30,0x0a,0x06,0x08,0x2a,0x86,
+0x48,0xce,0x3d,0x04,0x03,0x02,0x30,0x2b,0x31,0x0b,0x30,0x09,
+0x06,0x03,0x55,0x04,0x06,0x13,0x02,0x44,0x45,0x31,0x0d,0x30,
+0x0b,0x06,0x03,0x55,0x04,0x0a,0x0c,0x04,0x57,0x69,0x6e,0x65,
+0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,0x04,0x03,0x0c,0x04,0x57,
+0x69,0x6e,0x65,0x30,0x1e,0x17,0x0d,0x31,0x37,0x30,0x39,0x32,
+0x37,0x31,0x33,0x34,0x31,0x30,0x34,0x5a,0x17,0x0d,0x32,0x37,
+0x30,0x39,0x32,0x35,0x31,0x33,0x34,0x31,0x30,0x34,0x5a,0x30,
+0x2b,0x31,0x0b,0x30,0x09,0x06,0x03,0x55,0x04,0x06,0x13,0x02,
+0x44,0x45,0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,0x04,0x0a,0x0c,
+0x04,0x54,0x65,0x73,0x74,0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,
+0x04,0x03,0x0c,0x04,0x54,0x65,0x73,0x74,0x30,0x59,0x30,0x13,
+0x06,0x07,0x2a,0x86,0x48,0xce,0x3d,0x02,0x01,0x06,0x08,0x2a,
+0x86,0x48,0xce,0x3d,0x03,0x01,0x07,0x03,0x42,0x00,0x04,0xed,
+0xfc,0x77,0xd8,0xb9,0xe7,0xf3,0xf8,0xce,0x13,0xb8,0x7f,0x0f,
+0x78,0xea,0x73,0x87,0x29,0x10,0xe1,0x6d,0x10,0xce,0x57,0x60,
+0x3b,0x3e,0xb4,0x5f,0x0d,0x20,0xc1,0xeb,0x6d,0x74,0xe9,0x7b,
+0x11,0x51,0x9a,0x00,0xe8,0xe9,0x12,0x84,0xb9,0x07,0x7e,0x7b,
+0x62,0x67,0x12,0x67,0x08,0xe5,0x2e,0x27,0xce,0xa2,0x57,0x15,
+0xad,0xc5,0x1f,0x30,0x0a,0x06,0x08,0x2a,0x86,0x48,0xce,0x3d,
+0x04,0x03,0x02,0x03,0x49,0x00,0x30,0x46,0x02,0x21,0x00,0xd7,
+0x29,0xce,0x5a,0xef,0x74,0x85,0xd1,0x18,0x5f,0x6e,0xf1,0xba,
+0x53,0xd4,0xcd,0xdd,0xe0,0x5d,0xf1,0x5e,0x48,0x51,0xea,0x63,
+0xc0,0xe8,0xe2,0xf6,0xfa,0x4c,0xaf,0x02,0x21,0x00,0xe3,0x94,
+0x15,0x3b,0x6c,0x71,0x6e,0x44,0x22,0xcb,0xa0,0x88,0xcd,0x0a,
+0x5a,0x50,0x29,0x7c,0x5c,0xd6,0x6c,0xd2,0xe0,0x7f,0xcd,0x02,
+0x92,0x21,0x4c,0x2c,0x92,0xee };
+static const BYTE ecdsaSig[] = {
+0x30,0x46,0x02,0x21,0x00,0xd7,0x29,0xce,0x5a,0xef,0x74,0x85,
+0xd1,0x18,0x5f,0x6e,0xf1,0xba,0x53,0xd4,0xcd,0xdd,0xe0,0x5d,
+0xf1,0x5e,0x48,0x51,0xea,0x63,0xc0,0xe8,0xe2,0xf6,0xfa,0x4c,
+0xaf,0x02,0x21,0x00,0xe3,0x94,0x15,0x3b,0x6c,0x71,0x6e,0x44,
+0x22,0xcb,0xa0,0x88,0xcd,0x0a,0x5a,0x50,0x29,0x7c,0x5c,0xd6,
+0x6c,0xd2,0xe0,0x7f,0xcd,0x02,0x92,0x21,0x4c,0x2c,0x92,0xee };
+static const BYTE eccPubKey[] = {
+0x30,0x59,0x30,0x13,0x06,0x07,0x2a,0x86,0x48,0xce,0x3d,0x02,
+0x01,0x06,0x08,0x2a,0x86,0x48,0xce,0x3d,0x03,0x01,0x07,0x03,
+0x42,0x00,0x04,0xed,0xfc,0x77,0xd8,0xb9,0xe7,0xf3,0xf8,0xce,
+0x13,0xb8,0x7f,0x0f,0x78,0xea,0x73,0x87,0x29,0x10,0xe1,0x6d,
+0x10,0xce,0x57,0x60,0x3b,0x3e,0xb4,0x5f,0x0d,0x20,0xc1,0xeb,
+0x6d,0x74,0xe9,0x7b,0x11,0x51,0x9a,0x00,0xe8,0xe9,0x12,0x84,
+0xb9,0x07,0x7e,0x7b,0x62,0x67,0x12,0x67,0x08,0xe5,0x2e,0x27,
+0xce,0xa2,0x57,0x15,0xad,0xc5,0x1f };
+
+static void testECDSACert(void)
+{
+    DWORD decode_flags = CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NO_SIGNATURE_BYTE_REVERSAL_FLAG;
+    CERT_SIGNED_CONTENT_INFO *info;
+    CERT_PUBLIC_KEY_INFO *pubkey;
+    CERT_ECC_SIGNATURE *ecc_sig;
+    LPSTR *ecc_curve;
+    DWORD size;
+    BOOL ret;
+    int i;
+
+    info = NULL;
+    ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, X509_CERT, eccCert, sizeof(eccCert), decode_flags,
+                               NULL, &info, &size);
+    ok(ret, "CryptDecodeObjectEx failed with %d\n", GetLastError());
+
+    ok(!strcmp(info->SignatureAlgorithm.pszObjId, szOID_ECDSA_SHA256),
+       "Expected 1.2.840.10045.4.3.2, got %s\n", info->SignatureAlgorithm.pszObjId);
+    ok(!info->SignatureAlgorithm.Parameters.cbData,
+       "Expected no parameter data, got %d bytes\n", info->SignatureAlgorithm.Parameters.cbData);
+    ok(!info->SignatureAlgorithm.Parameters.pbData,
+       "Expected no parameter data, got %p pointer\n", info->SignatureAlgorithm.Parameters.pbData);
+
+    ok(info->Signature.cbData == sizeof(ecdsaSig),
+       "Expected %d bytes, got %d\n", (int)sizeof(ecdsaSig), info->Signature.cbData);
+    ok(info->Signature.pbData != NULL, "Got NULL pointer\n");
+    ok(!info->Signature.cUnusedBits, "Expected no unused bytes, got %d\n", info->Signature.cUnusedBits);
+    for (i = 0; i < info->Signature.cbData; i++)
+    {
+        ok(ecdsaSig[i] == info->Signature.pbData[i], "Expected %02x, got %02x at offset %d\n",
+           ecdsaSig[i], info->Signature.pbData[i], i);
+    }
+
+    ecc_sig = NULL;
+    ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, X509_ECC_SIGNATURE, info->Signature.pbData,
+                               info->Signature.cbData, decode_flags, NULL, &ecc_sig, &size);
+    ok(ret, "CryptDecodeObjectEx failed with %d\n", GetLastError());
+    if (ret)
+    {
+        ok(ecc_sig->r.cbData == 32, "Expected 32 bytes, got %d\n", ecc_sig->r.cbData);
+        ok(ecc_sig->r.pbData != NULL, "Got NULL pointer\n");
+        ok(ecc_sig->s.cbData == 32, "Expected 32 bytes, got %d\n", ecc_sig->s.cbData);
+        ok(ecc_sig->s.pbData != NULL, "Got NULL pointer\n");
+        for (i = 0; i < ecc_sig->r.cbData; i++)
+        {
+            ok(ecdsaSig[4+32-i] == ecc_sig->r.pbData[i], "Expected %02x, got %02x at offset %d\n",
+               ecdsaSig[4+32-i], ecc_sig->r.pbData[i], i);
+        }
+        for (i = 0; i < ecc_sig->s.cbData; i++)
+        {
+            ok(ecdsaSig[4+35+32-i] == ecc_sig->s.pbData[i], "Expected %02x, got %02x at offset %d\n",
+               ecdsaSig[4+35+32-i], ecc_sig->s.pbData[i], i);
+        }
+        LocalFree(ecc_sig);
+    }
+
+    LocalFree(info);
+
+    info = NULL;
+    decode_flags &= ~CRYPT_DECODE_NO_SIGNATURE_BYTE_REVERSAL_FLAG;
+    ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, X509_CERT, eccCert, sizeof(eccCert), decode_flags,
+                               NULL, &info, &size);
+    ok(ret, "CryptDecodeObjectEx failed with %d\n", GetLastError());
+
+    ok(info->Signature.cbData == sizeof(ecdsaSig),
+       "Expected %d bytes, got %d\n", (int)sizeof(ecdsaSig), info->Signature.cbData);
+    ok(info->Signature.pbData != NULL, "Got NULL pointer\n");
+    ok(!info->Signature.cUnusedBits, "Expected no unused bytes, got %d\n", info->Signature.cUnusedBits);
+    for (i = 0; i < info->Signature.cbData; i++)
+    {
+        ok(ecdsaSig[sizeof(ecdsaSig)-i-1] == info->Signature.pbData[i], "Expected %02x, got %02x at offset %d\n",
+           ecdsaSig[sizeof(ecdsaSig)-i-1], info->Signature.pbData[i], i);
+    }
+
+    LocalFree(info);
+
+    pubkey = NULL;
+    ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO, eccPubKey, sizeof(eccPubKey),
+                               decode_flags, NULL, &pubkey, &size);
+    ok(ret, "CryptDecodeObjectEx failed with %d\n", GetLastError());
+
+    ok(!strcmp(pubkey->Algorithm.pszObjId, szOID_ECC_PUBLIC_KEY),
+       "Expected 1.2.840.10045.2.1, got %s\n", pubkey->Algorithm.pszObjId);
+    ok(pubkey->Algorithm.Parameters.cbData == 10,
+       "Expected 10 bytes parameters, got %d bytes\n", pubkey->Algorithm.Parameters.cbData);
+    ok(pubkey->Algorithm.Parameters.pbData != NULL,
+       "Expected pointer to parameters, got NULL\n");
+
+    ecc_curve = NULL;
+    ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, X509_OBJECT_IDENTIFIER, pubkey->Algorithm.Parameters.pbData,
+                               pubkey->Algorithm.Parameters.cbData, decode_flags, NULL, &ecc_curve, &size);
+    ok(ret || broken(GetLastError() == ERROR_FILE_NOT_FOUND /* < Vista */),
+       "CryptDecodeObjectEx failed with %d\n", GetLastError());
+    if (ret)
+    {
+        ok(!strcmp(*ecc_curve, szOID_ECC_CURVE_P256), "Expected 1.2.840.10045.3.1.7, got %s\n", *ecc_curve);
+        LocalFree(ecc_curve);
+    }
+
+    ecc_curve = NULL;
+    ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, szOID_ECC_PUBLIC_KEY, pubkey->Algorithm.Parameters.pbData,
+                               pubkey->Algorithm.Parameters.cbData, decode_flags, NULL, &ecc_curve, &size);
+    ok(ret || broken(GetLastError() == ERROR_FILE_NOT_FOUND /* < Vista */),
+       "CryptDecodeObjectEx failed with %d\n", GetLastError());
+    if (ret)
+    {
+        ok(!strcmp(*ecc_curve, szOID_ECC_CURVE_P256), "Expected 1.2.840.10045.3.1.7, got %s\n", *ecc_curve);
+        LocalFree(ecc_curve);
+    }
+
+    ok(pubkey->PublicKey.cbData == 65, "Expected 32 bytes parameters, got %d bytes\n", pubkey->PublicKey.cbData);
+    ok(pubkey->PublicKey.pbData != NULL, "Expected pointer to parameters, got NULL\n");
+    for (i = 0; i < pubkey->PublicKey.cbData; i++)
+    {
+        ok(eccPubKey[26+i] == pubkey->PublicKey.pbData[i], "Expected %02x, got %02x at offset %d\n",
+           eccPubKey[26+i], pubkey->PublicKey.pbData[i], i);
+    }
+
+    LocalFree(pubkey);
+}
+
 START_TEST(encode)
 {
     static const DWORD encodings[] = { X509_ASN_ENCODING, PKCS_7_ASN_ENCODING,
@@ -8438,4 +8769,5 @@ START_TEST(encode)
         test_decodeRsaPrivateKey(encodings[i]);
     }
     testPortPublicKeyInfo();
+    testECDSACert();
 }
