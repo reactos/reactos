@@ -59,12 +59,12 @@ typedef NTSTATUS *PNTSTATUS;
 #define BCRYPT_SIGNATURE_LENGTH L"SignatureLength"
 
 #define BCRYPT_OPAQUE_KEY_BLOB   L"OpaqueKeyBlob"
-#define BCRYPT_KEY_DATA_BLOB     (const WCHAR []){'K','e','y','D','a','t','a','B','l','o','b',0}
-#define BCRYPT_AES_WRAP_KEY_BLOB (const WCHAR []){'R','f','c','3','5','6','5','K','e','y','W','r','a','p','B','l','o','b',0}
-#define BCRYPT_ECCPUBLIC_BLOB    (const WCHAR []){'E','C','C','P','U','B','L','I','C','B','L','O','B',0}
-#define BCRYPT_ECCPRIVATE_BLOB   (const WCHAR []){'E','C','C','P','R','I','V','A','T','E','B','L','O','B',0}
-#define BCRYPT_RSAPUBLIC_BLOB    (const WCHAR []){'R','S','A','P','U','B','L','I','C','B','L','O','B',0}
-#define BCRYPT_RSAPRIVATE_BLOB   (const WCHAR []){'R','S','A','P','R','I','V','A','T','E','B','L','O','B',0}
+#define BCRYPT_KEY_DATA_BLOB     L"KeyDataBlob"
+#define BCRYPT_AES_WRAP_KEY_BLOB L"Rfc3565KeyWrapBlob"
+#define BCRYPT_ECCPUBLIC_BLOB    L"ECCPUBLICBLOB"
+#define BCRYPT_ECCPRIVATE_BLOB   L"ECCPRIVATEBLOB"
+#define BCRYPT_RSAPUBLIC_BLOB    L"RSAPUBLICBLOB"
+#define BCRYPT_RSAPRIVATE_BLOB   L"RSAPRIVATEBLOB"
 
 #define MS_PRIMITIVE_PROVIDER L"Microsoft Primitive Provider"
 #define MS_PLATFORM_CRYPTO_PROVIDER L"Microsoft Platform Crypto Provider"
