@@ -81,8 +81,8 @@ KiDpcInterruptHandler(VOID)
     }
 
     /* Go back to old irql and disable interrupts */
-    KeLowerIrql(OldIrql);
     _disable();
+    KeLowerIrql(OldIrql);
 }
 
 
