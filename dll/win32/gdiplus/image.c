@@ -17,11 +17,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "gdiplus_private.h"
-
+#include <stdarg.h>
 #include <assert.h>
-#include <ole2.h>
-#include <olectl.h>
+
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "wingdi.h"
+
+#define COBJMACROS
+#include "objbase.h"
+#include "olectl.h"
+#include "ole2.h"
+
+#include "initguid.h"
+#include "wincodec.h"
+#include "gdiplus.h"
+#include "gdiplus_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 HRESULT WINAPI WICCreateImagingFactory_Proxy(UINT, IWICImagingFactory**);
 
@@ -38,13 +55,19 @@ static const struct
 {
     { &GUID_WICPixelFormatBlackWhite, PixelFormat1bppIndexed, WICBitmapPaletteTypeFixedBW },
     { &GUID_WICPixelFormat1bppIndexed, PixelFormat1bppIndexed, WICBitmapPaletteTypeFixedBW },
+    { &GUID_WICPixelFormat4bppIndexed, PixelFormat4bppIndexed, WICBitmapPaletteTypeFixedHalftone8 },
     { &GUID_WICPixelFormat8bppGray, PixelFormat8bppIndexed, WICBitmapPaletteTypeFixedGray256 },
     { &GUID_WICPixelFormat8bppIndexed, PixelFormat8bppIndexed, WICBitmapPaletteTypeFixedHalftone256 },
     { &GUID_WICPixelFormat16bppBGR555, PixelFormat16bppRGB555, WICBitmapPaletteTypeFixedHalftone256 },
     { &GUID_WICPixelFormat24bppBGR, PixelFormat24bppRGB, WICBitmapPaletteTypeFixedHalftone256 },
     { &GUID_WICPixelFormat32bppBGR, PixelFormat32bppRGB, WICBitmapPaletteTypeFixedHalftone256 },
+    { &GUID_WICPixelFormat48bppRGB, PixelFormat48bppRGB, WICBitmapPaletteTypeFixedHalftone256 },
     { &GUID_WICPixelFormat32bppBGRA, PixelFormat32bppARGB, WICBitmapPaletteTypeFixedHalftone256 },
     { &GUID_WICPixelFormat32bppPBGRA, PixelFormat32bppPARGB, WICBitmapPaletteTypeFixedHalftone256 },
+    { &GUID_WICPixelFormat32bppCMYK, PixelFormat32bppCMYK, WICBitmapPaletteTypeFixedHalftone256 },
+    { &GUID_WICPixelFormat32bppGrayFloat, PixelFormat32bppARGB, WICBitmapPaletteTypeFixedGray256 },
+    { &GUID_WICPixelFormat64bppCMYK, PixelFormat48bppRGB, WICBitmapPaletteTypeFixedHalftone256 },
+    { &GUID_WICPixelFormat64bppRGBA, PixelFormat48bppRGB, WICBitmapPaletteTypeFixedHalftone256 },
     { NULL }
 };
 
@@ -4297,6 +4320,11 @@ GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream *stream, GpImage **image)
     HRESULT hr;
     const struct image_codec *codec=NULL;
 
+    TRACE("%p %p\n", stream, image);
+
+    if (!stream || !image)
+        return InvalidParameter;
+
     /* choose an appropriate image decoder */
     stat = get_decoder_info(stream, &codec);
     if (stat != Ok) return stat;
@@ -4545,7 +4573,7 @@ static GpStatus encode_image_jpeg(GpImage *image, IStream* stream,
 static GpStatus encode_image_gif(GpImage *image, IStream* stream,
     GDIPCONST EncoderParameters* params)
 {
-    return encode_image_wic(image, stream, &CLSID_WICGifEncoder, params);
+    return encode_image_wic(image, stream, &GUID_ContainerFormatGif, params);
 }
 
 /*****************************************************************************
@@ -4558,7 +4586,7 @@ GpStatus WINGDIPAPI GdipSaveImageToStream(GpImage *image, IStream* stream,
     encode_image_func encode_image;
     int i;
 
-    TRACE("%p %p %p %p\n", image, stream, clsid, params);
+    TRACE("%p %p %s %p\n", image, stream, wine_dbgstr_guid(clsid), params);
 
     if(!image || !stream)
         return InvalidParameter;
@@ -5571,4 +5599,112 @@ GpStatus WINGDIPAPI GdipBitmapGetHistogramSize(HistogramFormat format, UINT *num
 
     *num_of_entries = 256;
     return Ok;
+}
+
+static GpStatus create_optimal_palette(ColorPalette *palette, INT desired,
+    BOOL transparent, GpBitmap *bitmap)
+{
+    GpStatus status;
+    BitmapData data;
+    HRESULT hr;
+    IWICImagingFactory *factory;
+    IWICPalette *wic_palette;
+
+    if (!bitmap) return InvalidParameter;
+    if (palette->Count < desired) return GenericError;
+
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat24bppRGB, &data);
+    if (status != Ok) return status;
+
+    hr = WICCreateImagingFactory_Proxy(WINCODEC_SDK_VERSION, &factory);
+    if (hr != S_OK)
+    {
+        GdipBitmapUnlockBits(bitmap, &data);
+        return hresult_to_status(hr);
+    }
+
+    hr = IWICImagingFactory_CreatePalette(factory, &wic_palette);
+    if (hr == S_OK)
+    {
+        IWICBitmap *bitmap;
+
+        /* PixelFormat24bppRGB actually stores the bitmap bits as BGR. */
+        hr = IWICImagingFactory_CreateBitmapFromMemory(factory, data.Width, data.Height,
+                &GUID_WICPixelFormat24bppBGR, data.Stride, data.Stride * data.Width, data.Scan0, &bitmap);
+        if (hr == S_OK)
+        {
+            hr = IWICPalette_InitializeFromBitmap(wic_palette, (IWICBitmapSource *)bitmap, desired, transparent);
+            if (hr == S_OK)
+            {
+                palette->Flags = 0;
+                IWICPalette_GetColorCount(wic_palette, &palette->Count);
+                IWICPalette_GetColors(wic_palette, palette->Count, palette->Entries, &palette->Count);
+            }
+
+            IWICBitmap_Release(bitmap);
+        }
+
+        IWICPalette_Release(wic_palette);
+    }
+
+    IWICImagingFactory_Release(factory);
+    GdipBitmapUnlockBits(bitmap, &data);
+
+    return hresult_to_status(hr);
+}
+
+/*****************************************************************************
+ * GdipInitializePalette [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipInitializePalette(ColorPalette *palette,
+    PaletteType type, INT desired, BOOL transparent, GpBitmap *bitmap)
+{
+    TRACE("(%p,%d,%d,%d,%p)\n", palette, type, desired, transparent, bitmap);
+
+    if (!palette) return InvalidParameter;
+
+    switch (type)
+    {
+    case PaletteTypeCustom:
+        return Ok;
+
+    case PaletteTypeOptimal:
+        return create_optimal_palette(palette, desired, transparent, bitmap);
+
+    /* WIC palette type enumeration matches these gdiplus enums */
+    case PaletteTypeFixedBW:
+    case PaletteTypeFixedHalftone8:
+    case PaletteTypeFixedHalftone27:
+    case PaletteTypeFixedHalftone64:
+    case PaletteTypeFixedHalftone125:
+    case PaletteTypeFixedHalftone216:
+    case PaletteTypeFixedHalftone252:
+    case PaletteTypeFixedHalftone256:
+    {
+        ColorPalette *wic_palette;
+        GpStatus status = Ok;
+
+        wic_palette = get_palette(NULL, type);
+        if (!wic_palette) return OutOfMemory;
+
+        if (palette->Count >= wic_palette->Count)
+        {
+            palette->Flags = wic_palette->Flags;
+            palette->Count = wic_palette->Count;
+            memcpy(palette->Entries, wic_palette->Entries, wic_palette->Count * sizeof(wic_palette->Entries[0]));
+        }
+        else
+            status = GenericError;
+
+        heap_free(wic_palette);
+
+        return status;
+    }
+
+    default:
+        FIXME("unknown palette type %d\n", type);
+        break;
+    }
+
+    return InvalidParameter;
 }

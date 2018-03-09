@@ -22,25 +22,18 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "windef.h"
+#include "wingdi.h"
+#include "winbase.h"
+#include "winuser.h"
 
-#define NONAMELESSUNION
-#define COBJMACROS
+#include "objbase.h"
+#include "ocidl.h"
+#include "wincodecsdk.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <objbase.h>
-#include <wincodecsdk.h>
-#include <gdiplus.h>
-
-#include <wine/unicode.h>
-#include <wine/list.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
+#include "gdiplus.h"
 
 #define GP_DEFAULT_PENSTYLE (PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT | PS_JOIN_MITER)
 #define MAX_ARC_PTS (13)
@@ -57,25 +50,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 #define GIF_DISPOSE_RESTORE_TO_BKGND 2
 #define GIF_DISPOSE_RESTORE_TO_PREV 3
 
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
 
 COLORREF ARGB2COLORREF(ARGB color) DECLSPEC_HIDDEN;
 HBITMAP ARGB2BMP(ARGB color) DECLSPEC_HIDDEN;
@@ -627,4 +601,4 @@ static inline void image_unlock(GpImage *image, BOOL unlock)
     if (unlock) image->busy = 0;
 }
 
-#endif /* __WINE_GP_PRIVATE_H_ */
+#endif
