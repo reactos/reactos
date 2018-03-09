@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
+#include "windef.h"
+#include "winuser.h"
 
 TEMPLATE1 DIALOG 5, 43, 227, 215
 STYLE WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS

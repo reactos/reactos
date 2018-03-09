@@ -19,7 +19,10 @@
  *
  */
 
-#include "precomp.h"
+#include "windows.h"
+#include "commdlg.h"
+#include "cderr.h"
+#include "wine/test.h"
 
 static UINT ID_FINDMSGSTRING;
 

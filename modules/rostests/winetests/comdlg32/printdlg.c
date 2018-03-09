@@ -20,7 +20,25 @@
  *
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "objbase.h"
+
+#include "cderr.h"
+#include "commdlg.h"
+#include "dlgs.h"
+#include "winspool.h"
+
+#include "wine/test.h"
 
 /* ########################### */
 

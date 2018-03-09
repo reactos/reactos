@@ -19,10 +19,11 @@
  *
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
 
-#include <wincon.h>
-#include <shlobj.h>
+#include "shlobj.h"
+#include "wine/test.h"
 
 #define IDT_CHANGEFILETYPE 500
 #define IDT_CLOSEDIALOG    501
