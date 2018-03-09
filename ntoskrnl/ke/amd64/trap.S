@@ -696,26 +696,35 @@ FUNC KiInterruptDispatch
     /* Increase interrupt count */
     inc dword ptr gs:[PcInterruptCount];
 
-    /* Load the address of the interrupt object into rcx */
-    mov rcx, [rbp + KTRAP_FRAME_ErrorCode]
+    /* Save rbx and rsi in the trap frame */
+    mov [rbp + KTRAP_FRAME_Rbx], rbx
+    mov [rbp + KTRAP_FRAME_Rsi], rsi
+
+    /* Load the address of the dispatch code into rbx */
+    mov rbx, [rbp + KTRAP_FRAME_ErrorCode]
 
     /* Substract offset of the DispatchCode member plus 6 for the call instruction */
-    sub rcx, KINTERRUPT_DispatchCode + 6
+    sub rbx, KINTERRUPT_DispatchCode + 6
 
+    /* Save the address of the InterruptListEntry in rsi */
+    lea rsi, [rbx + KINTERRUPT_InterruptListEntry]
+
+.DoDispatchInterrupt:
     /* Raise IRQL to SynchronizeIrql */
-    movzx rax, byte ptr [rcx + KINTERRUPT_SynchronizeIrql]
+    movzx rax, byte ptr [rbx + KINTERRUPT_SynchronizeIrql]
     mov cr8, rax
 
 #ifdef CONFIG_SMP
     /* Acquire interrupt lock */
-    mov r8, [rcx + KINTERRUPT_ActualLock]
+    mov r8, [rbx + KINTERRUPT_ActualLock]
 
     //KxAcquireSpinLock(Interrupt->ActualLock);
 #endif
 
     /* Call the ISR */
-    mov rdx, [rcx + KINTERRUPT_ServiceContext]
-    call qword ptr [rcx + KINTERRUPT_ServiceRoutine]
+    mov rcx, rbx
+    mov rdx, [rbx + KINTERRUPT_ServiceContext]
+    call qword ptr [rbx + KINTERRUPT_ServiceRoutine]
 
 #ifdef CONFIG_SMP
     /* Release interrupt lock */
@@ -725,6 +734,20 @@ FUNC KiInterruptDispatch
     /* Go back to old irql */
     movzx rax, byte ptr [rbp + KTRAP_FRAME_PreviousIrql]
     mov cr8, rax
+
+    /* Check for chained interrupts */
+    mov rax, [rbx + KINTERRUPT_InterruptListEntry]
+    cmp rax, rsi
+    je .Done
+
+    /* Load the next interrupt object into rbx and repeat */
+    lea rbx, [rax - KINTERRUPT_InterruptListEntry]
+    jmp .DoDispatchInterrupt
+
+.Done:
+    /* Restore rbx and rsi */
+    mov rbx, [rbp + KTRAP_FRAME_Rbx]
+    mov rsi, [rbp + KTRAP_FRAME_Rsi]
 
     /* Return */
     ExitTrap (TF_SAVE_ALL or TF_SEND_EOI)
