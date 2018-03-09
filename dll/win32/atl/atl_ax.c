@@ -18,12 +18,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <ole2.h>
-#include <exdisp.h>
-#include <shlwapi.h>
-#include <wine/atlwin.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winuser.h"
+#include "wine/debug.h"
+#include "objbase.h"
+#include "objidl.h"
+#include "ole2.h"
+#include "exdisp.h"
+#include "wine/atlbase.h"
+#include "atliface.h"
+#include "wine/atlwin.h"
+#include "shlwapi.h"
+
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
 typedef struct IOCS {
     IOleClientSite            IOleClientSite_iface;

@@ -19,10 +19,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
-
 #include <stdio.h>
-#include <rpcproxy.h>
+
+#define COBJMACROS
+
+#include "objidl.h"
+#include "rpcproxy.h"
+#include "wine/atlbase.h"
+#include "wine/atlwin.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
 extern HINSTANCE atl_instance;
 
