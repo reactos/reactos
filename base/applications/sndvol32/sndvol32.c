@@ -820,7 +820,8 @@ MainWindowProc(HWND hwnd,
                         }
 
                         /* destroy old status bar */
-                        DestroyWindow(MixerWindow->hStatusBar);
+                        if (MixerWindow->Mode == NORMAL_MODE)
+                            DestroyWindow(MixerWindow->hStatusBar);
 
                         /* update details */
                         Preferences.SelectedLine = Pref.SelectedLine;
@@ -835,18 +836,20 @@ MainWindowProc(HWND hwnd,
                         RebuildMixerWindowControls(&Preferences);
 
                         /* create status window */
-                        MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
-                                                                     NULL,
-                                                                     hwnd,
-                                                                     0);
-
-                        /* set status bar */
-                        if (MixerWindow->hStatusBar)
+                        if (MixerWindow->Mode == NORMAL_MODE)
                         {
-                            SendMessage(MixerWindow->hStatusBar,
-                                WM_SETTEXT,
-                                0,
-                                (LPARAM)szProduct);
+                            MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
+                                                                         NULL,
+                                                                         hwnd,
+                                                                         0);
+                            if (MixerWindow->hStatusBar)
+                            {
+                                /* Set status bar */
+                                SendMessage(MixerWindow->hStatusBar,
+                                    WM_SETTEXT,
+                                    0,
+                                    (LPARAM)szProduct);
+                            }
                         }
                     }
                     break;
@@ -999,16 +1002,19 @@ MainWindowProc(HWND hwnd,
                 }
 
                 /* create status window */
-                MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
-                                                             NULL,
-                                                             hwnd,
-                                                             0);
-                if (MixerWindow->hStatusBar)
+                if (MixerWindow->Mode == NORMAL_MODE)
                 {
-                    SendMessage(MixerWindow->hStatusBar,
-                                WM_SETTEXT,
-                                0,
-                                (LPARAM)szProduct);
+                    MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
+                                                                 NULL,
+                                                                 hwnd,
+                                                                 0);
+                    if (MixerWindow->hStatusBar)
+                    {
+                        SendMessage(MixerWindow->hStatusBar,
+                                    WM_SETTEXT,
+                                    0,
+                                   (LPARAM)szProduct);
+                    }
                 }
             }
             break;
@@ -1024,6 +1030,8 @@ MainWindowProc(HWND hwnd,
                 {
                     SndMixerDestroy(MixerWindow->Mixer);
                 }
+                if (MixerWindow->hFont)
+                    DeleteObject(MixerWindow->hFont);
                 HeapFree(hAppHeap, 0, MixerWindow);
             }
             break;
@@ -1080,7 +1088,9 @@ UnregisterApplicationClasses(VOID)
 }
 
 static HWND
-CreateApplicationWindow(VOID)
+CreateApplicationWindow(
+    WINDOW_MODE WindowMode,
+    BOOL bRecord)
 {
     HWND hWnd;
 
@@ -1091,6 +1101,9 @@ CreateApplicationWindow(VOID)
     {
         return NULL;
     }
+
+    MixerWindow->Mode = WindowMode;
+
 
     if (mixerGetNumDevs() > 0)
     {
@@ -1139,9 +1152,13 @@ CreateApplicationWindow(VOID)
 static
 BOOL
 HandleCommandLine(LPTSTR cmdline,
-                  PBOOL pTray)
+                  PWINDOW_MODE pMode,
+                  PBOOL pRecord)
 {
     TCHAR option;
+
+    *pRecord = FALSE;
+    *pMode = SMALL_MODE;
 
     while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
     {
@@ -1162,25 +1179,27 @@ HandleCommandLine(LPTSTR cmdline,
 
             case 'n': /* Normal size */
             case 'N':
-                *pTray = FALSE;
+                *pMode = NORMAL_MODE;
                 break;
 
             case 's': /* Small size */
             case 'S':
-                *pTray = FALSE;
+                *pMode = SMALL_MODE;
                 break;
 
             case 't': /* Tray size */
             case 'T':
-                *pTray = TRUE;
+                *pMode = TRAY_MODE;
                 break;
 
             case 'p': /* Play mode */
             case 'P':
+                *pRecord = FALSE;
                 break;
 
             case 'r': /* Record mode */
             case 'R':
+                *pRecord = TRUE;
                 break;
 
             default:
@@ -1200,7 +1219,8 @@ _tWinMain(HINSTANCE hInstance,
     MSG Msg;
     int Ret = 1;
     INITCOMMONCONTROLSEX Controls;
-    BOOL bTray = FALSE;
+    WINDOW_MODE WindowMode = SMALL_MODE;
+    BOOL bRecord = FALSE;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(nCmdShow);
@@ -1208,7 +1228,7 @@ _tWinMain(HINSTANCE hInstance,
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
 
-    HandleCommandLine(lpszCmdLine, &bTray);
+    HandleCommandLine(lpszCmdLine, &WindowMode, &bRecord);
 
     if (InitAppConfig())
     {
@@ -1225,7 +1245,7 @@ _tWinMain(HINSTANCE hInstance,
 
         InitCommonControlsEx(&Controls);
 
-        if (bTray)
+        if (WindowMode == TRAY_MODE)
         {
             DialogBoxParam(hAppInstance,
                            MAKEINTRESOURCE(IDD_TRAY_CTRL),
@@ -1237,7 +1257,7 @@ _tWinMain(HINSTANCE hInstance,
         {
             if (RegisterApplicationClasses())
             {
-                hMainWnd = CreateApplicationWindow();
+                hMainWnd = CreateApplicationWindow(WindowMode, bRecord);
                 if (hMainWnd != NULL)
                 {
                     BOOL bRet;

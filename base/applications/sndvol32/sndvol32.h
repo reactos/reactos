@@ -5,6 +5,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
 #include <winuser.h>
 #include <mmsystem.h>
 #include <commctrl.h>
@@ -13,6 +14,13 @@
 
 #include "resources.h"
 
+typedef enum _WINDOW_MODE
+{
+    NORMAL_MODE,
+    SMALL_MODE,
+    TRAY_MODE
+} WINDOW_MODE, *PWINDOW_MODE;
+
 typedef struct _MIXER_WINDOW
 {
   HWND hWnd;
@@ -20,9 +28,11 @@ typedef struct _MIXER_WINDOW
   struct _SND_MIXER *Mixer;
   UINT SelectedLine;
   UINT WindowCount;
-  HWND * Window;
+  HWND *Window;
 
-
+    WINDOW_MODE Mode;
+    RECT rect;
+    HFONT hFont;
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
