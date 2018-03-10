@@ -100,9 +100,9 @@ static CACHE_MANAGER_CALLBACKS Callbacks = {
 };
 
 static CC_FILE_SIZES FileSizes = {
-    .AllocationSize.QuadPart = 0x4000,
-    .FileSize.QuadPart = 0x4000,
-    .ValidDataLength.QuadPart = 0x4000,
+    RTL_CONSTANT_LARGE_INTEGER((LONGLONG)0x4000), // .AllocationSize
+    RTL_CONSTANT_LARGE_INTEGER((LONGLONG)0x4000), // .FileSize
+    RTL_CONSTANT_LARGE_INTEGER((LONGLONG)0x4000)  // .ValidDataLength
 };
 
 static
