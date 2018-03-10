@@ -138,16 +138,6 @@ else()
     #useful stuff!
     include(CMakeParseArguments)
 
-    # Do some cleanup
-    file(REMOVE
-        ${REACTOS_BINARY_DIR}/dependencies.graphml
-        ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt
-        ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt
-        ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt
-        ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt
-        ${REACTOS_BINARY_DIR}/boot/ros_cab.txt
-        ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt)
-
     if(NOT NEW_STYLE_BUILD)
         if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
             set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
