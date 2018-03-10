@@ -262,7 +262,7 @@ ConSrvTermInitTerminal(IN OUT PTERMINAL This,
     FrontEnd->Console = Console;
 
     /** HACK HACK!! Copy FrontEnd into the console!! **/
-    DPRINT1("Using FrontEndIFace HACK(1), should be removed after proper implementation!\n");
+    DPRINT("Using FrontEndIFace HACK(1), should be removed after proper implementation!\n");
     Console->FrontEndIFace = *FrontEnd;
 
     Status = FrontEnd->Vtbl->InitFrontEnd(FrontEnd, FrontEnd->Console);
