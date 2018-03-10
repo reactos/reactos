@@ -1373,6 +1373,7 @@ typedef BOOL
 #define CALG_OID_INFO_CNG_ONLY   0xffffffff
 #define CALG_OID_INFO_PARAMETERS 0xfffffffe
 
+#if defined(__GNUC__)
 #define CRYPT_OID_INFO_HASH_PARAMETERS_ALGORITHM     (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','H','a','s','h','P','a','r','a','m','e','t','e','r','s',0}
 #define CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM      (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','P','a','r','a','m','e','t','e','r','s',0}
 #define CRYPT_OID_INFO_MGF1_PARAMETERS_ALGORITHM     (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','M','g','f','1','P','a','r','a','m','e','t','e','r','s',0}
@@ -1380,6 +1381,23 @@ typedef BOOL
 #define CRYPT_OID_INFO_OAEP_PARAMETERS_ALGORITHM     (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','O','A','E','P','P','a','r','a','m','e','t','e','r','s',0}
 #define CRYPT_OID_INFO_ECC_WRAP_PARAMETERS_ALGORITHM (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','W','r','a','p','P','a','r','a','m','e','t','e','r','s',0}
 #define CRYPT_OID_INFO_NO_PARAMETERS_ALGORITHM       (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','N','o','P','a','r','a','m','e','t','e','r','s',0}
+#elif defined(_MSC_VER)
+#define CRYPT_OID_INFO_HASH_PARAMETERS_ALGORITHM     L"CryptOIDInfoHashParameters"
+#define CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM      L"CryptOIDInfoECCParameters"
+#define CRYPT_OID_INFO_MGF1_PARAMETERS_ALGORITHM     L"CryptOIDInfoMgf1Parameters"
+#define CRYPT_OID_INFO_NO_SIGN_ALGORITHM             L"CryptOIDInfoNoSign"
+#define CRYPT_OID_INFO_OAEP_PARAMETERS_ALGORITHM     L"CryptOIDInfoOAEPParameters"
+#define CRYPT_OID_INFO_ECC_WRAP_PARAMETERS_ALGORITHM L"CryptOIDInfoECCWrapParameters"
+#define CRYPT_OID_INFO_NO_PARAMETERS_ALGORITHM       L"CryptOIDInfoNoParameters"
+#else
+static const WCHAR CRYPT_OID_INFO_HASH_PARAMETERS_ALGORITHM[] =     {'C','r','y','p','t','O','I','D','I','n','f','o','H','a','s','h','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM[] =      {'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_MGF1_PARAMETERS_ALGORITHM[] =     {'C','r','y','p','t','O','I','D','I','n','f','o','M','g','f','1','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_NO_SIGN_ALGORITHM[] =             {'C','r','y','p','t','O','I','D','I','n','f','o','N','o','S','i','g','n',0};
+static const WCHAR CRYPT_OID_INFO_OAEP_PARAMETERS_ALGORITHM[] =     {'C','r','y','p','t','O','I','D','I','n','f','o','O','A','E','P','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_ECC_WRAP_PARAMETERS_ALGORITHM[] = {'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','W','r','a','p','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_NO_PARAMETERS_ALGORITHM[] =       {'C','r','y','p','t','O','I','D','I','n','f','o','N','o','P','a','r','a','m','e','t','e','r','s',0};
+#endif
 
 typedef struct _CRYPT_OID_INFO {
     DWORD   cbSize;
