@@ -1232,6 +1232,15 @@ IopCloseFile(
     IN ULONG SystemHandleCount
 );
 
+NTSTATUS
+NTAPI
+IopAcquireFileObjectLock(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN Alertable,
+    _Out_ PBOOLEAN LockFailed
+);
+
 PVOID
 NTAPI
 IoGetFileObjectFilterContext(
