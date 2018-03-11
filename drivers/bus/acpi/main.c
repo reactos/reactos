@@ -311,8 +311,7 @@ ACPIDispatchDeviceControl(
 
               status = STATUS_PENDING;
               break;
-               
-           // FIXME: When CORE-14134 gets fixed, IOCTL_BATTERY_QUERY_TAG case should be removed
+           
            case IOCTL_BATTERY_QUERY_TAG:
               DPRINT("Unsupported IOCTL with ID 294040.\n");
               break;
