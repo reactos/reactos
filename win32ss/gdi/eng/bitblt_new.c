@@ -410,10 +410,11 @@ IntEngBitBlt(
     ASSERT(prclTrg);
 
     /* Clip the target rect to the extents of the target surface */
-    rcClipped.left = max(prclTrg->left, 0);
-    rcClipped.top = max(prclTrg->top, 0);
-    rcClipped.right = min(prclTrg->right, psoTrg->sizlBitmap.cx);
-    rcClipped.bottom = min(prclTrg->bottom, psoTrg->sizlBitmap.cy);
+    if (!RECTL_bClipRectBySize(&rcClipped, prclTrg, &psoTrg->sizlBitmap))
+    {
+        /* Nothing left */
+        return TRUE;
+    }
 
     /* If no clip object is given, use trivial one */
     if (!pco) pco = (CLIPOBJ*)&gxcoTrivial;

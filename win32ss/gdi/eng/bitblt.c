@@ -619,20 +619,26 @@ IntEngBitBlt(
     BOOL bResult;
     RECTL rclClipped;
     RECTL rclSrc;
+    RECTL rclSrcClipped;
     POINTL ptlBrush;
     PFN_DrvBitBlt pfnBitBlt;
 
+    /* Sanity checks */
+    ASSERT(IS_VALID_ROP4(Rop4));
     ASSERT(psoTrg);
+
     psurfTrg = CONTAINING_RECORD(psoTrg, SURFACE, SurfObj);
 
-    /* FIXME: Should we really allow to pass non-well-ordered rects? */
+    /* Get the target rect and make it well ordered */
     rclClipped = *prclTrg;
     RECTL_vMakeWellOrdered(&rclClipped);
 
-    //DPRINT1("Rop4 : 0x%08x\n", Rop4);
-
-    /* Sanity check */
-    ASSERT(IS_VALID_ROP4(Rop4));
+    /* Clip the target rect against the bounds of the target surface */
+    if (!RECTL_bClipRectBySize(&rclClipped, &rclClipped, &psoTrg->sizlBitmap))
+    {
+        /* Nothing left */
+        return TRUE;
+    }
 
     if (pco)
     {
@@ -660,7 +666,21 @@ IntEngBitBlt(
         rclSrc.top = pptlSrc->y + rclClipped.top - prclTrg->top;
         rclSrc.right = rclSrc.left + rclClipped.right - rclClipped.left;
         rclSrc.bottom = rclSrc.top + rclClipped.bottom - rclClipped.top;
-        pptlSrc = (PPOINTL)&rclSrc;
+
+        /* Clip the source rect against the size of the source surface */
+        if (!RECTL_bClipRectBySize(&rclSrcClipped, &rclSrc, &psoSrc->sizlBitmap))
+        {
+            /* Nothing left */
+            return TRUE;
+        }
+
+        /* Fix up target rect */
+        rclClipped.left += (rclSrcClipped.left - rclSrc.left);
+        rclClipped.top += (rclSrcClipped.top - rclSrc.top);
+        rclClipped.right -= (rclSrc.right - rclSrcClipped.right);
+        rclClipped.bottom -= (rclSrc.bottom - rclSrcClipped.bottom);
+
+        pptlSrc = (PPOINTL)&rclSrcClipped;
     }
     else
     {
