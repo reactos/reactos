@@ -358,7 +358,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     HFONT OldFont, NewFont;
     BOOLEAN IsUnderline;
 
-    SetRectEmpty(&rcFramebuffer);
+    SetRectEmpty(rcFramebuffer);
 
     if (Buffer->Buffer == NULL) return;
 

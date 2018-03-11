@@ -129,7 +129,7 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
     PCONSRV_CONSOLE Console = Buffer->Header.Console;
     // ASSERT(Console == GuiData->Console);
 
-    SetRectEmpty(&rcFramebuffer);
+    SetRectEmpty(rcFramebuffer);
 
     if (Buffer->BitMap == NULL) return;
 
