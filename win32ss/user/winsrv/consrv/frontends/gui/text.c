@@ -358,6 +358,8 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     HFONT OldFont, NewFont;
     BOOLEAN IsUnderline;
 
+    SetRectEmpty(&rcFramebuffer);
+
     if (Buffer->Buffer == NULL) return;
 
     if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
