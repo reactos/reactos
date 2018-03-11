@@ -8,7 +8,7 @@ endif()
 
 if(POLICY CMP0026)
     # Allow use of the LOCATION property
-    cmake_policy(SET CMP0026 OLD)
+    cmake_policy(SET CMP0026 NEW)
 endif()
 
 if(POLICY CMP0051)
