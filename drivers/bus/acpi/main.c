@@ -313,7 +313,7 @@ ACPIDispatchDeviceControl(
               break;
 
            default:
-              DPRINT1("Unsupported IOCTL: %x\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
+              DPRINT("Unsupported IOCTL: %x\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
               break;
        }
     }
