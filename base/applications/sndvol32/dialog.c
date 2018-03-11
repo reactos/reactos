@@ -404,7 +404,7 @@ EnumConnectionsCallback(
           /* is it selected */
           if (Flags != 0x4)
           {
-              int dlgId = (PrefContext->MixerWindow->Mode == SMALL_MODE) ? IDD_SMALL_MASTER : IDD_VOLUME_CTRL;
+              int dlgId = (PrefContext->MixerWindow->Mode == SMALL_MODE) ? IDD_SMALL_MASTER : IDD_NORMAL_MASTER;
 
               /* load dialog resource */
               LoadDialog(hAppInstance, PrefContext->MixerWindow, MAKEINTRESOURCE(dlgId), PrefContext->Count);

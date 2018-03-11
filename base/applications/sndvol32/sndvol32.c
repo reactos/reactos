@@ -1248,7 +1248,7 @@ _tWinMain(HINSTANCE hInstance,
         if (WindowMode == TRAY_MODE)
         {
             DialogBoxParam(hAppInstance,
-                           MAKEINTRESOURCE(IDD_TRAY_CTRL),
+                           MAKEINTRESOURCE(IDD_TRAY_MASTER),
                            NULL,
                            TrayDlgProc,
                            0);
