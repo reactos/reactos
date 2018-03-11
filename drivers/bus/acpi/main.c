@@ -313,7 +313,7 @@ ACPIDispatchDeviceControl(
               break;
            
            case IOCTL_BATTERY_QUERY_TAG:
-              DPRINT("Unsupported IOCTL with ID 294040.\n");
+              DPRINT("IOCTL_BATTERY_QUERY_TAG is not supported!\n");
               break;
 
            default:
