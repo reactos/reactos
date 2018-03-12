@@ -311,6 +311,10 @@ ACPIDispatchDeviceControl(
 
               status = STATUS_PENDING;
               break;
+           
+           case IOCTL_BATTERY_QUERY_TAG:
+              DPRINT("IOCTL_BATTERY_QUERY_TAG is not supported!\n");
+              break;
 
            default:
               DPRINT1("Unsupported IOCTL: %x\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
