@@ -89,13 +89,6 @@ AllocW32Process(IN  PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
-#define FreeW32Process(/*Process*/ W32Process) \
-do { \
-    /*PPROCESSINFO W32Process = PsGetProcessWin32Process(Process);*/ \
-    /*ASSERT(W32Process);*/ \
-    IntDereferenceProcessInfo(W32Process); \
-} while(0)
-
 /*
  * Called from IntDereferenceProcessInfo
  */
@@ -332,7 +325,7 @@ ExitProcessCallback(PEPROCESS Process)
     ppiCurrent->peProcess = NULL;
 
     /* Finally, dereference */
-    FreeW32Process(/*Process*/ ppiCurrent); // IntDereferenceProcessInfo(ppiCurrent);
+    IntDereferenceProcessInfo(ppiCurrent);
 
     return STATUS_SUCCESS;
 }
@@ -397,18 +390,12 @@ AllocW32Thread(IN  PETHREAD Thread,
     RtlZeroMemory(ptiCurrent, sizeof(*ptiCurrent));
 
     PsSetThreadWin32Thread(Thread, ptiCurrent, NULL);
+    ObReferenceObject(Thread);
     IntReferenceThreadInfo(ptiCurrent);
 
     *W32Thread = ptiCurrent;
     return STATUS_SUCCESS;
 }
-
-#define FreeW32Thread(/*Thread*/ W32Thread) \
-do { \
-    /*PTHREADINFO W32Thread = PsGetThreadWin32Thread(Thread);*/ \
-    /*ASSERT(W32Thread);*/ \
-    IntDereferenceThreadInfo(W32Thread); \
-} while(0)
 
 /*
  * Called from IntDereferenceThreadInfo
@@ -427,6 +414,8 @@ UserDeleteW32Thread(PTHREADINFO pti)
    }
 
    MsqCleanupThreadMsgs(pti);
+
+   ObDereferenceObject(pti->pEThread);
 
    ExFreePoolWithTag(pti, USERTAG_THREADINFO);
 
@@ -845,10 +834,9 @@ ExitThreadCallback(PETHREAD Thread)
 
     /* The thread is dying */
     PsSetThreadWin32Thread(Thread /*ptiCurrent->pEThread*/, NULL, ptiCurrent);
-    ptiCurrent->pEThread = NULL;
 
-    /* Free the THREADINFO */
-    FreeW32Thread(/*Thread*/ ptiCurrent); // IntDereferenceThreadInfo(ptiCurrent);
+    /* Dereference the THREADINFO */
+    IntDereferenceThreadInfo(ptiCurrent);
 
     return STATUS_SUCCESS;
 }
