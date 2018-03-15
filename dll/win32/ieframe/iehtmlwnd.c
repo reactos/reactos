@@ -18,6 +18,10 @@
 
 #include "ieframe.h"
 
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
+
 static inline IEHTMLWindow *impl_from_IHTMLWindow2(IHTMLWindow2 *iface)
 {
     return CONTAINING_RECORD(iface, IEHTMLWindow, IHTMLWindow2_iface);

@@ -18,7 +18,15 @@
 
 #include "ieframe.h"
 
-#include <rpcproxy.h>
+#include "initguid.h"
+#include "rpcproxy.h"
+#include "shlguid.h"
+#include "isguids.h"
+#include "ieautomation.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 LONG module_ref = 0;
 HINSTANCE ieframe_instance;

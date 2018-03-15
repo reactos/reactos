@@ -18,6 +18,10 @@
 
 #include "ieframe.h"
 
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
+
 static inline DocHost *impl_from_IOleInPlaceFrame(IOleInPlaceFrame *iface)
 {
     return CONTAINING_RECORD(iface, DocHost, IOleInPlaceFrame_iface);
