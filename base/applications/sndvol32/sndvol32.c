@@ -651,14 +651,14 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
     }
 
     /* now go through all controls and compare control ids */
-    for(Index = 0; Index < ControlCount; Index++)
+    for (Index = 0; Index < ControlCount; Index++)
     {
         if (Context->bVertical)
         {
             if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
             {
                 /* FIXME: give me granularity */
-                DWORD Step = 0x10000 / 5;
+                DWORD Step = 0x10000 / VOLUME_STEPS;
 
                 /* set up details */
                 uDetails.dwValue = 0x10000 - Step * Context->SliderPos;
@@ -722,7 +722,7 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
     }
 
     /* now go through all controls and compare control ids */
-    for(Index = 0; Index < ControlCount; Index++)
+    for (Index = 0; Index < ControlCount; Index++)
     {
         if (Control[Index].dwControlID == PtrToUlong(Context))
         {
@@ -746,10 +746,10 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
                 {
                     /* update dialog control */
                     DWORD Position;
-                    DWORD Step = 0x10000 / 5;
+                    DWORD Step = 0x10000 / VOLUME_STEPS;
 
                     /* FIXME: give me granularity */
-                    Position = 5 - (Details.dwValue / Step);
+                    Position = VOLUME_STEPS - (Details.dwValue / Step);
 
                     /* update volume control slider */
                     UpdateDialogLineSliderControl(&Preferences, Line, Control[Index].dwControlID, IDC_LINE_SLIDER_VERT, Position);
@@ -761,7 +761,6 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
 
     /* free controls */
     HeapFree(GetProcessHeap(), 0, Control);
-
 
     /* done */
     return TRUE;

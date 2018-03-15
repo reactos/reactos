@@ -14,6 +14,13 @@
 
 #include "resources.h"
 
+#define VOLUME_STEPS       500
+#define VOLUME_TICKS         5
+#define VOLUME_PAGE_SIZE   100
+#define BALANCE_STEPS       64
+#define BALANCE_TICKS        1
+#define BALANCE_PAGE_SIZE   12
+
 typedef enum _WINDOW_MODE
 {
     NORMAL_MODE,

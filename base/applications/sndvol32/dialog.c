@@ -79,6 +79,7 @@ AddDialogControl(
     LPWSTR ClassName, WindowName = NULL;
     HWND hwnd;
     DWORD wID;
+    INT nSteps, i;
 
     /* initialize client rectangle */
     rect.left = DialogItem->x;
@@ -145,6 +146,11 @@ AddDialogControl(
         wID = DialogItem->id * (DialogIdMultiplier + 1);
 
     }
+
+    /* Hack: Disable TBS_AUTOTICKS because it looks ugly */
+    if (!wcsicmp(ClassName, L"msctls_trackbar32"))
+        DialogItem->style &= ~TBS_AUTOTICKS;
+
     /* now create the window */
     hwnd = CreateWindowExW(DialogItem->dwExtendedStyle,
                            ClassName,
@@ -168,18 +174,46 @@ AddDialogControl(
     /* check if this the track bar */
     if (!wcsicmp(ClassName, L"msctls_trackbar32"))
     {
-        /* set up range */
-        SendMessage(hwnd, TBM_SETRANGE, (WPARAM) TRUE, (LPARAM) MAKELONG(0, 5));
+        if (DialogItem->style & TBS_VERT)
+        {
+            /* Vertical trackbar: Volume */
 
-        /* set up page size */
-        SendMessage(hwnd, TBM_SETPAGESIZE, 0, (LPARAM) 1);
+            /* set up range */
+            SendMessage(hwnd, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, VOLUME_STEPS));
 
-        /* set available range */
-        //SendMessage(hwnd, TBM_SETSEL, (WPARAM) FALSE, (LPARAM) MAKELONG(0, 5));
+            /* set up page size */
+            SendMessage(hwnd, TBM_SETPAGESIZE, 0, (LPARAM)VOLUME_PAGE_SIZE);
 
-        /* set position */
-        SendMessage(hwnd, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 0);
+            /* set position */
+            SendMessage(hwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)0);
 
+            /* Calculate and set ticks */
+            nSteps = (VOLUME_STEPS / (VOLUME_TICKS + 1));
+            if (VOLUME_STEPS % (VOLUME_TICKS + 1) != 0)
+                nSteps++;
+            for (i = nSteps; i < VOLUME_STEPS; i += nSteps)
+                SendMessage(hwnd, TBM_SETTIC, 0, (LPARAM)i);
+        }
+        else
+        {
+            /* Horizontal trackbar: Balance */
+
+            /* set up range */
+            SendMessage(hwnd, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, BALANCE_STEPS));
+
+            /* set up page size */
+            SendMessage(hwnd, TBM_SETPAGESIZE, 0, (LPARAM)BALANCE_PAGE_SIZE);
+
+            /* set position */
+            SendMessage(hwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)BALANCE_STEPS / 2);
+
+            /* Calculate and set ticks */
+            nSteps = (BALANCE_STEPS / (BALANCE_TICKS + 1));
+            if (BALANCE_STEPS % (BALANCE_TICKS + 1) != 0)
+                nSteps++;
+            for (i = nSteps; i < BALANCE_STEPS; i += nSteps)
+                SendMessage(hwnd, TBM_SETTIC, 0, (LPARAM)i);
+        }
     }
     else if (!wcsicmp(ClassName, L"static") || !wcsicmp(ClassName, L"button"))
     {
@@ -419,64 +453,64 @@ EnumConnectionsCallback(
               if (SndMixerQueryControls(Mixer, &ControlCount, Line, &Control) != FALSE)
               {
                   /* now go through all controls and update their states */
-                  for(Index = 0; Index < ControlCount; Index++)
+                  for(Index = 0; Index < Line->cControls; Index++)
                   {
-                     if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_SWITCH)
-                     {
-                         MIXERCONTROLDETAILS_BOOLEAN Details;
+                      if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_SWITCH)
+                      {
+                          MIXERCONTROLDETAILS_BOOLEAN Details;
 
-                         /* get volume control details */
-                         if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&Details) != -1)
-                         {
-                             /* update dialog control */
-                             wID = (PrefContext->Count + 1) * IDC_LINE_SWITCH;
+                          /* get volume control details */
+                          if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&Details) != -1)
+                          {
+                              /* update dialog control */
+                              wID = (PrefContext->Count + 1) * IDC_LINE_SWITCH;
 
-                            /* get dialog control */
-                            hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+                              /* get dialog control */
+                              hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
 
-                            if (hDlgCtrl != NULL)
-                            {
-                                /* check state */
-                                if (SendMessageW(hDlgCtrl, BM_GETCHECK, 0, 0) != Details.fValue)
-                                {
-                                    /* update control state */
-                                    SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)Details.fValue, 0);
-                                }
-                            }
-                         }
-                     }
-                     else if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
-                     {
-                         MIXERCONTROLDETAILS_UNSIGNED Details;
+                              if (hDlgCtrl != NULL)
+                              {
+                                  /* check state */
+                                  if (SendMessageW(hDlgCtrl, BM_GETCHECK, 0, 0) != Details.fValue)
+                                  {
+                                      /* update control state */
+                                      SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)Details.fValue, 0);
+                                  }
+                              }
+                          }
+                      }
+                      else if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
+                      {
+                          MIXERCONTROLDETAILS_UNSIGNED Details;
 
-                         /* get volume control details */
-                         if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&Details) != -1)
-                         {
-                             /* update dialog control */
-                             DWORD Position;
-                             DWORD Step = 0x10000 / 5;
+                          /* get volume control details */
+                          if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&Details) != -1)
+                          {
+                              /* update dialog control */
+                              DWORD Position;
+                              DWORD Step = 0x10000 / VOLUME_STEPS;
 
-                             /* FIXME: give me granularity */
-                             Position = 5 - (Details.dwValue / Step);
+                              /* FIXME: give me granularity */
+                              Position = VOLUME_STEPS - (Details.dwValue / Step);
 
-                             /* FIXME support left - right slider */
-                             wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_VERT;
+                              /* FIXME support left - right slider */
+                              wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_VERT;
 
-                             /* get dialog control */
-                             hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+                              /* get dialog control */
+                              hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
 
-                             if (hDlgCtrl != NULL)
-                             {
-                                 /* check state */
-                                 LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
-                                 if (OldPosition != Position)
-                                 {
-                                     /* update control state */
-                                     SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, Position + Index);
-                                 }
-                             }
-                        }
-                     }
+                              if (hDlgCtrl != NULL)
+                              {
+                                  /* check state */
+                                  LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
+                                  if (OldPosition != Position)
+                                  {
+                                      /* update control state */
+                                      SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, Position + Index);
+                                  }
+                              }
+                          }
+                      }
                   }
 
                   /* free controls */
