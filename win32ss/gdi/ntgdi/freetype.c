@@ -2091,7 +2091,6 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
 {
     FT_SfntName Name;
     INT i, Count, BestIndex, Score, BestScore;
-    WCHAR Buf[LF_FULLFACESIZE];
     FT_Error Error;
     NTSTATUS Status = STATUS_NOT_FOUND;
     ANSI_STRING AnsiName;
@@ -2150,11 +2149,6 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
             continue;   /* invalid string */
         }
 
-        if (sizeof(Buf) < Name.string_len + sizeof(UNICODE_NULL))
-        {
-            continue;   /* name too long */
-        }
-
         if (Name.language_id == LangID)
         {
             Score = 30;
@@ -2188,15 +2182,22 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
         if (!Error)
         {
             /* NOTE: Name.string is not null-terminated */
-            RtlCopyMemory(Buf, Name.string, Name.string_len);
-            Buf[Name.string_len / sizeof(WCHAR)] = UNICODE_NULL;
+            UNICODE_STRING Tmp;
+            Tmp.Buffer = (PWCH)Name.string;
+            Tmp.Length = Tmp.MaximumLength = Name.string_len;
 
-            /* Convert UTF-16 big endian to little endian */
-            SwapEndian(Buf, Name.string_len);
+            pNameW->Length = 0;
+            pNameW->MaximumLength = Name.string_len + sizeof(WCHAR);
+            pNameW->Buffer = ExAllocatePoolWithTag(PagedPool, pNameW->MaximumLength, TAG_USTR);
 
-            if (RtlCreateUnicodeString(pNameW, Buf))
+            if (pNameW->Buffer)
             {
-                Status = STATUS_SUCCESS;
+                Status = RtlAppendUnicodeStringToString(pNameW, &Tmp);
+                if (Status == STATUS_SUCCESS)
+                {
+                    /* Convert UTF-16 big endian to little endian */
+                    SwapEndian(pNameW->Buffer, pNameW->Length);
+                }
             }
             else
             {
