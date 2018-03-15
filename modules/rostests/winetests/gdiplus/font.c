@@ -1259,10 +1259,7 @@ START_TEST(font)
 
     test_long_name();
     test_font_transform();
-    if (!winetest_interactive)
-        skip("ROSTESTS-154: Skipping test_font_substitution because of improper error handling\n");
-    else
-        test_font_substitution();
+    test_font_substitution();
     test_font_metrics();
     test_createfont();
     test_logfont();
