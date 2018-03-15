@@ -17,6 +17,11 @@
  */
 
 #include "hhctrl.h"
+#include "stream.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 void strbuf_init(strbuf_t *buf)
 {

@@ -69,7 +69,7 @@ reactos/dll/win32/faultrep            # Synced to WineStaging-2.9
 reactos/dll/win32/fontsub             # Synced to WineStaging-2.9
 reactos/dll/win32/fusion              # Synced to WineStaging-3.3
 reactos/dll/win32/gdiplus             # Synced to WineStaging-3.3
-reactos/dll/win32/hhctrl.ocx          # Synced to Wine-3.0
+reactos/dll/win32/hhctrl.ocx          # Synced to WineStaging-3.3
 reactos/dll/win32/hlink               # Synced to Wine-3.0
 reactos/dll/win32/hnetcfg             # Synced to Wine-3.0
 reactos/dll/win32/httpapi             # Synced to WineStaging-2.9
