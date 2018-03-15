@@ -12,7 +12,7 @@ list(APPEND SOURCE
     pop3transport.c
     protocol.c
     smtptransport.c
-    inetcomm_private.h)
+    precomp.h)
 
 add_library(inetcomm SHARED
     ${SOURCE}
@@ -24,5 +24,5 @@ add_library(inetcomm SHARED
 set_module_type(inetcomm win32dll)
 target_link_libraries(inetcomm uuid wine)
 add_importlibs(inetcomm ole32 oleaut32 ws2_32 user32 propsys urlmon msvcrt kernel32 ntdll)
-add_pch(inetcomm inetcomm_private.h SOURCE)
+add_pch(inetcomm precomp.h SOURCE)
 add_cd_file(TARGET inetcomm DESTINATION reactos/system32 FOR all)

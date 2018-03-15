@@ -19,10 +19,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "objbase.h"
+#include "ole2.h"
+#include "mimeole.h"
+#ifdef __REACTOS__
+#include <winreg.h>
+#endif
+#include "propvarutil.h"
+
+#include "wine/heap.h"
+#include "wine/list.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
 #include "inetcomm_private.h"
 
-#include <winreg.h>
-#include <propvarutil.h>
+WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
 typedef struct
 {
