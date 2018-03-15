@@ -19,7 +19,19 @@
  *
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <assert.h>
+
+#include "rpc.h"
+#include "rpcndr.h"
+#include "wine/winternl.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+#include "rpc_binding.h"
+#include "rpc_assoc.h"
+#include "rpc_message.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 

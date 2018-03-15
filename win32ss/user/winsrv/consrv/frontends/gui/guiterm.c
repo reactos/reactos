@@ -229,13 +229,10 @@ GuiConsoleInputThread(PVOID Param)
                  * that the window that we want to destroy doesn't exist yet.
                  * So first empty the message queue.
                  */
-                /*
                 while (PeekMessageW(&TempMsg, NULL, 0, 0, PM_REMOVE))
                 {
-                    TranslateMessage(&TempMsg);
                     DispatchMessageW(&TempMsg);
-                }*/
-                while (PeekMessageW(&TempMsg, NULL, 0, 0, PM_REMOVE)) ;
+                }
 
                 if (GuiData->hWindow == NULL) continue;
 

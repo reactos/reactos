@@ -59,18 +59,18 @@ bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
     {
     case CREATE_PROCESS_DEBUG_EVENT:
     {
-        data.ProcessPath.resize(MAX_PATH);
-        DWORD len = GetModuleFileNameExA(evt.u.CreateProcessInfo.hProcess, NULL, &data.ProcessPath[0], data.ProcessPath.size());
+        data.ProcessPath.resize(MAX_PATH*2);
+        DWORD len = GetModuleFileNameExW(evt.u.CreateProcessInfo.hProcess, NULL, &data.ProcessPath[0], data.ProcessPath.size());
         if (len)
         {
             data.ProcessPath.resize(len);
-            std::string::size_type pos = data.ProcessPath.find_last_of("\\/");
+            std::string::size_type pos = data.ProcessPath.find_last_of(L"\\/");
             if (pos != std::string::npos)
                 data.ProcessName = data.ProcessPath.substr(pos+1);
         }
         else
         {
-            data.ProcessPath = "??";
+            data.ProcessPath = L"??";
         }
         if (data.ProcessName.empty())
             data.ProcessName = data.ProcessPath;

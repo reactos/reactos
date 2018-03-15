@@ -1,3 +1,4 @@
+
 #ifndef _ACTIVEDS_PCH_
 #define _ACTIVEDS_PCH_
 
@@ -14,4 +15,4 @@
 #include <winbase.h>
 #include <objbase.h>
 
-#endif /* _ACTIVEDS_PCH_ */
+#endif /* !_ACTIVEDS_PCH_ */

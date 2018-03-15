@@ -18,7 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include "d3drm_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3drm);
 
 static inline struct d3drm_texture *impl_from_IDirect3DRMTexture(IDirect3DRMTexture *iface)
 {
@@ -44,7 +49,7 @@ static void d3drm_texture_destroy(struct d3drm_texture *texture)
         IDirect3DRM_Release(texture->d3drm);
     if (texture->surface)
         IDirectDrawSurface_Release(texture->surface);
-    HeapFree(GetProcessHeap(), 0, texture);
+    heap_free(texture);
 }
 
 static BOOL d3drm_validate_image(D3DRMIMAGE *image)
@@ -1114,7 +1119,7 @@ HRESULT d3drm_texture_create(struct d3drm_texture **texture, IDirect3DRM *d3drm)
 
     TRACE("texture %p.\n", texture);
 
-    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->IDirect3DRMTexture_iface.lpVtbl = &d3drm_texture1_vtbl;

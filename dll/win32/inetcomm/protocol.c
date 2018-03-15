@@ -16,9 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "inetcomm_private.h"
+#define COBJMACROS
+#define NONAMELESSUNION
 
 #include <assert.h>
+
+#include "mimeole.h"
+#include "inetcomm_private.h"
+
+#include "wine/debug.h"
+#include "wine/heap.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
 typedef struct {
     IUnknown IUnknown_inner;
@@ -477,8 +487,7 @@ static HRESULT WINAPI MimeHtmlProtocol_Start(IInternetProtocol *iface, const WCH
     if((bindf & (BINDF_ASYNCHRONOUS|BINDF_FROMURLMON|BINDF_NEEDFILE)) != (BINDF_ASYNCHRONOUS|BINDF_FROMURLMON|BINDF_NEEDFILE))
         FIXME("unsupported bindf %x\n", bindf);
 
-    This->sink = pOIProtSink;
-    IInternetProtocolSink_AddRef(This->sink);
+    IInternetProtocolSink_AddRef(This->sink = pOIProtSink);
 
     binding = heap_alloc(FIELD_OFFSET(MimeHtmlBinding,  url[url.mhtml_len+1]));
     if(!binding)

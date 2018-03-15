@@ -135,6 +135,7 @@ list(APPEND KMTEST_SOURCE
     kernel32/FileAttributes_user.c
     kernel32/FindFile_user.c
     ntos_cc/CcCopyRead_user.c
+    ntos_cc/CcMapData_user.c
     ntos_io/IoCreateFile_user.c
     ntos_io/IoDeviceObject_user.c
     ntos_io/IoReadWrite_user.c
@@ -173,7 +174,8 @@ add_dependencies(kmtest_drivers
     ntcreatesection_drv
     poirp_drv
     tcpip_drv
-    cccopyread_drv)
+    cccopyread_drv
+    ccmapdata_drv)
 
 add_custom_target(kmtest_all)
 add_dependencies(kmtest_all kmtest_drivers kmtest)

@@ -17,12 +17,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
+
+#define COBJMACROS
+#define CONST_VTABLE
+#include "wine/test.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "oaidl.h"
+#include "ocidl.h"
+#include "mlang.h"
+#include "shlwapi.h"
+#include "docobj.h"
+#include "shobjidl.h"
+#include "shlobj.h"
 
 /* Function ptrs for ordinal calls */
 static HMODULE hShlwapi;
-static BOOL is_win2k_and_lower;
-static BOOL is_win9x;
 
 static int (WINAPI *pSHSearchMapInt)(const int*,const int*,int,int);
 static HRESULT (WINAPI *pGetAcceptLanguagesA)(LPSTR,LPDWORD);
@@ -73,12 +86,6 @@ typedef struct SHELL_USER_PERMISSION {
 } SHELL_USER_PERMISSION, *PSHELL_USER_PERMISSION;
 
 static SECURITY_DESCRIPTOR* (WINAPI *pGetShellSecurityDescriptor)(const SHELL_USER_PERMISSION**,int);
-
-static HMODULE hmlang;
-static HRESULT (WINAPI *pLcidToRfc1766A)(LCID, LPSTR, INT);
-
-static HMODULE hshell32;
-static HRESULT (WINAPI *pSHGetDesktopFolder)(IShellFolder**);
 
 static const CHAR ie_international[] = {
     'S','o','f','t','w','a','r','e','\\',
@@ -192,11 +199,6 @@ static void test_GetAcceptLanguagesA(void)
     LPCSTR entry;
     INT i = 0;
 
-    if (!pGetAcceptLanguagesA) {
-        win_skip("GetAcceptLanguagesA is not available\n");
-        return;
-    }
-
     lcid = GetUserDefaultLCID();
 
     /* Get the original Value */
@@ -242,10 +244,8 @@ static void test_GetAcceptLanguagesA(void)
     if (lstrcmpA(buffer, language)) {
         /* some windows versions use "lang" or "lang-country" as default */
         language[0] = 0;
-        if (pLcidToRfc1766A) {
-            hr = pLcidToRfc1766A(lcid, language, sizeof(language));
-            ok(hr == S_OK, "LcidToRfc1766A returned 0x%x and %s\n", hr, language);
-        }
+        hr = LcidToRfc1766A(lcid, language, sizeof(language));
+        ok(hr == S_OK, "LcidToRfc1766A returned 0x%x and %s\n", hr, language);
     }
 
     ok(!lstrcmpA(buffer, language),
@@ -556,7 +556,6 @@ static void test_alloc_shared_remote(DWORD procid, HANDLE hmem)
     SetLastError(0xdeadbeef);
     hmem2 = pSHMapHandle(NULL, procid, GetCurrentProcessId(), 0, 0);
     ok(hmem2 == NULL, "expected NULL, got new handle\n");
-todo_wine
     ok(GetLastError() == 0xdeadbeef, "last error should not have changed, got %u\n", GetLastError());
 
     hmem2 = pSHMapHandle(hmem, procid, GetCurrentProcessId(), 0, 0);
@@ -699,40 +698,20 @@ static void test_GetShellSecurityDescriptor(void)
         &supCurrentUserFull, &supEveryoneDenied,
     };
     SECURITY_DESCRIPTOR* psd;
-    void *pChrCmpIW = GetProcAddress(hShlwapi, "ChrCmpIW");
 
-    if(!pGetShellSecurityDescriptor)
+    if(!pGetShellSecurityDescriptor) /* vista and later */
     {
         win_skip("GetShellSecurityDescriptor not available\n");
         return;
     }
 
-    if(pChrCmpIW && pChrCmpIW == pGetShellSecurityDescriptor) /* win2k */
-    {
-        win_skip("Skipping for GetShellSecurityDescriptor, same ordinal used for ChrCmpIW\n");
-        return;
-    }
-
     psd = pGetShellSecurityDescriptor(NULL, 2);
-    ok(psd==NULL ||
-       broken(psd==INVALID_HANDLE_VALUE), /* IE5 */
-       "GetShellSecurityDescriptor should fail\n");
+    ok(psd==NULL, "GetShellSecurityDescriptor should fail\n");
     psd = pGetShellSecurityDescriptor(rgsup, 0);
     ok(psd==NULL, "GetShellSecurityDescriptor should fail, got %p\n", psd);
 
     SetLastError(0xdeadbeef);
     psd = pGetShellSecurityDescriptor(rgsup, 2);
-    if (psd == NULL && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-    {
-        /* The previous calls to GetShellSecurityDescriptor don't set the last error */
-        win_skip("GetShellSecurityDescriptor is not implemented\n");
-        return;
-    }
-    if (psd == INVALID_HANDLE_VALUE)
-    {
-        win_skip("GetShellSecurityDescriptor is broken on IE5\n");
-        return;
-    }
     ok(psd!=NULL, "GetShellSecurityDescriptor failed\n");
     if (psd!=NULL)
     {
@@ -806,9 +785,6 @@ static void test_SHPackDispParams(void)
     DISPPARAMS params;
     VARIANT vars[10];
     HRESULT hres;
-
-    if(!pSHPackDispParams)
-        win_skip("SHPackSidpParams not available\n");
 
     memset(&params, 0xc0, sizeof(params));
     memset(vars, 0xc0, sizeof(vars));
@@ -1480,12 +1456,6 @@ static void test_IConnectionPoint(void)
     DISPPARAMS params;
     VARIANT vars[10];
 
-    if (!pIConnectionPoint_SimpleInvoke || !pConnectToConnectionPoint)
-    {
-        win_skip("IConnectionPoint Apis not present\n");
-        return;
-    }
-
     container = HeapAlloc(GetProcessHeap(),0,sizeof(Contain));
     container->IConnectionPointContainer_iface.lpVtbl = &contain_vtbl;
     container->refCount = 1;
@@ -1504,18 +1474,13 @@ static void test_IConnectionPoint(void)
     rc = pIConnectionPoint_SimpleInvoke(point,0xa0,NULL);
     ok(rc == S_OK, "pConnectToConnectionPoint failed with %x\n",rc);
 
-    if (pSHPackDispParams)
-    {
-        memset(&params, 0xc0, sizeof(params));
-        memset(vars, 0xc0, sizeof(vars));
-        rc = pSHPackDispParams(&params, vars, 2, VT_I4, 0xdeadbeef, VT_BSTR, 0xdeadcafe);
-        ok(rc == S_OK, "SHPackDispParams failed: %08x\n", rc);
+    memset(&params, 0xc0, sizeof(params));
+    memset(vars, 0xc0, sizeof(vars));
+    rc = pSHPackDispParams(&params, vars, 2, VT_I4, 0xdeadbeef, VT_BSTR, 0xdeadcafe);
+    ok(rc == S_OK, "SHPackDispParams failed: %08x\n", rc);
 
-        rc = pIConnectionPoint_SimpleInvoke(point,0xa1,&params);
-        ok(rc == S_OK, "pConnectToConnectionPoint failed with %x\n",rc);
-    }
-    else
-        win_skip("pSHPackDispParams not present\n");
+    rc = pIConnectionPoint_SimpleInvoke(point,0xa1,&params);
+    ok(rc == S_OK, "pConnectToConnectionPoint failed with %x\n",rc);
 
     rc = pConnectToConnectionPoint(NULL, &IID_NULL, FALSE, (IUnknown*)container, &cookie, NULL);
     ok(rc == S_OK, "pConnectToConnectionPoint failed with %x\n",rc);
@@ -1619,12 +1584,6 @@ static void test_SHPropertyBag_ReadLONG(void)
     LONG out;
     static const WCHAR szName1[] = {'n','a','m','e','1',0};
 
-    if (!pSHPropertyBag_ReadLONG)
-    {
-        win_skip("SHPropertyBag_ReadLONG not present\n");
-        return;
-    }
-
     pb = HeapAlloc(GetProcessHeap(),0,sizeof(PropBag));
     pb->refCount = 1;
     pb->IPropertyBag_iface.lpVtbl = &prop_vtbl;
@@ -1650,12 +1609,6 @@ static void test_SHSetWindowBits(void)
     DWORD style, styleold;
     WNDCLASSA clsA;
 
-    if(!pSHSetWindowBits)
-    {
-        win_skip("SHSetWindowBits is not available\n");
-        return;
-    }
-
     clsA.style = 0;
     clsA.lpfnWndProc = DefWindowProcA;
     clsA.cbClsExtra = 0;
@@ -1676,8 +1629,7 @@ static void test_SHSetWindowBits(void)
     SetLastError(0xdeadbeef);
     style = pSHSetWindowBits(NULL, GWL_STYLE, 0, 0);
     ok(style == 0, "expected 0 retval, got %d\n", style);
-    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE ||
-        broken(GetLastError() == 0xdeadbeef), /* Win9x/WinMe */
+    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE,
         "expected ERROR_INVALID_WINDOW_HANDLE, got %d\n", GetLastError());
 
     /* zero mask, zero flags */
@@ -1727,12 +1679,6 @@ static void test_SHFormatDateTimeA(void)
     DWORD flags;
     INT ret;
 
-    if(!pSHFormatDateTimeA)
-    {
-        win_skip("pSHFormatDateTimeA isn't available\n");
-        return;
-    }
-
 if (0)
 {
     /* crashes on native */
@@ -1777,8 +1723,7 @@ if (0)
     SetLastError(0xdeadbeef);
     ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
     ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
-    ok(GetLastError() == 0xdeadbeef ||
-        broken(GetLastError() == ERROR_INVALID_FLAGS), /* Win9x/WinMe */
+    ok(GetLastError() == 0xdeadbeef,
         "expected 0xdeadbeef, got %d\n", GetLastError());
 
     /* now check returned strings */
@@ -1889,12 +1834,6 @@ static void test_SHFormatDateTimeW(void)
 #define UNICODE_LTR_MARK 0x200e
 #define UNICODE_RTL_MARK 0x200f
 
-    if(!pSHFormatDateTimeW)
-    {
-        win_skip("pSHFormatDateTimeW isn't available\n");
-        return;
-    }
-
 if (0)
 {
     /* crashes on native */
@@ -1940,8 +1879,7 @@ if (0)
     ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
     ok(ret == lstrlenW(buff)+1 || ret == lstrlenW(buff),
        "expected %d or %d, got %d\n", lstrlenW(buff)+1, lstrlenW(buff), ret);
-    ok(GetLastError() == 0xdeadbeef ||
-        broken(GetLastError() == ERROR_INVALID_FLAGS), /* Win9x/WinMe/NT4 */
+    ok(GetLastError() == 0xdeadbeef,
         "expected 0xdeadbeef, got %d\n", GetLastError());
 
     /* now check returned strings */
@@ -1951,11 +1889,6 @@ if (0)
        "expected %d or %d, got %d\n", lstrlenW(buff)+1, lstrlenW(buff), ret);
     SetLastError(0xdeadbeef);
     ret = GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
-    if (ret == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-    {
-        win_skip("Needed W-functions are not implemented\n");
-        return;
-    }
     ok(ret == lstrlenW(buff2)+1, "expected %d, got %d\n", lstrlenW(buff2)+1, ret);
     ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
 
@@ -2103,23 +2036,10 @@ static void test_SHGetObjectCompatFlags(void)
     };
 
     static const char compat_path[] = "Software\\Microsoft\\Windows\\CurrentVersion\\ShellCompatibility\\Objects";
-    void *pColorAdjustLuma = GetProcAddress(hShlwapi, "ColorAdjustLuma");
     CHAR keyA[39]; /* {CLSID} */
     HKEY root;
     DWORD ret;
     int i;
-
-    if (!pSHGetObjectCompatFlags)
-    {
-        win_skip("SHGetObjectCompatFlags isn't available\n");
-        return;
-    }
-
-    if (pColorAdjustLuma && pColorAdjustLuma == pSHGetObjectCompatFlags) /* win2k */
-    {
-        win_skip("Skipping SHGetObjectCompatFlags, same ordinal used for ColorAdjustLuma\n");
-        return;
-    }
 
     /* null args */
     ret = pSHGetObjectCompatFlags(NULL, NULL);
@@ -2377,14 +2297,6 @@ static void test_IUnknown_QueryServiceExec(void)
     call_trace_t trace_expected;
     HRESULT hr;
 
-    /* on <=W2K platforms same ordinal used for another export with different
-       prototype, so skipping using this indirect condition */
-    if (is_win2k_and_lower)
-    {
-        win_skip("IUnknown_QueryServiceExec is not available\n");
-        return;
-    }
-
     provider = IServiceProviderImpl_Construct();
 
     /* null source pointer */
@@ -2494,14 +2406,6 @@ static void test_IUnknown_ProfferService(void)
     HRESULT hr;
     DWORD cookie;
 
-    /* on <=W2K platforms same ordinal used for another export with different
-       prototype, so skipping using this indirect condition */
-    if (is_win2k_and_lower)
-    {
-        win_skip("IUnknown_ProfferService is not available\n");
-        return;
-    }
-
     provider = IServiceProviderImpl_Construct();
     proff = IProfferServiceImpl_Construct();
 
@@ -2564,12 +2468,6 @@ static void test_SHCreateWorkerWindowA(void)
     HWND hwnd;
     LONG_PTR ret;
     BOOL res;
-
-    if (is_win2k_and_lower)
-    {
-        win_skip("SHCreateWorkerWindowA not available\n");
-        return;
-    }
 
     hwnd = pSHCreateWorkerWindowA(0, NULL, 0, 0, 0, 0);
     ok(hwnd != 0, "expected window\n");
@@ -2739,7 +2637,7 @@ static void test_SHIShellFolder_EnumObjects(void)
     HRESULT hres;
     IShellFolder *folder;
 
-    if(!pSHIShellFolder_EnumObjects || is_win2k_and_lower){
+    if(!pSHIShellFolder_EnumObjects){ /* win7 and later */
         win_skip("SHIShellFolder_EnumObjects not available\n");
         return;
     }
@@ -2756,7 +2654,7 @@ static void test_SHIShellFolder_EnumObjects(void)
     ok(enm == (IEnumIDList*)0xcafebabe, "Didn't get expected enumerator location, instead: %p\n", enm);
 
     /* SHIShellFolder_EnumObjects isn't strict about the IShellFolder object */
-    hres = pSHGetDesktopFolder(&folder);
+    hres = SHGetDesktopFolder(&folder);
     ok(hres == S_OK, "SHGetDesktopFolder failed: 0x%08x\n", hres);
 
     enm = NULL;
@@ -2825,11 +2723,6 @@ static void test_SHGetIniString(void)
     static const WCHAR testpathW[] = {'C',':','\\','t','e','s','t','.','i','n','i',0};
     WCHAR pathW[MAX_PATH];
 
-    if(!pSHGetIniStringW || is_win2k_and_lower){
-        win_skip("SHGetIniStringW is not available\n");
-        return;
-    }
-
     lstrcpyW(pathW, testpathW);
 
     if (!write_inifile(pathW))
@@ -2880,11 +2773,6 @@ static void test_SHSetIniString(void)
     static const WCHAR NewKeyW[] = {'N','e','w','K','e','y',0};
     static const WCHAR AValueW[] = {'A','V','a','l','u','e',0};
 
-    if(!pSHSetIniStringW || is_win2k_and_lower){
-        win_skip("SHSetIniStringW is not available\n");
-        return;
-    }
-
     if (!write_inifile(TestIniW))
         return;
 
@@ -2929,29 +2817,9 @@ static void test_SHGetShellKey(void)
     static const WCHAR ShellFoldersW[] = { 'S','h','e','l','l',' ','F','o','l','d','e','r','s',0 };
     static const WCHAR WineTestW[] = { 'W','i','n','e','T','e','s','t',0 };
 
-    void *pPathBuildRootW = GetProcAddress(hShlwapi, "PathBuildRootW");
     DWORD *alloc_data, data, size;
     HKEY hkey;
     HRESULT hres;
-
-    if (!pSHGetShellKey)
-    {
-        win_skip("SHGetShellKey(ordinal 491) isn't available\n");
-        return;
-    }
-
-    /* some win2k */
-    if (pPathBuildRootW && pPathBuildRootW == pSHGetShellKey)
-    {
-        win_skip("SHGetShellKey(ordinal 491) used for PathBuildRootW\n");
-        return;
-    }
-
-    if (is_win9x || is_win2k_and_lower)
-    {
-        win_skip("Ordinal 491 used for another call, skipping SHGetShellKey tests\n");
-        return;
-    }
 
     /* Vista+ limits SHKEY enumeration values */
     SetLastError(0xdeadbeef);
@@ -2990,12 +2858,6 @@ static void test_SHGetShellKey(void)
     }
     ok(hkey != NULL, "Can't create key\n");
     RegCloseKey(hkey);
-
-    if (!pSKGetValueW || !pSKSetValueW || !pSKDeleteValueW || !pSKAllocValueW)
-    {
-        win_skip("SKGetValueW, SKSetValueW, SKDeleteValueW or SKAllocValueW not available\n");
-        return;
-    }
 
     size = sizeof(data);
     hres = pSKGetValueW(SHKEY_Root_HKLM, WineTestW, NULL, NULL, &data, &size);
@@ -3083,12 +2945,6 @@ static void test_SHSetParentHwnd(void)
 {
     HWND hwnd, hwnd2, ret;
     DWORD style;
-
-    if (!pSHSetParentHwnd)
-    {
-        win_skip("SHSetParentHwnd not available\n");
-        return;
-    }
 
     hwnd = CreateWindowA("Button", "", WS_VISIBLE, 0, 0, 10, 10, NULL, NULL, NULL, NULL);
     ok(hwnd != NULL, "got %p\n", hwnd);
@@ -3264,14 +3120,6 @@ START_TEST(ordinal)
     int argc;
 
     hShlwapi = GetModuleHandleA("shlwapi.dll");
-    is_win2k_and_lower = GetProcAddress(hShlwapi, "StrChrNW") == 0;
-    is_win9x = GetProcAddress(hShlwapi, (LPSTR)99) == 0; /* StrCpyNXA */
-
-    /* SHCreateStreamOnFileEx was introduced in shlwapi v6.0 */
-    if(!GetProcAddress(hShlwapi, "SHCreateStreamOnFileEx")){
-        win_skip("Too old shlwapi version\n");
-        return;
-    }
 
     init_pointers();
 
@@ -3285,12 +3133,6 @@ START_TEST(ordinal)
         test_alloc_shared_remote(procid, hmem);
         return;
     }
-
-    hmlang = LoadLibraryA("mlang.dll");
-    pLcidToRfc1766A = (void *)GetProcAddress(hmlang, "LcidToRfc1766A");
-
-    hshell32 = LoadLibraryA("shell32.dll");
-    pSHGetDesktopFolder = (void *)GetProcAddress(hshell32, "SHGetDesktopFolder");
 
     test_GetAcceptLanguagesA();
     test_SHSearchMapInt();
@@ -3314,7 +3156,4 @@ START_TEST(ordinal)
     test_SHSetParentHwnd();
     test_IUnknown_GetClassID();
     test_DllGetVersion();
-
-    FreeLibrary(hshell32);
-    FreeLibrary(hmlang);
 }

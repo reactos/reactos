@@ -16,9 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
-
 #include "resource.h"
 
 #include <reactos/manifest_dll.rc>
@@ -77,7 +74,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION_STR "8.0.6001.18702"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"
 
 /* @makedep: ietoolbar.bmp */
 IDB_IETOOLBAR BITMAP "resources/ietoolbar.bmp"

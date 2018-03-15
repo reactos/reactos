@@ -213,7 +213,9 @@ AvailableStrings::AvailableStrings()
     if (GetStorageDirectory(szPath))
     {
         szAppsPath = szPath + L"\\rapps\\";
-        szCabPath = szPath + L"\\rappmgr.cab";
+        szCabName = L"rappmgr.cab";
+        szCabDir = szPath;
+        szCabPath = (szCabDir + L"\\") + szCabName;
         szSearchPath = szAppsPath + L"*.txt";
     }
 }
@@ -282,7 +284,9 @@ BOOL CAvailableApps::UpdateAppsDB()
 
     CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
-    if (!ExtractFilesFromCab(m_Strings.szCabPath, m_Strings.szAppsPath))
+    if (!ExtractFilesFromCab(m_Strings.szCabName, 
+                             m_Strings.szCabDir,
+                             m_Strings.szAppsPath))
     {
         return FALSE;
     }

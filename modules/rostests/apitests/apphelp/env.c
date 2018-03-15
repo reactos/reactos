@@ -685,14 +685,38 @@ static void Test_Shimdata(SDBQUERYRESULT_VISTA* result, const WCHAR* szLayer)
             investigate when we have support for multible db's! */
         if (dwSize == sizeof(ShimData_Win2k3))
         {
-            /* Fake it for now, so the memcmp works. */
             SDBQUERYRESULT_2k3* input = (SDBQUERYRESULT_2k3*)result;
             SDBQUERYRESULT_2k3* output = (SDBQUERYRESULT_2k3*)&result2;
-            ok(output->dwCustomSDBMap == 0, "Expected output->dwCustomSDBMap to be 0, was %u for %s\n", output->dwCustomSDBMap, wine_dbgstr_w(szLayer));
+            const GUID rgGuidDB0 = {0x11111111, 0x1111, 0x1111, {0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11}};
+
+            // Check expected data.
+            ok(input->dwLayerCount == 1,
+               "Expected input->dwLayerCount to be 1, was %u for %s\n",
+               input->dwLayerCount, wine_dbgstr_w(szLayer));
+            ok(input->dwCustomSDBMap == 1,
+               "Expected input->dwCustomSDBMap to be 1, was %u for %s\n",
+               input->dwCustomSDBMap, wine_dbgstr_w(szLayer));
+            ok(IsEqualGUID(&input->rgGuidDB[0], &rgGuidDB0),
+               "Expected input->rgGuidDB[0] to be %s, was %s for %s\n",
+               wine_dbgstr_guid(&rgGuidDB0), wine_dbgstr_guid(&input->rgGuidDB[0]), wine_dbgstr_w(szLayer));
+
+            // Check missing data.
+            ok(output->dwLayerCount == 0,
+               "Expected output->dwLayerCount to be 0, was %u for %s\n",
+               output->dwLayerCount, wine_dbgstr_w(szLayer));
+            ok(output->dwCustomSDBMap == 0,
+               "Expected output->dwCustomSDBMap to be 0, was %u for %s\n",
+               output->dwCustomSDBMap, wine_dbgstr_w(szLayer));
+            ok(IsEqualGUID(&output->rgGuidDB[0], &empty_result.rgGuidDB[0]),
+               "Expected output->rgGuidDB[0] to be empty, was %s for %s\n",
+               wine_dbgstr_guid(&output->rgGuidDB[0]), wine_dbgstr_w(szLayer));
+
+            // Fake it for now, so the memcmp works.
+            output->dwLayerCount = input->dwLayerCount;
             output->dwCustomSDBMap = input->dwCustomSDBMap;
             output->rgGuidDB[0] = input->rgGuidDB[0];
         }
-        ok(!memcmp(&result2, result, sizeof(result)), "Expected result2 to equal result for %s\n", wine_dbgstr_w(szLayer));
+        ok(!memcmp(&result2, result, sizeof(*result)), "Expected result2 to equal result for %s\n", wine_dbgstr_w(szLayer));
 
         RtlFreeHeap(GetProcessHeap(), 0, pData);
     }

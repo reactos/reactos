@@ -723,7 +723,8 @@ HRESULT STDMETHODCALLTYPE CMenuBand::GetShellFolder(DWORD *pdwFlags, LPITEMIDLIS
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    *theResult = 0;
+    if (theResult)
+        *theResult = 0;
 
     if (uMsg == WM_WININICHANGE && wParam == SPI_SETFLATMENU)
     {

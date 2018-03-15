@@ -16,7 +16,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "objbase.h"
+#include "ocidl.h"
+#include "initguid.h"
+
 #include "wincodecs_private.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 extern HRESULT WINAPI WIC_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
 
@@ -32,6 +49,7 @@ static const classinfo wic_classes[] = {
     {&CLSID_WICPngEncoder, PngEncoder_CreateInstance},
     {&CLSID_WICBmpEncoder, BmpEncoder_CreateInstance},
     {&CLSID_WICGifDecoder, GifDecoder_CreateInstance},
+    {&CLSID_WICGifEncoder, GifEncoder_CreateInstance},
     {&CLSID_WICIcoDecoder, IcoDecoder_CreateInstance},
     {&CLSID_WICJpegDecoder, JpegDecoder_CreateInstance},
     {&CLSID_WICJpegEncoder, JpegEncoder_CreateInstance},

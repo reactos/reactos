@@ -23,6 +23,19 @@
  * - Many flags, options and whatnot are unimplemented.
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <assert.h>
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "wincrypt.h"
+#include "wine/debug.h"
+#include "wine/exception.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -1371,6 +1384,13 @@ BOOL WINAPI CertRegisterPhysicalStore(const void *pvSystemStore, DWORD dwFlags,
     return FALSE;
 }
 
+BOOL WINAPI CertUnregisterPhysicalStore(const void *pvSystemStore, DWORD dwFlags,
+ LPCWSTR pwszStoreName)
+{
+    FIXME("(%p, %08x, %s): stub\n", pvSystemStore, dwFlags, debugstr_w(pwszStoreName));
+    return TRUE;
+}
+
 BOOL WINAPI CertRegisterSystemStore(const void *pvSystemStore, DWORD dwFlags,
   PCERT_SYSTEM_STORE_INFO pStoreInfo, void *pvReserved)
 {
@@ -1394,7 +1414,7 @@ BOOL WINAPI CertRegisterSystemStore(const void *pvSystemStore, DWORD dwFlags,
     return FALSE;
 }
 
-BOOL WINAPI CertUnregisterSystemStore(void *pvSystemStore, DWORD dwFlags)
+BOOL WINAPI CertUnregisterSystemStore(const void *pvSystemStore, DWORD dwFlags)
 {
     HCERTSTORE hstore;
 

@@ -137,7 +137,7 @@ OnQueryInitialFocus(
 {
     HWND hwnd = GetDlgItem(hwndDlg, pLogonData->bLocalSystem ? IDC_LOGON_SYSTEMACCOUNT : IDC_LOGON_THISACCOUNT);
 
-    SetWindowLong(hwndDlg, DWL_MSGRESULT, (LPARAM)hwnd);
+    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, (LPARAM)hwnd);
 
     return TRUE;
 }

@@ -18,7 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include "d3drm_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3drm);
 
 static inline struct d3drm_light *impl_from_IDirect3DRMLight(IDirect3DRMLight *iface)
 {
@@ -65,7 +70,7 @@ static ULONG WINAPI d3drm_light_Release(IDirect3DRMLight *iface)
     {
         d3drm_object_cleanup((IDirect3DRMObject *)iface, &light->obj);
         IDirect3DRM_Release(light->d3drm);
-        HeapFree(GetProcessHeap(), 0, light);
+        heap_free(light);
     }
 
     return refcount;
@@ -373,7 +378,7 @@ HRESULT d3drm_light_create(struct d3drm_light **light, IDirect3DRM *d3drm)
 
     TRACE("light %p.\n", light);
 
-    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->IDirect3DRMLight_iface.lpVtbl = &d3drm_light_vtbl;

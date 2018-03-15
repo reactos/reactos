@@ -18,11 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+#define INITGUID
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "guiddef.h"
+#include "fusion.h"
+#include "corerror.h"
+#include "strsafe.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
 #include "fusionpriv.h"
 
-#include <assert.h>
-#include <winuser.h>
-#include <strsafe.h>
+WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
 typedef struct {
     IAssemblyName IAssemblyName_iface;
@@ -100,12 +115,12 @@ static ULONG WINAPI IAssemblyNameImpl_Release(IAssemblyName *iface)
 
     if (!refCount)
     {
-        HeapFree(GetProcessHeap(), 0, This->path);
-        HeapFree(GetProcessHeap(), 0, This->displayname);
-        HeapFree(GetProcessHeap(), 0, This->name);
-        HeapFree(GetProcessHeap(), 0, This->culture);
-        HeapFree(GetProcessHeap(), 0, This->procarch);
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This->path);
+        heap_free(This->displayname);
+        heap_free(This->name);
+        heap_free(This->culture);
+        heap_free(This->procarch);
+        heap_free(This);
     }
 
     return refCount;
@@ -648,7 +663,7 @@ static WCHAR *parse_value( const WCHAR *str, unsigned int len )
     BOOL quoted = FALSE;
     unsigned int i = 0;
 
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (!(ret = heap_alloc( (len + 1) * sizeof(WCHAR) ))) return NULL;
     if (*p == '\"')
     {
         quoted = TRUE;
@@ -657,7 +672,7 @@ static WCHAR *parse_value( const WCHAR *str, unsigned int len )
     while (*p && *p != '\"') ret[i++] = *p++;
     if ((quoted && *p != '\"') || (!quoted && *p == '\"'))
     {
-        HeapFree( GetProcessHeap(), 0, ret );
+        heap_free( ret );
         return NULL;
     }
     ret[i] = 0;
@@ -754,7 +769,7 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
 
             hr = parse_procarch( name, name->procarch );
         }
-        HeapFree( GetProcessHeap(), 0, value );
+        heap_free( value );
 
         if (FAILED(hr))
             goto done;
@@ -763,13 +778,13 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
     }
 
 done:
-    HeapFree(GetProcessHeap(), 0, save);
+    heap_free(save);
     if (FAILED(hr))
     {
-        HeapFree(GetProcessHeap(), 0, name->displayname);
-        HeapFree(GetProcessHeap(), 0, name->name);
-        HeapFree(GetProcessHeap(), 0, name->culture);
-        HeapFree(GetProcessHeap(), 0, name->procarch);
+        heap_free(name->displayname);
+        heap_free(name->name);
+        heap_free(name->culture);
+        heap_free(name->procarch);
     }
     return hr;
 }
@@ -794,9 +809,7 @@ HRESULT WINAPI CreateAssemblyNameObject(IAssemblyName **ppAssemblyNameObj,
         (!szAssemblyName || !*szAssemblyName))
         return E_INVALIDARG;
 
-    name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAssemblyNameImpl));
-    if (!name)
-        return E_OUTOFMEMORY;
+    if (!(name = heap_alloc_zero(sizeof(*name)))) return E_OUTOFMEMORY;
 
     name->IAssemblyName_iface.lpVtbl = &AssemblyNameVtbl;
     name->ref = 1;
@@ -804,7 +817,7 @@ HRESULT WINAPI CreateAssemblyNameObject(IAssemblyName **ppAssemblyNameObj,
     hr = parse_display_name(name, szAssemblyName);
     if (FAILED(hr))
     {
-        HeapFree(GetProcessHeap(), 0, name);
+        heap_free(name);
         return hr;
     }
 

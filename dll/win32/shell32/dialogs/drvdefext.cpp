@@ -460,7 +460,7 @@ CDrvDefExt::GeneralPageProc(
 
                     if (GetDlgItemTextW(hwndDlg, 14000, wszBuf, _countof(wszBuf)))
                         SetVolumeLabelW(pDrvDefExt->m_wszDrive, wszBuf);
-                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
                     return TRUE;
                 }
             }

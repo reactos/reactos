@@ -20,7 +20,12 @@
 
 #include "hlink_private.h"
 
-#include <shellapi.h>
+#include "shellapi.h"
+#include "hlguids.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(hlink);
 
 #define HLINK_SAVE_MAGIC    0x00000002
 #define HLINK_SAVE_MONIKER_PRESENT      0x01
@@ -488,7 +493,7 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
         if (phbc)
         {
             r = IHlinkBrowseContext_GetObject(phbc, mon, TRUE, &unk);
-            if (r == S_FALSE)
+            if (r != S_OK)
             {
                 CreateBindCtx(0, &bcxt);
                 RegisterBindStatusCallback(bcxt, pbsc, NULL, 0);

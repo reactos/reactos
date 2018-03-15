@@ -16,9 +16,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winerror.h"
+#include "ole2.h"
+#include "rpcproxy.h"
+
+#include "initguid.h"
+#include "vfw.h"
 #include "avifile_private.h"
 
-#include <rpcproxy.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
 HMODULE AVIFILE_hModule   = NULL;
 
@@ -166,12 +182,18 @@ LPCWSTR AVIFILE_BasenameW(LPCWSTR szPath)
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID pclsid, REFIID piid, LPVOID *ppv)
 {
+  HRESULT hr;
+
   TRACE("(%s,%s,%p)\n", debugstr_guid(pclsid), debugstr_guid(piid), ppv);
 
   if (pclsid == NULL || piid == NULL || ppv == NULL)
     return E_FAIL;
 
-  return AVIFILE_CreateClassFactory(pclsid,piid,ppv);
+  hr = AVIFILE_CreateClassFactory(pclsid,piid,ppv);
+  if (SUCCEEDED(hr))
+    return hr;
+
+  return avifil32_DllGetClassObject(pclsid,piid,ppv);
 }
 
 /*****************************************************************************

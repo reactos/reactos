@@ -19,7 +19,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include "d3dx9_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 /* Returns TRUE if num is a power of 2, FALSE if not, or if 0 */
 static BOOL is_pow2(UINT num)
@@ -195,7 +200,7 @@ static D3DFORMAT get_luminance_replacement_format(D3DFORMAT format)
     };
     unsigned int i;
 
-    for (i = 0; i < sizeof(luminance_replacements) / sizeof(luminance_replacements[0]); ++i)
+    for (i = 0; i < ARRAY_SIZE(luminance_replacements); ++i)
         if (format == luminance_replacements[i].luminance_format)
             return luminance_replacements[i].replacement_format;
     return format;
@@ -330,10 +335,10 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
 
     if (fmt->block_width != 1 || fmt->block_height != 1)
     {
-        if (w < fmt->block_width)
-            w = fmt->block_width;
-        if (h < fmt->block_height)
-            h = fmt->block_height;
+        if (w % fmt->block_width)
+            w += fmt->block_width - w % fmt->block_width;
+        if (h % fmt->block_height)
+            h += fmt->block_height - h % fmt->block_height;
     }
 
     if ((caps.TextureCaps & D3DPTEXTURECAPS_POW2) && (!is_pow2(w)))
@@ -552,7 +557,7 @@ static D3DFORMAT get_alpha_replacement_format(D3DFORMAT format)
     };
     unsigned int i;
 
-    for (i = 0; i < sizeof(replacement_formats) / sizeof(replacement_formats[0]); ++i)
+    for (i = 0; i < ARRAY_SIZE(replacement_formats); ++i)
         if (replacement_formats[i].orig_format == format)
             return replacement_formats[i].replacement_format;
     return format;
@@ -1887,10 +1892,7 @@ HRESULT WINAPI D3DXSaveTextureToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
     if (!dst_buffer || !src_texture) return D3DERR_INVALIDCALL;
 
     if (file_format == D3DXIFF_DDS)
-    {
-        FIXME("DDS file format isn't supported yet\n");
-        return E_NOTIMPL;
-    }
+        return save_dds_texture_to_memory(dst_buffer, src_texture, src_palette);
 
     type = IDirect3DBaseTexture9_GetType(src_texture);
     switch (type)

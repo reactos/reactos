@@ -22,7 +22,7 @@ list(APPEND SOURCE
     urlhist.c
     view.c
     webbrowser.c
-    ieframe.h
+    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/ieframe_stubs.c)
 
 add_library(ieframe SHARED
@@ -42,5 +42,5 @@ add_dependencies(ieframe stdole2)
 set_module_type(ieframe win32dll)
 target_link_libraries(ieframe uuid wine)
 add_importlibs(ieframe urlmon shell32 comctl32 shlwapi oleaut32 ole32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
-add_pch(ieframe ieframe.h SOURCE)
+add_pch(ieframe precomp.h SOURCE)
 add_cd_file(TARGET ieframe DESTINATION reactos/system32 FOR all)

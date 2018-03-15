@@ -30,9 +30,23 @@
  * RemoveFiles
  */
 
-#include "msipriv.h"
+#include <stdarg.h>
 
-#include <patchapi.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "wine/debug.h"
+#include "fdi.h"
+#include "msi.h"
+#include "msidefs.h"
+#include "msipriv.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "patchapi.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -186,8 +200,6 @@ static UINT copy_file(MSIFILE *file, LPWSTR source)
         return GetLastError();
 
     SetFileAttributesW(file->TargetPath, FILE_ATTRIBUTE_NORMAL);
-
-    file->state = msifs_installed;
     return ERROR_SUCCESS;
 }
 
@@ -235,7 +247,6 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
             MoveFileExW(file->TargetPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT) &&
             MoveFileExW(tmpfileW, file->TargetPath, MOVEFILE_DELAY_UNTIL_REBOOT))
         {
-            file->state = msifs_installed;
             package->need_reboot_at_end = 1;
             gle = ERROR_SUCCESS;
         }
@@ -351,6 +362,8 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
+        BOOL is_global_assembly = msi_is_global_assembly( file->Component );
+
         msi_file_update_ui( package, file, szInstallFiles );
 
         rc = msi_load_media_info( package, file->Sequence, mi );
@@ -398,7 +411,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
             TRACE("copying %s to %s\n", debugstr_w(source), debugstr_w(file->TargetPath));
 
-            if (!msi_is_global_assembly( file->Component ))
+            if (!is_global_assembly)
             {
                 msi_create_directory(package, file->Component->Directory);
             }
@@ -410,10 +423,11 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
                 msi_free(source);
                 goto done;
             }
+            if (!is_global_assembly) file->state = msifs_installed;
             msi_free(source);
         }
-        else if (!msi_is_global_assembly( file->Component ) &&
-                 file->state != msifs_installed && !(file->Attributes & msidbFileAttributesPatchAdded))
+        else if (!is_global_assembly && file->state != msifs_installed &&
+                 !(file->Attributes & msidbFileAttributesPatchAdded))
         {
             ERR("compressed file wasn't installed (%s)\n", debugstr_w(file->File));
             rc = ERROR_INSTALL_FAILURE;

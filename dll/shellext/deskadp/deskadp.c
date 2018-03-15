@@ -198,17 +198,14 @@ ListAllModesDlgProc(HWND hwndDlg,
 
     if (uMsg != WM_INITDIALOG)
     {
-        This = (PDESKDISPLAYADAPTER)GetWindowLongPtr(hwndDlg,
-                                                     DWL_USER);
+        This = (PDESKDISPLAYADAPTER)GetWindowLongPtr(hwndDlg, DWLP_USER);
     }
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             This = (PDESKDISPLAYADAPTER)lParam;
-            SetWindowLongPtr(hwndDlg,
-                             DWL_USER,
-                             (LONG_PTR)This);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)This);
 
             InitListAllModesDialog(This,
                                    hwndDlg);
@@ -386,8 +383,7 @@ DisplayAdapterDlgProc(HWND hwndDlg,
 
     if (uMsg != WM_INITDIALOG)
     {
-        This = (PDESKDISPLAYADAPTER)GetWindowLongPtr(hwndDlg,
-                                                     DWL_USER);
+        This = (PDESKDISPLAYADAPTER)GetWindowLongPtr(hwndDlg, DWLP_USER);
     }
 
     switch (uMsg)
@@ -395,9 +391,7 @@ DisplayAdapterDlgProc(HWND hwndDlg,
         case WM_INITDIALOG:
             This = (PDESKDISPLAYADAPTER)((LPCPROPSHEETPAGE)lParam)->lParam;
             This->hwndDlg = hwndDlg;
-            SetWindowLongPtr(hwndDlg,
-                             DWL_USER,
-                             (LONG_PTR)This);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)This);
 
             InitDisplayAdapterDialog(This);
             Ret = TRUE;
@@ -426,7 +420,7 @@ DisplayAdapterDlgProc(HWND hwndDlg,
                 case PSN_APPLY:
                 {
                     SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
+                                     DWLP_MSGRESULT,
                                      ApplyDisplayAdapterChanges(This));
                     break;
                 }

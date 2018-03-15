@@ -246,7 +246,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_ACKPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_ACKPAGE);
                         return TRUE;
                     }
                     break;
@@ -358,7 +358,7 @@ AckPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_LOCALEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
                     break;
@@ -480,7 +480,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                         SendMessage(GetDlgItem(hwndDlg, IDC_OWNERORGANIZATION), WM_SETTEXT, 0, (LPARAM)pSetupData->OwnerOrganization);
                         if (WriteOwnerSettings(pSetupData->OwnerName, pSetupData->OwnerOrganization))
                         {
-                            SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_COMPUTERPAGE);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_COMPUTERPAGE);
                             return TRUE;
                         }
                     }
@@ -501,7 +501,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                         MessageBoxW(hwndDlg, ErrorName, Title, MB_ICONERROR | MB_OK);
 
                         SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
 
                         return TRUE;
                     }
@@ -512,7 +512,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                     if (!WriteOwnerSettings(OwnerName, OwnerOrganization))
                     {
                         SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 
@@ -706,7 +706,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup && WriteComputerSettings(pSetupData->ComputerName, hwndDlg))
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_THEMEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_THEMEPAGE);
                         return TRUE;
                     }
                     break;
@@ -721,7 +721,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                         }
                         MessageBoxW(hwndDlg, EmptyComputerName, Title, MB_ICONERROR | MB_OK);
                         SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 
@@ -731,7 +731,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     if (!WriteComputerSettings(ComputerName, hwndDlg))
                     {
                         SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 
@@ -746,7 +746,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                             wcscpy(EmptyPassword, L"You must enter a password !");
                         }
                         MessageBoxW(hwndDlg, EmptyPassword, Title, MB_ICONERROR | MB_OK);
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 #else
@@ -762,7 +762,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                             wcscpy(NotMatchPassword, L"The passwords you entered do not match. Please enter the desired password again.");
                         }
                         MessageBoxW(hwndDlg, NotMatchPassword, Title, MB_ICONERROR | MB_OK);
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 
@@ -778,7 +778,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                                 wcscpy(WrongPassword, L"The password you entered contains invalid characters. Please enter a cleaned password.");
                             }
                             MessageBoxW(hwndDlg, WrongPassword, Title, MB_ICONERROR | MB_OK);
-                            SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                             return TRUE;
                         }
                         Password++;
@@ -998,7 +998,7 @@ LocalePageDlgProc(HWND hwndDlg,
                             RunControlPanelApplet(hwndDlg, L"intl.cpl,,/f:\"unattend.inf\"");
                         }
 
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_OWNERPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_OWNERPAGE);
                         return TRUE;
                     }
                     break;
@@ -1571,7 +1571,7 @@ DateTimePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup && WriteDateTimeSettings(hwndDlg, SetupData))
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SetupData->uFirstNetworkWizardPage);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, SetupData->uFirstNetworkWizardPage);
                         return TRUE;
                     }
                     SetTimer(hwndDlg, 1, 1000, NULL);
@@ -1666,7 +1666,7 @@ ThemePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SetupData->uFirstNetworkWizardPage);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, SetupData->uFirstNetworkWizardPage);
                         return TRUE;
                     }
                     break;

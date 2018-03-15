@@ -19,10 +19,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
 
-#include "precomp.h"
+#include <stdio.h>
 
-#include <ole2.h>
+#include <initguid.h>
+#include <windows.h>
+#include <msiquery.h>
+#include <msidefs.h>
+#include <msi.h>
+#include <fci.h>
+#include <oaidl.h>
+
+#include "wine/test.h"
+
+#ifdef __REACTOS__
+#include "ole2.h"
+#endif
 
 static BOOL is_wow64;
 

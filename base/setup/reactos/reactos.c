@@ -174,7 +174,7 @@ TypeDlgProc(HWND hwndDlg,
 
                 case PSN_QUERYCANCEL:
                     SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
+                                     DWLP_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
                                                 pSetupData->szAbortMessage,
                                                 pSetupData->szAbortTitle,
@@ -262,7 +262,7 @@ DeviceDlgProc(HWND hwndDlg,
 
                 case PSN_QUERYCANCEL:
                     SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
+                                     DWLP_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
                                                 pSetupData->szAbortMessage,
                                                 pSetupData->szAbortTitle,
@@ -350,7 +350,7 @@ SummaryDlgProc(HWND hwndDlg,
 
                 case PSN_QUERYCANCEL:
                     SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
+                                     DWLP_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
                                                 pSetupData->szAbortMessage,
                                                 pSetupData->szAbortTitle,
@@ -401,7 +401,7 @@ ProcessDlgProc(HWND hwndDlg,
                    break;
                 case PSN_QUERYCANCEL:
                     SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
+                                     DWLP_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
                                                 pSetupData->szAbortMessage,
                                                 pSetupData->szAbortTitle,

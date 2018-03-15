@@ -17,10 +17,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "dmusic_private.h"
+#include "config.h"
+#include "wine/port.h"
 
 #include <stdio.h>
-#include <rpcproxy.h>
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "objbase.h"
+#include "rpcproxy.h"
+#include "initguid.h"
+#include "dmusici.h"
+
+#include "dmusic_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
 static HINSTANCE instance;
 LONG DMUSIC_refCount = 0;

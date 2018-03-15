@@ -17,26 +17,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#define COBJMACROS
 
-#include <wine/atlcom.h>
+#include "wine/atlbase.h"
+#include "wine/atlcom.h"
+
+#include "wine/debug.h"
+#include "wine/heap.h"
+#include "wine/unicode.h"
+
+#ifdef __REACTOS__
 #include <wingdi.h>
+#endif
+
+WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
 #define ATLVer1Size FIELD_OFFSET(_ATL_MODULEW, dwAtlBuildVer)
 
 HINSTANCE atl_instance;
 
 typedef unsigned char cpp_bool;
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
 
 static ICatRegister *catreg;
 

@@ -18,8 +18,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdio.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winerror.h>
+#include <wincrypt.h>
 
-#include "precomp.h"
+#include "wine/test.h"
 
 #define CERT_HEADER               "-----BEGIN CERTIFICATE-----\r\n"
 #define ALT_CERT_HEADER           "-----BEGIN This is some arbitrary text that goes on and on-----\r\n"
@@ -35,15 +41,6 @@
 #define CERT_REQUEST_TRAILER_NOCR "-----END NEW CERTIFICATE REQUEST-----\n"
 #define X509_HEADER_NOCR          "-----BEGIN X509 CRL-----\n"
 #define X509_TRAILER_NOCR         "-----END X509 CRL-----\n"
-
-static BOOL (WINAPI *pCryptBinaryToStringA)(const BYTE *pbBinary,
- DWORD cbBinary, DWORD dwFlags, LPSTR pszString, DWORD *pcchString);
-static BOOL (WINAPI *pCryptStringToBinaryA)(LPCSTR pszString,
- DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
- DWORD *pdwSkip, DWORD *pdwFlags);
-static BOOL (WINAPI *pCryptStringToBinaryW)(LPCWSTR pszString,
- DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
- DWORD *pdwSkip, DWORD *pdwFlags);
 
 struct BinTests
 {
@@ -91,7 +88,7 @@ static void encodeAndCompareBase64_A(const BYTE *toEncode, DWORD toEncodeLen,
     LPSTR str = NULL;
     BOOL ret;
 
-    ret = pCryptBinaryToStringA(toEncode, toEncodeLen, format, NULL, &strLen);
+    ret = CryptBinaryToStringA(toEncode, toEncodeLen, format, NULL, &strLen);
     ok(ret, "CryptBinaryToStringA failed: %d\n", GetLastError());
     str = HeapAlloc(GetProcessHeap(), 0, strLen);
     if (str)
@@ -99,7 +96,7 @@ static void encodeAndCompareBase64_A(const BYTE *toEncode, DWORD toEncodeLen,
         DWORD strLen2 = strLen;
         LPCSTR ptr = str;
 
-        ret = pCryptBinaryToStringA(toEncode, toEncodeLen, format, str,
+        ret = CryptBinaryToStringA(toEncode, toEncodeLen, format, str,
          &strLen2);
         ok(ret, "CryptBinaryToStringA failed: %d\n", GetLastError());
         ok(strLen2 == strLen - 1, "Expected length %d, got %d\n",
@@ -125,10 +122,10 @@ static void testBinaryToStringA(void)
     BOOL ret;
     DWORD strLen = 0, i;
 
-    ret = pCryptBinaryToStringA(NULL, 0, 0, NULL, NULL);
+    ret = CryptBinaryToStringA(NULL, 0, 0, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
-    ret = pCryptBinaryToStringA(NULL, 0, 0, NULL, &strLen);
+    ret = CryptBinaryToStringA(NULL, 0, 0, NULL, &strLen);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
      "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
     for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
@@ -137,7 +134,7 @@ static void testBinaryToStringA(void)
         LPSTR str = NULL;
         BOOL ret;
 
-        ret = pCryptBinaryToStringA(tests[i].toEncode, tests[i].toEncodeLen,
+        ret = CryptBinaryToStringA(tests[i].toEncode, tests[i].toEncodeLen,
          CRYPT_STRING_BINARY, NULL, &strLen);
         ok(ret, "CryptBinaryToStringA failed: %d\n", GetLastError());
         str = HeapAlloc(GetProcessHeap(), 0, strLen);
@@ -145,7 +142,7 @@ static void testBinaryToStringA(void)
         {
             DWORD strLen2 = strLen;
 
-            ret = pCryptBinaryToStringA(tests[i].toEncode, tests[i].toEncodeLen,
+            ret = CryptBinaryToStringA(tests[i].toEncode, tests[i].toEncodeLen,
              CRYPT_STRING_BINARY, str, &strLen2);
             ok(ret, "CryptBinaryToStringA failed: %d\n", GetLastError());
             ok(strLen == strLen2, "Expected length %d, got %d\n", strLen,
@@ -172,7 +169,7 @@ static void testBinaryToStringA(void)
         LPSTR str = NULL;
         BOOL ret;
 
-        ret = pCryptBinaryToStringA(testsNoCR[i].toEncode,
+        ret = CryptBinaryToStringA(testsNoCR[i].toEncode,
          testsNoCR[i].toEncodeLen, CRYPT_STRING_BINARY | CRYPT_STRING_NOCR,
          NULL, &strLen);
         ok(ret, "CryptBinaryToStringA failed: %d\n", GetLastError());
@@ -181,7 +178,7 @@ static void testBinaryToStringA(void)
         {
             DWORD strLen2 = strLen;
 
-            ret = pCryptBinaryToStringA(testsNoCR[i].toEncode,
+            ret = CryptBinaryToStringA(testsNoCR[i].toEncode,
              testsNoCR[i].toEncodeLen, CRYPT_STRING_BINARY | CRYPT_STRING_NOCR,
              str, &strLen2);
             ok(ret, "CryptBinaryToStringA failed: %d\n", GetLastError());
@@ -236,7 +233,7 @@ static void decodeAndCompareBase64_A(LPCSTR toDecode, LPCSTR header,
         strcat(str, toDecode);
         if (trailer)
             strcat(str, trailer);
-        ret = pCryptStringToBinaryA(str, 0, useFormat, NULL, &bufLen, NULL,
+        ret = CryptStringToBinaryA(str, 0, useFormat, NULL, &bufLen, NULL,
          NULL);
         ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
         buf = HeapAlloc(GetProcessHeap(), 0, bufLen);
@@ -245,14 +242,14 @@ static void decodeAndCompareBase64_A(LPCSTR toDecode, LPCSTR header,
             DWORD skipped, usedFormat;
 
             /* check as normal, make sure last two parameters are optional */
-            ret = pCryptStringToBinaryA(str, 0, useFormat, buf, &bufLen, NULL,
+            ret = CryptStringToBinaryA(str, 0, useFormat, buf, &bufLen, NULL,
              NULL);
             ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
             ok(bufLen == expectedLen,
              "Expected length %d, got %d\n", expectedLen, bufLen);
             ok(!memcmp(buf, expected, bufLen), "Unexpected value\n");
             /* check last two params */
-            ret = pCryptStringToBinaryA(str, 0, useFormat, buf, &bufLen,
+            ret = CryptStringToBinaryA(str, 0, useFormat, buf, &bufLen,
              &skipped, &usedFormat);
             ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
             ok(skipped == 0, "Expected skipped 0, got %d\n", skipped);
@@ -268,7 +265,7 @@ static void decodeAndCompareBase64_A(LPCSTR toDecode, LPCSTR header,
         strcat(str, toDecode);
         if (trailer)
             strcat(str, trailer);
-        ret = pCryptStringToBinaryA(str, 0, useFormat, NULL, &bufLen, NULL,
+        ret = CryptStringToBinaryA(str, 0, useFormat, NULL, &bufLen, NULL,
          NULL);
         /* expect failure with no header, and success with one */
         if (header)
@@ -283,7 +280,7 @@ static void decodeAndCompareBase64_A(LPCSTR toDecode, LPCSTR header,
             {
                 DWORD skipped, usedFormat;
 
-                ret = pCryptStringToBinaryA(str, 0, useFormat, buf, &bufLen,
+                ret = CryptStringToBinaryA(str, 0, useFormat, buf, &bufLen,
                  &skipped, &usedFormat);
                 ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
                 ok(skipped == strlen(garbage),
@@ -305,7 +302,7 @@ static void decodeBase64WithLenFmtW(LPCSTR strA, int len, DWORD fmt, BOOL retA,
     WCHAR strW[64];
     int i;
     for (i = 0; (strW[i] = strA[i]) != 0; ++i);
-    ret = pCryptStringToBinaryW(strW, len, fmt, buf, &bufLen, NULL, &fmtUsed);
+    ret = CryptStringToBinaryW(strW, len, fmt, buf, &bufLen, NULL, &fmtUsed);
     ok(ret == retA && bufLen == bufLenA && memcmp(bufA, buf, bufLen) == 0
      && fmtUsed == fmtUsedA, "base64 \"%s\" len %d: W and A differ\n", strA, len);
 }
@@ -316,7 +313,7 @@ static void decodeBase64WithLenFmt(LPCSTR str, int len, DWORD fmt, LPCSTR expect
     DWORD bufLen = sizeof(buf)-1, fmtUsed = 0xdeadbeef;
     BOOL ret;
     SetLastError(0xdeadbeef);
-    ret = pCryptStringToBinaryA(str, len, fmt, buf, &bufLen, NULL, &fmtUsed);
+    ret = CryptStringToBinaryA(str, len, fmt, buf, &bufLen, NULL, &fmtUsed);
     buf[bufLen] = 0;
     if (expected) {
         BOOL correct = ret && strcmp(expected, (char*)buf) == 0;
@@ -331,8 +328,8 @@ static void decodeBase64WithLenFmt(LPCSTR str, int len, DWORD fmt, LPCSTR expect
          "base64 \"%s\" len %d: expected failure, got \"%s\" (ret %d, le %d)\n",
          str, len, (char*)buf, ret, GetLastError());
     }
-    if (pCryptStringToBinaryW)
-        decodeBase64WithLenFmtW(str, len, fmt, ret, buf, bufLen, fmtUsed);
+
+    decodeBase64WithLenFmtW(str, len, fmt, ret, buf, bufLen, fmtUsed);
 }
 
 static void decodeBase64WithLenBroken(LPCSTR str, int len, LPCSTR expected, int le)
@@ -366,19 +363,19 @@ static void testStringToBinaryA(void)
     DWORD bufLen = 0, i;
     BYTE buf[8];
 
-    ret = pCryptStringToBinaryA(NULL, 0, 0, NULL, NULL, NULL, NULL);
+    ret = CryptStringToBinaryA(NULL, 0, 0, NULL, NULL, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
      "Expected ERROR_INVALID_PARAMETER, got ret=%d le=%u\n", ret, GetLastError());
-    ret = pCryptStringToBinaryA(NULL, 0, 0, NULL, &bufLen, NULL, NULL);
+    ret = CryptStringToBinaryA(NULL, 0, 0, NULL, &bufLen, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
      "Expected ERROR_INVALID_PARAMETER, got ret=%d le=%u\n", ret, GetLastError());
     /* Bogus format */
-    ret = pCryptStringToBinaryA(tests[0].base64, 0, 0, NULL, &bufLen, NULL,
+    ret = CryptStringToBinaryA(tests[0].base64, 0, 0, NULL, &bufLen, NULL,
      NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_DATA,
      "Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", ret, GetLastError());
     /* Decoding doesn't expect the NOCR flag to be specified */
-    ret = pCryptStringToBinaryA(tests[0].base64, 1,
+    ret = CryptStringToBinaryA(tests[0].base64, 1,
      CRYPT_STRING_BASE64 | CRYPT_STRING_NOCR, NULL, &bufLen, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_DATA,
      "Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", ret, GetLastError());
@@ -386,7 +383,7 @@ static void testStringToBinaryA(void)
     for (i = 0; i < sizeof(badStrings) / sizeof(badStrings[0]); i++)
     {
         bufLen = 0;
-        ret = pCryptStringToBinaryA(badStrings[i].str, 0, badStrings[i].format,
+        ret = CryptStringToBinaryA(badStrings[i].str, 0, badStrings[i].format,
          NULL, &bufLen, NULL, NULL);
         ok(!ret && GetLastError() == ERROR_INVALID_DATA,
            "%d: Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", i, ret, GetLastError());
@@ -444,7 +441,7 @@ static void testStringToBinaryA(void)
     /* Too small buffer */
     buf[0] = 0;
     bufLen = 4;
-    ret = pCryptStringToBinaryA("VVVVVVVV", 8, CRYPT_STRING_BASE64, (BYTE*)buf, &bufLen, NULL, NULL);
+    ret = CryptStringToBinaryA("VVVVVVVV", 8, CRYPT_STRING_BASE64, (BYTE*)buf, &bufLen, NULL, NULL);
     ok(!ret && bufLen == 4 && buf[0] == 0,
      "Expected ret 0, bufLen 4, buf[0] '\\0', got ret %d, bufLen %d, buf[0] '%c'\n",
      ret, bufLen, buf[0]);
@@ -456,7 +453,7 @@ static void testStringToBinaryA(void)
         /* Bogus length--oddly enough, that succeeds, even though it's not
          * properly padded.
          */
-        ret = pCryptStringToBinaryA(tests[i].base64, 1, CRYPT_STRING_BASE64,
+        ret = CryptStringToBinaryA(tests[i].base64, 1, CRYPT_STRING_BASE64,
          NULL, &bufLen, NULL, NULL);
         ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
         /* Check with the precise format */
@@ -513,7 +510,7 @@ static void testStringToBinaryA(void)
         /* Bogus length--oddly enough, that succeeds, even though it's not
          * properly padded.
          */
-        ret = pCryptStringToBinaryA(testsNoCR[i].base64, 1, CRYPT_STRING_BASE64,
+        ret = CryptStringToBinaryA(testsNoCR[i].base64, 1, CRYPT_STRING_BASE64,
          NULL, &bufLen, NULL, NULL);
         ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
         /* Check with the precise format */
@@ -548,19 +545,6 @@ static void testStringToBinaryA(void)
 
 START_TEST(base64)
 {
-    HMODULE lib = GetModuleHandleA("crypt32");
-
-    pCryptBinaryToStringA = (void *)GetProcAddress(lib, "CryptBinaryToStringA");
-    pCryptStringToBinaryA = (void *)GetProcAddress(lib, "CryptStringToBinaryA");
-    pCryptStringToBinaryW = (void *)GetProcAddress(lib, "CryptStringToBinaryW");
-
-    if (pCryptBinaryToStringA)
-        testBinaryToStringA();
-    else
-        win_skip("CryptBinaryToStringA is not available\n");
-
-    if (pCryptStringToBinaryA)
-        testStringToBinaryA();
-    else
-        win_skip("CryptStringToBinaryA is not available\n");
+    testBinaryToStringA();
+    testStringToBinaryA();
 }

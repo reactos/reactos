@@ -22,37 +22,21 @@
 #ifndef __WINE_MSI_PRIVATE__
 #define __WINE_MSI_PRIVATE__
 
-#include <wine/config.h>
-
-#include <assert.h>
 #include <stdarg.h>
 
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <wincon.h>
-#include <winver.h>
-#include <msiquery.h>
-#include <objbase.h>
-#include <msiserver.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-#include <fusion.h>
-#include <sddl.h>
-#include <msidefs.h>
-
-#include <wine/debug.h>
-#include <wine/list.h>
-#include <wine/unicode.h>
-
-#include "resource.h"
+#include "windef.h"
+#include "winbase.h"
+#include "fdi.h"
+#include "msi.h"
+#include "msiquery.h"
+#include "msidefs.h"
+#include "objbase.h"
+#include "objidl.h"
+#include "fusion.h"
+#include "winnls.h"
+#include "winver.h"
+#include "wine/list.h"
+#include "wine/debug.h"
 
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);
 BOOL is_wow64 DECLSPEC_HIDDEN;
@@ -968,6 +952,7 @@ extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty ) DECL
 extern INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty ) DECLSPEC_HIDDEN;
 extern LPWSTR msi_get_suminfo_product( IStorage *stg ) DECLSPEC_HIDDEN;
 extern UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns ) DECLSPEC_HIDDEN;
+extern UINT msi_export_suminfo( MSIDATABASE *db, HANDLE handle ) DECLSPEC_HIDDEN;
 extern UINT msi_load_suminfo_properties( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
 
 /* undocumented functions */
@@ -1279,7 +1264,5 @@ static inline LPWSTR strdupW( LPCWSTR src )
         lstrcpyW(dest, src);
     return dest;
 }
-
-#include "query.h"
 
 #endif /* __WINE_MSI_PRIVATE__ */

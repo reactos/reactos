@@ -17,7 +17,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdio.h>
+#include <stdarg.h>
+#define NONAMELESSUNION
+#include "windef.h"
+#include "winbase.h"
+#define CRYPT_OID_INFO_HAS_EXTRA_FIELDS
+#include "wincrypt.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "wine/debug.h"
+#include "wine/list.h"
 #include "crypt32_private.h"
+#include "cryptres.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -1066,6 +1081,8 @@ static const WCHAR sha384RSA[] = { 's','h','a','3','8','4','R','S','A',0 };
 static const WCHAR sha512RSA[] = { 's','h','a','5','1','2','R','S','A',0 };
 static const WCHAR mosaicUpdatedSig[] =
  { 'm','o','s','a','i','c','U','p','d','a','t','e','d','S','i','g',0 };
+static const WCHAR sha256ECDSA[] = { 's','h','a','2','5','6','E','C','D','S','A',0 };
+static const WCHAR sha384ECDSA[] = { 's','h','a','3','8','4','E','C','D','S','A',0 };
 static const WCHAR CN[] = { 'C','N',0 };
 static const WCHAR L[] = { 'L',0 };
 static const WCHAR O[] = { 'O',0 };
@@ -1112,12 +1129,16 @@ static const DWORD dssSign[2] = { CALG_DSS_SIGN,
 static const DWORD mosaicSign[2] = { CALG_DSS_SIGN,
  CRYPT_OID_INHIBIT_SIGNATURE_FORMAT_FLAG |
  CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG };
+static const DWORD ecdsaSign[2] = { CALG_OID_INFO_PARAMETERS,
+ CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG };
 static const CRYPT_DATA_BLOB rsaSignBlob = { sizeof(rsaSign),
  (LPBYTE)&rsaSign };
 static const CRYPT_DATA_BLOB dssSignBlob = { sizeof(dssSign),
  (LPBYTE)dssSign };
 static const CRYPT_DATA_BLOB mosaicSignBlob = { sizeof(mosaicSign),
  (LPBYTE)mosaicSign };
+static const CRYPT_DATA_BLOB ecdsaSignBlob = { sizeof(ecdsaSign),
+ (LPBYTE)ecdsaSign };
 
 static const DWORD ia5String[] = { CERT_RDN_IA5_STRING, 0 };
 static const DWORD numericString[] = { CERT_RDN_NUMERIC_STRING, 0 };
@@ -1139,6 +1160,8 @@ static const struct OIDInfoConstructor {
     UINT    Algid;
     LPCWSTR pwszName;
     const CRYPT_DATA_BLOB *blob;
+    LPCWSTR pwszCNGAlgid;
+    LPCWSTR pwszCNGExtraAlgid;
 } oidInfoConstructors[] = {
  { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     sha1, NULL },
  { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     sha, NULL },
@@ -1146,6 +1169,7 @@ static const struct OIDInfoConstructor {
  { 1, szOID_RSA_MD5,                   CALG_MD5,      md5, NULL },
  { 1, szOID_RSA_MD4,                   CALG_MD4,      md4, NULL },
  { 1, szOID_RSA_MD2,                   CALG_MD2,      md2, NULL },
+ /* NOTE: Windows Vista+ uses -1 instead of CALG_SHA_* following SHA entries. */
  { 1, szOID_NIST_sha256,               CALG_SHA_256,  sha256, NULL },
  { 1, szOID_NIST_sha384,               CALG_SHA_384,  sha384, NULL },
  { 1, szOID_NIST_sha512,               CALG_SHA_512,  sha512, NULL },
@@ -1193,6 +1217,10 @@ static const struct OIDInfoConstructor {
  { 4, szOID_OIWSEC_dsaSHA1,            CALG_SHA1,     dsaSHA1, &dssSignBlob },
  { 4, szOID_INFOSEC_mosaicUpdatedSig,  CALG_SHA1,     mosaicUpdatedSig,
    &mosaicSignBlob },
+ { 4, szOID_ECDSA_SHA256,              CALG_OID_INFO_CNG_ONLY, sha256ECDSA, &ecdsaSignBlob,
+   BCRYPT_SHA256_ALGORITHM, CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM },
+ { 4, szOID_ECDSA_SHA384,              CALG_OID_INFO_CNG_ONLY, sha384ECDSA, &ecdsaSignBlob,
+   BCRYPT_SHA384_ALGORITHM, CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM },
 
  { 5, szOID_COMMON_NAME,              0, CN, NULL },
  { 5, szOID_LOCALITY_NAME,            0, L, NULL },
@@ -1408,6 +1436,8 @@ static void init_oid_info(void)
                     info->info.ExtraInfo.pbData =
                      oidInfoConstructors[i].blob->pbData;
                 }
+                info->info.pwszCNGAlgid = oidInfoConstructors[i].pwszCNGAlgid;
+                info->info.pwszCNGExtraAlgid = oidInfoConstructors[i].pwszCNGExtraAlgid;
                 list_add_tail(&oidInfo, &info->entry);
             }
         }
@@ -1440,6 +1470,8 @@ static void init_oid_info(void)
                         info->info.ExtraInfo.pbData =
                          oidInfoConstructors[i].blob->pbData;
                     }
+                    info->info.pwszCNGAlgid = oidInfoConstructors[i].pwszCNGAlgid;
+                    info->info.pwszCNGExtraAlgid = oidInfoConstructors[i].pwszCNGExtraAlgid;
                     list_add_tail(&oidInfo, &info->entry);
                 }
             }

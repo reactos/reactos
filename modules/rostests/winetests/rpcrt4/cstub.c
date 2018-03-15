@@ -29,8 +29,8 @@
 #include <winnt.h>
 #include <winerror.h>
 
-
 #include "initguid.h"
+#include <ole2.h>
 #include "rpc.h"
 #include "rpcdce.h"
 #include "rpcproxy.h"

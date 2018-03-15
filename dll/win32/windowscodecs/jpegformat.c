@@ -16,11 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wincodecs_private.h"
+#include "config.h"
+#include "wine/port.h"
 
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <setjmp.h>
 
 #ifdef SONAME_LIBJPEG
 /* This is a hack, so jpeglib.h does not redefine INT32 and the like*/
@@ -36,6 +41,19 @@
 #undef UINT16
 #undef boolean
 #endif
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+
+#include "wincodecs_private.h"
+
+#include "wine/debug.h"
+#include "wine/library.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 #ifdef SONAME_LIBJPEG
 WINE_DECLARE_DEBUG_CHANNEL(jpeg);
@@ -405,10 +423,14 @@ static HRESULT WINAPI JpegDecoder_CopyPalette(IWICBitmapDecoder *iface,
 }
 
 static HRESULT WINAPI JpegDecoder_GetMetadataQueryReader(IWICBitmapDecoder *iface,
-    IWICMetadataQueryReader **ppIMetadataQueryReader)
+    IWICMetadataQueryReader **reader)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIMetadataQueryReader);
-    return E_NOTIMPL;
+    FIXME("(%p,%p): stub\n", iface, reader);
+
+    if (!reader) return E_INVALIDARG;
+
+    *reader = NULL;
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
 }
 
 static HRESULT WINAPI JpegDecoder_GetPreview(IWICBitmapDecoder *iface,
@@ -662,9 +684,15 @@ static HRESULT WINAPI JpegDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
         }
 
         if (This->cinfo.out_color_space == JCS_CMYK && This->cinfo.saw_Adobe_marker)
+        {
+            DWORD *pDwordData = (DWORD*) (This->image_data + stride * first_scanline);
+            DWORD *pDwordDataEnd = (DWORD*) (This->image_data + This->cinfo.output_scanline * stride);
+
             /* Adobe JPEG's have inverted CMYK data. */
-            for (i=0; i<data_size; i++)
-                This->image_data[i] ^= 0xff;
+            while(pDwordData < pDwordDataEnd)
+                *pDwordData++ ^= 0xffffffff;
+        }
+
     }
 
     LeaveCriticalSection(&This->lock);
@@ -1375,11 +1403,22 @@ static HRESULT WINAPI JpegEncoder_GetContainerFormat(IWICBitmapEncoder *iface,
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI JpegEncoder_GetEncoderInfo(IWICBitmapEncoder *iface,
-    IWICBitmapEncoderInfo **ppIEncoderInfo)
+static HRESULT WINAPI JpegEncoder_GetEncoderInfo(IWICBitmapEncoder *iface, IWICBitmapEncoderInfo **info)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIEncoderInfo);
-    return E_NOTIMPL;
+    IWICComponentInfo *comp_info;
+    HRESULT hr;
+
+    TRACE("%p,%p\n", iface, info);
+
+    if (!info) return E_INVALIDARG;
+
+    hr = CreateComponentInfo(&CLSID_WICJpegEncoder, &comp_info);
+    if (hr == S_OK)
+    {
+        hr = IWICComponentInfo_QueryInterface(comp_info, &IID_IWICBitmapEncoderInfo, (void **)info);
+        IWICComponentInfo_Release(comp_info);
+    }
+    return hr;
 }
 
 static HRESULT WINAPI JpegEncoder_SetColorContexts(IWICBitmapEncoder *iface,
@@ -1422,7 +1461,15 @@ static HRESULT WINAPI JpegEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 {
     JpegEncoder *This = impl_from_IWICBitmapEncoder(iface);
     HRESULT hr;
-    PROPBAG2 opts[6] = {{0}};
+    static const PROPBAG2 opts[6] =
+    {
+        { PROPBAG2_TYPE_DATA, VT_R4,            0, 0, (LPOLESTR)wszImageQuality },
+        { PROPBAG2_TYPE_DATA, VT_UI1,           0, 0, (LPOLESTR)wszBitmapTransform },
+        { PROPBAG2_TYPE_DATA, VT_I4 | VT_ARRAY, 0, 0, (LPOLESTR)wszLuminance },
+        { PROPBAG2_TYPE_DATA, VT_I4 | VT_ARRAY, 0, 0, (LPOLESTR)wszChrominance },
+        { PROPBAG2_TYPE_DATA, VT_UI1,           0, 0, (LPOLESTR)wszJpegYCrCbSubsampling },
+        { PROPBAG2_TYPE_DATA, VT_BOOL,          0, 0, (LPOLESTR)wszSuppressApp0 },
+    };
 
     TRACE("(%p,%p,%p)\n", iface, ppIFrameEncode, ppIEncoderOptions);
 
@@ -1440,30 +1487,14 @@ static HRESULT WINAPI JpegEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
         return WINCODEC_ERR_NOTINITIALIZED;
     }
 
-    opts[0].pstrName = (LPOLESTR)wszImageQuality;
-    opts[0].vt = VT_R4;
-    opts[0].dwType = PROPBAG2_TYPE_DATA;
-    opts[1].pstrName = (LPOLESTR)wszBitmapTransform;
-    opts[1].vt = VT_UI1;
-    opts[1].dwType = PROPBAG2_TYPE_DATA;
-    opts[2].pstrName = (LPOLESTR)wszLuminance;
-    opts[2].vt = VT_I4|VT_ARRAY;
-    opts[2].dwType = PROPBAG2_TYPE_DATA;
-    opts[3].pstrName = (LPOLESTR)wszChrominance;
-    opts[3].vt = VT_I4|VT_ARRAY;
-    opts[3].dwType = PROPBAG2_TYPE_DATA;
-    opts[4].pstrName = (LPOLESTR)wszJpegYCrCbSubsampling;
-    opts[4].vt = VT_UI1;
-    opts[4].dwType = PROPBAG2_TYPE_DATA;
-    opts[5].pstrName = (LPOLESTR)wszSuppressApp0;
-    opts[5].vt = VT_BOOL;
-    opts[5].dwType = PROPBAG2_TYPE_DATA;
-
-    hr = CreatePropertyBag2(opts, 6, ppIEncoderOptions);
-    if (FAILED(hr))
+    if (ppIEncoderOptions)
     {
-        LeaveCriticalSection(&This->lock);
-        return hr;
+        hr = CreatePropertyBag2(opts, sizeof(opts)/sizeof(opts[0]), ppIEncoderOptions);
+        if (FAILED(hr))
+        {
+            LeaveCriticalSection(&This->lock);
+            return hr;
+        }
     }
 
     This->frame_count = 1;

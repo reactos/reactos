@@ -22,32 +22,26 @@
 
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <htmlhelp.h>
-#include <ole2.h>
-#include <exdisp.h>
-#include <mshtmhst.h>
-#include <commctrl.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "htmlhelp.h"
+#include "ole2.h"
+#include "exdisp.h"
+#include "mshtmhst.h"
+#include "commctrl.h"
 
-#include <wine/itss.h>
-#include <wine/unicode.h>
-#include <wine/list.h>
+#ifdef INIT_GUID
+#include "initguid.h"
+#endif
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
-
-#include "resource.h"
-#include "stream.h"
+#include "wine/itss.h"
+#include "wine/unicode.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
 #define WB_GOBACK     0
 #define WB_GOFORWARD  1
@@ -251,29 +245,9 @@ HHInfo *find_window(const WCHAR *window) DECLSPEC_HIDDEN;
 
 /* memory allocation functions */
 
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), 0, len);
-}
-
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
-}
-
-static inline void * __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t len)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, mem, len);
-}
-
 static inline void * __WINE_ALLOC_SIZE(2) heap_realloc_zero(void *mem, size_t len)
 {
     return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, len);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline LPWSTR strdupW(LPCWSTR str)
@@ -337,4 +311,4 @@ static inline LPSTR strdupWtoA(LPCWSTR str)
 extern HINSTANCE hhctrl_hinstance DECLSPEC_HIDDEN;
 extern BOOL hh_process DECLSPEC_HIDDEN;
 
-#endif /* HHCTRL_H */
+#endif

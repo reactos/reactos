@@ -26,6 +26,11 @@
 #ifndef __WINE_DPLAYX_QUEUE_H
 #define __WINE_DPLAYX_QUEUE_H
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+
 #define DPQ_INSERT(a,b,c) DPQ_INSERT_IN_TAIL(a,b,c)
 
 /*

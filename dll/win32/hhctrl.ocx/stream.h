@@ -45,4 +45,4 @@ BOOL next_content(stream_t *stream, strbuf_t *buf) DECLSPEC_HIDDEN;
 BOOL next_node(stream_t *stream, strbuf_t *buf) DECLSPEC_HIDDEN;
 const char *get_attr(const char *node, const char *name, int *len) DECLSPEC_HIDDEN;
 
-#endif /* HHCTRL_STREAM_H */
+#endif

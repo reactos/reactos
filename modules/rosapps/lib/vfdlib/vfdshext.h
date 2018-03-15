@@ -67,7 +67,11 @@ public:
 		LPCMINVOKECOMMANDINFO lpcmi);
 
 	STDMETHODIMP GetCommandString(
+#ifndef __REACTOS__
 		UINT			idCmd,
+#else
+        UINT_PTR		idCmd,
+#endif
 		UINT			uFlags,
 		UINT			*reserved,
 		LPSTR			pszName,

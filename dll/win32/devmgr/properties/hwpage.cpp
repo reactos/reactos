@@ -803,8 +803,7 @@ HardwareDlgProc(IN HWND hwndDlg,
     PHARDWARE_PAGE_DATA hpd;
     INT_PTR Ret = FALSE;
 
-    hpd = (PHARDWARE_PAGE_DATA)GetWindowLongPtr(hwndDlg,
-                                                DWL_USER);
+    hpd = (PHARDWARE_PAGE_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     if (hpd != NULL || uMsg == WM_INITDIALOG)
     {
@@ -889,9 +888,7 @@ HardwareDlgProc(IN HWND hwndDlg,
                     HWND hWndParent;
 
                     hpd->hWnd = hwndDlg;
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_USER,
-                                     (DWORD_PTR)hpd);
+                    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)hpd);
 
                     hpd->ClassImageListData.cbSize = sizeof(SP_CLASSIMAGELIST_DATA);
 
@@ -965,7 +962,7 @@ HardwareDlgProc(IN HWND hwndDlg,
             case WM_DESTROY:
             {
                 /* zero hpd pointer in window data, because it can be used later (WM_DESTROY has not to be last message) */
-                SetWindowLongPtr(hwndDlg, DWL_USER, (DWORD_PTR)NULL);
+                SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)NULL);
                 
                 /* free devices list */
                 FreeDevicesList(hpd);

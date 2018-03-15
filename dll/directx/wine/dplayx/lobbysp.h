@@ -19,6 +19,13 @@
 #ifndef __WINE_LOBBY_SP_H
 #define __WINE_LOBBY_SP_H
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "dplobby.h"
+
 /* GUID for IDPLobbySP {5A4E5A20-2CED-11d0-A889-00A0C905433C} */
 DEFINE_GUID(IID_IDPLobbySP, 0x5a4e5a20, 0x2ced, 0x11d0, 0xa8, 0x89, 0x0, 0xa0, 0xc9, 0x5, 0x43, 0x3c);
 typedef struct IDPLobbySP *LPDPLOBBYSP;
@@ -509,4 +516,4 @@ DECLARE_INTERFACE_(IDPLobbySP,IUnknown)
  */
 extern DWORD gdwDPlaySPRefCount DECLSPEC_HIDDEN;
 
-#endif /* __WINE_LOBBY_SP_H */
+#endif

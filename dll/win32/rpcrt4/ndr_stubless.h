@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include <ndrtypes.h>
+#include "ndrtypes.h"
 
 /* there can't be any alignment with the structures in this file */
-#include <pshpack1.h>
+#include "pshpack1.h"
 
 typedef struct _NDR_PROC_HEADER
 {
@@ -226,7 +226,7 @@ typedef struct _NDR_EHD_CONTEXT
     unsigned char param_num;
 } NDR_EHD_CONTEXT;
 
-#include <poppack.h>
+#include "poppack.h"
 
 enum stubless_phase
 {

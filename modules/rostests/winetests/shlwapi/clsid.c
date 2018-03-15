@@ -17,10 +17,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
 
-#include <olectl.h>
-#include <initguid.h>
+#include "wine/test.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winnls.h"
+#include "winuser.h"
+#include "initguid.h"
+#include "shlguid.h"
+#include "shobjidl.h"
+#include "olectl.h"
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 

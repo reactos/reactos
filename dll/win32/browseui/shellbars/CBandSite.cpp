@@ -708,7 +708,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
 
     TRACE("(%p, %p, %u, %p, %p, %p)\n", this, hWnd, uMsg, wParam, lParam, plrResult);
 
-    *plrResult = 0;
+    if (plrResult)
+        *plrResult = 0;
     if (m_hwndRebar == NULL)
         return E_FAIL;
 

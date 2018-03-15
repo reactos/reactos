@@ -19,7 +19,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include "ddraw_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static inline struct ddraw_clipper *impl_from_IDirectDrawClipper(IDirectDrawClipper *iface)
 {
@@ -67,7 +72,7 @@ static ULONG WINAPI ddraw_clipper_Release(IDirectDrawClipper *iface)
     {
         if (clipper->region)
             DeleteObject(clipper->region);
-        HeapFree(GetProcessHeap(), 0, clipper);
+        heap_free(clipper);
     }
 
     return refcount;

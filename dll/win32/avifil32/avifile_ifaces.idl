@@ -1,0 +1,105 @@
+/*
+ * Proxy support for avifil32
+ *
+ * Copyright 2016 Dmitry Timoshkov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/*
+ * These interface descriptions are supposed to be used for automatic proxy
+ * generation by an IDL compiler.
+ *
+ * While it's possible to convert include/vfw.h to an .idl, that's proved to
+ * be a major waste of an effort because the resulting interface descriptions
+ * can't be used for automatic proxy generation since they are not compatible
+ * with IDL compiler restrictions for proxies, and fixing them up would make
+ * generated vfw.h source incompatible with PSDK's equivalent.
+ */
+
+import "wtypes.idl";
+import "unknwn.idl";
+
+typedef struct _AVISTREAMINFOW
+{
+    DWORD fccType;
+    DWORD fccHandler;
+    DWORD dwFlags;
+    DWORD dwCaps;
+    WORD  wPriority;
+    WORD  wLanguage;
+    DWORD dwScale;
+    DWORD dwRate;
+    DWORD dwStart;
+    DWORD dwLength;
+    DWORD dwInitialFrames;
+    DWORD dwSuggestedBufferSize;
+    DWORD dwQuality;
+    DWORD dwSampleSize;
+    RECT  rcFrame;
+    DWORD dwEditCount;
+    DWORD dwFormatChangeCount;
+    WCHAR szName[64];
+} AVISTREAMINFOW;
+
+[
+    object,
+    uuid(00020021-0000-0000-c000-000000000046)
+]
+interface IAVIStream : IUnknown
+{
+    HRESULT Create(LPARAM lParam1, LPARAM lParam2);
+    HRESULT Info(AVISTREAMINFOW *psi, LONG lSize);
+    LONG FindSample(LONG lPos, LONG lFlags);
+    HRESULT ReadFormat(LONG lPos, [out,size_is(*lpcbFormat)] char *lpFormat, [in,out] LONG *lpcbFormat);
+    HRESULT SetFormat(LONG lPos, [in,size_is(cbFormat)] char *lpFormat, LONG cbFormat);
+    HRESULT Read(LONG lStart, LONG lSamples, [out,size_is(cbBuffer)] char *lpBuffer, LONG cbBuffer, LONG *plBytes, LONG *plSamples);
+    HRESULT Write(LONG lStart, LONG lSamples, [in,size_is(cbBuffer)] char *lpBuffer, LONG cbBuffer, DWORD dwFlags, LONG *plSampWritten, LONG *plBytesWritten);
+    HRESULT Delete(LONG lStart, LONG lSamples);
+    HRESULT ReadData(DWORD fcc, [out,size_is(*lpcbBuffer)] char *lpBuffer, [in,out] LONG *lpcbBuffer);
+    HRESULT WriteData(DWORD fcc, [in,size_is(cbBuffer)] char *lpBuffer, LONG cbBuffer);
+    HRESULT SetInfo(AVISTREAMINFOW *plInfo, LONG cbInfo);
+};
+
+typedef struct _AVIFILEINFOW
+{
+    DWORD dwMaxBytesPerSec;
+    DWORD dwFlags;
+    DWORD dwCaps;
+    DWORD dwStreams;
+    DWORD dwSuggestedBufferSize;
+    DWORD dwWidth;
+    DWORD dwHeight;
+    DWORD dwScale;
+    DWORD dwRate;
+    DWORD dwLength;
+    DWORD dwEditCount;
+    WCHAR szFileType[64];
+} AVIFILEINFOW;
+
+[
+    object,
+    uuid(00020020-0000-0000-c000-000000000046)
+]
+interface IAVIFile : IUnknown
+{
+    HRESULT Info(AVIFILEINFOW *pfi, LONG lSize);
+    HRESULT GetStream(IAVIStream **ppStream, DWORD fccType, LONG lParam);
+    HRESULT CreateStream(IAVIStream **ppStream, AVISTREAMINFOW *psi);
+    HRESULT WriteData(DWORD fcc, [in,size_is(cbBuffer)] char *lpBuffer, LONG cbBuffer);
+    HRESULT ReadData(DWORD fcc, [out,size_is(*lpcbBuffer)] char *lpBuffer, [in,out] LONG *lpcbBuffer);
+    HRESULT EndRecord(void);
+    HRESULT DeleteStream(DWORD fccType, LONG lParam);
+};

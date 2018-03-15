@@ -10,6 +10,10 @@
 #ifndef _VFDLIB_H_
 #define _VFDLIB_H_
 
+#ifdef __REACTOS__
+#define DWL_USER DWLP_USER
+#endif
+
 #define VFD_LIBRARY_FILENAME	"vfd.dll"
 
 #ifdef VFD_EMBED_DRIVER

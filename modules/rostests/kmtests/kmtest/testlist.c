@@ -7,6 +7,7 @@
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_CcCopyRead;
+KMT_TESTFUNC Test_CcMapData;
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_FileAttributes;
 KMT_TESTFUNC Test_FindFile;
@@ -35,6 +36,7 @@ KMT_TESTFUNC Test_TcpIpConnect;
 const KMT_TEST TestList[] =
 {
     { "CcCopyRead",                   Test_CcCopyRead },
+    { "CcMapData",                    Test_CcMapData },
     { "-Example",                     Test_Example },
     { "FileAttributes",               Test_FileAttributes },
     { "FindFile",                     Test_FindFile },

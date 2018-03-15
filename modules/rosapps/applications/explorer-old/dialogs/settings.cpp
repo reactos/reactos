@@ -102,7 +102,7 @@ int DesktopSettingsDlg::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
 	  case PSN_QUERYINITIALFOCUS:
-		SetWindowLongPtr(_hwnd, DWL_MSGRESULT, (LPARAM)GetDlgItem(_hwnd, IDC_ICON_ALIGN_0+_alignment_cur));
+		SetWindowLongPtr(_hwnd, DWLP_MSGRESULT, (LPARAM)GetDlgItem(_hwnd, IDC_ICON_ALIGN_0+_alignment_cur));
 		break;
 
 	  case PSN_APPLY:

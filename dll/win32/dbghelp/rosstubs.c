@@ -18,8 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "dbghelp_private.h"
+#include <assert.h>
 
+#include "dbghelp_private.h"
+#include "image_private.h"
+
+#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 #define PDBGHELP_CREATE_USER_DUMP_CALLBACK PVOID

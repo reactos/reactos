@@ -22,8 +22,16 @@
  * to change it in user32 too.
  */
 
-#define WIN32_NO_STATUS
-#include <wine/debug.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#define NO_SHLWAPI_REG
+#include "shlwapi.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(string);
 

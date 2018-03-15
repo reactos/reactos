@@ -891,7 +891,7 @@ static HRESULT WINAPI HlinkBrowseContext_GetObject(IHlinkBrowseContext *iface,
     ok(fBindIfRootRegistered == 1, "fBindIfRootRegistered = %x\n", fBindIfRootRegistered);
 
     *ppiunk = HBC_object;
-    return HBC_object ? S_OK : S_FALSE;
+    return HBC_object ? S_OK : 0xdeadbeef;
 }
 
 static HRESULT WINAPI HlinkBrowseContext_Revoke(IHlinkBrowseContext *iface, DWORD dwRegister)

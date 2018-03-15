@@ -18,11 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "fusionpriv.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <wincrypt.h>
-#include <dbghelp.h>
-#include <corhdr.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winver.h"
+#include "wincrypt.h"
+#include "dbghelp.h"
+#include "ole2.h"
+#include "fusion.h"
+#include "corhdr.h"
+
+#include "fusionpriv.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 #define TableFromToken(tk) (TypeFromToken(tk) >> 24)
 #define TokenFromTable(idx) (idx << 24)
@@ -528,9 +539,7 @@ static HRESULT parse_metadata_header(ASSEMBLY *assembly, DWORD *hdrsz)
 
     metadatahdr = (METADATAHDR *)ptr;
 
-    assembly->metadatahdr = HeapAlloc(GetProcessHeap(), 0, sizeof(METADATAHDR));
-    if (!assembly->metadatahdr)
-        return E_OUTOFMEMORY;
+    if (!(assembly->metadatahdr = heap_alloc(sizeof(*assembly->metadatahdr)))) return E_OUTOFMEMORY;
 
     size = FIELD_OFFSET(METADATAHDR, Version);
     memcpy(assembly->metadatahdr, metadatahdr, size);
@@ -635,9 +644,7 @@ HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file)
 
     *out = NULL;
 
-    assembly = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ASSEMBLY));
-    if (!assembly)
-        return E_OUTOFMEMORY;
+    if (!(assembly = heap_alloc_zero(sizeof(*assembly)))) return E_OUTOFMEMORY;
 
     assembly->path = strdupW(file);
     if (!assembly->path)
@@ -688,12 +695,12 @@ HRESULT assembly_release(ASSEMBLY *assembly)
     if (!assembly)
         return S_OK;
 
-    HeapFree(GetProcessHeap(), 0, assembly->metadatahdr);
-    HeapFree(GetProcessHeap(), 0, assembly->path);
+    heap_free(assembly->metadatahdr);
+    heap_free(assembly->path);
     UnmapViewOfFile(assembly->data);
     CloseHandle(assembly->hmap);
     CloseHandle(assembly->hfile);
-    HeapFree(GetProcessHeap(), 0, assembly);
+    heap_free(assembly);
 
     return S_OK;
 }
@@ -706,8 +713,8 @@ static LPWSTR assembly_dup_str(const ASSEMBLY *assembly, DWORD index)
 
     len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
 
-    if ((cpy = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
-       MultiByteToWideChar(CP_ACP, 0, str, -1, cpy, len);
+    if ((cpy = heap_alloc(len * sizeof(WCHAR))))
+        MultiByteToWideChar(CP_ACP, 0, str, -1, cpy, len);
 
     return cpy;
 }
@@ -741,7 +748,7 @@ HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name)
 
 HRESULT assembly_get_path(const ASSEMBLY *assembly, LPWSTR *path)
 {
-    LPWSTR cpy = HeapAlloc(GetProcessHeap(), 0, (strlenW(assembly->path) + 1) * sizeof(WCHAR));
+    WCHAR *cpy = heap_alloc((strlenW(assembly->path) + 1) * sizeof(WCHAR));
     *path = cpy;
     if (cpy)
         strcpyW(cpy, assembly->path);
@@ -768,8 +775,7 @@ HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version)
     if (!asmtbl)
         return E_FAIL;
 
-    *version = HeapAlloc(GetProcessHeap(), 0, sizeof(format) + 4 * strlen("65535") * sizeof(WCHAR));
-    if (!*version)
+    if (!(*version = heap_alloc(sizeof(format) + 4 * strlen("65535") * sizeof(WCHAR))))
         return E_OUTOFMEMORY;
 
     sprintfW(*version, format, asmtbl->MajorVersion, asmtbl->MinorVersion,
@@ -841,8 +847,7 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token)
     if (!CryptGetHashParam(hash, HP_HASHVAL, NULL, &size, 0))
         return E_FAIL;
 
-    hashdata = HeapAlloc(GetProcessHeap(), 0, size);
-    if (!hashdata)
+    if (!(hashdata = heap_alloc(size)))
     {
         hr = E_OUTOFMEMORY;
         goto done;
@@ -854,8 +859,7 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token)
     for (i = size - 1; i >= size - 8; i--)
         tokbytes[size - i - 1] = hashdata[i];
 
-    tok = HeapAlloc(GetProcessHeap(), 0, (TOKEN_LENGTH + 1) * sizeof(WCHAR));
-    if (!tok)
+    if (!(tok = heap_alloc((TOKEN_LENGTH + 1) * sizeof(WCHAR))))
     {
         hr = E_OUTOFMEMORY;
         goto done;
@@ -867,7 +871,7 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token)
     hr = S_OK;
 
 done:
-    HeapFree(GetProcessHeap(), 0, hashdata);
+    heap_free(hashdata);
     CryptDestroyHash(hash);
     CryptReleaseContext(crypt, 0);
 
@@ -902,9 +906,7 @@ HRESULT assembly_get_external_files(ASSEMBLY *assembly, LPWSTR **files, DWORD *c
     if (num_rows <= 0)
         return S_OK;
 
-    ret = HeapAlloc(GetProcessHeap(), 0, num_rows * sizeof(WCHAR *));
-    if (!ret)
-        return E_OUTOFMEMORY;
+    if (!(ret = heap_alloc(num_rows * sizeof(WCHAR *)))) return E_OUTOFMEMORY;
 
     for (i = 0; i < num_rows; i++)
     {
@@ -917,8 +919,8 @@ HRESULT assembly_get_external_files(ASSEMBLY *assembly, LPWSTR **files, DWORD *c
         ret[i] = assembly_dup_str(assembly, idx);
         if (!ret[i])
         {
-            for (; i >= 0; i--) HeapFree(GetProcessHeap(), 0, ret[i]);
-            HeapFree(GetProcessHeap(), 0, ret);
+            for (; i >= 0; i--) heap_free(ret[i]);
+            heap_free(ret);
             return E_OUTOFMEMORY;
         }
         ptr += assembly->stringsz; /* skip Name field */

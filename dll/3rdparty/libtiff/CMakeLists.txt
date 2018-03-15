@@ -2,7 +2,8 @@
 add_definitions(
     -DWIN32
     -DNDEBUG
-    -DUSE_WIN32_FILEIO)
+    -DUSE_WIN32_FILEIO
+    -DTIF_PLATFORM_CONSOLE)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libtiff

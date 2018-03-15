@@ -19,9 +19,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
+#include <stdarg.h>
+#include <stdio.h>
+#include <math.h>
 #include <float.h>
+
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include "windef.h"
+#include "winbase.h"
+#include "winsock2.h"
+#include "wine/test.h"
+#include "winuser.h"
+#include "wingdi.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "winnt.h"
+
+#include "wtypes.h"
+#include "oleauto.h"
 
 static HMODULE hOleaut32;
 

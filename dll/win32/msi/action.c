@@ -18,11 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+#include <stdarg.h>
 
-#include <winsvc.h>
-#include <odbcinst.h>
-#include <imagehlp.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "winsvc.h"
+#include "odbcinst.h"
+#include "wine/debug.h"
+#include "msidefs.h"
+#include "winuser.h"
+#include "shlobj.h"
+#include "objbase.h"
+#include "mscoree.h"
+#include "shlwapi.h"
+#include "imagehlp.h"
+#include "wine/unicode.h"
+#include "winver.h"
+
+#include "msipriv.h"
+#include "resource.h"
 
 #define REG_PROGRESS_VALUE 13200
 #define COMPONENT_PROGRESS_VALUE 24000
@@ -141,6 +159,13 @@ static const WCHAR szWriteEnvironmentStrings[] =
     {'W','r','i','t','e','E','n','v','i','r','o','n','m','e','n','t','S','t','r','i','n','g','s',0};
 static const WCHAR szINSTALL[] =
     {'I','N','S','T','A','L','L',0};
+
+struct dummy_thread
+{
+    HANDLE started;
+    HANDLE stopped;
+    HANDLE thread;
+};
 
 static INT ui_actionstart(MSIPACKAGE *package, LPCWSTR action, LPCWSTR description, LPCWSTR template)
 {
@@ -2854,7 +2879,7 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
 
     comp->Action = msi_get_component_action( package, comp );
-    if (comp->Action != INSTALLSTATE_LOCAL)
+    if (comp->Action != INSTALLSTATE_LOCAL && comp->Action != INSTALLSTATE_SOURCE)
     {
         TRACE("component not scheduled for installation %s\n", debugstr_w(component));
         return ERROR_SUCCESS;
@@ -7952,6 +7977,42 @@ static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq)
     return rc;
 }
 
+DWORD WINAPI dummy_thread_proc(void *arg)
+{
+    struct dummy_thread *info = arg;
+    HRESULT hr;
+
+    hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+    if (FAILED(hr)) ERR("CoInitializeEx failed %08x\n", hr);
+
+    SetEvent(info->started);
+    WaitForSingleObject(info->stopped, INFINITE);
+
+    CoUninitialize();
+    return 0;
+}
+
+static void start_dummy_thread(struct dummy_thread *info)
+{
+    if (!(info->started = CreateEventA(NULL, TRUE, FALSE, NULL))) return;
+    if (!(info->stopped = CreateEventA(NULL, TRUE, FALSE, NULL))) return;
+    if (!(info->thread  = CreateThread(NULL, 0, dummy_thread_proc, info, 0, NULL))) return;
+
+    WaitForSingleObject(info->started, INFINITE);
+}
+
+static void stop_dummy_thread(struct dummy_thread *info)
+{
+    if (info->thread)
+    {
+        SetEvent(info->stopped);
+        WaitForSingleObject(info->thread, INFINITE);
+        CloseHandle(info->thread);
+    }
+    if (info->started) CloseHandle(info->started);
+    if (info->stopped) CloseHandle(info->stopped);
+}
+
 /****************************************************
  * TOP level entry points
  *****************************************************/
@@ -7962,6 +8023,7 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     static const WCHAR szDisableRollback[] = {'D','I','S','A','B','L','E','R','O','L','L','B','A','C','K',0};
     static const WCHAR szAction[] = {'A','C','T','I','O','N',0};
     WCHAR *reinstall = NULL, *productcode, *action;
+    struct dummy_thread thread_info = {NULL, NULL, NULL};
     UINT rc;
     DWORD len = 0;
 
@@ -8018,6 +8080,8 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     msi_adjust_privilege_properties( package );
     msi_set_context( package );
 
+    start_dummy_thread(&thread_info);
+
     productcode = msi_dup_property( package->db, szProductCode );
     if (strcmpiW( productcode, package->ProductCode ))
     {
@@ -8053,6 +8117,8 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
 
     /* finish up running custom actions */
     ACTION_FinishCustomActions(package);
+
+    stop_dummy_thread(&thread_info);
 
     if (package->need_rollback && !(reinstall = msi_dup_property( package->db, szReinstall )))
     {

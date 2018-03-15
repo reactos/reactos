@@ -91,7 +91,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include "config.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "msi.h"
+#include "msiquery.h"
+#include "objbase.h"
+#include "oleauto.h"
+
 #include "msipriv.h"
+#include "msiserver.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "wine/list.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -164,7 +184,7 @@ static void value_free( struct value val )
 }
 
 
-#line 168 "cond.tab.c" /* yacc.c:339  */
+#line 188 "cond.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -184,8 +204,8 @@ static void value_free( struct value val )
 
 /* In a future release of Bison, this section will be replaced
    by #include "cond.tab.h".  */
-#ifndef YY_COND_E_REACTOSSYNC3_0_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED
-# define YY_COND_E_REACTOSSYNC3_0_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED
+#ifndef YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED
+# define YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -245,7 +265,7 @@ extern int cond_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 102 "cond.y" /* yacc.c:355  */
+#line 122 "cond.y" /* yacc.c:355  */
 
     struct cond_str str;
     struct value value;
@@ -253,7 +273,7 @@ union YYSTYPE
     INT operator;
     BOOL bool;
 
-#line 257 "cond.tab.c" /* yacc.c:355  */
+#line 277 "cond.tab.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -263,11 +283,11 @@ union YYSTYPE
 
 int cond_parse (COND_input *info);
 
-#endif /* !YY_COND_E_REACTOSSYNC3_0_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED  */
+#endif /* !YY_COND_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_COND_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 271 "cond.tab.c" /* yacc.c:358  */
+#line 291 "cond.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -549,11 +569,11 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   129,   129,   135,   142,   146,   150,   154,   158,   165,
-     169,   176,   180,   188,   223,   231,   232,   233,   234,   235,
-     236,   237,   238,   239,   240,   241,   242,   243,   244,   245,
-     246,   247,   248,   252,   266,   281,   289,   299,   316,   333,
-     350,   370
+       0,   149,   149,   155,   162,   166,   170,   174,   178,   185,
+     189,   196,   200,   208,   243,   251,   252,   253,   254,   255,
+     256,   257,   258,   259,   260,   261,   262,   263,   264,   265,
+     266,   267,   268,   272,   286,   301,   309,   319,   336,   353,
+     370,   390
 };
 #endif
 
@@ -1372,89 +1392,89 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 130 "cond.y" /* yacc.c:1646  */
+#line 150 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             cond->result = (yyvsp[0].bool);
         }
-#line 1381 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1401 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 135 "cond.y" /* yacc.c:1646  */
+#line 155 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             cond->result = MSICONDITION_NONE;
         }
-#line 1390 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1410 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 143 "cond.y" /* yacc.c:1646  */
+#line 163 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[0].bool);
         }
-#line 1398 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1418 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 147 "cond.y" /* yacc.c:1646  */
+#line 167 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[-2].bool) || (yyvsp[0].bool);
         }
-#line 1406 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1426 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 151 "cond.y" /* yacc.c:1646  */
+#line 171 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = !(yyvsp[-2].bool) || (yyvsp[0].bool);
         }
-#line 1414 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1434 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 155 "cond.y" /* yacc.c:1646  */
+#line 175 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = ( (yyvsp[-2].bool) || (yyvsp[0].bool) ) && !( (yyvsp[-2].bool) && (yyvsp[0].bool) );
         }
-#line 1422 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1442 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 159 "cond.y" /* yacc.c:1646  */
+#line 179 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = ( (yyvsp[-2].bool) && (yyvsp[0].bool) ) || ( !(yyvsp[-2].bool) && !(yyvsp[0].bool) );
         }
-#line 1430 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1450 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 166 "cond.y" /* yacc.c:1646  */
+#line 186 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[0].bool);
         }
-#line 1438 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1458 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 170 "cond.y" /* yacc.c:1646  */
+#line 190 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[-2].bool) && (yyvsp[0].bool);
         }
-#line 1446 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1466 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 177 "cond.y" /* yacc.c:1646  */
+#line 197 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = !(yyvsp[0].bool);
         }
-#line 1454 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1474 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 181 "cond.y" /* yacc.c:1646  */
+#line 201 "cond.y" /* yacc.c:1646  */
     {
             if ((yyvsp[0].value).type == VALUE_INTEGER)
                 (yyval.bool) = (yyvsp[0].value).u.integer ? 1 : 0;
@@ -1462,11 +1482,11 @@ yyreduce:
                 (yyval.bool) = (yyvsp[0].value).u.string && (yyvsp[0].value).u.string[0];
             value_free( (yyvsp[0].value) );
         }
-#line 1466 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1486 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 189 "cond.y" /* yacc.c:1646  */
+#line 209 "cond.y" /* yacc.c:1646  */
     {
             if ((yyvsp[-2].value).type == VALUE_INTEGER && (yyvsp[0].value).type == VALUE_INTEGER)
             {
@@ -1501,127 +1521,127 @@ yyreduce:
             value_free( (yyvsp[-2].value) );
             value_free( (yyvsp[0].value) );
         }
-#line 1505 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1525 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 224 "cond.y" /* yacc.c:1646  */
+#line 244 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[-1].bool);
         }
-#line 1513 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1533 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 231 "cond.y" /* yacc.c:1646  */
+#line 251 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_EQ; }
-#line 1519 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1539 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 232 "cond.y" /* yacc.c:1646  */
+#line 252 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_NE; }
-#line 1525 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1545 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 233 "cond.y" /* yacc.c:1646  */
+#line 253 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_LT; }
-#line 1531 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1551 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 234 "cond.y" /* yacc.c:1646  */
+#line 254 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_GT; }
-#line 1537 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1557 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 235 "cond.y" /* yacc.c:1646  */
+#line 255 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_LE; }
-#line 1543 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1563 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 236 "cond.y" /* yacc.c:1646  */
+#line 256 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_GE; }
-#line 1549 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1569 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 237 "cond.y" /* yacc.c:1646  */
+#line 257 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_SS; }
-#line 1555 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1575 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 238 "cond.y" /* yacc.c:1646  */
+#line 258 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_IEQ; }
-#line 1561 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1581 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 239 "cond.y" /* yacc.c:1646  */
+#line 259 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_INE; }
-#line 1567 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1587 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 240 "cond.y" /* yacc.c:1646  */
+#line 260 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_ILT; }
-#line 1573 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1593 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 241 "cond.y" /* yacc.c:1646  */
+#line 261 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_IGT; }
-#line 1579 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1599 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 242 "cond.y" /* yacc.c:1646  */
+#line 262 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_ILE; }
-#line 1585 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1605 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 243 "cond.y" /* yacc.c:1646  */
+#line 263 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_IGE; }
-#line 1591 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1611 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 244 "cond.y" /* yacc.c:1646  */
+#line 264 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_ISS; }
-#line 1597 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1617 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 245 "cond.y" /* yacc.c:1646  */
+#line 265 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_LHS; }
-#line 1603 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1623 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 246 "cond.y" /* yacc.c:1646  */
+#line 266 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_RHS; }
-#line 1609 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1629 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 247 "cond.y" /* yacc.c:1646  */
+#line 267 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_ILHS; }
-#line 1615 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1635 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 248 "cond.y" /* yacc.c:1646  */
+#line 268 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_IRHS; }
-#line 1621 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1641 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 253 "cond.y" /* yacc.c:1646  */
+#line 273 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             UINT len;
@@ -1635,11 +1655,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1639 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1659 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 267 "cond.y" /* yacc.c:1646  */
+#line 287 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             UINT len = GetEnvironmentVariableW( (yyvsp[0].identifier), NULL, 0 );
@@ -1654,11 +1674,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1658 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1678 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 282 "cond.y" /* yacc.c:1646  */
+#line 302 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             (yyval.value).type = VALUE_LITERAL;
@@ -1666,11 +1686,11 @@ yyreduce:
             if( !(yyval.value).u.string )
                 YYABORT;
         }
-#line 1670 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1690 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 290 "cond.y" /* yacc.c:1646  */
+#line 310 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             LPWSTR szNum = COND_GetString( cond, &(yyvsp[0].str) );
@@ -1680,11 +1700,11 @@ yyreduce:
             (yyval.value).u.integer = atoiW( szNum );
             cond_free( szNum );
         }
-#line 1684 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1704 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 300 "cond.y" /* yacc.c:1646  */
+#line 320 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1701,11 +1721,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1705 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1725 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 317 "cond.y" /* yacc.c:1646  */
+#line 337 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1722,11 +1742,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1726 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1746 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 334 "cond.y" /* yacc.c:1646  */
+#line 354 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install, action;
@@ -1743,11 +1763,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1747 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1767 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 351 "cond.y" /* yacc.c:1646  */
+#line 371 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1764,22 +1784,22 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1768 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1788 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 371 "cond.y" /* yacc.c:1646  */
+#line 391 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             (yyval.identifier) = COND_GetString( cond, &(yyvsp[0].str) );
             if( !(yyval.identifier) )
                 YYABORT;
         }
-#line 1779 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1799 "cond.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1783 "E:/reactosSync3.0_gcc/dll/win32/msi/cond.tab.c" /* yacc.c:1646  */
+#line 1803 "cond.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2007,7 +2027,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 379 "cond.y" /* yacc.c:1906  */
+#line 399 "cond.y" /* yacc.c:1906  */
 
 
 

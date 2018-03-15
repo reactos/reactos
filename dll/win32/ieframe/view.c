@@ -19,6 +19,10 @@
 
 #include "ieframe.h"
 
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
+
 /**********************************************************************
  * Implement the IViewObject interface
  */
@@ -56,7 +60,7 @@ static HRESULT WINAPI ViewObject_Draw(IViewObject2 *iface, DWORD dwDrawAspect,
     FIXME("(%p)->(%d %d %p %p %p %p %p %p %p %08lx)\n", This, dwDrawAspect, lindex,
             pvAspect, ptd, hdcTargetDev, hdcDraw, lprcBounds, lprcWBounds, pfnContinue,
             dwContinue);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI ViewObject_GetColorSet(IViewObject2 *iface, DWORD dwAspect,

@@ -20,10 +20,9 @@
 
 #include <windef.h>
 #include <winuser.h>
-#include <dlgs.h>
 
+#include "cdlg.h"
 #include "filedlgbrowser.h"
-#include "resource.h"
 
 /*
  * Everything that does not depend on language,

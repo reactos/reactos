@@ -15,7 +15,7 @@ list(APPEND SOURCE
     search.c
     stream.c
     webbrowser.c
-    hhctrl.h)
+    precomp.h)
 
 add_library(hhctrl SHARED
     ${SOURCE}
@@ -34,5 +34,5 @@ set_module_type(hhctrl win32ocx)
 target_link_libraries(hhctrl uuid wine)
 add_importlibs(hhctrl advapi32 comctl32 shlwapi ole32 oleaut32 user32 gdi32 msvcrt kernel32 ntdll)
 add_dependencies(hhctrl stdole2 wineheaders)
-add_pch(hhctrl hhctrl.h SOURCE)
+add_pch(hhctrl precomp.h SOURCE)
 add_cd_file(TARGET hhctrl DESTINATION reactos/system32 FOR all)

@@ -18,7 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define _WIN32_MSI 300
+#define COBJMACROS
+
+#include <stdio.h>
+
+#include <windows.h>
+#include <msiquery.h>
+#include <msidefs.h>
+#include <msi.h>
+#include <fci.h>
+#include <objidl.h>
+#include <srrestoreptapi.h>
+#include <shlobj.h>
+#include <winsvc.h>
+#include <shellapi.h>
+
+#include "wine/test.h"
 
 static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE*);
@@ -53,6 +69,8 @@ static CHAR PROG_FILES_DIR_NATIVE[MAX_PATH];
 static CHAR COMMON_FILES_DIR[MAX_PATH];
 static CHAR APP_DATA_DIR[MAX_PATH];
 static CHAR WINDOWS_DIR[MAX_PATH];
+
+static const char *customdll;
 
 /* msi database data */
 
@@ -674,6 +692,18 @@ static const CHAR wrv_component_dat[] = "Component\tComponentId\tDirectory_\tAtt
                                         "Component\tComponent\n"
                                         "augustus\t\tMSITESTDIR\t0\t\taugustus\n";
 
+static const CHAR ca1_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
+                                               "s72\tS255\tI2\n"
+                                               "InstallExecuteSequence\tAction\n"
+                                               "maintest\tMAIN_TEST\t700\n"
+                                               "testretval\tTEST_RETVAL\t710\n";
+
+static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
+                                             "s72\ti2\tS64\tS0\n"
+                                             "CustomAction\tAction\n"
+                                             "maintest\t1\tcustom.dll\tmain_test\n"
+                                             "testretval\t1\tcustom.dll\ttest_retval\n";
+
 static const CHAR ca51_component_dat[] = "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
                                          "s72\tS38\ts72\ti2\tS255\tS72\n"
                                          "Component\tComponent\n"
@@ -1270,12 +1300,12 @@ static const char ft_install_exec_seq_dat[] =
     "InstallFinalize\t\t1500\n";
 
 static const char da_custom_action_dat[] =
-    "Action\tType\tSource\tTarget\tISComments\n"
-    "s72\ti2\tS64\tS0\tS255\n"
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
     "CustomAction\tAction\n"
-    "deferred\t1074\tCMDEXE\t/c if exist msitest (exit 0) else (exit 1)\t\n"
-    "immediate\t50\tCMDEXE\t/c mkdir msitest\t\n"
-    "cleanup\t50\tCMDEXE\t/c rmdir msitest\t\n";
+    "setprop\t51\tdeferred\t[TESTPATH]\n"
+    "immediate\t1\tcustom.dll\tda_immediate\n"
+    "deferred\t1025\tcustom.dll\tda_deferred\n";
 
 static const char da_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -1285,10 +1315,10 @@ static const char da_install_exec_seq_dat[] =
     "FileCost\t\t300\n"
     "CostFinalize\t\t400\n"
     "InstallInitialize\t\t500\n"
-    "deferred\t\t600\n"
-    "immediate\t\t700\n"
-    "InstallFinalize\t\t1100\n"
-    "cleanup\t\t1200\n";
+    "setprop\t\t600\n"
+    "deferred\t\t700\n"
+    "immediate\t\t800\n"
+    "InstallFinalize\t\t1100\n";
 
 typedef struct _msi_table
 {
@@ -1665,6 +1695,13 @@ static const msi_table sf_tables[] =
     ADD_TABLE(install_exec_seq),
     ADD_TABLE(rof_media),
     ADD_TABLE(property),
+};
+
+static const msi_table ca1_tables[] =
+{
+    ADD_TABLE(property),
+    ADD_TABLE(ca1_install_exec_seq),
+    ADD_TABLE(ca1_custom_action),
 };
 
 static const msi_table ca51_tables[] =
@@ -2571,6 +2608,29 @@ static LONG delete_key( HKEY key, LPCSTR subkey, REGSAM access )
     if (pRegDeleteKeyExA)
         return pRegDeleteKeyExA( key, subkey, access, 0 );
     return RegDeleteKeyA( key, subkey );
+}
+
+static char *load_resource(const char *name)
+{
+    static char path[MAX_PATH];
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    GetTempFileNameA(".", name, 0, path);
+
+    file = CreateFileA(path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", path, GetLastError());
+
+    res = FindResourceA(NULL, name, "TESTDLL");
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+
+    return path;
 }
 
 static void test_MsiInstallProduct(void)
@@ -3996,6 +4056,84 @@ static void test_sourcefolder(void)
 error:
     DeleteFileA(msifile);
     DeleteFileA("augustus");
+}
+
+static void add_custom_dll(void)
+{
+    MSIHANDLE hdb = 0, record;
+    UINT res;
+
+    res = MsiOpenDatabaseW(msifileW, MSIDBOPEN_TRANSACT, &hdb);
+    ok(res == ERROR_SUCCESS, "failed to open db: %u\n", res);
+
+    res = run_query(hdb, 0, "CREATE TABLE `Binary` (`Name` CHAR(72) NOT NULL, `Data` OBJECT NOT NULL PRIMARY KEY `Name`)");
+    ok(res == ERROR_SUCCESS, "failed to create Binary table: %u\n", res);
+
+    record = MsiCreateRecord(1);
+    res = MsiRecordSetStreamA(record, 1, customdll);
+    ok(res == ERROR_SUCCESS, "failed to add %s to stream: %u\n", customdll, res);
+
+    res = run_query(hdb, record, "INSERT INTO `Binary` (`Name`, `Data`) VALUES ('custom.dll', ?)");
+    ok(res == ERROR_SUCCESS, "failed to insert into Binary table: %u\n", res);
+
+    res = MsiDatabaseCommit(hdb);
+    ok(res == ERROR_SUCCESS, "failed to commit database: %u\n", res);
+
+    MsiCloseHandle(record);
+    MsiCloseHandle(hdb);
+}
+
+static INT CALLBACK ok_callback(void *context, UINT message_type, MSIHANDLE record)
+{
+    if (message_type == INSTALLMESSAGE_USER)
+    {
+        char file[200];
+        char msg[2000];
+        DWORD len;
+
+        len = sizeof(file);
+        MsiRecordGetStringA(record, 2, file, &len);
+        len = sizeof(msg);
+        MsiRecordGetStringA(record, 5, msg, &len);
+
+        todo_wine_if(MsiRecordGetInteger(record, 1))
+        ok_(file, MsiRecordGetInteger(record, 3)) (MsiRecordGetInteger(record, 4), "%s", msg);
+
+        return 1;
+    }
+    return 0;
+}
+
+static void test_customaction1(void)
+{
+    UINT r;
+
+    create_database(msifile, ca1_tables, sizeof(ca1_tables) / sizeof(msi_table));
+    add_custom_dll();
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    r = MsiInstallProductA(msifile, "MAIN_TEST=1");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    /* Test return values */
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=0");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=1626"); /* ERROR_FUNCTION_NOT_CALLED*/
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=1602");
+    ok(r == ERROR_INSTALL_USEREXIT, "Expected ERROR_INSTALL_USEREXIT, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=259"); /* ERROR_NO_MORE_ITEMS */
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    /* any other error maps to ERROR_INSTALL_FAILURE */
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=1");
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    DeleteFileA(msifile);
 }
 
 static void test_customaction51(void)
@@ -5904,22 +6042,44 @@ static void test_feature_tree(void)
     DeleteFileA( msifile );
 }
 
+static void check_file_matches(const char *filename, const char *text)
+{
+    char buffer[200];
+    HANDLE file;
+    DWORD size;
+
+    file = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    ReadFile(file, buffer, sizeof(buffer), &size, NULL);
+    ok(size == strlen(text) && !memcmp(buffer, text, size), "got %.*s\n", size, buffer);
+    CloseHandle(file);
+}
+
 static void test_deferred_action(void)
 {
+    char path[200], file[200], buffer[200];
     UINT r;
 
+    GetTempPathA(sizeof(path), path);
+    GetTempFileNameA(path, "da", 0, file);
+    sprintf(buffer, "TESTPATH=\"%s\"", file);
+
     create_database(msifile, da_tables, sizeof(da_tables) / sizeof(da_tables[0]));
+    add_custom_dll();
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
-    r = MsiInstallProductA(msifile, "CMDEXE=\"cmd.exe\"");
+    r = MsiInstallProductA(msifile, buffer);
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
     {
         skip("Not enough rights to perform tests\n");
         goto error;
     }
-todo_wine
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+todo_wine
+    check_file_matches(file, "onetwo");
+
+    ok(DeleteFileA(file), "Directory not created\n");
 
 error:
     DeleteFileA(msifile);
@@ -5971,6 +6131,9 @@ START_TEST(install)
     lstrcatA(log_file, "\\msitest.log");
     MsiEnableLogA(INSTALLLOGMODE_FATALEXIT, log_file, 0);
 
+    customdll = load_resource("custom.dll");
+    MsiSetExternalUIRecord(ok_callback, INSTALLLOGMODE_USER, NULL, NULL);
+
     if (pSRSetRestorePointA) /* test has side-effects on win2k3 that cause failures in following tests */
         test_MsiInstallProduct();
     test_MsiSetComponentState();
@@ -5990,6 +6153,7 @@ START_TEST(install)
     test_adminprops();
     test_missingcab();
     test_sourcefolder();
+    test_customaction1();
     test_customaction51();
     test_installstate();
     test_sourcepath();
@@ -6014,6 +6178,8 @@ START_TEST(install)
     test_remove_upgrade_code();
     test_feature_tree();
     test_deferred_action();
+
+    DeleteFileA(customdll);
 
     DeleteFileA(log_file);
 

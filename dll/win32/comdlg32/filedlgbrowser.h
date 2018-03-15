@@ -22,6 +22,17 @@
 #ifndef SHBROWSER_H
 #define SHBROWSER_H
 
+#ifndef RC_INVOKED
+#include <stdarg.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "shlobj.h"
+#include "objbase.h"
+#include "commdlg.h"
+
 /***********************************************************************
  * Defines and global variables
  */

@@ -17,6 +17,14 @@
  *
  */
 
+#include <assert.h>
+#include <stdarg.h>
+#define NONAMELESSUNION
+#include "windef.h"
+#include "winbase.h"
+#include "wincrypt.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);

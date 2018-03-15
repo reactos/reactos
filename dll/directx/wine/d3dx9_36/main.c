@@ -20,11 +20,14 @@
  *
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
 
-/***********************************************************************
- * DllMain.
- */
+#include "initguid.h"
+#include "d3dx9_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
+
 BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
 {
     switch(reason)
@@ -38,14 +41,13 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
     return TRUE;
 }
 
-/***********************************************************************
- * D3DXCheckVersion
- * Checks whether we are compiling against the correct d3d and d3dx library.
- */
-BOOL WINAPI D3DXCheckVersion(UINT d3dsdkvers, UINT d3dxsdkvers)
+BOOL WINAPI D3DXCheckVersion(UINT d3d_sdk_ver, UINT d3dx_sdk_ver)
 {
-    if(d3dsdkvers==D3D_SDK_VERSION && d3dxsdkvers==36)
-        return TRUE;
-    else
-        return FALSE;
+    return d3d_sdk_ver == D3D_SDK_VERSION && d3dx_sdk_ver == D3DX_SDK_VERSION;
+}
+
+DWORD WINAPI D3DXCpuOptimizations(BOOL enable)
+{
+    FIXME("%#x - stub\n", enable);
+    return 0;
 }

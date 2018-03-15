@@ -13,7 +13,7 @@ list(APPEND SOURCE
     download.c
     instrument.c
     port.c
-    dmusic_private.h)
+    precomp.h)
 
 add_library(dmusic SHARED
     ${SOURCE}
@@ -23,5 +23,5 @@ add_library(dmusic SHARED
 set_module_type(dmusic win32dll)
 target_link_libraries(dmusic dxguid uuid wine)
 add_importlibs(dmusic ole32 advapi32 winmm dsound user32 msvcrt kernel32 ntdll)
-add_pch(dmusic dmusic_private.h SOURCE)
+add_pch(dmusic precomp.h SOURCE)
 add_cd_file(TARGET dmusic DESTINATION reactos/system32 FOR all)

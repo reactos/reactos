@@ -322,6 +322,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
     NMHDR                                   *notifyHeader;
     // RECT                                    newBounds;
     HRESULT                                 hResult;
+    LRESULT                                 result;
     
     hResult = S_OK;
     if (uMsg == WM_NOTIFY)
@@ -342,7 +343,9 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
 #endif
                     break;
                 case NM_CUSTOMDRAW:
-                    *theResult = OnCustomDraw((LPNMCUSTOMDRAW)lParam);
+                    result = OnCustomDraw((LPNMCUSTOMDRAW)lParam);
+                    if (theResult)
+                        *theResult = result;
                     return S_OK;
             }
         }

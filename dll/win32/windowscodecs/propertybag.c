@@ -17,7 +17,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "wine/unicode.h"
+
 #include "wincodecs_private.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 typedef struct PropertyBag {
     IPropertyBag2 IPropertyBag2_iface;
@@ -198,7 +213,7 @@ static HRESULT WINAPI PropertyBag_CountProperties(IPropertyBag2 *iface, ULONG *p
     return S_OK;
 }
 
-static HRESULT copy_propbag2(PROPBAG2 *dest, PROPBAG2 *src)
+static HRESULT copy_propbag2(PROPBAG2 *dest, const PROPBAG2 *src)
 {
     dest->cfType = src->cfType;
     dest->clsid = src->clsid;
@@ -263,7 +278,7 @@ static const IPropertyBag2Vtbl PropertyBag_Vtbl = {
     PropertyBag_LoadObject
 };
 
-HRESULT CreatePropertyBag2(PROPBAG2 *options, UINT count,
+HRESULT CreatePropertyBag2(const PROPBAG2 *options, UINT count,
                            IPropertyBag2 **ppPropertyBag2)
 {
     UINT i;

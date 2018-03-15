@@ -20,6 +20,8 @@
 
 #include "dmusic_private.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
+
 static inline IReferenceClockImpl *impl_from_IReferenceClock(IReferenceClock *iface)
 {
     return CONTAINING_RECORD(iface, IReferenceClockImpl, IReferenceClock_iface);

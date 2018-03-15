@@ -17,8 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define DIRECTINPUT_VERSION 0x0700
 
+#define COBJMACROS
+#include <windows.h>
+
+#include <math.h>
+#include <stdlib.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "wingdi.h"
+#include "dinput.h"
 
 static const HRESULT SetCoop_null_window[16] =  {
     E_INVALIDARG, E_INVALIDARG, E_INVALIDARG, E_INVALIDARG,

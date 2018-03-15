@@ -11,11 +11,6 @@
 
 #include "gui.h"
 #include "misc.h"
-#include "cabinet.h"
-
- /* SESSION Operation */
-#define EXTRACT_FILLFILELIST  0x00000001
-#define EXTRACT_EXTRACTFILES  0x00000002
 
 static HANDLE hLog = NULL;
 
@@ -201,55 +196,6 @@ BOOL GetStorageDirectory(ATL::CStringW& Directory)
     Directory += L"\\rapps";
 
     return (CreateDirectoryW(Directory.GetString(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS);
-}
-
-BOOL ExtractFilesFromCab(const ATL::CStringW &CabName, const ATL::CStringW &OutputPath)
-{
-    return ExtractFilesFromCab(CabName.GetString(), OutputPath.GetString());
-}
-
-BOOL ExtractFilesFromCab(LPCWSTR lpCabName, LPCWSTR lpOutputPath)
-{
-    HINSTANCE hCabinetDll;
-    CHAR szCabName[MAX_PATH];
-    SESSION Dest;
-    HRESULT Result;
-    fnExtract pfnExtract;
-
-    hCabinetDll = LoadLibraryW(L"cabinet.dll");
-    if (hCabinetDll)
-    {
-        pfnExtract = (fnExtract) GetProcAddress(hCabinetDll, "Extract");
-        if (pfnExtract)
-        {
-            ZeroMemory(&Dest, sizeof(Dest));
-
-            WideCharToMultiByte(CP_ACP, 0, lpOutputPath, -1, Dest.Destination, MAX_PATH, NULL, NULL);
-            WideCharToMultiByte(CP_ACP, 0, lpCabName, -1, szCabName, _countof(szCabName), NULL, NULL);
-            Dest.Operation = EXTRACT_FILLFILELIST;
-
-            Result = pfnExtract(&Dest, szCabName);
-            if (Result == S_OK)
-            {
-                Dest.Operation = EXTRACT_EXTRACTFILES;
-                CreateDirectoryW(lpOutputPath, NULL);
-
-                Result = pfnExtract(&Dest, szCabName);
-                if (Result == S_OK)
-                {
-                    FreeLibrary(hCabinetDll);
-                    return TRUE;
-                }
-                else
-                {
-                    RemoveDirectoryW(lpOutputPath);
-                }
-            }
-        }
-        FreeLibrary(hCabinetDll);
-    }
-
-    return FALSE;
 }
 
 VOID InitLogs()

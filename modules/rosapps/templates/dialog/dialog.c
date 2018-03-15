@@ -123,7 +123,7 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     LPNMHDR pnmh;
     LPCREATESTRUCT lpCS;
     LONG nThisApp = 0;
-    DialogData* pData = (DialogData*)GetWindowLong(hDlg, DWL_USER);
+    DialogData* pData = (DialogData*)GetWindowLongPtr(hDlg, DWLP_USER);
     if (pData) nThisApp = pData->lData;
 
     switch (message) {
@@ -136,7 +136,7 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_INITDIALOG:
         pData = (DialogData*)lParam;
-        SetWindowLong(hDlg, DWL_USER, (LONG)pData);
+        SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)pData);
         if (pData) nThisApp = pData->lData;
         return OnCreate(hDlg, nThisApp);
 

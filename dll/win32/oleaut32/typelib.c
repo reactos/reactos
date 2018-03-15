@@ -47,12 +47,34 @@
  *
  */
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <winternl.h>
-#include <lzexpand.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <ctype.h>
 
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "winerror.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "winternl.h"
+#include "lzexpand.h"
+
+#include "wine/unicode.h"
+#include "objbase.h"
 #include "typelib.h"
+#include "wine/debug.h"
+#include "variant.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(typelib);
@@ -2415,7 +2437,7 @@ MSFT_DoFuncs(TLBContext*     pcx,
         ptfd->funcdesc.callconv   =  (pFuncRec->FKCCIC) >> 8 & 0xF;
         ptfd->funcdesc.cParams    =   pFuncRec->nrargs  ;
         ptfd->funcdesc.cParamsOpt =   pFuncRec->nroargs ;
-        ptfd->funcdesc.oVft       =   pFuncRec->VtableOffset & ~1;
+        ptfd->funcdesc.oVft       =   (pFuncRec->VtableOffset & ~1) * sizeof(void *) / pTI->pTypeLib->ptr_size;
         ptfd->funcdesc.wFuncFlags =   LOWORD(pFuncRec->Flags) ;
 
         /* nameoffset is sometimes -1 on the second half of a propget/propput
@@ -3501,10 +3523,6 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
     /* name, eventually add to a hash table */
     pTypeLibImpl->Name = MSFT_ReadName(&cx, tlbHeader.NameOffset);
 
-    TRACE("%s, syskind %d, version %d.%d, flags %04x\n",
-        debugstr_w(pTypeLibImpl->Name->str), pTypeLibImpl->syskind,
-        pTypeLibImpl->ver_major, pTypeLibImpl->ver_minor, pTypeLibImpl->libflags);
-
     /* help info */
     pTypeLibImpl->DocString = MSFT_ReadString(&cx, tlbHeader.helpstring);
     pTypeLibImpl->HelpFile = MSFT_ReadString(&cx, tlbHeader.helpfile);
@@ -4241,7 +4259,7 @@ static void SLTG_DoFuncs(char *pBlk, char *pFirstItem, ITypeInfoImpl *pTI,
 	pFuncDesc->funcdesc.callconv = pFunc->nacc & 0x7;
 	pFuncDesc->funcdesc.cParams = pFunc->nacc >> 3;
 	pFuncDesc->funcdesc.cParamsOpt = (pFunc->retnextopt & 0x7e) >> 1;
-	pFuncDesc->funcdesc.oVft = pFunc->vtblpos & ~1;
+	pFuncDesc->funcdesc.oVft = (pFunc->vtblpos & ~1) * sizeof(void *) / pTI->pTypeLib->ptr_size;
         if (pFunc->helpstring != 0xffff)
             pFuncDesc->HelpString = decode_string(hlp_strings, pBlk + pFunc->helpstring, pNameTable - pBlk, pTI->pTypeLib);
 
@@ -6531,6 +6549,44 @@ DWORD _invoke(FARPROC func, CALLCONV callconv, int nrargs, DWORD_PTR *args)
     return res;
 }
 
+#elif defined(__arm__)
+
+extern LONGLONG CDECL call_method( void *func, int nb_stk_args, const DWORD *stk_args, const DWORD *reg_args );
+__ASM_GLOBAL_FUNC( call_method,
+                    /* r0 = *func
+                     * r1 = nb_stk_args
+                     * r2 = *stk_args (pointer to 'nb_stk_args' DWORD values to push on stack)
+                     * r3 = *reg_args (pointer to 8, 64-bit d0-d7 (double) values OR as 16, 32-bit s0-s15 (float) values, followed by 4, 32-bit (DWORD) r0-r3 values)
+                     */
+
+                    "push {fp, lr}\n\t"             /* Save frame pointer and return address (stack still aligned to 8 bytes) */
+                    "mov fp, sp\n\t"                /* Save stack pointer as our frame for cleaning the stack on return */
+
+                    "lsls r1, r1, #2\n\t"           /* r1 = nb_stk_args * sizeof(DWORD) */
+                    "beq 1f\n\t"                    /* Skip allocation if no stack args */
+                    "add r2, r2, r1\n"              /* Calculate ending address of incoming stack data */
+                    "2:\tldr ip, [r2, #-4]!\n\t"    /* Get next value */
+                    "str ip, [sp, #-4]!\n\t"        /* Push it on the stack */
+                    "subs r1, r1, #4\n\t"           /* Decrement count */
+                    "bgt 2b\n\t"                    /* Loop till done */
+
+                    "1:\n\t"
+#ifndef __SOFTFP__
+                    "vldm r3!, {s0-s15}\n\t"        /* Load the s0-s15/d0-d7 arguments */
+#endif
+                    "mov ip, r0\n\t"                /* Save the function call address to ip before we nuke r0 with arguments to pass */
+                    "ldm r3, {r0-r3}\n\t"           /* Load the r0-r3 arguments */
+
+                    "blx ip\n\t"                    /* Call the target function */
+
+                    "mov sp, fp\n\t"                /* Clean the stack using fp */
+                    "pop {fp, pc}\n\t"              /* Restore fp and return */
+                )
+
+/* same function but returning single/double floating point */
+static float (CDECL * const call_float_method)(void *, int, const DWORD *, const DWORD *) = (void *)call_method;
+static double (CDECL * const call_double_method)(void *, int, const DWORD *, const DWORD *) = (void *)call_method;
+
 #endif  /* __x86_64__ */
 
 static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, VARTYPE *vt)
@@ -6562,7 +6618,6 @@ static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc,
         break;
 
     case TKIND_ALIAS:
-        tdesc = &tattr->tdescAlias;
         hr = typedescvt_to_variantvt(tinfo2, &tattr->tdescAlias, vt);
         break;
 
@@ -6956,6 +7011,182 @@ DispCallFunc(
     TRACE("retval: %s\n", debugstr_variant(pvargResult));
     return S_OK;
 
+#elif defined(__arm__)
+    int argspos;
+    void *func;
+    UINT i;
+    DWORD *args;
+    struct {
+#ifndef __SOFTFP__
+        union {
+            float s[16];
+            double d[8];
+        } sd;
+#endif
+        DWORD r[4];
+    } regs;
+    int rcount;     /* 32-bit register index count */
+#ifndef __SOFTFP__
+    int scount = 0; /* single-precision float register index count */
+    int dcount = 0; /* double-precision float register index count */
+#endif
+
+    TRACE("(%p, %ld, %d, %d, %d, %p, %p, %p (vt=%d))\n",
+        pvInstance, oVft, cc, vtReturn, cActuals, prgvt, prgpvarg, pvargResult, V_VT(pvargResult));
+
+    if (cc != CC_STDCALL && cc != CC_CDECL)
+    {
+        FIXME("unsupported calling convention %d\n",cc);
+        return E_INVALIDARG;
+    }
+
+    argspos = 0;
+    rcount = 0;
+
+    /* Determine if we need to pass a pointer for the return value as arg 0.  If so, do that */
+    /*  first as it will need to be in the 'r' registers:                                    */
+    switch (vtReturn)
+    {
+    case VT_DECIMAL:
+    case VT_VARIANT:
+        regs.r[rcount++] = (DWORD)pvargResult;  /* arg 0 is a pointer to the result */
+        break;
+    case VT_HRESULT:
+        WARN("invalid return type %u\n", vtReturn);
+        return E_INVALIDARG;
+    default:                    /* And all others are in 'r', 's', or 'd' registers or have no return value */
+        break;
+    }
+
+    if (pvInstance)
+    {
+        const FARPROC *vtable = *(FARPROC **)pvInstance;
+        func = vtable[oVft/sizeof(void *)];
+        regs.r[rcount++] = (DWORD)pvInstance; /* the This pointer is always the first parameter */
+    }
+    else func = (void *)oVft;
+
+    /* maximum size for an argument is sizeof(VARIANT).  Also allow for return pointer and stack alignment. */
+    args = heap_alloc( sizeof(VARIANT) * cActuals + sizeof(DWORD) * 4 );
+
+    for (i = 0; i < cActuals; i++)
+    {
+        VARIANT *arg = prgpvarg[i];
+        DWORD *pdwarg = (DWORD *)(arg);     /* a reinterpret_cast of the variant, used for copying structures when they are split between registers and stack */
+        int ntemp;              /* Used for counting words split between registers and stack */
+
+        switch (prgvt[i])
+        {
+        case VT_EMPTY:
+            break;
+        case VT_R8:             /* these must be 8-byte aligned, and put in 'd' regs or stack, as they are double-floats */
+        case VT_DATE:
+#ifndef __SOFTFP__
+            dcount = max( (scount + 1) / 2, dcount );
+            if (dcount < 8)
+            {
+                regs.sd.d[dcount++] = V_R8(arg);
+            }
+            else
+            {
+                argspos += (argspos % 2);   /* align argspos to 8-bytes */
+                memcpy( &args[argspos], &V_R8(arg), sizeof(V_R8(arg)) );
+                argspos += sizeof(V_R8(arg)) / sizeof(DWORD);
+            }
+            break;
+#endif
+        case VT_I8:             /* these must be 8-byte aligned, and put in 'r' regs or stack, as they are long-longs */
+        case VT_UI8:
+        case VT_CY:
+            if (rcount < 3)
+            {
+                rcount += (rcount % 2);     /* align rcount to 8-byte register pair */
+                memcpy( &regs.r[rcount], &V_UI8(arg), sizeof(V_UI8(arg)) );
+                rcount += sizeof(V_UI8(arg)) / sizeof(DWORD);
+            }
+            else
+            {
+                rcount = 4;                 /* Make sure we flag that all 'r' regs are full */
+                argspos += (argspos % 2);   /* align argspos to 8-bytes */
+                memcpy( &args[argspos], &V_UI8(arg), sizeof(V_UI8(arg)) );
+                argspos += sizeof(V_UI8(arg)) / sizeof(DWORD);
+            }
+            break;
+        case VT_DECIMAL:        /* these structures are 8-byte aligned, and put in 'r' regs or stack, can be split between the two */
+        case VT_VARIANT:
+            /* 8-byte align 'r' and/or stack: */
+            if (rcount < 3)
+                rcount += (rcount % 2);
+            else
+            {
+                rcount = 4;
+                argspos += (argspos % 2);
+            }
+            ntemp = sizeof(*arg) / sizeof(DWORD);
+            while (ntemp > 0)
+            {
+                if (rcount < 4)
+                    regs.r[rcount++] = *pdwarg++;
+                else
+                    args[argspos++] = *pdwarg++;
+                --ntemp;
+            }
+            break;
+        case VT_BOOL:  /* VT_BOOL is 16-bit but BOOL is 32-bit, needs to be extended */
+            if (rcount < 4)
+                regs.r[rcount++] = V_BOOL(arg);
+            else
+                args[argspos++] = V_BOOL(arg);
+            break;
+        case VT_R4:             /* these must be 4-byte aligned, and put in 's' regs or stack, as they are single-floats */
+#ifndef __SOFTFP__
+            if (!(scount % 2)) scount = max( scount, dcount * 2 );
+            if (scount < 16)
+                regs.sd.s[scount++] = V_R4(arg);
+            else
+                args[argspos++] = V_UI4(arg);
+            break;
+#endif
+        default:
+            if (rcount < 4)
+                regs.r[rcount++] = V_UI4(arg);
+            else
+                args[argspos++] = V_UI4(arg);
+            break;
+        }
+        TRACE("arg %u: type %s %s\n", i, debugstr_vt(prgvt[i]), debugstr_variant(arg));
+    }
+
+    argspos += (argspos % 2);   /* Make sure stack function alignment is 8-byte */
+
+    switch (vtReturn)
+    {
+    case VT_EMPTY:      /* EMPTY = no return value */
+    case VT_DECIMAL:    /* DECIMAL and VARIANT already have a pointer argument passed (see above) */
+    case VT_VARIANT:
+        call_method( func, argspos, args, (DWORD*)&regs );
+        break;
+    case VT_R4:
+        V_R4(pvargResult) = call_float_method( func, argspos, args, (DWORD*)&regs );
+        break;
+    case VT_R8:
+    case VT_DATE:
+        V_R8(pvargResult) = call_double_method( func, argspos, args, (DWORD*)&regs );
+        break;
+    case VT_I8:
+    case VT_UI8:
+    case VT_CY:
+        V_UI8(pvargResult) = call_method( func, argspos, args, (DWORD*)&regs );
+        break;
+    default:
+        V_UI4(pvargResult) = call_method( func, argspos, args, (DWORD*)&regs );
+        break;
+    }
+    heap_free( args );
+    if (vtReturn != VT_VARIANT) V_VT(pvargResult) = vtReturn;
+    TRACE("retval: %s\n", debugstr_variant(pvargResult));
+    return S_OK;
+
 #else
     FIXME( "(%p, %ld, %d, %d, %d, %p, %p, %p (vt=%d)): not implemented for this CPU\n",
            pvInstance, oVft, cc, vtReturn, cActuals, prgvt, prgpvarg, pvargResult, V_VT(pvargResult));
@@ -7049,7 +7280,6 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
             UINT cNamedArgs = pDispParams->cNamedArgs;
             DISPID *rgdispidNamedArgs = pDispParams->rgdispidNamedArgs;
             UINT vargs_converted=0;
-            ULONG_PTR offset;
 
             hres = S_OK;
 
@@ -7298,11 +7528,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                     break;
                 }
             }
-            if (FAILED(hres))
-            {
-                ERR("failed: %08x\n", hres);
-                goto func_fail; /* FIXME: we don't free changed types here */
-            }
+            if (FAILED(hres)) goto func_fail; /* FIXME: we don't free changed types here */
 
             /* VT_VOID is a special case for return types, so it is not
              * handled in the general function */
@@ -7315,16 +7541,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                 if (FAILED(hres)) goto func_fail; /* FIXME: we don't free changed types here */
             }
 
-            offset = func_desc->oVft & 0xFFFC;
-#ifdef _WIN64
-            if (This->pTypeLib->syskind == SYS_WIN32)
-            {
-                offset *= 2;
-                TRACE("extended offset to %#lx for SYS_WIN32\n", offset);
-            }
-#endif
-            TRACE("func_desc->oVft %#x, offset %#lx\n", func_desc->oVft, offset);
-            hres = DispCallFunc(pIUnk, offset, func_desc->callconv,
+            hres = DispCallFunc(pIUnk, func_desc->oVft & 0xFFFC, func_desc->callconv,
                                 V_VT(&varresult), func_desc->cParams, rgvt,
                                 prgpvarg, &varresult);
 
@@ -7451,7 +7668,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                      * pointer to be valid */
                     VariantInit(pVarResult);
                     hres = IDispatch_Invoke(pDispatch, DISPID_VALUE, &IID_NULL,
-                        GetSystemDefaultLCID(), INVOKE_PROPERTYGET,
+                        GetSystemDefaultLCID(), wFlags,
                         pDispParams, pVarResult, pExcepInfo, pArgErr);
                     IDispatch_Release(pDispatch);
                 }

@@ -485,7 +485,21 @@
 #define SelectBrush(hdc,hbr) ((HBRUSH)SelectObject((hdc),(HGDIOBJ)(HBRUSH)(hbr)))
 #define SelectFont(hdc,hfont) ((HFONT)SelectObject((hdc),(HGDIOBJ)(HFONT)(hfont)))
 #define SelectPen(hdc,hpen) ((HPEN)SelectObject((hdc),(HGDIOBJ)(HPEN)(hpen)))
-#define SetDlgMsgResult(hwnd,msg,result) (( (msg) == WM_CTLCOLORMSGBOX || (msg) == WM_CTLCOLOREDIT || (msg) == WM_CTLCOLORLISTBOX || (msg) == WM_CTLCOLORBTN || (msg) == WM_CTLCOLORDLG || (msg) == WM_CTLCOLORSCROLLBAR || (msg) == WM_CTLCOLORSTATIC || (msg) == WM_COMPAREITEM || (msg) == WM_VKEYTOITEM || (msg) == WM_CHARTOITEM || (msg) == WM_QUERYDRAGICON || (msg) == WM_INITDIALOG ) ? (BOOL)(result) : (SetWindowLong((hwnd),DWL_MSGRESULT,(LPARAM)(LRESULT)(result)),TRUE))
+#define SetDlgMsgResult(hwnd,msg,result) \
+     (( ((msg) == WM_CTLCOLORMSGBOX) || \
+        ((msg) == WM_CTLCOLOREDIT) || \
+        ((msg) == WM_CTLCOLORLISTBOX) || \
+        ((msg) == WM_CTLCOLORBTN) || \
+        ((msg) == WM_CTLCOLORDLG) || \
+        ((msg) == WM_CTLCOLORSCROLLBAR) || \
+        ((msg) == WM_CTLCOLORSTATIC) || \
+        ((msg) == WM_COMPAREITEM) || \
+        ((msg) == WM_VKEYTOITEM) || \
+        ((msg) == WM_CHARTOITEM) || \
+        ((msg) == WM_QUERYDRAGICON) || \
+        ((msg) == WM_INITDIALOG) ) ? \
+        (BOOL)(result) : \
+        (SetWindowLongPtr((hwnd), DWLP_MSGRESULT, (LPARAM)(LRESULT)(result)), TRUE) )
 #define SetWindowFont(hwnd,hfont,fRedraw) FORWARD_WM_SETFONT((hwnd),(hfont),(fRedraw),SendMessage)
 #define SetWindowRedraw(hwnd,fRedraw) ((void)SendMessage(hwnd,WM_SETREDRAW,(WPARAM)(BOOL)(fRedraw),0))
 #define Static_Enable(hwndCtl,fEnable) EnableWindow((hwndCtl),(fEnable))

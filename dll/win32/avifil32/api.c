@@ -17,9 +17,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winerror.h"
+
+#include "ole2.h"
+#include "shellapi.h"
+#include "shlobj.h"
+#include "vfw.h"
+#include "msacm.h"
+
 #include "avifile_private.h"
 
-#include <winreg.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(avifile);
+
 
 /***********************************************************************
  * for AVIBuildFilterW -- uses fixed size table

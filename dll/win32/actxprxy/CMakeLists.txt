@@ -20,7 +20,6 @@ add_rpcproxy_files(
 
 list(APPEND SOURCE
     usrmarshal.c
-    actxprxy.rc
     ${CMAKE_CURRENT_BINARY_DIR}/actxprxy_activscp_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/actxprxy_comcat_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/actxprxy_docobj_p.c
@@ -34,10 +33,15 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/actxprxy_shobjidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/actxprxy_urlhist_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+    precomp.h)
+
+add_library(actxprxy SHARED
+    ${SOURCE}
+    actxprxy.rc
     ${CMAKE_CURRENT_BINARY_DIR}/actxprxy.def)
 
-add_library(actxprxy SHARED ${SOURCE})
 set_module_type(actxprxy win32dll)
 target_link_libraries(actxprxy uuid wine ${PSEH_LIB})
 add_importlibs(actxprxy rpcrt4 ole32 oleaut32 msvcrt kernel32 ntdll)
+add_pch(actxprxy precomp.h SOURCE)
 add_cd_file(TARGET actxprxy DESTINATION reactos/system32 FOR all)

@@ -21,7 +21,20 @@
  *
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+
 #include "dbghelp_private.h"
+#include "image_private.h"
+#ifndef DBGHELP_STATIC_LIB
+#include "winternl.h"
+#include "wine/debug.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 

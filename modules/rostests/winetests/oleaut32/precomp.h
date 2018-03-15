@@ -1,3 +1,4 @@
+
 #ifndef _OLEAUT32_WINETEST_PRECOMP_H_
 #define _OLEAUT32_WINETEST_PRECOMP_H_
 
@@ -13,6 +14,7 @@
 
 #include <wine/test.h>
 
+#include <winreg.h>
 #include <winnls.h>
 #include <wingdi.h>
 #include <ole2.h>

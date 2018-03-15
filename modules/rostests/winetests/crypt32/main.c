@@ -18,7 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winerror.h>
+#include <wincrypt.h>
+#include <winreg.h>
+
+#include "wine/test.h"
 
 static HMODULE hCrypt;
 

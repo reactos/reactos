@@ -70,7 +70,7 @@ else()
         storage.c
         symbol.c
         type.c
-        dbghelp_private.h
+        precomp.h
         ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c)
 
     add_library(dbghelp SHARED
@@ -82,7 +82,7 @@ else()
     target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames zlib)
     add_delay_importlibs(dbghelp version)
     add_importlibs(dbghelp psapi msvcrt kernel32 ntdll)
-    add_pch(dbghelp dbghelp_private.h SOURCE)
+    add_pch(dbghelp precomp.h SOURCE)
     add_cd_file(TARGET dbghelp DESTINATION reactos/system32 FOR all)
 
 endif()

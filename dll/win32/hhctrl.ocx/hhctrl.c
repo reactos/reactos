@@ -19,9 +19,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wine/debug.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "htmlhelp.h"
+#include "ole2.h"
+#include "rpcproxy.h"
+
+#define INIT_GUID
 #include "hhctrl.h"
 
-#include <rpcproxy.h>
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 HINSTANCE hhctrl_hinstance;
 BOOL hh_process = FALSE;

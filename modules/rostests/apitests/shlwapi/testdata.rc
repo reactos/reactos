@@ -1,0 +1,10 @@
+
+#include "resource.h"
+
+ICON_16_8_BLACK     ICON "16_8_black.ico"
+ICON_16_8_RED       ICON "16_8_red.ico"
+ICON_16_32_BLACK    ICON "16_32_black.ico"
+ICON_16_32_RED      ICON "16_32_red.ico"
+ICON_32_8           ICON "32_8.ico"
+ICON_32_32          ICON "32_32.ico"
+

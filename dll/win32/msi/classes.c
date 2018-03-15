@@ -30,7 +30,16 @@
  * UnregisterMIMEInfo
  */
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "wine/debug.h"
 #include "msipriv.h"
+#include "winuser.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 

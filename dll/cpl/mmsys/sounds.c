@@ -929,7 +929,7 @@ ApplyChanges(HWND hwndDlg)
     }
     RegCloseKey(hKey);
 
-    SetWindowLong(hwndDlg, DWL_MSGRESULT, (LONG)PSNRET_NOERROR);
+    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, (LONG_PTR)PSNRET_NOERROR);
     return TRUE;
 }
 

@@ -18,9 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "quartz_private.h"
+#include <assert.h>
+#include <limits.h>
+#include <stdarg.h>
 
-#include <wine/list.h>
+#include "windef.h"
+#include "winbase.h"
+#include "vfwmsgs.h"
+
+#include "quartz_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct StdMediaSample2
 {

@@ -16,9 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NONAMELESSUNION
+
 #include "ieframe.h"
 
-#include <wininet.h>
+#include "exdispid.h"
+#include "shellapi.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "wininet.h"
+#include "mshtml.h"
+#include "perhist.h"
+#include "resource.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 static const WCHAR emptyW[] = {0};
 

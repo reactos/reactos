@@ -20,7 +20,10 @@
 
 #include "hlink_private.h"
 
-#include <wine/list.h>
+#include "wine/debug.h"
+#include "wine/list.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(hlink);
 
 struct link_entry
 {

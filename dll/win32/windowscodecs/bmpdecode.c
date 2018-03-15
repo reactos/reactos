@@ -16,9 +16,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wincodecs_private.h"
+#include "config.h"
 
 #include <assert.h>
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "wingdi.h"
+#include "objbase.h"
+
+#include "wincodecs_private.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 typedef struct {
     DWORD bc2Size;
@@ -256,7 +271,7 @@ static HRESULT WINAPI BmpFrameDecode_CopyPalette(IWICBitmapFrameDecode *iface,
             if (This->bih.bV5ClrUsed == 0)
                 count = 1 << This->bih.bV5BitCount;
             else
-                count = This->bih.bV5ClrUsed;
+                count = min(This->bih.bV5ClrUsed, 1 << This->bih.bV5BitCount);
 
             tablesize = sizeof(WICColor) * count;
             wiccolors = HeapAlloc(GetProcessHeap(), 0, tablesize);

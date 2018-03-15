@@ -18,9 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include "ws2tcpip.h"
+#include "windef.h"
+#include "winnt.h"
+#include "objbase.h"
+#include "ole2.h"
+#include "mimeole.h"
+
+#include <stdio.h>
+
+#include "wine/debug.h"
+
 #include "inetcomm_private.h"
 
-#include <ws2tcpip.h>
+WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
 static const WCHAR wszClassName[] = {'T','h','o','r','C','o','n','n','W','n','d','C','l','a','s','s',0};
 

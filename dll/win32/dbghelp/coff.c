@@ -32,7 +32,26 @@
  *	Add symbol size to internal symbol table.
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <assert.h>
+#include <stdlib.h>
+
+#include <string.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+
+#include "wine/exception.h"
+#include "wine/debug.h"
 #include "dbghelp_private.h"
+#include "wine/mscvpdb.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_coff);
 

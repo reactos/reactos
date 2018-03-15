@@ -16,7 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "wine/test.h"
+
+#define COBJMACROS
+#include "wincodec.h"
 
 static void test_StreamOnMemory(void)
 {

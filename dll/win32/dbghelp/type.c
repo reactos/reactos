@@ -22,6 +22,19 @@
  * upon which full support for datatype handling will eventually be built.
  */
 
+#define NONAMELESSUNION
+
+#include "config.h"
+#include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#ifndef DBGHELP_STATIC_LIB
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "wine/debug.h"
+#endif
 #include "dbghelp_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);

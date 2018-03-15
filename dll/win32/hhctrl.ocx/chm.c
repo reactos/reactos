@@ -20,9 +20,13 @@
  */
 
 #include "hhctrl.h"
+#include "stream.h"
 
-#include <winreg.h>
-#include <shlwapi.h>
+#include "winreg.h"
+#include "shlwapi.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 /* Reads a string from the #STRINGS section in the CHM file */
 static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)
@@ -304,13 +308,29 @@ void MergeChmProperties(HH_WINTYPEW *src, HHInfo *info, BOOL override)
 #endif
 }
 
-static inline WCHAR *ConvertChmString(HHInfo *info, const WCHAR **str)
+static inline WCHAR *ConvertChmString(HHInfo *info, DWORD id)
 {
     WCHAR *ret = NULL;
 
-    if(*str)
-        *str = ret = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)*str));
+    if(id)
+        ret = strdupAtoW(GetChmString(info->pCHMInfo, id));
     return ret;
+}
+
+static inline void wintype_free(HH_WINTYPEW *wintype)
+{
+    heap_free((void *)wintype->pszType);
+    heap_free((void *)wintype->pszCaption);
+    heap_free(wintype->paInfoTypes);
+    heap_free((void *)wintype->pszToc);
+    heap_free((void *)wintype->pszIndex);
+    heap_free((void *)wintype->pszFile);
+    heap_free((void *)wintype->pszHome);
+    heap_free((void *)wintype->pszJump1);
+    heap_free((void *)wintype->pszJump2);
+    heap_free((void *)wintype->pszUrlJump1);
+    heap_free((void *)wintype->pszUrlJump2);
+    heap_free((void *)wintype->pszCustomTabs);
 }
 
 /* Loads the HH_WINTYPE data from the CHM file
@@ -321,8 +341,6 @@ static inline WCHAR *ConvertChmString(HHInfo *info, const WCHAR **str)
 BOOL LoadWinTypeFromCHM(HHInfo *info)
 {
     LARGE_INTEGER liOffset;
-    WCHAR *pszType = NULL, *pszFile = NULL, *pszToc = NULL, *pszIndex = NULL, *pszCaption = NULL;
-    WCHAR *pszHome = NULL, *pszJump1 = NULL, *pszJump2 = NULL, *pszUrlJump1 = NULL, *pszUrlJump2 = NULL;
     IStorage *pStorage = info->pCHMInfo->pStorage;
     IStream *pStream = NULL;
     HH_WINTYPEW wintype;
@@ -330,10 +348,56 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
     DWORD cbRead;
     BOOL ret = FALSE;
 
-    static const WCHAR null[] = {0};
+    static const WCHAR empty[] = {0};
     static const WCHAR toc_extW[] = {'h','h','c',0};
     static const WCHAR index_extW[] = {'h','h','k',0};
     static const WCHAR windowsW[] = {'#','W','I','N','D','O','W','S',0};
+
+    /* HH_WINTYPE as stored on disk.  It's identical to HH_WINTYPE except that the pointer fields
+       have been changed to DWORDs, so that the layout on 64-bit remains unchanged. */
+    struct file_wintype
+    {
+        int          cbStruct;
+        BOOL         fUniCodeStrings;
+        DWORD        pszType;
+        DWORD        fsValidMembers;
+        DWORD        fsWinProperties;
+        DWORD        pszCaption;
+        DWORD        dwStyles;
+        DWORD        dwExStyles;
+        RECT         rcWindowPos;
+        int          nShowState;
+        DWORD        hwndHelp;
+        DWORD        hwndCaller;
+        DWORD        paInfoTypes;
+        DWORD        hwndToolBar;
+        DWORD        hwndNavigation;
+        DWORD        hwndHTML;
+        int          iNavWidth;
+        RECT         rcHTML;
+        DWORD        pszToc;
+        DWORD        pszIndex;
+        DWORD        pszFile;
+        DWORD        pszHome;
+        DWORD        fsToolBarFlags;
+        BOOL         fNotExpanded;
+        int          curNavType;
+        int          tabpos;
+        int          idNotify;
+        BYTE         tabOrder[HH_MAX_TABS+1];
+        int          cHistory;
+        DWORD        pszJump1;
+        DWORD        pszJump2;
+        DWORD        pszUrlJump1;
+        DWORD        pszUrlJump2;
+        RECT         rcMinSize;
+        int          cbInfoTypes;
+        DWORD        pszCustomTabs;
+    } file_wintype;
+
+    memset(&wintype, 0, sizeof(wintype));
+    wintype.cbStruct = sizeof(wintype);
+    wintype.fUniCodeStrings = TRUE;
 
     hr = IStorage_OpenStream(pStorage, windowsW, NULL, STGM_READ, 0, &pStream);
     if (SUCCEEDED(hr))
@@ -345,31 +409,45 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
         if (FAILED(hr)) goto done;
 
         /* read the HH_WINTYPE struct data */
-        hr = IStream_Read(pStream, &wintype, sizeof(wintype), &cbRead);
+        hr = IStream_Read(pStream, &file_wintype, sizeof(file_wintype), &cbRead);
         if (FAILED(hr)) goto done;
 
         /* convert the #STRINGS offsets to actual strings */
-        pszType     = ConvertChmString(info, &wintype.pszType);
-        pszFile     = ConvertChmString(info, &wintype.pszFile);
-        pszToc      = ConvertChmString(info, &wintype.pszToc);
-        pszIndex    = ConvertChmString(info, &wintype.pszIndex);
-        pszCaption  = ConvertChmString(info, &wintype.pszCaption);
-        pszHome     = ConvertChmString(info, &wintype.pszHome);
-        pszJump1    = ConvertChmString(info, &wintype.pszJump1);
-        pszJump2    = ConvertChmString(info, &wintype.pszJump2);
-        pszUrlJump1 = ConvertChmString(info, &wintype.pszUrlJump1);
-        pszUrlJump2 = ConvertChmString(info, &wintype.pszUrlJump2);
+        wintype.pszType         = ConvertChmString(info, file_wintype.pszType);
+        wintype.fsValidMembers  = file_wintype.fsValidMembers;
+        wintype.fsWinProperties = file_wintype.fsWinProperties;
+        wintype.pszCaption      = ConvertChmString(info, file_wintype.pszCaption);
+        wintype.dwStyles        = file_wintype.dwStyles;
+        wintype.dwExStyles      = file_wintype.dwExStyles;
+        wintype.rcWindowPos     = file_wintype.rcWindowPos;
+        wintype.nShowState      = file_wintype.nShowState;
+        wintype.iNavWidth       = file_wintype.iNavWidth;
+        wintype.rcHTML          = file_wintype.rcHTML;
+        wintype.pszToc          = ConvertChmString(info, file_wintype.pszToc);
+        wintype.pszIndex        = ConvertChmString(info, file_wintype.pszIndex);
+        wintype.pszFile         = ConvertChmString(info, file_wintype.pszFile);
+        wintype.pszHome         = ConvertChmString(info, file_wintype.pszHome);
+        wintype.fsToolBarFlags  = file_wintype.fsToolBarFlags;
+        wintype.fNotExpanded    = file_wintype.fNotExpanded;
+        wintype.curNavType      = file_wintype.curNavType;
+        wintype.tabpos          = file_wintype.tabpos;
+        wintype.idNotify        = file_wintype.idNotify;
+        memcpy(&wintype.tabOrder, file_wintype.tabOrder, sizeof(wintype.tabOrder));
+        wintype.cHistory        = file_wintype.cHistory;
+        wintype.pszJump1        = ConvertChmString(info, file_wintype.pszJump1);
+        wintype.pszJump2        = ConvertChmString(info, file_wintype.pszJump2);
+        wintype.pszUrlJump1     = ConvertChmString(info, file_wintype.pszUrlJump1);
+        wintype.pszUrlJump2     = ConvertChmString(info, file_wintype.pszUrlJump2);
+        wintype.rcMinSize       = file_wintype.rcMinSize;
+        wintype.cbInfoTypes     = file_wintype.cbInfoTypes;
     }
     else
     {
         /* no defined window types so use (hopefully) sane defaults */
         static const WCHAR defaultwinW[] = {'d','e','f','a','u','l','t','w','i','n','\0'};
-        memset(&wintype, 0, sizeof(wintype));
-        wintype.cbStruct = sizeof(wintype);
-        wintype.fUniCodeStrings = TRUE;
-        wintype.pszType    = pszType     = strdupW(info->pCHMInfo->defWindow ? info->pCHMInfo->defWindow : defaultwinW);
-        wintype.pszToc     = pszToc      = strdupW(info->pCHMInfo->defToc ? info->pCHMInfo->defToc : null);
-        wintype.pszIndex   = pszIndex    = strdupW(null);
+        wintype.pszType    = strdupW(info->pCHMInfo->defWindow ? info->pCHMInfo->defWindow : defaultwinW);
+        wintype.pszToc     = strdupW(info->pCHMInfo->defToc ? info->pCHMInfo->defToc : empty);
+        wintype.pszIndex   = strdupW(empty);
         wintype.fsValidMembers = 0;
         wintype.fsWinProperties = HHWIN_PROP_TRI_PANE;
         wintype.dwStyles = WS_POPUP;
@@ -381,24 +459,15 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
     /* merge the new data with any pre-existing HH_WINTYPE structure */
     MergeChmProperties(&wintype, info, FALSE);
     if (!info->WinType.pszCaption)
-        info->WinType.pszCaption = info->stringsW.pszCaption = strdupW(info->pCHMInfo->defTitle ? info->pCHMInfo->defTitle : null);
+        info->WinType.pszCaption = info->stringsW.pszCaption = strdupW(info->pCHMInfo->defTitle ? info->pCHMInfo->defTitle : empty);
     if (!info->WinType.pszFile)
-        info->WinType.pszFile    = info->stringsW.pszFile    = strdupW(info->pCHMInfo->defTopic ? info->pCHMInfo->defTopic : null);
+        info->WinType.pszFile    = info->stringsW.pszFile    = strdupW(info->pCHMInfo->defTopic ? info->pCHMInfo->defTopic : empty);
     if (!info->WinType.pszToc)
         info->WinType.pszToc     = info->stringsW.pszToc     = FindHTMLHelpSetting(info, toc_extW);
     if (!info->WinType.pszIndex)
         info->WinType.pszIndex   = info->stringsW.pszIndex   = FindHTMLHelpSetting(info, index_extW);
 
-    heap_free(pszType);
-    heap_free(pszFile);
-    heap_free(pszToc);
-    heap_free(pszIndex);
-    heap_free(pszCaption);
-    heap_free(pszHome);
-    heap_free(pszJump1);
-    heap_free(pszJump2);
-    heap_free(pszUrlJump1);
-    heap_free(pszUrlJump2);
+    wintype_free(&wintype);
     ret = TRUE;
 
 done:

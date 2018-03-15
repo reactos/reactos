@@ -18,9 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "dplayx_global.h"
+#include <string.h>
+#include "winerror.h"
+#include "wine/debug.h"
+
+#include "wine/dplaysp.h"
+#include "dplay_global.h"
+#include "name_server.h"
+#include "dplayx_messages.h"
+
+#include "dplayx_global.h" /* FIXME: For global hack */
 
 /* FIXME: Need to add interface locking inside procedures */
+
+WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
 typedef struct IDirectPlaySPImpl
 {

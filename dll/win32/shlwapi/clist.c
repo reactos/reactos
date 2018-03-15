@@ -17,8 +17,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdarg.h>
+#include <string.h>
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "objbase.h"
+#include "shlobj.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /* dwSignature for contained DATABLOCK_HEADER items */
 #define CLIST_ID_CONTAINER (~0U)
@@ -45,13 +56,8 @@ static inline LPDATABLOCK_HEADER NextItem(LPDBLIST lpList)
  *  lpNewItem [I] The new item to add to the list
  *
  * RETURNS
-#ifndef __REACTOS__
  *  Success: S_OK. The item is added to the list.
  *  Failure: An HRESULT error code.
-#else
- *  Success: TRUE. The item is added to the list.
- *  Failure: FALSE.
-#endif
  *
  * NOTES
  *  If the size of the element to be inserted is less than the size of a
@@ -59,32 +65,19 @@ static inline LPDATABLOCK_HEADER NextItem(LPDBLIST lpList)
  *  the call returns S_OK but does not actually add the element.
  *  See SHWriteDataBlockList.
  */
-#ifndef __REACTOS__
-HRESULT
-#else
-BOOL
-#endif
-WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem)
+BOOL WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem)
 {
   LPDATABLOCK_HEADER lpInsertAt = NULL;
   ULONG ulSize;
 
   TRACE("(%p,%p)\n", lppList, lpNewItem);
 
-  if(!lppList || !lpNewItem )
-#ifndef __REACTOS__
-    return E_INVALIDARG;
-#else
+  if(!lppList || !lpNewItem)
     return FALSE;
-#endif
 
   if (lpNewItem->cbSize < sizeof(DATABLOCK_HEADER) ||
       lpNewItem->dwSignature == CLIST_ID_CONTAINER)
-#ifndef __REACTOS__
-    return S_OK;
-#else
     return FALSE;
-#endif
 
   ulSize = lpNewItem->cbSize;
 
@@ -141,17 +134,9 @@ WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem)
     lpInsertAt = NextItem(lpInsertAt);
     lpInsertAt->cbSize = 0;
 
-#ifndef __REACTOS__
-    return lpNewItem->cbSize;
-#else
     return TRUE;
-#endif
   }
-#ifndef __REACTOS__
-  return S_OK;
-#else
   return FALSE;
-#endif
 }
 
 /*************************************************************************
@@ -369,11 +354,7 @@ VOID WINAPI SHFreeDataBlockList(LPDBLIST lpList)
  */
 BOOL WINAPI SHRemoveDataBlock(LPDBLIST* lppList, DWORD dwSignature)
 {
-#ifndef __REACTOS__
-  LPDATABLOCK_HEADER lpList = 0;
-#else
   LPDATABLOCK_HEADER lpList = NULL;
-#endif
   LPDATABLOCK_HEADER lpItem = NULL;
   LPDATABLOCK_HEADER lpNext;
   ULONG ulNewSize;

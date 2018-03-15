@@ -47,7 +47,11 @@
 //
 //	local functions
 //
+#ifndef __REACTOS__
 static INT CALLBACK OpenDialogProc(
+#else
+static INT_PTR CALLBACK OpenDialogProc(
+#endif
 	HWND			hDlg,
 	UINT			uMsg,
 	WPARAM			wParam,
@@ -89,7 +93,11 @@ DWORD WINAPI VfdGuiOpen(
 //
 // Open image dialog procedure
 //
+#ifndef __REACTOS__
 INT CALLBACK OpenDialogProc(
+#else
+INT_PTR CALLBACK OpenDialogProc(
+#endif
 	HWND			hDlg,
 	UINT			uMsg,
 	WPARAM			wParam,

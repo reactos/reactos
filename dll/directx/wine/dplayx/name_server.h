@@ -19,6 +19,15 @@
 #ifndef __WINE_DPLAYX_NAMESERVER
 #define __WINE_DPLAYX_NAMESERVER
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "dplay.h"
+#include "wine/dplaysp.h"
+#include "dplayx_messages.h"
+#include "dplay_global.h"
+
 void NS_SetLocalComputerAsNameServer( LPCDPSESSIONDESC2 lpsd, LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
 void NS_AddRemoteComputerAsNameServer( LPCVOID lpNSAddrHdr,
                                        DWORD dwHdrSize,

@@ -16,7 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <math.h>
+
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include "windef.h"
+#include "objbase.h"
+#include "wincodec.h"
+#include "wincodecsdk.h"
+#include "wine/test.h"
 
 static const WCHAR wszTestProperty1[] = {'P','r','o','p','e','r','t','y','1',0};
 static const WCHAR wszTestProperty2[] = {'P','r','o','p','e','r','t','y','2',0};

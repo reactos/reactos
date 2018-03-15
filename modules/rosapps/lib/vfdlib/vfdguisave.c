@@ -35,7 +35,11 @@
 //
 //	local functions
 //
+#ifndef __REACTOS__
 static INT CALLBACK SaveDialogProc(
+#else
+static INT_PTR CALLBACK SaveDialogProc(
+#endif
 	HWND			hDlg,
 	UINT			uMsg,
 	WPARAM			wParam,
@@ -119,7 +123,11 @@ DWORD GuiSaveParam(
 //
 // The dialog procedure
 //
+#ifndef __REACTOS__
 INT CALLBACK SaveDialogProc(
+#else
+INT_PTR CALLBACK SaveDialogProc(
+#endif
 	HWND			hDlg,
 	UINT			uMsg,
 	WPARAM			wParam,

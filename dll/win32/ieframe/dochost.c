@@ -18,7 +18,14 @@
 
 #include "ieframe.h"
 
-#include <initguid.h>
+#include "exdispid.h"
+#include "mshtml.h"
+#include "perhist.h"
+#include "initguid.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 DEFINE_OLEGUID(CGID_DocHostCmdPriv, 0x000214D4L, 0, 0);
 

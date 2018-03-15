@@ -17,7 +17,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdarg.h>
 
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "msi.h"
+#include "msiquery.h"
+#include "msidefs.h"
+#include "winver.h"
+#include "shlwapi.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
 #include "msipriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);

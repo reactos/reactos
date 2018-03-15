@@ -18,14 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
-#include <wininet.h>
-#include <intshcut.h>
+#include "config.h"
+#include "wine/port.h"
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "wine/unicode.h"
+#include "wininet.h"
+#include "winreg.h"
+#include "winternl.h"
+#define NO_SHLWAPI_STREAM
+#include "shlwapi.h"
+#include "intshcut.h"
+#include "wine/debug.h"
 
 HMODULE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
 BOOL    WINAPI MLFreeLibrary(HMODULE);
 HRESULT WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static inline WCHAR *heap_strdupAtoW(const char *str)
 {
@@ -902,7 +917,10 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	work = preliminary + base.cchProtocol+1+base.cchSuffix - 1;
         if (*work++ != '/')
             *(work++) = '/';
-	strcpyW(work, relative.pszSuffix);
+        if (relative.pszSuffix[0] == '.' && relative.pszSuffix[1] == 0)
+            *work = 0;
+        else
+            strcpyW(work, relative.pszSuffix);
 	break;
 
     default:

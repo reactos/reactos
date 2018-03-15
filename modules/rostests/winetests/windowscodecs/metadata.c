@@ -17,12 +17,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <math.h>
+#include <assert.h>
 
-#include <winnls.h>
-#include <propvarutil.h>
+#define COBJMACROS
 
-#include <initguid.h>
+#include "windef.h"
+#include "objbase.h"
+#include "wincodec.h"
+#include "wincodecsdk.h"
+#include "propvarutil.h"
+#include "wine/test.h"
+
+#include "initguid.h"
 DEFINE_GUID(IID_MdbrUnknown, 0x00240e6f,0x3f23,0x4432,0xb0,0xcc,0x48,0xd5,0xbb,0xff,0x6c,0x36);
 
 #define expect_blob(propvar, data, length) do { \

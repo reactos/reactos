@@ -20,7 +20,22 @@
  *
  */
 
+#define COBJMACROS
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "winuser.h"
+#include "objbase.h"
+#include "mimeole.h"
+#include "wine/debug.h"
+
 #include "inetcomm_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
 typedef struct
 {

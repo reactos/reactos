@@ -19,11 +19,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
 
 #include <math.h>
-#include <mlang.h>
-#include <ddeml.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#define NO_SHLWAPI_REG
+#define NO_SHLWAPI_STREAM
+#include "shlwapi.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "shlobj.h"
+#include "mlang.h"
+#include "ddeml.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+#include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 extern HINSTANCE shlwapi_hInstance;
 

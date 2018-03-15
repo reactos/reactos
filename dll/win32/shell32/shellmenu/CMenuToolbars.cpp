@@ -49,8 +49,11 @@ LRESULT CMenuToolbarBase::OnWinEventWrap(UINT uMsg, WPARAM wParam, LPARAM lParam
 HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
     NMHDR * hdr;
+    HRESULT hr;
+    LRESULT result;
 
-    *theResult = 0;
+    if (theResult)
+        *theResult = 0;
     switch (uMsg)
     {
     case WM_COMMAND:
@@ -75,7 +78,10 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return S_OK;
 
         case NM_CUSTOMDRAW:
-            return OnCustomDraw(reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr), theResult);
+            hr = OnCustomDraw(reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr), &result);
+            if (theResult)
+                *theResult = result;
+            return hr;
 
         case TBN_GETINFOTIP:
             return OnGetInfoTip(reinterpret_cast<LPNMTBGETINFOTIP>(hdr));

@@ -23,7 +23,6 @@ spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
 add_rpcproxy_files(windowscodecs_wincodec.idl)
 
 list(APPEND SOURCE
-    bitmap.c
     bmpdecode.c
     bmpencode.c
     clipper.c
@@ -51,7 +50,17 @@ list(APPEND SOURCE
     tgaformat.c
     tiffformat.c
     ungif.c
-    wincodecs_private.h)
+    precomp.h)
+
+if(MSVC)
+    if(ARCH STREQUAL "i386")
+        list(APPEND SOURCE msvc-thiscall.c)
+    endif()
+    set_source_files_properties(bitmap.c PROPERTIES COMPILE_FLAGS "/FImsvc.h")
+    list(APPEND ADDITIONAL_SOURCE bitmap.c)
+else()
+    list(APPEND SOURCE bitmap.c)
+endif()
 
 list(APPEND ADDITIONAL_SOURCE
     guid.c
@@ -68,5 +77,5 @@ add_library(windowscodecs SHARED
 set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})
 add_importlibs(windowscodecs ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 advapi32_vista propsys msvcrt kernel32 ntdll)
-add_pch(windowscodecs wincodecs_private.h SOURCE)
+add_pch(windowscodecs precomp.h SOURCE)
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)

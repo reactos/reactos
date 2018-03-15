@@ -86,6 +86,8 @@ struct AvailableStrings
     ATL::CStringW szCabPath;
     ATL::CStringW szAppsPath;
     ATL::CStringW szSearchPath;
+    ATL::CStringW szCabName;
+    ATL::CStringW szCabDir;
 
     AvailableStrings();
 };
