@@ -2522,8 +2522,8 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
 
         FontFamilyFillInfo(&InfoEntry, NULL, NULL, FontGDI);
 
-        if (_wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName) != 0 &&
-            _wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName) != 0)
+        if (_wcsnicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName, RTL_NUMBER_OF(LogFont->lfFaceName)-1) != 0 &&
+            _wcsnicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName, RTL_NUMBER_OF(LogFont->lfFaceName)-1) != 0)
         {
             continue;
         }
