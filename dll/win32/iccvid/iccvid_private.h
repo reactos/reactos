@@ -19,7 +19,7 @@
 #ifndef __ICCVID_PRIVATE_H
 #define __ICCVID_PRIVATE_H
 
-//#include <windef.h>
+#include <windef.h>
 
 #define IDS_NAME        100
 #define IDS_DESCRIPTION 101
