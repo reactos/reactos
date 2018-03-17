@@ -1503,7 +1503,7 @@ IntPaintDesktop(HDC hDC)
                 PWCHAR pstr = wszzVersion;
                 for (i = 0; (i < ARRAYSIZE(VerStrs)) && *pstr; ++i)
                 {
-                    VerStrs[i].n = (ULONG)wcslen(pstr);
+                    VerStrs[i].n = lstrlenW(pstr);
                     VerStrs[i].lpstr = pstr;
                     pstr += (VerStrs[i].n + 1);
                 }

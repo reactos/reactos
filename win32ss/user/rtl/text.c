@@ -163,11 +163,7 @@ static void TEXT_Ellipsify (HDC hdc, WCHAR *str, unsigned int max_len,
 {
     unsigned int len_ellipsis;
     unsigned int lo, mid, hi;
-#ifdef _WIN32K_
-    len_ellipsis = (unsigned int)wcslen(ELLIPSISW);
-#else
     len_ellipsis = strlenW (ELLIPSISW);
-#endif
     if (len_ellipsis > max_len) len_ellipsis = max_len;
     if (*len_str > max_len - len_ellipsis)
         *len_str = max_len - len_ellipsis;
@@ -274,11 +270,7 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
     int len_trailing;
     int len_under;
     WCHAR *lastBkSlash, *lastFwdSlash, *lastSlash;
-#ifdef _WIN32K_
-    len_ellipsis = (int)wcslen(ELLIPSISW);
-#else
     len_ellipsis = strlenW (ELLIPSISW);
-#endif
     if (!max_len) return;
     if (len_ellipsis >= max_len) len_ellipsis = max_len - 1;
     if (*len_str + len_ellipsis >= max_len)

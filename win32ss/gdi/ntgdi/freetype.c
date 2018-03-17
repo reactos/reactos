@@ -1225,10 +1225,10 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
             PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
             EntryCollection->Entry = LoadFont.PrivateEntry;
             IntLockProcessPrivateFonts(Win32Process);
-            EntryCollection->Handle = ++Win32Process->PrivateMemFontHandleCount;
+            EntryCollection->Handle = ULongToHandle(++Win32Process->PrivateMemFontHandleCount);
             InsertTailList(&Win32Process->PrivateMemFontListHead, &EntryCollection->ListEntry);
             IntUnLockProcessPrivateFonts(Win32Process);
-            Ret = (HANDLE)EntryCollection->Handle;
+            Ret = EntryCollection->Handle;
         }
     }
     *pNumAdded = FaceCount;
@@ -1302,7 +1302,7 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_COLL_MEM, ListEntry);
 
-        if (CurrentEntry->Handle == (UINT_PTR)hMMFont)
+        if (CurrentEntry->Handle == hMMFont)
         {
             EntryCollection = CurrentEntry;
             UnlinkFontMemCollection(CurrentEntry);
