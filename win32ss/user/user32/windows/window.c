@@ -1306,20 +1306,22 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 
     lpString[0] = '\0';
 
-    if (!TestWindowProcess( Wnd))
+    if (!TestWindowProcess(Wnd))
     {
-       _SEH2_TRY
-       {
-           Length = DefWindowProcA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
-       }
-       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-       {
-           Length = 0;
-       }
-       _SEH2_END;
+        _SEH2_TRY
+        {
+            Length = DefWindowProcA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Length = 0;
+        }
+        _SEH2_END;
     }
     else
-       Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    {
+        Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    }
     //ERR("GWTA Len %d : %s\n",Length,lpString);
     return Length;
 }
@@ -1330,7 +1332,20 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 int WINAPI
 GetWindowTextLengthA(HWND hWnd)
 {
-    return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
+    PWND Wnd;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return 0;
+
+    if (!TestWindowProcess(Wnd))
+    {
+        return DefWindowProcA(hWnd, WM_GETTEXTLENGTH, 0, 0);
+    }
+    else
+    {
+        return SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
+    }
 }
 
 /*
@@ -1339,7 +1354,20 @@ GetWindowTextLengthA(HWND hWnd)
 int WINAPI
 GetWindowTextLengthW(HWND hWnd)
 {
-    return(SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0));
+    PWND Wnd;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return 0;
+
+    if (!TestWindowProcess(Wnd))
+    {
+        return DefWindowProcW(hWnd, WM_GETTEXTLENGTH, 0, 0);
+    }
+    else
+    {
+        return SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0);
+    }
 }
 
 /*
@@ -1360,20 +1388,22 @@ GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 
     lpString[0] = L'\0';
 
-    if (!TestWindowProcess( Wnd))
+    if (!TestWindowProcess(Wnd))
     {
-       _SEH2_TRY
-       {
-           Length = DefWindowProcW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
-       }
-       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-       {
-           Length = 0;
-       }
-       _SEH2_END;
+        _SEH2_TRY
+        {
+            Length = DefWindowProcW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Length = 0;
+        }
+        _SEH2_END;
     }
     else
-       Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    {
+        Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    }
     //ERR("GWTW Len %d : %S\n",Length,lpString);
     return Length;
 }
