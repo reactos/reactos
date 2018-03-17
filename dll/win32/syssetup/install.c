@@ -552,9 +552,9 @@ static DWORD WINAPI
 ShowStatusMessageThread(
     IN LPVOID lpParameter)
 {
-    HWND *phWnd = (HWND *)lpParameter;
     HWND hWnd, hItem;
     MSG Msg;
+    UNREFERENCED_PARAMETER(lpParameter);
 
     hWnd = CreateDialogParam(hDllInstance,
                              MAKEINTRESOURCE(IDD_STATUSWINDOW_DLG),
@@ -563,7 +563,6 @@ ShowStatusMessageThread(
                              (LPARAM)NULL);
     if (!hWnd)
         return 0;
-    *phWnd = hWnd;
 
     ShowWindow(hWnd, SW_SHOW);
 
@@ -579,6 +578,8 @@ ShowStatusMessageThread(
         TranslateMessage(&Msg);
         DispatchMessage(&Msg);
     }
+
+    EndDialog(hWnd, 0);
 
     return 0;
 }
@@ -667,7 +668,8 @@ cleanup:
 static BOOL
 CommonInstall(VOID)
 {
-    HWND hWnd = NULL;
+    HANDLE hThread = NULL;
+    BOOL bResult = FALSE;
 
     hSysSetupInf = SetupOpenInfFileW(L"syssetup.inf",
                                      NULL,
@@ -682,49 +684,54 @@ CommonInstall(VOID)
     if (!InstallSysSetupInfDevices())
     {
         FatalError("InstallSysSetupInfDevices() failed!\n");
-        goto error;
+        goto Exit;
     }
 
     if(!InstallSysSetupInfComponents())
     {
         FatalError("InstallSysSetupInfComponents() failed!\n");
-        goto error;
+        goto Exit;
     }
 
     if (!IsConsoleBoot())
     {
-        HANDLE hThread;
-
         hThread = CreateThread(NULL,
                                0,
                                ShowStatusMessageThread,
-                               (LPVOID)&hWnd,
+                               NULL,
                                0,
                                NULL);
-        if (hThread)
-            CloseHandle(hThread);
     }
 
     if (!EnableUserModePnpManager())
     {
         FatalError("EnableUserModePnpManager() failed!\n");
-        goto error;
+        goto Exit;
     }
 
     if (CMP_WaitNoPendingInstallEvents(INFINITE) != WAIT_OBJECT_0)
     {
         FatalError("CMP_WaitNoPendingInstallEvents() failed!\n");
-        goto error;
+        goto Exit;
     }
 
-    EndDialog(hWnd, 0);
-    return TRUE;
+    bResult = TRUE;
 
-error:
-    if (hWnd)
-        EndDialog(hWnd, 0);
-    SetupCloseInfFile(hSysSetupInf);
-    return FALSE;
+Exit:
+
+    if (bResult == FALSE)
+    {
+        SetupCloseInfFile(hSysSetupInf);
+    }
+
+    if (hThread != NULL)
+    {
+        PostThreadMessage(GetThreadId(hThread), WM_QUIT, 0, 0);
+        WaitForSingleObject(hThread, INFINITE);
+        CloseHandle(hThread);
+    }
+
+    return bResult;
 }
 
 /* Install a section of a .inf file
