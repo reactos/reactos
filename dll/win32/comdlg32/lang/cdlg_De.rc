@@ -137,8 +137,8 @@ STRINGTABLE
     IDS_SAVE        "Speichern"
     IDS_SAVE_AS     "Speichern als"
     IDS_OPEN_FILE   "Öffne Datei"
-    IDS_SELECT_FOLDER "Select Folder"
-    IDS_FONT_SIZE_INPUT "Font size has to be a number."
+    IDS_SELECT_FOLDER "Ordner auswählen"
+    IDS_FONT_SIZE_INPUT "Schriftgröße muss eine Zahl sein."
 }
 
 /*
