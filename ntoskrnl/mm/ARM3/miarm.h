@@ -83,7 +83,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 // while on certain architectures such as ARM, it is enabling the cache which
 // requires a flag.
 //
-#if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(_M_IX86)
 //
 // Access Flags
 //
@@ -109,6 +109,34 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_ENABLE_CACHE        0
 #define PTE_DISABLE_CACHE       0x10
 #define PTE_WRITECOMBINED_CACHE 0x10
+#define PTE_PROTECT_MASK        0x612
+#elif defined(_M_AMD64)
+//
+// Access Flags
+//
+#define PTE_READONLY            0x8000000000000000ULL
+#define PTE_EXECUTE             0x0000000000000000ULL
+#define PTE_EXECUTE_READ        PTE_EXECUTE /* EXECUTE implies READ on x64 */
+#define PTE_READWRITE           0x8000000000000002ULL
+#define PTE_WRITECOPY           0x8000000000000200ULL
+#define PTE_EXECUTE_READWRITE   0x0000000000000002ULL
+#define PTE_EXECUTE_WRITECOPY   0x0000000000000200ULL
+#define PTE_PROTOTYPE           0x0000000000000400ULL
+
+//
+// State Flags
+//
+#define PTE_VALID               0x0000000000000001ULL
+#define PTE_ACCESSED            0x0000000000000020ULL
+#define PTE_DIRTY               0x0000000000000040ULL
+
+//
+// Cache flags
+//
+#define PTE_ENABLE_CACHE        0x0000000000000000ULL
+#define PTE_DISABLE_CACHE       0x0000000000000010ULL
+#define PTE_WRITECOMBINED_CACHE 0x0000000000000010ULL
+#define PTE_PROTECT_MASK        0x8000000000000612ULL
 #elif defined(_M_ARM)
 #define PTE_READONLY            0x200
 #define PTE_EXECUTE             0 // Not worrying about NX yet
@@ -118,15 +146,22 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_EXECUTE_READWRITE   0 // Not worrying about NX yet
 #define PTE_EXECUTE_WRITECOPY   0 // Not worrying about NX yet
 #define PTE_PROTOTYPE           0x400 // Using the Shared bit
+
 //
 // Cache flags
 //
 #define PTE_ENABLE_CACHE        0
 #define PTE_DISABLE_CACHE       0x10
 #define PTE_WRITECOMBINED_CACHE 0x10
+#define PTE_PROTECT_MASK        0x610
 #else
 #error Define these please!
 #endif
+
+//
+// Mask for image section page protection
+//
+#define IMAGE_SCN_PROTECTION_MASK (IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE)
 
 extern const ULONG_PTR MmProtectToPteMask[32];
 extern const ULONG MmProtectToValue[32];
@@ -2262,6 +2297,11 @@ MiMakePdeExistAndMakeValid(
     IN PEPROCESS TargetProcess,
     IN KIRQL OldIrql
 );
+
+VOID
+NTAPI
+MiWriteProtectSystemImage(
+    _In_ PVOID ImageBase);
 
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
