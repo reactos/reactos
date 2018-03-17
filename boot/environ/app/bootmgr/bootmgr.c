@@ -257,11 +257,11 @@ BmpFwGetApplicationDirectoryPath (
         }
 
         /* Check if we have space for one more character */
-        Status = RtlSizeTAdd(i, 1, &AppPathLength);
+        Status = RtlSIZETAdd(i, 1, &AppPathLength);
         if (NT_SUCCESS(Status))
         {
             /* Check if it's safe to multiply by two */
-            Status = RtlSizeTMult(AppPathLength, sizeof(WCHAR), &AppPathLength);
+            Status = RtlSIZETMult(AppPathLength, sizeof(WCHAR), &AppPathLength);
             if (NT_SUCCESS(Status))
             {
                 /* Allocate a copy for the string */
@@ -651,7 +651,7 @@ BmpFwGetFullPath (
 
     /* Compute the length of the directory, and add a NUL */
     BootDirLength = wcslen(BootDirectory);
-    Status = RtlSizeTAdd(BootDirLength, 1, &BootDirLength);
+    Status = RtlSIZETAdd(BootDirLength, 1, &BootDirLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
@@ -659,14 +659,14 @@ BmpFwGetFullPath (
 
     /* Add the length of the file, make sure it fits */
     PathLength = wcslen(FileName);
-    Status = RtlSizeTAdd(PathLength, BootDirLength, &PathLength);
+    Status = RtlSIZETAdd(PathLength, BootDirLength, &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Convert to bytes */
-    Status = RtlSizeTMult(PathLength, sizeof(WCHAR), &PathLength);
+    Status = RtlSIZETMult(PathLength, sizeof(WCHAR), &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
@@ -795,21 +795,21 @@ BmOpenDataStore (
 
     /* Add a NUL to the path, make sure it'll fit */
     PathLength = wcslen(PathBuffer);
-    Status = RtlSizeTAdd(PathLength, 1, &PathLength);
+    Status = RtlSIZETAdd(PathLength, 1, &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Convert to bytes */
-    Status = RtlSizeTMult(PathLength, sizeof(WCHAR), &PathLength);
+    Status = RtlSIZETMult(PathLength, sizeof(WCHAR), &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Now add the size of the path to the device path, check if it fits */
-    Status = RtlSizeTAdd(PathLength, BcdDevice->Size, &FullSize);
+    Status = RtlSIZETAdd(PathLength, BcdDevice->Size, &FullSize);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;

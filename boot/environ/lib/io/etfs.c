@@ -547,7 +547,8 @@ EtfsOpen (
     PBL_FILE_ENTRY NewFile;
     PWCHAR FilePath, FormatString;
     PBL_ETFS_FILE EtfsFile;
-    ULONG DeviceId, FileSize, DirOffset, FileOffset, Size;
+    ULONG DeviceId, FileSize, DirOffset, FileOffset;
+    SIZE_T Size;
     PRAW_DIR_REC DirEntry;
     BOOLEAN IsDirectory;
 

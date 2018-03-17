@@ -59,7 +59,7 @@ BiConvertRegistryDataToElement (
     )
 {
     NTSTATUS Status;
-    ULONG Length, Size, ReturnedLength;
+    SIZE_T Length, Size, ReturnedLength;
     PBL_DEVICE_DESCRIPTOR Device;
     BOOLEAN NullTerminate;
     PBCD_DEVICE_OPTION BcdDevice, ElementDevice;

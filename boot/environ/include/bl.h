@@ -2377,7 +2377,7 @@ BlpMmCreateBlockAllocator (
 
 PVOID
 BlMmAllocateHeap (
-    _In_ ULONG Size
+    _In_ SIZE_T Size
     );
 
 NTSTATUS
