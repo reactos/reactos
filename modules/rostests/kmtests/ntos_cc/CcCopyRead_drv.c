@@ -156,6 +156,7 @@ TestIrpHandler(
     _In_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IoStack)
 {
+    LARGE_INTEGER Zero = RTL_CONSTANT_LARGE_INTEGER(0LL);
     NTSTATUS Status;
     PTEST_FCB Fcb;
     CACHE_UNINITIALIZE_EVENT CacheUninitEvent;
@@ -307,7 +308,7 @@ TestIrpHandler(
     {
         ok_irql(PASSIVE_LEVEL);
         KeInitializeEvent(&CacheUninitEvent.Event, NotificationEvent, FALSE);
-        CcUninitializeCacheMap(IoStack->FileObject, NULL, &CacheUninitEvent);
+        CcUninitializeCacheMap(IoStack->FileObject, &Zero, &CacheUninitEvent);
         KeWaitForSingleObject(&CacheUninitEvent.Event, Executive, KernelMode, FALSE, NULL);
         Fcb = IoStack->FileObject->FsContext;
         ExFreePoolWithTag(Fcb, 'FwrI');
