@@ -18,9 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
 
-#include <wine/list.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winerror.h"
+#include "winternl.h"
+#include "objbase.h"
+#include "shlwapi.h"
+#include "wine/list.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "mapival.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
 BOOL WINAPI FBadRglpszA(LPSTR*,ULONG);
 
