@@ -79,11 +79,11 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "Hierher kopieren", IDM_COPYHERE
+        MENUITEM "Hierher verschieben", IDM_MOVEHERE
+        MENUITEM "Verknüpfung hier erstellen", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "Abbrechen", 0
     END
 END
 
@@ -618,10 +618,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Anderes Symbol"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    LTEXT "Datei nach Symbolen durchsuchen:", -1, 7, 7, 179, 10
     PUSHBUTTON "Durchsuchen...", IDC_BUTTON_PATH, 126, 17, 59, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 114, 14, ES_AUTOHSCROLL
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LTEXT "Wählen Sie ein Symbol aus der folgenden Liste:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 135, 179, 50, 14
@@ -675,10 +675,10 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS "Verwaltung"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Verwalten von administrativen Einstellungen."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Anpassen der Ansicht von Dateien, Ordnern und Verwalten von Dateiendungen."
+    IDS_FONTS_DESCRIPTION "Hinzufügen, Ändern und Verwalten von Schriftarten."
+    IDS_PRINTERS_DESCRIPTION "Anzeigen und Hinzufügen von Drucker und Faxgeräten."
 
     /* context menus */
     IDS_VIEW_LARGE "&Große Symbole"
@@ -768,7 +768,7 @@ BEGIN
     IDS_DRIVE_FIXED "Lokaler Datenträger"
     IDS_DRIVE_CDROM "CD-Laufwerk"
     IDS_DRIVE_NETWORK "Netzlaufwerk"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_FLOPPY "3.5 Diskette"
     IDS_DRIVE_REMOVABLE "Wechseldatenträger"
     IDS_FS_UNKNOWN "Unbekannt"
 
@@ -794,8 +794,8 @@ BEGIN
     IDS_CANTLOCKVOLUME "Sperren des Volumes nicht möglich (Fehlercode: %lu)."
     IDS_CANTDISMOUNTVOLUME "Ausbinden des Volumes nicht möglich (Fehlercode: %lu)."
     IDS_CANTEJECTMEDIA "Auswerfen des Mediums nicht möglich (Fehlercode: %lu)."
-    IDS_CANTSHOWPROPERTIES "Unable to show properties (Fehlercode: %lu)."
-    IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
+    IDS_CANTSHOWPROPERTIES "Anzeigen der Eigenschaften nicht möglich (Fehlercode: %lu)."
+    IDS_CANTDISCONNECT "Trennen nicht möglich (Fehlercode: %lu)."
 
     IDS_DIRECTORY "Dateiordner"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"
@@ -817,7 +817,7 @@ BEGIN
     IDS_SCR_FILE "Bildschirmschoner"
     IDS_SYS_FILE "Systemdatei"
     IDS_VXD_FILE "Virtueller Gerätetreiber"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s-Datei"
 
     IDS_OPEN_VERB "Öffnen"
     IDS_EXPLORE_VERB "Durchsuchen"
@@ -843,7 +843,7 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "%s-Datei"
 
     IDS_BYTES_FORMAT "Bytes"
     IDS_UNKNOWN_APP "Unbekannte Anwendung"
