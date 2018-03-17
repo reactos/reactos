@@ -29,13 +29,19 @@
 
 #define COBJMACROS
 
+#ifdef STANDALONE
+#include "initguid.h"
+#endif
+
 #include "unknwn.h"
 #include "uuids.h"
 #include "mmdeviceapi.h"
 #include "mmsystem.h"
 #include "audioclient.h"
 #include "audiopolicy.h"
-#include "initguid.h"
+#ifdef __REACTOS__
+#include <initguid.h>
+#endif
 #include "endpointvolume.h"
 
 static const unsigned int win_formats[][4] = {
@@ -945,8 +951,9 @@ static void test_clock(int share)
     ok(gbsize == bufsize,
        "BufferSize %u at rate %u\n", gbsize, pwfx->nSamplesPerSec);
     else
-    ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
-       "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
+        todo_wine
+        ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
+           "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
 
     /* In shared mode, GetCurrentPadding decreases in multiples of
      * fragment size (i.e. updated only at period ticks), whereas
