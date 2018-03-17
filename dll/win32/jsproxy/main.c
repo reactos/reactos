@@ -16,25 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/config.h>
+#include "config.h"
+#include "wine/port.h"
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <oleauto.h>
-#include <dispex.h>
-#include <activscp.h>
-#include <wininet.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
+#include <stdarg.h>
+#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -44,6 +30,9 @@
 #ifdef HAVE_NETDB_H
 # include <netdb.h>
 #endif
+#ifdef __REACTOS__
+#define COBJMACROS
+#endif
 #if defined(__MINGW32__) || defined (_MSC_VER)
 # include <ws2tcpip.h>
 #else
@@ -51,9 +40,24 @@
 # define ioctlsocket ioctl
 #endif
 
+#include "windef.h"
+#include "winbase.h"
 #ifndef __MINGW32__
 #define USE_WS_PREFIX
 #endif
+#include "winsock2.h"
+#include "ws2ipdef.h"
+#include "winnls.h"
+#include "wininet.h"
+#ifndef __REACTOS__
+#define COBJMACROS
+#endif
+#include "ole2.h"
+#include "dispex.h"
+#include "activscp.h"
+#include "wine/debug.h"
+#include "wine/heap.h"
+#include "wine/unicode.h"
 
 static HINSTANCE instance;
 
@@ -87,16 +91,6 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
         break;
     }
     return TRUE;
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline WCHAR *strdupAW( const char *src, int len )
