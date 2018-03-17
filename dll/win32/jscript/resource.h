@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <windef.h>
+
 #define JSCRIPT_MAJOR_VERSION 5
 #define JSCRIPT_MINOR_VERSION 8
 #define JSCRIPT_BUILD_VERSION 16475

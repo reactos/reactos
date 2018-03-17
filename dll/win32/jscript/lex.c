@@ -16,9 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <limits.h>
+
 #include "jscript.h"
+#include "activscp.h"
+#include "objsafe.h"
+#include "engine.h"
+#include "parser.h"
 
 #include "parser.tab.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR breakW[] = {'b','r','e','a','k',0};
 static const WCHAR caseW[] = {'c','a','s','e',0};

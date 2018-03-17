@@ -17,9 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "jscript.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <ntsecapi.h>
+#include <math.h>
+#include <limits.h>
+
+#include "jscript.h"
+#include "ntsecapi.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR EW[] = {'E',0};
 static const WCHAR LOG2EW[] = {'L','O','G','2','E',0};
