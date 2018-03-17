@@ -23,7 +23,7 @@
 
 #define COBJMACROS
 
-#include <dshow.h>
+#include "dshow.h"
 
 typedef struct {
     MCIDEVICEID    wDevID;
