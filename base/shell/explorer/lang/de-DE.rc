@@ -77,7 +77,7 @@ BEGIN
     GROUPBOX "Benachrichtigungsfeld", IDC_STATIC, 6, 114, 240, 98
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 126, 229, 24
     AUTOCHECKBOX "&Uhr Anzeigen", IDC_TASKBARPROP_CLOCK, 13, 153, 80, 10
-    AUTOCHECKBOX "Sekunden Anzeigen", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED  
+    AUTOCHECKBOX "Sekunden Anzeigen", IDC_TASKBARPROP_SECONDS, 120, 153, 80, 10, WS_DISABLED
     LTEXT "Das Benachrichtigungsfeld kann übersichtlich gestaltet werden, indem selten verwendete Symbole ausgeblendet werden.", IDC_STATIC, 13, 169, 223, 16
     AUTOCHECKBOX "&Inaktive Symbole ausblenden", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
     PUSHBUTTON "An&passen...", IDC_TASKBARPROP_ICONCUST, 188, 191, 50, 14
@@ -135,15 +135,15 @@ FONT 8, "MS Shell Dlg"
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "File Name Warning"
+CAPTION "Dateinamenwarnung"
 FONT 8, "MS Shell Dlg"
 {
-    DEFPUSHBUTTON    "&Ignore", IDIGNORE, 215, 60, 50, 14
-    PUSHBUTTON       "&Rename", IDC_FILE_RENAME, 159, 60, 50, 14
+    DEFPUSHBUTTON    "&Ignorieren", IDIGNORE, 215, 60, 50, 14
+    PUSHBUTTON       "&Umbenennen", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
-    AUTOCHECKBOX     "&Don't perform this check at startup", IDC_NOTCHECK, 7, 62, 139, 10
+    AUTOCHECKBOX     "&Beim Start nicht überprüfen", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "There is a file or folder on your computer called %s which could cause certain applications to not function correctly.  Renaming it to %s would solve this problem.  Would you like to rename it now?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Eine Datei namens %s auf Ihrem Computer, könnte die Funktion diverser Programme einschränken.  Umbennen der Datei in %s würde das Problem lösen.  Möchten Sie die Datei jetzt umbenennen?", IDC_STATIC, 34, 7, 224, 37
 }
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
