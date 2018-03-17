@@ -17,6 +17,7 @@
  */
 
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -69,7 +70,7 @@ BEGIN
         BEGIN
             MENUITEM "后退(&B)\tAlt+Left Arrow", IDM_GOTO_BACK
             MENUITEM "前进(&F)\tAlt+Right Arrow", IDM_GOTO_FORWARD
-            MENUITEM "上移一级(&U)", IDM_GOTO_UPONELEVEL
+            MENUITEM "上转(&U)", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "主页(&H)\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
@@ -103,27 +104,27 @@ BEGIN
 		MENUITEM "桌面(&D)", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
 		MENUITEM "快速启动(&Q)", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "新的工具栏...(&N)", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
+		MENUITEM "新建工具栏...(&N)", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
 	END
 END
 
 IDM_BAND_MENU MENUEX
 BEGIN
-	MENUITEM "Sho&w Title", IDM_BAND_TITLE
-	MENUITEM "&Close Toolbar", IDM_BAND_CLOSE
+	MENUITEM "显示标题(&W)", IDM_BAND_TITLE
+	MENUITEM "关闭工具栏(&C)", IDM_BAND_CLOSE
 END
 
 IDM_POPUPMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", IDM_VIEW_MENU
+        POPUP "视图(&V)", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "大图标(&L)", IDM_LARGE_ICONS
+            MENUITEM "小图标(&S)", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "打开文件夹(&O)", IDM_OPEN_FOLDER
+        MENUITEM "显示文本(&S)", IDM_SHOW_TEXT
     END    
 END
 
@@ -213,8 +214,8 @@ END
 
 STRINGTABLE
 BEGIN
-    9121 "连接到网络磁盘。"
-    9122 "从网络磁盘断开连接。"
+    9121 "连接到网络驱动器。"
+    9122 "断开网络驱动器。"
 END
 
 STRINGTABLE
