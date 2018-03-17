@@ -101,25 +101,23 @@ static void test_WNetGetRemoteName(void)
         info_size = sizeof(buffer);
         ret = WNetGetUniversalNameA(driveA, REMOTE_NAME_INFO_LEVEL,
                 buffer, &info_size);
-        todo_wine{
         if(drive_type == DRIVE_REMOTE)
+            todo_wine
             ok(ret == WN_NO_ERROR, "WNetGetUniversalNameA failed: %08x\n", ret);
         else
             ok(ret == WN_NOT_CONNECTED || ret == WN_NO_NET_OR_BAD_PATH,
                 "(%s) WNetGetUniversalNameA gave wrong error: %u\n", driveA, ret);
-        }
         ok(info_size == sizeof(buffer), "Got wrong size: %u\n", info_size);
 
         fail_size = 0;
         ret = WNetGetUniversalNameA(driveA, REMOTE_NAME_INFO_LEVEL,
                 buffer, &fail_size);
-        todo_wine{
         if(drive_type == DRIVE_REMOTE)
+            todo_wine
             ok(ret == WN_BAD_VALUE || ret == WN_MORE_DATA, "WNetGetUniversalNameA failed: %08x\n", ret);
         else
             ok(ret == WN_NOT_CONNECTED || ret == WN_NO_NET_OR_BAD_PATH,
                 "(%s) WNetGetUniversalNameA gave wrong error: %u\n", driveA, ret);
-        }
         ret = WNetGetUniversalNameA(driveA, REMOTE_NAME_INFO_LEVEL,
                 buffer, NULL);
         todo_wine ok(ret == WN_BAD_POINTER, "WNetGetUniversalNameA failed: %08x\n", ret);
@@ -127,13 +125,12 @@ static void test_WNetGetRemoteName(void)
         ret = WNetGetUniversalNameA(driveA, REMOTE_NAME_INFO_LEVEL,
                 NULL, &info_size);
 
-        todo_wine {
         if(drive_type == DRIVE_REMOTE)
+            todo_wine
             ok(ret == WN_BAD_POINTER || ret == WN_BAD_VALUE, "WNetGetUniversalNameA failed: %08x\n", ret);
         else
             ok(ret == WN_NOT_CONNECTED || ret == WN_BAD_VALUE,
                 "(%s) WNetGetUniversalNameA gave wrong error: %u\n", driveA, ret);
-        }
 
         fail_size = sizeof(driveA) / sizeof(char) - 1;
         ret = WNetGetUniversalNameA(driveA, REMOTE_NAME_INFO_LEVEL,
