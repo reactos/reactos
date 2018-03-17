@@ -73,6 +73,8 @@ VOID ShowAboutDlg(HWND hWndParent);
 BOOL RegisterMapClasses(HINSTANCE hInstance);
 VOID UnregisterMapClasses(HINSTANCE hInstance);
 
+int WINAPI GetUName(IN WORD wCharCode, OUT LPWSTR lpBuf);
+
 /* charmap.c */
 VOID UpdateStatusBar(WCHAR wch);
 extern VOID ChangeMapFont(HWND hDlg);
