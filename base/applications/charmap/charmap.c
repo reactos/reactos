@@ -264,9 +264,9 @@ UpdateStatusBar(WCHAR wch)
     WCHAR buff[MAX_PATH];
     WCHAR szDesc[MAX_PATH];
 
-        GetUName(wch, szDesc);
-        wsprintfW(buff, L"U+%04X: %s", wch, szDesc);
-        SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)buff);
+    GetUName(wch, szDesc);
+    wsprintfW(buff, L"U+%04X: %s", wch, szDesc);
+    SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)buff);
 }
 
 static
