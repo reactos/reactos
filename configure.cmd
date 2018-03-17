@@ -70,6 +70,7 @@ if defined ROS_ARCH (
     cl 2>&1 | find "19.10." > NUL && set VS_VERSION=15
     cl 2>&1 | find "19.11." > NUL && set VS_VERSION=15
     cl 2>&1 | find "19.12." > NUL && set VS_VERSION=15
+    cl 2>&1 | find "19.13." > NUL && set VS_VERSION=15
     if not defined VS_VERSION (
         echo Error: Visual Studio version too old or version detection failed.
         goto quit
