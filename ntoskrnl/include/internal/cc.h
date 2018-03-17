@@ -519,3 +519,24 @@ IsPointInRange(
 }
 
 #define CcBugCheck(A, B, C) KeBugCheckEx(CACHE_MANAGER, BugCheckFileId | ((ULONG)(__LINE__)), A, B, C)
+
+#if DBG
+#define CcRosVacbIncRefCount(vacb) CcRosVacbIncRefCount_(vacb,__FILE__,__LINE__)
+#define CcRosVacbDecRefCount(vacb) CcRosVacbDecRefCount_(vacb,__FILE__,__LINE__)
+
+VOID
+CcRosVacbIncRefCount_(
+    PROS_VACB vacb,
+    PCSTR file,
+    INT line);
+
+VOID
+CcRosVacbDecRefCount_(
+    PROS_VACB vacb,
+    PCSTR file,
+    INT line);
+
+#else
+#define CcRosVacbIncRefCount(vacb) (++((vacb)->ReferenceCount))
+#define CcRosVacbDecRefCount(vacb) (--((vacb)->ReferenceCount))
+#endif

@@ -222,14 +222,18 @@ CcPurgeCacheSection (
             break;
         }
 
-        /* Still in use, it cannot be purged, fail */
-        if (Vacb->ReferenceCount != 0 && !Vacb->Dirty)
+        /* Still in use, it cannot be purged, fail
+         * Allow one ref: VACB is supposed to be always 1-referenced
+         */
+        if ((Vacb->ReferenceCount > 1 && !Vacb->Dirty) ||
+            (Vacb->ReferenceCount > 2 && Vacb->Dirty))
         {
             Success = FALSE;
             break;
         }
 
         /* This VACB is in range, so unlink it and mark for free */
+        ASSERT(Vacb->ReferenceCount == 1 || Vacb->Dirty);
         RemoveEntryList(&Vacb->VacbLruListEntry);
         if (Vacb->Dirty)
         {
@@ -246,6 +250,7 @@ CcPurgeCacheSection (
         Vacb = CONTAINING_RECORD(RemoveHeadList(&FreeList),
                                  ROS_VACB,
                                  CacheMapVacbListEntry);
+        CcRosVacbDecRefCount(Vacb);
         CcRosInternalFreeVacb(Vacb);
     }
 

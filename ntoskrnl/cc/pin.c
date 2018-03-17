@@ -382,7 +382,15 @@ CcUnpinRepinnedBcb (
             iBcb->Pinned = FALSE;
             CcRosAcquireVacbLock(iBcb->Vacb, NULL);
             iBcb->Vacb->PinCount--;
+            ASSERT(iBcb->Vacb->PinCount == 0);
         }
+
+        CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
+                         iBcb->Vacb,
+                         TRUE,
+                         iBcb->Dirty,
+                         FALSE);
+
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
     }
