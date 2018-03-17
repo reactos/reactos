@@ -24,6 +24,9 @@
 #ifndef _NETSPI_H_
 #define _NETSPI_H_
 
+#include "windef.h"
+#include "winnetwk.h"
+
 /*
  * Note: The Unicode variants of all these routines/structures
  *       apparently don't exist, at least not in Win95 ...

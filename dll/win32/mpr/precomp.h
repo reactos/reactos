@@ -1,3 +1,4 @@
+
 #ifndef _MPR_PCH_
 #define _MPR_PCH_
 
@@ -16,6 +17,4 @@
 
 #include "mprres.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mpr);
-
-#endif /* _MPR_PCH_ */
+#endif /* !_MPR_PCH_ */

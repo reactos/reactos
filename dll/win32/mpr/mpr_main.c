@@ -18,9 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
 
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "winnetwk.h"
+#include "wine/debug.h"
 #include "wnetpriv.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
  /*
   * FIXME: The following routines should use a private heap ...

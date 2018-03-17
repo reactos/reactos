@@ -21,13 +21,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
-#include <winioctl.h>
-#include <npapi.h>
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winioctl.h"
+#include "winnetwk.h"
+#include "npapi.h"
+#include "winreg.h"
+#include "winuser.h"
 #define WINE_MOUNTMGR_EXTENSIONS
-#include <ddk/mountmgr.h>
-#include <wine/unicode.h>
+#include "ddk/mountmgr.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "mprres.h"
+#include "wnetpriv.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
 /* Data structures representing network service providers.  Assumes only one
  * thread creates them, and that they are constant for the life of the process
@@ -2577,7 +2587,7 @@ DWORD WINAPI WNetGetUniversalNameA ( LPCSTR lpLocalPath, DWORD dwInfoLevel,
         break;
     }
     case REMOTE_NAME_INFO_LEVEL:
-        err = WN_NO_NETWORK;
+        err = WN_NOT_CONNECTED;
         break;
 
     default:
