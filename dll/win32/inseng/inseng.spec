@@ -7,6 +7,6 @@
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
 @ stub DownloadFile
-@ stdcall -stub GetICifFileFromFile(ptr str)
-@ stdcall -stub GetICifRWFileFromFile(ptr str)
+@ stdcall GetICifFileFromFile(ptr str)
+@ stdcall GetICifRWFileFromFile(ptr str)
 @ stub PurgeDownloadDirectory
