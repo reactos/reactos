@@ -35,7 +35,14 @@
  *
  ***************************************************************************/
 
-#include "precomp.h"
+#include "lzx.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
 
 /* sized types */
 typedef unsigned char  UBYTE; /* 8 bits exactly    */

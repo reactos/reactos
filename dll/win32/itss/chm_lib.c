@@ -54,7 +54,20 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wine/unicode.h"
+
+#include "chm_lib.h"
+#include "lzx.h"
 
 #define CHM_ACQUIRE_LOCK(a) do {                        \
         EnterCriticalSection(&(a));                     \
