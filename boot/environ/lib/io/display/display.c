@@ -115,7 +115,7 @@ DsppLoadFontFile (
     DirectoryLength = wcslen(FontDirectory);
 
     /* Safely add them up*/
-    Status = RtlSizeTAdd(NameLength, DirectoryLength, &TotalLength);
+    Status = RtlSIZETAdd(NameLength, DirectoryLength, &TotalLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
