@@ -9785,7 +9785,7 @@ OslDrawLogo (
     CoordinateX = (DspGraphicalConsole->DisplayMode.HRes / 2) - (BmpWidth / 2);
     CoordinateY = (DspGraphicalConsole->DisplayMode.VRes / 2) - (BmpHeight / 2);
     BlMmTranslateVirtualAddress(GopBlt, &GopBltPhys);
-    GopBlt = (PVOID)GopBltPhys.LowPart;
+    GopBlt = PhysicalAddressToPtr(GopBltPhys);
 
     /* Make the screen black */
     RtlFillMemory(DspGraphicalConsole->FrameBuffer,

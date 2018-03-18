@@ -865,7 +865,7 @@ MmPapAllocatePagesInRange (
                                                    Type);
 
         /* Return the allocated address */
-        *PhysicalAddress = (PVOID)BaseAddress.LowPart;
+        *PhysicalAddress = PhysicalAddressToPtr(BaseAddress);
     }
 
 Exit:
@@ -1639,7 +1639,7 @@ MmSelectMappingAddress (
     if (MmTranslationType == BlNone)
     {
         /* Just return the physical address as the mapping address */
-        PreferredAddress = (PVOID)PhysicalAddress.LowPart;
+        PreferredAddress = PhysicalAddressToPtr(PhysicalAddress);
         goto Success;
     }
 

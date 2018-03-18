@@ -1385,6 +1385,14 @@ MmMdInitializeListHead (
     List->Type = 0;
 }
 
+FORCEINLINE
+PVOID
+PhysicalAddressToPtr (
+    _In_ PHYSICAL_ADDRESS PhysicalAddress)
+{
+    return (PVOID)(ULONG_PTR)PhysicalAddress.QuadPart;
+}
+
 /* INITIALIZATION ROUTINES ***************************************************/
 
 NTSTATUS
@@ -2369,7 +2377,7 @@ BlpMmCreateBlockAllocator (
 
 PVOID
 BlMmAllocateHeap (
-    _In_ ULONG Size
+    _In_ SIZE_T Size
     );
 
 NTSTATUS
