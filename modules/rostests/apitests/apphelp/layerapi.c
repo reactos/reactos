@@ -2,7 +2,7 @@
  * PROJECT:     apphelp_apitest
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for (registry)layer manipulation api's
- * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -57,7 +57,7 @@ static BOOL setLayerValue(BOOL bMachine, const char* valueName, const char* valu
     if (lstatus == ERROR_SUCCESS)
     {
         if (value)
-            lstatus = RegSetValueExA(key, valueName, 0, REG_SZ, (const BYTE*)value, strlen(value)+1);
+            lstatus = RegSetValueExA(key, valueName, 0, REG_SZ, (const BYTE*)value, (DWORD)strlen(value)+1);
         else
         {
             lstatus = RegDeleteValueA(key, valueName);
@@ -564,7 +564,7 @@ static void test_SetPermLayer(void)
     ok(DeleteFileA(file), "DeleteFile failed....\n");
 }
 
-static BOOL create_file(LPCSTR dir, LPCSTR name, int filler, size_t size)
+static BOOL create_file(LPCSTR dir, LPCSTR name, int filler, DWORD size)
 {
     char target[MAX_PATH], *tmp;
     HANDLE file;

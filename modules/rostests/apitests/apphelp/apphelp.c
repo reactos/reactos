@@ -4,7 +4,7 @@
  * PURPOSE:     Misc apphelp tests
  * COPYRIGHT:   Copyright 2012 Detlef Riekenberg
  *              Copyright 2013 Mislav Blažević
- *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -606,7 +606,7 @@ static void test_crc_imp(size_t len, DWORD expected)
         pSdbFreeFileAttributes(pattrinfo);
 }
 
-static void test_crc2_imp(size_t len, int fill, DWORD expected)
+static void test_crc2_imp(DWORD len, int fill, DWORD expected)
 {
     static const WCHAR path[] = {'t','e','s','t','x','x','.','e','x','e',0};
 
