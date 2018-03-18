@@ -13,7 +13,7 @@ ssize_t send_packet( struct interface_info *ip,
                      struct sockaddr_in *broadcast,
                      struct hardware *hardware ) {
     int result =
-        sendto( ip->wfdesc, (char *)p, size, 0,
+        sendto( ip->wfdesc, (char *)p, (int)size, 0,
                 (struct sockaddr *)broadcast, sizeof(*broadcast) );
 
     if (result < 0) {
@@ -33,7 +33,7 @@ ssize_t receive_packet(struct interface_info *ip,
                        struct hardware *hardware ) {
     int recv_addr_size = sizeof(*dest);
     int result =
-        recvfrom (ip -> rfdesc, (char *)packet_data, packet_len, 0,
+        recvfrom (ip -> rfdesc, (char *)packet_data, (int)packet_len, 0,
                   (struct sockaddr *)dest, &recv_addr_size );
     return result;
 }

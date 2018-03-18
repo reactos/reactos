@@ -646,7 +646,7 @@ MMixerSetGetMuxControlDetails(
                 /* copy details */
                 ListText[Index].dwParam1 = SourceLine->Line.dwLineID;
                 ListText[Index].dwParam2 = SourceLine->Line.dwComponentType;
-                MixerContext->Copy(ListText[Index].szName, SourceLine->Line.szName, (wcslen(SourceLine->Line.szName) + 1) * sizeof(WCHAR));
+                MixerContext->Copy(ListText[Index].szName, SourceLine->Line.szName, (ULONG)(wcslen(SourceLine->Line.szName) + 1) * sizeof(WCHAR));
 
                 /* mark offset as consumed */
                 LogicalNodes[CurLogicalPinOffset] = MAXULONG;
@@ -864,7 +864,7 @@ MMixerGetDeviceName(
     if (Status == MM_STATUS_SUCCESS)
     {
         /* copy device name */
-        MixerContext->Copy(DeviceName, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+        MixerContext->Copy(DeviceName, Name, (ULONG)min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
 
         /* make sure its null terminated */
         DeviceName[MAXPNAMELEN-1] = L'\0';
@@ -884,7 +884,7 @@ MMixerGetDeviceName(
     if (Status == MM_STATUS_SUCCESS)
     {
         /* copy device name */
-        MixerContext->Copy(DeviceName, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+        MixerContext->Copy(DeviceName, Name, (ULONG)min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
 
         /* make sure its null terminated */
         DeviceName[MAXPNAMELEN-1] = L'\0';

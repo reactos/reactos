@@ -88,7 +88,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     *BaseAddress = 0;
     Status = MiInsertVadEx((PMMVAD)Vad,
                            BaseAddress,
-                           BYTES_TO_PAGES(Size),
+                           Size,
                            HighestAddress,
                            PAGE_SIZE,
                            MEM_TOP_DOWN);
@@ -175,6 +175,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
     PMMPFN Pfn1, Pfn2;
     ULONG i;
     KIRQL OldIrql;
+    PSLIST_ENTRY SListEntry;
 
     //
     // This should be the guard page, so decrement by one
@@ -189,9 +190,8 @@ MmDeleteKernelStack(IN PVOID StackBase,
     {
         if (ExQueryDepthSList(&MmDeadStackSListHead) < MmMaximumDeadKernelStacks)
         {
-            Pfn1 = MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber);
-            InterlockedPushEntrySList(&MmDeadStackSListHead,
-                                      (PSLIST_ENTRY)&Pfn1->u1.NextStackPfn);
+            SListEntry = ((PSLIST_ENTRY)StackBase) - 1;
+            InterlockedPushEntrySList(&MmDeadStackSListHead, SListEntry);
             return;
         }
     }
@@ -265,7 +265,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
     ULONG i;
-    PMMPFN Pfn1;
+    PSLIST_ENTRY SListEntry;
 
     //
     // Calculate pages needed
@@ -286,11 +286,10 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         if (ExQueryDepthSList(&MmDeadStackSListHead))
         {
-            Pfn1 = (PMMPFN)InterlockedPopEntrySList(&MmDeadStackSListHead);
-            if (Pfn1)
+            SListEntry = InterlockedPopEntrySList(&MmDeadStackSListHead);
+            if (SListEntry != NULL)
             {
-                PointerPte = Pfn1->PteAddress;
-                BaseAddress = MiPteToAddress(++PointerPte);
+                BaseAddress = (SListEntry + 1);
                 return BaseAddress;
             }
         }
@@ -897,6 +896,12 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     PCHAR Destination;
     USHORT Length = 0;
     MMPTE TempPte;
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPPE PointerPpe;
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    PMMPXE PointerPxe;
+#endif
 
     /* We should have a PDE */
     ASSERT(Process->Pcb.DirectoryTableBase[0] != 0);
@@ -931,14 +936,21 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
     /* Do the same for hyperspace */
-#ifdef _M_AMD64
-    PointerPde = MiAddressToPxe((PVOID)HYPER_SPACE);
-#else
-    PointerPde = MiAddressToPde(HYPER_SPACE);
-#endif
+    PointerPde = MiAddressToPde((PVOID)HYPER_SPACE);
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
     //ASSERT(Process->Pcb.DirectoryTableBase[0] == PageFrameNumber * PAGE_SIZE); // we're not lucky
     MiInitializePfn(PageFrameNumber, (PMMPTE)PointerPde, TRUE);
+
+#if (_MI_PAGING_LEVELS >= 3)
+    PointerPpe = MiAddressToPpe((PVOID)HYPER_SPACE);
+    PageFrameNumber = PFN_FROM_PTE(PointerPpe);
+    MiInitializePfn(PageFrameNumber, PointerPpe, TRUE);
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    PointerPxe = MiAddressToPxe((PVOID)HYPER_SPACE);
+    PageFrameNumber = PFN_FROM_PTE(PointerPxe);
+    MiInitializePfn(PageFrameNumber, PointerPxe, TRUE);
+#endif
 
     /* Setup the PFN for the PTE for the working set */
     PointerPte = MiAddressToPte(MI_WORKING_SET_LIST);
@@ -1369,7 +1381,7 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
         MiDecrementShareCount(Pfn1, PageFrameIndex);
 
         /* Page table is now dead. Bye bye... */
-        ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
+        ///ASSERT((Pfn1->u3.e2.ReferenceCount == 0) || (Pfn1->u3.e1.WriteInProgress));
     }
     else
     {

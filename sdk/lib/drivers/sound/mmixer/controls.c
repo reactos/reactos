@@ -98,10 +98,10 @@ MMixerAddMixerControl(
 
         if (Status == MM_STATUS_SUCCESS)
         {
-            MixerContext->Copy(MixerControl->Control.szShortName, Name, (min(MIXER_SHORT_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
+            MixerContext->Copy(MixerControl->Control.szShortName, Name, (ULONG)(min(MIXER_SHORT_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
             MixerControl->Control.szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
 
-            MixerContext->Copy(MixerControl->Control.szName, Name, (min(MIXER_LONG_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
+            MixerContext->Copy(MixerControl->Control.szName, Name, (ULONG)(min(MIXER_LONG_NAME_CHARS, wcslen(Name)+1)) * sizeof(WCHAR));
             MixerControl->Control.szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
         }
 
@@ -266,10 +266,10 @@ MMixerCreateDestinationLine(
 
     if (LineName)
     {
-        MixerContext->Copy(DestinationLine->Line.szShortName, LineName, (min(MIXER_SHORT_NAME_CHARS, wcslen(LineName)+1)) * sizeof(WCHAR));
+        MixerContext->Copy(DestinationLine->Line.szShortName, LineName, (ULONG)(min(MIXER_SHORT_NAME_CHARS, wcslen(LineName)+1)) * sizeof(WCHAR));
         DestinationLine->Line.szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
 
-        MixerContext->Copy(DestinationLine->Line.szName, LineName, (min(MIXER_LONG_NAME_CHARS, wcslen(LineName)+1)) * sizeof(WCHAR));
+        MixerContext->Copy(DestinationLine->Line.szName, LineName, (ULONG)(min(MIXER_LONG_NAME_CHARS, wcslen(LineName)+1)) * sizeof(WCHAR));
         DestinationLine->Line.szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
 
     }
@@ -1006,10 +1006,10 @@ MMixerBuildMixerSourceLine(
     if (Status == MM_STATUS_SUCCESS)
     {
         /* store pin name as line name */
-        MixerContext->Copy(SrcLine->Line.szShortName, PinName, (min(MIXER_SHORT_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
+        MixerContext->Copy(SrcLine->Line.szShortName, PinName, (ULONG)(min(MIXER_SHORT_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
         SrcLine->Line.szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
 
-        MixerContext->Copy(SrcLine->Line.szName, PinName, (min(MIXER_LONG_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
+        MixerContext->Copy(SrcLine->Line.szName, PinName, (ULONG)(min(MIXER_LONG_NAME_CHARS, wcslen(PinName)+1)) * sizeof(WCHAR));
         SrcLine->Line.szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
 
         /* free pin name buffer */

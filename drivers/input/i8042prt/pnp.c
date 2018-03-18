@@ -507,7 +507,7 @@ i8042PnpStartDevice(
     BOOLEAN FoundIrq = FALSE;
     ULONG i;
     NTSTATUS Status;
-
+    __debugbreak();
     TRACE_(I8042PRT, "i8042PnpStartDevice(%p)\n", DeviceObject);
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     PortDeviceExtension = DeviceExtension->PortDeviceExtension;

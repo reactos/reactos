@@ -5,7 +5,8 @@ add_definitions(
 
 include_directories(
     include
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/include
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/fast486)
 
 function(add_hal _halname)
     cmake_parse_arguments(_haldata "" "" "SOURCES;COMPONENTS" ${ARGN})
@@ -57,7 +58,8 @@ if(ARCH STREQUAL "i386")
     add_subdirectory(minihal)
 
     # hal
-    add_hal(hal SOURCES up/halup.rc COMPONENTS generic legacy up pic)
+#    add_hal(hal SOURCES up/halup.rc COMPONENTS generic legacy up pic)
+    add_hal(hal SOURCES acpi/halacpi.rc COMPONENTS generic acpi up pic)
     add_hal(halacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up pic)
     add_hal(halapic SOURCES acpi/halacpi.rc COMPONENTS generic legacy up apic)
     add_hal(halaacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up apic)
@@ -76,5 +78,6 @@ elseif(ARCH STREQUAL "amd64")
         amd64/processor.c)
 
     add_hal(hal SOURCES ${HAL_SOURCE} COMPONENTS generic acpi apic)
+    target_link_libraries(hal fast486)
 
 endif()

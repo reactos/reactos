@@ -291,6 +291,18 @@ typedef struct _KCALLOUT_FRAME
 } KCALLOUT_FRAME, *PKCALLOUT_FRAME;
 
 //
+// User mode callout frame
+//
+typedef struct _UCALLOUT_FRAME
+{
+    PVOID Reserved;
+    ULONG ApiNumber;
+    PVOID Buffer;
+    ULONG Length;
+    EXCEPTION_REGISTRATION_RECORD SehRecord;
+} UCALLOUT_FRAME, *PUCALLOUT_FRAME;
+
+//
 // LDT Entry Definition
 //
 #ifndef _LDT_ENTRY_DEFINED

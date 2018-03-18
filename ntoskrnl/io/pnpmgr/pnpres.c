@@ -13,6 +13,16 @@
 #include <debug.h>
 
 static
+ULONG
+IopGetDescriptorSize(
+    PCM_FULL_RESOURCE_DESCRIPTOR ResourceDescriptor)
+{
+    ULONG Count = ResourceDescriptor->PartialResourceList.Count;
+    return FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR,
+        PartialResourceList.PartialDescriptors[Count]);
+}
+
+static
 BOOLEAN
 IopCheckDescriptorForConflict(PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc, OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor)
 {
@@ -195,6 +205,9 @@ IopFindInterruptResource(
         }
    }
 
+   DPRINT1("Failed to satisfy interrupt requirement with IRQ 0x%x-0x%x\n",
+           IoDesc->u.Interrupt.MinimumVector,
+           IoDesc->u.Interrupt.MaximumVector);
    return FALSE;
 }
 
@@ -542,12 +555,17 @@ IopCheckResourceDescriptor(
    IN BOOLEAN Silent,
    OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor)
 {
-   ULONG i, ii;
+   ULONG i, ii, DescriptorSize;
    BOOLEAN Result = FALSE;
+   PCM_FULL_RESOURCE_DESCRIPTOR FullDesc;
 
+   FullDesc = &ResourceList->List[0];
    for (i = 0; i < ResourceList->Count; i++)
    {
-      PCM_PARTIAL_RESOURCE_LIST ResList = &ResourceList->List[i].PartialResourceList;
+      PCM_PARTIAL_RESOURCE_LIST ResList = &FullDesc->PartialResourceList;
+      DescriptorSize = IopGetDescriptorSize(FullDesc);
+      FullDesc = (PCM_FULL_RESOURCE_DESCRIPTOR)((PUCHAR)FullDesc + DescriptorSize);
+
       for (ii = 0; ii < ResList->Count; ii++)
       {
          PCM_PARTIAL_RESOURCE_DESCRIPTOR ResDesc2 = &ResList->PartialDescriptors[ii];
@@ -606,6 +624,14 @@ IopCheckResourceDescriptor(
                  break;
 
              case CmResourceTypeInterrupt:
+                 if (ResDesc->u.Interrupt.Vector == 0xA)
+                 {
+                     //__debugbreak();
+                     DPRINT("Got Interrupt IRQ (0x%x 0x%x vs. 0x%x 0x%x)\n",
+                            ResDesc->u.Interrupt.Vector, ResDesc->u.Interrupt.Level,
+                            ResDesc2->u.Interrupt.Vector, ResDesc2->u.Interrupt.Level);
+                 }
+
                  if (ResDesc->u.Interrupt.Vector == ResDesc2->u.Interrupt.Vector)
                  {
                       if (!Silent)
@@ -767,7 +793,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
   HANDLE PnpMgrLevel1, PnpMgrLevel2, ResourceMapKey;
   UNICODE_STRING KeyName;
   OBJECT_ATTRIBUTES ObjectAttributes;
-
+  //__debugbreak();
   RtlInitUnicodeString(&KeyName,
                L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -1097,6 +1123,7 @@ IopAssignDeviceResources(
        Status = IopDetectResourceConflict(DeviceNode->ResourceList, FALSE, NULL);
        if (!NT_SUCCESS(Status))
        {
+           //__debugbreak();
            DPRINT1("Boot resources for %wZ cause a resource conflict!\n", &DeviceNode->InstancePath);
            ExFreePool(DeviceNode->ResourceList);
            DeviceNode->ResourceList = NULL;
@@ -1173,12 +1200,17 @@ IopCheckForResourceConflict(
    IN BOOLEAN Silent,
    OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor)
 {
-   ULONG i, ii;
+   ULONG i, ii, DescriptorSize;
    BOOLEAN Result = FALSE;
+   PCM_FULL_RESOURCE_DESCRIPTOR FullDesc;
 
+   FullDesc = &ResourceList1->List[0];
    for (i = 0; i < ResourceList1->Count; i++)
    {
-      PCM_PARTIAL_RESOURCE_LIST ResList = &ResourceList1->List[i].PartialResourceList;
+      PCM_PARTIAL_RESOURCE_LIST ResList = &FullDesc->PartialResourceList;
+      DescriptorSize = IopGetDescriptorSize(FullDesc);
+      FullDesc = (PCM_FULL_RESOURCE_DESCRIPTOR)((PUCHAR)FullDesc + DescriptorSize);
+
       for (ii = 0; ii < ResList->Count; ii++)
       {
          PCM_PARTIAL_RESOURCE_DESCRIPTOR ResDesc = &ResList->PartialDescriptors[ii];

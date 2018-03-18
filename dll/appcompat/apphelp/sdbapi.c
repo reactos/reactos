@@ -151,7 +151,7 @@ void WINAPI SdbpFlush(PDB pdb)
 
 DWORD SdbpStrlen(PCWSTR string)
 {
-    return wcslen(string);
+    return (DWORD)wcslen(string);
 }
 
 DWORD SdbpStrsize(PCWSTR string)

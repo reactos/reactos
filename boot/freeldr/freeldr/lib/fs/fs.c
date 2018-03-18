@@ -444,7 +444,7 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
     TRACE("FsRegisterDevice() Prefix = %s\n", Prefix);
 
     Length = strlen(Prefix) + 1;
-    pNewEntry = FrLdrTempAlloc(sizeof(DEVICE) + Length, TAG_DEVICE);
+    pNewEntry = FrLdrTempAlloc(sizeof(DEVICE) + (ULONG)Length, TAG_DEVICE);
     if (!pNewEntry)
         return;
     pNewEntry->FuncTable = FuncTable;

@@ -111,7 +111,7 @@ if(ARCH STREQUAL "i386")
     endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND LIBCNTPR_ASM_SOURCE
-        except/amd64/chkstk_asm.s
+        except/amd64/chkstk_ms.s
         except/amd64/seh.s
         setjmp/amd64/setjmp.s
         math/amd64/atan.S
@@ -126,7 +126,7 @@ elseif(ARCH STREQUAL "amd64")
         math/amd64/log.S
         math/amd64/log10.S
         math/amd64/pow.S
-        math/amd64/sqrt.S
+        # math/amd64/sqrt.S
         math/amd64/tan.S)
     list(APPEND LIBCNTPR_SOURCE
         except/amd64/ehandler.c

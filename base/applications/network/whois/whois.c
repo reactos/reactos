@@ -156,12 +156,12 @@ int main(int argc, char **argv)
 	while (argc-- > 1)
 	{
 		/* Send the request */
-		send(s, *argv, strlen(*argv), 0);
+		send(s, *argv, (int)strlen(*argv), 0);
 		send(s, " ", 1, 0);
 		argv++;
 	}
 	/* Send the last request */
-	send(s, *argv, strlen(*argv), 0);
+	send(s, *argv, (int)strlen(*argv), 0);
 	send(s, "\r\n", 2, 0);
 
 	/* Receive anything and print it */

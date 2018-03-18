@@ -192,7 +192,7 @@ BiOpenKey(
     PBI_KEY_OBJECT ParentKey, NewKey;
     PBI_KEY_HIVE ParentHive;
     NTSTATUS Status;
-    ULONG NameLength, SubNameLength, NameBytes;
+    SIZE_T NameLength, SubNameLength, NameBytes;
     PWCHAR NameStart, NameBuffer;
     UNICODE_STRING KeyString;
     HCELL_INDEX KeyCell;

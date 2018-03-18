@@ -216,7 +216,7 @@ BiConvertRegistryDataToElement (
                 }
 
                 /* Move to the next string in the registry array */
-                Size = (wcslen(BcdString) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
+                Size = (ULONG)(wcslen(BcdString) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
                 Length += Size;
                 BcdString = (PWCHAR)((ULONG_PTR)BcdString + Length);
             }

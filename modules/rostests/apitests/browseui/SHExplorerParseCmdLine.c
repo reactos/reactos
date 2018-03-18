@@ -35,7 +35,7 @@ typedef struct _EXPLORER_INFO
     ULONG Padding[PADDING_SIZE];
 } EXPLORER_INFO, *PEXPLORER_INFO;
 
-UINT (WINAPI *SHExplorerParseCmdLine)(_Out_ PEXPLORER_INFO Info);
+UINT_PTR (WINAPI *SHExplorerParseCmdLine)(_Out_ PEXPLORER_INFO Info);
 
 #define PIDL_IS_UNTOUCHED -1
 #define PIDL_IS_NULL -2
@@ -87,7 +87,7 @@ _In_ PCWSTR PidlPath,
 _Out_opt_ PUINT PWriteEnd)
 {
     EXPLORER_INFO Info;
-    UINT Ret;
+    UINT_PTR Ret;
     ULONG i;
     PDWORD InfoWords = (PDWORD) &Info;
 

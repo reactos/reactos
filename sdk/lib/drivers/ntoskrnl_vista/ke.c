@@ -22,6 +22,6 @@ KeQueryActiveProcessorCount(OUT PKAFFINITY ActiveProcessors OPTIONAL)
         *ActiveProcessors = ActiveMap;
     }
 
-    RtlInitializeBitMap(&Bitmap, &ActiveMap,  sizeof(ActiveMap) * 8);
+    RtlInitializeBitMap(&Bitmap, (PULONG)&ActiveMap,  sizeof(ActiveMap) * 8);
     return RtlNumberOfSetBits(&Bitmap);
 }

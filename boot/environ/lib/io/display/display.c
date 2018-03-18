@@ -110,8 +110,8 @@ DsppLoadFontFile (
     }
 
     /* Figure out the length of the file name, and of the directory */
-    NameLength = wcslen(FontFileName);
-    DirectoryLength = wcslen(FontDirectory);
+    NameLength = (ULONG)wcslen(FontFileName);
+    DirectoryLength = (ULONG)wcslen(FontDirectory);
 
     /* Safely add them up*/
     Status = RtlULongAdd(NameLength, DirectoryLength, &TotalLength);

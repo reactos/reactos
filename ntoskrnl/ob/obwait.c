@@ -201,7 +201,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         if (IsPointerOffset(DefaultObject))
         {
             /* Increase reference count */
-            InterlockedIncrement(&ObjectHeader->PointerCount);
+            InterlockedIncrementSizeT(&ObjectHeader->PointerCount);
             ReferencedObjects++;
 
             /* Save the Object and Wait Object, this is a relative offset */

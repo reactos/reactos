@@ -566,7 +566,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
-            if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
+            if (ProcessInformationLength != sizeof(((PPROCESS_DEVICEMAP_INFORMATION)0)->Query))
             {
                 if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
                 {
@@ -1880,8 +1880,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Only supported on x86 */
 #if defined (_X86_)
             Ke386SetIOPL();
-#else
-            Status = STATUS_NOT_IMPLEMENTED;
 #endif
             /* Done */
             break;

@@ -584,7 +584,7 @@ EtfsOpen (
     RtlZeroMemory(NewFile, sizeof(*NewFile));
 
     /* Figure out the size of the path and filename plus a slash and NUL */
-    Size = wcslen(Directory->FilePath) + wcslen(FileName) + 2;
+    Size = (ULONG)(wcslen(Directory->FilePath) + wcslen(FileName) + 2);
     FilePath = BlMmAllocateHeap(Size * sizeof(WCHAR));
     if (!FilePath)
     {

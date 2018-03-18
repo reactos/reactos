@@ -66,7 +66,7 @@ EnumerateNt4ServiceSoundDevices(
             }
 
             DevicePath = AllocateWideString(MaxNameLength +
-                                            strlen("\\\\.\\"));
+                                            (UINT)strlen("\\\\.\\"));
 
             /* Check that the memory allocation was successful */
             if ( ! DevicePath )
@@ -153,7 +153,7 @@ DetectNt4SoundDevices(
     IN  PWSTR BaseDeviceName,
     IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc)
 {
-    ULONG DeviceNameLength = 0;
+    SIZE_T DeviceNameLength = 0;
     PWSTR DeviceName = NULL;
     ULONG Index = 0;
     HANDLE DeviceHandle;

@@ -21,6 +21,9 @@ EXTERN KiGeneralProtectionFaultHandler:PROC
 EXTERN KiXmmExceptionHandler:PROC
 EXTERN KiDeliverApc:PROC
 EXTERN KiDpcInterruptHandler:PROC
+EXTERN PsConvertToGuiThread:PROC
+EXTERN MmCreateKernelStack:PROC
+EXTERN MmDeleteKernelStack:PROC
 
 #ifdef _WINKD_
 EXTERN KdSetOwedBreakpoints:PROC
@@ -806,8 +809,6 @@ ENDFUNC
 
 
 #define MAX_SYSCALL_PARAM_SIZE (16 * 8)
-#define HOME_SIZE 6*8
-#define SYSCALL_ALLOCATION (MAX_SYSCALL_PARAM_SIZE + HOME_SIZE)
 
 EXTERN KiSystemCallHandler:PROC
 
@@ -838,41 +839,53 @@ PUBLIC KiSystemCallEntry64
     mov rsp, gs:[PcRspBase]
 
     /* Allocate a TRAP_FRAME and space for parameters */
-    sub rsp, (KTRAP_FRAME_LENGTH + MAX_SYSCALL_PARAM_SIZE + HOME_SIZE)
+    sub rsp, (KTRAP_FRAME_LENGTH + MAX_SYSCALL_PARAM_SIZE)
 #if DBG
     /* Save rbp and load it with the old stack pointer */
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + HOME_SIZE + KTRAP_FRAME_Rbp], rbp
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbp], rbp
     mov rbp, gs:[PcUserRsp]
 #endif
 
-    /* Save important volatiles in the trap frame */
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rax], rax
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx], rcx
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R10], r10
-    mov [rsp + HOME_SIZE + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R11], r11
+    /* Save important registers in the trap frame */
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rax], rax
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx], r10
+    mov [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags], r11
 
     /* Set sane segments */
     mov ax, (KGDT64_R3_DATA or RPL_MASK)
     mov ds, ax
     mov es, ax
 
+.ENDP
+
+.PROC KiSystemCall64Again
+
+    /* Old stack pointer is in rcx, lie and say we saved it in rbp */
+    .setframe rbp, 0
+    .endprolog
+
     /* Call the C-handler (will enable interrupts) */
-    lea rcx, [rsp + SYSCALL_ALLOCATION]
     call KiSystemCallHandler
 
-    /* Deallocate the handlers home stack frame */
-    add rsp, HOME_SIZE
-
-    /* The return value is the address of the Nt-function */
-    mov rcx, [rsp + 0]
-    mov rdx, [rsp + 8]
-    mov r8, [rsp + 16]
-    mov r9, [rsp + 24]
+    /* The return value from KiSystemCallHandler is the address of the Nt-function */
+    mov rcx, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx]
+    mov rdx, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rdx]
+    mov r8, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R8]
+    mov r9, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R9]
     call rax
+
+.ENDP
+
+PUBLIC KiSystemServiceExit
+.PROC KiSystemServiceExit
+
+    /* Old stack pointer is in rcx, lie and say we saved it in rbp */
+    .setframe rbp, 0
+    .endprolog
 
 #if DBG
     /* Restore rbp */
-    mov rbp, [rsp + SYSCALL_ALLOCATION + KTRAP_FRAME_Rbp]
+    mov rbp, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rbp]
 #endif
 
     /* Disable interrupts for return */
@@ -884,8 +897,8 @@ PUBLIC KiSystemCallEntry64
     mov [rcx + KTHREAD_TrapFrame], rdx
 
     /* Prepare user mode return address (rcx) and eflags (r11) for sysret */
-    mov rcx, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rcx]
-    mov r11, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R11]
+    mov rcx, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rip]
+    mov r11, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_EFlags]
 
     /* Load user mode stack (It was copied to the trap frame) */
     mov rsp, [rsp + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rsp]
@@ -896,6 +909,39 @@ PUBLIC KiSystemCallEntry64
     /* return to user mode */
     .byte HEX(48) // REX prefix to return to long mode
     sysret
+
+.ENDP
+
+
+/*!
+ * VOID
+ * DECLSPEC_NORETURN
+ * KiServiceExit(IN PKTRAP_FRAME TrapFrame, IN NTSTATUS Status));
+ */
+PUBLIC KiServiceExit
+.PROC KiServiceExit
+    .endprolog
+
+    lea rsp, [rcx - MAX_SYSCALL_PARAM_SIZE]
+    jmp KiSystemServiceExit
+
+.ENDP
+
+
+/*!
+ * VOID
+ * DECLSPEC_NORETURN
+ * KiServiceExit2(IN PKTRAP_FRAME TrapFrame);
+ */
+PUBLIC KiServiceExit2
+.PROC KiServiceExit2
+    .ENDPROLOG
+
+    mov rbp, rcx
+    mov rsp, rcx
+
+    /* Return */
+    ExitTrap TF_SAVE_ALL
 .ENDP
 
 
@@ -921,6 +967,10 @@ FUNC KiZwSystemService
 
     /* Get current thread */
     mov r11, gs:[PcCurrentThread]
+
+    /* Save PreviousMode in the trap frame */
+    mov dil, byte ptr [r11 + KTHREAD_PreviousMode]
+    mov byte ptr [rbp + KTRAP_FRAME_PreviousMode], dil
 
     /* Save the old trap frame in TrapFrame.Rdx */
     mov rdi, [r11 + KTHREAD_TrapFrame]
@@ -952,8 +1002,12 @@ FUNC KiZwSystemService
 
     /* Restore the old trap frame */
     mov r11, gs:[PcCurrentThread]
-    mov rsi, [rsp + KTRAP_FRAME_Rdx]
+    mov rsi, [rbp + KTRAP_FRAME_Rdx]
     mov [r11 + KTHREAD_TrapFrame], rsi
+
+    /* Restore PreviousMode from the trap frame */
+    mov dil, byte ptr [rbp + KTRAP_FRAME_PreviousMode]
+    mov byte ptr [r11 + KTHREAD_PreviousMode], dil
 
     /* Restore rdi and rsi */
     mov rsi, [rbp + KTRAP_FRAME_Rsi]
@@ -966,39 +1020,71 @@ FUNC KiZwSystemService
 
 ENDFUNC
 
+PUBLIC KiConvertToGuiThread
+FUNC KiConvertToGuiThread
+
+    sub rsp, 40
+    .allocstack 40
+    .endprolog
+
+    // NewStack = (ULONG_PTR)MmCreateKernelStack(TRUE, 0);
+    mov cl, 1
+    xor rdx, rdx
+    call MmCreateKernelStack
+
+    /* Check for failure */
+    test rax, rax
+    jz KiConvertToGuiThreadFailed
+
+    ; OldStack = KeSwitchKernelStack((PVOID)NewStack, (PVOID)(NewStack - KERNEL_STACK_SIZE));
+    mov rcx, rax
+    mov rdx, rax
+    sub rdx, KERNEL_STACK_SIZE
+    call KeSwitchKernelStack
+
+    // MmDeleteKernelStack(OldStack, FALSE);
+    mov rcx, rax
+    xor rdx, rdx
+    call MmDeleteKernelStack
+
+    /* Call the worker function */
+    call PsConvertToGuiThread
+
+    /* Check for failure */
+    test rax, rax
+    js KiConvertToGuiThreadFailed
+
+    /* Disable interrupts for return */
+    cli
+
+    // FIXME: should just do the trap frame switch in KiSystemCallHandler64
+    /* Restore old trap frame */
+    mov rcx, gs:[PcCurrentThread]
+    mov rdx, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_TrapFrame]
+    mov [rcx + KTHREAD_TrapFrame], rdx
+
+    // Restore register parameters
+    mov rcx, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rip]
+    mov rdx, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_Rdx]
+    mov r8, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R8]
+    mov r9, [rsp + 48 + MAX_SYSCALL_PARAM_SIZE + KTRAP_FRAME_R9]
+
+    /* Run KiSystemCallHandler again */
+    add rsp, 48
+    jmp KiSystemCall64Again
+
+KiConvertToGuiThreadFailed:
+
+    /* Clean up the stack and return failure */
+    add rsp, 40
+    mov eax, HEX(C0000017) // STATUS_NO_MEMORY
+    ret
+
+ENDFUNC
 
 KiExitToUserApc:
     int 3
 
-/*!
- * VOID
- * DECLSPEC_NORETURN
- * KiServiceExit(IN PKTRAP_FRAME TrapFrame, IN NTSTATUS Status));
- */
-PUBLIC KiServiceExit
-KiServiceExit:
-    mov [rcx + KTRAP_FRAME_Rax], rdx
-    mov rbp, rcx
-    mov rsp, rcx
-
-    /* Return */
-    //ExitTrap TF_SAVE_ALL
-
-/*!
- * VOID
- * DECLSPEC_NORETURN
- * KiServiceExit2(IN PKTRAP_FRAME TrapFrame);
- */
-PUBLIC KiServiceExit2
-.PROC KiServiceExit2
-    .ENDPROLOG
-
-    mov rbp, rcx
-    mov rsp, rcx
-
-    /* Return */
-    ExitTrap TF_SAVE_ALL
-.ENDP
 
 PUBLIC KiInitializeSegments
 KiInitializeSegments:
@@ -1007,6 +1093,59 @@ KiInitializeSegments:
     swapgs
     mov gs, ax
     ret
+
+/*!
+ * VOID
+ * KiSwitchKernelStackHelper(
+ *     LONG_PTR StackOffset,
+ *     PVOID OldStackBase);
+ */
+PUBLIC KiSwitchKernelStackHelper
+KiSwitchKernelStackHelper:
+    
+    /* Pop return address from the current stack */
+    pop rax
+
+    /* Switch to new stack */
+    lea rsp, [rsp + rcx]
+
+    /* Push return address on the new stack */
+    push rax
+
+    /* Return on new stack */
+    mov rax, rdx
+    ret
+
+EXTERN KiSwitchKernelStack:PROC
+
+PUBLIC KeSwitchKernelStack
+FUNC KeSwitchKernelStack
+
+    sub rsp, 40
+    .allocstack 40
+
+    ; Save rcx
+    mov [rsp], rcx
+    .savereg rcx, 0
+    .endprolog
+
+    ; Call the C handler, which returns the old stack in rax
+   call KiSwitchKernelStack
+
+    ; Restore rcx (StackBase)
+    mov rcx, [rsp]
+
+    ; Switch to new stack: RSP += (StackBase - OldStackBase)
+    sub rcx, rax
+    add rsp, rcx
+
+    ; Deallocate the home frame
+    add rsp, 40
+    ret
+
+ENDFUNC
+
+
 
 
 #ifdef _MSC_VER

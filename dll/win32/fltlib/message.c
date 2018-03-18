@@ -35,8 +35,8 @@ FilterConnectCommunicationPort(_In_ LPCWSTR lpPortName,
     UNICODE_STRING DeviceName;
     UNICODE_STRING PortName;
     HANDLE FileHandle;
-    ULONG PortNameSize;
-    ULONG BufferSize;
+    SIZE_T PortNameSize;
+    SIZE_T BufferSize;
     PCHAR Ptr;
     NTSTATUS Status;
     HRESULT hr;

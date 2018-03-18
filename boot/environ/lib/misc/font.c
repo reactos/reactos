@@ -54,7 +54,7 @@ BfLoadFontFile (
     )
 {
     PBL_DEFERRED_FONT_FILE DeferredFont;
-    ULONG FontPathSize;
+    SIZE_T FontPathSize;
 
     /* Allocate the deferred font structure */
     DeferredFont = (PBL_DEFERRED_FONT_FILE)BlMmAllocateHeap(sizeof(*DeferredFont));

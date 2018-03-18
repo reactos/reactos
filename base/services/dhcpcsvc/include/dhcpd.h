@@ -261,7 +261,7 @@ struct protocol {
 struct hash_bucket {
 	struct hash_bucket *next;
 	unsigned char *name;
-	int len;
+	size_t len;
 	unsigned char *value;
 };
 
