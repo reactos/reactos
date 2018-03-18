@@ -939,6 +939,10 @@ CcRosInternalFreeVacb (
     if (Vacb->PinCount != 0 || Vacb->ReferenceCount != 0)
     {
         DPRINT1("Invalid free: %ld, %ld\n", Vacb->ReferenceCount, Vacb->PinCount);
+        if (Vacb->SharedCacheMap->FileObject && Vacb->SharedCacheMap->FileObject->FileName.Length)
+        {
+            DPRINT1("For file: %wZ\n", &Vacb->SharedCacheMap->FileObject->FileName);
+        }
     }
 
     ASSERT(Vacb->PinCount == 0);
