@@ -1385,7 +1385,7 @@ NtUserBuildHwndList(
       PWND Window;
       HWND *List = NULL;
 
-      Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
+      Status = PsLookupThreadByThreadId(UlongToHandle(dwThreadId), &Thread);
       if (!NT_SUCCESS(Status))
       {
          ERR("Thread Id is not valid!\n");
@@ -1840,7 +1840,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       }
    }
    else // Not a child
-      pWnd->IDMenu = (UINT) Cs->hMenu;
+      pWnd->IDMenu = (UINT_PTR)Cs->hMenu;
 
 
    if ( ParentWindow &&

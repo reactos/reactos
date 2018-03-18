@@ -676,7 +676,7 @@ NtUserGetObjectInformation(
     PDESKTOP DesktopObject = NULL;
     USEROBJECTFLAGS ObjectFlags;
     PVOID pvData = NULL;
-    DWORD nDataSize = 0;
+    SIZE_T nDataSize = 0;
 
     _SEH2_TRY
     {

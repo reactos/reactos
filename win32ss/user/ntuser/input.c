@@ -677,8 +677,8 @@ NtUserAttachThreadInput(
   UserEnterExclusive();
   TRACE("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
 
-  pti = IntTID2PTI((HANDLE)idAttach);
-  ptiTo = IntTID2PTI((HANDLE)idAttachTo);
+  pti = IntTID2PTI(UlongToHandle(idAttach));
+  ptiTo = IntTID2PTI(UlongToHandle(idAttachTo));
 
   if ( !pti || !ptiTo )
   {

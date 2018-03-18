@@ -1310,13 +1310,13 @@ BOOL
 FASTCALL
 IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
 {
-   DWORD FlashState;
+   DWORD_PTR FlashState;
    UINT uCount = pfwi->uCount;
    BOOL Activate = FALSE, Ret = FALSE;
 
    ASSERT(pfwi);
 
-   FlashState = (DWORD)UserGetProp(pWnd, AtomFlashWndState, TRUE);
+   FlashState = (DWORD_PTR)UserGetProp(pWnd, AtomFlashWndState, TRUE);
 
    if (FlashState == FLASHW_FINISHED)
    {

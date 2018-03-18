@@ -808,8 +808,8 @@ NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyl
    /* Now the other bit of the frame */
    if (Style & (WS_DLGFRAME | WS_BORDER) || ExStyle & WS_EX_DLGMODALFRAME)
    {
-      DWORD Width = UserGetSystemMetrics(SM_CXBORDER);
-      DWORD Height = UserGetSystemMetrics(SM_CYBORDER);
+      LONG Width = UserGetSystemMetrics(SM_CXBORDER);
+      LONG Height = UserGetSystemMetrics(SM_CYBORDER);
 
       NtGdiSelectBrush(hDC, IntGetSysColorBrush(
          (ExStyle & (WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE)) ? COLOR_3DFACE :

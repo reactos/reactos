@@ -87,10 +87,9 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
 
     /* Fill out the Port Message Header */
     ApiMessage->Header.u2.ZeroInit = 0;
-    ApiMessage->Header.u1.s1.TotalLength = DataLength +
-        sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data); // FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
-    ApiMessage->Header.u1.s1.DataLength = DataLength +
-        FIELD_OFFSET(CSR_API_MESSAGE, Data) - sizeof(ApiMessage->Header); // ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
+    ApiMessage->Header.u1.s1.TotalLength = FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
+    ApiMessage->Header.u1.s1.DataLength = ApiMessage->Header.u1.s1.TotalLength - 
+        sizeof(ApiMessage->Header);
 
     /* Fill out the CSR Header */
     ApiMessage->ApiNumber = ApiNumber;

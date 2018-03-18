@@ -28,4 +28,24 @@ BOOL FASTCALL UserIsEntered(VOID);
 BOOL FASTCALL UserIsEnteredExclusive(VOID);
 DWORD FASTCALL UserGetLanguageToggle(VOID);
 
+_Success_(return != FALSE)
+BOOL
+NTAPI
+RegReadUserSetting(
+    _In_z_ PCWSTR pwszKeyName,
+    _In_z_ PCWSTR pwszValueName,
+    _In_ ULONG ulType,
+    _Out_writes_bytes_(cjDataSize) _When_(ulType == REG_SZ, _Post_z_) PVOID pvData,
+    _In_ ULONG cjDataSize);
+
+_Success_(return != FALSE)
+BOOL
+NTAPI
+RegWriteUserSetting(
+    _In_z_ PCWSTR pwszKeyName,
+    _In_z_ PCWSTR pwszValueName,
+    _In_ ULONG ulType,
+    _In_reads_bytes_(cjDataSize) const VOID *pvData,
+    _In_ ULONG cjDataSize);
+
 /* EOF */

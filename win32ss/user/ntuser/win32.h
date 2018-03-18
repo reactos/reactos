@@ -295,3 +295,17 @@ typedef struct _PROCESSINFO
 void NTAPI UserDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments);
 ULONG_PTR NTAPI UserDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
 #endif
+
+/* Helper function used by some wine code */
+
+__forceinline
+int
+lstrlenW(
+    _In_ LPCWSTR lpString)
+{
+    size_t size = wcslen(lpString);
+    if (size > ULONG_MAX) __fastfail(FAST_FAIL_RANGE_CHECK_FAILURE);
+    return (int)size;
+}
+
+#define strlenW lstrlenW

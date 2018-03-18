@@ -1490,7 +1490,7 @@ IntAllowSetForegroundWindow(DWORD dwProcessId)
    ppi = NULL;
    if (dwProcessId != ASFW_ANY)
    {
-      if (!NT_SUCCESS(PsLookupProcessByProcessId((HANDLE)dwProcessId, &Process)))
+      if (!NT_SUCCESS(PsLookupProcessByProcessId(UlongToHandle(dwProcessId), &Process)))
       {
          EngSetLastError(ERROR_INVALID_PARAMETER);
          return FALSE;

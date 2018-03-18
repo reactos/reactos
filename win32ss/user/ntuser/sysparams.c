@@ -382,7 +382,7 @@ SpiStoreSz(PCWSTR pwszKey, PCWSTR pwszValue, PCWSTR pwsz)
     RegWriteUserSetting(pwszKey,
                         pwszValue,
                         REG_SZ,
-                        (PWSTR)pwsz,
+                        pwsz,
                         (wcslen(pwsz) + 1) * sizeof(WCHAR));
 }
 
@@ -561,7 +561,7 @@ UINT_PTR
 SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
 {
     DWORD dwRegMask;
-    BOOL bValue = (BOOL)pvValue;
+    BOOL bValue = PtrToUlong(pvValue);
 
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
 
@@ -1612,7 +1612,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetUserPref(UPM_CURSORSHADOW, pvParam, fl);
 
         case SPI_SETCURSORSHADOW:
-            gspv.bMouseCursorShadow = (BOOL)pvParam;
+            gspv.bMouseCursorShadow = PtrToUlong(pvParam);
             return SpiSetUserPref(UPM_CURSORSHADOW, pvParam, fl);
 
         case SPI_GETUIEFFECTS:
@@ -1631,7 +1631,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetUserPref(UPM_CLICKLOCK, pvParam, fl);
 
         case SPI_SETMOUSECLICKLOCK:
-            gspv.bMouseClickLock = (BOOL)pvParam;
+            gspv.bMouseClickLock = PtrToUlong(pvParam);
             return SpiSetUserPref(UPM_CLICKLOCK, pvParam, fl);
 
         case SPI_GETMOUSEVANISH:

@@ -963,7 +963,7 @@ IntSetPaletteEntries(
     PPALETTE palGDI;
     ULONG numEntries;
 
-    if ((UINT)hpal & GDI_HANDLE_STOCK_MASK)
+    if ((UINT_PTR)hpal & GDI_HANDLE_STOCK_MASK)
     {
     	return 0;
     }
@@ -1247,7 +1247,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    PPALETTE palGDI;
 
    if ( !hgdiobj ||
-        ((UINT)hgdiobj & GDI_HANDLE_STOCK_MASK) ||
+        ((UINT_PTR)hgdiobj & GDI_HANDLE_STOCK_MASK) ||
         !GDI_HANDLE_IS_TYPE(hgdiobj, GDI_OBJECT_TYPE_PALETTE) )
       return Ret;
 

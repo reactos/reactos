@@ -2343,7 +2343,7 @@ UserRegisterSystemClasses(VOID)
         hBrush = DefaultServerClasses[i].hBrush;
         if (hBrush <= (HBRUSH)COLOR_MENUBAR)
         {
-            hBrush = IntGetSysColorBrush((INT)hBrush);
+            hBrush = IntGetSysColorBrush(HandleToUlong(hBrush));
         }
         wc.hbrBackground = hBrush;
         wc.lpszMenuName = NULL;
