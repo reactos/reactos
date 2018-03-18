@@ -16,9 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mstask_private.h"
+#include <stdio.h>
 
-#include <rpcproxy.h>
+#include "mstask_private.h"
+#include "objbase.h"
+#include "rpcproxy.h"
+
+#include "wine/debug.h"
+
+
+WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
 static HINSTANCE hInst;
 LONG dll_ref = 0;

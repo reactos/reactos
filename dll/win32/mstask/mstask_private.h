@@ -21,19 +21,13 @@
 
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <mstask.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(mstask);
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "mstask.h"
 
 extern LONG dll_ref DECLSPEC_HIDDEN;
 

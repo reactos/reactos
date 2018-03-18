@@ -16,9 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "corerror.h"
 #include "mstask_private.h"
+#include "wine/debug.h"
 
-#include <corerror.h>
+WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
 typedef struct
 {

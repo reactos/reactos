@@ -10,7 +10,7 @@ list(APPEND SOURCE
     task.c
     task_scheduler.c
     task_trigger.c
-    mstask_private.h
+    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/mstask_local_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/mstask_stubs.c)
 
@@ -22,5 +22,5 @@ add_library(mstask SHARED
 set_module_type(mstask win32dll)
 target_link_libraries(mstask uuid wine)
 add_importlibs(mstask ole32 msvcrt kernel32 ntdll)
-add_pch(mstask mstask_private.h SOURCE)
+add_pch(mstask precomp.h SOURCE)
 add_cd_file(TARGET mstask DESTINATION reactos/system32 FOR all)
