@@ -535,6 +535,9 @@ IDirectSoundFullDuplexImpl_Initialize(
         lpDscBufferDesc, lpDsBufferDesc, hWnd, dwLevel,
         lplpDirectSoundCaptureBuffer8, lplpDirectSoundBuffer8);
 
+    if (!lplpDirectSoundCaptureBuffer8 || !lplpDirectSoundBuffer8)
+        return E_INVALIDARG;
+
     if (This->renderer_device != NULL || This->capture_device != NULL) {
         WARN("already initialized\n");
         *lplpDirectSoundCaptureBuffer8 = NULL;
