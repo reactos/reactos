@@ -28,19 +28,17 @@
  *		those should be taken care of...
  */
 
-#define WIN32_NO_STATUS
-
 #include <stdarg.h>
-//#include <string.h>
-#include <windef.h>
-//#include "winbase.h"
-#include <wingdi.h>
-#include <winuser.h>
-#include <mmddk.h>
-#include <mmreg.h>
-#include <msacm.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
+#include <string.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "mmddk.h"
+#include "mmreg.h"
+#include "msacm.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wavemap);
 
