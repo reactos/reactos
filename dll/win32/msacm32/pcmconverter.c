@@ -26,9 +26,28 @@
  *	  embedded driver handling scheme in msacm32.dll which isn't done yet
  */
 
-#include "wineacm.h"
+#include "config.h"
 
 #include <assert.h>
+#include <stdarg.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "mmsystem.h"
+#define NOBITMAP
+#include "mmreg.h"
+#include "msacm.h"
+#include "wingdi.h"
+#include "winnls.h"
+#include "winuser.h"
+
+#include "msacmdrv.h"
+#include "wineacm.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msacm);
 
 /***********************************************************************
  *           PCM_drvOpen
