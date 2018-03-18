@@ -537,7 +537,7 @@ DlgPreferencesProc(HWND hwndDlg,
                              (LONG_PTR)lParam);
             Context = (PPREFERENCES_CONTEXT)((LONG_PTR)lParam);
             Context->hwndDlg = hwndDlg;
-            Context->Mixer = SndMixerCreate(hwndDlg);
+            Context->Mixer = SndMixerCreate(hwndDlg, Context->MixerWindow->MixerId);
             Context->Selected = (UINT)-1;
 
             FillDevContext.PrefContext = Context;
@@ -805,7 +805,7 @@ MainWindowProc(HWND hwnd,
                         TCHAR szProduct[MAXPNAMELEN];
 
                         /* get mixer product name */
-                        if (SndMixerGetProductName(MixerWindow->Mixer,
+                        if (SndMixerGetProductName(Pref.Mixer,
                                                    szProduct,
                                                    sizeof(szProduct) / sizeof(szProduct[0])) == -1)
                         {
@@ -962,7 +962,7 @@ MainWindowProc(HWND hwnd,
                              GWL_USERDATA,
                              (LONG_PTR)MixerWindow);
             MixerWindow->hWnd = hwnd;
-            MixerWindow->Mixer = SndMixerCreate(MixerWindow->hWnd);
+            MixerWindow->Mixer = SndMixerCreate(MixerWindow->hWnd, MixerWindow->MixerId);
             if (MixerWindow->Mixer != NULL)
             {
                 TCHAR szProduct[MAXPNAMELEN];
@@ -1089,7 +1089,7 @@ UnregisterApplicationClasses(VOID)
 static HWND
 CreateApplicationWindow(
     WINDOW_MODE WindowMode,
-    BOOL bRecord)
+    UINT MixerId)
 {
     HWND hWnd;
 
@@ -1102,7 +1102,7 @@ CreateApplicationWindow(
     }
 
     MixerWindow->Mode = WindowMode;
-
+    MixerWindow->MixerId = MixerId;
 
     if (mixerGetNumDevs() > 0)
     {
@@ -1152,11 +1152,11 @@ static
 BOOL
 HandleCommandLine(LPTSTR cmdline,
                   PWINDOW_MODE pMode,
-                  PBOOL pRecord)
+                  PUINT pMixerId)
 {
     TCHAR option;
 
-    *pRecord = FALSE;
+    *pMixerId = 0;
     *pMode = SMALL_MODE;
 
     while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
@@ -1193,12 +1193,12 @@ HandleCommandLine(LPTSTR cmdline,
 
             case 'p': /* Play mode */
             case 'P':
-                *pRecord = FALSE;
+                *pMixerId = 0;
                 break;
 
             case 'r': /* Record mode */
             case 'R':
-                *pRecord = TRUE;
+                *pMixerId = 1;
                 break;
 
             default:
@@ -1219,7 +1219,7 @@ _tWinMain(HINSTANCE hInstance,
     int Ret = 1;
     INITCOMMONCONTROLSEX Controls;
     WINDOW_MODE WindowMode = SMALL_MODE;
-    BOOL bRecord = FALSE;
+    UINT MixerId = 0;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(nCmdShow);
@@ -1227,7 +1227,7 @@ _tWinMain(HINSTANCE hInstance,
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
 
-    HandleCommandLine(lpszCmdLine, &WindowMode, &bRecord);
+    HandleCommandLine(lpszCmdLine, &WindowMode, &MixerId);
 
     if (InitAppConfig())
     {
@@ -1256,7 +1256,7 @@ _tWinMain(HINSTANCE hInstance,
         {
             if (RegisterApplicationClasses())
             {
-                hMainWnd = CreateApplicationWindow(WindowMode, bRecord);
+                hMainWnd = CreateApplicationWindow(WindowMode, MixerId);
                 if (hMainWnd != NULL)
                 {
                     BOOL bRet;

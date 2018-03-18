@@ -66,7 +66,7 @@ ClearMixerCache(PSND_MIXER Mixer)
 }
 
 PSND_MIXER
-SndMixerCreate(HWND hWndNotification)
+SndMixerCreate(HWND hWndNotification, UINT MixerId)
 {
     PSND_MIXER Mixer = (PSND_MIXER) HeapAlloc(GetProcessHeap(),
                                  HEAP_ZERO_MEMORY,
@@ -80,7 +80,7 @@ SndMixerCreate(HWND hWndNotification)
         if (Mixer->MixersCount > 0)
         {
             /* select the first mixer by default */
-            SndMixerSelect(Mixer, 0);
+            SndMixerSelect(Mixer, MixerId);
         }
     }
 

@@ -38,6 +38,7 @@ typedef struct _MIXER_WINDOW
   HWND *Window;
 
     WINDOW_MODE Mode;
+    UINT MixerId;
     RECT rect;
     HFONT hFont;
 } MIXER_WINDOW, *PMIXER_WINDOW;
@@ -123,7 +124,7 @@ typedef BOOL (CALLBACK *PFNSNDMIXENUMLINES)(PSND_MIXER Mixer, LPMIXERLINE Line, 
 typedef BOOL (CALLBACK *PFNSNDMIXENUMCONNECTIONS)(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Context);
 typedef BOOL (CALLBACK *PFNSNDMIXENUMPRODUCTS)(PSND_MIXER Mixer, UINT Id, LPCTSTR ProductName, PVOID Context);
 
-PSND_MIXER SndMixerCreate(HWND hWndNotification);
+PSND_MIXER SndMixerCreate(HWND hWndNotification, UINT MixerId);
 VOID SndMixerDestroy(PSND_MIXER Mixer);
 VOID SndMixerClose(PSND_MIXER Mixer);
 BOOL SndMixerSelect(PSND_MIXER Mixer, UINT MixerId);
