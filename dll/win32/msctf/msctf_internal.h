@@ -21,29 +21,7 @@
 #ifndef __WINE_MSCTF_I_H
 #define __WINE_MSCTF_I_H
 
-#include <wine/config.h>
-
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <objbase.h>
-#include <olectl.h>
-#include <msctf.h>
-#include <shlwapi.h>
-
-#include <wine/list.h>
-#include <wine/unicode.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(msctf);
+#include "wine/list.h"
 
 #define COOKIE_MAGIC_TMSINK  0x0010
 #define COOKIE_MAGIC_CONTEXTSINK 0x0020

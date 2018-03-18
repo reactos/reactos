@@ -25,4 +25,4 @@
 #define WINE_PRODUCTVERSION 5,1,2600,3319
 #define WINE_PRODUCTVERSION_STR "5.1.2600.3319"
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"

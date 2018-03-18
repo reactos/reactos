@@ -18,7 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "wine/debug.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "shlwapi.h"
+#include "winerror.h"
+#include "objbase.h"
+
+#include "wine/unicode.h"
+
+#include "msctf.h"
 #include "msctf_internal.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 typedef struct tagCategoryMgr {
     ITfCategoryMgr ITfCategoryMgr_iface;
