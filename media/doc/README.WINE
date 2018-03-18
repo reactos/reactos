@@ -103,7 +103,7 @@ reactos/dll/win32/mprapi              # Synced to WineStaging-3.3
 reactos/dll/win32/msacm32             # Synced to WineStaging-3.3
 reactos/dll/win32/msacm32.drv         # Synced to WineStaging-3.3
 reactos/dll/win32/msadp32.acm         # Synced to WineStaging-3.3
-reactos/dll/win32/mscat32             # Synced to WineStaging-2.9
+reactos/dll/win32/mscat32             # Synced to WineStaging-3.3
 reactos/dll/win32/mscms               # Synced to WineStaging-2.9
 reactos/dll/win32/mscoree             # Synced to Wine-1.5.4
 reactos/dll/win32/msctf               # Synced to WineStaging-2.9
