@@ -808,6 +808,9 @@ CcRosCreateVacb (
         ExFreeToNPagedLookasideList(&VacbLookasideList, current);
     }
 
+    /* Reference it to allow release */
+    CcRosVacbIncRefCount(current);
+
     return Status;
 }
 
@@ -842,8 +845,6 @@ CcRosGetVacb (
         {
             return Status;
         }
-
-        CcRosVacbIncRefCount(current);
     }
 
     KeAcquireGuardedMutex(&ViewLock);
