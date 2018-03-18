@@ -963,7 +963,6 @@ CcFlushCache (
     LONGLONG RemainingLength;
     PROS_VACB current;
     NTSTATUS Status;
-    KIRQL oldIrql;
 
     CCTRACE(CC_API_DEBUG, "SectionObjectPointers=%p FileOffset=%p Length=%lu\n",
         SectionObjectPointers, FileOffset, Length);
@@ -1006,13 +1005,7 @@ CcFlushCache (
                     }
                 }
 
-                CcRosReleaseVacbLock(current);
-
-                KeAcquireGuardedMutex(&ViewLock);
-                KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
-                CcRosVacbDecRefCount(current);
-                KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
-                KeReleaseGuardedMutex(&ViewLock);
+                CcRosReleaseVacb(SharedCacheMap, current, current->Valid, current->Dirty, FALSE);
             }
 
             Offset.QuadPart += VACB_MAPPING_GRANULARITY;
