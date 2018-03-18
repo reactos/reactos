@@ -22,7 +22,7 @@
 #include <aviriff.h>
 #include <stdio.h>
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 static void test_output(const BYTE *output, int out_size, const BYTE *expect, int size)
 {
