@@ -26,6 +26,10 @@ extern ULONG ExpInitializationPhase;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 
+#define MAX_DEVICE_ID_LEN          200
+#define MAX_SEPARATORS_INSTANCEID  0
+#define MAX_SEPARATORS_DEVICEID    1
+
 /* DATA **********************************************************************/
 
 PDRIVER_OBJECT IopRootDriverObject;
@@ -1760,6 +1764,95 @@ cleanup:
     return Status;
 }
 
+static
+BOOLEAN
+IopValidateID(
+    _In_ PWCHAR Id,
+    _In_ BUS_QUERY_ID_TYPE QueryType)
+{
+    PWCHAR PtrChar;
+    PWCHAR StringEnd;
+    WCHAR Char;
+    ULONG SeparatorsCount = 0;
+    PWCHAR PtrPrevChar = NULL;
+    ULONG MaxSeparators;
+    BOOLEAN IsMultiSz;
+
+    PAGED_CODE();
+
+    switch (QueryType)
+    {
+        case BusQueryDeviceID:
+            MaxSeparators = MAX_SEPARATORS_DEVICEID;
+            IsMultiSz = FALSE;
+            break;
+        case BusQueryInstanceID:
+            MaxSeparators = MAX_SEPARATORS_INSTANCEID;
+            IsMultiSz = FALSE;
+            break;
+
+        case BusQueryHardwareIDs:
+        case BusQueryCompatibleIDs:
+            IsMultiSz = TRUE;
+            break;
+
+        default:
+            DPRINT1("IopValidateID: Not handled QueryType - %x\n", QueryType);
+            return FALSE;
+    }
+
+    StringEnd = Id + MAX_DEVICE_ID_LEN;
+
+    for (PtrChar = Id; PtrChar < StringEnd; PtrChar++)
+    {
+        Char = *PtrChar;
+
+        if (Char == UNICODE_NULL)
+        {
+            if (!IsMultiSz || (PtrPrevChar && PtrChar == PtrPrevChar + 1))
+            {
+                if (MaxSeparators == SeparatorsCount || IsMultiSz)
+                {
+                    return TRUE;
+                }
+
+                DPRINT1("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
+                        SeparatorsCount, MaxSeparators);
+                goto ErrorExit;
+            }
+
+            StringEnd = PtrChar + MAX_DEVICE_ID_LEN + 1;
+            PtrPrevChar = PtrChar;
+        }
+        else if (Char < ' ' || Char > 0x7F || Char == ',')
+        {
+            DPRINT1("IopValidateID: Invalid character - %04X\n", Char);
+            goto ErrorExit;
+        }
+        else if (Char == ' ')
+        {
+            *PtrChar = '_';
+        }
+        else if (Char == '\\')
+        {
+            SeparatorsCount++;
+
+            if (SeparatorsCount > MaxSeparators)
+            {
+                DPRINT1("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
+                        SeparatorsCount, MaxSeparators);
+                goto ErrorExit;
+            }
+        }
+    }
+
+    DPRINT1("IopValidateID: Not terminated ID\n");
+
+ErrorExit:
+    // FIXME logging
+    return FALSE;
+}
+ 
 NTSTATUS
 IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                     HANDLE InstanceKey)
@@ -1770,6 +1863,7 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
    UNICODE_STRING ValueName;
    NTSTATUS Status;
    ULONG Length, TotalLength;
+   BOOLEAN IsValidID;
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryHardwareIDs to device stack\n");
 
@@ -1781,11 +1875,15 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                               &Stack);
    if (NT_SUCCESS(Status))
    {
-      /*
-       * FIXME: Check for valid characters, if there is invalid characters
-       * then bugcheck.
-       */
+      IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryHardwareIDs);
+
+      if (!IsValidID)
+      {
+         DPRINT1("Invalid HardwareIDs. DeviceNode - %p\n", DeviceNode);
+      }
+
       TotalLength = 0;
+
       Ptr = (PWSTR)IoStatusBlock.Information;
       DPRINT("Hardware IDs:\n");
       while (*Ptr)
@@ -1829,6 +1927,7 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
    UNICODE_STRING ValueName;
    NTSTATUS Status;
    ULONG Length, TotalLength;
+   BOOLEAN IsValidID;
 
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryCompatibleIDs to device stack\n");
 
@@ -1841,11 +1940,15 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
       &Stack);
    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
-      /*
-      * FIXME: Check for valid characters, if there is invalid characters
-      * then bugcheck.
-      */
+      IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryCompatibleIDs);
+
+      if (!IsValidID)
+      {
+         DPRINT1("Invalid CompatibleIDs. DeviceNode - %p\n", DeviceNode);
+      }
+
       TotalLength = 0;
+
       Ptr = (PWSTR)IoStatusBlock.Information;
       DPRINT("Compatible IDs:\n");
       while (*Ptr)
@@ -1891,6 +1994,7 @@ IopCreateDeviceInstancePath(
     NTSTATUS Status;
     UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
     DEVICE_CAPABILITIES DeviceCapabilities;
+    BOOLEAN IsValidID;
 
     DPRINT("Sending IRP_MN_QUERY_ID.BusQueryDeviceID to device stack\n");
 
@@ -1905,13 +2009,15 @@ IopCreateDeviceInstancePath(
         return Status;
     }
 
+    IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryDeviceID);
+
+    if (!IsValidID)
+    {
+        DPRINT1("Invalid DeviceID. DeviceNode - %p\n", DeviceNode);
+    }
+
     /* Save the device id string */
     RtlInitUnicodeString(&DeviceId, (PWSTR)IoStatusBlock.Information);
-
-    /*
-     * FIXME: Check for valid characters, if there is invalid characters
-     * then bugcheck.
-     */
 
     DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after enumeration)\n");
 
@@ -1960,6 +2066,16 @@ IopCreateDeviceInstancePath(
     {
         DPRINT("IopInitiatePnpIrp(BusQueryInstanceID) failed (Status %lx)\n", Status);
         ASSERT(IoStatusBlock.Information == 0);
+    }
+
+    if (IoStatusBlock.Information)
+    {
+        IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryInstanceID);
+
+        if (!IsValidID)
+        {
+            DPRINT1("Invalid InstanceID. DeviceNode - %p\n", DeviceNode);
+        }
     }
 
     RtlInitUnicodeString(&InstanceId,
@@ -2011,7 +2127,6 @@ IopCreateDeviceInstancePath(
 
     return STATUS_SUCCESS;
 }
-
 
 /*
  * IopActionInterrogateDeviceStack
