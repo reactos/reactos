@@ -147,10 +147,6 @@ AddDialogControl(
 
     }
 
-    /* Hack: Disable TBS_AUTOTICKS because it looks ugly */
-    if (!wcsicmp(ClassName, L"msctls_trackbar32"))
-        DialogItem->style &= ~TBS_AUTOTICKS;
-
     /* now create the window */
     hwnd = CreateWindowExW(DialogItem->dwExtendedStyle,
                            ClassName,
