@@ -114,8 +114,8 @@ UserpCaptureStringParameters(
                 continue;
             }
 
-            /* Allocate a buffer for the string */
-            TempStringU.MaximumLength = ParamStringU.Length;
+            /* Allocate a buffer for the string and reserve a NULL terminator */
+            TempStringU.MaximumLength = ParamStringU.Length + sizeof(UNICODE_NULL);
             TempStringU.Length = ParamStringU.Length;
             TempStringU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                                  HEAP_ZERO_MEMORY,
@@ -140,36 +140,47 @@ UserpCaptureStringParameters(
                 RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
                 continue;
             }
+            /* NULL-terminate the string */
+            TempStringU.Buffer[TempStringU.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
             DPRINT("ParamString = \'%wZ\'\n", &TempStringU);
 
-            /* Allocate a buffer for converted to ANSI string */
-            TempStringA.MaximumLength = RtlUnicodeStringToAnsiSize(&TempStringU);
-            TempStringA.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                 HEAP_ZERO_MEMORY,
-                                                 TempStringA.MaximumLength);
-            if (!TempStringA.Buffer)
+            if (Message->Status == STATUS_SERVICE_NOTIFICATION)
             {
-                /* We failed, skip this string */
-                DPRINT1("Cannot allocate memory with size %u, skipping.\n", TempStringA.MaximumLength);
+                /* Just keep the allocated NULL-terminated UNICODE string */
+                Parameters[nParam] = (ULONG_PTR)TempStringU.Buffer;
+                Size += TempStringU.Length;
+            }
+            else
+            {
+                /* Allocate a buffer for converted to ANSI string */
+                TempStringA.MaximumLength = RtlUnicodeStringToAnsiSize(&TempStringU);
+                TempStringA.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                     HEAP_ZERO_MEMORY,
+                                                     TempStringA.MaximumLength);
+                if (!TempStringA.Buffer)
+                {
+                    /* We failed, skip this string */
+                    DPRINT1("Cannot allocate memory with size %u, skipping.\n", TempStringA.MaximumLength);
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
+                    continue;
+                }
+
+                /* Convert string to ANSI and free temporary buffer */
+                Status = RtlUnicodeStringToAnsiString(&TempStringA, &TempStringU, FALSE);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
-                continue;
-            }
+                if (!NT_SUCCESS(Status))
+                {
+                    /* We failed, skip this string */
+                    DPRINT1("RtlUnicodeStringToAnsiString() failed, Status 0x%lx, skipping.\n", Status);
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringA.Buffer);
+                    continue;
+                }
 
-            /* Convert string to ANSI and free temporary buffer */
-            Status = RtlUnicodeStringToAnsiString(&TempStringA, &TempStringU, FALSE);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringU.Buffer);
-            if (!NT_SUCCESS(Status))
-            {
-                /* We failed, skip this string */
-                DPRINT1("RtlUnicodeStringToAnsiString() failed, Status 0x%lx, skipping.\n", Status);
-                RtlFreeHeap(RtlGetProcessHeap(), 0, TempStringA.Buffer);
-                continue;
+                /* Note: RtlUnicodeStringToAnsiString() returns a NULL-terminated string */
+                Parameters[nParam] = (ULONG_PTR)TempStringA.Buffer;
+                Size += TempStringU.Length;
             }
-
-            /* Note: RtlUnicodeStringToAnsiString returns NULL terminated string */
-            Parameters[nParam] = (ULONG_PTR)TempStringA.Buffer;
-            Size += TempStringU.Length;
         }
         else
         {
@@ -295,9 +306,46 @@ UserpGetClientFileName(
 
 static
 VOID
+UserpDuplicateParamStringToUnicodeString(
+    IN OUT PUNICODE_STRING UnicodeString,
+    IN PCWSTR ParamString)
+{
+    UNICODE_STRING FormatU, TempStringU;
+
+    /* Calculate buffer length for the text message */
+    RtlInitUnicodeString(&FormatU, (PWSTR)ParamString);
+    if (UnicodeString->MaximumLength < FormatU.MaximumLength)
+    {
+        /* Duplicate the text message in a larger buffer */
+        if (NT_SUCCESS(RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                                 &FormatU, &TempStringU)))
+        {
+            *UnicodeString = TempStringU;
+        }
+        else
+        {
+            /* We could not allocate a larger buffer; continue using the smaller original buffer */
+            DPRINT1("Cannot allocate memory for UnicodeString, use original buffer.\n");
+
+            /* Copy the truncated string, NULL-terminate it */
+            FormatU.MaximumLength = UnicodeString->MaximumLength;
+            FormatU.Length = FormatU.MaximumLength - sizeof(UNICODE_NULL);
+            RtlCopyUnicodeString(UnicodeString, &FormatU);
+        }
+    }
+    else
+    {
+        /* Copy the string, NULL-terminate it */
+        RtlCopyUnicodeString(UnicodeString, &FormatU);
+    }
+}
+
+static
+VOID
 UserpFormatMessages(
     IN OUT PUNICODE_STRING TextStringU,
     IN OUT PUNICODE_STRING CaptionStringU,
+    OUT PUINT pdwType,
     IN PHARDERROR_MSG Message)
 {
     NTSTATUS Status;
@@ -312,7 +360,7 @@ UserpFormatMessages(
     PMESSAGE_RESOURCE_ENTRY MessageResource;
     PWSTR FormatString, pszBuffer;
     size_t cszBuffer;
-    ULONG Severity;
+    ULONG Severity = (ULONG)(Message->Status) >> 30;
     ULONG Size;
 
     /* Open client process */
@@ -329,6 +377,90 @@ UserpFormatMessages(
 
     /* Capture all string parameters from the process memory */
     UserpCaptureStringParameters(Parameters, &SizeOfStrings, Message, hProcess);
+
+    /*
+     * Check whether it is a service notification, in which case
+     * we format the parameters and take the short route.
+     */
+    if (Message->Status == STATUS_SERVICE_NOTIFICATION)
+    {
+        /* Close the process handle */
+        if (hProcess) NtClose(hProcess);
+
+        /*
+         * Retrieve the message box flags. Note that we filter out
+         * MB_SERVICE_NOTIFICATION to not enter an infinite recursive
+         * loop when we will call MessageBox() later on.
+         */
+        *pdwType = (UINT)Parameters[2] & ~MB_SERVICE_NOTIFICATION;
+
+        /* Duplicate the UNICODE text message */
+        if (Message->UnicodeStringParameterMask & 0x1)
+        {
+            /* A string has been provided: duplicate it */
+            UserpDuplicateParamStringToUnicodeString(TextStringU, (PCWSTR)Parameters[0]);
+        }
+        else
+        {
+            /* No string (or invalid one) has been provided: keep the original buffer and reset the string length to zero */
+            TextStringU->Length = 0;
+        }
+
+        /* Duplicate the UNICODE caption */
+        if (Message->UnicodeStringParameterMask & 0x2)
+        {
+            /* A string has been provided: duplicate it */
+            UserpDuplicateParamStringToUnicodeString(CaptionStringU, (PCWSTR)Parameters[1]);
+        }
+        else
+        {
+            /* No string (or invalid one) has been provided: keep the original buffer and reset the string length to zero */
+            CaptionStringU->Length = 0;
+        }
+
+        goto Quit;
+    }
+
+    /* Set the message box type */
+    *pdwType = 0;
+    switch (Message->ValidResponseOptions)
+    {
+        case OptionAbortRetryIgnore:
+            *pdwType = MB_ABORTRETRYIGNORE;
+            break;
+        case OptionOk:
+            *pdwType = MB_OK;
+            break;
+        case OptionOkCancel:
+            *pdwType = MB_OKCANCEL;
+            break;
+        case OptionRetryCancel:
+            *pdwType = MB_RETRYCANCEL;
+            break;
+        case OptionYesNo:
+            *pdwType = MB_YESNO;
+            break;
+        case OptionYesNoCancel:
+            *pdwType = MB_YESNOCANCEL;
+            break;
+        case OptionShutdownSystem:
+            *pdwType = MB_OK;
+            break;
+        case OptionOkNoWait:
+            *pdwType = MB_OK;
+            break;
+        case OptionCancelTryContinue:
+            *pdwType = MB_CANCELTRYCONTINUE;
+            break;
+    }
+
+    /* Set the severity icon */
+    // STATUS_SEVERITY_SUCCESS
+         if (Severity == STATUS_SEVERITY_INFORMATIONAL) *pdwType |= MB_ICONINFORMATION;
+    else if (Severity == STATUS_SEVERITY_WARNING)       *pdwType |= MB_ICONWARNING;
+    else if (Severity == STATUS_SEVERITY_ERROR)         *pdwType |= MB_ICONERROR;
+
+    *pdwType |= MB_SYSTEMMODAL | MB_SETFOREGROUND;
 
     /* Copy the Parameters array locally */
     RtlCopyMemory(&CopyParameters, Parameters, sizeof(CopyParameters));
@@ -351,8 +483,6 @@ UserpFormatMessages(
         FileNameU = g_SystemProcessU;
     }
 
-    Severity = (ULONG)(Message->Status) >> 30;
-
     /* Get text string of the error code */
     Status = RtlFindMessage(GetModuleHandleW(L"ntdll"),
                             (ULONG_PTR)RT_MESSAGETABLE,
@@ -368,14 +498,25 @@ UserpFormatMessages(
         }
         else
         {
-            RtlInitAnsiString(&FormatA, (PCHAR)MessageResource->Text);
+            RtlInitAnsiString(&FormatA, (PSTR)MessageResource->Text);
             /* Status = */ RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
         }
     }
     else
     {
-        /* Fall back to hardcoded value */
-        RtlInitUnicodeString(&FormatU, L"Unknown Hard Error");
+        /*
+         * Fall back to hardcoded value.
+         * NOTE: The value used here is ReactOS-specific: it allows specifying
+         * the exact hard error status value and the parameters. The version
+         * used on Windows only says "Unknown Hard Error".
+         */
+#if 0
+        RtlInitUnicodeString(&FormatU, L"Unknown Hard Error 0x%08lx\n"
+                                       L"Parameters: 0x%p 0x%p 0x%p 0x%p");
+#else
+        RtlInitUnicodeString(&FormatU, L"Unknown Hard Error 0x%08lx");
+        CopyParameters[0] = Message->Status;
+#endif
         FormatA.Buffer = NULL;
     }
 
@@ -444,7 +585,7 @@ UserpFormatMessages(
     /* Calculate buffer length for the caption */
     cszBuffer = WindowTitleU.Length + FileNameU.Length + TempStringU.Length +
                 3 * sizeof(WCHAR) + sizeof(UNICODE_NULL);
-    if (cszBuffer > CaptionStringU->MaximumLength)
+    if (CaptionStringU->MaximumLength < cszBuffer)
     {
         /* Allocate a larger buffer for the caption */
         pszBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -452,8 +593,8 @@ UserpFormatMessages(
                                     cszBuffer);
         if (!pszBuffer)
         {
-            /* We could not allocate a larger buffer; continue using the smaller static buffer */
-            DPRINT1("Cannot allocate memory for CaptionStringU, use static buffer.\n");
+            /* We could not allocate a larger buffer; continue using the smaller original buffer */
+            DPRINT1("Cannot allocate memory for CaptionStringU, use original buffer.\n");
         }
         else
         {
@@ -496,7 +637,7 @@ UserpFormatMessages(
             }
             else
             {
-                RtlInitAnsiString(&Format2A, (PCHAR)MessageResource->Text);
+                RtlInitAnsiString(&Format2A, (PSTR)MessageResource->Text);
                 /* Status = */ RtlAnsiStringToUnicodeString(&Format2U, &Format2A, TRUE);
             }
 
@@ -552,6 +693,7 @@ UserpFormatMessages(
             CopyParameters[0] = (ULONG_PTR)L"unknown software exception";
         }
 
+        /* Add explanation text for dialog buttons */
         if (Message->ValidResponseOptions == OptionOk ||
             Message->ValidResponseOptions == OptionOkCancel)
         {
@@ -568,7 +710,7 @@ UserpFormatMessages(
     /* Calculate buffer length for the text message */
     cszBuffer = FormatU.Length + SizeOfStrings + Size * sizeof(WCHAR) +
                 sizeof(UNICODE_NULL);
-    if (cszBuffer > TextStringU->MaximumLength)
+    if (TextStringU->MaximumLength < cszBuffer)
     {
         /* Allocate a larger buffer for the text message */
         pszBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -576,8 +718,8 @@ UserpFormatMessages(
                                     cszBuffer);
         if (!pszBuffer)
         {
-            /* We could not allocate a larger buffer; continue using the smaller static buffer */
-            DPRINT1("Cannot allocate memory for TextStringU, use static buffer.\n");
+            /* We could not allocate a larger buffer; continue using the smaller original buffer */
+            DPRINT1("Cannot allocate memory for TextStringU, use original buffer.\n");
         }
         else
         {
@@ -599,6 +741,7 @@ UserpFormatMessages(
                              CopyParameters[0], CopyParameters[1],
                              CopyParameters[2], CopyParameters[3]);
 
+        /* Add explanation text for dialog buttons */
         if (Message->Status == STATUS_UNHANDLED_EXCEPTION)
         {
             if (Message->ValidResponseOptions == OptionOk ||
@@ -642,6 +785,7 @@ UserpFormatMessages(
     if (Format2A.Buffer) RtlFreeUnicodeString(&Format2U);
     if (FormatA.Buffer) RtlFreeUnicodeString(&FormatU);
 
+Quit:
     /* Final cleanup */
     UserpFreeStringParameters(Parameters, Message);
 }
@@ -695,9 +839,11 @@ GetRegInt(
 }
 
 static BOOL
-UserpShowInformationBalloon(PWSTR Text,
-                            PWSTR Caption,
-                            PHARDERROR_MSG Message)
+UserpShowInformationBalloon(
+    IN PCWSTR Text,
+    IN PCWSTR Caption,
+    IN UINT   Type,
+    IN PHARDERROR_MSG Message)
 {
     ULONG ShellErrorMode;
     HWND hwnd;
@@ -741,7 +887,7 @@ UserpShowInformationBalloon(PWSTR Text,
     if (NT_SUCCESS(Message->Status))
         pdata->dwType = MB_OK;
     else if (Message->Status == STATUS_SERVICE_NOTIFICATION)
-        pdata->dwType = Message->Parameters[2];
+        pdata->dwType = Type;
     else
         pdata->dwType = MB_ICONINFORMATION;
 
@@ -768,68 +914,17 @@ UserpShowInformationBalloon(PWSTR Text,
 }
 
 static
-ULONG
+HARDERROR_RESPONSE
 UserpMessageBox(
     IN PCWSTR Text,
     IN PCWSTR Caption,
-    IN ULONG ValidResponseOptions,
-    IN ULONG Severity,
-    IN ULONG Timeout)
+    IN UINT   Type,
+    IN ULONG  Timeout)
 {
-    ULONG Type, MessageBoxResponse;
+    ULONG MessageBoxResponse;
 
-    /* Set the message box type */
-    switch (ValidResponseOptions)
-    {
-        case OptionAbortRetryIgnore:
-            Type = MB_ABORTRETRYIGNORE;
-            break;
-        case OptionOk:
-            Type = MB_OK;
-            break;
-        case OptionOkCancel:
-            Type = MB_OKCANCEL;
-            break;
-        case OptionRetryCancel:
-            Type = MB_RETRYCANCEL;
-            break;
-        case OptionYesNo:
-            Type = MB_YESNO;
-            break;
-        case OptionYesNoCancel:
-            Type = MB_YESNOCANCEL;
-            break;
-        case OptionShutdownSystem:
-            Type = MB_RETRYCANCEL; // FIXME???
-            break;
-        case OptionOkNoWait:
-            /*
-             * At that point showing the balloon failed. Is that correct?
-             */
-            Type = MB_OK; // FIXME!
-            break;
-        case OptionCancelTryContinue:
-            Type = MB_CANCELTRYCONTINUE;
-            break;
-
-        /* Anything else is invalid */
-        default:
-        {
-            DPRINT1("Unknown ValidResponseOptions = %d\n", ValidResponseOptions);
-            return ResponseNotHandled;
-        }
-    }
-
-    /* Set severity */
-    // STATUS_SEVERITY_SUCCESS
-         if (Severity == STATUS_SEVERITY_INFORMATIONAL) Type |= MB_ICONINFORMATION;
-    else if (Severity == STATUS_SEVERITY_WARNING)       Type |= MB_ICONWARNING;
-    else if (Severity == STATUS_SEVERITY_ERROR)         Type |= MB_ICONERROR;
-
-    Type |= MB_SYSTEMMODAL | MB_SETFOREGROUND;
-
-    DPRINT("Text = '%S', Caption = '%S', Severity = %d, Type = 0x%lx\n",
-           Text, Caption, Severity, Type);
+    DPRINT("Text = '%S', Caption = '%S', Type = 0x%lx\n",
+           Text, Caption, Type);
 
     /* Display a message box */
     MessageBoxResponse = MessageBoxTimeoutW(NULL, Text, Caption, Type, 0, Timeout);
@@ -846,6 +941,7 @@ UserpMessageBox(
         case IDRETRY:    return ResponseRetry;
         case IDTRYAGAIN: return ResponseTryAgain;
         case IDCONTINUE: return ResponseContinue;
+        default:         return ResponseNotHandled;
     }
 
     return ResponseNotHandled;
@@ -895,6 +991,7 @@ UserServerHardError(
     IN PHARDERROR_MSG Message)
 {
     ULONG ErrorMode;
+    UINT dwType = 0;
     UNICODE_STRING TextU, CaptionU;
     WCHAR LocalTextBuffer[256];
     WCHAR LocalCaptionBuffer[256];
@@ -907,16 +1004,24 @@ UserServerHardError(
     /* Make sure we don't have too many parameters */
     if (Message->NumberOfParameters > MAXIMUM_HARDERROR_PARAMETERS)
     {
-        // FIXME: Windows just fails (STATUS_INVALID_PARAMETER) & returns ResponseNotHandled.
+        // NOTE: Windows just fails (STATUS_INVALID_PARAMETER) & returns ResponseNotHandled.
+        DPRINT1("Invalid NumberOfParameters = %d\n", Message->NumberOfParameters);
         Message->NumberOfParameters = MAXIMUM_HARDERROR_PARAMETERS;
     }
     if (Message->ValidResponseOptions > OptionCancelTryContinue)
     {
-        // STATUS_INVALID_PARAMETER;
-        Message->Response = ResponseNotHandled;
-        return;
+        DPRINT1("Unknown ValidResponseOptions = %d\n", Message->ValidResponseOptions);
+        return; // STATUS_INVALID_PARAMETER;
     }
-    // TODO: More message validation: check NumberOfParameters wrt. Message Status code.
+    if (Message->Status == STATUS_SERVICE_NOTIFICATION)
+    {
+        if (Message->NumberOfParameters < 3)
+        {
+            DPRINT1("Invalid NumberOfParameters = %d for STATUS_SERVICE_NOTIFICATION\n", Message->NumberOfParameters);
+            return; // STATUS_INVALID_PARAMETER;
+        }
+        // (Message->UnicodeStringParameterMask & 0x3)
+    }
 
     /* Re-initialize the hard errors cache */
     UserInitHardErrorsCache();
@@ -924,7 +1029,7 @@ UserServerHardError(
     /* Format the message caption and text */
     RtlInitEmptyUnicodeString(&TextU, LocalTextBuffer, sizeof(LocalTextBuffer));
     RtlInitEmptyUnicodeString(&CaptionU, LocalCaptionBuffer, sizeof(LocalCaptionBuffer));
-    UserpFormatMessages(&TextU, &CaptionU, Message);
+    UserpFormatMessages(&TextU, &CaptionU, &dwType, /* &Timeout, */ Message);
 
     /* Log the hard error message */
     UserpLogHardError(&TextU, &CaptionU);
@@ -948,6 +1053,7 @@ UserServerHardError(
         Message->Response = ResponseOk;
         if (UserpShowInformationBalloon(TextU.Buffer,
                                         CaptionU.Buffer,
+                                        dwType,
                                         Message))
         {
             Message->Response = ResponseOk;
@@ -958,8 +1064,7 @@ UserServerHardError(
     /* Display the message box */
     Message->Response = UserpMessageBox(TextU.Buffer,
                                         CaptionU.Buffer,
-                                        Message->ValidResponseOptions,
-                                        (ULONG)(Message->Status) >> 30,
+                                        dwType,
                                         (ULONG)-1);
 
 Quit:
