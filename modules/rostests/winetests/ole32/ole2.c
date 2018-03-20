@@ -19,15 +19,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
+#define WIN32_LEAN_AND_MEAN
 
-#ifndef __REACTOS__
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "objbase.h"
+#include "shlguid.h"
+
+#include "wine/test.h"
+
 #include "initguid.h"
 
 DEFINE_GUID(CLSID_Picture_Metafile,0x315,0,0,0xc0,0,0,0,0,0,0,0x46);
 DEFINE_GUID(CLSID_Picture_Dib,0x316,0,0,0xc0,0,0,0,0,0,0,0x46);
 DEFINE_GUID(CLSID_Picture_EnhMetafile,0x319,0,0,0xc0,0,0,0,0,0,0,0x46);
-#endif
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 
@@ -144,7 +154,11 @@ typedef struct PresentationDataHeader
     DWORD dwSize;
 } PresentationDataHeader;
 
+#ifdef __REACTOS__
 static inline void check_expected_method_fmt(const char *method_name, const FORMATETC *fmt)
+#else
+static void inline check_expected_method_fmt(const char *method_name, const FORMATETC *fmt)
+#endif
 {
     trace("%s\n", method_name);
     ok(expected_method_list->method != NULL, "Extra method %s called\n", method_name);
@@ -2416,6 +2430,40 @@ static void test_data_cache_cache(void)
 
     IDataObject_Release( data );
     IOleCache2_Release( cache );
+
+    /* tests for a static class cache */
+    hr = CreateDataCache( NULL, &CLSID_Picture_Dib, &IID_IOleCache2, (void **)&cache );
+
+    fmt.cfFormat = CF_DIB;
+    fmt.dwAspect = DVASPECT_CONTENT;
+    fmt.tymed = TYMED_HGLOBAL;
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( hr == CACHE_S_SAMECACHE, "got %08x\n", hr );
+
+    /* aspect other than DVASPECT_CONTENT should fail */
+    fmt.dwAspect = DVASPECT_THUMBNAIL;
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( FAILED(hr), "got %08x\n", hr );
+
+    fmt.dwAspect = DVASPECT_DOCPRINT;
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( FAILED(hr), "got %08x\n", hr );
+
+    /* try caching another clip format */
+    fmt.cfFormat = CF_METAFILEPICT;
+    fmt.dwAspect = DVASPECT_CONTENT;
+    fmt.tymed = TYMED_MFPICT;
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( FAILED(hr), "got %08x\n", hr );
+
+    /* As an exception, it's possible to add an icon aspect */
+    fmt.cfFormat = CF_METAFILEPICT;
+    fmt.dwAspect = DVASPECT_ICON;
+    fmt.tymed = TYMED_MFPICT;
+    hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    IOleCache2_Release( cache );
 }
 
 /* The CLSID_Picture_ classes automatically create appropriate cache entries */
@@ -3976,13 +4024,18 @@ static void check_storage_contents(IStorage *stg, const struct storage_def *stg_
         hr = IStorage_OpenStream(stg, stat.pwcsName, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stream);
         ok(hr == S_OK, "unexpected %#x\n", hr);
 
-        if (!memcmp(name, "\2OlePres", 7))
+        if (!memcmp(name, "\2OlePres", 8))
         {
+            ULONG header_size = sizeof(header);
+
             clipformat = read_clipformat(stream);
 
-            hr = IStream_Read(stream, &header, sizeof(header), &bytes);
+            if (clipformat == 0) /* view cache */
+                header_size = FIELD_OFFSET(PresentationDataHeader, unknown7);
+
+            hr = IStream_Read(stream, &header, header_size, &bytes);
             ok(hr == S_OK, "unexpected %#x\n", hr);
-            ok(bytes >= 24, "read %u bytes\n", bytes);
+            ok(bytes == header_size, "read %u bytes, expected %u\n", bytes, header_size);
 
             if (winetest_debug > 1)
                 trace("header: tdSize %#x, dvAspect %#x, lindex %#x, advf %#x, unknown7 %#x, dwObjectExtentX %#x, dwObjectExtentY %#x, dwSize %#x\n",
@@ -4218,12 +4271,14 @@ static void test_data_cache_save_data(void)
                 { CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL },
                 { CF_METAFILEPICT, 0, DVASPECT_CONTENT, -1, TYMED_MFPICT },
                 { CF_ENHMETAFILE, 0, DVASPECT_CONTENT, -1, TYMED_ENHMF },
+                { 0, 0, DVASPECT_DOCPRINT, -1, TYMED_HGLOBAL },
             },
-            3, 3, &CLSID_WineTest,
+            4, 3, &CLSID_WineTest,
             {
-                &CLSID_WineTestOld, 3, { { "\2OlePres000", CF_DIB, DVASPECT_CONTENT, 0, NULL, 0 },
+                &CLSID_WineTestOld, 4, { { "\2OlePres000", CF_DIB, DVASPECT_CONTENT, 0, NULL, 0 },
                                          { "\2OlePres001", CF_METAFILEPICT, DVASPECT_CONTENT, 0, NULL, 0 },
-                                         { "\2OlePres002", CF_ENHMETAFILE, DVASPECT_CONTENT, 0, NULL, 0 } }
+                                         { "\2OlePres002", CF_ENHMETAFILE, DVASPECT_CONTENT, 0, NULL, 0 },
+                                         { "\2OlePres003", 0, DVASPECT_DOCPRINT, 0, NULL, 0 } }
             }
         },
         /* without setting data */
@@ -4410,7 +4465,6 @@ static void test_data_cache_contents(void)
         ok(hr == S_OK, "unexpected %#x\n", hr);
 
         hr = IPersistStorage_IsDirty(stg);
-todo_wine_if(test_data[i].in == &stg_def_4 || test_data[i].in == &stg_def_8 || test_data[i].in == &stg_def_9)
         ok(hr == S_FALSE, "%d: unexpected %#x\n", i, hr);
 
         hr = IPersistStorage_Save(stg, doc2, FALSE);
@@ -4423,7 +4477,8 @@ todo_wine_if(test_data[i].in == &stg_def_4 || test_data[i].in == &stg_def_8 || t
 todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_1 || test_data[i].in == &stg_def_2))
         ok(enumerated_streams == matched_streams, "%d out: enumerated %d != matched %d\n", i,
            enumerated_streams, matched_streams);
-todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_5))
+todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_4 || test_data[i].in == &stg_def_5
+                 || test_data[i].in == &stg_def_6))
         ok(enumerated_streams == test_data[i].out->stream_count, "%d: saved streams %d != def streams %d\n", i,
             enumerated_streams, test_data[i].out->stream_count);
 
