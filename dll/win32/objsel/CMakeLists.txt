@@ -9,7 +9,7 @@ spec2def(objsel.dll objsel.spec)
 list(APPEND SOURCE
     factory.c
     objsel.c
-    objsel_private.h)
+    precomp.h)
 
 add_library(objsel SHARED
     ${SOURCE}
@@ -19,5 +19,5 @@ add_library(objsel SHARED
 set_module_type(objsel win32dll)
 target_link_libraries(objsel uuid wine)
 add_importlibs(objsel ole32 advapi32 msvcrt kernel32 ntdll)
-add_pch(objsel objsel_private.h SOURCE)
+add_pch(objsel precomp.h SOURCE)
 add_cd_file(TARGET objsel DESTINATION reactos/system32 FOR all)
