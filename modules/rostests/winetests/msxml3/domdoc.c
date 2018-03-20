@@ -21,9 +21,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
 
-#include <asptlb.h>
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include <stdio.h>
+#include <assert.h>
+
+#include "windows.h"
+
+#include "msxml.h"
+#include "msxml2.h"
+#include "msxml2did.h"
+#include "ole2.h"
+#include "dispex.h"
+#include "objsafe.h"
+#include "mshtml.h"
+#include "initguid.h"
+#include "asptlb.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
 
 /* undef the #define in msxml2 so that we can access all versions */
 #undef CLSID_DOMDocument
@@ -155,7 +173,7 @@ static ULONG WINAPI dispevent_Release(IDispatch *iface)
     ULONG ref = InterlockedDecrement( &This->ref );
 
     if (ref == 0)
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
 
     return ref;
 }
@@ -215,7 +233,7 @@ static const IDispatchVtbl dispeventVtbl =
 
 static IDispatch* create_dispevent(void)
 {
-    dispevent *event = HeapAlloc(GetProcessHeap(), 0, sizeof(*event));
+    dispevent *event = heap_alloc(sizeof(*event));
 
     event->IDispatch_iface.lpVtbl = &dispeventVtbl;
     event->ref = 1;
@@ -682,8 +700,10 @@ static void _expect_list_len(IXMLDOMNodeList *list, LONG len, int line)
 #define EXPECT_HR(hr,hr_exp) \
     ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
 
+#ifdef __REACTOS__
 #define EXPECT_NOT_HR(hr,hr_exp) \
     ok(hr != hr_exp, "got 0x%08x, expected not 0x%08x\n", hr, hr_exp)
+#endif
 
 static const WCHAR szEmpty[] = { 0 };
 static const WCHAR szIncomplete[] = {
@@ -10168,13 +10188,68 @@ static void write_to_file(const char *name, const char *data)
     CloseHandle(hfile);
 }
 
+static void test_doc_load_from_path(IXMLDOMDocument *doc, const char *path)
+{
+    IXMLDOMDocument *doc2;
+    IXMLDOMElement *elem;
+    BSTR url, url2;
+    VARIANT_BOOL b;
+    VARIANT src;
+    HRESULT hr;
+
+    url = _bstr_(path);
+
+    V_VT(&src) = VT_BSTR;
+    V_BSTR(&src) = url;
+    hr = IXMLDOMDocument_load(doc, src, &b);
+    ok(hr == S_OK, "Failed to load document, %#x.\n", hr);
+    ok(b == VARIANT_TRUE, "got %d\n", b);
+
+    V_VT(&src) = VT_BSTR | VT_BYREF;
+    V_BSTRREF(&src) = &url;
+    hr = IXMLDOMDocument_load(doc, src, &b);
+    ok(hr == S_OK, "Failed to load document, %#x.\n", hr);
+    ok(b == VARIANT_TRUE, "got %d\n", b);
+
+    url = NULL;
+    hr = IXMLDOMDocument_get_url(doc, &url);
+    ok(hr == S_OK, "Failed to get document url, hr %#x.\n", hr);
+
+    hr = IXMLDOMDocument_get_documentElement(doc, &elem);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    /* Create another instance for the same document, check url */
+    hr = IXMLDOMElement_get_ownerDocument(elem, &doc2);
+    ok(hr == S_OK, "Failed to get owner document, hr %#x.\n", hr);
+
+    hr = IXMLDOMDocument_get_url(doc2, &url2);
+    ok(hr == S_OK, "Failed to get document url, hr %#x.\n", hr);
+    ok(!lstrcmpW(url, url2), "Unexpected url %s.\n", wine_dbgstr_w(url2));
+
+    IXMLDOMDocument_Release(doc2);
+    IXMLDOMElement_Release(elem);
+    SysFreeString(url2);
+    SysFreeString(url);
+}
+
+static void url_forward_slash(char *url)
+{
+    char *p = url;
+
+    while (*p)
+    {
+        if (*p == '\\')
+            *p = '/';
+        p++;
+    }
+}
+
 static void test_load(void)
 {
-    IXMLDOMDocument *doc, *doc2;
-    BSTR pathW, bstr1, bstr2;
+    char path[MAX_PATH], path2[MAX_PATH];
     IXMLDOMNodeList *list;
-    IXMLDOMElement *elem;
-    char path[MAX_PATH];
+    IXMLDOMDocument *doc;
+    BSTR bstr1, bstr2;
     VARIANT_BOOL b;
     VARIANT src;
     HRESULT hr;
@@ -10195,47 +10270,26 @@ static void test_load(void)
     EXPECT_HR(hr, E_INVALIDARG);
     ok(b == VARIANT_FALSE, "got %d\n", b);
 
-    pathW = _bstr_(path);
+    /* "file://" url */
+    strcpy(path2, "file://");
+    strcat(path2, path);
+    test_doc_load_from_path(doc, path2);
 
-    /* load from path: VT_BSTR */
-    V_VT(&src) = VT_BSTR;
-    V_BSTR(&src) = pathW;
-    hr = IXMLDOMDocument_load(doc, src, &b);
-    EXPECT_HR(hr, S_OK);
-    ok(b == VARIANT_TRUE, "got %d\n", b);
+    /* file:// url, forward slashes */
+    url_forward_slash(path2);
+    test_doc_load_from_path(doc, path2);
 
-    bstr1 = NULL;
-    hr = IXMLDOMDocument_get_url(doc, &bstr1);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    SysFreeString(bstr1);
+    /* "file:/" url */
+    strcpy(path2, "file:/");
+    strcat(path2, path);
+    test_doc_load_from_path(doc, path);
 
-    /* load from a path: VT_BSTR|VT_BYREF */
-    V_VT(&src) = VT_BSTR | VT_BYREF;
-    V_BSTRREF(&src) = &pathW;
-    hr = IXMLDOMDocument_load(doc, src, &b);
-    EXPECT_HR(hr, S_OK);
-    ok(b == VARIANT_TRUE, "got %d\n", b);
+    /* file:/ with forward slashes. */
+    url_forward_slash(path2);
+    test_doc_load_from_path(doc, path2);
 
-    bstr1 = NULL;
-    hr = IXMLDOMDocument_get_url(doc, &bstr1);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-
-    hr = IXMLDOMDocument_get_documentElement(doc, &elem);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-
-    /* create another instance for the same document, check url */
-    hr = IXMLDOMElement_get_ownerDocument(elem, &doc2);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-
-    hr = IXMLDOMDocument_get_url(doc, &bstr2);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(!lstrcmpW(bstr1, bstr2), "got %s\n", wine_dbgstr_w(bstr2));
-
-    IXMLDOMDocument_Release(doc2);
-    IXMLDOMElement_Release(elem);
-
-    SysFreeString(bstr1);
-    SysFreeString(bstr2);
+    /* Regular local path. */
+    test_doc_load_from_path(doc, path);
 
     /* load from a path: VT_BSTR|VT_BYREF, null ptr */
     V_VT(&src) = VT_BSTR | VT_BYREF;
@@ -10255,7 +10309,7 @@ static void test_load(void)
     write_to_file(path, nocontent);
 
     V_VT(&src) = VT_BSTR;
-    V_BSTR(&src) = pathW;
+    V_BSTR(&src) = _bstr_(path);
     b = VARIANT_TRUE;
     hr = IXMLDOMDocument_load(doc, src, &b);
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
@@ -12124,34 +12178,148 @@ static void test_put_data(void)
        type++;
     }
 
-    /* \r\n sequence is never escaped */
+    IXMLDOMDocument_Release(doc);
+    free_bstrs();
+}
+
+static void test_newline_normalization(void)
+{
+    const struct msxmlsupported_data_t *table = domdoc_support_data;
+    IXMLDOMDocument *doc;
+    IXMLDOMText *text;
+    IXMLDOMNode *node;
+    VARIANT v;
+    VARIANT_BOOL b;
+    BSTR s;
+    HRESULT hr;
+    LONG length;
+
     V_VT(&v) = VT_I2;
     V_I2(&v) = NODE_TEXT;
 
-    hr = IXMLDOMDocument_createNode(doc, v, _bstr_("name"), NULL, &node);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    while (table->clsid)
+    {
+        if (!is_clsid_supported(table->clsid, &IID_IXMLDOMDocument))
+        {
+            table++;
+            continue;
+        }
 
-    IXMLDOMNode_QueryInterface(node, &IID_IXMLDOMText, (void**)&text);
+        hr = CoCreateInstance(table->clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (void**)&doc);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
 
-    hr = IXMLDOMText_put_data(text, _bstr_("\r\n"));
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+        hr = IXMLDOMDocument_createNode(doc, v, _bstr_("name"), NULL, &node);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
 
-    hr = IXMLDOMText_get_data(text, &get_data);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+        IXMLDOMNode_QueryInterface(node, &IID_IXMLDOMText, (void**)&text);
+
+        /* \r\n is normalized to \n and back to \r\n */
+
+        hr = IXMLDOMText_put_data(text, _bstr_("\r\n"));
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IXMLDOMText_get_data(text, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("\n")), "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        hr = IXMLDOMText_get_length(text, &length);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(length == 1, "got %d, expected 1\n", length);
+
+        hr = IXMLDOMText_get_xml(text, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("\r\n")), "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        /* \r\r\n is normalized to \n\n and back to \r\n\r\n */
+
+        hr = IXMLDOMText_put_data(text, _bstr_("\r\r\n"));
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IXMLDOMText_get_data(text, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("\n\n")), "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        hr = IXMLDOMText_get_length(text, &length);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(length == 2, "got %d, expected 2\n", length);
+
+        hr = IXMLDOMText_get_xml(text, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("\r\n\r\n")), "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        /* the same normalizations are applied when loading a document as a whole */
+
+        hr = IXMLDOMDocument_loadXML(doc, _bstr_("<?xml version=\"1.0\"?><root>foo\n\r\n\r\r\nbar</root>"), &b);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IXMLDOMDocument_get_text(doc, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("foo\n\n\n\nbar")), "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        hr = IXMLDOMDocument_get_xml(doc, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("<?xml version=\"1.0\"?>\r\n<root>foo\r\n\r\n\r\n\r\nbar</root>\r\n")),
+           "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        /* even if xml:space="preserve" */
+
+        hr = IXMLDOMDocument_loadXML(doc, _bstr_("<?xml version=\"1.0\"?>"
+                                                 "<root xml:space=\"preserve\">foo\n\r\n\r\r\nbar</root>"), &b);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IXMLDOMDocument_get_text(doc, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("foo\n\n\n\nbar")), "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        hr = IXMLDOMDocument_get_xml(doc, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("<?xml version=\"1.0\"?>\r\n"
+                               "<root xml:space=\"preserve\">foo\r\n\r\n\r\n\r\nbar</root>\r\n")),
+           "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        /* or preserveWhiteSpace is set */
+
+        hr = IXMLDOMDocument_put_preserveWhiteSpace(doc, VARIANT_TRUE);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IXMLDOMDocument_loadXML(doc, _bstr_("<?xml version=\"1.0\"?><root>foo\n\r\n\r\r\nbar</root>"), &b);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IXMLDOMDocument_get_text(doc, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!lstrcmpW(s, _bstr_("foo\n\n\n\nbar")), "got %s\n", wine_dbgstr_w(s));
+        SysFreeString(s);
+
+        hr = IXMLDOMDocument_get_xml(doc, &s);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        if (IsEqualGUID(table->clsid, &CLSID_DOMDocument60))
+        {
+            /* DOMDocument60 does the newline normalization but does not insert line breaks around the root node */
 todo_wine
-    ok(!lstrcmpW(get_data, _bstr_("\n")), "got %s\n", wine_dbgstr_w(get_data));
-    SysFreeString(get_data);
+            ok(!lstrcmpW(s, _bstr_("<?xml version=\"1.0\"?><root>foo\r\n\r\n\r\n\r\nbar</root>")),
+               "got %s\n", wine_dbgstr_w(s));
+        }
+        else
+        {
+            ok(!lstrcmpW(s, _bstr_("<?xml version=\"1.0\"?>\r\n<root>foo\r\n\r\n\r\n\r\nbar</root>\r\n")),
+               "got %s\n", wine_dbgstr_w(s));
+        }
+        SysFreeString(s);
 
-    hr = IXMLDOMText_get_xml(text, &get_data);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(!lstrcmpW(get_data, _bstr_("\r\n")), "got %s\n", wine_dbgstr_w(get_data));
-    SysFreeString(get_data);
-
-    IXMLDOMText_Release(text);
-    IXMLDOMNode_Release(node);
-
-    IXMLDOMDocument_Release(doc);
-    free_bstrs();
+        IXMLDOMText_Release(text);
+        IXMLDOMNode_Release(node);
+        IXMLDOMDocument_Release(doc);
+        free_bstrs();
+        table++;
+    }
 }
 
 static void test_putref_schemas(void)
@@ -12735,6 +12903,7 @@ START_TEST(domdoc)
     test_nodeValue();
     test_get_namespaces();
     test_put_data();
+    test_newline_normalization();
     test_putref_schemas();
     test_namedmap_newenum();
     test_xmlns_attribute();

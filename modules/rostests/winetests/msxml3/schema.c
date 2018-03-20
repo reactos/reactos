@@ -19,9 +19,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
+#include <assert.h>
+#define COBJMACROS
 
-DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+#include "initguid.h"
+#include "windows.h"
+#include "ole2.h"
+#include "msxml2.h"
+#undef CLSID_DOMDocument
+#include "msxml2did.h"
+#include "dispex.h"
+
+#include "wine/test.h"
+
+#ifdef __REACTOS__
+#include <cguid.h>
+#endif
 
 #define EXPECT_HR(hr,hr_exp) \
     ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
@@ -426,8 +440,13 @@ static const CHAR szOpenSeqXML4[] = "<test><x/><x/><y/><z/><z/><v/></test>";
                   wine_dbgstr_longlong(v1), wine_dbgstr_longlong(v2)); \
 }
 
+#ifdef __REACTOS__
 #define expect_int64(expr, x, base) _expect64(expr, #x, base, LONG64, _strtoi64)
 #define expect_uint64(expr, x, base) _expect64(expr, #x, base, ULONG64, _strtoui64)
+#else
+#define expect_int64(expr, x, base) _expect64(expr, #x, base, LONG64, strtoll)
+#define expect_uint64(expr, x, base) _expect64(expr, #x, base, ULONG64, strtoull)
+#endif
 
 static BSTR alloced_bstrs[256];
 static int alloced_bstrs_count;

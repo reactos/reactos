@@ -18,7 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include <stdio.h>
+#include "windows.h"
+#include "ole2.h"
+#include "msxml2.h"
+#include "msxml2did.h"
+#include "ocidl.h"
+
+#include "wine/test.h"
 
 #define EXPECT_HR(hr,hr_exp) \
     ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)

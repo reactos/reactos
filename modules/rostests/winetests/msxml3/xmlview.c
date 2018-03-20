@@ -15,13 +15,23 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define COBJMACROS
+#define CONST_VTABLE
 
-#include "precomp.h"
+#include <stdio.h>
+#include <assert.h>
 
-#include <perhist.h>
-#include <docobj.h>
+#include "windows.h"
+#include "ole2.h"
+#include "mshtml.h"
+#include "mshtmdid.h"
+#include "initguid.h"
+#include "perhist.h"
+#include "docobj.h"
+#include "urlmon.h"
+#include "xmlparser.h"
 
-#define DISPID_HTMLDOCUMENTEVENTS2_ONREADYSTATECHANGE DISPID_READYSTATECHANGE
+#include "wine/test.h"
 
 HRESULT (WINAPI *pCreateURLMoniker)(IMoniker*, LPCWSTR, IMoniker**);
 

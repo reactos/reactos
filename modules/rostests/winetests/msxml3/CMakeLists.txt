@@ -13,7 +13,12 @@ list(APPEND SOURCE
     xmlview.c
     precomp.h)
 
-add_executable(msxml3_winetest ${SOURCE} testlist.c rsrc.rc)
+add_executable(msxml3_winetest
+    ${SOURCE}
+    guid.c
+    testlist.c
+    rsrc.rc)
+
 add_idl_headers(xmlparser_idlheader_test xmlparser.idl)
 add_dependencies(msxml3_winetest xmlparser_idlheader_test)
 set_module_type(msxml3_winetest win32cui)

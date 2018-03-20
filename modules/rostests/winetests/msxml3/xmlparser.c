@@ -17,8 +17,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define COBJMACROS
+#define CONST_VTABLE
 
-#include "precomp.h"
+#include <stdio.h>
+#include <assert.h>
+
+#include "windows.h"
+#include "ole2.h"
+#include "xmlparser.h"
+#include "wine/test.h"
+
 
 static HRESULT WINAPI nodefact_QueryInterface(IXMLNodeFactory *iface,
         REFIID riid, void **ppvObject)
