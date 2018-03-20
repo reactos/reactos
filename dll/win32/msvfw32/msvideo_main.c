@@ -26,12 +26,20 @@
  *      - no thread safety
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "commdlg.h"
+#include "vfw.h"
 #include "msvideo_private.h"
-
-#include <winreg.h>
-#include <commdlg.h>
-
-#include "resource.h"
+#include "wine/debug.h"
 
 /* Drivers32 settings */
 #define HKLM_DRIVERS32 "Software\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32"
@@ -88,6 +96,11 @@ static const char *wine_dbgstr_icerr( int ret )
     }
 #undef XX
     return str;
+}
+
+static inline int get_stride(int width, int depth)
+{
+    return ((depth * width + 31) >> 3) & ~3;
 }
 
 static WINE_HIC*        MSVIDEO_FirstHic /* = NULL */;
@@ -215,48 +228,48 @@ static int compare_fourcc(DWORD fcc1, DWORD fcc2)
   return strncasecmp(fcc_str1, fcc_str2, 4);
 }
 
-typedef BOOL (*enum_handler_t)(const char*, unsigned int, void*);
+typedef BOOL (*enum_handler_t)(const char *name, const char *driver, unsigned int index, void *param);
 
 static BOOL enum_drivers(DWORD fccType, enum_handler_t handler, void* param)
 {
-    CHAR buf[2048], fccTypeStr[5], *s;
+    char fccTypeStr[4];
+    char name_buf[10];
+    char buf[2048];
+
     DWORD i, cnt = 0, lRet;
     BOOL result = FALSE;
     HKEY hKey;
 
     fourcc_to_string(fccTypeStr, fccType);
-    fccTypeStr[4] = '.';
 
     /* first, go through the registry entries */
     lRet = RegOpenKeyExA(HKEY_LOCAL_MACHINE, HKLM_DRIVERS32, 0, KEY_QUERY_VALUE, &hKey);
     if (lRet == ERROR_SUCCESS) 
     {
-        DWORD name, data, type;
         i = 0;
         for (;;)
-	{
-	    name = 10;
-	    data = sizeof buf - name;
-	    lRet = RegEnumValueA(hKey, i++, buf, &name, 0, &type, (LPBYTE)(buf+name), &data);
-	    if (lRet == ERROR_NO_MORE_ITEMS) break;
-	    if (lRet != ERROR_SUCCESS) continue;
-	    if (fccType && (name != 9 || strncasecmp(buf, fccTypeStr, 5))) continue;
-	    buf[name] = '=';
-	    if ((result = handler(buf, cnt++, param))) break;
-	}
-    	RegCloseKey( hKey );
+        {
+            DWORD name_len = 10, driver_len = 128;
+            lRet = RegEnumValueA(hKey, i++, name_buf, &name_len, 0, 0, (BYTE *)buf, &driver_len);
+            if (lRet == ERROR_NO_MORE_ITEMS) break;
+            if (name_len != 9 || name_buf[4] != '.') continue;
+            if (fccType && strncasecmp(name_buf, fccTypeStr, 4)) continue;
+            if ((result = handler(name_buf, buf, cnt++, param))) break;
+        }
+        RegCloseKey( hKey );
     }
     if (result) return result;
 
     /* if that didn't work, go through the values in system.ini */
     if (GetPrivateProfileSectionA("drivers32", buf, sizeof(buf), "system.ini")) 
     {
-	for (s = buf; *s; s += strlen(s) + 1)
-	{
-            TRACE("got %s\n", s);
-	    if (fccType && (strncasecmp(s, fccTypeStr, 5) || s[9] != '=')) continue;
-	    if ((result = handler(s, cnt++, param))) break;
-	}
+        char *s;
+        for (s = buf; *s; s += strlen(s) + 1)
+        {
+            if (s[4] != '.' || s[9] != '=') continue;
+            if (fccType && strncasecmp(s, fccTypeStr, 4)) continue;
+            if ((result = handler(s, s + 10, cnt++, param))) break;
+        }
     }
 
     return result;
@@ -286,21 +299,23 @@ DWORD WINAPI VideoForWindowsVersion(void)
     return 0x040003B6; /* 4.950 */
 }
 
-static BOOL ICInfo_enum_handler(const char *drv, unsigned int nr, void *param)
+static BOOL ICInfo_enum_handler(const char *name, const char *driver, unsigned int nr, void *param)
 {
     ICINFO *lpicinfo = param;
-    DWORD fccHandler = mmioStringToFOURCCA(drv + 5, 0);
+    DWORD fccType = mmioStringToFOURCCA(name, 0);
+    DWORD fccHandler = mmioStringToFOURCCA(name + 5, 0);
 
     if (lpicinfo->fccHandler != nr && compare_fourcc(lpicinfo->fccHandler, fccHandler))
         return FALSE;
 
+    lpicinfo->fccType = fccType;
     lpicinfo->fccHandler = fccHandler;
     lpicinfo->dwFlags = 0;
     lpicinfo->dwVersion = 0;
     lpicinfo->dwVersionICM = ICVERSION;
     lpicinfo->szName[0] = 0;
     lpicinfo->szDescription[0] = 0;
-    MultiByteToWideChar(CP_ACP, 0, drv + 10, -1, lpicinfo->szDriver, 
+    MultiByteToWideChar(CP_ACP, 0, driver, -1, lpicinfo->szDriver,
 			sizeof(lpicinfo->szDriver)/sizeof(WCHAR));
 
     return TRUE;
@@ -639,10 +654,10 @@ static HIC try_driver(driver_info_t *info)
     return 0;
 }
 
-static BOOL ICLocate_enum_handler(const char *drv, unsigned int nr, void *param)
+static BOOL ICLocate_enum_handler(const char *name, const char *driver, unsigned int nr, void *param)
 {
     driver_info_t *info = param;
-    info->fccHandler = mmioStringToFOURCCA(drv + 5, 0);
+    info->fccHandler = mmioStringToFOURCCA(name + 5, 0);
     info->hic = try_driver(info);
     return info->hic != 0;
 }
@@ -709,25 +724,86 @@ HIC VFWAPI ICGetDisplayFormat(
 	HIC hic,LPBITMAPINFOHEADER lpbiIn,LPBITMAPINFOHEADER lpbiOut,
 	INT depth,INT dx,INT dy)
 {
-	HIC	tmphic = hic;
+    static const struct
+    {
+        int depth;
+        int compression;
+    }
+    try_depths[] =
+    {
+        { 8, BI_RGB},
+        {16, BI_RGB},
+        {16, BI_BITFIELDS},
+        {24, BI_RGB},
+        {32, BI_RGB},
+    };
 
-	TRACE("(%p,%p,%p,%d,%d,%d)!\n",hic,lpbiIn,lpbiOut,depth,dx,dy);
+    int screen_depth, i;
+    BOOL found = FALSE;
+    HIC tmphic;
+    HDC hdc;
 
-	if (!tmphic) {
-		tmphic=ICLocate(ICTYPE_VIDEO,0,lpbiIn,NULL,ICMODE_DECOMPRESS);
-		if (!tmphic)
-			return tmphic;
-	}
-	if ((dy == lpbiIn->biHeight) && (dx == lpbiIn->biWidth))
-		dy = dx = 0; /* no resize needed */
+    TRACE("(%p,%p,%p,%d,%d,%d)!\n", hic, lpbiIn, lpbiOut, depth, dx, dy);
+
+    tmphic = hic ? hic : ICLocate(ICTYPE_VIDEO, 0, lpbiIn, NULL, ICMODE_DECOMPRESS);
+    if (!tmphic) return tmphic;
+
+    hdc = GetDC(0);
+    screen_depth = GetDeviceCaps(hdc, BITSPIXEL) * GetDeviceCaps(hdc, PLANES);
+    ReleaseDC(0, hdc);
+
+    if (dx <= 0) dx = lpbiIn->biWidth;
+    if (dy <= 0) dy = lpbiIn->biHeight;
+    if (!depth) depth = screen_depth;
 
 	/* Can we decompress it ? */
-	if (ICDecompressQuery(tmphic,lpbiIn,NULL) != 0)
+	if (ICDecompressQuery(tmphic, lpbiIn, NULL) != ICERR_OK)
 		goto errout; /* no, sorry */
 
 	ICSendMessage(tmphic, ICM_DECOMPRESS_GET_FORMAT, (DWORD_PTR)lpbiIn, (DWORD_PTR)lpbiOut);
 
-	if (lpbiOut->biCompression != 0) {
+    lpbiOut->biSize = sizeof(BITMAPINFOHEADER);
+    lpbiOut->biWidth = dx;
+    lpbiOut->biHeight = dy;
+    lpbiOut->biPlanes = 1;
+
+    for (i = 0; i < sizeof(try_depths) / sizeof(try_depths[0]); i++)
+    {
+        if (!found && try_depths[i].depth != depth)
+            continue;
+
+        found = TRUE;
+        lpbiOut->biBitCount = try_depths[i].depth;
+        lpbiOut->biCompression = try_depths[i].compression;
+        lpbiOut->biSizeImage = dx * get_stride(dy, lpbiOut->biBitCount);
+
+        if (ICDecompressQuery(tmphic, lpbiIn, lpbiOut) == ICERR_OK)
+        {
+            if (try_depths[i].depth == 8)
+                ICDecompressGetPalette(tmphic, lpbiIn, lpbiOut);
+            goto success;
+        }
+    }
+
+    if (!found)
+    {
+        lpbiOut->biBitCount = depth;
+        lpbiOut->biCompression = BI_RGB;
+        lpbiOut->biSizeImage = dx * get_stride(dy, lpbiOut->biBitCount);
+        if (ICDecompressQuery(tmphic, lpbiIn, lpbiOut) == ICERR_OK)
+            goto success;
+
+        lpbiOut->biBitCount = screen_depth;
+        lpbiOut->biCompression = BI_RGB;
+        lpbiOut->biSizeImage = dx * get_stride(dy, lpbiOut->biBitCount);
+        if (ICDecompressQuery(tmphic, lpbiIn, lpbiOut) == ICERR_OK)
+            goto success;
+    }
+
+    if (ICSendMessage(tmphic, ICM_DECOMPRESS_GET_FORMAT, (DWORD_PTR)lpbiIn, (DWORD_PTR)lpbiOut))
+        goto errout;
+
+    if (lpbiOut->biCompression != 0) {
            FIXME("Ooch, how come decompressor outputs compressed data (%d)??\n",
 			 lpbiOut->biCompression);
 	}
@@ -736,20 +812,11 @@ HIC VFWAPI ICGetDisplayFormat(
 			 lpbiOut->biSize);
 	   lpbiOut->biSize = sizeof(*lpbiOut);
 	}
-	if (!depth) {
-		HDC	hdc;
 
-		hdc = GetDC(0);
-		depth = GetDeviceCaps(hdc,BITSPIXEL)*GetDeviceCaps(hdc,PLANES);
-		ReleaseDC(0,hdc);
-		if (depth==15)	depth = 16;
-		if (depth<8)	depth =  8;
-	}
-	if (lpbiIn->biBitCount == 8)
-		depth = 8;
-
+success:
 	TRACE("=> %p\n", tmphic);
 	return tmphic;
+
 errout:
 	if (hic!=tmphic)
 		ICClose(tmphic);
