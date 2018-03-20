@@ -19,13 +19,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
 
+#include "config.h"
+
+#include <stdarg.h>
 #ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
 # include <libxml/parserInternals.h>
+# include <libxml/xmlerror.h>
 #endif
 
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "msxml6.h"
+
+#include "msxml_private.h"
+
+#include "wine/debug.h"
+
 #ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 typedef struct _domtext
 {
@@ -505,7 +522,7 @@ static HRESULT WINAPI domtext_get_xml(
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    return node_get_xml(&This->node, FALSE, p);
+    return node_get_xml(&This->node, TRUE, p);
 }
 
 static HRESULT WINAPI domtext_transformNode(
@@ -599,15 +616,35 @@ static HRESULT WINAPI domtext_put_data(
     BSTR data)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
-    static const WCHAR rnW[] = {'\r','\n',0};
+    BSTR normalized_data = NULL;
+    HRESULT hr;
+    size_t i, j;
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(data));
 
-    if (data && !strcmpW(rnW, data))
-        This->node.node->name = xmlStringTextNoenc;
-    else
-        domtext_reset_noenc(This);
-    return node_set_content(&This->node, data);
+    if (data)
+    {
+        /* normalize line endings */
+        normalized_data = SysAllocStringLen(NULL, SysStringLen(data));
+        if (!normalized_data) return E_OUTOFMEMORY;
+        for (i = 0, j = 0; data[i]; i++)
+        {
+            if (data[i] == '\r')
+            {
+                if (data[i + 1] == '\n') i++; /* change \r\n to just \n */
+                normalized_data[j++] = '\n'; /* change \r by itself to \n */
+            }
+            else
+                normalized_data[j++] = data[i];
+        }
+        normalized_data[j] = 0;
+    }
+
+    domtext_reset_noenc(This);
+    hr = node_set_content(&This->node, normalized_data);
+
+    SysFreeString(normalized_data);
+    return hr;
 }
 
 static HRESULT WINAPI domtext_get_length(

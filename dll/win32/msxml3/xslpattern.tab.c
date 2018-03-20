@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.2"
+#define YYBISON_VERSION "3.0"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -70,13 +70,16 @@
 /* Copy the first part of user declarations.  */
 #line 21 "xslpattern.y" /* yacc.c:339  */
 
-#include "precomp.h"
-
-#include <wine/port.h>
+#include "config.h"
+#include "wine/port.h"
 
 #ifdef HAVE_LIBXML2
 #include "xslpattern.h"
 #include <libxml/xpathInternals.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+
 
 static const xmlChar NameTest_mod_pre[] = "*[name()='";
 static const xmlChar NameTest_mod_post[] = "']";
@@ -110,11 +113,11 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
 
 #line 115 "xslpattern.tab.c" /* yacc.c:339  */
 
-# ifndef YY_NULLPTR
+# ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
+#   define YY_NULL nullptr
 #  else
-#   define YY_NULLPTR 0
+#   define YY_NULL 0
 #  endif
 # endif
 
@@ -126,7 +129,10 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
 # define YYERROR_VERBOSE 0
 #endif
 
-
+/* In a future release of Bison, this section will be replaced
+   by #include "xslpattern.tab.h".  */
+#ifndef YY_XSLPATTERN_E_REACTOSSYNC_GCC_DLL_WIN32_MSXML3_XSLPATTERN_TAB_H_INCLUDED
+# define YY_XSLPATTERN_E_REACTOSSYNC_GCC_DLL_WIN32_MSXML3_XSLPATTERN_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -180,11 +186,11 @@ typedef int YYSTYPE;
 
 int xslpattern_parse (parser_param* p, void* scanner);
 
-
+#endif /* !YY_XSLPATTERN_E_REACTOSSYNC_GCC_DLL_WIN32_MSXML3_XSLPATTERN_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 191 "xslpattern.tab.c" /* yacc.c:358  */
+#line 194 "xslpattern.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -241,30 +247,11 @@ typedef short int yytype_int16;
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE
-# if (defined __GNUC__                                               \
-      && (2 < __GNUC__ || (__GNUC__ == 2 && 96 <= __GNUC_MINOR__)))  \
-     || defined __SUNPRO_C && 0x5110 <= __SUNPRO_C
-#  define YY_ATTRIBUTE(Spec) __attribute__(Spec)
-# else
-#  define YY_ATTRIBUTE(Spec) /* empty */
-# endif
-#endif
-
-#ifndef YY_ATTRIBUTE_PURE
-# define YY_ATTRIBUTE_PURE   YY_ATTRIBUTE ((__pure__))
-#endif
-
-#ifndef YY_ATTRIBUTE_UNUSED
-# define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
-#endif
-
-#if !defined _Noreturn \
-     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
-# if defined _MSC_VER && 1200 <= _MSC_VER
-#  define _Noreturn __declspec (noreturn)
-# else
-#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
+#ifndef __attribute__
+/* This feature is available in gcc versions 2.5 and later.  */
+# if (! defined __GNUC__ || __GNUC__ < 2 \
+      || (__GNUC__ == 2 && __GNUC_MINOR__ < 5))
+#  define __attribute__(Spec) /* empty */
 # endif
 #endif
 
@@ -518,7 +505,7 @@ static const char *const yytname[] =
   "PrimaryExpr", "FunctionCall", "Arguments", "Argument", "UnionExpr",
   "PathExpr", "FilterExpr", "OrExpr", "BoolOrExpr", "AndExpr",
   "BoolAndExpr", "EqualityExpr", "BoolEqualityExpr", "RelationalExpr",
-  "BoolRelationalExpr", "UnaryExpr", "BoolUnaryExpr", "AllExpr", YY_NULLPTR
+  "BoolRelationalExpr", "UnaryExpr", "BoolUnaryExpr", "AllExpr", YY_NULL
 };
 #endif
 
@@ -991,11 +978,11 @@ static int
 yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yytype_int16 *yyssp, int yytoken)
 {
-  YYSIZE_T yysize0 = yytnamerr (YY_NULLPTR, yytname[yytoken]);
+  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
   YYSIZE_T yysize = yysize0;
   enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
   /* Internationalized format string. */
-  const char *yyformat = YY_NULLPTR;
+  const char *yyformat = YY_NULL;
   /* Arguments of yyformat. */
   char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
   /* Number of reported tokens (one for the "unexpected", one per
@@ -1052,7 +1039,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                   }
                 yyarg[yycount++] = yytname[yyx];
                 {
-                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
+                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
                   if (! (yysize <= yysize1
                          && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
                     return 2;
@@ -1394,7 +1381,7 @@ yyreduce:
     {
                                 p->out = (yyvsp[0]);
                             }
-#line 1401 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1385 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
@@ -1406,7 +1393,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1413 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1397 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
@@ -1415,7 +1402,7 @@ yyreduce:
                                 TRACE("Got UnprefixedName: \"%s\"\n", (yyvsp[0]));
                                 (yyval)=(yyvsp[0]);
                             }
-#line 1422 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1406 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
@@ -1426,7 +1413,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1433 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1417 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
@@ -1435,7 +1422,7 @@ yyreduce:
                                 TRACE("Got AbsoluteLocationPath: \"/\"\n");
                                 (yyval)=xmlStrdup(U("/"));
                             }
-#line 1442 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1426 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
@@ -1447,7 +1434,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1454 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1438 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
@@ -1460,7 +1447,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1467 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1451 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
@@ -1471,7 +1458,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1478 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1462 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
@@ -1482,7 +1469,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1489 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1473 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
@@ -1492,7 +1479,7 @@ yyreduce:
                                 (yyval)=(yyvsp[-1]);
                                 (yyval)=xmlStrcat((yyval),U("::"));
                             }
-#line 1499 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1483 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
@@ -1503,7 +1490,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1510 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1494 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
@@ -1512,7 +1499,7 @@ yyreduce:
                                 TRACE("Got All attributes pattern: \"@*\"\n");
                                 (yyval)=xmlStrdup(U("@*"));
                             }
-#line 1519 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1503 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
@@ -1521,7 +1508,7 @@ yyreduce:
                                 TRACE("Got NameTest: \"*\"\n");
                                 (yyval)=xmlStrdup(U("*"));
                             }
-#line 1528 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1512 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
@@ -1531,7 +1518,7 @@ yyreduce:
                                 (yyval)=(yyvsp[-2]);
                                 (yyval)=xmlStrcat((yyval),U(":*"));
                             }
-#line 1538 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1522 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
@@ -1554,7 +1541,7 @@ yyreduce:
                                 if (!registeredNsURI)
                                     (yyval)=xmlStrcat((yyval),NameTest_mod_post);
                             }
-#line 1561 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1545 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
@@ -1565,7 +1552,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),NameTest_mod_post);
                             }
-#line 1572 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1556 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
@@ -1575,7 +1562,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1582 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1566 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
@@ -1587,7 +1574,7 @@ yyreduce:
                                 xmlFree((yyvsp[-1]));
                                 (yyval)=xmlStrcat((yyval),U("]"));
                             }
-#line 1594 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1578 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
@@ -1597,7 +1584,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1604 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1588 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
@@ -1608,7 +1595,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1615 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1599 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
@@ -1620,7 +1607,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1627 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1611 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
@@ -1629,7 +1616,7 @@ yyreduce:
                                 TRACE("Got AbbreviatedStep: \"..\"\n");
                                 (yyval)=xmlStrdup(U(".."));
                             }
-#line 1636 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1620 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
@@ -1638,7 +1625,7 @@ yyreduce:
                                 TRACE("Got AbbreviatedStep: \".\"\n");
                                 (yyval)=xmlStrdup(U("."));
                             }
-#line 1645 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1629 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
@@ -1650,7 +1637,7 @@ yyreduce:
                                 xmlFree((yyvsp[-1]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 1657 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1641 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
@@ -1662,7 +1649,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1669 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1653 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
@@ -1725,7 +1712,7 @@ yyreduce:
                                     (yyval)=xmlStrcat((yyval),U(")"));
                                 }
                             }
-#line 1732 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1716 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
@@ -1759,7 +1746,7 @@ yyreduce:
                                     (yyval)=xmlStrcat((yyval),U("()"));
                                 }
                             }
-#line 1766 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1750 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
@@ -1770,7 +1757,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1777 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1761 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
@@ -1782,7 +1769,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1789 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1773 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
@@ -1794,7 +1781,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1801 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1785 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
@@ -1806,7 +1793,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1813 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1797 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
@@ -1817,7 +1804,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1824 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1808 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
@@ -1829,7 +1816,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1836 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1820 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
@@ -1841,7 +1828,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1848 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1832 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
@@ -1853,7 +1840,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1860 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1844 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
@@ -1868,7 +1855,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 1875 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1859 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
@@ -1880,7 +1867,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1887 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1871 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
@@ -1895,7 +1882,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 1902 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1886 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
@@ -1907,7 +1894,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1914 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1898 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
@@ -1922,7 +1909,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 1929 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1913 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
@@ -1934,7 +1921,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1941 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1925 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
@@ -1949,7 +1936,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 1956 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1940 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
@@ -1961,7 +1948,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1968 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1952 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
@@ -1976,7 +1963,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 1983 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1967 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
@@ -1988,7 +1975,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 1995 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1979 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
@@ -2003,7 +1990,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2010 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 1994 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
@@ -2015,7 +2002,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2022 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2006 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
@@ -2027,7 +2014,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2034 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2018 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
@@ -2039,7 +2026,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2046 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2030 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
@@ -2048,7 +2035,7 @@ yyreduce:
                                 FIXME("Unrecognized $all$ expression - ignoring\n");
                                 (yyval)=xmlStrdup(U(""));
                             }
-#line 2055 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2039 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
@@ -2059,7 +2046,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 2066 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2050 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 94:
@@ -2070,7 +2057,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 2077 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2061 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 95:
@@ -2081,7 +2068,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 2088 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2072 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 96:
@@ -2092,7 +2079,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 2099 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2083 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 97:
@@ -2103,7 +2090,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 2110 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2094 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 98:
@@ -2114,7 +2101,7 @@ yyreduce:
                                 (yyval)=xmlStrcat((yyval),(yyvsp[0]));
                                 xmlFree((yyvsp[0]));
                             }
-#line 2121 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2105 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 99:
@@ -2128,7 +2115,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2135 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2119 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 100:
@@ -2142,7 +2129,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2149 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2133 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
@@ -2156,7 +2143,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2163 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2147 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 102:
@@ -2170,7 +2157,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2177 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2161 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
@@ -2184,7 +2171,7 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2191 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2175 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
@@ -2198,11 +2185,11 @@ yyreduce:
                                 xmlFree((yyvsp[0]));
                                 (yyval)=xmlStrcat((yyval),U(")"));
                             }
-#line 2205 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2189 "xslpattern.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2209 "xslpattern.tab.c" /* yacc.c:1646  */
+#line 2193 "xslpattern.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

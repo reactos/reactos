@@ -19,14 +19,38 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define NONAMELESSUNION
 
-#include <wingdi.h>
-#include <mshtml.h>
-#include <objsafe.h>
-#include <docobj.h>
+#include "config.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/xmlerror.h>
+# include <libxml/encoding.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "wininet.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "mshtml.h"
+#include "msxml6.h"
+#include "objsafe.h"
+#include "docobj.h"
+#include "shlwapi.h"
+
+#include "msxml_private.h"
+
+#include "wine/debug.h"
 
 #ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 static const WCHAR colspaceW[] = {':',' ',0};
 static const WCHAR crlfW[] = {'\r','\n',0};
@@ -492,7 +516,7 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate *ifac
     if (This->request->use_utf8_content)
     {
         lstrcpyW(ptr, content_type_utf8W);
-        ptr += sizeof(content_type_utf8W)/sizeof(WCHAR)-1;
+        ptr += ARRAY_SIZE(content_type_utf8W) - 1;
     }
 
     if (base_uri)
@@ -511,13 +535,13 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate *ifac
         ptr += SysStringLen(entry->header);
 
         lstrcpyW(ptr, colspaceW);
-        ptr += sizeof(colspaceW)/sizeof(WCHAR)-1;
+        ptr += ARRAY_SIZE(colspaceW) - 1;
 
         lstrcpyW(ptr, entry->value);
         ptr += SysStringLen(entry->value);
 
         lstrcpyW(ptr, crlfW);
-        ptr += sizeof(crlfW)/sizeof(WCHAR)-1;
+        ptr += ARRAY_SIZE(crlfW) - 1;
     }
 
     *add_headers = buff;
@@ -1006,8 +1030,8 @@ static HRESULT httprequest_setRequestHeader(httprequest *This, BSTR header, BSTR
     entry->value  = SysAllocString(value);
 
     /* header length including null terminator */
-    This->reqheader_size += SysStringLen(entry->header) + sizeof(colspaceW)/sizeof(WCHAR) +
-                            SysStringLen(entry->value)  + sizeof(crlfW)/sizeof(WCHAR) - 1;
+    This->reqheader_size += SysStringLen(entry->header) + ARRAY_SIZE(colspaceW) +
+        SysStringLen(entry->value) + ARRAY_SIZE(crlfW) - 1;
 
     list_add_head(&This->reqheaders, &entry->entry);
 

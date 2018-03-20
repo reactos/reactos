@@ -1,3 +1,4 @@
+
 #ifndef _MSXML3_PCH_
 #define _MSXML3_PCH_
 
@@ -26,6 +27,4 @@
 
 #include "msxml_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(msxml);
-
-#endif /* _MSXML3_PCH_ */
+#endif /* !_MSXML3_PCH_ */

@@ -18,9 +18,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include "config.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/xmlerror.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "msxml6.h"
+#include "wininet.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "ocidl.h"
+
+#include "wine/debug.h"
+
+#include "msxml_private.h"
 
 #ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 /* FIXME: IXMLDocument needs to implement
  *   - IXMLError
@@ -350,9 +374,9 @@ static HRESULT WINAPI xmldoc_put_URL(IXMLDocument *iface, BSTR p)
     if (!PathIsURLW(p))
     {
         WCHAR fullpath[MAX_PATH];
-        DWORD needed = sizeof(url) / sizeof(WCHAR);
+        DWORD needed = ARRAY_SIZE(url);
 
-        if (!PathSearchAndQualifyW(p, fullpath, sizeof(fullpath) / sizeof(WCHAR)))
+        if (!PathSearchAndQualifyW(p, fullpath, ARRAY_SIZE(fullpath)))
         {
             ERR("can't find path\n");
             return E_FAIL;

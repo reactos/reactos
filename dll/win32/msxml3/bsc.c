@@ -16,7 +16,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "config.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/xmlerror.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "msxml6.h"
+#include "wininet.h"
+#include "urlmon.h"
+#include "winreg.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+#include "msxml_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 struct bsc_t {
     IBindStatusCallback IBindStatusCallback_iface;
@@ -217,24 +242,24 @@ static const struct IBindStatusCallbackVtbl bsc_vtbl =
     bsc_OnObjectAvailable
 };
 
-HRESULT create_moniker_from_url(LPCWSTR url, IMoniker **mon)
+HRESULT create_uri(const WCHAR *url, IUri **uri)
 {
     WCHAR fileUrl[INTERNET_MAX_URL_LENGTH];
 
     TRACE("%s\n", debugstr_w(url));
 
-    if(!PathIsURLW(url))
+    if (!PathIsURLW(url))
     {
         WCHAR fullpath[MAX_PATH];
-        DWORD needed = sizeof(fileUrl)/sizeof(WCHAR);
+        DWORD needed = ARRAY_SIZE(fileUrl);
 
-        if(!PathSearchAndQualifyW(url, fullpath, sizeof(fullpath)/sizeof(WCHAR)))
+        if (!PathSearchAndQualifyW(url, fullpath, ARRAY_SIZE(fullpath)))
         {
             WARN("can't find path\n");
             return E_FAIL;
         }
 
-        if(FAILED(UrlCreateFromPathW(fullpath, fileUrl, &needed, 0)))
+        if (FAILED(UrlCreateFromPathW(fullpath, fileUrl, &needed, 0)))
         {
             ERR("can't create url from path\n");
             return E_FAIL;
@@ -242,7 +267,22 @@ HRESULT create_moniker_from_url(LPCWSTR url, IMoniker **mon)
         url = fileUrl;
     }
 
-    return CreateURLMonikerEx(NULL, url, mon, 0);
+    return CreateUri(url, Uri_CREATE_ALLOW_RELATIVE | Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME, 0, uri);
+}
+
+HRESULT create_moniker_from_url(LPCWSTR url, IMoniker **mon)
+{
+    HRESULT hr;
+    IUri *uri;
+
+    TRACE("%s\n", debugstr_w(url));
+
+    if (FAILED(hr = create_uri(url, &uri)))
+        return hr;
+
+    hr = CreateURLMonikerEx2(NULL, uri, mon, 0);
+    IUri_Release(uri);
+    return hr;
 }
 
 HRESULT bind_url(IMoniker *mon, HRESULT (*onDataAvailable)(void*,char*,DWORD),

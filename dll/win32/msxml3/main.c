@@ -19,11 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <wine/port.h>
+#define COBJMACROS
 
+#include <stdarg.h>
 #ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/xmlerror.h>
 # ifdef SONAME_LIBXSLT
 #  ifdef HAVE_LIBXSLT_PATTERN_H
 #   include <libxslt/pattern.h>
@@ -35,22 +39,37 @@
 #  include <libxslt/xsltutils.h>
 #  include <libxslt/variables.h>
 #  include <libxslt/xsltInternals.h>
+#  include <libxslt/documents.h>
+#  include <libxslt/extensions.h>
+#  include <libxslt/extra.h>
 # endif
 #endif
 
-#include <rpcproxy.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "rpcproxy.h"
+#include "msxml.h"
+#include "msxml6.h"
 
-#include <wine/library.h>
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "wine/library.h"
+
+#include "msxml_private.h"
 
 HINSTANCE MSXML_hInstance = NULL;
 
 #ifdef HAVE_LIBXML2
 
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+
 void wineXmlCallbackLog(char const* caller, xmlErrorLevel lvl, char const* msg, va_list ap)
 {
     enum __wine_debug_class dbcl;
     char buff[200];
-    const int max_size = sizeof(buff) / sizeof(buff[0]);
+    const int max_size = ARRAY_SIZE(buff);
     int len;
 
     switch (lvl)
@@ -155,11 +174,14 @@ DECL_FUNCPTR(xsltApplyStylesheetUser);
 DECL_FUNCPTR(xsltCleanupGlobals);
 DECL_FUNCPTR(xsltFreeStylesheet);
 DECL_FUNCPTR(xsltFreeTransformContext);
+DECL_FUNCPTR(xsltFunctionNodeSet);
 DECL_FUNCPTR(xsltNewTransformContext);
 DECL_FUNCPTR(xsltNextImport);
 DECL_FUNCPTR(xsltParseStylesheetDoc);
 DECL_FUNCPTR(xsltQuoteUserParams);
+DECL_FUNCPTR(xsltRegisterExtModuleFunction);
 DECL_FUNCPTR(xsltSaveResultTo);
+DECL_FUNCPTR(xsltSetLoaderFunc);
 # undef DECL_FUNCPTR
 #endif
 
@@ -181,15 +203,25 @@ static void init_libxslt(void)
     LOAD_FUNCPTR(xsltCleanupGlobals, 1);
     LOAD_FUNCPTR(xsltFreeStylesheet, 1);
     LOAD_FUNCPTR(xsltFreeTransformContext, 1);
+    LOAD_FUNCPTR(xsltFunctionNodeSet, 1);
     LOAD_FUNCPTR(xsltNewTransformContext, 1);
     LOAD_FUNCPTR(xsltNextImport, 1);
     LOAD_FUNCPTR(xsltParseStylesheetDoc, 1);
     LOAD_FUNCPTR(xsltQuoteUserParams, 1);
+    LOAD_FUNCPTR(xsltRegisterExtModuleFunction, 1);
     LOAD_FUNCPTR(xsltSaveResultTo, 1);
+    LOAD_FUNCPTR(xsltSetLoaderFunc, 1);
 #undef LOAD_FUNCPTR
 
     if (pxsltInit)
         pxsltInit();
+
+    pxsltSetLoaderFunc(xslt_doc_default_loader);
+    pxsltRegisterExtModuleFunction(
+        (const xmlChar *)"node-set",
+        (const xmlChar *)"urn:schemas-microsoft-com:xslt",
+        pxsltFunctionNodeSet);
+
     return;
 
  sym_not_found:

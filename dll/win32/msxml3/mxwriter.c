@@ -19,7 +19,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#include "config.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+
+#include "msxml6.h"
+
+#include "wine/debug.h"
+#include "wine/list.h"
+
+#include "msxml_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 static const WCHAR emptyW[] = {0};
 static const WCHAR spaceW[] = {' '};
@@ -206,7 +225,7 @@ static xml_encoding parse_encoding_name(const WCHAR *encoding)
     int min, max, n, c;
 
     min = 0;
-    max = sizeof(xml_encoding_map)/sizeof(struct xml_encoding_data) - 1;
+    max = ARRAY_SIZE(xml_encoding_map) - 1;
 
     while (min <= max)
     {
@@ -496,21 +515,21 @@ static WCHAR *get_escaped_string(const WCHAR *str, escape_mode mode, int *len)
         {
         case '<':
             memcpy(ptr, ltW, sizeof(ltW));
-            ptr += sizeof(ltW)/sizeof(WCHAR);
+            ptr += ARRAY_SIZE(ltW);
             break;
         case '&':
             memcpy(ptr, ampW, sizeof(ampW));
-            ptr += sizeof(ampW)/sizeof(WCHAR);
+            ptr += ARRAY_SIZE(ampW);
             break;
         case '>':
             memcpy(ptr, gtW, sizeof(gtW));
-            ptr += sizeof(gtW)/sizeof(WCHAR);
+            ptr += ARRAY_SIZE(gtW);
             break;
         case '"':
             if (mode == EscapeValue)
             {
                 memcpy(ptr, equotW, sizeof(equotW));
-                ptr += sizeof(equotW)/sizeof(WCHAR);
+                ptr += ARRAY_SIZE(equotW);
                 break;
             }
             /* fallthrough for text mode */
@@ -538,26 +557,26 @@ static void write_prolog_buffer(mxwriter *writer)
     static const WCHAR noW[] = {'n','o','\"','?','>'};
 
     /* version */
-    write_output_buffer(writer, versionW, sizeof(versionW)/sizeof(WCHAR));
+    write_output_buffer(writer, versionW, ARRAY_SIZE(versionW));
     write_output_buffer_quoted(writer, writer->version, -1);
 
     /* encoding */
-    write_output_buffer(writer, encodingW, sizeof(encodingW)/sizeof(WCHAR));
+    write_output_buffer(writer, encodingW, ARRAY_SIZE(encodingW));
 
     if (writer->dest)
         write_output_buffer(writer, writer->encoding, -1);
     else
-        write_output_buffer(writer, utf16W, sizeof(utf16W)/sizeof(WCHAR) - 1);
+        write_output_buffer(writer, utf16W, ARRAY_SIZE(utf16W) - 1);
     write_output_buffer(writer, quotW, 1);
 
     /* standalone */
-    write_output_buffer(writer, standaloneW, sizeof(standaloneW)/sizeof(WCHAR));
+    write_output_buffer(writer, standaloneW, ARRAY_SIZE(standaloneW));
     if (writer->props[MXWriter_Standalone] == VARIANT_TRUE)
-        write_output_buffer(writer, yesW, sizeof(yesW)/sizeof(WCHAR));
+        write_output_buffer(writer, yesW, ARRAY_SIZE(yesW));
     else
-        write_output_buffer(writer, noW, sizeof(noW)/sizeof(WCHAR));
+        write_output_buffer(writer, noW, ARRAY_SIZE(noW));
 
-    write_output_buffer(writer, crlfW, sizeof(crlfW)/sizeof(WCHAR));
+    write_output_buffer(writer, crlfW, ARRAY_SIZE(crlfW));
     writer->newline = TRUE;
 }
 
@@ -609,7 +628,7 @@ static void write_node_indent(mxwriter *writer)
     /* This is to workaround PI output logic that always puts newline chars,
        document prolog PI does that too. */
     if (!writer->newline)
-        write_output_buffer(writer, crlfW, sizeof(crlfW)/sizeof(WCHAR));
+        write_output_buffer(writer, crlfW, ARRAY_SIZE(crlfW));
     while (indent--)
         write_output_buffer(writer, tabW, 1);
 
@@ -1426,7 +1445,7 @@ static HRESULT WINAPI SAXContentHandler_processingInstruction(
     if (!target) return E_INVALIDARG;
 
     write_node_indent(This);
-    write_output_buffer(This, openpiW, sizeof(openpiW)/sizeof(WCHAR));
+    write_output_buffer(This, openpiW, ARRAY_SIZE(openpiW));
 
     if (*target)
         write_output_buffer(This, target, ntarget);
@@ -1437,7 +1456,7 @@ static HRESULT WINAPI SAXContentHandler_processingInstruction(
         write_output_buffer(This, data, ndata);
     }
 
-    write_output_buffer(This, closepiW, sizeof(closepiW)/sizeof(WCHAR));
+    write_output_buffer(This, closepiW, ARRAY_SIZE(closepiW));
     This->newline = TRUE;
 
     return S_OK;
@@ -1505,7 +1524,7 @@ static HRESULT WINAPI SAXLexicalHandler_startDTD(ISAXLexicalHandler *iface,
 
     if (!name) return E_INVALIDARG;
 
-    write_output_buffer(This, doctypeW, sizeof(doctypeW)/sizeof(WCHAR));
+    write_output_buffer(This, doctypeW, ARRAY_SIZE(doctypeW));
 
     if (*name)
     {
@@ -1515,7 +1534,7 @@ static HRESULT WINAPI SAXLexicalHandler_startDTD(ISAXLexicalHandler *iface,
 
     if (publicId)
     {
-        write_output_buffer(This, publicW, sizeof(publicW)/sizeof(WCHAR));
+        write_output_buffer(This, publicW, ARRAY_SIZE(publicW));
         write_output_buffer_quoted(This, publicId, publicId_len);
 
         if (!systemId) return E_INVALIDARG;
@@ -1530,13 +1549,13 @@ static HRESULT WINAPI SAXLexicalHandler_startDTD(ISAXLexicalHandler *iface,
     }
     else if (systemId)
     {
-        write_output_buffer(This, systemW, sizeof(systemW)/sizeof(WCHAR));
+        write_output_buffer(This, systemW, ARRAY_SIZE(systemW));
         write_output_buffer_quoted(This, systemId, systemId_len);
         if (*systemId)
             write_output_buffer(This, spaceW, 1);
     }
 
-    write_output_buffer(This, openintW, sizeof(openintW)/sizeof(WCHAR));
+    write_output_buffer(This, openintW, ARRAY_SIZE(openintW));
 
     return S_OK;
 }
@@ -1548,7 +1567,7 @@ static HRESULT WINAPI SAXLexicalHandler_endDTD(ISAXLexicalHandler *iface)
 
     TRACE("(%p)\n", This);
 
-    write_output_buffer(This, closedtdW, sizeof(closedtdW)/sizeof(WCHAR));
+    write_output_buffer(This, closedtdW, ARRAY_SIZE(closedtdW));
 
     return S_OK;
 }
@@ -1575,7 +1594,7 @@ static HRESULT WINAPI SAXLexicalHandler_startCDATA(ISAXLexicalHandler *iface)
     TRACE("(%p)\n", This);
 
     write_node_indent(This);
-    write_output_buffer(This, scdataW, sizeof(scdataW)/sizeof(WCHAR));
+    write_output_buffer(This, scdataW, ARRAY_SIZE(scdataW));
     This->cdata = TRUE;
 
     return S_OK;
@@ -1588,7 +1607,7 @@ static HRESULT WINAPI SAXLexicalHandler_endCDATA(ISAXLexicalHandler *iface)
 
     TRACE("(%p)\n", This);
 
-    write_output_buffer(This, ecdataW, sizeof(ecdataW)/sizeof(WCHAR));
+    write_output_buffer(This, ecdataW, ARRAY_SIZE(ecdataW));
     This->cdata = FALSE;
 
     return S_OK;
@@ -1607,10 +1626,10 @@ static HRESULT WINAPI SAXLexicalHandler_comment(ISAXLexicalHandler *iface, const
     close_element_starttag(This);
     write_node_indent(This);
 
-    write_output_buffer(This, copenW, sizeof(copenW)/sizeof(WCHAR));
+    write_output_buffer(This, copenW, ARRAY_SIZE(copenW));
     if (nchars)
         write_output_buffer(This, chars, nchars);
-    write_output_buffer(This, ccloseW, sizeof(ccloseW)/sizeof(WCHAR));
+    write_output_buffer(This, ccloseW, ARRAY_SIZE(ccloseW));
 
     return S_OK;
 }
@@ -1660,14 +1679,14 @@ static HRESULT WINAPI SAXDeclHandler_elementDecl(ISAXDeclHandler *iface,
 
     if (!name || !model) return E_INVALIDARG;
 
-    write_output_buffer(This, elementW, sizeof(elementW)/sizeof(WCHAR));
+    write_output_buffer(This, elementW, ARRAY_SIZE(elementW));
     if (n_name) {
         write_output_buffer(This, name, n_name);
-        write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
     }
     if (n_model)
         write_output_buffer(This, model, n_model);
-    write_output_buffer(This, closetagW, sizeof(closetagW)/sizeof(WCHAR));
+    write_output_buffer(This, closetagW, ARRAY_SIZE(closetagW));
 
     return S_OK;
 }
@@ -1685,31 +1704,31 @@ static HRESULT WINAPI SAXDeclHandler_attributeDecl(ISAXDeclHandler *iface,
         debugstr_wn(attr, n_attr), n_attr, debugstr_wn(type, n_type), n_type, debugstr_wn(Default, n_default), n_default,
         debugstr_wn(value, n_value), n_value);
 
-    write_output_buffer(This, attlistW, sizeof(attlistW)/sizeof(WCHAR));
+    write_output_buffer(This, attlistW, ARRAY_SIZE(attlistW));
     if (n_element) {
         write_output_buffer(This, element, n_element);
-        write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
     }
 
     if (n_attr) {
         write_output_buffer(This, attr, n_attr);
-        write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
     }
 
     if (n_type) {
         write_output_buffer(This, type, n_type);
-        write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
     }
 
     if (n_default) {
         write_output_buffer(This, Default, n_default);
-        write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
     }
 
     if (n_value)
         write_output_buffer_quoted(This, value, n_value);
 
-    write_output_buffer(This, closetagW, sizeof(closetagW)/sizeof(WCHAR));
+    write_output_buffer(This, closetagW, ARRAY_SIZE(closetagW));
 
     return S_OK;
 }
@@ -1724,16 +1743,16 @@ static HRESULT WINAPI SAXDeclHandler_internalEntityDecl(ISAXDeclHandler *iface,
 
     if (!name || !value) return E_INVALIDARG;
 
-    write_output_buffer(This, entityW, sizeof(entityW)/sizeof(WCHAR));
+    write_output_buffer(This, entityW, ARRAY_SIZE(entityW));
     if (n_name) {
         write_output_buffer(This, name, n_name);
-        write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
     }
 
     if (n_value)
         write_output_buffer_quoted(This, value, n_value);
 
-    write_output_buffer(This, closetagW, sizeof(closetagW)/sizeof(WCHAR));
+    write_output_buffer(This, closetagW, ARRAY_SIZE(closetagW));
 
     return S_OK;
 }
@@ -1749,26 +1768,26 @@ static HRESULT WINAPI SAXDeclHandler_externalEntityDecl(ISAXDeclHandler *iface,
 
     if (!name || !systemId) return E_INVALIDARG;
 
-    write_output_buffer(This, entityW, sizeof(entityW)/sizeof(WCHAR));
+    write_output_buffer(This, entityW, ARRAY_SIZE(entityW));
     if (n_name) {
         write_output_buffer(This, name, n_name);
-        write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
     }
 
     if (publicId)
     {
-        write_output_buffer(This, publicW, sizeof(publicW)/sizeof(WCHAR));
+        write_output_buffer(This, publicW, ARRAY_SIZE(publicW));
         write_output_buffer_quoted(This, publicId, n_publicId);
-        write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
         write_output_buffer_quoted(This, systemId, n_systemId);
     }
     else
     {
-        write_output_buffer(This, systemW, sizeof(systemW)/sizeof(WCHAR));
+        write_output_buffer(This, systemW, ARRAY_SIZE(systemW));
         write_output_buffer_quoted(This, systemId, n_systemId);
     }
 
-    write_output_buffer(This, closetagW, sizeof(closetagW)/sizeof(WCHAR));
+    write_output_buffer(This, closetagW, ARRAY_SIZE(closetagW));
 
     return S_OK;
 }
@@ -2280,30 +2299,30 @@ static HRESULT WINAPI SAXDTDHandler_notationDecl(ISAXDTDHandler *iface,
     if (!name || !n_name)
         return E_INVALIDARG;
 
-    write_output_buffer(This, notationW, sizeof(notationW)/sizeof(WCHAR));
+    write_output_buffer(This, notationW, ARRAY_SIZE(notationW));
     write_output_buffer(This, name, n_name);
 
     if (!publicid && !systemid)
         return E_INVALIDARG;
 
-    write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+    write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
     if (publicid)
     {
-        write_output_buffer(This, publicW, sizeof(publicW)/sizeof(WCHAR));
+        write_output_buffer(This, publicW, ARRAY_SIZE(publicW));
         write_output_buffer_quoted(This, publicid, n_publicid);
         if (systemid)
         {
-            write_output_buffer(This, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+            write_output_buffer(This, spaceW, ARRAY_SIZE(spaceW));
             write_output_buffer_quoted(This, systemid, n_systemid);
         }
     }
     else
     {
-        write_output_buffer(This, systemW, sizeof(systemW)/sizeof(WCHAR));
+        write_output_buffer(This, systemW, ARRAY_SIZE(systemW));
         write_output_buffer_quoted(This, systemid, n_systemid);
     }
 
-    write_output_buffer(This, closetagW, sizeof(closetagW)/sizeof(WCHAR));
+    write_output_buffer(This, closetagW, ARRAY_SIZE(closetagW));
 
     return S_OK;
 }

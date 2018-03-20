@@ -19,21 +19,41 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
 
+#include "config.h"
+
+#include <stdarg.h>
 #include <assert.h>
-
 #ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/xmlerror.h>
 # include <libxml/xpathInternals.h>
 # include <libxml/xmlsave.h>
 # include <libxml/SAX2.h>
 # include <libxml/parserInternals.h>
 #endif
 
-#include <olectl.h>
-#include <objsafe.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "ole2.h"
+#include "olectl.h"
+#include "msxml6.h"
+#include "wininet.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "ocidl.h"
+#include "objsafe.h"
+
+#include "wine/debug.h"
+
+#include "msxml_private.h"
 
 #ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 /* not defined in older versions */
 #define XML_SAVE_FORMAT     1
@@ -66,7 +86,7 @@ typedef struct {
     xmlChar const* selectNsStr;
     LONG selectNsStr_len;
     BOOL XPath;
-    WCHAR *url;
+    IUri *uri;
 } domdoc_properties;
 
 typedef struct ConnectionPoint ConnectionPoint;
@@ -278,8 +298,8 @@ static domdoc_properties *create_properties(MSXML_VERSION version)
     properties->version = version;
     properties->XPath = (version == MSXML4 || version == MSXML6);
 
-    /* document url */
-    properties->url = NULL;
+    /* document uri */
+    properties->uri = NULL;
 
     return properties;
 }
@@ -315,16 +335,9 @@ static domdoc_properties* copy_properties(domdoc_properties const* properties)
             list_add_tail(&pcopy->selectNsList, &new_ns->entry);
         }
 
-        if (properties->url)
-        {
-            int len = strlenW(properties->url);
-
-            pcopy->url = CoTaskMemAlloc((len+1)*sizeof(WCHAR));
-            memcpy(pcopy->url, properties->url, len*sizeof(WCHAR));
-            pcopy->url[len] = 0;
-        }
-        else
-            pcopy->url = NULL;
+        pcopy->uri = properties->uri;
+        if (pcopy->uri)
+            IUri_AddRef(pcopy->uri);
     }
 
     return pcopy;
@@ -338,7 +351,8 @@ static void free_properties(domdoc_properties* properties)
             IXMLDOMSchemaCollection2_Release(properties->schemaCache);
         clear_selectNsList(&properties->selectNsList);
         heap_free((xmlChar*)properties->selectNsStr);
-        CoTaskMemFree(properties->url);
+        if (properties->uri)
+            IUri_Release(properties->uri);
         heap_free(properties);
     }
 }
@@ -2273,16 +2287,20 @@ static HRESULT WINAPI domdoc_load(
     if ( filename )
     {
         IMoniker *mon;
+        IUri *uri;
 
-        CoTaskMemFree(This->properties->url);
-        This->properties->url = NULL;
+        if (This->properties->uri)
+        {
+            IUri_Release(This->properties->uri);
+            This->properties->uri = NULL;
+        }
 
-        hr = create_moniker_from_url( filename, &mon);
+        hr = create_uri(filename, &uri);
+        if (SUCCEEDED(hr))
+            hr = CreateURLMonikerEx2(NULL, uri, &mon, 0);
         if ( SUCCEEDED(hr) )
         {
             hr = domdoc_load_moniker( This, mon );
-            if (hr == S_OK)
-                IMoniker_GetDisplayName(mon, NULL, NULL, &This->properties->url);
             IMoniker_Release(mon);
         }
 
@@ -2290,6 +2308,8 @@ static HRESULT WINAPI domdoc_load(
             This->error = E_FAIL;
         else
         {
+            get_doc(This)->name = (char *)xmlchar_from_wcharn(filename, -1, TRUE);
+            This->properties->uri = uri;
             hr = This->error = S_OK;
             *isSuccessful = VARIANT_TRUE;
         }
@@ -2354,16 +2374,10 @@ static HRESULT WINAPI domdoc_get_url(
     if (!url)
         return E_INVALIDARG;
 
-    if (This->properties->url)
-    {
-        *url = SysAllocString(This->properties->url);
-        if (!*url)
-            return E_OUTOFMEMORY;
-
-        return S_OK;
-    }
-    else
+    if (!This->properties->uri)
         return return_null_bstr(url);
+
+    return IUri_GetPropertyBSTR(This->properties->uri, Uri_PROPERTY_DISPLAY_URI, url, 0);
 }
 
 
