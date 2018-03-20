@@ -20,20 +20,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-
 #include <assert.h>
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "wine/heap.h"
 
-#include <odbcinst.h>
+#include "odbcinst.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(odbc);
 
@@ -83,16 +83,6 @@ static void push_error(int code, LPCWSTR msg)
 static void clear_errors(void)
 {
     num_errors = 0;
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline WCHAR *heap_strdupAtoW(const char *str)
