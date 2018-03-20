@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winuser.h"
-//#include "winnls.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winnls.h"
 
 #include "olestd.h"
 
 #define WINE_FILENAME_STR "ole32.dll"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"
 
 /*
  * Everything that does not depend on language,

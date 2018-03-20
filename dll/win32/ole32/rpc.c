@@ -20,9 +20,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <winsvc.h>
+#include <stdarg.h>
+#include <string.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winsvc.h"
+#include "objbase.h"
+#include "ole2.h"
+#include "rpc.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "servprov.h"
+#include "wine/unicode.h"
+
+#include "compobj_private.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
