@@ -23,9 +23,9 @@ LIST_ENTRY CmpFreeDelayItemsListHead;
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 CmpInitCmPrivateAlloc(VOID)
 {
     /* Make sure we didn't already do this */
@@ -38,9 +38,9 @@ CmpInitCmPrivateAlloc(VOID)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 CmpInitCmPrivateDelayAlloc(VOID)
 {
     /* Initialize the delay allocation list and lock */

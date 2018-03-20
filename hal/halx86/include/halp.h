@@ -9,6 +9,7 @@
 #else
 #define INIT_SECTION /* Done via alloc_text for MSC */
 #endif
+#define INIT_FUNCTION INIT_SECTION
 
 
 #ifdef CONFIG_SMP

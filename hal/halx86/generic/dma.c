@@ -133,7 +133,7 @@ static DMA_OPERATIONS HalpDmaOperations = {
 /* FUNCTIONS *****************************************************************/
 
 #ifndef _MINIHAL_
-INIT_SECTION
+INIT_FUNCTION
 VOID
 HalpInitDma(VOID)
 {

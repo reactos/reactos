@@ -154,7 +154,7 @@ HalpSetCmosData(IN ULONG BusNumber,
     return Length - Len;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpInitializeCmos(VOID)

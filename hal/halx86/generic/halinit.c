@@ -29,7 +29,7 @@ BOOLEAN HalpPciLockSettings;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -76,7 +76,7 @@ HalInitializeProcessor(
 /*
  * @implemented
  */
-INIT_SECTION
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalInitSystem(IN ULONG BootPhase,

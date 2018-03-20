@@ -9,6 +9,7 @@
 #else
 #define INIT_SECTION /* Done via alloc_text for MSC */
 #endif
+#define INIT_FUNCTION INIT_SECTION
 
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \

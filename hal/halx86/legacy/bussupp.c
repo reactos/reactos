@@ -160,7 +160,7 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
     return Bus;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterInternalBusHandlers(VOID)
@@ -235,7 +235,7 @@ HalpRegisterInternalBusHandlers(VOID)
 }
 
 #ifndef _MINIHAL_
-INIT_SECTION
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
@@ -283,7 +283,7 @@ HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
     return Status;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 PBUS_HANDLER
 NTAPI
 HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
@@ -368,7 +368,7 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
     return Bus;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
@@ -430,7 +430,7 @@ HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
 
 static BOOLEAN WarningsGiven[5];
 
-INIT_SECTION
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpGetChipHacks(IN USHORT VendorId,
@@ -494,7 +494,7 @@ HalpGetChipHacks(IN USHORT VendorId,
     return Status;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
@@ -575,7 +575,7 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
     return FALSE;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
@@ -628,7 +628,7 @@ HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
     return FALSE;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
@@ -642,7 +642,7 @@ HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
              (PciData->SubClass == PCI_SUBCLASS_BR_CARDBUS)));
 }
 
-INIT_SECTION
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpGetPciBridgeConfig(IN ULONG PciType,
@@ -695,7 +695,7 @@ HalpGetPciBridgeConfig(IN ULONG PciType,
     return FALSE;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpFixupPciSupportedRanges(IN ULONG BusCount)
@@ -758,7 +758,7 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
     }
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 ShowSize(ULONG x)
@@ -790,7 +790,7 @@ ShowSize(ULONG x)
  */
 #include "pci_classes.h"
 #include "pci_vendors.h"
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpDebugPciDumpBus(IN ULONG i,
@@ -943,7 +943,7 @@ HalpDebugPciDumpBus(IN ULONG i,
 }
 #endif
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpInitializePciBus(VOID)
@@ -1182,7 +1182,7 @@ HalpInitializePciBus(VOID)
 #endif
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpInitBusHandlers(VOID)
@@ -1191,7 +1191,7 @@ HalpInitBusHandlers(VOID)
     HalpRegisterInternalBusHandlers();
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterKdSupportFunctions(VOID)

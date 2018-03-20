@@ -608,7 +608,7 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
     return STATUS_SUCCESS;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
@@ -618,7 +618,7 @@ HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
@@ -627,7 +627,7 @@ HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterPciDebuggingDeviceInfo(VOID)
@@ -862,7 +862,7 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
     return Length;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
 HalpQueryPciRegistryInfo(VOID)
@@ -1095,7 +1095,7 @@ HalpQueryPciRegistryInfo(VOID)
 #endif
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpInitializePciStubs(VOID)

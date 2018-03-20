@@ -1804,9 +1804,9 @@ InitializePool(           //
 );                        //
 
 // FIXFIX: THIS ONE TOO
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 ExInitializePoolDescriptor(
     IN PPOOL_DESCRIPTOR PoolDescriptor,
     IN POOL_TYPE PoolType,
