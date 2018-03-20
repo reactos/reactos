@@ -847,6 +847,53 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
+NTSTATUS
+AfdQueryFsDeviceInfo(PDEVICE_OBJECT DeviceObject, PFILE_FS_DEVICE_INFORMATION Buffer, PULONG Length)
+{
+    if (*Length >= sizeof(FILE_FS_DEVICE_INFORMATION))
+    {
+        Buffer->Characteristics = 0;
+        Buffer->DeviceType = FILE_DEVICE_NAMED_PIPE;
+
+        *Length -= sizeof(FILE_FS_DEVICE_INFORMATION);
+
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        ASSERT(*Length >= sizeof(FILE_FS_DEVICE_INFORMATION));
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+}
+
+static NTSTATUS NTAPI
+AfdQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp)
+{
+    FS_INFORMATION_CLASS InfoClass;
+    PVOID Buffer;
+    ULONG Length;
+    NTSTATUS Status = STATUS_INVALID_INFO_CLASS;
+
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
+    Length = IrpSp->Parameters.QueryVolume.Length;
+    InfoClass = IrpSp->Parameters.QueryVolume.FsInformationClass;
+
+    switch (InfoClass)
+    {
+    case FileFsDeviceInformation:
+        Status = AfdQueryFsDeviceInfo(DeviceObject, Buffer, &Length);
+        break;
+    default:
+        break;
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = IrpSp->Parameters.QueryVolume.Length - Length;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+
+    return Status;
+}
+
 static DRIVER_DISPATCH AfdDispatch;
 static NTSTATUS NTAPI
 AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -887,6 +934,10 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* read data */
     case IRP_MJ_READ:
         return AfdConnectedSocketReadData( DeviceObject, Irp, IrpSp, TRUE );
+
+    /* query volume info */
+    case IRP_MJ_QUERY_VOLUME_INFORMATION:
+        return AfdQueryVolumeInformation(DeviceObject, Irp, IrpSp);
 
     case IRP_MJ_DEVICE_CONTROL:
     {
@@ -1265,6 +1316,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_WRITE] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_READ] = AfdDispatch;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = AfdDispatch;
     DriverObject->DriverUnload = AfdUnload;
 
     Status = IoCreateDevice(DriverObject,
