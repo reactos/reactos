@@ -13,7 +13,7 @@ list(APPEND SOURCE
     main.c
     propservice.c
     window.c
-    oleacc_private.h
+    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c)
 
 add_idl_headers(oleacc_idlheader oleacc_classes.idl)
@@ -39,5 +39,5 @@ add_dependencies(oleacc oleacc_idlheader stdole2)
 set_module_type(oleacc win32dll)
 target_link_libraries(oleacc uuid wine ${PSEH_LIB})
 add_importlibs(oleacc oleaut32 ole32 user32 rpcrt4 msvcrt kernel32 ntdll)
-add_pch(oleacc oleacc_private.h SOURCE)
+add_pch(oleacc precomp.h SOURCE)
 add_cd_file(TARGET oleacc DESTINATION reactos/system32 FOR all)

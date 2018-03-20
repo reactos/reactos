@@ -16,37 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _OLEACC_PRIVATE_H_
-#define _OLEACC_PRIVATE_H_
+#pragma once
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <ole2.h>
-#include <oleacc_classes.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(oleacc);
+#include "oleacc_classes.h"
 
 HRESULT create_client_object(HWND, const IID*, void**) DECLSPEC_HIDDEN;
 HRESULT create_window_object(HWND, const IID*, void**) DECLSPEC_HIDDEN;
 HRESULT get_accpropservices_factory(REFIID, void**) DECLSPEC_HIDDEN;
 
 int convert_child_id(VARIANT *v) DECLSPEC_HIDDEN;
-
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
-
-#endif /* _OLEACC_PRIVATE_H_ */

@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <oleacc.h>
-
+#include "oleacc.h"
 #include "resource.h"
 
 1 TYPELIB "oleacc_classes.tlb"
@@ -36,7 +34,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION 6,1,7600,16385
 #define WINE_PRODUCTVERSION_STR "6.1.6700.16385"
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"
 
 /* UTF-8 */
 #pragma code_page(65001)

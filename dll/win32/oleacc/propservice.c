@@ -16,7 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include <stdarg.h>
+
 #include "oleacc_private.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(oleacc);
 
 static HRESULT WINAPI AccPropServices_QueryInterface(IAccPropServices *iface, REFIID riid, void **ppv)
 {

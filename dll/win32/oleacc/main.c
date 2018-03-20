@@ -18,14 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "commctrl.h"
+#include "rpcproxy.h"
+
+#include "initguid.h"
 #include "oleacc_private.h"
-
-#include <commctrl.h>
-#include <rpcproxy.h>
-
-#include <wine/unicode.h>
-
 #include "resource.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(oleacc);
 
 static const WCHAR lresult_atom_prefix[] = {'w','i','n','e','_','o','l','e','a','c','c',':'};
 
