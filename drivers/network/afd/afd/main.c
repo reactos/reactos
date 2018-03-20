@@ -313,6 +313,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     DeviceExt = DeviceObject->DeviceExtension;
     FileObject = IrpSp->FileObject;
+    FileObject->Flags |= FO_NAMED_PIPE;
     //Disposition = (IrpSp->Parameters.Create.Options >> 24) & 0xff;
 
     Irp->IoStatus.Information = 0;
