@@ -6,14 +6,21 @@
  */
 
 #include "ws2_32.h"
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
 #include <io.h>
 #include <fcntl.h>
 
+#define WINVER_WIN8    0x0602
 
 static void run_open_osfhandle(void)
 {
     DWORD type;
     int handle, err;
+    FILE_FS_DEVICE_INFORMATION DeviceInfo;
+    IO_STATUS_BLOCK StatusBlock;
+    NTSTATUS Status;
+
     SOCKET fd = WSASocketA(AF_INET, SOCK_STREAM, 0, NULL, 0, 0);
     ok (fd != INVALID_SOCKET, "Invalid socket\n");
     if (fd == INVALID_SOCKET)
@@ -21,6 +28,21 @@ static void run_open_osfhandle(void)
 
     type = GetFileType((HANDLE)fd);
     ok(type == FILE_TYPE_PIPE, "Expected type FILE_TYPE_PIPE, was: %lu\n", type);
+
+    Status = NtQueryVolumeInformationFile((HANDLE)fd, &StatusBlock, &DeviceInfo, sizeof(DeviceInfo), FileFsDeviceInformation);
+    ok(Status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got 0x%lx\n", Status);
+    if (Status == STATUS_SUCCESS)
+    {
+        RTL_OSVERSIONINFOEXW rtlinfo = { sizeof(rtlinfo), 0 };
+        ULONG Characteristics;
+        DWORD dwWinVersion;
+        ok(DeviceInfo.DeviceType == FILE_DEVICE_NAMED_PIPE, "Expected FILE_DEVICE_NAMED_PIPE, got: 0x%lx\n", DeviceInfo.DeviceType);
+
+        RtlGetVersion((PRTL_OSVERSIONINFOW)&rtlinfo);
+        dwWinVersion = (rtlinfo.dwMajorVersion << 8) | rtlinfo.dwMinorVersion;
+        Characteristics = dwWinVersion >= WINVER_WIN8 ? 0x20000 : 0;
+        ok(DeviceInfo.Characteristics == Characteristics, "Expected 0x%lx, got: 0x%lx\n", Characteristics, DeviceInfo.Characteristics);
+    }
 
     handle = _open_osfhandle(fd, _O_BINARY | _O_RDWR);
     err = *_errno();
