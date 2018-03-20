@@ -26,6 +26,9 @@ struct jpeg_decompress_struct;
 struct _iobuf;
 struct _xsltTransformContext;
 struct _xmlOutputBuffer;
+struct _xmlXPathParserContext;
+struct _xmlDict;
+enum xsltLoadType;
 
 typedef struct IWineD3D * (__stdcall typeof(WineDirect3DCreate))(unsigned int, struct IUnknown *);
 typedef struct IWineD3DClipper * (__stdcall typeof(WineDirect3DCreateClipper))(struct IUnknown *);
@@ -56,6 +59,11 @@ typedef struct _xsltStylesheet * (__cdecl typeof(xsltNextImport))(struct _xsltSt
 typedef void (__cdecl typeof(xsltCleanupGlobals))(void);
 typedef void (__cdecl typeof(xsltFreeStylesheet))(struct _xsltStylesheet *);
 typedef struct _xsltStylesheet * (__cdecl typeof(xsltParseStylesheetDoc))(struct _xmlDoc *);
+typedef void (__cdecl typeof(xsltFunctionNodeSet))(struct _xmlXPathParserContext *, int);
+typedef void (__cdecl typeof(xmlXPathFunction))(struct _xmlXPathParserContext *, int);
+typedef int (__cdecl typeof(xsltRegisterExtModuleFunction))(const unsigned char *, const unsigned char *, typeof(xmlXPathFunction));
+typedef struct _xmlDoc * (__cdecl typeof(xsltDocLoaderFunc))(const unsigned char *, struct _xmlDict *, int, void *, enum xsltLoadType);
+typedef void (__cdecl typeof(xsltSetLoaderFunc))(typeof(xsltDocLoaderFunc));
 typedef struct jpeg_error_mgr * (__cdecl typeof(jpeg_std_error))(struct jpeg_error_mgr *);
 typedef void (__cdecl typeof(jpeg_CreateDecompress))(struct jpeg_decompress_struct *, int, __typeof_size);
 typedef int (__cdecl typeof(jpeg_read_header))(struct jpeg_decompress_struct *, int);
