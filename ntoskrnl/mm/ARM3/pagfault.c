@@ -2099,7 +2099,7 @@ UserFault:
         /* Resolve a demand zero fault */
         MiResolveDemandZeroFault(PointerPpe,
                                  PointerPxe,
-                                 MM_READWRITE,
+                                 MM_EXECUTE_READWRITE,
                                  CurrentProcess,
                                  MM_NOIRQL);
 
@@ -2133,7 +2133,7 @@ UserFault:
         /* Resolve a demand zero fault */
         MiResolveDemandZeroFault(PointerPde,
                                  PointerPpe,
-                                 MM_READWRITE,
+                                 MM_EXECUTE_READWRITE,
                                  CurrentProcess,
                                  MM_NOIRQL);
 
@@ -2175,7 +2175,7 @@ UserFault:
         /* Resolve a demand zero fault */
         MiResolveDemandZeroFault(PointerPte,
                                  PointerPde,
-                                 MM_READWRITE,
+                                 MM_EXECUTE_READWRITE,
                                  CurrentProcess,
                                  MM_NOIRQL);
 #if MI_TRACE_PFNS
