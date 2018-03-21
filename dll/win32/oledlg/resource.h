@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <oledlg.h>
+
 #define IDS_RESULTOBJDESC               101
 #define IDS_RESULTFILEOBJDESC           102
 #define IDS_BROWSE                      103

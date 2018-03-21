@@ -21,27 +21,6 @@
 #ifndef __OLEDLG_PRIVATE_H__
 #define __OLEDLG_PRIVATE_H__
 
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <oledlg.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-#include "resource.h"
-
 extern HINSTANCE OLEDLG_hInstance DECLSPEC_HIDDEN;
 
 extern UINT cf_embed_source DECLSPEC_HIDDEN;
