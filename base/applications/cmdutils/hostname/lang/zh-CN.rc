@@ -4,7 +4,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "打印当前主机的名称。\n\nhostname"
+    IDS_USAGE "打印当前主机名。\n\nhostname"
     IDS_NOSET "hostname -s 不受支持。"
     IDS_ERROR "Win32 错误"
 END

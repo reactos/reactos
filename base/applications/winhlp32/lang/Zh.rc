@@ -5,6 +5,7 @@
  * Copyright 2002 liuspider <liuspider@yahoo.com>
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
  * Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
+ * Copyright 2018 Li Keqing <auroracloud4096@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,7 +30,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 MAIN_MENU MENU
 {
  POPUP "文件(&F)" {
-  MENUITEM "打开(&O)", MNID_FILE_OPEN
+  MENUITEM "打开(&O)...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "打印(&P)", MNID_FILE_PRINT
   MENUITEM "打印机设置(&S)...", MNID_FILE_SETUP
@@ -82,15 +83,15 @@ STID_WINE_HELP, 	"ReactOS 帮助"
 STID_WHERROR, 		"错误"
 STID_WARNING,  		"警告"
 STID_INFO,  		"信息"
-STID_NOT_IMPLEMENTED, 	"未实现"
+STID_NOT_IMPLEMENTED, 	"尚未实现"
 STID_HLPFILE_ERROR_s, 	"读入帮助文件“%s”时发生错误"
 STID_INDEX, 		"索引(&I)"
 STID_CONTENTS,		"概要"
 STID_BACK, 		"返回(&B)"
 STID_ALL_FILES, 	"所有文件 (*.*)"
 STID_HELP_FILES_HLP, 	"帮助文件 (*.hlp)"
-STID_FILE_NOT_FOUND_s	"找不到文件“%s”。 你想要自己找这个文件吗？"
-STID_NO_RICHEDIT	"找不到 richedit 的实现……终止"
+STID_FILE_NOT_FOUND_s	"找不到文件“%s”。您想要自己找这个文件吗？"
+STID_NO_RICHEDIT	"找不到 richedit 的实现……正在停止"
 STID_PSH_INDEX,		"帮助主题："
 }
 

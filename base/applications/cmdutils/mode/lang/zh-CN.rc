@@ -1,0 +1,68 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "配置系统设备。\n\n\
+设备状态:     MODE [device] [/STATUS]\n\
+串口:         MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n\
+                                [to=on|off] [xon=on|off] [odsr=on|off]\n\
+                                [octs=on|off] [dtr=on|off|hs]\n\
+                                [rts=on|off|hs|tg] [idsr=on|off]\n\
+重定向打印:   MODE LPTn[:]=COMm[:]\n\
+选择代码页:   MODE CON[:] CP SELECT=yyy\n\
+代码页状态:   MODE CON[:] CP [/STATUS]\n\
+显示模式:     MODE CON[:] [COLS=c] [LINES=n]\n\
+敲击速率:     MODE CON[:] [RATE=r DELAY=d]\n"
+
+    IDS_QUERY_SERIAL_FOUND "    发现串口设备 - %s\n"
+    IDS_QUERY_PRINTER_FOUND "    发现打印设备 - %s\n"
+    IDS_QUERY_PARALLEL_FOUND "    发现并口设备 - %s\n"
+    IDS_QUERY_DOSDEV_FOUND "    发现 DOS 设备 - %s\n"
+    // IDS_QUERY_MISC_FOUND "    发现其他设备 - %s\n"
+
+    // IDS_QUERY_DEVICE_FOUND "    发现 %s 设备 - %s\n"
+    // IDS_SERIAL  "串口"
+    // IDS_PRINTER "并口"
+    // IDS_OTHER   "其他"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEVICE_STATUS_HEADER "%s 设备的状态:"
+
+    IDS_COM_STATUS_BAUD             "    波特率:            %ld\n"
+    IDS_COM_STATUS_PARITY           "    奇偶位:            %s\n"
+    IDS_COM_STATUS_DATA_BITS        "    数据位:            %d\n"
+    IDS_COM_STATUS_STOP_BITS        "    终止位:            %s\n"
+    IDS_COM_STATUS_TIMEOUT          "    超时:              %s\n"
+    IDS_COM_STATUS_XON_XOFF         "    XON/XOFF:        %s\n"
+    IDS_COM_STATUS_CTS_HANDSHAKING  "    CTS 握手:       %s\n"
+    IDS_COM_STATUS_DSR_HANDSHAKING  "    DSR 握手:       %s\n"
+    IDS_COM_STATUS_DSR_SENSITIVITY  "    DSR 灵敏度:     %s\n"
+    IDS_COM_STATUS_DTR_CIRCUIT      "    DTR 通路:       %s\n"
+    IDS_COM_STATUS_RTS_CIRCUIT      "    RTS 通路:       %s\n"
+
+    IDS_CONSOLE_STATUS_LINES    "    行数:              %d\n"
+    IDS_CONSOLE_STATUS_COLS     "    列数:              %d\n"
+    IDS_CONSOLE_KBD_RATE        "    键盘速率:          %ld\n"
+    IDS_CONSOLE_KBD_DELAY       "    键盘延迟:          %ld\n"
+    IDS_CONSOLE_CODEPAGE        "    代码页:            %d\n"
+
+    IDS_PRINTER_OUTPUT_NOT_REROUTED     "    打印机输出没有被重定向。\n"
+    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    打印机输出被重定向至串口 %s。\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_QUERY_DEVICES "错误: 无法查询 DOS 设备 (0x%lx)。\n"
+    IDS_ERROR_QUERY_DEVICES_FORM "    QueryDosDeviceW(%s) 返回无法识别的表格 %s。\n"
+    IDS_ERROR_SET_PARALLEL_STATE "SetParallelState(%d) - DefineDosDevice(%s) (0x%lx)\n"
+    IDS_ERROR_INVALID_PARAMETER "错误: 无效参数 - %s\n"
+    IDS_ERROR_ILLEGAL_DEVICE_NAME "错误: 非法设备名 - %s (0x%lx)\n"
+    IDS_ERROR_STATUS_GET_DEVICE "错误: 无法获得设备 COM%d 的状态:\n"
+    IDS_ERROR_STATUS_SET_DEVICE "错误: 无法设置设备 COM%d 的状态:\n"
+    IDS_ERROR_INVALID_PARITY_BITS "错误: 奇偶位 %d 值无效:\n"
+    IDS_ERROR_INVALID_STOP_BITS "错误: 终止位 %d 值无效:\n"
+    IDS_ERROR_NO_MEMORY "错误: 内存不足。\n"
+    IDS_ERROR_SCREEN_LINES_COL "错误: 屏幕无法被设置成指定的行数和列数。\n"
+END

@@ -104,3 +104,7 @@ ReactOS = "ReactOS Takımı"
 FloppyClassName = "Yumuşak Disk Sürücüleri"
 GenericMfg = "(Umûmî Yumuşak Disk Sürücüleri)"
 Floppy.DeviceDesc = "Umûmî Yumuşak Disk Sürücüsü"
+
+[Strings.0804]
+GenericMfg = "(通用软盘驱动器)"
+Floppy.DeviceDesc = "通用软盘驱动器"

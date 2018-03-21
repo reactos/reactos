@@ -107,3 +107,10 @@ AcctonEN1207D.DeviceDesc = "Accton EN-1207D (RTL8139) Ethernet Bağdaştırıcı
 DLinkDFE538TX.DeviceDesc = "D-Link DFE-538TX (RTL8139) Ethernet Bağdaştırıcısı"
 LevelOneFPC0106TX.DeviceDesc = "LevelOne FPC-0106Tx (RTL8139) Ethernet Bağdaştırıcısı"
 CompaqHNE300.DeviceDesc = "Compaq HNE-300 (RTL8139C) Ethernet Bağdaştırıcısı"
+
+[Strings.0804]
+Realtek8139.DeviceDesc = "Realtek RTL8139 以太网适配器"
+AcctonEN1207D.DeviceDesc = "Accton EN-1207D (RTL8139) 以太网适配器"
+DLinkDFE538TX.DeviceDesc = "D-Link DFE-538TX (RTL8139) 以太网适配器"
+LevelOneFPC0106TX.DeviceDesc = "LevelOne FPC-0106Tx (RTL8139) 以太网适配器"
+CompaqHNE300.DeviceDesc = "Compaq HNE-300 (RTL8139C) 以太网适配器"

@@ -81,3 +81,6 @@ PCI\VEN_10DE&DEV_02A0.DeviceDesc = "NV2A Xbox Çizge İşleme Birimi"
 ReactOS = "Команда ReactOS"
 nVidiaMfg = "Корпорація nVidia"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Графічний процесор NV2A Xbox"
+
+[Strings.0804]
+PCI\VEN_10DE&DEV_02A0.DeviceDesc = "NV2A Xbox 图形处理器"

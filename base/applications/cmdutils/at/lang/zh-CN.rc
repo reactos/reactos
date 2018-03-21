@@ -1,0 +1,50 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "AT 命令安排命令和程序在一个特定的时间和日期运行在计算机上。\n\
+为了使用 AT 命令请确保 Schedule 服务正在运行。\n\n\
+AT [\\\\computername] [ [id] [/DELETE] | /DELETE [/YES]]\n\
+AT [\\\\computername] time [/INTERACTIVE]\n\
+    [ /EVERY:date[,...] | /NEXT:date[,...]] ""command""\n\n\
+\\\\computername     指定一个远程计算机。如果省略这个参数命令将运行在本地\n\
+                   计算机上。\n\
+id                 分配给被安排命令的标示号码。\n\
+/DELETE            取消一个被安排的命令。如果省略 id，计算机上所有被安排的\n\
+                   命令都将被取消。\n\
+/YES               取消任务时使用将不再询求确认。\n\
+time               指定命令运行的时间。\n\
+/INTERACTIVE       允许任务在运行时与登录的用户的桌面交互。\n\
+/EVERY:date[,...]  在每周或每月的特定日子运行指定命令。如果省略 date，则认定是\n\
+                   每个月的今天。\n\
+/NEXT:date[,...]   在下一个日期到来时候运行指定命令。如果省略 date，则认定是\n\
+                   每个月的今天。\n\
+""command""          将被运行的命令或者批程序。\n"
+
+    IDS_DELETE_ALL "这个操作江删除所有安排好的任务。\n"
+    IDS_NEW_JOB "添加以任务 ID %lu 添加新任务\n"
+    IDS_JOBS_LIST "状态 ID   日                     时间          命令行\n"
+    IDS_NO_ENTRIES "列表中没有项目。\n"
+
+    IDS_CONFIRM_QUESTION "您想继续操作吗？(Y/N) [N]: "
+    IDS_CONFIRM_INVALID  "\n这是一个无效的回应。\n"
+    IDS_CONFIRM_YES "Y"
+    IDS_CONFIRM_NO "N"
+
+    IDS_TODAY "今天"
+    IDS_TOMORROW "明天"
+    IDS_EVERY "每次"
+    IDS_NEXT "下次"
+
+    IDS_YES "是"
+    IDS_NO "否"
+    IDS_ERROR "错误"
+    IDS_OK "确定"
+
+    IDS_TASKID      "任务 ID:       %lu\n"
+    IDS_STATUS      "状态:    %s\n"
+    IDS_SCHEDULE    "安排:    %s\n"
+    IDS_TIME        "今日时间:      %s\n"
+    IDS_INTERACTIVE "交互:    %s\n"
+    IDS_COMMAND     "命令:    %s\n"
+END

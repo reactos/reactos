@@ -62,9 +62,9 @@ BEGIN
     BEGIN
         MENUITEM "新游戏(&N)\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "纸牌... (&D)", IDM_GAME_DECK
+        MENUITEM "纸牌(&D)...", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "退出(&E)", IDM_GAME_EXIT
+        MENUITEM "退出(&X)", IDM_GAME_EXIT
     END
     POPUP "帮助(&H)"
     BEGIN

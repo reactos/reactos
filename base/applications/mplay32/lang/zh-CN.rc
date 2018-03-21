@@ -6,10 +6,10 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "文件(&F)"
     BEGIN
-        MENUITEM "打开... (&O)\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "打开(&O)...\tCtrl+O", IDM_OPEN_FILE
         MENUITEM "关闭(&C)\tCtrl+W", IDM_CLOSE_FILE
         MENUITEM SEPARATOR
-        MENUITEM "退出(&E)", IDM_EXIT
+        MENUITEM "退出(&X)", IDM_EXIT
     END
     POPUP "播放(&P)"
     BEGIN
@@ -20,7 +20,7 @@ BEGIN
     END
     POPUP "视图(&V)"
     BEGIN
-        MENUITEM "单窗模式(&M)", IDM_SWITCHVIEW
+        MENUITEM "单窗口模式(&M)", IDM_SWITCHVIEW
     END
     POPUP "设备(&D)"
     BEGIN
@@ -53,7 +53,7 @@ BEGIN
     IDS_MODE_PAUSE "已暂停"
     IDS_MODE_RECORD "录音中"
     IDS_MODE_SEEK "查找中"
-    IDS_MODE_NOT_READY "未准备好"
+    IDS_MODE_NOT_READY "未就绪"
     IDS_ALL_TYPES_FILTER "所有支持的格式"
     IDS_TOOLTIP_PLAY "播放"
     IDS_TOOLTIP_STOP "停止"

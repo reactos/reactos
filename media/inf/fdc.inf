@@ -151,3 +151,7 @@ FDCClassName = "Diskelių įrenginių valdikliai"
 
 GenericMfg = "(Standartiniai diskelių įrenginių valdikliai)"
 *PNP0700.DeviceDesc = "Standartinis diskelių įrenginio valdiklis"
+
+[Strings.0804]
+GenericMfg = "(通用软盘控制器)"
+*PNP0700.DeviceDesc = "通用软盘控制器"

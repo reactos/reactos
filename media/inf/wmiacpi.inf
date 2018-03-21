@@ -62,3 +62,7 @@ GenericMfg = "(Универсальные системные устройств�
 ReactOS = "ReactOS Takımı"
 GenericMfg = "(Umûmî Dizge Aygıtları)"
 *PNP0C14.DeviceDesc = "ACPI için WMI"
+
+[Strings.0804]
+GenericMfg = "(通用系统设备)"
+*PNP0C14.DeviceDesc = "ACPI 的 WMI"

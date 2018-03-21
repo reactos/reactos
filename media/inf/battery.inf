@@ -139,3 +139,8 @@ BatteryClassName = "Батареї"
 GenericMfg = "(Стандартні батареї)"
 ACPI\PNP0C0A.DeviceDesc = "Батареї з ACPI-сумісним методом керування"
 ACPI\ACPI0003.DeviceDesc = "AC адаптер"
+
+[Strings.0804]
+GenericMfg = "(通用电池)"
+ACPI\PNP0C0A.DeviceDesc = "ACPI 兼容控制模式电池"
+ACPI\ACPI0003.DeviceDesc = "交流适配器"

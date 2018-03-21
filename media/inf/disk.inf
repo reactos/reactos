@@ -113,3 +113,9 @@ DiskClassName = "Дискові приводи"
 Disk.DeviceDesc = "Дисковий привід"
 OpticalDisk.DeviceDesc = "Оптичний привід дисків"
 Disk.ServiceDesc = "Драйвер диску"
+
+[Strings.0804]
+GenericMfg = "(通用磁盘驱动器)"
+Disk.DeviceDesc = "磁盘驱动器"
+OpticalDisk.DeviceDesc = "光盘驱动器"
+Disk.ServiceDesc = "磁盘驱动器"

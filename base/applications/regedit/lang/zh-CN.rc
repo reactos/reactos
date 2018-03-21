@@ -49,11 +49,11 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "新建(&N)"
         BEGIN
-            MENUITEM "项(&K)", ID_EDIT_NEW_KEY
+            MENUITEM "键(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "字符串值(&S)", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "二进制值(&B)", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "DWORD ??&D)", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "DWORD 值(&D)", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "多字符串值(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "可扩充字符串值(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
@@ -63,7 +63,7 @@ BEGIN
         MENUITEM "删除(&D)\tDel", ID_EDIT_DELETE
         MENUITEM "重命名(&R)", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "复制项名称(&C)", ID_EDIT_COPYKEYNAME
+        MENUITEM "复制键名称(&C)", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "查找(&F)...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "查找下一个(&X)\tF3", ID_EDIT_FINDNEXT
@@ -72,14 +72,14 @@ BEGIN
     BEGIN
         MENUITEM "状态栏(&B)", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "拆分(&L)", ID_VIEW_SPLIT
+        MENUITEM "拆分视图(&L)", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "刷新(&R)\tF5", ID_VIEW_REFRESH
     END
     POPUP "收藏夹(&F)"
     BEGIN
         MENUITEM "添加到收藏夹(&A)", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "删除收藏夹(&R)", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+        MENUITEM "删除收藏(&R)", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -94,7 +94,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "修改(&M)", ID_EDIT_MODIFY
-        MENUITEM "修改二进位数据", ID_EDIT_MODIFY_BIN
+        MENUITEM "修改二进制数据", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
         MENUITEM "删除(&D)\tDel", ID_EDIT_DELETE
         MENUITEM "重命名(&R)", ID_EDIT_RENAME
@@ -103,7 +103,7 @@ BEGIN
     BEGIN
         POPUP "新建(&N)"
         BEGIN
-            MENUITEM "项(&K)", ID_EDIT_NEW_KEY
+            MENUITEM "键(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "字符串值(&S)", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "二进制值(&B)", ID_EDIT_NEW_BINARYVALUE
@@ -117,7 +117,7 @@ BEGIN
         MENUITEM "展开/折叠", ID_TREE_EXPANDBRANCH
         POPUP "新建(&N)"
         BEGIN
-            MENUITEM "项(&K)", ID_EDIT_NEW_KEY
+            MENUITEM "键(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "字符串值(&S)", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "二进制值(&B)", ID_EDIT_NEW_BINARYVALUE
@@ -133,7 +133,7 @@ BEGIN
         MENUITEM "导出(&E)", ID_TREE_EXPORT
         MENUITEM "权限(&P)...", ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "复制项名称(&C)", ID_EDIT_COPYKEYNAME
+        MENUITEM "复制键名(&C)", ID_EDIT_COPYKEYNAME
     END
     POPUP ""
     BEGIN
@@ -153,9 +153,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "编辑字符串"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "数值名称(&N):", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "值名称(&N):", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "数值数据(&V):", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "值数据(&V):", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "确定", IDOK, 142, 64, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 196, 64, 50, 14
@@ -166,9 +166,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "编辑多字符串"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "数值名称(&N):", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "值名称(&N):", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "数值数据(&V):", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "值数据(&V):", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON "确定", IDOK, 142, 154, 50, 14
@@ -180,9 +180,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "编辑二进制数值"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "数值名称(&N):", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "值名称(&N):", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "数值数据(&V):", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "值数据(&V):", IDC_STATIC, 6, 35, 161, 8
     CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
     DEFPUSHBUTTON "确定", IDOK, 142, 154, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 196, 154, 50, 14
@@ -193,9 +193,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "编辑 DWORD 值"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "数值名称(&N):", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "值名称(&N):", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "数值数据(&V):", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "值数据(&V):", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
     GROUPBOX "基数", IDC_STATIC, 130, 35, 116, 39
     AUTORADIOBUTTON "十六进制(&H)", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
@@ -240,13 +240,13 @@ BEGIN
     LTEXT "共享", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
     LTEXT "专用设备", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
     LTEXT "专用的驱动程序", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "分界面类型:", IDC_STATIC, 144, 220, 58, 8
+    RTEXT "接口类型:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
     RTEXT "总线编号:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
     RTEXT "版本:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "修订本:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "修订版本:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "确定", IDOK, 92, 263, 40, 14
     PUSHBUTTON "数据...(&D)", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
@@ -270,44 +270,44 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "包含与整个注册表工作相关的命令。"
-    ID_EDIT_MENU "包含编辑值或项的命令。"
-    ID_VIEW_MENU "包含自定义注册表窗口的命令。"
-    ID_FAVOURITES_MENU "包含访问常用项时所用的命令。"
+    ID_REGISTRY_MENU "包含操作整个注册表的命令。"
+    ID_EDIT_MENU "包含编辑值或键的命令。"
+    ID_VIEW_MENU "包含定制注册表窗口的命令。"
+    ID_FAVOURITES_MENU "包含访问常用键时所用的命令。"
     ID_HELP_MENU "包含显示帮助以及注册表编辑器有关信息的命令。"
-    ID_EDIT_NEW_MENU "包含创建新项或值的命令。"
+    ID_EDIT_NEW_MENU "包含创建新键或值的命令。"
 END
 
 STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY "修改该值的数据。"
-    ID_EDIT_NEW_KEY "添加新项。"
+    ID_EDIT_NEW_KEY "添加新键。"
     ID_EDIT_NEW_STRINGVALUE "添加新字符串值。"
     ID_EDIT_NEW_BINARYVALUE "添加新二进制值。"
     ID_EDIT_NEW_DWORDVALUE "添加新 DWORD 值。"
-    ID_REGISTRY_IMPORTREGISTRYFILE "将文件导入到注册表中。"
+    ID_REGISTRY_IMPORTREGISTRYFILE "将文本文件导入到注册表中。"
     ID_REGISTRY_EXPORTREGISTRYFILE "将注册表全部或部分导出到文件中。"
     ID_REGISTRY_LOADHIVE "加載配置单元到注册表中。"
-    ID_REGISTRY_UNLOADHIVE "從注册表中卸載配置单元。"
+    ID_REGISTRY_UNLOADHIVE "从注册表中卸載配置单元。"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "连接到远程计算机的注册表。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "断开与远程计算机注册表的连接。"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "与远程计算机注册表断开连接。"
     ID_REGISTRY_PRINT "打印所有或部分注册表。"
 /*    ID_HELP_HELPTOPICS "打开注册表编辑器帮助。" */
-    ID_HELP_ABOUT "显示程序信息、版本号和版权。"
+    ID_HELP_ABOUT "显示程序信息、版本和版权。"
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "退出注册表编辑器。"
-    ID_FAVOURITES_ADDTOFAVOURITES "将项添加到收藏夹列表中。"
-    ID_FAVOURITES_REMOVEFAVOURITE "将项从收藏夹列表中删除。"
+    ID_FAVOURITES_ADDTOFAVOURITES "将键添加到收藏夹列表中。"
+    ID_FAVOURITES_REMOVEFAVOURITE "将键从收藏夹列表中删除。"
     ID_VIEW_STATUSBAR "显示或隐藏状态栏。"
-    ID_VIEW_SPLIT "改变两窗格的拆分位置。"
+    ID_VIEW_SPLIT "改变两个面板的拆分位置。"
     ID_VIEW_REFRESH "刷新窗口。"
     ID_EDIT_DELETE "删除所选内容。"
     ID_EDIT_RENAME "重命名选定内容。"
-    ID_EDIT_COPYKEYNAME "将选定项的名称复制到剪贴板上。"
-    ID_EDIT_FIND "在项、值或数据里找到文本字符串。"
+    ID_EDIT_COPYKEYNAME "将选定键的名称复制到剪贴板上。"
+    ID_EDIT_FIND "在键、值或数据里找到文本字符串。"
     ID_EDIT_FINDNEXT "继续查找上次搜索的文本。"
 END
 
@@ -315,39 +315,39 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "错误"
     IDS_WARNING "警告"
-    IDS_BAD_KEY "不能查询项 '%s'"
+    IDS_BAD_KEY "不能查询键 '%s'"
     IDS_BAD_VALUE "不能查询值 '%s'"
-    IDS_UNSUPPORTED_TYPE "不能编辑这类型的项 (%ld)"
+    IDS_UNSUPPORTED_TYPE "不能编辑这种类型的键 (%ld)"
     IDS_TOO_BIG_VALUE "数值过大 (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 类型的数据不能包含空字符串。\r\n注册表编辑器将删除找到得空字符串。"
-    IDS_QUERY_DELETE_KEY_ONE "确实要删除这个项吗?"
-    IDS_QUERY_DELETE_KEY_MORE "确实要删除这些项吗?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "确认项删除"
-    IDS_QUERY_DELETE_ONE "确实要删除此数值吗?"
-    IDS_QUERY_DELETE_MORE "确实要删除这些数值吗?"
-    IDS_QUERY_DELETE_CONFIRM "确认数值删除"
+    IDS_QUERY_DELETE_KEY_ONE "确实要删除这个键吗?"
+    IDS_QUERY_DELETE_KEY_MORE "确实要删除这些键吗?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "确认删除键"
+    IDS_QUERY_DELETE_ONE "确实要删除此值吗?"
+    IDS_QUERY_DELETE_MORE "确实要删除这些值吗?"
+    IDS_QUERY_DELETE_CONFIRM "确认删除值"
     IDS_ERR_DELVAL_CAPTION "删除值时出错。"
     IDS_ERR_DELETEVALUE "无法删除所有指定的值!"
     IDS_ERR_RENVAL_CAPTION "重命名值时产生错误"
-    IDS_ERR_RENVAL_TOEMPTY "注册表编辑器无法重命名 %s。指定的值名为空。请键入其他名称，再试一次。"
-    IDS_QUERY_IMPORT_HIVE_CAPTION "确认项的恢复"
-    IDS_QUERY_IMPORT_HIVE_MSG "一个项将恢复在当前选定的项。\n所有值和子项此项将被都删除。\n您想继续该操作吗？"
-    IDS_NEW_KEY "新项 #%d"
+    IDS_ERR_RENVAL_TOEMPTY "注册表编辑器无法重命名 %s。指定的值名为空。请输入其他名称，再试一次。"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "确认恢复键"
+    IDS_QUERY_IMPORT_HIVE_MSG "一个键将恢复在当前选定的键上。\n此键上的所有值和子键将被都删除。\n您想继续该操作吗？"
+    IDS_NEW_KEY "新键 #%d"
     IDS_NEW_VALUE "新值 #%d"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BINARY_EMPTY "(长度为零的二进位值)"
+    IDS_BINARY_EMPTY "(零长度的二进位值)"
     IDS_DEFAULT_VALUE_NAME "(默认)"
-    IDS_VALUE_NOT_SET "(数值未设置)"
+    IDS_VALUE_NOT_SET "(值未设置)"
     IDS_UNKNOWN_TYPE "未知类型: (0x%lx)"
     IDS_MY_COMPUTER "我的计算机"
     IDS_IMPORT_REG_FILE "导入注册表文件"
     IDS_EXPORT_REG_FILE "导出注册表文件"
     IDS_LOAD_HIVE "加载配置单元"
     IDS_UNLOAD_HIVE "卸载配置单元"
-    IDS_INVALID_DWORD "(不正确的 DWORD 值)"
+    IDS_INVALID_DWORD "(无效的 DWORD 值)"
 END
 
 STRINGTABLE
@@ -367,10 +367,10 @@ STRINGTABLE
 BEGIN
     IDS_ACCESS_FULLCONTROL "完全控制"
     IDS_ACCESS_READ "读取"
-    IDS_ACCESS_QUERYVALUE "查询数值"
-    IDS_ACCESS_SETVALUE "设置数值"
-    IDS_ACCESS_CREATESUBKEY "创建子项"
-    IDS_ACCESS_ENUMERATESUBKEYS "枚举子项"
+    IDS_ACCESS_QUERYVALUE "查询值"
+    IDS_ACCESS_SETVALUE "设置值"
+    IDS_ACCESS_CREATESUBKEY "创建子键"
+    IDS_ACCESS_ENUMERATESUBKEYS "枚举子键"
     IDS_ACCESS_NOTIFY "通知"
     IDS_ACCESS_CREATELINK "创建链接"
     IDS_ACCESS_DELETE "删除"
@@ -381,9 +381,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INHERIT_THISKEYONLY "只有该项"
-    IDS_INHERIT_THISKEYANDSUBKEYS "该项及其子项"
-    IDS_INHERIT_SUBKEYSONLY "只有子项"
+    IDS_INHERIT_THISKEYONLY "只有该键"
+    IDS_INHERIT_THISKEYANDSUBKEYS "该键及其子键"
+    IDS_INHERIT_SUBKEYSONLY "只有子键"
 END
 
 STRINGTABLE
@@ -396,28 +396,28 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "添加信息可无意中更改或删除值并导致组件停止正常工作。\n如果您不信任此 '%s' 中的信息的来源，并不将其添加到注册表。\n\n是否确实要继续?"
-    IDS_IMPORT_OK "'%s' 中包含的值和项已成功添加到注册表。"
-    IDS_IMPORT_ERROR "无法将 '%s' 导入： 打开该文件时出错。可能有磁盘或文件系统错误或文件可能不存在。"
-    IDS_EXPORT_ERROR "无法导出 '%s' ： 创建或写入文件时出错。可能有磁盘或文件系统错误。"
+    IDS_IMPORT_PROMPT "添加信息可能会无意中更改或删除值并导致组件停止正常工作。\n如果您不信任 '%s' 中信息的来源，不要将其添加到注册表中。\n\n是否确实要继续?"
+    IDS_IMPORT_OK "'%s' 中包含的键和值已经被成功添加到注册表中。"
+    IDS_IMPORT_ERROR "无法导入 '%s' ： 打开该文件时出错。可能磁盘或文件系统有错误或者文件不存在。"
+    IDS_EXPORT_ERROR "无法导出 '%s' ： 创建或写入文件时出错。可能磁盘或文件系统有错误。"
 END
 
 STRINGTABLE
 BEGIN
     IDS_BUSNUMBER "总线编号"
-    IDS_INTERFACE "介面"
+    IDS_INTERFACE "接口"
     IDS_DMA_CHANNEL "通道"
     IDS_DMA_PORT "端口"
     IDS_INTERRUPT_VECTOR "矢量"
     IDS_INTERRUPT_LEVEL "等级"
-    IDS_INTERRUPT_AFFINITY "亲和性"
+    IDS_INTERRUPT_AFFINITY "关联性"
     IDS_INTERRUPT_TYPE "类型"
     IDS_MEMORY_ADDRESS "物理地址"
     IDS_MEMORY_LENGTH "长度"
-    IDS_MEMORY_ACCESS "捷径"
+    IDS_MEMORY_ACCESS "通道"
     IDS_PORT_ADDRESS "物理地址"
     IDS_PORT_LENGTH "长度"
-    IDS_PORT_ACCESS "捷径"
+    IDS_PORT_ACCESS "通道"
     IDS_SPECIFIC_RESERVED1 "保留 1"
     IDS_SPECIFIC_RESERVED2 "保留 2"
     IDS_SPECIFIC_DATASIZE "数据大小"
@@ -431,7 +431,7 @@ BEGIN
     IDS_INTERRUPT_LEVEL_SENSITIVE "级别敏感"
     IDS_MEMORY_READ_ONLY "只读"
     IDS_MEMORY_WRITE_ONLY "只写"
-    IDS_MEMORY_READ_WRITE "只读 / 只写"
+    IDS_MEMORY_READ_WRITE "读写"
 END
 
 STRINGTABLE
@@ -453,7 +453,7 @@ BEGIN
     IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE "未知的界面类型"
+    IDS_BUS_UNKNOWNTYPE "未知的接口类型"
 END
 
 /*****************************************************************/
@@ -475,7 +475,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "加载配置单元"
 FONT 9, "Ms Shell Dlg"
 BEGIN
-    LTEXT "项(&K):", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    LTEXT "键(&K):", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "确定", IDOK, 140, 17, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 89, 17, 50, 14
@@ -488,20 +488,20 @@ FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON "确定", IDOK, 129, 7, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 129, 24, 50, 14
-    LTEXT "收藏夹名(&F):", IDC_STATIC, 7, 7, 70, 10
+    LTEXT "收藏名(&F):", IDC_STATIC, 7, 7, 70, 10
     EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "删除收藏夹"
+CAPTION "删除收藏"
 FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON "确定", IDOK, 107, 114, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 7, 114, 50, 14
     CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
             WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "选择收藏夹(&S):", IDC_STATIC, 7, 7, 99, 12
+    LTEXT "选择收藏(&S):", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 275, 82
@@ -514,7 +514,7 @@ BEGIN
     GROUPBOX "查看", IDC_STATIC, 7, 25, 63, 51
     LTEXT "查找目标(&N):", IDC_STATIC, 7, 8, 50, 10
     EDITTEXT IDC_FINDWHAT, 55, 7, 142, 13, ES_AUTOHSCROLL
-    CONTROL "项(&K)", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+    CONTROL "键(&K)", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 35, 8
     CONTROL "值(&V)", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 48, 36, 8

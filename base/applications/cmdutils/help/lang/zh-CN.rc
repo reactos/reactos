@@ -4,12 +4,12 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "通过帮助实用程序不支持此命令。\n试 ""%s /?""\n。"
+    IDS_NO_ENTRY "帮助实用程序不支持此命令。\n试试 ""%s /?""\n。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "提供ReactOS命令的帮助信息。\n\n\
+    IDS_USAGE "提供 ReactOS 命令的帮助信息。\n\n\
 HELP [command]\n\n\
   command - 显示此命令的帮助信息。\n"
     IDS_HELP1 "列出所有可用命令 (+ 它们的描述)\n\n\
@@ -19,12 +19,12 @@ HELP [command]\n\n\
 ALIAS    设置、删除或显示别名。\n\
 ATTRIB   显示或改变文件属性。\n\
 BEEP     使扬声器发声。\n\
-CALL     从一个批处理程序中调用另一个。\n\
+CALL     从一个批处理程序中调用另一个批处理程序。\n\
 CD       显示当前目录的名称或更改当前目录。\n\
 CHCP     显示或设置活动代码页。\n\
 CHOICE   等待用户在一组选项中做出选择。\n\
-CLS      清除屏幕。\n\
-CMD      启动 ReactOS 命令行解释器的一个新实例。\n\
+CLS      清空屏幕。\n\
+CMD      创建一个 ReactOS 命令行解释器的新实例。\n\
 COLOR    设置控制台默认的前景和背景颜色。\n\
 COPY     将一个或多个文件复制到另一个位置。\n\
 DATE     显示或设置日期。\n\
@@ -65,6 +65,6 @@ TIMER    允许使用至多十个停表。\n\
 TITLE    设置一个 CMD.EXE 会话的窗口标题。\n\
 TYPE     显示一个文本文件的内容。\n\
 VER      显示 ReactOS 版本。\n\
-VERIFY   决定 ReactOS 是否检验您的文件已被正确地写入磁盘。\n\
+VERIFY   要求 ReactOS 检验您的文件是否已被正确地写入磁盘。\n\
 VOL      显示磁盘卷标和序列号。\n"
 END

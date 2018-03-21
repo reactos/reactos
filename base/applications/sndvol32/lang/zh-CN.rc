@@ -22,7 +22,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "音量控制"
-    IDS_NOMIXERDEVICES "没有可用的混音器设备！这个程序即将退出。"
+    IDS_NOMIXERDEVICES "没有可用的混音器设备！程序即将退出。"
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250
