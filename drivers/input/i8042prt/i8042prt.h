@@ -223,6 +223,8 @@ typedef struct _I8042_HOOK_WORKITEM
 #define MOUSE_ENAB         0xA8
 #define MOUSE_LINE_TEST    0xA9
 #define CTRL_SELF_TEST     0xAA
+#define KBD_CLK_DISABLE    0xAD
+#define KBD_CLK_ENABLE     0xAE
 #define CTRL_WRITE_MOUSE   0xD4
 
 /*-----------------------------------------------------

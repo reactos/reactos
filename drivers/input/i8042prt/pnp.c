@@ -274,6 +274,10 @@ i8042ConnectKeyboardInterrupt(
     TRACE_(I8042PRT, "i8042ConnectKeyboardInterrupt()\n");
 
     PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
+
+    // Enable keyboard clock line
+    i8042Write(PortDeviceExtension, PortDeviceExtension->ControlPort, KBD_CLK_ENABLE);
+
     DirqlMax = MAX(
         PortDeviceExtension->KeyboardInterrupt.Dirql,
         PortDeviceExtension->MouseInterrupt.Dirql);
