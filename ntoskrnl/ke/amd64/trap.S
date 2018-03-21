@@ -617,7 +617,7 @@ PUBLIC KiRetireDpcListInDpcStack
 
     /* Switch stack and call the function */
     mov rsp, rdx
-    sub rsp, 40
+    sub rsp, 48
     call KiRetireDpcList
 
     /* Restore stack, cleanup and return */
