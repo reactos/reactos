@@ -113,7 +113,7 @@ void ME_CopyToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
 
 ME_Style *ME_MakeStyle(CHARFORMAT2W *style)
 {
-  ME_Style *s = ALLOC_OBJ(ME_Style);
+  ME_Style *s = heap_alloc(sizeof(*s));
 
   assert(style->cbSize == sizeof(CHARFORMAT2W));
   s->fmt = *style;
@@ -306,7 +306,8 @@ ME_LogFontFromStyle(ME_Context* c, LOGFONTW *lf, const ME_Style *s)
     lf->lfWeight = s->fmt.wWeight;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_ITALIC)
     lf->lfItalic = 1;
-  if ((s->fmt.dwEffects & s->fmt.dwMask & (CFM_UNDERLINE | CFE_LINK)) &&
+  if ((s->fmt.dwEffects & s->fmt.dwMask & CFM_UNDERLINE) &&
+      !(s->fmt.dwEffects & CFE_LINK) &&
       s->fmt.bUnderlineType == CFU_CF1UNDERLINE)
     lf->lfUnderline = 1;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_STRIKEOUT)
@@ -425,7 +426,7 @@ void ME_DestroyStyle(ME_Style *s)
     s->font_cache = NULL;
   }
   ScriptFreeCache( &s->script_cache );
-  FREE_OBJ(s);
+  heap_free(s);
 }
 
 void ME_AddRefStyle(ME_Style *s)

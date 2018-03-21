@@ -637,8 +637,8 @@ void ME_MoveCursorFromTableRowStartParagraph(ME_TextEditor *editor)
 
 struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor)
 {
-  RTFTable *tableDef = ALLOC_OBJ(RTFTable);
-  ZeroMemory(tableDef, sizeof(RTFTable));
+  RTFTable *tableDef = heap_alloc_zero(sizeof(*tableDef));
+
   if (!editor->bEmulateVersion10) /* v4.1 */
     tableDef->gapH = 10;
   return tableDef;

@@ -224,13 +224,20 @@
  *
  */
 
+#define NONAMELESSUNION
+
 #include "editor.h"
-
-#include <commdlg.h>
-#include <undocuser.h>
-
+#include "commdlg.h"
+#include "winreg.h"
+#define NO_SHLWAPI_STREAM 
+#include "shlwapi.h"
 #include "rtf.h"
+#include "imm.h"
 #include "res.h"
+
+#ifdef __REACTOS__
+#include <reactos/undocuser.h>
+#endif
 
 #define STACK_SIZE_DEFAULT  100
 #define STACK_SIZE_MAX     1000
@@ -258,9 +265,7 @@ static inline BOOL is_version_nt(void)
 }
 
 static ME_TextBuffer *ME_MakeText(void) {
-  
-  ME_TextBuffer *buf = ALLOC_OBJ(ME_TextBuffer);
-
+  ME_TextBuffer *buf = heap_alloc(sizeof(*buf));
   ME_DisplayItem *p1 = ME_MakeDI(diTextStart);
   ME_DisplayItem *p2 = ME_MakeDI(diTextEnd);
   
@@ -603,8 +608,7 @@ void ME_RTFParAttrHook(RTF_Info *info)
     if (!info->editor->bEmulateVersion10) /* v4.1 */
     {
       while (info->rtfParam > info->nestingLevel) {
-        RTFTable *tableDef = ALLOC_OBJ(RTFTable);
-        ZeroMemory(tableDef, sizeof(RTFTable));
+        RTFTable *tableDef = heap_alloc_zero(sizeof(*tableDef));
         tableDef->parent = info->tableDef;
         info->tableDef = tableDef;
 
@@ -638,10 +642,7 @@ void ME_RTFParAttrHook(RTF_Info *info)
       {
         RTFTable *tableDef;
         if (!info->tableDef)
-        {
-            info->tableDef = ALLOC_OBJ(RTFTable);
-            ZeroMemory(info->tableDef, sizeof(RTFTable));
-        }
+            info->tableDef = heap_alloc_zero(sizeof(*info->tableDef));
         tableDef = info->tableDef;
         RTFFlushOutputBuffer(info);
         if (tableDef->tableRowStart &&
@@ -2139,12 +2140,12 @@ static int ME_GetTextRange(ME_TextEditor *editor, WCHAR *strText,
       return ME_GetTextW(editor, strText, INT_MAX, start, nLen, FALSE, FALSE);
     } else {
       int nChars;
-      WCHAR *p = ALLOC_N_OBJ(WCHAR, nLen+1);
+      WCHAR *p = heap_alloc((nLen+1) * sizeof(*p));
       if (!p) return 0;
       nChars = ME_GetTextW(editor, p, nLen, start, nLen, FALSE, FALSE);
       WideCharToMultiByte(CP_ACP, 0, p, nChars+1, (char *)strText,
                           nLen+1, NULL, NULL);
-      FREE_OBJ(p);
+      heap_free(p);
       return nChars;
     }
 }
@@ -2990,7 +2991,7 @@ static BOOL ME_ShowContextMenu(ME_TextEditor *editor, int x, int y)
 
 ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
 {
-  ME_TextEditor *ed = ALLOC_OBJ(ME_TextEditor);
+  ME_TextEditor *ed = heap_alloc(sizeof(*ed));
   int i;
   DWORD props;
   LONG selbarwidth;
@@ -3024,7 +3025,7 @@ ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
    * or paragraph selection.
    */
   ed->nCursors = 4;
-  ed->pCursors = ALLOC_N_OBJ(ME_Cursor, ed->nCursors);
+  ed->pCursors = heap_alloc(ed->nCursors * sizeof(*ed->pCursors));
   ME_SetCursorToStart(ed, &ed->pCursors[0]);
   ed->pCursors[1] = ed->pCursors[0];
   ed->pCursors[2] = ed->pCursors[0];
@@ -3157,10 +3158,9 @@ void ME_DestroyEditor(ME_TextEditor *editor)
   }
   OleUninitialize();
 
-  FREE_OBJ(editor->pBuffer);
-  FREE_OBJ(editor->pCursors);
-
-  FREE_OBJ(editor);
+  heap_free(editor->pBuffer);
+  heap_free(editor->pCursors);
+  heap_free(editor);
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -4299,10 +4299,10 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
       int nChars = MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, NULL, 0);
       WCHAR *tmp;
 
-      if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
+      if ((tmp = heap_alloc(nChars * sizeof(*tmp))) != NULL)
         MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, tmp, nChars);
       r = ME_FindText(editor, wParam, &ft->chrg, tmp, NULL);
-      FREE_OBJ( tmp );
+      heap_free(tmp);
     }else{
       FINDTEXTW *ft = (FINDTEXTW *)lParam;
       r = ME_FindText(editor, wParam, &ft->chrg, ft->lpstrText, NULL);
@@ -4317,10 +4317,10 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
       int nChars = MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, NULL, 0);
       WCHAR *tmp;
 
-      if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
+      if ((tmp = heap_alloc(nChars * sizeof(*tmp))) != NULL)
         MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, tmp, nChars);
       r = ME_FindText(editor, wParam, &ex->chrg, tmp, &ex->chrgText);
-      FREE_OBJ( tmp );
+      heap_free(tmp);
     }else{
       FINDTEXTEXW *ex = (FINDTEXTEXW *)lParam;
       r = ME_FindText(editor, wParam, &ex->chrg, ex->lpstrText, &ex->chrgText);

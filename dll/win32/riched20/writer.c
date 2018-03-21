@@ -18,6 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#define NONAMELESSUNION
+
 #include "editor.h"
 #include "rtf.h"
 
@@ -52,15 +57,11 @@ ME_StreamOutRTFText(ME_OutStream *pStream, const WCHAR *text, LONG nChars);
 static ME_OutStream*
 ME_StreamOutInit(ME_TextEditor *editor, EDITSTREAM *stream)
 {
-  ME_OutStream *pStream = ALLOC_OBJ(ME_OutStream);
+  ME_OutStream *pStream = heap_alloc_zero(sizeof(*pStream));
+
   pStream->stream = stream;
   pStream->stream->dwError = 0;
-  pStream->pos = 0;
-  pStream->written = 0;
-  pStream->nFontTblLen = 0;
   pStream->nColorTblLen = 1;
-  pStream->nNestingLevel = 0;
-  memset(&pStream->cur_fmt, 0, sizeof(pStream->cur_fmt));
   pStream->cur_fmt.dwEffects = CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR;
   pStream->cur_fmt.bUnderlineType = CFU_UNDERLINE;
   return pStream;
@@ -96,7 +97,7 @@ ME_StreamOutFree(ME_OutStream *pStream)
   LONG written = pStream->written;
   TRACE("total length = %u\n", written);
 
-  FREE_OBJ(pStream);
+  heap_free(pStream);
   return written;
 }
 
@@ -1143,8 +1144,7 @@ static BOOL ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream,
         nSize = WideCharToMultiByte(nCodePage, 0, get_text( &cursor.pRun->member.run, cursor.nOffset ),
                                     nLen, NULL, 0, NULL, NULL);
         if (nSize > nBufLen) {
-          FREE_OBJ(buffer);
-          buffer = ALLOC_N_OBJ(char, nSize);
+          buffer = heap_realloc(buffer, nSize);
           nBufLen = nSize;
         }
         WideCharToMultiByte(nCodePage, 0, get_text( &cursor.pRun->member.run, cursor.nOffset ),
@@ -1158,7 +1158,7 @@ static BOOL ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream,
     cursor.pRun = ME_FindItemFwd(cursor.pRun, diRun);
   }
 
-  FREE_OBJ(buffer);
+  heap_free(buffer);
   return success;
 }
 

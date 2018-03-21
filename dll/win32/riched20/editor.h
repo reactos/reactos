@@ -18,66 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _RICHED20_EDITOR_H
-#define _RICHED20_EDITOR_H
-
-#include <config.h>
-
-#include <assert.h>
-#include <stdio.h>
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0400
-#endif
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <richedit.h>
-#include <ole2.h>
-#include <richole.h>
-#include <imm.h>
-#include <textserv.h>
-#include <tom.h>
-#include <usp10.h>
-
-#include <wine/debug.h>
-#include <wine/list.h>
-#include <wine/unicode.h>
+#pragma once
 
 #include "editstr.h"
+#include "wine/unicode.h"
 
 struct _RTF_Info;
 
 extern HANDLE me_heap DECLSPEC_HIDDEN;
-
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc( size_t len )
-{
-    return HeapAlloc( me_heap, 0, len );
-}
-
-static inline BOOL heap_free( void *ptr )
-{
-    return HeapFree( me_heap, 0, ptr );
-}
-
-static inline void * __WINE_ALLOC_SIZE(2) heap_realloc( void *ptr, size_t len )
-{
-    return HeapReAlloc( me_heap, 0, ptr, len );
-}
-
-#define ALLOC_OBJ(type) heap_alloc(sizeof(type))
-#define ALLOC_N_OBJ(type, count) heap_alloc((count)*sizeof(type))
-#define FREE_OBJ(ptr) heap_free(ptr)
 
 #define RUN_IS_HIDDEN(run) ((run)->style->fmt.dwMask & CFM_HIDDEN \
                              && (run)->style->fmt.dwEffects & CFE_HIDDEN)
@@ -393,5 +341,3 @@ LRESULT ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream) 
 HRESULT ME_GetDataObject(ME_TextEditor *editor, const ME_Cursor *start, int nChars, LPDATAOBJECT *lplpdataobj) DECLSPEC_HIDDEN;
 
 void release_typelib(void) DECLSPEC_HIDDEN;
-
-#endif /* _RICHED20_EDITOR_H */

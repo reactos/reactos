@@ -484,7 +484,7 @@ void ME_InsertOLEFromCursor(ME_TextEditor *editor, const REOBJECT* reo, int nCur
 
   di = ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, pStyle,
                                        MERF_GRAPHICS);
-  di->member.run.ole_obj = ALLOC_OBJ(*reo);
+  di->member.run.ole_obj = heap_alloc(sizeof(*reo));
   ME_CopyReObject(di->member.run.ole_obj, reo);
   ME_ReleaseStyle(pStyle);
 }
