@@ -63,21 +63,23 @@ void (*bootp_packet_handler)(struct interface_info *,
  * bootp_packet_handler hook to try to do something with it.
  */
 void
-dispatch(void)
+dispatch(HANDLE hStopEvent)
 {
     int count, to_msec;
     struct protocol *l;
     time_t howlong, cur_time;
-    HANDLE Events[2];
-    int EventCount = 1;
+    HANDLE Events[3];
+    int EventCount = 2;
 
     Events[0] = StartAdapterDiscovery();
     if (!Events[0])
          return;
+
     AdapterStateChangedEvent = Events[0];
-    
-    Events[1] = WSA_INVALID_EVENT;
-    
+
+    Events[1] = hStopEvent;
+    Events[2] = WSA_INVALID_EVENT;
+
     ApiLock();
 
     do {
@@ -116,29 +118,29 @@ dispatch(void)
             to_msec = INFINITE;
         }
 
-        if (Events[1] == WSA_INVALID_EVENT && DhcpSocket != INVALID_SOCKET)
+        if (Events[2] == WSA_INVALID_EVENT && DhcpSocket != INVALID_SOCKET)
         {
-            Events[1] = WSACreateEvent();
-            if (Events[1] != WSA_INVALID_EVENT)
+            Events[2] = WSACreateEvent();
+            if (Events[2] != WSA_INVALID_EVENT)
             {
-                count = WSAEventSelect(DhcpSocket, Events[1], FD_READ | FD_CLOSE);
+                count = WSAEventSelect(DhcpSocket, Events[2], FD_READ | FD_CLOSE);
                 if (count != NO_ERROR)
                 {
-                    WSACloseEvent(Events[1]);
-                    Events[1] = WSA_INVALID_EVENT;
+                    WSACloseEvent(Events[2]);
+                    Events[2] = WSA_INVALID_EVENT;
                 }
                 else
                 {
-                    EventCount = 2;
+                    EventCount = 3;
                 }
             }
         }
-        else if (Events[1] != WSA_INVALID_EVENT && DhcpSocket == INVALID_SOCKET)
+        else if (Events[2] != WSA_INVALID_EVENT && DhcpSocket == INVALID_SOCKET)
         {
-            WSACloseEvent(Events[1]);
-            Events[1] = WSA_INVALID_EVENT;
+            WSACloseEvent(Events[2]);
+            Events[2] = WSA_INVALID_EVENT;
 
-            EventCount = 1;
+            EventCount = 2;
         }
 
         ApiUnlock();
@@ -154,10 +156,15 @@ dispatch(void)
         }
         else if (count == WAIT_OBJECT_0 + 1)
         {
+            /* Stop event signalled */
+            break;
+        }
+        else if (count == WAIT_OBJECT_0 + 2)
+        {
             /* Packet received */
-            
+
             /* WSA events are manual reset events */
-            WSAResetEvent(Events[1]);
+            WSAResetEvent(Events[2]);
         }
         else
         {
@@ -178,7 +185,8 @@ dispatch(void)
 
     AdapterStateChangedEvent = NULL;
     CloseHandle(Events[0]);
-    WSACloseEvent(Events[1]);
+    CloseHandle(Events[1]);
+    WSACloseEvent(Events[2]);
 
     ApiUnlock();
 }
