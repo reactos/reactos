@@ -21,16 +21,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "qmgr.h"
-
 #include <stdio.h>
 
-#include <winuser.h>
-#include <winreg.h>
-#include <advpub.h>
-#include <olectl.h>
-#include <rpcproxy.h>
-#include <initguid.h>
+#define COBJMACROS
+#include "objbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "advpub.h"
+#include "olectl.h"
+#include "rpcproxy.h"
+#include "winsvc.h"
+#include "qmgr.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
 
 /* Handle to the base address of this DLL */
 static HINSTANCE hInst;
