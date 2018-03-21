@@ -18,12 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "propsys_private.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include <stdarg.h>
 #include <stdio.h>
-#include <winreg.h>
-#include <oleauto.h>
-#include <propvarutil.h>
+#include <stdlib.h>
+
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "shlobj.h"
+#include "propvarutil.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(propsys);
 
 static HRESULT PROPVAR_ConvertFILETIME(const FILETIME *ft, PROPVARIANT *ppropvarDest, VARTYPE vt)
 {
@@ -321,6 +336,24 @@ HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret)
 
     return hr;
 }
+
+PCWSTR WINAPI PropVariantToStringWithDefault(REFPROPVARIANT propvarIn, LPCWSTR pszDefault)
+{
+    static const WCHAR str_empty[] = {0};
+    if (propvarIn->vt == VT_BSTR)
+    {
+        if (propvarIn->u.bstrVal == NULL)
+            return str_empty;
+
+        return propvarIn->u.bstrVal;
+    }
+
+    if (propvarIn->vt == VT_LPWSTR && propvarIn->u.pwszVal != NULL)
+        return propvarIn->u.pwszVal;
+
+    return pszDefault;
+}
+
 
 /******************************************************************
  *  PropVariantChangeType   (PROPSYS.@)

@@ -138,7 +138,7 @@
 @ stdcall PropVariantToStringAlloc(ptr ptr)
 @ stub PropVariantToStringVector
 @ stub PropVariantToStringVectorAlloc
-@ stub PropVariantToStringWithDefault
+@ stdcall PropVariantToStringWithDefault(ptr wstr)
 @ stdcall PropVariantToUInt16(ptr ptr)
 @ stub PropVariantToUInt16Vector
 @ stub PropVariantToUInt16VectorAlloc

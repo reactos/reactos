@@ -7,7 +7,7 @@ list(APPEND SOURCE
     propstore.c
     propsys_main.c
     propvar.c
-    propsys_private.h
+    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/propsys_stubs.c)
 
 add_library(propsys SHARED
@@ -18,5 +18,5 @@ add_library(propsys SHARED
 set_module_type(propsys win32dll)
 target_link_libraries(propsys uuid wine)
 add_importlibs(propsys ole32 oleaut32 msvcrt kernel32 ntdll)
-add_pch(propsys propsys_private.h SOURCE)
+add_pch(propsys precomp.h SOURCE)
 add_cd_file(TARGET propsys DESTINATION reactos/system32 FOR all)

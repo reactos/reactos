@@ -19,9 +19,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+#include "config.h"
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "rpcproxy.h"
+#include "propsys.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
 #include "propsys_private.h"
 
-#include <rpcproxy.h>
+WINE_DEFAULT_DEBUG_CHANNEL(propsys);
 
 static HINSTANCE propsys_hInstance;
 
