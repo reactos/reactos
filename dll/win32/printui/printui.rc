@@ -19,7 +19,7 @@
  *
  */
 
-//#include "winver.h"
+#include "winver.h"
 
 #define WINE_FILENAME_STR "printui.dll"
 #define WINE_FILEDESCRIPTION_STR "User Interface for Printing"
@@ -31,4 +31,4 @@
 #define WINE_PRODUCTVERSION      5,1,2600,2180
 #define WINE_PRODUCTVERSION_STR "5.1.2600.2180"
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"
