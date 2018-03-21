@@ -600,7 +600,19 @@ PUBLIC KiApcInterrupt
     ExitTrap (TF_VOLATILES or TF_IRQL)
 .ENDP
 
+/*
+ * VOID
+ * KiRetireDpcList(
+ *     PKPRCB Prcb);
+ */
 EXTERN KiRetireDpcList:PROC
+
+/*
+ * VOID
+ * KiRetireDpcListInDpcStack(
+ *     PKPRCB Prcb,
+ *     PVOID DpcStack);
+ */
 PUBLIC KiRetireDpcListInDpcStack
 .PROC KiRetireDpcListInDpcStack
     push rbp
@@ -609,9 +621,13 @@ PUBLIC KiRetireDpcListInDpcStack
     .setframe rbp, 0
     .endprolog
 
-    /* Switch stack and call the function */
+    /* Switch to the DpcStack */
     mov rsp, rdx
-    sub rsp, 40
+
+    /* The stack is 16 byte aligned, allocate 32 bytes home space */
+    sub rsp, 32
+
+    /* Call KiRetireDpcList on the given stack */
     call KiRetireDpcList
 
     /* Restore stack, cleanup and return */
