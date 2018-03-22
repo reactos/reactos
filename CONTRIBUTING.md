@@ -65,7 +65,7 @@ Our commit style is defined in a __[commit template]__. Use it as a reference or
 
 - *Use your __real name__ and __real email__.* We do not accept anonymous contributions!
 - *Ensure your contribution is properly described.* Include the relevant issue number if applicable.
-- *Put only related changes.* It will make reviewing easier as the reviewer needs to recall less information about the existing source code that is changed./rapps-db/commit/7737182148cde7c559fb21170d3e5c3acf42648c.patch
+- *Put only related changes.* It will make reviewing easier as the reviewer needs to recall less information about the existing source code that is changed.
 - *Search for similar pull requests/patches before submitting.* It may be that a similar pull request or issue was opened previously. Comment and review on that one instead.
 - *Keep your contribution small and focused on the topic.* It can be tempting to fix existing issues as you come across them while reading the source code. Resist the temptation and put in a note in the source code instead, or (even better) put the issue in the issue tracking system.
 - *Respect our __[Coding Style]__ and __[Programming Guidelines]__.*
