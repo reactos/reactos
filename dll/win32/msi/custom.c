@@ -18,9 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <wine/exception.h>
+#define COBJMACROS
+
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "msidefs.h"
+#include "winuser.h"
+#include "objbase.h"
+#include "oleauto.h"
+
+#include "msipriv.h"
+#include "msiserver.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "wine/exception.h"
 
 #ifdef _MSC_VER
 #include "msvchelper.h"
@@ -64,14 +80,14 @@ UINT msi_schedule_action( MSIPACKAGE *package, UINT script, const WCHAR *action 
     }
     TRACE("Scheduling action %s in script %u\n", debugstr_w(action), script);
 
-    count = package->script->ActionCount[script];
-    package->script->ActionCount[script]++;
-    if (count != 0) newbuf = msi_realloc( package->script->Actions[script],
-                                          package->script->ActionCount[script] * sizeof(WCHAR *) );
+    count = package->script_actions_count[script];
+    package->script_actions_count[script]++;
+    if (count != 0) newbuf = msi_realloc( package->script_actions[script],
+                                          package->script_actions_count[script] * sizeof(WCHAR *) );
     else newbuf = msi_alloc( sizeof(WCHAR *) );
 
     newbuf[count] = strdupW( action );
-    package->script->Actions[script] = newbuf;
+    package->script_actions[script] = newbuf;
     return ERROR_SUCCESS;
 }
 
@@ -80,18 +96,16 @@ UINT msi_register_unique_action( MSIPACKAGE *package, const WCHAR *action )
     UINT count;
     WCHAR **newbuf = NULL;
 
-    if (!package->script) return FALSE;
-
     TRACE("Registering %s as unique action\n", debugstr_w(action));
 
-    count = package->script->UniqueActionsCount;
-    package->script->UniqueActionsCount++;
-    if (count != 0) newbuf = msi_realloc( package->script->UniqueActions,
-                                          package->script->UniqueActionsCount * sizeof(WCHAR *) );
+    count = package->unique_actions_count;
+    package->unique_actions_count++;
+    if (count != 0) newbuf = msi_realloc( package->unique_actions,
+                                          package->unique_actions_count * sizeof(WCHAR *) );
     else newbuf = msi_alloc( sizeof(WCHAR *) );
 
     newbuf[count] = strdupW( action );
-    package->script->UniqueActions = newbuf;
+    package->unique_actions = newbuf;
     return ERROR_SUCCESS;
 }
 
@@ -99,25 +113,20 @@ BOOL msi_action_is_unique( const MSIPACKAGE *package, const WCHAR *action )
 {
     UINT i;
 
-    if (!package->script) return FALSE;
-
-    for (i = 0; i < package->script->UniqueActionsCount; i++)
+    for (i = 0; i < package->unique_actions_count; i++)
     {
-        if (!strcmpW( package->script->UniqueActions[i], action )) return TRUE;
+        if (!strcmpW( package->unique_actions[i], action )) return TRUE;
     }
     return FALSE;
 }
 
 static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR action, UINT options)
 {
-    if (!package->script)
-        return TRUE;
-
     if ((options & msidbCustomActionTypeClientRepeat) ==
             msidbCustomActionTypeClientRepeat)
     {
-        if (!(package->script->InWhatSequence & SEQUENCE_UI &&
-            package->script->InWhatSequence & SEQUENCE_EXEC))
+        if (!(package->InWhatSequence & SEQUENCE_UI &&
+            package->InWhatSequence & SEQUENCE_EXEC))
         {
             TRACE("Skipping action due to dbCustomActionTypeClientRepeat option.\n");
             return FALSE;
@@ -125,8 +134,8 @@ static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR acti
     }
     else if (options & msidbCustomActionTypeFirstSequence)
     {
-        if (package->script->InWhatSequence & SEQUENCE_UI &&
-            package->script->InWhatSequence & SEQUENCE_EXEC )
+        if (package->InWhatSequence & SEQUENCE_UI &&
+            package->InWhatSequence & SEQUENCE_EXEC )
         {
             TRACE("Skipping action due to msidbCustomActionTypeFirstSequence option.\n");
             return FALSE;
@@ -258,7 +267,7 @@ static MSIBINARY *create_temp_binary( MSIPACKAGE *package, LPCWSTR source, BOOL 
     /* keep a reference to prevent the dll from being unloaded */
     if (dll && !(binary->module = LoadLibraryW( tmpfile )))
     {
-        WARN( "failed to load dll %s (%u)\n", debugstr_w( tmpfile ), GetLastError() );
+        ERR( "failed to load dll %s (%u)\n", debugstr_w( tmpfile ), GetLastError() );
     }
     binary->source = strdupW( source );
     binary->tmpfile = tmpfile;
@@ -562,7 +571,7 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
     hModule = LoadLibraryW( dll );
     if (!hModule)
     {
-        WARN( "failed to load dll %s (%u)\n", debugstr_w( dll ), GetLastError() );
+        ERR( "failed to load dll %s (%u)\n", debugstr_w( dll ), GetLastError() );
         return ERROR_SUCCESS;
     }
 
@@ -695,7 +704,7 @@ static HANDLE execute_command( const WCHAR *app, WCHAR *arg, const WCHAR *dir )
         }
         if (!len_exe)
         {
-            WARN("can't find executable %u\n", GetLastError());
+            ERR("can't find executable %u\n", GetLastError());
             msi_free( exe );
             return INVALID_HANDLE_VALUE;
         }
@@ -733,7 +742,7 @@ static HANDLE execute_command( const WCHAR *app, WCHAR *arg, const WCHAR *dir )
     msi_free( exe );
     if (!ret)
     {
-        WARN("unable to execute command %u\n", GetLastError());
+        ERR("unable to execute command %u\n", GetLastError());
         return INVALID_HANDLE_VALUE;
     }
     CloseHandle( info.hThread );

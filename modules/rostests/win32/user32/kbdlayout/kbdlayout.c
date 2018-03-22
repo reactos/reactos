@@ -122,7 +122,7 @@ void FormatBox(HWND hWnd, DWORD Flags, WCHAR *Caption, WCHAR *Format, ...)
 
 LRESULT CALLBACK WndSubclassProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	WND_DATA *data = (WND_DATA*)GetWindowLongPtr(hwnd, GWL_USERDATA);
+	WND_DATA *data = (WND_DATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
 	if(uMsg == WM_INPUTLANGCHANGE)
 	{
@@ -143,9 +143,9 @@ LRESULT CALLBACK WndSubclassProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 void SubclassWnd(HWND hWnd, WCHAR* Name)
 {
 	WND_DATA *data = HeapAlloc(GetProcessHeap(), 0, sizeof(WND_DATA));
-	data->OrigProc = (WNDPROC)SetWindowLongPtr( hWnd, GWL_WNDPROC, (LONG_PTR)WndSubclassProc);
+	data->OrigProc = (WNDPROC)SetWindowLongPtr( hWnd, GWLP_WNDPROC, (LONG_PTR)WndSubclassProc);
 	wcsncpy(data->WndName, Name, 25);
-	SetWindowLongPtr(hWnd, GWL_USERDATA, (LONG_PTR)data);
+	SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)data);
 	return;
 }
 

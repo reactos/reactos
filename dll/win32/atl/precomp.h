@@ -1,3 +1,4 @@
+
 #ifndef _ATL_PCH_
 #define _ATL_PCH_
 
@@ -20,6 +21,4 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(atl);
-
-#endif /* _ATL_PCH_ */
+#endif /* !_ATL_PCH_ */

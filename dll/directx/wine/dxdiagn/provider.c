@@ -20,16 +20,29 @@
  *
  */
 
-#include "dxdiag_private.h"
+#include "config.h"
 
-#include <winver.h>
-#include <uuids.h>
-#include <mmddk.h>
-#include <d3d9.h>
-#include <fil_data.h>
-#include <psapi.h>
-#include <wbemcli.h>
-#include <dsound.h>
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#include "dxdiag_private.h"
+#include "wine/unicode.h"
+#include "winver.h"
+#include "objidl.h"
+#include "uuids.h"
+#include "vfw.h"
+#include "mmddk.h"
+#include "d3d9.h"
+#include "strmif.h"
+#include "initguid.h"
+#include "fil_data.h"
+#include "psapi.h"
+#include "wbemcli.h"
+#include "dsound.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
 
 static const WCHAR szEmpty[] = {0};
 

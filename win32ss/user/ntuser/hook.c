@@ -1470,7 +1470,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
            RETURN( NULL);
        }
 
-       if ( !(ptiHook = IntTID2PTI( (HANDLE)ThreadId )))
+       if ( !(ptiHook = IntTID2PTI( UlongToHandle(ThreadId) )))
        {
           ERR("Invalid thread id 0x%x\n", ThreadId);
           EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -1556,7 +1556,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        RETURN( NULL);
     }
 
-    Hook->ihmod   = (INT)Mod; // Module Index from atom table, Do this for now.
+    Hook->ihmod   = (INT_PTR)Mod; // Module Index from atom table, Do this for now.
     Hook->HookId  = HookId;
     Hook->rpdesk  = ptiHook->rpdesk;
     Hook->phkNext = NULL; /* Dont use as a chain! Use link lists for chaining. */

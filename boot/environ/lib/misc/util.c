@@ -904,12 +904,12 @@ BlArchGetPerformanceCounter (
     )
 {
 #if defined(_M_IX86) || defined(_M_X64)
-    INT CpuInfo[4];
+    CPU_INFO CpuInfo;
 
     /* Serialize with CPUID, if it exists */
     if (Archx86IsCpuidSupported())
     {
-        BlArchCpuId(0, 0, CpuInfo);
+        BlArchCpuId(0, 0, &CpuInfo);
     }
 
     /* Read the TSC */
@@ -924,11 +924,56 @@ VOID
 BlArchCpuId (
     _In_ ULONG Function,
     _In_ ULONG SubFunction,
-    _Out_ INT* Result
+    _Out_ PCPU_INFO Result
     )
 {
 #if defined(_M_IX86) || defined(_M_X64)
     /* Use the intrinsic */
-    __cpuidex(Result, Function, SubFunction);
+    __cpuidex((INT*)Result->AsUINT32, Function, SubFunction);
 #endif
+}
+
+CPU_VENDORS
+BlArchGetCpuVendor (
+    VOID
+    )
+{
+    CPU_INFO CpuInfo;
+    INT Temp;
+
+    /* Get the CPU Vendor */
+    BlArchCpuId(0, 0, &CpuInfo);
+    Temp = CpuInfo.Ecx;
+    CpuInfo.Ecx = CpuInfo.Edx;
+    CpuInfo.Edx = Temp;
+
+    /* Check against supported values */
+    if (!strncmp((PCHAR)&CpuInfo.Ebx, "GenuineIntel", 12))
+    {
+        return CPU_INTEL;
+    }
+    if (!strncmp((PCHAR)&CpuInfo.Ebx, "AuthenticAMD", 12))
+    {
+        return CPU_AMD;
+    }
+    if (!strncmp((PCHAR)&CpuInfo.Ebx, "CentaurHauls", 12))
+    {
+        return CPU_VIA;
+    }
+#ifdef _M_IX86
+    if (!strncmp((PCHAR)&CpuInfo.Ebx, "CyrixInstead", 12))
+    {
+        return CPU_CYRIX;
+    }
+    if (!strncmp((PCHAR)&CpuInfo.Ebx, "GenuineTMx86", 12))
+    {
+        return CPU_TRANSMETA;
+    }
+    if (!strncmp((PCHAR)&CpuInfo.Ebx, "RiseRiseRise", 12))
+    {
+        return CPU_RISE;
+    }
+#endif // _M_IX86
+    /* Other */
+    return CPU_UNKNOWN;
 }

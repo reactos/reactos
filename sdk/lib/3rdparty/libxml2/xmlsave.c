@@ -2109,8 +2109,6 @@ xmlBufAttrSerializeTxtContent(xmlBufPtr buf, xmlDocPtr doc,
                 xmlBufAdd(buf, base, cur - base);
             if (*cur < 0xC0) {
                 xmlSaveErr(XML_SAVE_NOT_UTF8, (xmlNodePtr) attr, NULL);
-                if (doc != NULL)
-                    doc->encoding = xmlStrdup(BAD_CAST "ISO-8859-1");
 		xmlSerializeHexCharRef(tmp, *cur);
                 xmlBufAdd(buf, (xmlChar *) tmp, -1);
                 cur++;
@@ -2140,9 +2138,6 @@ xmlBufAttrSerializeTxtContent(xmlBufPtr buf, xmlDocPtr doc,
             }
             if ((l == 1) || (!IS_CHAR(val))) {
                 xmlSaveErr(XML_SAVE_CHAR_INVALID, (xmlNodePtr) attr, NULL);
-                if (doc != NULL)
-                    doc->encoding = xmlStrdup(BAD_CAST "ISO-8859-1");
-
 		xmlSerializeHexCharRef(tmp, *cur);
                 xmlBufAdd(buf, (xmlChar *) tmp, -1);
                 cur++;

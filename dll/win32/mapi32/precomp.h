@@ -1,3 +1,4 @@
+
 #ifndef _MAPI32_PCH_
 #define _MAPI32_PCH_
 
@@ -25,6 +26,4 @@
 
 #include "util.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(mapi);
-
-#endif /* _MAPI32_PCH_ */
+#endif /* !_MAPI32_PCH_ */

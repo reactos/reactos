@@ -19,6 +19,15 @@
  */
 
 #include "quartz_private.h"
+#include "pin.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "uuids.h"
+#include "vfwmsgs.h"
+#include <assert.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 #define ALIGNDOWN(value,boundary) ((value)/(boundary)*(boundary))
 #define ALIGNUP(value,boundary) (ALIGNDOWN((value)+(boundary)-1, (boundary)))
@@ -209,7 +218,10 @@ static HRESULT PullPin_Init(const IPinVtbl *PullPin_Vtbl, const PIN_INFO * pPinI
     return S_OK;
 }
 
-HRESULT PullPin_Construct(const IPinVtbl *PullPin_Vtbl, const PIN_INFO * pPinInfo, SAMPLEPROC_PULL pSampleProc, LPVOID pUserData, QUERYACCEPTPROC pQueryAccept, CLEANUPPROC pCleanUp, REQUESTPROC pCustomRequest, STOPPROCESSPROC pDone, LPCRITICAL_SECTION pCritSec, IPin ** ppPin)
+HRESULT PullPin_Construct(const IPinVtbl *PullPin_Vtbl, const PIN_INFO * pPinInfo,
+                          SAMPLEPROC_PULL pSampleProc, LPVOID pUserData, QUERYACCEPTPROC pQueryAccept,
+                          CLEANUPPROC pCleanUp, REQUESTPROC pCustomRequest, STOPPROCESSPROC pDone,
+                          LPCRITICAL_SECTION pCritSec, IPin ** ppPin)
 {
     PullPin * pPinImpl;
 
@@ -529,11 +541,7 @@ static void  PullPin_Thread_Stop(PullPin *This)
     TRACE("(%p)->()\n", This);
 
     EnterCriticalSection(This->pin.pCritSec);
-    {
-        CloseHandle(This->hThread);
-        This->hThread = NULL;
-        SetEvent(This->hEventStateChanged);
-    }
+    SetEvent(This->hEventStateChanged);
     LeaveCriticalSection(This->pin.pCritSec);
 
     IBaseFilter_Release(This->pin.pinInfo.pFilter);
@@ -818,6 +826,10 @@ HRESULT WINAPI PullPin_Disconnect(IPin *iface)
             hr = S_FALSE;
     }
     LeaveCriticalSection(This->pin.pCritSec);
+
+    WaitForSingleObject(This->hThread, INFINITE);
+    CloseHandle(This->hThread);
+    This->hThread = NULL;
 
     return hr;
 }

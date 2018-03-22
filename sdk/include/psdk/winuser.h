@@ -849,12 +849,17 @@ extern "C" {
 #define GWLP_ID (-12)
 #define GWL_USERDATA (-21)
 #define GWLP_USERDATA (-21)
-#define DWL_DLGPROC 4
-#define DWLP_DLGPROC 4
+
+#ifndef __REACTOS__ // NEVER USE THESE!
 #define DWL_MSGRESULT 0
-#define DWLP_MSGRESULT 0
+#define DWL_DLGPROC 4
 #define DWL_USER 8
-#define DWLP_USER 8
+#endif
+
+#define DWLP_MSGRESULT 0
+#define DWLP_DLGPROC (DWLP_MSGRESULT + sizeof(LRESULT))
+#define DWLP_USER (DWLP_DLGPROC + sizeof(DLGPROC))
+
 #if (_WIN32_WINNT >= 0x0501)
 #define QS_ALLEVENTS 1215
 #define QS_ALLINPUT 1279
@@ -3445,6 +3450,14 @@ typedef struct tagSOUNDSENTRYW {
 	LPWSTR lpszWindowsEffectDLL;
 	DWORD iWindowsEffectOrdinal;
 } SOUNDSENTRYW,*LPSOUNDSENTRYW;
+
+#if (_WIN32_WINNT >= 0x0600)
+typedef struct tagAUDIODESCRIPTION {
+	UINT cbSize;
+	BOOL Enabled;
+	LCID Locale;
+} AUDIODESCRIPTION, *LPAUDIODESCRIPTION;
+#endif
 
 typedef struct tagSTICKYKEYS {
 	DWORD cbSize;

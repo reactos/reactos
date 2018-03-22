@@ -22,21 +22,18 @@
 #ifndef __WINE_D3DCOMPILER_PRIVATE_H
 #define __WINE_D3DCOMPILER_PRIVATE_H
 
-#include <config.h>
-#include <wine/port.h>
-
-#include <assert.h>
-#include <stdio.h>
+#include "wine/debug.h"
+#include "wine/list.h"
+#include "wine/rbtree.h"
 
 #define COBJMACROS
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <d3dcompiler.h>
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
 
-#include <wine/debug.h>
-#include <wine/list.h>
-#include <wine/rbtree.h>
+#include "d3dcompiler.h"
+
+#include <assert.h>
 
 /*
  * This doesn't belong here, but for some functions it is possible to return that value,

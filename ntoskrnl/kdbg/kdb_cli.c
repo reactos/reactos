@@ -93,6 +93,8 @@ static BOOLEAN KdbpCmdDmesg(ULONG Argc, PCHAR Argv[]);
 
 BOOLEAN ExpKdbgExtPool(ULONG Argc, PCHAR Argv[]);
 BOOLEAN ExpKdbgExtPoolUsed(ULONG Argc, PCHAR Argv[]);
+BOOLEAN ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[]);
+BOOLEAN ExpKdbgExtDefWrites(ULONG Argc, PCHAR Argv[]);
 
 #ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
@@ -186,6 +188,8 @@ static const struct
     { "help", "help", "Display help screen.", KdbpCmdHelp },
     { "!pool", "!pool [Address [Flags]]", "Display information about pool allocations.", ExpKdbgExtPool },
     { "!poolused", "!poolused [Flags [Tag]]", "Display pool usage.", ExpKdbgExtPoolUsed },
+    { "!filecache", "!filecache", "Display cache usage.", ExpKdbgExtFileCache },
+    { "!defwrites", "!defwrites", "Display cache write values.", ExpKdbgExtDefWrites },
 };
 
 /* FUNCTIONS *****************************************************************/

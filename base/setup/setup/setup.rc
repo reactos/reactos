@@ -1,4 +1,7 @@
+#include <winuser.h>
+
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Setup"
 #define REACTOS_STR_INTERNAL_NAME     "setup"
 #define REACTOS_STR_ORIGINAL_FILENAME "setup.exe"
+#include <reactos/manifest_exe.rc>
 #include <reactos/version.rc>

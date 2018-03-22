@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_SQL_SQL_TAB_H_INCLUDED
-# define YY_SQL_SQL_TAB_H_INCLUDED
+#ifndef YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED
+# define YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -134,4 +134,4 @@ union YYSTYPE
 
 int sql_parse (SQL_input *info);
 
-#endif /* !YY_SQL_SQL_TAB_H_INCLUDED  */
+#endif /* !YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED  */

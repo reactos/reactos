@@ -17,9 +17,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "propvarutil.h"
+
 #include "wincodecs_private.h"
 
-#include <propvarutil.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 static const WCHAR *map_shortname_to_schema(const GUID *format, const WCHAR *name);
 

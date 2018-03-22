@@ -144,7 +144,7 @@ VOID NBTimeout(VOID)
                     if (NCE->State & NUD_INCOMPLETE)
                     {
                         /* We couldn't get an address to this IP at all */
-                        Status = NDIS_STATUS_NETWORK_UNREACHABLE;
+                        Status = NDIS_STATUS_HOST_UNREACHABLE;
                     }
                     else
                     {

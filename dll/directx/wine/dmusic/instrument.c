@@ -20,6 +20,8 @@
 
 #include "dmusic_private.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
+
 static const GUID IID_IDirectMusicInstrumentPRIVATE = { 0xbcb20080, 0xa40c, 0x11d1, { 0x86, 0xbc, 0x00, 0xc0, 0x4f, 0xbf, 0x8f, 0xef } };
 
 /* IDirectMusicInstrument IUnknown part: */

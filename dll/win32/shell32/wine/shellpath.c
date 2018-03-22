@@ -49,30 +49,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static const BOOL is_win64 = sizeof(void *) > sizeof(int);
 
-typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
-
-static LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
-
-BOOL IsWow64()
-{
-    BOOL bIsWow64 = FALSE;
-
-    if (!fnIsWow64Process)
-    {
-        fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
-            GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
-    }
-
-    if (!fnIsWow64Process)
-        return FALSE;
-
-    if (!fnIsWow64Process(GetCurrentProcess(), &bIsWow64))
-        return FALSE;
-
-    return bIsWow64;
-}
-
-
 /*
 	########## Combining and Constructing paths ##########
 */
@@ -1513,16 +1489,23 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
     if (!pszPath)
         return E_INVALIDARG;
 
-    switch (folder)
+    if (!is_win64)
     {
-    case CSIDL_PROGRAM_FILES:
-        if (IsWow64())
-            folder = CSIDL_PROGRAM_FILESX86;
-        break;
-    case CSIDL_PROGRAM_FILES_COMMON:
-        if (IsWow64())
-            folder = CSIDL_PROGRAM_FILESX86;
-        break;
+        BOOL is_wow64;
+
+        switch (folder)
+        {
+        case CSIDL_PROGRAM_FILES:
+        case CSIDL_PROGRAM_FILESX86:
+            IsWow64Process( GetCurrentProcess(), &is_wow64 );
+            folder = is_wow64 ? CSIDL_PROGRAM_FILESX86 : CSIDL_PROGRAM_FILES;
+            break;
+        case CSIDL_PROGRAM_FILES_COMMON:
+        case CSIDL_PROGRAM_FILES_COMMONX86:
+            IsWow64Process( GetCurrentProcess(), &is_wow64 );
+            folder = is_wow64 ? CSIDL_PROGRAM_FILES_COMMONX86 : CSIDL_PROGRAM_FILES_COMMON;
+            break;
+        }
     }
 
     switch (CSIDL_Data[folder].type)

@@ -290,7 +290,8 @@ HRESULT STDMETHODCALLTYPE CAddressBand::OnWinEvent(
     HRESULT                                 hResult;
     RECT                                    rect;
 
-    *theResult = 0;
+    if (theResult)
+        *theResult = 0;
 
     switch (uMsg)
     {

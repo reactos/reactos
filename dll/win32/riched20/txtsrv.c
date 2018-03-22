@@ -18,8 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "editor.h"
+#include "config.h"
+#include "wine/port.h"
 
+#define COBJMACROS
+
+#include "editor.h"
+#include "ole2.h"
+#include "oleauto.h"
+#include "richole.h"
+#include "tom.h"
+#include "imm.h"
+#include "textserv.h"
+#include "wine/debug.h"
+#include "editstr.h"
 
 #ifdef __i386__  /* thiscall functions are i386-specific */
 

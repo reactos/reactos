@@ -457,7 +457,7 @@ WelcomeDlgProc(
     UNREFERENCED_PARAMETER(wParam);
 
     /* Retrieve pointer to the global setup data */
-    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -468,7 +468,7 @@ WelcomeDlgProc(
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             hwndControl = GetParent(hwndDlg);
 
@@ -567,7 +567,7 @@ CHSourceDlgProc(
     PDEVINSTDATA DevInstData;
 
     /* Retrieve pointer to the global setup data */
-    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -578,7 +578,7 @@ CHSourceDlgProc(
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             hwndControl = GetParent(hwndDlg);
 
@@ -716,7 +716,7 @@ SearchDrvDlgProc(
     DWORD dwThreadId;
 
     /* Retrieve pointer to the global setup data */
-    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -727,7 +727,7 @@ SearchDrvDlgProc(
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             DevInstData->hDialog = hwndDlg;
             hwndControl = GetParent(hwndDlg);
@@ -778,7 +778,7 @@ SearchDrvDlgProc(
                 case PSN_KILLACTIVE:
                     if (hThread != 0)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
                         return TRUE;
                     }
                     break;
@@ -811,7 +811,7 @@ InstallDrvDlgProc(
     DWORD dwThreadId;
 
     /* Retrieve pointer to the global setup data */
-    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -822,7 +822,7 @@ InstallDrvDlgProc(
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             DevInstData->hDialog = hwndDlg;
             hwndControl = GetParent(hwndDlg);
@@ -889,7 +889,7 @@ InstallDrvDlgProc(
                 case PSN_KILLACTIVE:
                     if (hThread != 0)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
                         return TRUE;
                     }
                     break;
@@ -924,7 +924,7 @@ NoDriverDlgProc(
     UNREFERENCED_PARAMETER(wParam);
 
     /* Get pointer to the global setup data */
-    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -934,7 +934,7 @@ NoDriverDlgProc(
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             /* Center the wizard window */
             CenterWindow(GetParent(hwndDlg));
@@ -1043,7 +1043,7 @@ InstallFailedDlgProc(
     UNREFERENCED_PARAMETER(wParam);
 
     /* Retrieve pointer to the global setup data */
-    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -1053,7 +1053,7 @@ InstallFailedDlgProc(
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             /* Center the wizard window */
             CenterWindow(GetParent(hwndDlg));
@@ -1122,7 +1122,7 @@ NeedRebootDlgProc(
     UNREFERENCED_PARAMETER(wParam);
 
     /* Retrieve pointer to the global setup data */
-    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -1132,7 +1132,7 @@ NeedRebootDlgProc(
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             /* Center the wizard window */
             CenterWindow(GetParent(hwndDlg));
@@ -1201,7 +1201,7 @@ FinishDlgProc(
     UNREFERENCED_PARAMETER(wParam);
 
     /* Retrieve pointer to the global setup data */
-    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+    DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -1211,7 +1211,7 @@ FinishDlgProc(
 
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             /* Center the wizard window */
             CenterWindow(GetParent(hwndDlg));

@@ -204,6 +204,17 @@ BOOL WINAPI PaintMenuBar(HWND hWnd, HDC hDC, ULONG left, ULONG right, ULONG top,
 #define DrawCaptionTemp DrawCaptionTempA
 #endif
 
+//
+// Hard error balloon package
+//
+typedef struct _BALLOON_HARD_ERROR_DATA
+{
+    DWORD cbHeaderSize;
+    DWORD Status;
+    DWORD dwType; /* any combination of the MB_ message box types */
+    ULONG_PTR TitleOffset;
+    ULONG_PTR MessageOffset;
+} BALLOON_HARD_ERROR_DATA, *PBALLOON_HARD_ERROR_DATA;
 
 //
 // User api hook
@@ -218,7 +229,7 @@ typedef BOOL (WINAPI *ADJUSTWINDOWRECTEX)(LPRECT,DWORD,BOOL,DWORD);
 typedef int (WINAPI *GETSYSTEMMETRICS)(int);
 typedef BOOL (WINAPI *SYSTEMPARAMETERSINFOA)(UINT,UINT,PVOID,UINT);
 typedef BOOL (WINAPI *SYSTEMPARAMETERSINFOW)(UINT,UINT,PVOID,UINT);
-typedef BOOL (__fastcall *FORCERESETUSERAPIHOOK)(HINSTANCE);
+typedef BOOL (WINAPI *FORCERESETUSERAPIHOOK)(HINSTANCE);
 typedef BOOL (WINAPI *DRAWFRAMECONTROL)(HDC,LPRECT,UINT,UINT);
 typedef BOOL (WINAPI *DRAWCAPTION)(HWND,HDC,LPCRECT,UINT);
 typedef BOOL (WINAPI *MDIREDRAWFRAME)(HWND,DWORD);

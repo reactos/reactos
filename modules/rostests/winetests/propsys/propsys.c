@@ -19,27 +19,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 
-//#include <stdarg.h>
+#include <stdarg.h>
 #include <stdio.h>
 
 #define NONAMELESSUNION
 
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winnls.h>
-//#include "objbase.h"
-#include <ole2.h>
-#include <initguid.h>
-#include <propsys.h>
-#include <propvarutil.h>
-#include <wine/test.h>
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "initguid.h"
+#include "propsys.h"
+#include "propvarutil.h"
+#include "wine/test.h"
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 DEFINE_GUID(dummy_guid, 0xdeadbeef, 0xdead, 0xbeef, 0xde, 0xad, 0xbe, 0xef, 0xca, 0xfe, 0xba, 0xbe);
@@ -890,6 +883,317 @@ static void test_intconversions(void)
     ok(llval == -7, "got wrong value %s\n", wine_dbgstr_longlong(llval));
 }
 
+static void test_PropVariantToBoolean(void)
+{
+    static WCHAR str_0[] = {'0',0};
+    static WCHAR str_1[] = {'1',0};
+    static WCHAR str_7[] = {'7',0};
+    static WCHAR str_n7[] = {'-','7',0};
+    static WCHAR str_true[] = {'t','r','u','e',0};
+    static WCHAR str_true2[] = {'#','T','R','U','E','#',0};
+    static WCHAR str_true_case[] = {'t','R','U','e',0};
+    static WCHAR str_false[] = {'f','a','l','s','e',0};
+    static WCHAR str_false2[] = {'#','F','A','L','S','E','#',0};
+    static WCHAR str_true_space[] = {'t','r','u','e',' ',0};
+    static WCHAR str_yes[] = {'y','e','s',0};
+    PROPVARIANT propvar;
+    HRESULT hr;
+    BOOL val;
+
+    /* VT_BOOL */
+    propvar.vt = VT_BOOL;
+    propvar.u.boolVal = VARIANT_FALSE;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_BOOL;
+    propvar.u.boolVal = 1;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_BOOL;
+    propvar.u.boolVal = VARIANT_TRUE;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    /* VT_EMPTY */
+    propvar.vt = VT_EMPTY;
+    propvar.u.boolVal = VARIANT_TRUE;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    /* test integer conversion */
+    propvar.vt = VT_I4;
+    propvar.u.lVal = 0;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_I4;
+    propvar.u.lVal = 1;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_I4;
+    propvar.u.lVal = 67;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_I4;
+    propvar.u.lVal = -67;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    /* test string conversion */
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_0;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_1;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_7;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_n7;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_true;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_true_case;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_true2;
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_false;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_false2;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_true_space;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == DISP_E_TYPEMISMATCH, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = str_yes;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == DISP_E_TYPEMISMATCH, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = NULL;
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == DISP_E_TYPEMISMATCH, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    /* VT_LPSTR */
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = (char *)"#TruE#";
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == DISP_E_TYPEMISMATCH, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = (char *)"#TRUE#";
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = (char *)"tRUe";
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = (char *)"#FALSE#";
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = (char *)"fALSe";
+    val = TRUE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == FALSE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = (char *)"1";
+    val = FALSE;
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = (char *)"-1";
+    hr = PropVariantToBoolean(&propvar, &val);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(val == TRUE, "Unexpected value %d\n", val);
+}
+
+static void test_PropVariantToStringWithDefault(void)
+{
+    PROPVARIANT propvar;
+    static WCHAR default_value[] = {'t', 'e', 's', 't', 0};
+    static WCHAR wstr_test2[] =  {'t', 'e', 's', 't', '2', 0};
+    static WCHAR wstr_empty[] = {0};
+    static WCHAR wstr_space[] = {' ', 0};
+    static CHAR str_test2[] =  "test2";
+    static CHAR str_empty[] = "";
+    static CHAR str_space[] = " ";
+    LPCWSTR result;
+
+    propvar.vt = VT_EMPTY;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_NULL;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_BOOL;
+    propvar.u.boolVal = VARIANT_TRUE;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_I4;
+    propvar.u.lVal = 15;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    /* VT_LPWSTR */
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = NULL;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = wstr_empty;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == wstr_empty, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = wstr_space;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == wstr_space, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_LPWSTR;
+    propvar.u.pwszVal = wstr_test2;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == wstr_test2, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    /* VT_LPSTR */
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = NULL;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = str_empty;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = str_space;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_LPSTR;
+    propvar.u.pszVal = str_test2;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(result == default_value, "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    /* VT_BSTR */
+
+    propvar.vt = VT_BSTR;
+    propvar.u.bstrVal = NULL;
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(!lstrcmpW(result, wstr_empty), "Unexpected value %s\n", wine_dbgstr_w(result));
+
+    propvar.vt = VT_BSTR;
+    propvar.u.bstrVal = SysAllocString(wstr_empty);
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(!lstrcmpW(result, wstr_empty), "Unexpected value %s\n", wine_dbgstr_w(result));
+    SysFreeString(propvar.u.bstrVal);
+
+    propvar.vt = VT_BSTR;
+    propvar.u.bstrVal = SysAllocString(wstr_space);
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(!lstrcmpW(result, wstr_space), "Unexpected value %s\n", wine_dbgstr_w(result));
+    SysFreeString(propvar.u.bstrVal);
+
+    propvar.vt = VT_BSTR;
+    propvar.u.bstrVal = SysAllocString(wstr_test2);
+    result = PropVariantToStringWithDefault(&propvar, default_value);
+    ok(!lstrcmpW(result, wstr_test2), "Unexpected value %s\n", wine_dbgstr_w(result));
+    SysFreeString(propvar.u.bstrVal);
+}
+
 static void test_PropVariantChangeType_LPWSTR(void)
 {
     PROPVARIANT dest, src;
@@ -938,4 +1242,6 @@ START_TEST(propsys)
     test_PropVariantCompare();
     test_intconversions();
     test_PropVariantChangeType_LPWSTR();
+    test_PropVariantToBoolean();
+    test_PropVariantToStringWithDefault();
 }

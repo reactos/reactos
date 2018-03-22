@@ -18,24 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 
 #include <stdarg.h>
-//#include <stdio.h>
+#include <stdio.h>
 
 #define NONAMELESSUNION
 
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <propsys.h>
-#include <wine/test.h>
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "propsys.h"
+#include "wine/test.h"
 
-#include <initguid.h>
+#include "initguid.h"
 
 DEFINE_GUID(PKEY_WineTest, 0x7b317433, 0xdfa3, 0x4c44, 0xad, 0x3e, 0x2f, 0x80, 0x4b, 0x90, 0xdb, 0xf4);
 

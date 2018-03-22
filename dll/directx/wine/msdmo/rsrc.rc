@@ -23,4 +23,4 @@
 #define WINE_PRODUCTVERSION 6,5,1,900
 #define WINE_PRODUCTVERSION_STR "6.5"
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"

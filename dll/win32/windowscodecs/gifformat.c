@@ -17,11 +17,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wincodecs_private.h"
+#include "config.h"
 
-#include <ole2.h>
+#include <stdarg.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
 
 #include "ungif.h"
+
+#include "wincodecs_private.h"
+
+#include "wine/debug.h"
+
+#ifdef __REACTOS__
+#include <ole2.h>
+#endif
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 #include "pshpack1.h"
 

@@ -45,6 +45,7 @@ static unsigned int getbits(mpg123_handle *fr, int number_of_bits)
 fprintf(stderr,"g%d",number_of_bits);
 #endif
   /* Safety catch until we got the nasty code fully figured out. */
+  /* No, that catch stays here, even if we think we got it figured out! */
   if( (long)(fr->wordpointer-fr->bsbuf)*8
       + fr->bitindex+number_of_bits > (long)fr->framesize*8 )
     return 0;

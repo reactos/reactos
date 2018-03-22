@@ -2,25 +2,11 @@
  * PROJECT:     ReactOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Print Monitors
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
-
-static void
-_MarshallUpMonitorInfo(PBYTE pMonitorInfo, DWORD Level)
-{
-    PMONITOR_INFO_2W pMonitorInfo2 = (PMONITOR_INFO_2W)pMonitorInfo;        // MONITOR_INFO_1W is a subset of MONITOR_INFO_2W
-
-    // Replace relative offset addresses in the output by absolute pointers.
-    pMonitorInfo2->pName = (PWSTR)((ULONG_PTR)pMonitorInfo2->pName + (ULONG_PTR)pMonitorInfo2);
-
-    if (Level == 2)
-    {
-        pMonitorInfo2->pDLLName = (PWSTR)((ULONG_PTR)pMonitorInfo2->pDLLName + (ULONG_PTR)pMonitorInfo2);
-        pMonitorInfo2->pEnvironment = (PWSTR)((ULONG_PTR)pMonitorInfo2->pEnvironment + (ULONG_PTR)pMonitorInfo2);
-    }
-}
+#include <marshalling/monitors.h>
 
 BOOL WINAPI
 AddMonitorA(PSTR pName, DWORD Level, PBYTE pMonitors)
@@ -66,8 +52,6 @@ BOOL WINAPI
 EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
-    DWORD i;
-    PBYTE p = pMonitors;
 
     TRACE("EnumMonitorsW(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pMonitors, cbBuf, pcbNeeded, pcReturned);
 
@@ -86,15 +70,8 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
     if (dwErrorCode == ERROR_SUCCESS)
     {
         // Replace relative offset addresses in the output by absolute pointers.
-        for (i = 0; i < *pcReturned; i++)
-        {
-            _MarshallUpMonitorInfo(p, Level);
-
-            if (Level == 1)
-                p += sizeof(MONITOR_INFO_1W);
-            else if (Level == 2)
-                p += sizeof(MONITOR_INFO_2W);
-        }
+        ASSERT(Level >= 1 && Level <= 2);
+        MarshallUpStructuresArray(cbBuf, pMonitors, *pcReturned, pMonitorInfoMarshalling[Level]->pInfo, pMonitorInfoMarshalling[Level]->cbStructureSize, TRUE);
     }
 
     SetLastError(dwErrorCode);

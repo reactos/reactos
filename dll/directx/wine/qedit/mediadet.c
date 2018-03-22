@@ -17,10 +17,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "qedit_private.h"
-
 #include <assert.h>
-#include <oleauto.h>
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+
+#include "qedit_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(qedit);
 
 typedef struct MediaDetImpl {
     IUnknown IUnknown_inner;

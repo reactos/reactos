@@ -267,8 +267,8 @@ NTSTATUS TCPTranslateError(const err_t err)
             Status = STATUS_UNSUCCESSFUL;
             break;
     }
-    
-    DbgPrint("TCP operation failed: 0x%x (%d)\n", Status, err);
+
+    TI_DbgPrint(DEBUG_TCP,("TCP operation failed: 0x%x (%d)\n", Status, err));
 
     return Status;
 }
@@ -367,7 +367,7 @@ NTSTATUS TCPConnect
             
             Bucket->Request.RequestNotifyObject = (PVOID)Complete;
             Bucket->Request.RequestContext = Context;
-			
+
             InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
         
             Status = TCPTranslateError(LibTCPConnect(Connection,

@@ -20,6 +20,11 @@
 
 #pragma once
 
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <htmlhelp.h>
+
 #define IDS_CONTENTS    1
 #define IDS_INDEX       2
 #define IDS_SEARCH      3

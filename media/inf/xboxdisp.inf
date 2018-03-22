@@ -56,6 +56,10 @@ PCI\VEN_10DE&DEV_02A0.DeviceDesc = "NV2A Xbox Graphics Processing Unit"
 ReactOS = "Equipo de ReactOS"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Unidad de procesamiento de gráficos de Xbox NV2A"
 
+[Strings.0415]
+ReactOS = "Ekipa ReactOS"
+PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Procesor graficzny Xbox NV2A"
+
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 nVidiaMfg = "Corporația nVidia"
@@ -77,3 +81,6 @@ PCI\VEN_10DE&DEV_02A0.DeviceDesc = "NV2A Xbox Çizge İşleme Birimi"
 ReactOS = "Команда ReactOS"
 nVidiaMfg = "Корпорація nVidia"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Графічний процесор NV2A Xbox"
+
+[Strings.0804]
+PCI\VEN_10DE&DEV_02A0.DeviceDesc = "NV2A Xbox 图形处理器"

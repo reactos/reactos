@@ -1,13 +1,13 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite user-mode test list
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Kernel-Mode Test Suite user-mode test list
  */
 
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_CcCopyRead;
+KMT_TESTFUNC Test_CcMapData;
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_FileAttributes;
 KMT_TESTFUNC Test_FindFile;
@@ -36,6 +36,7 @@ KMT_TESTFUNC Test_TcpIpConnect;
 const KMT_TEST TestList[] =
 {
     { "CcCopyRead",                   Test_CcCopyRead },
+    { "CcMapData",                    Test_CcMapData },
     { "-Example",                     Test_Example },
     { "FileAttributes",               Test_FileAttributes },
     { "FindFile",                     Test_FindFile },

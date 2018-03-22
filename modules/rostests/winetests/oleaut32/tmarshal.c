@@ -17,14 +17,28 @@
  *
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
 
+#include <windows.h>
+#include <ocidl.h>
+#include <stdio.h>
+
+#include "wine/test.h"
+
+#include "tmarshal.h"
 #include "tmarshal_dispids.h"
 
 static HRESULT (WINAPI *pVarAdd)(LPVARIANT,LPVARIANT,LPVARIANT);
 
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, #func " failed with error 0x%08x\n", hr)
+
+#ifdef __i386__
+static const int tmarshal_todo = 0;
+#else
+static const int tmarshal_todo = 1;
+#endif
 
 /* ULL suffix is not portable */
 #define ULL_CONST(dw1, dw2) ((((ULONGLONG)dw1) << 32) | (ULONGLONG)dw2)
@@ -1297,6 +1311,7 @@ static void test_typelibmarshal(void)
 
     IStream_Seek(pStream, ullZero, STREAM_SEEK_SET, NULL);
     hr = CoUnmarshalInterface(pStream, &IID_IKindaEnumWidget, (void **)&pKEW);
+    todo_wine_if(tmarshal_todo)
     ok_ole_success(hr, CoUnmarshalInterface);
     IStream_Release(pStream);
 
@@ -1323,6 +1338,7 @@ static void test_typelibmarshal(void)
     VariantInit(&varresult);
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_NAME, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_PROPERTYPUT, &dispparams, &varresult, &excepinfo, NULL);
     ok_ole_success(hr, IDispatch_Invoke);
+    todo_wine_if(tmarshal_todo)
     ok(excepinfo.wCode == 0x0 && excepinfo.scode == S_OK,
         "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
         excepinfo.wCode, excepinfo.scode);
@@ -1342,6 +1358,7 @@ static void test_typelibmarshal(void)
     VariantInit(&varresult);
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_NAME, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
     ok_ole_success(hr, IDispatch_Invoke);
+    todo_wine_if(tmarshal_todo)
     ok(excepinfo.wCode == 0x0 && excepinfo.scode == S_OK,
         "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
         excepinfo.wCode, excepinfo.scode);
@@ -1510,6 +1527,7 @@ static void test_typelibmarshal(void)
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_CLONEDISPATCH, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
     ok_ole_success(hr, IDispatch_Invoke);
 
+    todo_wine_if(tmarshal_todo)
     ok(excepinfo.wCode == 0x0 && excepinfo.scode == S_OK,
         "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
         excepinfo.wCode, excepinfo.scode);
@@ -1527,6 +1545,7 @@ static void test_typelibmarshal(void)
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_CLONECOCLASS, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
     ok_ole_success(hr, IDispatch_Invoke);
 
+    todo_wine_if(tmarshal_todo)
     ok(excepinfo.wCode == 0x0 && excepinfo.scode == S_OK,
        "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
        excepinfo.wCode, excepinfo.scode);
@@ -1543,6 +1562,7 @@ static void test_typelibmarshal(void)
     VariantInit(&varresult);
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_COCLASS, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
     ok_ole_success(hr, IDispatch_Invoke);
+    todo_wine_if(tmarshal_todo)
     ok(excepinfo.wCode == 0x0 && excepinfo.scode == S_OK,
         "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
         excepinfo.wCode, excepinfo.scode);
@@ -1566,6 +1586,7 @@ static void test_typelibmarshal(void)
     hr = IDispatch_Invoke(pDispatch, DISPID_VALUE, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
     ok_ole_success(hr, IDispatch_Invoke);
 
+    todo_wine_if(tmarshal_todo)
     ok(excepinfo.wCode == 0x0 && excepinfo.scode == S_OK,
         "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
         excepinfo.wCode, excepinfo.scode);
@@ -1621,9 +1642,9 @@ static void test_typelibmarshal(void)
     V_I4(&vararg[1]) = 2;
     hr = IWidget_VariantCArray(pWidget, 2, vararg);
     ok_ole_success(hr, IWidget_VariantCArray);
-    todo_wine
+    todo_wine_if(!tmarshal_todo)
     ok(V_VT(&vararg[0]) == VT_I4 && V_I4(&vararg[0]) == 2, "vararg[0] = %d[%d]\n", V_VT(&vararg[0]), V_I4(&vararg[0]));
-    todo_wine
+    todo_wine_if(!tmarshal_todo)
     ok(V_VT(&vararg[1]) == VT_I4 && V_I4(&vararg[1]) == 3, "vararg[1] = %d[%d]\n", V_VT(&vararg[1]), V_I4(&vararg[1]));
 
     /* call VarArg */
@@ -1694,6 +1715,7 @@ static void test_typelibmarshal(void)
     VariantInit(&varresult);
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_ERROR, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, NULL, &excepinfo, NULL);
     ok(hr == DISP_E_EXCEPTION, "IDispatch_Invoke should have returned DISP_E_EXCEPTION instead of 0x%08x\n", hr);
+    todo_wine_if(tmarshal_todo)
     ok(excepinfo.wCode == 0x0 && excepinfo.scode == E_NOTIMPL,
         "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
         excepinfo.wCode, excepinfo.scode);
@@ -1720,6 +1742,7 @@ static void test_typelibmarshal(void)
     hr = ITypeInfo_Invoke(pTypeInfo, &NonOleAutomation, DISPID_NOA_ERROR, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
     ok(hr == DISP_E_EXCEPTION, "ITypeInfo_Invoke should have returned DISP_E_EXCEPTION instead of 0x%08x\n", hr);
     ok(V_VT(&varresult) == VT_EMPTY, "V_VT(&varresult) should be VT_EMPTY instead of %d\n", V_VT(&varresult));
+    todo_wine_if(tmarshal_todo)
     ok(excepinfo.wCode == 0x0 && excepinfo.scode == E_NOTIMPL,
         "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
         excepinfo.wCode, excepinfo.scode);
@@ -2031,6 +2054,7 @@ static void test_external_connection(void)
 
     IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
     hres = CoUnmarshalInterface(stream, &IID_ItestDual, (void**)&iface);
+    todo_wine_if(tmarshal_todo)
     ok(hres == S_OK, "CoUnmarshalInterface failed: %08x\n", hres);
     ok(external_connections == 1, "external_connections = %d\n", external_connections);
 
@@ -2039,16 +2063,19 @@ static void test_external_connection(void)
 
     /* Creating a stub for new iface causes new external connection. */
     hres = ItestDual_QueryInterface(iface, &IID_ITestSecondDisp, (void**)&second);
+    todo_wine_if(tmarshal_todo)
     ok(hres == S_OK, "Could not get ITestSecondDisp iface: %08x\n", hres);
     todo_wine
     ok(external_connections == 2, "external_connections = %d\n", external_connections);
 
-    ITestSecondDisp_Release(second);
+    if (hres == S_OK)
+        ITestSecondDisp_Release(second);
     todo_wine
     ok(external_connections == 2, "external_connections = %d\n", external_connections);
 
     expect_last_release_closes = TRUE;
     ItestDual_Release(iface);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     end_host_object(tid, thread);
@@ -2060,12 +2087,14 @@ static void test_external_connection(void)
     expect_last_release_closes = FALSE;
     hres = CoMarshalInterface(stream, &IID_ItestDual, (IUnknown*)&TestDual, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
     ok(hres == S_OK, "CoMarshalInterface failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 1, "external_connections = %d\n", external_connections);
 
     expect_last_release_closes = TRUE;
     IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
     hres = CoReleaseMarshalData(stream);
     ok(hres == S_OK, "CoReleaseMarshalData failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     /* Two separated marshal data are still one external connection. */
@@ -2076,21 +2105,25 @@ static void test_external_connection(void)
     IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
     hres = CoMarshalInterface(stream, &IID_ItestDual, (IUnknown*)&TestDual, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
     ok(hres == S_OK, "CoMarshalInterface failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 1, "external_connections = %d\n", external_connections);
 
     hres = CoMarshalInterface(stream2, &IID_ItestDual, (IUnknown*)&TestDual, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
     ok(hres == S_OK, "CoMarshalInterface failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 1, "external_connections = %d\n", external_connections);
 
     IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
     hres = CoReleaseMarshalData(stream);
     ok(hres == S_OK, "CoReleaseMarshalData failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 1, "external_connections = %d\n", external_connections);
 
     expect_last_release_closes = TRUE;
     IStream_Seek(stream2, zero, STREAM_SEEK_SET, NULL);
     hres = CoReleaseMarshalData(stream2);
     ok(hres == S_OK, "CoReleaseMarshalData failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     IStream_Release(stream);
@@ -2102,17 +2135,20 @@ static void test_external_connection(void)
 
     hres = CoMarshalInterface(stream, &IID_ItestDual, (IUnknown*)&TestDual, MSHCTX_INPROC, NULL, MSHLFLAGS_TABLEWEAK);
     ok(hres == S_OK, "CoMarshalInterface failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
     hres = CoUnmarshalInterface(stream, &IID_ItestDual, (void**)&iface);
     ok(hres == S_OK, "CoUnmarshalInterface failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 0, "external_connections = %d\n", external_connections);
     ItestDual_Release(iface);
 
     IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
     hres = CoReleaseMarshalData(stream);
     ok(hres == S_OK, "CoReleaseMarshalData failed: %08x\n", hres);
+    todo_wine_if(tmarshal_todo)
     ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     IStream_Release(stream);

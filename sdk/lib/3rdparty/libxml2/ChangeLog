@@ -1929,7 +1929,7 @@ Mon Jun 12 12:54:25 CEST 2006 Kasimier Buchcik <libxml2-cvs@cazic.net>
 
 	* tree.c: Fixed xmlGetNodePath() to generate the node test "*"
 	  for elements in the default namespace, rather than generating
-	  an unprefixed named node test and loosing the namespace
+	  an unprefixed named node test and losing the namespace
 	  information.
 
 Fri Jun  9 21:45:02 CEST 2006 Kasimier Buchcik <libxml2-cvs@cazic.net>
@@ -2305,7 +2305,7 @@ Mon Mar  6 14:21:08 CET 2006 Kasimier Buchcik <libxml2-cvs@cazic.net>
 	* tree.c: Simplified usage of the internal xmlNsMap. Added a
 	  "strict" lookup for namespaces based on a prefix. Fixed a
 	  namespace processing issue in the clone-node function, which
-	  occured if a @ctxt argument was given.
+	  occurred if a @ctxt argument was given.
 	  
 Fri Mar  3 17:44:10 CET 2006 Rob Richards <rrichards@ctindustries.net>
 
@@ -3951,7 +3951,7 @@ Thu Jun 30 15:01:52 CEST 2005 Daniel Veillard <daniel@veillard.com>
 	* README: updated 
 	* debugXML.c: fix a bug raised by bill on IRC
 	* relaxng.c: fix a leak in weird circumstances
-	* runsuite.c Makefile.am: standalone test tool agaisnt
+	* runsuite.c Makefile.am: standalone test tool against
 	  the regression suites, work in progress
 
 Tue Jun 28 08:30:26 CEST 2005 Daniel Veillard <daniel@veillard.com>
@@ -4356,7 +4356,7 @@ Fri Apr  8 21:58:04 CEST 2005 Kasimier Buchcik <libxml2-cvs@cazic.net>
 	* xmlschemas.c: Added substitution group constraints; changed
 	  the build of the pre-computed substitution groups. Channeled
 	  errors during xsi assembling of schemas to the validation
-	  context. Fixed a big memory leak, which occured when using
+	  context. Fixed a big memory leak, which occurred when using
 	  IDCs: the precomputed value of attributes was not freed if
 	  the attribute did not resolve to an IDC field (discovered
 	  with the help of Randy J. Ray's schema, posted to the
@@ -4551,7 +4551,7 @@ Mon Mar 21 22:58:37 CET 2005 Kasimier Buchcik <libxml2-cvs@cazic.net>
 
 Mon Mar 21 21:09:07 CET 2005 Kasimier Buchcik <libxml2-cvs@cazic.net>
 
-	* xmlschemas.c: Fixed a segfault, which occured during bubbling
+	* xmlschemas.c: Fixed a segfault, which occurred during bubbling
 	  of IDC nodes (bug #170779 and #170778, reported by GUY Fabrice):
 	  a variable was missed to be reset in a loop. Deactivated bubbling,
 	  if not referenced by a keyref.
@@ -11220,7 +11220,7 @@ Fri Mar  7 19:29:40 CET 2003 Daniel Veillard <daniel@veillard.com>
 	* test/xsdtest/xsdtest.xml uri.c: after and exchange with James
 	  Clark it appeared I had bug in URI parsing code ...
 	* relaxng.c include/libxml/relaxng.h: completely revamped error
-	  reporting to not loose message from optional parts.
+	  reporting to not lose message from optional parts.
 	* xmllint.c: added timing for RNG validation steps
 	* result/relaxng/*: updated the result, all error messages changed
 
@@ -13182,7 +13182,7 @@ Thu Aug  1 12:17:30 CEST 2002 Daniel Veillard <daniel@veillard.com>
 	  xmlNewCharEncodingHandler as requested in #89415
 	* python/generator.py python/setup.py.in: applied cleanup
 	  patches from Marc-Andre Lemburg
-	* tree.c: fixing bug #89332 on a specific case of loosing 
+	* tree.c: fixing bug #89332 on a specific case of losing 
 	  the XML-1.0 namespace on xml:xxx attributes
 
 Wed Jul 31 23:27:42 2002  Aleksey Sanin  <aleksey@aleksey.com>
@@ -15356,7 +15356,7 @@ Sat Oct  6 15:27:12 CEST 2001 Daniel Veillard <daniel@veillard.com>
 
 Sat Oct  6 15:07:14 CEST 2001 Daniel Veillard <daniel@veillard.com>
 
-	* xpath.c: fixing #61673 part I, do not loose doc information
+	* xpath.c: fixing #61673 part I, do not lose doc information
 	  when copying result value trees.
 
 Sat Oct  6 11:58:58 CEST 2001 Daniel Veillard <daniel@veillard.com>
@@ -15970,7 +15970,7 @@ Tue Jul 10 17:47:09 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 Mon Jul  9 22:06:53 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 
 	* valid.c: fixed "Internal: MIXED struct bad" when #CDATA elements
-	  validation occured on content with element child
+	  validation occurred on content with element child
 
 Mon Jul  9 17:59:08 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 

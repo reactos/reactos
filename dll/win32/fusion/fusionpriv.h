@@ -23,25 +23,16 @@
 
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winver.h"
+#include "wine/heap.h"
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-#include <winver.h>
+#ifdef __REACTOS__
 #include <objbase.h>
 #include <fusion.h>
-#include <corerror.h>
-
-#include <wine/unicode.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(fusion);
+#endif
 
 #include <pshpack1.h>
 
@@ -463,8 +454,7 @@ static inline LPWSTR strdupW(LPCWSTR src)
     if (!src)
         return NULL;
 
-    dest = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(src) + 1) * sizeof(WCHAR));
-    if (dest)
+    if ((dest = heap_alloc((lstrlenW(src) + 1) * sizeof(WCHAR))))
         lstrcpyW(dest, src);
 
     return dest;

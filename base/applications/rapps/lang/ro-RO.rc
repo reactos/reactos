@@ -83,7 +83,7 @@ BEGIN
     LTEXT "excepție pentru", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "I&mplicite", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "Con&firmă", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "Con&firmă", IDOK, 116, 195, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -95,7 +95,7 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "Instalea&ză de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Descarcă și instalează", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "Con&firmă", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "Con&firmă", IDOK, 86, 78, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 150, 78, 60, 14
 END
 
@@ -114,9 +114,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Despre gestionarul de programe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Gestionar de programe ReactOS\nDrept de autor (C) 2009\nde către Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Î&nchide", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Gestionar de programe ReactOS\nDrept de autor (C) 2009\nde către Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Î&nchide", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -212,7 +212,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu poate fi descărcat! Verificați conexiunea de Internet!"
     IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu au putut fi eliminate!"
     IDS_UNABLE_TO_INSTALL "Programul de instalare nu poate fi executat!"
-    IDS_CERT_DOES_NOT_MATCH "Verificarea certificatului SSL a eșuat."    
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Integritatea pachetului în verificare…"
     IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
     IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."
@@ -220,6 +220,7 @@ BEGIN
     IDS_SELECT_ALL "Selectează/Deselectează Toate"
     IDS_INSTALL_SELECTED "Instalează selecționate"
     IDS_SELECTEDFORINST "Selectate pentru instalare"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

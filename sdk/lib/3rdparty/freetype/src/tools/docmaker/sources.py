@@ -3,7 +3,7 @@
 #
 #    Convert source code comments to multi-line blocks (library file).
 #
-#  Copyright 2002-2017 by
+#  Copyright 2002-2018 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,
@@ -171,7 +171,7 @@ re_bold   = re.compile( r"\*((?:\w|-)(?:\w|'|-)*)\*(.*)" )   #  *bold*
 #
 # This regular expression code to identify an URL has been taken from
 #
-#   http://mail.python.org/pipermail/tutor/2002-September/017228.html
+#   https://mail.python.org/pipermail/tutor/2002-September/017228.html
 #
 # (with slight modifications).
 #

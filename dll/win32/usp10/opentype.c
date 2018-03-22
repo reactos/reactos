@@ -2041,7 +2041,7 @@ static void GPOS_apply_MarkToLigature(const OT_LookupTable *look, const SCRIPT_A
                     }
                     if (!offset)
                     {
-                        ERR("Failed to find avalible ligature connection point\n");
+                        ERR("Failed to find available ligature connection point\n");
                         return;
                     }
 

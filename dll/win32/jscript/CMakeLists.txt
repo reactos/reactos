@@ -33,7 +33,7 @@ list(APPEND SOURCE
     regexp.c
     string.c
     vbarray.c
-    jscript.h)
+    precomp.h)
 
 list(APPEND jscript_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/jscript.rgs
@@ -54,5 +54,5 @@ add_dependencies(jscript jscript_idlheader stdole2)
 set_module_type(jscript win32dll)
 target_link_libraries(jscript uuid wine)
 add_importlibs(jscript user32 ole32 oleaut32 advapi32 msvcrt kernel32 ntdll)
-add_pch(jscript jscript.h SOURCE)
+add_pch(jscript precomp.h SOURCE)
 add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)

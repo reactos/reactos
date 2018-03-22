@@ -687,9 +687,38 @@ static VOID FsRtlLargeMcbTestsExt2()
     FsRtlUninitializeLargeMcb(&FirstMcb);
 }
 
+static VOID FsRtlLargeMcbTestsFastFat()
+{
+    LARGE_MCB FirstMcb;
+    LONGLONG Lbn, Vbn, SectorCount;
+    ULONG Index;
+    BOOLEAN Result;
+
+    FsRtlInitializeLargeMcb(&FirstMcb, PagedPool);
+
+    Lbn = -1;
+    SectorCount = -1;
+    Result = FsRtlLookupLargeMcbEntry(&FirstMcb, 8388607LL, &Lbn, &SectorCount, NULL, NULL, NULL);
+    ok_bool_false(Result, "FsRtlLookupLargeMcbEntry returned");
+    ok_eq_longlong(Lbn, -1);
+    ok_eq_longlong(SectorCount, -1);
+
+    Vbn = -1;
+    Lbn = -1;
+    Index = (ULONG) -1;
+    Result = FsRtlLookupLastLargeMcbEntryAndIndex(&FirstMcb, &Vbn, &Lbn, &Index);
+    ok_bool_false(Result, "FsRtlLookupLastLargeMcbEntryAndIndex returned");
+    ok_eq_longlong(Vbn, -1);
+    ok_eq_longlong(Lbn, -1);
+    ok_eq_ulong(Index, (ULONG) -1);
+
+    FsRtlUninitializeLargeMcb(&FirstMcb);
+}
+
 START_TEST(FsRtlMcb)
 {
     FsRtlMcbTest();
     FsRtlLargeMcbTest();
     FsRtlLargeMcbTestsExt2();
+    FsRtlLargeMcbTestsFastFat();
 }

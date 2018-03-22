@@ -21,6 +21,9 @@
 #define COBJMACROS
 
 #include "initguid.h"
+#ifndef __REACTOS__
+#include "endpointvolume.h"
+#endif
 #include "mmdeviceapi.h"
 #include "audioclient.h"
 #include "audiopolicy.h"

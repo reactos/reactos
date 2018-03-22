@@ -141,7 +141,7 @@ VOID __cdecl ConFormatMessage(PCON_STREAM Stream, DWORD MessageId, ...)
                         NULL,
                         MessageId,
                         LANG_USER_DEFAULT,
-                        arg_ptr);
+                        &arg_ptr);
     va_end(arg_ptr);
 
     if (Len <= 0)

@@ -20,10 +20,10 @@
 
 #define COBJMACROS
 
-#include <wine/test.h>
+#include "wine/test.h"
 #include <stdio.h>
 
-//#include "initguid.h"
+#include "initguid.h"
 #include <oleacc.h>
 
 #define DEFINE_EXPECT(func) \

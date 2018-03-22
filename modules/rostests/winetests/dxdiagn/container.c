@@ -21,9 +21,9 @@
 #define COBJMACROS
 
 #include <stdio.h>
-#include <wine/dxdiag.h>
-#include <oleauto.h>
-#include <wine/test.h>
+#include "wine/dxdiag.h"
+#include "oleauto.h"
+#include "wine/test.h"
 
 struct property_test
 {

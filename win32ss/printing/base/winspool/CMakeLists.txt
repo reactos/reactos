@@ -4,6 +4,7 @@ add_rpc_files(client ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/winspool.idl)
 spec2def(winspool.drv winspool.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    ../marshalling.c
     devmode.c
     forms.c
     jobs.c

@@ -2374,7 +2374,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
         ASSERT(SwapEntry == 0);
         //SOffset.QuadPart = Offset.QuadPart + Segment->Image.FileOffset;
 #ifndef NEWCC
-        CcRosMarkDirtyVacb(SharedCacheMap, Offset.QuadPart);
+        CcRosMarkDirtyFile(SharedCacheMap, Offset.QuadPart);
 #endif
         MmLockSectionSegment(Segment);
         MmSetPageEntrySectionSegment(Segment, &Offset, PageEntry);
@@ -3758,17 +3758,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     Section->SectionPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
 
-#ifndef NEWCC
-    /*
-     * Initialized caching for this file object if previously caching
-     * was initialized for the same on disk file
-     */
-    Status = CcTryToInitializeFileCache(FileObject);
-#else
-    Status = STATUS_SUCCESS;
-#endif
-
-    if (!NT_SUCCESS(Status) || FileObject->SectionObjectPointer->ImageSectionObject == NULL)
+    if (FileObject->SectionObjectPointer->ImageSectionObject == NULL)
     {
         NTSTATUS StatusExeFmt;
 
@@ -4006,7 +3996,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 #ifndef NEWCC
             FileObject = MemoryArea->Data.SectionData.Section->FileObject;
             SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-            CcRosMarkDirtyVacb(SharedCacheMap, Offset.QuadPart + Segment->Image.FileOffset);
+            CcRosMarkDirtyFile(SharedCacheMap, Offset.QuadPart + Segment->Image.FileOffset);
 #endif
             ASSERT(SwapEntry == 0);
         }

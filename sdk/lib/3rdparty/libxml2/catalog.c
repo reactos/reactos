@@ -2396,6 +2396,7 @@ xmlParseSGMLCatalog(xmlCatalogPtr catal, const xmlChar *value,
 		case SGML_CATA_ENTITY:
 		    if (*cur == '%')
 			type = SGML_CATA_PENTITY;
+                    /* Falls through. */
 		case SGML_CATA_PENTITY:
 		case SGML_CATA_DOCTYPE:
 		case SGML_CATA_LINKTYPE:

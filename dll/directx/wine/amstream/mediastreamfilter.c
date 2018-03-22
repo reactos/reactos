@@ -18,175 +18,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wine/debug.h"
+
+#define COBJMACROS
+
+#include "winbase.h"
+#include "wingdi.h"
+#include "dshow.h"
+
+#include "wine/strmbase.h"
+
 #include "amstream_private.h"
 
-#include <wine/strmbase.h>
+#include "ddstream.h"
 
-typedef struct MediaStreamFilter_InputPin
-{
-    BaseInputPin pin;
-} MediaStreamFilter_InputPin;
-
-static const IPinVtbl MediaStreamFilter_InputPin_Vtbl =
-{
-    BaseInputPinImpl_QueryInterface,
-    BasePinImpl_AddRef,
-    BaseInputPinImpl_Release,
-    BaseInputPinImpl_Connect,
-    BaseInputPinImpl_ReceiveConnection,
-    BasePinImpl_Disconnect,
-    BasePinImpl_ConnectedTo,
-    BasePinImpl_ConnectionMediaType,
-    BasePinImpl_QueryPinInfo,
-    BasePinImpl_QueryDirection,
-    BasePinImpl_QueryId,
-    BasePinImpl_QueryAccept,
-    BasePinImpl_EnumMediaTypes,
-    BasePinImpl_QueryInternalConnections,
-    BaseInputPinImpl_EndOfStream,
-    BaseInputPinImpl_BeginFlush,
-    BaseInputPinImpl_EndFlush,
-    BasePinImpl_NewSegment
-};
+WINE_DEFAULT_DEBUG_CHANNEL(amstream);
 
 typedef struct {
     BaseFilter filter;
     ULONG nb_streams;
-    IMediaStream** streams;
-    IPin** pins;
+    IAMMediaStream** streams;
 } IMediaStreamFilterImpl;
 
 static inline IMediaStreamFilterImpl *impl_from_IMediaStreamFilter(IMediaStreamFilter *iface)
 {
     return CONTAINING_RECORD((IBaseFilter *)iface, IMediaStreamFilterImpl, filter.IBaseFilter_iface);
 }
-
-static HRESULT WINAPI BasePinImpl_CheckMediaType(BasePin *This, const AM_MEDIA_TYPE *pmt)
-{
-    IMediaStreamFilterImpl *filter = impl_from_IMediaStreamFilter((IMediaStreamFilter*)This->pinInfo.pFilter);
-    MSPID purpose_id;
-    ULONG i;
-
-    TRACE("Checking media type %s - %s\n", debugstr_guid(&pmt->majortype), debugstr_guid(&pmt->subtype));
-
-    /* Find which stream is associated with the pin */
-    for (i = 0; i < filter->nb_streams; i++)
-        if (&This->IPin_iface == filter->pins[i])
-            break;
-
-    if (i == filter->nb_streams)
-        return S_FALSE;
-
-    if (FAILED(IMediaStream_GetInformation(filter->streams[i], &purpose_id, NULL)))
-        return S_FALSE;
-
-    TRACE("Checking stream with purpose id %s\n", debugstr_guid(&purpose_id));
-
-    if (IsEqualGUID(&purpose_id, &MSPID_PrimaryVideo) && IsEqualGUID(&pmt->majortype, &MEDIATYPE_Video))
-    {
-        if (IsEqualGUID(&pmt->subtype, &MEDIASUBTYPE_RGB1) ||
-            IsEqualGUID(&pmt->subtype, &MEDIASUBTYPE_RGB4) ||
-            IsEqualGUID(&pmt->subtype, &MEDIASUBTYPE_RGB8)  ||
-            IsEqualGUID(&pmt->subtype, &MEDIASUBTYPE_RGB565) ||
-            IsEqualGUID(&pmt->subtype, &MEDIASUBTYPE_RGB555) ||
-            IsEqualGUID(&pmt->subtype, &MEDIASUBTYPE_RGB24) ||
-            IsEqualGUID(&pmt->subtype, &MEDIASUBTYPE_RGB32))
-        {
-            TRACE("Video sub-type %s matches\n", debugstr_guid(&pmt->subtype));
-            return S_OK;
-        }
-    }
-    else if (IsEqualGUID(&purpose_id, &MSPID_PrimaryAudio) && IsEqualGUID(&pmt->majortype, &MEDIATYPE_Audio))
-    {
-        if (IsEqualGUID(&pmt->subtype, &MEDIASUBTYPE_PCM))
-        {
-            TRACE("Audio sub-type %s matches\n", debugstr_guid(&pmt->subtype));
-            return S_OK;
-        }
-    }
-
-    return S_FALSE;
-}
-
-static LONG WINAPI BasePinImp_GetMediaTypeVersion(BasePin *This)
-{
-    return 0;
-}
-
-static HRESULT WINAPI BasePinImp_GetMediaType(BasePin *This, int index, AM_MEDIA_TYPE *amt)
-{
-    IMediaStreamFilterImpl *filter = (IMediaStreamFilterImpl*)This->pinInfo.pFilter;
-    MSPID purpose_id;
-    ULONG i;
-
-    /* FIXME: Reset structure as we only fill majortype and minortype for now */
-    ZeroMemory(amt, sizeof(*amt));
-
-    /* Find which stream is associated with the pin */
-    for (i = 0; i < filter->nb_streams; i++)
-        if (&This->IPin_iface == filter->pins[i])
-            break;
-
-    if (i == filter->nb_streams)
-        return S_FALSE;
-
-    if (FAILED(IMediaStream_GetInformation(filter->streams[i], &purpose_id, NULL)))
-        return S_FALSE;
-
-    TRACE("Processing stream with purpose id %s\n", debugstr_guid(&purpose_id));
-
-    if (IsEqualGUID(&purpose_id, &MSPID_PrimaryVideo))
-    {
-        amt->majortype = MEDIATYPE_Video;
-
-        switch (index)
-        {
-            case 0:
-                amt->subtype = MEDIASUBTYPE_RGB1;
-                break;
-            case 1:
-                amt->subtype = MEDIASUBTYPE_RGB4;
-                break;
-            case 2:
-                amt->subtype = MEDIASUBTYPE_RGB8;
-                break;
-            case 3:
-                amt->subtype = MEDIASUBTYPE_RGB565;
-                break;
-            case 4:
-                amt->subtype = MEDIASUBTYPE_RGB555;
-                break;
-            case 5:
-                amt->subtype = MEDIASUBTYPE_RGB24;
-                break;
-            case 6:
-                amt->subtype = MEDIASUBTYPE_RGB32;
-                break;
-            default:
-                return S_FALSE;
-        }
-    }
-    else if (IsEqualGUID(&purpose_id, &MSPID_PrimaryAudio))
-    {
-        if (index)
-            return S_FALSE;
-
-         amt->majortype = MEDIATYPE_Audio;
-         amt->subtype = MEDIASUBTYPE_PCM;
-    }
-
-    return S_OK;
-}
-
-static const BaseInputPinFuncTable input_BaseInputFuncTable = {
-    {
-        BasePinImpl_CheckMediaType,
-        NULL,
-        BasePinImp_GetMediaTypeVersion,
-        BasePinImp_GetMediaType
-    },
-    NULL
-};
 
 /*** IUnknown methods ***/
 
@@ -234,11 +91,10 @@ static ULONG WINAPI MediaStreamFilterImpl_Release(IMediaStreamFilter *iface)
         ULONG i;
         for (i = 0; i < This->nb_streams; i++)
         {
-            IMediaStream_Release(This->streams[i]);
-            IPin_Release(This->pins[i]);
+            IAMMediaStream_JoinFilter(This->streams[i], NULL);
+            IAMMediaStream_Release(This->streams[i]);
         }
         CoTaskMemFree(This->streams);
-        CoTaskMemFree(This->pins);
         BaseFilter_Destroy(&This->filter);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -331,39 +187,21 @@ static HRESULT WINAPI MediaStreamFilterImpl_QueryVendorInfo(IMediaStreamFilter *
 static HRESULT WINAPI MediaStreamFilterImpl_AddMediaStream(IMediaStreamFilter* iface, IAMMediaStream *pAMMediaStream)
 {
     IMediaStreamFilterImpl *This = impl_from_IMediaStreamFilter(iface);
-    IMediaStream** streams;
-    IPin** pins;
-    MediaStreamFilter_InputPin* pin;
+    IAMMediaStream** streams;
     HRESULT hr;
-    PIN_INFO info;
-    MSPID purpose_id;
 
     TRACE("(%p)->(%p)\n", iface, pAMMediaStream);
 
-    streams = CoTaskMemRealloc(This->streams, (This->nb_streams + 1) * sizeof(IMediaStream*));
+    streams = CoTaskMemRealloc(This->streams, (This->nb_streams + 1) * sizeof(IAMMediaStream*));
     if (!streams)
         return E_OUTOFMEMORY;
     This->streams = streams;
-    pins = CoTaskMemRealloc(This->pins, (This->nb_streams + 1) * sizeof(IPin*));
-    if (!pins)
-        return E_OUTOFMEMORY;
-    This->pins = pins;
-    info.pFilter = &This->filter.IBaseFilter_iface;
-    info.dir = PINDIR_INPUT;
-    hr = IAMMediaStream_GetInformation(pAMMediaStream, &purpose_id, NULL);
-    if (FAILED(hr))
-        return hr;
-    /* Pin name is "I{guid MSPID_PrimaryVideo or MSPID_PrimaryAudio}" */
-    info.achName[0] = 'I';
-    StringFromGUID2(&purpose_id, info.achName + 1, 40);
-    hr = BaseInputPin_Construct(&MediaStreamFilter_InputPin_Vtbl, sizeof(BaseInputPin), &info,
-            &input_BaseInputFuncTable, &This->filter.csFilter, NULL, &This->pins[This->nb_streams]);
+
+    hr = IAMMediaStream_JoinFilter(pAMMediaStream, iface);
     if (FAILED(hr))
         return hr;
 
-    pin = (MediaStreamFilter_InputPin*)This->pins[This->nb_streams];
-    pin->pin.pin.pinInfo.pFilter = &This->filter.IBaseFilter_iface;
-    This->streams[This->nb_streams] = (IMediaStream*)pAMMediaStream;
+    This->streams[This->nb_streams] = pAMMediaStream;
     This->nb_streams++;
 
     IAMMediaStream_AddRef(pAMMediaStream);
@@ -381,10 +219,10 @@ static HRESULT WINAPI MediaStreamFilterImpl_GetMediaStream(IMediaStreamFilter* i
 
     for (i = 0; i < This->nb_streams; i++)
     {
-        IMediaStream_GetInformation(This->streams[i], &purpose_id, NULL);
+        IAMMediaStream_GetInformation(This->streams[i], &purpose_id, NULL);
         if (IsEqualIID(&purpose_id, idPurpose))
         {
-            *ppMediaStream = This->streams[i];
+            *ppMediaStream = (IMediaStream *)This->streams[i];
             IMediaStream_AddRef(*ppMediaStream);
             return S_OK;
         }
@@ -476,8 +314,9 @@ static IPin* WINAPI MediaStreamFilterImpl_GetPin(BaseFilter *iface, int pos)
 
     if (pos < This->nb_streams)
     {
-        IPin_AddRef(This->pins[pos]);
-        return This->pins[pos];
+        IPin *pin = NULL;
+        IAMMediaStream_QueryInterface(This->streams[pos], &IID_IPin, (void **)&pin);
+        return pin;
     }
 
     return NULL;

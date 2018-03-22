@@ -1,18 +1,29 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Utilities Library
- * FILE:            sdk/lib/conutils/screen.h
- * PURPOSE:         Console/terminal screen management.
- * PROGRAMMERS:     - Hermes Belusca-Maito (for the library);
- *                  - All programmers who wrote the different console applications
- *                    from which I took those functions and improved them.
+ * PROJECT:     ReactOS Console Utilities Library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Console/terminal screen management.
+ * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
+ *              Copyright 2017-2018 Hermes Belusca-Maito
  */
+
+/**
+ * @file    screen.h
+ * @ingroup ConUtils
+ *
+ * @brief   Console/terminal screen management.
+ **/
 
 #ifndef __SCREEN_H__
 #define __SCREEN_H__
 
+#pragma once
+
 #ifndef _UNICODE
 #error The ConUtils library at the moment only supports compilation with _UNICODE defined!
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 
@@ -53,4 +64,10 @@ VOID
 ConClearScreen(IN PCON_SCREEN Screen);
 
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif  /* __SCREEN_H__ */
+
+/* EOF */

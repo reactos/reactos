@@ -12,5 +12,6 @@
 #include <commctrl.h>
 #include <tchar.h>
 #include <strsafe.h>
+#include <winnls.h>
 
 #include "resource.h"

@@ -1625,7 +1625,7 @@ BOOL WINAPI InternetCrackUrlW(const WCHAR *lpszUrl, DWORD dwUrlLength, DWORD dwF
 
     if (dwFlags & ICU_DECODE)
     {
-        WCHAR *url_tmp, *buffer;
+        WCHAR *url_tmp;
         DWORD len = dwUrlLength + 1;
         BOOL ret;
 
@@ -1634,24 +1634,9 @@ BOOL WINAPI InternetCrackUrlW(const WCHAR *lpszUrl, DWORD dwUrlLength, DWORD dwF
             SetLastError(ERROR_OUTOFMEMORY);
             return FALSE;
         }
-
-        buffer = url_tmp;
-        ret = InternetCanonicalizeUrlW(url_tmp, buffer, &len, ICU_DECODE | ICU_NO_ENCODE);
-        if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-        {
-            buffer = heap_alloc(len * sizeof(WCHAR));
-            if (!buffer)
-            {
-                SetLastError(ERROR_OUTOFMEMORY);
-                heap_free(url_tmp);
-                return FALSE;
-            }
-            ret = InternetCanonicalizeUrlW(url_tmp, buffer, &len, ICU_DECODE | ICU_NO_ENCODE);
-        }
+        ret = InternetCanonicalizeUrlW(url_tmp, url_tmp, &len, ICU_DECODE | ICU_NO_ENCODE);
         if (ret)
-            ret = InternetCrackUrlW(buffer, len, dwFlags & ~ICU_DECODE, lpUC);
-
-        if (buffer != url_tmp) heap_free(buffer);
+            ret = InternetCrackUrlW(url_tmp, len, dwFlags & ~ICU_DECODE, lpUC);
         heap_free(url_tmp);
         return ret;
     }
@@ -2286,8 +2271,7 @@ static WCHAR *get_proxy_autoconfig_url(void)
     CFRelease( settings );
     return ret;
 #else
-    static int once;
-    if (!once++) FIXME( "no support on this platform\n" );
+    FIXME( "no support on this platform\n" );
     return NULL;
 #endif
 }
@@ -2837,21 +2821,10 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
 	 FIXME("Option INTERNET_OPTION_DISABLE_AUTODIAL; STUB\n");
 	 break;
     case INTERNET_OPTION_HTTP_DECODING:
-    {
-        if (!lpwhh)
-        {
-            SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
-            return FALSE;
-        }
-        if (!lpBuffer || dwBufferLength != sizeof(BOOL))
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-        }
-        else
-            lpwhh->decoding = *(BOOL *)lpBuffer;
+        FIXME("INTERNET_OPTION_HTTP_DECODING; STUB\n");
+        SetLastError(ERROR_INTERNET_INVALID_OPTION);
+        ret = FALSE;
         break;
-    }
     case INTERNET_OPTION_COOKIES_3RD_PARTY:
         FIXME("INTERNET_OPTION_COOKIES_3RD_PARTY; STUB\n");
         SetLastError(ERROR_INTERNET_INVALID_OPTION);
@@ -2938,12 +2911,6 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         ret = (res == ERROR_SUCCESS);
         break;
         }
-    case INTERNET_OPTION_SETTINGS_CHANGED:
-        FIXME("INTERNET_OPTION_SETTINGS_CHANGED; STUB\n");
-        break;
-    case INTERNET_OPTION_REFRESH:
-        FIXME("INTERNET_OPTION_REFRESH; STUB\n");
-        break;
     default:
         FIXME("Option %d STUB\n",dwOption);
         SetLastError(ERROR_INTERNET_INVALID_OPTION);
@@ -4469,6 +4436,11 @@ BOOL WINAPI InternetGetSecurityInfoByURLW(LPCWSTR lpszURL, PCCERT_CHAIN_CONTEXT 
 
     TRACE("(%s %p %p)\n", debugstr_w(lpszURL), ppCertChain, pdwSecureFlags);
 
+    if (!ppCertChain && !pdwSecureFlags) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     url.dwHostNameLength = 1;
     res = InternetCrackUrlW(lpszURL, 0, 0, &url);
     if(!res || url.nScheme != INTERNET_SCHEME_HTTPS) {
@@ -4483,15 +4455,11 @@ BOOL WINAPI InternetGetSecurityInfoByURLW(LPCWSTR lpszURL, PCCERT_CHAIN_CONTEXT 
     }
 
     if(server->cert_chain) {
-        const CERT_CHAIN_CONTEXT *chain_dup;
-
-        chain_dup = CertDuplicateCertificateChain(server->cert_chain);
-        if(chain_dup) {
-            *ppCertChain = chain_dup;
+        if(pdwSecureFlags)
             *pdwSecureFlags = server->security_flags & _SECURITY_ERROR_FLAGS_MASK;
-        }else {
+
+        if(ppCertChain && !(*ppCertChain = CertDuplicateCertificateChain(server->cert_chain)))
             res = FALSE;
-        }
     }else {
         SetLastError(ERROR_INTERNET_ITEM_NOT_FOUND);
         res = FALSE;

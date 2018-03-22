@@ -35,8 +35,8 @@
 EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
 
 /* Accounting of the total threads and registry hacked threads */
-ULONG ExpCriticalWorkerThreads;
-ULONG ExpDelayedWorkerThreads;
+ULONG ExCriticalWorkerThreads;
+ULONG ExDelayedWorkerThreads;
 ULONG ExpAdditionalCriticalWorkerThreads;
 ULONG ExpAdditionalDelayedWorkerThreads;
 
@@ -162,7 +162,7 @@ ProcessLoop:
         WorkItem->WorkerRoutine(WorkItem->Parameter);
 
         /* Make sure APCs are not disabled */
-        if (Thread->Tcb.SpecialApcDisable)
+        if (Thread->Tcb.CombinedApcDisable != 0)
         {
             /* We're nice and do it behind your back */
             DPRINT1("Warning: Broken Worker Thread: %p %p %p came back "
@@ -170,7 +170,8 @@ ProcessLoop:
                     WorkItem->WorkerRoutine,
                     WorkItem->Parameter,
                     WorkItem);
-            Thread->Tcb.SpecialApcDisable = 0;
+            ASSERT(Thread->Tcb.CombinedApcDisable == 0);
+            Thread->Tcb.CombinedApcDisable = 0;
         }
 
         /* Make sure it returned at right IRQL */
@@ -566,7 +567,7 @@ ExpInitializeWorkerThreads(VOID)
     {
         /* Create the thread */
         ExpCreateWorkerThread(CriticalWorkQueue, FALSE);
-        ExpCriticalWorkerThreads++;
+        ExCriticalWorkerThreads++;
     }
 
     /* Create the built-in worker threads for the delayed queue */
@@ -574,7 +575,7 @@ ExpInitializeWorkerThreads(VOID)
     {
         /* Create the thread */
         ExpCreateWorkerThread(DelayedWorkQueue, FALSE);
-        ExpDelayedWorkerThreads++;
+        ExDelayedWorkerThreads++;
     }
 
     /* Create the built-in worker thread for the hypercritical queue */

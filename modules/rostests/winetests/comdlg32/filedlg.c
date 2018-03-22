@@ -19,12 +19,19 @@
  *
  */
 
-#include "precomp.h"
+#include <windows.h>
+#include <wine/test.h>
 
-#include <shlguid.h>
-#include <shobjidl.h>
-#include <ole2.h>
+#include "shlguid.h"
+#define COBJMACROS
+#include "shobjidl.h"
+#include "commdlg.h"
+#include "cderr.h"
+#include "dlgs.h"
+
+#ifdef __REACTOS__
 #include <reactos/undocuser.h>
+#endif
 
 /* ##### */
 

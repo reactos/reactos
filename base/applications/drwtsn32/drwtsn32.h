@@ -36,8 +36,8 @@ typedef std::map<DWORD, ThreadData> ThreadMap;
 class DumpData
 {
 public:
-    std::string ProcessPath;
-    std::string ProcessName;
+    std::wstring ProcessPath;
+    std::wstring ProcessName;
     DWORD ProcessID;
     DWORD ThreadID;
     HANDLE ProcessHandle;

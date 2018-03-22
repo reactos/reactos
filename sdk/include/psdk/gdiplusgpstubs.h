@@ -95,5 +95,6 @@ typedef FlushIntention GpFlushIntention;
 typedef CoordinateSpace GpCoordinateSpace;
 typedef PenAlignment GpPenAlignment;
 typedef PenType GpPenType;
+typedef HatchStyle GpHatchStyle;
 
 #endif

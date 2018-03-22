@@ -263,14 +263,15 @@ RegReadUserSetting(
     return NT_SUCCESS(Status);
 }
 
+_Success_(return != FALSE)
 BOOL
 NTAPI
 RegWriteUserSetting(
-    IN PCWSTR pwszKeyName,
-    IN PCWSTR pwszValueName,
-    IN ULONG ulType,
-    OUT PVOID pvData,
-    IN ULONG cbDataSize)
+    _In_z_ PCWSTR pwszKeyName,
+    _In_z_ PCWSTR pwszValueName,
+    _In_ ULONG ulType,
+    _In_reads_bytes_(cjDataSize) const VOID *pvData,
+    _In_ ULONG cbDataSize)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -337,7 +338,7 @@ RegWriteUserSetting(
     /* Initialize the value name string */
     RtlInitUnicodeString(&usValueName, pwszValueName);
 
-    Status = ZwSetValueKey(hkey, &usValueName, 0, ulType, pvData, cbDataSize);
+    Status = ZwSetValueKey(hkey, &usValueName, 0, ulType, (PVOID)pvData, cbDataSize);
     if(!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to write reg key '%S' value '%S', Status = %lx\n",

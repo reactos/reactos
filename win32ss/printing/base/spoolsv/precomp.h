@@ -17,8 +17,10 @@
 #include <winspool.h>
 #include <winsplp.h>
 #include <winspool_s.h>
+#include <ndk/rtlfuncs.h>
 
 #include <spoolss.h>
+#include <marshalling/marshalling.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);

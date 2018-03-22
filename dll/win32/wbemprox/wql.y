@@ -18,19 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wbemcli.h"
 #include "wbemprox_private.h"
-
-#include "wine/list.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
 struct parser
 {
@@ -411,6 +399,30 @@ expr:
   | prop_val TK_IS TK_NOT TK_NULL
         {
             $$ = expr_unary( ctx, $1, OP_NOTNULL );
+            if (!$$)
+                YYABORT;
+        }
+  | prop_val TK_EQ TK_NULL
+        {
+            $$ = expr_unary( ctx, $1, OP_ISNULL );
+            if (!$$)
+                YYABORT;
+        }
+  | TK_NULL TK_EQ prop_val
+        {
+            $$ = expr_unary( ctx, $3, OP_ISNULL );
+            if (!$$)
+                YYABORT;
+        }
+  | prop_val TK_NE TK_NULL
+        {
+            $$ = expr_unary( ctx, $1, OP_NOTNULL );
+            if (!$$)
+                YYABORT;
+        }
+  | TK_NULL TK_NE prop_val
+        {
+            $$ = expr_unary( ctx, $3, OP_NOTNULL );
             if (!$$)
                 YYABORT;
         }

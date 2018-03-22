@@ -19,7 +19,12 @@
  *
  */
 
+#include "config.h"
+#include "initguid.h"
 #include "d3d8_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
 HRESULT WINAPI D3D8GetSWInfo(void) {
     FIXME("(void): stub\n");
@@ -36,13 +41,13 @@ IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
 
     TRACE("sdk_version %#x.\n", sdk_version);
 
-    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return NULL;
 
     if (!d3d8_init(object))
     {
         WARN("Failed to initialize d3d8.\n");
-        HeapFree(GetProcessHeap(), 0, object);
+        heap_free(object);
         return NULL;
     }
 

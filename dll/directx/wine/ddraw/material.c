@@ -17,7 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include "ddraw_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static void dump_material(const D3DMATERIAL *mat)
 {
@@ -145,7 +150,7 @@ static ULONG WINAPI d3d_material3_Release(IDirect3DMaterial3 *iface)
             wined3d_mutex_unlock();
         }
 
-        HeapFree(GetProcessHeap(), 0, material);
+        heap_free(material);
     }
 
     return ref;
@@ -497,8 +502,7 @@ struct d3d_material *d3d_material_create(struct ddraw *ddraw)
 {
     struct d3d_material *material;
 
-    material = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*material));
-    if (!material)
+    if (!(material = heap_alloc_zero(sizeof(*material))))
         return NULL;
 
     material->IDirect3DMaterial3_iface.lpVtbl = &d3d_material3_vtbl;

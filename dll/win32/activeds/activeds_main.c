@@ -21,11 +21,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
 
-#include <iads.h>
+#define COBJMACROS
 
-#include <wine/debug.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+
+#include "objbase.h"
+#include "iads.h"
+#include "adshlp.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(activeds);
 
 /*****************************************************

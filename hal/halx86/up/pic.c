@@ -382,7 +382,7 @@ PHAL_SW_INTERRUPT_HANDLER SWInterruptHandlerTable[20] =
 {
     (PHAL_SW_INTERRUPT_HANDLER)KiUnexpectedInterrupt,
     HalpApcInterrupt,
-    HalpDispatchInterrupt2,
+    HalpDispatchInterrupt,
     (PHAL_SW_INTERRUPT_HANDLER)KiUnexpectedInterrupt,
     HalpHardwareInterrupt0,
     HalpHardwareInterrupt1,
@@ -677,7 +677,7 @@ HalClearSoftwareInterrupt(IN KIRQL Irql)
 }
 
 PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY
-NTAPI
+FASTCALL
 HalpEndSoftwareInterrupt2(IN KIRQL OldIrql,
                           IN PKTRAP_FRAME TrapFrame)
 {
@@ -1015,9 +1015,9 @@ HalpDismissIrq07Level(IN KIRQL Irql,
     return _HalpDismissIrqLevel(Irql, Irq, OldIrql);
 }
 
-VOID
+PHAL_SW_INTERRUPT_HANDLER
 __cdecl
-HalpHardwareInterruptLevel(VOID)
+HalpHardwareInterruptLevel2(VOID)
 {
     PKPCR Pcr = KeGetPcr();
     ULONG PendingIrqlMask, PendingIrql;
@@ -1027,7 +1027,7 @@ HalpHardwareInterruptLevel(VOID)
     if (PendingIrqlMask)
     {
         /* Check for in-service delayed interrupt */
-        if (Pcr->IrrActive & 0xFFFFFFF0) return;
+        if (Pcr->IrrActive & 0xFFFFFFF0) return NULL;
 
         /* Check if pending IRQL affects hardware state */
         BitScanReverse(&PendingIrql, PendingIrqlMask);
@@ -1036,8 +1036,10 @@ HalpHardwareInterruptLevel(VOID)
         Pcr->IRR ^= (1 << PendingIrql);
 
         /* Now handle pending interrupt */
-        SWInterruptHandlerTable[PendingIrql]();
+        return SWInterruptHandlerTable[PendingIrql];
     }
+
+    return NULL;
 }
 
 /* SYSTEM INTERRUPTS **********************************************************/
@@ -1139,10 +1141,10 @@ HalBeginSystemInterrupt(IN KIRQL Irql,
 /*
  * @implemented
  */
-VOID
-NTAPI
-HalEndSystemInterrupt(IN KIRQL OldIrql,
-                      IN PKTRAP_FRAME TrapFrame)
+PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY
+FASTCALL
+HalEndSystemInterrupt2(IN KIRQL OldIrql,
+                       IN PKTRAP_FRAME TrapFrame)
 {
     ULONG PendingIrql, PendingIrqlMask, PendingIrqMask;
     PKPCR Pcr = KeGetPcr();
@@ -1156,7 +1158,7 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
     if (PendingIrqlMask)
     {
         /* Check for in-service delayed interrupt */
-        if (Pcr->IrrActive & 0xFFFFFFF0) return;
+        if (Pcr->IrrActive & 0xFFFFFFF0) return NULL;
 
         /* Loop checking for pending interrupts */
         while (TRUE)
@@ -1172,7 +1174,7 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
 
                 /* Now check if this specific interrupt is already in-service */
                 PendingIrqMask = (1 << PendingIrql);
-                if (Pcr->IrrActive & PendingIrqMask) return;
+                if (Pcr->IrrActive & PendingIrqMask) return NULL;
 
                 /* Set active bit otherwise, and clear it from IRR */
                 Pcr->IrrActive |= PendingIrqMask;
@@ -1191,11 +1193,12 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
             else
             {
                 /* Now handle pending software interrupt */
-                SWInterruptHandlerTable2[PendingIrql](TrapFrame);
-                UNREACHABLE;
+                return SWInterruptHandlerTable2[PendingIrql];
             }
         }
     }
+
+    return NULL;
 }
 
 /* SOFTWARE INTERRUPT TRAPS ***************************************************/
@@ -1296,7 +1299,7 @@ HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
     KiEoiHelper(TrapFrame);
 }
 
-VOID
+PHAL_SW_INTERRUPT_HANDLER
 __cdecl
 HalpDispatchInterrupt2(VOID)
 {
@@ -1329,8 +1332,10 @@ HalpDispatchInterrupt2(VOID)
         }
 
         /* Now handle pending interrupt */
-        SWInterruptHandlerTable[PendingIrql]();
+        return SWInterruptHandlerTable[PendingIrql];
     }
+
+    return NULL;
 }
 
 #else

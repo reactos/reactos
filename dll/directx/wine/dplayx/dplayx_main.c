@@ -56,10 +56,17 @@
  *    client. Also get rid of offset dependency by making data offset independent
  *    somehow.
  */
+#include <stdarg.h>
 
+#include "winerror.h"
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "rpcproxy.h"
+#include "wine/debug.h"
 #include "dplayx_global.h"
 
-#include <rpcproxy.h>
+WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
 static HINSTANCE instance;
 

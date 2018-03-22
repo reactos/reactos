@@ -14,6 +14,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* PSDK/NDK Headers */
 // #define WIN32_NO_STATUS
 // #include <windef.h>
@@ -291,4 +295,7 @@ ElfGetFlags(
 VOID PRINT_HEADER(PEVENTLOGHEADER Header);
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif  /* __EVTLIB_H__ */

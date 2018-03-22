@@ -174,13 +174,13 @@ void ME_DestroyDisplayItem(ME_DisplayItem *item)
     heap_free( item->member.run.clusters );
     ME_ReleaseStyle(item->member.run.style);
   }
-  FREE_OBJ(item);
+  heap_free(item);
 }
 
 ME_DisplayItem *ME_MakeDI(ME_DIType type)
 {
-  ME_DisplayItem *item = ALLOC_OBJ(ME_DisplayItem);
-  ZeroMemory(item, sizeof(ME_DisplayItem));
+  ME_DisplayItem *item = heap_alloc_zero(sizeof(*item));
+
   item->type = type;
   item->prev = item->next = NULL;
   return item;

@@ -131,12 +131,82 @@ static void test_BrowseWindowInfo(void)
     IHlinkBrowseContext_Release(bc);
 }
 
+static HRESULT WINAPI Unknown_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+
+    if (IsEqualIID(riid, &IID_IUnknown))
+    {
+        *ppv = iface;
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI Unknown_AddRef(IUnknown *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI Unknown_Release(IUnknown *iface)
+{
+    return 1;
+}
+
+static IUnknownVtbl UnknownVtbl = {
+    Unknown_QueryInterface,
+    Unknown_AddRef,
+    Unknown_Release,
+};
+
+static IUnknown Unknown = { &UnknownVtbl };
+
+static void test_GetObject(void)
+{
+    IHlinkBrowseContext *bc;
+    IMoniker *dummy;
+    IBindCtx *bindctx;
+    IUnknown *unk;
+    WCHAR one[] = {'1',0};
+    WCHAR five[] = {'5',0};
+    DWORD cookie;
+    HRESULT hres;
+
+    hres = CreateBindCtx(0, &bindctx);
+    ok(hres == S_OK, "CreateBindCtx() failed: 0x%08x\n", hres);
+
+    hres = CreateItemMoniker(one, five, &dummy);
+    ok(hres == S_OK, "CreateItemMoniker() failed: 0x%08x\n", hres);
+
+    hres = HlinkCreateBrowseContext(NULL, &IID_IHlinkBrowseContext, (void **)&bc);
+    ok(hres == S_OK, "HlinkCreateBrowseContext() failed: 0x%08x\n", hres);
+
+    hres = IHlinkBrowseContext_GetObject(bc, dummy, FALSE, &unk);
+    ok(hres == MK_E_UNAVAILABLE, "expected MK_E_UNAVAILABLE, got 0x%08x\n", hres);
+
+    hres = IHlinkBrowseContext_Register(bc, 0, &Unknown, dummy, &cookie);
+    ok(hres == S_OK, "Register() failed: 0x%08x\n", hres);
+
+    hres = IHlinkBrowseContext_GetObject(bc, dummy, FALSE, &unk);
+    ok(hres == S_OK, "GetObject() failed: 0x%08x\n", hres);
+    ok(unk == &Unknown, "wrong object returned\n");
+
+    hres = IHlinkBrowseContext_Revoke(bc, cookie);
+    ok(hres == S_OK, "Revoke() failed: 0x%08x\n", hres);
+
+    hres = IHlinkBrowseContext_GetObject(bc, dummy, FALSE, &unk);
+    ok(hres == MK_E_UNAVAILABLE, "expected MK_E_UNAVAILABLE, got 0x%08x\n", hres);
+
+    IHlinkBrowseContext_Release(bc);
+}
+
 START_TEST(browse_ctx)
 {
     CoInitialize(NULL);
 
     test_SetInitialHlink();
     test_BrowseWindowInfo();
+    test_GetObject();
 
     CoUninitialize();
 }

@@ -21,10 +21,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wined3d_private.h"
-#include <winternl.h>
+#include "config.h"
+#include "wine/port.h"
 
-#include <wine/unicode.h>
+#include <stdio.h>
+
+#include "wined3d_private.h"
+#include "wine/winternl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_perf);
@@ -116,6 +119,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_conservative_depth",           ARB_CONSERVATIVE_DEPTH        },
     {"GL_ARB_copy_buffer",                  ARB_COPY_BUFFER               },
     {"GL_ARB_copy_image",                   ARB_COPY_IMAGE                },
+    {"GL_ARB_cull_distance",                ARB_CULL_DISTANCE             },
     {"GL_ARB_debug_output",                 ARB_DEBUG_OUTPUT              },
     {"GL_ARB_depth_buffer_float",           ARB_DEPTH_BUFFER_FLOAT        },
     {"GL_ARB_depth_clamp",                  ARB_DEPTH_CLAMP               },
@@ -132,6 +136,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_fragment_layer_viewport",      ARB_FRAGMENT_LAYER_VIEWPORT   },
     {"GL_ARB_fragment_program",             ARB_FRAGMENT_PROGRAM          },
     {"GL_ARB_fragment_shader",              ARB_FRAGMENT_SHADER           },
+    {"GL_ARB_framebuffer_no_attachments",   ARB_FRAMEBUFFER_NO_ATTACHMENTS},
     {"GL_ARB_framebuffer_object",           ARB_FRAMEBUFFER_OBJECT        },
     {"GL_ARB_framebuffer_sRGB",             ARB_FRAMEBUFFER_SRGB          },
     {"GL_ARB_geometry_shader4",             ARB_GEOMETRY_SHADER4          },
@@ -176,16 +181,19 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_texture_cube_map_array",       ARB_TEXTURE_CUBE_MAP_ARRAY    },
     {"GL_ARB_texture_env_combine",          ARB_TEXTURE_ENV_COMBINE       },
     {"GL_ARB_texture_env_dot3",             ARB_TEXTURE_ENV_DOT3          },
+    {"GL_ARB_texture_filter_anisotropic",   ARB_TEXTURE_FILTER_ANISOTROPIC},
     {"GL_ARB_texture_float",                ARB_TEXTURE_FLOAT             },
     {"GL_ARB_texture_gather",               ARB_TEXTURE_GATHER            },
     {"GL_ARB_texture_mirrored_repeat",      ARB_TEXTURE_MIRRORED_REPEAT   },
     {"GL_ARB_texture_mirror_clamp_to_edge", ARB_TEXTURE_MIRROR_CLAMP_TO_EDGE},
+    {"GL_ARB_texture_multisample",          ARB_TEXTURE_MULTISAMPLE       },
     {"GL_ARB_texture_non_power_of_two",     ARB_TEXTURE_NON_POWER_OF_TWO  },
     {"GL_ARB_texture_query_levels",         ARB_TEXTURE_QUERY_LEVELS      },
     {"GL_ARB_texture_rectangle",            ARB_TEXTURE_RECTANGLE         },
     {"GL_ARB_texture_rg",                   ARB_TEXTURE_RG                },
     {"GL_ARB_texture_rgb10_a2ui",           ARB_TEXTURE_RGB10_A2UI        },
     {"GL_ARB_texture_storage",              ARB_TEXTURE_STORAGE           },
+    {"GL_ARB_texture_storage_multisample",  ARB_TEXTURE_STORAGE_MULTISAMPLE},
     {"GL_ARB_texture_swizzle",              ARB_TEXTURE_SWIZZLE           },
     {"GL_ARB_texture_view",                 ARB_TEXTURE_VIEW              },
     {"GL_ARB_timer_query",                  ARB_TIMER_QUERY               },
@@ -224,6 +232,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_EXT_packed_depth_stencil",         EXT_PACKED_DEPTH_STENCIL      },
     {"GL_EXT_packed_float",                 EXT_PACKED_FLOAT              },
     {"GL_EXT_point_parameters",             EXT_POINT_PARAMETERS          },
+    {"GL_EXT_polygon_offset_clamp",         EXT_POLYGON_OFFSET_CLAMP      },
     {"GL_EXT_provoking_vertex",             EXT_PROVOKING_VERTEX          },
     {"GL_EXT_secondary_color",              EXT_SECONDARY_COLOR           },
     {"GL_EXT_stencil_two_side",             EXT_STENCIL_TWO_SIDE          },
@@ -234,7 +243,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_EXT_texture_compression_s3tc",     EXT_TEXTURE_COMPRESSION_S3TC  },
     {"GL_EXT_texture_env_combine",          EXT_TEXTURE_ENV_COMBINE       },
     {"GL_EXT_texture_env_dot3",             EXT_TEXTURE_ENV_DOT3          },
-    {"GL_EXT_texture_filter_anisotropic",   EXT_TEXTURE_FILTER_ANISOTROPIC},
+    {"GL_EXT_texture_filter_anisotropic",   ARB_TEXTURE_FILTER_ANISOTROPIC},
     {"GL_EXT_texture_integer",              EXT_TEXTURE_INTEGER           },
     {"GL_EXT_texture_lod_bias",             EXT_TEXTURE_LOD_BIAS          },
     {"GL_EXT_texture_mirror_clamp",         EXT_TEXTURE_MIRROR_CLAMP      },
@@ -265,9 +274,6 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_NV_vertex_program2_option",        NV_VERTEX_PROGRAM2_OPTION     },
     {"GL_NV_vertex_program3",               NV_VERTEX_PROGRAM3            },
     {"GL_NVX_gpu_memory_info",              NVX_GPU_MEMORY_INFO           },
-
-    /* SGI */
-    {"GL_SGIS_generate_mipmap",             SGIS_GENERATE_MIPMAP          },
 };
 
 static const struct wined3d_extension_map wgl_extension_map[] =
@@ -443,8 +449,8 @@ UINT64 adapter_adjust_memory(struct wined3d_adapter *adapter, INT64 amount)
 
 static void wined3d_adapter_cleanup(struct wined3d_adapter *adapter)
 {
-    HeapFree(GetProcessHeap(), 0, adapter->gl_info.formats);
-    HeapFree(GetProcessHeap(), 0, adapter->cfgs);
+    heap_free(adapter->gl_info.formats);
+    heap_free(adapter->cfgs);
 }
 
 ULONG CDECL wined3d_incref(struct wined3d *wined3d)
@@ -470,7 +476,7 @@ ULONG CDECL wined3d_decref(struct wined3d *wined3d)
         {
             wined3d_adapter_cleanup(&wined3d->adapters[i]);
         }
-        HeapFree(GetProcessHeap(), 0, wined3d);
+        heap_free(wined3d);
     }
 
     return refcount;
@@ -581,7 +587,7 @@ static void test_pbo_functionality(struct wined3d_gl_info *gl_info)
         0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x000000ff,
         0x80ff00ff, 0x0000ffff, 0x00ff00ff, 0x40ff00ff
     };
-    unsigned int check[sizeof(pattern) / sizeof(pattern[0])];
+    unsigned int check[ARRAY_SIZE(pattern)];
 
     /* No PBO -> No point in testing them. */
     if (!gl_info->supported[ARB_PIXEL_BUFFER_OBJECT]) return;
@@ -1486,6 +1492,7 @@ static const struct gpu_description gpu_description_table[] =
     {HW_VENDOR_INTEL,      CARD_INTEL_IVBS,                "Intel(R) HD Graphics Family",                               DRIVER_INTEL_HD4000,  1536},
     {HW_VENDOR_INTEL,      CARD_INTEL_HWD,                 "Intel(R) HD Graphics 4600",                                 DRIVER_INTEL_HD4000,  1536},
     {HW_VENDOR_INTEL,      CARD_INTEL_HWM,                 "Intel(R) HD Graphics 4600",                                 DRIVER_INTEL_HD4000,  1536},
+    {HW_VENDOR_INTEL,      CARD_INTEL_HD5000,              "Intel(R) HD Graphics 5000",                                 DRIVER_INTEL_HD4000,  1536},
     {HW_VENDOR_INTEL,      CARD_INTEL_I5100_1,             "Intel(R) Iris(TM) Graphics 5100",                           DRIVER_INTEL_HD4000,  1536},
     {HW_VENDOR_INTEL,      CARD_INTEL_I5100_2,             "Intel(R) Iris(TM) Graphics 5100",                           DRIVER_INTEL_HD4000,  1536},
     {HW_VENDOR_INTEL,      CARD_INTEL_I5100_3,             "Intel(R) Iris(TM) Graphics 5100",                           DRIVER_INTEL_HD4000,  1536},
@@ -1527,7 +1534,7 @@ static const struct driver_version_information *get_driver_version_info(enum win
     unsigned int i;
 
     TRACE("Looking up version info for driver=%d driver_model=%d\n", driver, driver_model);
-    for (i = 0; i < (sizeof(driver_version_table) / sizeof(driver_version_table[0])); i++)
+    for (i = 0; i < ARRAY_SIZE(driver_version_table); ++i)
     {
         const struct driver_version_information *entry = &driver_version_table[i];
 
@@ -1547,7 +1554,7 @@ static const struct gpu_description *get_gpu_description(enum wined3d_pci_vendor
 {
     unsigned int i;
 
-    for (i = 0; i < (sizeof(gpu_description_table) / sizeof(*gpu_description_table)); ++i)
+    for (i = 0; i < ARRAY_SIZE(gpu_description_table); ++i)
     {
         if (vendor == gpu_description_table[i].vendor && device == gpu_description_table[i].card)
             return &gpu_description_table[i];
@@ -1744,7 +1751,7 @@ static void fixup_extensions(struct wined3d_gl_info *gl_info, struct wined3d_cap
 {
     unsigned int i;
 
-    for (i = 0; i < (sizeof(quirk_table) / sizeof(*quirk_table)); ++i)
+    for (i = 0; i < ARRAY_SIZE(quirk_table); ++i)
     {
         if (!quirk_table[i].match(gl_info, ctx, gl_renderer, gl_vendor, card_vendor, device)) continue;
         TRACE("Applying driver quirk \"%s\".\n", quirk_table[i].description);
@@ -2167,6 +2174,7 @@ cards_intel[] =
     /* Haswell */
     {"Iris Pro 5200",               CARD_INTEL_IP5200_1},
     {"Iris 5100",                   CARD_INTEL_I5100_1},
+    {"HD Graphics 5000",            CARD_INTEL_HD5000}, /* MacOS */
     {"Haswell Mobile",              CARD_INTEL_HWM},
     {"Iris OpenGL Engine",          CARD_INTEL_HWM},    /* MacOS */
     /* Ivybridge */
@@ -2494,16 +2502,16 @@ static const struct
 card_vendor_table[] =
 {
     {HW_VENDOR_AMD,         "AMD",      amd_gl_vendor_table,
-            sizeof(amd_gl_vendor_table) / sizeof(*amd_gl_vendor_table),
+            ARRAY_SIZE(amd_gl_vendor_table),
             card_fallback_amd},
     {HW_VENDOR_NVIDIA,      "Nvidia",   nvidia_gl_vendor_table,
-            sizeof(nvidia_gl_vendor_table) / sizeof(*nvidia_gl_vendor_table),
+            ARRAY_SIZE(nvidia_gl_vendor_table),
             card_fallback_nvidia},
     {HW_VENDOR_VMWARE,      "VMware",   vmware_gl_vendor_table,
-            sizeof(vmware_gl_vendor_table) / sizeof(*vmware_gl_vendor_table),
+            ARRAY_SIZE(vmware_gl_vendor_table),
             card_fallback_amd},
     {HW_VENDOR_INTEL,       "Intel",    intel_gl_vendor_table,
-            sizeof(intel_gl_vendor_table) / sizeof(*intel_gl_vendor_table),
+            ARRAY_SIZE(intel_gl_vendor_table),
             card_fallback_intel},
 };
 
@@ -2565,7 +2573,7 @@ static enum wined3d_pci_device wined3d_guess_card(const struct shader_caps *shad
     enum wined3d_d3d_level d3d_level = d3d_level_from_caps(shader_caps, fragment_caps, glsl_version);
     enum wined3d_pci_device device;
 
-    for (i = 0; i < (sizeof(card_vendor_table) / sizeof(*card_vendor_table)); ++i)
+    for (i = 0; i < ARRAY_SIZE(card_vendor_table); ++i)
     {
         if (card_vendor_table[i].card_vendor != *card_vendor)
             continue;
@@ -2747,6 +2755,8 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(glGetShaderPrecisionFormat)
     USE_GL_FUNC(glDepthRangef)
     USE_GL_FUNC(glClearDepthf)
+    /* GL_ARB_framebuffer_no_attachments */
+    USE_GL_FUNC(glFramebufferParameteri)
     /* GL_ARB_framebuffer_object */
     USE_GL_FUNC(glBindFramebuffer)
     USE_GL_FUNC(glBindRenderbuffer)
@@ -2897,10 +2907,18 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(glCompressedTexSubImage2DARB)
     USE_GL_FUNC(glCompressedTexSubImage3DARB)
     USE_GL_FUNC(glGetCompressedTexImageARB)
+    /* GL_ARB_texture_multisample */
+    USE_GL_FUNC(glGetMultisamplefv);
+    USE_GL_FUNC(glSampleMaski);
+    USE_GL_FUNC(glTexImage2DMultisample);
+    USE_GL_FUNC(glTexImage3DMultisample);
     /* GL_ARB_texture_storage */
     USE_GL_FUNC(glTexStorage1D)
     USE_GL_FUNC(glTexStorage2D)
     USE_GL_FUNC(glTexStorage3D)
+    /* GL_ARB_texture_storage_multisample */
+    USE_GL_FUNC(glTexStorage2DMultisample);
+    USE_GL_FUNC(glTexStorage3DMultisample);
     /* GL_ARB_texture_view */
     USE_GL_FUNC(glTextureView)
     /* GL_ARB_timer_query */
@@ -3115,6 +3133,8 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     /* GL_EXT_point_parameters */
     USE_GL_FUNC(glPointParameterfEXT)
     USE_GL_FUNC(glPointParameterfvEXT)
+    /* GL_EXT_polygon_offset_clamp */
+    USE_GL_FUNC(glPolygonOffsetClampEXT)
     /* GL_EXT_provoking_vertex */
     USE_GL_FUNC(glProvokingVertexEXT)
     /* GL_EXT_secondary_color */
@@ -3209,120 +3229,122 @@ static void load_gl_funcs(struct wined3d_gl_info *gl_info)
     USE_GL_FUNC(wglSwapIntervalEXT)
 
     /* Newer core functions */
-    USE_GL_FUNC(glActiveTexture)            /* OpenGL 1.3 */
-    USE_GL_FUNC(glAttachShader)             /* OpenGL 2.0 */
-    USE_GL_FUNC(glBeginQuery)               /* OpenGL 1.5 */
-    USE_GL_FUNC(glBeginTransformFeedback)   /* OpenGL 3.0 */
-    USE_GL_FUNC(glBindAttribLocation)       /* OpenGL 2.0 */
-    USE_GL_FUNC(glBindBuffer)               /* OpenGL 1.5 */
-    USE_GL_FUNC(glBindFragDataLocation)     /* OpenGL 3.0 */
-    USE_GL_FUNC(glBindVertexArray)          /* OpenGL 3.0 */
-    USE_GL_FUNC(glBlendColor)               /* OpenGL 1.4 */
-    USE_GL_FUNC(glBlendEquation)            /* OpenGL 1.4 */
-    USE_GL_FUNC(glBlendEquationSeparate)    /* OpenGL 2.0 */
-    USE_GL_FUNC(glBlendFuncSeparate)        /* OpenGL 1.4 */
-    USE_GL_FUNC(glBufferData)               /* OpenGL 1.5 */
-    USE_GL_FUNC(glBufferSubData)            /* OpenGL 1.5 */
-    USE_GL_FUNC(glColorMaski)               /* OpenGL 3.0 */
-    USE_GL_FUNC(glCompileShader)            /* OpenGL 2.0 */
-    USE_GL_FUNC(glCompressedTexImage2D)     /* OpenGL 1.3 */
-    USE_GL_FUNC(glCompressedTexImage3D)     /* OpenGL 1.3 */
-    USE_GL_FUNC(glCompressedTexSubImage2D)  /* OpenGL 1.3 */
-    USE_GL_FUNC(glCompressedTexSubImage3D)  /* OpenGL 1.3 */
-    USE_GL_FUNC(glCreateProgram)            /* OpenGL 2.0 */
-    USE_GL_FUNC(glCreateShader)             /* OpenGL 2.0 */
-    USE_GL_FUNC(glDebugMessageCallback)     /* OpenGL 4.3 */
-    USE_GL_FUNC(glDebugMessageControl)      /* OpenGL 4.3 */
-    USE_GL_FUNC(glDebugMessageInsert)       /* OpenGL 4.3 */
-    USE_GL_FUNC(glDeleteBuffers)            /* OpenGL 1.5 */
-    USE_GL_FUNC(glDeleteProgram)            /* OpenGL 2.0 */
-    USE_GL_FUNC(glDeleteQueries)            /* OpenGL 1.5 */
-    USE_GL_FUNC(glDeleteShader)             /* OpenGL 2.0 */
-    USE_GL_FUNC(glDeleteVertexArrays)       /* OpenGL 3.0 */
-    USE_GL_FUNC(glDetachShader)             /* OpenGL 2.0 */
-    USE_GL_FUNC(glDisablei)                 /* OpenGL 3.0 */
-    USE_GL_FUNC(glDisableVertexAttribArray) /* OpenGL 2.0 */
-    USE_GL_FUNC(glDrawArraysInstanced)      /* OpenGL 3.1 */
-    USE_GL_FUNC(glDrawBuffers)              /* OpenGL 2.0 */
-    USE_GL_FUNC(glDrawElementsInstanced)    /* OpenGL 3.1 */
-    USE_GL_FUNC(glEnablei)                  /* OpenGL 3.0 */
-    USE_GL_FUNC(glEnableVertexAttribArray)  /* OpenGL 2.0 */
-    USE_GL_FUNC(glEndQuery)                 /* OpenGL 1.5 */
-    USE_GL_FUNC(glEndTransformFeedback)     /* OpenGL 3.0 */
-    USE_GL_FUNC(glFramebufferTexture)       /* OpenGL 3.2 */
-    USE_GL_FUNC(glGenBuffers)               /* OpenGL 1.5 */
-    USE_GL_FUNC(glGenQueries)               /* OpenGL 1.5 */
-    USE_GL_FUNC(glGenVertexArrays)          /* OpenGL 3.0 */
-    USE_GL_FUNC(glGetActiveUniform)         /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetAttachedShaders)       /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetAttribLocation)        /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetBooleani_v)            /* OpenGL 3.0 */
-    USE_GL_FUNC(glGetBufferSubData)         /* OpenGL 1.5 */
-    USE_GL_FUNC(glGetCompressedTexImage)    /* OpenGL 1.3 */
-    USE_GL_FUNC(glGetDebugMessageLog)       /* OpenGL 4.3 */
-    USE_GL_FUNC(glGetIntegeri_v)            /* OpenGL 3.0 */
-    USE_GL_FUNC(glGetProgramInfoLog)        /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetProgramiv)             /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetQueryiv)               /* OpenGL 1.5 */
-    USE_GL_FUNC(glGetQueryObjectuiv)        /* OpenGL 1.5 */
-    USE_GL_FUNC(glGetShaderInfoLog)         /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetShaderiv)              /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetShaderSource)          /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetStringi)               /* OpenGL 3.0 */
-    USE_GL_FUNC(glGetUniformfv)             /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetUniformiv)             /* OpenGL 2.0 */
-    USE_GL_FUNC(glGetUniformLocation)       /* OpenGL 2.0 */
-    USE_GL_FUNC(glIsEnabledi)               /* OpenGL 3.0 */
-    USE_GL_FUNC(glLinkProgram)              /* OpenGL 2.0 */
-    USE_GL_FUNC(glMapBuffer)                /* OpenGL 1.5 */
-    USE_GL_FUNC(glPointParameteri)          /* OpenGL 1.4 */
-    USE_GL_FUNC(glPointParameteriv)         /* OpenGL 1.4 */
-    USE_GL_FUNC(glShaderSource)             /* OpenGL 2.0 */
-    USE_GL_FUNC(glStencilFuncSeparate)      /* OpenGL 2.0 */
-    USE_GL_FUNC(glStencilOpSeparate)        /* OpenGL 2.0 */
-    USE_GL_FUNC(glTexBuffer)                /* OpenGL 3.1 */
-    USE_GL_FUNC(glTexImage3D)               /* OpenGL 1.2 */
-    USE_GL_FUNC(glTexSubImage3D)            /* OpenGL 1.2 */
-    USE_GL_FUNC(glTransformFeedbackVaryings)/* OpenGL 3.0 */
-    USE_GL_FUNC(glUniform1f)                /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform1fv)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform1i)                /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform1iv)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform2f)                /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform2fv)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform2i)                /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform2iv)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform3f)                /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform3fv)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform3i)                /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform3iv)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform4f)                /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform4fv)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform4i)                /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniform4iv)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniformMatrix2fv)         /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniformMatrix3fv)         /* OpenGL 2.0 */
-    USE_GL_FUNC(glUniformMatrix4fv)         /* OpenGL 2.0 */
-    USE_GL_FUNC(glUnmapBuffer)              /* OpenGL 1.5 */
-    USE_GL_FUNC(glUseProgram)               /* OpenGL 2.0 */
-    USE_GL_FUNC(glValidateProgram)          /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib1f)           /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib1fv)          /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib2f)           /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib2fv)          /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib3f)           /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib3fv)          /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib4f)           /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib4fv)          /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib4Nsv)         /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib4Nub)         /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib4Nubv)        /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib4Nusv)        /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib4sv)          /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttrib4ubv)         /* OpenGL 2.0 */
-    USE_GL_FUNC(glVertexAttribDivisor)      /* OpenGL 3.3 */
-    USE_GL_FUNC(glVertexAttribIPointer)     /* OpenGL 3.0 */
-    USE_GL_FUNC(glVertexAttribPointer)      /* OpenGL 2.0 */
+    USE_GL_FUNC(glActiveTexture)                               /* OpenGL 1.3 */
+    USE_GL_FUNC(glAttachShader)                                /* OpenGL 2.0 */
+    USE_GL_FUNC(glBeginQuery)                                  /* OpenGL 1.5 */
+    USE_GL_FUNC(glBeginTransformFeedback)                      /* OpenGL 3.0 */
+    USE_GL_FUNC(glBindAttribLocation)                          /* OpenGL 2.0 */
+    USE_GL_FUNC(glBindBuffer)                                  /* OpenGL 1.5 */
+    USE_GL_FUNC(glBindFragDataLocation)                        /* OpenGL 3.0 */
+    USE_GL_FUNC(glBindVertexArray)                             /* OpenGL 3.0 */
+    USE_GL_FUNC(glBlendColor)                                  /* OpenGL 1.4 */
+    USE_GL_FUNC(glBlendEquation)                               /* OpenGL 1.4 */
+    USE_GL_FUNC(glBlendEquationSeparate)                       /* OpenGL 2.0 */
+    USE_GL_FUNC(glBlendFuncSeparate)                           /* OpenGL 1.4 */
+    USE_GL_FUNC(glBufferData)                                  /* OpenGL 1.5 */
+    USE_GL_FUNC(glBufferSubData)                               /* OpenGL 1.5 */
+    USE_GL_FUNC(glColorMaski)                                  /* OpenGL 3.0 */
+    USE_GL_FUNC(glCompileShader)                               /* OpenGL 2.0 */
+    USE_GL_FUNC(glCompressedTexImage2D)                        /* OpenGL 1.3 */
+    USE_GL_FUNC(glCompressedTexImage3D)                        /* OpenGL 1.3 */
+    USE_GL_FUNC(glCompressedTexSubImage2D)                     /* OpenGL 1.3 */
+    USE_GL_FUNC(glCompressedTexSubImage3D)                     /* OpenGL 1.3 */
+    USE_GL_FUNC(glCreateProgram)                               /* OpenGL 2.0 */
+    USE_GL_FUNC(glCreateShader)                                /* OpenGL 2.0 */
+    USE_GL_FUNC(glDebugMessageCallback)                        /* OpenGL 4.3 */
+    USE_GL_FUNC(glDebugMessageControl)                         /* OpenGL 4.3 */
+    USE_GL_FUNC(glDebugMessageInsert)                          /* OpenGL 4.3 */
+    USE_GL_FUNC(glDeleteBuffers)                               /* OpenGL 1.5 */
+    USE_GL_FUNC(glDeleteProgram)                               /* OpenGL 2.0 */
+    USE_GL_FUNC(glDeleteQueries)                               /* OpenGL 1.5 */
+    USE_GL_FUNC(glDeleteShader)                                /* OpenGL 2.0 */
+    USE_GL_FUNC(glDeleteVertexArrays)                          /* OpenGL 3.0 */
+    USE_GL_FUNC(glDetachShader)                                /* OpenGL 2.0 */
+    USE_GL_FUNC(glDisablei)                                    /* OpenGL 3.0 */
+    USE_GL_FUNC(glDisableVertexAttribArray)                    /* OpenGL 2.0 */
+    USE_GL_FUNC(glDrawArraysInstanced)                         /* OpenGL 3.1 */
+    USE_GL_FUNC(glDrawBuffers)                                 /* OpenGL 2.0 */
+    USE_GL_FUNC(glDrawElementsInstanced)                       /* OpenGL 3.1 */
+    USE_GL_FUNC(glEnablei)                                     /* OpenGL 3.0 */
+    USE_GL_FUNC(glEnableVertexAttribArray)                     /* OpenGL 2.0 */
+    USE_GL_FUNC(glEndQuery)                                    /* OpenGL 1.5 */
+    USE_GL_FUNC(glEndTransformFeedback)                        /* OpenGL 3.0 */
+    USE_GL_FUNC(glFramebufferTexture)                          /* OpenGL 3.2 */
+    USE_GL_FUNC(glGenBuffers)                                  /* OpenGL 1.5 */
+    USE_GL_FUNC(glGenQueries)                                  /* OpenGL 1.5 */
+    USE_GL_FUNC(glGenVertexArrays)                             /* OpenGL 3.0 */
+    USE_GL_FUNC(glGetActiveUniform)                            /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetAttachedShaders)                          /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetAttribLocation)                           /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetBooleani_v)                               /* OpenGL 3.0 */
+    USE_GL_FUNC(glGetBufferSubData)                            /* OpenGL 1.5 */
+    USE_GL_FUNC(glGetCompressedTexImage)                       /* OpenGL 1.3 */
+    USE_GL_FUNC(glGetDebugMessageLog)                          /* OpenGL 4.3 */
+    USE_GL_FUNC(glGetIntegeri_v)                               /* OpenGL 3.0 */
+    USE_GL_FUNC(glGetProgramInfoLog)                           /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetProgramiv)                                /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetQueryiv)                                  /* OpenGL 1.5 */
+    USE_GL_FUNC(glGetQueryObjectuiv)                           /* OpenGL 1.5 */
+    USE_GL_FUNC(glGetShaderInfoLog)                            /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetShaderiv)                                 /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetShaderSource)                             /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetStringi)                                  /* OpenGL 3.0 */
+    USE_GL_FUNC(glGetTextureLevelParameteriv)                  /* OpenGL 4.5 */
+    USE_GL_FUNC(glGetTextureParameteriv)                       /* OpenGL 4.5 */
+    USE_GL_FUNC(glGetUniformfv)                                /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetUniformiv)                                /* OpenGL 2.0 */
+    USE_GL_FUNC(glGetUniformLocation)                          /* OpenGL 2.0 */
+    USE_GL_FUNC(glIsEnabledi)                                  /* OpenGL 3.0 */
+    USE_GL_FUNC(glLinkProgram)                                 /* OpenGL 2.0 */
+    USE_GL_FUNC(glMapBuffer)                                   /* OpenGL 1.5 */
+    USE_GL_FUNC(glPointParameteri)                             /* OpenGL 1.4 */
+    USE_GL_FUNC(glPointParameteriv)                            /* OpenGL 1.4 */
+    USE_GL_FUNC(glShaderSource)                                /* OpenGL 2.0 */
+    USE_GL_FUNC(glStencilFuncSeparate)                         /* OpenGL 2.0 */
+    USE_GL_FUNC(glStencilOpSeparate)                           /* OpenGL 2.0 */
+    USE_GL_FUNC(glTexBuffer)                                   /* OpenGL 3.1 */
+    USE_GL_FUNC(glTexImage3D)                                  /* OpenGL 1.2 */
+    USE_GL_FUNC(glTexSubImage3D)                               /* OpenGL 1.2 */
+    USE_GL_FUNC(glTransformFeedbackVaryings)                   /* OpenGL 3.0 */
+    USE_GL_FUNC(glUniform1f)                                   /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform1fv)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform1i)                                   /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform1iv)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform2f)                                   /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform2fv)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform2i)                                   /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform2iv)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform3f)                                   /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform3fv)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform3i)                                   /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform3iv)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform4f)                                   /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform4fv)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform4i)                                   /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniform4iv)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniformMatrix2fv)                            /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniformMatrix3fv)                            /* OpenGL 2.0 */
+    USE_GL_FUNC(glUniformMatrix4fv)                            /* OpenGL 2.0 */
+    USE_GL_FUNC(glUnmapBuffer)                                 /* OpenGL 1.5 */
+    USE_GL_FUNC(glUseProgram)                                  /* OpenGL 2.0 */
+    USE_GL_FUNC(glValidateProgram)                             /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib1f)                              /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib1fv)                             /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib2f)                              /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib2fv)                             /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib3f)                              /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib3fv)                             /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib4f)                              /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib4fv)                             /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib4Nsv)                            /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib4Nub)                            /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib4Nubv)                           /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib4Nusv)                           /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib4sv)                             /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttrib4ubv)                            /* OpenGL 2.0 */
+    USE_GL_FUNC(glVertexAttribDivisor)                         /* OpenGL 3.3 */
+    USE_GL_FUNC(glVertexAttribIPointer)                        /* OpenGL 3.0 */
+    USE_GL_FUNC(glVertexAttribPointer)                         /* OpenGL 2.0 */
 #undef USE_GL_FUNC
 
 #ifndef USE_WIN32_OPENGL
@@ -3521,7 +3543,7 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
     if (gl_info->supported[ARB_DRAW_BUFFERS] && wined3d_settings.offscreen_rendering_mode == ORM_FBO)
     {
         gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_DRAW_BUFFERS_ARB, &gl_max);
-        gl_info->limits.buffers = gl_max;
+        gl_info->limits.buffers = min(MAX_RENDER_TARGET_VIEWS, gl_max);
         TRACE("Max draw buffers: %u.\n", gl_max);
     }
     if (gl_info->supported[ARB_BLEND_FUNC_EXTENDED])
@@ -3625,9 +3647,9 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
         gl_info->limits.texture3d_size = gl_max;
         TRACE("Max texture3D size: %d.\n", gl_info->limits.texture3d_size);
     }
-    if (gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC])
+    if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
     {
-        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &gl_max);
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &gl_max);
         gl_info->limits.anisotropy = gl_max;
         TRACE("Max anisotropy: %d.\n", gl_info->limits.anisotropy);
     }
@@ -3782,6 +3804,19 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
         gl_info->limits.samples = gl_max;
     }
 
+    if (gl_info->supported[ARB_FRAMEBUFFER_NO_ATTACHMENTS])
+    {
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_FRAMEBUFFER_WIDTH, &gl_max);
+        gl_info->limits.framebuffer_width = gl_max;
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_FRAMEBUFFER_HEIGHT, &gl_max);
+        gl_info->limits.framebuffer_height = gl_max;
+    }
+    else
+    {
+        gl_info->limits.framebuffer_width = gl_info->limits.texture_size;
+        gl_info->limits.framebuffer_height = gl_info->limits.texture_size;
+    }
+
     gl_info->limits.samplers[WINED3D_SHADER_TYPE_PIXEL] =
             min(gl_info->limits.samplers[WINED3D_SHADER_TYPE_PIXEL], MAX_GL_FRAGMENT_SAMPLERS);
     sampler_count = 0;
@@ -3883,6 +3918,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         {ARB_PROVOKING_VERTEX,             MAKEDWORD_VERSION(3, 2)},
         {ARB_SEAMLESS_CUBE_MAP,            MAKEDWORD_VERSION(3, 2)},
         {ARB_SYNC,                         MAKEDWORD_VERSION(3, 2)},
+        {ARB_TEXTURE_MULTISAMPLE,          MAKEDWORD_VERSION(3, 2)},
         {ARB_VERTEX_ARRAY_BGRA,            MAKEDWORD_VERSION(3, 2)},
 
         {ARB_BLEND_FUNC_EXTENDED,          MAKEDWORD_VERSION(3, 3)},
@@ -3906,6 +3942,8 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         {ARB_ES2_COMPATIBILITY,            MAKEDWORD_VERSION(4, 1)},
         {ARB_VIEWPORT_ARRAY,               MAKEDWORD_VERSION(4, 1)},
 
+        {ARB_BASE_INSTANCE,                MAKEDWORD_VERSION(4, 2)},
+        {ARB_CONSERVATIVE_DEPTH,           MAKEDWORD_VERSION(4, 2)},
         {ARB_INTERNALFORMAT_QUERY,         MAKEDWORD_VERSION(4, 2)},
         {ARB_MAP_BUFFER_ALIGNMENT,         MAKEDWORD_VERSION(4, 2)},
         {ARB_SHADER_ATOMIC_COUNTERS,       MAKEDWORD_VERSION(4, 2)},
@@ -3921,20 +3959,24 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
         {ARB_DEBUG_OUTPUT,                 MAKEDWORD_VERSION(4, 3)},
         {ARB_ES3_COMPATIBILITY,            MAKEDWORD_VERSION(4, 3)},
         {ARB_FRAGMENT_LAYER_VIEWPORT,      MAKEDWORD_VERSION(4, 3)},
+        {ARB_FRAMEBUFFER_NO_ATTACHMENTS,   MAKEDWORD_VERSION(4, 3)},
         {ARB_INTERNALFORMAT_QUERY2,        MAKEDWORD_VERSION(4, 3)},
         {ARB_SHADER_IMAGE_SIZE,            MAKEDWORD_VERSION(4, 3)},
         {ARB_SHADER_STORAGE_BUFFER_OBJECT, MAKEDWORD_VERSION(4, 3)},
         {ARB_STENCIL_TEXTURING,            MAKEDWORD_VERSION(4, 3)},
         {ARB_TEXTURE_BUFFER_RANGE,         MAKEDWORD_VERSION(4, 3)},
         {ARB_TEXTURE_QUERY_LEVELS,         MAKEDWORD_VERSION(4, 3)},
+        {ARB_TEXTURE_STORAGE_MULTISAMPLE,  MAKEDWORD_VERSION(4, 2)},
         {ARB_TEXTURE_VIEW,                 MAKEDWORD_VERSION(4, 3)},
 
         {ARB_CLEAR_TEXTURE,                MAKEDWORD_VERSION(4, 4)},
 
         {ARB_CLIP_CONTROL,                 MAKEDWORD_VERSION(4, 5)},
+        {ARB_CULL_DISTANCE,                MAKEDWORD_VERSION(4, 5)},
         {ARB_DERIVATIVE_CONTROL,           MAKEDWORD_VERSION(4, 5)},
 
         {ARB_PIPELINE_STATISTICS_QUERY,    MAKEDWORD_VERSION(4, 6)},
+        {ARB_TEXTURE_FILTER_ANISOTROPIC,   MAKEDWORD_VERSION(4, 6)},
     };
     struct wined3d_driver_info *driver_info = &adapter->driver_info;
     const char *gl_vendor_str, *gl_renderer_str, *gl_version_str;
@@ -4004,13 +4046,11 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
             ERR("Received a NULL GL_EXTENSIONS.\n");
             return FALSE;
         }
-        parse_extension_string(gl_info, gl_extensions, gl_extension_map,
-                sizeof(gl_extension_map) / sizeof(*gl_extension_map));
+        parse_extension_string(gl_info, gl_extensions, gl_extension_map, ARRAY_SIZE(gl_extension_map));
     }
     else
     {
-        enumerate_gl_extensions(gl_info, gl_extension_map,
-                sizeof(gl_extension_map) / sizeof(*gl_extension_map));
+        enumerate_gl_extensions(gl_info, gl_extension_map, ARRAY_SIZE(gl_extension_map));
     }
 
     hdc = wglGetCurrentDC();
@@ -4020,8 +4060,7 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     if (!WGL_Extensions)
         WARN("WGL extensions not supported.\n");
     else
-        parse_extension_string(gl_info, WGL_Extensions, wgl_extension_map,
-                sizeof(wgl_extension_map) / sizeof(*wgl_extension_map));
+        parse_extension_string(gl_info, WGL_Extensions, wgl_extension_map, ARRAY_SIZE(wgl_extension_map));
 
     for (i = 0; i < ARRAY_SIZE(core_extensions); ++i)
     {
@@ -4233,8 +4272,23 @@ static BOOL wined3d_adapter_init_gl_caps(struct wined3d_adapter *adapter,
     if (gl_info->supported[ARB_TEXTURE_STORAGE] && gl_info->supported[APPLE_YCBCR_422])
     {
         /* AFAIK APPLE_ycbcr_422 is only available in legacy contexts so we shouldn't ever hit this. */
-        FIXME("Disabling APPLE_ycbcr_422 because of ARB_texture_storage.\n");
+        ERR("Disabling APPLE_ycbcr_422 because of ARB_texture_storage.\n");
         gl_info->supported[APPLE_YCBCR_422] = FALSE;
+    }
+    if (gl_info->supported[ARB_DRAW_INDIRECT] && !gl_info->supported[ARB_BASE_INSTANCE])
+    {
+        /* If ARB_base_instance is not supported the baseInstance field
+         * in indirect draw parameters must be 0 or behavior is undefined.
+         */
+        WARN("Disabling ARB_draw_indirect because ARB_base_instance is not supported.\n");
+        gl_info->supported[ARB_DRAW_INDIRECT] = FALSE;
+    }
+    if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE] && !wined3d_settings.multisample_textures)
+        gl_info->supported[ARB_TEXTURE_MULTISAMPLE] = FALSE;
+    if (gl_info->supported[ARB_TEXTURE_MULTISAMPLE] && !gl_info->supported[ARB_TEXTURE_STORAGE_MULTISAMPLE])
+    {
+        WARN("Disabling ARB_texture_multisample because immutable storage is not supported.\n");
+        gl_info->supported[ARB_TEXTURE_MULTISAMPLE] = FALSE;
     }
 
     wined3d_adapter_init_limits(gl_info);
@@ -4627,11 +4681,11 @@ HRESULT CDECL wined3d_find_closest_matching_adapter_mode(const struct wined3d *w
         return E_FAIL;
     }
 
-    if (!(modes = wined3d_calloc(mode_count, sizeof(*modes))))
+    if (!(modes = heap_calloc(mode_count, sizeof(*modes))))
         return E_OUTOFMEMORY;
-    if (!(matching_modes = wined3d_calloc(mode_count, sizeof(*matching_modes))))
+    if (!(matching_modes = heap_calloc(mode_count, sizeof(*matching_modes))))
     {
-        HeapFree(GetProcessHeap(), 0, modes);
+        heap_free(modes);
         return E_OUTOFMEMORY;
     }
 
@@ -4640,8 +4694,8 @@ HRESULT CDECL wined3d_find_closest_matching_adapter_mode(const struct wined3d *w
         if (FAILED(hr = wined3d_enum_adapter_modes(wined3d, adapter_idx,
                 mode->format_id, WINED3D_SCANLINE_ORDERING_UNKNOWN, i, &modes[i])))
         {
-            HeapFree(GetProcessHeap(), 0, matching_modes);
-            HeapFree(GetProcessHeap(), 0, modes);
+            heap_free(matching_modes);
+            heap_free(modes);
             return hr;
         }
         matching_modes[i] = &modes[i];
@@ -4677,8 +4731,8 @@ HRESULT CDECL wined3d_find_closest_matching_adapter_mode(const struct wined3d *w
         if (FAILED(hr = wined3d_get_adapter_display_mode(wined3d, adapter_idx,
                 &current_mode, NULL)))
         {
-            HeapFree(GetProcessHeap(), 0, matching_modes);
-            HeapFree(GetProcessHeap(), 0, modes);
+            heap_free(matching_modes);
+            heap_free(modes);
             return hr;
         }
         mode->width = current_mode.width;
@@ -4700,8 +4754,8 @@ HRESULT CDECL wined3d_find_closest_matching_adapter_mode(const struct wined3d *w
 
     *mode = *matching_modes[j];
 
-    HeapFree(GetProcessHeap(), 0, matching_modes);
-    HeapFree(GetProcessHeap(), 0, modes);
+    heap_free(matching_modes);
+    heap_free(modes);
 
     TRACE("Returning %ux%u@%u %s %#x.\n", mode->width, mode->height,
             mode->refresh_rate, debug_d3dformat(mode->format_id),
@@ -5257,6 +5311,13 @@ static BOOL wined3d_check_surface_capability(const struct wined3d_format *format
         return TRUE;
     }
 
+    if ((format->flags[WINED3D_GL_RES_TYPE_TEX_2D] & (WINED3DFMT_FLAG_EXTENSION | WINED3DFMT_FLAG_TEXTURE))
+            == (WINED3DFMT_FLAG_EXTENSION | WINED3DFMT_FLAG_TEXTURE))
+    {
+        TRACE("[OK]\n");
+        return TRUE;
+    }
+
     /* Reject other formats */
     TRACE("[FAILED]\n");
     return FALSE;
@@ -5276,10 +5337,9 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
 {
     const struct wined3d_adapter *adapter = &wined3d->adapters[adapter_idx];
     const struct wined3d_gl_info *gl_info = &adapter->gl_info;
-    const struct wined3d_format *adapter_format = wined3d_get_format(gl_info, adapter_format_id,
-            WINED3DUSAGE_RENDERTARGET);
-    const struct wined3d_format *format = wined3d_get_format(gl_info, check_format_id, usage);
+    const struct wined3d_format *adapter_format, *format;
     enum wined3d_gl_resource_type gl_type, gl_type_end;
+    BOOL mipmap_gen_supported = TRUE;
     DWORD format_flags = 0;
     DWORD allowed_usage;
 
@@ -5291,6 +5351,9 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
 
     if (adapter_idx >= wined3d->adapter_count)
         return WINED3DERR_INVALIDCALL;
+
+    adapter_format = wined3d_get_format(gl_info, adapter_format_id, WINED3DUSAGE_RENDERTARGET);
+    format = wined3d_get_format(gl_info, check_format_id, usage);
 
     switch (resource_type)
     {
@@ -5331,12 +5394,12 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                 gl_type = gl_type_end = WINED3D_GL_RES_TYPE_RB;
                 break;
             }
-            allowed_usage |= WINED3DUSAGE_AUTOGENMIPMAP
-                    | WINED3DUSAGE_DYNAMIC
+            allowed_usage |= WINED3DUSAGE_DYNAMIC
                     | WINED3DUSAGE_LEGACY_CUBEMAP
                     | WINED3DUSAGE_SOFTWAREPROCESSING
                     | WINED3DUSAGE_TEXTURE
                     | WINED3DUSAGE_QUERY_FILTER
+                    | WINED3DUSAGE_QUERY_GENMIPMAP
                     | WINED3DUSAGE_QUERY_LEGACYBUMPMAP
                     | WINED3DUSAGE_QUERY_SRGBREAD
                     | WINED3DUSAGE_QUERY_SRGBWRITE
@@ -5409,12 +5472,6 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
         return WINED3DERR_NOTAVAILABLE;
     }
 
-    if ((usage & WINED3DUSAGE_AUTOGENMIPMAP) && !gl_info->supported[SGIS_GENERATE_MIPMAP])
-    {
-        TRACE("No WINED3DUSAGE_AUTOGENMIPMAP support, returning WINED3DOK_NOAUTOGEN.\n");
-        return WINED3DOK_NOAUTOGEN;
-    }
-
     for (; gl_type <= gl_type_end; ++gl_type)
     {
         if ((format->flags[gl_type] & format_flags) != format_flags)
@@ -5443,6 +5500,15 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
                     debug_d3dformat(check_format_id));
             return WINED3DERR_NOTAVAILABLE;
         }
+
+        if (!(format->flags[gl_type] & WINED3DFMT_FLAG_GEN_MIPMAP))
+            mipmap_gen_supported = FALSE;
+    }
+
+    if ((usage & WINED3DUSAGE_QUERY_GENMIPMAP) && !mipmap_gen_supported)
+    {
+        TRACE("No WINED3DUSAGE_AUTOGENMIPMAP support, returning WINED3DOK_NOAUTOGEN.\n");
+        return WINED3DOK_NOMIPGEN;
     }
 
     return WINED3D_OK;
@@ -5614,8 +5680,8 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
     caps->Caps2                    = WINED3DCAPS2_CANRENDERWINDOWED |
                                      WINED3DCAPS2_FULLSCREENGAMMA |
                                      WINED3DCAPS2_DYNAMICTEXTURES;
-    if (gl_info->supported[SGIS_GENERATE_MIPMAP])
-        caps->Caps2 |= WINED3DCAPS2_CANAUTOGENMIPMAP;
+    if (gl_info->supported[ARB_FRAMEBUFFER_OBJECT] || gl_info->supported[EXT_FRAMEBUFFER_OBJECT])
+        caps->Caps2 |= WINED3DCAPS2_CANGENMIPMAP;
 
     caps->Caps3                    = WINED3DCAPS3_ALPHA_FULLSCREEN_FLIP_OR_DISCARD |
                                      WINED3DCAPS3_COPY_TO_VIDMEM                   |
@@ -5678,7 +5744,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                      WINED3DPRASTERCAPS_SLOPESCALEDEPTHBIAS |
                                      WINED3DPRASTERCAPS_DEPTHBIAS;
 
-    if (gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC])
+    if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
     {
         caps->RasterCaps  |= WINED3DPRASTERCAPS_ANISOTROPY    |
                              WINED3DPRASTERCAPS_ZBIAS         |
@@ -5797,7 +5863,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                WINED3DPTFILTERCAPS_MIPNEAREST       |
                                WINED3DPTFILTERCAPS_NEAREST;
 
-    if (gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC])
+    if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
     {
         caps->TextureFilterCaps  |= WINED3DPTFILTERCAPS_MAGFANISOTROPIC |
                                     WINED3DPTFILTERCAPS_MINFANISOTROPIC;
@@ -5818,7 +5884,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                        WINED3DPTFILTERCAPS_MIPNEAREST       |
                                        WINED3DPTFILTERCAPS_NEAREST;
 
-        if (gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC])
+        if (gl_info->supported[ARB_TEXTURE_FILTER_ANISOTROPIC])
         {
             caps->CubeTextureFilterCaps  |= WINED3DPTFILTERCAPS_MAGFANISOTROPIC |
                                             WINED3DPTFILTERCAPS_MINFANISOTROPIC;
@@ -6190,8 +6256,7 @@ HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, UINT adapter_idx, e
     if (wined3d->adapter_count && adapter_idx >= wined3d->adapter_count)
         return WINED3DERR_INVALIDCALL;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
-    if (!object)
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
     hr = device_init(object, wined3d, adapter_idx, device_type,
@@ -6199,7 +6264,7 @@ HRESULT CDECL wined3d_device_create(struct wined3d *wined3d, UINT adapter_idx, e
     if (FAILED(hr))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);
-        HeapFree(GetProcessHeap(), 0, object);
+        heap_free(object);
         return hr;
     }
 
@@ -6439,7 +6504,7 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
         attribute = WGL_NUMBER_PIXEL_FORMATS_ARB;
         GL_EXTCALL(wglGetPixelFormatAttribivARB(dc, 0, 0, 1, &attribute, &cfg_count));
 
-        adapter->cfgs = wined3d_calloc(cfg_count, sizeof(*adapter->cfgs));
+        adapter->cfgs = heap_calloc(cfg_count, sizeof(*adapter->cfgs));
         attribs[attrib_count++] = WGL_RED_BITS_ARB;
         attribs[attrib_count++] = WGL_GREEN_BITS_ARB;
         attribs[attrib_count++] = WGL_BLUE_BITS_ARB;
@@ -6504,7 +6569,7 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
         int cfg_count;
 
         cfg_count = DescribePixelFormat(dc, 0, 0, 0);
-        adapter->cfgs = wined3d_calloc(cfg_count, sizeof(*adapter->cfgs));
+        adapter->cfgs = heap_calloc(cfg_count, sizeof(*adapter->cfgs));
 
         for (i = 0, adapter->cfg_count = 0; i < cfg_count; ++i)
         {
@@ -6550,6 +6615,22 @@ static void wined3d_adapter_init_fb_cfgs(struct wined3d_adapter *adapter, HDC dc
     }
 }
 
+static DWORD get_max_gl_version(const struct wined3d_gl_info *gl_info, DWORD flags)
+{
+    const char *gl_vendor, *gl_renderer;
+
+    if (wined3d_settings.explicit_gl_version || (flags & WINED3D_PIXEL_CENTER_INTEGER))
+        return wined3d_settings.max_gl_version;
+
+    gl_vendor = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_VENDOR);
+    gl_renderer = (const char *)gl_info->gl_ops.gl.p_glGetString(GL_RENDERER);
+    if (!gl_vendor || !gl_renderer
+            || wined3d_guess_card_vendor(gl_vendor, gl_renderer) == HW_VENDOR_NVIDIA)
+        return wined3d_settings.max_gl_version;
+
+    return MAKEDWORD_VERSION(4, 4);
+}
+
 static BOOL has_extension(const char *list, const char *ext)
 {
     size_t len = strlen(ext);
@@ -6566,14 +6647,15 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, 
 {
     static const DWORD supported_gl_versions[] =
     {
+        MAKEDWORD_VERSION(4, 4),
         MAKEDWORD_VERSION(3, 2),
         MAKEDWORD_VERSION(1, 0),
     };
     struct wined3d_gl_info *gl_info = &adapter->gl_info;
     struct wined3d_caps_gl_ctx caps_gl_ctx = {0};
-    DWORD max_gl_version = wined3d_settings.max_gl_version;
-    DISPLAY_DEVICEW display_device;
     unsigned int i;
+    DISPLAY_DEVICEW display_device;
+    DWORD max_gl_version;
 
     TRACE("adapter %p, ordinal %u.\n", adapter, ordinal);
 
@@ -6617,6 +6699,8 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, 
         ERR("Failed to get a GL context for adapter %p.\n", adapter);
         return FALSE;
     }
+
+    max_gl_version = get_max_gl_version(gl_info, wined3d_creation_flags);
 
     if (wined3d_creation_flags & WINED3D_REQUEST_D3D10)
     {
@@ -6669,7 +6753,7 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, 
     {
         WARN("No suitable pixel formats found.\n");
         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
-        HeapFree(GetProcessHeap(), 0, adapter->cfgs);
+        heap_free(adapter->cfgs);
         return FALSE;
     }
 
@@ -6677,13 +6761,9 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal, 
     {
         ERR("Failed to initialize GL format info.\n");
         wined3d_caps_gl_ctx_destroy(&caps_gl_ctx);
-        HeapFree(GetProcessHeap(), 0, adapter->cfgs);
+        heap_free(adapter->cfgs);
         return FALSE;
     }
-
-    gl_info->fixed_polyoffset_scale = wined3d_adapter_find_polyoffset_scale(&caps_gl_ctx, GL_DEPTH_COMPONENT);
-    if (gl_info->supported[ARB_DEPTH_BUFFER_FLOAT])
-        gl_info->float_polyoffset_scale = wined3d_adapter_find_polyoffset_scale(&caps_gl_ctx, GL_DEPTH32F_STENCIL8);
 
     adapter->vram_bytes = adapter->driver_info.vram_bytes;
     adapter->vram_bytes_used = 0;

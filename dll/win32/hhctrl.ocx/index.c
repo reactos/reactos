@@ -18,6 +18,11 @@
  */
 
 #include "hhctrl.h"
+#include "stream.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 /* Fill the TreeView object corresponding to the Index items */
 static void fill_index_tree(HWND hwnd, IndexItem *item)

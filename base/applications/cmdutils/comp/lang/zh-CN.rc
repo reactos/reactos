@@ -1,0 +1,23 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "对比两个或两组文件的内容。\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      指定要比较的第一个文件的位置和名称。\n\
+  data2      指定要比较的第二个文件的位置和名称。\n\
+  /A         以 ASCII 字符形式显示区别 (默认: 十六进制)。\n\
+  /L         显示行数区别。\n"
+    IDS_INVALIDSWITCH "无效的选项 - /%c\n"
+    IDS_BADSYNTAX "命令行语法错误\n"
+    IDS_FILEERROR "无法找到/打开文件: %s\n"
+    IDS_COMPARING "正在比较 %s 和 %s...\n"
+    IDS_FILESIZEERROR "无法判断该文件大小: %s\n"
+    IDS_SIZEDIFFERS "文件大小不一致。\n"
+    IDS_READERROR "文件读取错误。\n"
+    IDS_MISMATCHLINE "在行 %d 处比较出错\n"
+    IDS_MISMATCHOFFSET "在偏移 0x%X 处比较出错\n"
+    IDS_ASCIIDIFF "文件%d = %c\n"
+    IDS_HEXADECIMALDIFF "文件%d = %X\n"
+    IDS_MATCH "文件比较无误\n"
+END

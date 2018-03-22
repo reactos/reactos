@@ -45,9 +45,43 @@
  *
  */
 
-#include "cdlg.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <shellapi.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+#include "winnls.h"
+#include "wingdi.h"
+#ifdef __REACTOS__
+/* RegGetValueW is supported by Win2k3 SP1 but headers need Win Vista */
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#endif
+#include "winreg.h"
+#include "winuser.h"
+#include "commdlg.h"
+#include "dlgs.h"
+#include "cdlg.h"
+#include "cderr.h"
+#include "shellapi.h"
+#include "shlobj.h"
+#include "filedlgbrowser.h"
+#include "shlwapi.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 #define UNIMPLEMENTED_FLAGS \
 (OFN_DONTADDTORECENT |\

@@ -7,6 +7,11 @@
  * Daniel Veillard <veillard@redhat.com>
  */
 
+/* To avoid EBCDIC trouble when parsing on zOS */
+#if defined(__MVS__)
+#pragma convert("ISO8859-1")
+#endif
+
 #define IN_LIBXML
 #include "libxml.h"
 
@@ -5398,7 +5403,7 @@ xmlSchemaValidateFacetInternal(xmlSchemaFacetPtr facet,
 	    if ((valType == XML_SCHEMAS_QNAME) ||
 		(valType == XML_SCHEMAS_NOTATION))
 		return (0);
-	    /* No break on purpose. */
+            /* Falls through. */
 	case XML_SCHEMA_FACET_MAXLENGTH:
 	case XML_SCHEMA_FACET_MINLENGTH: {
 	    unsigned int len = 0;

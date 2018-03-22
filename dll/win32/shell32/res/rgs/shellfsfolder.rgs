@@ -9,16 +9,16 @@ HKCR
 				val ThreadingModel = s 'Apartment'
 			}
 		}
-		NoRemove Interface
+	}
+	NoRemove Interface
+	{
+		ForceRemove {000214E6-0000-0000-C000-000000000046} = s 'IShellFolder'
 		{
-			ForceRemove {000214E6-0000-0000-C000-000000000046} = s 'IShellFolder'
+			NumMethods = s '13'
 			{
-				NumMethods = s '13'
-				{
-				}
-				ProxyStubClsid32 = s '{bf50b68e-29b8-4386-ae9c-9734d5117cd5}'
-				{
-				}
+			}
+			ProxyStubClsid32 = s '{bf50b68e-29b8-4386-ae9c-9734d5117cd5}'
+			{
 			}
 		}
 	}

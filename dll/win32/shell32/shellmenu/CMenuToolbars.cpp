@@ -49,8 +49,11 @@ LRESULT CMenuToolbarBase::OnWinEventWrap(UINT uMsg, WPARAM wParam, LPARAM lParam
 HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
     NMHDR * hdr;
+    HRESULT hr;
+    LRESULT result;
 
-    *theResult = 0;
+    if (theResult)
+        *theResult = 0;
     switch (uMsg)
     {
     case WM_COMMAND:
@@ -75,7 +78,10 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return S_OK;
 
         case NM_CUSTOMDRAW:
-            return OnCustomDraw(reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr), theResult);
+            hr = OnCustomDraw(reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr), &result);
+            if (theResult)
+                *theResult = result;
+            return hr;
 
         case TBN_GETINFOTIP:
             return OnGetInfoTip(reinterpret_cast<LPNMTBGETINFOTIP>(hdr));
@@ -287,6 +293,8 @@ CMenuToolbarBase::CMenuToolbarBase(CMenuBand *menuBand, BOOL usePager) :
 
 CMenuToolbarBase::~CMenuToolbarBase()
 {
+    ClearToolbar();
+
     if (m_hWnd)
         DestroyWindow();
 
@@ -1321,7 +1329,11 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
     {
         if (m_menuBand->_CallCBWithItemPidl(item, 0x10000000, 0, 0) == S_FALSE)
         {
-            DPA_AppendPtr(dpaSort, ILClone(item));
+            DPA_AppendPtr(dpaSort, item);
+        }
+        else
+        {
+            CoTaskMemFree(item);
         }
 
         hr = eidl->Next(1, &item, NULL);

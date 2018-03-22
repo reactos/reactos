@@ -20,9 +20,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
 
-DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+#include <stdio.h>
+#include <assert.h>
+
+#include "windows.h"
+#include "ole2.h"
+#include "msxml2.h"
+#include "msxml2did.h"
+#include "ocidl.h"
+#include "dispex.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
 
 static const WCHAR emptyW[] = {0};
 
@@ -246,16 +258,13 @@ static void add_call(struct call_sequence **seq, int sequence_index,
     if (!call_seq->sequence)
     {
         call_seq->size = 10;
-        call_seq->sequence = HeapAlloc(GetProcessHeap(), 0,
-                                      call_seq->size * sizeof (struct call_entry));
+        call_seq->sequence = heap_alloc(call_seq->size * sizeof (struct call_entry));
     }
 
     if (call_seq->count == call_seq->size)
     {
         call_seq->size *= 2;
-        call_seq->sequence = HeapReAlloc(GetProcessHeap(), 0,
-                                        call_seq->sequence,
-                                        call_seq->size * sizeof (struct call_entry));
+        call_seq->sequence = heap_realloc(call_seq->sequence, call_seq->size * sizeof (struct call_entry));
     }
 
     assert(call_seq->sequence);
@@ -290,7 +299,7 @@ static inline void flush_sequence(struct call_sequence **seg, int sequence_index
             SysFreeString(call_seq->sequence[i].attributes[j].qnameW);
             SysFreeString(call_seq->sequence[i].attributes[j].valueW);
         }
-        HeapFree(GetProcessHeap(), 0, call_seq->sequence[i].attributes);
+        heap_free(call_seq->sequence[i].attributes);
         call_seq->sequence[i].attr_count = 0;
 
         SysFreeString(call_seq->sequence[i].arg1W);
@@ -298,7 +307,7 @@ static inline void flush_sequence(struct call_sequence **seg, int sequence_index
         SysFreeString(call_seq->sequence[i].arg3W);
     }
 
-    HeapFree(GetProcessHeap(), 0, call_seq->sequence);
+    heap_free(call_seq->sequence);
     call_seq->sequence = NULL;
     call_seq->count = call_seq->size = 0;
 }
@@ -525,7 +534,7 @@ static void init_call_sequences(struct call_sequence **seq, int n)
     int i;
 
     for (i = 0; i < n; i++)
-        seq[i] = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct call_sequence));
+        seq[i] = heap_alloc_zero(sizeof(struct call_sequence));
 }
 
 static const WCHAR szSimpleXML[] = {
@@ -1212,7 +1221,7 @@ static HRESULT WINAPI contentHandler_startElement(
         int i;
 
         struct attribute_entry *attr;
-        attr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(struct attribute_entry));
+        attr = heap_alloc_zero(len * sizeof(*attr));
 
         v = VARIANT_TRUE;
         hr = ISAXXMLReader_getFeature(g_reader, _bstr_("http://xml.org/sax/features/namespaces"), &v);
@@ -2780,6 +2789,36 @@ static void test_saxreader_features(void)
             continue;
         }
 
+        if (IsEqualGUID(entry->guid, &CLSID_SAXXMLReader40) ||
+                IsEqualGUID(entry->guid, &CLSID_SAXXMLReader60))
+        {
+            value = VARIANT_TRUE;
+            hr = ISAXXMLReader_getFeature(reader, _bstr_("exhaustive-errors"), &value);
+            ok(hr == S_OK, "Failed to get feature value, hr %#x.\n", hr);
+            ok(value == VARIANT_FALSE, "Unexpected default feature value.\n");
+            hr = ISAXXMLReader_putFeature(reader, _bstr_("exhaustive-errors"), VARIANT_FALSE);
+            ok(hr == S_OK, "Failed to put feature value, hr %#x.\n", hr);
+
+            value = VARIANT_TRUE;
+            hr = ISAXXMLReader_getFeature(reader, _bstr_("schema-validation"), &value);
+            ok(hr == S_OK, "Failed to get feature value, hr %#x.\n", hr);
+            ok(value == VARIANT_FALSE, "Unexpected default feature value.\n");
+            hr = ISAXXMLReader_putFeature(reader, _bstr_("exhaustive-errors"), VARIANT_FALSE);
+            ok(hr == S_OK, "Failed to put feature value, hr %#x.\n", hr);
+        }
+        else
+        {
+            value = 123;
+            hr = ISAXXMLReader_getFeature(reader, _bstr_("exhaustive-errors"), &value);
+            ok(hr == E_INVALIDARG, "Failed to get feature value, hr %#x.\n", hr);
+            ok(value == 123, "Unexpected value %d.\n", value);
+
+            value = 123;
+            hr = ISAXXMLReader_getFeature(reader, _bstr_("schema-validation"), &value);
+            ok(hr == E_INVALIDARG, "Failed to get feature value, hr %#x.\n", hr);
+            ok(value == 123, "Unexpected value %d.\n", value);
+        }
+
         name = feature_names;
         while (*name)
         {
@@ -3296,7 +3335,7 @@ static void test_mxwriter_flush(void)
     ok(pos2.QuadPart == 0, "expected stream beginning\n");
 
     len = 2048;
-    buff = HeapAlloc(GetProcessHeap(), 0, len+1);
+    buff = heap_alloc(len + 1);
     memset(buff, 'A', len);
     buff[len] = 0;
     hr = ISAXContentHandler_characters(content, _bstr_(buff), len);
@@ -3379,7 +3418,7 @@ static void test_mxwriter_flush(void)
     ok(SysStringLen(V_BSTR(&dest)) == len, "got len=%d, expected %d\n", SysStringLen(V_BSTR(&dest)), len);
     VariantClear(&dest);
 
-    HeapFree(GetProcessHeap(), 0, buff);
+    heap_free(buff);
     ISAXContentHandler_Release(content);
     IStream_Release(stream);
     IMXWriter_Release(writer);

@@ -27,6 +27,18 @@
 
 /* All private prototype functions used by OLE will be added to this header file */
 
+#include <stdarg.h>
+
+#include "wine/list.h"
+#include "wine/heap.h"
+
+#include "windef.h"
+#include "winbase.h"
+#include "wtypes.h"
+#include "dcom.h"
+#include "winreg.h"
+#include "winternl.h"
+
 struct apartment;
 typedef struct apartment APARTMENT;
 typedef struct LocalServer LocalServer;
@@ -233,8 +245,8 @@ static inline HRESULT apartment_getoxid(const struct apartment *apt, OXID *oxid)
 }
 HRESULT apartment_createwindowifneeded(struct apartment *apt) DECLSPEC_HIDDEN;
 HWND apartment_getwindow(const struct apartment *apt) DECLSPEC_HIDDEN;
-void apartment_joinmta(void) DECLSPEC_HIDDEN;
-
+HRESULT enter_apartment(struct oletls *info, DWORD model) DECLSPEC_HIDDEN;
+void leave_apartment(struct oletls *info) DECLSPEC_HIDDEN;
 
 /* DCOM messages used by the apartment window (not compatible with native) */
 #define DM_EXECUTERPC   (WM_USER + 0) /* WPARAM = 0, LPARAM = (struct dispatch_params *) */
@@ -248,7 +260,7 @@ void apartment_joinmta(void) DECLSPEC_HIDDEN;
 static inline struct oletls *COM_CurrentInfo(void)
 {
     if (!NtCurrentTeb()->ReservedForOle)
-        NtCurrentTeb()->ReservedForOle = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct oletls));
+        NtCurrentTeb()->ReservedForOle = heap_alloc_zero(sizeof(struct oletls));
 
     return NtCurrentTeb()->ReservedForOle;
 }
@@ -311,16 +323,6 @@ extern LSTATUS open_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *) DECLSPEC_HI
 extern BOOL actctx_get_miscstatus(const CLSID*, DWORD, DWORD*) DECLSPEC_HIDDEN;
 
 extern const char *debugstr_formatetc(const FORMATETC *formatetc) DECLSPEC_HIDDEN;
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), 0, len);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
 
 static inline HRESULT copy_formatetc(FORMATETC *dst, const FORMATETC *src)
 {

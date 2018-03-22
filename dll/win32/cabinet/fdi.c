@@ -58,9 +58,20 @@
  *   -gmt
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "fdi.h"
 #include "cabinet.h"
 
-#include <stdio.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
 
 THOSE_ZIP_CONSTS;
 
@@ -2039,19 +2050,19 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
             fullpath[0] = '\0';
             if (pathlen) {
               strcpy(fullpath, userpath);
-#ifndef __REACTOS__
-              if (fullpath[pathlen - 1] != '\\')
-                strcat(fullpath, "\\");
-#else
+#ifdef __REACTOS__
               if (fullpath[pathlen - 1] == '\\')
                 fullpath[pathlen - 1] = '\0';
+#else
+              if (fullpath[pathlen - 1] != '\\')
+                strcat(fullpath, "\\");
 #endif
             }
-#ifndef __REACTOS__
-            if (filenamelen)
-#else
+#ifdef __REACTOS__
             if (filenamelen) {
               strcat(fullpath, "\\");
+#else
+            if (filenamelen)
 #endif
               strcat(fullpath, cab->mii.nextname);
 #ifdef __REACTOS__
@@ -2498,7 +2509,7 @@ BOOL __cdecl FDICopy(
   fdin.psz2 = (CAB(mii).nextinfo) ? CAB(mii).nextinfo : &emptystring;
   fdin.psz3 = pszCabPath;
 
-  if (((*pfnfdin)(fdintCABINET_INFO, &fdin))) {
+  if (pfnfdin(fdintCABINET_INFO, &fdin) == -1) {
     set_error( fdi, FDIERROR_USER_ABORT, 0 );
     goto bail_and_fail;
   }
@@ -2625,7 +2636,7 @@ BOOL __cdecl FDICopy(
       fdin.psz2 = (CAB(mii).prevname) ? CAB(mii).prevname : &emptystring;
       fdin.psz3 = (CAB(mii).previnfo) ? CAB(mii).previnfo : &emptystring;
 
-      if (((*pfnfdin)(fdintPARTIAL_FILE, &fdin))) {
+      if (pfnfdin(fdintPARTIAL_FILE, &fdin) == -1) {
         set_error( fdi, FDIERROR_USER_ABORT, 0 );
         goto bail_and_fail;
       }

@@ -775,7 +775,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
     {
         /* Dereference and fail */
         if (pFirstThread) ObDereferenceObject(pFirstThread);
-        if (pLastThread) ObDereferenceObject(pLastThread);
+        ObDereferenceObject(pLastThread);
         return Status;
     }
 

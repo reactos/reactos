@@ -19,9 +19,9 @@
  */
 
 #include "dmusic_private.h"
+#include "dmobject.h"
 
-#include <dmusicf.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 WINE_DECLARE_DEBUG_CHANNEL(dmfile);
 
 /*****************************************************************************

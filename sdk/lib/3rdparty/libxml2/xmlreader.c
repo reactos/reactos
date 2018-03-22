@@ -3982,7 +3982,7 @@ xmlTextReaderPreserve(xmlTextReaderPtr reader) {
  * pattern. The caller must also use xmlTextReaderCurrentDoc() to
  * keep an handle on the resulting document once parsing has finished
  *
- * Returns a positive number in case of success and -1 in case of error
+ * Returns a non-negative number in case of success and -1 in case of error
  */
 int
 xmlTextReaderPreservePattern(xmlTextReaderPtr reader, const xmlChar *pattern,

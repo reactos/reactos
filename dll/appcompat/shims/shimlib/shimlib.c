@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Shim helper library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Shim helper functions
- * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
@@ -155,7 +155,7 @@ VOID SeiInitDebugSupport(VOID)
     static const UNICODE_STRING DebugKey = RTL_CONSTANT_STRING(L"SHIM_DEBUG_LEVEL");
     UNICODE_STRING DebugValue;
     NTSTATUS Status;
-    ULONG NewLevel = 0;
+    ULONG NewLevel = SEI_MSG;
     WCHAR Buffer[40];
 
     RtlInitEmptyUnicodeString(&DebugValue, Buffer, sizeof(Buffer));

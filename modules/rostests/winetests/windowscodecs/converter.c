@@ -17,7 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <math.h>
+
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include "windef.h"
+#include "objbase.h"
+#include "wincodec.h"
+#include "wincodecsdk.h"
+#include "wine/test.h"
 
 static IWICImagingFactory *factory;
 
@@ -624,6 +635,7 @@ static const WCHAR wszLuminance[] = {'L','u','m','i','n','a','n','c','e',0};
 static const WCHAR wszChrominance[] = {'C','h','r','o','m','i','n','a','n','c','e',0};
 static const WCHAR wszJpegYCrCbSubsampling[] = {'J','p','e','g','Y','C','r','C','b','S','u','b','s','a','m','p','l','i','n','g',0};
 static const WCHAR wszSuppressApp0[] = {'S','u','p','p','r','e','s','s','A','p','p','0',0};
+static const WCHAR wszEnableV5Header32bppBGRA[] = {'E','n','a','b','l','e','V','5','H','e','a','d','e','r','3','2','b','p','p','B','G','R','A',0};
 
 static const struct property_opt_test_data testdata_tiff_props[] = {
     { wszTiffCompressionMethod, VT_UI1,         VT_UI1,  WICTiffCompressionDontCare },
@@ -644,6 +656,11 @@ static const struct property_opt_test_data testdata_jpeg_props[] = {
     { wszChrominance,          VT_I4|VT_ARRAY,  VT_EMPTY },
     { wszJpegYCrCbSubsampling, VT_UI1,          VT_UI1, WICJpegYCrCbSubsamplingDefault, 0.0f, TRUE }, /* not supported on XP/2k3 */
     { wszSuppressApp0,         VT_BOOL,         VT_BOOL, FALSE },
+    { NULL }
+};
+
+static const struct property_opt_test_data testdata_bmp_props[] = {
+    { wszEnableV5Header32bppBGRA, VT_BOOL, VT_BOOL, VARIANT_FALSE, 0.0f, TRUE }, /* Supported since Win7 */
     { NULL }
 };
 
@@ -773,6 +790,8 @@ static void test_encoder_properties(const CLSID* clsid_encoder, IPropertyBag2 *o
         test_specific_encoder_properties(options, testdata_png_props, all_props, cProperties2);
     else if (IsEqualCLSID(clsid_encoder, &CLSID_WICJpegEncoder))
         test_specific_encoder_properties(options, testdata_jpeg_props, all_props, cProperties2);
+    else if (IsEqualCLSID(clsid_encoder, &CLSID_WICBmpEncoder))
+        test_specific_encoder_properties(options, testdata_bmp_props, all_props, cProperties2);
 
     for (i=0; i < cProperties2; i++)
     {
@@ -1235,6 +1254,24 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
     IWICBitmapFrameDecode *framedecode;
     WICPixelFormatGUID pixelformat;
     int i;
+
+    hr = CoCreateInstance(clsid_encoder, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IWICBitmapEncoder, (void **)&encoder);
+    ok(SUCCEEDED(hr), "CoCreateInstance failed, hr=%x\n", hr);
+
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok(SUCCEEDED(hr), "CreateStreamOnHGlobal failed, hr=%x\n", hr);
+
+    hr = IWICBitmapEncoder_Initialize(encoder, stream, WICBitmapEncoderNoCache);
+    ok(SUCCEEDED(hr), "Initialize failed, hr=%x\n", hr);
+
+    /* Encoder options are optional. */
+    hr = IWICBitmapEncoder_CreateNewFrame(encoder, &frameencode, NULL);
+    ok(SUCCEEDED(hr), "Failed to create encode frame, hr %#x.\n", hr);
+
+    IStream_Release(stream);
+    IWICBitmapEncoder_Release(encoder);
+    IWICBitmapFrameEncode_Release(frameencode);
 
     hr = CoCreateInstance(clsid_encoder, NULL, CLSCTX_INPROC_SERVER,
         &IID_IWICBitmapEncoder, (void**)&encoder);

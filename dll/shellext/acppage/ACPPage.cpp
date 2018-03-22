@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Compatibility Layer Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     acppage entrypoint
- * COPYRIGHT:   Copyright 2015 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -15,10 +15,6 @@ LONG g_ModuleRefCnt = 0;
 class CLayerUIPropPageModule : public CComModule
 {
 public:
-    void Term()
-    {
-        CComModule::Term();
-    }
 };
 
 BEGIN_OBJECT_MAP(ObjectMap)
@@ -36,6 +32,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
         DisableThreadLibraryCalls(hInstance);
         g_hModule = hInstance;
         gModule.Init(ObjectMap, hInstance, NULL);
+        break;
+    case DLL_PROCESS_DETACH:
+        gModule.Term();
         break;
     }
 
@@ -62,10 +61,6 @@ STDAPI DllRegisterServer()
     if (FAILED(hr))
         return hr;
 
-    hr = gModule.UpdateRegistryFromResource(IDR_ACPPAGE, TRUE, NULL);
-    if (FAILED(hr))
-        return hr;
-
     return S_OK;
 }
 
@@ -74,10 +69,6 @@ STDAPI DllUnregisterServer()
     HRESULT hr;
 
     hr = gModule.DllUnregisterServer(FALSE);
-    if (FAILED(hr))
-        return hr;
-
-    hr = gModule.UpdateRegistryFromResource(IDR_ACPPAGE, FALSE, NULL);
     if (FAILED(hr))
         return hr;
 
@@ -92,22 +83,52 @@ struct CCoInit
 };
 
 EXTERN_C
+inline ULONG
+Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
+{
+    char Buffer[512];
+    char* Current = Buffer;
+    size_t Length = _countof(Buffer);
+    const char* fname = strrchr(filename, '\\');
+    if (fname == NULL)
+    {
+        fname = strrchr(filename, '/');
+        if (fname != NULL)
+            fname++;
+    }
+    else
+        fname++;
+
+    if (fname == NULL)
+        fname = filename;
+
+    StringCchPrintfExA(Current, Length, &Current, &Length, STRSAFE_NULL_ON_FAILURE, "%s:%d: ", fname, line);
+    va_list ArgList;
+    va_start(ArgList, lpFormat);
+    StringCchVPrintfExA(Current, Length, &Current, &Length, STRSAFE_NULL_ON_FAILURE, lpFormat, ArgList);
+    va_end(ArgList);
+    OutputDebugStringA(Buffer);
+    return 0;
+}
+
+
+EXTERN_C
 BOOL WINAPI GetExeFromLnk(PCWSTR pszLnk, PWSTR pszExe, size_t cchSize)
 {
     CCoInit init;
-    if (FAILED(init.hres))
+    if (FAILED_UNEXPECTEDLY(init.hres))
         return FALSE;
 
     CComPtr<IShellLinkW> spShellLink;
-    if (FAILED(CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellLinkW, &spShellLink))))
+    if (FAILED_UNEXPECTEDLY(CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellLinkW, &spShellLink))))
         return FALSE;
 
     CComPtr<IPersistFile> spPersistFile;
-    if (FAILED(spShellLink->QueryInterface(IID_PPV_ARG(IPersistFile, &spPersistFile))))
+    if (FAILED_UNEXPECTEDLY(spShellLink->QueryInterface(IID_PPV_ARG(IPersistFile, &spPersistFile))))
         return FALSE;
 
-    if (FAILED(spPersistFile->Load(pszLnk, STGM_READ)) || FAILED(spShellLink->Resolve(NULL, SLR_NO_UI | SLR_NOUPDATE | SLR_NOSEARCH)))
+    if (FAILED_UNEXPECTEDLY(spPersistFile->Load(pszLnk, STGM_READ)) || FAILED_UNEXPECTEDLY(spShellLink->Resolve(NULL, SLR_NO_UI | SLR_NOUPDATE | SLR_NOSEARCH)))
         return FALSE;
 
-    return SUCCEEDED(spShellLink->GetPath(pszExe, cchSize, NULL, SLGP_RAWPATH));
+    return !FAILED_UNEXPECTEDLY(spShellLink->GetPath(pszExe, cchSize, NULL, SLGP_RAWPATH));
 }

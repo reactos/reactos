@@ -82,7 +82,7 @@ BEGIN
     LTEXT "Bez proxy dla", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Domyślne", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -94,11 +94,11 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Zainstaluj z dysku (CD lub DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Pobierz i zainstaluj", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 150, 78, 60, 14
 END
 
-IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
 CAPTION "Pobierz %ls…"
 FONT 8, "MS Shell Dlg"
@@ -113,9 +113,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "O programie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Menedżer aplikacji ReactOS\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Zamknij", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Menedżer aplikacji ReactOS\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Zamknij", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -160,13 +160,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nWersja: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\nDostępna wersja: "
     IDS_AINFO_DESCRIPTION "\nOpis: "
     IDS_AINFO_SIZE "\nRozmiar: "
     IDS_AINFO_URLSITE "\nStrona: "
     IDS_AINFO_LICENSE "\nLicencja: "
     IDS_AINFO_URLDOWNLOAD "\nPobieranie: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nJęzyki: "
 END
 
 STRINGTABLE
@@ -211,14 +211,15 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Nie można pobrać pakietu! Sprawdź połączenie z siecią!"
     IDS_UNABLE_TO_REMOVE "Nie można było usunąć wpisu z rejestru!"
     IDS_UNABLE_TO_INSTALL "Nie można uruchomić instalatora!"
-    IDS_CERT_DOES_NOT_MATCH "Weryfikacja certyfikatu SSL nieudana."
+    IDS_UNABLE_TO_QUERY_CERT "Nie można odnaleźć informacji o certyfikacie.\n\nCzy chcesz mimo to kontynuować?"
     IDS_INTEG_CHECK_TITLE "Weryfikowanie integralności pakietu…"
     IDS_INTEG_CHECK_FAIL "Pakiet nie przeszedł kontroli integralności, mógł zostać uszkodzony lub naruszony podczas pobierania. Uruchamianie tego programu nie jest zalecane."
     IDS_INTERRUPTED_DOWNLOAD "Pobieranie zostało przerwane. Sprawdź połączenie z siecią"
     IDS_UNABLE_TO_WRITE "Nie można zapisać na dysku. Dysk może być pełny."
     IDS_SELECT_ALL "Zaznacz/Odznacz Wszystko"
     IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
-    IDS_SELECTEDFORINST "Selected for installation"
+    IDS_SELECTEDFORINST "Wybrane do instalacji"
+    IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer: %s\nCzy chcesz mimo to kontynuować?"
 END
 
 STRINGTABLE
@@ -228,7 +229,7 @@ BEGIN
     IDS_STATUS_DOWNLOADED "Pobrane"
     IDS_STATUS_UPDATE_AVAILABLE "Dostępna aktualizacja"
     IDS_STATUS_DOWNLOADING "Pobieranie…"
-    IDS_STATUS_INSTALLING "Instalowanie……"
+    IDS_STATUS_INSTALLING "Instalowanie…"
     IDS_STATUS_WAITING "Oczekiwanie na instalację…"
     IDS_STATUS_FINISHED "Gotowe"
 END
@@ -252,6 +253,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Baza Programów"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aktualizowanie bazy Programów…"
+    IDS_DL_DIALOG_DB_DISP "Baza programów"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aktualizowanie bazy programów…"
 END

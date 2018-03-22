@@ -456,23 +456,6 @@ void SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, CLSID* pclsidFolder)
     }
 }
 
-
-static const DWORD dwSupportedAttr=
-                      SFGAO_CANCOPY |           /*0x00000001 */
-                      SFGAO_CANMOVE |           /*0x00000002 */
-                      SFGAO_CANLINK |           /*0x00000004 */
-                      SFGAO_CANRENAME |         /*0x00000010 */
-                      SFGAO_CANDELETE |         /*0x00000020 */
-                      SFGAO_HASPROPSHEET |      /*0x00000040 */
-                      SFGAO_DROPTARGET |        /*0x00000100 */
-                      SFGAO_LINK |              /*0x00010000 */
-                      SFGAO_READONLY |          /*0x00040000 */
-                      SFGAO_HIDDEN |            /*0x00080000 */
-                      SFGAO_FILESYSANCESTOR |   /*0x10000000 */
-                      SFGAO_FOLDER |            /*0x20000000 */
-                      SFGAO_FILESYSTEM |        /*0x40000000 */
-                      SFGAO_HASSUBFOLDER;       /*0x80000000 */
-
 HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
 {
     DWORD dwFileAttributes, dwShellAttributes;
@@ -484,42 +467,29 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
         return S_OK;
     }
 
-    if (*pdwAttributes & ~dwSupportedAttr)
-    {
-        WARN ("attributes 0x%08x not implemented\n", (*pdwAttributes & ~dwSupportedAttr));
-        *pdwAttributes &= dwSupportedAttr;
-    }
-
     dwFileAttributes = _ILGetFileAttributes(pidl, NULL, 0);
 
     /* Set common attributes */
-    dwShellAttributes = *pdwAttributes;
-    dwShellAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
-                         SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
+    dwShellAttributes = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK | SFGAO_CANRENAME | SFGAO_CANDELETE |
+                        SFGAO_HASPROPSHEET | SFGAO_DROPTARGET | SFGAO_FILESYSTEM;
 
     if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    {
-        dwShellAttributes |=  (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
-    }
+        dwShellAttributes |= (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR | SFGAO_STORAGEANCESTOR | SFGAO_STORAGE);
     else
-        dwShellAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
+        dwShellAttributes |= SFGAO_STREAM;
 
     if (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
         dwShellAttributes |=  SFGAO_HIDDEN;
-    else
-        dwShellAttributes &= ~SFGAO_HIDDEN;
 
     if (dwFileAttributes & FILE_ATTRIBUTE_READONLY)
         dwShellAttributes |=  SFGAO_READONLY;
-    else
-        dwShellAttributes &= ~SFGAO_READONLY;
 
     if (SFGAO_LINK & *pdwAttributes)
     {
         char ext[MAX_PATH];
 
-        if (!_ILGetExtension(pidl, ext, MAX_PATH) || lstrcmpiA(ext, "lnk"))
-        dwShellAttributes &= ~SFGAO_LINK;
+        if (_ILGetExtension(pidl, ext, MAX_PATH) && !lstrcmpiA(ext, "lnk"))
+            dwShellAttributes |= SFGAO_LINK;
     }
 
     if (SFGAO_HASSUBFOLDER & *pdwAttributes)
@@ -530,13 +500,13 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
             CComPtr<IEnumIDList> pEnumIL;
             if (SUCCEEDED(psf2->EnumObjects(0, SHCONTF_FOLDERS, &pEnumIL)))
             {
-                if (pEnumIL->Skip(1) != S_OK)
-                    dwShellAttributes &= ~SFGAO_HASSUBFOLDER;
+                if (pEnumIL->Skip(1) == S_OK)
+                    dwShellAttributes |= SFGAO_HASSUBFOLDER;
             }
         }
     }
 
-    *pdwAttributes &= dwShellAttributes;
+    *pdwAttributes = dwShellAttributes;
 
     TRACE ("-- 0x%08x\n", *pdwAttributes);
     return S_OK;

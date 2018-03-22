@@ -36,6 +36,10 @@ import "objectarray.idl";
 
 cpp_quote("/* FIXME: #include <sherrors.h> */")
 
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef PlaySound")
+cpp_quote("#endif")
+
 
 /*****************************************************************************
  * IPersistFolder interface
@@ -4432,6 +4436,17 @@ library ShellObjects
     {
         interface IApplicationActivationManager;
     }
+
+#ifdef __REACTOS__
+    [
+        uuid(0010890e-8789-413c-adbc-48f5b511b3af)
+    ]
+    coclass UserNotification
+    {
+        interface IUserNotification;
+    }
+#endif // __REACTOS__
+
 }
 
 enum _OPPROGDLGF
@@ -4625,3 +4640,109 @@ interface IFolderBandPriv : IUnknown
 
     HRESULT SetNoText([in] BOOL fNoText);
 }
+
+
+#ifdef __REACTOS__
+/*****************************************************************************
+ * IQueryContinue interface
+ */
+
+[
+    uuid(7307055c-b24a-486b-9f25-163e597a28a9),
+    object,
+    pointer_default(unique)
+]
+interface IQueryContinue : IUnknown
+{
+    // Returns S_OK if the operation should continue, and S_FALSE if not.
+    HRESULT QueryContinue();
+}
+
+
+/*****************************************************************************
+ * IUserNotification interface
+ */
+
+[
+    uuid(ba9711ba-5893-4787-a7e1-41277151550b),
+    object,
+    pointer_default(unique)
+]
+interface IUserNotification : IUnknown
+{
+    HRESULT SetBalloonInfo(
+        [in, unique, string] LPCWSTR pszTitle,
+        [in, unique, string] LPCWSTR pszText,
+        [in] DWORD dwInfoFlags);
+
+    HRESULT SetBalloonRetry(
+        [in] DWORD dwShowTime,  // Time intervals in milliseconds
+        [in] DWORD dwInterval,
+        [in] UINT cRetryCount);
+
+    HRESULT SetIconInfo(
+        [in, unique] HICON hIcon,
+        [in, unique, string] LPCWSTR pszToolTip);
+
+    // Blocks until the notification times out.
+    HRESULT Show(
+        [in, unique] IQueryContinue *pqc,
+        [in] DWORD dwContinuePollInterval);
+
+    HRESULT PlaySound(
+        [in, string] LPCWSTR pszSoundName);
+};
+
+
+/*****************************************************************************
+ * IUserNotificationCallback interface (Vista+)
+ */
+
+[
+    uuid(19108294-0441-4aff-8013-fa0a730b0bea),
+    object
+]
+interface IUserNotificationCallback : IUnknown
+{
+    HRESULT OnBalloonUserClick([in] POINT * pt);
+    HRESULT OnLeftClick([in] POINT * pt);
+    HRESULT OnContextMenu([in] POINT * pt);
+};
+
+
+/*****************************************************************************
+ * IUserNotification2 interface (Vista+)
+ */
+
+[
+    uuid(215913cc-57eb-4fab-ab5a-e5fa7bea2a6c),
+    object,
+    pointer_default(unique)
+]
+interface IUserNotification2 : IUnknown
+{
+    HRESULT SetBalloonInfo(
+        [in, unique, string] LPCWSTR pszTitle,
+        [in, unique, string] LPCWSTR pszText,
+        [in] DWORD dwInfoFlags);
+
+    HRESULT SetBalloonRetry(
+        [in] DWORD dwShowTime,  // Time intervals in milliseconds
+        [in] DWORD dwInterval,
+        [in] UINT cRetryCount);
+
+    HRESULT SetIconInfo(
+        [in, unique] HICON hIcon,
+        [in, unique, string] LPCWSTR pszToolTip);
+
+    // Blocks until the notification times out.
+    HRESULT Show(
+        [in, unique] IQueryContinue *pqc,
+        [in] DWORD dwContinuePollInterval,
+        [in, unique] IUserNotificationCallback *pSink);
+
+    HRESULT PlaySound(
+        [in, string] LPCWSTR pszSoundName);
+};
+
+#endif // __REACTOS__

@@ -36,6 +36,7 @@ public:
     ~CShellItem();
     HRESULT get_parent_pidl(LPITEMIDLIST *parent_pidl);
     HRESULT get_parent_shellfolder(IShellFolder **ppsf);
+    HRESULT get_shellfolder(IBindCtx *pbc, REFIID riid, void **ppvOut);
 
     // IShellItem
     virtual HRESULT WINAPI BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut);

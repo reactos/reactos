@@ -189,6 +189,17 @@ static char *urlify_hostnames( const char *scheme, char *hostnames, ULONG port )
 }
 #endif
 
+#ifdef HAVE_LDAP
+static LDAP *create_context( const char *url )
+{
+    LDAP *ld;
+    int version = LDAP_VERSION3;
+    if (ldap_initialize( &ld, url ) != LDAP_SUCCESS) return NULL;
+    ldap_set_option( ld, LDAP_OPT_PROTOCOL_VERSION, &version );
+    return ld;
+}
+#endif
+
 /***********************************************************************
  *      cldap_openA     (WLDAP32.@)
  *
@@ -259,7 +270,7 @@ WLDAP32_LDAP * CDECL cldap_openW( PWCHAR hostname, ULONG portnumber )
     url = urlify_hostnames( "cldap://", hostnameU, portnumber );
     if (!url) goto exit;
 
-    ldap_initialize( &ld, url );
+    ld = create_context( url );
 
 exit:
     strfreeU( hostnameU );
@@ -368,7 +379,7 @@ WLDAP32_LDAP * CDECL ldap_initW( const PWCHAR hostname, ULONG portnumber )
     url = urlify_hostnames( "ldap://", hostnameU, portnumber );
     if (!url) goto exit;
 
-    ldap_initialize( &ld, url );
+    ld = create_context( url );
 
 exit:
     strfreeU( hostnameU );
@@ -450,7 +461,7 @@ WLDAP32_LDAP * CDECL ldap_openW( PWCHAR hostname, ULONG portnumber )
     url = urlify_hostnames( "ldap://", hostnameU, portnumber );
     if (!url) goto exit;
 
-    ldap_initialize( &ld, url );
+    ld = create_context( url );
 
 exit:
     strfreeU( hostnameU );

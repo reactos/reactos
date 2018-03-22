@@ -19,11 +19,11 @@
 const xmlChar *xsltDocFragFake = (const xmlChar *) " fake node libxslt";
 #endif
 
-const xmlChar *xsltComputingGlobalVarMarker =
+static const xmlChar *xsltComputingGlobalVarMarker =
  (const xmlChar *) " var/param being computed";
 
-#define XSLT_VAR_GLOBAL 1<<0
-#define XSLT_VAR_IN_SELECT 1<<1
+#define XSLT_VAR_GLOBAL (1<<0)
+#define XSLT_VAR_IN_SELECT (1<<1)
 #define XSLT_TCTXT_VARIABLE(c) ((xsltStackElemPtr) (c)->contextVariable)
 
 /************************************************************************
@@ -101,6 +101,9 @@ xsltRegisterTmpRVT(xsltTransformContextPtr ctxt, xmlDocPtr RVT)
     if ((ctxt == NULL) || (RVT == NULL))
 	return(-1);
 
+    RVT->prev = NULL;
+    RVT->psvi = XSLT_RVT_VARIABLE;
+
     /*
     * We'll restrict the lifetime of user-created fragments
     * insinde an xsl:variable and xsl:param to the lifetime of the
@@ -138,15 +141,18 @@ xsltRegisterLocalRVT(xsltTransformContextPtr ctxt,
     if ((ctxt == NULL) || (RVT == NULL))
 	return(-1);
 
+    RVT->prev = NULL;
+
     /*
     * When evaluating "select" expressions of xsl:variable
     * and xsl:param, we need to bind newly created tree fragments
-    * to the variable itself; otherwise the tragment will be
+    * to the variable itself; otherwise the fragment will be
     * freed before we leave the scope of a var.
     */
     if ((ctxt->contextVariable != NULL) &&
 	(XSLT_TCTXT_VARIABLE(ctxt)->flags & XSLT_VAR_IN_SELECT))
     {
+        RVT->psvi = XSLT_RVT_VARIABLE;
 	RVT->next = (xmlNodePtr) XSLT_TCTXT_VARIABLE(ctxt)->fragment;
 	XSLT_TCTXT_VARIABLE(ctxt)->fragment = RVT;
 	return(0);
@@ -156,19 +162,11 @@ xsltRegisterLocalRVT(xsltTransformContextPtr ctxt,
     * If not reference by a returning instruction (like EXSLT's function),
     * then this fragment will be freed, when the instruction exits.
     */
+    RVT->psvi = XSLT_RVT_LOCAL;
     RVT->next = (xmlNodePtr) ctxt->localRVT;
     if (ctxt->localRVT != NULL)
 	ctxt->localRVT->prev = (xmlNodePtr) RVT;
     ctxt->localRVT = RVT;
-    /*
-    * We need to keep track of the first registered fragment
-    * for extension instructions which return fragments
-    * (e.g. EXSLT'S function), in order to let
-    * xsltExtensionInstructionResultFinalize() clear the
-    * preserving flag on the fragments.
-    */
-    if (ctxt->localRVTBase == NULL)
-	ctxt->localRVTBase = RVT;
     return(0);
 }
 
@@ -183,26 +181,16 @@ xsltRegisterLocalRVT(xsltTransformContextPtr ctxt,
  * collector will free them after the function-calling process exits.
  *
  * Returns 0 in case of success and -1 in case of API or internal errors.
+ *
+ * This function is unsupported in newer releases of libxslt.
  */
 int
 xsltExtensionInstructionResultFinalize(xsltTransformContextPtr ctxt)
 {
-    xmlDocPtr cur;
-
-    if (ctxt == NULL)
-	return(-1);
-    if (ctxt->localRVTBase == NULL)
-	return(0);
-    /*
-    * Enable remaining local tree fragments to be freed
-    * by the fragment garbage collector.
-    */
-    cur = ctxt->localRVTBase;
-    do {
-	cur->psvi = NULL;
-	cur = (xmlDocPtr) cur->next;
-    } while (cur != NULL);
-    return(0);
+    xmlGenericError(xmlGenericErrorContext,
+            "xsltExtensionInstructionResultFinalize is unsupported "
+            "in this release of libxslt.\n");
+    return(-1);
 }
 
 /**
@@ -217,11 +205,35 @@ xsltExtensionInstructionResultFinalize(xsltTransformContextPtr ctxt)
  * tree fragments (via xsltCreateRVT()) with xsltRegisterLocalRVT().
  *
  * Returns 0 in case of success and -1 in case of error.
+ *
+ * It isn't necessary to call this function in newer releases of
+ * libxslt.
  */
 int
 xsltExtensionInstructionResultRegister(xsltTransformContextPtr ctxt,
 				       xmlXPathObjectPtr obj)
 {
+    return(0);
+}
+
+/**
+ * xsltFlagRVTs:
+ * @ctxt: an XSLT transformation context
+ * @obj: an XPath object to be inspected for result tree fragments
+ * @val: the flag value
+ *
+ * Updates ownership information of RVTs in @obj according to @val.
+ *
+ * @val = XSLT_RVT_FUNC_RESULT for the result of an extension function, so its
+ *        RVTs won't be destroyed after leaving the returning scope.
+ * @val = XSLT_RVT_LOCAL for the result of an extension function to reset
+ *        the state of its RVTs after it was returned to a new scope.
+ * @val = XSLT_RVT_GLOBAL for parts of global variables.
+ *
+ * Returns 0 in case of success and -1 in case of error.
+ */
+int
+xsltFlagRVTs(xsltTransformContextPtr ctxt, xmlXPathObjectPtr obj, void *val) {
     int i;
     xmlNodePtr cur;
     xmlDocPtr doc;
@@ -254,36 +266,59 @@ xsltExtensionInstructionResultRegister(xsltTransformContextPtr ctxt,
 		doc = cur->doc;
 	    } else {
 		xsltTransformError(ctxt, NULL, ctxt->inst,
-		    "Internal error in "
-		    "xsltExtensionInstructionResultRegister(): "
+		    "Internal error in xsltFlagRVTs(): "
 		    "Cannot retrieve the doc of a namespace node.\n");
-		goto error;
+		return(-1);
 	    }
 	} else {
 	    doc = cur->doc;
 	}
 	if (doc == NULL) {
 	    xsltTransformError(ctxt, NULL, ctxt->inst,
-		"Internal error in "
-		"xsltExtensionInstructionResultRegister(): "
+		"Internal error in xsltFlagRVTs(): "
 		"Cannot retrieve the doc of a node.\n");
-	    goto error;
+	    return(-1);
 	}
-	if (doc->name && (doc->name[0] == ' ')) {
+	if (doc->name && (doc->name[0] == ' ') &&
+            doc->psvi != XSLT_RVT_GLOBAL) {
 	    /*
 	    * This is a result tree fragment.
-	    * We'll use the @psvi field for reference counting.
-	    * TODO: How do we know if this is a value of a
-	    *  global variable or a doc acquired via the
+	    * We store ownership information in the @psvi field.
+	    * TODO: How do we know if this is a doc acquired via the
 	    *  document() function?
 	    */
-	    doc->psvi = (void *) ((long) 1);
+#ifdef WITH_XSLT_DEBUG_VARIABLE
+            XSLT_TRACE(ctxt,XSLT_TRACE_VARIABLES,xsltGenericDebug(xsltGenericDebugContext,
+                "Flagging RVT %p: %p -> %p\n", doc, doc->psvi, val));
+#endif
+
+            if (val == XSLT_RVT_LOCAL) {
+                if (doc->psvi != XSLT_RVT_FUNC_RESULT) {
+		    xmlGenericError(xmlGenericErrorContext,
+                            "xsltFlagRVTs: Invalid transition %p => LOCAL\n",
+                            doc->psvi);
+                    return(-1);
+                }
+
+                xsltRegisterLocalRVT(ctxt, doc);
+            } else if (val == XSLT_RVT_GLOBAL) {
+                if (doc->psvi != XSLT_RVT_LOCAL) {
+		    xmlGenericError(xmlGenericErrorContext,
+                            "xsltFlagRVTs: Invalid transition %p => GLOBAL\n",
+                            doc->psvi);
+                    doc->psvi = XSLT_RVT_GLOBAL;
+                    return(-1);
+                }
+
+                /* Will be registered as persistant in xsltReleaseLocalRVTs. */
+                doc->psvi = XSLT_RVT_GLOBAL;
+            } else if (val == XSLT_RVT_FUNC_RESULT) {
+	        doc->psvi = val;
+            }
 	}
     }
 
     return(0);
-error:
-    return(-1);
 }
 
 /**
@@ -329,9 +364,9 @@ xsltReleaseRVT(xsltTransformContextPtr ctxt, xmlDocPtr RVT)
 	}
 
 	/*
-	* Reset the reference counter.
+	* Reset the ownership information.
 	*/
-	RVT->psvi = 0;
+	RVT->psvi = NULL;
 
 	RVT->next = (xmlNodePtr) ctxt->cache->RVT;
 	ctxt->cache->RVT = RVT;
@@ -370,6 +405,8 @@ xsltRegisterPersistRVT(xsltTransformContextPtr ctxt, xmlDocPtr RVT)
 {
     if ((ctxt == NULL) || (RVT == NULL)) return(-1);
 
+    RVT->psvi = XSLT_RVT_GLOBAL;
+    RVT->prev = NULL;
     RVT->next = (xmlNodePtr) ctxt->persistRVT;
     if (ctxt->persistRVT != NULL)
 	ctxt->persistRVT->prev = (xmlNodePtr) RVT;
@@ -520,35 +557,21 @@ xsltFreeStackElem(xsltStackElemPtr elem) {
     /*
     * Release the list of temporary Result Tree Fragments.
     */
-    if (elem->fragment) {
+    if (elem->context) {
 	xmlDocPtr cur;
 
 	while (elem->fragment != NULL) {
 	    cur = elem->fragment;
 	    elem->fragment = (xmlDocPtr) cur->next;
 
-	    if (elem->context &&
-		(cur->psvi == (void *) ((long) 1)))
-	    {
-		/*
-		* This fragment is a result of an extension instruction
-		* (e.g. XSLT's function) and needs to be preserved until
-		* the instruction exits.
-		* Example: The fragment of the variable must not be freed
-		*  since it is returned by the EXSLT function:
-		*  <f:function name="foo">
-		*   <xsl:variable name="bar">
-		*     <bar/>
-		*   </xsl:variable>
-		*   <f:result select="$bar"/>
-		*  </f:function>
-		*
-		*/
-		xsltRegisterLocalRVT(elem->context, cur);
-	    } else {
+            if (cur->psvi == XSLT_RVT_VARIABLE) {
 		xsltReleaseRVT((xsltTransformContextPtr) elem->context,
 		    cur);
-	    }
+            } else if (cur->psvi != XSLT_RVT_FUNC_RESULT) {
+                xmlGenericError(xmlGenericErrorContext,
+                        "xsltFreeStackElem: Unexpected RVT flag %p\n",
+                        cur->psvi);
+            }
 	}
     }
     /*
@@ -942,6 +965,7 @@ xsltEvalVariable(xsltTransformContextPtr ctxt, xsltStackElemPtr variable,
 		* the Result Tree Fragment.
 		*/
 		variable->fragment = container;
+                container->psvi = XSLT_RVT_VARIABLE;
 
 		oldOutput = ctxt->output;
 		oldInsert = ctxt->insert;
@@ -1128,16 +1152,23 @@ xsltEvalGlobalVariable(xsltStackElemPtr elem, xsltTransformContextPtr ctxt)
 		xsltTransformError(ctxt, NULL, comp->inst,
 		    "Evaluating global variable %s failed\n", elem->name);
 	    ctxt->state = XSLT_STATE_STOPPED;
+            goto error;
+        }
+
+        /*
+         * Mark all RVTs that are referenced from result as part
+         * of this variable so they won't be freed too early.
+         */
+        xsltFlagRVTs(ctxt, result, XSLT_RVT_GLOBAL);
+
 #ifdef WITH_XSLT_DEBUG_VARIABLE
 #ifdef LIBXML_DEBUG_ENABLED
-	} else {
-	    if ((xsltGenericDebugContext == stdout) ||
-		(xsltGenericDebugContext == stderr))
-		xmlXPathDebugDumpObject((FILE *)xsltGenericDebugContext,
-					result, 0);
+	if ((xsltGenericDebugContext == stdout) ||
+	    (xsltGenericDebugContext == stderr))
+	    xmlXPathDebugDumpObject((FILE *)xsltGenericDebugContext,
+				    result, 0);
 #endif
 #endif
-	}
     } else {
 	if (elem->tree == NULL) {
 	    result = xmlXPathNewCString("");
@@ -1751,8 +1782,7 @@ xsltBuildVariable(xsltTransformContextPtr ctxt,
     elem->tree = tree;
     elem->value = xsltEvalVariable(ctxt, elem,
 	(xsltStylePreCompPtr) comp);
-    if (elem->value != NULL)
-	elem->computed = 1;
+    elem->computed = 1;
     return(elem);
 }
 

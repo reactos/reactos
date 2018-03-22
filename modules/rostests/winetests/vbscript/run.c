@@ -129,6 +129,8 @@ DEFINE_EXPECT(OnScriptError);
 #define DISPID_GLOBAL_TESTOPTIONALARG 1017
 #define DISPID_GLOBAL_LETOBJ        1018
 #define DISPID_GLOBAL_SETOBJ        1019
+#define DISPID_GLOBAL_TODO_WINE_OK  1020
+#define DISPID_GLOBAL_WEEKSTARTDAY  1021
 
 #define DISPID_TESTOBJ_PROPGET      2000
 #define DISPID_TESTOBJ_PROPPUT      2001
@@ -142,6 +144,7 @@ static const WCHAR testW[] = {'t','e','s','t',0};
 static const WCHAR emptyW[] = {0};
 
 static BOOL strict_dispid_check, is_english, allow_ui;
+static int first_day_of_week;
 static const char *test_name = "(null)";
 static int test_counter;
 static SCRIPTUICHANDLING uic_handling = SCRIPTUICHANDLING_NOUIERROR;
@@ -210,27 +213,22 @@ static const char *vt2a(VARIANT *v)
     }
 }
 
-/* Returns true if the user interface is in English. Note that this does not
- * presume of the formatting of dates, numbers, etc.
+/* Sets is_english to true if the user interface is in English. Note that this
+ * does not presume the formatting of dates, numbers, etc.
+ * Sets first_day_of_week to 1 if Sunday, 2 if Monday, and so on.
  */
-static BOOL is_lang_english(void)
+static void detect_locale(void)
 {
-    static HMODULE hkernel32 = NULL;
-    static LANGID (WINAPI *pGetThreadUILanguage)(void) = NULL;
-    static LANGID (WINAPI *pGetUserDefaultUILanguage)(void) = NULL;
+    HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
+    LANGID (WINAPI *pGetThreadUILanguage)(void) = (void*)GetProcAddress(kernel32, "GetThreadUILanguage");
 
-    if (!hkernel32)
-    {
-        hkernel32 = GetModuleHandleA("kernel32.dll");
-        pGetThreadUILanguage = (void*)GetProcAddress(hkernel32, "GetThreadUILanguage");
-        pGetUserDefaultUILanguage = (void*)GetProcAddress(hkernel32, "GetUserDefaultUILanguage");
-    }
-    if (pGetThreadUILanguage && PRIMARYLANGID(pGetThreadUILanguage()) != LANG_ENGLISH)
-        return FALSE;
-    if (pGetUserDefaultUILanguage && PRIMARYLANGID(pGetUserDefaultUILanguage()) != LANG_ENGLISH)
-        return FALSE;
+    is_english = ((!pGetThreadUILanguage || PRIMARYLANGID(pGetThreadUILanguage()) == LANG_ENGLISH) &&
+                  PRIMARYLANGID(GetUserDefaultUILanguage()) == LANG_ENGLISH &&
+                  PRIMARYLANGID(GetUserDefaultLangID()) == LANG_ENGLISH);
 
-    return PRIMARYLANGID(GetUserDefaultLangID()) == LANG_ENGLISH;
+    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_IFIRSTDAYOFWEEK | LOCALE_RETURN_NUMBER,
+                   (void*)&first_day_of_week, sizeof(first_day_of_week));
+    first_day_of_week = 1 + (first_day_of_week + 1) % 7;
 }
 
 static HRESULT WINAPI ServiceProvider_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
@@ -990,6 +988,11 @@ static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD 
         *pid = DISPID_GLOBAL_OK;
         return S_OK;
     }
+    if(!strcmp_wa(bstrName, "todo_wine_ok")) {
+        test_grfdex(grfdex, fdexNameCaseInsensitive);
+        *pid = DISPID_GLOBAL_TODO_WINE_OK;
+        return S_OK;
+    }
     if(!strcmp_wa(bstrName, "trace")) {
         test_grfdex(grfdex, fdexNameCaseInsensitive);
         *pid = DISPID_GLOBAL_TRACE;
@@ -1009,6 +1012,11 @@ static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD 
     if(!strcmp_wa(bstrName, "isEnglishLang")) {
         test_grfdex(grfdex, fdexNameCaseInsensitive);
         *pid = DISPID_GLOBAL_ISENGLANG;
+        return S_OK;
+    }
+    if(!strcmp_wa(bstrName, "firstDayOfWeek")) {
+        test_grfdex(grfdex, fdexNameCaseInsensitive);
+        *pid = DISPID_GLOBAL_WEEKSTARTDAY;
         return S_OK;
     }
     if(!strcmp_wa(bstrName, "testObj")) {
@@ -1099,6 +1107,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
     switch(id) {
+    case DISPID_GLOBAL_TODO_WINE_OK:
     case DISPID_GLOBAL_OK: {
         VARIANT *b;
 
@@ -1122,7 +1131,8 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 
         ok(V_VT(b) == VT_BOOL, "V_VT(b) = %d\n", V_VT(b));
 
-        ok(V_BOOL(b), "%s: %s\n", test_name, wine_dbgstr_w(V_BSTR(pdp->rgvarg)));
+        todo_wine_if(id == DISPID_GLOBAL_TODO_WINE_OK)
+            ok(V_BOOL(b), "%s: %s\n", test_name, wine_dbgstr_w(V_BSTR(pdp->rgvarg)));
         return S_OK;
     }
 
@@ -1180,6 +1190,11 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 
         V_VT(pvarRes) = VT_BOOL;
         V_BOOL(pvarRes) = is_english ? VARIANT_TRUE : VARIANT_FALSE;
+        return S_OK;
+
+    case DISPID_GLOBAL_WEEKSTARTDAY:
+        V_VT(pvarRes) = VT_I4;
+        V_I4(pvarRes) = first_day_of_week;
         return S_OK;
 
     case DISPID_GLOBAL_VBVAR:
@@ -1633,8 +1648,20 @@ static HRESULT WINAPI ActiveScriptSite_OnStateChange(IActiveScriptSite *iface, S
 static HRESULT WINAPI ActiveScriptSite_OnScriptError(IActiveScriptSite *iface, IActiveScriptError *pscripterror)
 {
     HRESULT hr = onerror_hres;
-    CHECK_EXPECT(OnScriptError);
 
+    if(!expect_OnScriptError) {
+        EXCEPINFO info;
+        ULONG line;
+        HRESULT hres;
+
+        hres = IActiveScriptError_GetSourcePosition(pscripterror, NULL, &line, NULL);
+        if(SUCCEEDED(hres))
+            hres = IActiveScriptError_GetExceptionInfo(pscripterror, &info);
+        if(SUCCEEDED(hres))
+            trace("Error in line %u: %s\n", line+1, wine_dbgstr_w(info.bstrDescription));
+    }
+
+    CHECK_EXPECT(OnScriptError);
     onerror_hres = E_NOTIMPL;
 
     return hr;
@@ -2342,7 +2369,7 @@ START_TEST(run)
     int argc;
     char **argv;
 
-    is_english = is_lang_english();
+    detect_locale();
     if(!is_english)
         skip("Skipping some tests in non-English locale\n");
 

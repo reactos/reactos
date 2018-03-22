@@ -125,7 +125,7 @@ HRESULT CSysTray::NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip, DWO
 
     TRACE("NotifyIcon code=%d, uId=%d, hIcon=%p, szTip=%S\n", code, uId, hIcon, szTip);
 
-    nim.cbSize = sizeof(NOTIFYICONDATA);
+    nim.cbSize = sizeof(nim);
     nim.uFlags = NIF_MESSAGE | NIF_ICON | NIF_STATE | NIF_TIP;
     nim.hIcon = hIcon;
     nim.uID = uId;
@@ -241,8 +241,12 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         return TRUE;
 
     case WM_TIMER:
-        UpdateIcons();
+        if (wParam == 1)
+            UpdateIcons();
+        else
+            ProcessIconMessage(uMsg, wParam, lParam, lResult);
         return TRUE;
+
     case WM_DESTROY:
         KillTimer(1);
         ShutdownIcons();

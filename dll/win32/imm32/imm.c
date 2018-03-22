@@ -19,23 +19,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-
-//#include <stdarg.h>
+#include <stdarg.h>
 #include <stdio.h>
 
-#include <windef.h>
-#include <winbase.h>
-//#include "wingdi.h"
-#include <winuser.h>
-//#include "winerror.h"
-#include <wine/debug.h>
-//#include "imm.h"
-#include <ddk/imm.h>
-#include <winnls.h>
-#include <winreg.h>
-#include <wine/list.h>
-#include <wine/unicode.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winerror.h"
+#include "wine/debug.h"
+#include "imm.h"
+#include "ddk/imm.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -3146,4 +3144,13 @@ BOOL WINAPI ImmGetHotKey(DWORD hotkey, UINT *modifiers, UINT *key, HKL hkl)
 {
     FIXME("%x, %p, %p, %p: stub\n", hotkey, modifiers, key, hkl);
     return FALSE;
+}
+
+/***********************************************************************
+ *              IMMDisableLegacyIME(IMM32.@)
+ */
+BOOL WINAPI ImmDisableLegacyIME(void)
+{
+    FIXME("stub\n");
+    return TRUE;
 }

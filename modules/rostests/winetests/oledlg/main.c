@@ -20,11 +20,11 @@
 
 #define COBJMACROS
 
-#include <wine/test.h>
+#include "wine/test.h"
 #include <stdio.h>
 
-#include <initguid.h>
-#include <oledlg.h>
+#include "initguid.h"
+#include "oledlg.h"
 
 static const WCHAR *strstrW( const WCHAR *str, const WCHAR *sub )
 {

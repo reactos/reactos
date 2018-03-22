@@ -16,8 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "jscript.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include <math.h>
+#include <limits.h>
+
+#include "jscript.h"
+#include "engine.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR NaNW[] = {'N','a','N',0};
 static const WCHAR InfinityW[] = {'I','n','f','i','n','i','t','y',0};

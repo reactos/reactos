@@ -52,18 +52,18 @@ static WCHAR* BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls
 }
 
 /****************************************************************************
- * CFSDropTarget::CopyItems
+ * CFSDropTarget::_CopyItems
  *
  * copies items to this folder
  */
-HRESULT WINAPI CFSDropTarget::CopyItems(IShellFolder * pSFFrom, UINT cidl,
-                                    LPCITEMIDLIST * apidl, BOOL bCopy)
+HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
+                                  LPCITEMIDLIST * apidl, BOOL bCopy)
 {
     LPWSTR pszSrcList;
     HRESULT hr;
     WCHAR wszTargetPath[MAX_PATH + 1];
 
-    wcscpy(wszTargetPath, sPathTarget);
+    wcscpy(wszTargetPath, m_sPathTarget);
     //Double NULL terminate.
     wszTargetPath[wcslen(wszTargetPath) + 1] = '\0';
 
@@ -75,7 +75,7 @@ HRESULT WINAPI CFSDropTarget::CopyItems(IShellFolder * pSFFrom, UINT cidl,
         return hr;
 
     pszSrcList = BuildPathsList(strretFrom.pOleStr, cidl, apidl);
-    ERR("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(sPathTarget), bCopy);
+    ERR("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(m_sPathTarget), bCopy);
     CoTaskMemFree(strretFrom.pOleStr);
     if (!pszSrcList)
         return E_OUTOFMEMORY;
@@ -83,7 +83,7 @@ HRESULT WINAPI CFSDropTarget::CopyItems(IShellFolder * pSFFrom, UINT cidl,
     SHFILEOPSTRUCTW op = {0};
     op.pFrom = pszSrcList;
     op.pTo = wszTargetPath;
-    op.hwnd = GetActiveWindow();
+    op.hwnd = m_hwndSite;
     op.wFunc = bCopy ? FO_COPY : FO_MOVE;
     op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
 
@@ -98,37 +98,39 @@ HRESULT WINAPI CFSDropTarget::CopyItems(IShellFolder * pSFFrom, UINT cidl,
 }
 
 CFSDropTarget::CFSDropTarget():
-    cfShellIDList(0),
-    fAcceptFmt(FALSE),
-    sPathTarget(NULL)
+    m_cfShellIDList(0),
+    m_fAcceptFmt(FALSE),
+    m_sPathTarget(NULL),
+    m_hwndSite(NULL),
+    m_grfKeyState(0)
 {
 }
 
-HRESULT WINAPI CFSDropTarget::Initialize(LPWSTR PathTarget)
+HRESULT CFSDropTarget::Initialize(LPWSTR PathTarget)
 {
     if (!PathTarget)
         return E_UNEXPECTED;
 
-    cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-    if (!cfShellIDList)
+    m_cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+    if (!m_cfShellIDList)
         return E_FAIL;
 
-    sPathTarget = (WCHAR *)SHAlloc((wcslen(PathTarget) + 1) * sizeof(WCHAR));
-    if (!sPathTarget)
+    m_sPathTarget = (WCHAR *)SHAlloc((wcslen(PathTarget) + 1) * sizeof(WCHAR));
+    if (!m_sPathTarget)
         return E_OUTOFMEMORY;
 
-    wcscpy(sPathTarget, PathTarget);
+    wcscpy(m_sPathTarget, PathTarget);
 
     return S_OK;
 }
 
 CFSDropTarget::~CFSDropTarget()
 {
-    SHFree(sPathTarget);
+    SHFree(m_sPathTarget);
 }
 
 BOOL
-CFSDropTarget::GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut)
+CFSDropTarget::_GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut)
 {
     WCHAR wszLink[40];
 
@@ -157,16 +159,16 @@ CFSDropTarget::GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pw
 /****************************************************************************
  * IDropTarget implementation
  */
-BOOL CFSDropTarget::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
+BOOL CFSDropTarget::_QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
 {
     /* TODO Windows does different drop effects if dragging across drives. 
     i.e., it will copy instead of move if the directories are on different disks. */
 
-    DWORD dwEffect = DROPEFFECT_MOVE;
+    DWORD dwEffect = m_dwDefaultEffect;
 
     *pdwEffect = DROPEFFECT_NONE;
 
-    if (fAcceptFmt) { /* Does our interpretation of the keystate ... */
+    if (m_fAcceptFmt) { /* Does our interpretation of the keystate ... */
         *pdwEffect = KeyStateToDropEffect (dwKeyState);
         
         if (*pdwEffect == DROPEFFECT_NONE)
@@ -180,23 +182,121 @@ BOOL CFSDropTarget::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
     return FALSE;
 }
 
+HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect, DWORD dwAvailableEffects)
+{
+    HMENU hmenu = LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_DRAGFILE));
+    if (!hmenu)
+        return E_OUTOFMEMORY;
+
+    HMENU hpopupmenu = GetSubMenu(hmenu, 0);
+
+    if ((dwAvailableEffects & DROPEFFECT_COPY) == 0)
+        DeleteMenu(hpopupmenu, IDM_COPYHERE, MF_BYCOMMAND);
+    else if ((dwAvailableEffects & DROPEFFECT_MOVE) == 0)
+        DeleteMenu(hpopupmenu, IDM_MOVEHERE, MF_BYCOMMAND);
+    else if ((dwAvailableEffects & DROPEFFECT_LINK) == 0)
+        DeleteMenu(hpopupmenu, IDM_LINKHERE, MF_BYCOMMAND);
+
+    if ((*pdwEffect & DROPEFFECT_COPY))
+        SetMenuDefaultItem(hpopupmenu, IDM_COPYHERE, FALSE);
+    else if ((*pdwEffect & DROPEFFECT_MOVE))
+        SetMenuDefaultItem(hpopupmenu, IDM_MOVEHERE, FALSE);
+    else if ((*pdwEffect & DROPEFFECT_LINK))
+        SetMenuDefaultItem(hpopupmenu, IDM_LINKHERE, FALSE);
+
+    /* FIXME: We need to support shell extensions here */
+
+    UINT uCommand = TrackPopupMenu(hpopupmenu,
+                                   TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY,
+                                   pt.x, pt.y, 0, m_hwndSite, NULL);
+    if (uCommand == 0)
+        return S_FALSE;
+    else if (uCommand == IDM_COPYHERE)
+        *pdwEffect = DROPEFFECT_COPY;
+    else if (uCommand == IDM_MOVEHERE)
+        *pdwEffect = DROPEFFECT_MOVE;
+    else if (uCommand == IDM_LINKHERE)
+        *pdwEffect = DROPEFFECT_LINK;
+
+    return S_OK;
+}
+
+HRESULT CFSDropTarget::_RepositionItems(IShellFolderView *psfv, IDataObject *pdtobj, POINTL pt)
+{
+    CComPtr<IFolderView> pfv;
+    POINT ptDrag;
+    HRESULT hr = psfv->QueryInterface(IID_PPV_ARG(IFolderView, &pfv));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = psfv->GetDragPoint(&ptDrag);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComHeapPtr<POINT> apt;
+    if (!apt.Allocate(cidl))
+    {
+        SHFree(pidlFolder);
+        _ILFreeaPidl(apidl, cidl);
+        return E_OUTOFMEMORY;
+    }
+
+    for (UINT i = 0; i<cidl; i++)
+    {
+        pfv->GetItemPosition(apidl[i], &apt[i]);
+        apt[i].x += pt.x - ptDrag.x;
+        apt[i].y += pt.y - ptDrag.y;
+    }
+
+    pfv->SelectAndPositionItems(cidl, apidl, apt, SVSI_SELECT);
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
+    return S_OK;
+}
+
 HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
                                         DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
     FORMATETC fmt;
     FORMATETC fmt2;
-    fAcceptFmt = FALSE;
+    m_fAcceptFmt = FALSE;
 
-    InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
+    InitFormatEtc (fmt, m_cfShellIDList, TYMED_HGLOBAL);
     InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);
 
     if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
-        fAcceptFmt = TRUE;
+        m_fAcceptFmt = TRUE;
     else if (SUCCEEDED(pDataObject->QueryGetData(&fmt2)))
-        fAcceptFmt = TRUE;
+        m_fAcceptFmt = TRUE;
 
-    QueryDrop(dwKeyState, pdwEffect);
+    m_grfKeyState = dwKeyState;
+    m_dwDefaultEffect = DROPEFFECT_MOVE;
+
+    STGMEDIUM medium;
+    if (SUCCEEDED(pDataObject->GetData(&fmt2, &medium)))
+    {
+        WCHAR wstrFirstFile[MAX_PATH];
+        if (DragQueryFileW((HDROP)medium.hGlobal, 0, wstrFirstFile, _countof(wstrFirstFile)))
+        {
+            /* Check if the drive letter is different */
+            if (wstrFirstFile[0] != m_sPathTarget[0])
+            {
+                m_dwDefaultEffect = DROPEFFECT_COPY;
+            }
+        }
+        ReleaseStgMedium(&medium);
+    }
+
+    _QueryDrop(dwKeyState, pdwEffect);
     return S_OK;
 }
 
@@ -208,7 +308,9 @@ HRESULT WINAPI CFSDropTarget::DragOver(DWORD dwKeyState, POINTL pt,
     if (!pdwEffect)
         return E_INVALIDARG;
 
-    QueryDrop(dwKeyState, pdwEffect);
+    m_grfKeyState = dwKeyState;
+
+    _QueryDrop(dwKeyState, pdwEffect);
 
     return S_OK;
 }
@@ -217,7 +319,7 @@ HRESULT WINAPI CFSDropTarget::DragLeave()
 {
     TRACE("(%p)\n", this);
 
-    fAcceptFmt = FALSE;
+    m_fAcceptFmt = FALSE;
 
     return S_OK;
 }
@@ -230,7 +332,31 @@ HRESULT WINAPI CFSDropTarget::Drop(IDataObject *pDataObject,
     if (!pdwEffect)
         return E_INVALIDARG;
 
-    QueryDrop(dwKeyState, pdwEffect);
+    IUnknown_GetWindow(m_site, &m_hwndSite);
+
+    DWORD dwAvailableEffects = *pdwEffect;
+
+    _QueryDrop(dwKeyState, pdwEffect);
+
+    TRACE("pdwEffect: 0x%x, m_dwDefaultEffect: 0x%x, dwAvailableEffects: 0x%x\n", *pdwEffect, m_dwDefaultEffect, dwAvailableEffects);
+
+    if (m_grfKeyState & MK_RBUTTON)
+    {
+        HRESULT hr = _GetEffectFromMenu(pDataObject, pt, pdwEffect, dwAvailableEffects);
+        if (FAILED_UNEXPECTEDLY(hr) || hr == S_FALSE)
+            return hr;
+    }
+
+    if (*pdwEffect == DROPEFFECT_MOVE && m_site)
+    {
+        CComPtr<IShellFolderView> psfv;
+        HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellFolderView, &psfv));
+        if (SUCCEEDED(hr) && psfv->IsDropOnSource(this) == S_OK)
+        {
+            _RepositionItems(psfv, pDataObject, pt);
+            return S_OK;
+        }
+    }
 
     BOOL fIsOpAsync = FALSE;
     CComPtr<IAsyncOperation> pAsyncOperation;
@@ -257,15 +383,33 @@ HRESULT WINAPI CFSDropTarget::Drop(IDataObject *pDataObject,
     return this->_DoDrop(pDataObject, dwKeyState, pt, pdwEffect);
 }
 
-HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
-                                      DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
+HRESULT
+WINAPI
+CFSDropTarget::SetSite(IUnknown *pUnkSite)
+{
+    m_site = pUnkSite;
+    return S_OK;
+}
+
+HRESULT
+WINAPI
+CFSDropTarget::GetSite(REFIID riid, void **ppvSite)
+{
+    if (!m_site)
+        return E_FAIL;
+
+    return m_site->QueryInterface(riid, ppvSite);
+}
+
+HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
+                               DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p) performing drop, effect %u\n", this, *pdwEffect);
     FORMATETC fmt;
     FORMATETC fmt2;
     STGMEDIUM medium;
 
-    InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
+    InitFormatEtc (fmt, m_cfShellIDList, TYMED_HGLOBAL);
     InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);
 
     HRESULT hr;
@@ -343,7 +487,7 @@ HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             WCHAR wszPath[MAX_PATH];
             WCHAR wszTarget[MAX_PATH];
 
-            wcscpy(wszTargetPath, sPathTarget);
+            wcscpy(wszTargetPath, m_sPathTarget);
 
             TRACE("target path = %s", debugstr_w(wszTargetPath));
 
@@ -374,14 +518,14 @@ HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
                 LPWSTR pwszFileName = PathFindFileNameW(wszPath);
                 LPWSTR pwszExt = PathFindExtensionW(wszPath);
-                LPWSTR placementPath = PathCombineW(lpStr1, sPathTarget, pwszFileName);
+                LPWSTR placementPath = PathCombineW(lpStr1, m_sPathTarget, pwszFileName);
                 CComPtr<IPersistFile> ppf;
 
                 //Check to see if it's already a link. 
                 if (!wcsicmp(pwszExt, L".lnk"))
                 {
                     //It's a link so, we create a new one which copies the old.
-                    if(!GetUniqueFileName(placementPath, pwszExt, wszTarget, TRUE)) 
+                    if(!_GetUniqueFileName(placementPath, pwszExt, wszTarget, TRUE)) 
                     {
                         ERR("Error getting unique file name");
                         hr = E_FAIL;
@@ -402,7 +546,7 @@ HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 {
                     //It's not a link, so build a new link using the creator class and fill it in.
                     //Create a file name for the link
-                    if (!GetUniqueFileName(placementPath, L".lnk", wszTarget, TRUE))
+                    if (!_GetUniqueFileName(placementPath, L".lnk", wszTarget, TRUE))
                     {
                         ERR("Error creating unique file name");
                         hr = E_FAIL;
@@ -441,7 +585,7 @@ HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
         }
         else 
         {
-            hr = this->CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl, bCopy);
+            hr = _CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl, bCopy);
         }
 
         SHFree(pidl);
@@ -457,7 +601,7 @@ HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             WCHAR wszTargetPath[MAX_PATH + 1];
             LPWSTR pszSrcList;
 
-            wcscpy(wszTargetPath, sPathTarget);
+            wcscpy(wszTargetPath, m_sPathTarget);
             //Double NULL terminate.
             wszTargetPath[wcslen(wszTargetPath) + 1] = '\0';
             
@@ -474,7 +618,7 @@ HRESULT WINAPI CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             ZeroMemory(&op, sizeof(op));
             op.pFrom = pszSrcList;
             op.pTo = wszTargetPath;
-            op.hwnd = GetActiveWindow();
+            op.hwnd = m_hwndSite;
             op.wFunc = bCopy ? FO_COPY : FO_MOVE;
             op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
             hr = SHFileOperationW(&op);

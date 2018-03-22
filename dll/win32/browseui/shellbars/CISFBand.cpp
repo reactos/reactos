@@ -10,6 +10,8 @@
 
 #include <commoncontrols.h>
 #include <shellapi.h>
+#include <wingdi.h>
+#include <uxtheme.h>
 
 /*
 TODO:
@@ -340,7 +342,8 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                 if (chk)
                     SHInvokeDefaultCommand(m_hWnd, m_pISF, (LPITEMIDLIST)tb.dwData);
 
-                *theResult = TRUE;
+                if (theResult)
+                    *theResult = TRUE;
                 break;
             }            
             case WM_NOTIFY:
@@ -391,18 +394,21 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
                             }
                         }
                         DestroyMenu(fmenu);
-                        
-                        *theResult = TRUE;
+
+                        if (theResult)
+                            *theResult = TRUE;
                         break;
                     }
                     default:
-                        *theResult = FALSE;
+                        if (theResult)
+                            *theResult = FALSE;
                 }
 
                 break;
             }
-            default: 
-                *theResult = FALSE;
+            default:
+                if (theResult)
+                    *theResult = FALSE;
         }
 
         return S_OK;              
@@ -431,6 +437,13 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
         if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
         {
+            if (nCmdID == DBID_SETWINDOWTHEME)
+            {
+                if (pvaIn && V_VT(pvaIn) == VT_BSTR && V_BSTR(pvaIn))
+                {
+                    SetWindowTheme(m_hWnd, V_BSTR(pvaIn), NULL);
+                }
+            }
             return S_OK;
         }
         

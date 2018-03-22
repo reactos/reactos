@@ -4,7 +4,7 @@
  * PURPOSE:     Misc apphelp tests
  * COPYRIGHT:   Copyright 2012 Detlef Riekenberg
  *              Copyright 2013 Mislav Blažević
- *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -87,12 +87,13 @@ typedef struct tagATTRINFO {
 
 static HMODULE hdll;
 static BOOL (WINAPI *pApphelpCheckShellObject)(REFCLSID, BOOL, ULONGLONG *);
-static LPCWSTR (WINAPI *pSdbTagToString)(TAG);
-static BOOL (WINAPI *pSdbGUIDToString)(CONST GUID *, PCWSTR, SIZE_T);
-static BOOL (WINAPI *pSdbIsNullGUID)(CONST GUID *);
-static BOOL (WINAPI *pSdbGetStandardDatabaseGUID)(DWORD, GUID*);
-static BOOL (WINAPI *pSdbGetFileAttributes)(LPCWSTR, PATTRINFO *, LPDWORD);
-static BOOL (WINAPI *pSdbFreeFileAttributes)(PATTRINFO);
+static LPCWSTR (WINAPI *pSdbTagToString)(TAG tag);
+static BOOL (WINAPI *pSdbGUIDToString)(REFGUID Guid, PWSTR GuidString, SIZE_T Length);
+static BOOL (WINAPI *pSdbIsNullGUID)(REFGUID Guid);
+static BOOL (WINAPI *pSdbGetStandardDatabaseGUID)(DWORD Flags, GUID* Guid);
+static BOOL (WINAPI *pSdbGetFileAttributes)(LPCWSTR wszPath, PATTRINFO *ppAttrInfo, LPDWORD pdwAttrCount);
+static BOOL (WINAPI *pSdbFreeFileAttributes)(PATTRINFO AttrInfo);
+static HRESULT (WINAPI* pSdbGetAppPatchDir)(PVOID hsdb, LPWSTR path, DWORD size);
 
 /* 'Known' database guids */
 DEFINE_GUID(GUID_DATABASE_MSI,0xd8ff6d16,0x6a3a,0x468a,0x8b,0x44,0x01,0x71,0x4d,0xdc,0x49,0xea);
@@ -605,7 +606,7 @@ static void test_crc_imp(size_t len, DWORD expected)
         pSdbFreeFileAttributes(pattrinfo);
 }
 
-static void test_crc2_imp(size_t len, int fill, DWORD expected)
+static void test_crc2_imp(DWORD len, int fill, DWORD expected)
 {
     static const WCHAR path[] = {'t','e','s','t','x','x','.','e','x','e',0};
 
@@ -869,34 +870,85 @@ static void test_ApplicationAttributes(void)
     DeleteFileA("testxx.exe");
 }
 
+/* Showing that SdbGetAppPatchDir returns HRESULT */
+static void test_SdbGetAppPatchDir(void)
+{
+    WCHAR Buffer[MAX_PATH];
+    HRESULT hr, expect_hr;
+    int n;
+
+
+    _SEH2_TRY
+    {
+        hr = pSdbGetAppPatchDir(NULL, NULL, 0);
+        ok_hex(hr, S_FALSE);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Some versions accept it, some don't */
+        trace("SdbGetAppPatchDir did not handle a NULL pointer very gracefully.\n");
+    }
+    _SEH2_END;
+
+
+
+    memset(Buffer, 0xbb, sizeof(Buffer));
+    hr = pSdbGetAppPatchDir(NULL, Buffer, 0);
+    if (g_WinVersion < WINVER_WIN7)
+        expect_hr = HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER);
+    else if (g_WinVersion < WINVER_WIN10)
+        expect_hr = S_OK;
+    else
+        expect_hr = S_FALSE;
+    ok_hex(hr, expect_hr);
+
+    if (g_WinVersion < WINVER_WIN7)
+        expect_hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+    else if (g_WinVersion < WINVER_WIN10)
+        expect_hr = S_OK;
+    else
+        expect_hr = TRUE;
+
+    memset(Buffer, 0xbb, sizeof(Buffer));
+    hr = pSdbGetAppPatchDir(NULL, Buffer, 1);
+    ok_hex(hr, expect_hr);
+
+
+    for (n = 2; n < _countof(Buffer) - 1; ++n)
+    {
+        memset(Buffer, 0xbb, sizeof(Buffer));
+        hr = pSdbGetAppPatchDir(NULL, Buffer, n);
+        ok(Buffer[n] == 0xbbbb, "Expected SdbGetAppPatchDir to leave WCHAR at %d untouched, was: %d\n",
+           n, Buffer[n]);
+        ok(hr == S_OK || hr == expect_hr, "Expected S_OK or 0x%x, was: 0x%x (at %d)\n", expect_hr, hr, n);
+    }
+}
 START_TEST(apphelp)
 {
-    g_WinVersion = get_host_winver();
-    trace("Detected version: 0x%x\n", g_WinVersion);
-    silence_debug_output();
-
     //SetEnvironmentVariable("SHIM_DEBUG_LEVEL", "4");
     //SetEnvironmentVariable("DEBUGCHANNEL", "+apphelp");
-    hdll = LoadLibraryA("apphelp.dll");
+    silence_debug_output();
 
-    pApphelpCheckShellObject = (void *) GetProcAddress(hdll, "ApphelpCheckShellObject");
-    pSdbTagToString = (void *) GetProcAddress(hdll, "SdbTagToString");
-    pSdbGUIDToString = (void *) GetProcAddress(hdll, "SdbGUIDToString");
-    pSdbIsNullGUID = (void *) GetProcAddress(hdll, "SdbIsNullGUID");
-    pSdbGetStandardDatabaseGUID = (void *) GetProcAddress(hdll, "SdbGetStandardDatabaseGUID");
-    pSdbGetFileAttributes = (void *) GetProcAddress(hdll, "SdbGetFileAttributes");
-    pSdbFreeFileAttributes = (void *) GetProcAddress(hdll, "SdbFreeFileAttributes");
+    hdll = LoadLibraryA("apphelp.dll");
+    g_WinVersion = get_module_version(hdll);
+    trace("Detected apphelp.dll version: 0x%x\n", g_WinVersion);
+
+#define RESOLVE(fnc)    do { p##fnc = (void *) GetProcAddress(hdll, #fnc); ok(!!p##fnc, #fnc " not found.\n"); } while (0)
+    RESOLVE(ApphelpCheckShellObject);
+    RESOLVE(SdbTagToString);
+    RESOLVE(SdbGUIDToString);
+    RESOLVE(SdbIsNullGUID);
+    RESOLVE(SdbGetStandardDatabaseGUID);
+    RESOLVE(SdbGetFileAttributes);
+    RESOLVE(SdbFreeFileAttributes);
+    RESOLVE(SdbGetAppPatchDir);
+#undef RESOLVE
 
     test_ApphelpCheckShellObject();
     test_GuidFunctions();
     test_ApplicationAttributes();
     test_SdbTagToString();
-#ifdef __REACTOS__
-    if (g_WinVersion < WINVER_WIN7)
-    {
-        g_WinVersion = WINVER_WIN7;
-        trace("Using version 0x%x for SdbTagToString tests\n", g_WinVersion);
-    }
-#endif
     test_SdbTagToStringAllTags();
+    if (pSdbGetAppPatchDir)
+        test_SdbGetAppPatchDir();
 }

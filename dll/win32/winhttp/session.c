@@ -71,6 +71,7 @@ static void session_destroy( object_header_t *hdr )
     TRACE("%p\n", session);
 
     if (session->unload_event) SetEvent( session->unload_event );
+    if (session->cred_handle_initialized) FreeCredentialsHandle( &session->cred_handle );
 
     LIST_FOR_EACH_SAFE( item, next, &session->cookie_cache )
     {
@@ -153,6 +154,17 @@ static BOOL session_set_option( object_header_t *hdr, DWORD option, LPVOID buffe
         policy = *(DWORD *)buffer;
         TRACE("0x%x\n", policy);
         hdr->redirect_policy = policy;
+        return TRUE;
+    }
+    case WINHTTP_OPTION_SECURE_PROTOCOLS:
+    {
+        if (buflen != sizeof(session->secure_protocols))
+        {
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+        session->secure_protocols = *(DWORD *)buffer;
+        TRACE("0x%x\n", session->secure_protocols);
         return TRUE;
     }
     case WINHTTP_OPTION_DISABLE_FEATURE:
@@ -577,6 +589,8 @@ static void request_destroy( object_header_t *hdr )
         heap_free( request->headers[i].value );
     }
     heap_free( request->headers );
+    for (i = 0; i < request->num_accept_types; i++) heap_free( request->accept_types[i] );
+    heap_free( request->accept_types );
     for (i = 0; i < TARGET_MAX; i++)
     {
         for (j = 0; j < SCHEME_MAX; j++)
@@ -1002,14 +1016,32 @@ static const object_vtbl_t request_vtbl =
 
 static BOOL store_accept_types( request_t *request, const WCHAR **accept_types )
 {
-    static const WCHAR attr_accept[] = {'A','c','c','e','p','t',0};
-    static const DWORD flags = WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_COALESCE_WITH_COMMA;
     const WCHAR **types = accept_types;
+    DWORD i;
 
     if (!types) return TRUE;
     while (*types)
     {
-        process_header( request, attr_accept, *types, flags, TRUE );
+        request->num_accept_types++;
+        types++;
+    }
+    if (!request->num_accept_types) return TRUE;
+    if (!(request->accept_types = heap_alloc( request->num_accept_types * sizeof(WCHAR *))))
+    {
+        request->num_accept_types = 0;
+        return FALSE;
+    }
+    types = accept_types;
+    for (i = 0; i < request->num_accept_types; i++)
+    {
+        if (!(request->accept_types[i] = strdupW( *types )))
+        {
+            for ( ; i > 0; --i) heap_free( request->accept_types[i - 1] );
+            heap_free( request->accept_types );
+            request->accept_types = NULL;
+            request->num_accept_types = 0;
+            return FALSE;
+        }
         types++;
     }
     return TRUE;

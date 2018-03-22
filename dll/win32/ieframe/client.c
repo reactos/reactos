@@ -16,7 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdio.h>
+
 #include "ieframe.h"
+
+#include "mshtmdid.h"
+#include "idispids.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 static inline DocHost *impl_from_IOleClientSite(IOleClientSite *iface)
 {

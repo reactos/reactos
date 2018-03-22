@@ -102,3 +102,7 @@ GenericMfg = "(Стандартні системні пристрої)"
 
 [Strings.0427]
 GenericMfg = "(Standartiniai sisteminiai įrenginiai)"
+
+[Strings.0804]
+GenericMfg = "(通用系统设备)"
+*PNP0C08.DeviceDesc = "ACPI 硬件"

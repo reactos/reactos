@@ -20,7 +20,17 @@
  * Handle palettes
  */
 
-#include "msvideo_private.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "vfw.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvideo);
 

@@ -440,8 +440,8 @@ xmlStrlen(const xmlChar *str) {
  * first bytes of @add. Note that if @len < 0 then this is an API error
  * and NULL will be returned.
  *
- * Returns a new xmlChar *, the original @cur is reallocated if needed
- * and should not be freed
+ * Returns a new xmlChar *, the original @cur is reallocated and should
+ * not be freed.
  */
 
 xmlChar *
@@ -519,7 +519,8 @@ xmlStrncatNew(const xmlChar *str1, const xmlChar *str2, int len) {
  * encoded in UTF-8 or an encoding with 8bit based chars, we assume
  * a termination mark of '0'.
  *
- * Returns a new xmlChar * containing the concatenated string.
+ * Returns a new xmlChar * containing the concatenated string. The original
+ * @cur is reallocated and should not be freed.
  */
 xmlChar *
 xmlStrcat(xmlChar *cur, const xmlChar *add) {
@@ -822,7 +823,7 @@ xmlCheckUTF8(const unsigned char *utf)
  * @len:  the number of characters in the array
  *
  * storage size of an UTF8 string
- * the behaviour is not garanteed if the input string is not UTF-8
+ * the behaviour is not guaranteed if the input string is not UTF-8
  *
  * Returns the storage size of
  * the first 'len' characters of ARRAY

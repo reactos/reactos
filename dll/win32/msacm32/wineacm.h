@@ -20,21 +20,11 @@
 #ifndef __WINE_WINEACM_H
 #define __WINE_WINEACM_H
 
-#include <wine/config.h>
-
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define NOBITMAP
-
 #include <windef.h>
 #include <winuser.h>
-
-#include <wine/debug.h>
+#ifdef __REACTOS__
 #include <wine/msacmdrv.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(msacm);
+#endif
 
 /***********************************************************************
  * Wine specific - Win32
@@ -162,6 +152,6 @@ LRESULT CALLBACK	PCM_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
 				       LPARAM dwParam1, LPARAM dwParam2) DECLSPEC_HIDDEN;
 
 /* Dialog box templates */
-#include <msacmdlg.h>
+#include "msacmdlg.h"
 
 #endif /* __WINE_WINEACM_H */

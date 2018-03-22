@@ -21,28 +21,17 @@
 #ifndef __QMGR_H__
 #define __QMGR_H__
 
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
+#include "windef.h"
 #define COBJMACROS
+#include "bits.h"
+#include "bits1_5.h"
+#include "bits2_0.h"
+#include "bits2_5.h"
+#include "bits3_0.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <winsvc.h>
-#include <objbase.h>
-#include <bits1_5.h>
-#include <bits2_0.h>
-#include <bits2_5.h>
-#include <bits3_0.h>
-
-#include <wine/list.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
+#include <string.h>
+#include "wine/list.h"
+#include "wine/unicode.h"
 
 /* Background copy job vtbl and related data */
 typedef struct

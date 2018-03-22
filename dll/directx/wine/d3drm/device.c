@@ -18,7 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include "d3drm_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3drm);
 
 static inline struct d3drm_device *impl_from_IDirect3DRMDevice(IDirect3DRMDevice *iface)
 {
@@ -56,7 +61,7 @@ void d3drm_device_destroy(struct d3drm_device *device)
         IDirectDraw_Release(device->ddraw);
         IDirect3DRM_Release(device->d3drm);
     }
-    HeapFree(GetProcessHeap(), 0, device);
+    heap_free(device);
 }
 
 static inline struct d3drm_device *impl_from_IDirect3DRMWinDevice(IDirect3DRMWinDevice *iface)
@@ -1636,7 +1641,7 @@ HRESULT d3drm_device_create(struct d3drm_device **device, IDirect3DRM *d3drm)
 
     TRACE("device %p, d3drm %p.\n", device, d3drm);
 
-    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->IDirect3DRMDevice_iface.lpVtbl = &d3drm_device1_vtbl;

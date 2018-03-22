@@ -13,7 +13,7 @@ list(APPEND SOURCE
     qmgr.c
     qmgr_main.c
     service.c
-    qmgr.h
+    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/qmgr_local_i.c)
 
 add_library(qmgr SHARED
@@ -26,6 +26,6 @@ add_idl_headers(qmgr_idlheader qmgr_local.idl)
 set_module_type(qmgr win32dll)
 target_link_libraries(qmgr uuid wine)
 add_importlibs(qmgr winhttp ole32 advapi32 msvcrt kernel32 ntdll)
-add_pch(qmgr qmgr.h SOURCE)
+add_pch(qmgr precomp.h SOURCE)
 add_cd_file(TARGET qmgr DESTINATION reactos/system32 FOR all)
 add_dependencies(qmgr qmgr_idlheader)

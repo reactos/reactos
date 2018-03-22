@@ -18,12 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+#include "config.h"
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "rpcproxy.h"
+#include "propsys.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "wine/list.h"
+
+#include "initguid.h"
 #include "propsys_private.h"
 
-#include <wine/list.h>
-
-#include <initguid.h>
 DEFINE_GUID(FMTID_NamedProperties, 0xd5cdd505, 0x2e9c, 0x101b, 0x93, 0x97, 0x08, 0x00, 0x2b, 0x2c, 0xf9, 0xae);
+
+WINE_DEFAULT_DEBUG_CHANNEL(propsys);
 
 typedef struct {
     struct list entry;

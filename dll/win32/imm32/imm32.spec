@@ -11,6 +11,7 @@
 @ stdcall ImmDestroySoftKeyboard(long)
 @ stdcall ImmDisableIME(long)
 @ stdcall ImmDisableIme(long) ImmDisableIME
+@ stdcall ImmDisableLegacyIME()
 @ stdcall ImmDisableTextFrameService(long)
 @ stdcall ImmEnumInputContext(long ptr long)
 @ stdcall ImmEnumRegisterWordA(long ptr str long str ptr)

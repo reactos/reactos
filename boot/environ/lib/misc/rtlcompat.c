@@ -23,7 +23,11 @@ CHECK_PAGED_CODE_RTL (
 }
 #endif
 
+#ifdef _WIN64
+PVOID MmHighestUserAddress = (PVOID)0xFFFFFFFFULL; // CHECKME
+#else
 PVOID MmHighestUserAddress = (PVOID)0xFFFFFFFF;
+#endif
 
 PVOID
 NTAPI

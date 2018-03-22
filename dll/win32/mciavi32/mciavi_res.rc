@@ -17,10 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "winbase.h"
-#include <mmddk.h>
-#include <digitalv.h>
+#include "windef.h"
+#include "winbase.h"
+#include "mmddk.h"
+#include "digitalv.h"
 
 #ifdef MCI_INTEGER64
 #define MCI_DWORD_PTR MCI_INTEGER64

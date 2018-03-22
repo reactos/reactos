@@ -30,10 +30,28 @@
  *  residing in a compound file object.
  */
 
-#include "precomp.h"
-#include "storage32.h"
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include <wine/wingdi16.h>
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winuser.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+#include "storage32.h"
+#include "ole2.h"      /* For Write/ReadClassStm */
+
+#include "winreg.h"
+#include "wine/wingdi16.h"
+#include "compobj_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
@@ -2067,7 +2085,7 @@ static HRESULT WINAPI StorageBaseImpl_SetClass(
   HRESULT hRes;
   DirEntry currentEntry;
 
-  TRACE("(%p, %p)\n", iface, clsid);
+  TRACE("(%p, %s)\n", iface, wine_dbgstr_guid(clsid));
 
   if (This->reverted)
     return STG_E_REVERTED;
@@ -7249,6 +7267,8 @@ BlockChainStream* BlockChainStream_Construct(
   BlockChainStream* newStream;
 
   newStream = HeapAlloc(GetProcessHeap(), 0, sizeof(BlockChainStream));
+  if(!newStream)
+    return NULL;
 
   newStream->parentStorage           = parentStorage;
   newStream->headOfStreamPlaceHolder = headOfStreamPlaceHolder;

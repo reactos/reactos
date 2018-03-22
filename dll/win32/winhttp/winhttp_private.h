@@ -135,6 +135,9 @@ typedef struct
     LPWSTR proxy_password;
     struct list cookie_cache;
     HANDLE unload_event;
+    CredHandle cred_handle;
+    BOOL cred_handle_initialized;
+    DWORD secure_protocols;
 } session_t;
 
 typedef struct
@@ -235,6 +238,8 @@ typedef struct
     char  read_buf[8192]; /* buffer for already read but not returned data */
     header_t *headers;
     DWORD num_headers;
+    WCHAR **accept_types;
+    DWORD num_accept_types;
     struct authinfo *authinfo;
     struct authinfo *proxy_authinfo;
     HANDLE task_wait;
@@ -313,7 +318,7 @@ void netconn_unload( void ) DECLSPEC_HIDDEN;
 ULONG netconn_query_data_available( netconn_t * ) DECLSPEC_HIDDEN;
 BOOL netconn_recv( netconn_t *, void *, size_t, int, int * ) DECLSPEC_HIDDEN;
 BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr_storage *, int ) DECLSPEC_HIDDEN;
-BOOL netconn_secure_connect( netconn_t *, WCHAR *, DWORD ) DECLSPEC_HIDDEN;
+BOOL netconn_secure_connect( netconn_t *, WCHAR *, DWORD, CredHandle * ) DECLSPEC_HIDDEN;
 BOOL netconn_send( netconn_t *, const void *, size_t, int * ) DECLSPEC_HIDDEN;
 DWORD netconn_set_timeout( netconn_t *, BOOL, int ) DECLSPEC_HIDDEN;
 BOOL netconn_is_alive( netconn_t * ) DECLSPEC_HIDDEN;
@@ -328,8 +333,6 @@ BOOL set_server_for_hostname( connect_t *, LPCWSTR, INTERNET_PORT ) DECLSPEC_HID
 void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
 
 void release_host( hostdata_t *host ) DECLSPEC_HIDDEN;
-
-BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only ) DECLSPEC_HIDDEN;
 
 extern HRESULT WinHttpRequest_create( void ** ) DECLSPEC_HIDDEN;
 void release_typelib( void ) DECLSPEC_HIDDEN;

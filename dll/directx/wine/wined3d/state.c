@@ -25,10 +25,79 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdio.h>
+#ifdef HAVE_FLOAT_H
+# include <float.h>
+#endif
+
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_shader);
+
+ULONG CDECL wined3d_blend_state_incref(struct wined3d_blend_state *state)
+{
+    ULONG refcount = InterlockedIncrement(&state->refcount);
+
+    TRACE("%p increasing refcount to %u.\n", state, refcount);
+
+    return refcount;
+}
+
+static void wined3d_blend_state_destroy_object(void *object)
+{
+    heap_free(object);
+}
+
+ULONG CDECL wined3d_blend_state_decref(struct wined3d_blend_state *state)
+{
+    ULONG refcount = InterlockedDecrement(&state->refcount);
+    struct wined3d_device *device = state->device;
+
+    TRACE("%p decreasing refcount to %u.\n", state, refcount);
+
+    if (!refcount)
+    {
+        state->parent_ops->wined3d_object_destroyed(state->parent);
+        wined3d_cs_destroy_object(device->cs, wined3d_blend_state_destroy_object, state);
+    }
+
+    return refcount;
+}
+
+void * CDECL wined3d_blend_state_get_parent(const struct wined3d_blend_state *state)
+{
+    TRACE("state %p.\n", state);
+
+    return state->parent;
+}
+
+HRESULT CDECL wined3d_blend_state_create(struct wined3d_device *device,
+        const struct wined3d_blend_state_desc *desc, void *parent,
+        const struct wined3d_parent_ops *parent_ops, struct wined3d_blend_state **state)
+{
+    struct wined3d_blend_state *object;
+
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, state %p.\n",
+            device, desc, parent, parent_ops, state);
+
+    if (!(object = heap_alloc_zero(sizeof(*object))))
+        return E_OUTOFMEMORY;
+
+    object->refcount = 1;
+    object->desc = *desc;
+    object->parent = parent;
+    object->parent_ops = parent_ops;
+    object->device = device;
+
+    TRACE("Created blend state %p.\n", object);
+    *state = object;
+
+    return WINED3D_OK;
+}
 
 ULONG CDECL wined3d_rasterizer_state_incref(struct wined3d_rasterizer_state *state)
 {
@@ -41,7 +110,7 @@ ULONG CDECL wined3d_rasterizer_state_incref(struct wined3d_rasterizer_state *sta
 
 static void wined3d_rasterizer_state_destroy_object(void *object)
 {
-    HeapFree(GetProcessHeap(), 0, object);
+    heap_free(object);
 }
 
 ULONG CDECL wined3d_rasterizer_state_decref(struct wined3d_rasterizer_state *state)
@@ -73,9 +142,10 @@ HRESULT CDECL wined3d_rasterizer_state_create(struct wined3d_device *device,
 {
     struct wined3d_rasterizer_state *object;
 
-    TRACE("device %p, desc %p, state %p.\n", device, desc, state);
+    TRACE("device %p, desc %p, parent %p, parent_ops %p, state %p.\n",
+            device, desc, parent, parent_ops, state);
 
-    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->refcount = 1;
@@ -472,7 +542,6 @@ static void state_blend(struct wined3d_context *context, const struct wined3d_st
 
     if (enable_blend && !enable_dual_blend)
     {
-        rt_format = state->fb->render_targets[0]->format;
         rt_fmt_flags = state->fb->render_targets[0]->format_flags;
 
         /* Disable blending in all cases even without pixelshaders.
@@ -499,6 +568,7 @@ static void state_blend(struct wined3d_context *context, const struct wined3d_st
     gl_info->gl_ops.gl.p_glEnable(GL_BLEND);
     checkGLcall("glEnable(GL_BLEND)");
 
+    rt_format = state->fb->render_targets[0]->format;
     gl_blend_from_d3d(&src_blend, &dst_blend,
             state->render_states[WINED3D_RS_SRCBLEND],
             state->render_states[WINED3D_RS_DESTBLEND], rt_format);
@@ -553,6 +623,28 @@ static void state_blendfactor(struct wined3d_context *context, const struct wine
     wined3d_color_from_d3dcolor(&color, state->render_states[WINED3D_RS_BLENDFACTOR]);
     GL_EXTCALL(glBlendColor(color.r, color.g, color.b, color.a));
     checkGLcall("glBlendColor");
+}
+
+static void state_blend_object(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    BOOL alpha_to_coverage = FALSE;
+
+    if (!gl_info->supported[ARB_MULTISAMPLE])
+        return;
+
+    if (state->blend_state)
+    {
+        struct wined3d_blend_state_desc *desc = &state->blend_state->desc;
+        alpha_to_coverage = desc->alpha_to_coverage;
+    }
+
+    if (alpha_to_coverage)
+        gl_info->gl_ops.gl.p_glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+    else
+        gl_info->gl_ops.gl.p_glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+
+    checkGLcall("blend state");
 }
 
 void state_alpha_test(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -613,9 +705,7 @@ void state_alpha_test(struct wined3d_context *context, const struct wined3d_stat
 
 void state_clipping(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    unsigned int clipplane_count = gl_info->limits.user_clip_distances;
-    unsigned int i, enable_mask, disable_mask;
+    unsigned int enable_mask;
 
     if (use_vs(state) && !context->d3d_info->vs_clipping)
     {
@@ -628,7 +718,7 @@ void state_clipping(struct wined3d_context *context, const struct wined3d_state 
          * disables all clip planes because of that - don't do anything here
          * and keep them disabled. */
         if (state->render_states[WINED3D_RS_CLIPPLANEENABLE] && !warned++)
-            FIXME("Clipping not supported with vertex shaders\n");
+            FIXME("Clipping not supported with vertex shaders.\n");
         return;
     }
 
@@ -638,39 +728,12 @@ void state_clipping(struct wined3d_context *context, const struct wined3d_state 
      * need to update the clipping field from ffp_vertex_settings. */
     context->shader_update_mask |= 1u << WINED3D_SHADER_TYPE_VERTEX;
 
-    /* TODO: Keep track of previously enabled clipplanes to avoid unnecessary resetting
-     * of already set values
-     */
-
     /* If enabling / disabling all
      * TODO: Is this correct? Doesn't D3DRS_CLIPPING disable clipping on the viewport frustrum?
      */
-    if (state->render_states[WINED3D_RS_CLIPPING])
-    {
-        enable_mask = state->render_states[WINED3D_RS_CLIPPLANEENABLE];
-        disable_mask = ~state->render_states[WINED3D_RS_CLIPPLANEENABLE];
-    }
-    else
-    {
-        enable_mask = 0;
-        disable_mask = ~0u;
-    }
-
-    if (clipplane_count < 32)
-    {
-        enable_mask &= (1u << clipplane_count) - 1;
-        disable_mask &= (1u << clipplane_count) - 1;
-    }
-
-    for (i = 0; enable_mask && i < clipplane_count; enable_mask >>= 1, ++i)
-        if (enable_mask & 1)
-            gl_info->gl_ops.gl.p_glEnable(GL_CLIP_DISTANCE0 + i);
-    checkGLcall("clip plane enable");
-
-    for (i = 0; disable_mask && i < clipplane_count; disable_mask >>= 1, ++i)
-        if (disable_mask & 1)
-            gl_info->gl_ops.gl.p_glDisable(GL_CLIP_DISTANCE0 + i);
-    checkGLcall("clip plane disable");
+    enable_mask = state->render_states[WINED3D_RS_CLIPPING] ?
+            state->render_states[WINED3D_RS_CLIPPLANEENABLE] : 0;
+    context_enable_clip_distances(context, enable_mask);
 }
 
 static void state_specularenable(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -1710,60 +1773,62 @@ static void state_depthbias(struct wined3d_context *context, const struct wined3
             || state->render_states[WINED3D_RS_DEPTHBIAS])
     {
         const struct wined3d_rendertarget_view *depth = state->fb->depth_stencil;
-        float scale;
+        float factor, units, scale;
 
         union
         {
             DWORD d;
-            INT   i;
             float f;
-        } scale_bias, const_bias;
+        } scale_bias, const_bias, bias_clamp;
 
         scale_bias.d = state->render_states[WINED3D_RS_SLOPESCALEDEPTHBIAS];
         const_bias.d = state->render_states[WINED3D_RS_DEPTHBIAS];
-
-        gl_info->gl_ops.gl.p_glEnable(GL_POLYGON_OFFSET_FILL);
-        checkGLcall("glEnable(GL_POLYGON_OFFSET_FILL)");
+        bias_clamp.d = state->render_states[WINED3D_RS_DEPTHBIASCLAMP];
 
         if (context->d3d_info->wined3d_creation_flags & WINED3D_LEGACY_DEPTH_BIAS)
         {
-            float bias = -(float)const_bias.d;
-            gl_info->gl_ops.gl.p_glPolygonOffset(bias, bias);
-            checkGLcall("glPolygonOffset");
-        }
-        else if (context->d3d_info->wined3d_creation_flags & WINED3D_FORWARD_DEPTH_BIAS)
-        {
-            gl_info->gl_ops.gl.p_glPolygonOffset(scale_bias.f, const_bias.i);
-            checkGLcall("glPolygonOffset(...)");
+            factor = units = -(float)const_bias.d;
         }
         else
         {
             if (depth)
             {
-                if (depth->format_flags & WINED3DFMT_FLAG_FLOAT)
-                    scale = gl_info->float_polyoffset_scale;
-                else
-                    scale = gl_info->fixed_polyoffset_scale;
+                scale = depth->format->depth_bias_scale;
 
                 TRACE("Depth format %s, using depthbias scale of %.8e.\n",
-                      debug_d3dformat(depth->format->id), scale);
+                        debug_d3dformat(depth->format->id), scale);
             }
             else
             {
                 /* The context manager will reapply this state on a depth stencil change */
-                TRACE("No depth stencil, using depthbias scale of 0.0.\n");
+                TRACE("No depth stencil, using depth bias scale of 0.0.\n");
                 scale = 0.0f;
             }
 
-            gl_info->gl_ops.gl.p_glPolygonOffset(scale_bias.f, const_bias.f * scale);
-            checkGLcall("glPolygonOffset(...)");
+            factor = scale_bias.f;
+            units = const_bias.f * scale;
+        }
+
+        gl_info->gl_ops.gl.p_glEnable(GL_POLYGON_OFFSET_FILL);
+        if (gl_info->supported[EXT_POLYGON_OFFSET_CLAMP])
+        {
+            GL_EXTCALL(glPolygonOffsetClampEXT(factor, units, bias_clamp.f));
+            checkGLcall("glPolygonOffsetClampEXT(...)");
+        }
+        else
+        {
+            if (bias_clamp.f)
+                WARN("EXT_polygon_offset_clamp extension missing, no support for depth bias clamping.\n");
+
+            gl_info->gl_ops.gl.p_glPolygonOffset(factor, units);
         }
     }
     else
     {
         gl_info->gl_ops.gl.p_glDisable(GL_POLYGON_OFFSET_FILL);
-        checkGLcall("glDisable(GL_POLYGON_OFFSET_FILL)");
     }
+
+    checkGLcall("depth bias");
 }
 
 static void state_depthclip(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -4552,22 +4617,19 @@ static void vertexdeclaration(struct wined3d_context *context, const struct wine
     }
     else
     {
-        if(!context->last_was_vshader) {
+        if (!context->last_was_vshader)
+        {
             static BOOL warned = FALSE;
             if (!context->d3d_info->vs_clipping)
             {
                 /* Disable all clip planes to get defined results on all drivers. See comment in the
                  * state_clipping state handler
                  */
-                for (i = 0; i < gl_info->limits.user_clip_distances; ++i)
-                {
-                    gl_info->gl_ops.gl.p_glDisable(GL_CLIP_PLANE0 + i);
-                    checkGLcall("glDisable(GL_CLIP_PLANE0 + i)");
-                }
+                context_enable_clip_distances(context, 0);
 
                 if (!warned && state->render_states[WINED3D_RS_CLIPPLANEENABLE])
                 {
-                    FIXME("Clipping not supported with vertex shaders\n");
+                    FIXME("Clipping not supported with vertex shaders.\n");
                     warned = TRUE;
                 }
             }
@@ -4620,101 +4682,83 @@ static void vertexdeclaration(struct wined3d_context *context, const struct wine
     }
 }
 
-static void viewport_miscpart(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+static void get_viewport(struct wined3d_context *context, const struct wined3d_state *state,
+        struct wined3d_viewport *viewport)
 {
     const struct wined3d_rendertarget_view *depth_stencil = state->fb->depth_stencil;
     const struct wined3d_rendertarget_view *target = state->fb->render_targets[0];
-    const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_viewport vp = state->viewport;
     unsigned int width, height;
-    float y;
+
+    *viewport = state->viewport;
 
     if (target)
     {
         if (context->d3d_info->wined3d_creation_flags & WINED3D_LIMIT_VIEWPORT)
         {
-            if (vp.width > target->width)
-                vp.width = target->width;
-            if (vp.height > target->height)
-                vp.height = target->height;
+            if (viewport->width > target->width)
+                viewport->width = target->width;
+            if (viewport->height > target->height)
+                viewport->height = target->height;
         }
+    }
+
+    /*
+     * Note: GL requires lower left, DirectX supplies upper left. This is
+     * reversed when using offscreen rendering.
+     */
+    if (context->render_offscreen)
+        return;
+
+    if (target)
+    {
         wined3d_rendertarget_view_get_drawable_size(target, context, &width, &height);
     }
     else if (depth_stencil)
     {
-        width = depth_stencil->width;
         height = depth_stencil->height;
     }
     else
     {
-        FIXME("No attachments draw calls not supported.\n");
+        FIXME("Could not get the height of render targets.\n");
         return;
     }
 
+    viewport->y = height - (viewport->y + viewport->height);
+}
+
+static void viewport_miscpart(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    struct wined3d_viewport vp;
+
+    get_viewport(context, state, &vp);
+
     gl_info->gl_ops.gl.p_glDepthRange(vp.min_z, vp.max_z);
-    checkGLcall("glDepthRange");
-    /* Note: GL requires lower left, DirectX supplies upper left. This is
-     * reversed when using offscreen rendering. */
-    y = context->render_offscreen ? vp.y : height - (vp.y + vp.height);
 
     if (gl_info->supported[ARB_VIEWPORT_ARRAY])
-        GL_EXTCALL(glViewportIndexedf(0, vp.x, y, vp.width, vp.height));
+        GL_EXTCALL(glViewportIndexedf(0, vp.x, vp.y, vp.width, vp.height));
     else
-        gl_info->gl_ops.gl.p_glViewport(vp.x, y, vp.width, vp.height);
-    checkGLcall("glViewport");
+        gl_info->gl_ops.gl.p_glViewport(vp.x, vp.y, vp.width, vp.height);
+    checkGLcall("setting clip space and viewport");
 }
 
 static void viewport_miscpart_cc(struct wined3d_context *context,
         const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_rendertarget_view *depth_stencil = state->fb->depth_stencil;
-    const struct wined3d_rendertarget_view *target = state->fb->render_targets[0];
-    /* See get_projection_matrix() in utils.c for a discussion about those
-     * values. */
+    /* See get_projection_matrix() in utils.c for a discussion about those values. */
     float pixel_center_offset = context->d3d_info->wined3d_creation_flags
             & WINED3D_PIXEL_CENTER_INTEGER ? 63.0f / 128.0f : -1.0f / 128.0f;
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    struct wined3d_viewport vp = state->viewport;
-    unsigned int width, height;
+    struct wined3d_viewport vp;
 
-    if (target)
-    {
-        if (context->d3d_info->wined3d_creation_flags & WINED3D_LIMIT_VIEWPORT)
-        {
-            if (vp.width > target->width)
-                vp.width = target->width;
-            if (vp.height > target->height)
-                vp.height = target->height;
-        }
-
-        wined3d_rendertarget_view_get_drawable_size(target, context, &width, &height);
-    }
-    else if (depth_stencil)
-    {
-        width = depth_stencil->width;
-        height = depth_stencil->height;
-    }
-    else
-    {
-        FIXME("No attachments draw calls not supported.\n");
-        return;
-    }
+    get_viewport(context, state, &vp);
+    vp.x += pixel_center_offset;
+    vp.y += pixel_center_offset;
 
     gl_info->gl_ops.gl.p_glDepthRange(vp.min_z, vp.max_z);
-    checkGLcall("glDepthRange");
 
-    if (context->render_offscreen)
-    {
-        GL_EXTCALL(glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE));
-        GL_EXTCALL(glViewportIndexedf(0, vp.x + pixel_center_offset, vp.y + pixel_center_offset,
-                vp.width, vp.height));
-    }
-    else
-    {
-        GL_EXTCALL(glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE));
-        GL_EXTCALL(glViewportIndexedf(0, vp.x + pixel_center_offset,
-                (height - (vp.y + vp.height)) + pixel_center_offset, vp.width, vp.height));
-    }
+    GL_EXTCALL(glClipControl(context->render_offscreen ? GL_UPPER_LEFT : GL_LOWER_LEFT, GL_ZERO_TO_ONE));
+    GL_EXTCALL(glViewportIndexedf(0, vp.x, vp.y, vp.width, vp.height));
     checkGLcall("setting clip space and viewport");
 }
 
@@ -5082,6 +5126,7 @@ const struct StateEntryTemplate misc_state_template[] =
     { STATE_RENDER(WINED3D_RS_DESTBLENDALPHA),            { STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE),          NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_DESTBLENDALPHA),            { STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE),          NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_BLENDOPALPHA),              { STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE),          NULL                }, WINED3D_GL_EXT_NONE             },
+    { STATE_BLEND,                                        { STATE_BLEND,                                        state_blend_object  }, WINED3D_GL_EXT_NONE             },
     { STATE_STREAMSRC,                                    { STATE_STREAMSRC,                                    streamsrc           }, WINED3D_GL_EXT_NONE             },
     { STATE_VDECL,                                        { STATE_VDECL,                                        vdecl_miscpart      }, WINED3D_GL_EXT_NONE             },
     { STATE_FRONTFACE,                                    { STATE_FRONTFACE,                                    frontface_cc        }, ARB_CLIP_CONTROL                },
@@ -5243,6 +5288,7 @@ const struct StateEntryTemplate misc_state_template[] =
     { STATE_RENDER(WINED3D_RS_BLENDFACTOR),               { STATE_RENDER(WINED3D_RS_BLENDFACTOR),               state_blendfactor   }, EXT_BLEND_COLOR                 },
     { STATE_RENDER(WINED3D_RS_BLENDFACTOR),               { STATE_RENDER(WINED3D_RS_BLENDFACTOR),               state_blendfactor_w }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_DEPTHBIAS),                 { STATE_RENDER(WINED3D_RS_DEPTHBIAS),                 state_depthbias     }, WINED3D_GL_EXT_NONE             },
+    { STATE_RENDER(WINED3D_RS_DEPTHBIASCLAMP),            { STATE_RENDER(WINED3D_RS_DEPTHBIAS),                 NULL                }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_ZVISIBLE),                  { STATE_RENDER(WINED3D_RS_ZVISIBLE),                  state_zvisible      }, WINED3D_GL_EXT_NONE             },
     { STATE_RENDER(WINED3D_RS_DEPTHCLIP),                 { STATE_RENDER(WINED3D_RS_DEPTHCLIP),                 state_depthclip     }, ARB_DEPTH_CLAMP                 },
     { STATE_RENDER(WINED3D_RS_DEPTHCLIP),                 { STATE_RENDER(WINED3D_RS_DEPTHCLIP),                 state_depthclip_w   }, WINED3D_GL_EXT_NONE             },
@@ -5293,30 +5339,6 @@ static const struct StateEntryTemplate vp_ffp_states[] =
     { STATE_CLIPPLANE(5),                                 { STATE_CLIPPLANE(5),                                 clipplane           }, WINED3D_GL_EXT_NONE             },
     { STATE_CLIPPLANE(6),                                 { STATE_CLIPPLANE(6),                                 clipplane           }, WINED3D_GL_EXT_NONE             },
     { STATE_CLIPPLANE(7),                                 { STATE_CLIPPLANE(7),                                 clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(8),                                 { STATE_CLIPPLANE(8),                                 clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(9),                                 { STATE_CLIPPLANE(9),                                 clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(10),                                { STATE_CLIPPLANE(10),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(11),                                { STATE_CLIPPLANE(11),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(12),                                { STATE_CLIPPLANE(12),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(13),                                { STATE_CLIPPLANE(13),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(14),                                { STATE_CLIPPLANE(14),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(15),                                { STATE_CLIPPLANE(15),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(16),                                { STATE_CLIPPLANE(16),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(17),                                { STATE_CLIPPLANE(17),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(18),                                { STATE_CLIPPLANE(18),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(19),                                { STATE_CLIPPLANE(19),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(20),                                { STATE_CLIPPLANE(20),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(21),                                { STATE_CLIPPLANE(21),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(22),                                { STATE_CLIPPLANE(22),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(23),                                { STATE_CLIPPLANE(23),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(24),                                { STATE_CLIPPLANE(24),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(25),                                { STATE_CLIPPLANE(25),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(26),                                { STATE_CLIPPLANE(26),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(27),                                { STATE_CLIPPLANE(27),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(28),                                { STATE_CLIPPLANE(28),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(29),                                { STATE_CLIPPLANE(29),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(30),                                { STATE_CLIPPLANE(30),                                clipplane           }, WINED3D_GL_EXT_NONE             },
-    { STATE_CLIPPLANE(31),                                { STATE_CLIPPLANE(31),                                clipplane           }, WINED3D_GL_EXT_NONE             },
       /* Lights */
     { STATE_LIGHT_TYPE,                                   { STATE_LIGHT_TYPE,                                   state_nop           }, WINED3D_GL_EXT_NONE             },
     { STATE_ACTIVELIGHT(0),                               { STATE_ACTIVELIGHT(0),                               light               }, WINED3D_GL_EXT_NONE             },
@@ -6065,6 +6087,7 @@ static void validate_state_table(struct StateEntry *state_table)
         STATE_FRAMEBUFFER,
         STATE_POINT_ENABLE,
         STATE_COLOR_KEY,
+        STATE_BLEND,
     };
     unsigned int i, current;
 
@@ -6081,7 +6104,7 @@ static void validate_state_table(struct StateEntry *state_table)
         if (i == STATE_RENDER(rs_holes[current].last)) ++current;
     }
 
-    for (i = 0; i < sizeof(simple_states) / sizeof(*simple_states); ++i)
+    for (i = 0; i < ARRAY_SIZE(simple_states); ++i)
     {
         if (!state_table[simple_states[i]].representative)
             ERR("State %s (%#x) should have a representative.\n",
@@ -6176,7 +6199,7 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
                     break;
                 case 1:
                     StateTable[cur[i].state].apply = multistate_apply_2;
-                    if (!(dev_multistate_funcs[cur[i].state] = wined3d_calloc(2, sizeof(**dev_multistate_funcs))))
+                    if (!(dev_multistate_funcs[cur[i].state] = heap_calloc(2, sizeof(**dev_multistate_funcs))))
                         goto out_of_mem;
 
                     dev_multistate_funcs[cur[i].state][0] = multistate_funcs[cur[i].state][0];
@@ -6184,13 +6207,9 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
                     break;
                 case 2:
                     StateTable[cur[i].state].apply = multistate_apply_3;
-                    funcs_array = HeapReAlloc(GetProcessHeap(),
-                                              0,
-                                              dev_multistate_funcs[cur[i].state],
-                                              sizeof(**dev_multistate_funcs) * 3);
-                    if (!funcs_array) {
+                    if (!(funcs_array = heap_realloc(dev_multistate_funcs[cur[i].state],
+                            sizeof(**dev_multistate_funcs) * 3)))
                         goto out_of_mem;
-                    }
 
                     dev_multistate_funcs[cur[i].state] = funcs_array;
                     dev_multistate_funcs[cur[i].state][2] = multistate_funcs[cur[i].state][2];
@@ -6216,8 +6235,9 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
     return WINED3D_OK;
 
 out_of_mem:
-    for (i = 0; i <= STATE_HIGHEST; ++i) {
-        HeapFree(GetProcessHeap(), 0, dev_multistate_funcs[i]);
+    for (i = 0; i <= STATE_HIGHEST; ++i)
+    {
+        heap_free(dev_multistate_funcs[i]);
     }
 
     memset(dev_multistate_funcs, 0, (STATE_HIGHEST + 1)*sizeof(*dev_multistate_funcs));

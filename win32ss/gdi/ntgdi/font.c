@@ -446,10 +446,10 @@ NtGdiAddFontResourceW(
     DPRINT("NtGdiAddFontResourceW\n");
 
     /* cwc = Length + trailing zero. */
-    if (cwc <= 1 || cwc > UNICODE_STRING_MAX_CHARS)
+    if ((cwc <= 1) || (cwc > UNICODE_STRING_MAX_CHARS))
         return 0;
 
-    SafeFileName.MaximumLength = cwc * sizeof(WCHAR);
+    SafeFileName.MaximumLength = (USHORT)(cwc * sizeof(WCHAR));
     SafeFileName.Length = SafeFileName.MaximumLength - sizeof(UNICODE_NULL);
     SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                 SafeFileName.MaximumLength,

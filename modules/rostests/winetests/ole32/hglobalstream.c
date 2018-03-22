@@ -19,7 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+
+#include "wine/test.h"
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 
@@ -36,15 +44,19 @@ do { \
         } \
 } while(0)
 
-static void test_streamonhglobal(IStream *pStream)
+static void test_streamonhglobal(void)
 {
     const char data[] = "Test String";
     ULARGE_INTEGER ull;
+    IStream *pStream;
     LARGE_INTEGER ll;
     char buffer[128];
     ULONG read;
     STATSTG statstg;
     HRESULT hr;
+
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &pStream);
+    ok(hr == S_OK, "Failed to create a stream, hr %#x.\n", hr);
 
     ull.QuadPart = sizeof(data);
     hr = IStream_SetSize(pStream, ull);
@@ -286,6 +298,8 @@ static void test_streamonhglobal(IStream *pStream)
     hr = IStream_SetSize(pStream, ull);
     ok(hr == E_OUTOFMEMORY || broken(hr == S_OK), /* win9x */
        "IStream_SetSize with large size should have returned E_OUTOFMEMORY instead of 0x%08x\n", hr);
+
+    IStream_Release(pStream);
 }
 
 static HRESULT WINAPI TestStream_QueryInterface(IStream *iface, REFIID riid, void **ppv)
@@ -730,16 +744,8 @@ static void test_IStream_Clone(void)
 
 START_TEST(hglobalstream)
 {
-    HRESULT hr;
-    IStream *pStream;
-
-    test_IStream_Clone();
-
-    hr = CreateStreamOnHGlobal(NULL, TRUE, &pStream);
-    ok_ole_success(hr, "CreateStreamOnHGlobal");
-
-    test_streamonhglobal(pStream);
-    IStream_Release(pStream);
+    test_streamonhglobal();
     test_copyto();
     test_freed_hglobal();
+    test_IStream_Clone();
 }

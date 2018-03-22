@@ -944,7 +944,7 @@ static void _read_request_data(struct test_request *req, struct info *info, cons
     WaitForSingleObject( info->wait, INFINITE );
 
     len = strlen(expected_data);
-    ok(!memcmp(buffer, expected_data, len), "unexpeceted data\n");
+    ok(!memcmp(buffer, expected_data, len), "unexpected data\n");
 }
 
 static void test_persistent_connection(int port)
@@ -1033,7 +1033,10 @@ START_TEST (notification)
     ret = WaitForSingleObject( si.event, 10000 );
     ok(ret == WAIT_OBJECT_0, "failed to start winhttp test server %u\n", GetLastError());
     if (ret != WAIT_OBJECT_0)
+    {
+        CloseHandle(thread);
         return;
+    }
 
 #ifdef __REACTOS__
 if (!winetest_interactive)

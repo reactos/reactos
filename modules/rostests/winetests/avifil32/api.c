@@ -19,17 +19,13 @@
  *
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <wine/test.h>
-#include <initguid.h>
-#include <wingdi.h>
-#include <vfw.h>
+#include "wine/test.h"
+#include "initguid.h"
+#include "wingdi.h"
+#include "vfw.h"
 
 /* ########################### */
 

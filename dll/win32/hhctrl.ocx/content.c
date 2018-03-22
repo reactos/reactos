@@ -17,7 +17,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NONAMELESSUNION
+
 #include "hhctrl.h"
+#include "stream.h"
+#include "resource.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 typedef enum {
     INSERT_NEXT,

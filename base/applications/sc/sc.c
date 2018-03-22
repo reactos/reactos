@@ -157,19 +157,35 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("control")))
     {
-        INT CtlValue;
+        INT ControlCode = 0;
 
         if (ArgCount > 1)
         {
             ServiceName = *ServiceArgs++;
             ArgCount--;
 
-            CtlValue = _ttoi(ServiceArgs[0]);
+            if (!lstrcmpi(ServiceArgs[0], _T("paramchange")))
+                ControlCode = SERVICE_CONTROL_PARAMCHANGE;
+            else if (!lstrcmpi(ServiceArgs[0], _T("netbindadd")))
+                ControlCode = SERVICE_CONTROL_NETBINDADD;
+            else if (!lstrcmpi(ServiceArgs[0], _T("netbindremove")))
+                ControlCode = SERVICE_CONTROL_NETBINDREMOVE;
+            else if (!lstrcmpi(ServiceArgs[0], _T("netbindenable")))
+                ControlCode = SERVICE_CONTROL_NETBINDENABLE;
+            else if (!lstrcmpi(ServiceArgs[0], _T("netbinddisable")))
+                ControlCode = SERVICE_CONTROL_NETBINDDISABLE;
+            else
+            {
+                ControlCode = _ttoi(ServiceArgs[0]);
+                if ((ControlCode < 128) && (ControlCode > 255))
+                    ControlCode = 0;
+            }
+
             ServiceArgs++;
             ArgCount--;
 
-            if ((CtlValue >= 128) && (CtlValue <= 255))
-                Control(CtlValue,
+            if (ControlCode != 0)
+                Control(ControlCode,
                         ServiceName,
                         ServiceArgs,
                         ArgCount);

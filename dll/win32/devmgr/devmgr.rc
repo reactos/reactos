@@ -42,6 +42,9 @@ IDB_TOOLBAR    BITMAP DISCARDABLE "resources/toolbar.bmp"
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
 #endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/et-EE.rc"
+#endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif

@@ -99,6 +99,103 @@ typedef struct _TASK_ITEM
     };
 } TASK_ITEM, *PTASK_ITEM;
 
+
+class CHardErrorThread
+{
+    DWORD m_ThreadId;
+    HANDLE m_hThread;
+    LONG m_bThreadRunning;
+    DWORD m_Status;
+    DWORD m_dwType;
+    CStringW m_Title;
+    CStringW m_Text;
+public:
+
+    CHardErrorThread():
+        m_ThreadId(0),
+        m_hThread(NULL),
+        m_bThreadRunning(FALSE),
+        m_Status(NULL),
+        m_dwType(NULL)
+    {
+    }
+
+    ~CHardErrorThread()
+    {
+        if (m_bThreadRunning)
+        {
+            /* Try to unstuck Show */
+            PostThreadMessage(m_ThreadId, WM_QUIT, 0, 0);   
+            DWORD ret = WaitForSingleObject(m_hThread, 3*1000);
+            if (ret == WAIT_TIMEOUT)
+                TerminateThread(m_hThread, 0);
+            CloseHandle(m_hThread);
+        }
+    }
+
+    HRESULT ThreadProc()
+    {
+        HRESULT hr;
+        CComPtr<IUserNotification> pnotification;
+
+        hr = OleInitialize(NULL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = CoCreateInstance(CLSID_UserNotification,
+                              NULL,
+                              CLSCTX_INPROC_SERVER,
+                              IID_PPV_ARG(IUserNotification, &pnotification));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = pnotification->SetBalloonInfo(m_Title, m_Text, NIIF_WARNING);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = pnotification->SetIconInfo(NULL, NULL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        /* Show will block until the balloon closes */
+        hr = pnotification->Show(NULL, 0);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return S_OK;
+    }
+
+    static DWORD CALLBACK s_HardErrorThreadProc(IN OUT LPVOID lpParameter)
+    {
+        CHardErrorThread* pThis = reinterpret_cast<CHardErrorThread*>(lpParameter);
+        pThis->ThreadProc();
+        CloseHandle(pThis->m_hThread);
+        OleUninitialize();
+        InterlockedExchange(&pThis->m_bThreadRunning, FALSE);
+        return 0;
+    }
+
+    void StartThread(PBALLOON_HARD_ERROR_DATA pData)
+    {
+        BOOL bIsRunning = InterlockedExchange(&m_bThreadRunning, TRUE);
+
+        /* Ignore the new message if we are already showing one */
+        if (bIsRunning)
+            return;
+
+        m_Status = pData->Status;
+        m_dwType = pData->dwType;
+        m_Title = (PWCHAR)((ULONG_PTR)pData + pData->TitleOffset);
+        m_Text = (PWCHAR)((ULONG_PTR)pData + pData->MessageOffset);
+        m_hThread = CreateThread(NULL, 0, s_HardErrorThreadProc, this, 0, &m_ThreadId);
+        if (!m_hThread)
+        {
+            m_bThreadRunning = FALSE;
+            CloseHandle(m_hThread);
+        }
+    }
+};
+
 class CTaskToolbar :
     public CWindowImplBaseT< CToolbar<TASK_ITEM>, CControlWinTraits >
 {
@@ -193,7 +290,10 @@ public:
 };
 
 class CTaskSwitchWnd :
-    public CWindowImpl < CTaskSwitchWnd, CWindow, CControlWinTraits >
+    public CComCoClass<CTaskSwitchWnd>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public CWindowImpl < CTaskSwitchWnd, CWindow, CControlWinTraits >,
+    public IOleWindow
 {
     CTaskToolbar m_TaskBar;
 
@@ -219,6 +319,9 @@ class CTaskSwitchWnd :
 
     SIZE m_ButtonSize;
 
+    UINT m_uHardErrorMsg;
+    CHardErrorThread m_HardErrorThread;
+
 public:
     CTaskSwitchWnd() :
         m_ShellHookMsg(NULL),
@@ -235,6 +338,7 @@ public:
         m_IsDestroying(FALSE)
     {
         ZeroMemory(&m_ButtonSize, sizeof(m_ButtonSize));
+        m_uHardErrorMsg = RegisterWindowMessageW(L"HardError");
     }
     virtual ~CTaskSwitchWnd() { }
 
@@ -1715,19 +1819,6 @@ public:
         return Ret;
     }
 
-    LRESULT OnEnableGrouping(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        LRESULT Ret = m_IsGroupingEnabled;
-        if ((BOOL)wParam != m_IsGroupingEnabled)
-        {
-            m_IsGroupingEnabled = (BOOL)wParam;
-
-            /* Collapse or expand groups if necessary */
-            UpdateButtonsSize(FALSE);
-        }
-        return Ret;
-    }
-
     LRESULT OnUpdateTaskbarPos(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         /* Update the button spacing */
@@ -1740,8 +1831,12 @@ public:
         TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
         if (newSettings->bGroupButtons != g_TaskbarSettings.bGroupButtons)
         {
-            /* TODO: Toggle grouping */
             g_TaskbarSettings.bGroupButtons = newSettings->bGroupButtons;
+            m_IsGroupingEnabled = g_TaskbarSettings.bGroupButtons;
+
+            /* Collapse or expand groups if necessary */
+            RefreshWindowList();
+            UpdateButtonsSize(FALSE);
         }
 
         return 0;
@@ -1827,6 +1922,45 @@ public:
         return 0;
     }
 
+    LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT)lParam;
+        if (cpData->dwData == m_uHardErrorMsg)
+        {
+            /* A hard error balloon message */
+            PBALLOON_HARD_ERROR_DATA pData = (PBALLOON_HARD_ERROR_DATA)cpData->lpData;
+            ERR("Got balloon data 0x%x, 0x%x, %S, %S!\n", pData->Status, pData->dwType, (WCHAR*)((ULONG_PTR)pData + pData->TitleOffset), (WCHAR*)((ULONG_PTR)pData + pData->MessageOffset));
+            if (pData->cbHeaderSize == sizeof(BALLOON_HARD_ERROR_DATA))
+                m_HardErrorThread.StartThread(pData);
+            return TRUE;
+        }
+
+        return FALSE;
+    }
+
+    HRESULT Initialize(IN HWND hWndParent, IN OUT ITrayWindow *tray)
+    {
+        m_Tray = tray;
+        m_IsGroupingEnabled = g_TaskbarSettings.bGroupButtons;
+        Create(hWndParent, 0, szRunningApps, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP);
+        if (!m_hWnd)
+            return E_FAIL;
+        return S_OK;
+    }
+
+    HRESULT WINAPI GetWindow(HWND* phwnd)
+    {
+        if (!phwnd)
+            return E_INVALIDARG;
+        *phwnd = m_hWnd;
+        return S_OK;
+    }
+
+    HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode)
+    {
+        return E_NOTIMPL;
+    }
+
     DECLARE_WND_CLASS_EX(szTaskSwitchWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTaskSwitchWnd)
@@ -1838,7 +1972,6 @@ public:
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-        MESSAGE_HANDLER(TSWM_ENABLEGROUPING, OnEnableGrouping)
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
@@ -1848,23 +1981,18 @@ public:
         MESSAGE_HANDLER(m_ShellHookMsg, OnShellHook)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
         MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
+        MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
     END_MSG_MAP()
 
-    HWND _Init(IN HWND hWndParent, IN OUT ITrayWindow *tray)
-    {
-        m_Tray = tray;
-        m_IsGroupingEnabled = TRUE; /* FIXME */
-        return Create(hWndParent, 0, szRunningApps, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP);
-    }
+    DECLARE_NOT_AGGREGATABLE(CTaskSwitchWnd)
+
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    BEGIN_COM_MAP(CTaskSwitchWnd)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+    END_COM_MAP()
 };
 
-HWND
-CreateTaskSwitchWnd(IN HWND hWndParent, IN OUT ITrayWindow *Tray)
+HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv)
 {
-    CTaskSwitchWnd * instance;
-
-    // TODO: Destroy after the window is destroyed
-    instance = new CTaskSwitchWnd();
-
-    return instance->_Init(hWndParent, Tray);
+    return ShellObjectCreatorInit<CTaskSwitchWnd>(hWndParent, Tray, riid, ppv);
 }

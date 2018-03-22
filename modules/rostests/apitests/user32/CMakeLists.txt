@@ -23,6 +23,7 @@ list(APPEND SOURCE
     LookupIconIdFromDirectoryEx.c
     NextDlgItem.c
     RealGetWindowClass.c
+    RedrawWindow.c
     RegisterClassEx.c
     RegisterHotKey.c
     ScrollDC.c

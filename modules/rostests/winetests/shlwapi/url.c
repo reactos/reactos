@@ -18,9 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <intshcut.h>
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "wininet.h"
+#include "intshcut.h"
 
 /* ################ */
 static HMODULE hShlwapi;
@@ -1502,6 +1509,7 @@ static const struct parse_url_test_t {
     {"ab-://www.winehq.org/",S_OK,3,URL_SCHEME_UNKNOWN},
     {" http://www.winehq.org/",URL_E_INVALID_SYNTAX},
     {"HTTP://www.winehq.org/",S_OK,4,URL_SCHEME_HTTP},
+    {"a+-.://www.winehq.org/",S_OK,4,URL_SCHEME_UNKNOWN},
 };
 
 static void test_ParseURL(void)

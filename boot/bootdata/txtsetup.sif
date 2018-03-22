@@ -523,6 +523,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000048F = kbdeo.dll
 
 [HiveInfs.Install]
+AddReg=caroots.inf,AddReg
 AddReg=registry.inf,AddReg
 
 ; EOF

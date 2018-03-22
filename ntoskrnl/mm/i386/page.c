@@ -673,13 +673,13 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     {
         if (Address < MmSystemRangeStart)
         {
-            DPRINT1("No process\n");
+            DPRINT1("NULL process given for user-mode mapping at %p -- %lu pages starting at %Ix\n", Address, PageCount, *Pages);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
         if (PageCount > 0x10000 ||
             (ULONG_PTR) Address / PAGE_SIZE + PageCount > 0x100000)
         {
-            DPRINT1("Page count too large\n");
+            DPRINT1("Page count too large for kernel-mode mapping at %p -- %lu pages starting at %Ix\n", Address, PageCount, *Pages);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
     }
@@ -687,14 +687,14 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     {
         if (Address >= MmSystemRangeStart)
         {
-            DPRINT1("Setting kernel address with process context\n");
+            DPRINT1("Process %p given for kernel-mode mapping at %p -- %lu pages starting at %Ix\n", Process, Address, PageCount, *Pages);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
         if (PageCount > (ULONG_PTR)MmSystemRangeStart / PAGE_SIZE ||
             (ULONG_PTR) Address / PAGE_SIZE + PageCount >
             (ULONG_PTR)MmSystemRangeStart / PAGE_SIZE)
         {
-            DPRINT1("Page Count too large\n");
+            DPRINT1("Page count too large for process %p user-mode mapping at %p -- %lu pages starting at %Ix\n", Process, Address, PageCount, *Pages);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
     }

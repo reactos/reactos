@@ -61,6 +61,9 @@ typedef struct _PRIVATE_CACHE_MAP_FLAGS
     ULONG Available:14;
 } PRIVATE_CACHE_MAP_FLAGS;
 
+#define PRIVATE_CACHE_MAP_READ_AHEAD_ACTIVE     (1 << 16)
+#define PRIVATE_CACHE_MAP_READ_AHEAD_ENABLED    (1 << 17)
+
 typedef struct _PRIVATE_CACHE_MAP
 {
     union
@@ -79,6 +82,7 @@ typedef struct _PRIVATE_CACHE_MAP
     ULONG ReadAheadLength[2];
     KSPIN_LOCK ReadAheadSpinLock;
     LIST_ENTRY PrivateLinks;
+    PVOID ReadAheadWorkItem;
 } PRIVATE_CACHE_MAP, *PPRIVATE_CACHE_MAP;
 
 typedef struct _BITMAP_RANGE
@@ -112,8 +116,8 @@ typedef struct _MBCB
 //
 typedef struct _SHARED_CACHE_MAP
 {
-    SHORT NodeTypeCode;
-    SHORT NodeByteSize;
+    CSHORT NodeTypeCode;
+    CSHORT NodeByteSize;
     ULONG OpenCount;
     LARGE_INTEGER FileSize;
     LIST_ENTRY BcbList;
@@ -156,6 +160,24 @@ typedef struct _SHARED_CACHE_MAP
 } SHARED_CACHE_MAP, *PSHARED_CACHE_MAP;
 
 #endif /* _NTIFS_INCLUDED_  */
+
+//
+// Deferred Write list entry
+//
+typedef struct _DEFERRED_WRITE
+{
+    CSHORT NodeTypeCode;
+    CSHORT NodeByteSize;
+    PFILE_OBJECT FileObject;
+    ULONG BytesToWrite;
+    LIST_ENTRY DeferredWriteLinks;
+    PKEVENT Event;
+    PCC_POST_DEFERRED_WRITE PostRoutine;
+    PVOID Context1;
+    PVOID Context2;
+    BOOLEAN LimitModifiedPages;
+} DEFERRED_WRITE, *PDEFERRED_WRITE;
+
 #endif /* NTOS_MODE_USER    */
 #endif /* _CCTYPES_H        */
 

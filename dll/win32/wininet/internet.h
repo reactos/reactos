@@ -357,7 +357,6 @@ struct _object_header_t
     ULONG  ErrorMask;
     DWORD  dwInternalFlags;
     LONG   refs;
-    BOOL   decoding;
     INTERNET_STATUS_CALLBACK lpfnStatusCB;
     struct list entry;
     struct list children;
@@ -454,6 +453,7 @@ typedef struct
     DWORD read_size;      /* valid data size in read_buf */
     BYTE  read_buf[READ_BUFFER_SIZE]; /* buffer for already read but not returned data */
 
+    BOOL decoding;
     data_stream_t *data_stream;
     netconn_stream_t netconn_stream;
 } http_request_t;

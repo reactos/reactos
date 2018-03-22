@@ -104,7 +104,10 @@ typedef struct PullPin
 #define Req_Pause  3
 
 /*** Constructors ***/
-HRESULT PullPin_Construct(const IPinVtbl *PullPin_Vtbl, const PIN_INFO * pPinInfo, SAMPLEPROC_PULL pSampleProc, LPVOID pUserData, QUERYACCEPTPROC pQueryAccept, CLEANUPPROC pCleanUp, STOPPROCESSPROC, REQUESTPROC pCustomRequest, LPCRITICAL_SECTION pCritSec, IPin ** ppPin);
+HRESULT PullPin_Construct(const IPinVtbl *PullPin_Vtbl, const PIN_INFO * pPinInfo,
+                          SAMPLEPROC_PULL pSampleProc, LPVOID pUserData, QUERYACCEPTPROC pQueryAccept,
+                          CLEANUPPROC pCleanUp, REQUESTPROC pCustomRequest, STOPPROCESSPROC pDone,
+                          LPCRITICAL_SECTION pCritSec, IPin ** ppPin);
 
 /**************************/
 /*** Pin Implementation ***/

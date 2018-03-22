@@ -284,13 +284,16 @@ static void test_authentication(void)
 
     memset( &info, 0, sizeof(info) );
     status_c = QueryContextAttributesA( &client.ctxt, SECPKG_ATTR_NEGOTIATION_INFO, &info );
-    ok( status_c == SEC_E_OK, "pQueryContextAttributesA returned %08x\n", status_c );
+    ok( status_c == SEC_E_OK, "QueryContextAttributesA returned %08x\n", status_c );
 
     pi = info.PackageInfo;
     ok( info.NegotiationState == SECPKG_NEGOTIATION_COMPLETE, "got %u\n", info.NegotiationState );
     ok( pi != NULL, "expected non-NULL PackageInfo\n" );
     if (pi)
     {
+        UINT expected, got;
+        char *eob;
+
         ok( pi->fCapabilities == NTLM_BASE_CAPS ||
             pi->fCapabilities == (NTLM_BASE_CAPS|SECPKG_FLAG_READONLY_WITH_CHECKSUM) ||
             pi->fCapabilities == (NTLM_BASE_CAPS|SECPKG_FLAG_RESTRICTED_TOKENS) ||
@@ -300,6 +303,19 @@ static void test_authentication(void)
         ok( pi->wVersion == 1, "got %u\n", pi->wVersion );
         ok( pi->wRPCID == RPC_C_AUTHN_WINNT, "got %u\n", pi->wRPCID );
         ok( !lstrcmpA( pi->Name, "NTLM" ), "got %s\n", pi->Name );
+
+        expected = sizeof(*pi) + lstrlenA(pi->Name) + 1 + lstrlenA(pi->Comment) + 1;
+        got = HeapSize(GetProcessHeap(), 0, pi);
+todo_wine
+        ok( got == expected, "got %u, expected %u\n", got, expected );
+        eob = (char *)pi + expected;
+todo_wine
+        ok( pi->Name + lstrlenA(pi->Name) < eob, "Name doesn't fit into allocated block\n" );
+todo_wine
+        ok( pi->Comment + lstrlenA(pi->Comment) < eob, "Comment doesn't fit into allocated block\n" );
+
+        status = FreeContextBuffer( pi );
+        ok( status == SEC_E_OK, "FreeContextBuffer error %#x\n", status );
     }
 
 done:

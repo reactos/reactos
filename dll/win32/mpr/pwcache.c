@@ -19,9 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
+#include <stdarg.h>
 #include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnetwk.h"
+#include "winreg.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 
 static const char mpr_key[] = "Software\\Wine\\Wine\\Mpr\\";
 

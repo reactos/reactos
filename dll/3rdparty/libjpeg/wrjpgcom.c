@@ -2,7 +2,7 @@
  * wrjpgcom.c
  *
  * Copyright (C) 1994-1997, Thomas G. Lane.
- * Modified 2015 by Guido Vollbeding.
+ * Modified 2015-2017 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -254,7 +254,7 @@ copy_variable (void)
   if (length < 2)
     ERREXIT("Erroneous JPEG marker length");
   length -= 2;
-  /* Skip over the remaining bytes */
+  /* Copy the remaining bytes */
   while (length > 0) {
     write_1_byte(read_1_byte());
     length--;

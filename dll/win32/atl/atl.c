@@ -17,26 +17,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#define COBJMACROS
 
-#include <wine/atlcom.h>
+#include "wine/atlbase.h"
+#include "wine/atlcom.h"
+
+#include "wine/debug.h"
+#include "wine/heap.h"
+#include "wine/unicode.h"
+
+#ifdef __REACTOS__
 #include <wingdi.h>
+#endif
+
+WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
 #define ATLVer1Size FIELD_OFFSET(_ATL_MODULEW, dwAtlBuildVer)
 
 HINSTANCE atl_instance;
 
 typedef unsigned char cpp_bool;
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
 
 static ICatRegister *catreg;
 
@@ -481,6 +481,7 @@ void* WINAPI AtlWinModuleExtractCreateWndData(_ATL_WIN_MODULE *winmod)
 /***********************************************************************
  *           AtlComModuleGetClassObject                [atl100.15]
  */
+#if _ATL_VER < _ATL_VER_110
 HRESULT WINAPI AtlComModuleGetClassObject(_ATL_COM_MODULE *pm, REFCLSID rclsid, REFIID riid, void **ppv)
 {
     _ATL_OBJMAP_ENTRY **iter;
@@ -505,10 +506,37 @@ HRESULT WINAPI AtlComModuleGetClassObject(_ATL_COM_MODULE *pm, REFCLSID rclsid, 
     WARN("Class %s not found\n", debugstr_guid(rclsid));
     return CLASS_E_CLASSNOTAVAILABLE;
 }
+#else
+HRESULT WINAPI AtlComModuleGetClassObject(_ATL_COM_MODULE *pm, REFCLSID rclsid, REFIID riid, void **ppv)
+{
+    _ATL_OBJMAP_ENTRY_EX **iter;
+    HRESULT hres;
+
+    TRACE("(%p %s %s %p)\n", pm, debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+
+    if(!pm)
+        return E_INVALIDARG;
+
+    for(iter = pm->m_ppAutoObjMapFirst; iter < pm->m_ppAutoObjMapLast; iter++) {
+        if(IsEqualCLSID((*iter)->pclsid, rclsid) && (*iter)->pfnGetClassObject) {
+            if(!(*iter)->pCache->pCF)
+                hres = (*iter)->pfnGetClassObject((*iter)->pfnCreateInstance, &IID_IUnknown, (void**)&(*iter)->pCache->pCF);
+            if((*iter)->pCache->pCF)
+                hres = IUnknown_QueryInterface((*iter)->pCache->pCF, riid, ppv);
+            TRACE("returning %p (%08x)\n", *ppv, hres);
+            return hres;
+        }
+    }
+
+    WARN("Class %s not found\n", debugstr_guid(rclsid));
+    return CLASS_E_CLASSNOTAVAILABLE;
+}
+#endif
 
 /***********************************************************************
  *           AtlComModuleRegisterClassObjects   [atl100.17]
  */
+#if _ATL_VER < _ATL_VER_110
 HRESULT WINAPI AtlComModuleRegisterClassObjects(_ATL_COM_MODULE *module, DWORD context, DWORD flags)
 {
     _ATL_OBJMAP_ENTRY **iter;
@@ -536,10 +564,40 @@ HRESULT WINAPI AtlComModuleRegisterClassObjects(_ATL_COM_MODULE *module, DWORD c
 
    return S_OK;
 }
+#else
+HRESULT WINAPI AtlComModuleRegisterClassObjects(_ATL_COM_MODULE *module, DWORD context, DWORD flags)
+{
+    _ATL_OBJMAP_ENTRY_EX **iter;
+    IUnknown *unk;
+    HRESULT hres;
+
+    TRACE("(%p %x %x)\n", module, context, flags);
+
+    if(!module)
+        return E_INVALIDARG;
+
+    for(iter = module->m_ppAutoObjMapFirst; iter < module->m_ppAutoObjMapLast; iter++) {
+        if(!(*iter)->pfnGetClassObject)
+            continue;
+
+        hres = (*iter)->pfnGetClassObject((*iter)->pfnCreateInstance, &IID_IUnknown, (void**)&unk);
+        if(FAILED(hres))
+            return hres;
+
+        hres = CoRegisterClassObject((*iter)->pclsid, unk, context, flags, &(*iter)->pCache->dwRegister);
+        IUnknown_Release(unk);
+        if(FAILED(hres))
+            return hres;
+    }
+
+   return S_OK;
+}
+#endif
 
 /***********************************************************************
  *           AtlComModuleRevokeClassObjects   [atl100.20]
  */
+#if _ATL_VER < _ATL_VER_110
 HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
 {
     _ATL_OBJMAP_ENTRY **iter;
@@ -558,10 +616,31 @@ HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
 
     return S_OK;
 }
+#else
+HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
+{
+    _ATL_OBJMAP_ENTRY_EX **iter;
+    HRESULT hres;
+
+    TRACE("(%p)\n", module);
+
+    if(!module)
+        return E_INVALIDARG;
+
+    for(iter = module->m_ppAutoObjMapFirst; iter < module->m_ppAutoObjMapLast; iter++) {
+        hres = CoRevokeClassObject((*iter)->pCache->dwRegister);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    return S_OK;
+}
+#endif
 
 /***********************************************************************
  *           AtlComModuleUnregisterServer       [atl100.22]
  */
+#if _ATL_VER < _ATL_VER_110
 HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid)
 {
     const struct _ATL_CATMAP_ENTRY *catmap;
@@ -610,6 +689,56 @@ HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeL
 
     return S_OK;
 }
+#else
+HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bRegTypeLib, const CLSID *clsid)
+{
+    const struct _ATL_CATMAP_ENTRY *catmap;
+    _ATL_OBJMAP_ENTRY_EX **iter;
+    HRESULT hres;
+
+    TRACE("(%p %x %s)\n", mod, bRegTypeLib, debugstr_guid(clsid));
+
+    for(iter = mod->m_ppAutoObjMapFirst; iter < mod->m_ppAutoObjMapLast; iter++) {
+        if(!*iter || (clsid && !IsEqualCLSID((*iter)->pclsid, clsid)))
+            continue;
+
+        TRACE("Unregistering clsid %s\n", debugstr_guid((*iter)->pclsid));
+
+        catmap = (*iter)->pfnGetCategoryMap();
+        if(catmap) {
+            hres = AtlRegisterClassCategoriesHelper((*iter)->pclsid, catmap, FALSE);
+            if(FAILED(hres))
+                return hres;
+        }
+
+        hres = (*iter)->pfnUpdateRegistry(FALSE);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    if(bRegTypeLib) {
+        ITypeLib *typelib;
+        TLIBATTR *attr;
+        BSTR path;
+
+        hres = AtlLoadTypeLib(mod->m_hInstTypeLib, NULL, &path, &typelib);
+        if(FAILED(hres))
+            return hres;
+
+        SysFreeString(path);
+        hres = ITypeLib_GetLibAttr(typelib, &attr);
+        if(SUCCEEDED(hres)) {
+            hres = UnRegisterTypeLib(&attr->guid, attr->wMajorVerNum, attr->wMinorVerNum, attr->lcid, attr->syskind);
+            ITypeLib_ReleaseTLibAttr(typelib, attr);
+        }
+        ITypeLib_Release(typelib);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    return S_OK;
+}
+#endif
 
 #endif
 

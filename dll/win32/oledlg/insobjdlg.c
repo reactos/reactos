@@ -18,9 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "oledlg_private.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <winreg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "wine/winternl.h"
+#include "winerror.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+#include "oledlg.h"
+#include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(oledlg);
 

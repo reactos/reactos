@@ -55,7 +55,7 @@ static void test_WNetGetUniversalName(void)
         ret = WNetGetUniversalNameA(driveA, UNIVERSAL_NAME_INFO_LEVEL,
                 buffer, &fail_size);
         if(drive_type == DRIVE_REMOTE)
-            todo_wine ok(ret == WN_BAD_VALUE, "WNetGetUniversalNameA failed: %08x\n", ret);
+            todo_wine ok(ret == WN_BAD_VALUE || ret == WN_MORE_DATA, "WNetGetUniversalNameA failed: %08x\n", ret);
         else
             ok(ret == WN_NOT_CONNECTED || ret == WN_NO_NET_OR_BAD_PATH,
                 "(%s) WNetGetUniversalNameW gave wrong error: %u\n", driveA, ret);
@@ -114,7 +114,7 @@ static void test_WNetGetRemoteName(void)
                 buffer, &fail_size);
         if(drive_type == DRIVE_REMOTE)
             todo_wine
-            ok(ret == WN_BAD_VALUE, "WNetGetUniversalNameA failed: %08x\n", ret);
+            ok(ret == WN_BAD_VALUE || ret == WN_MORE_DATA, "WNetGetUniversalNameA failed: %08x\n", ret);
         else
             ok(ret == WN_NOT_CONNECTED || ret == WN_NO_NET_OR_BAD_PATH,
                 "(%s) WNetGetUniversalNameA gave wrong error: %u\n", driveA, ret);
@@ -127,7 +127,7 @@ static void test_WNetGetRemoteName(void)
 
         if(drive_type == DRIVE_REMOTE)
             todo_wine
-            ok(ret == WN_BAD_POINTER, "WNetGetUniversalNameA failed: %08x\n", ret);
+            ok(ret == WN_BAD_POINTER || ret == WN_BAD_VALUE, "WNetGetUniversalNameA failed: %08x\n", ret);
         else
             ok(ret == WN_NOT_CONNECTED || ret == WN_BAD_VALUE,
                 "(%s) WNetGetUniversalNameA gave wrong error: %u\n", driveA, ret);
@@ -281,8 +281,9 @@ static void test_WNetUseConnection(void)
         strcpy(netRes->lpRemoteName, "\\\\127.0.0.1\\c$");
         bufSize = 0;
         ret = pWNetUseConnectionA(NULL, netRes, NULL, NULL, 0, NULL, &bufSize, &outRes);
-        if (ret == ERROR_ALREADY_ASSIGNED) continue;
+        if (ret != ERROR_ALREADY_ASSIGNED) break;
     }
+    if (ret == ERROR_ALREADY_ASSIGNED) goto end;    /* no drives available */
     todo_wine ok(ret == WN_SUCCESS, "Unexpected return: %u\n", ret);
     ok(bufSize == 0, "Unexpected buffer size: %u\n", bufSize);
     if (ret == WN_SUCCESS) WNetCancelConnectionA(drive, TRUE);
@@ -307,6 +308,7 @@ static void test_WNetUseConnection(void)
     ok(bufSize == 4, "Unexpected buffer size: %u\n", bufSize);
     if (ret == WN_SUCCESS) WNetCancelConnectionA(drive, TRUE);
 
+end:
     HeapFree(GetProcessHeap(), 0, netRes);
 }
 

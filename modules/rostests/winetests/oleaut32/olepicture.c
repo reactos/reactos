@@ -19,7 +19,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <math.h>
+#include <float.h>
+
+#define COBJMACROS
+#define CONST_VTABLE
+#ifndef __REACTOS__
+#define NONAMELESSUNION
+#endif
+
+#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winerror.h>
+#include <winnt.h>
+
+#include <urlmon.h>
+#include <wtypes.h>
+#include <olectl.h>
+#include <objidl.h>
 
 #define expect_eq(expr, value, type, format) { type ret = (expr); ok((value) == ret, #expr " expected " format " got " format "\n", value, ret); }
 
@@ -710,7 +733,8 @@ static void test_Render(void)
     HDC hdc = create_render_dc();
 
     /* test IPicture::Render return code on uninitialized picture */
-    OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (VOID**)&pic);
+    hres = OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (void **)&pic);
+    ok(hres == S_OK, "Failed to create a picture, hr %#x.\n", hres);
     hres = IPicture_get_Type(pic, &type);
     ok(hres == S_OK, "IPicture_get_Type does not return S_OK, but 0x%08x\n", hres);
     ok(type == PICTYPE_UNINITIALIZED, "Expected type = PICTYPE_UNINITIALIZED, got = %d\n", type);
@@ -743,7 +767,8 @@ static void test_Render(void)
         return;
     }
 
-    OleCreatePictureIndirect(&desc, &IID_IPicture, TRUE, (VOID**)&pic);
+    hres = OleCreatePictureIndirect(&desc, &IID_IPicture, TRUE, (void **)&pic);
+    ok(hres == S_OK, "Failed to create a picture, hr %#x.\n", hres);
     /* zero dimensions, PICTYPE_ICON */
     hres = picture_render(pic, hdc, 0, 0, 0, 0, 0, 0, 0, 0, NULL);
     ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
@@ -797,7 +822,8 @@ static void test_get_Attributes(void)
     short type;
     DWORD attr;
 
-    OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (VOID**)&pic);
+    hres = OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (void **)&pic);
+    ok(hres == S_OK, "Failed to create a picture, hr %#x.\n", hres);
     hres = IPicture_get_Type(pic, &type);
     ok(hres == S_OK, "IPicture_get_Type does not return S_OK, but 0x%08x\n", hres);
     ok(type == PICTYPE_UNINITIALIZED, "Expected type = PICTYPE_UNINITIALIZED, got = %d\n", type);
@@ -818,8 +844,8 @@ static void test_get_Handle(void)
     IPicture *pic;
     HRESULT hres;
 
-    OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (VOID**)&pic);
-
+    hres = OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (void **)&pic);
+    ok(hres == S_OK, "Failed to create a picture, hr %#x.\n", hres);
     hres = IPicture_get_Handle(pic, NULL);
     ole_expect(hres, E_POINTER);
 
@@ -831,7 +857,8 @@ static void test_get_Type(void)
     IPicture *pic;
     HRESULT hres;
 
-    OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (VOID**)&pic);
+    hres = OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (void **)&pic);
+    ok(hres == S_OK, "Failed to create a picture, hr %#x.\n", hres);
 
     hres = IPicture_get_Type(pic, NULL);
     ole_expect(hres, E_POINTER);

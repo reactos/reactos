@@ -25,37 +25,7 @@
 #include "dshow.h"
 #include "tlhelp32.h"
 
-static HANDLE (WINAPI *pCreateToolhelp32Snapshot)(DWORD, DWORD);
-static BOOL (WINAPI *pThread32First)(HANDLE, LPTHREADENTRY32);
-static BOOL (WINAPI *pThread32Next)(HANDLE, LPTHREADENTRY32);
-
 static IUnknown *pAviSplitter = NULL;
-
-static int count_threads(void)
-{
-    THREADENTRY32 te;
-    int threads;
-    HANDLE h;
-
-    h = pCreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-    te.dwSize = sizeof(te);
-
-    if (h == INVALID_HANDLE_VALUE)
-        return -1;
-
-    pThread32First(h, &te);
-    if (te.th32OwnerProcessID == GetCurrentProcessId())
-        threads = 1;
-    else
-        threads = 0;
-
-    while (pThread32Next(h, &te))
-        if (te.th32OwnerProcessID == GetCurrentProcessId())
-            ++threads;
-
-    CloseHandle(h);
-    return threads;
-}
 
 static BOOL create_avisplitter(void)
 {
@@ -300,45 +270,54 @@ static void test_filesourcefilter(void)
     }
 }
 
-static const WCHAR wfile[] = {'t','e','s','t','.','a','v','i',0};
-static const char afile[] = "test.avi";
+static const WCHAR avifile[] = {'t','e','s','t','.','a','v','i',0};
 
-/* This test doesn't use the quartz filtergraph because it makes it impossible
- * to be certain that a thread is really one owned by the avi splitter.
- * A lot of the decoder filters will also have their own thread, and Windows'
- * filtergraph has a separate thread for start/stop/seeking requests.
- * By avoiding the filtergraph altogether and connecting streams directly to
- * the null renderer I am sure that this is not the case here.
- */
-static void test_threads(void)
+static WCHAR *load_resource(const WCHAR *name)
+{
+    static WCHAR pathW[MAX_PATH];
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    lstrcatW(pathW, name);
+
+    file = CreateFileW(pathW, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", wine_dbgstr_w(pathW),
+        GetLastError());
+
+    res = FindResourceW(NULL, name, (LPCWSTR)RT_RCDATA);
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+
+    return pathW;
+}
+
+static void test_filter_graph(void)
 {
     IFileSourceFilter *pfile = NULL;
     IBaseFilter *preader = NULL, *pavi = NULL;
     IEnumPins *enumpins = NULL;
     IPin *filepin = NULL, *avipin = NULL;
     HRESULT hr;
-    int baselevel, curlevel, expected;
     HANDLE file = NULL;
     PIN_DIRECTION dir = PINDIR_OUTPUT;
     char buffer[13];
     DWORD readbytes;
     FILTER_STATE state;
 
-    /* We need another way of counting threads on NT4. Skip these tests (for now) */
-    if (!pCreateToolhelp32Snapshot || !pThread32First || !pThread32Next)
-    {
-        win_skip("Needed thread functions are not available (NT4)\n");
-        return;
-    }
+    WCHAR *filename = load_resource(avifile);
 
-    /* Before doing anything (the thread count at the start differs per OS) */
-    baselevel = count_threads();
-
-    file = CreateFileW(wfile, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE,
+    file = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE,
         NULL, OPEN_EXISTING, 0, NULL);
     if (file == INVALID_HANDLE_VALUE)
     {
-        skip("Could not read test file \"%s\", skipping test\n", afile);
+        skip("Could not read test file \"%s\", skipping test\n", wine_dbgstr_w(filename));
+        DeleteFileW(filename);
         return;
     }
 
@@ -349,7 +328,8 @@ static void test_threads(void)
     if (strncmp(buffer, "RIFF", 4) || strcmp(buffer + 8, "AVI "))
     {
         skip("%s is not an avi riff file, not doing the avi splitter test\n",
-            afile);
+            wine_dbgstr_w(filename));
+        DeleteFileW(filename);
         return;
     }
 
@@ -379,10 +359,10 @@ static void test_threads(void)
     if (hr != S_OK)
         goto fail;
 
-    hr = IFileSourceFilter_Load(pfile, wfile, NULL);
+    hr = IFileSourceFilter_Load(pfile, filename, NULL);
     if (hr != S_OK)
     {
-        trace("Could not load file\n");
+        trace("Could not load file: %08x\n", hr);
         goto fail;
     }
 
@@ -409,19 +389,10 @@ static void test_threads(void)
     if (hr != S_OK)
         goto fail;
 
-    curlevel = count_threads();
-    ok(curlevel == baselevel,
-        "The thread count should be %d not %d\n", baselevel, curlevel);
-
     hr = IPin_Connect(filepin, avipin, NULL);
     ok(hr == S_OK, "Could not connect: %08x\n", hr);
     if (hr != S_OK)
         goto fail;
-
-    expected = 1 + baselevel;
-    curlevel = count_threads();
-    ok(curlevel == expected,
-        "The thread count should be %d not %d\n", expected, curlevel);
 
     IPin_Release(avipin);
     avipin = NULL;
@@ -444,12 +415,17 @@ static void test_threads(void)
 
             hr = CoCreateInstance(&CLSID_NullRenderer, NULL,
                 CLSCTX_INPROC_SERVER, &IID_IBaseFilter, (LPVOID*)&pnull);
-            ok(hr == S_OK, "Could not create null renderer: %08x\n", hr);
-            if (hr != S_OK)
+            if (hr == REGDB_E_CLASSNOTREG)
+            {
+                win_skip("Null renderer not registered, skipping\n");
                 break;
+            }
+            ok(hr == S_OK, "Could not create null renderer: %08x\n", hr);
 
-            IBaseFilter_EnumPins(pnull, &nullenum);
-            IEnumPins_Next(nullenum, 1, &nullpin, NULL);
+            hr = IBaseFilter_EnumPins(pnull, &nullenum);
+            ok(hr == S_OK, "Failed to enum pins, hr %#x.\n", hr);
+            hr = IEnumPins_Next(nullenum, 1, &nullpin, NULL);
+            ok(hr == S_OK, "Failed to get next pin, hr %#x.\n", hr);
             IEnumPins_Release(nullenum);
             IPin_QueryDirection(nullpin, &dir);
 
@@ -462,7 +438,6 @@ static void test_threads(void)
                 break;
             }
             IBaseFilter_Run(pnull, 0);
-            ++expected;
         }
 
         IPin_Release(avipin);
@@ -494,10 +469,6 @@ static void test_threads(void)
     IBaseFilter_Run(pavi, 0);
     IBaseFilter_GetState(pavi, INFINITE, &state);
 
-    curlevel = count_threads();
-    ok(curlevel == expected,
-        "The thread count should be %d not %d\n", expected, curlevel);
-
     IBaseFilter_Pause(pavi);
     IBaseFilter_Pause(preader);
     IBaseFilter_Stop(pavi);
@@ -520,7 +491,9 @@ fail2:
             if (dir == PINDIR_OUTPUT)
             {
                 PIN_INFO info;
-                IPin_QueryPinInfo(to, &info);
+
+                hr = IPin_QueryPinInfo(to, &info);
+                ok(hr == S_OK, "Failed to query pin info, hr %#x.\n", hr);
 
                 /* Release twice: Once normal, second from the
                  * previous while loop
@@ -569,20 +542,11 @@ fail:
     if (pfile)
         IFileSourceFilter_Release(pfile);
 
-    curlevel = count_threads();
-    todo_wine
-    ok(curlevel == baselevel,
-        "The thread count should be %d not %d\n", baselevel, curlevel);
+    DeleteFileW(filename);
 }
 
 START_TEST(avisplitter)
 {
-    HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
-
-    pCreateToolhelp32Snapshot = (void*)GetProcAddress(kernel32, "CreateToolhelp32Snapshot");
-    pThread32First = (void*)GetProcAddress(kernel32, "Thread32First");
-    pThread32Next = (void*)GetProcAddress(kernel32, "Thread32Next");
-
     CoInitialize(NULL);
 
     if (!create_avisplitter())
@@ -594,7 +558,7 @@ START_TEST(avisplitter)
     test_query_interface();
     test_basefilter();
     test_filesourcefilter();
-    test_threads();
+    test_filter_graph();
 
     release_avisplitter();
 

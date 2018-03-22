@@ -247,7 +247,7 @@ xsltIsBlank(xmlChar *str) {
  *									*
  ************************************************************************/
 static xsltDecimalFormatPtr
-xsltNewDecimalFormat(xmlChar *name)
+xsltNewDecimalFormat(const xmlChar *nsUri, xmlChar *name)
 {
     xsltDecimalFormatPtr self;
     /* UTF-8 for 0x2030 */
@@ -256,6 +256,7 @@ xsltNewDecimalFormat(xmlChar *name)
     self = xmlMalloc(sizeof(xsltDecimalFormat));
     if (self != NULL) {
 	self->next = NULL;
+        self->nsUri = nsUri;
 	self->name = name;
 
 	/* Default values */
@@ -341,7 +342,39 @@ xsltDecimalFormatGetByName(xsltStylesheetPtr style, xmlChar *name)
 	for (result = style->decimalFormat->next;
 	     result != NULL;
 	     result = result->next) {
-	    if (xmlStrEqual(name, result->name))
+	    if ((result->nsUri == NULL) && xmlStrEqual(name, result->name))
+		return result;
+	}
+	style = xsltNextImport(style);
+    }
+    return result;
+}
+
+/**
+ * xsltDecimalFormatGetByQName:
+ * @style: the XSLT stylesheet
+ * @nsUri: the namespace URI of the QName
+ * @name: the local part of the QName
+ *
+ * Find decimal-format by QName
+ *
+ * Returns the xsltDecimalFormatPtr
+ */
+xsltDecimalFormatPtr
+xsltDecimalFormatGetByQName(xsltStylesheetPtr style, const xmlChar *nsUri,
+                            const xmlChar *name)
+{
+    xsltDecimalFormatPtr result = NULL;
+
+    if (name == NULL)
+	return style->decimalFormat;
+
+    while (style != NULL) {
+	for (result = style->decimalFormat->next;
+	     result != NULL;
+	     result = result->next) {
+	    if (xmlStrEqual(nsUri, result->nsUri) &&
+                xmlStrEqual(name, result->name))
 		return result;
 	}
 	style = xsltNextImport(style);
@@ -719,7 +752,7 @@ xsltNewStylesheet(void) {
 
     ret->omitXmlDeclaration = -1;
     ret->standalone = -1;
-    ret->decimalFormat = xsltNewDecimalFormat(NULL);
+    ret->decimalFormat = xsltNewDecimalFormat(NULL, NULL);
     ret->indent = -1;
     ret->errors = 0;
     ret->warnings = 0;
@@ -782,9 +815,8 @@ xsltAllocateExtraCtxt(xsltTransformContextPtr ctxt)
 	    ctxt->extras = (xsltRuntimeExtraPtr)
 		xmlMalloc(ctxt->extrasMax * sizeof(xsltRuntimeExtra));
 	    if (ctxt->extras == NULL) {
-		xmlGenericError(xmlGenericErrorContext,
+		xsltTransformError(ctxt, NULL, NULL,
 			"xsltAllocateExtraCtxt: out of memory\n");
-		ctxt->state = XSLT_STATE_ERROR;
 		return(0);
 	    }
 	    for (i = 0;i < ctxt->extrasMax;i++) {
@@ -800,9 +832,8 @@ xsltAllocateExtraCtxt(xsltTransformContextPtr ctxt)
 	    tmp = (xsltRuntimeExtraPtr) xmlRealloc(ctxt->extras,
 		            ctxt->extrasMax * sizeof(xsltRuntimeExtra));
 	    if (tmp == NULL) {
-		xmlGenericError(xmlGenericErrorContext,
+		xsltTransformError(ctxt, NULL, NULL,
 			"xsltAllocateExtraCtxt: out of memory\n");
-		ctxt->state = XSLT_STATE_ERROR;
 		return(0);
 	    }
 	    ctxt->extras = tmp;
@@ -1181,6 +1212,7 @@ xsltParseStylesheetOutput(xsltStylesheetPtr style, xmlNodePtr cur)
 		xsltTransformError(NULL, style, cur,
                                  "invalid value for method: %s\n", prop);
                 if (style != NULL) style->warnings++;
+                xmlFree(prop);
             }
 	} else {
 	    style->method = prop;
@@ -1358,18 +1390,37 @@ xsltParseStylesheetDecimalFormat(xsltStylesheetPtr style, xmlNodePtr cur)
 
     prop = xmlGetNsProp(cur, BAD_CAST("name"), NULL);
     if (prop != NULL) {
-	format = xsltDecimalFormatGetByName(style, prop);
+        const xmlChar *nsUri;
+
+        if (xmlValidateQName(prop, 0) != 0) {
+            xsltTransformError(NULL, style, cur,
+                "xsl:decimal-format: Invalid QName '%s'.\n", prop);
+	    style->warnings++;
+            xmlFree(prop);
+            return;
+        }
+        /*
+        * TODO: Don't use xsltGetQNameURI().
+        */
+        nsUri = xsltGetQNameURI(cur, &prop);
+        if (prop == NULL) {
+	    style->warnings++;
+            return;
+        }
+	format = xsltDecimalFormatGetByQName(style, nsUri, prop);
 	if (format != NULL) {
 	    xsltTransformError(NULL, style, cur,
 	 "xsltParseStylestyleDecimalFormat: %s already exists\n", prop);
-	    if (style != NULL) style->warnings++;
+	    style->warnings++;
+            xmlFree(prop);
 	    return;
 	}
-	format = xsltNewDecimalFormat(prop);
+	format = xsltNewDecimalFormat(nsUri, prop);
 	if (format == NULL) {
 	    xsltTransformError(NULL, style, cur,
      "xsltParseStylestyleDecimalFormat: failed creating new decimal-format\n");
-	    if (style != NULL) style->errors++;
+	    style->errors++;
+            xmlFree(prop);
 	    return;
 	}
 	/* Append new decimal-format structure */
@@ -3396,7 +3447,7 @@ internal_err:
 #ifdef XSLT_REFACTORED
 #else
 static void
-xsltPrecomputeStylesheet(xsltStylesheetPtr style, xmlNodePtr cur)
+xsltPreprocessStylesheet(xsltStylesheetPtr style, xmlNodePtr cur)
 {
     xmlNodePtr deleteNode, styleelem;
     int internalize = 0;
@@ -3427,7 +3478,7 @@ xsltPrecomputeStylesheet(xsltStylesheetPtr style, xmlNodePtr cur)
 	if (deleteNode != NULL) {
 #ifdef WITH_XSLT_DEBUG_BLANKS
 	    xsltGenericDebug(xsltGenericDebugContext,
-	     "xsltPrecomputeStylesheet: removing ignorable blank node\n");
+	     "xsltPreprocessStylesheet: removing ignorable blank node\n");
 #endif
 	    xmlUnlinkNode(deleteNode);
 	    xmlFreeNode(deleteNode);
@@ -3467,7 +3518,6 @@ xsltPrecomputeStylesheet(xsltStylesheetPtr style, xmlNodePtr cur)
 	    }
 	    if (IS_XSLT_ELEM(cur)) {
 		exclPrefixes = 0;
-		xsltStylePreCompute(style, cur);
 		if (IS_XSLT_NAME(cur, "text")) {
 		    for (;exclPrefixes > 0;exclPrefixes--)
 			exclPrefixPop(style);
@@ -3518,7 +3568,7 @@ xsltPrecomputeStylesheet(xsltStylesheetPtr style, xmlNodePtr cur)
 	     * going back
 	     */
 	    if (exclPrefixes > 0) {
-		xsltPrecomputeStylesheet(style, cur->children);
+		xsltPreprocessStylesheet(style, cur->children);
 		for (;exclPrefixes > 0;exclPrefixes--)
 		    exclPrefixPop(style);
 		goto skip_children;
@@ -3589,7 +3639,7 @@ skip_children:
     if (deleteNode != NULL) {
 #ifdef WITH_XSLT_DEBUG_PARSING
 	xsltGenericDebug(xsltGenericDebugContext,
-	 "xsltPrecomputeStylesheet: removing ignorable blank node\n");
+	 "xsltPreprocessStylesheet: removing ignorable blank node\n");
 #endif
 	xmlUnlinkNode(deleteNode);
 	xmlFreeNode(deleteNode);
@@ -4834,10 +4884,12 @@ xsltParseTemplateContent(xsltStylesheetPtr style, xmlNodePtr templ) {
 	    delete = NULL;
 	}
 	if (IS_XSLT_ELEM(cur)) {
+            xsltStylePreCompute(style, cur);
+
 	    if (IS_XSLT_NAME(cur, "text")) {
 		/*
 		* TODO: Processing of xsl:text should be moved to
-		*   xsltPrecomputeStylesheet(), since otherwise this
+		*   xsltPreprocessStylesheet(), since otherwise this
 		*   will be performed for every multiply included
 		*   stylesheet; i.e. this here is not skipped with
 		*   the use of the style->nopreproc flag.
@@ -5367,6 +5419,7 @@ xsltParseStylesheetTemplate(xsltStylesheetPtr style, xmlNodePtr template) {
 	        xsltTransformError(NULL, style, template,
 	            "xsl:template : error invalid name '%s'\n", prop);
 		if (style != NULL) style->errors++;
+                xmlFree(prop);
 		goto error;
 	    }
 	    ret->name = xmlDictLookup(style->dict, BAD_CAST prop, -1);
@@ -6026,7 +6079,7 @@ xsltParseStylesheetTop(xsltStylesheetPtr style, xmlNodePtr top) {
 	if ((!xmlStrEqual(prop, (const xmlChar *)"1.0")) &&
             (!xmlStrEqual(prop, (const xmlChar *)"1.1"))) {
 	    xsltTransformError(NULL, style, top,
-		"xsl:version: only 1.0 features are supported\n");
+		"xsl:version: only 1.1 features are supported\n");
 	    if (style != NULL) {
                 style->forwards_compatible = 1;
                 style->warnings++;
@@ -6097,31 +6150,31 @@ xsltParseStylesheetTop(xsltStylesheetPtr style, xmlNodePtr top) {
 	    xsltTransformError(NULL, style, cur,
 			"xsltParseStylesheetTop: ignoring misplaced import element\n");
 	    if (style != NULL) style->errors++;
-    } else if (IS_XSLT_NAME(cur, "include")) {
+        } else if (IS_XSLT_NAME(cur, "include")) {
 	    if (xsltParseStylesheetInclude(style, cur) != 0)
 		if (style != NULL) style->errors++;
-    } else if (IS_XSLT_NAME(cur, "strip-space")) {
+        } else if (IS_XSLT_NAME(cur, "strip-space")) {
 	    xsltParseStylesheetStripSpace(style, cur);
-    } else if (IS_XSLT_NAME(cur, "preserve-space")) {
+        } else if (IS_XSLT_NAME(cur, "preserve-space")) {
 	    xsltParseStylesheetPreserveSpace(style, cur);
-    } else if (IS_XSLT_NAME(cur, "output")) {
+        } else if (IS_XSLT_NAME(cur, "output")) {
 	    xsltParseStylesheetOutput(style, cur);
-    } else if (IS_XSLT_NAME(cur, "key")) {
+        } else if (IS_XSLT_NAME(cur, "key")) {
 	    xsltParseStylesheetKey(style, cur);
-    } else if (IS_XSLT_NAME(cur, "decimal-format")) {
+        } else if (IS_XSLT_NAME(cur, "decimal-format")) {
 	    xsltParseStylesheetDecimalFormat(style, cur);
-    } else if (IS_XSLT_NAME(cur, "attribute-set")) {
+        } else if (IS_XSLT_NAME(cur, "attribute-set")) {
 	    xsltParseStylesheetAttributeSet(style, cur);
-    } else if (IS_XSLT_NAME(cur, "variable")) {
+        } else if (IS_XSLT_NAME(cur, "variable")) {
 	    xsltParseGlobalVariable(style, cur);
-    } else if (IS_XSLT_NAME(cur, "param")) {
+        } else if (IS_XSLT_NAME(cur, "param")) {
 	    xsltParseGlobalParam(style, cur);
-    } else if (IS_XSLT_NAME(cur, "template")) {
+        } else if (IS_XSLT_NAME(cur, "template")) {
 #ifdef WITH_XSLT_DEBUG_PARSING
 	    templates++;
 #endif
 	    xsltParseStylesheetTemplate(style, cur);
-    } else if (IS_XSLT_NAME(cur, "namespace-alias")) {
+        } else if (IS_XSLT_NAME(cur, "namespace-alias")) {
 	    xsltNamespaceAlias(style, cur);
 	} else {
             if ((style != NULL) && (style->forwards_compatible == 0)) {
@@ -6130,13 +6183,6 @@ xsltParseStylesheetTop(xsltStylesheetPtr style, xmlNodePtr top) {
 			cur->name);
 	        if (style != NULL) style->errors++;
 	    }
-	    else {
-                /* do Forwards-Compatible Processing */
-	        xsltTransformError(NULL, style, cur,
-			"xsltParseStylesheetTop: ignoring unknown %s element\n",
-			cur->name);
-	        if (style != NULL) style->warnings++;
-            }
 	}
 	cur = cur->next;
     }
@@ -6380,7 +6426,7 @@ xsltParseStylesheetProcess(xsltStylesheetPtr ret, xmlDocPtr doc) {
 	ret->literal_result = 1;
     }
     if (!ret->nopreproc) {
-	xsltPrecomputeStylesheet(ret, cur);
+	xsltPreprocessStylesheet(ret, cur);
     }
     if (ret->literal_result == 0) {
 	xsltParseStylesheetTop(ret, cur);
@@ -6403,10 +6449,11 @@ xsltParseStylesheetProcess(xsltStylesheetPtr ret, xmlDocPtr doc) {
 		"xsltParseStylesheetProcess : document is stylesheet\n");
 #endif
 
-	if (!xmlStrEqual(prop, (const xmlChar *)"1.0")) {
+	if ((!xmlStrEqual(prop, (const xmlChar *)"1.0")) &&
+            (!xmlStrEqual(prop, (const xmlChar *)"1.1"))) {
 	    xsltTransformError(NULL, ret, cur,
-		"xsl:version: only 1.0 features are supported\n");
-	     /* TODO set up compatibility when not XSLT 1.0 */
+		"xsl:version: only 1.1 features are supported\n");
+            ret->forwards_compatible = 1;
 	    ret->warnings++;
 	}
 	xmlFree(prop);

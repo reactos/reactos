@@ -2,25 +2,11 @@
  * PROJECT:     ReactOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Ports
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
-
-static void
-_MarshallUpPortInfo(PBYTE pPortInfo, DWORD Level)
-{
-    PPORT_INFO_2W pPortInfo2 = (PPORT_INFO_2W)pPortInfo;         // PORT_INFO_1W is a subset of PORT_INFO_2W
-
-    // Replace relative offset addresses in the output by absolute pointers.
-    pPortInfo2->pPortName = (PWSTR)((ULONG_PTR)pPortInfo2->pPortName + (ULONG_PTR)pPortInfo2);
-
-    if (Level == 2)
-    {
-        pPortInfo2->pDescription = (PWSTR)((ULONG_PTR)pPortInfo2->pDescription + (ULONG_PTR)pPortInfo2);
-        pPortInfo2->pMonitorName = (PWSTR)((ULONG_PTR)pPortInfo2->pMonitorName + (ULONG_PTR)pPortInfo2);
-    }
-}
+#include <marshalling/ports.h>
 
 BOOL WINAPI
 AddPortA(PSTR pName, HWND hWnd, PSTR pMonitorName)
@@ -98,8 +84,6 @@ BOOL WINAPI
 EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
-    DWORD i;
-    PBYTE p = pPorts;
 
     TRACE("EnumPortsW(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pPorts, cbBuf, pcbNeeded, pcReturned);
 
@@ -118,15 +102,8 @@ EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded
     if (dwErrorCode == ERROR_SUCCESS)
     {
         // Replace relative offset addresses in the output by absolute pointers.
-        for (i = 0; i < *pcReturned; i++)
-        {
-            _MarshallUpPortInfo(p, Level);
-
-            if (Level == 1)
-                p += sizeof(PORT_INFO_1W);
-            else if (Level == 2)
-                p += sizeof(PORT_INFO_2W);
-        }
+        ASSERT(Level >= 1 && Level <= 2);
+        MarshallUpStructuresArray(cbBuf, pPorts, *pcReturned, pPortInfoMarshalling[Level]->pInfo, pPortInfoMarshalling[Level]->cbStructureSize, TRUE);
     }
 
     SetLastError(dwErrorCode);

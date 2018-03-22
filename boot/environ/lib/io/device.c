@@ -608,6 +608,39 @@ BlockIoGetInformation (
     return STATUS_SUCCESS;
 }
 
+BOOLEAN
+BlDeviceIsVirtualPartitionDevice (
+    _In_ PBL_DEVICE_DESCRIPTOR InputDevice,
+    _Outptr_ PBL_DEVICE_DESCRIPTOR* VirtualDevice
+    )
+{
+    BOOLEAN IsVirtual;
+    PBL_LOCAL_DEVICE ParentDisk;
+
+    /* Assume it isn't */
+    IsVirtual = FALSE;
+
+    /* Check if this is a partition device */
+    if ((InputDevice->DeviceType == LegacyPartitionDevice) ||
+        (InputDevice->DeviceType == PartitionDevice))
+    {
+        /* Check if the parent disk is a VHD */
+        ParentDisk = &InputDevice->Partition.Disk;
+        if (ParentDisk->Type == VirtualDiskDevice)
+        {
+            /* This is a virtual partition device -- does the caller want it? */
+            IsVirtual = TRUE;
+            if (VirtualDevice)
+            {
+                *VirtualDevice = (PBL_DEVICE_DESCRIPTOR)(&ParentDisk->VirtualHardDisk + 1);
+            }
+        }
+    }
+
+    /* Return */
+    return IsVirtual;
+}
+
 NTSTATUS
 BlDeviceSetInformation (
     _In_ ULONG DeviceId,
@@ -1802,7 +1835,7 @@ BlockIoEfiHashFunction (
     )
 {
     /* Get rid of the alignment bits to have a more unique number */
-    return ((ULONG)Entry->Value >> 3) % TableSize;
+    return ((ULONG_PTR)Entry->Value >> 3) % TableSize;
 }
 
 NTSTATUS

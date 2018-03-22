@@ -18,11 +18,35 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+#include <stdarg.h>
 
-#include <softpub.h>
-#include <initguid.h>
-#include <msxml2.h>
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "shlwapi.h"
+#include "msi.h"
+#include "msidefs.h"
+#include "msiquery.h"
+#include "msipriv.h"
+#include "msiserver.h"
+#include "wincrypt.h"
+#include "winver.h"
+#include "winuser.h"
+#include "shlobj.h"
+#include "shobjidl.h"
+#include "objidl.h"
+#include "wintrust.h"
+#include "softpub.h"
+
+#include "initguid.h"
+#include "msxml2.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -3723,7 +3747,7 @@ UINT WINAPI MsiCollectUserInfoW(LPCWSTR szProduct)
     if (!package)
         return ERROR_CALL_NOT_IMPLEMENTED;
 
-    rc = ACTION_PerformUIAction(package, szFirstRun, SCRIPT_NONE);
+    rc = ACTION_PerformAction(package, szFirstRun, SCRIPT_NONE);
     msiobj_release( &package->hdr );
 
     MsiCloseHandle(handle);
@@ -3749,7 +3773,7 @@ UINT WINAPI MsiCollectUserInfoA(LPCSTR szProduct)
     if (!package)
         return ERROR_CALL_NOT_IMPLEMENTED;
 
-    rc = ACTION_PerformUIAction(package, szFirstRun, SCRIPT_NONE);
+    rc = ACTION_PerformAction(package, szFirstRun, SCRIPT_NONE);
     msiobj_release( &package->hdr );
 
     MsiCloseHandle(handle);
@@ -3830,7 +3854,7 @@ UINT WINAPI MsiConfigureFeatureW(LPCWSTR szProduct, LPCWSTR szFeature, INSTALLST
 
     MsiSetInternalUI( INSTALLUILEVEL_BASIC, NULL );
 
-    r = ACTION_PerformUIAction( package, szCostInitialize, SCRIPT_NONE );
+    r = ACTION_PerformAction( package, szCostInitialize, SCRIPT_NONE );
     if (r != ERROR_SUCCESS)
         goto end;
 

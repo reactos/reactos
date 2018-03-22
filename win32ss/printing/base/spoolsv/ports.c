@@ -2,42 +2,11 @@
  * PROJECT:     ReactOS Print Spooler Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Ports
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
-
-static void
-_MarshallDownPortInfo(PBYTE* ppPortInfo, DWORD Level)
-{
-    // Replace absolute pointer addresses in the output by relative offsets.
-    if (Level == 1)
-    {
-        PPORT_INFO_1W pPortInfo1 = (PPORT_INFO_1W)(*ppPortInfo);
-
-        pPortInfo1->pName = (PWSTR)((ULONG_PTR)pPortInfo1->pName - (ULONG_PTR)pPortInfo1);
-
-        *ppPortInfo += sizeof(PORT_INFO_1W);
-    }
-    else if (Level == 2)
-    {
-        PPORT_INFO_2W pPortInfo2 = (PPORT_INFO_2W)(*ppPortInfo);
-
-        pPortInfo2->pPortName = (PWSTR)((ULONG_PTR)pPortInfo2->pPortName - (ULONG_PTR)pPortInfo2);
-        pPortInfo2->pDescription = (PWSTR)((ULONG_PTR)pPortInfo2->pDescription - (ULONG_PTR)pPortInfo2);
-        pPortInfo2->pMonitorName = (PWSTR)((ULONG_PTR)pPortInfo2->pMonitorName - (ULONG_PTR)pPortInfo2);
-
-        *ppPortInfo += sizeof(PORT_INFO_2W);
-    }
-    else if (Level == 3)
-    {
-        PPORT_INFO_3W pPortInfo3 = (PPORT_INFO_3W)(*ppPortInfo);
-
-        pPortInfo3->pszStatus = (PWSTR)((ULONG_PTR)pPortInfo3->pszStatus - (ULONG_PTR)pPortInfo3);
-
-        *ppPortInfo += sizeof(PORT_INFO_3W);
-    }
-}
+#include <marshalling/ports.h>
 
 DWORD
 _RpcAddPort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pMonitorName)
@@ -85,11 +54,8 @@ _RpcEnumPorts(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pPort, DWORD cbBuf, DWOR
     if (EnumPortsW(pName, Level, pPortAligned, cbBuf, pcbNeeded, pcReturned))
     {
         // Replace absolute pointer addresses in the output by relative offsets.
-        DWORD i;
-        PBYTE p = pPortAligned;
-
-        for (i = 0; i < *pcReturned; i++)
-            _MarshallDownPortInfo(&p, Level);
+        ASSERT(Level >= 1 && Level <= 2);
+        MarshallDownStructuresArray(pPortAligned, *pcReturned, pPortInfoMarshalling[Level]->pInfo, pPortInfoMarshalling[Level]->cbStructureSize, TRUE);
     }
     else
     {

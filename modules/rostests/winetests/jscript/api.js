@@ -294,6 +294,7 @@ obj = new Date();
 ok(!obj.hasOwnProperty('getTime'), "obj.hasOwnProperty('getTime') is true");
 ok(!Date.hasOwnProperty('getTime'), "Date.hasOwnProperty('getTime') is true");
 ok(Date.prototype.hasOwnProperty('getTime'), "Date.prototype.hasOwnProperty('getTime') is false");
+ok(!("now" in Date), "now found in Date");
 
 obj = new Number();
 ok(!obj.hasOwnProperty('toFixed'), "obj.hasOwnProperty('toFixed') is true");
@@ -907,6 +908,8 @@ ok(tmp === undefined, "tmp = " + tmp);
 arr = [,,,,,];
 tmp = arr.pop();
 ok(arr.length === 5, "arr.length = " + arr.length);
+ok(tmp === undefined, "tmp = " + tmp);
+tmp = [1,2,,,].pop();
 ok(tmp === undefined, "tmp = " + tmp);
 
 function PseudoArray() {

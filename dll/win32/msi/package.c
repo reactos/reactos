@@ -18,9 +18,35 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#define COBJMACROS
 
-#include <wininet.h>
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "shlwapi.h"
+#include "wingdi.h"
+#include "wine/debug.h"
+#include "msi.h"
+#include "msiquery.h"
+#include "objidl.h"
+#include "wincrypt.h"
+#include "winuser.h"
+#include "wininet.h"
+#include "winver.h"
+#include "urlmon.h"
+#include "shlobj.h"
+#include "wine/unicode.h"
+#include "objbase.h"
+#include "msidefs.h"
+#include "sddl.h"
+
+#include "msipriv.h"
+#include "msiserver.h"
+#include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -103,17 +129,18 @@ static void free_assembly( MSIASSEMBLY *assembly )
 void msi_free_action_script( MSIPACKAGE *package, UINT script )
 {
     UINT i;
-    for (i = 0; i < package->script->ActionCount[script]; i++)
-        msi_free( package->script->Actions[script][i] );
+    for (i = 0; i < package->script_actions_count[script]; i++)
+        msi_free( package->script_actions[script][i] );
 
-    msi_free( package->script->Actions[script] );
-    package->script->Actions[script] = NULL;
-    package->script->ActionCount[script] = 0;
+    msi_free( package->script_actions[script] );
+    package->script_actions[script] = NULL;
+    package->script_actions_count[script] = 0;
 }
 
 static void free_package_structures( MSIPACKAGE *package )
 {
     struct list *item, *cursor;
+    int i;
 
     LIST_FOR_EACH_SAFE( item, cursor, &package->features )
     {
@@ -249,20 +276,12 @@ static void free_package_structures( MSIPACKAGE *package )
         msi_free( info );
     }
 
-    if (package->script)
-    {
-        INT i;
-        UINT j;
+    for (i = 0; i < SCRIPT_MAX; i++)
+        msi_free_action_script( package, i );
 
-        for (i = 0; i < SCRIPT_MAX; i++)
-            msi_free_action_script( package, i );
-
-        for (j = 0; j < package->script->UniqueActionsCount; j++)
-            msi_free( package->script->UniqueActions[j] );
-
-        msi_free( package->script->UniqueActions );
-        msi_free( package->script );
-    }
+    for (i = 0; i < package->unique_actions_count; i++)
+        msi_free( package->unique_actions[i] );
+    msi_free( package->unique_actions);
 
     LIST_FOR_EACH_SAFE( item, cursor, &package->binaries )
     {
@@ -509,71 +528,73 @@ done:
 
 static LPWSTR get_fusion_filename(MSIPACKAGE *package)
 {
-    HKEY netsetup;
+    static const WCHAR fusion[] =
+        {'f','u','s','i','o','n','.','d','l','l',0};
+    static const WCHAR subkey[] =
+        {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+         'N','E','T',' ','F','r','a','m','e','w','o','r','k',' ','S','e','t','u','p','\\','N','D','P',0};
+    static const WCHAR subdir[] =
+        {'M','i','c','r','o','s','o','f','t','.','N','E','T','\\','F','r','a','m','e','w','o','r','k','\\',0};
+    static const WCHAR v2050727[] =
+        {'v','2','.','0','.','5','0','7','2','7',0};
+    static const WCHAR v4client[] =
+        {'v','4','\\','C','l','i','e','n','t',0};
+    static const WCHAR installpath[] =
+        {'I','n','s','t','a','l','l','P','a','t','h',0};
+    HKEY netsetup, hkey;
     LONG res;
-    LPWSTR file = NULL;
-    DWORD index = 0, size;
-    WCHAR ver[MAX_PATH];
-    WCHAR name[MAX_PATH];
-    WCHAR windir[MAX_PATH];
+    DWORD size, len, type;
+    WCHAR windir[MAX_PATH], path[MAX_PATH], *filename = NULL;
 
-    static const WCHAR fusion[] = {'f','u','s','i','o','n','.','d','l','l',0};
-    static const WCHAR sub[] = {
-        'S','o','f','t','w','a','r','e','\\',
-        'M','i','c','r','o','s','o','f','t','\\',
-        'N','E','T',' ','F','r','a','m','e','w','o','r','k',' ','S','e','t','u','p','\\',
-        'N','D','P',0
-    };
-    static const WCHAR subdir[] = {
-        'M','i','c','r','o','s','o','f','t','.','N','E','T','\\',
-        'F','r','a','m','e','w','o','r','k','\\',0
-    };
-
-    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, sub, 0, KEY_ENUMERATE_SUB_KEYS, &netsetup);
+    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, subkey, 0, KEY_CREATE_SUB_KEY, &netsetup);
     if (res != ERROR_SUCCESS)
         return NULL;
 
-    GetWindowsDirectoryW(windir, MAX_PATH);
-
-    ver[0] = '\0';
-    size = MAX_PATH;
-    while (RegEnumKeyExW(netsetup, index, name, &size, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+    if (!RegCreateKeyExW(netsetup, v4client, 0, NULL, 0, KEY_QUERY_VALUE, NULL, &hkey, NULL))
     {
-        index++;
-
-        /* verify existence of fusion.dll .Net 3.0 does not install a new one */
-        if (strcmpW( ver, name ) < 0)
+        size = sizeof(path)/sizeof(path[0]);
+        if (!RegQueryValueExW(hkey, installpath, NULL, &type, (BYTE *)path, &size))
         {
-            LPWSTR check;
-            size = lstrlenW(windir) + lstrlenW(subdir) + lstrlenW(name) +lstrlenW(fusion) + 3;
-            check = msi_alloc(size * sizeof(WCHAR));
+            len = strlenW(path) + strlenW(fusion) + 2;
+            if (!(filename = msi_alloc(len * sizeof(WCHAR)))) return NULL;
 
-            if (!check)
+            strcpyW(filename, path);
+            strcatW(filename, szBackSlash);
+            strcatW(filename, fusion);
+            if (GetFileAttributesW(filename) != INVALID_FILE_ATTRIBUTES)
             {
-                msi_free(file);
-                return NULL;
+                TRACE( "found %s\n", debugstr_w(filename) );
+                RegCloseKey(hkey);
+                RegCloseKey(netsetup);
+                return filename;
             }
+        }
+        RegCloseKey(hkey);
+    }
 
-            lstrcpyW(check, windir);
-            lstrcatW(check, szBackSlash);
-            lstrcatW(check, subdir);
-            lstrcatW(check, name);
-            lstrcatW(check, szBackSlash);
-            lstrcatW(check, fusion);
+    if (!RegCreateKeyExW(netsetup, v2050727, 0, NULL, 0, KEY_QUERY_VALUE, NULL, &hkey, NULL))
+    {
+        RegCloseKey(hkey);
+        GetWindowsDirectoryW(windir, MAX_PATH);
+        len = strlenW(windir) + strlenW(subdir) + strlenW(v2050727) + strlenW(fusion) + 3;
+        if (!(filename = msi_alloc(len * sizeof(WCHAR)))) return NULL;
 
-            if(GetFileAttributesW(check) != INVALID_FILE_ATTRIBUTES)
-            {
-                msi_free(file);
-                file = check;
-                lstrcpyW(ver, name);
-            }
-            else
-                msi_free(check);
+        strcpyW(filename, windir);
+        strcatW(filename, szBackSlash);
+        strcatW(filename, subdir);
+        strcatW(filename, v2050727);
+        strcatW(filename, szBackSlash);
+        strcatW(filename, fusion);
+        if (GetFileAttributesW(filename) != INVALID_FILE_ATTRIBUTES)
+        {
+            TRACE( "found %s\n", debugstr_w(filename) );
+            RegCloseKey(netsetup);
+            return filename;
         }
     }
 
     RegCloseKey(netsetup);
-    return file;
+    return filename;
 }
 
 typedef struct tagLANGANDCODEPAGE
@@ -1061,7 +1082,6 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
         msi_adjust_privilege_properties( package );
 
         package->ProductCode = msi_dup_property( package->db, szProductCode );
-        package->script = msi_alloc_zero( sizeof(MSISCRIPT) );
 
         set_installer_properties( package );
 
@@ -1737,6 +1757,8 @@ static INT internal_ui_handler(MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     case INSTALLMESSAGE_INFO:
     case INSTALLMESSAGE_INITIALIZE:
     case INSTALLMESSAGE_TERMINATE:
+    case INSTALLMESSAGE_INSTALLSTART:
+    case INSTALLMESSAGE_INSTALLEND:
         return 0;
     case INSTALLMESSAGE_SHOWDIALOG:
     {
@@ -1858,42 +1880,14 @@ LPWSTR msi_get_error_message(MSIDATABASE *db, int error)
 INT MSI_ProcessMessageVerbatim(MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIRECORD *record)
 {
     LPWSTR message = {0};
-    DWORD len, log_type = 0;
+    DWORD len;
+    DWORD log_type = 1 << (eMessageType >> 24);
     UINT res;
     INT rc = 0;
     char *msg;
 
     TRACE("%x\n", eMessageType);
     if (TRACE_ON(msi)) dump_record(record);
-
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_FATALEXIT)
-        log_type |= INSTALLLOGMODE_FATALEXIT;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_ERROR)
-        log_type |= INSTALLLOGMODE_ERROR;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_WARNING)
-        log_type |= INSTALLLOGMODE_WARNING;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_USER)
-        log_type |= INSTALLLOGMODE_USER;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_INFO)
-        log_type |= INSTALLLOGMODE_INFO;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_RESOLVESOURCE)
-        log_type |= INSTALLLOGMODE_RESOLVESOURCE;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_OUTOFDISKSPACE)
-        log_type |= INSTALLLOGMODE_OUTOFDISKSPACE;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_COMMONDATA)
-        log_type |= INSTALLLOGMODE_COMMONDATA;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_ACTIONSTART)
-        log_type |= INSTALLLOGMODE_ACTIONSTART;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_ACTIONDATA)
-        log_type |= INSTALLLOGMODE_ACTIONDATA;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_PROGRESS)
-        log_type |= INSTALLLOGMODE_PROGRESS;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_INITIALIZE)
-        log_type |= INSTALLLOGMODE_INITIALIZE;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_TERMINATE)
-        log_type |= INSTALLLOGMODE_TERMINATE;
-    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_SHOWDIALOG)
-        log_type |= INSTALLLOGMODE_SHOWDIALOG;
 
     if (!package || !record)
         message = NULL;
@@ -2293,7 +2287,10 @@ static MSIRECORD *msi_get_property_row( MSIDATABASE *db, LPCWSTR name )
 
         row = MSI_CreateRecord(1);
         if (!row)
+        {
+            msi_free(buffer);
             return NULL;
+        }
         MSI_RecordSetStringW(row, 1, buffer);
         msi_free(buffer);
         return row;
@@ -2308,7 +2305,10 @@ static MSIRECORD *msi_get_property_row( MSIDATABASE *db, LPCWSTR name )
 
         row = MSI_CreateRecord(1);
         if (!row)
+        {
+            msi_free(buffer);
             return NULL;
+        }
         MSI_RecordSetStringW(row, 1, buffer);
         msi_free(buffer);
         return row;

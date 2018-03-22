@@ -1454,6 +1454,7 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
+       ERR("Got exception in hooked DrawFrameControl!\n");
    }
    _SEH2_END;
 

@@ -351,7 +351,7 @@ extern void (*bootp_packet_handler)(struct interface_info *,
     struct dhcp_packet *, int, unsigned int, struct iaddr, struct hardware *);
 void discover_interfaces(struct interface_info *);
 void reinitialize_interfaces(void);
-void dispatch(void);
+void dispatch(HANDLE hStopEvent);
 void got_one(struct protocol *);
 void add_timeout(time_t, void (*)(void *), void *);
 void cancel_timeout(void (*)(void *), void *);

@@ -113,3 +113,7 @@ GenericMfg = "(Стандартні приводи DVD/CD-ROM)"
 
 [Strings.0427]
 CDROMClassName = "DVD/CD-ROM įrenginiai"
+
+[Strings.0804]
+GenCdRom.DeviceDesc = "CD-ROM 驱动器"
+GenericMfg = "(通用 DVD/CD-ROM 驱动器)"

@@ -23,27 +23,19 @@
 #ifndef __WINE_D3D8_PRIVATE_H
 #define __WINE_D3D8_PRIVATE_H
 
-#include <config.h>
-
 #include <assert.h>
 #include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
-
-#include <d3d8.h>
-#include <wine/wined3d.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "wine/debug.h"
+#include "wine/heap.h"
+#include "d3d8.h"
+#include "wine/wined3d.h"
 
 #define D3DPRESENTFLAGS_MASK 0x00000fffu
 
@@ -281,7 +273,48 @@ HRESULT d3d8_pixel_shader_init(struct d3d8_pixel_shader *shader, struct d3d8_dev
 
 D3DFORMAT d3dformat_from_wined3dformat(enum wined3d_format_id format) DECLSPEC_HIDDEN;
 enum wined3d_format_id wined3dformat_from_d3dformat(D3DFORMAT format) DECLSPEC_HIDDEN;
+unsigned int wined3dmapflags_from_d3dmapflags(unsigned int flags) DECLSPEC_HIDDEN;
 void load_local_constants(const DWORD *d3d8_elements, struct wined3d_shader *wined3d_vertex_shader) DECLSPEC_HIDDEN;
 size_t parse_token(const DWORD *pToken) DECLSPEC_HIDDEN;
+
+static inline DWORD d3dusage_from_wined3dusage(unsigned int usage)
+{
+    return usage & WINED3DUSAGE_MASK;
+}
+
+static inline D3DPOOL d3dpool_from_wined3daccess(unsigned int access, unsigned int usage)
+{
+    switch (access & (WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_CPU))
+    {
+        default:
+        case WINED3D_RESOURCE_ACCESS_GPU:
+            return D3DPOOL_DEFAULT;
+        case WINED3D_RESOURCE_ACCESS_CPU:
+            if (usage & WINED3DUSAGE_SCRATCH)
+                return D3DPOOL_SCRATCH;
+            return D3DPOOL_SYSTEMMEM;
+        case WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_CPU:
+            return D3DPOOL_MANAGED;
+    }
+}
+
+static inline unsigned int wined3daccess_from_d3dpool(D3DPOOL pool, unsigned int usage)
+{
+    switch (pool)
+    {
+        case D3DPOOL_DEFAULT:
+            if (usage & D3DUSAGE_DYNAMIC)
+                return WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+            return WINED3D_RESOURCE_ACCESS_GPU;
+        case D3DPOOL_MANAGED:
+            return WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_CPU
+                    | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+        case D3DPOOL_SYSTEMMEM:
+        case D3DPOOL_SCRATCH:
+            return WINED3D_RESOURCE_ACCESS_CPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+        default:
+            return 0;
+    }
+}
 
 #endif /* __WINE_D3DX8_PRIVATE_H */

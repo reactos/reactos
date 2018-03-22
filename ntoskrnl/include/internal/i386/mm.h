@@ -20,6 +20,7 @@
 #define HYPER_SPACE_END                                0xC0BFFFFF
 #endif
 #define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
+#define MI_SYSTEM_CACHE_START                   (PVOID)0xC1000000
 #define MI_PAGED_POOL_START                     (PVOID)0xE1000000
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
 #define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000

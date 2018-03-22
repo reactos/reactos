@@ -387,9 +387,9 @@ DWORD getNumRoutes(void)
             memset( &isnmp, 0, sizeof( isnmp ) );
             status = tdiGetMibForIpEntity( tcpFile, &entitySet[i], &isnmp );
             if( !NT_SUCCESS(status) ) {
-                tdiFreeThingSet( entitySet );
-                closeTcpFile( tcpFile );
-                return status;
+                WARN("tdiGetMibForIpEntity failed for i = %d", i);
+                numRoutes = 0;
+                break;
             }
             numRoutes += isnmp.ipsi_numroutes;
         }
@@ -397,6 +397,7 @@ DWORD getNumRoutes(void)
 
     TRACE("numRoutes: %d\n", (int)numRoutes);
 
+    tdiFreeThingSet( entitySet );
     closeTcpFile( tcpFile );
 
     return numRoutes;

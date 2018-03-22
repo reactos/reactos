@@ -40,21 +40,18 @@
  *       Tim Ferguson: http://www.csse.monash.edu.au/~timf/
  * ------------------------------------------------------------------------ */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-//#include "commdlg.h"
-#include <vfw.h>
-//#include "mmsystem.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "commdlg.h"
+#include "vfw.h"
+#include "mmsystem.h"
 #include "iccvid_private.h"
 
-#include <wine/debug.h>
+#include "wine/debug.h"
+#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iccvid);
 
@@ -85,20 +82,6 @@ typedef struct _ICCVID_Info
     cinepak_info *cvinfo;
 } ICCVID_Info;
 
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
-
-static inline int get_stride(int width, int depth)
-{
-    return ((depth * width + 31) >> 3) & ~3;
-}
 
 /* ------------------------------------------------------------------------ */
 static unsigned char *in_buffer, uiclip[1024], *uiclp = NULL;
@@ -186,6 +169,10 @@ int x, y;
     }
 }
 
+static inline int get_stride(int width, int depth)
+{
+    return ((depth * width + 31) >> 3) & ~3;
+}
 
 /* ------------------------------------------------------------------------ */
 static void cvid_v4_32(unsigned char *frm, unsigned char *limit, int stride, BOOL inverted,

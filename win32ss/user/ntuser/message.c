@@ -2090,7 +2090,7 @@ NtUserPostThreadMessage(DWORD idThread,
 
     UserEnterExclusive();
 
-    Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
+    Status = PsLookupThreadByThreadId(UlongToHandle(idThread), &peThread);
 
     if ( Status == STATUS_SUCCESS )
     {

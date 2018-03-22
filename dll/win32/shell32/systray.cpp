@@ -1,5 +1,6 @@
 /*
  * Copyright 2004 Martin Fuchs
+ * Copyright 2018 Hermes Belusca-Maito
  *
  * Pass on icon notification messages to the systray implementation
  * in the currently running shell.
@@ -21,93 +22,103 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-/* copy data structure for tray notifications */
-typedef struct TrayNotifyCDS_Dummy {
-    DWORD    cookie;
-    DWORD    notify_code;
-    DWORD    nicon_data[1];    // placeholder for NOTIFYICONDATA structure
-} TrayNotifyCDS_Dummy;
-
-/* The only difference between Shell_NotifyIconA and Shell_NotifyIconW is the call to SendMessageA/W. */
-static BOOL SHELL_NotifyIcon(DWORD dwMessage, void* pnid, HWND nid_hwnd, DWORD nid_size, BOOL unicode)
-{
-    HWND hwnd;
-    COPYDATASTRUCT data;
-
-    BOOL ret = FALSE;
-    int len = FIELD_OFFSET(TrayNotifyCDS_Dummy, nicon_data) + nid_size;
-
-    TrayNotifyCDS_Dummy* pnotify_data = (TrayNotifyCDS_Dummy*) alloca(len);
-
-    pnotify_data->cookie = 1;
-    pnotify_data->notify_code = dwMessage;
-    memcpy(&pnotify_data->nicon_data, pnid, nid_size);
-
-    data.dwData = 1;
-    data.cbData = len;
-    data.lpData = pnotify_data;
-
-    for(hwnd = 0; (hwnd = FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL)); )
-        if ((unicode ? SendMessageW : SendMessageA)(hwnd, WM_COPYDATA, (WPARAM)nid_hwnd, (LPARAM)&data))
-            ret = TRUE;
-
-    return ret;
-}
-
+WINE_DEFAULT_DEBUG_CHANNEL(shell_notify);
 
 /*************************************************************************
- * Shell_NotifyIcon            [SHELL32.296]
+ * Shell_NotifyIcon             [SHELL32.296]
  * Shell_NotifyIconA            [SHELL32.297]
  */
 BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
 {
     NOTIFYICONDATAW nidW;
-    DWORD cbSize;
+    DWORD cbSize, dwValidFlags;
 
-    /* Validate the cbSize as Windows XP does */
-    if (pnid->cbSize != NOTIFYICONDATAA_V1_SIZE &&
-        pnid->cbSize != NOTIFYICONDATAA_V2_SIZE &&
-        pnid->cbSize != sizeof(NOTIFYICONDATAA))
-    {
-        WARN("Invalid cbSize (%d) - using only Win95 fields (size=%d)\n",
-            pnid->cbSize, NOTIFYICONDATAA_V1_SIZE);
-        cbSize = NOTIFYICONDATAA_V1_SIZE;
-    }
-    else
-        cbSize = pnid->cbSize;
-
+    /* Initialize and capture the basic data fields */
     ZeroMemory(&nidW, sizeof(nidW));
-    nidW.cbSize = sizeof(nidW);
+    nidW.cbSize = sizeof(nidW); // Use a default size for the moment
     nidW.hWnd   = pnid->hWnd;
     nidW.uID    = pnid->uID;
     nidW.uFlags = pnid->uFlags;
     nidW.uCallbackMessage = pnid->uCallbackMessage;
     nidW.hIcon  = pnid->hIcon;
 
-    /* szTip */
-    if (pnid->uFlags & NIF_TIP)
-        MultiByteToWideChar(CP_ACP, 0, pnid->szTip, -1, nidW.szTip, _countof(nidW.szTip));
+    /* Validate the structure size and the flags */
+    cbSize = pnid->cbSize;
+    dwValidFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+    if (cbSize == sizeof(NOTIFYICONDATAA))
+    {
+        nidW.cbSize = sizeof(nidW);
+        dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID /* | NIF_REALTIME | NIF_SHOWTIP */;
+    }
+    else if (cbSize == NOTIFYICONDATAA_V3_SIZE)
+    {
+        nidW.cbSize = NOTIFYICONDATAW_V3_SIZE;
+        dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID;
+    }
+    else if (cbSize == NOTIFYICONDATAA_V2_SIZE)
+    {
+        nidW.cbSize = NOTIFYICONDATAW_V2_SIZE;
+        dwValidFlags |= NIF_STATE | NIF_INFO;
+    }
+    else // if cbSize == NOTIFYICONDATAA_V1_SIZE or something else
+    {
+        if (cbSize != NOTIFYICONDATAA_V1_SIZE)
+        {
+            WARN("Invalid cbSize (%d) - using only Win95 fields (size=%d)\n",
+                cbSize, NOTIFYICONDATAA_V1_SIZE);
+            cbSize = NOTIFYICONDATAA_V1_SIZE;
+        }
+        nidW.cbSize = NOTIFYICONDATAW_V1_SIZE;
+    }
+    nidW.uFlags &= dwValidFlags;
+
+    /* Capture the other data fields */
+
+    if (nidW.uFlags & NIF_TIP)
+    {
+        /*
+         * Depending on the size of the NOTIFYICONDATA structure
+         * we should convert part of, or all the szTip string.
+         */
+        if (cbSize <= NOTIFYICONDATAA_V1_SIZE)
+        {
+#define NIDV1_TIP_SIZE_A  (NOTIFYICONDATAA_V1_SIZE - FIELD_OFFSET(NOTIFYICONDATAA, szTip))/sizeof(CHAR)
+            MultiByteToWideChar(CP_ACP, 0, pnid->szTip, NIDV1_TIP_SIZE_A,
+                                nidW.szTip, _countof(nidW.szTip));
+            /* Truncate the string */
+            nidW.szTip[NIDV1_TIP_SIZE_A - 1] = 0;
+#undef NIDV1_TIP_SIZE_A
+        }
+        else
+        {
+            MultiByteToWideChar(CP_ACP, 0, pnid->szTip, -1,
+                                nidW.szTip, _countof(nidW.szTip));
+        }
+    }
 
     if (cbSize >= NOTIFYICONDATAA_V2_SIZE)
     {
-        nidW.dwState      = pnid->dwState;
-        nidW.dwStateMask  = pnid->dwStateMask;
-
-        /* szInfo, szInfoTitle */
-        if (pnid->uFlags & NIF_INFO)
-        {
-            MultiByteToWideChar(CP_ACP, 0, pnid->szInfo, -1,  nidW.szInfo, _countof(nidW.szInfo));
-            MultiByteToWideChar(CP_ACP, 0, pnid->szInfoTitle, -1, nidW.szInfoTitle, _countof(nidW.szInfoTitle));
-        }
-
-        nidW.uTimeout = pnid->uTimeout;
+        nidW.dwState     = pnid->dwState;
+        nidW.dwStateMask = pnid->dwStateMask;
+        nidW.uTimeout    = pnid->uTimeout;
         nidW.dwInfoFlags = pnid->dwInfoFlags;
+
+        if (nidW.uFlags & NIF_INFO)
+        {
+            MultiByteToWideChar(CP_ACP, 0, pnid->szInfo, -1,
+                                nidW.szInfo, _countof(nidW.szInfo));
+            MultiByteToWideChar(CP_ACP, 0, pnid->szInfoTitle, -1,
+                                nidW.szInfoTitle, _countof(nidW.szInfoTitle));
+        }
     }
+
+    if ((cbSize >= NOTIFYICONDATAA_V3_SIZE) && (nidW.uFlags & NIF_GUID))
+        nidW.guidItem = pnid->guidItem;
 
     if (cbSize >= sizeof(NOTIFYICONDATAA))
         nidW.hBalloonIcon = pnid->hBalloonIcon;
+
+    /* Call the unicode function */
     return Shell_NotifyIconW(dwMessage, &nidW);
 }
 
@@ -116,19 +127,81 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
  */
 BOOL WINAPI Shell_NotifyIconW(DWORD dwMessage, PNOTIFYICONDATAW pnid)
 {
-    DWORD cbSize;
+    BOOL ret = FALSE;
+    HWND hShellTrayWnd;
+    DWORD cbSize, dwValidFlags;
+    TRAYNOTIFYDATAW tnid;
+    COPYDATASTRUCT data;
 
-    /* Validate the cbSize so that WM_COPYDATA doesn't crash the application */
-    if (pnid->cbSize != NOTIFYICONDATAW_V1_SIZE &&
-        pnid->cbSize != NOTIFYICONDATAW_V2_SIZE &&
-        pnid->cbSize != sizeof(NOTIFYICONDATAW))
+    /* Find a handle to the shell tray window */
+    hShellTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    if (!hShellTrayWnd)
+        return FALSE; // None found, bail out
+
+    /* Validate the structure size and the flags */
+    cbSize = pnid->cbSize;
+    dwValidFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+    if (cbSize == sizeof(NOTIFYICONDATAW))
     {
-        WARN("Invalid cbSize (%d) - using only Win95 fields (size=%d)\n",
-            pnid->cbSize, NOTIFYICONDATAW_V1_SIZE);
-        cbSize = NOTIFYICONDATAA_V1_SIZE;
+        dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID /* | NIF_REALTIME | NIF_SHOWTIP */;
     }
-    else
-        cbSize = pnid->cbSize;
+    else if (cbSize == NOTIFYICONDATAW_V3_SIZE)
+    {
+        dwValidFlags |= NIF_STATE | NIF_INFO | NIF_GUID;
+    }
+    else if (cbSize == NOTIFYICONDATAW_V2_SIZE)
+    {
+        dwValidFlags |= NIF_STATE | NIF_INFO;
+    }
+    else // if cbSize == NOTIFYICONDATAW_V1_SIZE or something else
+    {
+        if (cbSize != NOTIFYICONDATAW_V1_SIZE)
+        {
+            WARN("Invalid cbSize (%d) - using only Win95 fields (size=%d)\n",
+                cbSize, NOTIFYICONDATAW_V1_SIZE);
+            cbSize = NOTIFYICONDATAW_V1_SIZE;
+        }
+    }
 
-    return SHELL_NotifyIcon(dwMessage, pnid, pnid->hWnd, cbSize, TRUE);
+    /* Build the data structure */
+    ZeroMemory(&tnid, sizeof(tnid));
+    tnid.dwSignature = NI_NOTIFY_SIG;
+    tnid.dwMessage   = dwMessage;
+
+    /* Copy only the needed data, everything else is zeroed out */
+    CopyMemory(&tnid.nid, pnid, cbSize);
+    /* Adjust the size (the NOTIFYICONDATA structure is the full-fledged one) and the flags */
+    tnid.nid.cbSize = sizeof(tnid.nid);
+    tnid.nid.uFlags &= dwValidFlags;
+
+    /* Be sure the szTip member (that could be cut-off) is correctly NULL-terminated */
+    if (tnid.nid.uFlags & NIF_TIP)
+    {
+        if (cbSize <= NOTIFYICONDATAW_V1_SIZE)
+        {
+#define NIDV1_TIP_SIZE_W  (NOTIFYICONDATAW_V1_SIZE - FIELD_OFFSET(NOTIFYICONDATAW, szTip))/sizeof(WCHAR)
+            tnid.nid.szTip[NIDV1_TIP_SIZE_W - 1] = 0;
+#undef NIDV1_TIP_SIZE_W
+        }
+        else
+        {
+            tnid.nid.szTip[_countof(tnid.nid.szTip) - 1] = 0;
+        }
+    }
+
+    /* Be sure the info strings are correctly NULL-terminated */
+    if (tnid.nid.uFlags & NIF_INFO)
+    {
+        tnid.nid.szInfo[_countof(tnid.nid.szInfo) - 1] = 0;
+        tnid.nid.szInfoTitle[_countof(tnid.nid.szInfoTitle) - 1] = 0;
+    }
+
+    /* Send the data */
+    data.dwData = 1;
+    data.cbData = sizeof(tnid);
+    data.lpData = &tnid;
+    if (SendMessageW(hShellTrayWnd, WM_COPYDATA, (WPARAM)pnid->hWnd, (LPARAM)&data))
+        ret = TRUE;
+
+    return ret;
 }

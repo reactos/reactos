@@ -21,15 +21,17 @@
 #ifndef __AMSTREAM_PRIVATE_INCLUDED__
 #define __AMSTREAM_PRIVATE_INCLUDED__
 
-#define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
-#define COBJMACROS
+#include <stdarg.h>
 
-#include <dshow.h>
-#include <amstream.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(amstream);
+#include "windef.h"
+#include "winbase.h"
+#include "wtypes.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "dshow.h"
+#include "mmstream.h"
+#include "austream.h"
+#include "amstream.h"
 
 HRESULT AM_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
 HRESULT AMAudioData_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;

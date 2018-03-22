@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.2"
+#define YYBISON_VERSION "3.0"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -91,7 +91,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+
+#include "config.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "query.h"
+#include "wine/list.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -120,11 +132,11 @@ static struct expr * EXPR_wildcard( void *info );
 
 #line 134 "sql.tab.c" /* yacc.c:339  */
 
-# ifndef YY_NULLPTR
+# ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
+#   define YY_NULL nullptr
 #  else
-#   define YY_NULLPTR 0
+#   define YY_NULL 0
 #  endif
 # endif
 
@@ -138,8 +150,8 @@ static struct expr * EXPR_wildcard( void *info );
 
 /* In a future release of Bison, this section will be replaced
    by #include "sql.tab.h".  */
-#ifndef YY_SQL_SQL_TAB_H_INCLUDED
-# define YY_SQL_SQL_TAB_H_INCLUDED
+#ifndef YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED
+# define YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -242,7 +254,7 @@ union YYSTYPE
 
 int sql_parse (SQL_input *info);
 
-#endif /* !YY_SQL_SQL_TAB_H_INCLUDED  */
+#endif /* !YY_SQL_E_REACTOSSYNC_GCC_DLL_WIN32_MSI_SQL_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
@@ -303,30 +315,11 @@ typedef short int yytype_int16;
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE
-# if (defined __GNUC__                                               \
-      && (2 < __GNUC__ || (__GNUC__ == 2 && 96 <= __GNUC_MINOR__)))  \
-     || defined __SUNPRO_C && 0x5110 <= __SUNPRO_C
-#  define YY_ATTRIBUTE(Spec) __attribute__(Spec)
-# else
-#  define YY_ATTRIBUTE(Spec) /* empty */
-# endif
-#endif
-
-#ifndef YY_ATTRIBUTE_PURE
-# define YY_ATTRIBUTE_PURE   YY_ATTRIBUTE ((__pure__))
-#endif
-
-#ifndef YY_ATTRIBUTE_UNUSED
-# define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
-#endif
-
-#if !defined _Noreturn \
-     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
-# if defined _MSC_VER && 1200 <= _MSC_VER
-#  define _Noreturn __declspec (noreturn)
-# else
-#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
+#ifndef __attribute__
+/* This feature is available in gcc versions 2.5 and later.  */
+# if (! defined __GNUC__ || __GNUC__ < 2 \
+      || (__GNUC__ == 2 && __GNUC_MINOR__ < 5))
+#  define __attribute__(Spec) /* empty */
 # endif
 #endif
 
@@ -583,7 +576,7 @@ static const char *const yytname[] =
   "data_count", "oneselect", "selectfrom", "selcollist", "collist", "from",
   "unorderdfrom", "tablelist", "expr", "val", "constlist",
   "update_assign_list", "column_assignment", "const_val", "column_val",
-  "column", "selcolumn", "table", "id", "string", "number", YY_NULLPTR
+  "column", "selcolumn", "table", "id", "string", "number", YY_NULL
 };
 #endif
 
@@ -1050,11 +1043,11 @@ static int
 yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yytype_int16 *yyssp, int yytoken)
 {
-  YYSIZE_T yysize0 = yytnamerr (YY_NULLPTR, yytname[yytoken]);
+  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
   YYSIZE_T yysize = yysize0;
   enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
   /* Internationalized format string. */
-  const char *yyformat = YY_NULLPTR;
+  const char *yyformat = YY_NULL;
   /* Arguments of yyformat. */
   char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
   /* Number of reported tokens (one for the "unexpected", one per
@@ -1111,7 +1104,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                   }
                 yyarg[yycount++] = yytname[yyx];
                 {
-                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
+                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
                   if (! (yysize <= yysize1
                          && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
                     return 2;
@@ -1453,7 +1446,7 @@ yyreduce:
         SQL_input* sql = (SQL_input*) info;
         *sql->view = (yyvsp[0].query);
     }
-#line 1469 "sql.tab.c" /* yacc.c:1646  */
+#line 1450 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
@@ -1468,7 +1461,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  insert );
         }
-#line 1484 "sql.tab.c" /* yacc.c:1646  */
+#line 1465 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
@@ -1483,7 +1476,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  insert );
         }
-#line 1499 "sql.tab.c" /* yacc.c:1646  */
+#line 1480 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
@@ -1504,7 +1497,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  create );
         }
-#line 1520 "sql.tab.c" /* yacc.c:1646  */
+#line 1501 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
@@ -1521,7 +1514,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  create );
         }
-#line 1537 "sql.tab.c" /* yacc.c:1646  */
+#line 1518 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
@@ -1536,7 +1529,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  update );
         }
-#line 1552 "sql.tab.c" /* yacc.c:1646  */
+#line 1533 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
@@ -1551,7 +1544,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  update );
         }
-#line 1567 "sql.tab.c" /* yacc.c:1646  */
+#line 1548 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
@@ -1566,7 +1559,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), delete );
         }
-#line 1582 "sql.tab.c" /* yacc.c:1646  */
+#line 1563 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
@@ -1581,7 +1574,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), alter );
         }
-#line 1597 "sql.tab.c" /* yacc.c:1646  */
+#line 1578 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
@@ -1596,7 +1589,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), alter );
         }
-#line 1612 "sql.tab.c" /* yacc.c:1646  */
+#line 1593 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
@@ -1611,7 +1604,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), alter );
         }
-#line 1627 "sql.tab.c" /* yacc.c:1646  */
+#line 1608 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
@@ -1619,7 +1612,7 @@ yyreduce:
     {
             (yyval.integer) = 1;
         }
-#line 1635 "sql.tab.c" /* yacc.c:1646  */
+#line 1616 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
@@ -1627,7 +1620,7 @@ yyreduce:
     {
             (yyval.integer) = -1;
         }
-#line 1643 "sql.tab.c" /* yacc.c:1646  */
+#line 1624 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
@@ -1643,7 +1636,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), drop );
         }
-#line 1659 "sql.tab.c" /* yacc.c:1646  */
+#line 1640 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
@@ -1654,7 +1647,7 @@ yyreduce:
             else
                 (yyval.column_list) = NULL;
         }
-#line 1670 "sql.tab.c" /* yacc.c:1646  */
+#line 1651 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
@@ -1668,7 +1661,7 @@ yyreduce:
             ci->next = (yyvsp[0].column_list);
             (yyval.column_list) = (yyvsp[-2].column_list);
         }
-#line 1684 "sql.tab.c" /* yacc.c:1646  */
+#line 1665 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
@@ -1676,7 +1669,7 @@ yyreduce:
     {
             (yyval.column_list) = (yyvsp[0].column_list);
         }
-#line 1692 "sql.tab.c" /* yacc.c:1646  */
+#line 1673 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
@@ -1686,7 +1679,7 @@ yyreduce:
             (yyval.column_list)->type = ((yyvsp[0].column_type) | MSITYPE_VALID);
             (yyval.column_list)->temporary = (yyvsp[0].column_type) & MSITYPE_TEMPORARY ? TRUE : FALSE;
         }
-#line 1702 "sql.tab.c" /* yacc.c:1646  */
+#line 1683 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
@@ -1694,7 +1687,7 @@ yyreduce:
     {
             (yyval.column_type) = (yyvsp[0].column_type);
         }
-#line 1710 "sql.tab.c" /* yacc.c:1646  */
+#line 1691 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
@@ -1702,7 +1695,7 @@ yyreduce:
     {
             (yyval.column_type) = (yyvsp[-1].column_type) | MSITYPE_LOCALIZABLE;
         }
-#line 1718 "sql.tab.c" /* yacc.c:1646  */
+#line 1699 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
@@ -1710,7 +1703,7 @@ yyreduce:
     {
             (yyval.column_type) = (yyvsp[-1].column_type) | MSITYPE_TEMPORARY;
         }
-#line 1726 "sql.tab.c" /* yacc.c:1646  */
+#line 1707 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
@@ -1718,7 +1711,7 @@ yyreduce:
     {
             (yyval.column_type) |= MSITYPE_NULLABLE;
         }
-#line 1734 "sql.tab.c" /* yacc.c:1646  */
+#line 1715 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
@@ -1726,15 +1719,15 @@ yyreduce:
     {
             (yyval.column_type) = (yyvsp[-2].column_type);
         }
-#line 1742 "sql.tab.c" /* yacc.c:1646  */
+#line 1723 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
 #line 357 "sql.y" /* yacc.c:1646  */
     {
-            (yyval.column_type) = MSITYPE_STRING | 1;
+            (yyval.column_type) = MSITYPE_STRING | 0x400;
         }
-#line 1750 "sql.tab.c" /* yacc.c:1646  */
+#line 1731 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
@@ -1742,7 +1735,7 @@ yyreduce:
     {
             (yyval.column_type) = MSITYPE_STRING | 0x400 | (yyvsp[-1].column_type);
         }
-#line 1758 "sql.tab.c" /* yacc.c:1646  */
+#line 1739 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
@@ -1750,7 +1743,7 @@ yyreduce:
     {
             (yyval.column_type) = MSITYPE_STRING | 0x400;
         }
-#line 1766 "sql.tab.c" /* yacc.c:1646  */
+#line 1747 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
@@ -1758,7 +1751,7 @@ yyreduce:
     {
             (yyval.column_type) = 2 | 0x400;
         }
-#line 1774 "sql.tab.c" /* yacc.c:1646  */
+#line 1755 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
@@ -1766,7 +1759,7 @@ yyreduce:
     {
             (yyval.column_type) = 2 | 0x400;
         }
-#line 1782 "sql.tab.c" /* yacc.c:1646  */
+#line 1763 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
@@ -1774,7 +1767,7 @@ yyreduce:
     {
             (yyval.column_type) = 4;
         }
-#line 1790 "sql.tab.c" /* yacc.c:1646  */
+#line 1771 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
@@ -1782,7 +1775,7 @@ yyreduce:
     {
             (yyval.column_type) = MSITYPE_STRING | MSITYPE_VALID;
         }
-#line 1798 "sql.tab.c" /* yacc.c:1646  */
+#line 1779 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
@@ -1792,7 +1785,7 @@ yyreduce:
                 YYABORT;
             (yyval.column_type) = (yyvsp[0].integer);
         }
-#line 1808 "sql.tab.c" /* yacc.c:1646  */
+#line 1789 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
@@ -1800,7 +1793,7 @@ yyreduce:
     {
             (yyval.query) = (yyvsp[0].query);
         }
-#line 1816 "sql.tab.c" /* yacc.c:1646  */
+#line 1797 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
@@ -1816,7 +1809,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), distinct );
         }
-#line 1832 "sql.tab.c" /* yacc.c:1646  */
+#line 1813 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
@@ -1837,7 +1830,7 @@ yyreduce:
             else
                 (yyval.query) = (yyvsp[0].query);
         }
-#line 1853 "sql.tab.c" /* yacc.c:1646  */
+#line 1834 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
@@ -1845,7 +1838,7 @@ yyreduce:
     {
             (yyvsp[-2].column_list)->next = (yyvsp[0].column_list);
         }
-#line 1861 "sql.tab.c" /* yacc.c:1646  */
+#line 1842 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
@@ -1853,7 +1846,7 @@ yyreduce:
     {
             (yyval.column_list) = NULL;
         }
-#line 1869 "sql.tab.c" /* yacc.c:1646  */
+#line 1850 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
@@ -1861,7 +1854,7 @@ yyreduce:
     {
             (yyvsp[-2].column_list)->next = (yyvsp[0].column_list);
         }
-#line 1877 "sql.tab.c" /* yacc.c:1646  */
+#line 1858 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
@@ -1869,7 +1862,7 @@ yyreduce:
     {
             (yyval.column_list) = NULL;
         }
-#line 1885 "sql.tab.c" /* yacc.c:1646  */
+#line 1866 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
@@ -1885,7 +1878,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), table );
         }
-#line 1901 "sql.tab.c" /* yacc.c:1646  */
+#line 1882 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
@@ -1902,7 +1895,7 @@ yyreduce:
 
             (yyval.query) = (yyvsp[-3].query);
         }
-#line 1918 "sql.tab.c" /* yacc.c:1646  */
+#line 1899 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
@@ -1918,7 +1911,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), where );
         }
-#line 1934 "sql.tab.c" /* yacc.c:1646  */
+#line 1915 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
@@ -1934,7 +1927,7 @@ yyreduce:
 
             PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), where );
         }
-#line 1950 "sql.tab.c" /* yacc.c:1646  */
+#line 1931 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
@@ -1942,7 +1935,7 @@ yyreduce:
     {
             (yyval.string) = (yyvsp[0].string);
         }
-#line 1958 "sql.tab.c" /* yacc.c:1646  */
+#line 1939 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
@@ -1952,7 +1945,7 @@ yyreduce:
             if (!(yyval.string))
                 YYABORT;
         }
-#line 1968 "sql.tab.c" /* yacc.c:1646  */
+#line 1949 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
@@ -1962,7 +1955,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 1978 "sql.tab.c" /* yacc.c:1646  */
+#line 1959 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
@@ -1972,7 +1965,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 1988 "sql.tab.c" /* yacc.c:1646  */
+#line 1969 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
@@ -1982,7 +1975,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 1998 "sql.tab.c" /* yacc.c:1646  */
+#line 1979 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
@@ -1992,7 +1985,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2008 "sql.tab.c" /* yacc.c:1646  */
+#line 1989 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
@@ -2002,7 +1995,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2018 "sql.tab.c" /* yacc.c:1646  */
+#line 1999 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
@@ -2012,7 +2005,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2028 "sql.tab.c" /* yacc.c:1646  */
+#line 2009 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
@@ -2022,7 +2015,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2038 "sql.tab.c" /* yacc.c:1646  */
+#line 2019 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
@@ -2032,7 +2025,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2048 "sql.tab.c" /* yacc.c:1646  */
+#line 2029 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
@@ -2042,7 +2035,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2058 "sql.tab.c" /* yacc.c:1646  */
+#line 2039 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
@@ -2052,7 +2045,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2068 "sql.tab.c" /* yacc.c:1646  */
+#line 2049 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
@@ -2062,7 +2055,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2078 "sql.tab.c" /* yacc.c:1646  */
+#line 2059 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
@@ -2073,7 +2066,7 @@ yyreduce:
                 YYABORT;
             (yyval.column_list)->val = (yyvsp[0].expr);
         }
-#line 2089 "sql.tab.c" /* yacc.c:1646  */
+#line 2070 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
@@ -2085,7 +2078,7 @@ yyreduce:
             (yyval.column_list)->val = (yyvsp[-2].expr);
             (yyval.column_list)->next = (yyvsp[0].column_list);
         }
-#line 2101 "sql.tab.c" /* yacc.c:1646  */
+#line 2082 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
@@ -2094,7 +2087,7 @@ yyreduce:
             (yyval.column_list) = (yyvsp[-2].column_list);
             (yyval.column_list)->next = (yyvsp[0].column_list);
         }
-#line 2110 "sql.tab.c" /* yacc.c:1646  */
+#line 2091 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
@@ -2103,7 +2096,7 @@ yyreduce:
             (yyval.column_list) = (yyvsp[-2].column_list);
             (yyval.column_list)->val = (yyvsp[0].expr);
         }
-#line 2119 "sql.tab.c" /* yacc.c:1646  */
+#line 2100 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
@@ -2113,7 +2106,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2129 "sql.tab.c" /* yacc.c:1646  */
+#line 2110 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
@@ -2123,7 +2116,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2139 "sql.tab.c" /* yacc.c:1646  */
+#line 2120 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
@@ -2133,7 +2126,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2149 "sql.tab.c" /* yacc.c:1646  */
+#line 2130 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
@@ -2143,7 +2136,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2159 "sql.tab.c" /* yacc.c:1646  */
+#line 2140 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
@@ -2153,7 +2146,7 @@ yyreduce:
             if( !(yyval.expr) )
                 YYABORT;
         }
-#line 2169 "sql.tab.c" /* yacc.c:1646  */
+#line 2150 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
@@ -2163,7 +2156,7 @@ yyreduce:
             if( !(yyval.column_list) )
                 YYABORT;
         }
-#line 2179 "sql.tab.c" /* yacc.c:1646  */
+#line 2160 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
@@ -2173,7 +2166,7 @@ yyreduce:
             if( !(yyval.column_list) )
                 YYABORT;
         }
-#line 2189 "sql.tab.c" /* yacc.c:1646  */
+#line 2170 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
@@ -2183,7 +2176,7 @@ yyreduce:
             if( !(yyval.column_list) )
                 YYABORT;
         }
-#line 2199 "sql.tab.c" /* yacc.c:1646  */
+#line 2180 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
@@ -2193,7 +2186,7 @@ yyreduce:
             if( !(yyval.column_list) )
                 YYABORT;
         }
-#line 2209 "sql.tab.c" /* yacc.c:1646  */
+#line 2190 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
@@ -2203,7 +2196,7 @@ yyreduce:
             if( !(yyval.column_list) )
                 YYABORT;
         }
-#line 2219 "sql.tab.c" /* yacc.c:1646  */
+#line 2200 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
@@ -2211,7 +2204,7 @@ yyreduce:
     {
             (yyval.string) = (yyvsp[0].string);
         }
-#line 2227 "sql.tab.c" /* yacc.c:1646  */
+#line 2208 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
@@ -2220,7 +2213,7 @@ yyreduce:
             if ( SQL_getstring( info, &(yyvsp[0].str), &(yyval.string) ) != ERROR_SUCCESS || !(yyval.string) )
                 YYABORT;
         }
-#line 2236 "sql.tab.c" /* yacc.c:1646  */
+#line 2217 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
@@ -2229,7 +2222,7 @@ yyreduce:
             if ( SQL_getstring( info, &(yyvsp[0].str), &(yyval.string) ) != ERROR_SUCCESS || !(yyval.string) )
                 YYABORT;
         }
-#line 2245 "sql.tab.c" /* yacc.c:1646  */
+#line 2226 "sql.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
@@ -2237,11 +2230,11 @@ yyreduce:
     {
             (yyval.integer) = SQL_getint( info );
         }
-#line 2253 "sql.tab.c" /* yacc.c:1646  */
+#line 2234 "sql.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2257 "sql.tab.c" /* yacc.c:1646  */
+#line 2238 "sql.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

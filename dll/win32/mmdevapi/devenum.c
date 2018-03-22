@@ -16,15 +16,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define NONAMELESSUNION
+#define COBJMACROS
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "wine/debug.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
+
+#include "initguid.h"
+#include "ole2.h"
+#include "mmdeviceapi.h"
+#include "dshow.h"
+#include "dsound.h"
+#include "audioclient.h"
+#include "endpointvolume.h"
+#include "audiopolicy.h"
+
 #include "mmdevapi.h"
+#include "devpkey.h"
 
-#include <wine/list.h>
-
-#include <oleauto.h>
-#include <initguid.h>
-#define _WINDOWS_H
-#include <dshow.h>
-#include <devpkey.h>
+WINE_DEFAULT_DEBUG_CHANNEL(mmdevapi);
 
 static const WCHAR software_mmdevapi[] =
     { 'S','o','f','t','w','a','r','e','\\',
@@ -595,7 +613,7 @@ static HRESULT WINAPI MMDevice_Activate(IMMDevice *iface, REFIID riid, DWORD cls
         if (SUCCEEDED(hr))
         {
             IPersistPropertyBag *ppb;
-            hr = IUnknown_QueryInterface((IUnknown*)*ppv, &IID_IPersistPropertyBag, (void*)&ppb);
+            hr = IUnknown_QueryInterface((IUnknown*)*ppv, &IID_IPersistPropertyBag, (void **)&ppb);
             if (SUCCEEDED(hr))
             {
                 /* ::Load cannot assume the interface stays alive after the function returns,

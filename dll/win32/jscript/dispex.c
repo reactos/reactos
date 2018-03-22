@@ -16,7 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+
 #include "jscript.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 #define FDEX_VERSION_MASK 0xf0000000
 #define GOLDEN_RATIO 0x9E3779B9U
@@ -83,8 +90,19 @@ static const builtin_prop_t *find_builtin_prop(jsdisp_t *This, const WCHAR *name
         i = (min+max)/2;
 
         r = strcmpW(name, This->builtin_info->props[i].name);
-        if(!r)
+        if(!r) {
+            /* Skip prop if it's available only in higher compatibility mode. */
+            unsigned version = (This->builtin_info->props[i].flags & PROPF_VERSION_MASK)
+                >> PROPF_VERSION_SHIFT;
+            if(version && version > This->ctx->version)
+                return NULL;
+
+            /* Skip prop if it's available only in HTML mode and we're not running in HTML mode. */
+            if((This->builtin_info->props[i].flags & PROPF_HTML) && !This->ctx->html_mode)
+                return NULL;
+
             return This->builtin_info->props + i;
+        }
 
         if(r < 0)
             max = i-1;
@@ -1096,6 +1114,8 @@ HRESULT disp_call(script_ctx_t *ctx, IDispatch *disp, DISPID id, WORD flags, uns
             return E_FAIL;
         }
 
+        if(ctx != jsdisp->ctx)
+            flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
         hres = jsdisp_call(jsdisp, id, flags, argc, argv, ret);
         jsdisp_release(jsdisp);
         return hres;
@@ -1184,6 +1204,8 @@ HRESULT disp_call_value(script_ctx_t *ctx, IDispatch *disp, IDispatch *jsthis, W
 
     jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
+        if(ctx != jsdisp->ctx)
+            flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
         hres = jsdisp_call_value(jsdisp, jsthis, flags, argc, argv, r);
         jsdisp_release(jsdisp);
         return hres;

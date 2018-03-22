@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_XSLPATTERN_XSLPATTERN_TAB_H_INCLUDED
-# define YY_XSLPATTERN_XSLPATTERN_TAB_H_INCLUDED
+#ifndef YY_XSLPATTERN_E_REACTOSSYNC_GCC_DLL_WIN32_MSXML3_XSLPATTERN_TAB_H_INCLUDED
+# define YY_XSLPATTERN_E_REACTOSSYNC_GCC_DLL_WIN32_MSXML3_XSLPATTERN_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -85,4 +85,4 @@ typedef int YYSTYPE;
 
 int xslpattern_parse (parser_param* p, void* scanner);
 
-#endif /* !YY_XSLPATTERN_XSLPATTERN_TAB_H_INCLUDED  */
+#endif /* !YY_XSLPATTERN_E_REACTOSSYNC_GCC_DLL_WIN32_MSXML3_XSLPATTERN_TAB_H_INCLUDED  */

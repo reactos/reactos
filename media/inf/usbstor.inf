@@ -104,3 +104,7 @@ GenericBulkOnlyTransport.DeviceDesc = "USB-накопичувач"
 [Strings.0427]
 GenericMfg = "(Standartiniai USB įrenginiai)"
 GenericBulkOnlyTransport.DeviceDesc = "USB atminties įrenginys"
+
+[Strings.0804]
+GenericMfg = "(通用 USB 设备)"
+GenericBulkOnlyTransport.DeviceDesc = "USB 存储设备"

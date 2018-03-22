@@ -23,7 +23,19 @@
    sometimes, especially when 2 instances of the
    dialog are loaded at the same time */
 
+#include <stdarg.h>
+#include <stdio.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "commdlg.h"
+#include "dlgs.h"
+#include "wine/debug.h"
+#include "cderr.h"
 #include "cdlg.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 static INT_PTR CALLBACK ColorDlgProc( HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam );
 

@@ -41,8 +41,8 @@ static LRESULT CALLBACK ToolTipProc(
 	switch (uMsg) {
 	case WM_CREATE:
 		//	Store Font handle
-		SetWindowLong(hWnd, GWL_USERDATA,
-			(LONG)((LPCREATESTRUCT)lParam)->lpCreateParams);
+		SetWindowLongPtr(hWnd, GWLP_USERDATA,
+			(LONG_PTR)((LPCREATESTRUCT)lParam)->lpCreateParams);
 		return 0;
 
 	case WM_PAINT:
@@ -56,7 +56,7 @@ static LRESULT CALLBACK ToolTipProc(
 				RECT rc;
 
 
-				SelectObject(hDC, (HFONT)GetWindowLong(hWnd, GWL_USERDATA));
+				SelectObject(hDC, (HFONT)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
 				SetTextColor(hDC, GetSysColor(COLOR_INFOTEXT));
 				SetBkMode(hDC, TRANSPARENT);
@@ -121,7 +121,7 @@ static LRESULT CALLBACK ToolTipProc(
 
 	case WM_DESTROY:
 		//	delete font
-		DeleteObject((HFONT)GetWindowLong(hWnd, GWL_USERDATA));
+		DeleteObject((HFONT)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 		return 0;
 	}
 

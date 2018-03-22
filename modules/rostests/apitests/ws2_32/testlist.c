@@ -12,6 +12,7 @@ extern void func_getservbyport(void);
 extern void func_ioctlsocket(void);
 extern void func_nonblocking(void);
 extern void func_nostartup(void);
+extern void func_open_osfhandle(void);
 extern void func_recv(void);
 extern void func_send(void);
 extern void func_WSAAsync(void);
@@ -30,6 +31,7 @@ const struct test winetest_testlist[] =
     { "ioctlsocket", func_ioctlsocket },
     { "nonblocking", func_nonblocking },
     { "nostartup", func_nostartup },
+    { "open_osfhandle", func_open_osfhandle },
     { "recv", func_recv },
     { "send", func_send },
     { "WSAAsync", func_WSAAsync },

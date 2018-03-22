@@ -1171,6 +1171,10 @@ ok(tmp["0"] === undefined, "tmp[0] is not undefined");
 ok(tmp["3"] === 2, "tmp[3] !== 2");
 ok(tmp["6"] === true, "tmp[6] !== true");
 ok(tmp[2] === 1, "tmp[2] !== 1");
+ok(!("0" in tmp), "0 found in array");
+ok(!("1" in tmp), "1 found in array");
+ok("2" in tmp, "2 not found in array");
+ok(!("2" in [1,,,,]), "2 found in [1,,,,]");
 
 ok([1,].length === 2, "[1,].length !== 2");
 ok([,,].length === 3, "[,,].length !== 3");

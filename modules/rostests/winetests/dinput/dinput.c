@@ -16,9 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define DIRECTINPUT_VERSION 0x0700
 
+#define COBJMACROS
+#include <initguid.h>
+#include <windows.h>
+#include <dinput.h>
 #include <dinputd.h>
+
+#include "wine/test.h"
 
 HINSTANCE hInstance;
 

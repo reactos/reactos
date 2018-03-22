@@ -346,7 +346,7 @@ FsRtlAddToTunnelCache(IN PTUNNEL Cache,
                       IN ULONG DataLength,
                       IN PVOID Data)
 {
-    PTUNNEL_NODE_ENTRY NodeEntry;
+    PTUNNEL_NODE_ENTRY NodeEntry = NULL;
     PRTL_SPLAY_LINKS CurEntry, LastEntry;
     ULONG Length;
     LONG Result = 0;
@@ -384,23 +384,24 @@ FsRtlAddToTunnelCache(IN PTUNNEL Cache,
         Length += LongName->Length;
     }
 
-    if (Length > DEFAULT_ENTRY_SIZE)
-    {
-        /* bigger than default entry */
-        NodeEntry = ExAllocatePool(NonPagedPool, Length);
-        AllocatedFromPool = TRUE;
-    }
-    else
+    if (Length <= DEFAULT_ENTRY_SIZE)
     {
         /* get standard entry */
         NodeEntry = ExAllocateFromPagedLookasideList(&TunnelLookasideList);
     }
 
-    /* check for success */
-    if (!NodeEntry)
+    if (NodeEntry == NULL)
     {
-         /* out of memory */
-         return;
+        /* bigger than default entry or allocation failed */
+        NodeEntry = ExAllocatePool(PagedPool | POOL_COLD_ALLOCATION, Length);
+        /* check for success */
+        if (NodeEntry == NULL)
+        {
+             /* out of memory */
+             return;
+        }
+
+        AllocatedFromPool = TRUE;
     }
 
     /* acquire lock */

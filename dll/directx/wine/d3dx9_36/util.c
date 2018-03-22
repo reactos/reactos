@@ -17,7 +17,12 @@
  *
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include "d3dx9_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 static void la_from_rgba(const struct vec4 *rgba, struct vec4 *la)
 {
@@ -216,7 +221,7 @@ const struct pixel_format_desc *get_format_info(D3DFORMAT format)
 
 const struct pixel_format_desc *get_format_info_idx(int idx)
 {
-    if(idx >= sizeof(formats) / sizeof(formats[0]))
+    if(idx >= ARRAY_SIZE(formats))
         return NULL;
     if(formats[idx].format == D3DFMT_UNKNOWN)
         return NULL;

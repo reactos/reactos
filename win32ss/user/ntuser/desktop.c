@@ -1427,7 +1427,7 @@ IntPaintDesktop(HDC hDC)
         // We expect at most 4 strings (3 for version, 1 for optional NtSystemRoot)
         static POLYTEXTW VerStrs[4] = {{0},{0},{0},{0}};
         INT i = 0;
-        INT len;
+        SIZE_T len;
 
         HFONT hFont1 = NULL, hFont2 = NULL, hOldFont = NULL;
         COLORREF crText, color_old;
@@ -1503,7 +1503,7 @@ IntPaintDesktop(HDC hDC)
                 PWCHAR pstr = wszzVersion;
                 for (i = 0; (i < ARRAYSIZE(VerStrs)) && *pstr; ++i)
                 {
-                    VerStrs[i].n = wcslen(pstr);
+                    VerStrs[i].n = lstrlenW(pstr);
                     VerStrs[i].lpstr = pstr;
                     pstr += (VerStrs[i].n + 1);
                 }

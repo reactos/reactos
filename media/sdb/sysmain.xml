@@ -173,6 +173,24 @@
                 <EXCLUDE MODULE="oleaut32.dll" />
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
+            <SHIM NAME="Win8RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
+            <SHIM NAME="Win81RTMVersionLie">
+                <INCLUDE MODULE="shell32.dll" />
+                <INCLUDE MODULE="msi.dll" />
+                <EXCLUDE MODULE="kernel32.dll" />
+                <EXCLUDE MODULE="msvcrt.dll" />
+                <EXCLUDE MODULE="ole32.dll" />
+                <EXCLUDE MODULE="oleaut32.dll" />
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
 
             <!-- Display mode shims -->
 
@@ -195,6 +213,13 @@
             <SHIM NAME="HideShimEnv">
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
+
+            <FLAG NAME="GetShortPathNameNT4">
+                <FLAG_MASK_KERNEL>1</FLAG_MASK_KERNEL>
+            </FLAG>
+            <FLAG NAME="GetDiskFreeSpace2GB">
+                <FLAG_MASK_KERNEL>8</FLAG_MASK_KERNEL>
+            </FLAG>
 
         </LIBRARY>
 
@@ -284,6 +309,16 @@
             <SHIM_REF NAME="Win7RTMVersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
+        <LAYER NAME="WIN8RTM">
+            <SHIM_REF NAME="Win8RTMVersionLie" />
+            <!-- TODO: Add more fixes! -->
+        </LAYER>
+        <LAYER NAME="WIN81RTM">
+            <SHIM_REF NAME="Win81RTMVersionLie" />
+            <!-- TODO: Add more fixes! -->
+        </LAYER>
+
+
 
         <!-- Display mode layers -->
 
@@ -304,6 +339,14 @@
         <LAYER NAME="VMHorizonSetup">
             <!-- ProductId: {7051C96D-AA61-4D83-AF37-646E82D616ED} -->
             <SHIM_REF NAME="VMHorizonSetup" />
+        </LAYER>
+
+        <!-- 'Flag' layers -->
+        <LAYER NAME="GetShortPathNameNT4">
+            <FLAG_REF NAME="GetShortPathNameNT4" />
+        </LAYER>
+        <LAYER NAME="GetDiskFreeSpace2GB">
+            <FLAG_REF NAME="GetDiskFreeSpace2GB" />
         </LAYER>
 
     </DATABASE>

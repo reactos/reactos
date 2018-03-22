@@ -21,32 +21,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#include <config.h>
+#include "config.h"
 
 #include <stdarg.h>
-//#include <stdio.h>
+#include <stdio.h>
 
 #define COBJMACROS
 
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-#include <ole2.h>
-//#include "objbase.h"
-#include <rpcproxy.h>
-#include <mlang.h>
-#include <mimeole.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "objbase.h"
+#include "rpcproxy.h"
+#include "mlang.h"
+#include "mimeole.h"
 
-#include <wine/unicode.h>
-#include <wine/debug.h>
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "wine/list.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mlang);
 
-//#include "initguid.h"
+#include "initguid.h"
 
 static HRESULT MultiLanguage_create(IUnknown *pUnkOuter, LPVOID *ppObj);
 static HRESULT MLangConvertCharset_create(IUnknown *outer, void **obj);
@@ -121,13 +119,33 @@ static const MIME_CP_INFO baltic_cp[] =
 };
 static const MIME_CP_INFO chinese_simplified_cp[] =
 {
+    { "Chinese Simplified (Auto-Select)",
+      50936, MIMECONTF_IMPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+             MIMECONTF_MIME_LATEST,
+      "_autodetect_chs", "_autodetect_chs", "_autodetect_chs" },
     { "Chinese Simplified (GB2312)",
       936, MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL |
-           MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
+           MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_VALID |
            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID_NLS |
            MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
       "gb2312", "gb2312", "gb2312" },
-      { "Chinese Simplified (GBK)",
+    { "Chinese Simplified (GB2312-80)",
+      20936, MIMECONTF_IMPORT | MIMECONTF_EXPORT | MIMECONTF_VALID |
+             MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+      "x-cp20936", "x-cp20936", "x-cp20936" },
+    { "Chinese Simplified (HZ)",
+      52936, MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_IMPORT |
+             MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT |
+             MIMECONTF_VALID | MIMECONTF_VALID_NLS | MIMECONTF_MIME_IE4 |
+             MIMECONTF_MIME_LATEST,
+      "hz-gb-2312", "hz-gb-2312", "hz-gb-2312" },
+    { "Chinese Simplified (GB18030)",
+      54936, MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL |
+             MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS | MIMECONTF_SAVABLE_BROWSER |
+             MIMECONTF_EXPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+             MIMECONTF_MIME_LATEST,
+      "GB18030", "GB18030", "GB18030" },
+    { "Chinese Simplified (GBK)",
       936, MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL |
            MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
            MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID_NLS |
@@ -136,12 +154,20 @@ static const MIME_CP_INFO chinese_simplified_cp[] =
 };
 static const MIME_CP_INFO chinese_traditional_cp[] =
 {
+    { "Chinese Traditional (Auto-Select)",
+      50950, MIMECONTF_IMPORT | MIMECONTF_VALID | MIMECONTF_VALID_NLS |
+             MIMECONTF_MIME_LATEST,
+      "_autodetect_cht", "_autodetect_cht", "_autodetect_cht" },
     { "Chinese Traditional (Big5)",
       950, MIMECONTF_MAILNEWS | MIMECONTF_BROWSER | MIMECONTF_MINIMAL |
            MIMECONTF_IMPORT | MIMECONTF_SAVABLE_MAILNEWS |
-           MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT |
+           MIMECONTF_SAVABLE_BROWSER | MIMECONTF_EXPORT | MIMECONTF_VALID |
            MIMECONTF_VALID_NLS | MIMECONTF_MIME_IE4 | MIMECONTF_MIME_LATEST,
-      "big5", "big5", "big5" }
+      "big5", "big5", "big5" },
+    { "Chinese Traditional (CNS)",
+      20000, MIMECONTF_IMPORT | MIMECONTF_EXPORT | MIMECONTF_VALID |
+             MIMECONTF_VALID_NLS | MIMECONTF_MIME_LATEST,
+      "x-Chinese-CNS", "x-Chinese-CNS", "x-Chinese-CNS" }
 };
 static const MIME_CP_INFO central_european_cp[] =
 {
@@ -469,36 +495,54 @@ static const struct mlang_data
 } mlang_data[] =
 {
     { "Arabic",1256,sizeof(arabic_cp)/sizeof(arabic_cp[0]),arabic_cp,
-      "Courier","Arial", sidArabic }, /* FIXME */
+      "Simplified Arabic Fixed","Simplified Arabic", sidArabic },
     { "Baltic",1257,sizeof(baltic_cp)/sizeof(baltic_cp[0]),baltic_cp,
-      "Courier","Arial", sidAsciiLatin }, /* FIXME */
+      "Courier New","Arial", sidAsciiLatin },
     { "Chinese Simplified",936,sizeof(chinese_simplified_cp)/sizeof(chinese_simplified_cp[0]),chinese_simplified_cp,
-      "Courier","Arial", sidHan }, /* FIXME */
+      "Simsun","Simsun", sidHan },
     { "Chinese Traditional",950,sizeof(chinese_traditional_cp)/sizeof(chinese_traditional_cp[0]),chinese_traditional_cp,
-      "Courier","Arial", sidBopomofo }, /* FIXME */
+      "MingLiu","New MingLiu", sidBopomofo },
     { "Central European",1250,sizeof(central_european_cp)/sizeof(central_european_cp[0]),central_european_cp,
-      "Courier","Arial", sidAsciiLatin }, /* FIXME */
+      "Courier New","Arial", sidAsciiLatin },
     { "Cyrillic",1251,sizeof(cyrillic_cp)/sizeof(cyrillic_cp[0]),cyrillic_cp,
-      "Courier","Arial", sidCyrillic }, /* FIXME */
+      "Courier New","Arial", sidCyrillic },
     { "Greek",1253,sizeof(greek_cp)/sizeof(greek_cp[0]),greek_cp,
-      "Courier","Arial", sidGreek }, /* FIXME */
+      "Courier New","Arial", sidGreek },
     { "Hebrew",1255,sizeof(hebrew_cp)/sizeof(hebrew_cp[0]),hebrew_cp,
-      "Courier","Arial", sidHebrew }, /* FIXME */
+      "Miriam Fixed","David", sidHebrew },
     { "Japanese",932,sizeof(japanese_cp)/sizeof(japanese_cp[0]),japanese_cp,
       "MS Gothic","MS PGothic", sidKana },
     { "Korean",949,sizeof(korean_cp)/sizeof(korean_cp[0]),korean_cp,
-      "Courier","Arial", sidHangul }, /* FIXME */
+      "GulimChe","Gulim", sidHangul },
     { "Thai",874,sizeof(thai_cp)/sizeof(thai_cp[0]),thai_cp,
-      "Courier","Arial", sidThai }, /* FIXME */
+      "Tahoma","Tahoma", sidThai },
     { "Turkish",1254,sizeof(turkish_cp)/sizeof(turkish_cp[0]),turkish_cp,
-      "Courier","Arial", sidAsciiLatin }, /* FIXME */
+      "Courier New","Arial", sidAsciiLatin },
     { "Vietnamese",1258,sizeof(vietnamese_cp)/sizeof(vietnamese_cp[0]),vietnamese_cp,
-      "Courier","Arial", sidAsciiLatin }, /* FIXME */
+      "Courier New","Arial", sidAsciiLatin },
     { "Western European",1252,sizeof(western_cp)/sizeof(western_cp[0]),western_cp,
-      "Courier","Arial", sidAsciiLatin }, /* FIXME */
+      "Courier New","Arial", sidAsciiLatin },
     { "Unicode",CP_UNICODE,sizeof(unicode_cp)/sizeof(unicode_cp[0]),unicode_cp,
-      "Courier","Arial" } /* FIXME */
+      "Courier New","Arial" }
 };
+
+struct font_list
+{
+    struct list list_entry;
+    HFONT base_font;
+    HFONT font;
+    UINT charset;
+};
+
+static struct list font_cache = LIST_INIT(font_cache);
+static CRITICAL_SECTION font_cache_critical;
+static CRITICAL_SECTION_DEBUG font_cache_critical_debug =
+{
+    0, 0, &font_cache_critical,
+    { &font_cache_critical_debug.ProcessLocksList, &font_cache_critical_debug.ProcessLocksList },
+    0, 0, { (DWORD_PTR)(__FILE__ ": font_cache_critical") }
+};
+static CRITICAL_SECTION font_cache_critical = { &font_cache_critical_debug, -1, 0, 0, 0, 0 };
 
 static void fill_cp_info(const struct mlang_data *ml_data, UINT index, MIMECPINFO *mime_cp_info);
 
@@ -1287,6 +1331,119 @@ HRESULT WINAPI Rfc1766ToLcidA(LCID *lcid, LPCSTR rfc1766A)
     return Rfc1766ToLcidW(lcid, rfc1766W);
 }
 
+static HRESULT map_font(HDC hdc, DWORD codepages, HFONT src_font, HFONT *dst_font)
+{
+    struct font_list *font_list_entry;
+    CHARSETINFO charset_info;
+    HFONT new_font, old_font;
+    LOGFONTW font_attr;
+    DWORD mask, Csb[2];
+    BOOL found_cached;
+    UINT charset;
+    BOOL ret;
+    UINT i;
+
+    if (hdc == NULL || src_font == NULL) return E_FAIL;
+
+    for (i = 0; i < 32; i++)
+    {
+        mask = (DWORD)(1 << i);
+        if (codepages & mask)
+        {
+            Csb[0] = mask;
+            Csb[1] = 0x0;
+            ret = TranslateCharsetInfo(Csb, &charset_info, TCI_SRCFONTSIG);
+            if (!ret) continue;
+
+            /* use cached font if possible */
+            found_cached = FALSE;
+            EnterCriticalSection(&font_cache_critical);
+            LIST_FOR_EACH_ENTRY(font_list_entry, &font_cache, struct font_list, list_entry)
+            {
+                if (font_list_entry->charset == charset_info.ciCharset &&
+                    font_list_entry->base_font == src_font)
+                {
+                    if (dst_font != NULL)
+                        *dst_font = font_list_entry->font;
+                    found_cached = TRUE;
+                }
+            }
+            LeaveCriticalSection(&font_cache_critical);
+            if (found_cached) return S_OK;
+
+            GetObjectW(src_font, sizeof(font_attr), &font_attr);
+            font_attr.lfCharSet = (BYTE)charset_info.ciCharset;
+            font_attr.lfWidth = 0;
+            font_attr.lfFaceName[0] = 0;
+            new_font = CreateFontIndirectW(&font_attr);
+            if (new_font == NULL) continue;
+
+            old_font = SelectObject(hdc, new_font);
+            charset = GetTextCharset(hdc);
+            SelectObject(hdc, old_font);
+            if (charset == charset_info.ciCharset)
+            {
+                font_list_entry = HeapAlloc(GetProcessHeap(), 0, sizeof(*font_list_entry));
+                if (font_list_entry == NULL) return E_OUTOFMEMORY;
+
+                font_list_entry->base_font = src_font;
+                font_list_entry->font = new_font;
+                font_list_entry->charset = charset;
+
+                EnterCriticalSection(&font_cache_critical);
+                list_add_tail(&font_cache, &font_list_entry->list_entry);
+                LeaveCriticalSection(&font_cache_critical);
+
+                if (dst_font != NULL)
+                    *dst_font = new_font;
+                return S_OK;
+            }
+        }
+    }
+
+    return E_FAIL;
+}
+
+static HRESULT release_font(HFONT font)
+{
+    struct font_list *font_list_entry;
+    HRESULT hr;
+
+    hr = E_FAIL;
+    EnterCriticalSection(&font_cache_critical);
+    LIST_FOR_EACH_ENTRY(font_list_entry, &font_cache, struct font_list, list_entry)
+    {
+        if (font_list_entry->font == font)
+        {
+            list_remove(&font_list_entry->list_entry);
+            DeleteObject(font);
+            HeapFree(GetProcessHeap(), 0, font_list_entry);
+            hr = S_OK;
+            break;
+        }
+    }
+    LeaveCriticalSection(&font_cache_critical);
+
+    return hr;
+}
+
+static HRESULT clear_font_cache(void)
+{
+    struct font_list *font_list_entry;
+    struct font_list *font_list_entry2;
+
+    EnterCriticalSection(&font_cache_critical);
+    LIST_FOR_EACH_ENTRY_SAFE(font_list_entry, font_list_entry2, &font_cache, struct font_list, list_entry)
+    {
+        list_remove(&font_list_entry->list_entry);
+        DeleteObject(font_list_entry->font);
+        HeapFree(GetProcessHeap(), 0, font_list_entry);
+    }
+    LeaveCriticalSection(&font_cache_critical);
+
+    return S_OK;
+}
+
 /******************************************************************************
  * MLANG ClassFactory
  */
@@ -1898,23 +2055,26 @@ static HRESULT WINAPI fnIMLangFontLink_MapFont(
         HFONT hSrcFont,
         HFONT* phDestFont)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->%p %08x %p %p\n",iface, hDC, dwCodePages, hSrcFont, phDestFont);
+
+    return map_font(hDC, dwCodePages, hSrcFont, phDestFont);
 }
 
 static HRESULT WINAPI fnIMLangFontLink_ReleaseFont(
         IMLangFontLink* iface,
         HFONT hFont)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->%p\n",iface, hFont);
+
+    return release_font(hFont);
 }
 
 static HRESULT WINAPI fnIMLangFontLink_ResetFontMapping(
         IMLangFontLink* iface)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("(%p)\n",iface);
+
+    return clear_font_cache();
 }
 
 
@@ -2474,7 +2634,7 @@ static ULONG WINAPI fnIMultiLanguage3_Release( IMultiLanguage3* iface )
     TRACE("(%p)->(%d)\n", This, ref);
     if (ref == 0)
     {
-	HeapFree(GetProcessHeap(), 0, This);
+        HeapFree(GetProcessHeap(), 0, This);
         UnlockModule();
     }
 
@@ -3326,21 +3486,38 @@ static HRESULT WINAPI fnIMLangFontLink2_GetFontCodePages(IMLangFontLink2 *iface,
 static HRESULT WINAPI fnIMLangFontLink2_ReleaseFont(IMLangFontLink2* This,
         HFONT hFont)
 {
-    FIXME("(%p)->%p\n",This, hFont);
-    return E_NOTIMPL;
+    TRACE("(%p)->%p\n",This, hFont);
+
+    return release_font(hFont);
 }
 
 static HRESULT WINAPI fnIMLangFontLink2_ResetFontMapping(IMLangFontLink2* This)
 {
-    FIXME("(%p)->\n",This);
-    return E_NOTIMPL;
+    TRACE("(%p)\n",This);
+
+    return clear_font_cache();
 }
 
 static HRESULT WINAPI fnIMLangFontLink2_MapFont(IMLangFontLink2* This,
         HDC hDC, DWORD dwCodePages, WCHAR chSrc, HFONT *pFont)
 {
-    FIXME("(%p)->%p %i %s %p\n",This, hDC, dwCodePages, debugstr_wn(&chSrc,1), pFont);
-    return E_NOTIMPL;
+    HFONT old_font;
+
+    TRACE("(%p)->%p %08x %04x %p\n",This, hDC, dwCodePages, chSrc, pFont);
+
+    if (!hDC) return E_FAIL;
+
+    if (dwCodePages != 0)
+    {
+        old_font = GetCurrentObject(hDC, OBJ_FONT);
+        return map_font(hDC, dwCodePages, old_font, pFont);
+    }
+    else
+    {
+        if (pFont == NULL) return E_INVALIDARG;
+        FIXME("the situation where dwCodepages is set to zero is not implemented\n");
+        return E_FAIL;
+    }
 }
 
 static HRESULT WINAPI fnIMLangFontLink2_GetFontUnicodeRanges(IMLangFontLink2* This,

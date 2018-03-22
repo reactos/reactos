@@ -10,6 +10,7 @@ list(APPEND SOURCE
     ioctlsocket.c
     nonblocking.c
     nostartup.c
+    open_osfhandle.c
     recv.c
     send.c
     WSAAsync.c

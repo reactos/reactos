@@ -9,7 +9,7 @@
 @ cdecl StorPortDebugPrint()
 @ stdcall StorPortDeviceBusy(ptr long long long long)
 @ stdcall StorPortDeviceReady(ptr long long long)
-# StorPortExtendedFunction
+@ cdecl StorPortExtendedFunction()
 @ stdcall StorPortFreeDeviceBase(ptr ptr)
 @ stdcall StorPortFreeRegistryBuffer(ptr ptr)
 @ stdcall StorPortGetBusData(ptr long long long ptr long)

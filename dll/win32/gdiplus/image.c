@@ -17,11 +17,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "gdiplus_private.h"
-
+#include <stdarg.h>
 #include <assert.h>
-#include <ole2.h>
-#include <olectl.h>
+
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "wingdi.h"
+
+#define COBJMACROS
+#include "objbase.h"
+#include "olectl.h"
+#include "ole2.h"
+
+#include "initguid.h"
+#include "wincodec.h"
+#include "gdiplus.h"
+#include "gdiplus_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 HRESULT WINAPI WICCreateImagingFactory_Proxy(UINT, IWICImagingFactory**);
 
@@ -2074,24 +2091,7 @@ static GpStatus free_image_data(GpImage *image)
         heap_free(((GpBitmap*)image)->prop_item);
     }
     else if (image->type == ImageTypeMetafile)
-    {
-        GpMetafile *metafile = (GpMetafile*)image;
-        heap_free(metafile->comment_data);
-        DeleteEnhMetaFile(CloseEnhMetaFile(metafile->record_dc));
-        if (!metafile->preserve_hemf)
-            DeleteEnhMetaFile(metafile->hemf);
-        if (metafile->record_graphics)
-        {
-            WARN("metafile closed while recording\n");
-            /* not sure what to do here; for now just prevent the graphics from functioning or using this object */
-            metafile->record_graphics->image = NULL;
-            metafile->record_graphics->busy = TRUE;
-        }
-        if (metafile->record_stream)
-        {
-            IStream_Release(metafile->record_stream);
-        }
-    }
+        METAFILE_Free((GpMetafile *)image);
     else
     {
         WARN("invalid image: %p\n", image);
@@ -4319,6 +4319,11 @@ GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream *stream, GpImage **image)
     LARGE_INTEGER seek;
     HRESULT hr;
     const struct image_codec *codec=NULL;
+
+    TRACE("%p %p\n", stream, image);
+
+    if (!stream || !image)
+        return InvalidParameter;
 
     /* choose an appropriate image decoder */
     stat = get_decoder_info(stream, &codec);

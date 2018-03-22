@@ -1,18 +1,29 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Utilities Library
- * FILE:            sdk/lib/conutils/pager.h
- * PURPOSE:         Console/terminal paging functionality.
- * PROGRAMMERS:     - Hermes Belusca-Maito (for the library);
- *                  - All programmers who wrote the different console applications
- *                    from which I took those functions and improved them.
+ * PROJECT:     ReactOS Console Utilities Library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Console/terminal paging functionality.
+ * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
+ *              Copyright 2017-2018 Hermes Belusca-Maito
  */
+
+/**
+ * @file    pager.h
+ * @ingroup ConUtils
+ *
+ * @brief   Console/terminal paging functionality.
+ **/
 
 #ifndef __PAGER_H__
 #define __PAGER_H__
 
+#pragma once
+
 #ifndef _UNICODE
 #error The ConUtils library at the moment only supports compilation with _UNICODE defined!
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 
@@ -37,6 +48,7 @@ do { \
     (pPager)->Screen = (pScreen);   \
     (pPager)->LineCount = 0;        \
 } while (0)
+
 
                                       // Pager,         Done,     Total
 typedef BOOL (__stdcall *PAGE_PROMPT)(IN PCON_PAGER, IN DWORD, IN DWORD);
@@ -71,4 +83,10 @@ ConResPaging(
     IN BOOL StartPaging,
     IN UINT uID);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif  /* __PAGER_H__ */
+
+/* EOF */

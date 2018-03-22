@@ -19,7 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
 #include "dbghelp_private.h"
+#include "winternl.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -160,41 +168,40 @@ static void* arm64_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* siz
 #ifdef __aarch64__
     switch (regno)
     {
-    case CV_ARM64_PSTATE: *size = sizeof(ctx->Cpsr); return &ctx->Cpsr;
-    case CV_ARM64_X0 +  0: *size = sizeof(ctx->X0);  return &ctx->X0;
-    case CV_ARM64_X0 +  1: *size = sizeof(ctx->X1);  return &ctx->X1;
-    case CV_ARM64_X0 +  2: *size = sizeof(ctx->X2);  return &ctx->X2;
-    case CV_ARM64_X0 +  3: *size = sizeof(ctx->X3);  return &ctx->X3;
-    case CV_ARM64_X0 +  4: *size = sizeof(ctx->X4);  return &ctx->X4;
-    case CV_ARM64_X0 +  5: *size = sizeof(ctx->X5);  return &ctx->X5;
-    case CV_ARM64_X0 +  6: *size = sizeof(ctx->X6);  return &ctx->X6;
-    case CV_ARM64_X0 +  7: *size = sizeof(ctx->X7);  return &ctx->X7;
-    case CV_ARM64_X0 +  8: *size = sizeof(ctx->X8);  return &ctx->X8;
-    case CV_ARM64_X0 +  9: *size = sizeof(ctx->X9);  return &ctx->X9;
-    case CV_ARM64_X0 + 10: *size = sizeof(ctx->X10); return &ctx->X10;
-    case CV_ARM64_X0 + 11: *size = sizeof(ctx->X11); return &ctx->X11;
-    case CV_ARM64_X0 + 12: *size = sizeof(ctx->X12); return &ctx->X12;
-    case CV_ARM64_X0 + 13: *size = sizeof(ctx->X13); return &ctx->X13;
-    case CV_ARM64_X0 + 14: *size = sizeof(ctx->X14); return &ctx->X14;
-    case CV_ARM64_X0 + 15: *size = sizeof(ctx->X15); return &ctx->X15;
-    case CV_ARM64_X0 + 16: *size = sizeof(ctx->X16); return &ctx->X16;
-    case CV_ARM64_X0 + 17: *size = sizeof(ctx->X17); return &ctx->X17;
-    case CV_ARM64_X0 + 18: *size = sizeof(ctx->X18); return &ctx->X18;
-    case CV_ARM64_X0 + 19: *size = sizeof(ctx->X19); return &ctx->X19;
-    case CV_ARM64_X0 + 20: *size = sizeof(ctx->X20); return &ctx->X20;
-    case CV_ARM64_X0 + 21: *size = sizeof(ctx->X21); return &ctx->X21;
-    case CV_ARM64_X0 + 22: *size = sizeof(ctx->X22); return &ctx->X22;
-    case CV_ARM64_X0 + 23: *size = sizeof(ctx->X23); return &ctx->X23;
-    case CV_ARM64_X0 + 24: *size = sizeof(ctx->X24); return &ctx->X24;
-    case CV_ARM64_X0 + 25: *size = sizeof(ctx->X25); return &ctx->X25;
-    case CV_ARM64_X0 + 26: *size = sizeof(ctx->X26); return &ctx->X26;
-    case CV_ARM64_X0 + 27: *size = sizeof(ctx->X27); return &ctx->X27;
-    case CV_ARM64_X0 + 28: *size = sizeof(ctx->X28); return &ctx->X28;
-
-    case CV_ARM64_FP:     *size = sizeof(ctx->Fp);     return &ctx->Fp;
-    case CV_ARM64_LR:     *size = sizeof(ctx->Lr);     return &ctx->Lr;
-    case CV_ARM64_SP:     *size = sizeof(ctx->Sp);     return &ctx->Sp;
-    case CV_ARM64_PC:     *size = sizeof(ctx->Pc);     return &ctx->Pc;
+    case CV_ARM64_X0 +  0:
+    case CV_ARM64_X0 +  1:
+    case CV_ARM64_X0 +  2:
+    case CV_ARM64_X0 +  3:
+    case CV_ARM64_X0 +  4:
+    case CV_ARM64_X0 +  5:
+    case CV_ARM64_X0 +  6:
+    case CV_ARM64_X0 +  7:
+    case CV_ARM64_X0 +  8:
+    case CV_ARM64_X0 +  9:
+    case CV_ARM64_X0 + 10:
+    case CV_ARM64_X0 + 11:
+    case CV_ARM64_X0 + 12:
+    case CV_ARM64_X0 + 13:
+    case CV_ARM64_X0 + 14:
+    case CV_ARM64_X0 + 15:
+    case CV_ARM64_X0 + 16:
+    case CV_ARM64_X0 + 17:
+    case CV_ARM64_X0 + 18:
+    case CV_ARM64_X0 + 19:
+    case CV_ARM64_X0 + 20:
+    case CV_ARM64_X0 + 21:
+    case CV_ARM64_X0 + 22:
+    case CV_ARM64_X0 + 23:
+    case CV_ARM64_X0 + 24:
+    case CV_ARM64_X0 + 25:
+    case CV_ARM64_X0 + 26:
+    case CV_ARM64_X0 + 27:
+    case CV_ARM64_X0 + 28: *size = sizeof(ctx->u.X[0]); return &ctx->u.X[regno - CV_ARM64_X0];
+    case CV_ARM64_PSTATE:  *size = sizeof(ctx->Cpsr);   return &ctx->Cpsr;
+    case CV_ARM64_FP:      *size = sizeof(ctx->Fp);     return &ctx->Fp;
+    case CV_ARM64_LR:      *size = sizeof(ctx->Lr);     return &ctx->Lr;
+    case CV_ARM64_SP:      *size = sizeof(ctx->Sp);     return &ctx->Sp;
+    case CV_ARM64_PC:      *size = sizeof(ctx->Pc);     return &ctx->Pc;
     }
 #endif
     FIXME("Unknown register %x\n", regno);

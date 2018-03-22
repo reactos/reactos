@@ -18,14 +18,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+#include <stdarg.h>
 
-#include <stdio.h>
-#include <propvarutil.h>
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "stdio.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "shlwapi.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "msi.h"
+#include "msiquery.h"
+#include "msidefs.h"
+#include "msipriv.h"
+#include "objidl.h"
+#include "propvarutil.h"
+#include "msiserver.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-#include <pshpack1.h>
+#include "pshpack1.h"
 
 typedef struct { 
     WORD wByteOrder;
@@ -63,7 +79,7 @@ typedef struct {
     } u;
 } PROPERTY_DATA;
  
-#include <poppack.h>
+#include "poppack.h"
 
 static HRESULT (WINAPI *pPropVariantChangeType)
     (PROPVARIANT *ppropvarDest, REFPROPVARIANT propvarSrc,

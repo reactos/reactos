@@ -29,13 +29,19 @@
 
 #define COBJMACROS
 
+#ifdef STANDALONE
+#include "initguid.h"
+#endif
+
 #include "unknwn.h"
 #include "uuids.h"
 #include "mmdeviceapi.h"
 #include "mmsystem.h"
 #include "audioclient.h"
 #include "audiopolicy.h"
-#include "initguid.h"
+#ifdef __REACTOS__
+#include <initguid.h>
+#endif
 #include "endpointvolume.h"
 
 static const unsigned int win_formats[][4] = {
@@ -320,11 +326,7 @@ static void test_audioclient(void)
     hr = IAudioClient_Initialize(ac, AUDCLNT_SHAREMODE_SHARED, 0, 5000000, 0, pwfx, NULL);
     ok(hr == S_OK, "Valid Initialize returns %08x\n", hr);
     if (hr != S_OK)
-    {
-        IAudioClient_Release(ac);
-        CoTaskMemFree(pwfx);
-        return;
-    }
+        goto cleanup;
 
     hr = IAudioClient_GetStreamLatency(ac, NULL);
     ok(hr == E_POINTER, "GetStreamLatency(NULL) call returns %08x\n", hr);
@@ -369,8 +371,8 @@ static void test_audioclient(void)
     hr = IAudioClient_Start(ac);
     ok(hr == AUDCLNT_E_NOT_STOPPED, "Start twice returns %08x\n", hr);
 
+cleanup:
     IAudioClient_Release(ac);
-
     CloseHandle(handle);
     CoTaskMemFree(pwfx);
 }

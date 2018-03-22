@@ -20,9 +20,9 @@
 
 #define COBJMACROS
 
-#include <initguid.h>
-#include <wine/dxdiag.h>
-#include <wine/test.h>
+#include "initguid.h"
+#include "wine/dxdiag.h"
+#include "wine/test.h"
 
 static void test_Initialize(void)
 {

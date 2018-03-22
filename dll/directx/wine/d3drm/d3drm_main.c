@@ -17,6 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include "initguid.h"
 #include "d3drm_private.h"
 
 /***********************************************************************
@@ -58,8 +62,7 @@ HRESULT d3drm_object_add_destroy_callback(struct d3drm_object *object, D3DRMOBJE
     if (!cb)
         return D3DRMERR_BADVALUE;
 
-    callback = HeapAlloc(GetProcessHeap(), 0, sizeof(*callback));
-    if (!callback)
+    if (!(callback = heap_alloc(sizeof(*callback))))
         return E_OUTOFMEMORY;
 
     callback->cb = cb;
@@ -81,7 +84,7 @@ HRESULT d3drm_object_delete_destroy_callback(struct d3drm_object *object, D3DRMO
         if (callback->cb == cb && callback->ctx == ctx)
         {
             list_remove(&callback->entry);
-            HeapFree(GetProcessHeap(), 0, callback);
+            heap_free(callback);
             break;
         }
     }
@@ -136,13 +139,13 @@ HRESULT d3drm_object_set_name(struct d3drm_object *object, const char *name)
 {
     DWORD req_size;
 
-    HeapFree(GetProcessHeap(), 0, object->name);
+    heap_free(object->name);
     object->name = NULL;
 
     if (name)
     {
         req_size = strlen(name) + 1;
-        if (!(object->name = HeapAlloc(GetProcessHeap(), 0, req_size)))
+        if (!(object->name = heap_alloc(req_size)))
             return E_OUTOFMEMORY;
         memcpy(object->name, name, req_size);
     }
@@ -158,9 +161,9 @@ void d3drm_object_cleanup(IDirect3DRMObject *iface, struct d3drm_object *object)
     {
         callback->cb(iface, callback->ctx);
         list_remove(&callback->entry);
-        HeapFree(GetProcessHeap(), 0, callback);
+        heap_free(callback);
     }
 
-    HeapFree(GetProcessHeap(), 0, object->name);
+    heap_free(object->name);
     object->name = NULL;
 }

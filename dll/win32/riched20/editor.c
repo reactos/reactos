@@ -176,7 +176,7 @@
   + ES_DISABLENOSCROLL (scrollbar is always visible)
   - ES_EX_NOCALLOLEINIT
   + ES_LEFT
-  - ES_MULTILINE (currently single line controls aren't supported)
+  + ES_MULTILINE
   - ES_NOIME
   - ES_READONLY (I'm not sure if beeping is the proper behaviour)
   + ES_RIGHT
@@ -224,13 +224,20 @@
  *
  */
 
+#define NONAMELESSUNION
+
 #include "editor.h"
-
-#include <commdlg.h>
-#include <undocuser.h>
-
+#include "commdlg.h"
+#include "winreg.h"
+#define NO_SHLWAPI_STREAM 
+#include "shlwapi.h"
 #include "rtf.h"
+#include "imm.h"
 #include "res.h"
+
+#ifdef __REACTOS__
+#include <reactos/undocuser.h>
+#endif
 
 #define STACK_SIZE_DEFAULT  100
 #define STACK_SIZE_MAX     1000
@@ -258,9 +265,7 @@ static inline BOOL is_version_nt(void)
 }
 
 static ME_TextBuffer *ME_MakeText(void) {
-  
-  ME_TextBuffer *buf = ALLOC_OBJ(ME_TextBuffer);
-
+  ME_TextBuffer *buf = heap_alloc(sizeof(*buf));
   ME_DisplayItem *p1 = ME_MakeDI(diTextStart);
   ME_DisplayItem *p2 = ME_MakeDI(diTextEnd);
   
@@ -603,8 +608,7 @@ void ME_RTFParAttrHook(RTF_Info *info)
     if (!info->editor->bEmulateVersion10) /* v4.1 */
     {
       while (info->rtfParam > info->nestingLevel) {
-        RTFTable *tableDef = ALLOC_OBJ(RTFTable);
-        ZeroMemory(tableDef, sizeof(RTFTable));
+        RTFTable *tableDef = heap_alloc_zero(sizeof(*tableDef));
         tableDef->parent = info->tableDef;
         info->tableDef = tableDef;
 
@@ -638,10 +642,7 @@ void ME_RTFParAttrHook(RTF_Info *info)
       {
         RTFTable *tableDef;
         if (!info->tableDef)
-        {
-            info->tableDef = ALLOC_OBJ(RTFTable);
-            ZeroMemory(info->tableDef, sizeof(RTFTable));
-        }
+            info->tableDef = heap_alloc_zero(sizeof(*info->tableDef));
         tableDef = info->tableDef;
         RTFFlushOutputBuffer(info);
         if (tableDef->tableRowStart &&
@@ -2139,12 +2140,12 @@ static int ME_GetTextRange(ME_TextEditor *editor, WCHAR *strText,
       return ME_GetTextW(editor, strText, INT_MAX, start, nLen, FALSE, FALSE);
     } else {
       int nChars;
-      WCHAR *p = ALLOC_N_OBJ(WCHAR, nLen+1);
+      WCHAR *p = heap_alloc((nLen+1) * sizeof(*p));
       if (!p) return 0;
       nChars = ME_GetTextW(editor, p, nLen, start, nLen, FALSE, FALSE);
       WideCharToMultiByte(CP_ACP, 0, p, nChars+1, (char *)strText,
                           nLen+1, NULL, NULL);
-      FREE_OBJ(p);
+      heap_free(p);
       return nChars;
     }
 }
@@ -2291,6 +2292,14 @@ static BOOL paste_special(ME_TextEditor *editor, UINT cf, REPASTESPECIAL *ps, BO
     struct paste_format *format;
     IDataObject *data;
 
+    /* Protect read-only edit control from modification */
+    if (editor->styleFlags & ES_READONLY)
+    {
+        if (!check_only)
+            MessageBeep(MB_ICONERROR);
+        return FALSE;
+    }
+
     init_paste_formats();
 
     if (ps && ps->dwAspect != DVASPECT_CONTENT)
@@ -2346,6 +2355,30 @@ static BOOL ME_Copy(ME_TextEditor *editor, const ME_Cursor *start, int nChars)
     IDataObject_Release(dataObj);
   }
   return SUCCEEDED(hr);
+}
+
+static BOOL copy_or_cut(ME_TextEditor *editor, BOOL cut)
+{
+    BOOL result;
+    int offs, num_chars;
+    int start_cursor = ME_GetSelectionOfs(editor, &offs, &num_chars);
+    ME_Cursor *sel_start = &editor->pCursors[start_cursor];
+
+    if (cut && (editor->styleFlags & ES_READONLY))
+    {
+        MessageBeep(MB_ICONERROR);
+        return FALSE;
+    }
+
+    num_chars -= offs;
+    result = ME_Copy(editor, sel_start, num_chars);
+    if (result && cut)
+    {
+        ME_InternalDeleteText(editor, sel_start, num_chars, FALSE);
+        ME_CommitUndo(editor);
+        ME_UpdateRepaint(editor, TRUE);
+    }
+    return result;
 }
 
 /* helper to send a msg filter notification */
@@ -2642,22 +2675,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
     case 'C':
     case 'X':
       if (ctrl_is_down)
-      {
-        BOOL result;
-        int nOfs, nChars;
-        int nStartCur = ME_GetSelectionOfs(editor, &nOfs, &nChars);
-        ME_Cursor *selStart = &editor->pCursors[nStartCur];
-
-        nChars -= nOfs;
-        result = ME_Copy(editor, selStart, nChars);
-        if (result && nKey == 'X')
-        {
-          ME_InternalDeleteText(editor, selStart, nChars, FALSE);
-          ME_CommitUndo(editor);
-          ME_UpdateRepaint(editor, TRUE);
-        }
-        return result;
-      }
+        return copy_or_cut(editor, nKey == 'X');
       break;
     case 'Z':
       if (ctrl_is_down)
@@ -2973,7 +2991,7 @@ static BOOL ME_ShowContextMenu(ME_TextEditor *editor, int x, int y)
 
 ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
 {
-  ME_TextEditor *ed = ALLOC_OBJ(ME_TextEditor);
+  ME_TextEditor *ed = heap_alloc(sizeof(*ed));
   int i;
   DWORD props;
   LONG selbarwidth;
@@ -3007,7 +3025,7 @@ ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
    * or paragraph selection.
    */
   ed->nCursors = 4;
-  ed->pCursors = ALLOC_N_OBJ(ME_Cursor, ed->nCursors);
+  ed->pCursors = heap_alloc(ed->nCursors * sizeof(*ed->pCursors));
   ME_SetCursorToStart(ed, &ed->pCursors[0]);
   ed->pCursors[1] = ed->pCursors[0];
   ed->pCursors[2] = ed->pCursors[0];
@@ -3140,10 +3158,9 @@ void ME_DestroyEditor(ME_TextEditor *editor)
   }
   OleUninitialize();
 
-  FREE_OBJ(editor->pBuffer);
-  FREE_OBJ(editor->pCursors);
-
-  FREE_OBJ(editor);
+  heap_free(editor->pBuffer);
+  heap_free(editor->pCursors);
+  heap_free(editor);
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -3401,21 +3418,7 @@ static void ME_SetText(ME_TextEditor *editor, void *text, BOOL unicode)
   int textLen;
 
   LPWSTR wszText = ME_ToUnicode(codepage, text, &textLen);
-
-  if (textLen > 0)
-  {
-    int len = -1;
-
-    /* uses default style! */
-    if (!(editor->styleFlags & ES_MULTILINE))
-    {
-      WCHAR *p = wszText;
-
-      while (*p != '\0' && *p != '\r' && *p != '\n') p++;
-      len = p - wszText;
-    }
-    ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
-  }
+  ME_InsertTextFromCursor(editor, 0, wszText, textLen, editor->pBuffer->pDefaultStyle);
   ME_EndToUnicode(codepage, wszText);
 }
 
@@ -4065,19 +4068,8 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     return 0;
   case WM_CUT:
   case WM_COPY:
-  {
-    int nFrom, nTo, nStartCur = ME_GetSelectionOfs(editor, &nFrom, &nTo);
-    int nChars = nTo - nFrom;
-    ME_Cursor *selStart = &editor->pCursors[nStartCur];
-
-    if (ME_Copy(editor, selStart, nChars) && msg == WM_CUT)
-    {
-      ME_InternalDeleteText(editor, selStart, nChars, FALSE);
-      ME_CommitUndo(editor);
-      ME_UpdateRepaint(editor, TRUE);
-    }
+    copy_or_cut(editor, msg == WM_CUT);
     return 0;
-  }
   case WM_GETTEXTLENGTH:
   {
     GETTEXTLENGTHEX how;
@@ -4307,10 +4299,10 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
       int nChars = MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, NULL, 0);
       WCHAR *tmp;
 
-      if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
+      if ((tmp = heap_alloc(nChars * sizeof(*tmp))) != NULL)
         MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, tmp, nChars);
       r = ME_FindText(editor, wParam, &ft->chrg, tmp, NULL);
-      FREE_OBJ( tmp );
+      heap_free(tmp);
     }else{
       FINDTEXTW *ft = (FINDTEXTW *)lParam;
       r = ME_FindText(editor, wParam, &ft->chrg, ft->lpstrText, NULL);
@@ -4325,10 +4317,10 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
       int nChars = MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, NULL, 0);
       WCHAR *tmp;
 
-      if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
+      if ((tmp = heap_alloc(nChars * sizeof(*tmp))) != NULL)
         MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, tmp, nChars);
       r = ME_FindText(editor, wParam, &ex->chrg, tmp, &ex->chrgText);
-      FREE_OBJ( tmp );
+      heap_free(tmp);
     }else{
       FINDTEXTEXW *ex = (FINDTEXTEXW *)lParam;
       r = ME_FindText(editor, wParam, &ex->chrg, ex->lpstrText, &ex->chrgText);

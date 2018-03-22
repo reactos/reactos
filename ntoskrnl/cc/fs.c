@@ -13,14 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifndef VACB_MAPPING_GRANULARITY
-#define VACB_MAPPING_GRANULARITY (256 * 1024)
-#endif
-
 /* GLOBALS   *****************************************************************/
 
 extern KGUARDED_MUTEX ViewLock;
-extern ULONG DirtyPageCount;
 
 NTSTATUS CcRosInternalFreeVacb(PROS_VACB Vacb);
 
@@ -111,17 +106,51 @@ CcInitializeCacheMap (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 CcIsThereDirtyData (
     IN PVPB Vpb)
 {
+    PROS_VACB Vacb;
+    PLIST_ENTRY Entry;
+    /* Assume no dirty data */
+    BOOLEAN Dirty = FALSE;
+
     CCTRACE(CC_API_DEBUG, "Vpb=%p\n", Vpb);
 
-    UNIMPLEMENTED;
-    return FALSE;
+    KeAcquireGuardedMutex(&ViewLock);
+
+    /* Browse dirty VACBs */
+    for (Entry = DirtyVacbListHead.Flink; Entry != &DirtyVacbListHead; Entry = Entry->Flink)
+    {
+        Vacb = CONTAINING_RECORD(Entry, ROS_VACB, DirtyVacbListEntry);
+        /* Look for these associated with our volume */
+        if (Vacb->SharedCacheMap->FileObject->Vpb != Vpb)
+        {
+            continue;
+        }
+
+        /* From now on, we are associated with our VPB */
+
+        /* Temporary files are not counted as dirty */
+        if (BooleanFlagOn(Vacb->SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
+        {
+            continue;
+        }
+
+        /* A single dirty VACB is enough to have dirty data */
+        if (Vacb->Dirty)
+        {
+            Dirty = TRUE;
+            break;
+        }
+    }
+
+    KeReleaseGuardedMutex(&ViewLock);
+
+    return Dirty;
 }
 
 /*
@@ -193,19 +222,22 @@ CcPurgeCacheSection (
             break;
         }
 
-        /* Still in use, it cannot be purged, fail */
-        if (Vacb->ReferenceCount != 0 && !Vacb->Dirty)
+        /* Still in use, it cannot be purged, fail
+         * Allow one ref: VACB is supposed to be always 1-referenced
+         */
+        if ((Vacb->ReferenceCount > 1 && !Vacb->Dirty) ||
+            (Vacb->ReferenceCount > 2 && Vacb->Dirty))
         {
             Success = FALSE;
             break;
         }
 
         /* This VACB is in range, so unlink it and mark for free */
+        ASSERT(Vacb->ReferenceCount == 1 || Vacb->Dirty);
         RemoveEntryList(&Vacb->VacbLruListEntry);
         if (Vacb->Dirty)
         {
-            RemoveEntryList(&Vacb->DirtyVacbListEntry);
-            DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+            CcRosUnmarkDirtyVacb(Vacb, FALSE);
         }
         RemoveEntryList(&Vacb->CacheMapVacbListEntry);
         InsertHeadList(&FreeList, &Vacb->CacheMapVacbListEntry);
@@ -218,6 +250,7 @@ CcPurgeCacheSection (
         Vacb = CONTAINING_RECORD(RemoveHeadList(&FreeList),
                                  ROS_VACB,
                                  CacheMapVacbListEntry);
+        CcRosVacbDecRefCount(Vacb);
         CcRosInternalFreeVacb(Vacb);
     }
 
@@ -303,7 +336,6 @@ CcUninitializeCacheMap (
         FileObject, TruncateSize, UninitializeCompleteEvent);
 
     if (TruncateSize != NULL &&
-        FileObject->SectionObjectPointer != NULL &&
         FileObject->SectionObjectPointer->SharedCacheMap != NULL)
     {
         SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;

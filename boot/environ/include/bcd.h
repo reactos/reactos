@@ -150,8 +150,9 @@ typedef enum BcdOSLoaderElementTypes
     BcdOSLoaderBoolean_UsePlatformClock = 0x260000A2,
     BcdOSLoaderBoolean_ForceLegacyPlatform = 0x260000A3,
     BcdOSLoaderInteger_TscSyncPolicy = 0x250000A6,
-    BcdOSLoaderBoolean_EmsEnabled = 0x260000b0,
-    BcdOSLoaderInteger_DriverLoadFailurePolicy = 0x250000c1,
+    BcdOSLoaderBoolean_EmsEnabled = 0x260000B0,
+    BcdOSLoaderInteger_ForceFailure = 0x250000C0,
+    BcdOSLoaderInteger_DriverLoadFailurePolicy = 0x250000C1,
     BcdOSLoaderInteger_BootMenuPolicy = 0x250000C2,
     BcdOSLoaderBoolean_AdvancedOptionsOneTime = 0x260000C3,
     BcdOSLoaderBoolean_OptionsEditOneTime = 0x260000C4, /* Undocumented */
@@ -195,7 +196,8 @@ typedef enum BcdBootMgrElementTypes
     BcdBootMgrBoolean_PersistBootSequence = 0x26000031
 } BcdBootMgrElementTypes;
 
-typedef enum _BcdResumeElementTypes {
+typedef enum _BcdResumeElementTypes
+{
     Reserved1 = 0x21000001,
     Reserved2 = 0x22000002,
     BcdResumeBoolean_UseCustomSettings = 0x26000003,
@@ -203,6 +205,18 @@ typedef enum _BcdResumeElementTypes {
     BcdResumeBoolean_DebugOptionEnabled = 0x26000006,
     BcdResumeInteger_BootMenuPolicy = 0x25000008
 } BcdResumeElementTypes;
+
+typedef enum _BCDE_OSLOADER_TYPE_BOOT_STATUS_POLICY
+{
+    DisplayAllFailures,
+    IgnoreAllFailures,
+    IgnoreShutdownFailures,
+    IgnoreBootFailures,
+    IgnoreCheckpointFailures,
+    DisplayShutdownFailures,
+    DisplayBootFailures,
+    DisplayCheckpointFailures
+} BCDE_OSLOADER_TYPE_BOOT_STATUS_POLICY;
 
 /* Undocumented */
 typedef enum BcdStartupElementTypes

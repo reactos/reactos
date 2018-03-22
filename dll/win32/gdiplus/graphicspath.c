@@ -17,7 +17,21 @@
  *
  */
 
+#include <stdarg.h>
+#include <math.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "wingdi.h"
+
+#include "objbase.h"
+
+#include "gdiplus.h"
 #include "gdiplus_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 typedef struct path_list_node_t path_list_node_t;
 struct path_list_node_t {
@@ -2291,6 +2305,9 @@ GpStatus WINGDIPAPI GdipAddPathRectangle(GpPath *path, REAL x, REAL y,
 
     if(!path)
         return InvalidParameter;
+
+    if (width <= 0.0 || height <= 0.0)
+        return Ok;
 
     /* make a backup copy of path data */
     if((retstat = GdipClonePath(path, &backup)) != Ok)

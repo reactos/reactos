@@ -18,18 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
+#include "config.h"
 
-//#include <stdarg.h>
+#include <stdarg.h>
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wingdi.h"
-//#include "winuser.h"
-//#include "winternl.h"
-//#include "icm.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "wine/winternl.h"
+#include "icm.h"
 
-//#include "mscms_priv.h"
+#include "mscms_priv.h"
 
 #ifdef HAVE_LCMS2
 

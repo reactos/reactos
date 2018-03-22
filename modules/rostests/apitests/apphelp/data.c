@@ -2,7 +2,7 @@
  * PROJECT:     apphelp_apitest
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Common data / functions for apphelp_apitest
- * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <exdisp.h>
@@ -231,6 +231,7 @@ typedef struct rsrc_section_t
     VAR translation;
 } rsrc_section_t;
 
+#define    RT_VERSION_DW       16
 static const rsrc_section_t rsrc_section =
 {
     /* header */
@@ -245,7 +246,7 @@ static const rsrc_section_t rsrc_section =
     /* file_info_id */
     {
         {{
-            (DWORD)VS_FILE_INFO, /* NameOffset:31 */
+                RT_VERSION_DW, /* NameOffset:31 */
             0 /* NameIsString:1 */
         }},
         {
@@ -552,7 +553,7 @@ void test_create_file_imp(const WCHAR* name, const char* contents, size_t len)
         if (contents && len)
         {
             DWORD size;
-            WriteFile(file, contents, len, &size, NULL);
+            WriteFile(file, contents, (DWORD)len, &size, NULL);
         }
         CloseHandle(file);
     }

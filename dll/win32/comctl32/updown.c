@@ -607,11 +607,11 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
     RECT  budRect;  /* new coord for the buddy */
     int   x, width;  /* new x position and width for the up-down */
     WCHAR buddyClass[40];
-    HWND ret;
+    HWND old_buddy;
 
     TRACE("(hwnd=%p, bud=%p)\n", infoPtr->Self, bud);
 
-    ret = infoPtr->Buddy;
+    old_buddy = infoPtr->Buddy;
 
     /* there is already a buddy assigned */
     if (infoPtr->Buddy) RemoveWindowSubclass(infoPtr->Buddy, UPDOWN_Buddy_SubclassProc,
@@ -648,7 +648,7 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
             x  = budRect.right+DEFAULT_XSEP;
         } else {
             /* nothing to do */
-            return ret;
+            return old_buddy;
         }
 
         /* first adjust the buddy to accommodate the up/down */
@@ -677,14 +677,15 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
                      budRect.top - DEFAULT_ADDTOP, width,
                      budRect.bottom - budRect.top + DEFAULT_ADDTOP + DEFAULT_ADDBOT,
                      SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOZORDER);
-    } else {
+    } else if (!(infoPtr->dwStyle & UDS_HORZ) && old_buddy != NULL) {
         RECT rect;
         GetWindowRect(infoPtr->Self, &rect);
         MapWindowPoints(HWND_DESKTOP, GetParent(infoPtr->Self), (POINT *)&rect, 2);
         SetWindowPos(infoPtr->Self, 0, rect.left, rect.top, DEFAULT_WIDTH, rect.bottom - rect.top,
                      SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOZORDER);
     }
-    return ret;
+
+    return old_buddy;
 }
 
 /***********************************************************************

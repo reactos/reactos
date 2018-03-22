@@ -19,7 +19,7 @@ list(APPEND SOURCE
     tmpfile.c
     wavfile.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-    avifile_private.h)
+    precomp.h)
 
 add_library(avifil32 SHARED
     ${SOURCE}
@@ -31,5 +31,5 @@ add_library(avifil32 SHARED
 set_module_type(avifil32 win32dll)
 target_link_libraries(avifil32 wine ${PSEH_LIB})
 add_importlibs(avifil32 msacm32 msvfw32 winmm ole32 user32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
-add_pch(avifil32 avifile_private.h SOURCE)
+add_pch(avifil32 precomp.h SOURCE)
 add_cd_file(TARGET avifil32 DESTINATION reactos/system32 FOR all)

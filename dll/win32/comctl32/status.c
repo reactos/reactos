@@ -196,10 +196,14 @@ STATUSBAR_DrawPart (const STATUS_INFO *infoPtr, HDC hdc, const STATUSWINDOWPART 
         SendMessageW (infoPtr->Notify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
     } else {
         r.left += x;
+#ifdef __REACTOS__
         if (!theme)
             DrawStatusTextW (hdc, &r, part->text, SBT_NOBORDERS);
         else
             DrawThemeText(theme, hdc, SP_PANE, 0, part->text, -1, DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX, 0, &r);
+#else
+        DrawStatusTextW (hdc, &r, part->text, SBT_NOBORDERS);
+#endif
     }
 }
 

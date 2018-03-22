@@ -83,7 +83,7 @@ BEGIN
     GROUPBOX "Profil użytkownika", -1, 7, 7, 238, 54
     LTEXT "Ścieżka profilu:", -1, 16, 22, 55, 8
     EDITTEXT IDC_USER_PROFILE_PATH, 78, 19, 160, 13, ES_AUTOHSCROLL
-    LTEXT "Skrypt logowania:", -1, 16, 40, 55, 8
+    LTEXT "Skrypt logowania:", -1, 16, 40, 65, 8
     EDITTEXT IDC_USER_PROFILE_SCRIPT, 78, 37, 160, 13, ES_AUTOHSCROLL
     GROUPBOX "Katalog domowy", -1, 7, 68, 238, 54
     AUTORADIOBUTTON "Ścieżka lokalna:", IDC_USER_PROFILE_LOCAL, 16, 83, 60, 10
@@ -138,7 +138,7 @@ BEGIN
     RTEXT "Hasło:", -1, 7, 70, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD2, 107, 85, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
     RTEXT "Powtórz hasło:", -1, 7, 88, 96, 8
-    AUTOCHECKBOX "Użytkownik musi zmienić hasło podczas pierwszego logowania", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 200, 10
+    AUTOCHECKBOX "Użytkownik musi zmienić hasło podczas pierwszego logowania", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 220, 10
     AUTOCHECKBOX "Użytkownik nie może zmienić hasła", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Hasło nigdy nie wygasa", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Konto jest zablokowane", IDC_USER_NEW_DISABLED, 7, 151, 200, 10

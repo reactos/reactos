@@ -18,14 +18,36 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define COBJMACROS
 
-#include "precomp.h"
+#include "config.h"
 
+#include <stdarg.h>
 #ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/xmlerror.h>
+# include <libxml/SAX2.h>
 # include <libxml/parserInternals.h>
 #endif
 
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "ole2.h"
+#include "msxml6.h"
+#include "wininet.h"
+#include "urlmon.h"
+#include "winreg.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+#include "msxml_private.h"
+
 #ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 typedef enum
 {
@@ -78,6 +100,14 @@ static const WCHAR FeatureNamespacePrefixesW[] = {
     '/','n','a','m','e','s','p','a','c','e','-','p','r','e','f','i','x','e','s',0
 };
 
+static const WCHAR ExhaustiveErrorsW[] = {
+    'e','x','h','a','u','s','t','i','v','e','-','e','r','r','o','r','s',0
+};
+
+static const WCHAR SchemaValidationW[] = {
+    's','c','h','e','m','a','-','v','a','l','i','d','a','t','i','o','n',0
+};
+
 struct saxreader_feature_pair
 {
     saxreader_feature feature;
@@ -85,12 +115,14 @@ struct saxreader_feature_pair
 };
 
 static const struct saxreader_feature_pair saxreader_feature_map[] = {
+    { ExhaustiveErrors, ExhaustiveErrorsW },
     { ExternalGeneralEntities, FeatureExternalGeneralEntitiesW },
     { ExternalParameterEntities, FeatureExternalParameterEntitiesW },
     { LexicalHandlerParEntities, FeatureLexicalHandlerParEntitiesW },
     { NamespacePrefixes, FeatureNamespacePrefixesW },
     { Namespaces, FeatureNamespacesW },
-    { ProhibitDTD, FeatureProhibitDTDW }
+    { ProhibitDTD, FeatureProhibitDTDW },
+    { SchemaValidation, SchemaValidationW },
 };
 
 static saxreader_feature get_saxreader_feature(const WCHAR *name)
@@ -98,7 +130,7 @@ static saxreader_feature get_saxreader_feature(const WCHAR *name)
     int min, max, n, c;
 
     min = 0;
-    max = sizeof(saxreader_feature_map)/sizeof(struct saxreader_feature_pair) - 1;
+    max = ARRAY_SIZE(saxreader_feature_map) - 1;
 
     while (min <= max)
     {
@@ -539,7 +571,7 @@ static BOOL bstr_pool_insert(struct bstrpool *pool, BSTR pool_entry)
 {
     if (!pool->pool)
     {
-        pool->pool = HeapAlloc(GetProcessHeap(), 0, 16 * sizeof(*pool->pool));
+        pool->pool = heap_alloc(16 * sizeof(*pool->pool));
         if (!pool->pool)
             return FALSE;
 
@@ -548,7 +580,7 @@ static BOOL bstr_pool_insert(struct bstrpool *pool, BSTR pool_entry)
     }
     else if (pool->index == pool->len)
     {
-        BSTR *realloc = HeapReAlloc(GetProcessHeap(), 0, pool->pool, pool->len * 2 * sizeof(*realloc));
+        BSTR *realloc = heap_realloc(pool->pool, pool->len * 2 * sizeof(*realloc));
 
         if (!realloc)
             return FALSE;
@@ -568,7 +600,7 @@ static void free_bstr_pool(struct bstrpool *pool)
     for (i = 0; i < pool->index; i++)
         SysFreeString(pool->pool[i]);
 
-    HeapFree(GetProcessHeap(), 0, pool->pool);
+    heap_free(pool->pool);
 
     pool->pool = NULL;
     pool->index = pool->len = 0;
@@ -646,7 +678,7 @@ static void format_error_message_from_id(saxlocator *This, HRESULT hr)
     {
         WCHAR msg[1024];
         if(!FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM,
-                    NULL, hr, 0, msg, sizeof(msg)/sizeof(msg[0]), NULL))
+                    NULL, hr, 0, msg, ARRAY_SIZE(msg), NULL))
         {
             FIXME("MSXML errors not yet supported.\n");
             msg[0] = '\0';
@@ -1388,7 +1420,7 @@ static BSTR saxreader_get_unescaped_value(const xmlChar *buf, int len)
         WCHAR *src;
 
         /* leave first '&' from a reference as a value */
-        src = dest + (sizeof(ampescW)/sizeof(WCHAR) - 1);
+        src = dest + ARRAY_SIZE(ampescW) - 1;
         dest++;
 
         /* move together with null terminator */
@@ -1950,6 +1982,7 @@ static BSTR saxreader_get_cdata_chunk(const xmlChar *str, int len)
     BSTR bstr = bstr_from_xmlCharN(str, len), ret;
     WCHAR *ptr;
 
+    len = SysStringLen(bstr);
     ptr = bstr + len - 1;
     while ((*ptr == '\r' || *ptr == '\n') && ptr >= bstr)
         ptr--;
@@ -2016,7 +2049,7 @@ static void libxml_cdatablock(void *ctx, const xmlChar *value, int len)
             while (i < len)
             {
                 if (value[i] != '\r' && value[i] != '\n') break;
-                    i++;
+                i++;
             }
             end = &value[i];
 
@@ -3193,7 +3226,14 @@ static HRESULT WINAPI isaxxmlreader_getFeature(
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(feature_name), value);
 
     feature = get_saxreader_feature(feature_name);
-    if (feature == Namespaces || feature == NamespacePrefixes)
+
+    if (This->version < MSXML4 && (feature == ExhaustiveErrors || feature == SchemaValidation))
+        return E_INVALIDARG;
+
+    if (feature == Namespaces ||
+            feature == NamespacePrefixes ||
+            feature == ExhaustiveErrors ||
+            feature == SchemaValidation)
         return get_feature_value(This, feature, value);
 
     FIXME("(%p)->(%s %p) stub\n", This, debugstr_w(feature_name), value);
@@ -3213,15 +3253,18 @@ static HRESULT WINAPI isaxxmlreader_putFeature(
     feature = get_saxreader_feature(feature_name);
 
     /* accepted cases */
-    if ((feature == ExternalGeneralEntities   && value == VARIANT_FALSE) ||
-        (feature == ExternalParameterEntities && value == VARIANT_FALSE) ||
+    if ((feature == ExhaustiveErrors && value == VARIANT_FALSE) ||
+        (feature == SchemaValidation && value == VARIANT_FALSE) ||
          feature == Namespaces ||
          feature == NamespacePrefixes)
     {
         return set_feature_value(This, feature, value);
     }
 
-    if (feature == LexicalHandlerParEntities || feature == ProhibitDTD)
+    if (feature == LexicalHandlerParEntities ||
+            feature == ProhibitDTD ||
+            feature == ExternalGeneralEntities ||
+            feature == ExternalParameterEntities)
     {
         FIXME("(%p)->(%s %x) stub\n", This, debugstr_w(feature_name), value);
         return set_feature_value(This, feature, value);

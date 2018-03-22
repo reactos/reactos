@@ -103,6 +103,11 @@ NpCreatePipe(
         ShareAccess = FILE_SHARE_READ;
     else if (NamedPipeConfiguration == FILE_PIPE_FULL_DUPLEX)
         ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    else
+    {
+        ASSERTMSG("Invalid NamedPipeConfiguration parameter value!", FALSE);
+        return STATUS_INVALID_PARAMETER_6;
+    }
 
     DefaultTimeout.QuadPart = -50 * 1000 * 10;
 
@@ -185,6 +190,11 @@ NpOpenPipe(
         ShareAccess = FILE_SHARE_READ;
     else if (NamedPipeConfiguration == FILE_PIPE_FULL_DUPLEX)
         ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    else
+    {
+        ASSERTMSG("Invalid NamedPipeConfiguration parameter value!", FALSE);
+        return STATUS_INVALID_PARAMETER_3;
+    }
 
     return NpOpenPipeEx(ClientHandle,
                         PipePath,

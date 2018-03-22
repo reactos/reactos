@@ -21,6 +21,11 @@
 
 #include "objsel_private.h"
 
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(objsel);
+
+
 static inline ClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
 {
     return CONTAINING_RECORD(iface, ClassFactoryImpl, IClassFactory_iface);

@@ -19,10 +19,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include "config.h"
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "rpcproxy.h"
+#include "urlmon.h"
+#ifdef __REACTOS__
+#include <winreg.h>
+#endif
+#include "shlwapi.h"
+#include "initguid.h"
+#include "inseng.h"
+
 #include "inseng_private.h"
 
-#include <rpcproxy.h>
-#include <urlmon.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(inseng);
 
 static HINSTANCE instance;
 
@@ -36,7 +56,6 @@ struct thread_info
 {
     DWORD operation;
     DWORD jobflags;
-
     IEnumCifComponents *enum_comp;
 
     DWORD download_size;
@@ -46,8 +65,7 @@ struct thread_info
     ULONGLONG download_start;
 };
 
-struct InstallEngine
-{
+struct InstallEngine {
     IInstallEngine2 IInstallEngine2_iface;
     IInstallEngineTiming IInstallEngineTiming_iface;
     LONG ref;
@@ -81,14 +99,14 @@ struct downloadcb
     HRESULT hr;
 };
 
-static inline struct downloadcb *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
-{
-    return CONTAINING_RECORD(iface, struct downloadcb, IBindStatusCallback_iface);
-}
-
 static inline InstallEngine *impl_from_IInstallEngine2(IInstallEngine2 *iface)
 {
     return CONTAINING_RECORD(iface, InstallEngine, IInstallEngine2_iface);
+}
+
+static inline struct downloadcb *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
+{
+    return CONTAINING_RECORD(iface, struct downloadcb, IBindStatusCallback_iface);
 }
 
 static inline InstallEngine *impl_from_IInstallEngineTiming(IInstallEngineTiming *iface)
@@ -305,7 +323,7 @@ static HRESULT downloadcb_create(InstallEngine *engine, HANDLE event, char *file
 {
     struct downloadcb *cb;
 
-    cb = heap_zero_alloc(sizeof(*cb));
+    cb = heap_alloc_zero(sizeof(*cb));
     if (!cb) return E_OUTOFMEMORY;
 
     cb->IBindStatusCallback_iface.lpVtbl = &BindStatusCallbackVtbl;
@@ -414,10 +432,10 @@ static HRESULT calc_sizes(IEnumCifComponents *enum_comp, DWORD operation, DWORD 
 
         /* FIXME: handle install options and find out the default options*/
         if (operation == OP_DOWNLOAD && ICifComponent_IsComponentDownloaded(comp) == S_FALSE)
-            download += ICifComponent_GetDownloadSize(comp);
+            download = ICifComponent_GetDownloadSize(comp);
         /*
         if (operation == OP_INSTALL && ICifComponent_IsComponentInstalled(comp) == S_FALSE)
-            install += ICifComponent_GetInstalledSize(comp);
+            install = ICifComponent_GetInstalledSize(comp);
         */
     }
 
@@ -1158,7 +1176,7 @@ static HRESULT WINAPI InstallEngineTiming_GetInstallProgress(IInstallEngineTimin
     ULONGLONG elapsed;
     static int once;
 
-    if (!once++)
+    if (!once)
         FIXME("(%p)->(%p): semi-stub\n", This, progress);
     else
         TRACE("(%p)->(%p): semi-stub\n", This, progress);
@@ -1230,7 +1248,7 @@ static HRESULT WINAPI InstallEngineCF_CreateInstance(IClassFactory *iface, IUnkn
 
     TRACE("(%p %s %p)\n", outer, debugstr_guid(riid), ppv);
 
-    engine = heap_zero_alloc(sizeof(*engine));
+    engine = heap_alloc_zero(sizeof(*engine));
     if(!engine)
         return E_OUTOFMEMORY;
 

@@ -19,6 +19,9 @@
  */
 
 #include "qmgr.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
 
 static ULONG WINAPI
 BITS_IClassFactory_AddRef(IClassFactory *iface)

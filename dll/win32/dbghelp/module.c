@@ -19,7 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+
 #include "dbghelp_private.h"
+#ifndef DBGHELP_STATIC_LIB
+#include "psapi.h"
+#include "winternl.h"
+#include "wine/debug.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -91,7 +102,9 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
 
 void module_set_module(struct module* module, const WCHAR* name)
 {
-    module_fill_module(name, module->module.ModuleName, sizeof(module->module.ModuleName));
+    module_fill_module(name, module->module.ModuleName,
+            sizeof(module->module.ModuleName) / sizeof(module->module.ModuleName[0]));
+    module_fill_module(name, module->modulename, sizeof(module->modulename) / sizeof(module->modulename[0]));
 }
 
 const WCHAR *get_wine_loader_name(void)
@@ -815,7 +828,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HANDLE hProcess,
         if (!(dbghelp_options & SYMOPT_WINE_WITH_NATIVE_MODULES) &&
             (module->type == DMT_ELF || module->type == DMT_MACHO))
             continue;
-        if (!EnumModulesCallback(module->module.ModuleName,
+        if (!EnumModulesCallback(module->modulename,
                                  module->module.BaseOfImage, UserContext))
             break;
     }
@@ -915,7 +928,7 @@ BOOL  WINAPI EnumerateLoadedModulesW64(HANDLE hProcess,
         if (!GetModuleInformation(hProcess, hMods[i], &mi, sizeof(mi)) ||
             !GetModuleBaseNameW(hProcess, hMods[i], baseW, sizeof(baseW) / sizeof(WCHAR)))
             continue;
-        module_fill_module(baseW, modW, sizeof(modW) / sizeof(CHAR));
+        module_fill_module(baseW, modW, sizeof(modW) / sizeof(modW[0]));
         EnumLoadedModulesCallback(modW, (DWORD_PTR)mi.lpBaseOfDll, mi.SizeOfImage,
                                   UserContext);
     }
@@ -925,6 +938,12 @@ BOOL  WINAPI EnumerateLoadedModulesW64(HANDLE hProcess,
 }
 
 #endif /* DBGHELP_STATIC_LIB */
+
+static void dbghelp_str_WtoA(const WCHAR *src, char *dst, int dst_len)
+{
+    WideCharToMultiByte(CP_ACP, 0, src, -1, dst, dst_len - 1, NULL, NULL);
+    dst[dst_len - 1] = 0;
+}
 
 /******************************************************************
  *		SymGetModuleInfo (DBGHELP.@)
@@ -941,19 +960,16 @@ BOOL  WINAPI SymGetModuleInfo(HANDLE hProcess, DWORD dwAddr,
     miw64.SizeOfStruct = sizeof(miw64);
     if (!SymGetModuleInfoW64(hProcess, dwAddr, &miw64)) return FALSE;
 
-    mi.SizeOfStruct  = miw64.SizeOfStruct;
+    mi.SizeOfStruct  = ModuleInfo->SizeOfStruct;
     mi.BaseOfImage   = miw64.BaseOfImage;
     mi.ImageSize     = miw64.ImageSize;
     mi.TimeDateStamp = miw64.TimeDateStamp;
     mi.CheckSum      = miw64.CheckSum;
     mi.NumSyms       = miw64.NumSyms;
     mi.SymType       = miw64.SymType;
-    WideCharToMultiByte(CP_ACP, 0, miw64.ModuleName, -1,
-                        mi.ModuleName, sizeof(mi.ModuleName), NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, miw64.ImageName, -1,
-                        mi.ImageName, sizeof(mi.ImageName), NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, miw64.LoadedImageName, -1,
-                        mi.LoadedImageName, sizeof(mi.LoadedImageName), NULL, NULL);
+    dbghelp_str_WtoA(miw64.ModuleName, mi.ModuleName, sizeof(mi.ModuleName));
+    dbghelp_str_WtoA(miw64.ImageName, mi.ImageName, sizeof(mi.ImageName));
+    dbghelp_str_WtoA(miw64.LoadedImageName, mi.LoadedImageName, sizeof(mi.LoadedImageName));
 
     memcpy(ModuleInfo, &mi, ModuleInfo->SizeOfStruct);
 
@@ -975,7 +991,7 @@ BOOL  WINAPI SymGetModuleInfoW(HANDLE hProcess, DWORD dwAddr,
     miw64.SizeOfStruct = sizeof(miw64);
     if (!SymGetModuleInfoW64(hProcess, dwAddr, &miw64)) return FALSE;
 
-    miw.SizeOfStruct  = miw64.SizeOfStruct;
+    miw.SizeOfStruct  = ModuleInfo->SizeOfStruct;
     miw.BaseOfImage   = miw64.BaseOfImage;
     miw.ImageSize     = miw64.ImageSize;
     miw.TimeDateStamp = miw64.TimeDateStamp;
@@ -1010,25 +1026,20 @@ BOOL  WINAPI SymGetModuleInfo64(HANDLE hProcess, DWORD64 dwAddr,
     miw64.SizeOfStruct = sizeof(miw64);
     if (!SymGetModuleInfoW64(hProcess, dwAddr, &miw64)) return FALSE;
 
-    mi64.SizeOfStruct  = miw64.SizeOfStruct;
+    mi64.SizeOfStruct  = ModuleInfo->SizeOfStruct;
     mi64.BaseOfImage   = miw64.BaseOfImage;
     mi64.ImageSize     = miw64.ImageSize;
     mi64.TimeDateStamp = miw64.TimeDateStamp;
     mi64.CheckSum      = miw64.CheckSum;
     mi64.NumSyms       = miw64.NumSyms;
     mi64.SymType       = miw64.SymType;
-    WideCharToMultiByte(CP_ACP, 0, miw64.ModuleName, -1,
-                        mi64.ModuleName, sizeof(mi64.ModuleName), NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, miw64.ImageName, -1,
-                        mi64.ImageName, sizeof(mi64.ImageName), NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, miw64.LoadedImageName, -1,
-                        mi64.LoadedImageName, sizeof(mi64.LoadedImageName), NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, miw64.LoadedPdbName, -1,
-                        mi64.LoadedPdbName, sizeof(mi64.LoadedPdbName), NULL, NULL);
+    dbghelp_str_WtoA(miw64.ModuleName, mi64.ModuleName, sizeof(mi64.ModuleName));
+    dbghelp_str_WtoA(miw64.ImageName, mi64.ImageName, sizeof(mi64.ImageName));
+    dbghelp_str_WtoA(miw64.LoadedImageName, mi64.LoadedImageName, sizeof(mi64.LoadedImageName));
+    dbghelp_str_WtoA(miw64.LoadedPdbName, mi64.LoadedPdbName, sizeof(mi64.LoadedPdbName));
 
     mi64.CVSig         = miw64.CVSig;
-    WideCharToMultiByte(CP_ACP, 0, miw64.CVData, -1,
-                        mi64.CVData, sizeof(mi64.CVData), NULL, NULL);
+    dbghelp_str_WtoA(miw64.CVData, mi64.CVData, sizeof(mi64.CVData));
     mi64.PdbSig        = miw64.PdbSig;
     mi64.PdbSig70      = miw64.PdbSig70;
     mi64.PdbAge        = miw64.PdbAge;

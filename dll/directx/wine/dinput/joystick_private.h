@@ -19,6 +19,16 @@
 #ifndef __WINE_DLLS_DINPUT_JOYSTICK_PRIVATE_H
 #define __WINE_DLLS_DINPUT_JOYSTICK_PRIVATE_H
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "dinput.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
+#include "dinput_private.h"
+#include "device_private.h"
+
 /* Number of objects in the default data format */
 #define MAX_PROPS 164
 struct JoystickGenericImpl;

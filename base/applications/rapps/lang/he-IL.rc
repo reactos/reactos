@@ -20,7 +20,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "רענון\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "עדכון מסד נתונים\tCtrl+F5", ID_RESETDB
     END
     POPUP "עזרה"
     BEGIN
@@ -50,12 +50,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "רענן\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "עדכון מסד נתונים\tCtrl+F5", ID_RESETDB
     END
 END
 
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "הגדרות"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -68,32 +69,34 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "בחר", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "מחק את קובץ ההתקנה לאחר סיום ההתקנה", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Proxy", -1, 4, 116, 240, 76
-    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    GROUPBOX "שרת פרוקסי", -1, 4, 116, 240, 76
+    CONTROL "הגדרות פרוקסי של המערכת", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "חיבור ישיר(ללא פרוקסי)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "פרוקסי", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    LTEXT "ללא פרוקסי עבור:", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "ברירת מחדל", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "אישור", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "אישור", IDOK, 116, 195, 60, 14
     PUSHBUTTON "ביטול", IDCANCEL, 181, 195, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "התקנת תכנית"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "התקן מתוך דיסק (CD או DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "הורד והתקן", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "אישור", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "אישור", IDOK, 86, 78, 60, 14
     PUSHBUTTON "ביטול", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "הורדה %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -104,12 +107,13 @@ END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "אודות"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "סגירה", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "סגירה", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -119,7 +123,7 @@ BEGIN
     IDS_TOOLTIP_MODIFY "שינוי"
     IDS_TOOLTIP_SETTINGS "הגדרות"
     IDS_TOOLTIP_REFRESH "רענון"
-    IDS_TOOLTIP_UPDATE_DB "Update Database"
+    IDS_TOOLTIP_UPDATE_DB "עדכון מסד נתונים"
     IDS_TOOLTIP_EXIT "יציאה"
 END
 
@@ -154,13 +158,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nגרסה: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\nגרסה זמינה: "
     IDS_AINFO_DESCRIPTION "\nתיאור: "
     IDS_AINFO_SIZE "\nגודל: "
     IDS_AINFO_URLSITE "\nדף בית: "
     IDS_AINFO_LICENSE "\nרישיון: "
     IDS_AINFO_URLDOWNLOAD "\nהורד: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nשפות: "
 END
 
 STRINGTABLE
@@ -205,7 +209,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Verifying package integrity…"
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
@@ -213,23 +217,24 @@ BEGIN
     IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
-    IDS_STATUS_DOWNLOADED "Downloaded"
-    IDS_STATUS_UPDATE_AVAILABLE "Update available"
-    IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
-    IDS_STATUS_WAITING "Waiting to install…"
-    IDS_STATUS_FINISHED "Finished"
+    IDS_STATUS_INSTALLED "מותקן"
+    IDS_STATUS_NOTINSTALLED "לא מותקן"
+    IDS_STATUS_DOWNLOADED "הורד"
+    IDS_STATUS_UPDATE_AVAILABLE "עדכון זמין"
+    IDS_STATUS_DOWNLOADING "מוריד..."
+    IDS_STATUS_INSTALLING "מתקין..."
+    IDS_STATUS_WAITING "מחכה להתקנה..."
+    IDS_STATUS_FINISHED "הסתיים"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
+    IDS_LICENSE_OPENSOURCE "קוד פתוח"
     IDS_LICENSE_FREEWARE "Freeware"
     IDS_LICENSE_TRIAL "Trial/Demo"
 END

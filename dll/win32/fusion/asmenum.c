@@ -18,9 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "guiddef.h"
+#include "fusion.h"
+#include "corerror.h"
 #include "fusionpriv.h"
 
-#include <wine/list.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "wine/list.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
 typedef struct _tagASMNAME
 {
@@ -89,10 +106,10 @@ static ULONG WINAPI IAssemblyEnumImpl_Release(IAssemblyEnum *iface)
 
             list_remove(&asmname->entry);
             IAssemblyName_Release(asmname->name);
-            HeapFree(GetProcessHeap(), 0, asmname);
+            heap_free(asmname);
         }
 
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
     }
 
     return refCount;
@@ -338,8 +355,7 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
             }
             sprintfW(disp, name_fmt, parent, version, token);
 
-            asmname = HeapAlloc(GetProcessHeap(), 0, sizeof(ASMNAME));
-            if (!asmname)
+            if (!(asmname = heap_alloc(sizeof(*asmname))))
             {
                 hr = E_OUTOFMEMORY;
                 break;
@@ -349,7 +365,7 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
                                           CANOF_PARSE_DISPLAY_NAME, NULL);
             if (FAILED(hr))
             {
-                HeapFree(GetProcessHeap(), 0, asmname);
+                heap_free(asmname);
                 break;
             }
 
@@ -357,7 +373,7 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
             if (FAILED(hr))
             {
                 IAssemblyName_Release(asmname->name);
-                HeapFree(GetProcessHeap(), 0, asmname);
+                heap_free(asmname);
                 break;
             }
 
@@ -460,9 +476,7 @@ HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum **pEnum, IUnknown *pUnkReserved,
     if (dwFlags == 0 || dwFlags == ASM_CACHE_ROOT)
         return E_INVALIDARG;
 
-    asmenum = HeapAlloc(GetProcessHeap(), 0, sizeof(IAssemblyEnumImpl));
-    if (!asmenum)
-        return E_OUTOFMEMORY;
+    if (!(asmenum = heap_alloc(sizeof(*asmenum)))) return E_OUTOFMEMORY;
 
     asmenum->IAssemblyEnum_iface.lpVtbl = &AssemblyEnumVtbl;
     asmenum->ref = 1;
@@ -473,7 +487,7 @@ HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum **pEnum, IUnknown *pUnkReserved,
         hr = enumerate_gac(asmenum, pName);
         if (FAILED(hr))
         {
-            HeapFree(GetProcessHeap(), 0, asmenum);
+            heap_free(asmenum);
             return hr;
         }
     }

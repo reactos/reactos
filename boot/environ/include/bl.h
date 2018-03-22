@@ -675,6 +675,82 @@ NTSTATUS
     VOID
     );
 
+typedef VOID
+(*PBL_MM_FLUSH_TLB) (
+    VOID
+    );
+
+typedef VOID
+(*PBL_MM_RELOCATE_SELF_MAP) (
+    VOID
+    );
+
+typedef NTSTATUS
+(*PBL_MM_MOVE_VIRTUAL_ADDRESS_RANGE) (
+    _In_ PVOID DestinationAddress,
+    _In_ PVOID SourceAddress,
+    _In_ ULONGLONG Size
+    );
+
+typedef NTSTATUS
+(*PBL_MM_ZERO_VIRTUAL_ADDRESS_RANGE) (
+    _In_ PVOID DestinationAddress,
+    _In_ ULONGLONG Size
+    );
+
+typedef VOID
+(*PBL_MM_DESTROY_SELF_MAP) (
+    VOID
+    );
+
+typedef VOID
+(*PBL_MM_FLUSH_TLB_ENTRY) (
+    _In_ PVOID VirtualAddress
+    );
+
+typedef VOID
+(*PBL_MM_FLUSH_TLB) (
+    VOID
+    );
+
+typedef NTSTATUS
+(*PBL_MM_UNMAP_VIRTUAL_ADDRESS) (
+    _In_ PVOID VirtualAddress,
+    _In_ ULONG Size
+    );
+
+typedef NTSTATUS
+(*PBL_MM_REMAP_VIRTUAL_ADDRESS) (
+    _In_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_ PVOID VirtualAddress,
+    _In_ ULONG Size,
+    _In_ ULONG CacheAttributes
+    );
+
+typedef NTSTATUS
+(*PBL_MM_MAP_PHYSICAL_ADDRESS) (
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _Out_ PVOID VirtualAddress,
+    _In_ ULONG Size,
+    _In_ ULONG CacheAttributes
+    );
+
+typedef BOOLEAN
+(*PBL_MM_TRANSLATE_VIRTUAL_ADDRESS) (
+    _In_ PVOID VirtualAddress,
+    _Out_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_opt_ PULONG CacheAttributes
+    );
+
+typedef NTSTATUS
+(*PBL_STATUS_ERROR_HANDLER) (
+    _In_ ULONG ErrorCode,
+    _In_ ULONG Parameter1,
+    _In_ ULONG_PTR Parameter2,
+    _In_ ULONG_PTR Parameter3,
+    _In_ ULONG_PTR Parameter4
+    );
+
 /* DATA STRUCTURES ***********************************************************/
 
 typedef struct _BL_LIBRARY_PARAMETERS
@@ -847,7 +923,7 @@ typedef struct _BL_HARDDISK_DEVICE
 
 typedef struct _BL_LOCAL_DEVICE
 {
-    ULONG Type;
+    BL_LOCAL_DEVICE_TYPE Type;
     union
     {
         struct
@@ -856,6 +932,8 @@ typedef struct _BL_LOCAL_DEVICE
         } FloppyDisk;
 
         BL_HARDDISK_DEVICE HardDisk;
+
+        BL_HARDDISK_DEVICE VirtualHardDisk;
 
         struct
         {
@@ -1210,12 +1288,12 @@ typedef struct _BL_IMAGE_APPLICATION_ENTRY
     ULONG ImageSize;
 } BL_IMAGE_APPLICATION_ENTRY, *PBL_IMAGE_APPLICATION_ENTRY;
 
-typedef struct _BL_IMAGE_PARAMETERS
+typedef struct _BL_BUFFER_DESCRIPTOR
 {
     PVOID Buffer;
     ULONG ActualSize;
     ULONG BufferSize;
-} BL_IMAGE_PARAMETERS, *PBL_IMAGE_PARAMETERS;
+} BL_BUFFER_DESCRIPTOR, *PBL_BUFFER_DESCRIPTOR;
 
 typedef struct _BL_DEFERRED_FONT_FILE
 {
@@ -1305,6 +1383,14 @@ MmMdInitializeListHead (
     List->First = &List->ListHead;
     List->This = NULL;
     List->Type = 0;
+}
+
+FORCEINLINE
+PVOID
+PhysicalAddressToPtr (
+    _In_ PHYSICAL_ADDRESS PhysicalAddress)
+{
+    return (PVOID)(ULONG_PTR)PhysicalAddress.QuadPart;
 }
 
 /* INITIALIZATION ROUTINES ***************************************************/
@@ -1632,7 +1718,6 @@ EtfsMount (
 
 /* DEBUG ROUTINES ************************************************************/
 
-
 BOOLEAN
 BlBdDebuggerEnabled (
     VOID
@@ -1666,7 +1751,12 @@ VOID
 BlArchCpuId (
     _In_ ULONG Function,
     _In_ ULONG SubFunction,
-    _Out_ INT* Result
+    _Out_ PCPU_INFO Result
+    );
+
+CPU_VENDORS
+BlArchGetCpuVendor (
+    VOID
     );
 
 BOOLEAN
@@ -1928,7 +2018,8 @@ BlCopyBootOptions (
 NTSTATUS
 BlAppendBootOptionBoolean (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
-    _In_ ULONG OptionId
+    _In_ ULONG OptionId,
+    _In_ BOOLEAN Value
     );
 
 NTSTATUS
@@ -1941,6 +2032,7 @@ BlAppendBootOptionInteger (
 NTSTATUS
 BlAppendBootOptionString (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ ULONG OptionId,
     _In_ PWCHAR OptionString
     );
 
@@ -2174,6 +2266,7 @@ MmPaReserveSelfMapPages (
     _In_ ULONG Alignment,
     _In_ ULONG PageCount
     );
+
 NTSTATUS
 BlMmFreePhysicalPages (
     _In_ PHYSICAL_ADDRESS Address
@@ -2215,7 +2308,7 @@ BlMmRemoveBadMemory (
 NTSTATUS
 BlMmGetMemoryMap (
     _In_ PLIST_ENTRY MemoryMap,
-    _In_ PBL_IMAGE_PARAMETERS MemoryParameters,
+    _In_ PBL_BUFFER_DESCRIPTOR MemoryParameters,
     _In_ ULONG WhichTypes,
     _In_ ULONG Flags
     );
@@ -2284,7 +2377,7 @@ BlpMmCreateBlockAllocator (
 
 PVOID
 BlMmAllocateHeap (
-    _In_ ULONG Size
+    _In_ SIZE_T Size
     );
 
 NTSTATUS
@@ -2347,6 +2440,12 @@ BlpIoRegisterDestroyRoutine (
 NTSTATUS
 BlDeviceClose (
     _In_ ULONG DeviceId
+    );
+
+BOOLEAN
+BlDeviceIsVirtualPartitionDevice (
+    _In_ PBL_DEVICE_DESCRIPTOR InputDevice,
+    _Outptr_ PBL_DEVICE_DESCRIPTOR* VirtualDevice
     );
 
 NTSTATUS
@@ -2755,5 +2854,10 @@ extern ULONGLONG BlpTimePerformanceFrequency;
 extern LIST_ENTRY RegisteredFileSystems;
 extern BL_ADDRESS_RANGE MmArchKsegAddressRange;
 extern ULONG_PTR MmArchTopOfApplicationAddressSpace;
+extern PBL_MM_RELOCATE_SELF_MAP BlMmRelocateSelfMap;
+extern PBL_MM_FLUSH_TLB BlMmFlushTlb;
+extern PBL_MM_MOVE_VIRTUAL_ADDRESS_RANGE BlMmMoveVirtualAddressRange;
+extern PBL_MM_ZERO_VIRTUAL_ADDRESS_RANGE BlMmZeroVirtualAddressRange;
+extern PBL_STATUS_ERROR_HANDLER BlpStatusErrorHandler;
 
 #endif

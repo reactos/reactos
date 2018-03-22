@@ -155,7 +155,7 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
 
 LRESULT CALLBACK CardImageWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    PCARDBACK pCardBack = (PCARDBACK)GetWindowLongPtr(hwnd, GWL_USERDATA);
+    PCARDBACK pCardBack = (PCARDBACK)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     static WNDPROC hOldProc = NULL;
 
     if (!pCardBack)
@@ -248,7 +248,7 @@ INT_PTR CALLBACK CardBackDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                                                                    GWLP_WNDPROC,
                                                                    (LONG_PTR)CardImageWndProc);
 
-                SetWindowLongPtr(pCardBacks[i].hSelf, GWL_USERDATA, (LONG_PTR)&pCardBacks[i]);
+                SetWindowLongPtr(pCardBacks[i].hSelf, GWLP_USERDATA, (LONG_PTR)&pCardBacks[i]);
             }
 
             return TRUE;

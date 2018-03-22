@@ -20,10 +20,9 @@
 
 #include <windef.h>
 #include <winuser.h>
-#include <dlgs.h>
 
+#include "cdlg.h"
 #include "filedlgbrowser.h"
-#include "resource.h"
 
 /*
  * Everything that does not depend on language,
@@ -71,6 +70,9 @@
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/cdlg_Es.rc"
+#endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/cdlg_Et.rc"
 #endif
 #ifdef LANGUAGE_FI_FI
     #include "lang/cdlg_Fi.rc"

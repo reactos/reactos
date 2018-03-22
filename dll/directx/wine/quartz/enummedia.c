@@ -20,6 +20,10 @@
 
 #include "quartz_private.h"
 
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
+
 void dump_AM_MEDIA_TYPE(const AM_MEDIA_TYPE * pmt)
 {
     if (!pmt)

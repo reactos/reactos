@@ -27,12 +27,13 @@ QueryFileInfo(
         Buffer = KmtAllocateGuarded(*Length);
         if (skip(Buffer != NULL, "Failed to allocate %Iu bytes\n", *Length))
             return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlFillMemory(Buffer, *Length, 0xdd);
     }
     else
     {
         Buffer = NULL;
     }
-    RtlFillMemory(Buffer, *Length, 0xDD);
     RtlFillMemory(&IoStatus, sizeof(IoStatus), 0x55);
     _SEH2_TRY
     {
@@ -55,8 +56,16 @@ QueryFileInfo(
         ok_eq_hex(Status, STATUS_SUCCESS);
         Status = IoStatus.Status;
     }
+
     *Length = IoStatus.Information;
-    *Info = Buffer;
+    if (NT_SUCCESS(Status))
+    {
+        *Info = Buffer;
+    }
+    else if (Buffer)
+    {
+        KmtFreeGuarded(Buffer);
+    }
     return Status;
 }
 
@@ -73,7 +82,7 @@ TestAllInformation(VOID)
     PFILE_ALL_INFORMATION FileAllInfo;
     SIZE_T Length;
     ULONG NameLength;
-    PWCHAR Name = NULL;
+    PWCHAR Name;
     UNICODE_STRING NamePart;
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -140,32 +149,35 @@ TestAllInformation(VOID)
     Length = FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + MAX_PATH * sizeof(WCHAR);
     Status = QueryFileInfo(FileHandle, (PVOID*)&FileAllInfo, &Length, FileAllInformation);
     ok_eq_hex(Status, STATUS_SUCCESS);
-    if (!skip(NT_SUCCESS(Status) && FileAllInfo != NULL, "No info\n"))
+    if (skip(NT_SUCCESS(Status) && FileAllInfo != NULL, "No info\n"))
     {
-        NameLength = FileAllInfo->NameInformation.FileNameLength;
-        ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength);
-        Name = ExAllocatePoolWithTag(PagedPool, NameLength + sizeof(UNICODE_NULL), 'sFmK');
-        if (!skip(Name != NULL, "Could not allocate %lu bytes\n", NameLength + (ULONG)sizeof(UNICODE_NULL)))
-        {
-            RtlCopyMemory(Name,
-                          FileAllInfo->NameInformation.FileName,
-                          NameLength);
-            Name[NameLength / sizeof(WCHAR)] = UNICODE_NULL;
-            ok(Name[0] == L'\\', "Name is %ls, expected first char to be \\\n", Name);
-            ok(NameLength >= Ntoskrnl.Length + sizeof(WCHAR), "NameLength %lu too short\n", NameLength);
-            if (NameLength >= Ntoskrnl.Length)
-            {
-                NamePart.Buffer = Name + (NameLength - Ntoskrnl.Length) / sizeof(WCHAR);
-                NamePart.Length = Ntoskrnl.Length;
-                NamePart.MaximumLength = NamePart.Length;
-                ok(RtlEqualUnicodeString(&NamePart, &Ntoskrnl, TRUE),
-                   "Name ends in '%wZ', expected %wZ\n", &NamePart, &Ntoskrnl);
-            }
-        }
-        ok(FileAllInfo->NameInformation.FileName[NameLength / sizeof(WCHAR)] == 0xdddd,
-           "Char past FileName is %x\n",
-           FileAllInfo->NameInformation.FileName[NameLength / sizeof(WCHAR)]);
+        goto NoInfo;
     }
+
+    NameLength = FileAllInfo->NameInformation.FileNameLength;
+    ok_eq_size(Length, FIELD_OFFSET(FILE_ALL_INFORMATION, NameInformation.FileName) + NameLength);
+    Name = ExAllocatePoolWithTag(PagedPool, NameLength + sizeof(UNICODE_NULL), 'sFmK');
+    if (!skip(Name != NULL, "Could not allocate %lu bytes\n", NameLength + (ULONG)sizeof(UNICODE_NULL)))
+    {
+        RtlCopyMemory(Name,
+                      FileAllInfo->NameInformation.FileName,
+                      NameLength);
+        Name[NameLength / sizeof(WCHAR)] = UNICODE_NULL;
+        ok(Name[0] == L'\\', "Name is %ls, expected first char to be \\\n", Name);
+        ok(NameLength >= Ntoskrnl.Length + sizeof(WCHAR), "NameLength %lu too short\n", NameLength);
+        if (NameLength >= Ntoskrnl.Length)
+        {
+            NamePart.Buffer = Name + (NameLength - Ntoskrnl.Length) / sizeof(WCHAR);
+            NamePart.Length = Ntoskrnl.Length;
+            NamePart.MaximumLength = NamePart.Length;
+            ok(RtlEqualUnicodeString(&NamePart, &Ntoskrnl, TRUE),
+               "Name ends in '%wZ', expected %wZ\n", &NamePart, &Ntoskrnl);
+        }
+        ExFreePoolWithTag(Name, 'sFmK');
+    }
+    ok(FileAllInfo->NameInformation.FileName[NameLength / sizeof(WCHAR)] == 0xdddd,
+       "Char past FileName is %x\n",
+       FileAllInfo->NameInformation.FileName[NameLength / sizeof(WCHAR)]);
     if (FileAllInfo)
         KmtFreeGuarded(FileAllInfo);
 
@@ -209,8 +221,7 @@ TestAllInformation(VOID)
     if (FileAllInfo)
         KmtFreeGuarded(FileAllInfo);
 
-    ExFreePoolWithTag(Name, 'sFmK');
-
+NoInfo:
     Status = ObCloseHandle(FileHandle, KernelMode);
     ok_eq_hex(Status, STATUS_SUCCESS);
 }

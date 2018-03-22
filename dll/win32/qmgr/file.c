@@ -18,10 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "qmgr.h"
+#include <stdarg.h>
 
-#include <urlmon.h>
-#include <winhttp.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winhttp.h"
+#define COBJMACROS
+#include "qmgr.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
 
 static inline BackgroundCopyFileImpl *impl_from_IBackgroundCopyFile2(
     IBackgroundCopyFile2 *iface)

@@ -34,4 +34,4 @@ extern enumx_impl *enumx_allocate(REFIID, const void *, ULONG,
                                   IUnknown *, enumx_copy_cb) DECLSPEC_HIDDEN;
 extern void *enumx_add_element(enumx_impl *, const void *) DECLSPEC_HIDDEN;
 
-#endif /* __OLE_ENUM_H__ */
+#endif

@@ -19,7 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <math.h>
+
+#include "objbase.h"
+#include "gdiplus.h"
+#include "wine/test.h"
 
 #define RGNDATA_RECT            0x10000000
 #define RGNDATA_PATH            0x10000001

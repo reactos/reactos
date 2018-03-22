@@ -205,7 +205,10 @@ typedef enum {
     BUTTON_HOT ,
     BUTTON_PRESSED ,
     BUTTON_DISABLED ,
-    BUTTON_INACTIVE
+    BUTTON_INACTIVE ,
+    BUTTON_INACTIVE_HOT ,
+    BUTTON_INACTIVE_PRESSED ,
+    BUTTON_INACTIVE_DISABLED
 } THEME_BUTTON_STATES;
 
 #define HT_ISBUTTON(ht) ((ht) == HTMINBUTTON || (ht) == HTMAXBUTTON || (ht) == HTCLOSE || (ht) == HTHELP)
@@ -256,7 +259,7 @@ extern BOOL g_bThemeHooksActive;
 
 void UXTHEME_InitSystem(HINSTANCE hInst);
 void UXTHEME_LoadTheme(BOOL bLoad);
-BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg);
+BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 
 /* No alpha blending */
 #define ALPHABLEND_NONE             0

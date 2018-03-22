@@ -27,6 +27,7 @@
 #ifdef HAVE_PTHREAD_H
 #include <pthread.h>
 #elif defined HAVE_WIN32_THREADS
+//#define WIN32_LEAN_AND_MEAN
 //#include <windows.h>
 #ifndef HAVE_COMPILER_TLS
 #include <process.h>
@@ -48,47 +49,27 @@
 
 static int libxml_is_threaded = -1;
 #if defined(__GNUC__) && defined(__GLIBC__)
-#ifdef linux
+#ifdef __linux__
 #if (__GNUC__ == 3 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 3)
-extern int pthread_once (pthread_once_t *__once_control,
-                         void (*__init_routine) (void))
-	   __attribute((weak));
-extern void *pthread_getspecific (pthread_key_t __key)
-	   __attribute((weak));
-extern int pthread_setspecific (pthread_key_t __key,
-                                __const void *__pointer)
-	   __attribute((weak));
-extern int pthread_key_create (pthread_key_t *__key,
-                               void (*__destr_function) (void *))
-	   __attribute((weak));
-extern int pthread_key_delete (pthread_key_t __key)
-	   __attribute((weak));
-extern int pthread_mutex_init ()
-	   __attribute((weak));
-extern int pthread_mutex_destroy ()
-	   __attribute((weak));
-extern int pthread_mutex_lock ()
-	   __attribute((weak));
-extern int pthread_mutex_unlock ()
-	   __attribute((weak));
-extern int pthread_cond_init ()
-	   __attribute((weak));
-extern int pthread_cond_destroy ()
-	   __attribute((weak));
-extern int pthread_cond_wait ()
-	   __attribute((weak));
-extern int pthread_equal ()
-	   __attribute((weak));
-extern pthread_t pthread_self ()
-	   __attribute((weak));
-extern int pthread_key_create ()
-	   __attribute((weak));
-extern int pthread_key_delete ()
-	   __attribute((weak));
-extern int pthread_cond_signal ()
-	   __attribute((weak));
+#pragma weak pthread_once
+#pragma weak pthread_getspecific
+#pragma weak pthread_setspecific
+#pragma weak pthread_key_create
+#pragma weak pthread_key_delete
+#pragma weak pthread_mutex_init
+#pragma weak pthread_mutex_destroy
+#pragma weak pthread_mutex_lock
+#pragma weak pthread_mutex_unlock
+#pragma weak pthread_cond_init
+#pragma weak pthread_cond_destroy
+#pragma weak pthread_cond_wait
+#pragma weak pthread_equal
+#pragma weak pthread_self
+#pragma weak pthread_key_create
+#pragma weak pthread_key_delete
+#pragma weak pthread_cond_signal
 #endif
-#endif /* linux */
+#endif /* __linux__ */
 #endif /* defined(__GNUC__) && defined(__GLIBC__) */
 #endif /* HAVE_PTHREAD_H */
 
@@ -158,7 +139,7 @@ static DWORD globalkey = TLS_OUT_OF_INDEXES;
 static DWORD mainthread;
 static struct {
     DWORD done;
-    DWORD control;
+    LONG control;
 } run_once = { 0, 0};
 static volatile LPCRITICAL_SECTION global_init_lock = NULL;
 
@@ -458,7 +439,8 @@ __xmlGlobalInitMutexLock(void)
 
         /* Swap it into the global_init_lock */
 #ifdef InterlockedCompareExchangePointer
-        InterlockedCompareExchangePointer(&global_init_lock, cs, NULL);
+        InterlockedCompareExchangePointer((void **) &global_init_lock,
+                                          cs, NULL);
 #else /* Use older void* version */
         InterlockedCompareExchange((void **) &global_init_lock,
                                    (void *) cs, NULL);
@@ -999,11 +981,23 @@ xmlOnceInit(void)
 #ifdef HAVE_PTHREAD_H
 #elif defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
 #if defined(LIBXML_STATIC_FOR_DLL)
-BOOL XMLCALL
-xmlDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+int XMLCALL
+xmlDllMain(ATTRIBUTE_UNUSED void *hinstDLL, unsigned long fdwReason,
+           ATTRIBUTE_UNUSED void *lpvReserved)
 #else
+/* declare to avoid "no previous prototype for 'DllMain'" warning */
+/* Note that we do NOT want to include this function declaration in
+   a public header because it's meant to be called by Windows itself,
+   not a program that uses this library.  This also has to be exported. */
+
+XMLPUBFUN BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+         DWORD     fdwReason,
+         LPVOID    lpvReserved);
+
 BOOL WINAPI
-DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+DllMain(ATTRIBUTE_UNUSED HINSTANCE hinstDLL, DWORD fdwReason,
+        ATTRIBUTE_UNUSED LPVOID lpvReserved)
 #endif
 {
     switch (fdwReason) {

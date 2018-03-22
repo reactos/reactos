@@ -1,3 +1,4 @@
+
 #ifndef _MSIMTF_PCH_
 #define _MSIMTF_PCH_
 
@@ -19,6 +20,5 @@
 #include <dimm.h>
 
 #include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(msimtf);
 
-#endif /* _MSIMTF_PCH_ */
+#endif /* !_MSIMTF_PCH_ */

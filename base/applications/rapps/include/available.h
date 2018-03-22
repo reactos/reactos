@@ -1,7 +1,7 @@
 #pragma once
 
 #include <windef.h>
-#include <atlstr.h> 
+#include <atlstr.h>
 #include <atlsimpcoll.h>
 #include <atlcoll.h>
 
@@ -86,6 +86,8 @@ struct AvailableStrings
     ATL::CStringW szCabPath;
     ATL::CStringW szAppsPath;
     ATL::CStringW szSearchPath;
+    ATL::CStringW szCabName;
+    ATL::CStringW szCabDir;
 
     AvailableStrings();
 };

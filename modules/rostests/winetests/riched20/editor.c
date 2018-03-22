@@ -70,6 +70,10 @@ static HWND new_richedit(HWND parent) {
   return new_window(RICHEDIT_CLASS20A, ES_MULTILINE, parent);
 }
 
+static HWND new_richedit_with_style(HWND parent, DWORD style) {
+  return new_window(RICHEDIT_CLASS20A, style, parent);
+}
+
 static HWND new_richeditW(HWND parent) {
   return new_windowW(RICHEDIT_CLASS20W, ES_MULTILINE, parent);
 }
@@ -3748,6 +3752,20 @@ static void test_WM_SETTEXT(void)
   TEST_SETTEXTW(urtftextW, urtftextW) /* interpreted as ascii text */
   DestroyWindow(hwndRichEdit);
 #undef TEST_SETTEXTW
+
+  /* Single-line richedit */
+  hwndRichEdit = new_richedit_with_style(NULL, 0);
+  result = SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"line1\r\nline2");
+  ok(result == 1, "WM_SETTEXT returned %ld, expected 12\n", result);
+  result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buf);
+  ok(result == 5, "WM_GETTEXT returned %ld, expected 5\n", result);
+  ok(!strcmp(buf, "line1"), "WM_GETTEXT returned incorrect string '%s'\n", buf);
+  result = SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"{\\rtf1 ABC\\rtlpar\\par DEF\\par HIJ\\pard\\par}");
+  ok(result == 1, "WM_SETTEXT returned %ld, expected 1\n", result);
+  result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buf);
+  ok(result == 3, "WM_GETTEXT returned %ld, expected 3\n", result);
+  ok(!strcmp(buf, "ABC"), "WM_GETTEXT returned incorrect string '%s'\n", buf);
+  DestroyWindow(hwndRichEdit);
 }
 
 /* Set *pcb to one to show that the remaining cb-1 bytes are not
@@ -4405,6 +4423,17 @@ static void test_EM_SETTEXTEX(void)
                  "EM_SETTEXTEX: Test multibyte character set wrong text: Result: %s\n", bufACP);
   }
 
+  DestroyWindow(hwndRichEdit);
+
+  /* Single-line richedit */
+  hwndRichEdit = new_richedit_with_style(NULL, 0);
+  setText.flags = ST_DEFAULT;
+  setText.codepage = CP_ACP;
+  result = SendMessageA(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM)"line1\r\nline2");
+  ok(result == 1, "EM_SETTEXTEX incorrectly returned %d, expected 1\n", result);
+  result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)bufACP);
+  ok(result == 5, "WM_GETTEXT incorrectly returned %d, expected 5\n", result);
+  ok(!strcmp(bufACP, "line1"), "EM_SETTEXTEX: Test single-line text: Result: %s\n", bufACP);
   DestroyWindow(hwndRichEdit);
 }
 
@@ -5351,6 +5380,15 @@ static void test_EM_REPLACESEL(int redraw)
         SendMessageA(hwndRichEdit, WM_SETREDRAW, TRUE, 0);
 
     DestroyWindow(hwndRichEdit);
+
+    /* Single-line richedit */
+    hwndRichEdit = new_richedit_with_style(NULL, 0);
+    r = SendMessageA(hwndRichEdit, EM_REPLACESEL, 0, (LPARAM)"line1\r\nline2");
+    ok(r == 12, "EM_REPLACESEL returned %d, expected 12\n", r);
+    r = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
+    ok(r == 5, "WM_GETTEXT returned %d, expected 5\n", r);
+    ok(!strcmp(buffer, "line1"), "WM_GETTEXT returned incorrect string '%s'\n", buffer);
+    DestroyWindow(hwndRichEdit);
 }
 
 /* Native riched20 inspects the keyboard state (e.g. GetKeyState)
@@ -5498,6 +5536,39 @@ static void test_WM_PASTE(void)
         "test paste: strcmp = %i, actual = '%s'\n", result, buffer);
     release_key(VK_CONTROL);
 
+    /* Copy multiline text to clipboard for future use */
+    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text3);
+    SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
+    SendMessageA(hwndRichEdit, WM_COPY, 0, 0);
+    SendMessageA(hwndRichEdit, EM_SETSEL, 0, 0);
+
+    /* Paste into read-only control */
+    result = SendMessageA(hwndRichEdit, EM_SETREADONLY, TRUE, 0);
+    SendMessageA(hwndRichEdit, WM_PASTE, 0, 0);
+    SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
+    result = strcmp(buffer, text3);
+    ok(result == 0,
+        "test paste: strcmp = %i, actual = '%s'\n", result, buffer);
+
+    /* Cut from read-only control */
+    SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
+    SendMessageA(hwndRichEdit, WM_CUT, 0, 0);
+    SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
+    result = strcmp(buffer, text3);
+    ok(result == 0,
+        "test paste: strcmp = %i, actual = '%s'\n", result, buffer);
+
+    /* FIXME: Wine doesn't flush Ole clipboard when window is destroyed so do it manually */
+    OleFlushClipboard();
+    DestroyWindow(hwndRichEdit);
+
+    /* Paste multi-line text into single-line control */
+    hwndRichEdit = new_richedit_with_style(NULL, 0);
+    SendMessageA(hwndRichEdit, WM_PASTE, 0, 0);
+    SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
+    result = strcmp(buffer, "testing paste");
+    ok(result == 0,
+        "test paste: strcmp = %i, actual = '%s'\n", result, buffer);
     DestroyWindow(hwndRichEdit);
 }
 
@@ -5958,6 +6029,18 @@ static void test_EM_STREAMIN(void)
   ok(es.dwError == 0, "EM_STREAMIN: Test 5 set error %d, expected %d\n", es.dwError, 0);
 
   DestroyWindow(hwndRichEdit);
+
+  /* Single-line richedit */
+  hwndRichEdit = new_richedit_with_style(NULL, 0);
+  ptr = "line1\r\nline2";
+  es.dwCookie = (DWORD_PTR)&ptr;
+  es.dwError = 0;
+  es.pfnCallback = test_EM_STREAMIN_esCallback;
+  result = SendMessageA(hwndRichEdit, EM_STREAMIN, SF_TEXT, (LPARAM)&es);
+  ok(result == 12, "got %ld, expected %d\n", result, 12);
+  result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
+  ok (!strcmp(buffer, "line1"),
+      "EM_STREAMIN: Unexpected text '%s'\n", buffer);
 }
 
 static void test_EM_StreamIn_Undo(void)

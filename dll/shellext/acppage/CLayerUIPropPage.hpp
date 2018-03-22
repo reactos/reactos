@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Compatibility Layer Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CLayerUIPropPage definition
- * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once

@@ -19,8 +19,11 @@
  */
 
 #include "hhctrl.h"
+#include "resource.h"
 
-#include <mshtmhst.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 static inline WebBrowserContainer *impl_from_IOleClientSite(IOleClientSite *iface)
 {

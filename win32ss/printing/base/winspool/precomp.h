@@ -15,8 +15,10 @@
 #include <winreg.h>
 #include <winspool.h>
 #include <winspool_c.h>
+#include <ndk/rtlfuncs.h>
 
 #include <spoolss.h>
+#include <marshalling/marshalling.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(winspool);

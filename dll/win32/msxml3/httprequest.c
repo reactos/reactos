@@ -19,14 +19,38 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define NONAMELESSUNION
 
-#include <wingdi.h>
-#include <mshtml.h>
-#include <objsafe.h>
-#include <docobj.h>
+#include "config.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/xmlerror.h>
+# include <libxml/encoding.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "wininet.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "mshtml.h"
+#include "msxml6.h"
+#include "objsafe.h"
+#include "docobj.h"
+#include "shlwapi.h"
+
+#include "msxml_private.h"
+
+#include "wine/debug.h"
 
 #ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 static const WCHAR colspaceW[] = {':',' ',0};
 static const WCHAR crlfW[] = {'\r','\n',0};
@@ -49,6 +73,7 @@ typedef struct
     IXMLHTTPRequest IXMLHTTPRequest_iface;
     IObjectWithSite IObjectWithSite_iface;
     IObjectSafety   IObjectSafety_iface;
+    ISupportErrorInfo ISupportErrorInfo_iface;
     LONG ref;
 
     READYSTATE state;
@@ -105,6 +130,11 @@ static inline httprequest *impl_from_IObjectWithSite(IObjectWithSite *iface)
 static inline httprequest *impl_from_IObjectSafety(IObjectSafety *iface)
 {
     return CONTAINING_RECORD(iface, httprequest, IObjectSafety_iface);
+}
+
+static inline httprequest *impl_from_ISupportErrorInfo(ISupportErrorInfo *iface)
+{
+    return CONTAINING_RECORD(iface, httprequest, ISupportErrorInfo_iface);
 }
 
 static inline serverhttp *impl_from_IServerXMLHTTPRequest(IServerXMLHTTPRequest *iface)
@@ -486,7 +516,7 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate *ifac
     if (This->request->use_utf8_content)
     {
         lstrcpyW(ptr, content_type_utf8W);
-        ptr += sizeof(content_type_utf8W)/sizeof(WCHAR)-1;
+        ptr += ARRAY_SIZE(content_type_utf8W) - 1;
     }
 
     if (base_uri)
@@ -505,13 +535,13 @@ static HRESULT WINAPI BSCHttpNegotiate_BeginningTransaction(IHttpNegotiate *ifac
         ptr += SysStringLen(entry->header);
 
         lstrcpyW(ptr, colspaceW);
-        ptr += sizeof(colspaceW)/sizeof(WCHAR)-1;
+        ptr += ARRAY_SIZE(colspaceW) - 1;
 
         lstrcpyW(ptr, entry->value);
         ptr += SysStringLen(entry->value);
 
         lstrcpyW(ptr, crlfW);
-        ptr += sizeof(crlfW)/sizeof(WCHAR)-1;
+        ptr += ARRAY_SIZE(crlfW) - 1;
     }
 
     *add_headers = buff;
@@ -856,6 +886,7 @@ static HRESULT verify_uri(httprequest *This, IUri *uri)
 static HRESULT httprequest_open(httprequest *This, BSTR method, BSTR url,
         VARIANT async, VARIANT user, VARIANT password)
 {
+    static const WCHAR MethodHeadW[] = {'H','E','A','D',0};
     static const WCHAR MethodGetW[] = {'G','E','T',0};
     static const WCHAR MethodPutW[] = {'P','U','T',0};
     static const WCHAR MethodPostW[] = {'P','O','S','T',0};
@@ -891,6 +922,7 @@ static HRESULT httprequest_open(httprequest *This, BSTR method, BSTR url,
         This->verb = BINDVERB_POST;
     }
     else if (!strcmpiW(method, MethodDeleteW) ||
+             !strcmpiW(method, MethodHeadW) ||
              !strcmpiW(method, MethodPropFindW))
     {
         This->verb = BINDVERB_CUSTOM;
@@ -998,8 +1030,8 @@ static HRESULT httprequest_setRequestHeader(httprequest *This, BSTR header, BSTR
     entry->value  = SysAllocString(value);
 
     /* header length including null terminator */
-    This->reqheader_size += SysStringLen(entry->header) + sizeof(colspaceW)/sizeof(WCHAR) +
-                            SysStringLen(entry->value)  + sizeof(crlfW)/sizeof(WCHAR) - 1;
+    This->reqheader_size += SysStringLen(entry->header) + ARRAY_SIZE(colspaceW) +
+        SysStringLen(entry->value) + ARRAY_SIZE(crlfW) - 1;
 
     list_add_head(&This->reqheaders, &entry->entry);
 
@@ -1303,6 +1335,10 @@ static HRESULT WINAPI XMLHTTPRequest_QueryInterface(IXMLHTTPRequest *iface, REFI
     {
         *ppvObject = &This->IObjectSafety_iface;
     }
+    else if (IsEqualGUID(&IID_ISupportErrorInfo, riid))
+    {
+        *ppvObject = &This->ISupportErrorInfo_iface;
+    }
     else
     {
         TRACE("Unsupported interface %s\n", debugstr_guid(riid));
@@ -1310,7 +1346,7 @@ static HRESULT WINAPI XMLHTTPRequest_QueryInterface(IXMLHTTPRequest *iface, REFI
         return E_NOINTERFACE;
     }
 
-    IXMLHTTPRequest_AddRef( iface );
+    IUnknown_AddRef((IUnknown *)*ppvObject);
 
     return S_OK;
 }
@@ -1683,6 +1719,41 @@ static const IObjectSafetyVtbl ObjectSafetyVtbl = {
     httprequest_Safety_SetInterfaceSafetyOptions
 };
 
+static HRESULT WINAPI SupportErrorInfo_QueryInterface(ISupportErrorInfo *iface, REFIID riid, void **obj)
+{
+    httprequest *This = impl_from_ISupportErrorInfo(iface);
+    return IXMLHTTPRequest_QueryInterface(&This->IXMLHTTPRequest_iface, riid, obj);
+}
+
+static ULONG WINAPI SupportErrorInfo_AddRef(ISupportErrorInfo *iface)
+{
+    httprequest *This = impl_from_ISupportErrorInfo(iface);
+    return IXMLHTTPRequest_AddRef(&This->IXMLHTTPRequest_iface);
+}
+
+static ULONG WINAPI SupportErrorInfo_Release(ISupportErrorInfo *iface)
+{
+    httprequest *This = impl_from_ISupportErrorInfo(iface);
+    return IXMLHTTPRequest_Release(&This->IXMLHTTPRequest_iface);
+}
+
+static HRESULT WINAPI SupportErrorInfo_InterfaceSupportsErrorInfo(ISupportErrorInfo *iface, REFIID riid)
+{
+    httprequest *This = impl_from_ISupportErrorInfo(iface);
+
+    FIXME("(%p)->(%s)\n", This, debugstr_guid(riid));
+
+    return E_NOTIMPL;
+}
+
+static const ISupportErrorInfoVtbl SupportErrorInfoVtbl =
+{
+    SupportErrorInfo_QueryInterface,
+    SupportErrorInfo_AddRef,
+    SupportErrorInfo_Release,
+    SupportErrorInfo_InterfaceSupportsErrorInfo,
+};
+
 /* IServerXMLHTTPRequest */
 static HRESULT WINAPI ServerXMLHTTPRequest_QueryInterface(IServerXMLHTTPRequest *iface, REFIID riid, void **obj)
 {
@@ -1697,6 +1768,10 @@ static HRESULT WINAPI ServerXMLHTTPRequest_QueryInterface(IServerXMLHTTPRequest 
     {
         *obj = iface;
     }
+    else if ( IsEqualGUID( riid, &IID_ISupportErrorInfo ))
+    {
+        *obj = &This->req.ISupportErrorInfo_iface;
+    }
     else
     {
         TRACE("Unsupported interface %s\n", debugstr_guid(riid));
@@ -1704,7 +1779,7 @@ static HRESULT WINAPI ServerXMLHTTPRequest_QueryInterface(IServerXMLHTTPRequest 
         return E_NOINTERFACE;
     }
 
-    IServerXMLHTTPRequest_AddRef( iface );
+    IUnknown_AddRef( (IUnknown *)*obj );
 
     return S_OK;
 }
@@ -1903,7 +1978,7 @@ static HRESULT WINAPI ServerXMLHTTPRequest_setTimeouts(IServerXMLHTTPRequest *if
 {
     serverhttp *This = impl_from_IServerXMLHTTPRequest( iface );
     FIXME("(%p)->(%d %d %d %d): stub\n", This, resolveTimeout, connectTimeout, sendTimeout, receiveTimeout);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI ServerXMLHTTPRequest_waitForResponse(IServerXMLHTTPRequest *iface, VARIANT timeout, VARIANT_BOOL *isSuccessful)
@@ -1961,6 +2036,7 @@ static void init_httprequest(httprequest *req)
     req->IXMLHTTPRequest_iface.lpVtbl = &XMLHTTPRequestVtbl;
     req->IObjectWithSite_iface.lpVtbl = &ObjectWithSiteVtbl;
     req->IObjectSafety_iface.lpVtbl = &ObjectSafetyVtbl;
+    req->ISupportErrorInfo_iface.lpVtbl = &SupportErrorInfoVtbl;
     req->ref = 1;
 
     req->async = FALSE;

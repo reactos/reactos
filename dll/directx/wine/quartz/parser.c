@@ -20,6 +20,20 @@
  */
 
 #include "quartz_private.h"
+#include "pin.h"
+
+#include "vfwmsgs.h"
+#include "amvideo.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+#include <math.h>
+#include <assert.h>
+
+#include "parser.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 static const WCHAR wcsInputPinName[] = {'i','n','p','u','t',' ','p','i','n',0};
 static const IMediaSeekingVtbl Parser_Seeking_Vtbl;
@@ -54,7 +68,7 @@ static IPin* WINAPI Parser_GetPin(BaseFilter *iface, int pos)
 {
     ParserImpl *This = impl_from_BaseFilter(iface);
 
-    TRACE("Asking for pos %x\n", pos);
+    TRACE("%p->(%x)\n", This, pos);
 
     /* Input pin also has a pin, hence the > and not >= */
     if (pos > This->cStreams || pos < 0)
@@ -67,6 +81,8 @@ static IPin* WINAPI Parser_GetPin(BaseFilter *iface, int pos)
 static LONG WINAPI Parser_GetPinCount(BaseFilter *iface)
 {
     ParserImpl *This = impl_from_BaseFilter(iface);
+
+    TRACE("%p->()\n", This);
 
     return This->cStreams;
 }
@@ -212,7 +228,7 @@ HRESULT WINAPI Parser_GetClassID(IBaseFilter * iface, CLSID * pClsid)
 {
     ParserImpl *This = impl_from_IBaseFilter(iface);
 
-    TRACE("(%p)\n", pClsid);
+    TRACE("%p->(%p)\n", This, pClsid);
 
     *pClsid = This->filter.clsid;
 
@@ -227,7 +243,7 @@ HRESULT WINAPI Parser_Stop(IBaseFilter * iface)
     PullPin *pin = impl_PullPin_from_IPin(This->ppPins[0]);
     ULONG i;
 
-    TRACE("()\n");
+    TRACE("%p->()\n", This);
 
     EnterCriticalSection(&pin->thread_lock);
 
@@ -265,7 +281,7 @@ HRESULT WINAPI Parser_Pause(IBaseFilter * iface)
     ParserImpl *This = impl_from_IBaseFilter(iface);
     PullPin *pin = impl_PullPin_from_IPin(This->ppPins[0]);
 
-    TRACE("()\n");
+    TRACE("%p->()\n", This);
 
     EnterCriticalSection(&pin->thread_lock);
     EnterCriticalSection(&This->filter.csFilter);
@@ -301,7 +317,7 @@ HRESULT WINAPI Parser_Run(IBaseFilter * iface, REFERENCE_TIME tStart)
 
     ULONG i;
 
-    TRACE("(%s)\n", wine_dbgstr_longlong(tStart));
+    TRACE("%p->(%s)\n", This, wine_dbgstr_longlong(tStart));
 
     EnterCriticalSection(&pin->thread_lock);
     EnterCriticalSection(&This->filter.csFilter);
@@ -347,7 +363,7 @@ HRESULT WINAPI Parser_GetState(IBaseFilter * iface, DWORD dwMilliSecsTimeout, FI
     PullPin *pin = impl_PullPin_from_IPin(This->ppPins[0]);
     HRESULT hr = S_OK;
 
-    TRACE("(%d, %p)\n", dwMilliSecsTimeout, pState);
+    TRACE("%p->(%d, %p)\n", This, dwMilliSecsTimeout, pState);
 
     EnterCriticalSection(&pin->thread_lock);
     EnterCriticalSection(&This->filter.csFilter);
@@ -368,7 +384,7 @@ HRESULT WINAPI Parser_SetSyncSource(IBaseFilter * iface, IReferenceClock *pClock
     ParserImpl *This = impl_from_IBaseFilter(iface);
     PullPin *pin = impl_PullPin_from_IPin(This->ppPins[0]);
 
-    TRACE("(%p)\n", pClock);
+    TRACE("%p->(%p)\n", This, pClock);
 
     EnterCriticalSection(&pin->thread_lock);
     BaseFilterImpl_SetSyncSource(iface,pClock);
@@ -391,7 +407,8 @@ HRESULT WINAPI Parser_EnumPins(IBaseFilter * iface, IEnumPins **ppEnum)
 
 HRESULT WINAPI Parser_FindPin(IBaseFilter * iface, LPCWSTR Id, IPin **ppPin)
 {
-    FIXME("(%p)->(%s,%p)\n", iface, debugstr_w(Id), ppPin);
+    ParserImpl *This = impl_from_IBaseFilter(iface);
+    FIXME("(%p)->(%s,%p)\n", This, debugstr_w(Id), ppPin);
 
     /* FIXME: critical section */
 

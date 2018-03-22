@@ -16,9 +16,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+#include <stdarg.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winerror.h"
+
+#include "objbase.h"
+#include "ocidl.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
 #include "wincodecs_private.h"
 
-#include <shlwapi.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 /***********************************************************************
  *		interface for self-registering

@@ -216,9 +216,11 @@ static COLORREF get_back_color( ME_Context *c, ME_Style *style, BOOL highlight )
     return color;
 }
 
-static void get_underline_pen( ME_Style *style, COLORREF color, HPEN *pen )
+static HPEN get_underline_pen( ME_Style *style, COLORREF color )
 {
-    *pen = NULL;
+    if (style->fmt.dwEffects & CFE_LINK)
+        return CreatePen( PS_SOLID, 1, color );
+
     /* Choose the pen type for underlining the text. */
     if (style->fmt.dwEffects & CFE_UNDERLINE)
     {
@@ -227,11 +229,9 @@ static void get_underline_pen( ME_Style *style, COLORREF color, HPEN *pen )
         case CFU_UNDERLINE:
         case CFU_UNDERLINEWORD: /* native seems to map it to simple underline (MSDN) */
         case CFU_UNDERLINEDOUBLE: /* native seems to map it to simple underline (MSDN) */
-            *pen = CreatePen( PS_SOLID, 1, color );
-            break;
+            return CreatePen( PS_SOLID, 1, color );
         case CFU_UNDERLINEDOTTED:
-            *pen = CreatePen( PS_DOT, 1, color );
-            break;
+            return CreatePen( PS_DOT, 1, color );
         default:
             FIXME( "Unknown underline type (%u)\n", style->fmt.bUnderlineType );
             /* fall through */
@@ -240,14 +240,14 @@ static void get_underline_pen( ME_Style *style, COLORREF color, HPEN *pen )
             break;
         }
     }
-    return;
+    return NULL;
 }
 
 static void draw_underline( ME_Context *c, ME_Run *run, int x, int y, COLORREF color )
 {
     HPEN pen;
 
-    get_underline_pen( run->style, color, &pen );
+    pen = get_underline_pen( run->style, color );
     if (pen)
     {
         HPEN old_pen = SelectObject( c->hDC, pen );
@@ -481,7 +481,7 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
   }
 
   if (run->nFlags & MERF_GRAPHICS)
-    ME_DrawOLE(c, x, y, run, para, (runofs >= nSelFrom) && (runofs < nSelTo));
+    ME_DrawOLE(c, x, y, run, (runofs >= nSelFrom) && (runofs < nSelTo));
   else
   {
     ME_DrawTextWithStyle(c, run, x, y, nSelFrom - runofs, nSelTo - runofs,

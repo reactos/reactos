@@ -1961,8 +1961,9 @@ xmlBuildURI(const xmlChar *URI, const xmlChar *base) {
 	    res->scheme = xmlMemStrdup(bas->scheme);
 	if (bas->authority != NULL)
 	    res->authority = xmlMemStrdup(bas->authority);
-	else if (bas->server != NULL) {
-	    res->server = xmlMemStrdup(bas->server);
+	else if ((bas->server != NULL) || (bas->port == -1)) {
+	    if (bas->server != NULL)
+		res->server = xmlMemStrdup(bas->server);
 	    if (bas->user != NULL)
 		res->user = xmlMemStrdup(bas->user);
 	    res->port = bas->port;
@@ -2024,8 +2025,9 @@ xmlBuildURI(const xmlChar *URI, const xmlChar *base) {
     }
     if (bas->authority != NULL)
 	res->authority = xmlMemStrdup(bas->authority);
-    else if (bas->server != NULL) {
-	res->server = xmlMemStrdup(bas->server);
+    else if ((bas->server != NULL) || (bas->port == -1)) {
+	if (bas->server != NULL)
+	    res->server = xmlMemStrdup(bas->server);
 	if (bas->user != NULL)
 	    res->user = xmlMemStrdup(bas->user);
 	res->port = bas->port;
@@ -2163,7 +2165,6 @@ xmlBuildRelativeURI (const xmlChar * URI, const xmlChar * base)
     xmlChar *val = NULL;
     int ret;
     int ix;
-    int pos = 0;
     int nbslash = 0;
     int len;
     xmlURIPtr ref = NULL;
@@ -2254,19 +2255,22 @@ xmlBuildRelativeURI (const xmlChar * URI, const xmlChar * base)
 	uptr = NULL;
 	len = 1;	/* this is for a string terminator only */
     } else {
-    /*
-     * Next we compare the two strings and find where they first differ
-     */
-	if ((ref->path[pos] == '.') && (ref->path[pos+1] == '/'))
-            pos += 2;
+        xmlChar *rptr = (xmlChar *) ref->path;
+        int pos = 0;
+
+        /*
+         * Next we compare the two strings and find where they first differ
+         */
+	if ((*rptr == '.') && (rptr[1] == '/'))
+            rptr += 2;
 	if ((*bptr == '.') && (bptr[1] == '/'))
             bptr += 2;
-	else if ((*bptr == '/') && (ref->path[pos] != '/'))
+	else if ((*bptr == '/') && (*rptr != '/'))
 	    bptr++;
-	while ((bptr[pos] == ref->path[pos]) && (bptr[pos] != 0))
+	while ((bptr[pos] == rptr[pos]) && (bptr[pos] != 0))
 	    pos++;
 
-	if (bptr[pos] == ref->path[pos]) {
+	if (bptr[pos] == rptr[pos]) {
 	    val = xmlStrdup(BAD_CAST "");
 	    goto done;		/* (I can't imagine why anyone would do this) */
 	}
@@ -2276,25 +2280,25 @@ xmlBuildRelativeURI (const xmlChar * URI, const xmlChar * base)
 	 * beginning of the "unique" suffix of URI
 	 */
 	ix = pos;
-	if ((ref->path[ix] == '/') && (ix > 0))
+	if ((rptr[ix] == '/') && (ix > 0))
 	    ix--;
-	else if ((ref->path[ix] == 0) && (ix > 1) && (ref->path[ix - 1] == '/'))
+	else if ((rptr[ix] == 0) && (ix > 1) && (rptr[ix - 1] == '/'))
 	    ix -= 2;
 	for (; ix > 0; ix--) {
-	    if (ref->path[ix] == '/')
+	    if (rptr[ix] == '/')
 		break;
 	}
 	if (ix == 0) {
-	    uptr = (xmlChar *)ref->path;
+	    uptr = (xmlChar *)rptr;
 	} else {
 	    ix++;
-	    uptr = (xmlChar *)&ref->path[ix];
+	    uptr = (xmlChar *)&rptr[ix];
 	}
 
 	/*
 	 * In base, count the number of '/' from the differing point
 	 */
-	if (bptr[pos] != ref->path[pos]) {/* check for trivial URI == base */
+	if (bptr[pos] != rptr[pos]) {/* check for trivial URI == base */
 	    for (; bptr[ix] != 0; ix++) {
 		if (bptr[ix] == '/')
 		    nbslash++;
@@ -2390,8 +2394,7 @@ xmlCanonicPath(const xmlChar *path)
  */
 #if defined(_WIN32) && !defined(__CYGWIN__)
     int len = 0;
-    int i = 0;
-    xmlChar *p = NULL;
+    char *p = NULL;
 #endif
     xmlURIPtr uri;
     xmlChar *ret;
@@ -2455,6 +2458,7 @@ xmlCanonicPath(const xmlChar *path)
 	        xmlFreeURI(uri);
 		return escURI;
 	    }
+            xmlFree(escURI);
 	}
     }
 
@@ -2472,7 +2476,7 @@ path_processing:
     len = xmlStrlen(path);
     if ((len > 2) && IS_WINDOWS_PATH(path)) {
         /* make the scheme 'file' */
-	uri->scheme = xmlStrdup(BAD_CAST "file");
+	uri->scheme = (char *) xmlStrdup(BAD_CAST "file");
 	/* allocate space for leading '/' + path + string terminator */
 	uri->path = xmlMallocAtomic(len + 2);
 	if (uri->path == NULL) {
@@ -2482,9 +2486,9 @@ path_processing:
 	/* Put in leading '/' plus path */
 	uri->path[0] = '/';
 	p = uri->path + 1;
-	strncpy(p, path, len + 1);
+	strncpy(p, (char *) path, len + 1);
     } else {
-	uri->path = xmlStrdup(path);
+	uri->path = (char *) xmlStrdup(path);
 	if (uri->path == NULL) {
 	    xmlFreeURI(uri);
 	    return(NULL);

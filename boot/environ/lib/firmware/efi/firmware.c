@@ -280,7 +280,7 @@ EfiVmOpenProtocol (
     }
 
     /* Check what address the interface lives at, and translate it */
-    InterfaceVa = (PVOID)InterfaceAddress.LowPart;
+    InterfaceVa = PhysicalAddressToPtr(InterfaceAddress);
     if (BlMmTranslateVirtualAddress(InterfaceVa, &TranslatedAddress))
     {
         /* We expect firmware to be 1:1 mapped, fail if not */
@@ -868,9 +868,9 @@ EfiConInExSetState (
     {
         /* Translate pointers from virtual to physical */
         BlMmTranslateVirtualAddress(ConInEx, &ConInExPhys);
-        ConInEx = (EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL*)ConInExPhys.LowPart;
+        ConInEx = (EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL*)PhysicalAddressToPtr(ConInExPhys);
         BlMmTranslateVirtualAddress(KeyToggleState, &KeyTogglePhys);
-        KeyToggleState = (EFI_KEY_TOGGLE_STATE*)KeyTogglePhys.LowPart;
+        KeyToggleState = (EFI_KEY_TOGGLE_STATE*)PhysicalAddressToPtr(KeyTogglePhys);
 
         /* Switch to real mode */
         BlpArchSwitchContext(BlRealMode);
@@ -938,15 +938,15 @@ EfiGetMemoryMap (
     {
         /* Convert all of the addresses to physical */
         BlMmTranslateVirtualAddress(MemoryMapSize, &MemoryMapSizePhysical);
-        MemoryMapSize = (UINTN*)MemoryMapSizePhysical.LowPart;
+        MemoryMapSize = (UINTN*)PhysicalAddressToPtr(MemoryMapSizePhysical);
         BlMmTranslateVirtualAddress(MemoryMap, &MemoryMapPhysical);
-        MemoryMap = (EFI_MEMORY_DESCRIPTOR*)MemoryMapPhysical.LowPart;
+        MemoryMap = (EFI_MEMORY_DESCRIPTOR*)PhysicalAddressToPtr(MemoryMapPhysical);
         BlMmTranslateVirtualAddress(MapKey, &MapKeyPhysical);
-        MapKey = (UINTN*)MapKeyPhysical.LowPart;
+        MapKey = (UINTN*)PhysicalAddressToPtr(MapKeyPhysical);
         BlMmTranslateVirtualAddress(DescriptorSize, &DescriptorSizePhysical);
-        DescriptorSize = (UINTN*)DescriptorSizePhysical.LowPart;
+        DescriptorSize = (UINTN*)PhysicalAddressToPtr(DescriptorSizePhysical);
         BlMmTranslateVirtualAddress(DescriptorVersion, &DescriptorVersionPhysical);
-        DescriptorVersion = (UINTN*)DescriptorVersionPhysical.LowPart;
+        DescriptorVersion = (UINTN*)PhysicalAddressToPtr(DescriptorVersionPhysical);
 
         /* Switch to real mode */
         BlpArchSwitchContext(BlRealMode);
@@ -1267,15 +1267,15 @@ EfiGopGetFrameBuffer (
     {
         /* Translate pointer to physical */
         BlMmTranslateVirtualAddress(GopInterface, &GopInterfacePhys);
-        GopInterface = (PVOID)GopInterfacePhys.LowPart;
+        GopInterface = PhysicalAddressToPtr(GopInterfacePhys);
 
         /* Translate pointer to physical */
         BlMmTranslateVirtualAddress(FrameBuffer, &FrameBufferPhys);
-        FrameBuffer = (PVOID)FrameBufferPhys.LowPart;
+        FrameBuffer = PhysicalAddressToPtr(FrameBufferPhys);
 
         /* Translate pointer to physical */
         BlMmTranslateVirtualAddress(FrameBufferSize, &FrameBufferSizePhys);
-        FrameBufferSize = (PVOID)FrameBufferSizePhys.LowPart;
+        FrameBufferSize = PhysicalAddressToPtr(FrameBufferSizePhys);
 
         /* Switch to real mode */
         BlpArchSwitchContext(BlRealMode);
@@ -1311,21 +1311,21 @@ EfiGopGetCurrentMode (
         {
             return STATUS_UNSUCCESSFUL;
         }
-        GopInterface = (PVOID)GopInterfacePhys.LowPart;
+        GopInterface = PhysicalAddressToPtr(GopInterfacePhys);
 
         /* Translate pointer to physical */
         if (!BlMmTranslateVirtualAddress(Mode, &ModePhys))
         {
             return STATUS_UNSUCCESSFUL;
         }
-        Mode = (PVOID)ModePhys.LowPart;
+        Mode = PhysicalAddressToPtr(ModePhys);
 
         /* Translate pointer to physical */
         if (!BlMmTranslateVirtualAddress(Information, &InformationPhys))
         {
             return STATUS_UNSUCCESSFUL;
         }
-        Information = (PVOID)InformationPhys.LowPart;
+        Information = PhysicalAddressToPtr(InformationPhys);
 
         /* Switch to real mode */
         BlpArchSwitchContext(BlRealMode);
@@ -1435,7 +1435,7 @@ EfiLocateHandleBuffer (
     {
         /* Translate the input buffer from virtual to physical */
         TranslateResult = BlMmTranslateVirtualAddress(InputBuffer, &BufferPhys);
-        InputBuffer = TranslateResult ? (PVOID)BufferPhys.LowPart : NULL;
+        InputBuffer = TranslateResult ? PhysicalAddressToPtr(BufferPhys) : NULL;
 
         /* Switch to real mode */
         BlpArchSwitchContext(BlRealMode);
@@ -1478,7 +1478,7 @@ EfiLocateHandleBuffer (
             /* Translate the input buffer from virtual to physical */
             TranslateResult = BlMmTranslateVirtualAddress(InputBuffer,
                                                           &BufferPhys);
-            InputBuffer = TranslateResult ? (PVOID)BufferPhys.LowPart : NULL;
+            InputBuffer = TranslateResult ? PhysicalAddressToPtr(BufferPhys) : NULL;
 
             /* Switch to real mode */
             BlpArchSwitchContext(BlRealMode);
@@ -1581,7 +1581,7 @@ EfiAllocatePages (
     {
         /* Translate output address */
         BlMmTranslateVirtualAddress(Memory, &MemoryPhysical);
-        Memory = (EFI_PHYSICAL_ADDRESS*)MemoryPhysical.LowPart;
+        Memory = (EFI_PHYSICAL_ADDRESS*)PhysicalAddressToPtr(MemoryPhysical);
 
         /* Switch to real mode */
         BlpArchSwitchContext(BlRealMode);

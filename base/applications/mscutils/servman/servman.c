@@ -23,6 +23,7 @@ wWinMain(HINSTANCE hThisInstance,
 {
     LPWSTR lpAppName;
     HWND hMainWnd;
+    HACCEL hAccelTable;
     MSG Msg;
     int Ret = 1;
     INITCOMMONCONTROLSEX icex;
@@ -51,6 +52,9 @@ wWinMain(HINSTANCE hThisInstance,
         return 1;
     }
 
+    hAccelTable = LoadAcceleratorsW(hInstance,
+                                    MAKEINTRESOURCEW(IDA_SERVMAN));
+
     if (InitMainWindowImpl())
     {
         hMainWnd = CreateMainWindow(lpAppName,
@@ -62,6 +66,7 @@ wWinMain(HINSTANCE hThisInstance,
             {
                 //if ( !hProgDlg || !IsWindow(hProgDlg) || !IsDialogMessage(hProgDlg, &Msg) )
                 //if (!IsDialogMessage(g_hProgDlg, &Msg))
+                if (!TranslateAcceleratorW(hMainWnd, hAccelTable, &Msg))
                 {
                     TranslateMessage(&Msg);
                     DispatchMessageW(&Msg);

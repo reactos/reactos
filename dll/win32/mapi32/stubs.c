@@ -1,5 +1,7 @@
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(mapi);
+
 typedef PVOID LPMAPIFORMMGR, LPADDRESSBOOK;
 
 HRESULT

@@ -865,7 +865,7 @@ MmPapAllocatePagesInRange (
                                                    Type);
 
         /* Return the allocated address */
-        *PhysicalAddress = (PVOID)BaseAddress.LowPart;
+        *PhysicalAddress = PhysicalAddressToPtr(BaseAddress);
     }
 
 Exit:
@@ -1221,7 +1221,7 @@ MmPapFreePages (
 NTSTATUS
 BlMmGetMemoryMap (
     _In_ PLIST_ENTRY MemoryMap,
-    _In_ PBL_IMAGE_PARAMETERS MemoryParameters,
+    _In_ PBL_BUFFER_DESCRIPTOR MemoryParameters,
     _In_ ULONG WhichTypes,
     _In_ ULONG Flags
     )
@@ -1639,7 +1639,7 @@ MmSelectMappingAddress (
     if (MmTranslationType == BlNone)
     {
         /* Just return the physical address as the mapping address */
-        PreferredAddress = (PVOID)PhysicalAddress.LowPart;
+        PreferredAddress = PhysicalAddressToPtr(PhysicalAddress);
         goto Success;
     }
 

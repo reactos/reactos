@@ -18,7 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+#include "wine/debug.h"
+
+#define COBJMACROS
+
+#include "winbase.h"
+#include "wingdi.h"
+
 #include "d3dxof_private.h"
+#include "dxfile.h"
+
+#include <stdio.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dxof_parsing);
 

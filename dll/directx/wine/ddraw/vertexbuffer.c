@@ -17,7 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include "ddraw_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static inline struct d3d_vertex_buffer *impl_from_IDirect3DVertexBuffer7(IDirect3DVertexBuffer7 *iface)
 {
@@ -97,7 +102,7 @@ static ULONG WINAPI d3d_vertex_buffer7_Release(IDirect3DVertexBuffer7 *iface)
         if (buffer->version == 7)
             IDirectDraw7_Release(&buffer->ddraw->IDirectDraw7_iface);
 
-        HeapFree(GetProcessHeap(), 0, buffer);
+        heap_free(buffer);
     }
 
     return ref;
@@ -110,22 +115,24 @@ static ULONG WINAPI d3d_vertex_buffer7_Release(IDirect3DVertexBuffer7 *iface)
 static HRESULT d3d_vertex_buffer_create_wined3d_buffer(struct d3d_vertex_buffer *buffer, BOOL dynamic,
         struct wined3d_buffer **wined3d_buffer)
 {
-    DWORD usage = WINED3DUSAGE_STATICDECL;
-    enum wined3d_pool pool;
+    struct wined3d_buffer_desc desc;
 
-    if (buffer->Caps & D3DVBCAPS_SYSTEMMEMORY)
-        pool = WINED3D_POOL_SYSTEM_MEM;
-    else
-        pool = WINED3D_POOL_DEFAULT;
-
+    desc.byte_width = buffer->size;
+    desc.usage = WINED3DUSAGE_STATICDECL;
     if (buffer->Caps & D3DVBCAPS_WRITEONLY)
-        usage |= WINED3DUSAGE_WRITEONLY;
+        desc.usage |= WINED3DUSAGE_WRITEONLY;
     if (dynamic)
-        usage |= WINED3DUSAGE_DYNAMIC;
+        desc.usage |= WINED3DUSAGE_DYNAMIC;
+    desc.bind_flags = WINED3D_BIND_VERTEX_BUFFER;
+    if (buffer->Caps & D3DVBCAPS_SYSTEMMEMORY)
+        desc.access = WINED3D_RESOURCE_ACCESS_CPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+    else
+        desc.access = WINED3D_RESOURCE_ACCESS_GPU | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+    desc.misc_flags = 0;
+    desc.structure_byte_stride = 0;
 
-    return wined3d_buffer_create_vb(buffer->ddraw->wined3d_device,
-        buffer->size, usage, pool, buffer, &ddraw_null_wined3d_parent_ops,
-        wined3d_buffer);
+    return wined3d_buffer_create(buffer->ddraw->wined3d_device, &desc,
+            NULL, buffer, &ddraw_null_wined3d_parent_ops, wined3d_buffer);
 }
 
 /*****************************************************************************
@@ -155,23 +162,16 @@ static HRESULT WINAPI d3d_vertex_buffer7_Lock(IDirect3DVertexBuffer7 *iface,
     struct wined3d_resource *wined3d_resource;
     struct wined3d_map_desc wined3d_map_desc;
     HRESULT hr;
-    DWORD wined3d_flags = 0;
 
     TRACE("iface %p, flags %#x, data %p, data_size %p.\n", iface, flags, data, data_size);
 
-    /* Writeonly: Pointless. Event: Unsupported by native according to the sdk
-     * nosyslock: Not applicable
-     */
+    if (buffer->version != 7)
+        flags &= ~(DDLOCK_NOOVERWRITE | DDLOCK_DISCARDCONTENTS);
+
     if (!(flags & DDLOCK_WAIT))
-        wined3d_flags |= WINED3D_MAP_DONOTWAIT;
-    if (flags & DDLOCK_READONLY)
-        wined3d_flags |= WINED3D_MAP_READONLY;
-    if (flags & DDLOCK_NOOVERWRITE)
-        wined3d_flags |= WINED3D_MAP_NOOVERWRITE;
+        flags |= DDLOCK_DONOTWAIT;
     if (flags & DDLOCK_DISCARDCONTENTS)
     {
-        wined3d_flags |= WINED3D_MAP_DISCARD;
-
         if (!buffer->dynamic)
         {
             struct wined3d_buffer *new_buffer;
@@ -201,7 +201,7 @@ static HRESULT WINAPI d3d_vertex_buffer7_Lock(IDirect3DVertexBuffer7 *iface,
     }
 
     hr = wined3d_resource_map(wined3d_buffer_get_resource(buffer->wined3d_buffer),
-            0, &wined3d_map_desc, NULL, wined3d_flags);
+            0, &wined3d_map_desc, NULL, wined3dmapflags_from_ddrawmapflags(flags));
     *data = wined3d_map_desc.data;
 
     wined3d_mutex_unlock();
@@ -246,7 +246,7 @@ static HRESULT WINAPI d3d_vertex_buffer7_Unlock(IDirect3DVertexBuffer7 *iface)
  *  SrcIndex: Index of the first vertex in the src buffer to process
  *  D3DDevice: Device to use for transformation
  *  Flags: 0 for default, D3DPV_DONOTCOPYDATA to prevent copying
- *         unchaned vertices
+ *         unchanged vertices
  *
  * Returns:
  *  D3D_OK on success
@@ -441,8 +441,7 @@ HRESULT d3d_vertex_buffer_create(struct d3d_vertex_buffer **vertex_buf,
     TRACE("    FVF %#x\n", desc->dwFVF);
     TRACE("    dwNumVertices %u\n", desc->dwNumVertices);
 
-    buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer));
-    if (!buffer)
+    if (!(buffer = heap_alloc_zero(sizeof(*buffer))))
         return DDERR_OUTOFMEMORY;
 
     buffer->IDirect3DVertexBuffer7_iface.lpVtbl = &d3d_vertex_buffer7_vtbl;
@@ -479,7 +478,7 @@ end:
     if (hr == D3D_OK)
         *vertex_buf = buffer;
     else
-        HeapFree(GetProcessHeap(), 0, buffer);
+        heap_free(buffer);
 
     return hr;
 }

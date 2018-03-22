@@ -36,8 +36,28 @@
  *   PropertyStorage_ReadFromStream
  */
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winuser.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "dictionary.h"
 #include "storage32.h"
+#include "enumx.h"
+#include "oleauto.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
 

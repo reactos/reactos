@@ -85,7 +85,9 @@ EXPORTS	TIFFAccessTagMethods
 	TIFFReadRGBAImage
 	TIFFReadRGBAImageOriented
 	TIFFReadRGBAStrip
+	TIFFReadRGBAStripExt
 	TIFFReadRGBATile
+	TIFFReadRGBATileExt
 	TIFFReadRawStrip
 	TIFFReadRawTile
 	TIFFReadScanline

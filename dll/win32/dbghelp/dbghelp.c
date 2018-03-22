@@ -18,9 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "dbghelp_private.h"
+#ifndef DBGHELP_STATIC_LIB
+#include "config.h"
 
+#include "dbghelp_private.h"
+#include "winerror.h"
+#include "psapi.h"
+#include "wine/debug.h"
 #include "wdbgexts.h"
+#include "winnls.h"
+#else
+#include "dbghelp_private.h"
+#include "wdbgexts.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -355,7 +365,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
     pcs->dbg_hdr_addr = 0;
     pcs->next = process_first;
     process_first = pcs;
-
+    
 #ifndef DBGHELP_STATIC_LIB
     if (check_live_target(pcs))
     {

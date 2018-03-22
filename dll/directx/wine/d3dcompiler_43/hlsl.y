@@ -1151,7 +1151,7 @@ preproc_directive:        PRE_LINE STRING
                                 hlsl_ctx.line_no = $1;
                                 if (strcmp($2, hlsl_ctx.source_file))
                                     new_array = d3dcompiler_realloc(hlsl_ctx.source_files,
-                                            sizeof(*hlsl_ctx.source_files) * hlsl_ctx.source_files_count + 1);
+                                            sizeof(*hlsl_ctx.source_files) * (hlsl_ctx.source_files_count + 1));
 
                                 if (new_array)
                                 {

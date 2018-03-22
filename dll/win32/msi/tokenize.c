@@ -16,7 +16,14 @@
 ** parser for analysis.
 */
 
-#include "msipriv.h"
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdlib.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wine/unicode.h"
+#include "query.h"
 #include "sql.tab.h"
 
 /*

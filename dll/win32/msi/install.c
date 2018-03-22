@@ -20,7 +20,22 @@
 
 /* Msi top level apis directly related to installs */
 
+#define COBJMACROS
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "wine/debug.h"
+#include "msi.h"
+#include "msidefs.h"
+#include "objbase.h"
+#include "oleauto.h"
+
 #include "msipriv.h"
+#include "msiserver.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -90,7 +105,7 @@ UINT WINAPI MsiDoActionW( MSIHANDLE hInstall, LPCWSTR szAction )
         return ERROR_SUCCESS;
     }
  
-    ret = ACTION_PerformUIAction( package, szAction, SCRIPT_NONE );
+    ret = ACTION_PerformAction( package, szAction, SCRIPT_NONE );
     msiobj_release( &package->hdr );
 
     return ret;

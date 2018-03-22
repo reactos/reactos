@@ -243,12 +243,25 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
 
     len = GetPrivateProfileStringW(add_codeW, NULL, NULL, buf, sizeof(buf)/sizeof(*buf), ctx->install_file);
     if(len) {
-        FIXME("[Add.Code] section not supported\n");
+        default_install = FALSE;
 
-        /* Don't throw an error if we successfully ran setup hooks;
-           installation is likely to be complete enough */
-        if(default_install)
-            return E_NOTIMPL;
+        for(key = buf; *key; key += strlenW(key)+1) {
+            TRACE("[Add.Code] key: %s\n", debugstr_w(key));
+
+            len = GetPrivateProfileStringW(add_codeW, key, NULL, sect_name, sizeof(sect_name)/sizeof(*sect_name),
+                    ctx->install_file);
+            if(!len) {
+                WARN("Could not get key value\n");
+                return E_FAIL;
+            }
+
+            hres = RunSetupCommandW(ctx->hwnd, ctx->install_file, sect_name,
+                    ctx->tmp_dir, NULL, NULL, RSC_FLAG_INF, NULL);
+            if(FAILED(hres)) {
+                WARN("RunSetupCommandW failed: %08x\n", hres);
+                return hres;
+            }
+        }
     }
 
     if(default_install) {

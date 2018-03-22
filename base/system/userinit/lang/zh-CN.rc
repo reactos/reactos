@@ -1,4 +1,5 @@
 /* Simpified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -37,9 +38,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHELL_FAIL "Userinit 无法启动外壳！"
+    IDS_SHELL_FAIL "Userinit 无法启动 Shell！"
     IDS_INSTALLER_FAIL "Userinit 启动安装程序失败！"
-    IDS_CANCEL_CONFIRM "Are you sure you want to quit the ReactOS LiveCD?\nIf you choose to do so, your computer might restart."
+    IDS_CANCEL_CONFIRM "你确定要退出 ReactOS LiveCD 吗?\n如果选择退出，您的计算机将重新启动。"
 END
 
 STRINGTABLE

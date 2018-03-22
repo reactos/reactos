@@ -27,9 +27,18 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
 #ifndef __STORAGE32_H__
 #define __STORAGE32_H__
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "objbase.h"
+#include "winreg.h"
+#include "winternl.h"
+#include "wine/list.h"
 
 /*
  * Definitions for the file format offsets.
@@ -517,20 +526,25 @@ StgStreamImpl* StgStreamImpl_Construct(
 /******************************************************************************
  * Endian conversion macros
  */
-#undef htole32
-#undef htole16
-
 #ifdef WORDS_BIGENDIAN
 
+#ifndef htole32
 #define htole32(x) RtlUlongByteSwap(x)
+#endif
+#ifndef htole16
 #define htole16(x) RtlUshortByteSwap(x)
+#endif
 #define lendian32toh(x) RtlUlongByteSwap(x)
 #define lendian16toh(x) RtlUshortByteSwap(x)
 
 #else
 
+#ifndef htole32
 #define htole32(x) (x)
+#endif
+#ifndef htole16
 #define htole16(x) (x)
+#endif
 #define lendian32toh(x) (x)
 #define lendian16toh(x) (x)
 

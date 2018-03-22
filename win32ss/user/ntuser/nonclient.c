@@ -737,7 +737,7 @@ UserDrawCaptionButton(PWND pWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hD
       case DFCS_CAPTIONCLOSE:
       {
           PMENU pSysMenu = IntGetSystemMenu(pWnd, FALSE);
-          UINT MenuState = IntGetMenuState(UserHMGetHandle(pSysMenu), SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
+          UINT MenuState = IntGetMenuState(pSysMenu ? UserHMGetHandle(pSysMenu) : NULL, SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
 
          /* A tool window has a smaller Close button */
          if (ExStyle & WS_EX_TOOLWINDOW)
@@ -808,8 +808,8 @@ NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyl
    /* Now the other bit of the frame */
    if (Style & (WS_DLGFRAME | WS_BORDER) || ExStyle & WS_EX_DLGMODALFRAME)
    {
-      DWORD Width = UserGetSystemMetrics(SM_CXBORDER);
-      DWORD Height = UserGetSystemMetrics(SM_CYBORDER);
+      LONG Width = UserGetSystemMetrics(SM_CXBORDER);
+      LONG Height = UserGetSystemMetrics(SM_CYBORDER);
 
       NtGdiSelectBrush(hDC, IntGetSysColorBrush(
          (ExStyle & (WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE)) ? COLOR_3DFACE :
@@ -1380,7 +1380,7 @@ NC_DoButton(PWND pWnd, WPARAM wParam, LPARAM lParam)
    {
       case HTCLOSE:
          SysMenu = IntGetSystemMenu(pWnd, FALSE);
-         MenuState = IntGetMenuState(UserHMGetHandle(SysMenu), SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
+         MenuState = IntGetMenuState(SysMenu ? UserHMGetHandle(SysMenu) : NULL, SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
          if (!(Style & WS_SYSMENU) || (MenuState & (MF_GRAYED|MF_DISABLED)) || (pWnd->style & CS_NOCLOSE))
             return;
          ButtonType = DFCS_CAPTIONCLOSE;
@@ -1554,7 +1554,7 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
     case HTSYSMENU:
     {
       PMENU SysMenu = IntGetSystemMenu(pWnd, FALSE);
-      UINT state = IntGetMenuState(UserHMGetHandle(SysMenu), SC_CLOSE, MF_BYCOMMAND);
+      UINT state = IntGetMenuState(SysMenu ? UserHMGetHandle(SysMenu) : NULL, SC_CLOSE, MF_BYCOMMAND);
                   
       /* If the close item of the sysmenu is disabled or not present do nothing */
       if ((state & (MF_DISABLED | MF_GRAYED)) || (state == 0xFFFFFFFF))

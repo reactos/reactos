@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Compatibility Layer Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CLayerUIPropPage implementation
- * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -33,13 +33,11 @@ static struct {
     { L"Windows XP (SP2)", L"WINXPSP2" },
     { L"Windows XP (SP3)", L"WINXPSP3" },
     { L"Windows Server 2003 (SP1)", L"WINSRV03SP1" },
-#if 0
     { L"Windows Server 2008 (SP1)", L"WINSRV08SP1" },
     { L"Windows Vista", L"VISTARTM" },
     { L"Windows Vista (SP1)", L"VISTASP1" },
     { L"Windows Vista (SP2)", L"VISTASP2" },
     { L"Windows 7", L"WIN7RTM" },
-#endif
     { NULL, NULL }
 };
 
@@ -66,6 +64,28 @@ static const WCHAR* g_AllowedExtensions[] = {
     L".cmd",
     0
 };
+
+BOOL IsBuiltinLayer(PCWSTR Name)
+{
+    size_t n;
+
+    for (n = 0; g_Layers[n].Name; ++n)
+    {
+        if (!wcsicmp(g_Layers[n].Name, Name))
+        {
+            return TRUE;
+        }
+    }
+
+    for (n = 0; g_CompatModes[n].Name; ++n)
+    {
+        if (!wcsicmp(g_CompatModes[n].Name, Name))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
 
 
 void ACDBG_FN(PCSTR FunctionName, PCWSTR Format, ...)
@@ -95,10 +115,16 @@ CLayerUIPropPage::CLayerUIPropPage()
 , m_RegistryEnabledLayers(0)
 , m_EnabledLayers(0)
 {
+    CComBSTR title;
+    title.LoadString(g_hModule, IDS_COMPAT_TITLE);
+    m_psp.pszTitle = title.Detach();
+    m_psp.dwFlags |= PSP_USETITLE;
 }
 
 CLayerUIPropPage::~CLayerUIPropPage()
 {
+    CComBSTR title;
+    title.Attach((BSTR)m_psp.pszTitle);
 }
 
 HRESULT CLayerUIPropPage::InitFile(PCWSTR Filename)
@@ -241,8 +267,6 @@ int CLayerUIPropPage::OnSetActive()
 
     m_CustomLayers = m_RegistryCustomLayers;
 
-    /* TODO: visualize 'custom' layers! */
-
     UpdateControls();
 
     return 0;
@@ -360,6 +384,15 @@ void CLayerUIPropPage::UpdateControls()
         ::ShowWindow(GetDlgItem(g_Layers[n].Id), SW_SHOW);
     }
 
+    CStringW customLayers;
+    for (int j = 0; j < m_CustomLayers.GetSize(); ++j)
+    {
+        if (j > 0)
+            customLayers += L", ";
+        customLayers += m_CustomLayers[j];
+    }
+    SetDlgItemTextW(IDC_ENABLED_LAYERS, customLayers);
+
     SetModified(HasChanges());
 }
 
@@ -371,7 +404,7 @@ LRESULT CLayerUIPropPage::OnCtrlCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl
 
 LRESULT CLayerUIPropPage::OnEditModes(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    if (DialogBoxParam(g_hModule, MAKEINTRESOURCE(IDD_EDITCOMPATIBILITYMODES), m_hWnd, EditModesProc, (LPARAM)this) == IDOK)
+    if (DialogBoxParamW(g_hModule, MAKEINTRESOURCEW(IDD_EDITCOMPATIBILITYMODES), m_hWnd, EditModesProc, (LPARAM)this) == IDOK)
         UpdateControls();
     return 0;
 }
@@ -499,7 +532,7 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
             if (ComboHasData(hWnd))
             {
                 CComBSTR question, title;
-                title.LoadString(g_hModule, IDS_TABTITLE);
+                title.LoadString(g_hModule, IDS_COMPAT_TITLE);
                 question.LoadString(g_hModule, IDS_YOU_DID_NOT_ADD);
                 int result = ::MessageBoxW(hWnd, question, title, MB_YESNOCANCEL | MB_ICONQUESTION);
                 switch (result)

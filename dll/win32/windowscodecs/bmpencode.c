@@ -17,9 +17,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "wingdi.h"
+#include "objbase.h"
+
 #include "wincodecs_private.h"
 
-#include <wingdi.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 struct bmp_pixelformat {
     const WICPixelFormatGUID *guid;
@@ -64,6 +78,8 @@ typedef struct BmpFrameEncode {
     UINT colors;
     BOOL committed;
 } BmpFrameEncode;
+
+static const WCHAR wszEnableV5Header32bppBGRA[] = {'E','n','a','b','l','e','V','5','H','e','a','d','e','r','3','2','b','p','p','B','G','R','A',0};
 
 static inline BmpFrameEncode *impl_from_IWICBitmapFrameEncode(IWICBitmapFrameEncode *iface)
 {
@@ -127,6 +143,9 @@ static HRESULT WINAPI BmpFrameEncode_Initialize(IWICBitmapFrameEncode *iface,
     TRACE("(%p,%p)\n", iface, pIEncoderOptions);
 
     if (This->initialized) return WINCODEC_ERR_WRONGSTATE;
+
+    if (pIEncoderOptions)
+        WARN("ignoring encoder options.\n");
 
     This->initialized = TRUE;
 
@@ -531,6 +550,10 @@ static HRESULT WINAPI BmpEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
     BmpEncoder *This = impl_from_IWICBitmapEncoder(iface);
     BmpFrameEncode *encode;
     HRESULT hr;
+    static const PROPBAG2 opts[1] =
+    {
+        { PROPBAG2_TYPE_DATA, VT_BOOL, 0, 0, (LPOLESTR)wszEnableV5Header32bppBGRA },
+    };
 
     TRACE("(%p,%p,%p)\n", iface, ppIFrameEncode, ppIEncoderOptions);
 
@@ -538,8 +561,11 @@ static HRESULT WINAPI BmpEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 
     if (!This->stream) return WINCODEC_ERR_NOTINITIALIZED;
 
-    hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
-    if (FAILED(hr)) return hr;
+    if (ppIEncoderOptions)
+    {
+        hr = CreatePropertyBag2(opts, sizeof(opts)/sizeof(opts[0]), ppIEncoderOptions);
+        if (FAILED(hr)) return hr;
+    }
 
     encode = HeapAlloc(GetProcessHeap(), 0, sizeof(BmpFrameEncode));
     if (!encode)

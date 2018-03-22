@@ -16,25 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 
-//#include <stdio.h>
-#include <stdarg.h>
+#include <stdio.h>
 
-//#include <windows.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <objbase.h>
-//#include <mscoree.h>
+#include <windows.h>
+#include <mscoree.h>
 #include <fusion.h>
 #include <corerror.h>
+#include <strsafe.h>
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 /* ok-like statement which takes two unicode strings or one unicode and one ANSI string as arguments */
 static CHAR string1[MAX_PATH];
@@ -314,7 +306,7 @@ static const ASMPROP_RES enname[ASM_NAME_MAX_PARAMS] =
 static const ASMPROP_RES pubkeyname[ASM_NAME_MAX_PARAMS] =
 {
     {S_OK, "", 0},
-    {S_OK, "\x12\x34\x56\x78\x90\xab\xcd\xef", 8},
+    {S_OK, "\x01\x23\x45\x67\x89\x0a\xbc\xde", 8},
     {S_OK, "", 0},
     {S_OK, "wine", 10},
     {S_OK, "", 0},
@@ -348,11 +340,6 @@ static inline void to_widechar(LPWSTR dest, LPCSTR src)
     MultiByteToWideChar(CP_ACP, 0, src, -1, dest, MAX_PATH);
 }
 
-static inline void to_multibyte(LPSTR dest, LPWSTR src)
-{
-    WideCharToMultiByte(CP_ACP, 0, src, -1, dest, MAX_PATH, NULL, NULL);
-}
-
 static void test_assembly_name_props_line(IAssemblyName *name,
                                           const ASMPROP_RES *vals, int line)
 {
@@ -376,13 +363,26 @@ static void test_assembly_name_props_line(IAssemblyName *name,
         if (hr != E_INVALIDARG)
         {
             ok(size == vals[i].size, "%d: prop %d: Expected %d, got %d\n", line, i, vals[i].size, size);
-            if (size && size != MAX_PATH)
+            if (!size)
+            {
+                ok(str[0] == 0xcccc, "%d: prop %d: str[0] = %x\n", line, i, str[0]);
+            }
+            else if (size != MAX_PATH)
             {
                 if (i != ASM_NAME_NAME && i != ASM_NAME_CULTURE)
                     ok( !memcmp( vals[i].val, str, size ), "%d: prop %d: wrong value\n", line, i );
                 else
                     ok( !lstrcmpW( expect, str ), "%d: prop %d: Expected %s, got %s\n",
                         line, i, wine_dbgstr_w(expect), wine_dbgstr_w(str) );
+            }
+
+            if (size != 0 && size != MAX_PATH)
+            {
+                size--;
+                hr = IAssemblyName_GetProperty(name, i, str, &size);
+                ok(hr == STRSAFE_E_INSUFFICIENT_BUFFER,
+                        "%d: prop %d: Expected STRSAFE_E_INSUFFICIENT_BUFFER, got %08x\n", line, i, hr);
+                ok(size == vals[i].size, "%d: prop %d: Expected %d, got %d\n", line, i, vals[i].size, size);
             }
         }
     }
@@ -397,6 +397,7 @@ static void test_CreateAssemblyNameObject(void)
     WCHAR str[MAX_PATH];
     WCHAR namestr[MAX_PATH];
     DWORD size, hi, lo;
+    PEKIND arch;
     HRESULT hr;
 
     static const WCHAR empty[] = {0};
@@ -535,6 +536,13 @@ static void test_CreateAssemblyNameObject(void)
     ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
     ok(str[0] == 'a', "got %c\n", str[0]);
     ok(size == 5, "got %u\n", size);
+
+    size = 0;
+    str[0] = 'a';
+    hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
+    ok(str[0] == 'a', "got %c\n", str[0]);
+    ok(size == 5, "Wrong size %u\n", size);
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
@@ -740,8 +748,8 @@ static void test_CreateAssemblyNameObject(void)
 
     IAssemblyName_Release(name);
 
-    /* 'wine, PublicKeyToken=1234567890abcdef' */
-    to_widechar(namestr, "wine, PublicKeyToken=1234567890abcdef");
+    /* 'wine, PublicKeyToken=01234567890abcde' */
+    to_widechar(namestr, "wine, PublicKeyToken=01234567890abcde");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
@@ -750,7 +758,7 @@ static void test_CreateAssemblyNameObject(void)
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok_aw("wine, PublicKeyToken=1234567890abcdef", str);
+    ok_aw("wine, PublicKeyToken=01234567890abcde", str);
     ok(size == 38, "Expected 38, got %d\n", size);
 
     size = MAX_PATH;
@@ -794,6 +802,12 @@ static void test_CreateAssemblyNameObject(void)
         ok_aw("wine, processorArchitecture=x86", str);
         ok(size == 32, "Expected 32, got %d\n", size);
 
+        size = sizeof(arch);
+        hr = IAssemblyName_GetProperty(name, ASM_NAME_ARCHITECTURE, &arch, &size);
+        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(arch == peI386, "Expected peI386, got %d\n", arch);
+        ok(size == sizeof(arch), "Wrong size %d\n", size);
+
         IAssemblyName_Release(name);
 
         /* amd64 */
@@ -807,6 +821,12 @@ static void test_CreateAssemblyNameObject(void)
         ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
         ok_aw("wine, processorArchitecture=AMD64", str);
         ok(size == 34, "Expected 34, got %d\n", size);
+
+        size = sizeof(arch);
+        hr = IAssemblyName_GetProperty(name, ASM_NAME_ARCHITECTURE, &arch, &size);
+        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(arch == peAMD64, "Expected peAMD64, got %d\n", arch);
+        ok(size == sizeof(arch), "Wrong size %d\n", size);
 
         IAssemblyName_Release(name);
 
@@ -822,6 +842,12 @@ static void test_CreateAssemblyNameObject(void)
         ok_aw("wine, processorArchitecture=IA64", str);
         ok(size == 33, "Expected 33, got %d\n", size);
 
+        size = sizeof(arch);
+        hr = IAssemblyName_GetProperty(name, ASM_NAME_ARCHITECTURE, &arch, &size);
+        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(arch == peIA64, "Expected peIA64, got %d\n", arch);
+        ok(size == sizeof(arch), "Wrong size %d\n", size);
+
         IAssemblyName_Release(name);
 
         /* msil */
@@ -835,6 +861,12 @@ static void test_CreateAssemblyNameObject(void)
         ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
         ok_aw("wine, processorArchitecture=MSIL", str);
         ok(size == 33, "Expected 33, got %d\n", size);
+
+        size = sizeof(arch);
+        hr = IAssemblyName_GetProperty(name, ASM_NAME_ARCHITECTURE, &arch, &size);
+        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(arch == peMSIL, "Expected peMSIL, got %d\n", arch);
+        ok(size == sizeof(arch), "Wrong size %d\n", size);
 
         IAssemblyName_Release(name);
     }

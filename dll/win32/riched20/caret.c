@@ -484,7 +484,7 @@ void ME_InsertOLEFromCursor(ME_TextEditor *editor, const REOBJECT* reo, int nCur
 
   di = ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, pStyle,
                                        MERF_GRAPHICS);
-  di->member.run.ole_obj = ALLOC_OBJ(*reo);
+  di->member.run.ole_obj = heap_alloc(sizeof(*reo));
   ME_CopyReObject(di->member.run.ole_obj, reo);
   ME_ReleaseStyle(pStyle);
 }
@@ -550,6 +550,10 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
     } else { /* handle EOLs */
       ME_DisplayItem *tp, *end_run, *run, *prev;
       int eol_len = 0;
+
+      /* Check if new line is allowed for this control */
+      if (!(editor->styleFlags & ES_MULTILINE))
+        break;
 
       /* Find number of CR and LF in end of paragraph run */
       if (*pos =='\r')

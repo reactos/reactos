@@ -403,7 +403,16 @@ extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 
 #endif /* NTOS_MODE_USER */
 
-#ifdef NTOS_MODE_USER
+//
+// Constant Large Integer Macro
+//
+#ifdef NONAMELESSUNION
+C_ASSERT(FIELD_OFFSET(LARGE_INTEGER, u.LowPart) == 0);
+#else
+C_ASSERT(FIELD_OFFSET(LARGE_INTEGER, LowPart) == 0);
+#endif
+#define RTL_CONSTANT_LARGE_INTEGER(quad_part) { { (quad_part), (quad_part)>>32 } }
+#define RTL_MAKE_LARGE_INTEGER(low_part, high_part) { { (low_part), (high_part) } }
 
 //
 // Boot Status Data Field Types
@@ -416,9 +425,20 @@ typedef enum _RTL_BSD_ITEM_TYPE
     RtlBsdItemAabTimeout,
     RtlBsdItemBootGood,
     RtlBsdItemBootShutdown,
+    RtlBsdSleepInProgress,
+    RtlBsdPowerTransition,
+    RtlBsdItemBootAttemptCount,
+    RtlBsdItemBootCheckpoint,
+    RtlBsdItemBootId,
+    RtlBsdItemShutdownBootId,
+    RtlBsdItemReportedAbnormalShutdownBootId,
+    RtlBsdItemErrorInfo,
+    RtlBsdItemPowerButtonPressInfo,
+    RtlBsdItemChecksum,
     RtlBsdItemMax
 } RTL_BSD_ITEM_TYPE, *PRTL_BSD_ITEM_TYPE;
 
+#ifdef NTOS_MODE_USER
 //
 // Table and Compare result types
 //
@@ -1225,6 +1245,92 @@ typedef struct _RTL_HANDLE_TABLE
     PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
+
+//
+// RTL Boot Status Data Item
+//
+typedef struct _RTL_BSD_ITEM
+{
+    RTL_BSD_ITEM_TYPE Type;
+    PVOID DataBuffer;
+    ULONG DataLength;
+} RTL_BSD_ITEM, *PRTL_BSD_ITEM;
+
+//
+// Data Sub-Structures for "bootstat.dat" RTL Data File
+//
+typedef struct _RTL_BSD_DATA_POWER_TRANSITION
+{
+    LARGE_INTEGER PowerButtonTimestamp;
+    struct
+    {
+        UCHAR SystemRunning : 1;
+        UCHAR ConnectedStandbyInProgress : 1;
+        UCHAR UserShutdownInProgress : 1;
+        UCHAR SystemShutdownInProgress : 1;
+        UCHAR SleepInProgress : 4;
+    } Flags;
+    UCHAR ConnectedStandbyScenarioInstanceId;
+    UCHAR ConnectedStandbyEntryReason;
+    UCHAR ConnectedStandbyExitReason;
+    USHORT SystemSleepTransitionCount;
+    LARGE_INTEGER LastReferenceTime;
+    ULONG LastReferenceTimeChecksum;
+    ULONG LastUpdateBootId;
+} RTL_BSD_DATA_POWER_TRANSITION, *PRTL_BSD_DATA_POWER_TRANSITION;
+
+typedef struct _RTL_BSD_DATA_ERROR_INFO
+{
+    ULONG BootId;
+    ULONG RepeatCount;
+    ULONG OtherErrorCount;
+    ULONG Code;
+    ULONG OtherErrorCount2;
+} RTL_BSD_DATA_ERROR_INFO, *PRTL_BSD_DATA_ERROR_INFO;
+
+typedef struct _RTL_BSD_POWER_BUTTON_PRESS_INFO
+{
+    LARGE_INTEGER LastPressTime;
+    ULONG CumulativePressCount;
+    USHORT LastPressBootId;
+    UCHAR LastPowerWatchdogStage;
+    struct
+    {
+        UCHAR WatchdogArmed : 1;
+        UCHAR ShutdownInProgress : 1;
+    } Flags;
+    LARGE_INTEGER LastReleaseTime;
+    ULONG CumulativeReleaseCount;
+    USHORT LastReleaseBootId;
+    USHORT ErrorCount;
+    UCHAR CurrentConnectedStandbyPhase;
+    ULONG TransitionLatestCheckpointId;
+    ULONG TransitionLatestCheckpointType;
+    ULONG TransitionLatestCheckpointSequenceNumber;
+} RTL_BSD_POWER_BUTTON_PRESS_INFO, *PRTL_BSD_POWER_BUTTON_PRESS_INFO;
+
+//
+// Main Structure for "bootstat.dat" RTL Data File
+//
+typedef struct _RTL_BSD_DATA
+{
+    ULONG Version;                                          // RtlBsdItemVersionNumber
+    ULONG ProductType;                                      // RtlBsdItemProductType
+    BOOLEAN AabEnabled;                                     // RtlBsdItemAabEnabled
+    UCHAR AabTimeout;                                       // RtlBsdItemAabTimeout
+    BOOLEAN LastBootSucceeded;                              // RtlBsdItemBootGood
+    BOOLEAN LastBootShutdown;                               // RtlBsdItemBootShutdown
+    BOOLEAN SleepInProgress;                                // RtlBsdSleepInProgress
+    RTL_BSD_DATA_POWER_TRANSITION PowerTransition;          // RtlBsdPowerTransition
+    UCHAR BootAttemptCount;                                 // RtlBsdItemBootAttemptCount
+    UCHAR LastBootCheckpoint;                               // RtlBsdItemBootCheckpoint
+    UCHAR Checksum;                                         // RtlBsdItemChecksum
+    ULONG LastBootId;                                       // RtlBsdItemBootId
+    ULONG LastSuccessfulShutdownBootId;                     // RtlBsdItemShutdownBootId
+    ULONG LastReportedAbnormalShutdownBootId;               // RtlBsdItemReportedAbnormalShutdownBootId
+    RTL_BSD_DATA_ERROR_INFO ErrorInfo;                      // RtlBsdItemErrorInfo
+    RTL_BSD_POWER_BUTTON_PRESS_INFO PowerButtonPressInfo;   // RtlBsdItemPowerButtonPressInfo
+} RTL_BSD_DATA, *PRTL_BSD_DATA;
 
 #ifdef NTOS_MODE_USER
 //

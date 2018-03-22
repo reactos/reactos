@@ -6951,7 +6951,7 @@ START_TEST(dplayx)
     if (!winetest_interactive)
     {
         skip("Run in interactive mode to run all dplayx tests.\n");
-        return;
+        goto done;
     }
 
     trace("Running in interactive mode, tests will take a while\n");
@@ -6991,6 +6991,8 @@ START_TEST(dplayx)
     test_remote_data_replication();
     test_host_migration();
 
+done:
     FreeLibrary(module);
     CoUninitialize();
+    if (firewall_enabled) set_firewall(APP_REMOVE);
 }

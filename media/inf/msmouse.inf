@@ -416,4 +416,14 @@ LogMfg = "Logitech"
 MSMfg = "Microsoft"
 *PNP0F01.DeviceDesc = "Microsoft nuoseklioji pelė"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 tipo pelė"
-﻿
+
+[Strings.0804]
+StdMfg = "(标准鼠标)"
+SERIAL_MOUSE.DeviceDesc = "标准串口鼠标"
+PS2_MOUSE.DeviceDesc = "标准 PS/2 鼠标"
+HID_MOUSE.DeviceDesc = "HID 鼠标"
+*PNP0F13.DeviceDesc = "用于 PS/2 风格鼠标的 PS/2 端口"
+*PNP0F08.DeviceDesc = "Logitech 串口鼠标"
+*PNP0F12.DeviceDesc = "Logitech PS/2 风格鼠标"
+*PNP0F01.DeviceDesc = "Microsoft 串口鼠标"
+*PNP0F03.DeviceDesc = "Microsoft PS/2 风格鼠标"

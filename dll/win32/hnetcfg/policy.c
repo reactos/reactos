@@ -16,7 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "netfw.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
 #include "hnetcfg_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
 typedef struct fw_policy
 {
@@ -32,12 +48,231 @@ static inline fw_policy *impl_from_INetFwPolicy( INetFwPolicy *iface )
 typedef struct fw_policy2
 {
     INetFwPolicy2 INetFwPolicy2_iface;
+    INetFwRules   *fw_policy2_rules;
     LONG refs;
 } fw_policy2;
 
 static inline fw_policy2 *impl_from_INetFwPolicy2( INetFwPolicy2 *iface )
 {
     return CONTAINING_RECORD(iface, fw_policy2, INetFwPolicy2_iface);
+}
+
+typedef struct fw_rules
+{
+    INetFwRules INetFwRules_iface;
+    LONG refs;
+} fw_rules;
+
+static inline fw_rules *impl_from_INetFwRules( INetFwRules *iface )
+{
+    return CONTAINING_RECORD(iface, fw_rules, INetFwRules_iface);
+}
+
+static HRESULT WINAPI netfw_rules_QueryInterface(
+    INetFwRules *iface,
+    REFIID riid,
+    void **object)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+
+    TRACE("%p %s %p\n", This, debugstr_guid( riid ), object );
+
+    if ( IsEqualGUID( riid, &IID_INetFwRules ) ||
+         IsEqualGUID( riid, &IID_IDispatch ) ||
+         IsEqualGUID( riid, &IID_IUnknown ) )
+    {
+        *object = iface;
+    }
+    else
+    {
+        FIXME("interface %s not implemented\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+    INetFwRules_AddRef( iface );
+    return S_OK;
+}
+
+static ULONG WINAPI netfw_rules_AddRef(
+    INetFwRules *iface )
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+    return InterlockedIncrement( &This->refs );
+}
+
+static ULONG WINAPI netfw_rules_Release(
+    INetFwRules *iface )
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+    LONG refs = InterlockedDecrement( &This->refs );
+    if (!refs)
+    {
+        TRACE("destroying %p\n", This);
+        HeapFree( GetProcessHeap(), 0, This );
+    }
+    return refs;
+}
+
+static HRESULT WINAPI netfw_rules_GetTypeInfoCount(
+    INetFwRules *iface,
+    UINT *pctinfo )
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+
+    TRACE("%p %p\n", This, pctinfo);
+    *pctinfo = 1;
+    return S_OK;
+}
+
+static HRESULT WINAPI netfw_rules_GetTypeInfo(
+    INetFwRules *iface,
+    UINT iTInfo,
+    LCID lcid,
+    ITypeInfo **ppTInfo)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+
+    TRACE("%p %u %u %p\n", This, iTInfo, lcid, ppTInfo);
+    return get_typeinfo( INetFwRules_tid, ppTInfo );
+}
+
+static HRESULT WINAPI netfw_rules_GetIDsOfNames(
+    INetFwRules *iface,
+    REFIID riid,
+    LPOLESTR *rgszNames,
+    UINT cNames,
+    LCID lcid,
+    DISPID *rgDispId)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("%p %s %p %u %u %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+
+    hr = get_typeinfo( INetFwRules_tid, &typeinfo );
+    if (SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames( typeinfo, rgszNames, cNames, rgDispId );
+        ITypeInfo_Release( typeinfo );
+    }
+    return hr;
+}
+
+static HRESULT WINAPI netfw_rules_Invoke(
+    INetFwRules *iface,
+    DISPID dispIdMember,
+    REFIID riid,
+    LCID lcid,
+    WORD wFlags,
+    DISPPARAMS *pDispParams,
+    VARIANT *pVarResult,
+    EXCEPINFO *pExcepInfo,
+    UINT *puArgErr)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("%p %d %s %d %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo( INetFwRules_tid, &typeinfo );
+    if (SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke( typeinfo, &This->INetFwRules_iface, dispIdMember,
+                               wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr );
+        ITypeInfo_Release( typeinfo );
+    }
+    return hr;
+}
+
+static HRESULT WINAPI netfw_rules_get_Count(
+    INetFwRules *iface,
+    LONG *count)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+
+    FIXME("%p, %p\n", This, count);
+
+    if (count)
+        *count = 0;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI netfw_rules_Add(
+    INetFwRules *iface,
+    INetFwRule *rule)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+
+    FIXME("%p, %p\n", This, rule);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI netfw_rules_Remove(
+    INetFwRules *iface,
+    BSTR name)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+
+    FIXME("%p, %s\n", This, debugstr_w(name));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI netfw_rules_Item(
+    INetFwRules *iface,
+    BSTR name,
+    INetFwRule **rule)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+
+    FIXME("%p, %s, %p\n", This, debugstr_w(name), rule);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI netfw_rules_get__NewEnum(
+    INetFwRules *iface,
+    IUnknown **newEnum)
+{
+    fw_rules *This = impl_from_INetFwRules( iface );
+
+    FIXME("%p, %p\n", This, newEnum);
+    return E_NOTIMPL;
+}
+
+static const struct INetFwRulesVtbl fw_rules_vtbl =
+{
+    netfw_rules_QueryInterface,
+    netfw_rules_AddRef,
+    netfw_rules_Release,
+    netfw_rules_GetTypeInfoCount,
+    netfw_rules_GetTypeInfo,
+    netfw_rules_GetIDsOfNames,
+    netfw_rules_Invoke,
+    netfw_rules_get_Count,
+    netfw_rules_Add,
+    netfw_rules_Remove,
+    netfw_rules_Item,
+    netfw_rules_get__NewEnum
+};
+
+static HRESULT create_INetFwRules(INetFwRules **object)
+{
+    fw_rules *rules;
+
+    TRACE("(%p)\n", object);
+
+    rules = HeapAlloc( GetProcessHeap(), 0, sizeof(*rules) );
+    if (!rules) return E_OUTOFMEMORY;
+
+    rules->INetFwRules_iface.lpVtbl = &fw_rules_vtbl;
+    rules->refs = 1;
+
+    *object = &rules->INetFwRules_iface;
+
+    TRACE("returning iface %p\n", *object);
+    return S_OK;
 }
 
 static ULONG WINAPI fw_policy_AddRef(
@@ -222,6 +457,11 @@ static HRESULT WINAPI fwpolicy2_QueryInterface(INetFwPolicy2 *iface, REFIID riid
     {
         *out = iface;
     }
+    else if( IsEqualGUID( riid, &IID_INetFwRules ) )
+    {
+        TRACE("INetFwRules not supported\n");
+        return E_NOINTERFACE;
+    }
     else
     {
         FIXME("interface %s not implemented\n", debugstr_guid(riid));
@@ -243,6 +483,7 @@ static ULONG WINAPI fwpolicy2_Release(INetFwPolicy2 *iface)
     LONG refs = InterlockedDecrement( &fw_policy->refs );
     if (!refs)
     {
+        INetFwRules_Release(fw_policy->fw_policy2_rules);
         TRACE("destroying %p\n", fw_policy);
         HeapFree( GetProcessHeap(), 0, fw_policy );
     }
@@ -395,8 +636,18 @@ static HRESULT WINAPI fwpolicy2_get_Rules(INetFwPolicy2 *iface, INetFwRules **ru
 {
     fw_policy2 *This = impl_from_INetFwPolicy2( iface );
 
-    FIXME("%p %p\n", This, rules);
-    return E_NOTIMPL;
+    TRACE("%p %p\n", This, rules);
+
+    if(!rules)
+        return E_POINTER;
+
+    if(rules)
+    {
+        *rules = This->fw_policy2_rules;
+        INetFwRules_AddRef(This->fw_policy2_rules);
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI fwpolicy2_get_ServiceRestriction(INetFwPolicy2 *iface, INetFwServiceRestriction **ServiceRestriction)
@@ -525,6 +776,12 @@ HRESULT NetFwPolicy2_create( IUnknown *outer, void **obj )
     fp->refs = 1;
 
     *obj = &fp->INetFwPolicy2_iface;
+
+    if (FAILED(create_INetFwRules(&fp->fw_policy2_rules)))
+    {
+        HeapFree( GetProcessHeap(), 0, fp );
+        return E_OUTOFMEMORY;
+    }
 
     TRACE("returning iface %p\n", *obj);
     return S_OK;

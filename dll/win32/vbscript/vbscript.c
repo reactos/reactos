@@ -345,6 +345,9 @@ static HRESULT WINAPI VBScript_SetScriptState(IActiveScript *iface, SCRIPTSTATE 
     case SCRIPTSTATE_INITIALIZED:
         FIXME("unimplemented SCRIPTSTATE_INITIALIZED\n");
         return S_OK;
+    case SCRIPTSTATE_DISCONNECTED:
+        FIXME("unimplemented SCRIPTSTATE_DISCONNECTED\n");
+        return S_OK;
     default:
         FIXME("unimplemented state %d\n", ss);
         return E_NOTIMPL;

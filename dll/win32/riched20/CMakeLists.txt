@@ -21,7 +21,7 @@ list(APPEND SOURCE
     undo.c
     wrap.c
     writer.c
-    editor.h)
+    precomp.h)
 
 if(MSVC)
     if(ARCH STREQUAL "i386")
@@ -49,5 +49,5 @@ add_dependencies(riched20 stdole2)
 set_module_type(riched20 win32dll)
 target_link_libraries(riched20 wine uuid)
 add_importlibs(riched20 ole32 oleaut32 usp10 imm32 user32 gdi32 msvcrt kernel32 ntdll)
-add_pch(riched20 editor.h SOURCE)
+add_pch(riched20 precomp.h SOURCE)
 add_cd_file(TARGET riched20 DESTINATION reactos/system32 FOR all)

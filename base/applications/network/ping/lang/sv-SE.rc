@@ -50,7 +50,7 @@ Alternativ:\n\
     IDS_REPLY_TTL "TTL=%d\n"
     IDS_REPLY_STATUS "Echo reply returned %lu.\n"
     IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
-    IDS_DEST_NET_UNREACHABLE "Destination net unreachable.\n"
+    IDS_DEST_NET_UNREACHABLE "Destination network unreachable.\n"
     IDS_REQUEST_TIMED_OUT "Förfrågan gjorde timeout.\n"
     IDS_TTL_EXPIRED "TTL expired in transit.\n"
     IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %u)\n"

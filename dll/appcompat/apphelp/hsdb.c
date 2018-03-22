@@ -4,7 +4,7 @@
  * PURPOSE:     Shim matching / data (un)packing
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blaževic
- *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
@@ -563,11 +563,11 @@ Cleanup:
 /**
  * Retrieves AppPatch directory.
  *
- * @param [in]  pdb      Handle to the shim database.
+ * @param [in]  pdb     Handle to the shim database.
  * @param [out] path    Pointer to memory in which path shall be written.
  * @param [in]  size    Size of the buffer in characters.
  */
-BOOL WINAPI SdbGetAppPatchDir(HSDB hsdb, LPWSTR path, DWORD size)
+HRESULT WINAPI SdbGetAppPatchDir(HSDB hsdb, LPWSTR path, DWORD size)
 {
     static WCHAR* default_dir = NULL;
     static CONST WCHAR szAppPatch[] = {'\\','A','p','p','P','a','t','c','h',0};
@@ -579,6 +579,7 @@ BOOL WINAPI SdbGetAppPatchDir(HSDB hsdb, LPWSTR path, DWORD size)
     if (!default_dir)
     {
         WCHAR* tmp;
+        HRESULT hr = E_FAIL;
         UINT len = GetSystemWindowsDirectoryW(NULL, 0) + SdbpStrlen(szAppPatch);
         tmp = SdbAlloc((len + 1)* sizeof(WCHAR));
         if (tmp)
@@ -586,7 +587,8 @@ BOOL WINAPI SdbGetAppPatchDir(HSDB hsdb, LPWSTR path, DWORD size)
             UINT r = GetSystemWindowsDirectoryW(tmp, len+1);
             if (r && r < len)
             {
-                if (SUCCEEDED(StringCchCatW(tmp, len+1, szAppPatch)))
+                hr = StringCchCatW(tmp, len+1, szAppPatch);
+                if (SUCCEEDED(hr))
                 {
                     if (InterlockedCompareExchangePointer((void**)&default_dir, tmp, NULL) == NULL)
                         tmp = NULL;
@@ -597,19 +599,19 @@ BOOL WINAPI SdbGetAppPatchDir(HSDB hsdb, LPWSTR path, DWORD size)
         }
         if (!default_dir)
         {
-            SHIM_ERR("Unable to obtain default AppPatch directory\n");
-            return FALSE;
+            SHIM_ERR("Unable to obtain default AppPatch directory (0x%x)\n", hr);
+            return hr;
         }
     }
 
     if (!hsdb)
     {
-        return SUCCEEDED(StringCchCopyW(path, size, default_dir));
+        return StringCchCopyW(path, size, default_dir);
     }
     else
     {
         SHIM_ERR("Unimplemented for hsdb != NULL\n");
-        return FALSE;
+        return E_NOTIMPL;
     }
 }
 
@@ -692,7 +694,7 @@ BOOL WINAPI SdbPackAppCompatData(HSDB hsdb, PSDBQUERYRESULT pQueryResult, PVOID*
         return FALSE;
     }
 
-    GetWindowsDirectoryW(pData->szModule, _countof(pData->szModule));
+    GetSystemWindowsDirectoryW(pData->szModule, _countof(pData->szModule));
     hr = StringCchCatW(pData->szModule, _countof(pData->szModule), L"\\system32\\apphelp.dll");
     if (!SUCCEEDED(hr))
     {

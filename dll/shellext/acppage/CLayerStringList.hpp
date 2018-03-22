@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Compatibility Layer Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CLayerStringList implementation
- * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -36,24 +36,24 @@ public:
         while (celt && m_layer)
         {
             TAGID nameid = SdbFindFirstTag(m_db, m_layer, TAG_NAME);
-            if (!nameid)
-                return S_FALSE;
+            if (nameid)
+            {
+                LPWSTR name = SdbGetStringTagPtr(m_db, nameid);
+                if (name && !IsBuiltinLayer(name))
+                {
+                    ULONG Size = wcslen(name) + 1;
 
-            LPWSTR name = SdbGetStringTagPtr(m_db, nameid);
-            if (!name)
-                return S_FALSE;
+                    *rgelt = (LPOLESTR)::CoTaskMemAlloc(Size * sizeof(WCHAR));
+                    StringCchCopyW(*rgelt, Size, name);
 
-            ULONG Size = wcslen(name) + 1;
+                    if (pceltFetched)
+                        (*pceltFetched)++;
 
-            *rgelt = (LPOLESTR)::CoTaskMemAlloc(Size * sizeof(WCHAR));
-            StringCchCopyW(*rgelt, Size, name);
-
-            if (pceltFetched)
-                (*pceltFetched)++;
-
+                    celt--;
+                    rgelt++;
+                }
+            }
             m_layer = SdbFindNextTag(m_db, m_root, m_layer);
-            celt--;
-            rgelt++;
         }
         return celt ? S_FALSE : S_OK;
     }

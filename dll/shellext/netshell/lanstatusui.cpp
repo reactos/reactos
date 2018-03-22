@@ -232,7 +232,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     nid.cbSize = sizeof(nid);
     nid.uID = pContext->uID;
     nid.hWnd = pContext->hwndStatusDlg;
-    nid.uVersion = 3;
+    nid.uVersion = NOTIFYICON_VERSION;
 
     if (pContext->pNet->GetProperties(&pProperties) == S_OK)
     {
@@ -784,7 +784,7 @@ LANStatusUiDlg(
             if (lppsn->hdr.code == PSN_APPLY || lppsn->hdr.code == PSN_RESET)
             {
                 pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
                 pContext->hwndDlg = NULL;
                 return TRUE;
             }
@@ -1041,7 +1041,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
                 nid.cbSize = sizeof(nid);
                 nid.uID = Index++;
                 nid.uFlags = NIF_MESSAGE;
-                nid.uVersion = 3;
+                nid.uVersion = NOTIFYICON_VERSION;
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
 

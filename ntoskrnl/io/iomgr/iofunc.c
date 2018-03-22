@@ -17,6 +17,9 @@
 #include <debug.h>
 #include "internal/io_i.h"
 
+volatile LONG IoPageReadIrpAllocationFailure = 0;
+volatile LONG IoPageReadNonPagefileIrpAllocationFailure = 0;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -1039,6 +1042,14 @@ IoSynchronousPageWrite(IN PFILE_OBJECT FileObject,
     IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
             FileObject, Mdl, Offset);
 
+    /* Is the write originating from Cc? */
+    if (FileObject->SectionObjectPointer != NULL &&
+        FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+    {
+        ++CcDataFlushes;
+        CcDataPages += BYTES_TO_PAGES(MmGetMdlByteCount(Mdl));
+    }
+
     /* Get the Device Object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
@@ -1091,7 +1102,30 @@ IoPageRead(IN PFILE_OBJECT FileObject,
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
+    /* If allocation failed, try to see whether we can use
+     * the reserve IRP
+     */
+    if (Irp == NULL)
+    {
+        /* We will use it only for paging file */
+        if (MmIsFileObjectAPagingFile(FileObject))
+        {
+            InterlockedExchangeAdd(&IoPageReadIrpAllocationFailure, 1);
+            Irp = IopAllocateReserveIrp(DeviceObject->StackSize);
+        }
+        else
+        {
+            InterlockedExchangeAdd(&IoPageReadNonPagefileIrpAllocationFailure, 1);
+        }
+
+        /* If allocation failed (not a paging file or too big stack size)
+         * Fail for real
+         */
+        if (Irp == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);

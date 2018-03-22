@@ -54,6 +54,7 @@ list(APPEND SOURCE
     httprequest.idl
     iads.idl
     icftypes.idl
+    ieautomation.idl
     imnact.idl
     imnxport.idl
     indexsrv.idl

@@ -16,14 +16,36 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "config.h"
 
-#include <wingdi.h>
-#include <mshtml.h>
-#include <mshtmhst.h>
-#include <perhist.h>
+#include <stdarg.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
 
 #ifdef HAVE_LIBXML2
+#include <libxml/parser.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "msxml6.h"
+#ifdef __REACTOS__
+#include <wingdi.h>
+#endif
+#include "mshtml.h"
+#include "mshtmhst.h"
+#include "perhist.h"
+#include "docobj.h"
+
+#include "wine/debug.h"
+
+#include "msxml_private.h"
+
+#ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 typedef struct
 {
@@ -415,7 +437,7 @@ static inline HRESULT handle_xml_load(BindStatusCallback *This)
 
     /* TODO: fix parsing processing instruction value */
     if((p = strstrW(V_BSTR(&var), hrefW))) {
-        p += sizeof(hrefW)/sizeof(WCHAR)-1;
+        p += ARRAY_SIZE(hrefW) - 1;
         if(*p!='\'' && *p!='\"') p = NULL;
         else {
             href = p+1;

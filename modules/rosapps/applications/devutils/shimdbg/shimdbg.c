@@ -20,6 +20,7 @@ void xprintf(const char *fmt, ...)
     va_start(ap, fmt);
     vprintf(fmt, ap);
     vDbgPrintEx(-1, DPFLTR_ERROR_LEVEL, fmt, ap);
+    va_end(ap);
 }
 
 

@@ -17,6 +17,7 @@
 #include <wincon.h>
 #include <commdlg.h>
 #include <ddeml.h>
+
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shobjidl.h>
@@ -36,7 +37,11 @@
 #include <shlguid_undoc.h>
 #include <shlobj_undoc.h>
 #include <shlwapi_undoc.h>
+
+#include <shellapi.h>
+#undef ShellExecute
 #include <undocshell.h>
+
 #include <browseui_undoc.h>
 
 #include <shellutils.h>
@@ -79,6 +84,7 @@
 #include "shellmenu/CMenuSite.h"
 #include "shellmenu/CMergedFolder.h"
 #include "shellmenu/shellmenu.h"
+#include "CUserNotification.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>

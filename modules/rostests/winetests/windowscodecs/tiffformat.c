@@ -16,7 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "wincodec.h"
+#include "wine/test.h"
 
 #define IFD_BYTE 1
 #define IFD_ASCII 2
@@ -31,7 +39,7 @@
 #define IFD_FLOAT 11
 #define IFD_DOUBLE 12
 
-#include <pshpack2.h>
+#include "pshpack2.h"
 struct IFD_entry
 {
     SHORT id;
@@ -77,8 +85,8 @@ static const struct tiff_1bpp_data
         { 0x115, IFD_SHORT, 1, 1 }, /* SAMPLESPERPIXEL */
         { 0x116, IFD_LONG, 1, 1 }, /* ROWSPERSTRIP */
         { 0x117, IFD_LONG, 1, 1 }, /* STRIPBYTECOUNT */
-        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_1bpp_data, res) },
-        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_1bpp_data, res) },
+        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_1bpp_data, res) }, /* XRESOLUTION */
+        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_1bpp_data, res) }, /* YRESOLUTION */
         { 0x128, IFD_SHORT, 1, 2 }, /* RESOLUTIONUNIT */
     },
     0,
@@ -117,8 +125,8 @@ static const struct tiff_8bpp_alpha
         { 0x115, IFD_SHORT, 1, 2 }, /* SAMPLESPERPIXEL */
         { 0x116, IFD_LONG, 1, 2 }, /* ROWSPERSTRIP */
         { 0x117, IFD_LONG, 1, 8 }, /* STRIPBYTECOUNT */
-        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_8bpp_alpha, res) },
-        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_8bpp_alpha, res) },
+        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_8bpp_alpha, res) }, /* XRESOLUTION */
+        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_8bpp_alpha, res) }, /* YRESOLUTION */
         { 0x11c, IFD_SHORT, 1, 1 }, /* PLANARCONFIGURATION */
         { 0x128, IFD_SHORT, 1, 2 }, /* RESOLUTIONUNIT */
         { 0x152, IFD_SHORT, 1, 1 } /* EXTRASAMPLES: 1 - Associated alpha with pre-multiplied color */
@@ -169,6 +177,81 @@ static const struct tiff_8bpp_data
     { 96, 1 },
     { { 0 } },
     { 0,1,2,3 }
+};
+
+static const struct tiff_resolution_test_data
+{
+    struct IFD_rational resx;
+    struct IFD_rational resy;
+    LONG resolution_unit;
+    double expected_dpi_x;
+    double expected_dpi_y;
+    /* if != 0: values for different behavior of some Windows versions */
+    double broken_dpi_x;
+    double broken_dpi_y;
+} tiff_resolution_test_data[] =
+{
+    { { 100, 1 }, {  50, 1 }, 0, 100.0,  50.0,     0,      0  }, /* invalid resolution unit */
+    { {  50, 1 }, { 100, 1 }, 0,  50.0, 100.0,     0,      0  },
+
+    { { 100, 1 }, {  50, 1 }, 1, 100.0,  50.0,     0,      0  }, /* RESUNIT_NONE */
+    { {  50, 1 }, { 100, 1 }, 1,  50.0, 100.0,     0,      0  },
+
+    { {  49, 1 }, {  49, 1 }, 2,  49.0,  49.0,     0,      0  }, /* same resolution for both X and Y */
+    { {  33, 1 }, {  55, 1 }, 2,  33.0,  55.0,     0,      0  }, /* different resolutions for X and Y */
+    { {  50, 2 }, {  66, 3 }, 2,  25.0,  22.0,     0,      0  }, /* denominator != 1 */
+
+    { { 100, 1 }, { 200, 1 }, 3, 254.0, 508.0,     0,      0  }, /* unit = centimeters */
+
+    /* XP and Server 2003 do not discard both resolution values if only one of them is invalid */
+    { {   0, 1 }, {  29, 1 }, 2,  96.0,  96.0,     0,   29.0  }, /* resolution 0 */
+    { {  58, 1 }, {  29, 0 }, 2,  96.0,  96.0,  58.0,      0  }, /* denominator 0 (division by zero) */
+
+    /* XP and Server 2003 return 96 dots per centimeter (= 243.84 dpi) as fallback value */
+    { {   0, 1 }, { 100, 1 }, 3,  96.0,  96.0, 243.84, 254.0  }, /* resolution 0 and unit = centimeters */
+    { {  50, 1 }, {  72, 0 }, 3,  96.0,  96.0, 127.0,  243.84 }  /* denominator 0 and unit = centimeters */
+};
+
+static struct tiff_resolution_image_data
+{
+    USHORT byte_order;
+    USHORT version;
+    ULONG dir_offset;
+    USHORT number_of_entries;
+    struct IFD_entry entry[13];
+    ULONG next_IFD;
+    struct IFD_rational resx;
+    struct IFD_rational resy;
+    BYTE pixel_data[4];
+} tiff_resolution_image_data =
+{
+#ifdef WORDS_BIGENDIAN
+    'M' | 'M' << 8,
+#else
+    'I' | 'I' << 8,
+#endif
+    42,
+    FIELD_OFFSET(struct tiff_resolution_image_data, number_of_entries),
+    13,
+    {
+        { 0xff, IFD_SHORT, 1, 0 }, /* SUBFILETYPE */
+        { 0x100, IFD_LONG, 1, 1 }, /* IMAGEWIDTH */
+        { 0x101, IFD_LONG, 1, 1 }, /* IMAGELENGTH */
+        { 0x102, IFD_SHORT, 1, 1 }, /* BITSPERSAMPLE */
+        { 0x103, IFD_SHORT, 1, 1 }, /* COMPRESSION: XP doesn't accept IFD_LONG here */
+        { 0x106, IFD_SHORT, 1, 1 }, /* PHOTOMETRIC */
+        { 0x111, IFD_LONG, 1, FIELD_OFFSET(struct tiff_resolution_image_data, pixel_data) }, /* STRIPOFFSETS */
+        { 0x115, IFD_SHORT, 1, 1 }, /* SAMPLESPERPIXEL */
+        { 0x116, IFD_LONG, 1, 1 }, /* ROWSPERSTRIP */
+        { 0x117, IFD_LONG, 1, 1 }, /* STRIPBYTECOUNT */
+        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_resolution_image_data, resx) }, /* XRESOLUTION */
+        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_resolution_image_data, resy) }, /* YRESOLUTION */
+        { 0x128, IFD_SHORT, 1, 1 }, /* RESOLUTIONUNIT -- value will be filled with test data */
+    },
+    0,
+    { 72, 1 }, /* value will be filled with test data */
+    { 72, 1 }, /* value will be filled with test data */
+    { 0x11, 0x22, 0x33, 0 }
 };
 #include "poppack.h"
 
@@ -549,6 +632,58 @@ static void test_tiff_8bpp_palette(void)
     IWICPalette_Release(palette);
     IWICBitmapFrameDecode_Release(frame);
     IWICBitmapDecoder_Release(decoder);
+}
+
+static void test_tiff_resolution(void)
+{
+    HRESULT hr;
+    IWICBitmapDecoder *decoder;
+    IWICBitmapFrameDecode *frame;
+    double dpi_x, dpi_y;
+    int i;
+
+    for (i = 0; i < sizeof(tiff_resolution_test_data)/sizeof(tiff_resolution_test_data[0]); i++)
+    {
+        const struct tiff_resolution_test_data *test_data = &tiff_resolution_test_data[i];
+        tiff_resolution_image_data.resx = test_data->resx;
+        tiff_resolution_image_data.resy = test_data->resy;
+        tiff_resolution_image_data.entry[12].value = test_data->resolution_unit;
+
+        hr = create_decoder(&tiff_resolution_image_data, sizeof(tiff_resolution_image_data), &decoder);
+        ok(hr == S_OK, "Failed to load TIFF image data %#x\n", hr);
+        if (hr != S_OK) return;
+
+        hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
+        ok(hr == S_OK, "%d: GetFrame error %#x\n", i, hr);
+
+        hr = IWICBitmapFrameDecode_GetResolution(frame, &dpi_x, &dpi_y);
+        ok(hr == S_OK, "%d: GetResolution error %#x\n", i, hr);
+
+        if (test_data->broken_dpi_x != 0)
+        {
+            ok(fabs(dpi_x - test_data->expected_dpi_x) < 0.01 || broken(fabs(dpi_x - test_data->broken_dpi_x) < 0.01),
+                "%d: x: expected %f or %f, got %f\n", i, test_data->expected_dpi_x, test_data->broken_dpi_x, dpi_x);
+        }
+        else
+        {
+            ok(fabs(dpi_x - test_data->expected_dpi_x) < 0.01,
+                "%d: x: expected %f, got %f\n", i, test_data->expected_dpi_x, dpi_x);
+        }
+
+        if (test_data->broken_dpi_y != 0)
+        {
+            ok(fabs(dpi_y - test_data->expected_dpi_y) < 0.01 || broken(fabs(dpi_y - test_data->broken_dpi_y) < 0.01),
+                "%d: y: expected %f or %f, got %f\n", i, test_data->expected_dpi_y, test_data->broken_dpi_y, dpi_y);
+        }
+        else
+        {
+            ok(fabs(dpi_y - test_data->expected_dpi_y) < 0.01,
+                "%d: y: expected %f, got %f\n", i, test_data->expected_dpi_y, dpi_y);
+        }
+
+        IWICBitmapFrameDecode_Release(frame);
+        IWICBitmapDecoder_Release(decoder);
+    }
 }
 
 #include "pshpack2.h"
@@ -947,6 +1082,7 @@ START_TEST(tiffformat)
     test_tiff_8bpp_palette();
     test_QueryCapability();
     test_tiff_8bpp_alpha();
+    test_tiff_resolution();
 
     IWICImagingFactory_Release(factory);
     CoUninitialize();

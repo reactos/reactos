@@ -1,0 +1,65 @@
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&קובץ"
+    BEGIN
+        MENUITEM "&פתיחה...", CMD_OPEN
+        MENUITEM "&שמירה בשם...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&יציאה", CMD_EXIT
+    END
+    POPUP "&עריכה"
+    BEGIN
+        MENUITEM "&מחק\tDel", CMD_DELETE
+    END
+    POPUP "&תצוגה"
+    BEGIN
+        MENUITEM "&אוטומטי", CMD_AUTOMATIC
+    END
+    POPUP "ע&זרה"
+    BEGIN
+        MENUITEM "&נושאי עזרה", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&אודות", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "צופה לוח גזירה"
+    STRING_CLIPFILE  "Clipboard Element"
+    STRING_DELETE_MSG "לנקות את לוח הגזירה?"
+    STRING_DELETE_TITLE "ניקוי לוח גזירה"
+    STRING_FORMAT_NT "קבצי לוח גזירה של ReactOS (*.clp)"
+    STRING_FORMAT_GEN "קבצי לוח גזירה (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "תבנית לא ידועה"
+    STRING_CF_TEXT "טקסט"
+    STRING_CF_BITMAP "מפת סיבים"
+    STRING_CF_OEMTEXT "טקסט OEM"
+    STRING_CF_UNICODETEXT "טקסט יוניקוד"
+    STRING_CF_DIB "DIB Bitmap"
+    STRING_CF_LOCALE "Locale Data"
+    STRING_CF_ENHMETAFILE "Enhanced Metafile"
+    STRING_CF_METAFILEPICT "Metafile"
+    STRING_CF_PALETTE "ערכת צבעים"
+    STRING_CF_DIBV5 "DIB Bitmap (Version 5)"
+    STRING_CF_SYLK "Symbolic Link Format"
+    STRING_CF_DIF "Data Interchange Format"
+    STRING_CF_HDROP "Drop Data"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "לוח הגזירה מכיל נתונים בתבנית שלא ניתנת להצגה."
+    ERROR_INVALID_FILE_FORMAT "הקובץ אינו קובץ לוח גזירה תקין."
+END

@@ -49,11 +49,13 @@ private:
         BOOL                                bHiddenTitle;
     };
 
-    LONG                                    fBandsCount;
-    LONG                                    fBandsAllocated;
-    struct BandObject                       *fBands;
-    HWND                                    fRebarWindow;
-    CComPtr<IOleWindow>                     fOleWindow;
+    LONG                                    m_cBands;
+    LONG                                    m_cBandsAllocated;
+    struct BandObject                       *m_bands;
+    HWND                                    m_hwndRebar;
+    CComPtr<IOleWindow>                     m_site;
+    DWORD                                   m_dwState; /* BSSF_ flags */
+    DWORD                                   m_dwStyle; /* BSIS_ flags */
 public:
     CBandSiteBase();
     ~CBandSiteBase();
@@ -117,17 +119,17 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SaveToStreamBS(IUnknown *, IStream *);
 
 private:
-    UINT GetBandID(struct BandObject *Band);
-    struct BandObject *GetBandByID(DWORD dwBandID);
-    void FreeBand(struct BandObject *Band);
-    DWORD GetBandSiteViewMode();
-    VOID BuildRebarBandInfo(struct BandObject *Band, REBARBANDINFOW *prbi);
-    HRESULT UpdateSingleBand(struct BandObject *Band);
-    HRESULT UpdateAllBands();
-    HRESULT UpdateBand(DWORD dwBandID);
-    struct BandObject *GetBandFromHwnd(HWND hwnd);
+    UINT _GetBandID(struct BandObject *Band);
+    struct BandObject *_GetBandByID(DWORD dwBandID);
+    void _FreeBand(struct BandObject *Band);
+    DWORD _GetViewMode();
+    VOID _BuildBandInfo(struct BandObject *Band, REBARBANDINFOW *prbi);
+    HRESULT _UpdateBand(struct BandObject *Band);
+    HRESULT _UpdateAllBands();
+    HRESULT _UpdateBand(DWORD dwBandID);
+    struct BandObject *_GetBandFromHwnd(HWND hwnd);
     HRESULT _IsBandDeletable(DWORD dwBandID);
-    HRESULT OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult);
+    HRESULT _OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult);
 
     BEGIN_COM_MAP(CBandSiteBase)
         COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)

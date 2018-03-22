@@ -2,7 +2,7 @@ string(TIMESTAMP KERNEL_VERSION_BUILD %Y%m%d UTC)
 
 set(KERNEL_VERSION_MAJOR "0")
 set(KERNEL_VERSION_MINOR "4")
-set(KERNEL_VERSION_PATCH_LEVEL "8")
+set(KERNEL_VERSION_PATCH_LEVEL "9")
 set(COPYRIGHT_YEAR "2018")
 
 # KERNEL_VERSION_BUILD_TYPE is "dev" for Git builds
@@ -39,7 +39,7 @@ if(EXISTS "${REACTOS_SOURCE_DIR}/.git")
         endif()
 
         execute_process(
-            COMMAND "${GIT_EXECUTABLE}" describe --abbrev=7
+            COMMAND "${GIT_EXECUTABLE}" describe --abbrev=7 --long
             WORKING_DIRECTORY ${REACTOS_SOURCE_DIR}
             OUTPUT_VARIABLE GIT_DESCRIBE_REVISION
             RESULT_VARIABLE GIT_CALL_RESULT

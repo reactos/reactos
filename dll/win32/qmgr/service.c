@@ -18,7 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "windef.h"
+#include "winsvc.h"
 #include "qmgr.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
 
 HANDLE stop_event = NULL;
 

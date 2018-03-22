@@ -68,7 +68,7 @@
 @ stdcall D3DXCreateFontW(ptr long long long long long long long long long wstr ptr)
 @ stdcall D3DXCreateFragmentLinker(ptr long ptr)
 @ stdcall D3DXCreateFragmentLinkerEx(ptr long long ptr)
-@ stdcall -stub D3DXCreateKeyframedAnimationSet(ptr long long long long ptr ptr)
+@ stdcall D3DXCreateKeyframedAnimationSet(str double long long long ptr ptr)
 @ stdcall D3DXCreateLine(ptr ptr)
 @ stdcall D3DXCreateMatrixStack(long ptr)
 @ stdcall D3DXCreateMesh(long long long ptr ptr ptr)

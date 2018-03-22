@@ -12,9 +12,10 @@
  *                  Samuel Serapión
  */
 
-/* Based on Wine Staging 1.7.37 */
+/* Based on Wine 3.2-37c98396 */
 
 #include <rtl.h>
+#include <ntstrsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -440,15 +441,19 @@ enum assembly_type
 
 struct assembly
 {
-    enum assembly_type       type;
-    struct assembly_identity id;
-    struct file_info         manifest;
-    WCHAR                   *directory;
-    BOOL                     no_inherit;
-    struct dll_redirect     *dlls;
-    unsigned int             num_dlls;
-    unsigned int             allocated_dlls;
-    struct entity_array      entities;
+    enum assembly_type             type;
+    struct assembly_identity       id;
+    struct file_info               manifest;
+    WCHAR                         *directory;
+    BOOL                           no_inherit;
+    struct dll_redirect           *dlls;
+    unsigned int                   num_dlls;
+    unsigned int                   allocated_dlls;
+    struct entity_array            entities;
+    COMPATIBILITY_CONTEXT_ELEMENT *compat_contexts;
+    ULONG                          num_compat_contexts;
+    ACTCTX_REQUESTED_RUN_LEVEL     run_level;
+    ULONG                          ui_access;
 };
 
 enum context_sections
@@ -651,6 +656,16 @@ static const WCHAR staticW[] = {'s','t','a','t','i','c',0};
 static const WCHAR supportsmultilevelundoW[] = {'s','u','p','p','o','r','t','s','m','u','l','t','i','l','e','v','e','l','u','n','d','o',0};
 static const WCHAR wantstomenumergeW[] = {'w','a','n','t','s','t','o','m','e','n','u','m','e','r','g','e',0};
 
+static const WCHAR compatibilityW[] = {'c','o','m','p','a','t','i','b','i','l','i','t','y',0};
+static const WCHAR compatibilityNSW[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','c','o','m','p','a','t','i','b','i','l','i','t','y','.','v','1',0};
+static const WCHAR applicationW[] = {'a','p','p','l','i','c','a','t','i','o','n',0};
+static const WCHAR supportedOSW[] = {'s','u','p','p','o','r','t','e','d','O','S',0};
+static const WCHAR IdW[] = {'I','d',0};
+static const WCHAR requestedExecutionLevelW[] = {'r','e','q','u','e','s','t','e','d','E','x','e','c','u','t','i','o','n','L','e','v','e','l',0};
+static const WCHAR requestedPrivilegesW[] = {'r','e','q','u','e','s','t','e','d','P','r','i','v','i','l','e','g','e','s',0};
+static const WCHAR securityW[] = {'s','e','c','u','r','i','t','y',0};
+static const WCHAR trustInfoW[] = {'t','r','u','s','t','I','n','f','o',0};
+
 struct olemisc_entry
 {
     const WCHAR *name;
@@ -694,6 +709,7 @@ static const WCHAR wildcardW[] = {'*',0};
 
 static ACTIVATION_CONTEXT_WRAPPED system_actctx = { ACTCTX_MAGIC_MARKER, { 1 } };
 static ACTIVATION_CONTEXT *process_actctx = &system_actctx.ActivationContext;
+static ACTIVATION_CONTEXT *implicit_actctx = &system_actctx.ActivationContext;
 
 static WCHAR *strdupW(const WCHAR* str)
 {
@@ -823,6 +839,25 @@ static struct dll_redirect* add_dll_redirect(struct assembly* assembly)
         assembly->allocated_dlls = new_count;
     }
     return &assembly->dlls[assembly->num_dlls++];
+}
+
+static PCOMPATIBILITY_CONTEXT_ELEMENT add_compat_context(struct assembly* assembly)
+{
+    void *ptr;
+    if (assembly->num_compat_contexts)
+    {
+        unsigned int new_count = assembly->num_compat_contexts + 1;
+        ptr = RtlReAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+                                 assembly->compat_contexts,
+                                 new_count * sizeof(COMPATIBILITY_CONTEXT_ELEMENT) );
+    }
+    else
+    {
+        ptr = RtlAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(COMPATIBILITY_CONTEXT_ELEMENT) );
+    }
+    if (!ptr) return NULL;
+    assembly->compat_contexts = ptr;
+    return &assembly->compat_contexts[assembly->num_compat_contexts++];
 }
 
 static void free_assembly_identity(struct assembly_identity *ai)
@@ -1116,6 +1151,7 @@ static void actctx_release( ACTIVATION_CONTEXT *actctx )
             RtlFreeHeap( RtlGetProcessHeap(), 0, assembly->dlls );
             RtlFreeHeap( RtlGetProcessHeap(), 0, assembly->manifest.info );
             RtlFreeHeap( RtlGetProcessHeap(), 0, assembly->directory );
+            RtlFreeHeap( RtlGetProcessHeap(), 0, assembly->compat_contexts );
             free_entity_array( &assembly->entities );
             free_assembly_identity(&assembly->id);
         }
@@ -1504,8 +1540,11 @@ static BOOL com_class_add_progid(const xmlstr_t *progid, struct entity *entity)
 
     if (progids->allocated == progids->num)
     {
+        WCHAR **new_progids = RtlReAllocateHeap(RtlGetProcessHeap(), 0, progids->progids,
+                                                2 * progids->allocated * sizeof(WCHAR*));
+        if (!new_progids) return FALSE;
         progids->allocated *= 2;
-        progids->progids = RtlReAllocateHeap(RtlGetProcessHeap(), 0, progids->progids, progids->allocated * sizeof(WCHAR*));
+        progids->progids = new_progids;
     }
 
     if (!(progids->progids[progids->num] = xmlstrdupW(progid))) return FALSE;
@@ -2314,6 +2353,229 @@ static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly, struct 
     return ret;
 }
 
+static BOOL parse_compatibility_application_elem(xmlbuf_t* xmlbuf, struct assembly* assembly,
+                                                 struct actctx_loader* acl)
+{
+    xmlstr_t attr_name, attr_value, elem;
+    BOOL end = FALSE, ret = TRUE, error;
+
+    while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
+    {
+        if (xmlstr_cmp_end(&elem, applicationW))
+        {
+            ret = parse_end_element(xmlbuf);
+            break;
+        }
+        else if (xmlstr_cmp(&elem, supportedOSW))
+        {
+            while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
+            {
+                if (xmlstr_cmp(&attr_name, IdW))
+                {
+                    UNICODE_STRING str;
+                    COMPATIBILITY_CONTEXT_ELEMENT* compat;
+                    GUID compat_id;
+                    str.Buffer = (PWSTR)attr_value.ptr;
+                    str.Length = str.MaximumLength = (USHORT)attr_value.len * sizeof(WCHAR);
+                    if (RtlGUIDFromString(&str, &compat_id) == STATUS_SUCCESS)
+                    {
+                        if (!(compat = add_compat_context(assembly))) return FALSE;
+                        compat->Type = ACTCX_COMPATIBILITY_ELEMENT_TYPE_OS;
+                        compat->Id = compat_id;
+                    }
+                    else
+                    {
+                        UNICODE_STRING attr_valueU = xmlstr2unicode(&attr_value);
+                        DPRINT1("Invalid guid %wZ\n", &attr_valueU);
+                    }
+                }
+                else
+                {
+                    UNICODE_STRING attr_nameU = xmlstr2unicode(&attr_name);
+                    UNICODE_STRING attr_valueU = xmlstr2unicode(&attr_value);
+                    DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
+                }
+            }
+        }
+        else
+        {
+            UNICODE_STRING elemU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elemU);
+            ret = parse_unknown_elem(xmlbuf, &elem);
+        }
+    }
+
+    return ret;
+}
+
+static BOOL parse_compatibility_elem(xmlbuf_t* xmlbuf, struct assembly* assembly,
+                                     struct actctx_loader* acl)
+{
+    xmlstr_t elem;
+    BOOL ret = TRUE;
+
+    while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
+    {
+        if (xmlstr_cmp_end(&elem, compatibilityW))
+        {
+            ret = parse_end_element(xmlbuf);
+            break;
+        }
+        else if (xmlstr_cmp(&elem, applicationW))
+        {
+            ret = parse_compatibility_application_elem(xmlbuf, assembly, acl);
+        }
+        else
+        {
+            UNICODE_STRING elemU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elemU);
+            ret = parse_unknown_elem(xmlbuf, &elem);
+        }
+    }
+    return ret;
+}
+
+static BOOL parse_requested_execution_level_elem(xmlbuf_t* xmlbuf, struct assembly* assembly, struct actctx_loader *acl)
+{
+    static const WCHAR levelW[] = {'l','e','v','e','l',0};
+    static const WCHAR asInvokerW[] = {'a','s','I','n','v','o','k','e','r',0};
+    static const WCHAR requireAdministratorW[] = {'r','e','q','u','i','r','e','A','d','m','i','n','i','s','t','r','a','t','o','r',0};
+    static const WCHAR highestAvailableW[] = {'h','i','g','h','e','s','t','A','v','a','i','l','a','b','l','e',0};
+    static const WCHAR uiAccessW[] = {'u','i','A','c','c','e','s','s',0};
+    static const WCHAR falseW[] = {'f','a','l','s','e',0};
+    static const WCHAR trueW[] = {'t','r','u','e',0};
+
+    xmlstr_t attr_name, attr_value, elem;
+    BOOL end = FALSE, ret = TRUE, error;
+
+    /* Multiple requestedExecutionLevel elements are not supported. */
+    if (assembly->run_level != ACTCTX_RUN_LEVEL_UNSPECIFIED)
+        return FALSE;
+
+    while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
+    {
+        UNICODE_STRING attr_nameU = xmlstr2unicode(&attr_name);
+        UNICODE_STRING attr_valueU = xmlstr2unicode(&attr_value);
+        if (xmlstr_cmp(&attr_name, levelW))
+        {
+            if (xmlstr_cmpi(&attr_value, asInvokerW))
+                assembly->run_level = ACTCTX_RUN_LEVEL_AS_INVOKER;
+            else if (xmlstr_cmpi(&attr_value, highestAvailableW))
+                assembly->run_level = ACTCTX_RUN_LEVEL_HIGHEST_AVAILABLE;
+            else if (xmlstr_cmpi(&attr_value, requireAdministratorW))
+                assembly->run_level = ACTCTX_RUN_LEVEL_REQUIRE_ADMIN;
+            else
+                DPRINT1("unknown execution level: %wZ\n", &attr_valueU);
+        }
+        else if (xmlstr_cmp(&attr_name, uiAccessW))
+        {
+            if (xmlstr_cmpi(&attr_value, falseW))
+                assembly->ui_access = FALSE;
+            else if (xmlstr_cmpi(&attr_value, trueW))
+                assembly->ui_access = TRUE;
+            else
+                DPRINT1("unknown uiAccess value: %wZ\n", &attr_valueU);
+        }
+        else
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
+    }
+
+    if (error) return FALSE;
+    if (end) return TRUE;
+
+    while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
+    {
+        if (xmlstr_cmp_end(&elem, requestedExecutionLevelW))
+        {
+            ret = parse_end_element(xmlbuf);
+            break;
+        }
+        else
+        {
+            UNICODE_STRING elemU = xmlstr2unicode(&elem);
+            DPRINT1("unknown element %wZ\n", &elemU);
+            ret = parse_unknown_elem(xmlbuf, &elem);
+        }
+    }
+
+    return ret;
+}
+
+static BOOL parse_requested_privileges_elem(xmlbuf_t* xmlbuf, struct assembly* assembly, struct actctx_loader *acl)
+{
+    xmlstr_t elem;
+    BOOL ret = TRUE;
+
+    while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
+    {
+        if (xmlstr_cmp_end(&elem, requestedPrivilegesW))
+        {
+            ret = parse_end_element(xmlbuf);
+            break;
+        }
+        else if (xmlstr_cmp(&elem, requestedExecutionLevelW))
+            ret = parse_requested_execution_level_elem(xmlbuf, assembly, acl);
+        else
+        {
+            UNICODE_STRING elemU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elemU);
+            ret = parse_unknown_elem(xmlbuf, &elem);
+        }
+    }
+
+    return ret;
+}
+
+static BOOL parse_security_elem(xmlbuf_t *xmlbuf, struct assembly *assembly, struct actctx_loader *acl)
+{
+    xmlstr_t elem;
+    BOOL ret = TRUE;
+
+    while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
+    {
+        if (xmlstr_cmp_end(&elem, securityW))
+        {
+            ret = parse_end_element(xmlbuf);
+            break;
+        }
+        else if (xmlstr_cmp(&elem, requestedPrivilegesW))
+            ret = parse_requested_privileges_elem(xmlbuf, assembly, acl);
+        else
+        {
+            UNICODE_STRING elemU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elemU);
+            ret = parse_unknown_elem(xmlbuf, &elem);
+        }
+    }
+
+    return ret;
+}
+
+static BOOL parse_trust_info_elem(xmlbuf_t *xmlbuf, struct assembly *assembly, struct actctx_loader *acl)
+{
+    xmlstr_t elem;
+    BOOL ret = TRUE;
+
+    while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
+    {
+        if (xmlstr_cmp_end(&elem, trustInfoW))
+        {
+            ret = parse_end_element(xmlbuf);
+            break;
+        }
+        else if (xmlstr_cmp(&elem, securityW))
+            ret = parse_security_elem(xmlbuf, assembly, acl);
+        else
+        {
+            UNICODE_STRING elemU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elemU);
+            ret = parse_unknown_elem(xmlbuf, &elem);
+        }
+    }
+
+    return ret;
+}
+
 static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
                                 struct assembly* assembly,
                                 struct assembly_identity* expected_ai)
@@ -2406,6 +2668,11 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
         {
             ret = parse_clr_surrogate_elem(xmlbuf, assembly, acl);
         }
+        else if (xml_elem_cmp(&elem, trustInfoW, asmv2W) ||
+                 xml_elem_cmp(&elem, trustInfoW, asmv1W))
+        {
+            ret = parse_trust_info_elem(xmlbuf, assembly, acl);
+        }
         else if (xml_elem_cmp(&elem, assemblyIdentityW, asmv1W))
         {
             if (!parse_assembly_identity_elem(xmlbuf, acl->actctx, &assembly->id)) return FALSE;
@@ -2435,12 +2702,10 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
                 }
             }
         }
-#ifdef __REACTOS__
-        else if (xml_elem_cmp(&elem, L"trustInfo", asmv1W))
+        else if (xml_elem_cmp(&elem, compatibilityW, compatibilityNSW))
         {
-            ret = parse_unknown_elem(xmlbuf, &elem);
+            ret = parse_compatibility_elem(xmlbuf, assembly, acl);
         }
-#endif
         else
         {
             attr_nameU = xmlstr2unicode(&elem);
@@ -4654,6 +4919,8 @@ void actctx_init(void)
 {
     ACTCTXW ctx;
     HANDLE handle;
+    WCHAR buffer[1024];
+    NTSTATUS Status;
 
     ctx.cbSize   = sizeof(ctx);
     ctx.lpSource = NULL;
@@ -4664,6 +4931,22 @@ void actctx_init(void)
     if (NT_SUCCESS(RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle)))
     {
         process_actctx = check_actctx(handle);
+    }
+
+    ctx.dwFlags  = 0;
+    ctx.hModule  = NULL;
+    ctx.lpResourceName = NULL;
+    ctx.lpSource = buffer;
+    RtlStringCchCopyW(buffer, 1024, SharedUserData->NtSystemRoot);
+    RtlStringCchCatW(buffer, 1024, L"\\winsxs\\manifests\\systemcompatible.manifest");
+    Status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle);
+    if (NT_SUCCESS(Status))
+    {
+        implicit_actctx = check_actctx(handle);
+    }
+    else
+    {
+        DPRINT1("Failed to create the implicit act ctx. Status: 0x%x!!!\n", Status);
     }
 }
 
@@ -5250,6 +5533,55 @@ NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle,
         }
         break;
 
+    case CompatibilityInformationInActivationContext:
+        {
+            /*ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION*/DWORD *acci = buffer;
+            COMPATIBILITY_CONTEXT_ELEMENT *elements;
+            struct assembly *assembly = NULL;
+            ULONG num_compat_contexts = 0, n;
+            SIZE_T len;
+
+            if (!(actctx = check_actctx(handle))) return STATUS_INVALID_PARAMETER;
+
+            if (actctx->num_assemblies) assembly = actctx->assemblies;
+
+            if (assembly)
+                num_compat_contexts = assembly->num_compat_contexts;
+            len = sizeof(*acci) + num_compat_contexts * sizeof(COMPATIBILITY_CONTEXT_ELEMENT);
+
+            if (retlen) *retlen = len;
+            if (!buffer || bufsize < len) return STATUS_BUFFER_TOO_SMALL;
+
+            *acci = num_compat_contexts;
+            elements = (COMPATIBILITY_CONTEXT_ELEMENT*)(acci + 1);
+            for (n = 0; n < num_compat_contexts; ++n)
+            {
+                elements[n] = assembly->compat_contexts[n];
+            }
+        }
+        break;
+
+    case RunlevelInformationInActivationContext:
+        {
+            ACTIVATION_CONTEXT_RUN_LEVEL_INFORMATION *acrli = buffer;
+            struct assembly *assembly;
+            SIZE_T len;
+
+            if (!(actctx = check_actctx(handle))) return STATUS_INVALID_PARAMETER;
+
+            len = sizeof(*acrli);
+            if (retlen) *retlen = len;
+            if (!buffer || bufsize < len)
+                return STATUS_BUFFER_TOO_SMALL;
+
+            assembly = actctx->assemblies;
+
+            acrli->ulFlags  = 0;
+            acrli->RunLevel = assembly ? assembly->run_level : ACTCTX_RUN_LEVEL_UNSPECIFIED;
+            acrli->UiAccess = assembly ? assembly->ui_access : 0;
+        }
+        break;
+
     default:
         DPRINT( "class %u not implemented\n", class );
         return STATUS_NOT_IMPLEMENTED;
@@ -5347,6 +5679,9 @@ NTSTATUS NTAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *g
     if (status != STATUS_SUCCESS)
         status = find_string( process_actctx, section_kind, section_name, flags, data );
 
+    if (status != STATUS_SUCCESS)
+        status = find_string( implicit_actctx, section_kind, section_name, flags, data );
+
     DPRINT("RtlFindActivationContextSectionString() returns status %x\n", status);
     return status;
 }
@@ -5386,6 +5721,9 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
 
     if (status != STATUS_SUCCESS)
         status = find_guid( process_actctx, section_kind, guid, flags, data );
+
+    if (status != STATUS_SUCCESS)
+        status = find_guid( implicit_actctx, section_kind, guid, flags, data );
 
     return status;
 }

@@ -233,63 +233,67 @@ void DuplicatesTest()
 
 START_TEST(FsRtlTunnel)
 {
-    PUNICODE_STRING s_name;
-    PUNICODE_STRING l_name;
-    PUNICODE_STRING name;
-    PUNICODE_STRING a;
+    UNICODE_STRING s_name;
+    UNICODE_STRING l_name;
+    UNICODE_STRING name;
+    UNICODE_STRING a;
     BOOLEAN is;
 
     //Initialize Cash
     TestFsRtlInitializeTunnelCache();
 
-    s_name = (PUNICODE_STRING)ExAllocatePool(PagedPool,sizeof(UNICODE_STRING));
-    ok(s_name != NULL, "s_name in TestFsRtlAddToTunnelCache is NULL after allocated memory\n");
-    RtlInitUnicodeString(s_name, L"smal");
+    s_name.Length = 0;
+    s_name.MaximumLength = 64 * sizeof(WCHAR);
+    s_name.Buffer = ExAllocatePoolWithTag(PagedPool, s_name.MaximumLength, 'sFmK');
+    ok(s_name.Buffer != NULL, "s_name.Buffer in TestFsRtlAddToTunnelCache is NULL after allocated memory\n");
+    RtlAppendUnicodeToString(&s_name, L"smal");
 
-    l_name = (PUNICODE_STRING)ExAllocatePool(PagedPool,sizeof(UNICODE_STRING));
-    ok(l_name != NULL, "l_name in TestFsRtlAddToTunnelCache is NULL after allocated memory\n");
-    RtlInitUnicodeString(l_name, L"bigbigbigbigbig");
+    l_name.Length = 0;
+    l_name.MaximumLength = 64 * sizeof(WCHAR);
+    l_name.Buffer = ExAllocatePoolWithTag(PagedPool, l_name.MaximumLength, 'lFmK');
+    ok(l_name.Buffer != NULL, "l_name.Buffer in TestFsRtlAddToTunnelCache is NULL after allocated memory\n");
+    RtlAppendUnicodeToString(&l_name, L"bigbigbigbigbig");
 
     // Add elem
-    TestFsRtlAddToTunnelCache(12345, s_name, l_name, TRUE);
+    TestFsRtlAddToTunnelCache(12345, &s_name, &l_name, TRUE);
 
-    name = (PUNICODE_STRING)ExAllocatePool(PagedPool,sizeof(UNICODE_STRING));
-    ok(name != NULL, "name in FsRtlFindInTunnelCache is NULL after allocated memory\n");
-    RtlInitUnicodeString(name, L"smal");
+    name.Length = 0;
+    name.MaximumLength = 64 * sizeof(WCHAR);
+    name.Buffer = ExAllocatePoolWithTag(PagedPool, name.MaximumLength, 'nFmK');
+    ok(name.Buffer != NULL, "name.Buffer in FsRtlFindInTunnelCache is NULL after allocated memory\n");
+    RtlAppendUnicodeToString(&name, L"smal");
 
     // Find
-    is = TestFsRtlFindInTunnelCache(12345, name, s_name, l_name);
+    is = TestFsRtlFindInTunnelCache(12345, &name, &s_name, &l_name);
     ok(is == TRUE, "FsRtlFindInTunnelCache dosn't find elem id = 12345\n");
 
     TestFsRtlDeleteKeyFromTunnelCache(12345);	//Delete
-    is = TestFsRtlFindInTunnelCache(12345, name, s_name, l_name);
+    is = TestFsRtlFindInTunnelCache(12345, &name, &s_name, &l_name);
     ok(is == FALSE, "TestFsRtlDeleteKeyFromTunnelCache dosn't delete elem id = 12345\n");
 
-    is = TestFsRtlFindInTunnelCache(12347, name, s_name, l_name);
+    is = TestFsRtlFindInTunnelCache(12347, &name, &s_name, &l_name);
     ok(is == FALSE, "FsRtlDeleteTunnelCache dosn't clear cash\n");
 
-    TestFsRtlAddToTunnelCache(12345, s_name, l_name, TRUE);
-    TestFsRtlAddToTunnelCache(12347, s_name, l_name, TRUE);
-    a = (PUNICODE_STRING)ExAllocatePool(PagedPool,sizeof(UNICODE_STRING));
-    RtlInitUnicodeString(a, NULL);
-    TestFsRtlAddToTunnelCache(12346, a, l_name, FALSE);
+    TestFsRtlAddToTunnelCache(12345, &s_name, &l_name, TRUE);
+    TestFsRtlAddToTunnelCache(12347, &s_name, &l_name, TRUE);
+    RtlInitUnicodeString(&a, NULL);
+    TestFsRtlAddToTunnelCache(12346, &a, &l_name, FALSE);
 
     //Clear all
     FsRtlDeleteTunnelCache(T);
 
-    is = TestFsRtlFindInTunnelCache(12345, name, s_name, l_name);
+    is = TestFsRtlFindInTunnelCache(12345, &name, &s_name, &l_name);
     ok(is == FALSE, "FsRtlDeleteTunnelCache dosn't clear cash\n");
 
-    is = TestFsRtlFindInTunnelCache(12346, name, a, l_name);
+    is = TestFsRtlFindInTunnelCache(12346, &name, &a, &l_name);
     ok(is == FALSE, "FsRtlDeleteTunnelCache dosn't clear cash\n");
 
-    is = TestFsRtlFindInTunnelCache(12347, name, s_name, l_name);
+    is = TestFsRtlFindInTunnelCache(12347, &name, &s_name, &l_name);
     ok(is == FALSE, "FsRtlDeleteTunnelCache dosn't clear cash\n");
 
-    ExFreePool(a);
-    ExFreePool(name);
-    ExFreePool(l_name);
-    ExFreePool(s_name);
+    ExFreePoolWithTag(name.Buffer, 'nFmK');
+    ExFreePoolWithTag(l_name.Buffer, 'lFmK');
+    ExFreePoolWithTag(s_name.Buffer, 'sFmK');
 
     ExFreePool(Tb);
     ExFreePool(T);

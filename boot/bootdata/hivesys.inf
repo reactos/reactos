@@ -1309,6 +1309,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ReactOS\Settings\Version","ReportAsWorkst
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDReleaseType",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000200
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","Directory",0x00020002,"%SystemRoot%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","ErrorMode",0x00010003,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","NoInteractiveServices",0x00010003,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","SystemDirectory",0x00020002,"%SystemRoot%\system32"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x00000012
 
@@ -1543,10 +1548,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","File",0x00020000,"%SystemRoot%\system32\config\SysEvent.Evt"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","MaxSize",0x00010003,524288
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","Retention",0x00010003,604800
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Application Popup","EventMessageFile",0x00020000,"%SystemRoot%\system32\ntdll.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Application Popup","TypesSupported",0x00010003,0x00000007
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
-HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","TypesSupported",0x00010001,0x00000007
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","TypesSupported",0x00010003,0x00000007
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
-HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","TypesSupported",0x00010001,0x00000007
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","TypesSupported",0x00010003,0x00000007
 
 ; Filesystem recognizer driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ErrorControl",0x00010001,0x00000000
@@ -2272,7 +2279,7 @@ VIETNAMESE = "Vietnamese"
 
 ; Services names and descriptions
 AUDIO_SERVICE="Usługa Audio"
-AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio"
+AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio."
 
 BITS_SERVICE="Usługa inteligentnego transferu w tle"
 BITS_SERVICE_DESCRIPTION="Przenosi dane pomiędzy klientami a serwerami w tle."
@@ -2308,7 +2315,7 @@ TELNETD_SERVICE="Usługa ReactOS Telnet"
 TELNETD_SERVICE_DESCRIPTION="Usługa ReactOS Telnet"
 
 THEMES_SERVICE="Motywy"
-THEMES_SERVICE_DESCRIPTION="Oferuje wsparcie dla motywów"
+THEMES_SERVICE_DESCRIPTION="Oferuje wsparcie dla motywów."
 
 WINMGMT_SERVICE="Infrastruktura zarządzania ReactOS"
 WINMGMT_SERVICE_DESCRIPTION="Dostarcza interfejs w celu uzyskiwania dostępu do informacji zarządzania o systemie operacyjnym, urządzeniach, aplikacjach i usługach."

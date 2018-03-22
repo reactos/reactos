@@ -17,7 +17,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/debug.h"
+
 #include "quartz_private.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 extern HRESULT WINAPI QUARTZ_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI QUARTZ_DllCanUnloadNow(void) DECLSPEC_HIDDEN;

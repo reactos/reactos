@@ -175,65 +175,15 @@ static HWND create_syslink(DWORD style, HWND parent)
     return hWndSysLink;
 }
 
-
-START_TEST(syslink)
+static void test_create_syslink(void)
 {
-    ULONG_PTR ctx_cookie;
-    HANDLE hCtx;
-    HMODULE hComctl32;
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
-    INITCOMMONCONTROLSEX iccex;
-    BOOL rc;
     HWND hWndSysLink;
     LONG oldstyle;
-    POINT orig_pos;
-
-    if (!load_v6_module(&ctx_cookie, &hCtx))
-        return;
-
-    /* LoadLibrary is needed. This file has no reference to functions in comctl32 */
-    hComctl32 = LoadLibraryA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (!pInitCommonControlsEx)
-    {
-        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
-        return;
-    }
-    iccex.dwSize = sizeof(iccex);
-    iccex.dwICC = ICC_LINK_CLASS;
-    rc = pInitCommonControlsEx(&iccex);
-    ok(rc, "InitCommonControlsEx failed (le %u)\n", GetLastError());
-    if (!rc)
-    {
-        skip("Could not register ICC_LINK_CLASS\n");
-        return;
-    }
-
-    /* Move the cursor off the parent window */
-    GetCursorPos(&orig_pos);
-    SetCursorPos(400, 400);
-
-    init_msg_sequences(sequences, NUM_MSG_SEQUENCE);
-
-    /* Create parent window */
-    hWndParent = create_parent_window();
-    ok(hWndParent != NULL, "Failed to create parent Window!\n");
-    if (!hWndParent)
-    {
-        skip("Parent window not present\n");
-        return;
-    }
-    flush_events();
 
     /* Create an invisible SysLink control */
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
     hWndSysLink = create_syslink(WS_CHILD | WS_TABSTOP, hWndParent);
     ok(hWndSysLink != NULL, "Expected non NULL value (le %u)\n", GetLastError());
-    if (!hWndSysLink)
-    {
-        skip("SysLink control not present?\n");
-        return;
-    }
     flush_events();
     ok_sequence(sequences, SYSLINK_SEQ_INDEX, empty_wnd_seq, "create SysLink", FALSE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_create_syslink_wnd_seq, "create SysLink (parent)", TRUE);
@@ -248,6 +198,74 @@ START_TEST(syslink)
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_visible_syslink_wnd_seq, "visible SysLink (parent)", TRUE);
 
     DestroyWindow(hWndSysLink);
+}
+
+static void test_LM_GETIDEALHEIGHT(void)
+{
+    HWND hwnd;
+    LONG ret;
+
+    hwnd = create_syslink(WS_CHILD | WS_TABSTOP | WS_VISIBLE, hWndParent);
+    ok(hwnd != NULL, "Failed to create SysLink window.\n");
+
+    ret = SendMessageA(hwnd, LM_GETIDEALHEIGHT, 0, 0);
+    ok(ret > 0, "Unexpected ideal height, %d.\n", ret);
+
+    DestroyWindow(hwnd);
+}
+
+static void test_LM_GETIDEALSIZE(void)
+{
+    HWND hwnd;
+    LONG ret;
+    SIZE sz;
+
+    hwnd = create_syslink(WS_CHILD | WS_TABSTOP | WS_VISIBLE, hWndParent);
+    ok(hwnd != NULL, "Failed to create SysLink window.\n");
+
+    memset(&sz, 0, sizeof(sz));
+    ret = SendMessageA(hwnd, LM_GETIDEALSIZE, 0, (LPARAM)&sz);
+    ok(ret > 0, "Unexpected return value, %d.\n", ret);
+    if (sz.cy == 0)
+        win_skip("LM_GETIDEALSIZE is not supported.\n");
+    else
+    {
+        ok(sz.cx > 5, "Unexpected ideal width, %d.\n", sz.cx);
+        ok(sz.cy == ret, "Unexpected ideal height, %d.\n", sz.cy);
+    }
+
+    DestroyWindow(hwnd);
+}
+
+START_TEST(syslink)
+{
+    ULONG_PTR ctx_cookie;
+    HMODULE hComctl32;
+    POINT orig_pos;
+    HANDLE hCtx;
+
+    if (!load_v6_module(&ctx_cookie, &hCtx))
+        return;
+
+    /* LoadLibrary is needed. This file has no reference to functions in comctl32 */
+    hComctl32 = LoadLibraryA("comctl32.dll");
+    ok(hComctl32 != NULL, "Failed to load comctl32.dll.\n");
+
+    /* Move the cursor off the parent window */
+    GetCursorPos(&orig_pos);
+    SetCursorPos(400, 400);
+
+    init_msg_sequences(sequences, NUM_MSG_SEQUENCE);
+
+    /* Create parent window */
+    hWndParent = create_parent_window();
+    ok(hWndParent != NULL, "Failed to create parent Window!\n");
+    flush_events();
+
+    test_create_syslink();
+    test_LM_GETIDEALHEIGHT();
+    test_LM_GETIDEALSIZE();
+
     DestroyWindow(hWndParent);
     unload_v6_module(ctx_cookie, hCtx);
     SetCursorPos(orig_pos.x, orig_pos.y);

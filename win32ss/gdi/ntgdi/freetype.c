@@ -323,6 +323,7 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
     BYTE                            CharSets[FONTSUBST_FROM_AND_TO];
     LPWSTR                          pch;
     PFONTSUBST_ENTRY                pEntry;
+    BOOLEAN                         Success;
 
     /* the FontSubstitutes registry key */
     static UNICODE_STRING FontSubstKey =
@@ -367,10 +368,11 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
         Length = pInfo->NameLength / sizeof(WCHAR);
         pInfo->Name[Length] = UNICODE_NULL;   /* truncate */
-        Status = RtlCreateUnicodeString(&FromW, pInfo->Name);
-        if (!NT_SUCCESS(Status))
+        Success = RtlCreateUnicodeString(&FromW, pInfo->Name);
+        if (!Success)
         {
-            DPRINT("RtlCreateUnicodeString failed: 0x%08X\n", Status);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            DPRINT("RtlCreateUnicodeString failed\n");
             break;      /* failure */
         }
 
@@ -389,10 +391,11 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
         pch = (LPWSTR)((PUCHAR)pInfo + pInfo->DataOffset);
         Length = pInfo->DataLength / sizeof(WCHAR);
         pch[Length] = UNICODE_NULL; /* truncate */
-        Status = RtlCreateUnicodeString(&ToW, pch);
-        if (!NT_SUCCESS(Status))
+        Success = RtlCreateUnicodeString(&ToW, pch);
+        if (!Success)
         {
-            DPRINT("RtlCreateUnicodeString failed: 0x%08X\n", Status);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            DPRINT("RtlCreateUnicodeString failed\n");
             RtlFreeUnicodeString(&FromW);
             break;      /* failure */
         }
@@ -1078,7 +1081,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     PVOID Buffer = NULL;
     IO_STATUS_BLOCK Iosb;
     PVOID SectionObject;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     LARGE_INTEGER SectionSize;
     OBJECT_ATTRIBUTES ObjectAttributes;
     GDI_LOAD_FONT   LoadFont;
@@ -1165,7 +1168,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
         Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
         if (NT_SUCCESS(Status))
         {
-            ULONG DataSize;
+            SIZE_T DataSize;
             LPWSTR pFileName = wcsrchr(FileName->Buffer, L'\\');
             if (pFileName)
             {
@@ -1222,10 +1225,10 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
             PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
             EntryCollection->Entry = LoadFont.PrivateEntry;
             IntLockProcessPrivateFonts(Win32Process);
-            EntryCollection->Handle = ++Win32Process->PrivateMemFontHandleCount;
+            EntryCollection->Handle = ULongToHandle(++Win32Process->PrivateMemFontHandleCount);
             InsertTailList(&Win32Process->PrivateMemFontListHead, &EntryCollection->ListEntry);
             IntUnLockProcessPrivateFonts(Win32Process);
-            Ret = (HANDLE)EntryCollection->Handle;
+            Ret = EntryCollection->Handle;
         }
     }
     *pNumAdded = FaceCount;
@@ -1299,7 +1302,7 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_COLL_MEM, ListEntry);
 
-        if (CurrentEntry->Handle == (UINT)hMMFont)
+        if (CurrentEntry->Handle == hMMFont)
         {
             EntryCollection = CurrentEntry;
             UnlinkFontMemCollection(CurrentEntry);
@@ -2088,7 +2091,6 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
 {
     FT_SfntName Name;
     INT i, Count, BestIndex, Score, BestScore;
-    WCHAR Buf[LF_FULLFACESIZE];
     FT_Error Error;
     NTSTATUS Status = STATUS_NOT_FOUND;
     ANSI_STRING AnsiName;
@@ -2147,11 +2149,6 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
             continue;   /* invalid string */
         }
 
-        if (sizeof(Buf) < Name.string_len + sizeof(UNICODE_NULL))
-        {
-            continue;   /* name too long */
-        }
-
         if (Name.language_id == LangID)
         {
             Score = 30;
@@ -2185,13 +2182,27 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
         if (!Error)
         {
             /* NOTE: Name.string is not null-terminated */
-            RtlCopyMemory(Buf, Name.string, Name.string_len);
-            Buf[Name.string_len / sizeof(WCHAR)] = UNICODE_NULL;
+            UNICODE_STRING Tmp;
+            Tmp.Buffer = (PWCH)Name.string;
+            Tmp.Length = Tmp.MaximumLength = Name.string_len;
 
-            /* Convert UTF-16 big endian to little endian */
-            SwapEndian(Buf, Name.string_len);
+            pNameW->Length = 0;
+            pNameW->MaximumLength = Name.string_len + sizeof(WCHAR);
+            pNameW->Buffer = ExAllocatePoolWithTag(PagedPool, pNameW->MaximumLength, TAG_USTR);
 
-            Status = RtlCreateUnicodeString(pNameW, Buf);
+            if (pNameW->Buffer)
+            {
+                Status = RtlAppendUnicodeStringToString(pNameW, &Tmp);
+                if (Status == STATUS_SUCCESS)
+                {
+                    /* Convert UTF-16 big endian to little endian */
+                    SwapEndian(pNameW->Buffer, pNameW->Length);
+                }
+            }
+            else
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
         }
     }
 
@@ -2511,8 +2522,8 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
 
         FontFamilyFillInfo(&InfoEntry, NULL, NULL, FontGDI);
 
-        if (_wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName) != 0 &&
-            _wcsicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName) != 0)
+        if (_wcsnicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName, RTL_NUMBER_OF(LogFont->lfFaceName)-1) != 0 &&
+            _wcsnicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName, RTL_NUMBER_OF(LogFont->lfFaceName)-1) != 0)
         {
             continue;
         }

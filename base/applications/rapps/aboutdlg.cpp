@@ -10,7 +10,8 @@
 
 static INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    if (Msg == WM_COMMAND && LOWORD(wParam) == IDOK)
+    if ((Msg == WM_COMMAND) &&
+        (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL))
     {
         return EndDialog(hDlg, LOWORD(wParam));
     }

@@ -19,7 +19,6 @@
 #include <freeldr.h>
 #include <cportlib/cportlib.h>
 
-#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(HWDETECT);
@@ -341,12 +340,12 @@ DetectSerialMouse(PUCHAR Port)
     StallExecutionProcessor(10000);
 
     /* Read first four bytes, which contains Microsoft Mouse signs */
-    TimeOut = 200;
+    TimeOut = 20;
     for (i = 0; i < 4; i++)
     {
-        while (((READ_PORT_UCHAR(Port + 5) & 1) == 0) && (TimeOut > 0))
+        while ((READ_PORT_UCHAR(Port + 5) & 1) == 0)
         {
-            StallExecutionProcessor(1000);
+            StallExecutionProcessor(100);
             --TimeOut;
             if (TimeOut == 0)
                 return MOUSE_TYPE_NONE;

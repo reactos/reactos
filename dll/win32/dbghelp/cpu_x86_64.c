@@ -19,7 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
 #include "dbghelp_private.h"
+#include "winternl.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -702,6 +710,7 @@ static void*    x86_64_find_runtime_function(struct module* module, DWORD64 addr
             while (rtf->UnwindData & 1)  /* follow chained entry */
             {
                 FIXME("RunTime_Function outside IMAGE_DIRECTORY_ENTRY_EXCEPTION unimplemented yet!\n");
+                return NULL;
                 /* we need to read into the other process */
                 /* rtf = (RUNTIME_FUNCTION*)(module->module.BaseOfImage + (rtf->UnwindData & ~1)); */
             }

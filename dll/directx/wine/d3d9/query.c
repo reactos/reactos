@@ -20,7 +20,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
 #include "d3d9_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 static inline struct d3d9_query *impl_from_IDirect3DQuery9(IDirect3DQuery9 *iface)
 {
@@ -69,7 +72,7 @@ static ULONG WINAPI d3d9_query_Release(IDirect3DQuery9 *iface)
         wined3d_mutex_unlock();
 
         IDirect3DDevice9Ex_Release(query->parent_device);
-        HeapFree(GetProcessHeap(), 0, query);
+        heap_free(query);
     }
     return refcount;
 }
@@ -184,7 +187,11 @@ HRESULT query_init(struct d3d9_query *query, struct d3d9_device *device, D3DQUER
 
     if (type > D3DQUERYTYPE_MEMORYPRESSURE)
     {
-        WARN("Invalid query type %#x.\n", type);
+        if (type == 0x16)
+            FIXME("Undocumented query %#x created.\n", type);
+        else
+            WARN("Invalid query type %#x.\n", type);
+
         return D3DERR_NOTAVAILABLE;
     }
 

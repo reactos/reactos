@@ -16,7 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+
 #include "inseng_private.h"
+
+#include "wine/list.h"
 
 struct inf_value
 {
@@ -80,7 +89,7 @@ static const char *get_substitution(struct inf_file *inf, const char *name, int 
 static int expand_variables_buffer(struct inf_file *inf, const char *str, char *output)
 {
     const char *p, *var_start = NULL;
-    int var_len, len = 0;
+    int var_len = 0, len = 0;
     const char *substitution;
 
     for (p = str; *p; p++)
@@ -336,7 +345,7 @@ static HRESULT inf_section_parse(struct inf_file *inf, char *line, char *last_ch
     name = trim(line, NULL, FALSE);
     if (!name) return S_OK;
 
-    sec = heap_zero_alloc(sizeof(*sec));
+    sec = heap_alloc_zero(sizeof(*sec));
     if (!sec) return E_OUTOFMEMORY;
 
     sec->name = name;
@@ -364,7 +373,7 @@ static HRESULT inf_value_parse(struct inf_section *sec, char *line)
     key = trim(key, NULL, FALSE);
     value = trim(value, NULL, TRUE);
 
-    key_val = heap_zero_alloc(sizeof(*key_val));
+    key_val = heap_alloc_zero(sizeof(*key_val));
     if (!key_val) return E_OUTOFMEMORY;
 
     key_val->key = key;
@@ -404,7 +413,7 @@ HRESULT inf_load(const char *path, struct inf_file **inf_file)
     file = CreateFileA(path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file == INVALID_HANDLE_VALUE) return E_FAIL;
 
-    inf = heap_zero_alloc(sizeof(*inf));
+    inf = heap_alloc_zero(sizeof(*inf));
     if (!inf) goto error;
 
     if (!GetFileSizeEx(file, &file_size))
@@ -412,7 +421,7 @@ HRESULT inf_load(const char *path, struct inf_file **inf_file)
 
     inf->size = file_size.QuadPart;
 
-    inf->content = heap_zero_alloc(inf->size);
+    inf->content = heap_alloc_zero(inf->size);
     if (!inf->content) goto error;
 
     list_init(&inf->sections);

@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-
 #include "msvidc32_private.h"
 
 /* UTF-8 */
@@ -75,7 +73,7 @@
     #include "lang/msvidc32_Si.rc"
 #endif
 #ifdef LANGUAGE_SQ_AL
-	#include "lang/msvidc32_Sq.rc"
+    #include "lang/msvidc32_Sq.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/msvidc32_Sv.rc"

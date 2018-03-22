@@ -25,7 +25,19 @@
  *  Please submit a test case if you find a difference.
  */
 
-#include "precomp.h"
+#include "config.h"
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wine/unicode.h"
+#include "winerror.h"
+#include "variant.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 

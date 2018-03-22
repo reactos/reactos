@@ -624,7 +624,8 @@ BlCopyBootOptions (
 NTSTATUS
 BlAppendBootOptionBoolean (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
-    _In_ ULONG OptionId
+    _In_ ULONG OptionId,
+    _In_ BOOLEAN Value
     )
 {
     NTSTATUS Status;
@@ -642,7 +643,7 @@ BlAppendBootOptionBoolean (
     Option->DataSize = sizeof(USHORT);
     Option->Type = OptionId;
     Option->DataOffset = sizeof(*Option);
-    *(PBOOLEAN)(Option + 1) = TRUE;
+    *(PBOOLEAN)(Option + 1) = Value;
 
     /* Append it */
     Status = BlAppendBootOptions(AppEntry, Option);
@@ -687,6 +688,7 @@ BlAppendBootOptionInteger (
 NTSTATUS
 BlAppendBootOptionString (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
+    _In_ ULONG OptionId,
     _In_ PWCHAR OptionString
     )
 {
@@ -719,7 +721,7 @@ BlAppendBootOptionString (
     /* Initialize it and copy the string value */
     RtlZeroMemory(Option, sizeof(*Option) + StringSize);
     Option->DataSize = StringSize;
-    Option->Type = BcdLibraryString_ApplicationPath;
+    Option->Type = OptionId;
     Option->DataOffset = sizeof(*Option);
     wcsncpy((PWCHAR)Option + 1, OptionString, StringSize / sizeof(WCHAR));
 

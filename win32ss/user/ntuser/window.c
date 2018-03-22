@@ -1385,7 +1385,7 @@ NtUserBuildHwndList(
       PWND Window;
       HWND *List = NULL;
 
-      Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
+      Status = PsLookupThreadByThreadId(UlongToHandle(dwThreadId), &Thread);
       if (!NT_SUCCESS(Status))
       {
          ERR("Thread Id is not valid!\n");
@@ -1840,7 +1840,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       }
    }
    else // Not a child
-      pWnd->IDMenu = (UINT) Cs->hMenu;
+      pWnd->IDMenu = (UINT_PTR)Cs->hMenu;
 
 
    if ( ParentWindow &&
@@ -3566,12 +3566,12 @@ IntCheckFrameEdge(ULONG Style, ULONG ExStyle)
       return FALSE;
 }
 
-static LONG
-co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlter)
+static LONG_PTR
+co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULONG Size, BOOL bAlter)
 {
    PWND Window, Parent;
    PWINSTATION_OBJECT WindowStation;
-   LONG OldValue;
+   LONG_PTR OldValue;
    STYLESTRUCT Style;
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -3581,29 +3581,53 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
 
    if ((INT)Index >= 0)
    {
-      if ((Index + sizeof(LONG)) > Window->cbwndExtra)
+      if ((Index + Size) > Window->cbwndExtra)
       {
          EngSetLastError(ERROR_INVALID_INDEX);
          return( 0);
       }
 
-      OldValue = *((LONG *)((PCHAR)(Window + 1) + Index));
-/*
-      if ( Index == DWLP_DLGPROC && Wnd->state & WNDS_DIALOGWINDOW)
+#ifdef _WIN64
+      if (Size == sizeof(LONG))
       {
-         OldValue = (LONG)IntSetWindowProc( Wnd,
-                                           (WNDPROC)NewValue,
-                                            Ansi);
-         if (!OldValue) return 0;
+         OldValue = *((LONG *)((PCHAR)(Window + 1) + Index));
+         *((LONG*)((PCHAR)(Window + 1) + Index)) = (LONG)NewValue;
       }
- */
-      *((LONG *)((PCHAR)(Window + 1) + Index)) = NewValue;
+      else
+#endif
+      {
+         OldValue = *((LONG_PTR *)((PCHAR)(Window + 1) + Index));
+         /*
+         if ( Index == DWLP_DLGPROC && Wnd->state & WNDS_DIALOGWINDOW)
+         {
+            OldValue = (LONG_PTR)IntSetWindowProc( Wnd, (WNDPROC)NewValue, Ansi);
+            if (!OldValue) return 0;
+         }
+         */
+         *((LONG_PTR*)((PCHAR)(Window + 1) + Index)) = NewValue;
+      }
+
    }
    else
    {
+#ifdef _WIN64
+      if (Size == sizeof(LONG))
+      {
+         if ((Index != GWL_STYLE) &&
+             (Index != GWL_EXSTYLE) &&
+             (Index != GWL_ID) &&
+             (Index != GWL_USERDATA))
+         {
+            ERR("NtUserSetWindowLong(): Index requires pointer size: %lu\n", Index);
+            EngSetLastError(ERROR_INVALID_INDEX);
+            return 0;
+         }
+      }
+#endif
+
       switch (Index)
       {
-         case GWL_EXSTYLE:
+         case GWL_EXSTYLE: // LONG
             OldValue = (LONG) Window->ExStyle;
             Style.styleOld = OldValue;
             Style.styleNew = NewValue;
@@ -3635,7 +3659,7 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
             co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_EXSTYLE, (LPARAM) &Style);
             break;
 
-         case GWL_STYLE:
+         case GWL_STYLE: // LONG
             OldValue = (LONG) Window->style;
             Style.styleOld = OldValue;
             Style.styleNew = NewValue;
@@ -3689,7 +3713,7 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
                 co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_STYLE, (LPARAM) &Style);
             break;
 
-         case GWL_WNDPROC:
+         case GWLP_WNDPROC: // LONG_PTR
          {
             if ( Window->head.pti->ppi != PsGetCurrentProcessWin32Process() ||
                  Window->fnid & FNID_FREED)
@@ -3697,31 +3721,31 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
                EngSetLastError(ERROR_ACCESS_DENIED);
                return( 0);
             }
-            OldValue = (LONG)IntSetWindowProc(Window,
-                                              (WNDPROC)NewValue,
-                                              Ansi);
+            OldValue = (LONG_PTR)IntSetWindowProc(Window,
+                                                  (WNDPROC)NewValue,
+                                                  Ansi);
             break;
          }
 
-         case GWL_HINSTANCE:
-            OldValue = (LONG) Window->hModule;
+         case GWLP_HINSTANCE: // LONG_PTR
+            OldValue = (LONG_PTR) Window->hModule;
             Window->hModule = (HINSTANCE) NewValue;
             break;
 
-         case GWL_HWNDPARENT:
+         case GWLP_HWNDPARENT: // LONG_PTR
             Parent = Window->spwndParent;
             if (Parent && (Parent->head.h == IntGetDesktopWindow()))
-               OldValue = (LONG) IntSetOwner(Window->head.h, (HWND) NewValue);
+               OldValue = (LONG_PTR) IntSetOwner(Window->head.h, (HWND) NewValue);
             else
-               OldValue = (LONG) co_UserSetParent(Window->head.h, (HWND) NewValue);
+               OldValue = (LONG_PTR) co_UserSetParent(Window->head.h, (HWND) NewValue);
             break;
 
-         case GWL_ID:
+         case GWLP_ID: // LONG
             OldValue = (LONG) Window->IDMenu;
             Window->IDMenu = (UINT) NewValue;
             break;
 
-         case GWL_USERDATA:
+         case GWLP_USERDATA: // LONG or LONG_PTR
             OldValue = Window->dwUserData;
             Window->dwUserData = NewValue;
             break;
@@ -3737,11 +3761,16 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
    return( OldValue);
 }
 
-
 LONG FASTCALL
 co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {
-    return co_IntSetWindowLong(hWnd, Index, NewValue, Ansi, FALSE);
+    return (LONG)co_IntSetWindowLongPtr(hWnd, Index, NewValue, Ansi, sizeof(LONG), FALSE);
+}
+
+LONG_PTR FASTCALL
+co_UserSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi)
+{
+    return co_IntSetWindowLongPtr(hWnd, Index, NewValue, Ansi, sizeof(LONG_PTR), FALSE);
 }
 
 /*
@@ -3769,12 +3798,35 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
       return 0;
    }
 
-   ret = co_IntSetWindowLong(hWnd, Index, NewValue, Ansi, FALSE);
+   ret = (LONG)co_IntSetWindowLongPtr(hWnd, Index, NewValue, Ansi, sizeof(LONG), FALSE);
 
    UserLeave();
 
    return ret;
 }
+
+#ifdef _WIN64
+LONG_PTR APIENTRY
+NtUserSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi)
+{
+    LONG_PTR ret;
+
+    UserEnterExclusive();
+
+    if (hWnd == IntGetDesktopWindow())
+    {
+        EngSetLastError(STATUS_ACCESS_DENIED);
+        UserLeave();
+        return 0;
+    }
+
+    ret = co_IntSetWindowLongPtr(hWnd, Index, NewValue, Ansi, sizeof(LONG_PTR), FALSE);
+
+    UserLeave();
+
+    return ret;
+}
+#endif // _WIN64
 
 DWORD APIENTRY
 NtUserAlterWindowStyle(HWND hWnd, DWORD Index, LONG NewValue)
@@ -3790,7 +3842,7 @@ NtUserAlterWindowStyle(HWND hWnd, DWORD Index, LONG NewValue)
       return 0;
    }
 
-   ret = co_IntSetWindowLong(hWnd, Index, NewValue, FALSE, TRUE);
+   ret = co_IntSetWindowLongPtr(hWnd, Index, NewValue, FALSE, sizeof(LONG), TRUE);
 
    UserLeave();
 
@@ -3876,7 +3928,7 @@ CLEANUP:
 /*
  * @implemented
  */
-DWORD APIENTRY
+DWORD_PTR APIENTRY
 NtUserQueryWindow(HWND hWnd, DWORD Index)
 {
 /* Console Leader Process CID Window offsets */
@@ -3884,7 +3936,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 #define GWLP_CONSOLE_LEADER_TID 4
 
    PWND pWnd;
-   DWORD Result;
+   DWORD_PTR Result;
    DECLARE_RETURN(UINT);
 
    TRACE("Enter NtUserQueryWindow\n");
@@ -3903,11 +3955,11 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
               (pWnd->pcls->atomClassName == gaGuiConsoleWndClass) )
          {
             // IntGetWindowLong(offset == GWLP_CONSOLE_LEADER_PID)
-            Result = (DWORD)(*((LONG_PTR*)((PCHAR)(pWnd + 1) + GWLP_CONSOLE_LEADER_PID)));
+            Result = (DWORD_PTR)(*((LONG_PTR*)((PCHAR)(pWnd + 1) + GWLP_CONSOLE_LEADER_PID)));
          }
          else
          {
-            Result = (DWORD)IntGetWndProcessId(pWnd);
+            Result = (DWORD_PTR)IntGetWndProcessId(pWnd);
          }
          break;
       }
@@ -3918,29 +3970,29 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
               (pWnd->pcls->atomClassName == gaGuiConsoleWndClass) )
          {
             // IntGetWindowLong(offset == GWLP_CONSOLE_LEADER_TID)
-            Result = (DWORD)(*((LONG_PTR*)((PCHAR)(pWnd + 1) + GWLP_CONSOLE_LEADER_TID)));
+            Result = (DWORD_PTR)(*((LONG_PTR*)((PCHAR)(pWnd + 1) + GWLP_CONSOLE_LEADER_TID)));
          }
          else
          {
-            Result = (DWORD)IntGetWndThreadId(pWnd);
+            Result = (DWORD_PTR)IntGetWndThreadId(pWnd);
          }
          break;
       }
 
       case QUERY_WINDOW_ACTIVE:
-         Result = (DWORD)(pWnd->head.pti->MessageQueue->spwndActive ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndActive) : 0);
+         Result = (DWORD_PTR)(pWnd->head.pti->MessageQueue->spwndActive ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndActive) : 0);
          break;
 
       case QUERY_WINDOW_FOCUS:
-         Result = (DWORD)(pWnd->head.pti->MessageQueue->spwndFocus ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndFocus) : 0);
+         Result = (DWORD_PTR)(pWnd->head.pti->MessageQueue->spwndFocus ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndFocus) : 0);
          break;
 
       case QUERY_WINDOW_ISHUNG:
-         Result = (DWORD)MsqIsHung(pWnd->head.pti);
+         Result = (DWORD_PTR)MsqIsHung(pWnd->head.pti);
          break;
 
       case QUERY_WINDOW_REAL_ID:
-         Result = (DWORD)pWnd->head.pti->pEThread->Cid.UniqueProcess;
+         Result = (DWORD_PTR)pWnd->head.pti->pEThread->Cid.UniqueProcess;
          break;
 
       case QUERY_WINDOW_FOREGROUND:
@@ -3948,7 +4000,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       default:
-         Result = (DWORD)NULL;
+         Result = 0;
          break;
    }
 

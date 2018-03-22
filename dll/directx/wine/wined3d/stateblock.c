@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -221,7 +223,7 @@ static void stateblock_savedstates_set_all(struct wined3d_saved_states *states, 
     stateblock_set_bits(states->renderState, WINEHIGHEST_RENDER_STATE + 1);
     for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = 0x3ffff;
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = 0x3ffe;
-    states->clipplane = 0xffffffff;
+    states->clipplane = (1u << MAX_CLIP_DISTANCES) - 1;
     states->pixelShaderConstantsB = 0xffff;
     states->pixelShaderConstantsI = 0xffff;
     states->vertexShaderConstantsB = 0xffff;
@@ -240,16 +242,16 @@ static void stateblock_savedstates_set_pixel(struct wined3d_saved_states *states
 
     states->pixelShader = 1;
 
-    for (i = 0; i < sizeof(pixel_states_render) / sizeof(*pixel_states_render); ++i)
+    for (i = 0; i < ARRAY_SIZE(pixel_states_render); ++i)
     {
         DWORD rs = pixel_states_render[i];
         states->renderState[rs >> 5] |= 1u << (rs & 0x1f);
     }
 
-    for (i = 0; i < sizeof(pixel_states_texture) / sizeof(*pixel_states_texture); ++i)
+    for (i = 0; i < ARRAY_SIZE(pixel_states_texture); ++i)
         texture_mask |= 1u << pixel_states_texture[i];
     for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
-    for (i = 0; i < sizeof(pixel_states_sampler) / sizeof(*pixel_states_sampler); ++i)
+    for (i = 0; i < ARRAY_SIZE(pixel_states_sampler); ++i)
         sampler_mask |= 1u << pixel_states_sampler[i];
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = sampler_mask;
     states->pixelShaderConstantsB = 0xffff;
@@ -267,16 +269,16 @@ static void stateblock_savedstates_set_vertex(struct wined3d_saved_states *state
     states->vertexDecl = 1;
     states->vertexShader = 1;
 
-    for (i = 0; i < sizeof(vertex_states_render) / sizeof(*vertex_states_render); ++i)
+    for (i = 0; i < ARRAY_SIZE(vertex_states_render); ++i)
     {
         DWORD rs = vertex_states_render[i];
         states->renderState[rs >> 5] |= 1u << (rs & 0x1f);
     }
 
-    for (i = 0; i < sizeof(vertex_states_texture) / sizeof(*vertex_states_texture); ++i)
+    for (i = 0; i < ARRAY_SIZE(vertex_states_texture); ++i)
         texture_mask |= 1u << vertex_states_texture[i];
     for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = texture_mask;
-    for (i = 0; i < sizeof(vertex_states_sampler) / sizeof(*vertex_states_sampler); ++i)
+    for (i = 0; i < ARRAY_SIZE(vertex_states_sampler); ++i)
         sampler_mask |= 1u << vertex_states_sampler[i];
     for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = sampler_mask;
     states->vertexShaderConstantsB = 0xffff;
@@ -407,7 +409,7 @@ static void stateblock_init_lights(struct wined3d_stateblock *stateblock, struct
 
         LIST_FOR_EACH_ENTRY(src_light, &light_map[i], struct wined3d_light_info, entry)
         {
-            struct wined3d_light_info *dst_light = HeapAlloc(GetProcessHeap(), 0, sizeof(*dst_light));
+            struct wined3d_light_info *dst_light = heap_alloc(sizeof(*dst_light));
 
             *dst_light = *src_light;
             list_add_tail(&stateblock->state.light_map[i], &dst_light->entry);
@@ -542,7 +544,7 @@ void state_cleanup(struct wined3d_state *state)
         {
             struct wined3d_light_info *light = LIST_ENTRY(e1, struct wined3d_light_info, entry);
             list_remove(&light->entry);
-            HeapFree(GetProcessHeap(), 0, light);
+            heap_free(light);
         }
     }
 }
@@ -556,7 +558,7 @@ ULONG CDECL wined3d_stateblock_decref(struct wined3d_stateblock *stateblock)
     if (!refcount)
     {
         state_cleanup(&stateblock->state);
-        HeapFree(GetProcessHeap(), 0, stateblock);
+        heap_free(stateblock);
     }
 
     return refcount;
@@ -1242,6 +1244,8 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
     state->render_states[WINED3D_RS_BLENDFACTOR] = 0xffffffff;
     state->render_states[WINED3D_RS_SRGBWRITEENABLE] = 0;
     state->render_states[WINED3D_RS_DEPTHBIAS] = 0;
+    tmpfloat.f = 0.0f;
+    state->render_states[WINED3D_RS_DEPTHBIASCLAMP] = tmpfloat.d;
     state->render_states[WINED3D_RS_DEPTHCLIP] = TRUE;
     state->render_states[WINED3D_RS_WRAP8] = 0;
     state->render_states[WINED3D_RS_WRAP9] = 0;
@@ -1374,15 +1378,14 @@ HRESULT CDECL wined3d_stateblock_create(struct wined3d_device *device,
     TRACE("device %p, type %#x, stateblock %p.\n",
             device, type, stateblock);
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
-    if (!object)
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
     hr = stateblock_init(object, device, type);
     if (FAILED(hr))
     {
         WARN("Failed to initialize stateblock, hr %#x.\n", hr);
-        HeapFree(GetProcessHeap(), 0, object);
+        heap_free(object);
         return hr;
     }
 

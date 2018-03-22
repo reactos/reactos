@@ -16,9 +16,34 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
 
-#include <msxml6did.h>
+#include "config.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/xmlerror.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "ole2.h"
+#include "msxml6.h"
+#include "msxml6did.h"
+#include "wininet.h"
+#include "urlmon.h"
+#include "winreg.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+#include "msxml_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 static CRITICAL_SECTION cs_dispex_static_data;
 static CRITICAL_SECTION_DEBUG cs_dispex_static_data_dbg =
@@ -183,11 +208,11 @@ void release_typelib(void)
         heap_free(iter);
     }
 
-    for(i=0; i < sizeof(typeinfos)/sizeof(*typeinfos); i++)
+    for(i=0; i < ARRAY_SIZE(typeinfos); i++)
         if(typeinfos[i])
             ITypeInfo_Release(typeinfos[i]);
 
-    for(i=0; i < sizeof(typelib)/sizeof(*typelib); i++)
+    for(i=0; i < ARRAY_SIZE(typelib); i++)
         if(typelib[i])
             ITypeLib_Release(typelib[i]);
 

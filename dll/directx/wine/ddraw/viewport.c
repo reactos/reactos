@@ -17,7 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include "ddraw_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 /*****************************************************************************
  * Helper functions
@@ -216,7 +221,7 @@ static ULONG WINAPI d3d_viewport_Release(IDirect3DViewport3 *iface)
     TRACE("%p decreasing refcount to %u.\n", viewport, ref);
 
     if (!ref)
-        HeapFree(GetProcessHeap(), 0, viewport);
+        heap_free(viewport);
 
     return ref;
 }

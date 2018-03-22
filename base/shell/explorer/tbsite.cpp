@@ -329,13 +329,6 @@ public:
             bsi.dwStyle = (Locked ? BSIS_LOCKED | BSIS_NOGRIPPER : BSIS_AUTOGRIPPER);
 
             hRet = m_BandSite->SetBandSiteInfo(&bsi);
-
-            /* HACK for CORE-9809 ! */
-            if (hRet == E_NOTIMPL)
-                hRet = S_OK;
-            else
-                ERR("HACK for CORE-9809 no longer needed!\n");
-
             if (SUCCEEDED(hRet))
             {
                 hRet = Update();
@@ -355,7 +348,23 @@ public:
         /* FIXME: Should be delayed */
         IUnknown_Exec(punk, IID_IDeskBand, DBID_DELAYINIT, 0, NULL, NULL);
 
-        return m_BandSite->AddBand(punk);
+        HRESULT hr = m_BandSite->AddBand(punk);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        VARIANT vThemeName;
+        V_VT(&vThemeName) = VT_BSTR;
+        V_BSTR(&vThemeName) = SysAllocString(L"TaskBar");
+        IUnknown_Exec(punk,
+                      IID_IDeskBand,
+                      DBID_SETWINDOWTHEME,
+                      0,
+                      &vThemeName,
+                      NULL);
+
+        SysFreeString(V_BSTR(&vThemeName));
+
+        return S_OK;
     }
 
     virtual HRESULT STDMETHODCALLTYPE EnumBands(

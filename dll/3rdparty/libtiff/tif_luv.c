@@ -1,4 +1,4 @@
-/* $Id: tif_luv.c,v 1.47 2017-05-14 10:17:27 erouault Exp $ */
+/* $Id: tif_luv.c,v 1.49 2017-07-24 12:47:30 erouault Exp $ */
 
 /*
  * Copyright (c) 1997 Greg Ward Larson
@@ -25,7 +25,6 @@
  */
 
 #include <precomp.h>
-
 #ifdef LOGLUV_SUPPORT
 
 /*
@@ -1315,7 +1314,7 @@ LogL16InitState(TIFF* tif)
 	}
         if( isTiled(tif) )
             sp->tbuflen = multiply_ms(td->td_tilewidth, td->td_tilelength);
-        else if( td->td_rowsperstrip != (uint32)-1 )
+        else if( td->td_rowsperstrip < td->td_imagelength )
             sp->tbuflen = multiply_ms(td->td_imagewidth, td->td_rowsperstrip);
         else
             sp->tbuflen = multiply_ms(td->td_imagewidth, td->td_imagelength);
@@ -1417,8 +1416,10 @@ LogLuvInitState(TIFF* tif)
 	}
         if( isTiled(tif) )
             sp->tbuflen = multiply_ms(td->td_tilewidth, td->td_tilelength);
-        else
+        else if( td->td_rowsperstrip < td->td_imagelength )
             sp->tbuflen = multiply_ms(td->td_imagewidth, td->td_rowsperstrip);
+        else
+            sp->tbuflen = multiply_ms(td->td_imagewidth, td->td_imagelength);
 	if (multiply_ms(sp->tbuflen, sizeof (uint32)) == 0 ||
 	    (sp->tbuf = (uint8*) _TIFFmalloc(sp->tbuflen * sizeof (uint32))) == NULL) {
 		TIFFErrorExt(tif->tif_clientdata, module, "No space for SGILog translation buffer");

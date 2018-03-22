@@ -30,12 +30,29 @@
  */
 
 #include "quartz_private.h"
+#include "pin.h"
+
+#include "uuids.h"
+#include "vfw.h"
+#include "aviriff.h"
+#include "vfwmsgs.h"
+#include "amvideo.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+#include <math.h>
+#include <assert.h>
+
+#include "parser.h"
 
 #define TWOCCFromFOURCC(fcc) HIWORD(fcc)
 
 /* four character codes used in AVI files */
 #define ckidINFO       mmioFOURCC('I','N','F','O')
 #define ckidREC        mmioFOURCC('R','E','C',' ')
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct StreamData
 {
@@ -1098,8 +1115,7 @@ static HRESULT AVISplitter_InputPin_PreConnect(IPin * iface, IPin * pConnectPin,
         pos += sizeof(RIFFCHUNK) + list.cb;
         hr = IAsyncReader_SyncRead(This->pReader, pos, sizeof(list), (BYTE *)&list);
     }
-    while (hr == S_OK && (list.fcc != FOURCC_LIST ||
-           (list.fcc == FOURCC_LIST && list.fccListType != listtypeAVIMOVIE)));
+    while (hr == S_OK && (list.fcc != FOURCC_LIST || list.fccListType != listtypeAVIMOVIE));
 
     if (hr != S_OK)
     {

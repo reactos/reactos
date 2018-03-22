@@ -17,6 +17,11 @@
  */
 
 #include "hhctrl.h"
+#include "stream.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 static SearchItem *SearchCHM_Folder(SearchItem *item, IStorage *pStorage,
                                     const WCHAR *folder, const char *needle);

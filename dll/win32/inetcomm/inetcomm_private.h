@@ -18,30 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _INETCOMM_PRIVATE_H_
-#define _INETCOMM_PRIVATE_H_
+#pragma once
 
-#include <stdio.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <ole2.h>
-#include <mimeole.h>
-#include <winsock2.h>
-#include <imnxport.h>
-
-#include <wine/list.h>
-#include <wine/unicode.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
+#include "winsock2.h"
+#include "winuser.h"
+#include "objbase.h"
+#include "imnxport.h"
 
 typedef struct InternetTransport InternetTransport;
 
@@ -103,15 +85,3 @@ HRESULT MimeInternational_Construct(IMimeInternational **internat) DECLSPEC_HIDD
 HRESULT SMTPTransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
 HRESULT IMAPTransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
 HRESULT POP3TransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
-
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), 0, len);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
-
-#endif /* _INETCOMM_PRIVATE_H_ */

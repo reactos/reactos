@@ -21,7 +21,6 @@
 
 #include <freeldr.h>
 
-#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(HWDETECT);
@@ -112,8 +111,6 @@ HalpCalibrateStallExecution(VOID)
     WRITE_PORT_UCHAR((PUCHAR)0x40, LATCH >> 8); /* MSB */
 
     /* Stage 1:  Coarse calibration                                   */
-
-    WaitFor8254Wraparound();
 
     delay_count = 1;
 

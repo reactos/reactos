@@ -219,7 +219,7 @@ typedef struct tagHOOK
     int HookId; /* Hook table index */
     ULONG_PTR offPfn;
     ULONG flags; /* Some internal flags */
-    INT ihmod;
+    INT_PTR ihmod;
     struct _THREADINFO *ptiHooked;
     struct _DESKTOP *rpdesk;
     /* ReactOS */
@@ -692,7 +692,7 @@ typedef struct _WND
     HMENU SystemMenu;
     //PMENU spmenuSys;
     /* Window menu handle or window id */
-    UINT IDMenu; // Use spmenu
+    UINT_PTR IDMenu; // Use spmenu
     //PMENU spmenu;
     HRGN hrgnClip;
     HRGN hrgnNewFrame;
@@ -702,7 +702,7 @@ typedef struct _WND
     ULONG cbwndExtra;
     struct _WND *spwndLastActive;
     HIMC hImc; // Input context associated with this window.
-    LONG dwUserData;
+    LONG_PTR dwUserData;
     PVOID pActCtx;
     //PD3DMATRIX pTransForm;
     struct _WND *spwndClipboardListener;
@@ -1662,14 +1662,14 @@ DWORD
 NTAPI
 NtUserCallHwndParam(
     HWND hWnd,
-    DWORD Param,
+    DWORD_PTR Param,
     DWORD Routine);
 
 DWORD
 NTAPI
 NtUserCallHwndParamLock(
     HWND hWnd,
-    DWORD Param,
+    DWORD_PTR Param,
     DWORD Routine);
 
 BOOL
@@ -2801,7 +2801,7 @@ NtUserQueryUserCounters(
 #define QUERY_WINDOW_REAL_ID           0x05
 #define QUERY_WINDOW_FOREGROUND        0x06
 
-DWORD
+DWORD_PTR
 NTAPI
 NtUserQueryWindow(
     HWND hWnd,
@@ -3234,6 +3234,16 @@ NtUserSetWindowLong(
     DWORD Index,
     LONG NewValue,
     BOOL Ansi);
+
+#ifdef _WIN64
+LONG_PTR
+NTAPI
+NtUserSetWindowLongPtr(
+    HWND hWnd,
+    DWORD Index,
+    LONG_PTR NewValue,
+    BOOL Ansi);
+#endif // _WIN64
 
 BOOL
 NTAPI

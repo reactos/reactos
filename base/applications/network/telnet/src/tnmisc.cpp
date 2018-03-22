@@ -153,8 +153,8 @@ bool SetIcon(HWND hConsoleWindow, HANDLE hIcon, LPARAM *pOldBIcon, LPARAM *pOldS
 #else
 	// load the icon from the resource file -crn@ozemail.com.au 16/12/98
 	if(!hIcon) {
-		hIcon = LoadIcon ((HANDLE)GetWindowLongPtr(hConsoleWindow,
-			GWL_HINSTANCE), "TELNETICON");
+		hIcon = LoadIcon((HANDLE)GetWindowLongPtr(hConsoleWindow,
+			GWLP_HINSTANCE), "TELNETICON");
 	}
 #endif
 

@@ -12,7 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <advapi32.h>
-WINE_DEFAULT_DEBUG_CHANNEL(advapi);
+WINE_DEFAULT_DEBUG_CHANNEL(advapi_service);
 
 
 /* TYPES *********************************************************************/
@@ -135,15 +135,19 @@ ScDestroyStatusBinding(VOID)
 }
 
 
-static PACTIVE_SERVICE
-ScLookupServiceByServiceName(LPCWSTR lpServiceName)
+static DWORD
+ScLookupServiceByServiceName(IN LPCWSTR lpServiceName,
+                             OUT PACTIVE_SERVICE* pService)
 {
     DWORD i;
 
     TRACE("ScLookupServiceByServiceName(%S) called\n", lpServiceName);
 
     if (lpActiveServices[0].bOwnProcess)
-        return &lpActiveServices[0];
+    {
+        *pService = &lpActiveServices[0];
+        return ERROR_SUCCESS;
+    }
 
     for (i = 0; i < dwActiveServiceCount; i++)
     {
@@ -151,15 +155,14 @@ ScLookupServiceByServiceName(LPCWSTR lpServiceName)
         if (_wcsicmp(lpActiveServices[i].ServiceName.Buffer, lpServiceName) == 0)
         {
             TRACE("Found!\n");
-            return &lpActiveServices[i];
+            *pService = &lpActiveServices[i];
+            return ERROR_SUCCESS;
         }
     }
 
     TRACE("No service found!\n");
-
-    SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
-
-    return NULL;
+    *pService = NULL;
+    return ERROR_SERVICE_NOT_IN_EXE;
 }
 
 
@@ -229,7 +232,6 @@ ScConnectControlPipe(HANDLE *hPipe)
                                     QueryTable,
                                     NULL,
                                     NULL);
-
     if (!NT_SUCCESS(Status))
     {
         ERR("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
@@ -269,7 +271,7 @@ ScConnectControlPipe(HANDLE *hPipe)
     dwProcessId = GetCurrentProcessId();
     WriteFile(*hPipe,
               &dwProcessId,
-              sizeof(DWORD),
+              sizeof(dwProcessId),
               &dwBytesWritten,
               NULL);
 
@@ -432,9 +434,9 @@ ScStartService(PACTIVE_SERVICE lpService,
     if (lpService == NULL || ControlPacket == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    TRACE("ScStartService() called\n");
-    TRACE("Size: %lu\n", ControlPacket->dwSize);
-    TRACE("Service: %S\n", (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset));
+    TRACE("ScStartService(Size: %lu, Service: '%S') called\n",
+          ControlPacket->dwSize,
+          (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset));
 
     /* Set the service status handle */
     lpService->hServiceStatus = ControlPacket->hServiceStatus;
@@ -458,18 +460,20 @@ ScStartService(PACTIVE_SERVICE lpService,
                                     0,
                                     ScServiceMainStubW,
                                     ThreadParamsW,
-                                    CREATE_SUSPENDED,
+                                    0,
                                     &ThreadId);
         if (ThreadHandle == NULL)
         {
             if (ThreadParamsW->lpArgVector != NULL)
             {
-                HeapFree(GetProcessHeap(),
-                         0,
-                         ThreadParamsW->lpArgVector);
+                HeapFree(GetProcessHeap(), 0, ThreadParamsW->lpArgVector);
             }
             HeapFree(GetProcessHeap(), 0, ThreadParamsW);
+
+            return ERROR_SERVICE_NO_THREAD;
         }
+
+        CloseHandle(ThreadHandle);
     }
     else
     {
@@ -489,22 +493,21 @@ ScStartService(PACTIVE_SERVICE lpService,
                                     0,
                                     ScServiceMainStubA,
                                     ThreadParamsA,
-                                    CREATE_SUSPENDED,
+                                    0,
                                     &ThreadId);
         if (ThreadHandle == NULL)
         {
             if (ThreadParamsA->lpArgVector != NULL)
             {
-                HeapFree(GetProcessHeap(),
-                         0,
-                         ThreadParamsA->lpArgVector);
+                HeapFree(GetProcessHeap(), 0, ThreadParamsA->lpArgVector);
             }
             HeapFree(GetProcessHeap(), 0, ThreadParamsA);
-        }
-    }
 
-    ResumeThread(ThreadHandle);
-    CloseHandle(ThreadHandle);
+            return ERROR_SERVICE_NO_THREAD;
+        }
+
+        CloseHandle(ThreadHandle);
+    }
 
     return ERROR_SUCCESS;
 }
@@ -514,26 +517,31 @@ static DWORD
 ScControlService(PACTIVE_SERVICE lpService,
                  PSCM_CONTROL_PACKET ControlPacket)
 {
+    DWORD dwError;
+
     if (lpService == NULL || ControlPacket == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    TRACE("ScControlService() called\n");
-    TRACE("Size: %lu\n", ControlPacket->dwSize);
-    TRACE("Service: %S\n", (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset));
+    TRACE("ScControlService(Size: %lu, Service: '%S') called\n",
+          ControlPacket->dwSize,
+          (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset));
 
     if (lpService->HandlerFunction)
     {
         (lpService->HandlerFunction)(ControlPacket->dwControl);
+        dwError = ERROR_SUCCESS;
     }
     else if (lpService->HandlerFunctionEx)
     {
-        /* FIXME: send correct params */
-        (lpService->HandlerFunctionEx)(ControlPacket->dwControl, 0, NULL, NULL);
+        /* FIXME: Send correct 2nd and 3rd parameters */
+        dwError = (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
+                                                 0, NULL,
+                                                 lpService->HandlerContext);
     }
 
-    TRACE("ScControlService() done\n");
+    TRACE("ScControlService() done (error %lu)\n", dwError);
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 
@@ -544,7 +552,7 @@ ScServiceDispatcher(HANDLE hPipe,
 {
     DWORD Count;
     BOOL bResult;
-    DWORD dwRunningServices = 0;
+    BOOL bRunning = TRUE;
     LPWSTR lpServiceName;
     PACTIVE_SERVICE lpService;
     SCM_REPLY_PACKET ReplyPacket;
@@ -555,7 +563,7 @@ ScServiceDispatcher(HANDLE hPipe,
     if (ControlPacket == NULL || dwBufferSize < sizeof(SCM_CONTROL_PACKET))
         return FALSE;
 
-    while (TRUE)
+    while (bRunning)
     {
         /* Read command from the control pipe */
         bResult = ReadFile(hPipe,
@@ -572,39 +580,40 @@ ScServiceDispatcher(HANDLE hPipe,
         lpServiceName = (LPWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
         TRACE("Service: %S\n", lpServiceName);
 
-        if (ControlPacket->dwControl == SERVICE_CONTROL_START_OWN)
-            lpActiveServices[0].bOwnProcess = TRUE;
-
-        lpService = ScLookupServiceByServiceName(lpServiceName);
-        if (lpService != NULL)
+        if (lpServiceName[0] == UNICODE_NULL)
         {
-            /* Execute command */
-            switch (ControlPacket->dwControl)
-            {
-                case SERVICE_CONTROL_START_SHARE:
-                case SERVICE_CONTROL_START_OWN:
-                    TRACE("Start command - received SERVICE_CONTROL_START\n");
-                    dwError = ScStartService(lpService, ControlPacket);
-                    if (dwError == ERROR_SUCCESS)
-                        dwRunningServices++;
-                    break;
-
-                case SERVICE_CONTROL_STOP:
-                    TRACE("Stop command - received SERVICE_CONTROL_STOP\n");
-                    dwError = ScControlService(lpService, ControlPacket);
-                    if (dwError == ERROR_SUCCESS)
-                        dwRunningServices--;
-                    break;
-
-                default:
-                    TRACE("Command %lu received", ControlPacket->dwControl);
-                    dwError = ScControlService(lpService, ControlPacket);
-                    break;
-            }
+            ERR("Stop dispatcher thread\n");
+            bRunning = FALSE;
+            dwError = ERROR_SUCCESS;
         }
         else
         {
-            dwError = ERROR_SERVICE_DOES_NOT_EXIST;
+            if (ControlPacket->dwControl == SERVICE_CONTROL_START_OWN)
+                lpActiveServices[0].bOwnProcess = TRUE;
+
+            dwError = ScLookupServiceByServiceName(lpServiceName, &lpService);
+            if ((dwError == ERROR_SUCCESS) && (lpService != NULL))
+            {
+                /* Execute command */
+                switch (ControlPacket->dwControl)
+                {
+                    case SERVICE_CONTROL_START_SHARE:
+                    case SERVICE_CONTROL_START_OWN:
+                        TRACE("Start command - received SERVICE_CONTROL_START\n");
+                        dwError = ScStartService(lpService, ControlPacket);
+                        break;
+
+                    case SERVICE_CONTROL_STOP:
+                        TRACE("Stop command - received SERVICE_CONTROL_STOP\n");
+                        dwError = ScControlService(lpService, ControlPacket);
+                        break;
+
+                    default:
+                        TRACE("Command %lu received", ControlPacket->dwControl);
+                        dwError = ScControlService(lpService, ControlPacket);
+                        break;
+                }
+            }
         }
 
         ReplyPacket.dwError = dwError;
@@ -620,9 +629,6 @@ ScServiceDispatcher(HANDLE hPipe,
             ERR("Pipe write failed (Error: %lu)\n", GetLastError());
             return FALSE;
         }
-
-        if (dwRunningServices == 0)
-            break;
     }
 
     return TRUE;
@@ -630,7 +636,7 @@ ScServiceDispatcher(HANDLE hPipe,
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerA
+ *  RegisterServiceCtrlHandlerA
  *
  * @implemented
  */
@@ -640,26 +646,26 @@ RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
 {
     ANSI_STRING ServiceNameA;
     UNICODE_STRING ServiceNameU;
-    SERVICE_STATUS_HANDLE SHandle;
+    SERVICE_STATUS_HANDLE hServiceStatus;
 
-    RtlInitAnsiString(&ServiceNameA, (LPSTR)lpServiceName);
+    RtlInitAnsiString(&ServiceNameA, lpServiceName);
     if (!NT_SUCCESS(RtlAnsiStringToUnicodeString(&ServiceNameU, &ServiceNameA, TRUE)))
     {
-        SetLastError(ERROR_OUTOFMEMORY);
-        return (SERVICE_STATUS_HANDLE)0;
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
     }
 
-    SHandle = RegisterServiceCtrlHandlerW(ServiceNameU.Buffer,
-                                          lpHandlerProc);
+    hServiceStatus = RegisterServiceCtrlHandlerW(ServiceNameU.Buffer,
+                                                 lpHandlerProc);
 
     RtlFreeUnicodeString(&ServiceNameU);
 
-    return SHandle;
+    return hServiceStatus;
 }
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerW
+ *  RegisterServiceCtrlHandlerW
  *
  * @implemented
  */
@@ -667,25 +673,33 @@ SERVICE_STATUS_HANDLE WINAPI
 RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
                             LPHANDLER_FUNCTION lpHandlerProc)
 {
+    DWORD dwError;
     PACTIVE_SERVICE Service;
 
-    Service = ScLookupServiceByServiceName((LPWSTR)lpServiceName);
-    if (Service == NULL)
+    dwError = ScLookupServiceByServiceName(lpServiceName, &Service);
+    if ((dwError != ERROR_SUCCESS) || (Service == NULL))
     {
-        return (SERVICE_STATUS_HANDLE)NULL;
+        SetLastError(dwError);
+        return NULL;
     }
 
-    Service->HandlerFunction = lpHandlerProc;
+    if (!lpHandlerProc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    Service->HandlerFunction   = lpHandlerProc;
     Service->HandlerFunctionEx = NULL;
 
-    TRACE("RegisterServiceCtrlHandler returning %lu\n", Service->hServiceStatus);
+    TRACE("RegisterServiceCtrlHandler returning 0x%p\n", Service->hServiceStatus);
 
     return Service->hServiceStatus;
 }
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerExA
+ *  RegisterServiceCtrlHandlerExA
  *
  * @implemented
  */
@@ -696,27 +710,27 @@ RegisterServiceCtrlHandlerExA(LPCSTR lpServiceName,
 {
     ANSI_STRING ServiceNameA;
     UNICODE_STRING ServiceNameU;
-    SERVICE_STATUS_HANDLE SHandle;
+    SERVICE_STATUS_HANDLE hServiceStatus;
 
-    RtlInitAnsiString(&ServiceNameA, (LPSTR)lpServiceName);
+    RtlInitAnsiString(&ServiceNameA, lpServiceName);
     if (!NT_SUCCESS(RtlAnsiStringToUnicodeString(&ServiceNameU, &ServiceNameA, TRUE)))
     {
-        SetLastError(ERROR_OUTOFMEMORY);
-        return (SERVICE_STATUS_HANDLE)0;
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
     }
 
-    SHandle = RegisterServiceCtrlHandlerExW(ServiceNameU.Buffer,
-                                            lpHandlerProc,
-                                            lpContext);
+    hServiceStatus = RegisterServiceCtrlHandlerExW(ServiceNameU.Buffer,
+                                                   lpHandlerProc,
+                                                   lpContext);
 
     RtlFreeUnicodeString(&ServiceNameU);
 
-    return SHandle;
+    return hServiceStatus;
 }
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerExW
+ *  RegisterServiceCtrlHandlerExW
  *
  * @implemented
  */
@@ -725,26 +739,34 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
                               LPHANDLER_FUNCTION_EX lpHandlerProc,
                               LPVOID lpContext)
 {
+    DWORD dwError;
     PACTIVE_SERVICE Service;
 
-    Service = ScLookupServiceByServiceName(lpServiceName);
-    if (Service == NULL)
+    dwError = ScLookupServiceByServiceName(lpServiceName, &Service);
+    if ((dwError != ERROR_SUCCESS) || (Service == NULL))
     {
-        return (SERVICE_STATUS_HANDLE)NULL;
+        SetLastError(dwError);
+        return NULL;
     }
 
-    Service->HandlerFunction = NULL;
-    Service->HandlerFunctionEx = lpHandlerProc;
-    Service->HandlerContext = lpContext;
+    if (!lpHandlerProc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
 
-    TRACE("RegisterServiceCtrlHandlerEx returning %lu\n", Service->hServiceStatus);
+    Service->HandlerFunction   = NULL;
+    Service->HandlerFunctionEx = lpHandlerProc;
+    Service->HandlerContext    = lpContext;
+
+    TRACE("RegisterServiceCtrlHandlerEx returning 0x%p\n", Service->hServiceStatus);
 
     return Service->hServiceStatus;
 }
 
 
 /**********************************************************************
- *	I_ScIsSecurityProcess
+ *  I_ScIsSecurityProcess
  *
  * Undocumented
  *
@@ -758,7 +780,7 @@ I_ScIsSecurityProcess(VOID)
 
 
 /**********************************************************************
- *	I_ScPnPGetServiceName
+ *  I_ScPnPGetServiceName
  *
  * Undocumented
  *
@@ -786,7 +808,7 @@ I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	I_ScSetServiceBitsA
+ *  I_ScSetServiceBitsA
  *
  * Undocumented
  *
@@ -803,7 +825,6 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         bResult = RI_ScSetServiceBitsA((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                        dwServiceBits,
                                        bSetBitsOn,
@@ -822,7 +843,7 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	I_ScSetServiceBitsW
+ *  I_ScSetServiceBitsW
  *
  * Undocumented
  *
@@ -839,7 +860,6 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         bResult = RI_ScSetServiceBitsW((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                        dwServiceBits,
                                        bSetBitsOn,
@@ -858,7 +878,7 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	SetServiceBits
+ *  SetServiceBits
  *
  * @implemented
  */
@@ -877,7 +897,7 @@ SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	SetServiceStatus
+ *  SetServiceStatus
  *
  * @implemented
  */
@@ -887,12 +907,10 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     DWORD dwError;
 
-    TRACE("SetServiceStatus() called\n");
-    TRACE("hServiceStatus %lu\n", hServiceStatus);
+    TRACE("SetServiceStatus(hServiceStatus %lu) called\n", hServiceStatus);
 
     RpcTryExcept
     {
-        /* Call to services.exe using RPC */
         dwError = RSetServiceStatus((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                     lpServiceStatus);
     }
@@ -904,7 +922,7 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ScmrSetServiceStatus() failed (Error %lu)\n", dwError);
+        ERR("RSetServiceStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -916,7 +934,7 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 
 
 /**********************************************************************
- *	StartServiceCtrlDispatcherA
+ *  StartServiceCtrlDispatcherA
  *
  * @implemented
  */
@@ -939,11 +957,14 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
     }
 
     dwActiveServiceCount = i;
+
+    /* Initialize the service table */
     lpActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
                                        HEAP_ZERO_MEMORY,
                                        dwActiveServiceCount * sizeof(ACTIVE_SERVICE));
     if (lpActiveServices == NULL)
     {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -953,16 +974,18 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
         RtlCreateUnicodeStringFromAsciiz(&lpActiveServices[i].ServiceName,
                                          lpServiceStartTable[i].lpServiceName);
         lpActiveServices[i].ServiceMain.A = lpServiceStartTable[i].lpServiceProc;
-        lpActiveServices[i].hServiceStatus = 0;
+        lpActiveServices[i].hServiceStatus = NULL;
         lpActiveServices[i].bUnicode = FALSE;
         lpActiveServices[i].bOwnProcess = FALSE;
     }
+
+    /* Initialize the connection to the SCM */
 
     dwError = ScConnectControlPipe(&hPipe);
     if (dwError != ERROR_SUCCESS)
     {
         bRet = FALSE;
-        goto done;
+        goto Done;
     }
 
     dwBufSize = sizeof(SCM_CONTROL_PACKET) +
@@ -973,22 +996,24 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
                                     dwBufSize);
     if (ControlPacket == NULL)
     {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
         bRet = FALSE;
-        goto done;
+        goto Done;
     }
 
     ScCreateStatusBinding();
 
+    /* Start the dispatcher loop */
     ScServiceDispatcher(hPipe, ControlPacket, dwBufSize);
 
+    /* Close the connection */
     ScDestroyStatusBinding();
-
     CloseHandle(hPipe);
 
     /* Free the control packet */
     RtlFreeHeap(RtlGetProcessHeap(), 0, ControlPacket);
 
-done:
+Done:
     /* Free the service table */
     for (i = 0; i < dwActiveServiceCount; i++)
     {
@@ -998,12 +1023,14 @@ done:
     lpActiveServices = NULL;
     dwActiveServiceCount = 0;
 
+    if (!bRet) SetLastError(dwError);
+
     return bRet;
 }
 
 
 /**********************************************************************
- *	StartServiceCtrlDispatcherW
+ *  StartServiceCtrlDispatcherW
  *
  * @implemented
  */
@@ -1026,11 +1053,14 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
     }
 
     dwActiveServiceCount = i;
+
+    /* Initialize the service table */
     lpActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
                                        HEAP_ZERO_MEMORY,
                                        dwActiveServiceCount * sizeof(ACTIVE_SERVICE));
     if (lpActiveServices == NULL)
     {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -1040,16 +1070,18 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
         RtlCreateUnicodeString(&lpActiveServices[i].ServiceName,
                                lpServiceStartTable[i].lpServiceName);
         lpActiveServices[i].ServiceMain.W = lpServiceStartTable[i].lpServiceProc;
-        lpActiveServices[i].hServiceStatus = 0;
+        lpActiveServices[i].hServiceStatus = NULL;
         lpActiveServices[i].bUnicode = TRUE;
         lpActiveServices[i].bOwnProcess = FALSE;
     }
+
+    /* Initialize the connection to the SCM */
 
     dwError = ScConnectControlPipe(&hPipe);
     if (dwError != ERROR_SUCCESS)
     {
         bRet = FALSE;
-        goto done;
+        goto Done;
     }
 
     dwBufSize = sizeof(SCM_CONTROL_PACKET) +
@@ -1060,22 +1092,24 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
                                     dwBufSize);
     if (ControlPacket == NULL)
     {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
         bRet = FALSE;
-        goto done;
+        goto Done;
     }
 
     ScCreateStatusBinding();
 
+    /* Start the dispatcher loop */
     ScServiceDispatcher(hPipe, ControlPacket, dwBufSize);
 
+    /* Close the connection */
     ScDestroyStatusBinding();
-
     CloseHandle(hPipe);
 
     /* Free the control packet */
     RtlFreeHeap(RtlGetProcessHeap(), 0, ControlPacket);
 
-done:
+Done:
     /* Free the service table */
     for (i = 0; i < dwActiveServiceCount; i++)
     {
@@ -1084,6 +1118,8 @@ done:
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
     lpActiveServices = NULL;
     dwActiveServiceCount = 0;
+
+    if (!bRet) SetLastError(dwError);
 
     return bRet;
 }

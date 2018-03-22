@@ -18,13 +18,19 @@
  *
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <ole2.h>
-#include <wine/wined3d.h>
+#include "d3dx9_private.h"
 
-#include <initguid.h>
-#include <wincodec.h>
+#include "initguid.h"
+#include "ole2.h"
+#include "wincodec.h"
+
+#include "wine/wined3d.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
+
 
 /* Wine-specific WIC GUIDs */
 DEFINE_GUID(GUID_WineContainerFormatTga, 0x0c44fda1,0xa5c5,0x4298,0x96,0x85,0x47,0x3f,0xc1,0x7c,0xd3,0x22);
@@ -49,7 +55,7 @@ static D3DFORMAT wic_guid_to_d3dformat(const GUID *guid)
 {
     unsigned int i;
 
-    for (i = 0; i < sizeof(wic_pixel_formats) / sizeof(wic_pixel_formats[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(wic_pixel_formats); i++)
     {
         if (IsEqualGUID(wic_pixel_formats[i].wic_guid, guid))
             return wic_pixel_formats[i].d3dformat;
@@ -62,7 +68,7 @@ static const GUID *d3dformat_to_wic_guid(D3DFORMAT format)
 {
     unsigned int i;
 
-    for (i = 0; i < sizeof(wic_pixel_formats) / sizeof(wic_pixel_formats[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(wic_pixel_formats); i++)
     {
         if (wic_pixel_formats[i].d3dformat == format)
             return wic_pixel_formats[i].wic_guid;
@@ -161,7 +167,7 @@ static D3DFORMAT dds_fourcc_to_d3dformat(DWORD fourcc)
         D3DFMT_A32B32G32R32F,
     };
 
-    for (i = 0; i < sizeof(known_fourcc) / sizeof(known_fourcc[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(known_fourcc); i++)
     {
         if (known_fourcc[i] == fourcc)
             return fourcc;
@@ -200,7 +206,7 @@ static D3DFORMAT dds_rgb_to_d3dformat(const struct dds_pixel_format *pixel_forma
 {
     unsigned int i;
 
-    for (i = 0; i < sizeof(rgb_pixel_formats) / sizeof(rgb_pixel_formats[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(rgb_pixel_formats); i++)
     {
         if (rgb_pixel_formats[i].bpp == pixel_format->bpp
             && rgb_pixel_formats[i].rmask == pixel_format->rmask
@@ -307,7 +313,7 @@ static HRESULT d3dformat_to_dds_pixel_format(struct dds_pixel_format *pixel_form
 
     pixel_format->size = sizeof(*pixel_format);
 
-    for (i = 0; i < sizeof(rgb_pixel_formats) / sizeof(rgb_pixel_formats[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(rgb_pixel_formats); i++)
     {
         if (rgb_pixel_formats[i].format == d3dformat)
         {

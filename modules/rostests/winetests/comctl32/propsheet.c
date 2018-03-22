@@ -25,10 +25,18 @@
 static HWND parenthwnd;
 static HWND sheethwnd;
 
+static BOOL rtl;
 static LONG active_page = -1;
 
 #define IDC_APPLY_BUTTON 12321
 
+
+static void detect_locale(void)
+{
+    DWORD reading_layout;
+    rtl = GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IREADINGLAYOUT | LOCALE_RETURN_NUMBER,
+            (void *)&reading_layout, sizeof(reading_layout)) && reading_layout == 1;
+}
 
 /* try to make sure pending X events have been processed before continuing */
 static void flush_events(void)
@@ -492,19 +500,28 @@ static void test_buttons(void)
     button = GetDlgItem(hdlg, IDCANCEL);
     GetWindowRect(button, &rc);
     ok(rc.top == top, "Cancel button should have same top as OK button\n");
-    ok(rc.left > prevRight, "Cancel button should be to the right of OK button\n");
+    if (rtl)
+        ok(rc.left < prevRight, "Cancel button should be to the left of OK button\n");
+    else
+        ok(rc.left > prevRight, "Cancel button should be to the right of OK button\n");
     prevRight = rc.right;
 
     button = GetDlgItem(hdlg, IDC_APPLY_BUTTON);
     GetWindowRect(button, &rc);
     ok(rc.top == top, "Apply button should have same top as OK button\n");
-    ok(rc.left > prevRight, "Apply button should be to the right of Cancel button\n");
+    if (rtl)
+        ok(rc.left < prevRight, "Apply button should be to the left of Cancel button\n");
+    else
+        ok(rc.left > prevRight, "Apply button should be to the right of Cancel button\n");
     prevRight = rc.right;
 
     button = GetDlgItem(hdlg, IDHELP);
     GetWindowRect(button, &rc);
     ok(rc.top == top, "Help button should have same top as OK button\n");
-    ok(rc.left > prevRight, "Help button should be to the right of Apply button\n");
+    if (rtl)
+        ok(rc.left < prevRight, "Help button should be to the left of Apply button\n");
+    else
+        ok(rc.left > prevRight, "Help button should be to the right of Apply button\n");
 
     DestroyWindow(hdlg);
 }
@@ -1120,6 +1137,15 @@ static void test_CreatePropertySheetPage(void)
 
 START_TEST(propsheet)
 {
+    detect_locale();
+    if (rtl)
+    {
+        /* use locale-specific RTL resources when on an RTL locale */
+        /* without this, propsheets on RTL locales use English LTR resources */
+        trace("RTL locale detected\n");
+        SetProcessDefaultLayout(LAYOUT_RTL);
+    }
+
     test_title();
     test_nopage();
     test_disableowner();

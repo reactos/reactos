@@ -662,6 +662,13 @@
 #define IDM_RENAME (FCIDM_SHVIEW_RENAME - 0x7000)
 #define IDM_PROPERTIES (FCIDM_SHVIEW_PROPERTIES - 0x7000)
 
+#define IDM_DRAGFILE 0xce
+#define IDM_COPYHERE 0x7
+#define IDM_MOVEHERE 0x8
+#define IDM_LINKHERE 0xB
+
+
+
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128
 #define IDR_CONTROLPANEL        130
@@ -689,4 +696,5 @@
 #define IDR_QUERYASSOCIATIONS   152
 #define IDR_MERGEDFOLDER        153
 #define IDR_REBARBANDSITE       154
-#define IDR_SHELL               155
+#define IDR_USERNOTIFICATION    155
+#define IDR_SHELL               156

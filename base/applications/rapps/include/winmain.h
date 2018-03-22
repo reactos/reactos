@@ -31,5 +31,5 @@ extern SETTINGS_INFO SettingsInfo;
 VOID SaveSettings(HWND hwnd);
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
-// integrity.cpp 
+// integrity.cpp
 BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName);

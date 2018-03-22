@@ -1,3 +1,4 @@
+
 #ifndef _OLE32_WINETEST_PRECOMP_H_
 #define _OLE32_WINETEST_PRECOMP_H_
 

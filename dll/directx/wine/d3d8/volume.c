@@ -18,7 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
 #include "d3d8_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
 static inline struct d3d8_volume *impl_from_IDirect3DVolume8(IDirect3DVolume8 *iface)
 {
@@ -122,8 +125,8 @@ static HRESULT WINAPI d3d8_volume_GetDesc(IDirect3DVolume8 *iface, D3DVOLUME_DES
 
     desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
     desc->Type = D3DRTYPE_VOLUME;
-    desc->Usage = wined3d_desc.usage & WINED3DUSAGE_MASK;
-    desc->Pool = wined3d_desc.pool;
+    desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage);
+    desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
     desc->Size = wined3d_desc.size;
     desc->Width = wined3d_desc.width;
     desc->Height = wined3d_desc.height;
@@ -144,7 +147,8 @@ static HRESULT WINAPI d3d8_volume_LockBox(IDirect3DVolume8 *iface,
 
     wined3d_mutex_lock();
     if (FAILED(hr = wined3d_resource_map(wined3d_texture_get_resource(volume->wined3d_texture),
-            volume->sub_resource_idx, &map_desc, (const struct wined3d_box *)box, flags)))
+            volume->sub_resource_idx, &map_desc, (const struct wined3d_box *)box,
+            wined3dmapflags_from_d3dmapflags(flags))))
         map_desc.data = NULL;
     wined3d_mutex_unlock();
 
@@ -152,6 +156,8 @@ static HRESULT WINAPI d3d8_volume_LockBox(IDirect3DVolume8 *iface,
     locked_box->SlicePitch = map_desc.slice_pitch;
     locked_box->pBits = map_desc.data;
 
+    if (hr == E_INVALIDARG)
+        return D3DERR_INVALIDCALL;
     return hr;
 }
 
@@ -192,7 +198,7 @@ static void STDMETHODCALLTYPE volume_wined3d_object_destroyed(void *parent)
 {
     struct d3d8_volume *volume = parent;
     d3d8_resource_cleanup(&volume->resource);
-    HeapFree(GetProcessHeap(), 0, volume);
+    heap_free(volume);
 }
 
 static const struct wined3d_parent_ops d3d8_volume_wined3d_parent_ops =

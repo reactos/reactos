@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite test framework declarations
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Kernel-Mode Test Suite test framework kernel declarations
+ * COPYRIGHT:   Copyright 2011-2018 Thomas Faber <thomas.faber@reactos.org>
  */
 
 #ifndef _KMTEST_TEST_KERNEL_H_

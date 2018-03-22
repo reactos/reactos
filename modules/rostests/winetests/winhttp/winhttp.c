@@ -326,7 +326,7 @@ static void test_SendRequest (void)
     static CHAR post_data[] = "mode=Test";
     static const char test_post[] = "mode => Test\0\n";
     HINTERNET session, request, connection;
-    DWORD header_len, optional_len, total_len, bytes_rw, size, err;
+    DWORD header_len, optional_len, total_len, bytes_rw, size, err, disable;
     DWORD_PTR context;
     BOOL ret;
     CHAR buffer[256];
@@ -355,6 +355,12 @@ static void test_SendRequest (void)
 
     context = 0xdeadbeef;
     ret = WinHttpSetOption(request, WINHTTP_OPTION_CONTEXT_VALUE, &context, sizeof(context));
+    ok(ret, "WinHttpSetOption failed: %u\n", GetLastError());
+
+    /* writing more data than promised by the content-length header causes an error when the connection
+       is resued, so disable keep-alive */
+    disable = WINHTTP_DISABLE_KEEP_ALIVE;
+    ret = WinHttpSetOption(request, WINHTTP_OPTION_DISABLE_FEATURE, &disable, sizeof(disable));
     ok(ret, "WinHttpSetOption failed: %u\n", GetLastError());
 
     context++;
@@ -575,7 +581,7 @@ static void test_WinHttpAddHeaders(void)
     SetLastError(0xdeadbeef);
     ret = WinHttpAddRequestHeaders(request, test_headers[0], -1L, WINHTTP_ADDREQ_FLAG_ADD);
     err = GetLastError();
-    ok(ret, "WinHttpAddRequestHeader failed to add new header, got %d with error %u.\n", ret, err);
+    ok(ret, "WinHttpAddRequestHeaders failed to add new header, got %d with error %u.\n", ret, err);
     ok(err == ERROR_SUCCESS || broken(err == 0xdeadbeef) /* < win7 */, "got %u\n", err);
 
     index = 0;
@@ -981,7 +987,7 @@ static void test_secure_connection(void)
 {
     static const char data_start[] = "<!DOCTYPE html PUBLIC";
     HINTERNET ses, con, req;
-    DWORD size, status, policy, bitness, read_size, err, available_size;
+    DWORD size, status, policy, bitness, read_size, err, available_size, protocols;
     BOOL ret;
     CERT_CONTEXT *cert;
     WINHTTP_CERTIFICATE_INFO info;
@@ -993,6 +999,11 @@ static void test_secure_connection(void)
     policy = WINHTTP_OPTION_REDIRECT_POLICY_ALWAYS;
     ret = WinHttpSetOption(ses, WINHTTP_OPTION_REDIRECT_POLICY, &policy, sizeof(policy));
     ok(ret, "failed to set redirect policy %u\n", GetLastError());
+
+    protocols = WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2;
+    ret = WinHttpSetOption(ses, WINHTTP_OPTION_SECURE_PROTOCOLS, &protocols, sizeof(protocols));
+    err = GetLastError();
+    ok(ret || err == ERROR_INVALID_PARAMETER /* < win7 */, "failed to set protocols %u\n", err);
 
     con = WinHttpConnect(ses, test_winehq, 443, 0);
     ok(con != NULL, "failed to open a connection %u\n", GetLastError());
@@ -2077,6 +2088,7 @@ static const char largeauth[] =
 
 static const char unauthorized[] = "Unauthorized";
 static const char hello_world[] = "Hello World";
+static const char auth_unseen[] = "Auth Unseen";
 
 struct server_info
 {
@@ -2135,6 +2147,15 @@ static DWORD CALLBACK server_thread(LPVOID param)
         {
             send(c, okmsg, sizeof okmsg - 1, 0);
             send(c, page1, sizeof page1 - 1, 0);
+        }
+        if (strstr(buffer, "/auth_with_creds"))
+        {
+            send(c, okauthmsg, sizeof okauthmsg - 1, 0);
+            if (strstr(buffer, "Authorization: Basic dXNlcjpwd2Q="))
+                send(c, hello_world, sizeof hello_world - 1, 0);
+            else
+                send(c, auth_unseen, sizeof auth_unseen - 1, 0);
+            continue;
         }
         if (strstr(buffer, "/auth"))
         {
@@ -2316,6 +2337,7 @@ static void test_basic_request(int port, const WCHAR *verb, const WCHAR *path)
 static void test_basic_authentication(int port)
 {
     static const WCHAR authW[] = {'/','a','u','t','h',0};
+    static const WCHAR auth_with_credsW[] = {'/','a','u','t','h','_','w','i','t','h','_','c','r','e','d','s',0};
     static WCHAR userW[] = {'u','s','e','r',0};
     static WCHAR passW[] = {'p','w','d',0};
     static WCHAR pass2W[] = {'p','w','d','2',0};
@@ -2449,6 +2471,45 @@ static void test_basic_authentication(int port)
     error = GetLastError();
     ok(!ret, "expected failure\n");
     ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    ret = WinHttpSetCredentials(req, WINHTTP_AUTH_TARGET_SERVER, WINHTTP_AUTH_SCHEME_BASIC, userW, passW, NULL);
+    ok(ret, "failed to set credentials %u\n", GetLastError());
+
+    ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
+    ok(ret, "failed to send request %u\n", GetLastError());
+
+    ret = WinHttpReceiveResponse(req, NULL);
+    ok(ret, "failed to receive response %u\n", GetLastError());
+
+    status = 0xdeadbeef;
+    size = sizeof(status);
+    ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
+    ok(ret, "failed to query status code %u\n", GetLastError());
+    ok(status == HTTP_STATUS_OK, "request failed unexpectedly %u\n", status);
+
+    size = 0;
+    ret = WinHttpReadData(req, buffer, sizeof(buffer), &size);
+    error = GetLastError();
+    ok(ret || broken(error == ERROR_WINHTTP_SHUTDOWN || error == ERROR_WINHTTP_TIMEOUT) /* XP */, "failed to read data %u\n", GetLastError());
+    if (ret)
+    {
+        ok(size == 11, "expected 11, got %u\n", size);
+        ok(!memcmp(buffer, hello_world, 11), "got %s\n", buffer);
+    }
+
+    WinHttpCloseHandle(req);
+    WinHttpCloseHandle(con);
+    WinHttpCloseHandle(ses);
+
+    /* now set the credentials first to show that they get sent with the first request */
+    ses = WinHttpOpen(test_useragent, WINHTTP_ACCESS_TYPE_NO_PROXY, NULL, NULL, 0);
+    ok(ses != NULL, "failed to open session %u\n", GetLastError());
+
+    con = WinHttpConnect(ses, localhostW, port, 0);
+    ok(con != NULL, "failed to open a connection %u\n", GetLastError());
+
+    req = WinHttpOpenRequest(con, NULL, auth_with_credsW, NULL, NULL, NULL, 0);
+    ok(req != NULL, "failed to open a request %u\n", GetLastError());
 
     ret = WinHttpSetCredentials(req, WINHTTP_AUTH_TARGET_SERVER, WINHTTP_AUTH_SCHEME_BASIC, userW, passW, NULL);
     ok(ret, "failed to set credentials %u\n", GetLastError());
@@ -4426,7 +4487,10 @@ START_TEST (winhttp)
     ret = WaitForSingleObject(si.event, 10000);
     ok(ret == WAIT_OBJECT_0, "failed to start winhttp test server %u\n", GetLastError());
     if (ret != WAIT_OBJECT_0)
+    {
+        CloseHandle(thread);
         return;
+    }
 
     test_IWinHttpRequest(si.port);
     test_connection_info(si.port);
@@ -4446,4 +4510,5 @@ START_TEST (winhttp)
     test_basic_request(si.port, NULL, quitW);
 
     WaitForSingleObject(thread, 3000);
+    CloseHandle(thread);
 }

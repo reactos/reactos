@@ -611,10 +611,10 @@ MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, COLOR_S
         if (i == 1)
         {
             ++rect.left; ++rect.top; ++rect.right; ++rect.bottom;
-            SetTextColor(DC, RGB(0xff, 0xff, 0xff));
+            SetTextColor(DC, scheme->crColor[COLOR_BTNHIGHLIGHT]);
             DrawTextW(DC, Text, -1, &rect, uFormat);
             --rect.left; --rect.top; --rect.right; --rect.bottom;
-            SetTextColor(DC, RGB(0x80, 0x80, 0x80));
+            SetTextColor(DC, scheme->crColor[COLOR_BTNSHADOW]);
         }
         DrawTextW(DC, Text, -1, &rect, uFormat);
     }

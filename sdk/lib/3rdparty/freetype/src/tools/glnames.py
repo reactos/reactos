@@ -6,7 +6,7 @@
 #
 
 
-# Copyright 1996-2017 by
+# Copyright 1996-2018 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -151,7 +151,7 @@ mac_standard_names = \
 # The list of standard `SID' glyph names.  For the official list,
 # see Annex A of document at
 #
-#   http://partners.adobe.com/public/developer/en/font/5176.CFF.pdf  .
+#   https://www.adobe.com/content/dam/acom/en/devnet/font/pdfs/5176.CFF.pdf  .
 #
 sid_standard_names = \
 [
@@ -5318,7 +5318,7 @@ def main():
   write( "/*                                                                         */\n" )
   write( "/*    PostScript glyph names.                                              */\n" )
   write( "/*                                                                         */\n" )
-  write( "/*  Copyright 2005-2017 by                                                 */\n" )
+  write( "/*  Copyright 2005-2018 by                                                 */\n" )
   write( "/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */\n" )
   write( "/*                                                                         */\n" )
   write( "/*  This file is part of the FreeType project, and may only be used,       */\n" )

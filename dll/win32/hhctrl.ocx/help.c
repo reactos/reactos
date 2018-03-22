@@ -22,8 +22,15 @@
 
 #include "hhctrl.h"
 
-#include <wingdi.h>
-#include <wininet.h>
+#include "wingdi.h"
+#include "commctrl.h"
+#include "wininet.h"
+
+#include "wine/debug.h"
+
+#include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
 static LRESULT Help_OnSize(HWND hWnd);
 static void ExpandContract(HHInfo *pHHInfo);
@@ -1596,7 +1603,7 @@ static LRESULT CALLBACK Help_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
 static BOOL HH_CreateHelpWindow(HHInfo *info)
 {
-    HWND hWnd, parent = 0;
+    HWND hWnd;
     RECT winPos = info->WinType.rcWindowPos;
     WNDCLASSEXW wcex;
     DWORD dwStyles, dwExStyles;
@@ -1670,11 +1677,8 @@ static BOOL HH_CreateHelpWindow(HHInfo *info)
     caption = info->WinType.pszCaption;
     if (!*caption) caption = info->pCHMInfo->defTitle;
 
-    if (info->WinType.dwStyles & WS_CHILD)
-        parent = info->WinType.hwndCaller;
-
-    hWnd = CreateWindowExW(dwExStyles, windowClassW, caption,
-                           dwStyles, x, y, width, height, parent, NULL, hhctrl_hinstance, NULL);
+    hWnd = CreateWindowExW(dwExStyles, windowClassW, caption, dwStyles, x, y, width, height,
+                           info->WinType.hwndCaller, NULL, hhctrl_hinstance, NULL);
     if (!hWnd)
         return FALSE;
 

@@ -163,11 +163,12 @@ static void dump_sequence( struct msg_sequence **seq, int sequence_index,
 }
 
 static inline void ok_sequence_(struct msg_sequence **seq, int sequence_index,
-    const struct message *expected, const char *context, BOOL todo,
+    const struct message *expected_list, const char *context, BOOL todo,
     const char *file, int line)
 {
-    struct msg_sequence *msg_seq = seq[sequence_index];
     static const struct message end_of_sequence = {0, 0, 0, 0};
+    struct msg_sequence *msg_seq = seq[sequence_index];
+    const struct message *expected = expected_list;
     const struct message *actual, *sequence;
     int failcount = 0, dump = 0;
 
@@ -377,7 +378,7 @@ static inline void ok_sequence_(struct msg_sequence **seq, int sequence_index,
     }
 
 done:
-    if (dump) dump_sequence( seq, sequence_index, expected, context, file, line );
+    if (dump) dump_sequence( seq, sequence_index, expected_list, context, file, line );
     flush_sequence(seq, sequence_index);
 }
 

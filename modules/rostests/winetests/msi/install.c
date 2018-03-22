@@ -18,7 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define _WIN32_MSI 300
+#define COBJMACROS
+
+#include <stdio.h>
+
+#include <windows.h>
+#include <msiquery.h>
+#include <msidefs.h>
+#include <msi.h>
+#include <fci.h>
+#include <objidl.h>
+#include <srrestoreptapi.h>
+#include <shlobj.h>
+#include <winsvc.h>
+#include <shellapi.h>
+
+#include "wine/test.h"
 
 static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE*);
@@ -53,6 +69,8 @@ static CHAR PROG_FILES_DIR_NATIVE[MAX_PATH];
 static CHAR COMMON_FILES_DIR[MAX_PATH];
 static CHAR APP_DATA_DIR[MAX_PATH];
 static CHAR WINDOWS_DIR[MAX_PATH];
+
+static const char *customdll;
 
 /* msi database data */
 
@@ -674,6 +692,18 @@ static const CHAR wrv_component_dat[] = "Component\tComponentId\tDirectory_\tAtt
                                         "Component\tComponent\n"
                                         "augustus\t\tMSITESTDIR\t0\t\taugustus\n";
 
+static const CHAR ca1_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
+                                               "s72\tS255\tI2\n"
+                                               "InstallExecuteSequence\tAction\n"
+                                               "maintest\tMAIN_TEST\t700\n"
+                                               "testretval\tTEST_RETVAL\t710\n";
+
+static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
+                                             "s72\ti2\tS64\tS0\n"
+                                             "CustomAction\tAction\n"
+                                             "maintest\t1\tcustom.dll\tmain_test\n"
+                                             "testretval\t1\tcustom.dll\ttest_retval\n";
+
 static const CHAR ca51_component_dat[] = "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
                                          "s72\tS38\ts72\ti2\tS255\tS72\n"
                                          "Component\tComponent\n"
@@ -1269,6 +1299,27 @@ static const char ft_install_exec_seq_dat[] =
     "PublishProduct\t\t1400\n"
     "InstallFinalize\t\t1500\n";
 
+static const char da_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "setprop\t51\tdeferred\t[TESTPATH]\n"
+    "immediate\t1\tcustom.dll\tda_immediate\n"
+    "deferred\t1025\tcustom.dll\tda_deferred\n";
+
+static const char da_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "CostInitialize\t\t200\n"
+    "FileCost\t\t300\n"
+    "CostFinalize\t\t400\n"
+    "InstallInitialize\t\t500\n"
+    "setprop\t\t600\n"
+    "deferred\t\t700\n"
+    "immediate\t\t800\n"
+    "InstallFinalize\t\t1100\n";
+
 typedef struct _msi_table
 {
     const CHAR *filename;
@@ -1646,6 +1697,13 @@ static const msi_table sf_tables[] =
     ADD_TABLE(property),
 };
 
+static const msi_table ca1_tables[] =
+{
+    ADD_TABLE(property),
+    ADD_TABLE(ca1_install_exec_seq),
+    ADD_TABLE(ca1_custom_action),
+};
+
 static const msi_table ca51_tables[] =
 {
     ADD_TABLE(ca51_component),
@@ -1921,6 +1979,19 @@ static const msi_table ft_tables[] =
     ADD_TABLE(ft_custom_action),
     ADD_TABLE(ft_install_exec_seq),
     ADD_TABLE(property)
+};
+
+static const msi_table da_tables[] =
+{
+    ADD_TABLE(media),
+    ADD_TABLE(directory),
+    ADD_TABLE(file),
+    ADD_TABLE(component),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(property),
+    ADD_TABLE(da_install_exec_seq),
+    ADD_TABLE(da_custom_action),
 };
 
 /* cabinet definitions */
@@ -2390,6 +2461,22 @@ static void delete_test_files(void)
     RemoveDirectoryA("msitest");
 }
 
+static void delete_pf_files(void)
+{
+    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
+    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
+    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
+    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
+    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+}
+
 static void write_file(const CHAR *filename, const char *data, int data_size)
 {
     DWORD size;
@@ -2523,6 +2610,29 @@ static LONG delete_key( HKEY key, LPCSTR subkey, REGSAM access )
     return RegDeleteKeyA( key, subkey );
 }
 
+static char *load_resource(const char *name)
+{
+    static char path[MAX_PATH];
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    GetTempFileNameA(".", name, 0, path);
+
+    file = CreateFileA(path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", path, GetLastError());
+
+    res = FindResourceA(NULL, name, "TESTDLL");
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+
+    return path;
+}
+
 static void test_MsiInstallProduct(void)
 {
     UINT r;
@@ -2570,18 +2680,7 @@ static void test_MsiInstallProduct(void)
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyExA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", 0, access, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -2617,18 +2716,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -2640,18 +2728,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -2663,18 +2740,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -2686,18 +2752,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -2709,18 +2764,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, "PUBLISH_PRODUCT=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
@@ -2731,18 +2775,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
@@ -2753,18 +2786,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
@@ -2775,18 +2797,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
@@ -2797,18 +2808,7 @@ static void test_MsiInstallProduct(void)
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
@@ -3844,6 +3844,7 @@ static void test_admin(void)
     ok(!RemoveDirectoryA("c:\\msitest"), "File installed\n");
 
     r = MsiInstallProductA(msifile, "ACTION=ADMIN");
+    todo_wine
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
     ok(!delete_pf("msitest\\augustus", TRUE), "File installed\n");
     ok(!delete_pf("msitest", FALSE), "Directory created\n");
@@ -4055,6 +4056,84 @@ static void test_sourcefolder(void)
 error:
     DeleteFileA(msifile);
     DeleteFileA("augustus");
+}
+
+static void add_custom_dll(void)
+{
+    MSIHANDLE hdb = 0, record;
+    UINT res;
+
+    res = MsiOpenDatabaseW(msifileW, MSIDBOPEN_TRANSACT, &hdb);
+    ok(res == ERROR_SUCCESS, "failed to open db: %u\n", res);
+
+    res = run_query(hdb, 0, "CREATE TABLE `Binary` (`Name` CHAR(72) NOT NULL, `Data` OBJECT NOT NULL PRIMARY KEY `Name`)");
+    ok(res == ERROR_SUCCESS, "failed to create Binary table: %u\n", res);
+
+    record = MsiCreateRecord(1);
+    res = MsiRecordSetStreamA(record, 1, customdll);
+    ok(res == ERROR_SUCCESS, "failed to add %s to stream: %u\n", customdll, res);
+
+    res = run_query(hdb, record, "INSERT INTO `Binary` (`Name`, `Data`) VALUES ('custom.dll', ?)");
+    ok(res == ERROR_SUCCESS, "failed to insert into Binary table: %u\n", res);
+
+    res = MsiDatabaseCommit(hdb);
+    ok(res == ERROR_SUCCESS, "failed to commit database: %u\n", res);
+
+    MsiCloseHandle(record);
+    MsiCloseHandle(hdb);
+}
+
+static INT CALLBACK ok_callback(void *context, UINT message_type, MSIHANDLE record)
+{
+    if (message_type == INSTALLMESSAGE_USER)
+    {
+        char file[200];
+        char msg[2000];
+        DWORD len;
+
+        len = sizeof(file);
+        MsiRecordGetStringA(record, 2, file, &len);
+        len = sizeof(msg);
+        MsiRecordGetStringA(record, 5, msg, &len);
+
+        todo_wine_if(MsiRecordGetInteger(record, 1))
+        ok_(file, MsiRecordGetInteger(record, 3)) (MsiRecordGetInteger(record, 4), "%s", msg);
+
+        return 1;
+    }
+    return 0;
+}
+
+static void test_customaction1(void)
+{
+    UINT r;
+
+    create_database(msifile, ca1_tables, sizeof(ca1_tables) / sizeof(msi_table));
+    add_custom_dll();
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    r = MsiInstallProductA(msifile, "MAIN_TEST=1");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    /* Test return values */
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=0");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=1626"); /* ERROR_FUNCTION_NOT_CALLED*/
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=1602");
+    ok(r == ERROR_INSTALL_USEREXIT, "Expected ERROR_INSTALL_USEREXIT, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=259"); /* ERROR_NO_MORE_ITEMS */
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    /* any other error maps to ERROR_INSTALL_FAILURE */
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=1");
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    DeleteFileA(msifile);
 }
 
 static void test_customaction51(void)
@@ -4721,18 +4800,7 @@ static void test_adminimage(void)
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
 error:
     DeleteFileA("msifile");
@@ -4900,19 +4968,8 @@ static void test_shortcut(void)
 
     CoUninitialize();
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
     while (!delete_pf("msitest\\Shortcut.lnk", TRUE) && GetLastError() == ERROR_SHARING_VIOLATION) Sleep(1000);
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
 error:
     delete_test_files();
@@ -5006,18 +5063,7 @@ static void test_installed_prop(void)
     r = MsiConfigureProductExA(prodcode, INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT, "FULL=1");
     ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5051,18 +5097,7 @@ static void test_allusers_prop(void)
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5076,18 +5111,7 @@ static void test_allusers_prop(void)
     r = MsiInstallProductA(msifile, "FULL=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5101,18 +5125,7 @@ static void test_allusers_prop(void)
     r = MsiInstallProductA(msifile, "FULL=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    delete_pf_files();
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -6029,6 +6042,49 @@ static void test_feature_tree(void)
     DeleteFileA( msifile );
 }
 
+static void check_file_matches(const char *filename, const char *text)
+{
+    char buffer[200];
+    HANDLE file;
+    DWORD size;
+
+    file = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    ReadFile(file, buffer, sizeof(buffer), &size, NULL);
+    ok(size == strlen(text) && !memcmp(buffer, text, size), "got %.*s\n", size, buffer);
+    CloseHandle(file);
+}
+
+static void test_deferred_action(void)
+{
+    char path[200], file[200], buffer[200];
+    UINT r;
+
+    GetTempPathA(sizeof(path), path);
+    GetTempFileNameA(path, "da", 0, file);
+    sprintf(buffer, "TESTPATH=\"%s\"", file);
+
+    create_database(msifile, da_tables, sizeof(da_tables) / sizeof(da_tables[0]));
+    add_custom_dll();
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    r = MsiInstallProductA(msifile, buffer);
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        goto error;
+    }
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+todo_wine
+    check_file_matches(file, "onetwo");
+
+    ok(DeleteFileA(file), "Directory not created\n");
+
+error:
+    DeleteFileA(msifile);
+}
+
 START_TEST(install)
 {
     DWORD len;
@@ -6075,6 +6131,9 @@ START_TEST(install)
     lstrcatA(log_file, "\\msitest.log");
     MsiEnableLogA(INSTALLLOGMODE_FATALEXIT, log_file, 0);
 
+    customdll = load_resource("custom.dll");
+    MsiSetExternalUIRecord(ok_callback, INSTALLLOGMODE_USER, NULL, NULL);
+
     if (pSRSetRestorePointA) /* test has side-effects on win2k3 that cause failures in following tests */
         test_MsiInstallProduct();
     test_MsiSetComponentState();
@@ -6094,6 +6153,7 @@ START_TEST(install)
     test_adminprops();
     test_missingcab();
     test_sourcefolder();
+    test_customaction1();
     test_customaction51();
     test_installstate();
     test_sourcepath();
@@ -6117,6 +6177,9 @@ START_TEST(install)
     test_shared_component();
     test_remove_upgrade_code();
     test_feature_tree();
+    test_deferred_action();
+
+    DeleteFileA(customdll);
 
     DeleteFileA(log_file);
 

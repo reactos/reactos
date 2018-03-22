@@ -37,12 +37,14 @@ typedef union
   FILETIME ft_struct;
 } FT;
 
+#ifndef _MSC_VER
 static EXCEPTION_RECORD GS_ExceptionRecord;
 static CONTEXT GS_ContextRecord;
 
 static const EXCEPTION_POINTERS GS_ExceptionPointers = {
   &GS_ExceptionRecord,&GS_ContextRecord
 };
+#endif
 
 DECLSPEC_SELECTANY UINT_PTR __security_cookie = DEFAULT_SECURITY_COOKIE;
 DECLSPEC_SELECTANY UINT_PTR __security_cookie_complement = ~(DEFAULT_SECURITY_COOKIE);

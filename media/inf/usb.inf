@@ -94,6 +94,7 @@ USB\CLASS_09.DeviceDesc = "標準 USBハブ"
 [Strings.0415]
 ReactOS = "Ekipa ReactOS"
 GenericMfg = "(Standardowy koncentrator USB)"
+USB\COMPOSITE.DeviceDesc = "Urządzenie kompozytowe USB"
 USB\CLASS_09.DeviceDesc = "Standardowy koncentrator USB"
 
 [Strings.0416]
@@ -132,3 +133,8 @@ USB\CLASS_09.DeviceDesc = "Стандартний USB-хаб"
 [Strings.0427]
 GenericMfg = "(Standartinis USB šakotuvas)"
 USB\CLASS_09.DeviceDesc = "Standartinis USB šakotuvas"
+
+[Strings.0804]
+GenericMfg = "(通用 USB 集线器)"
+USB\COMPOSITE.DeviceDesc = "USB 聚合设备"
+USB\CLASS_09.DeviceDesc = "通用 USB 集线器"

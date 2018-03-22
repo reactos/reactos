@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
+#include "avifile_private.h"
 
-#include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -64,6 +62,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/avifile_Es.rc"
+#endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/avifile_Et.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/avifile_Fr.rc"

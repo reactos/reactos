@@ -15,6 +15,8 @@ extern PFN_NUMBER MmLowestPhysicalPage;
 extern PFN_NUMBER MmHighestPhysicalPage;
 extern PFN_NUMBER MmAvailablePages;
 extern PFN_NUMBER MmResidentAvailablePages;
+extern ULONG MmThrottleTop;
+extern ULONG MmThrottleBottom;
 
 extern LIST_ENTRY MmLoadedUserImageList;
 

@@ -468,7 +468,8 @@ ExpTagAllowPrint(CHAR Tag)
     if ((Tag >= 'a' && Tag <= 'z') ||
         (Tag >= 'A' && Tag <= 'Z') ||
         (Tag >= '0' && Tag <= '9') ||
-        Tag == ' ')
+        Tag == ' ' || Tag == '=' ||
+        Tag == '?' || Tag == '@')
     {
         return TRUE;
     }
@@ -1809,8 +1810,14 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
 #if DBG
             //
             // Out of memory, display current consumption
+            // Let's consider that if the caller wanted more
+            // than a hundred pages, that's a bogus caller
+            // and we are not out of memory
             //
-            MiDumpPoolConsumers(FALSE, 0, 0, 0);
+            if (NumberOfBytes < 100 * PAGE_SIZE)
+            {
+                MiDumpPoolConsumers(FALSE, 0, 0, 0);
+            }
 #endif
 
             //
@@ -2142,8 +2149,14 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
 #if DBG
         //
         // Out of memory, display current consumption
+        // Let's consider that if the caller wanted more
+        // than a hundred pages, that's a bogus caller
+        // and we are not out of memory
         //
-        MiDumpPoolConsumers(FALSE, 0, 0, 0);
+        if (NumberOfBytes < 100 * PAGE_SIZE)
+        {
+            MiDumpPoolConsumers(FALSE, 0, 0, 0);
+        }
 #endif
 
         //

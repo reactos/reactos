@@ -47,9 +47,16 @@
  *  3 Sep 90 - Version 1.1 by Gershon Elber (Support for Gif89, Unique names).
  *****************************************************************************/
 
-#include "wincodecs_private.h"
+#include <stdlib.h>
+#include <string.h>
 
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
 #include "ungif.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 static void *ungif_alloc( size_t sz )
 {

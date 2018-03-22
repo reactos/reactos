@@ -36,73 +36,6 @@ PVOID MmPteBase;
 PVOID MmPdeBase;
 ULONG MmArchReferencePageSize;
 
-typedef VOID
-(*PBL_MM_FLUSH_TLB) (
-    VOID
-    );
-
-typedef VOID
-(*PBL_MM_RELOCATE_SELF_MAP) (
-    VOID
-    );
-
-typedef NTSTATUS
-(*PBL_MM_MOVE_VIRTUAL_ADDRESS_RANGE) (
-    _In_ PVOID DestinationAddress,
-    _In_ PVOID SourceAddress,
-    _In_ ULONGLONG Size
-    );
-
-typedef NTSTATUS
-(*PBL_MM_ZERO_VIRTUAL_ADDRESS_RANGE) (
-    _In_ PVOID DestinationAddress,
-    _In_ ULONGLONG Size
-    );
-
-typedef VOID
-(*PBL_MM_DESTROY_SELF_MAP) (
-    VOID
-    );
-
-typedef VOID
-(*PBL_MM_FLUSH_TLB_ENTRY) (
-    _In_ PVOID VirtualAddress
-    );
-
-typedef VOID
-(*PBL_MM_FLUSH_TLB) (
-    VOID
-    );
-
-typedef NTSTATUS
-(*PBL_MM_UNMAP_VIRTUAL_ADDRESS) (
-    _In_ PVOID VirtualAddress,
-    _In_ ULONG Size
-    );
-
-typedef NTSTATUS
-(*PBL_MM_REMAP_VIRTUAL_ADDRESS) (
-    _In_ PPHYSICAL_ADDRESS PhysicalAddress,
-    _Out_ PVOID VirtualAddress,
-    _In_ ULONG Size,
-    _In_ ULONG CacheAttributes
-    );
-
-typedef NTSTATUS
-(*PBL_MM_MAP_PHYSICAL_ADDRESS) (
-    _In_ PHYSICAL_ADDRESS PhysicalAddress,
-    _Out_ PVOID VirtualAddress,
-    _In_ ULONG Size,
-    _In_ ULONG CacheAttributes
-    );
-
-typedef BOOLEAN
-(*PBL_MM_TRANSLATE_VIRTUAL_ADDRESS) (
-    _In_ PVOID VirtualAddress,
-    _Out_ PPHYSICAL_ADDRESS PhysicalAddress,
-    _Out_opt_ PULONG CacheAttributes
-    );
-
 PBL_MM_TRANSLATE_VIRTUAL_ADDRESS Mmx86TranslateVirtualAddress;
 PBL_MM_MAP_PHYSICAL_ADDRESS Mmx86MapPhysicalAddress;
 PBL_MM_REMAP_VIRTUAL_ADDRESS Mmx86RemapVirtualAddress;
@@ -1101,7 +1034,7 @@ MmArchInitialize (
 {
     NTSTATUS Status;
     ULONGLONG IncreaseUserVa, PerfCounter, CpuRandom;
-    INT CpuInfo[4];
+    CPU_INFO CpuInfo;
 
     /* For phase 2, just map deferred regions */
     if (Phase != 1)
@@ -1157,10 +1090,10 @@ MmArchInitialize (
             if (BlArchIsCpuIdFunctionSupported(1))
             {
                 /* Call it */
-                BlArchCpuId(1, 0, CpuInfo);
+                BlArchCpuId(1, 0, &CpuInfo);
 
                 /* Check if RDRAND is supported */
-                if (CpuInfo[2] & 0x40000000)
+                if (CpuInfo.Ecx & 0x40000000)
                 {
                     EfiPrintf(L"Your CPU can do RDRAND! Good for you!\r\n");
                     CpuRandom = 0;

@@ -21,10 +21,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+#include <math.h>
+
 #include "quartz_private.h"
+#include "pin.h"
 
-#include <strmif.h>
+#include "uuids.h"
+#include "mmreg.h"
+#include "mmsystem.h"
 
+#include "wine/winternl.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+#include "parser.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 #define SEQUENCE_HEADER_CODE     0xB3
 #define PACK_START_CODE          0xBA

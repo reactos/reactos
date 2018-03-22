@@ -285,7 +285,7 @@
 #define GetWindowExStyle(hwnd) ((DWORD)GetWindowLong(hwnd,GWL_EXSTYLE))
 #define GetWindowFont(hwnd) FORWARD_WM_GETFONT((hwnd),SendMessage)
 #define GetWindowID(hwnd) GetDlgCtrlID(hwnd)
-#define GetWindowInstance(hwnd) ((HMODULE)GetWindowLong(hwnd,GWL_HINSTANCE))
+#define GetWindowInstance(hwnd) ((HMODULE)GetWindowLongPtr(hwnd,GWLP_HINSTANCE))
 #define GetWindowOwner(hwnd) GetWindow(hwnd,GW_OWNER)
 #define GetWindowStyle(hwnd) ((DWORD)GetWindowLong(hwnd,GWL_STYLE))
 #define GlobalAllocPtr(flags,cb) (GlobalLock(GlobalAlloc((flags),(cb))))
@@ -485,7 +485,21 @@
 #define SelectBrush(hdc,hbr) ((HBRUSH)SelectObject((hdc),(HGDIOBJ)(HBRUSH)(hbr)))
 #define SelectFont(hdc,hfont) ((HFONT)SelectObject((hdc),(HGDIOBJ)(HFONT)(hfont)))
 #define SelectPen(hdc,hpen) ((HPEN)SelectObject((hdc),(HGDIOBJ)(HPEN)(hpen)))
-#define SetDlgMsgResult(hwnd,msg,result) (( (msg) == WM_CTLCOLORMSGBOX || (msg) == WM_CTLCOLOREDIT || (msg) == WM_CTLCOLORLISTBOX || (msg) == WM_CTLCOLORBTN || (msg) == WM_CTLCOLORDLG || (msg) == WM_CTLCOLORSCROLLBAR || (msg) == WM_CTLCOLORSTATIC || (msg) == WM_COMPAREITEM || (msg) == WM_VKEYTOITEM || (msg) == WM_CHARTOITEM || (msg) == WM_QUERYDRAGICON || (msg) == WM_INITDIALOG ) ? (BOOL)(result) : (SetWindowLong((hwnd),DWL_MSGRESULT,(LPARAM)(LRESULT)(result)),TRUE))
+#define SetDlgMsgResult(hwnd,msg,result) \
+     (( ((msg) == WM_CTLCOLORMSGBOX) || \
+        ((msg) == WM_CTLCOLOREDIT) || \
+        ((msg) == WM_CTLCOLORLISTBOX) || \
+        ((msg) == WM_CTLCOLORBTN) || \
+        ((msg) == WM_CTLCOLORDLG) || \
+        ((msg) == WM_CTLCOLORSCROLLBAR) || \
+        ((msg) == WM_CTLCOLORSTATIC) || \
+        ((msg) == WM_COMPAREITEM) || \
+        ((msg) == WM_VKEYTOITEM) || \
+        ((msg) == WM_CHARTOITEM) || \
+        ((msg) == WM_QUERYDRAGICON) || \
+        ((msg) == WM_INITDIALOG) ) ? \
+        (BOOL)(result) : \
+        (SetWindowLongPtr((hwnd), DWLP_MSGRESULT, (LPARAM)(LRESULT)(result)), TRUE) )
 #define SetWindowFont(hwnd,hfont,fRedraw) FORWARD_WM_SETFONT((hwnd),(hfont),(fRedraw),SendMessage)
 #define SetWindowRedraw(hwnd,fRedraw) ((void)SendMessage(hwnd,WM_SETREDRAW,(WPARAM)(BOOL)(fRedraw),0))
 #define Static_Enable(hwndCtl,fEnable) EnableWindow((hwndCtl),(fEnable))
@@ -494,8 +508,8 @@
 #define Static_GetTextLength(hwndCtl) GetWindowTextLength(hwndCtl)
 #define Static_SetIcon(hwndCtl,hIcon) ((HICON)(UINT)(DWORD)SendMessage((hwndCtl),STM_SETICON,(WPARAM)(HICON)(hIcon),0))
 #define Static_SetText(hwndCtl,lpsz) SetWindowText((hwndCtl),(lpsz))
-#define SubclassDialog(hwndDlg,lpfn) ((DLGPROC)SetWindowLong(hwndDlg,DWL_DLGPROC,(LPARAM)(DLGPROC)(lpfn)))
-#define SubclassWindow(hwnd,lpfn) ((WNDPROC)SetWindowLong((hwnd),GWL_WNDPROC,(LPARAM)(WNDPROC)(lpfn)))
+#define SubclassDialog(hwndDlg,lpfn) ((DLGPROC)SetWindowLongPtr(hwndDlg,DWLP_DLGPROC,(LPARAM)(DLGPROC)(lpfn)))
+#define SubclassWindow(hwnd,lpfn) ((WNDPROC)SetWindowLongPtr((hwnd),GWLP_WNDPROC,(LPARAM)(WNDPROC)(lpfn)))
 #define SubtractRgn(hrgnResult,hrgnA,hrgnB) CombineRgn(hrgnResult,hrgnA,hrgnB,RGN_DIFF)
 #define UnionRgn(hrgnResult,hrgnA,hrgnB) CombineRgn(hrgnResult,hrgnA,hrgnB,RGN_OR)
 #define XorRgn(hrgnResult,hrgnA,hrgnB) CombineRgn(hrgnResult,hrgnA,hrgnB,RGN_XOR)

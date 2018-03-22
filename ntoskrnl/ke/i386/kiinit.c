@@ -44,7 +44,7 @@ KiInitMachineDependent(VOID)
     PFX_SAVE_AREA FxSaveArea;
     ULONG MXCsrMask = 0xFFBF;
     CPU_INFO CpuInfo;
-    KI_SAMPLE_MAP Samples[4];
+    KI_SAMPLE_MAP Samples[10];
     PKI_SAMPLE_MAP CurrentSample = Samples;
     LARGE_IDENTITY_MAP IdentityMap;
 
@@ -240,11 +240,17 @@ KiInitMachineDependent(VOID)
                     CurrentSample++;
                     Sample++;
 
-                    if (Sample == sizeof(Samples) / sizeof(Samples[0]))
+                    if (Sample == RTL_NUMBER_OF(Samples))
                     {
-                        /* Restart */
-                        CurrentSample = Samples;
-                        Sample = 0;
+                        /* No luck. Average the samples and be done */
+                        ULONG TotalMHz = 0;
+                        while (Sample--)
+                        {
+                            TotalMHz += Samples[Sample].MHz;
+                        }
+                        CurrentSample[-1].MHz = TotalMHz / RTL_NUMBER_OF(Samples);
+                        DPRINT1("Sampling CPU frequency failed. Using average of %lu MHz\n", CurrentSample[-1].MHz);
+                        break;
                     }
                 }
 

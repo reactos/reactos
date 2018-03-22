@@ -4,7 +4,7 @@
  * PURPOSE:     Tests for shim-database api's
  * COPYRIGHT:   Copyright 2012 Detlef Riekenberg
  *              Copyright 2013 Mislav Blažević
- *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -471,7 +471,7 @@ static void test_stringtable()
     static const WCHAR* all[] = { test1, test2, test3, test4, test5, lipsum, lipsum2, empty };
     static const TAGID expected_str[] = { 0xc, 0x12, 0x18, 0x1e, 0x24, 0x2a, 0x30, 0x36 };
     static const TAGID expected_tab[] = { 6, 0x18, 0x2a, 0x3c, 0x4e, 0x60, 0x846, 0x102c };
-    size_t n, j;
+    DWORD n, j;
 
     for (n = 0; n < (sizeof(all) / sizeof(all[0])); ++n)
     {
@@ -1079,9 +1079,8 @@ static BOOL IsUserAdmin()
 }
 
 
-
 template<typename SDBQUERYRESULT_T>
-static void check_adwExeFlags(DWORD adwExeFlags_0, SDBQUERYRESULT_T& query, const char* file, int line, int cur)
+static void check_adwExeFlags(DWORD adwExeFlags_0, SDBQUERYRESULT_T& query, const char* file, int line, size_t cur)
 {
     ok_(file, line)(query.adwExeFlags[0] == adwExeFlags_0, "Expected adwExeFlags[0] to be 0x%x, was: 0x%x for %d\n", adwExeFlags_0, query.adwExeFlags[0], cur);
     for (size_t n = 1; n < _countof(query.atrExes); ++n)
@@ -1089,13 +1088,13 @@ static void check_adwExeFlags(DWORD adwExeFlags_0, SDBQUERYRESULT_T& query, cons
 }
 
 template<>
-void check_adwExeFlags(DWORD, SDBQUERYRESULT_2k3&, const char*, int, int)
+void check_adwExeFlags(DWORD, SDBQUERYRESULT_2k3&, const char*, int, size_t)
 {
 }
 
 
 template<typename SDBQUERYRESULT_T>
-static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, int cur)
+static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, size_t cur)
 {
     WCHAR exename[MAX_PATH], testfile[MAX_PATH];
     BOOL ret;

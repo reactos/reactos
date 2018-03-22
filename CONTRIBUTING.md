@@ -49,13 +49,17 @@ Your contribution can be of numerous forms. We currently accept two ways to cont
 
 ### Pull Requests
 
-Since our [migration to GitHub] we gladly accept __[Pull Requests]__. Pull requests let you tell others about changes you have pushed to a repository on GitHub. Once a pull request is opened, you can discuss and review the potential changes with collaborators and add follow-up commits before the changes are merged into the repository. __Pull request is a prefered way to submit your work__ - it makes reviewing and merging your contribution much easier.
+Since our [migration to GitHub] we gladly accept __[Pull Requests]__. Pull requests let you tell others about changes you have pushed to a repository on GitHub. Once a pull request is opened, you can discuss and review the potential changes with collaborators and add follow-up commits before the changes are merged into the repository. __Pull request is a preferred way to submit your work__ - it makes reviewing and merging your contribution much easier.
 
 ### Patches
 
 A __[patch]__ is a set of changes to existing source code. The changes in a patch can be merged into existing source code. This process is referred to as applying a patch (to source code). Which changes a patch contains and the way the patch is structured can have significant impact on the consequences that can happen from applying the patch. 
 
 See [Submitting Patches] for details.
+
+### Commit style
+
+Our commit style is defined in a __[commit template]__. Use it as a reference or turn it on using `git config commit.template .gitmessage`. This will set this template as an initial commit message for the new commits in your local repository.
 
 ### Rules and Recommendations
 
@@ -96,3 +100,4 @@ Finding a good project to start with can be a challenge, because when starting o
   [README.FSD]:                                                  /media/doc/README.FSD
   [Coverity]:                                                    https://scan.coverity.com/projects/reactos
   [request-coverity]:                                            https://scan.coverity.com/memberships/new?project_id=reactos
+  [commit template]:                                             .gitmessage

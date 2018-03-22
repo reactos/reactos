@@ -76,13 +76,68 @@ HRESULT CShellItem::get_parent_shellfolder(IShellFolder **ppsf)
     return hr;
 }
 
+HRESULT CShellItem::get_shellfolder(IBindCtx *pbc, REFIID riid, void **ppvOut)
+{
+    CComPtr<IShellFolder> psf;
+    CComPtr<IShellFolder> psfDesktop;
+    HRESULT ret;
+
+    ret = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(ret))
+        return ret;
+
+    if (_ILIsDesktop(m_pidl))
+        psf = psfDesktop;
+    else
+    {
+        ret = psfDesktop->BindToObject(m_pidl, pbc, IID_PPV_ARG(IShellFolder, &psf));
+        if (FAILED_UNEXPECTEDLY(ret))
+            return ret;
+    }
+
+    return psf->QueryInterface(riid, ppvOut);
+}
+
 HRESULT WINAPI CShellItem::BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut)
 {
-    FIXME("(%p,%p,%s,%p,%p)\n", this, pbc, shdebugstr_guid(&rbhid), riid, ppvOut);
+    HRESULT ret;
+    TRACE("(%p, %p,%s,%p,%p)\n", this, pbc, shdebugstr_guid(&rbhid), riid, ppvOut);
 
     *ppvOut = NULL;
+    if (IsEqualGUID(rbhid, BHID_SFObject))
+    {
+        return get_shellfolder(pbc, riid, ppvOut);
+    }
+    else if (IsEqualGUID(rbhid, BHID_SFUIObject))
+    {
+        CComPtr<IShellFolder> psf_parent;
+        if (_ILIsDesktop(m_pidl))
+            ret = SHGetDesktopFolder(&psf_parent);
+        else
+            ret = get_parent_shellfolder(&psf_parent);
+        if (FAILED_UNEXPECTEDLY(ret))
+            return ret;
 
-    return E_NOTIMPL;
+        LPCITEMIDLIST pidl = ILFindLastID(m_pidl);
+        return psf_parent->GetUIObjectOf(NULL, 1, &pidl, riid, NULL, ppvOut);
+    }
+    else if (IsEqualGUID(rbhid, BHID_DataObject))
+    {
+        return BindToHandler(pbc, BHID_SFUIObject, IID_IDataObject, ppvOut);
+    }
+    else if (IsEqualGUID(rbhid, BHID_SFViewObject))
+    {
+        CComPtr<IShellFolder> psf;
+        ret = get_shellfolder(NULL, IID_PPV_ARG(IShellFolder, &psf));
+        if (FAILED_UNEXPECTEDLY(ret))
+            return ret;
+
+        return psf->CreateViewObject(NULL, riid, ppvOut);
+    }
+
+    FIXME("Unsupported BHID %s.\n", debugstr_guid(&rbhid));
+
+    return MK_E_NOOBJECT;
 }
 
 HRESULT WINAPI CShellItem::GetParent(IShellItem **ppsi)
@@ -104,52 +159,7 @@ HRESULT WINAPI CShellItem::GetParent(IShellItem **ppsi)
 
 HRESULT WINAPI CShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
 {
-    HRESULT hr;
-    CComPtr<IShellFolder>        parent_folder;
-    STRRET name;
-    DWORD uFlags;
-
-    TRACE("(%p,%x,%p)\n", this, sigdnName, ppszName);
-
-    if (sigdnName & SIGDN_URL)
-        return E_NOTIMPL;
-
-    if (ppszName == NULL)
-        return E_POINTER;
-
-    *ppszName = NULL;
-
-    hr = get_parent_shellfolder(&parent_folder);
-    if (SUCCEEDED(hr))
-    {
-        switch (sigdnName)
-        {
-        case SIGDN_PARENTRELATIVEEDITING:
-            uFlags = SHGDN_FOREDITING | SHGDN_INFOLDER;
-            break;
-        case SIGDN_DESKTOPABSOLUTEEDITING:
-            uFlags = SHGDN_FOREDITING;
-            break;
-        case SIGDN_PARENTRELATIVEPARSING:
-            uFlags = SHGDN_FORPARSING | SHGDN_INFOLDER;
-            break;
-        case SIGDN_DESKTOPABSOLUTEPARSING:
-            uFlags = SHGDN_FORPARSING;
-            break;
-        default:
-            uFlags = SHGDN_NORMAL;
-            break;
-        }
-
-        hr = parent_folder->GetDisplayNameOf(m_pidl, uFlags, &name);
-        if (SUCCEEDED(hr))
-        {
-            StrRetToStrW(&name, m_pidl, ppszName);
-            return S_OK;
-        }
-    }
-
-    return hr;
+    return SHGetNameFromIDList(m_pidl, sigdnName, ppszName);
 }
 
 HRESULT WINAPI CShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs)
@@ -160,22 +170,29 @@ HRESULT WINAPI CShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs
 
     TRACE("(%p,%x,%p)\n", this, sfgaoMask, psfgaoAttribs);
 
-    hr = get_parent_shellfolder(&parent_folder);
-    if (SUCCEEDED(hr))
-    {
-        child_pidl = ILFindLastID(m_pidl);
-        *psfgaoAttribs = sfgaoMask;
-        hr = parent_folder->GetAttributesOf(1, &child_pidl, psfgaoAttribs);
-    }
+    if (_ILIsDesktop(m_pidl))
+        hr = SHGetDesktopFolder(&parent_folder);
+    else
+        hr = get_parent_shellfolder(&parent_folder);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    return hr;
+    child_pidl = ILFindLastID(m_pidl);
+    *psfgaoAttribs = sfgaoMask;
+    hr = parent_folder->GetAttributesOf(1, &child_pidl, psfgaoAttribs);
+    *psfgaoAttribs &= sfgaoMask;
+
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return (sfgaoMask == *psfgaoAttribs) ? S_OK : S_FALSE;
 }
 
 HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
 {
     HRESULT hr;
     CComPtr<IPersistIDList>      pIDList;
-    CComPtr<IShellFolder>        parent_folder;
+    CComPtr<IShellFolder>        psfDesktop;
     LPITEMIDLIST pidl;
 
     TRACE("(%p,%p,%x,%p)\n", this, oth, hint, piOrder);
@@ -189,19 +206,23 @@ HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
         hr = pIDList->GetIDList(&pidl);
         if (SUCCEEDED(hr))
         {
-            hr = get_parent_shellfolder(&parent_folder);
+            hr = SHGetDesktopFolder(&psfDesktop);
             if (SUCCEEDED(hr))
             {
-                hr = parent_folder->CompareIDs(hint, m_pidl, pidl);
-                *piOrder = static_cast<int>(SCODE_CODE(hr));
+                hr = psfDesktop->CompareIDs(hint, m_pidl, pidl);
+                *piOrder = (int)(short)SCODE_CODE(hr);
             }
             ILFree(pidl);
         }
     }
 
-    if (SUCCEEDED(hr))
+    if(FAILED(hr))
+        return hr;
+
+    if(*piOrder)
+        return S_FALSE;
+    else
         return S_OK;
-    return hr;
 }
 
 HRESULT WINAPI CShellItem::GetClassID(CLSID *pClassID)
@@ -250,6 +271,8 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
 
     TRACE("(%p,%p,%p,%p)\n", pidlParent, psfParent, pidl, ppsi);
 
+    *ppsi = NULL;
+
     if (!pidl)
         return E_INVALIDARG;
 
@@ -291,7 +314,6 @@ HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
     hr = CShellItem::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellItem, &newShellItem));
     if (FAILED(hr))
     {
-        *ppsi = NULL;
         ILFree(new_pidl);
         return hr;
     }

@@ -74,7 +74,7 @@ BEGIN
     LTEXT "Исключения", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "По умолчанию", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
     PUSHBUTTON "Отмена", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -86,7 +86,7 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Установить с диска", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Скачать и установить", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
     PUSHBUTTON "Отмена", IDCANCEL, 150, 78, 60, 14
 END
 
@@ -105,9 +105,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "О программе"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Менеджер приложений ReactOS\nАвторские права (C) 2009\nДмитрий Чапышев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Закрыть", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Менеджер приложений ReactOS\nАвторские права (C) 2009\nДмитрий Чапышев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Закрыть", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -203,7 +203,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Не удалось скачать приложение! Проверьте подключение к сети Интернет!"
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
     IDS_UNABLE_TO_INSTALL "Не удалось завершить установку!"
-    IDS_CERT_DOES_NOT_MATCH "Ошибка проверки SSL сертификата."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Проверка целостности приложения…"
     IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
     IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
@@ -211,6 +211,7 @@ BEGIN
     IDS_SELECT_ALL "Выбрать все"
     IDS_INSTALL_SELECTED "Установить выбранное"
     IDS_SELECTEDFORINST "Выбрано для установки"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

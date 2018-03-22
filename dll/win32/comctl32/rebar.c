@@ -613,6 +613,7 @@ REBAR_DrawBand (HDC hdc, const REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
 	    oldcolor = SetTextColor (hdc, new);
 	}
 
+#ifdef __REACTOS__
     if (!theme)
     {
         DrawTextW (hdc, lpBand->lpText, -1, &lpBand->rcCapText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -621,6 +622,10 @@ REBAR_DrawBand (HDC hdc, const REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
     {
         DrawThemeText(theme, hdc, 0, 0, lpBand->lpText, -1, DT_CENTER | DT_VCENTER | DT_SINGLELINE, 0, &lpBand->rcCapText);
     }
+#else
+	DrawTextW (hdc, lpBand->lpText, -1, &lpBand->rcCapText,
+		   DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+#endif
 
 	if (oldBkMode != TRANSPARENT)
 	    SetBkMode (hdc, oldBkMode);
@@ -1826,42 +1831,26 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
     RECT cr;
     COLORREF old = CLR_NONE, new;
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
-#ifdef __REACTOS__
-    HRGN hrgn;
-#endif
 
     GetClientRect (infoPtr->hwndSelf, &cr);
 
 #ifdef __REACTOS__
-
     if (theme)
     {
-        if (IsThemeBackgroundPartiallyTransparent(theme, RP_BACKGROUND, 0))
+        if (IsThemeBackgroundPartiallyTransparent(theme, 0, 0))
         {
             DrawThemeParentBackground (infoPtr->hwndSelf, hdc, &cr);
         }
         DrawThemeBackground (theme, hdc, 0, 0, &cr, NULL);
     }
-
-    hrgn = CreateRectRgn(cr.left, cr.top, cr.right, cr.bottom);
-
 #endif
 
     oldrow = -1;
     for(i=0; i<infoPtr->uNumBands; i++) {
         RECT rcBand;
-#ifdef __REACTOS__
-        RECT rcBandReal;
-        HRGN hrgnBand;
-#endif
-
         lpBand = REBAR_GetBand(infoPtr, i);
 	if (HIDDENBAND(lpBand)) continue;
         translate_rect(infoPtr, &rcBand, &lpBand->rcBand);
-
-#ifdef __REACTOS__
-        rcBandReal = rcBand;
-#endif
 
 	/* draw band separator between rows */
 	if (lpBand->iRow != oldrow) {
@@ -1887,9 +1876,6 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 		}
                 TRACE ("drawing band separator bottom (%s)\n",
                        wine_dbgstr_rect(&rcRowSep));
-#ifdef __REACTOS__
-        rcBandReal = rcRowSep;
-#endif
 	    }
 	}
 
@@ -1900,9 +1886,6 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 	    if (infoPtr->dwStyle & CCS_VERT) {
                 rcSep.bottom = rcSep.top;
 		rcSep.top -= SEP_WIDTH_SIZE;
-#ifdef __REACTOS__
-        rcBandReal.top -= SEP_WIDTH_SIZE;
-#endif
                 if (theme)
                     DrawThemeEdge (theme, hdc, RP_BAND, 0, &rcSep, EDGE_ETCHED, BF_BOTTOM, NULL);
                 else
@@ -1911,9 +1894,6 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 	    else {
                 rcSep.right = rcSep.left;
 		rcSep.left -= SEP_WIDTH_SIZE;
-#ifdef __REACTOS__
-        rcBandReal.left -= SEP_WIDTH_SIZE;
-#endif
                 if (theme)
                     DrawThemeEdge (theme, hdc, RP_BAND, 0, &rcSep, EDGE_ETCHED, BF_RIGHT, NULL);
                 else
@@ -1944,9 +1924,6 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 #endif
 	}
 
-#ifdef __REACTOS__
-        if (!theme)
-#else
         if (theme)
         {
             /* When themed, the background color is ignored (but not a
@@ -1954,7 +1931,6 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
             DrawThemeBackground (theme, hdc, 0, 0, &cr, &rcBand);
         }
         else
-#endif
         {
             old = SetBkColor (hdc, new);
             TRACE("%s background color=0x%06x, band %s\n",
@@ -1965,26 +1941,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
             if (lpBand->clrBack != CLR_NONE)
                 SetBkColor (hdc, old);
         }
-
-#ifdef __REACTOS__
-        hrgnBand = CreateRectRgn(rcBandReal.left, rcBandReal.top, rcBandReal.right, rcBandReal.bottom);
-        CombineRgn(hrgn, hrgn, hrgnBand, RGN_DIFF);
-        DeleteObject(hrgnBand);
-#endif
     }
-
-#if 1
-#ifdef __REACTOS__
-    if (!theme)
-#endif
-    {
-        //FIXME: Apparently painting the remaining area is a v6 feature
-        HBRUSH hbrush = CreateSolidBrush(new);
-        FillRgn(hdc, hrgn, hbrush);
-        DeleteObject(hbrush);
-    }
-    DeleteObject(hrgn);
-#endif
     return TRUE;
 }
 

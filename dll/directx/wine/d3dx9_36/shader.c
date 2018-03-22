@@ -19,11 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "d3dx9_36_private.h"
-
+#include "config.h"
+#include "wine/port.h"
 #include <stdio.h>
 
+#include "d3dx9_private.h"
+#include "d3dcommon.h"
 #include "d3dcompiler.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 /* This function is not declared in the SDK headers yet. */
 HRESULT WINAPI D3DAssemble(const void *data, SIZE_T datasize, const char *filename,
@@ -2774,112 +2778,248 @@ HRESULT WINAPI D3DXCreateTextureShader(const DWORD *function, ID3DXTextureShader
     return D3D_OK;
 }
 
-static const DWORD* skip_instruction(const DWORD *byte_code, UINT shader_model)
+static unsigned int get_instr_length(const DWORD *byte_code, unsigned int major, unsigned int minor)
 {
-    TRACE("Shader model %u\n", shader_model);
+    unsigned int len = 0;
 
-    /* Handle all special instructions whose arguments may contain D3DSIO_DCL */
-    if ((*byte_code & D3DSI_OPCODE_MASK) == D3DSIO_COMMENT)
+    if (major > 1)
+        return (*byte_code & D3DSI_INSTLENGTH_MASK) >> D3DSI_INSTLENGTH_SHIFT;
+
+    switch (*byte_code & 0xffff)
     {
-        byte_code += 1 + ((*byte_code & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT);
-    }
-    else if (shader_model >= 2)
-    {
-        byte_code += 1 + ((*byte_code & D3DSI_INSTLENGTH_MASK) >> D3DSI_INSTLENGTH_SHIFT);
-    }
-    else if ((*byte_code & D3DSI_OPCODE_MASK) == D3DSIO_DEF)
-    {
-        byte_code += 1 + 5;
-    }
-    else
-    {
-        /* Handle remaining safe instructions */
-        while (*++byte_code & (1u << 31));
+        case D3DSIO_END:
+            ERR("Unexpected END token.\n");
+            return 0;
+        case D3DSIO_COMMENT:
+            return (*byte_code & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
+        case D3DSIO_DEF:
+        case D3DSIO_DEFI:
+            return 5;
+        case D3DSIO_DEFB:
+            return 2;
+        default:
+            ++byte_code;
+            while (*byte_code & 0x80000000)
+            {
+                ++byte_code;
+                ++len;
+            }
     }
 
-    return byte_code;
+    return len;
 }
 
-static UINT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, DWORD type)
+static HRESULT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count, BOOL output)
 {
-    const DWORD *ptr = byte_code;
-    UINT shader_model = (*ptr >> 8) & 0xff;
-    UINT i = 0;
-
-    TRACE("Shader version: %#x\n", *ptr);
-    ptr++;
-
-    while (*ptr != D3DSIO_END)
+    static const D3DDECLUSAGE regtype_usage[] =
     {
-        if (*ptr & (1u << 31))
-        {
-            FIXME("Opcode expected but got %#x\n", *ptr);
-            return 0;
-        }
-        else if ((*ptr & D3DSI_OPCODE_MASK) == D3DSIO_DCL)
-        {
-            DWORD param1 = *++ptr;
-            DWORD param2 = *++ptr;
-            DWORD usage = (param1 & D3DSP_DCL_USAGE_MASK) >> D3DSP_DCL_USAGE_SHIFT;
-            DWORD usage_index = (param1 & D3DSP_DCL_USAGEINDEX_MASK) >> D3DSP_DCL_USAGEINDEX_SHIFT;
-            DWORD reg_type = ((param2 & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2)
-                    | ((param2 & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT);
+        D3DDECLUSAGE_COLOR,
+        D3DDECLUSAGE_COLOR,
+        0,
+        D3DDECLUSAGE_TEXCOORD,
+        0,
+        D3DDECLUSAGE_COLOR,
+        D3DDECLUSAGE_TEXCOORD,
+        0,
+        0,
+        D3DDECLUSAGE_DEPTH
+    };
+    static const D3DDECLUSAGE rast_usage[] =
+    {
+        D3DDECLUSAGE_POSITION,
+        D3DDECLUSAGE_FOG,
+        D3DDECLUSAGE_PSIZE
+    };
+    DWORD reg_type, usage, index, version_token = *byte_code;
+    BOOL is_ps = version_token >> 16 == 0xffff;
+    unsigned int major, minor, i = 0, j;
+    BYTE colors = 0, rastout = 0;
+    BOOL has_dcl, depth = 0;
+    WORD texcoords = 0;
 
-            TRACE("D3DSIO_DCL param1: %#x, param2: %#x, usage: %u, usage_index: %u, reg_type: %u\n",
-                   param1, param2, usage, usage_index, reg_type);
+    if ((version_token & 0xffff0000) != 0xfffe0000 && (version_token & 0xffff0000) != 0xffff0000)
+        return D3DXERR_INVALIDDATA;
 
-            if (reg_type == type)
+    major = version_token >> 8 & 0xff;
+    minor = version_token & 0xff;
+
+    TRACE("%s shader, version %u.%u.\n", is_ps ? "Pixel" : "Vertex", major, minor);
+    ++byte_code;
+
+    has_dcl = (!is_ps && (!output || major == 3)) || (is_ps && !output && major >= 2);
+
+    while (*byte_code != D3DSIO_END)
+    {
+        if (has_dcl && (*byte_code & 0xffff) == D3DSIO_DCL)
+        {
+            DWORD usage_token = byte_code[1];
+            DWORD reg = byte_code[2];
+
+            reg_type = ((reg & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT)
+                    | ((reg & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2);
+
+            if (is_ps && !output && major == 2)
             {
+                /* dcl with no explicit usage, look at the register. */
+                reg_type = ((reg & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT)
+                        | ((reg & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2);
+                index = reg & D3DSP_REGNUM_MASK;
+                if (reg_type >= ARRAY_SIZE(regtype_usage))
+                {
+                    WARN("Invalid register type %u.\n", reg_type);
+                    reg_type = 0;
+                }
+                usage = regtype_usage[reg_type];
                 if (semantics)
                 {
                     semantics[i].Usage = usage;
-                    semantics[i].UsageIndex = usage_index;
+                    semantics[i].UsageIndex = index;
                 }
-                i++;
+                ++i;
             }
+            else if ((!output && reg_type == D3DSPR_INPUT) || (output && reg_type == D3DSPR_OUTPUT))
+            {
+                if (semantics)
+                {
+                    semantics[i].Usage =
+                            (usage_token & D3DSP_DCL_USAGE_MASK) >> D3DSP_DCL_USAGE_SHIFT;
+                    semantics[i].UsageIndex =
+                            (usage_token & D3DSP_DCL_USAGEINDEX_MASK) >> D3DSP_DCL_USAGEINDEX_SHIFT;
+                }
+                ++i;
+            }
+            byte_code += 3;
+        }
+        else if (!has_dcl)
+        {
+            unsigned int len = get_instr_length(byte_code, major, minor) + 1;
 
-            ptr++;
+            switch (*byte_code & 0xffff)
+            {
+                case D3DSIO_COMMENT:
+                case D3DSIO_DEF:
+                case D3DSIO_DEFB:
+                case D3DSIO_DEFI:
+                    byte_code += len;
+                    break;
+                default:
+                    ++byte_code;
+                    while (*byte_code & 0x80000000)
+                    {
+                        reg_type = ((*byte_code & D3DSP_REGTYPE_MASK) >> D3DSP_REGTYPE_SHIFT)
+                                | ((*byte_code & D3DSP_REGTYPE_MASK2) >> D3DSP_REGTYPE_SHIFT2);
+                        index = *byte_code & D3DSP_REGNUM_MASK;
+
+                        if ((reg_type == D3DSPR_TEMP && is_ps && major == 1)
+                                || (reg_type == D3DSPR_INPUT && is_ps)
+                                || (reg_type == D3DSPR_TEXTURE && is_ps && !output)
+                                || reg_type == D3DSPR_RASTOUT
+                                || reg_type == D3DSPR_ATTROUT
+                                || reg_type == D3DSPR_OUTPUT
+                                || reg_type == D3DSPR_DEPTHOUT)
+                        {
+                            if (reg_type == D3DSPR_RASTOUT)
+                                rastout |= 1u << index;
+                            else if (reg_type == D3DSPR_DEPTHOUT)
+                                depth = TRUE;
+                            else if (reg_type == D3DSPR_TEXTURE || reg_type == D3DSPR_OUTPUT)
+                                texcoords |= 1u << index;
+                            else
+                                colors |= 1u << index;
+                        }
+                        ++byte_code;
+                    }
+            }
         }
         else
         {
-            ptr = skip_instruction(ptr, shader_model);
+            byte_code += get_instr_length(byte_code, major, minor) + 1;
         }
     }
 
-    return i;
+    if (!has_dcl)
+    {
+        i = j = 0;
+        while (texcoords)
+        {
+            if (texcoords & 1)
+            {
+                if (semantics)
+                {
+                    semantics[i].Usage = D3DDECLUSAGE_TEXCOORD;
+                    semantics[i].UsageIndex = j;
+                }
+                ++i;
+            }
+            texcoords >>= 1;
+            ++j;
+        }
+        j = 0;
+        while (colors)
+        {
+            if (colors & 1)
+            {
+                if (semantics)
+                {
+                    semantics[i].Usage = D3DDECLUSAGE_COLOR;
+                    semantics[i].UsageIndex = j;
+                }
+                ++i;
+            }
+            colors >>= 1;
+            ++j;
+        }
+        j = 0;
+        while (rastout)
+        {
+            if (rastout & 1)
+            {
+                if (j >= ARRAY_SIZE(rast_usage))
+                {
+                    WARN("Invalid RASTOUT register index.\n");
+                    usage = 0;
+                }
+                else
+                {
+                    usage = rast_usage[j];
+                }
+                if (semantics)
+                {
+                    semantics[i].Usage = usage;
+                    semantics[i].UsageIndex = 0;
+                }
+                ++i;
+            }
+            rastout >>= 1;
+            ++j;
+        }
+        if (depth)
+        {
+            if (semantics)
+            {
+                semantics[i].Usage = D3DDECLUSAGE_DEPTH;
+                semantics[i].UsageIndex = 0;
+            }
+            ++i;
+        }
+    }
+
+    if (count)
+        *count = i;
+
+    return D3D_OK;
 }
 
 HRESULT WINAPI D3DXGetShaderInputSemantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count)
 {
-    UINT nb_semantics;
+    TRACE("byte_code %p, semantics %p, count %p.\n", byte_code, semantics, count);
 
-    TRACE("byte_code %p, semantics %p, count %p\n", byte_code, semantics, count);
-
-    if (!byte_code)
-        return D3DERR_INVALIDCALL;
-
-    nb_semantics = get_shader_semantics(byte_code, semantics, D3DSPR_INPUT);
-
-    if (count)
-        *count = nb_semantics;
-
-    return D3D_OK;
+    return get_shader_semantics(byte_code, semantics, count, FALSE);
 }
-
 
 HRESULT WINAPI D3DXGetShaderOutputSemantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count)
 {
-    UINT nb_semantics;
+    TRACE("byte_code %p, semantics %p, count %p.\n", byte_code, semantics, count);
 
-    TRACE("byte_code %p, semantics %p, count %p\n", byte_code, semantics, count);
-
-    if (!byte_code)
-        return D3DERR_INVALIDCALL;
-
-    nb_semantics = get_shader_semantics(byte_code, semantics, D3DSPR_OUTPUT);
-
-    if (count)
-        *count = nb_semantics;
-
-    return D3D_OK;
+    return get_shader_semantics(byte_code, semantics, count, TRUE);
 }

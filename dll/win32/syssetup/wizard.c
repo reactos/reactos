@@ -246,7 +246,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_ACKPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_ACKPAGE);
                         return TRUE;
                     }
                     break;
@@ -358,7 +358,7 @@ AckPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_LOCALEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_LOCALEPAGE);
                         return TRUE;
                     }
                     break;
@@ -480,7 +480,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                         SendMessage(GetDlgItem(hwndDlg, IDC_OWNERORGANIZATION), WM_SETTEXT, 0, (LPARAM)pSetupData->OwnerOrganization);
                         if (WriteOwnerSettings(pSetupData->OwnerName, pSetupData->OwnerOrganization))
                         {
-                            SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_COMPUTERPAGE);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_COMPUTERPAGE);
                             return TRUE;
                         }
                     }
@@ -501,7 +501,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                         MessageBoxW(hwndDlg, ErrorName, Title, MB_ICONERROR | MB_OK);
 
                         SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
 
                         return TRUE;
                     }
@@ -512,7 +512,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                     if (!WriteOwnerSettings(OwnerName, OwnerOrganization))
                     {
                         SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 
@@ -706,7 +706,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (pSetupData->UnattendSetup && WriteComputerSettings(pSetupData->ComputerName, hwndDlg))
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_THEMEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_THEMEPAGE);
                         return TRUE;
                     }
                     break;
@@ -721,7 +721,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                         }
                         MessageBoxW(hwndDlg, EmptyComputerName, Title, MB_ICONERROR | MB_OK);
                         SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 
@@ -731,7 +731,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     if (!WriteComputerSettings(ComputerName, hwndDlg))
                     {
                         SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 
@@ -746,7 +746,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                             wcscpy(EmptyPassword, L"You must enter a password !");
                         }
                         MessageBoxW(hwndDlg, EmptyPassword, Title, MB_ICONERROR | MB_OK);
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 #else
@@ -762,7 +762,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                             wcscpy(NotMatchPassword, L"The passwords you entered do not match. Please enter the desired password again.");
                         }
                         MessageBoxW(hwndDlg, NotMatchPassword, Title, MB_ICONERROR | MB_OK);
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                         return TRUE;
                     }
 
@@ -778,7 +778,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                                 wcscpy(WrongPassword, L"The password you entered contains invalid characters. Please enter a cleaned password.");
                             }
                             MessageBoxW(hwndDlg, WrongPassword, Title, MB_ICONERROR | MB_OK);
-                            SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, -1);
                             return TRUE;
                         }
                         Password++;
@@ -943,7 +943,7 @@ LocalePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -951,7 +951,7 @@ LocalePageDlgProc(HWND hwndDlg,
         {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
             WriteUserLocale();
 
             SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
@@ -998,7 +998,7 @@ LocalePageDlgProc(HWND hwndDlg,
                             RunControlPanelApplet(hwndDlg, L"intl.cpl,,/f:\"unattend.inf\"");
                         }
 
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_OWNERPAGE);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_OWNERPAGE);
                         return TRUE;
                     }
                     break;
@@ -1529,14 +1529,14 @@ DateTimePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
 
             CreateTimeZoneList(SetupData);
 
@@ -1571,7 +1571,7 @@ DateTimePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup && WriteDateTimeSettings(hwndDlg, SetupData))
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SetupData->uFirstNetworkWizardPage);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, SetupData->uFirstNetworkWizardPage);
                         return TRUE;
                     }
                     SetTimer(hwndDlg, 1, 1000, NULL);
@@ -1616,24 +1616,24 @@ ThemePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
             BUTTON_IMAGELIST imldata = {0, {0,10,0,10}, BUTTON_IMAGELIST_ALIGN_TOP};
-            
+
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
-            
-            imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_CLASSIC), 0, 0, CLR_NONE , IMAGE_BITMAP, LR_CREATEDIBSECTION);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
+
+            imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_CLASSIC), 0, 0, 0x00FF00FF, IMAGE_BITMAP, LR_CREATEDIBSECTION);
             SendDlgItemMessage(hwndDlg, IDC_CLASSICSTYLE, BCM_SETIMAGELIST, 0, (LPARAM)&imldata);
 
-            imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_LAUTUS), 0, 0, CLR_NONE , IMAGE_BITMAP, LR_CREATEDIBSECTION);
+            imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_LAUTUS), 0, 0, 0x00FF00FF , IMAGE_BITMAP, LR_CREATEDIBSECTION);
             SendDlgItemMessage(hwndDlg, IDC_THEMEDSTYLE, BCM_SETIMAGELIST, 0, (LPARAM)&imldata);
-            
+
             SendDlgItemMessage(hwndDlg, IDC_CLASSICSTYLE, BM_SETCHECK, BST_CHECKED, 0);
             break;
         }
@@ -1666,7 +1666,7 @@ ThemePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup)
                     {
-                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SetupData->uFirstNetworkWizardPage);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, SetupData->uFirstNetworkWizardPage);
                         return TRUE;
                     }
                     break;
@@ -1963,7 +1963,7 @@ ProcessPageDlgProc(HWND hwndDlg,
     WCHAR Title[64];
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -1971,7 +1971,7 @@ ProcessPageDlgProc(HWND hwndDlg,
         {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
         }
         break;
 
@@ -2491,25 +2491,6 @@ ProcessUnattendSetup(
 
 typedef DWORD(WINAPI *PFNREQUESTWIZARDPAGES)(PDWORD, HPROPSHEETPAGE *, PSETUPDATA);
 
-BOOL ActivateComctl32v6ActCtx(ULONG_PTR *cookie, HANDLE* hActCtx)
-{
-    ACTCTXW ActCtx = {sizeof(ACTCTX), ACTCTX_FLAG_RESOURCE_NAME_VALID};
-    WCHAR fileBuffer[MAX_PATH];
-
-    *hActCtx = INVALID_HANDLE_VALUE;
-
-    if (!GetModuleFileName(hDllInstance, fileBuffer, MAX_PATH))
-        return FALSE;
-
-    ActCtx.lpSource = fileBuffer;
-    ActCtx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
-    *hActCtx = CreateActCtx(&ActCtx);
-    if (*hActCtx == INVALID_HANDLE_VALUE)
-        return FALSE;
-
-    return ActivateActCtx(*hActCtx, cookie);
-}
-
 VOID
 InstallWizard(VOID)
 {
@@ -2523,9 +2504,6 @@ InstallWizard(VOID)
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
     DWORD dwPageCount = 8, dwNetworkPageCount = 0;
-    BOOL bActCtxActivated;
-    ULONG_PTR cookie;
-    HANDLE hActCtx;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2542,11 +2520,6 @@ InstallWizard(VOID)
                     MB_ICONERROR | MB_OK);
         goto done;
     }
-
-    /* Load and activate the act ctx for comctl32v6 now manually. 
-     *  Even if the exe of the process had a manifest, at the point of its launch
-     *  the manifest of comctl32 wouldn't be installed so it wouldn't be loaded at all */
-    bActCtxActivated = ActivateComctl32v6ActCtx(&cookie, &hActCtx);
 
     hNetShell = LoadLibraryW(L"netshell.dll");
     if (hNetShell != NULL)
@@ -2700,12 +2673,6 @@ done:
 
     if (hNetShell != NULL)
         FreeLibrary(hNetShell);
-
-    if (bActCtxActivated)
-    {
-        DeactivateActCtx(0, cookie);
-        ReleaseActCtx(hActCtx);
-    }
 
     if (pSetupData != NULL)
     {

@@ -18,7 +18,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "dshow.h"
+#include "wine/debug.h"
 #include "quartz_private.h"
+#include "ole2.h"
+#include "olectl.h"
+#include "strmif.h"
+#include "vfwmsgs.h"
+#include "evcode.h"
+#include "wine/unicode.h"
+
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct {
     HWND     hWnd;      /* Target window */
@@ -1027,6 +1048,7 @@ static HRESULT WINAPI FilterGraph2_Connect(IFilterGraph2 *iface, IPin *ppinOut, 
         if (IsEqualGUID(&clsid, &FilterCLSID)) {
             /* Skip filter (same as the one the output pin belongs to) */
             IBaseFilter_Release(pfilter);
+            pfilter = NULL;
             goto error;
         }
 

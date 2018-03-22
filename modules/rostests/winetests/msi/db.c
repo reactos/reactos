@@ -18,7 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include <stdio.h>
+
+#include <windows.h>
+#include <objidl.h>
+#include <msi.h>
+#include <msidefs.h>
+#include <msiquery.h>
+
+#include "wine/test.h"
 
 static const char *msifile = "winetest-db.msi";
 static const char *msifile2 = "winetst2-db.msi";
@@ -193,7 +203,7 @@ static UINT run_queryW( MSIHANDLE hdb, MSIHANDLE hrec, const WCHAR *query )
 
 static UINT create_component_table( MSIHANDLE hdb )
 {
-    return run_query( hdb, 0,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `Component` ( "
             "`Component` CHAR(72) NOT NULL, "
             "`ComponentId` CHAR(38), "
@@ -202,87 +212,99 @@ static UINT create_component_table( MSIHANDLE hdb )
             "`Condition` CHAR(255), "
             "`KeyPath` CHAR(72) "
             "PRIMARY KEY `Component`)" );
+    ok(r == ERROR_SUCCESS, "Failed to create Component table: %u\n", r);
+    return r;
 }
 
 static UINT create_custom_action_table( MSIHANDLE hdb )
 {
-    return run_query( hdb, 0,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `CustomAction` ( "
             "`Action` CHAR(72) NOT NULL, "
             "`Type` SHORT NOT NULL, "
             "`Source` CHAR(72), "
             "`Target` CHAR(255) "
             "PRIMARY KEY `Action`)" );
+    ok(r == ERROR_SUCCESS, "Failed to create CustomAction table: %u\n", r);
+    return r;
 }
 
 static UINT create_directory_table( MSIHANDLE hdb )
 {
-    return run_query( hdb, 0,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `Directory` ( "
             "`Directory` CHAR(255) NOT NULL, "
             "`Directory_Parent` CHAR(255), "
             "`DefaultDir` CHAR(255) NOT NULL "
             "PRIMARY KEY `Directory`)" );
+    ok(r == ERROR_SUCCESS, "Failed to create Directory table: %u\n", r);
+    return r;
 }
 
 static UINT create_feature_components_table( MSIHANDLE hdb )
 {
-    return run_query( hdb, 0,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `FeatureComponents` ( "
             "`Feature_` CHAR(38) NOT NULL, "
             "`Component_` CHAR(72) NOT NULL "
             "PRIMARY KEY `Feature_`, `Component_` )" );
+    ok(r == ERROR_SUCCESS, "Failed to create FeatureComponents table: %u\n", r);
+    return r;
 }
 
 static UINT create_std_dlls_table( MSIHANDLE hdb )
 {
-    return run_query( hdb, 0,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `StdDlls` ( "
             "`File` CHAR(255) NOT NULL, "
             "`Binary_` CHAR(72) NOT NULL "
             "PRIMARY KEY `File` )" );
+    ok(r == ERROR_SUCCESS, "Failed to create StdDlls table: %u\n", r);
+    return r;
 }
 
 static UINT create_binary_table( MSIHANDLE hdb )
 {
-    return run_query( hdb, 0,
-            "CREATE TABLE `Binary` ( "
+    UINT r = run_query( hdb, 0,
+           "CREATE TABLE `Binary` ( "
             "`Name` CHAR(72) NOT NULL, "
             "`Data` CHAR(72) NOT NULL "
             "PRIMARY KEY `Name` )" );
+    ok(r == ERROR_SUCCESS, "Failed to create Binary table: %u\n", r);
+    return r;
 }
 
-#define make_add_entry(type, qtext) \
-    static UINT add##_##type##_##entry( MSIHANDLE hdb, const char *values ) \
-    { \
-        char insert[] = qtext; \
-        char *query; \
-        UINT sz, r; \
-        sz = strlen(values) + sizeof insert; \
-        query = HeapAlloc(GetProcessHeap(),0,sz); \
-        sprintf(query,insert,values); \
-        r = run_query( hdb, 0, query ); \
-        HeapFree(GetProcessHeap(), 0, query); \
-        return r; \
-    }
+static inline UINT add_entry(const char *file, int line, const char *type, MSIHANDLE hdb, const char *values, const char *insert)
+{
+    char *query;
+    UINT sz, r;
 
-make_add_entry(component,
-               "INSERT INTO `Component`  "
-               "(`Component`, `ComponentId`, `Directory_`, "
+    sz = strlen(values) + strlen(insert) + 1;
+    query = HeapAlloc(GetProcessHeap(), 0, sz);
+    sprintf(query, insert, values);
+    r = run_query(hdb, 0, query);
+    HeapFree(GetProcessHeap(), 0, query);
+    ok_(file, line)(r == ERROR_SUCCESS, "failed to insert into %s table: %u\n", type, r);
+    return r;
+}
+
+#define add_component_entry(hdb, values) add_entry(__FILE__, __LINE__, "Component", hdb, values, \
+               "INSERT INTO `Component`  " \
+               "(`Component`, `ComponentId`, `Directory_`, " \
                "`Attributes`, `Condition`, `KeyPath`) VALUES( %s )")
 
-make_add_entry(custom_action,
-               "INSERT INTO `CustomAction`  "
+#define add_custom_action_entry(hdb, values) add_entry(__FILE__, __LINE__, "CustomAction", hdb, values, \
+               "INSERT INTO `CustomAction`  " \
                "(`Action`, `Type`, `Source`, `Target`) VALUES( %s )")
 
-make_add_entry(feature_components,
-               "INSERT INTO `FeatureComponents` "
+#define add_feature_components_entry(hdb, values) add_entry(__FILE__, __LINE__, "FeatureComponents", hdb, values, \
+               "INSERT INTO `FeatureComponents` " \
                "(`Feature_`, `Component_`) VALUES( %s )")
 
-make_add_entry(std_dlls,
+#define add_std_dlls_entry(hdb, values) add_entry(__FILE__, __LINE__, "StdDlls", hdb, values, \
                "INSERT INTO `StdDlls` (`File`, `Binary_`) VALUES( %s )")
 
-make_add_entry(binary,
+#define add_binary_entry(hdb, values) add_entry(__FILE__, __LINE__, "Binary", hdb, values, \
                "INSERT INTO `Binary` (`Name`, `Data`) VALUES( %s )")
 
 static void test_msiinsert(void)
@@ -3117,8 +3139,7 @@ static MSIHANDLE create_package_db(const WCHAR *filename)
     res = set_summary_info(hdb);
     ok( res == ERROR_SUCCESS , "Failed to set summary info\n" );
 
-    res = create_directory_table(hdb);
-    ok( res == ERROR_SUCCESS , "Failed to create directory table\n" );
+    create_directory_table(hdb);
 
     return hdb;
 }
@@ -3447,62 +3468,28 @@ static void test_join(void)
     hdb = create_db();
     ok( hdb, "failed to create db\n");
 
-    r = create_component_table( hdb );
-    ok( r == ERROR_SUCCESS, "cannot create Component table: %d\n", r );
+    create_component_table( hdb );
+    add_component_entry( hdb, "'zygomatic', 'malar', 'INSTALLDIR', 0, '', ''" );
+    add_component_entry( hdb, "'maxilla', 'alveolar', 'INSTALLDIR', 0, '', ''" );
+    add_component_entry( hdb, "'nasal', 'septum', 'INSTALLDIR', 0, '', ''" );
+    add_component_entry( hdb, "'mandible', 'ramus', 'INSTALLDIR', 0, '', ''" );
 
-    r = add_component_entry( hdb, "'zygomatic', 'malar', 'INSTALLDIR', 0, '', ''" );
-    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+    create_feature_components_table( hdb );
+    add_feature_components_entry( hdb, "'procerus', 'maxilla'" );
+    add_feature_components_entry( hdb, "'procerus', 'nasal'" );
+    add_feature_components_entry( hdb, "'nasalis', 'nasal'" );
+    add_feature_components_entry( hdb, "'nasalis', 'mandible'" );
+    add_feature_components_entry( hdb, "'nasalis', 'notacomponent'" );
+    add_feature_components_entry( hdb, "'mentalis', 'zygomatic'" );
 
-    r = add_component_entry( hdb, "'maxilla', 'alveolar', 'INSTALLDIR', 0, '', ''" );
-    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+    create_std_dlls_table( hdb );
+    add_std_dlls_entry( hdb, "'msvcp.dll', 'msvcp.dll.01234'" );
+    add_std_dlls_entry( hdb, "'msvcr.dll', 'msvcr.dll.56789'" );
 
-    r = add_component_entry( hdb, "'nasal', 'septum', 'INSTALLDIR', 0, '', ''" );
-    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
-
-    r = add_component_entry( hdb, "'mandible', 'ramus', 'INSTALLDIR', 0, '', ''" );
-    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
-
-    r = create_feature_components_table( hdb );
-    ok( r == ERROR_SUCCESS, "cannot create FeatureComponents table: %d\n", r );
-
-    r = add_feature_components_entry( hdb, "'procerus', 'maxilla'" );
-    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
-
-    r = add_feature_components_entry( hdb, "'procerus', 'nasal'" );
-    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
-
-    r = add_feature_components_entry( hdb, "'nasalis', 'nasal'" );
-    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
-
-    r = add_feature_components_entry( hdb, "'nasalis', 'mandible'" );
-    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
-
-    r = add_feature_components_entry( hdb, "'nasalis', 'notacomponent'" );
-    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
-
-    r = add_feature_components_entry( hdb, "'mentalis', 'zygomatic'" );
-    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
-
-    r = create_std_dlls_table( hdb );
-    ok( r == ERROR_SUCCESS, "cannot create StdDlls table: %d\n", r );
-
-    r = add_std_dlls_entry( hdb, "'msvcp.dll', 'msvcp.dll.01234'" );
-    ok( r == ERROR_SUCCESS, "cannot add std dlls: %d\n", r );
-
-    r = add_std_dlls_entry( hdb, "'msvcr.dll', 'msvcr.dll.56789'" );
-    ok( r == ERROR_SUCCESS, "cannot add std dlls: %d\n", r );
-
-    r = create_binary_table( hdb );
-    ok( r == ERROR_SUCCESS, "cannot create Binary table: %d\n", r );
-
-    r = add_binary_entry( hdb, "'msvcp.dll.01234', 'abcdefgh'" );
-    ok( r == ERROR_SUCCESS, "cannot add binary: %d\n", r );
-
-    r = add_binary_entry( hdb, "'msvcr.dll.56789', 'ijklmnop'" );
-    ok( r == ERROR_SUCCESS, "cannot add binary: %d\n", r );
-
-    r = add_binary_entry( hdb, "'single.dll.31415', 'msvcp.dll'" );
-    ok( r == ERROR_SUCCESS, "cannot add binary: %d\n", r );
+    create_binary_table( hdb );
+    add_binary_entry( hdb, "'msvcp.dll.01234', 'abcdefgh'" );
+    add_binary_entry( hdb, "'msvcr.dll.56789', 'ijklmnop'" );
+    add_binary_entry( hdb, "'single.dll.31415', 'msvcp.dll'" );
 
     query = "CREATE TABLE `One` (`A` SHORT, `B` SHORT PRIMARY KEY `A`)";
     r = run_query( hdb, 0, query);
@@ -4790,7 +4777,7 @@ static void test_update(void)
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expectd ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
 
     MsiViewClose(view);
     MsiCloseHandle(view);
@@ -7657,14 +7644,10 @@ static void test_dbtopackage(void)
 
     set_summary_info(hdb);
 
-    r = create_directory_table(hdb);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    create_directory_table(hdb);
 
-    r = create_custom_action_table(hdb);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    r = add_custom_action_entry(hdb, "'SetProp', 51, 'MYPROP', 'grape'");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    create_custom_action_table(hdb);
+    add_custom_action_entry(hdb, "'SetProp', 51, 'MYPROP', 'grape'");
 
     sprintf(package, "#%u", hdb);
     r = MsiOpenPackageA(package, &hpkg);
@@ -7721,14 +7704,10 @@ static void test_dbtopackage(void)
 
     set_summary_info(hdb);
 
-    r = create_directory_table(hdb);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    create_directory_table(hdb);
 
-    r = create_custom_action_table(hdb);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    r = add_custom_action_entry(hdb, "'SetProp', 51, 'MYPROP', 'grape'");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    create_custom_action_table(hdb);
+    add_custom_action_entry(hdb, "'SetProp', 51, 'MYPROP', 'grape'");
 
     sprintf(package, "#%u", hdb);
     r = MsiOpenPackageA(package, &hpkg);

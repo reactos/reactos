@@ -17,7 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+
+#include "wine/test.h"
+#include "shlwapi.h"
+#include "shlguid.h"
 
 #define expect(expected, got) ok( (expected) == (got), "Expected %d, got %d\n", (expected), (got))
 #define expect_hr(expected, got) ok( (expected) == (got), "Expected %08x, got %08x\n", (expected), (got))

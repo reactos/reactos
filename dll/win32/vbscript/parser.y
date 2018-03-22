@@ -19,11 +19,6 @@
 %{
 
 #include "vbscript.h"
-#include "parse.h"
-
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 static int parser_error(parser_ctx_t *,const char*);
 
@@ -148,7 +143,7 @@ Program
 
 OptionExplicit_opt
     : /* empty */                { $$ = FALSE; }
-    | tOPTION tEXPLICIT tNL      { $$ = TRUE; }
+    | tOPTION tEXPLICIT StSep    { $$ = TRUE; }
 
 SourceElements
     : /* empty */
@@ -164,7 +159,7 @@ StatementsNl
     | StatementNl StatementsNl              { $$ = link_statements($1, $2); }
 
 StatementNl
-    : Statement tNL                 { $$ = $1; }
+    : Statement tNL                         { $$ = $1; }
 
 Statement
     : ':'                                   { $$ = NULL; }
@@ -396,29 +391,29 @@ PrimaryExpression
     | tME                           { $$ = new_expression(ctx, EXPR_ME, 0); CHECK_ERROR; }
 
 ClassDeclaration
-    : tCLASS Identifier tNL ClassBody tEND tCLASS tNL       { $4->name = $2; $$ = $4; }
+    : tCLASS Identifier StSep ClassBody tEND tCLASS StSep       { $4->name = $2; $$ = $4; }
 
 ClassBody
-    : /* empty */                               { $$ = new_class_decl(ctx); }
-    | FunctionDecl tNL ClassBody                { $$ = add_class_function(ctx, $3, $1); CHECK_ERROR; }
+    : /* empty */                                 { $$ = new_class_decl(ctx); }
+    | FunctionDecl StSep ClassBody                { $$ = add_class_function(ctx, $3, $1); CHECK_ERROR; }
     /* FIXME: We should use DimDecl here to support arrays, but that conflicts with PropertyDecl. */
-    | Storage tIdentifier tNL ClassBody         { dim_decl_t *dim_decl = new_dim_decl(ctx, $2, FALSE, NULL); CHECK_ERROR;
+    | Storage tIdentifier StSep ClassBody         { dim_decl_t *dim_decl = new_dim_decl(ctx, $2, FALSE, NULL); CHECK_ERROR;
                                                   $$ = add_dim_prop(ctx, $4, dim_decl, $1); CHECK_ERROR; }
-    | tDIM DimDecl tNL ClassBody                { $$ = add_dim_prop(ctx, $4, $2, 0); CHECK_ERROR; }
-    | PropertyDecl tNL ClassBody                { $$ = add_class_function(ctx, $3, $1); CHECK_ERROR; }
+    | tDIM DimDecl StSep ClassBody                { $$ = add_dim_prop(ctx, $4, $2, 0); CHECK_ERROR; }
+    | PropertyDecl StSep ClassBody                { $$ = add_class_function(ctx, $3, $1); CHECK_ERROR; }
 
 PropertyDecl
-    : Storage_opt tPROPERTY tGET tIdentifier ArgumentsDecl_opt tNL StatementsNl_opt tEND tPROPERTY
+    : Storage_opt tPROPERTY tGET tIdentifier ArgumentsDecl_opt StSep StatementsNl_opt tEND tPROPERTY
                                     { $$ = new_function_decl(ctx, $4, FUNC_PROPGET, $1, $5, $7); CHECK_ERROR; }
-    | Storage_opt tPROPERTY tLET tIdentifier '(' ArgumentDecl ')' tNL StatementsNl_opt tEND tPROPERTY
+    | Storage_opt tPROPERTY tLET tIdentifier '(' ArgumentDecl ')' StSep StatementsNl_opt tEND tPROPERTY
                                     { $$ = new_function_decl(ctx, $4, FUNC_PROPLET, $1, $6, $9); CHECK_ERROR; }
-    | Storage_opt tPROPERTY tSET tIdentifier '(' ArgumentDecl ')' tNL StatementsNl_opt tEND tPROPERTY
+    | Storage_opt tPROPERTY tSET tIdentifier '(' ArgumentDecl ')' StSep StatementsNl_opt tEND tPROPERTY
                                     { $$ = new_function_decl(ctx, $4, FUNC_PROPSET, $1, $6, $9); CHECK_ERROR; }
 
 FunctionDecl
-    : Storage_opt tSUB Identifier ArgumentsDecl_opt tNL StatementsNl_opt tEND tSUB
+    : Storage_opt tSUB Identifier ArgumentsDecl_opt StSep StatementsNl_opt tEND tSUB
                                     { $$ = new_function_decl(ctx, $3, FUNC_SUB, $1, $4, $6); CHECK_ERROR; }
-    | Storage_opt tFUNCTION Identifier ArgumentsDecl_opt tNL StatementsNl_opt tEND tFUNCTION
+    | Storage_opt tFUNCTION Identifier ArgumentsDecl_opt StSep StatementsNl_opt tEND tFUNCTION
                                     { $$ = new_function_decl(ctx, $3, FUNC_FUNCTION, $1, $4, $6); CHECK_ERROR; }
 
 Storage_opt
@@ -448,10 +443,12 @@ Identifier
     : tIdentifier    { $$ = $1; }
     | tPROPERTY      { $$ = propertyW; }
 
-/* Some statements accept both new line and ':' as a separator */
+/* Most statements accept both new line and ':' as separators */
 StSep
     : tNL
     | ':'
+    | tNL StSep
+    | ':' StSep
 
 %%
 

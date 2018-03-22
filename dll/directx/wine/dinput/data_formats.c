@@ -16,15 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#if 0
+#pragma makedep implib
+#endif
 
 #include <stdarg.h>
 
-#include <windef.h>
-#include <winbase.h>
-#include <dinput.h>
+#include "windef.h"
+#include "dinput.h"
 
 #define numObjects(x) (sizeof(x) / sizeof(x[0]))
 

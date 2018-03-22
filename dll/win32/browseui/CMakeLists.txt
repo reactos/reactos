@@ -45,7 +45,7 @@ add_library(browseui SHARED
 
 set_module_type(browseui win32dll UNICODE)
 target_link_libraries(browseui shellbars atlnew uuid wine)
-add_importlibs(browseui shlwapi shell32 comctl32 gdi32 ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(browseui uxtheme shlwapi shell32 comctl32 gdi32 ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(browseui precomp.h SOURCE)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
 

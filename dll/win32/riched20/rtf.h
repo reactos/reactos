@@ -1,6 +1,16 @@
 #ifndef _RTF
 #define _RTF
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "richedit.h"
+
+
 /*
  * rtf.h - RTF document processing stuff.  Release 1.10.
  */

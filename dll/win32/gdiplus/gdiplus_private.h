@@ -22,25 +22,18 @@
 #include <math.h>
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "windef.h"
+#include "wingdi.h"
+#include "winbase.h"
+#include "winuser.h"
 
-#define NONAMELESSUNION
-#define COBJMACROS
+#include "objbase.h"
+#include "ocidl.h"
+#include "wincodecsdk.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <objbase.h>
-#include <wincodecsdk.h>
-#include <gdiplus.h>
-
-#include <wine/unicode.h>
-#include <wine/list.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
+#include "gdiplus.h"
 
 #define GP_DEFAULT_PENSTYLE (PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT | PS_JOIN_MITER)
 #define MAX_ARC_PTS (13)
@@ -57,25 +50,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 #define GIF_DISPOSE_RESTORE_TO_BKGND 2
 #define GIF_DISPOSE_RESTORE_TO_PREV 3
 
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
 
 COLORREF ARGB2COLORREF(ARGB color) DECLSPEC_HIDDEN;
 HBITMAP ARGB2BMP(ARGB color) DECLSPEC_HIDDEN;
@@ -129,6 +103,7 @@ extern GpStatus METAFILE_DrawImagePointsRect(GpMetafile* metafile, GpImage *imag
 extern GpStatus METAFILE_AddSimpleProperty(GpMetafile *metafile, SHORT prop, SHORT val) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_DrawPath(GpMetafile *metafile, GpPen *pen, GpPath *path) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_FillPath(GpMetafile *metafile, GpBrush *brush, GpPath *path) DECLSPEC_HIDDEN;
+extern void METAFILE_Free(GpMetafile *metafile) DECLSPEC_HIDDEN;
 
 extern void calc_curve_bezier(const GpPointF *pts, REAL tension, REAL *x1,
     REAL *y1, REAL *x2, REAL *y2) DECLSPEC_HIDDEN;
@@ -147,7 +122,7 @@ extern GpStatus trace_path(GpGraphics *graphics, GpPath *path) DECLSPEC_HIDDEN;
 typedef struct region_element region_element;
 extern void delete_element(region_element *element) DECLSPEC_HIDDEN;
 
-extern GpStatus get_hatch_data(HatchStyle hatchstyle, const char **result) DECLSPEC_HIDDEN;
+extern GpStatus get_hatch_data(GpHatchStyle hatchstyle, const char **result) DECLSPEC_HIDDEN;
 
 static inline INT gdip_round(REAL x)
 {
@@ -270,6 +245,7 @@ struct GpGraphics{
     INT origin_x, origin_y;
     INT gdi_transform_acquire_count, gdi_transform_save;
     GpMatrix gdi_transform;
+    HRGN gdi_clip;
     /* For giving the caller an HDC when we technically can't: */
     HBITMAP temp_hbitmap;
     int temp_hbitmap_width;
@@ -284,7 +260,7 @@ struct GpBrush{
 
 struct GpHatch{
     GpBrush brush;
-    HatchStyle hatchstyle;
+    GpHatchStyle hatchstyle;
     ARGB forecol;
     ARGB backcol;
 };
@@ -378,6 +354,38 @@ struct GpImage{
     LONG busy;
 };
 
+#define EmfPlusObjectTableSize 64
+
+typedef enum EmfPlusObjectType
+{
+    ObjectTypeInvalid,
+    ObjectTypeBrush,
+    ObjectTypePen,
+    ObjectTypePath,
+    ObjectTypeRegion,
+    ObjectTypeImage,
+    ObjectTypeFont,
+    ObjectTypeStringFormat,
+    ObjectTypeImageAttributes,
+    ObjectTypeCustomLineCap,
+    ObjectTypeMax = ObjectTypeCustomLineCap,
+} EmfPlusObjectType;
+
+/* Deserialized EmfPlusObject record. */
+struct emfplus_object {
+    EmfPlusObjectType type;
+    union {
+        GpBrush *brush;
+        GpPen *pen;
+        GpPath *path;
+        GpRegion *region;
+        GpImage *image;
+        GpFont *font;
+        GpImageAttributes *image_attributes;
+        void *object;
+    } u;
+};
+
 struct GpMetafile{
     GpImage image;
     GpRectF bounds;
@@ -411,6 +419,7 @@ struct GpMetafile{
     GpRegion *base_clip; /* clip region in device space for all metafile output */
     GpRegion *clip; /* clip region within the metafile */
     struct list containers;
+    struct emfplus_object objtable[EmfPlusObjectTableSize];
 };
 
 struct GpBitmap{
@@ -454,6 +463,12 @@ struct color_remap_table{
     ColorMap *colormap;
 };
 
+enum imageattr_noop{
+    IMAGEATTR_NOOP_UNDEFINED,
+    IMAGEATTR_NOOP_SET,
+    IMAGEATTR_NOOP_CLEAR,
+};
+
 struct GpImageAttributes{
     WrapMode wrap;
     ARGB outside_color;
@@ -463,6 +478,7 @@ struct GpImageAttributes{
     struct color_remap_table colorremaptables[ColorAdjustTypeCount];
     BOOL gamma_enabled[ColorAdjustTypeCount];
     REAL gamma[ColorAdjustTypeCount];
+    enum imageattr_noop noop[ColorAdjustTypeCount];
 };
 
 struct GpFont{
@@ -535,6 +551,30 @@ struct GpRegion{
     region_element node;
 };
 
+struct memory_buffer
+{
+    const BYTE *buffer;
+    INT size, pos;
+};
+
+static inline void init_memory_buffer(struct memory_buffer *mbuf, const BYTE *buffer, INT size)
+{
+    mbuf->buffer = buffer;
+    mbuf->size = size;
+    mbuf->pos = 0;
+}
+
+static inline const void *buffer_read(struct memory_buffer *mbuf, INT size)
+{
+    if (mbuf->size - mbuf->pos >= size)
+    {
+        const void *data = mbuf->buffer + mbuf->pos;
+        mbuf->pos += size;
+        return data;
+    }
+    return NULL;
+}
+
 typedef GpStatus (*gdip_format_string_callback)(HDC hdc,
     GDIPCONST WCHAR *string, INT index, INT length, GDIPCONST GpFont *font,
     GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
@@ -561,4 +601,4 @@ static inline void image_unlock(GpImage *image, BOOL unlock)
     if (unlock) image->busy = 0;
 }
 
-#endif /* __WINE_GP_PRIVATE_H_ */
+#endif

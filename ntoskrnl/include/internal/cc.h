@@ -40,6 +40,30 @@
 // Global Cc Data
 //
 extern ULONG CcRosTraceLevel;
+extern LIST_ENTRY DirtyVacbListHead;
+extern ULONG CcDirtyPageThreshold;
+extern ULONG CcTotalDirtyPages;
+extern LIST_ENTRY CcDeferredWrites;
+extern KSPIN_LOCK CcDeferredWriteSpinLock;
+extern ULONG CcNumberWorkerThreads;
+extern LIST_ENTRY CcIdleWorkerThreadList;
+extern LIST_ENTRY CcExpressWorkQueue;
+extern LIST_ENTRY CcRegularWorkQueue;
+extern LIST_ENTRY CcPostTickWorkQueue;
+extern NPAGED_LOOKASIDE_LIST CcTwilightLookasideList;
+extern LARGE_INTEGER CcIdleDelay;
+
+//
+// Counters
+//
+extern ULONG CcLazyWritePages;
+extern ULONG CcLazyWriteIos;
+extern ULONG CcMapDataWait;
+extern ULONG CcMapDataNoWait;
+extern ULONG CcPinReadWait;
+extern ULONG CcPinReadNoWait;
+extern ULONG CcDataPages;
+extern ULONG CcDataFlushes;
 
 typedef struct _PF_SCENARIO_ID
 {
@@ -144,20 +168,33 @@ typedef struct _PFSN_PREFETCHER_GLOBALS
 
 typedef struct _ROS_SHARED_CACHE_MAP
 {
-    LIST_ENTRY CacheMapVacbListHead;
-    ULONG TimeStamp;
-    PFILE_OBJECT FileObject;
-    LARGE_INTEGER SectionSize;
+    CSHORT NodeTypeCode;
+    CSHORT NodeByteSize;
+    ULONG OpenCount;
     LARGE_INTEGER FileSize;
-    BOOLEAN PinAccess;
+    LARGE_INTEGER SectionSize;
+    PFILE_OBJECT FileObject;
+    ULONG DirtyPages;
+    LIST_ENTRY SharedCacheMapLinks;
+    ULONG Flags;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
+    LIST_ENTRY PrivateList;
+    ULONG DirtyPageThreshold;
+    PRIVATE_CACHE_MAP PrivateCacheMap;
+
+    /* ROS specific */
+    LIST_ENTRY CacheMapVacbListHead;
+    ULONG TimeStamp;
+    BOOLEAN PinAccess;
     KSPIN_LOCK CacheMapLock;
-    ULONG OpenCount;
 #if DBG
     BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
 } ROS_SHARED_CACHE_MAP, *PROS_SHARED_CACHE_MAP;
+
+#define READAHEAD_DISABLED 0x1
+#define WRITEBEHIND_DISABLED 0x2
 
 typedef struct _ROS_VACB
 {
@@ -203,6 +240,55 @@ typedef struct _INTERNAL_BCB
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
+typedef struct _LAZY_WRITER
+{
+    LIST_ENTRY WorkQueue;
+    KDPC ScanDpc;
+    KTIMER ScanTimer;
+    BOOLEAN ScanActive;
+    BOOLEAN OtherWork;
+    BOOLEAN PendingTeardown;
+} LAZY_WRITER, *PLAZY_WRITER;
+
+typedef struct _WORK_QUEUE_ENTRY
+{
+    LIST_ENTRY WorkQueueLinks;
+    union
+    {
+        struct
+        {
+            FILE_OBJECT *FileObject;
+        } Read;
+        struct
+        {
+            SHARED_CACHE_MAP *SharedCacheMap;
+        } Write;
+        struct
+        {
+            KEVENT *Event;
+        } Event;
+        struct
+        {
+            unsigned long Reason;
+        } Notification;
+    } Parameters;
+    unsigned char Function;
+} WORK_QUEUE_ENTRY, *PWORK_QUEUE_ENTRY;
+
+typedef enum _WORK_QUEUE_FUNCTIONS
+{
+    ReadAhead = 1,
+    WriteBehind = 2,
+    LazyWrite = 3,
+    SetDone = 4,
+} WORK_QUEUE_FUNCTIONS, *PWORK_QUEUE_FUNCTIONS;
+
+extern LAZY_WRITER LazyWriter;
+
+#define NODE_TYPE_DEFERRED_WRITE 0x02FC
+#define NODE_TYPE_PRIVATE_MAP    0x02FE
+#define NODE_TYPE_SHARED_MAP     0x02FF
+
 VOID
 NTAPI
 CcPfInitializePrefetcher(
@@ -243,6 +329,10 @@ VOID
 NTAPI
 CcInitView(VOID);
 
+VOID
+NTAPI
+CcShutdownLazyWriter(VOID);
+
 NTSTATUS
 NTAPI
 CcReadVirtualAddress(PROS_VACB Vacb);
@@ -276,17 +366,29 @@ CcInitCacheZeroPage(VOID);
 
 NTSTATUS
 NTAPI
-CcRosMarkDirtyVacb(
+CcRosMarkDirtyFile(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset
 );
+
+VOID
+NTAPI
+CcRosMarkDirtyVacb(
+    PROS_VACB Vacb);
+
+VOID
+NTAPI
+CcRosUnmarkDirtyVacb(
+    PROS_VACB Vacb,
+    BOOLEAN LockViews);
 
 NTSTATUS
 NTAPI
 CcRosFlushDirtyPages(
     ULONG Target,
     PULONG Count,
-    BOOLEAN Wait
+    BOOLEAN Wait,
+    BOOLEAN CalledFromLazy
 );
 
 VOID
@@ -337,9 +439,36 @@ CcRosReleaseFileCache(
     PFILE_OBJECT FileObject
 );
 
-NTSTATUS
+VOID
 NTAPI
-CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
+CcShutdownSystem(VOID);
+
+VOID
+NTAPI
+CcWorkerThread(PVOID Parameter);
+
+VOID
+NTAPI
+CcScanDpc(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2);
+
+VOID
+CcScheduleLazyWriteScan(BOOLEAN NoDelay);
+
+VOID
+CcPostDeferredWrites(VOID);
+
+VOID
+CcPostWorkQueue(
+    IN PWORK_QUEUE_ENTRY WorkItem,
+    IN PLIST_ENTRY WorkQueue);
+
+VOID
+CcPerformReadAhead(
+    IN PFILE_OBJECT FileObject);
 
 FORCEINLINE
 NTSTATUS
@@ -388,3 +517,26 @@ IsPointInRange(
 {
     return DoRangesIntersect(Offset1, Length1, Point, 1);
 }
+
+#define CcBugCheck(A, B, C) KeBugCheckEx(CACHE_MANAGER, BugCheckFileId | ((ULONG)(__LINE__)), A, B, C)
+
+#if DBG
+#define CcRosVacbIncRefCount(vacb) CcRosVacbIncRefCount_(vacb,__FILE__,__LINE__)
+#define CcRosVacbDecRefCount(vacb) CcRosVacbDecRefCount_(vacb,__FILE__,__LINE__)
+
+VOID
+CcRosVacbIncRefCount_(
+    PROS_VACB vacb,
+    PCSTR file,
+    INT line);
+
+VOID
+CcRosVacbDecRefCount_(
+    PROS_VACB vacb,
+    PCSTR file,
+    INT line);
+
+#else
+#define CcRosVacbIncRefCount(vacb) (++((vacb)->ReferenceCount))
+#define CcRosVacbDecRefCount(vacb) (--((vacb)->ReferenceCount))
+#endif

@@ -28,7 +28,10 @@ PsReferenceProcessFilePointer(IN PEPROCESS Process,
     PAGED_CODE();
 
     /* Lock the process */
-    ExAcquireRundownProtection(&Process->RundownProtect);
+    if (!ExAcquireRundownProtection(&Process->RundownProtect))
+    {
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
 
     /* Get the section */
     Section = Process->SectionObject;
@@ -2415,6 +2418,19 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             {
                 PspClearCrossThreadFlag(Thread, CT_BREAK_ON_TERMINATION_BIT);
             }
+            break;
+
+        case ThreadHideFromDebugger:
+
+            /* Check buffer length */
+            if (ThreadInformationLength != 0)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Set the flag */
+            PspSetCrossThreadFlag(Thread, CT_HIDE_FROM_DEBUGGER_BIT);
             break;
 
         default:

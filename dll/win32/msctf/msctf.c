@@ -18,10 +18,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+
+#include "wine/debug.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "shlguid.h"
+#include "comcat.h"
+#include "olectl.h"
+#include "rpcproxy.h"
+#include "msctf.h"
+#include "inputscope.h"
+
 #include "msctf_internal.h"
 
-#include <rpcproxy.h>
-#include <inputscope.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 static HINSTANCE MSCTF_hinstance;
 

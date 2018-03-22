@@ -308,20 +308,17 @@ static void test_capture(IAudioClient *ac, HANDLE handle, WAVEFORMATEX *wfx)
           hr==S_OK ? (UINT)pos : -1, pad, flags, frames);
 
     if(hr == S_OK){
-        /* The discontinuity is reported here, but is this an old or new packet? */
-        todo_wine_if(!(flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)) {
-            /* FIXME: Some drivers fail */
-            ok(flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY, "expect DISCONTINUITY %x\n", flags);
+        if(flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY){
             /* Native's position is one period further than what we read.
              * Perhaps that's precisely the meaning of DATA_DISCONTINUITY:
              * signal when the position jump left a gap. */
-            ok(pos == sum + frames, "Position %u gap %d\n", (UINT)pos, (UINT)pos - sum);
+            ok(pos == sum + frames, "Position %u last %u frames %u\n", (UINT)pos, sum, frames);
+            sum = pos;
+        }else{ /* win10 */
+            ok(pos == sum, "Position %u last %u frames %u\n", (UINT)pos, sum, frames);
         }
 
         ok(pad == next, "GCP %u vs. BufferSize %u\n", (UINT32)pad, next);
-
-        if(flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)
-            sum = pos;
     }
 
     hr = IAudioCaptureClient_ReleaseBuffer(acc, frames);
@@ -416,9 +413,9 @@ static void test_capture(IAudioClient *ac, HANDLE handle, WAVEFORMATEX *wfx)
     hr = IAudioCaptureClient_GetBuffer(acc, &data, &frames, &flags, &pos, &qpc);
     ok(hr == S_OK, "Valid IAudioCaptureClient_GetBuffer returns %08x\n", hr);
     trace("Running position %d pad %u flags %x, amount of frames locked: %u\n",
-          hr==S_OK ? (UINT)pos : -1, pad, flags, frames);
+          SUCCEEDED(hr) ? (UINT)pos : -1, pad, flags, frames);
 
-    if(hr == S_OK){
+    if(SUCCEEDED(hr)){
         /* Some w7 machines signal DATA_DISCONTINUITY here following the
          * previous AUDCLNT_S_BUFFER_EMPTY, others not.  What logic? */
         ok(pos >= sum, "Position %u gap %d\n", (UINT)pos, (UINT)pos - sum);
@@ -556,8 +553,7 @@ static void test_audioclient(void)
     if (hr != S_OK)
     {
         skip("Cannot initialize %08x, remainder of tests is useless\n", hr);
-        CoTaskMemFree(pwfx);
-        return;
+        goto cleanup;
     }
 
     hr = IAudioClient_GetStreamLatency(ac, NULL);
@@ -592,6 +588,7 @@ static void test_audioclient(void)
 
     test_capture(ac, handle, pwfx);
 
+cleanup:
     IAudioClient_Release(ac);
     CloseHandle(handle);
     CoTaskMemFree(pwfx);

@@ -22,6 +22,10 @@
 #ifndef __DICTIONARY_H__
 #define __DICTIONARY_H__
 
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+
 struct dictionary;
 
 /* Returns whether key a is less than, equal to, or greater than key b, in

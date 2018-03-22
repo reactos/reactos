@@ -775,17 +775,6 @@ NTAPI
 VfatReleaseFromLazyWrite(
     IN PVOID Context);
 
-BOOLEAN
-NTAPI
-VfatAcquireForReadAhead(
-    IN PVOID Context,
-    IN BOOLEAN Wait);
-
-VOID
-NTAPI
-VfatReleaseFromReadAhead(
-    IN PVOID Context);
-
 /* fat.c */
 
 NTSTATUS

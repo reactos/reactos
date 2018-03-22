@@ -872,6 +872,8 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     UNICODE_STRING KeyName;
     PCMHIVE SystemHive = NULL;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
+    BOOLEAN Success;
+
     PAGED_CODE();
 
     /* Setup the ansi string */
@@ -918,8 +920,9 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Set the hive filename */
-    Status = RtlCreateUnicodeString(&SystemHive->FileFullPath, L"\\SystemRoot\\System32\\Config\\SYSTEM");
-    if (!NT_SUCCESS(Status))
+    Success = RtlCreateUnicodeString(&SystemHive->FileFullPath,
+                                     L"\\SystemRoot\\System32\\Config\\SYSTEM");
+    if (!Success)
     {
         return FALSE;
     }

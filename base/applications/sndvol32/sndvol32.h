@@ -5,6 +5,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
 #include <winuser.h>
 #include <mmsystem.h>
 #include <commctrl.h>
@@ -13,6 +14,20 @@
 
 #include "resources.h"
 
+#define VOLUME_STEPS       500
+#define VOLUME_TICKS         5
+#define VOLUME_PAGE_SIZE   100
+#define BALANCE_STEPS       64
+#define BALANCE_TICKS        1
+#define BALANCE_PAGE_SIZE   12
+
+typedef enum _WINDOW_MODE
+{
+    NORMAL_MODE,
+    SMALL_MODE,
+    TRAY_MODE
+} WINDOW_MODE, *PWINDOW_MODE;
+
 typedef struct _MIXER_WINDOW
 {
   HWND hWnd;
@@ -20,9 +35,12 @@ typedef struct _MIXER_WINDOW
   struct _SND_MIXER *Mixer;
   UINT SelectedLine;
   UINT WindowCount;
-  HWND * Window;
+  HWND *Window;
 
-
+    WINDOW_MODE Mode;
+    UINT MixerId;
+    RECT rect;
+    HFONT hFont;
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
@@ -106,7 +124,7 @@ typedef BOOL (CALLBACK *PFNSNDMIXENUMLINES)(PSND_MIXER Mixer, LPMIXERLINE Line, 
 typedef BOOL (CALLBACK *PFNSNDMIXENUMCONNECTIONS)(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Context);
 typedef BOOL (CALLBACK *PFNSNDMIXENUMPRODUCTS)(PSND_MIXER Mixer, UINT Id, LPCTSTR ProductName, PVOID Context);
 
-PSND_MIXER SndMixerCreate(HWND hWndNotification);
+PSND_MIXER SndMixerCreate(HWND hWndNotification, UINT MixerId);
 VOID SndMixerDestroy(PSND_MIXER Mixer);
 VOID SndMixerClose(PSND_MIXER Mixer);
 BOOL SndMixerSelect(PSND_MIXER Mixer, UINT MixerId);
@@ -163,5 +181,15 @@ WriteLineConfig(IN LPTSTR szDeviceName,
                 IN LPTSTR szLineName,
                 IN PSNDVOL_REG_LINESTATE LineState,
                 IN DWORD cbSize);
+
+/* tray.c */
+
+INT_PTR
+CALLBACK
+TrayDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam);
 
 #endif /* __SNDVOL32_H */

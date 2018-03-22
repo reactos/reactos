@@ -18,17 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdio.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include <stdio.h>
 
 #define COBJMACROS
 
-#include <wine/test.h>
-#include <objbase.h>
-#include <bits.h>
+#include "wine/test.h"
+#include "bits.h"
 
 /* Globals used by many tests */
 static const WCHAR test_displayNameA[] = {'T','e','s','t','A', 0};

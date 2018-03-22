@@ -112,9 +112,17 @@ add_dependencies(bootmgfw asm bugcodes)
 
 list(APPEND ROSLOAD_BASE_SOURCE
      app/rosload/rosload.c
+     app/rosload/roslogo.c
      )
 
-add_executable(rosload ${ROSLOAD_BASE_SOURCE})
+if(ARCH STREQUAL "i386")
+    list(APPEND ROSLOAD_ASM_SOURCE
+         app/rosload/i386/osxfera.s
+         )
+endif()
+
+add_asm_files(rosload_asm ${ROSLOAD_ASM_SOURCE})
+add_executable(rosload ${ROSLOAD_BASE_SOURCE} ${rosload_asm})
 set_target_properties(rosload PROPERTIES SUFFIX ".efi")
 
 if(MSVC)

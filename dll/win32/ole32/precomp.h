@@ -1,7 +1,8 @@
+
 #ifndef _OLE32_PCH_
 #define _OLE32_PCH_
 
-#include <config.h>
+#include <wine/config.h>
 
 #include <assert.h>
 #include <stdarg.h>
@@ -36,4 +37,4 @@
 #include "enumx.h"
 #include "moniker.h"
 
-#endif /* _OLE32_PCH_ */
+#endif /* !_OLE32_PCH_ */

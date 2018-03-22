@@ -14,6 +14,7 @@ BEGIN
     CHECKBOX "640x480 pantaila erresoluzioarekin exekutatu", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "Ezgaitu gai bisualak", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     PUSHBUTTON "Konpatibilitate moduan editatu...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
+    LTEXT "",IDC_ENABLED_LAYERS,7,185,210,21
     CONTROL "<A> Programen konpatibilitateari buruz gehiago</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END
 
@@ -33,7 +34,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TABTITLE "Compatibility"
+    IDS_COMPAT_TITLE "Konpatibilitatea"
     IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
     IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
     IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"

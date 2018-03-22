@@ -15,14 +15,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
+#define WIN32_LEAN_AND_MEAN
 #include <stdio.h>
 
-#define WIN32_LEAN_AND_MEAN
 #define COBJMACROS
-#include <wine/test.h>
+
+#ifdef __REACTOS__
 #include <objbase.h>
-#include <netcfgx.h>
+#endif
+#include "netcfgx.h"
+#include "wine/test.h"
 
 static void create_configuration(void)
 {

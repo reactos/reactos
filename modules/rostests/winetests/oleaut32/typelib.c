@@ -19,10 +19,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
 
-#include <winreg.h>
-#include <test_reg.h>
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include <wine/test.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <assert.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "oleauto.h"
+#include "ocidl.h"
+#include "shlwapi.h"
+#include "tmarshal.h"
+#include "olectl.h"
+
+#include "test_reg.h"
+#include "test_tlb.h"
 
 #define expect_eq(expr, value, type, format) { type _ret = (expr); ok((value) == _ret, #expr " expected " format " got " format "\n", value, _ret); }
 #define expect_int(expr, value) expect_eq(expr, (int)(value), int, "%d")
@@ -73,6 +91,97 @@ static WCHAR wszGUID[] = {'G','U','I','D',0};
 static WCHAR wszguid[] = {'g','u','i','d',0};
 
 static const BOOL is_win64 = sizeof(void *) > sizeof(int);
+
+#ifdef __i386__
+static const BOOL abi_supports_stdcall = TRUE;
+#else
+static const BOOL abi_supports_stdcall = FALSE;
+#endif
+
+static HRESULT WINAPI collection_QueryInterface(ICollection *iface, REFIID riid, void **ret)
+{
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IDispatch) ||
+        IsEqualIID(riid, &IID_ICollection))
+    {
+        *ret = iface;
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI collection_AddRef(ICollection *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI collection_Release(ICollection *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI collection_GetTypeInfoCount(ICollection *iface, UINT *cnt)
+{
+    ok(0, "unexpected call\n");
+    *cnt = 0;
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI collection_GetTypeInfo(ICollection *iface, UINT index, LCID lcid, ITypeInfo **ti)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI collection_GetIDsOfNames(ICollection *iface, REFIID riid, LPOLESTR *names,
+    UINT cnt, LCID lcid, DISPID *dispid)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI collection_Invoke(ICollection *iface, DISPID dispid, REFIID riid,
+    LCID lcid, WORD flags, DISPPARAMS *dispparams, VARIANT *res, EXCEPINFO *ei, UINT *argerr)
+{
+    if(dispid != DISPID_VALUE) {
+        ok(0, "unexpected call\n");
+        return E_NOTIMPL;
+    }
+
+    ok(flags == (DISPATCH_METHOD|DISPATCH_PROPERTYGET), "flags = %x\n", flags);
+    ok(dispparams != NULL, "dispparams == NULL\n");
+    ok(!dispparams->rgdispidNamedArgs, "dispparams->rgdispidNamedArgs != NULL\n");
+    ok(dispparams->cArgs == 1, "dispparams->cArgs = %d\n", dispparams->cArgs);
+    ok(!dispparams->cNamedArgs, "dispparams->cNamedArgs = %d\n", dispparams->cNamedArgs);
+    ok(V_VT(dispparams->rgvarg) == VT_I4, "V_VT(dispparams->rgvarg) = %d\n", V_VT(dispparams->rgvarg));
+    ok(V_I4(dispparams->rgvarg) == 7, "V_I4(dispparams->rgvarg) = %d\n", V_I4(dispparams->rgvarg));
+    ok(res != NULL, "res == NULL\n");
+    ok(V_VT(res) == VT_EMPTY, "V_VT(res) = %d\n", V_VT(res));
+
+    V_VT(res) = VT_I4;
+    V_I4(res) = 15;
+    return S_OK;
+}
+
+static HRESULT WINAPI collection_Item(ICollection *iface, int i, int *p)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static const ICollectionVtbl collectionvtbl = {
+    collection_QueryInterface,
+    collection_AddRef,
+    collection_Release,
+    collection_GetTypeInfoCount,
+    collection_GetTypeInfo,
+    collection_GetIDsOfNames,
+    collection_Invoke,
+    collection_Item
+};
+
+static ICollection collection = { &collectionvtbl };
 
 static HRESULT WINAPI invoketest_QueryInterface(IInvokeTest *iface, REFIID riid, void **ret)
 {
@@ -145,6 +254,13 @@ static HRESULT WINAPI invoketest_testfunc(IInvokeTest *iface, int i, int *p)
     return S_OK;
 }
 
+static HRESULT WINAPI invoketest_testget(IInvokeTest *iface, ICollection **p)
+{
+    *p = &collection;
+    ICollection_AddRef(&collection);
+    return S_OK;
+}
+
 static const IInvokeTestVtbl invoketestvtbl = {
     invoketest_QueryInterface,
     invoketest_AddRef,
@@ -156,7 +272,8 @@ static const IInvokeTestVtbl invoketestvtbl = {
     invoketest_get_test,
     invoketest_putref_testprop,
     invoketest_putref_testprop2,
-    invoketest_testfunc
+    invoketest_testfunc,
+    invoketest_testget
 };
 
 static IInvokeTest invoketest = { &invoketestvtbl };
@@ -944,6 +1061,22 @@ static void test_TypeInfo(void)
     ok(V_VT(&res) == VT_I4, "got %d\n", V_VT(&res));
     ok(V_I4(&res) == 1, "got %d\n", V_I4(&res));
 
+    /* call propget with DISPATCH_METHOD|DISPATCH_PROPERTYGET flags */
+    V_VT(&args[0]) = VT_I4;
+    V_I4(&args[0]) = 7;
+
+    dispparams.cArgs = 1;
+    dispparams.rgvarg = args;
+
+    i = 0;
+    V_VT(&res) = VT_EMPTY;
+    V_I4(&res) = 0;
+    hr = ITypeInfo_Invoke(pTypeInfo, &invoketest, 4, DISPATCH_METHOD|DISPATCH_PROPERTYGET, &dispparams, &res, NULL, &i);
+    ok(hr == S_OK, "got 0x%08x, %d\n", hr, i);
+    ok(V_VT(&res) == VT_I4, "got %d\n", V_VT(&res));
+    ok(V_I4(&res) == 15, "got %d\n", V_I4(&res));
+
+
     /* DISPATCH_PROPERTYPUTREF */
     l = 1;
     V_VT(&args[0]) = VT_I4|VT_BYREF;
@@ -1151,7 +1284,7 @@ static void test_DispCallFunc(void)
     ok( V_UI4(&result) == 4321, "wrong result %u\n", V_UI4(&result) );
 
     /* the function checks the argument sizes for stdcall */
-    if (!is_win64)  /* no stdcall on 64-bit */
+    if (abi_supports_stdcall)
     {
         res = DispCallFunc( NULL, (ULONG_PTR)stdcall_func, CC_STDCALL, VT_UI4, 0, types, pargs, &result );
         ok( res == DISP_E_BADCALLEE, "DispCallFunc wrong error %x\n", res );
@@ -1939,8 +2072,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
 
     hres = ITypeInfo_GetTypeAttr(ti, &typeattr);
     ok(hres == S_OK, "got %08x\n", hres);
-    ok(typeattr->cbSizeVft == 3 * ptr_size || broken(sys == SYS_WIN32 && typeattr->cbSizeVft == 24) /* xp64 */,
-            "retrieved IUnknown gave wrong cbSizeVft: %u\n", typeattr->cbSizeVft);
+    ok(typeattr->cbSizeVft == 3 * ptr_size, "retrieved IUnknown gave wrong cbSizeVft: %u\n", typeattr->cbSizeVft);
     ITypeInfo_ReleaseTypeAttr(ti, typeattr);
 
     ITypeInfo_Release(ti);
@@ -1983,8 +2115,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 0, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 3 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 24) /* xp64 */,
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 3 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_BSTR, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2043,8 +2174,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 4 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 28) /* xp64 */,
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 4 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2086,8 +2216,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 0, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 4 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 28), /* xp64 */
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 4 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2117,8 +2246,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 7 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 40) /* xp64 */,
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 7 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2149,8 +2277,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 7 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 40) /* xp64 */,
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 7 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2185,8 +2312,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 6 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 36) /* xp64 */,
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 6 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2226,8 +2352,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 2, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 6 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 36) /* xp64 */,
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 6 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2280,8 +2405,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 2, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 6 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 36) /* xp64 */,
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 6 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2338,8 +2462,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 8 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 44), /* xp64 */
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 8 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2382,8 +2505,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 9 * ptr_size || broken(sys == SYS_WIN32 && pfuncdesc->oVft == 48), /* xp64 */
-            "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 9 * ptr_size, "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VARIANT, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -2702,8 +2824,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(typeattr->cFuncs == 1, "cFuncs = %d\n", typeattr->cFuncs);
     ok(typeattr->cVars == 0, "cVars = %d\n", typeattr->cVars);
     ok(typeattr->cImplTypes == 1, "cImplTypes = %d\n", typeattr->cImplTypes);
-    ok(typeattr->cbSizeVft == 8 * ptr_size || broken(sys == SYS_WIN32 && typeattr->cbSizeVft == 7 * sizeof(void *) + 4), /* xp64 */
-       "cbSizeVft = %d\n", typeattr->cbSizeVft);
+    ok(typeattr->cbSizeVft == 8 * ptr_size, "cbSizeVft = %d\n", typeattr->cbSizeVft);
     ok(typeattr->cbAlignment == 4, "cbAlignment = %d\n", typeattr->cbAlignment);
     ok(typeattr->wTypeFlags == (TYPEFLAG_FDISPATCHABLE|TYPEFLAG_FDUAL), "wTypeFlags = %d\n", typeattr->wTypeFlags);
     ok(typeattr->wMajorVerNum == 0, "wMajorVerNum = %d\n", typeattr->wMajorVerNum);
@@ -2747,8 +2868,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(typeattr->cFuncs == 13, "cFuncs = %d\n", typeattr->cFuncs);
     ok(typeattr->cVars == 0, "cVars = %d\n", typeattr->cVars);
     ok(typeattr->cImplTypes == 1, "cImplTypes = %d\n", typeattr->cImplTypes);
-    ok(typeattr->cbSizeVft == 16 * ptr_size || broken(sys == SYS_WIN32 && typeattr->cbSizeVft == 3 * sizeof(void *) + 52), /* xp64 */
-       "cbSizeVft = %d\n", typeattr->cbSizeVft);
+    ok(typeattr->cbSizeVft == 16 * ptr_size, "cbSizeVft = %d\n", typeattr->cbSizeVft);
     ok(typeattr->cbAlignment == 4, "cbAlignment = %d\n", typeattr->cbAlignment);
     ok(typeattr->wTypeFlags == 0, "wTypeFlags = %d\n", typeattr->wTypeFlags);
     ok(typeattr->wMajorVerNum == 0, "wMajorVerNum = %d\n", typeattr->wMajorVerNum);
@@ -3022,8 +3142,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 0, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 4 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 4 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3047,8 +3166,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 0, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 5 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 5 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3072,8 +3190,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 2, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 6 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 6 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3132,8 +3249,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 2, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 7 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 7 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3179,8 +3295,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 8 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 8 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3217,8 +3332,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 9 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 9 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VARIANT, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3255,8 +3369,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 2, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 10 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 10 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3296,8 +3409,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 11 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 11 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3332,8 +3444,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 0, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 12 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 12 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_BSTR, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3364,8 +3475,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 13 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 13 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3398,8 +3508,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 14 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 14 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3430,8 +3539,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(pfuncdesc->oVft == 15 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == 15 * sizeof(void*), "got %d\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3492,8 +3600,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 0xffffaaa8 ||
-            pfuncdesc->oVft == 0x5550, "got %x\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == (short)(0xaaa8 * sizeof(void *) / ptr_size), "got %x\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3525,9 +3632,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(pfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", pfuncdesc->callconv);
     ok(pfuncdesc->cParams == 1, "got %d\n", pfuncdesc->cParams);
     ok(pfuncdesc->cParamsOpt == 0, "got %d\n", pfuncdesc->cParamsOpt);
-    ok(pfuncdesc->oVft == 0xffffaaac ||
-            pfuncdesc->oVft == 0xffffaab0 ||
-            pfuncdesc->oVft == 0x5558, "got %x\n", pfuncdesc->oVft);
+    ok(pfuncdesc->oVft == (short)((sys == SYS_WIN64 ? 0xaab0 : 0xaaac) * sizeof(void *) / ptr_size), "got %x\n", pfuncdesc->oVft);
     ok(pfuncdesc->cScodes == 0, "got %d\n", pfuncdesc->cScodes);
     ok(pfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", pfuncdesc->elemdescFunc.tdesc.vt);
     ok(pfuncdesc->wFuncFlags == 0, "got 0x%x\n", pfuncdesc->wFuncFlags);
@@ -3663,8 +3768,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ok(bindptr.lpfuncdesc->callconv == CC_STDCALL, "got 0x%x\n", bindptr.lpfuncdesc->callconv);
     ok(bindptr.lpfuncdesc->cParams == 8, "got %d\n", bindptr.lpfuncdesc->cParams);
     ok(bindptr.lpfuncdesc->cParamsOpt == 0, "got %d\n", bindptr.lpfuncdesc->cParamsOpt);
-    todo_wine_if(is_win64 && sys == SYS_WIN32)
-        ok(bindptr.lpfuncdesc->oVft == 6 * sizeof(void*), "got %x\n", bindptr.lpfuncdesc->oVft);
+    ok(bindptr.lpfuncdesc->oVft == 6 * sizeof(void*), "got %x\n", bindptr.lpfuncdesc->oVft);
     ok(bindptr.lpfuncdesc->cScodes == 0, "got %d\n", bindptr.lpfuncdesc->cScodes);
     ok(bindptr.lpfuncdesc->elemdescFunc.tdesc.vt == VT_VOID, "got %d\n", bindptr.lpfuncdesc->elemdescFunc.tdesc.vt);
     ok(bindptr.lpfuncdesc->wFuncFlags == FUNCFLAG_FRESTRICTED, "got 0x%x\n", bindptr.lpfuncdesc->wFuncFlags);
@@ -4720,9 +4824,7 @@ todo_wine /* widl generates broken typelib and typeattr just reflects that */
             expect_int(desc->callconv, fn_info->callconv);
             expect_int(desc->cParams, fn_info->cParams);
             expect_int(desc->cParamsOpt, fn_info->cParamsOpt);
-            ok( desc->oVft == fn_info->vtbl_index * sizeof(void*) ||
-                broken(desc->oVft == fn_info->vtbl_index * 4), /* xp64 */
-                "desc->oVft got %u\n", desc->oVft );
+            expect_int(desc->oVft, fn_info->vtbl_index * sizeof(void*));
             expect_int(desc->cScodes, fn_info->cScodes);
             expect_int(desc->wFuncFlags, fn_info->wFuncFlags);
             ole_check(ITypeInfo_GetNames(typeinfo, desc->memid, namesTab, 256, &cNames));
@@ -4868,7 +4970,7 @@ static void test_register_typelib(BOOL system_registration)
     {
         TYPEKIND kind;
         WORD flags;
-    } attrs[13] =
+    } attrs[] =
     {
         { TKIND_INTERFACE, 0 },
         { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE },
@@ -4881,6 +4983,7 @@ static void test_register_typelib(BOOL system_registration)
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
+        { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE },
         { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE },
         { TKIND_RECORD, 0 }
     };
@@ -4917,7 +5020,7 @@ static void test_register_typelib(BOOL system_registration)
     ok(hr == S_OK, "got %08x\n", hr);
 
     count = ITypeLib_GetTypeInfoCount(typelib);
-    ok(count == 13, "got %d\n", count);
+    ok(count == 14, "got %d\n", count);
 
     for(i = 0; i < count; i++)
     {
@@ -5872,9 +5975,7 @@ static void testTDA(ITypeLib *tl, struct _TDATest *TDATest,
 #endif
     }
 
-    ok(typeattr->cbSizeInstance == size ||
-            broken(TDATest->vt == VT_VARIANT && ptr_size != sizeof(void*) && typeattr->cbSizeInstance == sizeof(VARIANT)) /* winxp64 */,
-            "got wrong size for VT %u: 0x%x\n", TDATest->vt, typeattr->cbSizeInstance);
+    ok(typeattr->cbSizeInstance == size, "got wrong size for VT %u: 0x%x\n", TDATest->vt, typeattr->cbSizeInstance);
     ok(typeattr->cbAlignment == alignment, "got wrong alignment for VT %u: 0x%x\n", TDATest->vt, typeattr->cbAlignment);
     ok(typeattr->tdescAlias.vt == TDATest->vt, "got wrong VT for VT %u: 0x%x\n", TDATest->vt, typeattr->tdescAlias.vt);
 

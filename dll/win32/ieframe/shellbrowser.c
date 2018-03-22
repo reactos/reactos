@@ -19,9 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "ieframe.h"
-
 #include <assert.h>
+
+#include "ieframe.h"
+#include "exdispid.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
 static inline ShellBrowser *impl_from_IShellBrowser(IShellBrowser *iface)
 {

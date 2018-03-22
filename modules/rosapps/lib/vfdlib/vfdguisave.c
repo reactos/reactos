@@ -35,7 +35,11 @@
 //
 //	local functions
 //
+#ifndef __REACTOS__
 static INT CALLBACK SaveDialogProc(
+#else
+static INT_PTR CALLBACK SaveDialogProc(
+#endif
 	HWND			hDlg,
 	UINT			uMsg,
 	WPARAM			wParam,
@@ -119,7 +123,11 @@ DWORD GuiSaveParam(
 //
 // The dialog procedure
 //
+#ifndef __REACTOS__
 INT CALLBACK SaveDialogProc(
+#else
+INT_PTR CALLBACK SaveDialogProc(
+#endif
 	HWND			hDlg,
 	UINT			uMsg,
 	WPARAM			wParam,
@@ -187,7 +195,7 @@ void OnInit(
 {
 	//	Store parameters
 
-	SetWindowLong(hDlg, GWL_USERDATA, (ULONG)pParam);
+	SetWindowLongPtr(hDlg, GWLP_USERDATA, (ULONG_PTR)pParam);
 
 	//	clear the target existence flag
 
@@ -285,7 +293,7 @@ void OnTarget(
 	//
 	//	get the current image info
 	//
-	param = (PCSAVE_PARAM)GetWindowLong(hDlg, GWL_USERDATA);
+	param = (PCSAVE_PARAM)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 
 	if (_stricmp(param->ImageName, buf) == 0) {
 
@@ -461,7 +469,7 @@ DWORD OnOK(
 	BOOL			truncate;
 	DWORD			ret;
 
-	param = (PCSAVE_PARAM)GetWindowLong(hDlg, GWL_USERDATA);
+	param = (PCSAVE_PARAM)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 
 	if (!param) {
 		return ERROR_INVALID_FUNCTION;

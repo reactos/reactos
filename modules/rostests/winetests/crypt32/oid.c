@@ -17,8 +17,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdio.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winerror.h>
+#define CRYPT_OID_INFO_HAS_EXTRA_FIELDS
+#include <wincrypt.h>
+#include <winreg.h>
 
-#include "precomp.h"
+#include "wine/test.h"
+
 
 static BOOL (WINAPI *pCryptEnumOIDInfo)(DWORD,DWORD,void*,PFN_CRYPT_ENUM_OID_INFO);
 
@@ -28,6 +37,7 @@ struct OIDToAlgID
     LPCSTR oid;
     LPCSTR altOid;
     DWORD algID;
+    DWORD altAlgID;
 };
 
 static const struct OIDToAlgID oidToAlgID[] = {
@@ -64,6 +74,9 @@ static const struct OIDToAlgID oidToAlgID[] = {
  { szOID_OIWDIR_md2RSA, NULL, CALG_MD2 },
  { szOID_INFOSEC_mosaicUpdatedSig, NULL, CALG_SHA },
  { szOID_INFOSEC_mosaicKMandUpdSig, NULL, CALG_DSS_SIGN },
+ { szOID_NIST_sha256, NULL, CALG_SHA_256, -1 },
+ { szOID_NIST_sha384, NULL, CALG_SHA_384, -1 },
+ { szOID_NIST_sha512, NULL, CALG_SHA_512, -1 }
 };
 
 static const struct OIDToAlgID algIDToOID[] = {
@@ -96,10 +109,7 @@ static void testOIDToAlgID(void)
     for (i = 0; i < sizeof(oidToAlgID) / sizeof(oidToAlgID[0]); i++)
     {
         alg = CertOIDToAlgId(oidToAlgID[i].oid);
-        /* Not all Windows installations support all these, so make sure it's
-         * at least not the wrong one.
-         */
-        ok(alg == 0 || alg == oidToAlgID[i].algID,
+        ok(alg == oidToAlgID[i].algID || (oidToAlgID[i].altAlgID && alg == oidToAlgID[i].altAlgID),
          "Expected %d, got %d\n", oidToAlgID[i].algID, alg);
     }
 }
@@ -118,6 +128,7 @@ static void testAlgIDToOID(void)
     {
         oid = CertAlgIdToOID(algIDToOID[i].algID);
         /* Allow failure, not every version of Windows supports every algo */
+        ok(oid != NULL || broken(!oid), "CertAlgIdToOID failed, expected %s\n", algIDToOID[i].oid);
         if (oid)
         {
             if (strcmp(oid, algIDToOID[i].oid))
@@ -533,11 +544,15 @@ static void test_enumOIDInfo(void)
 
 static void test_findOIDInfo(void)
 {
+    static WCHAR sha256ECDSA[] = { 's','h','a','2','5','6','E','C','D','S','A',0 };
     static WCHAR sha1[] = { 's','h','a','1',0 };
-    static CHAR oid_rsa_md5[] = szOID_RSA_MD5;
+    static CHAR oid_rsa_md5[] = szOID_RSA_MD5, oid_sha256[] = szOID_NIST_sha256;
+    static CHAR oid_ecda_sha25[] = szOID_ECDSA_SHA256;
     ALG_ID alg = CALG_SHA1;
     ALG_ID algs[2] = { CALG_MD5, CALG_RSA_SIGN };
     PCCRYPT_OID_INFO info;
+
+    static const WCHAR sha256W[] = {'s','h','a','2','5','6',0};
 
     info = CryptFindOIDInfo(0, NULL, 0);
     ok(info == NULL, "Expected NULL\n");
@@ -577,6 +592,49 @@ static void test_findOIDInfo(void)
         ok(U(*info).Algid == CALG_MD5, "Expected CALG_MD5, got %d\n",
            U(*info).Algid);
     }
+
+    info = CryptFindOIDInfo(CRYPT_OID_INFO_OID_KEY, oid_sha256, 0);
+    ok(info != NULL, "Expected to find szOID_RSA_MD5\n");
+    if (info)
+    {
+        ok(!strcmp(info->pszOID, szOID_NIST_sha256), "Expected %s, got %s\n",
+         szOID_NIST_sha256, info->pszOID);
+        ok(!lstrcmpW(info->pwszName, sha256W), "pwszName = %s\n", wine_dbgstr_w(info->pwszName));
+        ok(U(*info).Algid == CALG_SHA_256 || U(*info).Algid == -1,
+           "Expected CALG_MD5 or -1, got %d\n", U(*info).Algid);
+    }
+
+    info = CryptFindOIDInfo(CRYPT_OID_INFO_OID_KEY, oid_ecda_sha25, 0);
+    if (info)
+    {
+        DWORD *data;
+
+        ok(info->cbSize == sizeof(*info),
+           "Expected %d, got %d\n", (int)sizeof(*info), info->cbSize);
+        ok(!strcmp(info->pszOID, oid_ecda_sha25),
+           "Expected %s, got %s\n", oid_ecda_sha25, info->pszOID);
+        ok(!lstrcmpW(info->pwszName, sha256ECDSA),
+           "Expected %s, got %s\n", wine_dbgstr_w(sha256ECDSA), wine_dbgstr_w(info->pwszName));
+        ok(info->dwGroupId == CRYPT_SIGN_ALG_OID_GROUP_ID,
+           "Expected CRYPT_SIGN_ALG_OID_GROUP_ID, got %u\n", info->dwGroupId);
+        ok(U(*info).Algid == CALG_OID_INFO_CNG_ONLY,
+           "Expected CALG_OID_INFO_CNG_ONLY, got %d\n", U(*info).Algid);
+
+        data = (DWORD *)info->ExtraInfo.pbData;
+        ok(info->ExtraInfo.cbData == 8,
+           "Expected 8, got %d\n", info->ExtraInfo.cbData);
+        ok(data[0] == CALG_OID_INFO_PARAMETERS,
+           "Expected CALG_OID_INFO_PARAMETERS, got %x\n", data[0]);
+        ok(data[1] == CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG,
+           "Expected CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG, got %x\n", data[1]);
+
+        ok(!lstrcmpW(info->pwszCNGAlgid, BCRYPT_SHA256_ALGORITHM), "Expected %s, got %s\n",
+           wine_dbgstr_w(BCRYPT_SHA256_ALGORITHM), wine_dbgstr_w(info->pwszCNGAlgid));
+        ok(!lstrcmpW(info->pwszCNGExtraAlgid, CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM), "Expected %s, got %s\n",
+           wine_dbgstr_w(CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM), wine_dbgstr_w(info->pwszCNGExtraAlgid));
+    }
+    else
+        win_skip("Host does not support ECDSA_SHA256, skipping test\n");
 }
 
 START_TEST(oid)

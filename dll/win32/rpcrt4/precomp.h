@@ -1,3 +1,4 @@
+
 #ifndef _RPCRT4_PCH_
 #define _RPCRT4_PCH_
 
@@ -37,4 +38,4 @@
 #include "rpc_message.h"
 #include "rpc_server.h"
 
-#endif /* _RPCRT4_PCH_ */
+#endif /* !_RPCRT4_PCH_ */

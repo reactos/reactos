@@ -234,6 +234,7 @@ VersionRegisterClass(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+       ERR("Got exception while trying to call RegisterClassNameW!\n");
     }
     _SEH2_END
 
@@ -1840,7 +1841,7 @@ SetWindowLongPtrA(HWND hWnd,
                   INT nIndex,
                   LONG_PTR dwNewLong)
 {
-    return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, FALSE);
+    return NtUserSetWindowLongPtr(hWnd, nIndex, dwNewLong, TRUE);
 }
 
 /*
@@ -1852,7 +1853,7 @@ SetWindowLongPtrW(HWND hWnd,
                   INT nIndex,
                   LONG_PTR dwNewLong)
 {
-    return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, FALSE);
+    return NtUserSetWindowLongPtr(hWnd, nIndex, dwNewLong, FALSE);
 }
 #endif
 

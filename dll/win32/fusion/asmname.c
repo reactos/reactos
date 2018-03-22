@@ -18,10 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+#define INITGUID
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "guiddef.h"
+#include "fusion.h"
+#include "corerror.h"
+#include "strsafe.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
 #include "fusionpriv.h"
 
-#include <assert.h>
-#include <winuser.h>
+WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
 typedef struct {
     IAssemblyName IAssemblyName_iface;
@@ -38,6 +54,8 @@ typedef struct {
 
     BYTE pubkey[8];
     BOOL haspubkey;
+
+    PEKIND pekind;
 
     LONG ref;
 } IAssemblyNameImpl;
@@ -97,12 +115,12 @@ static ULONG WINAPI IAssemblyNameImpl_Release(IAssemblyName *iface)
 
     if (!refCount)
     {
-        HeapFree(GetProcessHeap(), 0, This->path);
-        HeapFree(GetProcessHeap(), 0, This->displayname);
-        HeapFree(GetProcessHeap(), 0, This->name);
-        HeapFree(GetProcessHeap(), 0, This->culture);
-        HeapFree(GetProcessHeap(), 0, This->procarch);
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This->path);
+        heap_free(This->displayname);
+        heap_free(This->name);
+        heap_free(This->culture);
+        heap_free(This->procarch);
+        heap_free(This);
     }
 
     return refCount;
@@ -123,11 +141,11 @@ static HRESULT WINAPI IAssemblyNameImpl_GetProperty(IAssemblyName *iface,
                                                     LPDWORD pcbProperty)
 {
     IAssemblyNameImpl *name = impl_from_IAssemblyName(iface);
+    DWORD size;
 
     TRACE("(%p, %d, %p, %p)\n", iface, PropertyId, pvProperty, pcbProperty);
 
-    *((LPWSTR)pvProperty) = '\0';
-
+    size = *pcbProperty;
     switch (PropertyId)
     {
         case ASM_NAME_NULL_PUBLIC_KEY:
@@ -143,45 +161,65 @@ static HRESULT WINAPI IAssemblyNameImpl_GetProperty(IAssemblyName *iface,
             *pcbProperty = 0;
             if (name->name)
             {
-                lstrcpyW(pvProperty, name->name);
                 *pcbProperty = (lstrlenW(name->name) + 1) * 2;
+                if (size < *pcbProperty)
+                    return STRSAFE_E_INSUFFICIENT_BUFFER;
+                lstrcpyW(pvProperty, name->name);
             }
             break;
 
         case ASM_NAME_MAJOR_VERSION:
             *pcbProperty = 0;
-            *((WORD *)pvProperty) = name->version[0];
             if (name->versize >= 1)
+            {
                 *pcbProperty = sizeof(WORD);
+                if (size < *pcbProperty)
+                    return STRSAFE_E_INSUFFICIENT_BUFFER;
+                *((WORD *)pvProperty) = name->version[0];
+            }
             break;
 
         case ASM_NAME_MINOR_VERSION:
             *pcbProperty = 0;
-            *((WORD *)pvProperty) = name->version[1];
             if (name->versize >= 2)
+            {
                 *pcbProperty = sizeof(WORD);
+                if (size < *pcbProperty)
+                    return STRSAFE_E_INSUFFICIENT_BUFFER;
+                *((WORD *)pvProperty) = name->version[1];
+            }
             break;
 
         case ASM_NAME_BUILD_NUMBER:
             *pcbProperty = 0;
-            *((WORD *)pvProperty) = name->version[2];
             if (name->versize >= 3)
+            {
                 *pcbProperty = sizeof(WORD);
+                if (size < *pcbProperty)
+                    return STRSAFE_E_INSUFFICIENT_BUFFER;
+                *((WORD *)pvProperty) = name->version[2];
+            }
             break;
 
         case ASM_NAME_REVISION_NUMBER:
             *pcbProperty = 0;
-            *((WORD *)pvProperty) = name->version[3];
             if (name->versize >= 4)
+            {
                 *pcbProperty = sizeof(WORD);
+                if (size < *pcbProperty)
+                    return STRSAFE_E_INSUFFICIENT_BUFFER;
+                *((WORD *)pvProperty) = name->version[3];
+            }
             break;
 
         case ASM_NAME_CULTURE:
             *pcbProperty = 0;
             if (name->culture)
             {
-                lstrcpyW(pvProperty, name->culture);
                 *pcbProperty = (lstrlenW(name->culture) + 1) * 2;
+                if (size < *pcbProperty)
+                    return STRSAFE_E_INSUFFICIENT_BUFFER;
+                lstrcpyW(pvProperty, name->culture);
             }
             break;
 
@@ -189,8 +227,21 @@ static HRESULT WINAPI IAssemblyNameImpl_GetProperty(IAssemblyName *iface,
             *pcbProperty = 0;
             if (name->haspubkey)
             {
-                memcpy(pvProperty, name->pubkey, sizeof(DWORD) * 2);
                 *pcbProperty = sizeof(DWORD) * 2;
+                if (size < *pcbProperty)
+                    return STRSAFE_E_INSUFFICIENT_BUFFER;
+                memcpy(pvProperty, name->pubkey, sizeof(DWORD) * 2);
+            }
+            break;
+
+        case ASM_NAME_ARCHITECTURE:
+            *pcbProperty = 0;
+            if (name->pekind != peNone)
+            {
+                *pcbProperty = sizeof(PEKIND);
+                if (size < *pcbProperty)
+                    return STRSAFE_E_INSUFFICIENT_BUFFER;
+                *((PEKIND *)pvProperty) = name->pekind;
             }
             break;
 
@@ -281,7 +332,10 @@ static HRESULT WINAPI IAssemblyNameImpl_GetDisplayName(IAssemblyName *iface,
         size += lstrlenW(separator) + lstrlenW(procarch) + lstrlenW(equals) + lstrlenW(name->procarch);
 
     if (size > *pccDisplayName)
-        return S_FALSE;
+    {
+        *pccDisplayName = size;
+        return E_NOT_SUFFICIENT_BUFFER;
+    }
 
     /* Construct the string */
     lstrcpyW(szDisplayName, name->name);
@@ -307,8 +361,8 @@ static HRESULT WINAPI IAssemblyNameImpl_GetDisplayName(IAssemblyName *iface,
     if ((dwDisplayFlags & ASM_DISPLAYF_PUBLIC_KEY_TOKEN) && (name->haspubkey))
     {
         WCHAR pkt[CHARS_PER_PUBKEY + 1];
-        static const WCHAR spec[] = {'%','0','x','%','0','x','%','0','x',
-            '%','0','x','%','0','x','%','0','x','%','0','x','%','0','x',0};
+        static const WCHAR spec[] = {'%','0','2','x','%','0','2','x','%','0','2','x',
+            '%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x',0};
 
         lstrcatW(szDisplayName, separator);
 
@@ -578,6 +632,30 @@ static HRESULT parse_pubkey(IAssemblyNameImpl *name, LPCWSTR pubkey)
     return S_OK;
 }
 
+static HRESULT parse_procarch(IAssemblyNameImpl *name, LPCWSTR procarch)
+{
+    static const WCHAR msilW[] = {'m','s','i','l',0};
+    static const WCHAR x86W[] = {'x','8','6',0};
+    static const WCHAR ia64W[] = {'i','a','6','4',0};
+    static const WCHAR amd64W[] = {'a','m','d','6','4',0};
+
+    if (!lstrcmpiW(procarch, msilW))
+        name->pekind = peMSIL;
+    else if (!lstrcmpiW(procarch, x86W))
+        name->pekind = peI386;
+    else if (!lstrcmpiW(procarch, ia64W))
+        name->pekind = peIA64;
+    else if (!lstrcmpiW(procarch, amd64W))
+        name->pekind = peAMD64;
+    else
+    {
+        ERR("unrecognized architecture: %s\n", wine_dbgstr_w(procarch));
+        return FUSION_E_INVALID_NAME;
+    }
+
+    return S_OK;
+}
+
 static WCHAR *parse_value( const WCHAR *str, unsigned int len )
 {
     WCHAR *ret;
@@ -585,7 +663,7 @@ static WCHAR *parse_value( const WCHAR *str, unsigned int len )
     BOOL quoted = FALSE;
     unsigned int i = 0;
 
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (!(ret = heap_alloc( (len + 1) * sizeof(WCHAR) ))) return NULL;
     if (*p == '\"')
     {
         quoted = TRUE;
@@ -594,7 +672,7 @@ static WCHAR *parse_value( const WCHAR *str, unsigned int len )
     while (*p && *p != '\"') ret[i++] = *p++;
     if ((quoted && *p != '\"') || (!quoted && *p == '\"'))
     {
-        HeapFree( GetProcessHeap(), 0, ret );
+        heap_free( ret );
         return NULL;
     }
     ret[i] = 0;
@@ -688,8 +766,10 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
         {
             name->procarch = value;
             value = NULL;
+
+            hr = parse_procarch( name, name->procarch );
         }
-        HeapFree( GetProcessHeap(), 0, value );
+        heap_free( value );
 
         if (FAILED(hr))
             goto done;
@@ -698,13 +778,13 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
     }
 
 done:
-    HeapFree(GetProcessHeap(), 0, save);
+    heap_free(save);
     if (FAILED(hr))
     {
-        HeapFree(GetProcessHeap(), 0, name->displayname);
-        HeapFree(GetProcessHeap(), 0, name->name);
-        HeapFree(GetProcessHeap(), 0, name->culture);
-        HeapFree(GetProcessHeap(), 0, name->procarch);
+        heap_free(name->displayname);
+        heap_free(name->name);
+        heap_free(name->culture);
+        heap_free(name->procarch);
     }
     return hr;
 }
@@ -729,9 +809,7 @@ HRESULT WINAPI CreateAssemblyNameObject(IAssemblyName **ppAssemblyNameObj,
         (!szAssemblyName || !*szAssemblyName))
         return E_INVALIDARG;
 
-    name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAssemblyNameImpl));
-    if (!name)
-        return E_OUTOFMEMORY;
+    if (!(name = heap_alloc_zero(sizeof(*name)))) return E_OUTOFMEMORY;
 
     name->IAssemblyName_iface.lpVtbl = &AssemblyNameVtbl;
     name->ref = 1;
@@ -739,7 +817,7 @@ HRESULT WINAPI CreateAssemblyNameObject(IAssemblyName **ppAssemblyNameObj,
     hr = parse_display_name(name, szAssemblyName);
     if (FAILED(hr))
     {
-        HeapFree(GetProcessHeap(), 0, name);
+        heap_free(name);
         return hr;
     }
 

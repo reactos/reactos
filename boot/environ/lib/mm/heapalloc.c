@@ -567,7 +567,7 @@ MmHaInitialize (
 
 PVOID
 BlMmAllocateHeap (
-    _In_ ULONG Size
+    _In_ SIZE_T Size
     )
 {
     ULONG BufferSize;
@@ -581,8 +581,8 @@ BlMmAllocateHeap (
     }
 
     /* Align the buffer size to the minimum size required */
-    BufferSize = ALIGN_UP(Size + FIELD_OFFSET(BL_BUSY_HEAP_ENTRY, Buffer),
-                          FIELD_OFFSET(BL_BUSY_HEAP_ENTRY, Buffer));
+    BufferSize = ALIGN_UP_BY(Size + FIELD_OFFSET(BL_BUSY_HEAP_ENTRY, Buffer),
+                             FIELD_OFFSET(BL_BUSY_HEAP_ENTRY, Buffer));
 
     /* Watch out for overflow */
     if (BufferSize <= Size)

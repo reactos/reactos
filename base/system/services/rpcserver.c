@@ -13,6 +13,7 @@
 #include "services.h"
 
 #include <winnls.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -992,7 +993,8 @@ RCloseServiceHandle(
         if (lpService->dwRefCount == 0)
         {
             /* If this service has been marked for deletion */
-            if (lpService->bDeleted)
+            if (lpService->bDeleted &&
+                lpService->Status.dwCurrentState == SERVICE_STOPPED)
             {
                 /* Open the Services Reg key */
                 dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -1110,6 +1112,11 @@ RControlService(
 
         case SERVICE_CONTROL_PAUSE:
         case SERVICE_CONTROL_CONTINUE:
+        case SERVICE_CONTROL_PARAMCHANGE:
+        case SERVICE_CONTROL_NETBINDADD:
+        case SERVICE_CONTROL_NETBINDREMOVE:
+        case SERVICE_CONTROL_NETBINDENABLE:
+        case SERVICE_CONTROL_NETBINDDISABLE:
             DesiredAccess = SERVICE_PAUSE_CONTINUE;
             break;
 
@@ -1224,10 +1231,25 @@ RControlService(
                 if ((dwControlsAccepted & SERVICE_ACCEPT_PAUSE_CONTINUE) == 0)
                     return ERROR_INVALID_SERVICE_CONTROL;
                 break;
+
+            case SERVICE_CONTROL_PARAMCHANGE:
+                if ((dwControlsAccepted & SERVICE_ACCEPT_PARAMCHANGE) == 0)
+                    return ERROR_INVALID_SERVICE_CONTROL;
+                break;
+
+            case SERVICE_CONTROL_NETBINDADD:
+            case SERVICE_CONTROL_NETBINDREMOVE:
+            case SERVICE_CONTROL_NETBINDENABLE:
+            case SERVICE_CONTROL_NETBINDDISABLE:
+                if ((dwControlsAccepted & SERVICE_ACCEPT_NETBINDCHANGE) == 0)
+                    return ERROR_INVALID_SERVICE_CONTROL;
+                break;
         }
 
         /* Send control code to the service */
-        dwError = ScmControlService(lpService,
+        dwError = ScmControlService(lpService->lpImage->hControlPipe,
+                                    lpService->lpServiceName,
+                                    (SERVICE_STATUS_HANDLE)lpService,
                                     dwControl);
 
         /* Return service status information */
@@ -1238,36 +1260,36 @@ RControlService(
 
     if (dwError == ERROR_SUCCESS)
     {
-            if (dwControl == SERVICE_CONTROL_STOP ||
-                dwControl == SERVICE_CONTROL_PAUSE ||
-                dwControl == SERVICE_CONTROL_CONTINUE)
+        if (dwControl == SERVICE_CONTROL_STOP ||
+            dwControl == SERVICE_CONTROL_PAUSE ||
+            dwControl == SERVICE_CONTROL_CONTINUE)
+        {
+            /* Log a successful send control */
+
+            switch (dwControl)
             {
-                /* Log a successful send control */
+                case SERVICE_CONTROL_STOP:
+                    uID = IDS_SERVICE_STOP;
+                    break;
 
-                switch (dwControl)
-                {
-                    case SERVICE_CONTROL_STOP:
-                        uID = IDS_SERVICE_STOP;
-                        break;
+                case SERVICE_CONTROL_PAUSE:
+                    uID = IDS_SERVICE_PAUSE;
+                    break;
 
-                    case SERVICE_CONTROL_PAUSE:
-                        uID = IDS_SERVICE_PAUSE;
-                        break;
-
-                    case SERVICE_CONTROL_CONTINUE:
-                        uID = IDS_SERVICE_RESUME;
-                        break;
-                }
-                LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, 80);
-
-                lpLogStrings[0] = lpService->lpDisplayName;
-                lpLogStrings[1] = szLogBuffer;
-
-                ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
-                            EVENTLOG_INFORMATION_TYPE,
-                            2,
-                            lpLogStrings);
+                case SERVICE_CONTROL_CONTINUE:
+                    uID = IDS_SERVICE_RESUME;
+                    break;
             }
+            LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, ARRAYSIZE(szLogBuffer));
+
+            lpLogStrings[0] = lpService->lpDisplayName;
+            lpLogStrings[1] = szLogBuffer;
+
+            ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
+                        EVENTLOG_INFORMATION_TYPE,
+                        2,
+                        lpLogStrings);
+        }
     }
 
     return dwError;
@@ -1724,6 +1746,28 @@ RSetServiceStatus(
     /* Restore the previous service type */
     lpService->Status.dwServiceType = dwPreviousType;
 
+    /* Dereference a stopped service */
+    if ((lpServiceStatus->dwServiceType & SERVICE_WIN32) &&
+        (lpServiceStatus->dwCurrentState == SERVICE_STOPPED))
+    {
+        /* Decrement the image run counter */
+        lpService->lpImage->dwImageRunCount--;
+
+        /* If we just stopped the last running service... */
+        if (lpService->lpImage->dwImageRunCount == 0)
+        {
+            /* Stop the dispatcher thread */
+            ScmControlService(lpService->lpImage->hControlPipe,
+                              L"",
+                              (SERVICE_STATUS_HANDLE)lpService,
+                              SERVICE_CONTROL_STOP);
+
+            /* Remove the service image */
+            ScmRemoveServiceImage(lpService->lpImage);
+            lpService->lpImage = NULL;
+        }
+    }
+
     /* Unlock the service database */
     ScmUnlockDatabase();
 
@@ -1732,7 +1776,8 @@ RSetServiceStatus(
         (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS))
     {
         /* Log a failed service stop */
-        swprintf(szLogBuffer, L"%lu", lpServiceStatus->dwWin32ExitCode);
+        StringCchPrintfW(szLogBuffer, ARRAYSIZE(szLogBuffer),
+                         L"%lu", lpServiceStatus->dwWin32ExitCode);
         lpLogStrings[0] = lpService->lpDisplayName;
         lpLogStrings[1] = szLogBuffer;
 
@@ -1762,7 +1807,7 @@ RSetServiceStatus(
                 break;
         }
 
-        LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, 80);
+        LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, ARRAYSIZE(szLogBuffer));
         lpLogStrings[0] = lpService->lpDisplayName;
         lpLogStrings[1] = szLogBuffer;
 
@@ -2278,13 +2323,13 @@ RCreateServiceW(
 
     /* Allocate a new service entry */
     dwError = ScmCreateNewServiceRecord(lpServiceName,
-                                        &lpService);
+                                        &lpService,
+                                        dwServiceType,
+                                        dwStartType);
     if (dwError != ERROR_SUCCESS)
         goto done;
 
     /* Fill the new service entry */
-    lpService->Status.dwServiceType = dwServiceType;
-    lpService->dwStartType = dwStartType;
     lpService->dwErrorControl = dwErrorControl;
 
     /* Fill the display name */

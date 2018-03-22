@@ -28,7 +28,7 @@ if(USE_CLANG_CL OR (NOT MSVC))
 endif()
 
 set_module_type(msvcrt_winetest win32cui)
-add_importlibs(msvcrt_winetest msvcrt kernel32)
+add_importlibs(msvcrt_winetest advapi32 msvcrt kernel32)
 
 if(MSVC)
     target_link_libraries(msvcrt_winetest oldnames)

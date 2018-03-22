@@ -16,11 +16,12 @@
 #define IDC_ADD                    1010
 #define IDC_EDIT                   1011
 #define IDC_DELETE                 1012
+#define IDC_ENABLED_LAYERS         1013
 
 #define IDS_DESCRIPTION 101
 
 /* strings */
-#define IDS_TABTITLE                    2000
+#define IDS_COMPAT_TITLE                2000
 #define IDS_FAILED_NETWORK              2001
 #define IDS_FAILED_PROTECTED            2002
 #define IDS_YOU_DID_NOT_ADD             2003

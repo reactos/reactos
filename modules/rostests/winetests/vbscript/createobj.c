@@ -58,6 +58,8 @@
 
 extern const CLSID CLSID_VBScript;
 
+#define VB_E_ACCESS_DENIED      0x800a0046
+
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
 
@@ -996,6 +998,8 @@ static void test_GetObject(void)
     SET_EXPECT(SetSite);
     SET_EXPECT(reportSuccess);
     hres = parse_script_ae(parser, "Call GetObject(\"clsid:" TESTOBJINST_CLSID "\").reportSuccess()");
+    if(broken(hres == VB_E_ACCESS_DENIED)) /* 64-bit win8 fails on the first try */
+        hres = parse_script_ae(parser, "Call GetObject(\"clsid:" TESTOBJINST_CLSID "\").reportSuccess()");
     if(hres == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND)) { /* Workaround for broken win2k */
         win_skip("got unexpected error %08x\n", hres);
         CLEAR_CALLED(QI_IObjectWithSite);

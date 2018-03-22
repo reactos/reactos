@@ -16,7 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define DIRECTINPUT_VERSION 0x0700
+
+#define COBJMACROS
+#include <windows.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "dinput.h"
 
 static const DIOBJECTDATAFORMAT obj_data_format[] = {
   { &GUID_YAxis, 16, DIDFT_OPTIONAL|DIDFT_AXIS  |DIDFT_MAKEINSTANCE(1), 0},

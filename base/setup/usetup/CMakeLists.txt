@@ -40,7 +40,7 @@ if(USE_CLANG_CL)
     add_target_compile_flags(usetup "-Wno-invalid-source-encoding")
 endif()
 
-target_link_libraries(usetup zlib inflib ext2lib vfatlib)
+target_link_libraries(usetup zlib_solo inflib ext2lib vfatlib)
 set_module_type(usetup nativecui)
 add_importlibs(usetup ntdll)
 add_pch(usetup usetup.h SOURCE)

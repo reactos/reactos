@@ -19,7 +19,14 @@
  *
  */
 
+#include "config.h"
+
+#define COBJMACROS
 #include "dxdiag_private.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
 
 static inline IDxDiagContainerImpl *impl_from_IDxDiagContainer(IDxDiagContainer *iface)
 {

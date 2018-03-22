@@ -283,7 +283,7 @@ static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
         mask_info->bmiHeader = info->bmiHeader;
         mask_info->bmiHeader.biBitCount = 1;
         mask_info->bmiHeader.biSizeImage = mask_width * height;
-        if (!(mask_bits = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, info->bmiHeader.biSizeImage )))
+        if (!(mask_bits = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, mask_info->bmiHeader.biSizeImage )))
             goto done;
         if (!GetDIBits( hdc, hbmMask, 0, height, mask_bits, mask_info, DIB_RGB_COLORS )) goto done;
     }
@@ -2132,7 +2132,8 @@ ImageList_LoadImageW (HINSTANCE hi, LPCWSTR lpbmp, INT cx, INT cGrow,
 
         nImageCount = dib.dsBm.bmWidth / cx;
 
-        himl = ImageList_Create (cx, dib.dsBm.bmHeight, ILC_MASK | color, nImageCount, cGrow);
+        if (clrMask != CLR_NONE) color |= ILC_MASK;
+        himl = ImageList_Create (cx, dib.dsBm.bmHeight, color, nImageCount, cGrow);
         if (!himl) {
             DeleteObject (handle);
             return NULL;

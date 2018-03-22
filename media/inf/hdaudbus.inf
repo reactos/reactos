@@ -70,6 +70,15 @@ MODEMFG = "Modem Device on High Definition Audio Bus"
 UNKNOWNFG = "Unknown Device on High Definition Audio Bus"
 HDAudioBUS = "Internal High Definition Audio Bus"
 
+[Strings.0415]
+DiskId1 = "Sterownik magistrali ReactOS UAA dla High Definition Audio. Dysk instalacyjny #1"
+HDAudio.DeviceDesc = "Kontroler High Definition Audio"
+HDAudBus.SVCDESC = "Sterownik magistrali ReactOS UAA dla High Definition Audio."
+AUDIOFG = "Urządzenie audio na High Definition Audio Bus"
+MODEMFG = "Urządzenie telefoniczne na High Definition Audio Bus"
+UNKNOWNFG = "Nieznane urządzenie na High Definition Audio Bus"
+HDAudioBUS = "Wewnętrzna magistrala High Definition Audio"
+
 [Strings.0418]
 DiskId1 = "Modúl-pilot ReactOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
 HDAudio.DeviceDesc = "Dispozitiv de control audio de înaltă definiție"
@@ -87,3 +96,11 @@ AUDIOFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Ses Aygıtı"
 MODEMFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Çevirge Aygıtı"
 UNKNOWNFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Bilinmeyen Aygıt"
 HDAudioBUS = "İç Yüksek Tanımlı Ses Veri Yolu"
+
+[Strings.0804]
+HDAudio.DeviceDesc = "高保真音频控制器"
+HDAudBus.SVCDESC = "ReactOS 高保真音频 UAA 总线驱动"
+AUDIOFG = "HDA 总线上的音频设备"
+MODEMFG = "HDA 总线上的 Modem 设备"
+UNKNOWNFG = "HDA 总线上的未知设备"
+HDAudioBUS = "内部 HDA 总线"

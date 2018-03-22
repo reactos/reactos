@@ -19,7 +19,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "objbase.h"
+#include "rpcproxy.h"
+#include "commdlg.h"
+#include "cderr.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+
 #include "cdlg.h"
+
 
 DECLSPEC_HIDDEN HINSTANCE	COMDLG32_hInstance = 0;
 

@@ -23,7 +23,7 @@
 #include <ndk/rtlfuncs.h>
 #include <atlcoll.h>
 #include <atlsimpcoll.h>
-#include <atlstr.h> 
+#include <atlstr.h>
 #include <rappsmsg.h>
 
 #include "resource.h"

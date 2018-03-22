@@ -18,23 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 
-#include <wine/test.h>
-#include <wingdi.h>
-#include <winnls.h>
-#include <vfwmsgs.h>
-#include <objbase.h>
-#include <mmreg.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <initguid.h>
-#include <amstream.h>
-#include <dxsdk/uuids.h>
+#include "wine/test.h"
+#include "initguid.h"
+#include "uuids.h"
+#include "amstream.h"
+#include "vfwmsgs.h"
+#include "mmreg.h"
+#include "ks.h"
+#include "ksmedia.h"
 
 #define EXPECT_REF(obj,ref) _expect_ref((IUnknown*)obj, ref, __LINE__)
 static void _expect_ref(IUnknown* obj, ULONG ref, int line)
@@ -265,6 +258,7 @@ static void test_media_streams(void)
     {
         IAMMediaStream* am_media_stream;
         IMultiMediaStream *multi_media_stream;
+        IPin *pin = NULL;
         IAudioMediaStream* audio_media_stream;
         IDirectDrawMediaStream *ddraw_stream = NULL;
         IDirectDrawStreamSample *ddraw_sample = NULL;
@@ -283,6 +277,11 @@ static void test_media_streams(void)
         IMultiMediaStream_Release(multi_media_stream);
 
         IAMMediaStream_Release(am_media_stream);
+
+        hr = IMediaStream_QueryInterface(video_stream, &IID_IPin, (void **)&pin);
+        ok(hr == S_OK, "IMediaStream_QueryInterface returned: %x\n", hr);
+
+        IPin_Release(pin);
 
         hr = IMediaStream_QueryInterface(video_stream, &IID_IAudioMediaStream, (LPVOID*)&audio_media_stream);
         ok(hr == E_NOINTERFACE, "IMediaStream_QueryInterface returned: %x\n", hr);
@@ -375,6 +374,7 @@ static void test_media_streams(void)
     {
         IAMMediaStream* am_media_stream;
         IMultiMediaStream *multi_media_stream;
+        IPin *pin = NULL;
         IDirectDrawMediaStream* ddraw_stream = NULL;
         IAudioMediaStream* audio_media_stream = NULL;
         IAudioStreamSample *audio_sample = NULL;
@@ -393,6 +393,11 @@ static void test_media_streams(void)
         IMultiMediaStream_Release(multi_media_stream);
 
         IAMMediaStream_Release(am_media_stream);
+
+        hr = IMediaStream_QueryInterface(audio_stream, &IID_IPin, (void **)&pin);
+        ok(hr == S_OK, "IMediaStream_QueryInterface returned: %x\n", hr);
+
+        IPin_Release(pin);
 
         hr = IMediaStream_QueryInterface(audio_stream, &IID_IDirectDrawMediaStream, (LPVOID*)&ddraw_stream);
         ok(hr == E_NOINTERFACE, "IMediaStream_QueryInterface returned: %x\n", hr);
@@ -478,6 +483,10 @@ static void test_media_streams(void)
                 ok(SUCCEEDED(hr), "IEnumMediaTypes_Next returned: %x\n", hr);
                 ok(nb_media_types > 0, "nb_media_types should be >0\n");
                 IEnumMediaTypes_Release(enum_media_types);
+                hr = IMediaStream_QueryInterface(i ? audio_stream : video_stream, &IID_IPin, (void **)&pin);
+                ok(hr == S_OK, "IMediaStream_QueryInterface returned: %x\n", hr);
+                ok(pin == pins[i], "Pin is %p instead of %p\n", pins[i], pin);
+                IPin_Release(pin);
                 IPin_Release(pins[i]);
             }
             IEnumPins_Release(enum_pins);

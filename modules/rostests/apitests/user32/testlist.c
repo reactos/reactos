@@ -25,6 +25,7 @@ extern void func_LoadImage(void);
 extern void func_LookupIconIdFromDirectoryEx(void);
 extern void func_NextDlgItem(void);
 extern void func_RealGetWindowClass(void);
+extern void func_RedrawWindow(void);
 extern void func_RegisterHotKey(void);
 extern void func_RegisterClassEx(void);
 extern void func_ScrollDC(void);
@@ -65,6 +66,7 @@ const struct test winetest_testlist[] =
     { "LookupIconIdFromDirectoryEx", func_LookupIconIdFromDirectoryEx },
     { "NextDlgItem", func_NextDlgItem },
     { "RealGetWindowClass", func_RealGetWindowClass },
+    { "RedrawWindow", func_RedrawWindow },
     { "RegisterHotKey", func_RegisterHotKey },
     { "RegisterClassEx", func_RegisterClassEx },
     { "ScrollDC", func_ScrollDC },

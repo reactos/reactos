@@ -1416,6 +1416,7 @@ static void test_mhtml_protocol_binding(const mhtml_binding_test_t *test)
     HRESULT hres;
     HANDLE file;
     DWORD size;
+    BOOL ret;
 
     p = file_name + GetCurrentDirectoryA(sizeof(file_name), file_name);
     *p++ = '\\';
@@ -1454,7 +1455,8 @@ static void test_mhtml_protocol_binding(const mhtml_binding_test_t *test)
     CHECK_CALLED(ReportResult);
 
     IInternetProtocol_Release(protocol);
-    ok(DeleteFileA("winetest.mht"), "DeleteFile failed: %u\n", GetLastError());
+    ret = DeleteFileA("winetest.mht");
+    ok(ret, "DeleteFile failed: %u\n", GetLastError());
 }
 
 static const struct {

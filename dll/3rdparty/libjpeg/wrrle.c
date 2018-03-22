@@ -2,6 +2,7 @@
  * wrrle.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
+ * Modified 2017 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -263,8 +264,8 @@ finish_output_rle (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo)
 
   /* Emit file trailer */
   rle_puteof(&header);
-  fflush(dest->pub.output_file);
-  if (ferror(dest->pub.output_file))
+  JFFLUSH(dest->pub.output_file);
+  if (JFERROR(dest->pub.output_file))
     ERREXIT(cinfo, JERR_FILE_WRITE);
 }
 
@@ -299,7 +300,7 @@ jinit_write_rle (j_decompress_ptr cinfo)
      (JDIMENSION) (cinfo->output_width * cinfo->output_components),
      cinfo->output_height, (JDIMENSION) 1);
 
-  return (djpeg_dest_ptr) dest;
+  return &dest->pub;
 }
 
 #endif /* RLE_SUPPORTED */

@@ -58,8 +58,27 @@
  *
  */
 
-#include "precomp.h"
+#include <assert.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winerror.h"
+#include "winnls.h"
+#include "ole2.h"
+#include "wine/debug.h"
+#include "olestd.h"
+
 #include "storage32.h"
+
+#include "compobj_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

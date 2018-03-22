@@ -2,59 +2,11 @@
  * PROJECT:     ReactOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions for managing print jobs
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
-
-static void
-_MarshallUpAddJobInfo(PADDJOB_INFO_1W pAddJobInfo1)
-{
-    // Replace relative offset addresses in the output by absolute pointers.
-    pAddJobInfo1->Path = (PWSTR)((ULONG_PTR)pAddJobInfo1->Path + (ULONG_PTR)pAddJobInfo1);
-}
-
-static void
-_MarshallUpJobInfo(PBYTE pJobInfo, DWORD Level)
-{
-    PJOB_INFO_1W pJobInfo1;
-    PJOB_INFO_2W pJobInfo2;
-
-    // Replace relative offset addresses in the output by absolute pointers.
-    if (Level == 1)
-    {
-        pJobInfo1 = (PJOB_INFO_1W)pJobInfo;
-        pJobInfo1->pDatatype = (PWSTR)((ULONG_PTR)pJobInfo1->pDatatype + (ULONG_PTR)pJobInfo1);
-        pJobInfo1->pDocument = (PWSTR)((ULONG_PTR)pJobInfo1->pDocument + (ULONG_PTR)pJobInfo1);
-        pJobInfo1->pMachineName = (PWSTR)((ULONG_PTR)pJobInfo1->pMachineName + (ULONG_PTR)pJobInfo1);
-        pJobInfo1->pPrinterName = (PWSTR)((ULONG_PTR)pJobInfo1->pPrinterName + (ULONG_PTR)pJobInfo1);
-
-        if (pJobInfo1->pStatus)
-            pJobInfo1->pStatus = (PWSTR)((ULONG_PTR)pJobInfo1->pStatus + (ULONG_PTR)pJobInfo1);
-
-        pJobInfo1->pUserName = (PWSTR)((ULONG_PTR)pJobInfo1->pUserName + (ULONG_PTR)pJobInfo1);
-    }
-    else if (Level == 2)
-    {
-        pJobInfo2 = (PJOB_INFO_2W)pJobInfo;
-        pJobInfo2->pDatatype = (PWSTR)((ULONG_PTR)pJobInfo2->pDatatype + (ULONG_PTR)pJobInfo2);
-        pJobInfo2->pDevMode = (PDEVMODEW)((ULONG_PTR)pJobInfo2->pDevMode + (ULONG_PTR)pJobInfo2);
-        pJobInfo2->pDocument = (PWSTR)((ULONG_PTR)pJobInfo2->pDocument + (ULONG_PTR)pJobInfo2);
-        pJobInfo2->pDriverName = (PWSTR)((ULONG_PTR)pJobInfo2->pDriverName + (ULONG_PTR)pJobInfo2);
-        pJobInfo2->pMachineName = (PWSTR)((ULONG_PTR)pJobInfo2->pMachineName + (ULONG_PTR)pJobInfo2);
-        pJobInfo2->pNotifyName = (PWSTR)((ULONG_PTR)pJobInfo2->pNotifyName + (ULONG_PTR)pJobInfo2);
-        pJobInfo2->pPrinterName = (PWSTR)((ULONG_PTR)pJobInfo2->pPrinterName + (ULONG_PTR)pJobInfo2);
-        pJobInfo2->pPrintProcessor = (PWSTR)((ULONG_PTR)pJobInfo2->pPrintProcessor + (ULONG_PTR)pJobInfo2);
-
-        if (pJobInfo2->pParameters)
-            pJobInfo2->pParameters = (PWSTR)((ULONG_PTR)pJobInfo2->pParameters + (ULONG_PTR)pJobInfo2);
-
-        if (pJobInfo2->pStatus)
-            pJobInfo2->pStatus = (PWSTR)((ULONG_PTR)pJobInfo2->pStatus + (ULONG_PTR)pJobInfo2);
-
-        pJobInfo2->pUserName = (PWSTR)((ULONG_PTR)pJobInfo2->pUserName + (ULONG_PTR)pJobInfo2);
-    }
-}
+#include <marshalling/jobs.h>
 
 BOOL WINAPI
 AddJobA(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded)
@@ -91,7 +43,10 @@ AddJobW(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded
     RpcEndExcept;
 
     if (dwErrorCode == ERROR_SUCCESS)
-        _MarshallUpAddJobInfo((PADDJOB_INFO_1W)pData);
+    {
+        // Replace relative offset addresses in the output by absolute pointers.
+        MarshallUpStructure(cbBuf, pData, AddJobInfo1Marshalling.pInfo, AddJobInfo1Marshalling.cbStructureSize, TRUE);
+    }
 
 Cleanup:
     SetLastError(dwErrorCode);
@@ -110,8 +65,6 @@ BOOL WINAPI
 EnumJobsW(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode;
-    DWORD i;
-    PBYTE p = pJob;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
     TRACE("EnumJobsW(%p, %lu, %lu, %lu, %p, %lu, %p, %p)\n", hPrinter, FirstJob, NoJobs, Level, pJob, cbBuf, pcbNeeded, pcReturned);
@@ -136,15 +89,11 @@ EnumJobsW(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs, DWORD Level, PBYTE pJob
 
     if (dwErrorCode == ERROR_SUCCESS)
     {
-        // Replace relative offset addresses in the output by absolute pointers.
-        for (i = 0; i < *pcReturned; i++)
+        // Replace relative offset addresses in the output by absolute pointers for JOB_INFO_1W and JOB_INFO_2W.
+        if (Level <= 2)
         {
-            _MarshallUpJobInfo(p, Level);
-
-            if (Level == 1)
-                p += sizeof(JOB_INFO_1W);
-            else if (Level == 2)
-                p += sizeof(JOB_INFO_2W);
+            ASSERT(Level >= 1);
+            MarshallUpStructuresArray(cbBuf, pJob, *pcReturned, pJobInfoMarshalling[Level]->pInfo, pJobInfoMarshalling[Level]->cbStructureSize, TRUE);
         }
     }
 
@@ -190,7 +139,8 @@ GetJobW(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJob, DWORD cbBuf, PDWO
     if (dwErrorCode == ERROR_SUCCESS)
     {
         // Replace relative offset addresses in the output by absolute pointers.
-        _MarshallUpJobInfo(pJob, Level);
+        ASSERT(Level >= 1 && Level <= 2);
+        MarshallUpStructure(cbBuf, pJob, pJobInfoMarshalling[Level]->pInfo, pJobInfoMarshalling[Level]->cbStructureSize, TRUE);
     }
 
 Cleanup:

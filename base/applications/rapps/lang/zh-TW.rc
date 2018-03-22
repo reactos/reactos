@@ -76,7 +76,7 @@ BEGIN
     LTEXT "沒有代理", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "預設", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "確定", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "確定", IDOK, 116, 195, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -88,7 +88,7 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "從存儲裝置安裝 (CD 或 DVD)(&I)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "下載並安裝(&D)", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "確定", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "確定", IDOK, 86, 78, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 150, 78, 60, 14
 END
 
@@ -107,9 +107,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "關於"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "ReactOS 程式管理器 版權所有 (C) 2009\n作者 Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "關閉", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "ReactOS 程式管理器 版權所有 (C) 2009\n作者 Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "關閉", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -205,7 +205,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "無法從登錄檔刪除該程式的資料！"
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_CERT_DOES_NOT_MATCH "SSL 憑證驗證失敗。"
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "驗證套裝軟體的完整性…"
     IDS_INTEG_CHECK_FAIL "包沒有通過完整性檢查，它可能已損壞，或者在下載過程中篡改。建議您不要運行該軟體。"
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
@@ -213,6 +213,7 @@ BEGIN
     IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

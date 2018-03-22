@@ -1,4 +1,4 @@
-/* $Id: tif_color.c,v 1.23 2017-05-13 18:17:34 erouault Exp $ */
+/* $Id: tif_color.c,v 1.24 2017-05-29 10:12:54 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -275,10 +275,10 @@ TIFFYCbCrToRGBInit(TIFFYCbCrToRGB* ycbcr, float *luma, float *refBlackWhite)
       for (i = 0, x = -128; i < 256; i++, x++) {
 	    int32 Cr = (int32)CLAMPw(Code2V(x, refBlackWhite[4] - 128.0F,
 			    refBlackWhite[5] - 128.0F, 127),
-                            -128.0F * 64, 128.0F * 64);
+                            -128.0F * 32, 128.0F * 32);
 	    int32 Cb = (int32)CLAMPw(Code2V(x, refBlackWhite[2] - 128.0F,
 			    refBlackWhite[3] - 128.0F, 127),
-                            -128.0F * 64, 128.0F * 64);
+                            -128.0F * 32, 128.0F * 32);
 
 	    ycbcr->Cr_r_tab[i] = (int32)((D1*Cr + ONE_HALF)>>SHIFT);
 	    ycbcr->Cb_b_tab[i] = (int32)((D3*Cb + ONE_HALF)>>SHIFT);
@@ -286,7 +286,7 @@ TIFFYCbCrToRGBInit(TIFFYCbCrToRGB* ycbcr, float *luma, float *refBlackWhite)
 	    ycbcr->Cb_g_tab[i] = D4*Cb + ONE_HALF;
 	    ycbcr->Y_tab[i] =
 		    (int32)CLAMPw(Code2V(x + 128, refBlackWhite[0], refBlackWhite[1], 255),
-                                  -128.0F * 64, 128.0F * 64);
+                                  -128.0F * 32, 128.0F * 32);
       }
     }
 

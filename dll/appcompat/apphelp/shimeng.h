@@ -72,6 +72,13 @@ typedef struct _HOOKMODULEINFO
 
 } HOOKMODULEINFO, *PHOOKMODULEINFO;
 
+typedef struct _FLAGINFO
+{
+    ULARGE_INTEGER AppCompatFlags;
+    ULARGE_INTEGER AppCompatFlagsUser;
+    ULONG ProcessParameters_Flags;
+} FLAGINFO, *PFLAGINFO;
+
 
 #if SDBAPI_DEBUG_ALLOC
 

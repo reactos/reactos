@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*                                                                         */
-/*  Copyright 2005-2017 by                                                 */
+/*  Copyright 2005-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  Copyright 2013 by Google, Inc.                                         */
@@ -1007,8 +1007,9 @@
       goto Fail;
     }
 
-    FT_TRACE3(( "tt_sbit_decoder_load_compound: loading %d components\n",
-                num_components ));
+    FT_TRACE3(( "tt_sbit_decoder_load_compound: loading %d component%s\n",
+                num_components,
+                num_components == 1 ? "" : "s" ));
 
     for ( nn = 0; nn < num_components; nn++ )
     {

@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
-
 #include "credui_resources.h"
 
 /* @makedep: banner.bmp */
@@ -42,6 +39,9 @@ IDB_BANNER BITMAP "res/banner.bmp"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/credui_Es.rc"
+#endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/credui_Et.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/credui_Fr.rc"

@@ -74,7 +74,7 @@ HRESULT WINAPI CMyDocsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
     if(cidl)
         return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
 
-    if (!rgfInOut || !apidl)
+    if (!rgfInOut)
         return E_INVALIDARG;
 
     if (*rgfInOut == 0)

@@ -119,8 +119,8 @@ DriverEntry(
     /* Cache manager */
     VfatGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = VfatAcquireForLazyWrite;
     VfatGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = VfatReleaseFromLazyWrite;
-    VfatGlobalData->CacheMgrCallbacks.AcquireForReadAhead = VfatAcquireForReadAhead;
-    VfatGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = VfatReleaseFromReadAhead;
+    VfatGlobalData->CacheMgrCallbacks.AcquireForReadAhead = VfatAcquireForLazyWrite;
+    VfatGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = VfatReleaseFromLazyWrite;
 
     /* Fast I/O */
     VfatInitFastIoRoutines(&VfatGlobalData->FastIoDispatch);

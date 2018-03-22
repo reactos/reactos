@@ -2,28 +2,11 @@
  * PROJECT:     ReactOS Print Spooler Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Print Processors
- * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
  */
 
 #include "precomp.h"
-
-static void
-_MarshallDownDatatypesInfo(PDATATYPES_INFO_1W* ppDatatypesInfo1)
-{
-    // Replace absolute pointer addresses in the output by relative offsets.
-    PDATATYPES_INFO_1W pDatatypesInfo1 = *ppDatatypesInfo1;
-    pDatatypesInfo1->pName = (PWSTR)((ULONG_PTR)pDatatypesInfo1->pName - (ULONG_PTR)pDatatypesInfo1);
-    *ppDatatypesInfo1 += sizeof(DATATYPES_INFO_1W);
-}
-
-static void
-_MarshallDownPrintProcessorInfo(PPRINTPROCESSOR_INFO_1W* ppPrintProcessorInfo1)
-{
-    // Replace absolute pointer addresses in the output by relative offsets.
-    PPRINTPROCESSOR_INFO_1W pPrintProcessorInfo1 = *ppPrintProcessorInfo1;
-    pPrintProcessorInfo1->pName = (PWSTR)((ULONG_PTR)pPrintProcessorInfo1->pName - (ULONG_PTR)pPrintProcessorInfo1);
-    *ppPrintProcessorInfo1 += sizeof(PRINTPROCESSOR_INFO_1W);
-}
+#include <marshalling/printprocessors.h>
 
 DWORD
 _RpcAddPrintProcessor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pPathName, WCHAR* pPrintProcessorName)
@@ -57,11 +40,7 @@ _RpcEnumPrintProcessorDatatypes(WINSPOOL_HANDLE pName, WCHAR* pPrintProcessorNam
     if (EnumPrintProcessorDatatypesW(pName, pPrintProcessorName, Level, pDatatypesAligned, cbBuf, pcbNeeded, pcReturned))
     {
         // Replace absolute pointer addresses in the output by relative offsets.
-        DWORD i;
-        PDATATYPES_INFO_1W p = (PDATATYPES_INFO_1W)pDatatypesAligned;
-
-        for (i = 0; i < *pcReturned; i++)
-            _MarshallDownDatatypesInfo(&p);
+        MarshallDownStructuresArray(pDatatypesAligned, *pcReturned, DatatypesInfo1Marshalling.pInfo, DatatypesInfo1Marshalling.cbStructureSize, TRUE);
     }
     else
     {
@@ -92,11 +71,7 @@ _RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level,
     if (EnumPrintProcessorsW(pName, pEnvironment, Level, pPrintProcessorInfoAligned, cbBuf, pcbNeeded, pcReturned))
     {
         // Replace absolute pointer addresses in the output by relative offsets.
-        DWORD i;
-        PPRINTPROCESSOR_INFO_1W p = (PPRINTPROCESSOR_INFO_1W)pPrintProcessorInfoAligned;
-
-        for (i = 0; i < *pcReturned; i++)
-            _MarshallDownPrintProcessorInfo(&p);
+        MarshallDownStructuresArray(pPrintProcessorInfoAligned, *pcReturned, PrintProcessorInfo1Marshalling.pInfo, PrintProcessorInfo1Marshalling.cbStructureSize, TRUE);
     }
     else
     {

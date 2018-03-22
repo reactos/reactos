@@ -95,7 +95,7 @@ LRESULT CALLBACK CBTProc(int code, WPARAM wParam, LPARAM lParam)
         ChildWnd* pChildWnd = newchild;
         newchild = NULL;
         pChildWnd->hWnd = (HWND)wParam;
-        SetWindowLong(pChildWnd->hWnd, GWL_USERDATA, (LPARAM)pChildWnd);
+        SetWindowLongPtr(pChildWnd->hWnd, GWLP_USERDATA, (LPARAM)pChildWnd);
     }
     return CallNextHookEx(hcbthook, code, wParam, lParam);
 }

@@ -4,7 +4,7 @@
  * Copyright 1995 Sven Verdoolaege
  * Copyright 1998 Juergen Schmied
  * Copyright 2003 Mike Hearn
- * Copyright 2007 Hervé Poussineau
+ * Copyright 2007 HervÃ© Poussineau
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,35 +40,35 @@ handle_t __RPC_USER
 EVENTLOG_HANDLE_A_bind(EVENTLOG_HANDLE_A UNCServerName)
 {
     handle_t hBinding = NULL;
-    UCHAR *pszStringBinding;
-    RPC_STATUS status;
+    RPC_CSTR pszStringBinding;
+    RPC_STATUS Status;
 
     TRACE("EVENTLOG_HANDLE_A_bind() called\n");
 
-    status = RpcStringBindingComposeA(NULL,
-                                      (UCHAR *)"ncacn_np",
-                                      (UCHAR *)UNCServerName,
-                                      (UCHAR *)"\\pipe\\EventLog",
+    Status = RpcStringBindingComposeA(NULL,
+                                      (RPC_CSTR)"ncacn_np",
+                                      (RPC_CSTR)UNCServerName,
+                                      (RPC_CSTR)"\\pipe\\EventLog",
                                       NULL,
-                                      (UCHAR **)&pszStringBinding);
-    if (status)
+                                      &pszStringBinding);
+    if (Status)
     {
-        ERR("RpcStringBindingCompose returned 0x%x\n", status);
+        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
         return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
-    status = RpcBindingFromStringBindingA(pszStringBinding,
+    Status = RpcBindingFromStringBindingA(pszStringBinding,
                                           &hBinding);
-    if (status != RPC_S_OK)
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
     }
 
-    status = RpcStringFreeA(&pszStringBinding);
-    if (status != RPC_S_OK)
+    Status = RpcStringFreeA(&pszStringBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcStringFree returned 0x%x\n", status);
+        ERR("RpcStringFree returned 0x%x\n", Status);
     }
 
     return hBinding;
@@ -79,14 +79,14 @@ void __RPC_USER
 EVENTLOG_HANDLE_A_unbind(EVENTLOG_HANDLE_A UNCServerName,
                          handle_t hBinding)
 {
-    RPC_STATUS status;
+    RPC_STATUS Status;
 
     TRACE("EVENTLOG_HANDLE_A_unbind() called\n");
 
-    status = RpcBindingFree(&hBinding);
-    if (status != RPC_S_OK)
+    Status = RpcBindingFree(&hBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFree returned 0x%x\n", status);
+        ERR("RpcBindingFree returned 0x%x\n", Status);
     }
 }
 
@@ -95,35 +95,35 @@ handle_t __RPC_USER
 EVENTLOG_HANDLE_W_bind(EVENTLOG_HANDLE_W UNCServerName)
 {
     handle_t hBinding = NULL;
-    LPWSTR pszStringBinding;
-    RPC_STATUS status;
+    RPC_WSTR pszStringBinding;
+    RPC_STATUS Status;
 
     TRACE("EVENTLOG_HANDLE_W_bind() called\n");
 
-    status = RpcStringBindingComposeW(NULL,
+    Status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
                                       UNCServerName,
                                       L"\\pipe\\EventLog",
                                       NULL,
                                       &pszStringBinding);
-    if (status != RPC_S_OK)
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcStringBindingCompose returned 0x%x\n", status);
+        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
         return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
-    status = RpcBindingFromStringBindingW(pszStringBinding,
+    Status = RpcBindingFromStringBindingW(pszStringBinding,
                                           &hBinding);
-    if (status != RPC_S_OK)
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
     }
 
-    status = RpcStringFreeW(&pszStringBinding);
-    if (status != RPC_S_OK)
+    Status = RpcStringFreeW(&pszStringBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcStringFree returned 0x%x\n", status);
+        ERR("RpcStringFree returned 0x%x\n", Status);
     }
 
     return hBinding;
@@ -134,14 +134,14 @@ void __RPC_USER
 EVENTLOG_HANDLE_W_unbind(EVENTLOG_HANDLE_W UNCServerName,
                          handle_t hBinding)
 {
-    RPC_STATUS status;
+    RPC_STATUS Status;
 
     TRACE("EVENTLOG_HANDLE_W_unbind() called\n");
 
-    status = RpcBindingFree(&hBinding);
-    if (status != RPC_S_OK)
+    Status = RpcBindingFree(&hBinding);
+    if (Status != RPC_S_OK)
     {
-        ERR("RpcBindingFree returned 0x%x\n", status);
+        ERR("RpcBindingFree returned 0x%x\n", Status);
     }
 }
 
@@ -1352,7 +1352,7 @@ ElfReportEventA(IN HANDLE hEventLog,
                                   NumStrings,
                                   DataSize,
                                   (PRPC_STRING)&ComputerName,
-                                  UserSID,
+                                  (PRPC_SID)UserSID,
                                   (PRPC_STRING*)Strings,
                                   Data,
                                   Flags,
@@ -1491,7 +1491,7 @@ ElfReportEventW(IN HANDLE hEventLog,
                                   NumStrings,
                                   DataSize,
                                   (PRPC_UNICODE_STRING)&ComputerName,
-                                  UserSID,
+                                  (PRPC_SID)UserSID,
                                   (PRPC_UNICODE_STRING*)Strings,
                                   Data,
                                   Flags,

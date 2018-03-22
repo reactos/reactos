@@ -18,29 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
-//#include <stdio.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #define COBJMACROS
 
 #include <wine/test.h>
-//#include <windef.h>
-//#include <winbase.h>
-//#include <winuser.h>
-//#include <wingdi.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
 #include <winnls.h>
-#include <winreg.h>
-//#include <winerror.h>
-//#include <winnt.h>
-//#include <wtypes.h>
-#include <objbase.h>
-//#include <olectl.h>
-//#include <ocidl.h>
-//#include <initguid.h>
+#include <winerror.h>
+#include <winnt.h>
+#include <wtypes.h>
+#include <olectl.h>
+#include <ocidl.h>
+#include <initguid.h>
 #include <atliface.h>
 
 static const char textA[] =

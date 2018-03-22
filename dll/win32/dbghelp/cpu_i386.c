@@ -18,10 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "dbghelp_private.h"
+#include <assert.h>
 
 #ifndef DBGHELP_STATIC_LIB
-#include <wine/winbase16.h>
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "dbghelp_private.h"
+#include "wine/winbase16.h"
+#include "winternl.h"
+#include "wine/debug.h"
+#else
+#include "dbghelp_private.h"
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);

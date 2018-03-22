@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+<dependency>
+    <dependentAssembly>
+        <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="5.82.0.0" publicKeyToken="6595b64144ccf1df" processorArchitecture="x86" language="*" />
+    </dependentAssembly>
+    <dependentAssembly>
+        <assemblyIdentity type="win32" name="Microsoft.Windows.GdiPlus" version="1.1.0.0" publicKeyToken="6595b64144ccf1df" processorArchitecture="x86" language="*" />
+    </dependentAssembly>
+</dependency>
+</assembly>

@@ -1,18 +1,21 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Utilities Library
- * FILE:            sdk/lib/conutils/screen.c
- * PURPOSE:         Console/terminal screen management.
- * PROGRAMMERS:     - Hermes Belusca-Maito (for the library);
- *                  - All programmers who wrote the different console applications
- *                    from which I took those functions and improved them.
+ * PROJECT:     ReactOS Console Utilities Library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Console/terminal screen management.
+ * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
+ *              Copyright 2017-2018 Hermes Belusca-Maito
  */
+
+/**
+ * @file    screen.c
+ * @ingroup ConUtils
+ *
+ * @brief   Console/terminal screen management.
+ **/
 
 /* FIXME: Temporary HACK before we cleanly support UNICODE functions */
 #define UNICODE
 #define _UNICODE
-
-#include <stdlib.h> // limits.h // For MB_LEN_MAX
 
 #include <windef.h>
 #include <winbase.h>
@@ -173,3 +176,5 @@ ConClearScreen(IN PCON_SCREEN Screen)
         CON_STREAM_WRITE(Screen->Stream, &ch, 1);
     }
 }
+
+/* EOF */

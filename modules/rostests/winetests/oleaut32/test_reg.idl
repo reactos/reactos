@@ -131,6 +131,15 @@ library register_test
     }
 
     [
+        uuid(fed318b2-c2ed-11e7-abc4-cec278b6b50a)
+    ]
+    interface ICollection : IDispatch
+    {
+        [id(DISPID_VALUE)]
+        HRESULT Item([in] int i, [out, retval] int *p);
+    }
+
+    [
         uuid(f1b68c3b-02a3-4110-bc4c-cf9bc7e7f177)
     ]
     interface IInvokeTest : IDispatch
@@ -143,6 +152,8 @@ library register_test
         LONG testprop2([in] IUnknown *i);
         [id(3)]
         HRESULT testfunc([in] int i, [out, retval] int *p);
+        [propget, id(4)]
+        HRESULT testget([out, retval] ICollection **p);
     }
 
     /* uuid is same as for test_struct2 in test_tlb.idl, fields are different */

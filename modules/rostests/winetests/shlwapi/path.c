@@ -17,7 +17,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "wininet.h"
 
 static BOOL (WINAPI *pPathIsValidCharA)(char,DWORD);
 static BOOL (WINAPI *pPathIsValidCharW)(WCHAR,DWORD);
@@ -1421,6 +1429,11 @@ static void test_PathGetDriveNumber(void)
     static const CHAR test2A[] = "file:////b:\\test.file";
     static const CHAR test3A[] = "file:///c:\\test.file";
     static const CHAR test4A[] = "file:\\\\c:\\test.file";
+    static const CHAR test5A[] = "\\\\?\\C:\\dir\\file.txt";
+    static const WCHAR test1W[] =
+        {'a',':','\\',0};
+    static const WCHAR test5W[] =
+        {'\\','\\','?','\\','C',':','\\','d','i','r','\\','f','i','l','e',0};
     int ret;
 
     SetLastError(0xdeadbeef);
@@ -1430,12 +1443,19 @@ static void test_PathGetDriveNumber(void)
 
     ret = PathGetDriveNumberA(test1A);
     ok(ret == 0, "got %d\n", ret);
+    ret = PathGetDriveNumberW(test1W);
+    ok(ret == 0, "got %d\n", ret);
     ret = PathGetDriveNumberA(test2A);
     ok(ret == -1, "got %d\n", ret);
     ret = PathGetDriveNumberA(test3A);
     ok(ret == -1, "got %d\n", ret);
     ret = PathGetDriveNumberA(test4A);
     ok(ret == -1, "got %d\n", ret);
+
+    ret = PathGetDriveNumberA(test5A);
+    ok(ret == -1, "got %d\n", ret);
+    ret = PathGetDriveNumberW(test5W);
+    ok(ret == 2 || broken(ret == -1) /* winxp */, "got = %d\n", ret);
 }
 
 static void test_PathUnExpandEnvStrings(void)
@@ -1443,10 +1463,11 @@ static void test_PathUnExpandEnvStrings(void)
     static const WCHAR sysrootW[] = {'%','S','y','s','t','e','m','R','o','o','t','%',0};
     static const WCHAR sysdriveW[] = {'%','S','y','s','t','e','m','D','r','i','v','e','%',0};
     static const WCHAR nonpathW[] = {'p','a','t','h',0};
+    static const WCHAR computernameW[] = {'C','O','M','P','U','T','E','R','N','A','M','E',0};
     static const char sysrootA[] = "%SystemRoot%";
     static const char sysdriveA[] = "%SystemDrive%";
-    WCHAR pathW[MAX_PATH], buffW[MAX_PATH], sysdrvW[3];
-    char path[MAX_PATH], buff[MAX_PATH], sysdrvA[3], envvarA[10];
+    WCHAR pathW[MAX_PATH], buffW[MAX_PATH], sysdrvW[3], envvarW[30];
+    char path[MAX_PATH], buff[MAX_PATH], sysdrvA[3], envvarA[30];
     BOOL ret;
     UINT len;
 
@@ -1455,6 +1476,19 @@ static void test_PathUnExpandEnvStrings(void)
         win_skip("PathUnExpandEnvStrings not available\n");
         return;
     }
+
+    /* The value of ComputerName is not a path */
+    ret = GetEnvironmentVariableA("COMPUTERNAME", envvarA, sizeof(envvarA));
+    ok(ret, "got %d\n", ret);
+    SetLastError(0xdeadbeef);
+    ret = pPathUnExpandEnvStringsA(envvarA, buff, sizeof(buff));
+    ok(!ret && GetLastError() == 0xdeadbeef, "got %d, error %d\n", ret, GetLastError());
+
+    ret = GetEnvironmentVariableW(computernameW, envvarW, sizeof(envvarW)/sizeof(WCHAR));
+    ok(ret, "got %d\n", ret);
+    SetLastError(0xdeadbeef);
+    ret = pPathUnExpandEnvStringsW(envvarW, buffW, sizeof(buffW)/sizeof(WCHAR));
+    ok(!ret && GetLastError() == 0xdeadbeef, "got %d, error %d\n", ret, GetLastError());
 
     /* something that can't be represented with env var */
     strcpy(path, "somepath_name");

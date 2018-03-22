@@ -8,6 +8,7 @@ list(APPEND SOURCE
     gifformat.c
     icoformat.c
     info.c
+    jpegformat.c
     metadata.c
     palette.c
     pngformat.c

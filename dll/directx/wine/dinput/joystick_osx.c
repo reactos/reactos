@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "config.h"
+#include "wine/port.h"
 
 #if defined(HAVE_IOKIT_HID_IOHIDLIB_H)
 #define DWORD UInt32
@@ -79,17 +79,17 @@
 #undef E_PENDING
 #endif /* HAVE_IOKIT_HID_IOHIDLIB_H */
 
-//#include "wine/debug.h"
-//#include "wine/unicode.h"
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winerror.h"
-//#include "winreg.h"
-//#include "dinput.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "dinput.h"
 
 #include "dinput_private.h"
-//#include "device_private.h"
-//#include "joystick_private.h"
+#include "device_private.h"
+#include "joystick_private.h"
 
 #ifdef HAVE_IOHIDMANAGERCREATE
 
@@ -640,14 +640,20 @@ static void get_osx_device_elements(JoystickImpl *device, int axis_map[8])
         {
             IOHIDElementRef element = ( IOHIDElementRef ) CFArrayGetValueAtIndex( elements, idx );
             int type = IOHIDElementGetType( element );
+            int usage_page = IOHIDElementGetUsagePage( element );
 
             TRACE("element %s\n", debugstr_element(element));
+
+            if (usage_page >= kHIDPage_VendorDefinedStart)
+            {
+                /* vendor pages can repurpose type ids, resulting in incorrect case matches below (e.g. ds4 controllers) */
+                continue;
+            }
 
             switch(type)
             {
                 case kIOHIDElementTypeInput_Button:
                 {
-                    int usage_page = IOHIDElementGetUsagePage( element );
                     TRACE("kIOHIDElementTypeInput_Button usage_page %d\n", usage_page);
                     if (usage_page != kHIDPage_Button)
                     {

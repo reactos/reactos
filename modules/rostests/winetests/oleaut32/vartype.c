@@ -18,9 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define CONST_VTABLE
+#define COBJMACROS
 
-#include <initguid.h>
+#include "wine/test.h"
+#include "oleauto.h"
+#include <math.h>
+#include <stdio.h>
+#include "test_tlb.h"
+
+#include "initguid.h"
 
 DEFINE_GUID(UUID_test_struct, 0x4029f190, 0xca4a, 0x4611, 0xae,0xb9,0x67,0x39,0x83,0xcb,0x96,0xdd);
 
@@ -2722,6 +2729,7 @@ static void test_VarR8FromStr(void)
   CONVERT_STR(VarR8FromStr,"0.5",LOCALE_NOUSEROVERRIDE);  EXPECT(0.5);
   CONVERT_STR(VarR8FromStr,"0.6",LOCALE_NOUSEROVERRIDE);  EXPECT(0.6);
   CONVERT_STR(VarR8FromStr,"1.5",LOCALE_NOUSEROVERRIDE);  EXPECT(1.5);
+  CONVERT_STR(VarR8FromStr,"1e-94938484",LOCALE_NOUSEROVERRIDE);  EXPECT(0);
 
   /* We already have exhaustive tests for number parsing, so skip those tests here */
 }
@@ -3102,6 +3110,8 @@ static void test_VarDateFromStr(void)
   DFS("6/30/2011 01:20:34");          EXPECT_DBL(40724.05594907407);
   DFS("6/30/2011 01:20:34 AM");       EXPECT_DBL(40724.05594907407);
   DFS("6/30/2011 01:20:34 PM");       EXPECT_DBL(40724.55594907407);
+  DFS("2013-05-14 02:04:12");         EXPECT_DBL(41408.08625000001);
+  DFS("2013-05-14 02:04:12.017000000"); EXPECT_MISMATCH;
   /* Native fails "1999 January 3, 9AM". I consider that a bug in native */
 
   /* test a data with ideographic space */
@@ -6064,6 +6074,7 @@ static void test_recinfo(void)
     IRecordInfo_Release(recinfo);
 
     ITypeInfo_Release(typeinfo);
+    ITypeLib_Release(typelib2);
     ITypeLib_Release(typelib);
     DeleteFileW(filenameW);
     DeleteFileW(filename2W);

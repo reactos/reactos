@@ -18,10 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
 
-#include <wine/exception.h>
-#include <wine/winternl.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+#include "winerror.h"
+#include "wine/debug.h"
+#include "wine/exception.h"
+#include "imagehlp.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
 
 static WORD CalcCheckSum(DWORD StartValue, LPVOID BaseAddress, DWORD WordCount);
 

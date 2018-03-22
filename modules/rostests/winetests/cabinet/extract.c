@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <stdio.h>
-//#include <windows.h>
-#include <wine/test.h>
-#include <fci.h>
-#include <fdi.h>
+#include <stdio.h>
+#include <windows.h>
+#include "fci.h"
+#include "fdi.h"
+#include "wine/test.h"
 
 /* make the max size large so there is only one cab file */
 #define MEDIA_SIZE          999999999

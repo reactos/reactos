@@ -18,7 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <math.h>
+#include <limits.h>
+
+#include "objbase.h"
+#include "gdiplus.h"
+#include "wine/test.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 #define expectf(expected, got) ok(fabs(expected - got) < 0.0001, "Expected %.2f, got %.2f\n", expected, got)
@@ -159,6 +164,7 @@ static void test_invert(void)
     GdipCreateMatrix2(2.0/16.0, 2.0/16.0, -5.0/16.0, 3.0/16.0, 3.0/16.0, -21.0/16.0, &inverted);
     GdipIsMatrixEqual(matrix, inverted, &equal);
     expect(TRUE, equal);
+    GdipDeleteMatrix(matrix);
 
     GdipCreateMatrix2(0.0006, 0, 0, 0.0006, 400, 400, &matrix);
     status = GdipInvertMatrix(matrix);

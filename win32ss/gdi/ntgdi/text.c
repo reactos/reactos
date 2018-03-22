@@ -496,7 +496,8 @@ NtGdiGetTextFaceW(
     HFONT hFont;
     PTEXTOBJ TextObj;
     NTSTATUS Status;
-    INT fLen, ret;
+    SIZE_T fLen;
+    INT ret;
 
     /* FIXME: Handle bAliasName */
 

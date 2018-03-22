@@ -19,16 +19,38 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include "config.h"
 
 #include <assert.h>
-
+#include <stdarg.h>
 #ifdef HAVE_LIBXML2
+# include <libxml/xmlerror.h>
+# include <libxml/tree.h>
 # include <libxml/xmlschemas.h>
 # include <libxml/schemasInternals.h>
+# include <libxml/hash.h>
+# include <libxml/parser.h>
 # include <libxml/parserInternals.h>
+# include <libxml/xmlIO.h>
+# include <libxml/xmlversion.h>
 # include <libxml/xpath.h>
 #endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "msxml6.h"
+
+#include "wine/debug.h"
+
+#include "msxml_private.h"
+
+#ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 /* We use a chained hashtable, which can hold any number of schemas
  * TODO: grow/shrink hashtable depending on load factor
@@ -37,8 +59,6 @@
 
 /* This is just the number of buckets, should be prime */
 #define DEFAULT_HASHTABLE_SIZE 17
-
-#ifdef HAVE_LIBXML2
 
 xmlDocPtr XDR_to_XSD_doc(xmlDocPtr xdr_doc, xmlChar const* nsURI);
 
@@ -729,7 +749,7 @@ void schemasInit(void)
     /* Resource is loaded as raw data,
      * need a null-terminated string */
     while (buf[datatypes_len - 1] != '>') datatypes_len--;
-    datatypes_src = HeapAlloc(GetProcessHeap(), 0, datatypes_len + 1);
+    datatypes_src = heap_alloc(datatypes_len + 1);
     memcpy(datatypes_src, buf, datatypes_len);
     datatypes_src[datatypes_len] = 0;
 
@@ -743,7 +763,7 @@ void schemasInit(void)
 void schemasCleanup(void)
 {
     xmlSchemaFree(datatypes_schema);
-    HeapFree(GetProcessHeap(), 0, datatypes_src);
+    heap_free(datatypes_src);
     xmlSetExternalEntityLoader(_external_entity_loader);
 }
 

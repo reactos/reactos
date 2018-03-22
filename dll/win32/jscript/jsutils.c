@@ -16,8 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "jscript.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include <math.h>
+#include <assert.h>
+
+#include "jscript.h"
+#include "engine.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 WINE_DECLARE_DEBUG_CHANNEL(heap);
 
 const char *debugstr_jsval(const jsval_t v)
@@ -287,11 +297,21 @@ HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
     case VT_I2:
         *r = jsval_number(V_I2(var));
         return S_OK;
+    case VT_UI2:
+        *r = jsval_number(V_UI2(var));
+        return S_OK;
     case VT_INT:
         *r = jsval_number(V_INT(var));
         return S_OK;
     case VT_UI4:
         *r = jsval_number(V_UI4(var));
+        return S_OK;
+    case VT_UI8:
+        /*
+         * Native doesn't support VT_UI8 here, but it's needed for IE9+ APIs
+         * (native IE9 doesn't use jscript.dll for JavaScript).
+         */
+        *r = jsval_number(V_UI8(var));
         return S_OK;
     case VT_R4:
         *r = jsval_number(V_R4(var));

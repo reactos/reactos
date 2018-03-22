@@ -17,9 +17,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <shlwapi.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "wincodec.h"
+#include "wine/test.h"
+#include "shlwapi.h"
 
 /* 1x1 pixel PNG image */
 static const char png_no_color_profile[] = {
@@ -668,11 +674,11 @@ static void test_color_formats(void)
         { 24, 2, NULL, NULL, NULL },
         { 32, 2, NULL, NULL, NULL },
         /* 0 - PNG_COLOR_TYPE_GRAY */
-        { 1, 0, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormat1bppIndexed, TRUE },
-        { 2, 0, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppIndexed, TRUE },
-        { 4, 0, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppIndexed, TRUE },
-        { 8, 0, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppIndexed, TRUE },
-        { 16, 0, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat64bppRGBA, TRUE },
+        { 1, 0, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormat1bppIndexed },
+        { 2, 0, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppIndexed },
+        { 4, 0, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppIndexed },
+        { 8, 0, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppIndexed },
+        { 16, 0, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat64bppRGBA },
         { 24, 0, NULL, NULL, NULL },
         { 32, 0, NULL, NULL, NULL },
         /* 3 - PNG_COLOR_TYPE_PALETTE */

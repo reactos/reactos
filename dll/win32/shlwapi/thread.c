@@ -18,8 +18,25 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdarg.h>
+#include <string.h>
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winuser.h"
+#define NO_SHLWAPI_REG
+#define NO_SHLWAPI_PATH
+#define NO_SHLWAPI_GDI
+#define NO_SHLWAPI_STREAM
+#define NO_SHLWAPI_USER
+#include "shlwapi.h"
+#include "shlobj.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 extern DWORD SHLWAPI_ThreadRef_index;  /* Initialised in shlwapi_main.c */
 

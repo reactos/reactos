@@ -21,11 +21,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#define DDRAW_INIT_GUID
 #include "ddraw_private.h"
-#include <winreg.h>
-#include <rpcproxy.h>
+#include "rpcproxy.h"
 
 #include "wine/exception.h"
+#include "winreg.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static struct list global_ddraw_list = LIST_INIT(global_ddraw_list);
 
@@ -86,8 +92,7 @@ static void ddraw_enumerate_secondary_devices(struct wined3d *wined3d, LPDDENUMC
 /* Handle table functions */
 BOOL ddraw_handle_table_init(struct ddraw_handle_table *t, UINT initial_size)
 {
-    t->entries = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, initial_size * sizeof(*t->entries));
-    if (!t->entries)
+    if (!(t->entries = heap_alloc_zero(initial_size * sizeof(*t->entries))))
     {
         ERR("Failed to allocate handle table memory.\n");
         return FALSE;
@@ -101,7 +106,7 @@ BOOL ddraw_handle_table_init(struct ddraw_handle_table *t, UINT initial_size)
 
 void ddraw_handle_table_destroy(struct ddraw_handle_table *t)
 {
-    HeapFree(GetProcessHeap(), 0, t->entries);
+    heap_free(t->entries);
     memset(t, 0, sizeof(*t));
 }
 
@@ -130,9 +135,9 @@ DWORD ddraw_allocate_handle(struct ddraw_handle_table *t, void *object, enum ddr
     {
         /* Grow the table */
         UINT new_size = t->table_size + (t->table_size >> 1);
-        struct ddraw_handle_entry *new_entries = HeapReAlloc(GetProcessHeap(),
-                0, t->entries, new_size * sizeof(*t->entries));
-        if (!new_entries)
+        struct ddraw_handle_entry *new_entries;
+
+        if (!(new_entries = heap_realloc(t->entries, new_size * sizeof(*t->entries))))
         {
             ERR("Failed to grow the handle table.\n");
             return DDRAW_INVALID_HANDLE;
@@ -292,8 +297,7 @@ DDRAW_Create(const GUID *guid,
         flags = WINED3D_LEGACY_FFP_LIGHTING;
 
     /* DirectDraw creation comes here */
-    ddraw = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ddraw));
-    if (!ddraw)
+    if (!(ddraw = heap_alloc_zero(sizeof(*ddraw))))
     {
         ERR("Out of memory when creating DirectDraw\n");
         return E_OUTOFMEMORY;
@@ -303,7 +307,7 @@ DDRAW_Create(const GUID *guid,
     if (FAILED(hr))
     {
         WARN("Failed to initialize ddraw object, hr %#x.\n", hr);
-        HeapFree(GetProcessHeap(), 0, ddraw);
+        heap_free(ddraw);
         return hr;
     }
 
@@ -664,7 +668,7 @@ static ULONG WINAPI ddraw_class_factory_Release(IClassFactory *iface)
     TRACE("%p decreasing refcount to %u.\n", factory, ref);
 
     if (!ref)
-        HeapFree(GetProcessHeap(), 0, factory);
+        heap_free(factory);
 
     return ref;
 }
@@ -736,20 +740,20 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **out)
             && !IsEqualGUID(&IID_IUnknown, riid))
         return E_NOINTERFACE;
 
-    for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
+    for (i=0; i < ARRAY_SIZE(object_creation); i++)
     {
         if (IsEqualGUID(object_creation[i].clsid, rclsid))
             break;
     }
 
-    if (i == sizeof(object_creation)/sizeof(object_creation[0]))
+    if (i == ARRAY_SIZE(object_creation))
     {
         FIXME("%s: no class found.\n", debugstr_guid(rclsid));
         return CLASS_E_CLASSNOTAVAILABLE;
     }
 
-    factory = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*factory));
-    if (factory == NULL) return E_OUTOFMEMORY;
+    if (!(factory = heap_alloc_zero(sizeof(*factory))))
+        return E_OUTOFMEMORY;
 
     factory->IClassFactory_iface.lpVtbl = &IClassFactory_Vtbl;
     factory->ref = 1;

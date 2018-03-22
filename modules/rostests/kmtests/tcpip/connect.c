@@ -68,7 +68,7 @@ TestTcpConnect(void)
     FileInfo = ExAllocatePoolWithTag(NonPagedPool,
             FileInfoSize,
             TAG_TEST);
-    ok(FileInfo != NULL, "");
+    ok(FileInfo != NULL, "FileInfo is NULL!\n");
     RtlZeroMemory(FileInfo, FileInfoSize);
 
     FileInfo->EaNameLength = TDI_TRANSPORT_ADDRESS_LENGTH;
@@ -111,7 +111,7 @@ TestTcpConnect(void)
     FileInfo = ExAllocatePoolWithTag(NonPagedPool,
             FileInfoSize,
             TAG_TEST);
-    ok(FileInfo != NULL, "");
+    ok(FileInfo != NULL, "FileInfo is NULL!\n");
     RtlZeroMemory(FileInfo, FileInfoSize);
 
     FileInfo->EaNameLength = TDI_CONNECTION_CONTEXT_LENGTH;

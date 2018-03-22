@@ -13,6 +13,7 @@ extern "C"
     //fixme: this isn't in wine's shlwapi header, and the definition doesnt match the
     // windows headers. When wine's header and lib are fixed this can be removed.
     DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen);
+    INT WINAPI SHUnicodeToAnsi(LPCWSTR lpSrcStr, LPSTR lpDstStr, INT iLen);
 };
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
@@ -48,8 +49,13 @@ struct _StaticInvokeCommandMap_
     { "Preview", 0 }, // Unimplemented
     { "Open", FCIDM_SHVIEW_OPEN },
     { CMDSTR_NEWFOLDERA, FCIDM_SHVIEW_NEWFOLDER },
-    { CMDSTR_VIEWLISTA, FCIDM_SHVIEW_LISTVIEW },
-    { CMDSTR_VIEWDETAILSA, FCIDM_SHVIEW_REPORTVIEW }
+    { "cut", FCIDM_SHVIEW_CUT},
+    { "copy", FCIDM_SHVIEW_COPY},
+    { "paste", FCIDM_SHVIEW_INSERT},
+    { "link", FCIDM_SHVIEW_CREATELINK},
+    { "delete", FCIDM_SHVIEW_DELETE},
+    { "properties", FCIDM_SHVIEW_PROPERTIES},
+    { "rename", FCIDM_SHVIEW_RENAME},
 };
 
 
@@ -377,6 +383,9 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
         WARN("IShellExtInit::Initialize failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
         return hr;
     }
+
+    if (m_site)
+        IUnknown_SetSite(pcm, m_site);
 
     PDynamicShellEntry pEntry = (DynamicShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DynamicShellEntry));
     if (!pEntry)
@@ -1236,7 +1245,7 @@ CDefaultContextMenu::InvokeCommand(
         Result = DoCreateNewFolder(&LocalInvokeInfo);
         break;
     default:
-        Result = E_UNEXPECTED;
+        Result = E_INVALIDARG;
         ERR("Unhandled Verb %xl\n", LOWORD(LocalInvokeInfo.lpVerb));
         break;
     }
@@ -1255,15 +1264,68 @@ CDefaultContextMenu::GetCommandString(
 {
     /* We don't handle the help text yet */
     if (uFlags == GCS_HELPTEXTA ||
-        uFlags == GCS_HELPTEXTW)
+        uFlags == GCS_HELPTEXTW ||
+        HIWORD(idCommand) != 0)
     {
         return E_NOTIMPL;
+    }
+
+    UINT CmdId = LOWORD(idCommand);
+
+    if (m_pDynamicEntries && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
+    {
+        idCommand -= m_iIdSHEFirst;
+        PDynamicShellEntry pEntry = GetDynamicEntry(idCommand);
+        if (!pEntry)
+            return E_FAIL;
+
+        idCommand -= pEntry->iIdCmdFirst;
+        return pEntry->pCM->GetCommandString(idCommand,
+                                             uFlags,
+                                             lpReserved,
+                                             lpszName,
+                                             uMaxNameLen);
+    }
+
+    if (m_pStaticEntries && CmdId >= m_iIdSCMFirst && CmdId < m_iIdSCMLast)
+    {
+        /* Validation just returns S_OK on a match. The id exists. */
+        if (uFlags == GCS_VALIDATEA || uFlags == GCS_VALIDATEW)
+            return S_OK;
+
+        CmdId -= m_iIdSCMFirst;
+
+        PStaticShellEntry pEntry = m_pStaticEntries;
+        while (pEntry && (CmdId--) > 0)
+            pEntry = pEntry->pNext;
+
+        if (!pEntry)
+            return E_INVALIDARG;
+
+        if (uFlags == GCS_VERBW)
+            return StringCchCopyW((LPWSTR)lpszName, uMaxNameLen, pEntry->szVerb);
+
+        if (uFlags == GCS_VERBA)
+        {
+            if (SHUnicodeToAnsi(pEntry->szVerb, lpszName, uMaxNameLen))
+                return S_OK;
+        }
+
+        return E_INVALIDARG;
+    }
+
+    //FIXME: Should we handle callbacks here?
+    if (m_iIdDfltFirst != m_iIdDfltLast && CmdId >= m_iIdDfltFirst && CmdId < m_iIdDfltLast)
+    {
+        CmdId -= m_iIdDfltFirst;
+        /* See the definitions of IDM_CUT and co to see how this works */
+        CmdId += 0x7000;
     }
 
     /* Loop looking for a matching Id */
     for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); i++)
     {
-        if (g_StaticInvokeCmdMap[i].IntVerb == idCommand)
+        if (g_StaticInvokeCmdMap[i].IntVerb == CmdId)
         {
             /* Validation just returns S_OK on a match */
             if (uFlags == GCS_VALIDATEA || uFlags == GCS_VALIDATEW)

@@ -19,9 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <htmlhelp.h>
-
 #include "resource.h"
 
 /* UTF-8 */
@@ -115,7 +112,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION 5,2,3790,2744
 #define WINE_PRODUCTVERSION_STR "5.2.3790.2744"
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"
 
 /* @makedep: hhtoolbar.bmp */
 IDB_HHTOOLBAR BITMAP "res/hhtoolbar.bmp"

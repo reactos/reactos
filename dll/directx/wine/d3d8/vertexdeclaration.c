@@ -21,7 +21,10 @@
 /* IDirect3DVertexDeclaration8 is internal to our implementation.
  * It's not visible in the API. */
 
+#include "config.h"
 #include "d3d8_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
 static const char *debug_d3dvsdt_type(D3DVSDT_TYPE d3dvsdt_type)
 {
@@ -263,7 +266,7 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
     TRACE("d3d8_elements %p, d3d8_elements_size %p, wined3d_elements %p\n", d3d8_elements, d3d8_elements_size, wined3d_elements);
 
     /* 128 should be enough for anyone... */
-    *wined3d_elements = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 128 * sizeof(**wined3d_elements));
+    *wined3d_elements = heap_alloc_zero(128 * sizeof(**wined3d_elements));
     while (D3DVSD_END() != *token)
     {
         token_type = ((*token & D3DVSD_TOKENTYPEMASK) >> D3DVSD_TOKENTYPESHIFT);
@@ -311,8 +314,8 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
 static void STDMETHODCALLTYPE d3d8_vertexdeclaration_wined3d_object_destroyed(void *parent)
 {
     struct d3d8_vertex_declaration *declaration = parent;
-    HeapFree(GetProcessHeap(), 0, declaration->elements);
-    HeapFree(GetProcessHeap(), 0, declaration);
+    heap_free(declaration->elements);
+    heap_free(declaration);
 }
 
 void d3d8_vertex_declaration_destroy(struct d3d8_vertex_declaration *declaration)
@@ -339,11 +342,10 @@ HRESULT d3d8_vertex_declaration_init(struct d3d8_vertex_declaration *declaration
     declaration->shader_handle = shader_handle;
 
     wined3d_element_count = convert_to_wined3d_declaration(elements, &declaration->elements_size, &wined3d_elements);
-    declaration->elements = HeapAlloc(GetProcessHeap(), 0, declaration->elements_size);
-    if (!declaration->elements)
+    if (!(declaration->elements = heap_alloc(declaration->elements_size)))
     {
         ERR("Failed to allocate vertex declaration elements memory.\n");
-        HeapFree(GetProcessHeap(), 0, wined3d_elements);
+        heap_free(wined3d_elements);
         return E_OUTOFMEMORY;
     }
 
@@ -353,11 +355,11 @@ HRESULT d3d8_vertex_declaration_init(struct d3d8_vertex_declaration *declaration
     hr = wined3d_vertex_declaration_create(device->wined3d_device, wined3d_elements, wined3d_element_count,
             declaration, &d3d8_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_vertex_declaration);
     wined3d_mutex_unlock();
-    HeapFree(GetProcessHeap(), 0, wined3d_elements);
+    heap_free(wined3d_elements);
     if (FAILED(hr))
     {
         WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);
-        HeapFree(GetProcessHeap(), 0, declaration->elements);
+        heap_free(declaration->elements);
         return hr;
     }
 

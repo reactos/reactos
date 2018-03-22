@@ -16,7 +16,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "wingdi.h"
+#include "winerror.h"
+#include "mmsystem.h"
+#include "vfw.h"
+
 #include "avifile_private.h"
+#include "extrachunk.h"
+
+#include "wine/debug.h"
+#include "initguid.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
 /***********************************************************************/
 
@@ -265,7 +282,6 @@ static ULONG   WINAPI IAVIEditStream_fnRelease(IAVIEditStream*iface)
     }
 
     HeapFree(GetProcessHeap(), 0, This);
-    return 0;
   }
   return ref;
 }

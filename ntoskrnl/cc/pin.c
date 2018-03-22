@@ -18,6 +18,17 @@
 
 extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 
+/* Counters:
+ * - Number of calls to CcMapData that could wait
+ * - Number of calls to CcMapData that couldn't wait
+ * - Number of calls to CcPinRead that could wait
+ * - Number of calls to CcPinRead that couldn't wait
+ */
+ULONG CcMapDataWait = 0;
+ULONG CcMapDataNoWait = 0;
+ULONG CcPinReadWait = 0;
+ULONG CcPinReadNoWait = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -44,6 +55,15 @@ CcMapData (
     DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %lu, Flags 0x%lx,"
            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
            Length, Flags, pBcb, pBuffer);
+
+    if (Flags & MAP_WAIT)
+    {
+        ++CcMapDataWait;
+    }
+    else
+    {
+        ++CcMapDataNoWait;
+    }
 
     ReadOffset = FileOffset->QuadPart;
 
@@ -176,6 +196,15 @@ CcPinRead (
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
         FileObject, FileOffset, Length, Flags);
 
+    if (Flags & PIN_WAIT)
+    {
+        ++CcPinReadWait;
+    }
+    else
+    {
+        ++CcPinReadNoWait;
+    }
+
     if (CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
     {
         if (CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
@@ -283,14 +312,14 @@ CcUnpinDataForThread (
         iBcb->Vacb->PinCount--;
     }
 
-    CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
-                     iBcb->Vacb,
-                     TRUE,
-                     iBcb->Dirty,
-                     FALSE);
-
     if (--iBcb->RefCount == 0)
     {
+        CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
+                         iBcb->Vacb,
+                         TRUE,
+                         iBcb->Dirty,
+                         FALSE);
+
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
     }
@@ -353,7 +382,15 @@ CcUnpinRepinnedBcb (
             iBcb->Pinned = FALSE;
             CcRosAcquireVacbLock(iBcb->Vacb, NULL);
             iBcb->Vacb->PinCount--;
+            ASSERT(iBcb->Vacb->PinCount == 0);
         }
+
+        CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
+                         iBcb->Vacb,
+                         TRUE,
+                         iBcb->Dirty,
+                         FALSE);
+
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
     }

@@ -19,27 +19,8 @@
 #ifndef __AVIFILE_PRIVATE_H
 #define __AVIFILE_PRIVATE_H
 
-#include <assert.h>
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-
 #include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <vfw.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-#include "extrachunk.h"
-#include "resource.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(avifile);
+#include <winuser.h>
 
 #ifndef MAX_AVISTREAMS
 #define MAX_AVISTREAMS 8
@@ -54,6 +35,22 @@ WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 #define DIBPTR(lp)      ((LPBYTE)(lp) + (lp)->biSize + \
                          (lp)->biClrUsed * sizeof(RGBQUAD))
 #endif
+
+#define IDD_SAVEOPTIONS      0x0100
+#define IDC_INTERLEAVE       0x0110
+#define IDC_INTERLEAVEEVERY  0x0111
+#define IDC_STREAM           0x0112
+#define IDC_OPTIONS          0x0113
+#define IDC_FORMATTEXT       0x0114
+
+#define IDS_WAVESTREAMFORMAT 0x0100
+#define IDS_WAVEFILETYPE     0x0101
+#define IDS_ALLMULTIMEDIA    0x0184
+#define IDS_ALLFILES         0x0185
+#define IDS_VIDEO            0x0189
+#define IDS_AUDIO            0x0190
+#define IDS_AVIFILETYPE      0x0192
+#define IDS_UNCOMPRESSED     0x0193
 
 DEFINE_AVIGUID(CLSID_ICMStream, 0x00020001, 0, 0);
 DEFINE_AVIGUID(CLSID_WAVFile,   0x00020003, 0, 0);
@@ -71,4 +68,4 @@ extern PAVIFILE  AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStr
 extern LPCWSTR  AVIFILE_BasenameW(LPCWSTR szFileName) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI avifil32_DllGetClassObject(REFCLSID pclsid, REFIID piid, LPVOID *ppv) DECLSPEC_HIDDEN;
 
-#endif /* __AVIFILE_PRIVATE_H */
+#endif

@@ -18,24 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
+#include "config.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
-#include <config.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
+#include <stdarg.h>
 
-//#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "icm.h"
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-#include <wingdi.h>
-#include <winuser.h>
-#include <winreg.h>
-//#include "shlwapi.h"
-#include <icm.h>
-
-//#include "mscms_priv.h"
+#include "mscms_priv.h"
 
 static void basename( LPCWSTR path, LPWSTR name )
 {

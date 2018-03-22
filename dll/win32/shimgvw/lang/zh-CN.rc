@@ -1,4 +1,5 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -12,8 +13,8 @@ BEGIN
     IDS_TOOLTIP_PREV_PIC "上一张图片"
     IDS_TOOLTIP_ZOOM_IN "放大 (+)"
     IDS_TOOLTIP_ZOOM_OUT "缩小 (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "旋转顺时针 (Ctrl+K)"
-    IDS_TOOLTIP_ROT_COUNCW "旋转逆时针 (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CLOCKW "顺时针旋转 (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "逆时针旋转 (Ctrl+L)"
     IDS_TOOLTIP_PRINT "打印 (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "另存为...(Ctrl+S)"
 END
@@ -23,7 +24,7 @@ BEGIN
     IDS_EMF_FILE    "EMF 图像"
     IDS_GIF_FILE    "GIF 图像"
     IDS_JPG_FILE    "JPEG 图像"
-    IDS_BMP_FILE    "Bitmap 图像"
+    IDS_BMP_FILE    "BMP 图像"
     IDS_PNG_FILE    "PNG 图像"
     IDS_TIF_FILE    "TIF 图像"
     IDS_WMF_FILE    "WMF 图像"

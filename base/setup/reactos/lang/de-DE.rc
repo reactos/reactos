@@ -106,13 +106,13 @@ BEGIN
     LTEXT "Sie haben die erste Stufe des ReactOS-Setup erfolgreich abgeschlossen.", IDC_STATIC, 20, 50, 277, 10
     LTEXT "Wenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Wenn eine CD im Laufwerk ist, entfernen Sie sie. Klicken Sie zum Neustart auf Beenden.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Wenn eine CD im Laufwerk ist, entfernen Sie diese. Klicken Sie zum Neustart auf Beenden.", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
 BEGIN
     IDS_TYPETITLE "Willkommen zum ReactOS-Setup"
-    IDS_TYPESUBTITLE "Wählen Sie einen Setuptyp."
+    IDS_TYPESUBTITLE "Wählen Sie einen Setuptypen."
     IDS_DEVICETITLE "Einstellen der Basisgeräte"
     IDS_DEVICESUBTITLE "Einstellungen der Anzeigegeräte und der Tastatur."
     IDS_DRIVETITLE "Richte Installationspartition und Systemverzeichnis ein"
@@ -123,7 +123,7 @@ BEGIN
     IDS_RESTARTSUBTITLE "Die erste Stufe des Setup wurde abgeschlossen, starten Sie den Rechner neu, um mit der zweiten Stufe fortzufahren."
     IDS_SUMMARYTITLE "Installationszusammenfassung"
     IDS_SUMMARYSUBTITLE "Liste alle Installationseinstellungen vor Anwendung auf die Geräte auf"
-    IDS_ABORTSETUP "ReactOS ist nicht vollständig auf Ihrem Computer installiert. Wenn Sie das Setup verlassen, dann müssen Sie das Setup nochmals ausführen, um ReactOS zu installieren. Wirklich beenden?"
+    IDS_ABORTSETUP "ReactOS ist nicht vollständig auf Ihrem Computer installiert. Wenn Sie das Setup verlassen, müssen Sie das Setup nochmals ausführen, um ReactOS zu installieren. Wirklich beenden?"
     IDS_ABORTSETUP2 "Installation abbrechen?"
     IDS_NO_TXTSETUP_SIF "Die Datei 'txtsetup.sif' konnte nicht gefunden werden.\nSetup kann nicht fortfahren."
     IDS_CAPTION "ReactOS Setup"

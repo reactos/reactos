@@ -16,7 +16,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+
 #include "wincodecs_private.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 /* WARNING: .NET Media Integration Layer (MIL) directly dereferences
  * BitmapImpl members and depends on its exact layout.
@@ -63,13 +77,10 @@ static inline BitmapImpl *impl_from_IMILUnknown1(IMILUnknown1 *iface)
     return CONTAINING_RECORD(iface, BitmapImpl, IMILUnknown1_iface);
 }
 
-#ifndef __REACTOS__
-/* This is currently unused */
 static inline BitmapImpl *impl_from_IMILUnknown2(IMILUnknown2 *iface)
 {
     return CONTAINING_RECORD(iface, BitmapImpl, IMILUnknown2_iface);
 }
-#endif
 
 static inline BitmapLockImpl *impl_from_IWICBitmapLock(IWICBitmapLock *iface)
 {

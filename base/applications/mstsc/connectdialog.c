@@ -1262,7 +1262,7 @@ DlgProc(HWND hDlg,
                                       szBuffer,
                                       -1,
                                       &txtRc,
-                                      DT_BOTTOM | DT_SINGLELINE | DT_NOCLIP);
+                                      DT_BOTTOM | DT_SINGLELINE | DT_NOCLIP | DT_CENTER); //DT_CENTER makes the text visible in RTL layouts...
                             SelectObject(hdc, hFontOld);
                             DeleteObject(hFont);
                         }

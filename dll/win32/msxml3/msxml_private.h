@@ -21,14 +21,17 @@
 #ifndef __MSXML_PRIVATE__
 #define __MSXML_PRIVATE__
 
-#include <dispex.h>
+#include "dispex.h"
 
-#include <wine/unicode.h>
-#include <wine/list.h>
+#include "wine/unicode.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
 #ifndef __WINE_CONFIG_H
 # error You must include config.h to use this header
 #endif
+
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
 typedef enum {
     MSXML_DEFAULT = 0,
@@ -164,29 +167,9 @@ const IID *get_riid_from_tid(enum tid_t tid) DECLSPEC_HIDDEN;
 
 /* memory allocation functions */
 
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
-}
-
 static inline void* __WINE_ALLOC_SIZE(2) heap_realloc_zero(void *mem, size_t size)
 {
     return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline LPWSTR heap_strdupW(LPCWSTR str)
@@ -379,6 +362,12 @@ extern BSTR EnsureCorrectEOL(BSTR) DECLSPEC_HIDDEN;
 
 extern xmlChar* tagName_to_XPath(const BSTR tagName) DECLSPEC_HIDDEN;
 
+#ifdef SONAME_LIBXSLT
+#  include <libxslt/documents.h>
+extern xmlDocPtr xslt_doc_default_loader(const xmlChar *uri, xmlDictPtr dict, int options,
+    void *_ctxt, xsltLoadType type) DECLSPEC_HIDDEN;
+#endif /* SONAME_LIBXSLT */
+
 static inline BSTR bstr_from_xmlChar(const xmlChar *str)
 {
     BSTR ret = NULL;
@@ -395,12 +384,12 @@ static inline BSTR bstr_from_xmlChar(const xmlChar *str)
     return ret;
 }
 
-static inline xmlChar *xmlchar_from_wcharn(const WCHAR *str, int nchars)
+static inline xmlChar *xmlchar_from_wcharn(const WCHAR *str, int nchars, BOOL use_xml_alloc)
 {
     xmlChar *xmlstr;
     DWORD len = WideCharToMultiByte( CP_UTF8, 0, str, nchars, NULL, 0, NULL, NULL );
 
-    xmlstr = heap_alloc( len+1 );
+    xmlstr = use_xml_alloc ? xmlMalloc( len + 1 ) : heap_alloc( len + 1 );
     if ( xmlstr )
     {
         WideCharToMultiByte( CP_UTF8, 0, str, nchars, (LPSTR) xmlstr, len+1, NULL, NULL );
@@ -411,7 +400,7 @@ static inline xmlChar *xmlchar_from_wcharn(const WCHAR *str, int nchars)
 
 static inline xmlChar *xmlchar_from_wchar( const WCHAR *str )
 {
-    return xmlchar_from_wcharn(str, -1);
+    return xmlchar_from_wcharn(str, -1, FALSE);
 }
 
 static inline xmlChar *heap_strdupxmlChar(const xmlChar *str)
@@ -544,6 +533,7 @@ static inline const CLSID* SchemaCache_version(MSXML_VERSION v)
 typedef struct bsc_t bsc_t;
 
 HRESULT create_moniker_from_url(LPCWSTR, IMoniker**) DECLSPEC_HIDDEN;
+HRESULT create_uri(const WCHAR *, IUri **) DECLSPEC_HIDDEN;
 HRESULT bind_url(IMoniker*, HRESULT (*onDataAvailable)(void*,char*,DWORD), void*, bsc_t**) DECLSPEC_HIDDEN;
 HRESULT detach_bsc(bsc_t*) DECLSPEC_HIDDEN;
 

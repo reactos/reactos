@@ -45,14 +45,14 @@ MoreOptDlgProc(HWND hwndDlg,
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             CheckDlgButton(hwndDlg, IDC_INSTFREELDR, BST_CHECKED);
             SendMessage(GetDlgItem(hwndDlg, IDC_PATH),
@@ -157,7 +157,7 @@ DriveDlgProc(
 #endif
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -165,7 +165,7 @@ DriveDlgProc(
         {
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             CreateListViewColumns(pSetupData->hInstance,
                                   GetDlgItem(hwndDlg, IDC_PARTITION));
@@ -245,7 +245,7 @@ DriveDlgProc(
 
                 case PSN_QUERYCANCEL:
                     SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
+                                     DWLP_MSGRESULT,
                                      MessageBox(GetParent(hwndDlg),
                                                 pSetupData->szAbortMessage,
                                                 pSetupData->szAbortTitle,

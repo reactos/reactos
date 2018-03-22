@@ -395,6 +395,57 @@ static const char wrong_depmanifest1[] =
 "<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.4\" processorArchitecture=\"" ARCH "\" />"
 "</assembly>";
 
+static const char compat_manifest_no_supportedOs[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"   <assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"   <compatibility xmlns=\"urn:schemas-microsoft-com:compatibility.v1\">"
+"       <application>"
+"       </application>"
+"   </compatibility>"
+"</assembly>";
+
+static const char compat_manifest_vista[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"   <assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"   <compatibility xmlns=\"urn:schemas-microsoft-com:compatibility.v1\">"
+"       <application>"
+"           <supportedOS Id=\"{e2011457-1546-43c5-a5fe-008deee3d3f0}\" />"  /* Windows Vista */
+"       </application>"
+"   </compatibility>"
+"</assembly>";
+
+static const char compat_manifest_vista_7_8_10_81[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"   <assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"   <compatibility xmlns=\"urn:schemas-microsoft-com:compatibility.v1\">"
+"       <application>"
+"           <supportedOS Id=\"{e2011457-1546-43c5-a5fe-008deee3d3f0}\" />"  /* Windows Vista */
+"           <supportedOS Id=\"{35138b9a-5d96-4fbd-8e2d-a2440225f93a}\" />"  /* Windows 7 */
+"           <supportedOS Id=\"{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}\" />"  /* Windows 8 */
+"           <supportedOS Id=\"{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}\" />"  /* Windows 10 */
+"           <supportedOS Id=\"{1f676c76-80e1-4239-95bb-83d0f6d0da78}\" />"  /* Windows 8.1 */
+"       </application>"
+"   </compatibility>"
+"</assembly>";
+
+static const char compat_manifest_other_guid[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"   <assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"   <compatibility xmlns=\"urn:schemas-microsoft-com:compatibility.v1\">"
+"       <application>"
+"           <supportedOS Id=\"{12345566-1111-2222-3333-444444444444}\" />"
+"       </application>"
+"   </compatibility>"
+"</assembly>";
+
+DEFINE_GUID(VISTA_COMPAT_GUID,      0xe2011457, 0x1546, 0x43c5, 0xa5, 0xfe, 0x00, 0x8d, 0xee, 0xe3, 0xd3, 0xf0);
+DEFINE_GUID(WIN7_COMPAT_GUID,       0x35138b9a, 0x5d96, 0x4fbd, 0x8e, 0x2d, 0xa2, 0x44, 0x02, 0x25, 0xf9, 0x3a);
+DEFINE_GUID(WIN8_COMPAT_GUID,       0x4a2f28e3, 0x53b9, 0x4441, 0xba, 0x9c, 0xd6, 0x9d, 0x4a, 0x4a, 0x6e, 0x38);
+DEFINE_GUID(WIN81_COMPAT_GUID,      0x1f676c76, 0x80e1, 0x4239, 0x95, 0xbb, 0x83, 0xd0, 0xf6, 0xd0, 0xda, 0x78);
+DEFINE_GUID(WIN10_COMPAT_GUID,      0x8e0f7a12, 0xbfb3, 0x4fe8, 0xb9, 0xa5, 0x48, 0xfd, 0x50, 0xa1, 0x5a, 0x9a);
+DEFINE_GUID(OTHER_COMPAT_GUID,      0x12345566, 0x1111, 0x2222, 0x33, 0x33, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44);
+
+
 static const WCHAR testlib_dll[] =
     {'t','e','s','t','l','i','b','.','d','l','l',0};
 static const WCHAR testlib2_dll[] =
@@ -894,7 +945,7 @@ static HANDLE test_create(const char *file)
     return handle;
 }
 
-static void test_create_and_fail(const char *manifest, const char *depmanifest, int todo)
+static void test_create_and_fail(const char *manifest, const char *depmanifest, int todo, BOOL is_broken)
 {
     ACTCTXW actctx;
     HANDLE handle;
@@ -909,8 +960,14 @@ static void test_create_and_fail(const char *manifest, const char *depmanifest, 
     handle = pCreateActCtxW(&actctx);
     todo_wine_if(todo)
     {
-        ok(handle == INVALID_HANDLE_VALUE, "handle != INVALID_HANDLE_VALUE\n");
-        ok(GetLastError() == ERROR_SXS_CANT_GEN_ACTCTX, "GetLastError == %u\n", GetLastError());
+        if (is_broken)
+            ok(broken(handle != INVALID_HANDLE_VALUE) || handle == INVALID_HANDLE_VALUE,
+                "Unexpected context handle %p.\n", handle);
+        else
+            ok(handle == INVALID_HANDLE_VALUE, "Unexpected context handle %p.\n", handle);
+
+        if (handle == INVALID_HANDLE_VALUE)
+            ok(GetLastError() == ERROR_SXS_CANT_GEN_ACTCTX, "Unexpected error %d.\n", GetLastError());
     }
     if (handle != INVALID_HANDLE_VALUE) pReleaseActCtx( handle );
     DeleteFileA("bad.manifest");
@@ -953,31 +1010,31 @@ static void test_create_fail(void)
     ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError == %u\n", GetLastError());
 
     trace("wrong_manifest1\n");
-    test_create_and_fail(wrong_manifest1, NULL, 0 );
+    test_create_and_fail(wrong_manifest1, NULL, 0, FALSE);
     trace("wrong_manifest2\n");
-    test_create_and_fail(wrong_manifest2, NULL, 0 );
+    test_create_and_fail(wrong_manifest2, NULL, 0, FALSE);
     trace("wrong_manifest3\n");
-    test_create_and_fail(wrong_manifest3, NULL, 1 );
+    test_create_and_fail(wrong_manifest3, NULL, 1, FALSE);
     trace("wrong_manifest4\n");
-    test_create_and_fail(wrong_manifest4, NULL, 1 );
+    test_create_and_fail(wrong_manifest4, NULL, 1, FALSE);
     trace("wrong_manifest5\n");
-    test_create_and_fail(wrong_manifest5, NULL, 0 );
+    test_create_and_fail(wrong_manifest5, NULL, 0, FALSE);
     trace("wrong_manifest6\n");
-    test_create_and_fail(wrong_manifest6, NULL, 0 );
+    test_create_and_fail(wrong_manifest6, NULL, 0, FALSE);
     trace("wrong_manifest7\n");
-    test_create_and_fail(wrong_manifest7, NULL, 1 );
+    test_create_and_fail(wrong_manifest7, NULL, 1, FALSE);
     trace("wrong_manifest8\n");
-    test_create_and_fail(wrong_manifest8, NULL, 0 );
+    test_create_and_fail(wrong_manifest8, NULL, 0, FALSE);
     trace("wrong_manifest9\n");
-    test_create_and_fail(wrong_manifest9, NULL, 0 );
+    test_create_and_fail(wrong_manifest9, NULL, 0, TRUE /* WinXP */);
     trace("wrong_manifest10\n");
-    test_create_and_fail(wrong_manifest10, NULL, 0 );
+    test_create_and_fail(wrong_manifest10, NULL, 0, TRUE /* WinXP */);
     trace("UTF-16 manifest1 without BOM\n");
     test_create_wide_and_fail(manifest1, FALSE );
     trace("manifest2\n");
-    test_create_and_fail(manifest2, NULL, 0 );
+    test_create_and_fail(manifest2, NULL, 0, FALSE);
     trace("manifest2+depmanifest1\n");
-    test_create_and_fail(manifest2, wrong_depmanifest1, 0 );
+    test_create_and_fail(manifest2, wrong_depmanifest1, 0, FALSE);
 }
 
 struct strsection_header
@@ -1909,8 +1966,6 @@ static void test_actctx(void)
     HANDLE handle;
     BOOL b;
 
-    test_create_fail();
-
     trace("default actctx\n");
 
     b = pGetCurrentActCtx(&handle);
@@ -2095,7 +2150,8 @@ static void test_actctx(void)
 
     if(create_manifest_file("test6.manifest", manifest6, -1, NULL, NULL)) {
         handle = test_create("test6.manifest");
-        ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+        ok(handle != INVALID_HANDLE_VALUE || broken(handle == INVALID_HANDLE_VALUE) /* WinXP */,
+            "Unexpected context handle %p.\n", handle);
         DeleteFileA("test6.manifest");
         DeleteFileA("testdep.manifest");
         if(handle != INVALID_HANDLE_VALUE)
@@ -2267,7 +2323,7 @@ static HANDLE create_manifest(const char *filename, const char *data, int line)
     return handle;
 }
 
-static void kernel32_find(ULONG section, const char *string_to_find, BOOL should_find, int line)
+static void kernel32_find(ULONG section, const char *string_to_find, BOOL should_find, BOOL todo, int line)
 {
     UNICODE_STRING string_to_findW;
     ACTCTX_SECTION_KEYED_DATA data;
@@ -2284,6 +2340,7 @@ static void kernel32_find(ULONG section, const char *string_to_find, BOOL should
     err = GetLastError();
     ok_(__FILE__, line)(ret == should_find,
         "FindActCtxSectionStringA: expected ret = %u, got %u\n", should_find, ret);
+    todo_wine_if(todo)
     ok_(__FILE__, line)(err == (should_find ? ERROR_SUCCESS : ERROR_SXS_KEY_NOT_FOUND),
         "FindActCtxSectionStringA: unexpected error %u\n", err);
 
@@ -2295,6 +2352,7 @@ static void kernel32_find(ULONG section, const char *string_to_find, BOOL should
     err = GetLastError();
     ok_(__FILE__, line)(ret == should_find,
         "FindActCtxSectionStringW: expected ret = %u, got %u\n", should_find, ret);
+    todo_wine_if(todo)
     ok_(__FILE__, line)(err == (should_find ? ERROR_SUCCESS : ERROR_SXS_KEY_NOT_FOUND),
         "FindActCtxSectionStringW: unexpected error %u\n", err);
 
@@ -2317,7 +2375,7 @@ static void kernel32_find(ULONG section, const char *string_to_find, BOOL should
     pRtlFreeUnicodeString(&string_to_findW);
 }
 
-static void ntdll_find(ULONG section, const char *string_to_find, BOOL should_find, int line)
+static void ntdll_find(ULONG section, const char *string_to_find, BOOL should_find, BOOL todo, int line)
 {
     UNICODE_STRING string_to_findW;
     ACTCTX_SECTION_KEYED_DATA data;
@@ -2329,10 +2387,12 @@ static void ntdll_find(ULONG section, const char *string_to_find, BOOL should_fi
     data.cbSize = sizeof(data);
 
     ret = pRtlFindActivationContextSectionString(0, NULL, section, &string_to_findW, &data);
+    todo_wine_if(todo)
     ok_(__FILE__, line)(ret == (should_find ? STATUS_SUCCESS : STATUS_SXS_KEY_NOT_FOUND),
         "RtlFindActivationContextSectionString: unexpected status 0x%x\n", ret);
 
     ret = pRtlFindActivationContextSectionString(0, NULL, section, &string_to_findW, NULL);
+    todo_wine_if(todo)
     ok_(__FILE__, line)(ret == (should_find ? STATUS_SUCCESS : STATUS_SXS_KEY_NOT_FOUND),
         "RtlFindActivationContextSectionString: unexpected status 0x%x\n", ret);
 
@@ -2350,22 +2410,22 @@ static void test_findsectionstring(void)
     ok(ret, "ActivateActCtx failed: %u\n", GetLastError());
 
     /* first we show the parameter validation from kernel32 */
-    kernel32_find(ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION, "testdep", FALSE, __LINE__);
-    kernel32_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib.dll", TRUE, __LINE__);
-    kernel32_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib2.dll", TRUE, __LINE__);
-    kernel32_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib3.dll", FALSE, __LINE__);
-    kernel32_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass", TRUE, __LINE__);
-    kernel32_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass2", TRUE, __LINE__);
-    kernel32_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass3", FALSE, __LINE__);
+    kernel32_find(ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION, "testdep", FALSE, TRUE, __LINE__);
+    kernel32_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib.dll", TRUE, FALSE, __LINE__);
+    kernel32_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib2.dll", TRUE, FALSE, __LINE__);
+    kernel32_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib3.dll", FALSE, FALSE, __LINE__);
+    kernel32_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass", TRUE, FALSE, __LINE__);
+    kernel32_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass2", TRUE, FALSE, __LINE__);
+    kernel32_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass3", FALSE, FALSE, __LINE__);
 
     /* then we show that ntdll plays by different rules */
-    ntdll_find(ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION, "testdep", FALSE, __LINE__);
-    ntdll_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib.dll", TRUE, __LINE__);
-    ntdll_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib2.dll", TRUE, __LINE__);
-    ntdll_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib3.dll", FALSE, __LINE__);
-    ntdll_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass", TRUE, __LINE__);
-    ntdll_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass2", TRUE, __LINE__);
-    ntdll_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass3", FALSE, __LINE__);
+    ntdll_find(ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION, "testdep", FALSE, TRUE, __LINE__);
+    ntdll_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib.dll", TRUE, FALSE, __LINE__);
+    ntdll_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib2.dll", TRUE, FALSE, __LINE__);
+    ntdll_find(ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION, "testlib3.dll", FALSE, FALSE, __LINE__);
+    ntdll_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass", TRUE, FALSE, __LINE__);
+    ntdll_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass2", TRUE, FALSE, __LINE__);
+    ntdll_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass3", FALSE, FALSE, __LINE__);
 
     ret = pDeactivateActCtx(0, cookie);
     ok(ret, "DeactivateActCtx failed: %u\n", GetLastError());
@@ -2683,6 +2743,179 @@ todo_wine
     pReleaseActCtx(handle);
 }
 
+/* Test structure to verify alignment */
+typedef struct _test_act_ctx_compat_info {
+    DWORD ElementCount;
+    COMPATIBILITY_CONTEXT_ELEMENT Elements[10];
+} test_act_ctx_compat_info;
+
+static void test_no_compat(HANDLE handle, int line)
+{
+    test_act_ctx_compat_info compat_info;
+    SIZE_T size;
+    BOOL b;
+
+    memset(&compat_info, 0, sizeof(compat_info));
+    b = pQueryActCtxW(QUERY_ACTCTX_FLAG_NO_ADDREF, handle, NULL,
+                      CompatibilityInformationInActivationContext, &compat_info,
+                      sizeof(compat_info), &size);
+
+    ok_(__FILE__, line)(b, "CompatibilityInformationInActivationContext failed\n");
+    ok_(__FILE__, line)(size == sizeof(DWORD), "size mismatch (got %lu, expected 4)\n", size);
+    ok_(__FILE__, line)(compat_info.ElementCount == 0, "unexpected ElementCount %u\n", compat_info.ElementCount);
+}
+
+static void test_with_compat(HANDLE handle, DWORD num_compat, const GUID* expected_compat[], int line)
+{
+    test_act_ctx_compat_info compat_info;
+    SIZE_T size;
+    SIZE_T expected = sizeof(COMPATIBILITY_CONTEXT_ELEMENT) * num_compat + sizeof(DWORD);
+    DWORD n;
+    BOOL b;
+
+    memset(&compat_info, 0, sizeof(compat_info));
+    b = pQueryActCtxW(QUERY_ACTCTX_FLAG_NO_ADDREF, handle, NULL,
+                      CompatibilityInformationInActivationContext, &compat_info,
+                      sizeof(compat_info), &size);
+
+    ok_(__FILE__, line)(b, "CompatibilityInformationInActivationContext failed\n");
+    ok_(__FILE__, line)(size == expected, "size mismatch (got %lu, expected %lu)\n", size, expected);
+    ok_(__FILE__, line)(compat_info.ElementCount == num_compat, "unexpected ElementCount %u\n", compat_info.ElementCount);
+
+    for (n = 0; n < num_compat; ++n)
+    {
+        ok_(__FILE__, line)(IsEqualGUID(&compat_info.Elements[n].Id, expected_compat[n]),
+                            "got wrong clsid %s, expected %s for %u\n",
+                            wine_dbgstr_guid(&compat_info.Elements[n].Id),
+                            wine_dbgstr_guid(expected_compat[n]),
+                            n);
+        ok_(__FILE__, line)(compat_info.Elements[n].Type == ACTCX_COMPATIBILITY_ELEMENT_TYPE_OS,
+                            "Wrong type, got %u for %u\n", (DWORD)compat_info.Elements[n].Type, n);
+    }
+}
+
+static void test_compatibility(void)
+{
+    HANDLE handle;
+
+    /* No compat results returned */
+    trace("manifest1\n");
+    if(!create_manifest_file("test1.manifest", manifest1, -1, NULL, NULL))
+    {
+        skip("Could not create manifest file\n");
+        return;
+    }
+    handle = test_create("test1.manifest");
+    ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+    DeleteFileA("test1.manifest");
+    if(handle != INVALID_HANDLE_VALUE)
+    {
+        char buffer[sizeof(COMPATIBILITY_CONTEXT_ELEMENT) * 2 + sizeof(DWORD)];
+        SIZE_T size;
+        BOOL b;
+
+        memset(buffer, 0, sizeof(buffer));
+        b = pQueryActCtxW(QUERY_ACTCTX_FLAG_NO_ADDREF, handle, NULL,
+                          CompatibilityInformationInActivationContext, buffer,
+                          sizeof(buffer), &size);
+
+        if (!b && GetLastError() == ERROR_INVALID_PARAMETER)
+        {
+            win_skip("CompatibilityInformationInActivationContext not supported.\n");
+            pReleaseActCtx(handle);
+            return;
+        }
+
+        test_basic_info(handle, __LINE__);
+        test_no_compat(handle, __LINE__);
+        pReleaseActCtx(handle);
+    }
+
+    /* Still no compat results returned */
+    trace("no_supportedOs\n");
+    if(!create_manifest_file("no_supportedOs.manifest", compat_manifest_no_supportedOs, -1, NULL, NULL))
+    {
+        skip("Could not create manifest file\n");
+        return;
+    }
+    handle = test_create("no_supportedOs.manifest");
+    ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+    DeleteFileA("no_supportedOs.manifest");
+    if(handle != INVALID_HANDLE_VALUE)
+    {
+        test_basic_info(handle, __LINE__);
+        test_no_compat(handle, __LINE__);
+        pReleaseActCtx(handle);
+    }
+
+    /* Just one result returned */
+    trace("manifest_vista\n");
+    if(!create_manifest_file("manifest_vista.manifest", compat_manifest_vista, -1, NULL, NULL))
+    {
+        skip("Could not create manifest file\n");
+        return;
+    }
+    handle = test_create("manifest_vista.manifest");
+    ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+    DeleteFileA("manifest_vista.manifest");
+    if(handle != INVALID_HANDLE_VALUE)
+    {
+        static const GUID* expect_manifest[] =
+        {
+            &VISTA_COMPAT_GUID
+        };
+        test_basic_info(handle, __LINE__);
+        test_with_compat(handle, 1, expect_manifest, __LINE__);
+        pReleaseActCtx(handle);
+    }
+
+    /* Show that the order is retained */
+    trace("manifest_vista_7_8_10_81\n");
+    if(!create_manifest_file("manifest_vista_7_8_10_81.manifest", compat_manifest_vista_7_8_10_81, -1, NULL, NULL))
+    {
+        skip("Could not create manifest file\n");
+        return;
+    }
+    handle = test_create("manifest_vista_7_8_10_81.manifest");
+    ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+    DeleteFileA("manifest_vista_7_8_10_81.manifest");
+    if(handle != INVALID_HANDLE_VALUE)
+    {
+        static const GUID* expect_manifest[] =
+        {
+            &VISTA_COMPAT_GUID,
+            &WIN7_COMPAT_GUID,
+            &WIN8_COMPAT_GUID,
+            &WIN10_COMPAT_GUID,
+            &WIN81_COMPAT_GUID,
+        };
+        test_basic_info(handle, __LINE__);
+        test_with_compat(handle, 5, expect_manifest, __LINE__);
+        pReleaseActCtx(handle);
+    }
+
+    /* Show that even unknown GUID's are stored */
+    trace("manifest_other_guid\n");
+    if(!create_manifest_file("manifest_other_guid.manifest", compat_manifest_other_guid, -1, NULL, NULL))
+    {
+        skip("Could not create manifest file\n");
+        return;
+    }
+    handle = test_create("manifest_other_guid.manifest");
+    ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+    DeleteFileA("manifest_other_guid.manifest");
+    if(handle != INVALID_HANDLE_VALUE)
+    {
+        static const GUID* expect_manifest[] =
+        {
+            &OTHER_COMPAT_GUID,
+        };
+        test_basic_info(handle, __LINE__);
+        test_with_compat(handle, 1, expect_manifest, __LINE__);
+        pReleaseActCtx(handle);
+    }
+}
+
 START_TEST(actctx)
 {
     int argc;
@@ -2703,8 +2936,10 @@ START_TEST(actctx)
     }
 
     test_actctx();
+    test_create_fail();
     test_CreateActCtx();
     test_findsectionstring();
     test_ZombifyActCtx();
     run_child_process();
+    test_compatibility();
 }

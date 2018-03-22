@@ -519,6 +519,23 @@ StorPortDeviceReady(
 
 
 /*
+ * @unimplemented
+ */
+STORPORT_API
+ULONG
+StorPortExtendedFunction(
+    _In_ STORPORT_FUNCTION_CODE FunctionCode,
+    _In_ PVOID HwDeviceExtension,
+    ...)
+{
+    DPRINT1("StorPortExtendedFunction(%d %p ...)\n",
+            FunctionCode, HwDeviceExtension);
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
  * @implemented
  */
 STORPORT_API

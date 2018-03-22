@@ -20,37 +20,18 @@
 #ifndef __QUARTZ_PRIVATE_INCLUDED__
 #define __QUARTZ_PRIVATE_INCLUDED__
 
-#include <wine/config.h>
-
 #include <stdarg.h>
-#include <assert.h>
-
-#define WIN32_LEAN_AND_MEAN
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <dshow.h>
-#include <dvdmedia.h>
-#include <vfw.h>
-#include <aviriff.h>
-#include <shlwapi.h>
-
-#include <wine/strmbase.h>
-#include <wine/unicode.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
-
-#include "pin.h"
-#include "parser.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wtypes.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "dshow.h"
+#include "wine/strmbase.h"
+#include "wine/list.h"
 
 /* see IAsyncReader::Request on MSDN for the explanation of this */
 #define MEDIATIME_FROM_BYTES(x) ((LONGLONG)(x) * 10000000)

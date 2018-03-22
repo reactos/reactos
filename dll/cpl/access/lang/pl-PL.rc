@@ -54,7 +54,7 @@ CAPTION "Ekran"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Wysoki Kontrast", -1, 6, 11, 248, 62
-    LTEXT "Użyj tej funkcji, jeśli chcesz, żeby ReactOS używał kolorów i czcionek zaprojektowanych do łatwego czytania",
+    LTEXT "Użyj tej funkcji, jeśli chcesz, żeby ReactOS używał kolorów i czcionek zaprojektowanych do łatwego czytania.",
           -1, 12, 20, 238, 29
     AUTOCHECKBOX "&Użyj funkcji Wysoki Kontrast", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "U&stawienia", IDC_CONTRAST_BUTTON, 154, 49, 90, 14
@@ -248,7 +248,7 @@ BEGIN
     GROUPBOX "Klawisze powtarzane", -1, 6, 11, 234, 106
     LTEXT "Zastąp ustawienia Klawiatury w Panelu Sterowania:",
           -1, 12, 20, 222, 20
-    AUTORADIOBUTTON "&Bez powtarzania klawiszy", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
+    AUTORADIOBUTTON "&Bez powtarzania klawiszy", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 98, 11, WS_GROUP
     AUTORADIOBUTTON "&Zmniejsz częstotliwość powtarzania", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11
     LTEXT "O&późnienie powtarzania:", -1, 24, 60, 60, 11
     COMBOBOX IDC_REPEAT_DELAY_COMBO, 24, 71, 210, 56,

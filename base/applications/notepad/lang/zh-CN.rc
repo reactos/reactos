@@ -63,7 +63,7 @@ BEGIN
         MENUITEM "内容(&C)", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
         MENUITEM "关于(&A)", CMD_ABOUT
-        MENUITEM "资料信息(&O)...", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "信息(&O)...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -78,25 +78,25 @@ BEGIN
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
     GROUPBOX "纸张", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "大小:(&S)", stc2, 16, 22, 36, 8
+    LTEXT "尺寸(&S):", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "任务栏:(&T)", stc3, 16, 42, 36, 8
+    LTEXT "纸盒(&T):", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "方向", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "直向(&P)", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "纵向(&P)", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
     AUTORADIOBUTTON "横向(&L)", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
-    GROUPBOX "边框", grp4, 80, 66, 152, 56, BS_GROUPBOX
-    LTEXT "左:(&E)", stc15, 88, 82, 30, 8
+    GROUPBOX "边界", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "左(&E):", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "右:(&R)", stc16, 159, 82, 30, 8
+    LTEXT "右(&R):", stc16, 159, 82, 30, 8
     EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "上:(&O)", stc17, 88, 102, 30, 8
+    LTEXT "上(&O):", stc17, 88, 102, 30, 8
     EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "下:(&B)", stc18, 159, 102, 30, 8
+    LTEXT "下(&B):", stc18, 159, 102, 30, 8
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "页眉:(&H)", 0x140, 8, 132, 40, 15
+    LTEXT "页眉(&H):", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "页脚:(&F)", 0x142, 8, 149, 40, 15
+    LTEXT "页脚(&F):", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "帮助", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "确定", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
@@ -113,14 +113,14 @@ BEGIN
     COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "编码:", 0x155, 5, 2, 41, 12
     COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "換行:", 0x156, 5, 20, 41, 12
+    LTEXT "换行:", 0x156, 5, 20, 41, 12
 END
 
 /* Dialog 'Go To' */
 DIALOG_GOTO DIALOGEX 0, 0, 165, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
-CAPTION "转到下列行"
+CAPTION "转到行"
 BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
     LTEXT "行数:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
@@ -134,7 +134,7 @@ CAPTION "关于 ReactOS 记事本"
 FONT 9, "宋体"
 BEGIN
     CONTROL "ReactOS 记事本 v1.0\r\n版权 1997,98 Marcel Baur\r\n版权 2000 Mike McCormack\r\n版权 2002 Sylvain Petreolle\r\n版权 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "静态", 0x50000000, 8, 48, 272, 11
+    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
     DEFPUSHBUTTON "关闭", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30
     EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -142,13 +142,13 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_LICENSE "此程序是免费软件;你可以将它重新分发和/或修改在 GNU 通用公共许可的条款下，作为出版由自由软件基金会;两个版本 2 的许可协议，或 (在您的选择) 任何更新的版本。\r\n\r\n此程序被分布在希望它有用，但没有任何担保。没有甚至对适销性或特定用途的默示保证。  请参阅 GNU 通用公共许可证有关更多详细信息。\r\n\r\n您应该已经收到一份 GNU 通用公共许可证以及这一计划; 如果没有，写信给自由软件基金会, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    STRING_LICENSE "此程序是免费软件;您可以依据由自由软件基金会发布的 GNU 通用公共许可的条款将它重新分发和/或修改;许可协议的版本 2，或 (以您的选择) 任何后续的版本。\r\n\r\n此程序因为希望有所用途而被分发，但没有任何担保。没有甚至对适销性或特定用途的默示保证。请参阅 GNU 通用公共许可证有关更多详细信息。\r\n\r\n您应该已经收到一份 GNU 通用公共许可证以及这一计划; 如果没有，请写信给自由软件基金会, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
-    STRING_PAGESETUP_FOOTERVALUE "Page &s" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "页面 &s" /* FIXME */
     STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
     STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
     STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
@@ -160,27 +160,27 @@ BEGIN
     STRING_UNTITLED "未命名"
     STRING_ALL_FILES "所有文件 (*.*)"
     STRING_TEXT_FILES_TXT "文本文件 (*.txt)"
-    STRING_TOOLARGE "记事本不能打开 '%s' 这么大的文件。\n \
-请使用别的编辑器。"
-    STRING_NOTEXT "您没有输入任何文本。 \
-\n请输入一些再试"
+    STRING_TOOLARGE "文件 '%s' 太大，记事本无法打开它。\n \
+请使用其他的编辑器。"
+    STRING_NOTEXT "您没有输入任何文本。\
+\n请输入一些再试试"
     STRING_DOESNOTEXIST "文件 '%s'\n不存在\n\n \
 您想新建一个文件吗？"
-    STRING_NOTSAVED "文件 '%s'\n正文已更改\n\n \
+    STRING_NOTSAVED "文件 '%s'\n已经被更改\n\n \
 是否保存更改？"
     STRING_NOTFOUND "找不到文件 '%s'"
     STRING_OUT_OF_MEMORY "没有足够的内存可以用来完成此项任务。 \
-\n请关闭一些程序施放内存后再试。"
+\n请关闭一些程序释放内存后再试。"
     STRING_CANNOTFIND "找不到 '%s'"
     STRING_ANSI "ANSI"
-    STRING_UNICODE "国际码"
-    STRING_UNICODE_BE "国际码 (大端)"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (大端)"
     STRING_UTF8 "UTF-8"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
-    STRING_LINE_COLUMN "线 %d, 列 %d"
-    STRING_PRINTERROR "不能打印文件 '%s'。\n\n请确保打印机已打开，并且已正确配置。"
+    STRING_LINE_COLUMN "行 %d, 列 %d"
+    STRING_PRINTERROR "无法打印文件 '%s'。\n\n请确保打印机已打开，并且已正确配置。"
 
     STRING_TEXT_DOCUMENT "文本文档"
 END

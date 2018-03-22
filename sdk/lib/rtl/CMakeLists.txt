@@ -56,6 +56,7 @@ list(APPEND SOURCE
     slist.c
     sid.c
     splaytree.c
+    sysvol.c
     thread.c
     time.c
     timezone.c

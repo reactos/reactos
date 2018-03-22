@@ -544,6 +544,9 @@
     SVC_(UserSetTimer, 4)
     SVC_(UserSetWindowFNID, 2)
     SVC_(UserSetWindowLong, 4)
+#ifdef _WIN64
+    SVC_(UserSetWindowLongPtr, 4)
+#endif // _WIN64
     SVC_(UserSetWindowPlacement, 2)
     SVC_(UserSetWindowPos, 7)
     SVC_(UserSetWindowRgn, 3)

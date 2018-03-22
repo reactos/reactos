@@ -19,6 +19,22 @@
  */
 
 #include "quartz_private.h"
+#include "pin.h"
+
+#include "uuids.h"
+#include "aviriff.h"
+#include "vfwmsgs.h"
+#include "mmsystem.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+#include <math.h>
+#include <assert.h>
+
+#include "parser.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 static const WCHAR wcsOutputPinName[] = {'o','u','t','p','u','t',' ','p','i','n',0};
 

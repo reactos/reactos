@@ -23,7 +23,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winternl.h"
+#include "wine/debug.h"
+
 #include "storage32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
@@ -590,7 +603,6 @@ static HRESULT WINAPI StgStreamImpl_Clone(
 				   IStream**    ppstm) /* [out] */
 {
   StgStreamImpl* This = impl_from_IStream(iface);
-  HRESULT hres;
   StgStreamImpl* new_stream;
   LARGE_INTEGER seek_pos;
 
@@ -616,11 +628,7 @@ static HRESULT WINAPI StgStreamImpl_Clone(
 
   seek_pos.QuadPart = This->currentPosition.QuadPart;
 
-  hres = IStream_Seek(*ppstm, seek_pos, STREAM_SEEK_SET, NULL);
-
-  assert (SUCCEEDED(hres));
-
-  return S_OK;
+  return IStream_Seek(*ppstm, seek_pos, STREAM_SEEK_SET, NULL);
 }
 
 /*

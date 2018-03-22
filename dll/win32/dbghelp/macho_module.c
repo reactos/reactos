@@ -21,7 +21,37 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#ifdef HAVE_MACH_O_LOADER_H
+#include <CoreFoundation/CFString.h>
+#define LoadResource mac_LoadResource
+#define GetCurrentThread mac_GetCurrentThread
+#include <CoreServices/CoreServices.h>
+#undef LoadResource
+#undef GetCurrentThread
+#undef DPRINTF
+#endif
+
+#include <stdio.h>
+#include <assert.h>
+#include <stdarg.h>
+#include <errno.h>
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+#ifdef HAVE_SYS_MMAN_H
+# include <sys/mman.h>
+#endif
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
 #include "dbghelp_private.h"
+#include "winternl.h"
+#include "wine/library.h"
+#include "wine/debug.h"
+#include "image_private.h"
 
 #ifdef HAVE_MACH_O_LOADER_H
 
@@ -47,10 +77,6 @@ struct dyld_all_image_infos {
     int                           processDetachedFromSharedRegion;
 };
 #endif
-
-#include "winternl.h"
-#include "wine/library.h"
-#include "wine/debug.h"
 
 #ifdef WORDS_BIGENDIAN
 #define swap_ulong_be_to_host(n) (n)

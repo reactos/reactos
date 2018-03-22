@@ -21,7 +21,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include "ddraw_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 static void DDRAW_dump_pixelformat(const DDPIXELFORMAT *pf);
 
@@ -556,6 +561,31 @@ enum wined3d_format_id wined3dformat_from_ddrawformat(const DDPIXELFORMAT *DDPix
     return WINED3DFMT_UNKNOWN;
 }
 
+unsigned int wined3dmapflags_from_ddrawmapflags(unsigned int flags)
+{
+    static const unsigned int handled = DDLOCK_NOSYSLOCK
+            | DDLOCK_NOOVERWRITE
+            | DDLOCK_DISCARDCONTENTS
+            | DDLOCK_DONOTWAIT;
+    unsigned int wined3d_flags;
+
+    wined3d_flags = flags & handled;
+    if (!(flags & (DDLOCK_NOOVERWRITE | DDLOCK_DISCARDCONTENTS)))
+        wined3d_flags |= WINED3D_MAP_READ;
+    if (!(flags & DDLOCK_READONLY))
+        wined3d_flags |= WINED3D_MAP_WRITE;
+    if (!(wined3d_flags & (WINED3D_MAP_READ | WINED3D_MAP_WRITE)))
+        wined3d_flags |= WINED3D_MAP_READ | WINED3D_MAP_WRITE;
+    if (flags & DDLOCK_NODIRTYUPDATE)
+        wined3d_flags |= WINED3D_MAP_NO_DIRTY_UPDATE;
+    flags &= ~(handled | DDLOCK_WAIT | DDLOCK_READONLY | DDLOCK_NODIRTYUPDATE);
+
+    if (flags)
+        FIXME("Unhandled flags %#x.\n", flags);
+
+    return wined3d_flags;
+}
+
 static float colour_to_float(DWORD colour, DWORD mask)
 {
     if (!mask)
@@ -738,8 +768,8 @@ void DDRAW_dump_DDSCAPS2(const DDSCAPS2 *in)
         FE(DDSCAPS2_STEREOSURFACELEFT)
     };
 
-    DDRAW_dump_flags_nolf(in->dwCaps, flags, sizeof(flags)/sizeof(flags[0]));
-    DDRAW_dump_flags(in->dwCaps2, flags2, sizeof(flags2)/sizeof(flags2[0]));
+    DDRAW_dump_flags_nolf(in->dwCaps, flags, ARRAY_SIZE(flags));
+    DDRAW_dump_flags(in->dwCaps2, flags2, ARRAY_SIZE(flags2));
 }
 
 static void
@@ -776,7 +806,7 @@ DDRAW_dump_pixelformat_flag(DWORD flagmask)
         FE(DDPF_ZPIXELS)
     };
 
-    DDRAW_dump_flags_nolf(flagmask, flags, sizeof(flags)/sizeof(flags[0]));
+    DDRAW_dump_flags_nolf(flagmask, flags, ARRAY_SIZE(flags));
 }
 
 static void DDRAW_dump_members(DWORD flags, const void *data, const struct member_info *mems, size_t num_mems)
@@ -876,8 +906,7 @@ void DDRAW_dump_surface_desc(const DDSURFACEDESC2 *lpddsd)
       {
           DDRAW_dump_members(lpddsd->dwFlags, lpddsd, members_caps, 1);
       }
-      DDRAW_dump_members(lpddsd->dwFlags, lpddsd, members,
-                          sizeof(members)/sizeof(members[0]));
+      DDRAW_dump_members(lpddsd->dwFlags, lpddsd, members, ARRAY_SIZE(members));
     }
 }
 
@@ -954,7 +983,7 @@ void DDRAW_dump_cooperativelevel(DWORD cooplevel)
     if (TRACE_ON(ddraw))
     {
         TRACE(" - ");
-        DDRAW_dump_flags(cooplevel, flags, sizeof(flags)/sizeof(flags[0]));
+        DDRAW_dump_flags(cooplevel, flags, ARRAY_SIZE(flags));
     }
 }
 
@@ -1113,13 +1142,13 @@ void DDRAW_dump_DDCAPS(const DDCAPS *lpcaps)
     };
 
     TRACE(" - dwSize : %d\n", lpcaps->dwSize);
-    TRACE(" - dwCaps : "); DDRAW_dump_flags(lpcaps->dwCaps, flags1, sizeof(flags1)/sizeof(flags1[0]));
-    TRACE(" - dwCaps2 : "); DDRAW_dump_flags(lpcaps->dwCaps2, flags2, sizeof(flags2)/sizeof(flags2[0]));
-    TRACE(" - dwCKeyCaps : "); DDRAW_dump_flags(lpcaps->dwCKeyCaps, flags3, sizeof(flags3)/sizeof(flags3[0]));
-    TRACE(" - dwFXCaps : "); DDRAW_dump_flags(lpcaps->dwFXCaps, flags4, sizeof(flags4)/sizeof(flags4[0]));
-    TRACE(" - dwFXAlphaCaps : "); DDRAW_dump_flags(lpcaps->dwFXAlphaCaps, flags5, sizeof(flags5)/sizeof(flags5[0]));
-    TRACE(" - dwPalCaps : "); DDRAW_dump_flags(lpcaps->dwPalCaps, flags6, sizeof(flags6)/sizeof(flags6[0]));
-    TRACE(" - dwSVCaps : "); DDRAW_dump_flags(lpcaps->dwSVCaps, flags7, sizeof(flags7)/sizeof(flags7[0]));
+    TRACE(" - dwCaps : "); DDRAW_dump_flags(lpcaps->dwCaps, flags1, ARRAY_SIZE(flags1));
+    TRACE(" - dwCaps2 : "); DDRAW_dump_flags(lpcaps->dwCaps2, flags2, ARRAY_SIZE(flags2));
+    TRACE(" - dwCKeyCaps : "); DDRAW_dump_flags(lpcaps->dwCKeyCaps, flags3, ARRAY_SIZE(flags3));
+    TRACE(" - dwFXCaps : "); DDRAW_dump_flags(lpcaps->dwFXCaps, flags4, ARRAY_SIZE(flags4));
+    TRACE(" - dwFXAlphaCaps : "); DDRAW_dump_flags(lpcaps->dwFXAlphaCaps, flags5, ARRAY_SIZE(flags5));
+    TRACE(" - dwPalCaps : "); DDRAW_dump_flags(lpcaps->dwPalCaps, flags6, ARRAY_SIZE(flags6));
+    TRACE(" - dwSVCaps : "); DDRAW_dump_flags(lpcaps->dwSVCaps, flags7, ARRAY_SIZE(flags7));
     TRACE("...\n");
     TRACE(" - dwNumFourCCCodes : %d\n", lpcaps->dwNumFourCCCodes);
     TRACE(" - dwCurrVisibleOverlays : %d\n", lpcaps->dwCurrVisibleOverlays);

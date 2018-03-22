@@ -1,4 +1,4 @@
-/* $Id: tif_fax3.c,v 1.80 2017-04-27 19:50:01 erouault Exp $ */
+/* $Id: tif_fax3.c,v 1.81 2017-06-18 10:31:50 erouault Exp $ */
 
 /*
  * Copyright (c) 1990-1997 Sam Leffler
@@ -25,7 +25,6 @@
  */
 
 #include <precomp.h>
-
 #ifdef CCITT_SUPPORT
 /*
  * TIFF Library.
@@ -1044,7 +1043,11 @@ Fax3Encode2DRow(TIFF* tif, unsigned char* bp, unsigned char* rp, uint32 bits)
 	for (;;) {
 		b2 = finddiff2(rp, b1, bits, PIXEL(rp,b1));
 		if (b2 >= a1) {
-			int32 d = b1 - a1;
+			/* Naive computation triggers -fsanitize=undefined,unsigned-integer-overflow */
+			/* although it is correct unless the difference between both is < 31 bit */
+			/* int32 d = b1 - a1; */
+			int32 d = (b1 >= a1 && b1 - a1 <= 3U) ? (int32)(b1 - a1):
+			          (b1 < a1 && a1 - b1 <= 3U) ? -(int32)(a1 - b1) : 0x7FFFFFFF;
 			if (!(-3 <= d && d <= 3)) {	/* horizontal mode */
 				a2 = finddiff2(bp, a1, bits, PIXEL(bp,a1));
 				putcode(tif, &horizcode);

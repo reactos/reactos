@@ -36,31 +36,33 @@ TODO:
     ** The chevron should be shown only when needed
 */
 
-CBandSiteBase::CBandSiteBase()
+CBandSiteBase::CBandSiteBase():
+    m_cBands(0),
+    m_cBandsAllocated(0),
+    m_bands(NULL),
+    m_hwndRebar(NULL),
+    m_dwState(0),
+    m_dwStyle(0)
 {
-    fBandsCount = 0;
-    fBandsAllocated = 0;
-    fBands = NULL;
-    fRebarWindow = NULL;
 }
 
-UINT CBandSiteBase::GetBandID(struct BandObject *Band)
+UINT CBandSiteBase::_GetBandID(struct BandObject *Band)
 {
-    return (UINT)(Band - fBands);
+    return (UINT)(Band - m_bands);
 }
 
-struct CBandSiteBase::BandObject *CBandSiteBase::GetBandByID(DWORD dwBandID)
+struct CBandSiteBase::BandObject *CBandSiteBase::_GetBandByID(DWORD dwBandID)
 {
-    if ((LONG)dwBandID >= fBandsAllocated)
+    if ((LONG)dwBandID >= m_cBandsAllocated)
         return NULL;
 
-    if (fBands[dwBandID].DeskBand == NULL)
+    if (m_bands[dwBandID].DeskBand == NULL)
         return NULL;
 
-    return &fBands[dwBandID];
+    return &m_bands[dwBandID];
 }
 
-void CBandSiteBase::FreeBand(struct BandObject *Band)
+void CBandSiteBase::_FreeBand(struct BandObject *Band)
 {
     ATLASSERT(Band->DeskBand != NULL);
     ATLASSERT(Band->OleWindow != NULL);
@@ -69,15 +71,15 @@ void CBandSiteBase::FreeBand(struct BandObject *Band)
     Band->OleWindow->Release();
     Band->WndEvtHandler->Release();
     memset(Band, 0, sizeof(*Band));
-    fBandsCount--;
+    m_cBands--;
 }
 
-DWORD CBandSiteBase::GetBandSiteViewMode()
+DWORD CBandSiteBase::_GetViewMode()
 {
     DWORD                                   dwStyle;
 
     /* FIXME: What about DBIF_VIEWMODE_FLOATING and DBIF_VIEWMODE_TRANSPARENT? */
-    dwStyle = GetWindowLongPtr(fRebarWindow, GWL_STYLE);
+    dwStyle = GetWindowLongPtr(m_hwndRebar, GWL_STYLE);
 
     if (dwStyle & CCS_VERT)
         return DBIF_VIEWMODE_VERTICAL;
@@ -85,13 +87,13 @@ DWORD CBandSiteBase::GetBandSiteViewMode()
         return DBIF_VIEWMODE_NORMAL;
 }
 
-VOID CBandSiteBase::BuildRebarBandInfo(struct BandObject *Band, REBARBANDINFOW *prbi)
+VOID CBandSiteBase::_BuildBandInfo(struct BandObject *Band, REBARBANDINFOW *prbi)
 {
     ZeroMemory(prbi, sizeof(*prbi));
     prbi->cbSize = sizeof(*prbi);
 
     prbi->fMask = RBBIM_ID;
-    prbi->wID = GetBandID(Band);
+    prbi->wID = _GetBandID(Band);
 
     if (Band->dbi.dwMask & DBIM_MINSIZE)
     {
@@ -146,13 +148,13 @@ VOID CBandSiteBase::BuildRebarBandInfo(struct BandObject *Band, REBARBANDINFOW *
             prbi->fStyle |= RBBS_BREAK;
         if (Band->dbi.dwModeFlags & DBIMF_TOPALIGN)
             prbi->fStyle |= RBBS_TOPALIGN;
-        if (Band->dbi.dwModeFlags & DBIMF_NOGRIPPER)
+        if ((Band->dbi.dwModeFlags & DBIMF_NOGRIPPER) || (m_dwStyle & BSIS_NOGRIPPER))
             prbi->fStyle |= RBBS_NOGRIPPER;
-        if (Band->dbi.dwModeFlags & DBIMF_ALWAYSGRIPPER)
+        if ((Band->dbi.dwModeFlags & DBIMF_ALWAYSGRIPPER) || (m_dwStyle & BSIS_ALWAYSGRIPPER))
             prbi->fStyle |= RBBS_GRIPPERALWAYS;
     }
 
-    if (Band->bHiddenTitle)
+    if (Band->bHiddenTitle  || (m_dwStyle & BSIS_NOCAPTION))
     {
         prbi->fMask |= RBBIM_STYLE;
         prbi->fStyle |= RBBS_HIDETITLE;
@@ -167,7 +169,7 @@ VOID CBandSiteBase::BuildRebarBandInfo(struct BandObject *Band, REBARBANDINFOW *
     }
 }
 
-HRESULT CBandSiteBase::UpdateSingleBand(struct BandObject *Band)
+HRESULT CBandSiteBase::_UpdateBand(struct BandObject *Band)
 {
     REBARBANDINFOW                          rbi;
     DWORD                                   dwViewMode;
@@ -178,12 +180,12 @@ HRESULT CBandSiteBase::UpdateSingleBand(struct BandObject *Band)
     Band->dbi.dwMask = DBIM_MINSIZE | DBIM_MAXSIZE | DBIM_INTEGRAL |
         DBIM_ACTUAL | DBIM_TITLE | DBIM_MODEFLAGS | DBIM_BKCOLOR;
 
-    dwViewMode = GetBandSiteViewMode();
+    dwViewMode = _GetViewMode();
 
-    hRet = Band->DeskBand->GetBandInfo((DWORD)GetBandID(Band), dwViewMode, &Band->dbi);
+    hRet = Band->DeskBand->GetBandInfo((DWORD)_GetBandID(Band), dwViewMode, &Band->dbi);
     if (SUCCEEDED(hRet))
     {
-        BuildRebarBandInfo(Band, &rbi);
+        _BuildBandInfo(Band, &rbi);
         if (SUCCEEDED(Band->OleWindow->GetWindow(&rbi.hwndChild)) &&
             rbi.hwndChild != NULL)
         {
@@ -191,10 +193,10 @@ HRESULT CBandSiteBase::UpdateSingleBand(struct BandObject *Band)
             WARN ("ReBar band uses child window 0x%p\n", rbi.hwndChild);
         }
 
-        uBand = (UINT)SendMessageW(fRebarWindow, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
+        uBand = (UINT)SendMessageW(m_hwndRebar, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
         if (uBand != (UINT)-1)
         {
-            if (!SendMessageW(fRebarWindow, RB_SETBANDINFOW, (WPARAM)uBand, reinterpret_cast<LPARAM>(&rbi)))
+            if (!SendMessageW(m_hwndRebar, RB_SETBANDINFOW, (WPARAM)uBand, reinterpret_cast<LPARAM>(&rbi)))
             {
                 WARN("Failed to update the rebar band!\n");
             }
@@ -207,16 +209,16 @@ HRESULT CBandSiteBase::UpdateSingleBand(struct BandObject *Band)
     return hRet;
 }
 
-HRESULT CBandSiteBase::UpdateAllBands()
+HRESULT CBandSiteBase::_UpdateAllBands()
 {
     LONG                                    i;
     HRESULT                                 hRet;
 
-    for (i = 0; i < fBandsAllocated; i++)
+    for (i = 0; i < m_cBandsAllocated; i++)
     {
-        if (fBands[i].DeskBand != NULL)
+        if (m_bands[i].DeskBand != NULL)
         {
-            hRet = UpdateSingleBand(&fBands[i]);
+            hRet = _UpdateBand(&m_bands[i]);
             if (FAILED_UNEXPECTEDLY(hRet))
                 return hRet;
         }
@@ -225,15 +227,15 @@ HRESULT CBandSiteBase::UpdateAllBands()
     return S_OK;
 }
 
-HRESULT CBandSiteBase::UpdateBand(DWORD dwBandID)
+HRESULT CBandSiteBase::_UpdateBand(DWORD dwBandID)
 {
     struct BandObject                       *Band;
 
-    Band = GetBandByID(dwBandID);
+    Band = _GetBandByID(dwBandID);
     if (Band == NULL)
         return E_FAIL;
 
-    return UpdateSingleBand(Band);
+    return _UpdateBand(Band);
 }
 
 HRESULT CBandSiteBase::_IsBandDeletable(DWORD dwBandID)
@@ -253,15 +255,15 @@ HRESULT CBandSiteBase::_IsBandDeletable(DWORD dwBandID)
     return ((dwState & BSSF_UNDELETEABLE) != 0) ? S_FALSE : S_OK;
 }
 
-HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
+HRESULT CBandSiteBase::_OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
 {
     /* Find the index fo the band that was clicked */
     int x = GET_X_LPARAM(lParam);
     int y = GET_Y_LPARAM(lParam);
 
     RBHITTESTINFO htInfo = {{x, y}};
-    ScreenToClient(fRebarWindow, &htInfo.pt);
-    int iBand = SendMessageW(fRebarWindow, RB_HITTEST, 0, (LPARAM)&htInfo);
+    ScreenToClient(m_hwndRebar, &htInfo.pt);
+    int iBand = SendMessageW(m_hwndRebar, RB_HITTEST, 0, (LPARAM)&htInfo);
     if (iBand < 0)
     {
         /* FIXME: what to do here? */
@@ -270,11 +272,11 @@ HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
     /* Now get the id of the band that was clicked */
     REBARBANDINFOW bandInfo = {sizeof(bandInfo), RBBIM_ID};
-    SendMessageW(fRebarWindow, RB_GETBANDINFOW, htInfo.iBand, (LPARAM)&bandInfo);
+    SendMessageW(m_hwndRebar, RB_GETBANDINFOW, htInfo.iBand, (LPARAM)&bandInfo);
 
     /* Finally get the band */
     DWORD dwBandID = bandInfo.wID;
-    struct BandObject *Band = GetBandByID(dwBandID);
+    struct BandObject *Band = _GetBandByID(dwBandID);
     if (Band == NULL)
         return E_FAIL;
 
@@ -295,35 +297,38 @@ HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         }
     }
 
-    /* Load the static part of the menu */
-    HMENU hMenuStatic = LoadMenuW(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCEW(IDM_BAND_MENU));
-
-    if (hMenuStatic)
+    if (!(m_dwStyle & BSIS_LOCKED))
     {
-        Shell_MergeMenus(hMenu, hMenuStatic, UINT_MAX, 0, UINT_MAX, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
+        /* Load the static part of the menu */
+        HMENU hMenuStatic = LoadMenuW(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCEW(IDM_BAND_MENU));
 
-        ::DestroyMenu(hMenuStatic);
+        if (hMenuStatic)
+        {
+            Shell_MergeMenus(hMenu, hMenuStatic, UINT_MAX, 0, UINT_MAX, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
 
-        hr = _IsBandDeletable(dwBandID);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+            ::DestroyMenu(hMenuStatic);
 
-        /* Remove the close item if it is not deletable */
-        if (hr == S_FALSE || (Band->dbi.dwModeFlags & DBIMF_UNDELETEABLE) != 0)
-            DeleteMenu(hMenu, IDM_BAND_CLOSE, MF_BYCOMMAND);
+            hr = _IsBandDeletable(dwBandID);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
 
-        if ((Band->dbi.dwMask & DBIM_TITLE) == 0)
-            DeleteMenu(hMenu, IDM_BAND_TITLE, MF_BYCOMMAND);
-        else
-            CheckMenuItem(hMenu, IDM_BAND_TITLE, Band->bHiddenTitle ? MF_UNCHECKED : MF_CHECKED);
+            /* Remove the close item if it is not deletable */
+            if (hr == S_FALSE || (Band->dbi.dwModeFlags & DBIMF_UNDELETEABLE) != 0)
+                DeleteMenu(hMenu, IDM_BAND_CLOSE, MF_BYCOMMAND);
+
+            if ((Band->dbi.dwMask & DBIM_TITLE) == 0)
+                DeleteMenu(hMenu, IDM_BAND_TITLE, MF_BYCOMMAND);
+            else
+                CheckMenuItem(hMenu, IDM_BAND_TITLE, Band->bHiddenTitle ? MF_UNCHECKED : MF_CHECKED);
+        }
     }
 
     /* TODO: Query the menu of our site */
 
-    UINT uCommand = ::TrackPopupMenuEx(hMenu, TPM_RETURNCMD, x, y, fRebarWindow, NULL);
+    UINT uCommand = ::TrackPopupMenuEx(hMenu, TPM_RETURNCMD, x, y, m_hwndRebar, NULL);
     if (uCommand < idBandLast)
     {
-        CMINVOKECOMMANDINFO cmi = { sizeof(cmi), 0, fRebarWindow, MAKEINTRESOURCEA(uCommand)};
+        CMINVOKECOMMANDINFO cmi = { sizeof(cmi), 0, m_hwndRebar, MAKEINTRESOURCEA(uCommand)};
         hr = pcm->InvokeCommand(&cmi);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
@@ -334,7 +339,7 @@ HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         {
             Band->bHiddenTitle = !Band->bHiddenTitle;
 
-            hr = UpdateBand(dwBandID);
+            hr = _UpdateBand(dwBandID);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
         }
@@ -349,22 +354,22 @@ HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     return S_OK;
 }
 
-struct CBandSiteBase::BandObject *CBandSiteBase::GetBandFromHwnd(HWND hwnd)
+struct CBandSiteBase::BandObject *CBandSiteBase::_GetBandFromHwnd(HWND hwnd)
 {
     HRESULT                                 hRet;
     HWND                                    hWndBand;
     LONG                                    i;
 
-    for (i = 0; i < fBandsAllocated; i++)
+    for (i = 0; i < m_cBandsAllocated; i++)
     {
-        if (fBands[i].DeskBand != NULL)
+        if (m_bands[i].DeskBand != NULL)
         {
-            ASSERT(fBands[i].OleWindow);
+            ASSERT(m_bands[i].OleWindow);
 
             hWndBand = NULL;
-            hRet = fBands[i].OleWindow->GetWindow(&hWndBand);
+            hRet = m_bands[i].OleWindow->GetWindow(&hWndBand);
             if (SUCCEEDED(hRet) && hWndBand == hwnd)
-                return &fBands[i];
+                return &m_bands[i];
         }
     }
 
@@ -376,21 +381,21 @@ CBandSiteBase::~CBandSiteBase()
 
     TRACE("destroying %p\n", this);
 
-    if (fRebarWindow != NULL)
+    if (m_hwndRebar != NULL)
     {
-        DestroyWindow(fRebarWindow);
-        fRebarWindow = NULL;
+        DestroyWindow(m_hwndRebar);
+        m_hwndRebar = NULL;
     }
 
-    if (fBands != NULL)
+    if (m_bands != NULL)
     {
-        for (INT i = 0; i < fBandsAllocated; i++)
+        for (INT i = 0; i < m_cBandsAllocated; i++)
         {
-            if (fBands[i].DeskBand != NULL)
-                FreeBand(&fBands[i]);
+            if (m_bands[i].DeskBand != NULL)
+                _FreeBand(&m_bands[i]);
         }
-        CoTaskMemFree(fBands);
-        fBands = NULL;
+        CoTaskMemFree(m_bands);
+        m_bands = NULL;
     }
 }
 
@@ -408,149 +413,146 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
 
     TRACE("(%p, %p)\n", this, punk);
 
-    if (punk == NULL || fRebarWindow == NULL)
+    if (punk == NULL || m_hwndRebar == NULL)
         return E_FAIL;
 
     hRet = punk->QueryInterface(IID_PPV_ARG(IDeskBand, &DeskBand));
-    if (!SUCCEEDED(hRet) || DeskBand == NULL)
-        goto Cleanup;
-    hRet = punk->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ObjWithSite));
-    if (!SUCCEEDED(hRet) || ObjWithSite == NULL)
-        goto Cleanup;
-    hRet = punk->QueryInterface(IID_PPV_ARG(IOleWindow, &OleWindow));
-    if (!SUCCEEDED(hRet) || OleWindow == NULL)
-        goto Cleanup;
-    hRet = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &WndEvtHandler));
-    if (!SUCCEEDED(hRet) || WndEvtHandler == NULL)
-        goto Cleanup;
+    if (FAILED_UNEXPECTEDLY(hRet))
+        return hRet;
 
-    hRet = S_OK;
-    if (fBandsAllocated > fBandsCount)
+    hRet = punk->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ObjWithSite));
+    if (FAILED_UNEXPECTEDLY(hRet))
+        return hRet;
+
+    hRet = punk->QueryInterface(IID_PPV_ARG(IOleWindow, &OleWindow));
+    if (FAILED_UNEXPECTEDLY(hRet))
+        return hRet;
+
+    hRet = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &WndEvtHandler));
+    if (FAILED_UNEXPECTEDLY(hRet))
+        return hRet;
+
+    if (m_cBandsAllocated > m_cBands)
     {
         /* Search for a free band object */
-        for (INT i = 0; i < fBandsAllocated; i++)
+        for (INT i = 0; i < m_cBandsAllocated; i++)
         {
-            if (fBands[i].DeskBand == NULL)
+            if (m_bands[i].DeskBand == NULL)
             {
-                NewBand = &fBands[i];
+                NewBand = &m_bands[i];
                 break;
             }
         }
     }
-    else if (fBandsAllocated > 0)
+    else if (m_cBandsAllocated > 0)
     {
-        ASSERT (fBands != NULL);
+        ASSERT (m_bands != NULL);
 
         /* Reallocate the band object array */
-        NewAllocated = fBandsAllocated + 8;
+        NewAllocated = m_cBandsAllocated + 8;
         if (NewAllocated > 0xFFFF)
             NewAllocated = 0xFFFF;
-        if (NewAllocated == fBandsAllocated)
+        if (NewAllocated == m_cBandsAllocated)
         {
-            hRet = E_OUTOFMEMORY;
-            goto Cleanup;
+            return E_OUTOFMEMORY;
         }
 
 
         NewBand = static_cast<struct BandObject *>(CoTaskMemAlloc(NewAllocated * sizeof(struct BandObject)));
         if (NewBand == NULL)
         {
-            hRet = E_OUTOFMEMORY;
-            goto Cleanup;
+            return E_OUTOFMEMORY;
         }
 
         /* Copy the old array */
-        memcpy(NewBand, fBands, fBandsAllocated * sizeof(struct BandObject));
+        memcpy(NewBand, m_bands, m_cBandsAllocated * sizeof(struct BandObject));
 
         /* Initialize the added bands */
-        memset(&NewBand[fBandsAllocated], 0, (NewAllocated - fBandsAllocated) * sizeof(struct BandObject));
+        memset(&NewBand[m_cBandsAllocated], 0, (NewAllocated - m_cBandsAllocated) * sizeof(struct BandObject));
 
-        fBandsAllocated = NewAllocated;
-        CoTaskMemFree(fBands);
-        fBands = NewBand;
+        m_cBandsAllocated = NewAllocated;
+        CoTaskMemFree(m_bands);
+        m_bands = NewBand;
     }
     else
     {
-        ASSERT(fBands == NULL);
-        ASSERT(fBandsAllocated == 0);
-        ASSERT(fBandsCount == 0);
+        ASSERT(m_bands == NULL);
+        ASSERT(m_cBandsAllocated == 0);
+        ASSERT(m_cBands == 0);
 
         /* Allocate new array */
-        fBands = static_cast<struct BandObject *>(CoTaskMemAlloc(8 * sizeof(struct BandObject)));
-        if (fBands == NULL)
+        m_bands = static_cast<struct BandObject *>(CoTaskMemAlloc(8 * sizeof(struct BandObject)));
+        if (m_bands == NULL)
         {
-            hRet = E_OUTOFMEMORY;
-            goto Cleanup;
+            return E_OUTOFMEMORY;
         }
 
         /* Initialize the added bands */
-        memset(fBands, 0, 8 * sizeof(struct BandObject));
+        memset(m_bands, 0, 8 * sizeof(struct BandObject));
 
-        fBandsAllocated += 8;
-        NewBand = &fBands[0];
+        m_cBandsAllocated += 8;
+        NewBand = &m_bands[0];
     }
 
+    ASSERT(NewBand != NULL);
+
+    m_cBands++;
+    NewBand->DeskBand = DeskBand.Detach();
+    NewBand->OleWindow = OleWindow.Detach();
+    NewBand->WndEvtHandler = WndEvtHandler.Detach();
+
+    /* Create the ReBar band */
+    hRet = ObjWithSite->SetSite(static_cast<IOleWindow *>(this));
     if (SUCCEEDED(hRet))
     {
-        ASSERT(NewBand != NULL);
-
-        fBandsCount++;
-        NewBand->DeskBand = DeskBand.Detach();
-        NewBand->OleWindow = OleWindow.Detach();
-        NewBand->WndEvtHandler = WndEvtHandler.Detach();
-
-        /* Create the ReBar band */
-        hRet = ObjWithSite->SetSite(static_cast<IOleWindow *>(this));
-        if (SUCCEEDED(hRet))
+        uBand = 0xffffffff;
+        if (SUCCEEDED(_UpdateBand(NewBand)))
         {
-            uBand = 0xffffffff;
-            if (SUCCEEDED(UpdateSingleBand(NewBand)))
+            if (NewBand->dbi.dwMask & DBIM_MODEFLAGS)
             {
-                if (NewBand->dbi.dwMask & DBIM_MODEFLAGS)
-                {
-                    if (NewBand->dbi.dwModeFlags & DBIMF_ADDTOFRONT)
-                        uBand = 0;
-                }
+                if (NewBand->dbi.dwModeFlags & DBIMF_ADDTOFRONT)
+                    uBand = 0;
             }
+        }
 
-            BuildRebarBandInfo(NewBand, &rbi);
+        _BuildBandInfo(NewBand, &rbi);
 
-            if (SUCCEEDED(NewBand->OleWindow->GetWindow(&rbi.hwndChild)) &&
-                rbi.hwndChild != NULL)
+        if (SUCCEEDED(NewBand->OleWindow->GetWindow(&rbi.hwndChild)) &&
+            rbi.hwndChild != NULL)
+        {
+            rbi.fMask |= RBBIM_CHILD;
+            WARN ("ReBar band uses child window 0x%p\n", rbi.hwndChild);
+        }
+
+        if (!SendMessageW(m_hwndRebar, RB_INSERTBANDW, (WPARAM)uBand, reinterpret_cast<LPARAM>(&rbi)))
+            return E_FAIL;
+
+        hRet = (HRESULT)((USHORT)_GetBandID(NewBand));
+
+        _UpdateAllBands();
+    }
+    else
+    {
+        WARN("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
+
+        /* Remove the band from the ReBar control */
+        _BuildBandInfo(NewBand, &rbi);
+        uBand = (UINT)SendMessageW(m_hwndRebar, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
+        if (uBand != (UINT)-1)
+        {
+            if (!SendMessageW(m_hwndRebar, RB_DELETEBAND, (WPARAM)uBand, 0))
             {
-                rbi.fMask |= RBBIM_CHILD;
-                WARN ("ReBar band uses child window 0x%p\n", rbi.hwndChild);
+                ERR("Failed to delete band!\n");
             }
-
-            if (!SendMessageW(fRebarWindow, RB_INSERTBANDW, (WPARAM)uBand, reinterpret_cast<LPARAM>(&rbi)))
-                return E_FAIL;
-
-            hRet = (HRESULT)((USHORT)GetBandID(NewBand));
         }
         else
-        {
-            WARN("IBandSite::AddBand(): Call to IDeskBand::SetSite() failed: %x\n", hRet);
+            ERR("Failed to map band id to index!\n");
 
-            /* Remove the band from the ReBar control */
-            BuildRebarBandInfo(NewBand, &rbi);
-            uBand = (UINT)SendMessageW(fRebarWindow, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
-            if (uBand != (UINT)-1)
-            {
-                if (!SendMessageW(fRebarWindow, RB_DELETEBAND, (WPARAM)uBand, 0))
-                {
-                    ERR("Failed to delete band!\n");
-                }
-            }
-            else
-                ERR("Failed to map band id to index!\n");
+        _FreeBand(NewBand);
 
-            FreeBand(NewBand);
-
-            hRet = E_FAIL;
-            /* goto Cleanup; */
-        }
+        hRet = E_FAIL;
     }
-Cleanup:
+
     return hRet;
 }
 
@@ -561,14 +563,14 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::EnumBands(UINT uBand, DWORD *pdwBandID)
     TRACE("(%p, %u, %p)\n", this, uBand, pdwBandID);
 
     if (uBand == 0xffffffff)
-        return (UINT)fBandsCount;
+        return (UINT)m_cBands;
 
-    if (uBand >= (UINT)fBandsCount)
+    if (uBand >= (UINT)m_cBands)
         return E_FAIL;
 
-    for (i = 0; i < (DWORD)fBandsAllocated; i++)
+    for (i = 0; i < (DWORD)m_cBandsAllocated; i++)
     {
-        if (fBands[i].DeskBand != NULL)
+        if (m_bands[i].DeskBand != NULL)
         {
             if (uBand == 0)
             {
@@ -590,7 +592,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::QueryBand(DWORD dwBandID, IDeskBand **p
 
     TRACE("(%p, %u, %p, %p, %p, %d)\n", this, dwBandID, ppstb, pdwState, pszName, cchName);
 
-    Band = GetBandByID(dwBandID);
+    Band = _GetBandByID(dwBandID);
     if (Band == NULL)
         return E_FAIL;
 
@@ -620,7 +622,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetBandState(DWORD dwBandID, DWORD dwMa
 
     TRACE("(%p, %u, %x, %x)\n", this, dwBandID, dwMask, dwState);
 
-    Band = GetBandByID(dwBandID);
+    Band = _GetBandByID(dwBandID);
     if (Band == NULL)
         return E_FAIL;
 
@@ -635,17 +637,17 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::RemoveBand(DWORD dwBandID)
 
     TRACE("(%p, %u)\n", this, dwBandID);
 
-    if (fRebarWindow == NULL)
+    if (m_hwndRebar == NULL)
         return E_FAIL;
 
-    Band = GetBandByID(dwBandID);
+    Band = _GetBandByID(dwBandID);
     if (Band == NULL)
         return E_FAIL;
 
-    uBand = (UINT)SendMessageW(fRebarWindow, RB_IDTOINDEX, (WPARAM)GetBandID(Band), 0);
+    uBand = (UINT)SendMessageW(m_hwndRebar, RB_IDTOINDEX, (WPARAM)_GetBandID(Band), 0);
     if (uBand != (UINT)-1)
     {
-        if (!SendMessageW(fRebarWindow, RB_DELETEBAND, (WPARAM)uBand, 0))
+        if (!SendMessageW(m_hwndRebar, RB_DELETEBAND, (WPARAM)uBand, 0))
         {
             ERR("Could not delete band!\n");
         }
@@ -653,7 +655,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::RemoveBand(DWORD dwBandID)
     else
         ERR("Could not map band id to index!\n");
 
-    FreeBand(Band);
+    _FreeBand(Band);
     return S_OK;
 }
 
@@ -663,7 +665,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::GetBandObject(DWORD dwBandID, REFIID ri
 
     TRACE("(%p, %u, %s, %p)\n", this, dwBandID, debugstr_guid(&riid), ppv);
 
-    Band = GetBandByID(dwBandID);
+    Band = _GetBandByID(dwBandID);
     if (Band == NULL)
     {
         *ppv = NULL;
@@ -675,14 +677,29 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::GetBandObject(DWORD dwBandID, REFIID ri
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::SetBandSiteInfo(const BANDSITEINFO *pbsinfo)
 {
-    FIXME("(%p, %p)\n", this, pbsinfo);
-    return E_NOTIMPL;
+    if (!pbsinfo)
+        return E_INVALIDARG;
+
+    if ((pbsinfo->dwMask & BSIM_STATE))
+        m_dwState = pbsinfo->dwState;
+    if ((pbsinfo->dwMask & BSIM_STYLE))
+        m_dwStyle = pbsinfo->dwStyle;
+
+    _UpdateAllBands();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::GetBandSiteInfo(BANDSITEINFO *pbsinfo)
 {
-    FIXME("(%p, %p)\n", this, pbsinfo);
-    return E_NOTIMPL;
+    if (!pbsinfo)
+        return E_INVALIDARG;
+
+    if ((pbsinfo->dwMask & BSIM_STATE))
+        pbsinfo->dwState = m_dwState;
+    if ((pbsinfo->dwMask & BSIM_STYLE))
+        pbsinfo->dwStyle = m_dwStyle;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
@@ -691,13 +708,14 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
 
     TRACE("(%p, %p, %u, %p, %p, %p)\n", this, hWnd, uMsg, wParam, lParam, plrResult);
 
-    *plrResult = 0;
-    if (fRebarWindow == NULL)
+    if (plrResult)
+        *plrResult = 0;
+    if (m_hwndRebar == NULL)
         return E_FAIL;
 
     if (uMsg == WM_CONTEXTMENU)
     {
-        HRESULT hr = OnContextMenu(hWnd, uMsg, wParam, lParam, plrResult);
+        HRESULT hr = _OnContextMenu(hWnd, uMsg, wParam, lParam, plrResult);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
         
@@ -710,20 +728,20 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
     else if (uMsg == WM_NOTIFY)
     {
         NMHDR* pnmhdr = reinterpret_cast<NMHDR*>(lParam);
-        if (pnmhdr->hwndFrom != fRebarWindow)
+        if (pnmhdr->hwndFrom != m_hwndRebar)
         {
             hWnd = pnmhdr->hwndFrom;
         }
         else
         {
-            for (int i = 0; i < fBandsAllocated; i++)
+            for (int i = 0; i < m_cBandsAllocated; i++)
             {
-                if (fBands[i].WndEvtHandler && fBands[i].OleWindow)
+                if (m_bands[i].WndEvtHandler && m_bands[i].OleWindow)
                 {
                     HWND hwndBand;
-                    if (SUCCEEDED(fBands[i].OleWindow->GetWindow(&hwndBand)))
+                    if (SUCCEEDED(m_bands[i].OleWindow->GetWindow(&hwndBand)))
                     {
-                        fBands[i].WndEvtHandler->OnWinEvent(hwndBand, uMsg, wParam, lParam, plrResult);
+                        m_bands[i].WndEvtHandler->OnWinEvent(hwndBand, uMsg, wParam, lParam, plrResult);
                     }
                 }
             }
@@ -731,7 +749,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
         }
     }
 
-    Band = GetBandFromHwnd(hWnd);
+    Band = _GetBandFromHwnd(hWnd);
     if (Band != NULL)
     {
         return Band->WndEvtHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, plrResult);
@@ -746,10 +764,10 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::IsWindowOwner(HWND hWnd)
 
     TRACE("(%p, %p)\n", this, hWnd);
 
-    if (fRebarWindow == NULL)
+    if (m_hwndRebar == NULL)
         return E_FAIL;
 
-    Band = GetBandFromHwnd(hWnd);
+    Band = _GetBandFromHwnd(hWnd);
     if (Band != NULL)
         return S_OK;
 
@@ -760,8 +778,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::GetWindow(HWND *phWnd)
 {
     TRACE("(%p, %p)\n", this, phWnd);
 
-    *phWnd = fRebarWindow;
-    if (fRebarWindow != NULL)
+    *phWnd = m_hwndRebar;
+    if (m_hwndRebar != NULL)
         return S_OK;
 
     return E_FAIL;
@@ -781,20 +799,20 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetDeskBarSite(IUnknown *pUnk)
 
     TRACE("(%p, %p)\n", this, pUnk);
 
-    fOleWindow.Release();
+    m_site = NULL;
 
-    hRet = pUnk->QueryInterface(IID_PPV_ARG(IOleWindow, &fOleWindow));
+    hRet = pUnk->QueryInterface(IID_PPV_ARG(IOleWindow, &m_site));
     if (FAILED_UNEXPECTEDLY(hRet))
         return E_FAIL;
 
-    hRet = fOleWindow->GetWindow(&hWndParent);
+    hRet = m_site->GetWindow(&hWndParent);
     if (FAILED_UNEXPECTEDLY(hRet))
         return E_FAIL;
 
     style = WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | RBS_VARHEIGHT | RBS_AUTOSIZE |
         RBS_BANDBORDERS | CCS_NODIVIDER | /*CCS_NORESIZE |*/ CCS_NOPARENTALIGN;
 
-    fRebarWindow = CreateWindowExW(WS_EX_TOOLWINDOW,
+    m_hwndRebar = CreateWindowExW(WS_EX_TOOLWINDOW,
                                    REBARCLASSNAMEW,
                                    NULL,
                                    style,
@@ -803,9 +821,9 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetDeskBarSite(IUnknown *pUnk)
                                    NULL,
                                    _AtlBaseModule.GetModuleInstance(),
                                    NULL);
-    if (fRebarWindow == NULL)
+    if (m_hwndRebar == NULL)
     {
-        fOleWindow.Release();
+        m_site = NULL;
         WARN("IDeskbarClient::SetDeskBarSite() failed to create ReBar control!\n");
         return E_FAIL;
     }
@@ -820,10 +838,10 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetModeDBC(DWORD dwMode)
 
     TRACE("(%p, %x)\n", this, dwMode);
 
-    if (fRebarWindow == NULL)
+    if (m_hwndRebar == NULL)
         return E_FAIL;
 
-    dwStyle = dwPrevStyle = GetWindowLongPtr(fRebarWindow, GWL_STYLE);
+    dwStyle = dwPrevStyle = GetWindowLongPtr(m_hwndRebar, GWL_STYLE);
     if (dwMode & DBIF_VIEWMODE_VERTICAL)
         dwStyle |= CCS_VERT;
 
@@ -832,7 +850,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetModeDBC(DWORD dwMode)
 
     if (dwStyle != dwPrevStyle)
     {
-        SetWindowLongPtr(fRebarWindow, GWL_STYLE, dwPrevStyle);
+        SetWindowLongPtr(m_hwndRebar, GWL_STYLE, dwPrevStyle);
     }
 
     return S_OK;
@@ -842,10 +860,10 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::UIActivateDBC(DWORD dwState)
 {
     TRACE("(%p, %x)\n", this, dwState);
 
-    if (fRebarWindow == NULL)
+    if (m_hwndRebar == NULL)
         return E_FAIL;
 
-    ShowWindow(fRebarWindow, (dwState & DBC_SHOW) ? SW_SHOW : SW_HIDE);
+    ShowWindow(m_hwndRebar, (dwState & DBC_SHOW) ? SW_SHOW : SW_HIDE);
     //FIXME: Properly notify bands?
     return S_OK;
 }
@@ -870,7 +888,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::Exec(const GUID *pguidCmdGroup, DWORD n
 
     TRACE("(%p, %p, %u, %u, %p, %p)\n", this, pguidCmdGroup, nCmdID, nCmdExecOpt, pvaIn, pvaOut);
 
-    if (fRebarWindow == NULL)
+    if (m_hwndRebar == NULL)
         return E_FAIL;
 
     if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
@@ -879,12 +897,12 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::Exec(const GUID *pguidCmdGroup, DWORD n
         {
             case DBID_BANDINFOCHANGED:
                 if (pvaIn == NULL)
-                    hRet = UpdateAllBands();
+                    hRet = _UpdateAllBands();
                 else
                 {
                     /* Update a single band */
                     if (pvaIn->n1.n2.vt == VT_I4)
-                        hRet = UpdateBand(pvaIn->n1.n2.n3.lVal);
+                        hRet = _UpdateBand(pvaIn->n1.n2.n3.lVal);
                     else
                         hRet = E_FAIL;
                 }

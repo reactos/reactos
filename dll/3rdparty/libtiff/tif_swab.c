@@ -1,4 +1,4 @@
-/* $Id: tif_swab.c,v 1.14 2016-09-04 21:32:56 erouault Exp $ */
+/* $Id: tif_swab.c,v 1.15 2017-06-08 16:39:50 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -29,10 +29,9 @@
  *
  * XXX We assume short = 16-bits and long = 32-bits XXX
  */
-
 #include <precomp.h>
 
-#ifndef TIFFSwabShort
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabShort)
 void
 TIFFSwabShort(uint16* wp)
 {
@@ -43,7 +42,7 @@ TIFFSwabShort(uint16* wp)
 }
 #endif
 
-#ifndef TIFFSwabLong
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabLong)
 void
 TIFFSwabLong(uint32* lp)
 {
@@ -55,7 +54,7 @@ TIFFSwabLong(uint32* lp)
 }
 #endif
 
-#ifndef TIFFSwabLong8
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabLong8)
 void
 TIFFSwabLong8(uint64* lp)
 {
@@ -69,7 +68,7 @@ TIFFSwabLong8(uint64* lp)
 }
 #endif
 
-#ifndef TIFFSwabArrayOfShort
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabArrayOfShort)
 void
 TIFFSwabArrayOfShort(register uint16* wp, tmsize_t n)
 {
@@ -85,7 +84,7 @@ TIFFSwabArrayOfShort(register uint16* wp, tmsize_t n)
 }
 #endif
 
-#ifndef TIFFSwabArrayOfTriples
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabArrayOfTriples)
 void
 TIFFSwabArrayOfTriples(register uint8* tp, tmsize_t n)
 {
@@ -101,7 +100,7 @@ TIFFSwabArrayOfTriples(register uint8* tp, tmsize_t n)
 }
 #endif
 
-#ifndef TIFFSwabArrayOfLong
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabArrayOfLong)
 void
 TIFFSwabArrayOfLong(register uint32* lp, tmsize_t n)
 {
@@ -118,7 +117,7 @@ TIFFSwabArrayOfLong(register uint32* lp, tmsize_t n)
 }
 #endif
 
-#ifndef TIFFSwabArrayOfLong8
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabArrayOfLong8)
 void
 TIFFSwabArrayOfLong8(register uint64* lp, tmsize_t n)
 {
@@ -137,7 +136,7 @@ TIFFSwabArrayOfLong8(register uint64* lp, tmsize_t n)
 }
 #endif
 
-#ifndef TIFFSwabFloat
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabFloat)
 void
 TIFFSwabFloat(float* fp)
 {
@@ -149,7 +148,7 @@ TIFFSwabFloat(float* fp)
 }
 #endif
 
-#ifndef TIFFSwabArrayOfFloat
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabArrayOfFloat)
 void
 TIFFSwabArrayOfFloat(register float* fp, tmsize_t n)
 {
@@ -166,7 +165,7 @@ TIFFSwabArrayOfFloat(register float* fp, tmsize_t n)
 }
 #endif
 
-#ifndef TIFFSwabDouble
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabDouble)
 void
 TIFFSwabDouble(double *dp)
 {
@@ -180,7 +179,7 @@ TIFFSwabDouble(double *dp)
 }
 #endif
 
-#ifndef TIFFSwabArrayOfDouble
+#if defined(DISABLE_CHECK_TIFFSWABMACROS) || !defined(TIFFSwabArrayOfDouble)
 void
 TIFFSwabArrayOfDouble(double* dp, tmsize_t n)
 {

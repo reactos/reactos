@@ -2,7 +2,7 @@
  * PROJECT:     xml2sdb
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Conversion functions from xml -> db
- * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "xml2sdb.h"
@@ -14,7 +14,7 @@
 using tinyxml2::XMLText;
 
 static const GUID GUID_NULL = { 0 };
-static const char szCompilerVersion[] = "1.6.0.0";
+static const char szCompilerVersion[] = "1.7.0.0";
 
 #if !defined(C_ASSERT)
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
@@ -88,7 +88,7 @@ std::string ReadStringNode(XMLHandle dbNode, const char* nodeName)
     return ToString(dbNode.FirstChildElement(nodeName));
 }
 
-DWORD ReadDWordNode(XMLHandle dbNode, const char* nodeName)
+DWORD ReadQWordNode(XMLHandle dbNode, const char* nodeName)
 {
     std::string value = ReadStringNode(dbNode, nodeName);
     int base = 10;
@@ -97,7 +97,12 @@ DWORD ReadDWordNode(XMLHandle dbNode, const char* nodeName)
         base = 16;
         value = value.substr(2);
     }
-    return static_cast<DWORD>(strtoul(value.c_str(), NULL, base));
+    return static_cast<QWORD>(strtoul(value.c_str(), NULL, base));
+}
+
+DWORD ReadDWordNode(XMLHandle dbNode, const char* nodeName)
+{
+    return static_cast<DWORD>(ReadQWordNode(dbNode, nodeName));
 }
 
 unsigned char char2byte(char hexChar, bool* success = NULL)
@@ -310,6 +315,29 @@ bool ShimRef::toSdb(PDB pdb, Database& db)
 }
 
 
+
+/***********************************************************************
+ *   FlagRef
+ */
+
+bool FlagRef::fromXml(XMLHandle dbNode)
+{
+    Name = ReadStringNode(dbNode, "NAME");
+    return !Name.empty();
+}
+
+bool FlagRef::toSdb(PDB pdb, Database& db)
+{
+    TAGID tagid = db.BeginWriteListTag(pdb, TAG_FLAG_REF);
+    db.WriteString(pdb, TAG_NAME, Name, true);
+
+    if (!FlagTagid)
+        FlagTagid = db.FindFlagTagid(Name);
+    SdbWriteDWORDTag(pdb, TAG_FLAG_TAGID, FlagTagid);
+    return !!db.EndWriteListTag(pdb, tagid);
+}
+
+
 /***********************************************************************
  *   Shim
  */
@@ -342,6 +370,35 @@ bool Shim::toSdb(PDB pdb, Database& db)
 
 
 /***********************************************************************
+ *   Flag
+ */
+
+bool Flag::fromXml(XMLHandle dbNode)
+{
+    Name = ReadStringNode(dbNode, "NAME");
+
+    KernelFlags = ReadQWordNode(dbNode, "FLAG_MASK_KERNEL");
+    UserFlags = ReadQWordNode(dbNode, "FLAG_MASK_USER");
+    ProcessParamFlags = ReadQWordNode(dbNode, "FLAG_PROCESSPARAM");
+
+    return !Name.empty();
+}
+
+bool Flag::toSdb(PDB pdb, Database& db)
+{
+    Tagid = db.BeginWriteListTag(pdb, TAG_FLAG);
+    db.InsertFlagTagid(Name, Tagid);
+    db.WriteString(pdb, TAG_NAME, Name, true);
+
+    db.WriteQWord(pdb, TAG_FLAG_MASK_KERNEL, KernelFlags);
+    db.WriteQWord(pdb, TAG_FLAG_MASK_USER, UserFlags);
+    db.WriteQWord(pdb, TAG_FLAG_PROCESSPARAM, ProcessParamFlags);
+
+    return !!db.EndWriteListTag(pdb, Tagid);
+}
+
+
+/***********************************************************************
  *   Layer
  */
 
@@ -349,6 +406,7 @@ bool Layer::fromXml(XMLHandle dbNode)
 {
     Name = ReadStringNode(dbNode, "NAME");
     ReadGeneric(dbNode, ShimRefs, "SHIM_REF");
+    ReadGeneric(dbNode, FlagRefs, "FLAG_REF");
     return true;
 }
 
@@ -357,6 +415,8 @@ bool Layer::toSdb(PDB pdb, Database& db)
     Tagid = db.BeginWriteListTag(pdb, TAG_LAYER);
     db.WriteString(pdb, TAG_NAME, Name, true);
     if (!WriteGeneric(pdb, ShimRefs, db))
+        return false;
+    if (!WriteGeneric(pdb, FlagRefs, db))
         return false;
     return !!db.EndWriteListTag(pdb, Tagid);
 }
@@ -430,6 +490,7 @@ bool Exe::fromXml(XMLHandle dbNode)
     ReadGeneric(dbNode, MatchingFiles, "MATCHING_FILE");
 
     ReadGeneric(dbNode, ShimRefs, "SHIM_REF");
+    ReadGeneric(dbNode, FlagRefs, "FLAG_REF");
 
     return !Name.empty();
 }
@@ -450,6 +511,8 @@ bool Exe::toSdb(PDB pdb, Database& db)
     if (!WriteGeneric(pdb, MatchingFiles, db))
         return false;
     if (!WriteGeneric(pdb, ShimRefs, db))
+        return false;
+    if (!WriteGeneric(pdb, FlagRefs, db))
         return false;
 
     return !!db.EndWriteListTag(pdb, Tagid);
@@ -489,6 +552,12 @@ void Database::WriteDWord(PDB pdb, TAG tag, DWORD value, bool always)
         SdbWriteDWORDTag(pdb, tag, value);
 }
 
+void Database::WriteQWord(PDB pdb, TAG tag, QWORD value, bool always)
+{
+    if (always || value)
+        SdbWriteQWORDTag(pdb, tag, value);
+}
+
 TAGID Database::BeginWriteListTag(PDB pdb, TAG tag)
 {
     return SdbBeginWriteListTag(pdb, tag);
@@ -516,7 +585,9 @@ bool Database::fromXml(XMLHandle dbNode)
         }
         else if (NodeName == "FLAG")
         {
-            SHIM_ERR("Unhanled FLAG type\n");
+            Flag flag;
+            if (flag.fromXml(libChild))
+                Library.Flags.push_back(flag);
         }
         else if (NodeName == "INCLUDE" || NodeName == "EXCLUDE")
         {
@@ -560,6 +631,8 @@ bool Database::toSdb(LPCWSTR path)
     if (!WriteGeneric(pdb, Library.InExcludes, *this))
         return false;
     if (!WriteGeneric(pdb, Library.Shims, *this))
+        return false;
+    if (!WriteGeneric(pdb, Library.Flags, *this))
         return false;
     EndWriteListTag(pdb, tidLibrary);
     if (!WriteGeneric(pdb, Layers, *this))
@@ -615,6 +688,15 @@ TAGID Database::FindPatchTagid(const sdbstring& name)
     return FindTagid(name, KnownPatches);
 }
 
+void Database::InsertFlagTagid(const sdbstring& name, TAGID tagid)
+{
+    InsertTagid(name, tagid, KnownFlags, "Flag");
+}
+
+TAGID Database::FindFlagTagid(const sdbstring& name)
+{
+    return FindTagid(name, KnownFlags);
+}
 
 
 bool xml_2_db(const char* xml, const WCHAR* sdb)

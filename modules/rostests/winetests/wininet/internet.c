@@ -566,7 +566,7 @@ static void test_cookie_attrs(void)
     DWORD size, state;
     BOOL ret;
 
-    if(!GetProcAddress(GetModuleHandleA("wininet.dll"), "InternetGetSecurityInfoByURLA")) {
+    if(!GetProcAddress(GetModuleHandleA("wininet.dll"), "DeleteWpadCacheForNetworks")) {
         win_skip("Skipping cookie attributes tests. Too old IE.\n");
         return;
     }
@@ -1165,20 +1165,6 @@ static void test_InternetSetOption(void)
     ret = InternetSetOptionA(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
     ok(ret == FALSE, "InternetSetOption should've failed\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() = %x\n", GetLastError());
-
-    ret = InternetSetOptionA(req, INTERNET_OPTION_SETTINGS_CHANGED, NULL, 0);
-    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
-
-    ret = InternetSetOptionA(ses, INTERNET_OPTION_SETTINGS_CHANGED, NULL, 0);
-    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
-
-    ret = InternetSetOptionA(ses, INTERNET_OPTION_REFRESH, NULL, 0);
-    ok(ret == TRUE, "InternetSetOption should've succeeded\n");
-
-    SetLastError(0xdeadbeef);
-    ret = InternetSetOptionA(req, INTERNET_OPTION_REFRESH, NULL, 0);
-    todo_wine ok(ret == FALSE, "InternetSetOption should've failed\n");
-    todo_wine ok(GetLastError() == ERROR_INTERNET_INCORRECT_HANDLE_TYPE, "GetLastError() = %x\n", GetLastError());
 
     ret = InternetCloseHandle(req);
     ok(ret == TRUE, "InternetCloseHandle failed: 0x%08x\n", GetLastError());

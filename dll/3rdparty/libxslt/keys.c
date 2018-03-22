@@ -384,10 +384,13 @@ xsltAddKey(xsltStylesheetPtr style, const xmlChar *name,
 	prev->next = key;
     }
     key->next = NULL;
+    key = NULL;
 
 error:
     if (pattern != NULL)
 	xmlFree(pattern);
+    if (key != NULL)
+        xsltFreeKeyDef(key);
     return(0);
 }
 

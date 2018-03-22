@@ -38,9 +38,9 @@ Fat12WriteBootSector(IN HANDLE FileHandle,
     RtlZeroMemory(NewBootSector, BootSector->BytesPerSector);
 
     /* Copy FAT16 BPB to new bootsector */
-    memcpy(&NewBootSector->OEMName[0],
-           &BootSector->OEMName[0],
-           FIELD_OFFSET(FAT16_BOOT_SECTOR, Res2) - FIELD_OFFSET(FAT16_BOOT_SECTOR, OEMName));
+    memcpy(&NewBootSector->Jump[0],
+           &BootSector->Jump[0],
+           FIELD_OFFSET(FAT16_BOOT_SECTOR, Res2) - FIELD_OFFSET(FAT16_BOOT_SECTOR, Jump));
            /* FAT16 BPB length (up to (not including) Res2) */
 
     /* Write the boot sector signature */
@@ -276,6 +276,10 @@ Fat12Format(IN HANDLE FileHandle,
 
     RtlZeroMemory(&BootSector, sizeof(FAT16_BOOT_SECTOR));
     memcpy(&BootSector.OEMName[0], "MSWIN4.1", 8);
+    /* FIXME: Add dummy bootloader for real */
+    BootSector.Jump[0] = 0xeb;
+    BootSector.Jump[1] = 0x3c;
+    BootSector.Jump[2] = 0x90;
     BootSector.BytesPerSector = DiskGeometry->BytesPerSector;
     BootSector.SectorsPerCluster = ClusterSize / BootSector.BytesPerSector;
     BootSector.ReservedSectors = 1;

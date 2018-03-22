@@ -143,7 +143,7 @@ START_TEST(CComObject)
     }
 
 #ifndef __REACTOS__
-    printf("CImage: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
+    printf("CComObject: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
     return g_tests_failed;
 #endif
 }

@@ -258,7 +258,8 @@ UpdateSystemTime(ULONG ulTime)
         return;
     }
 
-    if (!SystemSetLocalTime(&stNew))
+    /* Use SystemSetTime with SystemTime = TRUE to set System Time */
+    if (!SystemSetTime(&stNew, TRUE))
          DisplayWin32Error(GetLastError());
 }
 

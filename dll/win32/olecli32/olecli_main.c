@@ -21,20 +21,18 @@
 /*	At the moment, these are only empty stubs.
  */
 
-#define WIN32_NO_STATUS
+#include "config.h"
 
-#include <config.h>
+#include <stdarg.h>
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-#include <wine/windef16.h>
-//#include "winbase.h"
-#include <wingdi.h>
-//#include "wownt32.h"
-//#include "objbase.h"
+#include "windef.h"
+#include "wine/windef16.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "wownt32.h"
+#include "objbase.h"
 #include "olecli.h"
-#include <wine/debug.h>
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

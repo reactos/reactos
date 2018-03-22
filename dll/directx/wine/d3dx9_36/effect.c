@@ -17,10 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
 
-#include <d3dcompiler.h>
-#include <initguid.h>
+#include "d3dx9_private.h"
+#include "d3dcompiler.h"
 
 /* Constants for special INT/FLOAT conversation */
 #define INT_FLOAT_MULTI 255.0f
@@ -31,6 +32,8 @@ static const char parameter_magic_string[4] = {'@', '!', '#', '\xFF'};
 #define PARAMETER_FLAG_SHARED 1
 
 #define INITIAL_POOL_SIZE 16
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 enum STATE_CLASS
 {
@@ -100,6 +103,7 @@ struct d3dx_object
     UINT size;
     void *data;
     struct d3dx_parameter *param;
+    BOOL creation_failed;
 };
 
 struct d3dx_state
@@ -1140,21 +1144,17 @@ static HRESULT d3dx9_base_effect_get_pass_desc(struct d3dx9_base_effect *base,
             void *param_value;
             BOOL param_dirty;
             HRESULT hr;
+            void *data;
 
             if (FAILED(hr = d3dx9_get_param_value_ptr(pass, &pass->states[i], &param_value, &param,
                     FALSE, &param_dirty)))
                 return hr;
 
-            if (!param->object_id)
-            {
-                FIXME("Zero object ID in shader parameter.\n");
-                return E_FAIL;
-            }
-
+            data = param->object_id ? base->objects[param->object_id].data : NULL;
             if (state_table[state->operation].class == SC_VERTEXSHADER)
-                desc->pVertexShaderFunction = base->objects[param->object_id].data;
+                desc->pVertexShaderFunction = data;
             else
-                desc->pPixelShaderFunction = base->objects[param->object_id].data;
+                desc->pPixelShaderFunction = data;
         }
     }
 
@@ -3938,11 +3938,50 @@ static D3DXHANDLE WINAPI ID3DXEffectImpl_GetCurrentTechnique(ID3DXEffect *iface)
 
 static HRESULT WINAPI ID3DXEffectImpl_ValidateTechnique(ID3DXEffect* iface, D3DXHANDLE technique)
 {
-    struct ID3DXEffectImpl *This = impl_from_ID3DXEffect(iface);
+    struct ID3DXEffectImpl *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx9_base_effect *base = &effect->base_effect;
+    struct d3dx_technique *tech = get_valid_technique(base, technique);
+    HRESULT ret = D3D_OK;
+    unsigned int i, j;
 
-    FIXME("(%p)->(%p): stub\n", This, technique);
+    FIXME("iface %p, technique %p semi-stub.\n", iface, technique);
 
-    return D3D_OK;
+    if (!tech)
+    {
+        ret = D3DERR_INVALIDCALL;
+        goto done;
+    }
+    for (i = 0; i < tech->pass_count; ++i)
+    {
+        struct d3dx_pass *pass = &tech->passes[i];
+
+        for (j = 0; j < pass->state_count; ++j)
+        {
+            struct d3dx_state *state = &pass->states[j];
+
+            if (state_table[state->operation].class == SC_VERTEXSHADER
+                    || state_table[state->operation].class == SC_PIXELSHADER)
+            {
+                struct d3dx_parameter *param;
+                void *param_value;
+                BOOL param_dirty;
+                HRESULT hr;
+
+                if (FAILED(hr = d3dx9_get_param_value_ptr(pass, &pass->states[j], &param_value, &param,
+                        FALSE, &param_dirty)))
+                    return hr;
+
+                if (param->object_id && base->objects[param->object_id].creation_failed)
+                {
+                    ret = E_FAIL;
+                    goto done;
+                }
+            }
+        }
+    }
+done:
+    TRACE("Returning %#x.\n", ret);
+    return ret;
 }
 
 static HRESULT WINAPI ID3DXEffectImpl_FindNextValidTechnique(ID3DXEffect *iface,
@@ -5976,7 +6015,7 @@ static HRESULT d3dx9_create_object(struct d3dx9_base_effect *base, struct d3dx_o
                     (IDirect3DVertexShader9 **)param->data)))
             {
                 WARN("Failed to create vertex shader.\n");
-                return D3D_OK;
+                object->creation_failed = TRUE;
             }
             break;
         case D3DXPT_PIXELSHADER:
@@ -5984,7 +6023,7 @@ static HRESULT d3dx9_create_object(struct d3dx9_base_effect *base, struct d3dx_o
                     (IDirect3DPixelShader9 **)param->data)))
             {
                 WARN("Failed to create pixel shader.\n");
-                return D3D_OK;
+                object->creation_failed = TRUE;
             }
             break;
         default:
@@ -6457,6 +6496,11 @@ static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
     char *skip_constants_buffer = NULL;
     const char **skip_constants = NULL;
     unsigned int skip_constants_count = 0;
+#if D3DX_SDK_VERSION <= 36
+    UINT compile_flags = D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
+#else
+    UINT compile_flags = 0;
+#endif
     unsigned int i, j;
 
     TRACE("base %p, data %p, data_size %lu, effect %p, pool %p, skip_constants %s.\n",
@@ -6473,7 +6517,7 @@ static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
     {
         TRACE("HLSL ASCII effect, trying to compile it.\n");
         hr = D3DCompile(data, data_size, NULL, defines, include,
-                "main", "fx_2_0", 0, eflags, &bytecode, &temp_errors);
+                "main", "fx_2_0", compile_flags, eflags, &bytecode, &temp_errors);
         if (FAILED(hr))
         {
             WARN("Failed to compile ASCII effect.\n");

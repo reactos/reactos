@@ -26,19 +26,19 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\n用法：\n \
-        ipconfig [/? | /all | /renew [适配器] | /release [适配器] |\n \
+    "\n用法: \n \
+        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid 适配器 |\n \
-                  /setclassid 适配器 [类ID] ]\n \
+                  /showclassid adapter |\n \
+                  /setclassid adapter [classid] ]\n \
     \n \
     其中\n \
-        适配器          连接名称\n \
-                       (通配符 * 和 ？ 是被允许的，参见示例)\n \
+        adapter         连接名称\n \
+                        (允许使用通配符 * 和 ？，参见示例)\n \
     \n \
-        选项：\n \
+        选项: \n \
            /?           显示这个帮助信息。\n \
-           /all         显示完全的配置信息。\n \
+           /all         显示完整的配置信息。\n \
            /release     释放指定适配器的 IP 地址。\n \
            /renew       更新指定适配器的 IP 地址。\n \
            /flushdns    清空 DNS 缓存。\n \

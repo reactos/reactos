@@ -697,7 +697,7 @@ ThemeHooksInstall()
         ret = FALSE;
     }
 
-    UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
+    UXTHEME_broadcast_theme_changed (NULL, TRUE);
 
     return ret;
 }
@@ -709,7 +709,7 @@ ThemeHooksRemove()
 
     ret = UnregisterUserApiHook();
 
-    UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
+    UXTHEME_broadcast_theme_changed (NULL, FALSE);
 
     return ret;
 }

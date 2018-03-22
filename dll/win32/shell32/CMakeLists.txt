@@ -67,6 +67,7 @@ list(APPEND SOURCE
     CDefViewBckgrndMenu.cpp
     stubs.cpp
     systray.cpp
+    CUserNotification.cpp
     CDefaultContextMenu.cpp
     COpenWithMenu.cpp
     CNewMenu.cpp

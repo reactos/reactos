@@ -204,7 +204,7 @@ inline BOOL CAvailableApplicationInfo::GetString(LPCWSTR lpKeyName, ATL::CString
     }
     return TRUE;
 }
-// CAvailableApplicationInfo 
+// CAvailableApplicationInfo
 
 // AvailableStrings
 AvailableStrings::AvailableStrings()
@@ -213,7 +213,9 @@ AvailableStrings::AvailableStrings()
     if (GetStorageDirectory(szPath))
     {
         szAppsPath = szPath + L"\\rapps\\";
-        szCabPath = szPath + L"\\rappmgr.cab";
+        szCabName = L"rappmgr.cab";
+        szCabDir = szPath;
+        szCabPath = (szCabDir + L"\\") + szCabName;
         szSearchPath = szAppsPath + L"*.txt";
     }
 }
@@ -282,7 +284,9 @@ BOOL CAvailableApps::UpdateAppsDB()
 
     CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
-    if (!ExtractFilesFromCab(m_Strings.szCabPath, m_Strings.szAppsPath))
+    if (!ExtractFilesFromCab(m_Strings.szCabName, 
+                             m_Strings.szCabDir,
+                             m_Strings.szAppsPath))
     {
         return FALSE;
     }
@@ -352,8 +356,8 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc)
         m_InfoList.AddTail(Info);
 
 skip_if_cached:
-        if (EnumType == Info->m_Category 
-            || EnumType == ENUM_ALL_AVAILABLE 
+        if (EnumType == Info->m_Category
+            || EnumType == ENUM_ALL_AVAILABLE
             || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected))
         {
             Info->RefreshAppInfo();

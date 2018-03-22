@@ -1,8 +1,6 @@
-Index: include/reactos/libs/libjpeg/jmorecfg.h
-===================================================================
---- include/reactos/libs/libjpeg/jmorecfg.h	(revision 66390)
-+++ include/reactos/libs/libjpeg/jmorecfg.h	(working copy)
-@@ -238,14 +238,62 @@
+--- a/sdk/include/reactos/libs/libjpeg/jmorecfg.h
++++ b/sdk/include/reactos/libs/libjpeg/jmorecfg.h
+@@ -238,14 +238,62 @@ typedef unsigned int JDIMENSION;
   * or code profilers that require it.
   */
  

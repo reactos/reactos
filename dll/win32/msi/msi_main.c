@@ -18,9 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msipriv.h"
+#include <stdarg.h>
 
-#include <rpcproxy.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "oleauto.h"
+#include "rpcproxy.h"
+#include "msipriv.h"
+#include "msiserver.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 

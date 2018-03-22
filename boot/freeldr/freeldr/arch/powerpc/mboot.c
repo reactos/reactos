@@ -25,7 +25,6 @@
 #include "ppcmmu/mmu.h"
 #include "compat.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* We'll check this to see if we're in OFW land */

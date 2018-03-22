@@ -17,11 +17,15 @@
  *
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include "d3dx9_private.h"
 #include "d3dx9xof.h"
 #undef MAKE_DDHRESULT
 #include "dxfile.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 static HRESULT error_dxfile_to_d3dxfile(HRESULT error)
 {

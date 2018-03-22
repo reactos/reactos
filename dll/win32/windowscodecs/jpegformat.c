@@ -16,11 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wincodecs_private.h"
+#include "config.h"
+#include "wine/port.h"
 
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <setjmp.h>
 
 #ifdef SONAME_LIBJPEG
 /* This is a hack, so jpeglib.h does not redefine INT32 and the like*/
@@ -36,6 +41,19 @@
 #undef UINT16
 #undef boolean
 #endif
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+
+#include "wincodecs_private.h"
+
+#include "wine/debug.h"
+#include "wine/library.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 #ifdef SONAME_LIBJPEG
 WINE_DECLARE_DEBUG_CHANNEL(jpeg);
@@ -137,7 +155,6 @@ typedef struct {
     struct jpeg_error_mgr jerr;
     struct jpeg_source_mgr source_mgr;
     BYTE source_buffer[1024];
-    UINT bpp, stride;
     BYTE *image_data;
     CRITICAL_SECTION lock;
 } JpegDecoder;
@@ -286,8 +303,6 @@ static HRESULT WINAPI JpegDecoder_Initialize(IWICBitmapDecoder *iface, IStream *
     int ret;
     LARGE_INTEGER seek;
     jmp_buf jmpbuf;
-    UINT data_size, i;
-
     TRACE("(%p,%p,%u)\n", iface, pIStream, cacheOptions);
 
     EnterCriticalSection(&This->lock);
@@ -364,55 +379,6 @@ static HRESULT WINAPI JpegDecoder_Initialize(IWICBitmapDecoder *iface, IStream *
         ERR("jpeg_start_decompress failed\n");
         LeaveCriticalSection(&This->lock);
         return E_FAIL;
-    }
-
-    if (This->cinfo.out_color_space == JCS_GRAYSCALE) This->bpp = 8;
-    else if (This->cinfo.out_color_space == JCS_CMYK) This->bpp = 32;
-    else This->bpp = 24;
-
-    This->stride = (This->bpp * This->cinfo.output_width + 7) / 8;
-    data_size = This->stride * This->cinfo.output_height;
-
-    This->image_data = HeapAlloc(GetProcessHeap(), 0, data_size);
-    if (!This->image_data)
-    {
-        LeaveCriticalSection(&This->lock);
-        return E_OUTOFMEMORY;
-    }
-
-    while (This->cinfo.output_scanline < This->cinfo.output_height)
-    {
-        UINT first_scanline = This->cinfo.output_scanline;
-        UINT max_rows;
-        JSAMPROW out_rows[4];
-        JDIMENSION ret;
-
-        max_rows = min(This->cinfo.output_height-first_scanline, 4);
-        for (i=0; i<max_rows; i++)
-            out_rows[i] = This->image_data + This->stride * (first_scanline+i);
-
-        ret = pjpeg_read_scanlines(&This->cinfo, out_rows, max_rows);
-        if (ret == 0)
-        {
-            ERR("read_scanlines failed\n");
-            LeaveCriticalSection(&This->lock);
-            return E_FAIL;
-        }
-    }
-
-    if (This->bpp == 24)
-    {
-        /* libjpeg gives us RGB data and we want BGR, so byteswap the data */
-        reverse_bgr8(3, This->image_data,
-            This->cinfo.output_width, This->cinfo.output_height,
-            This->stride);
-    }
-
-    if (This->cinfo.out_color_space == JCS_CMYK && This->cinfo.saw_Adobe_marker)
-    {
-        /* Adobe JPEG's have inverted CMYK data. */
-        for (i=0; i<data_size; i++)
-            This->image_data[i] ^= 0xff;
     }
 
     This->initialized = TRUE;
@@ -635,11 +601,104 @@ static HRESULT WINAPI JpegDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
     const WICRect *prc, UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer)
 {
     JpegDecoder *This = impl_from_IWICBitmapFrameDecode(iface);
-
+    UINT bpp;
+    UINT stride;
+    UINT data_size;
+    UINT max_row_needed;
+    jmp_buf jmpbuf;
+    WICRect rect;
     TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
 
-    return copy_pixels(This->bpp, This->image_data,
-        This->cinfo.output_width, This->cinfo.output_height, This->stride,
+    if (!prc)
+    {
+        rect.X = 0;
+        rect.Y = 0;
+        rect.Width = This->cinfo.output_width;
+        rect.Height = This->cinfo.output_height;
+        prc = &rect;
+    }
+    else
+    {
+        if (prc->X < 0 || prc->Y < 0 || prc->X+prc->Width > This->cinfo.output_width ||
+            prc->Y+prc->Height > This->cinfo.output_height)
+            return E_INVALIDARG;
+    }
+
+    if (This->cinfo.out_color_space == JCS_GRAYSCALE) bpp = 8;
+    else if (This->cinfo.out_color_space == JCS_CMYK) bpp = 32;
+    else bpp = 24;
+
+    stride = bpp * This->cinfo.output_width;
+    data_size = stride * This->cinfo.output_height;
+
+    max_row_needed = prc->Y + prc->Height;
+    if (max_row_needed > This->cinfo.output_height) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->lock);
+
+    if (!This->image_data)
+    {
+        This->image_data = HeapAlloc(GetProcessHeap(), 0, data_size);
+        if (!This->image_data)
+        {
+            LeaveCriticalSection(&This->lock);
+            return E_OUTOFMEMORY;
+        }
+    }
+
+    This->cinfo.client_data = jmpbuf;
+
+    if (setjmp(jmpbuf))
+    {
+        LeaveCriticalSection(&This->lock);
+        return E_FAIL;
+    }
+
+    while (max_row_needed > This->cinfo.output_scanline)
+    {
+        UINT first_scanline = This->cinfo.output_scanline;
+        UINT max_rows;
+        JSAMPROW out_rows[4];
+        UINT i;
+        JDIMENSION ret;
+
+        max_rows = min(This->cinfo.output_height-first_scanline, 4);
+        for (i=0; i<max_rows; i++)
+            out_rows[i] = This->image_data + stride * (first_scanline+i);
+
+        ret = pjpeg_read_scanlines(&This->cinfo, out_rows, max_rows);
+
+        if (ret == 0)
+        {
+            ERR("read_scanlines failed\n");
+            LeaveCriticalSection(&This->lock);
+            return E_FAIL;
+        }
+
+        if (bpp == 24)
+        {
+            /* libjpeg gives us RGB data and we want BGR, so byteswap the data */
+            reverse_bgr8(3, This->image_data + stride * first_scanline,
+                This->cinfo.output_width, This->cinfo.output_scanline - first_scanline,
+                stride);
+        }
+
+        if (This->cinfo.out_color_space == JCS_CMYK && This->cinfo.saw_Adobe_marker)
+        {
+            DWORD *pDwordData = (DWORD*) (This->image_data + stride * first_scanline);
+            DWORD *pDwordDataEnd = (DWORD*) (This->image_data + This->cinfo.output_scanline * stride);
+
+            /* Adobe JPEG's have inverted CMYK data. */
+            while(pDwordData < pDwordDataEnd)
+                *pDwordData++ ^= 0xffffffff;
+        }
+
+    }
+
+    LeaveCriticalSection(&This->lock);
+
+    return copy_pixels(bpp, This->image_data,
+        This->cinfo.output_width, This->cinfo.output_height, stride,
         prc, cbStride, cbBufferSize, pbBuffer);
 }
 
@@ -1402,7 +1461,15 @@ static HRESULT WINAPI JpegEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 {
     JpegEncoder *This = impl_from_IWICBitmapEncoder(iface);
     HRESULT hr;
-    PROPBAG2 opts[6] = {{0}};
+    static const PROPBAG2 opts[6] =
+    {
+        { PROPBAG2_TYPE_DATA, VT_R4,            0, 0, (LPOLESTR)wszImageQuality },
+        { PROPBAG2_TYPE_DATA, VT_UI1,           0, 0, (LPOLESTR)wszBitmapTransform },
+        { PROPBAG2_TYPE_DATA, VT_I4 | VT_ARRAY, 0, 0, (LPOLESTR)wszLuminance },
+        { PROPBAG2_TYPE_DATA, VT_I4 | VT_ARRAY, 0, 0, (LPOLESTR)wszChrominance },
+        { PROPBAG2_TYPE_DATA, VT_UI1,           0, 0, (LPOLESTR)wszJpegYCrCbSubsampling },
+        { PROPBAG2_TYPE_DATA, VT_BOOL,          0, 0, (LPOLESTR)wszSuppressApp0 },
+    };
 
     TRACE("(%p,%p,%p)\n", iface, ppIFrameEncode, ppIEncoderOptions);
 
@@ -1420,28 +1487,9 @@ static HRESULT WINAPI JpegEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
         return WINCODEC_ERR_NOTINITIALIZED;
     }
 
-    opts[0].pstrName = (LPOLESTR)wszImageQuality;
-    opts[0].vt = VT_R4;
-    opts[0].dwType = PROPBAG2_TYPE_DATA;
-    opts[1].pstrName = (LPOLESTR)wszBitmapTransform;
-    opts[1].vt = VT_UI1;
-    opts[1].dwType = PROPBAG2_TYPE_DATA;
-    opts[2].pstrName = (LPOLESTR)wszLuminance;
-    opts[2].vt = VT_I4|VT_ARRAY;
-    opts[2].dwType = PROPBAG2_TYPE_DATA;
-    opts[3].pstrName = (LPOLESTR)wszChrominance;
-    opts[3].vt = VT_I4|VT_ARRAY;
-    opts[3].dwType = PROPBAG2_TYPE_DATA;
-    opts[4].pstrName = (LPOLESTR)wszJpegYCrCbSubsampling;
-    opts[4].vt = VT_UI1;
-    opts[4].dwType = PROPBAG2_TYPE_DATA;
-    opts[5].pstrName = (LPOLESTR)wszSuppressApp0;
-    opts[5].vt = VT_BOOL;
-    opts[5].dwType = PROPBAG2_TYPE_DATA;
-
     if (ppIEncoderOptions)
     {
-        hr = CreatePropertyBag2(opts, 6, ppIEncoderOptions);
+        hr = CreatePropertyBag2(opts, sizeof(opts)/sizeof(opts[0]), ppIEncoderOptions);
         if (FAILED(hr))
         {
             LeaveCriticalSection(&This->lock);

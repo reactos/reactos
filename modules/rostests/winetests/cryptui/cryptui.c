@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdarg.h>
-//#include <stdio.h>
+#include <stdio.h>
 #define NONAMELESSUNION
 #include <windef.h>
 #include <winbase.h>
-//#include <winerror.h>
+#include <winerror.h>
 #include <winuser.h>
-//#include <wincrypt.h>
+#include <wincrypt.h>
 #include <cryptuiapi.h>
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 static BYTE v1CertWithValidPubKey[] = {
 0x30,0x81,0xcf,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,0x15,0x31,0x13,0x30,

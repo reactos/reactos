@@ -4742,7 +4742,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         goto FailPath;
     }
 
-	if ((AllocationType & MEM_RESET) == MEM_RESET)
+    if ((AllocationType & MEM_RESET) == MEM_RESET)
     {
         /// @todo HACK: pretend success
         DPRINT("MEM_RESET not supported\n");
@@ -4778,6 +4778,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     // Make sure this is an ARM3 section
     //
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)PAGE_ROUND_DOWN(PBaseAddress));
+    ASSERT(MemoryArea != NULL);
     if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
     {
         DPRINT1("Illegal commit of non-ARM3 section!\n");
@@ -5490,8 +5491,8 @@ FinalPath:
                       AlreadyDecommitted;
 
     ASSERT(CommitReduction >= 0);
+    ASSERT(Vad->u.VadFlags.CommitCharge >= CommitReduction);
     Vad->u.VadFlags.CommitCharge -= CommitReduction;
-    ASSERT(Vad->u.VadFlags.CommitCharge >= 0);
 
     //
     // We are done, go to the exit path without freeing the VAD as it remains

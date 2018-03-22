@@ -23,7 +23,28 @@
  *  - Some types of binding handles
  */
 
-#include "precomp.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+
+#include "objbase.h"
+#include "rpc.h"
+#include "rpcproxy.h"
+
+#include "wine/exception.h"
+#include "wine/debug.h"
+#include "wine/rpcfc.h"
+
+#include "cpsf.h"
+#include "ndr_misc.h"
+#include "ndr_stubless.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
@@ -1116,6 +1137,11 @@ LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, uns
 }
 #endif
 
+static inline BOOL param_needs_alloc( PARAM_ATTRIBUTES attr )
+{
+    return attr.IsOut && !attr.IsIn && !attr.IsBasetype && !attr.IsByValue;
+}
+
 static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
                               PFORMAT_STRING pFormat, enum stubless_phase phase,
                               unsigned short number_of_params)
@@ -1151,20 +1177,14 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
             {
                 HeapFree(GetProcessHeap(), 0, *(void **)pArg);
             }
-            else if (params[i].attr.IsOut &&
-                     !params[i].attr.IsIn &&
-                     !params[i].attr.IsBasetype &&
-                     !params[i].attr.IsByValue)
+            else if (param_needs_alloc(params[i].attr) &&
+                     (!params[i].attr.MustFree || params[i].attr.IsSimpleRef))
             {
                 if (*pTypeFormat != RPC_FC_BIND_CONTEXT) pStubMsg->pfnFree(*(void **)pArg);
             }
             break;
         case STUBLESS_INITOUT:
-            if (!params[i].attr.IsIn &&
-                params[i].attr.IsOut &&
-                !params[i].attr.IsBasetype &&
-                !params[i].attr.ServerAllocSize &&
-                !params[i].attr.IsByValue)
+            if (param_needs_alloc(params[i].attr) && !params[i].attr.ServerAllocSize)
             {
                 if (*pTypeFormat == RPC_FC_BIND_CONTEXT)
                 {

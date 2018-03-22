@@ -1407,7 +1407,8 @@ APIENTRY
 NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
 {
     PTHREADINFO pti;
-    DWORD i, cchKeyName, dwRet = 0;
+    DWORD i, dwRet = 0;
+    SIZE_T cchKeyName;
     WORD wScanCode = (lParam >> 16) & 0xFF;
     BOOL bExtKey = (HIWORD(lParam) & KF_EXTENDED) ? TRUE : FALSE;
     PKBDTABLES pKbdTbl;

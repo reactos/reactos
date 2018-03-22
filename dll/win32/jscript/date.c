@@ -17,7 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <limits.h>
+#include <math.h>
+#include <assert.h>
+
 #include "jscript.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 /* 1601 to 1970 is 369 years plus 89 leap days */
 #define TIME_EPOCH  ((ULONGLONG)(369 * 365 + 89) * 86400 * 1000)
@@ -81,6 +92,7 @@ static const WCHAR getYearW[] = {'g','e','t','Y','e','a','r',0};
 static const WCHAR setYearW[] = {'s','e','t','Y','e','a','r',0};
 
 static const WCHAR UTCW[] = {'U','T','C',0};
+static const WCHAR nowW[] = {'n','o','w',0};
 static const WCHAR parseW[] = {'p','a','r','s','e',0};
 
 static inline DateInstance *date_from_jsdisp(jsdisp_t *jsdisp)
@@ -439,6 +451,17 @@ static inline DOUBLE time_clip(DOUBLE time)
     }
 
     return floor(time);
+}
+
+static double date_now(void)
+{
+    FILETIME ftime;
+    LONGLONG time;
+
+    GetSystemTimeAsFileTime(&ftime);
+    time = ((LONGLONG)ftime.dwHighDateTime << 32) + ftime.dwLowDateTime;
+
+    return time/10000 - TIME_EPOCH;
 }
 
 static SYSTEMTIME create_systemtime(DOUBLE time)
@@ -2350,6 +2373,15 @@ static HRESULT DateConstr_UTC(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     return hres;
 }
 
+/* ECMA-262 5.1 Edition    15.9.4.4 */
+static HRESULT DateConstr_now(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    TRACE("\n");
+
+    if(r) *r = jsval_number(date_now());
+    return S_OK;
+}
+
 static HRESULT DateConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
@@ -2362,19 +2394,11 @@ static HRESULT DateConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, 
     case DISPATCH_CONSTRUCT:
         switch(argc) {
         /* ECMA-262 3rd Edition    15.9.3.3 */
-        case 0: {
-            FILETIME time;
-            LONGLONG lltime;
-
-            GetSystemTimeAsFileTime(&time);
-            lltime = ((LONGLONG)time.dwHighDateTime<<32)
-                + time.dwLowDateTime;
-
-            hres = create_date(ctx, NULL, lltime/10000-TIME_EPOCH, &date);
+        case 0:
+            hres = create_date(ctx, NULL, date_now(), &date);
             if(FAILED(hres))
                 return hres;
             break;
-        }
 
         /* ECMA-262 3rd Edition    15.9.3.2 */
         case 1: {
@@ -2443,6 +2467,7 @@ static HRESULT DateConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, 
 
 static const builtin_prop_t DateConstr_props[] = {
     {UTCW,    DateConstr_UTC,    PROPF_METHOD},
+    {nowW,    DateConstr_now,    PROPF_HTML|PROPF_METHOD},
     {parseW,  DateConstr_parse,  PROPF_METHOD}
 };
 

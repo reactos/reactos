@@ -952,7 +952,8 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 
 #ifndef NEWCC
         /* Flush dirty cache pages */
-        CcRosFlushDirtyPages(-1, &Dummy, FALSE); //HACK: We really should wait here!
+        /* XXX: Is that still mandatory? As now we'll wait on lazy writer to complete? */
+        CcRosFlushDirtyPages(-1, &Dummy, FALSE, FALSE); //HACK: We really should wait here!
 #else
         Dummy = 0;
 #endif

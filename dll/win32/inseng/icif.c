@@ -16,7 +16,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include "config.h"
+
+#include <stdarg.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "rpcproxy.h"
+#include "inseng.h"
+
 #include "inseng_private.h"
+
+#include "wine/list.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(inseng);
 
 #define DEFAULT_INSTALLER_DESC "Active Setup Installation"
 
@@ -873,7 +892,7 @@ static HRESULT enum_components_create(ICifFile *file, struct list *start, char *
 {
     struct ciffenum_components *enumerator;
 
-    enumerator = heap_zero_alloc(sizeof(*enumerator));
+    enumerator = heap_alloc_zero(sizeof(*enumerator));
     if (!enumerator) return E_OUTOFMEMORY;
 
     enumerator->IEnumCifComponents_iface.lpVtbl = &enum_componentsVtbl;
@@ -985,7 +1004,7 @@ static HRESULT enum_groups_create(ICifFile *file, struct list *start, IEnumCifGr
 {
     struct ciffenum_groups *enumerator;
 
-    enumerator = heap_zero_alloc(sizeof(*enumerator));
+    enumerator = heap_alloc_zero(sizeof(*enumerator));
     if (!enumerator) return E_OUTOFMEMORY;
 
     enumerator->IEnumCifGroups_iface.lpVtbl = &enum_groupsVtbl;
@@ -1424,7 +1443,7 @@ static BOOL read_dependencies(struct cifcomponent *component, struct inf_section
     {
         next = next_part(&str, TRUE);
 
-        dependency = heap_zero_alloc(sizeof(*dependency));
+        dependency = heap_alloc_zero(sizeof(*dependency));
         if (!dependency) goto done;
 
         dependency->id = strdupA(str);
@@ -1472,7 +1491,7 @@ static BOOL read_urls(struct cifcomponent *component, struct inf_section *sectio
             goto next;
         index--;
 
-        url_entry = heap_zero_alloc(sizeof(*url_entry));
+        url_entry = heap_alloc_zero(sizeof(*url_entry));
         if (!url_entry) goto error;
 
         url_entry->index = index;
@@ -1523,7 +1542,7 @@ static HRESULT process_component(struct ciffile *file, struct inf_section *secti
     struct cifcomponent *component;
     HRESULT hr = E_OUTOFMEMORY;
 
-    component = heap_zero_alloc(sizeof(*component));
+    component = heap_alloc_zero(sizeof(*component));
     if (!component) return E_OUTOFMEMORY;
 
     component->ICifComponent_iface.lpVtbl = &cifcomponentVtbl;
@@ -1602,7 +1621,7 @@ static HRESULT process_group(struct ciffile *file, struct inf_section *section, 
     struct cifgroup *group;
     HRESULT hr = E_OUTOFMEMORY;
 
-    group = heap_zero_alloc(sizeof(*group));
+    group = heap_alloc_zero(sizeof(*group));
     if (!group) return E_OUTOFMEMORY;
 
     group->ICifGroup_iface.lpVtbl = &cifgroupVtbl;
@@ -1686,7 +1705,7 @@ static HRESULT load_ciffile(const char *path, ICifFile **icif)
     struct ciffile *file;
     HRESULT hr = E_FAIL;
 
-    file = heap_zero_alloc(sizeof(*file));
+    file = heap_alloc_zero(sizeof(*file));
     if(!file) return E_OUTOFMEMORY;
 
     file->ICifFile_iface.lpVtbl = &ciffileVtbl;

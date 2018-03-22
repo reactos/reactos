@@ -35,7 +35,7 @@ list(APPEND SOURCE
     sip.c
     store.c
     str.c
-    crypt32_private.h)
+    precomp.h)
 
 add_library(crypt32 SHARED
     ${SOURCE}
@@ -46,6 +46,6 @@ add_library(crypt32 SHARED
 set_module_type(crypt32 win32dll)
 target_link_libraries(crypt32 wine ${PSEH_LIB} oldnames)
 add_delay_importlibs(crypt32 cryptnet)
-add_importlibs(crypt32 user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
-add_pch(crypt32 crypt32_private.h SOURCE)
+add_importlibs(crypt32 bcrypt user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
+add_pch(crypt32 precomp.h SOURCE)
 add_cd_file(TARGET crypt32 DESTINATION reactos/system32 FOR all)

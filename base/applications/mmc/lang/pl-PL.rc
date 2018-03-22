@@ -18,7 +18,7 @@ BEGIN
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje", IDM_HELP_ABOUT
+        MENUITEM "Konsola zarządzania ReactOS - i&nformacje", IDM_HELP_ABOUT
     END
 END
 
@@ -39,12 +39,12 @@ BEGIN
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje", IDM_HELP_ABOUT
+        MENUITEM "Konsola zarządzania ReactOS - i&nformacje", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Konsola Zarządzania ReactOS"
+    IDS_APPTITLE "Konsola zarządzania ReactOS"
     IDS_CONSOLETITLE "Konsola%1!u!"
 END

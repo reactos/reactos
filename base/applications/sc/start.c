@@ -68,6 +68,7 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
     if (pServiceInfo != NULL)
     {
         PrintService(ServiceName,
+                     NULL,
                      pServiceInfo,
                      TRUE);
 

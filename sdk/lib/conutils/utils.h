@@ -1,25 +1,41 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Utilities Library
- * FILE:            sdk/lib/conutils/utils.h
- * PURPOSE:         Base set of functions for loading string resources
- *                  and message strings, and handle type identification.
- * PROGRAMMERS:     - Hermes Belusca-Maito (for the library);
- *                  - All programmers who wrote the different console applications
- *                    from which I took those functions and improved them.
+ * PROJECT:     ReactOS Console Utilities Library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Base set of functions for loading string resources
+ *              and message strings, and handle type identification.
+ * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
+ *              Copyright 2017-2018 Hermes Belusca-Maito
  */
+
+/**
+ * @file    utils.h
+ * @ingroup ConUtils
+ *
+ * @brief   General-purpose utility functions (wrappers around
+ *          or reimplementations of Win32 APIs).
+ **/
 
 #ifndef __UTILS_H__
 #define __UTILS_H__
+
+#pragma once
 
 #ifndef _UNICODE
 #error The ConUtils library at the moment only supports compilation with _UNICODE defined!
 #endif
 
-/*
- * General-purpose utility functions (wrappers around,
- * or reimplementations of, Win32 APIs).
- */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+INT
+WINAPI
+K32LoadStringExW(
+    IN  HINSTANCE hInstance OPTIONAL,
+    IN  UINT   uID,
+    IN  LANGID LanguageId,
+    OUT LPWSTR lpBuffer,
+    IN  INT    nBufferMax);
 
 INT
 WINAPI
@@ -50,4 +66,10 @@ IsConsoleHandle(IN HANDLE hHandle);
 // #include <wincon.h>
 
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif  /* __UTILS_H__ */
+
+/* EOF */

@@ -16,7 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "d3dx9_36_private.h"
+#include "config.h"
+#include "wine/port.h"
+
+#include "d3dx9_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 HRESULT WINAPI D3DXLoadVolumeFromFileA(IDirect3DVolume9 *dst_volume,
                                        const PALETTEENTRY *dst_palette,

@@ -2,7 +2,7 @@
  * PROJECT:     appshim_apitest
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for versionlie shims
- * COPYRIGHT:   Copyright 2015 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -13,20 +13,12 @@
 #else
 #include <winternl.h>
 #endif
-#include <stdio.h>
 #include "wine/test.h"
+#include <strsafe.h>
 
-typedef struct tagHOOKAPI {
-    PCSTR LibraryName;
-    PCSTR FunctionName;
-    PVOID ReplacementFunction;
-    PVOID OriginalFunction;
-    PVOID Unk1;
-    PVOID Unk2;
-} HOOKAPI, *PHOOKAPI;
+#include "appshim_apitest.h"
 
-static BOOL (WINAPI* pSdbGetAppPatchDir)(PVOID,LPWSTR,DWORD);
-static PHOOKAPI (WINAPI* pGetHookAPIs)(LPCSTR,LPCWSTR,PDWORD);
+static tGETHOOKAPIS pGetHookAPIs;
 
 
 static DWORD g_WinVersion;
@@ -48,7 +40,7 @@ typedef BOOL(WINAPI* GETVERSIONEXAPROC)(LPOSVERSIONINFOEXA);
 typedef BOOL(WINAPI* GETVERSIONEXWPROC)(LPOSVERSIONINFOEXW);
 typedef DWORD(WINAPI* GETVERSIONPROC)(void);
 
-static void expect_shim_imp(PHOOKAPI hook, PCSTR library, PCSTR function, PCSTR shim, int* same)
+void expect_shim_imp(PHOOKAPI hook, PCSTR library, PCSTR function, PCSTR shim, int* same)
 {
     int lib = lstrcmpA(library, hook->LibraryName);
     int fn = lstrcmpA(function, hook->FunctionName);
@@ -70,7 +62,7 @@ static void verify_shima_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
 
     while (v1.dwOSVersionInfoSize)
     {
-        ok1 = GetVersionExA((LPOSVERSIONINFOA)&v1), ok2;
+        ok1 = GetVersionExA((LPOSVERSIONINFOA)&v1);
         hook->OriginalFunction = GetVersionExA;
 
         ok2 = ((GETVERSIONEXAPROC)hook->ReplacementFunction)(&v2);
@@ -86,7 +78,7 @@ static void verify_shima_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
             winetest_ok(info->dwPlatformId == v2.dwPlatformId, "Expected dwPlatformId to be equal, was: %u, %u for %s\n", info->dwPlatformId, v2.dwPlatformId, shim);
 
             if (info->wServicePackMajor)
-                sprintf(szCSDVersion, "Service Pack %u", info->wServicePackMajor);
+                StringCchPrintfA(szCSDVersion, _countof(szCSDVersion), "Service Pack %u", info->wServicePackMajor);
             winetest_ok(lstrcmpA(szCSDVersion, v2.szCSDVersion) == 0, "Expected szCSDVersion to be equal, was: %s, %s for %s\n", szCSDVersion, v2.szCSDVersion, shim);
 
             if (v1.dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXA))
@@ -135,7 +127,7 @@ static void verify_shimw_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
 
     while (v1.dwOSVersionInfoSize)
     {
-        ok1 = GetVersionExW((LPOSVERSIONINFOW)&v1), ok2;
+        ok1 = GetVersionExW((LPOSVERSIONINFOW)&v1);
         hook->OriginalFunction = GetVersionExW;
 
         ok2 = ((GETVERSIONEXWPROC)hook->ReplacementFunction)(&v2);
@@ -150,7 +142,6 @@ static void verify_shimw_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
         }
         if (ok1 && ok2)
         {
-            static const WCHAR szCSDFMT[] = {'S','e','r','v','i','c','e',' ','P','a','c','k',' ','%','u',0};
             WCHAR szCSDVersion[128] = { 0 };
             winetest_ok(v1.dwOSVersionInfoSize == v2.dwOSVersionInfoSize, "Expected dwOSVersionInfoSize to be equal, was: %u, %u for %s\n", v1.dwOSVersionInfoSize, v2.dwOSVersionInfoSize, shim);
             winetest_ok(info->dwMajorVersion == v2.dwMajorVersion, "Expected dwMajorVersion to be equal, was: %u, %u for %s\n", info->dwMajorVersion, v2.dwMajorVersion, shim);
@@ -159,7 +150,7 @@ static void verify_shimw_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR sh
             winetest_ok(info->dwPlatformId == v2.dwPlatformId, "Expected dwPlatformId to be equal, was: %u, %u for %s\n", info->dwPlatformId, v2.dwPlatformId, shim);
 
             if (info->wServicePackMajor)
-                swprintf(szCSDVersion, szCSDFMT, info->wServicePackMajor);
+                StringCchPrintfW(szCSDVersion, _countof(szCSDVersion), L"Service Pack %u", info->wServicePackMajor);
             winetest_ok(lstrcmpW(szCSDVersion, v2.szCSDVersion) == 0, "Expected szCSDVersion to be equal, was: %s, %s for %s\n", wine_dbgstr_w(szCSDVersion), wine_dbgstr_w(v2.szCSDVersion), shim);
 
             if (v1.dwOSVersionInfoSize == sizeof(OSVERSIONINFOEXW))
@@ -205,11 +196,10 @@ static void verify_shim_imp(PHOOKAPI hook, const VersionLieInfo* info, PCSTR shi
         return;
     }
     ver = ((GETVERSIONPROC)hook->ReplacementFunction)();
-    winetest_ok(info->FullVersion == ver, "Expected GetVersion to return %u, was: %u for %s\n", info->FullVersion, ver, shim);
+    winetest_ok(info->FullVersion == ver, "Expected GetVersion to return 0x%x, was: 0x%x for %s\n", info->FullVersion, ver, shim);
 }
 
 
-#define expect_shim  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : expect_shim_imp
 #define verify_shima  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : verify_shima_imp
 #define verify_shimw  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : verify_shimw_imp
 #define verify_shim  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : verify_shim_imp
@@ -292,6 +282,10 @@ VersionLieInfo g_WinVistaSP2 = { 0x17720006, 6, 0, 6002, VER_PLATFORM_WIN32_NT, 
 
 VersionLieInfo g_Win7RTM = { 0x1db00106, 6, 1, 7600, VER_PLATFORM_WIN32_NT, 0, 0 };
 
+VersionLieInfo g_Win8RTM = { 0x23f00206, 6, 2, 9200, VER_PLATFORM_WIN32_NT, 0, 0 };
+VersionLieInfo g_Win81RTM = { 0x25800306, 6, 3, 9600, VER_PLATFORM_WIN32_NT, 0, 0 };
+
+
 DWORD get_host_winver(void)
 {
     RTL_OSVERSIONINFOEXW rtlinfo = {0};
@@ -303,28 +297,90 @@ DWORD get_host_winver(void)
     return (rtlinfo.dwMajorVersion << 8) | rtlinfo.dwMinorVersion;
 }
 
-START_TEST(versionlie)
+BOOL LoadShimDLL(PCWSTR ShimDll, HMODULE* module, tGETHOOKAPIS* ppGetHookAPIs)
 {
-    HMODULE dll = LoadLibraryA("apphelp.dll");
-    WCHAR buf[MAX_PATH];
-    WCHAR aclayers[] = {'\\','a','c','l','a','y','e','r','s','.','d','l','l',0};
-    pSdbGetAppPatchDir = (void*)GetProcAddress(dll, "SdbGetAppPatchDir");
+    static tSDBGETAPPPATCHDIR pSdbGetAppPatchDir = NULL;
+    HMODULE dll;
+    WCHAR buf[MAX_PATH] = {0};
     if (!pSdbGetAppPatchDir)
     {
-        skip("apphelp.dll not loaded, or does not export SdbGetAppPatchDir\n");
-        return;
+        dll = LoadLibraryA("apphelp.dll");
+        pSdbGetAppPatchDir = (tSDBGETAPPPATCHDIR)GetProcAddress(dll, "SdbGetAppPatchDir");
+
+        if (!pSdbGetAppPatchDir)
+        {
+            skip("Unable to retrieve SdbGetAppPatchDir (%p, %p)\n", dll, pSdbGetAppPatchDir);
+        }
     }
 
-    pSdbGetAppPatchDir(NULL, buf, MAX_PATH);
-    lstrcatW(buf, aclayers);
+    if (!pSdbGetAppPatchDir || !SUCCEEDED(pSdbGetAppPatchDir(NULL, buf, MAX_PATH)))
+    {
+        skip("Unable to retrieve AppPatch dir, building manually\n");
+        if (!GetSystemWindowsDirectoryW(buf, MAX_PATH))
+        {
+            skip("Unable to build AppPatch name(1)\n");
+            return FALSE;
+        }
+        if (!SUCCEEDED(StringCchCatW(buf, _countof(buf), L"\\AppPatch")))
+        {
+            skip("Unable to build AppPatch name(2)\n");
+            return FALSE;
+        }
+    }
+    if (!SUCCEEDED(StringCchCatW(buf, _countof(buf), L"\\")) ||
+        !SUCCEEDED(StringCchCatW(buf, _countof(buf), ShimDll)))
+    {
+        skip("Unable to append dll name\n");
+        return FALSE;
+    }
+
     dll = LoadLibraryW(buf);
-    pGetHookAPIs = (void*)GetProcAddress(dll, "GetHookAPIs");
+    if (!dll)
+    {
+        skip("Unable to load shim dll from AppPatch\n");
+        GetSystemWindowsDirectoryW(buf, _countof(buf));
+
+        if (SUCCEEDED(StringCchCatW(buf, _countof(buf), L"\\System32\\")) &&
+            SUCCEEDED(StringCchCatW(buf, _countof(buf), ShimDll)))
+        {
+            dll = LoadLibraryW(buf);
+        }
+
+        if (!dll)
+        {
+            skip("Unable to load shim dll from System32 (Recent Win10)\n");
+            return FALSE;
+        }
+    }
+    *module = dll;
+    *ppGetHookAPIs = (tGETHOOKAPIS)GetProcAddress(dll, "GetHookAPIs");
+
+    return *ppGetHookAPIs != NULL;
+}
+
+
+tGETHOOKAPIS LoadShimDLL2(PCWSTR ShimDll)
+{
+    HMODULE module;
+    tGETHOOKAPIS pGetHookAPIs;
+
+    if (LoadShimDLL(ShimDll, &module, &pGetHookAPIs))
+    {
+        if (!pGetHookAPIs)
+            skip("No GetHookAPIs found\n");
+        return pGetHookAPIs;
+    }
+    return NULL;
+}
+
+
+START_TEST(versionlie)
+{
+    pGetHookAPIs = LoadShimDLL2(L"aclayers.dll");
 
     if (!pGetHookAPIs)
-    {
-        skip("aclayers.dll not loaded, or does not export GetHookAPIs\n");
         return;
-    }
+
     g_WinVersion = get_host_winver();
 
     run_test("Win95VersionLie", &g_Win95);
@@ -344,4 +400,6 @@ START_TEST(versionlie)
     run_test("VistaSP1VersionLie", &g_WinVistaSP1);
     run_test("VistaSP2VersionLie", &g_WinVistaSP2);
     run_test("Win7RTMVersionLie", &g_Win7RTM);
+    run_test("Win8RTMVersionLie", &g_Win8RTM);
+    run_test("Win81RTMVersionLie", &g_Win81RTM);
 }

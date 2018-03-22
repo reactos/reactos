@@ -8,6 +8,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "אודות הרשמקול של ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -25,34 +26,34 @@ BEGIN
         MENUITEM "פתח...", ID_FILE_OPEN
         MENUITEM "שמור", ID_FILE_SAVE, GRAYED
         MENUITEM "שמור בשם...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "שחזור...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "מאפיינים", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "יציאה", ID_FILE_EXIT
     END
-    POPUP "&Edit"
+    POPUP "&עריכה"
     BEGIN
-        MENUITEM "&Copy", ID_EDIT_COPY
+        MENUITEM "&העתק", ID_EDIT_COPY
         MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
         MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Insert File...", ID_EDIT_INSERTFILE
+        MENUITEM "הכנסת קובץ...", ID_EDIT_INSERTFILE
         MENUITEM "&Mix with File...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
         MENUITEM "Delete &Before Current Position",ID_EDIT_DELETEBEFORE, GRAYED
         MENUITEM "Delete &After Current Position",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&udio Properties", ID_EDIT_AUDIOPROPS
+        MENUITEM "מאפייני שמע", ID_EDIT_AUDIOPROPS
     END
-    POPUP "Effect&s"
+    POPUP "א&פקטים"
     BEGIN
-        MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
-        MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL
+        MENUITEM "ה&גברת עוצמה(ב 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "ה&נמכת עוצמה", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Increase Speed (by 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "&Decrease Speed", ID_EFFECTS_DECSPD
+        MENUITEM "הגברת &מהירות (ב 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "הו&רדת מהירות", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "&Add Echo", ID_EFFECTS_ECHO
+        MENUITEM "הוספת הד", ID_EFFECTS_ECHO
         MENUITEM "&Reverse", ID_EFFECTS_REVERSE
     END
     POPUP "?"

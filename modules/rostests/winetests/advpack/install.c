@@ -18,17 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #include <stdio.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <objbase.h>
+#include <windows.h>
 #include <advpub.h>
-#include <wine/test.h>
+#include "wine/test.h"
 
 static HMODULE hAdvPack;
 /* function pointers */

@@ -753,36 +753,6 @@ VfatReleaseFromLazyWrite(
     ExReleaseResourceLite(&(Fcb->MainResource));
 }
 
-BOOLEAN
-NTAPI
-VfatAcquireForReadAhead(
-    IN PVOID Context,
-    IN BOOLEAN Wait)
-{
-    PVFATFCB Fcb = (PVFATFCB)Context;
-    ASSERT(Fcb);
-    DPRINT("VfatAcquireForReadAhead(): Fcb %p\n", Fcb);
-
-    if (!ExAcquireResourceExclusiveLite(&(Fcb->MainResource), Wait))
-    {
-        DPRINT("VfatAcquireForReadAhead(): ExReleaseResourceLite failed.\n");
-        return FALSE;
-    }
-    return TRUE;
-}
-
-VOID
-NTAPI
-VfatReleaseFromReadAhead(
-    IN PVOID Context)
-{
-    PVFATFCB Fcb = (PVFATFCB)Context;
-    ASSERT(Fcb);
-    DPRINT("VfatReleaseFromReadAhead(): Fcb %p\n", Fcb);
-
-    ExReleaseResourceLite(&(Fcb->MainResource));
-}
-
 INIT_SECTION
 VOID
 VfatInitFastIoRoutines(

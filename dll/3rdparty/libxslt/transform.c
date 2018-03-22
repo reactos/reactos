@@ -23,6 +23,7 @@
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_EXTRA
 #define WITH_XSLT_DEBUG_PROCESS
+#define WITH_XSLT_DEBUG_VARIABLE
 #endif
 
 #define XSLT_GENERATE_HTML_DOCTYPE
@@ -55,10 +56,9 @@ static xmlNsPtr
 xsltCopyNamespaceListInternal(xmlNodePtr node, xmlNsPtr cur);
 
 static xmlNodePtr
-xsltCopyTreeInternal(xsltTransformContextPtr ctxt,
-		     xmlNodePtr invocNode,
-		     xmlNodePtr node,
-		     xmlNodePtr insert, int isLRE, int topElemVisited);
+xsltCopyTree(xsltTransformContextPtr ctxt, xmlNodePtr invocNode,
+	     xmlNodePtr node, xmlNodePtr insert, int isLRE,
+	     int topElemVisited);
 
 static void
 xsltApplySequenceConstructor(xsltTransformContextPtr ctxt,
@@ -434,7 +434,7 @@ xsltGetXIncludeDefault(void) {
     return(xsltDoXIncludeDefault);
 }
 
-unsigned long xsltDefaultTrace = (unsigned long) XSLT_TRACE_ALL;
+static unsigned long xsltDefaultTrace = (unsigned long) XSLT_TRACE_ALL;
 
 /**
  * xsltDebugSetDefaultTrace:
@@ -733,9 +733,6 @@ xsltFreeTransformContext(xsltTransformContextPtr ctxt) {
  *									*
  ************************************************************************/
 
-xmlNodePtr xsltCopyTree(xsltTransformContextPtr ctxt,
-                        xmlNodePtr node, xmlNodePtr insert, int literal);
-
 /**
  * xsltAddChild:
  * @parent:  the parent node
@@ -751,7 +748,7 @@ static xmlNodePtr
 xsltAddChild(xmlNodePtr parent, xmlNodePtr cur) {
    xmlNodePtr ret;
 
-   if ((cur == NULL) || (parent == NULL))
+   if (cur == NULL)
        return(NULL);
    if (parent == NULL) {
        xmlFreeNode(cur);
@@ -783,13 +780,32 @@ xsltAddTextString(xsltTransformContextPtr ctxt, xmlNodePtr target,
         return(target);
 
     if (ctxt->lasttext == target->content) {
+        int minSize;
 
-	if (ctxt->lasttuse + len >= ctxt->lasttsize) {
+        /* Check for integer overflow accounting for NUL terminator. */
+        if (len >= INT_MAX - ctxt->lasttuse) {
+            xsltTransformError(ctxt, NULL, target,
+                "xsltCopyText: text allocation failed\n");
+            return(NULL);
+        }
+        minSize = ctxt->lasttuse + len + 1;
+
+        if (ctxt->lasttsize < minSize) {
 	    xmlChar *newbuf;
 	    int size;
+            int extra;
 
-	    size = ctxt->lasttsize + len + 100;
-	    size *= 2;
+            /* Double buffer size but increase by at least 100 bytes. */
+            extra = minSize < 100 ? 100 : minSize;
+
+            /* Check for integer overflow. */
+            if (extra > INT_MAX - ctxt->lasttsize) {
+                size = INT_MAX;
+            }
+            else {
+                size = ctxt->lasttsize + extra;
+            }
+
 	    newbuf = (xmlChar *) xmlRealloc(target->content,size);
 	    if (newbuf == NULL) {
 		xsltTransformError(ctxt, NULL, target,
@@ -1090,7 +1106,7 @@ exit:
  *
  * Do a copy of an attribute.
  * Called by:
- *  - xsltCopyTreeInternal()
+ *  - xsltCopyTree()
  *  - xsltCopyOf()
  *  - xsltCopy()
  *
@@ -1191,7 +1207,7 @@ xsltShallowCopyAttr(xsltTransformContextPtr ctxt, xmlNodePtr invocNode,
  * @target element node.
  *
  * Called by:
- *  - xsltCopyTreeInternal()
+ *  - xsltCopyTree()
  *
  * Returns 0 on success and -1 on errors and internal errors.
  */
@@ -1313,7 +1329,7 @@ xsltShallowCopyElem(xsltTransformContextPtr ctxt, xmlNodePtr node,
 	    *  copy over all namespace nodes in scope.
 	    *  The damn thing about this is, that we would need to
 	    *  use the xmlGetNsList(), for every single node; this is
-	    *  also done in xsltCopyTreeInternal(), but only for the top node.
+	    *  also done in xsltCopyTree(), but only for the top node.
 	    */
 	    if (node->ns != NULL) {
 		if (isLRE) {
@@ -1371,7 +1387,7 @@ xsltCopyTreeList(xsltTransformContextPtr ctxt, xmlNodePtr invocNode,
     xmlNodePtr copy, ret = NULL;
 
     while (list != NULL) {
-	copy = xsltCopyTreeInternal(ctxt, invocNode,
+	copy = xsltCopyTree(ctxt, invocNode,
 	    list, insert, isLRE, topElemVisited);
 	if (copy != NULL) {
 	    if (ret == NULL) {
@@ -1391,7 +1407,7 @@ xsltCopyTreeList(xsltTransformContextPtr ctxt, xmlNodePtr invocNode,
  * Do a copy of a namespace list. If @node is non-NULL the
  * new namespaces are added automatically.
  * Called by:
- *   xsltCopyTreeInternal()
+ *   xsltCopyTree()
  *
  * QUESTION: What is the exact difference between this function
  *  and xsltCopyNamespaceList() in "namespaces.c"?
@@ -1549,7 +1565,7 @@ occupied:
 }
 
 /**
- * xsltCopyTreeInternal:
+ * xsltCopyTree:
  * @ctxt:  the XSLT transformation context
  * @invocNode: responsible node in the stylesheet; used for error reports
  * @node:  the element node in the source tree
@@ -1568,10 +1584,9 @@ occupied:
  * Returns a pointer to the new tree, or NULL in case of error
  */
 static xmlNodePtr
-xsltCopyTreeInternal(xsltTransformContextPtr ctxt,
-		     xmlNodePtr invocNode,
-		     xmlNodePtr node,
-		     xmlNodePtr insert, int isLRE, int topElemVisited)
+xsltCopyTree(xsltTransformContextPtr ctxt, xmlNodePtr invocNode,
+	     xmlNodePtr node, xmlNodePtr insert, int isLRE,
+	     int topElemVisited)
 {
     xmlNodePtr copy;
 
@@ -1627,7 +1642,7 @@ xsltCopyTreeInternal(xsltTransformContextPtr ctxt,
 	copy = xsltAddChild(insert, copy);
         if (copy == NULL) {
             xsltTransformError(ctxt, NULL, invocNode,
-            "xsltCopyTreeInternal: Copying of '%s' failed.\n", node->name);
+            "xsltCopyTree: Copying of '%s' failed.\n", node->name);
             return (copy);
         }
 	/*
@@ -1758,32 +1773,9 @@ xsltCopyTreeInternal(xsltTransformContextPtr ctxt,
 	}
     } else {
 	xsltTransformError(ctxt, NULL, invocNode,
-	    "xsltCopyTreeInternal: Copying of '%s' failed.\n", node->name);
+	    "xsltCopyTree: Copying of '%s' failed.\n", node->name);
     }
     return(copy);
-}
-
-/**
- * xsltCopyTree:
- * @ctxt:  the XSLT transformation context
- * @node:  the element node in the source tree
- * @insert:  the parent in the result tree
- * @literal:  indicates if @node is a Literal Result Element
- *
- * Make a copy of the full tree under the element node @node
- * and insert it as last child of @insert
- * For literal result element, some of the namespaces may not be copied
- * over according to section 7.1.
- * TODO: Why is this a public function?
- *
- * Returns a pointer to the new tree, or NULL in case of error
- */
-xmlNodePtr
-xsltCopyTree(xsltTransformContextPtr ctxt, xmlNodePtr node,
-	     xmlNodePtr insert, int literal)
-{
-    return(xsltCopyTreeInternal(ctxt, node, node, insert, literal, 0));
-
 }
 
 /************************************************************************
@@ -1987,6 +1979,9 @@ xsltDefaultProcessOneNode(xsltTransformContextPtr ctxt, xmlNodePtr node,
 
     /*
      * Handling of Elements: second pass, actual processing
+     *
+     * Note that params are passed to the next template. This matches
+     * XSLT 2.0 behavior but doesn't conform to XSLT 1.0.
      */
     oldSize = ctxt->xpathCtxt->contextSize;
     oldPos = ctxt->xpathCtxt->proximityPosition;
@@ -2266,30 +2261,28 @@ xsltReleaseLocalRVTs(xsltTransformContextPtr ctxt, xmlDocPtr base)
 {
     xmlDocPtr cur = ctxt->localRVT, tmp;
 
-    while ((cur != NULL) && (cur != base)) {
-	if (cur->psvi == (void *) ((long) 1)) {
-	    cur = (xmlDocPtr) cur->next;
-	} else {
-	    tmp = cur;
-	    cur = (xmlDocPtr) cur->next;
+    if (cur == base)
+        return;
+    if (cur->prev != NULL)
+        xsltTransformError(ctxt, NULL, NULL, "localRVT not head of list\n");
 
-	    if (tmp == ctxt->localRVT)
-		ctxt->localRVT = cur;
+    do {
+        tmp = cur;
+        cur = (xmlDocPtr) cur->next;
+        if (tmp->psvi == XSLT_RVT_LOCAL) {
+            xsltReleaseRVT(ctxt, tmp);
+        } else if (tmp->psvi == XSLT_RVT_GLOBAL) {
+            xsltRegisterPersistRVT(ctxt, tmp);
+        } else if (tmp->psvi != XSLT_RVT_FUNC_RESULT) {
+            xmlGenericError(xmlGenericErrorContext,
+                    "xsltReleaseLocalRVTs: Unexpected RVT flag %p\n",
+                    tmp->psvi);
+        }
+    } while (cur != base);
 
-	    /*
-	    * We need ctxt->localRVTBase for extension instructions
-	    * which return values (like EXSLT's function).
-	    */
-	    if (tmp == ctxt->localRVTBase)
-		ctxt->localRVTBase = cur;
-
-	    if (tmp->prev)
-		tmp->prev->next = (xmlNodePtr) cur;
-	    if (cur)
-		cur->prev = tmp->prev;
-	    xsltReleaseRVT(ctxt, tmp);
-	}
-    }
+    if (base != NULL)
+        base->prev = NULL;
+    ctxt->localRVT = base;
 }
 
 /**
@@ -2315,7 +2308,7 @@ xsltApplySequenceConstructor(xsltTransformContextPtr ctxt,
     xmlNodePtr oldInsert, oldInst, oldCurInst, oldContextNode;
     xmlNodePtr cur, insert, copy = NULL;
     int level = 0, oldVarsNr;
-    xmlDocPtr oldLocalFragmentTop, oldLocalFragmentBase;
+    xmlDocPtr oldLocalFragmentTop;
 
 #ifdef XSLT_REFACTORED
     xsltStylePreCompPtr info;
@@ -2342,6 +2335,24 @@ xsltApplySequenceConstructor(xsltTransformContextPtr ctxt,
     if (list == NULL)
         return;
     CHECK_STOPPED;
+
+    /*
+    * Check for infinite recursion: stop if the maximum of nested templates
+    * is excceeded. Adjust xsltMaxDepth if you need more.
+    */
+    if (ctxt->depth >= ctxt->maxTemplateDepth) {
+        xsltTransformError(ctxt, NULL, list,
+	    "xsltApplySequenceConstructor: A potential infinite template "
+            "recursion was detected.\n"
+	    "You can adjust xsltMaxDepth (--maxdepth) in order to "
+	    "raise the maximum number of nested template calls and "
+	    "variables/params (currently set to %d).\n",
+	    ctxt->maxTemplateDepth);
+        xsltDebug(ctxt, contextNode, list, NULL);
+	ctxt->state = XSLT_STATE_STOPPED;
+        return;
+    }
+    ctxt->depth++;
 
     oldLocalFragmentTop = ctxt->localRVT;
     oldInsert = insert = ctxt->insert;
@@ -2642,17 +2653,22 @@ xsltApplySequenceConstructor(xsltTransformContextPtr ctxt,
 			"xsltApplySequenceConstructor: extension construct %s\n",
 			cur->name));
 #endif
+                    /*
+                     * Disable the xsltCopyTextString optimization for
+                     * extension elements. Extensions could append text using
+                     * xmlAddChild which will free the buffer pointed to by
+                     * 'lasttext'. This buffer could later be reallocated with
+                     * a different size than recorded in 'lasttsize'. See bug
+                     * #777432.
+                     */
+                    if (cur->psvi == xsltExtMarker) {
+                        ctxt->lasttext = NULL;
+                    }
+
 		    ctxt->insert = insert;
-		    /*
-		    * We need the fragment base for extension instructions
-		    * which return values (like EXSLT's function).
-		    */
-		    oldLocalFragmentBase = ctxt->localRVTBase;
-		    ctxt->localRVTBase = NULL;
 
 		    func(ctxt, contextNode, cur, cur->psvi);
 
-		    ctxt->localRVTBase = oldLocalFragmentBase;
 		    /*
 		    * Cleanup temporary tree fragments.
 		    */
@@ -2716,12 +2732,9 @@ xsltApplySequenceConstructor(xsltTransformContextPtr ctxt,
 		oldCurInst = ctxt->inst;
 		ctxt->inst = cur;
                 ctxt->insert = insert;
-		oldLocalFragmentBase = ctxt->localRVTBase;
-		ctxt->localRVTBase = NULL;
 
                 info->func(ctxt, contextNode, cur, (xsltElemPreCompPtr) info);
 
-		ctxt->localRVTBase = oldLocalFragmentBase;
 		/*
 		* Cleanup temporary tree fragments.
 		*/
@@ -2835,13 +2848,19 @@ xsltApplySequenceConstructor(xsltTransformContextPtr ctxt,
                     cur->name));
 #endif
 
+                /*
+                 * Disable the xsltCopyTextString optimization for
+                 * extension elements. Extensions could append text using
+                 * xmlAddChild which will free the buffer pointed to by
+                 * 'lasttext'. This buffer could later be reallocated with
+                 * a different size than recorded in 'lasttsize'. See bug
+                 * #777432.
+                 */
+                if (cur->psvi == xsltExtMarker) {
+	            ctxt->lasttext = NULL;
+                }
+
                 ctxt->insert = insert;
-		/*
-		* We need the fragment base for extension instructions
-		* which return values (like EXSLT's function).
-		*/
-		oldLocalFragmentBase = ctxt->localRVTBase;
-		ctxt->localRVTBase = NULL;
 
                 function(ctxt, contextNode, cur, cur->psvi);
 		/*
@@ -2850,7 +2869,6 @@ xsltApplySequenceConstructor(xsltTransformContextPtr ctxt,
 		if (oldLocalFragmentTop != ctxt->localRVT)
 		    xsltReleaseLocalRVTs(ctxt, oldLocalFragmentTop);
 
-		ctxt->localRVTBase = oldLocalFragmentBase;
                 ctxt->insert = oldInsert;
 
             }
@@ -2992,6 +3010,8 @@ error:
     ctxt->inst = oldInst;
     ctxt->insert = oldInsert;
 
+    ctxt->depth--;
+
 #ifdef WITH_DEBUGGER
     if ((ctxt->debugStatus != XSLT_DEBUG_NONE) && (addCallResult)) {
         xslDropCall();
@@ -3026,7 +3046,7 @@ xsltApplyXSLTTemplate(xsltTransformContextPtr ctxt,
     long start = 0;
     xmlNodePtr cur;
     xsltStackElemPtr tmpParam = NULL;
-    xmlDocPtr oldUserFragmentTop, oldLocalFragmentTop;
+    xmlDocPtr oldUserFragmentTop;
 
 #ifdef XSLT_REFACTORED
     xsltStyleItemParamPtr iparam;
@@ -3058,23 +3078,6 @@ xsltApplyXSLTTemplate(xsltTransformContextPtr ctxt,
         return;
     CHECK_STOPPED;
 
-    /*
-    * Check for infinite recursion: stop if the maximum of nested templates
-    * is excceeded. Adjust xsltMaxDepth if you need more.
-    */
-    if (ctxt->templNr >= ctxt->maxTemplateDepth)
-    {
-        xsltTransformError(ctxt, NULL, list,
-	    "xsltApplyXSLTTemplate: A potential infinite template recursion "
-	    "was detected.\n"
-	    "You can adjust xsltMaxDepth (--maxdepth) in order to "
-	    "raise the maximum number of nested template calls and "
-	    "variables/params (currently set to %d).\n",
-	    ctxt->maxTemplateDepth);
-        xsltDebug(ctxt, contextNode, list, NULL);
-        return;
-    }
-
     if (ctxt->varsNr >= ctxt->maxTemplateVars)
 	{
         xsltTransformError(ctxt, NULL, list,
@@ -3084,12 +3087,12 @@ xsltApplyXSLTTemplate(xsltTransformContextPtr ctxt,
 	    "raise the maximum number of variables/params (currently set to %d).\n",
 	    ctxt->maxTemplateVars);
         xsltDebug(ctxt, contextNode, list, NULL);
+	ctxt->state = XSLT_STATE_STOPPED;
         return;
 	}
 
     oldUserFragmentTop = ctxt->tmpRVT;
     ctxt->tmpRVT = NULL;
-    oldLocalFragmentTop = ctxt->localRVT;
 
     /*
     * Initiate a distinct scope of local params/variables.
@@ -3189,31 +3192,6 @@ xsltApplyXSLTTemplate(xsltTransformContextPtr ctxt,
     if (ctxt->varsNr > ctxt->varsBase)
 	xsltTemplateParamsCleanup(ctxt);
     ctxt->varsBase = oldVarsBase;
-
-    /*
-    * Clean up remaining local tree fragments.
-    * This also frees fragments which are the result of
-    * extension instructions. Should normally not be hit; but
-    * just for the case xsltExtensionInstructionResultFinalize()
-    * was not called by the extension author.
-    */
-    if (oldLocalFragmentTop != ctxt->localRVT) {
-	xmlDocPtr curdoc = ctxt->localRVT, tmp;
-
-	do {
-	    tmp = curdoc;
-	    curdoc = (xmlDocPtr) curdoc->next;
-	    /* Need to housekeep localRVTBase */
-	    if (tmp == ctxt->localRVTBase)
-	        ctxt->localRVTBase = curdoc;
-	    if (tmp->prev)
-		tmp->prev->next = (xmlNodePtr) curdoc;
-	    if (curdoc)
-		curdoc->prev = tmp->prev;
-	    xsltReleaseRVT(ctxt, tmp);
-	} while (curdoc != oldLocalFragmentTop);
-    }
-    ctxt->localRVT = oldLocalFragmentTop;
 
     /*
     * Release user-created fragments stored in the scope
@@ -3820,7 +3798,6 @@ xsltDocumentElem(xsltTransformContextPtr ctxt, xmlNodePtr node,
 	xsltTransformError(ctxt, NULL, inst,
                          "xsltDocumentElem: unable to save to %s\n",
                          filename);
-	ctxt->state = XSLT_STATE_ERROR;
 #ifdef WITH_XSLT_DEBUG_EXTRA
     } else {
         xsltGenericDebug(xsltGenericDebugContext,
@@ -4433,8 +4410,7 @@ xsltCopyOf(xsltTransformContextPtr ctxt, xmlNodePtr node,
 			xsltShallowCopyAttr(ctxt, inst,
 			    ctxt->insert, (xmlAttrPtr) cur);
 		    } else {
-			xsltCopyTreeInternal(ctxt, inst,
-			    cur, ctxt->insert, 0, 0);
+			xsltCopyTree(ctxt, inst, cur, ctxt->insert, 0, 0);
 		    }
 		}
 	    }
@@ -4684,6 +4660,10 @@ xsltApplyImports(xsltTransformContextPtr ctxt, xmlNodePtr contextNode,
 	    templ, NULL);
 
 	ctxt->currentTemplateRule = oldCurTemplRule;
+    }
+    else {
+        /* Use built-in templates. */
+        xsltDefaultProcessOneNode(ctxt, contextNode, NULL);
     }
 }
 
@@ -5632,6 +5612,7 @@ typedef struct xsltHTMLVersion {
 } xsltHTMLVersion;
 
 static xsltHTMLVersion xsltHTMLVersions[] = {
+    { "5", NULL, "about:legacy-compat" },
     { "4.01frame", "-//W3C//DTD HTML 4.01 Frameset//EN",
       "http://www.w3.org/TR/1999/REC-html401-19991224/frameset.dtd"},
     { "4.01strict", "-//W3C//DTD HTML 4.01//EN",
@@ -5857,7 +5838,8 @@ xsltApplyStylesheetInternal(xsltStylesheetPtr style, xmlDocPtr doc,
      */
     root = xmlDocGetRootElement(doc);
     if (root != NULL) {
-	if (((long) root->content) >= 0 && (xslDebugStatus == XSLT_DEBUG_NONE))
+	if (((ptrdiff_t) root->content >= 0) &&
+            (xslDebugStatus == XSLT_DEBUG_NONE))
 	    xmlXPathOrderDocElems(doc);
     }
 
@@ -6007,6 +5989,9 @@ xsltApplyStylesheetInternal(xsltStylesheetPtr style, xmlDocPtr doc,
 
     xsltEvalGlobalVariables(ctxt);
 
+    /* Clean up any unused RVTs. */
+    xsltReleaseLocalRVTs(ctxt, NULL);
+
     ctxt->node = (xmlNodePtr) doc;
     ctxt->output = res;
     ctxt->insert = (xmlNodePtr) res;
@@ -6151,7 +6136,7 @@ xsltApplyStylesheetInternal(xsltStylesheetPtr style, xmlDocPtr doc,
     /*
      * Be pedantic.
      */
-    if ((ctxt != NULL) && (ctxt->state == XSLT_STATE_ERROR)) {
+    if ((ctxt != NULL) && (ctxt->state != XSLT_STATE_OK)) {
 	xmlFreeDoc(res);
 	res = NULL;
     }

@@ -113,6 +113,11 @@ HRESULT
 CDefViewBckgrndMenu::Initialize(IShellFolder* psf)
 {
     m_psf = psf;
+
+    /* Get the context menu of the folder. Do it here because someone may call
+       InvokeCommand without calling QueryContextMenu. It is fine if this fails */
+    m_psf->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &m_folderCM));
+
     return S_OK;
 }
 
@@ -121,6 +126,10 @@ WINAPI
 CDefViewBckgrndMenu::SetSite(IUnknown *pUnkSite)
 {
     m_site = pUnkSite;
+
+    if(m_folderCM)
+        IUnknown_SetSite(m_folderCM, pUnkSite);
+
     return S_OK;
 }
 
@@ -154,9 +163,8 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
        but as stated above, its sole user is CDefView and should really be that way. */
     m_idCmdFirst = idCmdFirst;
 
-    /* Query the shell folder to add any items it wants to add in the background context menu */
-    hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &m_folderCM));
-    if (SUCCEEDED(hr))
+    /* Let the shell folder add any items it wants to add in the background context menu */
+    if (m_folderCM)
     {
         hr = m_folderCM->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
         if (SUCCEEDED(hr))
@@ -208,21 +216,42 @@ WINAPI
 CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     UINT idCmd = LOWORD(lpcmi->lpVerb);
-    if(HIWORD(lpcmi->lpVerb) != 0 || idCmd < m_LastFolderCMId)
-    {
-        return m_folderCM->InvokeCommand(lpcmi);
-    }
 
-    /* The default part of the background menu doesn't have shifted ids so we need to convert the id offset to the real id */
-    idCmd += m_idCmdFirst;
+    if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, CMDSTR_VIEWLISTA))
+    {
+        idCmd = FCIDM_SHVIEW_LISTVIEW;
+    }
+    else if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, CMDSTR_VIEWDETAILSA))
+    {
+        idCmd = FCIDM_SHVIEW_REPORTVIEW;
+    }
+    else if(HIWORD(lpcmi->lpVerb) != 0 || idCmd < m_LastFolderCMId)
+    {
+        if (m_folderCM)
+        {
+            return m_folderCM->InvokeCommand(lpcmi);
+        }
+        WARN("m_folderCM is NULL!\n");
+        return E_NOTIMPL;
+    }
+    else
+    {
+        /* The default part of the background menu doesn't have shifted ids so we need to convert the id offset to the real id */
+        idCmd += m_idCmdFirst;
+    }
 
     /* The commands that are handled by the def view are forwarded to it */
     switch (idCmd)
     {
     case FCIDM_SHVIEW_INSERT:
     case FCIDM_SHVIEW_INSERTLINK:
-        lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd);
-        return m_folderCM->InvokeCommand(lpcmi);
+        if (m_folderCM)
+        {
+            lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd);
+            return m_folderCM->InvokeCommand(lpcmi);
+        }
+        WARN("m_folderCM is NULL!\n");
+        return E_NOTIMPL;
     case FCIDM_SHVIEW_BIGICON:
     case FCIDM_SHVIEW_SMALLICON:
     case FCIDM_SHVIEW_LISTVIEW:

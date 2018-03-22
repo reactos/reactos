@@ -18,9 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "config.h"
+
+#define COBJMACROS
+
+#include <stdarg.h>
 
 #ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+# include <libxml/parserInternals.h>
+# include <libxml/xmlerror.h>
 # include <libxml/HTMLtree.h>
 # ifdef SONAME_LIBXSLT
 #  ifdef HAVE_LIBXSLT_PATTERN_H
@@ -33,10 +40,24 @@
 #  include <libxslt/variables.h>
 #  include <libxslt/xsltutils.h>
 #  include <libxslt/xsltInternals.h>
+#  include <libxslt/documents.h>
 # endif
 #endif
 
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "ole2.h"
+#include "msxml6.h"
+
+#include "msxml_private.h"
+
+#include "wine/debug.h"
+
 #ifdef HAVE_LIBXML2
+
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #ifdef SONAME_LIBXSLT
 extern void* libxslt_handle;
@@ -1294,7 +1315,192 @@ static HRESULT node_transform_write_to_stream(xsltStylesheetPtr style, xmlDocPtr
     return hr;
 }
 
-#endif
+struct import_buffer
+{
+    char *data;
+    int cur;
+    int len;
+};
+
+static int XMLCALL import_loader_io_read(void *context, char *out, int len)
+{
+    struct import_buffer *buffer = (struct import_buffer *)context;
+
+    TRACE("%p, %p, %d\n", context, out, len);
+
+    if (buffer->cur == buffer->len)
+        return 0;
+
+    len = min(len, buffer->len - buffer->cur);
+    memcpy(out, &buffer->data[buffer->cur], len);
+    buffer->cur += len;
+
+    TRACE("read %d\n", len);
+
+    return len;
+}
+
+static int XMLCALL import_loader_io_close(void * context)
+{
+    struct import_buffer *buffer = (struct import_buffer *)context;
+
+    TRACE("%p\n", context);
+
+    heap_free(buffer->data);
+    heap_free(buffer);
+    return 0;
+}
+
+static HRESULT import_loader_onDataAvailable(void *ctxt, char *ptr, DWORD len)
+{
+    xmlParserInputPtr *input = (xmlParserInputPtr *)ctxt;
+    xmlParserInputBufferPtr inputbuffer;
+    struct import_buffer *buffer;
+
+    buffer = heap_alloc(sizeof(*buffer));
+
+    buffer->data = heap_alloc(len);
+    memcpy(buffer->data, ptr, len);
+    buffer->cur = 0;
+    buffer->len = len;
+
+    inputbuffer = xmlParserInputBufferCreateIO(import_loader_io_read, import_loader_io_close, buffer,
+            XML_CHAR_ENCODING_NONE);
+    *input = xmlNewIOInputStream(ctxt, inputbuffer, XML_CHAR_ENCODING_NONE);
+    if (!*input)
+        xmlFreeParserInputBuffer(inputbuffer);
+
+    return *input ? S_OK : E_FAIL;
+}
+
+static HRESULT xslt_doc_get_uri(const xmlChar *uri, void *_ctxt, xsltLoadType type, IUri **doc_uri)
+{
+    xsltStylesheetPtr style = (xsltStylesheetPtr)_ctxt;
+    IUri *href_uri;
+    HRESULT hr;
+    BSTR uriW;
+
+    *doc_uri = NULL;
+
+    uriW = bstr_from_xmlChar(uri);
+    hr = CreateUri(uriW, Uri_CREATE_ALLOW_RELATIVE | Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME, 0, &href_uri);
+    SysFreeString(uriW);
+    if (FAILED(hr))
+    {
+        WARN("Failed to create href uri, %#x.\n", hr);
+        return hr;
+    }
+
+    if (type == XSLT_LOAD_STYLESHEET && style->doc && style->doc->name)
+    {
+        IUri *base_uri;
+        BSTR baseuriW;
+
+        baseuriW = bstr_from_xmlChar((xmlChar *)style->doc->name);
+        hr = CreateUri(baseuriW, Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME, 0, &base_uri);
+        SysFreeString(baseuriW);
+        if (FAILED(hr))
+        {
+            WARN("Failed to create base uri, %#x.\n", hr);
+            return hr;
+        }
+
+        hr = CoInternetCombineIUri(base_uri, href_uri, 0, doc_uri, 0);
+        IUri_Release(base_uri);
+        if (FAILED(hr))
+            WARN("Failed to combine uris, %#x.\n", hr);
+    }
+    else
+    {
+        *doc_uri = href_uri;
+        IUri_AddRef(*doc_uri);
+    }
+
+    IUri_Release(href_uri);
+
+    return hr;
+}
+
+xmlDocPtr xslt_doc_default_loader(const xmlChar *uri, xmlDictPtr dict, int options,
+    void *_ctxt, xsltLoadType type)
+{
+    IUri *import_uri = NULL;
+    xmlParserInputPtr input;
+    xmlParserCtxtPtr pctxt;
+    xmlDocPtr doc = NULL;
+    IMoniker *moniker;
+    HRESULT hr;
+    bsc_t *bsc;
+    BSTR uriW;
+
+    TRACE("%s, %p, %#x, %p, %d\n", debugstr_a((const char *)uri), dict, options, _ctxt, type);
+
+    pctxt = xmlNewParserCtxt();
+    if (!pctxt)
+        return NULL;
+
+    if (dict && pctxt->dict)
+    {
+        xmlDictFree(pctxt->dict);
+        pctxt->dict = NULL;
+    }
+
+    if (dict)
+    {
+        pctxt->dict = dict;
+        xmlDictReference(pctxt->dict);
+    }
+
+    xmlCtxtUseOptions(pctxt, options);
+
+    hr = xslt_doc_get_uri(uri, _ctxt, type, &import_uri);
+    if (FAILED(hr))
+        goto failed;
+
+    hr = CreateURLMonikerEx2(NULL, import_uri, &moniker, 0);
+    if (FAILED(hr))
+        goto failed;
+
+    hr = bind_url(moniker, import_loader_onDataAvailable, &input, &bsc);
+    IMoniker_Release(moniker);
+    if (FAILED(hr))
+        goto failed;
+
+    if (FAILED(detach_bsc(bsc)))
+        goto failed;
+
+    if (!input)
+        goto failed;
+
+    inputPush(pctxt, input);
+    xmlParseDocument(pctxt);
+
+    if (pctxt->wellFormed)
+    {
+        doc = pctxt->myDoc;
+        /* Set imported uri, to give nested imports a chance. */
+        if (IUri_GetPropertyBSTR(import_uri, Uri_PROPERTY_ABSOLUTE_URI, &uriW, 0) == S_OK)
+        {
+            doc->name = (char *)xmlchar_from_wcharn(uriW, SysStringLen(uriW), TRUE);
+            SysFreeString(uriW);
+        }
+    }
+    else
+    {
+        doc = NULL;
+        xmlFreeDoc(pctxt->myDoc);
+        pctxt->myDoc = NULL;
+    }
+
+failed:
+    xmlFreeParserCtxt(pctxt);
+    if (import_uri)
+        IUri_Release(import_uri);
+
+    return doc;
+}
+
+#endif /* SONAME_LIBXSLT */
 
 HRESULT node_transform_node_params(const xmlnode *This, IXMLDOMNode *stylesheet, BSTR *p,
     ISequentialStream *stream, const struct xslprocessor_params *params)

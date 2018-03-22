@@ -20,7 +20,10 @@
 
 #include "hlink_private.h"
 
-#include <wine/list.h>
+#include "wine/debug.h"
+#include "wine/list.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(hlink);
 
 struct link_entry
 {
@@ -95,10 +98,11 @@ static ULONG WINAPI IHlinkBC_fnRelease (IHlinkBrowseContext* iface)
     return ref;
 }
 
+static const WCHAR szIdent[] = {'W','I','N','E','H','L','I','N','K',0};
+
 static HRESULT WINAPI IHlinkBC_Register(IHlinkBrowseContext* iface,
         DWORD dwReserved, IUnknown *piunk, IMoniker *pimk, DWORD *pdwRegister)
 {
-    static const WCHAR szIdent[] = {'W','I','N','E','H','L','I','N','K',0};
     HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
     IMoniker *mon;
     IMoniker *composite;
@@ -122,11 +126,29 @@ static HRESULT WINAPI IHlinkBC_Register(IHlinkBrowseContext* iface,
     return S_OK;
 }
 
-static HRESULT WINAPI IHlinkBC_GetObject(IHlinkBrowseContext* face,
+static HRESULT WINAPI IHlinkBC_GetObject(IHlinkBrowseContext* iface,
         IMoniker *pimk, BOOL fBindifRootRegistered, IUnknown **ppiunk)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HlinkBCImpl *This = impl_from_IHlinkBrowseContext(iface);
+    IMoniker *mon;
+    IMoniker *composite;
+    IRunningObjectTable *ROT;
+    HRESULT hr;
+
+    TRACE("(%p)->(%p, %d, %p)\n", This, pimk, fBindifRootRegistered, ppiunk);
+
+    hr = CreateItemMoniker(NULL, szIdent, &mon);
+    if (FAILED(hr)) return hr;
+    CreateGenericComposite(mon, pimk, &composite);
+
+    GetRunningObjectTable(0, &ROT);
+    hr = IRunningObjectTable_GetObject(ROT, composite, ppiunk);
+
+    IRunningObjectTable_Release(ROT);
+    IMoniker_Release(composite);
+    IMoniker_Release(mon);
+
+    return hr;
 }
 
 static HRESULT WINAPI IHlinkBC_Revoke(IHlinkBrowseContext* iface,

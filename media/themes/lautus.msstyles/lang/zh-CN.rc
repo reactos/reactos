@@ -1,4 +1,5 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -30,10 +31,10 @@ STRINGTABLE
 {
 5000, "磊灿"
 5001, "视觉样式"
-5002, "ReactOS 基础"
-5003, "Pisarz, 基于 Luna Inspirat"
-5004, "根据 GNU/GPL 2.0, 2011 释放"
+5002, "ReactOS 基金会"
+5003, "Pisarz, 基于 Luna Inspirat 项目"
+5004, "基于 GNU/GPL 2.0，于 2011 年发行"
 5005, "http://www.reactos.org"
-5006, "版本1.0"
+5006, "版本 1.0"
 5007, "ReactOS 的视觉样式"
 }

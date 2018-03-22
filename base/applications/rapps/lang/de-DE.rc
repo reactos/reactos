@@ -74,7 +74,7 @@ BEGIN
     LTEXT "Kein Proxy", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Vorgabe", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -86,7 +86,7 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Installation von einem Datenträger (CD oder DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "Herunterla&den und installieren", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 150, 78, 60, 14
 END
 
@@ -105,9 +105,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Über"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS-Anwendungsmanager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Schließen", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "ReactOS-Anwendungsmanager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Schließen", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -203,7 +203,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Paket konnte nicht geladen werden! Prüfen Sie Ihre Internetverbindung!"
     IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry löschen!"
     IDS_UNABLE_TO_INSTALL "Paket konnte nicht installiert werden!"
-    IDS_CERT_DOES_NOT_MATCH "Überprüfung des SSL-Zertifikats fehlgeschlagen."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Integritätsprüfung…"
     IDS_INTEG_CHECK_FAIL "Das Paket hat die Integritätsprüfung nicht bestanden. Mögliche Ursachen sind Übertragungsfehler, Datenbankfehler oder Manipulation durch einen Angreifer. Sie sollten die Software nicht ausführen."
     IDS_INTERRUPTED_DOWNLOAD "Übertragung unterbrochen. Prüfen Sie Ihre Internetverbindung!"
@@ -211,6 +211,7 @@ BEGIN
     IDS_SELECT_ALL "Alle/Keine"
     IDS_INSTALL_SELECTED "Ausgewählte Installieren"
     IDS_SELECTEDFORINST "Zur Installation ausgewählt"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

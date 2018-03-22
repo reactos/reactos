@@ -17,7 +17,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+
 #include "qedit_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(qedit);
 
 typedef struct {
     IUnknown IUnknown_inner;
@@ -38,6 +51,7 @@ static inline TimelineImpl *impl_from_IAMTimeline(IAMTimeline *iface)
 
 typedef struct {
     IAMTimelineObj IAMTimelineObj_iface;
+    IAMTimelineGroup IAMTimelineGroup_iface;
     LONG ref;
     TIMELINE_MAJOR_TYPE timeline_type;
 } TimelineObjImpl;
@@ -47,7 +61,13 @@ static inline TimelineObjImpl *impl_from_IAMTimelineObj(IAMTimelineObj *iface)
     return CONTAINING_RECORD(iface, TimelineObjImpl, IAMTimelineObj_iface);
 }
 
+static inline TimelineObjImpl *impl_from_IAMTimelineGroup(IAMTimelineGroup *iface)
+{
+    return CONTAINING_RECORD(iface, TimelineObjImpl, IAMTimelineGroup_iface);
+}
+
 static const IAMTimelineObjVtbl IAMTimelineObj_VTable;
+static const IAMTimelineGroupVtbl IAMTimelineGroup_VTable;
 
 /* Timeline inner IUnknown */
 
@@ -157,6 +177,7 @@ static HRESULT WINAPI Timeline_IAMTimeline_CreateEmptyNode(IAMTimeline *iface, I
 
     obj_impl->ref = 1;
     obj_impl->IAMTimelineObj_iface.lpVtbl = &IAMTimelineObj_VTable;
+    obj_impl->IAMTimelineGroup_iface.lpVtbl = &IAMTimelineGroup_VTable;
     obj_impl->timeline_type = type;
 
     *obj = &obj_impl->IAMTimelineObj_iface;
@@ -440,6 +461,8 @@ static HRESULT WINAPI TimelineObj_QueryInterface(IAMTimelineObj *iface, REFIID r
     *ppv = NULL;
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IAMTimelineObj))
         *ppv = &This->IAMTimelineObj_iface;
+    else if (IsEqualIID(riid, &IID_IAMTimelineGroup))
+        *ppv = &This->IAMTimelineGroup_iface;
     else
         WARN("(%p, %s,%p): not found\n", This, debugstr_guid(riid), ppv);
 
@@ -789,4 +812,189 @@ static const IAMTimelineObjVtbl IAMTimelineObj_VTable =
     TimelineObj_GetTimelineNoRef,
     TimelineObj_GetGroupIBelongTo,
     TimelineObj_GetEmbedDepth,
+};
+
+static HRESULT WINAPI timelinegrp_QueryInterface(IAMTimelineGroup *iface, REFIID riid, void **object)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    return IAMTimelineObj_QueryInterface(&This->IAMTimelineObj_iface, riid, object);
+}
+
+static ULONG WINAPI timelinegrp_AddRef(IAMTimelineGroup *iface)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    return IAMTimelineObj_AddRef(&This->IAMTimelineObj_iface);
+}
+
+static ULONG WINAPI timelinegrp_Release(IAMTimelineGroup *iface)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    return IAMTimelineObj_Release(&This->IAMTimelineObj_iface);
+}
+
+static HRESULT WINAPI timelinegrp_SetTimeline(IAMTimelineGroup *iface, IAMTimeline *timeline)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, timeline);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_GetTimeline(IAMTimelineGroup *iface, IAMTimeline **timeline)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, timeline);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_GetPriority(IAMTimelineGroup *iface, LONG *priority)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, priority);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_GetMediaType(IAMTimelineGroup *iface, AM_MEDIA_TYPE *mediatype)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, mediatype);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_SetMediaType(IAMTimelineGroup *iface, AM_MEDIA_TYPE *mediatype)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, mediatype);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_SetOutputFPS(IAMTimelineGroup *iface, double fps)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%f)\n", This, fps);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_GetOutputFPS(IAMTimelineGroup *iface, double *fps)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, fps);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_SetGroupName(IAMTimelineGroup *iface, BSTR name)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(name));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_GetGroupName(IAMTimelineGroup *iface, BSTR *name)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, name);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_SetPreviewMode(IAMTimelineGroup *iface, BOOL preview)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%d)\n", This, preview);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_GetPreviewMode(IAMTimelineGroup *iface, BOOL *preview)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, preview);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_SetMediaTypeForVB(IAMTimelineGroup *iface, LONG type)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%d)\n", This, type);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_GetOutputBuffering(IAMTimelineGroup *iface, int *buffer)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, buffer);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_SetOutputBuffering(IAMTimelineGroup *iface, int buffer)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%d)\n", This, buffer);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_SetSmartRecompressFormat(IAMTimelineGroup *iface, LONG *format)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, format);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_GetSmartRecompressFormat(IAMTimelineGroup *iface, LONG **format)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, format);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_IsSmartRecompressFormatSet(IAMTimelineGroup *iface, BOOL *set)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, set);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_IsRecompressFormatDirty(IAMTimelineGroup *iface, BOOL *dirty)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, dirty);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_ClearRecompressFormatDirty(IAMTimelineGroup *iface)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI timelinegrp_SetRecompFormatFromSource(IAMTimelineGroup *iface, IAMTimelineSrc *source)
+{
+    TimelineObjImpl *This = impl_from_IAMTimelineGroup(iface);
+    FIXME("(%p)->(%p)\n", This, source);
+    return E_NOTIMPL;
+}
+
+static const IAMTimelineGroupVtbl IAMTimelineGroup_VTable =
+{
+    timelinegrp_QueryInterface,
+    timelinegrp_AddRef,
+    timelinegrp_Release,
+    timelinegrp_SetTimeline,
+    timelinegrp_GetTimeline,
+    timelinegrp_GetPriority,
+    timelinegrp_GetMediaType,
+    timelinegrp_SetMediaType,
+    timelinegrp_SetOutputFPS,
+    timelinegrp_GetOutputFPS,
+    timelinegrp_SetGroupName,
+    timelinegrp_GetGroupName,
+    timelinegrp_SetPreviewMode,
+    timelinegrp_GetPreviewMode,
+    timelinegrp_SetMediaTypeForVB,
+    timelinegrp_GetOutputBuffering,
+    timelinegrp_SetOutputBuffering,
+    timelinegrp_SetSmartRecompressFormat,
+    timelinegrp_GetSmartRecompressFormat,
+    timelinegrp_IsSmartRecompressFormatSet,
+    timelinegrp_IsRecompressFormatDirty,
+    timelinegrp_ClearRecompressFormatDirty,
+    timelinegrp_SetRecompFormatFromSource
 };

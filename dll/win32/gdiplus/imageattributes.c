@@ -16,7 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "windef.h"
+#include "wingdi.h"
+
+#include "objbase.h"
+
+#include "gdiplus.h"
 #include "gdiplus_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 GpStatus WINGDIPAPI GdipCloneImageAttributes(GDIPCONST GpImageAttributes *imageattr,
     GpImageAttributes **cloneImageattr)
@@ -209,14 +218,14 @@ GpStatus WINGDIPAPI GdipSetImageAttributesGamma(GpImageAttributes *imageAttr,
 GpStatus WINGDIPAPI GdipSetImageAttributesNoOp(GpImageAttributes *imageAttr,
     ColorAdjustType type, BOOL enableFlag)
 {
-    static int calls;
-
     TRACE("(%p,%u,%i)\n", imageAttr, type, enableFlag);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if (type >= ColorAdjustTypeCount)
+        return InvalidParameter;
 
-    return NotImplemented;
+    imageAttr->noop[type] = enableFlag ? IMAGEATTR_NOOP_SET : IMAGEATTR_NOOP_CLEAR;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetImageAttributesOutputChannel(GpImageAttributes *imageAttr,
@@ -323,6 +332,7 @@ GpStatus WINGDIPAPI GdipResetImageAttributes(GpImageAttributes *imageAttr,
     GdipSetImageAttributesColorKeys(imageAttr, type, FALSE, 0, 0);
     GdipSetImageAttributesRemapTable(imageAttr, type, FALSE, 0, NULL);
     GdipSetImageAttributesGamma(imageAttr, type, FALSE, 0.0);
+    imageAttr->noop[type] = IMAGEATTR_NOOP_UNDEFINED;
 
     return Ok;
 }

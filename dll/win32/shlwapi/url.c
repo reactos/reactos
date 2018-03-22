@@ -18,14 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
-#include <wininet.h>
-#include <intshcut.h>
+#include "config.h"
+#include "wine/port.h"
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "wine/unicode.h"
+#include "wininet.h"
+#include "winreg.h"
+#include "winternl.h"
+#define NO_SHLWAPI_STREAM
+#include "shlwapi.h"
+#include "intshcut.h"
+#include "wine/debug.h"
 
 HMODULE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
 BOOL    WINAPI MLFreeLibrary(HMODULE);
 HRESULT WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
+
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static inline WCHAR *heap_strdupAtoW(const char *str)
 {
@@ -154,7 +169,7 @@ HRESULT WINAPI ParseURLA(LPCSTR x, PARSEDURLA *y)
     if(y->cbSize != sizeof(*y))
         return E_INVALIDARG;
 
-    while(*ptr && (isalnum(*ptr) || *ptr == '-'))
+    while(*ptr && (isalnum(*ptr) || *ptr == '-' || *ptr == '+' || *ptr == '.'))
         ptr++;
 
     if (*ptr != ':' || ptr <= x+1) {
@@ -188,7 +203,7 @@ HRESULT WINAPI ParseURLW(LPCWSTR x, PARSEDURLW *y)
     if(y->cbSize != sizeof(*y))
         return E_INVALIDARG;
 
-    while(*ptr && (isalnumW(*ptr) || *ptr == '-'))
+    while(*ptr && (isalnumW(*ptr) || *ptr == '-' || *ptr == '+' || *ptr == '.'))
         ptr++;
 
     if (*ptr != ':' || ptr <= x+1) {

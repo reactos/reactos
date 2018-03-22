@@ -17,10 +17,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL (gdiplus);
+
+#include "objbase.h"
+
+#include "gdiplus.h"
 #include "gdiplus_private.h"
 
 /* PANOSE is 10 bytes in size, need to pack the structure properly */
-#include <pshpack2.h>
+#include "pshpack2.h"
 typedef struct
 {
     USHORT version;
@@ -85,7 +100,7 @@ typedef struct
     SHORT metricDataFormat;
     USHORT numberOfHMetrics;
 } TT_HHEA;
-#include <poppack.h>
+#include "poppack.h"
 
 #ifdef WORDS_BIGENDIAN
 #define GET_BE_WORD(x) (x)
@@ -1378,33 +1393,36 @@ static int match_name_table_language( const tt_name_record *name, LANGID lang )
     return 0;
 }
 
-static WCHAR *copy_name_table_string( const tt_name_record *name, const BYTE *data, WCHAR *ret, DWORD len )
+static WCHAR *copy_name_table_string( const tt_name_record *name, const BYTE *data )
 {
     WORD name_len = GET_BE_WORD(name->length);
     WORD codepage;
+    WCHAR *ret;
+    int len;
 
     switch (GET_BE_WORD(name->platform_id))
     {
     case TT_PLATFORM_APPLE_UNICODE:
     case TT_PLATFORM_MICROSOFT:
-        if (name_len >= len*sizeof(WCHAR))
-            return NULL;
+        ret = heap_alloc((name_len / 2 + 1) * sizeof(WCHAR));
         for (len = 0; len < name_len / 2; len++)
             ret[len] = (data[len * 2] << 8) | data[len * 2 + 1];
         ret[len] = 0;
         return ret;
     case TT_PLATFORM_MACINTOSH:
         codepage = get_mac_code_page( name );
-        len = MultiByteToWideChar( codepage, 0, (char *)data, name_len, ret, len-1 );
+        len = MultiByteToWideChar( codepage, 0, (char *)data, name_len, NULL, 0 ) + 1;
         if (!len)
             return NULL;
+        ret = heap_alloc(len * sizeof(WCHAR));
+        len = MultiByteToWideChar( codepage, 0, (char *)data, name_len, ret, len - 1 );
         ret[len] = 0;
         return ret;
     }
     return NULL;
 }
 
-static WCHAR *load_ttf_name_id( const BYTE *mem, DWORD_PTR size, DWORD id, WCHAR *ret, DWORD len )
+static WCHAR *load_ttf_name_id( const BYTE *mem, DWORD_PTR size, DWORD id )
 {
     LANGID lang = GetSystemDefaultLangID();
     const tt_header *header;
@@ -1465,8 +1483,9 @@ static WCHAR *load_ttf_name_id( const BYTE *mem, DWORD_PTR size, DWORD id, WCHAR
 
     if (best_lang)
     {
+        WCHAR *ret;
         name_record = (const tt_name_record*)(name_table + 1) + best_index;
-        ret = copy_name_table_string( name_record, mem+ofs+GET_BE_WORD(name_record->offset), ret, len );
+        ret = copy_name_table_string( name_record, mem+ofs+GET_BE_WORD(name_record->offset) );
         TRACE( "name %u found platform %u lang %04x %s\n", GET_BE_WORD(name_record->name_id),
                 GET_BE_WORD(name_record->platform_id), GET_BE_WORD(name_record->language_id), debugstr_w( ret ));
         return ret;
@@ -1482,43 +1501,45 @@ static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm, D
 GpStatus WINGDIPAPI GdipPrivateAddMemoryFont(GpFontCollection* fontCollection,
         GDIPCONST void* memory, INT length)
 {
-    WCHAR buf[32], *name;
+    WCHAR *name;
     DWORD count = 0;
     HANDLE font;
+    GpStatus ret = Ok;
     TRACE("%p, %p, %d\n", fontCollection, memory, length);
 
     if (!fontCollection || !memory || !length)
         return InvalidParameter;
 
-    name = load_ttf_name_id(memory, length, NAME_ID_FULL_FONT_NAME, buf, sizeof(buf)/sizeof(*buf));
+    name = load_ttf_name_id(memory, length, NAME_ID_FULL_FONT_NAME);
     if (!name)
         return OutOfMemory;
 
     font = AddFontMemResourceEx((void*)memory, length, NULL, &count);
     TRACE("%s: %p/%u\n", debugstr_w(name), font, count);
     if (!font || !count)
-        return InvalidParameter;
-
-    if (count)
+        ret = InvalidParameter;
+    else
     {
         HDC hdc;
         LOGFONTW lfw;
 
         hdc = CreateCompatibleDC(0);
 
+        /* Truncate name if necessary, GDI32 can't deal with long names */
+        if(lstrlenW(name) > LF_FACESIZE - 1)
+            name[LF_FACESIZE - 1] = 0;
+
         lfw.lfCharSet = DEFAULT_CHARSET;
         lstrcpyW(lfw.lfFaceName, name);
         lfw.lfPitchAndFamily = 0;
 
         if (!EnumFontFamiliesExW(hdc, &lfw, add_font_proc, (LPARAM)fontCollection, 0))
-        {
-            DeleteDC(hdc);
-            return OutOfMemory;
-        }
+            ret = OutOfMemory;
 
         DeleteDC(hdc);
     }
-    return Ok;
+    heap_free(name);
+    return ret;
 }
 
 /*****************************************************************************

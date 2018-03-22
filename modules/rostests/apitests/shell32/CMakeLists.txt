@@ -12,6 +12,7 @@ list(APPEND SOURCE
     CMyComputer.cpp
     CShellDesktop.cpp
     CShellLink.cpp
+    CUserNotification.cpp
     menu.cpp
     PathResolve.cpp
     SHCreateFileExtractIconW.cpp

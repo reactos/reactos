@@ -10,7 +10,6 @@ add_definitions(
     -DHAVE_STAT
     -DHAVE_WIN32_THREADS
     -D_REENTRANT
-    -D_WINSOCKAPI_
     -DLIBXML_STATIC)
 
 list(APPEND SOURCE

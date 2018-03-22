@@ -77,7 +77,7 @@ BEGIN
     LTEXT "Sin proxy para:", -1, 125, 154, 50, 8, SS_RIGHT
     EDITTEXT IDC_NO_PROXY_FOR, 177, 153, 61, 14, ES_AUTOHSCROLL
     PUSHBUTTON "Por defecto", IDC_DEFAULT_SETTINGS, 8, 180, 60, 14
-    PUSHBUTTON "Aceptar", IDOK, 116, 180, 60, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 116, 180, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 181, 180, 60, 14
 END
 
@@ -89,7 +89,7 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Instalar desde un disco (CD o DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Descargar e instalar", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "Aceptar", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 86, 78, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 150, 78, 60, 14
 END
 
@@ -108,9 +108,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Acerca de"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Administrador de aplicaciones de ReactOS\nCopyright (C) 2009\nCreado por Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Cerrar", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "Administrador de aplicaciones de ReactOS\nCopyright (C) 2009\nCreado por Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Cerrar", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -206,7 +206,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "No se pudieron borrar del Registro los datos de instalación del programa."
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_CERT_DOES_NOT_MATCH "Ha fallado la comprobación del certificado SSL."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete…"
     IDS_INTEG_CHECK_FAIL "El paquete no ha pasado la comprobación de integridad, puede haber sido alterado o estar corrupto. No se recomienda ejecutarlo."
     IDS_INTERRUPTED_DOWNLOAD "Se ha interrumpido la descarga por un error de red. Comprueba la conexión a Internet."
@@ -214,6 +214,7 @@ BEGIN
     IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

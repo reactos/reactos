@@ -556,10 +556,50 @@ Language=English
 One of the pages to lock was already locked.
 .
 
+MessageId=0x1a
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_LOG_HARD_ERROR
+Language=English
+Application popup: %1 : %2
+.
+
+MessageId=0x1b
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_ALREADY_WIN32
+Language=English
+A Win32 process already exists.
+.
+
 MessageId=0x1c
 Severity=Informational
 Facility=System
 SymbolicName=STATUS_WX86_UNSIMULATE
+Language=English
+Exception status code used by Win32 x86 emulation subsystem.
+.
+
+MessageId=0x1d
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_WX86_CONTINUE
+Language=English
+Exception status code used by Win32 x86 emulation subsystem.
+.
+
+MessageId=0x1e
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_WX86_SINGLE_STEP
+Language=English
+Exception status code used by Win32 x86 emulation subsystem.
+.
+
+MessageId=0x1f
+Severity=Informational
+Facility=System
+SymbolicName=STATUS_WX86_BREAKPOINT
 Language=English
 Exception status code used by Win32 x86 emulation subsystem.
 .

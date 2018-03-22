@@ -537,7 +537,7 @@ DlgPreferencesProc(HWND hwndDlg,
                              (LONG_PTR)lParam);
             Context = (PPREFERENCES_CONTEXT)((LONG_PTR)lParam);
             Context->hwndDlg = hwndDlg;
-            Context->Mixer = SndMixerCreate(hwndDlg);
+            Context->Mixer = SndMixerCreate(hwndDlg, Context->MixerWindow->MixerId);
             Context->Selected = (UINT)-1;
 
             FillDevContext.PrefContext = Context;
@@ -651,14 +651,14 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
     }
 
     /* now go through all controls and compare control ids */
-    for(Index = 0; Index < ControlCount; Index++)
+    for (Index = 0; Index < ControlCount; Index++)
     {
         if (Context->bVertical)
         {
             if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
             {
                 /* FIXME: give me granularity */
-                DWORD Step = 0x10000 / 5;
+                DWORD Step = 0x10000 / VOLUME_STEPS;
 
                 /* set up details */
                 uDetails.dwValue = 0x10000 - Step * Context->SliderPos;
@@ -722,7 +722,7 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
     }
 
     /* now go through all controls and compare control ids */
-    for(Index = 0; Index < ControlCount; Index++)
+    for (Index = 0; Index < ControlCount; Index++)
     {
         if (Control[Index].dwControlID == PtrToUlong(Context))
         {
@@ -746,10 +746,10 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
                 {
                     /* update dialog control */
                     DWORD Position;
-                    DWORD Step = 0x10000 / 5;
+                    DWORD Step = 0x10000 / VOLUME_STEPS;
 
                     /* FIXME: give me granularity */
-                    Position = 5 - (Details.dwValue / Step);
+                    Position = VOLUME_STEPS - (Details.dwValue / Step);
 
                     /* update volume control slider */
                     UpdateDialogLineSliderControl(&Preferences, Line, Control[Index].dwControlID, IDC_LINE_SLIDER_VERT, Position);
@@ -761,7 +761,6 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
 
     /* free controls */
     HeapFree(GetProcessHeap(), 0, Control);
-
 
     /* done */
     return TRUE;
@@ -806,7 +805,7 @@ MainWindowProc(HWND hwnd,
                         TCHAR szProduct[MAXPNAMELEN];
 
                         /* get mixer product name */
-                        if (SndMixerGetProductName(MixerWindow->Mixer,
+                        if (SndMixerGetProductName(Pref.Mixer,
                                                    szProduct,
                                                    sizeof(szProduct) / sizeof(szProduct[0])) == -1)
                         {
@@ -820,7 +819,8 @@ MainWindowProc(HWND hwnd,
                         }
 
                         /* destroy old status bar */
-                        DestroyWindow(MixerWindow->hStatusBar);
+                        if (MixerWindow->Mode == NORMAL_MODE)
+                            DestroyWindow(MixerWindow->hStatusBar);
 
                         /* update details */
                         Preferences.SelectedLine = Pref.SelectedLine;
@@ -835,18 +835,20 @@ MainWindowProc(HWND hwnd,
                         RebuildMixerWindowControls(&Preferences);
 
                         /* create status window */
-                        MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
-                                                                     NULL,
-                                                                     hwnd,
-                                                                     0);
-
-                        /* set status bar */
-                        if (MixerWindow->hStatusBar)
+                        if (MixerWindow->Mode == NORMAL_MODE)
                         {
-                            SendMessage(MixerWindow->hStatusBar,
-                                WM_SETTEXT,
-                                0,
-                                (LPARAM)szProduct);
+                            MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
+                                                                         NULL,
+                                                                         hwnd,
+                                                                         0);
+                            if (MixerWindow->hStatusBar)
+                            {
+                                /* Set status bar */
+                                SendMessage(MixerWindow->hStatusBar,
+                                    WM_SETTEXT,
+                                    0,
+                                    (LPARAM)szProduct);
+                            }
                         }
                     }
                     break;
@@ -960,7 +962,7 @@ MainWindowProc(HWND hwnd,
                              GWL_USERDATA,
                              (LONG_PTR)MixerWindow);
             MixerWindow->hWnd = hwnd;
-            MixerWindow->Mixer = SndMixerCreate(MixerWindow->hWnd);
+            MixerWindow->Mixer = SndMixerCreate(MixerWindow->hWnd, MixerWindow->MixerId);
             if (MixerWindow->Mixer != NULL)
             {
                 TCHAR szProduct[MAXPNAMELEN];
@@ -999,16 +1001,19 @@ MainWindowProc(HWND hwnd,
                 }
 
                 /* create status window */
-                MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
-                                                             NULL,
-                                                             hwnd,
-                                                             0);
-                if (MixerWindow->hStatusBar)
+                if (MixerWindow->Mode == NORMAL_MODE)
                 {
-                    SendMessage(MixerWindow->hStatusBar,
-                                WM_SETTEXT,
-                                0,
-                                (LPARAM)szProduct);
+                    MixerWindow->hStatusBar = CreateStatusWindow(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
+                                                                 NULL,
+                                                                 hwnd,
+                                                                 0);
+                    if (MixerWindow->hStatusBar)
+                    {
+                        SendMessage(MixerWindow->hStatusBar,
+                                    WM_SETTEXT,
+                                    0,
+                                   (LPARAM)szProduct);
+                    }
                 }
             }
             break;
@@ -1024,6 +1029,8 @@ MainWindowProc(HWND hwnd,
                 {
                     SndMixerDestroy(MixerWindow->Mixer);
                 }
+                if (MixerWindow->hFont)
+                    DeleteObject(MixerWindow->hFont);
                 HeapFree(hAppHeap, 0, MixerWindow);
             }
             break;
@@ -1080,7 +1087,9 @@ UnregisterApplicationClasses(VOID)
 }
 
 static HWND
-CreateApplicationWindow(VOID)
+CreateApplicationWindow(
+    WINDOW_MODE WindowMode,
+    UINT MixerId)
 {
     HWND hWnd;
 
@@ -1091,6 +1100,9 @@ CreateApplicationWindow(VOID)
     {
         return NULL;
     }
+
+    MixerWindow->Mode = WindowMode;
+    MixerWindow->MixerId = MixerId;
 
     if (mixerGetNumDevs() > 0)
     {
@@ -1136,6 +1148,67 @@ CreateApplicationWindow(VOID)
     return hWnd;
 }
 
+static
+BOOL
+HandleCommandLine(LPTSTR cmdline,
+                  PWINDOW_MODE pMode,
+                  PUINT pMixerId)
+{
+    TCHAR option;
+
+    *pMixerId = 0;
+    *pMode = SMALL_MODE;
+
+    while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
+    {
+        if (*cmdline++ == _T(' '))
+            continue;
+
+        option = *cmdline;
+        if (option)
+            cmdline++;
+        while (*cmdline == _T(' '))
+            cmdline++;
+
+        switch (option)
+        {
+            case 'd': /* Device */
+            case 'D':
+                break;
+
+            case 'n': /* Normal size */
+            case 'N':
+                *pMode = NORMAL_MODE;
+                break;
+
+            case 's': /* Small size */
+            case 'S':
+                *pMode = SMALL_MODE;
+                break;
+
+            case 't': /* Tray size */
+            case 'T':
+                *pMode = TRAY_MODE;
+                break;
+
+            case 'p': /* Play mode */
+            case 'P':
+                *pMixerId = 0;
+                break;
+
+            case 'r': /* Record mode */
+            case 'R':
+                *pMixerId = 1;
+                break;
+
+            default:
+                return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 int WINAPI
 _tWinMain(HINSTANCE hInstance,
           HINSTANCE hPrevInstance,
@@ -1145,13 +1218,16 @@ _tWinMain(HINSTANCE hInstance,
     MSG Msg;
     int Ret = 1;
     INITCOMMONCONTROLSEX Controls;
+    WINDOW_MODE WindowMode = SMALL_MODE;
+    UINT MixerId = 0;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpszCmdLine);
-	UNREFERENCED_PARAMETER(nCmdShow);
+    UNREFERENCED_PARAMETER(nCmdShow);
 
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
+
+    HandleCommandLine(lpszCmdLine, &WindowMode, &MixerId);
 
     if (InitAppConfig())
     {
@@ -1168,37 +1244,48 @@ _tWinMain(HINSTANCE hInstance,
 
         InitCommonControlsEx(&Controls);
 
-        if (RegisterApplicationClasses())
+        if (WindowMode == TRAY_MODE)
         {
-            hMainWnd = CreateApplicationWindow();
-            if (hMainWnd != NULL)
-            {
-                BOOL bRet;
-                while ((bRet =GetMessage(&Msg,
-                                         NULL,
-                                         0,
-                                         0)) != 0)
-                {
-                    if (bRet != -1)
-                    {
-                        TranslateMessage(&Msg);
-                        DispatchMessage(&Msg);
-                    }
-                }
-
-                DestroyWindow(hMainWnd);
-                Ret = 0;
-            }
-            else
-            {
-                DPRINT("Failed to create application window (LastError: %d)!\n", GetLastError());
-            }
-
-            UnregisterApplicationClasses();
+            DialogBoxParam(hAppInstance,
+                           MAKEINTRESOURCE(IDD_TRAY_MASTER),
+                           NULL,
+                           TrayDlgProc,
+                           0);
         }
         else
         {
-            DPRINT("Failed to register application classes (LastError: %d)!\n", GetLastError());
+            if (RegisterApplicationClasses())
+            {
+                hMainWnd = CreateApplicationWindow(WindowMode, MixerId);
+                if (hMainWnd != NULL)
+                {
+                    BOOL bRet;
+                    while ((bRet =GetMessage(&Msg,
+                                             NULL,
+                                             0,
+                                             0)) != 0)
+                    {
+                        if (bRet != -1)
+                        {
+                            TranslateMessage(&Msg);
+                            DispatchMessage(&Msg);
+                        }
+                    }
+
+                    DestroyWindow(hMainWnd);
+                    Ret = 0;
+                }
+                else
+                {
+                    DPRINT("Failed to create application window (LastError: %d)!\n", GetLastError());
+                }
+
+                UnregisterApplicationClasses();
+            }
+            else
+            {
+                DPRINT("Failed to register application classes (LastError: %d)!\n", GetLastError());
+            }
         }
 
         if (lpAppTitle != NULL)

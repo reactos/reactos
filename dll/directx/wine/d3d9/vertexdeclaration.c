@@ -19,7 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
 #include "d3d9_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 static const struct
 {
@@ -86,8 +89,8 @@ HRESULT vdecl_convert_fvf(
            has_psize + has_diffuse + has_specular + num_textures + 1;
 
     /* convert the declaration */
-    elements = HeapAlloc(GetProcessHeap(), 0, size * sizeof(D3DVERTEXELEMENT9));
-    if (!elements) return D3DERR_OUTOFVIDEOMEMORY;
+    if (!(elements = heap_alloc(size * sizeof(*elements))))
+        return D3DERR_OUTOFVIDEOMEMORY;
 
     elements[size-1] = end_element;
     idx = 0;
@@ -307,8 +310,8 @@ struct d3d9_vertex_declaration *unsafe_impl_from_IDirect3DVertexDeclaration9(IDi
 static void STDMETHODCALLTYPE d3d9_vertexdeclaration_wined3d_object_destroyed(void *parent)
 {
     struct d3d9_vertex_declaration *declaration = parent;
-    HeapFree(GetProcessHeap(), 0, declaration->elements);
-    HeapFree(GetProcessHeap(), 0, declaration);
+    heap_free(declaration->elements);
+    heap_free(declaration);
 }
 
 static const struct wined3d_parent_ops d3d9_vertexdeclaration_wined3d_parent_ops =
@@ -333,18 +336,18 @@ static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9 *d3d9_elem
     /* Skip the END element */
     --count;
 
-    *wined3d_elements = HeapAlloc(GetProcessHeap(), 0, count * sizeof(**wined3d_elements));
-    if (!*wined3d_elements) {
+    if (!(*wined3d_elements = heap_alloc(count * sizeof(**wined3d_elements))))
+    {
         FIXME("Memory allocation failed\n");
         return D3DERR_OUTOFVIDEOMEMORY;
     }
 
     for (i = 0; i < count; ++i)
     {
-        if (d3d9_elements[i].Type >= (sizeof(d3d_dtype_lookup) / sizeof(*d3d_dtype_lookup)))
+        if (d3d9_elements[i].Type >= ARRAY_SIZE(d3d_dtype_lookup))
         {
             WARN("Invalid element type %#x.\n", d3d9_elements[i].Type);
-            HeapFree(GetProcessHeap(), 0, *wined3d_elements);
+            heap_free(*wined3d_elements);
             return E_FAIL;
         }
         (*wined3d_elements)[i].format = d3d_dtype_lookup[d3d9_elements[i].Type].format;
@@ -382,10 +385,9 @@ static HRESULT vertexdeclaration_init(struct d3d9_vertex_declaration *declaratio
     declaration->refcount = 1;
 
     element_count = wined3d_element_count + 1;
-    declaration->elements = HeapAlloc(GetProcessHeap(), 0, element_count * sizeof(*declaration->elements));
-    if (!declaration->elements)
+    if (!(declaration->elements = heap_alloc(element_count * sizeof(*declaration->elements))))
     {
-        HeapFree(GetProcessHeap(), 0, wined3d_elements);
+        heap_free(wined3d_elements);
         ERR("Failed to allocate vertex declaration elements memory.\n");
         return D3DERR_OUTOFVIDEOMEMORY;
     }
@@ -396,10 +398,10 @@ static HRESULT vertexdeclaration_init(struct d3d9_vertex_declaration *declaratio
     hr = wined3d_vertex_declaration_create(device->wined3d_device, wined3d_elements, wined3d_element_count,
             declaration, &d3d9_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_declaration);
     wined3d_mutex_unlock();
-    HeapFree(GetProcessHeap(), 0, wined3d_elements);
+    heap_free(wined3d_elements);
     if (FAILED(hr))
     {
-        HeapFree(GetProcessHeap(), 0, declaration->elements);
+        heap_free(declaration->elements);
         WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);
         return hr;
     }
@@ -416,15 +418,14 @@ HRESULT d3d9_vertex_declaration_create(struct d3d9_device *device,
     struct d3d9_vertex_declaration *object;
     HRESULT hr;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
-    if (!object)
+    if (!(object = heap_alloc_zero(sizeof(*object))))
         return E_OUTOFMEMORY;
 
     hr = vertexdeclaration_init(object, device, elements);
     if (FAILED(hr))
     {
         WARN("Failed to initialize vertex declaration, hr %#x.\n", hr);
-        HeapFree(GetProcessHeap(), 0, object);
+        heap_free(object);
         return hr;
     }
 

@@ -16,9 +16,11 @@ list(APPEND SOURCE
     startmnucust.cpp
     startmnusite.cpp
     startup.cpp
+    syspager.cpp
     taskband.cpp
     taskswnd.cpp
     tbsite.cpp
+    trayclock.cpp
     trayntfy.cpp
     trayprop.cpp
     traywnd.cpp

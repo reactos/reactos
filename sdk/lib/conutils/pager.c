@@ -1,18 +1,21 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Utilities Library
- * FILE:            sdk/lib/conutils/pager.c
- * PURPOSE:         Console/terminal paging functionality.
- * PROGRAMMERS:     - Hermes Belusca-Maito (for the library);
- *                  - All programmers who wrote the different console applications
- *                    from which I took those functions and improved them.
+ * PROJECT:     ReactOS Console Utilities Library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Console/terminal paging functionality.
+ * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
+ *              Copyright 2017-2018 Hermes Belusca-Maito
  */
+
+/**
+ * @file    pager.c
+ * @ingroup ConUtils
+ *
+ * @brief   Console/terminal paging functionality.
+ **/
 
 /* FIXME: Temporary HACK before we cleanly support UNICODE functions */
 #define UNICODE
 #define _UNICODE
-
-#include <stdlib.h> // limits.h // For MB_LEN_MAX
 
 #include <windef.h>
 #include <winbase.h>
@@ -158,3 +161,5 @@ ConResPaging(
     return ConResPagingEx(Pager, PagePrompt, StartPaging,
                           NULL /*GetModuleHandleW(NULL)*/, uID);
 }
+
+/* EOF */

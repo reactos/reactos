@@ -77,7 +77,7 @@ static int taskkill_vprintfW(const WCHAR *msg, __ms_va_list va_args)
     return count;
 }
 
-static int CDECL taskkill_printfW(const WCHAR *msg, ...)
+static int WINAPIV taskkill_printfW(const WCHAR *msg, ...)
 {
     __ms_va_list va_args;
     int len;
@@ -89,7 +89,7 @@ static int CDECL taskkill_printfW(const WCHAR *msg, ...)
     return len;
 }
 
-static int CDECL taskkill_message_printfW(int msg, ...)
+static int WINAPIV taskkill_message_printfW(int msg, ...)
 {
     __ms_va_list va_args;
     WCHAR msg_buffer[8192];

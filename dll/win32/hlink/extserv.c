@@ -18,6 +18,11 @@
 
 #include "hlink_private.h"
 
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(hlink);
+
 typedef struct {
     IUnknown           IUnknown_inner;
     IAuthenticate      IAuthenticate_iface;

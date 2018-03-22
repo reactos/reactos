@@ -275,7 +275,7 @@ BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
     return TRUE;
 }
 
-#endif
+#endif /* __REACTOS__ */
 
 /***********************************************************************
  * DllMain [Internal]
@@ -1120,7 +1120,6 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
     TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
-
     return S_OK;
 }
 

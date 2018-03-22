@@ -19,9 +19,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
+#include <stdarg.h>
+#include <stdio.h>
+#include <math.h>
 #include <float.h>
+
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include "windef.h"
+#include "winbase.h"
+#include "winsock2.h"
+#include "wine/test.h"
+#include "winuser.h"
+#include "wingdi.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "winnt.h"
+
+#include "wtypes.h"
+#include "oleauto.h"
 
 static HMODULE hOleaut32;
 
@@ -1930,6 +1947,11 @@ static void test_VarNumFromParseNum(void)
 
   /* Currency is preferred over decimal */
   SETRGB(0, 1); CONVERT(1,0,0,1,0,0, VTBIT_CY|VTBIT_DECIMAL); EXPECT_CY(1);
+
+  /* Underflow test */
+  SETRGB(0, 1); CONVERT(1,0,NUMPRS_EXPONENT,1,0,-94938484, VTBIT_R4); EXPECT_R4(0.0);
+  SETRGB(0, 1); CONVERT(1,0,NUMPRS_EXPONENT,1,0,-94938484, VTBIT_R8); EXPECT_R8(0.0);
+  SETRGB(0, 1); CONVERT(1,0,NUMPRS_EXPONENT,1,0,-94938484, VTBIT_CY); EXPECT_CY(0);
 }
 
 

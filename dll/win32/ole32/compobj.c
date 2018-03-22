@@ -36,10 +36,38 @@
  *
  */
 
-#include "precomp.h"
+#include "config.h"
 
-#include <ctxtcall.h>
-#include <dde.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "winuser.h"
+#define USE_COM_CONTEXT_DEF
+#include "objbase.h"
+#include "ole2.h"
+#include "ole2ver.h"
+#include "ctxtcall.h"
+#include "dde.h"
+#include "servprov.h"
+#ifndef __REACTOS__
+#include "initguid.h"
+#endif
+#include "compobj_private.h"
+#include "moniker.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -1702,12 +1730,6 @@ HWND apartment_getwindow(const struct apartment *apt)
     return apt->win;
 }
 
-void apartment_joinmta(void)
-{
-    apartment_addref(MTA);
-    COM_CurrentInfo()->apt = MTA;
-}
-
 static void COM_TlsDestroy(void)
 {
     struct oletls *info = NtCurrentTeb()->ReservedForOle;
@@ -1812,6 +1834,40 @@ HRESULT WINAPI CoRevokeInitializeSpy(ULARGE_INTEGER cookie)
     return S_OK;
 }
 
+HRESULT enter_apartment( struct oletls *info, DWORD model )
+{
+    HRESULT hr = S_OK;
+
+    if (!info->apt)
+    {
+        if (!apartment_get_or_create( model ))
+            return E_OUTOFMEMORY;
+    }
+    else if (!apartment_is_model( info->apt, model ))
+    {
+        WARN( "Attempt to change threading model of this apartment from %s to %s\n",
+              info->apt->multi_threaded ? "multi-threaded" : "apartment threaded",
+              model & COINIT_APARTMENTTHREADED ? "apartment threaded" : "multi-threaded" );
+        return RPC_E_CHANGED_MODE;
+    }
+    else
+        hr = S_FALSE;
+
+    info->inits++;
+
+    return hr;
+}
+
+void leave_apartment( struct oletls *info )
+{
+    if (!--info->inits)
+    {
+        if (info->ole_inits)
+            WARN( "Uninitializing apartment while Ole is still initialized\n" );
+        apartment_release( info->apt );
+        info->apt = NULL;
+    }
+}
 
 /******************************************************************************
  *		CoInitialize	[OLE32.@]
@@ -1870,8 +1926,7 @@ HRESULT WINAPI CoInitialize(LPVOID lpReserved)
 HRESULT WINAPI DECLSPEC_HOTPATCH CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
 {
   struct oletls *info = COM_CurrentInfo();
-  HRESULT hr = S_OK;
-  APARTMENT *apt;
+  HRESULT hr;
 
   TRACE("(%p, %x)\n", lpReserved, (int)dwCoInit);
 
@@ -1900,24 +1955,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoInitializeEx(LPVOID lpReserved, DWORD dwCoIni
   if (info->spy)
       IInitializeSpy_PreInitialize(info->spy, dwCoInit, info->inits);
 
-  if (!(apt = info->apt))
-  {
-    apt = apartment_get_or_create(dwCoInit);
-    if (!apt) return E_OUTOFMEMORY;
-  }
-  else if (!apartment_is_model(apt, dwCoInit))
-  {
-    /* Changing the threading model after it's been set is illegal. If this warning is triggered by Wine
-       code then we are probably using the wrong threading model to implement that API. */
-    ERR("Attempt to change threading model of this apartment from %s to %s\n",
-        apt->multi_threaded ? "multi-threaded" : "apartment threaded",
-        dwCoInit & COINIT_APARTMENTTHREADED ? "apartment threaded" : "multi-threaded");
-    return RPC_E_CHANGED_MODE;
-  }
-  else
-    hr = S_FALSE;
-
-  info->inits++;
+  hr = enter_apartment( info, dwCoInit );
 
   if (info->spy)
       IInitializeSpy_PostInitialize(info->spy, hr, dwCoInit, info->inits);
@@ -1964,13 +2002,7 @@ void WINAPI DECLSPEC_HOTPATCH CoUninitialize(void)
     return;
   }
 
-  if (!--info->inits)
-  {
-    if (info->ole_inits)
-      WARN("uninitializing apartment while Ole is still initialized\n");
-    apartment_release(info->apt);
-    info->apt = NULL;
-  }
+  leave_apartment( info );
 
   /*
    * Decrease the reference count.
@@ -4441,6 +4473,8 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
     APARTMENT *apt = COM_CurrentApt();
     BOOL message_loop = apt && !apt->multi_threaded;
     BOOL check_apc = (dwFlags & COWAIT_ALERTABLE) != 0;
+    BOOL post_quit = FALSE;
+    UINT exit_code;
 
     TRACE("(0x%08x, 0x%08x, %d, %p, %p)\n", dwFlags, dwTimeout, cHandles,
         pHandles, lpdwindex);
@@ -4521,20 +4555,27 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
                     }
                 }
 
+                if (!apt->win)
+                {
+                    /* If window is NULL on apartment, peek at messages so that it will not trigger
+                     * MsgWaitForMultipleObjects next time. */
+                    PeekMessageW(NULL, NULL, 0, 0, PM_QS_POSTMESSAGE | PM_NOREMOVE | PM_NOYIELD);
+                }
                 /* some apps (e.g. Visio 2010) don't handle WM_PAINT properly and loop forever,
                  * so after processing 100 messages we go back to checking the wait handles */
                 while (count++ < 100 && COM_PeekMessage(apt, &msg))
                 {
-                    TRACE("received message whilst waiting for RPC: 0x%04x\n", msg.message);
-                    TranslateMessage(&msg);
-                    DispatchMessageW(&msg);
                     if (msg.message == WM_QUIT)
                     {
-                        TRACE("resending WM_QUIT to outer message loop\n");
-                        PostQuitMessage(msg.wParam);
-                        /* no longer need to process messages */
-                        message_loop = FALSE;
-                        break;
+                        TRACE("received WM_QUIT message\n");
+                        post_quit = TRUE;
+                        exit_code = msg.wParam;
+                    }
+                    else
+                    {
+                        TRACE("received message whilst waiting for RPC: 0x%04x\n", msg.message);
+                        TranslateMessage(&msg);
+                        DispatchMessageW(&msg);
                     }
                 }
                 continue;
@@ -4563,6 +4604,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
         }
         break;
     }
+    if (post_quit) PostQuitMessage(exit_code);
     TRACE("-- 0x%08x\n", hr);
     return hr;
 }

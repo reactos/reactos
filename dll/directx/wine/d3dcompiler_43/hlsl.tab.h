@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_HLSL_HLSL_TAB_H_INCLUDED
-# define YY_HLSL_HLSL_TAB_H_INCLUDED
+#ifndef YY_HLSL_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED
+# define YY_HLSL_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -200,4 +200,4 @@ extern YYSTYPE hlsl_lval;
 extern YYLTYPE hlsl_lloc;
 int hlsl_parse (void);
 
-#endif /* !YY_HLSL_HLSL_TAB_H_INCLUDED  */
+#endif /* !YY_HLSL_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED  */

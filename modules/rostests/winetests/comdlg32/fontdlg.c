@@ -19,9 +19,19 @@
  *
  */
 
-#include "precomp.h"
+#include <stdarg.h>
 
-#include <winspool.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "wingdi.h"
+#include "winspool.h"
+#include "winuser.h"
+#include "objbase.h"
+
+#include "commdlg.h"
+
+#include "wine/test.h"
 
 static int get_dpiy(void)
 {

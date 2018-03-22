@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.2"
+#define YYBISON_VERSION "3.0"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -72,6 +72,11 @@
 
 /* Copy the first part of user declarations.  */
 #line 21 "hlsl.y" /* yacc.c:339  */
+
+#include "config.h"
+#include "wine/debug.h"
+
+#include <stdio.h>
 
 #include "d3dcompiler_private.h"
 
@@ -952,11 +957,11 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
 
 #line 959 "hlsl.tab.c" /* yacc.c:339  */
 
-# ifndef YY_NULLPTR
+# ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULLPTR nullptr
+#   define YY_NULL nullptr
 #  else
-#   define YY_NULLPTR 0
+#   define YY_NULL 0
 #  endif
 # endif
 
@@ -968,7 +973,10 @@ static const struct hlsl_ir_function_decl *get_overloaded_func(struct wine_rb_tr
 # define YYERROR_VERBOSE 1
 #endif
 
-
+/* In a future release of Bison, this section will be replaced
+   by #include "hlsl.tab.h".  */
+#ifndef YY_HLSL_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED
+# define YY_HLSL_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -1112,7 +1120,7 @@ union YYSTYPE
     struct reg_reservation *reg_reservation;
     struct parse_colon_attribute colon_attribute;
 
-#line 1121 "hlsl.tab.c" /* yacc.c:355  */
+#line 1124 "hlsl.tab.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -1137,11 +1145,11 @@ extern YYSTYPE hlsl_lval;
 extern YYLTYPE hlsl_lloc;
 int hlsl_parse (void);
 
-
+#endif /* !YY_HLSL_E_REACTOSSYNC_GCC_DLL_DIRECTX_WINE_D3DCOMPILER_43_HLSL_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 1150 "hlsl.tab.c" /* yacc.c:358  */
+#line 1153 "hlsl.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -1198,30 +1206,11 @@ typedef short int yytype_int16;
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE
-# if (defined __GNUC__                                               \
-      && (2 < __GNUC__ || (__GNUC__ == 2 && 96 <= __GNUC_MINOR__)))  \
-     || defined __SUNPRO_C && 0x5110 <= __SUNPRO_C
-#  define YY_ATTRIBUTE(Spec) __attribute__(Spec)
-# else
-#  define YY_ATTRIBUTE(Spec) /* empty */
-# endif
-#endif
-
-#ifndef YY_ATTRIBUTE_PURE
-# define YY_ATTRIBUTE_PURE   YY_ATTRIBUTE ((__pure__))
-#endif
-
-#ifndef YY_ATTRIBUTE_UNUSED
-# define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
-#endif
-
-#if !defined _Noreturn \
-     && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112)
-# if defined _MSC_VER && 1200 <= _MSC_VER
-#  define _Noreturn __declspec (noreturn)
-# else
-#  define _Noreturn YY_ATTRIBUTE ((__noreturn__))
+#ifndef __attribute__
+/* This feature is available in gcc versions 2.5 and later.  */
+# if (! defined __GNUC__ || __GNUC__ < 2 \
+      || (__GNUC__ == 2 && __GNUC_MINOR__ < 5))
+#  define __attribute__(Spec) /* empty */
 # endif
 #endif
 
@@ -1518,7 +1507,7 @@ static const char *const yytname[] =
   "mul_expr", "add_expr", "shift_expr", "relational_expr", "equality_expr",
   "bitand_expr", "bitxor_expr", "bitor_expr", "logicand_expr",
   "logicor_expr", "conditional_expr", "assignment_expr", "assign_op",
-  "expr", YY_NULLPTR
+  "expr", YY_NULL
 };
 #endif
 
@@ -2004,7 +1993,7 @@ do {                                            \
 
 /* Print *YYLOCP on YYO.  Private, do not rely on its existence. */
 
-YY_ATTRIBUTE_UNUSED
+__attribute__((__unused__))
 static unsigned
 yy_location_print_ (FILE *yyo, YYLTYPE const * const yylocp)
 {
@@ -2267,11 +2256,11 @@ static int
 yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                 yytype_int16 *yyssp, int yytoken)
 {
-  YYSIZE_T yysize0 = yytnamerr (YY_NULLPTR, yytname[yytoken]);
+  YYSIZE_T yysize0 = yytnamerr (YY_NULL, yytname[yytoken]);
   YYSIZE_T yysize = yysize0;
   enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
   /* Internationalized format string. */
-  const char *yyformat = YY_NULLPTR;
+  const char *yyformat = YY_NULL;
   /* Arguments of yyformat. */
   char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
   /* Number of reported tokens (one for the "unexpected", one per
@@ -2328,7 +2317,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
                   }
                 yyarg[yycount++] = yytname[yyx];
                 {
-                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
+                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULL, yytname[yyx]);
                   if (! (yysize <= yysize1
                          && yysize1 <= YYSTACK_ALLOC_MAXIMUM))
                     return 2;
@@ -2688,7 +2677,7 @@ yyreduce:
 #line 1095 "hlsl.y" /* yacc.c:1646  */
     {
                             }
-#line 2697 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2681 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
@@ -2729,7 +2718,7 @@ yyreduce:
                                 TRACE("Adding function '%s' to the function list.\n", (yyvsp[0].function).name);
                                 add_function_decl(&hlsl_ctx.functions, (yyvsp[0].function).name, (yyvsp[0].function).decl, FALSE);
                             }
-#line 2738 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2722 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
@@ -2737,14 +2726,14 @@ yyreduce:
     {
                                 TRACE("Declaration statement parsed.\n");
                             }
-#line 2746 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2730 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
 #line 1139 "hlsl.y" /* yacc.c:1646  */
     {
                             }
-#line 2753 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2737 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
@@ -2752,7 +2741,7 @@ yyreduce:
     {
                                 TRACE("Skipping stray semicolon.\n");
                             }
-#line 2761 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2745 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
@@ -2764,7 +2753,7 @@ yyreduce:
                                 hlsl_ctx.line_no = (yyvsp[-1].intval);
                                 if (strcmp((yyvsp[0].name), hlsl_ctx.source_file))
                                     new_array = d3dcompiler_realloc(hlsl_ctx.source_files,
-                                            sizeof(*hlsl_ctx.source_files) * hlsl_ctx.source_files_count + 1);
+                                            sizeof(*hlsl_ctx.source_files) * (hlsl_ctx.source_files_count + 1));
 
                                 if (new_array)
                                 {
@@ -2777,7 +2766,7 @@ yyreduce:
                                     d3dcompiler_free((yyvsp[0].name));
                                 }
                             }
-#line 2786 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2770 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
@@ -2797,7 +2786,7 @@ yyreduce:
                                 }
                                 (yyval.list) = declare_vars((yyvsp[-2].type), 0, (yyvsp[-1].list));
                             }
-#line 2806 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2790 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
@@ -2826,7 +2815,7 @@ yyreduce:
                                     return 1;
                                 }
                             }
-#line 2835 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2819 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
@@ -2839,7 +2828,7 @@ yyreduce:
                                 check_invalid_matrix_modifiers((yyvsp[-4].modifiers), &loc);
                                 (yyval.type) = new_struct_type(NULL, (yyvsp[-4].modifiers), (yyvsp[-1].list));
                             }
-#line 2848 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2832 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
@@ -2848,7 +2837,7 @@ yyreduce:
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                             }
-#line 2857 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2841 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
@@ -2870,7 +2859,7 @@ yyreduce:
                                 }
                                 d3dcompiler_free((yyvsp[0].list));
                             }
-#line 2879 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2863 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
@@ -2878,7 +2867,7 @@ yyreduce:
     {
                                 (yyval.list) = gen_struct_fields((yyvsp[-2].type), (yyvsp[-3].modifiers), (yyvsp[-1].list));
                             }
-#line 2887 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2871 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
@@ -2886,7 +2875,7 @@ yyreduce:
     {
                                 (yyval.list) = gen_struct_fields((yyvsp[-2].type), 0, (yyvsp[-1].list));
                             }
-#line 2895 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2879 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
@@ -2897,7 +2886,7 @@ yyreduce:
                                 (yyval.function).decl->body = (yyvsp[0].list);
                                 pop_scope(&hlsl_ctx);
                             }
-#line 2906 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2890 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
@@ -2907,7 +2896,7 @@ yyreduce:
                                 (yyval.function) = (yyvsp[-1].function);
                                 pop_scope(&hlsl_ctx);
                             }
-#line 2916 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2900 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
@@ -2940,7 +2929,7 @@ yyreduce:
                                 (yyval.function).decl->semantic = (yyvsp[0].colon_attribute).semantic;
                                 set_location(&(yyval.function).decl->node.loc, &(yylsp[-4]));
                             }
-#line 2949 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2933 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
@@ -2949,7 +2938,7 @@ yyreduce:
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                             }
-#line 2958 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2942 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
@@ -2958,7 +2947,7 @@ yyreduce:
                                 pop_scope(&hlsl_ctx);
                                 (yyval.list) = (yyvsp[-1].list);
                             }
-#line 2967 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2951 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
@@ -2966,7 +2955,7 @@ yyreduce:
     {
                                 push_scope(&hlsl_ctx);
                             }
-#line 2975 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2959 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
@@ -2975,7 +2964,7 @@ yyreduce:
                                 (yyval.colon_attribute).semantic = NULL;
                                 (yyval.colon_attribute).reg_reservation = NULL;
                             }
-#line 2984 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2968 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
@@ -2984,7 +2973,7 @@ yyreduce:
                                 (yyval.colon_attribute).semantic = (yyvsp[0].name);
                                 (yyval.colon_attribute).reg_reservation = NULL;
                             }
-#line 2993 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2977 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
@@ -2993,7 +2982,7 @@ yyreduce:
                                 (yyval.colon_attribute).semantic = NULL;
                                 (yyval.colon_attribute).reg_reservation = (yyvsp[0].reg_reservation);
                             }
-#line 3002 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2986 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
@@ -3001,7 +2990,7 @@ yyreduce:
     {
                                 (yyval.name) = (yyvsp[0].name);
                             }
-#line 3010 "hlsl.tab.c" /* yacc.c:1646  */
+#line 2994 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
@@ -3010,7 +2999,7 @@ yyreduce:
                                 (yyval.reg_reservation) = parse_reg_reservation((yyvsp[-1].name));
                                 d3dcompiler_free((yyvsp[-1].name));
                             }
-#line 3019 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3003 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
@@ -3022,7 +3011,7 @@ yyreduce:
                                 (yyval.reg_reservation) = parse_reg_reservation((yyvsp[-1].name));
                                 d3dcompiler_free((yyvsp[-1].name));
                             }
-#line 3031 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3015 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
@@ -3031,7 +3020,7 @@ yyreduce:
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                             }
-#line 3040 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3024 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
@@ -3039,7 +3028,7 @@ yyreduce:
     {
                                 (yyval.list) = (yyvsp[0].list);
                             }
-#line 3048 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3032 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
@@ -3057,7 +3046,7 @@ yyreduce:
                                     return -1;
                                 }
                             }
-#line 3066 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3050 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
@@ -3074,7 +3063,7 @@ yyreduce:
                                     return 1;
                                 }
                             }
-#line 3083 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3067 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
@@ -3087,7 +3076,7 @@ yyreduce:
                                 (yyval.parameter).semantic = (yyvsp[0].colon_attribute).semantic;
                                 (yyval.parameter).reg_reservation = (yyvsp[0].colon_attribute).reg_reservation;
                             }
-#line 3096 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3080 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
@@ -3095,7 +3084,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = 0;
                             }
-#line 3104 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3088 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
@@ -3109,7 +3098,7 @@ yyreduce:
                                 }
                                 (yyval.modifiers) = (yyvsp[-1].modifiers) | (yyvsp[0].modifiers);
                             }
-#line 3118 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3102 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
@@ -3117,7 +3106,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = HLSL_MODIFIER_IN;
                             }
-#line 3126 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3110 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
@@ -3125,7 +3114,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = HLSL_MODIFIER_OUT;
                             }
-#line 3134 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3118 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
@@ -3133,7 +3122,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = HLSL_MODIFIER_IN | HLSL_MODIFIER_OUT;
                             }
-#line 3142 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3126 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
@@ -3141,7 +3130,7 @@ yyreduce:
     {
                                 (yyval.type) = (yyvsp[0].type);
                             }
-#line 3150 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3134 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
@@ -3164,7 +3153,7 @@ yyreduce:
 
                                 (yyval.type) = new_hlsl_type(NULL, HLSL_CLASS_VECTOR, (yyvsp[-3].type)->base_type, (yyvsp[-1].intval), 1);
                             }
-#line 3173 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3157 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
@@ -3187,7 +3176,7 @@ yyreduce:
 
                                 (yyval.type) = new_hlsl_type(NULL, HLSL_CLASS_MATRIX, (yyvsp[-5].type)->base_type, (yyvsp[-3].intval), (yyvsp[-1].intval));
                             }
-#line 3196 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3180 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
@@ -3195,7 +3184,7 @@ yyreduce:
     {
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("void"), HLSL_CLASS_OBJECT, HLSL_TYPE_VOID, 1, 1);
                             }
-#line 3204 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3188 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
@@ -3204,7 +3193,7 @@ yyreduce:
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("sampler"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_GENERIC;
                             }
-#line 3213 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3197 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
@@ -3213,7 +3202,7 @@ yyreduce:
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("sampler1D"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_1D;
                             }
-#line 3222 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3206 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
@@ -3222,7 +3211,7 @@ yyreduce:
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("sampler2D"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_2D;
                             }
-#line 3231 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3215 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
@@ -3231,7 +3220,7 @@ yyreduce:
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("sampler3D"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_3D;
                             }
-#line 3240 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3224 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
@@ -3240,7 +3229,7 @@ yyreduce:
                                 (yyval.type) = new_hlsl_type(d3dcompiler_strdup("samplerCUBE"), HLSL_CLASS_OBJECT, HLSL_TYPE_SAMPLER, 1, 1);
                                 (yyval.type)->sampler_dim = HLSL_SAMPLER_DIM_CUBE;
                             }
-#line 3249 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3233 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
@@ -3252,7 +3241,7 @@ yyreduce:
                                 (yyval.type) = type;
                                 d3dcompiler_free((yyvsp[0].name));
                             }
-#line 3261 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3245 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
@@ -3273,7 +3262,7 @@ yyreduce:
                                 }
                                 d3dcompiler_free((yyvsp[0].name));
                             }
-#line 3282 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3266 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
@@ -3287,7 +3276,7 @@ yyreduce:
                                 }
                                 list_init((yyval.list));
                             }
-#line 3296 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3280 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
@@ -3299,7 +3288,7 @@ yyreduce:
                                 if (!add_typedef((yyvsp[-3].modifiers), (yyvsp[-2].type), (yyvsp[-1].list), &loc))
                                     return 1;
                             }
-#line 3308 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3292 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
@@ -3311,7 +3300,7 @@ yyreduce:
                                 if (!add_typedef(0, (yyvsp[-2].type), (yyvsp[-1].list), &loc))
                                     return 1;
                             }
-#line 3320 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3304 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
@@ -3321,7 +3310,7 @@ yyreduce:
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &(yyvsp[0].variable_def)->entry);
                             }
-#line 3330 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3314 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
@@ -3330,7 +3319,7 @@ yyreduce:
                                 (yyval.list) = (yyvsp[-2].list);
                                 list_add_tail((yyval.list), &(yyvsp[0].variable_def)->entry);
                             }
-#line 3339 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3323 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
@@ -3341,7 +3330,7 @@ yyreduce:
                                 (yyval.variable_def)->name = (yyvsp[-1].name);
                                 (yyval.variable_def)->array_size = (yyvsp[0].intval);
                             }
-#line 3350 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3334 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
@@ -3349,7 +3338,7 @@ yyreduce:
     {
                                 (yyval.list) = declare_vars((yyvsp[-2].type), (yyvsp[-3].modifiers), (yyvsp[-1].list));
                             }
-#line 3358 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3342 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
@@ -3357,7 +3346,7 @@ yyreduce:
     {
                                 (yyval.list) = NULL;
                             }
-#line 3366 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3350 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
@@ -3365,7 +3354,7 @@ yyreduce:
     {
                                 (yyval.list) = (yyvsp[0].list);
                             }
-#line 3374 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3358 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
@@ -3375,7 +3364,7 @@ yyreduce:
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &(yyvsp[0].variable_def)->entry);
                             }
-#line 3384 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3368 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
@@ -3384,7 +3373,7 @@ yyreduce:
                                 (yyval.list) = (yyvsp[-2].list);
                                 list_add_tail((yyval.list), &(yyvsp[0].variable_def)->entry);
                             }
-#line 3393 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3377 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
@@ -3397,7 +3386,7 @@ yyreduce:
                                 (yyval.variable_def)->semantic = (yyvsp[0].colon_attribute).semantic;
                                 (yyval.variable_def)->reg_reservation = (yyvsp[0].colon_attribute).reg_reservation;
                             }
-#line 3406 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3390 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
@@ -3412,7 +3401,7 @@ yyreduce:
                                 (yyval.variable_def)->reg_reservation = (yyvsp[-2].colon_attribute).reg_reservation;
                                 (yyval.variable_def)->initializer = (yyvsp[0].list);
                             }
-#line 3421 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3405 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
@@ -3420,7 +3409,7 @@ yyreduce:
     {
                                 (yyval.intval) = 0;
                             }
-#line 3429 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3413 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
@@ -3430,7 +3419,7 @@ yyreduce:
                                 (yyval.intval) = 0;
                                 free_instr((yyvsp[-1].instr));
                             }
-#line 3439 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3423 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
@@ -3438,7 +3427,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = 0;
                             }
-#line 3447 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3431 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
@@ -3446,7 +3435,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_EXTERN, &(yylsp[-1]));
                             }
-#line 3455 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3439 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
@@ -3454,7 +3443,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_NOINTERPOLATION, &(yylsp[-1]));
                             }
-#line 3463 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3447 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
@@ -3462,7 +3451,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_MODIFIER_PRECISE, &(yylsp[-1]));
                             }
-#line 3471 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3455 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
@@ -3470,7 +3459,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_SHARED, &(yylsp[-1]));
                             }
-#line 3479 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3463 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
@@ -3478,7 +3467,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_GROUPSHARED, &(yylsp[-1]));
                             }
-#line 3487 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3471 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
@@ -3486,7 +3475,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_STATIC, &(yylsp[-1]));
                             }
-#line 3495 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3479 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
@@ -3494,7 +3483,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_UNIFORM, &(yylsp[-1]));
                             }
-#line 3503 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3487 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
@@ -3502,7 +3491,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_STORAGE_VOLATILE, &(yylsp[-1]));
                             }
-#line 3511 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3495 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
@@ -3510,7 +3499,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_MODIFIER_CONST, &(yylsp[-1]));
                             }
-#line 3519 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3503 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
@@ -3518,7 +3507,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_MODIFIER_ROW_MAJOR, &(yylsp[-1]));
                             }
-#line 3527 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3511 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
@@ -3526,7 +3515,7 @@ yyreduce:
     {
                                 (yyval.modifiers) = add_modifier((yyvsp[0].modifiers), HLSL_MODIFIER_COLUMN_MAJOR, &(yylsp[-1]));
                             }
-#line 3535 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3519 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
@@ -3536,7 +3525,7 @@ yyreduce:
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &(yyvsp[0].instr)->entry);
                             }
-#line 3545 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3529 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
@@ -3544,7 +3533,7 @@ yyreduce:
     {
                                 (yyval.list) = (yyvsp[-1].list);
                             }
-#line 3553 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3537 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
@@ -3552,7 +3541,7 @@ yyreduce:
     {
                                 (yyval.list) = (yyvsp[-2].list);
                             }
-#line 3561 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3545 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
@@ -3560,7 +3549,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 3569 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3553 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 88:
@@ -3570,7 +3559,7 @@ yyreduce:
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &(yyvsp[0].instr)->entry);
                             }
-#line 3579 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3563 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
@@ -3579,7 +3568,7 @@ yyreduce:
                                 (yyval.list) = (yyvsp[-2].list);
                                 list_add_tail((yyval.list), &(yyvsp[0].instr)->entry);
                             }
-#line 3588 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3572 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
@@ -3587,7 +3576,7 @@ yyreduce:
     {
                                 (yyval.boolval) = TRUE;
                             }
-#line 3596 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3580 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
@@ -3595,7 +3584,7 @@ yyreduce:
     {
                                 (yyval.boolval) = FALSE;
                             }
-#line 3604 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3588 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
@@ -3603,7 +3592,7 @@ yyreduce:
     {
                                 (yyval.list) = (yyvsp[0].list);
                             }
-#line 3612 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3596 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
@@ -3613,7 +3602,7 @@ yyreduce:
                                 list_move_tail((yyval.list), (yyvsp[0].list));
                                 d3dcompiler_free((yyvsp[0].list));
                             }
-#line 3622 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3606 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 100:
@@ -3639,7 +3628,7 @@ yyreduce:
                                 list_init((yyval.list));
                                 list_add_tail((yyval.list), &jump->node.entry);
                             }
-#line 3648 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3632 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
@@ -3666,7 +3655,7 @@ yyreduce:
                                 list_init((yyval.list));
                                 list_add_head((yyval.list), &instr->node.entry);
                             }
-#line 3675 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3659 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 102:
@@ -3675,7 +3664,7 @@ yyreduce:
                                 (yyval.if_body).then_instrs = (yyvsp[0].list);
                                 (yyval.if_body).else_instrs = NULL;
                             }
-#line 3684 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3668 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
@@ -3684,7 +3673,7 @@ yyreduce:
                                 (yyval.if_body).then_instrs = (yyvsp[-2].list);
                                 (yyval.if_body).else_instrs = (yyvsp[0].list);
                             }
-#line 3693 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3677 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
@@ -3703,7 +3692,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-4]));
                                 (yyval.list) = create_loop(LOOP_WHILE, NULL, cond, NULL, (yyvsp[0].list), &loc);
                             }
-#line 3712 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3696 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 105:
@@ -3722,7 +3711,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-6]));
                                 (yyval.list) = create_loop(LOOP_DO_WHILE, NULL, cond, NULL, (yyvsp[-5].list), &loc);
                             }
-#line 3731 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3715 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 106:
@@ -3734,7 +3723,7 @@ yyreduce:
                                 (yyval.list) = create_loop(LOOP_FOR, (yyvsp[-4].list), (yyvsp[-3].list), (yyvsp[-2].instr), (yyvsp[0].list), &loc);
                                 pop_scope(&hlsl_ctx);
                             }
-#line 3743 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3727 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 107:
@@ -3749,7 +3738,7 @@ yyreduce:
                                 (yyval.list) = create_loop(LOOP_FOR, (yyvsp[-4].list), (yyvsp[-3].list), (yyvsp[-2].instr), (yyvsp[0].list), &loc);
                                 pop_scope(&hlsl_ctx);
                             }
-#line 3758 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3742 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 108:
@@ -3758,7 +3747,7 @@ yyreduce:
                                 (yyval.list) = d3dcompiler_alloc(sizeof(*(yyval.list)));
                                 list_init((yyval.list));
                             }
-#line 3767 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3751 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 109:
@@ -3769,7 +3758,7 @@ yyreduce:
                                 if ((yyvsp[-1].instr))
                                     list_add_head((yyval.list), &(yyvsp[-1].instr)->entry);
                             }
-#line 3778 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3762 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 110:
@@ -3787,7 +3776,7 @@ yyreduce:
                                 c->v.value.f[0] = (yyvsp[0].floatval);
                                 (yyval.instr) = &c->node;
                             }
-#line 3796 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3780 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 111:
@@ -3805,7 +3794,7 @@ yyreduce:
                                 c->v.value.i[0] = (yyvsp[0].intval);
                                 (yyval.instr) = &c->node;
                             }
-#line 3814 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3798 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 112:
@@ -3823,7 +3812,7 @@ yyreduce:
                                 c->v.value.b[0] = (yyvsp[0].boolval);
                                 (yyval.instr) = &c->node;
                             }
-#line 3832 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3816 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 113:
@@ -3838,7 +3827,7 @@ yyreduce:
                                 else
                                     (yyval.instr) = NULL;
                             }
-#line 3847 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3831 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 114:
@@ -3846,7 +3835,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[-1].instr);
                             }
-#line 3855 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3839 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 115:
@@ -3863,7 +3852,7 @@ yyreduce:
                                 }
                                 (yyval.var) = var;
                             }
-#line 3872 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3856 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 116:
@@ -3871,7 +3860,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 3880 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3864 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 117:
@@ -3894,7 +3883,7 @@ yyreduce:
                                 (yyval.instr)->data_type = clone_hlsl_type((yyval.instr)->data_type);
                                 (yyval.instr)->data_type->modifiers |= HLSL_MODIFIER_CONST;
                             }
-#line 3903 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3887 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 118:
@@ -3917,7 +3906,7 @@ yyreduce:
                                 (yyval.instr)->data_type = clone_hlsl_type((yyval.instr)->data_type);
                                 (yyval.instr)->data_type->modifiers |= HLSL_MODIFIER_CONST;
                             }
-#line 3926 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3910 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 119:
@@ -3975,7 +3964,7 @@ yyreduce:
                                     return 1;
                                 }
                             }
-#line 3984 "hlsl.tab.c" /* yacc.c:1646  */
+#line 3968 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 120:
@@ -4037,7 +4026,7 @@ yyreduce:
 
                                 (yyval.instr) = &deref->node;
                             }
-#line 4046 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4030 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 121:
@@ -4076,7 +4065,7 @@ yyreduce:
 
                                 (yyval.instr) = &constructor->node;
                             }
-#line 4085 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4069 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 122:
@@ -4084,7 +4073,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4093 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4077 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 123:
@@ -4104,7 +4093,7 @@ yyreduce:
                                 operands[1] = operands[2] = NULL;
                                 (yyval.instr) = &new_expr(HLSL_IR_UNOP_PREINC, operands, &loc)->node;
                             }
-#line 4113 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4097 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 124:
@@ -4124,7 +4113,7 @@ yyreduce:
                                 operands[1] = operands[2] = NULL;
                                 (yyval.instr) = &new_expr(HLSL_IR_UNOP_PREDEC, operands, &loc)->node;
                             }
-#line 4133 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4117 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 125:
@@ -4147,7 +4136,7 @@ yyreduce:
                                     (yyval.instr) = &new_expr(ops[(yyvsp[-1].unary_op)], operands, &loc)->node;
                                 }
                             }
-#line 4156 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4140 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 126:
@@ -4182,7 +4171,7 @@ yyreduce:
                                 expr = new_cast((yyvsp[0].instr), dst_type, &loc);
                                 (yyval.instr) = expr ? &expr->node : NULL;
                             }
-#line 4191 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4175 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 127:
@@ -4190,7 +4179,7 @@ yyreduce:
     {
                                 (yyval.unary_op) = UNARY_OP_PLUS;
                             }
-#line 4199 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4183 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 128:
@@ -4198,7 +4187,7 @@ yyreduce:
     {
                                 (yyval.unary_op) = UNARY_OP_MINUS;
                             }
-#line 4207 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4191 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 129:
@@ -4206,7 +4195,7 @@ yyreduce:
     {
                                 (yyval.unary_op) = UNARY_OP_LOGICNOT;
                             }
-#line 4215 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4199 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 130:
@@ -4214,7 +4203,7 @@ yyreduce:
     {
                                 (yyval.unary_op) = UNARY_OP_BITNOT;
                             }
-#line 4223 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4207 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 131:
@@ -4222,7 +4211,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4231 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4215 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 132:
@@ -4233,7 +4222,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_mul((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4242 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4226 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 133:
@@ -4244,7 +4233,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_div((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4253 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4237 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 134:
@@ -4255,7 +4244,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_mod((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4264 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4248 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 135:
@@ -4263,7 +4252,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4272 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4256 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 136:
@@ -4274,7 +4263,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_add((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4283 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4267 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 137:
@@ -4285,7 +4274,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_sub((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4294 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4278 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 138:
@@ -4293,7 +4282,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4302 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4286 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 139:
@@ -4301,7 +4290,7 @@ yyreduce:
     {
                                 FIXME("Left shift\n");
                             }
-#line 4310 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4294 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 140:
@@ -4309,7 +4298,7 @@ yyreduce:
     {
                                 FIXME("Right shift\n");
                             }
-#line 4318 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4302 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 141:
@@ -4317,7 +4306,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4326 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4310 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 142:
@@ -4328,7 +4317,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_lt((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4337 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4321 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 143:
@@ -4339,7 +4328,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_gt((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4348 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4332 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 144:
@@ -4350,7 +4339,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_le((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4359 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4343 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 145:
@@ -4361,7 +4350,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_ge((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4370 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4354 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 146:
@@ -4369,7 +4358,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4378 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4362 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 147:
@@ -4380,7 +4369,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_eq((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4389 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4373 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 148:
@@ -4391,7 +4380,7 @@ yyreduce:
                                 set_location(&loc, &(yylsp[-1]));
                                 (yyval.instr) = &hlsl_ne((yyvsp[-2].instr), (yyvsp[0].instr), &loc)->node;
                             }
-#line 4400 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4384 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 149:
@@ -4399,7 +4388,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4408 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4392 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 150:
@@ -4407,7 +4396,7 @@ yyreduce:
     {
                                 FIXME("bitwise AND\n");
                             }
-#line 4416 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4400 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 151:
@@ -4415,7 +4404,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4424 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4408 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 152:
@@ -4423,7 +4412,7 @@ yyreduce:
     {
                                 FIXME("bitwise XOR\n");
                             }
-#line 4432 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4416 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 153:
@@ -4431,7 +4420,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4440 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4424 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 154:
@@ -4439,7 +4428,7 @@ yyreduce:
     {
                                 FIXME("bitwise OR\n");
                             }
-#line 4448 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4432 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 155:
@@ -4447,7 +4436,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4456 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4440 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 156:
@@ -4455,7 +4444,7 @@ yyreduce:
     {
                                 FIXME("logic AND\n");
                             }
-#line 4464 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4448 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 157:
@@ -4463,7 +4452,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4472 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4456 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 158:
@@ -4471,7 +4460,7 @@ yyreduce:
     {
                                 FIXME("logic OR\n");
                             }
-#line 4480 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4464 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 159:
@@ -4479,7 +4468,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4488 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4472 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 160:
@@ -4487,7 +4476,7 @@ yyreduce:
     {
                                 FIXME("ternary operator\n");
                             }
-#line 4496 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4480 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 161:
@@ -4495,7 +4484,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4504 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4488 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 162:
@@ -4515,7 +4504,7 @@ yyreduce:
                                     return 1;
                                 (yyval.instr)->loc = loc;
                             }
-#line 4524 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4508 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 163:
@@ -4523,7 +4512,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_ASSIGN;
                             }
-#line 4532 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4516 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 164:
@@ -4531,7 +4520,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_ADD;
                             }
-#line 4540 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4524 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 165:
@@ -4539,7 +4528,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_SUB;
                             }
-#line 4548 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4532 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 166:
@@ -4547,7 +4536,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_MUL;
                             }
-#line 4556 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4540 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 167:
@@ -4555,7 +4544,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_DIV;
                             }
-#line 4564 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4548 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 168:
@@ -4563,7 +4552,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_MOD;
                             }
-#line 4572 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4556 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 169:
@@ -4571,7 +4560,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_LSHIFT;
                             }
-#line 4580 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4564 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 170:
@@ -4579,7 +4568,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_RSHIFT;
                             }
-#line 4588 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4572 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 171:
@@ -4587,7 +4576,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_AND;
                             }
-#line 4596 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4580 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 172:
@@ -4595,7 +4584,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_OR;
                             }
-#line 4604 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4588 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 173:
@@ -4603,7 +4592,7 @@ yyreduce:
     {
                                 (yyval.assign_op) = ASSIGN_OP_XOR;
                             }
-#line 4612 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4596 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 174:
@@ -4611,7 +4600,7 @@ yyreduce:
     {
                                 (yyval.instr) = (yyvsp[0].instr);
                             }
-#line 4620 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4604 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
   case 175:
@@ -4619,11 +4608,11 @@ yyreduce:
     {
                                 FIXME("Comma expression\n");
                             }
-#line 4628 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4612 "hlsl.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 4632 "hlsl.tab.c" /* yacc.c:1646  */
+#line 4616 "hlsl.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

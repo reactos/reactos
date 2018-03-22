@@ -16,7 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "vfw.h"
+
 #include "avifile_private.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
 #ifndef DIBPTR
 #define DIBPTR(lp)      ((LPBYTE)(lp) + (lp)->biSize + \
@@ -122,7 +134,6 @@ static ULONG   WINAPI IGetFrame_fnRelease(IGetFrame *iface)
     }
 
     HeapFree(GetProcessHeap(), 0, iface);
-    return 0;
   }
 
   return ref;

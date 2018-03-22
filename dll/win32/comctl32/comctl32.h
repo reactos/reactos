@@ -77,6 +77,8 @@ typedef struct
 
 extern COMCTL32_SysColor  comctl32_color DECLSPEC_HIDDEN;
 
+#ifdef __REACTOS__
+
 typedef struct _BUTTON_DATA {
     LONG state;
     HFONT font;
@@ -92,6 +94,8 @@ static inline PBUTTON_DATA _GetButtonData(HWND hwnd)
     return (PBUTTON_DATA)GetWindowLongPtrW( hwnd, 0 );
 }
 
+#endif /* __REACTOS__ */
+
 /* Internal function */
 HWND COMCTL32_CreateToolTip (HWND) DECLSPEC_HIDDEN;
 VOID COMCTL32_RefreshSysColors(void) DECLSPEC_HIDDEN;
@@ -103,6 +107,10 @@ INT  Str_GetPtrWtoA (LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen) DECLSPEC_HIDDEN;
 INT  Str_GetPtrAtoW (LPCSTR lpSrc, LPWSTR lpDest, INT nMaxLen) DECLSPEC_HIDDEN;
 BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc) DECLSPEC_HIDDEN;
 BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc) DECLSPEC_HIDDEN;
+
+#ifndef __REACTOS__
+#define COMCTL32_VERSION_MINOR 81
+#endif
 
 /* Our internal stack structure of the window procedures to subclass */
 typedef struct _SUBCLASSPROCS {
@@ -175,18 +183,21 @@ extern void TREEVIEW_Register(void) DECLSPEC_HIDDEN;
 extern void TREEVIEW_Unregister(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
+#ifdef __REACTOS__
 extern void BUTTON_Register();
 extern void BUTTON_Unregister();
-#ifdef __REACTOS__
 extern void TOOLBARv6_Register(void) DECLSPEC_HIDDEN;
 extern void TOOLBARv6_Unregister(void) DECLSPEC_HIDDEN;
-#endif
+#endif /* __REACTOS__ */
 
 int MONTHCAL_MonthLength(int month, int year) DECLSPEC_HIDDEN;
 int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace) DECLSPEC_HIDDEN;
 LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second) DECLSPEC_HIDDEN;
-
+#ifdef __REACTOS__
 extern void THEMING_Initialize(HANDLE hActCtx5, HANDLE hActCtx6) DECLSPEC_HIDDEN;
+#else
+extern void THEMING_Initialize(void) DECLSPEC_HIDDEN;
+#endif
 extern void THEMING_Uninitialize(void) DECLSPEC_HIDDEN;
 extern LRESULT THEMING_CallOriginalClass(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 extern void THEMING_SetSubclassData(HWND, ULONG_PTR) DECLSPEC_HIDDEN;

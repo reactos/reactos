@@ -209,7 +209,7 @@ class CTrayWindow :
     HWND m_TaskSwitch;
     HWND m_TrayNotify;
 
-    CTrayNotifyWnd* m_TrayNotifyInstance;
+    CComPtr<IUnknown> m_TrayNotifyInstance;
 
     DWORD    m_Position;
     HMONITOR m_Monitor;
@@ -2048,6 +2048,11 @@ ChangePos:
         if (FAILED_UNEXPECTEDLY(hRet))
             return FALSE;
 
+        /* Create the tray notification window */
+        hRet = CTrayNotifyWnd_CreateInstance(m_hWnd, IID_PPV_ARG(IUnknown, &m_TrayNotifyInstance));
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return FALSE;
+
         /* Get the hwnd of the rebar */
         hRet = IUnknown_GetWindow(m_TrayBandSite, &m_Rebar);
         if (FAILED_UNEXPECTEDLY(hRet))
@@ -2058,10 +2063,12 @@ ChangePos:
         if (FAILED_UNEXPECTEDLY(hRet))
             return FALSE;
 
-        SetWindowTheme(m_Rebar, L"TaskBar", NULL);
+        /* Get the hwnd of the tray notification window */
+        hRet = IUnknown_GetWindow(m_TrayNotifyInstance, &m_TrayNotify);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return FALSE;
 
-        /* Create the tray notification window */
-        m_TrayNotify = CreateTrayNotifyWnd(this, &m_TrayNotifyInstance);
+        SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
         UpdateFonts();
 
@@ -2072,6 +2079,9 @@ ChangePos:
             m_AutoHideState = AUTOHIDE_HIDING;
             SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
         }
+
+        /* Set the initial lock state in the band site */
+        m_TrayBandSite->Lock(g_TaskbarSettings.bLock);
 
         RegisterHotKey(m_hWnd, IDHK_RUN, MOD_WIN, 'R');
         RegisterHotKey(m_hWnd, IDHK_MINIMIZE_ALL, MOD_WIN, 'M');
@@ -2150,10 +2160,7 @@ ChangePos:
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (m_TrayNotify)
-        {
-            TRACE("WM_COPYDATA notify message received. Handling...\n");
-            return TrayNotify_NotifyIconCmd(m_TrayNotifyInstance, wParam, lParam);
-        }
+            ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
         return TRUE;
     }
 
@@ -2162,6 +2169,10 @@ ChangePos:
         if (!m_Theme)
         {
             bHandled = FALSE;
+            return 0;
+        }
+        else if (g_TaskbarSettings.bLock)
+        {
             return 0;
         }
 
@@ -2556,23 +2567,11 @@ HandleTrayContextMenu:
 
     LRESULT OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        /* Let the clock handle the double click */
+        ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
+
         /* We "handle" this message so users can't cause a weird maximize/restore
         window animation when double-clicking the tray window! */
-
-        /* We should forward mouse messages to child windows here.
-        Right now, this is only clock double-click */
-        RECT rcClock;
-        if (TrayNotify_GetClockRect(m_TrayNotifyInstance, &rcClock))
-        {
-            POINT ptClick;
-            ptClick.x = MAKEPOINTS(lParam).x;
-            ptClick.y = MAKEPOINTS(lParam).y;
-            if (PtInRect(&rcClock, ptClick))
-            {
-                //FIXME: use SHRunControlPanel
-                ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
-            }
-        }
         return TRUE;
     }
 
@@ -2997,7 +2996,7 @@ public:
                        MF_BYCOMMAND);
         }
 
-        CheckMenuItem(hPopup,
+        CheckMenuItem(menubase,
                       ID_LOCKTASKBAR,
                       MF_BYCOMMAND | (g_TaskbarSettings.bLock ? MF_CHECKED : MF_UNCHECKED));
 

@@ -20,7 +20,22 @@
  *
  */
 
+#define COBJMACROS
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "winuser.h"
+#include "objbase.h"
+#include "mimeole.h"
+#include "wine/debug.h"
+
 #include "inetcomm_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
 typedef struct
 {
@@ -44,13 +59,7 @@ static HRESULT SMTPTransport_ParseResponse(SMTPTransport *This, char *pszRespons
     pResponse->rIxpResult.pszResponse = pszResponse;
     pResponse->rIxpResult.dwSocketError = 0;
     pResponse->rIxpResult.uiServerError = strtol(pszResponse, &pszResponse, 10);
-    if (*pszResponse == '-')
-    {
-        pResponse->fDone = FALSE;
-        pszResponse++;
-    }
-    else
-        pResponse->fDone = TRUE;
+    pResponse->fDone = (*pszResponse != '-');
 
     switch (pResponse->rIxpResult.uiServerError)
     {

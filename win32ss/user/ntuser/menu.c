@@ -598,6 +598,7 @@ BOOL FASTCALL
 IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
 {
     PITEM item;
+    PITEM newItems;
 
     TRACE("(menu=%p pos=%04x flags=%04x)\n",pMenu, nPos, wFlags);
     if (!(item = MENU_FindItem( &pMenu, &nPos, wFlags ))) return FALSE;
@@ -617,13 +618,17 @@ IntRemoveMenuItem( PMENU pMenu, UINT nPos, UINT wFlags, BOOL bRecurse )
     }
     else
     {
-	while(nPos < pMenu->cItems)
-	{
-	    *item = *(item+1);
-	    item++;
-	    nPos++;
-	}
-	pMenu->rgItems = DesktopHeapReAlloc(pMenu->head.rpdesk, pMenu->rgItems, pMenu->cItems * sizeof(ITEM));
+        while (nPos < pMenu->cItems)
+        {
+            *item = *(item+1);
+            item++;
+            nPos++;
+        }
+        newItems = DesktopHeapReAlloc(pMenu->head.rpdesk, pMenu->rgItems, pMenu->cItems * sizeof(ITEM));
+        if (newItems)
+        {
+            pMenu->rgItems = newItems;
+        }
     }
     return TRUE;
 }
@@ -773,10 +778,10 @@ IntCloneMenuItems(PMENU Destination, PMENU Source)
    if(!Source->cItems)
       return FALSE;
 
-   NewMenuItem = DesktopHeapAlloc(Destination->head.rpdesk, (Source->cItems+1) * sizeof(ITEM));
+   NewMenuItem = DesktopHeapAlloc(Destination->head.rpdesk, Source->cItems * sizeof(ITEM));
    if(!NewMenuItem) return FALSE;
 
-   RtlZeroMemory(NewMenuItem, (Source->cItems+1) * sizeof(ITEM));
+   RtlZeroMemory(NewMenuItem, Source->cItems * sizeof(ITEM));
 
    Destination->rgItems = NewMenuItem;
 
@@ -810,6 +815,7 @@ IntCloneMenuItems(PMENU Destination, PMENU Source)
          NewMenuItem->Xlpstr = NewMenuItem->lpstr.Buffer;
       }
       NewMenuItem->hbmp = MenuItem->hbmp;
+      Destination->cItems = i + 1;
    }
    return TRUE;
 }
@@ -842,7 +848,7 @@ IntCloneMenu(PMENU Source)
    Menu->spwndNotify = NULL;
    Menu->cyMenu = 0;
    Menu->cxMenu = 0;
-   Menu->cItems = Source->cItems;
+   Menu->cItems = 0;
    Menu->iTop = 0;
    Menu->iMaxTop = 0;
    Menu->cxTextAlign = 0;
@@ -1164,7 +1170,12 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
       {
          UNICODE_STRING Source;
 
-         Source.Length = Source.MaximumLength = lpmii->cch * sizeof(WCHAR);
+         if (!NT_VERIFY(lpmii->cch <= UNICODE_STRING_MAX_CHARS))
+         {
+             return FALSE;
+         }
+
+         Source.Length = Source.MaximumLength = (USHORT)(lpmii->cch * sizeof(WCHAR));
          Source.Buffer = lpmii->dwTypeData;
 
          MenuItem->lpstr.Buffer = DesktopHeapAlloc( MenuObject->head.rpdesk, Source.Length + sizeof(WCHAR));
@@ -2511,11 +2522,11 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             if (!(lpitem->fState & MF_HILITE) )
             {
                 ++rect.left; ++rect.top; ++rect.right; ++rect.bottom;
-                IntGdiSetTextColor(hdc, RGB(0xff, 0xff, 0xff));
+                IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
                 DrawTextW( hdc, Text, i, &rect, uFormat );
                 --rect.left; --rect.top; --rect.right; --rect.bottom;
             }
-            IntGdiSetTextColor(hdc, RGB(0x80, 0x80, 0x80));
+            IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNSHADOW));
         }
         DrawTextW( hdc, Text, i, &rect, uFormat);
 
@@ -2538,11 +2549,11 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
                 if (!(lpitem->fState & MF_HILITE) )
                 {
                     ++rect.left; ++rect.top; ++rect.right; ++rect.bottom;
-                    IntGdiSetTextColor(hdc, RGB(0xff, 0xff, 0xff));
+                    IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNHIGHLIGHT));
                     DrawTextW( hdc, Text + i + 1, -1, &rect, uFormat);
                     --rect.left; --rect.top; --rect.right; --rect.bottom;
                 }
-                IntGdiSetTextColor(hdc, RGB(0x80, 0x80, 0x80));
+                IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNSHADOW));
             }
             DrawTextW( hdc, Text + i + 1, -1, &rect, uFormat );
         }
@@ -4436,6 +4447,10 @@ PopupMenuWndProc(
         }
         Wnd->fnid = FNID_MENU;
         pPopupMenu = DesktopHeapAlloc( Wnd->head.rpdesk, sizeof(POPUPMENU) );
+        if (pPopupMenu == NULL)
+        {
+            return TRUE;
+        }
         pPopupMenu->posSelectedItem = NO_SELECTED_ITEM;
         pPopupMenu->spwndPopupMenu = Wnd;
         ((PMENUWND)Wnd)->ppopupmenu = pPopupMenu;
@@ -5082,15 +5097,13 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
       if (!hNewMenu)
       {
          ERR("No Menu!!\n");
-         IntReleaseMenuObject(SysMenu);
-         UserDestroyMenu(hSysMenu);
+         IntDestroyMenuObject(SysMenu, FALSE);
          return NULL;
       }
       Menu = UserGetMenuObject(hNewMenu);
       if (!Menu)
       {
-         IntReleaseMenuObject(SysMenu);
-         UserDestroyMenu(hSysMenu);
+         IntDestroyMenuObject(SysMenu, FALSE);
          return NULL;
       }
 
@@ -5110,6 +5123,12 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
       IntMenuItemInfo(Menu, SC_MINIMIZE, FALSE, &ItemInfoSet, TRUE, NULL);
 
       NewMenu = IntCloneMenu(Menu);
+      if (NewMenu == NULL)
+      {
+         IntDestroyMenuObject(Menu, FALSE);
+         IntDestroyMenuObject(SysMenu, FALSE);
+         return NULL;
+      }
 
       IntReleaseMenuObject(NewMenu);
       UserSetMenuDefaultItem(NewMenu, SC_CLOSE, FALSE);
@@ -5274,7 +5293,7 @@ IntSetMenu(
 
    }
 
-   Wnd->IDMenu = (UINT) Menu;
+   Wnd->IDMenu = (UINT_PTR) Menu;
    if (NULL != NewMenu)
    {
       NewMenu->hWnd = UserHMGetHandle(Wnd);

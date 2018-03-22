@@ -29,8 +29,23 @@
 /* BCD Headers */
 #include <bcd.h>
 
+/* ARC Headers */
+#include <arc/arc.h>
+
 /* STRUCTURES ****************************************************************/
 
+typedef struct _OSL_BSD_ITEM_TABLE_ENTRY
+{
+    ULONG Offset;
+    ULONG Size;
+} OSL_BSD_ITEM_TABLE_ENTRY;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+OslDrawLogo (
+    VOID
+);
 
 #endif

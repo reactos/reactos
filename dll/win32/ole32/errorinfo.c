@@ -23,7 +23,21 @@
  * TEB at offset 0xf80.
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <string.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "oleauto.h"
+#include "winerror.h"
+
+#include "wine/unicode.h"
+#include "compobj_private.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

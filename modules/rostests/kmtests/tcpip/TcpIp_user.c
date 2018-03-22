@@ -30,9 +30,12 @@ UnloadTcpIpTestDriver(void)
 
 START_TEST(TcpIpTdi)
 {
+    DWORD Error;
+
     LoadTcpIpTestDriver();
 
-    ok(KmtSendToDriver(IOCTL_TEST_TDI) == ERROR_SUCCESS, "\n");
+    Error = KmtSendToDriver(IOCTL_TEST_TDI);
+    ok_eq_ulong(Error, ERROR_SUCCESS);
 
     UnloadTcpIpTestDriver();
 }
@@ -54,10 +57,10 @@ AcceptProc(
     /* Initialize winsock */
     WinsockVersion = MAKEWORD(2, 0);
     Error = WSAStartup(WinsockVersion, &WsaData);
-    ok(Error == 0, "");
+    ok_eq_int(Error, 0);
 
     ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    ok_bool_true(ListenSocket != INVALID_SOCKET, "socket failed");
+    ok(ListenSocket != INVALID_SOCKET, "socket failed\n");
 
     ZeroMemory(&ListenAddress, sizeof(ListenAddress));
     ListenAddress.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
@@ -65,19 +68,19 @@ AcceptProc(
     ListenAddress.sin_family = AF_INET;
 
     Error = bind(ListenSocket, (struct sockaddr*)&ListenAddress, sizeof(ListenAddress));
-    ok(Error == 0, "");
+    ok_eq_int(Error, 0);
 
     Error = listen(ListenSocket, 1);
-    ok(Error == 0, "");
+    ok_eq_int(Error, 0);
 
     SetEvent(ReadyToConnectEvent);
 
     AcceptAddressLength = sizeof(AcceptAddress);
     AcceptSocket = accept(ListenSocket, (struct sockaddr*)&AcceptAddress, &AcceptAddressLength);
-    ok(AcceptSocket != INVALID_SOCKET, "\n");
+    ok(AcceptSocket != INVALID_SOCKET, "accept failed\n");
     ok_eq_long(AcceptAddressLength, sizeof(AcceptAddress));
     ok_eq_hex(AcceptAddress.sin_addr.S_un.S_addr, inet_addr("127.0.0.1"));
-    ok_eq_hex(AcceptAddress.sin_port, ntohs(TEST_CONNECT_CLIENT_PORT));
+    ok_eq_hex(AcceptAddress.sin_port, htons(TEST_CONNECT_CLIENT_PORT));
 
     return 0;
 }
@@ -86,18 +89,20 @@ START_TEST(TcpIpConnect)
 {
     HANDLE AcceptThread;
     HANDLE ReadyToConnectEvent;
+    DWORD Error;
 
     ReadyToConnectEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    ok(ReadyToConnectEvent != NULL, "\n");
+    ok(ReadyToConnectEvent != NULL, "CreateEvent failed\n");
 
     AcceptThread = CreateThread(NULL, 0, AcceptProc, (PVOID)ReadyToConnectEvent, 0, NULL);
-    ok(AcceptThread != NULL, "");
+    ok(AcceptThread != NULL, "CreateThread failed\n");
 
     WaitForSingleObject(ReadyToConnectEvent, INFINITE);
 
     LoadTcpIpTestDriver();
 
-    ok(KmtSendToDriver(IOCTL_TEST_CONNECT) == ERROR_SUCCESS, "\n");
+    Error = KmtSendToDriver(IOCTL_TEST_CONNECT);
+    ok_eq_ulong(Error, ERROR_SUCCESS);
 
     WaitForSingleObject(AcceptThread, INFINITE);
 

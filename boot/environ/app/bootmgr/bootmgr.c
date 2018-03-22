@@ -231,7 +231,7 @@ BmpFwGetApplicationDirectoryPath (
     )
 {
     NTSTATUS Status;
-    ULONG i, AppPathLength;
+    SIZE_T i, AppPathLength;
     PWCHAR ApplicationPath, PathCopy;
 
     /* Clear the incoming string */
@@ -257,11 +257,11 @@ BmpFwGetApplicationDirectoryPath (
         }
 
         /* Check if we have space for one more character */
-        Status = RtlULongAdd(i, 1, &AppPathLength);
+        Status = RtlSIZETAdd(i, 1, &AppPathLength);
         if (NT_SUCCESS(Status))
         {
             /* Check if it's safe to multiply by two */
-            Status = RtlULongMult(AppPathLength, sizeof(WCHAR), &AppPathLength);
+            Status = RtlSIZETMult(AppPathLength, sizeof(WCHAR), &AppPathLength);
             if (NT_SUCCESS(Status))
             {
                 /* Allocate a copy for the string */
@@ -647,11 +647,11 @@ BmpFwGetFullPath (
     )
 {
     NTSTATUS Status;
-    ULONG BootDirLength, PathLength;
+    SIZE_T BootDirLength, PathLength;
 
     /* Compute the length of the directory, and add a NUL */
     BootDirLength = wcslen(BootDirectory);
-    Status = RtlULongAdd(BootDirLength, 1, &BootDirLength);
+    Status = RtlSIZETAdd(BootDirLength, 1, &BootDirLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
@@ -659,14 +659,14 @@ BmpFwGetFullPath (
 
     /* Add the length of the file, make sure it fits */
     PathLength = wcslen(FileName);
-    Status = RtlULongAdd(PathLength, BootDirLength, &PathLength);
+    Status = RtlSIZETAdd(PathLength, BootDirLength, &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Convert to bytes */
-    Status = RtlULongLongToULong(PathLength * sizeof(WCHAR), &PathLength);
+    Status = RtlSIZETMult(PathLength, sizeof(WCHAR), &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
@@ -716,7 +716,7 @@ BmOpenDataStore (
     PBL_DEVICE_DESCRIPTOR BcdDevice;
     PWCHAR BcdPath, FullPath, PathBuffer;
     BOOLEAN HavePath;
-    ULONG PathLength, FullSize;
+    SIZE_T PathLength, FullSize;
     PVOID FinalBuffer;
     UNICODE_STRING BcdString;
 
@@ -795,21 +795,21 @@ BmOpenDataStore (
 
     /* Add a NUL to the path, make sure it'll fit */
     PathLength = wcslen(PathBuffer);
-    Status = RtlULongAdd(PathLength, 1, &PathLength);
+    Status = RtlSIZETAdd(PathLength, 1, &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Convert to bytes */
-    Status = RtlULongLongToULong(PathLength * sizeof(WCHAR), &PathLength);
+    Status = RtlSIZETMult(PathLength, sizeof(WCHAR), &PathLength);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
     }
 
     /* Now add the size of the path to the device path, check if it fits */
-    Status = RtlULongAdd(PathLength, BcdDevice->Size, &FullSize);
+    Status = RtlSIZETAdd(PathLength, BcdDevice->Size, &FullSize);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;
@@ -1357,7 +1357,9 @@ BmpPopulateBootEntryList (
                                      L"\\Windows\\System32\\winload.efi";
 
                         /* Add the path to the boot entry */
-                        Status = BlAppendBootOptionString(BootEntry, LoaderPath);
+                        Status = BlAppendBootOptionString(BootEntry,
+                                                          BcdLibraryString_ApplicationPath,
+                                                          LoaderPath);
                         if (!NT_SUCCESS(Status))
                         {
                             goto Quickie;
@@ -2156,7 +2158,7 @@ BmDisplayDumpError (
     if (BmpInternalBootError)
     {
         /* Return it -- but it's a pointer? */
-        return (ULONG)BmpInternalBootError; // ???
+        return (ULONG_PTR)BmpInternalBootError; // ???
     }
 
     /* Otherwise, show the menu to see what to do */
@@ -2511,7 +2513,8 @@ TryAgain:
             {
                 /* Set the option this once */
                 BlAppendBootOptionBoolean(BootEntry,
-                                          BcdLibraryBoolean_DisplayAdvancedOptions);
+                                          BcdLibraryBoolean_DisplayAdvancedOptions,
+                                          TRUE);
             }
             else
             {
@@ -2536,7 +2539,8 @@ TryAgain:
             {
                 /* Set the option this once */
                 BlAppendBootOptionBoolean(BootEntry,
-                                          BcdLibraryBoolean_DisplayOptionsEdit);
+                                          BcdLibraryBoolean_DisplayOptionsEdit,
+                                          TRUE);
             }
             else
             {
@@ -2686,12 +2690,16 @@ Quickie:
 
             case AdvancedOptions:
                 /* Show the advanced options next iteration */
-                BlAppendBootOptionBoolean(BootEntry, BcdOSLoaderBoolean_AdvancedOptionsOneTime);
+                BlAppendBootOptionBoolean(BootEntry,
+                                          BcdOSLoaderBoolean_AdvancedOptionsOneTime,
+                                          TRUE);
                 goto TryAgain;
 
             case BootOptions:
                 /* Show the options editor next iteration */
-                BlAppendBootOptionBoolean(BootEntry, BcdOSLoaderBoolean_OptionsEditOneTime);
+                BlAppendBootOptionBoolean(BootEntry,
+                                          BcdOSLoaderBoolean_OptionsEditOneTime,
+                                          TRUE);
                 goto TryAgain;
 
             case Recover:
