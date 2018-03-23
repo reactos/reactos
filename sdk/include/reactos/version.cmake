@@ -4,6 +4,7 @@ set(KERNEL_VERSION_MAJOR "0")
 set(KERNEL_VERSION_MINOR "1")
 set(KERNEL_VERSION_PATCH_LEVEL "0")
 set(COPYRIGHT_YEAR "2018")
+set(COPYRIGHT_YEAR_OMEGA "2018")
 
 # KERNEL_VERSION_BUILD_TYPE is "dev" for Git builds
 # or "RC1", "RC2", "" for releases.
