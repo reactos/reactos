@@ -18,6 +18,13 @@
 
 #include "urlmon_main.h"
 
+#define NO_SHLWAPI_REG
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
+
 typedef struct {
     Protocol base;
 

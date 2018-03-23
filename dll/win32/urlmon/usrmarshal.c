@@ -16,9 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NONAMELESSUNION
+
 #include "urlmon_main.h"
 
-#include <ole2.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 HRESULT CALLBACK IWinInetHttpInfo_QueryInfo_Proxy(IWinInetHttpInfo* This,
     DWORD dwOption, LPVOID pBuffer, DWORD *pcbBuf, DWORD *pdwFlags,

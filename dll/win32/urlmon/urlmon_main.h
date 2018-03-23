@@ -22,30 +22,18 @@
 
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <objbase.h>
-#include <oleauto.h>
-#include <urlmon.h>
-#include <wininet.h>
-#include <advpub.h>
-#define NO_SHLWAPI_REG
-#include <shlwapi.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "urlmon.h"
+#include "wininet.h"
 
-#include <wine/debug.h>
-#include <wine/list.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
+#include "wine/unicode.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
 extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
 extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
@@ -247,29 +235,9 @@ void release_notif_hwnd(HWND) DECLSPEC_HIDDEN;
 
 const char *debugstr_bindstatus(ULONG) DECLSPEC_HIDDEN;
 
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
-}
-
 static inline void* __WINE_ALLOC_SIZE(2) heap_realloc_zero(void *mem, size_t size)
 {
     return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline LPWSTR heap_strdupW(LPCWSTR str)
