@@ -185,7 +185,7 @@ reactos/dll/win32/sxs                 # Synced to WineStaging-3.3
 reactos/dll/win32/t2embed             # Synced to WineStaging-3.3
 reactos/dll/win32/tapi32              # Synced to WineStaging-3.3
 reactos/dll/win32/traffic             # Synced to WineStaging-3.3
-reactos/dll/win32/twain_32            # Synced to Wine-3.0
+reactos/dll/win32/twain_32            # Synced to WineStaging-3.3
 reactos/dll/win32/updspapi            # Synced to WineStaging-2.9
 reactos/dll/win32/url                 # Synced to WineStaging-2.9
 reactos/dll/win32/urlmon              # Synced to Wine-3.0
