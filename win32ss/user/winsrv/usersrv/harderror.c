@@ -61,6 +61,28 @@ RtlLoadUnicodeString(
 }
 
 
+/*
+ * NOTE: _scwprintf() is NOT exported by ntdll.dll,
+ * only _vscwprintf() is, so we need to implement it here.
+ * Code comes from sdk/lib/crt/printf/_scwprintf.c .
+ */
+int
+__cdecl
+_scwprintf(
+    const wchar_t *format,
+    ...)
+{
+    int len;
+    va_list args;
+
+    va_start(args, format);
+    len = _vscwprintf(format, args);
+    va_end(args);
+
+    return len;
+}
+
+
 /* FIXME */
 int
 WINAPI
@@ -349,9 +371,18 @@ UserpFormatMessages(
     OUT PULONG pdwTimeout,
     IN PHARDERROR_MSG Message)
 {
+    /* Special hardcoded messages */
+    static const PCWSTR pszUnknownHardError =
+        L"Unknown Hard Error 0x%08lx\n"
+        L"Parameters: 0x%p 0x%p 0x%p 0x%p";
+    static const PCWSTR pszExceptionHardError =
+        L"Exception processing message 0x%08lx\n"
+        L"Parameters: 0x%p 0x%p 0x%p 0x%p";
+
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hProcess;
+    ULONG Severity = (ULONG)(Message->Status) >> 30;
     ULONG SizeOfStrings;
     ULONG_PTR Parameters[MAXIMUM_HARDERROR_PARAMETERS] = {0};
     ULONG_PTR CopyParameters[MAXIMUM_HARDERROR_PARAMETERS];
@@ -361,8 +392,6 @@ UserpFormatMessages(
     PMESSAGE_RESOURCE_ENTRY MessageResource;
     PWSTR FormatString, pszBuffer;
     size_t cszBuffer;
-    ULONG Severity = (ULONG)(Message->Status) >> 30;
-    ULONG Size;
 
     /* Open client process */
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
@@ -378,6 +407,13 @@ UserpFormatMessages(
 
     /* Capture all string parameters from the process memory */
     UserpCaptureStringParameters(Parameters, &SizeOfStrings, Message, hProcess);
+
+    /* Initialize the output strings */
+    TextStringU->Length = 0;
+    TextStringU->Buffer[0] = UNICODE_NULL;
+
+    CaptionStringU->Length = 0;
+    CaptionStringU->Buffer[0] = UNICODE_NULL;
 
     /*
      * Check whether it is a service notification, in which case
@@ -395,29 +431,15 @@ UserpFormatMessages(
          */
         *pdwType = (UINT)Parameters[2] & ~MB_SERVICE_NOTIFICATION;
 
-        /* Duplicate the UNICODE text message */
+        /*
+         * Duplicate the UNICODE text message and caption.
+         * If no strings or invalid ones have been provided, keep
+         * the original buffers and reset the string lengths to zero.
+         */
         if (Message->UnicodeStringParameterMask & 0x1)
-        {
-            /* A string has been provided: duplicate it */
             UserpDuplicateParamStringToUnicodeString(TextStringU, (PCWSTR)Parameters[0]);
-        }
-        else
-        {
-            /* No string (or invalid one) has been provided: keep the original buffer and reset the string length to zero */
-            TextStringU->Length = 0;
-        }
-
-        /* Duplicate the UNICODE caption */
         if (Message->UnicodeStringParameterMask & 0x2)
-        {
-            /* A string has been provided: duplicate it */
             UserpDuplicateParamStringToUnicodeString(CaptionStringU, (PCWSTR)Parameters[1]);
-        }
-        else
-        {
-            /* No string (or invalid one) has been provided: keep the original buffer and reset the string length to zero */
-            CaptionStringU->Length = 0;
-        }
 
         /* Set the timeout */
         if (Message->NumberOfParameters >= 4)
@@ -493,7 +515,8 @@ UserpFormatMessages(
         FileNameU = g_SystemProcessU;
     }
 
-    /* Get text string of the error code */
+    /* Retrieve the description of the error code */
+    FormatA.Buffer = NULL;
     Status = RtlFindMessage(GetModuleHandleW(L"ntdll"),
                             (ULONG_PTR)RT_MESSAGETABLE,
                             LANG_NEUTRAL,
@@ -511,41 +534,40 @@ UserpFormatMessages(
             RtlInitAnsiString(&FormatA, (PSTR)MessageResource->Text);
             /* Status = */ RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
         }
+        ASSERT(FormatU.Buffer);
     }
     else
     {
         /*
-         * Fall back to hardcoded value.
+         * Fall back to unknown hard error format string.
          * NOTE: The value used here is ReactOS-specific: it allows specifying
-         * the exact hard error status value and the parameters. The version
-         * used on Windows only says "Unknown Hard Error".
+         * the exact hard error status value and the parameters, contrary to
+         * the one on Windows which only says: "Unknown Hard Error".
          */
-#if 0
-        RtlInitUnicodeString(&FormatU, L"Unknown Hard Error 0x%08lx\n"
-                                       L"Parameters: 0x%p 0x%p 0x%p 0x%p");
-#else
-        RtlInitUnicodeString(&FormatU, L"Unknown Hard Error 0x%08lx");
-        CopyParameters[0] = Message->Status;
-#endif
+        RtlInitEmptyUnicodeString(&FormatU, NULL, 0);
         FormatA.Buffer = NULL;
     }
 
     FormatString = FormatU.Buffer;
 
-    /* Check whether a caption exists */
-    if (FormatString[0] == L'{')
+    /* Check whether a caption is specified in the format string */
+    if (FormatString && FormatString[0] == L'{')
     {
         /* Set caption start */
         TempStringU.Buffer = ++FormatString;
 
-        /* Get size of the caption */
-        for (Size = 0; *FormatString != UNICODE_NULL && *FormatString != L'}'; Size++)
-            FormatString++;
+        /* Get the caption size and find where the format string really starts */
+        for (TempStringU.Length = 0;
+             *FormatString != UNICODE_NULL && *FormatString != L'}';
+             ++TempStringU.Length)
+        {
+            ++FormatString;
+        }
 
         /* Skip '}', '\r', '\n' */
         FormatString += 3;
 
-        TempStringU.Length = (USHORT)(Size * sizeof(WCHAR));
+        TempStringU.Length *= sizeof(WCHAR);
         TempStringU.MaximumLength = TempStringU.Length;
     }
     else
@@ -612,6 +634,7 @@ UserpFormatMessages(
         }
     }
     CaptionStringU->Length = 0;
+    CaptionStringU->Buffer[0] = UNICODE_NULL;
 
     /* Append the file name, the separator and the caption text */
     RtlStringCbPrintfW(CaptionStringU->Buffer,
@@ -620,19 +643,22 @@ UserpFormatMessages(
                        &WindowTitleU, &FileNameU, &TempStringU);
     CaptionStringU->Length = (USHORT)(wcslen(CaptionStringU->Buffer) * sizeof(WCHAR));
 
-    /* Free string buffers if needed */
+    /* Free the strings if needed */
     if (WindowTitleU.Buffer) RtlFreeUnicodeString(&WindowTitleU);
     if (hProcess) RtlFreeUnicodeString(&FileNameU);
 
-    // FIXME: What is 42 == ??
-    Size = 42;
+    Format2A.Buffer = NULL;
+
+    /* If we have an unknown hard error, skip the special cases handling */
+    if (!FormatString)
+        goto BuildMessage;
 
     /* Check if this is an exception message */
     if (Message->Status == STATUS_UNHANDLED_EXCEPTION)
     {
         ULONG ExceptionCode = CopyParameters[0];
 
-        /* Get text string of the exception code */
+        /* Retrieve the description of the exception code */
         Status = RtlFindMessage(GetModuleHandleW(L"ntdll"),
                                 (ULONG_PTR)RT_MESSAGETABLE,
                                 LANG_NEUTRAL,
@@ -650,10 +676,12 @@ UserpFormatMessages(
                 RtlInitAnsiString(&Format2A, (PSTR)MessageResource->Text);
                 /* Status = */ RtlAnsiStringToUnicodeString(&Format2U, &Format2A, TRUE);
             }
+            ASSERT(Format2U.Buffer);
 
             /* Handle special cases */
             if (ExceptionCode == STATUS_ACCESS_VIOLATION)
             {
+                /* Use a new FormatString */
                 FormatString = Format2U.Buffer;
                 CopyParameters[0] = CopyParameters[1];
                 CopyParameters[1] = CopyParameters[3];
@@ -664,6 +692,7 @@ UserpFormatMessages(
             }
             else if (ExceptionCode == STATUS_IN_PAGE_ERROR)
             {
+                /* Use a new FormatString */
                 FormatString = Format2U.Buffer;
                 CopyParameters[0] = CopyParameters[1];
                 CopyParameters[1] = CopyParameters[3];
@@ -702,24 +731,64 @@ UserpFormatMessages(
             CopyParameters[1] = CopyParameters[0];
             CopyParameters[0] = (ULONG_PTR)L"unknown software exception";
         }
-
-        /* Add explanation text for dialog buttons */
-        if (Message->ValidResponseOptions == OptionOk ||
-            Message->ValidResponseOptions == OptionOkCancel)
-        {
-            /* Reserve space for one newline and the OK-terminate-program string */
-            Size += 1 + (g_OKTerminateU.Length / sizeof(WCHAR));
-        }
-        if (Message->ValidResponseOptions == OptionOkCancel)
-        {
-            /* Reserve space for one newline and the CANCEL-debug-program string */
-            Size += 1 + (g_CancelDebugU.Length / sizeof(WCHAR));
-        }
     }
 
-    /* Calculate buffer length for the text message */
-    cszBuffer = FormatU.Length + SizeOfStrings + Size * sizeof(WCHAR) +
-                sizeof(UNICODE_NULL);
+BuildMessage:
+    /*
+     * Calculate buffer length for the text message. If FormatString
+     * is NULL this means we have an unknown hard error whose format
+     * string is in FormatU.
+     */
+    cszBuffer = 0;
+    /* Wrap in SEH to protect from invalid string parameters */
+    _SEH2_TRY
+    {
+        if (!FormatString)
+        {
+            /* Fall back to unknown hard error format string, and use the original parameters */
+            cszBuffer = _scwprintf(pszUnknownHardError,
+                                   Message->Status,
+                                   Parameters[0], Parameters[1],
+                                   Parameters[2], Parameters[3]);
+            cszBuffer *= sizeof(WCHAR);
+        }
+        else
+        {
+            cszBuffer = _scwprintf(FormatString,
+                                   CopyParameters[0], CopyParameters[1],
+                                   CopyParameters[2], CopyParameters[3]);
+            cszBuffer *= sizeof(WCHAR);
+
+            /* Add a description for the dialog buttons */
+            if (Message->Status == STATUS_UNHANDLED_EXCEPTION)
+            {
+                if (Message->ValidResponseOptions == OptionOk ||
+                    Message->ValidResponseOptions == OptionOkCancel)
+                {
+                    /* Reserve space for one newline and the OK-terminate-program string */
+                    cszBuffer += sizeof(WCHAR) + g_OKTerminateU.Length;
+                }
+                if (Message->ValidResponseOptions == OptionOkCancel)
+                {
+                    /* Reserve space for one newline and the CANCEL-debug-program string */
+                    cszBuffer += sizeof(WCHAR) + g_CancelDebugU.Length;
+                }
+            }
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* An exception occurred, use a default string with the original parameters */
+        cszBuffer = _scwprintf(pszExceptionHardError,
+                               Message->Status,
+                               Parameters[0], Parameters[1],
+                               Parameters[2], Parameters[3]);
+        cszBuffer *= sizeof(WCHAR);
+    }
+    _SEH2_END;
+
+    cszBuffer += SizeOfStrings + sizeof(UNICODE_NULL);
+
     if (TextStringU->MaximumLength < cszBuffer)
     {
         /* Allocate a larger buffer for the text message */
@@ -737,6 +806,7 @@ UserpFormatMessages(
         }
     }
     TextStringU->Length = 0;
+    TextStringU->Buffer[0] = UNICODE_NULL;
 
     /* Wrap in SEH to protect from invalid string parameters */
     _SEH2_TRY
@@ -744,32 +814,45 @@ UserpFormatMessages(
         /* Print the string into the buffer */
         pszBuffer = TextStringU->Buffer;
         cszBuffer = TextStringU->MaximumLength;
-        RtlStringCbPrintfExW(pszBuffer, cszBuffer,
-                             &pszBuffer, &cszBuffer,
-                             STRSAFE_IGNORE_NULLS,
-                             FormatString,
-                             CopyParameters[0], CopyParameters[1],
-                             CopyParameters[2], CopyParameters[3]);
 
-        /* Add explanation text for dialog buttons */
-        if (Message->Status == STATUS_UNHANDLED_EXCEPTION)
+        if (!FormatString)
         {
-            if (Message->ValidResponseOptions == OptionOk ||
-                Message->ValidResponseOptions == OptionOkCancel)
+            /* Fall back to unknown hard error format string, and use the original parameters */
+            RtlStringCbPrintfW(pszBuffer, cszBuffer,
+                               pszUnknownHardError,
+                               Message->Status,
+                               Parameters[0], Parameters[1],
+                               Parameters[2], Parameters[3]);
+        }
+        else
+        {
+            RtlStringCbPrintfExW(pszBuffer, cszBuffer,
+                                 &pszBuffer, &cszBuffer,
+                                 0,
+                                 FormatString,
+                                 CopyParameters[0], CopyParameters[1],
+                                 CopyParameters[2], CopyParameters[3]);
+
+            /* Add a description for the dialog buttons */
+            if (Message->Status == STATUS_UNHANDLED_EXCEPTION)
             {
-                RtlStringCbPrintfExW(pszBuffer, cszBuffer,
-                                     &pszBuffer, &cszBuffer,
-                                     STRSAFE_IGNORE_NULLS,
-                                     L"\n%wZ",
-                                     &g_OKTerminateU);
-            }
-            if (Message->ValidResponseOptions == OptionOkCancel)
-            {
-                RtlStringCbPrintfExW(pszBuffer, cszBuffer,
-                                     &pszBuffer, &cszBuffer,
-                                     STRSAFE_IGNORE_NULLS,
-                                     L"\n%wZ",
-                                     &g_CancelDebugU);
+                if (Message->ValidResponseOptions == OptionOk ||
+                    Message->ValidResponseOptions == OptionOkCancel)
+                {
+                    RtlStringCbPrintfExW(pszBuffer, cszBuffer,
+                                         &pszBuffer, &cszBuffer,
+                                         0,
+                                         L"\n%wZ",
+                                         &g_OKTerminateU);
+                }
+                if (Message->ValidResponseOptions == OptionOkCancel)
+                {
+                    RtlStringCbPrintfExW(pszBuffer, cszBuffer,
+                                         &pszBuffer, &cszBuffer,
+                                         0,
+                                         L"\n%wZ",
+                                         &g_CancelDebugU);
+                }
             }
         }
     }
@@ -781,8 +864,7 @@ UserpFormatMessages(
 
         RtlStringCbPrintfW(TextStringU->Buffer,
                            TextStringU->MaximumLength,
-                           L"Exception processing message 0x%08lx\n"
-                           L"Parameters: 0x%p 0x%p 0x%p 0x%p",
+                           pszExceptionHardError,
                            Message->Status,
                            Parameters[0], Parameters[1],
                            Parameters[2], Parameters[3]);
@@ -791,12 +873,12 @@ UserpFormatMessages(
 
     TextStringU->Length = (USHORT)(wcslen(TextStringU->Buffer) * sizeof(WCHAR));
 
-    /* Free converted Unicode strings */
+    /* Free the converted UNICODE strings */
     if (Format2A.Buffer) RtlFreeUnicodeString(&Format2U);
     if (FormatA.Buffer) RtlFreeUnicodeString(&FormatU);
 
 Quit:
-    /* Final cleanup */
+    /* Free the captured parameters */
     UserpFreeStringParameters(Parameters, Message);
 }
 
@@ -850,40 +932,43 @@ GetRegInt(
 
 static BOOL
 UserpShowInformationBalloon(
-    IN PCWSTR Text,
-    IN PCWSTR Caption,
-    IN UINT   Type,
+    IN PUNICODE_STRING TextStringU,
+    IN PUNICODE_STRING CaptionStringU,
+    IN UINT Type,
     IN PHARDERROR_MSG Message)
 {
     ULONG ShellErrorMode;
-    HWND hwnd;
+    HWND hWndTaskman;
     COPYDATASTRUCT CopyData;
     PBALLOON_HARD_ERROR_DATA pdata;
     DWORD dwSize, cbTextLen, cbTitleLen;
     PWCHAR pText, pCaption;
-    DWORD ret, dwResult;
+    DWORD ret;
+    DWORD_PTR dwResult;
 
     /* Query the shell error mode value */
     ShellErrorMode = GetRegInt(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Windows",
                                L"ShellErrorMode", 0);
 
-    /* Make the shell display the hard error message in balloon only if necessary */
+    /* Make the shell display the hard error message only if necessary */
     if (ShellErrorMode != 1)
         return FALSE;
 
-    hwnd = GetTaskmanWindow();
-    if (!hwnd)
+    /* Retrieve the shell task window */
+    hWndTaskman = GetTaskmanWindow();
+    if (!hWndTaskman)
     {
         DPRINT1("Failed to find shell task window (last error %lu)\n", GetLastError());
         return FALSE;
     }
 
-    cbTextLen  = ((Text    ? wcslen(Text)    : 0) + 1) * sizeof(WCHAR);
-    cbTitleLen = ((Caption ? wcslen(Caption) : 0) + 1) * sizeof(WCHAR);
+    cbTextLen  = TextStringU->Length + sizeof(UNICODE_NULL);
+    cbTitleLen = CaptionStringU->Length + sizeof(UNICODE_NULL);
 
     dwSize = sizeof(BALLOON_HARD_ERROR_DATA);
     dwSize += cbTextLen + cbTitleLen;
 
+    /* Build the data buffer */
     pdata = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
     if (!pdata)
     {
@@ -893,31 +978,27 @@ UserpShowInformationBalloon(
 
     pdata->cbHeaderSize = sizeof(BALLOON_HARD_ERROR_DATA);
     pdata->Status = Message->Status;
+    pdata->dwType = Type;
 
-    if (NT_SUCCESS(Message->Status))
-        pdata->dwType = MB_OK;
-    else if (Message->Status == STATUS_SERVICE_NOTIFICATION)
-        pdata->dwType = Type;
-    else
-        pdata->dwType = MB_ICONINFORMATION;
-
-    pdata->TitleOffset = pdata->cbHeaderSize;
-    pdata->MessageOffset = pdata->TitleOffset;
-    pdata->MessageOffset += cbTitleLen;
+    pdata->TitleOffset   = pdata->cbHeaderSize;
+    pdata->MessageOffset = pdata->TitleOffset + cbTitleLen;
     pCaption = (PWCHAR)((ULONG_PTR)pdata + pdata->TitleOffset);
     pText = (PWCHAR)((ULONG_PTR)pdata + pdata->MessageOffset);
-    wcscpy(pCaption, Caption);
-    wcscpy(pText, Text);
+    RtlStringCbCopyNW(pCaption, cbTitleLen, CaptionStringU->Buffer, CaptionStringU->Length);
+    RtlStringCbCopyNW(pText, cbTextLen, TextStringU->Buffer, TextStringU->Length);
 
+    /* Send the message */
+
+    /* Retrieve a unique system-wide message to communicate hard error data with the shell */
     CopyData.dwData = RegisterWindowMessageW(L"HardError");
     CopyData.cbData = dwSize;
     CopyData.lpData = pdata;
 
     dwResult = FALSE;
-
-    ret = SendMessageTimeoutW(hwnd, WM_COPYDATA, 0, (LPARAM)&CopyData,
+    ret = SendMessageTimeoutW(hWndTaskman, WM_COPYDATA, 0, (LPARAM)&CopyData,
                               SMTO_NORMAL | SMTO_ABORTIFHUNG, 3000, &dwResult);
 
+    /* Free the buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, pdata);
 
     return (ret && dwResult) ? TRUE : FALSE;
@@ -926,18 +1007,21 @@ UserpShowInformationBalloon(
 static
 HARDERROR_RESPONSE
 UserpMessageBox(
-    IN PCWSTR Text,
-    IN PCWSTR Caption,
-    IN UINT   Type,
-    IN ULONG  Timeout)
+    IN PUNICODE_STRING TextStringU,
+    IN PUNICODE_STRING CaptionStringU,
+    IN UINT  Type,
+    IN ULONG Timeout)
 {
     ULONG MessageBoxResponse;
 
     DPRINT("Text = '%S', Caption = '%S', Type = 0x%lx\n",
-           Text, Caption, Type);
+           TextStringU->Buffer, CaptionStringU->Buffer, Type);
 
     /* Display a message box */
-    MessageBoxResponse = MessageBoxTimeoutW(NULL, Text, Caption, Type, 0, Timeout);
+    MessageBoxResponse = MessageBoxTimeoutW(NULL,
+                                            TextStringU->Buffer,
+                                            CaptionStringU->Buffer,
+                                            Type, 0, Timeout);
 
     /* Return response value */
     switch (MessageBoxResponse)
@@ -1028,7 +1112,8 @@ UserServerHardError(
     {
         if (Message->NumberOfParameters < 3)
         {
-            DPRINT1("Invalid NumberOfParameters = %d for STATUS_SERVICE_NOTIFICATION\n", Message->NumberOfParameters);
+            DPRINT1("Invalid NumberOfParameters = %d for STATUS_SERVICE_NOTIFICATION\n",
+                    Message->NumberOfParameters);
             return; // STATUS_INVALID_PARAMETER;
         }
         // (Message->UnicodeStringParameterMask & 0x3)
@@ -1062,8 +1147,8 @@ UserServerHardError(
     {
         /* Display the balloon */
         Message->Response = ResponseOk;
-        if (UserpShowInformationBalloon(TextU.Buffer,
-                                        CaptionU.Buffer,
+        if (UserpShowInformationBalloon(&TextU,
+                                        &CaptionU,
                                         dwType,
                                         Message))
         {
@@ -1073,8 +1158,8 @@ UserServerHardError(
     }
 
     /* Display the message box */
-    Message->Response = UserpMessageBox(TextU.Buffer,
-                                        CaptionU.Buffer,
+    Message->Response = UserpMessageBox(&TextU,
+                                        &CaptionU,
                                         dwType,
                                         Timeout);
 
