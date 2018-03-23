@@ -11,9 +11,10 @@
 int __cdecl streamout(FILE *stream, const char *format, va_list argptr);
 
 int
+__cdecl
 _vscprintf(
-   const char *format,
-   va_list argptr)
+    const char *format,
+    va_list argptr)
 {
     FILE nulfile;
     nulfile._tmpfname = nulfile._ptr = nulfile._base = NULL;
