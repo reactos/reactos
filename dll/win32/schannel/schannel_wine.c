@@ -22,6 +22,8 @@
 
 #include <wine/config.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(schannel);
+
 #if defined(SONAME_LIBGNUTLS) || defined (HAVE_SECURITY_SECURITY_H) || defined (SONAME_LIBMBEDTLS)
 
 #define SCHAN_INVALID_HANDLE ~0UL

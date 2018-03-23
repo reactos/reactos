@@ -1,3 +1,4 @@
+
 #ifndef _SCHANNEL_PCH_
 #define _SCHANNEL_PCH_
 
@@ -15,15 +16,12 @@
 #include <sspi.h>
 #include <ntsecapi.h>
 #include <ntsecpkg.h>
-
 #include <schannel.h>
 
-#include <wine/list.h>
-#include "schannel_priv.h"
-
 #include <wine/debug.h>
+#include <wine/list.h>
 #include <wine/unicode.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(schannel);
+#include "schannel_priv.h"
 
-#endif /* _SCHANNEL_PCH_ */
+#endif /* !_SCHANNEL_PCH_ */
