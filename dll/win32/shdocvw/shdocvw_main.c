@@ -20,10 +20,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
 #include "shdocvw.h"
 
-#include <shlwapi.h>
-#include <wininet.h>
+#include "winreg.h"
+#include "shlwapi.h"
+#include "wininet.h"
+#include "isguids.h"
+
+#include "initguid.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 LONG SHDOCVW_refCount = 0;
 
@@ -365,8 +379,7 @@ DWORD WINAPI ParseURLFromOutsideSourceW(LPCWSTR url, LPWSTR out, LPDWORD plen, L
     HRESULT hr;
     DWORD needed;
     DWORD len;
-    DWORD res = 0;
-
+    DWORD res;
 
     TRACE("(%s, %p, %p, %p) len: %d, unknown: 0x%x\n", debugstr_w(url), out, plen, unknown,
             plen ? *plen : 0, unknown ? *unknown : 0);
@@ -392,10 +405,12 @@ DWORD WINAPI ParseURLFromOutsideSourceW(LPCWSTR url, LPWSTR out, LPDWORD plen, L
     needed = lstrlenW(buffer_out)+1;
     TRACE("got 0x%x with %s (need %d)\n", hr, debugstr_w(buffer_out), needed);
 
+    res = 0;
     if (*plen >= needed) {
         if (out != NULL) {
             lstrcpyW(out, buffer_out);
-            res++;
+            /* On success, 1 is returned for unicode version */
+            res = 1;
         }
         needed--;
     }
@@ -438,6 +453,7 @@ DWORD WINAPI ParseURLFromOutsideSourceA(LPCSTR url, LPSTR out, LPDWORD plen, LPD
     if (*plen >= needed) {
         if (out != NULL) {
             WideCharToMultiByte(CP_ACP, 0, buffer, -1, out, *plen, NULL, NULL);
+            /* On success, string size including terminating 0 is returned for ansi version */
             res = needed;
         }
         needed--;
@@ -545,4 +561,33 @@ BOOL WINAPI DoFileDownload(LPWSTR filename)
 {
     FIXME("(%s) stub\n", debugstr_w(filename));
     return FALSE;
+}
+
+/******************************************************************
+ * DoOrganizeFavDlgW (SHDOCVW.@)
+ */
+BOOL WINAPI DoOrganizeFavDlgW(HWND hwnd, LPCWSTR initDir)
+{
+    FIXME("(%p %s) stub\n", hwnd, debugstr_w(initDir));
+    return FALSE;
+}
+
+/******************************************************************
+ * DoOrganizeFavDlg (SHDOCVW.@)
+ */
+BOOL WINAPI DoOrganizeFavDlg(HWND hwnd, LPCSTR initDir)
+{
+    LPWSTR initDirW = NULL;
+    BOOL res;
+
+    TRACE("(%p %s)\n", hwnd, debugstr_a(initDir));
+
+    if (initDir) {
+        DWORD len = MultiByteToWideChar(CP_ACP, 0, initDir, -1, NULL, 0);
+        initDirW = heap_alloc(len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, initDir, -1, initDirW, len);
+    }
+    res = DoOrganizeFavDlgW(hwnd, initDirW);
+    heap_free(initDirW);
+    return res;
 }
