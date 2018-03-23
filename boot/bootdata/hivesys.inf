@@ -1312,6 +1312,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x000002
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","Directory",0x00020002,"%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","ErrorMode",0x00010003,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","NoInteractiveServices",0x00010003,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","ShellErrorMode",0x00010003,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","SystemDirectory",0x00020002,"%SystemRoot%\system32"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
