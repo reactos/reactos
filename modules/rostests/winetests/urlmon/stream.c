@@ -16,23 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 #define CONST_VTABLE
 
 #include <wine/test.h>
-//#include <stdarg.h>
-//#include <stddef.h>
+#include <stdarg.h>
+#include <stddef.h>
 
-//#include "windef.h"
-//#include "winbase.h"
-#include <winnls.h>
-#include <ole2.h>
-//#include "urlmon.h"
-#include <wininet.h>
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "urlmon.h"
+#include "wininet.h"
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE

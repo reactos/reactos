@@ -5,10 +5,6 @@
  * Unit tests for data structure packing
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #ifndef __REACTOS__
 #define WINVER 0x0501
 #define _WIN32_IE 0x0501
@@ -18,12 +14,11 @@
 #define WINE_NOWINSOCK
 
 #include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <urlmon.h>
+#include "windef.h"
+#include "winbase.h"
+#include "urlmon.h"
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 /***********************************************************************
  * Compatibility macros
