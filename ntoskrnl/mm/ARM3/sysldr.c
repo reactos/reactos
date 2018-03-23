@@ -1435,7 +1435,7 @@ MiFreeInitializationCode(IN PVOID InitStart,
     ASSERT(MI_IS_PHYSICAL_ADDRESS(InitStart) == FALSE);
 
     /*  Compute the number of pages we expect to free */
-    PagesFreed = (PFN_NUMBER)(MiAddressToPte(InitEnd) - PointerPte + 1);
+    PagesFreed = (PFN_NUMBER)(MiAddressToPte(InitEnd) - PointerPte);
 
     /* Try to actually free them */
     PagesFreed = MiDeleteSystemPageableVm(PointerPte,
@@ -1455,7 +1455,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     ULONG_PTR DllBase, InitStart, InitEnd, ImageEnd, InitCode;
     PLIST_ENTRY NextEntry;
     PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_SECTION_HEADER Section, LastSection;
+    PIMAGE_SECTION_HEADER Section, LastSection, InitSection;
     BOOLEAN InitFound;
 
     /* So we don't free our own code yet */
@@ -1508,6 +1508,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
             {
                 /* Remember this */
                 InitFound = TRUE;
+                InitSection = Section;
             }
 
             if (InitFound)
@@ -1520,11 +1521,11 @@ MiFindInitializationCode(OUT PVOID *StartVa,
 
                 /* Get the start and end addresses */
                 InitStart = DllBase + Section->VirtualAddress;
-                InitEnd = (ULONG_PTR)ALIGN_UP_POINTER_BY(InitStart + Size, Alignment);
+                InitEnd = ALIGN_UP_BY(InitStart + Size, Alignment);
 
                 /* Align the addresses to PAGE_SIZE */
-                InitStart = (ULONG_PTR)ALIGN_DOWN_POINTER_BY(InitStart, PAGE_SIZE);
-                InitEnd = (ULONG_PTR)ALIGN_DOWN_POINTER_BY(InitEnd, PAGE_SIZE);
+                InitStart = ALIGN_UP_BY(InitStart, PAGE_SIZE);
+                InitEnd = ALIGN_DOWN_BY(InitEnd, PAGE_SIZE);
 
                 /* Have we reached the last section? */
                 if (SectionCount == 1)
@@ -1562,25 +1563,26 @@ MiFindInitializationCode(OUT PVOID *StartVa,
                     Size = max(LastSection->SizeOfRawData, LastSection->Misc.VirtualSize);
 
                     /* Use this as the end of the section address */
-                    InitEnd = DllBase + LastSection->VirtualAddress + Size - 1;
+                    InitEnd = DllBase + LastSection->VirtualAddress + Size;
 
                     /* Have we reached the last section yet? */
                     if (SectionCount != 1)
                     {
                         /* Then align this accross the session boundary */
-                        InitEnd = ((Alignment + InitEnd - 1) & 0XFFFFF000) - 1;
+                        InitEnd = ALIGN_UP_BY(InitEnd, Alignment);
+                        InitEnd = ALIGN_DOWN_BY(InitEnd, PAGE_SIZE);
                     }
                 }
 
                 /* Make sure we don't let the init section go past the image */
                 ImageEnd = DllBase + LdrEntry->SizeOfImage;
-                if (InitEnd > ImageEnd) InitEnd = (ImageEnd - 1) | (PAGE_SIZE - 1);
+                if (InitEnd > ImageEnd) InitEnd = ALIGN_UP_BY(ImageEnd, PAGE_SIZE);
 
                 /* Make sure we have a valid, non-zero init section */
-                if (InitStart <= InitEnd)
+                if (InitStart < InitEnd)
                 {
                     /* Make sure we are not within this code itself */
-                    if ((InitCode >= InitStart) && (InitCode <= InitEnd))
+                    if ((InitCode >= InitStart) && (InitCode < InitEnd))
                     {
                         /* Return it, we can't free ourselves now */
                         ASSERT(*StartVa == 0);
@@ -1590,7 +1592,12 @@ MiFindInitializationCode(OUT PVOID *StartVa,
                     else
                     {
                         /* This isn't us -- go ahead and free it */
-                        ASSERT(MI_IS_PHYSICAL_ADDRESS((PVOID)InitStart) == FALSE);
+                        DPRINT("Freeing init code: %p-%p ('%wZ' @%p : '%s')\n",
+                               (PVOID)InitStart,
+                               (PVOID)InitEnd,
+                               &LdrEntry->BaseDllName,
+                               LdrEntry->DllBase,
+                               InitSection->Name);
                         MiFreeInitializationCode((PVOID)InitStart, (PVOID)InitEnd);
                     }
                 }
