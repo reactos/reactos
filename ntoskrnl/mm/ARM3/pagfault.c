@@ -319,7 +319,7 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         }
 
         /* Return full access rights */
-        *ProtectCode = MM_READWRITE;
+        *ProtectCode = MM_EXECUTE_READWRITE;
         return NULL;
     }
     else if (MI_IS_SESSION_ADDRESS(VirtualAddress))
@@ -2338,7 +2338,7 @@ UserFault:
                 _WARN("This is probably completely broken!");
                 MI_WRITE_INVALID_PDE((PMMPDE)PointerPte, DemandZeroPde);
 #else
-                MI_WRITE_INVALID_PTE(PointerPte, DemandZeroPde);
+                MI_WRITE_INVALID_PDE(PointerPte, DemandZeroPde);
 #endif
             }
             else
