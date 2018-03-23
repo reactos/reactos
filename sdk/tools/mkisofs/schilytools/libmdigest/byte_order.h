@@ -77,7 +77,7 @@ extern "C" {
 #define	IS_BIG_ENDIAN 1
 #define	IS_LITTLE_ENDIAN 0
 #else
-	error "Can't detect CPU architechture"
+#	error "Can't detect CPU architechture"
 #endif
 
 #endif	/* HAVE_C_BIGENDIAN */
