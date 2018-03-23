@@ -1,3 +1,4 @@
+
 #ifndef _STI_PCH_
 #define _STI_PCH_
 
@@ -14,6 +15,5 @@
 #include <sti.h>
 
 #include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(sti);
 
-#endif /* _STI_PCH_ */
+#endif /* !_STI_PCH_ */
