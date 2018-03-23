@@ -16,22 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-//#include "winerror.h"
-#include <shellapi.h>
-#include <shlwapi.h>
-//#include "intshcut.h"
-#include <winuser.h>
-//#include "commctrl.h"
-#include <prsht.h>
-#include <wine/debug.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winerror.h"
+#include "shellapi.h"
+#include "shlwapi.h"
+#include "intshcut.h"
+#include "winuser.h"
+#include "commctrl.h"
+#include "prsht.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(url);
 
