@@ -30,18 +30,15 @@
  */
 
 #include <stdarg.h>
-//#include <stdio.h>
-//#include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "windef.h"
+#include "winbase.h"
+#include "wininet.h"
+#include "winsock2.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <wininet.h>
-//#include "winsock.h"
-
-#include <wine/test.h>
+#include "wine/test.h"
 
 
 static BOOL (WINAPI *pFtpCommandA)(HINTERNET,BOOL,DWORD,LPCSTR,DWORD_PTR,HINTERNET*);
