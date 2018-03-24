@@ -3227,8 +3227,7 @@ static struct string_index *find_string_index(const struct strsection_header *se
         {
             const WCHAR *nameW = (WCHAR*)((BYTE*)section + iter->name_offset);
 
-            if (!_wcsnicmp(nameW, name->Buffer, name->Length / sizeof(WCHAR)) && 
-                wcslen(nameW) == name->Length / sizeof(WCHAR))
+            if (!strcmpiW(nameW, name->Buffer))
             {
                 index = iter;
                 break;
