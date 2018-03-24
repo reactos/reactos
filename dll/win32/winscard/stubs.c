@@ -8,7 +8,9 @@
  *      11/07/2004  Created
  */
 
-#include <precomp.h>
+#include "precomp.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(winscard);
 
 /*
  * @unimplemented
