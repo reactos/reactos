@@ -28,11 +28,12 @@
 #include <stdio.h>
 
 #include <wine/test.h>
-#include <winnls.h>
-#include <wingdi.h>
-#include <winuser.h>
-//#include <windows.h>
+#include <windows.h>
 #include <usp10.h>
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
+#endif
 
 typedef struct _itemTest {
     char todo_flag[6];
@@ -1292,11 +1293,12 @@ static int _find_font_for_range(HDC hdc, const CHAR *recommended, BYTE range, co
             if (*hfont)
             {
                 winetest_trace("using font %s\n",lParam.lf.lfFaceName);
-                *origFont = SelectObject(hdc,*hfont);
                 if (fingerprint)
                 {
                     WORD output[10];
                     int i;
+
+                    *origFont = SelectObject(hdc,*hfont);
                     if (GetGlyphIndicesW(hdc, fingerprint->check, 10, output, 0) != GDI_ERROR)
                     {
                         for (i=0; i < 10; i++)
@@ -1310,6 +1312,7 @@ static int _find_font_for_range(HDC hdc, const CHAR *recommended, BYTE range, co
                             }
                         if (i == 10) rc = 1;
                     }
+                    SelectObject(hdc, *origFont);
                 }
                 else rc = 1;
             }
@@ -2020,7 +2023,7 @@ static void test_ScriptShape(HDC hdc)
 
         chars[0] = 'A';
         chars[2] = 'A';
-        for (j = 0; j < sizeof(test_data) / sizeof(*test_data); ++j)
+        for (j = 0; j < ARRAY_SIZE(test_data); ++j)
         {
             WCHAR c = test_data[j].c;
             SCRIPT_ITEM *item;
@@ -2074,15 +2077,15 @@ static void test_ScriptShape(HDC hdc)
     /* Text does not support this range. */
     memset(items, 0, sizeof(items));
     nb = 0;
-    hr = ScriptItemize(test3, sizeof(test3)/sizeof(test3[0]), sizeof(items)/sizeof(items[0]), NULL, NULL, items, &nb);
+    hr = ScriptItemize(test3, ARRAY_SIZE(test3), ARRAY_SIZE(items), NULL, NULL, items, &nb);
     ok(hr == S_OK, "ScriptItemize failed, hr %#x.\n", hr);
     ok(items[0].a.eScript > 0, "Expected script id.\n");
     ok(nb == 1, "Unexpected number of items.\n");
 
     memset(glyphs, 0xff, sizeof(glyphs));
     nb = 0;
-    hr = ScriptShape(hdc, &sc, test3, sizeof(test3)/sizeof(test3[0]), sizeof(glyphs)/sizeof(glyphs[0]), &items[0].a,
-        glyphs, logclust, attrs, &nb);
+    hr = ScriptShape(hdc, &sc, test3, ARRAY_SIZE(test3), ARRAY_SIZE(glyphs),
+            &items[0].a, glyphs, logclust, attrs, &nb);
     ok(hr == S_OK, "ScriptShape failed, hr %#x.\n", hr);
     ok(nb == 1, "Unexpected glyph count %u\n", nb);
     ok(glyphs[0] == 0, "Unexpected glyph id\n");
@@ -2164,7 +2167,6 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
     const SCRIPT_PROPERTIES **ppSp;
 
     int             cInChars;
-    int             cMaxItems;
     SCRIPT_ITEM     pItem[255];
     int             pcItems;
     WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0}; 
@@ -2175,192 +2177,135 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
     WCHAR           TestItem6[] = {'T', 'e', 's', 't', 'f',' ',' ',' ','\r','\n','e','n','d',0};
 
     SCRIPT_CACHE    psc;
-    int             cChars;
-    int             cMaxGlyphs;
     unsigned short  pwOutGlyphs1[256];
-    unsigned short  pwOutGlyphs2[256];
     unsigned short  pwLogClust[256];
     SCRIPT_VISATTR  psva[256];
     int             pcGlyphs;
     int             piAdvance[256];
     GOFFSET         pGoffset[256];
     ABC             pABC[256];
-    int             cnt;
+    unsigned int i;
 
-    /* Start testing usp10 functions                                                         */
-    /* This test determines that the pointer returned by ScriptGetProperties is valid
-     * by checking a known value in the table                                                */
+    /* Verify we get a valid pointer from ScriptGetProperties(). */
     hr = ScriptGetProperties(&ppSp, &iMaxProps);
     ok(hr == S_OK, "ScriptGetProperties failed: 0x%08x\n", hr);
     trace("number of script properties %d\n", iMaxProps);
-    ok (iMaxProps > 0, "Number of scripts returned should not be 0\n");
-    if  (iMaxProps > 0)
-         ok( ppSp[0]->langid == 0, "Langid[0] not = to 0\n"); /* Check a known value to ensure   */
-                                                              /* ptrs work                       */
+    ok(iMaxProps > 0, "Got unexpected script count %d.\n", iMaxProps);
+    ok(ppSp[0]->langid == 0, "Got unexpected langid %#x.\n", ppSp[0]->langid);
 
-    /* This is a valid test that will cause parsing to take place                             */
-    cInChars = 5;
-    cMaxItems = 255;
-    hr = ScriptItemize(TestItem1, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == S_OK, "ScriptItemize should return S_OK, returned %08x\n", hr);
-    /*  This test is for the interim operation of ScriptItemize where only one SCRIPT_ITEM is *
-     *  returned.                                                                             */
-    ok (pcItems > 0, "The number of SCRIPT_ITEMS should be greater than 0\n");
-    if (pcItems > 0)
-        ok (pItem[0].iCharPos == 0 && pItem[1].iCharPos == cInChars,
-            "Start pos not = 0 (%d) or end pos not = %d (%d)\n",
-            pItem[0].iCharPos, cInChars, pItem[1].iCharPos);
+    /* This is a valid test that will cause parsing to take place. */
+    cInChars = lstrlenW(TestItem1);
+    hr = ScriptItemize(TestItem1, cInChars, ARRAY_SIZE(pItem), NULL, NULL, pItem, &pcItems);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    /* This test is for the interim operation of ScriptItemize() where only
+     * one SCRIPT_ITEM is returned. */
+    ok(pcItems == 1, "Got unexpected item count %d.\n", pcItems);
+    ok(pItem[0].iCharPos == 0, "Got unexpected character position %d.\n", pItem[0].iCharPos);
+    ok(pItem[1].iCharPos == cInChars, "Got unexpected character position %d, expected %d.\n",
+            pItem[1].iCharPos, cInChars);
 
-    /* It would appear that we have a valid SCRIPT_ANALYSIS and can continue
-     * ie. ScriptItemize has succeeded and that pItem has been set                            */
-    cInChars = 5;
-    if (hr == S_OK) {
-        psc = NULL;                                   /* must be null on first call           */
-        cChars = cInChars;
-        cMaxGlyphs = cInChars;
-        hr = ScriptShape(NULL, &psc, TestItem1, cChars,
-                         cMaxGlyphs, &pItem[0].a,
-                         pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
-        ok (hr == E_PENDING, "If psc is NULL (%08x) the E_PENDING should be returned\n", hr);
-        cMaxGlyphs = 4;
-        hr = ScriptShape(hdc, &psc, TestItem1, cChars,
-                         cMaxGlyphs, &pItem[0].a,
-                         pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
-        ok (hr == E_OUTOFMEMORY, "If not enough output area cChars (%d) is > than CMaxGlyphs "
-                                 "(%d) but not E_OUTOFMEMORY\n",
-                                 cChars, cMaxGlyphs);
-        cMaxGlyphs = 256;
-        hr = ScriptShape(hdc, &psc, TestItem1, cChars,
-                         cMaxGlyphs, &pItem[0].a,
-                         pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
-        ok (hr == S_OK, "ScriptShape should return S_OK not (%08x)\n", hr);
-        ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
-        ok (pcGlyphs == cChars, "Chars in (%d) should equal Glyphs out (%d)\n", cChars, pcGlyphs);
-        if (hr ==0) {
-            hr = ScriptPlace(hdc, &psc, pwOutGlyphs1, pcGlyphs, psva, &pItem[0].a, piAdvance,
-                             pGoffset, pABC);
-            ok (hr == S_OK, "ScriptPlace should return S_OK not (%08x)\n", hr);
-            hr = ScriptPlace(NULL, &psc, pwOutGlyphs1, pcGlyphs, psva, &pItem[0].a, piAdvance,
-                             pGoffset, pABC);
-            ok (hr == S_OK, "ScriptPlace should return S_OK not (%08x)\n", hr);
-            for (cnt=0; cnt < pcGlyphs; cnt++)
-                pwOutGlyphs[cnt] = pwOutGlyphs1[cnt];                 /* Send to next function */
-        }
+    psc = NULL;
+    hr = ScriptShape(NULL, &psc, TestItem1, cInChars, cInChars,
+            &pItem[0].a, pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+    ok(hr == E_PENDING, "Got unexpected hr %#x.\n", hr);
 
-        /* This test will check to make sure that SCRIPT_CACHE is reused and that not translation   *
-         * takes place if fNoGlyphIndex is set.                                                     */
+    hr = ScriptShape(hdc, &psc, TestItem1, cInChars, cInChars - 1,
+            &pItem[0].a, pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+    ok(hr == E_OUTOFMEMORY, "Got unexpected hr %#x.\n", hr);
 
-        cInChars = 5;
-        cMaxItems = 255;
-        hr = ScriptItemize(TestItem2, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-        ok (hr == S_OK, "ScriptItemize should return S_OK, returned %08x\n", hr);
-        /*  This test is for the interim operation of ScriptItemize where only one SCRIPT_ITEM is   *
-         *  returned.                                                                               */
-        ok (pItem[0].iCharPos == 0 && pItem[1].iCharPos == cInChars,
-                            "Start pos not = 0 (%d) or end pos not = %d (%d)\n",
-                             pItem[0].iCharPos, cInChars, pItem[1].iCharPos);
-        /* It would appear that we have a valid SCRIPT_ANALYSIS and can continue                    */
-        if (hr == S_OK) {
-             cChars = cInChars;
-             cMaxGlyphs = 256;
-             pItem[0].a.fNoGlyphIndex = 1;                /* say no translate                     */
-             hr = ScriptShape(NULL, &psc, TestItem2, cChars,
-                              cMaxGlyphs, &pItem[0].a,
-                              pwOutGlyphs2, pwLogClust, psva, &pcGlyphs);
-             ok (hr != E_PENDING, "If psc should not be NULL (%08x) and the E_PENDING should be returned\n", hr);
-             ok (hr == S_OK, "ScriptShape should return S_OK not (%08x)\n", hr);
-             ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
-             ok (pcGlyphs == cChars, "Chars in (%d) should equal Glyphs out (%d)\n", cChars, pcGlyphs);
-             for (cnt=0; cnt < cChars && TestItem2[cnt] == pwOutGlyphs2[cnt]; cnt++) {}
-             ok (cnt == cChars, "Translation to place when told not to. WCHAR %d - %04x != %04x\n",
-                           cnt, TestItem2[cnt], pwOutGlyphs2[cnt]);
-             if (hr == S_OK) {
-                 hr = ScriptPlace(hdc, &psc, pwOutGlyphs2, pcGlyphs, psva, &pItem[0].a, piAdvance,
-                                  pGoffset, pABC);
-                 ok (hr == S_OK, "ScriptPlace should return S_OK not (%08x)\n", hr);
-             }
-        }
-        ScriptFreeCache( &psc);
-        ok (!psc, "psc is not null after ScriptFreeCache\n");
+    hr = ScriptShape(hdc, &psc, TestItem1, cInChars, ARRAY_SIZE(pwOutGlyphs1),
+            &pItem[0].a, pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!!psc, "Got unexpected psc %p.\n", psc);
+    ok(pcGlyphs == cInChars, "Got unexpected glyph count %d, expected %d.\n", pcGlyphs, cInChars);
 
+    /* Send to next test. */
+    memcpy(pwOutGlyphs, pwOutGlyphs1, pcGlyphs * sizeof(*pwOutGlyphs));
+
+    hr = ScriptPlace(hdc, &psc, pwOutGlyphs1, pcGlyphs,
+            psva, &pItem[0].a, piAdvance, pGoffset, pABC);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    hr = ScriptPlace(NULL, &psc, pwOutGlyphs1, pcGlyphs,
+            psva, &pItem[0].a, piAdvance, pGoffset, pABC);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+
+    /* This test verifies that SCRIPT_CACHE is reused and that no translation
+     * takes place if fNoGlyphIndex is set. */
+    cInChars = lstrlenW(TestItem2);
+    hr = ScriptItemize(TestItem2, cInChars, ARRAY_SIZE(pItem), NULL, NULL, pItem, &pcItems);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    /* This test is for the interim operation of ScriptItemize() where only
+     * one SCRIPT_ITEM is returned. */
+    ok(pcItems == 1, "Got unexpected item count %d.\n", pcItems);
+    ok(pItem[0].iCharPos == 0, "Got unexpected character position %d.\n", pItem[0].iCharPos);
+    ok(pItem[1].iCharPos == cInChars, "Got unexpected character position %d, expected %d.\n",
+            pItem[1].iCharPos, cInChars);
+
+    pItem[0].a.fNoGlyphIndex = 1; /* No translation. */
+    hr = ScriptShape(NULL, &psc, TestItem2, cInChars, ARRAY_SIZE(pwOutGlyphs1),
+           &pItem[0].a, pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!!psc, "Got unexpected psc %p.\n", psc);
+    ok(pcGlyphs == cInChars, "Got unexpected glyph count %d, expected %d.\n", pcGlyphs, cInChars);
+
+    for (i = 0; i < cInChars; ++i)
+    {
+        ok(pwOutGlyphs1[i] == TestItem2[i],
+                "Got unexpected pwOutGlyphs1[%u] %#x, expected %#x.\n",
+                i, pwOutGlyphs1[i], TestItem2[i]);
     }
 
-    /* This is a valid test that will cause parsing to take place and create 3 script_items   */
-    cInChars = (sizeof(TestItem3)/2)-1;
-    cMaxItems = 255;
-    hr = ScriptItemize(TestItem3, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == S_OK, "ScriptItemize should return S_OK, returned %08x\n", hr);
-    if  (hr == S_OK)
-	{
-        ok (pcItems == 3, "The number of SCRIPT_ITEMS should be 3 not %d\n", pcItems);
-        if (pcItems > 2)
-        {
-            ok (pItem[0].iCharPos == 0 && pItem[1].iCharPos == 6,
-                "Start pos [0] not = 0 (%d) or end pos [1] not = %d\n",
-                pItem[0].iCharPos, pItem[1].iCharPos);
-            ok (pItem[1].iCharPos == 6 && pItem[2].iCharPos == 11,
-                "Start pos [1] not = 6 (%d) or end pos [2] not = 11 (%d)\n",
-                pItem[1].iCharPos, pItem[2].iCharPos);
-            ok (pItem[2].iCharPos == 11 && pItem[3].iCharPos == cInChars,
-                "Start pos [2] not = 11 (%d) or end [3] pos not = 14 (%d), cInChars = %d\n",
-                pItem[2].iCharPos, pItem[3].iCharPos, cInChars);
-        }
-    }
+    hr = ScriptPlace(hdc, &psc, pwOutGlyphs1, pcGlyphs,
+            psva, &pItem[0].a, piAdvance, pGoffset, pABC);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ScriptFreeCache(&psc);
+    ok(!psc, "Got unexpected psc %p.\n", psc);
 
-    /* This is a valid test that will cause parsing to take place and create 5 script_items   */
-    cInChars = (sizeof(TestItem4)/2)-1;
-    cMaxItems = 255;
-    hr = ScriptItemize(TestItem4, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == S_OK, "ScriptItemize should return S_OK, returned %08x\n", hr);
-    if  (hr == S_OK)
-	{
-        ok (pcItems == 5, "The number of SCRIPT_ITEMS should be 5 not %d\n", pcItems);
-        if (pcItems > 4)
-        {
-            ok (pItem[0].iCharPos == 0 && pItem[1].iCharPos == 6,
-                "Start pos [0] not = 0 (%d) or end pos [1] not = %d\n",
-                pItem[0].iCharPos, pItem[1].iCharPos);
-            ok (pItem[0].a.s.uBidiLevel == 0, "Should have been bidi=0 not %d\n",
-                                               pItem[0].a.s.uBidiLevel);
-            ok (pItem[1].iCharPos == 6 && pItem[2].iCharPos == 11,
-                "Start pos [1] not = 6 (%d) or end pos [2] not = 11 (%d)\n",
-                pItem[1].iCharPos, pItem[2].iCharPos);
-            ok (pItem[1].a.s.uBidiLevel == 1, "Should have been bidi=1 not %d\n",
-                                              pItem[1].a.s.uBidiLevel);
-            ok (pItem[2].iCharPos == 11 && pItem[3].iCharPos == 12,
-                "Start pos [2] not = 11 (%d) or end [3] pos not = 12 (%d)\n",
-                pItem[2].iCharPos, pItem[3].iCharPos);
-            ok (pItem[2].a.s.uBidiLevel == 0, "Should have been bidi=0 not %d\n",
-                                               pItem[2].a.s.uBidiLevel);
-            ok (pItem[3].iCharPos == 12 && pItem[4].iCharPos == 13,
-                "Start pos [3] not = 12 (%d) or end [4] pos not = 13 (%d)\n",
-                pItem[3].iCharPos, pItem[4].iCharPos);
-            ok (pItem[3].a.s.uBidiLevel == 0, "Should have been bidi=0 not %d\n",
-                                               pItem[3].a.s.uBidiLevel);
-            ok (pItem[4].iCharPos == 13 && pItem[5].iCharPos == cInChars,
-                "Start pos [4] not = 13 (%d) or end [5] pos not = 16 (%d), cInChars = %d\n",
-                pItem[4].iCharPos, pItem[5].iCharPos, cInChars);
-        }
-    }
+    /* This is a valid test that will cause parsing to take place and create 3
+     * script_items. */
+    cInChars = lstrlenW(TestItem3);
+    hr = ScriptItemize(TestItem3, cInChars, ARRAY_SIZE(pItem), NULL, NULL, pItem, &pcItems);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(pcItems == 3, "Got unexpected item count %d.\n", pcItems);
+    ok(pItem[0].iCharPos == 0, "Got unexpected character position %d.\n", pItem[0].iCharPos);
+    ok(pItem[1].iCharPos == 6, "Got unexpected character position %d.\n", pItem[1].iCharPos);
+    ok(pItem[2].iCharPos == 11, "Got unexpected character position %d.\n", pItem[2].iCharPos);
+    ok(pItem[3].iCharPos == cInChars, "Got unexpected character position %d, expected %d.\n",
+            pItem[3].iCharPos, cInChars);
 
-    /*
-     * This test is for when the first unicode character requires bidi support
-     */
-    cInChars = (sizeof(TestItem5)-1)/sizeof(WCHAR);
-    hr = ScriptItemize(TestItem5, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == S_OK, "ScriptItemize should return S_OK, returned %08x\n", hr);
-    ok (pcItems == 4, "There should have been 4 items, found %d\n", pcItems);
-    ok (pItem[0].a.s.uBidiLevel == 1, "The first character should have been bidi=1 not %d\n",
-                                       pItem[0].a.s.uBidiLevel);
+    /* This is a valid test that will cause parsing to take place and create 5
+     * script_items. */
+    cInChars = lstrlenW(TestItem4);
+    hr = ScriptItemize(TestItem4, cInChars, ARRAY_SIZE(pItem), NULL, NULL, pItem, &pcItems);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(pcItems == 5, "Got unexpected item count %d.\n", pcItems);
 
-    /* This test checks to make sure that the test to see if there are sufficient buffers to store  *
-     * the pointer to the last char works.  Note that windows often needs a greater number of       *
-     * SCRIPT_ITEMS to process a string than is returned in pcItems.                                */
-    cInChars = (sizeof(TestItem6)/2)-1;
-    cMaxItems = 4;
-    hr = ScriptItemize(TestItem6, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == E_OUTOFMEMORY, "ScriptItemize should return E_OUTOFMEMORY, returned %08x\n", hr);
+    ok(pItem[0].iCharPos == 0, "Got unexpected character position %d.\n", pItem[0].iCharPos);
+    ok(pItem[1].iCharPos == 6, "Got unexpected character position %d.\n", pItem[1].iCharPos);
+    ok(pItem[2].iCharPos == 11, "Got unexpected character position %d.\n", pItem[2].iCharPos);
+    ok(pItem[3].iCharPos == 12, "Got unexpected character position %d.\n", pItem[3].iCharPos);
+    ok(pItem[4].iCharPos == 13, "Got unexpected character position %d.\n", pItem[4].iCharPos);
+    ok(pItem[5].iCharPos == cInChars, "Got unexpected character position %d, expected %d.\n",
+            pItem[5].iCharPos, cInChars);
 
+    ok(pItem[0].a.s.uBidiLevel == 0, "Got unexpected bidi level %u.\n", pItem[0].a.s.uBidiLevel);
+    ok(pItem[1].a.s.uBidiLevel == 1, "Got unexpected bidi level %u.\n", pItem[1].a.s.uBidiLevel);
+    ok(pItem[2].a.s.uBidiLevel == 0, "Got unexpected bidi level %u.\n", pItem[2].a.s.uBidiLevel);
+    ok(pItem[3].a.s.uBidiLevel == 0, "Got unexpected bidi level %u.\n", pItem[3].a.s.uBidiLevel);
+    ok(pItem[4].a.s.uBidiLevel == 0, "Got unexpected bidi level %u.\n", pItem[3].a.s.uBidiLevel);
+
+    /* This test is for when the first Unicode character requires BiDi support. */
+    hr = ScriptItemize(TestItem5, lstrlenW(TestItem5), ARRAY_SIZE(pItem), NULL, NULL, pItem, &pcItems);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(pcItems == 4, "Got unexpected item count %d.\n", pcItems);
+    ok(pItem[0].a.s.uBidiLevel == 1, "Got unexpected bidi level %u.\n", pItem[0].a.s.uBidiLevel);
+
+    /* This test verifies that the test to see if there are sufficient buffers
+     * to store the pointer to the last character works. Note that Windows
+     * often needs a greater number of SCRIPT_ITEMS to process a string than
+     * is returned in pcItems. */
+    hr = ScriptItemize(TestItem6, lstrlenW(TestItem6), 4, NULL, NULL, pItem, &pcItems);
+    ok(hr == E_OUTOFMEMORY, "Got unexpected hr %#x.\n", hr);
 }
 
 static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
@@ -2693,14 +2638,11 @@ static void test_ScriptTextOut(HDC hdc)
     HRESULT         hr;
 
     int             cInChars;
-    int             cMaxItems;
     SCRIPT_ITEM     pItem[255];
     int             pcItems;
     WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0}; 
 
     SCRIPT_CACHE    psc;
-    int             cChars;
-    int             cMaxGlyphs;
     unsigned short  pwOutGlyphs1[256];
     WORD            pwLogClust[256];
     SCRIPT_VISATTR  psva[256];
@@ -2710,112 +2652,84 @@ static void test_ScriptTextOut(HDC hdc)
     ABC             pABC[256];
     RECT            rect;
     int             piX;
-    int             iCP = 1;
-    BOOL            fTrailing = FALSE;
-    SCRIPT_LOGATTR  *psla;
     SCRIPT_LOGATTR  sla[256];
 
-    /* This is a valid test that will cause parsing to take place                             */
+    /* This is a valid test that will cause parsing to take place. */
+    cInChars = lstrlenW(TestItem1);
+    hr = ScriptItemize(TestItem1, cInChars, ARRAY_SIZE(pItem), NULL, NULL, pItem, &pcItems);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    /* This test is for the interim operation of ScriptItemize() where only
+     * one SCRIPT_ITEM is returned. */
+    ok(pcItems == 1, "Got unexpected item count %d.\n", pcItems);
+    ok(pItem[0].iCharPos == 0, "Got unexpected character position %d.\n", pItem[0].iCharPos);
+    ok(pItem[1].iCharPos == cInChars, "Got unexpected character position %d, expected %d.\n",
+            pItem[1].iCharPos, cInChars);
+
+    psc = NULL;
     cInChars = 5;
-    cMaxItems = 255;
-    hr = ScriptItemize(TestItem1, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == S_OK, "ScriptItemize should return S_OK, returned %08x\n", hr);
-    /*  This test is for the interim operation of ScriptItemize where only one SCRIPT_ITEM is *
-     *  returned.                                                                             */
-    ok (pcItems > 0, "The number of SCRIPT_ITEMS should be greater than 0\n");
-    if (pcItems > 0)
-        ok (pItem[0].iCharPos == 0 && pItem[1].iCharPos == cInChars,
-            "Start pos not = 0 (%d) or end pos not = %d (%d)\n",
-            pItem[0].iCharPos, cInChars, pItem[1].iCharPos);
+    hr = ScriptShape(hdc, &psc, TestItem1, cInChars, ARRAY_SIZE(pwOutGlyphs1),
+            &pItem[0].a, pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!!psc, "Got unexpected psc %p.\n", psc);
+    ok(pcGlyphs == cInChars, "Got unexpected glyph count %d, expected %d.\n", pcGlyphs, cInChars);
 
-    /* It would appear that we have a valid SCRIPT_ANALYSIS and can continue
-     * ie. ScriptItemize has succeeded and that pItem has been set                            */
-    cInChars = 5;
-    if (hr == S_OK) {
-        psc = NULL;                                   /* must be null on first call           */
-        cChars = cInChars;
-        cMaxGlyphs = 256;
-        hr = ScriptShape(hdc, &psc, TestItem1, cChars,
-                         cMaxGlyphs, &pItem[0].a,
-                         pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
-        ok (hr == S_OK, "ScriptShape should return S_OK not (%08x)\n", hr);
-        ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
-        ok (pcGlyphs == cChars, "Chars in (%d) should equal Glyphs out (%d)\n", cChars, pcGlyphs);
-        if (hr == S_OK) {
-            /* Note hdc is needed as glyph info is not yet in psc                  */
-            hr = ScriptPlace(hdc, &psc, pwOutGlyphs1, pcGlyphs, psva, &pItem[0].a, piAdvance,
-                             pGoffset, pABC);
-            ok (hr == S_OK, "Should return S_OK not (%08x)\n", hr);
-            ScriptFreeCache(&psc);              /* Get rid of psc for next test set */
-            ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
+    /* Note hdc is needed as glyph info is not yet in psc. */
+    hr = ScriptPlace(hdc, &psc, pwOutGlyphs1, pcGlyphs,
+            psva, &pItem[0].a, piAdvance, pGoffset, pABC);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    /* Get rid of psc for next test set. */
+    ScriptFreeCache(&psc);
+    ok(!psc, "Got unexpected psc %p.\n", psc);
 
-            hr = ScriptTextOut(NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, NULL, 0, NULL, NULL, NULL);
-            ok (hr == E_INVALIDARG, "Should return 0 not (%08x)\n", hr);
+    hr = ScriptTextOut(NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, NULL, 0, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
 
-            hr = ScriptTextOut(NULL, NULL, 0, 0, 0, NULL, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
-                               piAdvance, NULL, pGoffset);
-            ok( hr == E_INVALIDARG, "(NULL,NULL,TestItem1, cInChars, dwFlags, pwOutGlyphs3), "
-                                    "expected E_INVALIDARG, got %08x\n", hr);
+    hr = ScriptTextOut(NULL, NULL, 0, 0, 0, NULL, &pItem[0].a, NULL, 0,
+            pwOutGlyphs1, pcGlyphs, piAdvance, NULL, pGoffset);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
 
-            /* Set psc to NULL, to be able to check if a pointer is returned in psc */
-            psc = NULL;
-            hr = ScriptTextOut(NULL, &psc, 0, 0, 0, NULL, NULL, NULL, 0, NULL, 0,
-                               NULL, NULL, NULL);
-            ok( hr == E_INVALIDARG, "(NULL,&psc,NULL,0,0,0,NULL,), expected E_INVALIDARG, "
-                                    "got %08x\n", hr);
-            ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
+    hr = ScriptTextOut(NULL, &psc, 0, 0, 0, NULL, NULL, NULL, 0, NULL, 0, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!psc, "Got unexpected psc %p.\n", psc);
 
-            /* hdc is required for this one rather than the usual optional          */
-            psc = NULL;
-            hr = ScriptTextOut(NULL, &psc, 0, 0, 0, NULL, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
-                               piAdvance, NULL, pGoffset);
-            ok( hr == E_INVALIDARG, "(NULL,&psc,), expected E_INVALIDARG, got %08x\n", hr);
-            ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
+    /* hdc is required. */
+    hr = ScriptTextOut(NULL, &psc, 0, 0, 0, NULL, &pItem[0].a, NULL, 0,
+            pwOutGlyphs1, pcGlyphs, piAdvance, NULL, pGoffset);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!psc, "Got unexpected psc %p.\n", psc);
+    hr = ScriptTextOut(hdc, &psc, 0, 0, 0, NULL, &pItem[0].a, NULL, 0,
+            pwOutGlyphs1, pcGlyphs, piAdvance, NULL, pGoffset);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
 
-            /* Set that it returns 0 status */
-            hr = ScriptTextOut(hdc, &psc, 0, 0, 0, NULL, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
-                               piAdvance, NULL, pGoffset);
-            ok (hr == S_OK, "ScriptTextOut should return S_OK not (%08x)\n", hr);
+    /* Test Rect Rgn is acceptable. */
+    SetRect(&rect, 10, 10, 40, 20);
+    hr = ScriptTextOut(hdc, &psc, 0, 0, 0, &rect, &pItem[0].a, NULL, 0,
+            pwOutGlyphs1, pcGlyphs, piAdvance, NULL, pGoffset);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
 
-            /* Test Rect Rgn is acceptable */
-            SetRect(&rect, 10, 10, 40, 20);
-            hr = ScriptTextOut(hdc, &psc, 0, 0, 0, &rect, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
-                               piAdvance, NULL, pGoffset);
-            ok (hr == S_OK, "ScriptTextOut should return S_OK not (%08x)\n", hr);
+    hr = ScriptCPtoX(1, FALSE, cInChars, pcGlyphs, pwLogClust, psva, piAdvance, &pItem[0].a, &piX);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
 
-            iCP = 1;
-            hr = ScriptCPtoX(iCP, fTrailing, cChars, pcGlyphs, (const WORD *) &pwLogClust,
-                            (const SCRIPT_VISATTR *) &psva, (const int *)&piAdvance, &pItem[0].a, &piX);
-            ok(hr == S_OK, "ScriptCPtoX Stub should return S_OK not %08x\n", hr);
+    hr = ScriptBreak(TestItem1, cInChars, &pItem[0].a, sla);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
 
-            psla = (SCRIPT_LOGATTR *)&sla;
-            hr = ScriptBreak(TestItem1, cChars, &pItem[0].a, psla);
-            ok(hr == S_OK, "ScriptBreak Stub should return S_OK not %08x\n", hr);
-
-            /* Clean up and go   */
-            ScriptFreeCache(&psc);
-            ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
-        }
-    }
+    ScriptFreeCache(&psc);
+    ok(!psc, "Got unexpected psc %p.\n", psc);
 }
 
+/* The intent is to validate that the DC passed into ScriptTextOut() is used
+ * instead of the (possibly) invalid cached one. */
 static void test_ScriptTextOut2(HDC hdc)
 {
-/*  Intent is to validate that the HDC passed into ScriptTextOut is
- *  used instead of the (possibly) invalid cached one
- */
     HRESULT         hr;
 
     HDC             hdc1, hdc2;
     int             cInChars;
-    int             cMaxItems;
     SCRIPT_ITEM     pItem[255];
     int             pcItems;
     WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0};
 
     SCRIPT_CACHE    psc;
-    int             cChars;
-    int             cMaxGlyphs;
     unsigned short  pwOutGlyphs1[256];
     WORD            pwLogClust[256];
     SCRIPT_VISATTR  psva[256];
@@ -2823,67 +2737,53 @@ static void test_ScriptTextOut2(HDC hdc)
     int             piAdvance[256];
     GOFFSET         pGoffset[256];
     ABC             pABC[256];
+    BOOL ret;
 
-    /* Create an extra DC that will be used until the ScriptTextOut */
+    /* Create an extra DC that will be used until the ScriptTextOut() call. */
     hdc1 = CreateCompatibleDC(hdc);
-    ok (hdc1 != 0, "CreateCompatibleDC failed to create a DC\n");
+    ok(!!hdc1, "Failed to create a DC.\n");
     hdc2 = CreateCompatibleDC(hdc);
-    ok (hdc2 != 0, "CreateCompatibleDC failed to create a DC\n");
+    ok(!!hdc2, "Failed to create a DC.\n");
 
-    /* This is a valid test that will cause parsing to take place                             */
-    cInChars = 5;
-    cMaxItems = 255;
-    hr = ScriptItemize(TestItem1, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == S_OK, "ScriptItemize should return S_OK, returned %08x\n", hr);
-    /*  This test is for the interim operation of ScriptItemize where only one SCRIPT_ITEM is *
-     *  returned.                                                                             */
-    ok (pcItems > 0, "The number of SCRIPT_ITEMS should be greater than 0\n");
-    if (pcItems > 0)
-        ok (pItem[0].iCharPos == 0 && pItem[1].iCharPos == cInChars,
-            "Start pos not = 0 (%d) or end pos not = %d (%d)\n",
-            pItem[0].iCharPos, cInChars, pItem[1].iCharPos);
+    /* This is a valid test that will cause parsing to take place. */
+    cInChars = lstrlenW(TestItem1);
+    hr = ScriptItemize(TestItem1, cInChars, ARRAY_SIZE(pItem), NULL, NULL, pItem, &pcItems);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    /* This test is for the interim operation of ScriptItemize() where only
+     * one SCRIPT_ITEM is returned. */
+    ok(pcItems == 1, "Got unexpected item count %d.\n", pcItems);
+    ok(pItem[0].iCharPos == 0, "Got unexpected character position %d.\n", pItem[0].iCharPos);
+    ok(pItem[1].iCharPos == cInChars, "Got unexpected character position %d, expected %d.\n",
+            pItem[1].iCharPos, cInChars);
 
-    /* It would appear that we have a valid SCRIPT_ANALYSIS and can continue
-     * ie. ScriptItemize has succeeded and that pItem has been set                            */
-    cInChars = 5;
-    if (hr == S_OK) {
-        psc = NULL;                                   /* must be null on first call           */
-        cChars = cInChars;
-        cMaxGlyphs = 256;
-        hr = ScriptShape(hdc2, &psc, TestItem1, cChars,
-                         cMaxGlyphs, &pItem[0].a,
-                         pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
-        ok (hr == S_OK, "ScriptShape should return S_OK not (%08x)\n", hr);
-        ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
-        ok (pcGlyphs == cChars, "Chars in (%d) should equal Glyphs out (%d)\n", cChars, pcGlyphs);
-        if (hr == S_OK) {
-            BOOL ret;
+    psc = NULL;
+    hr = ScriptShape(hdc2, &psc, TestItem1, cInChars, ARRAY_SIZE(pwOutGlyphs1),
+            &pItem[0].a, pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!!psc, "Got unexpected psc %p.\n", psc);
+    ok(pcGlyphs == cInChars, "Got unexpected glyph count %d, expected %d.\n", pcGlyphs, cInChars);
 
-            /* Note hdc is needed as glyph info is not yet in psc                  */
-            hr = ScriptPlace(hdc2, &psc, pwOutGlyphs1, pcGlyphs, psva, &pItem[0].a, piAdvance,
-                             pGoffset, pABC);
-            ok (hr == S_OK, "Should return S_OK not (%08x)\n", hr);
+    /* Note hdc is needed as glyph info is not yet in psc. */
+    hr = ScriptPlace(hdc2, &psc, pwOutGlyphs1, pcGlyphs,
+            psva, &pItem[0].a, piAdvance, pGoffset, pABC);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
 
-            /*   key part!!!   cached dc is being deleted  */
-            ret = DeleteDC(hdc2);
-            ok(ret, "DeleteDC should return 1 not %d\n", ret);
+    /* Key part! Cached DC is being deleted. */
+    ret = DeleteDC(hdc2);
+    ok(ret, "Got unexpected ret %#x.\n", ret);
 
-            /* At this point the cached hdc (hdc2) has been destroyed,
-             * however, we are passing in a *real* hdc (the original hdc).
-             * The text should be written to that DC
-             */
-            hr = ScriptTextOut(hdc1, &psc, 0, 0, 0, NULL, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
-                               piAdvance, NULL, pGoffset);
-            ok (hr == S_OK, "ScriptTextOut should return S_OK not (%08x)\n", hr);
-            ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
+    /* At this point the cached DC (hdc2) has been destroyed. However, we are
+     * passing in a *real* DC (the original DC). The text should be written to
+     * that DC. */
+    hr = ScriptTextOut(hdc1, &psc, 0, 0, 0, NULL, &pItem[0].a, NULL, 0,
+            pwOutGlyphs1, pcGlyphs, piAdvance, NULL, pGoffset);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!!psc, "Got unexpected psc %p.\n", psc);
 
-            DeleteDC(hdc1);
+    DeleteDC(hdc1);
 
-            /* Clean up and go   */
-            ScriptFreeCache(&psc);
-            ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
-        }
-    }
+    ScriptFreeCache(&psc);
+    ok(!psc, "Got unexpected psc %p.\n", psc);
 }
 
 static void test_ScriptTextOut3(HDC hdc)
@@ -2891,14 +2791,11 @@ static void test_ScriptTextOut3(HDC hdc)
     HRESULT         hr;
 
     int             cInChars;
-    int             cMaxItems;
     SCRIPT_ITEM     pItem[255];
     int             pcItems;
     WCHAR           TestItem1[] = {' ','\r', 0};
 
     SCRIPT_CACHE    psc;
-    int             cChars;
-    int             cMaxGlyphs;
     unsigned short  pwOutGlyphs1[256];
     WORD            pwLogClust[256];
     SCRIPT_VISATTR  psva[256];
@@ -2908,48 +2805,39 @@ static void test_ScriptTextOut3(HDC hdc)
     ABC             pABC[256];
     RECT            rect;
 
-    /* This is to ensure that nonexistent glyphs are translated into a valid glyph number */
-    cInChars = 2;
-    cMaxItems = 255;
-    hr = ScriptItemize(TestItem1, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == S_OK, "ScriptItemize should return S_OK, returned %08x\n", hr);
-    /*  This test is for the interim operation of ScriptItemize where only one SCRIPT_ITEM is *
-     *  returned.                                                                             */
-    ok (pcItems > 0, "The number of SCRIPT_ITEMS should be greater than 0\n");
-    if (pcItems > 0)
-        ok (pItem[0].iCharPos == 0 && pItem[2].iCharPos == cInChars,
-            "Start pos not = 0 (%d) or end pos not = %d (%d)\n",
-            pItem[0].iCharPos, cInChars, pItem[2].iCharPos);
+    /* This is to ensure that non-existent glyphs are translated into a valid
+     * glyph number. */
+    cInChars = lstrlenW(TestItem1);
+    hr = ScriptItemize(TestItem1, cInChars, ARRAY_SIZE(pItem), NULL, NULL, pItem, &pcItems);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    /* This test is for the interim operation of ScriptItemize() where only
+     * one SCRIPT_ITEM is returned. */
+    ok(pcItems == 2, "Got unexpected item count %d.\n", pcItems);
+    ok(pItem[0].iCharPos == 0, "Got unexpected character position %d.\n", pItem[0].iCharPos);
+    ok(pItem[1].iCharPos == 1, "Got unexpected character position %d.\n", pItem[0].iCharPos);
+    ok(pItem[2].iCharPos == cInChars, "Got unexpected character position %d, expected %d.\n",
+            pItem[2].iCharPos, cInChars);
 
-    /* It would appear that we have a valid SCRIPT_ANALYSIS and can continue
-     * ie. ScriptItemize has succeeded and that pItem has been set                            */
-    cInChars = 2;
-    if (hr == S_OK) {
-        psc = NULL;                                   /* must be null on first call           */
-        cChars = cInChars;
-        cMaxGlyphs = 256;
-        hr = ScriptShape(hdc, &psc, TestItem1, cChars,
-                         cMaxGlyphs, &pItem[0].a,
-                         pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
-        ok (hr == S_OK, "ScriptShape should return S_OK not (%08x)\n", hr);
-        ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
-        ok (pcGlyphs == cChars, "Chars in (%d) should equal Glyphs out (%d)\n", cChars, pcGlyphs);
-        if (hr ==0) {
-            /* Note hdc is needed as glyph info is not yet in psc                  */
-            hr = ScriptPlace(hdc, &psc, pwOutGlyphs1, pcGlyphs, psva, &pItem[0].a, piAdvance,
-                             pGoffset, pABC);
-            ok (hr == S_OK, "Should return S_OK not (%08x)\n", hr);
+    psc = NULL;
+    hr = ScriptShape(hdc, &psc, TestItem1, cInChars, ARRAY_SIZE(pwOutGlyphs1),
+            &pItem[0].a, pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!!psc, "Got unexpected psc %p.\n", psc);
+    ok(pcGlyphs == cInChars, "Got unexpected glyph count %d, expected %d.\n", pcGlyphs, cInChars);
 
-            /* Test Rect Rgn is acceptable */
-            SetRect(&rect, 10, 10, 40, 20);
-            hr = ScriptTextOut(hdc, &psc, 0, 0, 0, &rect, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
-                               piAdvance, NULL, pGoffset);
-            ok (hr == S_OK, "ScriptTextOut should return S_OK not (%08x)\n", hr);
-        }
-        /* Clean up and go   */
-        ScriptFreeCache(&psc);
-        ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
-    }
+    /* Note hdc is needed as glyph info is not yet in psc. */
+    hr = ScriptPlace(hdc, &psc, pwOutGlyphs1, pcGlyphs,
+            psva, &pItem[0].a, piAdvance, pGoffset, pABC);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+
+    /* Test Rect Rgn is acceptable. */
+    SetRect(&rect, 10, 10, 40, 20);
+    hr = ScriptTextOut(hdc, &psc, 0, 0, 0, &rect, &pItem[0].a, NULL, 0,
+            pwOutGlyphs1, pcGlyphs, piAdvance, NULL, pGoffset);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+
+    ScriptFreeCache(&psc);
+    ok(!psc, "Got unexpected psc %p.\n", psc);
 }
 
 #define test_item_ScriptXtoX(a,b,c,d,e,f) (winetest_set_location(__FILE__,__LINE__), 0) ? 0 : _test_item_ScriptXtoX(a,b,c,d,e,f)
@@ -3211,26 +3099,23 @@ static void test_ScriptXtoX(void)
         win_skip("Uniscribe version too old to test Hebrew clusters\n");
 }
 
+/* This set of tests is for the string functions of Uniscribe. The
+ * ScriptStringAnalyse() function allocates memory pointed to by the
+ * SCRIPT_STRING_ANALYSIS ssa pointer. This memory is freed by
+ * ScriptStringFree(). There needs to be a valid hdc for this as
+ * ScriptStringAnalyse() calls ScriptItemize(), ScriptShape() and
+ * ScriptPlace() which require it. */
 static void test_ScriptString(HDC hdc)
 {
-/*******************************************************************************************
- *
- * This set of tests are for the string functions of uniscribe.  The ScriptStringAnalyse
- * function allocates memory pointed to by the SCRIPT_STRING_ANALYSIS ssa pointer.  This
- * memory is freed by ScriptStringFree.  There needs to be a valid hdc for this as
- * ScriptStringAnalyse calls ScriptItemize, ScriptShape and ScriptPlace which require it.
- *
- */
 
     HRESULT         hr;
     WCHAR           teststr[] = {'T','e','s','t','1',' ','a','2','b','3', '\0'};
-    int             len = (sizeof(teststr) / sizeof(WCHAR)) - 1;
+    int             len = ARRAY_SIZE(teststr) - 1;
     int             Glyphs = len * 2 + 16;
-    int             Charset;
     DWORD           Flags = SSA_GLYPHS;
     int             ReqWidth = 100;
-    static const int Dx[(sizeof(teststr) / sizeof(WCHAR)) - 1];
-    static const BYTE InClass[(sizeof(teststr) / sizeof(WCHAR)) - 1];
+    static const int Dx[ARRAY_SIZE(teststr) - 1];
+    static const BYTE InClass[ARRAY_SIZE(teststr) - 1];
     SCRIPT_STRING_ANALYSIS ssa = NULL;
 
     int             X = 10; 
@@ -3241,78 +3126,62 @@ static void test_ScriptString(HDC hdc)
     int             MaxSel = 0;
     BOOL            Disabled = FALSE;
     const int      *clip_len;
-    int            i;
     UINT           *order;
+    unsigned int i;
 
+    /* Test without hdc to get E_PENDING. */
+    hr = ScriptStringAnalyse(NULL, teststr, len, Glyphs, -1,
+            Flags, ReqWidth, NULL, NULL, Dx, NULL, InClass, &ssa);
+    ok(hr == E_PENDING, "Got unexpected hr %#x.\n", hr);
 
-    Charset = -1;     /* this flag indicates unicode input */
-    /* Test without hdc to get E_PENDING */
-    hr = ScriptStringAnalyse( NULL, teststr, len, Glyphs, Charset, Flags,
-                              ReqWidth, NULL, NULL, Dx, NULL,
-                              InClass, &ssa);
-    ok(hr == E_PENDING, "ScriptStringAnalyse Stub should return E_PENDING not %08x\n", hr);
+    /* Test that 0 length string returns E_INVALIDARG. */
+    hr = ScriptStringAnalyse(hdc, teststr, 0, Glyphs, -1,
+            Flags, ReqWidth, NULL, NULL, Dx, NULL, InClass, &ssa);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
 
-    /* Test that 0 length string returns E_INVALIDARG  */
-    hr = ScriptStringAnalyse( hdc, teststr, 0, Glyphs, Charset, Flags,
-                              ReqWidth, NULL, NULL, Dx, NULL,
-                              InClass, &ssa);
-    ok(hr == E_INVALIDARG, "ScriptStringAnalyse should return E_INVALIDARG not %08x\n", hr);
-
-    /* test with hdc, this should be a valid test  */
-    hr = ScriptStringAnalyse( hdc, teststr, len, Glyphs, Charset, Flags,
-                              ReqWidth, NULL, NULL, Dx, NULL,
-                              InClass, &ssa);
-    ok(hr == S_OK, "ScriptStringAnalyse should return S_OK not %08x\n", hr);
+    /* Test with hdc, this should be a valid test. */
+    hr = ScriptStringAnalyse(hdc, teststr, len, Glyphs, -1,
+            Flags, ReqWidth, NULL, NULL, Dx, NULL, InClass, &ssa);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
     ScriptStringFree(&ssa);
 
-    /* test makes sure that a call with a valid pssa still works */
-    hr = ScriptStringAnalyse( hdc, teststr, len, Glyphs, Charset, Flags,
-                              ReqWidth, NULL, NULL, Dx, NULL,
-                              InClass, &ssa);
-    ok(hr == S_OK, "ScriptStringAnalyse should return S_OK not %08x\n", hr);
-    ok(ssa != NULL, "ScriptStringAnalyse pssa should not be NULL\n");
+    /* Test makes sure that a call with a valid pssa still works. */
+    hr = ScriptStringAnalyse(hdc, teststr, len, Glyphs, -1,
+            Flags, ReqWidth, NULL, NULL, Dx, NULL, InClass, &ssa);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!!ssa, "Got unexpected ssa %p.\n", ssa);
 
-    if (hr == S_OK)
+    hr = ScriptStringOut(ssa, X, Y, Options, &rc, MinSel, MaxSel, Disabled);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+
+    clip_len = ScriptString_pcOutChars(ssa);
+    ok(*clip_len == len, "Got unexpected *clip_len %d, expected %d.\n", *clip_len, len);
+
+    order = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, *clip_len * sizeof(*order));
+    hr = ScriptStringGetOrder(ssa, order);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+
+    for (i = 0; i < *clip_len; ++i)
     {
-        hr = ScriptStringOut(ssa, X, Y, Options, &rc, MinSel, MaxSel, Disabled);
-        ok(hr == S_OK, "ScriptStringOut should return S_OK not %08x\n", hr);
+        ok(order[i] == i, "Got unexpected order[%u] %u.\n", i, order[i]);
     }
+    HeapFree(GetProcessHeap(), 0, order);
 
-     clip_len = ScriptString_pcOutChars(ssa);
-     ok(*clip_len == len, "ScriptString_pcOutChars failed, got %d, expected %d\n", *clip_len, len);
-
-     order = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, *clip_len * sizeof(UINT));
-     hr = ScriptStringGetOrder(ssa, order);
-     ok(hr == S_OK, "ScriptStringGetOrder failed, got %08x, expected S_OK\n", hr);
-
-     for (i = 0; i < *clip_len; i++) ok(order[i] == i, "%d: got %d expected %d\n", i, order[i], i);
-     HeapFree(GetProcessHeap(), 0, order);
-
-     hr = ScriptStringFree(&ssa);
-     ok(hr == S_OK, "ScriptStringFree should return S_OK not %08x\n", hr);
+    hr = ScriptStringFree(&ssa);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
 }
 
+/* Test ScriptStringXtoCP() and ScriptStringCPtoX(). Since fonts may differ
+ * between Windows and Wine, the test generates values using one function, and
+ * then verifies the output is consistent with the output of the other. */
 static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
 {
-/*****************************************************************************************
- *
- * This test is for the ScriptStringXtoCP and ScriptStringXtoCP functions.  Due to the
- * nature of the fonts between Windows and Wine, the test is implemented by generating
- * values using one one function then checking the output of the second.  In this way
- * the validity of the functions is established using Windows as a base and confirming
- * similar behaviour in wine.
- */
-
     HRESULT         hr;
     static const WCHAR teststr1[]  = {0x05e9, 'i', 0x05dc, 'n', 0x05d5, 'e', 0x05dd, '.',0};
     static const BOOL rtl[] = {1, 0, 1, 0, 1, 0, 1, 0};
-    void            *String = (WCHAR *) &teststr1;      /* ScriptStringAnalysis needs void */
-    int             String_len = (sizeof(teststr1)/sizeof(WCHAR))-1;
+    unsigned int String_len = ARRAY_SIZE(teststr1) - 1;
     int             Glyphs = String_len * 2 + 16;       /* size of buffer as recommended  */
-    int             Charset = -1;                       /* unicode                        */
-    DWORD           Flags = SSA_GLYPHS;
-    int             ReqWidth = 100;
-    static const BYTE InClass[(sizeof(teststr1)/sizeof(WCHAR))-1];
+    static const BYTE InClass[ARRAY_SIZE(teststr1) - 1];
     SCRIPT_STRING_ANALYSIS ssa = NULL;
 
     int             Ch;                                  /* Character position in string */
@@ -3320,170 +3189,135 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
     int             Cp;                                  /* Character position in string */
     int             X;
     int             trail,lead;
-    BOOL            fTrailing;
 
-    /* Test with hdc, this should be a valid test
-     * Here we generate an SCRIPT_STRING_ANALYSIS that will be used as input to the
-     * following character positions to X and X to character position functions.
-     */
+    /* Test with hdc, this should be a valid test. Here we generate a
+     * SCRIPT_STRING_ANALYSIS that will be used as input to the following
+     * character-positions-to-X and X-to-character-position functions. */
+    hr = ScriptStringAnalyse(hdc, &teststr1, String_len, Glyphs, -1,
+            SSA_GLYPHS, 100, NULL, NULL, NULL, NULL, InClass, &ssa);
+    ok(hr == S_OK || broken(hr == E_INVALIDARG) /* NT */,
+            "Got unexpected hr %08x.\n", hr);
+    if (hr != S_OK)
+        return;
+    ok(!!ssa, "Got unexpected ssa %p.\n", ssa);
 
-    hr = ScriptStringAnalyse( hdc, String, String_len, Glyphs, Charset, Flags,
-                              ReqWidth, NULL, NULL, NULL, NULL,
-                              InClass, &ssa);
-    ok(hr == S_OK ||
-       hr == E_INVALIDARG, /* NT */
-       "ScriptStringAnalyse should return S_OK or E_INVALIDARG not %08x\n", hr);
-
-    if  (hr == S_OK)
+    /* Loop to generate character positions to provide starting positions for
+     * the ScriptStringCPtoX() and ScriptStringXtoCP() functions. */
+    for (Cp = 0; Cp < String_len; ++Cp)
     {
-        ok(ssa != NULL, "ScriptStringAnalyse ssa should not be NULL\n");
+        /* The fTrailing flag is used to indicate whether the X being returned
+         * is at the beginning or the end of the character. What happens here
+         * is that if fTrailing indicates the end of the character, i.e. FALSE,
+         * then ScriptStringXtoCP() returns the beginning of the next
+         * character and iTrailing is FALSE. So for this loop iTrailing will
+         * be FALSE in both cases. */
+        hr = ScriptStringCPtoX(ssa, Cp, TRUE, &trail);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+        hr = ScriptStringCPtoX(ssa, Cp, FALSE, &lead);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+        ok(rtl[Cp] ? lead > trail : lead < trail,
+                "Got unexpected lead %d, trail %d, for rtl[%u] %u.\n",
+                lead, trail, Cp, rtl[Cp]);
 
-        /*
-         * Loop to generate character positions to provide starting positions for the
-         * ScriptStringCPtoX and ScriptStringXtoCP functions
-         */
-        for (Cp = 0; Cp < String_len; Cp++)
-        {
-            /* The fTrailing flag is used to indicate whether the X being returned is at
-             * the beginning or the end of the character. What happens here is that if
-             * fTrailing indicates the end of the character, ie. FALSE, then ScriptStringXtoCP
-             * returns the beginning of the next character and iTrailing is FALSE.  So for this
-             * loop iTrailing will be FALSE in both cases.
-             */
-            hr = ScriptStringCPtoX(ssa, Cp, TRUE, &trail);
-            ok(hr == S_OK, "ScriptStringCPtoX should return S_OK not %08x\n", hr);
-            hr = ScriptStringCPtoX(ssa, Cp, FALSE, &lead);
-            ok(hr == S_OK, "ScriptStringCPtoX should return S_OK not %08x\n", hr);
-            if (rtl[Cp])
-                ok(lead > trail, "Leading values should be after trailing for rtl characters(%i)\n",Cp);
-            else
-                ok(lead < trail, "Trailing values should be after leading for ltr characters(%i)\n",Cp);
+        /* Move by 1 pixel so that we are not between 2 characters. That could
+         * result in being the lead of a RTL and at the same time the trail of
+         * an LTR. */
 
-            /* move by 1 pixel so that we are not between 2 characters.  That could result in being the lead of a rtl and
-               at the same time the trail of an ltr */
-
-            /* inside the leading edge */
-            X = lead;
-            if (rtl[Cp]) X--; else X++;
-            hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
-            ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
-            ok(Cp == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp, Ch, trail);
-            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
-                                  iTrailing, X);
-
-            /* inside the trailing edge */
-            X = trail;
-            if (rtl[Cp]) X++; else X--;
-            hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
-            ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
-            ok(Cp == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp, Ch, trail);
-            ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n",
-                                  iTrailing, X);
-
-            /* outside the "trailing" edge */
-            if (Cp < String_len-1)
-            {
-                if (rtl[Cp]) X = lead; else X = trail;
-                X++;
-                hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
-                ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
-                ok(Cp + 1 == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp + 1, Ch, trail);
-                if (rtl[Cp+1])
-                    ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n",
-                                          iTrailing, X);
-                else
-                    ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
-                                          iTrailing, X);
-            }
-
-            /* outside the "leading" edge */
-            if (Cp != 0)
-            {
-                if (rtl[Cp]) X = trail; else X = lead;
-                X--;
-                hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
-                ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
-                ok(Cp - 1 == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp - 1, Ch, trail);
-                if (Cp != 0  && rtl[Cp-1])
-                    ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
-                                          iTrailing, X);
-                else
-                    ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n",
-                                          iTrailing, X);
-            }
-        }
-
-        /* Check beyond the leading boundary of the whole string */
-        if (rtl[0])
-        {
-            /* having a leading rtl character seems to confuse usp */
-            /* this looks to be a windows bug we should emulate */
-            hr = ScriptStringCPtoX(ssa, 0, TRUE, &X);
-            ok(hr == S_OK, "ScriptStringCPtoX should return S_OK not %08x\n", hr);
-            X--;
-            hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
-            ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
-            ok(Ch == 1, "ScriptStringXtoCP should return Ch = 1 not %d for X outside leading edge when rtl\n", Ch);
-            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = outside leading edge when rtl\n",
-                                       iTrailing);
-        }
-        else
-        {
-            hr = ScriptStringCPtoX(ssa, 0, FALSE, &X);
-            ok(hr == S_OK, "ScriptStringCPtoX should return S_OK not %08x\n", hr);
-            X--;
-            hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
-            ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
-            ok(Ch == -1, "ScriptStringXtoCP should return Ch = -1 not %d for X outside leading edge\n", Ch);
-            ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = outside leading edge\n",
-                                       iTrailing);
-        }
-
-        /* Check beyond the end boundary of the whole string */
-        if (rtl[String_len-1])
-        {
-            hr = ScriptStringCPtoX(ssa, String_len-1, FALSE, &X);
-            ok(hr == S_OK, "ScriptStringCPtoX should return S_OK not %08x\n", hr);
-        }
-        else
-        {
-            hr = ScriptStringCPtoX(ssa, String_len-1, TRUE, &X);
-            ok(hr == S_OK, "ScriptStringCPtoX should return S_OK not %08x\n", hr);
-        }
-        X++;
+        /* Inside the leading edge. */
+        X = rtl[Cp] ? lead - 1 : lead + 1;
         hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
-        ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
-        ok(Ch == String_len, "ScriptStringXtoCP should return Ch = %i not %d for X outside trailing edge\n", String_len, Ch);
-        ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = outside trailing edge\n",
-                                   iTrailing);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+        ok(Ch == Cp, "Got unexpected Ch %d for X %d, expected %d.\n", Ch, X, Cp);
+        ok(!iTrailing, "Got unexpected iTrailing %#x for X %d.\n", iTrailing, X);
 
-        /*
-         * Cleanup the SSA for the next round of tests
-         */
-        hr = ScriptStringFree(&ssa);
-        ok(hr == S_OK, "ScriptStringFree should return S_OK not %08x\n", hr);
+        /* Inside the trailing edge. */
+        X = rtl[Cp] ? trail + 1 : trail - 1;
+        hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+        ok(Ch == Cp, "Got unexpected Ch %d for X %d, expected %d.\n", Ch, X, Cp);
+        ok(iTrailing, "Got unexpected iTrailing %#x for X %d.\n", iTrailing, X);
 
-        /*
-         * Test to see that exceeding the number of chars returns E_INVALIDARG.  First
-         * generate an SSA for the subsequent tests.
-         */
-        hr = ScriptStringAnalyse( hdc, String, String_len, Glyphs, Charset, Flags,
-                                  ReqWidth, NULL, NULL, NULL, NULL,
-                                  InClass, &ssa);
-        ok(hr == S_OK, "ScriptStringAnalyse should return S_OK not %08x\n", hr);
+        /* Outside the trailing edge. */
+        if (Cp < String_len - 1)
+        {
+            X = rtl[Cp] ? lead + 1 : trail + 1;
+            hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
+            ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+            ok(Ch == Cp + 1, "Got unexpected Ch %d for X %d, expected %d.\n", Ch, X, Cp + 1);
+            ok(iTrailing == !!rtl[Cp + 1], "Got unexpected iTrailing %#x for X %d, expected %#x.\n",
+                    iTrailing, X, !!rtl[Cp + 1]);
+        }
 
-        /*
-         * When ScriptStringCPtoX is called with a character position Cp that exceeds the
-         * string length, return E_INVALIDARG.  This also invalidates the ssa so a
-         * ScriptStringFree should also fail.
-         */
-        fTrailing = FALSE;
-        Cp = String_len + 1;
-        hr = ScriptStringCPtoX(ssa, Cp, fTrailing, &X);
-        ok(hr == E_INVALIDARG, "ScriptStringCPtoX should return E_INVALIDARG not %08x\n", hr);
-
-        ScriptStringFree(&ssa);
+        /* Outside the leading edge. */
+        if (Cp)
+        {
+            X = rtl[Cp] ? trail - 1 : lead - 1;
+            hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
+            ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+            ok(Ch == Cp - 1, "Got unexpected Ch %d for X %d, expected %d.\n", Ch, X, Cp - 1);
+            ok(iTrailing == !rtl[Cp - 1], "Got unexpected iTrailing %#x for X %d, expected %#x.\n",
+                    iTrailing, X, !rtl[Cp - 1]);
+        }
     }
+
+    /* Check beyond the leading boundary of the whole string. */
+    if (rtl[0])
+    {
+        /* Having a leading RTL character seems to confuse usp. This looks to
+         * be a Windows bug we should emulate. */
+        hr = ScriptStringCPtoX(ssa, 0, TRUE, &X);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+        --X;
+        hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+        ok(Ch == 1, "Got unexpected Ch %d.\n", Ch);
+        ok(!iTrailing, "Got unexpected iTrailing %#x.\n", iTrailing);
+    }
+    else
+    {
+        hr = ScriptStringCPtoX(ssa, 0, FALSE, &X);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+        --X;
+        hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+        ok(Ch == -1, "Got unexpected Ch %d.\n", Ch);
+        ok(iTrailing, "Got unexpected iTrailing %#x.\n", iTrailing);
+    }
+
+    /* Check beyond the end boundary of the whole string. */
+    if (rtl[String_len - 1])
+    {
+        hr = ScriptStringCPtoX(ssa, String_len - 1, FALSE, &X);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    }
+    else
+    {
+        hr = ScriptStringCPtoX(ssa, String_len - 1, TRUE, &X);
+        ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    }
+    ++X;
+    hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    ok(Ch == String_len, "Got unexpected Ch %d, expected %d.\n", Ch, String_len);
+    ok(!iTrailing, "Got unexpected iTrailing %#x.\n", iTrailing);
+
+    /* Cleanup the SSA for the next round of tests. */
+    hr = ScriptStringFree(&ssa);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+
+    /* Test to see that exceeding the number of characters returns
+     * E_INVALIDARG. First generate an SSA for the subsequent tests. */
+    hr = ScriptStringAnalyse(hdc, &teststr1, String_len, Glyphs, -1,
+            SSA_GLYPHS, 100, NULL, NULL, NULL, NULL, InClass, &ssa);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+
+    /* When ScriptStringCPtoX() is called with a character position that
+     * exceeds the string length, return E_INVALIDARG. This also invalidates
+     * the ssa so a ScriptStringFree() should also fail. */
+    hr = ScriptStringCPtoX(ssa, String_len + 1, FALSE, &X);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+
+    ScriptStringFree(&ssa);
 }
 
 static HWND create_test_window(void)
@@ -3672,7 +3506,7 @@ static void test_ScriptLayout(void)
     hr = ScriptLayout(sizeof(levels[0]), levels[0], NULL, NULL);
     ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got 0x%08x\n", hr);
 
-    for (i = 0; i < sizeof(levels)/sizeof(levels[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(levels); ++i)
     {
         hr = ScriptLayout(sizeof(levels[0]), levels[i], vistolog, logtovis);
         ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
@@ -3745,7 +3579,7 @@ static void test_digit_substitution(void)
         LGRPID_ARMENIAN
     };
 
-    for (i = 0; i < sizeof(groups)/sizeof(groups[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(groups); ++i)
     {
         ret = EnumLanguageGroupLocalesA(enum_proc, groups[i], 0, 0);
         ok(ret, "EnumLanguageGroupLocalesA failed unexpectedly: %u\n", GetLastError());
@@ -3867,116 +3701,117 @@ static void test_newlines(void)
 
 static void test_ScriptGetFontFunctions(HDC hdc)
 {
+    static const WCHAR test_phagspa[] = {0xa84f, 0xa861, 0xa843, 0x0020, 0xa863, 0xa861, 0xa859,
+            0x0020, 0xa850, 0xa85c, 0xa85e};
+    SCRIPT_CONTROL control;
+    SCRIPT_CACHE sc = NULL;
+    SCRIPT_ITEM items[15];
+    OPENTYPE_TAG tags[5];
+    SCRIPT_STATE state;
+    int count = 0;
     HRESULT hr;
+
     if (!pScriptGetFontScriptTags || !pScriptGetFontLanguageTags || !pScriptGetFontFeatureTags)
     {
-        win_skip("ScriptGetFontScriptTags,ScriptGetFontLanguageTags or ScriptGetFontFeatureTags not available on this platform\n");
+        win_skip("ScriptGetFontScriptTags, ScriptGetFontLanguageTags or "
+                "ScriptGetFontFeatureTags not available on this platform.\n");
+        return;
     }
+
+    hr = pScriptGetFontScriptTags(hdc, &sc, NULL, 0, NULL, NULL);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontScriptTags(hdc, &sc, NULL, 0, NULL, &count);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontScriptTags(hdc, &sc, NULL, ARRAY_SIZE(tags), tags, NULL);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontScriptTags(hdc, &sc, NULL, 0, tags, &count);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontScriptTags(NULL, &sc, NULL, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == E_PENDING, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontScriptTags(hdc, &sc, NULL, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == S_OK || hr == E_OUTOFMEMORY, "Got unexpected hr %#x.\n", hr);
+    if (hr == S_OK)
+        ok(count <= 5, "Got unexpected count %d.\n", count);
     else
-    {
-        SCRIPT_CACHE sc = NULL;
-        OPENTYPE_TAG tags[5];
-        int count = 0;
-        int outnItems=0;
-        SCRIPT_ITEM outpItems[15];
-        SCRIPT_CONTROL Control;
-        SCRIPT_STATE State;
-        static const WCHAR test_phagspa[] = {0xa84f, 0xa861, 0xa843, 0x0020, 0xa863, 0xa861, 0xa859, 0x0020, 0xa850, 0xa85c, 0xa85e};
+        ok(!count, "Got unexpected count %d.\n", count);
+    ok(!!sc, "Got unexpected script cache %p.\n", sc);
 
-        hr = pScriptGetFontScriptTags(hdc, &sc, NULL, 0, NULL, NULL);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontScriptTags(hdc, &sc, NULL, 0, NULL, &count);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontScriptTags(hdc, &sc, NULL, 5, tags, NULL);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontScriptTags(hdc, &sc, NULL, 0, tags, &count);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontScriptTags(NULL, &sc, NULL, 5, tags, &count);
-        ok(hr == E_PENDING,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontScriptTags(hdc, &sc, NULL, 5, tags, &count);
-        ok((hr == S_OK || hr == E_OUTOFMEMORY),"Incorrect return code\n");
-        if (hr == S_OK)
-            ok(count <= 5, "Count should be less or equal to 5 with S_OK return\n");
-        else if (hr == E_OUTOFMEMORY)
-            ok(count == 0, "Count should be 0 with E_OUTOFMEMORY return\n");
-        ok(sc != NULL, "ScriptCache should be initialized\n");
+    ScriptFreeCache(&sc);
+    sc = NULL;
 
-        ScriptFreeCache(&sc);
-        sc = NULL;
+    hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, 0, NULL, NULL);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, 0, NULL, &count);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, ARRAY_SIZE(tags), tags, NULL);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, 0, tags, &count);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontLanguageTags(NULL, &sc, NULL, latn_tag, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == E_PENDING, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == S_OK || hr == E_OUTOFMEMORY, "Got unexpected hr %#x.\n", hr);
+    if (hr == S_OK)
+        ok(count <= 5, "Got unexpected count %d.\n", count);
+    else
+        ok(!count, "Got unexpected count %d.\n", count);
 
-        hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, 0, NULL, NULL);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, 0, NULL, &count);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, 5, tags, NULL);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, 0, tags, &count);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontLanguageTags(NULL, &sc, NULL, latn_tag, 5, tags, &count);
-        ok(hr == E_PENDING,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, latn_tag, 5, tags, &count);
-        ok((hr == S_OK || hr == E_OUTOFMEMORY),"Incorrect return code\n");
-        if (hr == S_OK)
-            ok(count <= 5, "Count should be less or equal to 5 with S_OK return\n");
-        else if (hr == E_OUTOFMEMORY)
-            ok(count == 0, "Count should be 0 with E_OUTOFMEMORY return\n");
+    ScriptFreeCache(&sc);
+    sc = NULL;
 
-        ScriptFreeCache(&sc);
-        sc = NULL;
+    hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, 0, NULL, NULL);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, 0, NULL, &count);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, ARRAY_SIZE(tags), tags, NULL);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, 0, tags, &count);
+    ok(hr == E_INVALIDARG, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontFeatureTags(NULL, &sc, NULL, latn_tag, 0x0, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == E_PENDING, "Got unexpected hr %#x.\n", hr);
+    ok(!sc, "Got unexpected script cache %p.\n", sc);
+    hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == S_OK || hr == E_OUTOFMEMORY, "Got unexpected hr %#x.\n", hr);
+    if (hr == S_OK)
+        ok(count <= 5, "Got unexpected count %d.\n", count);
+    else
+        ok(!count, "Got unexpected count %d.\n", count);
 
-        hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, 0, NULL, NULL);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, 0, NULL, &count);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, 5, tags, NULL);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, 0, tags, &count);
-        ok(hr == E_INVALIDARG,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontFeatureTags(NULL, &sc, NULL, latn_tag, 0x0, 5, tags, &count);
-        ok(hr == E_PENDING,"Incorrect return code\n");
-        ok(sc == NULL, "ScriptCache should remain uninitialized\n");
-        hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, latn_tag, 0x0, 5, tags, &count);
-        ok((hr == S_OK || hr == E_OUTOFMEMORY),"Incorrect return code\n");
-        if (hr == S_OK)
-            ok(count <= 5, "Count should be less or equal to 5 with S_OK return\n");
-        else if (hr == E_OUTOFMEMORY)
-            ok(count == 0, "Count should be 0 with E_OUTOFMEMORY return\n");
+    memset(&control, 0, sizeof(control));
+    memset(&state, 0, sizeof(state));
 
-        memset(&Control, 0, sizeof(Control));
-        memset(&State, 0, sizeof(State));
+    hr = ScriptItemize(test_phagspa, ARRAY_SIZE(test_phagspa), ARRAY_SIZE(items),
+            &control, &state, items, &count);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    memset(tags, 0, sizeof(tags));
+    hr = pScriptGetFontScriptTags(hdc, &sc, &items[0].a, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == USP_E_SCRIPT_NOT_IN_FONT || broken(hr == S_OK), "Got unexpected hr %#x.\n", hr);
 
-        hr = ScriptItemize(test_phagspa, 10, 15, &Control, &State, outpItems, &outnItems);
-        ok(hr == S_OK, "ScriptItemize failed: 0x%08x\n", hr);
-        memset(tags,0,sizeof(tags));
-        hr = pScriptGetFontScriptTags(hdc, &sc, &outpItems[0].a, 5, tags, &count);
-        ok( hr == USP_E_SCRIPT_NOT_IN_FONT || broken(hr == S_OK), "wrong return code\n");
+    hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, dsrt_tag, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    hr = pScriptGetFontLanguageTags(hdc, &sc, &items[0].a, dsrt_tag, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == E_INVALIDARG || broken(hr == S_OK), "Got unexpected hr %#x.\n", hr);
 
-        hr = pScriptGetFontLanguageTags(hdc, &sc, NULL, dsrt_tag, 5, tags, &count);
-        ok( hr == S_OK, "wrong return code\n");
-        hr = pScriptGetFontLanguageTags(hdc, &sc, &outpItems[0].a, dsrt_tag, 5, tags, &count);
-        ok( hr == E_INVALIDARG || broken(hr == S_OK), "wrong return code\n");
+    hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, dsrt_tag, 0x0, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    hr = pScriptGetFontFeatureTags(hdc, &sc, &items[0].a, dsrt_tag, 0x0, ARRAY_SIZE(tags), tags, &count);
+    ok(hr == E_INVALIDARG || broken(hr == S_OK), "Got unexpected hr %#x.\n", hr);
 
-        hr = pScriptGetFontFeatureTags(hdc, &sc, NULL, dsrt_tag, 0x0, 5, tags, &count);
-        ok( hr == S_OK, "wrong return code\n");
-        hr = pScriptGetFontFeatureTags(hdc, &sc, &outpItems[0].a, dsrt_tag, 0x0, 5, tags, &count);
-        ok( hr == E_INVALIDARG || broken(hr == S_OK), "wrong return code\n");
-
-        ScriptFreeCache(&sc);
-    }
+    ScriptFreeCache(&sc);
 }
 
 struct logical_width_test
@@ -4008,7 +3843,7 @@ static void test_ScriptGetLogicalWidths(void)
     SCRIPT_ANALYSIS sa = { 0 };
     unsigned int i, j;
 
-    for (i = 0; i < sizeof(logical_width_tests)/sizeof(logical_width_tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(logical_width_tests); ++i)
     {
         const struct logical_width_test *ptr = logical_width_tests + i;
         SCRIPT_VISATTR attrs[3];
@@ -4069,7 +3904,7 @@ static void test_ScriptIsComplex(void)
     hr = ScriptIsComplex(test2W, 0, SIC_ASCIIDIGIT);
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
 
-    for (i = 0; i < sizeof(complex_tests)/sizeof(complex_tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(complex_tests); ++i)
     {
         hr = ScriptIsComplex(complex_tests[i].text, lstrlenW(complex_tests[i].text), complex_tests[i].flags);
     todo_wine_if(complex_tests[i].todo)
