@@ -18,11 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winldap_private.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include <stdarg.h>
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
 #ifndef LDAP_MAXINT
 #define LDAP_MAXINT  2147483647
 #endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+
+#include "winldap_private.h"
+#include "wldap32.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 /***********************************************************************
  *      ldap_create_page_controlA     (WLDAP32.@)
@@ -84,17 +99,15 @@ static ULONG create_page_control( ULONG pagesize, struct WLDAP32_berval *cookie,
         return WLDAP32_LDAP_NO_MEMORY;
 
     /* copy the berval so it can be properly freed by the caller */
-    val = HeapAlloc( GetProcessHeap(), 0, berval->bv_len );
-    if (!val) return WLDAP32_LDAP_NO_MEMORY;
+    if (!(val = heap_alloc( berval->bv_len ))) return WLDAP32_LDAP_NO_MEMORY;
 
     len = berval->bv_len;
     memcpy( val, berval->bv_val, len );
     ber_bvfree( berval );
 
-    ctrl = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPControlW) );
-    if (!ctrl)
+    if (!(ctrl = heap_alloc( sizeof(LDAPControlW) )))
     {
-        HeapFree( GetProcessHeap(), 0, val );
+        heap_free( val );
         return WLDAP32_LDAP_NO_MEMORY;
     }
 

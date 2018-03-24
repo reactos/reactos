@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include <wine/unicode.h>
+#include "wine/heap.h"
+#include "wine/unicode.h"
 
 extern HINSTANCE hwldap32 DECLSPEC_HIDDEN;
 
@@ -33,22 +34,16 @@ ULONG map_error( int ) DECLSPEC_HIDDEN;
 static inline char *strdupU( const char *src )
 {
     char *dst;
-
     if (!src) return NULL;
-    dst = HeapAlloc( GetProcessHeap(), 0, (strlen( src ) + 1) * sizeof(char) );
-    if (dst)
-        strcpy( dst, src );
+    if ((dst = heap_alloc( (strlen( src ) + 1) * sizeof(char) ))) strcpy( dst, src );
     return dst;
 }
 
 static inline WCHAR *strdupW( const WCHAR *src )
 {
     WCHAR *dst;
-
     if (!src) return NULL;
-    dst = HeapAlloc( GetProcessHeap(), 0, (strlenW( src ) + 1) * sizeof(WCHAR) );
-    if (dst)
-        strcpyW( dst, src );
+    if ((dst = heap_alloc( (strlenW( src ) + 1) * sizeof(WCHAR) ))) strcpyW( dst, src );
     return dst;
 }
 
@@ -58,7 +53,7 @@ static inline LPWSTR strAtoW( LPCSTR str )
     if (str)
     {
         DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+        if ((ret = heap_alloc( len * sizeof(WCHAR) )))
             MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
     }
     return ret;
@@ -70,7 +65,7 @@ static inline LPSTR strWtoA( LPCWSTR str )
     if (str)
     {
         DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
+        if ((ret = heap_alloc( len )))
             WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
     }
     return ret;
@@ -82,7 +77,7 @@ static inline char *strWtoU( LPCWSTR str )
     if (str)
     {
         DWORD len = WideCharToMultiByte( CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
+        if ((ret = heap_alloc( len )))
             WideCharToMultiByte( CP_UTF8, 0, str, -1, ret, len, NULL, NULL );
     }
     return ret;
@@ -94,7 +89,7 @@ static inline LPWSTR strUtoW( char *str )
     if (str)
     {
         DWORD len = MultiByteToWideChar( CP_UTF8, 0, str, -1, NULL, 0 );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+        if ((ret = heap_alloc( len * sizeof(WCHAR) )))
             MultiByteToWideChar( CP_UTF8, 0, str, -1, ret, len );
     }
     return ret;
@@ -102,17 +97,17 @@ static inline LPWSTR strUtoW( char *str )
 
 static inline void strfreeA( LPSTR str )
 {
-    HeapFree( GetProcessHeap(), 0, str );
+    heap_free( str );
 }
 
 static inline void strfreeW( LPWSTR str )
 {
-    HeapFree( GetProcessHeap(), 0, str );
+    heap_free( str );
 }
 
 static inline void strfreeU( char *str )
 {
-    HeapFree( GetProcessHeap(), 0, str );
+    heap_free( str );
 }
 
 static inline DWORD strarraylenA( LPSTR *strarray )
@@ -144,9 +139,7 @@ static inline LPWSTR *strarrayAtoW( LPSTR *strarray )
     if (strarray)
     {
         size  = sizeof(WCHAR*) * (strarraylenA( strarray ) + 1);
-        strarrayW = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (strarrayW)
+        if ((strarrayW = heap_alloc( size )))
         {
             LPSTR *p = strarray;
             LPWSTR *q = strarrayW;
@@ -166,9 +159,7 @@ static inline LPSTR *strarrayWtoA( LPWSTR *strarray )
     if (strarray)
     {
         size = sizeof(LPSTR) * (strarraylenW( strarray ) + 1);
-        strarrayA = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (strarrayA)
+        if ((strarrayA = heap_alloc( size )))
         {
             LPWSTR *p = strarray;
             LPSTR *q = strarrayA;
@@ -188,9 +179,7 @@ static inline char **strarrayWtoU( LPWSTR *strarray )
     if (strarray)
     {
         size = sizeof(char*) * (strarraylenW( strarray ) + 1);
-        strarrayU = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (strarrayU)
+        if ((strarrayU = heap_alloc( size )))
         {
             LPWSTR *p = strarray;
             char **q = strarrayU;
@@ -210,9 +199,7 @@ static inline LPWSTR *strarrayUtoW( char **strarray )
     if (strarray)
     {
         size = sizeof(WCHAR*) * (strarraylenU( strarray ) + 1);
-        strarrayW = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (strarrayW)
+        if ((strarrayW = heap_alloc( size )))
         {
             char **p = strarray;
             LPWSTR *q = strarrayW;
@@ -230,7 +217,7 @@ static inline void strarrayfreeA( LPSTR *strarray )
     {
         LPSTR *p = strarray;
         while (*p) strfreeA( *p++ );
-        HeapFree( GetProcessHeap(), 0, strarray );
+        heap_free( strarray );
     }
 }
 
@@ -240,7 +227,7 @@ static inline void strarrayfreeW( LPWSTR *strarray )
     {
         LPWSTR *p = strarray;
         while (*p) strfreeW( *p++ );
-        HeapFree( GetProcessHeap(), 0, strarray );
+        heap_free( strarray );
     }
 }
 
@@ -250,7 +237,7 @@ static inline void strarrayfreeU( char **strarray )
     {
         char **p = strarray;
         while (*p) strfreeU( *p++ );
-        HeapFree( GetProcessHeap(), 0, strarray );
+        heap_free( strarray );
     }
 }
 
@@ -261,8 +248,7 @@ static inline struct berval *bvdup( struct berval *bv )
     struct berval *berval;
     DWORD size = sizeof(struct berval) + bv->bv_len;
 
-    berval = HeapAlloc( GetProcessHeap(), 0, size );
-    if (berval)
+    if ((berval = heap_alloc( size )))
     {
         char *val = (char *)berval + sizeof(struct berval);
 
@@ -288,9 +274,7 @@ static inline struct berval **bvarraydup( struct berval **bv )
     if (bv)
     {
         size = sizeof(struct berval *) * (bvarraylen( bv ) + 1);
-        berval = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (berval)
+        if ((berval = heap_alloc( size )))
         {
             struct berval **p = bv;
             struct berval **q = berval;
@@ -305,16 +289,15 @@ static inline struct berval **bvarraydup( struct berval **bv )
 static inline void bvarrayfree( struct berval **bv )
 {
     struct berval **p = bv;
-    while (*p) HeapFree( GetProcessHeap(), 0, *p++ );
-    HeapFree( GetProcessHeap(), 0, bv );
+    while (*p) heap_free( *p++ );
+    heap_free( bv );
 }
 
 static inline LDAPModW *modAtoW( LDAPModA *mod )
 {
     LDAPModW *modW;
 
-    modW = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPModW) );
-    if (modW)
+    if ((modW = heap_alloc( sizeof(LDAPModW) )))
     {
         modW->mod_op = mod->mod_op;
         modW->mod_type = strAtoW( mod->mod_type );
@@ -331,8 +314,7 @@ static inline LDAPMod *modWtoU( LDAPModW *mod )
 {
     LDAPMod *modU;
 
-    modU = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPMod) );
-    if (modU)
+    if ((modU = heap_alloc( sizeof(LDAPMod) )))
     {
         modU->mod_op = mod->mod_op;
         modU->mod_type = strWtoU( mod->mod_type );
@@ -351,7 +333,7 @@ static inline void modfreeW( LDAPModW *mod )
         bvarrayfree( mod->mod_vals.modv_bvals );
     else
         strarrayfreeW( mod->mod_vals.modv_strvals );
-    HeapFree( GetProcessHeap(), 0, mod );
+    heap_free( mod );
 }
 
 static inline void modfreeU( LDAPMod *mod )
@@ -360,7 +342,7 @@ static inline void modfreeU( LDAPMod *mod )
         bvarrayfree( mod->mod_vals.modv_bvals );
     else
         strarrayfreeU( mod->mod_vals.modv_strvals );
-    HeapFree( GetProcessHeap(), 0, mod );
+    heap_free( mod );
 }
 
 static inline DWORD modarraylenA( LDAPModA **modarray )
@@ -385,9 +367,7 @@ static inline LDAPModW **modarrayAtoW( LDAPModA **modarray )
     if (modarray)
     {
         size = sizeof(LDAPModW*) * (modarraylenA( modarray ) + 1);
-        modarrayW = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (modarrayW)
+        if ((modarrayW = heap_alloc( size )))
         {
             LDAPModA **p = modarray;
             LDAPModW **q = modarrayW;
@@ -407,9 +387,7 @@ static inline LDAPMod **modarrayWtoU( LDAPModW **modarray )
     if (modarray)
     {
         size = sizeof(LDAPMod*) * (modarraylenW( modarray ) + 1);
-        modarrayU = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (modarrayU)
+        if ((modarrayU = heap_alloc( size )))
         {
             LDAPModW **p = modarray;
             LDAPMod **q = modarrayU;
@@ -427,7 +405,7 @@ static inline void modarrayfreeW( LDAPModW **modarray )
     {
         LDAPModW **p = modarray;
         while (*p) modfreeW( *p++ );
-        HeapFree( GetProcessHeap(), 0, modarray );
+        heap_free( modarray );
     }
 }
 
@@ -437,7 +415,7 @@ static inline void modarrayfreeU( LDAPMod **modarray )
     {
         LDAPMod **p = modarray;
         while (*p) modfreeU( *p++ );
-        HeapFree( GetProcessHeap(), 0, modarray );
+        heap_free( modarray );
     }
 }
 
@@ -449,15 +427,13 @@ static inline LDAPControlW *controlAtoW( LDAPControlA *control )
 
     if (control->ldctl_value.bv_val)
     {
-        val = HeapAlloc( GetProcessHeap(), 0, len );
-        if (!val) return NULL;
+        if (!(val = heap_alloc( len ))) return NULL;
         memcpy( val, control->ldctl_value.bv_val, len );
     }
 
-    controlW = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPControlW) );
-    if (!controlW)
+    if (!(controlW = heap_alloc( sizeof(LDAPControlW) )))
     {
-        HeapFree( GetProcessHeap(), 0, val );
+        heap_free( val );
         return NULL;
     }
 
@@ -477,15 +453,13 @@ static inline LDAPControlA *controlWtoA( LDAPControlW *control )
 
     if (control->ldctl_value.bv_val)
     {
-        val = HeapAlloc( GetProcessHeap(), 0, len );
-        if (!val) return NULL;
+        if (!(val = heap_alloc( len ))) return NULL;
         memcpy( val, control->ldctl_value.bv_val, len );
     }
 
-    controlA = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPControlA) );
-    if (!controlA)
+    if (!(controlA = heap_alloc( sizeof(LDAPControlA) )))
     {
-        HeapFree( GetProcessHeap(), 0, val );
+        heap_free( val );
         return NULL;
     }
 
@@ -505,15 +479,13 @@ static inline LDAPControl *controlWtoU( LDAPControlW *control )
 
     if (control->ldctl_value.bv_val)
     {
-        val = HeapAlloc( GetProcessHeap(), 0, len );
-        if (!val) return NULL;
+        if (!(val = heap_alloc( len ))) return NULL;
         memcpy( val, control->ldctl_value.bv_val, len );
     }
 
-    controlU = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPControl) );
-    if (!controlU)
+    if (!(controlU = heap_alloc( sizeof(LDAPControl) )))
     {
-        HeapFree( GetProcessHeap(), 0, val );
+        heap_free( val );
         return NULL;
     }
 
@@ -533,15 +505,13 @@ static inline LDAPControlW *controlUtoW( LDAPControl *control )
 
     if (control->ldctl_value.bv_val)
     {
-        val = HeapAlloc( GetProcessHeap(), 0, len );
-        if (!val) return NULL;
+        if (!(val = heap_alloc( len ))) return NULL;
         memcpy( val, control->ldctl_value.bv_val, len );
     }
 
-    controlW = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPControlW) );
-    if (!controlW)
+    if (!(controlW = heap_alloc( sizeof(LDAPControlW) )))
     {
-        HeapFree( GetProcessHeap(), 0, val );
+        heap_free( val );
         return NULL;
     }
 
@@ -549,7 +519,7 @@ static inline LDAPControlW *controlUtoW( LDAPControl *control )
     controlW->ldctl_value.bv_len = len; 
     controlW->ldctl_value.bv_val = val; 
     controlW->ldctl_iscritical = control->ldctl_iscritical;
- 
+
     return controlW;
 }
 
@@ -558,8 +528,8 @@ static inline void controlfreeA( LDAPControlA *control )
     if (control)
     {
         strfreeA( control->ldctl_oid );
-        HeapFree( GetProcessHeap(), 0, control->ldctl_value.bv_val );
-        HeapFree( GetProcessHeap(), 0, control );
+        heap_free( control->ldctl_value.bv_val );
+        heap_free( control );
     }
 }
 
@@ -568,8 +538,8 @@ static inline void controlfreeW( LDAPControlW *control )
     if (control)
     {
         strfreeW( control->ldctl_oid );
-        HeapFree( GetProcessHeap(), 0, control->ldctl_value.bv_val );
-        HeapFree( GetProcessHeap(), 0, control );
+        heap_free( control->ldctl_value.bv_val );
+        heap_free( control );
     }
 }
 
@@ -578,8 +548,8 @@ static inline void controlfreeU( LDAPControl *control )
     if (control)
     {
         strfreeU( control->ldctl_oid );
-        HeapFree( GetProcessHeap(), 0, control->ldctl_value.bv_val );
-        HeapFree( GetProcessHeap(), 0, control );
+        heap_free( control->ldctl_value.bv_val );
+        heap_free( control );
     }
 }
 
@@ -612,9 +582,7 @@ static inline LDAPControlW **controlarrayAtoW( LDAPControlA **controlarray )
     if (controlarray)
     {
         size = sizeof(LDAPControlW*) * (controlarraylenA( controlarray ) + 1);
-        controlarrayW = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (controlarrayW)
+        if ((controlarrayW = heap_alloc( size )))
         {
             LDAPControlA **p = controlarray;
             LDAPControlW **q = controlarrayW;
@@ -634,9 +602,7 @@ static inline LDAPControlA **controlarrayWtoA( LDAPControlW **controlarray )
     if (controlarray)
     {
         size = sizeof(LDAPControl*) * (controlarraylenW( controlarray ) + 1);
-        controlarrayA = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (controlarrayA)
+        if ((controlarrayA = heap_alloc( size )))
         {
             LDAPControlW **p = controlarray;
             LDAPControlA **q = controlarrayA;
@@ -656,9 +622,7 @@ static inline LDAPControl **controlarrayWtoU( LDAPControlW **controlarray )
     if (controlarray)
     {
         size = sizeof(LDAPControl*) * (controlarraylenW( controlarray ) + 1);
-        controlarrayU = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (controlarrayU)
+        if ((controlarrayU = heap_alloc( size )))
         {
             LDAPControlW **p = controlarray;
             LDAPControl **q = controlarrayU;
@@ -678,9 +642,7 @@ static inline LDAPControlW **controlarrayUtoW( LDAPControl **controlarray )
     if (controlarray)
     {
         size = sizeof(LDAPControlW*) * (controlarraylenU( controlarray ) + 1);
-        controlarrayW = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (controlarrayW)
+        if ((controlarrayW = heap_alloc( size )))
         {
             LDAPControl **p = controlarray;
             LDAPControlW **q = controlarrayW;
@@ -698,7 +660,7 @@ static inline void controlarrayfreeA( LDAPControlA **controlarray )
     {
         LDAPControlA **p = controlarray;
         while (*p) controlfreeA( *p++ );
-        HeapFree( GetProcessHeap(), 0, controlarray );
+        heap_free( controlarray );
     }
 }
 
@@ -708,7 +670,7 @@ static inline void controlarrayfreeW( LDAPControlW **controlarray )
     {
         LDAPControlW **p = controlarray;
         while (*p) controlfreeW( *p++ );
-        HeapFree( GetProcessHeap(), 0, controlarray );
+        heap_free( controlarray );
     }
 }
 
@@ -718,7 +680,7 @@ static inline void controlarrayfreeU( LDAPControl **controlarray )
     {
         LDAPControl **p = controlarray;
         while (*p) controlfreeU( *p++ );
-        HeapFree( GetProcessHeap(), 0, controlarray );
+        heap_free( controlarray );
     }
 }
 
@@ -726,8 +688,7 @@ static inline LDAPSortKeyW *sortkeyAtoW( LDAPSortKeyA *sortkey )
 {
     LDAPSortKeyW *sortkeyW;
 
-    sortkeyW = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPSortKeyW) );
-    if (sortkeyW)
+    if ((sortkeyW = heap_alloc( sizeof(LDAPSortKeyW) )))
     {
         sortkeyW->sk_attrtype = strAtoW( sortkey->sk_attrtype );
         sortkeyW->sk_matchruleoid = strAtoW( sortkey->sk_matchruleoid );
@@ -740,8 +701,7 @@ static inline LDAPSortKeyA *sortkeyWtoA( LDAPSortKeyW *sortkey )
 {
     LDAPSortKeyA *sortkeyA;
 
-    sortkeyA = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPSortKeyA) );
-    if (sortkeyA)
+    if ((sortkeyA = heap_alloc( sizeof(LDAPSortKeyA) )))
     {
         sortkeyA->sk_attrtype = strWtoA( sortkey->sk_attrtype );
         sortkeyA->sk_matchruleoid = strWtoA( sortkey->sk_matchruleoid );
@@ -754,8 +714,7 @@ static inline LDAPSortKey *sortkeyWtoU( LDAPSortKeyW *sortkey )
 {
     LDAPSortKey *sortkeyU;
 
-    sortkeyU = HeapAlloc( GetProcessHeap(), 0, sizeof(LDAPSortKey) );
-    if (sortkeyU)
+    if ((sortkeyU = heap_alloc( sizeof(LDAPSortKey) )))
     {
         sortkeyU->attributeType = strWtoU( sortkey->sk_attrtype );
         sortkeyU->orderingRule = strWtoU( sortkey->sk_matchruleoid );
@@ -770,7 +729,7 @@ static inline void sortkeyfreeA( LDAPSortKeyA *sortkey )
     {
         strfreeA( sortkey->sk_attrtype );
         strfreeA( sortkey->sk_matchruleoid );
-        HeapFree( GetProcessHeap(), 0, sortkey );
+        heap_free( sortkey );
     }
 }
 
@@ -780,7 +739,7 @@ static inline void sortkeyfreeW( LDAPSortKeyW *sortkey )
     {
         strfreeW( sortkey->sk_attrtype );
         strfreeW( sortkey->sk_matchruleoid );
-        HeapFree( GetProcessHeap(), 0, sortkey );
+        heap_free( sortkey );
     }
 }
 
@@ -790,7 +749,7 @@ static inline void sortkeyfreeU( LDAPSortKey *sortkey )
     {
         strfreeU( sortkey->attributeType );
         strfreeU( sortkey->orderingRule );
-        HeapFree( GetProcessHeap(), 0, sortkey );
+        heap_free( sortkey );
     }
 }
 
@@ -816,9 +775,7 @@ static inline LDAPSortKeyW **sortkeyarrayAtoW( LDAPSortKeyA **sortkeyarray )
     if (sortkeyarray)
     {
         size = sizeof(LDAPSortKeyW*) * (sortkeyarraylenA( sortkeyarray ) + 1);
-        sortkeyarrayW = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (sortkeyarrayW)
+        if ((sortkeyarrayW = heap_alloc( size )))
         {
             LDAPSortKeyA **p = sortkeyarray;
             LDAPSortKeyW **q = sortkeyarrayW;
@@ -838,9 +795,7 @@ static inline LDAPSortKey **sortkeyarrayWtoU( LDAPSortKeyW **sortkeyarray )
     if (sortkeyarray)
     {
         size = sizeof(LDAPSortKey*) * (sortkeyarraylenW( sortkeyarray ) + 1);
-        sortkeyarrayU = HeapAlloc( GetProcessHeap(), 0, size );
-
-        if (sortkeyarrayU)
+        if ((sortkeyarrayU = heap_alloc( size )))
         {
             LDAPSortKeyW **p = sortkeyarray;
             LDAPSortKey **q = sortkeyarrayU;
@@ -858,7 +813,7 @@ static inline void sortkeyarrayfreeW( LDAPSortKeyW **sortkeyarray )
     {
         LDAPSortKeyW **p = sortkeyarray;
         while (*p) sortkeyfreeW( *p++ );
-        HeapFree( GetProcessHeap(), 0, sortkeyarray );
+        heap_free( sortkeyarray );
     }
 }
 
@@ -868,7 +823,7 @@ static inline void sortkeyarrayfreeU( LDAPSortKey **sortkeyarray )
     {
         LDAPSortKey **p = sortkeyarray;
         while (*p) sortkeyfreeU( *p++ );
-        HeapFree( GetProcessHeap(), 0, sortkeyarray );
+        heap_free( sortkeyarray );
     }
 }
 #endif /* HAVE_LDAP */

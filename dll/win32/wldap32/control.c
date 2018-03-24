@@ -18,7 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+
 #include "winldap_private.h"
+#include "wldap32.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 /***********************************************************************
  *      ldap_control_freeA     (WLDAP32.@)
@@ -260,8 +276,7 @@ INT CDECL ldap_create_vlv_controlW( WLDAP32_LDAP *ld, WLDAP32_LDAPVLVInfo *info,
 
 static inline void bv_val_dup( const struct WLDAP32_berval *src, struct WLDAP32_berval *dst )
 {
-    dst->bv_val = HeapAlloc( GetProcessHeap(), 0, src->bv_len );
-    if (dst->bv_val)
+    if ((dst->bv_val = heap_alloc( src->bv_len )))
     {
         memcpy( dst->bv_val, src->bv_val, src->bv_len );
         dst->bv_len = src->bv_len;
