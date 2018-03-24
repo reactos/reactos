@@ -624,17 +624,20 @@ CcRosMapVacbInKernelSpace(
     ULONG i;
     NTSTATUS Status;
     ULONG_PTR NumberOfPages;
+    PVOID BaseAddress = NULL;
 
     /* Create a memory area. */
     MmLockAddressSpace(MmGetKernelAddressSpace());
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 0, // nothing checks for VACB mareas, so set to 0
-                                &Vacb->BaseAddress,
+                                &BaseAddress,
                                 VACB_MAPPING_GRANULARITY,
                                 PAGE_READWRITE,
                                 (PMEMORY_AREA*)&Vacb->MemoryArea,
                                 0,
                                 PAGE_SIZE);
+    ASSERT(Vacb->BaseAddress == NULL);
+    Vacb->BaseAddress = BaseAddress;
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
     if (!NT_SUCCESS(Status))
     {
@@ -644,6 +647,7 @@ CcRosMapVacbInKernelSpace(
 
     ASSERT(((ULONG_PTR)Vacb->BaseAddress % PAGE_SIZE) == 0);
     ASSERT((ULONG_PTR)Vacb->BaseAddress > (ULONG_PTR)MmSystemRangeStart);
+    ASSERT((ULONG_PTR)Vacb->BaseAddress + VACB_MAPPING_GRANULARITY - 1 > (ULONG_PTR)MmSystemRangeStart);
 
     /* Create a virtual mapping for this memory area */
     NumberOfPages = BYTES_TO_PAGES(VACB_MAPPING_GRANULARITY);
@@ -658,6 +662,11 @@ CcRosMapVacbInKernelSpace(
             DPRINT1("Unable to allocate page\n");
             KeBugCheck(MEMORY_MANAGEMENT);
         }
+
+        ASSERT(BaseAddress == Vacb->BaseAddress);
+        ASSERT(i * PAGE_SIZE < VACB_MAPPING_GRANULARITY);
+        ASSERT((ULONG_PTR)Vacb->BaseAddress + (i * PAGE_SIZE) >= (ULONG_PTR)BaseAddress);
+        ASSERT((ULONG_PTR)Vacb->BaseAddress + (i * PAGE_SIZE) > (ULONG_PTR)MmSystemRangeStart);
 
         Status = MmCreateVirtualMapping(NULL,
                                         (PVOID)((ULONG_PTR)Vacb->BaseAddress + (i * PAGE_SIZE)),
@@ -951,6 +960,7 @@ CcRosInternalFreeVacb (
 
     ASSERT(Vacb->PinCount == 0);
     ASSERT(Vacb->ReferenceCount == 0);
+    RtlFillMemory(Vacb, sizeof(Vacb), 0xfd);
     ExFreeToNPagedLookasideList(&VacbLookasideList, Vacb);
     return STATUS_SUCCESS;
 }
