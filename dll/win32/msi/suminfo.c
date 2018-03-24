@@ -104,11 +104,21 @@ static void MSI_CloseSummaryInfo( MSIOBJECTHDR *arg )
     IStorage_Release( si->storage );
 }
 
+#ifdef __REACTOS__
+#define PID_DICTIONARY_MSI 0
+#define PID_CODEPAGE_MSI 1
+#define PID_SECURITY_MSI 19
+#endif
+
 static UINT get_type( UINT uiProperty )
 {
     switch( uiProperty )
     {
+#ifdef __REACTOS__
+    case PID_CODEPAGE_MSI:
+#else
     case PID_CODEPAGE:
+#endif
          return VT_I2;
 
     case PID_SUBJECT:
@@ -129,7 +139,11 @@ static UINT get_type( UINT uiProperty )
 
     case PID_WORDCOUNT:
     case PID_CHARCOUNT:
+#ifdef __REACTOS__
+    case PID_SECURITY_MSI:
+#else
     case PID_SECURITY:
+#endif
     case PID_PAGECOUNT:
          return VT_I4;
     }
@@ -940,10 +954,18 @@ static UINT parse_prop( LPCWSTR prop, LPCWSTR value, UINT *pid, INT *int_value,
     *pid = atoiW( prop );
     switch (*pid)
     {
+#ifdef __REACTOS__
+    case PID_CODEPAGE_MSI:
+#else
     case PID_CODEPAGE:
+#endif
     case PID_WORDCOUNT:
     case PID_CHARCOUNT:
+#ifdef __REACTOS__
+    case PID_SECURITY_MSI:
+#else
     case PID_SECURITY:
+#endif
     case PID_PAGECOUNT:
         *int_value = atoiW( value );
         break;
