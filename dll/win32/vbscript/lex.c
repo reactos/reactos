@@ -16,11 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <assert.h>
+#include <limits.h>
+
 #include "vbscript.h"
+#include "parse.h"
 #include "parser.tab.h"
 
-#include <wine/config.h>
-#include <wine/port.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 static const WCHAR andW[] = {'a','n','d',0};
 static const WCHAR byrefW[] = {'b','y','r','e','f',0};

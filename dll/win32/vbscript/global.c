@@ -16,11 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "vbscript.h"
-
+#include <assert.h>
 #include <math.h>
+
+#include "vbscript.h"
+#include "vbscript_defs.h"
+
+#include "mshtmhst.h"
+#include "objsafe.h"
+
+#include "wine/debug.h"
+
+#ifdef __REACTOS__
 #include <wingdi.h>
-#include <mshtmhst.h>
+#endif
+
+WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 #define VB_E_CANNOT_CREATE_OBJ 0x800a01ad
 #define VB_E_MK_PARSE_ERROR    0x800a01b0

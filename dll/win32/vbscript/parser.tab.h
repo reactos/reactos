@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_PARSER_E_REACTOSSYNC3_0_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
-# define YY_PARSER_E_REACTOSSYNC3_0_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
+#ifndef YY_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
+# define YY_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -121,7 +121,7 @@ extern int parser_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 83 "parser.y" /* yacc.c:1909  */
+#line 88 "parser.y" /* yacc.c:1909  */
 
     const WCHAR *string;
     statement_t *statement;
@@ -150,4 +150,4 @@ union YYSTYPE
 
 int parser_parse (parser_ctx_t *ctx);
 
-#endif /* !YY_PARSER_E_REACTOSSYNC3_0_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED  */

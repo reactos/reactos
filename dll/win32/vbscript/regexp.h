@@ -31,6 +31,8 @@
  * the Initial Developer. All Rights Reserved.
  */
 
+#pragma once
+
 #define REG_FOLD      0x01      /* fold uppercase to lowercase */
 #define REG_GLOB      0x02      /* global exec, creates array of matches */
 #define REG_MULTILINE 0x04      /* treat ^ and $ as begin and end of line */

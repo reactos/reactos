@@ -16,8 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "vbscript.h"
+#include <assert.h>
 
+#include "vbscript.h"
+#include "parse.h"
+#include "parser.tab.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 WINE_DECLARE_DEBUG_CHANNEL(vbscript_disas);
 
 typedef struct _statement_ctx_t {

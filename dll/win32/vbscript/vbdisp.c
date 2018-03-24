@@ -16,7 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+
 #include "vbscript.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 #define FDEX_VERSION_MASK 0xf0000000
 
@@ -549,7 +555,7 @@ static IDispatchExVtbl DispatchExVtbl = {
 static inline vbdisp_t *unsafe_impl_from_IDispatch(IDispatch *iface)
 {
     return iface->lpVtbl == (IDispatchVtbl*)&DispatchExVtbl
-        ? CONTAINING_RECORD(iface, vbdisp_t, IDispatchEx_iface)
+        ? CONTAINING_RECORD((IDispatchEx *)iface, vbdisp_t, IDispatchEx_iface)
         : NULL;
 }
 

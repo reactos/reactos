@@ -16,31 +16,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _VBSCRIPT_H
-#define _VBSCRIPT_H
+#pragma once
 
-#include <assert.h>
 #include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <oleauto.h>
-#include <objsafe.h>
-#include <dispex.h>
-#include <activscp.h>
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "dispex.h"
+#include "activscp.h"
 
-#include <wine/debug.h>
-#include <wine/list.h>
-#include <wine/unicode.h>
+#ifdef __REACTOS__
+#include <initguid.h>
+#endif
+#include "vbscript_classes.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
+#include "wine/heap.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
 
 typedef struct {
     void **blocks;
@@ -441,26 +436,6 @@ HRESULT create_safearray_iter(SAFEARRAY *sa, IEnumVARIANT **ev) DECLSPEC_HIDDEN;
 HRESULT WINAPI VBScriptFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT WINAPI VBScriptRegExpFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-
-static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
-
 static inline LPWSTR heap_strdupW(LPCWSTR str)
 {
     LPWSTR ret = NULL;
@@ -480,9 +455,3 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
 #define VBSCRIPT_BUILD_VERSION 16978
 #define VBSCRIPT_MAJOR_VERSION 5
 #define VBSCRIPT_MINOR_VERSION 8
-
-#include "parse.h"
-#include "regexp.h"
-#include "vbscript_defs.h"
-
-#endif /* _VBSCRIPT_H */

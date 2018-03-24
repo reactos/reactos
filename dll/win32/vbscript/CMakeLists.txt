@@ -15,7 +15,7 @@ list(APPEND SOURCE
     vbregexp.c
     vbscript.c
     vbscript_main.c
-    vbscript.h)
+    precomp.h)
 
 list(APPEND vbscript_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/vbscript_classes.rgs
@@ -39,5 +39,5 @@ set_module_type(vbscript win32dll)
 target_link_libraries(vbscript uuid wine)
 add_importlibs(vbscript oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(vbscript vbscript_idlheader stdole2)
-add_pch(vbscript vbscript.h SOURCE)
+add_pch(vbscript precomp.h SOURCE)
 add_cd_file(TARGET vbscript DESTINATION reactos/system32 FOR all)
