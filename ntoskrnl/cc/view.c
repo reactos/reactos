@@ -65,25 +65,45 @@ KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
 
 #if DBG
-VOID CcRosVacbIncRefCount_(PROS_VACB vacb, PCSTR file, INT line)
+ULONG CcRosVacbIncRefCount_(PROS_VACB vacb, PCSTR file, INT line)
 {
-    ++vacb->ReferenceCount;
+    ULONG Refs;
+
+    Refs = InterlockedIncrement((PLONG)&vacb->ReferenceCount);
     if (vacb->SharedCacheMap->Trace)
     {
         DbgPrint("(%s:%i) VACB %p ++RefCount=%lu, Dirty %u, PageOut %lu\n",
-                 file, line, vacb, vacb->ReferenceCount, vacb->Dirty, vacb->PageOut);
+                 file, line, vacb, Refs, vacb->Dirty, vacb->PageOut);
     }
+
+    return Refs;
 }
-VOID CcRosVacbDecRefCount_(PROS_VACB vacb, PCSTR file, INT line)
+ULONG CcRosVacbDecRefCount_(PROS_VACB vacb, PCSTR file, INT line)
 {
-    ASSERT(vacb->ReferenceCount != 0);
-    --vacb->ReferenceCount;
-    ASSERT(!(vacb->ReferenceCount == 0 && vacb->Dirty));
+    ULONG Refs;
+
+    Refs = InterlockedDecrement((PLONG)&vacb->ReferenceCount);
+    ASSERT(!(Refs == 0 && vacb->Dirty));
     if (vacb->SharedCacheMap->Trace)
     {
         DbgPrint("(%s:%i) VACB %p --RefCount=%lu, Dirty %u, PageOut %lu\n",
-                 file, line, vacb, vacb->ReferenceCount, vacb->Dirty, vacb->PageOut);
+                 file, line, vacb, Refs, vacb->Dirty, vacb->PageOut);
     }
+
+    return Refs;
+}
+ULONG CcRosVacbGetRefCount_(PROS_VACB vacb, PCSTR file, INT line)
+{
+    ULONG Refs;
+
+    Refs = InterlockedCompareExchange((PLONG)&vacb->ReferenceCount, 0, 0);
+    if (vacb->SharedCacheMap->Trace)
+    {
+        DbgPrint("(%s:%i) VACB %p ==RefCount=%lu, Dirty %u, PageOut %lu\n",
+                 file, line, vacb, Refs, vacb->Dirty, vacb->PageOut);
+    }
+
+    return Refs;
 }
 #endif
 
@@ -221,7 +241,7 @@ CcRosFlushDirtyPages (
         ASSERT(current->Dirty);
 
         /* One reference is added above */
-        if (current->ReferenceCount > 2)
+        if (CcRosVacbGetRefCount(current) > 2)
         {
             CcRosReleaseVacbLock(current);
             current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
@@ -311,6 +331,8 @@ retry:
     current_entry = VacbLruListHead.Flink;
     while (current_entry != &VacbLruListHead)
     {
+        ULONG Refs;
+
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     VacbLruListEntry);
@@ -342,14 +364,14 @@ retry:
         }
 
         /* Dereference the VACB */
-        CcRosVacbDecRefCount(current);
+        Refs = CcRosVacbDecRefCount(current);
 
         /* Check if we can free this entry now */
-        if (current->ReferenceCount < 2)
+        if (Refs < 2)
         {
             ASSERT(!current->Dirty);
             ASSERT(!current->MappedCount);
-            ASSERT(current->ReferenceCount == 1);
+            ASSERT(Refs == 1);
 
             RemoveEntryList(&current->CacheMapVacbListEntry);
             RemoveEntryList(&current->VacbLruListEntry);
@@ -409,6 +431,7 @@ CcRosReleaseVacb (
     BOOLEAN Dirty,
     BOOLEAN Mapped)
 {
+    ULONG Refs;
     ASSERT(SharedCacheMap);
 
     DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p, Valid %u)\n",
@@ -425,13 +448,13 @@ CcRosReleaseVacb (
     {
         Vacb->MappedCount++;
     }
-    CcRosVacbDecRefCount(Vacb);
+    Refs = CcRosVacbDecRefCount(Vacb);
     if (Mapped && (Vacb->MappedCount == 1))
     {
         CcRosVacbIncRefCount(Vacb);
     }
 
-    ASSERT(Vacb->ReferenceCount > 0);
+    ASSERT(Refs > 0);
 
     CcRosReleaseVacbLock(Vacb);
 
@@ -835,6 +858,7 @@ CcRosGetVacb (
 {
     PROS_VACB current;
     NTSTATUS Status;
+    ULONG Refs;
 
     ASSERT(SharedCacheMap);
 
@@ -856,6 +880,8 @@ CcRosGetVacb (
         }
     }
 
+    Refs = CcRosVacbGetRefCount(current);
+
     KeAcquireGuardedMutex(&ViewLock);
 
     /* Move to the tail of the LRU list */
@@ -873,7 +899,7 @@ CcRosGetVacb (
     *Vacb = current;
     *BaseOffset = current->FileOffset.QuadPart;
 
-    ASSERT(current->ReferenceCount > 1);
+    ASSERT(Refs > 1);
 
     return STATUS_SUCCESS;
 }
