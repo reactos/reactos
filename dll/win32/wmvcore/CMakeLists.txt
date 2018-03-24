@@ -9,7 +9,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/wmvcore_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wmvcore.def)
 
-add_library(wmvcore SHARED ${SOURCE})
+add_library(wmvcore SHARED ${SOURCE} version.rc)
 set_module_type(wmvcore win32dll)
 target_link_libraries(wmvcore wine)
 add_importlibs(wmvcore msvcrt kernel32 ntdll)

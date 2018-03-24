@@ -21,6 +21,7 @@
 #include "initguid.h"
 #include "wmsdk.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wmvcore);
 

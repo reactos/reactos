@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Jacek Caban for CodeWeavers
+ * Copyright 2017 Louis Lenders
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,11 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WINE_FILEDESCRIPTION_STR "Wine Media Playback dll"
+#define WINE_FILENAME_STR "wmvcore.dll"
+#define WINE_FILEVERSION 12,0,7601,17514
+#define WINE_FILEVERSION_STR "12.0.7601.17514"
+#define WINE_PRODUCTVERSION 12,0,7601,17514
+#define WINE_PRODUCTVERSION_STR "12.0.7601.17514"
 
-#define COBJMACROS
-
-#define EXTERN_GUID DEFINE_GUID
-
-#include "windef.h"
-#include "winbase.h"
+#include "wine/wine_common_ver.rc"
