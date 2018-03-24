@@ -431,7 +431,7 @@ CcRosReleaseVacb (
         CcRosVacbIncRefCount(Vacb);
     }
 
-    ASSERT(Vacb->ReferenceCount != 0);
+    ASSERT(Vacb->ReferenceCount > 0);
 
     CcRosReleaseVacbLock(Vacb);
 
@@ -863,6 +863,9 @@ CcRosGetVacb (
     DPRINT("*BaseAddress %p\n", *BaseAddress);
     *Vacb = current;
     *BaseOffset = current->FileOffset.QuadPart;
+
+    ASSERT(current->ReferenceCount > 1);
+
     return STATUS_SUCCESS;
 }
 
