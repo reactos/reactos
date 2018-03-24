@@ -9,7 +9,7 @@ list(APPEND SOURCE
     register.c
     softpub.c
     wintrust_main.c
-    wintrust_priv.h
+    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust_stubs.c)
 
 add_library(wintrust SHARED
@@ -23,5 +23,5 @@ target_link_libraries(wintrust wine ${PSEH_LIB})
 #add_delay_importlibs(wintrust cryptui imagehlp)
 add_delay_importlibs(wintrust cryptui)
 add_importlibs(wintrust imagehlp crypt32 user32 advapi32 msvcrt kernel32 ntdll)
-add_pch(wintrust wintrust_priv.h SOURCE)
+add_pch(wintrust precomp.h SOURCE)
 add_cd_file(TARGET wintrust DESTINATION reactos/system32 FOR all)
