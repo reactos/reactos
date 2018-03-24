@@ -19,19 +19,34 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winhttp_private.h"
+#define COBJMACROS
+#include "config.h"
+#include "wine/port.h"
 
+#include <stdarg.h>
+#include <assert.h>
 #ifdef HAVE_ARPA_INET_H
 # include <arpa/inet.h>
 #endif
 
-#include <assert.h>
-#include <winuser.h>
-#include <httprequest.h>
-#include <httprequestid.h>
-#include <schannel.h>
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "initguid.h"
+#include "httprequest.h"
+#include "httprequestid.h"
+#include "schannel.h"
+#include "winhttp.h"
 
+#include "winhttp_private.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
+
+#ifdef __REACTOS__
 #include "inet_ntop.c"
+#endif
 
 #define DEFAULT_KEEP_ALIVE_TIMEOUT 30000
 
@@ -391,7 +406,7 @@ static BOOL delete_header( request_t *request, DWORD index )
     return TRUE;
 }
 
-static BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only )
+BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only )
 {
     int index;
     header_t hdr;
@@ -2060,16 +2075,11 @@ static BOOL send_request( request_t *request, LPCWSTR headers, DWORD headers_len
     WCHAR *req = NULL;
     char *req_ascii;
     int bytes_sent;
-    DWORD len, i, flags;
+    DWORD len;
 
     clear_response_headers( request );
     drain_content( request );
 
-    flags = WINHTTP_ADDREQ_FLAG_ADD|WINHTTP_ADDREQ_FLAG_COALESCE_WITH_COMMA;
-    for (i = 0; i < request->num_accept_types; i++)
-    {
-        process_header( request, attr_accept, request->accept_types[i], flags, TRUE );
-    }
     if (session->agent)
         process_header( request, attr_user_agent, session->agent, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
 

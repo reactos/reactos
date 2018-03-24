@@ -19,27 +19,15 @@
 #ifndef _WINE_WINHTTP_PRIVATE_H_
 #define _WINE_WINHTTP_PRIVATE_H_
 
-#include <wine/config.h>
+#ifndef __WINE_CONFIG_H
+# error You must include config.h to use this header
+#endif
 
-#include <stdarg.h>
+#include "wine/heap.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <oleauto.h>
-#include <winsock2.h>
-#include <winhttp.h>
-
-#include <wine/list.h>
-#include <wine/unicode.h>
-
+#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -56,10 +44,8 @@
 # define ioctlsocket ioctl
 #endif
 
-#include <sspi.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
+#include "ole2.h"
+#include "sspi.h"
 
 static const WCHAR getW[]    = {'G','E','T',0};
 static const WCHAR postW[]   = {'P','O','S','T',0};
@@ -238,8 +224,6 @@ typedef struct
     char  read_buf[8192]; /* buffer for already read but not returned data */
     header_t *headers;
     DWORD num_headers;
-    WCHAR **accept_types;
-    DWORD num_accept_types;
     struct authinfo *authinfo;
     struct authinfo *proxy_authinfo;
     HANDLE task_wait;
@@ -334,32 +318,14 @@ void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
 
 void release_host( hostdata_t *host ) DECLSPEC_HIDDEN;
 
+BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only ) DECLSPEC_HIDDEN;
+
 extern HRESULT WinHttpRequest_create( void ** ) DECLSPEC_HIDDEN;
 void release_typelib( void ) DECLSPEC_HIDDEN;
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc( SIZE_T size )
-{
-    return HeapAlloc( GetProcessHeap(), 0, size );
-}
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero( SIZE_T size )
-{
-    return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, size );
-}
-
-static inline void* __WINE_ALLOC_SIZE(2) heap_realloc( LPVOID mem, SIZE_T size )
-{
-    return HeapReAlloc( GetProcessHeap(), 0, mem, size );
-}
 
 static inline void* __WINE_ALLOC_SIZE(2) heap_realloc_zero( LPVOID mem, SIZE_T size )
 {
     return HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, mem, size );
-}
-
-static inline BOOL heap_free( LPVOID mem )
-{
-    return HeapFree( GetProcessHeap(), 0, mem );
 }
 
 static inline WCHAR *strdupW( const WCHAR *src )
