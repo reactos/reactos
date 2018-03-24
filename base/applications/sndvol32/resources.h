@@ -2,6 +2,9 @@
 
 #define IDM_MAINMENU 101
 
+#define IDI_BALANCELEFT 301
+#define IDI_BALANCERIGHT 302
+#define IDI_MUTED 303
 #define IDI_MAINAPP 304
 
 #define IDC_PROPERTIES        1001
