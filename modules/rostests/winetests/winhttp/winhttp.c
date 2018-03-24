@@ -19,27 +19,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 #include <stdarg.h>
 #include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <ole2.h>
 #include <winsock2.h>
-//#include <ws2tcpip.h>
+#include <ws2tcpip.h>
 #include <winhttp.h>
 #include <wincrypt.h>
 #include <winreg.h>
 #include <stdio.h>
-//#include "initguid.h"
+#include <initguid.h>
 #include <httprequest.h>
 #include <httprequestid.h>
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
