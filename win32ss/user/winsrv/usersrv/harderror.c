@@ -346,6 +346,7 @@ UserpFormatMessages(
     IN OUT PUNICODE_STRING TextStringU,
     IN OUT PUNICODE_STRING CaptionStringU,
     OUT PUINT pdwType,
+    OUT PULONG pdwTimeout,
     IN PHARDERROR_MSG Message)
 {
     NTSTATUS Status;
@@ -418,6 +419,12 @@ UserpFormatMessages(
             CaptionStringU->Length = 0;
         }
 
+        /* Set the timeout */
+        if (Message->NumberOfParameters >= 4)
+            *pdwTimeout = (ULONG)Parameters[3];
+        else
+            *pdwTimeout = INFINITE;
+
         goto Quit;
     }
 
@@ -461,6 +468,9 @@ UserpFormatMessages(
     else if (Severity == STATUS_SEVERITY_ERROR)         *pdwType |= MB_ICONERROR;
 
     *pdwType |= MB_SYSTEMMODAL | MB_SETFOREGROUND;
+
+    /* Set the timeout */
+    *pdwTimeout = INFINITE;
 
     /* Copy the Parameters array locally */
     RtlCopyMemory(&CopyParameters, Parameters, sizeof(CopyParameters));
@@ -991,7 +1001,8 @@ UserServerHardError(
     IN PHARDERROR_MSG Message)
 {
     ULONG ErrorMode;
-    UINT dwType = 0;
+    UINT  dwType = 0;
+    ULONG Timeout = INFINITE;
     UNICODE_STRING TextU, CaptionU;
     WCHAR LocalTextBuffer[256];
     WCHAR LocalCaptionBuffer[256];
@@ -1029,7 +1040,7 @@ UserServerHardError(
     /* Format the message caption and text */
     RtlInitEmptyUnicodeString(&TextU, LocalTextBuffer, sizeof(LocalTextBuffer));
     RtlInitEmptyUnicodeString(&CaptionU, LocalCaptionBuffer, sizeof(LocalCaptionBuffer));
-    UserpFormatMessages(&TextU, &CaptionU, &dwType, /* &Timeout, */ Message);
+    UserpFormatMessages(&TextU, &CaptionU, &dwType, &Timeout, Message);
 
     /* Log the hard error message */
     UserpLogHardError(&TextU, &CaptionU);
@@ -1065,7 +1076,7 @@ UserServerHardError(
     Message->Response = UserpMessageBox(TextU.Buffer,
                                         CaptionU.Buffer,
                                         dwType,
-                                        (ULONG)-1);
+                                        Timeout);
 
 Quit:
     /* Free the strings if they have been reallocated */
