@@ -19,9 +19,11 @@
  */
 
 #include <stdarg.h>
-#include <windef.h>
-#include <winuser.h>
-#include <wingdi.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
 
 /***********************************************************************
  *           WinGCreateDC   (WING32.@)
