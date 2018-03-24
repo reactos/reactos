@@ -16,29 +16,28 @@ inline void release_ioinfo(ioinfo *info);
 #define TCHAR4 ULONG
 #endif
 
-#define TCSIZE sizeof(_TCHAR)
-#define TOULL(x) ((TCHAR4)(x))
+#define TCSIZE_BITS (sizeof(_TCHAR)*8)
 
-#define EXE ((TOULL('e')<<(2*TCSIZE)) | (TOULL('x')<<TCSIZE) | (TOULL('e')))
-#define BAT ((TOULL('b')<<(2*TCSIZE)) | (TOULL('a')<<TCSIZE) | (TOULL('t')))
-#define CMD ((TOULL('c')<<(2*TCSIZE)) | (TOULL('m')<<TCSIZE) | (TOULL('d')))
-#define COM ((TOULL('c')<<(2*TCSIZE)) | (TOULL('o')<<TCSIZE) | (TOULL('m')))
+#define EXE (((TCHAR4)('e')<<(2*TCSIZE_BITS)) | ((TCHAR4)('x')<<TCSIZE_BITS) | ((TCHAR4)('e')))
+#define BAT (((TCHAR4)('b')<<(2*TCSIZE_BITS)) | ((TCHAR4)('a')<<TCSIZE_BITS) | ((TCHAR4)('t')))
+#define CMD (((TCHAR4)('c')<<(2*TCSIZE_BITS)) | ((TCHAR4)('m')<<TCSIZE_BITS) | ((TCHAR4)('d')))
+#define COM (((TCHAR4)('c')<<(2*TCSIZE_BITS)) | ((TCHAR4)('o')<<TCSIZE_BITS) | ((TCHAR4)('m')))
 
 int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
 {
   DWORD dw;
   WIN32_FILE_ATTRIBUTE_DATA hfi;
   unsigned short mode = ALL_S_IREAD;
-  int plen;
+  size_t plen;
 
   TRACE(":file (%s) buf(%p)\n",path,buf);
 
   plen = _tcslen(path);
-  while (plen && path[plen-1]==' ')
+  while (plen && path[plen-1]==__T(' '))
     plen--;
 
-  if (plen && (plen<2 || path[plen-2]!=':') &&
-          (path[plen-1]==':' || path[plen-1]=='\\' || path[plen-1]=='/'))
+  if (plen && (plen<2 || path[plen-2]!=__T(':')) &&
+          (path[plen-1]==__T(':') || path[plen-1]==__T('\\') || path[plen-1]==__T('/')))
   {
     *_errno() = ENOENT;
     return -1;
@@ -58,8 +57,8 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
                  Also a letter as first char isn't enough to be classified
 		 as a drive letter
   */
-  if (isalpha(*path)&& (*(path+1)==':'))
-    buf->st_dev = buf->st_rdev = toupper(*path) - 'A'; /* drive num */
+  if (_istalpha(*path) && (*(path+1)==__T(':')))
+    buf->st_dev = buf->st_rdev = _totupper(*path) - __T('A'); /* drive num */
   else
     buf->st_dev = buf->st_rdev = _getdrive() - 1;
 
@@ -70,10 +69,13 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
   {
     mode |= _S_IFREG;
     /* executable? */
-    if (plen > 6 && path[plen-4] == '.')  /* shortest exe: "\x.exe" */
+    if (plen > 6 && path[plen-4] == __T('.'))  /* shortest exe: "\x.exe" */
     {
-      unsigned int ext = tolower(path[plen-1]) | (tolower(path[plen-2]) << 8) |
-                                 (tolower(path[plen-3]) << 16);
+
+      TCHAR4 ext = (TCHAR4)_totlower(path[plen-1])
+                   | ((TCHAR4)_totlower(path[plen-2]) << TCSIZE_BITS)
+                   | ((TCHAR4)_totlower(path[plen-3]) << 2*TCSIZE_BITS);
+
       if (ext == EXE || ext == BAT || ext == CMD || ext == COM)
           mode |= ALL_S_IEXEC;
     }
