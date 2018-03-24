@@ -22,10 +22,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NONAMELESSUNION
+
+#include "ws2tcpip.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "wininet.h"
+#include "winineti.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "shlwapi.h"
+#include "shlobj.h"
+#include "shellapi.h"
+
 #include "internet.h"
 
-#include <shlobj.h>
-#include <shellapi.h>
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 static const char urlcache_ver_prefix[] = "WINE URLCache Ver ";
 static const char urlcache_ver[] = "0.2012001";

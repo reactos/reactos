@@ -21,20 +21,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NONAMELESSUNION
+
+#include "ws2tcpip.h"
+
+#include <time.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <assert.h>
+
+#include "wine/library.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wininet.h"
+#include "winerror.h"
+
+#include "wine/debug.h"
 #include "internet.h"
 
-#include <sys/types.h>
-#ifdef HAVE_POLL_H
-#include <poll.h>
-#endif
-#ifdef HAVE_SYS_FILIO_H
-# include <sys/filio.h>
-#endif
-#ifdef HAVE_NETINET_TCP_H
-# include <netinet/tcp.h>
-#endif
-
-#include <errno.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 static DWORD netconn_verify_cert(netconn_t *conn, PCCERT_CONTEXT cert, HCERTSTORE store)
 {

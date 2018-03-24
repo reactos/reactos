@@ -26,7 +26,46 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#ifdef HAVE_CORESERVICES_CORESERVICES_H
+#define GetCurrentThread MacGetCurrentThread
+#define LoadResource MacLoadResource
+#include <CoreServices/CoreServices.h>
+#undef GetCurrentThread
+#undef LoadResource
+#undef DPRINTF
+#endif
+
+#include "winsock2.h"
+#include "ws2ipdef.h"
+
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <assert.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "wininet.h"
+#include "winnls.h"
+#include "wine/debug.h"
+#include "winerror.h"
+#define NO_SHLWAPI_STREAM
+#include "shlwapi.h"
+
+#include "wine/exception.h"
+
 #include "internet.h"
+#include "resource.h"
+
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 typedef struct
 {
@@ -1625,7 +1664,7 @@ BOOL WINAPI InternetCrackUrlW(const WCHAR *lpszUrl, DWORD dwUrlLength, DWORD dwF
 
     if (dwFlags & ICU_DECODE)
     {
-        WCHAR *url_tmp;
+        WCHAR *url_tmp, *buffer;
         DWORD len = dwUrlLength + 1;
         BOOL ret;
 
@@ -1634,9 +1673,24 @@ BOOL WINAPI InternetCrackUrlW(const WCHAR *lpszUrl, DWORD dwUrlLength, DWORD dwF
             SetLastError(ERROR_OUTOFMEMORY);
             return FALSE;
         }
-        ret = InternetCanonicalizeUrlW(url_tmp, url_tmp, &len, ICU_DECODE | ICU_NO_ENCODE);
+
+        buffer = url_tmp;
+        ret = InternetCanonicalizeUrlW(url_tmp, buffer, &len, ICU_DECODE | ICU_NO_ENCODE);
+        if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            buffer = heap_alloc(len * sizeof(WCHAR));
+            if (!buffer)
+            {
+                SetLastError(ERROR_OUTOFMEMORY);
+                heap_free(url_tmp);
+                return FALSE;
+            }
+            ret = InternetCanonicalizeUrlW(url_tmp, buffer, &len, ICU_DECODE | ICU_NO_ENCODE);
+        }
         if (ret)
-            ret = InternetCrackUrlW(url_tmp, len, dwFlags & ~ICU_DECODE, lpUC);
+            ret = InternetCrackUrlW(buffer, len, dwFlags & ~ICU_DECODE, lpUC);
+
+        if (buffer != url_tmp) heap_free(buffer);
         heap_free(url_tmp);
         return ret;
     }
@@ -2271,7 +2325,8 @@ static WCHAR *get_proxy_autoconfig_url(void)
     CFRelease( settings );
     return ret;
 #else
-    FIXME( "no support on this platform\n" );
+    static int once;
+    if (!once++) FIXME( "no support on this platform\n" );
     return NULL;
 #endif
 }
@@ -2821,10 +2876,21 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
 	 FIXME("Option INTERNET_OPTION_DISABLE_AUTODIAL; STUB\n");
 	 break;
     case INTERNET_OPTION_HTTP_DECODING:
-        FIXME("INTERNET_OPTION_HTTP_DECODING; STUB\n");
-        SetLastError(ERROR_INTERNET_INVALID_OPTION);
-        ret = FALSE;
+    {
+        if (!lpwhh)
+        {
+            SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
+            return FALSE;
+        }
+        if (!lpBuffer || dwBufferLength != sizeof(BOOL))
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            ret = FALSE;
+        }
+        else
+            lpwhh->decoding = *(BOOL *)lpBuffer;
         break;
+    }
     case INTERNET_OPTION_COOKIES_3RD_PARTY:
         FIXME("INTERNET_OPTION_COOKIES_3RD_PARTY; STUB\n");
         SetLastError(ERROR_INTERNET_INVALID_OPTION);
@@ -2911,6 +2977,12 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         ret = (res == ERROR_SUCCESS);
         break;
         }
+    case INTERNET_OPTION_SETTINGS_CHANGED:
+        FIXME("INTERNET_OPTION_SETTINGS_CHANGED; STUB\n");
+        break;
+    case INTERNET_OPTION_REFRESH:
+        FIXME("INTERNET_OPTION_REFRESH; STUB\n");
+        break;
     default:
         FIXME("Option %d STUB\n",dwOption);
         SetLastError(ERROR_INTERNET_INVALID_OPTION);

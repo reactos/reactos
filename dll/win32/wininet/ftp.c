@@ -27,7 +27,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "ws2tcpip.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <assert.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "wininet.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "winternl.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
 #include "internet.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 #define RESPONSE_TIMEOUT        30
 
