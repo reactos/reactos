@@ -175,14 +175,23 @@ static inline ioinfo* get_ioinfo_nolock(int fd)
 /*static*/ inline ioinfo* get_ioinfo(int fd)
 {
     ioinfo *ret = get_ioinfo_nolock(fd);
-    if(ret->exflag & EF_CRIT_INIT)
-        EnterCriticalSection(&ret->crit);
+    if(ret == &__badioinfo)
+        return ret;
+    if(!(ret->exflag & EF_CRIT_INIT)) {
+        LOCK_FILES();
+        if(!(ret->exflag & EF_CRIT_INIT)) {
+            InitializeCriticalSection(&ret->crit);
+            ret->exflag |= EF_CRIT_INIT;
+        }
+        UNLOCK_FILES();
+    }
+    EnterCriticalSection(&ret->crit);
     return ret;
 }
 
 /*static*/ inline void release_ioinfo(ioinfo *info)
 {
-    if(info->exflag & EF_CRIT_INIT)
+    if(info!=&__badioinfo && info->exflag & EF_CRIT_INIT)
         LeaveCriticalSection(&info->crit);
 }
 
@@ -240,10 +249,8 @@ static inline BOOL is_valid_fd(int fd)
 /* INTERNAL: free a file entry fd */
 static void msvcrt_free_fd(int fd)
 {
-  ioinfo *fdinfo;
+  ioinfo *fdinfo = get_ioinfo(fd);
 
-  LOCK_FILES();
-  fdinfo = get_ioinfo_nolock(fd);
   if(fdinfo != &__badioinfo)
   {
     fdinfo->handle = INVALID_HANDLE_VALUE;
@@ -266,7 +273,9 @@ static void msvcrt_free_fd(int fd)
         break;
     }
   }
+  release_ioinfo(fdinfo);
 
+  LOCK_FILES();
   if (fd == fdend - 1)
     fdend--;
   if (fd < fdstart)
@@ -421,7 +430,7 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
   for (fd = 0; fd < fdend; fd++)
   {
     /* to be inherited, we need it to be open, and that DONTINHERIT isn't set */
-    fdinfo = get_ioinfo_nolock(fd);
+    fdinfo = get_ioinfo(fd);
     if ((fdinfo->wxflag & (WX_OPEN | WX_DONTINHERIT)) == WX_OPEN)
     {
       *wxflag_ptr = fdinfo->wxflag;
@@ -432,6 +441,7 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
       *wxflag_ptr = 0;
       *handle_ptr = INVALID_HANDLE_VALUE;
     }
+    release_ioinfo(fdinfo);
     wxflag_ptr++; handle_ptr++;
   }
   return TRUE;
@@ -941,20 +951,33 @@ int CDECL _close(int fd)
  */
 int CDECL _dup2(int od, int nd)
 {
+  ioinfo *info_od, *info_nd;
   int ret;
 
   TRACE("(od=%d, nd=%d)\n", od, nd);
   LOCK_FILES();
-  if (nd < MSVCRT_MAX_FILES && nd >= 0 && is_valid_fd(od))
+
+  if (od < nd)
+  {
+    info_od = get_ioinfo(od);
+    info_nd = get_ioinfo(nd);
+  }
+  else
+  {
+    info_nd = get_ioinfo(nd);
+    info_od = get_ioinfo(od);
+  }
+
+  if (nd < MSVCRT_MAX_FILES && nd >= 0 && (info_od->wxflag & WX_OPEN))
   {
     HANDLE handle;
 
-    if (DuplicateHandle(GetCurrentProcess(), get_ioinfo_nolock(od)->handle,
+    if (DuplicateHandle(GetCurrentProcess(), info_od->handle,
      GetCurrentProcess(), &handle, 0, TRUE, DUPLICATE_SAME_ACCESS))
     {
-      int wxflag = get_ioinfo_nolock(od)->wxflag & ~_O_NOINHERIT;
+      int wxflag = info_od->wxflag & ~_O_NOINHERIT;
 
-      if (is_valid_fd(nd))
+      if (info_nd->wxflag & WX_OPEN)
         _close(nd);
       ret = msvcrt_set_fd(handle, wxflag, nd);
       if (ret == -1)
@@ -979,6 +1002,9 @@ int CDECL _dup2(int od, int nd)
     *_errno() = EBADF;
     ret = -1;
   }
+
+  release_ioinfo(info_od);
+  release_ioinfo(info_nd);
   UNLOCK_FILES();
   return ret;
 }
@@ -2092,9 +2118,8 @@ static inline int get_utf8_char_len(char ch)
 /*********************************************************************
  * (internal) read_utf8
  */
-static int read_utf8(int fd, wchar_t *buf, unsigned int count)
+static int read_utf8(ioinfo *fdinfo, wchar_t *buf, unsigned int count)
 {
-    ioinfo *fdinfo = get_ioinfo_nolock(fd);
     HANDLE hand = fdinfo->handle;
     char min_buf[4], *readbuf, lookahead;
     DWORD readbuf_size, pos=0, num_read=1, char_len, i, j;
@@ -2269,12 +2294,10 @@ static int read_utf8(int fd, wchar_t *buf, unsigned int count)
  * the file pointer on the \r character while getc() goes on to
  * the following \n
  */
-static int read_i(int fd, void *buf, unsigned int count)
+static int read_i(int fd, ioinfo *fdinfo, void *buf, unsigned int count)
 {
     DWORD num_read, utf16;
     char *bufstart = buf;
-    HANDLE hand = fdtoh(fd);
-    ioinfo *fdinfo = get_ioinfo_nolock(fd);
 
     if (count == 0)
         return 0;
@@ -2285,8 +2308,8 @@ static int read_i(int fd, void *buf, unsigned int count)
     }
     /* Don't trace small reads, it gets *very* annoying */
     if (count > 4)
-        TRACE(":fd (%d) handle (%p) buf (%p) len (%d)\n",fd,hand,buf,count);
-    if (hand == INVALID_HANDLE_VALUE)
+        TRACE(":fd (%d) handle (%p) buf (%p) len (%d)\n", fd, fdinfo->handle, buf, count);
+    if (fdinfo->handle == INVALID_HANDLE_VALUE)
     {
         *_errno() = EBADF;
         return -1;
@@ -2300,9 +2323,9 @@ static int read_i(int fd, void *buf, unsigned int count)
     }
 
     if((fdinfo->wxflag&WX_TEXT) && (fdinfo->exflag&EF_UTF8))
-        return read_utf8(fd, buf, count);
+        return read_utf8(fdinfo, buf, count);
 
-    if (fdinfo->lookahead[0]!='\n' || ReadFile(hand, bufstart, count, &num_read, NULL))
+    if (fdinfo->lookahead[0]!='\n' || ReadFile(fdinfo->handle, bufstart, count, &num_read, NULL))
     {
         if (fdinfo->lookahead[0] != '\n')
         {
@@ -2315,7 +2338,7 @@ static int read_i(int fd, void *buf, unsigned int count)
                 fdinfo->lookahead[1] = '\n';
             }
 
-            if(count>1+utf16 && ReadFile(hand, bufstart+1+utf16, count-1-utf16, &num_read, NULL))
+            if(count>1+utf16 && ReadFile(fdinfo->handle, bufstart+1+utf16, count-1-utf16, &num_read, NULL))
                 num_read += 1+utf16;
             else
                 num_read = 1+utf16;
@@ -2360,7 +2383,7 @@ static int read_i(int fd, void *buf, unsigned int count)
                     DWORD len;
 
                     lookahead[1] = '\n';
-                    if (ReadFile(hand, lookahead, 1+utf16, &len, NULL) && len)
+                    if (ReadFile(fdinfo->handle, lookahead, 1+utf16, &len, NULL) && len)
                     {
                         if(lookahead[0]=='\n' && (!utf16 || lookahead[1]==0) && j==0)
                         {
@@ -2433,9 +2456,10 @@ static int read_i(int fd, void *buf, unsigned int count)
  */
 int CDECL _read(int fd, void *buf, unsigned int count)
 {
-  int num_read;
-  num_read = read_i(fd, buf, count);
-  return num_read;
+    ioinfo *info = get_ioinfo(fd);
+    int num_read = read_i(fd, info, buf, count);
+    release_ioinfo(info);
+    return num_read;
 }
 
 /*********************************************************************
@@ -2443,30 +2467,34 @@ int CDECL _read(int fd, void *buf, unsigned int count)
  */
 int CDECL _setmode(int fd,int mode)
 {
-    int ret = get_ioinfo_nolock(fd)->wxflag & WX_TEXT ? _O_TEXT : _O_BINARY;
-    if(ret==_O_TEXT && (get_ioinfo_nolock(fd)->exflag & (EF_UTF8|EF_UTF16)))
+    ioinfo *info = get_ioinfo(fd);
+    int ret = info->wxflag & WX_TEXT ? _O_TEXT : _O_BINARY;
+    if(ret==_O_TEXT && (info->exflag & (EF_UTF8|EF_UTF16)))
         ret = _O_WTEXT;
 
     if(mode!=_O_TEXT && mode!=_O_BINARY && mode!=_O_WTEXT
                 && mode!=_O_U16TEXT && mode!=_O_U8TEXT) {
         *_errno() = EINVAL;
+        release_ioinfo(info);
         return -1;
     }
 
     if(mode == _O_BINARY) {
-        get_ioinfo_nolock(fd)->wxflag &= ~WX_TEXT;
-        get_ioinfo_nolock(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
+        info->wxflag &= ~WX_TEXT;
+        info->exflag &= ~(EF_UTF8|EF_UTF16);
+        release_ioinfo(info);
         return ret;
     }
 
-    get_ioinfo_nolock(fd)->wxflag |= WX_TEXT;
+    info->wxflag |= WX_TEXT;
     if(mode == _O_TEXT)
-        get_ioinfo_nolock(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
+        info->exflag &= ~(EF_UTF8|EF_UTF16);
     else if(mode == _O_U8TEXT)
-        get_ioinfo_nolock(fd)->exflag = (get_ioinfo_nolock(fd)->exflag & ~EF_UTF16) | EF_UTF8;
+        info->exflag = (info->exflag & ~EF_UTF16) | EF_UTF8;
     else
-        get_ioinfo_nolock(fd)->exflag = (get_ioinfo_nolock(fd)->exflag & ~EF_UTF8) | EF_UTF16;
+        info->exflag = (info->exflag & ~EF_UTF8) | EF_UTF16;
 
+    release_ioinfo(info);
     return ret;
 
 }
@@ -2543,7 +2571,7 @@ int CDECL _umask(int umask)
 int CDECL _write(int fd, const void* buf, unsigned int count)
 {
     DWORD num_written;
-    ioinfo *info = get_ioinfo_nolock(fd);
+    ioinfo *info = get_ioinfo(fd);
     HANDLE hand = info->handle;
 
     /* Don't trace small writes, it gets *very* annoying */
@@ -2554,12 +2582,14 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
     if (hand == INVALID_HANDLE_VALUE)
     {
         *_errno() = EBADF;
+        release_ioinfo(info);
         return -1;
     }
 
     if (((info->exflag&EF_UTF8) || (info->exflag&EF_UTF16)) && count&1)
     {
         *_errno() = EINVAL;
+        release_ioinfo(info);
         return -1;
     }
 
@@ -2571,7 +2601,10 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
     {
         if (WriteFile(hand, buf, count, &num_written, NULL)
                 &&  (num_written == count))
+        {
+            release_ioinfo(info);
             return num_written;
+        }
         TRACE("WriteFile (fd %d, hand %p) failed-last error (%d)\n", fd,
                 hand, GetLastError());
         *_errno() = ENOSPC;
@@ -2662,6 +2695,7 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
             if(!conv_len) {
                 _dosmaperr(GetLastError());
                 free(p);
+                release_ioinfo(info);
                 return -1;
             }
 
@@ -2693,6 +2727,7 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
 
         if (!WriteFile(hand, q, size, &num_written, NULL))
             num_written = -1;
+        release_ioinfo(info);
         if(p)
             free(p);
         if (num_written != size)
@@ -2705,6 +2740,7 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
         return count;
     }
 
+    release_ioinfo(info);
     return -1;
 }
 
@@ -2805,7 +2841,7 @@ int CDECL _filbuf(FILE* file)
 
     if(!(file->_flag & (_IOMYBUF | _USERBUF))) {
         int r;
-        if ((r = read_i(file->_file,&c,1)) != 1) {
+        if ((r = _read(file->_file,&c,1)) != 1) {
             file->_flag |= (r == 0) ? _IOEOF : _IOERR;
             _unlock_file(file);
             return EOF;
@@ -2814,7 +2850,7 @@ int CDECL _filbuf(FILE* file)
         _unlock_file(file);
         return c;
     } else {
-        file->_cnt = read_i(file->_file, file->_base, file->_bufsiz);
+        file->_cnt = _read(file->_file, file->_base, file->_bufsiz);
         if(file->_cnt<=0) {
             file->_flag |= (file->_cnt == 0) ? _IOEOF : _IOERR;
             file->_cnt = 0;
