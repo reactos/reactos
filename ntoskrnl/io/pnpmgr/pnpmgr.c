@@ -26,9 +26,8 @@ extern ULONG ExpInitializationPhase;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 
-#define MAX_DEVICE_ID_LEN          200
-#define MAX_SEPARATORS_INSTANCEID  0
-#define MAX_SEPARATORS_DEVICEID    1
+/* Keep synchronized with psdk/cfgmgr32.h */
+#define MAX_DEVICE_ID_LEN   200
 
 /* DATA **********************************************************************/
 
@@ -1767,91 +1766,213 @@ cleanup:
 static
 BOOLEAN
 IopValidateID(
-    _In_ PWCHAR Id,
+    _In_ PDEVICE_OBJECT DeviceObject OPTIONAL,
+    _Inout_ PWCHAR Id,
     _In_ BUS_QUERY_ID_TYPE QueryType)
 {
-    PWCHAR PtrChar;
-    PWCHAR StringEnd;
+    PWCHAR ThisId, PtrChar;
+    PWCHAR PtrEndPrevId = NULL;
     WCHAR Char;
     ULONG SeparatorsCount = 0;
-    PWCHAR PtrPrevChar = NULL;
-    ULONG MaxSeparators;
+    ULONG MaxSeparators = 0;
     BOOLEAN IsMultiSz;
+    PIO_ERROR_LOG_PACKET ErrorLogEntry;
+    PWSTR ErrorReason = NULL;
+    PVOID Data = NULL;
+    ULONG DataSize = 0;
 
     PAGED_CODE();
 
     switch (QueryType)
     {
         case BusQueryDeviceID:
-            MaxSeparators = MAX_SEPARATORS_DEVICEID;
+            MaxSeparators = 1;
             IsMultiSz = FALSE;
             break;
+
         case BusQueryInstanceID:
-            MaxSeparators = MAX_SEPARATORS_INSTANCEID;
+            MaxSeparators = 0;
             IsMultiSz = FALSE;
             break;
 
         case BusQueryHardwareIDs:
         case BusQueryCompatibleIDs:
-            MaxSeparators = MAX_SEPARATORS_DEVICEID;
+            MaxSeparators = 1;
             IsMultiSz = TRUE;
             break;
 
         default:
-            DPRINT1("IopValidateID: Not handled QueryType - %x\n", QueryType);
+            DPRINT1("IopValidateID: QueryType %lu not handled!\n", QueryType);
             return FALSE;
     }
 
-    StringEnd = Id + MAX_DEVICE_ID_LEN;
+    DPRINT("IopValidateID: QueryType %lu:\n", QueryType);
 
-    for (PtrChar = Id; PtrChar < StringEnd; PtrChar++)
+    /* Verify each ID */
+    for (ThisId = Id; ; ThisId = PtrEndPrevId + 1)
     {
-        Char = *PtrChar;
+        DPRINT("    Analyzing ID '%S'\n", ThisId);
 
-        if (Char == UNICODE_NULL)
+        /* Analyze and possibly fixup characters in this ID */
+        SeparatorsCount = 0;
+        for (PtrChar = ThisId; PtrChar - ThisId < MAX_DEVICE_ID_LEN; ++PtrChar)
         {
-            if (!IsMultiSz || (PtrPrevChar && PtrChar == PtrPrevChar + 1))
+            Char = *PtrChar;
+
+            /* Check whether we are at the end of the ID */
+            if (Char == UNICODE_NULL)
             {
-                if (MaxSeparators == SeparatorsCount || IsMultiSz)
+                /* In case of an ID list (multi-string), we allow only the first ID to be empty */
+                if (!IsMultiSz || (PtrEndPrevId && PtrChar == PtrEndPrevId + 1))
                 {
-                    return TRUE;
+                    if (MaxSeparators == SeparatorsCount || IsMultiSz)
+                    {
+                        DPRINT("      ID is OK!\n");
+                        DPRINT("\n");
+                        return TRUE;
+                    }
+
+                    DPRINT1("IopValidateID: ID '%S' has too many separators (SeparatorsCount: %lu, MaxSeparators: %lu)\n",
+                            ThisId, SeparatorsCount, MaxSeparators);
+
+                    /* Prepare for error logging */
+                    ErrorReason = L"too many separators";
+                    Data = &SeparatorsCount;
+                    DataSize = sizeof(SeparatorsCount);
+
+                    goto ErrorExit;
                 }
 
-                DPRINT1("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
-                        SeparatorsCount, MaxSeparators);
-                goto ErrorExit;
+                DPRINT("      ID is OK!\n");
+
+                /* Continue with the next ID */
+                PtrEndPrevId = PtrChar;
+                break;
             }
-
-            StringEnd = PtrChar + MAX_DEVICE_ID_LEN + 1;
-            PtrPrevChar = PtrChar;
-            SeparatorsCount = 0;
-        }
-        else if (Char < ' ' || Char > 0x7F || Char == ',')
-        {
-            DPRINT1("IopValidateID: Invalid character - %04X\n", Char);
-            goto ErrorExit;
-        }
-        else if (Char == ' ')
-        {
-            *PtrChar = '_';
-        }
-        else if (Char == '\\')
-        {
-            SeparatorsCount++;
-
-            if (SeparatorsCount > MaxSeparators)
+            else if (Char < ' ' || Char > 0x7F || Char == ',')
             {
-                DPRINT1("IopValidateID: SeparatorsCount - %lu, MaxSeparators - %lu\n",
-                        SeparatorsCount, MaxSeparators);
+                DPRINT1("IopValidateID: ID '%S' has an invalid character '%04X'\n", ThisId, Char);
+
+                /* Prepare for error logging */
+                ErrorReason = L"invalid character";
+                Data = &Char;
+                DataSize = sizeof(Char);
+
                 goto ErrorExit;
             }
+            else if (Char == ' ')
+            {
+                *PtrChar = '_';
+            }
+            else if (Char == '\\')
+            {
+                ++SeparatorsCount;
+
+                if (SeparatorsCount > MaxSeparators)
+                {
+                    DPRINT1("IopValidateID: ID '%S' has too many separators (SeparatorsCount: %lu, MaxSeparators: %lu)\n",
+                            ThisId, SeparatorsCount, MaxSeparators);
+
+                    /* Prepare for error logging */
+                    ErrorReason = L"too many separators";
+                    Data = &SeparatorsCount;
+                    DataSize = sizeof(SeparatorsCount);
+
+                    goto ErrorExit;
+                }
+            }
+        }
+
+        /* Bail out if this ID is too long */
+        if (PtrChar - ThisId >= MAX_DEVICE_ID_LEN)
+            break;
+    }
+
+    DPRINT1("IopValidateID: ID '%S' not terminated or too long\n", ThisId);
+
+    /* Prepare for error logging */
+    ErrorReason = L"not terminated or too long";
+
+ErrorExit:
+    /* Log an error if needed */
+    if (DeviceObject)
+    {
+        /* Determine the size of the error log entry */
+        UCHAR EntrySize = ROUND_UP(sizeof(IO_ERROR_LOG_PACKET) + DataSize, sizeof(ULONG));
+        if (// DeviceObject &&
+            DeviceObject->DriverObject->DriverName.Buffer &&
+            DeviceObject->DriverObject->DriverName.Length)
+        {
+            EntrySize += DeviceObject->DriverObject->DriverName.Length + sizeof(UNICODE_NULL);
+        }
+        if (ErrorReason)
+        {
+            EntrySize += wcslen(ErrorReason) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+        }
+
+        /* Allocate an event log entry */
+        ErrorLogEntry = IoAllocateErrorLogEntry(IopRootDriverObject, EntrySize);
+        if (ErrorLogEntry)
+        {
+            /* Set the error code */
+            ErrorLogEntry->ErrorCode   = STATUS_PNP_INVALID_ID;
+            ErrorLogEntry->FinalStatus = STATUS_PNP_INVALID_ID;
+
+            /* Save the extra data */
+            ErrorLogEntry->DumpDataSize = (USHORT)DataSize;
+            if (Data && DataSize)
+                RtlCopyMemory(ErrorLogEntry->DumpData, Data, DataSize);
+
+            /* Initialize the strings */
+            ErrorLogEntry->NumberOfStrings = 0;
+            ErrorLogEntry->StringOffset = ROUND_UP(sizeof(IO_ERROR_LOG_PACKET) + DataSize, sizeof(ULONG));
+            PtrChar = (PWCHAR)((ULONG_PTR)ErrorLogEntry + ErrorLogEntry->StringOffset);
+
+            /* Save the driver name */
+            if (// DeviceObject &&
+                DeviceObject->DriverObject->DriverName.Buffer &&
+                DeviceObject->DriverObject->DriverName.Length)
+            {
+                ErrorLogEntry->NumberOfStrings++;
+                Data = DeviceObject->DriverObject->DriverName.Buffer;
+                DataSize = DeviceObject->DriverObject->DriverName.Length;
+                RtlCopyMemory(PtrChar, Data, DataSize);
+                PtrChar[DataSize / sizeof(WCHAR)] = UNICODE_NULL;
+                PtrChar += (DataSize + sizeof(UNICODE_NULL)) / sizeof(WCHAR);
+            }
+            /* Save the error reason */
+            if (ErrorReason)
+            {
+                ErrorLogEntry->NumberOfStrings++;
+                Data = ErrorReason;
+                DataSize = wcslen(ErrorReason) * sizeof(WCHAR);
+                RtlCopyMemory(PtrChar, Data, DataSize);
+                PtrChar[DataSize / sizeof(WCHAR)] = UNICODE_NULL;
+                PtrChar += (DataSize + sizeof(UNICODE_NULL)) / sizeof(WCHAR);
+            }
+
+            /* Write the error log entry */
+            IoWriteErrorLogEntry(ErrorLogEntry);
         }
     }
 
-    DPRINT1("IopValidateID: Not terminated ID\n");
+#if DBG
+    DPRINT1("IopValidateID: QueryType %lu:\n", QueryType);
+    if (IsMultiSz)
+    {
+        DPRINT1("Invalid ID inside the list =\n");
+        for (ThisId = Id; *ThisId; ThisId += wcslen(ThisId) + 1)
+        {
+            DPRINT1("    '%S'\n", ThisId);
+        }
+    }
+    else
+    {
+        DPRINT1("ID '%S' is invalid!\n", Id);
+    }
+    DPRINT1("\n");
+#endif
 
-ErrorExit:
-    // FIXME logging
     return FALSE;
 }
  
@@ -1877,8 +1998,9 @@ IopQueryHardwareIds(PDEVICE_NODE DeviceNode,
                               &Stack);
    if (NT_SUCCESS(Status))
    {
-      IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryHardwareIDs);
-
+      IsValidID = IopValidateID(DeviceNode->PhysicalDeviceObject,
+                                (PWCHAR)IoStatusBlock.Information,
+                                BusQueryHardwareIDs);
       if (!IsValidID)
       {
          DPRINT1("Invalid HardwareIDs. DeviceNode - %p\n", DeviceNode);
@@ -1942,8 +2064,9 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
       &Stack);
    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
    {
-      IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryCompatibleIDs);
-
+      IsValidID = IopValidateID(DeviceNode->PhysicalDeviceObject,
+                                (PWCHAR)IoStatusBlock.Information,
+                                BusQueryCompatibleIDs);
       if (!IsValidID)
       {
          DPRINT1("Invalid CompatibleIDs. DeviceNode - %p\n", DeviceNode);
@@ -2011,8 +2134,9 @@ IopCreateDeviceInstancePath(
         return Status;
     }
 
-    IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryDeviceID);
-
+    IsValidID = IopValidateID(DeviceNode->PhysicalDeviceObject,
+                              (PWCHAR)IoStatusBlock.Information,
+                              BusQueryDeviceID);
     if (!IsValidID)
     {
         DPRINT1("Invalid DeviceID. DeviceNode - %p\n", DeviceNode);
@@ -2072,8 +2196,9 @@ IopCreateDeviceInstancePath(
 
     if (IoStatusBlock.Information)
     {
-        IsValidID = IopValidateID((PWCHAR)IoStatusBlock.Information, BusQueryInstanceID);
-
+        IsValidID = IopValidateID(DeviceNode->PhysicalDeviceObject,
+                                  (PWCHAR)IoStatusBlock.Information,
+                                  BusQueryInstanceID);
         if (!IsValidID)
         {
             DPRINT1("Invalid InstanceID. DeviceNode - %p\n", DeviceNode);
