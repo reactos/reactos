@@ -153,4 +153,13 @@ typedef struct _sig_element
 char* _setlocale(int,const char*);
 NTSYSAPI VOID NTAPI RtlAssert(PVOID FailedAssertion,PVOID FileName,ULONG LineNumber,PCHAR Message);
 
+/* ioinfo structure size is different in msvcrXX.dll's */
+typedef struct {
+    HANDLE              handle;
+    unsigned char       wxflag;
+    char                lookahead[3];
+    int                 exflag;
+    CRITICAL_SECTION    crit;
+} ioinfo;
+
 #endif /* __WINE_MSVCRT_H */

@@ -45,6 +45,7 @@
 
 #include <precomp.h>
 #include "wine/unicode.h"
+#include "internal/wine/msvcrt.h"
 
 #include <sys/utime.h>
 #include <direct.h>
@@ -113,15 +114,6 @@ static char utf16_bom[2] = { 0xff, 0xfe };
 
 #define MSVCRT_INTERNAL_BUFSIZ 4096
 
-/* ioinfo structure size is different in msvcrXX.dll's */
-typedef struct {
-    HANDLE              handle;
-    unsigned char       wxflag;
-    char                lookahead[3];
-    int                 exflag;
-    CRITICAL_SECTION    crit;
-} ioinfo;
-
 /*********************************************************************
  *		__pioinfo (MSVCRT.@)
  * array of pointers to ioinfo arrays [32]
@@ -180,7 +172,7 @@ static inline ioinfo* get_ioinfo_nolock(int fd)
     return ret + (fd%MSVCRT_FD_BLOCK_SIZE);
 }
 
-static inline ioinfo* get_ioinfo(int fd)
+/*static*/ inline ioinfo* get_ioinfo(int fd)
 {
     ioinfo *ret = get_ioinfo_nolock(fd);
     if(ret->exflag & EF_CRIT_INIT)
@@ -188,7 +180,7 @@ static inline ioinfo* get_ioinfo(int fd)
     return ret;
 }
 
-static inline void release_ioinfo(ioinfo *info)
+/*static*/ inline void release_ioinfo(ioinfo *info)
 {
     if(info->exflag & EF_CRIT_INIT)
         LeaveCriticalSection(&info->crit);
