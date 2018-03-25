@@ -177,8 +177,12 @@ BEGIN
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Treiberdetails...", IDC_DRIVERDETAILS, 7, 106, 80, 15
     LTEXT "Einzelheiten über die Treiberdateien anzeigen.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "Treiber &aktualisieren...", IDC_UPDATEDRIVER, 7, 126, 80, 15
-    LTEXT "Aktualisiert den Gerätetreiber.", -1, 91, 130, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "Treiber &aktualisieren...", IDC_UPDATEDRIVER, 7, 134, 80, 15
+    LTEXT "Aktualisiert den Gerätetreiber.", -1, 91, 138, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Installierter Treiber", IDC_ROLLBACKDRIVER, 7, 162, 80, 15
+    LTEXT "Den installierten Treiber verwenden, falls das Gerät nach der Aktualisierung nicht ordnungsgemäß funktioniert.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "&Deinstallieren", IDC_UNINSTALLDRIVER, 7, 190, 80, 15
+    LTEXT "Treiber deinstallieren. (Erweitert)", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
