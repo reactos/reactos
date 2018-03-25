@@ -831,17 +831,19 @@ CcRosCreateVacb (
     }
 #endif
 
+    /* Reference it to allow release */
+    CcRosVacbIncRefCount(current);
+
     Status = CcRosMapVacbInKernelSpace(current);
     if (!NT_SUCCESS(Status))
     {
         RemoveEntryList(&current->CacheMapVacbListEntry);
         RemoveEntryList(&current->VacbLruListEntry);
-        CcRosReleaseVacbLock(current);
+        CcRosReleaseVacb(SharedCacheMap, current, FALSE,
+                         FALSE, FALSE);
+        CcRosVacbDecRefCount(current);
         ExFreeToNPagedLookasideList(&VacbLookasideList, current);
     }
-
-    /* Reference it to allow release */
-    CcRosVacbIncRefCount(current);
 
     return Status;
 }
