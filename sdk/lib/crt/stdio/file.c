@@ -182,13 +182,16 @@ static inline ioinfo* get_ioinfo_nolock(int fd)
 
 static inline ioinfo* get_ioinfo(int fd)
 {
-    ioinfo *ret = NULL;
-    if(fd < MSVCRT_MAX_FILES)
-        ret = __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE];
-    if(!ret)
-        return &__badioinfo;
+    ioinfo *ret = get_ioinfo_nolock(fd);
+    if(ret->exflag & EF_CRIT_INIT)
+        EnterCriticalSection(&ret->crit);
+    return ret;
+}
 
-    return ret + (fd%MSVCRT_FD_BLOCK_SIZE);
+static inline void release_ioinfo(ioinfo *info)
+{
+    if(info->exflag & EF_CRIT_INIT)
+        LeaveCriticalSection(&info->crit);
 }
 
 static inline FILE* msvcrt_get_file(int i)
@@ -814,27 +817,36 @@ int CDECL _wunlink(const wchar_t *path)
  */
 int CDECL _commit(int fd)
 {
-  HANDLE hand = fdtoh(fd);
+    ioinfo *info = get_ioinfo(fd);
+    int ret;
 
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
-    return -1;
-
-  if (!FlushFileBuffers(hand))
-  {
-    if (GetLastError() == ERROR_INVALID_HANDLE)
+    TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+    if (info->handle == INVALID_HANDLE_VALUE)
+        ret = -1;
+    else if (!FlushFileBuffers(info->handle))
     {
-      /* FlushFileBuffers fails for console handles
-       * so we ignore this error.
-       */
-      return 0;
+        if (GetLastError() == ERROR_INVALID_HANDLE)
+        {
+          /* FlushFileBuffers fails for console handles
+           * so we ignore this error.
+           */
+          ret = 0;
+        }
+        else
+        {
+            TRACE(":failed-last error (%d)\n",GetLastError());
+            _dosmaperr(GetLastError());
+            ret = -1;
+        }
     }
-    TRACE(":failed-last error (%d)\n",GetLastError());
-    _dosmaperr(GetLastError());
-    return -1;
-  }
-  TRACE(":ok\n");
-  return 0;
+    else
+    {
+        TRACE(":ok\n");
+        ret = 0;
+    }
+
+    release_ioinfo(info);
+    return ret;
 }
 
 /* _flushall calls fflush which calls _flushall */
@@ -907,27 +919,24 @@ int CDECL fflush(FILE* file)
  */
 int CDECL _close(int fd)
 {
-  HANDLE hand;
+  ioinfo *info = get_ioinfo(fd);
   int ret;
 
   LOCK_FILES();
-  hand = fdtoh(fd);
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
+  TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+  if (!(info->wxflag & WX_OPEN)) {
     ret = -1;
-  else if (!CloseHandle(hand))
-  {
-    WARN(":failed-last error (%d)\n",GetLastError());
-    _dosmaperr(GetLastError());
-    ret = -1;
-  }
-  else
-  {
+  } else {
+    ret = CloseHandle(info->handle) ? 0 : -1;
     msvcrt_free_fd(fd);
-    ret = 0;
+    if (ret) {
+      WARN(":failed-last error (%d)\n",GetLastError());
+      _dosmaperr(GetLastError());
+      ret = -1;
+    }
   }
   UNLOCK_FILES();
-  TRACE(":ok\n");
+  release_ioinfo(info);
   return ret;
 }
 
@@ -1004,29 +1013,38 @@ int CDECL _dup(int od)
  */
 int CDECL _eof(int fd)
 {
+  ioinfo *info = get_ioinfo(fd);
   DWORD curpos,endpos;
   LONG hcurpos,hendpos;
-  HANDLE hand = fdtoh(fd);
 
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
+  TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
 
-  if (hand == INVALID_HANDLE_VALUE)
+  if (info->handle == INVALID_HANDLE_VALUE)
+  {
+    release_ioinfo(info);
     return -1;
+  }
 
-  if (get_ioinfo_nolock(fd)->wxflag & WX_ATEOF) return TRUE;
+  if (info->wxflag & WX_ATEOF)
+  {
+      release_ioinfo(info);
+      return TRUE;
+  }
 
   /* Otherwise we do it the hard way */
   hcurpos = hendpos = 0;
-  curpos = SetFilePointer(hand, 0, &hcurpos, FILE_CURRENT);
-  endpos = SetFilePointer(hand, 0, &hendpos, FILE_END);
+  curpos = SetFilePointer(info->handle, 0, &hcurpos, FILE_CURRENT);
+  endpos = SetFilePointer(info->handle, 0, &hendpos, FILE_END);
 
   if (curpos == endpos && hcurpos == hendpos)
   {
     /* FIXME: shouldn't WX_ATEOF be set here? */
+    release_ioinfo(info);
     return TRUE;
   }
 
-  SetFilePointer(hand, curpos, &hcurpos, FILE_BEGIN);
+  SetFilePointer(info->handle, curpos, &hcurpos, FILE_BEGIN);
+  release_ioinfo(info);
   return FALSE;
 }
 
@@ -1092,15 +1110,20 @@ void msvcrt_free_io(void)
  */
 __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
 {
-  HANDLE hand = fdtoh(fd);
+  ioinfo *info = get_ioinfo(fd);
   LARGE_INTEGER ofs;
 
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
+  TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+
+  if (info->handle == INVALID_HANDLE_VALUE)
+  {
+    release_ioinfo(info);
     return -1;
+  }
 
   if (whence < 0 || whence > 2)
   {
+    release_ioinfo(info);
     *_errno() = EINVAL;
     return -1;
   }
@@ -1114,14 +1137,16 @@ __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
   /* The MoleBox protection scheme expects msvcrt to use SetFilePointer only,
    * so a LARGE_INTEGER offset cannot be passed directly via SetFilePointerEx. */
   ofs.QuadPart = offset;
-  if ((ofs.u.LowPart = SetFilePointer(hand, ofs.u.LowPart, &ofs.u.HighPart, whence)) != INVALID_SET_FILE_POINTER ||
+  if ((ofs.u.LowPart = SetFilePointer(info->handle, ofs.u.LowPart, &ofs.u.HighPart, whence)) != INVALID_SET_FILE_POINTER ||
       GetLastError() == ERROR_SUCCESS)
   {
-    get_ioinfo_nolock(fd)->wxflag &= ~(WX_ATEOF|WX_READEOF);
+    info->wxflag &= ~(WX_ATEOF|WX_READEOF);
     /* FIXME: What if we seek _to_ EOF - is EOF set? */
 
+    release_ioinfo(info);
     return ofs.QuadPart;
   }
+  release_ioinfo(info);
   TRACE(":error-last error (%d)\n",GetLastError());
   _dosmaperr(GetLastError());
   return -1;
@@ -1167,16 +1192,20 @@ void CDECL _unlock_file(FILE *file)
  */
 int CDECL _locking(int fd, int mode, LONG nbytes)
 {
+  ioinfo *info = get_ioinfo(fd);
   BOOL ret;
   DWORD cur_locn;
-  HANDLE hand = fdtoh(fd);
 
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
+  TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+  if (info->handle == INVALID_HANDLE_VALUE)
+  {
+    release_ioinfo(info);
     return -1;
+  }
 
   if (mode < 0 || mode > 4)
   {
+    release_ioinfo(info);
     *_errno() = EINVAL;
     return -1;
   }
@@ -1189,8 +1218,9 @@ int CDECL _locking(int fd, int mode, LONG nbytes)
         (mode==_LK_NBRLCK)?"_LK_NBRLCK":
                           "UNKNOWN");
 
-  if ((cur_locn = SetFilePointer(hand, 0L, NULL, SEEK_CUR)) == INVALID_SET_FILE_POINTER)
+  if ((cur_locn = SetFilePointer(info->handle, 0L, NULL, SEEK_CUR)) == INVALID_SET_FILE_POINTER)
   {
+    release_ioinfo(info);
     FIXME ("Seek failed\n");
     *_errno() = EINVAL; /* FIXME */
     return -1;
@@ -1201,16 +1231,17 @@ int CDECL _locking(int fd, int mode, LONG nbytes)
     ret = 1; /* just to satisfy gcc */
     while (nretry--)
     {
-      ret = LockFile(hand, cur_locn, 0L, nbytes, 0L);
+      ret = LockFile(info->handle, cur_locn, 0L, nbytes, 0L);
       if (ret) break;
       Sleep(1);
     }
   }
   else if (mode == _LK_UNLCK)
-    ret = UnlockFile(hand, cur_locn, 0L, nbytes, 0L);
+    ret = UnlockFile(info->handle, cur_locn, 0L, nbytes, 0L);
   else
-    ret = LockFile(hand, cur_locn, 0L, nbytes, 0L);
+    ret = LockFile(info->handle, cur_locn, 0L, nbytes, 0L);
   /* FIXME - what about error settings? */
+  release_ioinfo(info);
   return ret ? 0 : -1;
 }
 
@@ -1259,18 +1290,16 @@ int CDECL fseek(FILE* file, long offset, int whence)
  */
 int CDECL _chsize_s(int fd, __int64 size)
 {
+    ioinfo *info;
     __int64 cur, pos;
-    HANDLE handle;
     BOOL ret = FALSE;
 
     TRACE("(fd=%d, size=%s)\n", fd, wine_dbgstr_longlong(size));
 
     if (!MSVCRT_CHECK_PMT(size >= 0)) return EINVAL;
 
-    LOCK_FILES();
-
-    handle = fdtoh(fd);
-    if (handle != INVALID_HANDLE_VALUE)
+    info = get_ioinfo(fd);
+    if (info->handle != INVALID_HANDLE_VALUE)
     {
         /* save the current file pointer */
         cur = _lseeki64(fd, 0, SEEK_CUR);
@@ -1279,7 +1308,7 @@ int CDECL _chsize_s(int fd, __int64 size)
             pos = _lseeki64(fd, size, SEEK_SET);
             if (pos >= 0)
             {
-                ret = SetEndOfFile(handle);
+                ret = SetEndOfFile(info->handle);
                 if (!ret) _dosmaperr(GetLastError());
             }
 
@@ -1288,7 +1317,7 @@ int CDECL _chsize_s(int fd, __int64 size)
         }
     }
 
-    UNLOCK_FILES();
+    release_ioinfo(info);
     return ret ? 0 : *_errno();
 }
 
