@@ -41,34 +41,34 @@ EVENTLOG_HANDLE_A_bind(EVENTLOG_HANDLE_A UNCServerName)
 {
     handle_t hBinding = NULL;
     RPC_CSTR pszStringBinding;
-    RPC_STATUS Status;
+    RPC_STATUS status;
 
     TRACE("EVENTLOG_HANDLE_A_bind() called\n");
 
-    Status = RpcStringBindingComposeA(NULL,
+    status = RpcStringBindingComposeA(NULL,
                                       (RPC_CSTR)"ncacn_np",
                                       (RPC_CSTR)UNCServerName,
                                       (RPC_CSTR)"\\pipe\\EventLog",
                                       NULL,
                                       &pszStringBinding);
-    if (Status)
+    if (status)
     {
-        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
+        ERR("RpcStringBindingCompose returned 0x%x\n", status);
         return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
-    Status = RpcBindingFromStringBindingA(pszStringBinding,
+    status = RpcBindingFromStringBindingA(pszStringBinding,
                                           &hBinding);
-    if (Status != RPC_S_OK)
+    if (status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
-    Status = RpcStringFreeA(&pszStringBinding);
-    if (Status != RPC_S_OK)
+    status = RpcStringFreeA(&pszStringBinding);
+    if (status != RPC_S_OK)
     {
-        ERR("RpcStringFree returned 0x%x\n", Status);
+        ERR("RpcStringFree returned 0x%x\n", status);
     }
 
     return hBinding;
@@ -79,14 +79,14 @@ void __RPC_USER
 EVENTLOG_HANDLE_A_unbind(EVENTLOG_HANDLE_A UNCServerName,
                          handle_t hBinding)
 {
-    RPC_STATUS Status;
+    RPC_STATUS status;
 
     TRACE("EVENTLOG_HANDLE_A_unbind() called\n");
 
-    Status = RpcBindingFree(&hBinding);
-    if (Status != RPC_S_OK)
+    status = RpcBindingFree(&hBinding);
+    if (status != RPC_S_OK)
     {
-        ERR("RpcBindingFree returned 0x%x\n", Status);
+        ERR("RpcBindingFree returned 0x%x\n", status);
     }
 }
 
@@ -96,34 +96,34 @@ EVENTLOG_HANDLE_W_bind(EVENTLOG_HANDLE_W UNCServerName)
 {
     handle_t hBinding = NULL;
     RPC_WSTR pszStringBinding;
-    RPC_STATUS Status;
+    RPC_STATUS status;
 
     TRACE("EVENTLOG_HANDLE_W_bind() called\n");
 
-    Status = RpcStringBindingComposeW(NULL,
+    status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
                                       UNCServerName,
                                       L"\\pipe\\EventLog",
                                       NULL,
                                       &pszStringBinding);
-    if (Status != RPC_S_OK)
+    if (status != RPC_S_OK)
     {
-        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
+        ERR("RpcStringBindingCompose returned 0x%x\n", status);
         return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
-    Status = RpcBindingFromStringBindingW(pszStringBinding,
+    status = RpcBindingFromStringBindingW(pszStringBinding,
                                           &hBinding);
-    if (Status != RPC_S_OK)
+    if (status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
-    Status = RpcStringFreeW(&pszStringBinding);
-    if (Status != RPC_S_OK)
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status != RPC_S_OK)
     {
-        ERR("RpcStringFree returned 0x%x\n", Status);
+        ERR("RpcStringFree returned 0x%x\n", status);
     }
 
     return hBinding;
@@ -134,14 +134,14 @@ void __RPC_USER
 EVENTLOG_HANDLE_W_unbind(EVENTLOG_HANDLE_W UNCServerName,
                          handle_t hBinding)
 {
-    RPC_STATUS Status;
+    RPC_STATUS status;
 
     TRACE("EVENTLOG_HANDLE_W_unbind() called\n");
 
-    Status = RpcBindingFree(&hBinding);
-    if (Status != RPC_S_OK)
+    status = RpcBindingFree(&hBinding);
+    if (status != RPC_S_OK)
     {
-        ERR("RpcBindingFree returned 0x%x\n", Status);
+        ERR("RpcBindingFree returned 0x%x\n", status);
     }
 }
 
@@ -813,7 +813,8 @@ ElfOpenBackupEventLogW(IN PUNICODE_STRING UNCServerNameU,
     {
         Status = ElfrOpenBELW(pUNCServerName,
                               (PRPC_UNICODE_STRING)BackupFileNameU,
-                              1, 1,
+                              1,
+                              1,
                               (IELF_HANDLE*)phEventLog);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -851,7 +852,7 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
     RtlInitUnicodeString(&UNCServerName, lpUNCServerName);
 
     Status = ElfOpenBackupEventLogW(&UNCServerName, &FileName, &hEventLog);
-    
+
     if (FileName.Buffer != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
 
@@ -901,7 +902,8 @@ ElfOpenEventLogA(IN PANSI_STRING UNCServerNameA,
         Status = ElfrOpenELA(pUNCServerName,
                              (PRPC_STRING)SourceNameA,
                              &EmptyStringA,
-                             1, 1,
+                             1,
+                             1,
                              (IELF_HANDLE*)phEventLog);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -966,7 +968,8 @@ ElfOpenEventLogW(IN PUNICODE_STRING UNCServerNameU,
         Status = ElfrOpenELW(pUNCServerName,
                              (PRPC_UNICODE_STRING)SourceNameU,
                              &EmptyStringU,
-                             1, 1,
+                             1,
+                             1,
                              (IELF_HANDLE*)phEventLog);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1204,7 +1207,8 @@ ElfRegisterEventSourceA(IN PANSI_STRING UNCServerNameA,
         Status = ElfrRegisterEventSourceA(pUNCServerName,
                                           (PRPC_STRING)SourceNameA,
                                           &EmptyStringA,
-                                          1, 1,
+                                          1,
+                                          1,
                                           (IELF_HANDLE*)phEventLog);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1274,7 +1278,8 @@ ElfRegisterEventSourceW(IN PUNICODE_STRING UNCServerNameU,
         Status = ElfrRegisterEventSourceW(pUNCServerName,
                                           (PRPC_UNICODE_STRING)SourceNameU,
                                           &EmptyStringU,
-                                          1, 1,
+                                          1,
+                                          1,
                                           (IELF_HANDLE*)phEventLog);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)

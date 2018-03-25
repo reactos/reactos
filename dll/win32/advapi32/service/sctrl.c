@@ -12,7 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <advapi32.h>
-WINE_DEFAULT_DEBUG_CHANNEL(advapi_service);
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
 /* TYPES *********************************************************************/
@@ -135,9 +135,8 @@ ScDestroyStatusBinding(VOID)
 }
 
 
-static DWORD
-ScLookupServiceByServiceName(IN LPCWSTR lpServiceName,
-                             OUT PACTIVE_SERVICE* pService)
+static PACTIVE_SERVICE
+ScLookupServiceByServiceName(LPCWSTR lpServiceName)
 {
     DWORD i;
 
@@ -145,10 +144,7 @@ ScLookupServiceByServiceName(IN LPCWSTR lpServiceName,
           lpServiceName);
 
     if (lpActiveServices[0].bOwnProcess)
-    {
-        *pService = &lpActiveServices[0];
-        return ERROR_SUCCESS;
-    }
+        return &lpActiveServices[0];
 
     for (i = 0; i < dwActiveServiceCount; i++)
     {
@@ -156,14 +152,12 @@ ScLookupServiceByServiceName(IN LPCWSTR lpServiceName,
         if (_wcsicmp(lpActiveServices[i].ServiceName.Buffer, lpServiceName) == 0)
         {
             TRACE("Found!\n");
-            *pService = &lpActiveServices[i];
-            return ERROR_SUCCESS;
+            return &lpActiveServices[i];
         }
     }
 
     TRACE("No service found!\n");
-    *pService = NULL;
-    return ERROR_SERVICE_NOT_IN_EXE;
+    return NULL;
 }
 
 
@@ -600,8 +594,8 @@ ScServiceDispatcher(HANDLE hPipe,
             if (ControlPacket->dwControl == SERVICE_CONTROL_START_OWN)
                 lpActiveServices[0].bOwnProcess = TRUE;
 
-            dwError = ScLookupServiceByServiceName(lpServiceName, &lpService);
-            if ((dwError == ERROR_SUCCESS) && (lpService != NULL))
+            lpService = ScLookupServiceByServiceName(lpServiceName);
+            if (lpService != NULL)
             {
                 /* Execute command */
                 switch (ControlPacket->dwControl)
@@ -622,6 +616,10 @@ ScServiceDispatcher(HANDLE hPipe,
                         dwError = ScControlService(lpService, ControlPacket);
                         break;
                 }
+            }
+            else
+            {
+                dwError = ERROR_SERVICE_NOT_IN_EXE;
             }
         }
 
@@ -685,16 +683,15 @@ SERVICE_STATUS_HANDLE WINAPI
 RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
                             LPHANDLER_FUNCTION lpHandlerProc)
 {
-    DWORD dwError;
     PACTIVE_SERVICE Service;
 
     TRACE("RegisterServiceCtrlHandlerW(%s %p %p)\n",
           debugstr_w(lpServiceName), lpHandlerProc);
 
-    dwError = ScLookupServiceByServiceName(lpServiceName, &Service);
-    if ((dwError != ERROR_SUCCESS) || (Service == NULL))
+    Service = ScLookupServiceByServiceName(lpServiceName);
+    if (Service == NULL)
     {
-        SetLastError(dwError);
+        SetLastError(ERROR_SERVICE_NOT_IN_EXE);
         return NULL;
     }
 
@@ -704,7 +701,7 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
         return NULL;
     }
 
-    Service->HandlerFunction   = lpHandlerProc;
+    Service->HandlerFunction = lpHandlerProc;
     Service->HandlerFunctionEx = NULL;
 
     TRACE("RegisterServiceCtrlHandler returning %p\n", Service->hServiceStatus);
@@ -757,16 +754,15 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
                               LPHANDLER_FUNCTION_EX lpHandlerProc,
                               LPVOID lpContext)
 {
-    DWORD dwError;
     PACTIVE_SERVICE Service;
 
     TRACE("RegisterServiceCtrlHandlerExW(%s %p %p)\n",
           debugstr_w(lpServiceName), lpHandlerProc, lpContext);
 
-    dwError = ScLookupServiceByServiceName(lpServiceName, &Service);
-    if ((dwError != ERROR_SUCCESS) || (Service == NULL))
+    Service = ScLookupServiceByServiceName(lpServiceName);
+    if (Service == NULL)
     {
-        SetLastError(dwError);
+        SetLastError(ERROR_SERVICE_NOT_IN_EXE);
         return NULL;
     }
 
@@ -776,11 +772,11 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
         return NULL;
     }
 
-    Service->HandlerFunction   = NULL;
+    Service->HandlerFunction = NULL;
     Service->HandlerFunctionEx = lpHandlerProc;
-    Service->HandlerContext    = lpContext;
+    Service->HandlerContext = lpContext;
 
-    TRACE("RegisterServiceCtrlHandlerEx returning 0x%p\n", Service->hServiceStatus);
+    TRACE("RegisterServiceCtrlHandlerEx returning %p\n", Service->hServiceStatus);
 
     return Service->hServiceStatus;
 }
@@ -996,7 +992,7 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
 
     dwActiveServiceCount = i;
 
-    /* Initialize the service table */
+    /* Allocate the service table */
     lpActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
                                        HEAP_ZERO_MEMORY,
                                        dwActiveServiceCount * sizeof(ACTIVE_SERVICE));
@@ -1017,13 +1013,12 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
         lpActiveServices[i].bOwnProcess = FALSE;
     }
 
-    /* Initialize the connection to the SCM */
-
+    /* Connect to the SCM */
     dwError = ScConnectControlPipe(&hPipe);
     if (dwError != ERROR_SUCCESS)
     {
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     dwBufSize = sizeof(SCM_CONTROL_PACKET) +
@@ -1036,22 +1031,24 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
     {
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     ScCreateStatusBinding();
 
-    /* Start the dispatcher loop */
+    /* Call the dispatcher loop */
     ScServiceDispatcher(hPipe, ControlPacket, dwBufSize);
 
-    /* Close the connection */
+
     ScDestroyStatusBinding();
+
+    /* Close the connection */
     CloseHandle(hPipe);
 
     /* Free the control packet */
     RtlFreeHeap(RtlGetProcessHeap(), 0, ControlPacket);
 
-Done:
+done:
     /* Free the service table */
     for (i = 0; i < dwActiveServiceCount; i++)
     {
@@ -1061,7 +1058,8 @@ Done:
     lpActiveServices = NULL;
     dwActiveServiceCount = 0;
 
-    if (!bRet) SetLastError(dwError);
+    if (!bRet)
+        SetLastError(dwError);
 
     return bRet;
 }
@@ -1093,7 +1091,7 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
 
     dwActiveServiceCount = i;
 
-    /* Initialize the service table */
+    /* Allocate the service table */
     lpActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
                                        HEAP_ZERO_MEMORY,
                                        dwActiveServiceCount * sizeof(ACTIVE_SERVICE));
@@ -1114,13 +1112,12 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
         lpActiveServices[i].bOwnProcess = FALSE;
     }
 
-    /* Initialize the connection to the SCM */
-
+    /* Connect to the SCM */
     dwError = ScConnectControlPipe(&hPipe);
     if (dwError != ERROR_SUCCESS)
     {
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     dwBufSize = sizeof(SCM_CONTROL_PACKET) +
@@ -1133,22 +1130,23 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
     {
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     ScCreateStatusBinding();
 
-    /* Start the dispatcher loop */
+    /* Call the dispatcher loop */
     ScServiceDispatcher(hPipe, ControlPacket, dwBufSize);
 
-    /* Close the connection */
     ScDestroyStatusBinding();
+
+    /* Close the connection */
     CloseHandle(hPipe);
 
     /* Free the control packet */
     RtlFreeHeap(RtlGetProcessHeap(), 0, ControlPacket);
 
-Done:
+done:
     /* Free the service table */
     for (i = 0; i < dwActiveServiceCount; i++)
     {
@@ -1158,7 +1156,8 @@ Done:
     lpActiveServices = NULL;
     dwActiveServiceCount = 0;
 
-    if (!bRet) SetLastError(dwError);
+    if (!bRet)
+        SetLastError(dwError);
 
     return bRet;
 }

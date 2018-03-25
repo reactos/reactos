@@ -10,7 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <advapi32.h>
-WINE_DEFAULT_DEBUG_CHANNEL(advapi_service);
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -20,35 +20,35 @@ SVCCTL_HANDLEA_bind(SVCCTL_HANDLEA szMachineName)
 {
     handle_t hBinding = NULL;
     RPC_CSTR pszStringBinding;
-    RPC_STATUS Status;
+    RPC_STATUS status;
 
     TRACE("SVCCTL_HANDLEA_bind(%s)\n",
           debugstr_a(szMachineName));
 
-    Status = RpcStringBindingComposeA(NULL,
+    status = RpcStringBindingComposeA(NULL,
                                       (RPC_CSTR)"ncacn_np",
                                       (RPC_CSTR)szMachineName,
                                       (RPC_CSTR)"\\pipe\\ntsvcs",
                                       NULL,
                                       &pszStringBinding);
-    if (Status != RPC_S_OK)
+    if (status != RPC_S_OK)
     {
-        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
+        ERR("RpcStringBindingCompose returned 0x%x\n", status);
         return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
-    Status = RpcBindingFromStringBindingA(pszStringBinding,
+    status = RpcBindingFromStringBindingA(pszStringBinding,
                                           &hBinding);
-    if (Status != RPC_S_OK)
+    if (status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
-    Status = RpcStringFreeA(&pszStringBinding);
-    if (Status != RPC_S_OK)
+    status = RpcStringFreeA(&pszStringBinding);
+    if (status != RPC_S_OK)
     {
-        ERR("RpcStringFree returned 0x%x\n", Status);
+        ERR("RpcStringFree returned 0x%x\n", status);
     }
 
     return hBinding;
@@ -59,15 +59,15 @@ void __RPC_USER
 SVCCTL_HANDLEA_unbind(SVCCTL_HANDLEA szMachineName,
                       handle_t hBinding)
 {
-    RPC_STATUS Status;
+    RPC_STATUS status;
 
     TRACE("SVCCTL_HANDLEA_unbind(%s %p)\n",
           debugstr_a(szMachineName), hBinding);
 
-    Status = RpcBindingFree(&hBinding);
-    if (Status != RPC_S_OK)
+    status = RpcBindingFree(&hBinding);
+    if (status != RPC_S_OK)
     {
-        ERR("RpcBindingFree returned 0x%x\n", Status);
+        ERR("RpcBindingFree returned 0x%x\n", status);
     }
 }
 
@@ -77,35 +77,35 @@ SVCCTL_HANDLEW_bind(SVCCTL_HANDLEW szMachineName)
 {
     handle_t hBinding = NULL;
     RPC_WSTR pszStringBinding;
-    RPC_STATUS Status;
+    RPC_STATUS status;
 
     TRACE("SVCCTL_HANDLEW_bind(%s)\n",
           debugstr_w(szMachineName));
 
-    Status = RpcStringBindingComposeW(NULL,
+    status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
                                       szMachineName,
                                       L"\\pipe\\ntsvcs",
                                       NULL,
                                       &pszStringBinding);
-    if (Status != RPC_S_OK)
+    if (status != RPC_S_OK)
     {
-        ERR("RpcStringBindingCompose returned 0x%x\n", Status);
+        ERR("RpcStringBindingCompose returned 0x%x\n", status);
         return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
-    Status = RpcBindingFromStringBindingW(pszStringBinding,
+    status = RpcBindingFromStringBindingW(pszStringBinding,
                                           &hBinding);
-    if (Status != RPC_S_OK)
+    if (status != RPC_S_OK)
     {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", Status);
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
-    Status = RpcStringFreeW(&pszStringBinding);
-    if (Status != RPC_S_OK)
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status != RPC_S_OK)
     {
-        ERR("RpcStringFree returned 0x%x\n", Status);
+        ERR("RpcStringFree returned 0x%x\n", status);
     }
 
     return hBinding;
@@ -116,20 +116,19 @@ void __RPC_USER
 SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
                       handle_t hBinding)
 {
-    RPC_STATUS Status;
+    RPC_STATUS status;
 
     TRACE("SVCCTL_HANDLEW_unbind(%s %p)\n",
           debugstr_w(szMachineName), hBinding);
 
-    Status = RpcBindingFree(&hBinding);
-    if (Status != RPC_S_OK)
+    status = RpcBindingFree(&hBinding);
+    if (status != RPC_S_OK)
     {
-        ERR("RpcBindingFree returned 0x%x\n", Status);
+        ERR("RpcBindingFree returned 0x%x\n", status);
     }
 }
 
 
-/* HACK: because of a problem with rpcrt4, rpcserver is hacked to return 6 for ERROR_SERVICE_DOES_NOT_EXIST */
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status)
 {
@@ -1638,6 +1637,7 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
+        /* HACK: because of a problem with rpcrt4, rpcserver is hacked to return 6 for ERROR_SERVICE_DOES_NOT_EXIST */
         dwError = ScmRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
@@ -1797,11 +1797,13 @@ WaitForSCManager(VOID)
     hEvent = OpenEventW(SYNCHRONIZE, FALSE, SCM_START_EVENT);
     if (hEvent == NULL)
     {
-        if (GetLastError() != ERROR_FILE_NOT_FOUND) return;
+        if (GetLastError() != ERROR_FILE_NOT_FOUND)
+            return;
 
         /* Try to create a new event */
         hEvent = CreateEventW(NULL, TRUE, FALSE, SCM_START_EVENT);
-        if (hEvent == NULL) return;
+        if (hEvent == NULL)
+            return;
     }
 
     /* Wait for 3 minutes */
