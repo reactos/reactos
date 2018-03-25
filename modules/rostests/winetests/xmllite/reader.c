@@ -18,37 +18,35 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 #define CONST_VTABLE
 
-//#include <stdarg.h>
+#include <stdarg.h>
 #include <stdio.h>
 
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <initguid.h>
-#include <ole2.h>
-#include <xmllite.h>
-#include <wine/test.h>
+#include "windef.h"
+#include "winbase.h"
+#include "initguid.h"
+#include "ole2.h"
+#include "xmllite.h"
+#include "wine/test.h"
+#include "wine/heap.h"
+
+#define ARRAY_SIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 DEFINE_GUID(IID_IXmlReaderInput, 0x0b3ccc9b, 0x9214, 0x428b, 0xa2, 0xae, 0xef, 0x3a, 0xa8, 0x71, 0xaf, 0xda);
 
 static WCHAR *a2w(const char *str)
 {
     int len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-    WCHAR *ret = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+    WCHAR *ret = heap_alloc(len * sizeof(WCHAR));
     MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
     return ret;
 }
 
 static void free_str(WCHAR *str)
 {
-    HeapFree(GetProcessHeap(), 0, str);
+    heap_free(str);
 }
 
 static int strcmp_wa(const WCHAR *str1, const char *stra)
@@ -278,7 +276,7 @@ static void test_read_state(IXmlReader *reader, XmlReadState expected,
     state = -1; /* invalid state value */
     IXmlReader_GetProperty(reader, XmlReaderProperty_ReadState, &state);
 
-    if (exp_broken == -1)
+    if (exp_broken == expected)
         broken_state = FALSE;
     else
         broken_state = broken(exp_broken == state);
@@ -287,7 +285,7 @@ static void test_read_state(IXmlReader *reader, XmlReadState expected,
             state_to_str(expected), state_to_str(state));
 }
 
-#define TEST_READER_STATE(reader, state) test_read_state(reader, state, -1, __LINE__)
+#define TEST_READER_STATE(reader, state) test_read_state(reader, state, state, __LINE__)
 #define TEST_READER_STATE2(reader, state, brk) test_read_state(reader, state, brk, __LINE__)
 
 #define reader_value(a,b) _reader_value(__LINE__,a,b)
@@ -413,9 +411,7 @@ static ULONG WINAPI testinput_Release(IUnknown *iface)
 
     ref = InterlockedDecrement(&This->ref);
     if (ref == 0)
-    {
-        HeapFree(GetProcessHeap(), 0, This);
-    }
+        heap_free(This);
 
     return ref;
 }
@@ -431,7 +427,7 @@ static HRESULT testinput_createinstance(void **ppObj)
 {
     testinput *input;
 
-    input = HeapAlloc(GetProcessHeap(), 0, sizeof (*input));
+    input = heap_alloc(sizeof(*input));
     if(!input) return E_OUTOFMEMORY;
 
     input->IUnknown_iface.lpVtbl = &testinput_vtbl;
@@ -1649,7 +1645,7 @@ static void test_readvaluechunk(void)
 
     c = 0xdeadbeef;
     memset(buf, 0xcc, sizeof(buf));
-    hr = IXmlReader_ReadValueChunk(reader, buf, sizeof(buf)/sizeof(WCHAR), &c);
+    hr = IXmlReader_ReadValueChunk(reader, buf, ARRAY_SIZE(buf), &c);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(c == 10, "got %u\n", c);
     ok(buf[c] == 0xcccc, "buffer overflow\n");
@@ -1658,7 +1654,7 @@ static void test_readvaluechunk(void)
 
     c = 0xdeadbeef;
     memset(buf, 0xcc, sizeof(buf));
-    hr = IXmlReader_ReadValueChunk(reader, buf, sizeof(buf)/sizeof(WCHAR), &c);
+    hr = IXmlReader_ReadValueChunk(reader, buf, ARRAY_SIZE(buf), &c);
     ok(hr == S_FALSE, "got %08x\n", hr);
     ok(!c, "got %u\n", c);
 
@@ -1991,7 +1987,7 @@ static void test_prefix(void)
     hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
-    for (i = 0; i < sizeof(prefix_tests)/sizeof(prefix_tests[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(prefix_tests); i++) {
         XmlNodeType type;
 
         set_input_string(reader, prefix_tests[i].xml);
@@ -2066,7 +2062,7 @@ static void test_namespaceuri(void)
     hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
-    for (i = 0; i < sizeof(uri_tests)/sizeof(uri_tests[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(uri_tests); i++) {
         unsigned int j = 0;
 
         set_input_string(reader, uri_tests[i].xml);
@@ -2187,7 +2183,7 @@ static void test_encoding_detection(void)
 
     /* there's no way to query detected encoding back, so just verify that document is browsable */
 
-    for (i = 0; i < sizeof(encoding_testsA)/sizeof(encoding_testsA[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(encoding_testsA); i++)
     {
         set_input_string(reader, encoding_testsA[i]);
 
@@ -2197,7 +2193,7 @@ static void test_encoding_detection(void)
         ok(type != XmlNodeType_None, "Unexpected node type %d\n", type);
     }
 
-    for (i = 0; i < sizeof(encoding_testsW)/sizeof(encoding_testsW[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(encoding_testsW); i++)
     {
         stream = create_stream_on_data(encoding_testsW[i].text, lstrlenW(encoding_testsW[i].text) * sizeof(WCHAR));
 
