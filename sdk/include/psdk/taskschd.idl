@@ -1,0 +1,542 @@
+/*
+ * Task Scheduler definitions
+ *
+ * Copyright 2013 Dmitry Timoshkov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+    uuid(e34cb9f1-c7f7-424c-be29-027dcc09363a),
+    version(1.0)
+]
+library TaskScheduler
+{
+importlib("stdole2.tlb");
+
+typedef enum _TASK_STATE
+{
+    TASK_STATE_UNKNOWN,
+    TASK_STATE_DISABLED,
+    TASK_STATE_QUEUED,
+    TASK_STATE_READY,
+    TASK_STATE_RUNNING
+} TASK_STATE;
+
+typedef enum _TASK_ENUM_FLAGS
+{
+    TASK_ENUM_HIDDEN = 0x0001
+} TASK_ENUM_FLAGS;
+
+typedef enum _TASK_LOGON_TYPE
+{
+    TASK_LOGON_NONE,
+    TASK_LOGON_PASSWORD,
+    TASK_LOGON_S4U,
+    TASK_LOGON_INTERACTIVE_TOKEN,
+    TASK_LOGON_GROUP,
+    TASK_LOGON_SERVICE_ACCOUNT,
+    TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
+} TASK_LOGON_TYPE;
+
+typedef enum _TASK_RUNLEVEL
+{
+    TASK_RUNLEVEL_LUA,
+    TASK_RUNLEVEL_HIGHEST
+} TASK_RUNLEVEL_TYPE;
+
+typedef enum _TASK_TRIGGER_TYPE2
+{
+    TASK_TRIGGER_EVENT,
+    TASK_TRIGGER_TIME,
+    TASK_TRIGGER_DAILY,
+    TASK_TRIGGER_WEEKLY,
+    TASK_TRIGGER_MONTHLY,
+    TASK_TRIGGER_MONTHLYDOW,
+    TASK_TRIGGER_IDLE,
+    TASK_TRIGGER_REGISTRATION,
+    TASK_TRIGGER_BOOT,
+    TASK_TRIGGER_LOGON,
+    TASK_TRIGGER_SESSION_STATE_CHANGE = 11
+} TASK_TRIGGER_TYPE2;
+
+typedef enum _TASK_ACTION_TYPE
+{
+    TASK_ACTION_EXEC = 0,
+    TASK_ACTION_COM_HANDLER = 5,
+    TASK_ACTION_SEND_EMAIL = 6,
+    TASK_ACTION_SHOW_MESSAGE = 7
+} TASK_ACTION_TYPE;
+
+typedef enum _TASK_INSTANCES_POLICY
+{
+    TASK_INSTANCES_PARALLEL,
+    TASK_INSTANCES_QUEUE,
+    TASK_INSTANCES_IGNORE_NEW,
+    TASK_INSTANCES_STOP_EXISTING
+} TASK_INSTANCES_POLICY;
+
+typedef enum _TASK_COMPATIBILITY
+{
+    TASK_COMPATIBILITY_AT,
+    TASK_COMPATIBILITY_V1,
+    TASK_COMPATIBILITY_V2,
+    TASK_COMPATIBILITY_V2_1
+} TASK_COMPATIBILITY;
+
+typedef enum _TASK_CREATION
+{
+    TASK_VALIDATE_ONLY = 1,
+    TASK_CREATE = 2,
+    TASK_UPDATE = 4,
+    TASK_CREATE_OR_UPDATE = 6,
+    TASK_DISABLE = 8,
+    TASK_DONT_ADD_PRINCIPAL_ACE = 16,
+    TASK_IGNORE_REGISTRATION_TRIGGERS = 32
+} TASK_CREATION;
+
+interface ITaskService;
+interface IRegisteredTask;
+interface IRegisteredTaskCollection;
+interface IRegistrationInfo;
+interface ITaskFolder;
+interface ITaskFolderCollection;
+interface ITaskDefinition;
+interface ITaskSettings;
+interface IIdleSettings;
+interface IRunningTask;
+interface IRunningTaskCollection;
+interface ITrigger;
+interface ITriggerCollection;
+interface ITimeTrigger;
+interface IRepetitionPattern;
+interface IAction;
+interface IActionCollection;
+interface IExecAction;
+interface INetworkSettings;
+interface IPrincipal;
+
+[
+    object,
+    oleautomation,
+    uuid(2faba4c7-4da9-4013-9697-20cc3fd40f85)
+]
+interface ITaskService : IDispatch
+{
+    HRESULT GetFolder([in] BSTR path, [out, retval] ITaskFolder **folder );
+    HRESULT GetRunningTasks([in] LONG flags, [out, retval] IRunningTaskCollection **tasks );
+    HRESULT NewTask([in] DWORD flags, [out, retval] ITaskDefinition **definition );
+    HRESULT Connect([in, optional] VARIANT server, [in, optional] VARIANT user, [in, optional] VARIANT domain, [in, optional] VARIANT password);
+    [propget] HRESULT Connected([out, retval] VARIANT_BOOL *connected);
+    [propget] HRESULT TargetServer([out, retval] BSTR *server);
+    [propget] HRESULT ConnectedUser([out, retval] BSTR *user);
+    [propget] HRESULT ConnectedDomain([out, retval] BSTR *domain);
+    [propget] HRESULT HighestVersion([out, retval] DWORD *version);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(9c86f320-dee3-4dd1-b972-a303f26b061e)
+]
+interface IRegisteredTask : IDispatch
+{
+    [propget] HRESULT Name([out, retval] BSTR *name);
+    [propget] HRESULT Path([out, retval] BSTR *path);
+    [propget] HRESULT State([out, retval] TASK_STATE *state);
+    [propget] HRESULT Enabled([out, retval] VARIANT_BOOL *enabled);
+    [propput] HRESULT Enabled(VARIANT_BOOL enabled);
+    HRESULT Run([in] VARIANT params, [out, retval] IRunningTask **task);
+    HRESULT RunEx([in] VARIANT params, [in] LONG flags, [in] LONG sessionID, [in] BSTR user, [out, retval] IRunningTask **task);
+    HRESULT GetInstances([in] LONG flags, [out, retval] IRunningTaskCollection **tasks);
+    [propget] HRESULT LastRunTime([out, retval] DATE *date);
+    [propget] HRESULT LastTaskResult([out, retval] LONG *result);
+    [propget] HRESULT NumberOfMissedRuns([out, retval] LONG *runs);
+    [propget] HRESULT NextRunTime([out, retval] DATE *date);
+    [propget] HRESULT Definition([out, retval] ITaskDefinition **task);
+    [propget] HRESULT Xml([out, retval] BSTR *xml);
+    HRESULT GetSecurityDescriptor([in] LONG info, [out, retval] BSTR *sddl);
+    HRESULT SetSecurityDescriptor([in] BSTR sddl, [in] LONG flags);
+    HRESULT Stop([in] LONG flags);
+    HRESULT GetRunTimes([in] const LPSYSTEMTIME start, [in] const LPSYSTEMTIME end, [in, out] DWORD *count, [out] LPSYSTEMTIME *time);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(86627eb4-42a7-41e4-a4d9-ac33a72f2d52)
+]
+interface IRegisteredTaskCollection : IDispatch
+{
+    [propget] HRESULT Count([out, retval] LONG *count);
+    [propget] HRESULT Item([in] VARIANT index, [out, retval] IRegisteredTask **task);
+    [propget] HRESULT _NewEnum([out, retval] IUnknown **penum);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(416d8b73-cb41-4ea1-805c-9be9a5ac4a74)
+]
+interface IRegistrationInfo : IDispatch
+{
+    [propget] HRESULT Description([out, retval] BSTR *description);
+    [propput] HRESULT Description([in] BSTR description);
+    [propget] HRESULT Author([out, retval] BSTR *author);
+    [propput] HRESULT Author([in] BSTR author);
+    [propget] HRESULT Version([out, retval] BSTR *version);
+    [propput] HRESULT Version([in] BSTR version);
+    [propget] HRESULT Date([out, retval] BSTR *date);
+    [propput] HRESULT Date([in] BSTR date);
+    [propget] HRESULT Documentation([out, retval] BSTR *doc);
+    [propput] HRESULT Documentation([in] BSTR doc);
+    [propget] HRESULT XmlText([out, retval] BSTR *xml);
+    [propput] HRESULT XmlText([in] BSTR xml);
+    [propget] HRESULT URI([out, retval] BSTR *uri);
+    [propput] HRESULT URI([in] BSTR uri);
+    [propget] HRESULT SecurityDescriptor([out, retval] VARIANT *sddl);
+    [propput] HRESULT SecurityDescriptor([in] VARIANT sddl);
+    [propget] HRESULT Source([out, retval] BSTR *source);
+    [propput] HRESULT Source([in] BSTR source);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(8cfac062-a080-4c15-9a88-aa7c2af80dfc)
+]
+interface ITaskFolder : IDispatch
+{
+    [propget] HRESULT Name([out, retval] BSTR *name);
+    [propget] HRESULT Path([out, retval] BSTR *path);
+    HRESULT GetFolder([in] BSTR path, [out, retval] ITaskFolder **folder);
+    HRESULT GetFolders([in] LONG flags, [out, retval] ITaskFolderCollection **folders);
+    HRESULT CreateFolder([in] BSTR name, [in] VARIANT sddl, [out, retval] ITaskFolder **folder);
+    HRESULT DeleteFolder([in] BSTR name, [in] LONG flags);
+    HRESULT GetTask([in] BSTR path, [out, retval] IRegisteredTask **task);
+    HRESULT GetTasks([in] LONG flags, [out, retval] IRegisteredTaskCollection **tasks);
+    HRESULT DeleteTask([in] BSTR name, [in] LONG flags);
+    HRESULT RegisterTask([in] BSTR path, [in] BSTR xml, [in] LONG flags, [in] VARIANT user, [in] VARIANT password,
+                         [in] TASK_LOGON_TYPE logonType, [in] VARIANT sddl, [out, retval] IRegisteredTask **task);
+    HRESULT RegisterTaskDefinition([in] BSTR path, [in] ITaskDefinition *definition, [in] LONG flags,
+                                   [in] VARIANT user,  [in] VARIANT password,  [in] TASK_LOGON_TYPE logon,
+                                   [in] VARIANT sddl, [out, retval] IRegisteredTask **task);
+    HRESULT GetSecurityDescriptor(LONG info, [out, retval] BSTR *sddl);
+    HRESULT SetSecurityDescriptor([in] BSTR sddl, [in] LONG flags);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(79184a66-8664-423f-97f1-637356a5d812)
+]
+interface ITaskFolderCollection : IDispatch
+{
+    [propget] HRESULT Count([out, retval] LONG *count);
+    [propget] HRESULT Item([in] VARIANT index, [out, retval] ITaskFolder **folder);
+    [propget] HRESULT _NewEnum([out, retval] IUnknown **penum);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(f5bc8fc5-536d-4f77-b852-fbc1356fdeb6)
+]
+interface ITaskDefinition : IDispatch
+{
+    [propget] HRESULT RegistrationInfo([out, retval] IRegistrationInfo **info);
+    [propput] HRESULT RegistrationInfo([in] IRegistrationInfo *info);
+    [propget] HRESULT Triggers([out, retval] ITriggerCollection **triggers);
+    [propput] HRESULT Triggers([in] ITriggerCollection *triggers);
+    [propget] HRESULT Settings([out, retval] ITaskSettings **settings);
+    [propput] HRESULT Settings([in] ITaskSettings *settings);
+    [propget] HRESULT Data([out, retval] BSTR *data);
+    [propput] HRESULT Data([in] BSTR data);
+    [propget] HRESULT Principal([out, retval] IPrincipal **principal);
+    [propput] HRESULT Principal([in] IPrincipal *principal);
+    [propget] HRESULT Actions([out, retval] IActionCollection **actions);
+    [propput] HRESULT Actions([in] IActionCollection *actions);
+    [propget] HRESULT XmlText([out, retval] BSTR *xml);
+    [propput] HRESULT XmlText([in] BSTR xml);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(8fd4711d-2d02-4c8c-87e3-eff699de127e)
+]
+interface ITaskSettings : IDispatch
+{
+    [propget] HRESULT AllowDemandStart([out, retval] VARIANT_BOOL *allow);
+    [propput] HRESULT AllowDemandStart([in] VARIANT_BOOL allow);
+    [propget] HRESULT RestartInterval([out, retval] BSTR *interval);
+    [propput] HRESULT RestartInterval([in] BSTR interval);
+    [propget] HRESULT RestartCount([out, retval] INT *count);
+    [propput] HRESULT RestartCount([in] INT count);
+    [propget] HRESULT MultipleInstances([out, retval] TASK_INSTANCES_POLICY *policy);
+    [propput] HRESULT MultipleInstances([in] TASK_INSTANCES_POLICY policy);
+    [propget] HRESULT StopIfGoingOnBatteries([out, retval] VARIANT_BOOL *stop);
+    [propput] HRESULT StopIfGoingOnBatteries([in] VARIANT_BOOL stop);
+    [propget] HRESULT DisallowStartIfOnBatteries([out, retval] VARIANT_BOOL *disallow);
+    [propput] HRESULT DisallowStartIfOnBatteries([in] VARIANT_BOOL disallow);
+    [propget] HRESULT AllowHardTerminate([out, retval] VARIANT_BOOL *allow);
+    [propput] HRESULT AllowHardTerminate([in] VARIANT_BOOL allow);
+    [propget] HRESULT StartWhenAvailable([out, retval] VARIANT_BOOL *start);
+    [propput] HRESULT StartWhenAvailable([in] VARIANT_BOOL start);
+    [propget] HRESULT XmlText([out, retval] BSTR *xml);
+    [propput] HRESULT XmlText([in] BSTR xml);
+    [propget] HRESULT RunOnlyIfNetworkAvailable([out, retval] VARIANT_BOOL *run);
+    [propput] HRESULT RunOnlyIfNetworkAvailable([in] VARIANT_BOOL run);
+    [propget] HRESULT ExecutionTimeLimit([out, retval] BSTR *limit);
+    [propput] HRESULT ExecutionTimeLimit([in] BSTR limit);
+    [propget] HRESULT Enabled([out, retval] VARIANT_BOOL *enabled);
+    [propput] HRESULT Enabled([in] VARIANT_BOOL enabled);
+    [propget] HRESULT DeleteExpiredTaskAfter([out, retval] BSTR *delay);
+    [propput] HRESULT DeleteExpiredTaskAfter([in] BSTR delay);
+    [propget] HRESULT Priority([out, retval] INT *priority);
+    [propput] HRESULT Priority([in] INT priority);
+    [propget] HRESULT Compatibility([out, retval] TASK_COMPATIBILITY *level);
+    [propput] HRESULT Compatibility([in] TASK_COMPATIBILITY level);
+    [propget] HRESULT Hidden([out, retval] VARIANT_BOOL *hidden);
+    [propput] HRESULT Hidden([in] VARIANT_BOOL hidden);
+    [propget] HRESULT IdleSettings([out, retval] IIdleSettings **settings);
+    [propput] HRESULT IdleSettings([in] IIdleSettings *settings);
+    [propget] HRESULT RunOnlyIfIdle([out, retval] VARIANT_BOOL *run);
+    [propput] HRESULT RunOnlyIfIdle([in] VARIANT_BOOL run);
+    [propget] HRESULT WakeToRun([out, retval] VARIANT_BOOL *wake);
+    [propput] HRESULT WakeToRun([in] VARIANT_BOOL wake);
+    [propget] HRESULT NetworkSettings([out, retval] INetworkSettings **settings);
+    [propput] HRESULT NetworkSettings([in] INetworkSettings *settings);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(84594461-0053-4342-a8fd-088fabf11f32)
+]
+interface IIdleSettings : IDispatch
+{
+    [propget] HRESULT IdleDuration([out, retval] BSTR *delay);
+    [propput] HRESULT IdleDuration([in] BSTR delay);
+    [propget] HRESULT WaitTimeout([out, retval] BSTR *timeout);
+    [propput] HRESULT WaitTimeout([in] BSTR timeout);
+    [propget] HRESULT StopOnIdleEnd([out, retval] VARIANT_BOOL *stop);
+    [propput] HRESULT StopOnIdleEnd([in] VARIANT_BOOL stop);
+    [propget] HRESULT RestartOnIdle([out, retval] VARIANT_BOOL *restart);
+    [propput] HRESULT RestartOnIdle([in] VARIANT_BOOL restart);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(653758fb-7b9a-4f1e-a471-beeb8e9b834e)
+]
+interface IRunningTask : IDispatch
+{
+    [propget] HRESULT Name([out, retval] BSTR *name);
+    [propget] HRESULT InstanceGuid([out, retval] BSTR *guid);
+    [propget] HRESULT Path([out, retval] BSTR *path);
+    [propget] HRESULT State([out, retval] TASK_STATE *state);
+    [propget] HRESULT CurrentAction([out, retval] BSTR *name);
+    HRESULT Stop(void );
+    HRESULT Refresh(void );
+    [propget] HRESULT EnginePID([out, retval] DWORD *pid);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(6a67614b-6828-4fec-aa54-6d52e8f1f2db)
+]
+interface IRunningTaskCollection : IDispatch
+{
+    [propget] HRESULT Count([out, retval] LONG *count);
+    [propget] HRESULT Item([in] VARIANT index, [out, retval] IRunningTask **task);
+    [propget] HRESULT _NewEnum([out, retval] IUnknown **penum);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(09941815-ea89-4b5b-89e0-2a773801fac3)
+]
+interface ITrigger : IDispatch
+{
+    [propget] HRESULT Type([out, retval] TASK_TRIGGER_TYPE2 *type);
+    [propget] HRESULT Id([out, retval] BSTR *id);
+    [propput] HRESULT Id([in] BSTR id);
+    [propget] HRESULT Repetition([out, retval] IRepetitionPattern **repeat);
+    [propput] HRESULT Repetition([in] IRepetitionPattern *repeat);
+    [propget] HRESULT ExecutionTimeLimit([out, retval] BSTR *limit);
+    [propput] HRESULT ExecutionTimeLimit([in] BSTR limit);
+    [propget] HRESULT StartBoundary([out, retval] BSTR *start);
+    [propput] HRESULT StartBoundary([in] BSTR start);
+    [propget] HRESULT EndBoundary([out, retval] BSTR *end);
+    [propput] HRESULT EndBoundary([in] BSTR end);
+    [propget] HRESULT Enabled([out, retval] VARIANT_BOOL *enabled);
+    [propput] HRESULT Enabled([in] VARIANT_BOOL enabled);
+}
+
+[
+    odl,
+    uuid(126c5cd8-b288-41d5-8dbf-e491446adc5c),
+    oleautomation,
+    dual,
+    nonextensible
+]
+interface IDailyTrigger : ITrigger
+{
+    [propget] HRESULT DaysInterval([out, retval] short *pDays);
+    [propput] HRESULT DaysInterval([in] short days);
+    [propget] HRESULT RandomDelay([out, retval] BSTR *pRandomDelay);
+    [propput] HRESULT RandomDelay([in] BSTR randomDelay);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(85df5081-1b24-4f32-878a-d9d14df4cb77)
+]
+interface ITriggerCollection : IDispatch
+{
+    [propget] HRESULT Count([out, retval] LONG *count);
+    [propget] HRESULT Item([in] LONG index, [out, retval] ITrigger **trigger);
+    [propget] HRESULT _NewEnum([out, retval] IUnknown **penum);
+    HRESULT Create([in] TASK_TRIGGER_TYPE2 type, [out, retval] ITrigger **trigger);
+    HRESULT Remove([in] VARIANT index);
+    HRESULT Clear();
+}
+
+[
+    object,
+    oleautomation,
+    uuid(b45747e0-eba7-4276-9f29-85c5bb300006)
+]
+interface ITimeTrigger : ITrigger
+{
+    [propget] HRESULT RandomDelay([out, retval] BSTR *delay);
+    [propput] HRESULT RandomDelay([in] BSTR delay);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(7fb9acf1-26be-400e-85b5-294b9c75dfd6)
+]
+interface IRepetitionPattern : IDispatch
+{
+    [propget] HRESULT Interval([out, retval] BSTR *interval);
+    [propput] HRESULT Interval([in] BSTR interval);
+    [propget] HRESULT Duration([out, retval] BSTR *duration);
+    [propput] HRESULT Duration([in] BSTR duration);
+    [propget] HRESULT StopAtDurationEnd([out, retval] VARIANT_BOOL *stop);
+    [propput] HRESULT StopAtDurationEnd([in] VARIANT_BOOL sop);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(bae54997-48b1-4cbe-9965-d6be263ebea4)
+]
+interface IAction : IDispatch
+{
+    [propget] HRESULT Id([out, retval] BSTR *id);
+    [propput] HRESULT Id([in] BSTR id);
+    [propget] HRESULT Type([out, retval] TASK_ACTION_TYPE *type);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(02820e19-7b98-4ed2-b2e8-fdccceff619b)
+]
+interface IActionCollection : IDispatch
+{
+    [propget] HRESULT Count([out, retval] LONG *count);
+    [propget] HRESULT Item([in] LONG index, [out, retval] IAction **action);
+    [propget] HRESULT _NewEnum([out, retval] IUnknown **penum);
+    [propget] HRESULT XmlText([out, retval] BSTR *xml);
+    [propput] HRESULT XmlText([in] BSTR xml);
+    HRESULT Create([in] TASK_ACTION_TYPE Type, [out, retval] IAction **action);
+    HRESULT Remove([in] VARIANT index);
+    HRESULT Clear();
+    [propget] HRESULT Context([out, retval] BSTR *ctx);
+    [propput] HRESULT Context([in] BSTR ctx);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(4c3d624d-fd6b-49a3-b9b7-09cb3cd3f047)
+]
+interface IExecAction : IAction
+{
+    [propget] HRESULT Path([out, retval] BSTR *path);
+    [propput] HRESULT Path([in] BSTR path);
+    [propget] HRESULT Arguments([out, retval] BSTR *argument);
+    [propput] HRESULT Arguments([in] BSTR argument);
+    [propget] HRESULT WorkingDirectory([out, retval] BSTR *directory);
+    [propput] HRESULT WorkingDirectory([in] BSTR directory);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(9f7dea84-c30b-4245-80b6-00e9f646f1b4)
+]
+interface INetworkSettings : IDispatch
+{
+    [propget] HRESULT Name([out, retval] BSTR *name);
+    [propput] HRESULT Name([in] BSTR name);
+    [propget] HRESULT Id([out, retval] BSTR *id);
+    [propput] HRESULT Id([in] BSTR id);
+}
+
+[
+    object,
+    oleautomation,
+    uuid(d98d51e5-c9b4-496a-a9c1-18980261cf0f)
+]
+interface IPrincipal : IDispatch
+{
+    [propget] HRESULT Id([out, retval] BSTR *id);
+    [propput] HRESULT Id([in] BSTR id);
+    [propget] HRESULT DisplayName([out, retval] BSTR *name);
+    [propput] HRESULT DisplayName([in] BSTR name);
+    [propget] HRESULT UserId([out, retval] BSTR *user);
+    [propput] HRESULT UserId([in] BSTR user);
+    [propget] HRESULT LogonType([out, retval] TASK_LOGON_TYPE *logon);
+    [propput] HRESULT LogonType([in] TASK_LOGON_TYPE logon);
+    [propget] HRESULT GroupId([out, retval] BSTR *group);
+    [propput] HRESULT GroupId([in] BSTR group);
+    [propget] HRESULT RunLevel([out, retval] TASK_RUNLEVEL_TYPE *level);
+    [propput] HRESULT RunLevel([in] TASK_RUNLEVEL_TYPE level);
+}
+
+[
+    threading(both),
+    progid("Schedule.Service.1"),
+    vi_progid("Schedule.Service"),
+    uuid(0f87369f-a4e5-4cfc-bd3e-73e6154572dd)
+]
+coclass TaskScheduler
+{
+    interface ITaskService;
+}
+
+} /* library TaskScheduler */
