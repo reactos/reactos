@@ -18,13 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "xmllite_private.h"
+#define COBJMACROS
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <assert.h>
+#include "windef.h"
+#include "winbase.h"
+#include "initguid.h"
+#include "objbase.h"
+#include "xmllite.h"
+#include "xmllite_private.h"
 
-#include <wine/list.h>
-#include <wine/unicode.h>
+#include "wine/debug.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(xmllite);
 
 /* not defined in public headers */
 DEFINE_GUID(IID_IXmlReaderInput, 0x0b3ccc9b, 0x9214, 0x428b, 0xa2, 0xae, 0xef, 0x3a, 0xa8, 0x71, 0xaf, 0xda);
@@ -158,7 +168,7 @@ const WCHAR *get_encoding_name(xml_encoding encoding)
 xml_encoding get_encoding_from_codepage(UINT codepage)
 {
     int i;
-    for (i = 0; i < sizeof(xml_encoding_map)/sizeof(xml_encoding_map[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(xml_encoding_map); i++)
     {
         if (xml_encoding_map[i].cp == codepage) return xml_encoding_map[i].enc;
     }
@@ -739,7 +749,7 @@ xml_encoding parse_encoding_name(const WCHAR *name, int len)
     if (!name) return XmlEncoding_Unknown;
 
     min = 0;
-    max = sizeof(xml_encoding_map)/sizeof(xml_encoding_map[0]) - 1;
+    max = ARRAY_SIZE(xml_encoding_map) - 1;
 
     while (min <= max)
     {
@@ -3003,12 +3013,12 @@ static void reader_get_attribute_ns_uri(xmlreader *reader, struct attribute *att
             strval_eq(reader, &attr->prefix, &strval_xmlns))
     {
         *uri = xmlns_uriW;
-        *len = sizeof(xmlns_uriW)/sizeof(xmlns_uriW[0]) - 1;
+        *len = ARRAY_SIZE(xmlns_uriW) - 1;
     }
     else if (strval_eq(reader, &attr->prefix, &strval_xml))
     {
         *uri = xml_uriW;
-        *len = sizeof(xml_uriW)/sizeof(xml_uriW[0]) - 1;
+        *len = ARRAY_SIZE(xml_uriW) - 1;
     }
     else
     {

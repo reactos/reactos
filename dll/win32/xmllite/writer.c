@@ -18,16 +18,24 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define COBJMACROS
 
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "xmllite.h"
 #include "xmllite_private.h"
+#include "initguid.h"
 
-#include <wine/list.h>
-#include <wine/unicode.h>
+#include "wine/debug.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(xmllite);
 
 /* not defined in public headers */
 DEFINE_GUID(IID_IXmlWriterOutput, 0xc1131708, 0x0f59, 0x477f, 0x93, 0x59, 0x7d, 0x33, 0x24, 0x51, 0xbc, 0x1a);
-
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 static const WCHAR closeelementW[] = {'<','/'};
 static const WCHAR closetagW[] = {' ','/','>'};
