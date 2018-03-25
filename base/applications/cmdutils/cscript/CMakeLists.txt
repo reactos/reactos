@@ -7,7 +7,7 @@ list(APPEND SOURCE
     ${wscript_folder}/arguments.c
     ${wscript_folder}/host.c
     ${wscript_folder}/main.c
-    ${wscript_folder}/wscript.h)
+    ${wscript_folder}/precomp.h)
 
 add_executable(cscript ${SOURCE} rsrc.rc)
 add_idl_headers(cscript_idlheader ihost.idl)
@@ -17,5 +17,5 @@ target_link_libraries(cscript uuid wine)
 set_module_type(cscript win32cui UNICODE)
 add_importlibs(cscript shell32 oleaut32 ole32 advapi32 user32 msvcrt kernel32 ntdll)
 add_dependencies(cscript stdole2 cscript_idlheader)
-add_pch(cscript ${wscript_folder}/wscript.h SOURCE)
+add_pch(cscript ${wscript_folder}/precomp.h SOURCE)
 add_cd_file(TARGET cscript DESTINATION reactos/system32 FOR all)
