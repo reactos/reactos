@@ -16,31 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _WUAPI_PRIVATE_H_
-#define _WUAPI_PRIVATE_H_
-
-#include <wine/config.h>
-
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-
-#define COBJMACROS
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <wuapi.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
-
 extern HRESULT AutomaticUpdates_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
 extern HRESULT UpdateSession_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
 extern HRESULT UpdateSearcher_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
 extern HRESULT UpdateDownloader_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
 extern HRESULT UpdateInstaller_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
 extern HRESULT SystemInformation_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
-
-#endif /* _WUAPI_PRIVATE_H_ */
