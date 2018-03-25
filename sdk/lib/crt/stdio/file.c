@@ -221,31 +221,6 @@ static inline FILE* msvcrt_get_file(int i)
     return &ret->file;
 }
 
-static inline BOOL is_valid_fd(int fd)
-{
-    return fd >= 0 && fd < fdend && (get_ioinfo_nolock(fd)->wxflag & WX_OPEN);
-}
-
-/* INTERNAL: Get the HANDLE for a fd
- * This doesn't lock the table, because a failure will result in
- * INVALID_HANDLE_VALUE being returned, which should be handled correctly.  If
- * it returns a valid handle which is about to be closed, a subsequent call
- * will fail, most likely in a sane way.
- */
-/*static*/ HANDLE fdtoh(int fd)
-{
-  if (!is_valid_fd(fd))
-  {
-    WARN(":fd (%d) - no handle!\n",fd);
-    *__doserrno() = 0;
-    *_errno() = EBADF;
-    return INVALID_HANDLE_VALUE;
-  }
-  //if (get_ioinfo_nolock(fd)->handle == INVALID_HANDLE_VALUE)
-      //FIXME("returning INVALID_HANDLE_VALUE for %d\n", fd);
-  return get_ioinfo_nolock(fd)->handle;
-}
-
 /* INTERNAL: free a file entry fd */
 static void msvcrt_free_fd(int fd)
 {
@@ -383,7 +358,7 @@ static FILE* msvcrt_alloc_fp(void)
 static int msvcrt_init_fp(FILE* file, int fd, unsigned stream_flags)
 {
   TRACE(":fd (%d) allocating FILE*\n",fd);
-  if (!is_valid_fd(fd))
+  if (!(get_ioinfo_nolock(fd)->wxflag & WX_OPEN))
   {
     WARN(":invalid fd %d\n",fd);
     *__doserrno() = 0;
@@ -1581,9 +1556,11 @@ int CDECL _fileno(FILE* file)
  */
 intptr_t CDECL _get_osfhandle(int fd)
 {
-  HANDLE hand = fdtoh(fd);
+  HANDLE hand = get_ioinfo_nolock(fd)->handle;
   TRACE(":fd (%d) handle (%p)\n",fd,hand);
 
+  if(hand == INVALID_HANDLE_VALUE)
+      *_errno() = EBADF;
   return (intptr_t)hand;
 }
 
