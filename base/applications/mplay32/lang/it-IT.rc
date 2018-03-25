@@ -11,21 +11,21 @@ BEGIN
     END
     POPUP "&Play"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
+        MENUITEM "Play/&Pausa\tCtrl+P", IDC_PLAY
         MENUITEM "St&op\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "Ripet&i\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&Visualizza"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "&Modalità Finestra-Singola", IDM_SWITCHVIEW
     END
-    POPUP "&Device"
+    POPUP "&Dispositivo"
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "&Proprietà", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "&Controllo Volume", IDM_VOLUMECTL
     END
     POPUP "&Aiuto"
     BEGIN
@@ -44,14 +44,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
-    IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
-    IDS_MODE_NOT_READY "Not ready"
+    IDS_MODE_UNKNOWN "Sconosciuto"
+    IDS_MODE_OPEN "Aperto"
+    IDS_MODE_STOP "Fermato"
+    IDS_MODE_PLAY "Riprendendo"
+    IDS_MODE_PAUSE "In Pausa"
+    IDS_MODE_RECORD "Registrazione"
+    IDS_MODE_SEEK "Cerca"
+    IDS_MODE_NOT_READY "Non pronto"
     IDS_ALL_TYPES_FILTER "Tutti i tipi supportati"
     IDS_TOOLTIP_PLAY "Riproduci"
     IDS_TOOLTIP_STOP "Interrompi"
@@ -60,8 +60,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Riavvolgimento rapido"
     IDS_TOOLTIP_SEEKFORW "Avanzamento rapido"
     IDS_TOOLTIP_FORWARD "Successivo"
-    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_TOOLTIP_PAUSE "Pausa"
     IDS_APPTITLE "Riproduttore multimediale ReactOS"
     IDS_PLAY "Riproduci"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error."
+    IDS_DEFAULTMCIERRMSG "Nessuna descrizione è disponibile per questo tipo di errore."
 END
