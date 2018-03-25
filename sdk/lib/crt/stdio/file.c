@@ -101,6 +101,7 @@ extern int _commode;
 /* values for exflag - it's used differently in msvcr90.dll*/
 #define EF_UTF8           0x01
 #define EF_UTF16          0x02
+#define EF_CRIT_INIT      0x04
 #define EF_UNK_UNICODE    0x08
 
 static char utf8_bom[3] = { 0xef, 0xbb, 0xbf };
@@ -218,7 +219,7 @@ static inline FILE* msvcrt_get_file(int i)
 
 static inline BOOL is_valid_fd(int fd)
 {
-    return fd >= 0 && fd < fdend && (get_ioinfo(fd)->wxflag & WX_OPEN);
+    return fd >= 0 && fd < fdend && (get_ioinfo_nolock(fd)->wxflag & WX_OPEN);
 }
 
 /* INTERNAL: Get the HANDLE for a fd
@@ -236,9 +237,9 @@ static inline BOOL is_valid_fd(int fd)
     *_errno() = EBADF;
     return INVALID_HANDLE_VALUE;
   }
-  //if (get_ioinfo(fd)->handle == INVALID_HANDLE_VALUE)
+  //if (get_ioinfo_nolock(fd)->handle == INVALID_HANDLE_VALUE)
       //FIXME("returning INVALID_HANDLE_VALUE for %d\n", fd);
-  return get_ioinfo(fd)->handle;
+  return get_ioinfo_nolock(fd)->handle;
 }
 
 /* INTERNAL: free a file entry fd */
@@ -247,7 +248,7 @@ static void msvcrt_free_fd(int fd)
   ioinfo *fdinfo;
 
   LOCK_FILES();
-  fdinfo = get_ioinfo(fd);
+  fdinfo = get_ioinfo_nolock(fd);
   if(fdinfo != &__badioinfo)
   {
     fdinfo->handle = INVALID_HANDLE_VALUE;
@@ -291,7 +292,7 @@ static int msvcrt_set_fd(HANDLE hand, int flag, int fd)
     return -1;
   }
 
-  fdinfo = get_ioinfo(fd);
+  fdinfo = get_ioinfo_nolock(fd);
   if(fdinfo == &__badioinfo) {
     int i;
 
@@ -305,7 +306,7 @@ static int msvcrt_set_fd(HANDLE hand, int flag, int fd)
     for(i=0; i<MSVCRT_FD_BLOCK_SIZE; i++)
       __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE][i].handle = INVALID_HANDLE_VALUE;
 
-    fdinfo = get_ioinfo(fd);
+    fdinfo = get_ioinfo_nolock(fd);
   }
 
   fdinfo->handle = hand;
@@ -313,14 +314,16 @@ static int msvcrt_set_fd(HANDLE hand, int flag, int fd)
   fdinfo->lookahead[0] = '\n';
   fdinfo->lookahead[1] = '\n';
   fdinfo->lookahead[2] = '\n';
-  fdinfo->exflag = 0;
+  if(!(fdinfo->exflag & EF_CRIT_INIT))
+      InitializeCriticalSection(&fdinfo->crit);
+  fdinfo->exflag = EF_CRIT_INIT;
 
   /* locate next free slot */
   if (fd == fdstart && fd == fdend)
     fdstart = fdend + 1;
   else
     while (fdstart < fdend &&
-      get_ioinfo(fdstart)->handle != INVALID_HANDLE_VALUE)
+      get_ioinfo_nolock(fdstart)->handle != INVALID_HANDLE_VALUE)
       fdstart++;
   /* update last fd in use */
   if (fd >= fdend)
@@ -423,7 +426,7 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
   for (fd = 0; fd < fdend; fd++)
   {
     /* to be inherited, we need it to be open, and that DONTINHERIT isn't set */
-    fdinfo = get_ioinfo(fd);
+    fdinfo = get_ioinfo_nolock(fd);
     if ((fdinfo->wxflag & (WX_OPEN | WX_DONTINHERIT)) == WX_OPEN)
     {
       *wxflag_ptr = fdinfo->wxflag;
@@ -470,10 +473,10 @@ void msvcrt_init_io(void)
     }
     fdend = max( 3, count );
     for (fdstart = 3; fdstart < fdend; fdstart++)
-        if (get_ioinfo(fdstart)->handle == INVALID_HANDLE_VALUE) break;
+        if (get_ioinfo_nolock(fdstart)->handle == INVALID_HANDLE_VALUE) break;
   }
 
-  fdinfo = get_ioinfo(STDIN_FILENO);
+  fdinfo = get_ioinfo_nolock(STDIN_FILENO);
   if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
     HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
     DWORD type = GetFileType(h);
@@ -482,7 +485,7 @@ void msvcrt_init_io(void)
             |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDIN_FILENO);
   }
 
-  fdinfo = get_ioinfo(STDOUT_FILENO);
+  fdinfo = get_ioinfo_nolock(STDOUT_FILENO);
   if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD type = GetFileType(h);
@@ -491,7 +494,7 @@ void msvcrt_init_io(void)
             |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDOUT_FILENO);
   }
 
-  fdinfo = get_ioinfo(STDERR_FILENO);
+  fdinfo = get_ioinfo_nolock(STDERR_FILENO);
   if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
     HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
     DWORD type = GetFileType(h);
@@ -500,9 +503,9 @@ void msvcrt_init_io(void)
             |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDERR_FILENO);
   }
 
-  TRACE(":handles (%p)(%p)(%p)\n", get_ioinfo(STDIN_FILENO)->handle,
-        get_ioinfo(STDOUT_FILENO)->handle,
-        get_ioinfo(STDERR_FILENO)->handle);
+  TRACE(":handles (%p)(%p)(%p)\n", get_ioinfo_nolock(STDIN_FILENO)->handle,
+        get_ioinfo_nolock(STDOUT_FILENO)->handle,
+        get_ioinfo_nolock(STDERR_FILENO)->handle);
 
   memset(_iob,0,3*sizeof(FILE));
   for (i = 0; i < 3; i++)
@@ -895,7 +898,7 @@ int CDECL fflush(FILE* file)
         _unlock_file(file);
 
         return 0;
-    }    
+    }
     return 0;
 }
 
@@ -945,10 +948,10 @@ int CDECL _dup2(int od, int nd)
   {
     HANDLE handle;
 
-    if (DuplicateHandle(GetCurrentProcess(), get_ioinfo(od)->handle,
+    if (DuplicateHandle(GetCurrentProcess(), get_ioinfo_nolock(od)->handle,
      GetCurrentProcess(), &handle, 0, TRUE, DUPLICATE_SAME_ACCESS))
     {
-      int wxflag = get_ioinfo(od)->wxflag & ~_O_NOINHERIT;
+      int wxflag = get_ioinfo_nolock(od)->wxflag & ~_O_NOINHERIT;
 
       if (is_valid_fd(nd))
         _close(nd);
@@ -1010,7 +1013,7 @@ int CDECL _eof(int fd)
   if (hand == INVALID_HANDLE_VALUE)
     return -1;
 
-  if (get_ioinfo(fd)->wxflag & WX_ATEOF) return TRUE;
+  if (get_ioinfo_nolock(fd)->wxflag & WX_ATEOF) return TRUE;
 
   /* Otherwise we do it the hard way */
   hcurpos = hendpos = 0;
@@ -1058,7 +1061,17 @@ void msvcrt_free_io(void)
     _fcloseall();
 
     for(i=0; i<sizeof(__pioinfo)/sizeof(__pioinfo[0]); i++)
+    {
+        if(!__pioinfo[i])
+            continue;
+
+        for(j=0; j<MSVCRT_FD_BLOCK_SIZE; j++)
+        {
+            if(__pioinfo[i][j].exflag & EF_CRIT_INIT)
+                DeleteCriticalSection(&__pioinfo[i][j].crit);
+        }
         free(__pioinfo[i]);
+    }
 
     for(j=0; j<MSVCRT_stream_idx; j++)
     {
@@ -1104,7 +1117,7 @@ __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
   if ((ofs.u.LowPart = SetFilePointer(hand, ofs.u.LowPart, &ofs.u.HighPart, whence)) != INVALID_SET_FILE_POINTER ||
       GetLastError() == ERROR_SUCCESS)
   {
-    get_ioinfo(fd)->wxflag &= ~(WX_ATEOF|WX_READEOF);
+    get_ioinfo_nolock(fd)->wxflag &= ~(WX_ATEOF|WX_READEOF);
     /* FIXME: What if we seek _to_ EOF - is EOF set? */
 
     return ofs.QuadPart;
@@ -1854,11 +1867,11 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
       return *_errno();
 
   if (oflags & _O_WTEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF16|EF_UNK_UNICODE;
+      get_ioinfo_nolock(*fd)->exflag |= EF_UTF16|EF_UNK_UNICODE;
   else if (oflags & _O_U16TEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF16;
+      get_ioinfo_nolock(*fd)->exflag |= EF_UTF16;
   else if (oflags & _O_U8TEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF8;
+      get_ioinfo_nolock(*fd)->exflag |= EF_UTF8;
 
   TRACE(":fd (%d) handle (%p)\n", *fd, hand);
   return 0;
@@ -2060,7 +2073,7 @@ static inline int get_utf8_char_len(char ch)
  */
 static int read_utf8(int fd, wchar_t *buf, unsigned int count)
 {
-    ioinfo *fdinfo = get_ioinfo(fd);
+    ioinfo *fdinfo = get_ioinfo_nolock(fd);
     HANDLE hand = fdinfo->handle;
     char min_buf[4], *readbuf, lookahead;
     DWORD readbuf_size, pos=0, num_read=1, char_len, i, j;
@@ -2240,7 +2253,7 @@ static int read_i(int fd, void *buf, unsigned int count)
     DWORD num_read, utf16;
     char *bufstart = buf;
     HANDLE hand = fdtoh(fd);
-    ioinfo *fdinfo = get_ioinfo(fd);
+    ioinfo *fdinfo = get_ioinfo_nolock(fd);
 
     if (count == 0)
         return 0;
@@ -2409,8 +2422,8 @@ int CDECL _read(int fd, void *buf, unsigned int count)
  */
 int CDECL _setmode(int fd,int mode)
 {
-    int ret = get_ioinfo(fd)->wxflag & WX_TEXT ? _O_TEXT : _O_BINARY;
-    if(ret==_O_TEXT && (get_ioinfo(fd)->exflag & (EF_UTF8|EF_UTF16)))
+    int ret = get_ioinfo_nolock(fd)->wxflag & WX_TEXT ? _O_TEXT : _O_BINARY;
+    if(ret==_O_TEXT && (get_ioinfo_nolock(fd)->exflag & (EF_UTF8|EF_UTF16)))
         ret = _O_WTEXT;
 
     if(mode!=_O_TEXT && mode!=_O_BINARY && mode!=_O_WTEXT
@@ -2420,18 +2433,18 @@ int CDECL _setmode(int fd,int mode)
     }
 
     if(mode == _O_BINARY) {
-        get_ioinfo(fd)->wxflag &= ~WX_TEXT;
-        get_ioinfo(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
+        get_ioinfo_nolock(fd)->wxflag &= ~WX_TEXT;
+        get_ioinfo_nolock(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
         return ret;
     }
 
-    get_ioinfo(fd)->wxflag |= WX_TEXT;
+    get_ioinfo_nolock(fd)->wxflag |= WX_TEXT;
     if(mode == _O_TEXT)
-        get_ioinfo(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
+        get_ioinfo_nolock(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
     else if(mode == _O_U8TEXT)
-        get_ioinfo(fd)->exflag = (get_ioinfo(fd)->exflag & ~EF_UTF16) | EF_UTF8;
+        get_ioinfo_nolock(fd)->exflag = (get_ioinfo_nolock(fd)->exflag & ~EF_UTF16) | EF_UTF8;
     else
-        get_ioinfo(fd)->exflag = (get_ioinfo(fd)->exflag & ~EF_UTF8) | EF_UTF16;
+        get_ioinfo_nolock(fd)->exflag = (get_ioinfo_nolock(fd)->exflag & ~EF_UTF8) | EF_UTF16;
 
     return ret;
 
@@ -2509,7 +2522,7 @@ int CDECL _umask(int umask)
 int CDECL _write(int fd, const void* buf, unsigned int count)
 {
     DWORD num_written;
-    ioinfo *info = get_ioinfo(fd);
+    ioinfo *info = get_ioinfo_nolock(fd);
     HANDLE hand = info->handle;
 
     /* Don't trace small writes, it gets *very* annoying */
@@ -2866,8 +2879,8 @@ wint_t CDECL fgetwc(FILE* file)
 
     _lock_file(file);
 
-    if((get_ioinfo(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
-            || !(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+    if((get_ioinfo_nolock(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
+            || !(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT)) {
         char *p;
 
         for(p=(char*)&ret; (wint_t*)p<&ret+1; p++) {
@@ -3063,7 +3076,7 @@ wint_t CDECL fputwc(wchar_t c, FILE* stream)
     /* If this is a real file stream (and not some temporary one for
        sprintf-like functions), check whether it is opened in text mode.
        In this case, we have to perform an implicit conversion to ANSI. */
-    if (!(stream->_flag & _IOSTRG) && get_ioinfo(stream->_file)->wxflag & WX_TEXT)
+    if (!(stream->_flag & _IOSTRG) && get_ioinfo_nolock(stream->_file)->wxflag & WX_TEXT)
     {
         /* Convert to multibyte in text mode */
         char mbc[MB_LEN_MAX];
@@ -3292,7 +3305,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
       i = (file->_cnt<rcnt) ? file->_cnt : rcnt;
       /* If the buffer fill reaches eof but fread wouldn't, clear eof. */
       if (i > 0 && i < file->_cnt) {
-        get_ioinfo(file->_file)->wxflag &= ~WX_ATEOF;
+        get_ioinfo_nolock(file->_file)->wxflag &= ~WX_ATEOF;
         file->_flag &= ~_IOEOF;
       }
       if (i > 0) {
@@ -3313,7 +3326,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
     /* expose feof condition in the flags
      * MFC tests file->_flag for feof, and doesn't call feof())
      */
-    if (get_ioinfo(file->_file)->wxflag & WX_ATEOF)
+    if (get_ioinfo_nolock(file->_file)->wxflag & WX_ATEOF)
         file->_flag |= _IOEOF;
     else if (i == -1)
     {
@@ -3431,7 +3444,7 @@ __int64 CDECL _ftelli64(FILE* file)
         if(file->_flag & _IOWRT) {
             pos += file->_ptr - file->_base;
 
-            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
+            if(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT) {
                 char *p;
 
                 for(p=file->_base; p<file->_ptr; p++)
@@ -3443,7 +3456,7 @@ __int64 CDECL _ftelli64(FILE* file)
             int i;
 
             pos -= file->_cnt;
-            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
+            if(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT) {
                 for(i=0; i<file->_cnt; i++)
                     if(file->_ptr[i] == '\n')
                         pos--;
@@ -3459,8 +3472,8 @@ __int64 CDECL _ftelli64(FILE* file)
             pos -= file->_bufsiz;
             pos += file->_ptr - file->_base;
 
-            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
-                if(get_ioinfo(file->_file)->wxflag & WX_READNL)
+            if(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT) {
+                if(get_ioinfo_nolock(file->_file)->wxflag & WX_READNL)
                     pos--;
 
                 for(p=file->_base; p<file->_ptr; p++)
@@ -3517,7 +3530,7 @@ int CDECL fputws(const wchar_t *s, FILE* file)
     int ret;
 
     _lock_file(file);
-    if (!(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+    if (!(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT)) {
         ret = fwrite(s,sizeof(*s),len,file) == len ? 0 : EOF;
         _unlock_file(file);
         return ret;
@@ -3901,8 +3914,8 @@ wint_t CDECL ungetwc(wint_t wc, FILE * file)
 
     _lock_file(file);
 
-    if((get_ioinfo(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
-            || !(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+    if((get_ioinfo_nolock(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
+            || !(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT)) {
         unsigned char * pp = (unsigned char *)&mwc;
         int i;
 
