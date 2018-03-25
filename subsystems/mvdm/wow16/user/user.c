@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS-on-ReactOS-16bit (aka. RoR16 or WoW16)
- * FILE:            subsystems/mvdm/wow16/user.c
- * PURPOSE:         16-bit USER stub module
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROJECT:     ReactOS-on-ReactOS-16bit (aka. RoR16 or WoW16)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     16-bit USER stub module
+ * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
  */
 
 /* INCLUDES *******************************************************************/

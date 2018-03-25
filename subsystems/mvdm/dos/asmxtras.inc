@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel
- * FILE:            asmxtras.inc
- * PURPOSE:         Extended ASM macros for GAS and MASM/ML64
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROJECT:     ReactOS Virtual DOS Machine
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Extended ASM macros for GAS and MASM/ML64
+ * COPYRIGHT:   Copyright 2015-2018 Hermes Belusca-Maito
  *
  * NOTE: This file is an extension to our well-known asm.inc that defines
  *       a set of macros allowing us to assemble specially-crafted ASM files
