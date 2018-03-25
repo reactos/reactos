@@ -16,20 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _WSHOM_PRIVATE_H_
-#define _WSHOM_PRIVATE_H_
+#pragma once
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include <stdarg.h>
+
 #define COBJMACROS
 
-#include <windef.h>
-#include <winbase.h>
-#include <wshom.h>
-#include <ocidl.h>
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "olectl.h"
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(wshom);
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
 /* typelibs */
 typedef enum tid_t {
@@ -53,5 +51,3 @@ struct provideclassinfo {
 extern void init_classinfo(const GUID *guid, IUnknown *outer, struct provideclassinfo *classinfo) DECLSPEC_HIDDEN;
 
 HRESULT WINAPI WshShellFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-
-#endif /* _WSHOM_PRIVATE_H_ */
