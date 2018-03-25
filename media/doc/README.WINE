@@ -220,7 +220,7 @@ reactos/dll/win32/xinput1_3           # Synced to WineStaging-2.9
 reactos/dll/win32/xinput9_1_0         # Synced to WineStaging-2.9
 reactos/dll/win32/xmllite             # Synced to WineStaging-3.3
 
-reactos/dll/cpl/inetcpl               # Synced to WineStaging-2.9
+reactos/dll/cpl/inetcpl               # Synced to WineStaging-3.3
 
 reactos/win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-2.9 (known there as /dll/win32/localui)
 

@@ -19,9 +19,25 @@
  *
  */
 
+#define NONAMELESSUNION
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include <cpl.h>
+#include "ole2.h"
+
+#include "wine/debug.h"
+
 #include "inetcpl.h"
 
-#include <cpl.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
 
 DECLSPEC_HIDDEN HMODULE hcpl;
 
