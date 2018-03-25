@@ -7,7 +7,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Syntaxe tohoto příkazu:\n\nREG [ ADD | DELETE | QUERY ]\nREG operace /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD název_klíče [/v název_hodnoty | /ve] [/t type] [/s oddělovač] [/d data] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE název_klíče [/v název_hodnoty | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY název_klíče [/v název_hodnoty | /ve] [/s]\n"

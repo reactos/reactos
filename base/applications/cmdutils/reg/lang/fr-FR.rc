@@ -2,7 +2,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "La syntaxe de cette commande est :\n\nREG [ ADD | DELETE | QUERY ]\nREG commande /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD nom_de_clé [/v nom_de_valeur | /ve] [/t type] [/s séparateur] [/d données] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE nom_de_clé [/v nom_de_valeur | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY nom_de_clé [/v nom_de_valeur | /ve] [/s]\n"

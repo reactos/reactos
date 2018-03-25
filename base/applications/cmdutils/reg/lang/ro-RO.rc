@@ -8,7 +8,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Sintaxa acestei comenzi este:\n\nREG [ ADD | DELETE | QUERY ]\nREG comandă /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD nume_cheie [/v nume_valoare | /ve] [/t tip] [/s separator] [/d date] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE nume_cheie [/v nume_valoare | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY nume_cheie [/v nume_valoare | /ve] [/s]\n"

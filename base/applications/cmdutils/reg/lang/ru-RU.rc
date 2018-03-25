@@ -2,7 +2,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Использование:\n\nREG [ ADD | DELETE | QUERY ]\nREG <команда> /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD <имя_раздела> [/v <имя_параметра> | /ve] [/t <тип>] [/s <разделитель>] [/d <данные>] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE <имя_раздела> [/v <имя_параметра> | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY <имя_раздела> [/v [имя_параметра] | /ve] [/s]\n"

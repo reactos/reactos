@@ -2,7 +2,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Składnia tego polecenia:\n\nREG [ ADD | DELETE | QUERY ]\nREG polecenie /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD nazwa_klucza [/v nazwa_wartości | /ve] [/t typ] [/s separator] [/d dane] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE nazwa_klucza [/v nazwa_wartości | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY nazwa_klucza [/v nazwa_wartości | /ve] [/s]\n"

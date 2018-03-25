@@ -20,7 +20,7 @@
 
 #pragma once
 
-//#include <windef.h>
+#include <windef.h>
 
 /* Translation IDs. */
 #define STRING_USAGE                  101

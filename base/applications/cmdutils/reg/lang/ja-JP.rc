@@ -2,7 +2,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "このコマンドの構文は次のとおりです:\n\nREG [ ADD | DELETE | QUERY ]\nREG コマンド /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD キー名 [/v 値名 | /ve] [/t type] [/s セパレータ] [/d データ] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE キー名 [/v 値名 | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY キー名 [/v 値名 | /ve] [/s]\n"

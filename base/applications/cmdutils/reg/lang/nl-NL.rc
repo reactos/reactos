@@ -2,7 +2,7 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Gebruik van dit commando is:\n\nREG [ ADD | DELETE | QUERY ]\nREG commando /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD sleutel_naam [/v waarde_naam | /ve] [/t type] [/s scheidingsteken] [/d data] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE sleutel_naam [/v waarde_naam | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY sleutel_naam [/v waarde_naam | /ve] [/s]\n"
