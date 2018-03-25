@@ -125,9 +125,6 @@ ioinfo * __pioinfo[MSVCRT_MAX_FILES/MSVCRT_FD_BLOCK_SIZE] = { 0 };
  */
 ioinfo __badioinfo = { INVALID_HANDLE_VALUE, WX_TEXT };
 
-static int fdstart = 3; /* first unallocated fd */
-static int fdend = 3; /* highest allocated fd */
-
 typedef struct {
     FILE file;
     CRITICAL_SECTION crit;
@@ -143,12 +140,9 @@ static int MSVCRT_umask = 0;
 /* INTERNAL: static data for tmpnam and _wtmpname functions */
 static int tmpnam_unique;
 
-/* This critical section protects the tables __pioinfo and fstreams,
- * and their related indexes, fdstart, fdend,
- * and MSVCRT_stream_idx, from race conditions.
- * It doesn't protect against race conditions manipulating the underlying files
- * or flags; doing so would probably be better accomplished with per-file
- * protection, rather than locking the whole table for every change.
+/* This critical section protects the MSVCRT_fstreams table
+ * and MSVCRT_stream_idx from race conditions. It also
+ * protects fd critical sections creation code.
  */
 static CRITICAL_SECTION MSVCRT_file_cs;
 static CRITICAL_SECTION_DEBUG MSVCRT_file_cs_debug =
@@ -172,19 +166,24 @@ static inline ioinfo* get_ioinfo_nolock(int fd)
     return ret + (fd%MSVCRT_FD_BLOCK_SIZE);
 }
 
+static inline void init_ioinfo_cs(ioinfo *info)
+{
+    if(!(info->exflag & EF_CRIT_INIT)) {
+        LOCK_FILES();
+        if(!(info->exflag & EF_CRIT_INIT)) {
+            InitializeCriticalSection(&info->crit);
+            info->exflag |= EF_CRIT_INIT;
+        }
+        UNLOCK_FILES();
+    }
+}
+
 /*static*/ inline ioinfo* get_ioinfo(int fd)
 {
     ioinfo *ret = get_ioinfo_nolock(fd);
     if(ret == &__badioinfo)
         return ret;
-    if(!(ret->exflag & EF_CRIT_INIT)) {
-        LOCK_FILES();
-        if(!(ret->exflag & EF_CRIT_INIT)) {
-            InitializeCriticalSection(&ret->crit);
-            ret->exflag |= EF_CRIT_INIT;
-        }
-        UNLOCK_FILES();
-    }
+    init_ioinfo_cs(ret);
     EnterCriticalSection(&ret->crit);
     return ret;
 }
@@ -216,77 +215,49 @@ static inline BOOL alloc_pioinfo_block(int fd)
 
 static inline ioinfo* get_ioinfo_alloc_fd(int fd)
 {
-    ioinfo *ret, *info;
+    ioinfo *ret;
 
     ret = get_ioinfo(fd);
     if(ret != &__badioinfo)
-    {
-        LOCK_FILES();
-        /* locate next free slot */
-        if (fd == fdstart && fd == fdend)
-            fdstart = fdend + 1;
-        else if (fd == fdstart)
-        {
-            fdstart++;
-            while (fdstart < fdend &&
-                    ((info = get_ioinfo_nolock(fdstart))->exflag & EF_CRIT_INIT))
-            {
-                if (TryEnterCriticalSection(&info->crit))
-                {
-                    if (info->handle == INVALID_HANDLE_VALUE)
-                    {
-                        LeaveCriticalSection(&info->crit);
-                        break;
-                    }
-                    LeaveCriticalSection(&info->crit);
-                }
-                fdstart++;
-            }
-        }
-        /* update last fd in use */
-        if (fd >= fdend)
-            fdend = fd + 1;
-        TRACE("fdstart is %d, fdend is %d\n", fdstart, fdend);
-        UNLOCK_FILES();
         return ret;
-    }
 
     if(!alloc_pioinfo_block(fd))
         return &__badioinfo;
 
-    ret = get_ioinfo(fd);
-    if(ret == &__badioinfo)
-        return ret;
+    return get_ioinfo(fd);
+}
 
-    LOCK_FILES();
-    /* locate next free slot */
-    if (fd == fdstart && fd == fdend)
-        fdstart = fdend + 1;
-    else if (fd == fdstart)
+static inline ioinfo* get_ioinfo_alloc(int *fd)
+{
+    int i;
+
+    *fd = -1;
+    for(i=0; i<MSVCRT_MAX_FILES; i++)
     {
-        fdstart++;
-        while (fdstart < fdend &&
-                ((info = get_ioinfo_nolock(fdstart))->exflag & EF_CRIT_INIT))
+        ioinfo *info = get_ioinfo_nolock(i);
+
+        if(info == &__badioinfo)
         {
-            if (TryEnterCriticalSection(&info->crit))
+            if(!alloc_pioinfo_block(i))
+                return &__badioinfo;
+            info = get_ioinfo_nolock(i);
+        }
+
+        init_ioinfo_cs(info);
+        if(TryEnterCriticalSection(&info->crit))
+        {
+            if(info->handle == INVALID_HANDLE_VALUE)
             {
-                if (info->handle == INVALID_HANDLE_VALUE)
-                {
-                    LeaveCriticalSection(&info->crit);
-                    break;
-                }
-                LeaveCriticalSection(&info->crit);
+                *fd = i;
+                return info;
             }
-            fdstart++;
+            LeaveCriticalSection(&info->crit);
         }
     }
-    /* update last fd in use */
-    if (fd >= fdend)
-        fdend = fd + 1;
-    TRACE("fdstart is %d, fdend is %d\n", fdstart, fdend);
-    UNLOCK_FILES();
 
-    return ret;
+    WARN(":files exhausted!\n");
+    *_errno() = ENFILE;
+    return &__badioinfo;
 }
 
 /*static*/ inline void release_ioinfo(ioinfo *info)
@@ -349,13 +320,6 @@ static void msvcrt_free_fd(int fd)
     }
   }
   release_ioinfo(fdinfo);
-
-  LOCK_FILES();
-  if (fd == fdend - 1)
-    fdend--;
-  if (fd < fdstart)
-    fdstart = fd;
-  UNLOCK_FILES();
 }
 
 static void msvcrt_set_fd(ioinfo *fdinfo, HANDLE hand, int flag)
@@ -378,23 +342,11 @@ static void msvcrt_set_fd(ioinfo *fdinfo, HANDLE hand, int flag)
 /* INTERNAL: Allocate an fd slot from a Win32 HANDLE */
 /*static*/ int msvcrt_alloc_fd(HANDLE hand, int flag)
 {
-    ioinfo *info;
     int fd;
+    ioinfo *info = get_ioinfo_alloc(&fd);
 
-    LOCK_FILES();
-    fd = fdstart;
     TRACE(":handle (%p) allocating fd (%d)\n", hand, fd);
 
-    if (fd >= MSVCRT_MAX_FILES)
-    {
-        UNLOCK_FILES();
-        WARN(":files exhausted!\n");
-        *_errno() = ENFILE;
-        return -1;
-    }
-
-    info = get_ioinfo_alloc_fd(fd);
-    UNLOCK_FILES();
     if(info == &__badioinfo)
         return -1;
 
@@ -533,9 +485,6 @@ void msvcrt_init_io(void)
 
       wxflag_ptr++; handle_ptr++;
     }
-    fdend = max( 3, count );
-    for (fdstart = 3; fdstart < fdend; fdstart++)
-        if (get_ioinfo_nolock(fdstart)->handle == INVALID_HANDLE_VALUE) break;
   }
 
   fdinfo = get_ioinfo_alloc_fd(STDIN_FILENO);
@@ -984,7 +933,6 @@ int CDECL _close(int fd)
   ioinfo *info = get_ioinfo(fd);
   int ret;
 
-  LOCK_FILES();
   TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
   if (!(info->wxflag & WX_OPEN)) {
     ret = -1;
@@ -997,7 +945,6 @@ int CDECL _close(int fd)
       ret = -1;
     }
   }
-  UNLOCK_FILES();
   release_ioinfo(info);
   return ret;
 }
@@ -1015,7 +962,6 @@ int CDECL _dup2(int od, int nd)
   int ret;
 
   TRACE("(od=%d, nd=%d)\n", od, nd);
-  LOCK_FILES();
 
   if (od < nd)
   {
@@ -1062,7 +1008,6 @@ int CDECL _dup2(int od, int nd)
 
   release_ioinfo(info_od);
   release_ioinfo(info_nd);
-  UNLOCK_FILES();
   return ret;
 }
 
@@ -1072,14 +1017,13 @@ int CDECL _dup2(int od, int nd)
 int CDECL _dup(int od)
 {
   int fd, ret;
+  ioinfo *info = get_ioinfo_alloc(&fd);
 
-  LOCK_FILES();
-  fd = fdstart;
   if (_dup2(od, fd) == 0)
     ret = fd;
   else
     ret = -1;
-  UNLOCK_FILES();
+  release_ioinfo(info);
   return ret;
 }
 
@@ -1767,7 +1711,6 @@ int CDECL _pipe(int *pfds, unsigned int psize, int textmode)
     unsigned int wxflags = split_oflags(textmode);
     int fd;
 
-    LOCK_FILES();
     fd = msvcrt_alloc_fd(readHandle, wxflags);
     if (fd != -1)
     {
@@ -1791,7 +1734,6 @@ int CDECL _pipe(int *pfds, unsigned int psize, int textmode)
       CloseHandle(writeHandle);
       *_errno() = EMFILE;
     }
-    UNLOCK_FILES();
   }
   else
     _dosmaperr(GetLastError());
@@ -3468,7 +3410,7 @@ FILE* CDECL _wfreopen(const wchar_t *path, const wchar_t *mode, FILE* file)
   TRACE(":path (%p) mode (%s) file (%p) fd (%d)\n", debugstr_w(path), debugstr_w(mode), file, file ? file->_file : -1);
 
   LOCK_FILES();
-  if (!file || ((fd = file->_file) < 0) || fd > fdend)
+  if (!file || ((fd = file->_file) < 0))
     file = NULL;
   else
   {
