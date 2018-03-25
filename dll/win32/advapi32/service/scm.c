@@ -22,7 +22,8 @@ SVCCTL_HANDLEA_bind(SVCCTL_HANDLEA szMachineName)
     RPC_CSTR pszStringBinding;
     RPC_STATUS Status;
 
-    TRACE("SVCCTL_HANDLEA_bind()\n");
+    TRACE("SVCCTL_HANDLEA_bind(%s)\n",
+          debugstr_a(szMachineName));
 
     Status = RpcStringBindingComposeA(NULL,
                                       (RPC_CSTR)"ncacn_np",
@@ -60,7 +61,8 @@ SVCCTL_HANDLEA_unbind(SVCCTL_HANDLEA szMachineName,
 {
     RPC_STATUS Status;
 
-    TRACE("SVCCTL_HANDLEA_unbind()\n");
+    TRACE("SVCCTL_HANDLEA_unbind(%s %p)\n",
+          debugstr_a(szMachineName), hBinding);
 
     Status = RpcBindingFree(&hBinding);
     if (Status != RPC_S_OK)
@@ -77,7 +79,8 @@ SVCCTL_HANDLEW_bind(SVCCTL_HANDLEW szMachineName)
     RPC_WSTR pszStringBinding;
     RPC_STATUS Status;
 
-    TRACE("SVCCTL_HANDLEW_bind()\n");
+    TRACE("SVCCTL_HANDLEW_bind(%s)\n",
+          debugstr_w(szMachineName));
 
     Status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
@@ -115,7 +118,8 @@ SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
 {
     RPC_STATUS Status;
 
-    TRACE("SVCCTL_HANDLEW_unbind()\n");
+    TRACE("SVCCTL_HANDLEW_unbind(%s %p)\n",
+          debugstr_w(szMachineName), hBinding);
 
     Status = RpcBindingFree(&hBinding);
     if (Status != RPC_S_OK)
@@ -129,6 +133,9 @@ SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status)
 {
+    TRACE("ScmRpcStatusToWinError(%lx)\n",
+          Status);
+
     switch (Status)
     {
         case STATUS_ACCESS_VIOLATION:
@@ -162,7 +169,8 @@ ChangeServiceConfig2A(SC_HANDLE hService,
     SC_RPC_CONFIG_INFOA Info;
     DWORD dwError;
 
-    TRACE("ChangeServiceConfig2A()\n");
+    TRACE("ChangeServiceConfig2A(%p %lu %p)\n",
+          hService, dwInfoLevel, lpInfo);
 
     if (lpInfo == NULL) return TRUE;
 
@@ -219,7 +227,8 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     SC_RPC_CONFIG_INFOW Info;
     DWORD dwError;
 
-    TRACE("ChangeServiceConfig2W()\n");
+    TRACE("ChangeServiceConfig2W(%p %lu %p)\n",
+          hService, dwInfoLevel, lpInfo);
 
     if (lpInfo == NULL) return TRUE;
 
@@ -289,7 +298,10 @@ ChangeServiceConfigA(SC_HANDLE hService,
     LPWSTR lpPasswordW = NULL;
     LPBYTE lpEncryptedPassword = NULL;
 
-    TRACE("ChangeServiceConfigA()\n");
+    TRACE("ChangeServiceConfigA(%p %lu %lu %lu %s %s %p %s %s %s %s)\n",
+          dwServiceType, dwStartType, dwErrorControl, debugstr_a(lpBinaryPathName),
+          debugstr_a(lpLoadOrderGroup), lpdwTagId, debugstr_a(lpDependencies),
+          debugstr_a(lpServiceStartName), debugstr_a(lpPassword), debugstr_a(lpDisplayName));
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -389,7 +401,10 @@ ChangeServiceConfigW(SC_HANDLE hService,
     DWORD dwPasswordLength = 0;
     LPBYTE lpEncryptedPassword = NULL;
 
-    TRACE("ChangeServiceConfigW()\n");
+    TRACE("ChangeServiceConfigW(%p %lu %lu %lu %s %s %p %s %s %s %s)\n",
+          dwServiceType, dwStartType, dwErrorControl, debugstr_w(lpBinaryPathName),
+          debugstr_w(lpLoadOrderGroup), lpdwTagId, debugstr_w(lpDependencies),
+          debugstr_w(lpServiceStartName), debugstr_w(lpPassword), debugstr_w(lpDisplayName));
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -574,8 +589,11 @@ CreateServiceA(SC_HANDLE hSCManager,
     LPWSTR lpPasswordW = NULL;
     LPBYTE lpEncryptedPassword = NULL;
 
-    TRACE("CreateServiceA(%p %s %s)\n",
-          hSCManager, debugstr_a(lpServiceName), debugstr_a(lpDisplayName));
+    TRACE("CreateServiceA(%p %s %s %lx %lu %lu %lu %s %s %p %s %s %s)\n",
+          hSCManager, debugstr_a(lpServiceName), debugstr_a(lpDisplayName),
+          dwDesiredAccess, dwServiceType, dwStartType, dwErrorControl,
+          debugstr_a(lpBinaryPathName), debugstr_a(lpLoadOrderGroup), lpdwTagId,
+          debugstr_a(lpDependencies), debugstr_a(lpServiceStartName), debugstr_a(lpPassword));
 
     if (!hSCManager)
     {
@@ -687,8 +705,11 @@ CreateServiceW(SC_HANDLE hSCManager,
     DWORD dwPasswordLength = 0;
     LPBYTE lpEncryptedPassword = NULL;
 
-    TRACE("CreateServiceW(%p %s %s)\n",
-          hSCManager, debugstr_w(lpServiceName), debugstr_w(lpDisplayName));
+    TRACE("CreateServiceW(%p %s %s %lx %lu %lu %lu %s %s %p %s %s %s)\n",
+          hSCManager, debugstr_w(lpServiceName), debugstr_w(lpDisplayName),
+          dwDesiredAccess, dwServiceType, dwStartType, dwErrorControl,
+          debugstr_w(lpBinaryPathName), debugstr_w(lpLoadOrderGroup), lpdwTagId,
+          debugstr_w(lpDependencies), debugstr_w(lpServiceStartName), debugstr_w(lpPassword));
 
     if (!hSCManager)
     {
@@ -806,7 +827,9 @@ EnumDependentServicesA(SC_HANDLE hService,
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumDependentServicesA()\n");
+    TRACE("EnumDependentServicesA(%p %lu %p %lu %p %p)\n",
+          hService, dwServiceState, lpServices, cbBufSize,
+          pcbBytesNeeded, lpServicesReturned);
 
     if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSA))
     {
@@ -882,7 +905,9 @@ EnumDependentServicesW(SC_HANDLE hService,
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumDependentServicesW()\n");
+    TRACE("EnumDependentServicesW(%p %lu %p %lu %p %p)\n",
+          hService, dwServiceState, lpServices, cbBufSize,
+          pcbBytesNeeded, lpServicesReturned);
 
     if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSW))
     {
@@ -961,7 +986,10 @@ EnumServiceGroupW(SC_HANDLE hSCManager,
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumServiceGroupW()\n");
+    TRACE("EnumServiceGroupW(%p %lu %lu %p %lu %p %p %p %s)\n",
+          hSCManager, dwServiceType, dwServiceState, lpServices,
+          cbBufSize, pcbBytesNeeded, lpServicesReturned,
+          lpResumeHandle, debugstr_w(lpGroup));
 
     if (!hSCManager)
     {
@@ -1068,7 +1096,9 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumServicesStatusA()\n");
+    TRACE("EnumServicesStatusA(%p %lu %lu %p %lu %p %p %p)\n",
+          hSCManager, dwServiceType, dwServiceState, lpServices,
+          cbBufSize, pcbBytesNeeded, lpServicesReturned, lpResumeHandle);
 
     if (!hSCManager)
     {
@@ -1160,7 +1190,9 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumServicesStatusW()\n");
+    TRACE("EnumServicesStatusW(%p %lu %lu %p %lu %p %p %p)\n",
+          hSCManager, dwServiceType, dwServiceState, lpServices,
+          cbBufSize, pcbBytesNeeded, lpServicesReturned, lpResumeHandle);
 
     if (!hSCManager)
     {
@@ -1254,7 +1286,10 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumServicesStatusExA()\n");
+    TRACE("EnumServicesStatusExA(%p %lu %lu %p %lu %p %p %p %s)\n",
+          hSCManager, dwServiceType, dwServiceState, lpServices,
+          cbBufSize, pcbBytesNeeded, lpServicesReturned, lpResumeHandle,
+          debugstr_a(pszGroupName));
 
     if (InfoLevel != SC_ENUM_PROCESS_INFO)
     {
@@ -1359,7 +1394,10 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
     DWORD dwError;
     DWORD dwCount;
 
-    TRACE("EnumServicesStatusExW()\n");
+    TRACE("EnumServicesStatusExW(%p %lu %lu %p %lu %p %p %p %s)\n",
+          hSCManager, dwServiceType, dwServiceState, lpServices,
+          cbBufSize, pcbBytesNeeded, lpServicesReturned, lpResumeHandle,
+          debugstr_w(pszGroupName));
 
     if (InfoLevel != SC_ENUM_PROCESS_INFO)
     {
