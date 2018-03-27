@@ -4123,14 +4123,14 @@ USBH_CheckDeviceIDUnique(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
                     if (NumberBytes == SN_DescriptorLength)
                     {
-                        break;
+                        return FALSE;
                     }
                 }
             }
         }
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 BOOLEAN
