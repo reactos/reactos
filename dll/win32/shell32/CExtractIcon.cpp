@@ -338,3 +338,39 @@ HRESULT WINAPI SHCreateDefaultExtractIcon(REFIID riid, void **ppv)
 {
     return ShellObjectCreator<CExtractIcon>(riid, ppv);
 }
+
+/*
+ * Partially implemented
+ * See apitests\shell32\SHCreateFileExtractIconW.cpp for details
+ * Currently (march 2018) our shell does not handle IExtractIconW with an invalid path,
+ * so this (wrong) implementation actually works better for us.
+ */
+EXTERN_C HRESULT
+WINAPI
+SHCreateFileExtractIconW(LPCWSTR pszPath,
+                         DWORD dwFileAttributes,
+                         REFIID riid,
+                         void **ppv)
+{
+    SHFILEINFOW shfi;
+    ULONG_PTR firet = SHGetFileInfoW(pszPath, dwFileAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_ICONLOCATION);
+    HRESULT hr = E_FAIL;
+    if (firet)
+    {
+        CComPtr<IDefaultExtractIconInit> iconInit;
+        hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &iconInit));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = iconInit->SetNormalIcon(shfi.szDisplayName, shfi.iIcon);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return iconInit->QueryInterface(riid, ppv);
+    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return hr;
+}
+

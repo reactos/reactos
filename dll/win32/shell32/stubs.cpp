@@ -69,20 +69,6 @@ PathIsEqualOrSubFolder(LPWSTR lpFolder, LPWSTR lpSubFolder)
     return FALSE;
 }
 
-/*
- * Unimplemented
- */
-EXTERN_C HRESULT
-WINAPI
-SHCreateFileExtractIconW(LPCWSTR pszPath,
-                         DWORD dwFileAttributes,
-                         REFIID riid,
-                         void **ppv)
-{
-    FIXME("SHCreateFileExtractIconW() stub\n");
-    return E_FAIL;
-}
-
 EXTERN_C HRESULT
 WINAPI
 SHGetUnreadMailCountW(HKEY hKeyUser,
