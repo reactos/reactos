@@ -112,6 +112,23 @@
 
     #endif
 
+    #ifndef NDEBUG_USBPORT_USB2
+
+        #define DPRINT_USB2(fmt, ...) do { \
+            if (DbgPrint("(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__))  \
+                DbgPrint("(%s:%d) DbgPrint() failed!\n", __RELFILE__, __LINE__); \
+        } while (0)
+
+    #else
+
+#if defined(_MSC_VER)
+        #define DPRINT_USB2   __noop
+#else
+        #define DPRINT_USB2(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+#endif
+
+    #endif
+
 #else /* not DBG */
 
 #if defined(_MSC_VER)
@@ -121,6 +138,7 @@
     #define DPRINT_INT    __noop
     #define DPRINT_TIMER    __noop
     #define DPRINT_QUEUE    __noop
+    #define DPRINT_USB2    __noop
 #else
     #define DPRINT_MINIPORT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT_CORE(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
@@ -128,6 +146,7 @@
     #define DPRINT_INT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT_TIMER(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT_QUEUE(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #define DPRINT_USB2(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 #endif /* _MSC_VER */
 
 #endif /* not DBG */

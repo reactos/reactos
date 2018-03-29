@@ -637,8 +637,8 @@ USBPORT_InvalidateControllerHandler(IN PDEVICE_OBJECT FdoDevice,
 {
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
 
-    DPRINT("USBPORT_InvalidateControllerHandler: Invalidate Type - %x\n",
-           Type);
+    DPRINT_CORE("USBPORT_InvalidateControllerHandler: Invalidate Type - %x\n",
+                Type);
 
     FdoExtension = FdoDevice->DeviceExtension;
 
@@ -869,7 +869,7 @@ USBPORT_DpcHandler(IN PDEVICE_OBJECT FdoDevice)
     LIST_ENTRY List;
     LONG LockCounter;
 
-    DPRINT("USBPORT_DpcHandler: ... \n");
+    DPRINT_CORE("USBPORT_DpcHandler: ... \n");
 
     FdoExtension = FdoDevice->DeviceExtension;
 
@@ -1845,7 +1845,8 @@ USBPORT_AddDevice(IN PDRIVER_OBJECT DriverObject,
         RtlInitUnicodeString(&DeviceName, CharDeviceName);
 
         Length = sizeof(USBPORT_DEVICE_EXTENSION) +
-                 MiniPortInterface->Packet.MiniPortExtensionSize;
+                 MiniPortInterface->Packet.MiniPortExtensionSize +
+                 sizeof(USB2_HC_EXTENSION);
 
         /* Create device */
         Status = IoCreateDevice(DriverObject,
@@ -1903,6 +1904,22 @@ USBPORT_AddDevice(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->MiniPortExt = (PVOID)((ULONG_PTR)FdoExtension +
                                         sizeof(USBPORT_DEVICE_EXTENSION));
 
+    if (MiniPortInterface->Packet.MiniPortFlags & USB_MINIPORT_FLAGS_USB2)
+    {
+        FdoExtension->Usb2Extension =
+        (PUSB2_HC_EXTENSION)((ULONG_PTR)FdoExtension->MiniPortExt +
+                             MiniPortInterface->Packet.MiniPortExtensionSize);
+
+        DPRINT("USBPORT_AddDevice: Usb2Extension - %p\n",
+               FdoExtension->Usb2Extension);
+
+        USB2_InitController(FdoExtension->Usb2Extension);
+    }
+    else
+    {
+        FdoExtension->Usb2Extension = NULL;
+    }
+
     FdoExtension->MiniPortInterface = MiniPortInterface;
     FdoExtension->FdoNameNumber = DeviceNumber;
 
@@ -1936,7 +1953,7 @@ USBPORT_Unload(IN PDRIVER_OBJECT DriverObject)
 
     if (!MiniPortInterface)
     {
-        DPRINT("USBPORT_Unload: CRITICAL ERROR!!! USBPORT_FindMiniPort not found MiniPortInterface\n");
+        DPRINT("USBPORT_Unload: CRITICAL ERROR!!! Not found MiniPortInterface\n");
         KeBugCheckEx(BUGCODE_USB_DRIVER, 1, 0, 0, 0);
     }
 
