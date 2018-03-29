@@ -12,6 +12,7 @@
 
 #define NDEBUG_USBPORT_MINIPORT
 #define NDEBUG_USBPORT_URB
+//#define NDEBUG_USBPORT_USB2
 #include "usbdebug.h"
 
 ULONG
@@ -273,5 +274,41 @@ USBPORT_DumpingIDs(IN PVOID Buffer)
 
     DPRINT("TotalLength: %hu\n", TotalLength);
     DPRINT("\n");
+}
+
+VOID
+NTAPI
+USBPORT_DumpingEndpointProperties(IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties)
+{
+    DPRINT_USB2("DeviceAddress         - %X\n", EndpointProperties->DeviceAddress);
+    DPRINT_USB2("EndpointAddress       - %X\n", EndpointProperties->EndpointAddress);
+    DPRINT_USB2("TotalMaxPacketSize    - %X\n", EndpointProperties->TotalMaxPacketSize);
+    DPRINT_USB2("Period                - %X\n", EndpointProperties->Period);
+    DPRINT_USB2("DeviceSpeed           - %X\n", EndpointProperties->DeviceSpeed);
+    DPRINT_USB2("UsbBandwidth          - %X\n", EndpointProperties->UsbBandwidth);
+    DPRINT_USB2("ScheduleOffset        - %X\n", EndpointProperties->ScheduleOffset);
+    DPRINT_USB2("TransferType          - %X\n", EndpointProperties->TransferType);
+    DPRINT_USB2("MaxTransferSize       - %X\n", EndpointProperties->MaxTransferSize);
+    DPRINT_USB2("HubAddr               - %X\n", EndpointProperties->HubAddr);
+    DPRINT_USB2("PortNumber            - %X\n", EndpointProperties->PortNumber);
+    DPRINT_USB2("InterruptScheduleMask - %X\n", EndpointProperties->InterruptScheduleMask);
+    DPRINT_USB2("SplitCompletionMask   - %X\n", EndpointProperties->SplitCompletionMask);
+    DPRINT_USB2("MaxPacketSize         - %X\n", EndpointProperties->MaxPacketSize);
+}
+
+VOID
+NTAPI
+USBPORT_DumpingTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint)
+{
+    DPRINT_USB2("MaxPacketSize   - %X\n", TtEndpoint->MaxPacketSize);
+    DPRINT_USB2("Period          - %X\n", TtEndpoint->Period);
+    DPRINT_USB2("TtEndpointParams- %X\n", TtEndpoint->TtEndpointParams.AsULONG);
+    DPRINT_USB2("CalcBusTime     - %X\n", TtEndpoint->CalcBusTime);
+    DPRINT_USB2("StartTime       - %X\n", TtEndpoint->StartTime);
+    DPRINT_USB2("ActualPeriod    - %X\n", TtEndpoint->ActualPeriod);
+    DPRINT_USB2("StartFrame      - %X\n", TtEndpoint->StartFrame);
+    DPRINT_USB2("StartMicroframe - %X\n", TtEndpoint->StartMicroframe);
+    DPRINT_USB2("Nums            - %X\n", TtEndpoint->Nums.AsULONG);
+    DPRINT_USB2("nextTtEndpoint  - %X\n", TtEndpoint->NextTtEndpoint);
 }
 

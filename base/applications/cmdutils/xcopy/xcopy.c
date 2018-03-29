@@ -39,17 +39,12 @@
  *   5 - Disk write error
  */
 
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <winnls.h>
-#include <wincon.h>
+#include <windows.h>
 #include <wine/debug.h>
-//#include <wine/unicode.h>
-
+#include <wine/unicode.h>
 #include "xcopy.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(xcopy);

@@ -22,24 +22,21 @@
 #ifndef __WINE_SHDOCVW_H
 #define __WINE_SHDOCVW_H
 
-#include <wine/config.h>
+#define COBJMACROS
 
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
 
-#define COBJMACROS
+#include "ole2.h"
+#include "shlobj.h"
+#include "exdisp.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <winreg.h>
-#include <shlobj.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
+#include "wine/unicode.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
 /**********************************************************************
  * Shell Instance Objects
@@ -53,18 +50,5 @@ extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid,
 extern LONG SHDOCVW_refCount DECLSPEC_HIDDEN;
 static inline void SHDOCVW_LockModule(void) { InterlockedIncrement( &SHDOCVW_refCount ); }
 static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_refCount ); }
-
-
-/* memory allocation functions */
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), 0, len);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
 
 #endif /* __WINE_SHDOCVW_H */

@@ -148,8 +148,8 @@ USBPORT_SplitBulkInterruptTransfer(IN PDEVICE_OBJECT FdoDevice,
 
     InitializeListHead(&tmplist);
 
-    DPRINT1("USBPORT_SplitBulkInterruptTransfer: TransferBufferLength - %x, NeedSplits - %x\n",
-            TransferBufferLength, NeedSplits);
+    DPRINT("USBPORT_SplitBulkInterruptTransfer: TransferBufferLength - %x, NeedSplits - %x\n",
+           TransferBufferLength, NeedSplits);
 
     if (!NeedSplits)
     {
@@ -214,7 +214,7 @@ Exit:
 
     while (!IsListEmpty(&tmplist))
     {
-        DPRINT1("USBPORT_SplitBulkInterruptTransfer: ... \n");
+        DPRINT("USBPORT_SplitBulkInterruptTransfer: ... \n");
 
         SplitTransfer = CONTAINING_RECORD(tmplist.Flink,
                                           USBPORT_TRANSFER,

@@ -17,7 +17,7 @@ list(APPEND SOURCE
     request.c
     session.c
     url.c
-    winhttp_private.h)
+    precomp.h)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/winhttp_tlb.tlb)
 add_typelib(winhttp_tlb.idl)
@@ -32,5 +32,5 @@ target_link_libraries(winhttp uuid wine)
 add_delay_importlibs(winhttp oleaut32 ole32 crypt32 secur32)
 add_importlibs(winhttp user32 advapi32 ws2_32 jsproxy kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(winhttp stdole2)
-add_pch(winhttp winhttp_private.h SOURCE)
+add_pch(winhttp precomp.h SOURCE)
 add_cd_file(TARGET winhttp DESTINATION reactos/system32 FOR all)

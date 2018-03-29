@@ -17,10 +17,8 @@
  */
 
 #include <stdio.h>
-
-#include <wine/test.h>
-#include <winnls.h>
-#include <winreg.h>
+#include <windows.h>
+#include "wine/test.h"
 
 #define lok ok_(__FILE__,line)
 #define KEY_BASE "Software\\Wine\\reg_test"

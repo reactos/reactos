@@ -29,8 +29,8 @@
 129 stub DoFileDownloadEx
 130 stdcall -noname RunInstallUninstallStubs2(long)
 131 stub -noname SHCreateSplashScreen
-132 stub DoOrganizeFavDlg
-133 stub DoOrganizeFavDlgW
+132 stdcall DoOrganizeFavDlg(long str)
+133 stdcall DoOrganizeFavDlgW(long wstr)
 134 stub DoPrivacyDlg
 135 stub -noname IsFileUrl
 136 stub -noname IsFileUrlW

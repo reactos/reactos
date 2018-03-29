@@ -2,7 +2,7 @@ LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Sintaksa ukaza:\n\nREG [ ADD | DELETE | QUERY ]\nREG ukaz /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD ime_ključa [/v ime_vrednosti | /ve] [/t vrsta] [/s ločilo] [/d podatki] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE ime_ključa [/v ime_vrednosti | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY ime_ključa [/v ime_vrednosti | /ve] [/s]\n"

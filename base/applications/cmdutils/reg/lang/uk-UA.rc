@@ -2,7 +2,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Синтаксис цієї команди наступний:\n\nREG [ ADD | DELETE | QUERY ]\nREG <команда> /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD <ключ> [/v <параметр> | /ve] [/t <тип>] [/s <розділювач>] [/d дані] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE <ключ> [/v <параметр> | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY <ключ> [/v <параметр> | /ve] [/s]\n"

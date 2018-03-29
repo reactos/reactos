@@ -18,9 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include "config.h"
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wbemcli.h"
+
+#include "wine/debug.h"
 #include "wbemprox_private.h"
 
+#ifdef __REACTOS__
 #include <winreg.h>
+#endif
+
+WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
 static HRESULT to_bstr_array( BSTR *strings, DWORD count, VARIANT *var )
 {

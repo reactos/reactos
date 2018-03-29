@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
 #include <setupapi.h>
 #include <shlwapi.h>
 #include <shlobj.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(extrac32);
 

@@ -41,9 +41,19 @@
  * has been modified.
  */
 
-#include <windef.h>
+#include "config.h"
 
-#include <wine/list.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winnls.h"
+#include "usp10.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
 #include "usp10_internal.h"
 
@@ -682,8 +692,9 @@ static BracketPair *computeBracketPairs(IsolatedRun *iso_run)
     WCHAR *open_stack;
     int *stack_index;
     int stack_top = iso_run->length;
+    unsigned int pair_count = 0;
     BracketPair *out = NULL;
-    int pair_count = 0;
+    SIZE_T out_size = 0;
     int i;
 
     open_stack = heap_alloc(iso_run->length * sizeof(*open_stack));
@@ -692,55 +703,55 @@ static BracketPair *computeBracketPairs(IsolatedRun *iso_run)
     for (i = 0; i < iso_run->length; i++)
     {
         unsigned short ubv = get_table_entry(bidi_bracket_table, iso_run->item[i].ch);
-        if (ubv)
-        {
-            if (!out)
-            {
-                out = heap_alloc(sizeof(*out));
-                out[0].start = -1;
-            }
 
-            if ((ubv >> 8) == 0)
+        if (!ubv)
+            continue;
+
+        if ((ubv >> 8) == 0)
+        {
+            --stack_top;
+            open_stack[stack_top] = iso_run->item[i].ch + (signed char)(ubv & 0xff);
+            /* Deal with canonical equivalent U+2329/232A and U+3008/3009. */
+            if (open_stack[stack_top] == 0x232a)
+                open_stack[stack_top] = 0x3009;
+            stack_index[stack_top] = i;
+        }
+        else if ((ubv >> 8) == 1)
+        {
+            unsigned int j;
+
+            for (j = stack_top; j < iso_run->length; ++j)
             {
-                stack_top --;
-                open_stack[stack_top] = iso_run->item[i].ch + (signed char)(ubv & 0xff);
-                /* deal with canonical equivalent U+2329/232A and U+3008/3009 */
-                if (open_stack[stack_top] == 0x232A)
-                    open_stack[stack_top] = 0x3009;
-                stack_index[stack_top] = i;
-            }
-            else if ((ubv >> 8) == 1)
-            {
-                int j;
-                if (stack_top == iso_run->length) continue;
-                for (j = stack_top; j < iso_run->length; j++)
-                {
-                    WCHAR c = iso_run->item[i].ch;
-                    if (c == 0x232A) c = 0x3009;
-                    if (c == open_stack[j])
-                    {
-                        out[pair_count].start = stack_index[j];
-                        out[pair_count].end = i;
-                        pair_count++;
-                        out = HeapReAlloc(GetProcessHeap(), 0, out, sizeof(BracketPair) * (pair_count+1));
-                        out[pair_count].start = -1;
-                        stack_top = j+1;
-                        break;
-                    }
-                }
+                WCHAR c = iso_run->item[i].ch;
+
+                if (c == 0x232a)
+                    c = 0x3009;
+
+                if (c != open_stack[j])
+                    continue;
+
+                if (!(usp10_array_reserve((void **)&out, &out_size, pair_count + 2, sizeof(*out))))
+                    ERR("Failed to grow output array.\n");
+
+                out[pair_count].start = stack_index[j];
+                out[pair_count].end = i;
+                ++pair_count;
+
+                out[pair_count].start = -1;
+                stack_top = j + 1;
+                break;
             }
         }
     }
-    if (pair_count == 0)
-    {
-        heap_free(out);
-        out = NULL;
-    }
-    else if (pair_count > 1)
-        qsort(out, pair_count, sizeof(BracketPair), compr);
 
     heap_free(open_stack);
     heap_free(stack_index);
+
+    if (!pair_count)
+        return NULL;
+
+    qsort(out, pair_count, sizeof(*out), compr);
+
     return out;
 }
 

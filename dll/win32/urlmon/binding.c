@@ -16,7 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NONAMELESSUNION
+
 #include "urlmon_main.h"
+#include "winreg.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 static WCHAR cbinding_contextW[] = {'C','B','i','n','d','i','n','g',' ','C','o','n','t','e','x','t',0};
 static WCHAR bscb_holderW[] = { '_','B','S','C','B','_','H','o','l','d','e','r','_',0 };

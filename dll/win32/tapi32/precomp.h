@@ -1,3 +1,4 @@
+
 #ifndef _TAPI32_PCH_
 #define _TAPI32_PCH_
 
@@ -18,6 +19,4 @@
 #include <wine/unicode.h>
 #include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(tapi);
-
-#endif /* _TAPI32_PCH_ */
+#endif /* !_TAPI32_PCH_ */

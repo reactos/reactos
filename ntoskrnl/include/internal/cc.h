@@ -220,7 +220,7 @@ typedef struct _ROS_VACB
     /* Mutex */
     KMUTEX Mutex;
     /* Number of references. */
-    ULONG ReferenceCount;
+    volatile ULONG ReferenceCount;
     /* How many times was it pinned? */
     _Guarded_by_(Mutex)
     LONG PinCount;
@@ -523,20 +523,28 @@ IsPointInRange(
 #if DBG
 #define CcRosVacbIncRefCount(vacb) CcRosVacbIncRefCount_(vacb,__FILE__,__LINE__)
 #define CcRosVacbDecRefCount(vacb) CcRosVacbDecRefCount_(vacb,__FILE__,__LINE__)
+#define CcRosVacbGetRefCount(vacb) CcRosVacbGetRefCount_(vacb,__FILE__,__LINE__)
 
-VOID
+ULONG
 CcRosVacbIncRefCount_(
     PROS_VACB vacb,
     PCSTR file,
     INT line);
 
-VOID
+ULONG
 CcRosVacbDecRefCount_(
     PROS_VACB vacb,
     PCSTR file,
     INT line);
 
+ULONG
+CcRosVacbGetRefCount_(
+    PROS_VACB vacb,
+    PCSTR file,
+    INT line);
+
 #else
-#define CcRosVacbIncRefCount(vacb) (++((vacb)->ReferenceCount))
-#define CcRosVacbDecRefCount(vacb) (--((vacb)->ReferenceCount))
+#define CcRosVacbIncRefCount(vacb) InterlockedIncrement((PLONG)&(vacb)->ReferenceCount)
+#define CcRosVacbDecRefCount(vacb) InterlockedDecrement((PLONG)&(vacb)->ReferenceCount)
+#define CcRosVacbGetRefCount(vacb) InterlockedCompareExchange((PLONG)&(vacb)->ReferenceCount, 0, 0)
 #endif

@@ -135,6 +135,8 @@ list(APPEND CRT_SOURCE
     misc/tls.c
     printf/_cprintf.c
     printf/_cwprintf.c
+    printf/_scprintf.c
+    printf/_scwprintf.c
     printf/_snprintf.c
     printf/_snprintf_s.c
     printf/_snwprintf.c

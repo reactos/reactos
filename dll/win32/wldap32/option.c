@@ -18,7 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+
 #include "winldap_private.h"
+#include "wldap32.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 /***********************************************************************
  *      ldap_get_optionA     (WLDAP32.@)

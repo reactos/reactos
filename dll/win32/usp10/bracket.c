@@ -2,7 +2,9 @@
 /* generated from http://www.unicode.org/Public/10.0.0/ucd/BidiBrackets.txt */
 /* DO NOT EDIT!! */
 
-const unsigned short /* DECLSPEC_HIDDEN */ bidi_bracket_table[768] =
+#include "wine/unicode.h"
+
+const unsigned short DECLSPEC_HIDDEN bidi_bracket_table[768] =
 {
     /* level 1 offsets */
     0x0100, 0x0110, 0x0110, 0x0110, 0x0110, 0x0110, 0x0110, 0x0110,

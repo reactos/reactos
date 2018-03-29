@@ -25,4 +25,4 @@
 #define WINE_PRODUCTVERSION 8,00,7601,17601
 #define WINE_PRODUCTVERSION_STR "8.00.7601.17601"
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"

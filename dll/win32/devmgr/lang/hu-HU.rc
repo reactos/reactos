@@ -176,8 +176,12 @@ BEGIN
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Driver Details...", IDC_DRIVERDETAILS, 7, 106, 75, 15
     LTEXT "To view details about the driver files.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 126, 75, 15
-    LTEXT "Update the device driver.", -1, 91, 130, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 134, 75, 15
+    LTEXT "Update the device driver.", -1, 91, 138, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
+    LTEXT "To uninstall the driver (Advanced).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230

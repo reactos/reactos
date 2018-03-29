@@ -22,20 +22,15 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "windef.h"
+#include "winbase.h"
+#include "wininet.h"
+#include "winineti.h"
+#include "winsock2.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winnls.h>
-#include <wincrypt.h>
-#include <wininet.h>
-#include <winsock.h>
-
-#include <wine/test.h>
+#include "wine/test.h"
 
 /* Undocumented security flags */
 #define _SECURITY_FLAG_CERT_REV_FAILED    0x00800000
@@ -2057,6 +2052,22 @@ static const char okmsg2[] =
 "Set-Cookie: two\r\n"
 "\r\n";
 
+static const char okmsg_cookie_path[] =
+"HTTP/1.1 200 OK\r\n"
+"Date: Mon, 01 Dec 2008 13:44:34 GMT\r\n"
+"Server: winetest\r\n"
+"Content-Length: 0\r\n"
+"Set-Cookie: subcookie2=data; path=/test_cookie_set_path\r\n"
+"\r\n";
+
+static const char okmsg_cookie[] =
+"HTTP/1.1 200 OK\r\n"
+"Date: Mon, 01 Dec 2008 13:44:34 GMT\r\n"
+"Server: winetest\r\n"
+"Content-Length: 0\r\n"
+"Set-Cookie: testcookie=testvalue\r\n"
+"\r\n";
+
 static const char notokmsg[] =
 "HTTP/1.1 400 Bad Request\r\n"
 "Server: winetest\r\n"
@@ -2275,7 +2286,7 @@ static DWORD CALLBACK server_thread(LPVOID param)
         }
         if (strstr(buffer, "/testC"))
         {
-            if (strstr(buffer, "Cookie: cookie=biscuit"))
+            if (strstr(buffer, "cookie=biscuit"))
                 send(c, okmsg, sizeof okmsg-1, 0);
             else
                 send(c, notokmsg, sizeof notokmsg-1, 0);
@@ -2420,6 +2431,51 @@ static DWORD CALLBACK server_thread(LPVOID param)
             else
                 send(c, notokmsg, sizeof notokmsg-1, 0);
         }
+        if (strstr(buffer, "/test_cookie_path1"))
+        {
+            if (strstr(buffer, "subcookie=data"))
+                 send(c, okmsg, sizeof okmsg-1, 0);
+             else
+                 send(c, notokmsg, sizeof notokmsg-1, 0);
+        }
+        if (strstr(buffer, "/test_cookie_path2"))
+        {
+            if (strstr(buffer, "subcookie2=data"))
+                 send(c, okmsg, sizeof okmsg-1, 0);
+             else
+                 send(c, notokmsg, sizeof notokmsg-1, 0);
+        }
+        if (strstr(buffer, "/test_cookie_set_path"))
+        {
+            send(c, okmsg_cookie_path, sizeof okmsg_cookie_path-1, 0);
+        }
+        if (strstr(buffer, "/test_cookie_merge"))
+        {
+            if (strstr(buffer, "subcookie=data") &&
+                !strstr(buffer, "manual_cookie=test"))
+                 send(c, okmsg, sizeof okmsg-1, 0);
+             else
+                 send(c, notokmsg, sizeof notokmsg-1, 0);
+        }
+        if (strstr(buffer, "/test_cookie_set_host_override"))
+        {
+            send(c, okmsg_cookie, sizeof okmsg_cookie-1, 0);
+        }
+        if (strstr(buffer, "/test_cookie_check_host_override"))
+        {
+            if (strstr(buffer, "Cookie:") && strstr(buffer, "testcookie=testvalue"))
+                send(c, okmsg, sizeof okmsg-1, 0);
+            else
+                send(c, notokmsg, sizeof notokmsg-1, 0);
+        }
+        if (strstr(buffer, "/test_cookie_check_different_host"))
+        {
+            if (!strstr(buffer, "foo") &&
+                strstr(buffer, "cookie=biscuit"))
+                send(c, okmsg, sizeof okmsg-1, 0);
+            else
+                send(c, notokmsg, sizeof notokmsg-1, 0);
+        }
         if (strstr(buffer, "/test_host_override"))
         {
             if (strstr(buffer, host_header_override))
@@ -2450,6 +2506,20 @@ static DWORD CALLBACK server_thread(LPVOID param)
         if (strstr(buffer, "GET /test_remove_dot_segments"))
         {
             send(c, okmsg, sizeof(okmsg)-1, 0);
+        }
+        if (strstr(buffer, "HEAD /test_auth_host1"))
+        {
+            if (strstr(buffer, "Authorization: Basic dGVzdDE6cGFzcw=="))
+                send(c, okmsg, sizeof okmsg-1, 0);
+            else
+                send(c, noauthmsg, sizeof noauthmsg-1, 0);
+        }
+        if (strstr(buffer, "HEAD /test_auth_host2"))
+        {
+            if (strstr(buffer, "Authorization: Basic dGVzdDE6cGFzczI="))
+                send(c, okmsg, sizeof okmsg-1, 0);
+            else
+                send(c, noauthmsg, sizeof noauthmsg-1, 0);
         }
         shutdown(c, 2);
         closesocket(c);
@@ -3147,6 +3217,152 @@ static void test_header_override(int port)
     }
 
     InternetCloseHandle(req);
+    InternetSetCookieA("http://localhost", "cookie", "biscuit");
+    req = HttpOpenRequestA(con, NULL, "/testC", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpAddRequestHeadersA(req, host_header_override, ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_set_host_override", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpAddRequestHeadersA(req, host_header_override, ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_check_host_override", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpAddRequestHeadersA(req, host_header_override, ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_check_host_override", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetSetCookieA("http://test.local", "foo", "bar");
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_check_different_host", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_check_different_host", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpAddRequestHeadersA(req, host_header_override, ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpenA failed\n");
+
+    con = InternetConnectA(ses, "localhost", port, "test1", "pass", INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnectA failed %u\n", GetLastError());
+
+    req = HttpOpenRequestA( con, "HEAD", "/test_auth_host1", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequestA failed %u\n", GetLastError());
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequestA failed %u\n", GetLastError());
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpenA failed\n");
+
+    con = InternetConnectA( ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnectA failed %u\n", GetLastError());
+
+    req = HttpOpenRequestA(con, "HEAD", "/test_auth_host1", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequestA failed %u\n", GetLastError());
+
+    ret = HttpAddRequestHeadersA(req, host_header_override, ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA( req, NULL, 0, NULL, 0 );
+    ok( ret, "HttpSendRequestA failed %u\n", GetLastError() );
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpenA failed\n");
+
+    con = InternetConnectA(ses, "localhost", port, "test1", "pass2", INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnectA failed %u\n", GetLastError());
+
+    req = HttpOpenRequestA(con, "HEAD", "/test_auth_host2", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequestA failed %u\n", GetLastError());
+
+    ret = HttpAddRequestHeadersA(req, host_header_override, ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequestA failed %u\n", GetLastError());
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpenA failed\n");
+
+    con = InternetConnectA(ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnectA failed %u\n", GetLastError());
+
+    req = HttpOpenRequestA(con, "HEAD", "/test_auth_host2", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequestA failed %u\n", GetLastError());
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequestA failed %u\n", GetLastError());
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
     InternetCloseHandle(con);
     InternetCloseHandle(ses);
 }
@@ -3696,6 +3912,68 @@ static void test_cache_read_gzipped(int port)
     InternetCloseHandle(con);
     InternetCloseHandle(ses);
 
+    /* Decompression doesn't work while reading from cache */
+    test_cache_gzip = 0;
+    sprintf(cache_url, cache_url_fmt, port, get_gzip);
+    DeleteUrlCacheEntryA(cache_url);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL,"InternetOpen failed with error %u\n", GetLastError());
+
+    ret = TRUE;
+    ret = InternetSetOptionA(ses, INTERNET_OPTION_HTTP_DECODING, &ret, sizeof(ret));
+    ok(ret, "InternetSetOption(INTERNET_OPTION_HTTP_DECODING) failed: %d\n", GetLastError());
+
+    con = InternetConnectA(ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnect failed with error %u\n", GetLastError());
+
+    req = HttpOpenRequestA(con, NULL, get_gzip, NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, "Accept-Encoding: gzip", -1, NULL, 0);
+    ok(ret, "HttpSendRequest failed with error %u\n", GetLastError());
+    size = 0;
+    while(InternetReadFile(req, buf+size, sizeof(buf)-1-size, &read) && read)
+        size += read;
+    ok(size == 10, "read %d bytes of data\n", size);
+    buf[size] = 0;
+    ok(!strncmp(buf, content, size), "incorrect page content: %s\n", buf);
+    InternetCloseHandle(req);
+
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    /* Decompression doesn't work while reading from cache */
+    test_cache_gzip = 0;
+    sprintf(cache_url, cache_url_fmt, port, get_gzip);
+    DeleteUrlCacheEntryA(cache_url);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL,"InternetOpen failed with error %u\n", GetLastError());
+
+    con = InternetConnectA(ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnect failed with error %u\n", GetLastError());
+
+    ret = TRUE;
+    ret = InternetSetOptionA(con, INTERNET_OPTION_HTTP_DECODING, &ret, sizeof(ret));
+    ok(ret, "InternetSetOption(INTERNET_OPTION_HTTP_DECODING) failed: %d\n", GetLastError());
+
+    req = HttpOpenRequestA(con, NULL, get_gzip, NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, "Accept-Encoding: gzip", -1, NULL, 0);
+    ok(ret, "HttpSendRequest failed with error %u\n", GetLastError());
+    size = 0;
+    while(InternetReadFile(req, buf+size, sizeof(buf)-1-size, &read) && read)
+        size += read;
+    ok(size == 10, "read %d bytes of data\n", size);
+    buf[size] = 0;
+    ok(!strncmp(buf, content, size), "incorrect page content: %s\n", buf);
+    InternetCloseHandle(req);
+
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
     DeleteUrlCacheEntryA(cache_url);
 }
 
@@ -3734,7 +4012,7 @@ static void test_cookie_header(int port)
     HINTERNET ses, con, req;
     DWORD size, error;
     BOOL ret;
-    char buffer[64];
+    char buffer[256];
 
     ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     ok(ses != NULL, "InternetOpen failed\n");
@@ -3762,7 +4040,7 @@ static void test_cookie_header(int port)
     size = sizeof(buffer);
     ret = HttpQueryInfoA(req, HTTP_QUERY_COOKIE | HTTP_QUERY_FLAG_REQUEST_HEADERS, buffer, &size, NULL);
     ok(ret, "HttpQueryInfo failed: %u\n", GetLastError());
-    ok(!strcmp(buffer, "cookie=not biscuit"), "got '%s' expected \'cookie=not biscuit\'\n", buffer);
+    ok(!!strstr(buffer, "cookie=not biscuit"), "got '%s' expected \'cookie=not biscuit\'\n", buffer);
 
     ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
     ok(ret, "HttpSendRequest failed: %u\n", GetLastError());
@@ -3773,9 +4051,61 @@ static void test_cookie_header(int port)
     size = sizeof(buffer);
     ret = HttpQueryInfoA(req, HTTP_QUERY_COOKIE | HTTP_QUERY_FLAG_REQUEST_HEADERS, buffer, &size, NULL);
     ok(ret, "HttpQueryInfo failed: %u\n", GetLastError());
-    ok(!strcmp(buffer, "cookie=biscuit"), "got '%s' expected \'cookie=biscuit\'\n", buffer);
+    ok(!strstr(buffer, "cookie=not biscuit"), "'%s' should not contain \'cookie=not biscuit\'\n", buffer);
+    ok(!!strstr(buffer, "cookie=biscuit"), "'%s' should contain \'cookie=biscuit\'\n", buffer);
 
     InternetCloseHandle(req);
+
+    InternetSetCookieA("http://localhost/testCCCC", "subcookie", "data");
+
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_path1", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+    InternetCloseHandle(req);
+
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_path1/abc", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+    InternetCloseHandle(req);
+
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_set_path", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+    InternetCloseHandle(req);
+
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_path2", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 400);
+    InternetCloseHandle(req);
+
+    req = HttpOpenRequestA(con, NULL, "/test_cookie_merge", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpAddRequestHeadersA(req, "Cookie: manual_cookie=test\r\n", ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed: %u\n", GetLastError());
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed\n");
+
+    test_status_code(req, 200);
+    InternetCloseHandle(req);
+
     InternetCloseHandle(con);
     InternetCloseHandle(ses);
 }

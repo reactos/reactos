@@ -12,7 +12,7 @@ add_typelib(wshom.idl)
 list(APPEND SOURCE
     shell.c
     wshom_main.c
-    wshom_private.h)
+    precomp.h)
 
 add_library(wshom SHARED
     ${SOURCE}
@@ -30,5 +30,5 @@ set_module_type(wshom win32ocx)
 target_link_libraries(wshom uuid wine)
 add_importlibs(wshom oleaut32 ole32 shell32 advapi32 advapi32_vista user32 msvcrt kernel32 ntdll)
 add_dependencies(wshom stdole2 wshom_idlheader)
-add_pch(wshom wshom_private.h SOURCE)
+add_pch(wshom precomp.h SOURCE)
 add_cd_file(TARGET wshom DESTINATION reactos/system32 FOR all)

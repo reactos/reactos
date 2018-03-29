@@ -9,7 +9,7 @@ spec2def(shdocvw.dll shdocvw.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     shdocvw_main.c
     shlinstobj.c
-    shdocvw.h
+    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_stubs.c)
 
 add_typelib(shdocvw_v1.idl)
@@ -25,5 +25,5 @@ target_link_libraries(shdocvw uuid wine)
 add_delay_importlibs(shdocvw ole32 oleaut32 ieframe)
 add_importlibs(shdocvw shlwapi advapi32 msvcrt kernel32 ntdll)
 add_dependencies(shdocvw stdole2)
-add_pch(shdocvw shdocvw.h SOURCE)
+add_pch(shdocvw precomp.h SOURCE)
 add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)

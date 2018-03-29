@@ -19,9 +19,6 @@
  *
  */
 
-#include <windef.h>
-#include <winuser.h>
-
 #include "localui.h"
 
 #define WINE_FILENAME_STR "localui.dll"

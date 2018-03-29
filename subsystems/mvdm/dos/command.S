@@ -1,15 +1,9 @@
 /*
- * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            command.S
- * PURPOSE:         DOS32 command.com for NTVDM
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROJECT:     ReactOS Virtual DOS Machine
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     DOS32 command.com for NTVDM
+ * COPYRIGHT:   Copyright 2015-2018 Hermes Belusca-Maito
  */
-
-//
-// See http://www.ganino.com/games/scripts/dos-6.0%20source%20code%3F/dev/smartdrv/umbload.asm
-// and https://books.google.fr/books?id=rtmJgtfaxz8C&pg=PA256&lpg=PA256&dq=int+21+4b+program+exec+block&source=bl&ots=OfAF7qFwfl&sig=PrW73CE1dzFm3rwrTsYZkC77U4Y&hl=en&sa=X&redir_esc=y#v=onepage&q=int%2021%204b%20program%20exec%20block&f=false
-//
 
 /* INCLUDES *******************************************************************/
 

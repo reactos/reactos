@@ -18,12 +18,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "ws2tcpip.h"
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "wininet.h"
+#include "winnetwk.h"
+#include "wine/debug.h"
+#include "winerror.h"
+#define NO_SHLWAPI_STREAM
+#include "shlwapi.h"
+#include "cryptuiapi.h"
+
 #include "internet.h"
 
-#include <winnetwk.h>
-#include <cryptuiapi.h>
+#include "wine/unicode.h"
+
+#include "resource.h"
 
 #define MAX_STRING_LEN 1024
+
+WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 struct WININET_ErrorDlgParams
 {
@@ -552,6 +571,15 @@ BOOL WINAPI InternetShowSecurityInfoByURLW(LPCWSTR url, HWND window)
 {
    FIXME("stub: %s %p\n", debugstr_w(url), window);
    return FALSE;
+}
+
+/***********************************************************************
+ *           ParseX509EncodedCertificateForListBoxEntry (@)
+ */
+DWORD WINAPI ParseX509EncodedCertificateForListBoxEntry(LPBYTE cert, DWORD len, LPSTR szlistbox, LPDWORD listbox)
+{
+   FIXME("stub: %p %d %s %p\n", cert, len, debugstr_a(szlistbox), listbox);
+   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /***********************************************************************

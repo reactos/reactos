@@ -18,31 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 #define CONST_VTABLE
-#define NONAMELESSUNION
 
 /* needed for IInternetZoneManagerEx2 */
+#ifdef __REACTOS__
 #undef _WIN32_IE
+#endif
 #define _WIN32_IE 0x0700
 
 #include <wine/test.h>
-//#include <stdarg.h>
-//#include <stddef.h>
+#include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 
-//#include "windef.h"
-//#include "winbase.h"
-#include <winreg.h>
-#include <winnls.h>
-#include <ole2.h>
-//#include "urlmon.h"
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "urlmon.h"
 
-//#include "initguid.h"
+#include "initguid.h"
+#include <wine/heap.h>
 
 #define URLZONE_CUSTOM  URLZONE_USER_MIN+1
 #define URLZONE_CUSTOM2 URLZONE_CUSTOM+1
@@ -182,11 +178,6 @@ static int strcmp_w(const WCHAR *str1, const WCHAR *str2)
 
     if(len1!=len2) return 1;
     return memcmp(str1, str2, len1*sizeof(WCHAR));
-}
-
-static inline void heap_free(void *mem)
-{
-    HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline LPWSTR a2w(LPCSTR str)

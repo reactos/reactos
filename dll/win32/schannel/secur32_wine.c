@@ -21,6 +21,8 @@
 
 #include <assert.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(schannel);
+
 typedef struct _SecurePackageTable
 {
     DWORD numPackages;

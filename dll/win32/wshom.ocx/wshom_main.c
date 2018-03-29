@@ -18,7 +18,13 @@
 
 #include "wshom_private.h"
 
-#include <rpcproxy.h>
+#include "initguid.h"
+#include "wshom.h"
+#include "rpcproxy.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wshom);
 
 static HINSTANCE wshom_instance;
 
@@ -101,7 +107,7 @@ void release_typelib(void)
     if(!typelib)
         return;
 
-    for(i=0; i < sizeof(typeinfos)/sizeof(*typeinfos); i++)
+    for(i = 0; i < ARRAY_SIZE(typeinfos); i++)
         if(typeinfos[i])
             ITypeInfo_Release(typeinfos[i]);
 

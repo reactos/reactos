@@ -16,12 +16,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include "config.h"
+#include <stdarg.h>
+#include <limits.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "olectl.h"
+#include "dispex.h"
+#include "ntsecapi.h"
+#include "scrrun.h"
 #include "scrrun_private.h"
 
+#include "wine/debug.h"
+#include "wine/unicode.h"
+#include "wine/heap.h"
+
+#ifdef __REACTOS__
 #include <winver.h>
-#include <olectl.h>
-#include <ntsecapi.h>
-#include <wine/unicode.h>
+#endif
+
+WINE_DEFAULT_DEBUG_CHANNEL(scrrun);
 
 static const WCHAR bsW[] = {'\\',0};
 static const WCHAR utf16bom = 0xfeff;
@@ -987,7 +1005,7 @@ static HRESULT WINAPI drive_get_VolumeName(IDrive *iface, BSTR *name)
         return E_POINTER;
 
     *name = NULL;
-    ret = GetVolumeInformationW(This->root, nameW, sizeof(nameW)/sizeof(WCHAR), NULL, NULL, NULL, NULL, 0);
+    ret = GetVolumeInformationW(This->root, nameW, ARRAY_SIZE(nameW), NULL, NULL, NULL, NULL, 0);
     if (ret)
         *name = SysAllocString(nameW);
     return ret ? S_OK : E_FAIL;
@@ -1012,7 +1030,7 @@ static HRESULT WINAPI drive_get_FileSystem(IDrive *iface, BSTR *fs)
         return E_POINTER;
 
     *fs = NULL;
-    ret = GetVolumeInformationW(This->root, NULL, 0, NULL, NULL, NULL, nameW, sizeof(nameW)/sizeof(WCHAR));
+    ret = GetVolumeInformationW(This->root, NULL, 0, NULL, NULL, NULL, nameW, ARRAY_SIZE(nameW));
     if (ret)
         *fs = SysAllocString(nameW);
     return ret ? S_OK : E_FAIL;
@@ -3427,13 +3445,13 @@ static HRESULT WINAPI filesys_GetSpecialFolder(IFileSystem3 *iface,
     switch (SpecialFolder)
     {
     case WindowsFolder:
-        ret = GetWindowsDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+        ret = GetWindowsDirectoryW(pathW, ARRAY_SIZE(pathW));
         break;
     case SystemFolder:
-        ret = GetSystemDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+        ret = GetSystemDirectoryW(pathW, ARRAY_SIZE(pathW));
         break;
     case TemporaryFolder:
-        ret = GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+        ret = GetTempPathW(ARRAY_SIZE(pathW), pathW);
         /* we don't want trailing backslash */
         if (ret && pathW[ret-1] == '\\')
             pathW[ret-1] = 0;

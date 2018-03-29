@@ -19,29 +19,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-//#include <stdarg.h>
+#include <stdarg.h>
 #include <stdio.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define CONST_VTABLE
 
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <winreg.h>
-#include <wingdi.h>
-#include <objbase.h>
-//#include "initguid.h"
-//#include "urlmon.h"
-#include <wininet.h>
-#include <mshtml.h>
+#include "windef.h"
+#include "winbase.h"
+#include "initguid.h"
+#include "urlmon.h"
+#include "wininet.h"
+#include "mshtml.h"
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 static HRESULT (WINAPI *pCreateAsyncBindCtxEx)(IBindCtx *, DWORD,
                 IBindStatusCallback *, IEnumFORMATETC *, IBindCtx **, DWORD);
@@ -190,6 +182,7 @@ static HRESULT abort_hres;
 static BOOL have_IHttpNegotiate2, use_bscex, is_async_prot;
 static BOOL test_redirect, use_cache_file, callback_read, no_callback, test_abort;
 static WCHAR cache_file_name[MAX_PATH];
+static WCHAR http_cache_file[MAX_PATH];
 static BOOL only_check_prot_args = FALSE;
 static BOOL invalid_cn_accepted = FALSE;
 static BOOL abort_start = FALSE;
@@ -1935,6 +1928,14 @@ static HRESULT WINAPI statusclb_OnStopBinding(IBindStatusCallbackEx *iface, HRES
             ok( WaitForSingleObject(complete_event2, 90000) == WAIT_OBJECT_0, "wait timed out\n" );
     }
 
+    if(test_protocol == HTTP_TEST && !emulate_protocol && http_cache_file[0]) {
+        HANDLE file = CreateFileW(http_cache_file, DELETE, FILE_SHARE_DELETE, NULL,
+                                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        ok(file == INVALID_HANDLE_VALUE, "expected INVALID_HANDLE_VALUE, got %p\n", file);
+        ok(GetLastError() == ERROR_SHARING_VIOLATION, "expected ERROR_SHARING_VIOLATION, got %u\n", GetLastError());
+        http_cache_file[0] = 0;
+    }
+
     return S_OK;
 }
 
@@ -2091,6 +2092,8 @@ static HRESULT WINAPI statusclb_OnDataAvailable(IBindStatusCallbackEx *iface, DW
         else if(emulate_protocol)
             ok(!lstrcmpW(pstgmed->u.lpszFileName, cache_fileW),
                "unexpected file name %s\n", wine_dbgstr_w(pstgmed->u.lpszFileName));
+        else if(test_protocol == HTTP_TEST)
+            lstrcpyW(http_cache_file, pstgmed->u.lpszFileName);
         else
             ok(pstgmed->u.lpszFileName != NULL, "lpszFileName == NULL\n");
     }

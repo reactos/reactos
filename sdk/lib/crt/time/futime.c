@@ -39,8 +39,10 @@
 #include <time.h>
 #include <sys/utime.h>
 #include "bitsfixup.h"
+#include <internal/wine/msvcrt.h>
 
-HANDLE fdtoh(int fd);
+inline ioinfo* get_ioinfo(int fd);
+inline void release_ioinfo(ioinfo *info);
 
 /******************************************************************************
  * \name _futime
@@ -52,12 +54,12 @@ HANDLE fdtoh(int fd);
 int
 _futime(int fd, struct _utimbuf *filetime)
 {
-    HANDLE handle;
+    ioinfo *info = get_ioinfo(fd);
     FILETIME at, wt;
 
-    handle = fdtoh(fd);
-    if (handle == INVALID_HANDLE_VALUE)
+    if (info->handle == INVALID_HANDLE_VALUE)
     {
+        release_ioinfo(info);
         return -1;
     }
 
@@ -84,11 +86,12 @@ _futime(int fd, struct _utimbuf *filetime)
         }
     }
 
-    if (!SetFileTime(handle, NULL, &at, &wt))
+    if (!SetFileTime(info->handle, NULL, &at, &wt))
     {
+        release_ioinfo(info);
         _dosmaperr(GetLastError());
         return -1 ;
     }
-
+    release_ioinfo(info);
     return 0;
 }

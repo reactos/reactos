@@ -19,11 +19,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "twain.h"
 #include "twain_i.h"
-
-#include <winuser.h>
-
 #include "resource.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
 static TW_UINT16 DSM_initialized;	/* whether Source Manager is initialized */
 static TW_UINT32 DSM_sourceId;		/* source id generator */

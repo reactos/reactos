@@ -22,9 +22,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wintrust_priv.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wintrust.h"
+#include "mscat.h"
+#include "mssip.h"
+#include "imagehlp.h"
+#include "winternl.h"
 
-#include <imagehlp.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 

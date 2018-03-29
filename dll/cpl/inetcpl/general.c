@@ -19,10 +19,20 @@
  *
  */
 
-#include "inetcpl.h"
-
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <wininet.h>
+#include <winreg.h>
+#include <shlwapi.h>
+#include <prsht.h>
 #include <shlobj.h>
+
+#include "inetcpl.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
 
 static const WCHAR about_blank[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
 static const WCHAR start_page[] = {'S','t','a','r','t',' ','P','a','g','e',0};

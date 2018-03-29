@@ -416,10 +416,12 @@ TestIrpHandler(
         if (IoStack->FileObject->SectionObjectPointer != NULL &&
             IoStack->FileObject->SectionObjectPointer->SharedCacheMap != NULL)
         {
+            LARGE_INTEGER Zero = RTL_CONSTANT_LARGE_INTEGER(0LL);
+
             CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
             CcPurgeCacheSection(&Fcb->SectionObjectPointers, NULL, 0, FALSE);
             KeInitializeEvent(&CacheUninitEvent.Event, NotificationEvent, FALSE);
-            CcUninitializeCacheMap(IoStack->FileObject, NULL, &CacheUninitEvent);
+            CcUninitializeCacheMap(IoStack->FileObject, &Zero, &CacheUninitEvent);
             KeWaitForSingleObject(&CacheUninitEvent.Event, Executive, KernelMode, FALSE, NULL);
         }
         ExFreePoolWithTag(Fcb, 'FwrI');

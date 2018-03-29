@@ -18,12 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+#define INITGUID
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "winsxs.h"
+#include "msxml2.h"
+
+#include "wine/debug.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
 #include "sxs_private.h"
 
-#include <oleauto.h>
-#include <msxml2.h>
-
-#include <wine/list.h>
+WINE_DEFAULT_DEBUG_CHANNEL(sxs);
 
 static const WCHAR cache_mutex_nameW[] =
     {'_','_','W','I','N','E','_','S','X','S','_','C','A','C','H','E','_','M','U','T','E','X','_','_',0};

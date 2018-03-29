@@ -205,8 +205,8 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
             switch (ir.Event.KeyEvent.wVirtualKeyCode)
             {
 #ifdef FEATURE_HISTORY
-                case 'K':
-                    /*add the current command line to the history*/
+                case _T('K'):
+                    /* add the current command line to the history */
                     if (dwControlKeyState &
                         (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
                     {
@@ -221,8 +221,8 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         break;
                     }
 
-                case 'D':
-                    /*delete current history entry*/
+                case _T('D'):
+                    /* delete current history entry */
                     if (dwControlKeyState &
                         (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
                     {
@@ -234,8 +234,25 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         //bContinue=TRUE;
                         break;
                     }
-
 #endif /*FEATURE_HISTORY*/
+
+                case _T('M'):
+                    /* ^M does the same as return */
+                    if (dwControlKeyState &
+                        (LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
+                    {
+                        /* end input, return to main */
+#ifdef FEATURE_HISTORY
+                        /* add to the history */
+                        if (str[0])
+                            History (0, str);
+#endif /*FEATURE_HISTORY*/
+                        str[charcount++] = _T('\n');
+                        str[charcount] = _T('\0');
+                        ConOutChar (_T('\n'));
+                        bReturn = TRUE;
+                        break;
+                    }
             }
         }
 
@@ -432,9 +449,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
 #endif
                 break;
 
-            case _T('M'):
             case _T('C'):
-                /* ^M does the same as return */
                 bCharInput = TRUE;
                 if (!(ir.Event.KeyEvent.dwControlKeyState &
                     (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
@@ -452,7 +467,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                 str[charcount++] = _T('\n');
                 str[charcount] = _T('\0');
                 ConOutChar(_T('\n'));
-            bReturn = TRUE;
+                bReturn = TRUE;
                 break;
 
             case VK_ESCAPE:

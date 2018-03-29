@@ -18,25 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
+#ifdef __REACTOS__
 #define CONST_VTABLE
+#endif
+
 #define COBJMACROS
 
 #include <stdarg.h>
-//#include <stdio.h>
+#include <stdio.h>
 
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <objbase.h>
-#include <ole2.h>
-#include <xmllite.h>
-#include <wine/test.h>
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "xmllite.h"
+#include "wine/test.h"
 
-#include <initguid.h>
+#include "initguid.h"
 DEFINE_GUID(IID_IXmlWriterOutput, 0xc1131708, 0x0f59, 0x477f, 0x93, 0x59, 0x7d, 0x33, 0x24, 0x51, 0xbc, 0x1a);
 
 static const WCHAR aW[] = {'a',0};

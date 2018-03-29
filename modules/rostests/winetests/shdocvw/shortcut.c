@@ -34,23 +34,19 @@
 
 #include <stdarg.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
 
-//#include "initguid.h"
-#include <shlobj.h>
-//#include "shobjidl.h"
-//#include "shlguid.h"
-//#include "ole2.h"
+#include "initguid.h"
+#include "shlobj.h"
+#include "shobjidl.h"
+#include "shlguid.h"
+#include "ole2.h"
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 /* The following definitions and helper functions are meant to make the de-/registration
  * of the various necessary registry keys easier. */

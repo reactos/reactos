@@ -16,7 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include <windef.h>
+#include <winbase.h>
+#include <ole2.h>
+
 #include "wscript.h"
+
+#include <wine/debug.h>
+#include <wine/heap.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(wscript);
 
 #define BUILDVERSION 16535
 
@@ -307,7 +322,11 @@ static HRESULT WINAPI Host_Echo(IHost *iface, SAFEARRAY *args)
 {
     WCHAR *output = NULL, *ptr;
     unsigned argc, i, len;
+#ifdef __REACTOS__
     LONG ubound, lbound;
+#else
+    int ubound, lbound;
+#endif
     VARIANT *argv;
     BSTR *strs;
     HRESULT hres;

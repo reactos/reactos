@@ -250,7 +250,7 @@
 @ stdcall phoneGetVolume(long long ptr)
 @ stdcall phoneInitialize(ptr long ptr str ptr)
 @ stdcall phoneInitializeExA(ptr long ptr str ptr ptr ptr)
-@ stdcall phoneInitializeExW(ptr long ptr str ptr ptr ptr)
+@ stdcall phoneInitializeExW(ptr long ptr wstr ptr ptr ptr)
 @ stdcall phoneNegotiateAPIVersion(long long long long ptr ptr)
 @ stdcall phoneNegotiateExtVersion(long long long long long ptr)
 @ stdcall phoneOpen(long long ptr long long long long)
@@ -269,10 +269,10 @@
 @ stdcall tapiGetLocationInfo(str str) tapiGetLocationInfoA
 @ stdcall tapiGetLocationInfoA(str str)
 @ stdcall tapiGetLocationInfoW(wstr wstr)
-@ stub tapiRequestDrop
+@ stub    tapiRequestDrop
 @ stdcall tapiRequestMakeCall(str str str str) tapiRequestMakeCallA
 @ stdcall tapiRequestMakeCallA(str str str str)
 @ stub tapiRequestMakeCallW
-@ stub tapiRequestMediaCall
+@ stub    tapiRequestMediaCall
 @ stub tapiRequestMediaCallA
 @ stub tapiRequestMediaCallW

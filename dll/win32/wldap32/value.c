@@ -18,7 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <stdarg.h>
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+
 #include "winldap_private.h"
+#include "wldap32.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 /***********************************************************************
  *      ldap_count_values_len     (WLDAP32.@)
@@ -140,8 +156,7 @@ static char *bv2str( struct berval *bv )
     char *str = NULL;
     unsigned int len = bv->bv_len;
 
-    str = HeapAlloc( GetProcessHeap(), 0, len + 1 );
-    if (str)
+    if ((str = heap_alloc( len + 1 )))
     {
         memcpy( str, bv->bv_val, len );
         str[len] = '\0';
@@ -160,8 +175,7 @@ static char **bv2str_array( struct berval **bv )
         len++;
         p++;
     }
-    str = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(char *) );
-    if (!str) return NULL;
+    if (!(str = heap_alloc( (len + 1) * sizeof(char *) ))) return NULL;
 
     p = bv;
     while (*p)
@@ -169,8 +183,8 @@ static char **bv2str_array( struct berval **bv )
         str[i] = bv2str( *p );
         if (!str[i])
         {
-            while (i > 0) HeapFree( GetProcessHeap(), 0, str[--i] );
-            HeapFree( GetProcessHeap(), 0, str );
+            while (i > 0) heap_free( str[--i] );
+            heap_free( str );
             return NULL;
         } 
         i++;

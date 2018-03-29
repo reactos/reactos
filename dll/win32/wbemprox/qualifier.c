@@ -16,7 +16,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include "config.h"
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "wbemcli.h"
+
+#include "wine/debug.h"
 #include "wbemprox_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
 struct qualifier_set
 {

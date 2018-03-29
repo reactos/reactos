@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            subsystems/mvdm/samples/testvdd/testvdd.c
- * PURPOSE:         Testing VDD for NTVDM
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROJECT:     ReactOS Virtual DOS Machine
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Testing VDD for NTVDM
+ * COPYRIGHT:   Copyright 2015-2018 Hermes Belusca-Maito
  */
 
 /* INCLUDES *******************************************************************/

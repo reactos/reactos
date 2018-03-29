@@ -39,4 +39,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION 5,8,0,16978
 #define WINE_PRODUCTVERSION_STR "5.8.7601.16978"
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"

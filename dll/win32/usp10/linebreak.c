@@ -2,7 +2,9 @@
 /* generated from http://www.unicode.org/Public/10.0.0/ucd/LineBreak.txt */
 /* DO NOT EDIT!! */
 
-const unsigned short /* DECLSPEC_HIDDEN */ wine_linebreak_table[7248] =
+#include "wine/unicode.h"
+
+const unsigned short DECLSPEC_HIDDEN wine_linebreak_table[7248] =
 {
     /* level 1 offsets */
     0x0100, 0x0110, 0x0120, 0x0130, 0x0140, 0x0150, 0x0160, 0x0170,

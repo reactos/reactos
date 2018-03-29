@@ -23,69 +23,13 @@
 #ifndef _WINE_INTERNET_H_
 #define _WINE_INTERNET_H_
 
-#include <wine/config.h>
+#include "wine/unicode.h"
+#include "wine/heap.h"
+#include "wine/list.h"
 
-#include <assert.h>
-#include <stdio.h>
+#include <time.h>
 
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winuser.h>
-#include <wininet.h>
-#define NO_SHLWAPI_STREAM
-#define NO_SHLWAPI_REG
-#define NO_SHLWAPI_GDI
-#include <shlwapi.h>
-
-#include <wine/list.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-#ifdef HAVE_ARPA_INET_H
-# include <arpa/inet.h>
-#endif
-#ifdef HAVE_NETDB_H
-# include <netdb.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-# include <sys/types.h>
-# include <netinet/in.h>
-#endif
-#ifdef HAVE_SYS_IOCTL_H
-# include <sys/ioctl.h>
-#endif
-#ifdef HAVE_SYS_POLL_H
-# include <sys/poll.h>
-#endif
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
-#endif
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
-#if defined(__MINGW32__) || defined (_MSC_VER)
-#include <ws2tcpip.h>
-#else
-#define closesocket close
-#define ioctlsocket ioctl
-#endif /* __MINGW32__ */
-
-#include <winineti.h>
-
-#include "resource.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(wininet);
+#include "winineti.h"
 
 extern HMODULE WININET_hModule DECLSPEC_HIDDEN;
 
@@ -146,29 +90,9 @@ typedef struct
 BOOL is_valid_netconn(netconn_t *) DECLSPEC_HIDDEN;
 void close_netconn(netconn_t *) DECLSPEC_HIDDEN;
 
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), 0, len);
-}
-
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
-}
-
-static inline void * __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t len)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, mem, len);
-}
-
 static inline void * __WINE_ALLOC_SIZE(2) heap_realloc_zero(void *mem, size_t len)
 {
     return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, len);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline LPWSTR heap_strdupW(LPCWSTR str)
@@ -357,6 +281,7 @@ struct _object_header_t
     ULONG  ErrorMask;
     DWORD  dwInternalFlags;
     LONG   refs;
+    BOOL   decoding;
     INTERNET_STATUS_CALLBACK lpfnStatusCB;
     struct list entry;
     struct list children;
@@ -453,7 +378,6 @@ typedef struct
     DWORD read_size;      /* valid data size in read_buf */
     BYTE  read_buf[READ_BUFFER_SIZE]; /* buffer for already read but not returned data */
 
-    BOOL decoding;
     data_stream_t *data_stream;
     netconn_stream_t netconn_stream;
 } http_request_t;

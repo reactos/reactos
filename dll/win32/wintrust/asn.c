@@ -18,11 +18,22 @@
  *
  */
 
-#include "wintrust_priv.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <assert.h>
-#include <snmp.h>
-#include <wine/exception.h>
+#define NONAMELESSUNION
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "wincrypt.h"
+#include "wintrust.h"
+#include "snmp.h"
+#include "winternl.h"
+#include "wine/debug.h"
+#include "wine/exception.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptasn);
 

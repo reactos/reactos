@@ -2,7 +2,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Programmer kjøres som følger:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD nøkkelnavn [/v verdi | /ve] [/t type] [/s separator] [/d data] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE nøkkelnavn [/v verdi | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY nøkkelnavn [/v verdi | /ve] [/s]\n"

@@ -224,7 +224,7 @@ static void test_AddDefaultForUsage(void)
 static void test_LoadFunctionPointers(void)
 {
     BOOL ret;
-    CRYPT_PROVIDER_FUNCTIONS funcs;
+    CRYPT_PROVIDER_FUNCTIONS funcs = {0};
     GUID action = WINTRUST_ACTION_GENERIC_VERIFY_V2;
 
     if (!pWintrustLoadFunctionPointers)

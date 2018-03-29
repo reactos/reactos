@@ -16,12 +16,40 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+#include "wine/debug.h"
+
+#include <stdarg.h>
+#include <stdlib.h>
+
+#ifdef HAVE_CORESERVICES_CORESERVICES_H
+#define GetCurrentThread MacGetCurrentThread
+#define LoadResource MacLoadResource
+#include <CoreServices/CoreServices.h>
+#undef GetCurrentThread
+#undef LoadResource
+#undef DPRINTF
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#ifndef __MINGW32__
+#define USE_WS_PREFIX
+#endif
+#include "winsock2.h"
+#include "ws2ipdef.h"
+#include "winhttp.h"
+#include "wincrypt.h"
+#include "winreg.h"
+#define COBJMACROS
+#include "ole2.h"
+#include "dispex.h"
+#include "activscp.h"
+
 #include "winhttp_private.h"
 
-#include <wincrypt.h>
-#include <winreg.h>
-#include <dispex.h>
-#include <activscp.h>
+WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
 #define DEFAULT_RESOLVE_TIMEOUT     0
 #define DEFAULT_CONNECT_TIMEOUT     20000
@@ -589,8 +617,6 @@ static void request_destroy( object_header_t *hdr )
         heap_free( request->headers[i].value );
     }
     heap_free( request->headers );
-    for (i = 0; i < request->num_accept_types; i++) heap_free( request->accept_types[i] );
-    heap_free( request->accept_types );
     for (i = 0; i < TARGET_MAX; i++)
     {
         for (j = 0; j < SCHEME_MAX; j++)
@@ -1016,32 +1042,14 @@ static const object_vtbl_t request_vtbl =
 
 static BOOL store_accept_types( request_t *request, const WCHAR **accept_types )
 {
+    static const WCHAR attr_accept[] = {'A','c','c','e','p','t',0};
+    static const DWORD flags = WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_COALESCE_WITH_COMMA;
     const WCHAR **types = accept_types;
-    DWORD i;
 
     if (!types) return TRUE;
     while (*types)
     {
-        request->num_accept_types++;
-        types++;
-    }
-    if (!request->num_accept_types) return TRUE;
-    if (!(request->accept_types = heap_alloc( request->num_accept_types * sizeof(WCHAR *))))
-    {
-        request->num_accept_types = 0;
-        return FALSE;
-    }
-    types = accept_types;
-    for (i = 0; i < request->num_accept_types; i++)
-    {
-        if (!(request->accept_types[i] = strdupW( *types )))
-        {
-            for ( ; i > 0; --i) heap_free( request->accept_types[i - 1] );
-            heap_free( request->accept_types );
-            request->accept_types = NULL;
-            request->num_accept_types = 0;
-            return FALSE;
-        }
+        process_header( request, attr_accept, *types, flags, TRUE );
         types++;
     }
     return TRUE;

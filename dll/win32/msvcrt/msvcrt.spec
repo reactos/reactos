@@ -601,8 +601,8 @@
 @ cdecl -arch=i386 _safe_fprem()
 @ cdecl -arch=i386 _safe_fprem1()
 @ cdecl _scalb(double long)
-# stub _scprintf
-# stub _scwprintf
+@ varargs _scprintf(str)
+@ varargs _scwprintf(wstr)
 @ cdecl _searchenv(str str ptr)
 @ stdcall -i386 _seh_longjmp_unwind(ptr)
 # stub _set_SSE2_enable

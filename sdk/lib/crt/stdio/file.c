@@ -45,6 +45,7 @@
 
 #include <precomp.h>
 #include "wine/unicode.h"
+#include "internal/wine/msvcrt.h"
 
 #include <sys/utime.h>
 #include <direct.h>
@@ -101,6 +102,7 @@ extern int _commode;
 /* values for exflag - it's used differently in msvcr90.dll*/
 #define EF_UTF8           0x01
 #define EF_UTF16          0x02
+#define EF_CRIT_INIT      0x04
 #define EF_UNK_UNICODE    0x08
 
 static char utf8_bom[3] = { 0xef, 0xbb, 0xbf };
@@ -112,15 +114,6 @@ static char utf16_bom[2] = { 0xff, 0xfe };
 
 #define MSVCRT_INTERNAL_BUFSIZ 4096
 
-/* ioinfo structure size is different in msvcrXX.dll's */
-typedef struct {
-    HANDLE              handle;
-    unsigned char       wxflag;
-    char                lookahead[3];
-    int                 exflag;
-    CRITICAL_SECTION    crit;
-} ioinfo;
-
 /*********************************************************************
  *		__pioinfo (MSVCRT.@)
  * array of pointers to ioinfo arrays [32]
@@ -131,9 +124,6 @@ ioinfo * __pioinfo[MSVCRT_MAX_FILES/MSVCRT_FD_BLOCK_SIZE] = { 0 };
  *		__badioinfo (MSVCRT.@)
  */
 ioinfo __badioinfo = { INVALID_HANDLE_VALUE, WX_TEXT };
-
-static int fdstart = 3; /* first unallocated fd */
-static int fdend = 3; /* highest allocated fd */
 
 typedef struct {
     FILE file;
@@ -150,12 +140,9 @@ static int MSVCRT_umask = 0;
 /* INTERNAL: static data for tmpnam and _wtmpname functions */
 static int tmpnam_unique;
 
-/* This critical section protects the tables __pioinfo and fstreams,
- * and their related indexes, fdstart, fdend,
- * and MSVCRT_stream_idx, from race conditions.
- * It doesn't protect against race conditions manipulating the underlying files
- * or flags; doing so would probably be better accomplished with per-file
- * protection, rather than locking the whole table for every change.
+/* This critical section protects the MSVCRT_fstreams table
+ * and MSVCRT_stream_idx from race conditions. It also
+ * protects fd critical sections creation code.
  */
 static CRITICAL_SECTION MSVCRT_file_cs;
 static CRITICAL_SECTION_DEBUG MSVCRT_file_cs_debug =
@@ -179,15 +166,104 @@ static inline ioinfo* get_ioinfo_nolock(int fd)
     return ret + (fd%MSVCRT_FD_BLOCK_SIZE);
 }
 
-static inline ioinfo* get_ioinfo(int fd)
+static inline void init_ioinfo_cs(ioinfo *info)
 {
-    ioinfo *ret = NULL;
-    if(fd < MSVCRT_MAX_FILES)
-        ret = __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE];
-    if(!ret)
+    if(!(info->exflag & EF_CRIT_INIT)) {
+        LOCK_FILES();
+        if(!(info->exflag & EF_CRIT_INIT)) {
+            InitializeCriticalSection(&info->crit);
+            info->exflag |= EF_CRIT_INIT;
+        }
+        UNLOCK_FILES();
+    }
+}
+
+/*static*/ inline ioinfo* get_ioinfo(int fd)
+{
+    ioinfo *ret = get_ioinfo_nolock(fd);
+    if(ret == &__badioinfo)
+        return ret;
+    init_ioinfo_cs(ret);
+    EnterCriticalSection(&ret->crit);
+    return ret;
+}
+
+static inline BOOL alloc_pioinfo_block(int fd)
+{
+    ioinfo *block;
+    int i;
+
+    if(fd<0 || fd>=MSVCRT_MAX_FILES)
+    {
+        *_errno() = ENFILE;
+        return FALSE;
+    }
+
+    block = calloc(MSVCRT_FD_BLOCK_SIZE, sizeof(ioinfo));
+    if(!block)
+    {
+        WARN(":out of memory!\n");
+        *_errno() = ENOMEM;
+        return FALSE;
+    }
+    for(i=0; i<MSVCRT_FD_BLOCK_SIZE; i++)
+        block[i].handle = INVALID_HANDLE_VALUE;
+    if(InterlockedCompareExchangePointer((void**)&__pioinfo[fd/MSVCRT_FD_BLOCK_SIZE], block, NULL))
+        free(block);
+    return TRUE;
+}
+
+static inline ioinfo* get_ioinfo_alloc_fd(int fd)
+{
+    ioinfo *ret;
+
+    ret = get_ioinfo(fd);
+    if(ret != &__badioinfo)
+        return ret;
+
+    if(!alloc_pioinfo_block(fd))
         return &__badioinfo;
 
-    return ret + (fd%MSVCRT_FD_BLOCK_SIZE);
+    return get_ioinfo(fd);
+}
+
+static inline ioinfo* get_ioinfo_alloc(int *fd)
+{
+    int i;
+
+    *fd = -1;
+    for(i=0; i<MSVCRT_MAX_FILES; i++)
+    {
+        ioinfo *info = get_ioinfo_nolock(i);
+
+        if(info == &__badioinfo)
+        {
+            if(!alloc_pioinfo_block(i))
+                return &__badioinfo;
+            info = get_ioinfo_nolock(i);
+        }
+
+        init_ioinfo_cs(info);
+        if(TryEnterCriticalSection(&info->crit))
+        {
+            if(info->handle == INVALID_HANDLE_VALUE)
+            {
+                *fd = i;
+                return info;
+            }
+            LeaveCriticalSection(&info->crit);
+        }
+    }
+
+    WARN(":files exhausted!\n");
+    *_errno() = ENFILE;
+    return &__badioinfo;
+}
+
+/*static*/ inline void release_ioinfo(ioinfo *info)
+{
+    if(info!=&__badioinfo && info->exflag & EF_CRIT_INIT)
+        LeaveCriticalSection(&info->crit);
 }
 
 static inline FILE* msvcrt_get_file(int i)
@@ -216,38 +292,11 @@ static inline FILE* msvcrt_get_file(int i)
     return &ret->file;
 }
 
-static inline BOOL is_valid_fd(int fd)
-{
-    return fd >= 0 && fd < fdend && (get_ioinfo(fd)->wxflag & WX_OPEN);
-}
-
-/* INTERNAL: Get the HANDLE for a fd
- * This doesn't lock the table, because a failure will result in
- * INVALID_HANDLE_VALUE being returned, which should be handled correctly.  If
- * it returns a valid handle which is about to be closed, a subsequent call
- * will fail, most likely in a sane way.
- */
-/*static*/ HANDLE fdtoh(int fd)
-{
-  if (!is_valid_fd(fd))
-  {
-    WARN(":fd (%d) - no handle!\n",fd);
-    *__doserrno() = 0;
-    *_errno() = EBADF;
-    return INVALID_HANDLE_VALUE;
-  }
-  //if (get_ioinfo(fd)->handle == INVALID_HANDLE_VALUE)
-      //FIXME("returning INVALID_HANDLE_VALUE for %d\n", fd);
-  return get_ioinfo(fd)->handle;
-}
-
 /* INTERNAL: free a file entry fd */
 static void msvcrt_free_fd(int fd)
 {
-  ioinfo *fdinfo;
+  ioinfo *fdinfo = get_ioinfo(fd);
 
-  LOCK_FILES();
-  fdinfo = get_ioinfo(fd);
   if(fdinfo != &__badioinfo)
   {
     fdinfo->handle = INVALID_HANDLE_VALUE;
@@ -270,83 +319,40 @@ static void msvcrt_free_fd(int fd)
         break;
     }
   }
-
-  if (fd == fdend - 1)
-    fdend--;
-  if (fd < fdstart)
-    fdstart = fd;
-  UNLOCK_FILES();
+  release_ioinfo(fdinfo);
 }
 
-/* INTERNAL: Allocate an fd slot from a Win32 HANDLE, starting from fd */
-/* caller must hold the files lock */
-static int msvcrt_set_fd(HANDLE hand, int flag, int fd)
+static void msvcrt_set_fd(ioinfo *fdinfo, HANDLE hand, int flag)
 {
-  ioinfo *fdinfo;
-
-  if (fd >= MSVCRT_MAX_FILES)
-  {
-    WARN(":files exhausted!\n");
-    *_errno() = ENFILE;
-    return -1;
-  }
-
-  fdinfo = get_ioinfo(fd);
-  if(fdinfo == &__badioinfo) {
-    int i;
-
-    __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE] = calloc(MSVCRT_FD_BLOCK_SIZE, sizeof(ioinfo));
-    if(!__pioinfo[fd/MSVCRT_FD_BLOCK_SIZE]) {
-      WARN(":out of memory!\n");
-      *_errno() = ENOMEM;
-      return -1;
-    }
-
-    for(i=0; i<MSVCRT_FD_BLOCK_SIZE; i++)
-      __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE][i].handle = INVALID_HANDLE_VALUE;
-
-    fdinfo = get_ioinfo(fd);
-  }
-
   fdinfo->handle = hand;
   fdinfo->wxflag = WX_OPEN | (flag & (WX_DONTINHERIT | WX_APPEND | WX_TEXT | WX_PIPE | WX_TTY));
   fdinfo->lookahead[0] = '\n';
   fdinfo->lookahead[1] = '\n';
   fdinfo->lookahead[2] = '\n';
-  fdinfo->exflag = 0;
+  fdinfo->exflag &= EF_CRIT_INIT;
 
-  /* locate next free slot */
-  if (fd == fdstart && fd == fdend)
-    fdstart = fdend + 1;
-  else
-    while (fdstart < fdend &&
-      get_ioinfo(fdstart)->handle != INVALID_HANDLE_VALUE)
-      fdstart++;
-  /* update last fd in use */
-  if (fd >= fdend)
-    fdend = fd + 1;
-  TRACE("fdstart is %d, fdend is %d\n", fdstart, fdend);
-
-  switch (fd)
+  switch (fdinfo-__pioinfo[0])
   {
   case 0: SetStdHandle(STD_INPUT_HANDLE,  hand); break;
   case 1: SetStdHandle(STD_OUTPUT_HANDLE, hand); break;
   case 2: SetStdHandle(STD_ERROR_HANDLE,  hand); break;
   }
-
-  return fd;
 }
 
 /* INTERNAL: Allocate an fd slot from a Win32 HANDLE */
 /*static*/ int msvcrt_alloc_fd(HANDLE hand, int flag)
 {
-  int ret;
+    int fd;
+    ioinfo *info = get_ioinfo_alloc(&fd);
 
-  LOCK_FILES();
-  TRACE(":handle (%p) allocating fd (%d)\n",hand,fdstart);
-  ret = msvcrt_set_fd(hand, flag, fdstart);
-  UNLOCK_FILES();
-  return ret;
+    TRACE(":handle (%p) allocating fd (%d)\n", hand, fd);
+
+    if(info == &__badioinfo)
+        return -1;
+
+    msvcrt_set_fd(info, hand, flag);
+    release_ioinfo(info);
+    return fd;
 }
 
 /* INTERNAL: Allocate a FILE* for an fd slot */
@@ -376,7 +382,7 @@ static FILE* msvcrt_alloc_fp(void)
 static int msvcrt_init_fp(FILE* file, int fd, unsigned stream_flags)
 {
   TRACE(":fd (%d) allocating FILE*\n",fd);
-  if (!is_valid_fd(fd))
+  if (!(get_ioinfo_nolock(fd)->wxflag & WX_OPEN))
   {
     WARN(":invalid fd %d\n",fd);
     *__doserrno() = 0;
@@ -404,12 +410,17 @@ static int msvcrt_init_fp(FILE* file, int fd, unsigned stream_flags)
  */
 unsigned create_io_inherit_block(WORD *size, BYTE **block)
 {
-  int         fd;
+  int         fd, last_fd;
   char*       wxflag_ptr;
   HANDLE*     handle_ptr;
   ioinfo*     fdinfo;
 
-  *size = sizeof(unsigned) + (sizeof(char) + sizeof(HANDLE)) * fdend;
+  for (last_fd=MSVCRT_MAX_FILES-1; last_fd>=0; last_fd--)
+    if (get_ioinfo_nolock(last_fd)->handle != INVALID_HANDLE_VALUE)
+      break;
+  last_fd++;
+
+  *size = sizeof(unsigned) + (sizeof(char) + sizeof(HANDLE)) * last_fd;
   *block = calloc(1, *size);
   if (!*block)
   {
@@ -417,10 +428,10 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
     return FALSE;
   }
   wxflag_ptr = (char*)*block + sizeof(unsigned);
-  handle_ptr = (HANDLE*)(wxflag_ptr + fdend * sizeof(char));
+  handle_ptr = (HANDLE*)(wxflag_ptr + last_fd);
 
-  *(unsigned*)*block = fdend;
-  for (fd = 0; fd < fdend; fd++)
+  *(unsigned*)*block = last_fd;
+  for (fd = 0; fd < last_fd; fd++)
   {
     /* to be inherited, we need it to be open, and that DONTINHERIT isn't set */
     fdinfo = get_ioinfo(fd);
@@ -434,6 +445,7 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
       *wxflag_ptr = 0;
       *handle_ptr = INVALID_HANDLE_VALUE;
     }
+    release_ioinfo(fdinfo);
     wxflag_ptr++; handle_ptr++;
   }
   return TRUE;
@@ -464,45 +476,50 @@ void msvcrt_init_io(void)
     for (i = 0; i < count; i++)
     {
       if ((*wxflag_ptr & WX_OPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
-        msvcrt_set_fd(*handle_ptr, *wxflag_ptr, i);
+      {
+        fdinfo = get_ioinfo_alloc_fd(i);
+        if(fdinfo != &__badioinfo)
+            msvcrt_set_fd(fdinfo, *handle_ptr, *wxflag_ptr);
+        release_ioinfo(fdinfo);
+      }
 
       wxflag_ptr++; handle_ptr++;
     }
-    fdend = max( 3, count );
-    for (fdstart = 3; fdstart < fdend; fdstart++)
-        if (get_ioinfo(fdstart)->handle == INVALID_HANDLE_VALUE) break;
   }
 
-  fdinfo = get_ioinfo(STDIN_FILENO);
+  fdinfo = get_ioinfo_alloc_fd(STDIN_FILENO);
   if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
     HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
     DWORD type = GetFileType(h);
 
-    msvcrt_set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
-            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDIN_FILENO);
+    msvcrt_set_fd(fdinfo, h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
+            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0));
   }
+  release_ioinfo(fdinfo);
 
-  fdinfo = get_ioinfo(STDOUT_FILENO);
+  fdinfo = get_ioinfo_alloc_fd(STDOUT_FILENO);
   if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD type = GetFileType(h);
 
-    msvcrt_set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
-            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDOUT_FILENO);
+    msvcrt_set_fd(fdinfo, h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
+            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0));
   }
+  release_ioinfo(fdinfo);
 
-  fdinfo = get_ioinfo(STDERR_FILENO);
+  fdinfo = get_ioinfo_alloc_fd(STDERR_FILENO);
   if (!(fdinfo->wxflag & WX_OPEN) || fdinfo->handle == INVALID_HANDLE_VALUE) {
     HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
     DWORD type = GetFileType(h);
 
-    msvcrt_set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
-            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDERR_FILENO);
+    msvcrt_set_fd(fdinfo, h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
+            |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0));
   }
+  release_ioinfo(fdinfo);
 
-  TRACE(":handles (%p)(%p)(%p)\n", get_ioinfo(STDIN_FILENO)->handle,
-        get_ioinfo(STDOUT_FILENO)->handle,
-        get_ioinfo(STDERR_FILENO)->handle);
+  TRACE(":handles (%p)(%p)(%p)\n", get_ioinfo_nolock(STDIN_FILENO)->handle,
+        get_ioinfo_nolock(STDOUT_FILENO)->handle,
+        get_ioinfo_nolock(STDERR_FILENO)->handle);
 
   memset(_iob,0,3*sizeof(FILE));
   for (i = 0; i < 3; i++)
@@ -811,27 +828,36 @@ int CDECL _wunlink(const wchar_t *path)
  */
 int CDECL _commit(int fd)
 {
-  HANDLE hand = fdtoh(fd);
+    ioinfo *info = get_ioinfo(fd);
+    int ret;
 
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
-    return -1;
-
-  if (!FlushFileBuffers(hand))
-  {
-    if (GetLastError() == ERROR_INVALID_HANDLE)
+    TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+    if (info->handle == INVALID_HANDLE_VALUE)
+        ret = -1;
+    else if (!FlushFileBuffers(info->handle))
     {
-      /* FlushFileBuffers fails for console handles
-       * so we ignore this error.
-       */
-      return 0;
+        if (GetLastError() == ERROR_INVALID_HANDLE)
+        {
+          /* FlushFileBuffers fails for console handles
+           * so we ignore this error.
+           */
+          ret = 0;
+        }
+        else
+        {
+            TRACE(":failed-last error (%d)\n",GetLastError());
+            _dosmaperr(GetLastError());
+            ret = -1;
+        }
     }
-    TRACE(":failed-last error (%d)\n",GetLastError());
-    _dosmaperr(GetLastError());
-    return -1;
-  }
-  TRACE(":ok\n");
-  return 0;
+    else
+    {
+        TRACE(":ok\n");
+        ret = 0;
+    }
+
+    release_ioinfo(info);
+    return ret;
 }
 
 /* _flushall calls fflush which calls _flushall */
@@ -895,7 +921,7 @@ int CDECL fflush(FILE* file)
         _unlock_file(file);
 
         return 0;
-    }    
+    }
     return 0;
 }
 
@@ -904,27 +930,30 @@ int CDECL fflush(FILE* file)
  */
 int CDECL _close(int fd)
 {
-  HANDLE hand;
+  ioinfo *info = get_ioinfo(fd);
   int ret;
 
-  LOCK_FILES();
-  hand = fdtoh(fd);
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
+  TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+  if (!(info->wxflag & WX_OPEN)) {
     ret = -1;
-  else if (!CloseHandle(hand))
-  {
-    WARN(":failed-last error (%d)\n",GetLastError());
-    _dosmaperr(GetLastError());
-    ret = -1;
-  }
-  else
-  {
+  } else if (fd == STDOUT_FILENO &&
+          info->handle == get_ioinfo_nolock(STDERR_FILENO)->handle) {
     msvcrt_free_fd(fd);
     ret = 0;
+  } else if (fd == STDERR_FILENO &&
+          info->handle == get_ioinfo_nolock(STDOUT_FILENO)->handle) {
+    msvcrt_free_fd(fd);
+    ret = 0;
+  } else {
+    ret = CloseHandle(info->handle) ? 0 : -1;
+    msvcrt_free_fd(fd);
+    if (ret) {
+      WARN(":failed-last error (%d)\n",GetLastError());
+      _dosmaperr(GetLastError());
+      ret = -1;
+    }
   }
-  UNLOCK_FILES();
-  TRACE(":ok\n");
+  release_ioinfo(info);
   return ret;
 }
 
@@ -937,32 +966,41 @@ int CDECL _close(int fd)
  */
 int CDECL _dup2(int od, int nd)
 {
+  ioinfo *info_od, *info_nd;
   int ret;
 
   TRACE("(od=%d, nd=%d)\n", od, nd);
-  LOCK_FILES();
-  if (nd < MSVCRT_MAX_FILES && nd >= 0 && is_valid_fd(od))
+
+  if (od < nd)
+  {
+    info_od = get_ioinfo(od);
+    info_nd = get_ioinfo_alloc_fd(nd);
+  }
+  else
+  {
+    info_nd = get_ioinfo_alloc_fd(nd);
+    info_od = get_ioinfo(od);
+  }
+
+  if (info_nd == &__badioinfo)
+  {
+      ret = -1;
+  }
+  else if (info_od->wxflag & WX_OPEN)
   {
     HANDLE handle;
 
-    if (DuplicateHandle(GetCurrentProcess(), get_ioinfo(od)->handle,
+    if (DuplicateHandle(GetCurrentProcess(), info_od->handle,
      GetCurrentProcess(), &handle, 0, TRUE, DUPLICATE_SAME_ACCESS))
     {
-      int wxflag = get_ioinfo(od)->wxflag & ~_O_NOINHERIT;
+      int wxflag = info_od->wxflag & ~_O_NOINHERIT;
 
-      if (is_valid_fd(nd))
+      if (info_nd->wxflag & WX_OPEN)
         _close(nd);
-      ret = msvcrt_set_fd(handle, wxflag, nd);
-      if (ret == -1)
-      {
-        CloseHandle(handle);
-        *_errno() = EMFILE;
-      }
-      else
-      {
-        /* _dup2 returns 0, not nd, on success */
-        ret = 0;
-      }
+
+      msvcrt_set_fd(info_nd, handle, wxflag);
+      /* _dup2 returns 0, not nd, on success */
+      ret = 0;
     }
     else
     {
@@ -975,7 +1013,9 @@ int CDECL _dup2(int od, int nd)
     *_errno() = EBADF;
     ret = -1;
   }
-  UNLOCK_FILES();
+
+  release_ioinfo(info_od);
+  release_ioinfo(info_nd);
   return ret;
 }
 
@@ -985,14 +1025,13 @@ int CDECL _dup2(int od, int nd)
 int CDECL _dup(int od)
 {
   int fd, ret;
+  ioinfo *info = get_ioinfo_alloc(&fd);
 
-  LOCK_FILES();
-  fd = fdstart;
   if (_dup2(od, fd) == 0)
     ret = fd;
   else
     ret = -1;
-  UNLOCK_FILES();
+  release_ioinfo(info);
   return ret;
 }
 
@@ -1001,29 +1040,38 @@ int CDECL _dup(int od)
  */
 int CDECL _eof(int fd)
 {
+  ioinfo *info = get_ioinfo(fd);
   DWORD curpos,endpos;
   LONG hcurpos,hendpos;
-  HANDLE hand = fdtoh(fd);
 
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
+  TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
 
-  if (hand == INVALID_HANDLE_VALUE)
+  if (info->handle == INVALID_HANDLE_VALUE)
+  {
+    release_ioinfo(info);
     return -1;
+  }
 
-  if (get_ioinfo(fd)->wxflag & WX_ATEOF) return TRUE;
+  if (info->wxflag & WX_ATEOF)
+  {
+      release_ioinfo(info);
+      return TRUE;
+  }
 
   /* Otherwise we do it the hard way */
   hcurpos = hendpos = 0;
-  curpos = SetFilePointer(hand, 0, &hcurpos, FILE_CURRENT);
-  endpos = SetFilePointer(hand, 0, &hendpos, FILE_END);
+  curpos = SetFilePointer(info->handle, 0, &hcurpos, FILE_CURRENT);
+  endpos = SetFilePointer(info->handle, 0, &hendpos, FILE_END);
 
   if (curpos == endpos && hcurpos == hendpos)
   {
     /* FIXME: shouldn't WX_ATEOF be set here? */
+    release_ioinfo(info);
     return TRUE;
   }
 
-  SetFilePointer(hand, curpos, &hcurpos, FILE_BEGIN);
+  SetFilePointer(info->handle, curpos, &hcurpos, FILE_BEGIN);
+  release_ioinfo(info);
   return FALSE;
 }
 
@@ -1058,7 +1106,17 @@ void msvcrt_free_io(void)
     _fcloseall();
 
     for(i=0; i<sizeof(__pioinfo)/sizeof(__pioinfo[0]); i++)
+    {
+        if(!__pioinfo[i])
+            continue;
+
+        for(j=0; j<MSVCRT_FD_BLOCK_SIZE; j++)
+        {
+            if(__pioinfo[i][j].exflag & EF_CRIT_INIT)
+                DeleteCriticalSection(&__pioinfo[i][j].crit);
+        }
         free(__pioinfo[i]);
+    }
 
     for(j=0; j<MSVCRT_stream_idx; j++)
     {
@@ -1079,15 +1137,20 @@ void msvcrt_free_io(void)
  */
 __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
 {
-  HANDLE hand = fdtoh(fd);
+  ioinfo *info = get_ioinfo(fd);
   LARGE_INTEGER ofs;
 
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
+  TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+
+  if (info->handle == INVALID_HANDLE_VALUE)
+  {
+    release_ioinfo(info);
     return -1;
+  }
 
   if (whence < 0 || whence > 2)
   {
+    release_ioinfo(info);
     *_errno() = EINVAL;
     return -1;
   }
@@ -1101,14 +1164,16 @@ __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
   /* The MoleBox protection scheme expects msvcrt to use SetFilePointer only,
    * so a LARGE_INTEGER offset cannot be passed directly via SetFilePointerEx. */
   ofs.QuadPart = offset;
-  if ((ofs.u.LowPart = SetFilePointer(hand, ofs.u.LowPart, &ofs.u.HighPart, whence)) != INVALID_SET_FILE_POINTER ||
+  if ((ofs.u.LowPart = SetFilePointer(info->handle, ofs.u.LowPart, &ofs.u.HighPart, whence)) != INVALID_SET_FILE_POINTER ||
       GetLastError() == ERROR_SUCCESS)
   {
-    get_ioinfo(fd)->wxflag &= ~(WX_ATEOF|WX_READEOF);
+    info->wxflag &= ~(WX_ATEOF|WX_READEOF);
     /* FIXME: What if we seek _to_ EOF - is EOF set? */
 
+    release_ioinfo(info);
     return ofs.QuadPart;
   }
+  release_ioinfo(info);
   TRACE(":error-last error (%d)\n",GetLastError());
   _dosmaperr(GetLastError());
   return -1;
@@ -1154,16 +1219,20 @@ void CDECL _unlock_file(FILE *file)
  */
 int CDECL _locking(int fd, int mode, LONG nbytes)
 {
+  ioinfo *info = get_ioinfo(fd);
   BOOL ret;
   DWORD cur_locn;
-  HANDLE hand = fdtoh(fd);
 
-  TRACE(":fd (%d) handle (%p)\n",fd,hand);
-  if (hand == INVALID_HANDLE_VALUE)
+  TRACE(":fd (%d) handle (%p)\n", fd, info->handle);
+  if (info->handle == INVALID_HANDLE_VALUE)
+  {
+    release_ioinfo(info);
     return -1;
+  }
 
   if (mode < 0 || mode > 4)
   {
+    release_ioinfo(info);
     *_errno() = EINVAL;
     return -1;
   }
@@ -1176,8 +1245,9 @@ int CDECL _locking(int fd, int mode, LONG nbytes)
         (mode==_LK_NBRLCK)?"_LK_NBRLCK":
                           "UNKNOWN");
 
-  if ((cur_locn = SetFilePointer(hand, 0L, NULL, SEEK_CUR)) == INVALID_SET_FILE_POINTER)
+  if ((cur_locn = SetFilePointer(info->handle, 0L, NULL, FILE_CURRENT)) == INVALID_SET_FILE_POINTER)
   {
+    release_ioinfo(info);
     FIXME ("Seek failed\n");
     *_errno() = EINVAL; /* FIXME */
     return -1;
@@ -1188,16 +1258,17 @@ int CDECL _locking(int fd, int mode, LONG nbytes)
     ret = 1; /* just to satisfy gcc */
     while (nretry--)
     {
-      ret = LockFile(hand, cur_locn, 0L, nbytes, 0L);
+      ret = LockFile(info->handle, cur_locn, 0L, nbytes, 0L);
       if (ret) break;
       Sleep(1);
     }
   }
   else if (mode == _LK_UNLCK)
-    ret = UnlockFile(hand, cur_locn, 0L, nbytes, 0L);
+    ret = UnlockFile(info->handle, cur_locn, 0L, nbytes, 0L);
   else
-    ret = LockFile(hand, cur_locn, 0L, nbytes, 0L);
+    ret = LockFile(info->handle, cur_locn, 0L, nbytes, 0L);
   /* FIXME - what about error settings? */
+  release_ioinfo(info);
   return ret ? 0 : -1;
 }
 
@@ -1246,18 +1317,16 @@ int CDECL fseek(FILE* file, long offset, int whence)
  */
 int CDECL _chsize_s(int fd, __int64 size)
 {
+    ioinfo *info;
     __int64 cur, pos;
-    HANDLE handle;
     BOOL ret = FALSE;
 
     TRACE("(fd=%d, size=%s)\n", fd, wine_dbgstr_longlong(size));
 
     if (!MSVCRT_CHECK_PMT(size >= 0)) return EINVAL;
 
-    LOCK_FILES();
-
-    handle = fdtoh(fd);
-    if (handle != INVALID_HANDLE_VALUE)
+    info = get_ioinfo(fd);
+    if (info->handle != INVALID_HANDLE_VALUE)
     {
         /* save the current file pointer */
         cur = _lseeki64(fd, 0, SEEK_CUR);
@@ -1266,7 +1335,7 @@ int CDECL _chsize_s(int fd, __int64 size)
             pos = _lseeki64(fd, size, SEEK_SET);
             if (pos >= 0)
             {
-                ret = SetEndOfFile(handle);
+                ret = SetEndOfFile(info->handle);
                 if (!ret) _dosmaperr(GetLastError());
             }
 
@@ -1275,7 +1344,7 @@ int CDECL _chsize_s(int fd, __int64 size)
         }
     }
 
-    UNLOCK_FILES();
+    release_ioinfo(info);
     return ret ? 0 : *_errno();
 }
 
@@ -1521,9 +1590,11 @@ int CDECL _fileno(FILE* file)
  */
 intptr_t CDECL _get_osfhandle(int fd)
 {
-  HANDLE hand = fdtoh(fd);
+  HANDLE hand = get_ioinfo_nolock(fd)->handle;
   TRACE(":fd (%d) handle (%p)\n",fd,hand);
 
+  if(hand == INVALID_HANDLE_VALUE)
+      *_errno() = EBADF;
   return (intptr_t)hand;
 }
 
@@ -1648,7 +1719,6 @@ int CDECL _pipe(int *pfds, unsigned int psize, int textmode)
     unsigned int wxflags = split_oflags(textmode);
     int fd;
 
-    LOCK_FILES();
     fd = msvcrt_alloc_fd(readHandle, wxflags);
     if (fd != -1)
     {
@@ -1672,7 +1742,6 @@ int CDECL _pipe(int *pfds, unsigned int psize, int textmode)
       CloseHandle(writeHandle);
       *_errno() = EMFILE;
     }
-    UNLOCK_FILES();
   }
   else
     _dosmaperr(GetLastError());
@@ -1854,11 +1923,11 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
       return *_errno();
 
   if (oflags & _O_WTEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF16|EF_UNK_UNICODE;
+      get_ioinfo_nolock(*fd)->exflag |= EF_UTF16|EF_UNK_UNICODE;
   else if (oflags & _O_U16TEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF16;
+      get_ioinfo_nolock(*fd)->exflag |= EF_UTF16;
   else if (oflags & _O_U8TEXT)
-      get_ioinfo(*fd)->exflag |= EF_UTF8;
+      get_ioinfo_nolock(*fd)->exflag |= EF_UTF8;
 
   TRACE(":fd (%d) handle (%p)\n", *fd, hand);
   return 0;
@@ -2058,9 +2127,8 @@ static inline int get_utf8_char_len(char ch)
 /*********************************************************************
  * (internal) read_utf8
  */
-static int read_utf8(int fd, wchar_t *buf, unsigned int count)
+static int read_utf8(ioinfo *fdinfo, wchar_t *buf, unsigned int count)
 {
-    ioinfo *fdinfo = get_ioinfo(fd);
     HANDLE hand = fdinfo->handle;
     char min_buf[4], *readbuf, lookahead;
     DWORD readbuf_size, pos=0, num_read=1, char_len, i, j;
@@ -2235,12 +2303,10 @@ static int read_utf8(int fd, wchar_t *buf, unsigned int count)
  * the file pointer on the \r character while getc() goes on to
  * the following \n
  */
-static int read_i(int fd, void *buf, unsigned int count)
+static int read_i(int fd, ioinfo *fdinfo, void *buf, unsigned int count)
 {
     DWORD num_read, utf16;
     char *bufstart = buf;
-    HANDLE hand = fdtoh(fd);
-    ioinfo *fdinfo = get_ioinfo(fd);
 
     if (count == 0)
         return 0;
@@ -2251,8 +2317,8 @@ static int read_i(int fd, void *buf, unsigned int count)
     }
     /* Don't trace small reads, it gets *very* annoying */
     if (count > 4)
-        TRACE(":fd (%d) handle (%p) buf (%p) len (%d)\n",fd,hand,buf,count);
-    if (hand == INVALID_HANDLE_VALUE)
+        TRACE(":fd (%d) handle (%p) buf (%p) len (%d)\n", fd, fdinfo->handle, buf, count);
+    if (fdinfo->handle == INVALID_HANDLE_VALUE)
     {
         *_errno() = EBADF;
         return -1;
@@ -2266,9 +2332,9 @@ static int read_i(int fd, void *buf, unsigned int count)
     }
 
     if((fdinfo->wxflag&WX_TEXT) && (fdinfo->exflag&EF_UTF8))
-        return read_utf8(fd, buf, count);
+        return read_utf8(fdinfo, buf, count);
 
-    if (fdinfo->lookahead[0]!='\n' || ReadFile(hand, bufstart, count, &num_read, NULL))
+    if (fdinfo->lookahead[0]!='\n' || ReadFile(fdinfo->handle, bufstart, count, &num_read, NULL))
     {
         if (fdinfo->lookahead[0] != '\n')
         {
@@ -2281,7 +2347,7 @@ static int read_i(int fd, void *buf, unsigned int count)
                 fdinfo->lookahead[1] = '\n';
             }
 
-            if(count>1+utf16 && ReadFile(hand, bufstart+1+utf16, count-1-utf16, &num_read, NULL))
+            if(count>1+utf16 && ReadFile(fdinfo->handle, bufstart+1+utf16, count-1-utf16, &num_read, NULL))
                 num_read += 1+utf16;
             else
                 num_read = 1+utf16;
@@ -2326,7 +2392,7 @@ static int read_i(int fd, void *buf, unsigned int count)
                     DWORD len;
 
                     lookahead[1] = '\n';
-                    if (ReadFile(hand, lookahead, 1+utf16, &len, NULL) && len)
+                    if (ReadFile(fdinfo->handle, lookahead, 1+utf16, &len, NULL) && len)
                     {
                         if(lookahead[0]=='\n' && (!utf16 || lookahead[1]==0) && j==0)
                         {
@@ -2399,9 +2465,10 @@ static int read_i(int fd, void *buf, unsigned int count)
  */
 int CDECL _read(int fd, void *buf, unsigned int count)
 {
-  int num_read;
-  num_read = read_i(fd, buf, count);
-  return num_read;
+    ioinfo *info = get_ioinfo(fd);
+    int num_read = read_i(fd, info, buf, count);
+    release_ioinfo(info);
+    return num_read;
 }
 
 /*********************************************************************
@@ -2409,30 +2476,39 @@ int CDECL _read(int fd, void *buf, unsigned int count)
  */
 int CDECL _setmode(int fd,int mode)
 {
-    int ret = get_ioinfo(fd)->wxflag & WX_TEXT ? _O_TEXT : _O_BINARY;
-    if(ret==_O_TEXT && (get_ioinfo(fd)->exflag & (EF_UTF8|EF_UTF16)))
+    ioinfo *info = get_ioinfo(fd);
+    int ret = info->wxflag & WX_TEXT ? _O_TEXT : _O_BINARY;
+    if(ret==_O_TEXT && (info->exflag & (EF_UTF8|EF_UTF16)))
         ret = _O_WTEXT;
 
     if(mode!=_O_TEXT && mode!=_O_BINARY && mode!=_O_WTEXT
                 && mode!=_O_U16TEXT && mode!=_O_U8TEXT) {
         *_errno() = EINVAL;
+        release_ioinfo(info);
         return -1;
     }
 
+    if(info == &__badioinfo) {
+        *_errno() = EBADF;
+        return EOF;
+    }
+
     if(mode == _O_BINARY) {
-        get_ioinfo(fd)->wxflag &= ~WX_TEXT;
-        get_ioinfo(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
+        info->wxflag &= ~WX_TEXT;
+        info->exflag &= ~(EF_UTF8|EF_UTF16);
+        release_ioinfo(info);
         return ret;
     }
 
-    get_ioinfo(fd)->wxflag |= WX_TEXT;
+    info->wxflag |= WX_TEXT;
     if(mode == _O_TEXT)
-        get_ioinfo(fd)->exflag &= ~(EF_UTF8|EF_UTF16);
+        info->exflag &= ~(EF_UTF8|EF_UTF16);
     else if(mode == _O_U8TEXT)
-        get_ioinfo(fd)->exflag = (get_ioinfo(fd)->exflag & ~EF_UTF16) | EF_UTF8;
+        info->exflag = (info->exflag & ~EF_UTF16) | EF_UTF8;
     else
-        get_ioinfo(fd)->exflag = (get_ioinfo(fd)->exflag & ~EF_UTF8) | EF_UTF16;
+        info->exflag = (info->exflag & ~EF_UTF8) | EF_UTF16;
 
+    release_ioinfo(info);
     return ret;
 
 }
@@ -2520,12 +2596,14 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
     if (hand == INVALID_HANDLE_VALUE)
     {
         *_errno() = EBADF;
+        release_ioinfo(info);
         return -1;
     }
 
     if (((info->exflag&EF_UTF8) || (info->exflag&EF_UTF16)) && count&1)
     {
         *_errno() = EINVAL;
+        release_ioinfo(info);
         return -1;
     }
 
@@ -2537,7 +2615,10 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
     {
         if (WriteFile(hand, buf, count, &num_written, NULL)
                 &&  (num_written == count))
+        {
+            release_ioinfo(info);
             return num_written;
+        }
         TRACE("WriteFile (fd %d, hand %p) failed-last error (%d)\n", fd,
                 hand, GetLastError());
         *_errno() = ENOSPC;
@@ -2628,6 +2709,7 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
             if(!conv_len) {
                 _dosmaperr(GetLastError());
                 free(p);
+                release_ioinfo(info);
                 return -1;
             }
 
@@ -2659,6 +2741,7 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
 
         if (!WriteFile(hand, q, size, &num_written, NULL))
             num_written = -1;
+        release_ioinfo(info);
         if(p)
             free(p);
         if (num_written != size)
@@ -2671,6 +2754,7 @@ int CDECL _write(int fd, const void* buf, unsigned int count)
         return count;
     }
 
+    release_ioinfo(info);
     return -1;
 }
 
@@ -2771,7 +2855,7 @@ int CDECL _filbuf(FILE* file)
 
     if(!(file->_flag & (_IOMYBUF | _USERBUF))) {
         int r;
-        if ((r = read_i(file->_file,&c,1)) != 1) {
+        if ((r = _read(file->_file,&c,1)) != 1) {
             file->_flag |= (r == 0) ? _IOEOF : _IOERR;
             _unlock_file(file);
             return EOF;
@@ -2780,7 +2864,7 @@ int CDECL _filbuf(FILE* file)
         _unlock_file(file);
         return c;
     } else {
-        file->_cnt = read_i(file->_file, file->_base, file->_bufsiz);
+        file->_cnt = _read(file->_file, file->_base, file->_bufsiz);
         if(file->_cnt<=0) {
             file->_flag |= (file->_cnt == 0) ? _IOEOF : _IOERR;
             file->_cnt = 0;
@@ -2866,8 +2950,8 @@ wint_t CDECL fgetwc(FILE* file)
 
     _lock_file(file);
 
-    if((get_ioinfo(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
-            || !(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+    if((get_ioinfo_nolock(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
+            || !(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT)) {
         char *p;
 
         for(p=(char*)&ret; (wint_t*)p<&ret+1; p++) {
@@ -3063,7 +3147,7 @@ wint_t CDECL fputwc(wchar_t c, FILE* stream)
     /* If this is a real file stream (and not some temporary one for
        sprintf-like functions), check whether it is opened in text mode.
        In this case, we have to perform an implicit conversion to ANSI. */
-    if (!(stream->_flag & _IOSTRG) && get_ioinfo(stream->_file)->wxflag & WX_TEXT)
+    if (!(stream->_flag & _IOSTRG) && get_ioinfo_nolock(stream->_file)->wxflag & WX_TEXT)
     {
         /* Convert to multibyte in text mode */
         char mbc[MB_LEN_MAX];
@@ -3292,7 +3376,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
       i = (file->_cnt<rcnt) ? file->_cnt : rcnt;
       /* If the buffer fill reaches eof but fread wouldn't, clear eof. */
       if (i > 0 && i < file->_cnt) {
-        get_ioinfo(file->_file)->wxflag &= ~WX_ATEOF;
+        get_ioinfo_nolock(file->_file)->wxflag &= ~WX_ATEOF;
         file->_flag &= ~_IOEOF;
       }
       if (i > 0) {
@@ -3313,7 +3397,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
     /* expose feof condition in the flags
      * MFC tests file->_flag for feof, and doesn't call feof())
      */
-    if (get_ioinfo(file->_file)->wxflag & WX_ATEOF)
+    if (get_ioinfo_nolock(file->_file)->wxflag & WX_ATEOF)
         file->_flag |= _IOEOF;
     else if (i == -1)
     {
@@ -3339,7 +3423,7 @@ FILE* CDECL _wfreopen(const wchar_t *path, const wchar_t *mode, FILE* file)
   TRACE(":path (%p) mode (%s) file (%p) fd (%d)\n", debugstr_w(path), debugstr_w(mode), file, file ? file->_file : -1);
 
   LOCK_FILES();
-  if (!file || ((fd = file->_file) < 0) || fd > fdend)
+  if (!file || ((fd = file->_file) < 0))
     file = NULL;
   else
   {
@@ -3431,7 +3515,7 @@ __int64 CDECL _ftelli64(FILE* file)
         if(file->_flag & _IOWRT) {
             pos += file->_ptr - file->_base;
 
-            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
+            if(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT) {
                 char *p;
 
                 for(p=file->_base; p<file->_ptr; p++)
@@ -3443,7 +3527,7 @@ __int64 CDECL _ftelli64(FILE* file)
             int i;
 
             pos -= file->_cnt;
-            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
+            if(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT) {
                 for(i=0; i<file->_cnt; i++)
                     if(file->_ptr[i] == '\n')
                         pos--;
@@ -3459,8 +3543,8 @@ __int64 CDECL _ftelli64(FILE* file)
             pos -= file->_bufsiz;
             pos += file->_ptr - file->_base;
 
-            if(get_ioinfo(file->_file)->wxflag & WX_TEXT) {
-                if(get_ioinfo(file->_file)->wxflag & WX_READNL)
+            if(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT) {
+                if(get_ioinfo_nolock(file->_file)->wxflag & WX_READNL)
                     pos--;
 
                 for(p=file->_base; p<file->_ptr; p++)
@@ -3517,7 +3601,7 @@ int CDECL fputws(const wchar_t *s, FILE* file)
     int ret;
 
     _lock_file(file);
-    if (!(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+    if (!(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT)) {
         ret = fwrite(s,sizeof(*s),len,file) == len ? 0 : EOF;
         _unlock_file(file);
         return ret;
@@ -3901,8 +3985,8 @@ wint_t CDECL ungetwc(wint_t wc, FILE * file)
 
     _lock_file(file);
 
-    if((get_ioinfo(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
-            || !(get_ioinfo(file->_file)->wxflag & WX_TEXT)) {
+    if((get_ioinfo_nolock(file->_file)->exflag & (EF_UTF8 | EF_UTF16))
+            || !(get_ioinfo_nolock(file->_file)->wxflag & WX_TEXT)) {
         unsigned char * pp = (unsigned char *)&mwc;
         int i;
 

@@ -17,10 +17,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wbemprox_private.h"
+#include "config.h"
 
-#include <wbemprov.h>
-#include <rpcproxy.h>
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "objbase.h"
+#include "wbemcli.h"
+#include "wbemprov.h"
+#include "rpcproxy.h"
+
+#include "wbemprox_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
 static HINSTANCE instance;
 

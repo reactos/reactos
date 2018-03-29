@@ -16,23 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 #define CONST_VTABLE
 
 #include <wine/test.h>
-//#include <stdarg.h>
+#include <stdarg.h>
 #include <stdio.h>
 
-//#include "windef.h"
-//#include "winbase.h"
-#include <winnls.h>
-#include <ole2.h>
-#include <urlmon.h>
-#include <wininet.h>
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "urlmon.h"
+#include "wininet.h"
 
 static HRESULT (WINAPI *pCoInternetGetSession)(DWORD, IInternetSession **, DWORD);
 static HRESULT (WINAPI *pReleaseBindInfo)(BINDINFO*);
@@ -945,6 +940,39 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
     return S_OK;
 }
 
+static void test_http_info(IInternetProtocol *protocol)
+{
+    IWinInetHttpInfo *info;
+    char buf[1024];
+    DWORD size, len;
+    HRESULT hres;
+
+    static const WCHAR connectionW[] = {'c','o','n','n','e','c','t','i','o','n',0};
+
+    hres = IInternetProtocol_QueryInterface(protocol, &IID_IWinInetHttpInfo, (void**)&info);
+    ok(hres == S_OK, "Could not get IWinInterHttpInfo iface: %08x\n", hres);
+
+    size = sizeof(buf);
+    strcpy(buf, "connection");
+    hres = IWinInetHttpInfo_QueryInfo(info, HTTP_QUERY_CUSTOM, buf, &size, NULL, NULL);
+    if(tested_protocol != FTP_TEST) {
+        ok(hres == S_OK, "QueryInfo failed: %08x\n", hres);
+
+        ok(!strcmp(buf, "Keep-Alive"), "buf = %s\n", buf);
+        len = strlen(buf);
+        ok(size == len, "size = %u, expected %u\n", size, len);
+
+        size = sizeof(buf);
+        memcpy(buf, connectionW, sizeof(connectionW));
+        hres = IWinInetHttpInfo_QueryInfo(info, HTTP_QUERY_CUSTOM, buf, &size, NULL, NULL);
+        ok(hres == S_FALSE, "QueryInfo returned %08x\n", hres);
+    }else {
+        ok(hres == S_FALSE, "QueryInfo failed: %08x\n", hres);
+    }
+
+    IWinInetHttpInfo_Release(info);
+}
+
 static HRESULT WINAPI ProtocolSink_ReportData(IInternetProtocolSink *iface, DWORD grfBSCF,
         ULONG ulProgress, ULONG ulProgressMax)
 {
@@ -1075,6 +1103,9 @@ static HRESULT WINAPI ProtocolSink_ReportData(IInternetProtocolSink *iface, DWOR
                || broken(grfBSCF == (BSCF_FIRSTDATANOTIFICATION|BSCF_LASTDATANOTIFICATION)),
                "grcfBSCF = %08x\n", grfBSCF);
         }
+
+        if((grfBSCF & BSCF_FIRSTDATANOTIFICATION) && !binding_test)
+            test_http_info(async_protocol);
 
         if(!(bindf & BINDF_FROMURLMON) &&
            !(grfBSCF & BSCF_LASTDATANOTIFICATION)) {
@@ -3140,19 +3171,6 @@ static void test_protocol_terminate(IInternetProtocol *protocol)
     ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
 }
 
-static void test_http_info(IInternetProtocol *protocol)
-{
-    IWinInetHttpInfo *info;
-    HRESULT hres;
-
-    hres = IInternetProtocol_QueryInterface(protocol, &IID_IWinInetHttpInfo, (void**)&info);
-    ok(hres == S_OK, "Could not get IWinInterHttpInfo iface: %08x\n", hres);
-
-    /* TODO */
-
-    IWinInetHttpInfo_Release(info);
-}
-
 /* is_first refers to whether this is the first call to this function
  * _for this url_ */
 static void test_http_protocol_url(LPCWSTR url, int prot, DWORD flags, DWORD tymed)
@@ -3194,7 +3212,6 @@ static void test_http_protocol_url(LPCWSTR url, int prot, DWORD flags, DWORD tym
         ULONG ref;
 
         test_priority(async_protocol);
-        test_http_info(async_protocol);
 
         SET_EXPECT(ReportProgress_COOKIE_SENT);
         if(http_is_first) {
@@ -3463,7 +3480,6 @@ static void test_ftp_protocol(void)
     ok(hres == S_OK, "Could not get IInternetProtocol: %08x\n", hres);
 
     test_priority(async_protocol);
-    test_http_info(async_protocol);
 
     SET_EXPECT(GetBindInfo);
     SET_EXPECT(ReportProgress_FINDINGRESOURCE);

@@ -19,20 +19,16 @@
  */
 
 #include <stdarg.h>
-//#include <stdio.h>
-//#include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "wininet.h"
+#include "winineti.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <wininet.h>
-#include <winineti.h>
-
-#include <wine/test.h>
+#include "wine/test.h"
 
 static const char test_url[] = "http://urlcachetest.winehq.org/index.html";
 static const WCHAR test_urlW[] = {'h','t','t','p',':','/','/','u','r','l','c','a','c','h','e','t','e','s','t','.',

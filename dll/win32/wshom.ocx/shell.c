@@ -17,13 +17,17 @@
  */
 
 #include "wshom_private.h"
+#include "wshom.h"
 
-#include <shellapi.h>
-#include <shlobj.h>
-#include <dispex.h>
-#include <winreg.h>
+#include "shellapi.h"
+#include "shlobj.h"
+#include "dispex.h"
 
-#include <wine/unicode.h>
+#include "wine/debug.h"
+#include "wine/heap.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(wshom);
 
 typedef struct
 {
@@ -127,7 +131,7 @@ static ULONG WINAPI WshExec_Release(IWshExec *iface)
     if (!ref) {
         CloseHandle(This->info.hThread);
         CloseHandle(This->info.hProcess);
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
     }
 
     return ref;
@@ -322,7 +326,7 @@ static HRESULT WshExec_create(BSTR command, IWshExec **ret)
 
     *ret = NULL;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    This = heap_alloc(sizeof(*This));
     if (!This)
         return E_OUTOFMEMORY;
 
@@ -330,7 +334,7 @@ static HRESULT WshExec_create(BSTR command, IWshExec **ret)
     This->ref = 1;
 
     if (!CreateProcessW(NULL, command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &This->info)) {
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
         return HRESULT_FROM_WIN32(GetLastError());
     }
 
@@ -380,7 +384,7 @@ static ULONG WINAPI WshEnvironment_Release(IWshEnvironment *iface)
     TRACE("(%p) ref = %d\n", This, ref);
 
     if (!ref)
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
 
     return ref;
 }
@@ -516,7 +520,7 @@ static HRESULT WshEnvironment_Create(IWshEnvironment **env)
 {
     WshEnvironment *This;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    This = heap_alloc(sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
 
     This->IWshEnvironment_iface.lpVtbl = &WshEnvironmentVtbl;
@@ -569,7 +573,7 @@ static ULONG WINAPI WshCollection_Release(IWshCollection *iface)
     TRACE("(%p) ref = %d\n", This, ref);
 
     if (!ref)
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
 
     return ref;
 }
@@ -718,7 +722,7 @@ static HRESULT WshCollection_Create(IWshCollection **collection)
 {
     WshCollection *This;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    This = heap_alloc(sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
 
     This->IWshCollection_iface.lpVtbl = &WshCollectionVtbl;
@@ -775,7 +779,7 @@ static ULONG WINAPI WshShortcut_Release(IWshShortcut *iface)
     {
         SysFreeString(This->path_link);
         IShellLinkW_Release(This->link);
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
     }
 
     return ref;
@@ -856,7 +860,7 @@ static HRESULT WINAPI WshShortcut_get_Arguments(IWshShortcut *iface, BSTR *Argum
 
     *Arguments = NULL;
 
-    hr = IShellLinkW_GetArguments(This->link, buffW, sizeof(buffW)/sizeof(WCHAR));
+    hr = IShellLinkW_GetArguments(This->link, buffW, ARRAY_SIZE(buffW));
     if (FAILED(hr))
         return hr;
 
@@ -914,7 +918,7 @@ static HRESULT WINAPI WshShortcut_get_IconLocation(IWshShortcut *iface, BSTR *Ic
     if (!IconPath)
         return E_POINTER;
 
-    hr = IShellLinkW_GetIconLocation(This->link, buffW, sizeof(buffW)/sizeof(WCHAR), &icon);
+    hr = IShellLinkW_GetIconLocation(This->link, buffW, ARRAY_SIZE(buffW), &icon);
     if (FAILED(hr)) return hr;
 
     sprintfW(pathW, fmtW, buffW, icon);
@@ -1003,7 +1007,7 @@ static HRESULT WINAPI WshShortcut_get_WorkingDirectory(IWshShortcut *iface, BSTR
         return E_POINTER;
 
     *WorkingDirectory = NULL;
-    hr = IShellLinkW_GetWorkingDirectory(This->link, buffW, sizeof(buffW)/sizeof(WCHAR));
+    hr = IShellLinkW_GetWorkingDirectory(This->link, buffW, ARRAY_SIZE(buffW));
     if (FAILED(hr)) return hr;
 
     *WorkingDirectory = SysAllocString(buffW);
@@ -1074,7 +1078,7 @@ static HRESULT WshShortcut_Create(const WCHAR *path, IDispatch **shortcut)
 
     *shortcut = NULL;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    This = heap_alloc(sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
 
     This->IWshShortcut_iface.lpVtbl = &WshShortcutVtbl;
@@ -1084,7 +1088,7 @@ static HRESULT WshShortcut_Create(const WCHAR *path, IDispatch **shortcut)
             &IID_IShellLinkW, (void**)&This->link);
     if (FAILED(hr))
     {
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
         return hr;
     }
 
@@ -1092,7 +1096,7 @@ static HRESULT WshShortcut_Create(const WCHAR *path, IDispatch **shortcut)
     if (!This->path_link)
     {
         IShellLinkW_Release(This->link);
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
         return E_OUTOFMEMORY;
     }
 
@@ -1392,7 +1396,7 @@ static HKEY get_root_key(const WCHAR *path)
     };
     int i;
 
-    for (i = 0; i < sizeof(rootkeys)/sizeof(rootkeys[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(rootkeys); i++) {
         if (!strncmpW(path, rootkeys[i].full, strlenW(rootkeys[i].full)))
             return rootkeys[i].hkey;
         if (rootkeys[i].abbrev[0] && !strncmpW(path, rootkeys[i].abbrev, strlenW(rootkeys[i].abbrev)))
@@ -1423,7 +1427,7 @@ static HRESULT split_reg_path(const WCHAR *path, WCHAR **subkey, WCHAR **value)
             unsigned int len = *value - *subkey - 1;
             WCHAR *ret;
 
-            ret = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR));
+            ret = heap_alloc((len + 1)*sizeof(WCHAR));
             if (!ret)
                 return E_OUTOFMEMORY;
 
@@ -1463,7 +1467,7 @@ static HRESULT WINAPI WshShell3_RegRead(IWshShell3 *iface, BSTR name, VARIANT *v
     if (ret == ERROR_SUCCESS) {
         void *data;
 
-        data = HeapAlloc(GetProcessHeap(), 0, datalen);
+        data = heap_alloc(datalen);
         if (!data) {
             hr = E_OUTOFMEMORY;
             goto fail;
@@ -1471,7 +1475,7 @@ static HRESULT WINAPI WshShell3_RegRead(IWshShell3 *iface, BSTR name, VARIANT *v
 
         ret = RegGetValueW(root, subkey, val, RRF_RT_ANY, &type, data, &datalen);
         if (ret) {
-            HeapFree(GetProcessHeap(), 0, data);
+            heap_free(data);
             hr = HRESULT_FROM_WIN32(ret);
             goto fail;
         }
@@ -1561,7 +1565,7 @@ static HRESULT WINAPI WshShell3_RegRead(IWshShell3 *iface, BSTR name, VARIANT *v
             hr = E_FAIL;
         };
 
-        HeapFree(GetProcessHeap(), 0, data);
+        heap_free(data);
         if (FAILED(hr))
             VariantInit(value);
     }
@@ -1570,7 +1574,7 @@ static HRESULT WINAPI WshShell3_RegRead(IWshShell3 *iface, BSTR name, VARIANT *v
 
 fail:
     if (val)
-        HeapFree(GetProcessHeap(), 0, subkey);
+        heap_free(subkey);
     return hr;
 }
 
@@ -1658,7 +1662,7 @@ static HRESULT WINAPI WshShell3_RegWrite(IWshShell3 *iface, BSTR name, VARIANT *
 fail:
     VariantClear(&v);
     if (val)
-        HeapFree(GetProcessHeap(), 0, subkey);
+        heap_free(subkey);
     return hr;
 }
 

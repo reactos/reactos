@@ -590,6 +590,14 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
                     case IDC_UPDATEDRIVER:
                         UpdateDriver(hwndDlg, dap);
                         break;
+
+                    case IDC_ROLLBACKDRIVER:
+                        // FIXME
+                        break;
+
+                    case IDC_UNINSTALLDRIVER:
+                        // FIXME
+                        break;
                 }
                 break;
             }
@@ -615,6 +623,8 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
                     UpdateDriverDlg(hwndDlg,
                                     dap);
                 }
+                EnableWindow(GetDlgItem(hwndDlg, IDC_ROLLBACKDRIVER), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALLDRIVER), FALSE);
                 Ret = TRUE;
                 break;
             }

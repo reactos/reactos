@@ -72,6 +72,11 @@
 
 
 #include "vbscript.h"
+#include "parse.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 static int parser_error(parser_ctx_t *,const char*);
 
@@ -127,7 +132,7 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
 #define CHECK_ERROR if(((parser_ctx_t*)ctx)->hres != S_OK) YYABORT
 
 
-#line 131 "parser.tab.c" /* yacc.c:339  */
+#line 136 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -147,8 +152,8 @@ static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
 
 /* In a future release of Bison, this section will be replaced
    by #include "parser.tab.h".  */
-#ifndef YY_PARSER_E_REACTOSSYNC3_0_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
-# define YY_PARSER_E_REACTOSSYNC3_0_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
+#ifndef YY_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
+# define YY_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -238,7 +243,7 @@ extern int parser_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 83 "parser.y" /* yacc.c:355  */
+#line 88 "parser.y" /* yacc.c:355  */
 
     const WCHAR *string;
     statement_t *statement;
@@ -257,7 +262,7 @@ union YYSTYPE
     BOOL boolean;
     double dbl;
 
-#line 261 "parser.tab.c" /* yacc.c:355  */
+#line 266 "parser.tab.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -267,11 +272,11 @@ union YYSTYPE
 
 int parser_parse (parser_ctx_t *ctx);
 
-#endif /* !YY_PARSER_E_REACTOSSYNC3_0_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_PARSER_E_REACTOSSYNC_GCC_DLL_WIN32_VBSCRIPT_PARSER_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 275 "parser.tab.c" /* yacc.c:358  */
+#line 280 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -556,23 +561,23 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   142,   142,   145,   146,   148,   150,   151,   154,   155,
-     158,   159,   162,   165,   166,   167,   168,   169,   172,   173,
-     174,   176,   177,   178,   180,   183,   186,   187,   188,   189,
-     190,   191,   192,   193,   195,   196,   197,   198,   199,   201,
-     203,   207,   208,   211,   212,   215,   216,   217,   220,   221,
-     224,   225,   228,   231,   232,   235,   236,   239,   240,   243,
-     245,   246,   249,   251,   254,   255,   258,   259,   262,   266,
-     267,   270,   271,   272,   276,   277,   280,   281,   284,   285,
-     286,   288,   290,   293,   294,   297,   298,   301,   302,   305,
-     306,   309,   310,   313,   314,   317,   318,   321,   322,   323,
-     324,   325,   326,   327,   328,   331,   332,   335,   336,   337,
-     340,   341,   344,   345,   349,   350,   352,   356,   357,   360,
-     361,   362,   363,   366,   367,   370,   371,   372,   373,   374,
-     375,   376,   379,   380,   381,   382,   385,   386,   387,   390,
-     391,   394,   397,   398,   400,   402,   403,   406,   408,   410,
-     414,   416,   420,   421,   424,   425,   426,   429,   430,   433,
-     434,   437,   438,   439,   443,   444,   448,   449,   450,   451
+       0,   147,   147,   150,   151,   153,   155,   156,   159,   160,
+     163,   164,   167,   170,   171,   172,   173,   174,   177,   178,
+     179,   181,   182,   183,   185,   188,   191,   192,   193,   194,
+     195,   196,   197,   198,   200,   201,   202,   203,   204,   206,
+     208,   212,   213,   216,   217,   220,   221,   222,   225,   226,
+     229,   230,   233,   236,   237,   240,   241,   244,   245,   248,
+     250,   251,   254,   256,   259,   260,   263,   264,   267,   271,
+     272,   275,   276,   277,   281,   282,   285,   286,   289,   290,
+     291,   293,   295,   298,   299,   302,   303,   306,   307,   310,
+     311,   314,   315,   318,   319,   322,   323,   326,   327,   328,
+     329,   330,   331,   332,   333,   336,   337,   340,   341,   342,
+     345,   346,   349,   350,   354,   355,   357,   361,   362,   365,
+     366,   367,   368,   371,   372,   375,   376,   377,   378,   379,
+     380,   381,   384,   385,   386,   387,   390,   391,   392,   395,
+     396,   399,   402,   403,   405,   407,   408,   411,   413,   415,
+     419,   421,   425,   426,   429,   430,   431,   434,   435,   438,
+     439,   442,   443,   444,   448,   449,   453,   454,   455,   456
 };
 #endif
 
@@ -1709,964 +1714,964 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 142 "parser.y" /* yacc.c:1646  */
+#line 147 "parser.y" /* yacc.c:1646  */
     { parse_complete(ctx, (yyvsp[-2].boolean)); }
-#line 1715 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1720 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 145 "parser.y" /* yacc.c:1646  */
+#line 150 "parser.y" /* yacc.c:1646  */
     { (yyval.boolean) = FALSE; }
-#line 1721 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1726 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 146 "parser.y" /* yacc.c:1646  */
+#line 151 "parser.y" /* yacc.c:1646  */
     { (yyval.boolean) = TRUE; }
-#line 1727 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1732 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 150 "parser.y" /* yacc.c:1646  */
+#line 155 "parser.y" /* yacc.c:1646  */
     { source_add_statement(ctx, (yyvsp[0].statement)); }
-#line 1733 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1738 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 151 "parser.y" /* yacc.c:1646  */
+#line 156 "parser.y" /* yacc.c:1646  */
     { source_add_class(ctx, (yyvsp[0].class_decl)); }
-#line 1739 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1744 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 154 "parser.y" /* yacc.c:1646  */
+#line 159 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = NULL; }
-#line 1745 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1750 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 155 "parser.y" /* yacc.c:1646  */
+#line 160 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = (yyvsp[0].statement); }
-#line 1751 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1756 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 158 "parser.y" /* yacc.c:1646  */
+#line 163 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = (yyvsp[0].statement); }
-#line 1757 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1762 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 159 "parser.y" /* yacc.c:1646  */
+#line 164 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = link_statements((yyvsp[-1].statement), (yyvsp[0].statement)); }
-#line 1763 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1768 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 162 "parser.y" /* yacc.c:1646  */
+#line 167 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = (yyvsp[-1].statement); }
-#line 1769 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1774 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 165 "parser.y" /* yacc.c:1646  */
+#line 170 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = NULL; }
-#line 1775 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1780 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 166 "parser.y" /* yacc.c:1646  */
+#line 171 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = (yyvsp[0].statement); }
-#line 1781 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1786 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 167 "parser.y" /* yacc.c:1646  */
+#line 172 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = (yyvsp[0].statement); }
-#line 1787 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1792 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 168 "parser.y" /* yacc.c:1646  */
+#line 173 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-2].statement)->next = (yyvsp[0].statement); (yyval.statement) = (yyvsp[-2].statement); }
-#line 1793 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1798 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 169 "parser.y" /* yacc.c:1646  */
+#line 174 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = (yyvsp[-1].statement); }
-#line 1799 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1804 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 172 "parser.y" /* yacc.c:1646  */
+#line 177 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-1].member)->args = (yyvsp[0].expression); (yyval.statement) = new_call_statement(ctx, FALSE, (yyvsp[-1].member)); CHECK_ERROR; }
-#line 1805 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1810 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 173 "parser.y" /* yacc.c:1646  */
+#line 178 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-1].member)->args = (yyvsp[0].expression); (yyval.statement) = new_call_statement(ctx, TRUE, (yyvsp[-1].member)); CHECK_ERROR; }
-#line 1811 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1816 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 175 "parser.y" /* yacc.c:1646  */
+#line 180 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-3].member)->args = (yyvsp[-2].expression); (yyval.statement) = new_assign_statement(ctx, (yyvsp[-3].member), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 1817 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1822 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 176 "parser.y" /* yacc.c:1646  */
+#line 181 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_dim_statement(ctx, (yyvsp[0].dim_decl)); CHECK_ERROR; }
-#line 1823 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1828 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 177 "parser.y" /* yacc.c:1646  */
+#line 182 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = (yyvsp[0].statement); }
-#line 1829 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1834 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 179 "parser.y" /* yacc.c:1646  */
+#line 184 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_while_statement(ctx, STAT_WHILE, (yyvsp[-3].expression), (yyvsp[-1].statement)); CHECK_ERROR; }
-#line 1835 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1840 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 181 "parser.y" /* yacc.c:1646  */
+#line 186 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_while_statement(ctx, (yyvsp[-4].boolean) ? STAT_WHILELOOP : STAT_UNTIL, (yyvsp[-3].expression), (yyvsp[-1].statement));
                                               CHECK_ERROR; }
-#line 1842 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1847 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 184 "parser.y" /* yacc.c:1646  */
+#line 189 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_while_statement(ctx, (yyvsp[-1].boolean) ? STAT_DOWHILE : STAT_DOUNTIL, (yyvsp[0].expression), (yyvsp[-3].statement));
                                               CHECK_ERROR; }
-#line 1849 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1854 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 186 "parser.y" /* yacc.c:1646  */
+#line 191 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_while_statement(ctx, STAT_DOWHILE, NULL, (yyvsp[-1].statement)); CHECK_ERROR; }
-#line 1855 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1860 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 187 "parser.y" /* yacc.c:1646  */
+#line 192 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_function_statement(ctx, (yyvsp[0].func_decl)); CHECK_ERROR; }
-#line 1861 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1866 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 188 "parser.y" /* yacc.c:1646  */
+#line 193 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_statement(ctx, STAT_EXITDO, 0); CHECK_ERROR; }
-#line 1867 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1872 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 189 "parser.y" /* yacc.c:1646  */
+#line 194 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_statement(ctx, STAT_EXITFOR, 0); CHECK_ERROR; }
-#line 1873 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1878 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 190 "parser.y" /* yacc.c:1646  */
+#line 195 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_statement(ctx, STAT_EXITFUNC, 0); CHECK_ERROR; }
-#line 1879 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1884 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 191 "parser.y" /* yacc.c:1646  */
+#line 196 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_statement(ctx, STAT_EXITPROP, 0); CHECK_ERROR; }
-#line 1885 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1890 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 192 "parser.y" /* yacc.c:1646  */
+#line 197 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_statement(ctx, STAT_EXITSUB, 0); CHECK_ERROR; }
-#line 1891 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1896 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 194 "parser.y" /* yacc.c:1646  */
+#line 199 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-3].member)->args = (yyvsp[-2].expression); (yyval.statement) = new_set_statement(ctx, (yyvsp[-3].member), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 1897 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1902 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 195 "parser.y" /* yacc.c:1646  */
+#line 200 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_statement(ctx, STAT_STOP, 0); CHECK_ERROR; }
-#line 1903 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1908 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 196 "parser.y" /* yacc.c:1646  */
+#line 201 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_onerror_statement(ctx, TRUE); CHECK_ERROR; }
-#line 1909 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1914 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 197 "parser.y" /* yacc.c:1646  */
+#line 202 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_onerror_statement(ctx, FALSE); CHECK_ERROR; }
-#line 1915 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1920 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 198 "parser.y" /* yacc.c:1646  */
+#line 203 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_const_statement(ctx, (yyvsp[0].const_decl)); CHECK_ERROR; }
-#line 1921 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1926 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 200 "parser.y" /* yacc.c:1646  */
+#line 205 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_forto_statement(ctx, (yyvsp[-8].string), (yyvsp[-6].expression), (yyvsp[-4].expression), (yyvsp[-3].expression), (yyvsp[-1].statement)); CHECK_ERROR; }
-#line 1927 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1932 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 202 "parser.y" /* yacc.c:1646  */
+#line 207 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_foreach_statement(ctx, (yyvsp[-5].string), (yyvsp[-3].expression), (yyvsp[-1].statement)); }
-#line 1933 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1938 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 204 "parser.y" /* yacc.c:1646  */
+#line 209 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_select_statement(ctx, (yyvsp[-4].expression), (yyvsp[-2].case_clausule)); }
-#line 1939 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1944 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 207 "parser.y" /* yacc.c:1646  */
+#line 212 "parser.y" /* yacc.c:1646  */
     { (yyval.member) = new_member_expression(ctx, NULL, (yyvsp[0].string)); CHECK_ERROR; }
-#line 1945 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1950 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 208 "parser.y" /* yacc.c:1646  */
+#line 213 "parser.y" /* yacc.c:1646  */
     { (yyval.member) = new_member_expression(ctx, (yyvsp[-2].expression), (yyvsp[0].string)); CHECK_ERROR; }
-#line 1951 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1956 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 211 "parser.y" /* yacc.c:1646  */
+#line 216 "parser.y" /* yacc.c:1646  */
     { (yyval.dim_decl) = (yyvsp[0].dim_decl); }
-#line 1957 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1962 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 212 "parser.y" /* yacc.c:1646  */
+#line 217 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-2].dim_decl)->next = (yyvsp[0].dim_decl); (yyval.dim_decl) = (yyvsp[-2].dim_decl); }
-#line 1963 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1968 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 215 "parser.y" /* yacc.c:1646  */
+#line 220 "parser.y" /* yacc.c:1646  */
     { (yyval.dim_decl) = new_dim_decl(ctx, (yyvsp[0].string), FALSE, NULL); CHECK_ERROR; }
-#line 1969 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1974 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 216 "parser.y" /* yacc.c:1646  */
+#line 221 "parser.y" /* yacc.c:1646  */
     { (yyval.dim_decl) = new_dim_decl(ctx, (yyvsp[-3].string), TRUE, (yyvsp[-1].dim_list)); CHECK_ERROR; }
-#line 1975 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1980 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 217 "parser.y" /* yacc.c:1646  */
+#line 222 "parser.y" /* yacc.c:1646  */
     { (yyval.dim_decl) = new_dim_decl(ctx, (yyvsp[-1].string), TRUE, NULL); CHECK_ERROR; }
-#line 1981 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1986 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 220 "parser.y" /* yacc.c:1646  */
+#line 225 "parser.y" /* yacc.c:1646  */
     { (yyval.dim_list) = new_dim(ctx, (yyvsp[0].uint), NULL); }
-#line 1987 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1992 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 221 "parser.y" /* yacc.c:1646  */
+#line 226 "parser.y" /* yacc.c:1646  */
     { (yyval.dim_list) = new_dim(ctx, (yyvsp[-2].uint), (yyvsp[0].dim_list)); }
-#line 1993 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 1998 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 224 "parser.y" /* yacc.c:1646  */
+#line 229 "parser.y" /* yacc.c:1646  */
     { (yyval.const_decl) = (yyvsp[0].const_decl); }
-#line 1999 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2004 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 225 "parser.y" /* yacc.c:1646  */
+#line 230 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-2].const_decl)->next = (yyvsp[0].const_decl); (yyval.const_decl) = (yyvsp[-2].const_decl); }
-#line 2005 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2010 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 228 "parser.y" /* yacc.c:1646  */
+#line 233 "parser.y" /* yacc.c:1646  */
     { (yyval.const_decl) = new_const_decl(ctx, (yyvsp[-2].string), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2011 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2016 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 231 "parser.y" /* yacc.c:1646  */
+#line 236 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2017 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2022 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 232 "parser.y" /* yacc.c:1646  */
+#line 237 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_unary_expression(ctx, EXPR_NEG, (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2023 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2028 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 235 "parser.y" /* yacc.c:1646  */
+#line 240 "parser.y" /* yacc.c:1646  */
     { (yyval.boolean) = TRUE; }
-#line 2029 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2034 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 236 "parser.y" /* yacc.c:1646  */
+#line 241 "parser.y" /* yacc.c:1646  */
     { (yyval.boolean) = FALSE; }
-#line 2035 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2040 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 239 "parser.y" /* yacc.c:1646  */
+#line 244 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = NULL;}
-#line 2041 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2046 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 240 "parser.y" /* yacc.c:1646  */
+#line 245 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2047 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2052 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 244 "parser.y" /* yacc.c:1646  */
+#line 249 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_if_statement(ctx, (yyvsp[-7].expression), (yyvsp[-4].statement), (yyvsp[-3].elseif), (yyvsp[-2].statement)); CHECK_ERROR; }
-#line 2053 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2058 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 245 "parser.y" /* yacc.c:1646  */
+#line 250 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_if_statement(ctx, (yyvsp[-3].expression), (yyvsp[-1].statement), NULL, NULL); CHECK_ERROR; }
-#line 2059 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2064 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 247 "parser.y" /* yacc.c:1646  */
+#line 252 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = new_if_statement(ctx, (yyvsp[-5].expression), (yyvsp[-3].statement), NULL, (yyvsp[-1].statement)); CHECK_ERROR; }
-#line 2065 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2070 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 254 "parser.y" /* yacc.c:1646  */
+#line 259 "parser.y" /* yacc.c:1646  */
     { (yyval.elseif) = NULL; }
-#line 2071 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2076 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 255 "parser.y" /* yacc.c:1646  */
+#line 260 "parser.y" /* yacc.c:1646  */
     { (yyval.elseif) = (yyvsp[0].elseif); }
-#line 2077 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2082 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 258 "parser.y" /* yacc.c:1646  */
+#line 263 "parser.y" /* yacc.c:1646  */
     { (yyval.elseif) = (yyvsp[0].elseif); }
-#line 2083 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2088 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 259 "parser.y" /* yacc.c:1646  */
+#line 264 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-1].elseif)->next = (yyvsp[0].elseif); (yyval.elseif) = (yyvsp[-1].elseif); }
-#line 2089 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2094 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 263 "parser.y" /* yacc.c:1646  */
+#line 268 "parser.y" /* yacc.c:1646  */
     { (yyval.elseif) = new_elseif_decl(ctx, (yyvsp[-3].expression), (yyvsp[0].statement)); }
-#line 2095 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2100 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 266 "parser.y" /* yacc.c:1646  */
+#line 271 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = NULL; }
-#line 2101 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2106 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 267 "parser.y" /* yacc.c:1646  */
+#line 272 "parser.y" /* yacc.c:1646  */
     { (yyval.statement) = (yyvsp[0].statement); }
-#line 2107 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2112 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 270 "parser.y" /* yacc.c:1646  */
+#line 275 "parser.y" /* yacc.c:1646  */
     { (yyval.case_clausule) = NULL; }
-#line 2113 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2118 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 271 "parser.y" /* yacc.c:1646  */
+#line 276 "parser.y" /* yacc.c:1646  */
     { (yyval.case_clausule) = new_case_clausule(ctx, NULL, (yyvsp[0].statement), NULL); }
-#line 2119 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2124 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 273 "parser.y" /* yacc.c:1646  */
+#line 278 "parser.y" /* yacc.c:1646  */
     { (yyval.case_clausule) = new_case_clausule(ctx, (yyvsp[-3].expression), (yyvsp[-1].statement), (yyvsp[0].case_clausule)); }
-#line 2125 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2130 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 276 "parser.y" /* yacc.c:1646  */
+#line 281 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = NULL; }
-#line 2131 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2136 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 277 "parser.y" /* yacc.c:1646  */
+#line 282 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[-1].expression); }
-#line 2137 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2142 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 280 "parser.y" /* yacc.c:1646  */
+#line 285 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = NULL; }
-#line 2143 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2148 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 281 "parser.y" /* yacc.c:1646  */
+#line 286 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2149 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2154 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 284 "parser.y" /* yacc.c:1646  */
+#line 289 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2155 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2160 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 285 "parser.y" /* yacc.c:1646  */
+#line 290 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-2].expression)->next = (yyvsp[0].expression); (yyval.expression) = (yyvsp[-2].expression); }
-#line 2161 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2166 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 286 "parser.y" /* yacc.c:1646  */
+#line 291 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_expression(ctx, EXPR_NOARG, 0); CHECK_ERROR; (yyval.expression)->next = (yyvsp[0].expression); }
-#line 2167 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2172 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 293 "parser.y" /* yacc.c:1646  */
+#line 298 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2173 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2178 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 294 "parser.y" /* yacc.c:1646  */
+#line 299 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-2].expression)->next = (yyvsp[0].expression); (yyval.expression) = (yyvsp[-2].expression); }
-#line 2179 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2184 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 297 "parser.y" /* yacc.c:1646  */
+#line 302 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2185 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2190 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 298 "parser.y" /* yacc.c:1646  */
+#line 303 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_IMP, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2191 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2196 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 301 "parser.y" /* yacc.c:1646  */
+#line 306 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2197 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2202 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 302 "parser.y" /* yacc.c:1646  */
+#line 307 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_EQV, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2203 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2208 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 305 "parser.y" /* yacc.c:1646  */
+#line 310 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2209 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2214 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 306 "parser.y" /* yacc.c:1646  */
+#line 311 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_XOR, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2215 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2220 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 309 "parser.y" /* yacc.c:1646  */
+#line 314 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2221 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2226 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 310 "parser.y" /* yacc.c:1646  */
+#line 315 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_OR, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2227 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2232 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 313 "parser.y" /* yacc.c:1646  */
+#line 318 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2233 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2238 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 314 "parser.y" /* yacc.c:1646  */
+#line 319 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_AND, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2239 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2244 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 317 "parser.y" /* yacc.c:1646  */
+#line 322 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2245 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2250 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 318 "parser.y" /* yacc.c:1646  */
+#line 323 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_unary_expression(ctx, EXPR_NOT, (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2251 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2256 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 321 "parser.y" /* yacc.c:1646  */
+#line 326 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2257 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2262 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 322 "parser.y" /* yacc.c:1646  */
+#line 327 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_EQUAL, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2263 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2268 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 323 "parser.y" /* yacc.c:1646  */
+#line 328 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_NEQUAL, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2269 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2274 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 324 "parser.y" /* yacc.c:1646  */
+#line 329 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_GT, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2275 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2280 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 325 "parser.y" /* yacc.c:1646  */
+#line 330 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_LT, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2281 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2286 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 326 "parser.y" /* yacc.c:1646  */
+#line 331 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_GTEQ, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2287 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2292 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 327 "parser.y" /* yacc.c:1646  */
+#line 332 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_LTEQ, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2293 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2298 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 328 "parser.y" /* yacc.c:1646  */
+#line 333 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_IS, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2299 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2304 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 331 "parser.y" /* yacc.c:1646  */
+#line 336 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2305 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2310 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 332 "parser.y" /* yacc.c:1646  */
+#line 337 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_CONCAT, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2311 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2316 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 335 "parser.y" /* yacc.c:1646  */
+#line 340 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2317 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2322 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 336 "parser.y" /* yacc.c:1646  */
+#line 341 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_ADD, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2323 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2328 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 337 "parser.y" /* yacc.c:1646  */
+#line 342 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_SUB, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2329 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2334 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 340 "parser.y" /* yacc.c:1646  */
+#line 345 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2335 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2340 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 341 "parser.y" /* yacc.c:1646  */
+#line 346 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_MOD, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2341 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2346 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 344 "parser.y" /* yacc.c:1646  */
+#line 349 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2347 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2352 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 346 "parser.y" /* yacc.c:1646  */
+#line 351 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_IDIV, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2353 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2358 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 349 "parser.y" /* yacc.c:1646  */
+#line 354 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2359 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2364 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 351 "parser.y" /* yacc.c:1646  */
+#line 356 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_MUL, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2365 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2370 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 353 "parser.y" /* yacc.c:1646  */
+#line 358 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_DIV, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2371 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2376 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 356 "parser.y" /* yacc.c:1646  */
+#line 361 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2377 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2382 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 357 "parser.y" /* yacc.c:1646  */
+#line 362 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_binary_expression(ctx, EXPR_EXP, (yyvsp[-2].expression), (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2383 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2388 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 360 "parser.y" /* yacc.c:1646  */
+#line 365 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2389 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2394 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 361 "parser.y" /* yacc.c:1646  */
+#line 366 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2395 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2400 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 362 "parser.y" /* yacc.c:1646  */
+#line 367 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_new_expression(ctx, (yyvsp[0].string)); CHECK_ERROR; }
-#line 2401 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2406 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 363 "parser.y" /* yacc.c:1646  */
+#line 368 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_unary_expression(ctx, EXPR_NEG, (yyvsp[0].expression)); CHECK_ERROR; }
-#line 2407 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2412 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 366 "parser.y" /* yacc.c:1646  */
+#line 371 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2413 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2418 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 367 "parser.y" /* yacc.c:1646  */
+#line 372 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-1].member)->args = (yyvsp[0].expression); (yyval.expression) = &(yyvsp[-1].member)->expr; }
-#line 2419 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2424 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 370 "parser.y" /* yacc.c:1646  */
+#line 375 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_bool_expression(ctx, VARIANT_TRUE); CHECK_ERROR; }
-#line 2425 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2430 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 371 "parser.y" /* yacc.c:1646  */
+#line 376 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_bool_expression(ctx, VARIANT_FALSE); CHECK_ERROR; }
-#line 2431 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2436 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 372 "parser.y" /* yacc.c:1646  */
+#line 377 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_string_expression(ctx, (yyvsp[0].string)); CHECK_ERROR; }
-#line 2437 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2442 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 373 "parser.y" /* yacc.c:1646  */
+#line 378 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = (yyvsp[0].expression); }
-#line 2443 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2448 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 374 "parser.y" /* yacc.c:1646  */
+#line 379 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_expression(ctx, EXPR_EMPTY, 0); CHECK_ERROR; }
-#line 2449 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2454 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 130:
-#line 375 "parser.y" /* yacc.c:1646  */
+#line 380 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_expression(ctx, EXPR_NULL, 0); CHECK_ERROR; }
-#line 2455 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2460 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 376 "parser.y" /* yacc.c:1646  */
+#line 381 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_expression(ctx, EXPR_NOTHING, 0); CHECK_ERROR; }
-#line 2461 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2466 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 379 "parser.y" /* yacc.c:1646  */
+#line 384 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_long_expression(ctx, EXPR_USHORT, (yyvsp[0].lng)); CHECK_ERROR; }
-#line 2467 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2472 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 380 "parser.y" /* yacc.c:1646  */
+#line 385 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_long_expression(ctx, EXPR_USHORT, 0); CHECK_ERROR; }
-#line 2473 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2478 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 381 "parser.y" /* yacc.c:1646  */
+#line 386 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_long_expression(ctx, EXPR_ULONG, (yyvsp[0].lng)); CHECK_ERROR; }
-#line 2479 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2484 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 382 "parser.y" /* yacc.c:1646  */
+#line 387 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_double_expression(ctx, (yyvsp[0].dbl)); CHECK_ERROR; }
-#line 2485 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2490 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 385 "parser.y" /* yacc.c:1646  */
+#line 390 "parser.y" /* yacc.c:1646  */
     { (yyval.uint) = (yyvsp[0].lng); }
-#line 2491 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2496 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 386 "parser.y" /* yacc.c:1646  */
+#line 391 "parser.y" /* yacc.c:1646  */
     { (yyval.uint) = 0; }
-#line 2497 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2502 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 387 "parser.y" /* yacc.c:1646  */
+#line 392 "parser.y" /* yacc.c:1646  */
     { (yyval.uint) = (yyvsp[0].lng); }
-#line 2503 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2508 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 390 "parser.y" /* yacc.c:1646  */
+#line 395 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_unary_expression(ctx, EXPR_BRACKETS, (yyvsp[-1].expression)); }
-#line 2509 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2514 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 391 "parser.y" /* yacc.c:1646  */
+#line 396 "parser.y" /* yacc.c:1646  */
     { (yyval.expression) = new_expression(ctx, EXPR_ME, 0); CHECK_ERROR; }
-#line 2515 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2520 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 394 "parser.y" /* yacc.c:1646  */
+#line 399 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-3].class_decl)->name = (yyvsp[-5].string); (yyval.class_decl) = (yyvsp[-3].class_decl); }
-#line 2521 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2526 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 397 "parser.y" /* yacc.c:1646  */
+#line 402 "parser.y" /* yacc.c:1646  */
     { (yyval.class_decl) = new_class_decl(ctx); }
-#line 2527 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2532 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 398 "parser.y" /* yacc.c:1646  */
+#line 403 "parser.y" /* yacc.c:1646  */
     { (yyval.class_decl) = add_class_function(ctx, (yyvsp[0].class_decl), (yyvsp[-2].func_decl)); CHECK_ERROR; }
-#line 2533 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2538 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 400 "parser.y" /* yacc.c:1646  */
+#line 405 "parser.y" /* yacc.c:1646  */
     { dim_decl_t *dim_decl = new_dim_decl(ctx, (yyvsp[-2].string), FALSE, NULL); CHECK_ERROR;
                                                   (yyval.class_decl) = add_dim_prop(ctx, (yyvsp[0].class_decl), dim_decl, (yyvsp[-3].uint)); CHECK_ERROR; }
-#line 2540 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2545 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 402 "parser.y" /* yacc.c:1646  */
+#line 407 "parser.y" /* yacc.c:1646  */
     { (yyval.class_decl) = add_dim_prop(ctx, (yyvsp[0].class_decl), (yyvsp[-2].dim_decl), 0); CHECK_ERROR; }
-#line 2546 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2551 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 146:
-#line 403 "parser.y" /* yacc.c:1646  */
+#line 408 "parser.y" /* yacc.c:1646  */
     { (yyval.class_decl) = add_class_function(ctx, (yyvsp[0].class_decl), (yyvsp[-2].func_decl)); CHECK_ERROR; }
-#line 2552 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2557 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 147:
-#line 407 "parser.y" /* yacc.c:1646  */
+#line 412 "parser.y" /* yacc.c:1646  */
     { (yyval.func_decl) = new_function_decl(ctx, (yyvsp[-5].string), FUNC_PROPGET, (yyvsp[-8].uint), (yyvsp[-4].arg_decl), (yyvsp[-2].statement)); CHECK_ERROR; }
-#line 2558 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2563 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 148:
-#line 409 "parser.y" /* yacc.c:1646  */
+#line 414 "parser.y" /* yacc.c:1646  */
     { (yyval.func_decl) = new_function_decl(ctx, (yyvsp[-7].string), FUNC_PROPLET, (yyvsp[-10].uint), (yyvsp[-5].arg_decl), (yyvsp[-2].statement)); CHECK_ERROR; }
-#line 2564 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2569 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 411 "parser.y" /* yacc.c:1646  */
+#line 416 "parser.y" /* yacc.c:1646  */
     { (yyval.func_decl) = new_function_decl(ctx, (yyvsp[-7].string), FUNC_PROPSET, (yyvsp[-10].uint), (yyvsp[-5].arg_decl), (yyvsp[-2].statement)); CHECK_ERROR; }
-#line 2570 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2575 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 150:
-#line 415 "parser.y" /* yacc.c:1646  */
+#line 420 "parser.y" /* yacc.c:1646  */
     { (yyval.func_decl) = new_function_decl(ctx, (yyvsp[-5].string), FUNC_SUB, (yyvsp[-7].uint), (yyvsp[-4].arg_decl), (yyvsp[-2].statement)); CHECK_ERROR; }
-#line 2576 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2581 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 151:
-#line 417 "parser.y" /* yacc.c:1646  */
+#line 422 "parser.y" /* yacc.c:1646  */
     { (yyval.func_decl) = new_function_decl(ctx, (yyvsp[-5].string), FUNC_FUNCTION, (yyvsp[-7].uint), (yyvsp[-4].arg_decl), (yyvsp[-2].statement)); CHECK_ERROR; }
-#line 2582 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2587 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 152:
-#line 420 "parser.y" /* yacc.c:1646  */
+#line 425 "parser.y" /* yacc.c:1646  */
     { (yyval.uint) = 0; }
-#line 2588 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2593 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 153:
-#line 421 "parser.y" /* yacc.c:1646  */
+#line 426 "parser.y" /* yacc.c:1646  */
     { (yyval.uint) = (yyvsp[0].uint); }
-#line 2594 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2599 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 154:
-#line 424 "parser.y" /* yacc.c:1646  */
+#line 429 "parser.y" /* yacc.c:1646  */
     { (yyval.uint) = STORAGE_IS_DEFAULT; }
-#line 2600 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2605 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 155:
-#line 425 "parser.y" /* yacc.c:1646  */
+#line 430 "parser.y" /* yacc.c:1646  */
     { (yyval.uint) = 0; }
-#line 2606 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2611 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 156:
-#line 426 "parser.y" /* yacc.c:1646  */
+#line 431 "parser.y" /* yacc.c:1646  */
     { (yyval.uint) = STORAGE_IS_PRIVATE; }
-#line 2612 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2617 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 157:
-#line 429 "parser.y" /* yacc.c:1646  */
+#line 434 "parser.y" /* yacc.c:1646  */
     { (yyval.arg_decl) = NULL; }
-#line 2618 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2623 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 158:
-#line 430 "parser.y" /* yacc.c:1646  */
+#line 435 "parser.y" /* yacc.c:1646  */
     { (yyval.arg_decl) = (yyvsp[-1].arg_decl); }
-#line 2624 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2629 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 159:
-#line 433 "parser.y" /* yacc.c:1646  */
+#line 438 "parser.y" /* yacc.c:1646  */
     { (yyval.arg_decl) = (yyvsp[0].arg_decl); }
-#line 2630 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2635 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 160:
-#line 434 "parser.y" /* yacc.c:1646  */
+#line 439 "parser.y" /* yacc.c:1646  */
     { (yyvsp[-2].arg_decl)->next = (yyvsp[0].arg_decl); (yyval.arg_decl) = (yyvsp[-2].arg_decl); }
-#line 2636 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2641 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 161:
-#line 437 "parser.y" /* yacc.c:1646  */
+#line 442 "parser.y" /* yacc.c:1646  */
     { (yyval.arg_decl) = new_argument_decl(ctx, (yyvsp[-1].string), TRUE); }
-#line 2642 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2647 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 162:
-#line 438 "parser.y" /* yacc.c:1646  */
+#line 443 "parser.y" /* yacc.c:1646  */
     { (yyval.arg_decl) = new_argument_decl(ctx, (yyvsp[-1].string), TRUE); }
-#line 2648 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2653 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 163:
-#line 439 "parser.y" /* yacc.c:1646  */
+#line 444 "parser.y" /* yacc.c:1646  */
     { (yyval.arg_decl) = new_argument_decl(ctx, (yyvsp[-1].string), FALSE); }
-#line 2654 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2659 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 164:
-#line 443 "parser.y" /* yacc.c:1646  */
+#line 448 "parser.y" /* yacc.c:1646  */
     { (yyval.string) = (yyvsp[0].string); }
-#line 2660 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2665 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 444 "parser.y" /* yacc.c:1646  */
+#line 449 "parser.y" /* yacc.c:1646  */
     { (yyval.string) = propertyW; }
-#line 2666 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2671 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2670 "E:/reactosSync3.0_gcc/dll/win32/vbscript/parser.tab.c" /* yacc.c:1646  */
+#line 2675 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2894,7 +2899,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 453 "parser.y" /* yacc.c:1906  */
+#line 458 "parser.y" /* yacc.c:1906  */
 
 
 static int parser_error(parser_ctx_t *ctx, const char *str)

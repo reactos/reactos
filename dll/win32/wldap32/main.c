@@ -18,9 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winldap_private.h"
+#include "config.h"
+
+#include "wine/debug.h"
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
 
 HINSTANCE hwldap32;
+
+WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
 BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
 {

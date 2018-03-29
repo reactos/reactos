@@ -1,3 +1,4 @@
+
 #ifndef _WINSCARD_PCH_
 #define _WINSCARD_PCH_
 
@@ -14,6 +15,5 @@
 #include <winscard.h>
 
 #include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(winscard);
 
-#endif /* _WINSCARD_PCH_ */
+#endif /* !_WINSCARD_PCH_ */

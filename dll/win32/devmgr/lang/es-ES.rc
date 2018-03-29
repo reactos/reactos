@@ -176,9 +176,13 @@ BEGIN
     LTEXT "Firmante digital:", -1, 15, 81, 80, 8, SS_NOPREFIX | SS_RIGHT
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Detalles del controlador...", IDC_DRIVERDETAILS, 7, 106, 90, 15
-    LTEXT "Ver detalles de los archivos del controlador.", -1, 102, 110, 150, 17, SS_NOPREFIX
-    PUSHBUTTON "&Actualizar controlador...", IDC_UPDATEDRIVER, 7, 126, 90, 15
-    LTEXT "Actualizar el controlador del dispositivo.", -1, 102, 130, 150, 17, SS_NOPREFIX
+    LTEXT "Ver detalles de los archivos del controlador.", -1, 106, 105, 132, 17, SS_NOPREFIX
+    PUSHBUTTON "&Actualizar controlador...", IDC_UPDATEDRIVER, 7, 134, 90, 15
+    LTEXT "Actualizar el controlador del dispositivo.", -1, 106, 138, 132, 17, SS_NOPREFIX
+    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
+    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 106, 162, 132, 25, SS_NOPREFIX
+    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 90, 15
+    LTEXT "To uninstall the driver (Advanced).", -1, 106, 194, 132, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230

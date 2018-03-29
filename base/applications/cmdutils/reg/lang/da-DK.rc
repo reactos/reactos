@@ -2,7 +2,7 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Syntaksen for dette kommando er:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
+    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
     STRING_ADD_USAGE, "REG ADD nøgle_navn [/v værdi | /ve] [/t type] [/s separator] [/d data] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE nøgle_navn [/v værdi | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY nøgle_navn [/v værdi | /ve] [/s]\n"

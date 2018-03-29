@@ -19,16 +19,16 @@
 
 #define COBJMACROS
 
-//#include <stdio.h>
-//#include "windows.h"
-//#include "ocidl.h"
-#include <initguid.h>
-//#include "objidl.h"
-#include <wbemcli.h>
+#include <stdio.h>
+#include "windows.h"
+#include "ocidl.h"
+#include "initguid.h"
+#include "objidl.h"
+#include "wbemcli.h"
 #include "wmic.h"
 
-#include <wine/debug.h>
-#include <wine/unicode.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wmic);
 

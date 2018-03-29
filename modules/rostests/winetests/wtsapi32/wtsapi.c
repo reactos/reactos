@@ -85,7 +85,6 @@ static void test_WTSEnumerateProcessesW(void)
     {
         found = found || !lstrcmpW(pname, info[i].pProcessName);
     }
-    todo_wine
     ok(found || broken(!ret), "process name %s not found\n", wine_dbgstr_w(pname));
     if (info) WTSFreeMemory(info);
 }

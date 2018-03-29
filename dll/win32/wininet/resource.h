@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include <windef.h>
+#include <winuser.h>
+
 #define IDD_INVCERTDLG   0x398
 #define IDD_AUTHDLG      0x399
 #define IDD_PROXYDLG     0x400

@@ -24,13 +24,3 @@
 
 #include "windef.h"
 #include "winbase.h"
-
-static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}

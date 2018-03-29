@@ -18,7 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "sspi.h"
+#include "ntsecapi.h"
+#include "ntsecpkg.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(schannel);
 
 static SECPKG_USER_FUNCTION_TABLE secPkgUserTables[2] =
 { {

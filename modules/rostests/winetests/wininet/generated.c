@@ -14,12 +14,12 @@
 #define WINE_NOWINSOCK
 
 #include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <wininet.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wininet.h"
 #include "wininet_test.h"
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 /***********************************************************************
  * Compatibility macros

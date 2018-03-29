@@ -20,21 +20,16 @@
 #ifndef _TWAIN32_H
 #define _TWAIN32_H
 
-#include <wine/config.h>
+#ifndef __WINE_CONFIG_H
+# error You must include config.h first
+#endif
 
 #include <stdarg.h>
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-#include <twain.h>
-
-#include <wine/debug.h>
-#include <wine/list.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(twain);
+#include "windef.h"
+#include "winbase.h"
+#include "twain.h"
+#include "wine/list.h"
 
 struct pending_message
 {
@@ -84,4 +79,4 @@ extern TW_UINT16 TWAIN_ControlNull
 extern TW_UINT16 TWAIN_ProcessEvent
            (pTW_IDENTITY pOrigin, activeDS *pSource, TW_MEMREF pData) DECLSPEC_HIDDEN;
 
-#endif /* _TWAIN32_H */
+#endif

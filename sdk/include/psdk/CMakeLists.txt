@@ -112,6 +112,7 @@ list(APPEND SOURCE
 #   stdole2.idl
     strmif.idl
     structuredquerycondition.idl
+    taskschd.idl
     textstor.idl
     tlogstg.idl
     tom.idl

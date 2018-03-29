@@ -19,25 +19,9 @@
  *
  */
 
-#ifndef _USP10_INTERNAL_H_
-#define _USP10_INTERNAL_H_
+#pragma once
 
-#include <config.h>
-
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <usp10.h>
-
-#include <wine/debug.h>
-#include <wine/unicode.h>
-#include <wine/list.h>
+#include "wine/list.h"
 
 #define MS_MAKE_TAG( _x1, _x2, _x3, _x4 ) \
           ( ( (ULONG)_x4 << 24 ) |     \
@@ -237,21 +221,6 @@ typedef struct {
 
 enum {lex_Halant, lex_Composed_Vowel, lex_Matra_post, lex_Matra_pre, lex_Matra_above, lex_Matra_below, lex_ZWJ, lex_ZWNJ, lex_NBSP, lex_Modifier, lex_Vowel, lex_Consonant, lex_Generic, lex_Ra, lex_Vedic, lex_Anudatta, lex_Nukta};
 
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static inline void * __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
-
 static inline BOOL is_consonant( int type )
 {
     return (type == lex_Ra || type == lex_Consonant);
@@ -307,5 +276,3 @@ unsigned int OpenType_apply_GPOS_lookup(const ScriptCache *psc, const OUTLINETEX
 HRESULT OpenType_GetFontScriptTags(ScriptCache *psc, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pScriptTags, int *pcTags) DECLSPEC_HIDDEN;
 HRESULT OpenType_GetFontLanguageTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pLanguageTags, int *pcTags) DECLSPEC_HIDDEN;
 HRESULT OpenType_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG language_tag, BOOL filtered, OPENTYPE_TAG searchingFor, char tableType, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags, LoadedFeature** feature) DECLSPEC_HIDDEN;
-
-#endif /* _USP10_INTERNAL_H_ */

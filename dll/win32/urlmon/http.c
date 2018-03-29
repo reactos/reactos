@@ -17,7 +17,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define NONAMELESSUNION
+
 #include "urlmon_main.h"
+#include "wininet.h"
+
+#define NO_SHLWAPI_REG
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
     Protocol base;
@@ -902,11 +912,9 @@ static HRESULT WINAPI HttpInfo_QueryInfo(IWinInetHttpInfo *iface, DWORD dwOption
     if(!This->base.request)
         return E_FAIL;
 
-    if(!HttpQueryInfoW(This->base.request, dwOption, pBuffer, pcbBuffer, pdwFlags)) {
-        if(pBuffer)
-            memset(pBuffer, 0, *pcbBuffer);
-        return S_OK;
-    }
+    if(!HttpQueryInfoA(This->base.request, dwOption, pBuffer, pcbBuffer, pdwFlags))
+        return S_FALSE;
+
     return S_OK;
 }
 

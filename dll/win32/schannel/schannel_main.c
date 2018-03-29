@@ -18,7 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+
+#include "wine/debug.h"
+
+#ifdef __REACTOS__
+#include <sspi.h>
+#include <schannel.h>
+#include <wine/list.h>
+#include "schannel_priv.h"
+#endif
+
+WINE_DEFAULT_DEBUG_CHANNEL(schannel);
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {

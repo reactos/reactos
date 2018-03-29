@@ -17,9 +17,12 @@
  */
 
 #include "vbscript.h"
+#include "regexp.h"
+#include "vbsregexp55.h"
 
-#include <initguid.h>
-#include <vbsregexp55.h>
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 #define REGEXP_TID_LIST \
     XDIID(RegExp2), \

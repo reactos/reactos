@@ -18,25 +18,17 @@
 
 #include <stdio.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winnls.h>
 #include <ole2.h>
 #include <dispex.h>
 #include <activscp.h>
 #include <objsafe.h>
-//#include <urlmon.h>
-//#include <mshtmhst.h>
+#include <urlmon.h>
+#include <mshtmhst.h>
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 #ifdef _WIN64
 

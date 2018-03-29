@@ -36,6 +36,8 @@
  #include "wine/library.h"
 #endif
 
+WINE_DEFAULT_DEBUG_CHANNEL(schannel);
+
 #if defined(SONAME_LIBMBEDTLS) && !defined(HAVE_SECURITY_SECURITY_H) && !defined(SONAME_LIBGNUTLS)
 
 #include <mbedtls/ssl.h>

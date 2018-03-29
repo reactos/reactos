@@ -19,6 +19,11 @@
 %{
 
 #include "vbscript.h"
+#include "parse.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 static int parser_error(parser_ctx_t *,const char*);
 

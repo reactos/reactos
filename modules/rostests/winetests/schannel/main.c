@@ -213,12 +213,17 @@ static void testGetInfo(void)
     pTables = getNextSecPkgTable(pTables, Version);
     if (!pTables)
         return;
+    if (!pTables->GetInfo)
+    {
+        win_skip("GetInfo function missing\n");
+        return;
+    }
     status = pTables->GetInfo(&PackageInfo);
-    ok(status == STATUS_SUCCESS ||
+    ok(SUCCEEDED(status) ||
        status == SEC_E_UNSUPPORTED_FUNCTION, /* win2k3 */
        "status: 0x%x\n", status);
 
-    if (status == STATUS_SUCCESS)
+    if (SUCCEEDED(status))
     {
         ok(PackageInfo.fCapabilities == LSA_BASE_CAPS ||
            PackageInfo.fCapabilities == (LSA_BASE_CAPS|SECPKG_FLAG_APPCONTAINER_PASSTHROUGH),

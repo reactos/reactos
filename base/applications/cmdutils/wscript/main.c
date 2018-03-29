@@ -16,10 +16,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wscript.h"
+#include <stdarg.h>
 
+#define COBJMACROS
+#ifdef __REACTOS__
+#define CONST_VTABLE
+#endif
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <ole2.h>
 #include <shellapi.h>
 #include <activscp.h>
+#include <initguid.h>
+
+#include "wscript.h"
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 #ifdef _WIN64
 
@@ -34,6 +49,8 @@
 #define IActiveScriptParse_ParseScriptText IActiveScriptParse32_ParseScriptText
 
 #endif
+
+WINE_DEFAULT_DEBUG_CHANNEL(wscript);
 
 static const WCHAR wscriptW[] = {'W','S','c','r','i','p','t',0};
 static const WCHAR wshW[] = {'W','S','H',0};

@@ -19,9 +19,16 @@
  *
  */
 
-#include "inetcpl.h"
-
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <cryptuiapi.h>
+
+#include "inetcpl.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
 
 /*********************************************************************
  * display_cert_manager (internal)
