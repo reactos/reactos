@@ -65,21 +65,21 @@ END
 IDD_DELETE_HISTORY DIALOGEX  0, 0, 250, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Delete browsing history"
+CAPTION "Cancella Cronologia"
 BEGIN
 
-    AUTOCHECKBOX   "Temporary internet files\nCached copies of web pages, images and certificates.",
+    AUTOCHECKBOX   "File internet temporanei\nCopie di pagine web, immagini e certificati.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Cookies\nFiles saved on your computer by websites, which store things like user preferences and login information.",
+    AUTOCHECKBOX   "I Cookie\nFile salvate nel tuo computer dai siti web, che contengono dati come le preferenze dell'utente e altri informazioni.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "History\nList of websites you have accessed.",
+    AUTOCHECKBOX   "Storia\nLista di siti web che hai visitato.",
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Form data\nUsernames and other information you have entered into forms.",
+    AUTOCHECKBOX   "Dati inseriti\nNome utente e altri informazioni che hai inserito.",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Passwords\nSaved passwords you have entered into forms.",
+    AUTOCHECKBOX   "Password\nLe password salvate che hai inserito.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON  "Cancel", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Delete", IDOK, 120, 230, 60, 15, WS_GROUP
+    DEFPUSHBUTTON  "Annulla", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Cancella", IDOK, 120, 230, 60, 15, WS_GROUP
 
 END
 
@@ -87,7 +87,7 @@ END
 IDD_SECURITY DIALOGEX  0, 0, 320, 220
 STYLE DS_SHELLFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg"
-CAPTION "Security"
+CAPTION "Sicurezza"
 BEGIN
 
     CONTROL     "", IDC_SEC_LISTVIEW, "SysListView32",
