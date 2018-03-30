@@ -56,8 +56,7 @@ function(add_asm16_bin _target _binary_file _base_address)
 
     add_custom_target(${_target} ALL DEPENDS ${_binary_file})
     # set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_target} SUFFIX ".bin")
-    set_target_properties(${_target} PROPERTIES LOCATION_${CMAKE_BUILD_TYPE} ${_binary_file}) ## Support of $<TARGET_FILE:xxx> is limited to add_executable() or add_library()
-    set_target_properties(${_target} PROPERTIES LOCATION ${_binary_file})                     ## Support of $<TARGET_FILE:xxx> is limited to add_executable() or add_library()
+    set_target_properties(${_target} PROPERTIES BINARY_PATH ${_binary_file})
     add_clean_target(${_target})
 endfunction()
 
@@ -120,8 +119,7 @@ function(add_asm16_bin _target _binary_file _base_address)
 
     add_custom_target(${_target} ALL DEPENDS ${_binary_file})
     # set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_target} SUFFIX ".bin")
-    set_target_properties(${_target} PROPERTIES LOCATION_${CMAKE_BUILD_TYPE} ${_binary_file}) ## Support of $<TARGET_FILE:xxx> is limited to add_executable() or add_library()
-    set_target_properties(${_target} PROPERTIES LOCATION ${_binary_file})                     ## Support of $<TARGET_FILE:xxx> is limited to add_executable() or add_library()
+    set_target_properties(${_target} PROPERTIES BINARY_PATH ${_binary_file})
     add_clean_target(${_target})
 endfunction()
 
