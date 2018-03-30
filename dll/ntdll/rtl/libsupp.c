@@ -917,7 +917,6 @@ RtlComputeImportTableHash(IN HANDLE FileHandle,
                           OUT PCHAR Hash,
                           IN ULONG ImportTableHashSize)
 {
-    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
