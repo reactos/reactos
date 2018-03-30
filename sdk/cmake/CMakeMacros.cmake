@@ -304,7 +304,10 @@ function(add_cd_file)
 
     # get file if we need to
     if(NOT _CD_FILE)
-        get_target_property(_CD_FILE ${_CD_TARGET} LOCATION_${CMAKE_BUILD_TYPE})
+        set(_CD_FILE "$<TARGET_FILE:${_CD_TARGET}>")
+        if(NOT _CD_NAME_ON_CD)
+            set(_CD_NAME_ON_CD "$<TARGET_FILE_NAME:${_CD_TARGET}>")
+        endif()
     endif()
 
     # do we add it to all CDs?
@@ -340,9 +343,7 @@ function(add_cd_file)
         else()
             # add it in reactos.cab
             dir_to_num(${_CD_DESTINATION} _num)
-            file(RELATIVE_PATH __relative_file ${REACTOS_SOURCE_DIR} ${_CD_FILE})
-            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "\"${__relative_file}\" ${_num}\n")
-            unset(__relative_file)
+            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${_CD_FILE}\" ${_num}\n")
             # manage dependency - target level
             if(_CD_TARGET)
                 add_dependencies(reactos_cab_inf ${_CD_TARGET})
@@ -454,23 +455,35 @@ function(create_iso_lists)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.lst "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
     unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.lst "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst "${_filelist}")
     unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/livecd.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.lst "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst "${_filelist}")
     unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.lst "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst "${_filelist}")
     unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst)
 endfunction()
 
 # Create module_clean targets
@@ -843,11 +856,14 @@ function(add_rostests_file)
     endif()
 
     if(NOT _ROSTESTS_FILE)
-        get_target_property(_ROSTESTS_FILE ${_ROSTESTS_TARGET} LOCATION_${CMAKE_BUILD_TYPE})
-    endif()
-
-    if(NOT _ROSTESTS_RENAME)
-        get_filename_component(_ROSTESTS_RENAME ${_ROSTESTS_FILE} NAME)
+        set(_ROSTESTS_FILE "$<TARGET_FILE:${_ROSTESTS_TARGET}>")
+        if(NOT _ROSTESTS_RENAME)
+            set(_ROSTESTS_RENAME "$<TARGET_FILE_NAME:${_ROSTESTS_TARGET}>")
+        endif()
+    else()
+        if(NOT _ROSTESTS_RENAME)
+            get_filename_component(_ROSTESTS_RENAME ${_ROSTESTS_FILE} NAME)
+        endif()
     endif()
 
     if(_ROSTESTS_SUBDIR)
