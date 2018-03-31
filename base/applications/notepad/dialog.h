@@ -53,6 +53,9 @@ VOID DIALOG_HelpLicense(VOID);
 VOID DIALOG_HelpNoWarranty(VOID);
 VOID DIALOG_HelpAboutNotepad(VOID);
 
+// Prototype definiton -- This must be removed after ReactOS getting HTML Help support
+VOID DIALOG_WarningWindowBox(VOID);
+
 VOID DIALOG_TimeDate(VOID);
 
 int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFlags);
