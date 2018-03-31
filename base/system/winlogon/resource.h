@@ -1,6 +1,7 @@
 #pragma once
 
 /* Dialogs */
+#define IDD_SYSSHUTDOWN      500
 #define IDD_GINALOADFAILED   400
 #define IDD_SHUTDOWNCOMPUTER 300
 
@@ -8,6 +9,11 @@
 #define IDI_WINLOGON 4
 
 /* Controls */
+#define IDC_SYSSHUTDOWNMSG   501
+#define IDC_SHUTDOWNTIMELEFT 502
+#define IDC_SHUTDOWNCOMMENT  503
+#define IDC_SYSSHUTDOWNICON  504
+
 #define IDC_GINALOADFAILED        401
 #define IDC_GINALOADFAILEDCONTACT 402
 

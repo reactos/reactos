@@ -1,4 +1,4 @@
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 164, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -18,6 +18,17 @@ BEGIN
     LTEXT "Dynamická knihovna %s selhala při nahrávaní.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Kontaktujte správce počítače pro nahrazení dynamickě knihovny nebo obnovte původní dynamickou knihovnu.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Restart", 1, 80, 91, 68, 14
+END
+
+IDD_SYSSHUTDOWN DIALOGEX 50, 50, 162, 100
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP
+CAPTION "System Shutdown"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_WINLOGON, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
+    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down in:", IDC_SYSSHUTDOWNMSG, 38, 7, 124, 31
+    LTEXT "", IDC_SHUTDOWNTIMELEFT, 38, 38, 124, 14
+    LTEXT "No shutdown comment given.", IDC_SHUTDOWNCOMMENT, 38, 52, 124, 55
 END
 
 STRINGTABLE
