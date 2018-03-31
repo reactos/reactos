@@ -1093,7 +1093,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         toggle_child(hWnd, LOWORD(wParam), hStatusBar);
         return TRUE;
     case ID_HELP_HELPTOPICS:
-        WinHelpW(hWnd, getAppName(), HELP_FINDER, 0);
+        // WinHelpW(hWnd, getAppName(), HELP_FINDER, 0);
+        // The line above must be un-commented when ReactOS will get HTML Help support
+        MessageBox(hWnd, L"ReactOS HTML Help support isn't implemented yet!", L"Warning", MB_OK | MB_ICONWARNING);
         return TRUE;
     case ID_HELP_ABOUT:
         ShowAboutBox(hWnd);
