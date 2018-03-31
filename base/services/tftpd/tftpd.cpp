@@ -540,7 +540,11 @@ void processRequest(void *lpParam)
                 MYDWORD iip = ntohl(req.client.sin_addr.s_addr);
                 bool allowed = false;
 
+#ifdef __REACTOS__
+                for (int j = 0; j < _countof(cfig.hostRanges) && cfig.hostRanges[j].rangeStart; j++)
+#else
                 for (int j = 0; j <= 32 && cfig.hostRanges[j].rangeStart; j++)
+#endif
                 {
                     if (iip >= cfig.hostRanges[j].rangeStart && iip <= cfig.hostRanges[j].rangeEnd)
                     {
@@ -2050,7 +2054,11 @@ void init(void *lpParam)
 
         while (readSection(raw, f))
         {
+#ifdef __REACTOS__
+            if (i < _countof(cfig.hostRanges))
+#else
             if (i < 32)
+#endif
             {
                 MYDWORD rs = 0;
                 MYDWORD re = 0;
@@ -2098,7 +2106,11 @@ void init(void *lpParam)
     {
         char temp[128];
 
+#ifdef __REACTOS__
+        for (int i = 0; i < _countof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
+#else
         for (MYWORD i = 0; i <= sizeof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
+#endif
         {
             sprintf(logBuff, "%s", "permitted clients: ");
             sprintf(temp, "%s-", IP2String(tempbuff, htonl(cfig.hostRanges[i].rangeStart)));
