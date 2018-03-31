@@ -1,0 +1,9 @@
+/* TRANSLATORS: 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_LOCAL_PORT "Yerel Port"
+    IDS_LOCAL_MONITOR "Yerel Monitor"
+END
