@@ -358,6 +358,10 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_HELP_ABOUT:
             OnAbout();
             break;
+        // FIXME: MessageBox() must be removed when ReactOS will get HTML Help Support
+        case ID_HELP_TOPICS:
+            MessageBox(hDlg, L"ReactOS HTML Help support isn't implemented yet!", L"Warning", MB_OK | MB_ICONWARNING);
+            break;
         case ID_FILE_EXIT:
             EndDialog(hDlg, IDOK);
             break;
