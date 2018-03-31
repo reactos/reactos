@@ -14,6 +14,25 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+ExShutdownSystem(VOID)
+{
+    /* Dereference the hard-error port and process objects */
+    if (ExpDefaultErrorPort)
+    {
+        ObDereferenceObject(ExpDefaultErrorPort);
+        ExpDefaultErrorPort = NULL;
+    }
+    if (ExpDefaultErrorPortProcess)
+    {
+        ObDereferenceObject(ExpDefaultErrorPortProcess);
+        ExpDefaultErrorPortProcess = NULL;
+    }
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*

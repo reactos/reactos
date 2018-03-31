@@ -278,6 +278,10 @@ PopGracefulShutdown(IN PVOID Context)
     DPRINT("Configuration Manager shutting down\n");
     CmShutdownSystem();
 
+    /* Shut down the Executive */
+    DPRINT("Executive shutting down\n");
+    ExShutdownSystem();
+
     /* Note that modified pages should be written here (MiShutdownSystem) */
 
     /* Flush all user files before we start shutting down IO */

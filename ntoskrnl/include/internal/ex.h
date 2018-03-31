@@ -31,6 +31,9 @@ extern KSPIN_LOCK ExpPagedLookasideListLock;
 extern ULONG ExCriticalWorkerThreads;
 extern ULONG ExDelayedWorkerThreads;
 
+extern PVOID ExpDefaultErrorPort;
+extern PEPROCESS ExpDefaultErrorPortProcess;
+
 /*
  * NT/Cm Version Info variables
  */
@@ -60,6 +63,7 @@ extern WINKD_WORKER_STATE ExpDebuggerWork;
 extern PEPROCESS ExpDebuggerProcessAttach;
 extern PEPROCESS ExpDebuggerProcessKill;
 extern ULONG_PTR ExpDebuggerPageIn;
+
 VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
 // #endif /* _WINKD_ */
 
@@ -226,6 +230,10 @@ ExpInitializeExecutive(
     IN ULONG Cpu,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
+
+VOID
+NTAPI
+ExShutdownSystem(VOID);
 
 BOOLEAN
 NTAPI

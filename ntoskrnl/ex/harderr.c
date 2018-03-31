@@ -707,7 +707,7 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-    /* Check if we have the Privilege */
+    /* Check if we have the privileges */
     if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
     {
         DPRINT1("NtSetDefaultHardErrorPort: Caller requires "
@@ -718,7 +718,7 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
     /* Only called once during bootup, make sure we weren't called yet */
     if (!ExReadyForErrors)
     {
-        /* Reference the port */
+        /* Reference the hard-error port */
         Status = ObReferenceObjectByHandle(PortHandle,
                                            0,
                                            LpcPortObjectType,
@@ -727,9 +727,11 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
                                            NULL);
         if (NT_SUCCESS(Status))
         {
-            /* Save the data */
+            /* Keep also a reference to the process handling the hard errors */
             ExpDefaultErrorPortProcess = PsGetCurrentProcess();
+            ObReferenceObject(ExpDefaultErrorPortProcess);
             ExReadyForErrors = TRUE;
+            Status = STATUS_SUCCESS;
         }
     }
 
