@@ -137,7 +137,11 @@ struct data1
 struct data2
 {
     WSADATA wsaData;
+#ifdef __REACTOS__
+    home homes[MAX_SERVERS];
+#else
     home homes[8];
+#endif
     FILE *logfile;
     data12 hostRanges[32];
     char fileRead;

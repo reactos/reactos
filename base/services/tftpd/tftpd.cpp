@@ -541,7 +541,7 @@ void processRequest(void *lpParam)
                 bool allowed = false;
 
 #ifdef __REACTOS__
-                for (int j = 0; j < _countof(cfig.hostRanges) && cfig.hostRanges[j].rangeStart; j++)
+                for (MYWORD j = 0; j < _countof(cfig.hostRanges) && cfig.hostRanges[j].rangeStart; j++)
 #else
                 for (int j = 0; j <= 32 && cfig.hostRanges[j].rangeStart; j++)
 #endif
@@ -755,7 +755,11 @@ void processRequest(void *lpParam)
                 continue;
             }
 
+#ifdef __REACTOS__
+            for (int i = 0; i < MAX_SERVERS; i++)
+#else
             for (int i = 0; i < 8; i++)
+#endif
             {
                 //printf("%s=%i\n", req.filename, cfig.homes[i].alias[0]);
                 if (cfig.homes[i].alias[0] && !strcasecmp(req.filename, cfig.homes[i].alias))
@@ -1891,7 +1895,11 @@ void init(void *lpParam)
                 }
                 else if (name[0] && strlen(name) < 64 && value[0])
                 {
+#ifdef __REACTOS__
+                    for (int i = 0; i < MAX_SERVERS; i++)
+#else
                     for (int i = 0; i < 8; i++)
+#endif
                     {
                         if (cfig.homes[i].alias[0] && !strcasecmp(name, cfig.homes[i].alias))
                         {
@@ -2050,7 +2058,11 @@ void init(void *lpParam)
 
     if ((f = openSection("ALLOWED-CLIENTS", 1, iniFile)))
     {
+#ifdef __REACTOS__
+        MYWORD i = 0;
+#else
         int i = 0;
+#endif
 
         while (readSection(raw, f))
         {
@@ -2107,7 +2119,7 @@ void init(void *lpParam)
         char temp[128];
 
 #ifdef __REACTOS__
-        for (int i = 0; i < _countof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
+        for (MYWORD i = 0; i < _countof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
 #else
         for (MYWORD i = 0; i <= sizeof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
 #endif
@@ -2424,7 +2436,11 @@ bool detectChange()
     MYDWORD eventWait = UINT_MAX;
 
     if (cfig.failureCount)
+#ifdef __REACTOS__
+        eventWait = 10000 * (1 << cfig.failureCount);
+#else
         eventWait = 10000 * pow(2, cfig.failureCount);
+#endif
 
     OVERLAPPED overlap;
     MYDWORD ret;
