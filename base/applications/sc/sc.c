@@ -177,7 +177,7 @@ ScControl(LPCTSTR Server,       // remote machine name
             else
             {
                 ControlCode = _ttoi(ServiceArgs[0]);
-                if ((ControlCode < 128) && (ControlCode > 255))
+                if ((ControlCode < 128) || (ControlCode > 255))
                     ControlCode = 0;
             }
 
