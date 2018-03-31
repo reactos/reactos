@@ -250,7 +250,9 @@ static int ClipboardCommandHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 
         case CMD_HELP:
         {
-            HtmlHelpW(Globals.hMainWnd, L"clipbrd.chm", 0, 0);
+            // HtmlHelpW(Globals.hMainWnd, L"clipbrd.chm", 0, 0);
+            // ReactOS doesn't have HTML Help support yet, the line above will be commented for now
+            MessageBox(hWnd, L"ReactOS HTML Help support isn't implemented yet!", L"Warning", MB_OK | MB_ICONWARNING);
             break;
         }
 
