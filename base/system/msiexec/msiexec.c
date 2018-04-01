@@ -19,14 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define WIN32_LEAN_AND_MEAN
 
-#include <winreg.h>
-#include <winuser.h>
+#include <windows.h>
 #include <msi.h>
+#include <winsvc.h>
 #include <objbase.h>
+#include <stdio.h>
 
-#include <wine/unicode.h>
+#include "wine/debug.h"
+#include "wine/unicode.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msiexec);
 
 typedef HRESULT (WINAPI *DLLREGISTERSERVER)(void);
 typedef HRESULT (WINAPI *DLLUNREGISTERSERVER)(void);

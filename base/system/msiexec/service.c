@@ -18,7 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define WIN32_LEAN_AND_MEAN
+
+#include <stdio.h>
+#include <windows.h>
+#include <winsvc.h>
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(msiexec);
 
 static SERVICE_STATUS_HANDLE hstatus;
 
