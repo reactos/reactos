@@ -18,11 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
 
-#include <wmistr.h>
-#include <initguid.h>
-#include <evntrace.h>
+#include "initguid.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winnt.h"
+#include "winreg.h"
+#include "sddl.h"
+#include "wmistr.h"
+#include "evntrace.h"
+
+#include "wine/test.h"
 
 static BOOL (WINAPI *pCreateWellKnownSid)(WELL_KNOWN_SID_TYPE,PSID,PSID,DWORD*);
 static BOOL (WINAPI *pGetEventLogInformation)(HANDLE,DWORD,LPVOID,DWORD,LPDWORD);
@@ -1149,7 +1157,7 @@ static void test_start_trace(void)
     LONG ret;
 
     buffersize = sizeof(EVENT_TRACE_PROPERTIES) + sizeof(sessionname) + sizeof(filepath);
-    properties = (EVENT_TRACE_PROPERTIES *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
+    properties = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
     properties->Wnode.BufferSize = buffersize;
     properties->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
     properties->LogFileMode = EVENT_TRACE_FILE_MODE_NONE;

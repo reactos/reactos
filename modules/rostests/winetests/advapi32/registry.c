@@ -19,10 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
 #include <assert.h>
-#include <winperf.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+#include "winreg.h"
+#include "winperf.h"
+#include "winsvc.h"
+#include "winerror.h"
+#include "aclapi.h"
 
 #define IS_HKCR(hk) ((UINT_PTR)hk > 0 && ((UINT_PTR)hk & 3) == 2)
 
@@ -2504,6 +2512,12 @@ static void test_redirection(void)
             skip( "Not on Wow64, no redirection\n" );
             return;
         }
+    }
+
+    if (limited_user)
+    {
+        skip("not enough privileges to modify HKLM\n");
+        return;
     }
 
     err = RegCreateKeyExA( HKEY_LOCAL_MACHINE, "Software\\Wine", 0, NULL, 0,

@@ -18,9 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <wincred.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wincred.h"
+
+#include "wine/test.h"
 
 static BOOL (WINAPI *pCredDeleteA)(LPCSTR,DWORD,DWORD);
 static BOOL (WINAPI *pCredEnumerateA)(LPCSTR,DWORD,DWORD *,PCREDENTIALA **);
