@@ -105,13 +105,14 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
                   IN ULONG ValidResponseOptions,
                   OUT PULONG Response)
 {
+    NTSTATUS Status;
     PEPROCESS Process = PsGetCurrentProcess();
     PETHREAD Thread = PsGetCurrentThread();
     UCHAR Buffer[PORT_MAXIMUM_MESSAGE_LENGTH];
     PHARDERROR_MSG Message = (PHARDERROR_MSG)Buffer;
-    NTSTATUS Status;
     HANDLE PortHandle;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+
     PAGED_CODE();
 
     /* Check if this error will shutdown the system */
@@ -181,6 +182,31 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
 
     /* If hard errors are disabled, do nothing */
     if (Thread->HardErrorsAreDisabled) PortHandle = NULL;
+
+    /*
+     * If this is not the system thread, check whether hard errors are
+     * disabled for this thread on user-mode side, and if so, do nothing.
+     */
+    if (!Thread->SystemThread && (PortHandle != NULL))
+    {
+        /* Check if we have a TEB */
+        PTEB Teb = PsGetCurrentThread()->Tcb.Teb;
+        if (Teb)
+        {
+            _SEH2_TRY
+            {
+                if (Teb->HardErrorMode & RTL_SEM_FAILCRITICALERRORS)
+                {
+                    PortHandle = NULL;
+                }
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                NOTHING;
+            }
+            _SEH2_END;
+        }
+    }
 
     /* Now check if we have a port */
     if (PortHandle == NULL)
