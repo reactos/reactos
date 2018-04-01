@@ -12,6 +12,7 @@ list(APPEND SOURCE
     sas.c
     screensaver.c
     setup.c
+    shutdown.c
     winlogon.c
     wlx.c
     winlogon.h
