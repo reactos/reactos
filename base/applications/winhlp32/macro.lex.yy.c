@@ -333,6 +333,9 @@ void yyfree (void *  );
 
 /* Begin user sect3 */
 
+#define yywrap() 1
+#define YY_SKIP_YYWRAP
+
 typedef unsigned char YY_CHAR;
 
 FILE *yyin = (FILE *) 0, *yyout = (FILE *) 0;
@@ -494,10 +497,20 @@ char *yytext;
 #define YY_NO_INPUT 1
 
 #line 26 "macro.lex.l"
-#include <config.h>
+#include "config.h"
+#include <assert.h>
+#include <stdarg.h>
 
 #define YY_NO_UNISTD_H
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
 #include "winhelp.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
 struct lex_data {
     LPCSTR   macroptr;
@@ -515,7 +528,7 @@ struct lexret  yylval;
 #define YY_INPUT(buf,result,max_size)\
   if ((result = *lex_data->macroptr ? 1 : 0)) buf[0] = *lex_data->macroptr++;
 
-#line 537 "macro.lex.yy.c"
+#line 532 "macro.lex.yy.c"
 
 #define INITIAL 0
 #define quote 1
@@ -699,7 +712,7 @@ YY_DECL
 #line 58 "macro.lex.l"
 
 
-#line 726 "macro.lex.yy.c"
+#line 716 "macro.lex.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -867,7 +880,7 @@ YY_RULE_SETUP
 #line 108 "macro.lex.l"
 ECHO;
 	YY_BREAK
-#line 894 "macro.lex.yy.c"
+#line 884 "macro.lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1825,7 +1838,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 108 "macro.lex.l"
+#line 107 "macro.lex.l"
 
 
 
@@ -2089,8 +2102,4 @@ WINHELP_WINDOW* MACRO_CurrentWindow(void)
 {
     return lex_data ? lex_data->window : Globals.active_win;
 }
-
-#ifndef yywrap
-int yywrap(void) { return 1; }
-#endif
 

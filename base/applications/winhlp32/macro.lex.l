@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 %}
-%option noinput nounput never-interactive 8bit
+%option noinput nounput never-interactive 8bit noyywrap
 %x quote
 %{
 #include "config.h"
@@ -367,7 +367,3 @@ WINHELP_WINDOW* MACRO_CurrentWindow(void)
 {
     return lex_data ? lex_data->window : Globals.active_win;
 }
-
-#ifndef yywrap
-int yywrap(void) { return 1; }
-#endif

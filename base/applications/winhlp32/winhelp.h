@@ -20,8 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _WINHELP_H_
-#define _WINHELP_H_
+#pragma once
 
 #define MAX_LANGUAGE_NUMBER     255
 #define MAX_STRING_LEN          255
@@ -35,29 +34,12 @@
 
 #ifndef RC_INVOKED
 
-#include <assert.h>
 #include <stdarg.h>
-#include <stdio.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-#include <commdlg.h>
 
 #include "hlpfile.h"
+#include "windef.h"
+#include "winbase.h"
 #include "macro.h"
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
-
 #include "winhelp_res.h"
 
 typedef struct tagHelpButton
@@ -206,5 +188,3 @@ extern const char STRING_DIALOG_TEST[];
 
 /* Buttons */
 #define WH_FIRST_BUTTON     500
-
-#endif /* _WINHELP_H_ */

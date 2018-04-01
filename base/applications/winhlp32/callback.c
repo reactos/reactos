@@ -18,7 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_LEAN_AND_MEAN
+
+#include <stdio.h>
+
+#include "windows.h"
 #include "winhelp.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
 static WORD CALLBACK WHD_GetFSError(void)
 {

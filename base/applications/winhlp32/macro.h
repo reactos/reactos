@@ -19,6 +19,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma once
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+
 struct lexret {
   LPCSTR        proto;
   BOOL          bool;

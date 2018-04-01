@@ -22,10 +22,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winhelp.h"
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
-#include <richedit.h>
-#include <commctrl.h>
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "commdlg.h"
+#include "winhelp.h"
+#include "winhelp_res.h"
+#include "shellapi.h"
+#include "richedit.h"
+#include "commctrl.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
 WINHELP_GLOBALS Globals = {3, NULL, TRUE, NULL, NULL, NULL, NULL, NULL, {{{NULL,NULL}},0}, NULL};
 
