@@ -635,7 +635,6 @@ BaseInitiateSystemShutdownEx(
     else
     {
         RtlInitEmptyUnicodeString(&g_ShutdownParams.usMessage, NULL, 0);
-        HeapFree(GetProcessHeap(), 0, g_ShutdownParams.usMessage.Buffer);
     }
     g_ShutdownParams.dwTimeout = dwTimeout;
     g_ShutdownParams.bForceAppsClosed = bForceAppsClosed;
