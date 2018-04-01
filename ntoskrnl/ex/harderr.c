@@ -394,7 +394,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
     PVOID UserData = NULL;
     PHARDERROR_USER_PARAMETERS UserParams;
     PWSTR BufferBase;
-    ULONG SafeResponse;
+    ULONG SafeResponse = ResponseNotHandled;
 
     PAGED_CODE();
 
@@ -430,7 +430,12 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                                              &Size,
                                              MEM_COMMIT,
                                              PAGE_READWRITE);
-            if (!NT_SUCCESS(Status)) return Status;
+            if (!NT_SUCCESS(Status))
+            {
+                /* Return failure */
+                *Response = ResponseNotHandled;
+                return Status;
+            }
 
             /* Set the pointers to our data */
             UserParams = UserData;
@@ -551,11 +556,13 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PULONG_PTR SafeParams = NULL;
-    ULONG SafeResponse;
+    ULONG SafeResponse = ResponseNotHandled;
     UNICODE_STRING SafeString;
     ULONG i;
     ULONG ParamSize = 0;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    PAGED_CODE();
 
     /* Validate parameter count */
     if (NumberOfParameters > MAXIMUM_HARDERROR_PARAMETERS)
@@ -662,37 +669,17 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
         _SEH2_END;
 
         /* Call the system function directly, because we probed */
-        ExpRaiseHardError(ErrorStatus,
-                          NumberOfParameters,
-                          UnicodeStringParameterMask,
-                          SafeParams,
-                          ValidResponseOptions,
-                          &SafeResponse);
-    }
-    else
-    {
-        /* Reuse variable */
-        SafeParams = Parameters;
+        Status = ExpRaiseHardError(ErrorStatus,
+                                   NumberOfParameters,
+                                   UnicodeStringParameterMask,
+                                   SafeParams,
+                                   ValidResponseOptions,
+                                   &SafeResponse);
 
-        /*
-         * Call the Executive Function. It will probe and copy pointers to
-         * user-mode
-         */
-        ExRaiseHardError(ErrorStatus,
-                         NumberOfParameters,
-                         UnicodeStringParameterMask,
-                         SafeParams,
-                         ValidResponseOptions,
-                         &SafeResponse);
-    }
-
-    /* Check if we were called in user-mode */
-    if (PreviousMode != KernelMode)
-    {
-        /* That means we have a buffer to free */
+        /* Free captured buffer */
         if (SafeParams) ExFreePoolWithTag(SafeParams, TAG_ERR);
 
-        /* Enter SEH Block for return */
+        /* Enter SEH Block to return the response */
         _SEH2_TRY
         {
             /* Return the response */
@@ -707,6 +694,20 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
     }
     else
     {
+        /* Reuse variable */
+        SafeParams = Parameters;
+
+        /*
+         * Call the Executive Function. It will probe
+         * and copy pointers to user-mode.
+         */
+        Status = ExRaiseHardError(ErrorStatus,
+                                  NumberOfParameters,
+                                  UnicodeStringParameterMask,
+                                  SafeParams,
+                                  ValidResponseOptions,
+                                  &SafeResponse);
+
         /* Return the response */
         *Response = SafeResponse;
     }
@@ -739,6 +740,8 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+    PAGED_CODE();
 
     /* Check if we have the privileges */
     if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
