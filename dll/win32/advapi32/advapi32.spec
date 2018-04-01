@@ -422,8 +422,8 @@
 422 stdcall ObjectPrivilegeAuditAlarmW(wstr ptr long long ptr long)
 423 stdcall OpenBackupEventLogA(str str)
 424 stdcall OpenBackupEventLogW(wstr wstr)
-425 stub OpenEncryptedFileRawA
-426 stub OpenEncryptedFileRawW
+425 stdcall OpenEncryptedFileRawA(str long ptr)
+426 stdcall OpenEncryptedFileRawW(wstr long ptr)
 427 stdcall OpenEventLogA(str str)
 428 stdcall OpenEventLogW(wstr wstr)
 429 stdcall OpenProcessToken(long long ptr)
@@ -454,7 +454,7 @@
 454 stdcall QueryTraceA(double str ptr) ntdll.EtwQueryTraceA
 455 stdcall QueryTraceW(double str ptr) ntdll.EtwQueryTraceA
 456 stdcall QueryUsersOnEncryptedFile(wstr ptr)
-457 stub ReadEncryptedFileRaw
+457 stdcall ReadEncryptedFileRaw(ptr ptr ptr)
 458 stdcall ReadEventLogA(long long long ptr long ptr ptr)
 459 stdcall ReadEventLogW(long long long ptr long ptr ptr)
 460 stdcall RegCloseKey(long)
