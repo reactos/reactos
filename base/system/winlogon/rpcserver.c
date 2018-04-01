@@ -534,6 +534,7 @@ ShutdownDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_CLOSE:
         {
+            g_hShutdownDialog = NULL;
             g_bShuttingDown = FALSE;
             KillTimer(hwndDlg, IDT_SYSSHUTDOWN);
             if (g_ShutdownParams.usMessage.Buffer)
