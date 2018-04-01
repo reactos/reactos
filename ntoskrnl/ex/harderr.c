@@ -387,6 +387,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                  IN ULONG ValidResponseOptions,
                  OUT PULONG Response)
 {
+    NTSTATUS Status;
     SIZE_T Size;
     UNICODE_STRING CapturedParams[MAXIMUM_HARDERROR_PARAMETERS];
     ULONG i;
@@ -394,7 +395,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
     PHARDERROR_USER_PARAMETERS UserParams;
     PWSTR BufferBase;
     ULONG SafeResponse;
-    NTSTATUS Status;
+
     PAGED_CODE();
 
     /* Check if we have parameters */
@@ -435,35 +436,46 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
             UserParams = UserData;
             BufferBase = UserParams->Buffer;
 
-            /* Loop parameters again */
-            for (i = 0; i < NumberOfParameters; i++)
+            /* Enter SEH block as we are writing to user-mode space */
+            _SEH2_TRY
             {
-                /* Check if we're in the mask */
-                if (UnicodeStringParameterMask & (1 << i))
+                /* Loop parameters again */
+                for (i = 0; i < NumberOfParameters; i++)
                 {
-                    /* Update the base */
-                    UserParams->Parameters[i] = (ULONG_PTR)&UserParams->Strings[i];
+                    /* Check if we are in the mask */
+                    if (UnicodeStringParameterMask & (1 << i))
+                    {
+                        /* Update the base */
+                        UserParams->Parameters[i] = (ULONG_PTR)&UserParams->Strings[i];
 
-                    /* Copy the string buffer */
-                    RtlMoveMemory(BufferBase,
-                                  CapturedParams[i].Buffer,
-                                  CapturedParams[i].MaximumLength);
+                        /* Copy the string buffer */
+                        RtlMoveMemory(BufferBase,
+                                      CapturedParams[i].Buffer,
+                                      CapturedParams[i].MaximumLength);
 
-                    /* Set buffer */
-                    CapturedParams[i].Buffer = BufferBase;
+                        /* Set buffer */
+                        CapturedParams[i].Buffer = BufferBase;
 
-                    /* Copy the string structure */
-                    UserParams->Strings[i] = CapturedParams[i];
+                        /* Copy the string structure */
+                        UserParams->Strings[i] = CapturedParams[i];
 
-                    /* Update the pointer */
-                    BufferBase += CapturedParams[i].MaximumLength;
-                }
-                else
-                {
-                    /* No need to copy any strings */
-                    UserParams->Parameters[i] = Parameters[i];
+                        /* Update the pointer */
+                        BufferBase += CapturedParams[i].MaximumLength;
+                    }
+                    else
+                    {
+                        /* No need to copy any strings */
+                        UserParams->Parameters[i] = Parameters[i];
+                    }
                 }
             }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Return the exception code */
+                Status = _SEH2_GetExceptionCode();
+                DPRINT1("ExRaiseHardError - Exception when writing data to user-mode, Status 0x%08lx\n", Status);
+            }
+            _SEH2_END;
         }
         else
         {
