@@ -220,11 +220,11 @@ DrvSetPointerShape(
       /* FIXME: Is this really needed? */
       TempSurfObj = EngLockSurface(ppdev->PointerColorSurface);
       EngFreeMem(TempSurfObj->pvBits);
-      TempSurfObj->pvBits = 0;
+      TempSurfObj->pvBits = NULL;
       EngUnlockSurface(TempSurfObj);
 
       EngDeleteSurface(ppdev->PointerColorSurface);
-      ppdev->PointerMaskSurface = NULL;
+      ppdev->PointerColorSurface = NULL;
    }
 
    if (ppdev->PointerMaskSurface != NULL)
@@ -232,7 +232,7 @@ DrvSetPointerShape(
       /* FIXME: Is this really needed? */
       TempSurfObj = EngLockSurface(ppdev->PointerMaskSurface);
       EngFreeMem(TempSurfObj->pvBits);
-      TempSurfObj->pvBits = 0;
+      TempSurfObj->pvBits = NULL;
       EngUnlockSurface(TempSurfObj);
 
       EngDeleteSurface(ppdev->PointerMaskSurface);
@@ -276,12 +276,7 @@ DrvSetPointerShape(
       ppdev->PointerColorSurface = (HSURF)EngCreateBitmap(Size,
          psoColor->lDelta, psoColor->iBitmapFormat, 0, Bits);
    }
-   else
-   {
-      ppdev->PointerColorSurface = NULL;
-   }
 
-   if (psoMask != NULL)
    {
       SIZEL Size;
       PBYTE Bits;
@@ -293,10 +288,6 @@ DrvSetPointerShape(
 
       ppdev->PointerMaskSurface = (HSURF)EngCreateBitmap(Size,
          psoMask->lDelta, psoMask->iBitmapFormat, 0, Bits);
-   }
-   else
-   {
-      ppdev->PointerMaskSurface = NULL;
    }
 
    /*
