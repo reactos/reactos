@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
+#define WIN32_LEAN_AND_MEAN
 
+#include <stdarg.h>
+
+#include <windows.h>
 #include "resources.h"
 
 static const WCHAR SZ_WORDPAD[]   = {'\\','w','o','r','d','p','a','d','.','e','x','e',0};

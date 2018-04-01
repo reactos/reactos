@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma once
+#include <windef.h>
+#ifdef __REACTOS__
+#include <winuser.h>
+#endif
 
 #define IDS_FAILED 101
