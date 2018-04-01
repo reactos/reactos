@@ -18,26 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include <windows.h>
-
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <winreg.h>
-#include <winver.h>
-
+#include <windows.h>
 #include <advpub.h>
-//#include <ole2.h>
-//#include <rpcproxy.h>
+#include <ole2.h>
+#include <rpcproxy.h>
 
-#include <wine/unicode.h>
-#include <wine/debug.h>
+#include "wine/unicode.h"
+#include "wine/debug.h"
 
 extern DWORD WINAPI IEWinMain(const WCHAR*, int);
 
