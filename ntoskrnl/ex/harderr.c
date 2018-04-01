@@ -85,30 +85,15 @@ ExpSystemErrorHandler(IN NTSTATUS ErrorStatus,
 
 /*++
  * @name ExpRaiseHardError
+ * @implemented
  *
- * For now it's a stub
+ * See ExRaiseHardError and NtRaiseHardError, same parameters.
  *
- * @param ErrorStatus
- *        FILLME
- *
- * @param NumberOfParameters
- *        FILLME
- *
- * @param UnicodeStringParameterMask
- *        FILLME
- *
- * @param Parameters
- *        FILLME
- *
- * @param ValidResponseOptions
- *        FILLME
- *
- * @param Response
- *        FILLME
- *
- * @return None
- *
- * @remarks None
+ * This function performs the central work for both ExRaiseHardError
+ * and NtRaiseHardError. ExRaiseHardError is the service for kernel-mode
+ * that copies the parameters to user-mode, and NtRaiseHardError is the
+ * service for both kernel-mode and user-mode that performs parameters
+ * validation and capture if necessary.
  *
  *--*/
 NTSTATUS
@@ -342,7 +327,7 @@ ExSystemExceptionFilter(VOID)
  * @name ExRaiseHardError
  * @implemented
  *
- * See NtRaiseHardError
+ * See NtRaiseHardError and ExpRaiseHardError.
  *
  * @param ErrorStatus
  *        Error Code
@@ -362,9 +347,7 @@ ExSystemExceptionFilter(VOID)
  * @param Response
  *        Pointer to HARDERROR_RESPONSE enumeration
  *
- * @return None
- *
- * @remarks None
+ * @return Status
  *
  *--*/
 NTSTATUS
@@ -489,9 +472,9 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
  * @name NtRaiseHardError
  * @implemented
  *
- * This function sends HARDERROR_MSG LPC message to listener
- * (typically CSRSS.EXE). See NtSetDefaultHardErrorPort for more information
- * See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Error/NtRaiseHardError.html
+ * This function sends HARDERROR_MSG LPC message to a hard-error listener,
+ * typically CSRSS.EXE. See NtSetDefaultHardErrorPort for more information.
+ * See also: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Error/NtRaiseHardError.html
  *
  * @param ErrorStatus
  *        Error Code
@@ -513,8 +496,8 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
  *
  * @return Status
  *
- * @remarks NtRaiseHardError is easy way to display message in GUI
- *          without loading Win32 API libraries
+ * @remarks NtRaiseHardError constitutes an easy way to display messages
+ *          in GUI without loading any Win32 API libraries.
  *
  *--*/
 NTSTATUS
@@ -696,11 +679,11 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
  * @name NtSetDefaultHardErrorPort
  * @implemented
  *
- * NtSetDefaultHardErrorPort is typically called only once. After call,
- * kernel set BOOLEAN flag named ExReadyForErrors to TRUE, and all other
- * tries to change default port are broken with STATUS_UNSUCCESSFUL error code
- * See: http://www.windowsitlibrary.com/Content/356/08/2.html
- *      http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Error/NtSetDefaultHardErrorPort.html
+ * NtSetDefaultHardErrorPort is typically called only once. After the call,
+ * the kernel sets a BOOLEAN flag named ExReadyForErrors to TRUE, and all other
+ * attempts to change the default port fail with STATUS_UNSUCCESSFUL error code.
+ * See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Error/NtSetDefaultHardErrorPort.html
+ *      https://web.archive.org/web/20070716133753/http://www.windowsitlibrary.com/Content/356/08/2.html
  *
  * @param PortHandle
  *        Handle to named port object
