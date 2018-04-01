@@ -363,6 +363,19 @@ HeapSetInformation(HANDLE HeapHandle,
 /*
  * @implemented
  */
+SIZE_T
+WINAPI
+HeapSize(HANDLE hHeap,
+         DWORD dwFlags,
+         LPCVOID lpMem)
+{
+    /* Execute RtlSizeHeap() from RTL API */
+    return RtlSizeHeap(hHeap, dwFlags, lpMem);
+}
+
+/*
+ * @implemented
+ */
 HGLOBAL
 NTAPI
 GlobalAlloc(UINT uFlags,
