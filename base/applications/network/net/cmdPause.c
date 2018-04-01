@@ -28,7 +28,10 @@ INT cmdPause(INT argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            ConResPuts(StdOut, IDS_PAUSE_HELP);
+            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            ConResPuts(StdOut, IDS_PAUSE_SYNTAX);
+            ConResPuts(StdOut, IDS_PAUSE_HELP_1);
+            ConResPuts(StdOut, IDS_PAUSE_HELP_2);
             return 1;
         }
     }

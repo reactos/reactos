@@ -75,7 +75,7 @@ WORKSTATION   Displays information about the configuration of the\n\
                         on that server. The default is NO.\n\n"
     IDS_CONFIG_SERVER_HELP_5 "To display the current configuration for the Servr service,\n\
 type NET CONFIG SERVER without parameters.\n\n"
-    IDS_CONTINUE_SYNTAX "NET CONTINUE <nombre del servicio>"
+    IDS_CONTINUE_SYNTAX "NET CONTINUE <nombre del servicio>\n\n"
     IDS_CONTINUE_HELP_1 "NET CONTINUE reactivates a service that has been suspended by NET PAUSE.\n\n"
     IDS_CONTINUE_HELP_2 "service             Is the paused service\n\
                     For example, one of the following:\n\
@@ -84,46 +84,12 @@ type NET CONFIG SERVER without parameters.\n\n"
                     SCHEDULE\n\
                     SERVER\n\
                     WORKSTATION\n\n"
-    IDS_FILE_SYNTAX "NET FILE ..."
-    IDS_FILE_HELP "FILE\n..."
-    IDS_GROUP_SYNTAX "NET GROUP ..."
-    IDS_GROUP_HELP "GROUP\n..."
-    IDS_HELPMSG_SYNTAX "NET HELPMSG <código de error>"
-    IDS_HELPMSG_HELP "HELPMSG\n..."
-    IDS_LOCALGROUP_SYNTAX "NET LOCALGROUP [grupo [/COMMENT:""texto""]] [/DOMAIN]\n\
-               grupo {/ADD [/COMMENT:""texto""] | /DELETE} [/DOMAIN]\n\
-               grupo nombre [...] {/ADD | /DELETE} [/DOMAIN]"
-    IDS_LOCALGROUP_HELP "LOCALGROUP\n..."
-    IDS_NAME_SYNTAX "NET NAME ..."
-    IDS_NAME_HELP "NAME\n..."
-    IDS_PRINT_SYNTAX  "NET PRINT ..."
-    IDS_PRINT_HELP "PRINT\n..."
-    IDS_PAUSE_SYNTAX "NET PAUSE <nombre del servicio>"
-    IDS_PAUSE_HELP "PAUSE\n..."
-    IDS_SEND_SYNTAX "NET SEND ..."
-    IDS_SEND_HELP "SEND\n..."
-    IDS_SESSION_SYNTAX "NET SESSION ..."
-    IDS_SESSION_HELP "SESSION\n..."
-    IDS_SHARE_SYNTAX "NET SHARE ..."
-    IDS_SHARE_HELP "SHARE\n..."
-    IDS_START_SYNTAX "NET START ..."
-    IDS_START_HELP "START\n..."
-    IDS_STATISTICS_SYNTAX "NET STATISTICS ..."
-    IDS_STATISTICS_HELP "STATISTICS\n..."
-    IDS_STOP_SYNTAX "NET STOP <nombre del servicio>"
-    IDS_STOP_HELP "STOP\n..."
-    IDS_TIME_SYNTAX "NET TIME ..."
-    IDS_TIME_HELP "TIME\n..."
-    IDS_USE_SYNTAX "NET USE ..."
-    IDS_USE_HELP "USE\n..."
-    IDS_USER_SYNTAX "NET USER [usuario [contraseña | *] [opciones]] [/DOMAIN]\n\
-         usuario {contraseña | *} /ADD [opciones] [/DOMAIN]\n\
-         usuario [/DELETE] [/DOMAIN]"
-    IDS_USER_HELP "USER\n..."
-    IDS_VIEW_SYNTAX "NET VIEW ..."
-    IDS_VIEW_HELP "VIEW\n..."
-    IDS_HELP_SYNTAX "NET HELP <comando>\n   - o -\nNET <comando> /HELP\n\n\
-   Éstos son los argumentos de línea de comandos disponibles:\n\n\
+    IDS_FILE_SYNTAX "NET FILE [id [/CLOSE]]\n\n"
+    IDS_FILE_HELP "NET FILE\n...\n\n"
+    IDS_GROUP_SYNTAX "NET GROUP ...\n\n"
+    IDS_GROUP_HELP "GROUP\n...\n\n"
+    IDS_HELP_SYNTAX "NET HELP <comando>\n   - o -\nNET <comando> /HELP\n\n"
+    IDS_HELP_HELP_1 "   Éstos son los argumentos de línea de comandos disponibles:\n\n\
    NET ACCOUNTS             NET HELP                 NET SHARE\n\
    NET COMPUTER             NET HELPMSG              NET START\n\
    NET CONFIG               NET LOCALGROUP           NET STATISTICS\n\
@@ -131,8 +97,47 @@ type NET CONFIG SERVER without parameters.\n\n"
    NET CONFIG WORKSTATION   NET PAUSE                NET TIME\n\
    NET CONTINUE             NET PRINT                NET USE\n\
    NET FILE                 NET SEND                 NET USER\n\
-   NET GROUP                NET SESSION              NET VIEW\n\n\
-   ..."
+   NET GROUP                NET SESSION              NET VIEW\n\n"
+    IDS_HELP_HELP_2 "   ...\n\n"
+    IDS_HELPMSG_SYNTAX "NET HELPMSG <código de error>\n\n"
+    IDS_HELPMSG_HELP_1 "NET HELPMSG displays information about network messages (such as\n\
+error, warning and alert messages). When you type NET HELPMSG and the numeric\n\
+error (for example, ""net helpmsg 2182""), you will get information about the\n\
+message and suggested actions you can take to solve the problem.\n\n"
+    IDS_HELPMSG_HELP_2 "message#   Is the numerical error with which you need help.\n\n"
+    IDS_LOCALGROUP_SYNTAX "NET LOCALGROUP [grupo [/COMMENT:""texto""]] [/DOMAIN]\n\
+               grupo {/ADD [/COMMENT:""texto""] | /DELETE} [/DOMAIN]\n\
+               grupo nombre [...] {/ADD | /DELETE} [/DOMAIN]\n\n"
+    IDS_LOCALGROUP_HELP "LOCALGROUP\n...\n\n"
+    IDS_NAME_SYNTAX "NET NAME ...\n\n"
+    IDS_NAME_HELP "NAME\n...\n\n"
+    IDS_PRINT_SYNTAX  "NET PRINT ...\n\n"
+    IDS_PRINT_HELP "PRINT\n...\n\n"
+    IDS_PAUSE_SYNTAX "NET PAUSE <nombre del servicio>\n\n"
+    IDS_PAUSE_HELP_1 "NET PAUSE suspends a service. Pausing a service puts it on hold.\n\n"
+    IDS_PAUSE_HELP_2 "service   The name of the service to be paused.\n\n"
+    IDS_SEND_SYNTAX "NET SEND ...\n\n"
+    IDS_SEND_HELP "SEND\n...\n\n"
+    IDS_SESSION_SYNTAX "NET SESSION ...\n\n"
+    IDS_SESSION_HELP "SESSION\n...\n\n"
+    IDS_SHARE_SYNTAX "NET SHARE ...\n\n"
+    IDS_SHARE_HELP "SHARE\n...\n\n"
+    IDS_START_SYNTAX "NET START ...\n\n"
+    IDS_START_HELP "START\n...\n\n"
+    IDS_STATISTICS_SYNTAX "NET STATISTICS ...\n\n"
+    IDS_STATISTICS_HELP "STATISTICS\n...\n\n"
+    IDS_STOP_SYNTAX "NET STOP <nombre del servicio>\n\n"
+    IDS_STOP_HELP "STOP\n...\n\n"
+    IDS_TIME_SYNTAX "NET TIME ...\n\n"
+    IDS_TIME_HELP "TIME\n...\n\n"
+    IDS_USE_SYNTAX "NET USE ...\n\n"
+    IDS_USE_HELP "USE\n...\n\n"
+    IDS_USER_SYNTAX "NET USER [usuario [contraseña | *] [opciones]] [/DOMAIN]\n\
+         usuario {contraseña | *} /ADD [opciones] [/DOMAIN]\n\
+         usuario [/DELETE] [/DOMAIN]\n\n"
+    IDS_USER_HELP "USER\n...\n\n"
+    IDS_VIEW_SYNTAX "NET VIEW ...\n\n"
+    IDS_VIEW_HELP "VIEW\n...\n\n"
     IDS_NET_SYNTAX "NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
       HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
       SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]\n"

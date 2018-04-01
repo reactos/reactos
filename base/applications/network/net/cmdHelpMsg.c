@@ -30,7 +30,10 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            ConResPuts(StdOut, IDS_HELPMSG_HELP);
+            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            ConResPuts(StdOut, IDS_HELPMSG_SYNTAX);
+            ConResPuts(StdOut, IDS_HELPMSG_HELP_1);
+            ConResPuts(StdOut, IDS_HELPMSG_HELP_2);
             return 1;
         }
     }
@@ -38,6 +41,7 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
     errNum = wcstol(argv[2], &endptr, 10);
     if (*endptr != 0)
     {
+        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
         ConResPuts(StdOut, IDS_HELPMSG_SYNTAX);
         return 1;
     }
