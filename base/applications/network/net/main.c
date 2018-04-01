@@ -22,7 +22,7 @@ COMMAND cmds[] =
 {
     {L"accounts",   cmdAccounts},
     {L"computer",   unimplemented},
-    {L"config",     unimplemented},
+    {L"config",     cmdConfig},
     {L"continue",   cmdContinue},
     {L"file",       unimplemented},
     {L"group",      unimplemented},

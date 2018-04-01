@@ -46,6 +46,7 @@ VOID help(VOID);
 INT unimplemented(INT argc, WCHAR **argv);
 
 INT cmdAccounts(INT argc, WCHAR **argv);
+INT cmdConfig(INT argc, WCHAR **argv);
 INT cmdContinue(INT argc, WCHAR **argv);
 INT cmdHelp(INT argc, WCHAR **argv);
 INT cmdHelpMsg(INT argc, WCHAR **argv);
