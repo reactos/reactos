@@ -20,6 +20,7 @@ INT cmdStop(INT argc, WCHAR **argv)
 
     if (argc != 3)
     {
+        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
         ConResPuts(StdOut, IDS_STOP_SYNTAX);
         return 1;
     }

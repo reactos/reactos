@@ -21,6 +21,7 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
 
     if (argc < 3)
     {
+        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
         ConResPuts(StdOut, IDS_HELPMSG_SYNTAX);
         return 1;
     }

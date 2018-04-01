@@ -376,7 +376,10 @@ done:
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpMembers);
 
     if (result != 0)
+    {
+        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
         ConResPuts(StdOut, IDS_LOCALGROUP_SYNTAX);
+    }
 
     return result;
 }

@@ -624,7 +624,10 @@ done:
         NetApiBufferFree(pUserInfo);
 
     if (result != 0)
+    {
+        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
         ConResPuts(StdOut, IDS_USER_SYNTAX);
+    }
 
     return result;
 }

@@ -19,6 +19,7 @@ INT cmdContinue(INT argc, WCHAR **argv)
 
     if (argc != 3)
     {
+        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
         ConResPuts(StdOut, IDS_CONTINUE_SYNTAX);
         return 1;
     }
@@ -27,7 +28,11 @@ INT cmdContinue(INT argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            ConResPuts(StdOut, IDS_CONTINUE_HELP);
+            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            ConResPuts(StdOut, IDS_CONTINUE_SYNTAX);
+            ConResPuts(StdOut, IDS_CONTINUE_HELP_1);
+            ConResPuts(StdOut, IDS_CONTINUE_HELP_2);
+            ConResPuts(StdOut, IDS_GENERIC_PAGE);
             return 1;
         }
     }

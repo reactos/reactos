@@ -19,6 +19,7 @@ INT cmdPause(INT argc, WCHAR **argv)
 
     if (argc != 3)
     {
+        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
         ConResPuts(StdOut, IDS_PAUSE_SYNTAX);
         return 1;
     }

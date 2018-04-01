@@ -11,44 +11,81 @@
 
 INT cmdHelp(INT argc, WCHAR **argv)
 {
+    ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+
+/*
     if (argc != 3)
     {
         ConResPuts(StdOut, IDS_HELP_SYNTAX);
         return 0;
     }
-
+*/
     if (_wcsicmp(argv[2], L"ACCOUNTS") == 0)
     {
-        ConResPuts(StdOut, IDS_ACCOUNTS_HELP);
+        ConResPuts(StdOut, IDS_ACCOUNTS_SYNTAX);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_1);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_2);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_3);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_4);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_5);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_6);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_7);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_8);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_9);
+        ConResPuts(StdOut, IDS_ACCOUNTS_HELP_10);
+        ConResPuts(StdOut, IDS_GENERIC_PAGE);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"COMPUTER") == 0)
     {
-        ConResPuts(StdOut, IDS_COMPUTER_HELP);
+        ConResPuts(StdOut, IDS_COMPUTER_SYNTAX);
+        ConResPuts(StdOut, IDS_COMPUTER_HELP_1);
+        ConResPuts(StdOut, IDS_COMPUTER_HELP_2);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"CONFIG") == 0)
     {
-        ConResPuts(StdOut, IDS_CONFIG_HELP);
-        return 0;
+        if ((argc > 3) && (_wcsicmp(argv[3], L"SERVER") == 0))
+        {
+            ConResPuts(StdOut, IDS_CONFIG_SERVER_SYNTAX);
+            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_1);
+            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_2);
+            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_3);
+            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_4);
+            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_5);
+            ConResPuts(StdOut, IDS_GENERIC_PAGE);
+            return 0;
+        }
+        else
+        {
+            ConResPuts(StdOut, IDS_CONFIG_SYNTAX);
+            ConResPuts(StdOut, IDS_CONFIG_HELP_1);
+            ConResPuts(StdOut, IDS_CONFIG_HELP_2);
+            ConResPuts(StdOut, IDS_GENERIC_PAGE);
+            return 0;
+        }
     }
 
     if (_wcsicmp(argv[2], L"CONTINUE") == 0)
     {
-        ConResPuts(StdOut, IDS_CONTINUE_HELP);
+        ConResPuts(StdOut, IDS_CONTINUE_SYNTAX);
+        ConResPuts(StdOut, IDS_CONTINUE_HELP_1);
+        ConResPuts(StdOut, IDS_CONTINUE_HELP_2);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"FILE") == 0)
     {
+        ConResPuts(StdOut, IDS_FILE_SYNTAX);
         ConResPuts(StdOut, IDS_FILE_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"GROUP") == 0)
     {
+        ConResPuts(StdOut, IDS_GROUP_SYNTAX);
         ConResPuts(StdOut, IDS_GROUP_HELP);
         return 0;
     }
@@ -61,6 +98,7 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2], L"LOCALGROUP") == 0)
     {
+        ConResPuts(StdOut, IDS_LOCALGROUP_SYNTAX);
         ConResPuts(StdOut, IDS_LOCALGROUP_HELP);
         return 0;
     }

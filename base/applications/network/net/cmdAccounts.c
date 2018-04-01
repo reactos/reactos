@@ -36,6 +36,7 @@ cmdAccounts(
         if (_wcsicmp(argv[i], L"help") == 0)
         {
             /* Print short syntax help */
+            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
             ConResPuts(StdOut, IDS_ACCOUNTS_SYNTAX);
             return 0;
         }
@@ -43,7 +44,19 @@ cmdAccounts(
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
             /* Print full help text*/
-            ConResPuts(StdOut, IDS_ACCOUNTS_HELP);
+            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            ConResPuts(StdOut, IDS_ACCOUNTS_SYNTAX);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_1);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_2);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_3);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_4);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_5);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_6);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_7);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_8);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_9);
+            ConResPuts(StdOut, IDS_ACCOUNTS_HELP_10);
+            ConResPuts(StdOut, IDS_GENERIC_PAGE);
             return 0;
         }
 
