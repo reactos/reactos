@@ -312,6 +312,18 @@ GetSetupType(VOID);
 BOOL
 RunSetup(VOID);
 
+/* shutdown.h*/
+DWORD
+TerminateSystemShutdown(VOID);
+
+DWORD
+StartSystemShutdown(
+    PUNICODE_STRING lpMessage,
+    ULONG dwTimeout,
+    BOOLEAN bForceAppsClosed,
+    BOOLEAN bRebootAfterShutdown,
+    ULONG dwReason);
+
 /* winlogon.c */
 BOOL
 PlaySoundRoutine(IN LPCWSTR FileName,
