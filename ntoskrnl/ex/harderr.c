@@ -132,8 +132,18 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     /* Check if this error will shutdown the system */
     if (ValidResponseOptions == OptionShutdownSystem)
     {
-        /* Check for privilege */
-        if (!SeSinglePrivilegeCheck(SeShutdownPrivilege, PreviousMode))
+        /*
+         * Check if we have the privileges.
+         *
+         * NOTE: In addition to the Shutdown privilege we also check whether
+         * the caller has the Tcb privilege. The purpose is to allow only
+         * SYSTEM processes to "shutdown" the system on hard errors (BSOD)
+         * while forbidding regular processes to do so. This behaviour differs
+         * from Windows, where any user-mode process, as soon as it has the
+         * Shutdown privilege, can trigger a hard-error BSOD.
+         */
+        if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode) ||
+            !SeSinglePrivilegeCheck(SeShutdownPrivilege, PreviousMode))
         {
             /* No rights */
             *Response = ResponseNotHandled;
