@@ -20,7 +20,18 @@
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
 #include <advapi32.h>
+#else
+#include <stdarg.h>
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winternl.h"
+
+#include "crypt.h"
+#endif
 
 static const unsigned char CRYPT_LMhash_Magic[8] =
     { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
