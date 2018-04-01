@@ -1,10 +1,10 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 273, 178
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "3D Metin Görüntülük Koruyucusu Ayarları"
+CAPTION "3D Metin Ekran Koruyucusu Ayarları"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 216, 7, 50, 14
@@ -15,5 +15,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION "3D Metin Görüntülük Koruyucusu"
+    IDS_DESCRIPTION "3D Metin Ekran Koruyucusu"
 END
