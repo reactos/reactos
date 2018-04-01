@@ -251,6 +251,28 @@ GetErrorMode(VOID)
     return ErrMode;
 }
 
+static
+UINT
+Job_LimitFlags(void)
+{
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimitInfo = { 0 };
+    ULONG ReturnedLength = 0;
+    NTSTATUS Status;
+
+    Status = NtQueryInformationJobObject(NULL,
+                                         JobObjectExtendedLimitInformation,
+                                         &ExtendedLimitInfo,
+                                         sizeof(ExtendedLimitInfo),
+                                         &ReturnedLength);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ExtendedLimitInfo.BasicLimitInformation.LimitFlags = 0;
+    }
+    return ExtendedLimitInfo.BasicLimitInformation.LimitFlags;
+}
+
+
 /*
  * @implemented
  */
@@ -355,7 +377,8 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
      * and per-thread error-mode flags (NT).
      */
     if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) ||
-        (RtlGetThreadErrorMode() & RTL_SEM_NOGPFAULTERRORBOX))
+        (RtlGetThreadErrorMode() & RTL_SEM_NOGPFAULTERRORBOX) ||
+        (Job_LimitFlags() & JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION))
     {
         /* Do not display the pop-up error box, just transfer control to the exception handler */
         return EXCEPTION_EXECUTE_HANDLER;

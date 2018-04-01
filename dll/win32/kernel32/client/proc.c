@@ -3853,8 +3853,7 @@ StartScan:
                                                       NULL);
     }
 
-    /* Check if we're going to be debugged */
-    if (dwCreationFlags & DEBUG_PROCESS)
+    if (dwCreationFlags & CREATE_BREAKAWAY_FROM_JOB)
     {
         /* Set process flag */
         Flags |= PROCESS_CREATE_FLAGS_BREAKAWAY;

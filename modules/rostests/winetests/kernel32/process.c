@@ -280,6 +280,21 @@ static void WINETEST_PRINTF_ATTR(2,3) childPrintf(HANDLE h, const char* fmt, ...
     WriteFile(h, buffer, strlen(buffer), &w, NULL);
 }
 
+static UINT
+priv_GetErrorMode(VOID)
+{
+    NTSTATUS Status;
+    UINT ErrMode = 0xffffffff;
+    if (pNtQueryInformationProcess)
+    {
+        Status = pNtQueryInformationProcess(NtCurrentProcess(), ProcessDefaultHardErrorMode, &ErrMode, sizeof(ErrMode), NULL);
+        if (Status != STATUS_SUCCESS)
+            ErrMode = 0xfffffffe;
+        else
+            ErrMode ^= SEM_FAILCRITICALERRORS;
+    }
+    return ErrMode;
+}
 
 /******************************************************************
  *		doChild
@@ -412,6 +427,7 @@ static void     doChild(const char* file, const char* option)
         childPrintf(hFile, "CurrDirA=%s\n", encodeA(bufA));
     if (GetCurrentDirectoryW(sizeof(bufW) / sizeof(bufW[0]), bufW))
         childPrintf(hFile, "CurrDirW=%s\n", encodeW(bufW));
+    childPrintf(hFile, "GetErrorMode=%lu\n", priv_GetErrorMode());
     childPrintf(hFile, "\n");
 
     if (option && strcmp(option, "console") == 0)
@@ -2378,6 +2394,82 @@ static void _create_process(int line, const char *command, LPPROCESS_INFORMATION
     ok_(__FILE__, line)(ret, "CreateProcess error %u\n", GetLastError());
 }
 
+#define create_process_suspended(cmd, pi) _create_process_suspended(__LINE__, cmd, pi)
+static void _create_process_suspended(int line, const char *command, LPPROCESS_INFORMATION pi)
+{
+    BOOL ret;
+    char buffer[MAX_PATH];
+    STARTUPINFOA si = {0};
+
+    sprintf(buffer, "\"%s\" tests/process.c %s", selfname, command);
+
+    ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, pi);
+    ok_(__FILE__, line)(ret, "CreateProcess error %u\n", GetLastError());
+}
+
+
+#define test_assigned_proc(job, ...) _test_assigned_proc(__LINE__, job, __VA_ARGS__)
+static void _test_assigned_proc(int line, HANDLE job, int expected_count, ...)
+{
+    char buf[sizeof(JOBOBJECT_BASIC_PROCESS_ID_LIST) + sizeof(ULONG_PTR) * 20];
+    PJOBOBJECT_BASIC_PROCESS_ID_LIST pid_list = (JOBOBJECT_BASIC_PROCESS_ID_LIST *)buf;
+    DWORD ret_len, pid;
+    va_list valist;
+    int n;
+    BOOL ret;
+
+    memset(buf, 0, sizeof(buf));
+    ret = pQueryInformationJobObject(job, JobObjectBasicProcessIdList, pid_list, sizeof(buf), &ret_len);
+    ok_(__FILE__, line)(ret, "QueryInformationJobObject error %u\n", GetLastError());
+    if (ret)
+    {
+        ok_(__FILE__, line)(expected_count == pid_list->NumberOfAssignedProcesses,
+                            "Expected NumberOfAssignedProcesses to be %d (expected_count) is %d\n",
+                            expected_count, pid_list->NumberOfAssignedProcesses);
+        ok_(__FILE__, line)(expected_count == pid_list->NumberOfProcessIdsInList,
+                            "Expected NumberOfProcessIdsInList to be %d (expected_count) is %d\n",
+                            expected_count, pid_list->NumberOfProcessIdsInList);
+
+        va_start(valist, expected_count);
+        for (n = 0; n < min(expected_count, pid_list->NumberOfProcessIdsInList); ++n)
+        {
+            pid = va_arg(valist, DWORD);
+            ok_(__FILE__, line)(pid == pid_list->ProcessIdList[n],
+                                "Expected pid_list->ProcessIdList[%d] to be %x is %p\n",
+                                n, pid, pid_list->ProcessIdList[n]);
+        }
+        va_end(valist);
+    }
+}
+
+#define test_accounting(job, total_proc, active_proc, terminated_proc) _test_accounting(__LINE__, job, total_proc, active_proc, terminated_proc)
+static void _test_accounting(int line, HANDLE job, int total_proc, int active_proc, int terminated_proc)
+{
+    JOBOBJECT_BASIC_ACCOUNTING_INFORMATION basic_accounting;
+    DWORD ret_len;
+    BOOL ret;
+
+    memset(&basic_accounting, 0, sizeof(basic_accounting));
+    ret = pQueryInformationJobObject(job, JobObjectBasicAccountingInformation, &basic_accounting, sizeof(basic_accounting), &ret_len);
+    ok_(__FILE__, line)(ret, "QueryInformationJobObject error %u\n", GetLastError());
+    if (ret)
+    {
+        /* Not going to check process times or page faults */
+
+        ok_(__FILE__, line)(total_proc == basic_accounting.TotalProcesses,
+                            "Expected basic_accounting.TotalProcesses to be %d (total_proc) is %d\n",
+                            total_proc, basic_accounting.TotalProcesses);
+        ok_(__FILE__, line)(active_proc == basic_accounting.ActiveProcesses,
+                            "Expected basic_accounting.ActiveProcesses to be %d (active_proc) is %d\n",
+                            active_proc, basic_accounting.ActiveProcesses);
+        ok_(__FILE__, line)(terminated_proc == basic_accounting.TotalTerminatedProcesses,
+                            "Expected basic_accounting.TotalTerminatedProcesses to be %d (terminated_proc) is %d\n",
+                            terminated_proc, basic_accounting.TotalTerminatedProcesses);
+    }
+}
+
+
+
 
 static void test_IsProcessInJob(void)
 {
@@ -2404,11 +2496,15 @@ static void test_IsProcessInJob(void)
     ret = pIsProcessInJob(pi.hProcess, job, &out);
     ok(ret, "IsProcessInJob error %u\n", GetLastError());
     ok(!out, "IsProcessInJob returned out=%u\n", out);
+    test_assigned_proc(job, 0);
+    test_accounting(job, 0, 0, 0);
 
     out = TRUE;
     ret = pIsProcessInJob(pi.hProcess, job2, &out);
     ok(ret, "IsProcessInJob error %u\n", GetLastError());
     ok(!out, "IsProcessInJob returned out=%u\n", out);
+    test_assigned_proc(job2, 0);
+    test_accounting(job2, 0, 0, 0);
 
     out = TRUE;
     ret = pIsProcessInJob(pi.hProcess, NULL, &out);
@@ -2422,11 +2518,15 @@ static void test_IsProcessInJob(void)
     ret = pIsProcessInJob(pi.hProcess, job, &out);
     ok(ret, "IsProcessInJob error %u\n", GetLastError());
     ok(out, "IsProcessInJob returned out=%u\n", out);
+    test_assigned_proc(job, 1, pi.dwProcessId);
+    test_accounting(job, 1, 1, 0);
 
     out = TRUE;
     ret = pIsProcessInJob(pi.hProcess, job2, &out);
     ok(ret, "IsProcessInJob error %u\n", GetLastError());
     ok(!out, "IsProcessInJob returned out=%u\n", out);
+    test_assigned_proc(job2, 0);
+    test_accounting(job2, 0, 0, 0);
 
     out = FALSE;
     ret = pIsProcessInJob(pi.hProcess, NULL, &out);
@@ -2442,6 +2542,8 @@ static void test_IsProcessInJob(void)
     ret = pIsProcessInJob(pi.hProcess, job, &out);
     ok(ret, "IsProcessInJob error %u\n", GetLastError());
     ok(out, "IsProcessInJob returned out=%u\n", out);
+    test_assigned_proc(job, 0);
+    test_accounting(job, 1, 0, 0);
 
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -2458,11 +2560,15 @@ static void test_TerminateJobObject(void)
 
     job = pCreateJobObjectW(NULL, NULL);
     ok(job != NULL, "CreateJobObject error %u\n", GetLastError());
+    test_assigned_proc(job, 0);
+    test_accounting(job, 0, 0, 0);
 
     create_process("wait", &pi);
 
     ret = pAssignProcessToJobObject(job, pi.hProcess);
     ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+    test_assigned_proc(job, 1, pi.dwProcessId);
+    test_accounting(job, 1, 1, 0);
 
     ret = pTerminateJobObject(job, 123);
     ok(ret, "TerminateJobObject error %u\n", GetLastError());
@@ -2470,6 +2576,8 @@ static void test_TerminateJobObject(void)
     dwret = WaitForSingleObject(pi.hProcess, 1000);
     ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
     if (dwret == WAIT_TIMEOUT) TerminateProcess(pi.hProcess, 0);
+    test_assigned_proc(job, 0);
+    test_accounting(job, 1, 0, 0);
 
     ret = GetExitCodeProcess(pi.hProcess, &dwret);
     ok(ret, "GetExitCodeProcess error %u\n", GetLastError());
@@ -2480,6 +2588,8 @@ static void test_TerminateJobObject(void)
     CloseHandle(pi.hThread);
 
     /* Test adding an already terminated process to a job object */
+    test_assigned_proc(job, 0);
+    test_accounting(job, 1, 0, 0);
     create_process("exit", &pi);
 
     dwret = WaitForSingleObject(pi.hProcess, 1000);
@@ -2489,6 +2599,8 @@ static void test_TerminateJobObject(void)
     ret = pAssignProcessToJobObject(job, pi.hProcess);
     ok(!ret, "AssignProcessToJobObject unexpectedly succeeded\n");
     expect_eq_d(ERROR_ACCESS_DENIED, GetLastError());
+    test_assigned_proc(job, 0);
+    test_accounting(job, 1, 0, 0);
 
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -2675,21 +2787,419 @@ static void test_KillOnJobClose(void)
         return;
     }
     ok(ret, "SetInformationJobObject error %u\n", GetLastError());
+    test_assigned_proc(job, 0);
+    test_accounting(job, 0, 0, 0);
 
     create_process("wait", &pi);
 
     ret = pAssignProcessToJobObject(job, pi.hProcess);
     ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+    test_assigned_proc(job, 1, pi.dwProcessId);
+    test_accounting(job, 1, 1, 0);
 
     CloseHandle(job);
 
     dwret = WaitForSingleObject(pi.hProcess, 1000);
     ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
-    if (dwret == WAIT_TIMEOUT) TerminateProcess(pi.hProcess, 0);
+    if (dwret == WAIT_OBJECT_0)
+    {
+        dwret = 12345678;
+        ret = GetExitCodeProcess(pi.hProcess, &dwret);
+        ok(ret, "GetExitCodeProcess error %u\n", GetLastError());
+        ok(dwret == STATUS_SUCCESS, "GetExitCodeProcess returned %u\n", dwret);
+    }
+    else
+    {
+        TerminateProcess(pi.hProcess, 0);
+    }
 
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
 }
+
+static void test_JobLimitActiveProcess(void)
+{
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION limit_info;
+    PROCESS_INFORMATION pi[2];
+    HANDLE job;
+    BOOL ret;
+    DWORD dwret;
+
+    job = pCreateJobObjectW(NULL, NULL);
+    ok(job != NULL, "CreateJobObject error %u\n", GetLastError());
+
+    test_assigned_proc(job, 0);
+    test_accounting(job, 0, 0, 0);
+
+    create_process("wait", &pi[0]);
+
+    ret = pAssignProcessToJobObject(job, pi[0].hProcess);
+    ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+
+    test_assigned_proc(job, 1, pi[0].dwProcessId);
+    test_accounting(job, 1, 1, 0);
+
+    /* Query the default state */
+    memset(&limit_info, 0, sizeof(limit_info));
+    ret = pQueryInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info), &dwret);
+    ok(dwret == sizeof(limit_info), "wrong len %u\n", dwret);
+    ok_hex(limit_info.BasicLimitInformation.LimitFlags, 0);
+    ok_int(limit_info.BasicLimitInformation.ActiveProcessLimit, 0);
+
+    /* Limit it to 0 processes */
+    memset(&limit_info, 0, sizeof(limit_info));
+    limit_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+    limit_info.BasicLimitInformation.ActiveProcessLimit = 0;
+    ret = pSetInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info));
+    ok(ret, "SetInformationJobObject error %u\n", GetLastError());
+
+    /* Query the result */
+    memset(&limit_info, 0, sizeof(limit_info));
+    ret = pQueryInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info), &dwret);
+    ok(dwret == sizeof(limit_info), "wrong len %u\n", dwret);
+    ok_hex(limit_info.BasicLimitInformation.LimitFlags, JOB_OBJECT_LIMIT_ACTIVE_PROCESS);
+    ok_int(limit_info.BasicLimitInformation.ActiveProcessLimit, 0);
+
+    /* Existing process not killed */
+    test_assigned_proc(job, 1, pi[0].dwProcessId);
+    test_accounting(job, 1, 1, 0);
+
+    /* Limit it to 1 process */
+    memset(&limit_info, 0, sizeof(limit_info));
+    limit_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+    limit_info.BasicLimitInformation.ActiveProcessLimit = 1;
+    ret = pSetInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info));
+    ok(ret, "SetInformationJobObject error %u\n", GetLastError());
+
+    /* Query the result */
+    memset(&limit_info, 0, sizeof(limit_info));
+    ret = pQueryInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info), &dwret);
+    ok(dwret == sizeof(limit_info), "wrong len %u\n", dwret);
+    ok_hex(limit_info.BasicLimitInformation.LimitFlags, JOB_OBJECT_LIMIT_ACTIVE_PROCESS);
+    ok_int(limit_info.BasicLimitInformation.ActiveProcessLimit, 1);
+
+    /* Process not killed */
+    test_assigned_proc(job, 1, pi[0].dwProcessId);
+    test_accounting(job, 1, 1, 0);
+
+    create_process("wait", &pi[1]);
+
+    /* Not allowed to assign a new process */
+    ret = pAssignProcessToJobObject(job, pi[1].hProcess);
+    ok(!ret, "AssignProcessToJobObject unexpectedly succeeded\n");
+    expect_eq_d(ERROR_NOT_ENOUGH_QUOTA, GetLastError());
+
+    dwret = 1234565;
+    ret = GetExitCodeProcess(pi[1].hProcess, &dwret);
+    ok(ret, "GetExitCodeProcess error %u\n", GetLastError());
+    ok(dwret == STATUS_QUOTA_EXCEEDED, "wrong exitcode %u\n", dwret);
+
+    test_assigned_proc(job, 1, pi[0].dwProcessId);
+    test_accounting(job, 2, 1, 1);
+
+    if (dwret == STILL_ACTIVE)
+    {
+        TerminateProcess(pi[1].hProcess, 0);
+
+        dwret = WaitForSingleObject(pi[1].hProcess, 500);
+        ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
+    }
+    CloseHandle(pi[1].hProcess);
+    CloseHandle(pi[1].hThread);
+
+    /* Clear out the job */
+    TerminateProcess(pi[0].hProcess, 0);
+
+    dwret = WaitForSingleObject(pi[0].hProcess, 500);
+    ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
+    CloseHandle(pi[0].hProcess);
+    CloseHandle(pi[0].hThread);
+
+
+    /* Show that we can create 1 child process (we terminated the previous one),
+       but this child in turn cannot spawn anything since it would exceed quota. */
+    create_process_suspended("nested_fail", &pi[0]);
+
+    test_assigned_proc(job, 0);
+    test_accounting(job, 2, 0, 1);
+
+    ret = pAssignProcessToJobObject(job, pi[0].hProcess);
+    ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+
+    /* Child is assigned, but suspended */
+    test_assigned_proc(job, 1, pi[0].dwProcessId);
+    test_accounting(job, 3, 1, 1);
+
+    /* Resume it, wait for it to die */
+    ResumeThread(pi[0].hThread);
+    dwret = WaitForSingleObject(pi[0].hProcess, 500);
+    ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
+
+    /* Child died, and it should not have been able to spawn something
+       it is also not counted towards terminated processes. */
+    test_assigned_proc(job, 0);
+    test_accounting(job, 4, 0, 1);
+
+    /* Cleanup */
+    if (dwret == STILL_ACTIVE)
+    {
+        TerminateProcess(pi[0].hProcess, 0);
+
+        dwret = WaitForSingleObject(pi[0].hProcess, 500);
+        ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
+    }
+    CloseHandle(pi[0].hProcess);
+    CloseHandle(pi[0].hThread);
+
+    /* Limit it to 0 again */
+    memset(&limit_info, 0, sizeof(limit_info));
+    limit_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+    limit_info.BasicLimitInformation.ActiveProcessLimit = 0;
+    ret = pSetInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info));
+    ok(ret, "SetInformationJobObject error %u\n", GetLastError());
+
+    memset(&limit_info, 0, sizeof(limit_info));
+    ret = pQueryInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info), &dwret);
+    ok(dwret == sizeof(limit_info), "wrong len %u\n", dwret);
+    ok_hex(limit_info.BasicLimitInformation.LimitFlags, JOB_OBJECT_LIMIT_ACTIVE_PROCESS);
+    ok_int(limit_info.BasicLimitInformation.ActiveProcessLimit, 0);
+
+    test_assigned_proc(job, 0);
+    test_accounting(job, 4, 0, 1);
+
+    create_process("wait", &pi[0]);
+
+    /* Assigning a new process to this now-empty job object is not allowed */
+    ret = pAssignProcessToJobObject(job, pi[0].hProcess);
+    ok(!ret, "AssignProcessToJobObject unexpectedly succeeded\n");
+    expect_eq_d(ERROR_NOT_ENOUGH_QUOTA, GetLastError());
+
+    test_assigned_proc(job, 0);
+    test_accounting(job, 5, 0, 2);
+
+    dwret = 1234565;
+    ret = GetExitCodeProcess(pi[0].hProcess, &dwret);
+    ok(ret, "GetExitCodeProcess error %u\n", GetLastError());
+    ok(dwret == STATUS_QUOTA_EXCEEDED, "wrong exitcode %u\n", dwret);
+
+    test_assigned_proc(job, 0);
+    test_accounting(job, 5, 0, 2);
+
+    if (dwret == STILL_ACTIVE)
+    {
+        TerminateProcess(pi[0].hProcess, 0);
+
+        dwret = WaitForSingleObject(pi[0].hProcess, 500);
+        ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
+    }
+
+    ret = pTerminateJobObject(job, 123);
+    ok(ret, "TerminateJobObject error %u\n", GetLastError());
+
+    CloseHandle(pi[0].hProcess);
+    CloseHandle(pi[0].hThread);
+
+    CloseHandle(job);
+}
+
+static void test_JobUnhandledException(void)
+{
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION limit_info;
+    char buffer[MAX_PATH];
+    char oldenv[MAX_PATH] = { 0 };
+    PROCESS_INFORMATION pi[2];
+    STARTUPINFOA si = { 0 };
+    ULONG errormode;
+    HANDLE job;
+    BOOL ret;
+    DWORD dwret;
+
+    /* Set a mode to test with */
+    errormode = SetErrorMode(0);
+    dwret = GetEnvironmentVariableA("WINETEST_INTERACTIVE", oldenv, sizeof(oldenv));
+    if (!dwret)
+        oldenv[0] = '\0';
+    /* Make sure test.h does not set the errormode */
+    SetEnvironmentVariableA("WINETEST_INTERACTIVE", "1");
+
+    /* First, test default behavior */
+    job = pCreateJobObjectW(NULL, NULL);
+    ok(job != NULL, "CreateJobObject error %u\n", GetLastError());
+
+    test_assigned_proc(job, 0);
+    test_accounting(job, 0, 0, 0);
+
+    get_file_name(resfile);
+    sprintf(buffer, "\"%s\" tests/process.c dump \"%s\"", selfname, resfile);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi[0]), "CreateProcess\n");
+    ret = pAssignProcessToJobObject(job, pi[0].hProcess);
+    ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+
+    test_assigned_proc(job, 1, pi[0].dwProcessId);
+    test_accounting(job, 1, 1, 0);
+
+    ResumeThread(pi[0].hThread);
+
+    /* wait for child to terminate */
+    ok(WaitForSingleObject(pi[0].hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    /* child process has changed result file, so let profile functions know about it */
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+
+    test_assigned_proc(job, 0);
+    test_accounting(job, 1, 0, 0);
+
+    CloseHandle(pi[0].hProcess);
+    CloseHandle(pi[0].hThread);
+
+    okChildInt("Misc", "GetErrorMode", 0);
+    release_memory();
+    DeleteFileA(resfile);
+
+    /* Make the child crash. */
+    sprintf(buffer, "\"%s\" tests/process.c except", selfname);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi[0]), "CreateProcess\n");
+    ret = pAssignProcessToJobObject(job, pi[0].hProcess);
+    ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+
+    test_assigned_proc(job, 1, pi[0].dwProcessId);
+    test_accounting(job, 2, 1, 0);
+
+    /* child should not terminate, but display a dialog */
+    ResumeThread(pi[0].hThread);
+    dwret = WaitForSingleObject(pi[0].hProcess, 200);
+    ok(dwret == WAIT_TIMEOUT, "Child process did not timeout\n");
+
+    test_assigned_proc(job, 1, pi[0].dwProcessId);
+    test_accounting(job, 2, 1, 0);
+
+    if (dwret == WAIT_TIMEOUT)
+    {
+        __debugbreak();
+        TerminateProcess(pi[0].hProcess, 0);
+
+        dwret = WaitForSingleObject(pi[0].hProcess, 500);
+        ok(dwret == WAIT_OBJECT_0, "Child process did not exit\n");
+    }
+
+    CloseHandle(pi[0].hProcess);
+    CloseHandle(pi[0].hThread);
+
+    /* Now, assign a process to this job, and after it is assigned, change the flag */
+    get_file_name(resfile);
+    sprintf(buffer, "\"%s\" tests/process.c dump \"%s\"", selfname, resfile);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi[0]), "CreateProcess\n");
+    ret = pAssignProcessToJobObject(job, pi[0].hProcess);
+    ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+
+
+    sprintf(buffer, "\"%s\" tests/process.c except", selfname);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi[1]), "CreateProcess\n");
+    ret = pAssignProcessToJobObject(job, pi[1].hProcess);
+    ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+
+    test_assigned_proc(job, 2, pi[0].dwProcessId, pi[1].dwProcessId);
+    test_accounting(job, 4, 2, 0);
+
+    /* Set the flag */
+    memset(&limit_info, 0, sizeof(limit_info));
+    limit_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION;
+    ret = pSetInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info));
+    ok(ret, "SetInformationJobObject error %u\n", GetLastError());
+
+    /* Query the result */
+    memset(&limit_info, 0, sizeof(limit_info));
+    ret = pQueryInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info), &dwret);
+    ok(dwret == sizeof(limit_info), "wrong len %u\n", dwret);
+    ok_hex(limit_info.BasicLimitInformation.LimitFlags, JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION);
+
+    test_assigned_proc(job, 2, pi[0].dwProcessId, pi[1].dwProcessId);
+    test_accounting(job, 4, 2, 0);
+
+    /* wait for child to terminate */
+    ResumeThread(pi[0].hThread);
+    ok(WaitForSingleObject(pi[0].hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    /* child process has changed result file, so let profile functions know about it */
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+
+    CloseHandle(pi[0].hProcess);
+    CloseHandle(pi[0].hThread);
+
+    /* Error mode is not set */
+    okChildInt("Misc", "GetErrorMode", 0);
+    release_memory();
+    DeleteFileA(resfile);
+
+    test_assigned_proc(job, 1, pi[1].dwProcessId);
+    test_accounting(job, 4, 1, 0);
+
+    /* yet the child still acts as if it is */
+    ResumeThread(pi[1].hThread);
+    dwret = WaitForSingleObject(pi[1].hProcess, 500);
+    ok(dwret == WAIT_OBJECT_0, "Child process termination\n");
+
+    if (dwret == WAIT_TIMEOUT)
+    {
+        TerminateProcess(pi[1].hProcess, 0);
+
+        dwret = WaitForSingleObject(pi[1].hProcess, 200);
+        ok(dwret == WAIT_OBJECT_0, "Child process did not exit\n");
+    }
+
+    CloseHandle(pi[1].hProcess);
+    CloseHandle(pi[1].hThread);
+
+    test_assigned_proc(job, 0);
+    test_accounting(job, 4, 0, 0);
+
+    /* Now, repeat for a process that is assigned after the flag has been set */
+    get_file_name(resfile);
+    sprintf(buffer, "\"%s\" tests/process.c dump \"%s\"", selfname, resfile);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi[0]), "CreateProcess\n");
+    ret = pAssignProcessToJobObject(job, pi[0].hProcess);
+    ResumeThread(pi[0].hThread);
+    ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+    ok(WaitForSingleObject(pi[0].hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    /* child process has changed result file, so let profile functions know about it */
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+
+    CloseHandle(pi[0].hProcess);
+    CloseHandle(pi[0].hThread);
+
+    /* Still, error mode is not set */
+    okChildInt("Misc", "GetErrorMode", 0);
+    release_memory();
+    DeleteFileA(resfile);
+
+    sprintf(buffer, "\"%s\" tests/process.c except", selfname);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi[0]), "CreateProcess\n");
+    ret = pAssignProcessToJobObject(job, pi[0].hProcess);
+    ResumeThread(pi[0].hThread);
+    ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+    ok(WaitForSingleObject(pi[0].hProcess, 500) == WAIT_OBJECT_0, "Child process termination\n");
+
+    /* And yet, child exits as if it is set */
+    ok(dwret == WAIT_OBJECT_0, "Child process termination\n");
+    if (dwret == WAIT_TIMEOUT)
+    {
+        TerminateProcess(pi[0].hProcess, 0);
+
+        dwret = WaitForSingleObject(pi[0].hProcess, 200);
+        ok(dwret == WAIT_OBJECT_0, "Child process did not exit\n");
+    }
+
+    CloseHandle(pi[0].hProcess);
+    CloseHandle(pi[0].hThread);
+
+    /* This should clean up any left over dialogs */
+    ret = pTerminateJobObject(job, 123);
+    ok(ret, "TerminateJobObject error %u\n", GetLastError());
+    CloseHandle(job);
+
+    /* Restore to whatever it was */
+    SetErrorMode(errormode);
+    SetEnvironmentVariableA("WINETEST_INTERACTIVE", oldenv);
+}
+
 
 static void test_WaitForJobObject(void)
 {
@@ -2787,9 +3297,13 @@ static HANDLE test_AddSelfToJob(void)
 
     job = pCreateJobObjectW(NULL, NULL);
     ok(job != NULL, "CreateJobObject error %u\n", GetLastError());
+    test_assigned_proc(job, 0);
+    test_accounting(job, 0, 0, 0);
 
     ret = pAssignProcessToJobObject(job, GetCurrentProcess());
     ok(ret, "AssignProcessToJobObject error %u\n", GetLastError());
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 1, 1, 0);
 
     return job;
 }
@@ -2817,6 +3331,8 @@ static void test_jobInheritance(HANDLE job)
     ret = pIsProcessInJob(pi.hProcess, job, &out);
     ok(ret, "IsProcessInJob error %u\n", GetLastError());
     ok(out, "IsProcessInJob returned out=%u\n", out);
+    test_assigned_proc(job, 2, GetCurrentProcessId(), pi.dwProcessId);
+    test_accounting(job, 2, 2, 0);
 
     dwret = WaitForSingleObject(pi.hProcess, 1000);
     ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
@@ -2842,9 +3358,13 @@ static void test_BreakawayOk(HANDLE job)
 
     sprintf(buffer, "\"%s\" tests/process.c %s", selfname, "exit");
 
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 2, 1, 0);
     ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_BREAKAWAY_FROM_JOB, NULL, NULL, &si, &pi);
     ok(!ret, "CreateProcessA expected failure\n");
     expect_eq_d(ERROR_ACCESS_DENIED, GetLastError());
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 2, 1, 0);
 
     if (ret)
     {
@@ -2861,12 +3381,16 @@ static void test_BreakawayOk(HANDLE job)
     ret = pSetInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info));
     ok(ret, "SetInformationJobObject error %u\n", GetLastError());
 
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 2, 1, 0);
     ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_BREAKAWAY_FROM_JOB, NULL, NULL, &si, &pi);
     ok(ret, "CreateProcessA error %u\n", GetLastError());
 
     ret = pIsProcessInJob(pi.hProcess, job, &out);
     ok(ret, "IsProcessInJob error %u\n", GetLastError());
     ok(!out, "IsProcessInJob returned out=%u\n", out);
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 2, 1, 0);
 
     dwret = WaitForSingleObject(pi.hProcess, 1000);
     ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
@@ -2874,16 +3398,22 @@ static void test_BreakawayOk(HANDLE job)
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
 
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 2, 1, 0);
     limit_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK;
     ret = pSetInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info));
     ok(ret, "SetInformationJobObject error %u\n", GetLastError());
 
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 2, 1, 0);
     ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
     ok(ret, "CreateProcess error %u\n", GetLastError());
 
     ret = pIsProcessInJob(pi.hProcess, job, &out);
     ok(ret, "IsProcessInJob error %u\n", GetLastError());
     ok(!out, "IsProcessInJob returned out=%u\n", out);
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 2, 1, 0);
 
     dwret = WaitForSingleObject(pi.hProcess, 1000);
     ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
@@ -2895,6 +3425,8 @@ static void test_BreakawayOk(HANDLE job)
     limit_info.BasicLimitInformation.LimitFlags = 0;
     ret = pSetInformationJobObject(job, JobObjectExtendedLimitInformation, &limit_info, sizeof(limit_info));
     ok(ret, "SetInformationJobObject error %u\n", GetLastError());
+    test_assigned_proc(job, 1, GetCurrentProcessId());
+    test_accounting(job, 2, 1, 0);
 }
 
 static void test_StartupNoConsole(void)
@@ -3419,18 +3951,20 @@ START_TEST(process)
         if (!strcmp(myARGV[2], "dump") && myARGC >= 4)
         {
             doChild(myARGV[3], (myARGC >= 5) ? myARGV[4] : NULL);
-            return;
         }
         else if (!strcmp(myARGV[2], "wait"))
         {
             Sleep(30000);
             ok(0, "Child process not killed\n");
-            return;
         }
         else if (!strcmp(myARGV[2], "exit"))
         {
             Sleep(100);
-            return;
+        }
+        else if (!strcmp(myARGV[2], "except"))
+        {
+            RaiseException(ERROR_INVALID_PARAMETER, EXCEPTION_NONCONTINUABLE, 0, 0);
+            ok(0, "Child process did not die\n");
         }
         else if (!strcmp(myARGV[2], "nested") && myARGC >= 4)
         {
@@ -3447,43 +3981,74 @@ START_TEST(process)
             ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &startup, &info), "CreateProcess failed\n");
             CloseHandle(info.hProcess);
             CloseHandle(info.hThread);
-            return;
+        }
+        else if (!strcmp(myARGV[2], "nested_fail") /*&& myARGC >= 4*/)
+        {
+            char                buffer[MAX_PATH];
+            STARTUPINFOA        startup;
+            PROCESS_INFORMATION info;
+            DWORD dwret;
+            BOOL ret;//myARGV[3]
+
+            memset(&startup, 0, sizeof(startup));
+            startup.cb = sizeof(startup);
+            startup.dwFlags = STARTF_USESHOWWINDOW;
+            startup.wShowWindow = SW_SHOWNORMAL;
+
+            sprintf(buffer, "\"%s\" tests/process.c wait", selfname);
+            ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info);
+            dwret = GetLastError();
+            ok(!ret, "CreateProcess succeeded\n");
+            ok(dwret == ERROR_NOT_ENOUGH_QUOTA, "got %d\n", dwret);
+
+            if (ret)
+            {
+                TerminateProcess(info.hProcess, 0);
+                dwret = WaitForSingleObject(info.hProcess, 1000);
+                ok(dwret == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", dwret);
+            }
+
+            CloseHandle(info.hProcess);
+            CloseHandle(info.hThread);
+        }
+        else
+        {
+            ok(0, "Unexpected command %s\n", myARGV[2]);
         }
 
-        ok(0, "Unexpected command %s\n", myARGV[2]);
-        return;
+        ExitProcess(winetest_get_failures());   /* Do not print the success / failure line */
     }
 
-    test_process_info();
-    test_TerminateProcess();
-    test_Startup();
-    test_CommandLine();
-    test_Directory();
-    test_Toolhelp();
-    test_Environment();
-    test_SuspendFlag();
-    test_DebuggingFlag();
-    test_Console();
-    test_ExitCode();
-    test_OpenProcess();
-    test_GetProcessVersion();
-    test_GetProcessImageFileNameA();
-    test_QueryFullProcessImageNameA();
-    test_QueryFullProcessImageNameW();
-    test_Handles();
-    test_IsWow64Process();
-    test_SystemInfo();
-    test_RegistryQuota();
-    test_DuplicateHandle();
-    test_StartupNoConsole();
-    test_DetachConsoleHandles();
-    test_DetachStdHandles();
-    test_GetNumaProcessorNode();
-    test_session_info();
-    test_GetLogicalProcessorInformationEx();
-    test_GetActiveProcessorCount();
-    test_largepages();
-    test_ProcThreadAttributeList();
+    //test_process_info();
+    //test_TerminateProcess();
+    //test_Startup();
+    //test_CommandLine();
+    //test_Directory();
+    //test_Toolhelp();
+    //test_Environment();
+    //test_SuspendFlag();
+    //test_DebuggingFlag();
+    //test_Console();
+    //test_ExitCode();
+    //test_OpenProcess();
+    //test_GetProcessVersion();
+    //test_GetProcessImageFileNameA();
+    //test_QueryFullProcessImageNameA();
+    //test_QueryFullProcessImageNameW();
+    //test_Handles();
+    //test_IsWow64Process();
+    //test_SystemInfo();
+    //test_RegistryQuota();
+    //test_DuplicateHandle();
+    //test_StartupNoConsole();
+    //test_DetachConsoleHandles();
+    //test_DetachStdHandles();
+    //test_GetNumaProcessorNode();
+    //test_session_info();
+    //test_GetLogicalProcessorInformationEx();
+    //test_GetActiveProcessorCount();
+    //test_largepages();
+    //test_ProcThreadAttributeList();
 
     /* things that can be tested:
      *  lookup:         check the way program to be executed is searched
@@ -3502,6 +4067,8 @@ START_TEST(process)
     test_QueryInformationJobObject();
     test_CompletionPort();
     test_KillOnJobClose();
+    //test_JobLimitActiveProcess();
+    //test_JobUnhandledException();
     test_WaitForJobObject();
     job = test_AddSelfToJob();
     test_jobInheritance(job);

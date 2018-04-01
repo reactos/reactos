@@ -21,6 +21,7 @@ list(APPEND SOURCE
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQueryVolumeInformationFile.c
+    NtRaiseHardError.c
     NtReadFile.c
     NtSaveKey.c
     NtSetValueKey.c
