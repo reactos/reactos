@@ -18,14 +18,29 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include "config.h"
 
-#include "strmbase_private.h"
+#include <stdarg.h>
+#include <assert.h>
 
-#define NO_SHLWAPI_PATH
-#define NO_SHLWAPI_STRFCNS
-#define NO_SHLWAPI_GDI
-#define NO_SHLWAPI_STREAM
-#include <shlwapi.h>
+#define COBJMACROS
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winerror.h"
+#include "winreg.h"
+#include "objbase.h"
+#include "uuids.h"
+#include "strmif.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "wine/strmbase.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
 
 extern const int g_cTemplates;
 extern const FactoryTemplate g_Templates[];

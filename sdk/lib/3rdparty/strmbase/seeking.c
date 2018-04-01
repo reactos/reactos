@@ -20,7 +20,17 @@
  */
 /* FIXME: critical sections */
 
-#include "strmbase_private.h"
+#define COBJMACROS
+
+#include "dshow.h"
+#include "wine/strmbase.h"
+
+#include "uuids.h"
+#include "wine/debug.h"
+
+#include <assert.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
 
 static inline SourceSeeking *impl_from_IMediaSeeking(IMediaSeeking *iface)
 {

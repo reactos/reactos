@@ -21,8 +21,8 @@ list(APPEND SOURCE
     transform.c
     video.c
     window.c
-    strmbase_private.h)
+    precomp.h)
 
 add_library(strmbase ${SOURCE})
-add_pch(strmbase strmbase_private.h SOURCE)
+add_pch(strmbase precomp.h SOURCE)
 add_dependencies(strmbase psdk dxsdk)

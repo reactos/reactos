@@ -20,7 +20,17 @@
  */
 /* FIXME: critical sections */
 
-#include "strmbase_private.h"
+#define COBJMACROS
+
+#include "dshow.h"
+#include "uuids.h"
+
+#include "wine/debug.h"
+#include "wine/strmbase.h"
+
+#include <assert.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
 
 static const IMediaSeekingVtbl IMediaSeekingPassThru_Vtbl;
 static const IMediaPositionVtbl IMediaPositionPassThru_Vtbl;
@@ -516,9 +526,11 @@ static HRESULT WINAPI MediaSeekingPassThru_GetPositions(IMediaSeeking * iface, L
     if (SUCCEEDED(hr)) {
         hr = IMediaSeeking_GetPositions(seek, pCurrent, pStop);
         IMediaSeeking_Release(seek);
+    } else if (hr == VFW_E_NOT_CONNECTED) {
+        *pCurrent = 0;
+        *pStop = 0;
+        hr = S_OK;
     }
-    else
-        return E_NOTIMPL;
     return hr;
 }
 

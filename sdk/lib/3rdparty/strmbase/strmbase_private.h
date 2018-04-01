@@ -18,33 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _STRMBASE_PCH_
-#define _STRMBASE_PCH_
-
-#include <wine/config.h>
-
-#include <assert.h>
-#include <stdarg.h>
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#define WIN32_LEAN_AND_MEAN
-
-#define COBJMACROS
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
-#include <dshow.h>
-
-#include <wine/debug.h>
-#include <wine/strmbase.h>
-#include <wine/unicode.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(strmbase);
+#pragma once
 
 /* Quality Control */
 typedef struct QualityControlImpl {
@@ -76,5 +50,3 @@ HRESULT QualityControlRender_WaitFor(QualityControlImpl *This, IMediaSample *sam
 void QualityControlRender_DoQOS(QualityControlImpl *priv);
 void QualityControlRender_BeginRender(QualityControlImpl *This);
 void QualityControlRender_EndRender(QualityControlImpl *This);
-
-#endif /* _STRMBASE_PCH_ */

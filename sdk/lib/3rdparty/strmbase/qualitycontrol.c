@@ -23,7 +23,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
+
+#include "dshow.h"
+#include "wine/strmbase.h"
 #include "strmbase_private.h"
+
+#include "uuids.h"
+#include "wine/debug.h"
+
+#include <assert.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(strmbase_qc);
 
 #define XTIME_FMT "%u.%03u"
 #define XTIME(u) (int)(u/10000000), (int)((u / 10000)%1000)
