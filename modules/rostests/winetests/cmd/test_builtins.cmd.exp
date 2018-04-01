@@ -1222,6 +1222,9 @@ h=%h i=a j=b k=c l=d e f g m=%m n=%n o=%o@or_broken@h=%h i=a j=b k=c l=d e f g m
 h=%h i=a j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=a j=c k= l= m= n=%n o=%o
 h=%h i=b j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=b j=c k= l= m= n=%n o=%o
 h=%h i=b j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=b j=c k= l= m= n=%n o=%o
+------ parameter splitting
+:forFParameterSplittingFunc myparam1=myvalue1 myparam2=myparam2 mytest@space@@space@@space@
+:forFParameterSplittingFunc myparam1=myvalue1 myparam2=myparam2 mytest@space@@space@@space@
 ------------ Testing del ------------
 deleting 'file'
 errorlevel is 0, good
@@ -1258,8 +1261,8 @@ file move succeeded
 @todo_wine@bar@or_broken@baz
 read-only files are moveable
 file moved in subdirectory
-@todo_wine@moving a file to itself is a no-op@or_broken@moving a file to itself should be a no-op!
-@todo_wine@ErrorLevel: 0@or_broken@ErrorLevel: 1
+moving a file to itself is a no-op@or_broken@moving a file to itself should be a no-op!
+ErrorLevel: 0@or_broken@ErrorLevel: 1
 --- directory move
 simple directory move succeeded
 moving a directory to itself gives error; errlevel 1

@@ -1696,6 +1696,16 @@ for /f "tokens=2,2,3*" %%i in ("a b c d e f g") do echo h=%%h i=%%i j=%%j k=%%k 
 for /f "tokens=3,2,3*" %%i in ("a b c d e f g") do echo h=%%h i=%%i j=%%j k=%%k l=%%l m=%%m n=%%n o=%%o
 cd ..
 rd /s/q foobar
+echo ------ parameter splitting
+echo forFParameterSplittingFunc "myparam1=myvalue1 myparam2=myparam2" mytest> foo
+for /f "tokens=1 delims=;" %%i in (foo) do (call :%%i)
+del foo
+for /f "tokens=1 delims=;" %%i in ("forFParameterSplittingFunc "myparam1^=myvalue1 myparam2^=myparam2" mytest") do (call :%%i)
+goto :forFParameterSplittingEnd
+:forFParameterSplittingFunc
+echo %~0 %~1 %~2 %~3 %~4 %~5
+goto :eof
+:forFParameterSplittingEnd
 
 echo ------------ Testing del ------------
 echo abc > file
