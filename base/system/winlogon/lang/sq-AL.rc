@@ -9,7 +9,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Fik kompjuterin"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tani është e sigurt për të fikur kompjuterin tuaj.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    LTEXT "Tani është e sigurt për të fikur kompjuterin tuaj.", IDC_SHUTDOWNCOMPUTER, 31, 6, 132, 18
     ICON IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
     DEFPUSHBUTTON "&Rifillo", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
 END
