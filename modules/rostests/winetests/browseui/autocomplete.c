@@ -17,22 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 #define COBJMACROS
 
-#include <wine/test.h>
+#include <stdarg.h>
 
-//#include <stdarg.h>
-#include <winnls.h>
-//#include <initguid.h>
+#include <initguid.h>
+#include <windows.h>
 #include <shlobj.h>
-//#include <shldisp.h>
-//#include <shlwapi.h>
-//#include <shlguid.h>
+#include <shldisp.h>
+#include <shlwapi.h>
+#include <shlguid.h>
 
-
+#include "wine/test.h"
 
 #define ole_ok(exp) \
 { \
