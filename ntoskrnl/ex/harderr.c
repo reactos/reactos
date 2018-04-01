@@ -14,7 +14,7 @@
 
 #define TAG_ERR ' rrE'
 
-/* GLOBALS ****************************************************************/
+/* GLOBALS ******************************************************************/
 
 BOOLEAN ExReadyForErrors = FALSE;
 PVOID ExpDefaultErrorPort = NULL;
@@ -247,9 +247,12 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     KeQuerySystemTime(&Message->ErrorTime);
 
     /* Copy the parameters */
-    if (Parameters) RtlMoveMemory(&Message->Parameters,
-                                  Parameters,
-                                  sizeof(ULONG_PTR) * NumberOfParameters);
+    if (Parameters)
+    {
+        RtlMoveMemory(&Message->Parameters,
+                      Parameters,
+                      sizeof(ULONG_PTR) * NumberOfParameters);
+    }
 
     /* Send the LPC Message */
     Status = LpcRequestWaitReplyPort(PortHandle,
