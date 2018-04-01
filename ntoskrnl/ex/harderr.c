@@ -150,13 +150,15 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
                                   NumberOfParameters,
                                   UnicodeStringParameterMask,
                                   Parameters,
-                                  (PreviousMode != KernelMode) ? TRUE: FALSE);
+                                  (PreviousMode != KernelMode) ? TRUE : FALSE);
         }
     }
 
-    /* Enable hard error processing if it is enabled for the process
-     * or if the exception status forces it */
-    if ((Process->DefaultHardErrorProcessing & 1) ||
+    /*
+     * Enable hard error processing if it is enabled for the process
+     * or if the exception status forces it.
+     */
+    if ((Process->DefaultHardErrorProcessing & SEM_FAILCRITICALERRORS) ||
         (ErrorStatus & HARDERROR_OVERRIDE_ERRORMODE))
     {
         /* Check if we have an exception port */
@@ -199,7 +201,7 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
                                   NumberOfParameters,
                                   UnicodeStringParameterMask,
                                   Parameters,
-                                  (PreviousMode != KernelMode) ? TRUE: FALSE);
+                                  (PreviousMode != KernelMode) ? TRUE : FALSE);
 
             /* If we survived, return to caller */
             *Response = ResponseReturnToCaller;

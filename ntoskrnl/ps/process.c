@@ -448,15 +448,14 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Check if we have a parent */
     if (Parent)
     {
-        /* Inherit PID and Hard Error Processing */
+        /* Inherit PID and hard-error processing */
         Process->InheritedFromUniqueProcessId = Parent->UniqueProcessId;
-        Process->DefaultHardErrorProcessing = Parent->
-                                              DefaultHardErrorProcessing;
+        Process->DefaultHardErrorProcessing = Parent->DefaultHardErrorProcessing;
     }
     else
     {
-        /* Use default hard error processing */
-        Process->DefaultHardErrorProcessing = TRUE;
+        /* Use default hard-error processing */
+        Process->DefaultHardErrorProcessing = SEM_FAILCRITICALERRORS;
     }
 
     /* Check for a section handle */
@@ -586,7 +585,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                         PROCESS_PRIORITY_NORMAL,
                         Affinity,
                         DirectoryTableBase,
-                        (BOOLEAN)(Process->DefaultHardErrorProcessing & 4));
+                        BooleanFlagOn(Process->DefaultHardErrorProcessing,
+                                      SEM_NOALIGNMENTFAULTEXCEPT));
 
     /* Duplicate Parent Token */
     Status = PspInitializeProcessSecurity(Process, Parent);
