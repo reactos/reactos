@@ -15,45 +15,29 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * ---- rpcss_main.c:
- *   Initialize and start serving requests.  Bail if rpcss already is
- *   running.
- *
- * ---- RPCSS.EXE:
- *   
- *   Wine needs a server whose role is somewhat like that
- *   of rpcss.exe in windows.  This is not a clone of
- *   windows rpcss at all.  It has been given the same name, however,
- *   to provide for the possibility that at some point in the future, 
- *   it may become interface compatible with the "real" rpcss.exe on
- *   Windows.
- *
- * ---- KNOWN BUGS / TODO:
- *
- *   o Service hooks are unimplemented (if you bother to implement
- *     these, also implement net.exe, at least for "net start" and
- *     "net stop" (should be pretty easy I guess, assuming the rest
- *     of the services API infrastructure works.
- *
- *   o There is a looming problem regarding listening on privileged
- *     ports.  We will need to be able to coexist with SAMBA, and be able
- *     to function without running winelib code as root.  This may
- *     take some doing, including significant reconceptualization of the
- *     role of rpcss.exe in wine.
  */
 
-#include "rpcss.h"
+#include <stdio.h>
+#include <stdarg.h>
+#include <limits.h>
+#include <assert.h>
 
-#include <wine/debug.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "winsvc.h"
+#include "irot_s.h"
+#include "epm_s.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-HANDLE exit_event;
+static WCHAR rpcssW[] = {'R','p','c','S','s',0};
+static HANDLE exit_event;
+static SERVICE_STATUS_HANDLE service_handle;
 
-//extern HANDLE __wine_make_process_system(void);
-
-BOOL RPCSS_Initialize(void)
+static BOOL RPCSS_Initialize(void)
 {
   static unsigned short irot_protseq[] = IROT_PROTSEQ;
   static unsigned short irot_endpoint[] = IROT_ENDPOINT;
@@ -94,16 +78,6 @@ BOOL RPCSS_Initialize(void)
   if (status != RPC_S_OK)
     goto fail;
 
-#ifndef __REACTOS__
-  exit_event = __wine_make_process_system();
-#else
-  exit_event = CreateEventW(NULL, FALSE, FALSE, NULL); // never fires
-  {
-    HANDLE hStartEvent = CreateEventW(NULL, TRUE, FALSE, L"ScmCreatedEvent");
-    SetEvent(hStartEvent);
-  }
-#endif
-
   return TRUE;
 
 fail:
@@ -112,33 +86,76 @@ fail:
   return FALSE;
 }
 
-/* returns false if we discover at the last moment that we
-   aren't ready to terminate */
-BOOL RPCSS_Shutdown(void)
+static DWORD WINAPI service_handler( DWORD ctrl, DWORD event_type, LPVOID event_data, LPVOID context )
 {
-  RpcMgmtStopServerListening(NULL);
-  RpcServerUnregisterIf(epm_v3_0_s_ifspec, NULL, TRUE);
-  RpcServerUnregisterIf(Irot_v0_2_s_ifspec, NULL, TRUE);
+    SERVICE_STATUS status;
 
-  CloseHandle(exit_event);
+    status.dwServiceType             = SERVICE_WIN32;
+    status.dwControlsAccepted        = SERVICE_ACCEPT_STOP;
+    status.dwWin32ExitCode           = 0;
+    status.dwServiceSpecificExitCode = 0;
+    status.dwCheckPoint              = 0;
+    status.dwWaitHint                = 0;
 
-  return TRUE;
+    switch (ctrl)
+    {
+    case SERVICE_CONTROL_STOP:
+    case SERVICE_CONTROL_SHUTDOWN:
+        TRACE( "shutting down\n" );
+        RpcMgmtStopServerListening( NULL );
+        RpcServerUnregisterIf( epm_v3_0_s_ifspec, NULL, TRUE );
+        RpcServerUnregisterIf( Irot_v0_2_s_ifspec, NULL, TRUE );
+        status.dwCurrentState = SERVICE_STOP_PENDING;
+        status.dwControlsAccepted = 0;
+        SetServiceStatus( service_handle, &status );
+        SetEvent( exit_event );
+        return NO_ERROR;
+    default:
+        FIXME( "got service ctrl %x\n", ctrl );
+        status.dwCurrentState = SERVICE_RUNNING;
+        SetServiceStatus( service_handle, &status );
+        return NO_ERROR;
+    }
 }
 
-#ifndef __REACTOS__
-int main( int argc, char **argv )
+static void WINAPI ServiceMain( DWORD argc, LPWSTR *argv )
 {
-  /* 
-   * We are invoked as a standard executable; we act in a
-   * "lazy" manner.  We register our interfaces and endpoints, and hang around
-   * until we all user processes exit, and then silently terminate.
-   */
+    SERVICE_STATUS status;
 
-  if (RPCSS_Initialize()) {
-    WaitForSingleObject(exit_event, INFINITE);
-    RPCSS_Shutdown();
-  }
+    TRACE( "starting service\n" );
 
-  return 0;
+    if (!RPCSS_Initialize()) return;
+
+    exit_event = CreateEventW( NULL, TRUE, FALSE, NULL );
+
+    service_handle = RegisterServiceCtrlHandlerExW( rpcssW, service_handler, NULL );
+    if (!service_handle) return;
+
+    status.dwServiceType             = SERVICE_WIN32;
+    status.dwCurrentState            = SERVICE_RUNNING;
+    status.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+    status.dwWin32ExitCode           = 0;
+    status.dwServiceSpecificExitCode = 0;
+    status.dwCheckPoint              = 0;
+    status.dwWaitHint                = 10000;
+    SetServiceStatus( service_handle, &status );
+
+    WaitForSingleObject( exit_event, INFINITE );
+
+    status.dwCurrentState     = SERVICE_STOPPED;
+    status.dwControlsAccepted = 0;
+    SetServiceStatus( service_handle, &status );
+    TRACE( "service stopped\n" );
 }
-#endif
+
+int wmain( int argc, WCHAR *argv[] )
+{
+    static const SERVICE_TABLE_ENTRYW service_table[] =
+    {
+        { rpcssW, ServiceMain },
+        { NULL, NULL }
+    };
+
+    StartServiceCtrlDispatcherW( service_table );
+    return 0;
+}
