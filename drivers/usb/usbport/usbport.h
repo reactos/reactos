@@ -402,7 +402,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
 #if !defined(_M_X64)
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x500);
 #else
-C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x600);
+C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x690);
 #endif
 
 typedef struct _USBPORT_RH_DESCRIPTORS {
