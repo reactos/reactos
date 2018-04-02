@@ -16,6 +16,8 @@
 /* DEFINES *******************************************************************/
 
 #define SHUTDOWN_TIMER_ID 2000
+#define SECONDS_PER_DAY 86400
+#define SECONDS_PER_DECADE 315360000
 
 
 /* STRUCTS *******************************************************************/
@@ -46,16 +48,25 @@ OnTimer(
     HWND hwndDlg,
     PSYS_SHUTDOWN_PARAMS pShutdownParams)
 {
-    WCHAR szBuffer[10];
-    INT iSeconds, iMinutes, iHours;
+    WCHAR szBuffer[12];
+    INT iSeconds, iMinutes, iHours, iDays;
 
-    iSeconds = (INT)pShutdownParams->dwTimeout;
-    iHours = iSeconds / 3600;
-    iSeconds -= iHours * 3600;
-    iMinutes = iSeconds / 60;
-    iSeconds -= iMinutes * 60;
+    if (pShutdownParams->dwTimeout < SECONDS_PER_DAY)
+    {
+        iSeconds = (INT)pShutdownParams->dwTimeout;
+        iHours = iSeconds / 3600;
+        iSeconds -= iHours * 3600;
+        iMinutes = iSeconds / 60;
+        iSeconds -= iMinutes * 60;
 
-    swprintf(szBuffer, L"%02d:%02d:%02d", iHours, iMinutes, iSeconds);
+        swprintf(szBuffer, L"%02d:%02d:%02d", iHours, iMinutes, iSeconds);
+    }
+    else
+    {
+        iDays = (INT)(pShutdownParams->dwTimeout / SECONDS_PER_DAY);
+        swprintf(szBuffer, L"%d days", iDays);
+    }
+
     SetDlgItemTextW(hwndDlg, IDC_SYSSHUTDOWNTIMELEFT, szBuffer);
 
     if (pShutdownParams->dwTimeout == 0)
@@ -184,6 +195,10 @@ StartSystemShutdown(
     ULONG dwReason)
 {
     HANDLE hThread;
+
+    /* Fail if the timeout is 10 years or more */
+    if (dwTimeout >= SECONDS_PER_DECADE)
+        return ERROR_INVALID_PARAMETER;
 
     if (_InterlockedCompareExchange8((volatile char*)&g_ShutdownParams.bShuttingDown, TRUE, FALSE) == TRUE)
         return ERROR_SHUTDOWN_IN_PROGRESS;
