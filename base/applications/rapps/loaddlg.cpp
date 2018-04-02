@@ -719,15 +719,6 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             goto end;
         }
 
-        if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
-            goto end;
-
-        if (dwStatus != HTTP_STATUS_OK)
-        {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
-            goto end;
-        }
-
         dwStatusLen = sizeof(dwStatus);
 
         memset(&urlComponents, 0, sizeof(urlComponents));
@@ -745,10 +736,25 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         dwContentLen = 0;
 
         if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
-            HttpQueryInfoW(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatusLen, 0);
+        {
+            // query connection
+            if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
+                goto end;
+
+            if (dwStatus != HTTP_STATUS_OK)
+            {
+                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
+                goto end;
+            }
+
+            // query content length
+            HttpQueryInfoW(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatusLen, NULL);
+        }
 
         if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
+        {
             dwContentLen = FtpGetFileSize(hFile, &dwStatus);
+        }
 
         if (!dwContentLen)
         {
