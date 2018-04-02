@@ -95,8 +95,8 @@ IDI_NPICON ICON "res/notepad.ico"
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
 #endif
-#ifdef LANGUAGE_NN_NO
-    #include "lang/nn-NO.rc"
+#ifdef LANGUAGE_NO_NO
+    #include "lang/no-NO.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
