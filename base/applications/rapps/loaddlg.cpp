@@ -48,7 +48,7 @@
 
 #ifdef USE_CERT_PINNING
 #define CERT_ISSUER_INFO "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
-#define CERT_SUBJECT_INFO "svn.reactos.org"
+#define CERT_SUBJECT_INFO "rapps.reactos.org"
 #endif
 
 enum DownloadStatus
