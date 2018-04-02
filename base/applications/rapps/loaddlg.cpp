@@ -603,6 +603,8 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     LPCWSTR szCaption = static_cast<DownloadParam*>(param)->szCaption;
     ATL::CStringW szNewCaption;
 
+    const DWORD dwUrlConnectFlags = INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION;
+
     if (InfoArray.GetSize() <= 0)
     {
         MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD);
@@ -709,16 +711,6 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if (!hOpen)
             goto end;
 
-        hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
-                                 INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION,
-                                 0);
-
-        if (!hFile)
-        {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
-            goto end;
-        }
-
         dwStatusLen = sizeof(dwStatus);
 
         memset(&urlComponents, 0, sizeof(urlComponents));
@@ -737,6 +729,15 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
         {
+            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
+                                     dwUrlConnectFlags,
+                                     0);
+            if (!hFile)
+            {
+                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+                goto end;
+            }
+
             // query connection
             if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
                 goto end;
@@ -753,6 +754,16 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
         {
+            // force passive mode on FTP
+            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
+                                     dwUrlConnectFlags | INTERNET_FLAG_PASSIVE,
+                                     0);
+            if (!hFile)
+            {
+                MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+                goto end;
+            }
+
             dwContentLen = FtpGetFileSize(hFile, &dwStatus);
         }
 
