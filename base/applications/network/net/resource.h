@@ -52,20 +52,24 @@
 #define IDS_SHARE_SYNTAX         149
 #define IDS_SHARE_HELP           150
 #define IDS_START_SYNTAX         151
-#define IDS_START_HELP           152
-#define IDS_STATISTICS_SYNTAX    153
-#define IDS_STATISTICS_HELP      154
-#define IDS_STOP_SYNTAX          155
-#define IDS_STOP_HELP            156
-#define IDS_TIME_SYNTAX          157
-#define IDS_TIME_HELP            158
-#define IDS_USE_SYNTAX           159
-#define IDS_USE_HELP             160
-#define IDS_USER_SYNTAX          161
-#define IDS_USER_HELP            162
-#define IDS_VIEW_SYNTAX          163
-#define IDS_VIEW_HELP            164
-#define IDS_NET_SYNTAX           165
+#define IDS_START_HELP_1         152
+#define IDS_START_HELP_2         153
+#define IDS_START_HELP_3         154
+#define IDS_STATISTICS_SYNTAX    155
+#define IDS_STATISTICS_HELP      156
+#define IDS_STOP_SYNTAX          157
+#define IDS_STOP_HELP_1          158
+#define IDS_STOP_HELP_2          159
+#define IDS_STOP_HELP_3          160
+#define IDS_TIME_SYNTAX          161
+#define IDS_TIME_HELP            162
+#define IDS_USE_SYNTAX           163
+#define IDS_USE_HELP             164
+#define IDS_USER_SYNTAX          165
+#define IDS_USER_HELP            166
+#define IDS_VIEW_SYNTAX          167
+#define IDS_VIEW_HELP            168
+#define IDS_NET_SYNTAX           169
 
 #define IDS_ACCOUNTS_FORCE_LOGOFF      200
 #define IDS_ACCOUNTS_LOGOFF_SECONDS    201
@@ -82,14 +86,15 @@
 #define IDS_ACCOUNTS_STANDALONE_SERVER 212
 #define IDS_ACCOUNTS_WORKSTATION       213
 
-#define IDS_CONFIG_SERVER_NAME         230
-#define IDS_CONFIG_SERVER_COMMENT      231
-#define IDS_CONFIG_SERVER_VERSION      232
-#define IDS_CONFIG_SERVER_ACTIVE       233
-#define IDS_CONFIG_SERVER_HIDDEN       234
-#define IDS_CONFIG_SERVER_USERS        235
-#define IDS_CONFIG_SERVER_FILES        236
-#define IDS_CONFIG_SERVER_IDLE         237
+#define IDS_CONFIG_TEXT                230
+#define IDS_CONFIG_SERVER_NAME         231
+#define IDS_CONFIG_SERVER_COMMENT      232
+#define IDS_CONFIG_SERVER_VERSION      233
+#define IDS_CONFIG_SERVER_ACTIVE       234
+#define IDS_CONFIG_SERVER_HIDDEN       235
+#define IDS_CONFIG_SERVER_USERS        236
+#define IDS_CONFIG_SERVER_FILES        237
+#define IDS_CONFIG_SERVER_IDLE         238
 
 
 #define IDS_LOCALGROUP_ALIASES         300

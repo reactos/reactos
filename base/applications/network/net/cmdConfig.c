@@ -70,9 +70,6 @@ done:
     if (ServerInfo != NULL)
         NetApiBufferFree(ServerInfo);
 
-    if (Status == NERR_Success)
-        ConResPuts(StdOut, IDS_ERROR_NO_ERROR);
-
     return 0;
 }
 
@@ -161,8 +158,11 @@ cmdConfig(
     }
     else
     {
-
+        ConResPuts(StdOut, IDS_CONFIG_TEXT);
     }
+
+    if (result == 0)
+        ConResPuts(StdOut, IDS_ERROR_NO_ERROR);
 
     return result;
 }

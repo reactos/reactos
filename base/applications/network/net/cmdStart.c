@@ -173,7 +173,11 @@ cmdStart(INT argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            ConResPuts(StdOut, IDS_START_HELP);
+            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            ConResPuts(StdOut, IDS_START_SYNTAX);
+            ConResPuts(StdOut, IDS_START_HELP_1);
+            ConResPuts(StdOut, IDS_START_HELP_2);
+            ConResPuts(StdOut, IDS_START_HELP_3);
             return 1;
         }
     }

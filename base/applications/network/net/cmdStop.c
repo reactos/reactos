@@ -29,7 +29,11 @@ INT cmdStop(INT argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            ConResPuts(StdOut, IDS_STOP_HELP);
+            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            ConResPuts(StdOut, IDS_STOP_SYNTAX);
+            ConResPuts(StdOut, IDS_STOP_HELP_1);
+            ConResPuts(StdOut, IDS_STOP_HELP_2);
+            ConResPuts(StdOut, IDS_STOP_HELP_3);
             return 1;
         }
     }

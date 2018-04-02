@@ -121,12 +121,20 @@ message and suggested actions you can take to solve the problem.\n\n"
     IDS_SESSION_HELP "SESSION\n...\n\n"
     IDS_SHARE_SYNTAX "NET SHARE ...\n\n"
     IDS_SHARE_HELP "SHARE\n...\n\n"
-    IDS_START_SYNTAX "NET START <服務名稱>\n\n"
-    IDS_START_HELP "START\n...\n\n"
+    IDS_START_SYNTAX "NET START [service]\n\n"
+    IDS_START_HELP_1 "NET START starts services or lists running services.\n\n"
+    IDS_START_HELP_2 "service   The name of the service to be started.\n\n"
+    IDS_START_HELP_3 "When typed at the command prompt, service name of two words or more must\n\
+be enclosed in quotation marks. For example, NET START ""NET LOGON""\n\
+starts the net logon service.\n\n"
     IDS_STATISTICS_SYNTAX "NET STATISTICS ...\n\n"
     IDS_STATISTICS_HELP "STATISTICS\n...\n\n"
     IDS_STOP_SYNTAX "NET STOP <服務名稱>\n\n"
-    IDS_STOP_HELP "STOP\n...\n\n"
+    IDS_STOP_HELP_1 "NET STOP stops services.\n\n"
+    IDS_STOP_HELP_2 "service   The name of the service to be stopped.\n\n"
+    IDS_STOP_HELP_3 "Stopping a service cancels any network connection the service is\n\
+using. Also, some services are dependent on others. Stopping one\n\
+service can stop others. Some services cannot be stopped.\n\n"
     IDS_TIME_SYNTAX "NET TIME ...\n\n"
     IDS_TIME_HELP "TIME\n...\n\n"
     IDS_USE_SYNTAX "NET USE ...\n\n"
@@ -156,6 +164,8 @@ message and suggested actions you can take to solve the problem.\n\n"
     IDS_ACCOUNTS_STANDALONE_SERVER "獨立伺服器"
     IDS_ACCOUNTS_WORKSTATION "工作站"
 
+    IDS_CONFIG_TEXT "The following running services can be controlled:\n\n\
+   Server\n   Workstation\n\n"
     IDS_CONFIG_SERVER_NAME "Server Name"
     IDS_CONFIG_SERVER_COMMENT "Server Comment"
     IDS_CONFIG_SERVER_VERSION "Software version"
