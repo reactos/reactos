@@ -56,7 +56,7 @@ OnTimer(
     iSeconds -= iMinutes * 60;
 
     swprintf(szBuffer, L"%02d:%02d:%02d", iHours, iMinutes, iSeconds);
-    SetDlgItemTextW(hwndDlg, IDC_SHUTDOWNTIMELEFT, szBuffer);
+    SetDlgItemTextW(hwndDlg, IDC_SYSSHUTDOWNTIMELEFT, szBuffer);
 
     if (pShutdownParams->dwTimeout == 0)
     {
@@ -94,7 +94,7 @@ ShutdownDialogProc(
             if (pShutdownParams->pszMessage)
             {
                 SetDlgItemTextW(hwndDlg,
-                                IDC_SHUTDOWNCOMMENT,
+                                IDC_SYSSHUTDOWNMESSAGE,
                                 pShutdownParams->pszMessage);
             }
 
