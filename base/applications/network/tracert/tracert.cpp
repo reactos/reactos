@@ -8,15 +8,16 @@
  */
 
 #ifdef __REACTOS__
+#define USE_CONUTILS
 #define WIN32_NO_STATUS
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
 #define _INC_WINDOWS
-#include <stdio.h>
 #include <stdlib.h>
 #include <winsock2.h>
+#include <conutils.h>
 #else
 #include <winsock2.h>
 #include <Windows.h>
@@ -144,7 +145,7 @@ OutputText(
     return Ret;
 }
 #else
-#define OutputText(Id, ...) ConResPrintf(StdOut, Id, __VA_ARGS__)
+#define OutputText(Id, ...) ConResMsgPrintfEx(StdOut, NULL, 0, Id, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), ##__VA_ARGS__)
 #endif //USE_CONUTILS
 
 static
@@ -554,6 +555,11 @@ ParseCmdline(int argc, wchar_t *argv[])
 EXTERN_C
 int wmain(int argc, wchar_t *argv[])
 {
+#ifdef USE_CONUTILS
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+#endif
+
     Info.ResolveAddresses = true;
     Info.MaxHops = 30;
     Info.Timeout = 4000;
