@@ -10,19 +10,19 @@
 
 #include "winlogon.h"
 
-#include <ntstrsafe.h>
 #include <rpc.h>
 #include <winreg_s.h>
 
 /* DEFINES *******************************************************************/
 
-#define IDT_SYSSHUTDOWN 2000
+#define SHUTDOWN_TIMER_ID 2000
+
 
 /* STRUCTS *******************************************************************/
 
 typedef struct _SYS_SHUTDOWN_PARAMS
 {
-    UNICODE_STRING usMessage;
+    PWSTR pszMessage;
     ULONG dwTimeout;
     BOOLEAN bRebootAfterShutdown;
     BOOLEAN bForceAppsClosed;
@@ -32,9 +32,11 @@ typedef struct _SYS_SHUTDOWN_PARAMS
     BOOLEAN bShuttingDown;
 } SYS_SHUTDOWN_PARAMS, *PSYS_SHUTDOWN_PARAMS;
 
+
 /* GLOBALS *******************************************************************/
 
 SYS_SHUTDOWN_PARAMS g_ShutdownParams;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -44,17 +46,17 @@ OnTimer(
     HWND hwndDlg,
     PSYS_SHUTDOWN_PARAMS pShutdownParams)
 {
-    WCHAR strbuf[34];
-    INT seconds, minutes, hours;
+    WCHAR szBuffer[10];
+    INT iSeconds, iMinutes, iHours;
 
-    seconds = (INT)pShutdownParams->dwTimeout;
-    hours = seconds / 3600;
-    seconds -= hours * 3600;
-    minutes = seconds / 60;
-    seconds -= minutes * 60;
+    iSeconds = (INT)pShutdownParams->dwTimeout;
+    iHours = iSeconds / 3600;
+    iSeconds -= iHours * 3600;
+    iMinutes = iSeconds / 60;
+    iSeconds -= iMinutes * 60;
 
-    RtlStringCbPrintfW(strbuf, sizeof(strbuf), L"%d:%d:%d", hours, minutes, seconds);
-    SetDlgItemTextW(hwndDlg, IDC_SHUTDOWNTIMELEFT, strbuf);
+    swprintf(szBuffer, L"%02d:%02d:%02d", iHours, iMinutes, iSeconds);
+    SetDlgItemTextW(hwndDlg, IDC_SHUTDOWNTIMELEFT, szBuffer);
 
     if (pShutdownParams->dwTimeout == 0)
     {
@@ -89,28 +91,30 @@ ShutdownDialogProc(
 
             pShutdownParams->hShutdownDialog = hwndDlg;
 
-            if (pShutdownParams->usMessage.Length)
+            if (pShutdownParams->pszMessage)
             {
                 SetDlgItemTextW(hwndDlg,
                                 IDC_SHUTDOWNCOMMENT,
-                                pShutdownParams->usMessage.Buffer);
+                                pShutdownParams->pszMessage);
             }
+
             RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
             SetWindowPos(hwndDlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+
             PostMessage(hwndDlg, WM_TIMER, 0, 0);
-            SetTimer(hwndDlg, IDT_SYSSHUTDOWN, 1000, NULL);
+            SetTimer(hwndDlg, SHUTDOWN_TIMER_ID, 1000, NULL);
             break;
 
         case WM_CLOSE:
             pShutdownParams->hShutdownDialog = NULL;
             pShutdownParams->bShuttingDown = FALSE;
 
-            KillTimer(hwndDlg, IDT_SYSSHUTDOWN);
+            KillTimer(hwndDlg, SHUTDOWN_TIMER_ID);
 
-            if (pShutdownParams->usMessage.Buffer)
+            if (pShutdownParams->pszMessage)
             {
-                HeapFree(GetProcessHeap(), 0, pShutdownParams->usMessage.Buffer);
-                RtlInitEmptyUnicodeString(&pShutdownParams->usMessage, NULL, 0);
+                HeapFree(GetProcessHeap(), 0, pShutdownParams->pszMessage);
+                pShutdownParams->pszMessage = NULL;
             }
 
             EndDialog(hwndDlg, 0);
@@ -149,11 +153,12 @@ InitiateSystemShutdownThread(
         return ERROR_SUCCESS;
     }
 
-    if (pShutdownParams->usMessage.Buffer)
+    if (pShutdownParams->pszMessage)
     {
-        HeapFree(GetProcessHeap(), 0, pShutdownParams->usMessage.Buffer);
-        RtlInitEmptyUnicodeString(&pShutdownParams->usMessage, NULL, 0);
+        HeapFree(GetProcessHeap(), 0, pShutdownParams->pszMessage);
+        pShutdownParams->pszMessage = NULL;
     }
+
     pShutdownParams->bShuttingDown = FALSE;
 
     return GetLastError();
@@ -185,19 +190,22 @@ StartSystemShutdown(
 
     if (lpMessage && lpMessage->Length && lpMessage->Buffer)
     {
-        g_ShutdownParams.usMessage.Buffer = HeapAlloc(GetProcessHeap(), 0, lpMessage->Length + sizeof(UNICODE_NULL));
-        if (g_ShutdownParams.usMessage.Buffer == NULL)
+        g_ShutdownParams.pszMessage = HeapAlloc(GetProcessHeap(),
+                                                HEAP_ZERO_MEMORY,
+                                                lpMessage->Length + sizeof(UNICODE_NULL));
+        if (g_ShutdownParams.pszMessage == NULL)
         {
             g_ShutdownParams.bShuttingDown = FALSE;
             return GetLastError();
         }
 
-        RtlInitEmptyUnicodeString(&g_ShutdownParams.usMessage, g_ShutdownParams.usMessage.Buffer, lpMessage->Length + sizeof(UNICODE_NULL));
-        RtlCopyUnicodeString(&(g_ShutdownParams.usMessage), (PUNICODE_STRING)lpMessage);
+        wcsncpy(g_ShutdownParams.pszMessage,
+                lpMessage->Buffer,
+                lpMessage->Length / sizeof(WCHAR));
     }
     else
     {
-        RtlInitEmptyUnicodeString(&g_ShutdownParams.usMessage, NULL, 0);
+        g_ShutdownParams.pszMessage = NULL;
     }
 
     g_ShutdownParams.dwTimeout = dwTimeout;
@@ -212,10 +220,10 @@ StartSystemShutdown(
         return ERROR_SUCCESS;
     }
 
-    if (g_ShutdownParams.usMessage.Buffer)
+    if (g_ShutdownParams.pszMessage)
     {
-        HeapFree(GetProcessHeap(), 0, g_ShutdownParams.usMessage.Buffer);
-        RtlInitEmptyUnicodeString(&g_ShutdownParams.usMessage, NULL, 0);
+        HeapFree(GetProcessHeap(), 0, g_ShutdownParams.pszMessage);
+        g_ShutdownParams.pszMessage = NULL;
     }
 
     g_ShutdownParams.bShuttingDown = FALSE;
