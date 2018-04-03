@@ -179,7 +179,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     ULONG IdLength;
 
     DPRINT("IoReportDetectedDevice (DeviceObject %p, *DeviceObject %p)\n",
-      DeviceObject, DeviceObject ? *DeviceObject : NULL);
+           DeviceObject, DeviceObject ? *DeviceObject : NULL);
 
     ServiceName = DriverObject->DriverExtension->ServiceKeyName;
 
@@ -274,33 +274,33 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_MULTI_SZ, HardwareId, IdLength * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
-       DPRINT("Failed to write the compatible IDs: 0x%x\n", Status);
-       ZwClose(InstanceKey);
-       return Status;
+        DPRINT("Failed to write the compatible IDs: 0x%x\n", Status);
+        ZwClose(InstanceKey);
+        return Status;
     }
 
     /* Add a hardware ID if the driver didn't report one */
     RtlInitUnicodeString(&ValueName, L"HardwareID");
     if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
     {
-       /* Just use our most specific compatible ID */
-       IdLength = 0;
-       IdLength += swprintf(&HardwareId[IdLength],
-                            L"DETECTED%ls\\%wZ",
-                            IfString,
-                            &ServiceName);
-       IdLength++;
+        /* Just use our most specific compatible ID */
+        IdLength = 0;
+        IdLength += swprintf(&HardwareId[IdLength],
+                             L"DETECTED%ls\\%wZ",
+                             IfString,
+                             &ServiceName);
+        IdLength++;
 
-       HardwareId[IdLength++] = UNICODE_NULL;
+        HardwareId[IdLength++] = UNICODE_NULL;
 
-       /* Write the value to the registry */
-       Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_MULTI_SZ, HardwareId, IdLength * sizeof(WCHAR));
-       if (!NT_SUCCESS(Status))
-       {
-          DPRINT("Failed to write the hardware ID: 0x%x\n", Status);
-          ZwClose(InstanceKey);
-          return Status;
-       }
+        /* Write the value to the registry */
+        Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_MULTI_SZ, HardwareId, IdLength * sizeof(WCHAR));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Failed to write the hardware ID: 0x%x\n", Status);
+            ZwClose(InstanceKey);
+            return Status;
+        }
     }
 
     /* Assign the resources to the device node */
@@ -309,10 +309,10 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
 
     /* Set appropriate flags */
     if (DeviceNode->BootResources)
-       IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
+        IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
 
     if (!DeviceNode->ResourceRequirements && !DeviceNode->BootResources)
-       IopDeviceNodeSetFlag(DeviceNode, DNF_NO_RESOURCE_REQUIRED);
+        IopDeviceNodeSetFlag(DeviceNode, DNF_NO_RESOURCE_REQUIRED);
 
     /* Write the resource information to the registry */
     IopSetDeviceInstanceData(InstanceKey, DeviceNode);
@@ -320,15 +320,15 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     /* If the caller didn't get the resources assigned for us, do it now */
     if (!ResourceAssigned)
     {
-       Status = IopAssignDeviceResources(DeviceNode);
+        Status = IopAssignDeviceResources(DeviceNode);
 
-       /* See if we failed */
-       if (!NT_SUCCESS(Status))
-       {
-           DPRINT("Assigning resources failed: 0x%x\n", Status);
-           ZwClose(InstanceKey);
-           return Status;
-       }
+        /* See if we failed */
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Assigning resources failed: 0x%x\n", Status);
+            ZwClose(InstanceKey);
+            return Status;
+        }
     }
 
     /* Close the instance key handle */
