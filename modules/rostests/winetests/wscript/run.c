@@ -18,17 +18,16 @@
 
 #include <stdio.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <windef.h>
-#include <winbase.h>
-#include <objbase.h>
+#define PSAPI_VERSION 1
+#include <initguid.h>
+#include <windows.h>
 #include <psapi.h>
+#include <oaidl.h>
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
