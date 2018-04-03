@@ -224,6 +224,15 @@ static BOOL init_aes_environment(void)
         result = CryptGenKey(hProv, AT_SIGNATURE, 0, &hKey);
         ok(result, "%08x\n", GetLastError());
         if (result) CryptDestroyKey(hKey);
+
+        /* CALG_AES is not supported, but CALG_AES_128 is */
+        result = CryptGenKey(hProv, CALG_AES, 0, &hKey);
+        ok(!result && GetLastError() == NTE_BAD_ALGID, "%d %08x\n", result, GetLastError());
+        result = CryptGenKey(hProv, CALG_AES, 128 << 16, &hKey);
+        ok(!result && GetLastError() == NTE_BAD_ALGID, "%d %08x\n", result, GetLastError());
+        result = CryptGenKey(hProv, CALG_AES_128, 0, &hKey);
+        ok(result, "%08x\n", GetLastError());
+        if (result) CryptDestroyKey(hKey);
     }
     return TRUE;
 }
