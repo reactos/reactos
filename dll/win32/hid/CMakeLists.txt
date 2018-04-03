@@ -1,10 +1,10 @@
 
+spec2def(hid.dll hid.spec ADD_IMPORTLIB)
+
 list(APPEND SOURCE
     hid.c
     stubs.c
     precomp.h)
-
-spec2def(hid.dll hid.spec)
 
 add_library(hid SHARED
     ${SOURCE}
