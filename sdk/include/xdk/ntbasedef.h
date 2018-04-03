@@ -919,6 +919,7 @@ $endif(_WINNT_)
 #define PRODUCT_CORE_SINGLELANGUAGE                 0x00000064
 #define PRODUCT_CORE                                0x00000065
 #define PRODUCT_PROFESSIONAL_WMC                    0x00000067
+#define PRODUCT_ENTERPRISE_S_N_EVALUATION           0x00000082
 #define PRODUCT_UNLICENSED                          0xABCDABCD
 
 /* LangID and NLS */

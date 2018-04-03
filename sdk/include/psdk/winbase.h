@@ -1724,10 +1724,33 @@ _Ret_maybenull_ HANDLE WINAPI CreateSemaphoreExA(_In_opt_ LPSECURITY_ATTRIBUTES,
 HANDLE WINAPI CreateSemaphoreExW(LPSECURITY_ATTRIBUTES,LONG,LONG,LPCWSTR,DWORD,DWORD);
 #endif
 DWORD WINAPI CreateTapePartition(_In_ HANDLE, _In_ DWORD, _In_ DWORD, _In_ DWORD);
+
 #if (_WIN32_WINNT >= 0x0500)
+
 HANDLE WINAPI CreateTimerQueue(void);
-BOOL WINAPI CreateTimerQueueTimer(PHANDLE,HANDLE,WAITORTIMERCALLBACK,PVOID,DWORD,DWORD,ULONG);
-#endif
+
+BOOL
+WINAPI
+CreateTimerQueueTimer(
+  _Outptr_ PHANDLE,
+  _In_opt_ HANDLE,
+  _In_ WAITORTIMERCALLBACK,
+  _In_opt_ PVOID,
+  _In_ DWORD,
+  _In_ DWORD,
+  _In_ ULONG);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+ChangeTimerQueueTimer(
+  _In_opt_ HANDLE TimerQueue,
+  _Inout_ HANDLE Timer,
+  _In_ ULONG DueTime,
+  _In_ ULONG Period);
+
+#endif /* (_WIN32_WINNT >= 0x0500) */
+
 HANDLE WINAPI CreateThread(LPSECURITY_ATTRIBUTES,DWORD,LPTHREAD_START_ROUTINE,PVOID,DWORD,PDWORD);
 _Ret_maybenull_ HANDLE WINAPI CreateWaitableTimerA(_In_opt_ LPSECURITY_ATTRIBUTES, _In_ BOOL, _In_opt_ LPCSTR);
 _Ret_maybenull_ HANDLE WINAPI CreateWaitableTimerW(_In_opt_ LPSECURITY_ATTRIBUTES, _In_ BOOL, _In_opt_ LPCWSTR);
