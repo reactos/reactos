@@ -170,7 +170,11 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     RequestAddition(service_handle, TRUE);
     Status = CallCacheControl(&ntPath, TRUE, ApphelpCacheServiceLookup);
     ok_ntstatus(Status, STATUS_SUCCESS);
+#ifdef _WIN64
+    CacheEntry.ImageHandle = (HANDLE)0x8000000000000000ULL;
+#else
     CacheEntry.ImageHandle = (HANDLE)0x80000000;
+#endif
     Status = pNtApphelpCacheControl(ApphelpCacheServiceLookup, &CacheEntry);
     ok_ntstatus(Status, STATUS_NOT_FOUND);
 

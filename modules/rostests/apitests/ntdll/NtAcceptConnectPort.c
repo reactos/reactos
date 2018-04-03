@@ -51,10 +51,10 @@ ServerThread(
        "DataLength = %u\n", Message.Header.u1.s1.DataLength);
     ok(Message.Header.u2.s2.Type == LPC_CONNECTION_REQUEST,
        "Type = %x\n", Message.Header.u2.s2.Type);
-    ok(Message.Header.ClientId.UniqueProcess == (HANDLE)GetCurrentProcessId(),
+    ok(Message.Header.ClientId.UniqueProcess == UlongToHandle(GetCurrentProcessId()),
        "UniqueProcess = %p, expected %lx\n",
        Message.Header.ClientId.UniqueProcess, GetCurrentProcessId());
-    ok(Message.Header.ClientId.UniqueThread == (HANDLE)ClientThreadId,
+    ok(Message.Header.ClientId.UniqueThread == UlongToHandle(ClientThreadId),
        "UniqueThread = %p, expected %x\n",
        Message.Header.ClientId.UniqueThread, ClientThreadId);
     ok(Message.Message == TEST_CONNECTION_INFO_SIGNATURE1, "Message = %lx\n", Message.Message);
@@ -82,10 +82,10 @@ ServerThread(
        "DataLength = %u\n", Message.Header.u1.s1.DataLength);
     ok(Message.Header.u2.s2.Type == LPC_CONNECTION_REQUEST,
        "Type = %x\n", Message.Header.u2.s2.Type);
-    ok(Message.Header.ClientId.UniqueProcess == (HANDLE)GetCurrentProcessId(),
+    ok(Message.Header.ClientId.UniqueProcess == UlongToHandle(GetCurrentProcessId()),
        "UniqueProcess = %p, expected %lx\n",
        Message.Header.ClientId.UniqueProcess, GetCurrentProcessId());
-    ok(Message.Header.ClientId.UniqueThread == (HANDLE)ClientThreadId,
+    ok(Message.Header.ClientId.UniqueThread == UlongToHandle(ClientThreadId),
        "UniqueThread = %p, expected %x\n",
        Message.Header.ClientId.UniqueThread, ClientThreadId);
     ok(Message.Message == TEST_CONNECTION_INFO_SIGNATURE2, "Message = %lx\n", Message.Message);
@@ -115,10 +115,10 @@ ServerThread(
        "DataLength = %u\n", Message.Header.u1.s1.DataLength);
     ok(Message.Header.u2.s2.Type == LPC_DATAGRAM,
        "Type = %x\n", Message.Header.u2.s2.Type);
-    ok(Message.Header.ClientId.UniqueProcess == (HANDLE)GetCurrentProcessId(),
+    ok(Message.Header.ClientId.UniqueProcess == UlongToHandle(GetCurrentProcessId()),
        "UniqueProcess = %p, expected %lx\n",
        Message.Header.ClientId.UniqueProcess, GetCurrentProcessId());
-    ok(Message.Header.ClientId.UniqueThread == (HANDLE)ClientThreadId,
+    ok(Message.Header.ClientId.UniqueThread == UlongToHandle(ClientThreadId),
        "UniqueThread = %p, expected %x\n",
        Message.Header.ClientId.UniqueThread, ClientThreadId);
     ok(Message.Message == TEST_MESSAGE_MESSAGE, "Message = %lx\n", Message.Message);

@@ -467,7 +467,11 @@ VfdQueryImage(
 	IN	PDEVICE_EXTENSION		DeviceExtension,
 	OUT	PVFD_IMAGE_INFO			ImageInfo,
 	IN	ULONG					BufferLength,
+#ifndef __REACTOS__
 	OUT	PULONG					ReturnLength)
+#else
+	OUT	PSIZE_T					ReturnLength)
+#endif
 {
 	//	Check output buffer length
 

@@ -47,10 +47,10 @@ static BOOL IsBlockFromHeap(HANDLE hHeap, PVOID ptr)
 
     he.dwSize = sizeof(he);
 
-    if (Heap32First(&he, GetCurrentProcessId(), (DWORD)hHeap))
+    if (Heap32First(&he, GetCurrentProcessId(), (DWORD_PTR)hHeap))
     {
         do {
-            if ((DWORD)ptr >= he.dwAddress && (DWORD)ptr <= (he.dwAddress + he.dwBlockSize))
+            if ((DWORD_PTR)ptr >= he.dwAddress && (DWORD_PTR)ptr <= (he.dwAddress + he.dwBlockSize))
                 ret = TRUE;
         } while (!ret && Heap32Next(&he));
     }

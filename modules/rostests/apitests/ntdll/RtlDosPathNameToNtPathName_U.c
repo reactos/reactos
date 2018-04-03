@@ -145,7 +145,7 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 		check_result(bOK, "NtName does not match expected");
 		if (!bOK)
 		{
-			printf("input:  : %2u chars \"%S\"\n", wcslen(pwsz), pwsz);
+			printf("input:  : %2Iu chars \"%S\"\n", wcslen(pwsz), pwsz);
 			printf("Expected: %2u chars \"%S\"\n", lenExp, pwszExpected);
 			printf("Actual  : %2u chars \"%S\"\n", lenAct, lenAct ? pwszActual : L"(null)");
 			return;

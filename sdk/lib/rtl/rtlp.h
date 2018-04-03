@@ -74,10 +74,12 @@ RtlCallVectoredContinueHandlers(
     IN PCONTEXT Context
 );
 
+#ifdef _M_IX86
 typedef struct _DISPATCHER_CONTEXT
 {
     PEXCEPTION_REGISTRATION_RECORD RegistrationPointer;
 } DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+#endif
 
 /* These provide support for sharing code between User and Kernel RTL */
 PVOID
@@ -157,6 +159,7 @@ RtlpClearInDbgPrint(
 
 /* i386/except.S */
 
+#ifdef _M_IX86
 EXCEPTION_DISPOSITION
 NTAPI
 RtlpExecuteHandlerForException(PEXCEPTION_RECORD ExceptionRecord,
@@ -164,6 +167,7 @@ RtlpExecuteHandlerForException(PEXCEPTION_RECORD ExceptionRecord,
                                PCONTEXT Context,
                                PVOID DispatcherContext,
                                PEXCEPTION_ROUTINE ExceptionHandler);
+#endif
 
 EXCEPTION_DISPOSITION
 NTAPI

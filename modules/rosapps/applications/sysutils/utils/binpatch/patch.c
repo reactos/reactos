@@ -16,7 +16,7 @@
 
 typedef struct _PatchedByte
 {
-   int            offset;    /*!< File offset of the patched byte. */
+   uintptr_t      offset;    /*!< File offset of the patched byte. */
    unsigned char  expected;  /*!< Expected (original) value of the byte. */
    unsigned char  patched;   /*!< Patched (new) value for the byte. */
 } PatchedByte;
@@ -24,7 +24,7 @@ typedef struct _PatchedByte
 typedef struct _PatchedFile
 {
    const char  *name;        /*!< Name of the file to be patched. */
-   int          fileSize;    /*!< Size of the file in bytes. */
+   size_t       fileSize;    /*!< Size of the file in bytes. */
    int          patchCount;  /*!< Number of patches for the file. */
    PatchedByte *patches;     /*!< Patches for the file. */
 } PatchedFile;
@@ -53,11 +53,11 @@ static char m_patchBuffer[SIZEOF_PATCH_BUFFER_MAGIC + PATCH_BUFFER_SIZE] =
 /** HELPER FUNCTIONS **********************************************************/
 
 static void *
-loadFile(const char *fileName, int *fileSize_)
+loadFile(const char *fileName, size_t *fileSize_)
 {
    FILE *f;
    struct stat sb;
-   int fileSize;
+   size_t fileSize;
    void *p;
 
    /* Open the file */
@@ -82,7 +82,7 @@ loadFile(const char *fileName, int *fileSize_)
    if (p == NULL)
    {
       fclose(f);
-      printf("Couldn't allocate %d bytes for file %s!\n", fileSize, fileName);
+      printf("Couldn't allocate %Id bytes for file %s!\n", fileSize, fileName);
       return NULL;
    }
 
@@ -103,7 +103,7 @@ loadFile(const char *fileName, int *fileSize_)
 
 
 static int
-saveFile(const char *fileName, void *file, int fileSize)
+saveFile(const char *fileName, void *file, size_t fileSize)
 {
    FILE *f;
 
@@ -136,7 +136,8 @@ compareFiles(
 {
    const char *patchedFileName = patchedFile->name;
    unsigned char *origChunk, *patchedChunk;
-   int origSize, patchedSize, i, patchCount;
+   size_t origSize, patchedSize;
+   int i, patchCount;
    PatchedByte *patches = NULL;
    int patchesArrayCount = 0;
 
@@ -154,7 +155,7 @@ compareFiles(
    {
       free(origChunk);
       free(patchedChunk);
-      printf("File size of %s and %s differs (%d != %d)\n",
+      printf("File size of %s and %s differs (%Iu != %Iu)\n",
              originalFileName, patchedFileName,
              origSize, patchedSize);
       return -1;
@@ -179,7 +180,7 @@ compareFiles(
                 free(patches);
               free(origChunk);
               free(patchedChunk);
-              printf("\nOut of memory (tried to allocated %d bytes)\n",
+              printf("\nOut of memory (tried to allocated %Id bytes)\n",
                      patchCount * sizeof (PatchedByte));
               return -1;
             }
@@ -213,7 +214,7 @@ static int
 outputPatch(const char *outputFileName)
 {
    char *patchExe, *patchBuffer = NULL;
-   int i, size, patchExeSize, patchSize, stringSize, stringOffset, patchOffset;
+   size_t i, size, patchExeSize, patchSize, stringSize, stringOffset, patchOffset;
    Patch *patch;
    PatchedFile *files;
 
@@ -229,7 +230,7 @@ outputPatch(const char *outputFileName)
    }
    if ((stringSize + patchSize) > PATCH_BUFFER_SIZE)
    {
-      printf("Patch is too big - %d bytes maximum, %d bytes needed\n",
+      printf("Patch is too big - %u bytes maximum, %Iu bytes needed\n",
              PATCH_BUFFER_SIZE, stringSize + patchSize);
       return -1;
    }
@@ -316,14 +317,14 @@ loadPatch()
       return -1;
    }
 
-   m_patch.name = p + (int)patch->name;
+   m_patch.name = p + (intptr_t)patch->name;
    m_patch.fileCount = patch->fileCount;
-   m_patch.files = (PatchedFile *)(p + (int)patch->files);
+   m_patch.files = (PatchedFile *)(p + (intptr_t)patch->files);
 
    for (i = 0; i < m_patch.fileCount; i++)
    {
-      m_patch.files[i].name = p + (int)m_patch.files[i].name;
-      m_patch.files[i].patches = (PatchedByte *)(p + (int)m_patch.files[i].patches);
+      m_patch.files[i].name = p + (intptr_t)m_patch.files[i].name;
+      m_patch.files[i].patches = (PatchedByte *)(p + (intptr_t)m_patch.files[i].patches);
    }
 
    printf("Patch %s loaded...\n", m_patch.name);
@@ -386,7 +387,8 @@ createPatch()
 static int
 applyPatch()
 {
-   int c, i, j, fileSize, makeBackup;
+   int c, i, j, makeBackup;
+   size_t fileSize;
    unsigned char *file;
    char *p;
    const char *fileName;
@@ -415,12 +417,12 @@ applyPatch()
       {
          printf("----------------------\n"
                 "File name:   %s\n"
-                "File size:   %d bytes\n",
+                "File size:   %Id bytes\n",
                 m_patch.files[i].name, m_patch.files[i].fileSize);
          printf("Patch count: %d\n", m_patch.files[i].patchCount);
          for (j = 0; j < m_patch.files[i].patchCount; j++)
          {
-            printf("  Offset 0x%x   0x%02x -> 0x%02x\n",
+            printf("  Offset 0x%Ix   0x%02x -> 0x%02x\n",
                    m_patch.files[i].patches[j].offset,
                    m_patch.files[i].patches[j].expected,
                    m_patch.files[i].patches[j].patched);
@@ -483,7 +485,7 @@ applyPatch_file_open_error:
          if (fileSize != m_patch.files[i].fileSize)
          {
             free(file);
-            printf("File %s has unexpected filesize of %d bytes (%d bytes expected)\n",
+            printf("File %s has unexpected filesize of %Id bytes (%Id bytes expected)\n",
                    fileName, fileSize, m_patch.files[i].fileSize);
             if (fileName != m_patch.files[i].name) /* manually entered filename */
             {

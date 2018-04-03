@@ -28,10 +28,6 @@
 #define UWOP_SAVE_XMM128_FAR 9
 #define UWOP_PUSH_MACHFRAME 10
 
-#define UNW_FLAG_NHANDLER 0
-#define UNW_FLAG_EHANDLER 1
-#define UNW_FLAG_UHANDLER 2
-#define UNW_FLAG_CHAININFO 4
 
 typedef unsigned char UBYTE;
 
@@ -348,18 +344,17 @@ RtlpTryToUnwindEpilog(
     return TRUE;
 }
 
-
 PEXCEPTION_ROUTINE
 NTAPI
 RtlVirtualUnwind(
-    IN ULONG HandlerType,
-    IN ULONG64 ImageBase,
-    IN ULONG64 ControlPc,
-    IN PRUNTIME_FUNCTION FunctionEntry,
-    IN OUT PCONTEXT Context,
-    OUT PVOID *HandlerData,
-    OUT PULONG64 EstablisherFrame,
-    IN OUT PKNONVOLATILE_CONTEXT_POINTERS ContextPointers)
+    _In_ ULONG HandlerType,
+    _In_ ULONG64 ImageBase,
+    _In_ ULONG64 ControlPc,
+    _In_ PRUNTIME_FUNCTION FunctionEntry,
+    _Inout_ PCONTEXT Context,
+    _Outptr_ PVOID *HandlerData,
+    _Out_ PULONG64 EstablisherFrame,
+    _Inout_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers)
 {
     PUNWIND_INFO UnwindInfo;
     ULONG_PTR CodeOffset;
@@ -499,14 +494,14 @@ RtlVirtualUnwind(
 VOID
 NTAPI
 RtlUnwindEx(
-   IN ULONG64 TargetFrame,
-   IN ULONG64 TargetIp,
-   IN PEXCEPTION_RECORD ExceptionRecord,
-   IN PVOID ReturnValue,
-   OUT PCONTEXT OriginalContext,
-   IN PUNWIND_HISTORY_TABLE HistoryTable)
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_opt_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue,
+    _In_ PCONTEXT ContextRecord,
+    _In_opt_ struct _UNWIND_HISTORY_TABLE *HistoryTable)
 {
-    UNIMPLEMENTED;
+    __debugbreak();
     return;
 }
 

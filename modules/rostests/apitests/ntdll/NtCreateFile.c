@@ -15,7 +15,7 @@ START_TEST(NtCreateFile)
 
     Status = NtCreateFile(&FileHandle,
                           FILE_READ_DATA,
-                          (POBJECT_ATTRIBUTES)0xCCCCCCCC,
+                          (POBJECT_ATTRIBUTES)(ULONG_PTR)0xCCCCCCCCCCCCCCCCULL,
                           &StatusBlock,
                           NULL,
                           FILE_ATTRIBUTE_NORMAL,

@@ -90,7 +90,7 @@ HRESULT DSOUND_ReopenDevice(DirectSoundDevice *device, BOOL forcewave)
 
 	/* DRV_QUERYDSOUNDIFACE is a "Wine extension" to get the DSound interface */
 	if (ds_hw_accel != DS_HW_ACCEL_EMULATION && !forcewave)
-		waveOutMessage((HWAVEOUT)device->drvdesc.dnDevNode, DRV_QUERYDSOUNDIFACE, (DWORD_PTR)&device->driver, 0);
+		waveOutMessage((HWAVEOUT)(DWORD_PTR)device->drvdesc.dnDevNode, DRV_QUERYDSOUNDIFACE, (DWORD_PTR)&device->driver, 0);
 
 	/* Get driver description */
 	if (device->driver) {
