@@ -285,7 +285,7 @@ IopParseDevice(IN PVOID ParseObject,
     PFILE_OBJECT FileObject;
     PVPB Vpb = NULL;
     PIRP Irp;
-    PEXTENDED_IO_STACK_LOCATION StackLoc;
+    PIO_STACK_LOCATION StackLoc;
     IO_SECURITY_CONTEXT SecurityContext;
     IO_STATUS_BLOCK IoStatusBlock;
     BOOLEAN DirectOpen = FALSE, OpenCancelled, UseDummyFile;
@@ -673,7 +673,7 @@ IopParseDevice(IN PVOID ParseObject,
         SecurityContext.FullCreateOptions = OpenPacket->CreateOptions;
 
         /* Get the I/O Stack location */
-        StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
+        StackLoc = IoGetNextIrpStackLocation(Irp);
         StackLoc->Control = 0;
 
         /* Check what kind of file this is */

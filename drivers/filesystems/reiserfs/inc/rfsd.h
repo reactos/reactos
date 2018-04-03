@@ -26,6 +26,7 @@
 #ifdef __REACTOS__
 #include <ndk/rtlfuncs.h>
 #include <pseh/pseh2.h>
+typedef IO_STACK_LOCATION EXTENDED_IO_STACK_LOCATION, *PEXTENDED_IO_STACK_LOCATION;
 #endif
 
 typedef struct reiserfs_super_block_v1		RFSD_SUPER_BLOCK, *PRFSD_SUPER_BLOCK;
