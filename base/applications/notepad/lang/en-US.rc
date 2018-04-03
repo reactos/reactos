@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Notepad
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/)
+ * PURPOSE:     English language resource file
+ * COPYRIGHT:
+ */
+
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 ID_ACCEL ACCELERATORS
@@ -66,9 +73,9 @@ BEGIN
     END
 END
 
-/* Dialog 'Page setup' */
+/* Dialog 'Page Setup' */
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Page Setup"
 BEGIN
@@ -78,9 +85,9 @@ BEGIN
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
     GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
     LTEXT "&Size:", stc2, 16, 22, 36, 8
-    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Tray:", stc3, 16, 42, 36, 8
-    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
     AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
     AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
@@ -98,7 +105,7 @@ BEGIN
     LTEXT "&Footer:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
     PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
 END
@@ -142,17 +149,12 @@ BEGIN
     STRING_UNTITLED "Untitled"
     STRING_ALL_FILES "All files (*.*)"
     STRING_TEXT_FILES_TXT "Text files (*.txt)"
-    STRING_TOOLARGE "File '%s' is too large for notepad.\n \
-Please use a different editor."
-    STRING_NOTEXT "You didn't enter any text. \
-\nPlease type something and try again"
-    STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n \
-Do you want to create a new file ?"
-    STRING_NOTSAVED "File '%s'\nhas been modified\n\n \
-Would you like to save the changes ?"
+    STRING_TOOLARGE "File '%s' is too large for notepad.\n\nPlease use a different editor."
+    STRING_NOTEXT "You didn't enter any text.\n\nPlease type something and try again."
+    STRING_DOESNOTEXIST "File '%s' does not exist.\n\nDo you want to create a new file?"
+    STRING_NOTSAVED "File '%s' has been modified.\n\nWould you like to save the changes?"
     STRING_NOTFOUND "'%s' can not be found."
-    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
-task. \nClose one or more applications to increase the amount of \nfree memory."
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this task.\nClose one or more applications to increase the amount of\nfree memory."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
