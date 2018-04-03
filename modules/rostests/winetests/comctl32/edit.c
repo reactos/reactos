@@ -18,7 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
+#include "v6util.h"
+#include "msg.h"
 
 #ifndef ES_COMBO
 #define ES_COMBO 0x200
@@ -27,6 +32,20 @@
 #define ID_EDITTESTDBUTTON 0x123
 #define ID_EDITTEST2 99
 #define MAXLEN 200
+
+enum seq_index
+{
+    COMBINED_SEQ_INDEX = 0,
+    NUM_MSG_SEQUENCES,
+};
+
+enum msg_id
+{
+    PARENT_ID,
+    EDIT_ID,
+};
+
+static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
 struct edit_notify {
     int en_change, en_maxtext, en_update;
@@ -540,14 +559,10 @@ static HWND create_editcontrol (DWORD style, DWORD exstyle)
 {
     HWND handle;
 
-    handle = CreateWindowExA(exstyle,
-			  "EDIT",
-			  "Test Text",
-			  style,
-			  10, 10, 300, 300,
-			  NULL, NULL, hinst, NULL);
+    handle = CreateWindowExA(exstyle, WC_EDITA, "Text Text", style, 10, 10, 300, 300,
+        NULL, NULL, hinst, NULL);
     ok (handle != NULL, "CreateWindow EDIT Control failed\n");
-    assert (handle);
+
     if (winetest_interactive)
 	ShowWindow (handle, SW_SHOW);
     return handle;
@@ -582,7 +597,6 @@ static HWND create_child_editcontrol (DWORD style, DWORD exstyle)
                             rect.right - rect.left, rect.bottom - rect.top,
                             NULL, NULL, hinst, NULL);
     ok (parentWnd != NULL, "CreateWindow EDIT Test failed\n");
-    assert(parentWnd);
 
     editWnd = CreateWindowExA(exstyle,
                             "EDIT",
@@ -591,7 +605,6 @@ static HWND create_child_editcontrol (DWORD style, DWORD exstyle)
                             0, 0, 300, 300,
                             parentWnd, NULL, hinst, NULL);
     ok (editWnd != NULL, "CreateWindow EDIT Test Text failed\n");
-    assert(editWnd);
     if (winetest_interactive)
         ShowWindow (parentWnd, SW_SHOW);
     return editWnd;
@@ -738,15 +751,14 @@ static void test_edit_control_2(void)
     /* Create main and edit windows. */
     hwndMain = CreateWindowA(szEditTest2Class, "ET2", WS_OVERLAPPEDWINDOW,
                             0, 0, 200, 200, NULL, NULL, hinst, NULL);
-    assert(hwndMain);
+    ok(hwndMain != NULL, "Failed to create control parent.\n");
     if (winetest_interactive)
         ShowWindow (hwndMain, SW_SHOW);
 
-    hwndET2 = CreateWindowA("EDIT", NULL,
-                           WS_CHILD|WS_BORDER|ES_LEFT|ES_AUTOHSCROLL,
-                           0, 0, w, h, /* important this not be 0 size. */
-                           hwndMain, (HMENU) ID_EDITTEST2, hinst, NULL);
-    assert(hwndET2);
+    hwndET2 = CreateWindowA(WC_EDITA, NULL, WS_CHILD|WS_BORDER|ES_LEFT|ES_AUTOHSCROLL,
+        0, 0, w, h, /* important this not be 0 size. */
+        hwndMain, (HMENU) ID_EDITTEST2, hinst, NULL);
+    ok(hwndET2 != NULL, "Failed to create Edit control.\n");
     if (winetest_interactive)
         ShowWindow (hwndET2, SW_SHOW);
 
@@ -868,6 +880,66 @@ static LRESULT CALLBACK edit3_wnd_procA(HWND hWnd, UINT msg, WPARAM wParam, LPAR
     return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
+static LRESULT CALLBACK parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
+    LRESULT ret;
+
+    msg.message = message;
+    msg.flags = sent|wparam|id;
+    if (defwndproc_counter) msg.flags |= defwinproc;
+    msg.wParam = wParam;
+    msg.id = PARENT_ID;
+
+    if (message != WM_IME_SETCONTEXT &&
+        message != WM_IME_NOTIFY &&
+        message != WM_GETICON &&
+        message != WM_DWMNCRENDERINGCHANGED &&
+        message != WM_GETMINMAXINFO &&
+        message != WM_PAINT &&
+        message != WM_CTLCOLOREDIT &&
+        message < 0xc000)
+    {
+        add_message(sequences, COMBINED_SEQ_INDEX, &msg);
+    }
+
+    defwndproc_counter++;
+    ret = DefWindowProcA(hwnd, message, wParam, lParam);
+    defwndproc_counter--;
+
+    return ret;
+}
+
+static LRESULT CALLBACK edit_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
+    LRESULT ret;
+
+    msg.message = message;
+    msg.flags = sent|wparam|id;
+    if (defwndproc_counter) msg.flags |= defwinproc;
+    msg.wParam = wParam;
+    msg.id = EDIT_ID;
+
+    if (message != WM_IME_SETCONTEXT &&
+        message != WM_IME_NOTIFY)
+    {
+        add_message(sequences, COMBINED_SEQ_INDEX, &msg);
+    }
+
+    defwndproc_counter++;
+    if (IsWindowUnicode(hwnd))
+        ret = CallWindowProcW(oldproc, hwnd, message, wParam, lParam);
+    else
+        ret = CallWindowProcA(oldproc, hwnd, message, wParam, lParam);
+    defwndproc_counter--;
+
+    return ret;
+}
+
 /* Test behaviour of WM_SETTEXT, WM_REPLACESEL and notifications sent in response
  * to these messages.
  */
@@ -891,16 +963,11 @@ static void test_edit_control_3(void)
               0,
               CW_USEDEFAULT, CW_USEDEFAULT, 10, 10,
               NULL, NULL, NULL, NULL);
-    assert(hParent);
+    ok(hParent != NULL, "Failed to create control parent.\n");
 
     trace("EDIT: Single line, no ES_AUTOHSCROLL\n");
-    hWnd = CreateWindowExA(0,
-              "EDIT",
-              NULL,
-              0,
-              10, 10, 50, 50,
-              hParent, NULL, NULL, NULL);
-    assert(hWnd);
+    hWnd = CreateWindowExA(0, WC_EDITA, NULL, 0, 10, 10, 50, 50, hParent, NULL, NULL, NULL);
+    ok(hWnd != NULL, "Failed to create Edit control.\n");
 
     zero_notify();
     SendMessageA(hWnd, EM_REPLACESEL, 0, (LPARAM)str);
@@ -949,13 +1016,8 @@ static void test_edit_control_3(void)
     DestroyWindow(hWnd);
 
     trace("EDIT: Single line, ES_AUTOHSCROLL\n");
-    hWnd = CreateWindowExA(0,
-              "EDIT",
-              NULL,
-              ES_AUTOHSCROLL,
-              10, 10, 50, 50,
-              hParent, NULL, NULL, NULL);
-    assert(hWnd);
+    hWnd = CreateWindowExA(0, WC_EDITA, NULL, ES_AUTOHSCROLL, 10, 10, 50, 50, hParent, NULL, NULL, NULL);
+    ok(hWnd != NULL, "Failed to create Edit control.\n");
 
     zero_notify();
     SendMessageA(hWnd, EM_REPLACESEL, 0, (LPARAM)str);
@@ -1000,13 +1062,10 @@ static void test_edit_control_3(void)
     DestroyWindow(hWnd);
 
     trace("EDIT: Multline, no ES_AUTOHSCROLL, no ES_AUTOVSCROLL\n");
-    hWnd = CreateWindowExA(0,
-              "EDIT",
-              NULL,
-              ES_MULTILINE,
+    hWnd = CreateWindowExA(0, WC_EDITA, NULL, ES_MULTILINE,
               10, 10, (50 * dpi) / 96, (50 * dpi) / 96,
               hParent, NULL, NULL, NULL);
-    assert(hWnd);
+    ok(hWnd != NULL, "Failed to create Edit control.\n");
 
     zero_notify();
     SendMessageA(hWnd, EM_REPLACESEL, 0, (LPARAM)str);
@@ -1050,13 +1109,10 @@ static void test_edit_control_3(void)
     DestroyWindow(hWnd);
 
     trace("EDIT: Multline, ES_AUTOHSCROLL, no ES_AUTOVSCROLL\n");
-    hWnd = CreateWindowExA(0,
-              "EDIT",
-              NULL,
-              ES_MULTILINE | ES_AUTOHSCROLL,
+    hWnd = CreateWindowExA(0, WC_EDITA, NULL, ES_MULTILINE | ES_AUTOHSCROLL,
               10, 10, (50 * dpi) / 96, (50 * dpi) / 96,
               hParent, NULL, NULL, NULL);
-    assert(hWnd);
+    ok(hWnd != NULL, "Failed to create Edit control.\n");
 
     zero_notify();
     SendMessageA(hWnd, EM_REPLACESEL, 0, (LPARAM)str2);
@@ -1095,13 +1151,9 @@ static void test_edit_control_3(void)
     DestroyWindow(hWnd);
 
     trace("EDIT: Multline, ES_AUTOHSCROLL and ES_AUTOVSCROLL\n");
-    hWnd = CreateWindowExA(0,
-              "EDIT",
-              NULL,
-              ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
-              10, 10, 50, 50,
-              hParent, NULL, NULL, NULL);
-    assert(hWnd);
+    hWnd = CreateWindowExA(0, WC_EDITA, NULL, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
+              10, 10, 50, 50, hParent, NULL, NULL, NULL);
+    ok(hWnd != NULL, "Failed to create Edit control.\n");
 
     zero_notify();
     SendMessageA(hWnd, EM_REPLACESEL, 0, (LPARAM)str2);
@@ -1284,13 +1336,9 @@ static void test_edit_control_5(void)
     RECT rc;
 
     /* first show that a non-child won't do for this test */
-    hWnd = CreateWindowExA(0,
-              "EDIT",
-              str,
-              0,
-              10, 10, 1, 1,
-              NULL, NULL, NULL, NULL);
-    assert(hWnd);
+    hWnd = CreateWindowExA(0, WC_EDITA, str, 0, 10, 10, 1, 1, NULL, NULL, NULL, NULL);
+    ok(hWnd != NULL, "Failed to create Edit control.\n");
+
     /* size of non-child edit control is (much) bigger than requested */
     GetWindowRect( hWnd, &rc);
     ok( rc.right - rc.left > 20, "size of the window (%d) is smaller than expected\n",
@@ -1304,16 +1352,13 @@ static void test_edit_control_5(void)
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             250, 250,
                             NULL, NULL, hinst, NULL);
-    assert(parentWnd);
+    ok(parentWnd != NULL, "Failed to create control parent.\n");
     ShowWindow( parentWnd, SW_SHOW);
     /* single line */
-    hWnd = CreateWindowExA(0,
-              "EDIT",
-              str, WS_VISIBLE | WS_BORDER |
-              WS_CHILD,
+    hWnd = CreateWindowExA(0, WC_EDITA, str, WS_VISIBLE | WS_BORDER | WS_CHILD,
               rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
               parentWnd, NULL, NULL, NULL);
-    assert(hWnd);
+    ok(hWnd != NULL, "Failed to create Edit control.\n");
     GetClientRect( hWnd, &rc);
     ok( rc.right == rc1.right - rc1.left && rc.bottom == rc1.bottom - rc1.top,
             "Client rectangle not the expected size %s\n", wine_dbgstr_rect( &rc ));
@@ -1321,13 +1366,10 @@ static void test_edit_control_5(void)
     ok(lstrlenA(str) == len, "text shouldn't have been truncated\n");
     DestroyWindow(hWnd);
     /* multi line */
-    hWnd = CreateWindowExA(0,
-              "EDIT",
-              str,
-              WS_CHILD | ES_MULTILINE,
+    hWnd = CreateWindowExA(0, WC_EDITA, str, WS_CHILD | ES_MULTILINE,
               rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
               parentWnd, NULL, NULL, NULL);
-    assert(hWnd);
+    ok(hWnd != NULL, "Failed to create Edit control.\n");
     GetClientRect( hWnd, &rc);
     ok( rc.right == rc1.right - rc1.left && rc.bottom == rc1.bottom - rc1.top,
             "Client rectangle not the expected size %s\n", wine_dbgstr_rect( &rc ));
@@ -1412,14 +1454,9 @@ static void test_edit_control_scroll(void)
     /* Check the return value when EM_SCROLL doesn't scroll
      * anything. Should not return true unless any lines were actually
      * scrolled. */
-    hwEdit = CreateWindowA(
-              "EDIT",
-              single_line_str,
-              WS_VSCROLL | ES_MULTILINE,
-              1, 1, 100, 100,
-              NULL, NULL, hinst, NULL);
-
-    assert(hwEdit);
+    hwEdit = CreateWindowA(WC_EDITA, single_line_str, WS_VSCROLL | ES_MULTILINE,
+              1, 1, 100, 100, NULL, NULL, hinst, NULL);
+    ok(hwEdit != NULL, "Failed to create Edit control.\n");
 
     ret = SendMessageA(hwEdit, EM_SCROLL, SB_PAGEDOWN, 0);
     ok(!ret, "Returned %x, expected 0.\n", ret);
@@ -1438,13 +1475,9 @@ static void test_edit_control_scroll(void)
     /* SB_PAGEDOWN while at the beginning of a buffer with few lines
        should not cause EM_SCROLL to return a negative value of
        scrolled lines that would put us "before" the beginning. */
-    hwEdit = CreateWindowA(
-                "EDIT",
-                multiline_str,
-                WS_VSCROLL | ES_MULTILINE,
-                0, 0, 100, 100,
-                NULL, NULL, hinst, NULL);
-    assert(hwEdit);
+    hwEdit = CreateWindowA(WC_EDITA, multiline_str, WS_VSCROLL | ES_MULTILINE,
+                0, 0, 100, 100, NULL, NULL, hinst, NULL);
+    ok(hwEdit != NULL, "Failed to create Edit control.\n");
 
     ret = SendMessageA(hwEdit, EM_SCROLL, SB_PAGEDOWN, 0);
     ok(!ret, "Returned %x, expected 0.\n", ret);
@@ -2365,13 +2398,12 @@ static void test_contextmenu(void)
 
     hwndMain = CreateWindowA(szEditTest4Class, "ET4", WS_OVERLAPPEDWINDOW|WS_VISIBLE,
                             0, 0, 200, 200, NULL, NULL, hinst, NULL);
-    assert(hwndMain);
+    ok(hwndMain != NULL, "Failed to create control parent.\n");
 
-    hwndEdit = CreateWindowA("EDIT", NULL,
-                           WS_CHILD|WS_BORDER|WS_VISIBLE|ES_LEFT|ES_AUTOHSCROLL,
+    hwndEdit = CreateWindowA(WC_EDITA, NULL, WS_CHILD|WS_BORDER|WS_VISIBLE|ES_LEFT|ES_AUTOHSCROLL,
                            0, 0, 150, 50, /* important this not be 0 size. */
                            hwndMain, (HMENU) ID_EDITTEST2, hinst, NULL);
-    assert(hwndEdit);
+    ok(hwndEdit != NULL, "Failed to create Edit control.\n");
 
     SetFocus(NULL);
     SetCapture(hwndMain);
@@ -2408,6 +2440,7 @@ static BOOL register_classes(void)
     WNDCLASSA test3;
     WNDCLASSA test4;
     WNDCLASSA text_position;
+    WNDCLASSA wc;
 
     test2.style = 0;
     test2.lpfnWndProc = ET2_WndProc;
@@ -2456,6 +2489,12 @@ static BOOL register_classes(void)
     text_position.lpszClassName = szEditTextPositionClass;
     text_position.lpfnWndProc = DefWindowProcA;
     if (!RegisterClassA(&text_position)) return FALSE;
+
+    memset(&wc, 0, sizeof(wc));
+    wc.lpfnWndProc = parent_wnd_proc;
+    wc.hInstance = GetModuleHandleA(NULL);
+    wc.lpszClassName = "ParentWnd";
+    if (!RegisterClassA(&wc)) return FALSE;
 
     return TRUE;
 }
@@ -2750,7 +2789,6 @@ static void test_EM_GETHANDLE(void)
     buffer = LocalLock(hmem);
     ok(buffer != NULL, "got %p (expected != NULL)\n", buffer);
     len = lstrlenW(buffer);
-todo_wine
     ok(len == lstrlenW(str1W) && !lstrcmpW(buffer, str1W), "Unexpected buffer contents %s, length %d.\n",
         wine_dbgstr_w(buffer), len);
     LocalUnlock(hmem);
@@ -2775,7 +2813,6 @@ todo_wine
 
     lstrcpyA(current, str0);
     r = SendMessageA(hEdit, WM_GETTEXT, sizeof(current), (LPARAM)current);
-todo_wine
     ok(r == lstrlenA(str1_1) && !lstrcmpA(current, str1_1),
         "Unexpected retval %d and text \"%s\" (expected %d and \"%s\")\n", r, current, lstrlenA(str1_1), str1_1);
 
@@ -2784,7 +2821,6 @@ todo_wine
     ok(r, "Failed to set text.\n");
 
     buffer = LocalLock(hmem);
-todo_wine
     ok(buffer != NULL && buffer[0] == '1', "Unexpected buffer contents\n");
     LocalUnlock(hmem);
 
@@ -2792,7 +2828,6 @@ todo_wine
     ok(r, "Failed to replace selection.\n");
 
     buffer = LocalLock(hmem);
-todo_wine
     ok(buffer != NULL && buffer[0] == '2', "Unexpected buffer contents\n");
     LocalUnlock(hmem);
 
@@ -2814,12 +2849,10 @@ todo_wine
     SendMessageA(hEdit, EM_SETHANDLE, (WPARAM)halloc, 0);
 
     len = SendMessageA(hEdit, WM_GETTEXTLENGTH, 0, 0);
-todo_wine
     ok(len == lstrlenA(str2), "got %d (expected %d)\n", len, lstrlenA(str2));
 
     lstrcpyA(current, str0);
     r = SendMessageA(hEdit, WM_GETTEXT, sizeof(current), (LPARAM)current);
-todo_wine
     ok(r == lstrlenA(str2) && !lstrcmpA(current, str2),
         "got %d and \"%s\" (expected %d and \"%s\")\n", r, current, lstrlenA(str2), str2);
 
@@ -2944,7 +2977,6 @@ static void test_EM_GETLINE(void)
         char buff[16];
         int r;
 
-    todo_wine_if(i == 0)
         ok(IsWindowUnicode(hwnd[i]), "Expected unicode window.\n");
 
         SendMessageA(hwnd[i], WM_SETTEXT, 0, (LPARAM)str);
@@ -2977,6 +3009,91 @@ static void test_EM_GETLINE(void)
     }
 }
 
+static int CALLBACK test_wordbreak_procA(char *text, int current, int length, int code)
+{
+    return -1;
+}
+
+static void test_wordbreak_proc(void)
+{
+    EDITWORDBREAKPROCA proc;
+    LRESULT ret;
+    HWND hwnd;
+
+    hwnd = create_editcontrol(ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
+
+    proc = (void *)SendMessageA(hwnd, EM_GETWORDBREAKPROC, 0, 0);
+    ok(proc == NULL, "Unexpected wordbreak proc %p.\n", proc);
+
+    ret = SendMessageA(hwnd, EM_SETWORDBREAKPROC, 0, (LPARAM)test_wordbreak_procA);
+    ok(ret == 1, "Unexpected return value %ld.\n", ret);
+
+    proc = (void *)SendMessageA(hwnd, EM_GETWORDBREAKPROC, 0, 0);
+    ok(proc == test_wordbreak_procA, "Unexpected wordbreak proc %p.\n", proc);
+
+    ret = SendMessageA(hwnd, EM_SETWORDBREAKPROC, 0, 0);
+    ok(ret == 1, "Unexpected return value %ld.\n", ret);
+
+    proc = (void *)SendMessageA(hwnd, EM_GETWORDBREAKPROC, 0, 0);
+    ok(proc == NULL, "Unexpected wordbreak proc %p.\n", proc);
+
+    DestroyWindow(hwnd);
+}
+
+static const struct message setfocus_combined_seq[] =
+{
+    { WM_KILLFOCUS,    sent|id,            0, 0,                      PARENT_ID },
+    { WM_SETFOCUS,     sent|id,            0, 0,                      EDIT_ID   },
+    { WM_COMMAND,      sent|wparam|id, MAKEWPARAM(1, EN_SETFOCUS), 0, PARENT_ID },
+    { WM_PAINT,        sent|id,            0, 0,                      EDIT_ID   },
+    { WM_NCPAINT,      sent|id|defwinproc|optional, 0, 0,             EDIT_ID   },
+    { WM_ERASEBKGND,   sent|id|defwinproc|optional, 0, 0,             EDIT_ID   },
+    { 0 }
+};
+
+static const struct message killfocus_combined_seq[] =
+{
+    { WM_KILLFOCUS,    sent|id,            0, 0,                       EDIT_ID   },
+    { WM_COMMAND,      sent|wparam|id, MAKEWPARAM(1, EN_KILLFOCUS), 0, PARENT_ID },
+    { WM_SETFOCUS,     sent|id,            0, 0,                       PARENT_ID },
+    { WM_PAINT,        sent|id,            0, 0,                       EDIT_ID   },
+    { WM_NCPAINT,      sent|id|defwinproc|optional, 0, 0,              EDIT_ID   },
+    { 0 }
+};
+
+static void test_change_focus(void)
+{
+    HWND hwnd, parent_wnd;
+    WNDPROC oldproc;
+    MSG msg;
+
+    parent_wnd = CreateWindowA("ParentWnd", "", WS_OVERLAPPEDWINDOW,
+            0, 0, 200, 200, NULL, NULL, GetModuleHandleA(NULL), NULL);
+    ok(parent_wnd != NULL, "Failed to create control parent.\n");
+    SetWindowPos(parent_wnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE);
+    ShowWindow(parent_wnd, SW_SHOW);
+
+    hwnd = CreateWindowExA(0, WC_EDITA, "Test", WS_CHILD | WS_VISIBLE, 0, 0, 100, 100,
+            parent_wnd, (HMENU)1, GetModuleHandleA(NULL), NULL);
+    ok(hwnd != NULL, "Failed to create Edit control.\n");
+
+    oldproc = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)edit_subclass_proc);
+    SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)oldproc);
+
+    SetFocus(parent_wnd);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    SetFocus(hwnd);
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    ok_sequence(sequences, COMBINED_SEQ_INDEX, setfocus_combined_seq, "Set focus", TRUE);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    SetFocus(parent_wnd);
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+    ok_sequence(sequences, COMBINED_SEQ_INDEX, killfocus_combined_seq, "Kill focus", TRUE);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(edit)
 {
     ULONG_PTR ctx_cookie;
@@ -2985,6 +3102,8 @@ START_TEST(edit)
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
         return;
+
+    init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 
     hinst = GetModuleHandleA(NULL);
     b = register_classes();
@@ -3017,6 +3136,8 @@ START_TEST(edit)
     test_EM_GETHANDLE();
     test_paste();
     test_EM_GETLINE();
+    test_wordbreak_proc();
+    test_change_focus();
 
     UnregisterWindowClasses();
 

@@ -17,11 +17,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <windows.h>
+#include <commctrl.h>
+
+#include "resources.h"
+
+#include "wine/test.h"
+
+#include "v6util.h"
+#include "msg.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 
-static void test_create_tooltip(void)
+enum seq_index
+{
+    PARENT_SEQ_INDEX = 0,
+    NUM_MSG_SEQUENCES
+};
+
+static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
+
+static void test_create_tooltip(BOOL is_v6)
 {
     HWND parent, hwnd;
     DWORD style, exp_style;
@@ -37,7 +53,6 @@ static void test_create_tooltip(void)
     ok(hwnd != NULL, "failed to create tooltip wnd\n");
 
     style = GetWindowLongA(hwnd, GWL_STYLE);
-    trace("style = %08x\n", style);
     exp_style = 0x7fffffff | WS_POPUP;
     exp_style &= ~(WS_CHILD | WS_MAXIMIZE | WS_BORDER | WS_DLGFRAME);
     ok(style == exp_style || broken(style == (exp_style | WS_BORDER)), /* nt4 */
@@ -51,9 +66,12 @@ static void test_create_tooltip(void)
     ok(hwnd != NULL, "failed to create tooltip wnd\n");
 
     style = GetWindowLongA(hwnd, GWL_STYLE);
-    trace("style = %08x\n", style);
-    ok(style == (WS_POPUP | WS_CLIPSIBLINGS | WS_BORDER),
-       "wrong style %08x\n", style);
+    exp_style = WS_POPUP | WS_CLIPSIBLINGS;
+    if (!is_v6)
+        exp_style |= WS_BORDER;
+todo_wine_if(is_v6)
+    ok(style == exp_style || broken(style == (exp_style | WS_BORDER)) /* XP */,
+        "Unexpected window style %#x.\n", style);
 
     DestroyWindow(hwnd);
 
@@ -255,22 +273,56 @@ static void test_customdraw(void) {
 
 static const CHAR testcallbackA[]  = "callback";
 
+static RECT g_ttip_rect;
 static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static LONG defwndproc_counter = 0;
+    struct message msg;
+    LRESULT ret;
+
     if (message == WM_NOTIFY && lParam)
     {
         NMTTDISPINFOA *ttnmdi = (NMTTDISPINFOA*)lParam;
+        NMHDR *hdr = (NMHDR *)lParam;
+        RECT rect;
 
-        if (ttnmdi->hdr.code == TTN_GETDISPINFOA)
+        if (hdr->code != NM_CUSTOMDRAW)
+        {
+            msg.message = message;
+            msg.flags = sent|wparam|lparam;
+            if (defwndproc_counter) msg.flags |= defwinproc;
+            msg.wParam = wParam;
+            msg.lParam = lParam;
+            msg.id = hdr->code;
+            add_message(sequences, PARENT_SEQ_INDEX, &msg);
+        }
+
+        switch (hdr->code)
+        {
+        case TTN_GETDISPINFOA:
             lstrcpyA(ttnmdi->lpszText, testcallbackA);
+            break;
+        case TTN_SHOW:
+            GetWindowRect(hdr->hwndFrom, &rect);
+            ok(!EqualRect(&g_ttip_rect, &rect), "Unexpected window rectangle.\n");
+            break;
+        }
     }
 
-    return DefWindowProcA(hwnd, message, wParam, lParam);
+    defwndproc_counter++;
+    if (IsWindowUnicode(hwnd))
+        ret = DefWindowProcW(hwnd, message, wParam, lParam);
+    else
+        ret = DefWindowProcA(hwnd, message, wParam, lParam);
+    defwndproc_counter--;
+
+    return ret;
 }
 
-static BOOL register_parent_wnd_class(void)
+static void register_parent_wnd_class(void)
 {
     WNDCLASSA cls;
+    BOOL ret;
 
     cls.style = 0;
     cls.lpfnWndProc = parent_wnd_proc;
@@ -282,14 +334,12 @@ static BOOL register_parent_wnd_class(void)
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "Tooltips test parent class";
-    return RegisterClassA(&cls);
+    ret = RegisterClassA(&cls);
+    ok(ret, "Failed to register test parent class.\n");
 }
 
 static HWND create_parent_window(void)
 {
-    if (!register_parent_wnd_class())
-        return NULL;
-
     return CreateWindowExA(0, "Tooltips test parent class",
                           "Tooltips test parent window",
                           WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX |
@@ -439,7 +489,7 @@ todo_wine
                            NULL, NULL, NULL, 0);
     ok(hwnd != NULL, "failed to create tooltip wnd\n");
 
-    toolinfoW.cbSize = sizeof(TTTOOLINFOW);
+    toolinfoW.cbSize = TTTOOLINFOW_V2_SIZE + 1;
     toolinfoW.hwnd = NULL;
     toolinfoW.hinst = GetModuleHandleA(NULL);
     toolinfoW.uFlags = 0;
@@ -448,6 +498,9 @@ todo_wine
     toolinfoW.lParam = 0xdeadbeef;
     GetClientRect(hwnd, &toolinfoW.rect);
     r = SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&toolinfoW);
+    /* Wine currently checks for V3 structure size, which matches what V6 control does.
+       Older implementation was never updated to support lpReserved field. */
+todo_wine
     ok(!r, "Adding the tool to the tooltip succeeded!\n");
 
     if (0)  /* crashes on NT4 */
@@ -879,7 +932,7 @@ static LRESULT CALLBACK info_wnd_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     return 0;
 }
 
-static void test_setinfo(void)
+static void test_setinfo(BOOL is_v6)
 {
    WNDCLASSA wc;
    LRESULT   lResult;
@@ -971,7 +1024,8 @@ static void test_setinfo(void)
    toolInfo2.uId = 0x1234ABCD;
    lResult = SendMessageA(hwndTip, TTM_GETTOOLINFOA, 0, (LPARAM)&toolInfo2);
    ok(lResult, "GetToolInfo failed\n");
-   ok(toolInfo2.uFlags & TTF_SUBCLASS, "uFlags does not have subclass\n");
+   ok(toolInfo2.uFlags & TTF_SUBCLASS || broken(is_v6 && !(toolInfo2.uFlags & TTF_SUBCLASS)) /* XP */,
+       "uFlags does not have subclass\n");
    wndProc = (WNDPROC)GetWindowLongPtrA(parent, GWLP_WNDPROC);
    ok (wndProc != info_wnd_proc, "Window Proc is wrong\n");
 
@@ -1050,17 +1104,169 @@ static void test_margin(void)
     DestroyWindow(hwnd);
 }
 
+static void test_TTM_ADDTOOL(BOOL is_v6)
+{
+    static const WCHAR testW[] = {'T','e','s','t',0};
+    TTTOOLINFOW tiW;
+    TTTOOLINFOA ti;
+    int ret, size;
+    HWND hwnd, parent;
+    UINT max_size;
+
+    parent = CreateWindowExA(0, "Static", NULL, WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, 0);
+    ok(parent != NULL, "failed to create parent wnd\n");
+
+    hwnd = CreateWindowExA(WS_EX_TOPMOST, TOOLTIPS_CLASSA, NULL, TTS_NOPREFIX | TTS_ALWAYSTIP,
+        0, 0, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0);
+    ok(hwnd != NULL, "Failed to create tooltip window.\n");
+
+    for (size = 0; size <= TTTOOLINFOW_V3_SIZE + 1; size++)
+    {
+        ti.cbSize = size;
+        ti.hwnd = NULL;
+        ti.hinst = GetModuleHandleA(NULL);
+        ti.uFlags = 0;
+        ti.uId = 0x1234abce;
+        ti.lpszText = (LPSTR)"Test";
+        ti.lParam = 0xdeadbeef;
+        GetClientRect(hwnd, &ti.rect);
+
+        ret = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&ti);
+        ok(ret, "Failed to add a tool, size %d.\n", size);
+
+        ret = SendMessageA(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+        ok(ret == 1, "Unexpected tool count %d, size %d.\n", ret, size);
+
+        ret = SendMessageA(hwnd, TTM_DELTOOLA, 0, (LPARAM)&ti);
+        ok(!ret, "Unexpected ret value %d.\n", ret);
+
+        ret = SendMessageA(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+        ok(ret == 0, "Unexpected tool count %d, size %d.\n", ret, size);
+    }
+
+    /* W variant checks cbSize. */
+    max_size = is_v6 ? TTTOOLINFOW_V3_SIZE : TTTOOLINFOW_V2_SIZE;
+    for (size = 0; size <= max_size + 1; size++)
+    {
+        tiW.cbSize = size;
+        tiW.hwnd = NULL;
+        tiW.hinst = GetModuleHandleA(NULL);
+        tiW.uFlags = 0;
+        tiW.uId = 0x1234abce;
+        tiW.lpszText = (LPWSTR)testW;
+        tiW.lParam = 0xdeadbeef;
+        GetClientRect(hwnd, &tiW.rect);
+
+        ret = SendMessageA(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&tiW);
+    todo_wine_if(!is_v6 && size > max_size)
+        ok(size <= max_size ? ret : !ret, "%d: Unexpected ret value %d, size %d, max size %d.\n", is_v6, ret, size, max_size);
+        if (ret)
+        {
+            ret = SendMessageA(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+            ok(ret == 1, "Unexpected tool count %d.\n", ret);
+
+            ret = SendMessageA(hwnd, TTM_DELTOOLA, 0, (LPARAM)&tiW);
+            ok(!ret, "Unexpected ret value %d.\n", ret);
+
+            ret = SendMessageA(hwnd, TTM_GETTOOLCOUNT, 0, 0);
+            ok(ret == 0, "Unexpected tool count %d.\n", ret);
+        }
+    }
+
+    DestroyWindow(hwnd);
+}
+
+static const struct message ttn_show_parent_seq[] =
+{
+    { WM_NOTIFY, sent|id, 0, 0, TTN_SHOW },
+    { 0 }
+};
+
+static void test_TTN_SHOW(void)
+{
+    HWND hwndTip, hwnd;
+    TTTOOLINFOA ti;
+    RECT rect;
+    BOOL ret;
+
+    hwnd = create_parent_window();
+    ok(hwnd != NULL, "Failed to create parent window.\n");
+
+    /* Put cursor outside the window */
+    GetWindowRect(hwnd, &rect);
+    SetCursorPos(rect.right + 200, 0);
+
+    ShowWindow(hwnd, SW_SHOWNORMAL);
+    flush_events(100);
+
+    /* Create tooltip */
+    hwndTip = CreateWindowExA(WS_EX_TOPMOST, TOOLTIPS_CLASSA, NULL, TTS_ALWAYSTIP, 10, 10, 300, 300,
+        hwnd, NULL, NULL, 0);
+    ok(hwndTip != NULL, "Failed to create tooltip window.\n");
+
+    SetWindowPos(hwndTip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+    ti.cbSize = sizeof(TTTOOLINFOA);
+    ti.hwnd = hwnd;
+    ti.hinst = GetModuleHandleA(NULL);
+    ti.uFlags = TTF_SUBCLASS;
+    ti.uId = 0x1234abcd;
+    ti.lpszText = (LPSTR)"This is a test tooltip";
+    ti.lParam = 0xdeadbeef;
+    GetClientRect(hwnd, &ti.rect);
+    ret = SendMessageA(hwndTip, TTM_ADDTOOLA, 0, (LPARAM)&ti);
+    ok(ret, "Failed to add a tool.\n");
+
+    /* Make tooltip appear quickly */
+    SendMessageA(hwndTip, TTM_SETDELAYTIME, TTDT_INITIAL, MAKELPARAM(1, 0));
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    /* Put cursor inside window, tooltip will appear immediately */
+    GetWindowRect(hwnd, &rect);
+    SetCursorPos((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);
+    flush_events(200);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, ttn_show_parent_seq, "TTN_SHOW parent seq", FALSE);
+
+    DestroyWindow(hwndTip);
+    DestroyWindow(hwnd);
+}
+
 START_TEST(tooltips)
 {
-    InitCommonControls();
+    ULONG_PTR ctx_cookie;
+    HANDLE hCtx;
 
-    test_create_tooltip();
+    init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    LoadLibraryA("comctl32.dll");
+
+    register_parent_wnd_class();
+
+    test_create_tooltip(FALSE);
     test_customdraw();
     test_gettext();
     test_ttm_gettoolinfo();
     test_longtextA();
     test_longtextW();
     test_track();
-    test_setinfo();
+    test_setinfo(FALSE);
     test_margin();
+    test_TTM_ADDTOOL(FALSE);
+    test_TTN_SHOW();
+
+    if (!load_v6_module(&ctx_cookie, &hCtx))
+        return;
+
+    test_create_tooltip(TRUE);
+    test_customdraw();
+    test_longtextW();
+    test_track();
+    test_setinfo(TRUE);
+    test_margin();
+    test_TTM_ADDTOOL(TRUE);
+    test_TTN_SHOW();
+
+    unload_v6_module(ctx_cookie, hCtx);
 }

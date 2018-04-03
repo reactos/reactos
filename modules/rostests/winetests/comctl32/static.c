@@ -17,7 +17,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#ifndef __REACTOS__
+#define STRICT
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include "commctrl.h"
+
+#include "wine/test.h"
+
+#include "v6util.h"
 
 #define TODO_COUNT 1
 
@@ -44,7 +56,7 @@ static void flush_events(void)
 
 static HWND create_static(DWORD style)
 {
-    return CreateWindowA("static", "Test", WS_VISIBLE|WS_CHILD|style, 5, 5, 100, 100, hMainWnd, (HMENU)CTRL_ID, NULL, 0);
+    return CreateWindowA(WC_STATICA, "Test", WS_VISIBLE|WS_CHILD|style, 5, 5, 100, 100, hMainWnd, (HMENU)CTRL_ID, NULL, 0);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)

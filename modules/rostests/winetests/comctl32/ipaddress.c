@@ -17,7 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
+#include "v6util.h"
 
 #define expect(expected, got) ok(expected == got, "expected %d, got %d\n", expected,got)
 
@@ -57,32 +62,17 @@ static void test_get_set_text(void)
     DestroyWindow(hwnd);
 }
 
-static BOOL init(void)
-{
-    HMODULE hComctl32;
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
-    INITCOMMONCONTROLSEX iccex;
-
-    hComctl32 = GetModuleHandleA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (!pInitCommonControlsEx)
-    {
-        win_skip("InitCommonControlsEx() is missing.\n");
-        return FALSE;
-    }
-
-    iccex.dwSize = sizeof(iccex);
-    /* W2K and below need ICC_INTERNET_CLASSES for the IP Address Control */
-    iccex.dwICC  = ICC_INTERNET_CLASSES;
-    pInitCommonControlsEx(&iccex);
-
-    return TRUE;
-}
-
 START_TEST(ipaddress)
 {
-    if (!init())
+    ULONG_PTR cookie;
+    HANDLE ctxt;
+
+    test_get_set_text();
+
+    if (!load_v6_module(&cookie, &ctxt))
         return;
 
     test_get_set_text();
+
+    unload_v6_module(cookie, ctxt);
 }

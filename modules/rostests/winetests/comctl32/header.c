@@ -18,7 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
+#include "v6util.h"
+#include "msg.h"
+
+static HIMAGELIST (WINAPI *pImageList_Create)(int, int, UINT, int, int);
+static BOOL (WINAPI *pImageList_Destroy)(HIMAGELIST);
 
 typedef struct tagEXPECTEDNOTIFY
 {
@@ -526,58 +535,79 @@ static HWND create_custom_header_control(HWND hParent, BOOL preloadHeaderItems)
     return childHandle;
 }
 
-static void check_auto_format(void)
+static void header_item_getback(HWND hwnd, UINT mask, HDITEMA *item)
 {
-    HDITEMA hdiCreate;
-    HDITEMA hdiRead;
-    static CHAR text[] = "Test";
-    ZeroMemory(&hdiCreate, sizeof(HDITEMA));
+    int ret;
+
+    ret = SendMessageA(hwnd, HDM_INSERTITEMA, 0, (LPARAM)item);
+    ok(ret != -1, "Failed to add header item.\n");
+
+    memset(item, 0, sizeof(*item));
+    item->mask = mask;
+
+    ret = SendMessageA(hwnd, HDM_GETITEMA, 0, (LPARAM)item);
+    ok(ret != 0, "Failed to get item data.\n");
+    ret = SendMessageA(hwnd, HDM_DELETEITEM, 0, 0);
+    ok(ret != 0, "Failed to delete item.\n");
+}
+
+static void test_item_auto_format(HWND parent)
+{
+    static char text[] = "Test";
+    HDITEMA item;
+    HBITMAP hbm;
+    HWND hwnd;
+
+    hwnd = create_custom_header_control(parent, FALSE);
 
     /* Windows implicitly sets some format bits in INSERTITEM */
 
     /* HDF_STRING is automatically set and cleared for no text */
-    hdiCreate.mask = HDI_TEXT|HDI_WIDTH|HDI_FORMAT;
-    hdiCreate.pszText = text;
-    hdiCreate.cxy = 100;
-    hdiCreate.fmt=HDF_CENTER;
-    addReadDelItem(hWndHeader, &hdiCreate, HDI_FORMAT, &hdiRead);
-    ok(hdiRead.fmt == (HDF_STRING|HDF_CENTER), "HDF_STRING not set automatically (fmt=%x)\n", hdiRead.fmt);
+    item.mask = HDI_TEXT | HDI_WIDTH | HDI_FORMAT;
+    item.pszText = text;
+    item.cxy = 100;
+    item.fmt = HDF_CENTER;
+    header_item_getback(hwnd, HDI_FORMAT, &item);
+    ok(item.fmt == (HDF_STRING | HDF_CENTER), "Unexpected item format mask %#x.\n", item.fmt);
 
-    hdiCreate.mask = HDI_WIDTH|HDI_FORMAT;
-    hdiCreate.pszText = text;
-    hdiCreate.fmt = HDF_CENTER|HDF_STRING;
-    addReadDelItem(hWndHeader, &hdiCreate, HDI_FORMAT, &hdiRead);
-    ok(hdiRead.fmt == (HDF_CENTER), "HDF_STRING should be automatically cleared (fmt=%x)\n", hdiRead.fmt);
+    item.mask = HDI_WIDTH | HDI_FORMAT;
+    item.pszText = text;
+    item.fmt = HDF_CENTER | HDF_STRING;
+    header_item_getback(hwnd, HDI_FORMAT, &item);
+    ok(item.fmt == HDF_CENTER, "Unexpected item format mask %#x.\n", item.fmt);
 
     /* HDF_BITMAP is automatically set and cleared for a NULL bitmap or no bitmap */
-    hdiCreate.mask = HDI_BITMAP|HDI_WIDTH|HDI_FORMAT;
-    hdiCreate.hbm = CreateBitmap(16, 16, 1, 8, NULL);
-    hdiCreate.fmt = HDF_CENTER;
-    addReadDelItem(hWndHeader, &hdiCreate, HDI_FORMAT, &hdiRead);
-    ok(hdiRead.fmt == (HDF_BITMAP|HDF_CENTER), "HDF_BITMAP not set automatically (fmt=%x)\n", hdiRead.fmt);
-    DeleteObject(hdiCreate.hbm);
+    item.mask = HDI_BITMAP | HDI_WIDTH | HDI_FORMAT;
+    item.hbm = hbm = CreateBitmap(16, 16, 1, 8, NULL);
+    item.fmt = HDF_CENTER;
+    header_item_getback(hwnd, HDI_FORMAT, &item);
+    ok(item.fmt == (HDF_BITMAP | HDF_CENTER), "Unexpected item format mask %#x.\n", item.fmt);
+    DeleteObject(hbm);
 
-    hdiCreate.hbm = NULL;
-    hdiCreate.fmt = HDF_CENTER|HDF_BITMAP;
-    addReadDelItem(hWndHeader, &hdiCreate, HDI_FORMAT, &hdiRead);
-    ok(hdiRead.fmt == HDF_CENTER, "HDF_BITMAP not cleared automatically for NULL bitmap (fmt=%x)\n", hdiRead.fmt);
+    item.mask = HDI_BITMAP | HDI_WIDTH | HDI_FORMAT;
+    item.hbm = NULL;
+    item.fmt = HDF_CENTER | HDF_BITMAP;
+    header_item_getback(hwnd, HDI_FORMAT, &item);
+    ok(item.fmt == HDF_CENTER, "Unexpected item format mask %#x.\n", item.fmt);
 
-    hdiCreate.mask = HDI_WIDTH|HDI_FORMAT;
-    hdiCreate.fmt = HDF_CENTER|HDF_BITMAP;
-    addReadDelItem(hWndHeader, &hdiCreate, HDI_FORMAT, &hdiRead);
-    ok(hdiRead.fmt == HDF_CENTER, "HDF_BITMAP not cleared automatically for no bitmap (fmt=%x)\n", hdiRead.fmt);
+    item.mask = HDI_WIDTH | HDI_FORMAT;
+    item.fmt = HDF_CENTER | HDF_BITMAP;
+    header_item_getback(hwnd, HDI_FORMAT, &item);
+    ok(item.fmt == HDF_CENTER, "Unexpected item format mask %#x.\n", item.fmt);
 
     /* HDF_IMAGE is automatically set but not cleared */
-    hdiCreate.mask = HDI_IMAGE|HDI_WIDTH|HDI_FORMAT;
-    hdiCreate.iImage = 17;
-    addReadDelItem(hWndHeader, &hdiCreate, HDI_FORMAT, &hdiRead);
-    ok(hdiRead.fmt == (HDF_IMAGE|HDF_CENTER), "HDF_IMAGE not set automatically (fmt=%x)\n", hdiRead.fmt);
+    item.mask = HDI_IMAGE | HDI_WIDTH | HDI_FORMAT;
+    item.iImage = 17;
+    header_item_getback(hwnd, HDI_FORMAT, &item);
+    ok(item.fmt == (HDF_IMAGE | HDF_CENTER), "Unexpected item format mask %#x.\n", item.fmt);
 
-    hdiCreate.mask = HDI_WIDTH|HDI_FORMAT;
-    hdiCreate.fmt = HDF_CENTER|HDF_IMAGE;
-    hdiCreate.iImage = 0;
-    addReadDelItem(hWndHeader, &hdiCreate, HDI_FORMAT, &hdiRead);
-    ok(hdiRead.fmt == (HDF_CENTER|HDF_IMAGE), "HDF_IMAGE shouldn't be cleared automatically (fmt=%x)\n", hdiRead.fmt);
+    item.mask = HDI_WIDTH | HDI_FORMAT;
+    item.fmt = HDF_CENTER | HDF_IMAGE;
+    item.iImage = 0;
+    header_item_getback(hwnd, HDI_FORMAT, &item);
+    ok(item.fmt == (HDF_CENTER | HDF_IMAGE), "Unexpected item format mask %#x.\n", item.fmt);
+
+    DestroyWindow(hwnd);
 }
 
 static void check_auto_fields(void)
@@ -759,7 +789,6 @@ static void test_header_control (void)
     /* unexpected notifies cleared by notifies_received in setItem */
     delItem(hWndHeader, 0);
 
-    check_auto_format();
     TEST_GET_ITEMCOUNT(6);
     check_auto_fields();
     TEST_GET_ITEMCOUNT(6);
@@ -947,7 +976,7 @@ static void test_hdm_sethotdivider(HWND hParent)
 
 static void test_hdm_imageMessages(HWND hParent)
 {
-    HIMAGELIST hImageList = ImageList_Create (4, 4, 0, 1, 0);
+    HIMAGELIST hImageList = pImageList_Create (4, 4, 0, 1, 0);
     HIMAGELIST hIml;
     BOOL wasValid;
     HWND hChild;
@@ -967,13 +996,13 @@ static void test_hdm_imageMessages(HWND hParent)
 
     hIml = (HIMAGELIST) SendMessageA(hChild, HDM_CREATEDRAGIMAGE, 0, 0);
     ok(hIml != NULL, "Expected non-NULL handle, got %p\n", hIml);
-    ImageList_Destroy(hIml);
+    pImageList_Destroy(hIml);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, imageMessages_seq, "imageMessages sequence testing", FALSE);
 
     DestroyWindow(hChild);
 
-    wasValid = ImageList_Destroy(hImageList);
+    wasValid = pImageList_Destroy(hImageList);
     ok(wasValid, "Header must not free image list at destruction!\n");
 }
 
@@ -1638,27 +1667,22 @@ static LRESULT CALLBACK HeaderTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     return 0L;
 }
 
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+    X(ImageList_Create);
+    X(ImageList_Destroy);
+#undef X
+}
+
 static BOOL init(void)
 {
-    HMODULE hComctl32;
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
     WNDCLASSA wc;
-    INITCOMMONCONTROLSEX iccex;
     TEXTMETRICA tm;
     HFONT hOldFont;
     HDC hdc;
-
-    hComctl32 = GetModuleHandleA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (!pInitCommonControlsEx)
-    {
-        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
-        return FALSE;
-    }
-
-    iccex.dwSize = sizeof(iccex);
-    iccex.dwICC  = ICC_USEREX_CLASSES;
-    pInitCommonControlsEx(&iccex);
 
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;
@@ -1815,17 +1839,21 @@ START_TEST(header)
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
 
+    init_functions();
+    init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
+
     if (!init())
         return;
 
     test_header_control();
+    test_item_auto_format(hHeaderParentWnd);
     test_header_order();
     test_hdm_orderarray();
     test_customdraw();
 
     DestroyWindow(hHeaderParentWnd);
 
-    init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
     parent_hwnd = create_custom_parent_window();
     ok_sequence(sequences, PARENT_SEQ_INDEX, create_parent_wnd_seq, "create parent windows", FALSE);
 
@@ -1846,9 +1874,12 @@ START_TEST(header)
         return;
     }
 
+    init_functions();
+
     /* comctl32 version 6 tests start here */
     test_hdf_fixedwidth(parent_hwnd);
     test_hds_nosizing(parent_hwnd);
+    test_item_auto_format(parent_hwnd);
 
     unload_v6_module(ctx_cookie, hCtx);
 

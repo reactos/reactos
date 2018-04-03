@@ -19,7 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "commctrl.h"
+#include "objidl.h"
+
+#include "wine/test.h"
+#include "v6util.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 
@@ -49,38 +60,33 @@ static INT     (WINAPI *pDPA_Search)(HDPA,PVOID,INT,PFNDPACOMPARE,LPARAM,UINT);
 static BOOL    (WINAPI *pDPA_SetPtr)(HDPA,INT,PVOID);
 static BOOL    (WINAPI *pDPA_Sort)(HDPA,PFNDPACOMPARE,LPARAM);
 
-#define COMCTL32_GET_PROC(func, ord) \
-  ((p ## func = (PVOID)GetProcAddress(hcomctl32,(LPCSTR)ord)) ? 1 \
-   : (trace( #func " not exported\n"), 0)) 
-
-static BOOL InitFunctionPtrs(HMODULE hcomctl32)
+static void init_functions(void)
 {
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X2(f, ord) p##f = (void*)GetProcAddress(hComCtl32, (const char *)ord);
     /* 4.00+ */
-    if(COMCTL32_GET_PROC(DPA_Clone, 331) &&
-       COMCTL32_GET_PROC(DPA_Create, 328) &&
-       COMCTL32_GET_PROC(DPA_CreateEx, 340) &&
-       COMCTL32_GET_PROC(DPA_DeleteAllPtrs, 337) &&
-       COMCTL32_GET_PROC(DPA_DeletePtr, 336) &&
-       COMCTL32_GET_PROC(DPA_Destroy, 329) &&
-       COMCTL32_GET_PROC(DPA_GetPtr, 332) &&
-       COMCTL32_GET_PROC(DPA_GetPtrIndex, 333) &&
-       COMCTL32_GET_PROC(DPA_Grow, 330) &&
-       COMCTL32_GET_PROC(DPA_InsertPtr, 334) &&
-       COMCTL32_GET_PROC(DPA_Search, 339) &&
-       COMCTL32_GET_PROC(DPA_SetPtr, 335) &&
-       COMCTL32_GET_PROC(DPA_Sort, 338))
-    {
-        /* 4.71+ */
-        COMCTL32_GET_PROC(DPA_DestroyCallback, 386) &&
-        COMCTL32_GET_PROC(DPA_EnumCallback, 385) &&
-        COMCTL32_GET_PROC(DPA_LoadStream, 9) &&
-        COMCTL32_GET_PROC(DPA_Merge, 11) &&
-        COMCTL32_GET_PROC(DPA_SaveStream, 10);
+    X2(DPA_Clone, 331);
+    X2(DPA_Create, 328);
+    X2(DPA_CreateEx, 340);
+    X2(DPA_DeleteAllPtrs, 337);
+    X2(DPA_DeletePtr, 336);
+    X2(DPA_Destroy, 329);
+    X2(DPA_GetPtr, 332);
+    X2(DPA_GetPtrIndex, 333);
+    X2(DPA_Grow, 330);
+    X2(DPA_InsertPtr, 334);
+    X2(DPA_Search, 339);
+    X2(DPA_SetPtr, 335);
+    X2(DPA_Sort, 338);
 
-        return TRUE;
-    }
-
-    return FALSE;
+    /* 4.71+ */
+    X2(DPA_DestroyCallback, 386);
+    X2(DPA_EnumCallback, 385);
+    X2(DPA_LoadStream, 9);
+    X2(DPA_Merge, 11);
+    X2(DPA_SaveStream, 10);
+#undef X2
 }
 
 /* Callbacks */
@@ -618,7 +624,7 @@ static void test_DPA_LoadStream(void)
     dpa = NULL;
     hRes = pDPA_LoadStream(&dpa, CB_Load, pStm, NULL);
     expect(S_OK, hRes);
-    DPA_Destroy(dpa);
+    pDPA_Destroy(dpa);
 
     /* try with altered dwData2 field */
     header.dwSize = sizeof(header);
@@ -732,15 +738,10 @@ if (0) {
 
 START_TEST(dpa)
 {
-    HMODULE hcomctl32;
+    ULONG_PTR cookie;
+    HANDLE ctxt;
 
-    hcomctl32 = GetModuleHandleA("comctl32.dll");
-
-    if(!InitFunctionPtrs(hcomctl32))
-    {
-        win_skip("Needed functions are not available\n");
-        return;
-    }
+    init_functions();
 
     test_dpa();
     test_DPA_Merge();
@@ -748,4 +749,18 @@ START_TEST(dpa)
     test_DPA_DestroyCallback();
     test_DPA_LoadStream();
     test_DPA_SaveStream();
+
+    if (!load_v6_module(&cookie, &ctxt))
+        return;
+
+    init_functions();
+
+    test_dpa();
+    test_DPA_Merge();
+    test_DPA_EnumCallback();
+    test_DPA_DestroyCallback();
+    test_DPA_LoadStream();
+    test_DPA_SaveStream();
+
+    unload_v6_module(cookie, ctxt);
 }

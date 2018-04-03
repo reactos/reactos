@@ -17,7 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
+#include "v6util.h"
+#include "msg.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 #define NUM_MSG_SEQUENCE 2

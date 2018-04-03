@@ -17,7 +17,12 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#include "precomp.h"
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
+#include "msg.h"
+#include "v6util.h"
 
 #define expect(EXPECTED, GOT) ok((GOT)==(EXPECTED), "Expected %d, got %ld\n", (EXPECTED), (GOT))
 
@@ -25,6 +30,8 @@
 
 #define NUM_MSG_SEQUENCES   1
 #define DATETIME_SEQ_INDEX    0
+
+static BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
@@ -773,19 +780,23 @@ static void test_dts_shownone(void)
     DestroyWindow(hwnd);
 }
 
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+    X(InitCommonControlsEx);
+#undef X
+}
+
 START_TEST(datetime)
 {
-    HMODULE hComctl32;
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
     INITCOMMONCONTROLSEX iccex;
+    ULONG_PTR cookie;
+    HANDLE ctxt;
 
-    hComctl32 = GetModuleHandleA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (!pInitCommonControlsEx)
-    {
-        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
-        return;
-    }
+    init_functions();
+
     iccex.dwSize = sizeof(iccex);
     iccex.dwICC  = ICC_DATE_CLASSES;
     pInitCommonControlsEx(&iccex);
@@ -802,4 +813,16 @@ START_TEST(datetime)
     test_dtm_set_and_get_systemtime_with_limits();
     test_wm_set_get_text();
     test_dts_shownone();
+
+    if (!load_v6_module(&cookie, &ctxt))
+        return;
+
+    test_dtm_set_format();
+    test_dtm_set_and_get_mccolor();
+    test_dtm_set_and_get_mcfont();
+    test_dtm_get_monthcal();
+    test_wm_set_get_text();
+    test_dts_shownone();
+
+    unload_v6_module(cookie, ctxt);
 }

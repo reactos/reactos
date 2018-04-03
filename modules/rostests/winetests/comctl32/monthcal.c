@@ -19,7 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+
+#include "commctrl.h"
+
+#include "wine/test.h"
+#include "v6util.h"
+#include <windows.h>
+#include "msg.h"
 
 #define expect(expected, got) ok(expected == got, "Expected %d, got %d\n", expected, got);
 #define expect_hex(expected, got) ok(expected == got, "Expected %x, got %x\n", expected, got);
@@ -30,6 +41,8 @@
 #define MONTHCAL_SEQ_INDEX  1
 
 #define SEL_NOTIFY_TEST_ID  100
+
+static BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
@@ -586,8 +599,6 @@ static BOOL register_parent_wnd_class(void)
 static HWND create_parent_window(void)
 {
     HWND hwnd;
-
-    InitCommonControls();
 
     /* flush message sequences, so we can check the new sequence by the end of function */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -2028,22 +2039,23 @@ static void test_sel_notify(void)
     }
 }
 
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+    X(InitCommonControlsEx);
+#undef X
+}
+
 START_TEST(monthcal)
 {
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
     INITCOMMONCONTROLSEX iccex;
-    HMODULE hComctl32;
-
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
 
-    hComctl32 = GetModuleHandleA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (!pInitCommonControlsEx)
-    {
-        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
-        return;
-    }
+    init_functions();
+
     iccex.dwSize = sizeof(iccex);
     iccex.dwICC  = ICC_DATE_CLASSES;
     pInitCommonControlsEx(&iccex);

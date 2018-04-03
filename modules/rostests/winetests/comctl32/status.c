@@ -18,7 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
 
 #define SUBCLASS_NAME "MyStatusBar"
 
@@ -39,6 +42,8 @@ static INT g_ysize;
 static INT g_dpisize;
 static int g_wmdrawitm_ctr;
 static WNDPROC g_wndproc_saved;
+
+static BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
 
 static HWND create_status_control(DWORD style, DWORD exstyle)
 {
@@ -581,16 +586,31 @@ static void test_notify(void)
     ok(g_got_contextmenu, "WM_RBUTTONUP did not activate the context menu!\n");
 }
 
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+    X(InitCommonControlsEx);
+#undef X
+}
+
 START_TEST(status)
 {
+    INITCOMMONCONTROLSEX iccex;
+
+    init_functions();
+
     hinst = GetModuleHandleA(NULL);
 
-    g_hMainWnd = CreateWindowExA(0, "static", "", WS_OVERLAPPEDWINDOW,
+    iccex.dwSize = sizeof(iccex);
+    iccex.dwICC  = ICC_BAR_CLASSES;
+    pInitCommonControlsEx(&iccex);
+
+    g_hMainWnd = CreateWindowExA(0, WC_STATICA, "", WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, CW_USEDEFAULT, 672+2*GetSystemMetrics(SM_CXSIZEFRAME),
       226+GetSystemMetrics(SM_CYCAPTION)+2*GetSystemMetrics(SM_CYSIZEFRAME),
       NULL, NULL, GetModuleHandleA(NULL), 0);
-
-    InitCommonControls();
 
     register_subclass();
 

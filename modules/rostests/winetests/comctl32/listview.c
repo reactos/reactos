@@ -20,7 +20,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
+#include "v6util.h"
+#include "msg.h"
+
+static HIMAGELIST (WINAPI *pImageList_Create)(int, int, UINT, int, int);
+static BOOL (WINAPI *pImageList_Destroy)(HIMAGELIST);
+static int (WINAPI *pImageList_Add)(HIMAGELIST, HBITMAP, HBITMAP);
+static BOOL (WINAPI *p_TrackMouseEvent)(TRACKMOUSEEVENT *);
 
 enum seq_index {
     PARENT_SEQ_INDEX,
@@ -66,6 +77,18 @@ static NMLVDISPINFOA g_editbox_disp_info;
 static BOOL g_focus_test_LVN_DELETEITEM;
 
 static HWND subclass_editbox(HWND hwndListview);
+
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+    X(ImageList_Create);
+    X(ImageList_Destroy);
+    X(ImageList_Add);
+    X(_TrackMouseEvent);
+#undef X
+}
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
@@ -695,6 +718,21 @@ static HWND create_listview_controlW(DWORD style, HWND parent)
     return hwnd;
 }
 
+static BOOL is_win_xp(void)
+{
+    HWND hwnd, header;
+    BOOL ret;
+
+    hwnd = create_listview_control(LVS_ICON);
+    SendMessageA(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_HEADERINALLVIEWS, LVS_EX_HEADERINALLVIEWS);
+    header = (HWND)SendMessageA(hwnd, LVM_GETHEADER, 0, 0);
+    ret = !IsWindow(header);
+
+    DestroyWindow(hwnd);
+
+    return ret;
+}
+
 static LRESULT WINAPI header_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
@@ -842,16 +880,16 @@ static void test_images(void)
     RECT r1, r2;
     static CHAR hello[] = "hello";
 
-    himl = ImageList_Create(40, 40, 0, 4, 4);
+    himl = pImageList_Create(40, 40, 0, 4, 4);
     ok(himl != NULL, "failed to create imagelist\n");
 
     hbmp = CreateBitmap(40, 40, 1, 1, NULL);
     ok(hbmp != NULL, "failed to create bitmap\n");
 
-    r = ImageList_Add(himl, hbmp, 0);
+    r = pImageList_Add(himl, hbmp, 0);
     ok(r == 0, "should be zero\n");
 
-    hwnd = CreateWindowExA(0, "SysListView32", "foo", LVS_OWNERDRAWFIXED,
+    hwnd = CreateWindowExA(0, WC_LISTVIEWA, "foo", LVS_OWNERDRAWFIXED,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
 
@@ -914,7 +952,7 @@ static void test_checkboxes(void)
                 text2[] = "Text2",
                 text3[] = "Text3";
 
-    hwnd = CreateWindowExA(0, "SysListView32", "foo", LVS_REPORT,
+    hwnd = CreateWindowExA(0, WC_LISTVIEWA, "foo", LVS_REPORT,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
 
@@ -1141,7 +1179,7 @@ static void test_items(void)
     LVITEMA item;
     DWORD r;
 
-    hwnd = CreateWindowExA(0, "SysListView32", "foo", LVS_REPORT,
+    hwnd = CreateWindowExA(0, WC_LISTVIEWA, "foo", LVS_REPORT,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
 
@@ -1398,7 +1436,7 @@ static void test_columns(void)
     CHAR buff[5];
     DWORD rc;
 
-    hwnd = CreateWindowExA(0, "SysListView32", "foo", LVS_LIST,
+    hwnd = CreateWindowExA(0, WC_LISTVIEWA, "foo", LVS_LIST,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
 
@@ -1413,7 +1451,7 @@ static void test_columns(void)
 
     DestroyWindow(hwnd);
 
-    hwnd = CreateWindowExA(0, "SysListView32", "foo", LVS_REPORT,
+    hwnd = CreateWindowExA(0, WC_LISTVIEWA, "foo", LVS_REPORT,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
 
@@ -1513,7 +1551,28 @@ static LRESULT CALLBACK create_test_wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
     return ret;
 }
 
-static void test_create(void)
+/* Header creation is delayed in classic implementation. */
+#define TEST_NO_HEADER(a) test_header_presence_(a, FALSE, __LINE__)
+#define TEST_HEADER_EXPECTED(a) test_header_presence_(a, TRUE, __LINE__)
+#define TEST_NO_HEADER2(a, b) test_header_presence_(a, b, __LINE__)
+static void test_header_presence_(HWND hwnd, BOOL present, int line)
+{
+    HWND header = (HWND)SendMessageA(hwnd, LVM_GETHEADER, 0, 0);
+
+    if (present)
+    {
+        ok_(__FILE__, line)(IsWindow(header), "Header should have been created.\n");
+        if (header) /* FIXME: remove when todo's are fixed */
+            ok_(__FILE__, line)(header == GetDlgItem(hwnd, 0), "Dialog item expected.\n");
+    }
+    else
+    {
+        ok_(__FILE__, line)(!IsWindow(header), "Header shouldn't be created.\n");
+        ok_(__FILE__, line)(NULL == GetDlgItem(hwnd, 0), "NULL dialog item expected.\n");
+    }
+}
+
+static void test_create(BOOL is_version_6)
 {
     static const WCHAR testtextW[] = {'t','e','s','t',' ','t','e','x','t',0};
     char buff[16];
@@ -1525,15 +1584,24 @@ static void test_create(void)
     RECT rect;
     WNDCLASSEXA cls;
     DWORD style;
+    ATOM class;
+
+    if (is_win_xp() && is_version_6)
+    {
+        win_skip("Skipping some tests on XP.\n");
+        return;
+    }
 
     cls.cbSize = sizeof(WNDCLASSEXA);
-    ok(GetClassInfoExA(GetModuleHandleA(NULL), "SysListView32", &cls), "GetClassInfoEx failed\n");
+    r = GetClassInfoExA(GetModuleHandleA(NULL), WC_LISTVIEWA, &cls);
+    ok(r, "Failed to get class info.\n");
     listviewWndProc = cls.lpfnWndProc;
     cls.lpfnWndProc = create_test_wndproc;
     cls.lpszClassName = "MyListView32";
-    ok(RegisterClassExA(&cls), "RegisterClassEx failed\n");
+    class = RegisterClassExA(&cls);
+    ok(class, "Failed to register class.\n");
 
-    test_create_imagelist = ImageList_Create(16, 16, 0, 5, 10);
+    test_create_imagelist = pImageList_Create(16, 16, 0, 5, 10);
     hList = CreateWindowA("MyListView32", "Test", WS_VISIBLE, 0, 0, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0);
     ok((HIMAGELIST)SendMessageA(hList, LVM_GETIMAGELIST, 0, 0) == test_create_imagelist, "Image list not obtained\n");
     hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
@@ -1542,150 +1610,118 @@ static void test_create(void)
     DestroyWindow(hList);
 
     /* header isn't created on LVS_ICON and LVS_LIST styles */
-    hList = CreateWindowA("SysListView32", "Test", WS_VISIBLE, 0, 0, 100, 100, NULL, NULL,
-                           GetModuleHandleA(NULL), 0);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(NULL == GetDlgItem(hList, 0), "NULL dialog item expected\n");
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", WS_VISIBLE, 0, 0, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0);
+    TEST_NO_HEADER(hList);
+
     /* insert column */
     memset(&col, 0, sizeof(LVCOLUMNA));
     col.mask = LVCF_WIDTH;
     col.cx = 100;
     r = SendMessageA(hList, LVM_INSERTCOLUMNA, 0, (LPARAM)&col);
     expect(0, r);
+    TEST_HEADER_EXPECTED(hList);
     hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
     style = GetWindowLongA(hHeader, GWL_STYLE);
     ok(!(style & HDS_HIDDEN), "Not expected HDS_HIDDEN\n");
     DestroyWindow(hList);
 
-    hList = CreateWindowA("SysListView32", "Test", WS_VISIBLE|LVS_LIST, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", WS_VISIBLE|LVS_LIST, 0, 0, 100, 100, NULL, NULL,
                            GetModuleHandleA(NULL), 0);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(NULL == GetDlgItem(hList, 0), "NULL dialog item expected\n");
+    TEST_NO_HEADER(hList);
     /* insert column */
     memset(&col, 0, sizeof(LVCOLUMNA));
     col.mask = LVCF_WIDTH;
     col.cx = 100;
     r = SendMessageA(hList, LVM_INSERTCOLUMNA, 0, (LPARAM)&col);
     expect(0, r);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
+    TEST_HEADER_EXPECTED(hList);
     DestroyWindow(hList);
 
     /* try to switch LVS_ICON -> LVS_REPORT and back LVS_ICON -> LVS_REPORT */
-    hList = CreateWindowA("SysListView32", "Test", WS_VISIBLE, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", WS_VISIBLE, 0, 0, 100, 100, NULL, NULL,
                            GetModuleHandleA(NULL), 0);
     ret = SetWindowLongPtrA(hList, GWL_STYLE, GetWindowLongPtrA(hList, GWL_STYLE) | LVS_REPORT);
     ok(ret & WS_VISIBLE, "Style wrong, should have WS_VISIBLE\n");
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
+    TEST_HEADER_EXPECTED(hList);
     ret = SetWindowLongPtrA(hList, GWL_STYLE, GetWindowLongA(hList, GWL_STYLE) & ~LVS_REPORT);
     ok((ret & WS_VISIBLE) && (ret & LVS_REPORT), "Style wrong, should have WS_VISIBLE|LVS_REPORT\n");
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
+    TEST_HEADER_EXPECTED(hList);
     DestroyWindow(hList);
 
     /* try to switch LVS_LIST -> LVS_REPORT and back LVS_LIST -> LVS_REPORT */
-    hList = CreateWindowA("SysListView32", "Test", WS_VISIBLE|LVS_LIST, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", WS_VISIBLE|LVS_LIST, 0, 0, 100, 100, NULL, NULL,
                            GetModuleHandleA(NULL), 0);
     ret = SetWindowLongPtrA(hList, GWL_STYLE,
                            (GetWindowLongPtrA(hList, GWL_STYLE) & ~LVS_LIST) | LVS_REPORT);
     ok(((ret & WS_VISIBLE) && (ret & LVS_LIST)), "Style wrong, should have WS_VISIBLE|LVS_LIST\n");
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
-    ret = SetWindowLongPtrA(hList, GWL_STYLE,
-                           (GetWindowLongPtrA(hList, GWL_STYLE) & ~LVS_REPORT) | LVS_LIST);
+    TEST_HEADER_EXPECTED(hList);
+    ret = SetWindowLongPtrA(hList, GWL_STYLE, (GetWindowLongPtrA(hList, GWL_STYLE) & ~LVS_REPORT) | LVS_LIST);
     ok(((ret & WS_VISIBLE) && (ret & LVS_REPORT)), "Style wrong, should have WS_VISIBLE|LVS_REPORT\n");
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
+    TEST_HEADER_EXPECTED(hList);
     DestroyWindow(hList);
 
     /* LVS_REPORT without WS_VISIBLE */
-    hList = CreateWindowA("SysListView32", "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
                           GetModuleHandleA(NULL), 0);
     hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(NULL == GetDlgItem(hList, 0), "NULL dialog item expected\n");
+todo_wine_if(is_version_6)
+    TEST_NO_HEADER2(hList, is_version_6);
+
     /* insert column */
     memset(&col, 0, sizeof(LVCOLUMNA));
     col.mask = LVCF_WIDTH;
     col.cx = 100;
     r = SendMessageA(hList, LVM_INSERTCOLUMNA, 0, (LPARAM)&col);
     expect(0, r);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
+    TEST_HEADER_EXPECTED(hList);
     DestroyWindow(hList);
 
     /* LVS_REPORT without WS_VISIBLE, try to show it */
-    hList = CreateWindowA("SysListView32", "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
                           GetModuleHandleA(NULL), 0);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(NULL == GetDlgItem(hList, 0), "NULL dialog item expected\n");
+todo_wine_if(is_version_6)
+    TEST_NO_HEADER2(hList, is_version_6);
+
     ShowWindow(hList, SW_SHOW);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
+    TEST_HEADER_EXPECTED(hList);
     DestroyWindow(hList);
 
     /* LVS_REPORT with LVS_NOCOLUMNHEADER */
-    hList = CreateWindowA("SysListView32", "Test", LVS_REPORT|LVS_NOCOLUMNHEADER|WS_VISIBLE,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", LVS_REPORT|LVS_NOCOLUMNHEADER|WS_VISIBLE,
                           0, 0, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0);
+    TEST_HEADER_EXPECTED(hList);
     hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader), "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
     /* HDS_DRAGDROP set by default */
     ok(GetWindowLongPtrA(hHeader, GWL_STYLE) & HDS_DRAGDROP, "Expected header to have HDS_DRAGDROP\n");
     DestroyWindow(hList);
 
     /* setting LVS_EX_HEADERDRAGDROP creates header */
-    hList = CreateWindowA("SysListView32", "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
                           GetModuleHandleA(NULL), 0);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(NULL == GetDlgItem(hList, 0), "NULL dialog item expected\n");
+todo_wine_if(is_version_6)
+    TEST_NO_HEADER2(hList, is_version_6);
+
     SendMessageA(hList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_HEADERDRAGDROP);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader) ||
-       broken(!IsWindow(hHeader)), /* 4.7x common controls */
-       "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
+    TEST_HEADER_EXPECTED(hList);
     DestroyWindow(hList);
 
     /* setting LVS_EX_GRIDLINES creates header */
-    hList = CreateWindowA("SysListView32", "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
                           GetModuleHandleA(NULL), 0);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(NULL == GetDlgItem(hList, 0), "NULL dialog item expected\n");
+todo_wine_if(is_version_6)
+    TEST_NO_HEADER2(hList, is_version_6);
+
     SendMessageA(hList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_GRIDLINES);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader) ||
-       broken(!IsWindow(hHeader)), /* 4.7x common controls */
-       "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
+    TEST_HEADER_EXPECTED(hList);
     DestroyWindow(hList);
 
     /* setting LVS_EX_FULLROWSELECT creates header */
-    hList = CreateWindowA("SysListView32", "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
                           GetModuleHandleA(NULL), 0);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(NULL == GetDlgItem(hList, 0), "NULL dialog item expected\n");
+todo_wine_if(is_version_6)
+    TEST_NO_HEADER2(hList, is_version_6);
     SendMessageA(hList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT);
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(IsWindow(hHeader) ||
-       broken(!IsWindow(hHeader)), /* 4.7x common controls */
-       "Header should be created\n");
-    ok(hHeader == GetDlgItem(hList, 0), "Expected header as dialog item\n");
+    TEST_HEADER_EXPECTED(hList);
     DestroyWindow(hList);
 
     /* not report style accepts LVS_EX_HEADERDRAGDROP too */
@@ -1696,21 +1732,19 @@ static void test_create(void)
     DestroyWindow(hList);
 
     /* requesting header info with LVM_GETSUBITEMRECT doesn't create it */
-    hList = CreateWindowA("SysListView32", "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
+    hList = CreateWindowA(WC_LISTVIEWA, "Test", LVS_REPORT, 0, 0, 100, 100, NULL, NULL,
                           GetModuleHandleA(NULL), 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(NULL == GetDlgItem(hList, 0), "NULL dialog item expected\n");
+todo_wine_if(is_version_6)
+    TEST_NO_HEADER2(hList, is_version_6);
 
     SetRect(&rect, LVIR_BOUNDS, 1, -10, -10);
     r = SendMessageA(hList, LVM_GETSUBITEMRECT, -1, (LPARAM)&rect);
+    ok(r == 1, "Unexpected ret value %d.\n", r);
     /* right value contains garbage, probably because header columns are not set up */
-    expect(0, rect.bottom);
-    expect(1, r);
+    ok(rect.bottom >= 0, "Unexpected rectangle.\n");
 
-    hHeader = (HWND)SendMessageA(hList, LVM_GETHEADER, 0, 0);
-    ok(!IsWindow(hHeader), "Header shouldn't be created\n");
-    ok(GetDlgItem(hList, 0) == NULL, "NULL dialog item expected\n");
-
+todo_wine_if(is_version_6)
+    TEST_NO_HEADER2(hList, is_version_6);
     DestroyWindow(hList);
 
     /* WM_MEASUREITEM should be sent when created with LVS_OWNERDRAWFIXED */
@@ -1736,6 +1770,9 @@ static void test_create(void)
     GetWindowTextA(hList, buff, sizeof(buff));
     ok(!strcmp(buff, "test text"), "Unexpected window text %s.\n", buff);
     DestroyWindow(hList);
+
+    r = UnregisterClassA("MyListView32", NULL);
+    ok(r, "Failed to unregister test class.\n");
 }
 
 static void test_redraw(void)
@@ -1834,12 +1871,16 @@ static LRESULT WINAPI cd_wndproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
                 ok(nmlvcd->clrTextBk == CLR_DEFAULT, "got 0x%x\n", nmlvcd->clrTextBk);
                 ok(nmlvcd->clrText == RGB(0, 255, 0), "got 0x%x\n", nmlvcd->clrText);
-                todo_wine_if(nmlvcd->iSubItem)
-                    ok(clr == c0ffee, "clr=%.8x\n", clr);
+                if (!(GetWindowLongW(nmhdr->hwndFrom, GWL_STYLE) & LVS_SHOWSELALWAYS))
+                {
+                    todo_wine_if(nmlvcd->iSubItem)
+                        ok(clr == c0ffee, "clr=%.8x\n", clr);
+                }
                 return CDRF_NOTIFYPOSTPAINT;
             case CDDS_ITEMPOSTPAINT | CDDS_SUBITEM:
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
-                todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
+                if (!(GetWindowLongW(nmhdr->hwndFrom, GWL_STYLE) & LVS_SHOWSELALWAYS))
+                    todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
                 ok(nmlvcd->clrTextBk == CLR_DEFAULT, "got 0x%x\n", nmlvcd->clrTextBk);
                 ok(nmlvcd->clrText == RGB(0, 255, 0), "got 0x%x\n", nmlvcd->clrText);
                 return CDRF_DODEFAULT;
@@ -1855,6 +1896,7 @@ static void test_customdraw(void)
 {
     HWND hwnd;
     WNDPROC oldwndproc;
+    LVITEMA item;
 
     hwnd = create_listview_control(LVS_REPORT);
 
@@ -1873,6 +1915,18 @@ static void test_customdraw(void)
     InvalidateRect(hwnd, NULL, TRUE);
     UpdateWindow(hwnd);
     ok_sequence(sequences, PARENT_CD_SEQ_INDEX, parent_report_cd_seq, "parent customdraw, LVS_REPORT", FALSE);
+
+    /* check colors when item is selected */
+    SetWindowLongW(hwnd, GWL_STYLE, GetWindowLongW(hwnd, GWL_STYLE) | LVS_SHOWSELALWAYS);
+    item.mask = LVIF_STATE;
+    item.stateMask = LVIS_SELECTED;
+    item.state = LVIS_SELECTED;
+    SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
+    ok_sequence(sequences, PARENT_CD_SEQ_INDEX, parent_report_cd_seq, "parent customdraw, LVS_REPORT, selection", FALSE);
 
     DestroyWindow(hwnd);
 
@@ -2797,7 +2851,7 @@ static void test_subitem_rect(void)
     DestroyWindow(hwnd);
 
     /* try it for non LVS_REPORT style */
-    hwnd = CreateWindowA("SysListView32", "Test", LVS_ICON, 0, 0, 100, 100, NULL, NULL,
+    hwnd = CreateWindowA(WC_LISTVIEWA, "Test", LVS_ICON, 0, 0, 100, 100, NULL, NULL,
                          GetModuleHandleA(NULL), 0);
     SetRect(&rect, LVIR_BOUNDS, 1, -10, -10);
     r = SendMessageA(hwnd, LVM_GETSUBITEMRECT, -1, (LPARAM)&rect);
@@ -3726,15 +3780,15 @@ static void test_hittest(void)
     test_lvm_hittest(hwnd, x, y, -1, LVHT_TORIGHT, 0, FALSE, TRUE);
     test_lvm_subitemhittest(hwnd, x, y, -1, -1, LVHT_NOWHERE, FALSE, FALSE, FALSE);
     /* try with icons, state icons index is 1 based so at least 2 bitmaps needed */
-    himl = ImageList_Create(16, 16, 0, 4, 4);
+    himl = pImageList_Create(16, 16, 0, 4, 4);
     ok(himl != NULL, "failed to create imagelist\n");
     hbmp = CreateBitmap(16, 16, 1, 1, NULL);
     ok(hbmp != NULL, "failed to create bitmap\n");
-    r = ImageList_Add(himl, hbmp, 0);
+    r = pImageList_Add(himl, hbmp, 0);
     ok(r == 0, "should be zero\n");
     hbmp = CreateBitmap(16, 16, 1, 1, NULL);
     ok(hbmp != NULL, "failed to create bitmap\n");
-    r = ImageList_Add(himl, hbmp, 0);
+    r = pImageList_Add(himl, hbmp, 0);
     ok(r == 1, "should be one\n");
 
     r = SendMessageA(hwnd, LVM_SETIMAGELIST, LVSIL_STATE, (LPARAM)himl);
@@ -4016,15 +4070,15 @@ todo_wine
     expect(TRUE, r);
 
     /* state icons */
-    himl = ImageList_Create(16, 16, 0, 2, 2);
+    himl = pImageList_Create(16, 16, 0, 2, 2);
     ok(himl != NULL, "failed to create imagelist\n");
     hbm = CreateBitmap(16, 16, 1, 1, NULL);
     ok(hbm != NULL, "failed to create bitmap\n");
-    r = ImageList_Add(himl, hbm, 0);
+    r = pImageList_Add(himl, hbm, 0);
     expect(0, r);
     hbm = CreateBitmap(16, 16, 1, 1, NULL);
     ok(hbm != NULL, "failed to create bitmap\n");
-    r = ImageList_Add(himl, hbm, 0);
+    r = pImageList_Add(himl, hbm, 0);
     expect(1, r);
 
     r = SendMessageA(hwnd, LVM_SETIMAGELIST, LVSIL_STATE, (LPARAM)himl);
@@ -4164,7 +4218,7 @@ static void test_editbox(void)
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "edit box WM_COMMAND (EN_SETFOCUS), no edit created", FALSE);
     /* same thing but with valid window */
-    hwndedit = CreateWindowA("Edit", "Test edit", WS_VISIBLE | WS_CHILD, 0, 0, 20,
+    hwndedit = CreateWindowA(WC_EDITA, "Test edit", WS_VISIBLE | WS_CHILD, 0, 0, 20,
                 10, hwnd, (HMENU)1, (HINSTANCE)GetWindowLongPtrA(hwnd, GWLP_HINSTANCE), 0);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     r = SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(0, EN_SETFOCUS), (LPARAM)hwndedit);
@@ -4696,9 +4750,9 @@ static void test_getitemspacing(void)
     expect(cy, HIWORD(ret));
 
     /* now try with icons */
-    himl40 = ImageList_Create(40, 40, 0, 4, 4);
+    himl40 = pImageList_Create(40, 40, 0, 4, 4);
     ok(himl40 != NULL, "failed to create imagelist\n");
-    himl80 = ImageList_Create(80, 80, 0, 4, 4);
+    himl80 = pImageList_Create(80, 80, 0, 4, 4);
     ok(himl80 != NULL, "failed to create imagelist\n");
     ret = SendMessageA(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, (LPARAM)himl40);
     expect(0, ret);
@@ -4766,7 +4820,7 @@ static void test_getitemspacing(void)
     expect(cy + 40, HIWORD(ret));
 
     SendMessageA(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, 0);
-    ImageList_Destroy(himl80);
+    pImageList_Destroy(himl80);
     DestroyWindow(hwnd);
     /* LVS_SMALLICON */
     hwnd = create_listview_control(LVS_SMALLICON);
@@ -4784,7 +4838,7 @@ static void test_getitemspacing(void)
     expect(cy + 40, HIWORD(ret));
 
     SendMessageA(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, 0);
-    ImageList_Destroy(himl40);
+    pImageList_Destroy(himl40);
     DestroyWindow(hwnd);
     /* LVS_REPORT */
     hwnd = create_listview_control(LVS_REPORT);
@@ -4967,11 +5021,11 @@ static void test_approximate_viewrect(void)
 
     /* LVS_ICON */
     hwnd = create_listview_control(LVS_ICON);
-    himl = ImageList_Create(40, 40, 0, 4, 4);
+    himl = pImageList_Create(40, 40, 0, 4, 4);
     ok(himl != NULL, "failed to create imagelist\n");
     hbmp = CreateBitmap(40, 40, 1, 1, NULL);
     ok(hbmp != NULL, "failed to create bitmap\n");
-    ret = ImageList_Add(himl, hbmp, 0);
+    ret = pImageList_Add(himl, hbmp, 0);
     expect(0, ret);
     ret = SendMessageA(hwnd, LVM_SETIMAGELIST, 0, (LPARAM)himl);
     expect(0, ret);
@@ -5588,7 +5642,7 @@ static void test_createdragimage(void)
 
     himl = (HIMAGELIST)SendMessageA(list, LVM_CREATEDRAGIMAGE, 0, (LPARAM)&pt);
     ok(himl != NULL, "got %p\n", himl);
-    ImageList_Destroy(himl);
+    pImageList_Destroy(himl);
 
     DestroyWindow(list);
 }
@@ -5703,9 +5757,9 @@ static void test_imagelists(void)
     HIMAGELIST himl1, himl2, himl3;
     LRESULT ret;
 
-    himl1 = ImageList_Create(40, 40, 0, 4, 4);
-    himl2 = ImageList_Create(40, 40, 0, 4, 4);
-    himl3 = ImageList_Create(40, 40, 0, 4, 4);
+    himl1 = pImageList_Create(40, 40, 0, 4, 4);
+    himl2 = pImageList_Create(40, 40, 0, 4, 4);
+    himl3 = pImageList_Create(40, 40, 0, 4, 4);
     ok(himl1 != NULL, "Failed to create imagelist\n");
     ok(himl2 != NULL, "Failed to create imagelist\n");
     ok(himl3 != NULL, "Failed to create imagelist\n");
@@ -5938,7 +5992,7 @@ static void test_oneclickactivate(void)
     INT r;
     POINT orig_pos;
 
-    hwnd = CreateWindowExA(0, "SysListView32", "foo", WS_VISIBLE|WS_CHILD|LVS_LIST,
+    hwnd = CreateWindowExA(0, WC_LISTVIEWA, "foo", WS_VISIBLE|WS_CHILD|LVS_LIST,
             10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
     r = SendMessageA(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_ONECLICKACTIVATE);
@@ -5971,7 +6025,7 @@ static void test_oneclickactivate(void)
 
     track.cbSize = sizeof(track);
     track.dwFlags = TME_QUERY;
-    _TrackMouseEvent(&track);
+    p_TrackMouseEvent(&track);
     ok(track.hwndTrack == hwnd, "hwndTrack != hwnd\n");
     ok(track.dwFlags == TME_LEAVE, "dwFlags = %x\n", track.dwFlags);
 
@@ -6146,16 +6200,17 @@ static void test_state_image(void)
         insert_column(hwnd, 0);
         insert_column(hwnd, 1);
 
-        item.mask = LVIF_TEXT;
+        item.mask = LVIF_TEXT | LVIF_PARAM;
         item.iItem = 0;
         item.iSubItem = 0;
         item.pszText = text;
+        item.lParam = 123456;
         r = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&item);
         ok(r == 0, "Failed to insert an item.\n");
 
         item.mask = LVIF_STATE;
-        item.state = INDEXTOSTATEIMAGEMASK(1) | LVIS_SELECTED;
-        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED;
+        item.state = INDEXTOSTATEIMAGEMASK(1) | LVIS_SELECTED | LVIS_FOCUSED;
+        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED | LVIS_FOCUSED;
         item.iItem = 0;
         item.iSubItem = 0;
         r = SendMessageA(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
@@ -6168,27 +6223,49 @@ static void test_state_image(void)
         r = SendMessageA(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
         ok(r, "Failed to set subitem text.\n");
 
-        item.mask = LVIF_STATE;
-        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED;
+        item.mask = LVIF_STATE | LVIF_PARAM;
+        item.stateMask = ~0u;
         item.state = 0;
         item.iItem = 0;
         item.iSubItem = 0;
+        item.lParam = 0;
         r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM)&item);
         ok(r, "Failed to get item state.\n");
-        ok(item.state == (INDEXTOSTATEIMAGEMASK(1) | LVIS_SELECTED), "Unexpected item state %#x.\n", item.state);
+        ok(item.state == (INDEXTOSTATEIMAGEMASK(1) | LVIS_SELECTED | LVIS_FOCUSED),
+            "Unexpected item state %#x.\n", item.state);
+        ok(item.lParam == 123456, "Unexpected lParam %ld.\n", item.lParam);
 
-        item.mask = LVIF_STATE;
-        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED;
+        item.mask = 0;
+        item.stateMask = ~0u;
         item.state = INDEXTOSTATEIMAGEMASK(2);
         item.iItem = 0;
         item.iSubItem = 1;
         r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM)&item);
         ok(r, "Failed to get subitem state.\n");
-    todo_wine
+        ok(item.state == INDEXTOSTATEIMAGEMASK(2), "Unexpected state %#x.\n", item.state);
+
+        item.mask = LVIF_STATE | LVIF_PARAM;
+        item.stateMask = ~0u;
+        item.state = INDEXTOSTATEIMAGEMASK(2);
+        item.iItem = 0;
+        item.iSubItem = 1;
+        item.lParam = 0;
+        r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM)&item);
+        ok(r, "Failed to get subitem state.\n");
+        ok(item.state == 0, "Unexpected state %#x.\n", item.state);
+        ok(item.lParam == 123456, "Unexpected lParam %ld.\n", item.lParam);
+
+        item.mask = LVIF_STATE;
+        item.stateMask = LVIS_FOCUSED;
+        item.state = 0;
+        item.iItem = 0;
+        item.iSubItem = 1;
+        r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM)&item);
+        ok(r, "Failed to get subitem state.\n");
         ok(item.state == 0, "Unexpected state %#x.\n", item.state);
 
         item.mask = LVIF_STATE;
-        item.stateMask = LVIS_STATEIMAGEMASK | LVIS_SELECTED;
+        item.stateMask = ~0u;
         item.state = INDEXTOSTATEIMAGEMASK(2);
         item.iItem = 0;
         item.iSubItem = 2;
@@ -6210,25 +6287,56 @@ static void test_state_image(void)
     }
 }
 
+static void test_LVSCW_AUTOSIZE(void)
+{
+    int width, width2;
+    HWND hwnd;
+    BOOL ret;
+
+    hwnd = create_listview_control(LVS_REPORT);
+    ok(hwnd != NULL, "failed to create a listview window\n");
+
+    insert_column(hwnd, 0);
+    insert_column(hwnd, 1);
+    insert_item(hwnd, 0);
+
+    ret = SendMessageA(hwnd, LVM_SETCOLUMNWIDTH, 0, LVSCW_AUTOSIZE);
+    ok(ret, "Failed to set column width.\n");
+
+    width = SendMessageA(hwnd, LVM_GETCOLUMNWIDTH, 0, 0);
+    ok(width > 0, "Unexpected column width %d.\n", width);
+
+    /* Turn on checkboxes. */
+    ret = SendMessageA(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_CHECKBOXES, LVS_EX_CHECKBOXES);
+    ok(ret == 0, "Unexpected previous extended style.\n");
+
+    ret = SendMessageA(hwnd, LVM_SETCOLUMNWIDTH, 0, LVSCW_AUTOSIZE);
+    ok(ret, "Failed to set column width.\n");
+
+    width2 = SendMessageA(hwnd, LVM_GETCOLUMNWIDTH, 0, 0);
+    ok(width2 > 0, "Unexpected column width %d.\n", width2);
+    ok(width2 > width, "Expected increased column width.\n");
+
+    /* Turn off checkboxes. */
+    ret = SendMessageA(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_CHECKBOXES, 0);
+    ok(ret == LVS_EX_CHECKBOXES, "Unexpected previous extended style.\n");
+
+    ret = SendMessageA(hwnd, LVM_SETCOLUMNWIDTH, 0, LVSCW_AUTOSIZE);
+    ok(ret, "Failed to set column width.\n");
+
+    width = SendMessageA(hwnd, LVM_GETCOLUMNWIDTH, 0, 0);
+    ok(width > 0, "Unexpected column width %d.\n", width2);
+    ok(width2 > width, "Expected reduced column width.\n");
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(listview)
 {
-    HMODULE hComctl32;
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
-
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
 
-    hComctl32 = GetModuleHandleA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (pInitCommonControlsEx)
-    {
-        INITCOMMONCONTROLSEX iccex;
-        iccex.dwSize = sizeof(iccex);
-        iccex.dwICC  = ICC_LISTVIEW_CLASSES;
-        pInitCommonControlsEx(&iccex);
-    }
-    else
-        InitCommonControls();
+    init_functions();
 
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 
@@ -6242,7 +6350,7 @@ START_TEST(listview)
     test_images();
     test_checkboxes();
     test_items();
-    test_create();
+    test_create(FALSE);
     test_redraw();
     test_customdraw();
     test_icon_spacing();
@@ -6283,12 +6391,15 @@ START_TEST(listview)
     test_oneclickactivate();
     test_callback_mask();
     test_state_image();
+    test_LVSCW_AUTOSIZE();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
         DestroyWindow(hwndparent);
         return;
     }
+
+    init_functions();
 
     /* comctl32 version 6 tests start here */
     test_get_set_view();
@@ -6304,6 +6415,7 @@ START_TEST(listview)
     test_images();
     test_checkboxes();
     test_items();
+    test_create(TRUE);
     test_color();
     test_columns();
     test_sorting();
@@ -6321,6 +6433,7 @@ START_TEST(listview)
     test_LVM_REDRAWITEMS();
     test_oneclickactivate();
     test_state_image();
+    test_LVSCW_AUTOSIZE();
 
     unload_v6_module(ctx_cookie, hCtx);
 

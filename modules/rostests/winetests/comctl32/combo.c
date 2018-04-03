@@ -18,7 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <limits.h>
+#include <stdio.h>
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
+#include "v6util.h"
+#include "msg.h"
 
 #define EDITBOX_SEQ_INDEX  0
 #define NUM_MSG_SEQUENCES  1
@@ -150,7 +157,7 @@ static void test_comboex(void)
                 *out_of_range_item = "Out of Range Item";
 
     /* Allocate space for result */
-    textBuffer = HeapAlloc(GetProcessHeap(), 0, MAX_CHARS);
+    textBuffer = heap_alloc(MAX_CHARS);
 
     /* Basic comboboxex test */
     myHwnd = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
@@ -236,7 +243,7 @@ static void test_comboex(void)
 
 
     /* Cleanup */
-    HeapFree(GetProcessHeap(), 0, textBuffer);
+    heap_free(textBuffer);
     DestroyWindow(myHwnd);
 }
 
@@ -473,25 +480,20 @@ static LRESULT CALLBACK ComboExTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, L
     return 0L;
 }
 
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+#define X2(f, ord) p##f = (void*)GetProcAddress(hComCtl32, (const char *)ord);
+    X2(SetWindowSubclass, 410);
+#undef X
+#undef X2
+}
+
 static BOOL init(void)
 {
-    HMODULE hComctl32;
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
     WNDCLASSA wc;
-    INITCOMMONCONTROLSEX iccex;
-
-    hComctl32 = GetModuleHandleA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (!pInitCommonControlsEx)
-    {
-        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
-        return FALSE;
-    }
-    iccex.dwSize = sizeof(iccex);
-    iccex.dwICC  = ICC_USEREX_CLASSES;
-    pInitCommonControlsEx(&iccex);
-
-    pSetWindowSubclass = (void*)GetProcAddress(hComctl32, (LPSTR)410);
 
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;
@@ -505,7 +507,7 @@ static BOOL init(void)
     wc.lpfnWndProc = ComboExTestWndProc;
     RegisterClassA(&wc);
 
-    hMainWnd = CreateWindowA("static", "Test", WS_OVERLAPPEDWINDOW, 10, 10, 300, 300, NULL, NULL, NULL, 0);
+    hMainWnd = CreateWindowA(WC_STATICA, "Test", WS_OVERLAPPEDWINDOW, 10, 10, 300, 300, NULL, NULL, NULL, 0);
     ShowWindow(hMainWnd, SW_SHOW);
 
     hComboExParentWnd = CreateWindowExA(0, ComboExTestClass, "ComboEx test", WS_OVERLAPPEDWINDOW|WS_VISIBLE,
@@ -604,7 +606,7 @@ static void test_comboex_get_set_item(void)
 
 static HWND create_combobox(DWORD style)
 {
-    return CreateWindowA("ComboBox", "Combo", WS_VISIBLE|WS_CHILD|style, 5, 5, 100, 100, hMainWnd, (HMENU)COMBO_ID, NULL, 0);
+    return CreateWindowA(WC_COMBOBOXA, "Combo", WS_VISIBLE|WS_CHILD|style, 5, 5, 100, 100, hMainWnd, (HMENU)COMBO_ID, NULL, 0);
 }
 
 static int font_height(HFONT hFont)
@@ -1033,7 +1035,7 @@ static void test_combo_editselection_focus(DWORD style)
     get_combobox_info(hCombo, &cbInfo);
     hEdit = cbInfo.hwndItem;
 
-    hButton = CreateWindowA("Button", "OK", WS_VISIBLE|WS_CHILD|BS_DEFPUSHBUTTON,
+    hButton = CreateWindowA(WC_BUTTONA, "OK", WS_VISIBLE|WS_CHILD|BS_DEFPUSHBUTTON,
                             5, 50, 100, 20, hMainWnd, NULL,
                             (HINSTANCE)GetWindowLongPtrA(hMainWnd, GWLP_HINSTANCE), NULL);
 
@@ -1149,10 +1151,120 @@ static void test_combo_WS_VSCROLL(void)
     DestroyWindow(hCombo);
 }
 
+static void test_combo_dropdown_size(DWORD style)
+{
+    static const char wine_test[] = "Wine Test";
+    HWND hCombo, hList;
+    COMBOBOXINFO cbInfo;
+    int i, test, ret;
+
+    static const struct list_size_info
+    {
+        int num_items;
+        int height_combo;
+        int limit;
+    } info_height[] = {
+        {33, 50, -1},
+        {35, 50, 40},
+        {15, 50, 3},
+    };
+
+    for (test = 0; test < sizeof(info_height) / sizeof(info_height[0]); test++)
+    {
+        const struct list_size_info *info_test = &info_height[test];
+        int height_item; /* Height of a list item */
+        int height_list; /* Height of the list we got */
+        int expected_height_list;
+        RECT rect_list_client;
+        int min_visible_expected;
+
+        hCombo = CreateWindowA(WC_COMBOBOXA, "Combo", CBS_DROPDOWN | WS_VISIBLE | WS_CHILD | style, 5, 5, 100,
+                info_test->height_combo, hMainWnd, (HMENU)COMBO_ID, NULL, 0);
+
+        min_visible_expected = SendMessageA(hCombo, CB_GETMINVISIBLE, 0, 0);
+        todo_wine
+        ok(min_visible_expected == 30, "Unexpected number of items %d.\n", min_visible_expected);
+
+        cbInfo.cbSize = sizeof(COMBOBOXINFO);
+        ret = SendMessageA(hCombo, CB_GETCOMBOBOXINFO, 0, (LPARAM)&cbInfo);
+        ok(ret, "Failed to get combo info, %d\n", ret);
+
+        hList = cbInfo.hwndList;
+        for (i = 0; i < info_test->num_items; i++)
+        {
+            ret = SendMessageA(hCombo, CB_ADDSTRING, 0, (LPARAM) wine_test);
+            ok(ret == i, "Failed to add string %d, returned %d.\n", i, ret);
+        }
+
+        if (info_test->limit != -1)
+        {
+            int min_visible_actual;
+            min_visible_expected = info_test->limit;
+
+            ret = SendMessageA(hCombo, CB_SETMINVISIBLE, min_visible_expected, 0);
+            todo_wine
+            ok(ret, "Failed to set visible limit.\n");
+            min_visible_actual = SendMessageA(hCombo, CB_GETMINVISIBLE, 0, 0);
+            todo_wine
+            ok(min_visible_expected == min_visible_actual, "test %d: unexpected number of items %d.\n",
+                    test, min_visible_actual);
+        }
+
+        ret = SendMessageA(hCombo, CB_SHOWDROPDOWN, TRUE,0);
+        ok(ret, "Failed to show dropdown.\n");
+        ret = SendMessageA(hCombo, CB_GETDROPPEDSTATE, 0, 0);
+        ok(ret, "Unexpected dropped state.\n");
+
+        GetClientRect(hList, &rect_list_client);
+        height_list = rect_list_client.bottom - rect_list_client.top;
+        height_item = (int)SendMessageA(hList, LB_GETITEMHEIGHT, 0, 0);
+
+        if (style & CBS_NOINTEGRALHEIGHT)
+        {
+            RECT rect_list_complete;
+            int list_height_nonclient;
+            int list_height_calculated;
+            int edit_padding_size = cbInfo.rcItem.top; /* edit client rect top is the padding it has to its parent
+                                                          We assume it's the same on the bottom */
+
+            GetWindowRect(hList, &rect_list_complete);
+
+            list_height_nonclient = (rect_list_complete.bottom - rect_list_complete.top)
+                                    - (rect_list_client.bottom - rect_list_client.top);
+
+            /* Calculate the expected client size of the listbox popup from the size of the combobox. */
+            list_height_calculated = info_test->height_combo      /* Take height we created combobox with */
+                    - (cbInfo.rcItem.bottom - cbInfo.rcItem.top)  /* Subtract size of edit control */
+                    - list_height_nonclient                       /* Subtract list nonclient area */
+                    - edit_padding_size * 2;                      /* subtract space around the edit control */
+
+            expected_height_list = min(list_height_calculated, height_item * info_test->num_items);
+            if (expected_height_list < 0)
+                expected_height_list = 0;
+
+            todo_wine
+            ok(expected_height_list == height_list, "Test %d, expected list height to be %d, got %d\n",
+                    test, expected_height_list, height_list);
+        }
+        else
+        {
+            expected_height_list = min(info_test->num_items, min_visible_expected) * height_item;
+
+            todo_wine
+            ok(expected_height_list == height_list, "Test %d, expected list height to be %d, got %d\n",
+                    test, expected_height_list, height_list);
+        }
+
+        DestroyWindow(hCombo);
+    }
+}
+
 START_TEST(combo)
 {
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
+
+    init_functions();
 
     if (!init())
         return;
@@ -1188,6 +1300,8 @@ START_TEST(combo)
     test_combo_listbox_styles(CBS_SIMPLE);
     test_combo_listbox_styles(CBS_DROPDOWN);
     test_combo_listbox_styles(CBS_DROPDOWNLIST);
+    test_combo_dropdown_size(0);
+    test_combo_dropdown_size(CBS_NOINTEGRALHEIGHT);
 
     cleanup();
     unload_v6_module(ctx_cookie, hCtx);

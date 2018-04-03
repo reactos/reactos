@@ -17,7 +17,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
+#include "v6util.h"
 
 static const char * const strings[4] = {
     "First added",
@@ -31,6 +43,15 @@ static const char * const strings[4] = {
 
 static const char BAD_EXTENSION[] = "*.badtxt";
 
+static int strcmp_aw(LPCWSTR strw, const char *stra)
+{
+    WCHAR buf[1024];
+
+    if (!stra) return 1;
+    MultiByteToWideChar(CP_ACP, 0, stra, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    return lstrcmpW(strw, buf);
+}
+
 static HWND create_listbox(DWORD add_style, HWND parent)
 {
     INT_PTR ctl_id = 0;
@@ -39,7 +60,7 @@ static HWND create_listbox(DWORD add_style, HWND parent)
     if (parent)
       ctl_id=1;
 
-    handle = CreateWindowA("LISTBOX", "TestList", (LBS_STANDARD & ~LBS_SORT) | add_style, 0, 0, 100, 100,
+    handle = CreateWindowA(WC_LISTBOXA, "TestList", (LBS_STANDARD & ~LBS_SORT) | add_style, 0, 0, 100, 100,
         parent, (HMENU)ctl_id, NULL, 0);
     ok(handle != NULL, "Failed to create listbox window.\n");
 
@@ -144,11 +165,11 @@ static void run_test(const struct listbox_test test)
         WCHAR *txtw;
         CHAR *txt;
 
-        txt = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + 1);
+        txt = heap_alloc_zero(size + 1);
         resA = SendMessageA(hLB, LB_GETTEXT, i, (LPARAM)txt);
         ok(!strcmp(txt, strings[i]), "returned string for item %d does not match %s vs %s\n", i, txt, strings[i]);
 
-        txtw = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (size + 1) * sizeof(*txtw));
+        txtw = heap_alloc_zero((size + 1) * sizeof(*txtw));
         resW = SendMessageW(hLB, LB_GETTEXT, i, (LPARAM)txtw);
         if (resA != resW)
             trace("SendMessageW(LB_GETTEXT) not supported on this platform (resA=%d resW=%d), skipping...\n", resA, resW);
@@ -158,8 +179,8 @@ static void run_test(const struct listbox_test test)
             ok(!strcmp (txt, strings[i]), "returned string for item %d does not match %s vs %s\n", i, txt, strings[i]);
         }
 
-        HeapFree(GetProcessHeap(), 0, txtw);
-        HeapFree(GetProcessHeap(), 0, txt);
+        heap_free(txtw);
+        heap_free(txt);
     }
 
     /* Confirm the count of items, and that an invalid delete does not remove anything */
@@ -196,7 +217,7 @@ static void test_item_height(void)
 
     DestroyWindow (hLB);
 
-    hLB = CreateWindowA("LISTBOX", "TestList", LBS_OWNERDRAWVARIABLE,  0, 0, 100, 100, NULL, NULL, NULL, 0);
+    hLB = CreateWindowA(WC_LISTBOXA, "TestList", LBS_OWNERDRAWVARIABLE,  0, 0, 100, 100, NULL, NULL, NULL, 0);
 
     itemHeight = SendMessageA(hLB, LB_GETITEMHEIGHT, 0, 0);
     ok(itemHeight > 0 && itemHeight <= tm.tmHeight, "Unexpected item height %d, expected %d.\n",
@@ -217,6 +238,31 @@ static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
 {
     switch (msg)
     {
+    case WM_MEASUREITEM:
+    {
+        DWORD style = GetWindowLongA(GetWindow(hwnd, GW_CHILD), GWL_STYLE);
+        MEASUREITEMSTRUCT *mi = (void*)lparam;
+
+        ok(wparam == mi->CtlID, "got wParam=%08lx, expected %08x\n", wparam, mi->CtlID);
+        ok(mi->CtlType == ODT_LISTBOX, "mi->CtlType = %u\n", mi->CtlType);
+        ok(mi->CtlID == 1, "mi->CtlID = %u\n", mi->CtlID);
+        ok(mi->itemHeight, "mi->itemHeight = 0\n");
+
+        if (mi->itemID > 4 || style & LBS_OWNERDRAWFIXED)
+            break;
+
+        if (style & LBS_HASSTRINGS)
+        {
+            ok(!strcmp_aw((WCHAR*)mi->itemData, strings[mi->itemID]),
+                    "mi->itemData = %s (%d)\n", wine_dbgstr_w((WCHAR*)mi->itemData), mi->itemID);
+        }
+        else
+        {
+            ok((void*)mi->itemData == strings[mi->itemID],
+                    "mi->itemData = %08lx, expected %p\n", mi->itemData, strings[mi->itemID]);
+        }
+        break;
+    }
     case WM_DRAWITEM:
     {
         RECT rc_item, rc_client, rc_clip;
@@ -279,10 +325,10 @@ static void test_ownerdraw(void)
     RECT rc;
 
     parent = create_parent();
-    assert(parent);
+    ok(parent != NULL, "Failed to create parent window.\n");
 
     hLB = create_listbox(LBS_OWNERDRAWFIXED | WS_CHILD | WS_VISIBLE, parent);
-    assert(hLB);
+    ok(hLB != NULL, "Failed to create listbox window.\n");
 
     SetForegroundWindow(hLB);
     UpdateWindow(hLB);
@@ -321,7 +367,7 @@ static void test_LB_SELITEMRANGE(void)
     INT ret;
 
     hLB = create_listbox(LBS_EXTENDEDSEL, 0);
-    assert(hLB);
+    ok(hLB != NULL, "Failed to create listbox window.\n");
 
     listbox_query(hLB, &answer);
     listbox_test_query(test_nosel, answer);
@@ -419,7 +465,7 @@ static void test_listbox_height(void)
     HWND hList;
     int r, id;
 
-    hList = CreateWindowA( "ListBox", "list test", 0,
+    hList = CreateWindowA( WC_LISTBOXA, "list test", 0,
                           1, 1, 600, 100, NULL, NULL, NULL, NULL );
     ok( hList != NULL, "failed to create listbox\n");
 
@@ -459,21 +505,20 @@ static void test_itemfrompoint(void)
        without caption). LBS_NOINTEGRALHEIGHT is required in order to test
        behavior of partially-displayed item.
      */
-    HWND hList = CreateWindowA( "ListBox", "list test",
+    HWND hList = CreateWindowA( WC_LISTBOXA, "list test",
                                WS_VISIBLE|WS_POPUP|LBS_NOINTEGRALHEIGHT,
                                1, 1, 600, 100, NULL, NULL, NULL, NULL );
     ULONG r, id;
     RECT rc;
 
-    /* For an empty listbox win2k returns 0x1ffff, win98 returns 0x10000, nt4 returns 0xffffffff */
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( /* x */ 30, /* y */ 30 ));
-    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %x\n", r );
+    ok( r == MAKELPARAM(0xffff, 1), "Unexpected ret value %#x.\n", r );
 
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( 700, 30 ));
-    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %x\n", r );
+    ok( r == MAKELPARAM(0xffff, 1), "Unexpected ret value %#x.\n", r );
 
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( 30, 300 ));
-    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %x\n", r );
+    ok( r == MAKELPARAM(0xffff, 1), "Unexpected ret value %#x.\n", r );
 
     id = SendMessageA( hList, LB_ADDSTRING, 0, (LPARAM) "hi");
     ok( id == 0, "item id wrong\n");
@@ -484,7 +529,7 @@ static void test_itemfrompoint(void)
     ok( r == 0x1, "ret %x\n", r );
 
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( /* x */ 30, /* y */ 601 ));
-    ok( r == 0x10001, "ret %x\n", r );
+    ok( r == MAKELPARAM(1, 1), "Unexpected ret value %#x.\n", r );
 
     /* Resize control so that below assertions about sizes are valid */
     r = SendMessageA( hList, LB_GETITEMRECT, 0, (LPARAM)&rc);
@@ -540,7 +585,7 @@ static void test_listbox_item_data(void)
     HWND hList;
     int r, id;
 
-    hList = CreateWindowA( "ListBox", "list test", 0,
+    hList = CreateWindowA( WC_LISTBOXA, "list test", 0,
                           1, 1, 600, 100, NULL, NULL, NULL, NULL );
     ok( hList != NULL, "failed to create listbox\n");
 
@@ -580,9 +625,9 @@ static void test_listbox_LB_DIR(void)
        one file that fits the wildcard w*.c . Normally, the test
        directory itself satisfies both conditions.
      */
-    hList = CreateWindowA( "ListBox", "list test", WS_VISIBLE|WS_POPUP,
+    hList = CreateWindowA( WC_LISTBOXA, "list test", WS_VISIBLE|WS_POPUP,
                           1, 1, 600, 100, NULL, NULL, NULL, NULL );
-    assert(hList);
+    ok(hList != NULL, "Failed to create listbox window.\n");
 
     /* Test for standard usage */
 
@@ -891,7 +936,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, wildcard);
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DIRECTORY|DDL_EXCLUSIVE, (LPARAM)pathBuffer);
-    ok (res != -1 || broken(res == -1), "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_EXCLUSIVE, *) failed err %u\n",
+    ok (res != -1, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_EXCLUSIVE, *) failed err %u\n",
         GetLastError());
 
     itemCount = SendMessageA(hList, LB_GETCOUNT, 0, 0);
@@ -999,11 +1044,11 @@ static HWND g_label;
 
 static BOOL on_listbox_container_create(HWND hwnd, CREATESTRUCTA *lpcs)
 {
-    g_label = CreateWindowA("Static", "Contents of static control before DlgDirList.",
+    g_label = CreateWindowA(WC_STATICA, "Contents of static control before DlgDirList.",
         WS_CHILD | WS_VISIBLE, 10, 10, 512, 32, hwnd, (HMENU)ID_TEST_LABEL, NULL, 0);
     if (!g_label) return FALSE;
 
-    g_listBox = CreateWindowA("ListBox", "DlgDirList test",
+    g_listBox = CreateWindowA(WC_LISTBOXA, "DlgDirList test",
         WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER | WS_VSCROLL, 10, 60, 256, 256,
         hwnd, (HMENU)ID_TEST_LISTBOX, NULL, 0);
     if (!g_listBox) return FALSE;
@@ -1064,6 +1109,7 @@ static void test_listbox_dlgdir(void)
     char * p;
     char driveletter;
     HANDLE file;
+    BOOL ret;
 
     file = CreateFileA( "wtest1.tmp.c", GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
     ok(file != INVALID_HANDLE_VALUE, "Error creating the test file: %d\n", GetLastError());
@@ -1076,7 +1122,8 @@ static void test_listbox_dlgdir(void)
      */
 
     hInst = GetModuleHandleA(0);
-    if (!RegisterListboxWindowClass(hInst)) assert(0);
+    ret = RegisterListboxWindowClass(hInst);
+    ok(ret, "Failed to register test class.\n");
 
     hWnd = CreateWindowA("ListboxContainerClass", "ListboxContainerClass",
                     WS_OVERLAPPEDWINDOW | WS_VISIBLE,
@@ -1824,6 +1871,26 @@ static void test_listbox(void)
     run_test(EMS_NS);
 }
 
+static void test_WM_MEASUREITEM(void)
+{
+    HWND parent, listbox;
+    LRESULT data;
+
+    parent = create_parent();
+    listbox = create_listbox(WS_CHILD | LBS_OWNERDRAWVARIABLE, parent);
+
+    data = SendMessageA(listbox, LB_GETITEMDATA, 0, 0);
+    ok(data == (LRESULT)strings[0], "data = %08lx, expected %p\n", data, strings[0]);
+    DestroyWindow(parent);
+
+    parent = create_parent();
+    listbox = create_listbox(WS_CHILD | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS, parent);
+
+    data = SendMessageA(listbox, LB_GETITEMDATA, 0, 0);
+    ok(!data, "data = %08lx\n", data);
+    DestroyWindow(parent);
+}
+
 START_TEST(listbox)
 {
     ULONG_PTR ctx_cookie;
@@ -1846,6 +1913,7 @@ START_TEST(listbox)
     test_GetListBoxInfo();
     test_missing_lbuttonup();
     test_extents();
+    test_WM_MEASUREITEM();
 
     unload_v6_module(ctx_cookie, hCtx);
 }

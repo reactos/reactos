@@ -18,7 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <windows.h>
+#include <commctrl.h>
+
+#include "wine/test.h"
+#include "msg.h"
 
 #define NUM_MSG_SEQUENCES   1
 #define PAGER_SEQ_INDEX     0
@@ -335,7 +339,6 @@ START_TEST(pager)
 
     pSetWindowSubclass = (void*)GetProcAddress(mod, (LPSTR)410);
 
-    InitCommonControls();
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 
     parent_wnd = create_parent_window();

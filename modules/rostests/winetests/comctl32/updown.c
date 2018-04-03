@@ -44,7 +44,12 @@
  *   - more stuff to test
  */
 
-#include "precomp.h"
+#include <windows.h>
+#include <commctrl.h>
+#include <stdio.h>
+
+#include "wine/test.h"
+#include "msg.h"
 
 #define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
 
@@ -58,6 +63,8 @@
 
 static HWND parent_wnd, g_edit;
 
+static HWND (WINAPI *pCreateUpDownControl)(DWORD, INT, INT, INT, INT,
+    HWND, INT, HINSTANCE, HWND, INT, INT, INT);
 static BOOL (WINAPI *pSetWindowSubclass)(HWND, SUBCLASSPROC, UINT_PTR, DWORD_PTR);
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
@@ -877,7 +884,7 @@ static void test_CreateUpDownControl(void)
     RECT rect;
 
     GetClientRect(parent_wnd, &rect);
-    updown = CreateUpDownControl(WS_CHILD | WS_BORDER | WS_VISIBLE,
+    updown = pCreateUpDownControl(WS_CHILD | WS_BORDER | WS_VISIBLE,
         0, 0, rect.right, rect.bottom, parent_wnd, 1, GetModuleHandleA(NULL), g_edit, 100, 10, 50);
     ok(updown != NULL, "Failed to create control.\n");
 
@@ -893,13 +900,22 @@ static void test_CreateUpDownControl(void)
     DestroyWindow(updown);
 }
 
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+#define X2(f, ord) p##f = (void*)GetProcAddress(hComCtl32, (const char *)ord);
+    X(CreateUpDownControl);
+    X2(SetWindowSubclass, 410);
+#undef X
+#undef X2
+}
+
 START_TEST(updown)
 {
-    HMODULE mod = GetModuleHandleA("comctl32.dll");
+    init_functions();
 
-    pSetWindowSubclass = (void*)GetProcAddress(mod, (LPSTR)410);
-
-    InitCommonControls();
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 
     parent_wnd = create_parent_window();

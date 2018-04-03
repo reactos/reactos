@@ -17,7 +17,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "commctrl.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
+#include "v6util.h"
+#include "msg.h"
 
 #define WM_TD_CALLBACK (WM_APP) /* Custom dummy message to wrap callback notifications */
 
@@ -135,7 +145,7 @@ static void run_test_(TASKDIALOGCONFIG *info, int expect_button, const struct me
     int i;
 
     /* Allocate messages to test against, plus 2 implicit and 1 empty */
-    msg_start = msg = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*msg) * (test_messages_len + 3));
+    msg_start = msg = heap_alloc_zero(sizeof(*msg) * (test_messages_len + 3));
 
     /* Always needed, thus made implicit */
     init_test_message(TDN_DIALOG_CONSTRUCTED, 0, 0, msg++);
@@ -154,7 +164,7 @@ static void run_test_(TASKDIALOGCONFIG *info, int expect_button, const struct me
     ok_(file, line)(ret_button == expect_button,
                      "Wrong button. Expected %d, got %d\n", expect_button, ret_button);
 
-    HeapFree(GetProcessHeap(), 0, msg_start);
+    heap_free(msg_start);
 }
 
 static const LONG_PTR test_ref_data = 123456;

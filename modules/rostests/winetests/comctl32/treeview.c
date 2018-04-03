@@ -18,8 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
 
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "wine/commctrl.h" 
+
+#include "wine/test.h"
+#include "v6util.h"
+#include "msg.h"
+
+static BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
 static const char *TEST_CALLBACK_TEXT = "callback_text";
 
 static TVITEMA g_item_expanding, g_item_expanded;
@@ -1055,9 +1069,101 @@ static void test_get_set_textcolor(void)
 
 static void test_get_set_tooltips(void)
 {
-    HWND hwndLastToolTip = NULL;
-    HWND hPopupTreeView;
-    HWND hTree;
+    HWND hTree, tooltips, hwnd;
+    DWORD style;
+    int i;
+
+    /* TVS_NOTOOLTIPS */
+    hTree = create_treeview_control(TVS_NOTOOLTIPS);
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
+    ok(tooltips == NULL, "Unexpected tooltip window %p.\n", tooltips);
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_SETTOOLTIPS, 0, 0);
+    ok(tooltips == NULL, "Unexpected ret value %p.\n", tooltips);
+
+    /* Toggle style */
+    style = GetWindowLongA(hTree, GWL_STYLE);
+    SetWindowLongA(hTree, GWL_STYLE, style & ~TVS_NOTOOLTIPS);
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
+    ok(IsWindow(tooltips), "Unexpected tooltip window %p.\n", tooltips);
+
+    style = GetWindowLongA(hTree, GWL_STYLE);
+    SetWindowLongA(hTree, GWL_STYLE, style | TVS_NOTOOLTIPS);
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
+    ok(tooltips == NULL, "Unexpected tooltip window %p.\n", tooltips);
+
+    DestroyWindow(hTree);
+
+    /* Set some valid window, does not have to be tooltips class. */
+    hTree = create_treeview_control(TVS_NOTOOLTIPS);
+
+    hwnd = CreateWindowA(WC_STATICA, "Test", WS_VISIBLE|WS_CHILD, 5, 5, 100, 100, hMainWnd, NULL, NULL, 0);
+    ok(hwnd != NULL, "Failed to create child window.\n");
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_SETTOOLTIPS, (WPARAM)hwnd, 0);
+    ok(tooltips == NULL, "Unexpected ret value %p.\n", tooltips);
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
+    ok(tooltips == hwnd, "Unexpected tooltip window %p.\n", tooltips);
+
+    /* Externally set tooltips window, disable style. */
+    style = GetWindowLongA(hTree, GWL_STYLE);
+    SetWindowLongA(hTree, GWL_STYLE, style & ~TVS_NOTOOLTIPS);
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
+    ok(IsWindow(tooltips) && tooltips != hwnd, "Unexpected tooltip window %p.\n", tooltips);
+    ok(IsWindow(hwnd), "Expected valid window.\n");
+
+    style = GetWindowLongA(hTree, GWL_STYLE);
+    SetWindowLongA(hTree, GWL_STYLE, style | TVS_NOTOOLTIPS);
+    ok(!IsWindow(tooltips), "Unexpected tooltip window %p.\n", tooltips);
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
+    ok(tooltips == NULL, "Unexpected tooltip window %p.\n", tooltips);
+    ok(IsWindow(hwnd), "Expected valid window.\n");
+
+    DestroyWindow(hTree);
+    ok(IsWindow(hwnd), "Expected valid window.\n");
+
+    /* Set window, disable tooltips. */
+    hTree = create_treeview_control(0);
+
+    tooltips = (HWND)SendMessageA(hTree, TVM_SETTOOLTIPS, (WPARAM)hwnd, 0);
+    ok(IsWindow(tooltips), "Unexpected ret value %p.\n", tooltips);
+
+    style = GetWindowLongA(hTree, GWL_STYLE);
+    SetWindowLongA(hTree, GWL_STYLE, style | TVS_NOTOOLTIPS);
+    ok(!IsWindow(hwnd), "Unexpected tooltip window %p.\n", tooltips);
+    ok(IsWindow(tooltips), "Expected valid window %p.\n", tooltips);
+
+    DestroyWindow(hTree);
+    ok(IsWindow(tooltips), "Expected valid window %p.\n", tooltips);
+    DestroyWindow(tooltips);
+    DestroyWindow(hwnd);
+
+    for (i = 0; i < 2; i++)
+    {
+        DWORD style = i == 0 ? 0 : TVS_NOTOOLTIPS;
+
+        hwnd = CreateWindowA(WC_STATICA, "Test", WS_VISIBLE|WS_CHILD, 5, 5, 100, 100, hMainWnd, NULL, NULL, 0);
+        ok(hwnd != NULL, "Failed to create child window.\n");
+
+        hTree = create_treeview_control(style);
+
+        tooltips = (HWND)SendMessageA(hTree, TVM_SETTOOLTIPS, (WPARAM)hwnd, 0);
+        ok(style & TVS_NOTOOLTIPS ? tooltips == NULL : IsWindow(tooltips), "Unexpected ret value %p.\n", tooltips);
+        DestroyWindow(tooltips);
+
+        tooltips = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
+        ok(tooltips == hwnd, "Unexpected tooltip window %p.\n", tooltips);
+
+        /* TreeView is destroyed, check if set window is still around. */
+        DestroyWindow(hTree);
+        ok(!IsWindow(hwnd), "Unexpected window.\n");
+    }
 
     hTree = create_treeview_control(0);
     fill_tree(hTree);
@@ -1065,20 +1171,23 @@ static void test_get_set_tooltips(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* show even WS_POPUP treeview don't send NM_TOOLTIPSCREATED */
-    hPopupTreeView = CreateWindowA(WC_TREEVIEWA, NULL, WS_POPUP|WS_VISIBLE, 0, 0, 100, 100,
+    hwnd = CreateWindowA(WC_TREEVIEWA, NULL, WS_POPUP|WS_VISIBLE, 0, 0, 100, 100,
             hMainWnd, NULL, NULL, NULL);
-    DestroyWindow(hPopupTreeView);
+    DestroyWindow(hwnd);
 
     /* Testing setting a NULL ToolTip */
-    SendMessageA(hTree, TVM_SETTOOLTIPS, 0, 0);
-    hwndLastToolTip = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
-    ok(hwndLastToolTip == NULL, "NULL tool tip, reported as 0x%p, expected 0.\n", hwndLastToolTip);
+    tooltips = (HWND)SendMessageA(hTree, TVM_SETTOOLTIPS, 0, 0);
+    ok(IsWindow(tooltips), "Unexpected ret value %p.\n", tooltips);
+
+    hwnd = (HWND)SendMessageA(hTree, TVM_GETTOOLTIPS, 0, 0);
+    ok(hwnd == NULL, "Unexpected tooltip window %p.\n", hwnd);
 
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_tooltips_seq,
         "test get set tooltips", TRUE);
 
-    /* TODO: Add a test of an actual tooltip */
     DestroyWindow(hTree);
+    ok(IsWindow(tooltips), "Expected valid window.\n");
+    DestroyWindow(tooltips);
 }
 
 static void test_get_set_unicodeformat(void)
@@ -1328,9 +1437,6 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
         break;
     }
 
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
     }
 
     defwndproc_counter++;
@@ -2653,27 +2759,27 @@ static void test_right_click(void)
     DestroyWindow(hTree);
 }
 
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+    X(InitCommonControlsEx);
+#undef X
+}
+
 START_TEST(treeview)
 {
-    HMODULE hComctl32;
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
-    WNDCLASSA wc;
-    MSG msg;
-
+    INITCOMMONCONTROLSEX iccex;
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
-  
-    hComctl32 = GetModuleHandleA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (pInitCommonControlsEx)
-    {
-        INITCOMMONCONTROLSEX iccex;
-        iccex.dwSize = sizeof(iccex);
-        iccex.dwICC  = ICC_TREEVIEW_CLASSES;
-        pInitCommonControlsEx(&iccex);
-    }
-    else
-        InitCommonControls();
+    WNDCLASSA wc;
+
+    init_functions();
+
+    iccex.dwSize = sizeof(iccex);
+    iccex.dwICC  = ICC_TREEVIEW_CLASSES;
+    pInitCommonControlsEx(&iccex);
 
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
     init_msg_sequences(item_sequence, 1);
@@ -2740,16 +2846,31 @@ START_TEST(treeview)
 
     /* comctl32 version 6 tests start here */
     g_v6 = TRUE;
+
+    test_fillroot();
+    test_getitemtext();
+    test_get_set_insertmark();
+    test_get_set_item();
+    test_get_set_scrolltime();
+    test_get_set_textcolor();
+    test_get_linecolor();
+    test_get_insertmarkcolor();
     test_expandedimage();
+    test_get_set_tooltips();
+    test_get_set_unicodeformat();
+    test_expandinvisible();
+    test_itemedit();
+    test_treeview_classinfo();
+    test_delete_items();
+    test_cchildren();
     test_htreeitem_layout();
+    test_TVM_GETNEXTITEM();
+    test_TVM_HITTEST();
     test_WM_GETDLGCODE();
+    test_customdraw();
+    test_WM_KEYDOWN();
+    test_TVS_FULLROWSELECT();
+    test_TVM_SORTCHILDREN();
 
     unload_v6_module(ctx_cookie, hCtx);
-
-    PostMessageA(hMainWnd, WM_CLOSE, 0, 0);
-    while(GetMessageA(&msg, 0, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
-    }
 }

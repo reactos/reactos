@@ -17,7 +17,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+/* make sure the structures work with a comctl32 v5.x */
+#ifndef __REACTOS__
+#define _WIN32_WINNT 0x500
+#define _WIN32_IE 0x500
+#endif
+
+#include <assert.h>
+#include <stdarg.h>
+
+#include <windows.h>
+#include <commctrl.h>
+#include <uxtheme.h>
+
+#include "wine/heap.h"
+#include "wine/test.h"
+
+static BOOL (WINAPI *pImageList_Destroy)(HIMAGELIST);
+static HIMAGELIST (WINAPI *pImageList_LoadImageA)(HINSTANCE, LPCSTR, int, int, COLORREF, UINT, UINT);
 
 static RECT height_change_notify_rect;
 static HWND hMainWnd;
@@ -206,9 +223,9 @@ static rbsize_result_t rbsize_init(int cleft, int ctop, int cright, int cbottom,
     SetRect(&ret.rcClient, cleft, ctop, cright, cbottom);
     ret.cyBarHeight = cyBarHeight;
     ret.nRows = 0;
-    ret.cyRowHeights = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nRows*sizeof(int));
+    ret.cyRowHeights = heap_alloc_zero(nRows * sizeof(int));
     ret.nBands = 0;
-    ret.bands = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nBands*sizeof(rbband_result_t));
+    ret.bands = heap_alloc_zero(nBands * sizeof(*ret.bands));
 
     return ret;
 }
@@ -232,7 +249,7 @@ static rbsize_result_t *rbsize_results;
 
 static void rbsize_results_init(void)
 {
-    rbsize_results = HeapAlloc(GetProcessHeap(), 0, rbsize_results_num*sizeof(rbsize_result_t));
+    rbsize_results = heap_alloc(rbsize_results_num * sizeof(*rbsize_results));
 
     rbsize_results[0] = rbsize_init(0, 0, 672, 0, 0, 0, 0);
 
@@ -419,10 +436,10 @@ static void rbsize_results_free(void)
     int i;
 
     for (i = 0; i < rbsize_results_num; i++) {
-        HeapFree(GetProcessHeap(), 0, rbsize_results[i].cyRowHeights);
-        HeapFree(GetProcessHeap(), 0, rbsize_results[i].bands);
+        heap_free(rbsize_results[i].cyRowHeights);
+        heap_free(rbsize_results[i].bands);
     }
-    HeapFree(GetProcessHeap(), 0, rbsize_results);
+    heap_free(rbsize_results);
     rbsize_results = NULL;
 }
 
@@ -566,7 +583,7 @@ static void test_layout(void)
     check_sizes();
 
     /* an image will increase the band height */
-    himl = ImageList_LoadImageA(GetModuleHandleA("comctl32"), MAKEINTRESOURCEA(121), 24, 2,
+    himl = pImageList_LoadImageA(GetModuleHandleA("comctl32"), MAKEINTRESOURCEA(121), 24, 2,
             CLR_NONE, IMAGE_BITMAP, LR_DEFAULTCOLOR);
     ri.cbSize = sizeof(ri);
     ri.fMask = RBIM_IMAGELIST;
@@ -647,7 +664,7 @@ static void test_layout(void)
 
     rbsize_results_free();
     DestroyWindow(hRebar);
-    ImageList_Destroy(himl);
+    pImageList_Destroy(himl);
 }
 
 #if 0       /* use this to generate more tests */
@@ -1114,26 +1131,22 @@ static void test_notification(void)
     DestroyWindow(rebar);
 }
 
+static void init_functions(void)
+{
+    HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
+
+#define X(f) p##f = (void*)GetProcAddress(hComCtl32, #f);
+    X(ImageList_Destroy);
+    X(ImageList_LoadImageA);
+#undef X
+}
+
 START_TEST(rebar)
 {
-    HMODULE hComctl32;
-    BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
-    INITCOMMONCONTROLSEX iccex;
     MSG msg;
 
     init_system_font_height();
-
-    /* LoadLibrary is needed. This file has no reference to functions in comctl32 */
-    hComctl32 = LoadLibraryA("comctl32.dll");
-    pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
-    if (!pInitCommonControlsEx)
-    {
-        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
-        return;
-    }
-    iccex.dwSize = sizeof(iccex);
-    iccex.dwICC = ICC_COOL_CLASSES;
-    pInitCommonControlsEx(&iccex);
+    init_functions();
 
     hMainWnd = create_parent_window();
 
@@ -1158,6 +1171,4 @@ out:
         DispatchMessageA(&msg);
     }
     DestroyWindow(hMainWnd);
-
-    FreeLibrary(hComctl32);
 }
