@@ -452,7 +452,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 
    if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
    {
-      DeviceNode->Flags |= DNF_ADDED + DNF_STARTED;
+      DeviceNode->Flags |= (DNF_ADDED | DNF_STARTED);
       return STATUS_SUCCESS;
    }
 
