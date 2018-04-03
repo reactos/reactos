@@ -1,7 +1,7 @@
 environment:
   matrix:
-    - BuildType: "msvc"
     - BuildType: "msvc-x64"
+    - BuildType: "msvc"
     - BuildType: "clang-cl"
 
 version: reactos.appveyor.{build}
