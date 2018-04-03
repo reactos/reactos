@@ -3341,6 +3341,9 @@ typedef struct tagMINIMIZEDMETRICS {
 	int iArrange;
 } MINIMIZEDMETRICS, *PMINIMIZEDMETRICS,*LPMINIMIZEDMETRICS;
 
+#define WDA_NONE    0x0
+#define WDA_MONITOR 0x1
+
 typedef struct tagMOUSEKEYS{
 	UINT cbSize;
 	DWORD dwFlags;
