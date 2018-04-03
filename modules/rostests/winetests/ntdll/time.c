@@ -18,9 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS__
+#define NONAMELESSUNION
+#endif
 #include "ntdll_test.h"
-
-/* FIXME: Inspect */
+#ifndef __REACTOS__
+#include "ddk/wdm.h"
+#else /* FIXME: Inspect */
 
 typedef struct _KSYSTEM_TIME {
     ULONG LowPart;
@@ -91,6 +95,8 @@ typedef struct _KUSER_SHARED_DATA {
     ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
 } KSHARED_USER_DATA, *PKSHARED_USER_DATA;
 
+#endif /* !__REACTOS__ */
+
 #define TICKSPERSEC        10000000
 #define TICKSPERMSEC       10000
 #define SECSPERDAY         86400
@@ -98,6 +104,8 @@ typedef struct _KUSER_SHARED_DATA {
 static VOID (WINAPI *pRtlTimeToTimeFields)( const LARGE_INTEGER *liTime, PTIME_FIELDS TimeFields) ;
 static VOID (WINAPI *pRtlTimeFieldsToTime)(  PTIME_FIELDS TimeFields,  PLARGE_INTEGER Time) ;
 static NTSTATUS (WINAPI *pNtQueryPerformanceCounter)( LARGE_INTEGER *counter, LARGE_INTEGER *frequency );
+static NTSTATUS (WINAPI *pRtlQueryTimeZoneInformation)( RTL_TIME_ZONE_INFORMATION *);
+static NTSTATUS (WINAPI *pRtlQueryDynamicTimeZoneInformation)( RTL_DYNAMIC_TIME_ZONE_INFORMATION *);
 static ULONG (WINAPI *pNtGetTickCount)(void);
 
 static const int MonthLengths[2][12] =
@@ -187,6 +195,42 @@ static void test_NtQueryPerformanceCounter(void)
     ok(status == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08x\n", status);
 }
 
+static void test_RtlQueryTimeZoneInformation(void)
+{
+    RTL_DYNAMIC_TIME_ZONE_INFORMATION tzinfo;
+    NTSTATUS status;
+
+    /* test RtlQueryTimeZoneInformation returns an indirect string,
+       e.g. @tzres.dll,-32 (Vista or later) */
+    if (!pRtlQueryTimeZoneInformation || !pRtlQueryDynamicTimeZoneInformation)
+    {
+        win_skip("Time zone name tests requires Vista or later\n");
+        return;
+    }
+
+    memset(&tzinfo, 0, sizeof(tzinfo));
+    status = pRtlQueryDynamicTimeZoneInformation(&tzinfo);
+    ok(status == STATUS_SUCCESS,
+       "RtlQueryDynamicTimeZoneInformation failed, got %08x\n", status);
+    todo_wine ok(tzinfo.StandardName[0] == '@',
+       "standard time zone name isn't an indirect string, got %s\n",
+       wine_dbgstr_w(tzinfo.StandardName));
+    todo_wine ok(tzinfo.DaylightName[0] == '@',
+       "daylight time zone name isn't an indirect string, got %s\n",
+       wine_dbgstr_w(tzinfo.DaylightName));
+
+    memset(&tzinfo, 0, sizeof(tzinfo));
+    status = pRtlQueryTimeZoneInformation((RTL_TIME_ZONE_INFORMATION *)&tzinfo);
+    ok(status == STATUS_SUCCESS,
+       "RtlQueryTimeZoneInformation failed, got %08x\n", status);
+    todo_wine ok(tzinfo.StandardName[0] == '@',
+       "standard time zone name isn't an indirect string, got %s\n",
+       wine_dbgstr_w(tzinfo.StandardName));
+    todo_wine ok(tzinfo.DaylightName[0] == '@',
+       "daylight time zone name isn't an indirect string, got %s\n",
+       wine_dbgstr_w(tzinfo.DaylightName));
+}
+
 static void test_NtGetTickCount(void)
 {
 #ifndef _WIN64
@@ -217,10 +261,16 @@ START_TEST(time)
     pRtlTimeFieldsToTime = (void *)GetProcAddress(mod,"RtlTimeFieldsToTime");
     pNtQueryPerformanceCounter = (void *)GetProcAddress(mod, "NtQueryPerformanceCounter");
     pNtGetTickCount = (void *)GetProcAddress(mod,"NtGetTickCount");
+    pRtlQueryTimeZoneInformation =
+        (void *)GetProcAddress(mod, "RtlQueryTimeZoneInformation");
+    pRtlQueryDynamicTimeZoneInformation =
+        (void *)GetProcAddress(mod, "RtlQueryDynamicTimeZoneInformation");
+
     if (pRtlTimeToTimeFields && pRtlTimeFieldsToTime)
         test_pRtlTimeToTimeFields();
     else
         win_skip("Required time conversion functions are not available\n");
     test_NtQueryPerformanceCounter();
     test_NtGetTickCount();
+    test_RtlQueryTimeZoneInformation();
 }

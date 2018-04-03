@@ -24,7 +24,18 @@
  * windows.
  */
 
-#include "ntdll_test.h"
+#include <stdio.h>
+#include <stdarg.h>
+
+#include "ntstatus.h"
+/* Define WIN32_NO_STATUS so MSVC does not give us duplicate macro
+ * definition errors when we get to winnt.h
+ */
+#define WIN32_NO_STATUS
+
+#include "wine/test.h"
+#include "winnls.h"
+#include "winternl.h"
 
 static NTSTATUS (WINAPI *pNtClose)( PHANDLE );
 static NTSTATUS (WINAPI *pNtOpenFile)    ( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, ULONG, ULONG );

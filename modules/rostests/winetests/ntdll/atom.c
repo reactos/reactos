@@ -21,7 +21,22 @@
  * windows.
  */
 
-#include "ntdll_test.h"
+#include <stdio.h>
+#include <stdarg.h>
+
+#include "ntstatus.h"
+/* Define WIN32_NO_STATUS so MSVC does not give us duplicate macro 
+ * definition errors when we get to winnt.h
+ */
+#define WIN32_NO_STATUS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "winuser.h"
+#include "wine/test.h"
+#include "winternl.h"
 
 #ifndef __WINE_WINTERNL_H
 typedef unsigned short RTL_ATOM, *PRTL_ATOM;
@@ -164,6 +179,7 @@ static void test_NtAtom(void)
 
         testThread = CreateThread(NULL, 0, RtlAtomTestThread, &AtomTable, 0, NULL);
         WaitForSingleObject(testThread, INFINITE);
+        CloseHandle(testThread);
 
         Len = 64;
         res = pRtlQueryAtomInAtomTable(AtomTable, Atom2, &RefCount, &PinCount, Name, &Len);

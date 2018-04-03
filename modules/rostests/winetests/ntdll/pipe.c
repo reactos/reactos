@@ -17,7 +17,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "ntdll_test.h"
+#include <stdio.h>
+#include <stdarg.h>
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winnls.h"
+#include "wine/test.h"
+#include "winternl.h"
+#include "winioctl.h"
 
 #ifndef __WINE_WINTERNL_H
 
@@ -61,6 +73,7 @@ static NTSTATUS (WINAPI *pNtCreateNamedPipeFile) (PHANDLE handle, ULONG access,
                                         ULONG inbound_quota, ULONG outbound_quota,
                                         PLARGE_INTEGER timeout);
 static NTSTATUS (WINAPI *pNtQueryInformationFile) (IN HANDLE FileHandle, OUT PIO_STATUS_BLOCK IoStatusBlock, OUT PVOID FileInformation, IN ULONG Length, IN FILE_INFORMATION_CLASS FileInformationClass);
+static NTSTATUS (WINAPI *pNtQueryVolumeInformationFile)(HANDLE handle, PIO_STATUS_BLOCK io, void *buffer, ULONG length, FS_INFORMATION_CLASS info_class);
 static NTSTATUS (WINAPI *pNtSetInformationFile) (HANDLE handle, PIO_STATUS_BLOCK io, PVOID ptr, ULONG len, FILE_INFORMATION_CLASS class);
 static NTSTATUS (WINAPI *pNtCancelIoFile) (HANDLE hFile, PIO_STATUS_BLOCK io_status);
 static NTSTATUS (WINAPI *pNtCancelIoFileEx) (HANDLE hFile, IO_STATUS_BLOCK *iosb, IO_STATUS_BLOCK *io_status);
@@ -82,12 +95,13 @@ static BOOL init_func_ptrs(void)
     loadfunc(NtFsControlFile)
     loadfunc(NtCreateNamedPipeFile)
     loadfunc(NtQueryInformationFile)
+    loadfunc(NtQueryVolumeInformationFile)
     loadfunc(NtSetInformationFile)
     loadfunc(NtCancelIoFile)
-    loadfunc(NtCancelIoFileEx)
     loadfunc(RtlInitUnicodeString)
 
     /* not fatal */
+    pNtCancelIoFileEx = (void *)GetProcAddress(module, "NtCancelIoFileEx");
     module = GetModuleHandleA("kernel32.dll");
     pOpenThread = (void *)GetProcAddress(module, "OpenThread");
     pQueueUserAPC = (void *)GetProcAddress(module, "QueueUserAPC");
@@ -242,6 +256,9 @@ static void test_create(void)
                    res, access[k], sharing[j]);
                 ok(info.NamedPipeConfiguration == pipe_config[j], "wrong duplex status for pipe: %d, expected %d\n",
                    info.NamedPipeConfiguration, pipe_config[j]);
+
+                res = listen_pipe(hclient, hEvent, &iosb, FALSE);
+                ok(res == STATUS_ILLEGAL_FUNCTION, "expected STATUS_ILLEGAL_FUNCTION, got %x\n", res);
                 CloseHandle(hclient);
             }
 
@@ -569,21 +586,27 @@ static void test_cancelio(void)
 
     CloseHandle(hPipe);
 
-    res = create_pipe(&hPipe, FILE_SHARE_READ | FILE_SHARE_WRITE, 0 /* OVERLAPPED */);
-    ok(!res, "NtCreateNamedPipeFile returned %x\n", res);
+    if (pNtCancelIoFileEx)
+    {
+        res = create_pipe(&hPipe, FILE_SHARE_READ | FILE_SHARE_WRITE, 0 /* OVERLAPPED */);
+        ok(!res, "NtCreateNamedPipeFile returned %x\n", res);
 
-    memset(&iosb, 0x55, sizeof(iosb));
-    res = listen_pipe(hPipe, hEvent, &iosb, FALSE);
-    ok(res == STATUS_PENDING, "NtFsControlFile returned %x\n", res);
+        memset(&iosb, 0x55, sizeof(iosb));
+        res = listen_pipe(hPipe, hEvent, &iosb, FALSE);
+        ok(res == STATUS_PENDING, "NtFsControlFile returned %x\n", res);
 
-    res = pNtCancelIoFileEx(hPipe, &iosb, &cancel_sb);
-    ok(!res, "NtCancelIoFileEx returned %x\n", res);
+        res = pNtCancelIoFileEx(hPipe, &iosb, &cancel_sb);
+        ok(!res, "NtCancelIoFileEx returned %x\n", res);
 
-    ok(U(iosb).Status == STATUS_CANCELLED, "Wrong iostatus %x\n", U(iosb).Status);
-    ok(WaitForSingleObject(hEvent, 0) == 0, "hEvent not signaled\n");
+        ok(U(iosb).Status == STATUS_CANCELLED, "Wrong iostatus %x\n", U(iosb).Status);
+        ok(WaitForSingleObject(hEvent, 0) == 0, "hEvent not signaled\n");
+
+        CloseHandle(hPipe);
+    }
+    else
+        win_skip("NtCancelIoFileEx not available\n");
 
     CloseHandle(hEvent);
-    CloseHandle(hPipe);
 }
 
 static void _check_pipe_handle_state(int line, HANDLE handle, ULONG read, ULONG completion)
@@ -779,7 +802,7 @@ static void WINAPI apc( void *arg, IO_STATUS_BLOCK *iosb, ULONG reserved )
     ok( !reserved, "reserved is not 0: %x\n", reserved );
 }
 
-static void test_peek(HANDLE pipe, BOOL is_msgmode)
+static void test_peek(HANDLE pipe)
 {
     FILE_PIPE_PEEK_BUFFER buf;
     IO_STATUS_BLOCK iosb;
@@ -798,7 +821,6 @@ static void test_peek(HANDLE pipe, BOOL is_msgmode)
     ok(!status || status == STATUS_PENDING, "NtFsControlFile failed: %x\n", status);
     ok(buf.ReadDataAvailable == 1, "ReadDataAvailable = %u\n", buf.ReadDataAvailable);
     ok(!iosb.Status, "iosb.Status = %x\n", iosb.Status);
-    todo_wine_if(!is_msgmode)
     ok(is_signaled(event), "event is not signaled\n");
 
     CloseHandle(event);
@@ -865,7 +887,6 @@ static void read_pipe_test(ULONG pipe_flags, ULONG pipe_type)
     ret = WriteFile( write, buffer, 1, &written, NULL );
     ok(ret && written == 1, "WriteFile error %d\n", GetLastError());
     /* iosb updated here by async i/o */
-    Sleep(1);  /* FIXME: needed for wine to run the i/o apc  */
     ok( U(iosb).Status == 0, "wrong status %x\n", U(iosb).Status );
     ok( iosb.Information == 1, "wrong info %lu\n", iosb.Information );
     ok( !is_signaled( read ), "read handle is signaled\n" );
@@ -891,7 +912,6 @@ static void read_pipe_test(ULONG pipe_flags, ULONG pipe_type)
     ret = WriteFile( write, buffer, 1, &written, NULL );
     ok(ret && written == 1, "WriteFile error %d\n", GetLastError());
     /* iosb updated here by async i/o */
-    Sleep(1);  /* FIXME: needed for wine to run the i/o apc  */
     ok( U(iosb).Status == 0, "wrong status %x\n", U(iosb).Status );
     ok( iosb.Information == 1, "wrong info %lu\n", iosb.Information );
     ok( is_signaled( read ), "read handle is not signaled\n" );
@@ -910,7 +930,7 @@ static void read_pipe_test(ULONG pipe_flags, ULONG pipe_type)
     ret = WriteFile( write, buffer, 1, &written, NULL );
     ok(ret && written == 1, "WriteFile error %d\n", GetLastError());
 
-    test_peek(read, pipe_type & PIPE_TYPE_MESSAGE);
+    test_peek(read);
 
     status = NtReadFile( read, event, apc, &apc_count, &iosb, buffer, 1, NULL, NULL );
     ok( status == STATUS_SUCCESS, "wrong status %x\n", status );
@@ -1037,7 +1057,6 @@ static void read_pipe_test(ULONG pipe_flags, ULONG pipe_type)
     ok( !apc_count, "apc was called\n" );
     CloseHandle( write );
     Sleep(1);  /* FIXME: needed for wine to run the i/o apc  */
-    todo_wine_if(!(pipe_type & PIPE_TYPE_MESSAGE) && (pipe_flags & PIPE_ACCESS_OUTBOUND))
     ok( U(iosb).Status == STATUS_PIPE_BROKEN, "wrong status %x\n", U(iosb).Status );
     ok( iosb.Information == 0, "wrong info %lu\n", iosb.Information );
     ok( is_signaled( event ), "event is not signaled\n" );
@@ -1151,8 +1170,323 @@ static void read_pipe_test(ULONG pipe_flags, ULONG pipe_type)
         CloseHandle( read );
         CloseHandle( write );
     }
+    else
+        win_skip("NtCancelIoFileEx not available\n");
 
     CloseHandle(event);
+}
+
+static void test_volume_info(void)
+{
+    FILE_FS_DEVICE_INFORMATION *device_info;
+    IO_STATUS_BLOCK iosb;
+    HANDLE read, write;
+    char buffer[128];
+    NTSTATUS status;
+
+    if (!create_pipe_pair( &read, &write, FILE_FLAG_OVERLAPPED | PIPE_ACCESS_INBOUND,
+                           PIPE_TYPE_MESSAGE, 4096 )) return;
+
+    memset( buffer, 0xaa, sizeof(buffer) );
+    status = pNtQueryVolumeInformationFile( read, &iosb, buffer, sizeof(buffer), FileFsDeviceInformation );
+    ok( status == STATUS_SUCCESS, "NtQueryVolumeInformationFile failed: %x\n", status );
+    ok( iosb.Information == sizeof(*device_info), "Information = %lu\n", iosb.Information );
+    device_info = (FILE_FS_DEVICE_INFORMATION*)buffer;
+    ok( device_info->DeviceType == FILE_DEVICE_NAMED_PIPE, "DeviceType = %u\n", device_info->DeviceType );
+    ok( !(device_info->Characteristics & ~FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL),
+        "Characteristics = %x\n", device_info->Characteristics );
+
+    memset( buffer, 0xaa, sizeof(buffer) );
+    status = pNtQueryVolumeInformationFile( write, &iosb, buffer, sizeof(buffer), FileFsDeviceInformation );
+    ok( status == STATUS_SUCCESS, "NtQueryVolumeInformationFile failed: %x\n", status );
+    ok( iosb.Information == sizeof(*device_info), "Information = %lu\n", iosb.Information );
+    device_info = (FILE_FS_DEVICE_INFORMATION*)buffer;
+    ok( device_info->DeviceType == FILE_DEVICE_NAMED_PIPE, "DeviceType = %u\n", device_info->DeviceType );
+    ok( !(device_info->Characteristics & ~FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL),
+        "Characteristics = %x\n", device_info->Characteristics );
+
+    CloseHandle( read );
+    CloseHandle( write );
+}
+
+#define test_file_name_fail(a,b) _test_file_name_fail(__LINE__,a,b)
+static void _test_file_name_fail(unsigned line, HANDLE pipe, NTSTATUS expected_status)
+{
+    char buffer[512];
+    IO_STATUS_BLOCK iosb;
+    NTSTATUS status;
+
+    status = NtQueryInformationFile( pipe, &iosb, buffer, sizeof(buffer), FileNameInformation );
+    ok_(__FILE__,line)( status == expected_status, "NtQueryInformationFile failed: %x, expected %x\n",
+                        status, expected_status );
+}
+
+#define test_file_name(a) _test_file_name(__LINE__,a)
+static void _test_file_name(unsigned line, HANDLE pipe)
+{
+    char buffer[512];
+    FILE_NAME_INFORMATION *name_info = (FILE_NAME_INFORMATION*)buffer;
+    IO_STATUS_BLOCK iosb;
+    NTSTATUS status;
+
+    static const WCHAR nameW[] =
+        {'\\','n','t','d','l','l','_','t','e','s','t','s','_','p','i','p','e','.','c'};
+
+    memset( buffer, 0xaa, sizeof(buffer) );
+    memset( &iosb, 0xaa, sizeof(iosb) );
+    status = NtQueryInformationFile( pipe, &iosb, buffer, sizeof(buffer), FileNameInformation );
+    ok_(__FILE__,line)( status == STATUS_SUCCESS, "NtQueryInformationFile failed: %x\n", status );
+    ok_(__FILE__,line)( iosb.Status == STATUS_SUCCESS, "Status = %x\n", iosb.Status );
+    ok_(__FILE__,line)( iosb.Information == sizeof(name_info->FileNameLength) + sizeof(nameW),
+        "Information = %lu\n", iosb.Information );
+    ok( name_info->FileNameLength == sizeof(nameW), "FileNameLength = %u\n", name_info->FileNameLength );
+    ok( !memcmp(name_info->FileName, nameW, sizeof(nameW)), "FileName = %s\n", wine_dbgstr_w(name_info->FileName) );
+
+    /* too small buffer */
+    memset( buffer, 0xaa, sizeof(buffer) );
+    memset( &iosb, 0xaa, sizeof(iosb) );
+    status = NtQueryInformationFile( pipe, &iosb, buffer, 20, FileNameInformation );
+    ok( status == STATUS_BUFFER_OVERFLOW, "NtQueryInformationFile failed: %x\n", status );
+    ok( iosb.Status == STATUS_BUFFER_OVERFLOW, "Status = %x\n", iosb.Status );
+    ok( iosb.Information == 20, "Information = %lu\n", iosb.Information );
+    ok( name_info->FileNameLength == sizeof(nameW), "FileNameLength = %u\n", name_info->FileNameLength );
+    ok( !memcmp(name_info->FileName, nameW, 16), "FileName = %s\n", wine_dbgstr_w(name_info->FileName) );
+
+    /* too small buffer */
+    memset( buffer, 0xaa, sizeof(buffer) );
+    memset( &iosb, 0xaa, sizeof(iosb) );
+    status = NtQueryInformationFile( pipe, &iosb, buffer, 4, FileNameInformation );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryInformationFile failed: %x\n", status );
+}
+
+static void test_file_info(void)
+{
+    HANDLE server, client;
+
+    if (!create_pipe_pair( &server, &client, FILE_FLAG_OVERLAPPED | PIPE_ACCESS_INBOUND,
+                           PIPE_TYPE_MESSAGE, 4096 )) return;
+
+    test_file_name( client );
+    test_file_name( server );
+
+    DisconnectNamedPipe( server );
+    test_file_name_fail( client, STATUS_PIPE_DISCONNECTED );
+
+    CloseHandle( server );
+    CloseHandle( client );
+}
+
+static PSECURITY_DESCRIPTOR get_security_descriptor(HANDLE handle, BOOL todo)
+{
+    SECURITY_DESCRIPTOR *sec_desc;
+    ULONG length = 0;
+    NTSTATUS status;
+
+    status = NtQuerySecurityObject(handle, GROUP_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION,
+                                   NULL, 0, &length);
+    todo_wine_if(todo && status == STATUS_PIPE_DISCONNECTED)
+    ok(status == STATUS_BUFFER_TOO_SMALL,
+       "Failed to query object security descriptor length: %08x\n", status);
+    if(status != STATUS_BUFFER_TOO_SMALL) return NULL;
+    ok(length != 0, "length = 0\n");
+
+    sec_desc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, length);
+    status = NtQuerySecurityObject(handle, GROUP_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION,
+                                   sec_desc, length, &length);
+    ok(status == STATUS_SUCCESS, "Failed to query object security descriptor: %08x\n", status);
+
+    return sec_desc;
+}
+
+static TOKEN_OWNER *get_current_owner(void)
+{
+    TOKEN_OWNER *owner;
+    ULONG length = 0;
+    HANDLE token;
+    BOOL ret;
+
+    ret = OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &token);
+    ok(ret, "Failed to get process token: %u\n", GetLastError());
+
+    ret = GetTokenInformation(token, TokenOwner, NULL, 0, &length);
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "GetTokenInformation failed: %u\n", GetLastError());
+    ok(length != 0, "Failed to get token owner information length: %u\n", GetLastError());
+
+    owner = HeapAlloc(GetProcessHeap(), 0, length);
+    ret = GetTokenInformation(token, TokenOwner, owner, length, &length);
+    ok(ret, "Failed to get token owner information: %u)\n", GetLastError());
+
+    CloseHandle(token);
+    return owner;
+}
+
+static TOKEN_PRIMARY_GROUP *get_current_group(void)
+{
+    TOKEN_PRIMARY_GROUP *group;
+    ULONG length = 0;
+    HANDLE token;
+    BOOL ret;
+
+    ret = OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &token);
+    ok(ret, "Failed to get process token: %u\n", GetLastError());
+
+    ret = GetTokenInformation(token, TokenPrimaryGroup, NULL, 0, &length);
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "GetTokenInformation failed: %u\n", GetLastError());
+    ok(length != 0, "Failed to get primary group token information length: %u\n", GetLastError());
+
+    group = HeapAlloc(GetProcessHeap(), 0, length);
+    ret = GetTokenInformation(token, TokenPrimaryGroup, group, length, &length);
+    ok(ret, "Failed to get primary group token information: %u\n", GetLastError());
+
+    CloseHandle(token);
+    return group;
+}
+
+static SID *well_known_sid(WELL_KNOWN_SID_TYPE sid_type)
+{
+    DWORD size = SECURITY_MAX_SID_SIZE;
+    SID *sid;
+    BOOL ret;
+
+    sid = HeapAlloc(GetProcessHeap(), 0, size);
+    ret = CreateWellKnownSid(sid_type, NULL, sid, &size);
+    ok(ret, "CreateWellKnownSid failed: %u\n", GetLastError());
+    return sid;
+}
+
+#define test_group(a,b,c) _test_group(__LINE__,a,b,c)
+static void _test_group(unsigned line, HANDLE handle, SID *expected_sid, BOOL todo)
+{
+    SECURITY_DESCRIPTOR *sec_desc;
+    BOOLEAN defaulted;
+    PSID group_sid;
+    NTSTATUS status;
+
+    sec_desc = get_security_descriptor(handle, todo);
+    if (!sec_desc) return;
+
+    status = RtlGetGroupSecurityDescriptor(sec_desc, &group_sid, &defaulted);
+    ok_(__FILE__,line)(status == STATUS_SUCCESS,
+                       "Failed to query group from security descriptor: %08x\n", status);
+    todo_wine_if(todo)
+    ok_(__FILE__,line)(EqualSid(group_sid, expected_sid), "SIDs are not equal\n");
+
+    HeapFree(GetProcessHeap(), 0, sec_desc);
+}
+
+static void test_security_info(void)
+{
+    char sec_desc[SECURITY_DESCRIPTOR_MIN_LENGTH];
+    TOKEN_PRIMARY_GROUP *process_group;
+    SECURITY_ATTRIBUTES sec_attr;
+    TOKEN_OWNER *process_owner;
+    HANDLE server, client, server2;
+    SID *world_sid, *local_sid;
+    ULONG length;
+    NTSTATUS status;
+    BOOL ret;
+
+    trace("security tests...\n");
+
+    process_owner = get_current_owner();
+    process_group = get_current_group();
+    world_sid = well_known_sid(WinWorldSid);
+    local_sid = well_known_sid(WinLocalSid);
+
+    ret = InitializeSecurityDescriptor(sec_desc, SECURITY_DESCRIPTOR_REVISION);
+    ok(ret, "InitializeSecurityDescriptor failed\n");
+
+    ret = SetSecurityDescriptorOwner(sec_desc, process_owner->Owner, FALSE);
+    ok(ret, "SetSecurityDescriptorOwner failed\n");
+
+    ret = SetSecurityDescriptorGroup(sec_desc, process_group->PrimaryGroup, FALSE);
+    ok(ret, "SetSecurityDescriptorGroup failed\n");
+
+    server = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX | WRITE_OWNER, PIPE_TYPE_BYTE, 10,
+                              0x20000, 0x20000, 0, NULL);
+    ok(server != INVALID_HANDLE_VALUE, "CreateNamedPipe failed: %u\n", GetLastError());
+
+    client = CreateFileA(PIPENAME, GENERIC_ALL, 0, NULL, OPEN_EXISTING, 0, NULL);
+    ok(client != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
+
+    test_group(server, process_group->PrimaryGroup, TRUE);
+    test_group(client, process_group->PrimaryGroup, TRUE);
+
+    /* set server group, client changes as well */
+    ret = SetSecurityDescriptorGroup(sec_desc, world_sid, FALSE);
+    ok(ret, "SetSecurityDescriptorGroup failed\n");
+    status = NtSetSecurityObject(server, GROUP_SECURITY_INFORMATION, sec_desc);
+    ok(status == STATUS_SUCCESS, "NtSetSecurityObject failed: %08x\n", status);
+
+    test_group(server, world_sid, FALSE);
+    test_group(client, world_sid, FALSE);
+
+    /* new instance of pipe server has the same security descriptor */
+    server2 = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE, 10,
+                               0x20000, 0x20000, 0, NULL);
+    ok(server2 != INVALID_HANDLE_VALUE, "CreateNamedPipe failed: %u\n", GetLastError());
+    test_group(server2, world_sid, FALSE);
+
+    /* set client group, server changes as well */
+    ret = SetSecurityDescriptorGroup(sec_desc, local_sid, FALSE);
+    ok(ret, "SetSecurityDescriptorGroup failed\n");
+    status = NtSetSecurityObject(server, GROUP_SECURITY_INFORMATION, sec_desc);
+    ok(status == STATUS_SUCCESS, "NtSetSecurityObject failed: %08x\n", status);
+
+    test_group(server, local_sid, FALSE);
+    test_group(client, local_sid, FALSE);
+    test_group(server2, local_sid, FALSE);
+
+    CloseHandle(server);
+    /* SD is preserved after closing server object */
+    test_group(client, local_sid, TRUE);
+    CloseHandle(client);
+
+    server = server2;
+    client = CreateFileA(PIPENAME, GENERIC_ALL, 0, NULL, OPEN_EXISTING, 0, NULL);
+    ok(client != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
+
+    test_group(client, local_sid, FALSE);
+
+    ret = DisconnectNamedPipe(server);
+    ok(ret, "DisconnectNamedPipe failed: %u\n", GetLastError());
+
+    /* disconnected server may be queried for security info, but client does not */
+    test_group(server, local_sid, FALSE);
+    status = NtQuerySecurityObject(client, GROUP_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION,
+                                   NULL, 0, &length);
+    ok(status == STATUS_PIPE_DISCONNECTED, "NtQuerySecurityObject returned %08x\n", status);
+    status = NtSetSecurityObject(client, GROUP_SECURITY_INFORMATION, sec_desc);
+    ok(status == STATUS_PIPE_DISCONNECTED, "NtQuerySecurityObject returned %08x\n", status);
+
+    /* attempting to create another pipe instance with specified sd fails */
+    sec_attr.nLength = sizeof(sec_attr);
+    sec_attr.lpSecurityDescriptor = sec_desc;
+    sec_attr.bInheritHandle = FALSE;
+    ret = SetSecurityDescriptorGroup(sec_desc, local_sid, FALSE);
+    ok(ret, "SetSecurityDescriptorGroup failed\n");
+    server2 = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX | WRITE_OWNER, PIPE_TYPE_BYTE, 10,
+                               0x20000, 0x20000, 0, &sec_attr);
+    todo_wine
+    ok(server2 == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED,
+       "CreateNamedPipe failed: %u\n", GetLastError());
+    if (server2 != INVALID_HANDLE_VALUE) CloseHandle(server2);
+
+    CloseHandle(server);
+    CloseHandle(client);
+
+    server = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX | WRITE_OWNER, PIPE_TYPE_BYTE, 10,
+                              0x20000, 0x20000, 0, &sec_attr);
+    ok(server != INVALID_HANDLE_VALUE, "CreateNamedPipe failed: %u\n", GetLastError());
+    test_group(server, local_sid, FALSE);
+    CloseHandle(server);
+
+    HeapFree(GetProcessHeap(), 0, process_owner);
+    HeapFree(GetProcessHeap(), 0, process_group);
+    HeapFree(GetProcessHeap(), 0, world_sid);
+    HeapFree(GetProcessHeap(), 0, local_sid);
 }
 
 START_TEST(pipe)
@@ -1199,4 +1533,8 @@ START_TEST(pipe)
     read_pipe_test(PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE);
     trace("starting message read in message mode server -> client\n");
     read_pipe_test(PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE);
+
+    test_volume_info();
+    test_file_info();
+    test_security_info();
 }

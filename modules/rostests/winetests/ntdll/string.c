@@ -21,7 +21,10 @@
  * windows.
  */
 
+#include <stdlib.h>
+
 #include "ntdll_test.h"
+
 
 /* Function ptrs for ntdll calls */
 static HMODULE hntdll = 0;
@@ -56,7 +59,7 @@ static LPWSTR   (WINAPIV *p_wcsrchr)(LPCWSTR, WCHAR);
 
 static void     (__cdecl *p_qsort)(void *,size_t,size_t, int(__cdecl *compar)(const void *, const void *) );
 static void*    (__cdecl *p_bsearch)(void *,void*,size_t,size_t, int(__cdecl *compar)(const void *, const void *) );
-static int      (__cdecl *p__snprintf)(char *, size_t, const char *, ...);
+static int      (WINAPIV *p__snprintf)(char *, size_t, const char *, ...);
 
 
 static void InitFunctionPtrs(void)

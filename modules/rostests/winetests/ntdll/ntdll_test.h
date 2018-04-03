@@ -18,20 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _NTDLL_TEST_H_
-#define _NTDLL_TEST_H_
+#include <stdarg.h>
 
-#include <stdio.h>
-#include <ntstatus.h>
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x500 /* For NTSTATUS */
+#endif
 
+#include "ntstatus.h"
 #define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "winreg.h"
+#include "wine/winternl.h"
 
-#include <wine/test.h>
-#include <winuser.h>
-#include <winnls.h>
-#include <winioctl.h>
-#include <wine/winternl.h>
-
-#endif /* !_NTDLL_TEST_H_ */
+#include "wine/test.h"

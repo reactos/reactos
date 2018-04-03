@@ -28,7 +28,7 @@ static ULONG (WINAPI *pRtlIsDosDeviceName_U)( PCWSTR dos_name );
 static NTSTATUS (WINAPI *pRtlOemStringToUnicodeString)(UNICODE_STRING *, const STRING *, BOOLEAN );
 static BOOLEAN (WINAPI *pRtlIsNameLegalDOS8Dot3)(const UNICODE_STRING*,POEM_STRING,PBOOLEAN);
 static DWORD (WINAPI *pRtlGetFullPathName_U)(const WCHAR*,ULONG,WCHAR*,WCHAR**);
-
+static NTSTATUS (WINAPI *pRtlDosPathNameToNtPathName_U_WithStatus)(const WCHAR*, UNICODE_STRING*, WCHAR**, CURDIR*);
 
 static void test_RtlDetermineDosPathNameType_U(void)
 {
@@ -345,6 +345,35 @@ static void test_RtlGetFullPathName_U(void)
     }
 }
 
+static void test_RtlDosPathNameToNtPathName_U_WithStatus(void)
+{
+    static const WCHAR emptyW[] = { 0 };
+    WCHAR path[MAX_PATH];
+    UNICODE_STRING nameW;
+    NTSTATUS status;
+
+    if (!pRtlDosPathNameToNtPathName_U_WithStatus)
+    {
+        win_skip("RtlDosPathNameToNtPathName_U_WithStatus() is not supported.\n");
+        return;
+    }
+
+    GetCurrentDirectoryW( MAX_PATH, path );
+
+    status = pRtlDosPathNameToNtPathName_U_WithStatus( path, &nameW, NULL, NULL );
+    ok(!status, "Failed convert to nt path, %#x.\n", status);
+
+    status = pRtlDosPathNameToNtPathName_U_WithStatus( NULL, &nameW, NULL, NULL );
+    ok(status == STATUS_OBJECT_NAME_INVALID || broken(status == STATUS_OBJECT_PATH_NOT_FOUND) /* W2k3 */,
+        "Unexpected status %#x.\n", status);
+
+    status = pRtlDosPathNameToNtPathName_U_WithStatus( emptyW, &nameW, NULL, NULL );
+    ok(status == STATUS_OBJECT_NAME_INVALID || broken(status == STATUS_OBJECT_PATH_NOT_FOUND) /* W2k3 */,
+        "Unexpected status %#x.\n", status);
+
+    RtlFreeUnicodeString( &nameW );
+}
+
 START_TEST(path)
 {
     HMODULE mod = GetModuleHandleA("ntdll.dll");
@@ -361,9 +390,11 @@ START_TEST(path)
     pRtlOemStringToUnicodeString = (void *)GetProcAddress(mod,"RtlOemStringToUnicodeString");
     pRtlIsNameLegalDOS8Dot3 = (void *)GetProcAddress(mod,"RtlIsNameLegalDOS8Dot3");
     pRtlGetFullPathName_U = (void *)GetProcAddress(mod,"RtlGetFullPathName_U");
+    pRtlDosPathNameToNtPathName_U_WithStatus = (void *)GetProcAddress(mod, "RtlDosPathNameToNtPathName_U_WithStatus");
 
     test_RtlDetermineDosPathNameType_U();
     test_RtlIsDosDeviceName_U();
     test_RtlIsNameLegalDOS8Dot3();
     test_RtlGetFullPathName_U();
+    test_RtlDosPathNameToNtPathName_U_WithStatus();
 }

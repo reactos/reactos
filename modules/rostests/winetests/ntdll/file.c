@@ -24,9 +24,23 @@
  * windows.
  */
 
-#include "ntdll_test.h"
+#include <stdio.h>
+#include <stdarg.h>
 
-/* FIXME */
+#include "ntstatus.h"
+/* Define WIN32_NO_STATUS so MSVC does not give us duplicate macro
+ * definition errors when we get to winnt.h
+ */
+#define WIN32_NO_STATUS
+
+#include "wine/test.h"
+#include "winternl.h"
+#include "winuser.h"
+#include "winioctl.h"
+#ifndef __REACTOS__
+#include "ntifs.h"
+#else
+/* FIXME: Inspect */
 typedef struct _REPARSE_DATA_BUFFER {
   ULONG ReparseTag;
   USHORT ReparseDataLength;
@@ -52,6 +66,7 @@ typedef struct _REPARSE_DATA_BUFFER {
     } GenericReparseBuffer;
   } DUMMYUNIONNAME;
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+#endif
 
 #ifndef IO_COMPLETION_ALL_ACCESS
 #define IO_COMPLETION_ALL_ACCESS 0x001F0003
@@ -1970,7 +1985,6 @@ static void test_file_rename_information(void)
 
 static void test_file_link_information(void)
 {
-    static const WCHAR pipeW[] = {'\\','\\','.','\\','p','i','p','e','\\','w','i','n','e','_','t','e','s','t',0};
     static const WCHAR foo_txtW[] = {'\\','f','o','o','.','t','x','t',0};
     static const WCHAR fooW[] = {'f','o','o',0};
     WCHAR tmp_path[MAX_PATH], oldpath[MAX_PATH + 16], newpath[MAX_PATH + 16], *filename, *p;
@@ -2593,30 +2607,6 @@ static void test_file_link_information(void)
 
     CloseHandle( handle );
     CloseHandle( handle2 );
-
-    handle = CreateEventA( NULL, FALSE, FALSE, "wine_test_event" );
-    ok( !!handle, "Failed to create event: %u\n", GetLastError());
-
-    fni = HeapAlloc( GetProcessHeap(), 0, sizeof(FILE_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR) );
-    res = pNtQueryInformationFile( handle, &io, fni, sizeof(FILE_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR), FileNameInformation );
-    ok( res == STATUS_OBJECT_TYPE_MISMATCH, "res expected STATUS_OBJECT_TYPE_MISMATCH, got %x\n", res );
-    HeapFree( GetProcessHeap(), 0, fni );
-
-    CloseHandle( handle );
-
-    handle = CreateNamedPipeW( pipeW, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE|PIPE_READMODE_BYTE, 10, 512, 512, 0, NULL);
-    ok( handle != INVALID_HANDLE_VALUE, "Failed to create named pipe: %u\n", GetLastError());
-
-    fni = HeapAlloc( GetProcessHeap(), 0, sizeof(FILE_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR) );
-    res = pNtQueryInformationFile( handle, &io, fni, sizeof(FILE_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR), FileNameInformation );
-    ok( res == STATUS_SUCCESS, "res expected STATUS_SUCCESS, got %x\n", res );
-    fni->FileName[ fni->FileNameLength / sizeof(WCHAR) ] = 0;
-    ok( !lstrcmpiW(fni->FileName, pipeW + 8), "FileName expected %s, got %s\n",
-        wine_dbgstr_w(pipeW + 8), wine_dbgstr_w(fni->FileName) );
-    HeapFree( GetProcessHeap(), 0, fni );
-
-    CloseHandle( handle );
-
     HeapFree( GetProcessHeap(), 0, fli );
     delete_object( oldpath );
     delete_object( newpath );
@@ -4394,6 +4384,7 @@ static void test_read_write(void)
 static void test_ioctl(void)
 {
     HANDLE event = CreateEventA(NULL, TRUE, FALSE, NULL);
+    FILE_PIPE_PEEK_BUFFER peek_buf;
     IO_STATUS_BLOCK iosb;
     HANDLE file;
     NTSTATUS status;
@@ -4409,6 +4400,13 @@ static void test_ioctl(void)
 
     status = pNtFsControlFile(file, (HANDLE)0xdeadbeef, NULL, NULL, &iosb, 0xdeadbeef, 0, 0, 0, 0);
     ok(status == STATUS_INVALID_HANDLE, "NtFsControlFile returned %x\n", status);
+
+    memset(&iosb, 0x55, sizeof(iosb));
+    status = NtFsControlFile(file, NULL, NULL, NULL, &iosb, FSCTL_PIPE_PEEK, NULL, 0,
+                             &peek_buf, sizeof(peek_buf));
+    todo_wine
+    ok(status == STATUS_INVALID_DEVICE_REQUEST, "NtFsControlFile failed: %x\n", status);
+    ok(iosb.Status == 0x55555555, "iosb.Status = %x\n", iosb.Status);
 
     CloseHandle(event);
     CloseHandle(file);

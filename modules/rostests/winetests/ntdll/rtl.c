@@ -21,14 +21,17 @@
  * windows.
  */
 
-#include "ntdll_test.h"
+#include <stdlib.h>
 
-#include <inaddr.h>
-#include <in6addr.h>
-#include <objbase.h>
-#include <initguid.h>
+#include "ntdll_test.h"
+#include "inaddr.h"
+#include "in6addr.h"
+#include "initguid.h"
 #define COBJMACROS
-#include <shobjidl.h>
+#ifdef __REACTOS__
+#include <objbase.h>
+#endif
+#include "shobjidl.h"
 
 #ifndef __WINE_WINTERNL_H
 
@@ -112,6 +115,8 @@ static BOOL      (WINAPI *pRtlIsCriticalSectionLockedByThread)(CRITICAL_SECTION 
 static NTSTATUS  (WINAPI *pRtlInitializeCriticalSectionEx)(CRITICAL_SECTION *, ULONG, ULONG);
 static NTSTATUS  (WINAPI *pLdrEnumerateLoadedModules)(void *, void *, void *);
 static NTSTATUS  (WINAPI *pRtlQueryPackageIdentity)(HANDLE, WCHAR*, SIZE_T*, WCHAR*, SIZE_T*, BOOLEAN*);
+static NTSTATUS  (WINAPI *pRtlMakeSelfRelativeSD)(PSECURITY_DESCRIPTOR,PSECURITY_DESCRIPTOR,LPDWORD);
+static NTSTATUS  (WINAPI *pRtlAbsoluteToSelfRelativeSD)(PSECURITY_DESCRIPTOR,PSECURITY_DESCRIPTOR,PULONG);
 static NTSTATUS  (WINAPI *pLdrRegisterDllNotification)(ULONG, PLDR_DLL_NOTIFICATION_FUNCTION, void *, void **);
 static NTSTATUS  (WINAPI *pLdrUnregisterDllNotification)(void *);
 
@@ -180,6 +185,8 @@ static void InitFunctionPtrs(void)
         pRtlInitializeCriticalSectionEx = (void *)GetProcAddress(hntdll, "RtlInitializeCriticalSectionEx");
         pLdrEnumerateLoadedModules = (void *)GetProcAddress(hntdll, "LdrEnumerateLoadedModules");
         pRtlQueryPackageIdentity = (void *)GetProcAddress(hntdll, "RtlQueryPackageIdentity");
+        pRtlMakeSelfRelativeSD = (void *)GetProcAddress(hntdll, "RtlMakeSelfRelativeSD");
+        pRtlAbsoluteToSelfRelativeSD = (void *)GetProcAddress(hntdll, "RtlAbsoluteToSelfRelativeSD");
         pLdrRegisterDllNotification = (void *)GetProcAddress(hntdll, "LdrRegisterDllNotification");
         pLdrUnregisterDllNotification = (void *)GetProcAddress(hntdll, "LdrUnregisterDllNotification");
     }
@@ -3282,6 +3289,52 @@ static void test_LdrEnumerateLoadedModules(void)
     ok(status == STATUS_INVALID_PARAMETER, "expected STATUS_INVALID_PARAMETER, got 0x%08x\n", status);
 }
 
+static void test_RtlMakeSelfRelativeSD(void)
+{
+    char buf[sizeof(SECURITY_DESCRIPTOR_RELATIVE) + 4];
+    SECURITY_DESCRIPTOR_RELATIVE *sd_rel = (SECURITY_DESCRIPTOR_RELATIVE *)buf;
+    SECURITY_DESCRIPTOR sd;
+    NTSTATUS status;
+    DWORD len;
+
+    if (!pRtlMakeSelfRelativeSD || !pRtlAbsoluteToSelfRelativeSD)
+    {
+        win_skip( "RtlMakeSelfRelativeSD/RtlAbsoluteToSelfRelativeSD not available\n" );
+        return;
+    }
+
+    memset( &sd, 0, sizeof(sd) );
+    sd.Revision = SECURITY_DESCRIPTOR_REVISION;
+
+    len = 0;
+    status = pRtlMakeSelfRelativeSD( &sd, NULL, &len );
+    ok( status == STATUS_BUFFER_TOO_SMALL, "got %08x\n", status );
+    ok( len == sizeof(*sd_rel), "got %u\n", len );
+
+    len += 4;
+    status = pRtlMakeSelfRelativeSD( &sd, sd_rel, &len );
+    ok( status == STATUS_SUCCESS, "got %08x\n", status );
+    ok( len == sizeof(*sd_rel) + 4, "got %u\n", len );
+
+    len = 0;
+    status = pRtlAbsoluteToSelfRelativeSD( &sd, NULL, &len );
+    ok( status == STATUS_BUFFER_TOO_SMALL, "got %08x\n", status );
+    ok( len == sizeof(*sd_rel), "got %u\n", len );
+
+    len += 4;
+    status = pRtlAbsoluteToSelfRelativeSD( &sd, sd_rel, &len );
+    ok( status == STATUS_SUCCESS, "got %08x\n", status );
+    ok( len == sizeof(*sd_rel) + 4, "got %u\n", len );
+
+    sd.Control = SE_SELF_RELATIVE;
+    status = pRtlMakeSelfRelativeSD( &sd, sd_rel, &len );
+    ok( status == STATUS_SUCCESS, "got %08x\n", status );
+    ok( len == sizeof(*sd_rel) + 4, "got %u\n", len );
+
+    status = pRtlAbsoluteToSelfRelativeSD( &sd, sd_rel, &len );
+    ok( status == STATUS_BAD_DESCRIPTOR_FORMAT, "got %08x\n", status );
+}
+
 static void test_RtlQueryPackageIdentity(void)
 {
     const WCHAR programW[] = {'M','i','c','r','o','s','o','f','t','.','W','i','n','d','o','w','s','.',
@@ -3633,5 +3686,6 @@ START_TEST(rtl)
     test_RtlLeaveCriticalSection();
     test_LdrEnumerateLoadedModules();
     test_RtlQueryPackageIdentity();
+    test_RtlMakeSelfRelativeSD();
     test_LdrRegisterDllNotification();
 }
