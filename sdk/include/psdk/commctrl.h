@@ -4627,6 +4627,11 @@ typedef struct {
 
 #define BST_HOT 0x200
 
+#define BS_SPLITBUTTON    0x0000000C
+#define BS_DEFSPLITBUTTON 0x0000000D
+#define BS_COMMANDLINK    0x0000000E
+#define BS_DEFCOMMANDLINK 0x0000000F
+
 #endif /* !NOBUTTON */
 
 #ifndef NOSTATIC
