@@ -20,7 +20,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "wingdi.h"
+#include "winuser.h"
 
 #include "pshpack1.h"
 
@@ -1022,6 +1031,12 @@ static const unsigned char gif4pixel[42] = {
 0x02,0x00,0x00,0x02,0x03,0x14,0x16,0x05,0x00,0x3b
 };
 
+/* An invalid cursor with an invalid dwDIBOffset */
+static const unsigned char invalid_dwDIBOffset[] = {
+  0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00
+};
+
 static const DWORD biSize_tests[] = {
     0,
     sizeof(BITMAPCOREHEADER) - 1,
@@ -1061,6 +1076,8 @@ static void test_LoadImageBitmap(const char * test_desc, HBITMAP hbm)
     ok(ret == bm.bmHeight, "%s: %d lines were converted, not %d\n", test_desc, ret, bm.bmHeight);
 
     ok(color_match(pixel, 0x00ffffff), "%s: Pixel is 0x%08x\n", test_desc, pixel);
+
+    ReleaseDC(NULL, hdc);
 }
 
 static void test_LoadImageFile(const char * test_desc, const unsigned char * image_data,
@@ -1309,6 +1326,8 @@ static void test_LoadImage(void)
         test_LoadImageFile("BMP (broken biSize)", bmpimage, sizeof(bmpimage), "bmp", 0);
     }
     bitmap_header->biSize = sizeof(BITMAPINFOHEADER);
+
+    test_LoadImageFile("Cursor (invalid dwDIBOffset)", invalid_dwDIBOffset, sizeof(invalid_dwDIBOffset), "cur", 0);
 }
 
 #undef ARRAY_SIZE

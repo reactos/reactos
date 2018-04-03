@@ -18,9 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
+#include "wine/test.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
 
+#ifdef __REACTOS__
 #define WM_CLIPBOARDUPDATE 0x031D
+#endif
 
 static BOOL (WINAPI *pAddClipboardFormatListener)(HWND hwnd);
 static BOOL (WINAPI *pRemoveClipboardFormatListener)(HWND hwnd);
@@ -380,6 +388,9 @@ static void test_RegisterClipboardFormatA(void)
     len = GetClipboardFormatNameA(format_id, buf, 256);
     ok(len == lstrlenA("my_cool_clipboard_format"), "wrong format name length %d\n", len);
     ok(!lstrcmpA(buf, "my_cool_clipboard_format"), "wrong format name \"%s\"\n", buf);
+
+    len = GetClipboardFormatNameA(format_id, NULL, 0);
+    ok(len == 0, "wrong format name length %d\n", len);
 
     lstrcpyA(buf, "foo");
     SetLastError(0xdeadbeef);
@@ -888,6 +899,7 @@ static UINT wm_renderformat;
 static UINT nb_formats;
 static BOOL cross_thread;
 static BOOL do_render_format;
+static HANDLE update_event;
 
 static LRESULT CALLBACK clipboard_wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -946,6 +958,7 @@ static LRESULT CALLBACK clipboard_wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARA
         ok( msg_flags == ISMEX_NOSEND, "WM_CLIPBOARDUPDATE wrong flags %x\n", msg_flags );
         EnterCriticalSection(&clipboard_cs);
         wm_clipboardupdate++;
+        SetEvent(update_event);
         LeaveCriticalSection(&clipboard_cs);
         break;
     case WM_USER:
@@ -988,13 +1001,44 @@ static void get_clipboard_data_process(void)
     ok(r, "CloseClipboard failed: %d\n", GetLastError());
 }
 
+static UINT old_seq;
+
+static void check_messages_(int line, HWND win, UINT seq_diff, UINT draw, UINT update, UINT destroy, UINT render)
+{
+    MSG msg;
+    UINT count, fmt, seq;
+
+    seq = GetClipboardSequenceNumber();
+    ok_(__FILE__, line)(seq - old_seq == seq_diff, "sequence diff %d\n", seq - old_seq);
+    old_seq = seq;
+
+    if (!cross_thread)
+    {
+        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
+    }
+
+    if (update && !broken(!pAddClipboardFormatListener))
+        ok(WaitForSingleObject(update_event, 1000) == WAIT_OBJECT_0, "wait failed\n");
+
+    count = SendMessageA( win, WM_USER + 1, 0, 0 );
+    ok_(__FILE__, line)(count == draw, "WM_DRAWCLIPBOARD %sreceived\n", draw ? "not " : "");
+    count = SendMessageA( win, WM_USER + 2, 0, 0 );
+    ok_(__FILE__, line)(count == update || broken(!pAddClipboardFormatListener),
+                        "WM_CLIPBOARDUPDATE %sreceived\n", update ? "not " : "");
+    count = SendMessageA( win, WM_USER + 3, 0, 0 );
+    ok_(__FILE__, line)(count == destroy, "WM_DESTROYCLIPBOARD %sreceived\n", destroy ? "not " : "");
+    fmt = SendMessageA( win, WM_USER + 4, 0, 0 );
+    ok_(__FILE__, line)(fmt == render, "WM_RENDERFORMAT received %04x, expected %04x\n", fmt, render);
+}
+#define check_messages(a,b,c,d,e,f) check_messages_(__LINE__,a,b,c,d,e,f)
+
 static DWORD WINAPI clipboard_thread(void *param)
 {
     HWND ret, win = param;
     BOOL r;
     MSG msg;
     HANDLE handle;
-    UINT count, fmt, formats, old_seq = 0, seq;
+    UINT count, fmt, formats;
 
     cross_thread = (GetWindowThreadProcessId( win, NULL ) != GetCurrentThreadId());
     trace( "%s-threaded test\n", cross_thread ? "multi" : "single" );
@@ -1038,21 +1082,7 @@ static DWORD WINAPI clipboard_thread(void *param)
         ok( r, "RemoveClipboardFormatListener failed err %d\n", GetLastError());
     }
 
-    seq = GetClipboardSequenceNumber();
-    ok( seq == old_seq, "sequence changed\n" );
-    if (!cross_thread)
-    {
-        ok( wm_drawclipboard == 1, "WM_DRAWCLIPBOARD not received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER + 1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 0, 1, 0, 0, 0);
 
     SetLastError( 0xdeadbeef );
     r = OpenClipboard( (HWND)0xdead );
@@ -1062,125 +1092,32 @@ static DWORD WINAPI clipboard_thread(void *param)
     r = OpenClipboard(win);
     ok(r, "OpenClipboard failed: %d\n", GetLastError());
 
-    seq = GetClipboardSequenceNumber();
-    ok( seq == old_seq, "sequence changed\n" );
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 0, 0, 0, 0, 0);
 
     r = EmptyClipboard();
     ok(r, "EmptyClipboard failed: %d\n", GetLastError());
 
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    count = SendMessageA( win, WM_USER+3, 0, 0 );
-    ok( !count, "WM_DESTROYCLIPBOARD received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 1, 0, 0, 0, 0);
 
     r = EmptyClipboard();
     ok(r, "EmptyClipboard failed: %d\n", GetLastError());
     /* sequence changes again, even though it was already empty */
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    count = SendMessageA( win, WM_USER+3, 0, 0 );
-    ok( count, "WM_DESTROYCLIPBOARD not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 1, 0, 0, 1, 0);
     count = SendMessageA( win, WM_USER+5, 0, 0 );
     ok( !count, "wrong format count %u on WM_DESTROYCLIPBOARD\n", count );
 
     handle = SetClipboardData( CF_TEXT, create_textA() );
     ok(handle != 0, "SetClipboardData failed: %d\n", GetLastError());
 
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 1, 0, 0, 0, 0);
 
     SetClipboardData( CF_UNICODETEXT, 0 );
 
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 1, 0, 0, 0, 0);
 
     SetClipboardData( CF_UNICODETEXT, 0 );  /* same data again */
 
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 1, 0, 0, 0, 0);
 
     ok( IsClipboardFormatAvailable( CF_TEXT ), "CF_TEXT available\n" );
     ok( IsClipboardFormatAvailable( CF_UNICODETEXT ), "CF_UNICODETEXT available\n" );
@@ -1191,40 +1128,12 @@ static DWORD WINAPI clipboard_thread(void *param)
     ok(r, "CloseClipboard failed: %d\n", GetLastError());
     LeaveCriticalSection(&clipboard_cs);
 
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 2, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( wm_drawclipboard == 1, "WM_DRAWCLIPBOARD not received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( count == 1 || broken(!pAddClipboardFormatListener), "WM_CLIPBOARDUPDATE not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received %04x\n", fmt );
+    check_messages(win, 2, 1, 1, 0, 0);
 
     r = OpenClipboard(win);
     ok(r, "OpenClipboard failed: %d\n", GetLastError());
 
-    seq = GetClipboardSequenceNumber();
-    ok( seq == old_seq, "sequence changed\n" );
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 0, 0, 0, 0, 0);
 
     ok( IsClipboardFormatAvailable( CF_TEXT ), "CF_TEXT available\n" );
     ok( IsClipboardFormatAvailable( CF_UNICODETEXT ), "CF_UNICODETEXT available\n" );
@@ -1244,65 +1153,19 @@ static DWORD WINAPI clipboard_thread(void *param)
     do_render_format = FALSE;
 
     SetClipboardData( CF_WAVE, 0 );
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received %04x\n", fmt );
+    check_messages(win, 1, 0, 0, 0, 0);
 
     r = CloseClipboard();
     ok(r, "CloseClipboard failed: %d\n", GetLastError());
     /* no synthesized format, so CloseClipboard doesn't change the sequence */
-    seq = GetClipboardSequenceNumber();
-    ok( seq == old_seq, "sequence changed\n" );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( wm_drawclipboard == 1, "WM_DRAWCLIPBOARD not received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( count == 1 || broken(!pAddClipboardFormatListener), "WM_CLIPBOARDUPDATE not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received %04x\n", fmt );
+    check_messages(win, 0, 1, 1, 0, 0);
 
     r = OpenClipboard(win);
     ok(r, "OpenClipboard failed: %d\n", GetLastError());
     r = CloseClipboard();
     ok(r, "CloseClipboard failed: %d\n", GetLastError());
     /* nothing changed */
-    seq = GetClipboardSequenceNumber();
-    ok( seq == old_seq, "sequence changed\n" );
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    count = SendMessageA( win, WM_USER+3, 0, 0 );
-    ok( !count, "WM_DESTROYCLIPBOARD received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received %04x\n", fmt );
+    check_messages(win, 0, 0, 0, 0, 0);
 
     formats = CountClipboardFormats();
     r = OpenClipboard(0);
@@ -1312,195 +1175,67 @@ static DWORD WINAPI clipboard_thread(void *param)
     r = CloseClipboard();
     ok(r, "CloseClipboard failed: %d\n", GetLastError());
 
-    if (!cross_thread)
-    {
-        ok( wm_drawclipboard == 1, "WM_DRAWCLIPBOARD not received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( count == 1 || broken(!pAddClipboardFormatListener), "WM_CLIPBOARDUPDATE not received\n" );
-    count = SendMessageA( win, WM_USER+3, 0, 0 );
-    ok( count == 1, "WM_DESTROYCLIPBOARD not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received %04x\n", fmt );
+    check_messages(win, 1, 1, 1, 1, 0);
     count = SendMessageA( win, WM_USER+5, 0, 0 );
     ok( count == formats, "wrong format count %u on WM_DESTROYCLIPBOARD\n", count );
 
     r = OpenClipboard(win);
     ok(r, "OpenClipboard failed: %d\n", GetLastError());
     SetClipboardData( CF_WAVE, GlobalAlloc( GMEM_FIXED, 1 ));
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 2, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    count = SendMessageA( win, WM_USER+3, 0, 0 );
-    ok( !count, "WM_DESTROYCLIPBOARD received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received %04x\n", fmt );
+    check_messages(win, 1, 0, 0, 0, 0);
 
     EnterCriticalSection(&clipboard_cs);
     r = CloseClipboard();
     ok(r, "CloseClipboard failed: %d\n", GetLastError());
     LeaveCriticalSection(&clipboard_cs);
 
-    seq = GetClipboardSequenceNumber();
-    ok( seq == old_seq, "sequence changed\n" );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( wm_drawclipboard == 1, "WM_DRAWCLIPBOARD not received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( count == 1 || broken(!pAddClipboardFormatListener), "WM_CLIPBOARDUPDATE not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 0, 1, 1, 0, 0);
 
     run_process( "grab_clipboard 0" );
 
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
     if (!cross_thread)
     {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
         /* in this case we get a cross-thread WM_DRAWCLIPBOARD */
         cross_thread = TRUE;
         while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
         cross_thread = FALSE;
     }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( count == 1 || broken(!pAddClipboardFormatListener), "WM_CLIPBOARDUPDATE not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 1, 1, 1, 0, 0);
 
     r = OpenClipboard(0);
     ok(r, "OpenClipboard failed: %d\n", GetLastError());
     SetClipboardData( CF_WAVE, GlobalAlloc( GMEM_FIXED, 1 ));
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 1, 0, 0, 0, 0);
 
     EnterCriticalSection(&clipboard_cs);
     r = CloseClipboard();
     ok(r, "CloseClipboard failed: %d\n", GetLastError());
     LeaveCriticalSection(&clipboard_cs);
 
-    seq = GetClipboardSequenceNumber();
-    ok( seq == old_seq, "sequence changed\n" );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( wm_drawclipboard == 1, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( count == 1 || broken(!pAddClipboardFormatListener), "WM_CLIPBOARDUPDATE not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 0, 1, 1, 0, 0);
 
     run_process( "grab_clipboard 1" );
 
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 2, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
     if (!cross_thread)
     {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
         /* in this case we get a cross-thread WM_DRAWCLIPBOARD */
         cross_thread = TRUE;
         while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
         cross_thread = FALSE;
     }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( count == 1 || broken(!pAddClipboardFormatListener), "WM_CLIPBOARDUPDATE not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 2, 1, 1, 0, 0);
 
     r = OpenClipboard(0);
     ok(r, "OpenClipboard failed: %d\n", GetLastError());
     SetClipboardData( CF_WAVE, GlobalAlloc( GMEM_FIXED, 1 ));
-    seq = GetClipboardSequenceNumber();
-    ok( (int)(seq - old_seq) == 1, "sequence diff %d\n", seq - old_seq );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( !wm_drawclipboard, "WM_DRAWCLIPBOARD received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( !count, "WM_DRAWCLIPBOARD received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( !count, "WM_CLIPBOARDUPDATE received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 1, 0, 0, 0, 0);
 
     EnterCriticalSection(&clipboard_cs);
     r = CloseClipboard();
     ok(r, "CloseClipboard failed: %d\n", GetLastError());
     LeaveCriticalSection(&clipboard_cs);
 
-    seq = GetClipboardSequenceNumber();
-    ok( seq == old_seq, "sequence changed\n" );
-    old_seq = seq;
-    if (!cross_thread)
-    {
-        ok( wm_drawclipboard == 1, "WM_DRAWCLIPBOARD not received\n" );
-        ok( !wm_clipboardupdate, "WM_CLIPBOARDUPDATE received\n" );
-        ok( !wm_renderformat, "WM_RENDERFORMAT received\n" );
-        while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageW( &msg );
-    }
-    count = SendMessageA( win, WM_USER+1, 0, 0 );
-    ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-    count = SendMessageA( win, WM_USER+2, 0, 0 );
-    ok( count == 1 || broken(!pAddClipboardFormatListener), "WM_CLIPBOARDUPDATE not received\n" );
-    fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-    ok( !fmt, "WM_RENDERFORMAT received\n" );
+    check_messages(win, 0, 1, 1, 0, 0);
 
     if (cross_thread)
     {
@@ -1515,16 +1250,9 @@ static DWORD WINAPI clipboard_thread(void *param)
         do_render_format = TRUE;
         old_seq = GetClipboardSequenceNumber();
         run_process( "get_clipboard_data" );
-        seq = GetClipboardSequenceNumber();
-        ok( seq == old_seq, "sequence changed\n" );
         do_render_format = FALSE;
 
-        count = SendMessageA( win, WM_USER+1, 0, 0 );
-        ok( count == 1, "WM_DRAWCLIPBOARD not received\n" );
-        count = SendMessageA( win, WM_USER+2, 0, 0 );
-        ok( count == 1 || broken(!pAddClipboardFormatListener) /* < Vista */, "WM_CLIPBOARDUPDATE not received\n" );
-        fmt = SendMessageA( win, WM_USER+4, 0, 0 );
-        ok( fmt == CF_TEXT, "WM_RENDERFORMAT received\n" );
+        check_messages(win, 0, 1, 1, 0, CF_TEXT);
     }
 
     r = PostMessageA(win, WM_USER, 0, 0);
@@ -1555,6 +1283,7 @@ static void test_messages(void)
     DWORD tid;
 
     InitializeCriticalSection(&clipboard_cs);
+    update_event = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     memset(&cls, 0, sizeof(cls));
     cls.lpfnWndProc = clipboard_wnd_proc;
@@ -1755,10 +1484,8 @@ static void test_handles( HWND hwnd )
     h = SetClipboardData( 0xdeadbeef, hfixed );
     ok( h == hfixed, "got %p\n", h );
     ok( is_fixed( h ), "expected fixed mem %p\n", h );
-#ifndef _WIN64
-    /* testing if hfixed2 is freed triggers an exception on Win64 */
-    ok( is_freed( hfixed2 ) || broken( !is_freed( hfixed2 )) /* < Vista */, "expected freed mem %p\n", hfixed2 );
-#endif
+    if (0) /* this test is unreliable / crashes */
+        ok( is_freed( hfixed2 ), "expected freed mem %p\n", hfixed2 );
 
     r = CloseClipboard();
     ok( r, "gle %d\n", GetLastError() );

@@ -18,14 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#ifndef __REACTOS__
+#define _WIN32_WINNT 0x0501
+#endif
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+
+#include "wine/test.h"
 
 typedef LONG (WINAPI *PBROADCAST)( DWORD,LPDWORD,UINT,WPARAM,LPARAM );
 typedef LONG (WINAPI *PBROADCASTEX)( DWORD,LPDWORD,UINT,WPARAM,LPARAM,PBSMINFO );
-static PBROADCAST pBroadcastA;
-static PBROADCAST pBroadcastW;
-static PBROADCASTEX pBroadcastExA;
-static PBROADCASTEX pBroadcastExW;
 static HANDLE hevent;
 
 static LRESULT WINAPI main_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -48,20 +57,6 @@ static LRESULT WINAPI main_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 static BOOL init_procs(void)
 {
     WNDCLASSA cls;
-    HANDLE user32 = GetModuleHandleA("user32.dll");
-    pBroadcastA = (PBROADCAST)GetProcAddress(user32, "BroadcastSystemMessageA");
-    if (!pBroadcastA)
-        pBroadcastA = (PBROADCAST)GetProcAddress(user32, "BroadcastSystemMessage");
-    ok(pBroadcastA != NULL, "No BroadcastSystemMessage found\n");
-    if (!pBroadcastA)
-    {
-        win_skip("BroadcastA is not available\n");
-        return FALSE;
-    }
-
-    pBroadcastW = (PBROADCAST)GetProcAddress(user32, "BroadcastSystemMessageW");
-    pBroadcastExA = (PBROADCASTEX)GetProcAddress(user32, "BroadcastSystemMessageExA");
-    pBroadcastExW = (PBROADCASTEX)GetProcAddress(user32, "BroadcastSystemMessageExW");
 
     hevent = CreateEventA(NULL, TRUE, FALSE, "Asynchronous checking event");
 
@@ -253,12 +248,8 @@ if (0) /* TODO: Check the hang flags */
     PulseEvent(hevent);
 }
 
-static BOOL (WINAPI *pOpenProcessToken)(HANDLE, DWORD, HANDLE*);
-static BOOL (WINAPI *pAdjustTokenPrivileges)(HANDLE, BOOL, PTOKEN_PRIVILEGES, DWORD, PTOKEN_PRIVILEGES, PDWORD);
-
 static void test_noprivileges(void)
 {
-    HANDLE advapi32 = GetModuleHandleA("advapi32");
     HANDLE token;
     DWORD recips;
     BOOL ret;
@@ -266,14 +257,12 @@ static void test_noprivileges(void)
     static const DWORD BSM_ALL_RECIPS = BSM_VXDS | BSM_NETDRIVER |
                                         BSM_INSTALLABLEDRIVERS | BSM_APPLICATIONS;
 
-    pOpenProcessToken = (void *)GetProcAddress(advapi32, "OpenProcessToken");
-    pAdjustTokenPrivileges = (void *)GetProcAddress(advapi32, "AdjustTokenPrivileges");
-    if (!pOpenProcessToken || !pAdjustTokenPrivileges || !pOpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
     {
         skip("Can't open security token for process\n");
         return;
     }
-    if (!pAdjustTokenPrivileges(token, TRUE, NULL, 0, NULL, NULL))
+    if (!AdjustTokenPrivileges(token, TRUE, NULL, 0, NULL, NULL))
     {
         skip("Can't adjust security token for process\n");
         return;
@@ -283,7 +272,7 @@ static void test_noprivileges(void)
     SetLastError(0xcafebabe);
     recips = BSM_ALLDESKTOPS;
     ResetEvent(hevent);
-    ret = pBroadcastExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
+    ret = BroadcastSystemMessageExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
     ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     ok(recips == BSM_ALLDESKTOPS ||
@@ -294,7 +283,7 @@ static void test_noprivileges(void)
     SetLastError(0xcafebabe);
     recips = BSM_ALLCOMPONENTS;
     ResetEvent(hevent);
-    ret = pBroadcastExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
+    ret = BroadcastSystemMessageExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
     ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     ok(recips == BSM_ALLCOMPONENTS ||
@@ -305,7 +294,7 @@ static void test_noprivileges(void)
     SetLastError(0xcafebabe);
     recips = BSM_ALLDESKTOPS|BSM_APPLICATIONS;
     ResetEvent(hevent);
-    ret = pBroadcastExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
+    ret = BroadcastSystemMessageExW( BSF_QUERY, &recips, WM_NULL, 100, 0, NULL );
     ok(ret==1, "Returned: %d error %u\n", ret, GetLastError());
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     ok(recips == (BSM_ALLDESKTOPS|BSM_APPLICATIONS) ||
@@ -316,7 +305,7 @@ static void test_noprivileges(void)
     SetLastError(0xcafebabe);
     recips = BSM_ALLDESKTOPS|BSM_APPLICATIONS;
     ResetEvent(hevent);
-    ret = pBroadcastExW( BSF_QUERY, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY, NULL );
+    ret = BroadcastSystemMessageExW( BSF_QUERY, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY, NULL );
     ok(!ret, "Returned: %d\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     ok(recips == (BSM_ALLDESKTOPS|BSM_APPLICATIONS) ||
@@ -331,28 +320,17 @@ START_TEST(broadcast)
         return;
 
     trace("Running BroadcastSystemMessageA tests\n");
-    test_parameters(pBroadcastA, "BroadcastSystemMessageA");
-    if (pBroadcastW)
-    {
-        trace("Running BroadcastSystemMessageW tests\n");
-        test_parameters(pBroadcastW, "BroadcastSystemMessageW");
-    }
-    else
-        win_skip("No BroadcastSystemMessageW, skipping\n");
-    if (pBroadcastExA)
-    {
-        trace("Running BroadcastSystemMessageExA tests\n");
-        test_parametersEx(pBroadcastExA);
-    }
-    else
-        win_skip("No BroadcastSystemMessageExA, skipping\n");
-    if (pBroadcastExW)
-    {
-        trace("Running BroadcastSystemMessageExW tests\n");
-        test_parametersEx(pBroadcastExW);
-        trace("Attempting privileges checking tests\n");
-        test_noprivileges();
-    }
-    else
-        win_skip("No BroadcastSystemMessageExW, skipping\n");
+    test_parameters(BroadcastSystemMessageA, "BroadcastSystemMessageA");
+
+    trace("Running BroadcastSystemMessageW tests\n");
+    test_parameters(BroadcastSystemMessageW, "BroadcastSystemMessageW");
+
+    trace("Running BroadcastSystemMessageExA tests\n");
+    test_parametersEx(BroadcastSystemMessageExA);
+
+    trace("Running BroadcastSystemMessageExW tests\n");
+    test_parametersEx(BroadcastSystemMessageExW);
+
+    trace("Attempting privileges checking tests\n");
+    test_noprivileges();
 }

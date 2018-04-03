@@ -18,7 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+
+#include "wine/test.h"
 
 #ifndef DCX_USESTYLE
 #define DCX_USESTYLE         0x00010000
@@ -31,7 +40,7 @@ static void test_dc_attributes(void)
 {
     HDC hdc, old_hdc;
     HDC hdcs[20];
-    INT i, rop, def_rop;
+    INT i, rop, def_rop, caps;
     BOOL found_dc;
 
     /* test cache DC */
@@ -43,11 +52,14 @@ static void test_dc_attributes(void)
     rop = GetROP2( hdc );
     ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
 
+    ok( WindowFromDC( hdc ) == hwnd_cache, "wrong window\n" );
     ReleaseDC( hwnd_cache, hdc );
+    ok( WindowFromDC( hdc ) == 0, "wrong window\n" );
     hdc = GetDC( hwnd_cache );
     rop = GetROP2( hdc );
     ok( rop == def_rop, "wrong ROP2 %d after release\n", rop );
     SetROP2( hdc, R2_WHITE );
+    ok( WindowFromDC( hdc ) == hwnd_cache, "wrong window\n" );
     ReleaseDC( hwnd_cache, hdc );
     old_hdc = hdc;
 
@@ -106,6 +118,28 @@ static void test_dc_attributes(void)
     ok( rop == 0, "got %d\n", rop );
     rop = GetROP2( old_hdc );
     ok( rop == 0, "got %d\n", rop );
+    caps = GetDeviceCaps( old_hdc, HORZRES );
+    ok( caps == 0, "got %d\n", caps );
+    caps = GetDeviceCaps( old_hdc, VERTRES );
+    ok( caps == 0, "got %d\n", caps );
+    caps = GetDeviceCaps( old_hdc, NUMCOLORS );
+    ok( caps == 0, "got %d\n", caps );
+    ok( WindowFromDC( old_hdc ) == 0, "wrong window\n" );
+
+    hdc = GetDC(0);
+    caps = GetDeviceCaps( hdc, HORZRES );
+    ok( caps != 0, "got %d\n", caps );
+    caps = GetDeviceCaps( hdc, VERTRES );
+    ok( caps != 0, "got %d\n", caps );
+    caps = GetDeviceCaps( hdc, NUMCOLORS );
+    ok( caps != 0, "got %d\n", caps );
+    ReleaseDC( 0, hdc );
+    caps = GetDeviceCaps( hdc, HORZRES );
+    ok( caps == 0, "got %d\n", caps );
+    caps = GetDeviceCaps( hdc, VERTRES );
+    ok( caps == 0, "got %d\n", caps );
+    caps = GetDeviceCaps( hdc, NUMCOLORS );
+    ok( caps == 0, "got %d\n", caps );
 
     /* test own DC */
 
@@ -115,11 +149,14 @@ static void test_dc_attributes(void)
     ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
 
     old_hdc = hdc;
+    ok( WindowFromDC( hdc ) == hwnd_owndc, "wrong window\n" );
     ReleaseDC( hwnd_owndc, hdc );
+    ok( WindowFromDC( hdc ) == hwnd_owndc, "wrong window\n" );
     hdc = GetDC( hwnd_owndc );
     ok( old_hdc == hdc, "didn't get same DC %p/%p\n", old_hdc, hdc );
     rop = GetROP2( hdc );
     ok( rop == R2_WHITE, "wrong ROP2 %d after release\n", rop );
+    ok( WindowFromDC( hdc ) == hwnd_owndc, "wrong window\n" );
     ReleaseDC( hwnd_owndc, hdc );
     rop = GetROP2( hdc );
     ok( rop == R2_WHITE, "wrong ROP2 %d after second release\n", rop );
@@ -132,11 +169,14 @@ static void test_dc_attributes(void)
     ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
 
     old_hdc = hdc;
+    ok( WindowFromDC( hdc ) == hwnd_classdc, "wrong window\n" );
     ReleaseDC( hwnd_classdc, hdc );
+    ok( WindowFromDC( hdc ) == hwnd_classdc, "wrong window\n" );
     hdc = GetDC( hwnd_classdc );
     ok( old_hdc == hdc, "didn't get same DC %p/%p\n", old_hdc, hdc );
     rop = GetROP2( hdc );
     ok( rop == R2_WHITE, "wrong ROP2 %d after release\n", rop );
+    ok( WindowFromDC( hdc ) == hwnd_classdc, "wrong window\n" );
     ReleaseDC( hwnd_classdc, hdc );
     rop = GetROP2( hdc );
     ok( rop == R2_WHITE, "wrong ROP2 %d after second release\n", rop );
@@ -145,12 +185,15 @@ static void test_dc_attributes(void)
 
     old_hdc = GetDC( hwnd_classdc );
     SetROP2( old_hdc, R2_BLACK );
+    ok( WindowFromDC( old_hdc ) == hwnd_classdc, "wrong window\n" );
     hdc = GetDC( hwnd_classdc2 );
     ok( old_hdc == hdc, "didn't get same DC %p/%p\n", old_hdc, hdc );
     rop = GetROP2( hdc );
     ok( rop == R2_BLACK, "wrong ROP2 %d for other window\n", rop );
+    ok( WindowFromDC( hdc ) == hwnd_classdc2, "wrong window\n" );
     ReleaseDC( hwnd_classdc, old_hdc );
     ReleaseDC( hwnd_classdc, hdc );
+    ok( WindowFromDC( hdc ) == hwnd_classdc2, "wrong window\n" );
     rop = GetROP2( hdc );
     ok( rop == R2_BLACK, "wrong ROP2 %d after release\n", rop );
 }
@@ -588,19 +631,83 @@ static void test_dc_layout(void)
 
 static void test_destroyed_window(void)
 {
-    HDC dc;
+    HDC dc, old_dc;
+    HDC hdcs[30];
+    int i, rop;
 
-    dc = GetDCEx(hwnd_cache, 0, DCX_USESTYLE);
-    ok(!dc, "Got a non-NULL DC (%p) for a destroyed window.\n", dc);
+    dc = GetDC( hwnd_cache );
+    SetROP2( dc, R2_WHITE );
+    rop = GetROP2( dc );
+    ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == hwnd_cache, "wrong window\n" );
+    old_dc = dc;
 
-    dc = GetDCEx(hwnd_owndc, 0, DCX_USESTYLE);
-    ok(!dc, "Got a non-NULL DC (%p) for a destroyed window.\n", dc);
+    DestroyWindow( hwnd_cache );
+    rop = GetROP2( dc );
+    ok( rop == 0, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == 0, "wrong window\n" );
+    ok( !ReleaseDC( hwnd_cache, dc ), "ReleaseDC succeeded\n" );
+    dc = GetDC( hwnd_cache );
+    ok( !dc, "Got a non-NULL DC (%p) for a destroyed window\n", dc );
 
-    dc = GetDCEx(hwnd_classdc, 0, DCX_USESTYLE);
-    ok(!dc, "Got a non-NULL DC (%p) for a destroyed window.\n", dc);
+    for (i = 0; i < 30; i++)
+    {
+        dc = hdcs[i] = GetDCEx( hwnd_parent, 0, DCX_CACHE | DCX_USESTYLE );
+        if (dc == old_dc) break;
+    }
+    ok( i < 30, "DC for destroyed window not reused\n" );
+    while (i > 0) ReleaseDC( hwnd_parent, hdcs[--i] );
 
-    dc = GetDCEx(hwnd_classdc2, 0, DCX_USESTYLE);
-    ok(!dc, "Got a non-NULL DC (%p) for a destroyed window.\n", dc);
+    dc = GetDC( hwnd_classdc );
+    SetROP2( dc, R2_WHITE );
+    rop = GetROP2( dc );
+    ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == hwnd_classdc, "wrong window\n" );
+    old_dc = dc;
+
+    dc = GetDC( hwnd_classdc2 );
+    ok( old_dc == dc, "wrong DC\n" );
+    rop = GetROP2( dc );
+    ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == hwnd_classdc2, "wrong window\n" );
+    DestroyWindow( hwnd_classdc2 );
+
+    rop = GetROP2( dc );
+    ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == 0, "wrong window\n" );
+    ok( !ReleaseDC( hwnd_classdc2, dc ), "ReleaseDC succeeded\n" );
+    dc = GetDC( hwnd_classdc2 );
+    ok( !dc, "Got a non-NULL DC (%p) for a destroyed window\n", dc );
+
+    dc = GetDC( hwnd_classdc );
+    ok( dc != 0, "Got NULL DC\n" );
+    rop = GetROP2( dc );
+    ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == hwnd_classdc, "wrong window\n" );
+    DestroyWindow( hwnd_classdc );
+
+    rop = GetROP2( dc );
+    ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == 0, "wrong window\n" );
+    ok( !ReleaseDC( hwnd_classdc, dc ), "ReleaseDC succeeded\n" );
+    dc = GetDC( hwnd_classdc );
+    ok( !dc, "Got a non-NULL DC (%p) for a destroyed window\n", dc );
+
+    dc = GetDC( hwnd_owndc );
+    ok( dc != 0, "Got NULL DC\n" );
+    rop = GetROP2( dc );
+    ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == hwnd_owndc, "wrong window\n" );
+    DestroyWindow( hwnd_owndc );
+
+    rop = GetROP2( dc );
+    ok( rop == 0, "wrong ROP2 %d\n", rop );
+    ok( WindowFromDC( dc ) == 0, "wrong window\n" );
+    ok( !ReleaseDC( hwnd_owndc, dc ), "ReleaseDC succeeded\n" );
+    dc = GetDC( hwnd_owndc );
+    ok( !dc, "Got a non-NULL DC (%p) for a destroyed window\n", dc );
+
+    DestroyWindow( hwnd_parent );
 }
 
 START_TEST(dce)
@@ -652,12 +759,6 @@ START_TEST(dce)
     test_scroll_window();
     test_invisible_create();
     test_dc_layout();
-
-    DestroyWindow(hwnd_parent);
-    DestroyWindow(hwnd_classdc2);
-    DestroyWindow(hwnd_classdc);
-    DestroyWindow(hwnd_owndc);
-    DestroyWindow(hwnd_cache);
-
+    /* this should be last */
     test_destroyed_window();
 }

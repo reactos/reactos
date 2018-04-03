@@ -17,7 +17,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#ifndef __REACTOS__
+#define _WIN32_WINNT 0x0600 /* For SPI_GETMOUSEHOVERWIDTH and more */
+#define _WIN32_IE 0x0700
+#define WINVER 0x0600 /* For COLOR_MENUBAR, NONCLIENTMETRICS with padding */
+#endif
+
+#include <assert.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winreg.h"
+#include "winuser.h"
+#include "winnls.h"
 
 #ifndef SPI_GETDESKWALLPAPER
 # define SPI_GETDESKWALLPAPER 0x0073
@@ -2682,6 +2699,14 @@ static BOOL is_font_enumerated(const char *name)
     return ret;
 }
 
+static int get_cursor_size( int size )
+{
+    /* only certain sizes are allowed for cursors */
+    if (size >= 64) return 64;
+    if (size >= 48) return 48;
+    return 32;
+}
+
 static void test_GetSystemMetrics( void)
 {
     TEXTMETRICA tmMenuFont;
@@ -2760,8 +2785,8 @@ static void test_GetSystemMetrics( void)
     /* These don't depend on the Shell Icon Size registry value */
     ok_gsm( SM_CXICON, MulDiv( 32, dpi, USER_DEFAULT_SCREEN_DPI ) );
     ok_gsm( SM_CYICON, MulDiv( 32, dpi, USER_DEFAULT_SCREEN_DPI ) );
-    /* SM_CXCURSOR */
-    /* SM_CYCURSOR */
+    ok_gsm( SM_CXCURSOR, get_cursor_size( MulDiv( 32, dpi, USER_DEFAULT_SCREEN_DPI )));
+    ok_gsm( SM_CYCURSOR, get_cursor_size( MulDiv( 32, dpi, USER_DEFAULT_SCREEN_DPI )));
     ok_gsm( SM_CYMENU, ncm.iMenuHeight + 1);
     ok_gsm( SM_CXFULLSCREEN,
             GetSystemMetrics( SM_CXMAXIMIZED) - 2 * GetSystemMetrics( SM_CXFRAME));
@@ -2896,7 +2921,8 @@ static void test_GetSystemMetrics( void)
         trace( "Captionfontchar width %d  MenuFont %d,%d CaptionWidth from registry: %d screen %d,%d\n",
                 avcwCaption, tmMenuFont.tmHeight, tmMenuFont.tmExternalLeading, CaptionWidthfromreg, screen.cx, screen.cy);
     }
-    ReleaseDC( 0, hdc);
+
+    DeleteDC(hdc);
 }
 
 static void test_EnumDisplaySettings(void)

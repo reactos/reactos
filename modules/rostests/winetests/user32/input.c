@@ -44,7 +44,25 @@
  *
  */
 
-#include "precomp.h"
+#ifndef __REACTOS__
+#define _WIN32_WINNT 0x401
+#define _WIN32_IE 0x0500
+#endif
+
+#include <stdarg.h>
+#include <assert.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "wingdi.h"
+#include "winnls.h"
+
+#include "wine/test.h"
+
+#ifdef __REACTOS__
+#include <reactos/undocuser.h>
+#endif
 
 /* globals */
 static HWND hWndTest;
@@ -924,8 +942,7 @@ static void test_Input_blackbox(void)
     empty_message_queue();
 
     prevWndProc = SetWindowLongPtrA(window, GWLP_WNDPROC, (LONG_PTR) WndProc2);
-    ok(prevWndProc != 0 || (prevWndProc == 0 && GetLastError() == 0),
-       "error: %d\n", (int) GetLastError());
+    ok(prevWndProc != 0 || GetLastError() == 0, "error: %d\n", (int) GetLastError());
 
     i.type = INPUT_KEYBOARD;
     i.u.ki.time = 0;
@@ -1266,6 +1283,19 @@ static LRESULT CALLBACK hook_proc2( int code, WPARAM wparam, LPARAM lparam )
     return CallNextHookEx( 0, code, wparam, lparam );
 }
 
+static LRESULT CALLBACK hook_proc3( int code, WPARAM wparam, LPARAM lparam )
+{
+    POINT pt;
+
+    if (code == HC_ACTION)
+    {
+        /* MSLLHOOKSTRUCT does not seem to be reliable and contains different data on each run. */
+        GetCursorPos(&pt);
+        ok(pt.x == pt_old.x && pt.y == pt_old.y, "GetCursorPos: (%d,%d)\n", pt.x, pt.y);
+    }
+    return CallNextHookEx( 0, code, wparam, lparam );
+}
+
 static void test_mouse_ll_hook(void)
 {
     HWND hwnd;
@@ -1339,6 +1369,62 @@ static void test_mouse_ll_hook(void)
     ok(pt.x == pt_new.x && pt.y == pt_new.y, "Position changed: (%d,%d)\n", pt.x, pt.y);
 
     UnhookWindowsHookEx(hook2);
+    hook1 = SetWindowsHookExA(WH_MOUSE_LL, hook_proc3, GetModuleHandleA(0), 0);
+
+    SetRect(&rc, 150, 150, 150, 150);
+    ClipCursor(&rc);
+    clipped = TRUE;
+
+    SetCursorPos(140, 140);
+    GetCursorPos(&pt_old);
+    ok(pt_old.x == 150 && pt_old.y == 150, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+    SetCursorPos(160, 160);
+    GetCursorPos(&pt_old);
+    todo_wine
+    ok(pt_old.x == 149 && pt_old.y == 149, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+    mouse_event(MOUSEEVENTF_MOVE, -STEP, -STEP, 0, 0);
+    GetCursorPos(&pt_old);
+    ok(pt_old.x == 150 && pt_old.y == 150, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+    mouse_event(MOUSEEVENTF_MOVE, +STEP, +STEP, 0, 0);
+    GetCursorPos(&pt_old);
+    todo_wine
+    ok(pt_old.x == 149 && pt_old.y == 149, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+    mouse_event(MOUSEEVENTF_MOVE, 0, 0, 0, 0);
+    GetCursorPos(&pt_old);
+    ok(pt_old.x == 150 && pt_old.y == 150, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+    mouse_event(MOUSEEVENTF_MOVE, 0, 0, 0, 0);
+    GetCursorPos(&pt_old);
+    todo_wine
+    ok(pt_old.x == 149 && pt_old.y == 149, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+
+    clipped = FALSE;
+    ClipCursor(NULL);
+
+    SetCursorPos(140, 140);
+    SetRect(&rc, 150, 150, 150, 150);
+    ClipCursor(&rc);
+    GetCursorPos(&pt_old);
+    ok(pt_old.x == 150 && pt_old.y == 150, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+    ClipCursor(NULL);
+
+    SetCursorPos(160, 160);
+    SetRect(&rc, 150, 150, 150, 150);
+    ClipCursor(&rc);
+    GetCursorPos(&pt_old);
+    todo_wine
+    ok(pt_old.x == 149 && pt_old.y == 149, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+    ClipCursor(NULL);
+
+    SetCursorPos(150, 150);
+    SetRect(&rc, 150, 150, 150, 150);
+    ClipCursor(&rc);
+    GetCursorPos(&pt_old);
+    todo_wine
+    ok(pt_old.x == 149 && pt_old.y == 149, "Wrong new pos: (%d,%d)\n", pt_old.x, pt_old.y);
+    ClipCursor(NULL);
+
+    UnhookWindowsHookEx(hook1);
+
 done:
     DestroyWindow(hwnd);
     SetCursorPos(pt_org.x, pt_org.y);
@@ -1911,6 +1997,23 @@ static DWORD WINAPI create_static_win(void *arg)
     return 0;
 }
 
+static void get_dc_region(RECT *region, HWND hwnd, DWORD flags)
+{
+    int region_type;
+    HRGN hregion;
+    HDC hdc;
+
+    hdc = GetDCEx(hwnd, 0, flags);
+    ok(hdc != NULL, "GetDCEx failed\n");
+    hregion = CreateRectRgn(40, 40, 60, 60);
+    ok(hregion != NULL, "CreateRectRgn failed\n");
+    GetRandomRgn(hdc, hregion, SYSRGN);
+    region_type = GetRgnBox(hregion, region);
+    ok(region_type == SIMPLEREGION, "expected SIMPLEREGION, got %d\n", region_type);
+    DeleteObject(hregion);
+    ReleaseDC(hwnd, hdc);
+}
+
 static void test_Input_mouse(void)
 {
     BOOL got_button_down, got_button_up;
@@ -1923,10 +2026,18 @@ static void test_Input_mouse(void)
     int region_type;
     HRGN hregion;
     RECT region;
-    BOOL ret;
     MSG msg;
+    BOOL ret;
 
-    GetCursorPos(&pt_org);
+    SetLastError(0xdeadbeef);
+    ret = GetCursorPos(NULL);
+    ok(!ret, "GetCursorPos succeed\n");
+    ok(GetLastError() == 0xdeadbeef || GetLastError() == ERROR_NOACCESS, "error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = GetCursorPos(&pt_org);
+    ok(ret, "GetCursorPos failed\n");
+    ok(GetLastError() == 0xdeadbeef, "error %u\n", GetLastError());
 
     button_win = CreateWindowA("button", "button", WS_VISIBLE | WS_POPUP,
             100, 100, 100, 100, 0, NULL, NULL, NULL);
@@ -2043,6 +2154,7 @@ static void test_Input_mouse(void)
     }
     SetEvent(thread_data.end_event);
     WaitForSingleObject(thread, INFINITE);
+    CloseHandle(thread);
     ok(hittest_no && hittest_no<50, "expected WM_NCHITTEST message\n");
     ok(!got_button_down, "unexpected WM_RBUTTONDOWN message\n");
     ok(!got_button_up, "unexpected WM_RBUTTONUP message\n");
@@ -2144,6 +2256,10 @@ static void test_Input_mouse(void)
     hwnd = CreateWindowA(wclass.lpszClassName, "InputLayeredTest",
             WS_VISIBLE | WS_POPUP, 100, 100, 100, 100, button_win, NULL, NULL, NULL);
     ok(hwnd != NULL, "CreateWindowEx failed\n");
+
+    static_win = CreateWindowA("static", "Title", WS_VISIBLE | WS_CHILD,
+                          10, 10, 20, 20, hwnd, NULL, NULL, NULL);
+    ok(static_win != NULL, "CreateWindowA failed %u\n", GetLastError());
 
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     SetWindowLongA(hwnd, GWL_EXSTYLE, GetWindowLongA(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
@@ -2256,6 +2372,25 @@ static void test_Input_mouse(void)
         ok(region_type == ERROR, "expected ERROR, got %d\n", region_type);
     }
 
+    get_dc_region(&region, hwnd, DCX_PARENTCLIP);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, hwnd, DCX_WINDOW | DCX_USESTYLE);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, hwnd, DCX_USESTYLE);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, static_win, DCX_PARENTCLIP);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, static_win, DCX_WINDOW | DCX_USESTYLE);
+    ok(region.left == 110 && region.top == 110 && region.right == 130 && region.bottom == 130,
+       "expected region (110,110)-(130,130), got %s\n", wine_dbgstr_rect(&region));
+    get_dc_region(&region, static_win, DCX_USESTYLE);
+    ok(region.left == 100 && region.top == 100 && region.right == 200 && region.bottom == 200,
+       "expected region (100,100)-(200,200), got %s\n", wine_dbgstr_rect(&region));
+
     got_button_down = got_button_up = FALSE;
     simulate_click(TRUE, 150, 150);
     while (wait_for_message(&msg))
@@ -2343,6 +2478,7 @@ static void test_Input_mouse(void)
     ok(got_button_down, "expected WM_LBUTTONDOWN message\n");
     ok(got_button_up, "expected WM_LBUTTONUP message\n");
 
+    DestroyWindow(static_win);
     DestroyWindow(hwnd);
     SetCursorPos(pt_org.x, pt_org.y);
 
@@ -2726,7 +2862,11 @@ static void test_OemKeyScan(void)
         ret = OemKeyScan( oem );
 
         oem_char = LOBYTE( oem );
-        if (!OemToCharBuffW( &oem_char, &wchr, 1 ))
+        /* OemKeyScan returns -1 for any character that cannot be mapped,
+         * whereas OemToCharBuff changes unmappable characters to question
+         * marks. The ASCII characters 0-127, including the real question mark
+         * character, are all mappable and are the same in all OEM codepages. */
+        if (!OemToCharBuffW( &oem_char, &wchr, 1 ) || (wchr == '?' && oem_char < 0))
             expect = -1;
         else
         {

@@ -20,9 +20,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#ifndef __REACTOS__
+#define _WIN32_WINNT 0x0600 /* For WM_CHANGEUISTATE,QS_RAWINPUT,WM_DWMxxxx */
+#define WINVER 0x0600 /* for WM_GETTITLEBARINFOEX */
+#endif
 
-#include <dbt.h>
+#include <assert.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "dbt.h"
+
+#include "wine/test.h"
 
 #define MDI_FIRST_CHILD_ID 2004
 
@@ -6568,15 +6583,13 @@ static void test_button_messages(void)
         prevfont = SelectObject(hdc, hfont2);
         ok(prevfont == GetStockObject(SYSTEM_FONT), "Unexpected default font\n");
         SendMessageA(hwnd, WM_PRINTCLIENT, (WPARAM)hdc, 0);
-    todo_wine
-        ok(GetStockObject(SYSTEM_FONT) == GetCurrentObject(hdc, OBJ_FONT), "button[%u]: unexpected font selected after WM_PRINTCLIENT\n", i);
+        ok(hfont2 != GetCurrentObject(hdc, OBJ_FONT), "button[%u]: unexpected font selected after WM_PRINTCLIENT\n", i);
         SelectObject(hdc, prevfont);
 
         prevfont = SelectObject(hdc, hfont2);
         ok(prevfont == GetStockObject(SYSTEM_FONT), "Unexpected default font\n");
         SendMessageA(hwnd, WM_PAINT, (WPARAM)hdc, 0);
-    todo_wine
-        ok(GetStockObject(SYSTEM_FONT) == GetCurrentObject(hdc, OBJ_FONT), "button[%u]: unexpected font selected after WM_PAINT\n", i);
+        ok(hfont2 != GetCurrentObject(hdc, OBJ_FONT), "button[%u]: unexpected font selected after WM_PAINT\n", i);
         SelectObject(hdc, prevfont);
 
         DeleteDC(hdc);
@@ -7131,6 +7144,41 @@ static void test_static_messages(void)
 /****************** ComboBox message test *************************/
 #define ID_COMBOBOX 0x000f
 
+static const struct message SetCurSelComboSeq[] =
+{
+    { CB_SETCURSEL, sent|wparam|lparam, 0, 0 },
+    { LB_SETCURSEL, sent|wparam|lparam, 0, 0 },
+    { LB_SETTOPINDEX, sent|wparam|lparam, 0, 0 },
+    { LB_GETCURSEL, sent|wparam|lparam, 0, 0 },
+    { LB_GETTEXTLEN, sent|wparam|lparam, 0, 0 },
+    { LB_GETTEXTLEN, sent|wparam|lparam|optional, 0, 0 }, /* TODO: it's sent on all Windows versions */
+    { LB_GETTEXT, sent|wparam, 0 },
+    { WM_CTLCOLOREDIT, sent|parent },
+    { LB_GETITEMDATA, sent|wparam|lparam, 0, 0 },
+    { WM_DRAWITEM, sent|wparam|lparam|parent, ID_COMBOBOX, 0x100010f3 },
+    { 0 }
+};
+
+static const struct message SetCurSelComboSeq2[] =
+{
+    { CB_SETCURSEL, sent|wparam|lparam, 0, 0 },
+    { LB_SETCURSEL, sent|wparam|lparam, 0, 0 },
+    { LB_SETTOPINDEX, sent|wparam|lparam, 0, 0 },
+    { LB_GETCURSEL, sent|wparam|lparam, 0, 0 },
+    { LB_GETTEXTLEN, sent|wparam|lparam, 0, 0 },
+    { LB_GETTEXTLEN, sent|wparam|lparam|optional, 0, 0 }, /* TODO: it's sent on all Windows versions */
+    { LB_GETTEXT, sent|wparam, 0 },
+    { 0 }
+};
+
+static const struct message SetCurSelComboSeq_edit[] =
+{
+    { CB_SETCURSEL, sent|wparam|lparam, 0, 0 },
+    { WM_SETTEXT, sent|wparam, 0 },
+    { EM_SETSEL, sent|wparam|lparam, 0, INT_MAX },
+    { 0 }
+};
+
 static const struct message WmKeyDownComboSeq[] =
 {
     { WM_KEYDOWN, sent|wparam|lparam, VK_DOWN, 0 },
@@ -7214,9 +7262,10 @@ static const struct message SetFocusButtonSeq2[] =
     { 0 }
 };
 
-static WNDPROC old_combobox_proc, edit_window_proc;
+static WNDPROC old_combobox_proc, edit_window_proc, lbox_window_proc;
 
-static LRESULT CALLBACK combobox_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK combobox_edit_subclass_proc(HWND hwnd, UINT message,
+        WPARAM wParam, LPARAM lParam)
 {
     static LONG defwndproc_counter = 0;
     LRESULT ret;
@@ -7237,12 +7286,44 @@ static LRESULT CALLBACK combobox_subclass_proc(HWND hwnd, UINT message, WPARAM w
         if (defwndproc_counter) msg.flags |= defwinproc;
         msg.wParam = wParam;
         msg.lParam = lParam;
-        msg.descr = "combo";
+        msg.descr = "combo edit";
         add_message(&msg);
     }
 
     defwndproc_counter++;
     ret = CallWindowProcA(edit_window_proc, hwnd, message, wParam, lParam);
+    defwndproc_counter--;
+
+    return ret;
+}
+
+static LRESULT CALLBACK combobox_lbox_subclass_proc(HWND hwnd, UINT message,
+        WPARAM wParam, LPARAM lParam)
+{
+    static LONG defwndproc_counter = 0;
+    LRESULT ret;
+    struct recvd_message msg;
+
+    /* do not log painting messages */
+    if (message != WM_PAINT &&
+        message != WM_NCPAINT &&
+        message != WM_SYNCPAINT &&
+        message != WM_ERASEBKGND &&
+        message != WM_NCHITTEST &&
+        !ignore_message( message ))
+    {
+        msg.hwnd = hwnd;
+        msg.message = message;
+        msg.flags = sent|wparam|lparam;
+        if (defwndproc_counter) msg.flags |= defwinproc;
+        msg.wParam = wParam;
+        msg.lParam = lParam;
+        msg.descr = "combo lbox";
+        add_message(&msg);
+    }
+
+    defwndproc_counter++;
+    ret = CallWindowProcA(lbox_window_proc, hwnd, message, wParam, lParam);
     defwndproc_counter--;
 
     return ret;
@@ -7297,9 +7378,8 @@ static void subclass_combobox(void)
 
 static void test_combobox_messages(void)
 {
-    HWND parent, combo, button, edit;
+    HWND parent, combo, button, edit, lbox;
     LRESULT ret;
-    BOOL (WINAPI *pGetComboBoxInfo)(HWND, PCOMBOBOXINFO);
     COMBOBOXINFO cbInfo;
     BOOL res;
 
@@ -7344,13 +7424,6 @@ static void test_combobox_messages(void)
     DestroyWindow(parent);
 
     /* Start again. Test combobox text selection when getting and losing focus */
-    pGetComboBoxInfo = (void *)GetProcAddress(GetModuleHandleA("user32.dll"), "GetComboBoxInfo");
-    if (!pGetComboBoxInfo)
-    {
-        win_skip("GetComboBoxInfo is not available\n");
-        return;
-    }
-
     parent = CreateWindowExA(0, "TestParentClass", "Parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                              10, 10, 300, 300, NULL, NULL, NULL, NULL);
     ok(parent != 0, "Failed to create parent window\n");
@@ -7361,11 +7434,12 @@ static void test_combobox_messages(void)
 
     cbInfo.cbSize = sizeof(COMBOBOXINFO);
     SetLastError(0xdeadbeef);
-    res = pGetComboBoxInfo(combo, &cbInfo);
+    res = GetComboBoxInfo(combo, &cbInfo);
     ok(res, "Failed to get COMBOBOXINFO structure; LastError: %u\n", GetLastError());
     edit = cbInfo.hwndItem;
 
-    edit_window_proc = (WNDPROC)SetWindowLongPtrA(edit, GWLP_WNDPROC, (ULONG_PTR)combobox_subclass_proc);
+    edit_window_proc = (WNDPROC)SetWindowLongPtrA(edit, GWLP_WNDPROC,
+            (ULONG_PTR)combobox_edit_subclass_proc);
 
     button = CreateWindowExA(0, "Button", "OK", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
                              5, 50, 100, 20, parent, NULL,
@@ -7398,7 +7472,46 @@ static void test_combobox_messages(void)
     log_all_parent_messages--;
     ok_sequence(SetFocusButtonSeq2, "SetFocus on a Button (2)", TRUE);
 
+    SetFocus(combo);
+    SendMessageA(combo, WM_SETREDRAW, FALSE, 0);
+    flush_sequence();
+    log_all_parent_messages++;
+    SendMessageA(combo, CB_SETCURSEL, 0, 0);
+    log_all_parent_messages--;
+    ok_sequence(SetCurSelComboSeq_edit, "CB_SETCURSEL on a ComboBox with edit control", FALSE);
+
     DestroyWindow(button);
+    DestroyWindow(combo);
+
+    combo = CreateWindowExA(0, "my_combobox_class", "test",
+                            WS_CHILD | WS_VISIBLE | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST,
+                            5, 5, 100, 100, parent, (HMENU)ID_COMBOBOX, NULL, NULL);
+    ok(combo != 0, "Failed to create combobox window\n");
+
+    ret = SendMessageA(combo, CB_ADDSTRING, 0, (LPARAM)"item 0");
+    ok(ret == 0, "expected 0, got %ld\n", ret);
+
+    cbInfo.cbSize = sizeof(COMBOBOXINFO);
+    SetLastError(0xdeadbeef);
+    res = GetComboBoxInfo(combo, &cbInfo);
+    ok(res, "Failed to get COMBOBOXINFO structure; LastError: %u\n", GetLastError());
+    lbox = cbInfo.hwndList;
+    lbox_window_proc = (WNDPROC)SetWindowLongPtrA(lbox, GWLP_WNDPROC,
+            (ULONG_PTR)combobox_lbox_subclass_proc);
+    flush_sequence();
+
+    log_all_parent_messages++;
+    SendMessageA(combo, CB_SETCURSEL, 0, 0);
+    log_all_parent_messages--;
+    ok_sequence(SetCurSelComboSeq, "CB_SETCURSEL on a ComboBox", FALSE);
+
+    ShowWindow(combo, SW_HIDE);
+    flush_sequence();
+    log_all_parent_messages++;
+    SendMessageA(combo, CB_SETCURSEL, 0, 0);
+    log_all_parent_messages--;
+    ok_sequence(SetCurSelComboSeq2, "CB_SETCURSEL on a ComboBox", FALSE);
+
     DestroyWindow(combo);
     DestroyWindow(parent);
 }
@@ -9029,7 +9142,8 @@ static void test_accelerators(void)
     keybd_event(VK_MENU, 0, 0, 0);
     keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
     pump_msg_loop(hwnd, 0);
-    ok_sequence(WmAltPressRelease, "Alt press/release", FALSE);
+    /* this test doesn't pass in Wine for managed windows */
+    ok_sequence(WmAltPressRelease, "Alt press/release", TRUE);
 
     trace("testing VK_F1 press/release\n");
     keybd_event(VK_F1, 0, 0, 0);
@@ -9049,7 +9163,7 @@ static void test_accelerators(void)
     keybd_event(VK_F10, 0, 0, 0);
     keybd_event(VK_F10, 0, KEYEVENTF_KEYUP, 0);
     pump_msg_loop(hwnd, 0);
-    ok_sequence(WmVkF10Seq, "VK_F10 press/release", FALSE);
+    ok_sequence(WmVkF10Seq, "VK_F10 press/release", TRUE);
 
     trace("testing SHIFT+F10 press/release\n");
     keybd_event(VK_SHIFT, 0, 0, 0);
@@ -14469,6 +14583,13 @@ static const struct message wm_lb_deletestring_reset[] =
 };
 static const struct message wm_lb_addstring[] =
 {
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ef },
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ed },
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ee },
+    { 0 }
+};
+static const struct message wm_lb_addstring_ownerdraw[] =
+{
     { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ed },
     { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf0f2, 0xf30604ed },
     { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ee },
@@ -14477,7 +14598,7 @@ static const struct message wm_lb_addstring[] =
     { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf2f2, 0xf30604ef },
     { 0 }
 };
-static const struct message wm_lb_addstring_sort[] =
+static const struct message wm_lb_addstring_sort_ownerdraw[] =
 {
     { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ed },
     { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf0f2, 0xf30604ed },
@@ -14565,6 +14686,8 @@ static void test_listbox_messages(void)
 
     flush_sequence();
 
+    log_all_parent_messages++;
+
     ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 0");
     ok(ret == 0, "expected 0, got %ld\n", ret);
     ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 1");
@@ -14572,12 +14695,10 @@ static void test_listbox_messages(void)
     ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 2");
     ok(ret == 2, "expected 2, got %ld\n", ret);
 
-    ok_sequence(wm_lb_addstring, "LB_ADDSTRING", FALSE);
+    ok_sequence(wm_lb_addstring_ownerdraw, "LB_ADDSTRING", FALSE);
     check_lb_state(listbox, 3, LB_ERR, 0, 0);
 
     flush_sequence();
-
-    log_all_parent_messages++;
 
     trace("selecting item 0\n");
     ret = SendMessageA(listbox, LB_SETCURSEL, 0, 0);
@@ -14657,7 +14778,59 @@ static void test_listbox_messages(void)
     ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 2");
     ok(ret == 2, "expected 2, got %ld\n", ret);
 
-    ok_sequence(wm_lb_addstring_sort, "LB_ADDSTRING", FALSE);
+    ok_sequence(wm_lb_addstring_sort_ownerdraw, "LB_ADDSTRING", FALSE);
+    check_lb_state(listbox, 3, LB_ERR, 0, 0);
+
+    log_all_parent_messages--;
+
+    DestroyWindow(listbox);
+
+    /* with LBS_HASSTRINGS */
+    listbox = CreateWindowExA(WS_EX_NOPARENTNOTIFY, "ListBox", NULL,
+                              WS_CHILD | LBS_NOTIFY | LBS_HASSTRINGS | WS_VISIBLE,
+                              10, 10, 80, 80, parent, (HMENU)ID_LISTBOX, 0, NULL);
+    listbox_orig_proc = (WNDPROC)SetWindowLongPtrA(listbox, GWLP_WNDPROC, (ULONG_PTR)listbox_hook_proc);
+
+    check_lb_state(listbox, 0, LB_ERR, 0, 0);
+
+    flush_sequence();
+
+    log_all_parent_messages++;
+
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 2");
+    ok(ret == 0, "expected 0, got %ld\n", ret);
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 0");
+    ok(ret == 1, "expected 1, got %ld\n", ret);
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 1");
+    ok(ret == 2, "expected 2, got %ld\n", ret);
+
+    ok_sequence(wm_lb_addstring, "LB_ADDSTRING", FALSE);
+    check_lb_state(listbox, 3, LB_ERR, 0, 0);
+
+    log_all_parent_messages--;
+
+    DestroyWindow(listbox);
+
+    /* with LBS_HASSTRINGS and LBS_SORT */
+    listbox = CreateWindowExA(WS_EX_NOPARENTNOTIFY, "ListBox", NULL,
+                              WS_CHILD | LBS_NOTIFY | LBS_HASSTRINGS | LBS_SORT | WS_VISIBLE,
+                              10, 10, 80, 80, parent, (HMENU)ID_LISTBOX, 0, NULL);
+    listbox_orig_proc = (WNDPROC)SetWindowLongPtrA(listbox, GWLP_WNDPROC, (ULONG_PTR)listbox_hook_proc);
+
+    check_lb_state(listbox, 0, LB_ERR, 0, 0);
+
+    flush_sequence();
+
+    log_all_parent_messages++;
+
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 2");
+    ok(ret == 0, "expected 0, got %ld\n", ret);
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 0");
+    ok(ret == 0, "expected 0, got %ld\n", ret);
+    ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 1");
+    ok(ret == 1, "expected 1, got %ld\n", ret);
+
+    ok_sequence(wm_lb_addstring, "LB_ADDSTRING", FALSE);
     check_lb_state(listbox, 3, LB_ERR, 0, 0);
 
     log_all_parent_messages--;
@@ -16919,9 +17092,6 @@ static const struct message send_message_2[] = {
 };
 static const struct message send_message_3[] = {
     { WM_USER+3, sent|wparam|lparam, 0, 0 },
-    { 0 }
-};
-static const struct message send_message_4[] = {
     { WM_USER+1, sent|wparam|lparam, 0, 0 },
     { 0 }
 };
@@ -17028,15 +17198,10 @@ static void test_SendMessage_other_thread(int thread_n)
     ok(ret == MAKELONG(QS_SENDMESSAGE, QS_SENDMESSAGE|QS_POSTMESSAGE), "wrong status %08x\n", ret);
 
     trace("main: call PeekMessage\n");
-    ok(PeekMessageA(&msg, 0, 0, 0, PM_NOREMOVE), "PeekMessage should not fail\n");
-    ok(msg.message == WM_USER+1, "expected WM_USER+1, got %04x\n", msg.message);
-    ok_sequence(send_message_3, "SendMessage from other thread 3", thread_n == 2);
-
-    trace("main: call PeekMessage\n");
     ok(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "PeekMessage should not fail\n");
     ok(msg.message == WM_USER+1, "expected WM_USER+1, got %04x\n", msg.message);
     DispatchMessageA(&msg);
-    ok_sequence(send_message_4, "SendMessage from other thread 4", FALSE);
+    ok_sequence(send_message_3, "SendMessage from other thread 3", thread_n == 2);
 
     /* intentionally yield */
     MsgWaitForMultipleObjects(0, NULL, FALSE, 100, qs_all_input);

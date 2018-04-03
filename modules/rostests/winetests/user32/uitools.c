@@ -17,7 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define WINE_NO_INLINE_RECT
+#include "wine/test.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
 
 static void test_FillRect(void)
 {

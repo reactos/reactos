@@ -18,13 +18,63 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+/* To get CS_DROPSHADOW with the MSVC headers */
+#ifndef __REACTOS__
+#define _WIN32_WINNT 0x0501
+#endif
 
-#include <commctrl.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "commctrl.h"
 
 #define NUMCLASSWORDS 4
 
 #define IS_WNDPROC_HANDLE(x) (((ULONG_PTR)(x) >> 16) == (~0u >> 16))
+
+#ifdef __i386__
+#define ARCH "x86"
+#elif defined __x86_64__
+#define ARCH "amd64"
+#elif defined __arm__
+#define ARCH "arm"
+#elif defined __aarch64__
+#define ARCH "arm64"
+#else
+#define ARCH "none"
+#endif
+
+static const char comctl32_manifest[] =
+"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">\n"
+"  <assemblyIdentity\n"
+"      type=\"win32\"\n"
+"      name=\"Wine.User32.Tests\"\n"
+"      version=\"1.0.0.0\"\n"
+"      processorArchitecture=\"" ARCH "\"\n"
+"  />\n"
+"<description>Wine comctl32 test suite</description>\n"
+"<dependency>\n"
+"  <dependentAssembly>\n"
+"    <assemblyIdentity\n"
+"        type=\"win32\"\n"
+"        name=\"microsoft.windows.common-controls\"\n"
+"        version=\"6.0.0.0\"\n"
+"        processorArchitecture=\"" ARCH "\"\n"
+"        publicKeyToken=\"6595b64144ccf1df\"\n"
+"        language=\"*\"\n"
+"    />\n"
+"</dependentAssembly>\n"
+"</dependency>\n"
+"</assembly>\n";
 
 static LRESULT WINAPI ClassTest_WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -1029,6 +1079,45 @@ static void test_icons(void)
     DestroyWindow(hwnd);
 }
 
+static void create_manifest_file(const char *filename, const char *manifest)
+{
+    WCHAR path[MAX_PATH];
+    HANDLE file;
+    DWORD size;
+
+    MultiByteToWideChar( CP_ACP, 0, filename, -1, path, MAX_PATH );
+    file = CreateFileW(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
+    WriteFile(file, manifest, strlen(manifest), &size, NULL);
+    CloseHandle(file);
+}
+
+static HANDLE create_test_actctx(const char *file)
+{
+    WCHAR path[MAX_PATH];
+    ACTCTXW actctx;
+    HANDLE handle;
+
+    MultiByteToWideChar(CP_ACP, 0, file, -1, path, MAX_PATH);
+    memset(&actctx, 0, sizeof(ACTCTXW));
+    actctx.cbSize = sizeof(ACTCTXW);
+    actctx.lpSource = path;
+
+    handle = CreateActCtxW(&actctx);
+    ok(handle != INVALID_HANDLE_VALUE, "failed to create context, error %u\n", GetLastError());
+
+    ok(actctx.cbSize == sizeof(actctx), "cbSize=%d\n", actctx.cbSize);
+    ok(actctx.dwFlags == 0, "dwFlags=%d\n", actctx.dwFlags);
+    ok(actctx.lpSource == path, "lpSource=%p\n", actctx.lpSource);
+    ok(actctx.wProcessorArchitecture == 0, "wProcessorArchitecture=%d\n", actctx.wProcessorArchitecture);
+    ok(actctx.wLangId == 0, "wLangId=%d\n", actctx.wLangId);
+    ok(actctx.lpAssemblyDirectory == NULL, "lpAssemblyDirectory=%p\n", actctx.lpAssemblyDirectory);
+    ok(actctx.lpResourceName == NULL, "lpResourceName=%p\n", actctx.lpResourceName);
+    ok(actctx.lpApplicationName == NULL, "lpApplicationName=%p\n", actctx.lpApplicationName);
+    ok(actctx.hModule == NULL, "hModule=%p\n", actctx.hModule);
+
+    return handle;
+}
 static void test_comctl32_class( const char *name )
 {
     WNDCLASSA wcA;
@@ -1038,23 +1127,82 @@ static void test_comctl32_class( const char *name )
     WCHAR nameW[20];
     HWND hwnd;
 
-    module = GetModuleHandleA( "comctl32" );
-    ok( !module, "comctl32 already loaded\n" );
-    ret = GetClassInfoA( 0, name, &wcA );
-    ok( ret || broken(!ret) /* <= winxp */, "GetClassInfoA failed for %s\n", name );
-    if (!ret) return;
-    MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, sizeof(nameW)/sizeof(WCHAR) );
-    ret = GetClassInfoW( 0, nameW, &wcW );
-    ok( ret, "GetClassInfoW failed for %s\n", name );
-    module = GetModuleHandleA( "comctl32" );
-    ok( module != 0, "comctl32 not loaded\n" );
-    FreeLibrary( module );
-    module = GetModuleHandleA( "comctl32" );
-    ok( !module, "comctl32 still loaded\n" );
-    hwnd = CreateWindowA( name, "test", WS_OVERLAPPEDWINDOW, 0, 0, 10, 10, NULL, NULL, NULL, 0 );
-    ok( hwnd != 0, "failed to create window for %s\n", name );
-    module = GetModuleHandleA( "comctl32" );
-    ok( module != 0, "comctl32 not loaded\n" );
+    if (name[0] == '!')
+    {
+        char path[MAX_PATH];
+        ULONG_PTR cookie;
+        HANDLE context;
+
+        name++;
+
+        GetTempPathA(sizeof(path)/sizeof(path[0]), path);
+        strcat(path, "comctl32_class.manifest");
+
+        create_manifest_file(path, comctl32_manifest);
+        context = create_test_actctx(path);
+        ret = DeleteFileA(path);
+        ok(ret, "Failed to delete manifest file, error %d.\n", GetLastError());
+
+        module = GetModuleHandleA( "comctl32" );
+        ok( !module, "comctl32 already loaded\n" );
+
+        ret = ActivateActCtx(context, &cookie);
+        ok(ret, "Failed to activate context.\n");
+
+        /* Some systems load modules during context activation. In this case skip the rest of the test. */
+        module = GetModuleHandleA( "comctl32" );
+        ok( !module || broken(module != NULL) /* Vista/Win7 */, "comctl32 already loaded\n" );
+        if (module)
+        {
+            win_skip("Module loaded during context activation. Skipping tests.\n");
+            goto skiptest;
+        }
+
+        ret = GetClassInfoA( 0, name, &wcA );
+        ok( ret || broken(!ret) /* WinXP */, "GetClassInfoA failed for %s\n", name );
+        if (!ret)
+            goto skiptest;
+
+        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, sizeof(nameW)/sizeof(WCHAR) );
+        ret = GetClassInfoW( 0, nameW, &wcW );
+        ok( ret, "GetClassInfoW failed for %s\n", name );
+        module = GetModuleHandleA( "comctl32" );
+        ok( module != 0, "comctl32 not loaded\n" );
+        FreeLibrary( module );
+        module = GetModuleHandleA( "comctl32" );
+        ok( !module || broken(module != NULL) /* Vista */, "comctl32 still loaded\n" );
+        hwnd = CreateWindowA( name, "test", WS_OVERLAPPEDWINDOW, 0, 0, 10, 10, NULL, NULL, NULL, 0 );
+        ok( hwnd != 0, "failed to create window for %s\n", name );
+        module = GetModuleHandleA( "comctl32" );
+        ok( module != 0, "comctl32 not loaded\n" );
+        DestroyWindow( hwnd );
+
+    skiptest:
+        ret = DeactivateActCtx(0, cookie);
+        ok(ret, "Failed to deactivate context.\n");
+        ReleaseActCtx(context);
+    }
+    else
+    {
+        module = GetModuleHandleA( "comctl32" );
+        ok( !module, "comctl32 already loaded\n" );
+        ret = GetClassInfoA( 0, name, &wcA );
+        ok( ret || broken(!ret) /* <= winxp */, "GetClassInfoA failed for %s\n", name );
+        if (!ret) return;
+        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, sizeof(nameW)/sizeof(WCHAR) );
+        ret = GetClassInfoW( 0, nameW, &wcW );
+        ok( ret, "GetClassInfoW failed for %s\n", name );
+        module = GetModuleHandleA( "comctl32" );
+        ok( module != 0, "comctl32 not loaded\n" );
+        FreeLibrary( module );
+        module = GetModuleHandleA( "comctl32" );
+        ok( !module, "comctl32 still loaded\n" );
+        hwnd = CreateWindowA( name, "test", WS_OVERLAPPEDWINDOW, 0, 0, 10, 10, NULL, NULL, NULL, 0 );
+        ok( hwnd != 0, "failed to create window for %s\n", name );
+        module = GetModuleHandleA( "comctl32" );
+        ok( module != 0, "comctl32 not loaded\n" );
+        DestroyWindow( hwnd );
+    }
 }
 
 /* verify that comctl32 classes are automatically loaded by user32 */
@@ -1081,12 +1229,19 @@ static void test_comctl32_classes(void)
         PROGRESS_CLASSA,
         REBARCLASSNAMEA,
         STATUSCLASSNAMEA,
+        "SysLink",
         WC_TABCONTROLA,
         TOOLBARCLASSNAMEA,
         TOOLTIPS_CLASSA,
         TRACKBAR_CLASSA,
         WC_TREEVIEWA,
-        UPDOWN_CLASSA
+        UPDOWN_CLASSA,
+        "!Button",
+        "!Edit",
+        "!Static",
+        "!Listbox",
+        "!ComboBox",
+        "!ComboLBox",
     };
 
     winetest_get_mainargs( &argv );
@@ -1149,6 +1304,150 @@ static void test_IME(void)
     ok(!lstrcmpiA(ptr, "user32.dll") || !lstrcmpiA(ptr, "ntdll.dll"), "IME window proc implemented in %s\n", ptr);
 }
 
+static void test_actctx_classes(void)
+{
+    static const char main_manifest[] =
+        "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+          "<assemblyIdentity version=\"4.3.2.1\" name=\"Wine.WndClass.Test\" type=\"win32\" />"
+          "<file name=\"file.exe\">"
+            "<windowClass>MyTestClass</windowClass>"
+          "</file>"
+        "</assembly>";
+    static const char *testclass = "MyTestClass";
+    WNDCLASSA wc;
+    ULONG_PTR cookie;
+    HANDLE context;
+    BOOL ret;
+    ATOM class;
+    HINSTANCE hinst;
+    char buff[64];
+    HWND hwnd;
+    char path[MAX_PATH];
+
+    GetTempPathA(sizeof(path)/sizeof(path[0]), path);
+    strcat(path, "actctx_classes.manifest");
+
+    create_manifest_file(path, main_manifest);
+    context = create_test_actctx(path);
+    ret = DeleteFileA(path);
+    ok(ret, "Failed to delete manifest file, error %d.\n", GetLastError());
+
+    ret = ActivateActCtx(context, &cookie);
+    ok(ret, "Failed to activate context.\n");
+
+    memset(&wc, 0, sizeof(wc));
+    wc.lpfnWndProc = ClassTest_WndProc;
+    wc.hIcon = LoadIconW(0, (LPCWSTR)IDI_APPLICATION);
+    wc.lpszClassName = testclass;
+
+    hinst = GetModuleHandleW(0);
+
+    ret = GetClassInfoA(hinst, testclass, &wc);
+    ok(!ret, "Expected failure.\n");
+
+    class = RegisterClassA(&wc);
+    ok(class != 0, "Failed to register class.\n");
+
+    /* Class info is available by versioned and regular names. */
+    ret = GetClassInfoA(hinst, testclass, &wc);
+    ok(ret, "Failed to get class info.\n");
+
+    hwnd = CreateWindowExA(0, testclass, "test", 0, 0, 0, 0, 0, 0, 0, hinst, 0);
+    ok(hwnd != NULL, "Failed to create a window.\n");
+
+    ret = GetClassNameA(hwnd, buff, sizeof(buff));
+    ok(ret, "Failed to get class name.\n");
+    ok(!strcmp(buff, testclass), "Unexpected class name.\n");
+
+    ret = GetClassInfoA(hinst, "4.3.2.1!MyTestClass", &wc);
+    ok(ret, "Failed to get class info.\n");
+
+    ret = UnregisterClassA(testclass, hinst);
+    ok(!ret, "Failed to unregister class.\n");
+
+    ret = DeactivateActCtx(0, cookie);
+    ok(ret, "Failed to deactivate context.\n");
+
+    ret = GetClassInfoA(hinst, testclass, &wc);
+    ok(!ret, "Unexpected ret val %d.\n", ret);
+
+    ret = GetClassInfoA(hinst, "4.3.2.1!MyTestClass", &wc);
+    ok(ret, "Failed to get class info.\n");
+
+    ret = GetClassNameA(hwnd, buff, sizeof(buff));
+    ok(ret, "Failed to get class name.\n");
+    ok(!strcmp(buff, testclass), "Unexpected class name.\n");
+
+    DestroyWindow(hwnd);
+
+    ret = UnregisterClassA("MyTestClass", hinst);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+
+    ret = UnregisterClassA("4.3.2.1!MyTestClass", hinst);
+    ok(ret, "Failed to unregister class.\n");
+
+    /* Register versioned class without active context. */
+    wc.lpszClassName = "4.3.2.1!MyTestClass";
+    class = RegisterClassA(&wc);
+    ok(class != 0, "Failed to register class.\n");
+
+    ret = ActivateActCtx(context, &cookie);
+    ok(ret, "Failed to activate context.\n");
+
+    wc.lpszClassName = "MyTestClass";
+    class = RegisterClassA(&wc);
+    ok(class == 0, "Expected failure.\n");
+
+    ret = DeactivateActCtx(0, cookie);
+    ok(ret, "Failed to deactivate context.\n");
+
+    ret = UnregisterClassA("4.3.2.1!MyTestClass", hinst);
+    ok(ret, "Failed to unregister class.\n");
+
+    /* Only versioned name is registered. */
+    ret = ActivateActCtx(context, &cookie);
+    ok(ret, "Failed to activate context.\n");
+
+    wc.lpszClassName = "MyTestClass";
+    class = RegisterClassA(&wc);
+    ok(class != 0, "Failed to register class\n");
+
+    ret = DeactivateActCtx(0, cookie);
+    ok(ret, "Failed to deactivate context.\n");
+
+    ret = GetClassInfoA(hinst, "MyTestClass", &wc);
+    ok(!ret, "Expected failure.\n");
+
+    ret = GetClassInfoA(hinst, "4.3.2.1!MyTestClass", &wc);
+    ok(ret, "Failed to get class info.\n");
+
+    ret = UnregisterClassA("4.3.2.1!MyTestClass", hinst);
+    ok(ret, "Failed to unregister class.\n");
+
+    /* Register regular name first, it's not considered when versioned name is registered. */
+    wc.lpszClassName = "MyTestClass";
+    class = RegisterClassA(&wc);
+    ok(class != 0, "Failed to register class.\n");
+
+    ret = ActivateActCtx(context, &cookie);
+    ok(ret, "Failed to activate context.\n");
+
+    wc.lpszClassName = "MyTestClass";
+    class = RegisterClassA(&wc);
+    ok(class != 0, "Failed to register class.\n");
+
+    ret = DeactivateActCtx(0, cookie);
+    ok(ret, "Failed to deactivate context.\n");
+
+    ret = UnregisterClassA("4.3.2.1!MyTestClass", hinst);
+    ok(ret, "Failed to unregister class.\n");
+
+    ret = UnregisterClassA("MyTestClass", hinst);
+    ok(ret, "Failed to unregister class.\n");
+
+    ReleaseActCtx(context);
+}
+
 START_TEST(class)
 {
     char **argv;
@@ -1178,6 +1477,7 @@ START_TEST(class)
     test_builtinproc();
     test_icons();
     test_comctl32_classes();
+    test_actctx_classes();
 
     /* this test unregisters the Button class so it should be executed at the end */
     test_instances();
