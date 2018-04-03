@@ -16,7 +16,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_KEYBOARD, IDC_STATIC, 7, 55, 32, 32
-    LTEXT "Tekan kombinasi tombol Kontrol-Alt-Delete",IDC_STATIC, 38, 60, 144, 14
+    LTEXT "Tekan kombinasi tombol Kontrol-Alt-Delete",IDC_STATIC, 38, 60, 230, 14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0, 0, 275, 147
