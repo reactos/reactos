@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define GetPteAddress(x) (PHARDWARE_PTE)(((((ULONG_PTR)(x)) >> 12) << 2) + 0xC0000000)
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
