@@ -916,12 +916,10 @@ static void testAuth(ULONG data_rep, BOOL fake)
 
     memset(&info, 0, sizeof(info));
     sec_status = QueryContextAttributesA(&client.ctxt, SECPKG_ATTR_NEGOTIATION_INFO, &info);
-todo_wine
     ok(sec_status == SEC_E_OK, "QueryContextAttributesA returned %08x\n", sec_status);
 
     pi = info.PackageInfo;
     ok(info.NegotiationState == SECPKG_NEGOTIATION_COMPLETE, "got %u\n", info.NegotiationState);
-todo_wine
     ok(pi != NULL, "expected non-NULL PackageInfo\n");
     if (pi)
     {

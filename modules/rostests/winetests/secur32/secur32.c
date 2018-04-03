@@ -22,10 +22,13 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
-#include <wincred.h>
+#include <rpc.h>
+#include <rpcdce.h>
 #define SECURITY_WIN32
 #include <security.h>
 #include <schannel.h>
+#include <wincred.h>
+#include <winsock2.h>
 
 #include "wine/test.h"
 
@@ -65,20 +68,40 @@ static void testGetComputerObjectNameA(void)
     UINT i;
 
     for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
+        size = 0;
+        SetLastError(0xdeadbeef);
+        rc = pGetComputerObjectNameA(formats[i], NULL, &size);
+        ok(!rc, "GetComputerObjectName(%u) should fail\n", formats[i]);
+        switch (formats[i])
+        {
+        case NameUnknown:
+            ok(GetLastError() == ERROR_INVALID_PARAMETER, "%u: got %u\n", formats[i], GetLastError());
+            break;
+        default:
+            ok(GetLastError() == ERROR_NONE_MAPPED ||
+               GetLastError() == ERROR_NO_SUCH_USER ||
+               GetLastError() == ERROR_CANT_ACCESS_DOMAIN_INFO ||
+               GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+               "%u: got %u\n", formats[i], GetLastError());
+            break;
+        }
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) continue;
+
         size = sizeof(name);
-        ZeroMemory(name, sizeof(name));
+        SetLastError(0xdeadbeef);
         rc = pGetComputerObjectNameA(formats[i], name, &size);
-        ok(rc || ((formats[i] == NameUnknown) &&
-           (GetLastError() == ERROR_INVALID_PARAMETER)) ||
-           (GetLastError() == ERROR_CANT_ACCESS_DOMAIN_INFO) ||
-           (GetLastError() == ERROR_NO_SUCH_DOMAIN) ||
-           (GetLastError() == ERROR_NO_SUCH_USER) ||
-           (GetLastError() == ERROR_NONE_MAPPED) ||
-           (GetLastError() == ERROR_ACCESS_DENIED),
-           "GetComputerObjectNameA(%d) failed: %d\n",
-           formats[i], GetLastError());
-        if (rc)
-            trace("GetComputerObjectNameA() returned %s\n", name);
+        switch (formats[i])
+        {
+        case NameUnknown:
+            ok(!rc, "GetComputerObjectName(%u) should fail\n", formats[i]);
+            ok(GetLastError() == ERROR_INVALID_PARAMETER, "%u: got %u\n", formats[i], GetLastError());
+            break;
+        default:
+            ok(rc, "GetComputerObjectName(%u) error %u\n", formats[i], GetLastError());
+            trace("GetComputerObjectName(%u) returned %s\n", formats[i], name);
+            break;
+        }
     }
 }
 
@@ -90,22 +113,40 @@ static void testGetComputerObjectNameW(void)
     UINT i;
 
     for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
+        size = 0;
+        SetLastError(0xdeadbeef);
+        rc = pGetComputerObjectNameW(formats[i], NULL, &size);
+        ok(!rc || broken(rc) /* win10 */, "GetComputerObjectName(%u) should fail\n", formats[i]);
+        switch (formats[i])
+        {
+        case NameUnknown:
+            ok(GetLastError() == ERROR_INVALID_PARAMETER, "%u: got %u\n", formats[i], GetLastError());
+            break;
+        default:
+            ok(GetLastError() == ERROR_NONE_MAPPED ||
+               GetLastError() == ERROR_NO_SUCH_USER ||
+               GetLastError() == ERROR_CANT_ACCESS_DOMAIN_INFO ||
+               GetLastError() == WSAHOST_NOT_FOUND ||
+               GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+               "%u: got %u\n", formats[i], GetLastError());
+            break;
+        }
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) continue;
+
         size = sizeof(nameW)/sizeof(nameW[0]);
-        ZeroMemory(nameW, sizeof(nameW));
+        SetLastError(0xdeadbeef);
         rc = pGetComputerObjectNameW(formats[i], nameW, &size);
-        ok(rc || ((formats[i] == NameUnknown) &&
-           (GetLastError() == ERROR_INVALID_PARAMETER)) ||
-           (GetLastError() == ERROR_CANT_ACCESS_DOMAIN_INFO) ||
-           (GetLastError() == ERROR_NO_SUCH_DOMAIN) ||
-           (GetLastError() == ERROR_NO_SUCH_USER) ||
-           (GetLastError() == ERROR_NONE_MAPPED) ||
-           (GetLastError() == ERROR_ACCESS_DENIED),
-           "GetComputerObjectNameW(%d) failed: %d\n",
-           formats[i], GetLastError());
-        if (rc) {
-            char name[256];
-            WideCharToMultiByte( CP_ACP, 0, nameW, -1, name, sizeof(name), NULL, NULL );
-            trace("GetComputerObjectNameW() returned %s\n", name);
+        switch (formats[i])
+        {
+        case NameUnknown:
+            ok(!rc, "GetComputerObjectName(%u) should fail\n", formats[i]);
+            ok(GetLastError() == ERROR_INVALID_PARAMETER, "%u: got %u\n", formats[i], GetLastError());
+            break;
+        default:
+            ok(rc, "GetComputerObjectName(%u) error %u\n", formats[i], GetLastError());
+            trace("GetComputerObjectName(%u) returned %s\n", formats[i], wine_dbgstr_w(nameW));
+            break;
         }
     }
 }

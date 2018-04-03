@@ -306,12 +306,9 @@ static void test_authentication(void)
 
         expected = sizeof(*pi) + lstrlenA(pi->Name) + 1 + lstrlenA(pi->Comment) + 1;
         got = HeapSize(GetProcessHeap(), 0, pi);
-todo_wine
         ok( got == expected, "got %u, expected %u\n", got, expected );
         eob = (char *)pi + expected;
-todo_wine
         ok( pi->Name + lstrlenA(pi->Name) < eob, "Name doesn't fit into allocated block\n" );
-todo_wine
         ok( pi->Comment + lstrlenA(pi->Comment) < eob, "Comment doesn't fit into allocated block\n" );
 
         status = FreeContextBuffer( pi );
