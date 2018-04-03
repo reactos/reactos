@@ -18,17 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#ifdef __REACTOS__
 #define UNICODE
+#endif
+#include "windns.h"
 
-#include <wine/test.h>
-
-//#include <stdarg.h>
-//#include <stdio.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-#include <windns.h>
+#include "wine/test.h"
 
 static WCHAR name1[] = {'l','o','c','a','l','h','o','s','t',0};
 static WCHAR name2[] = {'L','O','C','A','L','H','O','S','T',0};

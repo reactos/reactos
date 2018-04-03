@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/test.h>
+#include <stdarg.h>
 
-//#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "windns.h"
 
-//#include "windef.h"
-//#include "winbase.h"
-//#include "winnls.h"
-#include <windns.h>
+#include "wine/test.h"
 
 BOOL WINAPI DnsFlushResolverCacheEntry_A(PCSTR);
 
