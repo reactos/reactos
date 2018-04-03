@@ -17,6 +17,7 @@
 #ifdef __REACTOS__
 #include <ndk/rtlfuncs.h>
 #include <pseh/pseh2.h>
+typedef IO_STACK_LOCATION EXTENDED_IO_STACK_LOCATION, *PEXTENDED_IO_STACK_LOCATION;
 #endif
 #include <stdio.h>
 #include <time.h>

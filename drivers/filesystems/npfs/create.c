@@ -361,7 +361,7 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
             IN PIRP Irp)
 {
     IO_STATUS_BLOCK IoStatus;
-    PEXTENDED_IO_STACK_LOCATION IoStack;
+    PIO_STACK_LOCATION IoStack;
     UNICODE_STRING FileName;
     PFILE_OBJECT FileObject;
     PFILE_OBJECT RelatedFileObject;
@@ -375,7 +375,7 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
     TRACE("Entered\n");
 
     InitializeListHead(&DeferredList);
-    IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = IoStack->FileObject;
     RelatedFileObject = FileObject->RelatedFileObject;
     FileName = FileObject->FileName;
@@ -791,7 +791,7 @@ NTAPI
 NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {
-    PEXTENDED_IO_STACK_LOCATION IoStack;
+    PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     PFILE_OBJECT RelatedFileObject;
     USHORT Disposition, ShareAccess;
@@ -807,7 +807,7 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     InitializeListHead(&DeferredList);
     Process = IoGetRequestorProcess(Irp);
 
-    IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     FileObject = IoStack->FileObject;
     RelatedFileObject = FileObject->RelatedFileObject;
 

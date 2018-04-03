@@ -107,7 +107,7 @@ NTSTATUS DEFAULTAPI
 MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
                    PIRP Irp)
 {
-    PEXTENDED_IO_STACK_LOCATION IoStack;
+    PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     PMSFS_DEVICE_EXTENSION DeviceExtension;
     PMSFS_FCB Fcb;
@@ -119,7 +119,7 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("MsfsCreateMailslot(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
-    IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     DeviceExtension = DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Buffer = IoStack->Parameters.CreateMailslot.Parameters;
