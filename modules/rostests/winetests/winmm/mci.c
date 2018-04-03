@@ -848,7 +848,7 @@ static void test_playWAVE(HWND hwnd)
     err = mciSendStringA("play mysound from 250 to 0", NULL, 0, NULL);
     ok(err==MCIERR_OUTOFRANGE,"mci play from 250 to 0 returned %s\n", dbg_mcierr(err));
 
-    Sleep(50); /* Give play from 0 to 0 time to finish. */
+    Sleep(100); /* Give play from 0 to 0 time to finish. */
     todo_wine test_notification(hwnd, "play from 0 to 0", MCI_NOTIFY_SUCCESSFUL);
 
     err = mciSendStringA("status mysound mode", buf, sizeof(buf), hwnd);

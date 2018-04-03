@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include "windows.h"
 #include "mmsystem.h"
+#include "objbase.h"
 #include "wine/test.h"
 
 extern const char* mmsys_error(MMRESULT error); /* from wave.c */

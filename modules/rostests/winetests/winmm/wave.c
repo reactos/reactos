@@ -32,15 +32,18 @@
 #define NOBITMAP
 #include "mmddk.h"
 #include "mmreg.h"
-//#include "ks.h"
-//#include "ksguid.h"
-//#include "ksmedia.h"
+#include "ks.h"
+#include "ksguid.h"
+#ifndef __REACTOS__
+#include "ksmedia.h"
+#endif
 
 #include "winmm_test.h"
 
-/* FIXME */
+#ifdef __REACTOS__ /* FIXME */
 DEFINE_GUID(KSDATAFORMAT_SUBTYPE_PCM, 0x00000001, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 DEFINE_GUID(KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, 0x00000003, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+#endif
 
 static DWORD g_tid;
 
@@ -981,7 +984,10 @@ static void wave_out_test_device(UINT_PTR device)
        "waveOutGetDevCapsA(%s): MMSYSERR_NOERROR expected, got %s\n",
        dev_name(device),wave_out_error(rc));
     if (rc!=MMSYSERR_NOERROR)
+    {
+        HeapFree(GetProcessHeap(), 0, nameA);
         return;
+    }
 
     trace("  %s: \"%s\" (%s) %d.%d (%d:%d)\n",dev_name(device),capsA.szPname,
           (nameA?nameA:"failed"),capsA.vDriverVersion >> 8,
