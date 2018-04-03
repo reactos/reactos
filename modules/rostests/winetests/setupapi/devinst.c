@@ -1417,8 +1417,6 @@ START_TEST(devinst)
     testRegisterAndGetDetail();
     testDeviceRegistryPropertyA();
     testDeviceRegistryPropertyW();
-    testSetupDiGetClassDevsA();
-
     if (!winetest_interactive)
     {
         win_skip("testSetupDiGetINFClassA(), ROSTESTS-66.\n");
@@ -1427,4 +1425,5 @@ START_TEST(devinst)
     {
         testSetupDiGetINFClassA();
     }
+    testSetupDiGetClassDevsA();
 }

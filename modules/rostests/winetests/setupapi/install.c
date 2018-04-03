@@ -39,22 +39,15 @@ static const WCHAR inffileW[] = {'t','e','s','t','.','i','n','f',0};
 static char CURR_DIR[MAX_PATH];
 
 /* Notes on InstallHinfSectionA/W:
- * - InstallHinfSectionW on Win98 and InstallHinfSectionA on WinXP seem to be stubs - they do not do anything
- *   and simply return without displaying any error message or setting last error. We test whether
- *   InstallHinfSectionA sets last error, and if it doesn't we set it to NULL and use the W version if available.
- * - These functions do not return a value and do not always set last error to ERROR_SUCCESS when installation still
- *   occurs (e.g., unquoted inf file with spaces, registry keys are written but last error is 6). Also, on Win98 last error
- *   is set to ERROR_SUCCESS even if install fails (e.g., quoted inf file with spaces, no registry keys set, MessageBox with
- *   "Installation Error" displayed). Thus, we must use functional tests (e.g., is registry key created) to determine whether
- *   or not installation occurred.
- * - On installation problems, a MessageBox() is displayed and a Beep() is issued. The MessageBox() is disabled with a
- *   CBT hook.
+ * - InstallHinfSectionA on WinXP seems to be a stub - it does not do anything
+ *   and simply returns without displaying any error message or setting last
+ *   error.
+ * - These functions do not return a value and do not always set last error to
+ *   ERROR_SUCCESS when installation still occurs (e.g., unquoted inf file with
+ *   spaces, registry keys are written but last error is 6).
+ * - On installation problems, a MessageBox() is displayed and a Beep() is
+ *   issued. The MessageBox() is disabled with a CBT hook.
  */
-
-static void (WINAPI *pInstallHinfSectionA)(HWND, HINSTANCE, LPCSTR, INT);
-static void (WINAPI *pInstallHinfSectionW)(HWND, HINSTANCE, LPCWSTR, INT);
-static BOOL (WINAPI *pSetupGetInfFileListA)(PCSTR, DWORD, PSTR, DWORD, PDWORD);
-static BOOL (WINAPI *pSetupGetInfFileListW)(PCWSTR, DWORD, PWSTR, DWORD, PDWORD);
 
 /*
  * Helpers
@@ -93,15 +86,11 @@ static const char *cmdline_inf = "[Version]\n"
 static void run_cmdline(LPCSTR section, int mode, LPCSTR path)
 {
     CHAR cmdline[MAX_PATH * 2];
+    WCHAR cmdlinew[MAX_PATH * 2];
 
     sprintf(cmdline, "%s %d %s", section, mode, path);
-    if (pInstallHinfSectionA) pInstallHinfSectionA(NULL, NULL, cmdline, 0);
-    else
-    {
-        WCHAR cmdlinew[MAX_PATH * 2];
-        MultiByteToWideChar(CP_ACP, 0, cmdline, -1, cmdlinew, MAX_PATH*2);
-        pInstallHinfSectionW(NULL, NULL, cmdlinew, 0);
-    }
+    MultiByteToWideChar(CP_ACP, 0, cmdline, -1, cmdlinew, MAX_PATH*2);
+    InstallHinfSectionW(NULL, NULL, cmdlinew, 0);
 }
 
 static void ok_registry(BOOL expectsuccess)
@@ -192,17 +181,6 @@ static void test_install_svc_from(void)
     HINF infhandle;
     BOOL ret;
     SC_HANDLE scm_handle, svc_handle;
-
-    /* Bail out if we are on win98 */
-    SetLastError(0xdeadbeef);
-    scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
-
-    if (!scm_handle && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
-    {
-        win_skip("OpenSCManagerA is not implemented, we are most likely on win9x\n");
-        return;
-    }
-    CloseServiceHandle(scm_handle);
 
     /* Basic inf file to satisfy SetupOpenInfFileA */
     strcpy(inf, "[Version]\nSignature=\"$Chicago$\"\n");
@@ -365,16 +343,10 @@ static void test_driver_install(void)
         "[Winetest.DriverFiles]\n"
         "winetest.sys";
 
-    /* Bail out if we are on win98 */
+    /* Bail out if we don't have enough rights */
     SetLastError(0xdeadbeef);
     scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
-
-    if (!scm_handle && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
-    {
-        win_skip("OpenSCManagerA is not implemented, we are most likely on win9x\n");
-        return;
-    }
-    else if (!scm_handle && (GetLastError() == ERROR_ACCESS_DENIED))
+    if (!scm_handle && (GetLastError() == ERROR_ACCESS_DENIED))
     {
         skip("Not enough rights to install the service\n");
         return;
@@ -421,8 +393,6 @@ static void test_driver_install(void)
 static void test_profile_items(void)
 {
     char path[MAX_PATH], commonprogs[MAX_PATH];
-    HMODULE hShell32;
-    BOOL (WINAPI *pSHGetFolderPathA)(HWND hwnd, int nFolder, HANDLE hToken, DWORD dwFlags, LPSTR pszPath);
 
     static const char *inf =
         "[Version]\n"
@@ -440,15 +410,7 @@ static void test_profile_items(void)
         "Name=TestGroup,4\n"
         ;
 
-    hShell32 = LoadLibraryA("shell32");
-    pSHGetFolderPathA = (void*)GetProcAddress(hShell32, "SHGetFolderPathA");
-    if (!pSHGetFolderPathA)
-    {
-        win_skip("SHGetFolderPathA is not available\n");
-        goto cleanup;
-    }
-
-    if (S_OK != pSHGetFolderPathA(NULL, CSIDL_COMMON_PROGRAMS, NULL, SHGFP_TYPE_CURRENT, commonprogs))
+    if (S_OK != SHGetFolderPathA(NULL, CSIDL_COMMON_PROGRAMS, NULL, SHGFP_TYPE_CURRENT, commonprogs))
     {
         skip("No common program files directory exists\n");
         goto cleanup;
@@ -467,19 +429,12 @@ static void test_profile_items(void)
     run_cmdline("DefaultInstall", 128, path);
 
     snprintf(path, MAX_PATH, "%s\\TestItem.lnk", commonprogs);
-    if (INVALID_FILE_ATTRIBUTES == GetFileAttributesA(path))
-    {
-        win_skip("ProfileItems not implemented on this system\n");
-    }
-    else
-    {
-        snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
-        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "directory not created\n");
-        snprintf(path, MAX_PATH, "%s\\TestDir\\TestItem2.lnk", commonprogs);
-        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "link not created\n");
-        snprintf(path, MAX_PATH, "%s\\TestGroup", commonprogs);
-        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "group not created\n");
-    }
+    snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
+    ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "directory not created\n");
+    snprintf(path, MAX_PATH, "%s\\TestDir\\TestItem2.lnk", commonprogs);
+    ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "link not created\n");
+    snprintf(path, MAX_PATH, "%s\\TestGroup", commonprogs);
+    ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "group not created\n");
 
     snprintf(path, MAX_PATH, "%s\\TestItem.lnk", commonprogs);
     DeleteFileA(path);
@@ -493,7 +448,6 @@ static void test_profile_items(void)
     RemoveDirectoryA(path);
 
 cleanup:
-    if (hShell32) FreeLibrary(hShell32);
     DeleteFileA(inffile);
 }
 
@@ -508,12 +462,6 @@ static void test_inffilelistA(void)
     char dir[MAX_PATH], *p;
     DWORD expected, outsize;
     BOOL ret;
-
-    if(!pSetupGetInfFileListA)
-    {
-        win_skip("SetupGetInfFileListA not present\n");
-        return;
-    }
 
     /* create a private directory, the temp directory may contain some
      * inf files left over from old installations
@@ -541,8 +489,8 @@ static void test_inffilelistA(void)
     /* mixed style
      */
     expected = 3 + strlen(inffile) + strlen(inffile2);
-    ret = pSetupGetInfFileListA(dir, INF_STYLE_OLDNT | INF_STYLE_WIN4, buffer,
-                                MAX_PATH, &outsize);
+    ret = SetupGetInfFileListA(dir, INF_STYLE_OLDNT | INF_STYLE_WIN4, buffer,
+                               MAX_PATH, &outsize);
     ok(ret, "expected SetupGetInfFileListA to succeed!\n");
     ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
          expected, outsize);
@@ -579,30 +527,19 @@ static void test_inffilelist(void)
     DWORD expected, outsize;
     BOOL ret;
 
-    if(!pSetupGetInfFileListW)
-    {
-        win_skip("SetupGetInfFileListW not present\n");
-        return;
-    }
-
     /* NULL means %windir%\\inf
      * get the value as reference
      */
     expected = 0;
     SetLastError(0xdeadbeef);
-    ret = pSetupGetInfFileListW(NULL, INF_STYLE_WIN4, NULL, 0, &expected);
-    if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-    {
-        win_skip("SetupGetInfFileListW not implemented\n");
-        return;
-    }
+    ret = SetupGetInfFileListW(NULL, INF_STYLE_WIN4, NULL, 0, &expected);
     ok(ret, "expected SetupGetInfFileListW to succeed! Error: %d\n", GetLastError());
     ok(expected > 0, "expected required buffersize to be at least 1\n");
 
     /* check if an empty string doesn't behaves like NULL */
     outsize = 0;
     SetLastError(0xdeadbeef);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
     ok(!ret, "expected SetupGetInfFileListW to fail!\n");
 
     /* create a private directory, the temp directory may contain some
@@ -632,7 +569,7 @@ static void test_inffilelist(void)
     MultiByteToWideChar(CP_ACP, 0, "\\not_existent", -1, ptr, MAX_PATH - lstrlenW(dir));
     outsize = 0xffffffff;
     SetLastError(0xdeadbeef);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
     ok(ret, "expected SetupGetInfFileListW to succeed!\n");
     ok(outsize == 1, "expected required buffersize to be 1, got %d\n", outsize);
     ok(ERROR_PATH_NOT_FOUND == GetLastError(),
@@ -648,7 +585,7 @@ static void test_inffilelist(void)
     MultiByteToWideChar(CP_ACP, 0, invalid_inf, -1, ptr+1, MAX_PATH - lstrlenW(dir));
     outsize = 0xffffffff;
     SetLastError(0xdeadbeef);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
     ok(!ret, "expected SetupGetInfFileListW to fail!\n");
     ok(ERROR_DIRECTORY == GetLastError(),
        "expected error ERROR_DIRECTORY, got %d\n", GetLastError());
@@ -658,7 +595,7 @@ static void test_inffilelist(void)
     dir[1 + lstrlenW(dir)] = 0;
     dir[lstrlenW(dir)] = '\\';
     SetLastError(0xdeadbeef);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_WIN4, NULL, 0, &outsize);
     ok(!ret, "expected SetupGetInfFileListW to fail!\n");
     ok(ERROR_DIRECTORY == GetLastError(),
        "expected error ERROR_DIRECTORY, got %d\n", GetLastError());
@@ -667,7 +604,7 @@ static void test_inffilelist(void)
      */
     *ptr = 0;
     expected = 3 + strlen(inffile) + strlen(inffile2);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
     ok(ret, "expected SetupGetInfFileListW to succeed!\n");
     ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
          expected, outsize);
@@ -678,7 +615,7 @@ static void test_inffilelist(void)
     /* upper case value
      */
     create_inf_file(inffile2, inf2);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
     ok(ret, "expected SetupGetInfFileListW to succeed!\n");
     ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
          expected, outsize);
@@ -690,7 +627,7 @@ static void test_inffilelist(void)
      */
     create_inf_file(inffile2, infNT);
     expected = 3 + strlen(inffile) + strlen(inffile2);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_WIN4, buffer, MAX_PATH, &outsize);
     ok(ret, "expected SetupGetInfFileListW to succeed!\n");
     ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
          expected, outsize);
@@ -701,7 +638,7 @@ static void test_inffilelist(void)
     /* old style
      */
     expected = 2 + strlen(invalid_inf);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_OLDNT, buffer, MAX_PATH, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_OLDNT, buffer, MAX_PATH, &outsize);
     ok(ret, "expected SetupGetInfFileListW to succeed!\n");
     ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
          expected, outsize);
@@ -711,8 +648,8 @@ static void test_inffilelist(void)
     /* mixed style
      */
     expected = 4 + strlen(inffile) + strlen(inffile2) + strlen(invalid_inf);
-    ret = pSetupGetInfFileListW(dir, INF_STYLE_OLDNT | INF_STYLE_WIN4, buffer,
-                                MAX_PATH, &outsize);
+    ret = SetupGetInfFileListW(dir, INF_STYLE_OLDNT | INF_STYLE_WIN4, buffer,
+                               MAX_PATH, &outsize);
     ok(ret, "expected SetupGetInfFileListW to succeed!\n");
     ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
          expected, outsize);
@@ -787,7 +724,6 @@ static void test_dirid(void)
 
 START_TEST(install)
 {
-    HMODULE hsetupapi = GetModuleHandleA("setupapi.dll");
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
     DWORD len;
 
@@ -800,49 +736,21 @@ START_TEST(install)
     if(len && (CURR_DIR[len - 1] == '\\'))
         CURR_DIR[len - 1] = 0;
 
-    pInstallHinfSectionA = (void *)GetProcAddress(hsetupapi, "InstallHinfSectionA");
-    pInstallHinfSectionW = (void *)GetProcAddress(hsetupapi, "InstallHinfSectionW");
-    pSetupGetInfFileListA = (void *)GetProcAddress(hsetupapi, "SetupGetInfFileListA");
-    pSetupGetInfFileListW = (void *)GetProcAddress(hsetupapi, "SetupGetInfFileListW");
+    /* Set CBT hook to disallow MessageBox creation in current thread */
+    hhook = SetWindowsHookExA(WH_CBT, cbt_hook_proc, 0, GetCurrentThreadId());
+    assert(hhook != 0);
 
-    if (pInstallHinfSectionA)
-    {
-        /* Check if pInstallHinfSectionA sets last error or is a stub (as on WinXP) */
-        static const char *minimal_inf = "[Version]\nSignature=\"$Chicago$\"\n";
-        char cmdline[MAX_PATH*2];
-        BOOL ret;
-        create_inf_file(inffile, minimal_inf);
-        sprintf(cmdline, "DefaultInstall 128 %s\\%s", CURR_DIR, inffile);
-        SetLastError(0xdeadbeef);
-        pInstallHinfSectionA(NULL, NULL, cmdline, 0);
-        if (GetLastError() == 0xdeadbeef)
-        {
-            skip("InstallHinfSectionA is broken (stub)\n");
-            pInstallHinfSectionA = NULL;
-        }
-        ret = DeleteFileA(inffile);
-        ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
-    }
-    if (!pInstallHinfSectionW && !pInstallHinfSectionA)
-        win_skip("InstallHinfSectionA and InstallHinfSectionW are not available\n");
-    else
-    {
-        /* Set CBT hook to disallow MessageBox creation in current thread */
-        hhook = SetWindowsHookExA(WH_CBT, cbt_hook_proc, 0, GetCurrentThreadId());
-        assert(hhook != 0);
+    test_cmdline();
+    test_registry();
+    test_install_svc_from();
+    test_driver_install();
+    test_dirid();
 
-        test_cmdline();
-        test_registry();
-        test_install_svc_from();
-        test_driver_install();
-        test_dirid();
+    UnhookWindowsHookEx(hhook);
 
-        UnhookWindowsHookEx(hhook);
-
-        /* We have to run this test after the CBT hook is disabled because
-            ProfileItems needs to create a window on Windows XP. */
-        test_profile_items();
-    }
+    /* We have to run this test after the CBT hook is disabled because
+        ProfileItems needs to create a window on Windows XP. */
+    test_profile_items();
 
     test_inffilelist();
     test_inffilelistA();
