@@ -19,7 +19,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <assert.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+
+#include "wine/test.h"
+
+#include "winuser.h"
+#include "winerror.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 
