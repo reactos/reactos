@@ -561,6 +561,7 @@ static void test_runner(void (*p_run_test)(void))
     WaitForSingleObject(thread, INFINITE);
     CloseHandle(event_handle);
     CloseHandle(pipe_handle);
+    CloseHandle(thread);
 }
 
 START_TEST(service)
