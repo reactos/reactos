@@ -48,6 +48,11 @@ static HDC (WINAPI *pwglGetPbufferDCARB)(HPBUFFERARB);
 static BOOL (WINAPI *pwglSwapIntervalEXT)(int interval);
 static int (WINAPI *pwglGetSwapIntervalEXT)(void);
 
+/* GL_ARB_debug_output */
+static void (WINAPI *pglDebugMessageCallbackARB)(void *, void *);
+static void (WINAPI *pglDebugMessageControlARB)(GLenum, GLenum, GLenum, GLsizei, const GLuint *, GLboolean);
+static void (WINAPI *pglDebugMessageInsertARB)(GLenum, GLenum, GLuint, GLenum, GLsizei, const char *);
+
 static const char* wgl_extensions = NULL;
 
 static void init_functions(void)
@@ -79,6 +84,11 @@ static void init_functions(void)
     /* WGL_EXT_swap_control */
     GET_PROC(wglSwapIntervalEXT)
     GET_PROC(wglGetSwapIntervalEXT)
+
+    /* GL_ARB_debug_output */
+    GET_PROC(glDebugMessageCallbackARB)
+    GET_PROC(glDebugMessageControlARB)
+    GET_PROC(glDebugMessageInsertARB)
 
 #undef GET_PROC
 }
@@ -209,7 +219,7 @@ static void test_pbuffers(HDC hdc)
     else skip("Pbuffer test for offscreen pixelformat skipped as no offscreen-only format with pbuffer capabilities has been found\n");
 }
 
-static int test_pfd(const PIXELFORMATDESCRIPTOR *pfd)
+static int test_pfd(const PIXELFORMATDESCRIPTOR *pfd, PIXELFORMATDESCRIPTOR *fmt)
 {
     int pf;
     HDC hdc;
@@ -222,6 +232,12 @@ static int test_pfd(const PIXELFORMATDESCRIPTOR *pfd)
 
     hdc = GetDC( hwnd );
     pf = ChoosePixelFormat( hdc, pfd );
+    if (pf && fmt)
+    {
+        memset(fmt, 0, sizeof(*fmt));
+        ok(DescribePixelFormat( hdc, pf, sizeof(*fmt), fmt ),
+           "DescribePixelFormat failed with error: %u\n", GetLastError());
+    }
     ReleaseDC( hwnd, hdc );
     DestroyWindow( hwnd );
 
@@ -249,59 +265,103 @@ static void test_choosepixelformat(void)
         0,                     /* reserved */
         0, 0, 0                /* layer masks */
     };
+    PIXELFORMATDESCRIPTOR ret_fmt;
 
-    ok( test_pfd(&pfd), "Simple pfd failed\n" );
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
     pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
     pfd.dwFlags |= PFD_STEREO_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
+    pfd.iPixelType = 32;
+    ok( test_pfd(&pfd, &ret_fmt), "Invalid pixel format 32 failed\n" );
+    ok( ret_fmt.iPixelType == PFD_TYPE_RGBA, "Expected pixel type PFD_TYPE_RGBA, got %d\n", ret_fmt.iPixelType );
+    pfd.iPixelType = 33;
+    ok( test_pfd(&pfd, &ret_fmt), "Invalid pixel format 33 failed\n" );
+    ok( ret_fmt.iPixelType == PFD_TYPE_RGBA, "Expected pixel type PFD_TYPE_RGBA, got %d\n", ret_fmt.iPixelType );
+    pfd.iPixelType = 15;
+    ok( test_pfd(&pfd, &ret_fmt), "Invalid pixel format 15 failed\n" );
+    ok( ret_fmt.iPixelType == PFD_TYPE_RGBA, "Expected pixel type PFD_TYPE_RGBA, got %d\n", ret_fmt.iPixelType );
+    pfd.iPixelType = PFD_TYPE_RGBA;
 
     pfd.cColorBits = 32;
-    ok( test_pfd(&pfd), "Simple pfd failed\n" );
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
     pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
     pfd.dwFlags |= PFD_STEREO_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
     pfd.cColorBits = 0;
 
     pfd.cAlphaBits = 8;
-    ok( test_pfd(&pfd), "Simple pfd failed\n" );
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
     pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
     pfd.dwFlags |= PFD_STEREO_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
     pfd.cAlphaBits = 0;
 
     pfd.cStencilBits = 8;
-    ok( test_pfd(&pfd), "Simple pfd failed\n" );
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
     pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
     pfd.dwFlags |= PFD_STEREO_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
     pfd.cStencilBits = 0;
 
     pfd.cAuxBuffers = 1;
-    ok( test_pfd(&pfd), "Simple pfd failed\n" );
+    ok( test_pfd(&pfd, NULL), "Simple pfd failed\n" );
     pfd.dwFlags |= PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE failed\n" );
     pfd.dwFlags |= PFD_STEREO_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_DOUBLEBUFFER_DONTCARE|PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_DOUBLEBUFFER_DONTCARE;
-    ok( test_pfd(&pfd), "PFD_STEREO_DONTCARE failed\n" );
+    ok( test_pfd(&pfd, NULL), "PFD_STEREO_DONTCARE failed\n" );
     pfd.dwFlags &= ~PFD_STEREO_DONTCARE;
     pfd.cAuxBuffers = 0;
+}
+
+static void WINAPI gl_debug_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                                             GLsizei length, const GLchar *message, const void *userParam)
+{
+    DWORD *count = (DWORD *)userParam;
+    (*count)++;
+}
+
+static void test_debug_message_callback(void)
+{
+    static const char testmsg[] = "Hello World";
+    DWORD count;
+
+    if (!pglDebugMessageCallbackARB)
+    {
+        skip("glDebugMessageCallbackARB not supported\n");
+        return;
+    }
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+    pglDebugMessageCallbackARB(gl_debug_message_callback, &count);
+    pglDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+
+    count = 0;
+    pglDebugMessageInsertARB(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, 0x42424242,
+                             GL_DEBUG_SEVERITY_LOW, sizeof(testmsg), testmsg);
+    ok(count == 1, "expected count == 1, got %u\n", count);
+
+    glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDisable(GL_DEBUG_OUTPUT);
 }
 
 static void test_setpixelformat(HDC winhdc)
@@ -442,7 +502,7 @@ static void test_sharelists(HDC winhdc)
         res = wglMakeCurrent(winhdc, hglrc2);
         ok(res, "Make current failed\n");
         res = wglShareLists(hglrc1, hglrc2);
-        todo_wine ok(res, "Sharing display lists with a destination context which has been made current failed\n");
+        ok(res, "Sharing display lists with a destination context which has been made current failed\n");
         wglMakeCurrent(0, 0);
         wglDeleteContext(hglrc2);
     }
@@ -1787,6 +1847,7 @@ START_TEST(opengl)
         }
 
         test_choosepixelformat();
+        test_debug_message_callback();
         test_setpixelformat(hdc);
         test_destroy(hdc);
         test_sharelists(hdc);
