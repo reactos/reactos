@@ -21,16 +21,16 @@
 
 #include <stdarg.h>
 
-#include <windef.h>
-#include <winbase.h>
-//#include "winerror.h"
-#include <wingdi.h>
-#include <winreg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "wingdi.h"
+#include "winreg.h"
 
-#include <winspool.h>
-#include <ddk/winsplp.h>
+#include "winspool.h"
+#include "ddk/winsplp.h"
 
-#include <wine/test.h>
+#include "wine/test.h"
 
 
 /* ##### */
