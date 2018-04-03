@@ -21,10 +21,24 @@ list(APPEND SOURCE
     infback.c
     uncompr.c)
 
+list(APPEND MINIZIP_SOURCE
+    contrib/minizip/crypt.h
+    contrib/minizip/ioapi.c
+    contrib/minizip/ioapi.h
+    contrib/minizip/iowin32.c
+    contrib/minizip/iowin32.h
+    contrib/minizip/unzip.c
+    contrib/minizip/unzip.h
+    contrib/minizip/zip.c
+    contrib/minizip/zip.h)
+
+
 if(CMAKE_CROSSCOMPILING)
     add_library(zlib ${SOURCE} ${SOLO_SOURCE})
     add_library(zlib_solo ${SOLO_SOURCE})
     add_target_compile_definitions(zlib_solo Z_SOLO)
+    add_library(minizip ${MINIZIP_SOURCE})
+    add_dependencies(minizip xdk)
 else()
     add_library(zlibhost ${SOLO_SOURCE})
     add_target_compile_definitions(zlibhost Z_SOLO)
