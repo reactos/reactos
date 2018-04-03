@@ -19,7 +19,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <limits.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
 
 static const char foobarA[] = "foobar";
 static const WCHAR foobarW[] = {'f','o','o','b','a','r',0};

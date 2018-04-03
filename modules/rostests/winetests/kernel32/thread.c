@@ -18,7 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+/* Define _WIN32_WINNT to get SetThreadIdealProcessor on Windows */
+#ifndef __REACTOS__
+#define _WIN32_WINNT 0x0600
+#endif
+
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+/* the tests intentionally pass invalid pointers and need an exception handler */
+#define WINE_NO_INLINE_STRING
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <winnt.h>
+#include <winerror.h>
+#include <winnls.h>
+#include <winternl.h>
+#include "wine/test.h"
 
 /* THREAD_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */
 #define THREAD_ALL_ACCESS_NT4 (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3ff)
@@ -1380,10 +1400,12 @@ static DWORD WINAPI LS_ThreadProc(LPVOID p)
     ok(LS_index0 != LS_index1, "%s failed\n", LS_AllocFuncName);
 
     /* Both slots should be initialized to NULL */
+    SetLastError(0xdeadbeef);
     val = LS_GetValueFunc(LS_index0);
     ok(GetLastError() == ERROR_SUCCESS, "%s failed\n", LS_GetValueFuncName);
     ok(val == NULL, "Slot not initialized correctly\n");
 
+    SetLastError(0xdeadbeef);
     val = LS_GetValueFunc(LS_index1);
     ok(GetLastError() == ERROR_SUCCESS, "%s failed\n", LS_GetValueFuncName);
     ok(val == NULL, "Slot not initialized correctly\n");
@@ -1392,10 +1414,12 @@ static DWORD WINAPI LS_ThreadProc(LPVOID p)
 
   if (sync_threads_and_run_one(0, id))
   {
+    SetLastError(0xdeadbeef);
     val = LS_GetValueFunc(LS_index0);
     ok(GetLastError() == ERROR_SUCCESS, "%s failed\n", LS_GetValueFuncName);
     ok(val == NULL, "Slot not initialized correctly\n");
 
+    SetLastError(0xdeadbeef);
     val = LS_GetValueFunc(LS_index1);
     ok(GetLastError() == ERROR_SUCCESS, "%s failed\n", LS_GetValueFuncName);
     ok(val == NULL, "Slot not initialized correctly\n");
@@ -1406,10 +1430,12 @@ static DWORD WINAPI LS_ThreadProc(LPVOID p)
     ret = LS_SetValueFunc(LS_index1, (LPVOID) 2);
     ok(ret, "%s failed\n", LS_SetValueFuncName);
 
+    SetLastError(0xdeadbeef);
     val = LS_GetValueFunc(LS_index0);
     ok(GetLastError() == ERROR_SUCCESS, "%s failed\n", LS_GetValueFuncName);
     ok(val == (LPVOID) 1, "Slot not initialized correctly\n");
 
+    SetLastError(0xdeadbeef);
     val = LS_GetValueFunc(LS_index1);
     ok(GetLastError() == ERROR_SUCCESS, "%s failed\n", LS_GetValueFuncName);
     ok(val == (LPVOID) 2, "Slot not initialized correctly\n");
@@ -1702,6 +1728,7 @@ static WORD get_thread_fpu_cw(void)
     res = CloseHandle(ctx.finished);
     ok(!!res, "Failed to close event handle, last error %#x.\n", GetLastError());
 
+    CloseHandle(thread);
     return ctx.cw;
 }
 

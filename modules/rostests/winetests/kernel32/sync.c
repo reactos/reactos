@@ -18,24 +18,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#ifndef __REACTOS__
+#define _WIN32_WINNT 0x500
+#endif
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winternl.h>
 
+#include "wine/test.h"
+
+#ifdef __REACTOS__
 #define QueryDepthSList(x) RtlQueryDepthSList(x)
 #define InterlockedPushEntrySList(x,y) RtlInterlockedPushEntrySList(x,y)
 #define InterlockedPopEntrySList(x) RtlInterlockedPopEntrySList(x)
 #define InterlockedFlushSList(x) RtlInterlockedFlushSList(x)
+#endif
 
 #undef __fastcall
 #define __fastcall __stdcall
 
-static BOOL   (WINAPI *pChangeTimerQueueTimer)(HANDLE, HANDLE, ULONG, ULONG);
-static HANDLE (WINAPI *pCreateTimerQueue)(void);
-static BOOL   (WINAPI *pCreateTimerQueueTimer)(PHANDLE, HANDLE, WAITORTIMERCALLBACK,
-                                               PVOID, DWORD, DWORD, ULONG);
-static HANDLE (WINAPI *pCreateWaitableTimerA)(SECURITY_ATTRIBUTES*,BOOL,LPCSTR);
-static BOOL   (WINAPI *pDeleteTimerQueueEx)(HANDLE, HANDLE);
-static BOOL   (WINAPI *pDeleteTimerQueueTimer)(HANDLE, HANDLE, HANDLE);
-static HANDLE (WINAPI *pOpenWaitableTimerA)(DWORD,BOOL,LPCSTR);
 static HANDLE (WINAPI *pCreateMemoryResourceNotification)(MEMORY_RESOURCE_NOTIFICATION_TYPE);
 static BOOL   (WINAPI *pQueryMemoryResourceNotification)(HANDLE, PBOOL);
 static VOID   (WINAPI *pInitOnceInitialize)(PINIT_ONCE);
@@ -106,25 +110,12 @@ static void init_fastcall_thunk(void)
 
 static void test_signalandwait(void)
 {
-    DWORD (WINAPI *pSignalObjectAndWait)(HANDLE, HANDLE, DWORD, BOOL);
-    HMODULE kernel32;
     DWORD r;
     HANDLE event[2], semaphore[2], file;
     int i;
 
-    kernel32 = GetModuleHandleA("kernel32.dll");
-    pSignalObjectAndWait = (void*) GetProcAddress(kernel32, "SignalObjectAndWait");
-
-    if (!pSignalObjectAndWait)
-        return;
-
     /* invalid parameters */
-    r = pSignalObjectAndWait(NULL, NULL, 0, 0);
-    if (r == ERROR_INVALID_FUNCTION)
-    {
-        win_skip("SignalObjectAndWait is not implemented\n");
-        return; /* Win98/ME */
-    }
+    r = SignalObjectAndWait(NULL, NULL, 0, 0);
     ok( r == WAIT_FAILED, "should fail\n");
 
     event[0] = CreateEventW(NULL, 0, 0, NULL);
@@ -132,22 +123,22 @@ static void test_signalandwait(void)
 
     ok( event[0] && event[1], "failed to create event flags\n");
 
-    r = pSignalObjectAndWait(event[0], NULL, 0, FALSE);
+    r = SignalObjectAndWait(event[0], NULL, 0, FALSE);
     ok( r == WAIT_FAILED, "should fail\n");
 
-    r = pSignalObjectAndWait(NULL, event[0], 0, FALSE);
+    r = SignalObjectAndWait(NULL, event[0], 0, FALSE);
     ok( r == WAIT_FAILED, "should fail\n");
 
 
     /* valid parameters */
-    r = pSignalObjectAndWait(event[0], event[1], 0, FALSE);
+    r = SignalObjectAndWait(event[0], event[1], 0, FALSE);
     ok( r == WAIT_OBJECT_0, "should succeed\n");
 
     /* event[0] is now signalled - we repeat this test multiple times
      * to ensure that the wineserver handles this situation properly. */
     for (i = 0; i < 10000; i++)
     {
-        r = pSignalObjectAndWait(event[0], event[0], 0, FALSE);
+        r = SignalObjectAndWait(event[0], event[0], 0, FALSE);
         ok(r == WAIT_OBJECT_0, "should succeed\n");
     }
 
@@ -155,12 +146,12 @@ static void test_signalandwait(void)
     r = WaitForSingleObject(event[0], 0);
     ok( r == WAIT_TIMEOUT, "event was signalled\n");
 
-    r = pSignalObjectAndWait(event[0], event[0], 0, FALSE);
+    r = SignalObjectAndWait(event[0], event[0], 0, FALSE);
     ok( r == WAIT_OBJECT_0, "should succeed\n");
 
     /* clear event[1] and check for a timeout */
     ok(ResetEvent(event[1]), "failed to clear event[1]\n");
-    r = pSignalObjectAndWait(event[0], event[1], 0, FALSE);
+    r = SignalObjectAndWait(event[0], event[1], 0, FALSE);
     ok( r == WAIT_TIMEOUT, "should timeout\n");
 
     CloseHandle(event[0]);
@@ -171,10 +162,10 @@ static void test_signalandwait(void)
     semaphore[1] = CreateSemaphoreW( NULL, 1, 1, NULL );
     ok( semaphore[0] && semaphore[1], "failed to create semaphore\n");
 
-    r = pSignalObjectAndWait(semaphore[0], semaphore[1], 0, FALSE);
+    r = SignalObjectAndWait(semaphore[0], semaphore[1], 0, FALSE);
     ok( r == WAIT_OBJECT_0, "should succeed\n");
 
-    r = pSignalObjectAndWait(semaphore[0], semaphore[1], 0, FALSE);
+    r = SignalObjectAndWait(semaphore[0], semaphore[1], 0, FALSE);
     ok( r == WAIT_FAILED, "should fail\n");
 
     r = ReleaseSemaphore(semaphore[0],1,NULL);
@@ -189,7 +180,7 @@ static void test_signalandwait(void)
     /* try a registry key */
     file = CreateFileA("x", GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL);
-    r = pSignalObjectAndWait(file, file, 0, FALSE);
+    r = SignalObjectAndWait(file, file, 0, FALSE);
     ok( r == WAIT_FAILED, "should fail\n");
     ok( ERROR_INVALID_HANDLE == GetLastError(), "should return invalid handle error\n");
     CloseHandle(file);
@@ -281,6 +272,16 @@ todo_wine
     hOpened = OpenMutexA(READ_CONTROL, FALSE, "winetestmutex");
     ok(!hOpened, "OpenMutex succeeded\n");
     ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hOpened = OpenMutexA(READ_CONTROL, FALSE, NULL);
+    ok(!hOpened, "OpenMutex succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hOpened = OpenMutexW(READ_CONTROL, FALSE, NULL);
+    ok(!hOpened, "OpenMutex succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     hOpened = CreateMutexA(NULL, FALSE, "WineTestMutex");
@@ -535,6 +536,16 @@ static void test_event(void)
     ok( !handle2, "OpenEvent succeeded\n");
     ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
 
+    SetLastError(0xdeadbeef);
+    handle2 = OpenEventA( EVENT_ALL_ACCESS, FALSE, NULL );
+    ok( !handle2, "OpenEvent succeeded\n");
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    handle2 = OpenEventW( EVENT_ALL_ACCESS, FALSE, NULL );
+    ok( !handle2, "OpenEvent succeeded\n");
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
+
     CloseHandle( handle );
 
     /* resource notifications are events too */
@@ -604,6 +615,16 @@ static void test_semaphore(void)
     ok( !handle2, "OpenSemaphore succeeded\n");
     ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
 
+    SetLastError(0xdeadbeef);
+    handle2 = OpenSemaphoreA( SEMAPHORE_ALL_ACCESS, FALSE, NULL );
+    ok( !handle2, "OpenSemaphore succeeded\n");
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    handle2 = OpenSemaphoreW( SEMAPHORE_ALL_ACCESS, FALSE, NULL );
+    ok( !handle2, "OpenSemaphore succeeded\n");
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
+
     CloseHandle( handle );
 }
 
@@ -611,42 +632,44 @@ static void test_waitable_timer(void)
 {
     HANDLE handle, handle2;
 
-    if (!pCreateWaitableTimerA || !pOpenWaitableTimerA)
-    {
-        win_skip("{Create,Open}WaitableTimerA() is not available\n");
-        return;
-    }
-
     /* test case sensitivity */
 
     SetLastError(0xdeadbeef);
-    handle = pCreateWaitableTimerA(NULL, FALSE, __FILE__ ": Test WaitableTimer");
+    handle = CreateWaitableTimerA(NULL, FALSE, __FILE__ ": Test WaitableTimer");
     ok(handle != NULL, "CreateWaitableTimer failed with error %u\n", GetLastError());
     ok(GetLastError() == 0, "wrong error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    handle2 = pCreateWaitableTimerA(NULL, FALSE, __FILE__ ": Test WaitableTimer");
+    handle2 = CreateWaitableTimerA(NULL, FALSE, __FILE__ ": Test WaitableTimer");
     ok( handle2 != NULL, "CreateWaitableTimer failed with error %d\n", GetLastError());
     ok( GetLastError() == ERROR_ALREADY_EXISTS, "wrong error %u\n", GetLastError());
     CloseHandle( handle2 );
 
     SetLastError(0xdeadbeef);
-    handle2 = pCreateWaitableTimerA(NULL, FALSE, __FILE__ ": TEST WAITABLETIMER");
+    handle2 = CreateWaitableTimerA(NULL, FALSE, __FILE__ ": TEST WAITABLETIMER");
     ok( handle2 != NULL, "CreateWaitableTimer failed with error %d\n", GetLastError());
     ok( GetLastError() == 0, "wrong error %u\n", GetLastError());
     CloseHandle( handle2 );
 
     SetLastError(0xdeadbeef);
-    handle2 = pOpenWaitableTimerA( TIMER_ALL_ACCESS, FALSE, __FILE__ ": Test WaitableTimer");
+    handle2 = OpenWaitableTimerA( TIMER_ALL_ACCESS, FALSE, __FILE__ ": Test WaitableTimer");
     ok( handle2 != NULL, "OpenWaitableTimer failed with error %d\n", GetLastError());
     CloseHandle( handle2 );
 
     SetLastError(0xdeadbeef);
-    handle2 = pOpenWaitableTimerA( TIMER_ALL_ACCESS, FALSE, __FILE__ ": TEST WAITABLETIMER");
+    handle2 = OpenWaitableTimerA( TIMER_ALL_ACCESS, FALSE, __FILE__ ": TEST WAITABLETIMER");
     ok( !handle2, "OpenWaitableTimer succeeded\n");
-    ok( GetLastError() == ERROR_FILE_NOT_FOUND ||
-        GetLastError() == ERROR_INVALID_NAME, /* win98 */
-        "wrong error %u\n", GetLastError());
+    ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    handle2 = OpenWaitableTimerA( TIMER_ALL_ACCESS, FALSE, NULL );
+    ok( !handle2, "OpenWaitableTimer failed with error %d\n", GetLastError());
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    handle2 = OpenWaitableTimerW( TIMER_ALL_ACCESS, FALSE, NULL );
+    ok( !handle2, "OpenWaitableTimer failed with error %d\n", GetLastError());
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
 
     CloseHandle( handle );
 }
@@ -776,7 +799,7 @@ static void CALLBACK timer_queue_cb2(PVOID p, BOOLEAN timedOut)
         SetLastError(0xdeadbeef);
         /* Note, XP SP2 does *not* do any deadlock checking, so passing
            INVALID_HANDLE_VALUE here will just hang.  */
-        ret = pDeleteTimerQueueTimer(d->q, d->t, NULL);
+        ret = DeleteTimerQueueTimer(d->q, d->t, NULL);
         ok(!ret, "DeleteTimerQueueTimer\n");
         ok(GetLastError() == ERROR_IO_PENDING, "DeleteTimerQueueTimer\n");
     }
@@ -790,7 +813,7 @@ static void CALLBACK timer_queue_cb3(PVOID p, BOOLEAN timedOut)
     {
         /* Basically kill the timer since it won't have time to run
            again.  */
-        BOOL ret = pChangeTimerQueueTimer(d->q, d->t, 10000, 0);
+        BOOL ret = ChangeTimerQueueTimer(d->q, d->t, 10000, 0);
         ok(ret, "ChangeTimerQueueTimer\n");
     }
 }
@@ -806,7 +829,7 @@ static void CALLBACK timer_queue_cb4(PVOID p, BOOLEAN timedOut)
            period of zero (run once), then ChangeTimerQueueTimer will
            fail if the timer is already flagged.  Hence we really run
            only once.  Otherwise we will run multiple times.  */
-        BOOL ret = pChangeTimerQueueTimer(d->q, d->t, 50, 50);
+        BOOL ret = ChangeTimerQueueTimer(d->q, d->t, 50, 50);
         ok(ret, "ChangeTimerQueueTimer\n");
         ++d->num_calls;
     }
@@ -838,15 +861,15 @@ static void CALLBACK timer_queue_cb6(PVOID p, BOOLEAN timedOut)
 
         /* The delete will pend while we are in this callback.  */
         SetLastError(0xdeadbeef);
-        ret = pDeleteTimerQueueTimer(d->q, d->t, NULL);
+        ret = DeleteTimerQueueTimer(d->q, d->t, NULL);
         ok(!ret, "DeleteTimerQueueTimer\n");
         ok(GetLastError() == ERROR_IO_PENDING, "DeleteTimerQueueTimer\n");
 
-        ret = pCreateTimerQueueTimer(&t, d->q, timer_queue_cb1, NULL, 100, 0, 0);
+        ret = CreateTimerQueueTimer(&t, d->q, timer_queue_cb1, NULL, 100, 0, 0);
         ok(ret, "CreateTimerQueueTimer\n");
         ok(t != NULL, "CreateTimerQueueTimer\n");
 
-        ret = pDeleteTimerQueueTimer(d->q, t, INVALID_HANDLE_VALUE);
+        ret = DeleteTimerQueueTimer(d->q, t, INVALID_HANDLE_VALUE);
         ok(ret, "DeleteTimerQueueTimer\n");
 
         /* Now we stay alive by hanging around in the callback.  */
@@ -862,35 +885,27 @@ static void test_timer_queue(void)
     HANDLE e, et1, et2;
     BOOL ret, ret0;
 
-    if (!pChangeTimerQueueTimer || !pCreateTimerQueue || !pCreateTimerQueueTimer
-        || !pDeleteTimerQueueEx || !pDeleteTimerQueueTimer)
-    {
-        win_skip("TimerQueue API not present\n");
-        return;
-    }
-
     /* Test asynchronous deletion of the queue. */
-    q = pCreateTimerQueue();
+    q = CreateTimerQueue();
     ok(q != NULL, "CreateTimerQueue\n");
 
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueEx(q, NULL);
+    ret = DeleteTimerQueueEx(q, NULL);
     ok(ret /* vista */ || GetLastError() == ERROR_IO_PENDING,
        "DeleteTimerQueueEx, GetLastError: expected ERROR_IO_PENDING, got %d\n",
        GetLastError());
 
     /* Test synchronous deletion of the queue and running timers. */
-    q = pCreateTimerQueue();
+    q = CreateTimerQueue();
     ok(q != NULL, "CreateTimerQueue\n");
 
     /* Not called. */
     t0 = NULL;
     n0 = 0;
-    ret = pCreateTimerQueueTimer(&t0, q, timer_queue_cb1, &n0, 0,
-                                 300, 0);
+    ret = CreateTimerQueueTimer(&t0, q, timer_queue_cb1, &n0, 0, 300, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t0 != NULL, "CreateTimerQueueTimer\n");
-    ret0 = pDeleteTimerQueueTimer(q, t0, NULL);
+    ret0 = DeleteTimerQueueTimer(q, t0, NULL);
     ok((!ret0 && GetLastError() == ERROR_IO_PENDING) ||
        broken(ret0), /* Win 2000 & XP & 2003 */
        "DeleteTimerQueueTimer ret=%d le=%u\n", ret0, GetLastError());
@@ -898,40 +913,35 @@ static void test_timer_queue(void)
     /* Called once.  */
     t1 = NULL;
     n1 = 0;
-    ret = pCreateTimerQueueTimer(&t1, q, timer_queue_cb1, &n1, 0,
-                                 0, 0);
+    ret = CreateTimerQueueTimer(&t1, q, timer_queue_cb1, &n1, 0, 0, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t1 != NULL, "CreateTimerQueueTimer\n");
 
     /* A slow one.  */
     t2 = NULL;
     n2 = 0;
-    ret = pCreateTimerQueueTimer(&t2, q, timer_queue_cb1, &n2, 0,
-                                 100, 0);
+    ret = CreateTimerQueueTimer(&t2, q, timer_queue_cb1, &n2, 0, 100, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t2 != NULL, "CreateTimerQueueTimer\n");
 
     /* A fast one.  */
     t3 = NULL;
     n3 = 0;
-    ret = pCreateTimerQueueTimer(&t3, q, timer_queue_cb1, &n3, 0,
-                                 10, 0);
+    ret = CreateTimerQueueTimer(&t3, q, timer_queue_cb1, &n3, 0, 10, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t3 != NULL, "CreateTimerQueueTimer\n");
 
     /* Start really late (it won't start).  */
     t4 = NULL;
     n4 = 0;
-    ret = pCreateTimerQueueTimer(&t4, q, timer_queue_cb1, &n4, 10000,
-                                 10, 0);
+    ret = CreateTimerQueueTimer(&t4, q, timer_queue_cb1, &n4, 10000, 10, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t4 != NULL, "CreateTimerQueueTimer\n");
 
     /* Start soon, but delay so long it won't run again.  */
     t5 = NULL;
     n5 = 0;
-    ret = pCreateTimerQueueTimer(&t5, q, timer_queue_cb1, &n5, 0,
-                                 10000, 0);
+    ret = CreateTimerQueueTimer(&t5, q, timer_queue_cb1, &n5, 0, 10000, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t5 != NULL, "CreateTimerQueueTimer\n");
 
@@ -939,14 +949,14 @@ static void test_timer_queue(void)
     Sleep(500);
 
     /* Test deleting a once-only timer.  */
-    ret = pDeleteTimerQueueTimer(q, t1, INVALID_HANDLE_VALUE);
+    ret = DeleteTimerQueueTimer(q, t1, INVALID_HANDLE_VALUE);
     ok(ret, "DeleteTimerQueueTimer\n");
 
     /* A periodic timer.  */
-    ret = pDeleteTimerQueueTimer(q, t2, INVALID_HANDLE_VALUE);
+    ret = DeleteTimerQueueTimer(q, t2, INVALID_HANDLE_VALUE);
     ok(ret, "DeleteTimerQueueTimer\n");
 
-    ret = pDeleteTimerQueueEx(q, INVALID_HANDLE_VALUE);
+    ret = DeleteTimerQueueEx(q, INVALID_HANDLE_VALUE);
     ok(ret, "DeleteTimerQueueEx\n");
     todo_wine
     ok(n0 == 1 || broken(ret0 && n0 == 0), "Timer callback 0 expected 1 got %d\n", n0);
@@ -965,32 +975,30 @@ static void test_timer_queue(void)
         return;
     }
 
-    q = pCreateTimerQueue();
+    q = CreateTimerQueue();
     ok(q != NULL, "CreateTimerQueue\n");
 
     /* Run once and finish quickly (should be done when we delete it).  */
     t1 = NULL;
-    ret = pCreateTimerQueueTimer(&t1, q, timer_queue_cb5, NULL, 0, 0, 0);
+    ret = CreateTimerQueueTimer(&t1, q, timer_queue_cb5, NULL, 0, 0, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t1 != NULL, "CreateTimerQueueTimer\n");
 
     /* Run once and finish slowly (shouldn't be done when we delete it).  */
     t2 = NULL;
-    ret = pCreateTimerQueueTimer(&t2, q, timer_queue_cb5, (PVOID) 1000, 0,
-                                 0, 0);
+    ret = CreateTimerQueueTimer(&t2, q, timer_queue_cb5, (PVOID) 1000, 0, 0, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t2 != NULL, "CreateTimerQueueTimer\n");
 
     /* Run once and finish quickly (should be done when we delete it).  */
     t3 = NULL;
-    ret = pCreateTimerQueueTimer(&t3, q, timer_queue_cb5, NULL, 0, 0, 0);
+    ret = CreateTimerQueueTimer(&t3, q, timer_queue_cb5, NULL, 0, 0, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t3 != NULL, "CreateTimerQueueTimer\n");
 
     /* Run once and finish slowly (shouldn't be done when we delete it).  */
     t4 = NULL;
-    ret = pCreateTimerQueueTimer(&t4, q, timer_queue_cb5, (PVOID) 1000, 0,
-                                 0, 0);
+    ret = CreateTimerQueueTimer(&t4, q, timer_queue_cb5, (PVOID) 1000, 0, 0, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t4 != NULL, "CreateTimerQueueTimer\n");
 
@@ -1000,20 +1008,20 @@ static void test_timer_queue(void)
     /* DeleteTimerQueueTimer always returns PENDING with a NULL event,
        even if the timer is finished.  */
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueTimer(q, t1, NULL);
+    ret = DeleteTimerQueueTimer(q, t1, NULL);
     ok(ret /* vista */ || GetLastError() == ERROR_IO_PENDING,
        "DeleteTimerQueueTimer, GetLastError: expected ERROR_IO_PENDING, got %d\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueTimer(q, t2, NULL);
+    ret = DeleteTimerQueueTimer(q, t2, NULL);
     ok(!ret, "DeleteTimerQueueTimer call was expected to fail\n");
     ok(GetLastError() == ERROR_IO_PENDING,
        "DeleteTimerQueueTimer, GetLastError: expected ERROR_IO_PENDING, got %d\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueTimer(q, t3, et1);
+    ret = DeleteTimerQueueTimer(q, t3, et1);
     ok(ret, "DeleteTimerQueueTimer call was expected to fail\n");
     ok(GetLastError() == 0xdeadbeef,
        "DeleteTimerQueueTimer, GetLastError: expected 0xdeadbeef, got %d\n",
@@ -1022,7 +1030,7 @@ static void test_timer_queue(void)
        "Timer destruction event not triggered\n");
 
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueTimer(q, t4, et2);
+    ret = DeleteTimerQueueTimer(q, t4, et2);
     ok(!ret, "DeleteTimerQueueTimer call was expected to fail\n");
     ok(GetLastError() == ERROR_IO_PENDING,
        "DeleteTimerQueueTimer, GetLastError: expected ERROR_IO_PENDING, got %d\n",
@@ -1031,7 +1039,7 @@ static void test_timer_queue(void)
        "Timer destruction event not triggered\n");
 
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueEx(q, e);
+    ret = DeleteTimerQueueEx(q, e);
     ok(ret /* vista */ || GetLastError() == ERROR_IO_PENDING,
        "DeleteTimerQueueEx, GetLastError: expected ERROR_IO_PENDING, got %d\n",
        GetLastError());
@@ -1040,25 +1048,23 @@ static void test_timer_queue(void)
     CloseHandle(e);
 
     /* Test deleting/changing a timer in execution.  */
-    q = pCreateTimerQueue();
+    q = CreateTimerQueue();
     ok(q != NULL, "CreateTimerQueue\n");
 
     /* Test changing a once-only timer before it fires (this is allowed,
        whereas after it fires you cannot).  */
     n1 = 0;
-    ret = pCreateTimerQueueTimer(&t1, q, timer_queue_cb1, &n1, 10000,
-                                 0, 0);
+    ret = CreateTimerQueueTimer(&t1, q, timer_queue_cb1, &n1, 10000, 0, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t1 != NULL, "CreateTimerQueueTimer\n");
-    ret = pChangeTimerQueueTimer(q, t1, 0, 0);
+    ret = ChangeTimerQueueTimer(q, t1, 0, 0);
     ok(ret, "ChangeTimerQueueTimer\n");
 
     d2.t = t2 = NULL;
     d2.num_calls = 0;
     d2.max_calls = 3;
     d2.q = q;
-    ret = pCreateTimerQueueTimer(&t2, q, timer_queue_cb2, &d2, 10,
-                                 10, 0);
+    ret = CreateTimerQueueTimer(&t2, q, timer_queue_cb2, &d2, 10, 10, 0);
     d2.t = t2;
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t2 != NULL, "CreateTimerQueueTimer\n");
@@ -1067,8 +1073,7 @@ static void test_timer_queue(void)
     d3.num_calls = 0;
     d3.max_calls = 4;
     d3.q = q;
-    ret = pCreateTimerQueueTimer(&t3, q, timer_queue_cb3, &d3, 10,
-                                 10, 0);
+    ret = CreateTimerQueueTimer(&t3, q, timer_queue_cb3, &d3, 10, 10, 0);
     d3.t = t3;
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t3 != NULL, "CreateTimerQueueTimer\n");
@@ -1076,15 +1081,14 @@ static void test_timer_queue(void)
     d4.t = t4 = NULL;
     d4.num_calls = 0;
     d4.q = q;
-    ret = pCreateTimerQueueTimer(&t4, q, timer_queue_cb4, &d4, 10,
-                                 0, 0);
+    ret = CreateTimerQueueTimer(&t4, q, timer_queue_cb4, &d4, 10, 0, 0);
     d4.t = t4;
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t4 != NULL, "CreateTimerQueueTimer\n");
 
     Sleep(500);
 
-    ret = pDeleteTimerQueueEx(q, INVALID_HANDLE_VALUE);
+    ret = DeleteTimerQueueEx(q, INVALID_HANDLE_VALUE);
     ok(ret, "DeleteTimerQueueEx\n");
     ok(n1 == 1, "ChangeTimerQueueTimer\n");
     ok(d2.num_calls == d2.max_calls, "DeleteTimerQueueTimer\n");
@@ -1092,15 +1096,14 @@ static void test_timer_queue(void)
     ok(d4.num_calls == 1, "Timer flagged for deletion incorrectly\n");
 
     /* Test an obscure bug that was in the original implementation.  */
-    q = pCreateTimerQueue();
+    q = CreateTimerQueue();
     ok(q != NULL, "CreateTimerQueue\n");
 
     /* All the work is done in the callback.  */
     d1.t = t1 = NULL;
     d1.num_calls = 0;
     d1.q = q;
-    ret = pCreateTimerQueueTimer(&t1, q, timer_queue_cb6, &d1, 100,
-                                 100, WT_EXECUTELONGFUNCTION);
+    ret = CreateTimerQueueTimer(&t1, q, timer_queue_cb6, &d1, 100, 100, WT_EXECUTELONGFUNCTION);
     d1.t = t1;
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t1 != NULL, "CreateTimerQueueTimer\n");
@@ -1108,7 +1111,7 @@ static void test_timer_queue(void)
     Sleep(750);
 
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueEx(q, NULL);
+    ret = DeleteTimerQueueEx(q, NULL);
     ok(ret /* vista */ || GetLastError() == ERROR_IO_PENDING,
        "DeleteTimerQueueEx, GetLastError: expected ERROR_IO_PENDING, got %d\n",
        GetLastError());
@@ -1117,57 +1120,54 @@ static void test_timer_queue(void)
     /* Test functions on the default timer queue.  */
     t1 = NULL;
     n1 = 0;
-    ret = pCreateTimerQueueTimer(&t1, NULL, timer_queue_cb1, &n1, 1000,
-                                 1000, 0);
+    ret = CreateTimerQueueTimer(&t1, NULL, timer_queue_cb1, &n1, 1000, 1000, 0);
     ok(ret, "CreateTimerQueueTimer, default queue\n");
     ok(t1 != NULL, "CreateTimerQueueTimer, default queue\n");
 
-    ret = pChangeTimerQueueTimer(NULL, t1, 2000, 2000);
+    ret = ChangeTimerQueueTimer(NULL, t1, 2000, 2000);
     ok(ret, "ChangeTimerQueueTimer, default queue\n");
 
-    ret = pDeleteTimerQueueTimer(NULL, t1, INVALID_HANDLE_VALUE);
+    ret = DeleteTimerQueueTimer(NULL, t1, INVALID_HANDLE_VALUE);
     ok(ret, "DeleteTimerQueueTimer, default queue\n");
 
     /* Try mixing default and non-default queues.  Apparently this works.  */
-    q = pCreateTimerQueue();
+    q = CreateTimerQueue();
     ok(q != NULL, "CreateTimerQueue\n");
 
     t1 = NULL;
     n1 = 0;
-    ret = pCreateTimerQueueTimer(&t1, q, timer_queue_cb1, &n1, 1000,
-                                 1000, 0);
+    ret = CreateTimerQueueTimer(&t1, q, timer_queue_cb1, &n1, 1000, 1000, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t1 != NULL, "CreateTimerQueueTimer\n");
 
     t2 = NULL;
     n2 = 0;
-    ret = pCreateTimerQueueTimer(&t2, NULL, timer_queue_cb1, &n2, 1000,
-                                 1000, 0);
+    ret = CreateTimerQueueTimer(&t2, NULL, timer_queue_cb1, &n2, 1000, 1000, 0);
     ok(ret, "CreateTimerQueueTimer\n");
     ok(t2 != NULL, "CreateTimerQueueTimer\n");
 
-    ret = pChangeTimerQueueTimer(NULL, t1, 2000, 2000);
+    ret = ChangeTimerQueueTimer(NULL, t1, 2000, 2000);
     ok(ret, "ChangeTimerQueueTimer\n");
 
-    ret = pChangeTimerQueueTimer(q, t2, 2000, 2000);
+    ret = ChangeTimerQueueTimer(q, t2, 2000, 2000);
     ok(ret, "ChangeTimerQueueTimer\n");
 
-    ret = pDeleteTimerQueueTimer(NULL, t1, INVALID_HANDLE_VALUE);
+    ret = DeleteTimerQueueTimer(NULL, t1, INVALID_HANDLE_VALUE);
     ok(ret, "DeleteTimerQueueTimer\n");
 
-    ret = pDeleteTimerQueueTimer(q, t2, INVALID_HANDLE_VALUE);
+    ret = DeleteTimerQueueTimer(q, t2, INVALID_HANDLE_VALUE);
     ok(ret, "DeleteTimerQueueTimer\n");
 
     /* Try to delete the default queue?  In any case: not allowed.  */
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueEx(NULL, NULL);
+    ret = DeleteTimerQueueEx(NULL, NULL);
     ok(!ret, "DeleteTimerQueueEx call was expected to fail\n");
     ok(GetLastError() == ERROR_INVALID_HANDLE,
        "DeleteTimerQueueEx, GetLastError: expected ERROR_INVALID_HANDLE, got %d\n",
        GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pDeleteTimerQueueEx(q, NULL);
+    ret = DeleteTimerQueueEx(q, NULL);
     ok(ret /* vista */ || GetLastError() == ERROR_IO_PENDING,
        "DeleteTimerQueueEx, GetLastError: expected ERROR_IO_PENDING, got %d\n",
        GetLastError());
@@ -2645,15 +2645,6 @@ START_TEST(sync)
     HMODULE hdll = GetModuleHandleA("kernel32.dll");
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
 
-    pChangeTimerQueueTimer = (void*)GetProcAddress(hdll, "ChangeTimerQueueTimer");
-    pCreateTimerQueue = (void*)GetProcAddress(hdll, "CreateTimerQueue");
-    pCreateTimerQueueTimer = (void*)GetProcAddress(hdll, "CreateTimerQueueTimer");
-    pCreateWaitableTimerA = (void*)GetProcAddress(hdll, "CreateWaitableTimerA");
-    pDeleteTimerQueueEx = (void*)GetProcAddress(hdll, "DeleteTimerQueueEx");
-    pDeleteTimerQueueTimer = (void*)GetProcAddress(hdll, "DeleteTimerQueueTimer");
-    pOpenWaitableTimerA = (void*)GetProcAddress(hdll, "OpenWaitableTimerA");
-    pCreateMemoryResourceNotification = (void *)GetProcAddress(hdll, "CreateMemoryResourceNotification");
-    pQueryMemoryResourceNotification = (void *)GetProcAddress(hdll, "QueryMemoryResourceNotification");
     pInitOnceInitialize = (void *)GetProcAddress(hdll, "InitOnceInitialize");
     pInitOnceExecuteOnce = (void *)GetProcAddress(hdll, "InitOnceExecuteOnce");
     pInitOnceBeginInitialize = (void *)GetProcAddress(hdll, "InitOnceBeginInitialize");

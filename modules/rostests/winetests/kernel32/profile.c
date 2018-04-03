@@ -18,7 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "windows.h"
+#include "sddl.h"
 
 #define KEY      "ProfileInt"
 #define SECTION  "Test"
@@ -524,6 +531,41 @@ static BOOL emptystr_ok(CHAR emptystr[MAX_PATH])
         }
 
     return TRUE;
+}
+
+static void test_profile_directory_readonly(void)
+{
+    BOOL ret;
+    CHAR path_folder[MAX_PATH];
+    CHAR path_file[MAX_PATH];
+    const char *sddl_string_everyone_readonly = "D:PAI(A;;0x1200a9;;;WD)";
+    SECURITY_ATTRIBUTES attributes = {0};
+    char lpStruct[] = { 's', 't', 'r', 'i', 'n', 'g' };
+
+    attributes.nLength = sizeof(attributes);
+    ret = ConvertStringSecurityDescriptorToSecurityDescriptorA(sddl_string_everyone_readonly, SDDL_REVISION_1, &attributes.lpSecurityDescriptor, NULL);
+    ok(ret == TRUE, "ConvertStringSecurityDescriptorToSecurityDescriptor failed: %d\n", GetLastError());
+
+    GetTempPathA(MAX_PATH, path_folder);
+    lstrcatA(path_folder, "wine-test");
+
+    strcpy(path_file, path_folder);
+    lstrcatA(path_file, "\\tmp.ini");
+
+    ret = CreateDirectoryA(path_folder, &attributes);
+    ok(ret == TRUE, "CreateDirectoryA failed: %d\n", GetLastError());
+
+    ret = WritePrivateProfileStringA("App", "key", "string", path_file);
+    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
+
+    ret = WritePrivateProfileSectionA("App", "key=string", path_file);
+    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
+
+    ret = WritePrivateProfileStructA("App", "key", lpStruct, sizeof(lpStruct), path_file);
+    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
+
+    ret = RemoveDirectoryA(path_folder);
+    ok(ret == TRUE, "RemoveDirectoryA failed: %d\n", GetLastError());
 }
 
 static void test_GetPrivateProfileString(const char *content, const char *descript)
@@ -1124,6 +1166,7 @@ START_TEST(profile)
     test_profile_existing();
     test_profile_delete_on_close();
     test_profile_refresh();
+    test_profile_directory_readonly();
     test_GetPrivateProfileString(
         "[section1]\r\n"
         "name1=val1\r\n"

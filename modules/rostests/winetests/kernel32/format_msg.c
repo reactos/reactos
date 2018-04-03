@@ -17,11 +17,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+
+#include "wine/test.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
 
 #define ULL(a,b)   (((ULONG64)(a) << 32) | (b))
 
-static DWORD __cdecl doit(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
+static DWORD WINAPIV doit(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
                           LPSTR out, DWORD outsize, ... )
 {
     __ms_va_list list;
@@ -34,7 +39,7 @@ static DWORD __cdecl doit(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
     return r;
 }
 
-static DWORD __cdecl doitW(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
+static DWORD WINAPIV doitW(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
                            LPWSTR out, DWORD outsize, ... )
 {
     __ms_va_list list;
@@ -1551,6 +1556,10 @@ static void test_message_from_hmodule(void)
 
     /* Test HRESULT. It's not documented but in practice _com_error::ErrorMessage relies on this. */
     ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, h, 0x80070005 /* E_ACCESSDENIED */,
+                         MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), out, sizeof(out)/sizeof(CHAR), NULL);
+    ok(ret != 0, "FormatMessageA returned 0\n");
+
+    ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_FROM_HMODULE, h, TRUST_E_NOSIGNATURE,
                          MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), out, sizeof(out)/sizeof(CHAR), NULL);
     ok(ret != 0, "FormatMessageA returned 0\n");
 

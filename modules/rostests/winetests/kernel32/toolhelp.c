@@ -18,7 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "tlhelp32.h"
+#include "wine/test.h"
+#include "winuser.h"
 
 static char     selfname[MAX_PATH];
 

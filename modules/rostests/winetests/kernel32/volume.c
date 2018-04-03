@@ -18,9 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
-#include <wine/ddk/ntddcdvd.h>
+#include "wine/test.h"
+#include "winbase.h"
+#include "winioctl.h"
+#include <stdio.h>
+#include "wine/ddk/ntddcdvd.h"
 
 #include <pshpack1.h>
 struct COMPLETE_DVD_LAYER_DESCRIPTOR
@@ -258,7 +260,7 @@ static void test_GetVolumeNameForVolumeMountPointW(void)
     }
 
     ret = pGetVolumeNameForVolumeMountPointW(path, volume, 0);
-    ok(ret == FALSE, "GetVolumeNameForVolumeMountPointA succeeded\n");
+    ok(ret == FALSE, "GetVolumeNameForVolumeMountPointW succeeded\n");
     ok(GetLastError() == ERROR_FILENAME_EXCED_RANGE ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Vista */
         "wrong error, last=%d\n", GetLastError());

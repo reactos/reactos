@@ -26,7 +26,15 @@
  *         FILE_NOTIFY_CHANGE_CREATION
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winternl.h>
 
 static DWORD CALLBACK NotificationThread(LPVOID arg)
 {
@@ -375,6 +383,7 @@ static void test_readdirectorychanges(void)
     static const WCHAR szHoo[] = { '\\','h','o','o',0 };
     static const WCHAR szGa[] = { '\\','h','o','o','\\','g','a',0 };
     PFILE_NOTIFY_INFORMATION pfni;
+    BOOL got_subdir_change = FALSE;
 
     if (!pReadDirectoryChangesW)
     {
@@ -542,26 +551,40 @@ static void test_readdirectorychanges(void)
     r = CreateDirectoryW( subsubdir, NULL );
     ok( r == TRUE, "failed to create directory\n");
 
-    r = WaitForSingleObject( ov.hEvent, 1000 );
-    ok( r == WAIT_OBJECT_0, "should be ready\n" );
-
-    ok( (NTSTATUS)ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
-    ok( ov.InternalHigh == 0x18 || ov.InternalHigh == 0x12 + 0x18,
-        "ov.InternalHigh wrong %lx\n", ov.InternalHigh);
-
-    pfni = (PFILE_NOTIFY_INFORMATION) buffer;
-    if (pfni->NextEntryOffset)  /* we may get a modified event on the parent dir */
+    while (1)
     {
-        ok( pfni->NextEntryOffset == 0x12, "offset wrong %x\n", pfni->NextEntryOffset );
-        ok( pfni->Action == FILE_ACTION_MODIFIED, "action wrong %d\n", pfni->Action );
-        ok( pfni->FileNameLength == 3*sizeof(WCHAR), "len wrong\n" );
-        ok( !memcmp(pfni->FileName,&szGa[1],3*sizeof(WCHAR)), "name wrong\n");
-        pfni = (PFILE_NOTIFY_INFORMATION)((char *)pfni + pfni->NextEntryOffset);
+        r = WaitForSingleObject( ov.hEvent, 1000 );
+        ok(r == WAIT_OBJECT_0, "should be ready\n" );
+        if (r == WAIT_TIMEOUT) break;
+
+        ok((NTSTATUS) ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
+
+        pfni = (PFILE_NOTIFY_INFORMATION) buffer;
+        while (1)
+        {
+            /* We might get one or more modified events on the parent dir */
+            if (pfni->Action == FILE_ACTION_MODIFIED)
+            {
+                ok(pfni->FileNameLength == 3 * sizeof(WCHAR), "len wrong\n" );
+                ok(!memcmp(pfni->FileName, &szGa[1], 3 * sizeof(WCHAR)), "name wrong\n");
+            }
+            else
+            {
+                ok(pfni->Action == FILE_ACTION_ADDED, "action wrong\n");
+                ok(pfni->FileNameLength == 6 * sizeof(WCHAR), "len wrong\n" );
+                ok(!memcmp(pfni->FileName, &szGa[1], 6 * sizeof(WCHAR)), "name wrong\n");
+                got_subdir_change = TRUE;
+            }
+            if (!pfni->NextEntryOffset) break;
+            pfni = (PFILE_NOTIFY_INFORMATION)((char *)pfni + pfni->NextEntryOffset);
+        }
+
+        if (got_subdir_change) break;
+
+        r = pReadDirectoryChangesW(hdir,buffer,sizeof buffer,FALSE,filter,NULL,&ov,NULL);
+        ok(r==TRUE, "should return true\n");
     }
-    ok( pfni->NextEntryOffset == 0, "offset wrong\n" );
-    ok( pfni->Action == FILE_ACTION_ADDED, "action wrong\n" );
-    ok( pfni->FileNameLength == 6*sizeof(WCHAR), "len wrong\n" );
-    ok( !memcmp(pfni->FileName,&szGa[1],6*sizeof(WCHAR)), "name wrong\n" );
+    ok(got_subdir_change, "didn't get subdir change\n");
 
     r = RemoveDirectoryW( subsubdir );
     ok( r == TRUE, "failed to remove directory\n");

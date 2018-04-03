@@ -10,7 +10,6 @@ list(APPEND SOURCE
     codepage.c
     comm.c
     console.c
-    cpu.c
     debugger.c
     directory.c
     drive.c

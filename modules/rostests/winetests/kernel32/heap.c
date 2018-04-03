@@ -20,7 +20,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winternl.h"
+#include "wine/test.h"
 
 #define MAGIC_DEAD 0xdeadbeef
 
@@ -200,7 +208,7 @@ static void test_heap(void)
         ((GetLastError() == ERROR_NOT_LOCKED) || (GetLastError() == MAGIC_DEAD)),
         "returned %d with %d (expected '0' with: ERROR_NOT_LOCKED or "
         "MAGIC_DEAD)\n", res, GetLastError());
- 
+
     GlobalFree(gbl);
     /* invalid handles are caught in windows: */
     SetLastError(MAGIC_DEAD);
@@ -208,6 +216,18 @@ static void test_heap(void)
     ok( (hsecond == gbl) && (GetLastError() == ERROR_INVALID_HANDLE),
         "returned %p with 0x%08x (expected %p with ERROR_INVALID_HANDLE)\n",
         hsecond, GetLastError(), gbl);
+    SetLastError(MAGIC_DEAD);
+    hsecond = GlobalFree(LongToHandle(0xdeadbeef)); /* bogus handle */
+    ok( (hsecond == LongToHandle(0xdeadbeef)) && (GetLastError() == ERROR_INVALID_HANDLE),
+        "returned %p with 0x%08x (expected %p with ERROR_INVALID_HANDLE)\n",
+        hsecond, GetLastError(), LongToHandle(0xdeadbeef));
+    SetLastError(MAGIC_DEAD);
+    hsecond = GlobalFree(LongToHandle(0xdeadbee0)); /* bogus pointer */
+    ok( (hsecond == LongToHandle(0xdeadbee0)) &&
+        ((GetLastError() == ERROR_INVALID_HANDLE) || broken(GetLastError() == ERROR_NOACCESS) /* wvista+ */),
+        "returned %p with 0x%08x (expected %p with ERROR_NOACCESS)\n",
+        hsecond, GetLastError(), LongToHandle(0xdeadbee0));
+
     SetLastError(MAGIC_DEAD);
     flags = GlobalFlags(gbl);
     ok( (flags == GMEM_INVALID_HANDLE) && (GetLastError() == ERROR_INVALID_HANDLE),
@@ -242,7 +262,7 @@ static void test_heap(void)
     ok(mem == NULL, "Expected NULL, got %p\n", mem);
 
     /* invalid free */
-    if (sizeof(void *) != 8)  /* crashes on 64-bit Vista */
+    if (sizeof(void *) != 8)  /* crashes on 64-bit */
     {
         SetLastError(MAGIC_DEAD);
         mem = GlobalFree(gbl);
@@ -560,7 +580,7 @@ static void test_HeapCreate(void)
       ok(HeapFree(heap,0,mem3),"HeapFree didn't pass successfully\n");
     }
 
-    /* Check that HeapRealloc works */
+    /* Check that HeapReAlloc works */
     mem2a=HeapReAlloc(heap,HEAP_ZERO_MEMORY,mem2,memchunk+5*sysInfo.dwPageSize);
     ok(mem2a!=NULL,"HeapReAlloc failed\n");
     if(mem2a) {
@@ -574,7 +594,7 @@ static void test_HeapCreate(void)
       ok(!error,"HeapReAlloc should have zeroed out its allocated memory\n");
     }
 
-    /* Check that HeapRealloc honours HEAP_REALLOC_IN_PLACE_ONLY */
+    /* Check that HeapReAlloc honours HEAP_REALLOC_IN_PLACE_ONLY */
     error=FALSE;
     mem1a=HeapReAlloc(heap,HEAP_REALLOC_IN_PLACE_ONLY,mem1,memchunk+sysInfo.dwPageSize);
     if(mem1a!=NULL) {

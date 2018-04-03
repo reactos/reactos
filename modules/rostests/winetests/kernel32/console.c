@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "wine/test.h"
+#include <windows.h>
+#include <stdio.h>
 
 static BOOL (WINAPI *pGetConsoleInputExeNameA)(DWORD, LPSTR);
 static DWORD (WINAPI *pGetConsoleProcessList)(LPDWORD, DWORD);
@@ -2580,6 +2582,11 @@ static void test_ReadConsole(void)
 
     SetLastError(0xdeadbeef);
     ret = GetFileSize(std_input, NULL);
+    if (GetLastError() == 0xdeadbeef)
+    {
+        skip("stdin is redirected\n");
+        return;
+    }
     ok(ret == INVALID_FILE_SIZE, "expected INVALID_FILE_SIZE, got %#x\n", ret);
     ok(GetLastError() == ERROR_INVALID_HANDLE ||
        GetLastError() == ERROR_INVALID_FUNCTION, /* Win 8, 10 */
