@@ -16,9 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
+#ifndef __REACTOS__
+#define NONAMELESSUNION
+#endif
 
-#include <initguid.h>
+#include <stdio.h>
+#include <wine/test.h>
+
+#include "winbase.h"
+#include "shlobj.h"
+#include "shellapi.h"
+#include "initguid.h"
 
 DEFINE_GUID(FMTID_Test,0x12345678,0x1234,0x1234,0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x12);
 DEFINE_GUID(FMTID_NotExisting, 0x12345678,0x1234,0x1234,0x12,0x12,0x12,0x12,0x12,0x12,0x12,0x13);

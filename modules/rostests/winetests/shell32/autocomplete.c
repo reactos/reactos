@@ -18,7 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include <stdarg.h>
+
+#include "windows.h"
+#include "shobjidl.h"
+#include "shlguid.h"
+#include "initguid.h"
+#include "shldisp.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
 
 static HWND hMainWnd, hEdit;
 static HINSTANCE hinst;
@@ -216,6 +227,171 @@ static void createMainWnd(void)
       CW_USEDEFAULT, CW_USEDEFAULT, 130, 105, NULL, NULL, GetModuleHandleA(NULL), 0);
 }
 
+struct string_enumerator
+{
+    IEnumString IEnumString_iface;
+    LONG ref;
+    WCHAR **data;
+    int data_len;
+    int cur;
+};
+
+static struct string_enumerator *impl_from_IEnumString(IEnumString *iface)
+{
+    return CONTAINING_RECORD(iface, struct string_enumerator, IEnumString_iface);
+}
+
+static HRESULT WINAPI string_enumerator_QueryInterface(IEnumString *iface, REFIID riid, void **ppv)
+{
+    if (IsEqualGUID(riid, &IID_IEnumString) || IsEqualGUID(riid, &IID_IUnknown))
+    {
+        IUnknown_AddRef(iface);
+        *ppv = iface;
+        return S_OK;
+    }
+
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI string_enumerator_AddRef(IEnumString *iface)
+{
+    struct string_enumerator *this = impl_from_IEnumString(iface);
+
+    ULONG ref = InterlockedIncrement(&this->ref);
+
+    return ref;
+}
+
+static ULONG WINAPI string_enumerator_Release(IEnumString *iface)
+{
+    struct string_enumerator *this = impl_from_IEnumString(iface);
+
+    ULONG ref = InterlockedDecrement(&this->ref);
+
+    if (!ref)
+        heap_free(this);
+
+    return ref;
+}
+
+static HRESULT WINAPI string_enumerator_Next(IEnumString *iface, ULONG num, LPOLESTR *strings, ULONG *num_returned)
+{
+    struct string_enumerator *this = impl_from_IEnumString(iface);
+    int i, len;
+
+    *num_returned = 0;
+    for (i = 0; i < num; i++)
+    {
+        if (this->cur >= this->data_len)
+            return S_FALSE;
+
+        len = lstrlenW(this->data[this->cur]) + 1;
+
+        strings[i] = CoTaskMemAlloc(len * sizeof(WCHAR));
+        memcpy(strings[i], this->data[this->cur], len * sizeof(WCHAR));
+
+        (*num_returned)++;
+        this->cur++;
+    }
+
+    return S_OK;
+}
+
+static HRESULT WINAPI string_enumerator_Reset(IEnumString *iface)
+{
+    struct string_enumerator *this = impl_from_IEnumString(iface);
+
+    this->cur = 0;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI string_enumerator_Skip(IEnumString *iface, ULONG num)
+{
+    struct string_enumerator *this = impl_from_IEnumString(iface);
+
+    this->cur += num;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI string_enumerator_Clone(IEnumString *iface, IEnumString **out)
+{
+    *out = NULL;
+    return E_NOTIMPL;
+}
+
+static IEnumStringVtbl string_enumerator_vtlb =
+{
+    string_enumerator_QueryInterface,
+    string_enumerator_AddRef,
+    string_enumerator_Release,
+    string_enumerator_Next,
+    string_enumerator_Skip,
+    string_enumerator_Reset,
+    string_enumerator_Clone
+};
+
+static HRESULT string_enumerator_create(void **ppv, WCHAR **suggestions, int count)
+{
+    struct string_enumerator *object;
+
+    object = heap_alloc_zero(sizeof(*object));
+    object->IEnumString_iface.lpVtbl = &string_enumerator_vtlb;
+    object->ref = 1;
+    object->data = suggestions;
+    object->data_len = count;
+    object->cur = 0;
+
+    *ppv = &object->IEnumString_iface;
+
+    return S_OK;
+}
+
+static void test_custom_source(void)
+{
+    static WCHAR str_alpha[] = {'t','e','s','t','1',0};
+    static WCHAR str_alpha2[] = {'t','e','s','t','2',0};
+    static WCHAR str_beta[] = {'a','u','t','o',' ','c','o','m','p','l','e','t','e',0};
+    static WCHAR *suggestions[] = { str_alpha, str_alpha2, str_beta };
+    IUnknown *enumerator;
+    IAutoComplete2 *autocomplete;
+    HWND hwnd_edit;
+    WCHAR buffer[20];
+    HRESULT hr;
+    MSG msg;
+
+    ShowWindow(hMainWnd, SW_SHOW);
+
+    hwnd_edit = CreateWindowA("Edit", "", WS_OVERLAPPED | WS_VISIBLE | WS_CHILD | WS_BORDER, 50, 5, 200, 20, hMainWnd, 0, NULL, 0);
+
+    hr = CoCreateInstance(&CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER, &IID_IAutoComplete2, (void**)&autocomplete);
+    ok(hr == S_OK, "CoCreateInstance failed: %x\n", hr);
+
+    string_enumerator_create((void**)&enumerator, suggestions, sizeof(suggestions) / sizeof(*suggestions));
+
+    hr = IAutoComplete2_SetOptions(autocomplete, ACO_AUTOSUGGEST | ACO_AUTOAPPEND);
+    ok(hr == S_OK, "IAutoComplete2_SetOptions failed: %x\n", hr);
+    hr = IAutoComplete2_Init(autocomplete, hwnd_edit, enumerator, NULL, NULL);
+    ok(hr == S_OK, "IAutoComplete_Init failed: %x\n", hr);
+
+    SendMessageW(hwnd_edit, WM_CHAR, 'a', 1);
+    /* Send a keyup message since wine doesn't handle WM_CHAR yet */
+    SendMessageW(hwnd_edit, WM_KEYUP, 'u', 1);
+    Sleep(100);
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+    SendMessageW(hwnd_edit, WM_GETTEXT, sizeof(buffer) / sizeof(*buffer), (LPARAM)buffer);
+    ok(lstrcmpW(str_beta, buffer) == 0, "Expected %s, got %s\n", wine_dbgstr_w(str_beta), wine_dbgstr_w(buffer));
+
+    ShowWindow(hMainWnd, SW_HIDE);
+    DestroyWindow(hwnd_edit);
+}
+
 START_TEST(autocomplete)
 {
     HRESULT r;
@@ -236,6 +412,8 @@ START_TEST(autocomplete)
     if (!ac)
         goto cleanup;
     test_killfocus();
+
+    test_custom_source();
 
     PostQuitMessage(0);
     while(GetMessageA(&msg,0,0,0)) {

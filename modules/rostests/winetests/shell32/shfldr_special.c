@@ -19,7 +19,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+#ifndef __REACTOS__
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#endif
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include "shellapi.h"
+#include "shlobj.h"
+
+#include "wine/test.h"
 
 static inline BOOL SHELL_OsIsUnicode(void)
 {

@@ -17,9 +17,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
 
-#include <shobjidl.h>
+#include <stdarg.h>
+
+#include "shlwapi.h"
+#include "shlguid.h"
+#include "shobjidl.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
+
 
 static void test_IQueryAssociations_QueryInterface(void)
 {
@@ -114,7 +122,7 @@ static void getstring_test(LPCWSTR assocName, HKEY progIdKey, ASSOCSTR str, LPCW
             return;
         }
 
-        buffer = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        buffer = heap_alloc(len * sizeof(WCHAR));
         ok_(__FILE__, line)(buffer != NULL, "out of memory\n");
         hr = IQueryAssociations_GetString(assoc, 0, str, NULL, buffer, &len);
         ok_(__FILE__, line)(hr == S_OK, "GetString returned 0x%x, expected S_OK\n", hr);
@@ -126,7 +134,7 @@ static void getstring_test(LPCWSTR assocName, HKEY progIdKey, ASSOCSTR str, LPCW
     }
 
     IQueryAssociations_Release(assoc);
-    HeapFree(GetProcessHeap(), 0, buffer);
+    heap_free(buffer);
 }
 
 static void test_IQueryAssociations_GetString(void)

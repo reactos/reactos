@@ -19,7 +19,24 @@
  *
  */
 
-#include "precomp.h"
+#define COBJMACROS
+
+#include "initguid.h"
+#include "windows.h"
+#include "shlguid.h"
+#include "shobjidl.h"
+#include "shlobj.h"
+#include "shellapi.h"
+#include "commoncontrols.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
+
+#include "shell32_test.h"
+
+#ifdef __REACTOS__
+#include <reactos/undocshell.h>
+#endif
 
 #ifndef SLDF_HAS_LOGO3ID
 #  define SLDF_HAS_LOGO3ID 0x00000800 /* not available in the Vista SDK */
@@ -28,6 +45,7 @@
 static void (WINAPI *pILFree)(LPITEMIDLIST);
 static BOOL (WINAPI *pILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST);
 static HRESULT (WINAPI *pSHILCreateFromPath)(LPCWSTR, LPITEMIDLIST *,DWORD*);
+static HRESULT (WINAPI *pSHGetFolderLocation)(HWND,INT,HANDLE,DWORD,PIDLIST_ABSOLUTE*);
 static HRESULT (WINAPI *pSHDefExtractIconA)(LPCSTR, int, UINT, HICON*, HICON*, UINT);
 static HRESULT (WINAPI *pSHGetStockIconInfo)(SHSTOCKICONID, UINT, SHSTOCKICONINFO *);
 static DWORD (WINAPI *pGetLongPathNameA)(LPCSTR, LPSTR, DWORD);
@@ -71,12 +89,12 @@ static LPITEMIDLIST path_to_pidl(const char* path)
         int len;
 
         len=MultiByteToWideChar(CP_ACP, 0, path, -1, NULL, 0);
-        pathW=HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+        pathW = heap_alloc(len * sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, path, -1, pathW, len);
 
         r=pSHILCreateFromPath(pathW, &pidl, NULL);
         ok(r == S_OK, "SHILCreateFromPath failed (0x%08x)\n", r);
-        HeapFree(GetProcessHeap(), 0, pathW);
+        heap_free(pathW);
     }
     return pidl;
 }
@@ -93,6 +111,7 @@ static void test_get_set(void)
     IShellLinkW *slW = NULL;
     char mypath[MAX_PATH];
     char buffer[INFOTIPSIZE];
+    WIN32_FIND_DATAA finddata;
     LPITEMIDLIST pidl, tmp_pidl;
     const char * str;
     int i;
@@ -145,11 +164,20 @@ static void test_get_set(void)
     /* Test Getting / Setting the path */
     strcpy(buffer,"garbage");
     r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), NULL, SLGP_RAWPATH);
-    todo_wine ok(r == S_FALSE || broken(r == S_OK) /* NT4/W2K */, "GetPath failed (0x%08x)\n", r);
+    ok(r == S_FALSE || broken(r == S_OK) /* NT4/W2K */, "GetPath failed (0x%08x)\n", r);
     ok(*buffer=='\0', "GetPath returned '%s'\n", buffer);
 
-    CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                     &IID_IShellLinkW, (LPVOID*)&slW);
+    strcpy(buffer,"garbage");
+    memset(&finddata, 0xaa, sizeof(finddata));
+    r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), &finddata, SLGP_RAWPATH);
+    ok(r == S_FALSE || broken(r == S_OK) /* NT4/W2K */, "GetPath failed (0x%08x)\n", r);
+    ok(*buffer=='\0', "GetPath returned '%s'\n", buffer);
+    ok(finddata.dwFileAttributes == 0, "unexpected attributes %x\n", finddata.dwFileAttributes);
+    ok(finddata.cFileName[0] == 0, "unexpected filename '%s'\n", finddata.cFileName);
+
+    r = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                         &IID_IShellLinkW, (LPVOID*)&slW);
+    ok(r == S_OK, "CoCreateInstance failed (0x%08x)\n", r);
     if (!slW /* Win9x */ || !pGetLongPathNameA /* NT4 */)
         skip("SetPath with NULL parameter crashes on Win9x and some NT4\n");
     else
@@ -166,7 +194,7 @@ static void test_get_set(void)
 
     strcpy(buffer,"garbage");
     r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), NULL, SLGP_RAWPATH);
-    todo_wine ok(r == S_FALSE, "GetPath failed (0x%08x)\n", r);
+    ok(r == S_FALSE, "GetPath failed (0x%08x)\n", r);
     ok(*buffer=='\0', "GetPath returned '%s'\n", buffer);
 
     /* Win98 returns S_FALSE, but WinXP returns S_OK */
@@ -178,6 +206,14 @@ static void test_get_set(void)
     r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), NULL, SLGP_RAWPATH);
     ok(r == S_OK, "GetPath failed (0x%08x)\n", r);
     ok(lstrcmpiA(buffer,str)==0, "GetPath returned '%s'\n", buffer);
+
+    strcpy(buffer,"garbage");
+    memset(&finddata, 0xaa, sizeof(finddata));
+    r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), &finddata, SLGP_RAWPATH);
+    ok(r == S_OK, "GetPath failed (0x%08x)\n", r);
+    ok(lstrcmpiA(buffer,str)==0, "GetPath returned '%s'\n", buffer);
+    ok(finddata.dwFileAttributes == 0, "unexpected attributes %x\n", finddata.dwFileAttributes);
+    ok(lstrcmpiA(finddata.cFileName, "file") == 0, "unexpected filename '%s'\n", finddata.cFileName);
 
     /* Get some real path to play with */
     GetWindowsDirectoryA( mypath, sizeof(mypath)-12 );
@@ -228,8 +264,41 @@ static void test_get_set(void)
         strcpy(buffer,"garbage");
         r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), NULL, SLGP_RAWPATH);
         ok(r == S_OK, "GetPath failed (0x%08x)\n", r);
-        todo_wine
         ok(lstrcmpiA(buffer, mypath)==0, "GetPath returned '%s'\n", buffer);
+
+        strcpy(buffer,"garbage");
+        memset(&finddata, 0xaa, sizeof(finddata));
+        r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), &finddata, SLGP_RAWPATH);
+        ok(r == S_OK, "GetPath failed (0x%08x)\n", r);
+        ok(lstrcmpiA(buffer, mypath)==0, "GetPath returned '%s'\n", buffer);
+        ok(finddata.dwFileAttributes != 0, "unexpected attributes %x\n", finddata.dwFileAttributes);
+        ok(lstrcmpiA(finddata.cFileName, "regedit.exe") == 0, "unexpected filename '%s'\n", finddata.cFileName);
+    }
+
+    if (pSHGetFolderLocation)
+    {
+        LPITEMIDLIST pidl_controls;
+
+        r = pSHGetFolderLocation(NULL, CSIDL_CONTROLS, NULL, 0, &pidl_controls);
+        ok(r == S_OK, "SHGetFolderLocation failed (0x%08x)\n", r);
+
+        r = IShellLinkA_SetIDList(sl, pidl_controls);
+        ok(r == S_OK, "SetIDList failed (0x%08x)\n", r);
+
+        strcpy(buffer,"garbage");
+        r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), NULL, SLGP_RAWPATH);
+        ok(r == S_FALSE, "GetPath failed (0x%08x)\n", r);
+        ok(buffer[0] == 0, "GetPath returned '%s'\n", buffer);
+
+        strcpy(buffer,"garbage");
+        memset(&finddata, 0xaa, sizeof(finddata));
+        r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), &finddata, SLGP_RAWPATH);
+        ok(r == S_FALSE, "GetPath failed (0x%08x)\n", r);
+        ok(buffer[0] == 0, "GetPath returned '%s'\n", buffer);
+        ok(finddata.dwFileAttributes == 0, "unexpected attributes %x\n", finddata.dwFileAttributes);
+        ok(finddata.cFileName[0] == 0, "unexpected filename '%s'\n", finddata.cFileName);
+
+        pILFree(pidl_controls);
     }
 
     /* test path with quotes (IShellLinkA_SetPath returns S_FALSE on W2K and below and S_OK on XP and above */
@@ -1396,6 +1465,7 @@ START_TEST(shelllink)
     pILFree = (void *)GetProcAddress(hmod, (LPSTR)155);
     pILIsEqual = (void *)GetProcAddress(hmod, (LPSTR)21);
     pSHILCreateFromPath = (void *)GetProcAddress(hmod, (LPSTR)28);
+    pSHGetFolderLocation = (void *)GetProcAddress(hmod, "SHGetFolderLocation");
     pSHDefExtractIconA = (void *)GetProcAddress(hmod, "SHDefExtractIconA");
     pSHGetStockIconInfo = (void *)GetProcAddress(hmod, "SHGetStockIconInfo");
     pGetLongPathNameA = (void *)GetProcAddress(hkernel32, "GetLongPathNameA");

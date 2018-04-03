@@ -21,9 +21,20 @@
  * namespace) path for a given folder (CSIDL value).
  */
 
-#include "precomp.h"
+#define COBJMACROS
 
-#include <initguid.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include "windef.h"
+#include "winbase.h"
+#include "shlguid.h"
+#include "shlobj.h"
+#include "shlwapi.h"
+#include "knownfolders.h"
+#include "shellapi.h"
+#include "wine/test.h"
+
+#include "initguid.h"
 
 /* CSIDL_MYDOCUMENTS is now the same as CSIDL_PERSONAL, but what we want
  * here is its original value.
@@ -1887,7 +1898,7 @@ static const struct knownFolderDef known_folders[] = {
     { 0 }
 };
 #undef KNOWN_FOLDER
-BOOL known_folder_found[sizeof(known_folders)/sizeof(known_folders[0])-1];
+BOOL known_folder_found[ARRAY_SIZE(known_folders)-1];
 
 static BOOL is_in_strarray(const WCHAR *needle, const char *hay)
 {
@@ -1903,7 +1914,7 @@ static BOOL is_in_strarray(const WCHAR *needle, const char *hay)
         if(strcmp(hay, "(null)") == 0 && !needle)
             return TRUE;
 
-        ret = MultiByteToWideChar(CP_ACP, 0, hay, -1, wstr, sizeof(wstr)/sizeof(wstr[0]));
+        ret = MultiByteToWideChar(CP_ACP, 0, hay, -1, wstr, ARRAY_SIZE(wstr));
         if(ret == 0)
         {
             ok(0, "Failed to convert string\n");
@@ -1956,7 +1967,7 @@ static void check_known_folder(IKnownFolderManager *mgr, KNOWNFOLDERID *folderId
                 ok_(__FILE__, known_folder->line)(hr == S_OK, "cannot get known folder definition for %s\n", known_folder->sFolderId);
                 if(SUCCEEDED(hr))
                 {
-                    ret = MultiByteToWideChar(CP_ACP, 0, known_folder->sName, -1,  sName, sizeof(sName)/sizeof(sName[0]));
+                    ret = MultiByteToWideChar(CP_ACP, 0, known_folder->sName, -1,  sName, ARRAY_SIZE(sName));
                     ok_(__FILE__, known_folder->line)(ret != 0, "cannot convert known folder name \"%s\" to wide characters\n", known_folder->sName);
 
                     ok_(__FILE__, known_folder->line)(lstrcmpW(kfd.pszName, sName)==0, "invalid known folder name returned for %s: %s expected, but %s retrieved\n", known_folder->sFolderId, wine_dbgstr_w(sName), wine_dbgstr_w(kfd.pszName));
@@ -2052,10 +2063,10 @@ static void test_knownFolders(void)
 
     GetWindowsDirectoryW( sWinDir, MAX_PATH );
 
-    GetTempPathW(sizeof(sExamplePath)/sizeof(sExamplePath[0]), sExamplePath);
+    GetTempPathW(ARRAY_SIZE(sExamplePath), sExamplePath);
     lstrcatW(sExamplePath, sExample);
 
-    GetTempPathW(sizeof(sExample2Path)/sizeof(sExample2Path[0]), sExample2Path);
+    GetTempPathW(ARRAY_SIZE(sExample2Path), sExample2Path);
     lstrcatW(sExample2Path, sExample2);
 
     lstrcpyW(sSubFolderPath, sExamplePath);
@@ -2110,7 +2121,6 @@ static void test_knownFolders(void)
             CoTaskMemFree(folderPath);
 
             hr = IKnownFolder_GetRedirectionCapabilities(folder, &redirectionCapabilities);
-            todo_wine
             ok(hr == S_OK, "failed to get redirection capabilities: 0x%08x\n", hr);
             todo_wine
             ok(redirectionCapabilities==0, "invalid redirection capabilities returned: %d\n", redirectionCapabilities);
@@ -2162,7 +2172,7 @@ static void test_knownFolders(void)
         ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got 0x%08x\n", hr);
         ok(folder == NULL, "got %p\n", folder);
 
-        for(i=0; i<sizeof(known_folder_found)/sizeof(known_folder_found[0]); ++i)
+        for(i=0; i < ARRAY_SIZE(known_folder_found); ++i)
             known_folder_found[i] = FALSE;
 
         hr = IKnownFolderManager_GetFolderIds(mgr, &folders, &nCount);
@@ -2170,7 +2180,7 @@ static void test_knownFolders(void)
         for(i=0;i<nCount;++i)
             check_known_folder(mgr, &folders[i]);
 
-        for(i=0; i<sizeof(known_folder_found)/sizeof(known_folder_found[0]); ++i)
+        for(i=0; i < ARRAY_SIZE(known_folder_found); ++i)
             if(!known_folder_found[i])
                 trace("Known folder %s not found on current platform\n", known_folders[i].sFolderId);
 
@@ -2544,7 +2554,7 @@ static void test_DoEnvironmentSubst(void)
         memset(bufferA, '#', MAX_PATH - 1);
         bufferA[MAX_PATH - 1] = 0;
         lstrcpyA(bufferA, names[i]);
-        MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, ARRAY_SIZE(bufferW));
 
         res2 = ExpandEnvironmentStringsA(names[i], expectedA, MAX_PATH);
         res = DoEnvironmentSubstA(bufferA, MAX_PATH);
@@ -2575,7 +2585,7 @@ static void test_DoEnvironmentSubst(void)
     memset(bufferA, '#', MAX_PATH - 1);
     bufferA[len + 2] = 0;
     lstrcpyA(bufferA, names[i]);
-    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, ARRAY_SIZE(bufferW));
 
     res2 = ExpandEnvironmentStringsA(bufferA, expectedA, MAX_PATH);
     res = DoEnvironmentSubstA(bufferA, len + 1);
@@ -2596,7 +2606,7 @@ static void test_DoEnvironmentSubst(void)
     memset(bufferA, '#', MAX_PATH - 1);
     bufferA[len + 2] = 0;
     lstrcpyA(bufferA, names[i]);
-    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, ARRAY_SIZE(bufferW));
 
     /* ANSI version failed without an extra byte, as documented on msdn */
     res = DoEnvironmentSubstA(bufferA, len);
@@ -2619,7 +2629,7 @@ static void test_DoEnvironmentSubst(void)
     memset(bufferA, '#', MAX_PATH - 1);
     bufferA[len + 2] = 0;
     lstrcpyA(bufferA, names[i]);
-    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, ARRAY_SIZE(bufferW));
 
     res = DoEnvironmentSubstA(bufferA, len - 1);
     ok(!HIWORD(res) && (LOWORD(res) == (len - 1)),
@@ -2640,7 +2650,7 @@ static void test_DoEnvironmentSubst(void)
     memset(bufferA, '#', MAX_PATH - 1);
     bufferA[MAX_PATH - 1] = 0;
     lstrcpyA(bufferA, does_not_existA);
-    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, ARRAY_SIZE(bufferW));
 
     res2 = lstrlenA(does_not_existA) + 1;
     res = DoEnvironmentSubstA(bufferA, MAX_PATH);
@@ -2691,7 +2701,7 @@ if (0)
     ok(!ret, "got %d\n", ret);
 }
 
-    GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    GetTempPathW(ARRAY_SIZE(pathW), pathW);
 
     /* Using short name only first */
     nameW[0] = 0;

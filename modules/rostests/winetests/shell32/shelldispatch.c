@@ -18,35 +18,63 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
-#include <winsvc.h>
-#include <initguid.h>
+#include "shldisp.h"
+#include "shlobj.h"
+#include "shlwapi.h"
+#include "winsvc.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
+
+#include "initguid.h"
 
 #define EXPECT_HR(hr,hr_exp) \
     ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
 
+#define EXPECT_REF(obj,ref) _expect_ref((IUnknown *)obj, ref, __LINE__)
+static void _expect_ref(IUnknown *obj, ULONG ref, int line)
+{
+    ULONG rc;
+    IUnknown_AddRef(obj);
+    rc = IUnknown_Release(obj);
+    ok_(__FILE__,line)(rc == ref, "Unexpected refcount %d, expected %d\n", rc, ref);
+}
+
 static const WCHAR winetestW[] = {'w','i','n','e','t','e','s','t',0};
 
-static HRESULT (WINAPI *pSHGetFolderPathW)(HWND, int, HANDLE, DWORD, LPWSTR);
 static HRESULT (WINAPI *pSHGetNameFromIDList)(PCIDLIST_ABSOLUTE,SIGDN,PWSTR*);
-static HRESULT (WINAPI *pSHGetSpecialFolderLocation)(HWND, int, LPITEMIDLIST *);
-static DWORD (WINAPI *pGetLongPathNameW)(LPCWSTR, LPWSTR, DWORD);
 
 /* Updated Windows 7 has a new IShellDispatch6 in its typelib */
 DEFINE_GUID(IID_IWin7ShellDispatch6, 0x34936ba1, 0x67ad, 0x4c41, 0x99,0xb8, 0x8c,0x12,0xdf,0xf1,0xe9,0x74);
 
+static BSTR a2bstr(const char *str)
+{
+    BSTR ret;
+    int len;
+
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    ret = SysAllocStringLen(NULL, len);
+    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+
+    return ret;
+}
+
+static void variant_set_string(VARIANT *v, const char *s)
+{
+    V_VT(v) = VT_BSTR;
+    V_BSTR(v) = a2bstr(s);
+}
+
 static void init_function_pointers(void)
 {
-    HMODULE hshell32, hkernel32;
+    HMODULE hshell32;
 
     hshell32 = GetModuleHandleA("shell32.dll");
-    hkernel32 = GetModuleHandleA("kernel32.dll");
-    pSHGetFolderPathW = (void*)GetProcAddress(hshell32, "SHGetFolderPathW");
     pSHGetNameFromIDList = (void*)GetProcAddress(hshell32, "SHGetNameFromIDList");
-    pSHGetSpecialFolderLocation = (void*)GetProcAddress(hshell32,
-     "SHGetSpecialFolderLocation");
-    pGetLongPathNameW = (void*)GetProcAddress(hkernel32, "GetLongPathNameW");
 }
 
 static void test_namespace(void)
@@ -108,18 +136,23 @@ static void test_namespace(void)
     FolderItem *item;
     VARIANT var;
     BSTR title, item_path;
+    IDispatch *disp;
     int len, i;
 
-    r = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER,
-     &IID_IShellDispatch, (LPVOID*)&sd);
-    if (r == REGDB_E_CLASSNOTREG) /* NT4 */
-    {
-        win_skip("skipping IShellDispatch tests\n");
-        return;
-    }
-    ok(SUCCEEDED(r), "CoCreateInstance failed: %08x\n", r);
-    if (FAILED(r))
-        return;
+    r = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER, &IID_IShellDispatch, (void **)&sd);
+    ok(SUCCEEDED(r), "Failed to create ShellDispatch object: %#x.\n", r);
+
+    disp = NULL;
+    r = IShellDispatch_get_Application(sd, &disp);
+    ok(r == S_OK, "Failed to get application pointer, hr %#x.\n", r);
+    ok(disp == (IDispatch *)sd, "Unexpected application pointer %p.\n", disp);
+    IDispatch_Release(disp);
+
+    disp = NULL;
+    r = IShellDispatch_get_Parent(sd, &disp);
+    ok(r == S_OK, "Failed to get Shell object parent, hr %#x.\n", r);
+    ok(disp == (IDispatch *)sd, "Unexpected parent pointer %p.\n", disp);
+    IDispatch_Release(disp);
 
     VariantInit(&var);
     folder = (void*)0xdeadbeef;
@@ -135,6 +168,7 @@ static void test_namespace(void)
         folder = (void*)0xdeadbeef;
         r = IShellDispatch_NameSpace(sd, var, &folder);
         if (special_folders[i] == ssfALTSTARTUP || special_folders[i] == ssfCOMMONALTSTARTUP)
+        todo_wine
             ok(r == S_OK || broken(r == S_FALSE) /* winxp */, "Failed to get folder for index %#x, got %08x\n", special_folders[i], r);
         else
             ok(r == S_OK, "Failed to get folder for index %#x, got %08x\n", special_folders[i], r);
@@ -144,32 +178,23 @@ static void test_namespace(void)
 
     V_VT(&var) = VT_I4;
     V_I4(&var) = -1;
-    folder = (void*)0xdeadbeef;
+    folder = (void *)0xdeadbeef;
     r = IShellDispatch_NameSpace(sd, var, &folder);
-    todo_wine {
-    ok(r == S_FALSE, "expected S_FALSE, got %08x\n", r);
-    ok(folder == NULL, "got %p\n", folder);
-    if (r == S_OK)
-        Folder_Release(folder);
-}
+    ok(r == S_FALSE, "Unexpected hr %#x.\n", r);
+    ok(folder == NULL, "Unexpected folder instance %p\n", folder);
+
     V_VT(&var) = VT_I4;
     V_I4(&var) = ssfPROGRAMFILES;
     r = IShellDispatch_NameSpace(sd, var, &folder);
-    ok(r == S_OK ||
-     broken(r == S_FALSE), /* NT4 */
-     "IShellDispatch::NameSpace failed: %08x\n", r);
+    ok(r == S_OK, "IShellDispatch::NameSpace failed: %08x\n", r);
     if (r == S_OK)
     {
         static WCHAR path[MAX_PATH];
 
-        if (pSHGetFolderPathW)
-        {
-            r = pSHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES, NULL,
-             SHGFP_TYPE_CURRENT, path);
-            ok(r == S_OK, "SHGetFolderPath failed: %08x\n", r);
-        }
+        r = SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES, NULL, SHGFP_TYPE_CURRENT, path);
+        ok(r == S_OK, "Failed to get folder path: %#x.\n", r);
+
         r = Folder_get_Title(folder, &title);
-        todo_wine
         ok(r == S_OK, "Folder::get_Title failed: %08x\n", r);
         if (r == S_OK)
         {
@@ -177,22 +202,20 @@ static void test_namespace(void)
                HKLM\Software\Microsoft\Windows\CurrentVersion\ProgramFilesDir.
                On newer Windows it seems constant and is not changed
                if the program files directory name is changed */
-            if (pSHGetSpecialFolderLocation && pSHGetNameFromIDList)
+            if (pSHGetNameFromIDList)
             {
                 LPITEMIDLIST pidl;
                 PWSTR name;
 
-                r = pSHGetSpecialFolderLocation(NULL, CSIDL_PROGRAM_FILES, &pidl);
+                r = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAM_FILES, &pidl);
                 ok(r == S_OK, "SHGetSpecialFolderLocation failed: %08x\n", r);
                 r = pSHGetNameFromIDList(pidl, SIGDN_NORMALDISPLAY, &name);
                 ok(r == S_OK, "SHGetNameFromIDList failed: %08x\n", r);
-                todo_wine
-                ok(!lstrcmpW(title, name), "expected %s, got %s\n",
-                 wine_dbgstr_w(name), wine_dbgstr_w(title));
+                ok(!lstrcmpW(title, name), "expected %s, got %s\n", wine_dbgstr_w(name), wine_dbgstr_w(title));
                 CoTaskMemFree(name);
                 CoTaskMemFree(pidl);
             }
-            else if (pSHGetFolderPathW)
+            else
             {
                 WCHAR *p;
 
@@ -202,7 +225,6 @@ static void test_namespace(void)
                 ok(!lstrcmpiW(title, p), "expected %s, got %s\n",
                  wine_dbgstr_w(p), wine_dbgstr_w(title));
             }
-            else skip("skipping Folder::get_Title test\n");
             SysFreeString(title);
         }
         r = Folder_QueryInterface(folder, &IID_Folder2, (LPVOID*)&folder2);
@@ -215,9 +237,7 @@ static void test_namespace(void)
             {
                 r = FolderItem_get_Path(item, &item_path);
                 ok(r == S_OK, "FolderItem::get_Path failed: %08x\n", r);
-                if (pSHGetFolderPathW)
-                    ok(!lstrcmpiW(item_path, path), "expected %s, got %s\n",
-                     wine_dbgstr_w(path), wine_dbgstr_w(item_path));
+                ok(!lstrcmpiW(item_path, path), "expected %s, got %s\n", wine_dbgstr_w(path), wine_dbgstr_w(item_path));
                 SysFreeString(item_path);
                 FolderItem_Release(item);
             }
@@ -229,34 +249,21 @@ static void test_namespace(void)
     V_VT(&var) = VT_I4;
     V_I4(&var) = ssfBITBUCKET;
     r = IShellDispatch_NameSpace(sd, var, &folder);
-    ok(r == S_OK ||
-     broken(r == S_FALSE), /* NT4 */
-     "IShellDispatch::NameSpace failed: %08x\n", r);
-    if (r == S_OK)
-    {
-        r = Folder_QueryInterface(folder, &IID_Folder2, (LPVOID*)&folder2);
-        ok(r == S_OK ||
-         broken(r == E_NOINTERFACE), /* NT4 */
-         "Folder::QueryInterface failed: %08x\n", r);
-        if (r == S_OK)
-        {
-            r = Folder2_get_Self(folder2, &item);
-            ok(r == S_OK, "Folder::get_Self failed: %08x\n", r);
-            if (r == S_OK)
-            {
-                r = FolderItem_get_Path(item, &item_path);
-                todo_wine
-                ok(r == S_OK, "FolderItem::get_Path failed: %08x\n", r);
-                todo_wine
-                ok(!lstrcmpW(item_path, clsidW), "expected %s, got %s\n",
-                 wine_dbgstr_w(clsidW), wine_dbgstr_w(item_path));
-                SysFreeString(item_path);
-                FolderItem_Release(item);
-            }
-            Folder2_Release(folder2);
-        }
-        Folder_Release(folder);
-    }
+    ok(r == S_OK, "IShellDispatch::NameSpace failed: %08x\n", r);
+
+    r = Folder_QueryInterface(folder, &IID_Folder2, (void **)&folder2);
+    ok(r == S_OK, "Failed to get Folder2 interface: %#x.\n", r);
+    r = Folder2_get_Self(folder2, &item);
+    ok(r == S_OK, "Folder::get_Self failed: %08x\n", r);
+    r = FolderItem_get_Path(item, &item_path);
+    ok(r == S_OK, "FolderItem::get_Path failed: %08x\n", r);
+    /* TODO: we return lowercase GUID here */
+    ok(!lstrcmpiW(item_path, clsidW), "expected %s, got %s\n", wine_dbgstr_w(clsidW), wine_dbgstr_w(item_path));
+
+    SysFreeString(item_path);
+    FolderItem_Release(item);
+    Folder2_Release(folder2);
+    Folder_Release(folder);
 
     GetTempPathW(MAX_PATH, tempW);
     GetCurrentDirectoryW(MAX_PATH, curW);
@@ -269,51 +276,39 @@ static void test_namespace(void)
     SysFreeString(V_BSTR(&var));
 
     GetFullPathNameW(winetestW, MAX_PATH, tempW, NULL);
-    if (pGetLongPathNameW)
-    {
-        len = pGetLongPathNameW(tempW, NULL, 0);
-        long_pathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (long_pathW)
-            pGetLongPathNameW(tempW, long_pathW, len);
-    }
+
+    len = GetLongPathNameW(tempW, NULL, 0);
+    long_pathW = heap_alloc(len * sizeof(WCHAR));
+    GetLongPathNameW(tempW, long_pathW, len);
+
     V_VT(&var) = VT_BSTR;
     V_BSTR(&var) = SysAllocString(tempW);
     r = IShellDispatch_NameSpace(sd, var, &folder);
     ok(r == S_OK, "IShellDispatch::NameSpace failed: %08x\n", r);
-    if (r == S_OK)
-    {
-        r = Folder_get_Title(folder, &title);
-        ok(r == S_OK, "Folder::get_Title failed: %08x\n", r);
-        if (r == S_OK)
-        {
-            ok(!lstrcmpW(title, winetestW), "bad title: %s\n",
-             wine_dbgstr_w(title));
-            SysFreeString(title);
-        }
-        r = Folder_QueryInterface(folder, &IID_Folder2, (LPVOID*)&folder2);
-        ok(r == S_OK ||
-         broken(r == E_NOINTERFACE), /* NT4 */
-         "Folder::QueryInterface failed: %08x\n", r);
-        if (r == S_OK)
-        {
-            r = Folder2_get_Self(folder2, &item);
-            ok(r == S_OK, "Folder::get_Self failed: %08x\n", r);
-            if (r == S_OK)
-            {
-                r = FolderItem_get_Path(item, &item_path);
-                ok(r == S_OK, "FolderItem::get_Path failed: %08x\n", r);
-                if (long_pathW)
-                    ok(!lstrcmpW(item_path, long_pathW),
-                     "expected %s, got %s\n", wine_dbgstr_w(long_pathW),
-                     wine_dbgstr_w(item_path));
-                SysFreeString(item_path);
-                FolderItem_Release(item);
-            }
-            Folder2_Release(folder2);
-        }
-        Folder_Release(folder);
-    }
-    SysFreeString(V_BSTR(&var));
+
+    disp = (void *)0xdeadbeef;
+    r = Folder_get_Parent(folder, &disp);
+    ok(r == E_NOTIMPL, "Unexpected hr %#x.\n", r);
+    ok(disp == NULL, "Unexpected parent pointer %p.\n", disp);
+
+    r = Folder_get_Title(folder, &title);
+    ok(r == S_OK, "Failed to get folder title: %#x.\n", r);
+    ok(!lstrcmpW(title, winetestW), "Unexpected title: %s\n",  wine_dbgstr_w(title));
+    SysFreeString(title);
+
+    r = Folder_QueryInterface(folder, &IID_Folder2, (void **)&folder2);
+    ok(r == S_OK, "Failed to get Folder2 interface: %#x.\n", r);
+    r = Folder2_get_Self(folder2, &item);
+    ok(r == S_OK, "Folder::get_Self failed: %08x\n", r);
+    r = FolderItem_get_Path(item, &item_path);
+    ok(r == S_OK, "Failed to get item path: %#x.\n", r);
+    ok(!lstrcmpW(item_path, long_pathW), "Unexpected path %s, got %s\n", wine_dbgstr_w(item_path), wine_dbgstr_w(long_pathW));
+    SysFreeString(item_path);
+    FolderItem_Release(item);
+    Folder2_Release(folder2);
+
+    Folder_Release(folder);
+    VariantClear(&var);
 
     len = lstrlenW(tempW);
     if (len < MAX_PATH - 1)
@@ -334,9 +329,7 @@ static void test_namespace(void)
                 SysFreeString(title);
             }
             r = Folder_QueryInterface(folder, &IID_Folder2, (LPVOID*)&folder2);
-            ok(r == S_OK ||
-             broken(r == E_NOINTERFACE), /* NT4 */
-             "Folder::QueryInterface failed: %08x\n", r);
+            ok(r == S_OK, "Failed to get Folder2 interface: %#x.\n", r);
             if (r == S_OK)
             {
                 r = Folder2_get_Self(folder2, &item);
@@ -345,10 +338,8 @@ static void test_namespace(void)
                 {
                     r = FolderItem_get_Path(item, &item_path);
                     ok(r == S_OK, "FolderItem::get_Path failed: %08x\n", r);
-                    if (long_pathW)
-                        ok(!lstrcmpW(item_path, long_pathW),
-                         "expected %s, got %s\n", wine_dbgstr_w(long_pathW),
-                         wine_dbgstr_w(item_path));
+                    ok(!lstrcmpW(item_path, long_pathW), "Unexpected path %s, got %s\n", wine_dbgstr_w(item_path),
+                        wine_dbgstr_w(long_pathW));
                     SysFreeString(item_path);
                     FolderItem_Release(item);
                 }
@@ -359,7 +350,7 @@ static void test_namespace(void)
         SysFreeString(V_BSTR(&var));
     }
 
-    HeapFree(GetProcessHeap(), 0, long_pathW);
+    heap_free(long_pathW);
     RemoveDirectoryW(winetestW);
     SetCurrentDirectoryW(curW);
     IShellDispatch_Release(sd);
@@ -367,55 +358,110 @@ static void test_namespace(void)
 
 static void test_items(void)
 {
-    WCHAR wstr[MAX_PATH], orig_dir[MAX_PATH];
+    static const struct
+    {
+        char name[32];
+        enum
+        {
+            DIRECTORY,
+            EMPTY_FILE,
+        }
+        type;
+    }
+    file_defs[] =
+    {
+        { "00-Myfolder",        DIRECTORY  },
+        { "01-empty.bin",       EMPTY_FILE },
+    };
+    WCHAR path[MAX_PATH], cur_dir[MAX_PATH], orig_dir[MAX_PATH];
     HRESULT r;
     IShellDispatch *sd = NULL;
     Folder *folder = NULL;
-    FolderItems *items = NULL;
+    FolderItems *items;
     FolderItems2 *items2 = NULL;
     FolderItems3 *items3 = NULL;
-    FolderItem *item = (FolderItem*)0xdeadbeef;
-    IDispatch *disp = NULL;
-    IUnknown *unk = NULL;
+    FolderItem *item = (FolderItem*)0xdeadbeef, *item2;
     FolderItemVerbs *verbs = (FolderItemVerbs*)0xdeadbeef;
-    VARIANT var;
-    LONG lcount = -1;
+    VARIANT var, int_index, str_index, str_index2;
+    IDispatch *disp, *disp2;
+    LONG count = -1;
+    IUnknown *unk;
+    HANDLE file;
+    BSTR bstr;
+    char cstr[64];
+    BOOL ret;
+    int i;
 
     r = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER, &IID_IShellDispatch, (void**)&sd);
     ok(SUCCEEDED(r), "CoCreateInstance failed: %08x\n", r);
     ok(!!sd, "sd is null\n");
 
-    GetTempPathW(MAX_PATH, wstr);
+    /* create and enter a temporary directory and a folder object for it */
+    GetTempPathW(MAX_PATH, path);
     GetCurrentDirectoryW(MAX_PATH, orig_dir);
-    SetCurrentDirectoryW(wstr);
-    CreateDirectoryW(winetestW, NULL);
-    GetFullPathNameW(winetestW, MAX_PATH, wstr, NULL);
+    SetCurrentDirectoryW(path);
+    ret = CreateDirectoryW(winetestW, NULL);
+    ok(ret, "CreateDirectory failed: %08x\n", GetLastError());
+    GetFullPathNameW(winetestW, MAX_PATH, path, NULL);
     V_VT(&var) = VT_BSTR;
-    V_BSTR(&var) = SysAllocString(wstr);
+    V_BSTR(&var) = SysAllocString(path);
+
+    EXPECT_REF(sd, 1);
     r = IShellDispatch_NameSpace(sd, var, &folder);
     ok(r == S_OK, "IShellDispatch::NameSpace failed: %08x\n", r);
     ok(!!folder, "folder is null\n");
-    SysFreeString(V_BSTR(&var));
-    IShellDispatch_Release(sd);
-    SetCurrentDirectoryW(winetestW);
+    EXPECT_REF(folder, 1);
+    EXPECT_REF(sd, 1);
 
+    VariantClear(&var);
+    SetCurrentDirectoryW(winetestW);
+    GetCurrentDirectoryW(MAX_PATH, path);
+    GetLongPathNameW(path, cur_dir, MAX_PATH);
+
+    /* FolderItems grabs its Folder reference */
+    items = NULL;
     r = Folder_Items(folder, &items);
     ok(r == S_OK, "Folder::Items failed: %08x\n", r);
     ok(!!items, "items is null\n");
-    r = FolderItems_QueryInterface(items, &IID_FolderItems2, (void**)&items2);
-    ok(r == S_OK || broken(r == E_NOINTERFACE) /* xp and later */, "FolderItems::QueryInterface failed: %08x\n", r);
-    ok(!!items2 || broken(!items2) /* xp and later */, "items2 is null\n");
-    r = FolderItems_QueryInterface(items, &IID_FolderItems3, (void**)&items3);
-    ok(r == S_OK, "FolderItems::QueryInterface failed: %08x\n", r);
-    ok(!!items3, "items3 is null\n");
-    Folder_Release(folder);
+    EXPECT_REF(folder, 2);
+    EXPECT_REF(items, 1);
+
+    unk = NULL;
+    r = Folder_Items(folder, (FolderItems **)&unk);
+    ok(r == S_OK, "Folder::Items failed: %08x\n", r);
+    EXPECT_REF(folder, 3);
+    IUnknown_Release(unk);
+    EXPECT_REF(folder, 2);
+
+    FolderItems_AddRef(items);
+    EXPECT_REF(folder, 2);
+    FolderItems_Release(items);
+
+    /* Application property */
+    disp = NULL;
+    EXPECT_REF(sd, 1);
+    r = Folder_get_Application(folder, &disp);
+    ok(r == S_OK, "Failed to get application %#x.\n", r);
+    ok(disp != (IDispatch *)sd, "Unexpected application pointer\n");
+    EXPECT_REF(sd, 1);
+
+    disp2 = NULL;
+    r = Folder_get_Application(folder, &disp2);
+    ok(r == S_OK, "Failed to get application %#x.\n", r);
+    ok(disp2 == disp, "Unexpected application pointer\n");
+    IDispatch_Release(disp2);
+
+    r = IDispatch_QueryInterface(disp, &IID_IShellDispatch, (void **)&disp2);
+    ok(r == S_OK, "Wrong instance, hr %#x.\n", r);
+    IDispatch_Release(disp2);
+    IDispatch_Release(disp);
 
     if (0) /* crashes on all versions of Windows */
         r = FolderItems_get_Count(items, NULL);
 
-    r = FolderItems_get_Count(items, &lcount);
+    r = FolderItems_get_Count(items, &count);
     ok(r == S_OK, "FolderItems::get_Count failed: %08x\n", r);
-    ok(!lcount, "expected 0 files, got %d\n", lcount);
+    ok(!count, "expected 0 files, got %d\n", count);
 
     V_VT(&var) = VT_I4;
     V_I4(&var) = 0;
@@ -424,7 +470,269 @@ static void test_items(void)
         r = FolderItems_Item(items, var, NULL);
 
     r = FolderItems_Item(items, var, &item);
-todo_wine
+    ok(r == S_FALSE, "expected S_FALSE, got %08x\n", r);
+    ok(!item, "item is not null\n");
+
+    /* create test files */
+    for (i = 0; i < sizeof(file_defs)/sizeof(file_defs[0]); i++)
+    {
+        switch (file_defs[i].type)
+        {
+            case DIRECTORY:
+                r = CreateDirectoryA(file_defs[i].name, NULL);
+                ok(r, "CreateDirectory failed: %08x\n", GetLastError());
+                PathCombineA(cstr, file_defs[i].name, "foo.txt");
+                file = CreateFileA(cstr, 0, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %08x\n", GetLastError());
+                CloseHandle(file);
+                break;
+
+            case EMPTY_FILE:
+                file = CreateFileA(file_defs[i].name, 0, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %08x\n", GetLastError());
+                CloseHandle(file);
+                break;
+        }
+    }
+
+    /* test that get_Count is not aware of the newly created files */
+    count = -1;
+    r = FolderItems_get_Count(items, &count);
+    ok(r == S_OK, "FolderItems::get_Count failed: %08x\n", r);
+    ok(!count, "expected 0 files, got %d\n", count);
+
+    /* test that the newly created files CAN be retrieved by string index */
+    variant_set_string(&var, file_defs[0].name);
+    item = NULL;
+    r = FolderItems_Item(items, var, &item);
+    ok(r == S_OK, "FolderItems::Item failed: %08x\n", r);
+    ok(!!item, "item is null\n");
+
+    disp = (void *)0xdeadbeef;
+    r = FolderItems_get_Parent(items, &disp);
+    ok(r == E_NOTIMPL, "Unexpected hr %#x.\n", r);
+    ok(disp == NULL, "Unexpected parent pointer %p.\n", disp);
+
+    r = FolderItem_get_Parent(item, &disp);
+    ok(r == S_OK, "Failed to get parent pointer, hr %#x.\n", r);
+    ok(disp == (IDispatch *)folder, "Unexpected parent pointer %p.\n", disp);
+    IDispatch_Release(disp);
+
+    if (item) FolderItem_Release(item);
+    VariantClear(&var);
+
+    /* recreate the items object */
+    FolderItems_Release(items);
+    items = NULL;
+    r = Folder_Items(folder, &items);
+    ok(r == S_OK, "Folder::Items failed: %08x\n", r);
+    ok(!!items, "items is null\n");
+    r = FolderItems_QueryInterface(items, &IID_FolderItems2, (void**)&items2);
+    ok(r == S_OK || broken(r == E_NOINTERFACE) /* xp and later */, "FolderItems::QueryInterface failed: %08x\n", r);
+    if (r == S_OK)
+    {
+        ok(!!items2, "items2 is null\n");
+        FolderItems2_Release(items2);
+    }
+    r = FolderItems_QueryInterface(items, &IID_FolderItems3, (void**)&items3);
+    ok(r == S_OK, "FolderItems::QueryInterface failed: %08x\n", r);
+    ok(!!items3, "items3 is null\n");
+
+    count = -1;
+    r = FolderItems_get_Count(items, &count);
+    ok(r == S_OK, "FolderItems::get_Count failed: %08x\n", r);
+    ok(count == sizeof(file_defs)/sizeof(file_defs[0]),
+       "expected %d files, got %d\n", (LONG)(sizeof(file_defs)/sizeof(file_defs[0])), count);
+
+    V_VT(&var) = VT_EMPTY;
+    item = (FolderItem*)0xdeadbeef;
+    r = FolderItems_Item(items, var, &item);
+    ok(r == E_NOTIMPL, "expected E_NOTIMPL, got %08x\n", r);
+    ok(!item, "item is not null\n");
+
+    V_VT(&var) = VT_I2;
+    V_I2(&var) = 0;
+
+    EXPECT_REF(folder, 2);
+    EXPECT_REF(items, 2);
+    item = NULL;
+    r = FolderItems_Item(items, var, &item);
+    ok(r == S_OK, "FolderItems::Item failed: %08x\n", r);
+    ok(!!item, "item is null\n");
+    EXPECT_REF(folder, 3);
+    EXPECT_REF(items, 2);
+
+    r = Folder_get_Application(folder, &disp);
+    ok(r == S_OK, "Failed to get application pointer %#x.\n", r);
+    r = FolderItem_get_Application(item, &disp2);
+    ok(r == S_OK, "Failed to get application pointer %#x.\n", r);
+    ok(disp == disp2, "Unexpected application pointer.\n");
+    IDispatch_Release(disp2);
+    IDispatch_Release(disp);
+
+    FolderItem_Release(item);
+
+    V_VT(&var) = VT_I4;
+    V_I4(&var) = 0;
+    item = NULL;
+    r = FolderItems_Item(items, var, &item);
+    ok(r == S_OK, "FolderItems::Item failed: %08x\n", r);
+    ok(!!item, "item is null\n");
+    if (item) FolderItem_Release(item);
+
+    V_I4(&var) = -1;
+    item = (FolderItem*)0xdeadbeef;
+    r = FolderItems_Item(items, var, &item);
+    ok(r == S_FALSE, "expected S_FALSE, got %08x\n", r);
+    ok(!item, "item is not null\n");
+
+    V_VT(&var) = VT_ERROR;
+    V_ERROR(&var) = 0;
+    item = NULL;
+    r = FolderItems_Item(items, var, &item);
+    ok(r == S_OK, "expected S_OK, got %08x\n", r);
+    ok(!!item, "item is null\n");
+    if (item)
+    {
+        bstr = NULL;
+        r = FolderItem_get_Path(item, &bstr);
+        ok(r == S_OK, "FolderItem::get_Path failed: %08x\n", r);
+        ok(!lstrcmpW(bstr, cur_dir),
+           "expected %s, got %s\n", wine_dbgstr_w(cur_dir), wine_dbgstr_w(bstr));
+        SysFreeString(bstr);
+        FolderItem_Release(item);
+    }
+
+    V_VT(&int_index) = VT_I4;
+
+    /* test the folder item corresponding to each file */
+    for (i = 0; i < sizeof(file_defs)/sizeof(file_defs[0]); i++)
+    {
+        VARIANT_BOOL b;
+        BSTR name;
+
+        V_I4(&int_index) = i;
+        variant_set_string(&str_index, file_defs[i].name);
+
+        item = NULL;
+        r = FolderItems_Item(items, int_index, &item);
+        ok(r == S_OK, "file_defs[%d]: FolderItems::Item failed: %08x\n", i, r);
+        ok(!!item, "file_defs[%d]: item is null\n", i);
+
+        item2 = NULL;
+        r = FolderItems_Item(items, int_index, &item2);
+        ok(r == S_OK, "file_defs[%d]: FolderItems::Item failed: %08x\n", i, r);
+        ok(item2 != item, "file_defs[%d]: item and item2 are the same\n", i);
+        FolderItem_Release(item2);
+
+        bstr = NULL;
+        r = FolderItem_get_Path(item, &bstr);
+        ok(r == S_OK, "file_defs[%d]: FolderItem::get_Path failed: %08x\n", i, r);
+        PathCombineW(path, cur_dir, V_BSTR(&str_index));
+        ok(!lstrcmpW(bstr, path),
+           "file_defs[%d]: expected %s, got %s\n", i, wine_dbgstr_w(path), wine_dbgstr_w(bstr));
+        SysFreeString(bstr);
+
+        bstr = a2bstr(file_defs[i].name);
+        r = FolderItem_get_Name(item, &name);
+        ok(r == S_OK, "Failed to get item name, hr %#x.\n", r);
+        /* Returned display name does not have to strictly match file name, e.g. extension could be omitted. */
+        ok(lstrlenW(name) <= lstrlenW(bstr), "file_defs[%d]: unexpected name length.\n", i);
+        ok(!memcmp(bstr, name, lstrlenW(name) * sizeof(WCHAR)), "file_defs[%d]: unexpected name %s.\n", i, wine_dbgstr_w(name));
+        SysFreeString(name);
+        SysFreeString(bstr);
+
+        FolderItem_Release(item);
+
+        item = NULL;
+        r = FolderItems_Item(items, str_index, &item);
+        ok(r == S_OK, "file_defs[%d]: FolderItems::Item failed: %08x\n", i, r);
+        ok(!!item, "file_defs[%d]: item is null\n", i);
+
+        bstr = NULL;
+        r = FolderItem_get_Path(item, &bstr);
+        ok(r == S_OK, "file_defs[%d]: FolderItem::get_Path failed: %08x\n", i, r);
+        PathCombineW(path, cur_dir, V_BSTR(&str_index));
+        ok(!lstrcmpW(bstr, path),
+           "file_defs[%d]: expected %s, got %s\n", i, wine_dbgstr_w(path), wine_dbgstr_w(bstr));
+        SysFreeString(bstr);
+
+        b = 0xdead;
+        r = FolderItem_get_IsFolder(item, &b);
+        ok(r == S_OK, "Failed to get IsFolder property, %#x.\n", r);
+        ok(file_defs[i].type == DIRECTORY ? b == VARIANT_TRUE : b == VARIANT_FALSE, "Unexpected prop value %#x.\n", b);
+
+        FolderItem_Release(item);
+
+        if (file_defs[i].type == DIRECTORY)
+        {
+            /* test that getting an item object for a file in a subdirectory succeeds */
+            PathCombineA(cstr, file_defs[i].name, "foo.txt");
+            variant_set_string(&str_index2, cstr);
+            item2 = NULL;
+            r = FolderItems_Item(items, str_index2, &item2);
+            ok(r == S_OK, "file_defs[%d]: FolderItems::Item failed: %08x\n", i, r);
+            ok(!!item2, "file_defs[%d]: item is null\n", i);
+            if (item2) FolderItem_Release(item2);
+            VariantClear(&str_index2);
+
+            /* delete the file in the subdirectory */
+            ret = DeleteFileA(cstr);
+            ok(ret, "file_defs[%d]: DeleteFile failed: %08x\n", i, GetLastError());
+
+            /* test that getting an item object via a relative path fails */
+            strcpy(cstr, file_defs[i].name);
+            strcat(cstr, "\\..\\");
+            strcat(cstr, file_defs[i].name);
+            variant_set_string(&str_index2, cstr);
+            item2 = (FolderItem*)0xdeadbeef;
+            r = FolderItems_Item(items, str_index2, &item2);
+       todo_wine {
+            ok(r == S_FALSE, "file_defs[%d]: expected S_FALSE, got %08x\n", i, r);
+            ok(!item2, "file_defs[%d]: item is not null\n", i);
+       }
+            if (item2) FolderItem_Release(item2);
+            VariantClear(&str_index2);
+
+            /* remove the directory */
+            ret = RemoveDirectoryA(file_defs[i].name);
+            ok(ret, "file_defs[%d]: RemoveDirectory failed: %08x\n", i, GetLastError());
+        }
+        else
+        {
+            ret = DeleteFileA(file_defs[i].name);
+            ok(ret, "file_defs[%d]: DeleteFile failed: %08x\n", i, GetLastError());
+        }
+
+        /* test that the folder item is still accessible by integer index */
+        item = NULL;
+        r = FolderItems_Item(items, int_index, &item);
+        ok(r == S_OK, "file_defs[%d]: FolderItems::Item failed: %08x\n", i, r);
+        ok(!!item, "file_defs[%d]: item is null\n", i);
+
+        bstr = NULL;
+        r = FolderItem_get_Path(item, &bstr);
+        ok(r == S_OK, "file_defs[%d]: FolderItem::get_Path failed: %08x\n", i, r);
+        PathCombineW(path, cur_dir, V_BSTR(&str_index));
+        ok(!lstrcmpW(bstr, path),
+           "file_defs[%d]: expected %s, got %s\n", i, wine_dbgstr_w(path), wine_dbgstr_w(bstr));
+        SysFreeString(bstr);
+
+        FolderItem_Release(item);
+
+        /* test that the folder item is no longer accessible by string index */
+        item = (FolderItem*)0xdeadbeef;
+        r = FolderItems_Item(items, str_index, &item);
+        ok(r == S_FALSE, "file_defs[%d]: expected S_FALSE, got %08x\n", i, r);
+        ok(!item, "file_defs[%d]: item is not null\n", i);
+
+        VariantClear(&str_index);
+    }
+
+    /* test that there are only as many folder items as there were files */
+    V_I4(&int_index) = sizeof(file_defs)/sizeof(file_defs[0]);
+    item = (FolderItem*)0xdeadbeef;
+    r = FolderItems_Item(items, int_index, &item);
     ok(r == S_FALSE, "expected S_FALSE, got %08x\n", r);
     ok(!item, "item is not null\n");
 
@@ -435,11 +743,13 @@ todo_wine
     }
 
     r = FolderItems_get_Application(items, &disp);
-todo_wine
     ok(r == S_OK, "FolderItems::get_Application failed: %08x\n", r);
-todo_wine
-    ok(!!disp, "disp is null\n");
-    if (disp) IDispatch_Release(disp);
+
+    r = Folder_get_Application(folder, &disp2);
+    ok(r == S_OK, "Failed to get application pointer, hr %#x.\n", r);
+    ok(disp == disp2, "Unexpected application pointer.\n");
+    IDispatch_Release(disp2);
+    IDispatch_Release(disp);
 
     if (0) /* crashes on xp */
     {
@@ -483,14 +793,37 @@ todo_wine
         ok(!verbs, "verbs is not null\n");
     }
 
-    GetTempPathW(MAX_PATH, wstr);
-    SetCurrentDirectoryW(wstr);
-    RemoveDirectoryW(winetestW);
+    /* remove the temporary directory and restore the original working directory */
+    GetTempPathW(MAX_PATH, path);
+    SetCurrentDirectoryW(path);
+    ret = RemoveDirectoryW(winetestW);
+    ok(ret, "RemoveDirectory failed: %08x\n", GetLastError());
     SetCurrentDirectoryW(orig_dir);
 
+    /* test that everything stops working after the directory has been removed */
+    count = -1;
+    r = FolderItems_get_Count(items, &count);
+    ok(r == S_OK, "FolderItems::get_Count failed: %08x\n", r);
+    ok(!count, "expected 0 files, got %d\n", count);
+
+    item = NULL;
+    V_I4(&int_index) = 0;
+    item = (FolderItem*)0xdeadbeef;
+    r = FolderItems_Item(items, int_index, &item);
+    ok(r == S_FALSE, "expected S_FALSE, got %08x\n", r);
+    ok(!item, "item is not null\n");
+
+    variant_set_string(&str_index, file_defs[0].name);
+    item = (FolderItem*)0xdeadbeef;
+    r = FolderItems_Item(items, str_index, &item);
+    ok(r == S_FALSE, "expected S_FALSE, got %08x\n", r);
+    ok(!item, "item is not null\n");
+    VariantClear(&str_index);
+
     FolderItems_Release(items);
-    if (items2) FolderItems2_Release(items2);
+    Folder_Release(folder);
     if (items3) FolderItems3_Release(items3);
+    IShellDispatch_Release(sd);
 }
 
 static void test_service(void)
@@ -739,7 +1072,7 @@ todo_wine {
     ok(hr == S_OK || broken(hr == S_FALSE), "got 0x%08x\n", hr);
     if (hr == S_FALSE) /* winxp and earlier */ {
         win_skip("SWC_DESKTOP is not supported, some tests will be skipped.\n");
-        /* older versions allowed to regiser SWC_DESKTOP and access it with FindWindowSW */
+        /* older versions allowed to register SWC_DESKTOP and access it with FindWindowSW */
         ok(disp == NULL, "got %p\n", disp);
         ok(ret == 0, "got %d\n", ret);
     }
@@ -763,6 +1096,9 @@ todo_wine {
         IUnknown *unk;
 
         ok(disp != NULL, "got %p\n", disp);
+
+        if (disp == NULL) goto skip_disp_tests;
+
         ok(ret != HandleToUlong(hwnd), "got %d\n", ret);
 
         /* IDispatch-related tests */
@@ -840,6 +1176,7 @@ if (hr == S_OK) {
         IServiceProvider_Release(sp);
         IDispatch_Release(disp);
     }
+skip_disp_tests:
 
     disp = (void*)0xdeadbeef;
     ret = 0xdead;
@@ -934,12 +1271,13 @@ static void test_ParseName(void)
 
 static void test_Verbs(void)
 {
-    FolderItemVerbs *verbs;
+    FolderItemVerbs *verbs, *verbs2;
     WCHAR pathW[MAX_PATH];
     FolderItemVerb *verb;
     IShellDispatch *sd;
     FolderItem *item;
     Folder2 *folder2;
+    IDispatch *disp;
     Folder *folder;
     HRESULT hr;
     LONG count, i;
@@ -972,6 +1310,21 @@ if (0) { /* crashes on some systems */
     hr = FolderItem_Verbs(item, &verbs);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
+    hr = FolderItem_Verbs(item, &verbs2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(verbs2 != verbs, "Unexpected verbs pointer.\n");
+    FolderItemVerbs_Release(verbs2);
+
+    disp = (void *)0xdeadbeef;
+    hr = FolderItemVerbs_get_Application(verbs, &disp);
+    ok(hr == E_NOTIMPL, "Unexpected hr %#x.\n", hr);
+    ok(disp == NULL, "Unexpected application pointer.\n");
+
+    disp = (void *)0xdeadbeef;
+    hr = FolderItemVerbs_get_Parent(verbs, &disp);
+    ok(hr == E_NOTIMPL, "Unexpected hr %#x.\n", hr);
+    ok(disp == NULL, "Unexpected parent pointer %p.\n", disp);
+
 if (0) { /* crashes on winxp/win2k3 */
     hr = FolderItemVerbs_get_Count(verbs, NULL);
     ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
@@ -998,7 +1351,17 @@ if (0) { /* crashes on winxp/win2k3 */
         ok(hr == S_OK, "got 0x%08x\n", hr);
         ok(str != NULL, "%d: name %s\n", i, wine_dbgstr_w(str));
         if (i == count)
-            ok(str[0] == 0, "%d: got teminating item %s\n", i, wine_dbgstr_w(str));
+            ok(str[0] == 0, "%d: got terminating item %s\n", i, wine_dbgstr_w(str));
+
+        disp = (void *)0xdeadbeef;
+        hr = FolderItemVerb_get_Parent(verb, &disp);
+        ok(hr == E_NOTIMPL, "got %#x.\n", hr);
+        ok(disp == NULL, "Unexpected parent pointer %p.\n", disp);
+
+        disp = (void *)0xdeadbeef;
+        hr = FolderItemVerb_get_Application(verb, &disp);
+        ok(hr == E_NOTIMPL, "got %#x.\n", hr);
+        ok(disp == NULL, "Unexpected parent pointer %p.\n", disp);
 
         SysFreeString(str);
         FolderItemVerb_Release(verb);
@@ -1054,6 +1417,7 @@ static void test_ShellExecute(void)
     ok(hr == S_OK, "ShellExecute failed: %08x\n", hr);
 
     SysFreeString(name);
+    IShellDispatch2_Release(sd);
 }
 
 START_TEST(shelldispatch)

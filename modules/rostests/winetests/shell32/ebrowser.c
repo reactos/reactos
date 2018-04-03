@@ -18,10 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdio.h>
 
-#include <initguid.h>
-#include <mshtml.h>
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include "shlobj.h"
+#include "shlwapi.h"
+
+#include "wine/heap.h"
+#include "wine/test.h"
+
+#include "initguid.h"
+#include "mshtml.h"
 
 /**********************************************************************
  * Some IIDs for test_SetSite.
@@ -231,7 +240,7 @@ static ULONG WINAPI IExplorerPaneVisibility_fnRelease(IExplorerPaneVisibility *i
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if(!ref)
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
 
     return ref;
 }
@@ -277,7 +286,7 @@ static IExplorerPaneVisibilityImpl *create_explorerpanevisibility(void)
 {
     IExplorerPaneVisibilityImpl *epv;
 
-    epv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IExplorerPaneVisibilityImpl));
+    epv = heap_alloc_zero(sizeof(*epv));
     epv->IExplorerPaneVisibility_iface.lpVtbl = &epvvt;
     epv->ref = 1;
 
@@ -320,7 +329,7 @@ static ULONG WINAPI ICommDlgBrowser3_fnRelease(ICommDlgBrowser3 *iface)
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if(!ref)
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
 
     return ref;
 }
@@ -431,7 +440,7 @@ static ICommDlgBrowser3Impl *create_commdlgbrowser3(void)
 {
     ICommDlgBrowser3Impl *cdb;
 
-    cdb = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ICommDlgBrowser3Impl));
+    cdb = heap_alloc_zero(sizeof(*cdb));
     cdb->ICommDlgBrowser3_iface.lpVtbl = &cdbvtbl;
     cdb->ref = 1;
 
@@ -489,7 +498,7 @@ static ULONG WINAPI IServiceProvider_fnRelease(IServiceProvider *iface)
     LONG ref = InterlockedDecrement(&This->ref);
 
     if(!ref)
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
 
     return ref;
 }
@@ -540,7 +549,7 @@ static const IServiceProviderVtbl spvtbl =
 
 static IServiceProviderImpl *create_serviceprovider(void)
 {
-    IServiceProviderImpl *sp = HeapAlloc(GetProcessHeap(), 0, sizeof(IServiceProviderImpl));
+    IServiceProviderImpl *sp = heap_alloc(sizeof(*sp));
     sp->IServiceProvider_iface.lpVtbl = &spvtbl;
     sp->ref = 1;
     return sp;

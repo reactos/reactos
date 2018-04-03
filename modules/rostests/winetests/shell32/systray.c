@@ -17,7 +17,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#ifndef __REACTOS__
+#define _WIN32_IE 0x600
+#endif
+#include <stdarg.h>
+
+#include <windows.h>
+#include "shellapi.h"
+
+#include "wine/test.h"
+
 
 static HWND hMainWnd;
 static BOOL (WINAPI *pShell_NotifyIconW)(DWORD,PNOTIFYICONDATAW);

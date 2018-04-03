@@ -5,7 +5,24 @@
  * Unit tests for data structure packing
  */
 
-#include "precomp.h"
+#ifndef __REACTOS__
+#define WINVER 0x0501
+#define _WIN32_IE 0x0501
+#define _WIN32_WINNT 0x0501
+#endif
+
+#define WINE_NOWINSOCK
+
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wtypes.h"
+#include "shellapi.h"
+#include "winuser.h"
+#include "wingdi.h"
+#include "shlobj.h"
+
+#include "wine/test.h"
 
 /***********************************************************************
  * Compatibility macros

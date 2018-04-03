@@ -26,30 +26,15 @@
  *         Tests for Invalid Characters in Names / Invalid Parameters
  */
 
-#include "precomp.h"
-
-/* Timeout on DdeClientTransaction Call */
-#define MS_TIMEOUT_VAL 1000
-/* # of times to poll for window creation */
-#define PDDE_POLL_NUM 150
-/* time to sleep between polls */
-#define PDDE_POLL_TIME 300
-
-/* Call Info */
-#define DDE_TEST_MISC            0x00010000
-#define DDE_TEST_CREATEGROUP     0x00020000
-#define DDE_TEST_DELETEGROUP     0x00030000
-#define DDE_TEST_SHOWGROUP       0x00040000
-#define DDE_TEST_ADDITEM         0x00050000
-#define DDE_TEST_DELETEITEM      0x00060000
-#define DDE_TEST_COMPOUND        0x00070000
-#define DDE_TEST_CALLMASK        0x00ff0000
-
-#define DDE_TEST_NUMMASK           0x0000ffff
+#include <stdio.h>
+#include <wine/test.h>
+#include <winbase.h>
+#include "dde.h"
+#include "ddeml.h"
+#include "winuser.h"
+#include "shlobj.h"
 
 static HRESULT (WINAPI *pSHGetLocalizedName)(LPCWSTR, LPWSTR, UINT, int *);
-static BOOL (WINAPI *pSHGetSpecialFolderPathA)(HWND, LPSTR, int, BOOL);
-static BOOL (WINAPI *pReadCabinetState)(CABINETSTATE *, int);
 
 static void init_function_pointers(void)
 {
@@ -57,10 +42,6 @@ static void init_function_pointers(void)
 
     hmod = GetModuleHandleA("shell32.dll");
     pSHGetLocalizedName = (void*)GetProcAddress(hmod, "SHGetLocalizedName");
-    pSHGetSpecialFolderPathA = (void*)GetProcAddress(hmod, "SHGetSpecialFolderPathA");
-    pReadCabinetState = (void*)GetProcAddress(hmod, "ReadCabinetState");
-    if (!pReadCabinetState)
-        pReadCabinetState = (void*)GetProcAddress(hmod, (LPSTR)651);
 }
 
 static BOOL use_common(void)
@@ -101,63 +82,20 @@ static BOOL full_title(void)
     CABINETSTATE cs;
 
     memset(&cs, 0, sizeof(cs));
-    if (pReadCabinetState)
-    {
-        pReadCabinetState(&cs, sizeof(cs));
-    }
-    else
-    {
-        HKEY key;
-        DWORD size;
-
-        win_skip("ReadCabinetState is not available, reading registry directly\n");
-        RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState", &key);
-        size = sizeof(cs);
-        RegQueryValueExA(key, "Settings", NULL, NULL, (LPBYTE)&cs, &size);
-        RegCloseKey(key);
-    }
+    ReadCabinetState(&cs, sizeof(cs));
 
     return (cs.fFullPathTitle == -1);
 }
 
 static char ProgramsDir[MAX_PATH];
 
-static char Group1Title[MAX_PATH]  = "Group1";
-static char Group2Title[MAX_PATH]  = "Group2";
-static char Group3Title[MAX_PATH]  = "Group3";
-static char StartupTitle[MAX_PATH] = "Startup";
-
 static void init_strings(void)
 {
-    char startup[MAX_PATH];
     char commonprograms[MAX_PATH];
     char programs[MAX_PATH];
 
-    if (pSHGetSpecialFolderPathA)
-    {
-        pSHGetSpecialFolderPathA(NULL, programs, CSIDL_PROGRAMS, FALSE);
-        pSHGetSpecialFolderPathA(NULL, commonprograms, CSIDL_COMMON_PROGRAMS, FALSE);
-        pSHGetSpecialFolderPathA(NULL, startup, CSIDL_STARTUP, FALSE);
-    }
-    else
-    {
-        HKEY key;
-        DWORD size;
-
-        /* Older Win9x and NT4 */
-
-        RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", &key);
-        size = sizeof(programs);
-        RegQueryValueExA(key, "Programs", NULL, NULL, (LPBYTE)&programs, &size);
-        size = sizeof(startup);
-        RegQueryValueExA(key, "Startup", NULL, NULL, (LPBYTE)&startup, &size);
-        RegCloseKey(key);
-
-        RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", &key);
-        size = sizeof(commonprograms);
-        RegQueryValueExA(key, "Common Programs", NULL, NULL, (LPBYTE)&commonprograms, &size);
-        RegCloseKey(key);
-    }
+    SHGetSpecialFolderPathA(NULL, programs, CSIDL_PROGRAMS, FALSE);
+    SHGetSpecialFolderPathA(NULL, commonprograms, CSIDL_COMMON_PROGRAMS, FALSE);
 
     /* ProgramsDir on Vista+ is always the users one (CSIDL_PROGRAMS). Before Vista
      * it depends on whether the user is an administrator (CSIDL_COMMON_PROGRAMS) or
@@ -167,55 +105,6 @@ static void init_strings(void)
         lstrcpyA(ProgramsDir, commonprograms);
     else
         lstrcpyA(ProgramsDir, programs);
-
-    if (full_title())
-    {
-        lstrcpyA(Group1Title, ProgramsDir);
-        lstrcatA(Group1Title, "\\Group1");
-        lstrcpyA(Group2Title, ProgramsDir);
-        lstrcatA(Group2Title, "\\Group2");
-        lstrcpyA(Group3Title, ProgramsDir);
-        lstrcatA(Group3Title, "\\Group3");
-
-        lstrcpyA(StartupTitle, startup);
-    }
-    else
-    {
-        /* Vista has the nice habit of displaying the full path in English
-         * and the short one localized. CSIDL_STARTUP on Vista gives us the
-         * English version so we have to 'translate' this one.
-         *
-         * MSDN claims it should be used for files not folders but this one
-         * suits our purposes just fine.
-         */
-        if (pSHGetLocalizedName)
-        {
-            WCHAR startupW[MAX_PATH];
-            WCHAR module[MAX_PATH];
-            WCHAR module_expanded[MAX_PATH];
-            WCHAR localized[MAX_PATH];
-            HRESULT hr;
-            int id;
-
-            MultiByteToWideChar(CP_ACP, 0, startup, -1, startupW, sizeof(startupW)/sizeof(WCHAR));
-            hr = pSHGetLocalizedName(startupW, module, MAX_PATH, &id);
-            todo_wine ok(hr == S_OK, "got 0x%08x\n", hr);
-            /* check to be removed when SHGetLocalizedName is implemented */
-            if (hr == S_OK)
-            {
-                ExpandEnvironmentStringsW(module, module_expanded, MAX_PATH);
-                LoadStringW(GetModuleHandleW(module_expanded), id, localized, MAX_PATH);
-
-                WideCharToMultiByte(CP_ACP, 0, localized, -1, StartupTitle, sizeof(StartupTitle), NULL, NULL);
-            }
-            else
-                lstrcpyA(StartupTitle, (strrchr(startup, '\\') + 1));
-        }
-        else
-        {
-            lstrcpyA(StartupTitle, (strrchr(startup, '\\') + 1));
-        }
-    }
 }
 
 static HDDEDATA CALLBACK DdeCallback(UINT type, UINT format, HCONV hConv, HSZ hsz1, HSZ hsz2,
@@ -225,472 +114,305 @@ static HDDEDATA CALLBACK DdeCallback(UINT type, UINT format, HCONV hConv, HSZ hs
     return NULL;
 }
 
-/*
- * Encoded String for Error Messages so that inner failures can determine
- * what test is failing.  Format is: [Code:TestNum]
- */
-static const char * GetStringFromTestParams(int testParams)
+static UINT dde_execute(DWORD instance, HCONV hconv, const char *command_str)
 {
-    int testNum;
-    static char testParamString[64];
-    const char *callId;
+    HDDEDATA command, hdata;
+    DWORD result;
+    UINT ret;
 
-    testNum = testParams & DDE_TEST_NUMMASK;
-    switch (testParams & DDE_TEST_CALLMASK)
-    {
-    default:
-    case DDE_TEST_MISC:
-        callId = "MISC";
-        break;
-    case DDE_TEST_CREATEGROUP:
-        callId = "C_G";
-        break;
-    case DDE_TEST_DELETEGROUP:
-        callId = "D_G";
-        break;
-    case DDE_TEST_SHOWGROUP:
-        callId = "S_G";
-        break;
-    case DDE_TEST_ADDITEM:
-        callId = "A_I";
-        break;
-    case DDE_TEST_DELETEITEM:
-        callId = "D_I";
-        break;
-    case DDE_TEST_COMPOUND:
-        callId = "CPD";
-        break;
-    }
+    command = DdeCreateDataHandle(instance, (BYTE *)command_str, strlen(command_str)+1, 0, 0, 0, 0);
+    ok(command != NULL, "DdeCreateDataHandle() failed: %u\n", DdeGetLastError(instance));
 
-    sprintf(testParamString, "  [%s:%i]", callId, testNum);
-    return testParamString;
+    hdata = DdeClientTransaction((BYTE *)command, -1, hconv, 0, 0, XTYP_EXECUTE, 2000, &result);
+    ret = DdeGetLastError(instance);
+    /* PROGMAN always returns 1 on success */
+    ok((UINT_PTR)hdata == !ret, "expected %u, got %p\n", !ret, hdata);
+
+    return ret;
 }
 
-/* Transfer DMLERR's into text readable strings for Error Messages */
-#define DMLERR_TO_STR(x) case x: return#x;
-static const char * GetStringFromError(UINT err)
+static char *dde_request(DWORD instance, HCONV hconv, const char *request_str)
 {
-    switch (err)
-    {
-    DMLERR_TO_STR(DMLERR_NO_ERROR);
-    DMLERR_TO_STR(DMLERR_ADVACKTIMEOUT);
-    DMLERR_TO_STR(DMLERR_BUSY);
-    DMLERR_TO_STR(DMLERR_DATAACKTIMEOUT);
-    DMLERR_TO_STR(DMLERR_DLL_NOT_INITIALIZED);
-    DMLERR_TO_STR(DMLERR_DLL_USAGE);
-    DMLERR_TO_STR(DMLERR_EXECACKTIMEOUT);
-    DMLERR_TO_STR(DMLERR_INVALIDPARAMETER);
-    DMLERR_TO_STR(DMLERR_LOW_MEMORY);
-    DMLERR_TO_STR(DMLERR_MEMORY_ERROR);
-    DMLERR_TO_STR(DMLERR_NOTPROCESSED);
-    DMLERR_TO_STR(DMLERR_NO_CONV_ESTABLISHED);
-    DMLERR_TO_STR(DMLERR_POKEACKTIMEOUT);
-    DMLERR_TO_STR(DMLERR_POSTMSG_FAILED);
-    DMLERR_TO_STR(DMLERR_REENTRANCY);
-    DMLERR_TO_STR(DMLERR_SERVER_DIED);
-    DMLERR_TO_STR(DMLERR_SYS_ERROR);
-    DMLERR_TO_STR(DMLERR_UNADVACKTIMEOUT);
-    DMLERR_TO_STR(DMLERR_UNFOUND_QUEUE_ID);
-    default:
-        return "Unknown DML Error";
-    }
+    static char data[2000];
+    HDDEDATA hdata;
+    HSZ item;
+    DWORD result;
+
+    item = DdeCreateStringHandleA(instance, request_str, CP_WINANSI);
+    ok(item != NULL, "DdeCreateStringHandle() failed: %u\n", DdeGetLastError(instance));
+
+    hdata = DdeClientTransaction(NULL, -1, hconv, item, CF_TEXT, XTYP_REQUEST, 2000, &result);
+    if (hdata == NULL) return NULL;
+
+    DdeGetData(hdata, (BYTE *)data, 2000, 0);
+
+    return data;
 }
 
-/* Helper Function to Transfer DdeGetLastError into a String */
-static const char * GetDdeLastErrorStr(DWORD instance)
+static BOOL check_window_exists(const char *name)
 {
-    UINT err = DdeGetLastError(instance);
-
-    return GetStringFromError(err);
-}
-
-/* Execute a Dde Command and return the error & result */
-/* Note: Progman DDE always returns a pointer to 0x00000001 on a successful result */
-static void DdeExecuteCommand(DWORD instance, HCONV hConv, const char *strCmd, HDDEDATA *hData, UINT *err, int testParams)
-{
-    HDDEDATA command;
-
-    command = DdeCreateDataHandle(instance, (LPBYTE) strCmd, strlen(strCmd)+1, 0, 0L, 0, 0);
-    ok (command != NULL, "DdeCreateDataHandle Error %s.%s\n",
-        GetDdeLastErrorStr(instance), GetStringFromTestParams(testParams));
-    *hData = DdeClientTransaction((void *) command,
-                                  -1,
-                                  hConv,
-                                  0,
-                                  0,
-                                  XTYP_EXECUTE,
-                                  MS_TIMEOUT_VAL,
-                                  NULL);
-
-    /* hData is technically a pointer, but for Program Manager,
-     * it is NULL (error) or 1 (success)
-     * TODO: Check other versions of Windows to verify 1 is returned.
-     * While it is unlikely that anyone is actually testing that the result is 1
-     * if all versions of windows return 1, Wine should also.
-     */
-    if (*hData == NULL)
-    {
-        *err = DdeGetLastError(instance);
-    }
-    else
-    {
-        *err = DMLERR_NO_ERROR;
-        todo_wine
-        {
-            ok(*hData == (HDDEDATA) 1, "Expected HDDEDATA Handle == 1, actually %p.%s\n",
-               *hData, GetStringFromTestParams(testParams));
-        }
-    }
-    DdeFreeDataHandle(command);
-}
-
-/*
- * Check if Window is onscreen with the appropriate name.
- *
- * Windows are not created synchronously.  So we do not know
- * when and if the window will be created/shown on screen.
- * This function implements a polling mechanism to determine
- * creation.
- * A more complicated method would be to use SetWindowsHookEx.
- * Since polling worked fine in my testing, no reason to implement
- * the other.  Comments about other methods of determining when
- * window creation happened were not encouraging (not including
- * SetWindowsHookEx).
- */
-static HWND CheckWindowCreated(const char *winName, BOOL closeWindow, int testParams)
-{
+    char title[MAX_PATH];
     HWND window = NULL;
     int i;
 
-    /* Poll for Window Creation */
-    for (i = 0; window == NULL && i < PDDE_POLL_NUM; i++)
+    if (full_title())
     {
-        Sleep(PDDE_POLL_TIME);
-        /* Specify the window class name to make sure what we find is really an
-         * Explorer window. Explorer used two different window classes so try
-         * both.
-         */
-        window = FindWindowA("ExplorerWClass", winName);
-        if (!window)
-            window = FindWindowA("CabinetWClass", winName);
+        strcpy(title, ProgramsDir);
+        strcat(title, "\\");
+        strcat(title, name);
     }
-    ok (window != NULL, "Window \"%s\" was not created in %i seconds - assumed failure.%s\n",
-        winName, PDDE_POLL_NUM*PDDE_POLL_TIME/1000, GetStringFromTestParams(testParams));
+    else
+        strcpy(title, name);
 
-    /* Close Window as desired. */
-    if (window != NULL && closeWindow)
+    for (i = 0; i < 20; i++)
     {
-        SendMessageA(window, WM_SYSCOMMAND, SC_CLOSE, 0);
-        window = NULL;
+        Sleep(100);
+        if ((window = FindWindowA("ExplorerWClass", title)) ||
+            (window = FindWindowA("CabinetWClass", title)))
+        {
+            SendMessageA(window, WM_SYSCOMMAND, SC_CLOSE, 0);
+            break;
+        }
     }
-    return window;
+
+    return (window != NULL);
 }
 
-/* Check for Existence (or non-existence) of a file or group
- *   When testing for existence of a group, groupName is not needed
- */
-static void CheckFileExistsInProgramGroups(const char *nameToCheck, BOOL shouldExist, BOOL isGroup,
-                                           const char *groupName, int testParams)
+static BOOL check_exists(const char *name)
 {
     char path[MAX_PATH];
-    DWORD attributes;
-    int len;
 
-    lstrcpyA(path, ProgramsDir);
-
-    len = strlen(path) + strlen(nameToCheck)+1;
-    if (groupName != NULL)
-    {
-        len += strlen(groupName)+1;
-    }
-    ok (len <= MAX_PATH, "Path Too Long.%s\n", GetStringFromTestParams(testParams));
-    if (len <= MAX_PATH)
-    {
-        if (groupName != NULL)
-        {
-            strcat(path, "\\");
-            strcat(path, groupName);
-        }
-        strcat(path, "\\");
-        strcat(path, nameToCheck);
-        attributes = GetFileAttributesA(path);
-        if (!shouldExist)
-        {
-            ok (attributes == INVALID_FILE_ATTRIBUTES , "File exists and shouldn't %s.%s\n",
-                path, GetStringFromTestParams(testParams));
-        } else {
-            if (attributes == INVALID_FILE_ATTRIBUTES)
-            {
-                ok (FALSE, "Created File %s doesn't exist.%s\n", path, GetStringFromTestParams(testParams));
-            } else if (isGroup) {
-                ok (attributes & FILE_ATTRIBUTE_DIRECTORY, "%s is not a folder (attr=%x).%s\n",
-                    path, attributes, GetStringFromTestParams(testParams));
-            } else {
-                ok (attributes & FILE_ATTRIBUTE_ARCHIVE, "Created File %s has wrong attributes (%x).%s\n",
-                    path, attributes, GetStringFromTestParams(testParams));
-            }
-        }
-    }
+    strcpy(path, ProgramsDir);
+    strcat(path, "\\");
+    strcat(path, name);
+    return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
 }
 
-/* Create Group Test.
- *   command and expected_result.
- *   if expected_result is DMLERR_NO_ERROR, test
- *        1. group was created
- *        2. window is open
- */
-static void CreateGroupTest(DWORD instance, HCONV hConv, const char *command, UINT expected_result,
-                            const char *groupName, const char *windowTitle, int testParams)
+static void test_parser(DWORD instance, HCONV hConv)
 {
-    HDDEDATA hData;
     UINT error;
 
-    /* Execute Command & Check Result */
-    DdeExecuteCommand(instance, hConv, command, &hData, &error, testParams);
-    todo_wine
-    {
-        ok (expected_result == error, "CreateGroup %s: Expected Error %s, received %s.%s\n",
-            groupName, GetStringFromError(expected_result), GetStringFromError(error),
-            GetStringFromTestParams(testParams));
-    }
+    /* Invalid Command */
+    error = dde_execute(instance, hConv, "[InvalidCommand()]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-    /* No Error */
-    if (error == DMLERR_NO_ERROR)
-    {
+    /* test parsing */
+    error = dde_execute(instance, hConv, "");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-        /* Check if Group Now Exists */
-        CheckFileExistsInProgramGroups(groupName, TRUE, TRUE, NULL, testParams);
-        /* Check if Window is Open (polling) */
-        CheckWindowCreated(windowTitle, TRUE, testParams);
-    }
-}
+    error = dde_execute(instance, hConv, "CreateGroup");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-/* Show Group Test.
- *   DDE command, expected_result, and the group name to check for existence
- *   if expected_result is DMLERR_NO_ERROR, test
- *        1. window is open
- */
-static HWND ShowGroupTest(DWORD instance, HCONV hConv, const char *command, UINT expected_result,
-                          const char *groupName, const char *windowTitle, BOOL closeAfterShowing, int testParams)
-{
-    HDDEDATA hData;
-    UINT error;
-    HWND hwnd = 0;
+    error = dde_execute(instance, hConv, "[CreateGroup");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-    DdeExecuteCommand(instance, hConv, command, &hData, &error, testParams);
-/* todo_wine...  Is expected to fail, wine stubbed functions DO fail */
-/* TODO REMOVE THIS CODE!!! */
-    todo_wine_if (expected_result != DMLERR_NOTPROCESSED)
-        ok (expected_result == error, "ShowGroup %s: Expected Error %s, received %s.%s\n",
-            groupName, GetStringFromError(expected_result), GetStringFromError(error),
-            GetStringFromTestParams(testParams));
+    error = dde_execute(instance, hConv, "[CreateGroup]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-    if (error == DMLERR_NO_ERROR)
-    {
-        /* Check if Window is Open (polling) */
-        hwnd = CheckWindowCreated(windowTitle, closeAfterShowing, testParams);
-    }
-    return hwnd;
-}
+    error = dde_execute(instance, hConv, "[CreateGroup()]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-/* Delete Group Test.
- *   DDE command, expected_result, and the group name to check for existence
- *   if expected_result is DMLERR_NO_ERROR, test
- *        1. group does not exist
- */
-static void DeleteGroupTest(DWORD instance, HCONV hConv, const char *command, UINT expected_result,
-                            const char *groupName, int testParams)
-{
-    HDDEDATA hData;
-    UINT error;
+    error = dde_execute(instance, hConv, "[cREATEgROUP(test)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("test"), "directory not created\n");
+    ok(check_window_exists("test"), "window not created\n");
 
-    DdeExecuteCommand(instance, hConv, command, &hData, &error, testParams);
-    todo_wine
-    {
-        ok (expected_result == error, "DeleteGroup %s: Expected Error %s, received %s.%s\n",
-            groupName, GetStringFromError(expected_result), GetStringFromError(error),
-            GetStringFromTestParams(testParams));
-    }
+    error = dde_execute(instance, hConv, "[AddItem(notepad,foobar)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("test/foobar.lnk"), "link not created\n");
 
-    if (error == DMLERR_NO_ERROR)
-    {
-        /* Check that Group does not exist */
-        CheckFileExistsInProgramGroups(groupName, FALSE, TRUE, NULL, testParams);
-    }
-}
+    error = dde_execute(instance, hConv, "[AddItem(notepad,foo bar)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("test/foo bar.lnk"), "link not created\n");
 
-/* Add Item Test
- *   DDE command, expected result, and group and file name where it should exist.
- *   checks to make sure error code matches expected error code
- *   checks to make sure item exists if successful
- */
-static void AddItemTest(DWORD instance, HCONV hConv, const char *command, UINT expected_result,
-                        const char *fileName, const char *groupName, int testParams)
-{
-    HDDEDATA hData;
-    UINT error;
+    error = dde_execute(instance, hConv, "[AddItem(notepad,a[b,c]d)]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-    DdeExecuteCommand(instance, hConv, command, &hData, &error, testParams);
-    todo_wine
-    {
-        ok (expected_result == error, "AddItem %s: Expected Error %s, received %s.%s\n",
-            fileName, GetStringFromError(expected_result), GetStringFromError(error),
-            GetStringFromTestParams(testParams));
-    }
+    error = dde_execute(instance, hConv, "[AddItem(notepad,\"a[b,c]d\")]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("test/a[b,c]d.lnk"), "link not created\n");
 
-    if (error == DMLERR_NO_ERROR)
-    {
-        /* Check that File exists */
-        CheckFileExistsInProgramGroups(fileName, TRUE, FALSE, groupName, testParams);
-    }
-}
+    error = dde_execute(instance, hConv, "  [  AddItem  (  notepad  ,  test  )  ]  ");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("test/test.lnk"), "link not created\n");
 
-/* Delete Item Test.
- *   DDE command, expected result, and group and file name where it should exist.
- *   checks to make sure error code matches expected error code
- *   checks to make sure item does not exist if successful
- */
-static void DeleteItemTest(DWORD instance, HCONV hConv, const char *command, UINT expected_result,
-                           const char *fileName, const char *groupName, int testParams)
-{
-    HDDEDATA hData;
-    UINT error;
+    error = dde_execute(instance, hConv, "[AddItem(notepad,one)][AddItem(notepad,two)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("test/one.lnk"), "link not created\n");
+    ok(check_exists("test/two.lnk"), "link not created\n");
 
-    DdeExecuteCommand(instance, hConv, command, &hData, &error, testParams);
-    todo_wine
-    {
-        ok (expected_result == error, "DeleteItem %s: Expected Error %s, received %s.%s\n",
-            fileName, GetStringFromError(expected_result), GetStringFromError(error),
-            GetStringFromTestParams(testParams));
-    }
+    error = dde_execute(instance, hConv, "[FakeCommand(test)][DeleteGroup(test)]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
+    ok(check_exists("test"), "directory should exist\n");
 
-    if (error == DMLERR_NO_ERROR)
-    {
-        /* Check that File does not exist */
-        CheckFileExistsInProgramGroups(fileName, FALSE, FALSE, groupName, testParams);
-    }
-}
+    error = dde_execute(instance, hConv, "[DeleteGroup(test)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(!check_exists("test"), "directory should not exist\n");
 
-/* Compound Command Test.
- *   not really generic, assumes command of the form:
- *          [CreateGroup ...][AddItem ...][AddItem ...]
- *   All samples I've seen using Compound were of this form (CreateGroup,
- *   AddItems) so this covers minimum expected functionality.
- */
-static HWND CompoundCommandTest(DWORD instance, HCONV hConv, const char *command, UINT expected_result,
-                                const char *groupName, const char *windowTitle, const char *fileName1,
-                                const char *fileName2, int testParams)
-{
-    HDDEDATA hData;
-    UINT error;
-    HWND hwnd = 0;
+    error = dde_execute(instance, hConv, "[ExitProgman()]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
 
-    DdeExecuteCommand(instance, hConv, command, &hData, &error, testParams);
-    todo_wine
-    {
-        ok (expected_result == error, "Compound String %s: Expected Error %s, received %s.%s\n",
-            command, GetStringFromError(expected_result), GetStringFromError(error),
-            GetStringFromTestParams(testParams));
-    }
-
-    if (error == DMLERR_NO_ERROR)
-    {
-        /* Check that File exists */
-        CheckFileExistsInProgramGroups(groupName, TRUE, TRUE, NULL, testParams);
-        hwnd = CheckWindowCreated(windowTitle, FALSE, testParams);
-        CheckFileExistsInProgramGroups(fileName1, TRUE, FALSE, groupName, testParams);
-        CheckFileExistsInProgramGroups(fileName2, TRUE, FALSE, groupName, testParams);
-    }
-    return hwnd;
-}
-
-static void CreateAddItemText(char *itemtext, const char *cmdline, const char *name)
-{
-    lstrcpyA(itemtext, "[AddItem(");
-    lstrcatA(itemtext, cmdline);
-    lstrcatA(itemtext, ",");
-    lstrcatA(itemtext, name);
-    lstrcatA(itemtext, ")]");
+    error = dde_execute(instance, hConv, "[ExitProgman]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
 }
 
 /* 1st set of tests */
-static int DdeTestProgman(DWORD instance, HCONV hConv)
+static void test_progman_dde(DWORD instance, HCONV hConv)
 {
-    HDDEDATA hData;
     UINT error;
-    int testnum;
-    char temppath[MAX_PATH];
-    char f1g1[MAX_PATH], f2g1[MAX_PATH], f3g1[MAX_PATH], f1g3[MAX_PATH], f2g3[MAX_PATH];
-    char itemtext[MAX_PATH + 20];
-    char comptext[2 * (MAX_PATH + 20) + 21];
-    HWND hwnd;
 
-    testnum = 1;
-    /* Invalid Command */
-    DdeExecuteCommand(instance, hConv, "[InvalidCommand()]", &hData, &error, DDE_TEST_MISC|testnum++);
-    ok (error == DMLERR_NOTPROCESSED, "InvalidCommand(), expected error %s, received %s.\n",
-        GetStringFromError(DMLERR_NOTPROCESSED), GetStringFromError(error));
+    /* test creating and deleting groups and items */
+    error = dde_execute(instance, hConv, "[CreateGroup(Group1)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group1"), "directory not created\n");
+    ok(check_window_exists("Group1"), "window not created\n");
 
-    /* On Vista+ the files have to exist when adding a link */
-    GetTempPathA(MAX_PATH, temppath);
-    GetTempFileNameA(temppath, "dde", 0, f1g1);
-    GetTempFileNameA(temppath, "dde", 0, f2g1);
-    GetTempFileNameA(temppath, "dde", 0, f3g1);
-    GetTempFileNameA(temppath, "dde", 0, f1g3);
-    GetTempFileNameA(temppath, "dde", 0, f2g3);
+    error = dde_execute(instance, hConv, "[AddItem]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-    /* CreateGroup Tests (including AddItem, DeleteItem) */
-    CreateGroupTest(instance, hConv, "[CreateGroup(Group1)]", DMLERR_NO_ERROR, "Group1", Group1Title, DDE_TEST_CREATEGROUP|testnum++);
-    CreateAddItemText(itemtext, f1g1, "f1g1Name");
-    AddItemTest(instance, hConv, itemtext, DMLERR_NO_ERROR, "f1g1Name.lnk", "Group1", DDE_TEST_ADDITEM|testnum++);
-    CreateAddItemText(itemtext, f2g1, "f2g1Name");
-    AddItemTest(instance, hConv, itemtext, DMLERR_NO_ERROR, "f2g1Name.lnk", "Group1", DDE_TEST_ADDITEM|testnum++);
-    DeleteItemTest(instance, hConv, "[DeleteItem(f2g1Name)]", DMLERR_NO_ERROR, "f2g1Name.lnk", "Group1", DDE_TEST_DELETEITEM|testnum++);
-    CreateAddItemText(itemtext, f3g1, "f3g1Name");
-    AddItemTest(instance, hConv, itemtext, DMLERR_NO_ERROR, "f3g1Name.lnk", "Group1", DDE_TEST_ADDITEM|testnum++);
-    CreateGroupTest(instance, hConv, "[CreateGroup(Group2)]", DMLERR_NO_ERROR, "Group2", Group2Title, DDE_TEST_CREATEGROUP|testnum++);
-    /* Create Group that already exists - same instance */
-    CreateGroupTest(instance, hConv, "[CreateGroup(Group1)]", DMLERR_NO_ERROR, "Group1", Group1Title, DDE_TEST_CREATEGROUP|testnum++);
+    error = dde_execute(instance, hConv, "[AddItem(test)]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-    /* ShowGroup Tests */
-    ShowGroupTest(instance, hConv, "[ShowGroup(Group1)]", DMLERR_NOTPROCESSED, "Group1", Group1Title, TRUE, DDE_TEST_SHOWGROUP|testnum++);
-    DeleteItemTest(instance, hConv, "[DeleteItem(f3g1Name)]", DMLERR_NO_ERROR, "f3g1Name.lnk", "Group1", DDE_TEST_DELETEITEM|testnum++);
-    ShowGroupTest(instance, hConv, "[ShowGroup(Startup,0)]", DMLERR_NO_ERROR, "Startup", StartupTitle, TRUE, DDE_TEST_SHOWGROUP|testnum++);
-    hwnd = ShowGroupTest(instance, hConv, "[ShowGroup(Group1,0)]", DMLERR_NO_ERROR, "Group1", Group1Title, FALSE, DDE_TEST_SHOWGROUP|testnum++);
+    error = dde_execute(instance, hConv, "[AddItem(notepad.exe)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group1/notepad.lnk"), "link not created\n");
 
-    /* DeleteGroup Test - Note that Window is Open for this test */
-    DeleteGroupTest(instance, hConv, "[DeleteGroup(Group1)]", DMLERR_NO_ERROR, "Group1", DDE_TEST_DELETEGROUP|testnum++);
-    if (hwnd) SendMessageA(hwnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+    error = dde_execute(instance, hConv, "[DeleteItem(notepad.exe)]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-    /* Compound Execute String Command */
-    lstrcpyA(comptext, "[CreateGroup(Group3)]");
-    CreateAddItemText(itemtext, f1g3, "f1g3Name");
-    lstrcatA(comptext, itemtext);
-    CreateAddItemText(itemtext, f2g3, "f2g3Name");
-    lstrcatA(comptext, itemtext);
-    hwnd = CompoundCommandTest(instance, hConv, comptext, DMLERR_NO_ERROR, "Group3", Group3Title, "f1g3Name.lnk", "f2g3Name.lnk", DDE_TEST_COMPOUND|testnum++);
+    error = dde_execute(instance, hConv, "[DeleteItem(notepad)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(!check_exists("Group1/notepad.lnk"), "link should not exist\n");
 
-    DeleteGroupTest(instance, hConv, "[DeleteGroup(Group3)]", DMLERR_NO_ERROR, "Group3", DDE_TEST_DELETEGROUP|testnum++);
-    if (hwnd) SendMessageA(hwnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+    error = dde_execute(instance, hConv, "[DeleteItem(notepad)]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
 
-    /* Full Parameters of Add Item */
-    /* AddItem(CmdLine[,Name[,IconPath[,IconIndex[,xPos,yPos[,DefDir[,HotKey[,fMinimize[fSeparateSpace]]]]]]]) */
+    error = dde_execute(instance, hConv, "[AddItem(notepad)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group1/notepad.lnk"), "link not created\n");
 
-    DeleteFileA(f1g1);
-    DeleteFileA(f2g1);
-    DeleteFileA(f3g1);
-    DeleteFileA(f1g3);
-    DeleteFileA(f2g3);
+    error = dde_execute(instance, hConv, "[AddItem(notepad)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
 
-    return testnum;
+    /* XP allows any valid path even if it does not exist; Vista+ requires that
+     * the path both exist and be a file (directories are invalid). */
+
+    error = dde_execute(instance, hConv, "[AddItem(C:\\windows\\system.ini)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group1/system.lnk"), "link not created\n");
+
+    error = dde_execute(instance, hConv, "[AddItem(notepad,test1)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group1/test1.lnk"), "link not created\n");
+
+    error = dde_execute(instance, hConv, "[DeleteItem(test1)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(!check_exists("Group1/test1.lnk"), "link should not exist\n");
+
+    error = dde_execute(instance, hConv, "[AddItem(notepad,test1)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group1/test1.lnk"), "link not created\n");
+
+    error = dde_execute(instance, hConv, "[ReplaceItem(test1)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(!check_exists("Group1/test1.lnk"), "link should not exist\n");
+
+    error = dde_execute(instance, hConv, "[AddItem(regedit)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group1/regedit.lnk"), "link not created\n");
+
+    /* test ShowGroup() and test which group an item gets added to */
+    error = dde_execute(instance, hConv, "[ShowGroup(Group1)]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
+
+    error = dde_execute(instance, hConv, "[ShowGroup(Group1, 0)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_window_exists("Group1"), "window not created\n");
+
+    error = dde_execute(instance, hConv, "[CreateGroup(Group2)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group2"), "directory not created\n");
+    ok(check_window_exists("Group2"), "window not created\n");
+
+    error = dde_execute(instance, hConv, "[AddItem(notepad,test2)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group2/test2.lnk"), "link not created\n");
+
+    error = dde_execute(instance, hConv, "[ShowGroup(Group1, 0)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_window_exists("Group1"), "window not created\n");
+
+    error = dde_execute(instance, hConv, "[AddItem(notepad,test3)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group1/test3.lnk"), "link not created\n");
+
+    error = dde_execute(instance, hConv, "[DeleteGroup(Group1)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(!check_exists("Group1"), "directory should not exist\n");
+
+    error = dde_execute(instance, hConv, "[DeleteGroup(Group1)]");
+    ok(error == DMLERR_NOTPROCESSED, "expected DMLERR_NOTPROCESSED, got %u\n", error);
+
+    error = dde_execute(instance, hConv, "[ShowGroup(Group2, 0)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_window_exists("Group2"), "window not created\n");
+
+    error = dde_execute(instance, hConv, "[ExitProgman(1)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+
+    error = dde_execute(instance, hConv, "[AddItem(notepad,test4)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group2/test4.lnk"), "link not created\n");
 }
 
 /* 2nd set of tests - 2nd connection */
-static void DdeTestProgman2(DWORD instance, HCONV hConv, int testnum)
+static void test_progman_dde2(DWORD instance, HCONV hConv)
 {
-    /* Create Group that already exists on a separate connection */
-    CreateGroupTest(instance, hConv, "[CreateGroup(Group2)]", DMLERR_NO_ERROR, "Group2", Group2Title, DDE_TEST_CREATEGROUP|testnum++);
-    DeleteGroupTest(instance, hConv, "[DeleteGroup(Group2)]", DMLERR_NO_ERROR, "Group2", DDE_TEST_DELETEGROUP|testnum++);
+    UINT error;
+
+    /* last open group is retained across connections */
+    error = dde_execute(instance, hConv, "[AddItem(notepad)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(check_exists("Group2/notepad.lnk"), "link not created\n");
+
+    error = dde_execute(instance, hConv, "[DeleteGroup(Group2)]");
+    ok(error == DMLERR_NO_ERROR, "expected DMLERR_NO_ERROR, got %u\n", error);
+    ok(!check_exists("Group2"), "directory should not exist\n");
+}
+
+static BOOL check_in_programs_list(const char *list, const char *group)
+{
+    while (1)
+    {
+        if (!strncmp(list, group, strlen(group)) && list[strlen(group)] == '\r')
+            return TRUE;
+        if (!(list = strchr(list, '\r'))) break;
+        list += 2;
+    }
+    return FALSE;
+}
+
+static void test_request_groups(DWORD instance, HCONV hconv)
+{
+    char *list;
+    char programs[MAX_PATH];
+    WIN32_FIND_DATAA finddata;
+    HANDLE hfind;
+
+    list = dde_request(instance, hconv, "Groups");
+    ok(list != NULL, "request failed: %u\n", DdeGetLastError(instance));
+    strcpy(programs, ProgramsDir);
+    strcat(programs, "/*");
+    hfind = FindFirstFileA(programs, &finddata);
+    do
+    {
+        if ((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && finddata.cFileName[0] != '.')
+        {
+            ok(check_in_programs_list(list, finddata.cFileName),
+               "directory '%s' missing from group list\n", finddata.cFileName);
+        }
+    } while (FindNextFileA(hfind, &finddata));
+    FindClose(hfind);
 }
 
 START_TEST(progman_dde)
@@ -699,20 +421,21 @@ START_TEST(progman_dde)
     UINT err;
     HSZ hszProgman;
     HCONV hConv;
-    int testnum;
+    BOOL ret;
 
     init_function_pointers();
     init_strings();
 
     /* Initialize DDE Instance */
     err = DdeInitializeA(&instance, DdeCallback, APPCMD_CLIENTONLY, 0);
-    ok (err == DMLERR_NO_ERROR, "DdeInitialize Error %s\n", GetStringFromError(err));
+    ok(err == DMLERR_NO_ERROR, "DdeInitialize() failed: %u\n", err);
 
     /* Create Connection */
     hszProgman = DdeCreateStringHandleA(instance, "PROGMAN", CP_WINANSI);
-    ok (hszProgman != NULL, "DdeCreateStringHandle Error %s\n", GetDdeLastErrorStr(instance));
+    ok(hszProgman != NULL, "DdeCreateStringHandle() failed: %u\n", DdeGetLastError(instance));
     hConv = DdeConnect(instance, hszProgman, hszProgman, NULL);
-    ok (DdeFreeStringHandle(instance, hszProgman), "DdeFreeStringHandle failure\n");
+    ret = DdeFreeStringHandle(instance, hszProgman);
+    ok(ret, "DdeFreeStringHandle() failed: %u\n", DdeGetLastError(instance));
     /* Seeing failures on early versions of Windows Connecting to progman, exit if connection fails */
     if (hConv == NULL)
     {
@@ -720,30 +443,36 @@ START_TEST(progman_dde)
         return;
     }
 
-    /* Run Tests */
-    testnum = DdeTestProgman(instance, hConv);
+    test_parser(instance, hConv);
+    test_progman_dde(instance, hConv);
+    test_request_groups(instance, hConv);
 
     /* Cleanup & Exit */
-    ok (DdeDisconnect(hConv), "DdeDisonnect Error %s\n", GetDdeLastErrorStr(instance));
-    ok (DdeUninitialize(instance), "DdeUninitialize failed\n");
+    ret = DdeDisconnect(hConv);
+    ok(ret, "DdeDisonnect() failed: %u\n", DdeGetLastError(instance));
+    ret = DdeUninitialize(instance);
+    ok(ret, "DdeUninitialize() failed: %u\n", DdeGetLastError(instance));
 
     /* 2nd Instance (Followup Tests) */
     /* Initialize DDE Instance */
     instance = 0;
     err = DdeInitializeA(&instance, DdeCallback, APPCMD_CLIENTONLY, 0);
-    ok (err == DMLERR_NO_ERROR, "DdeInitialize Error %s\n", GetStringFromError(err));
+    ok (err == DMLERR_NO_ERROR, "DdeInitialize() failed: %u\n", err);
 
     /* Create Connection */
     hszProgman = DdeCreateStringHandleA(instance, "PROGMAN", CP_WINANSI);
-    ok (hszProgman != NULL, "DdeCreateStringHandle Error %s\n", GetDdeLastErrorStr(instance));
+    ok(hszProgman != NULL, "DdeCreateStringHandle() failed: %u\n", DdeGetLastError(instance));
     hConv = DdeConnect(instance, hszProgman, hszProgman, NULL);
-    ok (hConv != NULL, "DdeConnect Error %s\n", GetDdeLastErrorStr(instance));
-    ok (DdeFreeStringHandle(instance, hszProgman), "DdeFreeStringHandle failure\n");
+    ok(hConv != NULL, "DdeConnect() failed: %u\n", DdeGetLastError(instance));
+    ret = DdeFreeStringHandle(instance, hszProgman);
+    ok(ret, "DdeFreeStringHandle() failed: %u\n", DdeGetLastError(instance));
 
     /* Run Tests */
-    DdeTestProgman2(instance, hConv, testnum);
+    test_progman_dde2(instance, hConv);
 
     /* Cleanup & Exit */
-    ok (DdeDisconnect(hConv), "DdeDisonnect Error %s\n", GetDdeLastErrorStr(instance));
-    ok (DdeUninitialize(instance), "DdeUninitialize failed\n");
+    ret = DdeDisconnect(hConv);
+    ok(ret, "DdeDisonnect() failed: %u\n", DdeGetLastError(instance));
+    ret = DdeUninitialize(instance);
+    ok(ret, "DdeUninitialize() failed: %u\n", DdeGetLastError(instance));
 }

@@ -18,7 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+#define WINE_NOWINSOCK
+#include <windows.h>
+#include "shellapi.h"
+#include "shlobj.h"
+#include "commoncontrols.h"
+
+#include "wine/test.h"
+
+#ifdef __REACTOS__
+#include <reactos/undocshell.h>
+#endif
 
 #ifndef FOF_NORECURSION
 #define FOF_NORECURSION 0x1000
