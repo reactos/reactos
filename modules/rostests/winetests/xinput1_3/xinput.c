@@ -24,7 +24,7 @@
 #include "wine/test.h"
 
 static DWORD (WINAPI *pXInputGetState)(DWORD, XINPUT_STATE*);
-static DWORD (WINAPI *pXInputGetStateEx)(DWORD, XINPUT_STATE_EX*);
+static DWORD (WINAPI *pXInputGetStateEx)(DWORD, XINPUT_STATE*);
 static DWORD (WINAPI *pXInputGetCapabilities)(DWORD,DWORD,XINPUT_CAPABILITIES*);
 static DWORD (WINAPI *pXInputSetState)(DWORD, XINPUT_VIBRATION*);
 static void  (WINAPI *pXInputEnable)(BOOL);
@@ -91,23 +91,19 @@ static void test_set_state(void)
 
 static void test_get_state(void)
 {
-    union
-    {
-        XINPUT_STATE state;
-        XINPUT_STATE_EX state_ex;
-    } xinput;
+    XINPUT_STATE state;
     DWORD controllerNum, i, result, good = XUSER_MAX_COUNT;
 
     for (i = 0; i < (pXInputGetStateEx ? 2 : 1); i++)
     {
         for (controllerNum = 0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
         {
-            ZeroMemory(&xinput, sizeof(xinput));
+            ZeroMemory(&state, sizeof(state));
 
             if (i == 0)
-                result = pXInputGetState(controllerNum, &xinput.state);
+                result = pXInputGetState(controllerNum, &state);
             else
-                result = pXInputGetStateEx(controllerNum, &xinput.state_ex);
+                result = pXInputGetStateEx(controllerNum, &state);
             ok(result == ERROR_SUCCESS || result == ERROR_DEVICE_NOT_CONNECTED,
                "%s failed with (%d)\n", i == 0 ? "XInputGetState" : "XInputGetStateEx", result);
 
@@ -125,39 +121,39 @@ static void test_get_state(void)
             }
             else
                 trace("XInputGetStateEx: %d\n", result);
-            trace("State->dwPacketNumber: %d\n", xinput.state.dwPacketNumber);
-            dump_gamepad(&xinput.state.Gamepad);
+            trace("State->dwPacketNumber: %d\n", state.dwPacketNumber);
+            dump_gamepad(&state.Gamepad);
         }
     }
 
-    result = pXInputGetState(XUSER_MAX_COUNT, &xinput.state);
+    result = pXInputGetState(XUSER_MAX_COUNT, &state);
     ok(result == ERROR_BAD_ARGUMENTS, "XInputGetState returned (%d)\n", result);
 
-    result = pXInputGetState(XUSER_MAX_COUNT+1, &xinput.state);
+    result = pXInputGetState(XUSER_MAX_COUNT+1, &state);
     ok(result == ERROR_BAD_ARGUMENTS, "XInputGetState returned (%d)\n", result);
     if (pXInputGetStateEx)
     {
-        result = pXInputGetStateEx(XUSER_MAX_COUNT, &xinput.state_ex);
+        result = pXInputGetStateEx(XUSER_MAX_COUNT, &state);
         ok(result == ERROR_BAD_ARGUMENTS, "XInputGetState returned (%d)\n", result);
 
-        result = pXInputGetStateEx(XUSER_MAX_COUNT+1, &xinput.state_ex);
+        result = pXInputGetStateEx(XUSER_MAX_COUNT+1, &state);
         ok(result == ERROR_BAD_ARGUMENTS, "XInputGetState returned (%d)\n", result);
     }
 
     if (winetest_interactive && good < XUSER_MAX_COUNT)
     {
         DWORD now = GetTickCount(), packet = 0;
-        XINPUT_GAMEPAD *game = &xinput.state.Gamepad;
+        XINPUT_GAMEPAD *game = &state.Gamepad;
 
         trace("You have 20 seconds to test the joystick freely\n");
         do
         {
             Sleep(100);
-            pXInputGetState(good, &xinput.state);
-            if (xinput.state.dwPacketNumber == packet)
+            pXInputGetState(good, &state);
+            if (state.dwPacketNumber == packet)
                 continue;
 
-            packet = xinput.state.dwPacketNumber;
+            packet = state.dwPacketNumber;
             trace("Buttons 0x%04X Triggers %3d/%3d LT %6d/%6d RT %6d/%6d\n",
                   game->wButtons, game->bLeftTrigger, game->bRightTrigger,
                   game->sThumbLX, game->sThumbLY, game->sThumbRX, game->sThumbRY);
