@@ -18,7 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include <locale.h>
+
+#include "wine/test.h"
+#include "winnls.h"
 
 static BOOL (__cdecl *p__crtGetStringTypeW)(DWORD, DWORD, const wchar_t*, int, WORD*);
 static int (__cdecl *pmemcpy_s)(void *, size_t, void*, size_t);

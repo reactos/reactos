@@ -18,12 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
+#include "wine/test.h"
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <direct.h>
+#include <sys/stat.h>
+#include <io.h>
 #include <mbctype.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <process.h>
+#include <errno.h>
 
 static int (__cdecl *p_makepath_s)(char *, size_t, const char *, const char *, const char *, const char *);
 static int (__cdecl *p_wmakepath_s)(wchar_t *, size_t, const wchar_t *,const wchar_t *, const wchar_t *, const wchar_t *);
+static int (__cdecl *p_searchenv_s)(const char*, const char*, char*, size_t);
+static int (__cdecl *p_wsearchenv_s)(const wchar_t*, const wchar_t*, wchar_t*, size_t);
 
 static void init(void)
 {
@@ -31,6 +44,8 @@ static void init(void)
 
     p_makepath_s = (void *)GetProcAddress(hmod, "_makepath_s");
     p_wmakepath_s = (void *)GetProcAddress(hmod, "_wmakepath_s");
+    p_searchenv_s = (void *)GetProcAddress(hmod, "_searchenv_s");
+    p_wsearchenv_s = (void *)GetProcAddress(hmod, "_wsearchenv_s");
 }
 
 typedef struct
@@ -406,6 +421,195 @@ static void test_splitpath(void)
     _setmbcp(prev_cp);
 }
 
+static void test_searchenv(void)
+{
+    const char *dirs[] = {
+        "\\search_env_test",
+        "\\search_env_test\\dir1",
+        "\\search_env_test\\dir2",
+        "\\search_env_test\\dir3longer"
+    };
+
+    const char *files[] = {
+        "\\search_env_test\\dir1\\1.dat",
+        "\\search_env_test\\dir1\\2.dat",
+        "\\search_env_test\\dir2\\1.dat",
+        "\\search_env_test\\dir2\\3.dat",
+        "\\search_env_test\\dir3longer\\3.dat"
+    };
+
+    const WCHAR env_w[] = {'T','E','S','T','_','P','A','T','H',0};
+    const WCHAR dat1_w[] = {'1','.','d','a','t',0};
+    const WCHAR dat3_w[] = {'3','.','d','a','t',0};
+
+    char env1[4*MAX_PATH], env2[4*MAX_PATH], tmppath[MAX_PATH], path[2*MAX_PATH];
+    char result[MAX_PATH], exp[2*MAX_PATH];
+    WCHAR result_w[MAX_PATH];
+    int i, path_len;
+    FILE *tmp_file;
+
+    if (getenv("TEST_PATH")) {
+        skip("TEST_PATH environment variable already set\n");
+        return;
+    }
+
+    path_len = GetTempPathA(MAX_PATH, tmppath);
+    ok(path_len, "GetTempPath failed\n");
+    memcpy(path, tmppath, path_len);
+
+    for(i=0; i<sizeof(dirs)/sizeof(*dirs); i++) {
+        strcpy(path+path_len, dirs[i]);
+	ok(!mkdir(path), "mkdir failed (dir = %s)\n", path);
+    }
+
+    for(i=0; i<sizeof(files)/sizeof(*files); i++) {
+        strcpy(path+path_len, files[i]);
+        tmp_file = fopen(path, "wb");
+	ok(tmp_file != NULL, "fopen failed (file = %s)\n", path);
+        fclose(tmp_file);
+    }
+
+    strcpy(env1, "TEST_PATH=");
+    strcpy(env2, "TEST_PATH=;");
+    for(i=1; i<sizeof(dirs)/sizeof(*dirs); i++) {
+        strcat(env1, tmppath);
+        strcat(env1, dirs[i]);
+        strcat(env1, ";");
+
+        strcat(env2, tmppath);
+        strcat(env2, dirs[i]);
+        strcat(env2, ";;");
+    }
+
+    if (!p_searchenv_s || !p_wsearchenv_s)
+        win_skip("searchenv_s or wsearchenv_s function is not available\n");
+
+    putenv(env1);
+    memset(result, 'x', sizeof(result));
+    _searchenv("fail", "TEST_PATH", result);
+    ok(!result[0], "got %s, expected ''\n", result);
+
+    if (p_searchenv_s) {
+        memset(result, 'x', sizeof(result));
+        i = p_searchenv_s("fail", "TEST_PATH", result, MAX_PATH);
+        ok(i == ENOENT, "searchenv_s returned %d\n", i);
+        ok(!result[0], "got %s, expected ''\n", result);
+    }
+
+    memset(result, 'x', sizeof(result));
+    strcpy(exp, tmppath);
+    strcat(exp, files[0]);
+    _searchenv("1.dat", "TEST_PATH", result);
+    ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+
+    if (p_searchenv_s) {
+        memset(result, 'x', sizeof(result));
+        i = p_searchenv_s("1.dat", "TEST_PATH", result, MAX_PATH);
+        ok(!i, "searchenv_s returned %d\n", i);
+        ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+    }
+
+    memset(result_w, 'x', sizeof(result_w));
+    _wsearchenv(dat1_w, env_w, result_w);
+    WideCharToMultiByte(CP_ACP, 0, result_w, -1, result, MAX_PATH, NULL, NULL);
+    ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+
+    if (p_wsearchenv_s) {
+        memset(result_w, 'x', sizeof(result_w));
+        i = p_wsearchenv_s(dat1_w, env_w, result_w, MAX_PATH);
+        ok(!i, "wsearchenv_s returned %d\n", i);
+        ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+    }
+
+    memset(result, 'x', sizeof(result));
+    strcpy(exp, tmppath);
+    strcat(exp, files[3]);
+    _searchenv("3.dat", "TEST_PATH", result);
+    ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+
+    if (p_searchenv_s) {
+        memset(result, 'x', sizeof(result));
+        i = p_searchenv_s("3.dat", "TEST_PATH", result, MAX_PATH);
+        ok(!i, "searchenv_s returned %d\n", i);
+        ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+    }
+
+    memset(result_w, 'x', sizeof(result_w));
+    _wsearchenv(dat3_w, env_w, result_w);
+    WideCharToMultiByte(CP_ACP, 0, result_w, -1, result, MAX_PATH, NULL, NULL);
+    ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+
+    if (p_wsearchenv_s) {
+        memset(result_w, 'x', sizeof(result_w));
+        i = p_wsearchenv_s(dat3_w, env_w, result_w, MAX_PATH);
+        ok(!i, "wsearchenv_s returned %d\n", i);
+        ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+    }
+
+    putenv(env2);
+    memset(result, 'x', sizeof(result));
+    strcpy(exp, tmppath);
+    strcat(exp, files[0]);
+    _searchenv("1.dat", "TEST_PATH", result);
+    ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+
+    if (p_searchenv_s) {
+        memset(result, 'x', sizeof(result));
+        i = p_searchenv_s("1.dat", "TEST_PATH", result, MAX_PATH);
+        ok(!i, "searchenv_s returned %d\n", i);
+        ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+    }
+
+    memset(result_w, 'x', sizeof(result_w));
+    _wsearchenv(dat1_w, env_w, result_w);
+    WideCharToMultiByte(CP_ACP, 0, result_w, -1, result, MAX_PATH, NULL, NULL);
+    ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+
+    if (p_wsearchenv_s) {
+        memset(result_w, 'x', sizeof(result_w));
+        i = p_wsearchenv_s(dat1_w, env_w, result_w, MAX_PATH);
+        ok(!i, "wsearchenv_s returned %d\n", i);
+        ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+    }
+
+    memset(result, 'x', sizeof(result));
+    strcpy(exp, tmppath);
+    strcat(exp, files[3]);
+    _searchenv("3.dat", "TEST_PATH", result);
+    ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+
+    if (p_searchenv_s) {
+        memset(result, 'x', sizeof(result));
+        i = p_searchenv_s("3.dat", "TEST_PATH", result, MAX_PATH);
+        ok(!i, "searchenv_s returned %d\n", i);
+        ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+    }
+
+    memset(result_w, 'x', sizeof(result_w));
+    _wsearchenv(dat3_w, env_w, result_w);
+    WideCharToMultiByte(CP_ACP, 0, result_w, -1, result, MAX_PATH, NULL, NULL);
+    ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+
+    if (p_wsearchenv_s) {
+        memset(result_w, 'x', sizeof(result_w));
+        i = p_wsearchenv_s(dat3_w, env_w, result_w, MAX_PATH);
+        ok(!i, "wsearchenv_s returned %d\n", i);
+        ok(!strcmp(result, exp), "got %s, expected '%s'\n", result, exp);
+    }
+
+    putenv("TEST_PATH=");
+
+    for(i=sizeof(files)/sizeof(*files)-1; i>=0; i--) {
+        strcpy(path+path_len, files[i]);
+        ok(!remove(path), "remove failed (file = %s)\n", path);
+    }
+
+    for(i=sizeof(dirs)/sizeof(*dirs)-1; i>=0; i--) {
+        strcpy(path+path_len, dirs[i]);
+        ok(!rmdir(path), "rmdir failed (dir = %s)\n", path);
+    }
+}
+
 START_TEST(dir)
 {
     init();
@@ -414,4 +618,5 @@ START_TEST(dir)
     test_makepath();
     test_makepath_s();
     test_splitpath();
+    test_searchenv();
 }

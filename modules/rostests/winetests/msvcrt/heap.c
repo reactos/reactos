@@ -18,9 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
+#include <stdlib.h>
 #include <malloc.h>
+#include <errno.h>
+#include "wine/test.h"
 
 static void (__cdecl *p_aligned_free)(void*) = NULL;
 static void * (__cdecl *p_aligned_malloc)(size_t,size_t) = NULL;

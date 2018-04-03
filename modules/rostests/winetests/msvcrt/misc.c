@@ -18,15 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
-#include <msvcrt.h>
+#include "wine/test.h"
+#include <errno.h>
+#include <stdio.h>
+#include <math.h>
+#include "msvcrt.h"
+#include <process.h>
 
 static inline float __port_infinity(void)
 {
     static const unsigned __inf_bytes = 0x7f800000;
     return *(const float *)&__inf_bytes;
 }
+#ifdef __REACTOS__
+#undef INFINITY
+#endif
 #define INFINITY __port_infinity()
 
 static inline float __port_nan(void)
@@ -34,6 +40,9 @@ static inline float __port_nan(void)
     static const unsigned __nan_bytes = 0x7fc00000;
     return *(const float *)&__nan_bytes;
 }
+#ifdef __REACTOS__
+#undef NAN
+#endif
 #define NAN __port_nan()
 
 static inline BOOL almost_equal(double d1, double d2) {
