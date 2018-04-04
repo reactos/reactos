@@ -26,8 +26,31 @@
  *     COMCTL32.DLL (internally).
  *
  */
+#include "config.h"
+#include "wine/port.h"
 
+#include <stdarg.h>
+#include <string.h>
+#include <ctype.h>
+#include <limits.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "commctrl.h"
+#include "objbase.h"
+#include "winerror.h"
+
+#include "wine/unicode.h"
 #include "comctl32.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 

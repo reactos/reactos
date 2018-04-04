@@ -18,21 +18,25 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * NOTE
- * 
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Sep. 12, 2002, by Dimitrie O. Paun.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- * 
  */
 
-#include "comctl32.h"
-
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
+#include "uxtheme.h"
+#include "vssym32.h"
+#include "wine/debug.h"
+
+#include "comctl32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(trackbar);
 
@@ -680,7 +684,7 @@ TRACKBAR_FillThumb (const TRACKBAR_INFO *infoPtr, HDC hdc, HBRUSH hbrush)
 
     oldbr = SelectObject(hdc, hbrush);
     SetPolyFillMode(hdc, WINDING);
-    Polygon(hdc, points, sizeof(points) / sizeof(points[0]));
+    Polygon(hdc, points, ARRAY_SIZE(points));
     SelectObject(hdc, oldbr);
 
     return PointDepth;

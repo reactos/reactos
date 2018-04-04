@@ -19,34 +19,31 @@
  *
  */
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
 #include "comctl32.h"
+#include "uxtheme.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(theming);
 
 typedef LRESULT (CALLBACK* THEMING_SUBCLASSPROC)(HWND, UINT, WPARAM, LPARAM,
     ULONG_PTR);
 
-#ifndef __REACTOS__ /* r73871 */
-extern LRESULT CALLBACK THEMING_ButtonSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                    ULONG_PTR) DECLSPEC_HIDDEN;
-#endif
-extern LRESULT CALLBACK THEMING_ComboSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                   ULONG_PTR) DECLSPEC_HIDDEN;
 #ifndef __REACTOS__ /* r73803 */
 extern LRESULT CALLBACK THEMING_DialogSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                     ULONG_PTR) DECLSPEC_HIDDEN;
 #endif
-extern LRESULT CALLBACK THEMING_EditSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                  ULONG_PTR) DECLSPEC_HIDDEN;
-extern LRESULT CALLBACK THEMING_ListBoxSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                     ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_ScrollbarSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                        ULONG_PTR) DECLSPEC_HIDDEN;
 
 #ifndef __REACTOS__
 static const WCHAR dialogClass[] = {'#','3','2','7','7','0',0};
 #endif
-static const WCHAR comboLboxClass[] = {'C','o','m','b','o','L','b','o','x',0};
 
 static const struct ThemingSubclass
 {
@@ -56,16 +53,11 @@ static const struct ThemingSubclass
     /* Note: list must be sorted by class name */
 #ifndef __REACTOS__ /* r73803 & r73871 */
     {dialogClass,          THEMING_DialogSubclassProc},
-    {WC_BUTTONW,           THEMING_ButtonSubclassProc},
 #endif
-    {WC_COMBOBOXW,         THEMING_ComboSubclassProc},
-    {comboLboxClass,       THEMING_ListBoxSubclassProc},
-    {WC_EDITW,             THEMING_EditSubclassProc},
-    {WC_LISTBOXW,          THEMING_ListBoxSubclassProc},
     {WC_SCROLLBARW,        THEMING_ScrollbarSubclassProc}
 };
 
-#define NUM_SUBCLASSES        (sizeof(subclasses)/sizeof(subclasses[0]))
+#define NUM_SUBCLASSES        (ARRAY_SIZE(subclasses))
 
 static WNDPROC originalProcs[NUM_SUBCLASSES];
 static ATOM atRefDataProp;
@@ -93,26 +85,14 @@ static LRESULT CALLBACK subclass_proc ## N (HWND wnd, UINT msg,             \
 }
 
 MAKE_SUBCLASS_PROC(0)
+#ifndef __REACTOS__
 MAKE_SUBCLASS_PROC(1)
-MAKE_SUBCLASS_PROC(2)
-MAKE_SUBCLASS_PROC(3)
-MAKE_SUBCLASS_PROC(4)
-#ifndef __REACTOS__ /* r73803 & r73871 */
-MAKE_SUBCLASS_PROC(5)
-MAKE_SUBCLASS_PROC(6)
 #endif
 
 static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
     subclass_proc0,
+#ifndef __REACTOS__
     subclass_proc1,
-    subclass_proc2,
-    subclass_proc3,
-#ifdef __REACTOS__ /* r73871 */
-    subclass_proc4
-#else
-    subclass_proc4,
-    subclass_proc5,
-    subclass_proc6
 #endif
 };
 

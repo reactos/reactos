@@ -89,9 +89,20 @@
  *
  */
 
-#include "comctl32.h"
 
-#include <wine/exception.h>
+
+#include <stdarg.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wine/unicode.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
+#include "comctl32.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(tooltips);
 
@@ -613,18 +624,10 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
     }
 
     toolPtr = &infoPtr->tools[nTool];
-
-    TRACE("Show tooltip %d\n", nTool);
-
-    hdr.hwndFrom = infoPtr->hwndSelf;
-    hdr.idFrom = toolPtr->uId;
-    hdr.code = TTN_SHOW;
-    SendMessageW (toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&hdr);
-
-    TRACE("%s\n", debugstr_w(infoPtr->szTipText));
-
     TOOLTIPS_CalcTipSize (infoPtr, &size);
-    TRACE("size %d x %d\n", size.cx, size.cy);
+
+    TRACE("Show tooltip %d, %s, size %d x %d\n", nTool, debugstr_w(infoPtr->szTipText),
+        size.cx, size.cy);
 
     if (track_activate && (toolPtr->uFlags & TTF_TRACK))
     {
@@ -797,7 +800,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
           }
         }
 
-        hrStem = CreatePolygonRgn(pts, sizeof(pts) / sizeof(pts[0]), ALTERNATE);
+        hrStem = CreatePolygonRgn(pts, ARRAY_SIZE(pts), ALTERNATE);
         
         hRgn = CreateRoundRectRgn(0,
                                   (infoPtr->bToolBelow ? BALLOON_STEMHEIGHT : 0),
@@ -813,9 +816,16 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
          * it is no longer needed */
     }
 
-    SetWindowPos (infoPtr->hwndSelf, HWND_TOPMOST, rect.left, rect.top,
-		    rect.right - rect.left, rect.bottom - rect.top,
-		    SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    SetWindowPos (infoPtr->hwndSelf, NULL, rect.left, rect.top,
+        rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_NOACTIVATE);
+
+    hdr.hwndFrom = infoPtr->hwndSelf;
+    hdr.idFrom = toolPtr->uId;
+    hdr.code = TTN_SHOW;
+    SendMessageW (toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&hdr);
+
+    SetWindowPos (infoPtr->hwndSelf, HWND_TOPMOST, 0, 0, 0, 0,
+        SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_NOACTIVATE);
 
     /* repaint the tooltip */
     InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
@@ -1048,7 +1058,7 @@ TOOLTIPS_AddToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
     TRACE("add tool (%p) %p %ld%s\n", infoPtr->hwndSelf, ti->hwnd, ti->uId,
         (ti->uFlags & TTF_IDISHWND) ? " TTF_IDISHWND" : "");
 
-    if (ti->cbSize >= TTTOOLINFOW_V2_SIZE && !ti->lpszText && isW)
+    if (ti->cbSize > TTTOOLINFOW_V3_SIZE && isW)
         return FALSE;
 
     if (infoPtr->uNumTools == 0) {
