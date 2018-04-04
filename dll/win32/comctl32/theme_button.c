@@ -24,6 +24,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(theme_button);
 
 #define BUTTON_TYPE 0x0f /* bit mask for the available button types */
 
+#if 0
+
 /* These are indices into a states array to determine the theme state for a given theme part. */
 typedef enum
 {
@@ -489,3 +491,5 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag
     paint(theme, hwnd, hParamDC, drawState, dtFlags, state & BST_FOCUS, prfFlag);
     return TRUE;
 }
+
+#endif

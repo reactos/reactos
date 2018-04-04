@@ -28,7 +28,17 @@
  *
  */
 
+#include <stdarg.h>
+#include <string.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
 #include "comctl32.h"
+#include "wine/debug.h"
+#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(hotkey);
 
@@ -232,7 +242,7 @@ HOTKEY_Destroy (HOTKEY_INFO *infoPtr)
 {
     /* free hotkey info data */
     SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
-    Free (infoPtr);
+    heap_free (infoPtr);
     return 0;
 }
 
@@ -401,7 +411,7 @@ HOTKEY_NCCreate (HWND hwnd, const CREATESTRUCTW *lpcs)
                     dwExStyle | WS_EX_CLIENTEDGE);
 
     /* allocate memory for info structure */
-    infoPtr = Alloc (sizeof(HOTKEY_INFO));
+    infoPtr = heap_alloc_zero (sizeof(*infoPtr));
     SetWindowLongPtrW(hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* initialize info structure */

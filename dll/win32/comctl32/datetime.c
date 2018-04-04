@@ -20,15 +20,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * NOTE
- * 
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Oct. 20, 2004, by Dimitrie O. Paun.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- * 
  * TODO:
  *    -- DTS_APPCANPARSE
  *    -- DTS_SHORTDATECENTURYFORMAT
@@ -39,9 +30,21 @@
  *    -- FORMATCALLBACK
  */
 
-#include "comctl32.h"
-
 #include <math.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <limits.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
+#include "comctl32.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(datetime);
 
@@ -325,7 +328,7 @@ DATETIME_SetFormatW (DATETIME_INFO *infoPtr, LPCWSTR format)
 	    format_item = LOCALE_STIMEFORMAT;
         else /* DTS_SHORTDATEFORMAT */
 	    format_item = LOCALE_SSHORTDATE;
-	GetLocaleInfoW(LOCALE_USER_DEFAULT, format_item, format_buf, sizeof(format_buf)/sizeof(format_buf[0]));
+	GetLocaleInfoW(LOCALE_USER_DEFAULT, format_item, format_buf, ARRAY_SIZE(format_buf));
 	format = format_buf;
     }
 
@@ -446,8 +449,7 @@ DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int 
 	    wsprintfW (result, fmt__2dW, date.wMonth);
 	    break;
 	case THREECHARMONTH:
-	    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+date.wMonth -1,
-			   buffer, sizeof(buffer)/sizeof(buffer[0]));
+	    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+date.wMonth -1, buffer, ARRAY_SIZE(buffer));
 	    wsprintfW (result, fmt__3sW, buffer);
 	    break;
 	case FULLMONTH:
@@ -739,14 +741,14 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
         INT oldBkMode = SetBkMode (hdc, TRANSPARENT);
         WCHAR txt[80];
 
-        DATETIME_ReturnTxt (infoPtr, 0, txt, sizeof(txt)/sizeof(txt[0]));
+        DATETIME_ReturnTxt (infoPtr, 0, txt, ARRAY_SIZE(txt));
         GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
         rcDraw->bottom = size.cy + 2;
 
         prevright = infoPtr->checkbox.right = ((infoPtr->dwStyle & DTS_SHOWNONE) ? 18 : 2);
 
         for (i = 0; i < infoPtr->nrFields; i++) {
-            DATETIME_ReturnTxt (infoPtr, i, txt, sizeof(txt)/sizeof(txt[0]));
+            DATETIME_ReturnTxt (infoPtr, i, txt, ARRAY_SIZE(txt));
             GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
             DATETIME_ReturnFieldWidth (infoPtr, hdc, i, &fieldWidth);
             field = &infoPtr->fieldRect[i];
@@ -1527,7 +1529,7 @@ DATETIME_GetText (const DATETIME_INFO *infoPtr, INT count, LPWSTR dst)
     dst[0] = 0;
     for (i = 0; i < infoPtr->nrFields; i++)
     {
-        DATETIME_ReturnTxt(infoPtr, i, buf, sizeof(buf)/sizeof(buf[0]));
+        DATETIME_ReturnTxt(infoPtr, i, buf, ARRAY_SIZE(buf));
         if ((strlenW(dst) + strlenW(buf)) < count)
             strcatW(dst, buf);
         else break;

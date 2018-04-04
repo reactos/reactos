@@ -19,7 +19,23 @@
  *
  */
 
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "commctrl.h"
+#include "winerror.h"
 #include "comctl32.h"
+
+#include "wine/debug.h"
+#include "wine/list.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(taskdialog);
 
@@ -423,11 +439,11 @@ static DLGTEMPLATE *create_taskdialog_template(const TASKDIALOGCONFIG *taskconfi
 
     /* Window title */
     if (!taskconfig->pszWindowTitle)
-        titleW = taskdialog_get_exe_name(taskconfig, pathW, sizeof(pathW)/sizeof(pathW[0]));
+        titleW = taskdialog_get_exe_name(taskconfig, pathW, ARRAY_SIZE(pathW));
     else if (IS_INTRESOURCE(taskconfig->pszWindowTitle))
     {
         if (!LoadStringW(taskconfig->hInstance, LOWORD(taskconfig->pszWindowTitle), (WCHAR *)&titleW, 0))
-            titleW = taskdialog_get_exe_name(taskconfig, pathW, sizeof(pathW)/sizeof(pathW[0]));
+            titleW = taskdialog_get_exe_name(taskconfig, pathW, ARRAY_SIZE(pathW));
     }
     else
         titleW = taskconfig->pszWindowTitle;

@@ -29,7 +29,15 @@
  *     http://members.ozemail.com.au/~geoffch/samples/win32/shell/comctl32  
  */
 
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "commctrl.h"
+
 #include "comctl32.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dsa);
 

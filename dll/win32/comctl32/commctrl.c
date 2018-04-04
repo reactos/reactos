@@ -53,10 +53,22 @@
  *   -- ICC_WIN95_CLASSES
  */
 
-#include "comctl32.h"
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
 
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
+#include "winerror.h"
+#include "winreg.h"
 #define NO_SHLWAPI_STREAM
-#include <shlwapi.h>
+#include "shlwapi.h"
+#include "comctl32.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
@@ -178,7 +190,13 @@ static void RegisterControls(BOOL bV6)
     }
     else
     {
-        BUTTON_Register();
+        BUTTON_Register ();
+        COMBO_Register ();
+        COMBOLBOX_Register ();
+        EDIT_Register ();
+        LISTBOX_Register ();
+        STATIC_Register ();
+
         TOOLBARv6_Register();
     }
 }
@@ -277,6 +295,28 @@ BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
 
 #endif /* __REACTOS__ */
 
+#ifndef __REACTOS__
+static void unregister_versioned_classes(void)
+{
+#define VERSION "6.0.2600.2982!"
+    static const char *classes[] =
+    {
+        VERSION WC_BUTTONA,
+        VERSION WC_COMBOBOXA,
+        VERSION "ComboLBox",
+        VERSION WC_EDITA,
+        VERSION WC_LISTBOXA,
+        VERSION WC_STATICA,
+    };
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(classes); i++)
+        UnregisterClassA(classes[i], NULL);
+
+#undef VERSION
+}
+#endif
+
 /***********************************************************************
  * DllMain [Internal]
  *
@@ -337,6 +377,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             TREEVIEW_Register ();
             UPDOWN_Register ();
 
+            BUTTON_Register ();
+            COMBO_Register ();
+            COMBOLBOX_Register ();
+            EDIT_Register ();
+            LISTBOX_Register ();
+            STATIC_Register ();
+
             /* subclass user32 controls */
             THEMING_Initialize ();
 #else
@@ -373,6 +420,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             TRACKBAR_Unregister ();
             TREEVIEW_Unregister ();
             UPDOWN_Unregister ();
+
+            unregister_versioned_classes ();
+
 #else
             UninitializeClasses();
 #endif
@@ -450,7 +500,7 @@ MenuHelp (UINT uMsg, WPARAM wParam, LPARAM lParam, HMENU hMainMenu,
 		if (uMenuID) {
 		    WCHAR szText[256];
 
-		    if (!LoadStringW (hInst, uMenuID, szText, sizeof(szText)/sizeof(szText[0])))
+		    if (!LoadStringW (hInst, uMenuID, szText, ARRAY_SIZE(szText)))
 			szText[0] = '\0';
 
 		    SendMessageW (hwndStatus, SB_SETTEXTW,
@@ -1593,7 +1643,7 @@ void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark
         {lCentre + 1, l2 - 3},
     };
     hOldPen = SelectObject(hDC, hPen);
-    PolyPolyline(hDC, aptInsertMark, adwPolyPoints, sizeof(adwPolyPoints)/sizeof(adwPolyPoints[0]));
+    PolyPolyline(hDC, aptInsertMark, adwPolyPoints, ARRAY_SIZE(adwPolyPoints));
     SelectObject(hDC, hOldPen);
     DeleteObject(hPen);
 }
