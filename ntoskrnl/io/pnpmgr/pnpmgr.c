@@ -1793,6 +1793,7 @@ IopValidateID(
 
         case BusQueryHardwareIDs:
         case BusQueryCompatibleIDs:
+            MaxSeparators = 0
             IsMultiSz = TRUE;
             break;
 
