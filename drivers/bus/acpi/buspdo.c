@@ -507,12 +507,12 @@ Bus_PDO_QueryDeviceId(
                                 Device->pnp.unique_id);
            else
               /* FIXME: Generate unique id! */
-              length = swprintf(temp, L"%ls", L"0000");
+              length = swprintf(temp, L"%ls", L"0");
         }
         else
         {
            /* FIXME: Generate unique id! */
-           length = swprintf(temp, L"%ls", L"0000");
+           length = swprintf(temp, L"%ls", L"0");
         }
 
         temp[length++] = UNICODE_NULL;
