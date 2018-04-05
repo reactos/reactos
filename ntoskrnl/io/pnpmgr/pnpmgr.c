@@ -1793,6 +1793,7 @@ IopValidateID(
 
         case BusQueryHardwareIDs:
         case BusQueryCompatibleIDs:
+            MaxSeparators = MAX_SEPARATORS_DEVICEID;
             IsMultiSz = TRUE;
             break;
 
@@ -1823,6 +1824,7 @@ IopValidateID(
 
             StringEnd = PtrChar + MAX_DEVICE_ID_LEN + 1;
             PtrPrevChar = PtrChar;
+            SeparatorsCount = 0;
         }
         else if (Char < ' ' || Char > 0x7F || Char == ',')
         {
