@@ -64,7 +64,6 @@ TestEntry(
     TestFastIoDispatch.FastIoRead = FastIoRead;
     DriverObject->FastIoDispatch = &TestFastIoDispatch;
 
-
     return Status;
 }
 
@@ -122,28 +121,7 @@ MapAndLockUserBuffer(
     _In_ _Out_ PIRP Irp,
     _In_ ULONG BufferLength)
 {
-    PMDL Mdl;
-
-    if (Irp->MdlAddress == NULL)
-    {
-        Mdl = IoAllocateMdl(Irp->UserBuffer, BufferLength, FALSE, FALSE, Irp);
-        if (Mdl == NULL)
-        {
-            return NULL;
-        }
-
-        _SEH2_TRY
-        {
-            MmProbeAndLockPages(Mdl, Irp->RequestorMode, IoWriteAccess);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            IoFreeMdl(Mdl);
-            Irp->MdlAddress = NULL;
-            _SEH2_YIELD(return NULL);
-        }
-        _SEH2_END;
-    }
+    ASSERT(Irp->MdlAddress); // Replace dead code from r72165.
 
     return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 }
@@ -243,13 +221,14 @@ TestIrpHandler(
             ok(Length % PAGE_SIZE != 0, "Length is aligned: %I64i\n", Length);
 
             Buffer = Irp->AssociatedIrp.SystemBuffer;
-            ok(Buffer != NULL, "Null pointer!\n");
+            ok(Buffer != NULL, "No SystemBuffer was allocated!\n");
 
+            // Even if there is no buffer, call CcCopyRead and let it fail.
             _SEH2_TRY
             {
                 Ret = CcCopyRead(IoStack->FileObject, &Offset, Length, TRUE, Buffer,
                                  &Irp->IoStatus);
-                ok_bool_true(Ret, "CcCopyRead");
+                ok_bool_true(Ret, "CcCopyRead returned");
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -276,12 +255,19 @@ TestIrpHandler(
             PMDL Mdl;
 
             ok_irql(APC_LEVEL);
-            ok((Offset.QuadPart % PAGE_SIZE == 0 || Offset.QuadPart == 0), "Offset is not aligned: %I64i\n", Offset.QuadPart);
+            ok(Offset.QuadPart % PAGE_SIZE == 0, "Offset is not aligned: %I64i\n", Offset.QuadPart); // Revert the useless change from r72182.
             ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
 
             ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
             Buffer = MapAndLockUserBuffer(Irp, Length);
-            ok(Buffer != NULL, "Null pointer!\n");
+            if (skip(Buffer != NULL, "MapAndLockUserBuffer returned NULL!\n"))
+            {
+                // Set status at both places.
+                Status = Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+            else
+            {
+
             RtlFillMemory(Buffer, Length, 0xBA);
 
             Status = STATUS_SUCCESS;
@@ -290,11 +276,13 @@ TestIrpHandler(
                 *(PUSHORT)((ULONG_PTR)Buffer + (ULONG_PTR)(1000LL - Offset.QuadPart)) = 0xFFFF;
             }
 
+            } // else, Buffer != NULL
+
             Mdl = Irp->MdlAddress;
             ok(Mdl != NULL, "Null pointer for MDL!\n");
             ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) != 0, "MDL not locked\n");
             ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
-            ok((Mdl->MdlFlags & MDL_IO_PAGE_READ) != 0, "Non paging IO\n");
+            ok((Mdl->MdlFlags & MDL_IO_PAGE_READ) != 0, "Paging IO not for reading\n"); // r75845 copypasta.
             ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
         }
 
@@ -316,17 +304,13 @@ TestIrpHandler(
         Status = STATUS_SUCCESS;
     }
 
-    if (Status == STATUS_PENDING)
-    {
-        IoMarkIrpPending(Irp);
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        Status = STATUS_PENDING;
-    }
-    else
-    {
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
+    // CcCopyRead never sets STATUS_PENDING, especially with wait=TRUE.
+    ASSERT(Status != STATUS_PENDING);
 
+// Remove wrong code added as is in r71445.
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    trace("TestIrpHandler returns: Status = 0x%08x", Status);
     return Status;
 }
