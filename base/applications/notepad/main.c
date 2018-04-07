@@ -1,25 +1,10 @@
 /*
- *  Notepad
- *
- *  Copyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>
- *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
- *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- *  Copyright 2002 Andriy Palamarchuk
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * PROJECT:     ReactOS Notepad
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/)
+ * PURPOSE:     Main program source file
+ * COPYRIGHT:   Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *              Copyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>
+ *              Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  */
 
 #include "notepad.h"
