@@ -2205,8 +2205,7 @@ ChangePos:
             pt.x = (SHORT) LOWORD(lParam);
             pt.y = (SHORT) HIWORD(lParam);
 
-            if (PtInRect(&rcClient,
-                pt))
+            if (PtInRect(&rcClient, pt))
             {
                 /* The user is trying to drag the tray window */
                 return HTCAPTION;
@@ -2236,7 +2235,6 @@ ChangePos:
             }
         }
         return HTBORDER;
-        return TRUE;
     }
 
     LRESULT OnMoving(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
