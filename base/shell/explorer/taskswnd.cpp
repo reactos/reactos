@@ -125,7 +125,7 @@ public:
         if (m_bThreadRunning)
         {
             /* Try to unstuck Show */
-            PostThreadMessage(m_ThreadId, WM_QUIT, 0, 0);   
+            PostThreadMessage(m_ThreadId, WM_QUIT, 0, 0);
             DWORD ret = WaitForSingleObject(m_hThread, 3*1000);
             if (ret == WAIT_TIMEOUT)
                 TerminateThread(m_hThread, 0);

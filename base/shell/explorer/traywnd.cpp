@@ -544,7 +544,7 @@ public:
         case IDHK_EXPLORE:
             //FIXME: We don't support this yet:
             //ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1);
-            ShellExecuteW(0, NULL, L"explorer.exe", L"/e ,", NULL, 1); 
+            ShellExecuteW(0, NULL, L"explorer.exe", L"/e ,", NULL, 1);
             break;
         case IDHK_FIND:
             SHFindFiles(NULL, NULL);
@@ -1311,8 +1311,8 @@ ChangePos:
         FitToRebar(&m_TrayRects[m_Position]);
 
         /* Move the tray window */
-        /* The handler of WM_WINDOWPOSCHANGING will override whatever size 
-           *and position we use here with m_TrayRects */
+        /* The handler of WM_WINDOWPOSCHANGING will override whatever size
+         * and position we use here with m_TrayRects */
         SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE);
         ResizeWorkArea();
         ApplyClipping(TRUE);
@@ -2012,7 +2012,7 @@ ChangePos:
         if (!m_ContextMenu)
             return E_INVALIDARG;
 
-        return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);        
+        return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
     }
 
 
@@ -2396,7 +2396,7 @@ ChangePos:
 
     LRESULT OnNcLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        /* This handler implements the trick that makes  the start button to 
+        /* This handler implements the trick that makes  the start button to
            get pressed when the user clicked left or below the button */
 
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
@@ -2705,14 +2705,14 @@ HandleTrayContextMenu:
         RECT rc;
         ::GetWindowRect(m_hWnd, &rc);
 
-        SIZE szWindow = { 
-            rc.right - rc.left, 
+        SIZE szWindow = {
+            rc.right - rc.left,
             rc.bottom - rc.top };
-        SIZE szTarget = { 
-            as->rcTarget.right - as->rcTarget.left, 
+        SIZE szTarget = {
+            as->rcTarget.right - as->rcTarget.left,
             as->rcTarget.bottom - as->rcTarget.top };
-        SIZE szActual = { 
-            as->rcActual.right - as->rcActual.left, 
+        SIZE szActual = {
+            as->rcActual.right - as->rcActual.left,
             as->rcActual.bottom - as->rcActual.top };
 
         SIZE borders = {
@@ -2976,7 +2976,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE 
+    virtual HRESULT STDMETHODCALLTYPE
         QueryContextMenu(HMENU hPopup,
                          UINT indexMenu,
                          UINT idCmdFirst,

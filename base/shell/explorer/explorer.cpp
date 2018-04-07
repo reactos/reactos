@@ -87,7 +87,7 @@ HideMinimizedWindows(IN BOOL bHide)
 #endif
 
 #if !WIN7_COMPAT_MODE
-static INT 
+static INT
 StartWithCommandLine(IN HINSTANCE hInstance)
 {
     BOOL b = FALSE;
@@ -109,7 +109,7 @@ StartWithCommandLine(IN HINSTANCE hInstance)
 }
 #endif
 
-static INT 
+static INT
 StartWithDesktop(IN HINSTANCE hInstance)
 {
     InitializeAtlModule(hInstance, TRUE);
