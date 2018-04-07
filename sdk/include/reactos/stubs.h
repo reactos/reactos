@@ -1,9 +1,8 @@
-#include <stdarg.h>
 #define WIN32_NO_STATUS
 #include <windef.h>
 
-#include <wine/config.h>
-#include <wine/exception.h>
+#define EXCEPTION_WINE_STUB       0x80000100
+#define EH_NONCONTINUABLE   0x01
 
 ULONG __cdecl DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...);
 
