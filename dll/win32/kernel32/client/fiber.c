@@ -312,32 +312,97 @@ IsThreadAFiber(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
 FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
 {
-   (void)lpCallback;
+    DWORD dwFlsIndex;
+    PPEB Peb = NtCurrentPeb();
+    PVOID *ppFlsSlots;
 
-   UNIMPLEMENTED;
-   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-   return FLS_OUT_OF_INDEXES;
+    RtlAcquirePebLock();
+
+    ppFlsSlots = NtCurrentTeb()->FlsData;
+
+    if (!Peb->FlsCallback &&
+        !(Peb->FlsCallback = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+                                             FLS_MAXIMUM_AVAILABLE * sizeof(PVOID))))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        dwFlsIndex = FLS_OUT_OF_INDEXES;
+    }
+    else
+    {
+        dwFlsIndex = RtlFindClearBitsAndSet(Peb->FlsBitmap, 1, 1);
+        if (dwFlsIndex != FLS_OUT_OF_INDEXES)
+        {
+            if (!ppFlsSlots &&
+                !(ppFlsSlots = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+                                               (FLS_MAXIMUM_AVAILABLE + 2) * sizeof(PVOID))))
+            {
+                RtlClearBits(Peb->FlsBitmap, dwFlsIndex, 1);
+                dwFlsIndex = FLS_OUT_OF_INDEXES;
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            }
+            else
+            {
+                if (!NtCurrentTeb()->FlsData)
+                    NtCurrentTeb()->FlsData = ppFlsSlots;
+
+                if (lpCallback)
+                    DPRINT1("FlsAlloc: Got lpCallback 0x%p, UNIMPLEMENTED!", lpCallback);
+
+                ppFlsSlots[dwFlsIndex + 2] = NULL; /* clear the value */
+                Peb->FlsCallback[dwFlsIndex] = lpCallback;
+            }
+        }
+        else
+        {
+            SetLastError(ERROR_NO_MORE_ITEMS);
+        }
+    }
+    RtlReleasePebLock();
+    return dwFlsIndex;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 FlsFree(DWORD dwFlsIndex)
 {
-    (void)dwFlsIndex;
+    BOOL ret;
+    PPEB Peb = NtCurrentPeb();
+    PVOID *ppFlsSlots;
 
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    if (dwFlsIndex >= FLS_MAXIMUM_AVAILABLE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    RtlAcquirePebLock();
+
+    ppFlsSlots = NtCurrentTeb()->FlsData;
+    ret = RtlAreBitsSet(Peb->FlsBitmap, dwFlsIndex, 1);
+    if (ret)
+    {
+        RtlClearBits(Peb->FlsBitmap, dwFlsIndex, 1);
+        /* FIXME: call Fls callback */
+        /* FIXME: add equivalent of ThreadZeroTlsCell here */
+        if (ppFlsSlots)
+            ppFlsSlots[dwFlsIndex + 2] = NULL;
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    RtlReleasePebLock();
+    return ret;
 }
 
 
@@ -349,22 +414,16 @@ WINAPI
 FlsGetValue(DWORD dwFlsIndex)
 {
     PVOID *ppFlsSlots;
-    PVOID pRetVal;
-
-    if(dwFlsIndex >= 128) goto l_InvalidParam;
 
     ppFlsSlots = NtCurrentTeb()->FlsData;
+    if (!dwFlsIndex || dwFlsIndex >= FLS_MAXIMUM_AVAILABLE || !ppFlsSlots)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
 
-    if(ppFlsSlots == NULL) goto l_InvalidParam;
-
-    SetLastError(0);
-    pRetVal = ppFlsSlots[dwFlsIndex + 2];
-
-    return pRetVal;
-
-l_InvalidParam:
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return NULL;
+    SetLastError(ERROR_SUCCESS);
+    return ppFlsSlots[dwFlsIndex + 2];
 }
 
 
@@ -377,43 +436,22 @@ FlsSetValue(DWORD dwFlsIndex,
             PVOID lpFlsData)
 {
     PVOID *ppFlsSlots;
-    TEB *pTeb = NtCurrentTeb();
 
-    if(dwFlsIndex >= 128) goto l_InvalidParam;
-
-    ppFlsSlots = pTeb->FlsData;
-
-    if (ppFlsSlots == NULL)
+    if (!dwFlsIndex || dwFlsIndex >= FLS_MAXIMUM_AVAILABLE)
     {
-        PEB *pPeb = pTeb->ProcessEnvironmentBlock;
-
-        ppFlsSlots = RtlAllocateHeap(pPeb->ProcessHeap,
-                                     HEAP_ZERO_MEMORY,
-                                     (128 + 2) * sizeof(PVOID));
-        if(ppFlsSlots == NULL) goto l_OutOfMemory;
-
-        pTeb->FlsData = ppFlsSlots;
-
-        RtlAcquirePebLock();
-
-        /* TODO: initialization */
-
-        RtlReleasePebLock();
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
-
+    if (!NtCurrentTeb()->FlsData &&
+        !(NtCurrentTeb()->FlsData = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+                                                    (FLS_MAXIMUM_AVAILABLE + 2) * sizeof(PVOID))))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    ppFlsSlots = NtCurrentTeb()->FlsData;
     ppFlsSlots[dwFlsIndex + 2] = lpFlsData;
-
     return TRUE;
-
-l_OutOfMemory:
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    goto l_Fail;
-
-l_InvalidParam:
-    SetLastError(ERROR_INVALID_PARAMETER);
-
-l_Fail:
-    return FALSE;
 }
 
 /* EOF */
