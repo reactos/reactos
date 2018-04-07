@@ -75,6 +75,7 @@ private:
     VOID RetrieveInstalledVersion();
     VOID RetrieveLanguages();
     VOID RetrieveLicenseType();
+    VOID RetrieveSize();
     inline BOOL FindInLanguages(LCID what) const;
 };
 

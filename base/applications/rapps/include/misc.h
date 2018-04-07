@@ -41,6 +41,6 @@ class CConfigParser
 public:
     CConfigParser(const ATL::CStringW& FileName = "");
 
-    UINT GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
-    UINT GetInt(const ATL::CStringW& KeyName);
+    BOOL GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString);
+    BOOL GetInt(const ATL::CStringW& KeyName, INT& iResult);
 };

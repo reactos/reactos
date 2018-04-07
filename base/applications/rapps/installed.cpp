@@ -129,7 +129,7 @@ BOOL ShowInstalledAppInfo(INT Index)
     GET_INFO(L"UninstallString", IDS_INFO_UNINSTALLSTR, CFE_BOLD, 0);
     GET_INFO(L"InstallSource", IDS_INFO_INSTALLSRC, CFE_BOLD, 0);
     GET_INFO(L"ModifyPath", IDS_INFO_MODIFYPATH, CFE_BOLD, 0);
-
+    
     return TRUE;
 }
 

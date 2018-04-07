@@ -354,7 +354,7 @@ VOID CConfigParser::CacheINILocale()
     m_szCachedINISectionLocaleNeutral = m_szCachedINISectionLocale + m_szLocaleID.Right(2);
 }
 
-UINT CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
+BOOL CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& ResultString)
 {
     DWORD dwResult;
 
@@ -392,9 +392,11 @@ UINT CConfigParser::GetString(const ATL::CStringW& KeyName, ATL::CStringW& Resul
     return (dwResult != 0 ? TRUE : FALSE);
 }
 
-UINT CConfigParser::GetInt(const ATL::CStringW& KeyName)
+BOOL CConfigParser::GetInt(const ATL::CStringW& KeyName, INT& iResult)
 {
     ATL::CStringW Buffer;
+
+    iResult = 0;
 
     // grab the text version of our entry
     if (!GetString(KeyName, Buffer))
@@ -404,8 +406,9 @@ UINT CConfigParser::GetInt(const ATL::CStringW& KeyName)
         return FALSE;
 
     // convert it to an actual integer
-    INT result = StrToIntW(Buffer.GetString());
+    iResult = StrToIntW(Buffer.GetString());
 
-    return (UINT) (result <= 0) ? 0 : result;
+    // we only care about values > 0
+    return (iResult > 0);
 }
 // CConfigParser
