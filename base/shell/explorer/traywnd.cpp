@@ -327,7 +327,19 @@ public:
 
     LRESULT DoExitWindows()
     {
+        /* Display the ReactOS Shutdown Dialog */
         ExitWindowsDialog(m_hWnd);
+
+        /*
+         * If the user presses CTRL+ALT+SHIFT while exiting
+         * the shutdown dialog, exit the shell cleanly.
+         */
+        if ((GetKeyState(VK_CONTROL) & 0x8000) &&
+            (GetKeyState(VK_SHIFT)   & 0x8000) &&
+            (GetKeyState(VK_MENU)    & 0x8000))
+        {
+            PostMessage(WM_QUIT, 0, 0);
+        }
         return 0;
     }
 
