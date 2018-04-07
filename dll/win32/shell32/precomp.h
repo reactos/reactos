@@ -16,6 +16,7 @@
 #include <winuser.h>
 #include <wincon.h>
 #include <commdlg.h>
+#include <commctrl.h>
 #include <ddeml.h>
 
 #include <shlwapi.h>

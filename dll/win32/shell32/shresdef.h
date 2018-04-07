@@ -253,6 +253,8 @@
 #define IDS_ADVANCED_SHOW_COMP_COLOR                30512
 #define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
+#define IDS_CANT_DELETE_FILE_TYPE                   30600
+
 /* Dialogs */
 
 /* Run dialog */
@@ -303,7 +305,6 @@
 /* Folder Options */
 #define IDD_FOLDER_OPTIONS_GENERAL         17
 #define IDD_FOLDER_OPTIONS_VIEW            18
-#define IDD_FOLDER_OPTIONS_FILETYPES       19
 #define IDC_FOLDER_OPTIONS_TASKICON        30109
 #define IDC_FOLDER_OPTIONS_FOLDERICON      30110
 #define IDC_FOLDER_OPTIONS_CLICKICON       30111
@@ -315,6 +316,17 @@
 #define IDC_FOLDER_OPTIONS_ULBROWSER       14008
 #define IDC_FOLDER_OPTIONS_ULPOINT         14009
 #define IDC_FOLDER_OPTIONS_DOUBLECLICK     14010
+
+/* Folder Options: File Types */
+#define IDD_FOLDER_OPTIONS_FILETYPES        19
+#define IDC_FILETYPES_LISTVIEW              14000
+#define IDC_FILETYPES_NEW                   14001
+#define IDC_FILETYPES_DELETE                14002
+#define IDC_FILETYPES_DETAILS_GROUPBOX      14003
+#define IDC_FILETYPES_APPNAME               14005
+#define IDC_FILETYPES_CHANGE                14006
+#define IDC_FILETYPES_DESCRIPTION           14007
+#define IDC_FILETYPES_ADVANCED              14008
 
 /* Yes to all msgbox */
 #define IDD_YESTOALL_MSGBOX  20
@@ -333,11 +345,28 @@
 #define IDC_BROWSE_FOR_FOLDER_TREEVIEW    0x3741
 
 /* Other dialogs */
+/* FIXME: these values are not compatible with 2k3 */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
 #define IDD_NOOPEN       27
+#define IDD_NEW_EXT      28
+
+/* Edit File Type dialog box */
+#define IDD_EDIT_FILE_TYPE                  36
+#define IDC_EDIT_FILE_TYPE_ICON             1100
+#define IDC_EDIT_FILE_TYPE_DESCRIPTION      1103
+#define IDC_EDIT_FILE_TYPE_CHANGE_ICON      1101
+#define IDC_EDIT_FILE_TYPE_ACTIONS          1106
+#define IDC_EDIT_FILE_TYPE_LISTVIEW         1107
+#define IDC_EDIT_FILE_TYPE_NEW              1108
+#define IDC_EDIT_FILE_TYPE_EDIT             1109
+#define IDC_EDIT_FILE_TYPE_REMOVE           1110
+#define IDC_EDIT_FILE_TYPE_SET_DEFAULT      1111
+#define IDC_EDIT_FILE_TYPE_CONFIRM_OPEN     1119
+#define IDC_EDIT_FILE_TYPE_SHOW_EXT         1113
+#define IDC_EDIT_FILE_TYPE_BROWSE_IN_SAME   1120
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29
