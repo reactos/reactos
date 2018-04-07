@@ -26,7 +26,70 @@ typedef struct _SHUTDOWN_DLG_CONTEXT
     PGINA_CONTEXT pgContext;
     DWORD ShutdownOptions;
     BOOL bCloseDlg;
+    BOOL bReasonUI;
 } SHUTDOWN_DLG_CONTEXT, *PSHUTDOWN_DLG_CONTEXT;
+
+
+static
+BOOL
+GetShutdownReasonUI(VOID)
+{
+    OSVERSIONINFOEX VersionInfo;
+    DWORD dwValue, dwSize;
+    HKEY hKey;
+    LONG lRet;
+
+    /* Query the policy value */
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"Software\\Policies\\Microsoft\\Windows NT\\Reliability",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        dwValue = 0;
+        dwSize = sizeof(dwValue);
+        RegQueryValueExW(hKey,
+                         L"ShutdownReasonUI",
+                         NULL,
+                         NULL,
+                         (LPBYTE)&dwValue,
+                         &dwSize);
+        RegCloseKey(hKey);
+
+        return (dwValue != 0) ? TRUE : FALSE;
+    }
+
+    /* Query the machine value */
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"Software\\Microsoft\\Windows\\CurrentVersion\\Reliability",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        dwValue = 0;
+        dwSize = sizeof(dwValue);
+        RegQueryValueExW(hKey,
+                         L"ShutdownReasonUI",
+                         NULL,
+                         NULL,
+                         (LPBYTE)&dwValue,
+                         &dwSize);
+        RegCloseKey(hKey);
+
+        return (dwValue != 0) ? TRUE : FALSE;
+    }
+
+    /* Return the default value */
+    VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
+    if (!GetVersionEx((POSVERSIONINFO)&VersionInfo))
+        return FALSE;
+
+    return FALSE;
+//    return (VersionInfo.wProductType == VER_NT_WORKSTATION) ? FALSE : TRUE;
+}
+
 
 DWORD
 LoadShutdownSelState(VOID)
@@ -427,12 +490,13 @@ ShutdownDialog(
     Context.pgContext = pgContext;
     Context.ShutdownOptions = ShutdownOptions;
     Context.bCloseDlg = FALSE;
+    Context.bReasonUI = GetShutdownReasonUI();
 
     if (pgContext->hWlx && pgContext->pWlxFuncs)
     {
         ret = pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                       pgContext->hDllInstance,
-                                                      MAKEINTRESOURCEW(IDD_SHUTDOWN_DLG),
+                                                      MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN_DLG),
                                                       hwndDlg,
                                                       ShutdownDialogProc,
                                                       (LPARAM)&Context);
@@ -440,7 +504,7 @@ ShutdownDialog(
     else
     {
         ret = DialogBoxParamW(pgContext->hDllInstance,
-                              MAKEINTRESOURCEW(IDD_SHUTDOWN_DLG),
+                              MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN_DLG),
                               hwndDlg,
                               ShutdownDialogProc,
                               (LPARAM)&Context);

@@ -9,6 +9,7 @@
 #define IDD_UNLOCK_DLG       105
 #define IDD_SHUTDOWN_DLG     108
 #define IDD_SHUTDOWN_FANCY   109
+#define IDD_SHUTDOWN_REASON  110
 
 #define IDC_LOGOFF               1001
 #define IDC_USERNAME             1002
@@ -25,6 +26,10 @@
 #define IDC_LOGON_TO             1013
 #define IDC_SHUTDOWN_LIST        1014
 #define IDC_SHUTDOWN_DESCRIPTION 1015
+#define IDC_REASON_PLANNED       1016
+#define IDC_REASON_LIST          1017
+#define IDC_REASON_DESCRIPTION   1018
+#define IDC_REASON_COMMENT       1019
 
 #define IDD_CHANGE_PASSWORD    106
 #define IDC_CHANGEPWD_USERNAME 1013
