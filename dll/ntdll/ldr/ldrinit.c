@@ -552,30 +552,38 @@ LdrpInitializeThread(IN PCONTEXT Context)
                     RtlActivateActivationContextUnsafeFast(&ActCtx,
                                                            LdrEntry->EntryPointActivationContext);
 
-                    /* Check if it has TLS */
-                    if (LdrEntry->TlsIndex)
+                    _SEH2_TRY
                     {
+                        /* Check if it has TLS */
+                        if (LdrEntry->TlsIndex)
+                        {
+                            /* Make sure we're not shutting down */
+                            if (!LdrpShutdownInProgress)
+                            {
+                                /* Call TLS */
+                                LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_THREAD_ATTACH);
+                            }
+                        }
+
                         /* Make sure we're not shutting down */
                         if (!LdrpShutdownInProgress)
                         {
-                            /* Call TLS */
-                            LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_THREAD_ATTACH);
+                            /* Call the Entrypoint */
+                            DPRINT("%wZ - Calling entry point at %p for thread attaching, %p/%p\n",
+                                   &LdrEntry->BaseDllName, LdrEntry->EntryPoint,
+                                   NtCurrentTeb()->RealClientId.UniqueProcess,
+                                   NtCurrentTeb()->RealClientId.UniqueThread);
+                            LdrpCallInitRoutine(LdrEntry->EntryPoint,
+                                                LdrEntry->DllBase,
+                                                DLL_THREAD_ATTACH,
+                                                NULL);
                         }
                     }
-
-                    /* Make sure we're not shutting down */
-                    if (!LdrpShutdownInProgress)
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        /* Call the Entrypoint */
-                        DPRINT("%wZ - Calling entry point at %p for thread attaching, %p/%p\n",
-                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint,
-                                NtCurrentTeb()->RealClientId.UniqueProcess,
-                                NtCurrentTeb()->RealClientId.UniqueThread);
-                        LdrpCallInitRoutine(LdrEntry->EntryPoint,
-                                         LdrEntry->DllBase,
-                                         DLL_THREAD_ATTACH,
-                                         NULL);
+                        /* Do nothing */
                     }
+                    _SEH2_END;
 
                     /* Deactivate the ActCtx */
                     RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -599,8 +607,16 @@ LdrpInitializeThread(IN PCONTEXT Context)
         RtlActivateActivationContextUnsafeFast(&ActCtx,
                                                LdrpImageEntry->EntryPointActivationContext);
 
-        /* Do TLS callbacks */
-        LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_THREAD_ATTACH);
+        _SEH2_TRY
+        {
+            /* Do TLS callbacks */
+            LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_THREAD_ATTACH);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Do nothing */
+        }
+        _SEH2_END;
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -796,23 +812,31 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             RtlActivateActivationContextUnsafeFast(&ActCtx,
                                                    LdrEntry->EntryPointActivationContext);
 
-            /* Check if it has TLS */
-            if (LdrEntry->TlsIndex && Context)
+            _SEH2_TRY
             {
-                /* Call TLS */
-                LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_PROCESS_ATTACH);
-            }
+                /* Check if it has TLS */
+                if (LdrEntry->TlsIndex && Context)
+                {
+                    /* Call TLS */
+                    LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_PROCESS_ATTACH);
+                }
 
-            /* Call the Entrypoint */
-            if (ShowSnaps)
-            {
-                DPRINT1("%wZ - Calling entry point at %p for DLL_PROCESS_ATTACH\n",
-                        &LdrEntry->BaseDllName, EntryPoint);
+                /* Call the Entrypoint */
+                if (ShowSnaps)
+                {
+                    DPRINT1("%wZ - Calling entry point at %p for DLL_PROCESS_ATTACH\n",
+                            &LdrEntry->BaseDllName, EntryPoint);
+                }
+                DllStatus = LdrpCallInitRoutine(EntryPoint,
+                                                LdrEntry->DllBase,
+                                                DLL_PROCESS_ATTACH,
+                                                Context);
             }
-            DllStatus = LdrpCallInitRoutine(EntryPoint,
-                                         LdrEntry->DllBase,
-                                         DLL_PROCESS_ATTACH,
-                                         Context);
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                DllStatus = FALSE;
+            }
+            _SEH2_END;
 
             /* Deactivate the ActCtx */
             RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -862,8 +886,16 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
         RtlActivateActivationContextUnsafeFast(&ActCtx,
                                                LdrpImageEntry->EntryPointActivationContext);
 
-        /* Do TLS callbacks */
-        LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_PROCESS_ATTACH);
+        _SEH2_TRY
+        {
+            /* Do TLS callbacks */
+            LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_PROCESS_ATTACH);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Do nothing */
+        }
+        _SEH2_END;
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -958,20 +990,28 @@ LdrShutdownProcess(VOID)
                 RtlActivateActivationContextUnsafeFast(&ActCtx,
                                                        LdrEntry->EntryPointActivationContext);
 
-                /* Check if it has TLS */
-                if (LdrEntry->TlsIndex)
+                _SEH2_TRY
                 {
-                    /* Call TLS */
-                    LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_PROCESS_DETACH);
-                }
+                    /* Check if it has TLS */
+                    if (LdrEntry->TlsIndex)
+                    {
+                        /* Call TLS */
+                        LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_PROCESS_DETACH);
+                    }
 
-                /* Call the Entrypoint */
-                DPRINT("%wZ - Calling entry point at %p for thread detaching\n",
-                        &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
-                LdrpCallInitRoutine(EntryPoint,
-                                 LdrEntry->DllBase,
-                                 DLL_PROCESS_DETACH,
-                                 (PVOID)1);
+                    /* Call the Entrypoint */
+                    DPRINT("%wZ - Calling entry point at %p for thread detaching\n",
+                           &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
+                    LdrpCallInitRoutine(EntryPoint,
+                                        LdrEntry->DllBase,
+                                        DLL_PROCESS_DETACH,
+                                        (PVOID)1);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* Do nothing */
+                }
+                _SEH2_END;
 
                 /* Deactivate the ActCtx */
                 RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -991,8 +1031,16 @@ LdrShutdownProcess(VOID)
         RtlActivateActivationContextUnsafeFast(&ActCtx,
                                                LdrpImageEntry->EntryPointActivationContext);
 
-        /* Do TLS callbacks */
-        LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_PROCESS_DETACH);
+        _SEH2_TRY
+        {
+            /* Do TLS callbacks */
+            LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_PROCESS_DETACH);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Do nothing */
+        }
+        _SEH2_END;
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -1066,28 +1114,36 @@ LdrShutdownThread(VOID)
                     RtlActivateActivationContextUnsafeFast(&ActCtx,
                                                            LdrEntry->EntryPointActivationContext);
 
-                    /* Check if it has TLS */
-                    if (LdrEntry->TlsIndex)
+                    _SEH2_TRY
                     {
+                        /* Check if it has TLS */
+                        if (LdrEntry->TlsIndex)
+                        {
+                            /* Make sure we're not shutting down */
+                            if (!LdrpShutdownInProgress)
+                            {
+                                /* Call TLS */
+                                LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_THREAD_DETACH);
+                            }
+                        }
+
                         /* Make sure we're not shutting down */
                         if (!LdrpShutdownInProgress)
                         {
-                            /* Call TLS */
-                            LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_THREAD_DETACH);
+                            /* Call the Entrypoint */
+                            DPRINT("%wZ - Calling entry point at %p for thread detaching\n",
+                                   &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
+                            LdrpCallInitRoutine(EntryPoint,
+                                                LdrEntry->DllBase,
+                                                DLL_THREAD_DETACH,
+                                                NULL);
                         }
                     }
-
-                    /* Make sure we're not shutting down */
-                    if (!LdrpShutdownInProgress)
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        /* Call the Entrypoint */
-                        DPRINT("%wZ - Calling entry point at %p for thread detaching\n",
-                                &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
-                        LdrpCallInitRoutine(EntryPoint,
-                                         LdrEntry->DllBase,
-                                         DLL_THREAD_DETACH,
-                                         NULL);
+                        /* Do nothing */
                     }
+                    _SEH2_END;
 
                     /* Deactivate the ActCtx */
                     RtlDeactivateActivationContextUnsafeFast(&ActCtx);
@@ -1108,8 +1164,16 @@ LdrShutdownThread(VOID)
         RtlActivateActivationContextUnsafeFast(&ActCtx,
                                                LdrpImageEntry->EntryPointActivationContext);
 
-        /* Do TLS callbacks */
-        LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_THREAD_DETACH);
+        _SEH2_TRY
+        {
+            /* Do TLS callbacks */
+            LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_THREAD_DETACH);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Do nothing */
+        }
+        _SEH2_END;
 
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);

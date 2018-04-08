@@ -1476,10 +1476,18 @@ LdrUnloadDll(IN PVOID BaseAddress)
                                                    LdrEntry->EntryPointActivationContext);
 
             /* Call the entrypoint */
-            LdrpCallInitRoutine(LdrEntry->EntryPoint,
-                                LdrEntry->DllBase,
-                                DLL_PROCESS_DETACH,
-                                NULL);
+            _SEH2_TRY
+            {
+                LdrpCallInitRoutine(LdrEntry->EntryPoint,
+                                    LdrEntry->DllBase,
+                                    DLL_PROCESS_DETACH,
+                                    NULL);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Do nothing */
+            }
+            _SEH2_END;
 
             /* Release the context */
             RtlDeactivateActivationContextUnsafeFast(&ActCtx);
