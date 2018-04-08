@@ -375,6 +375,7 @@ retry:
 
             RemoveEntryList(&current->CacheMapVacbListEntry);
             RemoveEntryList(&current->VacbLruListEntry);
+            InitializeListHead(&current->VacbLruListEntry);
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
 
             /* Calculate how many pages we freed for Mm */
@@ -413,6 +414,7 @@ retry:
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     CacheMapVacbListEntry);
+        InitializeListHead(&current->CacheMapVacbListEntry);
         CcRosVacbDecRefCount(current);
         CcRosInternalFreeVacb(current);
     }
@@ -567,6 +569,7 @@ CcRosUnmarkDirtyVacb (
     Vacb->Dirty = FALSE;
 
     RemoveEntryList(&Vacb->DirtyVacbListEntry);
+    InitializeListHead(&Vacb->DirtyVacbListEntry);
     CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     CcRosVacbDecRefCount(Vacb);
@@ -743,11 +746,12 @@ CcRosCreateVacb (
     }
 #endif
     current->MappedCount = 0;
-    current->DirtyVacbListEntry.Flink = NULL;
-    current->DirtyVacbListEntry.Blink = NULL;
     current->ReferenceCount = 0;
     current->PinCount = 0;
     KeInitializeMutex(&current->Mutex, 0);
+    InitializeListHead(&current->CacheMapVacbListEntry);
+    InitializeListHead(&current->DirtyVacbListEntry);
+    InitializeListHead(&current->VacbLruListEntry);
     CcRosAcquireVacbLock(current, NULL);
     KeAcquireGuardedMutex(&ViewLock);
 
@@ -988,6 +992,9 @@ CcRosInternalFreeVacb (
 
     ASSERT(Vacb->PinCount == 0);
     ASSERT(Vacb->ReferenceCount == 0);
+    ASSERT(IsListEmpty(&Vacb->CacheMapVacbListEntry));
+    ASSERT(IsListEmpty(&Vacb->DirtyVacbListEntry));
+    ASSERT(IsListEmpty(&Vacb->VacbLruListEntry));
     RtlFillMemory(Vacb, sizeof(Vacb), 0xfd);
     ExFreeToNPagedLookasideList(&VacbLookasideList, Vacb);
     return STATUS_SUCCESS;
@@ -1109,6 +1116,7 @@ CcRosDeleteFileCache (
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
             CcRosAcquireVacbLock(current, NULL);
             RemoveEntryList(&current->VacbLruListEntry);
+            InitializeListHead(&current->VacbLruListEntry);
             if (current->Dirty)
             {
                 KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
@@ -1133,6 +1141,7 @@ CcRosDeleteFileCache (
         {
             current_entry = RemoveTailList(&FreeList);
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
+            InitializeListHead(&current->CacheMapVacbListEntry);
             CcRosVacbDecRefCount(current);
             CcRosInternalFreeVacb(current);
         }

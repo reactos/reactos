@@ -238,6 +238,7 @@ CcPurgeCacheSection (
         /* This VACB is in range, so unlink it and mark for free */
         ASSERT(Refs == 1 || Vacb->Dirty);
         RemoveEntryList(&Vacb->VacbLruListEntry);
+        InitializeListHead(&Vacb->VacbLruListEntry);
         if (Vacb->Dirty)
         {
             CcRosUnmarkDirtyVacb(Vacb, FALSE);
@@ -253,6 +254,7 @@ CcPurgeCacheSection (
         Vacb = CONTAINING_RECORD(RemoveHeadList(&FreeList),
                                  ROS_VACB,
                                  CacheMapVacbListEntry);
+        InitializeListHead(&Vacb->CacheMapVacbListEntry);
         CcRosVacbDecRefCount(Vacb);
         CcRosInternalFreeVacb(Vacb);
     }
