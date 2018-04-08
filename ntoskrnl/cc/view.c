@@ -344,7 +344,7 @@ retry:
         CcRosVacbIncRefCount(current);
 
         /* Check if it's mapped and not dirty */
-        if (current->MappedCount > 0 && !current->Dirty)
+        if (InterlockedCompareExchange((PLONG)&current->MappedCount, 0, 0) > 0 && !current->Dirty)
         {
             /* We have to break these locks because Cc sucks */
             KeReleaseSpinLock(&current->SharedCacheMap->CacheMapLock, oldIrql);
@@ -448,14 +448,13 @@ CcRosReleaseVacb (
 
     if (Mapped)
     {
-        Vacb->MappedCount++;
-    }
-    Refs = CcRosVacbDecRefCount(Vacb);
-    if (Mapped && (Vacb->MappedCount == 1))
-    {
-        CcRosVacbIncRefCount(Vacb);
+        if (InterlockedIncrement((PLONG)&Vacb->MappedCount) == 1)
+        {
+            CcRosVacbIncRefCount(Vacb);
+        }
     }
 
+    Refs = CcRosVacbDecRefCount(Vacb);
     ASSERT(Refs > 0);
 
     CcRosReleaseVacbLock(Vacb);
@@ -630,9 +629,7 @@ CcRosUnmapVacb (
     }
 
     ASSERT(Vacb->MappedCount != 0);
-    Vacb->MappedCount--;
-
-    if (Vacb->MappedCount == 0)
+    if (InterlockedDecrement((PLONG)&Vacb->MappedCount) == 0)
     {
         CcRosVacbDecRefCount(Vacb);
     }
