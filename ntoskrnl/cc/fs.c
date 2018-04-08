@@ -251,12 +251,14 @@ CcPurgeCacheSection (
 
     while (!IsListEmpty(&FreeList))
     {
+        ULONG Refs;
+
         Vacb = CONTAINING_RECORD(RemoveHeadList(&FreeList),
                                  ROS_VACB,
                                  CacheMapVacbListEntry);
         InitializeListHead(&Vacb->CacheMapVacbListEntry);
-        CcRosVacbDecRefCount(Vacb);
-        CcRosInternalFreeVacb(Vacb);
+        Refs = CcRosVacbDecRefCount(Vacb);
+        ASSERT(Refs == 0);
     }
 
     return Success;

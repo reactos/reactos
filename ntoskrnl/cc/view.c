@@ -90,6 +90,11 @@ ULONG CcRosVacbDecRefCount_(PROS_VACB vacb, PCSTR file, INT line)
                  file, line, vacb, Refs, vacb->Dirty, vacb->PageOut);
     }
 
+    if (Refs == 0)
+    {
+        CcRosInternalFreeVacb(vacb);
+    }
+
     return Refs;
 }
 ULONG CcRosVacbGetRefCount_(PROS_VACB vacb, PCSTR file, INT line)
@@ -106,9 +111,6 @@ ULONG CcRosVacbGetRefCount_(PROS_VACB vacb, PCSTR file, INT line)
     return Refs;
 }
 #endif
-
-NTSTATUS
-CcRosInternalFreeVacb(PROS_VACB Vacb);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -187,12 +189,10 @@ CcRosFlushDirtyPages (
     PROS_VACB current;
     BOOLEAN Locked;
     NTSTATUS Status;
-    LARGE_INTEGER ZeroTimeout;
 
     DPRINT("CcRosFlushDirtyPages(Target %lu)\n", Target);
 
     (*Count) = 0;
-    ZeroTimeout.QuadPart = 0;
 
     KeEnterCriticalRegion();
     KeAcquireGuardedMutex(&ViewLock);
@@ -228,22 +228,11 @@ CcRosFlushDirtyPages (
             continue;
         }
 
-        Status = CcRosAcquireVacbLock(current,
-                                      Wait ? NULL : &ZeroTimeout);
-        if (Status != STATUS_SUCCESS)
-        {
-            current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
-                current->SharedCacheMap->LazyWriteContext);
-            CcRosVacbDecRefCount(current);
-            continue;
-        }
-
         ASSERT(current->Dirty);
 
         /* One reference is added above */
         if (CcRosVacbGetRefCount(current) > 2)
         {
-            CcRosReleaseVacbLock(current);
             current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
                 current->SharedCacheMap->LazyWriteContext);
             CcRosVacbDecRefCount(current);
@@ -254,7 +243,6 @@ CcRosFlushDirtyPages (
 
         Status = CcRosFlushVacb(current);
 
-        CcRosReleaseVacbLock(current);
         current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
             current->SharedCacheMap->LazyWriteContext);
 
@@ -410,13 +398,15 @@ retry:
 
     while (!IsListEmpty(&FreeList))
     {
+        ULONG Refs;
+
         current_entry = RemoveHeadList(&FreeList);
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     CacheMapVacbListEntry);
         InitializeListHead(&current->CacheMapVacbListEntry);
-        CcRosVacbDecRefCount(current);
-        CcRosInternalFreeVacb(current);
+        Refs = CcRosVacbDecRefCount(current);
+        ASSERT(Refs == 0);
     }
 
     DPRINT("Evicted %lu cache pages\n", (*NrFreed));
@@ -457,8 +447,6 @@ CcRosReleaseVacb (
     Refs = CcRosVacbDecRefCount(Vacb);
     ASSERT(Refs > 0);
 
-    CcRosReleaseVacbLock(Vacb);
-
     return STATUS_SUCCESS;
 }
 
@@ -494,7 +482,6 @@ CcRosLookupVacb (
             CcRosVacbIncRefCount(current);
             KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
             KeReleaseGuardedMutex(&ViewLock);
-            CcRosAcquireVacbLock(current, NULL);
             return current;
         }
         if (current->FileOffset.QuadPart > FileOffset)
@@ -718,6 +705,7 @@ CcRosCreateVacb (
     PLIST_ENTRY current_entry;
     NTSTATUS Status;
     KIRQL oldIrql;
+    ULONG Refs;
 
     ASSERT(SharedCacheMap);
 
@@ -745,7 +733,6 @@ CcRosCreateVacb (
     current->MappedCount = 0;
     current->ReferenceCount = 0;
     current->PinCount = 0;
-    KeInitializeMutex(&current->Mutex, 0);
     InitializeListHead(&current->CacheMapVacbListEntry);
     InitializeListHead(&current->DirtyVacbListEntry);
     InitializeListHead(&current->VacbLruListEntry);
@@ -760,7 +747,6 @@ CcRosCreateVacb (
         return Status;
     }
 
-    CcRosAcquireVacbLock(current, NULL);
     KeAcquireGuardedMutex(&ViewLock);
 
     *Vacb = current;
@@ -792,12 +778,12 @@ CcRosCreateVacb (
                         current);
             }
 #endif
-            CcRosVacbDecRefCount(*Vacb);
-            CcRosReleaseVacbLock(*Vacb);
             KeReleaseGuardedMutex(&ViewLock);
-            CcRosInternalFreeVacb(*Vacb);
+
+            Refs = CcRosVacbDecRefCount(*Vacb);
+            ASSERT(Refs == 0);
+
             *Vacb = current;
-            CcRosAcquireVacbLock(current, NULL);
             return STATUS_SUCCESS;
         }
         if (current->FileOffset.QuadPart < FileOffset)
@@ -1111,7 +1097,6 @@ CcRosDeleteFileCache (
             KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
 
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
-            CcRosAcquireVacbLock(current, NULL);
             RemoveEntryList(&current->VacbLruListEntry);
             InitializeListHead(&current->VacbLruListEntry);
             if (current->Dirty)
@@ -1122,7 +1107,6 @@ CcRosDeleteFileCache (
                 DPRINT1("Freeing dirty VACB\n");
             }
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
-            CcRosReleaseVacbLock(current);
 
             KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
         }
@@ -1136,11 +1120,13 @@ CcRosDeleteFileCache (
 
         while (!IsListEmpty(&FreeList))
         {
+            ULONG Refs;
+
             current_entry = RemoveTailList(&FreeList);
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
             InitializeListHead(&current->CacheMapVacbListEntry);
-            CcRosVacbDecRefCount(current);
-            CcRosInternalFreeVacb(current);
+            Refs = CcRosVacbDecRefCount(current);
+            ASSERT(Refs == 0);
         }
 
         OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
