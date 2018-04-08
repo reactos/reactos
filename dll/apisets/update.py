@@ -14,6 +14,8 @@ import subprocess
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
+NL_CHAR = '\n'
+
 IGNORE_OPTIONS = ('-norelay', '-ret16', '-ret64', '-register', '-private',
                   '-noname', '-ordinal', '-i386', '-arch=', '-stub')
 
@@ -234,7 +236,7 @@ class SpecEntry(object):
             assert self._ord != '@'
             name = 'Ordinal' + self._ord
         if not self._forwarder:
-            spec_file.write('{} stub{} {}\n'.format(self._ord, opts, name))
+            spec_file.write('{} stub{} {}{}'.format(self._ord, opts, name, NL_CHAR))
             estimate_size += 0x1000
         else:
             assert self.arch != Arch(), self.name
@@ -256,12 +258,13 @@ class SpecEntry(object):
                     fwd = '{}._imp__{}'.format(*self._forwarder)
             if arch != Arch(Arch.Any):
                 opts = '{} -arch={}'.format(opts, arch.to_str())
-            spec_file.write('{ord} {cc}{opts} {name}{args} {fwd}\n'.format(ord=self._ord,
-                                                                           cc=callconv,
-                                                                           opts=opts,
-                                                                           name=name,
-                                                                           args=args,
-                                                                           fwd=fwd))
+            spec_file.write('{ord} {cc}{opts} {name}{args} {fwd}{nl}'.format(ord=self._ord,
+                                                                             cc=callconv,
+                                                                             opts=opts,
+                                                                             name=name,
+                                                                             args=args,
+                                                                             fwd=fwd,
+                                                                             nl=NL_CHAR))
             estimate_size += 0x100
         return estimate_size
 
@@ -353,7 +356,7 @@ class SpecFile(object):
         fwd_strings = ' '.join(fwd_strings)
         name = self.name
         baseaddress = '0x{:8x}'.format(baseaddress)
-        cmakelists.write('add_apiset({} {} {})\n'.format(name, baseaddress, fwd_strings))
+        cmakelists.write('add_apiset({} {} {}){}'.format(name, baseaddress, fwd_strings, NL_CHAR))
         return self._estimate_size
 
 
@@ -377,6 +380,7 @@ def generate_specnames(dll_dir):
     yield (os.path.join(dll_dir, '..', 'win32ss', 'gdi', 'gdi32', 'gdi32.spec'), 'gdi32')
 
 def run(wineroot):
+    global NL_CHAR
     wine_apisets = []
     ros_modules = []
 
@@ -426,16 +430,21 @@ def run(wineroot):
         total = tuple(map(sum, zip(apiset.extra_forwarders(function_lookup, module_lookup), total)))
     print 'found', total[0], '/', total[1], 'forwarders'
 
-    print 'Writing apisets'
-    for apiset in wine_apisets:
-        with open(os.path.join(SCRIPT_DIR, apiset.name + '.spec'), 'wb') as out_spec:
-            out_spec.writelines(SPEC_HEADER)
-            apiset.write(out_spec)
-
-    print 'Writing CMakeLists.txt'
     with open(os.path.join(SCRIPT_DIR, 'CMakeLists.txt.in'), 'rb') as template:
         data = template.read()
         data = data.replace('%WINE_GIT_VERSION%', version)
+        # Detect the checkout newline settings
+        if '\r\n' in data:
+            NL_CHAR = '\r\n'
+
+    print 'Writing apisets'
+    spec_header = [line.replace('\n', NL_CHAR) for line in SPEC_HEADER]
+    for apiset in wine_apisets:
+        with open(os.path.join(SCRIPT_DIR, apiset.name + '.spec'), 'wb') as out_spec:
+            out_spec.writelines(spec_header)
+            apiset.write(out_spec)
+
+    print 'Writing CMakeLists.txt'
     baseaddress = 0x60000000
     with open(os.path.join(SCRIPT_DIR, 'CMakeLists.txt'), 'wb') as cmakelists:
         cmakelists.write(data)
