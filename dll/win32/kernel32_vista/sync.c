@@ -48,9 +48,6 @@ VOID
 NTAPI
 RtlReleaseSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock);
 
-ULONG
-NTAPI
-RtlNtStatusToDosError(IN NTSTATUS Status);
 
 VOID
 WINAPI
