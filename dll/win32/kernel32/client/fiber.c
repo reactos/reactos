@@ -352,7 +352,7 @@ FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
                     NtCurrentTeb()->FlsData = ppFlsSlots;
 
                 if (lpCallback)
-                    DPRINT1("FlsAlloc: Got lpCallback 0x%p, UNIMPLEMENTED!", lpCallback);
+                    DPRINT1("FlsAlloc: Got lpCallback 0x%p, UNIMPLEMENTED!\n", lpCallback);
 
                 ppFlsSlots[dwFlsIndex + 2] = NULL; /* clear the value */
                 Peb->FlsCallback[dwFlsIndex] = lpCallback;
