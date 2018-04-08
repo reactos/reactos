@@ -752,6 +752,17 @@ CcRosCreateVacb (
     InitializeListHead(&current->CacheMapVacbListEntry);
     InitializeListHead(&current->DirtyVacbListEntry);
     InitializeListHead(&current->VacbLruListEntry);
+
+    CcRosVacbIncRefCount(current);
+
+    Status = CcRosMapVacbInKernelSpace(current);
+    if (!NT_SUCCESS(Status))
+    {
+        CcRosVacbDecRefCount(current);
+        ExFreeToNPagedLookasideList(&VacbLookasideList, current);
+        return Status;
+    }
+
     CcRosAcquireVacbLock(current, NULL);
     KeAcquireGuardedMutex(&ViewLock);
 
@@ -784,9 +795,10 @@ CcRosCreateVacb (
                         current);
             }
 #endif
+            CcRosVacbDecRefCount(*Vacb);
             CcRosReleaseVacbLock(*Vacb);
             KeReleaseGuardedMutex(&ViewLock);
-            ExFreeToNPagedLookasideList(&VacbLookasideList, *Vacb);
+            CcRosInternalFreeVacb(*Vacb);
             *Vacb = current;
             CcRosAcquireVacbLock(current, NULL);
             return STATUS_SUCCESS;
@@ -813,7 +825,6 @@ CcRosCreateVacb (
     }
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     InsertTailList(&VacbLruListHead, &current->VacbLruListEntry);
-    CcRosVacbIncRefCount(current);
     KeReleaseGuardedMutex(&ViewLock);
 
     MI_SET_USAGE(MI_USAGE_CACHE);
@@ -837,17 +848,6 @@ CcRosCreateVacb (
 
     /* Reference it to allow release */
     CcRosVacbIncRefCount(current);
-
-    Status = CcRosMapVacbInKernelSpace(current);
-    if (!NT_SUCCESS(Status))
-    {
-        RemoveEntryList(&current->CacheMapVacbListEntry);
-        RemoveEntryList(&current->VacbLruListEntry);
-        CcRosReleaseVacb(SharedCacheMap, current, FALSE,
-                         FALSE, FALSE);
-        CcRosVacbDecRefCount(current);
-        ExFreeToNPagedLookasideList(&VacbLookasideList, current);
-    }
 
     return Status;
 }
