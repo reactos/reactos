@@ -34,16 +34,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEVERITY_SUCCESS        "Success"
-    IDS_SEVERITY_INFORMATIONAL  "System Information"
-    IDS_SEVERITY_WARNING        "System Warning"
-    IDS_SEVERITY_ERROR          "System Error"
+    IDS_SEVERITY_SUCCESS        "Skukces"
+    IDS_SEVERITY_INFORMATIONAL  "Informacja"
+    IDS_SEVERITY_WARNING        "Uwaga"
+    IDS_SEVERITY_ERROR          "Błąd"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYSTEM_PROCESS          "System Process"
-    IDS_UNKNOWN_SOFTWARE_EXCEPT "unknown software exception"
-    IDS_OK_TERMINATE_PROGRAM    "Click on OK to terminate the program."
-    IDS_CANCEL_DEBUG_PROGRAM    "Click on CANCEL to debug the program."
+    IDS_SYSTEM_PROCESS          "Proces"
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "nieznany wyjątek programowy"
+    IDS_OK_TERMINATE_PROGRAM    "Kliknij OK aby zakończyć pracę programu."
+    IDS_CANCEL_DEBUG_PROGRAM    "Kliknij Anuluj aby uzyskać więcej informacji o błędzie."
 END
