@@ -14,3 +14,4 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/drivers/etc/services DESTINATION re
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/sounds/ReactOS_LogOn.wav DESTINATION reactos/media FOR all)
 
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/systemcompatible.manifest DESTINATION reactos/winsxs/manifests FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/forwardcompatible.manifest DESTINATION reactos/winsxs/manifests FOR all)

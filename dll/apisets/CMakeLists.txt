@@ -32,8 +32,10 @@ function (add_apiset apiset_name baseaddress)
 
     add_importlibs(${apiset_name} ${ARGN} kernel32 ntdll)
 
-    add_cd_file(TARGET ${apiset_name} DESTINATION reactos/system32 FOR all)
+    add_cd_file(TARGET ${apiset_name} DESTINATION reactos/winsxs/x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef FOR all)
 endfunction()
+
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef.manifest DESTINATION reactos/winsxs/manifests FOR all)
 
 # Apisets will be appended
 
