@@ -24,7 +24,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Select a Destination"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Select the destionation directory",IDC_STATIC,6,12,174,8
+    LTEXT           "Select the destination directory",IDC_STATIC,6,12,174,8
     EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Browse...",IDC_BROWSE,174,42,54,14
     PUSHBUTTON      "Password",IDC_PASSWORD,174,66,54,14
