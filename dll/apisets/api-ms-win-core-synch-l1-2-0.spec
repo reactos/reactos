@@ -25,7 +25,7 @@
 @ stdcall InitializeConditionVariable() kernel32_vista.InitializeConditionVariable
 @ stdcall InitializeCriticalSection() kernel32.InitializeCriticalSection
 @ stdcall InitializeCriticalSectionAndSpinCount() kernel32.InitializeCriticalSectionAndSpinCount
-@ stub InitializeCriticalSectionEx
+@ stdcall InitializeCriticalSectionEx() kernel32_vista.InitializeCriticalSectionEx
 @ stdcall InitializeSRWLock() kernel32_vista.InitializeSRWLock
 @ stub InitializeSynchronizationBarrier
 @ stdcall LeaveCriticalSection() kernel32.LeaveCriticalSection

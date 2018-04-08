@@ -18,7 +18,7 @@
 @ stdcall EnterCriticalSection() kernel32.EnterCriticalSection
 @ stdcall InitializeCriticalSection() kernel32.InitializeCriticalSection
 @ stdcall InitializeCriticalSectionAndSpinCount() kernel32.InitializeCriticalSectionAndSpinCount
-@ stub InitializeCriticalSectionEx
+@ stdcall InitializeCriticalSectionEx() kernel32_vista.InitializeCriticalSectionEx
 @ stdcall InitializeSRWLock() kernel32_vista.InitializeSRWLock
 @ stdcall LeaveCriticalSection() kernel32.LeaveCriticalSection
 @ stdcall OpenEventA() kernel32.OpenEventA

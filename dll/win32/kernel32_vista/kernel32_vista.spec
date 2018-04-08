@@ -14,3 +14,5 @@
 @ stdcall SleepConditionVariableSRW(ptr ptr long long)
 @ stdcall WakeAllConditionVariable(ptr)
 @ stdcall WakeConditionVariable(ptr)
+
+@ stdcall InitializeCriticalSectionEx(ptr long long)

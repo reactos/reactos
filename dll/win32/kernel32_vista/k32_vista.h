@@ -8,4 +8,5 @@
 
 #include <ndk/kefuncs.h>
 #include <ndk/psfuncs.h>
+#include <ndk/rtlfuncs.h>
 
