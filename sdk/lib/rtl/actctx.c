@@ -4960,9 +4960,9 @@ void actctx_init(void)
                                                   &SizeRequired);
     if (NT_SUCCESS(Status))
     {
-        DPRINT("RtlQueryInformationActivationContext for CompatibilityInformationInActivationContext suceeded\n");
         ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION* ContextCompatInfo;
         ContextCompatInfo = (ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION*)Buffer;
+        DPRINT("RtlQueryInformationActivationContext for CompatibilityInformationInActivationContext suceeded\n");
         /* No Compatibility elements present, bail out */
         if (ContextCompatInfo->ElementCount != 0)
         {
