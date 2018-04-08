@@ -110,6 +110,7 @@ CcReadVirtualAddress (
     _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
+        DPRINT1("MmProbeAndLockPages failed with: %lx for %p (%p, %p)\n", Status, Mdl, Vacb, Vacb->BaseAddress);
         KeBugCheck(CACHE_MANAGER);
     } _SEH2_END;
 
@@ -186,6 +187,7 @@ CcWriteVirtualAddress (
     _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
+        DPRINT1("MmProbeAndLockPages failed with: %lx for %p (%p, %p)\n", Status, Mdl, Vacb, Vacb->BaseAddress);
         KeBugCheck(CACHE_MANAGER);
     } _SEH2_END;
 
