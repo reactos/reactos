@@ -175,8 +175,8 @@ UserpCaptureStringParameters(
             }
             else
             {
-                /* Allocate a buffer for converted to ANSI string */
-                TempStringA.MaximumLength = RtlUnicodeStringToAnsiSize(&TempStringU);
+                /* Allocate a buffer for conversion to ANSI string */
+                TempStringA.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(&TempStringU);
                 TempStringA.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                                      HEAP_ZERO_MEMORY,
                                                      TempStringA.MaximumLength);
@@ -542,7 +542,7 @@ UserpFormatMessages(
          * Fall back to unknown hard error format string.
          * NOTE: The value used here is ReactOS-specific: it allows specifying
          * the exact hard error status value and the parameters, contrary to
-         * the one on Windows which only says: "Unknown Hard Error".
+         * the one on Windows that only says: "Unknown Hard Error".
          */
         RtlInitEmptyUnicodeString(&FormatU, NULL, 0);
         FormatA.Buffer = NULL;
@@ -585,7 +585,7 @@ UserpFormatMessages(
     }
 
     /* Retrieve the window title of the client, if it has one */
-    RtlInitEmptyUnicodeString(&WindowTitleU, NULL, 0);
+    RtlInitEmptyUnicodeString(&WindowTitleU, L"", 0);
     hwndOwner = NULL;
     EnumThreadWindows(HandleToUlong(Message->h.ClientId.UniqueThread),
                       FindTopLevelWnd, (LPARAM)&hwndOwner);
@@ -595,21 +595,18 @@ UserpFormatMessages(
         if (cszBuffer != 0)
         {
             cszBuffer += 3; // 2 characters for ": " and a NULL terminator.
-            WindowTitleU.MaximumLength = (USHORT)(cszBuffer * sizeof(WCHAR));
-            WindowTitleU.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                  HEAP_ZERO_MEMORY,
-                                                  WindowTitleU.MaximumLength);
-            if (WindowTitleU.Buffer)
+            cszBuffer *= sizeof(WCHAR);
+            pszBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                        HEAP_ZERO_MEMORY,
+                                        cszBuffer);
+            if (pszBuffer)
             {
+                RtlInitEmptyUnicodeString(&WindowTitleU, pszBuffer, (USHORT)cszBuffer);
                 cszBuffer = GetWindowTextW(hwndOwner,
                                            WindowTitleU.Buffer,
                                            WindowTitleU.MaximumLength / sizeof(WCHAR));
                 WindowTitleU.Length = (USHORT)(cszBuffer * sizeof(WCHAR));
                 RtlAppendUnicodeToString(&WindowTitleU, L": ");
-            }
-            else
-            {
-                RtlInitEmptyUnicodeString(&WindowTitleU, NULL, 0);
             }
         }
     }
@@ -636,7 +633,7 @@ UserpFormatMessages(
     CaptionStringU->Length = 0;
     CaptionStringU->Buffer[0] = UNICODE_NULL;
 
-    /* Append the file name, the separator and the caption text */
+    /* Build the caption */
     RtlStringCbPrintfW(CaptionStringU->Buffer,
                        CaptionStringU->MaximumLength,
                        L"%wZ%wZ - %wZ",
