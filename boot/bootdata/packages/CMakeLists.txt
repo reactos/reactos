@@ -19,7 +19,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.cmake "")
 
 # This generates reactos.dff.dyn by processing the generator expressions
 file(GENERATE
-     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn
+     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.$<CONFIG>.dyn
      INPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.cmake)
 
 # This finalizes reactos.dff by concat-ing the two files: one generated and one static containing the optional file.
@@ -28,14 +28,14 @@ file(GENERATE
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff
     COMMAND ${CMAKE_COMMAND} -D SRC1=${CMAKE_CURRENT_SOURCE_DIR}/reactos.dff.in
-                             -D SRC2=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn
+                             -D SRC2=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.$<CONFIG>.dyn
                              -D DST=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
                              -P ${CMAKE_CURRENT_BINARY_DIR}/concat.cmake
     COMMAND ${CMAKE_COMMAND} -E copy_if_different 
                              ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
                              ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/reactos.dff.in
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.dyn)
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.$<CONFIG>.dyn)
 
 add_custom_target(
     reactos_cab_inf

@@ -458,7 +458,7 @@ function(create_iso_lists)
     file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
     unset(_filelist)
     file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.lst
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
@@ -466,7 +466,7 @@ function(create_iso_lists)
     file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst "${_filelist}")
     unset(_filelist)
     file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/livecd.lst
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/livecd.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
@@ -474,7 +474,7 @@ function(create_iso_lists)
     file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst "${_filelist}")
     unset(_filelist)
     file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.lst
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
@@ -482,7 +482,7 @@ function(create_iso_lists)
     file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst "${_filelist}")
     unset(_filelist)
     file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.lst
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.$<CONFIG>.lst
          INPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst)
 endfunction()
 
