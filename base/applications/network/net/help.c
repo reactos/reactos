@@ -162,7 +162,8 @@ INT cmdHelp(INT argc, WCHAR **argv)
     if (_wcsicmp(argv[2], L"STATISTICS") == 0)
     {
         ConResPuts(StdOut, IDS_STATISTICS_SYNTAX);
-        ConResPuts(StdOut, IDS_STATISTICS_HELP);
+        ConResPuts(StdOut, IDS_STATISTICS_HELP_1);
+        ConResPuts(StdOut, IDS_STATISTICS_HELP_2);
         return 0;
     }
 

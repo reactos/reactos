@@ -127,8 +127,12 @@ message and suggested actions you can take to solve the problem.\n\n"
     IDS_START_HELP_3 "When typed at the command prompt, service name of two words or more must\n\
 be enclosed in quotation marks. For example, NET START ""NET LOGON""\n\
 starts the net logon service.\n\n"
-    IDS_STATISTICS_SYNTAX "NET STATISTICS ...\n\n"
-    IDS_STATISTICS_HELP "STATISTICS\n...\n\n"
+    IDS_STATISTICS_SYNTAX "NET STATISTICS [SERVER | WORKSTATION]\n\n"
+    IDS_STATISTICS_HELP_1 "NET STATISTICS displays the statisticslog for the local Workstation or\n\
+Server service. Used without parameters, NET STATISTICS displays\n\
+the services for which statistics are available.\n\n"
+    IDS_STATISTICS_HELP_2 "SERVER        Displays the Server service statistics.\n\
+WORKSTATION   Displays the Workstation service statistics.\n\n"
     IDS_STOP_SYNTAX "NET STOP <имя_службы>\n\n"
     IDS_STOP_HELP_1 "NET STOP stops services.\n\n"
     IDS_STOP_HELP_2 "service   The name of the service to be stopped.\n\n"
@@ -187,6 +191,11 @@ service can stop others. Some services cannot be stopped.\n\n"
     IDS_LOCALGROUP_COMMENT "Комментарий"
     IDS_LOCALGROUP_MEMBERS "Члены"
 
+    IDS_STATISTICS_TEXT "Statistics are available for the following services:\n\n\
+   Server\n   Workstation\n\n"
+    IDS_STATISTICS_SERVER_NAME "Server statistics for \\\\%s\n\n"
+    IDS_STATISTICS_WORKSTATION_NAME "Workstation statistics for \\\\%s\n\n"
+
     IDS_USER_ACCOUNTS "Учетные записи пользователей для \\\\%s"
     IDS_USER_NAME "Имя пользователя"
     IDS_USER_FULL_NAME "Полное имя"
@@ -228,5 +237,5 @@ service can stop others. Some services cannot be stopped.\n\n"
     IDS_ERROR_OPTION_NOT_SUPPORTED "Опция %s в данный момент не поддерживается.\n"
     IDS_ERROR_INVALID_OPTION_VALUE "Вы ввели неверный данные для данной опции %s.\n"
     IDS_ERROR_SYSTEM_ERROR "Произошла системная ошибка: %d.\n"
-    IDS_ERROR_NO_ERROR "Команда успешно выполнена.\n\n\n"
+    IDS_ERROR_NO_ERROR "Команда успешно выполнена.\n\n"
 END

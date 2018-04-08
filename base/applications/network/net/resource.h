@@ -56,20 +56,21 @@
 #define IDS_START_HELP_2         153
 #define IDS_START_HELP_3         154
 #define IDS_STATISTICS_SYNTAX    155
-#define IDS_STATISTICS_HELP      156
-#define IDS_STOP_SYNTAX          157
-#define IDS_STOP_HELP_1          158
-#define IDS_STOP_HELP_2          159
-#define IDS_STOP_HELP_3          160
-#define IDS_TIME_SYNTAX          161
-#define IDS_TIME_HELP            162
-#define IDS_USE_SYNTAX           163
-#define IDS_USE_HELP             164
-#define IDS_USER_SYNTAX          165
-#define IDS_USER_HELP            166
-#define IDS_VIEW_SYNTAX          167
-#define IDS_VIEW_HELP            168
-#define IDS_NET_SYNTAX           169
+#define IDS_STATISTICS_HELP_1    156
+#define IDS_STATISTICS_HELP_2    157
+#define IDS_STOP_SYNTAX          158
+#define IDS_STOP_HELP_1          159
+#define IDS_STOP_HELP_2          160
+#define IDS_STOP_HELP_3          161
+#define IDS_TIME_SYNTAX          162
+#define IDS_TIME_HELP            163
+#define IDS_USE_SYNTAX           164
+#define IDS_USE_HELP             165
+#define IDS_USER_SYNTAX          166
+#define IDS_USER_HELP            167
+#define IDS_VIEW_SYNTAX          168
+#define IDS_VIEW_HELP            169
+#define IDS_NET_SYNTAX           170
 
 #define IDS_ACCOUNTS_FORCE_LOGOFF      200
 #define IDS_ACCOUNTS_LOGOFF_SECONDS    201
@@ -104,10 +105,14 @@
 #define IDS_CONFIG_WORKSTATION_LOGON    245
 
 
-#define IDS_LOCALGROUP_ALIASES         300
-#define IDS_LOCALGROUP_ALIAS_NAME      301
-#define IDS_LOCALGROUP_COMMENT         302
-#define IDS_LOCALGROUP_MEMBERS         303
+#define IDS_LOCALGROUP_ALIASES          300
+#define IDS_LOCALGROUP_ALIAS_NAME       301
+#define IDS_LOCALGROUP_COMMENT          302
+#define IDS_LOCALGROUP_MEMBERS          303
+
+#define IDS_STATISTICS_TEXT             320
+#define IDS_STATISTICS_SERVER_NAME      321
+#define IDS_STATISTICS_WORKSTATION_NAME 322
 
 #define IDS_USER_ACCOUNTS              449
 #define IDS_USER_NAME                  450

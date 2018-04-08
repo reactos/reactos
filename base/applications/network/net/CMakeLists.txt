@@ -12,6 +12,7 @@ list(APPEND SOURCE
     cmdLocalGroup.c
     cmdPause.c
     cmdStart.c
+    cmdStatistics.c
     cmdStop.c
     cmdUse.c
     cmdUser.c

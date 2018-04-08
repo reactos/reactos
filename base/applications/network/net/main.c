@@ -36,7 +36,7 @@ COMMAND cmds[] =
     {L"session",    unimplemented},
     {L"share",      unimplemented},
     {L"start",      cmdStart},
-    {L"statistics", unimplemented},
+    {L"statistics", cmdStatistics},
     {L"stop",       cmdStop},
     {L"time",       unimplemented},
     {L"use",        cmdUse},
