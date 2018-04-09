@@ -1014,6 +1014,9 @@ ENTERTAINMENT=Rozrywka
 COMMUNICATIONS=Komunikacja
 GAMES=Gry
 
+README_TITLE=Przeczytaj Mnie
+README_DESC=Plik Przeczytaj Mnie ReactOS
+
 CMD_TITLE=Wiersz polecenia
 CMD_DESC=Uruchom konsolę
 EXPLORER_TITLE=Eksplorator ReactOS
