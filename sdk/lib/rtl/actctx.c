@@ -16,6 +16,7 @@
 
 #include <rtl.h>
 #include <ntstrsafe.h>
+#include <compat_undoc.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -4935,9 +4936,6 @@ void actctx_init(void)
     HANDLE handle;
     WCHAR buffer[1024];
     NTSTATUS Status;
-    BOOLEAN bForwardCompatible = FALSE;
-    ULONG Buffer[(sizeof(COMPATIBILITY_CONTEXT_ELEMENT) * 10 + sizeof(ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION)) / sizeof(ULONG)]; 
-    SIZE_T SizeRequired;
 
     ctx.cbSize   = sizeof(ctx);
     ctx.lpSource = NULL;
@@ -4950,36 +4948,21 @@ void actctx_init(void)
         process_actctx = check_actctx(handle);
     }
 
-    /* FIXME: use RosGetProcessCompatVersion when PR419 gets merged */
-    Status = RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_NO_ADDREF,
-                                                  NULL,
-                                                  NULL,
-                                                  CompatibilityInformationInActivationContext,
-                                                  Buffer,
-                                                  sizeof(Buffer),
-                                                  &SizeRequired);
-    if (NT_SUCCESS(Status))
-    {
-        ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION* ContextCompatInfo;
-        ContextCompatInfo = (ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION*)Buffer;
-        DPRINT("RtlQueryInformationActivationContext for CompatibilityInformationInActivationContext suceeded\n");
-        /* No Compatibility elements present, bail out */
-        if (ContextCompatInfo->ElementCount != 0)
-        {
-            DPRINT1("Found compatibility information in exe manifest (%d). Attempting to activate forward compatibility!\n", ContextCompatInfo->ElementCount);
-            bForwardCompatible = TRUE;
-        }
-    }
-
     ctx.dwFlags  = 0;
     ctx.hModule  = NULL;
     ctx.lpResourceName = NULL;
     ctx.lpSource = buffer;
-    RtlStringCchCopyW(buffer, 1024, SharedUserData->NtSystemRoot);
-    if (!bForwardCompatible)
-        RtlStringCchCatW(buffer, 1024, L"\\winsxs\\manifests\\systemcompatible.manifest");
+    RtlStringCchCopyW(buffer, RTL_NUMBER_OF(buffer), SharedUserData->NtSystemRoot);
+
+    if (RosGetProcessCompatVersion())
+    {
+        RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\forwardcompatible.manifest");
+    }
     else
-        RtlStringCchCatW(buffer, 1024, L"\\winsxs\\manifests\\forwardcompatible.manifest");
+    {
+        RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\systemcompatible.manifest");
+    }
+
     Status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle);
     if (NT_SUCCESS(Status))
     {
