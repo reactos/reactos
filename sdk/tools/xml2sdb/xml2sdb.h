@@ -91,6 +91,22 @@ struct Flag
 };
 
 
+struct Data
+{
+    Data() : Tagid(0), DataType(0), DWordData(0), QWordData(0) { ; }
+
+    bool fromXml(XMLHandle dbNode);
+    bool toSdb(PDB pdb, Database& db);
+
+    std::string Name;
+    TAGID Tagid;
+    DWORD DataType;
+
+    std::string StringData;
+    DWORD DWordData;
+    QWORD QWordData;
+};
+
 struct Layer
 {
     Layer() : Tagid(0) { ; }
@@ -102,6 +118,7 @@ struct Layer
     TAGID Tagid;
     std::list<ShimRef> ShimRefs;
     std::list<FlagRef> FlagRefs;
+    std::list<Data> Datas;
 };
 
 struct MatchingFile

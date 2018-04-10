@@ -14,7 +14,7 @@
 using tinyxml2::XMLText;
 
 static const GUID GUID_NULL = { 0 };
-static const char szCompilerVersion[] = "1.7.0.0";
+static const char szCompilerVersion[] = "1.7.0.1";
 
 #if !defined(C_ASSERT)
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
@@ -399,6 +399,69 @@ bool Flag::toSdb(PDB pdb, Database& db)
 
 
 /***********************************************************************
+ *   Data
+ */
+
+#ifndef REG_SZ
+#define REG_SZ 1
+//#define REG_BINARY 3
+#define REG_DWORD 4
+#define REG_QWORD 11
+#endif
+
+
+bool Data::fromXml(XMLHandle dbNode)
+{
+    Name = ReadStringNode(dbNode, "NAME");
+
+    StringData = ReadStringNode(dbNode, "DATA_STRING");
+    if (!StringData.empty())
+    {
+        DataType = REG_SZ;
+        return !Name.empty();
+    }
+    DWordData = ReadDWordNode(dbNode, "DATA_DWORD");
+    if (DWordData)
+    {
+        DataType = REG_DWORD;
+        return !Name.empty();
+    }
+    QWordData = ReadQWordNode(dbNode, "DATA_QWORD");
+    if (QWordData)
+    {
+        DataType = REG_QWORD;
+        return !Name.empty();
+    }
+
+    SHIM_ERR("Data node (%s) without value!\n", Name.c_str());
+    return false;
+}
+
+bool Data::toSdb(PDB pdb, Database& db)
+{
+    Tagid = db.BeginWriteListTag(pdb, TAG_DATA);
+    db.WriteString(pdb, TAG_NAME, Name, true);
+    db.WriteDWord(pdb, TAG_DATA_VALUETYPE, DataType, true);
+    switch (DataType)
+    {
+    case REG_SZ:
+        db.WriteString(pdb, TAG_DATA_STRING, StringData);
+        break;
+    case REG_DWORD:
+        db.WriteDWord(pdb, TAG_DATA_DWORD, DWordData);
+        break;
+    case REG_QWORD:
+        db.WriteQWord(pdb, TAG_DATA_QWORD, QWordData);
+        break;
+    default:
+        SHIM_ERR("Data node (%s) with unknown type (0x%x)\n", Name.c_str(), DataType);
+        return false;
+    }
+
+    return !!db.EndWriteListTag(pdb, Tagid);
+}
+
+/***********************************************************************
  *   Layer
  */
 
@@ -407,6 +470,7 @@ bool Layer::fromXml(XMLHandle dbNode)
     Name = ReadStringNode(dbNode, "NAME");
     ReadGeneric(dbNode, ShimRefs, "SHIM_REF");
     ReadGeneric(dbNode, FlagRefs, "FLAG_REF");
+    ReadGeneric(dbNode, Datas, "DATA");
     return true;
 }
 
@@ -417,6 +481,8 @@ bool Layer::toSdb(PDB pdb, Database& db)
     if (!WriteGeneric(pdb, ShimRefs, db))
         return false;
     if (!WriteGeneric(pdb, FlagRefs, db))
+        return false;
+    if (!WriteGeneric(pdb, Datas, db))
         return false;
     return !!db.EndWriteListTag(pdb, Tagid);
 }
