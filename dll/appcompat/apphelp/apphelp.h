@@ -90,6 +90,8 @@ BOOL WINAPI SdbIsNullGUID(CONST GUID *Guid);
 HRESULT WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size);
 LPWSTR WINAPI SdbGetStringTagPtr(PDB pdb, TAGID tagid);
 TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name);
+DWORD WINAPI SdbQueryDataExTagID(PDB pdb, TAGID tiExe, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize, TAGID *ptiData);
+
 
 /* sdbread.c */
 BOOL WINAPI SdbpReadData(PDB pdb, PVOID dest, DWORD offset, DWORD num);
@@ -101,6 +103,9 @@ DWORD WINAPI SdbReadDWORDTag(PDB pdb, TAGID tagid, DWORD ret);
 QWORD WINAPI SdbReadQWORDTag(PDB pdb, TAGID tagid, QWORD ret);
 TAGID WINAPI SdbGetFirstChild(PDB pdb, TAGID parent);
 TAGID WINAPI SdbGetNextChild(PDB pdb, TAGID parent, TAGID prev_child);
+DWORD WINAPI SdbGetTagDataSize(PDB pdb, TAGID tagid);
+LPWSTR WINAPI SdbpGetString(PDB pdb, TAGID tagid, PDWORD size);
+
 
 /* sdbfileattr.c*/
 BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD attr_count);
@@ -116,6 +121,7 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name, LPCW
 BOOL WINAPI SdbTagIDToTagRef(HSDB hsdb, PDB pdb, TAGID tiWhich, TAGREF* ptrWhich);
 BOOL WINAPI SdbTagRefToTagID(HSDB hsdb, TAGREF trWhich, PDB* ppdb, TAGID* ptiWhich);
 BOOL WINAPI SdbUnpackAppCompatData(HSDB hsdb, LPCWSTR pszImageName, PVOID pData, PSDBQUERYRESULT pQueryResult);
+DWORD WINAPI SdbQueryData(HSDB hsdb, TAGREF trWhich, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize);
 
 #define ATTRIBUTE_AVAILABLE 0x1
 #define ATTRIBUTE_FAILED 0x2

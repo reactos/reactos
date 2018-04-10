@@ -753,7 +753,57 @@ DWORD WINAPI SdbGetAppCompatDataSize(ShimData* pData)
     if (!pData || pData->dwMagic != SHIMDATA_MAGIC)
         return 0;
 
-
     return pData->dwSize;
 }
 
+
+/**
+* Retrieve a Data entry
+*
+* @param [in]  hsdb                    The multi-database.
+* @param [in]  trExe                   The tagRef to start at
+* @param [in,opt]  lpszDataName        The name of the Data entry to find, or NULL to return all.
+* @param [out,opt]  lpdwDataType       Any of REG_SZ, REG_QWORD, REG_DWORD, ...
+* @param [out]  lpBuffer               The output buffer
+* @param [in,out,opt]  lpcbBufferSize  The size of lpBuffer in bytes
+* @param [out,opt]  ptrData            The tagRef of the data
+*
+* @return  ERROR_SUCCESS
+*/
+DWORD WINAPI SdbQueryDataEx(HSDB hsdb, TAGREF trWhich, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize, TAGREF *ptrData)
+{
+    PDB pdb;
+    TAGID tiWhich, tiData;
+    DWORD dwResult;
+
+    if (!SdbTagRefToTagID(hsdb, trWhich, &pdb, &tiWhich))
+    {
+        SHIM_WARN("Unable to translate trWhich=0x%x\n", trWhich);
+        return ERROR_NOT_FOUND;
+    }
+
+    dwResult = SdbQueryDataExTagID(pdb, tiWhich, lpszDataName, lpdwDataType, lpBuffer, lpcbBufferSize, &tiData);
+
+    if (dwResult == ERROR_SUCCESS && ptrData)
+        SdbTagIDToTagRef(hsdb, pdb, tiData, ptrData);
+
+    return dwResult;
+}
+
+
+/**
+* Retrieve a Data entry
+*
+* @param [in]  hsdb                    The multi-database.
+* @param [in]  trExe                   The tagRef to start at
+* @param [in,opt]  lpszDataName        The name of the Data entry to find, or NULL to return all.
+* @param [out,opt]  lpdwDataType       Any of REG_SZ, REG_QWORD, REG_DWORD, ...
+* @param [out]  lpBuffer               The output buffer
+* @param [in,out,opt]  lpcbBufferSize  The size of lpBuffer in bytes
+*
+* @return  ERROR_SUCCESS
+*/
+DWORD WINAPI SdbQueryData(HSDB hsdb, TAGREF trWhich, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize)
+{
+    return SdbQueryDataEx(hsdb, trWhich, lpszDataName, lpdwDataType, lpBuffer, lpcbBufferSize, NULL);
+}
