@@ -34,7 +34,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEVERITY_SUCCESS        "Skukces"
+    IDS_SEVERITY_SUCCESS        "Sukces"
     IDS_SEVERITY_INFORMATIONAL  "Informacja"
     IDS_SEVERITY_WARNING        "Uwaga"
     IDS_SEVERITY_ERROR          "Błąd"
@@ -42,7 +42,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SYSTEM_PROCESS          "Proces"
+    IDS_SYSTEM_PROCESS          "Proces systemowy"
     IDS_UNKNOWN_SOFTWARE_EXCEPT "nieznany wyjątek programowy"
     IDS_OK_TERMINATE_PROGRAM    "Kliknij OK aby zakończyć pracę programu."
     IDS_CANCEL_DEBUG_PROGRAM    "Kliknij Anuluj aby uzyskać więcej informacji o błędzie."
