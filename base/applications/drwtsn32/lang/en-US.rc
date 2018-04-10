@@ -5,6 +5,8 @@
  * COPYRIGHT:   Copyright 2018 William Kent (wjk011 [at] gmail [dot] com)
  */
 
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "ReactOS Crash Reporter"

@@ -1,0 +1,13 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     pl-PL resource file
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Raportowanie błędu ReactOS"
+    IDS_USER_ALERT_MESSAGE "Aplikacja %ls została zamknięta z powodu błędu. Informacje o tym błędzie zostały zapisne w:\r\n\r\n%ls"
+END
