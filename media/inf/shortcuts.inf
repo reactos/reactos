@@ -1014,13 +1014,16 @@ ENTERTAINMENT=Rozrywka
 COMMUNICATIONS=Komunikacja
 GAMES=Gry
 
+README_TITLE=Przeczytaj Mnie
+README_DESC=Plik Przeczytaj Mnie ReactOS
+
 CMD_TITLE=Wiersz polecenia
 CMD_DESC=Uruchom konsolę
 EXPLORER_TITLE=Eksplorator ReactOS
 EXPLORER_DESC=Uruchom Eksplorator
 RAPPS_TITLE=Menedżer aplikacji ReactOS
 RAPPS_TITLE_SHORT=Menedżer aplikacji
-RAPPS_DESC=Ściągnij i zainstaluj inne aplikacje
+RAPPS_DESC=Pobierz i zainstaluj inne aplikacje
 SERVMAN_TITLE=Menedżer usług
 SERVMAN_DESC=Uruchom Menedżer usług
 DEVMGMT_TITLE=Menedżer urządzeń
