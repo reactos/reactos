@@ -686,6 +686,7 @@ BOOL WINAPI SdbPackAppCompatData(HSDB hsdb, PSDBQUERYRESULT pQueryResult, PVOID*
     ShimData* pData;
     HRESULT hr;
     DWORD n;
+    BOOL bCloseDatabase = FALSE;
 
     if (!pQueryResult || !ppData || !pdwSize)
     {
@@ -719,12 +720,33 @@ BOOL WINAPI SdbPackAppCompatData(HSDB hsdb, PSDBQUERYRESULT pQueryResult, PVOID*
               pData->Query.dwFlags, pData->dwMagic, pData->Query.atrExes[0], pData->Query.atrLayers[0]);
 
     /* Database List */
-    /* 0x0 {GUID} NAME */
+    /* 0x0 {GUID} NAME: Use to open HSDB */
+    if (hsdb == NULL)
+    {
+        hsdb = SdbInitDatabase(HID_DOS_PATHS | SDB_DATABASE_MAIN_SHIM, NULL);
+        bCloseDatabase = TRUE;
+    }
 
     for (n = 0; n < pQueryResult->dwLayerCount; ++n)
     {
+        DWORD dwValue = 0, dwType;
+        DWORD dwValueSize = sizeof(dwValue);
         SHIM_INFO("Layer 0x%x\n", pQueryResult->atrLayers[n]);
+
+        if (SdbQueryData(hsdb, pQueryResult->atrLayers[n], L"SHIMVERSIONNT", &dwType, &dwValue, &dwValueSize) == ERROR_SUCCESS &&
+            dwType == REG_DWORD && dwValueSize == sizeof(dwValue))
+        {
+            dwValue = (dwValue % 100) | ((dwValue / 100) << 8);
+            if (dwValue > pData->dwRosProcessCompatVersion)
+                pData->dwRosProcessCompatVersion = dwValue;
+        }
     }
+
+    if (pData->dwRosProcessCompatVersion)
+        SHIM_INFO("Setting ProcessCompatVersion 0x%x\n", pData->dwRosProcessCompatVersion);
+
+    if (bCloseDatabase)
+        SdbReleaseDatabase(hsdb);
 
     *ppData = pData;
     *pdwSize = pData->dwSize;

@@ -283,38 +283,47 @@
         </LAYER>
         <LAYER NAME="VISTARTM">
             <SHIM_REF NAME="VistaRTMVersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="600" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="VISTASP1">
             <SHIM_REF NAME="VistaSP1VersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="600" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="VISTASP2">
             <SHIM_REF NAME="VistaSP2VersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="600" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WINSRV08">
             <SHIM_REF NAME="VistaRTMVersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="600" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WINSRV08SP1">
             <SHIM_REF NAME="VistaSP1VersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="600" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WINSRV08SP2">
             <SHIM_REF NAME="VistaSP2VersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="600" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WIN7RTM">
             <SHIM_REF NAME="Win7RTMVersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="601" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WIN8RTM">
             <SHIM_REF NAME="Win8RTMVersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="602" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WIN81RTM">
             <SHIM_REF NAME="Win81RTMVersionLie" />
+            <DATA NAME="SHIMVERSIONNT" DATA_DWORD="603" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
 
