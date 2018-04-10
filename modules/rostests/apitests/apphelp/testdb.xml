@@ -6,6 +6,14 @@
         <LIBRARY>
         </LIBRARY>
 
+        <LAYER NAME="DATA_LAYER">
+            <DATA NAME="TESTDATA1" DATA_DWORD="3333" />
+            <DATA NAME="TESTDATA2">
+                <DATA_QWORD>0x123456789</DATA_QWORD>
+            </DATA>
+            <DATA NAME="TeSTDaTa3" DATA_STRING="Test string" />
+            <!--<DATA NAME="TESTDATA4" DATA_BITS="90 90 90 90" />-->
+        </LAYER>
         <!-- Verify that we are able to match this -->
         <EXE>
             <NAME>test_match0.exe</NAME>

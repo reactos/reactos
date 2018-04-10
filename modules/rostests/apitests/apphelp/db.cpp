@@ -88,6 +88,7 @@
 #define TAG_LAYER (0xB | TAG_TYPE_LIST)
 #define TAG_APPHELP (0xD | TAG_TYPE_LIST)
 #define TAG_LINK (0xE | TAG_TYPE_LIST)
+#define TAG_DATA (0xF | TAG_TYPE_LIST)
 #define TAG_STRINGTABLE (0x801 | TAG_TYPE_LIST)
 
 #define TAG_STRINGTABLE_ITEM (0x801 | TAG_TYPE_STRING)
@@ -139,7 +140,7 @@ static TAGID (WINAPI *pSdbBeginWriteListTag)(PDB, TAG);
 static BOOL (WINAPI *pSdbEndWriteListTag)(PDB, TAGID);
 static TAGID (WINAPI *pSdbFindFirstTag)(PDB, TAGID, TAG);
 static TAGID (WINAPI *pSdbFindNextTag)(PDB, TAGID, TAGID);
-static TAGID (WINAPI *pSdbFindFirstNamedTag)(PDB, TAGID, TAGID, TAGID, LPCWSTR);
+static TAGID (WINAPI *pSdbFindFirstNamedTag)(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name);
 static WORD (WINAPI *pSdbReadWORDTag)(PDB, TAGID, WORD);
 static DWORD (WINAPI *pSdbReadDWORDTag)(PDB, TAGID, DWORD);
 static QWORD (WINAPI *pSdbReadQWORDTag)(PDB, TAGID, QWORD);
@@ -159,7 +160,9 @@ static BOOL (WINAPI *pSdbTagRefToTagID)(HSDB hSDB, TAGREF trWhich, PDB *ppdb, TA
 static BOOL (WINAPI *pSdbTagIDToTagRef)(HSDB hSDB, PDB pdb, TAGID tiWhich, TAGREF *ptrWhich);
 static TAGREF (WINAPI *pSdbGetLayerTagRef)(HSDB hsdb, LPCWSTR layerName);
 static LONGLONG (WINAPI* pSdbMakeIndexKeyFromString)(LPCWSTR);
-
+static DWORD (WINAPI* pSdbQueryData)(HSDB hsdb, TAGREF trWhich, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize);
+static DWORD (WINAPI* pSdbQueryDataEx)(HSDB hsdb, TAGREF trWhich, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize, TAGREF *ptrData);
+static DWORD (WINAPI* pSdbQueryDataExTagID)(PDB pdb, TAGID tiExe, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize, TAGID *ptiData);
 
 DEFINE_GUID(GUID_DATABASE_TEST, 0xe39b0eb0, 0x55db, 0x450b, 0x9b, 0xd4, 0xd2, 0x0c, 0x94, 0x84, 0x26, 0x0f);
 DEFINE_GUID(GUID_MAIN_DATABASE, 0x11111111, 0x1111, 0x1111, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11);
@@ -1597,6 +1600,223 @@ static void test_TagRef(void)
 }
 
 
+static void test_DataTags(HSDB hsdb)
+{
+    PDB pdb = NULL;
+    TAGID db = TAGID_NULL, layer, exe;
+    TAGREF trData;
+    BYTE Buffer[1024];
+    DWORD dwBufferSize, dwDataType, dwRet;
+    TAGID tiData;
+
+    BOOL ret = pSdbTagRefToTagID(hsdb, TAGID_ROOT, &pdb, NULL);
+
+    ok(ret != FALSE, "Expected ret to be TRUE, was: %d\n", ret);
+    ok(pdb != NULL, "Expected pdb to be valid\n");
+
+    if (pdb == NULL)
+    {
+        skip("Cannot run tests without pdb\n");
+        return;
+    }
+
+    db = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
+    ok(db != NULL, "Expected db to be valid\n");
+    if (db == TAGID_NULL)
+    {
+        skip("Cannot run tests without db\n");
+        return;
+    }
+
+    layer = pSdbFindFirstNamedTag(pdb, db, TAG_LAYER, TAG_NAME, L"DATA_LAYER");
+    ok(layer != NULL, "Expected layer to be valid\n");
+    if (layer == TAGID_NULL)
+    {
+        skip("Cannot run tests without layer\n");
+        return;
+    }
+
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwDataType = 0x12345;
+    tiData = 0x111111;
+    dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA1", &dwDataType, Buffer, &dwBufferSize, &tiData);
+    ok_hex(dwRet, ERROR_SUCCESS);
+    ok_hex(dwDataType, REG_DWORD);
+    ok_hex(dwBufferSize, sizeof(DWORD));
+    ok_hex(*(DWORD*)Buffer, 3333);
+    ok(tiData != NULL && tiData != 0x111111, "Expected tiData, got NULL\n");
+    ok_hex(pSdbGetTagFromTagID(pdb, tiData), TAG_DATA);
+
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA1", NULL, Buffer, &dwBufferSize, NULL);
+    ok_hex(dwRet, ERROR_SUCCESS);
+    ok_hex(dwBufferSize, sizeof(DWORD));
+    ok_hex(*(DWORD*)Buffer, 3333);
+
+    /* This succeeds on 2k3.. */
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA1", NULL, Buffer, NULL, NULL);
+    ok_hex(dwRet, ERROR_INSUFFICIENT_BUFFER);
+    ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = 1;
+    dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA1", NULL, Buffer, &dwBufferSize, NULL);
+    ok_hex(dwRet, ERROR_INSUFFICIENT_BUFFER);
+    ok_hex(dwBufferSize, sizeof(DWORD));
+    ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA1", NULL, NULL, &dwBufferSize, NULL);
+    ok_hex(dwRet, ERROR_INSUFFICIENT_BUFFER);
+    ok_hex(dwBufferSize, sizeof(DWORD));
+    ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwRet = pSdbQueryDataExTagID(pdb, TAGID_NULL, L"TESTDATA1", NULL, Buffer, &dwBufferSize, NULL);
+    ok_hex(dwRet, ERROR_NOT_FOUND);
+    ok_hex(dwBufferSize, sizeof(Buffer));
+    ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwDataType = 0x12345;
+    tiData = 0x111111;
+    dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA2", &dwDataType, Buffer, &dwBufferSize, &tiData);
+    ok_hex(dwRet, ERROR_SUCCESS);
+    ok_hex(dwDataType, REG_QWORD);
+    ok_hex(dwBufferSize, sizeof(QWORD));
+    ok(*(QWORD*)Buffer == 4294967295ull, "unexpected value 0x%I64x, expected 4294967295\n", *(QWORD*)Buffer);
+    ok(tiData != NULL && tiData != 0x111111, "Expected tiData, got NULL\n");
+    ok_hex(pSdbGetTagFromTagID(pdb, tiData), TAG_DATA);
+
+    /* Not case sensitive */
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwDataType = 0x12345;
+    tiData = 0x111111;
+    dwRet = pSdbQueryDataExTagID(pdb, layer, L"TESTDATA3", &dwDataType, Buffer, &dwBufferSize, &tiData);
+    ok_hex(dwRet, ERROR_SUCCESS);
+    ok_hex(dwDataType, REG_SZ);
+    ok_hex(dwBufferSize, (int)((wcslen(L"Test string")+1) * sizeof(WCHAR)));
+    Buffer[_countof(Buffer)-1] = L'\0';
+    ok_wstr(((WCHAR*)Buffer), L"Test string");
+    ok(tiData != NULL && tiData != 0x111111, "Expected tiData, got NULL\n");
+    ok_hex(pSdbGetTagFromTagID(pdb, tiData), TAG_DATA);
+
+    /* Show that SdbQueryDataEx behaves the same */
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwDataType = 0x12345;
+    trData = 0x111111;
+    dwRet = pSdbQueryDataEx(hsdb, layer, L"TESTDATA1", &dwDataType, Buffer, &dwBufferSize, &trData);
+    ok_hex(dwRet, ERROR_SUCCESS);
+    ok_hex(dwDataType, REG_DWORD);
+    ok_hex(dwBufferSize, sizeof(DWORD));
+    ok_hex(*(DWORD*)Buffer, 3333);
+    ok(trData != NULL && trData != 0x111111, "Expected trData, got NULL\n");
+
+    /* And SdbQueryData as well */
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwDataType = 0x12345;
+    dwRet = pSdbQueryData(hsdb, layer, L"TESTDATA1", &dwDataType, Buffer, &dwBufferSize);
+    ok_hex(dwRet, ERROR_SUCCESS);
+    ok_hex(dwDataType, REG_DWORD);
+    ok_hex(dwBufferSize, sizeof(DWORD));
+    ok_hex(*(DWORD*)Buffer, 3333);
+
+    exe = pSdbFindFirstNamedTag(pdb, db, TAG_EXE, TAG_NAME, L"test_match0.exe");
+    ok(exe != NULL, "Expected exe to be valid\n");
+    if (exe == TAGID_NULL)
+    {
+        skip("Cannot run tests without exe\n");
+        return;
+    }
+
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwDataType = 0x12345;
+    tiData = 0x111111;
+    dwRet = pSdbQueryDataExTagID(pdb, exe, L"TESTDATA1", &dwDataType, Buffer, &dwBufferSize, &tiData);
+    ok_hex(dwRet, ERROR_NOT_FOUND);
+    ok_hex(dwDataType, 0x12345);
+    ok_hex(dwBufferSize, sizeof(Buffer));
+    ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+    ok(tiData == 0x111111, "Expected 0x111111, got 0x%x\n", tiData);
+
+    /* Show that SdbQueryDataEx behaves the same */
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwDataType = 0x12345;
+    trData = 0x111111;
+    dwRet = pSdbQueryDataEx(hsdb, exe, L"TESTDATA1", &dwDataType, Buffer, &dwBufferSize, &trData);
+    ok_hex(dwRet, ERROR_NOT_FOUND);
+    ok_hex(dwDataType, 0x12345);
+    ok_hex(dwBufferSize, sizeof(Buffer));
+    ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+    ok(trData == 0x111111, "Expected 0x111111, got 0x%x\n", trData);
+
+    /* And SdbQueryData as well */
+    memset(Buffer, 0xaa, sizeof(Buffer));
+    dwBufferSize = sizeof(Buffer);
+    dwDataType = 0x12345;
+    dwRet = pSdbQueryData(hsdb, exe, L"TESTDATA1", &dwDataType, Buffer, &dwBufferSize);
+    ok_hex(dwRet, ERROR_NOT_FOUND);
+    ok_hex(dwDataType, 0x12345);
+    ok_hex(dwBufferSize, sizeof(Buffer));
+    ok_hex(*(DWORD*)Buffer, (int)0xaaaaaaaa);
+}
+
+
+static void test_Data(void)
+{
+    WCHAR workdir[MAX_PATH], dbpath[MAX_PATH];
+    BOOL ret;
+    HSDB hsdb;
+
+    ret = GetTempPathW(_countof(workdir), workdir);
+    ok(ret, "GetTempPathW error: %d\n", GetLastError());
+    lstrcatW(workdir, L"apphelp_test");
+
+    ret = CreateDirectoryW(workdir, NULL);
+    ok(ret, "CreateDirectoryW error: %d\n", GetLastError());
+
+    /* SdbInitDatabase needs an nt-path */
+    swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
+
+    if (extract_resource(dbpath + 4, MAKEINTRESOURCEW(101)))
+    {
+        hsdb = pSdbInitDatabase(HID_DATABASE_FULLPATH, dbpath);
+
+        ok(hsdb != NULL, "Expected a valid database handle\n");
+
+        if (!hsdb)
+        {
+            skip("SdbInitDatabase not implemented?\n");
+        }
+        else
+        {
+            test_DataTags(hsdb);
+            pSdbReleaseDatabase(hsdb);
+        }
+    }
+    else
+    {
+        ok(0, "Unable to extract database\n");
+    }
+
+    DeleteFileW(dbpath + 4);
+
+    ret = RemoveDirectoryW(workdir);
+    ok(ret, "RemoveDirectoryW error: %d\n", GetLastError());
+}
+
 
 static void expect_indexA_imp(const char* text, LONGLONG expected)
 {
@@ -1774,6 +1994,9 @@ START_TEST(db)
     *(void**)&pSdbTagRefToTagID = (void *)GetProcAddress(hdll, "SdbTagRefToTagID");
     *(void**)&pSdbTagIDToTagRef = (void *)GetProcAddress(hdll, "SdbTagIDToTagRef");
     *(void**)&pSdbMakeIndexKeyFromString = (void *)GetProcAddress(hdll, "SdbMakeIndexKeyFromString");
+    *(void**)&pSdbQueryData = (void *)GetProcAddress(hdll, "SdbQueryData");
+    *(void**)&pSdbQueryDataEx = (void *)GetProcAddress(hdll, "SdbQueryDataEx");
+    *(void**)&pSdbQueryDataExTagID = (void *)GetProcAddress(hdll, "SdbQueryDataExTagID");
     *(void**)&pSdbGetLayerTagRef = (void *)GetProcAddress(hdll, "SdbGetLayerTagRef");
 
     test_Sdb();
@@ -1795,6 +2018,7 @@ START_TEST(db)
         break;
     }
     test_TagRef();
+    test_Data();
     skip("test_SecondaryDB()\n");
     test_IndexKeyFromString();
 }
