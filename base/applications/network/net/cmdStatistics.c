@@ -6,6 +6,8 @@
  */
 
 #include "net.h"
+#include <rtltypes.h>
+#include <rtlfuncs.h>
 
 static
 INT
@@ -14,6 +16,10 @@ DisplayServerStatistics(VOID)
     PSERVER_INFO_100 ServerInfo = NULL;
     PSTAT_SERVER_0 StatisticsInfo = NULL;
     LARGE_INTEGER LargeValue;
+    FILETIME FileTime, LocalFileTime;
+    SYSTEMTIME SystemTime;
+    WORD wHour;
+    INT nPaddedLength = 33;
     NET_API_STATUS Status;
 
     Status = NetServerGetInfo(NULL, 100, (PBYTE*)&ServerInfo);
@@ -28,35 +34,77 @@ DisplayServerStatistics(VOID)
     if (Status != NERR_Success)
         goto done;
 
-    ConResPrintf(StdOut, IDS_STATISTICS_SERVER_NAME, ServerInfo->sv100_name);
+    ConResPrintf(StdOut, IDS_STATISTICS_SRV_NAME, ServerInfo->sv100_name);
 
-    printf("Statistik since %lu\n\n\n", StatisticsInfo->sts0_start);
+    RtlSecondsSince1970ToTime(StatisticsInfo->sts0_start,
+                              &LargeValue);
+    FileTime.dwLowDateTime = LargeValue.u.LowPart;
+    FileTime.dwHighDateTime = LargeValue.u.HighPart;
+    FileTimeToLocalFileTime(&FileTime, &LocalFileTime);
+    FileTimeToSystemTime(&LocalFileTime, &SystemTime);
 
-    printf("Sessions accepted %lu\n", StatisticsInfo->sts0_sopens);
-    printf("Sessions timed-out %lu\n", StatisticsInfo->sts0_stimedout);
-    printf("Sessions errored-out %lu\n\n", StatisticsInfo->sts0_serrorout);
+    wHour = SystemTime.wHour;
+    if (wHour == 0)
+    {
+        wHour = 12;
+    }
+    else if (wHour > 12)
+    {
+        wHour = wHour - 12;
+    }
+
+    ConResPrintf(StdOut, IDS_STATISTICS_SINCE,
+                 SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
+                 wHour, SystemTime.wMinute,
+                 (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
+
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_SESACCEPT, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_sopens);
+
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_SESSTIME, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_stimedout);
+
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_SESSERROR, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_serrorout);
 
     LargeValue.u.LowPart = StatisticsInfo->sts0_bytessent_low;
     LargeValue.u.HighPart = StatisticsInfo->sts0_bytessent_high;
-    printf("Kilobytes sent %I64u\n", LargeValue.QuadPart / 1024);
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_KBSENT, nPaddedLength);
+    ConPrintf(StdOut, L"%I64u\n", LargeValue.QuadPart / 1024);
 
     LargeValue.u.LowPart = StatisticsInfo->sts0_bytesrcvd_low;
     LargeValue.u.HighPart = StatisticsInfo->sts0_bytesrcvd_high;
-    printf("Kilobytes received %I64u\n\n", LargeValue.QuadPart / 1024);
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_KBRCVD, nPaddedLength);
+    ConPrintf(StdOut, L"%I64u\n", LargeValue.QuadPart / 1024);
 
-    printf("Mean response time (msec) %lu\n\n", StatisticsInfo->sts0_avresponse);
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_MRESPTIME, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_avresponse);
 
-    printf("System errors %lu\n", StatisticsInfo->sts0_syserrors);
-    printf("Permission violations %lu\n", StatisticsInfo->sts0_permerrors);
-    printf("Password violations %lu\n\n", StatisticsInfo->sts0_pwerrors);
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_SYSERRORS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_syserrors);
 
-    printf("Files accessed %lu\n", StatisticsInfo->sts0_fopens);
-    printf("Communication devices accessed %lu\n", StatisticsInfo->sts0_devopens);
-    printf("Print jobs spooled %lu\n\n", StatisticsInfo->sts0_jobsqueued);
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_PMERRORS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_permerrors);
 
-    printf("Times buffers exhausted\n\n");
-    printf("  Big buffers %lu\n", StatisticsInfo->sts0_bigbufneed);
-    printf("  Request buffers %lu\n\n", StatisticsInfo->sts0_reqbufneed);
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_PWERRORS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_pwerrors);
+
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_FILES, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_fopens);
+
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_DEVICES, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_devopens);
+
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_JOBS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_jobsqueued);
+
+    ConResPuts(StdOut, IDS_STATISTICS_SRV_BUFFERS);
+
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_BIGBUFFERS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_bigbufneed);
+
+    PrintPaddedResourceString(IDS_STATISTICS_SRV_REQBUFFERS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_reqbufneed);
 
 done:
     if (StatisticsInfo != NULL)
@@ -75,6 +123,10 @@ DisplayWorkstationStatistics(VOID)
 {
     PWKSTA_INFO_100 WorkstationInfo = NULL;
     PSTAT_WORKSTATION_0 StatisticsInfo = NULL;
+    LARGE_INTEGER LargeValue;
+    FILETIME FileTime, LocalFileTime;
+    SYSTEMTIME SystemTime;
+    WORD wHour;
     NET_API_STATUS Status;
 
     Status = NetWkstaGetInfo(NULL,
@@ -91,9 +143,28 @@ DisplayWorkstationStatistics(VOID)
     if (Status != NERR_Success)
         goto done;
 
-    ConResPrintf(StdOut, IDS_STATISTICS_WORKSTATION_NAME, WorkstationInfo->wki100_computername);
+    ConResPrintf(StdOut, IDS_STATISTICS_WKS_NAME, WorkstationInfo->wki100_computername);
 
-    printf("Statistik since %I64u\n\n\n", StatisticsInfo->StatisticsStartTime.QuadPart);
+    RtlSecondsSince1970ToTime(StatisticsInfo->StatisticsStartTime.u.LowPart,
+                              &LargeValue);
+    FileTime.dwLowDateTime = LargeValue.u.LowPart;
+    FileTime.dwHighDateTime = LargeValue.u.HighPart;
+    FileTimeToLocalFileTime(&FileTime, &LocalFileTime);
+    FileTimeToSystemTime(&LocalFileTime, &SystemTime);
+
+    wHour = SystemTime.wHour;
+    if (wHour == 0)
+    {
+        wHour = 12;
+    }
+    else if (wHour > 12)
+    {
+        wHour = wHour - 12;
+    }
+
+    ConResPrintf(StdOut, IDS_STATISTICS_SINCE,
+                 SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
+                 wHour, SystemTime.wMinute, (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
 
     printf("Bytes received %I64u\n", StatisticsInfo->BytesReceived.QuadPart);
     printf("Server Message Blocks (SMBs) received %I64u\n", StatisticsInfo->SmbsReceived.QuadPart);
