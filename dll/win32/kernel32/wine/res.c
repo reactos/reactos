@@ -1383,7 +1383,7 @@ static BOOL write_raw_resources( QUEUEDUPDATES *updates )
 {
     static const WCHAR prefix[] = { 'r','e','s','u',0 };
     WCHAR tempdir[MAX_PATH], tempfile[MAX_PATH];
-    DWORD section_size;
+    DWORD i, section_size;
     BOOL ret = FALSE;
     IMAGE_SECTION_HEADER *sec;
     IMAGE_NT_HEADERS32 *nt;
@@ -1567,11 +1567,19 @@ static BOOL write_raw_resources( QUEUEDUPDATES *updates )
             nt64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress = sec->VirtualAddress;
             nt64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].Size = res_size.total_size;
             nt64->OptionalHeader.SizeOfInitializedData = get_init_data_size( write_map->base, mapping_size );
+
+            for (i=0; i<nt64->OptionalHeader.NumberOfRvaAndSizes; i++)
+                if (nt64->OptionalHeader.DataDirectory[i].VirtualAddress > sec->VirtualAddress)
+                    nt64->OptionalHeader.DataDirectory[i].VirtualAddress += rva_delta;
         } else {
             nt->OptionalHeader.SizeOfImage += rva_delta;
             nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress = sec->VirtualAddress;
             nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].Size = res_size.total_size;
             nt->OptionalHeader.SizeOfInitializedData = get_init_data_size( write_map->base, mapping_size );
+
+            for (i=0; i<nt->OptionalHeader.NumberOfRvaAndSizes; i++)
+                if (nt->OptionalHeader.DataDirectory[i].VirtualAddress > sec->VirtualAddress)
+                    nt->OptionalHeader.DataDirectory[i].VirtualAddress += rva_delta;
         }
     }
 

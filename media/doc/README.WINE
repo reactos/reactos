@@ -274,7 +274,7 @@ kernel32 -
   reactos/dll/win32/kernel32/wine/comm.c                 # Synced in r52754
   reactos/dll/win32/kernel32/wine/lzexpand.c             # Synced to WineStaging-3.3
   reactos/dll/win32/kernel32/wine/profile.c              # Synced to WineStaging-3.3
-  reactos/dll/win32/kernel32/wine/res.c                  # Partially synced to WineStaging-1.7.55
+  reactos/dll/win32/kernel32/wine/res.c                  # Partially synced to WineStaging-3.3
   reactos/dll/win32/kernel32/winnls/string/casemap.c     # Synced to WineStaging-1.7.55
   reactos/dll/win32/kernel32/winnls/string/chartype.c    # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/collation.c   # Synced to WineStaging-1.7.55
