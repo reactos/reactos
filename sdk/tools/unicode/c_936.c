@@ -7937,7 +7937,7 @@ static const unsigned short uni2cp_high[256] =
     0x6919, 0x6a19, 0x6b19, 0x6dce, 0x6dce, 0x6dce, 0x6be9, 0x6ce8
 };
 
-const struct dbcs_table cptable_936 =
+const struct dbcs_table DECLSPEC_HIDDEN cptable_936 =
 {
     { 936, 2, 0x003f, 0x003f, "ANSI/OEM Simplified Chinese GBK" },
     cp2uni,

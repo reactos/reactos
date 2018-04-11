@@ -9095,7 +9095,7 @@ static const unsigned short uni2cp_high[256] =
     0x8c74, 0x8d74, 0x8e74, 0x905a, 0x905a, 0x905a, 0x905a, 0x8f73
 };
 
-const struct dbcs_table cptable_949 =
+const struct dbcs_table DECLSPEC_HIDDEN cptable_949 =
 {
     { 949, 2, 0x003f, 0x003f, "ANSI/OEM Korean Unified Hangul" },
     cp2uni,

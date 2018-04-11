@@ -412,7 +412,7 @@ static const unsigned short uni2cp_high[256] =
     0x08f3, 0x08f3, 0x08f3, 0x08f3, 0x08f3, 0x08f3, 0x08f3, 0x0894
 };
 
-const struct sbcs_table cptable_1251 =
+const struct sbcs_table DECLSPEC_HIDDEN cptable_1251 =
 {
     { 1251, 1, 0x003f, 0x003f, "ANSI Cyrillic" },
     cp2uni,

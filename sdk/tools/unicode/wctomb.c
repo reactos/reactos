@@ -22,7 +22,7 @@
 
 #include "wine/unicode.h"
 
-extern WCHAR wine_compose( const WCHAR *str );
+extern WCHAR wine_compose( const WCHAR *str ) DECLSPEC_HIDDEN;
 
 /****************************************************************/
 /* sbcs support */

@@ -715,7 +715,7 @@ static const unsigned short uni2cp_high[256] =
     0x1210, 0x1210, 0x1210, 0x0f6b, 0x1210, 0x1210, 0x1022, 0x1121
 };
 
-const struct sbcs_table cptable_28593 =
+const struct sbcs_table DECLSPEC_HIDDEN cptable_28593 =
 {
     { 28593, 1, 0x003f, 0x003f, "ISO 8859-3 Latin 3 (South European)" },
     cp2uni,

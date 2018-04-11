@@ -22,7 +22,7 @@
 
 #include "wine/unicode.h"
 
-extern unsigned int wine_decompose( WCHAR ch, WCHAR *dst, unsigned int dstlen );
+extern unsigned int wine_decompose( WCHAR ch, WCHAR *dst, unsigned int dstlen ) DECLSPEC_HIDDEN;
 
 /* check the code whether it is in Unicode Private Use Area (PUA). */
 /* MB_ERR_INVALID_CHARS raises an error converting from 1-byte character to PUA. */

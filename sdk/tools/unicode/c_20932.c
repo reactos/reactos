@@ -6265,7 +6265,7 @@ static const unsigned short uni2cp_high[256] =
     0x69a6, 0x652a, 0x662a, 0x6701, 0x69a6, 0x69a6, 0x67b8, 0x68b7
 };
 
-const struct dbcs_table cptable_20932 =
+const struct dbcs_table DECLSPEC_HIDDEN cptable_20932 =
 {
     { 20932, 2, 0x003f, 0x30fb, "EUC-JP" },
     cp2uni,

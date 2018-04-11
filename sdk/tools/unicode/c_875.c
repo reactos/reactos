@@ -687,7 +687,7 @@ static const unsigned short uni2cp_high[256] =
     0x113f, 0x113f, 0x113f, 0x0e9a, 0x113f, 0x113f, 0x0f51, 0x1050
 };
 
-const struct sbcs_table cptable_875 =
+const struct sbcs_table DECLSPEC_HIDDEN cptable_875 =
 {
     { 875, 1, 0x006f, 0x003f, "IBM EBCDIC Greek" },
     cp2uni,

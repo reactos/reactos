@@ -26,7 +26,9 @@
 #define WINE_UNICODE_INLINE  /* nothing */
 #include "wine/unicode.h"
 
+#ifdef __REACTOS__
 #define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
 
 int strcmpiW( const WCHAR *str1, const WCHAR *str2 )
 {

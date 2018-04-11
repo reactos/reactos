@@ -8243,7 +8243,7 @@ static const unsigned short uni2cp_high[256] =
     0x94b4, 0x95b4, 0x96b4, 0x978b, 0x9a30, 0x9a30, 0x9842, 0x9941
 };
 
-const struct dbcs_table cptable_10003 =
+const struct dbcs_table DECLSPEC_HIDDEN cptable_10003 =
 {
     { 10003, 2, 0x003f, 0x003f, "Mac Korean" },
     cp2uni,

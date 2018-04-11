@@ -713,7 +713,7 @@ static const unsigned short uni2cp_high[256] =
     0x11ff, 0x11ff, 0x11ff, 0x0f5a, 0x11ff, 0x11ff, 0x1011, 0x1110
 };
 
-const struct sbcs_table cptable_856 =
+const struct sbcs_table DECLSPEC_HIDDEN cptable_856 =
 {
     { 856, 1, 0x003f, 0x003f, "Hebrew PC" },
     cp2uni,

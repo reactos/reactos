@@ -419,7 +419,7 @@ static const unsigned short uni2cp_high[256] =
     0x06be, 0x081c, 0x081c, 0x081c, 0x081c, 0x081c, 0x081c, 0x07bd
 };
 
-const struct sbcs_table cptable_874 =
+const struct sbcs_table DECLSPEC_HIDDEN cptable_874 =
 {
     { 874, 1, 0x003f, 0x003f, "ANSI/OEM Thai" },
     cp2uni,

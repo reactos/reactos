@@ -8344,7 +8344,7 @@ static const unsigned short uni2cp_high[256] =
     0x753e, 0x763e, 0x773e, 0x79f3, 0x79f3, 0x79f3, 0x780e, 0x790d
 };
 
-const struct dbcs_table cptable_950 =
+const struct dbcs_table DECLSPEC_HIDDEN cptable_950 =
 {
     { 950, 2, 0x003f, 0x003f, "ANSI/OEM Traditional Chinese Big5" },
     cp2uni,

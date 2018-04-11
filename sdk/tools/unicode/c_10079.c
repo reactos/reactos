@@ -682,7 +682,7 @@ static const unsigned short uni2cp_high[256] =
     0x1119, 0x1119, 0x1119, 0x0e74, 0x1119, 0x1119, 0x0f2b, 0x102a
 };
 
-const struct sbcs_table cptable_10079 =
+const struct sbcs_table DECLSPEC_HIDDEN cptable_10079 =
 {
     { 10079, 1, 0x003f, 0x003f, "Mac Icelandic" },
     cp2uni,

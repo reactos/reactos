@@ -576,7 +576,7 @@ static const unsigned short uni2cp_high[256] =
     0x0dd7, 0x0dd7, 0x0dd7, 0x0dd7, 0x0dd7, 0x0dd7, 0x0dd7, 0x0d78
 };
 
-const struct sbcs_table cptable_1250 =
+const struct sbcs_table DECLSPEC_HIDDEN cptable_1250 =
 {
     { 1250, 1, 0x003f, 0x003f, "ANSI Eastern Europe" },
     cp2uni,

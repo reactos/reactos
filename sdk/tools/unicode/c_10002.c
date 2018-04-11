@@ -6538,7 +6538,7 @@ static const unsigned short uni2cp_high[256] =
     0x6482, 0x6582, 0x6682, 0x675b, 0x6a19, 0x6a19, 0x682b, 0x692a
 };
 
-const struct dbcs_table cptable_10002 =
+const struct dbcs_table DECLSPEC_HIDDEN cptable_10002 =
 {
     { 10002, 2, 0x003f, 0x003f, "Mac Traditional Chinese" },
     cp2uni,

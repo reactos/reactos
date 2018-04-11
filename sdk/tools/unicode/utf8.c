@@ -22,7 +22,7 @@
 
 #include "wine/unicode.h"
 
-extern WCHAR wine_compose( const WCHAR *str );
+extern WCHAR wine_compose( const WCHAR *str ) DECLSPEC_HIDDEN;
 
 /* number of following bytes in sequence based on first byte value (for bytes above 0x7f) */
 static const char utf8_length[128] =

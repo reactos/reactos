@@ -1,5 +1,5 @@
 /* Unicode case mappings */
-/* generated from http://www.unicode.org/Public/9.0.0/ucd/UnicodeData.txt */
+/* generated from http://www.unicode.org/Public/10.0.0/ucd/UnicodeData.txt */
 /* DO NOT EDIT!! */
 
 #include "wine/unicode.h"

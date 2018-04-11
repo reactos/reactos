@@ -309,7 +309,7 @@ static const unsigned short uni2cp_high[256] =
     0x05da, 0x05da, 0x05da, 0x05da, 0x05da, 0x05da, 0x05da, 0x057b
 };
 
-const struct sbcs_table cptable_1258 =
+const struct sbcs_table DECLSPEC_HIDDEN cptable_1258 =
 {
     { 1258, 1, 0x003f, 0x003f, "ANSI/OEM Viet Nam" },
     cp2uni,
