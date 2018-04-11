@@ -13,7 +13,7 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
 
 LanguageNames=(English=0x409:MSG00409
                Russian=0x419:MSG00419
-			   Polish=0x415:MSG00415)
+               Polish=0x415:MSG00415)
 
 MessageId=0
 Severity=Success
@@ -238,6 +238,7 @@ ERROR_INVALID_DRIVE - Система не может найти указанно
 Language=Polish
 ERROR_INVALID_DRIVE - Nie można odnaleźć dysku.
 .
+
 MessageId=16
 Severity=Success
 Facility=System
