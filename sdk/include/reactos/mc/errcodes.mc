@@ -267,7 +267,6 @@ Language=Polish
 ERROR_NOT_SAME_DEVICE - Nie można przenieść pliku na inny dysk.
 .
 
-
 MessageId=18
 Severity=Success
 Facility=System
@@ -2295,7 +2294,6 @@ Language=Russian
 ERROR_THREAD_1_INACTIVE - Не удается установить обработчик сигналов.
 .
 Language=Polish
-Language=Russian
 ERROR_THREAD_1_INACTIVE - Nie można ustawić programu obsługi sygnałów.
 .
 
@@ -2646,7 +2644,6 @@ Language=English
 ERROR_MR_MID_NOT_FOUND - The system cannot find message text for message number 0x%1 in the message file for %2.
 .
 Language=Polish
-Language=English
 ERROR_MR_MID_NOT_FOUND - System nie może znaleźć komunikatu dla numeru komunikatu 0x%1 w pliku komunikatów dla %2.
 .
 
