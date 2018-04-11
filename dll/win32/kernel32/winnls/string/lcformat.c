@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+
 #include <k32.h>
 
 #define NDEBUG
@@ -31,6 +33,28 @@ DEBUG_CHANNEL(nls);
 #define CRITICAL_SECTION RTL_CRITICAL_SECTION
 #define CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG
 #define CALINFO_MAX_YEAR 2029
+
+#else /* __REACTOS__ */
+
+#include "config.h"
+#include "wine/port.h"
+
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "winternl.h"
+
+#include "kernel_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(nls);
+
+#endif /* __REACTOS__ */
 
 #define DATE_DATEVARSONLY 0x0100  /* only date stuff: yMdg */
 #define TIME_TIMEVARSONLY 0x0200  /* only time stuff: hHmst */
@@ -81,7 +105,11 @@ static CRITICAL_SECTION_DEBUG NLS_FormatsCS_debug =
     0, 0, &NLS_FormatsCS,
     { &NLS_FormatsCS_debug.ProcessLocksList,
       &NLS_FormatsCS_debug.ProcessLocksList },
+#ifdef __REACTOS__
       0, 0, 0
+#else
+      0, 0, { (DWORD_PTR)(__FILE__ ": NLS_Formats") }
+#endif
 };
 static CRITICAL_SECTION NLS_FormatsCS = { &NLS_FormatsCS_debug, -1, 0, 0, 0, 0 };
 
@@ -552,7 +580,7 @@ static INT NLS_GetDateTimeFormatW(LCID lcid, DWORD dwFlags,
                 ++format;
               }
               /* Only numeric day form matters */
-              if (*format && *format == 'd')
+              if (*format == 'd')
               {
                 INT dcount = 1;
                 while (*++format == 'd') dcount++;
@@ -838,6 +866,47 @@ INT WINAPI GetDateFormatA( LCID lcid, DWORD dwFlags, const SYSTEMTIME* lpTime,
                                 lpFormat, lpDateStr, cchOut);
 }
 
+#ifndef __REACTOS__
+/******************************************************************************
+ * GetDateFormatEx [KERNEL32.@]
+ *
+ * Format a date for a given locale.
+ *
+ * PARAMS
+ *  localename [I] Locale to format for
+ *  flags      [I] LOCALE_ and DATE_ flags from "winnls.h"
+ *  date       [I] Date to format
+ *  format     [I] Format string, or NULL to use the locale defaults
+ *  outbuf     [O] Destination for formatted string
+ *  bufsize    [I] Size of outbuf, or 0 to calculate the resulting size
+ *  calendar   [I] Reserved, must be NULL
+ *
+ * See GetDateFormatA for notes.
+ *
+ * RETURNS
+ *  Success: The number of characters written to outbuf, or that would have
+ *           been written if bufsize is 0.
+ *  Failure: 0. Use GetLastError() to determine the cause.
+ */
+INT WINAPI GetDateFormatEx(LPCWSTR localename, DWORD flags,
+                           const SYSTEMTIME* date, LPCWSTR format,
+                           LPWSTR outbuf, INT bufsize, LPCWSTR calendar)
+{
+  TRACE("(%s,0x%08x,%p,%s,%p,%d,%s)\n", debugstr_w(localename), flags,
+        date, debugstr_w(format), outbuf, bufsize, debugstr_w(calendar));
+
+  /* Parameter is currently reserved and Windows errors if set */
+  if (calendar != NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+
+  return NLS_GetDateTimeFormatW(LocaleNameToLCID(localename, 0),
+                                flags | DATE_DATEVARSONLY, date, format,
+                                outbuf, bufsize);
+}
+#endif /* !__REACTOS__ */
 
 /******************************************************************************
  * GetDateFormatW	[KERNEL32.@]
@@ -904,6 +973,40 @@ INT WINAPI GetTimeFormatA(LCID lcid, DWORD dwFlags, const SYSTEMTIME* lpTime,
   return NLS_GetDateTimeFormatA(lcid, dwFlags|TIME_TIMEVARSONLY, lpTime,
                                 lpFormat, lpTimeStr, cchOut);
 }
+
+#ifndef __REACTOS__
+/******************************************************************************
+ * GetTimeFormatEx [KERNEL32.@]
+ *
+ * Format a date for a given locale.
+ *
+ * PARAMS
+ *  localename [I] Locale to format for
+ *  flags      [I] LOCALE_ and TIME_ flags from "winnls.h"
+ *  time       [I] Time to format
+ *  format     [I] Formatting overrides
+ *  outbuf     [O] Destination for formatted string
+ *  bufsize    [I] Size of outbuf, or 0 to calculate the resulting size
+ *
+ * See GetTimeFormatA for notes.
+ *
+ * RETURNS
+ *  Success: The number of characters written to outbuf, or that would have
+ *           have been written if bufsize is 0.
+ *  Failure: 0. Use GetLastError() to determine the cause.
+ */
+INT WINAPI GetTimeFormatEx(LPCWSTR localename, DWORD flags,
+                           const SYSTEMTIME* time, LPCWSTR format,
+                           LPWSTR outbuf, INT bufsize)
+{
+  TRACE("(%s,0x%08x,%p,%s,%p,%d)\n", debugstr_w(localename), flags, time,
+        debugstr_w(format), outbuf, bufsize);
+
+  return NLS_GetDateTimeFormatW(LocaleNameToLCID(localename, 0),
+                                flags | TIME_TIMEVARSONLY, time, format,
+                                outbuf, bufsize);
+}
+#endif /* !__REACTOS__ */
 
 /******************************************************************************
  *		GetTimeFormatW	[KERNEL32.@]
@@ -1264,6 +1367,27 @@ error:
   SetLastError(lpFormat && dwFlags ? ERROR_INVALID_FLAGS : ERROR_INVALID_PARAMETER);
   return 0;
 }
+
+#ifndef __REACTOS__
+/**************************************************************************
+ *              GetNumberFormatEx	(KERNEL32.@)
+ */
+INT WINAPI GetNumberFormatEx(LPCWSTR name, DWORD flags,
+                             LPCWSTR value, const NUMBERFMTW *format,
+                             LPWSTR number, int numout)
+{
+  LCID lcid;
+
+  TRACE("(%s,0x%08x,%s,%p,%p,%d)\n", debugstr_w(name), flags,
+        debugstr_w(value), format, number, numout);
+
+  lcid = LocaleNameToLCID(name, 0);
+  if (!lcid)
+    return 0;
+
+  return GetNumberFormatW(lcid, flags, value, format, number, numout);
+}
+#endif /* !__REACTOS__ */
 
 /**************************************************************************
  *              GetCurrencyFormatA	(KERNEL32.@)
@@ -1825,6 +1949,25 @@ BOOL WINAPI EnumDateFormatsW(DATEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
     return NLS_EnumDateFormats(&ctxt);
 }
 
+#ifndef __REACTOS__
+/**************************************************************************
+ *              EnumDateFormatsExEx	(KERNEL32.@)
+ */
+BOOL WINAPI EnumDateFormatsExEx(DATEFMT_ENUMPROCEXEX proc, const WCHAR *locale, DWORD flags, LPARAM lParam)
+{
+    struct enumdateformats_context ctxt;
+
+    ctxt.type = CALLBACK_ENUMPROCEXEX;
+    ctxt.u.callbackexex = proc;
+    ctxt.lcid = LocaleNameToLCID(locale, 0);
+    ctxt.flags = flags;
+    ctxt.lParam = lParam;
+    ctxt.unicode = TRUE;
+
+    return NLS_EnumDateFormats(&ctxt);
+}
+#endif /* !__REACTOS__ */
+
 struct enumtimeformats_context {
     enum enum_callback_type type;  /* callback kind */
     union {
@@ -1929,6 +2072,25 @@ BOOL WINAPI EnumTimeFormatsW(TIMEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
 
     return NLS_EnumTimeFormats(&ctxt);
 }
+
+#ifndef __REACTOS__
+/**************************************************************************
+ *              EnumTimeFormatsEx	(KERNEL32.@)
+ */
+BOOL WINAPI EnumTimeFormatsEx(TIMEFMT_ENUMPROCEX proc, const WCHAR *locale, DWORD flags, LPARAM lParam)
+{
+    struct enumtimeformats_context ctxt;
+
+    ctxt.type = CALLBACK_ENUMPROCEX;
+    ctxt.u.callbackex = proc;
+    ctxt.lcid = LocaleNameToLCID(locale, 0);
+    ctxt.flags = flags;
+    ctxt.lParam = lParam;
+    ctxt.unicode = TRUE;
+
+    return NLS_EnumTimeFormats(&ctxt);
+}
+#endif /* !__REACTOS__ */
 
 struct enumcalendar_context {
     enum enum_callback_type type;  /* callback kind */
@@ -2159,6 +2321,28 @@ BOOL WINAPI EnumCalendarInfoExW( CALINFO_ENUMPROCEXW calinfoproc,LCID locale,
   return NLS_EnumCalendarInfo(&ctxt);
 }
 
+#ifndef __REACTOS__
+/******************************************************************************
+ *		EnumCalendarInfoExEx	[KERNEL32.@]
+ */
+BOOL WINAPI EnumCalendarInfoExEx( CALINFO_ENUMPROCEXEX calinfoproc, LPCWSTR locale, CALID calendar,
+    LPCWSTR reserved, CALTYPE caltype, LPARAM lParam)
+{
+  struct enumcalendar_context ctxt;
+
+  TRACE("(%p,%s,0x%08x,%p,0x%08x,0x%ld)\n", calinfoproc, debugstr_w(locale), calendar, reserved, caltype, lParam);
+
+  ctxt.type = CALLBACK_ENUMPROCEXEX;
+  ctxt.u.callbackexex = calinfoproc;
+  ctxt.lcid = LocaleNameToLCID(locale, 0);
+  ctxt.calendar = calendar;
+  ctxt.caltype = caltype;
+  ctxt.lParam = lParam;
+  ctxt.unicode = TRUE;
+  return NLS_EnumCalendarInfo(&ctxt);
+}
+#endif /* !__REACTOS__ */
+
 /*********************************************************************
  *	GetCalendarInfoA				(KERNEL32.@)
  *
@@ -2197,6 +2381,71 @@ int WINAPI GetCalendarInfoA(LCID lcid, CALID Calendar, CALTYPE CalType,
 int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
 			    LPWSTR lpCalData, int cchData, LPDWORD lpValue)
 {
+    static const LCTYPE caltype_lctype_map[] = {
+        0, /* not used */
+        0, /* CAL_ICALINTVALUE */
+        0, /* CAL_SCALNAME */
+        0, /* CAL_IYEAROFFSETRANGE */
+        0, /* CAL_SERASTRING */
+        LOCALE_SSHORTDATE,
+        LOCALE_SLONGDATE,
+        LOCALE_SDAYNAME1,
+        LOCALE_SDAYNAME2,
+        LOCALE_SDAYNAME3,
+        LOCALE_SDAYNAME4,
+        LOCALE_SDAYNAME5,
+        LOCALE_SDAYNAME6,
+        LOCALE_SDAYNAME7,
+        LOCALE_SABBREVDAYNAME1,
+        LOCALE_SABBREVDAYNAME2,
+        LOCALE_SABBREVDAYNAME3,
+        LOCALE_SABBREVDAYNAME4,
+        LOCALE_SABBREVDAYNAME5,
+        LOCALE_SABBREVDAYNAME6,
+        LOCALE_SABBREVDAYNAME7,
+        LOCALE_SMONTHNAME1,
+        LOCALE_SMONTHNAME2,
+        LOCALE_SMONTHNAME3,
+        LOCALE_SMONTHNAME4,
+        LOCALE_SMONTHNAME5,
+        LOCALE_SMONTHNAME6,
+        LOCALE_SMONTHNAME7,
+        LOCALE_SMONTHNAME8,
+        LOCALE_SMONTHNAME9,
+        LOCALE_SMONTHNAME10,
+        LOCALE_SMONTHNAME11,
+        LOCALE_SMONTHNAME12,
+        LOCALE_SMONTHNAME13,
+        LOCALE_SABBREVMONTHNAME1,
+        LOCALE_SABBREVMONTHNAME2,
+        LOCALE_SABBREVMONTHNAME3,
+        LOCALE_SABBREVMONTHNAME4,
+        LOCALE_SABBREVMONTHNAME5,
+        LOCALE_SABBREVMONTHNAME6,
+        LOCALE_SABBREVMONTHNAME7,
+        LOCALE_SABBREVMONTHNAME8,
+        LOCALE_SABBREVMONTHNAME9,
+        LOCALE_SABBREVMONTHNAME10,
+        LOCALE_SABBREVMONTHNAME11,
+        LOCALE_SABBREVMONTHNAME12,
+        LOCALE_SABBREVMONTHNAME13,
+        LOCALE_SYEARMONTH,
+        0, /* CAL_ITWODIGITYEARMAX */
+#if (WINVER >= 0x0600) /* ReactOS */
+        LOCALE_SSHORTESTDAYNAME1,
+        LOCALE_SSHORTESTDAYNAME2,
+        LOCALE_SSHORTESTDAYNAME3,
+        LOCALE_SSHORTESTDAYNAME4,
+        LOCALE_SSHORTESTDAYNAME5,
+        LOCALE_SSHORTESTDAYNAME6,
+        LOCALE_SSHORTESTDAYNAME7,
+#endif
+        LOCALE_SMONTHDAY,
+        0, /* CAL_SABBREVERASTRING */
+    };
+    DWORD localeflags = 0;
+    CALTYPE calinfo;
+
     if (CalType & CAL_NOUSEROVERRIDE)
 	FIXME("flag CAL_NOUSEROVERRIDE used, not fully implemented\n");
     if (CalType & CAL_USE_CP_ACP)
@@ -2219,108 +2468,76 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
 
     /* FIXME: No verification is made yet wrt Locale
      * for the CALTYPES not requiring GetLocaleInfoA */
-    switch (CalType & ~(CAL_NOUSEROVERRIDE|CAL_RETURN_NUMBER|CAL_USE_CP_ACP)) {
+
+    calinfo = CalType & 0xffff;
+
+#ifdef __REACTOS__
+    if (CalType & LOCALE_RETURN_GENITIVE_NAMES)
+#else
+    if (CalType & CAL_RETURN_GENITIVE_NAMES)
+#endif
+        localeflags |= LOCALE_RETURN_GENITIVE_NAMES;
+
+    switch (calinfo) {
 	case CAL_ICALINTVALUE:
             if (CalType & CAL_RETURN_NUMBER)
                 return GetLocaleInfoW(Locale, LOCALE_RETURN_NUMBER | LOCALE_ICALENDARTYPE,
                         (LPWSTR)lpValue, 2);
             return GetLocaleInfoW(Locale, LOCALE_ICALENDARTYPE, lpCalData, cchData);
 	case CAL_SCALNAME:
-            FIXME("Unimplemented caltype %d\n", CalType & 0xffff);
+            FIXME("Unimplemented caltype %d\n", calinfo);
             if (lpCalData) *lpCalData = 0;
 	    return 1;
 	case CAL_IYEAROFFSETRANGE:
-            FIXME("Unimplemented caltype %d\n", CalType & 0xffff);
+            FIXME("Unimplemented caltype %d\n", calinfo);
 	    return 0;
 	case CAL_SERASTRING:
-            FIXME("Unimplemented caltype %d\n", CalType & 0xffff);
+            FIXME("Unimplemented caltype %d\n", calinfo);
 	    return 0;
 	case CAL_SSHORTDATE:
-	    return GetLocaleInfoW(Locale, LOCALE_SSHORTDATE, lpCalData, cchData);
 	case CAL_SLONGDATE:
-	    return GetLocaleInfoW(Locale, LOCALE_SLONGDATE, lpCalData, cchData);
 	case CAL_SDAYNAME1:
-	    return GetLocaleInfoW(Locale, LOCALE_SDAYNAME1, lpCalData, cchData);
 	case CAL_SDAYNAME2:
-	    return GetLocaleInfoW(Locale, LOCALE_SDAYNAME2, lpCalData, cchData);
 	case CAL_SDAYNAME3:
-	    return GetLocaleInfoW(Locale, LOCALE_SDAYNAME3, lpCalData, cchData);
 	case CAL_SDAYNAME4:
-	    return GetLocaleInfoW(Locale, LOCALE_SDAYNAME4, lpCalData, cchData);
 	case CAL_SDAYNAME5:
-	    return GetLocaleInfoW(Locale, LOCALE_SDAYNAME5, lpCalData, cchData);
 	case CAL_SDAYNAME6:
-	    return GetLocaleInfoW(Locale, LOCALE_SDAYNAME6, lpCalData, cchData);
 	case CAL_SDAYNAME7:
-	    return GetLocaleInfoW(Locale, LOCALE_SDAYNAME7, lpCalData, cchData);
 	case CAL_SABBREVDAYNAME1:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVDAYNAME1, lpCalData, cchData);
 	case CAL_SABBREVDAYNAME2:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVDAYNAME2, lpCalData, cchData);
 	case CAL_SABBREVDAYNAME3:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVDAYNAME3, lpCalData, cchData);
 	case CAL_SABBREVDAYNAME4:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVDAYNAME4, lpCalData, cchData);
 	case CAL_SABBREVDAYNAME5:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVDAYNAME5, lpCalData, cchData);
 	case CAL_SABBREVDAYNAME6:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVDAYNAME6, lpCalData, cchData);
 	case CAL_SABBREVDAYNAME7:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVDAYNAME7, lpCalData, cchData);
 	case CAL_SMONTHNAME1:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME1, lpCalData, cchData);
 	case CAL_SMONTHNAME2:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME2, lpCalData, cchData);
 	case CAL_SMONTHNAME3:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME3, lpCalData, cchData);
 	case CAL_SMONTHNAME4:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME4, lpCalData, cchData);
 	case CAL_SMONTHNAME5:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME5, lpCalData, cchData);
 	case CAL_SMONTHNAME6:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME6, lpCalData, cchData);
 	case CAL_SMONTHNAME7:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME7, lpCalData, cchData);
 	case CAL_SMONTHNAME8:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME8, lpCalData, cchData);
 	case CAL_SMONTHNAME9:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME9, lpCalData, cchData);
 	case CAL_SMONTHNAME10:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME10, lpCalData, cchData);
 	case CAL_SMONTHNAME11:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME11, lpCalData, cchData);
 	case CAL_SMONTHNAME12:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME12, lpCalData, cchData);
 	case CAL_SMONTHNAME13:
-	    return GetLocaleInfoW(Locale, LOCALE_SMONTHNAME13, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME1:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME1, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME2:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME2, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME3:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME3, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME4:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME4, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME5:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME5, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME6:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME6, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME7:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME7, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME8:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME8, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME9:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME9, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME10:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME10, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME11:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME11, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME12:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME12, lpCalData, cchData);
 	case CAL_SABBREVMONTHNAME13:
-	    return GetLocaleInfoW(Locale, LOCALE_SABBREVMONTHNAME13, lpCalData, cchData);
 	case CAL_SYEARMONTH:
-	    return GetLocaleInfoW(Locale, LOCALE_SYEARMONTH, lpCalData, cchData);
+            return GetLocaleInfoW(Locale, caltype_lctype_map[calinfo] | localeflags, lpCalData, cchData);
 	case CAL_ITWODIGITYEARMAX:
             if (CalType & CAL_RETURN_NUMBER)
             {
@@ -2343,7 +2560,7 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
             }
 	    break;
 	default:
-            FIXME("Unknown caltype %d\n",CalType & 0xffff);
+            FIXME("Unknown caltype %d\n", calinfo);
             SetLastError(ERROR_INVALID_FLAGS);
             return 0;
     }
