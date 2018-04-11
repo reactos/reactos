@@ -32,7 +32,13 @@
 #include <string.h>
 #include <ctype.h>
 
+#ifdef __REACTOS__
 #include <typedefs.h>
+#else
+#include "windef.h"
+#include "winbase.h"
+#endif
+
 #include "widl.h"
 #include "utils.h"
 #include "parser.h"

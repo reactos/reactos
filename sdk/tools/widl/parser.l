@@ -78,7 +78,7 @@ static int attr_token(const char *kw);
 
 static warning_list_t *disabled_warnings = NULL;
 
-#define MAX_IMPORT_DEPTH 10
+#define MAX_IMPORT_DEPTH 20
 struct {
   YY_BUFFER_STATE state;
   char *input_name;
@@ -495,60 +495,63 @@ void pop_import(void)
 }
 
 struct imports {
-	char *name;
-	struct imports *next;
+    char *name;
+    struct imports *next;
 } *first_import;
 
 int do_import(char *fname)
 {
-	FILE *f;
-	char *path, *name;
-	struct imports *import;
-	int ptr = import_stack_ptr;
-	int ret, fd;
+    FILE *f;
+    char *path, *name;
+    struct imports *import;
+    int ptr = import_stack_ptr;
+    int ret, fd;
 
-	import = first_import;
-	while (import && strcmp(import->name, fname))
-		import = import->next;
-	if (import) return 0; /* already imported */
+    import = first_import;
+    while (import && strcmp(import->name, fname))
+        import = import->next;
+    if (import) return 0; /* already imported */
 
-	import = xmalloc(sizeof(struct imports));
-	import->name = xstrdup(fname);
-	import->next = first_import;
-	first_import = import;
+    import = xmalloc(sizeof(struct imports));
+    import->name = xstrdup(fname);
+    import->next = first_import;
+    first_import = import;
 
-        /* don't search for a file name with a path in the include directories,
-         * for compatibility with MIDL */
-        if (strchr( fname, '/' ) || strchr( fname, '\\' ))
-            path = xstrdup( fname );
-        else if (!(path = wpp_find_include( fname, input_name )))
-            error_loc("Unable to open include file %s\n", fname);
+    /* don't search for a file name with a path in the include directories,
+     * for compatibility with MIDL */
+    if (strchr( fname, '/' ) || strchr( fname, '\\' ))
+        path = xstrdup( fname );
+    else if (!(path = wpp_find_include( fname, input_name )))
+        error_loc("Unable to open include file %s\n", fname);
 
-	import_stack[ptr].temp_name = temp_name;
-	import_stack[ptr].input_name = input_name;
-	import_stack[ptr].line_number = line_number;
-	import_stack_ptr++;
-        input_name = path;
-        line_number = 1;
+    if (import_stack_ptr == MAX_IMPORT_DEPTH)
+        error_loc("Exceeded max import depth\n");
 
-        name = xstrdup( "widl.XXXXXX" );
-        if((fd = mkstemps( name, 0 )) == -1)
-            error("Could not generate a temp name from %s\n", name);
+    import_stack[ptr].temp_name = temp_name;
+    import_stack[ptr].input_name = input_name;
+    import_stack[ptr].line_number = line_number;
+    import_stack_ptr++;
+    input_name = path;
+    line_number = 1;
 
-        temp_name = name;
-        if (!(f = fdopen(fd, "wt")))
-            error("Could not open fd %s for writing\n", name);
+    name = xstrdup( "widl.XXXXXX" );
+    if((fd = mkstemps( name, 0 )) == -1)
+        error("Could not generate a temp name from %s\n", name);
 
-        ret = wpp_parse( path, f );
-        fclose( f );
-        if (ret) exit(1);
+    temp_name = name;
+    if (!(f = fdopen(fd, "wt")))
+        error("Could not open fd %s for writing\n", name);
 
-	if((f = fopen(temp_name, "r")) == NULL)
-		error_loc("Unable to open %s\n", temp_name);
+    ret = wpp_parse( path, f );
+    fclose( f );
+    if (ret) exit(1);
 
-	import_stack[ptr].state = YY_CURRENT_BUFFER;
-	yy_switch_to_buffer(yy_create_buffer(f, YY_BUF_SIZE));
-	return 1;
+    if((f = fopen(temp_name, "r")) == NULL)
+        error_loc("Unable to open %s\n", temp_name);
+
+    import_stack[ptr].state = YY_CURRENT_BUFFER;
+    yy_switch_to_buffer(yy_create_buffer(f, YY_BUF_SIZE));
+    return 1;
 }
 
 void abort_import(void)

@@ -30,8 +30,13 @@
 
 #define NONAMELESSUNION
 
+#ifdef __REACTOS__
 #include <typedefs.h>
 #include <nls.h>
+#else
+#include "windef.h"
+#include "winbase.h"
+#endif
 
 #include "widl.h"
 #include "typelib.h"

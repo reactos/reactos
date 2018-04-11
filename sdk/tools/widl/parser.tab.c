@@ -228,8 +228,8 @@ static struct namespace *current_namespace = &global_namespace;
 
 /* In a future release of Bison, this section will be replaced
    by #include "parser.tab.h".  */
-#ifndef YY_PARSER_E_REACTOS_SYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED
-# define YY_PARSER_E_REACTOS_SYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED
+#ifndef YY_PARSER_E_REACTOSSYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED
+# define YY_PARSER_E_REACTOSSYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -475,7 +475,7 @@ extern YYSTYPE parser_lval;
 
 int parser_parse (void);
 
-#endif /* !YY_PARSER_E_REACTOS_SYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_PARSER_E_REACTOSSYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
@@ -5975,7 +5975,7 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
         type->attrs = attrs;
   }
 
-#ifdef __REACTOS__
+#ifdef __REACTOS__ /* r53187 / 5bf224e */
   /* Append the SWITCHTYPE attribute to a non-encapsulated union if it does not already have it.  */
   if (type_get_type_detect_alias(type) == TYPE_UNION &&
       is_attr(attrs, ATTR_SWITCHTYPE) &&

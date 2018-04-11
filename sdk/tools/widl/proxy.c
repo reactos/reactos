@@ -482,7 +482,11 @@ static const statement_t * get_callas_source(const type_t * iface, const var_t *
   return NULL;
 }
 
+#ifdef __REACTOS__ /* r57019 / c3be8a3 */
 static int write_proxy_procformatstring_offsets( const type_t *iface, int skip )
+#else
+static void write_proxy_procformatstring_offsets( const type_t *iface, int skip )
+#endif
 {
     const statement_t *stmt;
     int i = 0;
@@ -512,7 +516,9 @@ static int write_proxy_procformatstring_offsets( const type_t *iface, int skip )
             print_proxy( "%u,  /* %s::%s */\n", func->procstring_offset, iface->name, get_name(func));
         i++;
     }
+#ifdef __REACTOS__ /* r57019 / c3be8a3 */
     return i;
+#endif
 }
 
 static int write_proxy_methods(type_t *iface, int skip)
@@ -645,10 +651,14 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
   print_proxy( "static const unsigned short %s_FormatStringOffsetTable[] =\n", iface->name );
   print_proxy( "{\n" );
   indent++;
+#ifdef __REACTOS__ /* r57019 / c3be8a3 */
   if (write_proxy_procformatstring_offsets( iface, 0 ) == 0)
   {
       print_proxy( "0\n" );
   }
+#else
+  write_proxy_procformatstring_offsets( iface, 0 );
+#endif
   indent--;
   print_proxy( "};\n\n" );
 
@@ -722,10 +732,14 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
       print_proxy( "static const PRPC_STUB_FUNCTION %s_table[] =\n", iface->name);
       print_proxy( "{\n");
       indent++;
+#ifdef __REACTOS__ /* r57019 / c3be8a3 */
       if (write_stub_methods(iface, FALSE) == 0)
       {
           fprintf(proxy, "0");
       }
+#else
+      write_stub_methods(iface, FALSE);
+#endif
       fprintf(proxy, "\n");
       indent--;
       fprintf(proxy, "};\n\n");

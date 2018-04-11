@@ -960,7 +960,7 @@ static void write_method_macro(FILE *header, const type_t *iface, const type_t *
     if (is_override_method(iface, child, func))
       continue;
 
-    if (!is_callas(func->attrs) && !is_aggregate_return(func)) {
+    if (!is_callas(func->attrs)) {
       const var_t *arg;
 
       fprintf(header, "#define %s_%s(This", name, get_name(func));
@@ -968,6 +968,12 @@ static void write_method_macro(FILE *header, const type_t *iface, const type_t *
           LIST_FOR_EACH_ENTRY( arg, type_get_function_args(func->type), const var_t, entry )
               fprintf(header, ",%s", arg->name);
       fprintf(header, ") ");
+
+      if (is_aggregate_return(func))
+      {
+        fprintf(header, "%s_%s_define_WIDL_C_INLINE_WRAPPERS_for_aggregate_return_support\n", name, get_name(func));
+        continue;
+      }
 
       fprintf(header, "(This)->lpVtbl->%s(This", get_vtbl_entry_name(iface, func));
       if (type_get_function_args(func->type))
@@ -1128,7 +1134,11 @@ static void write_inline_wrappers(FILE *header, const type_t *iface, const type_
     if (!is_callas(func->attrs)) {
       const var_t *arg;
 
+#ifdef __REACTOS__
       fprintf(header, "FORCEINLINE ");
+#else
+      fprintf(header, "static FORCEINLINE ");
+#endif
       write_type_decl_left(header, type_function_get_rettype(func->type));
       fprintf(header, " %s_%s(", name, get_name(func));
       write_args(header, type_get_function_args(func->type), name, 1, FALSE);
@@ -1163,6 +1173,7 @@ static void do_write_c_method_def(FILE *header, const type_t *iface, const char 
 
   if (type_iface_get_inherit(iface))
     do_write_c_method_def(header, type_iface_get_inherit(iface), name);
+#ifdef __REACTOS__ /* r59312 / 3ab1571 */
   else if (type_iface_get_stmts(iface) == NULL)
   {
     fprintf(header, "#ifndef __cplusplus\n");
@@ -1172,6 +1183,7 @@ static void do_write_c_method_def(FILE *header, const type_t *iface, const char 
     fprintf(header, "\n");
     return;
   }
+#endif
 
   STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface))
   {

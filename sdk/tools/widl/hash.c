@@ -21,7 +21,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#ifdef __REACTOS__
 #include <nls.h>
+#else
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#endif
 
 #include "widltypes.h"
 #include "hash.h"
