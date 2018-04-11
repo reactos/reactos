@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <wine/unicode.h>
+#include "wine/unicode.h"
 
 static inline WCHAR to_unicode_digit( WCHAR ch )
 {
-    extern const WCHAR wine_digitmap[];
+    extern const WCHAR wine_digitmap[] DECLSPEC_HIDDEN;
     return ch + wine_digitmap[wine_digitmap[ch >> 8] + (ch & 0xff)];
 }
 
 static inline WCHAR to_unicode_native( WCHAR ch )
 {
-    extern const WCHAR wine_compatmap[];
+    extern const WCHAR wine_compatmap[] DECLSPEC_HIDDEN;
     return ch + wine_compatmap[wine_compatmap[ch >> 8] + (ch & 0xff)];
 }
 
