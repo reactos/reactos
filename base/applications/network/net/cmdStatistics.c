@@ -19,7 +19,7 @@ DisplayServerStatistics(VOID)
     FILETIME FileTime, LocalFileTime;
     SYSTEMTIME SystemTime;
     WORD wHour;
-    INT nPaddedLength = 33;
+    INT nPaddedLength = 35;
     NET_API_STATUS Status;
 
     Status = NetServerGetInfo(NULL, 100, (PBYTE*)&ServerInfo);
@@ -127,6 +127,7 @@ DisplayWorkstationStatistics(VOID)
     FILETIME FileTime, LocalFileTime;
     SYSTEMTIME SystemTime;
     WORD wHour;
+    INT nPaddedLength = 47;
     NET_API_STATUS Status;
 
     Status = NetWkstaGetInfo(NULL,
@@ -166,30 +167,63 @@ DisplayWorkstationStatistics(VOID)
                  SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
                  wHour, SystemTime.wMinute, (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
 
-    printf("Bytes received %I64u\n", StatisticsInfo->BytesReceived.QuadPart);
-    printf("Server Message Blocks (SMBs) received %I64u\n", StatisticsInfo->SmbsReceived.QuadPart);
-    printf("Bytes transmitted %I64u\n", StatisticsInfo->BytesTransmitted.QuadPart);
-    printf("Server Message Blocks (SMBs) transmitted %I64u\n", StatisticsInfo->SmbsTransmitted.QuadPart);
-    printf("Read operations %lu\n", StatisticsInfo->ReadOperations);
-    printf("Write operations %lu\n", StatisticsInfo->WriteOperations);
-    printf("Raw reads denied %lu\n", StatisticsInfo->RawReadsDenied);
-    printf("Raw writes denied %lu\n\n", StatisticsInfo->RawWritesDenied);
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_BYTESRCVD, nPaddedLength);
+    ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->BytesReceived.QuadPart);
 
-    printf("Network errors %lu\n", StatisticsInfo->NetworkErrors);
-    printf("Connections made %lu\n", StatisticsInfo->CoreConnects +
-                                     StatisticsInfo->Lanman20Connects +
-                                     StatisticsInfo->Lanman21Connects +
-                                     StatisticsInfo->LanmanNtConnects);
-    printf("Reconnections made %lu\n", StatisticsInfo->Reconnects);
-    printf("Server disconnects %lu\n\n", StatisticsInfo->ServerDisconnects);
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_SMBSRCVD, nPaddedLength);
+    ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->SmbsReceived.QuadPart);
 
-    printf("Sessions started %lu\n", StatisticsInfo->Sessions);
-    printf("Hung sessions %lu\n", StatisticsInfo->HungSessions);
-    printf("Failed sessions %lu\n", StatisticsInfo->FailedSessions);
-    printf("Failed operations %lu\n", StatisticsInfo->InitiallyFailedOperations +
-                                      StatisticsInfo->FailedCompletionOperations);
-    printf("Use count %lu\n", StatisticsInfo->UseCount);
-    printf("Failed use count %lu\n\n", StatisticsInfo->FailedUseCount);
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_BYTESTRANS, nPaddedLength);
+    ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->BytesTransmitted.QuadPart);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_SMBSTRANS, nPaddedLength);
+    ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->SmbsTransmitted.QuadPart);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_READOPS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->ReadOperations);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_WRITEOPS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->WriteOperations);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_READDENIED, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->RawReadsDenied);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_WRITEDENIED, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->RawWritesDenied);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_NETWORKERROR, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->NetworkErrors);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_CONNECTS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->CoreConnects +
+                                StatisticsInfo->Lanman20Connects +
+                                StatisticsInfo->Lanman21Connects +
+                                StatisticsInfo->LanmanNtConnects);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_RECONNECTS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->Reconnects);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_DISCONNECTS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->ServerDisconnects);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_SESSIONS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->Sessions);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_HUNGSESSIONS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->HungSessions);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_FAILSESSIONS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->FailedSessions);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_FAILEDOPS, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->InitiallyFailedOperations +
+                                StatisticsInfo->FailedCompletionOperations);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_USECOUNT, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n", StatisticsInfo->UseCount);
+
+    PrintPaddedResourceString(IDS_STATISTICS_WKS_FAILUSECOUNT, nPaddedLength);
+    ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->FailedUseCount);
 
 done:
     if (StatisticsInfo != NULL)
