@@ -284,7 +284,7 @@ kernel32 -
   reactos/dll/win32/kernel32/winnls/string/lang.c        # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/lcformat.c    # Synced to WineStaging-3.3
   reactos/dll/win32/kernel32/winnls/string/nls.c         # Synced in r52754
-  reactos/dll/win32/kernel32/winnls/string/sortkey.c     # Synced to WineStaging-1.9.16
+  reactos/dll/win32/kernel32/winnls/string/sortkey.c     # Synced to WineStaging-3.3
 
 msvcrt -
   reactos/sdk/lib/crt/conio/cputs.c             # Synced to WineStaging-1.9.16
