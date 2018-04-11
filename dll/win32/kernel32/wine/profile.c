@@ -19,11 +19,34 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(profile);
+
+#else /* __REACTOS__ */
+
+#include "config.h"
+#include "wine/port.h"
+
+#include <string.h>
+#include <stdarg.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "winternl.h"
+#include "wine/unicode.h"
+#include "wine/library.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(profile);
+
+#endif /* __REACTOS__ */
 
 static const char bom_utf8[] = {0xEF,0xBB,0xBF};
 
@@ -73,6 +96,8 @@ static PROFILE *MRUProfile[N_CACHED_PROFILES]={NULL};
 static const WCHAR emptystringW[] = {0};
 static const WCHAR wininiW[] = { 'w','i','n','.','i','n','i',0 };
 
+#ifdef __REACTOS__
+
 static RTL_CRITICAL_SECTION PROFILE_CritSect;
 static RTL_CRITICAL_SECTION_DEBUG critsect_debug =
 {
@@ -81,6 +106,19 @@ static RTL_CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, 0
 };
 static RTL_CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
+
+#else /* __REACTOS__ */
+
+static CRITICAL_SECTION PROFILE_CritSect;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &PROFILE_CritSect,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": PROFILE_CritSect") }
+};
+static CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
+
+#endif /* __REACTOS__ */
 
 static const char hex[16] = "0123456789ABCDEF";
 
@@ -263,7 +301,7 @@ static inline BOOL PROFILE_isspaceW(WCHAR c)
 	return isspaceW(c) || c == 0x1a;
 }
 
-static inline ENCODING PROFILE_DetectTextEncoding(void * buffer, int * len)
+static inline ENCODING PROFILE_DetectTextEncoding(const void * buffer, int * len)
 {
     int flags = IS_TEXT_UNICODE_SIGNATURE |
                 IS_TEXT_UNICODE_REVERSE_SIGNATURE |
@@ -469,8 +507,14 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
            next_key   = &key->next;
            prev_key   = key;
 
+#ifdef __REACTOS__
            TRACE("New key: name=%s, value=%s\n",
-               debugstr_w(key->name), key->value ? debugstr_w(key->value) : L"(none)");
+                 debugstr_w(key->name),
+                 key->value ? debugstr_w(key->value) : L"(none)");
+#else
+           TRACE("New key: name=%s, value=%s\n",
+               debugstr_w(key->name), key->value ? debugstr_w(key->value) : "(none)");
+#endif
         }
     }
     if (szFile != pBuffer)
@@ -745,7 +789,11 @@ static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
     if (!filename)
 	filename = wininiW;
 
+#ifdef __REACTOS__
     if ((RtlDetermineDosPathNameType_U(filename) == RtlPathTypeRelative) &&
+#else
+    if ((RtlDetermineDosPathNameType_U(filename) == RELATIVE_PATH) &&
+#endif
         !strchrW(filename, '\\') && !strchrW(filename, '/'))
     {
         static const WCHAR wszSeparator[] = {'\\', 0};
@@ -849,7 +897,11 @@ static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
  * If return_values is TRUE, also include the corresponding values.
  */
 static INT PROFILE_GetSection( PROFILESECTION *section, LPCWSTR section_name,
+#ifdef __REACTOS__
 			       LPWSTR buffer, DWORD len, BOOL return_values )
+#else
+			       LPWSTR buffer, UINT len, BOOL return_values )
+#endif
 {
     PROFILEKEY *key;
 
@@ -900,7 +952,11 @@ static INT PROFILE_GetSection( PROFILESECTION *section, LPCWSTR section_name,
 }
 
 /* See GetPrivateProfileSectionNamesA for documentation */
+#ifdef __REACTOS__
 static INT PROFILE_GetSectionNames( LPWSTR buffer, DWORD len )
+#else
+static INT PROFILE_GetSectionNames( LPWSTR buffer, UINT len )
+#endif
 {
     LPWSTR buf;
     UINT buflen,tmplen;
@@ -964,7 +1020,11 @@ static INT PROFILE_GetSectionNames( LPWSTR buffer, DWORD len )
  *
  */
 static INT PROFILE_GetString( LPCWSTR section, LPCWSTR key_name,
+#ifdef __REACTOS__
                               LPCWSTR def_val, LPWSTR buffer, DWORD len )
+#else
+                              LPCWSTR def_val, LPWSTR buffer, UINT len )
+#endif
 {
     PROFILEKEY *key = NULL;
     static const WCHAR empty_strW[] = { 0 };
@@ -1074,9 +1134,15 @@ UINT WINAPI GetProfileIntW( LPCWSTR section, LPCWSTR entry, INT def_val )
 /***********************************************************************
  *           GetPrivateProfileStringW   (KERNEL32.@)
  */
+#ifdef __REACTOS__
 DWORD WINAPI GetPrivateProfileStringW( LPCWSTR section, LPCWSTR entry,
 				     LPCWSTR def_val, LPWSTR buffer,
 				     DWORD len, LPCWSTR filename )
+#else
+INT WINAPI GetPrivateProfileStringW( LPCWSTR section, LPCWSTR entry,
+				     LPCWSTR def_val, LPWSTR buffer,
+				     UINT len, LPCWSTR filename )
+#endif
 {
     int		ret;
     LPWSTR	defval_tmp = NULL;
@@ -1130,9 +1196,15 @@ DWORD WINAPI GetPrivateProfileStringW( LPCWSTR section, LPCWSTR entry,
 /***********************************************************************
  *           GetPrivateProfileStringA   (KERNEL32.@)
  */
+#ifdef __REACTOS__
 DWORD WINAPI GetPrivateProfileStringA( LPCSTR section, LPCSTR entry,
 				     LPCSTR def_val, LPSTR buffer,
 				     DWORD len, LPCSTR filename )
+#else
+INT WINAPI GetPrivateProfileStringA( LPCSTR section, LPCSTR entry,
+				     LPCSTR def_val, LPSTR buffer,
+				     UINT len, LPCSTR filename )
+#endif
 {
     UNICODE_STRING sectionW, entryW, def_valW, filenameW;
     LPWSTR bufferW;
@@ -1173,8 +1245,13 @@ DWORD WINAPI GetPrivateProfileStringA( LPCSTR section, LPCSTR entry,
 /***********************************************************************
  *           GetProfileStringA   (KERNEL32.@)
  */
+#ifdef __REACTOS__
 DWORD WINAPI GetProfileStringA( LPCSTR section, LPCSTR entry, LPCSTR def_val,
 			      LPSTR buffer, DWORD len )
+#else
+INT WINAPI GetProfileStringA( LPCSTR section, LPCSTR entry, LPCSTR def_val,
+			      LPSTR buffer, UINT len )
+#endif
 {
     return GetPrivateProfileStringA( section, entry, def_val,
                                      buffer, len, "win.ini" );
@@ -1183,8 +1260,13 @@ DWORD WINAPI GetProfileStringA( LPCSTR section, LPCSTR entry, LPCSTR def_val,
 /***********************************************************************
  *           GetProfileStringW   (KERNEL32.@)
  */
+#ifdef __REACTOS__
 DWORD WINAPI GetProfileStringW( LPCWSTR section, LPCWSTR entry,
 			      LPCWSTR def_val, LPWSTR buffer, DWORD len )
+#else
+INT WINAPI GetProfileStringW( LPCWSTR section, LPCWSTR entry,
+			      LPCWSTR def_val, LPWSTR buffer, UINT len )
+#endif
 {
     return GetPrivateProfileStringW( section, entry, def_val,
 				     buffer, len, wininiW );
@@ -1263,7 +1345,11 @@ UINT WINAPI GetPrivateProfileIntA( LPCSTR section, LPCSTR entry,
 /***********************************************************************
  *           GetPrivateProfileSectionW   (KERNEL32.@)
  */
+#ifdef __REACTOS__
 DWORD WINAPI GetPrivateProfileSectionW( LPCWSTR section, LPWSTR buffer,
+#else
+INT WINAPI GetPrivateProfileSectionW( LPCWSTR section, LPWSTR buffer,
+#endif
 				      DWORD len, LPCWSTR filename )
 {
     int ret = 0;
@@ -1289,7 +1375,11 @@ DWORD WINAPI GetPrivateProfileSectionW( LPCWSTR section, LPWSTR buffer,
 /***********************************************************************
  *           GetPrivateProfileSectionA   (KERNEL32.@)
  */
+#ifdef __REACTOS__
 DWORD WINAPI GetPrivateProfileSectionA( LPCSTR section, LPSTR buffer,
+#else
+INT WINAPI GetPrivateProfileSectionA( LPCSTR section, LPSTR buffer,
+#endif
                                       DWORD len, LPCSTR filename )
 {
     UNICODE_STRING sectionW, filenameW;
@@ -1335,7 +1425,11 @@ DWORD WINAPI GetPrivateProfileSectionA( LPCSTR section, LPSTR buffer,
 /***********************************************************************
  *           GetProfileSectionA   (KERNEL32.@)
  */
+#ifdef __REACTOS__
 DWORD WINAPI GetProfileSectionA( LPCSTR section, LPSTR buffer, DWORD len )
+#else
+INT WINAPI GetProfileSectionA( LPCSTR section, LPSTR buffer, DWORD len )
+#endif
 {
     return GetPrivateProfileSectionA( section, buffer, len, "win.ini" );
 }
@@ -1343,7 +1437,11 @@ DWORD WINAPI GetProfileSectionA( LPCSTR section, LPSTR buffer, DWORD len )
 /***********************************************************************
  *           GetProfileSectionW   (KERNEL32.@)
  */
+#ifdef __REACTOS__
 DWORD WINAPI GetProfileSectionW( LPCWSTR section, LPWSTR buffer, DWORD len )
+#else
+INT WINAPI GetProfileSectionW( LPCWSTR section, LPWSTR buffer, DWORD len )
+#endif
 {
     return GetPrivateProfileSectionW( section, buffer, len, wininiW );
 }
@@ -1372,7 +1470,7 @@ BOOL WINAPI WritePrivateProfileStringW( LPCWSTR section, LPCWSTR entry,
             SetLastError(ERROR_FILE_NOT_FOUND);
         } else {
             ret = PROFILE_SetString( section, entry, string, FALSE);
-            PROFILE_FlushFile();
+            if (ret) ret = PROFILE_FlushFile();
         }
     }
 
@@ -1428,11 +1526,10 @@ BOOL WINAPI WritePrivateProfileSectionW( LPCWSTR section,
     else if (PROFILE_Open( filename, TRUE )) {
         if (!string) {/* delete the named section*/
 	    ret = PROFILE_SetString(section,NULL,NULL, FALSE);
-	    PROFILE_FlushFile();
         } else {
 	    PROFILE_DeleteAllKeys(section);
 	    ret = TRUE;
-	    while(*string) {
+	    while(*string && ret) {
                 LPWSTR buf = HeapAlloc( GetProcessHeap(), 0, (strlenW(string)+1) * sizeof(WCHAR) );
                 strcpyW( buf, string );
                 if((p = strchrW( buf, '='))) {
@@ -1442,8 +1539,8 @@ BOOL WINAPI WritePrivateProfileSectionW( LPCWSTR section,
                 HeapFree( GetProcessHeap(), 0, buf );
                 string += strlenW(string)+1;
             }
-            PROFILE_FlushFile();
         }
+        if (ret) ret = PROFILE_FlushFile();
     }
 
     RtlLeaveCriticalSection( &PROFILE_CritSect );
@@ -1725,7 +1822,7 @@ BOOL WINAPI WritePrivateProfileStructW (LPCWSTR section, LPCWSTR key,
 
     if (PROFILE_Open( filename, TRUE )) {
         ret = PROFILE_SetString( section, key, outstring, FALSE);
-        PROFILE_FlushFile();
+        if (ret) ret = PROFILE_FlushFile();
     }
 
     RtlLeaveCriticalSection( &PROFILE_CritSect );
