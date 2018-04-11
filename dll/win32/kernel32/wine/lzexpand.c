@@ -1,4 +1,4 @@
-/* 
+/*
  * LZ Decompression functions
  *
  * Copyright 1996 Marcus Meissner
@@ -33,6 +33,8 @@
  *
  */
 
+#ifdef __REACTOS__
+
 #include <k32.h>
 
 #define NDEBUG
@@ -44,6 +46,30 @@ DEBUG_CHANNEL(kernel32file);
 #include "lzexpand.h"
 
 #define _lwrite(a, b, c) (long)(_hwrite(a, b, (long)c))
+
+#else /* __REACTOS__ */
+
+#include "config.h"
+
+#include <string.h>
+#include <ctype.h>
+#include <sys/types.h>
+#include <stdarg.h>
+#include <stdio.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
+#include "windef.h"
+#include "winbase.h"
+#include "lzexpand.h"
+
+#include "wine/unicode.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(file);
+
+#endif /* __REACTOS__ */
 
 /* The readahead length of the decompressor. Reading single bytes
  * using _lread() would be SLOW.
@@ -136,7 +162,7 @@ static INT read_header(HFILE fd,struct lzfileheader *head)
 	memcpy(&(head->compressiontype),buf+LZ_MAGIC_LEN,1);
 	memcpy(&(head->lastchar),buf+LZ_MAGIC_LEN+1,1);
 
-	/* FIXME: consider endianess on non-intel architectures */
+	/* FIXME: consider endianness on non-intel architectures */
 	memcpy(&(head->reallength),buf+LZ_MAGIC_LEN+2,4);
 
 	if (memcmp(head->magic,LZMagic,LZ_MAGIC_LEN))
@@ -468,7 +494,11 @@ LONG WINAPI LZCopy( HFILE src, HFILE dest )
 
 	/* not compressed? just copy */
         if (!IS_LZ_HANDLE(src))
+#ifdef __REACTOS__
 		xread=(_readfun)_hread; // ROSHACK
+#else
+		xread=_lread;
+#endif
 	else
 		xread=(_readfun)LZRead;
 	len=0;
@@ -526,6 +556,7 @@ static LPSTR LZEXPAND_MangleName( LPCSTR fn )
 HFILE WINAPI LZOpenFileA( LPSTR fn, LPOFSTRUCT ofs, WORD mode )
 {
 	HFILE	fd,cfd;
+	BYTE    ofs_cBytes = ofs->cBytes;
 
 	TRACE("(%s,%p,%d)\n",fn,ofs,mode);
 	/* 0x70 represents all OF_SHARE_* flags, ignore them for the check */
@@ -536,6 +567,8 @@ HFILE WINAPI LZOpenFileA( LPSTR fn, LPOFSTRUCT ofs, WORD mode )
             fd = OpenFile(mfn,ofs,mode);
             HeapFree( GetProcessHeap(), 0, mfn );
 	}
+	if (fd==HFILE_ERROR)
+		ofs->cBytes = ofs_cBytes;
 	if ((mode&~0x70)!=OF_READ)
 		return fd;
 	if (fd==HFILE_ERROR)
@@ -579,6 +612,8 @@ void WINAPI LZClose( HFILE fd )
         }
 }
 
+#ifdef __REACTOS__
+
 /*
  * @implemented
  */
@@ -606,3 +641,4 @@ LZCreateFileW(IN LPCWSTR FileName,
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+#endif /* __REACTOS__ */
