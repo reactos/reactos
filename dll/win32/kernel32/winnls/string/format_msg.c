@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+
 #include <k32.h>
 
 #define NDEBUG
@@ -26,6 +28,30 @@
 DEBUG_CHANNEL(resource);
 
 extern HMODULE kernel32_handle;
+
+#else /* __REACTOS__ */
+
+#include "config.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winerror.h"
+#include "winternl.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "wine/unicode.h"
+#include "kernel_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(resource);
+
+#endif /* __REACTOS__ */
 
 struct format_args
 {
@@ -61,17 +87,25 @@ struct format_args
  */
 static LPWSTR load_message( HMODULE module, UINT id, WORD lang )
 {
+#ifdef __REACTOS__
     MESSAGE_RESOURCE_ENTRY *mre;
+#else
+    const MESSAGE_RESOURCE_ENTRY *mre;
+#endif
     WCHAR *buffer;
-    NTSTATUS Status;
+    NTSTATUS status;
 
     TRACE("module = %p, id = %08x\n", module, id );
 
     if (!module) module = GetModuleHandleW( NULL );
-    Status = RtlFindMessage(module, (ULONG_PTR)RT_MESSAGETABLE, lang, id, &mre);
-    if (!NT_SUCCESS(Status))
+#ifdef __REACTOS__
+    status = RtlFindMessage(module, (ULONG_PTR)RT_MESSAGETABLE, lang, id, &mre);
+    if (!NT_SUCCESS(status))
+#else
+    if ((status = RtlFindMessage( module, RT_MESSAGETABLE, lang, id, &mre )) != STATUS_SUCCESS)
+#endif
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError( RtlNtStatusToDosError(status) );
         return NULL;
     }
 
