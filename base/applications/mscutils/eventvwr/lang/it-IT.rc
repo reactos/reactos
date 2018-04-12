@@ -146,6 +146,24 @@ END
 
 STRINGTABLE
 BEGIN
+/* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
+    IDS_USAGE "ReactOS Event Viewer\n\
+\n\
+EventVwr [computer name] [/l:<event log file>] [/?]\n\
+\n\
+""computer name"" : Specifies the remote computer where to connect\n\
+\tto retrieve the events to display. If no name is specified, the\n\
+\tlocal computer is used.\n\
+\n\
+/l:<event log file> : Specifies which event log file to open.\n\
+\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+\n\
+/? : Displays this help message.\n\
+"
+END
+
+STRINGTABLE
+BEGIN
     IDS_EVENTLOG_ERROR_TYPE "Errore"
     IDS_EVENTLOG_WARNING_TYPE "Avviso"
     IDS_EVENTLOG_INFORMATION_TYPE "Informazione"

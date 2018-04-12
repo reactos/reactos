@@ -93,6 +93,8 @@
 #define IDS_CLEAREVENTS_MSG             110
 #define IDS_SAVE_FILTER                 111
 
+#define IDS_USAGE                       120
+
 #define IDS_EVENTLOG_ERROR_TYPE         200
 #define IDS_EVENTLOG_WARNING_TYPE       201
 #define IDS_EVENTLOG_INFORMATION_TYPE   202

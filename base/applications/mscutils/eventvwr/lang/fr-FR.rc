@@ -146,6 +146,24 @@ END
 
 STRINGTABLE
 BEGIN
+/* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
+    IDS_USAGE "Visionneuse d'événements ReactOS\n\
+\n\
+EventVwr [nom ordinateur] [/l:<fichier journal>] [/?]\n\
+\n\
+""nom ordinateur"" : Spécifie l'ordinateur distant auquel se connecter\n\
+\tpour récupérer les événements à afficher. Si aucun nom n'est spécifié,\n\
+\tl'ordinateur local est utilisé.\n\
+\n\
+/l:<fichier journal> : Spécifie quel fichier journal ouvrir.\n\
+\tSeuls les fichiers au format .evt (NT ≤ 5.2) sont supportés.\n\
+\n\
+/? : Affiche ce message d'aide.\n\
+"
+END
+
+STRINGTABLE
+BEGIN
     IDS_EVENTLOG_ERROR_TYPE "Erreur"
     IDS_EVENTLOG_WARNING_TYPE "Avertissement"
     IDS_EVENTLOG_INFORMATION_TYPE "Information"
@@ -175,15 +193,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+    IDS_COPY "Type d'événement :          %s\r\n\
+Source de l'événement :     %s\r\n\
+Catégorie de l'événement :  %s\r\n\
+ID de l'événement :         %s\r\n\
+Date :                      %s\r\n\
+Heure :                     %s\r\n\
+Utilisateur :               %s\r\n\
+Ordinateur :                %s\r\n\
+Description :\r\n%s"
 END
 
 STRINGTABLE

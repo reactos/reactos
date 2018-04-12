@@ -87,6 +87,10 @@ HMENU hMainMenu;                            /* The application's main menu */
 
 HTREEITEM htiSystemLogs = NULL, htiAppLogs = NULL, htiUserLogs = NULL;
 
+LPWSTR lpComputerName = NULL;       /* NULL: local user computer (default) */
+LPWSTR lpszzUserLogsToLoad = NULL;  /* The list of user logs to load at startup (multi-string) */
+SIZE_T cbUserLogsSize = 0;
+
 
 /* Global event records cache for the current active event log filter */
 DWORD g_TotalRecords = 0;
@@ -117,6 +121,8 @@ OPENFILENAMEW sfn;
 
 static DWORD WINAPI
 StartStopEnumEventsThread(IN LPVOID lpParameter);
+
+VOID OpenUserEventLogFile(IN LPCWSTR lpszFileName);
 
 VOID BuildLogListAndFilterList(IN LPCWSTR lpComputerName);
 VOID FreeLogList(VOID);
@@ -153,6 +159,184 @@ ShowWin32Error(IN DWORD dwError)
 
     MessageBoxW(hwndMainWindow, lpMessageBuffer, szTitle, MB_OK | MB_ICONERROR);
     LocalFree(lpMessageBuffer);
+}
+
+VOID
+DisplayUsage(VOID)
+{
+    LPWSTR lpBuffer;
+    LPCWSTR lpUsage;
+    INT iUsageLen = LoadStringW(hInst, IDS_USAGE, (LPWSTR)&lpUsage, 0);
+
+    if (iUsageLen == 0)
+        return;
+
+    lpBuffer = HeapAlloc(GetProcessHeap(), 0, (iUsageLen + 1) * sizeof(WCHAR));
+    if (!lpBuffer)
+        return;
+
+    StringCchCopyNW(lpBuffer, iUsageLen + 1, lpUsage, iUsageLen);
+    MessageBoxW(NULL, lpBuffer, szTitle, MB_OK | MB_ICONINFORMATION);
+
+    HeapFree(GetProcessHeap(), 0, lpBuffer);
+}
+
+BOOL
+ProcessCmdLine(IN LPWSTR lpCmdLine)
+{
+    BOOL Success = FALSE;
+    INT i, argc;
+    LPWSTR* argv;
+
+    /* Skip any leading whitespace */
+    if (lpCmdLine)
+    {
+        while (iswspace(*lpCmdLine))
+            ++lpCmdLine;
+    }
+
+    /* No command line means no processing needed */
+    if (!lpCmdLine || !*lpCmdLine)
+        return TRUE;
+
+    /* Build the arguments vector */
+    argv = CommandLineToArgvW(lpCmdLine, &argc);
+    if (!argv)
+        return FALSE;
+
+    /* Parse the command line for options (skip the program name) */
+    for (i = 1; i < argc; ++i)
+    {
+        /* Check for new options */
+        if (argv[i][0] == L'-' || argv[i][0] == L'/')
+        {
+            if (argv[i][1] == L'?' && argv[i][2] == 0)
+            {
+                /* Display help */
+                DisplayUsage();
+                goto Quit;
+            }
+            else
+            if (argv[i][2] == L':')
+            {
+                switch (towupper(argv[i][1]))
+                {
+                    case L'L':
+                    {
+                        LPWSTR lpNewBuffer;
+                        LPWSTR lpFileName = argv[i] + 3;
+                        SIZE_T cbFileName;
+
+                        /* Check for a quoted file name */
+                        if (*lpFileName == L'\"')
+                        {
+                            /* Skip this quote, and the last one too if any */
+                            ++lpFileName;
+                            cbFileName = wcslen(lpFileName);
+                            if (cbFileName > 0 && lpFileName[cbFileName - 1] == L'\"')
+                                lpFileName[cbFileName - 1] = UNICODE_NULL;
+                        }
+
+                        /* Skip this one if we do not actually have a file name */
+                        if (!*lpFileName)
+                            continue;
+
+                        cbFileName = (wcslen(lpFileName) + 1) * sizeof(WCHAR);
+
+                        /* Reallocate the list of user logs to load */
+                        if (lpszzUserLogsToLoad)
+                        {
+                            lpNewBuffer = HeapReAlloc(GetProcessHeap(),
+                                                      HEAP_ZERO_MEMORY,
+                                                      lpszzUserLogsToLoad,
+                                                      /* Count the multi-string NULL-terminator */
+                                                      cbUserLogsSize + cbFileName + sizeof(WCHAR));
+                        }
+                        else
+                        {
+                            cbUserLogsSize = 0;
+                            lpNewBuffer = HeapAlloc(GetProcessHeap(),
+                                                    HEAP_ZERO_MEMORY,
+                                                    /* Count the multi-string NULL-terminator */
+                                                    cbUserLogsSize + cbFileName + sizeof(WCHAR));
+                        }
+
+                        if (!lpNewBuffer)
+                        {
+                            ShowWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+                            goto Quit;
+                        }
+
+                        lpszzUserLogsToLoad = lpNewBuffer;
+                        lpNewBuffer = (LPWSTR)((ULONG_PTR)lpNewBuffer + cbUserLogsSize);
+                        cbUserLogsSize += cbFileName;
+
+                        /* Save the file name */
+                        StringCbCopyW(lpNewBuffer, cbFileName, lpFileName);
+
+                        continue;
+                    }
+
+                    default:
+                        break;
+                }
+            }
+
+            /* Unknown argument: display help and bail out */
+            DisplayUsage();
+            goto Quit;
+        }
+        else
+        {
+            /*
+             * An argument that does not start with the switch character.
+             * If this is the first argument then this corresponds to the
+             * optional computer name. Otherwise this is a wrong argument.
+             */
+            if (i == 1)
+            {
+                /* Store the computer name */
+                SIZE_T cbLength;
+
+                cbLength = (wcslen(argv[i]) + 1) * sizeof(WCHAR);
+                lpComputerName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbLength);
+                if (lpComputerName)
+                {
+                    StringCbCopyW(lpComputerName, cbLength, argv[i]);
+                }
+                /* else, fall back to local computer */
+            }
+            else
+            {
+                /* Invalid syntax: display help and bail out */
+                DisplayUsage();
+                goto Quit;
+            }
+        }
+    }
+
+    Success = TRUE;
+
+Quit:
+    /* In case of failure, free anything we have allocated */
+    if (!Success)
+    {
+        if (lpszzUserLogsToLoad)
+        {
+            cbUserLogsSize = 0;
+            HeapFree(GetProcessHeap(), 0, lpszzUserLogsToLoad);
+            lpszzUserLogsToLoad = NULL;
+        }
+        if (lpComputerName)
+        {
+            HeapFree(GetProcessHeap(), 0, lpComputerName);
+            lpComputerName = NULL;
+        }
+    }
+
+    /* Free the arguments vector and exit */
+    LocalFree(argv);
+    return Success;
 }
 
 int APIENTRY
@@ -194,6 +378,14 @@ wWinMain(HINSTANCE hInstance,
     LoadStringW(hInstance, IDS_LOADING_WAIT, szLoadingWait, ARRAYSIZE(szLoadingWait));
     LoadStringW(hInstance, IDS_NO_ITEMS, szEmptyList, ARRAYSIZE(szEmptyList));
 
+    /*
+     * Process the command-line arguments. Note that we need the full
+     * command-line, with the program file included, and not just what
+     * WinMain() provides in its lpCmdLine parameter.
+     */
+    if (!ProcessCmdLine(GetCommandLineW()))
+        goto Quit;
+
     if (!MyRegisterClass(hInstance))
         goto Quit;
 
@@ -223,12 +415,22 @@ wWinMain(HINSTANCE hInstance,
     /* Retrieve the available event logs on this computer and create filters for them */
     InitializeListHead(&EventLogList);
     InitializeListHead(&EventLogFilterList);
-    // TODO: Implement connection to remote computer...
-    // At the moment we only support the user local computer.
-    BuildLogListAndFilterList(NULL);
+    BuildLogListAndFilterList(lpComputerName);
 
-    // TODO: If the user wants to open an external event log with the Event Log Viewer
-    // (via the command line), it's here that the log should be opened.
+    /* Open the user-specified logs if any are present on the command-line */
+    if (lpszzUserLogsToLoad)
+    {
+        LPWSTR lpUserLog;
+        for (lpUserLog = lpszzUserLogsToLoad; *lpUserLog; lpUserLog += wcslen(lpUserLog) + 1)
+        {
+            OpenUserEventLogFile(lpUserLog);
+        }
+
+        /* Now cleanup the list of user logs */
+        cbUserLogsSize = 0;
+        HeapFree(GetProcessHeap(), 0, lpszzUserLogsToLoad);
+        lpszzUserLogsToLoad = NULL;
+    }
 
     /* Main message loop */
     while (GetMessageW(&msg, NULL, 0, 0))
@@ -256,6 +458,18 @@ Cleanup:
         CloseHandle(hStartStopEnumEvent);
 
 Quit:
+    /* Final cleanup */
+    if (lpszzUserLogsToLoad)
+    {
+        cbUserLogsSize = 0;
+        HeapFree(GetProcessHeap(), 0, lpszzUserLogsToLoad);
+        lpszzUserLogsToLoad = NULL;
+    }
+    if (lpComputerName)
+    {
+        HeapFree(GetProcessHeap(), 0, lpComputerName);
+        lpComputerName = NULL;
+    }
     FreeLibrary(hRichEdit);
 
     return (int)msg.wParam;
@@ -1433,7 +1647,6 @@ static DWORD WINAPI
 EnumEventsThread(IN LPVOID lpParameter)
 {
     PEVENTLOGFILTER EventLogFilter = (PEVENTLOGFILTER)lpParameter;
-    LPWSTR lpMachineName = NULL; // EventLogFilter->ComputerName;
     PEVENTLOG EventLog;
 
     ULONG LogIndex;
@@ -1472,6 +1685,54 @@ EnumEventsThread(IN LPVOID lpParameter)
     /* Save the current event log filter globally */
     EventLogFilter_AddRef(EventLogFilter);
     ActiveFilter = EventLogFilter;
+
+
+    /** HACK!! **/
+    EventLog = EventLogFilter->EventLogs[0];
+
+    // FIXME: Use something else instead of EventLog->LogName !!
+
+    /*
+     * Use a different formatting, whether the event log filter holds
+     * only one log, or many logs (the latter case is WIP TODO!)
+     */
+    if (EventLogFilter->NumOfEventLogs <= 1)
+    {
+        StringCchPrintfExW(szWindowTitle,
+                           ARRAYSIZE(szWindowTitle),
+                           &lpTitleTemplateEnd,
+                           &cchRemaining,
+                           0,
+                           szTitleTemplate, szTitle, EventLog->LogName); /* i = number of characters written */
+        dwMaxLength = (DWORD)cchRemaining;
+        if (!EventLog->ComputerName)
+            GetComputerNameW(lpTitleTemplateEnd, &dwMaxLength);
+        else
+            StringCchCopyW(lpTitleTemplateEnd, dwMaxLength, EventLog->ComputerName);
+
+        StringCbPrintfW(szStatusText,
+                        sizeof(szStatusText),
+                        szStatusBarTemplate,
+                        EventLog->LogName,
+                        0,
+                        0);
+    }
+    else
+    {
+        // TODO: Use a different title & implement filtering for multi-log filters !!
+        // (EventLogFilter->NumOfEventLogs > 1)
+        MessageBoxW(hwndMainWindow,
+                    L"Many-logs filtering is not implemented yet!!",
+                    L"Event Log",
+                    MB_OK | MB_ICONINFORMATION);
+    }
+
+    /* Set the window title */
+    SetWindowTextW(hwndMainWindow, szWindowTitle);
+
+    /* Update the status bar */
+    StatusBar_SetText(hwndStatus, 0, szStatusText);
+
 
     /* Disable list view redraw */
     SendMessageW(hwndListView, WM_SETREDRAW, FALSE, 0);
@@ -1699,18 +1960,6 @@ Cleanup:
      */
     if (EventLogFilter->NumOfEventLogs <= 1)
     {
-        StringCchPrintfExW(szWindowTitle,
-                           ARRAYSIZE(szWindowTitle),
-                           &lpTitleTemplateEnd,
-                           &cchRemaining,
-                           0,
-                           szTitleTemplate, szTitle, EventLog->LogName); /* i = number of characters written */
-        dwMaxLength = (DWORD)cchRemaining;
-        if (!lpMachineName)
-            GetComputerNameW(lpTitleTemplateEnd, &dwMaxLength);
-        else
-            StringCchCopyW(lpTitleTemplateEnd, dwMaxLength, lpMachineName);
-
         StringCbPrintfW(szStatusText,
                         sizeof(szStatusText),
                         szStatusBarTemplate,
@@ -1722,17 +1971,10 @@ Cleanup:
     {
         // TODO: Use a different title & implement filtering for multi-log filters !!
         // (EventLogFilter->NumOfEventLogs > 1)
-        MessageBoxW(hwndMainWindow,
-                    L"Many-logs filtering is not implemented yet!!",
-                    L"Event Log",
-                    MB_OK | MB_ICONINFORMATION);
     }
 
     /* Update the status bar */
     StatusBar_SetText(hwndStatus, 0, szStatusText);
-
-    /* Set the window title */
-    SetWindowTextW(hwndMainWindow, szWindowTitle);
 
     /* Resume list view redraw */
     SendMessageW(hwndListView, WM_SETREDRAW, TRUE, 0);
@@ -2240,6 +2482,8 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
     HTREEITEM hRootNode = NULL, hItem = NULL, hItemDefault = NULL;
 
     /* Open the EventLog key */
+    // TODO: Implement connection to remote computer...
+    // At the moment we only support the user local computer.
     // FIXME: Use local or remote computer
     Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, EVENTLOG_BASE_KEY, 0, KEY_READ, &hEventLogKey);
     if (Result != ERROR_SUCCESS)
