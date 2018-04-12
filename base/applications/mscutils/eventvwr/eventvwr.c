@@ -3459,30 +3459,40 @@ Quit:
     FileName = EventLog->FileName;
     if (FileName && *FileName)
     {
-        ExpandEnvironmentStringsW(FileName, wszBuf, MAX_PATH);
+        ExpandEnvironmentStringsW(FileName, wszBuf, ARRAYSIZE(wszBuf));
         FileName = wszBuf;
+    }
+    else
+    {
+        FileName = L"";
     }
     SetDlgItemTextW(hDlg, IDC_LOGFILE, FileName);
 
-    /*
-     * The general problem here (and in the shell as well) is that
-     * GetFileAttributesEx fails for files that are opened without
-     * shared access. To retrieve file information for those we need
-     * to use something else: FindFirstFile, on the full file name.
-     */
-
-    Success = GetFileAttributesExW(FileName,
-                                   GetFileExInfoStandard,
-                                   (LPWIN32_FILE_ATTRIBUTE_DATA)&FileInfo);
-    if (!Success)
+    if (FileName && *FileName)
     {
-        HANDLE hFind = FindFirstFileW(FileName, &FileInfo);
-        Success = (hFind != INVALID_HANDLE_VALUE);
-        if (Success)
-            FindClose(hFind);
+        /*
+         * The general problem here (and in the shell as well) is that
+         * GetFileAttributesEx fails for files that are opened without
+         * shared access. To retrieve file information for those we need
+         * to use something else: FindFirstFile, on the full file name.
+         */
+        Success = GetFileAttributesExW(FileName,
+                                       GetFileExInfoStandard,
+                                       (LPWIN32_FILE_ATTRIBUTE_DATA)&FileInfo);
+        if (!Success)
+        {
+            HANDLE hFind = FindFirstFileW(FileName, &FileInfo);
+            Success = (hFind != INVALID_HANDLE_VALUE);
+            if (Success)
+                FindClose(hFind);
+        }
+    }
+    else
+    {
+        Success = FALSE;
     }
 
-    // Starting there, FileName is invalid (because it uses wszBuf)
+    /* Starting there, FileName becomes invalid because we are reusing wszBuf */
 
     if (Success)
     {
