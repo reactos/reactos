@@ -1805,7 +1805,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     }
 
     /* process the IDList */
-    if (sei_tmp.fMask & SEE_MASK_IDLIST)
+    if ((sei_tmp.fMask & (SEE_MASK_IDLIST | SEE_MASK_INVOKEIDLIST)) == SEE_MASK_IDLIST)
     {
         CComPtr<IShellExecuteHookW> pSEH;
 
