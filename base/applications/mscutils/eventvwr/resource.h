@@ -80,39 +80,39 @@
 
 
 /* String IDs */
-#define IDS_COPYRIGHT                 102
-#define IDS_APP_TITLE                 103
-#define IDS_APP_TITLE_EX              104
-#define IDS_STATUS_MSG                105
-#define IDS_LOADING_WAIT              106
-#define IDS_NO_ITEMS                  107
-#define IDS_EVENTLOG_SYSTEM           108
-#define IDS_EVENTLOG_APP              109
-#define IDS_EVENTLOG_USER             110
-#define IDS_EVENTSTRINGIDNOTFOUND     209
-#define IDS_CLEAREVENTS_MSG           210
-#define IDS_SAVE_FILTER               211
+#define IDS_COPYRIGHT                   100
+#define IDS_APP_TITLE                   101
+#define IDS_APP_TITLE_EX                102
+#define IDS_STATUS_MSG                  103
+#define IDS_LOADING_WAIT                104
+#define IDS_NO_ITEMS                    105
+#define IDS_EVENTLOG_SYSTEM             106
+#define IDS_EVENTLOG_APP                107
+#define IDS_EVENTLOG_USER               108
+#define IDS_EVENTSTRINGIDNOTFOUND       109
+#define IDS_CLEAREVENTS_MSG             110
+#define IDS_SAVE_FILTER                 111
 
-#define IDS_EVENTLOG_ERROR_TYPE       251
-#define IDS_EVENTLOG_WARNING_TYPE     252
-#define IDS_EVENTLOG_INFORMATION_TYPE 253
-#define IDS_EVENTLOG_AUDIT_SUCCESS    254
-#define IDS_EVENTLOG_AUDIT_FAILURE    255
-#define IDS_EVENTLOG_SUCCESS          256
-#define IDS_EVENTLOG_UNKNOWN_TYPE     257
+#define IDS_EVENTLOG_ERROR_TYPE         200
+#define IDS_EVENTLOG_WARNING_TYPE       201
+#define IDS_EVENTLOG_INFORMATION_TYPE   202
+#define IDS_EVENTLOG_AUDIT_SUCCESS      203
+#define IDS_EVENTLOG_AUDIT_FAILURE      204
+#define IDS_EVENTLOG_SUCCESS            205
+#define IDS_EVENTLOG_UNKNOWN_TYPE       206
 
-#define IDS_BYTES_FORMAT              260
+#define IDS_BYTES_FORMAT                210
 
-#define IDS_COLUMNTYPE      300
-#define IDS_COLUMNDATE      301
-#define IDS_COLUMNTIME      302
-#define IDS_COLUMNSOURCE    303
-#define IDS_COLUMNCATEGORY  304
-#define IDS_COLUMNEVENT     305
-#define IDS_COLUMNUSER      306
-#define IDS_COLUMNCOMPUTER  307
+#define IDS_COLUMNTYPE      220
+#define IDS_COLUMNDATE      221
+#define IDS_COLUMNTIME      222
+#define IDS_COLUMNSOURCE    223
+#define IDS_COLUMNCATEGORY  224
+#define IDS_COLUMNEVENT     225
+#define IDS_COLUMNUSER      226
+#define IDS_COLUMNCOMPUTER  227
 
-#define IDS_COPY          400
+#define IDS_COPY            240
 
-#define IDS_NONE          320
-#define IDS_NOT_AVAILABLE 321
+#define IDS_NONE            250
+#define IDS_NOT_AVAILABLE   251

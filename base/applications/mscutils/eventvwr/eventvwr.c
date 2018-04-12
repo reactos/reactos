@@ -77,7 +77,7 @@ BYTE bSplit = 0;                            /* Splitter state:
                                              * 2: Horizontal splitting.
                                              */
 
-HWND hwndMainWindow;                        /* Main window */
+HWND hwndMainWindow = NULL;                 /* Main window */
 HWND hwndTreeView;                          /* TreeView control */
 HWND hwndListView;                          /* ListView control */          // NOTE: Used by evtdetctl.c
 HWND hwndEventDetails;                      /* Event details pane */
@@ -90,7 +90,7 @@ HTREEITEM htiSystemLogs = NULL, htiAppLogs = NULL, htiUserLogs = NULL;
 
 /* Global event records cache for the current active event log filter */
 DWORD g_TotalRecords = 0;
-PEVENTLOGRECORD *g_RecordPtrs = NULL;
+PEVENTLOGRECORD* g_RecordPtrs = NULL;
 
 /* Lists of event logs and event log filters */
 LIST_ENTRY EventLogList;
@@ -129,6 +129,32 @@ INT_PTR EventLogProperties(HINSTANCE, HWND, PEVENTLOGFILTER);
 INT_PTR CALLBACK EventDetails(HWND, UINT, WPARAM, LPARAM);
 
 
+/* MAIN FUNCTIONS *************************************************************/
+
+VOID
+ShowWin32Error(IN DWORD dwError)
+{
+    LPWSTR lpMessageBuffer;
+
+    if (dwError == ERROR_SUCCESS)
+        return;
+
+    if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                        FORMAT_MESSAGE_FROM_SYSTEM |
+                        FORMAT_MESSAGE_IGNORE_INSERTS,
+                        NULL,
+                        dwError,
+                        LANG_USER_DEFAULT,
+                        (LPWSTR)&lpMessageBuffer,
+                        0, NULL))
+    {
+        return;
+    }
+
+    MessageBoxW(hwndMainWindow, lpMessageBuffer, szTitle, MB_OK | MB_ICONERROR);
+    LocalFree(lpMessageBuffer);
+}
+
 int APIENTRY
 wWinMain(HINSTANCE hInstance,
          HINSTANCE hPrevInstance,
@@ -157,6 +183,9 @@ wWinMain(HINSTANCE hInstance,
         return -1;
 
     msg.wParam = (WPARAM)-1;
+
+    /* Store the instance handle in the global variable */
+    hInst = hInstance;
 
     /* Initialize global strings */
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, ARRAYSIZE(szTitle));
@@ -234,32 +263,6 @@ Quit:
 
 
 /* GENERIC HELPER FUNCTIONS ***************************************************/
-
-VOID
-ShowLastWin32Error(VOID)
-{
-    DWORD dwError;
-    LPWSTR lpMessageBuffer;
-
-    dwError = GetLastError();
-    if (dwError == ERROR_SUCCESS)
-        return;
-
-    if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                        FORMAT_MESSAGE_FROM_SYSTEM |
-                        FORMAT_MESSAGE_IGNORE_INSERTS,
-                        NULL,
-                        dwError,
-                        LANG_USER_DEFAULT,
-                        (LPWSTR)&lpMessageBuffer,
-                        0, NULL))
-    {
-        return;
-    }
-
-    MessageBoxW(hwndMainWindow, lpMessageBuffer, szTitle, MB_OK | MB_ICONERROR);
-    LocalFree(lpMessageBuffer);
-}
 
 VOID
 EventTimeToSystemTime(IN DWORD EventTime,
@@ -475,10 +478,10 @@ ApplyParameterStringsToMessage(
         while ((pTempMessage = wcschr(pTempMessage, L'%')))
         {
             pTempMessage++;
-            if (isdigit(*pTempMessage))
+            if (iswdigit(*pTempMessage))
             {
                 dwParamCount++;
-                while (isdigit(*++pTempMessage)) ;
+                while (iswdigit(*++pTempMessage)) ;
             }
         }
     }
@@ -487,10 +490,10 @@ ApplyParameterStringsToMessage(
         while ((pTempMessage = wcsstr(pTempMessage, L"%%")))
         {
             pTempMessage += 2;
-            if (isdigit(*pTempMessage))
+            if (iswdigit(*pTempMessage))
             {
                 dwParamCount++;
-                while (isdigit(*++pTempMessage)) ;
+                while (iswdigit(*++pTempMessage)) ;
             }
         }
     }
@@ -520,12 +523,12 @@ ApplyParameterStringsToMessage(
         while ((pTempMessage = wcschr(pTempMessage, L'%')) && (i < dwParamCount))
         {
             pTempMessage++;
-            if (isdigit(*pTempMessage))
+            if (iswdigit(*pTempMessage))
             {
                 pParamData[i].pStartingAddress = pTempMessage-1;
                 pParamData[i].pParameterID = (DWORD)_wtol(pTempMessage);
 
-                while (isdigit(*++pTempMessage)) ;
+                while (iswdigit(*++pTempMessage)) ;
 
                 pParamData[i].pEndingAddress = pTempMessage;
                 i++;
@@ -537,12 +540,12 @@ ApplyParameterStringsToMessage(
         while ((pTempMessage = wcsstr(pTempMessage, L"%%")) && (i < dwParamCount))
         {
             pTempMessage += 2;
-            if (isdigit(*pTempMessage))
+            if (iswdigit(*pTempMessage))
             {
                 pParamData[i].pStartingAddress = pTempMessage-2;
                 pParamData[i].pParameterID = (DWORD)_wtol(pTempMessage);
 
-                while (isdigit(*++pTempMessage)) ;
+                while (iswdigit(*++pTempMessage)) ;
 
                 pParamData[i].pEndingAddress = pTempMessage;
                 i++;
@@ -847,6 +850,8 @@ AllocEventLog(IN PCWSTR ComputerName OPTIONAL,
     EventLog->LogName = HeapAlloc(GetProcessHeap(), 0, cchName * sizeof(WCHAR));
     if (!EventLog->LogName)
     {
+        if (EventLog->ComputerName)
+            HeapFree(GetProcessHeap(), 0, EventLog->ComputerName);
         HeapFree(GetProcessHeap(), 0, EventLog);
         return NULL;
     }
@@ -862,6 +867,9 @@ EventLog_Free(IN PEVENTLOG EventLog)
 {
     if (EventLog->LogName)
         HeapFree(GetProcessHeap(), 0, EventLog->LogName);
+
+    if (EventLog->ComputerName)
+        HeapFree(GetProcessHeap(), 0, EventLog->ComputerName);
 
     if (EventLog->FileName)
         HeapFree(GetProcessHeap(), 0, EventLog->FileName);
@@ -1164,7 +1172,7 @@ GetEventMessage(IN LPCWSTR KeyName,
         lpMsgBuf = szMessage;
         while ((lpMsgBuf = wcsstr(lpMsgBuf, L"%%")))
         {
-            if (isdigit(lpMsgBuf[2]))
+            if (iswdigit(lpMsgBuf[2]))
             {
                 RtlMoveMemory(lpMsgBuf, lpMsgBuf+1, ((szStringArray + cch) - lpMsgBuf - 1) * sizeof(WCHAR));
             }
@@ -1493,7 +1501,7 @@ EnumEventsThread(IN LPVOID lpParameter)
 
     if (hEventLog == NULL)
     {
-        ShowLastWin32Error();
+        ShowWin32Error(GetLastError());
         goto Cleanup;
     }
 
@@ -1517,7 +1525,7 @@ EnumEventsThread(IN LPVOID lpParameter)
     g_RecordPtrs = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, dwTotalRecords * sizeof(*g_RecordPtrs));
     if (!g_RecordPtrs)
     {
-        // ShowLastWin32Error();
+        // ShowWin32Error(GetLastError());
         goto Quit;
     }
     g_TotalRecords = dwTotalRecords;
@@ -1890,11 +1898,72 @@ GetSelectedFilter(OUT HTREEITEM* phti OPTIONAL)
 
 
 VOID
-OpenUserEventLog(VOID)
+OpenUserEventLogFile(IN LPCWSTR lpszFileName)
 {
+    WIN32_FIND_DATAW FindData;
+    HANDLE hFind;
     PEVENTLOG EventLog;
     PEVENTLOGFILTER EventLogFilter;
+    SIZE_T cchFileName;
     HTREEITEM hItem = NULL;
+
+    /* Check whether the file actually exists */
+    hFind = FindFirstFileW(lpszFileName, &FindData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ShowWin32Error(GetLastError());
+        return;
+    }
+    FindClose(hFind);
+
+    /* Allocate a new event log entry */
+    EventLog = AllocEventLog(NULL, lpszFileName, FALSE);
+    if (EventLog == NULL)
+    {
+        ShowWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return;
+    }
+
+    /* Allocate a new event log filter entry for this event log */
+    EventLogFilter = AllocEventLogFilter(// LogName,
+                                         TRUE, TRUE, TRUE, TRUE, TRUE,
+                                         NULL, NULL, NULL,
+                                         1, &EventLog);
+    if (EventLogFilter == NULL)
+    {
+        ShowWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EventLog_Free(EventLog);
+        return;
+    }
+
+    /* Add the event log and the filter into their lists */
+    InsertTailList(&EventLogList, &EventLog->ListEntry);
+    InsertTailList(&EventLogFilterList, &EventLogFilter->ListEntry);
+
+    /* Retrieve and cache the event log file */
+    cchFileName = wcslen(lpszFileName) + 1;
+    EventLog->FileName = HeapAlloc(GetProcessHeap(), 0, cchFileName * sizeof(WCHAR));
+    if (EventLog->FileName)
+        StringCchCopyW(EventLog->FileName, cchFileName, lpszFileName);
+
+    hItem = TreeViewAddItem(hwndTreeView, htiUserLogs,
+                            (LPWSTR)lpszFileName,
+                            2, 3, (LPARAM)EventLogFilter);
+
+    /* Select the event log */
+    if (hItem)
+    {
+        // TreeView_Expand(hwndTreeView, htiUserLogs, TVE_EXPAND);
+        TreeView_SelectItem(hwndTreeView, hItem);
+        TreeView_EnsureVisible(hwndTreeView, hItem);
+    }
+    InvalidateRect(hwndTreeView, NULL, FALSE);
+    SetFocus(hwndTreeView);
+}
+
+VOID
+OpenUserEventLog(VOID)
+{
     WCHAR szFileName[MAX_PATH];
 
     ZeroMemory(szFileName, sizeof(szFileName));
@@ -1906,43 +1975,7 @@ OpenUserEventLog(VOID)
         return;
     sfn.lpstrFile[sfn.nMaxFile-1] = UNICODE_NULL;
 
-    /* Allocate a new event log entry */
-    EventLog = AllocEventLog(NULL, sfn.lpstrFile, FALSE);
-    if (EventLog == NULL)
-        return;
-
-    /* Allocate a new event log filter entry for this event log */
-    EventLogFilter = AllocEventLogFilter(// LogName,
-                                         TRUE, TRUE, TRUE, TRUE, TRUE,
-                                         NULL, NULL, NULL,
-                                         1, &EventLog);
-    if (EventLogFilter == NULL)
-    {
-        HeapFree(GetProcessHeap(), 0, EventLog);
-        return;
-    }
-
-    /* Add the event log and the filter into their lists */
-    InsertTailList(&EventLogList, &EventLog->ListEntry);
-    InsertTailList(&EventLogFilterList, &EventLogFilter->ListEntry);
-
-    /* Retrieve and cache the event log file */
-    EventLog->FileName = HeapAlloc(GetProcessHeap(), 0, sfn.nMaxFile * sizeof(WCHAR));
-    if (EventLog->FileName)
-        StringCchCopyW(EventLog->FileName, sfn.nMaxFile, sfn.lpstrFile);
-
-    hItem = TreeViewAddItem(hwndTreeView, htiUserLogs,
-                            szFileName,
-                            2, 3, (LPARAM)EventLogFilter);
-
-    /* Select the event log */
-    if (hItem)
-    {
-        // TreeView_Expand(hwndTreeView, htiUserLogs, TVE_EXPAND);
-        TreeView_SelectItem(hwndTreeView, hItem);
-        TreeView_EnsureVisible(hwndTreeView, hItem);
-    }
-    SetFocus(hwndTreeView);
+    OpenUserEventLogFile(sfn.lpstrFile);
 }
 
 VOID
@@ -1973,12 +2006,12 @@ SaveEventLog(IN PEVENTLOGFILTER EventLogFilter)
 
     if (!hEventLog)
     {
-        ShowLastWin32Error();
+        ShowWin32Error(GetLastError());
         return;
     }
 
     if (!BackupEventLogW(hEventLog, szFileName))
-        ShowLastWin32Error();
+        ShowWin32Error(GetLastError());
 
     CloseEventLog(hEventLog);
 }
@@ -2013,6 +2046,7 @@ CloseUserEventLog(IN PEVENTLOGFILTER EventLogFilter, IN HTREEITEM hti)
     // // TreeView_Expand(hwndTreeView, htiUserLogs, TVE_EXPAND);
     // TreeView_SelectItem(hwndTreeView, hItem);
     // TreeView_EnsureVisible(hwndTreeView, hItem);
+    InvalidateRect(hwndTreeView, NULL, FALSE);
     SetFocus(hwndTreeView);
 }
 
@@ -2062,13 +2096,13 @@ ClearEvents(IN PEVENTLOGFILTER EventLogFilter)
 
     if (!hEventLog)
     {
-        ShowLastWin32Error();
+        ShowWin32Error(GetLastError());
         return FALSE;
     }
 
     Success = ClearEventLogW(hEventLog, sfn.lpstrFile);
     if (!Success)
-        ShowLastWin32Error();
+        ShowWin32Error(GetLastError());
 
     CloseEventLog(hEventLog);
     return Success;
@@ -2254,7 +2288,7 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
                                              1, &EventLog);
         if (EventLogFilter == NULL)
         {
-            HeapFree(GetProcessHeap(), 0, EventLog);
+            EventLog_Free(EventLog);
             continue;
         }
 
@@ -2369,6 +2403,7 @@ Quit:
         TreeView_SelectItem(hwndTreeView, hItemDefault);
         TreeView_EnsureVisible(hwndTreeView, hItemDefault);
     }
+    InvalidateRect(hwndTreeView, NULL, FALSE);
     SetFocus(hwndTreeView);
 
     return;
@@ -2417,8 +2452,6 @@ InitInstance(HINSTANCE hInstance,
     HIMAGELIST hSmall;
     LVCOLUMNW lvc = {0};
     WCHAR szTemp[256];
-
-    hInst = hInstance; // Store instance handle in our global variable
 
     /* Create the main window */
     hwndMainWindow = CreateWindowW(szWindowClass,
