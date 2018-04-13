@@ -141,9 +141,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "Dzienniki systemu"
     IDS_EVENTLOG_APP "Dzienniki aplikacji"
     IDS_EVENTLOG_USER "Dzienniki użytkownika"
-    IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID ( %lu ) nie został odnaleziony w źródle ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego.\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "Czy chcesz zapisać dziennik zdarzeń przed czyszczeniem?"
     IDS_SAVE_FILTER "Dziennik zdarzeń (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Czy chcesz zapisać dziennik zdarzeń przed czyszczeniem?"
+    IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID ( %lu ) nie został odnaleziony w źródle ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego.\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -162,6 +162,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

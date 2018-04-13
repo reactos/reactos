@@ -137,9 +137,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "Systémové protokoly"
     IDS_EVENTLOG_APP "Protokoly aplikací"
     IDS_EVENTLOG_USER "Uživatelské protokoly"
-    IDS_EVENTSTRINGIDNOTFOUND "Popis ID události ( %lu ) zdroj ( %s ) nebyl nalezen. Místní počítač neobsahuje potřebné informace v registru nebo chybí DLL soubory pro zobrazení zpráv ze vzdáleného počítače.\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "Chcete tento protokol před odstraněním uložit?"
     IDS_SAVE_FILTER "Protokol událostí (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Chcete tento protokol před odstraněním uložit?"
+    IDS_EVENTSTRINGIDNOTFOUND "Popis ID události ( %lu ) zdroj ( %s ) nebyl nalezen. Místní počítač neobsahuje potřebné informace v registru nebo chybí DLL soubory pro zobrazení zpráv ze vzdáleného počítače.\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -158,6 +158,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

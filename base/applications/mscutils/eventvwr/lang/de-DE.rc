@@ -139,9 +139,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
-    IDS_EVENTSTRINGIDNOTFOUND "Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der Lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten von Remoten Computern anzuzeigen, nicht besitzt.\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "Möchten Sie dieses Protokoll vor dem Löschen speichern?"
     IDS_SAVE_FILTER "Ereignisprotokoll (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Möchten Sie dieses Protokoll vor dem Löschen speichern?"
+    IDS_EVENTSTRINGIDNOTFOUND "Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der Lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten von Remoten Computern anzuzeigen, nicht besitzt.\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -160,6 +160,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

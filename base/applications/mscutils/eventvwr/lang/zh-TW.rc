@@ -139,9 +139,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
-    IDS_EVENTSTRINGIDNOTFOUND "來源 ( %s ) 中的事件 ID ( %lu ) 的描述無法找到。 本地電腦可能沒有顯示來自遠端電腦消息所必需的註冊表資訊或消息 DLL 檔。\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日誌嗎？"
     IDS_SAVE_FILTER "事件日誌 (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日誌嗎？"
+    IDS_EVENTSTRINGIDNOTFOUND "來源 ( %s ) 中的事件 ID ( %lu ) 的描述無法找到。 本地電腦可能沒有顯示來自遠端電腦消息所必需的註冊表資訊或消息 DLL 檔。\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -160,6 +160,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

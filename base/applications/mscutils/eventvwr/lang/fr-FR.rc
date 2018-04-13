@@ -139,9 +139,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "Journaux système"
     IDS_EVENTLOG_APP "Journaux d'application"
     IDS_EVENTLOG_USER "Journaux de l'utilisateur"
-    IDS_EVENTSTRINGIDNOTFOUND "La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécessaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant.\n\nLes informations suivantes font partie de l'événement :\n\n"
-    IDS_CLEAREVENTS_MSG "Voulez-vous enregistrer ce journal d'événements avant de l'effacer ?"
     IDS_SAVE_FILTER "Journal d'événements (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Voulez-vous enregistrer ce journal d'événements avant de l'effacer ?"
+    IDS_EVENTSTRINGIDNOTFOUND "La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécessaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant.\n\nLes informations suivantes font partie de l'événement :\n\n"
 END
 
 STRINGTABLE
@@ -160,6 +160,7 @@ EventVwr [nom ordinateur] [/l:<fichier journal>] [/?]\n\
 \n\
 /? : Affiche ce message d'aide.\n\
 "
+    IDS_EVENTLOGFILE "Journal d'événements"
 END
 
 STRINGTABLE

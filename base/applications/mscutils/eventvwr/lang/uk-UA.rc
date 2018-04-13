@@ -139,9 +139,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
-    IDS_EVENTSTRINGIDNOTFOUND "Опис для Ідентифікатора події ( %lu ) за джерелом ( %s ) не знайдено. Локальний комп'ютер може не мати необхідної інформації в реєстрі чи DLL файлів повідомлень для відображення повідомлень, що надходять від віддаленого комп'ютера.\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
     IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
+    IDS_EVENTSTRINGIDNOTFOUND "Опис для Ідентифікатора події ( %lu ) за джерелом ( %s ) не знайдено. Локальний комп'ютер може не мати необхідної інформації в реєстрі чи DLL файлів повідомлень для відображення повідомлень, що надходять від віддаленого комп'ютера.\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -160,6 +160,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

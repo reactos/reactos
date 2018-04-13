@@ -89,11 +89,12 @@
 #define IDS_EVENTLOG_SYSTEM             106
 #define IDS_EVENTLOG_APP                107
 #define IDS_EVENTLOG_USER               108
-#define IDS_EVENTSTRINGIDNOTFOUND       109
+#define IDS_SAVE_FILTER                 109
 #define IDS_CLEAREVENTS_MSG             110
-#define IDS_SAVE_FILTER                 111
+#define IDS_EVENTSTRINGIDNOTFOUND       111
 
 #define IDS_USAGE                       120
+#define IDS_EVENTLOGFILE                121
 
 #define IDS_EVENTLOG_ERROR_TYPE         200
 #define IDS_EVENTLOG_WARNING_TYPE       201

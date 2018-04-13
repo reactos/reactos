@@ -139,9 +139,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "Системный журнал"
     IDS_EVENTLOG_APP "Журнал приложений"
     IDS_EVENTLOG_USER "Пользовательский журнал"
-    IDS_EVENTSTRINGIDNOTFOUND "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера.\n\nСледующая информация часть события:\n\n"
-    IDS_CLEAREVENTS_MSG "Вы хотите сохранить журнал событий перед очисткой?"
     IDS_SAVE_FILTER "Журнал событий (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Вы хотите сохранить журнал событий перед очисткой?"
+    IDS_EVENTSTRINGIDNOTFOUND "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера.\n\nСледующая информация часть события:\n\n"
 END
 
 STRINGTABLE
@@ -160,6 +160,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

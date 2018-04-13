@@ -137,9 +137,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
-    IDS_EVENTSTRINGIDNOTFOUND "Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър.\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
     IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
+    IDS_EVENTSTRINGIDNOTFOUND "Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър.\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -158,6 +158,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

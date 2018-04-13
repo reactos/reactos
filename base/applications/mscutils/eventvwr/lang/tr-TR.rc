@@ -145,9 +145,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "Dizge Kayıtları"
     IDS_EVENTLOG_APP "Uygulama Kayıtları"
     IDS_EVENTLOG_USER "Kullanıcı Kayıtları"
-    IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerli bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Değer Defteri bilgisi veyâ ileti DLL kütükleri olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
-    IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını saklamak ister misiniz?"
     IDS_SAVE_FILTER "Olay Kaydı (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını saklamak ister misiniz?"
+    IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerli bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Değer Defteri bilgisi veyâ ileti DLL kütükleri olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
 END
 
 STRINGTABLE
@@ -166,6 +166,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

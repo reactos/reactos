@@ -137,9 +137,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
-    IDS_EVENTSTRINGIDNOTFOUND "Beskrivelsen for Hendelse ID ( %lu ) i kilden ( %s ) kan ikke bli finnet. Lokale datamaskinen har ikke nødvendige register informasjon eller melding DLL filer for å vise melding fra en fjern datamaskin.\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
     IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
+    IDS_EVENTSTRINGIDNOTFOUND "Beskrivelsen for Hendelse ID ( %lu ) i kilden ( %s ) kan ikke bli finnet. Lokale datamaskinen har ikke nødvendige register informasjon eller melding DLL filer for å vise melding fra en fjern datamaskin.\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -158,6 +158,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

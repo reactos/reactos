@@ -139,9 +139,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
-    IDS_EVENTSTRINGIDNOTFOUND "No se pudo recuperar la descripción para el evento con ID ( %lu ) y origen ( %s ). El equipo local puede no tener la información necesaria en el registro o las DLLs necesarias para mostrar los mensajes de un equipo remoto.\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "¿Desea guardar este registro de eventos antes de borrarlo?"
     IDS_SAVE_FILTER "Registro de eventos (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "¿Desea guardar este registro de eventos antes de borrarlo?"
+    IDS_EVENTSTRINGIDNOTFOUND "No se pudo recuperar la descripción para el evento con ID ( %lu ) y origen ( %s ). El equipo local puede no tener la información necesaria en el registro o las DLLs necesarias para mostrar los mensajes de un equipo remoto.\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -160,6 +160,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE

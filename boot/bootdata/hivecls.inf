@@ -23,7 +23,14 @@ HKCR,".clp","",0x00000000,"clpfile"
 HKCR,"clpfile","",0x00000000,"Clipboard Element"
 HKCR,"clpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\clipbrd.exe,-121"
 HKCR,"clpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\clipbrd.exe,1"
-HKCR,"clpfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\clipbrd.exe %1"
+HKCR,"clpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\clipbrd.exe %1"
+
+; Event Log File
+HKCR,".evt","",0x00000000,"evtfile"
+HKCR,"evtfile","",0x00000000,"Event Log File"
+HKCR,"evtfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\eventvwr.exe,-121"
+HKCR,"evtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\eventvwr.exe,1"
+HKCR,"evtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\eventvwr.exe /l:""%1"""
 
 ; Rich Text Files
 HKCR,".rtf","",0x00000000,"rtffile"
@@ -33,7 +40,7 @@ HKCR,"rtffile","",0x00000000,"Rich Text Document"
 HKCR,"rtffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\wordpad.exe,-1404"
 HKCR,"rtffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\wordpad.exe,-103"
 HKCR,"rtffile\shell\open","",0x00000000,"Open"
-HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe %1"
+HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe ""%1"""
 HKCR,"rtffile\shell\print\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe /p ""%1"""
 
 ; Virtual Device Drivers

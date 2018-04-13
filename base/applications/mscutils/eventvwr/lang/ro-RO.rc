@@ -142,9 +142,9 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "Jurnale de sistem"
     IDS_EVENTLOG_APP "Jurnale de aplicație"
     IDS_EVENTLOG_USER "Jurnale de utilizator"
-    IDS_EVENTSTRINGIDNOTFOUND "Descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ) nu a fost găsită. Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea.\n\nInformații aferente evenimentului:\n\n"
-    IDS_CLEAREVENTS_MSG "Doriți păstrarea acestui jurnal de evenimente înainte de a-l închide?"
     IDS_SAVE_FILTER "Jurnal de evenimente (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Doriți păstrarea acestui jurnal de evenimente înainte de a-l închide?"
+    IDS_EVENTSTRINGIDNOTFOUND "Descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ) nu a fost găsită. Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea.\n\nInformații aferente evenimentului:\n\n"
 END
 
 STRINGTABLE
@@ -163,6 +163,7 @@ EventVwr [computer name] [/l:<event log file>] [/?]\n\
 \n\
 /? : Displays this help message.\n\
 "
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE
