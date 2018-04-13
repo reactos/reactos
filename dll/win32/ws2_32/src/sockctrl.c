@@ -123,6 +123,18 @@ WSAAPI
 listen(IN SOCKET s,
        IN INT backlog)
 {
+	//make a saperate thread call listen_call()
+	return WSACallThread( 1,(LPVOID) s, (LPVOID) backlog);
+}
+
+/*
+ * @implemented original listen() function
+ */
+INT
+WSAAPI
+listen_call(IN SOCKET s,
+       IN INT backlog)
+{
     PWSSOCKET Socket;
     INT Status;
     INT ErrorCode;

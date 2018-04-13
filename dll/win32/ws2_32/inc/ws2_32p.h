@@ -268,6 +268,19 @@ extern DWORD GlobalTlsIndex;
 extern BOOLEAN WsAsyncThreadInitialized;
 extern PWS_SOCK_POST_ROUTINE WsSockPostRoutine;
 
+INT
+WINAPI
+WSACallThread( IN int funcId, IN LPVOID arg1, IN LPVOID arg2);
+
+INT
+WSAAPI
+listen_call(IN SOCKET s,
+       IN INT backlog);
+
+DWORD
+WINAPI
+WSAThread( IN LPVOID reserved);
+
 LPSTR
 WSAAPI
 AnsiDupFromUnicode(IN LPCWSTR UnicodeString);

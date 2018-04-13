@@ -486,6 +486,13 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
                                &lpStartAddress,
                                sizeof(PPROCESS_START_ROUTINE));
 
+	#if defined(__i386__) 
+	    /*Set EBX = PEB */
+	    asm volatile (".intel_syntax noprefix");
+	    asm volatile ("mov ebx, fs:0x30");
+	    asm volatile (".att_syntax prefix");
+	#endif
+
         /* Call the Start Routine */
         ExitThread(lpStartAddress());
     }
