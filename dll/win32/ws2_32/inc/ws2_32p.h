@@ -270,8 +270,8 @@ extern PWS_SOCK_POST_ROUTINE WsSockPostRoutine;
 
 INT
 WINAPI
-WSACallThread(IN int funcId, 
-              IN LPVOID arg1, 
+WSACallThread(IN int funcId,
+              IN LPVOID arg1,
               IN LPVOID arg2);
 
 INT
