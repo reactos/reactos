@@ -123,8 +123,8 @@ WSAAPI
 listen(IN SOCKET s,
        IN INT backlog)
 {
-	//make a saperate thread call listen_call()
-	return WSACallThread( 1,(LPVOID) s, (LPVOID) backlog);
+	//Make a separate thread call listen_call()
+	return WSACallThread(1, (LPVOID) s, (LPVOID) backlog);
 }
 
 /*
@@ -133,7 +133,7 @@ listen(IN SOCKET s,
 INT
 WSAAPI
 listen_call(IN SOCKET s,
-       IN INT backlog)
+            IN INT backlog)
 {
     PWSSOCKET Socket;
     INT Status;

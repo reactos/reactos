@@ -18,7 +18,7 @@
 PWS_SOCK_POST_ROUTINE WsSockPostRoutine = NULL;
 CRITICAL_SECTION WsStartupLock;
 
-/* variables used to control WSAThread */
+/* Variables used to control WSAThread */
 CRITICAL_SECTION pWSAThreadLock;
 HANDLE pWSAthread;
 int WSAThreadCallId;
@@ -28,7 +28,7 @@ int WSAThreadError;
 int WSAThreadReturnvalue;
 HANDLE gWSAThreadEvent;
 HANDLE gWSAThreadCompleteEvent;
-/* end variables used to control WSAThread */
+/* End variables used to control WSAThread */
 
 #define WsStartupLock()     EnterCriticalSection(&WsStartupLock)
 #define WsStartupUnlock()   LeaveCriticalSection(&WsStartupLock)
@@ -102,9 +102,19 @@ WSACleanup(VOID)
         /* Decrement process reference count and check if it's zero */
         if (!(RefCount = InterlockedDecrement(&Process->RefCount)))
         {
-	    /* destroy WSAThread recources */
-	    WsCreateWSAThreadSynchronization();
-	    TerminateThread(pWSAthread, 0);
+            /* Be sure no other thread is using WSAThread */
+            WsCreateWSAThreadSynchronization();
+
+            /* Send message to thread to shutdown */
+	    WSAThreadCallId = 0;
+            SetEvent(gWSAThreadEvent);
+
+            /* Wait until the thread is closed */
+            WaitForSingleObject( 
+	    gWSAThreadCompleteEvent, // event handle
+	    INFINITE);               // indefinite wait
+
+            /* Destroy WSAThread recources */
 	    CloseHandle(gWSAThreadEvent);
 	    CloseHandle(gWSAThreadCompleteEvent);
 	    CloseHandle(pWSAthread);
@@ -145,36 +155,38 @@ WSACleanup(VOID)
 
 INT
 WINAPI
-WSACallThread( IN int funcId, IN LPVOID arg1, IN LPVOID arg2)
+WSACallThread(IN int funcId, 
+               IN LPVOID arg1, 
+               IN LPVOID arg2)
 {
     int lastError;
     int returnvalue;
 
-   /* wait until the Thread is ready to accept commands and lock it */
+   /* Wait until the Thread is ready to accept commands and lock it */
     WsCreateWSAThreadSynchronization();
 
-    /* set WSAThread parameters */
+    /* Set WSAThread parameters */
     WSAThreadCallId = funcId;
     WSAThreadArg1 = arg1;
     WSAThreadArg2 = arg2;
 
-    /* tell WSAThread the parameters have been set and it can preform itś task */
+    /* Tell WSAThread the parameters have been set and it can preform it's task */
     SetEvent(gWSAThreadEvent);
 
-    /* wait for the thread to complete his task */
+    /* Wait for the thread to complete its task */
     WaitForSingleObject( 
 	gWSAThreadCompleteEvent, // event handle
 	INFINITE);               // indefinite wait
     ResetEvent(gWSAThreadCompleteEvent);
 
-    /* receive return values */
+    /* Receive return values */
     returnvalue = WSAThreadReturnvalue;
     lastError = WSAThreadError;
     
-    /* unlock WSAThread */
+    /* Unlock WSAThread */
     WsDestroyWSAThreadSynchronization();
 
-    /* set results */
+    /* Set results */
     WSASetLastError(lastError);
     return returnvalue;
 }
@@ -183,10 +195,10 @@ WSACallThread( IN int funcId, IN LPVOID arg1, IN LPVOID arg2)
 
 DWORD
 WINAPI
-WSAThread( IN LPVOID reserved)
+WSAThread(IN LPVOID reserved)
 {
     while(TRUE) {
-	/* wait until all parameters have been set */
+	/* Wait until all parameters have been set */
 	WaitForSingleObject( 
 		gWSAThreadEvent,      // event handle
 		INFINITE);            // indefinite wait
@@ -194,18 +206,27 @@ WSAThread( IN LPVOID reserved)
 
 	/* Which WSA function should we be calling */
         switch(WSAThreadCallId) {
+            case 0:
+                /*Close the thread */
+                WSAThreadReturnvalue = 1;
+                WSAThreadError = 0;
+
+                /* Notify the caller the function is completed */
+                SetEvent(gWSAThreadCompleteEvent);
+
+                return 1;
             case 1:
-		/*call listen and return the returnvalue at WSAThreadReturnvalue */
+		/* Call listen and return the returnvalue at WSAThreadReturnvalue */
                 WSAThreadReturnvalue = listen_call((SOCKET) WSAThreadArg1, (INT) WSAThreadArg2);
                 break;
             default:
                 break;
         }
 	
-	/* copy the wsa error to WSAThreadError */
+	/* Copy the wsa error to WSAThreadError */
         WSAThreadError = WSAGetLastError();
 
-	/* notify the caller the function is completed */
+	/* Notify the caller the function is completed */
         SetEvent(gWSAThreadCompleteEvent);
    }
 }
@@ -342,29 +363,29 @@ WSAStartup(IN WORD wVersionRequested,
     /* Check if all worked */
     if (ErrorCode == ERROR_SUCCESS)
     {
-	/* create events for functio WSAThread */
-        gWSAThreadEvent = CreateEvent( 
-		NULL,               // default security attributes
-		TRUE,               // manual-reset event
-		FALSE,              // initial state is nonsignaled
-		TEXT("WSAThreadEvent")  // object name
-		); 
+        /* Create events for function WSAThread */
+        gWSAThreadEvent = CreateEventW( 
+                NULL,               // Default security attributes
+                TRUE,               // Manual-reset event
+                FALSE,              // Initial state is nonsignaled
+                NULL                // Object name
+                ); 
 
-        gWSAThreadCompleteEvent = CreateEvent( 
-		NULL,               // default security attributes
-		TRUE,               // manual-reset event
-		FALSE,              // initial state is nonsignaled
-		TEXT("WSAThreadCompleteEvent")  // object name
-		); 
+        gWSAThreadCompleteEvent = CreateEventW( 
+                NULL,               // Default security attributes
+                TRUE,               // Manual-reset event
+                FALSE,              // Initial state is nonsignaled
+                NULL                // Object name
+                ); 
 
 	/*Create Thread for WSAThread() */
 	pWSAthread = CreateThread( 
-		    NULL,		// default security attributes
-		    0,			// use default stack size  
-		    WSAThread,		// thread function name
-		    (DWORD) 0,          // argument to thread function 
-		    0,			// use default creation flags 
-		    NULL);		// returns the thread identifier 
+                NULL,       // default security attributes
+                0,          // use default stack size  
+                WSAThread,  // thread function name
+                (DWORD) 0,  // argument to thread function 
+                0,          // use default creation flags 
+                NULL);      // returns the thread identifier 
 
         /* Set the requested version */
         WsProcSetVersion(CurrentProcess, wVersionRequested);
