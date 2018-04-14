@@ -85,8 +85,23 @@ type NET CONFIG SERVER without parameters.\n\n"
                     WORKSTATION\n\n"
     IDS_FILE_SYNTAX "NET FILE [id [/CLOSE]]\n\n"
     IDS_FILE_HELP "NET FILE\n...\n\n"
-    IDS_GROUP_SYNTAX "NET GROUP ...\n\n"
-    IDS_GROUP_HELP "GROUP\n...\n\n"
+    IDS_GROUP_SYNTAX "NET GROUP [groupname [/COMMENT:""text""]] [/DOMAIN]\n\
+          groupname {/ADD [/COMMENT:""text""] | /DELETE} [/DOMAIN]\n\
+          groupname username [...] {/ADD | /DELETE} [/DOMAIN]\n\n"
+    IDS_GROUP_HELP_1 "NET GROUP adds, displays or modifies global groups on servers. When\n\
+used without parameters, it displays the groupnames on the server.\n\n"
+    IDS_GROUP_HELP_2 "groupname        Is the name of the group to add, expand, or delete.\n\
+                 Supply only a groupname to view a list of users\n\
+                 in a group.\n"
+    IDS_GROUP_HELP_3 "/COMMENT:""text""  Adds a comment for a new or existing group.\n\
+                 Enclose the text inquotation marks.\n"
+    IDS_GROUP_HELP_4 "/DOMAIN          Performs the operation on a domain controller\n\
+                 of the current domain. Otherwise, the operation is \n\
+                 performed on the local computer.\n"
+    IDS_GROUP_HELP_5 "username[ ...]   List one or more usernames to add to or remove from\n\
+                 a group. Separate multiple username entries with a space.\n"
+    IDS_GROUP_HELP_6 "/ADD             Adds a group, or adds a username to a group.\n"
+    IDS_GROUP_HELP_7 "/DELETE          Removes a group, or removes a username from a group.\n\n"
     IDS_HELP_SYNTAX "NET HELP <命令>\n   - 或 -\nNET <命令> /HELP\n\n"
     IDS_HELP_HELP_1 "   以下命令是可用的:\n\n\
    NET ACCOUNTS             NET HELP                 NET SHARE\n\
@@ -107,8 +122,8 @@ message and suggested actions you can take to solve the problem.\n\n"
     IDS_LOCALGROUP_SYNTAX "NET LOCALGROUP [組名 [/COMMENT:""文字""]] [/DOMAIN]\n\
                組名 {/ADD [/COMMENT:""文字""] | /DELETE} [/DOMAIN]\n\
                組名稱 [...] {/ADD | /DELETE} [/DOMAIN]\n\n"
-    IDS_LOCALGROUP_HELP_1 "NET LOCALGROUP modifies local groups on computers. When used without\n\
-options, it displays the local groups on the computer.\n\n"
+    IDS_LOCALGROUP_HELP_1 "NET LOCALGROUP adds, displays or modifies local groups on computers. When\n\
+used without parameters, it displays the local groups on the computer.\n\n"
     IDS_LOCALGROUP_HELP_2 "groupname        Is the name of the local group to add, expand, or\n\
                  delete. Supply only a groupname to view a list of\n\
                  users or global groups in a local group.\n"
@@ -117,7 +132,7 @@ options, it displays the local groups on the computer.\n\n"
     IDS_LOCALGROUP_HELP_4 "/DOMAIN          Performs the operation on a domain controller\n\
                  of the current domain. Otherwise, the operation is \n\
                  performed on the local computer.\n"
-    IDS_LOCALGROUP_HELP_5 "name [ ...]      List one or more usernames or groupnams to add or to\n\
+    IDS_LOCALGROUP_HELP_5 "name[ ...]       List one or more usernames or groupnams to add to or\n\
                  remove from a local group. Separate multiple entries with\n\
                  a space. Names may be users or global groups, but not\n\
                  other local groups. If a user is from another doamin,\n\
