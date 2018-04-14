@@ -4,7 +4,7 @@
  * PURPOSE:     Sdb low level glue layer
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blaževic
- *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "ntndk.h"
@@ -476,7 +476,7 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
 /**
  * Find the first named child tag.
  *
- * @param [in]  database    The database.
+ * @param [in]  pdb         The database.
  * @param [in]  root        The tag to start at
  * @param [in]  find        The tag type to find
  * @param [in]  nametag     The child of 'find' that contains the name
@@ -531,6 +531,116 @@ TAGREF WINAPI SdbGetLayerTagRef(HSDB hsdb, LPCWSTR layerName)
         }
     }
     return TAGREF_NULL;
+}
+
+
+#ifndef REG_SZ
+#define REG_SZ 1
+#define REG_DWORD 4
+#define REG_QWORD 11
+#endif
+
+
+/**
+ * Retrieve a Data entry
+ *
+ * @param [in]  pdb                     The database.
+ * @param [in]  tiExe                   The tagID to start at
+ * @param [in,opt]  lpszDataName        The name of the Data entry to find, or NULL to return all.
+ * @param [out,opt]  lpdwDataType       Any of REG_SZ, REG_QWORD, REG_DWORD, ...
+ * @param [out]  lpBuffer               The output buffer
+ * @param [in,out,opt]  lpcbBufferSize  The size of lpBuffer in bytes
+ * @param [out,opt]  ptiData            The tagID of the data
+ *
+ * @return  ERROR_SUCCESS
+ */
+DWORD WINAPI SdbQueryDataExTagID(PDB pdb, TAGID tiExe, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize, TAGID *ptiData)
+{
+    TAGID tiData, tiValueType, tiValue;
+    DWORD dwDataType, dwSizeRequired, dwInputSize;
+    LPCWSTR lpStringData;
+    /* Not supported yet */
+    if (!lpszDataName)
+        return ERROR_INVALID_PARAMETER;
+
+    tiData = SdbFindFirstNamedTag(pdb, tiExe, TAG_DATA, TAG_NAME, lpszDataName);
+    if (tiData == TAGID_NULL)
+    {
+        SHIM_INFO("No data tag found\n");
+        return ERROR_NOT_FOUND;
+    }
+
+    if (ptiData)
+        *ptiData = tiData;
+
+    tiValueType = SdbFindFirstTag(pdb, tiData, TAG_DATA_VALUETYPE);
+    if (tiValueType == TAGID_NULL)
+    {
+        SHIM_WARN("Data tag (0x%x) without valuetype\n", tiData);
+        return ERROR_INTERNAL_DB_CORRUPTION;
+    }
+
+    dwDataType = SdbReadDWORDTag(pdb, tiValueType, 0);
+    switch (dwDataType)
+    {
+    case REG_SZ:
+        tiValue = SdbFindFirstTag(pdb, tiData, TAG_DATA_STRING);
+        break;
+    case REG_DWORD:
+        tiValue = SdbFindFirstTag(pdb, tiData, TAG_DATA_DWORD);
+        break;
+    case REG_QWORD:
+        tiValue = SdbFindFirstTag(pdb, tiData, TAG_DATA_QWORD);
+        break;
+    default:
+        /* Not supported (yet) */
+        SHIM_WARN("Unsupported dwDataType=0x%x\n", dwDataType);
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if (lpdwDataType)
+        *lpdwDataType = dwDataType;
+
+    if (tiValue == TAGID_NULL)
+    {
+        SHIM_WARN("Data tag (0x%x) without data\n", tiData);
+        return ERROR_INTERNAL_DB_CORRUPTION;
+    }
+
+    if (dwDataType != REG_SZ)
+    {
+        dwSizeRequired = SdbGetTagDataSize(pdb, tiValue);
+    }
+    else
+    {
+        lpStringData = SdbpGetString(pdb, tiValue, &dwSizeRequired);
+        if (lpStringData == NULL)
+        {
+            return ERROR_INTERNAL_DB_CORRUPTION;
+        }
+    }
+    if (!lpcbBufferSize)
+        return ERROR_INSUFFICIENT_BUFFER;
+
+    dwInputSize = *lpcbBufferSize;
+    *lpcbBufferSize = dwSizeRequired;
+
+    if (dwInputSize < dwSizeRequired || lpBuffer == NULL)
+    {
+        SHIM_WARN("dwInputSize %u not sufficient to hold %u bytes\n", dwInputSize, dwSizeRequired);
+        return ERROR_INSUFFICIENT_BUFFER;
+    }
+
+    if (dwDataType != REG_SZ)
+    {
+        SdbpReadData(pdb, lpBuffer, tiValue + sizeof(TAG), dwSizeRequired);
+    }
+    else
+    {
+        StringCbCopyNW(lpBuffer, dwInputSize, lpStringData, dwSizeRequired);
+    }
+
+    return ERROR_SUCCESS;
 }
 
 

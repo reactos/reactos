@@ -1470,8 +1470,24 @@ LdrpInitializeProcessCompat(PVOID* pOldShimData)
     SIZE_T SizeRequired;
     NTSTATUS Status;
     DWORD n, cur;
+    ReactOS_ShimData* pShimData = *pOldShimData;
 
     C_ASSERT(RTL_NUMBER_OF(GuidOrder) == RTL_NUMBER_OF(GuidVersions));
+
+    if (pShimData)
+    {
+        if (pShimData->dwMagic != REACTOS_SHIMDATA_MAGIC ||
+            pShimData->dwSize != sizeof(ReactOS_ShimData))
+        {
+            DPRINT1("LdrpInitializeProcessCompat: Corrupt pShimData (0x%x, %u)\n", pShimData->dwMagic, pShimData->dwSize);
+            return;
+        }
+        if (pShimData->dwRosProcessCompatVersion)
+        {
+            DPRINT1("LdrpInitializeProcessCompat: ProcessCompatVersion already set to 0x%x\n", pShimData->dwRosProcessCompatVersion);
+            return;
+        }
+    }
 
     SizeRequired = sizeof(Buffer);
     Status = RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_NO_ADDREF,
@@ -1501,8 +1517,6 @@ LdrpInitializeProcessCompat(PVOID* pOldShimData)
             if (ContextCompatInfo->Elements[n].Type == ACTCX_COMPATIBILITY_ELEMENT_TYPE_OS &&
                 RtlCompareMemory(&ContextCompatInfo->Elements[n].Id, GuidOrder[cur], sizeof(GUID)) == sizeof(GUID))
             {
-                ReactOS_ShimData* pShimData = *pOldShimData;
-
                 /* If this process did not need shim data before, allocate and store it */
                 if (pShimData == NULL)
                 {

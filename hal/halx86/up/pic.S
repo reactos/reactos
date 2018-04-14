@@ -39,11 +39,14 @@ PUBLIC _&WrapperName&@8
     ret 8
 
 WrapperName&_CallIntHandler:
-    /* We got a pointer to call. Since it won't return, free up our stack
-       space. Otherwise we could end up with some nasty deep recursion.
+    /* We got a pointer to call. Since it won't return, reset the stack to
+       the location of the stack frame. This frees up our own stack as well
+       as that of the functions above us, and avoids an overflow due to
+       excessive recursion.
        The next function takes the trap frame as its (fastcall) argument. */
     mov ecx, [esp+8]
-    add esp, 12
+    mov esp, ecx
+    mov ebp, esp
     jmp eax
 .ENDP
 ENDM

@@ -4,14 +4,11 @@
  * PURPOSE:     Shim database query functions
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blaževic
- *              Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "windef.h"
 #include "apphelp.h"
-
-
-DWORD WINAPI SdbGetTagDataSize(PDB pdb, TAGID tagid);
 
 
 BOOL WINAPI SdbpReadData(PDB pdb, PVOID dest, DWORD offset, DWORD num)
@@ -47,7 +44,7 @@ static DWORD WINAPI SdbpGetTagSize(PDB pdb, TAGID tagid)
     return size;
 }
 
-static LPWSTR WINAPI SdbpGetString(PDB pdb, TAGID tagid, PDWORD size)
+LPWSTR WINAPI SdbpGetString(PDB pdb, TAGID tagid, PDWORD size)
 {
     TAG tag;
     TAGID offset;
@@ -79,7 +76,7 @@ static LPWSTR WINAPI SdbpGetString(PDB pdb, TAGID tagid, PDWORD size)
     }
 
     /* Optionally read string size */
-    if (size && !SdbpReadData(pdb, size, tagid + sizeof(TAG), sizeof(*size)))
+    if (size && !SdbpReadData(pdb, size, offset - sizeof(TAGID), sizeof(*size)))
         return FALSE;
 
     return (LPWSTR)(&pdb->data[offset]);

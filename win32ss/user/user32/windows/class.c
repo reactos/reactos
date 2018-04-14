@@ -90,7 +90,9 @@ ClassNameToVersion(
   BOOL bAnsi)
 {
     LPCWSTR VersionedClass = NULL;
+#ifdef USE_VERSIONED_CLASSES
     NTSTATUS Status;
+#endif
     UNICODE_STRING SectionName;
     WCHAR SectionNameBuf[MAX_PATH] = {0};
     ACTCTX_SECTION_KEYED_DATA KeyedData = { sizeof(KeyedData) };
@@ -126,13 +128,13 @@ ClassNameToVersion(
             RtlInitUnicodeString(&SectionName, lpszClass);
         }
     }
+#ifdef USE_VERSIONED_CLASSES
     Status = RtlFindActivationContextSectionString( FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
                                                     NULL,
                                                     ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION,
                                                    &SectionName,
                                                    &KeyedData );
 
-#ifdef USE_VERSIONED_CLASSES
     if (NT_SUCCESS(Status) && KeyedData.ulDataFormatVersion == 1)
     {
         struct strsection_header *SectionHeader = KeyedData.lpSectionBase;

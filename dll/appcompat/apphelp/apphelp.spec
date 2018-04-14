@@ -108,9 +108,9 @@
 @ stub SdbQueryApphelpInformation
 @ stub SdbQueryBlockUpgrade
 @ stub SdbQueryContext
-@ stub SdbQueryData
-@ stub SdbQueryDataEx
-@ stub SdbQueryDataExTagID
+@ stdcall SdbQueryData(ptr long wstr ptr ptr ptr)
+@ stdcall SdbQueryDataEx(ptr long wstr ptr ptr ptr ptr)
+@ stdcall SdbQueryDataExTagID(ptr long wstr ptr ptr ptr ptr)
 @ stub SdbQueryFlagInfo
 @ stub SdbQueryName
 @ stub SdbQueryReinstallUpgrade

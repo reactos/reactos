@@ -145,9 +145,28 @@ BEGIN
     IDS_EVENTLOG_SYSTEM "Dizge Kayıtları"
     IDS_EVENTLOG_APP "Uygulama Kayıtları"
     IDS_EVENTLOG_USER "Kullanıcı Kayıtları"
-    IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerli bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Değer Defteri bilgisi veyâ ileti DLL kütükleri olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
-    IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını saklamak ister misiniz?"
     IDS_SAVE_FILTER "Olay Kaydı (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını saklamak ister misiniz?"
+    IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerli bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Değer Defteri bilgisi veyâ ileti DLL kütükleri olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
+END
+
+STRINGTABLE
+BEGIN
+/* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
+    IDS_USAGE "ReactOS Event Viewer\n\
+\n\
+EventVwr [computer name] [/l:<event log file>] [/?]\n\
+\n\
+""computer name"" : Specifies the remote computer where to connect\n\
+\tto retrieve the events to display. If no name is specified, the\n\
+\tlocal computer is used.\n\
+\n\
+/l:<event log file> : Specifies which event log file to open.\n\
+\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+\n\
+/? : Displays this help message.\n\
+"
+    IDS_EVENTLOGFILE "Event Log File"
 END
 
 STRINGTABLE
