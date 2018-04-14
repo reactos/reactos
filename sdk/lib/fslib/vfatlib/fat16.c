@@ -38,8 +38,7 @@ Fat16WriteBootSector(IN HANDLE FileHandle,
     RtlZeroMemory(NewBootSector, BootSector->BytesPerSector);
 
     /* Copy FAT16 BPB to new bootsector */
-    memcpy(&NewBootSector->Jump[0],
-           &BootSector->Jump[0],
+    memcpy(NewBootSector, BootSector,
            FIELD_OFFSET(FAT16_BOOT_SECTOR, Res2) - FIELD_OFFSET(FAT16_BOOT_SECTOR, Jump));
            /* FAT16 BPB length (up to (not including) Res2) */
 
