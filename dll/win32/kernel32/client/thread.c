@@ -65,13 +65,6 @@ BaseThreadStartup(IN LPTHREAD_START_ROUTINE lpStartAddress,
             if (!BaseRunningInServerProcess) CsrNewThread();
         }
 
-	#if defined(__i386__) 
-	    /*Set EBX = PEB */
-	    asm volatile (".intel_syntax noprefix");
-	    asm volatile ("mov ebx, fs:0x30");
-	    asm volatile (".att_syntax prefix");
-	#endif
-
         /* Get the exit code from the Thread Start */
         ExitThread((lpStartAddress)((PVOID)lpParameter));
     }
