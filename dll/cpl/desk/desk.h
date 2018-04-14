@@ -81,6 +81,26 @@ ULONG __cdecl DbgPrint(PCCH Format,...);
 #define MAX_DESK_PAGES        32
 #define NUM_SPECTRUM_BITMAPS  3
 
+/* This number must match DesktopIcons array size */
+#define NUM_DESKTOP_ICONS  4
+
+typedef struct
+{
+    BOOL bHideClassic;  /* Hide icon in Classic mode */
+    BOOL bHideNewStart; /* Hide icon in Modern Start menu mode */
+} HIDE_ICON;
+
+typedef struct _DESKTOP_DATA
+{
+    BOOL bSettingsChanged;
+    HIDE_ICON optIcons[NUM_DESKTOP_ICONS];
+    BOOL bHideChanged[NUM_DESKTOP_ICONS];
+
+    BOOL bLocalSettingsChanged;
+    BOOL bLocalHideIcon[NUM_DESKTOP_ICONS];
+    BOOL bLocalHideChanged[NUM_DESKTOP_ICONS];
+} DESKTOP_DATA, *PDESKTOP_DATA;
+
 /* As slider control can't contain user data, we have to keep an
  * array of RESOLUTION_INFO to have our own associated data.
  */
@@ -142,6 +162,18 @@ AdvGeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 BOOL
 SwitchDisplayMode(HWND hwndDlg, PWSTR DeviceName, PSETTINGS_ENTRY seInit, PSETTINGS_ENTRY seNew, OUT PLONG rc);
+
+INT_PTR CALLBACK
+DesktopPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+VOID
+InitDesktopSettings(PDESKTOP_DATA pData);
+
+BOOL
+SaveDesktopSettings(PDESKTOP_DATA pData);
+
+VOID
+SetDesktopSettings(PDESKTOP_DATA pData);
 
 LONG
 RegLoadMUIStringW(IN HKEY hKey,

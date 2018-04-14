@@ -8,6 +8,7 @@ list(APPEND SOURCE
     background.c
     classinst.c
     desk.c
+    desktop.c
     devsett.c
     dibitmap.c
     misc.c
