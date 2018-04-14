@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/toolsettings.cpp
  * PURPOSE:     Window procedure of the tool settings window
  * PROGRAMMERS: Benedikt Freisen
+ *              Stanislav Motylkov
  */
 
 /* INCLUDES *********************************************************/
@@ -11,8 +12,6 @@
 #include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
-
-extern void zoomTo(int, int, int);
 
 LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, WINBOOL& bHandled)
 {
@@ -25,7 +24,10 @@ LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, W
 
 LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    zoomTo(125 << trackbarZoom.SendMessage(TBM_GETPOS, 0, 0), 0, 0);
+    if (!zoomTo(125 << trackbarZoom.SendMessage(TBM_GETPOS, 0, 0), 0, 0))
+    {
+        OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
+    }
     return 0;
 }
 

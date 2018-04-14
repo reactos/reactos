@@ -16,9 +16,6 @@
 
 /* FUNCTIONS ********************************************************/
 
-extern void
-zoomTo(int newZoom, int mouseX, int mouseY);
-
 void
 updateCanvasAndScrollbars()
 {
