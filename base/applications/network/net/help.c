@@ -102,7 +102,13 @@ INT cmdHelp(INT argc, WCHAR **argv)
     if (_wcsicmp(argv[2], L"LOCALGROUP") == 0)
     {
         ConResPuts(StdOut, IDS_LOCALGROUP_SYNTAX);
-        ConResPuts(StdOut, IDS_LOCALGROUP_HELP);
+        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_1);
+        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_2);
+        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_3);
+        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_4);
+        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_5);
+        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_6);
+        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_7);
         ConResPuts(StdOut, IDS_GENERIC_PAGE);
         return 0;
     }

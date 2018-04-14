@@ -105,7 +105,27 @@ message and suggested actions you can take to solve the problem.\n\n"
     IDS_LOCALGROUP_SYNTAX "NET LOCALGROUP [groupname [/COMMENT:""text""]] [/DOMAIN]\n\
                groupname {/ADD [/COMMENT:""text""] | /DELETE} [/DOMAIN]\n\
                groupname name [...] {/ADD | /DELETE} [/DOMAIN]\n\n"
-    IDS_LOCALGROUP_HELP "LOCALGROUP\n...\n\n"
+    IDS_LOCALGROUP_HELP_1 "NET LOCALGROUP modifies local groups on computers. When used without\n\
+options, it displays the local groups on the computer.\n\n"
+    IDS_LOCALGROUP_HELP_2 "groupname        Is the name of the local group to add, expand, or\n\
+                 delete. Supply only a groupname to view a list of\n\
+                 users or global groups in a local group.\n"
+    IDS_LOCALGROUP_HELP_3 "/COMMENT:""text""  Adds a comment for a new or existing group.\n\
+                 Enclose the text inquotation marks.\n"
+    IDS_LOCALGROUP_HELP_4 "/DOMAIN          Performs the operation on a domain controller\n\
+                 of the current domain. Otherwise, the operation is \n\
+                 performed on the local computer.\n"
+    IDS_LOCALGROUP_HELP_5 "name [ ...]      List one or more usernames or groupnams to add or to\n\
+                 remove from a local group. Separate multiple entries with\n\
+                 a space. Names may be users or global groups, but not\n\
+                 other local groups. If a user is from another doamin,\n\
+                 preface the username with the domain name (for\n\
+                 example, SALES\\RALPHR).\n"
+    IDS_LOCALGROUP_HELP_6 "/ADD             Adds a groupname or username to a local group. An account\n\
+                 must be established for users or global groups added to a\n\
+                 local group with this command.\n"
+    IDS_LOCALGROUP_HELP_7 "/DELETE          Removes a groupname or username from a local group.\n\n"
+
     IDS_NAME_SYNTAX "NET NAME ...\n\n"
     IDS_NAME_HELP "NAME\n...\n\n"
     IDS_PRINT_SYNTAX  "NET PRINT ...\n\n"
