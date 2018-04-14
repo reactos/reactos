@@ -486,8 +486,7 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
         case ICON_SMALL2:
             hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
             break;
-        default:
-            break;
+        DEFAULT_UNREACHABLE;
     }
     return (LRESULT)hIconRet;
 }
@@ -927,14 +926,23 @@ IntDefWindowProc(
       }
 
       case WM_MOUSEACTIVATE:
+         FIXME("CORE-14306 PR492 Debug: Wnd=0x%p\n", Wnd);
          if (Wnd->style & WS_CHILD)
          {
              LONG Ret;
              HWND hwndParent;
              PWND pwndParent = IntGetParent(Wnd);
              hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;
-             if (hwndParent) Ret = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
-             if (Ret) return (Ret);
+             FIXME("CORE-14306 PR492 Debug: pwndParent=0x%p, hwndParent=0x%p\n", pwndParent, hwndParent);
+             ASSERT(hwndParent != NULL);
+             if (hwndParent)
+             {
+                 Ret = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
+                 if (Ret)
+                 {
+                     return Ret;
+                 }
+             }
          }
          return ( (HIWORD(lParam) == WM_LBUTTONDOWN && LOWORD(lParam) == HTCAPTION) ? MA_NOACTIVATE : MA_ACTIVATE );
 
