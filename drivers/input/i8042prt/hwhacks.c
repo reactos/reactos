@@ -226,6 +226,70 @@ i8042ParseSMBiosTables(
     }
 }
 
+static
+VOID
+i8042StoreSMBiosTables(
+    _In_reads_bytes_(TableSize) PVOID SMBiosTables,
+    _In_ ULONG TableSize)
+{
+    static UNICODE_STRING mssmbiosKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\mssmbios");
+    static UNICODE_STRING DataName = RTL_CONSTANT_STRING(L"Data");
+    static UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SMBiosData");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE KeyHandle = NULL, SubKeyHandle = NULL;
+    NTSTATUS Status;
+
+    /* Create registry key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &mssmbiosKeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateKey(&KeyHandle,
+                         KEY_WRITE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return;
+    }
+
+    /* Create sub key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DataName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               KeyHandle,
+                               NULL);
+    Status = ZwCreateKey(&SubKeyHandle,
+                         KEY_WRITE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(KeyHandle);
+        return;
+    }
+
+    /* Write value */
+    ZwSetValueKey(SubKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_BINARY,
+                  SMBiosTables,
+                  TableSize);
+
+    ZwClose(SubKeyHandle);
+    ZwClose(KeyHandle);
+}
+
 VOID
 NTAPI
 i8042InitializeHwHacks(
@@ -270,6 +334,12 @@ i8042InitializeHwHacks(
         ExFreePoolWithTag(AllData, 'BTMS');
         return;
     }
+
+    /* FIXME: This function should be removed once the mssmbios driver is implemented */
+    /* Store SMBios data in registry */
+    i8042StoreSMBiosTables(AllData + 1,
+                           AllData->FixedInstanceSize);
+    DPRINT1("SMBiosTables HACK, see CORE-14867\n");
 
     /* Parse the table */
     i8042ParseSMBiosTables(AllData + 1,
