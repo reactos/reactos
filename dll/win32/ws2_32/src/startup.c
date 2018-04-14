@@ -106,19 +106,19 @@ WSACleanup(VOID)
             WsCreateWSAThreadSynchronization();
 
             /* Send message to thread to shutdown */
-	    WSAThreadCallId = 0;
+            WSAThreadCallId = 0;
             SetEvent(gWSAThreadEvent);
 
             /* Wait until the thread is closed */
             WaitForSingleObject( 
-	    gWSAThreadCompleteEvent, // event handle
-	    INFINITE);               // indefinite wait
+            gWSAThreadCompleteEvent, // event handle
+            INFINITE);               // indefinite wait
 
             /* Destroy WSAThread recources */
-	    CloseHandle(gWSAThreadEvent);
-	    CloseHandle(gWSAThreadCompleteEvent);
-	    CloseHandle(pWSAthread);
-	    WsDestroyWSAThreadSynchronization();
+            CloseHandle(gWSAThreadEvent);
+            CloseHandle(gWSAThreadCompleteEvent);
+            CloseHandle(pWSAthread);
+            WsDestroyWSAThreadSynchronization();
 
             /* It's zero, destroy the process structure */
             WsProcDelete(Process);
@@ -155,7 +155,7 @@ WSACleanup(VOID)
 
 INT
 WINAPI
-WSACallThread(IN int funcId, 
+WSACallThread(IN int funcId,
                IN LPVOID arg1, 
                IN LPVOID arg2)
 {
@@ -175,8 +175,8 @@ WSACallThread(IN int funcId,
 
     /* Wait for the thread to complete its task */
     WaitForSingleObject( 
-	gWSAThreadCompleteEvent, // event handle
-	INFINITE);               // indefinite wait
+        gWSAThreadCompleteEvent, // event handle
+        INFINITE);               // indefinite wait
     ResetEvent(gWSAThreadCompleteEvent);
 
     /* Receive return values */
@@ -198,13 +198,13 @@ WINAPI
 WSAThread(IN LPVOID reserved)
 {
     while(TRUE) {
-	/* Wait until all parameters have been set */
-	WaitForSingleObject( 
-		gWSAThreadEvent,      // event handle
-		INFINITE);            // indefinite wait
+        /* Wait until all parameters have been set */
+        WaitForSingleObject( 
+                gWSAThreadEvent,      // event handle
+                INFINITE);            // indefinite wait
         ResetEvent(gWSAThreadEvent);
 
-	/* Which WSA function should we be calling */
+        /* Which WSA function shoube calling */
         switch(WSAThreadCallId) {
             case 0:
                 /*Close the thread */
@@ -216,17 +216,17 @@ WSAThread(IN LPVOID reserved)
 
                 return 1;
             case 1:
-		/* Call listen and return the returnvalue at WSAThreadReturnvalue */
+                /* Call listen and return the returnvalue at WSAThreadReturnvalue */
                 WSAThreadReturnvalue = listen_call((SOCKET) WSAThreadArg1, (INT) WSAThreadArg2);
                 break;
             default:
                 break;
         }
-	
-	/* Copy the wsa error to WSAThreadError */
+
+        /* Copy the wsa error to WSAThreadError */
         WSAThreadError = WSAGetLastError();
 
-	/* Notify the caller the function is completed */
+        /* Notify the caller the function is completed */
         SetEvent(gWSAThreadCompleteEvent);
    }
 }
@@ -378,8 +378,8 @@ WSAStartup(IN WORD wVersionRequested,
                 NULL                // Object name
                 ); 
 
-	/*Create Thread for WSAThread() */
-	pWSAthread = CreateThread( 
+        /*Create Thread for WSAThread() */
+        pWSAthread = CreateThread( 
                 NULL,       // default security attributes
                 0,          // use default stack size  
                 WSAThread,  // thread function name

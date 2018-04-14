@@ -123,8 +123,8 @@ WSAAPI
 listen(IN SOCKET s,
        IN INT backlog)
 {
-	//Make a separate thread call listen_call()
-	return WSACallThread(1, (LPVOID) s, (LPVOID) backlog);
+        //Make a separate thread call listen_call()
+        return WSACallThread(1, (LPVOID)s, (LPVOID)backlog);
 }
 
 /*
