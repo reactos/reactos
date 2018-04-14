@@ -978,7 +978,7 @@ CcRosInternalFreeVacb (
     ASSERT(IsListEmpty(&Vacb->CacheMapVacbListEntry));
     ASSERT(IsListEmpty(&Vacb->DirtyVacbListEntry));
     ASSERT(IsListEmpty(&Vacb->VacbLruListEntry));
-    RtlFillMemory(Vacb, sizeof(Vacb), 0xfd);
+    RtlFillMemory(Vacb, sizeof(*Vacb), 0xfd);
     ExFreeToNPagedLookasideList(&VacbLookasideList, Vacb);
     return STATUS_SUCCESS;
 }
