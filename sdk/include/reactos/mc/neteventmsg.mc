@@ -15,7 +15,7 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
 
 LanguageNames=(English=0x409:MSG00409
                Russian=0x419:MSG00419
-			   Polish=0x415:MSG00415)
+               Polish=0x415:MSG00415)
 
 
 ;
@@ -109,7 +109,7 @@ Language=Russian
 Служба журана событий была запущена.
 .
 Language=Polish
-Uruchomiono usługdzię Dziennika zdarzeń.
+Uruchomiono usługę Dziennik zdarzeń.
 .
 
 MessageId=6006
@@ -123,7 +123,7 @@ Language=Russian
 Служба журнала событий была остановлена.
 .
 Language=Polish
-Zatrzymano usługę Dziennika zdarzeń.
+Zatrzymano usługę Dziennik zdarzeń.
 .
 
 MessageId=6007
@@ -137,7 +137,7 @@ Language=Russian
 Служба журнала событий %0
 .
 Language=Polish
-Usługa Dziennika zdarzeń "%0"
+Usługa Dziennik zdarzeń "%0"
 .
 
 MessageId=6008
@@ -153,7 +153,6 @@ Language=Russian
 Language=Polish
 Poprzednie zamknięcie systemu o godzinie %1 na %2 było nieoczekiwane.
 .
-
 
 MessageId=6009
 Severity=Warning
@@ -282,7 +281,7 @@ Language=Russian
 Служба "%1" зависит от следующей несуществующей службы: "%2"
 .
 Language=Polish
-Usługa %1 zależy od następującej nieistniejącej usługi: %2.
+Usługa %1 zależy od następującej nieistniejącej usługi: %2
 .
 
 MessageId=7005
@@ -296,7 +295,7 @@ Language=Russian
 Вызов "%1" завершился ошибкой: %n%2
 .
 Language=Polish
-Wywołanie %1 nie powiodło się i wystąpił następujący błąd: %n%2.
+Wywołanie %1 nie powiodło się i wystąpił następujący błąd: %n%2
 .
 
 MessageId=7006
@@ -307,7 +306,7 @@ Language=English
 The %1 call failed for %2 with the following error: %n%3
 .
 Language=Polish
-Wywołanie %1 dla %2 nie powiodło się i wystąpił następujący błąd: %n%3.
+Wywołanie %1 dla %2 nie powiodło się i wystąpił następujący błąd: %n%3
 .
 
 MessageId=7007
@@ -674,7 +673,7 @@ usługi %1. Element usługi: %2 jest obecnie w stanie nieprzewidywalnym.
 Jeśli ta konfiguracja nie zostanie naprawiona, ponowne uruchomienie usługi
 %1 może okazać się niemożliwe lub mogą wystąpić inne błędy. Aby upewnić się, 
 że usługa jest skonfigurowana właściwie, użyj przystawki Usługi w programie
-Microsoft Management Console (MMC).
+ReactOS Management Console (MMC).
 .
 
 MessageId=7038
@@ -691,7 +690,7 @@ Language=Polish
 Usługa %1 nie mogła zalogować się jako %2 z aktualnie skonfigurowanym 
 hasłem z powodu następującego błędu: %n%3%n%nAby upewnić się, że usługa 
 jest skonfigurowana właściwie, użyj przystawki Usługi w programie
-Microsoft Management Console (MMC).
+ReactOS Management Console (MMC).
 .
 
 MessageId=7039
@@ -706,11 +705,11 @@ process %2 and process %3 connected instead.%n%n
 Note that if this service is configured to start under a debugger, this behavior is expected.
 .
 Language=Polish
-Proces usługi innej niż uruchomiona przez Service Control Manager
-połączył się podczas uruchamiania usługi %1. Service Control Manager uruchomił
+Proces usługi innej niż uruchomiona przez Menedżer sterowania usługami
+połączył się podczas uruchamiania usługi %1. Menedżer sterowania usługami uruchomił
 proces %2 i połączył się proces %3.%n%n
 
-Jeśli ta usługa jest skonfigurowana to uruchumienia z debugerrem, te zachowanie jest oczekiwane.
+Jeśli ta usługa jest skonfigurowana do uruchomienia z debugerem, takie zachowanie jest oczekiwane.
 .
 
 MessageId=7040
@@ -724,7 +723,7 @@ Language=Russian
 Тип запуска службы "%1" изменен с "%2" на "%3".
 .
 Language=Polish
-Typ startowy usługi %1 zostął zmieniony z %2 do %3.
+Typ startowy usługi %1 został zmieniony z %2 do %3.
 .
 
 MessageId=7041
@@ -749,18 +748,18 @@ out if this is happening.
 .
 Language=Polish
 Usługa %1 nie mogła się zalogować jako %2 z aktualnie skonfigurowanym hasłem z powodu następującego błędu:%n
-Błąd logowania: użytkownik nie otrzymał wymaganyego typu logowania na tym komputerze.%n%n
+Błąd logowania: użytkownik nie otrzymał wymaganego typu logowania na tym komputerze.%n%n
 Usługa: %1%n
 Domena i użytkownik: %2%n%n
-Te konto usługi nie zawiera potrzebnego prawa użytkownika "Zaloguj się jako usługa."%n%n
+To konto usługi nie zawiera potrzebnego prawa użytkownika "Zaloguj się jako usługa."%n%n
 Akcje użytkownika%n%n
 Przypisz "Zaloguj się jako usługa" do konta usługi na tym komputerze. Możesz użyć
-Local Security Settings (Secpol.msc) by to wykonać. Jeśli ten komputer jest
-węzłem w klastrze, sprawdź czy te prawo użytkownika jest przypisane do konta usługi
-Cluster na wszystkich węzła tego klastra.%n%n
-Jeśli już przypisałeś te prawo użytkownika do konta usługi
-i prawo użytkownika wygląda na usunięte, obiekt Group Policy powiązany z tym
-węzłem może usuwać te prawo. Skontaktuj się z administratorem domeny by sprawdzić,
+Ustawień zabezpieczeń lokalnych (Secpol.msc), by to wykonać. Jeśli ten komputer jest
+węzłem w klastrze, sprawdź czy to prawo użytkownika jest przypisane do konta usługi
+Klaster na wszystkich węzłach tego klastra.%n%n
+Jeśli już przypisałeś to prawo użytkownika do konta usługi
+i prawo użytkownika wygląda na usunięte, obiekt zasad grupy powiązany z tym
+węzłem może usuwać to prawo. Skontaktuj się z administratorem domeny by sprawdzić,
 czy to się dokonuje.
 .
 
@@ -787,9 +786,8 @@ Language=English
 The %1 service did not shut down properly after receiving a preshutdown control.
 .
 Language=Polish
-Usługa %1 nie została poprawnie wyłaczona po otrzymaniu kodu sterownika przed zamknięciem systemu.
+Usługa %1 nie została poprawnie wyłączona po otrzymaniu kodu sterownika przed zamknięciem systemu.
 .
-
 
 ;
 ; transport events 9000-9499
