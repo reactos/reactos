@@ -24,7 +24,7 @@ _BaseThreadStartupThunk@0:
     push eax                  /* lpStartAddress */
     push 0                    /* Return EIP */
 
-    //set EBX = PEB
+    //Set EBX = PEB
     assume fs:nothing
     mov ebx, fs:48
     assume  fs:error
@@ -40,7 +40,7 @@ _BaseProcessStartThunk@0:
     push eax                  /* lpStartAddress */
     push 0                    /* Return EIP */
 
-    //set EBX = PEB
+    //Set EBX = PEB
     assume fs:nothing
     mov ebx, fs:48
     assume  fs:error
