@@ -24,7 +24,7 @@ _BaseThreadStartupThunk@0:
     push eax                  /* lpStartAddress */
     push 0                    /* Return EIP */
 
-    //Set EBX = PEB
+    //set EBX = PEB
     assume fs:nothing
     mov ebx, fs:48
     assume  fs:error
