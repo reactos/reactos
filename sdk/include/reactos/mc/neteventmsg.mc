@@ -339,7 +339,7 @@ Language=English
 Timeout (%1 milliseconds) waiting for the %2 service to connect.
 .
 Language=Polish
-Limit czasu (%1 milisekund) podczas oczekiwania na połączenie się z usługą %2.
+Upłynął limit czasu (%1 milisekund) podczas oczekiwania na połączenie się z usługą %2.
 .
 
 MessageId=7010
@@ -361,7 +361,7 @@ Language=English
 Timeout (%1 milliseconds) waiting for a transaction response from the %2 service.
 .
 Language=Polish
-Limit czasu (%1 milisekund) podczas oczekiwania na odpowiedź transakcji z usługi %2.
+Upłynął limit czasu (%1 milisekund) podczas oczekiwania na odpowiedź transakcji z usługi %2.
 .
 
 MessageId=7012
@@ -707,7 +707,7 @@ Note that if this service is configured to start under a debugger, this behavior
 Language=Polish
 Proces usługi innej niż uruchomiona przez Menedżer sterowania usługami
 połączył się podczas uruchamiania usługi %1. Menedżer sterowania usługami uruchomił
-proces %2 i połączył się proces %3.%n%n
+proces %2, a połączył się proces %3.%n%n
 
 Jeśli ta usługa jest skonfigurowana do uruchomienia z debugerem, takie zachowanie jest oczekiwane.
 .
