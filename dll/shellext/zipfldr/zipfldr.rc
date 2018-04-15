@@ -33,3 +33,6 @@ IDR_ZIPFLDR REGISTRY "res/zipfldr.rgs"
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
