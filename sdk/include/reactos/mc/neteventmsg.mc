@@ -328,7 +328,7 @@ Language=English
 No backslash is in the account name.
 .
 Language=Polish
-W nazwie konta brak znaku kreski ułamkowej odwróconej.
+W nazwie konta brak znaku ukośnika odwrotnego.
 .
 
 MessageId=7009
