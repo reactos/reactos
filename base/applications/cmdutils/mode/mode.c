@@ -82,7 +82,7 @@ int QueryDevices(VOID)
     if (Buffer == NULL)
     {
         /* We failed, bail out */
-        wprintf(L"ERROR: Not enough memory\n");
+        ConPuts(StdErr, L"ERROR: Not enough memory\n");
         return 0;
     }
 
@@ -95,7 +95,7 @@ int QueryDevices(VOID)
         if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         {
             /* We failed, bail out */
-            wprintf(L"ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
+            ConPrintf(StdErr, L"ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
             HeapFree(GetProcessHeap(), 0, Buffer);
             return 0;
         }
@@ -106,7 +106,7 @@ int QueryDevices(VOID)
         if (ptr == NULL)
         {
             /* We failed, bail out */
-            wprintf(L"ERROR: Not enough memory\n");
+            ConPuts(StdErr, L"ERROR: Not enough memory\n");
             HeapFree(GetProcessHeap(), 0, Buffer);
             return 0;
         }
@@ -167,12 +167,12 @@ int ShowParallelStatus(INT nPortNum)
         }
         else
         {
-            wprintf(L"    QueryDosDeviceW(%s) returned unrecognised form %s.\n", szPortName, buffer);
+            ConPrintf(StdErr, L"    QueryDosDeviceW(%s) returned unrecognised form %s.\n", szPortName, buffer);
         }
     }
     else
     {
-        wprintf(L"ERROR: QueryDosDeviceW(%s) failed: 0x%lx\n", szPortName, GetLastError());
+        ConPrintf(StdErr, L"ERROR: QueryDosDeviceW(%s) failed: 0x%lx\n", szPortName, GetLastError());
     }
 
     return 1;
@@ -187,7 +187,7 @@ int SetParallelState(INT nPortNum)
     swprintf(szTargetPath, L"COM%d", nPortNum);
     if (!DefineDosDeviceW(DDD_REMOVE_DEFINITION, szPortName, szTargetPath))
     {
-        wprintf(L"SetParallelState(%d) - DefineDosDevice(%s) failed: 0x%lx\n", nPortNum, szPortName, GetLastError());
+        ConPrintf(StdErr, L"SetParallelState(%d) - DefineDosDevice(%s) failed: 0x%lx\n", nPortNum, szPortName, GetLastError());
     }
 
     ShowParallelStatus(nPortNum);
@@ -408,12 +408,12 @@ int SetConsoleStateOld(IN PCWSTR ArgStr)
 Quit:
     ClearScreen(hConOut, &csbi);
     if (!ResizeTextConsole(hConOut, &csbi, Resolution))
-        wprintf(L"The screen cannot be set to the number of lines and columns specified.\n");
+        ConPuts(StdErr, L"The screen cannot be set to the number of lines and columns specified.\n");
 
     return 0;
 
 invalid_parameter:
-    wprintf(L"Invalid parameter - %s\n", ArgStr);
+    ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
     return 1;
 }
 
@@ -486,7 +486,7 @@ int SetConsoleState(IN PCWSTR ArgStr)
         else
         {
 invalid_parameter:
-            wprintf(L"Invalid parameter - %s\n", ArgStr);
+            ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
             return 1;
         }
     }
@@ -495,7 +495,7 @@ invalid_parameter:
     {
         ClearScreen(hConOut, &csbi);
         if (!ResizeTextConsole(hConOut, &csbi, Resolution))
-            wprintf(L"The screen cannot be set to the number of lines and columns specified.\n");
+            ConPuts(StdErr, L"The screen cannot be set to the number of lines and columns specified.\n");
     }
     else if (kbdMode)
     {
@@ -537,7 +537,7 @@ int SetConsoleCPState(IN PCWSTR ArgStr)
     else
     {
 invalid_parameter:
-        wprintf(L"Invalid parameter - %s\n", ArgStr);
+        ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
         return 1;
     }
 
@@ -570,8 +570,8 @@ SerialPortQuery(INT nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWr
 
     if (hPort == INVALID_HANDLE_VALUE)
     {
-        wprintf(L"Illegal device name - %s\n", szPortName);
-        wprintf(L"Last error = 0x%lx\n", GetLastError());
+        ConPrintf(StdErr, L"Illegal device name - %s\n", szPortName);
+        ConPrintf(StdErr, L"Last error = 0x%lx\n", GetLastError());
         return FALSE;
     }
 
@@ -579,7 +579,7 @@ SerialPortQuery(INT nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWr
                      : GetCommState(hPort, pDCB);
     if (!Success)
     {
-        wprintf(L"Failed to %s the status for device COM%d:\n", bWrite ? L"set" : L"get", nPortNum);
+        ConPrintf(StdErr, L"Failed to %s the status for device COM%d:\n", bWrite ? L"set" : L"get", nPortNum);
         goto Quit;
     }
 
@@ -587,7 +587,7 @@ SerialPortQuery(INT nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWr
                      : GetCommTimeouts(hPort, pCommTimeouts);
     if (!Success)
     {
-        wprintf(L"Failed to %s timeout status for device COM%d:\n", bWrite ? L"set" : L"get", nPortNum);
+        ConPrintf(StdErr, L"Failed to %s timeout status for device COM%d:\n", bWrite ? L"set" : L"get", nPortNum);
         goto Quit;
     }
 
@@ -619,12 +619,12 @@ int ShowSerialStatus(INT nPortNum)
     }
     if (dcb.Parity >= ARRAYSIZE(parity_strings))
     {
-        wprintf(L"ERROR: Invalid value for Parity Bits %d:\n", dcb.Parity);
+        ConPrintf(StdErr, L"ERROR: Invalid value for Parity Bits %d:\n", dcb.Parity);
         dcb.Parity = 0;
     }
     if (dcb.StopBits >= ARRAYSIZE(stopbit_strings))
     {
-        wprintf(L"ERROR: Invalid value for Stop Bits %d:\n", dcb.StopBits);
+        ConPrintf(StdErr, L"ERROR: Invalid value for Stop Bits %d:\n", dcb.StopBits);
         dcb.StopBits = 0;
     }
 
@@ -1087,7 +1087,7 @@ int SetSerialState(INT nPortNum, IN PCWSTR ArgStr)
 
     if (!Success)
     {
-        wprintf(L"Invalid parameter - %s\n", ArgStr);
+        ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
         return 1;
     }
 
@@ -1165,7 +1165,7 @@ int wmain(int argc, WCHAR* argv[])
     ArgStr = HeapAlloc(GetProcessHeap(), 0, (ArgStrSize + 1) * sizeof(WCHAR));
     if (ArgStr == NULL)
     {
-        wprintf(L"ERROR: Not enough memory\n");
+        ConPuts(StdErr, L"ERROR: Not enough memory\n");
         return 1;
     }
 
@@ -1215,7 +1215,7 @@ int wmain(int argc, WCHAR* argv[])
         if (!*argStr || _wcsnicmp(argStr, L"/STA", 4) == 0)
             ret = ShowParallelStatus(nPortNum);
         else
-            wprintf(L"ERROR: LPT port redirection is not implemented!\n");
+            ConPuts(StdErr, L"ERROR: LPT port redirection is not implemented!\n");
         // TODO: Implement setting LPT port redirection using SetParallelState().
         goto Quit;
     }
@@ -1282,7 +1282,7 @@ show_status:
     goto Quit;
 
 invalid_parameter:
-    wprintf(L"Invalid parameter - %s\n", ArgStr);
+    ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
     goto Quit;
 
 Quit:
