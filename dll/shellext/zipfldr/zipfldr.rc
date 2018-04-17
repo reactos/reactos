@@ -3,8 +3,6 @@
 
 #include "resource.h"
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
 1 ICON "res/zipfldr.ico"
 
 #define REACTOS_VERSION_DLL
@@ -17,72 +15,24 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDR_ZIPFLDR REGISTRY "res/zipfldr.rgs"
 
+/* UTF-8 */
+#pragma code_page(65001)
 
-
-IDD_PROPPAGEDESTIONATION DIALOGEX 0, 0, 235, 156
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Select a Destination"
-FONT 8, "MS Shell Dlg", 400, 0, 0x0
-BEGIN
-    LTEXT           "Select the destination directory",IDC_STATIC,6,12,174,8
-    EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Browse...",IDC_BROWSE,174,42,54,14
-    PUSHBUTTON      "Password",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Extracting...",IDC_STATIC,6,114,42,8
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
-END
-
-
-IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Extraction Complete"
-FONT 8, "MS Shell Dlg", 400, 0, 0x0
-BEGIN
-    LTEXT           "The files have been extracted to the following directory:",IDC_STATIC,6,12,222,18
-    LTEXT           "Target dir",IDC_DESTDIR,6,36,222,8
-    CONTROL         "Show extracted files",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,81,10
-    LTEXT           "Press finish to continue.",IDC_STATIC,6,84,174,8
-END
-
-
-IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
-STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Confirm File Replace"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    DEFPUSHBUTTON   "&Yes",IDYES,6,36,62,14
-    PUSHBUTTON      "Cancel",IDCANCEL,204,36,62,14
-    PUSHBUTTON      "Yes &To All",IDYESALL,72,36,62,14
-    PUSHBUTTON      "&No",IDNO,138,36,62,14
-    ICON            "",IDC_EXCLAMATION_ICON,6,6,24,22
-    LTEXT           "",IDC_MESSAGE,36,6,228,24
-END
-
-
-
-STRINGTABLE
-BEGIN
-    IDS_COL_NAME "Name"
-    IDS_COL_TYPE "Type"
-    IDS_COL_COMPRSIZE "Compressed size"
-    IDS_COL_PASSWORD "Password"
-    IDS_COL_SIZE "Size"
-    IDS_COL_RATIO "Ratio"
-    IDS_COL_DATE_MOD "Date modified"
-    IDS_YES "Yes"
-    IDS_NO "No"
-
-    IDS_WIZ_TITLE "Extraction Wizard"
-    IDS_WIZ_DEST_TITLE "Select a Destination"
-    IDS_WIZ_DEST_SUBTITLE "The files from the zip archive will be extracted to the location specified."
-    IDS_WIZ_COMPL_TITLE "Extraction Complete"
-    IDS_WIZ_COMPL_SUBTITLE "The files from the zip archive have been extracted."
-    IDS_WIZ_BROWSE_TITLE "Select the place where you want to extract the selected items."
-
-    IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\nDo you want to replace it?"
-
-    IDS_MENUITEM "Extract &All..."
-    IDS_HELPTEXT "Extracts folder contents"
-    IDS_FRIENDLYNAME "Compressed (zipped) Folder"
-
-END
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/et-EE.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif

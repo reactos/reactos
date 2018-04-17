@@ -1040,23 +1040,21 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
 
 NTSTATUS
 NTAPI
-MiCopyFromUserPage(PFN_NUMBER DestPage, PFN_NUMBER SrcPage)
+MiCopyFromUserPage(PFN_NUMBER DestPage, const VOID *SrcAddress)
 {
     PEPROCESS Process;
-    KIRQL Irql, Irql2;
-    PVOID DestAddress, SrcAddress;
+    KIRQL Irql;
+    PVOID DestAddress;
 
     Process = PsGetCurrentProcess();
     DestAddress = MiMapPageInHyperSpace(Process, DestPage, &Irql);
-    SrcAddress = MiMapPageInHyperSpace(Process, SrcPage, &Irql2);
-    if (DestAddress == NULL || SrcAddress == NULL)
+    if (DestAddress == NULL)
     {
         return(STATUS_NO_MEMORY);
     }
     ASSERT((ULONG_PTR)DestAddress % PAGE_SIZE == 0);
     ASSERT((ULONG_PTR)SrcAddress % PAGE_SIZE == 0);
     RtlCopyMemory(DestAddress, SrcAddress, PAGE_SIZE);
-    MiUnmapPageInHyperSpace(Process, SrcAddress, Irql2);
     MiUnmapPageInHyperSpace(Process, DestAddress, Irql);
     return(STATUS_SUCCESS);
 }
@@ -1781,7 +1779,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     /*
      * Copy the old page
      */
-    MiCopyFromUserPage(NewPage, OldPage);
+    NT_VERIFY(NT_SUCCESS(MiCopyFromUserPage(NewPage, PAddress)));
 
     /*
      * Unshare the old page.

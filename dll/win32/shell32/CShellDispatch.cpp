@@ -1,24 +1,12 @@
 /*
- * IShellDispatch implementation
- *
- * Copyright 2015 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     shell32
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     IShellDispatch implementation
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
+#include "winsvc.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -40,13 +28,27 @@ HRESULT CShellDispatch::Initialize()
 HRESULT STDMETHODCALLTYPE CShellDispatch::get_Application(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
-    return E_NOTIMPL;
+
+    if (!ppid)
+        return E_INVALIDARG;
+
+    *ppid = this;
+    AddRef();
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::get_Parent(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
-    return E_NOTIMPL;
+
+    if (ppid)
+    {
+        *ppid = static_cast<IDispatch*>(this);
+        AddRef();
+    }
+
+    return S_OK;
 }
 
 HRESULT VariantToIdlist(VARIANT* var, LPITEMIDLIST* idlist)
@@ -69,26 +71,56 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::NameSpace(VARIANT vDir, Folder **ppsdf
     if (!ppsdf)
         return E_POINTER;
     *ppsdf = NULL;
-    LPITEMIDLIST idlist = NULL;
-    HRESULT hr = VariantToIdlist(&vDir, &idlist);
+    HRESULT hr;
+
+    if (V_VT(&vDir) == VT_I2)
+    {
+        hr = VariantChangeType(&vDir, &vDir, 0, VT_I4);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+
+    CComHeapPtr<ITEMIDLIST> idlist;
+    hr = VariantToIdlist(&vDir, &idlist);
     if (!SUCCEEDED(hr) || !idlist)
         return S_FALSE;
-    CFolder* fld = new CComObject<CFolder>();
-    fld->Init(idlist);
-    *ppsdf = fld;
-    fld->AddRef();
-    return hr;
+
+    return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(idlist), IID_PPV_ARG(Folder, ppsdf));
+}
+
+static BOOL is_optional_argument(const VARIANT *arg)
+{
+    return V_VT(arg) == VT_ERROR && V_ERROR(arg) == DISP_E_PARAMNOTFOUND;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::BrowseForFolder(LONG Hwnd, BSTR Title, LONG Options, VARIANT RootFolder, Folder **ppsdf)
 {
     TRACE("(%p, %lu, %ls, %lu, %s, %p)\n", this, Hwnd, Title, Options, debugstr_variant(&RootFolder), ppsdf);
-    return E_NOTIMPL;
+
+    *ppsdf = NULL;
+
+    if (!is_optional_argument(&RootFolder))
+        FIXME("root folder is ignored\n");
+
+    BROWSEINFOW bi = { 0 };
+    bi.hwndOwner = reinterpret_cast<HWND>(LongToHandle(Hwnd));
+    bi.lpszTitle = Title;
+    bi.ulFlags = Options;
+
+    CComHeapPtr<ITEMIDLIST> selection;
+    selection.Attach(SHBrowseForFolderW(&bi));
+    if (!selection)
+        return S_FALSE;
+
+    return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(selection), IID_PPV_ARG(Folder, ppsdf));
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::Windows(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
+
+    *ppid = NULL;
+
     return E_NOTIMPL;
 }
 
@@ -208,10 +240,35 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::IsRestricted(BSTR group, BSTR restrict
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellDispatch::ShellExecute(BSTR file, VARIANT args, VARIANT dir, VARIANT op, VARIANT show)
+HRESULT STDMETHODCALLTYPE CShellDispatch::ShellExecute(BSTR file, VARIANT v_args, VARIANT v_dir, VARIANT v_op, VARIANT v_show)
 {
-    TRACE("(%p, %ls, %s, %s, %s, %s)\n", this, file, debugstr_variant(&args), debugstr_variant(&dir), debugstr_variant(&op), debugstr_variant(&show));
-    return E_NOTIMPL;
+    CComVariant args_str, dir_str, op_str, show_int;
+    WCHAR *args = NULL, *dir = NULL, *op = NULL;
+    INT show = 0;
+    HINSTANCE ret;
+
+    TRACE("(%s, %s, %s, %s, %s)\n", debugstr_w(file), debugstr_variant(&v_args),
+            debugstr_variant(&v_dir), debugstr_variant(&v_op), debugstr_variant(&v_show));
+
+    args_str.ChangeType(VT_BSTR, &v_args);
+    if (V_VT(&args_str) == VT_BSTR)
+        args = V_BSTR(&args_str);
+
+    dir_str.ChangeType(VT_BSTR, &v_dir);
+    if (V_VT(&dir_str) == VT_BSTR)
+        dir = V_BSTR(&dir_str);
+
+    op_str.ChangeType(VT_BSTR, &v_op);
+    if (V_VT(&op_str) == VT_BSTR)
+        op = V_BSTR(&op_str);
+
+    show_int.ChangeType(VT_I4, &v_show);
+    if (V_VT(&show_int) == VT_I4)
+        show = V_I4(&show_int);
+
+    ret = ShellExecuteW(NULL, op, file, args, dir, show);
+
+    return (ULONG_PTR)ret > 32 ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::FindPrinter(BSTR name, BSTR location, BSTR model)
@@ -238,10 +295,48 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ServiceStop(BSTR service, VARIANT pers
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellDispatch::IsServiceRunning(BSTR service, VARIANT *running)
+HRESULT STDMETHODCALLTYPE CShellDispatch::IsServiceRunning(BSTR name, VARIANT *running)
 {
-    TRACE("(%p, %ls, %p)\n", this, service, running);
-    return E_NOTIMPL;
+    SERVICE_STATUS_PROCESS status;
+    SC_HANDLE scm, service;
+    DWORD dummy;
+
+    TRACE("(%s, %p)\n", debugstr_w(name), running);
+
+    V_VT(running) = VT_BOOL;
+    V_BOOL(running) = VARIANT_FALSE;
+
+    scm = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
+    if (!scm)
+    {
+        ERR("failed to connect to service manager\n");
+        return S_OK;
+    }
+
+    service = OpenServiceW(scm, name, SERVICE_QUERY_STATUS);
+    if (!service)
+    {
+        ERR("Failed to open service %s (%u)\n", debugstr_w(name), GetLastError());
+        CloseServiceHandle(scm);
+        return S_OK;
+    }
+
+    if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO, (BYTE *)&status,
+                              sizeof(SERVICE_STATUS_PROCESS), &dummy))
+    {
+        TRACE("failed to query service status (%u)\n", GetLastError());
+        CloseServiceHandle(service);
+        CloseServiceHandle(scm);
+        return S_OK;
+    }
+
+    if (status.dwCurrentState == SERVICE_RUNNING)
+        V_BOOL(running) = VARIANT_TRUE;
+
+    CloseServiceHandle(service);
+    CloseServiceHandle(scm);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::CanStartStopService(BSTR service, VARIANT *ret)

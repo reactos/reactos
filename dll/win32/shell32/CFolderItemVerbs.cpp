@@ -107,7 +107,7 @@ HRESULT CFolderItemVerbs::Init(LPITEMIDLIST idlist)
 HRESULT STDMETHODCALLTYPE CFolderItemVerbs::get_Count(LONG *plCount)
 {
     if (!plCount)
-        return E_POINTER;
+        return E_INVALIDARG;
     *plCount = m_count;
     return S_OK;
 }
@@ -115,12 +115,20 @@ HRESULT STDMETHODCALLTYPE CFolderItemVerbs::get_Count(LONG *plCount)
 HRESULT STDMETHODCALLTYPE CFolderItemVerbs::get_Application(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
+
+    if (ppid)
+        *ppid = NULL;
+
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CFolderItemVerbs::get_Parent(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
+
+    if (ppid)
+        *ppid = NULL;
+
     return E_NOTIMPL;
 }
 
@@ -130,9 +138,8 @@ HRESULT STDMETHODCALLTYPE CFolderItemVerbs::Item(VARIANT indexVar, FolderItemVer
         return E_POINTER;
 
     CComVariant var;
-    VariantCopyInd(&var, &indexVar);
 
-    HRESULT hr = VariantChangeType(&var, &var, 0, VT_I4);
+    HRESULT hr = VariantChangeType(&var, &indexVar, 0, VT_I4);
     if (FAILED_UNEXPECTEDLY(hr))
         return E_INVALIDARG;
 
@@ -144,7 +151,9 @@ HRESULT STDMETHODCALLTYPE CFolderItemVerbs::Item(VARIANT indexVar, FolderItemVer
     BSTR name = NULL;
 
     if(index == m_count)
+    {
         name = SysAllocStringLen(NULL, 0);
+    }
     else
     {
         MENUITEMINFOW info = { sizeof(info), 0 };

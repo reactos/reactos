@@ -350,6 +350,8 @@ Query(LPCTSTR *ServiceArgs,
                          NULL,
                          pStatus,
                          bExtended);
+
+            HeapFree(GetProcessHeap(), 0, pStatus);
         }
     }
     else

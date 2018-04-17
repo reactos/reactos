@@ -232,7 +232,7 @@ public:
         }
 
     public:
-        enum { IDD = IDD_PROPPAGEDESTIONATION };
+        enum { IDD = IDD_PROPPAGEDESTINATION };
 
         BEGIN_MSG_MAP(CCompleteSettingsPage)
             COMMAND_ID_HANDLER(IDC_BROWSE, OnBrowse)

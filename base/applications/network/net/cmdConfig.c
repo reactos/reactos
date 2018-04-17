@@ -9,17 +9,13 @@
 
 static
 INT
-DisplayServerConfig(VOID)
+DisplayServerConfig(
+    PSERVER_INFO_102 ServerInfo)
 {
-    PSERVER_INFO_102 ServerInfo = NULL;
     PSERVER_TRANSPORT_INFO_0 TransportInfo = NULL;
     DWORD dwRead, dwTotal, i;
     INT nPaddedLength = 38;
     NET_API_STATUS Status;
-
-    Status = NetServerGetInfo(NULL, 102, (PBYTE*)&ServerInfo);
-    if (Status != NERR_Success)
-        goto done;
 
     Status = NetServerTransportEnum(NULL, 0, (PBYTE*)&TransportInfo,
                                     MAX_PREFERRED_LENGTH,
@@ -69,9 +65,6 @@ DisplayServerConfig(VOID)
 done:
     if (TransportInfo != NULL)
         NetApiBufferFree(TransportInfo);
-
-    if (ServerInfo != NULL)
-        NetApiBufferFree(ServerInfo);
 
     return 0;
 }
@@ -162,6 +155,11 @@ cmdConfig(
     INT i, result = 0;
     BOOL bServer = FALSE;
     BOOL bWorkstation = FALSE;
+    PWSTR p, endptr;
+    BOOL bModify = FALSE;
+    LONG lValue;
+    PSERVER_INFO_102 ServerInfo = NULL;
+    NET_API_STATUS Status;
 
     for (i = 2; i < argc; i++)
     {
@@ -222,7 +220,73 @@ cmdConfig(
 
     if (bServer)
     {
-        result = DisplayServerConfig();
+        Status = NetServerGetInfo(NULL, 102, (PBYTE*)&ServerInfo);
+        if (Status != NERR_Success)
+            goto done;
+
+        for (i = 2; i < argc; i++)
+        {
+            if (argv[i][0] != L'/')
+                continue;
+
+            if (_wcsnicmp(argv[i], L"/autodisconnect:", 16) == 0)
+            {
+                p = &argv[i][16];
+                lValue = wcstol(p, &endptr, 10);
+                if (*endptr != 0)
+                {
+                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/AUTODISCONNECT");
+                    result = 1;
+                    goto done;
+                }
+
+                if (lValue < -1 || lValue > 65535)
+                {
+                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/AUTODISCONNECT");
+                    result = 1;
+                    goto done;
+                }
+
+                ServerInfo->sv102_disc = lValue;
+                bModify = TRUE;
+            }
+            else if (_wcsnicmp(argv[i], L"/srvcomment:", 12) == 0)
+            {
+                ServerInfo->sv102_comment = &argv[i][12];
+                bModify = TRUE;
+            }
+            else if (_wcsnicmp(argv[i], L"/hidden:", 8) == 0)
+            {
+                p = &argv[i][8];
+                if (_wcsicmp(p, L"yes") != 0 && _wcsicmp(p, L"no") != 0)
+                {
+                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/HIDDEN");
+                    result = 1;
+                    goto done;
+                }
+
+                ServerInfo->sv102_hidden = (_wcsicmp(p, L"yes") == 0) ? TRUE : FALSE;
+                bModify = TRUE;
+            }
+            else
+            {
+                ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+                ConResPuts(StdOut, IDS_CONFIG_SERVER_SYNTAX);
+                result = 1;
+                goto done;
+            }
+        }
+
+        if (bModify)
+        {
+            Status = NetServerSetInfo(NULL, 102, (PBYTE)&ServerInfo, NULL);
+            if (Status != NERR_Success)
+                result = 1;
+        }
+        else
+        {
+            result = DisplayServerConfig(ServerInfo);
+        }
     }
     else if (bWorkstation)
     {
@@ -232,6 +296,10 @@ cmdConfig(
     {
         ConResPuts(StdOut, IDS_CONFIG_TEXT);
     }
+
+done:
+    if (ServerInfo != NULL)
+        NetApiBufferFree(ServerInfo);
 
     if (result == 0)
         ConResPuts(StdOut, IDS_ERROR_NO_ERROR);
