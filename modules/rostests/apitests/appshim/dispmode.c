@@ -481,7 +481,7 @@ START_TEST(dispmode)
     else
     {
         n = (size_t)atoi(argv[2]);
-        if (n >= 0 && n < _countof(tests))
+        if (n < _countof(tests))
         {
             run_test(n, FALSE);
         }
