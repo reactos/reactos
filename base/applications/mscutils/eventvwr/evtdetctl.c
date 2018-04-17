@@ -730,7 +730,7 @@ InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
      */
     SendDlgItemMessageW(hDlg, IDC_EVENTTEXTEDIT, EM_AUTOURLDETECT, AURL_ENABLEURL /* | AURL_ENABLEEAURLS */, 0);
 
-    /* Note that the RichEdit control never gets themed under WinXP+. One would have to write code to simulate Edit-control theming */
+    /* Note that the RichEdit control never gets themed under WinXP+; one would have to write code to simulate Edit-control theming */
 
     SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
     SendDlgItemMessageW(hDlg, IDC_EVENTDATAEDIT, WM_SETFONT, (WPARAM)pData->hMonospaceFont, (LPARAM)TRUE);

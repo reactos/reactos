@@ -37,8 +37,8 @@
 
 #define LVM_PROGRESS    (WM_APP + 1)    // Used by the subclassed ListView
 
-static const LPCWSTR szWindowClass       = L"EVENTVWR"; /* The main window class name */
-static const WCHAR   EVENTLOG_BASE_KEY[] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\";
+static const LPCWSTR EVENTVWR_WNDCLASS = L"EVENTVWR"; /* The main window class name */
+static const LPCWSTR EVENTLOG_BASE_KEY = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\";
 
 /* The 3 system logs that should always exist in the user's system */
 static const LPCWSTR SystemLogs[] =
@@ -442,6 +442,7 @@ wWinMain(HINSTANCE hInstance,
         }
     }
 
+    /* Stop the enumerator thread */
     SetEvent(hStartStopEnumEvent);
     WaitForSingleObject(hThread, INFINITE);
     CloseHandle(hThread);
@@ -1217,7 +1218,7 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
 {
     BOOL Success = FALSE;
     LONG Result;
-    DWORD Type, dwSize;
+    DWORD dwType, dwSize;
     WCHAR szModuleName[MAX_PATH];
     WCHAR szKeyName[MAX_PATH];
     HKEY hLogKey = NULL;
@@ -1249,10 +1250,10 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
     Result = RegQueryValueExW(hSourceKey,
                               EntryName,
                               NULL,
-                              &Type,
+                              &dwType,
                               (LPBYTE)szModuleName,
                               &dwSize);
-    if ((Result != ERROR_SUCCESS) || (Type != REG_EXPAND_SZ && Type != REG_SZ))
+    if ((Result != ERROR_SUCCESS) || (dwType != REG_EXPAND_SZ && dwType != REG_SZ))
     {
         szModuleName[0] = UNICODE_NULL;
     }
@@ -1829,7 +1830,7 @@ EnumEventsThread(IN LPVOID lpParameter)
         }
         else if (!bResult)
         {
-            /* exit on other errors (ERROR_HANDLE_EOF) */
+            /* Exit on other errors (ERROR_HANDLE_EOF) */
             break;
         }
 
@@ -2378,7 +2379,7 @@ MyRegisterClass(HINSTANCE hInstance)
     wcex.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
     wcex.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1); // COLOR_WINDOW + 1
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDM_EVENTVWR);
-    wcex.lpszClassName = szWindowClass;
+    wcex.lpszClassName = EVENTVWR_WNDCLASS;
     wcex.hIconSm = (HICON)LoadImageW(hInstance,
                                      MAKEINTRESOURCEW(IDI_EVENTVWR),
                                      IMAGE_ICON,
@@ -2400,7 +2401,7 @@ GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
     HKEY hLogKey;
     WCHAR *KeyPath;
     SIZE_T cbKeyPath;
-    DWORD Type, cbData;
+    DWORD dwType, cbData;
     DWORD dwMessageID = 0;
     WCHAR szModuleName[MAX_PATH];
 
@@ -2424,10 +2425,10 @@ GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
     Result = RegQueryValueExW(hLogKey,
                               L"DisplayNameFile",
                               NULL,
-                              &Type,
+                              &dwType,
                               (LPBYTE)szModuleName,
                               &cbData);
-    if ((Result != ERROR_SUCCESS) || (Type != REG_EXPAND_SZ && Type != REG_SZ))
+    if ((Result != ERROR_SUCCESS) || (dwType != REG_EXPAND_SZ && dwType != REG_SZ))
     {
         szModuleName[0] = UNICODE_NULL;
     }
@@ -2449,10 +2450,10 @@ GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
         Result = RegQueryValueExW(hLogKey,
                                   L"DisplayNameID",
                                   NULL,
-                                  &Type,
+                                  &dwType,
                                   (LPBYTE)&dwMessageID,
                                   &cbData);
-        if ((Result != ERROR_SUCCESS) || (Type != REG_DWORD))
+        if ((Result != ERROR_SUCCESS) || (dwType != REG_DWORD))
             dwMessageID = 0;
 
         *pdwMessageID = dwMessageID;
@@ -2471,7 +2472,7 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
     HKEY hEventLogKey, hLogKey;
     DWORD dwNumLogs = 0;
     DWORD dwIndex, dwMaxKeyLength;
-    DWORD Type;
+    DWORD dwType;
     PEVENTLOG EventLog;
     PEVENTLOGFILTER EventLogFilter;
     LPWSTR LogName = NULL;
@@ -2554,10 +2555,10 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
             Result = RegQueryValueExW(hLogKey,
                                       L"File",
                                       NULL,
-                                      &Type,
+                                      &dwType,
                                       NULL,
                                       &lpcName);
-            if ((Result != ERROR_SUCCESS) || (Type != REG_EXPAND_SZ && Type != REG_SZ))
+            if ((Result != ERROR_SUCCESS) || (dwType != REG_EXPAND_SZ && dwType != REG_SZ))
             {
                 // Windows' EventLog uses some kind of default value, we do not.
                 EventLog->FileName = NULL;
@@ -2571,7 +2572,7 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
                     Result = RegQueryValueExW(hLogKey,
                                               L"File",
                                               NULL,
-                                              &Type,
+                                              &dwType,
                                               (LPBYTE)EventLog->FileName,
                                               &lpcName);
                     if (Result != ERROR_SUCCESS)
@@ -2698,7 +2699,7 @@ InitInstance(HINSTANCE hInstance,
     WCHAR szTemp[256];
 
     /* Create the main window */
-    hwndMainWindow = CreateWindowW(szWindowClass,
+    hwndMainWindow = CreateWindowW(EVENTVWR_WNDCLASS,
                                    szTitle,
                                    WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
                                    CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
@@ -2731,7 +2732,7 @@ InitInstance(HINSTANCE hInstance,
                                          NULL,                       // no text
                                          WS_CHILD | PBS_SMOOTH,      // styles
                                          rs.left, rs.top,            // x, y
-                                         rs.right-rs.left, rs.bottom-rs.top, // cx, cy
+                                         rs.right - rs.left, rs.bottom - rs.top, // cx, cy
                                          hwndStatus,                 // parent window
                                          NULL,                       // window ID
                                          hInstance,                  // instance
@@ -3053,7 +3054,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         {
                             LPWSTR pszText = item.pszText;
 
-                            /* Trim all whitespace */
+                            /* Trim leading whitespace */
                             while (*pszText && iswspace(*pszText))
                                 ++pszText;
 
@@ -3234,41 +3235,44 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_SETCURSOR:
-            if (LOWORD(lParam) == HTCLIENT)
-            {
-                POINT pt;
-                GetCursorPos(&pt);
-                ScreenToClient(hWnd, &pt);
+        {
+            POINT pt;
 
-                /* Set the cursor for the vertical splitter */
-                if (pt.x >= nVSplitPos - SPLIT_WIDTH/2 && pt.x < nVSplitPos + SPLIT_WIDTH/2 + 1)
+            if (LOWORD(lParam) != HTCLIENT)
+                goto Default;
+
+            GetCursorPos(&pt);
+            ScreenToClient(hWnd, &pt);
+
+            /* Set the cursor for the vertical splitter */
+            if (pt.x >= nVSplitPos - SPLIT_WIDTH/2 && pt.x < nVSplitPos + SPLIT_WIDTH/2 + 1)
+            {
+                RECT rs;
+                GetClientRect(hWnd, &rect);
+                GetWindowRect(hwndStatus, &rs);
+                if (pt.y >= rect.top && pt.y < rect.bottom - (rs.bottom - rs.top))
                 {
-                    RECT rs;
-                    GetClientRect(hWnd, &rect);
-                    GetWindowRect(hwndStatus, &rs);
-                    if (pt.y >= rect.top && pt.y < rect.bottom - (rs.bottom - rs.top))
-                    {
-                        SetCursor(LoadCursorW(NULL, IDC_SIZEWE));
-                        return TRUE;
-                    }
+                    SetCursor(LoadCursorW(NULL, IDC_SIZEWE));
+                    return TRUE;
                 }
-                else
-                /* Set the cursor for the horizontal splitter, if the Event details pane is displayed */
-                if (hwndEventDetails &&
-                    (pt.y >= nHSplitPos - SPLIT_WIDTH/2 && pt.y < nHSplitPos + SPLIT_WIDTH/2 + 1))
+            }
+            else
+            /* Set the cursor for the horizontal splitter, if the Event details pane is displayed */
+            if (hwndEventDetails &&
+                (pt.y >= nHSplitPos - SPLIT_WIDTH/2 && pt.y < nHSplitPos + SPLIT_WIDTH/2 + 1))
+            {
+                // RECT rs;
+                GetClientRect(hWnd, &rect);
+                // GetWindowRect(hwndStatus, &rs);
+                if (pt.x >= nVSplitPos + SPLIT_WIDTH/2 + 1 /* rect.left + (rs.bottom - rs.top) */ &&
+                    pt.x < rect.right)
                 {
-                    // RECT rs;
-                    GetClientRect(hWnd, &rect);
-                    // GetWindowRect(hwndStatus, &rs);
-                    if (pt.x >= nVSplitPos + SPLIT_WIDTH/2 + 1 /* rect.left + (rs.bottom - rs.top) */ &&
-                        pt.x < rect.right)
-                    {
-                        SetCursor(LoadCursorW(NULL, IDC_SIZENS));
-                        return TRUE;
-                    }
+                    SetCursor(LoadCursorW(NULL, IDC_SIZENS));
+                    return TRUE;
                 }
             }
             goto Default;
+        }
 
         case WM_LBUTTONDOWN:
         {
@@ -3297,62 +3301,66 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_LBUTTONUP:
         case WM_RBUTTONDOWN:
-            if (GetCapture() == hWnd)
+        {
+            if (GetCapture() != hWnd)
+                break;
+
+            /* Adjust the correct splitter position */
+            if (bSplit == 1)
+                nVSplitPos = GET_X_LPARAM(lParam);
+            else if (bSplit == 2)
+                nHSplitPos = GET_Y_LPARAM(lParam);
+
+            /* If we are splitting, resize the windows */
+            if (bSplit != 0)
             {
-                /* Adjust the correct splitter position */
-                if (bSplit == 1)
-                    nVSplitPos = GET_X_LPARAM(lParam);
-                else if (bSplit == 2)
-                    nHSplitPos = GET_Y_LPARAM(lParam);
-
-                /* If we are splitting, resize the windows */
-                if (bSplit != 0)
-                {
-                    GetClientRect(hWnd, &rect);
-                    ResizeWnd(rect.right - rect.left, rect.bottom - rect.top);
-                }
-
-                /* Reset the splitter state */
-                bSplit = 0;
-
-                ReleaseCapture();
+                GetClientRect(hWnd, &rect);
+                ResizeWnd(rect.right - rect.left, rect.bottom - rect.top);
             }
+
+            /* Reset the splitter state */
+            bSplit = 0;
+
+            ReleaseCapture();
             break;
+        }
 
         case WM_MOUSEMOVE:
-            if (GetCapture() == hWnd)
+        {
+            if (GetCapture() != hWnd)
+                break;
+
+            /* Move the correct splitter */
+            if (bSplit == 1)
             {
-                /* Move the correct splitter */
-                if (bSplit == 1)
+                INT x = GET_X_LPARAM(lParam);
+
+                GetClientRect(hWnd, &rect);
+
+                x = min(max(x, SPLIT_WIDTH/2), rect.right - rect.left - SPLIT_WIDTH/2);
+                if (nVSplitPos != x)
                 {
-                    INT x = GET_X_LPARAM(lParam);
-
-                    GetClientRect(hWnd, &rect);
-
-                    x = min(max(x, SPLIT_WIDTH/2), rect.right - rect.left - SPLIT_WIDTH/2);
-                    if (nVSplitPos != x)
-                    {
-                        nVSplitPos = x;
-                        ResizeWnd(rect.right - rect.left, rect.bottom - rect.top);
-                    }
+                    nVSplitPos = x;
+                    ResizeWnd(rect.right - rect.left, rect.bottom - rect.top);
                 }
-                else if (bSplit == 2)
+            }
+            else if (bSplit == 2)
+            {
+                RECT rs;
+                INT y = GET_Y_LPARAM(lParam);
+
+                GetClientRect(hWnd, &rect);
+                GetWindowRect(hwndStatus, &rs);
+
+                y = min(max(y, SPLIT_WIDTH/2), rect.bottom - rect.top - SPLIT_WIDTH/2 - (rs.bottom - rs.top));
+                if (nHSplitPos != y)
                 {
-                    RECT rs;
-                    INT y = GET_Y_LPARAM(lParam);
-
-                    GetClientRect(hWnd, &rect);
-                    GetWindowRect(hwndStatus, &rs);
-
-                    y = min(max(y, SPLIT_WIDTH/2), rect.bottom - rect.top - SPLIT_WIDTH/2 - (rs.bottom - rs.top));
-                    if (nHSplitPos != y)
-                    {
-                        nHSplitPos = y;
-                        ResizeWnd(rect.right - rect.left, rect.bottom - rect.top);
-                    }
+                    nHSplitPos = y;
+                    ResizeWnd(rect.right - rect.left, rect.bottom - rect.top);
                 }
             }
             break;
+        }
 
         case WM_SIZE:
         {
@@ -3379,7 +3387,7 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
 {
     LPWSTR lpLogName = EventLog->LogName;
 
-    DWORD Result, Type;
+    DWORD Result, dwType;
     DWORD dwMaxSize = 0, dwRetention = 0;
     BOOL Success;
     WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA
@@ -3418,10 +3426,10 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     Result = RegQueryValueExW(hLogKey,
                               L"MaxSize",
                               NULL,
-                              &Type,
+                              &dwType,
                               (LPBYTE)&dwMaxSize,
                               &cbData);
-    if ((Result != ERROR_SUCCESS) || (Type != REG_DWORD))
+    if ((Result != ERROR_SUCCESS) || (dwType != REG_DWORD))
     {
         // dwMaxSize = 512 * 1024; /* 512 kBytes */
         dwMaxSize = 0;
@@ -3433,10 +3441,10 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     Result = RegQueryValueExW(hLogKey,
                               L"Retention",
                               NULL,
-                              &Type,
+                              &dwType,
                               (LPBYTE)&dwRetention,
                               &cbData);
-    if ((Result != ERROR_SUCCESS) || (Type != REG_DWORD))
+    if ((Result != ERROR_SUCCESS) || (dwType != REG_DWORD))
     {
         /* On Windows 2003 it is 604800 (secs) == 7 days */
         dwRetention = 0;
