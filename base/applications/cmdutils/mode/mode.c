@@ -46,7 +46,7 @@
 
 /*** For fixes, see also network/net/main.c ***/
 // VOID PrintPadding(...)
-INT
+VOID
 __cdecl
 UnderlinedResPrintf(
     IN PCON_STREAM Stream,
@@ -69,50 +69,76 @@ UnderlinedResPrintf(
          szMsgBuffer[i] = L'-';
     szMsgBuffer[Len] = UNICODE_NULL;
 
-    // FIXME: Use ConStreamWrite instead.
-    ConPuts(Stream, szMsgBuffer);
-
-    return Len;
+    ConStreamWrite(Stream, szMsgBuffer, Len);
 }
 
 int QueryDevices(VOID)
 {
-    WCHAR buffer[20240];
-    WCHAR* ptr = buffer;
+    PWSTR Buffer, ptr;
+    DWORD dwLen = MAX_PATH;
 
-    *ptr = L'\0';
-    // FIXME: Dynamically allocate 'buffer' in a loop.
-    if (QueryDosDeviceW(NULL, buffer, ARRAYSIZE(buffer)))
+    /* Pre-allocate a buffer for QueryDosDeviceW() */
+    Buffer = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
+    if (Buffer == NULL)
     {
-        while (*ptr != L'\0')
+        /* We failed, bail out */
+        wprintf(L"ERROR: Not enough memory\n");
+        return 0;
+    }
+
+    for (;;)
+    {
+        *Buffer = UNICODE_NULL;
+        if (QueryDosDeviceW(NULL, Buffer, dwLen))
+            break;
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         {
-            if (wcsstr(ptr, L"COM"))
-            {
-                ConResPrintf(StdOut, IDS_QUERY_SERIAL_FOUND, ptr);
-            }
-            else if (wcsstr(ptr, L"PRN"))
-            {
-                ConResPrintf(StdOut, IDS_QUERY_PRINTER_FOUND, ptr);
-            }
-            else if (wcsstr(ptr, L"LPT"))
-            {
-                ConResPrintf(StdOut, IDS_QUERY_PARALLEL_FOUND, ptr);
-            }
-            else if (wcsstr(ptr, L"AUX") || wcsstr(ptr, L"NUL"))
-            {
-                ConResPrintf(StdOut, IDS_QUERY_DOSDEV_FOUND, ptr);
-            }
-            else
-            {
-                // ConResPrintf(StdOut, IDS_QUERY_MISC_FOUND, ptr);
-            }
-            ptr += (wcslen(ptr) + 1);
+            /* We failed, bail out */
+            wprintf(L"ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
+            HeapFree(GetProcessHeap(), 0, Buffer);
+            return 0;
+        }
+
+        /* The buffer was too small, try to re-allocate it */
+        dwLen *= 2;
+        ptr = HeapReAlloc(GetProcessHeap(), 0, Buffer, dwLen * sizeof(WCHAR));
+        if (ptr == NULL)
+        {
+            /* We failed, bail out */
+            wprintf(L"ERROR: Not enough memory\n");
+            HeapFree(GetProcessHeap(), 0, Buffer);
+            return 0;
+        }
+        Buffer = ptr;
+    }
+
+    for (ptr = Buffer; *ptr != UNICODE_NULL; ptr += wcslen(ptr) + 1)
+    {
+        if (wcsstr(ptr, L"COM"))
+        {
+            ConResPrintf(StdOut, IDS_QUERY_SERIAL_FOUND, ptr);
+        }
+        else if (wcsstr(ptr, L"PRN"))
+        {
+            ConResPrintf(StdOut, IDS_QUERY_PRINTER_FOUND, ptr);
+        }
+        else if (wcsstr(ptr, L"LPT"))
+        {
+            ConResPrintf(StdOut, IDS_QUERY_PARALLEL_FOUND, ptr);
+        }
+        else if (wcsstr(ptr, L"AUX") || wcsstr(ptr, L"NUL"))
+        {
+            ConResPrintf(StdOut, IDS_QUERY_DOSDEV_FOUND, ptr);
+        }
+        else
+        {
+            // ConResPrintf(StdOut, IDS_QUERY_MISC_FOUND, ptr);
         }
     }
-    else
-    {
-        wprintf(L"ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
-    }
+
+    /* Free the buffer and return success */
+    HeapFree(GetProcessHeap(), 0, Buffer);
     return 1;
 }
 
@@ -129,7 +155,7 @@ int ShowParallelStatus(INT nPortNum)
 
     if (QueryDosDeviceW(szPortName, buffer, ARRAYSIZE(buffer)))
     {
-        WCHAR* ptr = wcsrchr(buffer, L'\\');
+        PWSTR ptr = wcsrchr(buffer, L'\\');
         if (ptr != NULL)
         {
             if (_wcsicmp(szPortName, ++ptr) == 0)
@@ -1131,7 +1157,7 @@ int wmain(int argc, WCHAR* argv[])
      */
     ArgStrSize = 0;
 
-    /* Compute space needed for the new string, and allocate it */
+    /* Compute the space needed for the new string, and allocate it */
     for (arg = 1; arg < argc; arg++)
     {
         ArgStrSize += wcslen(argv[arg]) + 1; // 1 for space
@@ -1166,8 +1192,15 @@ int wmain(int argc, WCHAR* argv[])
     }
     else if (_wcsnicmp(argStr, L"/STA", 4) == 0)
     {
-        // FIXME: Check if there are other "parameters" after the status,
-        // in which case this is invalid.
+        /* Skip this parameter */
+        while (*argStr != L' ') argStr++;
+        /* Skip any delimiter */
+        while (*argStr == L' ') argStr++;
+
+        /* The presence of any other parameter is invalid */
+        if (*argStr)
+            goto invalid_parameter;
+
         goto show_status;
     }
     else if (_wcsnicmp(argStr, L"LPT", 3) == 0)
@@ -1179,7 +1212,11 @@ int wmain(int argc, WCHAR* argv[])
         if (*argStr == L':') argStr++;
         while (*argStr == L' ') argStr++;
 
-        ret = ShowParallelStatus(nPortNum);
+        if (!*argStr || _wcsnicmp(argStr, L"/STA", 4) == 0)
+            ret = ShowParallelStatus(nPortNum);
+        else
+            wprintf(L"ERROR: LPT port redirection is not implemented!\n");
+        // TODO: Implement setting LPT port redirection using SetParallelState().
         goto Quit;
     }
     else if (_wcsnicmp(argStr, L"COM", 3) == 0)
