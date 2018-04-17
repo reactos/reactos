@@ -215,7 +215,6 @@ CcPinRead (
 
             iBcb->Pinned = TRUE;
             iBcb->Vacb->PinCount++;
-            CcRosReleaseVacbLock(iBcb->Vacb);
 
             if (Flags & PIN_EXCLUSIVE)
             {
@@ -308,7 +307,6 @@ CcUnpinDataForThread (
     {
         ExReleaseResourceForThreadLite(&iBcb->Lock, ResourceThreadId);
         iBcb->Pinned = FALSE;
-        CcRosAcquireVacbLock(iBcb->Vacb, NULL);
         iBcb->Vacb->PinCount--;
     }
 
@@ -360,7 +358,6 @@ CcUnpinRepinnedBcb (
         IoStatus->Information = 0;
         if (WriteThrough)
         {
-            CcRosAcquireVacbLock(iBcb->Vacb, NULL);
             if (iBcb->Vacb->Dirty)
             {
                 IoStatus->Status = CcRosFlushVacb(iBcb->Vacb);
@@ -369,7 +366,6 @@ CcUnpinRepinnedBcb (
             {
                 IoStatus->Status = STATUS_SUCCESS;
             }
-            CcRosReleaseVacbLock(iBcb->Vacb);
         }
         else
         {
@@ -380,7 +376,6 @@ CcUnpinRepinnedBcb (
         {
             ExReleaseResourceLite(&iBcb->Lock);
             iBcb->Pinned = FALSE;
-            CcRosAcquireVacbLock(iBcb->Vacb, NULL);
             iBcb->Vacb->PinCount--;
             ASSERT(iBcb->Vacb->PinCount == 0);
         }

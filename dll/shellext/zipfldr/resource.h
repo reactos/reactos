@@ -6,7 +6,7 @@
 
 /* Dialogs */
 
-#define IDD_PROPPAGEDESTIONATION    1000
+#define IDD_PROPPAGEDESTINATION     1000
 #define IDC_DIRECTORY               1001
 #define IDC_BROWSE                  1002
 #define IDC_PASSWORD                1003

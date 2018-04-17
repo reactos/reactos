@@ -757,8 +757,8 @@ MmAccessFault(
 NTSTATUS
 NTAPI
 MiCopyFromUserPage(
-    PFN_NUMBER NewPage,
-    PFN_NUMBER OldPage
+    PFN_NUMBER DestPage,
+    const VOID *SrcAddress
 );
 
 /* process.c *****************************************************************/

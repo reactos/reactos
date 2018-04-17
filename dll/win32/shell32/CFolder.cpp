@@ -1,21 +1,8 @@
 /*
- * Folder implementation
- *
- * Copyright 2015 Mark Jansen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     shell32
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Folder implementation
+ * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -31,9 +18,10 @@ CFolder::~CFolder()
 {
 }
 
-void CFolder::Init(LPITEMIDLIST idlist)
+HRESULT CFolder::Initialize(LPITEMIDLIST idlist)
 {
-    m_idlist.Attach(idlist);
+    m_idlist.Attach(ILClone(idlist));
+    return CShellDispatch_Constructor(IID_PPV_ARG(IShellDispatch, &m_Application));
 }
 
 HRESULT CFolder::GetShellFolder(CComPtr<IShellFolder>& psfCurrent)
@@ -65,35 +53,39 @@ HRESULT STDMETHODCALLTYPE CFolder::get_Title(BSTR *pbs)
 HRESULT STDMETHODCALLTYPE CFolder::get_Application(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
-    return E_NOTIMPL;
+
+    if (!ppid)
+        return E_INVALIDARG;
+
+    *ppid = m_Application;
+    (*ppid)->AddRef();
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::get_Parent(IDispatch **ppid)
 {
     TRACE("(%p %p)\n", this, ppid);
+
+    if (ppid)
+        *ppid = NULL;
+
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::get_ParentFolder(Folder **ppsf)
 {
     TRACE("(%p, %p)\n", this);
+
+    *ppsf = NULL;
+
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::Items(FolderItems **ppid)
 {
-    CFolderItems* items = new CComObject<CFolderItems>();
-    items->AddRef();
-
-    HRESULT hr = items->Init(ILClone(m_idlist));
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        items->Release();
-        return hr;
-    }
-
-    *ppid = items;
-    return S_OK;
+    /* FolderItems_Constructor */
+    return ShellObjectCreatorInit<CFolderItems>(static_cast<LPITEMIDLIST>(m_idlist), this, IID_PPV_ARG(FolderItems, ppid));
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::ParseName(BSTR bName, FolderItem **ppid)
@@ -113,11 +105,10 @@ HRESULT STDMETHODCALLTYPE CFolder::ParseName(BSTR bName, FolderItem **ppid)
     if (!SUCCEEDED(hr))
         return S_FALSE;
 
-    CFolderItem* item = new CComObject<CFolderItem>();
-    item->AddRef();
-    item->Init(ILCombine(m_idlist, relativePidl));
-    *ppid = item;
-    return S_OK;
+    CComHeapPtr<ITEMIDLIST> combined;
+    combined.Attach(ILCombine(m_idlist, relativePidl));
+
+    return ShellObjectCreatorInit<CFolderItem>(this, static_cast<LPITEMIDLIST>(combined), IID_PPV_ARG(FolderItem, ppid));
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::NewFolder(BSTR bName, VARIANT vOptions)
@@ -151,11 +142,8 @@ HRESULT STDMETHODCALLTYPE CFolder::get_Self(FolderItem **ppfi)
     TRACE("(%p, %p)\n", this, ppfi);
     if (!ppfi)
         return E_POINTER;
-    CFolderItem* item = new CComObject<CFolderItem>();
-    item->AddRef();
-    item->Init(ILClone(m_idlist));
-    *ppfi = item;
-    return S_OK;
+
+    return ShellObjectCreatorInit<CFolderItem>(this, static_cast<LPITEMIDLIST>(m_idlist), IID_PPV_ARG(FolderItem, ppfi));
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::get_OfflineStatus(LONG *pul)

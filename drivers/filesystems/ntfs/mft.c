@@ -1662,6 +1662,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
         ExFreePoolWithTag(IndexRecord, TAG_NTFS);
         ReleaseAttributeContext(IndexRootCtx);
         ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
+        return Status;
     }
 
     IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
