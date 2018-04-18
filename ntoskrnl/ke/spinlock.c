@@ -109,10 +109,10 @@ KeAcquireQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
                      0,
                      0);
     }
+#endif
 
     /* Do the inlined function */
     KxAcquireSpinLock(LockHandle->Lock);
-#endif
 }
 
 VOID
@@ -130,10 +130,10 @@ KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
                      0,
                      0);
     }
+#endif
 
     /* Do the inlined function */
     KxReleaseSpinLock(LockHandle->Lock);
-#endif
 }
 
 #endif
@@ -318,11 +318,11 @@ KeTryToAcquireSpinLockAtDpcLevel(IN OUT PKSPIN_LOCK SpinLock)
         /* It was already acquired */
         return FALSE;
     }
+#endif
 
 #if DBG
     /* On debug builds, we OR in the KTHREAD */
     *SpinLock = (ULONG_PTR)KeGetCurrentThread() | 1;
-#endif
 #endif
 
     /* All is well, return TRUE */
@@ -337,10 +337,10 @@ FASTCALL
 KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,
                                          IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-#ifdef CONFIG_SMP
     /* Set it up properly */
     LockHandle->LockQueue.Next = NULL;
     LockHandle->LockQueue.Lock = SpinLock;
+#ifdef CONFIG_SMP
 #if 0
     KeAcquireQueuedSpinLockAtDpcLevel(LockHandle->LockQueue.Next);
 #else
@@ -354,11 +354,11 @@ KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,
                      0,
                      0);
     }
+#endif
+#endif
 
     /* Acquire the lock */
     KxAcquireSpinLock(LockHandle->LockQueue.Lock); // HACK
-#endif
-#endif
 }
 
 /*
@@ -383,11 +383,11 @@ KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
                      0,
                      0);
     }
+#endif
+#endif
 
     /* Release the lock */
     KxReleaseSpinLock(LockHandle->LockQueue.Lock); // HACK
-#endif
-#endif
 }
 
 /*

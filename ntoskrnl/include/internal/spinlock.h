@@ -20,7 +20,15 @@ VOID
 KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 {
     /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
-    UNREFERENCED_PARAMETER(SpinLock);
+#if DBG
+    /* Make sure that we don't own the lock already */
+    if (*SpinLock != 0)
+    {
+        /* We do, bugcheck! */
+        KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
+    }
+#endif
+    *SpinLock = (ULONG_PTR)KeGetCurrentThread() | 1;
 
     /* Add an explicit memory barrier to prevent the compiler from reordering
        memory accesses across the borders of spinlocks */
@@ -35,7 +43,15 @@ VOID
 KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 {
     /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
-    UNREFERENCED_PARAMETER(SpinLock);
+#if DBG
+    /* Make sure that the threads match */
+    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) != *SpinLock)
+    {
+        /* They don't, bugcheck */
+        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
+    }
+#endif
+    *SpinLock = 0;
 
     /* Add an explicit memory barrier to prevent the compiler from reordering
        memory accesses across the borders of spinlocks */
