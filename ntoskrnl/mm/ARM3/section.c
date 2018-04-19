@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include <ntintsafe.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -2893,10 +2894,17 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     if (!(*ViewSize))
     {
         /* Compute it for the caller */
+#ifndef _WIN64
+        ULONGLONG CalculatedViewSize = (ULONGLONG)(Section->SizeOfSection.QuadPart - SectionOffset->QuadPart);
+#else
         *ViewSize = (SIZE_T)(Section->SizeOfSection.QuadPart - SectionOffset->QuadPart);
+#endif
 
         /* Check if it's larger than 4GB or overflows into kernel-mode */
-        if ((*ViewSize > 0xFFFFFFFF) ||
+        if (
+#ifndef _WIN64
+            !NT_SUCCESS(RtlULongLongToSIZET(CalculatedViewSize, ViewSize)) ||
+#endif
             (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)*BaseAddress) < *ViewSize))
         {
             DPRINT1("Section view won't fit\n");
