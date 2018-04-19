@@ -684,7 +684,7 @@ l_ReadHeaderFromFile:
     pssSegments[0].Length.QuadPart = nPrevVirtualEndOfSegment;
     pssSegments[0].RawLength.QuadPart = nFileSizeOfHeaders;
     pssSegments[0].Image.VirtualAddress = 0;
-    pssSegments[0].Image.Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA;
+    pssSegments[0].Image.Characteristics = 0;
     pssSegments[0].WriteCopy = TRUE;
 
     /* skip the headers segment */
@@ -1367,7 +1367,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     HasSwapEntry = MmIsPageSwapEntry(Process, Address);
 
     /* See if we should use a private page */
-    if ((HasSwapEntry) || (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA))
+    if (HasSwapEntry)
     {
         SWAPENTRY DummyEntry;
 
@@ -1958,9 +1958,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
      */
     MmUnlockSectionSegment(Context.Segment);
     Context.WasDirty = FALSE;
-    if (Context.Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
-            IS_SWAP_FROM_SSE(Entry) ||
-            PFN_FROM_SSE(Entry) != Page)
+    if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
     {
         Context.Private = TRUE;
     }
@@ -2348,9 +2346,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     /*
      * Check for a private (COWed) page.
      */
-    if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
-            IS_SWAP_FROM_SSE(Entry) ||
-            PFN_FROM_SSE(Entry) != Page)
+    if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
     {
         Private = TRUE;
     }
@@ -2483,9 +2479,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
                 Page = MmGetPfnForProcess(Process, Address);
 
                 Protect = PAGE_READONLY;
-                if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
-                        IS_SWAP_FROM_SSE(Entry) ||
-                        PFN_FROM_SSE(Entry) != Page)
+                if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
                 {
                     Protect = NewProtect;
                 }
