@@ -143,6 +143,28 @@
 @ thiscall -arch=i386 ?GetLocalOffsetForDate@WBEMTime@@SGJPBU_FILETIME@@@Z(ptr) _ZN8WBEMTime21GetLocalOffsetForDateEPK9_FILETIME@4
 @ thiscall -arch=i386 ?GetLocalOffsetForDate@WBEMTime@@SGJABJ@Z(ptr) _ZN8WBEMTime21GetLocalOffsetForDateERKl@4
 
+@ thiscall -arch=i386 ??0CHPtrArray@@QAE@XZ() _ZN10CHPtrArrayC1Ev
+@ thiscall -arch=i386 ??1CHPtrArray@@QAE@XZ() _ZN10CHPtrArrayD1Ev
+@ thiscall -arch=i386 ?GetSize@CHPtrArray@@QBEHXZ() _ZNK10CHPtrArray7GetSizeEv
+@ thiscall -arch=i386 ?GetUpperBound@CHPtrArray@@QBEHXZ() _ZNK10CHPtrArray13GetUpperBoundEv
+@ thiscall -arch=i386 ?SetSize@CHPtrArray@@QAEXHH@Z(long long) _ZN10CHPtrArray7SetSizeEii
+@ thiscall -arch=i386 ?FreeExtra@CHPtrArray@@QAEXXZ() _ZN10CHPtrArray9FreeExtraEv
+@ thiscall -arch=i386 ?RemoveAll@CHPtrArray@@QAEXXZ() _ZN10CHPtrArray9RemoveAllEv
+@ thiscall -arch=i386 ?GetAt@CHPtrArray@@QBEPAXH@Z(long) _ZNK10CHPtrArray5GetAtEi
+@ thiscall -arch=i386 ?SetAt@CHPtrArray@@QAEXHPAX@Z(long ptr) _ZN10CHPtrArray5SetAtEiPv
+@ thiscall -arch=i386 ?ElementAt@CHPtrArray@@QAEAAPAXH@Z(long) _ZN10CHPtrArray9ElementAtEi
+@ thiscall -arch=i386 ?GetData@CHPtrArray@@QBEPAPBXXZ() _ZNK10CHPtrArray7GetDataEv
+@ thiscall -arch=i386 ?GetData@CHPtrArray@@QAEPAPAXXZ() _ZN10CHPtrArray7GetDataEv
+@ thiscall -arch=i386 ?SetAtGrow@CHPtrArray@@QAEXHPAX@Z(long ptr) _ZN10CHPtrArray9SetAtGrowEiPv
+@ thiscall -arch=i386 ?Add@CHPtrArray@@QAEHPAX@Z(ptr) _ZN10CHPtrArray3AddEPv
+@ thiscall -arch=i386 ?Append@CHPtrArray@@QAEHABV1@@Z(ptr) _ZN10CHPtrArray6AppendERKS_
+@ thiscall -arch=i386 ?Copy@CHPtrArray@@QAEXABV1@@Z(ptr) _ZN10CHPtrArray4CopyERKS_
+@ thiscall -arch=i386 ??ACHPtrArray@@QBEPAXH@Z(long) _ZNK10CHPtrArrayixEi
+@ thiscall -arch=i386 ??ACHPtrArray@@QAEAAPAXH@Z(long) _ZN10CHPtrArrayixEi
+@ thiscall -arch=i386 ?InsertAt@CHPtrArray@@QAEXHPAXH@Z(long ptr long) _ZN10CHPtrArray8InsertAtEiPvi
+@ thiscall -arch=i386 ?RemoveAt@CHPtrArray@@QAEXHH@Z(long long) _ZN10CHPtrArray8RemoveAtEii
+@ thiscall -arch=i386 ?InsertAt@CHPtrArray@@QAEXHPAV1@@Z(long ptr) _ZN10CHPtrArray8InsertAtEiPS_
+
 # **************** win64 exports ****************
 @ thiscall -arch=win64 ?AllocBeforeWrite@CHString@@IEAAXH@Z(long) _ZN8CHString16AllocBeforeWriteEi # protected: void __thiscall CHString::AllocBeforeWrite(int)
 @ thiscall -arch=win64 ?AllocBuffer@CHString@@IEAAXH@Z(long) _ZN8CHString11AllocBufferEi # protected: void __thiscall CHString::AllocBuffer(int)
@@ -286,6 +308,28 @@
 @ thiscall -arch=win64 ?GetLocalOffsetForDate@WBEMTime@@SAJPEBU_SYSTEMTIME@@@Z(ptr) _ZN8WBEMTime21GetLocalOffsetForDateEPK11_SYSTEMTIME@4
 @ thiscall -arch=win64 ?GetLocalOffsetForDate@WBEMTime@@SAJPEBU_FILETIME@@@Z(ptr) _ZN8WBEMTime21GetLocalOffsetForDateEPK9_FILETIME@4
 @ thiscall -arch=win64 ?GetLocalOffsetForDate@WBEMTime@@SAJAEB_J@Z(ptr) _ZN8WBEMTime21GetLocalOffsetForDateERKl@4
+
+@ thiscall -arch=win64 ??0CHPtrArray@@QEAA@XZ() _ZN10CHPtrArrayC1Ev
+@ thiscall -arch=win64 ??1CHPtrArray@@QEAA@XZ() _ZN10CHPtrArrayD1Ev
+@ thiscall -arch=win64 ?GetSize@CHPtrArray@@QEBAHXZ() _ZNK10CHPtrArray7GetSizeEv
+@ thiscall -arch=win64 ?GetUpperBound@CHPtrArray@@QEBAHXZ() _ZNK10CHPtrArray13GetUpperBoundEv
+@ thiscall -arch=win64 ?SetSize@CHPtrArray@@QEAAXHH@Z(long long) _ZN10CHPtrArray7SetSizeEii
+@ thiscall -arch=win64 ?FreeExtra@CHPtrArray@@QEAAXXZ() _ZN10CHPtrArray9FreeExtraEv
+@ thiscall -arch=win64 ?RemoveAll@CHPtrArray@@QEAAXXZ() _ZN10CHPtrArray9RemoveAllEv
+@ thiscall -arch=win64 ?GetAt@CHPtrArray@@QEBAPEAXH@Z(long) _ZNK10CHPtrArray5GetAtEi
+@ thiscall -arch=win64 ?SetAt@CHPtrArray@@QEAAXHPEAX@Z(long ptr) _ZN10CHPtrArray5SetAtEiPv
+@ thiscall -arch=win64 ?ElementAt@CHPtrArray@@QEAAAEAPEAXH@Z(long) _ZN10CHPtrArray9ElementAtEi
+@ thiscall -arch=win64 ?GetData@CHPtrArray@@QEBAPEAPEBXXZ() _ZNK10CHPtrArray7GetDataEv
+@ thiscall -arch=win64 ?GetData@CHPtrArray@@QEAAPEAPEAXXZ() _ZN10CHPtrArray7GetDataEv
+@ thiscall -arch=win64 ?SetAtGrow@CHPtrArray@@QEAAXHPEAX@Z(long ptr) _ZN10CHPtrArray9SetAtGrowEiPv
+@ thiscall -arch=win64 ?Add@CHPtrArray@@QEAAHPEAX@Z(ptr) _ZN10CHPtrArray3AddEPv
+@ thiscall -arch=win64 ?Append@CHPtrArray@@QEAAHAEBV1@@Z(ptr) _ZN10CHPtrArray6AppendERKS_
+@ thiscall -arch=win64 ?Copy@CHPtrArray@@QEAAXAEBV1@@Z(ptr) _ZN10CHPtrArray4CopyERKS_
+@ thiscall -arch=win64 ??ACHPtrArray@@QEBAPEAXH@Z(long) _ZNK10CHPtrArrayixEi
+@ thiscall -arch=win64 ??ACHPtrArray@@QEAAAEAPEAXH@Z(long) _ZN10CHPtrArrayixEi
+@ thiscall -arch=win64 ?InsertAt@CHPtrArray@@QEAAXHPEAXH@Z(long ptr long) _ZN10CHPtrArray8InsertAtEiPvi
+@ thiscall -arch=win64 ?RemoveAt@CHPtrArray@@QEAAXHH@Z(long long) _ZN10CHPtrArray8RemoveAtEii
+@ thiscall -arch=win64 ?InsertAt@CHPtrArray@@QEAAXHPEAV1@@Z(long ptr) _ZN10CHPtrArray8InsertAtEiPS_
 
 # **************** arm exports ****************
 ;@ cdecl -arch=arm ??0CAutoEvent@@QAA@XZ()

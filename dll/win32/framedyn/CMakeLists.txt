@@ -7,6 +7,7 @@ list(APPEND SOURCE
     chstring.cpp
     provider.cpp
     wbemtime.cpp
+    chptrarr.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/framedyn.def)
 
 if(MSVC)
