@@ -439,7 +439,7 @@ KmtFilterRegisterCallbacks(
     _In_ CONST FLT_OPERATION_REGISTRATION *OperationRegistration)
 {
     ULONG Count = 0;
-    INT i;
+    ULONG i;
 
     if (Callbacks)
     {
@@ -463,7 +463,7 @@ KmtFilterRegisterCallbacks(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Copy the array, but using the our own pre/post callbacks */
+    /* Copy the array, but using our own pre/post callbacks */
     for (i = 0; i < Count; i++)
     {
         Callbacks[i].MajorFunction = OperationRegistration[i].MajorFunction;
@@ -519,7 +519,7 @@ FilterPreOperation(
 {
     FLT_PREOP_CALLBACK_STATUS Status;
     UCHAR MajorFunction;
-    INT i;
+    ULONG i;
 
     Status = FLT_PREOP_SUCCESS_NO_CALLBACK;
     MajorFunction = Data->Iopb->MajorFunction;
@@ -548,7 +548,7 @@ FilterPostOperation(
 {
     FLT_POSTOP_CALLBACK_STATUS Status;
     UCHAR MajorFunction;
-    INT i;
+    ULONG i;
 
     Status = FLT_POSTOP_FINISHED_PROCESSING;
     MajorFunction = Data->Iopb->MajorFunction;
