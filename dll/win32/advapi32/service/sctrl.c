@@ -536,9 +536,10 @@ ScControlService(PACTIVE_SERVICE lpService,
     else if (lpService->HandlerFunctionEx)
     {
         /* FIXME: Send correct 2nd and 3rd parameters */
-        dwError = (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
-                                                 0, NULL,
-                                                 lpService->HandlerContext);
+        (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
+                                       0, NULL,
+                                       lpService->HandlerContext);
+        dwError = ERROR_SUCCESS;
     }
 
     TRACE("ScControlService() done (Error %lu)\n", dwError);
