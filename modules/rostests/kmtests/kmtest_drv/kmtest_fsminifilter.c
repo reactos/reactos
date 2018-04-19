@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests - Filter Manager
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         FS Mini-filter wrapper to host the filter manager tests
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
- *                  Ged Murphy <ged.murphy@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests - Filter Manager
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     FS Mini-filter wrapper to host the filter manager tests
+ * COPYRIGHT:   Copyright 2017 Thomas Faber <thomas.faber@reactos.org>
+ *              Copyright 2017 Ged Murphy <ged.murphy@reactos.org>
  */
 
 #include <ntifs.h>
@@ -39,6 +39,7 @@ static PDRIVER_OBJECT TestDriverObject;
 static PDEVICE_OBJECT KmtestDeviceObject;
 static FILTER_DATA FilterData;
 static PFLT_OPERATION_REGISTRATION Callbacks = NULL;
+static ULONG CallbacksCount = 0;
 static PFLT_CONTEXT_REGISTRATION Contexts = NULL;
 
 static PFLT_CONNECT_NOTIFY FilterConnect = NULL;
@@ -296,6 +297,7 @@ FilterUnload(
     {
         ExFreePoolWithTag(Callbacks, KMTEST_FILTER_POOL_TAG);
         Callbacks = NULL;
+        CallbacksCount = 0;
     }
 
     return STATUS_SUCCESS;
@@ -337,7 +339,7 @@ FilterInstanceSetup(
     UNICODE_STRING VolumeName;
     ULONG ReportedSectorSize = 0;
     ULONG SectorSize = 0;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
 
@@ -473,6 +475,9 @@ KmtFilterRegisterCallbacks(
     /* Terminate the array */
     Callbacks[Count].MajorFunction = IRP_MJ_OPERATION_END;
 
+    /* Save the count of IRPs, not counting IRP_MJ_OPERATION_END last entry */
+    CallbacksCount = Count;
+
     return STATUS_SUCCESS;
 }
 
@@ -519,7 +524,7 @@ FilterPreOperation(
     Status = FLT_PREOP_SUCCESS_NO_CALLBACK;
     MajorFunction = Data->Iopb->MajorFunction;
 
-    for (i = 0; i < sizeof(Callbacks) / sizeof(Callbacks[0]); i++)
+    for (i = 0; i < CallbacksCount; i++)
     {
         if (MajorFunction == Callbacks[i].MajorFunction)
         {
@@ -548,7 +553,7 @@ FilterPostOperation(
     Status = FLT_POSTOP_FINISHED_PROCESSING;
     MajorFunction = Data->Iopb->MajorFunction;
 
-    for (i = 0; i < sizeof(Callbacks) / sizeof(Callbacks[0]); i++)
+    for (i = 0; i < CallbacksCount; i++)
     {
         if (MajorFunction == Callbacks[i].MajorFunction)
         {
