@@ -69,8 +69,7 @@
 @ stub _mbbtombc_l
 @ stdcall _mbbtype() msvcrt._mbbtype
 @ stub _mbbtype_l
-@ extern -arch=arm64,i386,arm _mbcasemap msvcrt._imp___mbcasemap
-@ extern -arch=x86_64 _mbcasemap msvcrt.__imp__mbcasemap
+@ extern -stub _mbcasemap msvcrt._mbcasemap # the -stub is a HACK to fix VS < 2017 build!
 @ stdcall _mbccpy() msvcrt._mbccpy
 @ stub _mbccpy_l
 @ stub _mbccpy_s

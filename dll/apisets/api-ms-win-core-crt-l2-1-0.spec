@@ -13,8 +13,7 @@
 @ stdcall _onexit() msvcrt._onexit
 @ stdcall _purecall() msvcrt._purecall
 @ stdcall _time64() msvcrt._time64
-@ extern -arch=arm64,i386,arm atexit msvcrt._imp__atexit
-@ extern -arch=x86_64 atexit msvcrt.__imp_atexit
+@ extern -stub atexit msvcrt.atexit # the -stub is a HACK to fix VS < 2017 build!
 @ stdcall exit() msvcrt.exit
 @ stub hgets
 @ stub hwprintf
