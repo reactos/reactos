@@ -91,6 +91,7 @@ NTSTRSAFEAPI RtlStringVPrintfWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSA
 NTSTRSAFEAPI RtlStringVPrintfExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags,STRSAFE_LPCSTR pszFormat,va_list argList);
 NTSTRSAFEAPI RtlStringVPrintfExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPWSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags,STRSAFE_LPCWSTR pszFormat,va_list argList);
 
+
 NTSTRSAFEAPI
 RtlStringLengthWorkerA(
   _In_reads_or_z_(cchMax) STRSAFE_LPCSTR psz,
@@ -2823,6 +2824,45 @@ RtlStringLengthWorkerW(
             *pcchLength = 0;
     }
     return Status;
+}
+
+NTSTRSAFEAPI 
+RtlUnicodeStringPrintf(PUNICODE_STRING DestinationString,
+	NTSTRSAFE_PCWSTR pszFormat, ...)
+{
+	if (DestinationString == NULL || pszFormat == NULL)
+		return STATUS_INVALID_PARAMETER;
+
+	if (DestinationString->Buffer == NULL || DestinationString->MaximumLength == 0)
+		return STATUS_INVALID_PARAMETER;
+	
+	size_t cchLength = 0;
+	NTSTATUS nt = RtlStringLengthWorkerW(DestinationString->Length, NTSTRSAFE_UNICODE_STRING_MAX_CCH, &cchLength);
+	ASSERT(NT_SUCCESS(nt));
+	
+	/* Don't allow inconsistency between actual length and UNICODE_STRING.Length field, 
+	 * or "full buffer" (MaximumLength == Length)
+	 */
+	
+	if ( ((DestinationString->Length == 0) && (cchLength != 0)) ||
+		 ((DestinationString->Length == DestinationString->MaximumLength)))
+		return STATUS_INVALID_PARAMETER;
+
+	return RtlStringVPrintfWorkerW(DestinationString->Buffer, DestinationString->MaximumLength, pszFormat, argList);
+}
+
+NTSTRSAFEAPI 
+RtlUnicodeStringPrintfEx(PUNICODE_STRING DestinationString,
+	PUNICODE_STRING RemainingString,
+	DWORD dwFlags,
+	NTSTRSAFE_PCWSTR pszFormat, ...)
+{
+	/* Verify flags */
+
+	if (dwFlags == STRSAFE_FILL_BEHIND)
+	{
+
+	}
 }
 
 #define RtlStringCopyWorkerA RtlStringCopyWorkerA_instead_use_StringCchCopyA_or_StringCchCopyExA;
