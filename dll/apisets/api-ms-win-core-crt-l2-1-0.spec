@@ -13,7 +13,7 @@
 @ stdcall _onexit() msvcrt._onexit
 @ stdcall _purecall() msvcrt._purecall
 @ stdcall _time64() msvcrt._time64
-@ extern atexit msvcrt.atexit
+@ cdecl -private atexit() msvcrt._imp__atexit # HACK to fix VS build issues. Should be extern!
 @ stdcall exit() msvcrt.exit
 @ stub hgets
 @ stub hwprintf

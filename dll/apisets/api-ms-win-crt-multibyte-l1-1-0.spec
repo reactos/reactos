@@ -69,7 +69,7 @@
 @ stub _mbbtombc_l
 @ stdcall _mbbtype() msvcrt._mbbtype
 @ stub _mbbtype_l
-@ extern _mbcasemap msvcrt._mbcasemap
+@ cdecl -private _mbcasemap() msvcrt._imp___mbcasemap # HACK to fix VS build issues. Should be extern!
 @ stdcall _mbccpy() msvcrt._mbccpy
 @ stub _mbccpy_l
 @ stub _mbccpy_s
