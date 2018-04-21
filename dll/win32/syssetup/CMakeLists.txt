@@ -6,6 +6,7 @@ list(APPEND SOURCE
     dllmain.c
     install.c
     logfile.c
+    proppage.c
     security.c
     wizard.c
     precomp.h
