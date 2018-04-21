@@ -31,6 +31,7 @@ KMT_TESTFUNC Test_RtlMemory;
 KMT_TESTFUNC Test_RtlRegistry;
 KMT_TESTFUNC Test_RtlSplayTree;
 KMT_TESTFUNC Test_RtlStack;
+KMT_TESTFUNC Test_RtlStrSafe;
 KMT_TESTFUNC Test_RtlUnicodeString;
 KMT_TESTFUNC Test_TcpIpIoctl;
 KMT_TESTFUNC Test_TcpIpTdi;
@@ -64,6 +65,7 @@ const KMT_TEST TestList[] =
     { "RtlRegistry",                  Test_RtlRegistry },
     { "RtlSplayTree",                 Test_RtlSplayTree },
     { "RtlStack",                     Test_RtlStack },
+    { "RtlStrSafe",                   Test_RtlStrSafe },
     { "RtlUnicodeString",             Test_RtlUnicodeString },
     { "TcpIpTdi",                     Test_TcpIpTdi },
     { "TcpIpConnect",                 Test_TcpIpConnect },
