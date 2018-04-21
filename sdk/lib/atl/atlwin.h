@@ -1804,6 +1804,15 @@ public:                                                                         
             return TRUE;                                                                        \
     }
 
+#define COMMAND_HANDLER(id, code, func)                                                         \
+    if (uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam))                   \
+    {                                                                                           \
+        bHandled = TRUE;                                                                        \
+        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                 \
+        if (bHandled)                                                                           \
+            return TRUE;                                                                        \
+    }
+
 #define COMMAND_ID_HANDLER(id, func)                                                            \
     if (uMsg == WM_COMMAND && id == LOWORD(wParam))                                                \
     {                                                                                            \
