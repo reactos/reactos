@@ -78,7 +78,7 @@ KiThreadStartup(VOID)
     StartFrame->SystemRoutine(StartFrame->StartRoutine, StartFrame->StartContext);
 
     /* If we returned, we better be a user thread */
-    if (!StartFrame->UserThread) DbgBreakPoint();
+    if (!StartFrame->UserThread) KeBugCheck((ULONG)0x0000000EL); // NO_USER_MODE_CONTEXT
 
     /* Exit to user-mode */
     KiServiceExit2(TrapFrame);
