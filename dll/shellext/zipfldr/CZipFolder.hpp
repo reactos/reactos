@@ -172,6 +172,9 @@ public:
         case 2: /* Compressed size */
         case 4: /* Size */
         {
+            if (isDir)
+                return SHSetStrRet(&psd->str, L"");
+
             ULONG64 Size = iColumn == 2 ? zipEntry->CompressedSize : zipEntry->UncompressedSize;
             if (!StrFormatByteSizeW(Size, Buffer, _countof(Buffer)))
                 return E_FAIL;
@@ -183,8 +186,11 @@ public:
             return SHSetStrRet(&psd->str, _AtlBaseModule.GetResourceInstance(), zipEntry->Password ? IDS_YES : IDS_NO);
         case 5: /* Ratio */
         {
+            if (isDir)
+                return SHSetStrRet(&psd->str, L"");
+
             int ratio = 0;
-            if (zipEntry->UncompressedSize && !isDir)
+            if (zipEntry->UncompressedSize)
                 ratio = 100 - (int)((zipEntry->CompressedSize*100)/zipEntry->UncompressedSize);
             StringCchPrintfW(Buffer, _countof(Buffer), L"%d%%", ratio);
             return SHSetStrRet(&psd->str, Buffer);
