@@ -98,7 +98,7 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
     PWCHAR IdBuffer, OriginalIdBuffer;
 
     /* Open the device instance key */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceKey);
     if (Status != STATUS_SUCCESS)
         return;
 
@@ -800,7 +800,7 @@ IopStartDevice(
    IopStartAndEnumerateDevice(DeviceNode);
 
    /* FIX: Should be done in new device instance code */
-   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceHandle);
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceHandle);
    if (!NT_SUCCESS(Status))
        goto ByeBye;
 
@@ -817,7 +817,7 @@ IopStartDevice(
        goto ByeBye;
 
    RtlInitUnicodeString(&KeyName, L"ActiveService");
-   Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, DeviceNode->ServiceName.Buffer, DeviceNode->ServiceName.Length);
+   Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, DeviceNode->ServiceName.Buffer, DeviceNode->ServiceName.Length + sizeof(UNICODE_NULL));
    // }
 
 ByeBye:
@@ -873,7 +873,7 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
    else
        DeviceNode->UserFlags &= ~DNUF_DONT_SHOW_IN_UI;
 
-   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceKey);
    if (NT_SUCCESS(Status))
    {
       /* Set 'Capabilities' value */
@@ -1067,7 +1067,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
    if (!PhysicalDeviceObject)
    {
-      FullServiceName.MaximumLength = LegacyPrefix.Length + ServiceName1->Length;
+      FullServiceName.MaximumLength = LegacyPrefix.Length + ServiceName1->Length + sizeof(UNICODE_NULL);
       FullServiceName.Length = 0;
       FullServiceName.Buffer = ExAllocatePool(PagedPool, FullServiceName.MaximumLength);
       if (!FullServiceName.Buffer)
@@ -1078,6 +1078,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
       RtlAppendUnicodeStringToString(&FullServiceName, &LegacyPrefix);
       RtlAppendUnicodeStringToString(&FullServiceName, ServiceName1);
+      RtlUpcaseUnicodeString(&FullServiceName, &FullServiceName, FALSE);
 
       Status = PnpRootCreateDevice(&FullServiceName, NULL, &PhysicalDeviceObject, &Node->InstancePath);
       if (!NT_SUCCESS(Status))
@@ -1097,7 +1098,9 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
           return Status;
       }
 
-      Node->ServiceName.Buffer = ExAllocatePool(PagedPool, ServiceName1->Length);
+      Node->ServiceName.MaximumLength = ServiceName1->Length + sizeof(UNICODE_NULL);
+      Node->ServiceName.Length = 0;
+      Node->ServiceName.Buffer = ExAllocatePool(PagedPool, Node->ServiceName.MaximumLength);
       if (!Node->ServiceName.Buffer)
       {
           ZwClose(InstanceHandle);
@@ -1106,39 +1109,39 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
           return Status;
       }
 
-      Node->ServiceName.MaximumLength = ServiceName1->Length;
-      Node->ServiceName.Length = 0;
-
-      RtlAppendUnicodeStringToString(&Node->ServiceName, ServiceName1);
+      RtlCopyUnicodeString(&Node->ServiceName, ServiceName1);
 
       if (ServiceName)
       {
           RtlInitUnicodeString(&KeyName, L"Service");
-          Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ServiceName->Buffer, ServiceName->Length);
+          Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ServiceName->Buffer, ServiceName->Length + sizeof(UNICODE_NULL));
       }
 
       if (NT_SUCCESS(Status))
       {
           RtlInitUnicodeString(&KeyName, L"Legacy");
-
           LegacyValue = 1;
           Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_DWORD, &LegacyValue, sizeof(LegacyValue));
+
+          RtlInitUnicodeString(&KeyName, L"ConfigFlags");
+          LegacyValue = 0;
+          ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_DWORD, &LegacyValue, sizeof(LegacyValue));
+
           if (NT_SUCCESS(Status))
           {
               RtlInitUnicodeString(&KeyName, L"Class");
-
-              RtlInitUnicodeString(&ClassName, L"LegacyDriver\0");
+              RtlInitUnicodeString(&ClassName, L"LegacyDriver");
               Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassName.Buffer, ClassName.Length + sizeof(UNICODE_NULL));
               if (NT_SUCCESS(Status))
               {
                   RtlInitUnicodeString(&KeyName, L"ClassGUID");
-
-                  RtlInitUnicodeString(&ClassGUID, L"{8ECC055D-047F-11D1-A537-0000F8753ED1}\0");
+                  RtlInitUnicodeString(&ClassGUID, L"{8ECC055D-047F-11D1-A537-0000F8753ED1}");
                   Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassGUID.Buffer, ClassGUID.Length + sizeof(UNICODE_NULL));
                   if (NT_SUCCESS(Status))
                   {
+                      // FIXME: Retrieve the real "description" by looking at the "DisplayName" string
+                      // of the corresponding CurrentControlSet\Services\xxx entry for this driver.
                       RtlInitUnicodeString(&KeyName, L"DeviceDesc");
-
                       Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ServiceName1->Buffer, ServiceName1->Length + sizeof(UNICODE_NULL));
                   }
               }
@@ -2244,7 +2247,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
     /*
      * Create registry key for the instance id, if it doesn't exist yet
      */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceKey);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
@@ -2719,10 +2722,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
              DeviceCaps.RawDeviceOK)
          {
             DPRINT("%wZ is using parent bus driver (%wZ)\n", &DeviceNode->InstancePath, &ParentDeviceNode->ServiceName);
-
-            DeviceNode->ServiceName.Length = 0;
-            DeviceNode->ServiceName.MaximumLength = 0;
-            DeviceNode->ServiceName.Buffer = NULL;
+            RtlInitEmptyUnicodeString(&DeviceNode->ServiceName, NULL, 0);
          }
          else if (ClassGUID.Length != 0)
          {

@@ -173,15 +173,17 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     NTSTATUS Status;
     HANDLE InstanceKey;
     ULONG RequiredLength;
-    UNICODE_STRING ValueName, ServiceName;
+    UNICODE_STRING ValueName, ServiceLongName, ServiceName;
     WCHAR HardwareId[256];
     PWCHAR IfString;
     ULONG IdLength;
+    ULONG LegacyValue;
 
     DPRINT("IoReportDetectedDevice (DeviceObject %p, *DeviceObject %p)\n",
            DeviceObject, DeviceObject ? *DeviceObject : NULL);
 
-    ServiceName = DriverObject->DriverExtension->ServiceKeyName;
+    ServiceLongName = DriverObject->DriverExtension->ServiceKeyName;
+    ServiceName = ServiceLongName;
 
     /* If the interface type is unknown, treat it as internal */
     if (LegacyBusType == InterfaceTypeUndefined)
@@ -193,6 +195,42 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     /* If NULL is returned then it's a bad type */
     if (!IfString)
         return STATUS_INVALID_PARAMETER;
+
+    /*
+     * Drivers that have been created via a direct IoCreateDriver() call
+     * have their ServiceKeyName set to \Driver\DriverName. We need to
+     * strip everything up to the last path separator and keep what remains.
+     */
+    if (DriverObject->Flags & DRVO_BUILTIN_DRIVER)
+    {
+        /*
+         * Find the last path separator.
+         * NOTE: Since ServiceName is not necessarily NULL-terminated,
+         * we cannot use wcsrchr().
+         */
+        if (ServiceName.Buffer && ServiceName.Length >= sizeof(WCHAR))
+        {
+            ValueName.Length = 1;
+            ValueName.Buffer = ServiceName.Buffer + (ServiceName.Length / sizeof(WCHAR)) - 1;
+
+            while ((ValueName.Buffer > ServiceName.Buffer) && (*ValueName.Buffer != L'\\'))
+            {
+                --ValueName.Buffer;
+                ++ValueName.Length;
+            }
+            if (*ValueName.Buffer == L'\\')
+            {
+                ++ValueName.Buffer;
+                --ValueName.Length;
+            }
+            ValueName.Length *= sizeof(WCHAR);
+
+            /* Shorten the string */
+            ServiceName.MaximumLength -= (ServiceName.Length - ValueName.Length);
+            ServiceName.Length = ValueName.Length;
+            ServiceName.Buffer = ValueName.Buffer;
+        }
+    }
 
     /* We use the caller's PDO if they supplied one */
     if (DeviceObject && *DeviceObject)
@@ -218,7 +256,6 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
                                  Pdo,
                                  NULL,
                                  &DeviceNode);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IopCreateDeviceNode() failed (Status 0x%08lx)\n", Status);
@@ -251,6 +288,23 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_VOLATILE, &InstanceKey);
     if (!NT_SUCCESS(Status))
         return Status;
+
+    /* Save the driver name */
+    RtlInitUnicodeString(&ValueName, L"Service");
+    Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_SZ, ServiceLongName.Buffer, ServiceLongName.Length + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed to write the Service name value: 0x%x\n", Status);
+    }
+
+    /* Report as non-legacy driver */
+    RtlInitUnicodeString(&ValueName, L"Legacy");
+    LegacyValue = 0;
+    Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_DWORD, &LegacyValue, sizeof(LegacyValue));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed to write the Legacy value: 0x%x\n", Status);
+    }
 
     /* Add DETECTEDInterfaceType\DriverName */
     IdLength = 0;
