@@ -1,15 +1,18 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/base/null/null.c
- * PURPOSE:         Null Device Driver
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  David Welch (welch@mcmail.com)
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Null Device Driver
+ * COPYRIGHT:   Copyright 1998-2018 David Welch (welch@mcmail.com)
+ *              Copyright 2007-2018 Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <wdm.h>
+
+/* GLOBALS *******************************************************************/
+
+FAST_IO_DISPATCH FastIoDispatch;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -20,6 +23,7 @@ NullQueryFileInformation(OUT PVOID Buffer,
                          IN FILE_INFORMATION_CLASS InformationClass)
 {
     PFILE_STANDARD_INFORMATION StandardInfo = Buffer;
+
     PAGED_CODE();
 
     /* We only support one class */
@@ -81,10 +85,11 @@ NTAPI
 NullDispatch(IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject;
     ULONG Length;
+
     PAGED_CODE();
 
     /* Get the file object and check what kind of request this is */
@@ -150,21 +155,33 @@ NullDispatch(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
+VOID
+NTAPI
+NullUnload(IN PDRIVER_OBJECT DriverObject)
+{
+    PDEVICE_OBJECT DeviceObject = DriverObject->DeviceObject;
+
+    /* Delete the Null device */
+    IoDeleteDevice(DeviceObject);
+}
+
 NTSTATUS
 NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
+    NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Null");
-    NTSTATUS Status;
-    PFAST_IO_DISPATCH FastIoDispatch;
+
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(RegistryPath);
 
     /* Page the driver */
     MmPageEntireDriver(DriverEntry);
 
-    /* Create null device */
+    /* Create the Null device */
     Status = IoCreateDevice(DriverObject,
                             0,
                             &DeviceName,
@@ -172,7 +189,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                             0,
                             FALSE,
                             &DeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Register driver routines */
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = NullDispatch;
@@ -181,26 +199,16 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_READ] = NullDispatch;
     DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = NullDispatch;
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = NullDispatch;
+    DriverObject->DriverUnload = NullUnload;
 
-    /* Allocate the fast I/O dispatch table */
-    FastIoDispatch = ExAllocatePoolWithTag(NonPagedPool,
-                                           sizeof(FAST_IO_DISPATCH),
-                                           'llun');
-    if (!FastIoDispatch)
-    {
-        /* Failed, cleanup */
-        IoDeleteDevice(DeviceObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Initialize it */
-    RtlZeroMemory(FastIoDispatch, sizeof(FAST_IO_DISPATCH));
-    FastIoDispatch->SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
+    /* Initialize the fast I/O dispatch table */
+    RtlZeroMemory(&FastIoDispatch, sizeof(FastIoDispatch));
+    FastIoDispatch.SizeOfFastIoDispatch = sizeof(FastIoDispatch);
 
     /* Setup our pointers */
-    FastIoDispatch->FastIoRead = NullRead;
-    FastIoDispatch->FastIoWrite = NullWrite;
-    DriverObject->FastIoDispatch = FastIoDispatch;
+    FastIoDispatch.FastIoRead = NullRead;
+    FastIoDispatch.FastIoWrite = NullWrite;
+    DriverObject->FastIoDispatch = &FastIoDispatch;
 
     /* Return success */
     return STATUS_SUCCESS;
