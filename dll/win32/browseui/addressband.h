@@ -43,6 +43,7 @@ private:
     bool                                    fGoButtonShown;
     HIMAGELIST                              m_himlNormal;
     HIMAGELIST                              m_himlHot;
+    INT                                     fAdjustNeeded;
 
 public:
     CAddressBand();
