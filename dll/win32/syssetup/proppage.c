@@ -110,6 +110,81 @@ MouseOnDialogInit(
                             (LPARAM)szBuffer);
     }
 
+    /* Set the input buffer length range: 100-300 */
+    SendDlgItemMessageW(hwndDlg,
+                        IDC_PS2MOUSEINPUTUPDN,
+                        UDM_SETRANGE32,
+                        100,
+                        300);
+
+    SendDlgItemMessageW(hwndDlg,
+                        IDC_PS2MOUSEINPUTUPDN,
+                        UDM_SETPOS32,
+                        0,
+                        100);
+}
+
+
+static
+VOID
+MouseOnCommand(
+    HWND hwndDlg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    switch (LOWORD(wParam))
+    {
+        case IDC_PS2MOUSESAMPLERATE:
+        case IDC_PS2MOUSEWHEEL:
+        case IDC_PS2MOUSEINPUTLEN:
+        case IDC_PS2MOUSEFASTINIT:
+            if (HIWORD(wParam) == CBN_SELCHANGE ||
+                HIWORD(wParam) == CBN_EDITCHANGE)
+            {
+                /* Enable the Apply button */
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
+            break;
+
+        case IDC_PS2MOUSEDEFAULTS:
+            if (HIWORD(wParam) == BN_CLICKED)
+            {
+                /* Sample rate: 100 */
+                SendDlgItemMessageW(hwndDlg,
+                                    IDC_PS2MOUSESAMPLERATE,
+                                    CB_SETCURSEL,
+                                    4,
+                                    0);
+
+                /* Wheel detection: Assume wheel present */
+                SendDlgItemMessageW(hwndDlg,
+                                    IDC_PS2MOUSEWHEEL,
+                                    CB_SETCURSEL,
+                                    2,
+                                    0);
+
+                /* Input buffer length: 100 packets */
+                SendDlgItemMessageW(hwndDlg,
+                                    IDC_PS2MOUSEINPUTUPDN,
+                                    UDM_SETPOS32,
+                                    0,
+                                    100);
+
+                /* Fast Initialization: Checked */
+                SendDlgItemMessage(hwndDlg,
+                                   IDC_PS2MOUSEFASTINIT,
+                                   BM_SETCHECK,
+                                   (WPARAM)BST_CHECKED,
+                                   (LPARAM)0);
+
+                /* Enable the Apply button */
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
+            break;
+
+        default:
+            break;
+    }
 }
 
 
@@ -129,6 +204,11 @@ MouseDlgProc(
         case WM_INITDIALOG:
             MouseOnDialogInit(hwndDlg, lParam);
             return TRUE;
+
+        case WM_COMMAND:
+            MouseOnCommand(hwndDlg, wParam, lParam);
+            break;
+
     }
 
     return FALSE;
