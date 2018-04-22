@@ -28,7 +28,7 @@ BEGIN
     LTEXT           "Все файлы были извлечены в следующую директорию:",IDC_STATIC,6,12,222,18
     LTEXT           "Целевой путь",IDC_DESTDIR,6,36,222,8
     CONTROL         "Показать извлечённые файлы",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,118,10
-    LTEXT           "Нажмите \"Готово\" чтобы продолжить.",IDC_STATIC,6,84,174,8
+    LTEXT           "Нажмите ""Готово"" чтобы продолжить.",IDC_STATIC,6,84,174,8
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
