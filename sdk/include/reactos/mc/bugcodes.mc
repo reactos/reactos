@@ -1557,7 +1557,7 @@ Severity=Success
 Facility=System
 SymbolicName=MANUALLY_INITIATED_CRASH
 Language=English
-The end-user manually generated the crashdump.
+The user manually generated the crash dump.
 .
 
 MessageId=0xE3
