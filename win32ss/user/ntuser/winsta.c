@@ -717,22 +717,49 @@ NtUserGetObjectInformation(
         goto Exit;
     }
 
-    TRACE("WinSta or Desktop opened!!\n");
+    TRACE("WinSta or Desktop opened!\n");
 
     /* Get data */
     switch (nIndex)
     {
         case UOI_FLAGS:
         {
-            /* This is a default implementation that does almost nothing */
-            ObjectFlags.fInherit = FALSE;
+            OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+            ULONG BytesWritten;
+
             ObjectFlags.fReserved = FALSE;
+
+            /* Check whether this handle is inheritable */
+            Status = ZwQueryObject(hObject,
+                                   ObjectHandleFlagInformation,
+                                   &HandleInfo,
+                                   sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
+                                   &BytesWritten);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("ZwQueryObject failed, Status 0x%08lx\n", Status);
+                break;
+            }
+            ObjectFlags.fInherit = HandleInfo.Inherit;
+
             ObjectFlags.dwFlags = 0;
+            if (WinStaObject != NULL)
+            {
+                if (!(WinStaObject->Flags & WSS_NOIO))
+                    ObjectFlags.dwFlags |= WSF_VISIBLE;
+            }
+            else if (DesktopObject != NULL)
+            {
+                FIXME("Setting DF_ALLOWOTHERACCOUNTHOOK is unimplemented.\n");
+            }
+            else
+            {
+                ERR("No associated WinStaObject nor DesktopObject!\n");
+            }
 
             pvData = &ObjectFlags;
             nDataSize = sizeof(ObjectFlags);
             Status = STATUS_SUCCESS;
-            ERR("UOI_FLAGS unimplemented!\n");
             break;
         }
 
