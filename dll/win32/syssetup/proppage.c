@@ -11,6 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DWORD MouseSampleRates[] = {20, 40, 60, 80, 100, 200};
+
 
 /*
  * @implemented
@@ -77,8 +79,65 @@ LegacyDriverPropPageProvider(
 }
 
 
+static
+VOID
+MouseOnDialogInit(
+    HWND hwndDlg,
+    LPARAM lParam)
+{
+    WCHAR szBuffer[64];
+    UINT i;
+
+    /* Add the sample rates */
+    for (i = 0; i < ARRAYSIZE(MouseSampleRates); i++)
+    {
+        wsprintf(szBuffer, L"%lu", MouseSampleRates[i]);
+        SendDlgItemMessageW(hwndDlg,
+                            IDC_PS2MOUSESAMPLERATE,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)szBuffer);
+    }
+
+    /* Add the detection options */
+    for (i = IDS_DETECTIONDISABLED; i <= IDS_ASSUMEPRESENT; i++)
+    {
+        LoadStringW(hDllInstance, i, szBuffer, ARRAYSIZE(szBuffer));
+        SendDlgItemMessageW(hwndDlg,
+                            IDC_PS2MOUSEWHEEL,
+                            CB_ADDSTRING,
+                            0,
+                            (LPARAM)szBuffer);
+    }
+
+}
+
+
+static
+INT_PTR
+CALLBACK
+MouseDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    DPRINT("MouseDlgProc\n");
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            MouseOnDialogInit(hwndDlg, lParam);
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -87,10 +146,38 @@ PS2MousePropPageProvider(
     _In_ LPFNADDPROPSHEETPAGE lpfnAddPropSheetPageProc,
     _In_ LPARAM lParam)
 {
-    DPRINT1("PS2MousePropPageProvider(%p %p %lx)\n",
+    PROPSHEETPAGEW PropSheetPage;
+    HPROPSHEETPAGE hPropSheetPage;
+
+    DPRINT("PS2MousePropPageProvider(%p %p %lx)\n",
            lpPropSheetPageRequest, lpfnAddPropSheetPageProc, lParam);
-    UNIMPLEMENTED;
-    return FALSE;
+
+    if (lpPropSheetPageRequest->PageRequested != SPPSR_ENUM_ADV_DEVICE_PROPERTIES)
+        return FALSE;
+
+    PropSheetPage.dwSize = sizeof(PROPSHEETPAGEW);
+    PropSheetPage.dwFlags = 0;
+    PropSheetPage.hInstance = hDllInstance;
+    PropSheetPage.pszTemplate = MAKEINTRESOURCE(IDD_PS2MOUSEPROPERTIES);
+    PropSheetPage.pfnDlgProc = MouseDlgProc;
+    PropSheetPage.lParam = 0;
+    PropSheetPage.pfnCallback = NULL;
+
+    hPropSheetPage = CreatePropertySheetPageW(&PropSheetPage);
+    if (hPropSheetPage == NULL)
+    {
+        DPRINT1("CreatePropertySheetPageW() failed!\n");
+        return FALSE;
+    }
+
+    if (!(*lpfnAddPropSheetPageProc)(hPropSheetPage, lParam))
+    {
+        DPRINT1("lpfnAddPropSheetPageProc() failed!\n");
+        DestroyPropertySheetPage(hPropSheetPage);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 

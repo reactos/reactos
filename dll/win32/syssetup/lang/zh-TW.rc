@@ -211,3 +211,10 @@ BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
     IDS_COMMONFILES "Common Files"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_DETECTIONDISABLED "Detection disabled"
+    IDS_LOOKFORWHEEL "Look for wheel"
+    IDS_ASSUMEPRESENT "Assume wheel is present"
+END

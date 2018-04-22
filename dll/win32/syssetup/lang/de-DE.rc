@@ -210,3 +210,10 @@ BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Programme"
     IDS_COMMONFILES "Gemeinsame Dateien"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_DETECTIONDISABLED "Erkennung deaktiviert"
+    IDS_LOOKFORWHEEL "Rad suchen"
+    IDS_ASSUMEPRESENT "Annehmen, dass Rad vorhanden ist"
+END
