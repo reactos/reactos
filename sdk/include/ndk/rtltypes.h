@@ -310,7 +310,7 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 //
 // Activation Contexts
 //
-#define INVALID_ACTIVATION_CONTEXT                          (PVOID)0xFFFFFFFF
+#define INVALID_ACTIVATION_CONTEXT                          ((PVOID)(LONG_PTR)-1)
 
 //
 // C++ CONST casting

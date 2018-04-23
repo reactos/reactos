@@ -31,7 +31,7 @@ DumpSkiplist(PSKIPLIST Skiplist)
             for (j = 1; j < pNode->Distance[i]; j++)
                 printf("---");
 
-            printf("%02lu", (DWORD)pNode->Next[i]->Element);
+            printf("%02Iu", (DWORD_PTR)pNode->Next[i]->Element);
 
             pNode = pNode->Next[i];
         }
@@ -51,7 +51,7 @@ MyAlloc(DWORD Size)
 int WINAPI
 MyCompare(PVOID A, PVOID B)
 {
-    return (DWORD)A - (DWORD)B;
+    return (DWORD_PTR)A - (DWORD_PTR)B;
 }
 
 void WINAPI
@@ -63,7 +63,7 @@ MyFree(PVOID Ptr)
 int
 main()
 {
-    DWORD Element;
+    PVOID Element;
     DWORD ElementIndex;
     DWORD i;
     SKIPLIST Skiplist;
@@ -74,23 +74,23 @@ main()
 
     // Insert some random elements with random numbers.
     for (i = 0; i < 40; i++)
-        InsertElementSkiplist(&Skiplist, (PVOID)(rand() % 100));
+        InsertElementSkiplist(&Skiplist, UlongToPtr(rand() % 100));
 
     // Delete all with index 0 to 29.
     for (i = 0; i < 30; i++)
-        DeleteElementSkiplist(&Skiplist, (PVOID)i);
+        DeleteElementSkiplist(&Skiplist, UlongToPtr(i));
 
     // Insert some more random elements.
     for (i = 0; i < 40; i++)
-        InsertElementSkiplist(&Skiplist, (PVOID)(rand() % 100));
+        InsertElementSkiplist(&Skiplist, UlongToPtr(rand() % 100));
 
     // Output the third element (with zero-based index 2).
     pNode = LookupNodeByIndexSkiplist(&Skiplist, 2);
-    printf("Element = %lu for index 2\n", (DWORD)pNode->Element);
+    printf("Element = %Iu for index 2\n", (DWORD_PTR)pNode->Element);
 
     // Check if an element with number 44 is in the list and output its index.
-    Element = (DWORD)LookupElementSkiplist(&Skiplist, (PVOID)44, &ElementIndex);
-    printf("Element = %lu, ElementIndex = %lu\n\n", Element, ElementIndex);
+    Element = LookupElementSkiplist(&Skiplist, UlongToPtr(44), &ElementIndex);
+    printf("Element = %p, ElementIndex = %lu\n\n", Element, ElementIndex);
 
     DumpSkiplist(&Skiplist);
 

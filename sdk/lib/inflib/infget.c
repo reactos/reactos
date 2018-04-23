@@ -13,11 +13,11 @@
 #define NDEBUG
 #include <debug.h>
 
-static unsigned int
+static size_t
 InfpSubstituteString(PINFCACHE Inf,
                      const WCHAR *text,
                      WCHAR *buffer,
-                     unsigned int size);
+                     size_t size);
 
 static void
 ShortToHex(PWCHAR Buffer,
@@ -36,7 +36,7 @@ ShortToHex(PWCHAR Buffer,
 static PCWSTR
 InfpGetSubstitutionString(PINFCACHE Inf,
                           PCWSTR str,
-                          unsigned int *len,
+                          size_t *len,
                           BOOL no_trailing_slash)
 {
     static const WCHAR percent = '%';
@@ -105,7 +105,7 @@ InfpGetSubstitutionString(PINFCACHE Inf,
     if (Status == STATUS_SUCCESS)
     {
         *len = strlenW(Data);
-        DPRINT("Substitute: %S  Length: %ul\n", Data, *len);
+        DPRINT("Substitute: %S  Length: %zu\n", Data, *len);
         return Data;
     }
 
@@ -116,14 +116,14 @@ InfpGetSubstitutionString(PINFCACHE Inf,
 /* do string substitutions on the specified text */
 /* the buffer is assumed to be large enough */
 /* returns necessary length not including terminating null */
-static unsigned int
+static size_t
 InfpSubstituteString(PINFCACHE Inf,
                      PCWSTR text,
                      PWSTR buffer,
-                     unsigned int size)
+                     size_t size)
 {
     const WCHAR *start, *subst, *p;
-    unsigned int len, total = 0;
+    size_t len, total = 0;
     int inside = 0;
 
     if (!buffer) size = MAX_INF_STRING_LENGTH + 1;
@@ -133,7 +133,7 @@ InfpSubstituteString(PINFCACHE Inf,
         inside = !inside;
         if (inside)  /* start of a %xx% string */
         {
-            len = (unsigned int)(p - start);
+            len = (p - start);
             if (len > size - 1) len = size - 1;
             if (buffer) memcpy( buffer + total, start, len * sizeof(WCHAR) );
             total += len;
@@ -142,12 +142,12 @@ InfpSubstituteString(PINFCACHE Inf,
         }
         else /* end of the %xx% string, find substitution */
         {
-            len = (unsigned int)(p - start - 1);
+            len = (p - start - 1);
             subst = InfpGetSubstitutionString( Inf, start + 1, &len, p[1] == '\\' );
             if (!subst)
             {
                 subst = start;
-                len = (unsigned int)(p - start + 1);
+                len = (p - start + 1);
             }
             if (len > size - 1) len = size - 1;
             if (buffer) memcpy( buffer + total, subst, len * sizeof(WCHAR) );
@@ -546,7 +546,7 @@ InfpGetStringField(PINFCONTEXT Context,
   PINFCACHEFIELD CacheField;
   ULONG Index;
   PWCHAR Ptr;
-  ULONG Size;
+  SIZE_T Size;
 
   if (Context == NULL || Context->Line == NULL)
     {
