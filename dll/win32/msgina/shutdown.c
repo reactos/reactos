@@ -398,7 +398,7 @@ ShutdownOnOk(
     }
 }
 
-static BOOL
+static INT_PTR
 CALLBACK
 ShutdownDialogProc(
     HWND hDlg,
