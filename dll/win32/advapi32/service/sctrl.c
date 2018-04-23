@@ -517,8 +517,6 @@ static DWORD
 ScControlService(PACTIVE_SERVICE lpService,
                  PSCM_CONTROL_PACKET ControlPacket)
 {
-    DWORD dwError;
-
     TRACE("ScControlService(%p %p)\n",
           lpService, ControlPacket);
 
@@ -531,7 +529,6 @@ ScControlService(PACTIVE_SERVICE lpService,
     if (lpService->HandlerFunction)
     {
         (lpService->HandlerFunction)(ControlPacket->dwControl);
-        dwError = ERROR_SUCCESS;
     }
     else if (lpService->HandlerFunctionEx)
     {
@@ -539,12 +536,11 @@ ScControlService(PACTIVE_SERVICE lpService,
         (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
                                        0, NULL,
                                        lpService->HandlerContext);
-        dwError = ERROR_SUCCESS;
     }
 
-    TRACE("ScControlService() done (Error %lu)\n", dwError);
+    TRACE("ScControlService() done\n");
 
-    return dwError;
+    return ERROR_SUCCESS;
 }
 
 
