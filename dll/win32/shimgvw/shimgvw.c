@@ -188,7 +188,7 @@ static void pSaveImageAs(HWND hwnd)
     GUID rawFormat;
     UINT num;
     UINT size;
-    UINT sizeRemain;
+    size_t sizeRemain;
     UINT j;
     WCHAR *c;
 

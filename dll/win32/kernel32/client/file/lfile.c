@@ -44,7 +44,7 @@ _hwrite(HFILE hFile, LPCSTR lpBuffer, long lBytes)
 
     if (lBytes == 0)
     {
-        if (!SetEndOfFile((HANDLE) hFile))
+        if (!SetEndOfFile((HANDLE)(ULONG_PTR) hFile))
         {
             return HFILE_ERROR;
         }
@@ -98,7 +98,7 @@ _lopen(LPCSTR lpPathName, int iReadWrite)
         default:                  dwSharing = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
     }
 
-    return (HFILE) CreateFileA(lpPathName,
+    return (HFILE)(ULONG_PTR) CreateFileA(lpPathName,
                                dwAccess,
                                dwSharing,
                                NULL,
