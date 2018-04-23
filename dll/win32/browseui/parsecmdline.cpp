@@ -226,7 +226,7 @@ static LPITEMIDLIST _GetDocumentsPidl()
 * SHExplorerParseCmdLine		[BROWSEUI.107]
 */
 extern "C"
-UINT
+UINT_PTR
 WINAPI
 SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
 {
