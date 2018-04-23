@@ -158,7 +158,7 @@ MuppIsDfsEnabled(VOID)
         return TRUE;
     }
 
-    return ((ULONG)KeyQueryOutput.KeyInfo.Data != 1);
+    return ((ULONG_PTR)KeyQueryOutput.KeyInfo.Data != 1);
 }
 
 VOID

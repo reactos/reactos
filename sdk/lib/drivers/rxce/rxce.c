@@ -2312,7 +2312,7 @@ RxDereferenceAndDeleteRxContext_Real(
         /* Is ShadowCrit still owned? Shouldn't happen! */
         if (RxContext->ShadowCritOwner != 0)
         {
-            DPRINT1("ShadowCritOwner not null! %p\n", (PVOID)RxContext->ShadowCritOwner);
+            DPRINT1("ShadowCritOwner not null! %lx\n", RxContext->ShadowCritOwner);
             ASSERT(FALSE);
         }
 #endif

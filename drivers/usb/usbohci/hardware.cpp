@@ -1412,7 +1412,7 @@ InterruptServiceRoutine(
     // defer processing
     //
     DPRINT("Status %x Acknowledge %x FrameNumber %x\n", Status, Acknowledge, This->m_HCCA->CurrentFrameNumber);
-    KeInsertQueueDpc(&This->m_IntDpcObject, (PVOID)Status, (PVOID)(DoneHead & ~1));
+    KeInsertQueueDpc(&This->m_IntDpcObject, UlongToPtr(Status), UlongToPtr(DoneHead & ~1));
 
     //
     // interrupt handled
@@ -1436,8 +1436,8 @@ OhciDeferredRoutine(
     // get parameters
     //
     This = (CUSBHardwareDevice*)DeferredContext;
-    CStatus = (ULONG) SystemArgument1;
-    DoneHead = (ULONG)SystemArgument2;
+    CStatus = PtrToUlong(SystemArgument1);
+    DoneHead = PtrToUlong(SystemArgument2);
 
     DPRINT("OhciDeferredRoutine Status %x DoneHead %x\n", CStatus, DoneHead);
 
