@@ -386,7 +386,7 @@ MMixerGetMidiDevicePath(
     PMIXER_LIST MixerList;
     LPMIXER_DATA MixerData;
     LPMIDI_INFO MidiInfo;
-    ULONG Length;
+    SIZE_T Length;
     MIXER_STATUS Status;
 
     /* verify mixer context */

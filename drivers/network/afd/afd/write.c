@@ -22,7 +22,7 @@ static NTSTATUS NTAPI SendComplete
     PIO_STACK_LOCATION NextIrpSp;
     PAFD_SEND_INFO SendReq = NULL;
     PAFD_MAPBUF Map;
-    UINT TotalBytesCopied = 0, TotalBytesProcessed = 0, SpaceAvail, i;
+    SIZE_T TotalBytesCopied = 0, TotalBytesProcessed = 0, SpaceAvail, i;
     UINT SendLength, BytesCopied;
     BOOLEAN HaltSendQueue;
 

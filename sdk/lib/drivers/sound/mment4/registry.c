@@ -21,7 +21,7 @@ OpenSoundDriverParametersRegKey(
     IN  LPWSTR ServiceName,
     OUT PHKEY KeyHandle)
 {
-    ULONG KeyLength;
+    SIZE_T KeyLength;
     PWCHAR ParametersKeyName;
 
     VALIDATE_MMSYS_PARAMETER( ServiceName );
@@ -75,7 +75,7 @@ OpenSoundDeviceRegKey(
     IN  DWORD DeviceIndex,
     OUT PHKEY KeyHandle)
 {
-    DWORD PathLength;
+    SIZE_T PathLength;
     PWCHAR RegPath;
 
     VALIDATE_MMSYS_PARAMETER( ServiceName );
