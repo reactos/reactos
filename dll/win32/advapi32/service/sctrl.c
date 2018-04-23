@@ -537,6 +537,10 @@ ScControlService(PACTIVE_SERVICE lpService,
                                        0, NULL,
                                        lpService->HandlerContext);
     }
+    else
+    {
+        ASSERT(lpService->HandlerFunction || lpService->HandlerFunctionEx);
+    }
 
     TRACE("ScControlService() done\n");
 
@@ -652,7 +656,7 @@ RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
     UNICODE_STRING ServiceNameU;
     SERVICE_STATUS_HANDLE hServiceStatus;
 
-    TRACE("RegisterServiceCtrlHandlerA(%s %p %p)\n",
+    TRACE("RegisterServiceCtrlHandlerA(%s %p)\n",
           debugstr_a(lpServiceName), lpHandlerProc);
 
     RtlInitAnsiString(&ServiceNameA, lpServiceName);
@@ -682,7 +686,7 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
 {
     PACTIVE_SERVICE Service;
 
-    TRACE("RegisterServiceCtrlHandlerW(%s %p %p)\n",
+    TRACE("RegisterServiceCtrlHandlerW(%s %p)\n",
           debugstr_w(lpServiceName), lpHandlerProc);
 
     Service = ScLookupServiceByServiceName(lpServiceName);
