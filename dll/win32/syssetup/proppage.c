@@ -189,6 +189,28 @@ MouseOnCommand(
 
 
 static
+BOOL
+MouseOnNotify(
+    HWND hwndDlg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    switch (((LPNMHDR)lParam)->idFrom)
+    {
+        case IDC_PS2MOUSEINPUTUPDN:
+            if (((LPNMHDR)lParam)->code == UDN_DELTAPOS)
+            {
+                ((LPNMUPDOWN)lParam)->iDelta *= 10;
+                return FALSE;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+static
 INT_PTR
 CALLBACK
 MouseDlgProc(
@@ -208,6 +230,9 @@ MouseDlgProc(
         case WM_COMMAND:
             MouseOnCommand(hwndDlg, wParam, lParam);
             break;
+
+        case WM_NOTIFY:
+            return MouseOnNotify(hwndDlg, wParam, lParam);
 
     }
 
