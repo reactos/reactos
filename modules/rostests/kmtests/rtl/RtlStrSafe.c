@@ -23,10 +23,11 @@ static void Test_RtlUnicodeStringPrintf()
     
     const WCHAR Result[] = L"1 2 3";
     ok_eq_bool(RtlUnicodeStringPrintf(&UsString, FormatStringInts, 1, 2, 3), STATUS_SUCCESS);
-    ok_eq_uint(UsString.Length, sizeof(Result));
+    ok_eq_uint(UsString.Length, sizeof(Result) - sizeof(WCHAR));
     ok_eq_uint(UsString.MaximumLength, sizeof(Buffer));
     ok_eq_wstr(UsString.Buffer, Result);
     
+
 
 }
 
