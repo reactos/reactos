@@ -24,7 +24,7 @@ BEGIN
     END
     POPUP "&Aide"
     BEGIN
-        MENUITEM "&Rubriques d'aide", CMD_HELP
+        MENUITEM "&Rubriques d'aide", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&À propos...", CMD_ABOUT
     END
