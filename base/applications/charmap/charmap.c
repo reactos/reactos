@@ -399,6 +399,11 @@ CharMapDlgProc(HWND hDlg,
                         break;
                     }
                     break;
+                
+                // FIXME: MessageBox() must be removed when ReactOS will get HTML Help support
+                case IDC_CMHELP:
+                    MessageBox(hDlg, L"ReactOS HTML Help support isn't implemented yet!", L"Warning", MB_OK | MB_ICONWARNING);
+                    break;
 
                 case IDC_COPY:
                     CopyCharacters(hDlg);

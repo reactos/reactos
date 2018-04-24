@@ -1352,9 +1352,12 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             return TRUE;
         }
         case IDM_HELP_HELP:
-#ifndef DISABLE_HTMLHELP_SUPPORT
-            HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
-#endif
+// #ifndef DISABLE_HTMLHELP_SUPPORT
+           // HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
+           // The line above (same thing for #ifndef and the end block) must be un-commented when ReactOS will get HTML Help support
+           MessageBox(hWnd, L"ReactOS HTML Help support isn't implemented yet!", L"Warning", MB_OK | MB_ICONWARNING);
+           break;
+// #endif
             return TRUE;
         case IDM_VIEW_STANDARD:
             if (calc.layout != CALC_LAYOUT_STANDARD)

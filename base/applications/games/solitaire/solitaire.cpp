@@ -709,7 +709,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 return 0;
 
             case IDM_HELP_CONTENTS:
-                WinHelp(hwnd, szHelpPath, HELP_CONTENTS, 0);//HELP_KEY, (DWORD)"How to play");
+                // WinHelp(hwnd, szHelpPath, HELP_CONTENTS, 0);//HELP_KEY, (DWORD)"How to play");
+                // FIXME: MessageBox() must be removed when ReactOS will get HTML Help support (as well as un-commenting the line above)
+                MessageBox(hwnd, L"ReactOS HTML Help support isn't implemented yet!", L"Warning", MB_OK | MB_ICONWARNING);
                 return 0;
 
             case IDM_HELP_ABOUT:

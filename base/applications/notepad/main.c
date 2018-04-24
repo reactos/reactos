@@ -86,7 +86,11 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 
     case CMD_STATUSBAR: DIALOG_ViewStatusBar(); break;
 
-    case CMD_HELP_CONTENTS: DIALOG_HelpContents(); break;
+    case CMD_HELP_CONTENTS: 
+         // DIALOG_HelpContents();
+         // The line above must be un-commented when ReactOS will get HTML Help support
+         DIALOG_WarningWindowBox(); 
+         break;
 
     case CMD_ABOUT:
         DialogBox(GetModuleHandle(NULL),

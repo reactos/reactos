@@ -1188,6 +1188,12 @@ VOID DIALOG_HelpContents(VOID)
     WinHelp(Globals.hMainWnd, helpfile, HELP_INDEX, 0);
 }
 
+// Warning box function prototype -- This must be removed after ReactOS getting HTML Help support
+VOID DIALOG_WarningWindowBox(VOID)
+{
+    MessageBox(Globals.hMainWnd, L"ReactOS HTML Help support isn't implemented yet!", L"Warning", MB_OK | MB_ICONWARNING);
+}
+
 VOID DIALOG_HelpAboutNotepad(VOID)
 {
     TCHAR szNotepad[MAX_STRING_LEN];
