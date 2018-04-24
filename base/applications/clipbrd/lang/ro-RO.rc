@@ -25,7 +25,7 @@ BEGIN
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…", CMD_HELP
+        MENUITEM "&Manual…", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Despre…", CMD_ABOUT
     END

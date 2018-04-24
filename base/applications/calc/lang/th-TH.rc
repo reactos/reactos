@@ -331,7 +331,7 @@ BEGIN
     END
     POPUP "&ช่วยเหลือ"
     BEGIN
-        MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP
+        MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "เกี่ยวกับ ReactOS Calc", IDM_HELP_ABOUT
     END
@@ -364,7 +364,7 @@ BEGIN
     END
     POPUP "&ช่วยเหลือ"
     BEGIN
-        MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP
+        MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "เกี่ยวกับ ReactOS Calc", IDM_HELP_ABOUT
     END
@@ -387,7 +387,7 @@ BEGIN
     END
     POPUP "&ช่วยเหลือ"
     BEGIN
-        MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP
+        MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "เกี่ยวกับ ReactOS Calc", IDM_HELP_ABOUT
     END

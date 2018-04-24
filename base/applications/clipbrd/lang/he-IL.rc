@@ -24,7 +24,7 @@ BEGIN
     END
     POPUP "ע&זרה"
     BEGIN
-        MENUITEM "&נושאי עזרה", CMD_HELP
+        MENUITEM "&נושאי עזרה", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&אודות", CMD_ABOUT
     END

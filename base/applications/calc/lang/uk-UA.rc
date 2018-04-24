@@ -339,7 +339,7 @@ BEGIN
     END
     POPUP "Довідка"
     BEGIN
-        MENUITEM "Зміст", IDM_HELP_HELP
+        MENUITEM "Зміст", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Про Калькулятор ReactOS", IDM_HELP_ABOUT
     END
@@ -372,7 +372,7 @@ BEGIN
     END
     POPUP "Довідка"
     BEGIN
-        MENUITEM "Зміст", IDM_HELP_HELP
+        MENUITEM "Зміст", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Про Калькулятор ReactOS", IDM_HELP_ABOUT
     END
@@ -395,7 +395,7 @@ BEGIN
     END
     POPUP "Довідка"
     BEGIN
-        MENUITEM "Зміст", IDM_HELP_HELP
+        MENUITEM "Зміст", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Про Калькулятор ReactOS", IDM_HELP_ABOUT
     END

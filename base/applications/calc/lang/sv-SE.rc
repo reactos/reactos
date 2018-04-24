@@ -338,7 +338,7 @@ BEGIN
     END
     POPUP "Hjälp"
     BEGIN
-        MENUITEM "Visa hjälp", IDM_HELP_HELP
+        MENUITEM "Visa hjälp", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
     END
@@ -371,7 +371,7 @@ BEGIN
     END
     POPUP "Hjälp"
     BEGIN
-        MENUITEM "Visa hjälp", IDM_HELP_HELP
+        MENUITEM "Visa hjälp", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
     END
@@ -394,7 +394,7 @@ BEGIN
     END
     POPUP "Hjälp"
     BEGIN
-        MENUITEM "Visa hjälp", IDM_HELP_HELP
+        MENUITEM "Visa hjälp", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
     END

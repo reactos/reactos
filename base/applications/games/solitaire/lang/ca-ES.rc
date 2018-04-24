@@ -78,7 +78,7 @@ BEGIN
     END
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&Contingut\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Contingut\tF1", IDM_HELP_CONTENTS, GRAYED
         MENUITEM "E&n quant a", IDM_HELP_ABOUT
     END
 END

@@ -338,7 +338,7 @@ BEGIN
     END
     POPUP "Pomocník"
     BEGIN
-        MENUITEM "Témy pomocníka", IDM_HELP_HELP
+        MENUITEM "Témy pomocníka", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Čo je kalkulačka systému ReactOS", IDM_HELP_ABOUT
     END
@@ -371,7 +371,7 @@ BEGIN
     END
     POPUP "Pomocník"
     BEGIN
-        MENUITEM "Témy pomocníka", IDM_HELP_HELP
+        MENUITEM "Témy pomocníka", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Čo je kalkulačka systému ReactOS", IDM_HELP_ABOUT
     END
@@ -394,7 +394,7 @@ BEGIN
     END
     POPUP "Pomocník"
     BEGIN
-        MENUITEM "Témy pomocníka", IDM_HELP_HELP
+        MENUITEM "Témy pomocníka", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Čo je kalkulačka systému ReactOS", IDM_HELP_ABOUT
     END

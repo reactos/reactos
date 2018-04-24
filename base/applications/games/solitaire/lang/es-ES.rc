@@ -80,7 +80,7 @@ BEGIN
     END
     POPUP "Ay&uda"
     BEGIN
-        MENUITEM "&Temas de ayuda\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Temas de ayuda\tF1", IDM_HELP_CONTENTS, GRAYED
         MENUITEM "&Acerca de", IDM_HELP_ABOUT
     END
 END

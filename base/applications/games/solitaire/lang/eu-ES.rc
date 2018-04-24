@@ -78,7 +78,7 @@ BEGIN
     END
     POPUP "&Laguntza"
     BEGIN
-        MENUITEM "&Edukia\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Edukia\tF1", IDM_HELP_CONTENTS, GRAYED
         MENUITEM "&Solitariori buruz", IDM_HELP_ABOUT
     END
 END

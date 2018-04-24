@@ -24,7 +24,7 @@ BEGIN
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&Вызов справки", CMD_HELP
+        MENUITEM "&Вызов справки", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&О программе", CMD_ABOUT
     END

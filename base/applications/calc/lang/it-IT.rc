@@ -331,7 +331,7 @@ BEGIN
     END
     POPUP "Aiuto"
     BEGIN
-        MENUITEM "Guida in linea", IDM_HELP_HELP
+        MENUITEM "Guida in linea", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Informazioni su ReactOS Calc", IDM_HELP_ABOUT
     END
@@ -364,7 +364,7 @@ BEGIN
     END
     POPUP "Aiuto"
     BEGIN
-        MENUITEM "Guida in linea", IDM_HELP_HELP
+        MENUITEM "Guida in linea", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Informazioni su ReactOS Calc", IDM_HELP_ABOUT
     END
@@ -387,7 +387,7 @@ BEGIN
     END
     POPUP "Aiuto"
     BEGIN
-        MENUITEM "Guida in linea", IDM_HELP_HELP
+        MENUITEM "Guida in linea", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Informazioni su ReactOS Calc", IDM_HELP_ABOUT
     END

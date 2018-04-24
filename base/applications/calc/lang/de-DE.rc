@@ -331,7 +331,7 @@ BEGIN
     END
     POPUP "Hilfe"
     BEGIN
-        MENUITEM "Hilfethemen", IDM_HELP_HELP
+        MENUITEM "Hilfethemen", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Info", IDM_HELP_ABOUT
     END
@@ -364,7 +364,7 @@ BEGIN
     END
     POPUP "Hilfe"
     BEGIN
-        MENUITEM "Hilfethemen", IDM_HELP_HELP
+        MENUITEM "Hilfethemen", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Über ReactOS Rechner", IDM_HELP_ABOUT
     END
@@ -387,7 +387,7 @@ BEGIN
     END
     POPUP "Hilfe"
     BEGIN
-        MENUITEM "Hilfethemen", IDM_HELP_HELP
+        MENUITEM "Hilfethemen", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Über ReactOS Rechner", IDM_HELP_ABOUT
     END

@@ -337,7 +337,7 @@ BEGIN
     END
     POPUP "עזרה"
     BEGIN
-        MENUITEM "נושאי עזרה", IDM_HELP_HELP
+        MENUITEM "נושאי עזרה", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "אודות המחשבון ReactOS", IDM_HELP_ABOUT
     END
@@ -370,7 +370,7 @@ BEGIN
     END
     POPUP "עזרה"
     BEGIN
-        MENUITEM "נושאי עזרה", IDM_HELP_HELP
+        MENUITEM "נושאי עזרה", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "אודות המחשבון ReactOS", IDM_HELP_ABOUT
     END
@@ -393,7 +393,7 @@ BEGIN
     END
     POPUP "עזרה"
     BEGIN
-        MENUITEM "נושאי עזרה", IDM_HELP_HELP
+        MENUITEM "נושאי עזרה", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "אודות המחשבון ReactOS", IDM_HELP_ABOUT
     END

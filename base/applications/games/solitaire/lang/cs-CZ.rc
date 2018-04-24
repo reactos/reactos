@@ -76,7 +76,7 @@ BEGIN
     END
     POPUP "Nápo&věda"
     BEGIN
-        MENUITEM "&Obsah\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Obsah\tF1", IDM_HELP_CONTENTS, GRAYED
         MENUITEM "O hře &Solitaire", IDM_HELP_ABOUT
     END
 END

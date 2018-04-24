@@ -78,7 +78,7 @@ BEGIN
     END
     POPUP "Помо&щ"
     BEGIN
-        MENUITEM "&Съдържание\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Съдържание\tF1", IDM_HELP_CONTENTS, GRAYED
         MENUITEM "&За", IDM_HELP_ABOUT
     END
 END

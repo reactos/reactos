@@ -331,7 +331,7 @@ BEGIN
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&О программе", IDM_HELP_ABOUT
     END
@@ -364,7 +364,7 @@ BEGIN
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&О программе", IDM_HELP_ABOUT
     END
@@ -387,7 +387,7 @@ BEGIN
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&О программе", IDM_HELP_ABOUT
     END

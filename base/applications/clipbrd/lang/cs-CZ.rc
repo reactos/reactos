@@ -24,7 +24,7 @@ BEGIN
     END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&Zobrazit nápovědu", CMD_HELP
+        MENUITEM "&Zobrazit nápovědu", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&O programu", CMD_ABOUT
     END
