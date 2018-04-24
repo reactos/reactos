@@ -331,7 +331,7 @@ BEGIN
     END
     POPUP "Help"
     BEGIN
-        MENUITEM "Θέματα Βοήθειας", IDM_HELP_HELP
+        MENUITEM "Θέματα Βοήθειας", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Σχετικά...", IDM_HELP_ABOUT
     END
@@ -364,7 +364,7 @@ BEGIN
     END
     POPUP "Βοήθεια"
     BEGIN
-        MENUITEM "Θέματα Βοήθειας", IDM_HELP_HELP
+        MENUITEM "Θέματα Βοήθειας", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Σχετικά...", IDM_HELP_ABOUT
     END
@@ -387,7 +387,7 @@ BEGIN
     END
     POPUP "Help"
     BEGIN
-        MENUITEM "Θέματα Βοήθειας", IDM_HELP_HELP
+        MENUITEM "Θέματα Βοήθειας", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Σχετικά...", IDM_HELP_ABOUT
     END
