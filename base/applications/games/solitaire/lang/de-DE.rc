@@ -78,7 +78,7 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Inhalt\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Inhalt\tF1", IDM_HELP_CONTENTS, GRAYED
         MENUITEM "Inf&o", IDM_HELP_ABOUT
     END
 END
