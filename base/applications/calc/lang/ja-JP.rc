@@ -331,7 +331,7 @@ BEGIN
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "ヘルプ トピック", IDM_HELP_HELP
+        MENUITEM "ヘルプ トピック", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "ReactOS 電卓について", IDM_HELP_ABOUT
     END
@@ -364,7 +364,7 @@ BEGIN
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "ヘルプ トピック", IDM_HELP_HELP
+        MENUITEM "ヘルプ トピック", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "ReactOS 電卓について", IDM_HELP_ABOUT
     END
@@ -387,7 +387,7 @@ BEGIN
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "ヘルプ トピック", IDM_HELP_HELP
+        MENUITEM "ヘルプ トピック", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "ReactOS 電卓について", IDM_HELP_ABOUT
     END
