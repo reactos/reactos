@@ -335,7 +335,7 @@ BEGIN
     END
     POPUP "Ndihmë"
     BEGIN
-        MENUITEM "Ndihmë temë", IDM_HELP_HELP
+        MENUITEM "Ndihmë temë", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
     END
@@ -368,7 +368,7 @@ BEGIN
     END
     POPUP "Ndihmë"
     BEGIN
-        MENUITEM "Ndihmë temë", IDM_HELP_HELP
+        MENUITEM "Ndihmë temë", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
     END
@@ -391,7 +391,7 @@ BEGIN
     END
     POPUP "Ndihmë"
     BEGIN
-        MENUITEM "Ndihmë temë", IDM_HELP_HELP
+        MENUITEM "Ndihmë temë", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
     END
