@@ -210,6 +210,8 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message) {
     case WM_INITDIALOG:
+        // For now, the Help dialog menu item is disabled because of lacking of HTML Help support
+        EnableMenuItem(GetMenu(hDlg), ID_HELP_TOPICS, MF_BYCOMMAND | MF_GRAYED);
         hMainWnd = hDlg;
         return OnCreate(hDlg);
 

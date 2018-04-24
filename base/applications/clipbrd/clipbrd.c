@@ -349,6 +349,10 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             Globals.hMenu = GetMenu(hWnd);
             Globals.hWndNext = SetClipboardViewer(hWnd);
+            
+            // For now, the Help dialog item is disabled because of lacking of HTML support
+            EnableMenuItem(Globals.hMenu, CMD_HELP, MF_BYCOMMAND | MF_GRAYED);
+            
             UpdateDisplayMenu();
             SetDisplayFormat(0);
             break;
