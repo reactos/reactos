@@ -31,7 +31,7 @@ BEGIN
     END
     POPUP "&Aiuto"
     BEGIN
-        MENUITEM "&Argomenti Guida", CMD_HELP
+        MENUITEM "&Argomenti Guida", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Informazioni", CMD_ABOUT
     END
