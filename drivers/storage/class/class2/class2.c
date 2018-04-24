@@ -4170,8 +4170,6 @@ Return Value:
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 status = STATUS_INSUFFICIENT_RESOURCES;
                 goto SetStatusAndReturn;
-
-                break;
             }
 
             irp2->Tail.Overlay.Thread = Irp->Tail.Overlay.Thread;
