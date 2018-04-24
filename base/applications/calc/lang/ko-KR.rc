@@ -333,7 +333,7 @@ BEGIN
     END
     POPUP "도움말"
     BEGIN
-        MENUITEM "도움말 항목", IDM_HELP_HELP
+        MENUITEM "도움말 항목", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "ReactOS 계산기 정보", IDM_HELP_ABOUT
     END
@@ -366,7 +366,7 @@ BEGIN
     END
     POPUP "도움말"
     BEGIN
-        MENUITEM "도움말 항목", IDM_HELP_HELP
+        MENUITEM "도움말 항목", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "ReactOS 계산기 정보", IDM_HELP_ABOUT
     END
@@ -389,7 +389,7 @@ BEGIN
     END
     POPUP "도움말"
     BEGIN
-        MENUITEM "도움말 항목", IDM_HELP_HELP
+        MENUITEM "도움말 항목", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "ReactOS 계산기 정보", IDM_HELP_ABOUT
     END
