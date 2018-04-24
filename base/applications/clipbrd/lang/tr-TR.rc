@@ -26,7 +26,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", CMD_HELP
+        MENUITEM "&Yardım Konuları", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Hakkında", CMD_ABOUT
     END
