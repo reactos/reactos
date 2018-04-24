@@ -490,6 +490,8 @@ PanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
     case WM_CREATE:
+        // For now, the Help push button is disabled because of lacking of HTML Help support
+        EnableWindow(GetDlgItem(hWnd, IDC_CMHELP), FALSE);
         return PanelOnCreate(hWnd, wParam, lParam);
 
     case WM_CLOSE:

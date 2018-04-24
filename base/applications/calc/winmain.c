@@ -1269,6 +1269,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         return SubclassButtonProc(hWnd, wp, lp);
 
     case WM_INITDIALOG:
+        // For now, the Help dialog is disabled because of lacking of HTML Help support
+        EnableMenuItem(GetMenu(hWnd), IDM_HELP_HELP, MF_BYCOMMAND | MF_GRAYED);
         calc.hWnd=hWnd;
 
 #ifdef USE_KEYBOARD_HOOK
