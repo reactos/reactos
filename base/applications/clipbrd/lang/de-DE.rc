@@ -24,7 +24,7 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "&Hilfethemen", CMD_HELP
+        MENUITEM "&Hilfethemen", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Inf&o", CMD_ABOUT
     END
