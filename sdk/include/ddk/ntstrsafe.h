@@ -2879,7 +2879,7 @@ RtlUnicodeStringPrintf(PUNICODE_STRING DestinationString,
     ntStatus = RtlUnicodeStringValidate(DestinationString);
     if (NT_SUCCESS(ntStatus))
     {
-        va_start(argList, iNumArgs);
+        va_start(argList, pszFormat);
 
         ntStatus = RtlStringVPrintfWorkerLenW(DestinationString->Buffer,
             DestinationString->MaximumLength,
@@ -2917,7 +2917,7 @@ RtlUnicodeStringPrintfEx(PUNICODE_STRING DestinationString,
     
     if (NT_SUCCESS(ntStatus))
     {
-        va_start(argList, iNumArgs);
+        va_start(argList, pszFormat);
      
         ntStatus = RtlStringVPrintfExWorkerLenW(DestinationString->Buffer,
             DestinationString->Length / sizeof(WCHAR),
