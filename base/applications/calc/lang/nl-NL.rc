@@ -331,7 +331,7 @@ BEGIN
     END
     POPUP "Help"
     BEGIN
-        MENUITEM "Help-onderwerpen", IDM_HELP_HELP
+        MENUITEM "Help-onderwerpen", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Over ReactOS Calc", IDM_HELP_ABOUT
     END
@@ -364,7 +364,7 @@ BEGIN
     END
     POPUP "Help"
     BEGIN
-        MENUITEM "Help-onderwerpen", IDM_HELP_HELP
+        MENUITEM "Help-onderwerpen", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Over ReactOS Calc", IDM_HELP_ABOUT
     END
@@ -387,7 +387,7 @@ BEGIN
     END
     POPUP "Help"
     BEGIN
-        MENUITEM "Help-onderwerpen", IDM_HELP_HELP
+        MENUITEM "Help-onderwerpen", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Over ReactOS Calc", IDM_HELP_ABOUT
     END
