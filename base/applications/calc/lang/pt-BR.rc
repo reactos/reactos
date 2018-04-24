@@ -333,7 +333,7 @@ BEGIN
     END
     POPUP "Ajuda"
     BEGIN
-        MENUITEM "Tópicos de ajuda", IDM_HELP_HELP
+        MENUITEM "Tópicos de ajuda", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Sobre Calculadora ReactOS", IDM_HELP_ABOUT
     END
@@ -366,7 +366,7 @@ BEGIN
     END
     POPUP "Ajuda"
     BEGIN
-        MENUITEM "Tópicos de ajuda", IDM_HELP_HELP
+        MENUITEM "Tópicos de ajuda", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Sobre Calculadora ReactOS", IDM_HELP_ABOUT
     END
@@ -389,7 +389,7 @@ BEGIN
     END
     POPUP "Ajuda"
     BEGIN
-        MENUITEM "Tópicos de ajuda", IDM_HELP_HELP
+        MENUITEM "Tópicos de ajuda", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Sobre Calculadora ReactOS", IDM_HELP_ABOUT
     END
