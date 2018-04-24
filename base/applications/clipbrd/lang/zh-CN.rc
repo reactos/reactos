@@ -26,7 +26,7 @@ BEGIN
     END
     POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "帮助主题(&H)", CMD_HELP
+        MENUITEM "帮助主题(&H)", CMD_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "关于(&A)", CMD_ABOUT
     END
