@@ -337,7 +337,7 @@ BEGIN
     END
     POPUP "Помощ"
     BEGIN
-        MENUITEM "Помощ", IDM_HELP_HELP
+        MENUITEM "Помощ", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
     END
@@ -370,7 +370,7 @@ BEGIN
     END
     POPUP "Помощ"
     BEGIN
-        MENUITEM "Помощ", IDM_HELP_HELP
+        MENUITEM "Помощ", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
     END
@@ -393,7 +393,7 @@ BEGIN
     END
     POPUP "Помощ"
     BEGIN
-        MENUITEM "Помощ", IDM_HELP_HELP
+        MENUITEM "Помощ", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
     END
