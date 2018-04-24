@@ -333,7 +333,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", IDM_HELP_HELP
+        MENUITEM "&Yardım Konuları", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
@@ -366,7 +366,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", IDM_HELP_HELP
+        MENUITEM "&Yardım Konuları", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
@@ -389,7 +389,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", IDM_HELP_HELP
+        MENUITEM "&Yardım Konuları", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&ReactOS Hesap Makinesi Üzerine...", IDM_HELP_ABOUT
     END
