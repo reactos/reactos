@@ -78,7 +78,7 @@ BEGIN
     END
     POPUP "&Βοήθεια"
     BEGIN
-        MENUITEM "&Περιεχόμενα\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Περιεχόμενα\tF1", IDM_HELP_CONTENTS, GRAYED
         MENUITEM "&Σχετικά", IDM_HELP_ABOUT
     END
 END
