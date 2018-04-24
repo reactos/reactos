@@ -333,7 +333,7 @@ BEGIN
     END
     POPUP "帮助"
     BEGIN
-        MENUITEM "帮助主题", IDM_HELP_HELP
+        MENUITEM "帮助主题", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "关于 ReactOS 计算器", IDM_HELP_ABOUT
     END
@@ -366,7 +366,7 @@ BEGIN
     END
     POPUP "帮助"
     BEGIN
-        MENUITEM "帮助主题", IDM_HELP_HELP
+        MENUITEM "帮助主题", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "关于 ReactOS 计算器", IDM_HELP_ABOUT
     END
@@ -389,7 +389,7 @@ BEGIN
     END
     POPUP "帮助"
     BEGIN
-        MENUITEM "帮助主题", IDM_HELP_HELP
+        MENUITEM "帮助主题", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "关于 ReactOS 计算器", IDM_HELP_ABOUT
     END
