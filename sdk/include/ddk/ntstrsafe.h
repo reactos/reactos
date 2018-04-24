@@ -2871,7 +2871,6 @@ RtlUnicodeStringPrintf(PUNICODE_STRING DestinationString,
     NTSTATUS ntStatus;
     size_t   cchFinalLength;
     va_list  argList;
-    int      iNumArgs;
 
     if (DestinationString == NULL || pszFormat == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -2879,7 +2878,7 @@ RtlUnicodeStringPrintf(PUNICODE_STRING DestinationString,
     ntStatus = RtlUnicodeStringValidate(DestinationString);
     if (NT_SUCCESS(ntStatus))
     {
-        va_start(argList, iNumArgs);
+        va_start(argList, pszFormat);
 
         ntStatus = RtlStringVPrintfWorkerLenW(DestinationString->Buffer,
             DestinationString->MaximumLength,
@@ -2908,7 +2907,6 @@ RtlUnicodeStringPrintfEx(PUNICODE_STRING DestinationString,
     size_t      cchFinalLength;
     size_t      cchRemaining;
     va_list     argList;
-    int         iNumArgs;
 
     ntStatus = RtlUnicodeStringValidate(DestinationString);
 
@@ -2917,7 +2915,7 @@ RtlUnicodeStringPrintfEx(PUNICODE_STRING DestinationString,
     
     if (NT_SUCCESS(ntStatus))
     {
-        va_start(argList, iNumArgs);
+        va_start(argList, pszFormat);
      
         ntStatus = RtlStringVPrintfExWorkerLenW(DestinationString->Buffer,
             DestinationString->Length / sizeof(WCHAR),
