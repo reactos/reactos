@@ -336,7 +336,7 @@ BEGIN
     END
     POPUP "Nápověda"
     BEGIN
-        MENUITEM "Témata nápovědy", IDM_HELP_HELP
+        MENUITEM "Témata nápovědy", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "O ReactOS kalkulačce", IDM_HELP_ABOUT
     END
@@ -369,7 +369,7 @@ BEGIN
     END
     POPUP "Nápověda"
     BEGIN
-        MENUITEM "Témata nápovědy", IDM_HELP_HELP
+        MENUITEM "Témata nápovědy", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "O ReactOS kalkulačce", IDM_HELP_ABOUT
     END
@@ -392,7 +392,7 @@ BEGIN
     END
     POPUP "Nápověda"
     BEGIN
-        MENUITEM "Témata nápovědy", IDM_HELP_HELP
+        MENUITEM "Témata nápovědy", IDM_HELP_HELP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "O ReactOS kalkulačce", IDM_HELP_ABOUT
     END
