@@ -310,10 +310,24 @@ vfatReleaseFCB(
 
     while (pFCB)
     {
+        ULONG RefCount;
+
         ASSERT(pFCB != pVCB->VolumeFcb);
         ASSERT(pFCB->RefCount > 0);
-        pFCB->RefCount--;
-        if (pFCB->RefCount == 0)
+        RefCount = --pFCB->RefCount;
+
+        if (RefCount == 1 && BooleanFlagOn(pFCB->Flags, FCB_CACHE_INITIALIZED))
+        {
+            PFILE_OBJECT tmpFileObject;
+            tmpFileObject = pFCB->FileObject;
+
+            pFCB->FileObject = NULL;
+            CcUninitializeCacheMap(tmpFileObject, NULL, NULL);
+            ClearFlag(pFCB->Flags, FCB_CACHE_INITIALIZED);
+            ObDereferenceObject(tmpFileObject);
+        }
+
+        if (RefCount == 0)
         {
             ASSERT(pFCB->OpenHandleCount == 0);
             tmpFcb = pFCB->parentFcb;
@@ -620,7 +634,7 @@ vfatFCBInitializeCacheFromVolume(
     _SEH2_END;
 
     vfatGrabFCB(vcb, fcb);
-    fcb->Flags |= FCB_CACHE_INITIALIZED;
+    SetFlag(fcb->Flags, FCB_CACHE_INITIALIZED);
     return STATUS_SUCCESS;
 }
 

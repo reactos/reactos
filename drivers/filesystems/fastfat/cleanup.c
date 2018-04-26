@@ -107,6 +107,7 @@ VfatCleanupFile(
                 {
                     pFcb->FileObject = NULL;
                     CcUninitializeCacheMap(tmpFileObject, NULL, NULL);
+                    ClearFlag(pFcb->Flags, FCB_CACHE_INITIALIZED);
                     ObDereferenceObject(tmpFileObject);
                 }
 
