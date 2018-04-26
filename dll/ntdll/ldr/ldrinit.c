@@ -1424,7 +1424,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
             GlobalFlag = 0;
 
         /* Call AVRF if necessary */
-        if (Peb->NtGlobalFlag & (FLG_POOL_ENABLE_TAIL_CHECK | FLG_HEAP_PAGE_ALLOCS))
+        if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
         {
             Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, TRUE, FALSE);
             if (!NT_SUCCESS(Status))
@@ -1436,7 +1436,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
     else
     {
         /* There are no image-specific options, so perform global initialization */
-        if (Peb->NtGlobalFlag & (FLG_POOL_ENABLE_TAIL_CHECK | FLG_HEAP_PAGE_ALLOCS))
+        if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
         {
             /* Initialize app verifier package */
             Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, TRUE, FALSE);
@@ -2055,7 +2055,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     }
 
     /* Check if the Application Verifier was enabled */
-    if (Peb->NtGlobalFlag & FLG_POOL_ENABLE_TAIL_CHECK)
+    if (Peb->NtGlobalFlag & FLG_APPLICATION_VERIFIER)
     {
         /* FIXME */
         DPRINT1("We don't support Application Verifier yet\n");

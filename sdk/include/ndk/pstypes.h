@@ -61,8 +61,7 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 #define FLG_HEAP_ENABLE_FREE_CHECK              0x00000020
 #define FLG_HEAP_VALIDATE_PARAMETERS            0x00000040
 #define FLG_HEAP_VALIDATE_ALL                   0x00000080
-#define FLG_POOL_ENABLE_TAIL_CHECK              0x00000100
-#define FLG_POOL_ENABLE_FREE_CHECK              0x00000200
+#define FLG_APPLICATION_VERIFIER                0x00000100
 #define FLG_POOL_ENABLE_TAGGING                 0x00000400
 #define FLG_HEAP_ENABLE_TAGGING                 0x00000800
 #define FLG_USER_STACK_TRACE_DB                 0x00001000
