@@ -1143,6 +1143,13 @@ CcRosDeleteFileCache (
                 {
                     DPRINT1("File was: %wZ\n", &FileObject->FileName);
                 }
+                else if (FileObject->FsContext != NULL &&
+                         ((PFSRTL_COMMON_FCB_HEADER)(FileObject->FsContext))->NodeTypeCode == 0x0502 &&
+                         ((PFSRTL_COMMON_FCB_HEADER)(FileObject->FsContext))->NodeByteSize == 0x1F8 &&
+                         ((PUNICODE_STRING)(((PUCHAR)FileObject->FsContext) + 0x100))->Length != 0)
+                {
+                    DPRINT1("File was: %wZ (FastFAT)\n", (PUNICODE_STRING)(((PUCHAR)FileObject->FsContext) + 0x100));
+                }
                 else
                 {
                     DPRINT1("No name for the file\n");
