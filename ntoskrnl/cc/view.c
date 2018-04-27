@@ -1132,7 +1132,25 @@ CcRosDeleteFileCache (
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
             InitializeListHead(&current->CacheMapVacbListEntry);
             Refs = CcRosVacbDecRefCount(current);
+#if DBG // CORE-14578
+            if (Refs != 0)
+            {
+                DPRINT1("Leaking VACB %p attached to %p (%I64d)\n", current, FileObject, current->FileOffset.QuadPart);
+                DPRINT1("There are: %d references left\n", Refs);
+                DPRINT1("Pin: %d, Map: %d\n", current->PinCount, current->MappedCount);
+                DPRINT1("Dirty: %d\n", current->Dirty);
+                if (FileObject->FileName.Length != 0)
+                {
+                    DPRINT1("File was: %wZ\n", &FileObject->FileName);
+                }
+                else
+                {
+                    DPRINT1("No name for the file\n");
+                }
+            }
+#else
             ASSERT(Refs == 0);
+#endif
         }
 
         OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
