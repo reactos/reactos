@@ -47,7 +47,7 @@
 extern LPTSTR lpOriginalEnvironment;
 extern WORD   wColor;
 extern WORD   wDefColor;
-extern BOOL   bCtrlBreak;
+extern volatile BOOL   bCtrlBreak;
 extern BOOL   bIgnoreEcho;
 extern BOOL   bExit;
 extern BOOL   bDisableBatchEcho;

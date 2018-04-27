@@ -450,12 +450,23 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                 break;
 
             case _T('C'):
-                bCharInput = TRUE;
-                if (!(ir.Event.KeyEvent.dwControlKeyState &
+                if ((ir.Event.KeyEvent.dwControlKeyState &
                     (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
                 {
-                    break;
+                    /* A CTRL-C.  Don't clear the the command line,
+                     * but return an empty string in str. */
+                    str[0] = L'\0';
+                    curx = orgx;
+                    cury = orgy;
+                    current = charcount = 0;
+                    bReturn = TRUE;
                 }
+                else
+                {
+                    /* Just a normal 'C' character */
+                    bCharInput = TRUE;
+                }
+                break;
 
             case VK_RETURN:
                 /* end input, return to main */
