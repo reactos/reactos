@@ -1463,6 +1463,7 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
         ULONG Valid = 0, Dirty = 0;
         PROS_SHARED_CACHE_MAP SharedCacheMap;
         PUNICODE_STRING FileName;
+        PWSTR Extra = L"";
 
         SharedCacheMap = CONTAINING_RECORD(ListEntry, ROS_SHARED_CACHE_MAP, SharedCacheMapLinks);
 
@@ -1489,13 +1490,22 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
         {
             FileName = &SharedCacheMap->FileObject->FileName;
         }
+        else if (SharedCacheMap->FileObject != NULL &&
+                 SharedCacheMap->FileObject->FsContext != NULL &&
+                 ((PFSRTL_COMMON_FCB_HEADER)(SharedCacheMap->FileObject->FsContext))->NodeTypeCode == 0x0502 &&
+                 ((PFSRTL_COMMON_FCB_HEADER)(SharedCacheMap->FileObject->FsContext))->NodeByteSize == 0x1F8 &&
+                 ((PUNICODE_STRING)(((PUCHAR)SharedCacheMap->FileObject->FsContext) + 0x100))->Length != 0)
+        {
+            FileName = (PUNICODE_STRING)(((PUCHAR)SharedCacheMap->FileObject->FsContext) + 0x100);
+            Extra = L" (FastFAT)";
+        }
         else
         {
             FileName = &NoName;
         }
 
         /* And print */
-        KdbpPrint("%p\t%d\t%d\t%wZ\n", SharedCacheMap, Valid, Dirty, FileName);
+        KdbpPrint("%p\t%d\t%d\t%wZ%S\n", SharedCacheMap, Valid, Dirty, FileName, Extra);
     }
 
     return TRUE;
