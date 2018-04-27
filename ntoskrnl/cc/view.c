@@ -1106,6 +1106,12 @@ CcRosDeleteFileCache (
                 KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
                 DPRINT1("Freeing dirty VACB\n");
             }
+            if (current->MappedCount != 0)
+            {
+                current->MappedCount = 0;
+                NT_VERIFY(CcRosVacbDecRefCount(current) > 0);
+                DPRINT1("Freeing mapped VACB\n");
+            }
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
 
             KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);
