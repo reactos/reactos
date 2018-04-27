@@ -455,7 +455,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                 {
                     /* A CTRL-C.  Don't clear the the command line,
                      * but return an empty string in str. */
-                    str[0] = L'\0';
+                    str[0] = _T('\0');
                     curx = orgx;
                     cury = orgy;
                     current = charcount = 0;

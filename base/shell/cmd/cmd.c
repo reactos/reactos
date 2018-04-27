@@ -1424,7 +1424,7 @@ ReadLine(TCHAR *commandline, BOOL bMore)
             return FALSE;
         }
 
-        if (readline[0] == L'\0')
+        if (readline[0] == _T('\0'))
         {
             return FALSE;
         }
