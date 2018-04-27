@@ -410,6 +410,8 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 #define FCB_IS_VOLUME           0x0010
 #define FCB_IS_DIRTY            0x0020
 
+#define NODE_TYPE_FCB ((CSHORT)0x0502)
+
 typedef struct _VFATFCB
 {
     /* FCB header required by ROS/NT */

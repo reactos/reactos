@@ -98,6 +98,9 @@ vfatInitFcb(
         KeBugCheckEx(FAT_FILE_SYSTEM, (ULONG_PTR)Fcb, (ULONG_PTR)NameU, 0, 0);
     }
 
+    Fcb->RFCB.NodeTypeCode = NODE_TYPE_FCB;
+    Fcb->RFCB.NodeByteSize = sizeof(VFATFCB);
+
     Fcb->PathNameU.Length = 0;
     Fcb->PathNameU.Buffer = Fcb->PathNameBuffer;
     Fcb->PathNameU.MaximumLength = PathNameBufferLength;
