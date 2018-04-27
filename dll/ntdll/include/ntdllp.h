@@ -46,6 +46,7 @@ extern ULONG LdrpActiveUnloadCount;
 extern BOOLEAN LdrpShutdownInProgress;
 extern UNICODE_STRING LdrpKnownDllPath;
 extern PLDR_DATA_TABLE_ENTRY LdrpGetModuleHandleCache, LdrpLoadedDllHandleCache;
+extern BOOLEAN RtlpPageHeapEnabled;
 extern ULONG RtlpDphGlobalFlags;
 extern BOOLEAN g_ShimsEnabled;
 extern PVOID g_pShimEngineModule;
@@ -157,6 +158,26 @@ LdrpLoadShimEngine(IN PWSTR ImageName,
 
 VOID NTAPI
 LdrpUnloadShimEngine(VOID);
+
+/* verifier.c */
+
+NTSTATUS NTAPI
+LdrpInitializeApplicationVerifierPackage(IN HANDLE KeyHandle,
+                                         IN PPEB Peb,
+                                         IN BOOLEAN SystemWide,
+                                         IN BOOLEAN ReadAdvancedOptions);
+
+NTSTATUS NTAPI
+AVrfInitializeVerifier(VOID);
+
+VOID NTAPI
+AVrfDllLoadNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+VOID NTAPI
+AVrfDllUnloadNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+VOID NTAPI
+AVrfPageHeapDllNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 
 
 /* FIXME: Cleanup this mess */

@@ -82,7 +82,6 @@ ULONG LdrpActiveUnloadCount;
 VOID NTAPI RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
 VOID NTAPI RtlInitializeHeapManager(VOID);
-extern BOOLEAN RtlpPageHeapEnabled;
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
@@ -1313,26 +1312,6 @@ LdrpFreeTls(VOID)
 
 NTSTATUS
 NTAPI
-LdrpInitializeApplicationVerifierPackage(PUNICODE_STRING ImagePathName, PPEB Peb, BOOLEAN SystemWide, BOOLEAN ReadAdvancedOptions)
-{
-    /* If global flags request DPH, perform some additional actions */
-    if (Peb->NtGlobalFlag & FLG_HEAP_PAGE_ALLOCS)
-    {
-        // TODO: Read advanced DPH flags from the registry if requested
-        if (ReadAdvancedOptions)
-        {
-            UNIMPLEMENTED;
-        }
-
-        /* Enable page heap */
-        RtlpPageHeapEnabled = TRUE;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE OptionsKey)
 {
     NTSTATUS Status;
@@ -1426,7 +1405,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
         /* Call AVRF if necessary */
         if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
         {
-            Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, TRUE, FALSE);
+            Status = LdrpInitializeApplicationVerifierPackage(KeyHandle, Peb, TRUE, FALSE);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("AVRF: LdrpInitializeApplicationVerifierPackage failed with %08X\n", Status);
@@ -1439,7 +1418,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
         if (Peb->NtGlobalFlag & (FLG_APPLICATION_VERIFIER | FLG_HEAP_PAGE_ALLOCS))
         {
             /* Initialize app verifier package */
-            Status = LdrpInitializeApplicationVerifierPackage(ImagePathName, Peb, TRUE, FALSE);
+            Status = LdrpInitializeApplicationVerifierPackage(KeyHandle, Peb, TRUE, FALSE);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("AVRF: LdrpInitializeApplicationVerifierPackage failed with %08X\n", Status);
@@ -2057,8 +2036,13 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check if the Application Verifier was enabled */
     if (Peb->NtGlobalFlag & FLG_APPLICATION_VERIFIER)
     {
-        /* FIXME */
-        DPRINT1("We don't support Application Verifier yet\n");
+        Status = AVrfInitializeVerifier();
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("LDR: AVrfInitializeVerifier failed (ntstatus 0x%x)\n", Status);
+            return Status;
+        }
+
     }
 
     if (IsDotNetImage)

@@ -19,6 +19,7 @@ list(APPEND SOURCE
     ldr/ldrinit.c
     ldr/ldrpe.c
     ldr/ldrutils.c
+    ldr/verifier.c
     rtl/libsupp.c
     rtl/uilist.c
     rtl/version.c

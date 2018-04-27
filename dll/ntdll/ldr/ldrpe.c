@@ -20,17 +20,6 @@ ULONG LdrpNormalSnap;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-NTAPI
-AVrfPageHeapDllNotification(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
-{
-    /* Check if page heap dll notification is turned on */
-    if (!(RtlpDphGlobalFlags & DPH_FLAG_DLL_NOTIFY))
-        return;
-
-    /* We don't support this flag currently */
-    UNIMPLEMENTED;
-}
 
 NTSTATUS
 NTAPI
@@ -795,10 +784,9 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
             }
 
             /* Check if Application Verifier was enabled */
-            if (Peb->NtGlobalFlag & FLG_HEAP_ENABLE_TAIL_CHECK)
+            if (Peb->NtGlobalFlag & FLG_APPLICATION_VERIFIER)
             {
-                /* FIXME */
-                DPRINT1("We don't support Application Verifier yet!\n");
+                AVrfDllLoadNotification(LdrEntry);
             }
 
             /* Just to be safe */
