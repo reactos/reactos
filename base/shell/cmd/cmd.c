@@ -429,7 +429,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
                           NULL,
                           NULL,
                           TRUE,
-                          0,   /* CREATE_NEW_PROCESS_GROUP */
+                          0,
                           NULL,
                           NULL,
                           &stui,
@@ -1459,26 +1459,16 @@ BOOL WINAPI BreakHandler(DWORD dwCtrlType)
 {
     DWORD           dwWritten;
     INPUT_RECORD    rec;
-    static BOOL SelfGenerated = FALSE;
 
     if ((dwCtrlType != CTRL_C_EVENT) &&
         (dwCtrlType != CTRL_BREAK_EVENT))
     {
         return FALSE;
     }
-    else
-    {
-        if (SelfGenerated)
-        {
-            SelfGenerated = FALSE;
-            return TRUE;
-        }
-    }
 
     if (!TryEnterCriticalSection(&ChildProcessRunningLock))
     {
-        SelfGenerated = TRUE;
-        GenerateConsoleCtrlEvent (dwCtrlType, 0);
+        /* Child process is running and will have received the control event */
         return TRUE;
     }
     else
