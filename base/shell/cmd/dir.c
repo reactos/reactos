@@ -870,7 +870,7 @@ DirPrintNewList(PDIRFINDINFO ptrFiles[],        /* [IN]Files' Info */
     ULARGE_INTEGER u64FileSize;
     PDIRFINDSTREAMNODE ptrCurStream;
 
-    for (i = 0; i < dwCount && !bCtrlBreak; i++)
+    for (i = 0; i < dwCount && !CheckCtrlBreak(BREAK_INPUT); i++)
     {
         /* Calculate size */
         if (ptrFiles[i]->stFindInfo.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
@@ -983,7 +983,7 @@ DirPrintWideList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
     /* Calculate the lines that will be printed */
     iLines = (USHORT)((dwCount + iColumns - 1) / iColumns);
 
-    for (i = 0; i < iLines && !bCtrlBreak; i++)
+    for (i = 0; i < iLines && !CheckCtrlBreak(BREAK_INPUT); i++)
     {
         for (j = 0; j < iColumns; j++)
         {
@@ -1033,7 +1033,7 @@ DirPrintOldList(PDIRFINDINFO ptrFiles[],        /* [IN] Files' Info */
     int iSizeFormat;                /* The format of size field */
     ULARGE_INTEGER u64FileSize;     /* The file size */
 
-    for (i = 0; i < dwCount && !bCtrlBreak; i++)
+    for (i = 0; i < dwCount && !CheckCtrlBreak(BREAK_INPUT); i++)
     {
         /* Broke 8.3 format */
         if (*ptrFiles[i]->stFindInfo.cAlternateFileName )
@@ -1092,7 +1092,7 @@ DirPrintBareList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
 {
     DWORD i;
 
-    for (i = 0; i < dwCount && !bCtrlBreak; i++)
+    for (i = 0; i < dwCount && !CheckCtrlBreak(BREAK_INPUT); i++)
     {
         if ((_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T(".")) == 0) ||
             (_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T("..")) == 0))
