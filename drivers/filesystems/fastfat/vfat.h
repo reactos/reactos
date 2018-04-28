@@ -409,6 +409,10 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 #define FCB_IS_PAGE_FILE        0x0008
 #define FCB_IS_VOLUME           0x0010
 #define FCB_IS_DIRTY            0x0020
+#ifdef KDBG
+#define FCB_CLEANED_UP          0x0040
+#define FCB_CLOSED              0x0080
+#endif
 
 #define NODE_TYPE_FCB ((CSHORT)0x0502)
 
@@ -898,14 +902,41 @@ vfatDestroyCCB(
     PVFATCCB pCcb);
 
 VOID
+#ifndef KDBG
 vfatGrabFCB(
+#else
+_vfatGrabFCB(
+#endif
     PDEVICE_EXTENSION pVCB,
-    PVFATFCB pFCB);
+    PVFATFCB pFCB
+#ifdef KDBG
+    ,
+    PCSTR File,
+    ULONG Line,
+    PCSTR Func
+#endif
+    );
 
 VOID
+#ifndef KDBG
 vfatReleaseFCB(
+#else
+_vfatReleaseFCB(
+#endif
     PDEVICE_EXTENSION pVCB,
-    PVFATFCB pFCB);
+    PVFATFCB pFCB
+#ifdef KDBG
+    ,
+    PCSTR File,
+    ULONG Line,
+    PCSTR Func
+#endif
+    );
+
+#ifdef KDBG
+#define vfatGrabFCB(v, f) _vfatGrabFCB(v, f, __FILE__, __LINE__, __FUNCTION__)
+#define vfatReleaseFCB(v, f) _vfatReleaseFCB(v, f, __FILE__, __LINE__, __FUNCTION__)
+#endif
 
 PVFATFCB
 vfatGrabFCBFromTable(

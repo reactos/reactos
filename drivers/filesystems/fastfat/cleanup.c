@@ -138,6 +138,9 @@ VfatCleanupFile(
         }
 
         FileObject->Flags |= FO_CLEANUP_COMPLETE;
+#ifdef KDBG
+        pFcb->Flags |= FCB_CLEANED_UP;
+#endif
 
         ExReleaseResourceLite(&pFcb->PagingIoResource);
         ExReleaseResourceLite(&pFcb->MainResource);

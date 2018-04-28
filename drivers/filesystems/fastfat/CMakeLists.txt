@@ -15,6 +15,7 @@ list(APPEND SOURCE
     flush.c
     fsctl.c
     iface.c
+    kdbg.c
     misc.c
     pnp.c
     rw.c

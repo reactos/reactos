@@ -48,6 +48,9 @@ VfatCloseFile(
     }
     else
     {
+#ifdef KDBG
+        pFcb->Flags |= FCB_CLOSED;
+#endif
         vfatReleaseFCB(DeviceExt, pFcb);
     }
 
