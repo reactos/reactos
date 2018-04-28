@@ -129,7 +129,7 @@ VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
  * Check if Ctrl-Break was pressed during the last calls
  */
 
-BOOL CheckCtrlBreak (INT mode)
+BOOL CheckCtrlBreak(INT mode)
 {
     static BOOL bLeaveAll = FALSE; /* leave all batch files */
     TCHAR options[4]; /* Yes, No, All */
@@ -138,10 +138,11 @@ BOOL CheckCtrlBreak (INT mode)
     switch (mode)
     {
         case BREAK_OUTOFBATCH:
-            bLeaveAll = 0;
+            bLeaveAll = FALSE;
             return FALSE;
 
         case BREAK_BATCHFILE:
+        {
             if (bLeaveAll)
                 return TRUE;
 
@@ -160,11 +161,15 @@ BOOL CheckCtrlBreak (INT mode)
             ConOutChar(_T('\n'));
 
             if (c == options[1])
-                return bCtrlBreak = FALSE; /* ignore */
+            {
+                bCtrlBreak = FALSE; /* ignore */
+                return FALSE;
+            }
 
             /* leave all batch files */
             bLeaveAll = ((c == options[2]) || (c == _T('\3')));
             break;
+        }
 
         case BREAK_INPUT:
             if (!bCtrlBreak)
@@ -173,7 +178,6 @@ BOOL CheckCtrlBreak (INT mode)
     }
 
     /* state processed */
-    bCtrlBreak = FALSE;
     return TRUE;
 }
 

@@ -151,7 +151,7 @@ typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, 
 
 BOOL bExit = FALSE;       /* indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
-volatile BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
+BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
 static BOOL bWaitForCommand = FALSE; /* When we are executing something passed on the commandline after /c or /k */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
@@ -1448,6 +1448,9 @@ ProcessInput(VOID)
 
     while (!bCanExit || !bExit)
     {
+        /* Reset the Ctrl-Break / Ctrl-C state */
+        bCtrlBreak = FALSE;
+
         Cmd = ParseCommand(NULL);
         if (!Cmd)
             continue;
@@ -1500,7 +1503,7 @@ BOOL WINAPI BreakHandler(DWORD dwCtrlType)
 
     /* FIXME: Handle batch files */
 
-    //ConOutPrintf(_T("^C"));
+    // ConOutPrintf(_T("^C"));
 
     return TRUE;
 }
