@@ -1418,16 +1418,14 @@ ReadLine(TCHAR *commandline, BOOL bMore)
             return FALSE;
         }
 
-        if (CheckCtrlBreak(BREAK_INPUT))
-        {
+        if (readline[0] == _T('\0'))
             ConOutChar(_T('\n'));
+
+        if (CheckCtrlBreak(BREAK_INPUT))
             return FALSE;
-        }
 
         if (readline[0] == _T('\0'))
-        {
             return FALSE;
-        }
 
         ip = readline;
     }
