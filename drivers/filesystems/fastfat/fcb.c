@@ -24,6 +24,10 @@
 
 #define TAG_FCB 'BCFV'
 
+#ifdef KDBG
+extern UNICODE_STRING DebugFile;
+#endif
+
 /*  --------------------------------------------------------  PUBLICS  */
 
 static
@@ -267,6 +271,13 @@ VOID
 vfatDestroyFCB(
     PVFATFCB pFCB)
 {
+#ifdef KDBG
+    if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &pFCB->LongNameU, FALSE, NULL))
+    {
+        DPRINT1("Destroying: %p (%wZ) %d\n", pFCB, &pFCB->PathNameU, pFCB->RefCount);
+    }
+#endif
+
     FsRtlUninitializeFileLock(&pFCB->FileLock);
     if (!vfatFCBIsRoot(pFCB) &&
         !BooleanFlagOn(pFCB->Flags, FCB_IS_FAT) && !BooleanFlagOn(pFCB->Flags, FCB_IS_VOLUME))
@@ -288,10 +299,28 @@ vfatFCBIsRoot(
 }
 
 VOID
+#ifndef KDBG
 vfatGrabFCB(
+#else
+_vfatGrabFCB(
+#endif
     PDEVICE_EXTENSION pVCB,
-    PVFATFCB pFCB)
+    PVFATFCB pFCB
+#ifdef KDBG
+    ,
+    PCSTR File,
+    ULONG Line,
+    PCSTR Func
+#endif
+)
 {
+#ifdef KDBG
+    if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &pFCB->LongNameU, FALSE, NULL))
+    {
+        DPRINT1("Inc ref count (%d, oc: %d) for: %p (%wZ) at: %s(%d) %s\n", pFCB->RefCount, pFCB->OpenHandleCount, pFCB, &pFCB->PathNameU, File, Line, Func);
+    }
+#endif
+
     ASSERT(ExIsResourceAcquiredExclusive(&pVCB->DirResource));
 
     ASSERT(pFCB != pVCB->VolumeFcb);
@@ -300,14 +329,32 @@ vfatGrabFCB(
 }
 
 VOID
+#ifndef KDBG
 vfatReleaseFCB(
+#else
+_vfatReleaseFCB(
+#endif
     PDEVICE_EXTENSION pVCB,
-    PVFATFCB pFCB)
+    PVFATFCB pFCB
+#ifdef KDBG
+    ,
+    PCSTR File,
+    ULONG Line,
+    PCSTR Func
+#endif
+)
 {
     PVFATFCB tmpFcb;
 
+#ifdef KDBG
+    if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &pFCB->LongNameU, FALSE, NULL))
+    {
+        DPRINT1("Dec ref count (%d, oc: %d) for: %p (%wZ) at: %s(%d) %s\n", pFCB->RefCount, pFCB->OpenHandleCount, pFCB, &pFCB->PathNameU, File, Line, Func);
+    }
+#else
     DPRINT("releasing FCB at %p: %wZ, refCount:%d\n",
            pFCB, &pFCB->PathNameU, pFCB->RefCount);
+#endif
 
     ASSERT(ExIsResourceAcquiredExclusive(&pVCB->DirResource));
 
@@ -591,6 +638,13 @@ vfatFCBInitializeCacheFromVolume(
 
     fileObject = IoCreateStreamFileObject (NULL, vcb->StorageDevice);
 
+#ifdef KDBG
+    if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &fcb->LongNameU, FALSE, NULL))
+    {
+        DPRINT1("Attaching %p to %p (%d)\n", fcb, fileObject, fcb->RefCount);
+    }
+#endif
+
     newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
     if (newCCB == NULL)
     {
@@ -748,6 +802,13 @@ vfatAttachFCBToFileObject(
 
     UNREFERENCED_PARAMETER(vcb);
 
+#ifdef KDBG
+    if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &fcb->LongNameU, FALSE, NULL))
+    {
+        DPRINT1("Attaching %p to %p (%d)\n", fcb, fileObject, fcb->RefCount);
+    }
+#endif
+
     newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
     if (newCCB == NULL)
     {
@@ -759,6 +820,11 @@ vfatAttachFCBToFileObject(
     fileObject->FsContext = fcb;
     fileObject->FsContext2 = newCCB;
     DPRINT("file open: fcb:%p PathName:%wZ\n", fcb, &fcb->PathNameU);
+
+#ifdef KDBG
+    fcb->Flags &= ~FCB_CLEANED_UP;
+    fcb->Flags &= ~FCB_CLOSED;
+#endif
 
     return STATUS_SUCCESS;
 }

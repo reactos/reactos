@@ -34,6 +34,24 @@
 #pragma alloc_text(INIT, DriverEntry)
 #endif
 
+#ifdef KDBG
+NTSTATUS
+NTAPI
+KdSystemDebugControl(IN ULONG Command,
+                     IN PVOID InputBuffer,
+                     IN ULONG InputBufferLength,
+                     OUT PVOID OutputBuffer,
+                     IN ULONG OutputBufferLength,
+                     IN OUT PULONG ReturnLength,
+                     IN KPROCESSOR_MODE PreviousMode);
+
+BOOLEAN
+NTAPI
+vfatKdbgHandler(
+    IN PCHAR Command,
+    IN ULONG Argc,
+    IN PCH Argv[]);
+#endif
 
 /* GLOBALS *****************************************************************/
 
@@ -137,6 +155,16 @@ DriverEntry(
     ExInitializeResourceLite(&VfatGlobalData->VolumeListLock);
     InitializeListHead(&VfatGlobalData->VolumeListHead);
     IoRegisterFileSystem(DeviceObject);
+
+#ifdef KDBG
+    {
+        BOOLEAN Registered;
+
+        Registered = KdSystemDebugControl('RbdK', vfatKdbgHandler, FALSE, NULL, 0, NULL, KernelMode);
+        DPRINT1("FastFAT KDBG extension registered: %s\n", (Registered ? "yes" : "no"));
+    }
+#endif
+
     return STATUS_SUCCESS;
 }
 
