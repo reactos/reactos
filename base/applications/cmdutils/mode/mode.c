@@ -167,7 +167,7 @@ int ShowParallelStatus(INT nPortNum)
         }
         else
         {
-            ConPrintf(StdErr, L"    QueryDosDeviceW(%s) returned unrecognised form %s.\n", szPortName, buffer);
+            ConResPrintf(StdErr, IDS_ERROR_QUERY_DEVICES_FORM, szPortName, buffer);
         }
     }
     else
@@ -187,7 +187,7 @@ int SetParallelState(INT nPortNum)
     swprintf(szTargetPath, L"COM%d", nPortNum);
     if (!DefineDosDeviceW(DDD_REMOVE_DEFINITION, szPortName, szTargetPath))
     {
-        ConPrintf(StdErr, L"SetParallelState(%d) - DefineDosDevice(%s) failed: 0x%lx\n", nPortNum, szPortName, GetLastError());
+        ConPrintf(StdErr, L"ERROR: SetParallelState(%d) - DefineDosDevice(%s) failed: 0x%lx\n", nPortNum, szPortName, GetLastError());
     }
 
     ShowParallelStatus(nPortNum);
@@ -408,12 +408,12 @@ int SetConsoleStateOld(IN PCWSTR ArgStr)
 Quit:
     ClearScreen(hConOut, &csbi);
     if (!ResizeTextConsole(hConOut, &csbi, Resolution))
-        ConPuts(StdErr, L"The screen cannot be set to the number of lines and columns specified.\n");
+        ConResPuts(StdErr, IDS_ERROR_SCREEN_LINES_COL);
 
     return 0;
 
 invalid_parameter:
-    ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
+    ConResPrintf(StdErr, IDS_ERROR_INVALID_PARAMETER, ArgStr);
     return 1;
 }
 
@@ -486,7 +486,7 @@ int SetConsoleState(IN PCWSTR ArgStr)
         else
         {
 invalid_parameter:
-            ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
+            ConResPrintf(StdErr, IDS_ERROR_INVALID_PARAMETER, ArgStr);
             return 1;
         }
     }
@@ -495,7 +495,7 @@ invalid_parameter:
     {
         ClearScreen(hConOut, &csbi);
         if (!ResizeTextConsole(hConOut, &csbi, Resolution))
-            ConPuts(StdErr, L"The screen cannot be set to the number of lines and columns specified.\n");
+            ConResPuts(StdErr, IDS_ERROR_SCREEN_LINES_COL);
     }
     else if (kbdMode)
     {
@@ -537,7 +537,7 @@ int SetConsoleCPState(IN PCWSTR ArgStr)
     else
     {
 invalid_parameter:
-        ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
+        ConResPrintf(StdErr, IDS_ERROR_INVALID_PARAMETER, ArgStr);
         return 1;
     }
 
@@ -570,8 +570,7 @@ SerialPortQuery(INT nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWr
 
     if (hPort == INVALID_HANDLE_VALUE)
     {
-        ConPrintf(StdErr, L"Illegal device name - %s\n", szPortName);
-        ConPrintf(StdErr, L"Last error = 0x%lx\n", GetLastError());
+        ConResPrintf(StdErr, IDS_ERROR_ILLEGAL_DEVICE_NAME, szPortName, GetLastError());
         return FALSE;
     }
 
@@ -579,7 +578,9 @@ SerialPortQuery(INT nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWr
                      : GetCommState(hPort, pDCB);
     if (!Success)
     {
-        ConPrintf(StdErr, L"Failed to %s the status for device COM%d:\n", bWrite ? L"set" : L"get", nPortNum);
+        ConResPrintf(StdErr,
+                     bWrite ? IDS_ERROR_STATUS_SET_DEVICE : IDS_ERROR_STATUS_GET_DEVICE,
+                     szPortName);
         goto Quit;
     }
 
@@ -587,7 +588,9 @@ SerialPortQuery(INT nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWr
                      : GetCommTimeouts(hPort, pCommTimeouts);
     if (!Success)
     {
-        ConPrintf(StdErr, L"Failed to %s timeout status for device COM%d:\n", bWrite ? L"set" : L"get", nPortNum);
+        ConResPrintf(StdErr,
+                     bWrite ? IDS_ERROR_TIMEOUT_SET_DEVICE : IDS_ERROR_TIMEOUT_GET_DEVICE,
+                     szPortName);
         goto Quit;
     }
 
@@ -619,12 +622,12 @@ int ShowSerialStatus(INT nPortNum)
     }
     if (dcb.Parity >= ARRAYSIZE(parity_strings))
     {
-        ConPrintf(StdErr, L"ERROR: Invalid value for Parity Bits %d:\n", dcb.Parity);
+        ConResPrintf(StdErr, IDS_ERROR_INVALID_PARITY_BITS, dcb.Parity);
         dcb.Parity = 0;
     }
     if (dcb.StopBits >= ARRAYSIZE(stopbit_strings))
     {
-        ConPrintf(StdErr, L"ERROR: Invalid value for Stop Bits %d:\n", dcb.StopBits);
+        ConResPrintf(StdErr, IDS_ERROR_INVALID_STOP_BITS, dcb.StopBits);
         dcb.StopBits = 0;
     }
 
@@ -1087,7 +1090,7 @@ int SetSerialState(INT nPortNum, IN PCWSTR ArgStr)
 
     if (!Success)
     {
-        ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
+        ConResPrintf(StdErr, IDS_ERROR_INVALID_PARAMETER, ArgStr);
         return 1;
     }
 
@@ -1282,7 +1285,7 @@ show_status:
     goto Quit;
 
 invalid_parameter:
-    ConPrintf(StdErr, L"Invalid parameter - %s\n", ArgStr);
+    ConResPrintf(StdErr, IDS_ERROR_INVALID_PARAMETER, ArgStr);
     goto Quit;
 
 Quit:
