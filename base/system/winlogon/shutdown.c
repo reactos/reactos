@@ -77,7 +77,8 @@ OnTimer(
     HWND hwndDlg,
     PSYS_SHUTDOWN_PARAMS pShutdownParams)
 {
-    WCHAR szBuffer[12];
+    WCHAR szFormatBuffer[32];
+    WCHAR szBuffer[32];
     INT iSeconds, iMinutes, iHours, iDays;
 
     if (!pShutdownParams->bShuttingDown)
@@ -95,12 +96,15 @@ OnTimer(
         iMinutes = iSeconds / 60;
         iSeconds -= iMinutes * 60;
 
-        swprintf(szBuffer, L"%02d:%02d:%02d", iHours, iMinutes, iSeconds);
+        LoadStringW(hAppInstance, IDS_TIMEOUTSHORTFORMAT, szFormatBuffer, ARRAYSIZE(szFormatBuffer));
+        swprintf(szBuffer, szFormatBuffer, iHours, iMinutes, iSeconds);
     }
     else
     {
         iDays = (INT)(pShutdownParams->dwTimeout / SECONDS_PER_DAY);
-        swprintf(szBuffer, L"%d days", iDays); // FIXME: Localize
+
+        LoadStringW(hAppInstance, IDS_TIMEOUTLONGFORMAT, szFormatBuffer, ARRAYSIZE(szFormatBuffer));
+        swprintf(szBuffer, szFormatBuffer, iDays);
     }
 
     SetDlgItemTextW(hwndDlg, IDC_SYSSHUTDOWNTIMELEFT, szBuffer);

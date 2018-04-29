@@ -54,6 +54,8 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Systém sa pripravuje na prechod do režimu dlhodobého spánku..."
     IDS_SAVEYOURSETTINGS "Systém ukladá Vaše nastavenia..."
     IDS_REACTOSISSTARTINGUP "Systém ReactOS sa spúšťa..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
 STRINGTABLE

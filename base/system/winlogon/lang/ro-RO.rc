@@ -58,6 +58,8 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Stare de hibernare în curs de pregătire…"
     IDS_SAVEYOURSETTINGS "Configurații personale în curs de păstrare…"
     IDS_REACTOSISSTARTINGUP "Sistem de operare în curs de pornire…"
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
 STRINGTABLE

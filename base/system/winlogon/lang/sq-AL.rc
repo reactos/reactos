@@ -53,6 +53,8 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Pergatitet per letargji..."
     IDS_SAVEYOURSETTINGS "Ruan konfigurimin tuaj..."
     IDS_REACTOSISSTARTINGUP "ReactOS po fillon..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
 STRINGTABLE

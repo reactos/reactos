@@ -49,6 +49,8 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Preparing to Hibernate..."
     IDS_SAVEYOURSETTINGS "Γίνεται αποθήκευση των ρυθμίσεών σας..."
     IDS_REACTOSISSTARTINGUP "Το ReactOS ξεκινά..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
 STRINGTABLE

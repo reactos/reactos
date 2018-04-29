@@ -51,6 +51,8 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Préparation de l'hibernation..."
     IDS_SAVEYOURSETTINGS "Enregistrement de vos paramètres..."
     IDS_REACTOSISSTARTINGUP "Démarrage de ReactOS..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
 STRINGTABLE

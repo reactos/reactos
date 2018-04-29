@@ -49,6 +49,8 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Forbreder dvalemodus..."
     IDS_SAVEYOURSETTINGS "Lagrer innstillingene..."
     IDS_REACTOSISSTARTINGUP "ReactOS starter opp..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
 STRINGTABLE 

@@ -51,6 +51,8 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Ruošiamasi išjungti įrašant..."
     IDS_SAVEYOURSETTINGS "Išsaugomos nuostatos..."
     IDS_REACTOSISSTARTINGUP "Paleidžiama ReactOS..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
 STRINGTABLE
