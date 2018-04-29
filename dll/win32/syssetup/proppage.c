@@ -490,9 +490,15 @@ MouseCallback(
     UINT uMsg,
     LPPROPSHEETPAGE ppsp)
 {
+    PMOUSE_INFO pMouseInfo;
+
+    pMouseInfo = (PMOUSE_INFO)ppsp->lParam;
+
     if (uMsg == PSPCB_RELEASE)
     {
-        HeapFree(GetProcessHeap(), 0, (PMOUSE_INFO)ppsp->lParam);
+        if (pMouseInfo->hDeviceKey != NULL)
+            RegCloseKey(pMouseInfo->hDeviceKey);
+        HeapFree(GetProcessHeap(), 0, pMouseInfo);
     }
 
     return 1;
