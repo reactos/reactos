@@ -30,21 +30,16 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef KDBG
+#include <ndk/kdfuncs.h>
+#include <reactos/kdros.h>
+#endif
+
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text(INIT, DriverEntry)
 #endif
 
 #ifdef KDBG
-NTSTATUS
-NTAPI
-KdSystemDebugControl(IN ULONG Command,
-                     IN PVOID InputBuffer,
-                     IN ULONG InputBufferLength,
-                     OUT PVOID OutputBuffer,
-                     IN ULONG OutputBufferLength,
-                     IN OUT PULONG ReturnLength,
-                     IN KPROCESSOR_MODE PreviousMode);
-
 BOOLEAN
 NTAPI
 vfatKdbgHandler(
@@ -160,7 +155,7 @@ DriverEntry(
     {
         BOOLEAN Registered;
 
-        Registered = KdSystemDebugControl('RbdK', vfatKdbgHandler, FALSE, NULL, 0, NULL, KernelMode);
+        Registered = KdRosRegisterCliCallback(vfatKdbgHandler);
         DPRINT1("FastFAT KDBG extension registered: %s\n", (Registered ? "yes" : "no"));
     }
 #endif
