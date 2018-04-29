@@ -544,6 +544,7 @@ DOSDATE, *PDOSDATE;
 #define IRPCONTEXT_COMPLETE         0x0002
 #define IRPCONTEXT_QUEUE            0x0004
 #define IRPCONTEXT_PENDINGRETURNED  0x0008
+#define IRPCONTEXT_DEFERRED_WRITE   0x0010
 
 typedef struct
 {
@@ -1084,6 +1085,12 @@ vfatReportChange(
     IN PVFATFCB Fcb,
     IN ULONG FilterMatch,
     IN ULONG Action);
+
+VOID
+NTAPI
+VfatHandleDeferredWrite(
+    IN PVOID IrpContext,
+    IN PVOID Unused);
 
 /* pnp.c */
 

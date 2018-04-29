@@ -213,6 +213,15 @@ VfatDispatchRequest(
     return Status;
 }
 
+VOID
+NTAPI
+VfatHandleDeferredWrite(
+    IN PVOID IrpContext,
+    IN PVOID Unused)
+{
+    VfatDispatchRequest((PVFAT_IRP_CONTEXT)IrpContext);
+}
+
 NTSTATUS
 NTAPI
 VfatBuildRequest(

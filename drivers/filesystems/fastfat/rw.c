@@ -895,6 +895,23 @@ VfatWrite(
         }
     }
 
+    if (!NoCache && !CcCanIWrite(IrpContext->FileObject, Length, CanWait,
+                                 BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_DEFERRED_WRITE)))
+    {
+        BOOLEAN Retrying;
+
+        Retrying = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_DEFERRED_WRITE);
+        SetFlag(IrpContext->Flags, IRPCONTEXT_DEFERRED_WRITE);
+
+        Status = STATUS_PENDING;
+        CcDeferWrite(IrpContext->FileObject, VfatHandleDeferredWrite,
+                     IrpContext, NULL, Length, Retrying);
+
+        DPRINT1("Dererring write!\n");
+
+        goto ByeBye;
+    }
+
     if (IsVolume)
     {
         Resource = &IrpContext->DeviceExt->DirResource;
