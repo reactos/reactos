@@ -47,11 +47,11 @@ KdRosDumpStackFrames(
 
 #if defined(KDBG)
 FORCEINLINE
-VOID
+ULONG
 KdRosRegisterCliCallback(
     PVOID Callback)
 {
-    KdSystemDebugControl('RbdK', Callback, FALSE, 0, 0, 0, 0);
+    return KdSystemDebugControl('RbdK', Callback, FALSE, 0, 0, 0, 0);
 }
 
 FORCEINLINE
