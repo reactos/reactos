@@ -29,6 +29,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -40,7 +41,6 @@
 #include "resource.h"
 
 #define MAX_PORTNAME_LEN 20
-#define MAX_COMPORT_NUM  10
 
 #define ASSERT(a)
 
@@ -70,76 +70,6 @@ UnderlinedResPrintf(
     szMsgBuffer[Len] = UNICODE_NULL;
 
     ConStreamWrite(Stream, szMsgBuffer, Len);
-}
-
-int QueryDevices(VOID)
-{
-    PWSTR Buffer, ptr;
-    DWORD dwLen = MAX_PATH;
-
-    /* Pre-allocate a buffer for QueryDosDeviceW() */
-    Buffer = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
-    if (Buffer == NULL)
-    {
-        /* We failed, bail out */
-        ConPuts(StdErr, L"ERROR: Not enough memory\n");
-        return 0;
-    }
-
-    for (;;)
-    {
-        *Buffer = UNICODE_NULL;
-        if (QueryDosDeviceW(NULL, Buffer, dwLen))
-            break;
-
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-        {
-            /* We failed, bail out */
-            ConPrintf(StdErr, L"ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
-            HeapFree(GetProcessHeap(), 0, Buffer);
-            return 0;
-        }
-
-        /* The buffer was too small, try to re-allocate it */
-        dwLen *= 2;
-        ptr = HeapReAlloc(GetProcessHeap(), 0, Buffer, dwLen * sizeof(WCHAR));
-        if (ptr == NULL)
-        {
-            /* We failed, bail out */
-            ConPuts(StdErr, L"ERROR: Not enough memory\n");
-            HeapFree(GetProcessHeap(), 0, Buffer);
-            return 0;
-        }
-        Buffer = ptr;
-    }
-
-    for (ptr = Buffer; *ptr != UNICODE_NULL; ptr += wcslen(ptr) + 1)
-    {
-        if (wcsstr(ptr, L"COM"))
-        {
-            ConResPrintf(StdOut, IDS_QUERY_SERIAL_FOUND, ptr);
-        }
-        else if (wcsstr(ptr, L"PRN"))
-        {
-            ConResPrintf(StdOut, IDS_QUERY_PRINTER_FOUND, ptr);
-        }
-        else if (wcsstr(ptr, L"LPT"))
-        {
-            ConResPrintf(StdOut, IDS_QUERY_PARALLEL_FOUND, ptr);
-        }
-        else if (wcsstr(ptr, L"AUX") || wcsstr(ptr, L"NUL"))
-        {
-            ConResPrintf(StdOut, IDS_QUERY_DOSDEV_FOUND, ptr);
-        }
-        else
-        {
-            // ConResPrintf(StdOut, IDS_QUERY_MISC_FOUND, ptr);
-        }
-    }
-
-    /* Free the buffer and return success */
-    HeapFree(GetProcessHeap(), 0, Buffer);
-    return 1;
 }
 
 int ShowParallelStatus(INT nPortNum)
@@ -174,6 +104,7 @@ int ShowParallelStatus(INT nPortNum)
     {
         ConPrintf(StdErr, L"ERROR: QueryDosDeviceW(%s) failed: 0x%lx\n", szPortName, GetLastError());
     }
+    ConPuts(StdOut, L"\n");
 
     return 1;
 }
@@ -251,6 +182,8 @@ int ShowConsoleStatus(VOID)
         ConResPrintf(StdOut, IDS_CONSOLE_KBD_DELAY, dwKbdDelay);
     }
     ConResPrintf(StdOut, IDS_CONSOLE_CODEPAGE, GetConsoleOutputCP());
+    ConPuts(StdOut, L"\n");
+
     return 0;
 }
 
@@ -261,6 +194,8 @@ int ShowConsoleCPStatus(VOID)
     ConPuts(StdOut, L"\n");
 
     ConResPrintf(StdOut, IDS_CONSOLE_CODEPAGE, GetConsoleOutputCP());
+    ConPuts(StdOut, L"\n");
+
     return 0;
 }
 
@@ -364,6 +299,7 @@ ResizeTextConsole(
 
     /* Update the console screen buffer information */
     GetConsoleScreenBufferInfo(hConOut, pcsbi);
+
     return TRUE;
 }
 
@@ -570,7 +506,11 @@ SerialPortQuery(INT nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWr
 
     if (hPort == INVALID_HANDLE_VALUE)
     {
-        ConResPrintf(StdErr, IDS_ERROR_ILLEGAL_DEVICE_NAME, szPortName, GetLastError());
+        DWORD dwLastError = GetLastError();
+        if (dwLastError == ERROR_ACCESS_DENIED)
+            ConResPrintf(StdErr, IDS_ERROR_DEVICE_NOT_AVAILABLE, szPortName);
+        else
+            ConResPrintf(StdErr, IDS_ERROR_ILLEGAL_DEVICE_NAME, szPortName, dwLastError);
         return FALSE;
     }
 
@@ -654,6 +594,8 @@ int ShowSerialStatus(INT nPortNum)
         control_strings[dcb.fDsrSensitivity ? 1 : 0]);
     ConResPrintf(StdOut, IDS_COM_STATUS_DTR_CIRCUIT, control_strings[dcb.fDtrControl]);
     ConResPrintf(StdOut, IDS_COM_STATUS_RTS_CIRCUIT, control_strings[dcb.fRtsControl]);
+    ConPuts(StdOut, L"\n");
+
     return 0;
 }
 
@@ -1108,24 +1050,100 @@ int SetSerialState(INT nPortNum, IN PCWSTR ArgStr)
 static PCWSTR
 FindPortNum(PCWSTR argStr, PINT PortNum)
 {
-    *PortNum = -1;
+    PWSTR endptr = NULL;
 
-    if (*argStr >= L'0' && *argStr <= L'9')
+    *PortNum = wcstol(argStr, &endptr, 10);
+    if (endptr == argStr)
     {
-        *PortNum = *argStr - L'0';
-        argStr++;
-        if (*argStr >= L'0' && *argStr <= L'9')
-        {
-            *PortNum *= 10;
-            *PortNum += *argStr - L'0';
-        }
-    }
-    else
-    {
+        *PortNum = -1;
         return NULL;
     }
 
-    return argStr;
+    return endptr;
+}
+
+int EnumerateDevices(VOID)
+{
+    PWSTR Buffer, ptr;
+    PCWSTR argStr;
+    DWORD dwLen = MAX_PATH;
+    INT nPortNum;
+
+    /* Pre-allocate a buffer for QueryDosDeviceW() */
+    Buffer = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
+    if (Buffer == NULL)
+    {
+        /* We failed, bail out */
+        ConPuts(StdErr, L"ERROR: Not enough memory\n");
+        return 0;
+    }
+
+    for (;;)
+    {
+        *Buffer = UNICODE_NULL;
+        if (QueryDosDeviceW(NULL, Buffer, dwLen))
+            break;
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            /* We failed, bail out */
+            ConPrintf(StdErr, L"ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
+            HeapFree(GetProcessHeap(), 0, Buffer);
+            return 0;
+        }
+
+        /* The buffer was too small, try to re-allocate it */
+        dwLen *= 2;
+        ptr = HeapReAlloc(GetProcessHeap(), 0, Buffer, dwLen * sizeof(WCHAR));
+        if (ptr == NULL)
+        {
+            /* We failed, bail out */
+            ConPuts(StdErr, L"ERROR: Not enough memory\n");
+            HeapFree(GetProcessHeap(), 0, Buffer);
+            return 0;
+        }
+        Buffer = ptr;
+    }
+
+    for (ptr = Buffer; *ptr != UNICODE_NULL; ptr += wcslen(ptr) + 1)
+    {
+        if (_wcsnicmp(ptr, L"COM", 3) == 0)
+        {
+            argStr = FindPortNum(ptr+3, &nPortNum);
+            if (!argStr || *argStr || nPortNum == -1)
+                continue;
+
+            // ConResPrintf(StdOut, IDS_QUERY_SERIAL_FOUND, ptr);
+            ShowSerialStatus(nPortNum);
+        }
+        else if (_wcsicmp(ptr, L"PRN") == 0)
+        {
+            ConResPrintf(StdOut, IDS_QUERY_PRINTER_FOUND, ptr);
+        }
+        else if (_wcsnicmp(ptr, L"LPT", 3) == 0)
+        {
+            argStr = FindPortNum(ptr+3, &nPortNum);
+            if (!argStr || *argStr || nPortNum == -1)
+                continue;
+
+            // ConResPrintf(StdOut, IDS_QUERY_PARALLEL_FOUND, ptr);
+            ShowParallelStatus(nPortNum);
+        }
+        else if (_wcsicmp(ptr, L"AUX") == 0 || _wcsicmp(ptr, L"NUL") == 0)
+        {
+            ConResPrintf(StdOut, IDS_QUERY_DOSDEV_FOUND, ptr);
+        }
+        else
+        {
+            // ConResPrintf(StdOut, IDS_QUERY_MISC_FOUND, ptr);
+        }
+    }
+
+    ShowConsoleStatus();
+
+    /* Free the buffer and return success */
+    HeapFree(GetProcessHeap(), 0, Buffer);
+    return 1;
 }
 
 int wmain(int argc, WCHAR* argv[])
@@ -1273,15 +1291,7 @@ int wmain(int argc, WCHAR* argv[])
     }
 
 show_status:
-    QueryDevices();
-/*
-    ShowParallelStatus(1);
-    for (nPortNum = 0; nPortNum < MAX_COMPORT_NUM; nPortNum++)
-    {
-        ShowSerialStatus(nPortNum + 1);
-    }
-    ShowConsoleStatus();
-*/
+    EnumerateDevices();
     goto Quit;
 
 invalid_parameter:

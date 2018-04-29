@@ -14,13 +14,13 @@ BEGIN
 Режим работы экрана:    MODE CON[:] [COLS=c] [LINES=n]\n\
 Ввод с клавиатуры:      MODE CON[:] [RATE=r DELAY=d]\n"
 
-    IDS_QUERY_SERIAL_FOUND "    Найдено последовательное устройство - %s\n"
-    IDS_QUERY_PRINTER_FOUND "    Найдено устройство печати - %s\n"
-    IDS_QUERY_PARALLEL_FOUND "    Найдено параллельное устройство - %s\n"
-    IDS_QUERY_DOSDEV_FOUND "    Найдено устройство DOS - %s\n"
-    // IDS_QUERY_MISC_FOUND "    Найдено другое устройство - %s\n"
+    IDS_QUERY_SERIAL_FOUND "Найдено последовательное устройство - %s\n"
+    IDS_QUERY_PRINTER_FOUND "Найдено устройство печати - %s\n"
+    IDS_QUERY_PARALLEL_FOUND "Найдено параллельное устройство - %s\n"
+    IDS_QUERY_DOSDEV_FOUND "Найдено устройство DOS - %s\n"
+    // IDS_QUERY_MISC_FOUND "Найдено другое устройство - %s\n"
 
-    // IDS_QUERY_DEVICE_FOUND "    Найдено %s устройство - %s\n"
+    // IDS_QUERY_DEVICE_FOUND "Найдено %s устройство - %s\n"
     // IDS_SERIAL  "последовательное"
     // IDS_PRINTER "параллельное"
     // IDS_OTHER   "другое"
@@ -59,6 +59,7 @@ BEGIN
     IDS_ERROR_SET_PARALLEL_STATE "ОШИБКА: SetParallelState(%d) - DefineDosDevice(%s) (0x%lx)\n"
     IDS_ERROR_INVALID_PARAMETER "Неверный параметр - %s\n"
     IDS_ERROR_ILLEGAL_DEVICE_NAME "Недопустимое имя устройства - %s (0x%lx)\n"
+    IDS_ERROR_DEVICE_NOT_AVAILABLE "The device %s is not currently available.\n"
     IDS_ERROR_STATUS_GET_DEVICE "Не удалось получить состояние устройства %s:\n"
     IDS_ERROR_STATUS_SET_DEVICE "Не удалось установить состояние устройства %s:\n"
     IDS_ERROR_TIMEOUT_GET_DEVICE "Failed to get the timeout for device %s:\n"
