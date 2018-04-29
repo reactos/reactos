@@ -30,22 +30,8 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifdef KDBG
-#include <ndk/kdfuncs.h>
-#include <reactos/kdros.h>
-#endif
-
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text(INIT, DriverEntry)
-#endif
-
-#ifdef KDBG
-BOOLEAN
-NTAPI
-vfatKdbgHandler(
-    IN PCHAR Command,
-    IN ULONG Argc,
-    IN PCH Argv[]);
 #endif
 
 /* GLOBALS *****************************************************************/

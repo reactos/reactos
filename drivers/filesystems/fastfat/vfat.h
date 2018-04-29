@@ -5,6 +5,10 @@
 #include <ntdddisk.h>
 #include <dos.h>
 #include <pseh/pseh2.h>
+#ifdef KDBG
+#include <ndk/kdfuncs.h>
+#include <reactos/kdros.h>
+#endif
 
 #ifdef __GNUC__
 #define INIT_SECTION __attribute__((section ("INIT")))
@@ -1042,6 +1046,10 @@ DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath);
 
+#ifdef KDBG
+/* kdbg.c */
+KDBG_CLI_ROUTINE vfatKdbgHandler;
+#endif
 
 /* misc.c */
 
