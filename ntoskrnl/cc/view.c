@@ -700,6 +700,88 @@ CcRosMapVacbInKernelSpace(
 }
 
 static
+BOOLEAN
+CcRosFreeUnusedVacb (
+    PULONG Count)
+{
+    ULONG cFreed;
+    BOOLEAN Freed;
+    KIRQL oldIrql;
+    PROS_VACB current;
+    LIST_ENTRY FreeList;
+    PLIST_ENTRY current_entry;
+
+    cFreed = 0;
+    Freed = FALSE;
+    InitializeListHead(&FreeList);
+
+    KeAcquireGuardedMutex(&ViewLock);
+
+    /* Browse all the available VACB */
+    current_entry = VacbLruListHead.Flink;
+    while (current_entry != &VacbLruListHead)
+    {
+        ULONG Refs;
+
+        current = CONTAINING_RECORD(current_entry,
+                                    ROS_VACB,
+                                    VacbLruListEntry);
+        current_entry = current_entry->Flink;
+
+        KeAcquireSpinLock(&current->SharedCacheMap->CacheMapLock, &oldIrql);
+
+        /* Only deal with unused VACB, we will free them */
+        Refs = CcRosVacbGetRefCount(current);
+        if (Refs < 2)
+        {
+            ASSERT(!current->Dirty);
+            ASSERT(!current->MappedCount);
+            ASSERT(Refs == 1);
+
+            /* Reset and move to free list */
+            RemoveEntryList(&current->CacheMapVacbListEntry);
+            RemoveEntryList(&current->VacbLruListEntry);
+            InitializeListHead(&current->VacbLruListEntry);
+            InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
+        }
+
+        KeReleaseSpinLock(&current->SharedCacheMap->CacheMapLock, oldIrql);
+
+    }
+
+    KeReleaseGuardedMutex(&ViewLock);
+
+    /* And now, free any of the found VACB, that'll free memory! */
+    while (!IsListEmpty(&FreeList))
+    {
+        ULONG Refs;
+
+        current_entry = RemoveHeadList(&FreeList);
+        current = CONTAINING_RECORD(current_entry,
+                                    ROS_VACB,
+                                    CacheMapVacbListEntry);
+        InitializeListHead(&current->CacheMapVacbListEntry);
+        Refs = CcRosVacbDecRefCount(current);
+        ASSERT(Refs == 0);
+        ++cFreed;
+    }
+
+    /* If we freed at least one VACB, return success */
+    if (cFreed != 0)
+    {
+        Freed = TRUE;
+    }
+
+    /* If caller asked for free count, return it */
+    if (Count != NULL)
+    {
+        *Count = cFreed;
+    }
+
+    return Freed;
+}
+
+static
 NTSTATUS
 CcRosCreateVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
@@ -712,6 +794,7 @@ CcRosCreateVacb (
     NTSTATUS Status;
     KIRQL oldIrql;
     ULONG Refs;
+    BOOLEAN Retried;
 
     ASSERT(SharedCacheMap);
 
@@ -745,9 +828,25 @@ CcRosCreateVacb (
 
     CcRosVacbIncRefCount(current);
 
+    Retried = FALSE;
+Retry:
+    /* Map VACB in kernel space */
     Status = CcRosMapVacbInKernelSpace(current);
     if (!NT_SUCCESS(Status))
     {
+        ULONG Freed;
+        /* If no space left, try to prune unused VACB
+         * to recover space to map our VACB
+         * If it succeed, retry to map, otherwise
+         * just fail.
+         */
+        if (!Retried && CcRosFreeUnusedVacb(&Freed))
+        {
+            DPRINT("Prunned %d VACB, trying again\n", Freed);
+            Retried = TRUE;
+            goto Retry;
+        }
+
         CcRosVacbDecRefCount(current);
         ExFreeToNPagedLookasideList(&VacbLookasideList, current);
         return Status;
