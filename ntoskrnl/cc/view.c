@@ -168,10 +168,12 @@ CcRosFlushVacb (
 {
     NTSTATUS Status;
 
+    CcRosUnmarkDirtyVacb(Vacb, TRUE);
+
     Status = CcWriteVirtualAddress(Vacb);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        CcRosUnmarkDirtyVacb(Vacb, TRUE);
+        CcRosMarkDirtyVacb(Vacb);
     }
 
     return Status;
