@@ -207,8 +207,6 @@ CcRosFlushDirtyPages (
 
     while ((current_entry != &DirtyVacbListHead) && (Target > 0))
     {
-        ULONG Refs;
-
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     DirtyVacbListEntry);
@@ -233,17 +231,6 @@ CcRosFlushDirtyPages (
         }
 
         ASSERT(current->Dirty);
-
-        /* One reference is added above */
-        Refs = CcRosVacbGetRefCount(current);
-        if ((Refs > 3 && current->PinCount == 0) ||
-            (Refs > 4 && current->PinCount > 1))
-        {
-            current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
-                current->SharedCacheMap->LazyWriteContext);
-            CcRosVacbDecRefCount(current);
-            continue;
-        }
 
         KeReleaseGuardedMutex(&ViewLock);
 
