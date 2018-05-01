@@ -127,6 +127,12 @@ ServiceInit(VOID)
     else
         CloseHandle(hThread);
 
+    /* Report a running workstation service */
+    SetServiceBits(ServiceStatusHandle,
+                   SV_TYPE_WORKSTATION,
+                   TRUE,
+                   TRUE);
+
     return ERROR_SUCCESS;
 }
 
