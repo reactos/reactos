@@ -368,6 +368,37 @@ typedef struct _SERVER_TRANSPORT_INFO_0 {
   LPWSTR svti0_networkaddress;
 } SERVER_TRANSPORT_INFO_0, *PSERVER_TRANSPORT_INFO_0, *LPSERVER_TRANSPORT_INFO_0;
 
+typedef struct _SERVER_TRANSPORT_INFO_1 {
+  DWORD svti1_numberofvcs;
+  LPWSTR svti1_transportname;
+  PBYTE svti1_transportaddress;
+  DWORD svti1_transportaddresslength;
+  LPWSTR svti1_networkaddress;
+  LPWSTR svti1_domain;
+} SERVER_TRANSPORT_INFO_1, *PSERVER_TRANSPORT_INFO_1, *LPSERVER_TRANSPORT_INFO_1;
+
+typedef struct _SERVER_TRANSPORT_INFO_2 {
+  DWORD svti2_numberofvcs;
+  LPWSTR svti2_transportname;
+  PBYTE svti2_transportaddress;
+  DWORD svti2_transportaddresslength;
+  LPWSTR svti2_networkaddress;
+  LPWSTR svti2_domain;
+  ULONG svti2_flags;
+} SERVER_TRANSPORT_INFO_2, *PSERVER_TRANSPORT_INFO_2, *LPSERVER_TRANSPORT_INFO_2;
+
+typedef struct _SERVER_TRANSPORT_INFO_3 {
+  DWORD svti3_numberofvcs;
+  LPWSTR svti3_transportname;
+  PBYTE svti3_transportaddress;
+  DWORD svti3_transportaddresslength;
+  LPWSTR svti3_networkaddress;
+  LPWSTR svti3_domain;
+  ULONG svti3_flags;
+  DWORD svti3_passwordlength;
+  BYTE svti3_password[256];
+} SERVER_TRANSPORT_INFO_3, *PSERVER_TRANSPORT_INFO_3, *LPSERVER_TRANSPORT_INFO_3;
+
 NET_API_STATUS WINAPI NetServerEnum(LPCWSTR, DWORD, PBYTE*, DWORD, PDWORD, PDWORD, DWORD, LPCWSTR, PDWORD);
 NET_API_STATUS WINAPI NetServerEnumEx(LPCWSTR, DWORD, PBYTE*, DWORD, PDWORD, PDWORD, DWORD, LPCWSTR, LPCWSTR);
 NET_API_STATUS WINAPI NetServerGetInfo(LPWSTR, DWORD, PBYTE*);
@@ -380,7 +411,7 @@ NET_API_STATUS WINAPI NetServerTransportAdd(LPWSTR, DWORD, PBYTE);
 NET_API_STATUS WINAPI NetServerTransportAddEx(LPWSTR, DWORD, PBYTE);
 NET_API_STATUS WINAPI NetServerTransportDel(LPWSTR, DWORD, PBYTE);
 NET_API_STATUS WINAPI NetServerTransportEnum(LPWSTR, DWORD, PBYTE*, DWORD, PDWORD, PDWORD, PDWORD);
-BOOL SetServiceBits(SERVICE_STATUS_HANDLE, DWORD, BOOL, BOOL);
+BOOL WINAPI SetServiceBits(SERVICE_STATUS_HANDLE, DWORD, BOOL, BOOL);
 
 #define SVI1_NUM_ELEMENTS 5
 #define SVI2_NUM_ELEMENTS 40
