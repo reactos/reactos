@@ -38,22 +38,22 @@ BEGIN
     PUSHBUTTON "Выключение", IDC_SHUTDOWN, 214, 122, 50, 14
 END
 
-IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 175
+IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 164
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Безопасность"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    GROUPBOX "Информация о входе в систему", IDC_STATIC, 7, 61, 261, 52
-    LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
-    LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
-    CTEXT "Выберите необходимое действие:", IDC_STATIC, 10, 119, 255, 8
-    PUSHBUTTON "Заблокировать", IDC_LOCK, 7, 135, 80, 14
-    PUSHBUTTON "Завершение сеанса", IDC_LOGOFF, 98, 135, 80, 14
-    PUSHBUTTON "Завершение работы", IDC_SHUTDOWN, 188, 135, 80, 14
-    PUSHBUTTON "Смена пароля", IDC_CHANGEPWD, 7, 155, 80, 14
-    PUSHBUTTON "Диспетчер задач", IDC_TASKMGR, 98, 154, 80, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 188, 154, 80, 14
+    GROUPBOX "Информация о входе в систему", IDC_STATIC, 7, 50, 261, 52
+    LTEXT "<Message>", IDC_LOGONMSG, 15, 62, 245, 18
+    LTEXT "<Logon date>", IDC_LOGONDATE, 15, 83, 245, 8
+    CTEXT "Выберите необходимое действие:", IDC_STATIC, 10, 108, 255, 8
+    PUSHBUTTON "Заблокировать", IDC_LOCK, 7, 124, 84, 14
+    PUSHBUTTON "Завершение сеанса...", IDC_LOGOFF, 96, 124, 84, 14
+    PUSHBUTTON "Завершение работы...", IDC_SHUTDOWN, 184, 124, 84, 14
+    PUSHBUTTON "Смена пароля...", IDC_CHANGEPWD, 7, 143, 84, 14
+    PUSHBUTTON "Диспетчер задач", IDC_TASKMGR, 96, 143, 84, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 184, 143, 84, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0, 0, 275, 121

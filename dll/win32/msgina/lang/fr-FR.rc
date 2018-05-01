@@ -11,7 +11,7 @@ END
 
 IDD_NOTICE_DLG DIALOGEX 0, 0, 275, 80
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Bienvenue à ReactOS"
+CAPTION "Bienvenue dans ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -36,22 +36,22 @@ BEGIN
     PUSHBUTTON "Éteindre", IDC_SHUTDOWN, 214, 122, 50, 14
 END
 
-IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 175
+IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 164
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Sécurité"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    GROUPBOX "Logon Information", IDC_STATIC, 7, 61, 261, 52
-    LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
-    LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
-    CTEXT "Que voulez-vous faire ?", IDC_STATIC, 10, 119, 255, 8
-    PUSHBUTTON "Verrouiller l'ordinateur", IDC_LOCK, 4, 135, 82, 14
-    PUSHBUTTON "Déconnecter", IDC_LOGOFF, 93, 135, 85, 14
-    PUSHBUTTON "Éteindre", IDC_SHUTDOWN, 184, 135, 70, 14
-    PUSHBUTTON "Changer le mot de passe", IDC_CHANGEPWD, 4, 154, 82, 14
-    PUSHBUTTON "Gestionnaire de tâches", IDC_TASKMGR, 93, 154, 85, 14
-    PUSHBUTTON "Annuler", IDCANCEL, 184, 154, 70, 14
+    GROUPBOX "Informations de session", IDC_STATIC, 7, 50, 261, 52
+    LTEXT "<Message>", IDC_LOGONMSG, 15, 62, 245, 18
+    LTEXT "<Logon date>", IDC_LOGONDATE, 15, 83, 245, 8
+    CTEXT "Que voulez-vous faire ?", IDC_STATIC, 10, 108, 255, 8
+    PUSHBUTTON "&Verrouiller l'ordinateur", IDC_LOCK, 7, 124, 95, 14
+    PUSHBUTTON "&Déconnecter...", IDC_LOGOFF, 104, 124, 82, 14
+    PUSHBUTTON "Ét&eindre...", IDC_SHUTDOWN, 188, 124, 80, 14
+    PUSHBUTTON "&Changer le mot de passe...", IDC_CHANGEPWD, 7, 143, 95, 14
+    PUSHBUTTON "&Gestionnaire de tâches", IDC_TASKMGR, 104, 143, 82, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 188, 143, 80, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0, 0, 275, 121
@@ -116,7 +116,7 @@ END
 
 IDD_SHUTDOWN_DLG DIALOGEX 0, 0, 275, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Fermer ReactOS"
+CAPTION "Arrêt de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -135,7 +135,7 @@ END
 IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 // STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Fermer ReactOS"
+CAPTION "Arrêt de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -143,13 +143,13 @@ BEGIN
     LTEXT "&Que voulez-vous que l'ordinateur fasse ?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
-    GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 9, 122, 257, 146
-    LTEXT "Select the option that best describes why you want to shut down your computer.", IDC_STATIC, 39, 134, 190, 17
-    LTEXT "&Option:", IDC_STATIC, 39, 154, 80, 8
-    AUTOCHECKBOX "&Planned", IDC_REASON_PLANNED, 182, 154, 47, 10
+    GROUPBOX "Moniteur d'événements de Mise hors tension", IDC_STATIC, 9, 122, 257, 146
+    LTEXT "Sélectionnez l'option qui décrit le mieux la raison pour laquelle vous voulez arrêter l'ordinateur.", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "&Option :", IDC_STATIC, 39, 154, 80, 8
+    AUTOCHECKBOX "&Planifié", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
-    LTEXT "&Comment:", IDC_STATIC, 39, 214, 80, 8
+    LTEXT "&Commentaire:", IDC_STATIC, 39, 214, 80, 8
     EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 150, 276, 55, 14, WS_GROUP
     PUSHBUTTON "Annuler", IDCANCEL, 211, 276, 55, 14
@@ -178,7 +178,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LOGGEDOUTSAS "Bienvenue!"
+    IDS_LOGGEDOUTSAS "Bienvenue !"
     IDS_LOCKEDSAS "Cet ordinateur est actuellement verrouillé."
     IDS_PRESSCTRLALTDELETE "Appuyez sur Ctrl-Alt-Suppr pour vous connecter."
     IDS_ASKFORUSER "Utilisateur : "
