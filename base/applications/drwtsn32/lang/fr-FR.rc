@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     fr-FR resource file
+ * COPYRIGHT:   Copyright 2018 Pierre Schweitzer (pierre@reactos.org)
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "ReactOS Crash Reporter"
+    IDS_USER_ALERT_MESSAGE "L'application %ls a cessé de fonctionner. Des informations à propos de ce dysfonctionnement ont été enregistrées ici :\r\n\r\n%ls"
+END
