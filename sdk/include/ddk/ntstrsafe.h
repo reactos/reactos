@@ -1581,7 +1581,9 @@ RtlStringCbLengthW(
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCopyWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_LPCSTR pszSrc)
+NTSTRSAFEAPI RtlStringCopyWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCSTR pszSrc)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     if (cchDest==0)
@@ -1603,7 +1605,9 @@ NTSTRSAFEAPI RtlStringCopyWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_L
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCopyWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE_LPCWSTR pszSrc)
+NTSTRSAFEAPI RtlStringCopyWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCWSTR pszSrc)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     if (cchDest==0)
@@ -1625,7 +1629,13 @@ NTSTRSAFEAPI RtlStringCopyWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE_
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCopyExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPCSTR pszSrc,STRSAFE_LPSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags)
+NTSTRSAFEAPI RtlStringCopyExWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPCSTR pszSrc,
+    STRSAFE_LPSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPSTR pszDestEnd = pszDest;
@@ -1725,7 +1735,13 @@ NTSTRSAFEAPI RtlStringCopyExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t 
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCopyExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPCWSTR pszSrc,STRSAFE_LPWSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags)
+NTSTRSAFEAPI RtlStringCopyExWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPCWSTR pszSrc,
+    STRSAFE_LPWSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPWSTR pszDestEnd = pszDest;
@@ -1825,7 +1841,9 @@ NTSTRSAFEAPI RtlStringCopyExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_t
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCopyNWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_LPCSTR pszSrc,size_t cchSrc)
+NTSTRSAFEAPI RtlStringCopyNWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCSTR pszSrc,size_t cchSrc)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     if (cchDest==0)
@@ -1848,7 +1866,10 @@ NTSTRSAFEAPI RtlStringCopyNWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCopyNWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE_LPCWSTR pszSrc,size_t cchToCopy)
+NTSTRSAFEAPI RtlStringCopyNWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCWSTR pszSrc,
+    size_t cchToCopy)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     if (cchDest==0)
@@ -1871,7 +1892,14 @@ NTSTRSAFEAPI RtlStringCopyNWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCopyNExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPCSTR pszSrc,size_t cchToCopy,STRSAFE_LPSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags)
+NTSTRSAFEAPI RtlStringCopyNExWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPCSTR pszSrc,
+    size_t cchToCopy,
+    STRSAFE_LPSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPSTR pszDestEnd = pszDest;
@@ -1975,7 +2003,14 @@ NTSTRSAFEAPI RtlStringCopyNExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCopyNExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPCWSTR pszSrc,size_t cchToCopy,STRSAFE_LPWSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags)
+NTSTRSAFEAPI RtlStringCopyNExWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPCWSTR pszSrc,
+    size_t cchToCopy,
+    STRSAFE_LPWSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPWSTR pszDestEnd = pszDest;
@@ -2079,7 +2114,9 @@ NTSTRSAFEAPI RtlStringCopyNExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCatWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_LPCSTR pszSrc)
+NTSTRSAFEAPI RtlStringCatWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCSTR pszSrc)
 {
     NTSTATUS Status;
     size_t cchDestLength;
@@ -2089,7 +2126,9 @@ NTSTRSAFEAPI RtlStringCatWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_LP
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCatWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE_LPCWSTR pszSrc)
+NTSTRSAFEAPI RtlStringCatWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCWSTR pszSrc)
 {
     NTSTATUS Status;
     size_t cchDestLength;
@@ -2099,7 +2138,13 @@ NTSTRSAFEAPI RtlStringCatWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE_L
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCatExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPCSTR pszSrc,STRSAFE_LPSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags)
+NTSTRSAFEAPI RtlStringCatExWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPCSTR pszSrc,
+    STRSAFE_LPSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPSTR pszDestEnd = pszDest;
@@ -2196,7 +2241,13 @@ NTSTRSAFEAPI RtlStringCatExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t c
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCatExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPCWSTR pszSrc,STRSAFE_LPWSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags)
+NTSTRSAFEAPI RtlStringCatExWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPCWSTR pszSrc,
+    STRSAFE_LPWSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPWSTR pszDestEnd = pszDest;
@@ -2293,7 +2344,10 @@ NTSTRSAFEAPI RtlStringCatExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_t 
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCatNWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_LPCSTR pszSrc,size_t cchToAppend)
+NTSTRSAFEAPI RtlStringCatNWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCSTR pszSrc,
+    size_t cchToAppend)
 {
     NTSTATUS Status;
     size_t cchDestLength;
@@ -2303,7 +2357,10 @@ NTSTRSAFEAPI RtlStringCatNWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_L
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCatNWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE_LPCWSTR pszSrc,size_t cchToAppend)
+NTSTRSAFEAPI RtlStringCatNWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCWSTR pszSrc,
+    size_t cchToAppend)
 {
     NTSTATUS Status;
     size_t cchDestLength;
@@ -2313,7 +2370,14 @@ NTSTRSAFEAPI RtlStringCatNWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE_
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCatNExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPCSTR pszSrc,size_t cchToAppend,STRSAFE_LPSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags)
+NTSTRSAFEAPI RtlStringCatNExWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPCSTR pszSrc,
+    size_t cchToAppend,
+    STRSAFE_LPSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPSTR pszDestEnd = pszDest;
@@ -2413,7 +2477,14 @@ NTSTRSAFEAPI RtlStringCatNExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t 
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringCatNExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPCWSTR pszSrc,size_t cchToAppend,STRSAFE_LPWSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags)
+NTSTRSAFEAPI RtlStringCatNExWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPCWSTR pszSrc,
+    size_t cchToAppend,
+    STRSAFE_LPWSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPWSTR pszDestEnd = pszDest;
@@ -2513,7 +2584,10 @@ NTSTRSAFEAPI RtlStringCatNExWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,size_t
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringVPrintfWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAFE_LPCSTR pszFormat,va_list argList)
+NTSTRSAFEAPI RtlStringVPrintfWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCSTR pszFormat,
+    va_list argList)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     if (cchDest==0)
@@ -2540,7 +2614,11 @@ NTSTRSAFEAPI RtlStringVPrintfWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,STRSAF
     return Status;
 }
 
-NTSTRSAFEAPI RtlpStringVPrintfWorkerW(STRSAFE_LPWSTR pszDest, size_t cchDest, STRSAFE_LPCWSTR pszFormat, size_t* pcchDestNewLen, va_list argList)
+NTSTRSAFEAPI RtlpStringVPrintfWorkerW(STRSAFE_LPWSTR pszDest, 
+    size_t cchDest, 
+    STRSAFE_LPCWSTR pszFormat, 
+    size_t* pcchDestNewLen, 
+    va_list argList)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     int iRet;
@@ -2566,7 +2644,10 @@ NTSTRSAFEAPI RtlpStringVPrintfWorkerW(STRSAFE_LPWSTR pszDest, size_t cchDest, ST
     return Status;
 }
 
-NTSTRSAFEAPI RtlStringVPrintfWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSAFE_LPCWSTR pszFormat,va_list argList)
+NTSTRSAFEAPI RtlStringVPrintfWorkerW(STRSAFE_LPWSTR pszDest,
+    size_t cchDest,
+    STRSAFE_LPCWSTR pszFormat,
+    va_list argList)
 {
     if (cchDest==0)
         return STATUS_INVALID_PARAMETER;
@@ -2574,7 +2655,11 @@ NTSTRSAFEAPI RtlStringVPrintfWorkerW(STRSAFE_LPWSTR pszDest,size_t cchDest,STRSA
     return RtlpStringVPrintfWorkerW(pszDest, cchDest, pszFormat, NULL, argList);
 }
 
-NTSTRSAFEAPI RtlStringVPrintfWorkerLenW(STRSAFE_LPWSTR pszDest, size_t cchDest, STRSAFE_LPCWSTR pszFormat, size_t* pcchDestNewLen, va_list argList)
+NTSTRSAFEAPI RtlStringVPrintfWorkerLenW(STRSAFE_LPWSTR pszDest, 
+    size_t cchDest, 
+    STRSAFE_LPCWSTR pszFormat, 
+    size_t* pcchDestNewLen, 
+    va_list argList)
 {
     if (cchDest == 0 || pcchDestNewLen == 0)
         return STATUS_INVALID_PARAMETER;
@@ -2582,7 +2667,14 @@ NTSTRSAFEAPI RtlStringVPrintfWorkerLenW(STRSAFE_LPWSTR pszDest, size_t cchDest, 
     return RtlpStringVPrintfWorkerW(pszDest, cchDest, pszFormat, pcchDestNewLen, argList);
 }
 
-NTSTRSAFEAPI RtlStringVPrintfExWorkerA(STRSAFE_LPSTR pszDest,size_t cchDest,size_t cbDest,STRSAFE_LPSTR *ppszDestEnd,size_t *pcchRemaining,STRSAFE_DWORD dwFlags,STRSAFE_LPCSTR pszFormat,va_list argList)
+NTSTRSAFEAPI RtlStringVPrintfExWorkerA(STRSAFE_LPSTR pszDest,
+    size_t cchDest,
+    size_t cbDest,
+    STRSAFE_LPSTR *ppszDestEnd,
+    size_t *pcchRemaining,
+    STRSAFE_DWORD dwFlags,
+    STRSAFE_LPCSTR pszFormat,
+    va_list argList)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     STRSAFE_LPSTR pszDestEnd = pszDest;
@@ -2885,37 +2977,51 @@ RtlStringLengthWorkerW(
     return Status;
 }
 
-
 NTSTRSAFEAPI
-RtlUnicodeStringValidate(PCUNICODE_STRING SourceString)
+RtlpUnicodeStringValidate(_In_opt_ PCUNICODE_STRING SourceString,
+    _In_ STRSAFE_DWORD dwFlags)
 {
-    if (SourceString->Length % sizeof(WCHAR) != 0 ||
-        SourceString->MaximumLength % sizeof(WCHAR) != 0 ||
-        SourceString->Length > SourceString->MaximumLength ||
-        SourceString->MaximumLength > NTSTRSAFE_UNICODE_STRING_MAX_CCH * sizeof(WCHAR) ||
-        (SourceString->Buffer == NULL && (SourceString->Length != 0 || SourceString->MaximumLength != 0)))
+    if (SourceString)
     {
-        return STATUS_INVALID_PARAMETER;
+        if (SourceString->Length % sizeof(WCHAR) != 0 ||
+            SourceString->MaximumLength % sizeof(WCHAR) != 0 ||
+            SourceString->Length > SourceString->MaximumLength ||
+            SourceString->MaximumLength > NTSTRSAFE_UNICODE_STRING_MAX_CCH * sizeof(WCHAR) ||
+            (SourceString->Buffer == NULL && (SourceString->Length != 0 || SourceString->MaximumLength != 0)))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        if (!(dwFlags & STRSAFE_IGNORE_NULLS))
+            return STATUS_INVALID_PARAMETER;
     }
 
     return STATUS_SUCCESS;
 }
 
 NTSTRSAFEAPI
-RtlpUnicodeStringValidateEx(PCUNICODE_STRING SourceString, STRSAFE_DWORD dwFlags)
+RtlUnicodeStringValidate(_In_opt_ PCUNICODE_STRING SourceString)
 {
-    if (dwFlags & STRSAFE_IGNORE_NULLS)
-        return STATUS_SUCCESS;
+    return RtlpUnicodeStringValidate(SourceString, 0);
+}
 
-    return RtlUnicodeStringValidate(SourceString);
+NTSTRSAFEAPI
+RtlUnicodeStringValidateEx(_In_opt_ PCUNICODE_STRING SourceString,
+    _In_ STRSAFE_DWORD dwFlags)
+{
+    if (dwFlags & ~(STRSAFE_UNICODE_STRING_VALID_FLAGS))
+        return STATUS_INVALID_PARAMETER;
 
+    return RtlpUnicodeStringValidate(SourceString, dwFlags);
 }
 
 static __inline
 NTSTATUS
 __cdecl
-RtlUnicodeStringPrintf(PUNICODE_STRING DestinationString,
-    NTSTRSAFE_PCWSTR pszFormat, ...)
+RtlUnicodeStringPrintf(_In_ PUNICODE_STRING DestinationString,
+    _In_ NTSTRSAFE_PCWSTR pszFormat, ...)
 {
     NTSTATUS Status;
     size_t   cchFinalLength;
@@ -2953,52 +3059,43 @@ RtlUnicodeStringPrintf(PUNICODE_STRING DestinationString,
 static __inline
 NTSTATUS
 __cdecl
-RtlUnicodeStringPrintfEx(PUNICODE_STRING DestinationString,
-    PUNICODE_STRING RemainingString,
-    STRSAFE_DWORD dwFlags,
-    NTSTRSAFE_PCWSTR pszFormat, ...)
+RtlUnicodeStringPrintfEx(_In_opt_ PUNICODE_STRING DestinationString,
+    _In_opt_  PUNICODE_STRING RemainingString,
+    _In_ STRSAFE_DWORD dwFlags,
+    _In_ NTSTRSAFE_PCWSTR pszFormat, ...)
 {
     NTSTATUS    Status;
     size_t      cchFinalLength;
     size_t      cchRemaining;
     va_list     argList;
 
-    Status = RtlpUnicodeStringValidateEx(DestinationString, dwFlags);
+    va_start(argList, pszFormat);
 
-    if (RemainingString) 
-        Status = RtlpUnicodeStringValidateEx(RemainingString, dwFlags);
-    
-    if (NT_SUCCESS(Status))
+    Status = RtlStringVPrintfExWorkerLenW(DestinationString->Buffer,
+        DestinationString->MaximumLength / sizeof(WCHAR),
+        DestinationString->MaximumLength,
+        &RemainingString->Buffer,
+        &cchRemaining,
+        dwFlags,
+        pszFormat,
+        &cchFinalLength,
+        argList);
+
+    va_end(argList);
+
+    if (Status == STATUS_BUFFER_OVERFLOW || NT_SUCCESS(Status))
     {
-        va_start(argList, pszFormat);
-     
-        Status = RtlStringVPrintfExWorkerLenW(DestinationString->Buffer,
-            DestinationString->MaximumLength / sizeof(WCHAR),
-            DestinationString->MaximumLength,
-            &RemainingString->Buffer,
-            &cchRemaining,
-            dwFlags,
-            pszFormat,
-            &cchFinalLength,
-            argList);
+        DestinationString->Length = (USHORT)(cchFinalLength * sizeof(WCHAR));
 
-        if (Status == STATUS_BUFFER_OVERFLOW || NT_SUCCESS(Status))
+        if (RemainingString)
         {
-            DestinationString->Length = (USHORT)(cchFinalLength * sizeof(WCHAR));
-
-            if (RemainingString)
-            {
-                RemainingString->Length = 0;
-                RemainingString->MaximumLength = (USHORT) cchRemaining * sizeof(WCHAR);
-            }
-         }
-
-        va_end(argList);
+            RemainingString->Length = 0;
+            RemainingString->MaximumLength = (USHORT)cchRemaining * sizeof(WCHAR);
+        }
     }
 
     return Status;
 }
-
 
 #define RtlStringCopyWorkerA RtlStringCopyWorkerA_instead_use_StringCchCopyA_or_StringCchCopyExA;
 #define RtlStringCopyWorkerW RtlStringCopyWorkerW_instead_use_StringCchCopyW_or_StringCchCopyExW;
