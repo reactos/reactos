@@ -46,59 +46,6 @@ REASON shutdownReason[] =
 };
 
 /*
- * This command helps to work around the fact that the shutdown utility has
- * different upper limits for the comment flag since each version of Windows
- * seems to have different upper limits.
- */
-BOOL CheckCommentLength(LPCWSTR comment)
-{
-    DWORD finalLength = 0;
-    size_t strLength = 0;
-    DWORD osVersion = 0;
-    DWORD osMajorVersion = 0;
-    DWORD osMinorVersion = 0;
-
-    /* An empty string is always valid. */
-    if (!comment || *comment == 0)
-        return TRUE;
-
-    /* Grab the version of the current Operating System. */
-    osVersion = GetVersion();
-
-    osMajorVersion = (DWORD)(LOBYTE(LOWORD(osVersion)));
-    osMinorVersion = (DWORD)(HIBYTE(LOWORD(osVersion)));
-
-    /*
-     * Check to make sure that the proper length is being used
-     * based upon the version of Windows currently being used.
-     */
-    if (osMajorVersion == 5) /* Windows XP/2003 */
-    {
-        if ((osMinorVersion == 1) || (osMinorVersion == 2))
-        {
-            finalLength = 127;
-        }
-    }
-    else if (osMajorVersion == 6) /* Windows Vista/7/2008 */
-    {
-        if ((osMinorVersion == 0) || (osMinorVersion == 1))
-        {
-            finalLength = 512;
-        }
-    }
-
-    /* Grab the length of the comment string. */
-    strLength = wcslen(comment);
-
-    /*
-     * Compare the size of the string to make sure
-     * it fits with the current version of Windows,
-     * and return TRUE or FALSE accordingly.
-     */
-    return (strLength <= finalLength);
-}
-
-/*
  * This function parses the reason code to a usable format that will specify
  * why the user wants to shut the computer down. Although this is used for
  * both client and server environments, use of a reason code is more important

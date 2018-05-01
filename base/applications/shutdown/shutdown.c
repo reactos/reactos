@@ -56,9 +56,9 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
                     break;
 
                 case L'c': /* Comment on reason for shutdown */
-                    if (index+1 > argc)
+                    if (index+1 >= argc)
                         return ERROR_INVALID_DATA;
-                    if(CheckCommentLength(argv[index+1]))
+                    if (!argv[index+1] || wcslen(argv[index+1]) <= 512)
                     {
                         pOpts->message = argv[index+1];
                         index++;

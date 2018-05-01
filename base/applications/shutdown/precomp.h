@@ -52,7 +52,6 @@ extern const DWORD defaultReason;
 /* PROTOTYPES *****************************************************************/
 
 /* misc.c */
-BOOL CheckCommentLength(LPCWSTR);
 DWORD ParseReasonCode(LPCWSTR);
 VOID DisplayError(DWORD dwError);
 
