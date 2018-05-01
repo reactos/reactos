@@ -1860,8 +1860,41 @@ RI_ScSetServiceBitsW(
     int bUpdateImmediately,
     wchar_t *lpString)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PSERVICE pService;
+
+    DPRINT("RI_ScSetServiceBitsW(%p %lx %d %d %S)\n",
+           hServiceStatus, dwServiceBits, bSetBitsOn,
+           bUpdateImmediately, lpString);
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    if (lpString != NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    if (hServiceStatus == 0)
+    {
+        DPRINT("hServiceStatus == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    // FIXME: Validate the status handle
+    pService = (PSERVICE)hServiceStatus;
+
+    if (bSetBitsOn)
+    {
+        DPRINT("Old service bits: %08lx\n", pService->dwServiceBits);
+        pService->dwServiceBits |= dwServiceBits;
+        DPRINT("New service bits: %08lx\n", pService->dwServiceBits);
+    }
+    else
+    {
+        DPRINT("Old service bits: %08lx\n", pService->dwServiceBits);
+        pService->dwServiceBits &= ~dwServiceBits;
+        DPRINT("New service bits: %08lx\n", pService->dwServiceBits);
+    }
+
+    return ERROR_SUCCESS;
 }
 
 
@@ -3335,8 +3368,17 @@ RI_ScSetServiceBitsA(
     int bUpdateImmediately,
     char *lpString)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    if (lpString != NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    return RI_ScSetServiceBitsW(hServiceStatus,
+                                dwServiceBits,
+                                bSetBitsOn,
+                                bUpdateImmediately,
+                                NULL);
 }
 
 

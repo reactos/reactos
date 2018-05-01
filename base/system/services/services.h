@@ -71,6 +71,8 @@ typedef struct _SERVICE
     DWORD dwErrorControl;
     DWORD dwTag;
 
+    DWORD dwServiceBits;
+
     ULONG Flags;
 
     PSECURITY_DESCRIPTOR pSecurityDescriptor;
