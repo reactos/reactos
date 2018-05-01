@@ -122,7 +122,7 @@ IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Upravit klasickou nabídku Start"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Nabídka Start", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "Nabídku Start lze přizpůsobit přidáním nebo odebráním položek.", IDC_STATIC, 48, 17, 108, 39
@@ -137,26 +137,26 @@ FONT 8, "MS Shell Dlg"
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Storno", IDCANCEL, 176, 220, 50, 14
-}
+END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Kontrola názvů souborů"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     DEFPUSHBUTTON    "&Ignorovat", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Přejmenovat", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Neprovádět tuto kontrolu při spouštění systému", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "Na Vašem počítači se nachází soubor nebo složka s názvem %s, který by mohl způsobit, že některé aplikace nebudou fungovat správně. Přejmenování na %s tento problém vyřeší. Přejete si provést přejmenování?", IDC_STATIC, 34, 7, 224, 37
-}
+END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Rozšířené"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Nastavení nabídky Start", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Ponecháním kurzoru na položce otevřít podnábidku", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "Zvýraznit &nově nainstalované programy", IDC_HIGHLIGHT, 14, 35, 224, 10
@@ -166,13 +166,13 @@ FONT 8, "MS Shell Dlg"
     LTEXT            "Vyberte tuto možnost pro zjednodušený přístup k naposledy otevřeným dokumentům. Vymazání tohoto seznamu neodstraní soubory.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "&Zobrazovat naposledy otevřené dokumenty", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "&Vymazat", IDC_CLEAR, 182, 168, 55, 14
-}
+END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Obecné"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Velikost ikon", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
@@ -189,7 +189,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-}
+END
 
 STRINGTABLE
 BEGIN

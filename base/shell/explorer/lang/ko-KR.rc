@@ -118,7 +118,7 @@ IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Customize Classic Start Menu"
 FONT 9, "굴림"
-{
+BEGIN
     GROUPBOX         "Start menu", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "You can customize your Start menu by adding or removing items.", IDC_STATIC, 48, 17, 108, 39
@@ -133,26 +133,26 @@ FONT 9, "굴림"
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Cancel", IDCANCEL, 176, 220, 50, 14
-}
+END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "File Name Warning"
 FONT 9, "굴림"
-{
+BEGIN
     DEFPUSHBUTTON    "&Ignore", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Rename", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Don't perform this check at startup", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "There is a file or folder on your computer called %s which could cause certain applications to not function correctly.  Renaming it to %s would solve this problem.  Would you like to rename it now?", IDC_STATIC, 34, 7, 224, 37
-}
+END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Advanced"
 FONT 9, "굴림"
-{
+BEGIN
     GROUPBOX         "Start menu settings ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Open submenus when I pause on them with my mouse", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "Highlight &newly installed programs", IDC_HIGHLIGHT, 14, 35, 224, 10
@@ -162,13 +162,13 @@ FONT 9, "굴림"
     LTEXT            "Select this option to provide quick access to the documents you opened most recently.  Clearing this list does not delete the documents.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "List my most &recently opened documents", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "&Clear List", IDC_CLEAR, 182, 168, 55, 14
-}
+END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "General"
 FONT 9, "굴림"
-{
+BEGIN
     GROUPBOX         "Select an icon size for programs ", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
@@ -185,7 +185,7 @@ FONT 9, "굴림"
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-}
+END
 
 STRINGTABLE
 BEGIN

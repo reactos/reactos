@@ -116,7 +116,7 @@ IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Mukauta klassista Käynnistä Valikkoa"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Käynnistä Valikko", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "Voit mukauttaa Käynnistä Valikkoa lisäämällä tai poistamalla kohteita.", IDC_STATIC, 48, 17, 108, 39
@@ -131,26 +131,26 @@ FONT 8, "MS Shell Dlg"
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Peruuta", IDCANCEL, 176, 220, 50, 14
-}
+END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Tiedoston nimi varoitus"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     DEFPUSHBUTTON    "&Jätä huomiotta", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Nimeä uudelleen", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Älä suoritä tätä tarkistusta käynnistettäessä", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "On tiedosto tai kansio tietokoneellasi nimeltään %s joka voi aiheuttaa sen että tietyt ohjelmat eivät toimi oikein. Sen uudelleenimeäminen nimelle %s ratkaisisi tämän ongelman. Haluatko nimetä sen uudelleen nyt?", IDC_STATIC, 34, 7, 224, 37
-}
+END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Lisäasetukset"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Käynnistä Valikko asetukset ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Avaa alivalikko kun keskeytän ne hiirellä", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "Korosta &uudet asennetut ohjelmat", IDC_HIGHLIGHT, 14, 35, 224, 10
@@ -160,13 +160,13 @@ FONT 8, "MS Shell Dlg"
     LTEXT            "Valitse tämä vaihtoehto saadaksesi nopean pääsyn tiedostoihin jotka olet avannut lähiaikoina.  Tämän listan tyhjentäminen ei poista tiedostoja.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "Listaa &useimmin avatut tiedostot", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "&Tyhjennä lista", IDC_CLEAR, 182, 168, 55, 14
-}
+END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Yleinen"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Valiset kuvakekoko ohjelmille ", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
@@ -183,7 +183,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&Sähköposti:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-}
+END
 
 STRINGTABLE
 BEGIN
