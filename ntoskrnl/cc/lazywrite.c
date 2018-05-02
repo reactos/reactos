@@ -152,12 +152,6 @@ CcLazyWriteScan(VOID)
         DPRINT("Lazy writer done (%d)\n", Count);
     }
 
-    /* If we have deferred writes, try them now! */
-    if (!IsListEmpty(&CcDeferredWrites))
-    {
-        CcPostDeferredWrites();
-    }
-
     /* Post items that were due for end of run */
     while (!IsListEmpty(&ToPost))
     {
@@ -166,10 +160,22 @@ CcLazyWriteScan(VOID)
         CcPostWorkQueue(WorkItem, &CcRegularWorkQueue);
     }
 
-    /* We're no longer active */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-    LazyWriter.ScanActive = FALSE;
-    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+    /* If we have deferred writes, try them now! */
+    if (!IsListEmpty(&CcDeferredWrites))
+    {
+        CcPostDeferredWrites();
+        /* Reschedule immediately a lazy writer run
+         * Keep us active to have short idle delay
+         */
+        CcScheduleLazyWriteScan(FALSE);
+    }
+    else
+    {
+        /* We're no longer active */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+        LazyWriter.ScanActive = FALSE;
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+    }
 }
 
 VOID CcScheduleLazyWriteScan(
