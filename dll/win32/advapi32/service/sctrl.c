@@ -517,7 +517,7 @@ static DWORD
 ScControlService(PACTIVE_SERVICE lpService,
                  PSCM_CONTROL_PACKET ControlPacket)
 {
-    DWORD dwError;
+    DWORD dwError = ERROR_SUCCESS;
 
     TRACE("ScControlService(%p %p)\n",
           lpService, ControlPacket);
@@ -530,16 +530,34 @@ ScControlService(PACTIVE_SERVICE lpService,
 
     if (lpService->HandlerFunction)
     {
-        (lpService->HandlerFunction)(ControlPacket->dwControl);
-        dwError = ERROR_SUCCESS;
+        _SEH2_TRY
+        {
+            (lpService->HandlerFunction)(ControlPacket->dwControl);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            dwError = ERROR_EXCEPTION_IN_SERVICE;
+        }
+        _SEH2_END;
     }
     else if (lpService->HandlerFunctionEx)
     {
-        /* FIXME: Send correct 2nd and 3rd parameters */
-        (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
-                                       0, NULL,
-                                       lpService->HandlerContext);
-        dwError = ERROR_SUCCESS;
+        _SEH2_TRY
+        {
+            /* FIXME: Send correct 2nd and 3rd parameters */
+            (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
+                                           0, NULL,
+                                           lpService->HandlerContext);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            dwError = ERROR_EXCEPTION_IN_SERVICE;
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        dwError = ERROR_SERVICE_CANNOT_ACCEPT_CTRL;
     }
 
     TRACE("ScControlService() done (Error %lu)\n", dwError);
