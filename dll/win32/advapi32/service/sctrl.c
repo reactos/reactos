@@ -517,8 +517,6 @@ static DWORD
 ScControlService(PACTIVE_SERVICE lpService,
                  PSCM_CONTROL_PACKET ControlPacket)
 {
-    DWORD dwError;
-
     TRACE("ScControlService(%p %p)\n",
           lpService, ControlPacket);
 
@@ -531,7 +529,6 @@ ScControlService(PACTIVE_SERVICE lpService,
     if (lpService->HandlerFunction)
     {
         (lpService->HandlerFunction)(ControlPacket->dwControl);
-        dwError = ERROR_SUCCESS;
     }
     else if (lpService->HandlerFunctionEx)
     {
@@ -539,12 +536,15 @@ ScControlService(PACTIVE_SERVICE lpService,
         (lpService->HandlerFunctionEx)(ControlPacket->dwControl,
                                        0, NULL,
                                        lpService->HandlerContext);
-        dwError = ERROR_SUCCESS;
+    }
+    else
+    {
+        ASSERT(lpService->HandlerFunction || lpService->HandlerFunctionEx);
     }
 
-    TRACE("ScControlService() done (Error %lu)\n", dwError);
+    TRACE("ScControlService() done\n");
 
-    return dwError;
+    return ERROR_SUCCESS;
 }
 
 
@@ -656,7 +656,7 @@ RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
     UNICODE_STRING ServiceNameU;
     SERVICE_STATUS_HANDLE hServiceStatus;
 
-    TRACE("RegisterServiceCtrlHandlerA(%s %p %p)\n",
+    TRACE("RegisterServiceCtrlHandlerA(%s %p)\n",
           debugstr_a(lpServiceName), lpHandlerProc);
 
     RtlInitAnsiString(&ServiceNameA, lpServiceName);
@@ -686,7 +686,7 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
 {
     PACTIVE_SERVICE Service;
 
-    TRACE("RegisterServiceCtrlHandlerW(%s %p %p)\n",
+    TRACE("RegisterServiceCtrlHandlerW(%s %p)\n",
           debugstr_w(lpServiceName), lpHandlerProc);
 
     Service = ScLookupServiceByServiceName(lpServiceName);
