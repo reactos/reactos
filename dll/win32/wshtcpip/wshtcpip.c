@@ -363,7 +363,7 @@ WSHIoctl(
         return res;
     }
 
-    UNIMPLEMENTED;
+    UNIMPLEMENTED_ONCE;
 
     DPRINT1("Ioctl: Unknown IOCTL code: %d\n", IoControlCode);
 
