@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Aleksey Bragin
  *                  Eric Kohl
  *                  Hervé Poussineau
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES *****************************************************************/
@@ -23,6 +24,14 @@
 #include <ndk/umfuncs.h>
 #include <fmifs/fmifs.h>
 
+#include <fslib/vfatlib.h>
+#include <fslib/ext2lib.h>
+#include <fslib/ntfslib.h>
+#include <fslib/cdfslib.h>
+#include <fslib/btrfslib.h>
+#include <fslib/ffslib.h>
+#include <fslib/reiserfslib.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -30,6 +39,25 @@
 
 #define FS_ATTRIBUTE_BUFFER_SIZE (MAX_PATH * sizeof(WCHAR) + sizeof(FILE_FS_ATTRIBUTE_INFORMATION))
 
+typedef struct _FILESYSTEM_CHKDSK
+{
+    WCHAR Name[10];
+    CHKDSKEX ChkdskFunc;
+} FILESYSTEM_CHKDSK, *PFILESYSTEM_CHKDSK;
+
+FILESYSTEM_CHKDSK FileSystems[10] =
+{
+    { L"FAT", VfatChkdsk },
+    { L"FAT32", VfatChkdsk },
+    { L"NTFS", NtfsChkdsk },
+    { L"EXT2", Ext2Chkdsk },
+    { L"EXT3", Ext2Chkdsk },
+    { L"EXT4", Ext2Chkdsk },
+    { L"Btrfs", BtrfsChkdskEx },
+    { L"RFSD", ReiserfsChkdsk },
+    { L"FFS", FfsChkdsk },
+    { L"CDFS", CdfsChkdsk },
+};
 
 /* FUNCTIONS ****************************************************************/
 //
@@ -245,70 +273,15 @@ ChkdskCallback(
     return TRUE;
 }
 
-/* Load the provider associated with this file system */
-static PVOID
-LoadProvider(
-    IN PWCHAR FileSystem)
-{
-    UNICODE_STRING ProviderDll;
-    PVOID BaseAddress;
-    NTSTATUS Status;
-
-    /* FIXME: add more providers here */
-
-    if (wcscmp(FileSystem, L"NTFS") == 0)
-    {
-      RtlInitUnicodeString(&ProviderDll, L"untfs.dll");
-    }
-    else if (wcscmp(FileSystem, L"FAT") == 0
-             || wcscmp(FileSystem, L"FAT32") == 0)
-    {
-      RtlInitUnicodeString(&ProviderDll, L"ufat.dll");
-    }
-    else if (wcscmp(FileSystem, L"EXT2") == 0
-             || wcscmp(FileSystem, L"EXT3") == 0
-             || wcscmp(FileSystem, L"EXT4") == 0)
-    {
-      RtlInitUnicodeString(&ProviderDll, L"uext2.dll");
-    }
-    else if (wcscmp(FileSystem, L"Btrfs") == 0)
-    {
-      RtlInitUnicodeString(&ProviderDll, L"ubtrfs.dll");
-    }
-    else if (wcscmp(FileSystem, L"RFSD") == 0)
-    {
-      RtlInitUnicodeString(&ProviderDll, L"ureiserfs.dll");
-    }
-    else if (wcscmp(FileSystem, L"FFS") == 0)
-    {
-      RtlInitUnicodeString(&ProviderDll, L"uffs.dll");
-    }
-    else if (wcscmp(FileSystem, L"CDFS") == 0)
-    {
-      RtlInitUnicodeString(&ProviderDll, L"ucdfs.dll");
-    }
-    else 
-    {
-      return NULL;
-    }
-
-    Status = LdrLoadDll(NULL, NULL, &ProviderDll, &BaseAddress);
-    if (!NT_SUCCESS(Status))
-        return NULL;
-    return BaseAddress;
-}
-
 static NTSTATUS
 CheckVolume(
     IN PWCHAR DrivePath)
 {
     WCHAR FileSystem[128];
-    ANSI_STRING ChkdskFunctionName = RTL_CONSTANT_STRING("ChkdskEx");
-    PVOID Provider;
-    CHKDSKEX ChkdskFunc;
     WCHAR NtDrivePath[64];
     UNICODE_STRING DrivePathU;
     NTSTATUS Status;
+    DWORD Count;
 
     /* Get the file system */
     Status = GetFileSystem(DrivePath,
@@ -321,44 +294,37 @@ CheckVolume(
         return Status;
     }
 
-    /* Load the provider which will do the chkdsk */
-    Provider = LoadProvider(FileSystem);
-    if (Provider == NULL)
+    /* Call provider */
+    for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
     {
-        DPRINT1("LoadProvider() failed\n");
+        if (wcscmp(FileSystem, FileSystems[Count].Name) != 0)
+        {
+            continue;
+        }
+
+        // PrintString("  Verifying volume %S\r\n", DrivePath);
+        swprintf(NtDrivePath, L"\\??\\");
+        wcscat(NtDrivePath, DrivePath);
+        NtDrivePath[wcslen(NtDrivePath)-1] = 0;
+        RtlInitUnicodeString(&DrivePathU, NtDrivePath);
+
+        DPRINT1("AUTOCHK: Checking %wZ\n", &DrivePathU);
+        Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
+                                               TRUE, // FixErrors
+                                               TRUE, // Verbose
+                                               TRUE, // CheckOnlyIfDirty
+                                               FALSE,// ScanDrive
+                                               ChkdskCallback);
+        break;
+    }
+
+    if (Count == sizeof(FileSystems) / sizeof(FileSystems[0]))
+    {
+        DPRINT1("File system not supported\n");
         PrintString("  Unable to verify a %S volume\r\n", FileSystem);
         return STATUS_DLL_NOT_FOUND;
     }
 
-    /* Get the Chkdsk function address */
-    Status = LdrGetProcedureAddress(Provider,
-                                    &ChkdskFunctionName,
-                                    0,
-                                    (PVOID*)&ChkdskFunc);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("LdrGetProcedureAddress() failed with status 0x%08lx\n", Status);
-        PrintString("  Unable to verify a %S volume\r\n", FileSystem);
-        LdrUnloadDll(Provider);
-        return Status;
-    }
-
-    /* Call provider */
-    // PrintString("  Verifying volume %S\r\n", DrivePath);
-    swprintf(NtDrivePath, L"\\??\\");
-    wcscat(NtDrivePath, DrivePath);
-    NtDrivePath[wcslen(NtDrivePath)-1] = 0;
-    RtlInitUnicodeString(&DrivePathU, NtDrivePath);
-
-    DPRINT1("AUTOCHK: Checking %wZ\n", &DrivePathU);
-    Status = ChkdskFunc(&DrivePathU,
-                        TRUE, // FixErrors
-                        TRUE, // Verbose
-                        TRUE, // CheckOnlyIfDirty
-                        FALSE,// ScanDrive
-                        ChkdskCallback);
-
-    LdrUnloadDll(Provider);
     return Status;
 }
 
