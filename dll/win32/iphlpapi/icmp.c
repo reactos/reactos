@@ -603,6 +603,7 @@ DWORD WINAPI IcmpSendEcho(
         WARN("using system ping command since SOCK_RAW was not supported.\n");
         return system_icmp(DestinationAddress, RequestData, RequestSize,
                            RequestOptions, ReplyBuffer, ReplySize, Timeout);
+    }
 #endif
 
     /* Prepare the request */
@@ -702,7 +703,11 @@ DWORD WINAPI IcmpSendEcho(
 #endif
 
     send_time = GetTickCount();
+#ifdef __REACTOS__
     res=sendto(icp->sid, (const char*)reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
+#else
+    res=sendto(icp->sid, reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
+#endif
     HeapFree(GetProcessHeap (), 0, reqbuf);
     if (res<0) {
         DWORD dwBestIfIndex;
@@ -716,6 +721,7 @@ DWORD WINAPI IcmpSendEcho(
             memcpy(&ier->Address, &IP4Addr, sizeof(IP4Addr));
         }
 
+#ifdef __REACTOS__
         if (WSAGetLastError()==WSAEMSGSIZE)
             ier->Status = IP_PACKET_TOO_BIG;
         else {
@@ -733,6 +739,24 @@ DWORD WINAPI IcmpSendEcho(
             }
         }
         return 1;
+#else
+        if (errno==EMSGSIZE)
+            SetLastError(IP_PACKET_TOO_BIG);
+        else {
+            switch (errno) {
+            case ENETUNREACH:
+                SetLastError(IP_DEST_NET_UNREACHABLE);
+                break;
+            case EHOSTUNREACH:
+                SetLastError(IP_DEST_HOST_UNREACHABLE);
+                break;
+            default:
+                TRACE("unknown error: errno=%d\n",errno);
+                SetLastError(IP_GENERAL_FAILURE);
+            }
+        }
+        return 0;
+#endif
     }
 
     /* Get the reply */
@@ -744,7 +768,11 @@ DWORD WINAPI IcmpSendEcho(
     while (poll(&fdr,1,Timeout)>0) {
 #endif
         recv_time = GetTickCount();
+#ifdef __REACTOS__
         res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,(int*)&addrlen);
+#else
+        res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,&addrlen);
+#endif
         TRACE("received %d bytes from %s\n",res, inet_ntoa(addr.sin_addr));
         ier->Status=IP_REQ_TIMED_OUT;
         if (res < 0)
