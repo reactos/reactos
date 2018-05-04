@@ -506,7 +506,7 @@ ExtTextOutW(
                   lpDx);
 
     /* Check if the string requires complex script processing */
-    if(ScriptIsComplex(lpString, cwc, SIC_COMPLEX) == S_OK)
+    if (ScriptIsComplex(lpString, cwc, SIC_COMPLEX) == S_OK)
     {
         /* The flags ETO_GLYPH_INDEX & ETO_IGNORELANGUAGE tell the gdi to avoid 
            complex script processing for the string. */
