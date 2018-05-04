@@ -1257,7 +1257,7 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
             }
 
             // Is the Index Entry large enough to store the VCN?
-            if (!CurrentKey->IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+            if (!BooleanFlagOn(CurrentKey->IndexEntry->Flags, NTFS_INDEX_ENTRY_NODE))
             {
                 // Allocate memory for the larger index entry
                 PINDEX_ENTRY_ATTRIBUTE NewEntry = ExAllocatePoolWithTag(NonPagedPool,
@@ -1357,7 +1357,7 @@ UpdateIndexNode(PDEVICE_EXTENSION DeviceExt,
             }
             
             // Is the Index Entry large enough to store the VCN?
-            if (!CurrentKey->IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+            if (!BooleanFlagOn(CurrentKey->IndexEntry->Flags, NTFS_INDEX_ENTRY_NODE))
             {
                 // Allocate memory for the larger index entry
                 PINDEX_ENTRY_ATTRIBUTE NewEntry = ExAllocatePoolWithTag(NonPagedPool,
