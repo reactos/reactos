@@ -2423,12 +2423,12 @@ PNP_HwProfFlags(
          else
          {
              dwSize = sizeof(DWORD);
-             if (!RegQueryValueExW(hDeviceKey,
-                                   L"CSConfigFlags",
-                                   NULL,
-                                   NULL,
-                                   (LPBYTE)pulValue,
-                                   &dwSize) != ERROR_SUCCESS)
+             if (RegQueryValueExW(hDeviceKey,
+                                  L"CSConfigFlags",
+                                  NULL,
+                                  NULL,
+                                  (LPBYTE)pulValue,
+                                  &dwSize) != ERROR_SUCCESS)
              {
                  *pulValue = 0;
              }
