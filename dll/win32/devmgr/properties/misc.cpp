@@ -1078,8 +1078,7 @@ FindCurrentDriver(IN HDEVINFO DeviceInfoSet,
             ERR("SetupDiGetDriverInfoDetail() failed with error 0x%lx\n", GetLastError());
             goto Cleanup;
         }
-        if (!_wcsicmp(DriverInfoDetailData.SectionName,
-                     InfSection) != 0)
+        if (_wcsicmp(DriverInfoDetailData.SectionName, InfSection) == 0)
         {
             /* We have found the right driver */
             Ret = TRUE;
