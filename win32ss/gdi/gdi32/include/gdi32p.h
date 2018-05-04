@@ -36,6 +36,13 @@ typedef INT
 
 #define SAPCALLBACKDELAY 244
 
+#define WINE_GCPW_FORCE_LTR 0
+#define WINE_GCPW_FORCE_RTL 1
+#define WINE_GCPW_LOOSE_LTR 2
+#define WINE_GCPW_LOOSE_RTL 3
+#define WINE_GCPW_DIR_MASK 3
+#define WINE_GCPW_LOOSE_MASK 2
+
 /* MACRO ********************************************************************/
 
 #define ROP_USES_SOURCE(Rop)   (((Rop) << 2 ^ Rop) & 0xCC0000)
@@ -671,4 +678,16 @@ METADC_GetAndSetDCDWord(
     _In_ USHORT usMF16Id,
     _In_ DWORD dwError);
 
+BOOL BIDI_Reorder(
+                HDC hDC,        /*[in] Display DC */
+                LPCWSTR lpString,       /* [in] The string for which information is to be returned */
+                INT uCount,     /* [in] Number of WCHARs in string. */
+                DWORD dwFlags,  /* [in] GetCharacterPlacement compatible flags specifying how to process the string */
+                DWORD dwWineGCP_Flags,       /* [in] Wine internal flags - Force paragraph direction */
+                LPWSTR lpOutString, /* [out] Reordered string */
+                INT uCountOut,  /* [in] Size of output buffer */
+                UINT *lpOrder, /* [out] Logical -> Visual order map */
+                WORD **lpGlyphs, /* [out] reordered, mirrored, shaped glyphs to display */
+                INT *cGlyphs /* [out] number of glyphs generated */
+    );
 /* EOF */

@@ -460,23 +460,24 @@ GetCharacterPlacementW(
     /* return number of initialized fields */
     lpResults->nGlyphs = nSet;
 
-    /*if((dwFlags&GCP_REORDER)==0 || !BidiAvail)
-      {*/
-    /* Treat the case where no special handling was requested in a fastpath way */
-    /* copy will do if the GCP_REORDER flag is not set */
-    if(lpResults->lpOutString)
-        lstrcpynW( lpResults->lpOutString, lpString, nSet );
-
-    if(lpResults->lpOrder)
+    if((dwFlags&GCP_REORDER)==0 )
     {
-        for(i = 0; i < nSet; i++)
-            lpResults->lpOrder[i] = i;
+        /* Treat the case where no special handling was requested in a fastpath way */
+        /* copy will do if the GCP_REORDER flag is not set */
+        if(lpResults->lpOutString)
+            lstrcpynW( lpResults->lpOutString, lpString, nSet );
+
+        if(lpResults->lpOrder)
+        {
+            for(i = 0; i < nSet; i++)
+                lpResults->lpOrder[i] = i;
+        }
     }
-    /*} else
-      {
-          BIDI_Reorder( lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
-                        nSet, lpResults->lpOrder );
-      }*/
+    else
+    {
+          BIDI_Reorder(NULL, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
+                       nSet, lpResults->lpOrder, NULL, NULL );
+    }
 
     /* FIXME: Will use the placement chars */
     if (lpResults->lpDx)
