@@ -679,15 +679,15 @@ METADC_GetAndSetDCDWord(
     _In_ DWORD dwError);
 
 BOOL BIDI_Reorder(
-                HDC hDC,        /*[in] Display DC */
-                LPCWSTR lpString,       /* [in] The string for which information is to be returned */
-                INT uCount,     /* [in] Number of WCHARs in string. */
-                DWORD dwFlags,  /* [in] GetCharacterPlacement compatible flags specifying how to process the string */
-                DWORD dwWineGCP_Flags,       /* [in] Wine internal flags - Force paragraph direction */
-                LPWSTR lpOutString, /* [out] Reordered string */
-                INT uCountOut,  /* [in] Size of output buffer */
-                UINT *lpOrder, /* [out] Logical -> Visual order map */
-                WORD **lpGlyphs, /* [out] reordered, mirrored, shaped glyphs to display */
-                INT *cGlyphs /* [out] number of glyphs generated */
+    HDC hDC,        /*[in] Display DC */
+    LPCWSTR lpString,       /* [in] The string for which information is to be returned */
+    INT uCount,     /* [in] Number of WCHARs in string. */
+    DWORD dwFlags,  /* [in] GetCharacterPlacement compatible flags specifying how to process the string */
+    DWORD dwWineGCP_Flags,       /* [in] Wine internal flags - Force paragraph direction */
+    LPWSTR lpOutString, /* [out] Reordered string */
+    INT uCountOut,  /* [in] Size of output buffer */
+    UINT *lpOrder, /* [out] Logical -> Visual order map */
+    WORD **lpGlyphs, /* [out] reordered, mirrored, shaped glyphs to display */
+    INT *cGlyphs /* [out] number of glyphs generated */
     );
 /* EOF */
