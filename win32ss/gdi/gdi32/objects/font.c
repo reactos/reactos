@@ -448,28 +448,28 @@ GetCharacterPlacementW(
     UINT i, nSet;
     DPRINT("GetCharacterPlacementW\n");
 
-    if(dwFlags&(~GCP_REORDER)) DPRINT("flags 0x%08lx ignored\n", dwFlags);
-    if(lpResults->lpClass) DPRINT("classes not implemented\n");
+    if (dwFlags&(~GCP_REORDER)) DPRINT("flags 0x%08lx ignored\n", dwFlags);
+    if (lpResults->lpClass) DPRINT("classes not implemented\n");
     if (lpResults->lpCaretPos && (dwFlags & GCP_REORDER))
         DPRINT("Caret positions for complex scripts not implemented\n");
 
     nSet = (UINT)uCount;
-    if(nSet > lpResults->nGlyphs)
+    if (nSet > lpResults->nGlyphs)
         nSet = lpResults->nGlyphs;
 
     /* return number of initialized fields */
     lpResults->nGlyphs = nSet;
 
-    if((dwFlags&GCP_REORDER)==0 )
+    if ((dwFlags&GCP_REORDER)==0 )
     {
         /* Treat the case where no special handling was requested in a fastpath way */
         /* copy will do if the GCP_REORDER flag is not set */
-        if(lpResults->lpOutString)
+        if (lpResults->lpOutString)
             lstrcpynW( lpResults->lpOutString, lpString, nSet );
 
-        if(lpResults->lpOrder)
+        if (lpResults->lpOrder)
         {
-            for(i = 0; i < nSet; i++)
+            for (i = 0; i < nSet; i++)
                 lpResults->lpOrder[i] = i;
         }
     }
