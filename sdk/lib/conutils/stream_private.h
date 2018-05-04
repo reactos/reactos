@@ -46,7 +46,7 @@ typedef struct _CON_STREAM
      * when 'hHandle' refers to a file or a pipe.
      */
     CON_STREAM_MODE Mode;
-    UINT CodePage;  // Used to convert UTF-16 text to some ANSI codepage.
+    UINT CodePage;  // Used to convert UTF-16 text to some ANSI code page.
 #endif /* defined(USE_CRT) */
 } CON_STREAM, *PCON_STREAM;
 

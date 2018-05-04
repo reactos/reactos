@@ -113,20 +113,14 @@ do { \
 } while(0)
 #endif /* defined(USE_CRT) */
 
-#ifdef _UNICODE
 /*
- * Use UTF8 by default for file output, because this mode is back-compatible
- * with ANSI, and it displays nice on terminals that support UTF8 by default
- * (not many terminals support UTF16 on the contrary).
+ * Use ANSI by default for file output, with no cached code page.
+ * Note that setting the stream mode to AnsiText and the code page value
+ * to CP_UTF8 sets the stream to UTF8 mode, and has the same effect as if
+ * the stream mode UTF8Text had been specified instead.
  */
 #define ConInitStdStreams() \
-    ConInitStdStreamsAndMode(UTF8Text, INVALID_CP)
-    /* Note that here the cache code page is unused */
-#else
-/* Use ANSI by default for file output */
-#define ConInitStdStreams() \
     ConInitStdStreamsAndMode(AnsiText, INVALID_CP)
-#endif /* defined(_UNICODE) */
 
 /* Stream translation modes */
 BOOL

@@ -73,9 +73,6 @@ static int ConToCRTMode[] =
     _O_U16TEXT, // UTF16Text (UTF16 without BOM; translated)
     _O_U8TEXT,  // UTF8Text  (UTF8  without BOM; translated)
 };
-#endif
-
-#ifdef USE_CRT
 
 /*
  * See http://archives.miloush.net/michkap/archive/2008/03/18/8306597.html
@@ -83,7 +80,7 @@ static int ConToCRTMode[] =
  * for more details.
  */
 
-// NOTE: May the translated mode be cached somehow?
+// NOTE1: May the translated mode be cached somehow?
 // NOTE2: We may also call IsConsoleHandle to directly set the mode to
 //        _O_U16TEXT if it's ok??
 // NOTE3: _setmode returns the previous mode, or -1 if failure.
@@ -99,16 +96,17 @@ do { \
 #else /* defined(USE_CRT) */
 
 /*
- * We set Stream->CodePage to INVALID_CP (= -1) to signal that the codepage
+ * We set Stream->CodePage to INVALID_CP (== -1) to signal that the code page
  * is either not assigned (if the mode is Binary, WideText, or UTF16Text), or
- * is not cached yet (if the mode is AnsiText). In this latter case the cache
- * is resolved inside ConWrite. Finally, if the mode is UTF8Text, the codepage
- * cache is set to CP_UTF8.
- * The codepage cache can be reset by an explicit call to CON_STREAM_SET_MODE
+ * is not cached (if the mode is AnsiText). In this latter case the code page
+ * is resolved inside ConWrite. Finally, if the mode is UTF8Text, the code page
+ * cache is always set to CP_UTF8.
+ * The code page cache can be reset by an explicit call to CON_STREAM_SET_MODE
  * (i.e. by calling ConStreamSetMode, or by reinitializing the stream with
  * ConStreamInit(Ex)).
  *
- * NOTE: the magic value could not be '0' since it is reserved for CP_ACP.
+ * NOTE: the reserved values are: 0 (CP_ACP), 1 (CP_OEMCP), 2 (CP_MACCP),
+ * 3 (CP_THREAD_ACP), 42 (CP_SYMBOL), 65000 (CP_UTF7) and 65001 (CP_UTF8).
  */
 #define CON_STREAM_SET_MODE(Stream, Mode, CacheCodePage)    \
 do { \
@@ -229,7 +227,7 @@ ConStreamSetCacheCodePage(
         return FALSE;
 
     /*
-     * Keep the original stream mode but set the correct file codepage
+     * Keep the original stream mode but set the correct file code page
      * (will be reset only if Mode == AnsiText).
      */
     Mode = Stream->Mode;
