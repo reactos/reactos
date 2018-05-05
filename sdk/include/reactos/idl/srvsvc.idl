@@ -1220,10 +1220,14 @@ interface srvsvc
         [in, string, unique] SRVSVC_HANDLE ServerName,
         [out] LPTIME_OF_DAY_INFO *BufferPtr);
 
-    // This method not used on the wire
-    void
+    /* Function 29 - Not used on wire */
+    NET_API_STATUS
     __stdcall
-    Opnum29NotUsedOnWire(void);
+    NetrServerSetServiceBits(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *Transport,
+        [in] DWORD ServiceBits,
+        [in] DWORD UpdateImmediately);
 
     NET_API_STATUS
     __stdcall

@@ -529,12 +529,17 @@ NetrRemoteTOD(
 }
 
 
-/* Function 29 */
-void
+/* Function 29 - Not used on wire */
+NET_API_STATUS
 __stdcall
-Opnum29NotUsedOnWire(void)
+NetrServerSetServiceBits(
+    SRVSVC_HANDLE ServerName,
+    WCHAR *Transport,
+    DWORD ServiceBits,
+    DWORD UpdateImmediately)
 {
     UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
