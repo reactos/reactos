@@ -147,9 +147,14 @@
 #define IDS_COM_FILE              203
 #define IDS_CPL_FILE              204
 #define IDS_CUR_FILE              205
+#define IDS_DB__FILE              220
 #define IDS_DLL_FILE              206
 #define IDS_DRV_FILE              207
+#define IDS_EFI_FILE              221
 #define IDS_EXE_FILE              208
+#define IDS_NLS_FILE              222
+#define IDS_OCX_FILE              223
+#define IDS_TLB_FILE              224
 #define IDS_FON_FILE              209
 #define IDS_TTF_FILE              210
 #define IDS_OTF_FILE              211
@@ -157,11 +162,12 @@
 #define IDS_ICO_FILE              213
 #define IDS_INI_FILE              214
 #define IDS_LNK_FILE              215
+#define IDS_NT__FILE              225
 #define IDS_PIF_FILE              216
 #define IDS_SCR_FILE              217
 #define IDS_SYS_FILE              218
 #define IDS_VXD_FILE              219
-#define IDS_ANY_FILE              220
+#define IDS_ANY_FILE              299
 
 #define IDS_EMPTY_BITBUCKET       172
 #define IDS_SHLEXEC_NOASSOC       173

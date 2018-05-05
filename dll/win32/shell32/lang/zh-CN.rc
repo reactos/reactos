@@ -741,7 +741,7 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "可执行文件 (*.exe)\0*.exe\0所有文件 (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    /* ATTENTION: If there is no special situation, please DO NOT change 
+    /* ATTENTION: If there is no special situation, please DO NOT change
     English folder names into Chinese, or it may cause problems in the system. */
     IDS_PROGRAMS "「开始」菜单\\程序"
     IDS_PERSONAL "我的文档"
@@ -806,15 +806,21 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "无法显示属性 (错误代码: %lu)."
     IDS_CANTDISCONNECT "无法断开连接 (错误代码: %lu)."
 
+    /* Friendly File Type Names */
     IDS_DIRECTORY "文件夹"
     IDS_BAT_FILE "ReactOS 批处理文件"
     IDS_CMD_FILE "ReactOS 命令脚本"
     IDS_COM_FILE "DOS 应用程序"
     IDS_CPL_FILE "控制面板项"
     IDS_CUR_FILE "光标"
+    IDS_DB__FILE "Database File"
     IDS_DLL_FILE "应用程序扩展"
     IDS_DRV_FILE "设备驱动程序"
+    IDS_EFI_FILE "Extensible Firmware Interface Executable"
     IDS_EXE_FILE "应用程序"
+    IDS_NLS_FILE "National Language Support File"
+    IDS_OCX_FILE "ActiveX Control"
+    IDS_TLB_FILE "Type Library"
     IDS_FON_FILE "字体文件"
     IDS_TTF_FILE "TrueType 字体文件"
     IDS_OTF_FILE "OpenType 字体文件"
@@ -822,6 +828,7 @@ BEGIN
     IDS_ICO_FILE "图标"
     IDS_INI_FILE "配置设置"
     IDS_LNK_FILE "快捷方式"
+    IDS_NT__FILE "NT DOS32 Configuration File"
     IDS_PIF_FILE "NT VDM 程序信息文件"
     IDS_SCR_FILE "屏幕保护程序"
     IDS_SYS_FILE "系统文件"
