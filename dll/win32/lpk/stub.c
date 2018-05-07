@@ -42,15 +42,6 @@ DWORD WINAPI LpkDrawTextEx(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6
 /*
  * @unimplemented
  */
-DWORD WINAPI LpkGetCharacterPlacement(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6, DWORD x7)
-{
-    UNIMPLEMENTED
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 DWORD WINAPI LpkGetTextExtentExPoint(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6,DWORD x7,DWORD x8,DWORD x9)
 {
     UNIMPLEMENTED

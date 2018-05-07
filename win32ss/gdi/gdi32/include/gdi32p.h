@@ -36,13 +36,6 @@ typedef INT
 
 #define SAPCALLBACKDELAY 244
 
-#define WINE_GCPW_FORCE_LTR 0
-#define WINE_GCPW_FORCE_RTL 1
-#define WINE_GCPW_LOOSE_LTR 2
-#define WINE_GCPW_LOOSE_RTL 3
-#define WINE_GCPW_DIR_MASK 3
-#define WINE_GCPW_LOOSE_MASK 2
-
 /* MACRO ********************************************************************/
 
 #define ROP_USES_SOURCE(Rop)   (((Rop) << 2 ^ Rop) & 0xCC0000)
@@ -678,16 +671,12 @@ METADC_GetAndSetDCDWord(
     _In_ USHORT usMF16Id,
     _In_ DWORD dwError);
 
-BOOL BIDI_Reorder(
-    _In_ HDC hDC,                /* [in] Display DC */
-    _In_ LPCWSTR lpString,       /* [in] The string for which information is to be returned */
-    _In_ INT uCount,             /* [in] Number of WCHARs in string. */
-    _In_ DWORD dwFlags,          /* [in] GetCharacterPlacement compatible flags specifying how to process the string */
-    _In_ DWORD dwWineGCP_Flags,  /* [in] Wine internal flags - Force paragraph direction */
-    _Out_ LPWSTR lpOutString,    /* [out] Reordered string */
-    _In_ INT uCountOut,          /* [in] Size of output buffer */
-    _Out_ UINT *lpOrder,         /* [out] Logical -> Visual order map */
-    _Out_ WORD **lpGlyphs,       /* [out] reordered, mirrored, shaped glyphs to display */
-    _Out_ INT *cGlyphs           /* [out] number of glyphs generated */
-    );
+DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent, 
+									  GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
+
+									  
+BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y,
+                           UINT fuOptions, const RECT *lprc, LPCWSTR lpString,
+                           UINT uCount , const INT *lpDx, INT unknown);
+						   
 /* EOF */

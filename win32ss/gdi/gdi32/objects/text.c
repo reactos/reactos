@@ -12,10 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y,
-                           UINT fuOptions, const RECT *lprc, LPCWSTR lpString,
-                           UINT uCount , const INT *lpDx, INT unknown);
-
 /*
  * @implemented
  */

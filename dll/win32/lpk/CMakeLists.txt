@@ -6,8 +6,8 @@ spec2def(lpk.dll lpk.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     bidi.c
     dllmain.c
-    stub.c
     lpk.c
+    stub.c
     ros_lpk.h)
 
 add_library(lpk SHARED
@@ -17,8 +17,7 @@ add_library(lpk SHARED
 
 set_module_type(lpk win32dll UNICODE)
 
-target_link_libraries(lpk
-    wine)
+target_link_libraries(lpk wine)
 
 add_importlibs(lpk usp10 user32 gdi32 msvcrt kernel32 ntdll)
 add_pch(lpk ros_lpk.h SOURCE)
