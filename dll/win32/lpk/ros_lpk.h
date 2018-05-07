@@ -14,6 +14,9 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <usp10.h>
 
 /* FIXME USP10 api that does not have prototype in any include file */
 VOID WINAPI LpkPresent(VOID);
@@ -61,11 +64,38 @@ DWORD WINAPI LpkInitialize(DWORD x1);
 DWORD WINAPI LpkTabbedTextOut(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6,DWORD x7,DWORD x8,DWORD x9,DWORD x10,DWORD x11,DWORD x12);
 BOOL WINAPI LpkDllInitialize (HANDLE  hDll, DWORD dwReason, LPVOID lpReserved);
 DWORD WINAPI LpkDrawTextEx(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6,DWORD x7,DWORD x8,DWORD x9, DWORD x10);
-DWORD WINAPI LpkExtTextOut(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6,DWORD x7,DWORD x8,DWORD x9);
 DWORD WINAPI LpkGetCharacterPlacement(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6, DWORD x7);
 DWORD WINAPI LpkGetTextExtentExPoint(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6,DWORD x7,DWORD x8,DWORD x9);
 DWORD WINAPI LpkPSMTextOut(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6);
 DWORD WINAPI LpkUseGDIWidthCache(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
 DWORD WINAPI ftsWordBreak(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
+
+/* Implemented */
+
+BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y,
+                          UINT fuOptions, const RECT *lprc, LPCWSTR lpString,
+                          UINT uCount , const INT *lpDx, INT unknown);
+
+/* bidi.c */
+
+#define WINE_GCPW_FORCE_LTR 0
+#define WINE_GCPW_FORCE_RTL 1
+#define WINE_GCPW_LOOSE_LTR 2
+#define WINE_GCPW_LOOSE_RTL 3
+#define WINE_GCPW_DIR_MASK 3
+#define WINE_GCPW_LOOSE_MASK 2
+
+BOOL BIDI_Reorder(
+    _In_ HDC hDC,                /* [in] Display DC */
+    _In_ LPCWSTR lpString,       /* [in] The string for which information is to be returned */
+    _In_ INT uCount,             /* [in] Number of WCHARs in string. */
+    _In_ DWORD dwFlags,          /* [in] GetCharacterPlacement compatible flags specifying how to process the string */
+    _In_ DWORD dwWineGCP_Flags,  /* [in] Wine internal flags - Force paragraph direction */
+    _Out_ LPWSTR lpOutString,    /* [out] Reordered string */
+    _In_ INT uCountOut,          /* [in] Size of output buffer */
+    _Out_ UINT *lpOrder,         /* [out] Logical -> Visual order map */
+    _Out_ WORD **lpGlyphs,       /* [out] reordered, mirrored, shaped glyphs to display */
+    _Out_ INT *cGlyphs           /* [out] number of glyphs generated */
+    );
 
 #endif /* _LPK_H */

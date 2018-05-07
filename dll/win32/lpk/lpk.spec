@@ -3,7 +3,7 @@
 @ stdcall LpkDllInitialize(ptr long ptr)
 @ stdcall LpkDrawTextEx(long long long long long long long long long long)
 @ extern LpkEditControl
-@ stdcall LpkExtTextOut(long long long long long long long long long)
+@ stdcall LpkExtTextOut(long long long long ptr wstr long ptr long)
 @ stdcall LpkGetCharacterPlacement(long long long long long long long)
 @ stdcall LpkGetTextExtentExPoint(long long long long long long long long long)
 @ stdcall LpkPSMTextOut(long long long long long long)

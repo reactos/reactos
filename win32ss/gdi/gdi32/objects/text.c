@@ -12,6 +12,10 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y,
+                           UINT fuOptions, const RECT *lprc, LPCWSTR lpString,
+                           UINT uCount , const INT *lpDx, INT unknown);
+
 /*
  * @implemented
  */
@@ -489,10 +493,6 @@ ExtTextOutW(
     _In_ UINT cwc,
     _In_reads_opt_(cwc) const INT *lpDx)
 {
-    LPWSTR lpReorderedString = (LPWSTR)lpString;
-    WORD *glyphs = NULL;
-    INT cGlyphs;
-
     HANDLE_METADC(BOOL,
                   ExtTextOut,
                   FALSE,
@@ -505,35 +505,9 @@ ExtTextOutW(
                   cwc,
                   lpDx);
 
-    /* Check if the string requires complex script processing */
-    if (ScriptIsComplex(lpString, cwc, SIC_COMPLEX) == S_OK)
-    {
-        /* The flags ETO_GLYPH_INDEX & ETO_IGNORELANGUAGE tell the gdi to avoid 
-           complex script processing for the string. */
-        if ( !(fuOptions & (ETO_GLYPH_INDEX | ETO_IGNORELANGUAGE) && cwc > 0))
-        {
-            lpReorderedString = HeapAlloc(GetProcessHeap(), 0, cwc * sizeof(WCHAR));
+    if ( !(fuOptions &  (ETO_GLYPH_INDEX | ETO_IGNORELANGUAGE)))
+        return LpkExtTextOut(hdc, x, y, fuOptions, lprc, lpString, cwc , lpDx, 0);
 
-            BIDI_Reorder(hdc, lpString, cwc, GCP_REORDER, WINE_GCPW_FORCE_LTR,
-                         lpReorderedString, cwc, NULL, &glyphs, &cGlyphs);
-        
-            fuOptions |= ETO_IGNORELANGUAGE;
-            if (glyphs)
-            {
-                fuOptions |= ETO_GLYPH_INDEX;
-            }
-
-            return NtGdiExtTextOutW(hdc,
-                                    x,
-                                    y,
-                                    fuOptions,
-                                    (LPRECT)lprc,
-                                    (LPWSTR)glyphs,
-                                    cGlyphs,
-                                    (LPINT)lpDx,
-                                    0);
-        }
-    }
 
     return NtGdiExtTextOutW(hdc,
                             x,
