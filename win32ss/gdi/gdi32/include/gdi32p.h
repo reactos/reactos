@@ -672,11 +672,10 @@ METADC_GetAndSetDCDWord(
     _In_ DWORD dwError);
 
 DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent, 
-									  GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
+                                      GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
 
-									  
 BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y,
-                           UINT fuOptions, const RECT *lprc, LPCWSTR lpString,
-                           UINT uCount , const INT *lpDx, INT unknown);
-						   
+                          UINT fuOptions, const RECT *lprc, LPCWSTR lpString,
+                          UINT uCount , const INT *lpDx, INT unknown);
+
 /* EOF */

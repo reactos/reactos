@@ -72,10 +72,10 @@ DWORD WINAPI ftsWordBreak(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
 /* Implemented */
 
 BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y, UINT fuOptions, const RECT *lprc,
-						  LPCWSTR lpString, UINT uCount , const INT *lpDx, INT unknown);
+                          LPCWSTR lpString, UINT uCount , const INT *lpDx, INT unknown);
 
 DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent, 
-									  GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
+                                      GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
 /* bidi.c */
 
 #define WINE_GCPW_FORCE_LTR 0

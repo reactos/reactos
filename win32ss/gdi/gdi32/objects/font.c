@@ -463,8 +463,8 @@ GetCharacterPlacementW(
     /* return number of initialized fields */
     lpResults->nGlyphs = nSet;
 
-        /* Treat the case where no special handling was requested in a fastpath way */
-        /* copy will do if the GCP_REORDER flag is not set */
+    /* Treat the case where no special handling was requested in a fastpath way */
+    /* copy will do if the GCP_REORDER flag is not set */
     if (lpResults->lpOutString)
         lstrcpynW( lpResults->lpOutString, lpString, nSet );
 

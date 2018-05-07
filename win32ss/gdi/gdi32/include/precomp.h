@@ -36,7 +36,6 @@
 #include <objbase.h>
 #include <ndk/rtlfuncs.h>
 #include <wingdi.h>
-#include <usp10.h>
 #define _ENGINE_EXPORT_
 #include <winddi.h>
 #include <prntfont.h>

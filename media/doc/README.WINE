@@ -264,8 +264,7 @@ advapi32 -
   reactos/dll/win32/advapi32/wine/security.c     # Out of Sync
 
 gdi32 -
-  reactos/dll/win32ss/gdi32/objects/linedda.c     # Synced at 20090410
-  reactos/dll/win32ss/gdi32/objects/bidi.c        # Synced to WineStaging-3.7
+  reactos/dll/win32/gdi32/objects/linedda.c     # Synced at 20090410
 
 iphlpapi -
   reactos/dll/win32/iphlpapi/icmp.c # Partially synced to WineStaging-1.7.55
@@ -287,6 +286,9 @@ kernel32 -
   reactos/dll/win32/kernel32/winnls/string/nls.c         # Synced in r52754
   reactos/dll/win32/kernel32/winnls/string/sortkey.c     # Synced to WineStaging-3.3
 
+lpk
+  reactos/dll/win32/lpk/bidi.c    #Synced to WineStaging-3.7
+  
 msvcrt -
   reactos/sdk/lib/crt/conio/cputs.c             # Synced to WineStaging-1.9.16
   reactos/sdk/lib/crt/except/cpp.c              # Synced at 20080528

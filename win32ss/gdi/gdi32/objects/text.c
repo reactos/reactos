@@ -4,7 +4,6 @@
  * PURPOSE:     Text drawing API.
  * COPYRIGHT:   Copyright 2014 Timo Kreuzer
  *              Copyright 2017 Katayama Hirofumi MZ
- *              Copyright 2018 Baruch Rutman & the Wine Project (BiDi support) 
  */
 
 #include <precomp.h>
