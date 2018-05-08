@@ -11,6 +11,7 @@ list(APPEND SOURCE
     dosdev.c
     FindActCtxSectionStringW.c
     FindFiles.c
+    FLS.c
     FormatMessage.c
     GetComputerNameEx.c
     GetCurrentDirectory.c
