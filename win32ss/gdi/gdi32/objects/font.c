@@ -461,10 +461,8 @@ GetCharacterPlacementW(
     lpResults->nGlyphs = nSet;
     
     if (dwFlags & GCP_REORDER)
-    {
         LpkGetCharacterPlacement(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags, 0);
-    }
-    
+
     else
     {
         /* Treat the case where no special handling was requested in a fastpath way */
@@ -478,7 +476,7 @@ GetCharacterPlacementW(
                 lpResults->lpOrder[i] = i;
         }
     }
-    
+
     /* FIXME: Will use the placement chars */
     if (lpResults->lpDx)
     {

@@ -76,7 +76,8 @@ LpkGetCharacterPlacement(
     BIDI_Reorder(NULL, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
                  lpResults->nGlyphs, lpResults->lpOrder, &glyphs, &cGlyphs);
     
-    wcscpy(lpResults->lpGlyphs, (LPWSTR)glyphs);
+    if (lpResults->lpGlyphs)
+        wcscpy(lpResults->lpGlyphs, (LPWSTR)glyphs);
     
     return TRUE;
 }
