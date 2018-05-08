@@ -46,12 +46,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_BUTTON_YES    "&Yes"
-    IDS_BUTTON_NO     "&No"
-    IDS_BUTTON_RETRY  "&Retry"
+    IDS_BUTTON_YES    "&Da"
+    IDS_BUTTON_NO     "&Nu"
+    IDS_BUTTON_RETRY  "&Reîncearcă"
     IDS_BUTTON_OK     "OK"
-    IDS_BUTTON_CANCEL "Cancel"
-    IDS_BUTTON_CLOSE  "&Close"
+    IDS_BUTTON_CANCEL "Anulează"
+    IDS_BUTTON_CLOSE  "&Închide"
 }
 
 IDD_PROPSHEET DIALOGEX 0, 0, 220, 140
