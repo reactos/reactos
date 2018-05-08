@@ -64,23 +64,20 @@ LpkGetCharacterPlacement(
     DWORD dwFlags,
     DWORD dwUnused)
 {
-    UINT nSet;
+    WORD *glyphs = NULL;
+    INT cGlyphs;
+
     UNREFERENCED_PARAMETER(dwUnused);
     
     /* Sanity check */
     if( !(dwFlags & GCP_REORDER))
-       return GetCharacterPlacementW(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags);
-    
-    nSet = (UINT)uCount;
-    if (nSet > lpResults->nGlyphs)
-        nSet = lpResults->nGlyphs;
-    
+       return FALSE;
     
     BIDI_Reorder(NULL, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
-                 nSet, lpResults->lpOrder, NULL, NULL );
+                 lpResults->nGlyphs, lpResults->lpOrder, &glyphs, &cGlyphs);
     
-    dwFlags ^= GCP_REORDER;
+    wcscpy(lpResults->lpGlyphs, (LPWSTR)glyphs);
     
-    return GetCharacterPlacementW(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags);
+    return TRUE;
 }
 

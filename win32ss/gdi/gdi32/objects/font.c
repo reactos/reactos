@@ -448,9 +448,6 @@ GetCharacterPlacementW(
     UINT i, nSet;
     DPRINT("GetCharacterPlacementW\n");
     
-    if (dwFlags & GCP_REORDER)
-        return LpkGetCharacterPlacement(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags, 0);
-
     if (dwFlags&(~GCP_REORDER)) DPRINT("flags 0x%08lx ignored\n", dwFlags);
     if (lpResults->lpClass) DPRINT("classes not implemented\n");
     if (lpResults->lpCaretPos && (dwFlags & GCP_REORDER))
@@ -462,18 +459,26 @@ GetCharacterPlacementW(
 
     /* return number of initialized fields */
     lpResults->nGlyphs = nSet;
-
-    /* Treat the case where no special handling was requested in a fastpath way */
-    /* copy will do if the GCP_REORDER flag is not set */
-    if (lpResults->lpOutString)
-        lstrcpynW( lpResults->lpOutString, lpString, nSet );
-
-    if (lpResults->lpOrder)
+    
+    if (dwFlags & GCP_REORDER)
     {
-        for (i = 0; i < nSet; i++)
-            lpResults->lpOrder[i] = i;
+        LpkGetCharacterPlacement(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags, 0);
     }
+    
+    else
+    {
+        /* Treat the case where no special handling was requested in a fastpath way */
+        /* copy will do if the GCP_REORDER flag is not set */ 
+        if (lpResults->lpOutString)
+            lstrcpynW( lpResults->lpOutString, lpString, nSet );
 
+        if (lpResults->lpOrder)
+        {
+            for (i = 0; i < nSet; i++)
+                lpResults->lpOrder[i] = i;
+        }
+    }
+    
     /* FIXME: Will use the placement chars */
     if (lpResults->lpDx)
     {
@@ -495,7 +500,7 @@ GetCharacterPlacementW(
                 lpResults->lpCaretPos[i] = (pos += size.cx);
     }
 
-    if (lpResults->lpGlyphs)
+    if (lpResults->lpGlyphs && !(dwFlags & GCP_REORDER))
         NtGdiGetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);
 
     if (GetTextExtentPoint32W(hdc, lpString, uCount, &size))
