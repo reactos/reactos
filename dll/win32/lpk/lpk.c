@@ -65,19 +65,29 @@ LpkGetCharacterPlacement(
     DWORD dwUnused)
 {
     WORD *glyphs = NULL;
+    UINT *lpOrder = NULL;
+    LPWSTR lpOutString;
     INT cGlyphs;
 
     UNREFERENCED_PARAMETER(dwUnused);
     
-    /* Sanity check */
-    if( !(dwFlags & GCP_REORDER))
+    /* Sanity checks */
+    if ( !(dwFlags & GCP_REORDER))
        return FALSE;
-    
-    BIDI_Reorder(NULL, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
-                 lpResults->nGlyphs, lpResults->lpOrder, &glyphs, &cGlyphs);
+
+    lpOutString = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WCHAR));
+
+    BIDI_Reorder(hdc, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpOutString,
+                 lpResults->nGlyphs, lpOrder, &glyphs, &cGlyphs);
+
+    if (lpResults->lpOutString)
+        wcscpy(lpResults->lpOutString, lpOutString);
+
+    if (lpResults->lpOrder)
+        memcpy(lpResults->lpOrder, lpOrder, sizeof(lpOrder));
     
     if (lpResults->lpGlyphs)
-        wcscpy(lpResults->lpGlyphs, (LPWSTR)glyphs);
+        wcscpy(lpResults->lpGlyphs, glyphs);
     
     return TRUE;
 }
