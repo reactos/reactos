@@ -46,8 +46,8 @@ RtlPcToFileHeader(
     }
     else
     {
-        /* We are in user land */
-        *BaseOfImage = KiRosPcToUserFileHeader(PcValue, &LdrEntry);
+        /* User mode is not handled here! */
+        *BaseOfImage = NULL;
     }
 
     return *BaseOfImage;
