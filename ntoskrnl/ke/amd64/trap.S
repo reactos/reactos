@@ -176,20 +176,39 @@ ENDFUNC
 
 PUBLIC KiDebugTrapOrFault
 FUNC KiDebugTrapOrFault
+
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
 
-    /* Check if the frame was from kernelmode */
+    /* Check if the frame was from user mode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
-    jz KiDebugTrapOrFaultKMode
+    jnz KiDebugTrapOrFaultUserMode
+
+    ; We might have got here from a pending #DB after
+    ; a POP SS or MOV SS followed by SYSCALL (See CVE-2018-8897)
+    ; To handle this, we need to verify that MSG_GSBASE is
+    ; correct, i.e. pointing to kernel mode memory.
+    mov rcx, MSR_GS_BASE
+    rdmsr
+    test edx, edx
+    js KiDebugTrapOrFaultDispatch
+
+    ; We are here from a pending #DB. This can only be created
+    ; on purpose and doesn't have any legitimate use case.
+    ; We simply ignore it
+    int 3
+    jmp KiDebugTrapOrFaultExit
+
+KiDebugTrapOrFaultUserMode:
 
     /* Enable interrupts for user-mode */
     sti
 
-KiDebugTrapOrFaultKMode:
+KiDebugTrapOrFaultDispatch:
     /* Dispatch the exception */
     DispatchException STATUS_SINGLE_STEP, 0, 0, 0, 0
 
+KiDebugTrapOrFaultExit:
     /* Return */
     ExitTrap TF_SAVE_ALL
 ENDFUNC

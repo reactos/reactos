@@ -31,8 +31,10 @@ KIPCR KiInitialPcr;
 /* Boot and double-fault/NMI/DPC stack */
 UCHAR DECLSPEC_ALIGN(16) P0BootStackData[KERNEL_STACK_SIZE] = {0};
 UCHAR DECLSPEC_ALIGN(16) KiDoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
+UCHAR DECLSPEC_ALIGN(16) KiDebugTrapStackData[KERNEL_STACK_SIZE] = { 0 };
 ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
 ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
+ULONG_PTR KiDebugTrapStack = (ULONG_PTR)&KiDebugTrapStackData[KERNEL_STACK_SIZE];
 
 void KiInitializeSegments();
 void KiSystemCallEntry64();
@@ -263,6 +265,9 @@ KiInitializeTss(IN PKTSS64 Tss,
 
     /* Setup a stack for NMI Traps */
     Tss->Ist[3] = (ULONG64)KiDoubleFaultStack;
+
+    /* Setup a stack for Debug Traps */
+    Tss->Ist[4] = (ULONG64)KiDebugTrapStack;
 
     /* Load the task register */
     __ltr(KGDT64_SYS_TSS);
