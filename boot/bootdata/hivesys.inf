@@ -687,7 +687,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000425","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000425","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5042"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout File",0x00000000,"kbdlv.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Text",0x00000000,%LATVIAN%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Text",0x00000000,%LATVIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5043"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout File",0x00000000,"kbdlt1.dll"
@@ -711,7 +711,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5117"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout File",0x00000000,"kbdaze.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Text",0x00000000,%AZERI_CYRILLIC%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Text",0x00000000,%AZERI_CYRILLIC%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5115"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042f","Layout File",0x00000000,"kbdmac.dll"
