@@ -37,6 +37,10 @@ RtlPcToFileHeader(
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InSystem;
+    KIRQL OldIrql;
+
+    /* Acquire the loaded module spinlock */
+    OldIrql = KeAcquireSpinLockRaiseToSynch(&PsLoadedModuleSpinLock);
 
     /* Get the base for this file */
     if ((ULONG_PTR)PcValue > (ULONG_PTR)MmHighestUserAddress)
@@ -46,9 +50,12 @@ RtlPcToFileHeader(
     }
     else
     {
-        /* We are in user land */
-        *BaseOfImage = KiRosPcToUserFileHeader(PcValue, &LdrEntry);
+        /* User mode is not handled here! */
+        *BaseOfImage = NULL;
     }
+
+    /* Release lock */
+    KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
 
     return *BaseOfImage;
 }
