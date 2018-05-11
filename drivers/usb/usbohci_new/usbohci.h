@@ -50,7 +50,7 @@ typedef union DECLSPEC_ALIGN(32) _OHCI_HW_TRANSFER_DESCRIPTOR {
 } OHCI_HW_TRANSFER_DESCRIPTOR, *POHCI_HW_TRANSFER_DESCRIPTOR;
 
 C_ASSERT(sizeof(OHCI_HW_TRANSFER_DESCRIPTOR) == 32);
-C_ASSERT(_alignof(OHCI_HW_TRANSFER_DESCRIPTOR) == 32);
+C_ASSERT(__alignof(OHCI_HW_TRANSFER_DESCRIPTOR) == 32);
 
 typedef struct _OHCI_HCD_TD {
   /* Hardware part */
@@ -79,7 +79,7 @@ typedef struct _OHCI_HCD_ED {
   ULONG Flags;
   LIST_ENTRY HcdEDLink;
 #ifdef _WIN64
-  ULONG Pad[6]; 
+  ULONG Pad[6];
 #else
   ULONG Pad[8];
 #endif
@@ -259,7 +259,7 @@ OHCI_RH_EnableIrq(
   IN PVOID ohciExtension);
 
 OHCI_REG_RH_DESCRIPTORA
-NTAPI 
+NTAPI
 OHCI_ReadRhDescriptorA(
   IN POHCI_EXTENSION OhciExtension);
 
