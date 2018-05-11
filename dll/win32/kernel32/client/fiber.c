@@ -1,12 +1,12 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS System Libraries
- * FILE:        dll/win32/kernel32/client/fiber.c
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Fiber Implementation
- * PROGRAMMERS:
- *              Alex Ionescu (alex@relsoft.net)
- *              KJK::Hyperion <noog@libero.it>
+ * COPYRIGHT:   Copyright 2005-2011 Alex Ionescu (alex@relsoft.net)
+ *              Copyright 2003-2008 KJK::Hyperion (noog@libero.it)
+ *              Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
  */
+
 #include <k32.h>
 #include <ndk/rtltypes.h>
 
@@ -410,36 +410,44 @@ FlsFree(DWORD dwFlsIndex)
 
     RtlAcquirePebLock();
 
-    ret = RtlAreBitsSet(Peb->FlsBitmap, dwFlsIndex, 1);
-    if (ret)
+    _SEH2_TRY
     {
-        PLIST_ENTRY Entry;
-        PFLS_CALLBACK_FUNCTION lpCallback;
-
-        RtlClearBits(Peb->FlsBitmap, dwFlsIndex, 1);
-        lpCallback = Peb->FlsCallback[dwFlsIndex];
-        Peb->FlsCallback[dwFlsIndex] = NULL;
-
-        for (Entry = Peb->FlsListHead.Flink; Entry != &Peb->FlsListHead; Entry = Entry->Flink)
+        ret = RtlAreBitsSet(Peb->FlsBitmap, dwFlsIndex, 1);
+        if (ret)
         {
-            PRTL_FLS_DATA pFlsData;
+            PLIST_ENTRY Entry;
+            PFLS_CALLBACK_FUNCTION lpCallback;
 
-            pFlsData = CONTAINING_RECORD(Entry, RTL_FLS_DATA, ListEntry);
-            if (pFlsData->Data[dwFlsIndex])
+            RtlClearBits(Peb->FlsBitmap, dwFlsIndex, 1);
+            lpCallback = Peb->FlsCallback[dwFlsIndex];
+
+            for (Entry = Peb->FlsListHead.Flink; Entry != &Peb->FlsListHead; Entry = Entry->Flink)
             {
-                if (lpCallback)
+                PRTL_FLS_DATA pFlsData;
+
+                pFlsData = CONTAINING_RECORD(Entry, RTL_FLS_DATA, ListEntry);
+                if (pFlsData->Data[dwFlsIndex])
                 {
-                    lpCallback(pFlsData->Data[dwFlsIndex]);
+                    if (lpCallback)
+                    {
+                        lpCallback(pFlsData->Data[dwFlsIndex]);
+                    }
+                    pFlsData->Data[dwFlsIndex] = NULL;
                 }
-                pFlsData->Data[dwFlsIndex] = NULL;
             }
+            Peb->FlsCallback[dwFlsIndex] = NULL;
+        }
+        else
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
         }
     }
-    else
+    _SEH2_FINALLY
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        RtlReleasePebLock();
     }
-    RtlReleasePebLock();
+    _SEH2_END;
+
     return ret;
 }
 
