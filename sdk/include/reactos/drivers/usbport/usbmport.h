@@ -54,8 +54,8 @@ typedef struct _USBPORT_RESOURCES {
   ULONG Reserved;
   PVOID ResourceBase;
   SIZE_T IoSpaceLength;
-  PVOID StartVA;
-  PVOID StartPA;
+  ULONG_PTR StartVA;
+  ULONG StartPA;
   UCHAR LegacySupport;
   BOOLEAN IsChirpHandled;
   UCHAR Reserved2;
@@ -76,7 +76,7 @@ typedef struct _USBPORT_ENDPOINT_PROPERTIES {
   ULONG TransferType;
   ULONG Direction;
   ULONG_PTR BufferVA;
-  ULONG_PTR BufferPA;
+  ULONG BufferPA;
   ULONG BufferLength;
   ULONG Reserved3;
   ULONG MaxTransferSize;
@@ -454,7 +454,7 @@ typedef ULONG
 
 typedef PVOID
 (NTAPI *PUSBPORT_GET_MAPPED_VIRTUAL_ADDRESS)(
-  PVOID,
+  ULONG,
   PVOID,
   PVOID);
 

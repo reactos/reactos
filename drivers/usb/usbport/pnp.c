@@ -824,8 +824,8 @@ USBPORT_StartDevice(IN PDEVICE_OBJECT FdoDevice,
             goto ExitWithError;
         }
 
-        UsbPortResources->StartVA = (PVOID)HeaderBuffer->VirtualAddress;
-        UsbPortResources->StartPA = (PVOID)HeaderBuffer->PhysicalAddress;
+        UsbPortResources->StartVA = HeaderBuffer->VirtualAddress;
+        UsbPortResources->StartPA = HeaderBuffer->PhysicalAddress;
 
         FdoExtension->MiniPortCommonBuffer = HeaderBuffer;
     }
