@@ -5,7 +5,6 @@ spec2def(lpk.dll lpk.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bidi.c
-    dllmain.c
     lpk.c
     stub.c
     ros_lpk.h)

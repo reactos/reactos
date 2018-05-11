@@ -2,10 +2,50 @@
  * PROJECT:     ReactOS LPK
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Language Pack DLL.
- * PROGRAMMERS: Baruch Rutman (peterooch at gmail dot com)
+ * PROGRAMMERS: Magnus Olsen  (greatlrd)
+ *              Baruch Rutman (peterooch at gmail dot com)
  */
 
 #include "ros_lpk.h"
+
+LPK_LPEDITCONTROL_LIST LpkEditControl = {EditCreate,       EditIchToXY,  EditMouseToIch, EditCchInWidth,
+                                         EditGetLineWidth, EditDrawText, EditHScroll,    EditMoveSelection,
+                                         EditVerifyText,   EditNextWord, EditSetMenu,    EditProcessMenu,
+                                         EditCreateCaret, EditAdjustCaret};
+
+BOOL
+WINAPI
+DllMain(
+    HANDLE  hDll,
+    DWORD   dwReason,
+    LPVOID  lpReserved)
+{
+
+    return LpkDllInitialize(hDll,dwReason,lpReserved);
+}
+
+BOOL
+WINAPI
+LpkDllInitialize(
+    HANDLE  hDll,
+    DWORD   dwReason,
+    LPVOID  lpReserved)
+{
+    switch(dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hDll);
+            /* Tell usp10 it is activated usp10 */
+            //LpkPresent();
+            break;
+
+        default:
+            break;
+    }
+
+    return TRUE;
+}
+
 
 /*
  * @implemented 
