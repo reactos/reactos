@@ -24,6 +24,10 @@ PVOID g_FlsData1 = NULL;
 LONG g_FlsCalled1 = 0;
 PVOID g_FlsData2 = NULL;
 LONG g_FlsCalled2 = 0;
+PVOID g_FlsData3 = NULL;
+LONG g_FlsCalled3 = 0;
+BOOL g_FlsExcept3 = FALSE;
+
 
 VOID WINAPI FlsCallback1(PVOID lpFlsData)
 {
@@ -37,6 +41,18 @@ VOID WINAPI FlsCallback2(PVOID lpFlsData)
     InterlockedIncrement(&g_FlsCalled2);
 }
 
+VOID WINAPI FlsCallback3(PVOID lpFlsData)
+{
+    ok(lpFlsData == g_FlsData3, "Expected g_FlsData3(%p), got %p\n", g_FlsData3, lpFlsData);
+
+    if (g_WinVersion <= WINVER_2003)
+        ok(RtlIsCriticalSectionLockedByThread(NtCurrentPeb()->FastPebLock), "Expected lock on PEB\n");
+    InterlockedIncrement(&g_FlsCalled3);
+    if (g_FlsExcept3)
+    {
+        RaiseException(ERROR_INVALID_PARAMETER, EXCEPTION_NONCONTINUABLE, 0, NULL);
+    }
+}
 
 typedef struct _FLS_CALLBACK_INFO
 {
@@ -78,11 +94,14 @@ void ok_fls_(DWORD dwIndex, PVOID pValue, PFLS_CALLBACK_FUNCTION lpCallback)
                     dwIndex,
                     lpCallback,
                     FlsCallback[dwIndex].lpCallback);
-        winetest_ok(FlsCallback[dwIndex].Unknown == NULL,
-                    "Expected FlsCallback[%lu].Unknown to be %p, was %p\n",
-                    dwIndex,
-                    NULL,
-                    FlsCallback[dwIndex].Unknown);
+        if (lpCallback != &FlsCallback3 || !g_FlsExcept3)
+        {
+            winetest_ok(FlsCallback[dwIndex].Unknown == NULL,
+                        "Expected FlsCallback[%lu].Unknown to be %p, was %p\n",
+                        dwIndex,
+                        NULL,
+                        FlsCallback[dwIndex].Unknown);
+        }
     }
     winetest_ok(FlsData[dwIndex + 2] == pValue,
                 "Expected FlsData[%lu + 2] to be %p, was %p\n",
@@ -113,7 +132,8 @@ static VOID init_funcs(void)
 START_TEST(FLS)
 {
     RTL_OSVERSIONINFOW rtlinfo = { sizeof(rtlinfo) };
-    DWORD dwIndex1, dwIndex2;
+    DWORD dwIndex1, dwIndex2, dwIndex3, dwErr;
+    BOOL bRet;
 
     init_funcs();
     if (!pFlsAlloc || !pFlsFree || !pFlsGetValue || !pFlsSetValue)
@@ -131,7 +151,11 @@ START_TEST(FLS)
     ok(dwIndex2 != FLS_OUT_OF_INDEXES, "Unable to allocate FLS index\n");
     ok(dwIndex1 != dwIndex2, "Expected different indexes, got %lu\n", dwIndex1);
 
-    if (dwIndex1 == FLS_OUT_OF_INDEXES || dwIndex2 == FLS_OUT_OF_INDEXES)
+    dwIndex3 = pFlsAlloc(FlsCallback3);
+    ok(dwIndex3 != FLS_OUT_OF_INDEXES, "Unable to allocate FLS index\n");
+    ok(dwIndex1 != dwIndex3, "Expected different indexes, got %lu\n", dwIndex1);
+
+    if (dwIndex1 == FLS_OUT_OF_INDEXES || dwIndex2 == FLS_OUT_OF_INDEXES || dwIndex3 == FLS_OUT_OF_INDEXES)
     {
         skip("Unable to continue test\n");
         return;
@@ -139,31 +163,75 @@ START_TEST(FLS)
 
     ok_fls(dwIndex1, g_FlsData1, &FlsCallback1);
     ok_fls(dwIndex2, g_FlsData2, &FlsCallback2);
+    ok_fls(dwIndex3, g_FlsData3, &FlsCallback3);
 
     g_FlsData1 = (PVOID)0x123456;
     ok(pFlsSetValue(dwIndex1, g_FlsData1), "FlsSetValue(%lu, %p) failed\n", dwIndex1, g_FlsData1);
 
     ok_fls(dwIndex1, g_FlsData1, &FlsCallback1);
     ok_fls(dwIndex2, g_FlsData2, &FlsCallback2);
+    ok_fls(dwIndex3, g_FlsData3, &FlsCallback3);
 
     ok_int(g_FlsCalled1, 0);
     ok_int(g_FlsCalled2, 0);
+    ok_int(g_FlsCalled3, 0);
 
     g_FlsData2 = (PVOID)0x9876112;
     ok(pFlsSetValue(dwIndex2, g_FlsData2), "FlsSetValue(%lu, %p) failed\n", dwIndex2, g_FlsData2);
 
     ok_fls(dwIndex1, g_FlsData1, &FlsCallback1);
     ok_fls(dwIndex2, g_FlsData2, &FlsCallback2);
+    ok_fls(dwIndex3, g_FlsData3, &FlsCallback3);
+
 
     ok_int(g_FlsCalled1, 0);
     ok_int(g_FlsCalled2, 0);
+    ok_int(g_FlsCalled3, 0);
 
-    ok(pFlsFree(dwIndex1), "FlsFree(%lu) failed\n", dwIndex1);
+    g_FlsData3 = (PVOID)0x98762;
+    ok(pFlsSetValue(dwIndex3, g_FlsData3), "FlsSetValue(%lu, %p) failed\n", dwIndex3, g_FlsData3);
+
+    ok_fls(dwIndex1, g_FlsData1, &FlsCallback1);
+    ok_fls(dwIndex2, g_FlsData2, &FlsCallback2);
+    ok_fls(dwIndex3, g_FlsData3, &FlsCallback3);
+
+    ok_int(g_FlsCalled1, 0);
+    ok_int(g_FlsCalled2, 0);
+    ok_int(g_FlsCalled3, 0);
+
+    ok(pFlsFree(dwIndex1) == TRUE, "FlsFree(%lu) failed\n", dwIndex1);
     g_FlsData1 = NULL;
 
     ok_fls(dwIndex1, g_FlsData1, NULL);
     ok_fls(dwIndex2, g_FlsData2, &FlsCallback2);
+    ok_fls(dwIndex3, g_FlsData3, &FlsCallback3);
 
     ok_int(g_FlsCalled1, 1);
     ok_int(g_FlsCalled2, 0);
+    ok_int(g_FlsCalled3, 0);
+
+    g_FlsExcept3 = TRUE;
+    _SEH2_TRY
+    {
+        bRet = pFlsFree(dwIndex3);
+        dwErr = GetLastError();
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bRet = 12345;
+        dwErr = 0xdeaddead;
+    }
+    _SEH2_END;
+    ok(RtlIsCriticalSectionLockedByThread(NtCurrentPeb()->FastPebLock) == FALSE, "Expected no lock on PEB\n");
+
+    ok(bRet == 12345, "FlsFree(%lu) should have failed, got %u\n", dwIndex3, bRet);
+    ok(dwErr == 0xdeaddead, "Expected GetLastError() to be 0xdeaddead, was %lx\n", dwErr);
+
+    ok_fls(dwIndex1, g_FlsData1, NULL);
+    ok_fls(dwIndex2, g_FlsData2, &FlsCallback2);
+    ok_fls(dwIndex3, g_FlsData3, &FlsCallback3);
+
+    ok_int(g_FlsCalled1, 1);
+    ok_int(g_FlsCalled2, 0);
+    ok_int(g_FlsCalled3, 1);
 }
