@@ -10,7 +10,7 @@
 USBPORT_REGISTRATION_PACKET RegPacket;
 
 VOID
-NTAPI 
+NTAPI
 UhciDumpHcdQH(PUHCI_HCD_QH QH)
 {
     DPRINT("QH              - %p\n", QH);
@@ -25,7 +25,7 @@ UhciDumpHcdQH(PUHCI_HCD_QH QH)
 }
 
 VOID
-NTAPI 
+NTAPI
 UhciDumpHcdTD(PUHCI_HCD_TD TD)
 {
     DPRINT("TD              - %p\n", TD);
@@ -106,7 +106,7 @@ UhciCleanupFrameListEntry(IN PUHCI_EXTENSION UhciExtension,
 }
 
 VOID
-NTAPI 
+NTAPI
 UhciCleanupFrameList(IN PUHCI_EXTENSION UhciExtension,
                      IN BOOLEAN IsAllEntries)
 {
@@ -1488,7 +1488,7 @@ UhciSubmitTransfer(IN PVOID uhciExtension,
 
     TransferType = UhciEndpoint->EndpointProperties.TransferType;
 
-    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS && 
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS &&
         InterlockedIncrement(&UhciExtension->ExtensionLock) == 1)
     {
         UhciExtension->FrameNumber = UhciGet32BitFrameNumber(UhciExtension);
@@ -1693,7 +1693,7 @@ UhciAbortIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
                      IN PUHCI_ENDPOINT UhciEndpoint,
                      IN PUHCI_TRANSFER UhciTransfer)
 {
-    DPRINT_IMPL("UhciAbortNonIsoTransfer: UNIMPLEMENTED. FIXME\n");
+    DPRINT_IMPL("UhciAbortIsoTransfer: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -1778,7 +1778,7 @@ UhciAbortNonIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
             PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
         }
 
-        DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p\n", TD);
+        DPRINT_UHCI("UhciAbortNonIsoTransfer: TD - %p\n", TD);
 
         UhciEndpoint->QH->HwQH.NextElement = PhysicalAddress;
         UhciEndpoint->QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
@@ -2131,7 +2131,7 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
             if (TD->NextHcdTD &&
                 TD->NextHcdTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE)
             {
-                if (NextTdPA == 0)   
+                if (NextTdPA == 0)
                     break;
 
                 if (NextTdPA != TD->NextHcdTD->PhysicalAddress)
@@ -2271,7 +2271,7 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
                             NextTD,
                             TransferedLen);
 
-                if (NextTdPA == 
+                if (NextTdPA ==
                     (QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_POINTER_MASK))
                 {
                     NextTD->Flags |= UHCI_HCD_TD_FLAG_DONE;
