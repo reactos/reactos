@@ -2117,7 +2117,7 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
                 NextTD,
                 NextTdPA);
 
-    for ( TD = UhciEndpoint->HeadTD; ; TD = TD->NextHcdTD )
+    for (TD = UhciEndpoint->HeadTD; ; TD = TD->NextHcdTD)
     {
         DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p, TD->NextHcdTD - %p\n",
                     TD,
@@ -2132,7 +2132,31 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
                 TD->NextHcdTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE)
             {
                 if (NextTdPA == 0)
-                    break;
+                {
+                    NextTD = TD->NextHcdTD;
+                    UhciEndpoint->HeadTD = NextTD;
+
+                    DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
+
+                    if (NextTD == NULL)
+                        UhciEndpoint->TailTD = NULL;
+
+                    if (NextTD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
+                    {
+                        PhysicalAddress = UHCI_ENDPOINT_FLAG_HALTED;
+                    }
+                    else
+                    {
+                        PhysicalAddress = NextTD->PhysicalAddress;
+                        PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+                    }
+
+                    DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
+
+                    QH->HwQH.NextElement = PhysicalAddress;
+                    QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
+                    goto ProcessListTDs;
+                }
 
                 if (NextTdPA != TD->NextHcdTD->PhysicalAddress)
                 {
@@ -2364,29 +2388,6 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
 
         goto ProcessListTDs;
     }
-
-    NextTD = TD->NextHcdTD;
-    UhciEndpoint->HeadTD = NextTD;
-
-    DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
-
-    if (NextTD == NULL)
-        UhciEndpoint->TailTD = NULL;
-
-    if (NextTD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
-    {
-        PhysicalAddress = UHCI_ENDPOINT_FLAG_HALTED;
-    }
-    else
-    {
-        PhysicalAddress = NextTD->PhysicalAddress;
-        PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
-    }
-
-    DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
-
-    QH->HwQH.NextElement = PhysicalAddress;
-    QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
 
 ProcessListTDs:
 
