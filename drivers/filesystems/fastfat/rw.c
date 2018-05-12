@@ -1,9 +1,10 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/rw.c
+ * FILE:             drivers/filesystems/fastfat/rw.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Pierre Schweitzer (pierre@reactos.org)
  *
  */
 
@@ -22,6 +23,12 @@
  * - Filip Navara, 26/07/2004
  */
 /* #define DEBUG_VERIFY_OFFSET_CACHING */
+
+/* Arbitrary, taken from MS FastFAT, should be
+ * refined given what we experience in common
+ * out of stack operations
+ */
+#define OVERFLOW_READ_THRESHHOLD 0xE00
 
 /* FUNCTIONS *****************************************************************/
 
@@ -536,16 +543,177 @@ VfatWriteFileData(
 }
 
 NTSTATUS
+VfatCommonRead(
+    PVFAT_IRP_CONTEXT IrpContext)
+{
+    PVFATFCB Fcb;
+    PVOID Buffer;
+    NTSTATUS Status;
+    ULONG Length = 0;
+    ULONG BytesPerSector;
+    LARGE_INTEGER ByteOffset;
+    ULONG ReturnedLength = 0;
+    BOOLEAN PagingIo, CanWait, IsVolume, NoCache;
+
+    PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
+    CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+    NoCache = BooleanFlagOn(IrpContext->Irp->Flags, IRP_NOCACHE);
+    Fcb = IrpContext->FileObject->FsContext;
+    IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
+
+    ByteOffset = IrpContext->Stack->Parameters.Read.ByteOffset;
+    Length = IrpContext->Stack->Parameters.Read.Length;
+    BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
+
+    if (!PagingIo &&
+        FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
+    {
+        if (!FsRtlCheckLockForReadAccess(&Fcb->FileLock, IrpContext->Irp))
+        {
+            return STATUS_FILE_LOCK_CONFLICT;
+        }
+    }
+
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, PagingIo);
+
+    if (!PagingIo && !NoCache && !IsVolume)
+    {
+        // cached read
+        Status = STATUS_SUCCESS;
+        if (ByteOffset.u.LowPart + Length > Fcb->RFCB.FileSize.u.LowPart)
+        {
+            Length = Fcb->RFCB.FileSize.u.LowPart - ByteOffset.u.LowPart;
+            Status = /*STATUS_END_OF_FILE*/STATUS_SUCCESS;
+        }
+
+        vfatAddToStat(IrpContext->DeviceExt, Base.UserFileReads, 1);
+        vfatAddToStat(IrpContext->DeviceExt, Base.UserFileReadBytes, Length);
+
+        _SEH2_TRY
+        {
+            if (IrpContext->FileObject->PrivateCacheMap == NULL)
+            {
+                CcInitializeCacheMap(IrpContext->FileObject,
+                                     (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                                     FALSE,
+                                     &(VfatGlobalData->CacheMgrCallbacks),
+                                     Fcb);
+            }
+
+            if (!CcCopyRead(IrpContext->FileObject,
+                            &ByteOffset,
+                            Length,
+                            CanWait,
+                            Buffer,
+                            &IrpContext->Irp->IoStatus))
+            {
+                ASSERT(!CanWait);
+                Status = STATUS_PENDING;
+                goto ByeBye;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+            goto ByeBye;
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(IrpContext->Irp->IoStatus.Status))
+        {
+            Status = IrpContext->Irp->IoStatus.Status;
+        }
+    }
+    else
+    {
+        // non cached read
+        Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
+        if (!NT_SUCCESS(Status))
+        {
+            goto ByeBye;
+        }
+
+        if (ByteOffset.QuadPart + Length > ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector))
+        {
+            Length = (ULONG)(ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
+        }
+
+        if (!IsVolume)
+        {
+            vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReads, 1);
+            vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReadBytes, Length);
+        }
+        else
+        {
+            vfatAddToStat(IrpContext->DeviceExt, Base.MetaDataReads, 1);
+            vfatAddToStat(IrpContext->DeviceExt, Base.MetaDataReadBytes, Length);
+        }
+
+        Status = VfatReadFileData(IrpContext, Length, ByteOffset, &ReturnedLength);
+        if (NT_SUCCESS(Status))
+        {
+            IrpContext->Irp->IoStatus.Information = ReturnedLength;
+        }
+    }
+
+ByeBye:
+    return Status;
+}
+
+VOID
+NTAPI
+VfatStackOverflowRead(
+    PVOID Context,
+    IN PKEVENT Event)
+{
+    PVFAT_IRP_CONTEXT IrpContext;
+
+    IrpContext = Context;
+    /* In a separate thread, we can wait and resources got locked */
+    SetFlag(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+
+    /* Perform the read operation */
+    DPRINT1("Performing posted read\n");
+    VfatCommonRead(IrpContext);
+
+    KeSetEvent(Event, 0, FALSE);
+}
+
+VOID
+VfatPostRead(
+    PVFAT_IRP_CONTEXT IrpContext,
+    PERESOURCE Lock,
+    BOOLEAN PagingIo)
+{
+    KEVENT Event;
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    ExAcquireResourceSharedLite(Lock, TRUE);
+
+    /* If paging IO, call the non failing but blocking routine */
+    if (PagingIo)
+    {
+        FsRtlPostPagingFileStackOverflow(IrpContext, &Event, VfatStackOverflowRead);
+    }
+    else
+    {
+        FsRtlPostStackOverflow(IrpContext, &Event, VfatStackOverflowRead);
+    }
+
+    /* Wait till it's done */
+    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+}
+
+NTSTATUS
 VfatRead(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     NTSTATUS Status;
     PVFATFCB Fcb;
     ULONG Length = 0;
-    ULONG ReturnedLength = 0;
     PERESOURCE Resource = NULL;
     LARGE_INTEGER ByteOffset;
-    PVOID Buffer;
     ULONG BytesPerSector;
     BOOLEAN PagingIo, CanWait, IsVolume, NoCache;
 
@@ -644,6 +812,23 @@ VfatRead(
         Resource = &Fcb->MainResource;
     }
 
+    /* Are we out of stack for the rest of the operation? */
+    if (IoGetRemainingStackSize() < OVERFLOW_READ_THRESHHOLD)
+    {
+        /* Lock the buffer */
+        Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* And post the read to the overflow thread */
+        VfatPostRead(IrpContext, Resource, PagingIo);
+
+        /* Return the appropriate status */
+        return IrpContext->Irp->IoStatus.Status;
+    }
+
     if (!ExAcquireResourceSharedLite(Resource, CanWait))
     {
         Resource = NULL;
@@ -651,97 +836,7 @@ VfatRead(
         goto ByeBye;
     }
 
-    if (!PagingIo &&
-        FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
-    {
-        if (!FsRtlCheckLockForReadAccess(&Fcb->FileLock, IrpContext->Irp))
-        {
-            Status = STATUS_FILE_LOCK_CONFLICT;
-            goto ByeBye;
-        }
-    }
-
-    Buffer = VfatGetUserBuffer(IrpContext->Irp, PagingIo);
-
-    if (!PagingIo && !NoCache && !IsVolume)
-    {
-        // cached read
-        Status = STATUS_SUCCESS;
-        if (ByteOffset.u.LowPart + Length > Fcb->RFCB.FileSize.u.LowPart)
-        {
-            Length = Fcb->RFCB.FileSize.u.LowPart - ByteOffset.u.LowPart;
-            Status = /*STATUS_END_OF_FILE*/STATUS_SUCCESS;
-        }
-
-        vfatAddToStat(IrpContext->DeviceExt, Base.UserFileReads, 1);
-        vfatAddToStat(IrpContext->DeviceExt, Base.UserFileReadBytes, Length);
-
-        _SEH2_TRY
-        {
-            if (IrpContext->FileObject->PrivateCacheMap == NULL)
-            {
-                CcInitializeCacheMap(IrpContext->FileObject,
-                                     (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                                     FALSE,
-                                     &(VfatGlobalData->CacheMgrCallbacks),
-                                     Fcb);
-            }
-
-            if (!CcCopyRead(IrpContext->FileObject,
-                            &ByteOffset,
-                            Length,
-                            CanWait,
-                            Buffer,
-                            &IrpContext->Irp->IoStatus))
-            {
-                ASSERT(!CanWait);
-                Status = STATUS_PENDING;
-                goto ByeBye;
-            }
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-            goto ByeBye;
-        }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(IrpContext->Irp->IoStatus.Status))
-        {
-            Status = IrpContext->Irp->IoStatus.Status;
-        }
-    }
-    else
-    {
-        // non cached read
-        Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
-        if (!NT_SUCCESS(Status))
-        {
-            goto ByeBye;
-        }
-
-        if (ByteOffset.QuadPart + Length > ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector))
-        {
-            Length = (ULONG)(ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
-        }
-
-        if (!IsVolume)
-        {
-            vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReads, 1);
-            vfatAddToStat(IrpContext->DeviceExt, Fat.NonCachedReadBytes, Length);
-        }
-        else
-        {
-            vfatAddToStat(IrpContext->DeviceExt, Base.MetaDataReads, 1);
-            vfatAddToStat(IrpContext->DeviceExt, Base.MetaDataReadBytes, Length);
-        }
-
-        Status = VfatReadFileData(IrpContext, Length, ByteOffset, &ReturnedLength);
-        if (NT_SUCCESS(Status))
-        {
-            IrpContext->Irp->IoStatus.Information = ReturnedLength;
-        }
-    }
+    Status = VfatCommonRead(IrpContext);
 
 ByeBye:
     if (Resource)
