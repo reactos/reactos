@@ -1618,35 +1618,33 @@ UhciProcessDoneNonIsoTD(IN PUHCI_EXTENSION UhciExtension,
     TransferParameters = UhciTransfer->TransferParameters;
     UhciEndpoint = UhciTransfer->UhciEndpoint;
 
-    if (TD->Flags & UHCI_HCD_TD_FLAG_NOT_ACCESSED)
-        goto ProcessDoneTD;
-
-    if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
-        USBDStatus = UhciGetErrorFromTD(UhciExtension, TD);
-
-    if (USBDStatus != USBD_STATUS_SUCCESS ||
-        (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL))
+    if (!(TD->Flags & UHCI_HCD_TD_FLAG_NOT_ACCESSED))
     {
-        TransferedLen = 0;
+        if (UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
+            USBDStatus = UhciGetErrorFromTD(UhciExtension, TD);
+
+        if (USBDStatus != USBD_STATUS_SUCCESS ||
+            (TD->HwTD.ControlStatus.ActualLength == UHCI_TD_LENGTH_NULL))
+        {
+            TransferedLen = 0;
+        }
+        else
+        {
+            TransferedLen = TD->HwTD.ControlStatus.ActualLength + 1;
+        }
+
+        if (TD->HwTD.Token.PIDCode != UHCI_TD_PID_SETUP)
+            UhciTransfer->TransferLen += TransferedLen;
+
+        if (TD->HwTD.Token.PIDCode == UHCI_TD_PID_IN &&
+            TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
+        {
+            DPRINT_IMPL("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
+        }
+
+        if (USBDStatus != USBD_STATUS_SUCCESS)
+            UhciTransfer->USBDStatus = USBDStatus;
     }
-    else
-    {
-        TransferedLen = TD->HwTD.ControlStatus.ActualLength + 1;
-    }
-
-    if (TD->HwTD.Token.PIDCode != UHCI_TD_PID_SETUP)
-        UhciTransfer->TransferLen += TransferedLen;
-
-    if (TD->HwTD.Token.PIDCode == UHCI_TD_PID_IN &&
-        TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
-    {
-        DPRINT_IMPL("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
-    }
-
-    if (USBDStatus != USBD_STATUS_SUCCESS)
-        UhciTransfer->USBDStatus = USBDStatus;
-
-ProcessDoneTD:
 
     if (TD->Flags & UHCI_HCD_TD_FLAG_DATA_BUFFER)
         DPRINT_IMPL("UhciProcessDoneNonIsoTD: UNIMPLEMENTED. FIXME\n");
