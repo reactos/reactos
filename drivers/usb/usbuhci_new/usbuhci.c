@@ -1046,9 +1046,6 @@ UhciAllocateTD(IN PUHCI_EXTENSION UhciExtension,
 
     DPRINT_UHCI("UhciAllocateTD: ...\n");
 
-    if (UhciEndpoint->MaxTDs == 0)
-        return NULL;
-
     AllocTdCounter = UhciEndpoint->AllocTdCounter;
 
     for (ix = 0; ix < UhciEndpoint->MaxTDs; ++ix)
@@ -1056,7 +1053,14 @@ UhciAllocateTD(IN PUHCI_EXTENSION UhciExtension,
         TD = &UhciEndpoint->FirstTD[AllocTdCounter];
 
         if (!(TD->Flags & UHCI_HCD_TD_FLAG_ALLOCATED))
-            break;
+        {
+            TD->Flags |= UHCI_HCD_TD_FLAG_ALLOCATED;
+
+            UhciEndpoint->AllocatedTDs++;
+            UhciEndpoint->AllocTdCounter = AllocTdCounter;
+
+            return TD;
+        }
 
         if (AllocTdCounter < UhciEndpoint->MaxTDs - 1)
             AllocTdCounter++;
@@ -1064,15 +1068,7 @@ UhciAllocateTD(IN PUHCI_EXTENSION UhciExtension,
             AllocTdCounter = 0;
     }
 
-    if (ix >= UhciEndpoint->MaxTDs)
-        return NULL;
-
-    TD->Flags |= UHCI_HCD_TD_FLAG_ALLOCATED;
-
-    UhciEndpoint->AllocatedTDs++;
-    UhciEndpoint->AllocTdCounter = AllocTdCounter;
-
-    return TD;
+    return NULL;
 }
 
 VOID
