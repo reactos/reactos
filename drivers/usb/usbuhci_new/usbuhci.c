@@ -2136,29 +2136,8 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
         {
             if (NextTdPA == 0)
             {
-                NextTD = TD->NextHcdTD;
-                UhciEndpoint->HeadTD = NextTD;
-
-                DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
-
-                if (NextTD == NULL)
-                    UhciEndpoint->TailTD = NULL;
-
-                if (NextTD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
-                {
-                    PhysicalAddress = UHCI_ENDPOINT_FLAG_HALTED;
-                }
-                else
-                {
-                    PhysicalAddress = NextTD->PhysicalAddress;
-                    PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
-                }
-
-                DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
-
-                QH->HwQH.NextElement = PhysicalAddress;
-                QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
-                goto ProcessListTDs;
+                TD = TD->NextHcdTD;
+                goto EnqueueTD;
             }
 
             if (NextTdPA != TD->NextHcdTD->PhysicalAddress)
@@ -2361,6 +2340,8 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
             UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_HALTED;
         }
     }
+
+EnqueueTD:
 
     if (TD)
     {
