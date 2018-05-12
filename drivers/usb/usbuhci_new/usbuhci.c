@@ -757,7 +757,7 @@ UhciStopController(IN PVOID uhciExtension,
     {
         KeQuerySystemTime(&CurrentTime);
 
-        if (CurrentTime.QuadPart >= CurrentTime.QuadPart)
+        if (CurrentTime.QuadPart >= EndTime.QuadPart)
         {
             DPRINT1("UhciStopController: Failed to reset\n");
             DbgBreakPoint();
