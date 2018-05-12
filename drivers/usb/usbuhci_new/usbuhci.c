@@ -2117,16 +2117,11 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
                 NextTD,
                 NextTdPA);
 
-    for (TD = UhciEndpoint->HeadTD; ; TD = TD->NextHcdTD)
+    for (TD = UhciEndpoint->HeadTD; TD != NextTD && TD != NULL; TD = TD->NextHcdTD)
     {
         DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p, TD->NextHcdTD - %p\n",
                     TD,
                     TD->NextHcdTD);
-
-        if (TD == NextTD || TD == NULL)
-        {
-            break;
-        }
 
         TD->Flags |= UHCI_HCD_TD_FLAG_DONE;
         InsertTailList(&UhciEndpoint->ListTDs, &TD->TdLink);
