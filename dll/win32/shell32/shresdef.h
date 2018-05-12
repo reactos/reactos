@@ -342,7 +342,7 @@
 #define IDC_FILETYPES_LISTVIEW              14000
 #define IDC_FILETYPES_NEW                   14001
 #define IDC_FILETYPES_DELETE                14002
-#define IDC_FILETYPES_DETAILS_GROUPBOX      14003
+#define IDC_FILETYPES_EXT_DETAILS           14003
 #define IDC_FILETYPES_APPNAME               14005
 #define IDC_FILETYPES_CHANGE                14006
 #define IDC_FILETYPES_DESCRIPTION           14007
