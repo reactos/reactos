@@ -338,6 +338,16 @@
 #define IDC_BROWSE_FOR_FOLDER_TITLE       0x3742
 #define IDC_BROWSE_FOR_FOLDER_TREEVIEW    0x3741
 
+/* Control IDs for IDD_FOLDER_OPTIONS_FILETYPES dialog */
+#define IDC_FILETYPES_LISTVIEW              14000
+#define IDC_FILETYPES_NEW                   14001
+#define IDC_FILETYPES_DELETE                14002
+#define IDC_FILETYPES_DETAILS_GROUPBOX      14003
+#define IDC_FILETYPES_APPNAME               14005
+#define IDC_FILETYPES_CHANGE                14006
+#define IDC_FILETYPES_DESCRIPTION           14007
+#define IDC_FILETYPES_ADVANCED              14008
+
 /* Other dialogs */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
