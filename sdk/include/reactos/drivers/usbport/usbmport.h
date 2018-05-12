@@ -51,9 +51,9 @@ typedef struct _USBPORT_RESOURCES {
   BOOLEAN ShareVector;
   UCHAR Padded2[3];
   KINTERRUPT_MODE InterruptMode;
-  ULONG Reserved;
+  ULONG_PTR Reserved;
   PVOID ResourceBase;
-  SIZE_T IoSpaceLength;
+  ULONG IoSpaceLength;
   ULONG_PTR StartVA;
   ULONG StartPA;
   UCHAR LegacySupport;
@@ -62,7 +62,7 @@ typedef struct _USBPORT_RESOURCES {
   UCHAR Reserved3;
 } USBPORT_RESOURCES, *PUSBPORT_RESOURCES;
 
-C_ASSERT(sizeof(USBPORT_RESOURCES) == 24 + 7 * sizeof(PVOID));
+C_ASSERT(sizeof(USBPORT_RESOURCES) == 32 + 5 * sizeof(PVOID));
 
 typedef struct _USBPORT_ENDPOINT_PROPERTIES {
   USHORT DeviceAddress;
@@ -90,7 +90,7 @@ typedef struct _USBPORT_ENDPOINT_PROPERTIES {
   ULONG Reserved6;
 } USBPORT_ENDPOINT_PROPERTIES, *PUSBPORT_ENDPOINT_PROPERTIES;
 
-C_ASSERT(sizeof(USBPORT_ENDPOINT_PROPERTIES) == 48 + 4 * sizeof(PVOID));
+C_ASSERT(sizeof(USBPORT_ENDPOINT_PROPERTIES) == 56 + 2 * sizeof(PVOID));
 
 typedef struct _USBPORT_TRANSFER_PARAMETERS {
   ULONG TransferFlags;

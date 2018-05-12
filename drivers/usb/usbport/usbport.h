@@ -394,7 +394,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
 #if !defined(_M_X64)
   ULONG Padded[64];
 #else
-  ULONG Padded[0];
+  ULONG Padded[30];
 #endif
 
 } USBPORT_DEVICE_EXTENSION, *PUSBPORT_DEVICE_EXTENSION;
@@ -402,7 +402,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
 #if !defined(_M_X64)
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x500);
 #else
-C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x690);
+C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x700);
 #endif
 
 typedef struct _USBPORT_RH_DESCRIPTORS {
