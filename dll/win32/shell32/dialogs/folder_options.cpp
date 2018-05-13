@@ -1569,6 +1569,7 @@ struct NEWEXT_DIALOG
 static VOID
 NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
 {
+    // If "Advanced" button was clicked, then we shrink or expand the dialog.
     WCHAR szText[64];
     RECT rc, rc1, rc2;
 
@@ -1671,6 +1672,17 @@ NewExtensionDlgProc(
             {
                 case IDOK:
                     GetDlgItemText(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
+                    GetDlgItemText(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
+                    if (pNewExt->szExt[0] == 0)
+                    {
+                        WCHAR szText[128], szTitle[128];
+                        LoadStringW(shell32_hInstance, IDS_NEWEXT_SPECIFY_EXT, szText, _countof(szText));
+                        szText[_countof(szText) - 1] = 0;
+                        LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szTitle, _countof(szTitle));
+                        szTitle[_countof(szTitle) - 1] = 0;
+                        MessageBoxW(hwndDlg, szText, szTitle, MB_ICONERROR);
+                        return 0;
+                    }
                     EndDialog(hwndDlg, IDOK);
                     break;
                 case IDCANCEL:
@@ -1684,6 +1696,84 @@ NewExtensionDlgProc(
             break;
     }
     return 0;
+}
+
+static BOOL
+FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
+{
+    DWORD dwValue = 1;
+    HKEY hKey;
+    WCHAR szKey[MAX_PATH];
+    LONG nResult;
+
+    // Search the next "ft%06u" key name
+    do
+    {
+        StringCchPrintf(szKey, _countof(szKey), TEXT("ft%06u"), dwValue);
+
+        nResult = RegOpenKeyEx(HKEY_CLASSES_ROOT, szKey, 0, KEY_READ, &hKey);
+        if (nResult != ERROR_SUCCESS)
+            break;
+
+        RegCloseKey(hKey);
+        ++dwValue;
+    } while (dwValue < 0x1000000);
+
+    RegCloseKey(hKey);
+
+    if (dwValue >= 0x1000000)
+        return FALSE;
+
+    // Create new "ft%06u" key
+    nResult = RegCreateKeyEx(HKEY_CLASSES_ROOT, szKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    if (ERROR_SUCCESS != nResult)
+        return FALSE;
+
+    RegCloseKey(hKey);
+
+    // Create the ".EXT" key
+    WCHAR szExt[16];
+    if (*pszExt == L'.')
+        ++pszExt;
+    StringCchPrintf(szExt, _countof(szExt), TEXT(".%s"), pszExt);
+    CharUpperW(szExt);
+    nResult = RegCreateKeyEx(HKEY_CLASSES_ROOT, szExt, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    if (ERROR_SUCCESS != nResult)
+        return FALSE;
+
+    // ".EXT" @ --> "ft%06u"
+    DWORD dwSize = (lstrlen(szKey) + 1) * sizeof(WCHAR);
+    RegSetValueExW(hKey, NULL, 0, REG_SZ, (BYTE *)szKey, dwSize);
+
+    RegCloseKey(hKey);
+
+    // Make up the file type name
+    WCHAR szFile[100], szFileFormat[100];
+    LoadStringW(shell32_hInstance, IDS_FILE_EXT_TYPE, szFileFormat, _countof(szFileFormat));
+    szFile[_countof(szFileFormat) - 1] = 0;
+    StringCchPrintf(szFile, _countof(szFile), szFileFormat, &szExt[1]);
+
+    // Insert an item to listview
+    INT iItem;
+    HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+    InsertFileType(hListView, &szExt[1], &iItem, szFile);
+
+    LV_ITEM item;
+    ZeroMemory(&item, sizeof(item));
+    item.mask = LVIF_STATE | LVIF_TEXT;
+    item.iItem = iItem;
+    item.state = LVIS_SELECTED | LVIS_FOCUSED;
+    item.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
+    item.pszText = &szExt[1];
+    ListView_SetItem(hListView, &item);
+
+    item.pszText = szFile;
+    item.iSubItem = 1;
+    ListView_SetItem(hListView, &item);
+
+    ListView_EnsureVisible(hListView, iItem, FALSE);
+
+    return TRUE;
 }
 
 // IDD_FOLDER_OPTIONS_FILETYPES dialog
@@ -1717,7 +1807,11 @@ FolderOptionsFileTypesDlg(
             switch(LOWORD(wParam))
             {
                 case IDC_FILETYPES_NEW:
-                    DialogBoxParam(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION), hwndDlg, NewExtensionDlgProc, (LPARAM)&newext);
+                    if (IDOK == DialogBoxParam(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION),
+                                               hwndDlg, NewExtensionDlgProc, (LPARAM)&newext))
+                    {
+                        FileTypesDlg_AddExt(hwndDlg, newext.szExt, newext.szFileType);
+                    }
                     break;
                 case IDC_FILETYPES_CHANGE:
                     pItem = FindSelectedItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
