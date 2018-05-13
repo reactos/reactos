@@ -1691,7 +1691,7 @@ FolderOptionsFileTypesDlg(
             switch(LOWORD(wParam))
             {
                 case IDC_FILETYPES_NEW:
-                    DialogBoxParam(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION), hwndDlg, NewExtensionDlgProc, LPARAM(&newext));
+                    DialogBoxParam(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION), hwndDlg, NewExtensionDlgProc, (LPARAM)&newext);
                     break;
                 case IDC_FILETYPES_CHANGE:
                     pItem = FindSelectedItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
