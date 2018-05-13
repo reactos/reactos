@@ -1653,21 +1653,21 @@ NewExtDlg_OnInitDialog(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
 static void
 StringTrimW(LPWSTR pszText)
 {
-    LPWSTR pchFirst, pchLast;
     LPWSTR pch = pszText;
     while (iswspace(*pch))
         pch++;
 
+    LPWSTR pchFirst, pchLast;
     pchFirst = pchLast = pch;
     while (*pch && !iswspace(*pch))
     {
-        pchLast = pch;
         ++pch;
+        pchLast = pch;
     }
 
     INT_PTR cch = pchLast - pchFirst;
     MoveMemory(pszText, pchFirst, cch * sizeof(WCHAR));
-    pszText[cch + 1] = 0;
+    pszText[cch] = 0;
 }
 
 // IDD_NEWEXTENSION dialog
