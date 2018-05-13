@@ -1592,7 +1592,7 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_SHOWNOACTIVATE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_SHOWNOACTIVATE);
 
-        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_RIGHT, szText, _countof(szText));
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_LEFT, szText, _countof(szText));
         SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
 
         SetFocus(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX));
@@ -1608,7 +1608,7 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_HIDE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_HIDE);
 
-        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_LEFT, szText, _countof(szText));
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_RIGHT, szText, _countof(szText));
         SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
 
         rc.bottom -= pNewExt->dy;
