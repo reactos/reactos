@@ -9,7 +9,7 @@ setlocal enabledelayedexpansion
 
 REM Does the user need help?
 if /I "%1" == "help" goto help
-if /I "%1" == "/?" (
+if "%1" == "/?" (
 :help
     echo Help for configure script
     echo Syntax: path\to\source\configure.cmd [script-options] [Cmake-options]
@@ -110,7 +110,7 @@ REM Parse command line parameters
             goto quit
         ) else if /I "%1" == "RTC" (
             echo. && echo 	Warning: RTC switch is ignored outside of a Visual Studio environment. && echo.
-        ) else if /I "%1" NEQ "" (
+        ) else if "%1" NEQ "" (
             echo %1| find /I "-D" > NUL
             if %ERRORLEVEL% == 0 (
                 REM User is passing a switch to CMake
@@ -190,7 +190,7 @@ REM Parse command line parameters
         ) else if /I "%1" == "RTC" (
             echo Runtime checks enabled
             set VS_RUNTIME_CHECKS=1
-        ) else if /I "%1" NEQ "" (
+        ) else if "%1" NEQ "" (
             echo %1| find /I "-D" > NUL
             if %ERRORLEVEL% == 0 (
                 REM User is passing a switch to CMake
@@ -221,7 +221,7 @@ if "%VS_SOLUTION%" == "1" (
     set REACTOS_OUTPUT_PATH=%REACTOS_OUTPUT_PATH%-sln
 )
 
-if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
+if /I "%REACTOS_SOURCE_DIR%" == "%CD%\" (
     set CD_SAME_AS_SOURCE=1
     echo Creating directories in %REACTOS_OUTPUT_PATH%
 
