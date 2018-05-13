@@ -1778,9 +1778,10 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     StringCchPrintf(szFile, _countof(szFile), szFileFormat, &szExt[1]);
 
     // Insert an item to listview
-    INT iItem;
     HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
-    InsertFileType(hListView, &szExt[1], &iItem, szFile);
+    INT iItem = ListView_GetItemCount(hListView);
+    INT iItemCopy = iItem;
+    InsertFileType(hListView, szExt, &iItemCopy, szFile);
 
     LV_ITEM item;
     ZeroMemory(&item, sizeof(item));
