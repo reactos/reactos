@@ -263,6 +263,8 @@
 #define IDS_NEWEXT_ADVANCED_RIGHT                   30516
 #define IDS_NEWEXT_NEW                              30518
 #define IDS_NEWEXT_SPECIFY_EXT                      30519
+#define IDS_NEWEXT_ALREADY_ASSOC                    30520
+#define IDS_NEWEXT_EXT_IN_USE                       30521
 
 /* Dialogs */
 

@@ -1559,6 +1559,7 @@ FindSelectedItem(
 struct NEWEXT_DIALOG
 {
     HWND hwndDlg;
+    HWND hwndLV;
     RECT rcDlg;
     BOOL bAdvanced;
     INT dy;
@@ -1670,6 +1671,78 @@ StringTrimW(LPWSTR pszText)
     pszText[cch] = 0;
 }
 
+static BOOL
+NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
+{
+    LV_FINDINFO find;
+    INT iItem;
+
+    GetDlgItemText(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
+    StringTrimW(pNewExt->szExt);
+
+    GetDlgItemText(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
+    StringTrimW(pNewExt->szFileType);
+
+    if (pNewExt->szExt[0] == 0)
+    {
+        WCHAR szText[128], szTitle[128];
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_SPECIFY_EXT, szText, _countof(szText));
+        szText[_countof(szText) - 1] = 0;
+        LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szTitle, _countof(szTitle));
+        szTitle[_countof(szTitle) - 1] = 0;
+        MessageBoxW(hwndDlg, szText, szTitle, MB_ICONERROR);
+        return FALSE;
+    }
+
+    ZeroMemory(&find, sizeof(find));
+    find.flags = LVFI_STRING;
+    if (pNewExt->szExt[0] == L'.')
+    {
+        find.psz = &pNewExt->szExt[1];
+    }
+    else
+    {
+        find.psz = pNewExt->szExt;
+    }
+
+    iItem = ListView_FindItem(pNewExt->hwndLV, -1, &find);
+    if (iItem >= 0)
+    {
+        // already exists
+        WCHAR szText[256], szFormat[256], szTitle[64], szFileType[64];
+
+        // get file type
+        LV_ITEM item;
+        ZeroMemory(&item, sizeof(item));
+        item.mask = LVIF_TEXT;
+        item.pszText = szFileType;
+        item.cchTextMax = _countof(szFileType);
+        item.iItem = iItem;
+        item.iSubItem = 1;
+        ListView_GetItem(pNewExt->hwndLV, &item);
+
+        // get text
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ALREADY_ASSOC, szFormat, _countof(szFormat));
+        szText[_countof(szFormat) - 1] = 0;
+        StringCchPrintf(szText, _countof(szText), szFormat, find.psz, szFileType, find.psz, szFileType);
+
+        // get title
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_EXT_IN_USE, szTitle, _countof(szTitle));
+        szTitle[_countof(szTitle) - 1] = 0;
+
+        if (MessageBoxW(hwndDlg, szText, szTitle, MB_ICONWARNING | MB_YESNO) == IDNO)
+        {
+            return FALSE;
+        }
+
+        // Delete the item
+        ListView_DeleteItem(pNewExt->hwndLV, iItem);
+    }
+
+    EndDialog(hwndDlg, IDOK);
+    return TRUE;
+}
+
 // IDD_NEWEXTENSION dialog
 INT_PTR
 CALLBACK
@@ -1679,42 +1752,26 @@ NewExtensionDlgProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    static NEWEXT_DIALOG *pNewExt = NULL;
+    static NEWEXT_DIALOG *s_pNewExt = NULL;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pNewExt = (NEWEXT_DIALOG *)lParam;
-            NewExtDlg_OnInitDialog(hwndDlg, pNewExt);
+            s_pNewExt = (NEWEXT_DIALOG *)lParam;
+            NewExtDlg_OnInitDialog(hwndDlg, s_pNewExt);
             return TRUE;
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    GetDlgItemText(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
-                    StringTrimW(pNewExt->szExt);
-
-                    GetDlgItemText(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
-                    StringTrimW(pNewExt->szFileType);
-
-                    if (pNewExt->szExt[0] == 0)
-                    {
-                        WCHAR szText[128], szTitle[128];
-                        LoadStringW(shell32_hInstance, IDS_NEWEXT_SPECIFY_EXT, szText, _countof(szText));
-                        szText[_countof(szText) - 1] = 0;
-                        LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szTitle, _countof(szTitle));
-                        szTitle[_countof(szTitle) - 1] = 0;
-                        MessageBoxW(hwndDlg, szText, szTitle, MB_ICONERROR);
-                        return 0;
-                    }
-                    EndDialog(hwndDlg, IDOK);
+                    NewExtDlg_OnOK(hwndDlg, s_pNewExt);
                     break;
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
                     break;
                 case IDC_NEWEXT_ADVANCED:
-                    pNewExt->bAdvanced = !pNewExt->bAdvanced;
-                    NewExtDlg_OnAdvanced(hwndDlg, pNewExt);
+                    s_pNewExt->bAdvanced = !s_pNewExt->bAdvanced;
+                    NewExtDlg_OnAdvanced(hwndDlg, s_pNewExt);
                     break;
             }
             break;
@@ -1832,6 +1889,7 @@ FolderOptionsFileTypesDlg(
             switch(LOWORD(wParam))
             {
                 case IDC_FILETYPES_NEW:
+                    newext.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
                     if (IDOK == DialogBoxParam(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION),
                                                hwndDlg, NewExtensionDlgProc, (LPARAM)&newext))
                     {
