@@ -259,8 +259,8 @@
 #define IDS_ADVANCED_SHOW_COMP_COLOR                30512
 #define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
-#define IDS_NEWEXT_ADVANCED_LEFT                    30503
-#define IDS_NEWEXT_ADVANCED_RIGHT                   30504
+#define IDS_NEWEXT_ADVANCED_LEFT                    30515
+#define IDS_NEWEXT_ADVANCED_RIGHT                   30516
 
 /* Dialogs */
 
