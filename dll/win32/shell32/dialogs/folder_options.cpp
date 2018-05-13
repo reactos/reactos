@@ -2,7 +2,7 @@
  *    Open With  Context Menu extension
  *
  * Copyright 2007 Johannes Anderwald <johannes.anderwald@reactos.org>
- * Copyright 2016-2017 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * Copyright 2016-2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1556,6 +1556,61 @@ FindSelectedItem(
     return NULL;
 }
 
+static VOID
+NewExtDlg_OnAdvanced(HWND hwndDlg, BOOL bAdvanced)
+{
+    WCHAR szText[64];
+    if (bAdvanced)
+    {
+        ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_SHOWNOACTIVATE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_SHOWNOACTIVATE);
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_RIGHT, szText, _countof(szText));
+    }
+    else
+    {
+        ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_HIDE);
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_LEFT, szText, _countof(szText));
+    }
+    SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
+}
+
+// IDD_NEWEXTENSION dialog
+INT_PTR
+CALLBACK
+NewExtensionDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    static BOOL s_bAdvanced = FALSE;
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            s_bAdvanced = FALSE;
+            NewExtDlg_OnAdvanced(hwndDlg, s_bAdvanced);
+            return TRUE;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwndDlg, IDOK);
+                    break;
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
+                case IDC_NEWEXT_ADVANCED:
+                    s_bAdvanced = !s_bAdvanced;
+                    NewExtDlg_OnAdvanced(hwndDlg, s_bAdvanced);
+                    break;
+            }
+            break;
+    }
+    return 0;
+}
+
+// IDD_FOLDER_OPTIONS_FILETYPES dialog
 INT_PTR
 CALLBACK
 FolderOptionsFileTypesDlg(
@@ -1578,14 +1633,17 @@ FolderOptionsFileTypesDlg(
             /* Disable the Delete button if the listview is empty or
                the selected item should not be deleted by the user */
             if (pItem == NULL || (pItem->EditFlags & 0x00000010)) // FTA_NoRemove
-                EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
             return TRUE;
 
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
-                case 14006:
-                    pItem = FindSelectedItem(GetDlgItem(hwndDlg, 14000));
+                case IDC_FILETYPES_NEW:
+                    DialogBox(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION), hwndDlg, NewExtensionDlgProc);
+                    break;
+                case IDC_FILETYPES_CHANGE:
+                    pItem = FindSelectedItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pItem)
                     {
                         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT;
@@ -1623,7 +1681,7 @@ FolderOptionsFileTypesDlg(
                     /* format buffer */
                     swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
                     /* update dialog */
-                    SetDlgItemTextW(hwndDlg, 14003, Buffer);
+                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DETAILS_GROUPBOX, Buffer);
 
                     if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
                     {
@@ -1633,19 +1691,19 @@ FolderOptionsFileTypesDlg(
                     /* format buffer */
                     swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
                     /* update dialog */
-                    SetDlgItemTextW(hwndDlg, 14007, Buffer);
+                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
 
                     /* Enable the Delete button */
                     if (pItem->EditFlags & 0x00000010) // FTA_NoRemove
-                        EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
                     else
-                        EnableWindow(GetDlgItem(hwndDlg, 14002), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), TRUE);
                 }
             }
             else if (lppl->hdr.code == PSN_SETACTIVE)
             {
                 /* On page activation, set the focus to the listview */
-                SetFocus(GetDlgItem(hwndDlg, 14000));
+                SetFocus(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
             }
             break;
     }

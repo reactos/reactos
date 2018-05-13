@@ -259,6 +259,9 @@
 #define IDS_ADVANCED_SHOW_COMP_COLOR                30512
 #define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
+#define IDS_NEWEXT_ADVANCED_LEFT                    30503
+#define IDS_NEWEXT_ADVANCED_RIGHT                   30504
+
 /* Dialogs */
 
 /* Run dialog */
@@ -352,6 +355,7 @@
 #define IDC_NEWEXT_EDIT                     14001
 #define IDC_NEWEXT_ADVANCED                 14002
 #define IDC_NEWEXT_COMBOBOX                 14003
+#define IDC_NEWEXT_ASSOC                    14004
 
 /* Other dialogs */
 #define IDD_RUN_AS       23

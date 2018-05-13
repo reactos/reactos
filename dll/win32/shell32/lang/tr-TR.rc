@@ -651,7 +651,7 @@ BEGIN
     LTEXT "&File Extension:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
     PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", -1, 10, 34, 85, 14
+    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
     PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
@@ -894,4 +894,7 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Bilgisayarım'da Denetim Masası'nı göster"
     IDS_ADVANCED_SHOW_COMP_COLOR "Şifrelenmiş veyâ sıkıştırılmış NTFS kütüklerini renkli göster"
     IDS_ADVANCED_SHOW_INFO_TIP "Dizin ve masaüstü ögeleri için açılan tanım göster"
+
+    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
+    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
 END
