@@ -246,7 +246,7 @@ if "%VS_SOLUTION%" == "1" (
     goto quit
 )
 
-if "%NEW_STYLE_BUILD%"=="0" (
+if "%NEW_STYLE_BUILD%" == "0" (
 
     if not exist host-tools (
         mkdir host-tools
@@ -278,7 +278,7 @@ if "%NEW_STYLE_BUILD%"=="0" (
 
 echo Preparing reactos...
 
-if "%NEW_STYLE_BUILD%"=="0" (
+if "%NEW_STYLE_BUILD%" == "0" (
     cd reactos
 )
 
@@ -287,7 +287,7 @@ if EXIST CMakeCache.txt (
     del host-tools\CMakeCache.txt /q
 )
 
-if "%NEW_STYLE_BUILD%"=="0" (
+if "%NEW_STYLE_BUILD%" == "0" (
     set BUILD_TOOLS_FLAG=-DREACTOS_BUILD_TOOLS_DIR:PATH="%REACTOS_BUILD_TOOLS_DIR%"
 )
 
@@ -299,7 +299,7 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
 )
 
-if "%NEW_STYLE_BUILD%"=="0" (
+if "%NEW_STYLE_BUILD%" == "0" (
     cd..
 )
 
