@@ -1594,6 +1594,8 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
 
         LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_RIGHT, szText, _countof(szText));
         SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
+
+        SetFocus(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX));
     }
     else
     {
