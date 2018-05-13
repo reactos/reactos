@@ -905,4 +905,5 @@ BEGIN
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
     IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
+    IDS_NEWEXT_NEW "<New>"
 END

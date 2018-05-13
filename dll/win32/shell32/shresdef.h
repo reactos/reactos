@@ -261,6 +261,7 @@
 
 #define IDS_NEWEXT_ADVANCED_LEFT                    30515
 #define IDS_NEWEXT_ADVANCED_RIGHT                   30516
+#define IDS_NEWEXT_NEW                              30518
 
 /* Dialogs */
 

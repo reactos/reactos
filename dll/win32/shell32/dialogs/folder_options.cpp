@@ -1563,6 +1563,7 @@ struct NEWEXT_DIALOG
     BOOL bAdvanced;
     INT dy;
     WCHAR szExt[16];
+    WCHAR szFileType[64];
 };
 
 static VOID
@@ -1572,6 +1573,7 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     RECT rc, rc1, rc2;
 
     GetWindowRect(hwndDlg, &rc);
+    rc.bottom = rc.top + (pNewExt->rcDlg.bottom - pNewExt->rcDlg.top);
 
     GetWindowRect(GetDlgItem(hwndDlg, IDOK), &rc1);
     MapWindowPoints(NULL, hwndDlg, (POINT *)&rc1, 2);
@@ -1589,9 +1591,9 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
 
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_SHOWNOACTIVATE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_SHOWNOACTIVATE);
-        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_RIGHT, szText, _countof(szText));
 
-        rc.bottom = rc.top + (pNewExt->rcDlg.bottom - pNewExt->rcDlg.top);
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_RIGHT, szText, _countof(szText));
+        SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
     }
     else
     {
@@ -1603,11 +1605,15 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
 
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_HIDE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_HIDE);
-        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_LEFT, szText, _countof(szText));
 
-        rc.bottom = rc.top + (pNewExt->rcDlg.bottom - pNewExt->rcDlg.top) - pNewExt->dy;
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_LEFT, szText, _countof(szText));
+        SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
+
+        rc.bottom -= pNewExt->dy;
+
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_NEW, szText, _countof(szText));
+        SetDlgItemTextW(hwndDlg, IDC_NEWEXT_COMBOBOX, szText);
     }
-    SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
 
     MoveWindow(GetDlgItem(hwndDlg, IDOK), rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top, TRUE);
     MoveWindow(GetDlgItem(hwndDlg, IDCANCEL), rc2.left, rc2.top, rc2.right - rc2.left, rc2.bottom - rc2.top, TRUE);
