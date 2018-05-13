@@ -1621,6 +1621,32 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     MoveWindow(hwndDlg, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
 }
 
+static BOOL
+NewExtDlg_OnInitDialog(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
+{
+    WCHAR szText[64];
+
+    pNewExt->hwndDlg = hwndDlg;
+    pNewExt->bAdvanced = FALSE;
+
+    GetWindowRect(hwndDlg, &pNewExt->rcDlg);
+
+    RECT rc1, rc2;
+    GetWindowRect(GetDlgItem(hwndDlg, IDC_NEWEXT_EDIT), &rc1);
+    GetWindowRect(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), &rc2);
+    pNewExt->dy = rc2.top - rc1.top;
+
+    LoadStringW(shell32_hInstance, IDS_NEWEXT_NEW, szText, _countof(szText));
+    SendDlgItemMessageW(hwndDlg, IDC_NEWEXT_COMBOBOX, CB_ADDSTRING, 0, (LPARAM)szText);
+    SendDlgItemMessageW(hwndDlg, IDC_NEWEXT_COMBOBOX, CB_SETCURSEL, 0, 0);
+
+    SendDlgItemMessageW(hwndDlg, IDC_NEWEXT_EDIT, EM_SETLIMITTEXT, _countof(pNewExt->szExt) - 1, 0);
+
+    NewExtDlg_OnAdvanced(hwndDlg, pNewExt);
+
+    return TRUE;
+}
+
 // IDD_NEWEXTENSION dialog
 INT_PTR
 CALLBACK
@@ -1631,20 +1657,12 @@ NewExtensionDlgProc(
     LPARAM lParam)
 {
     static NEWEXT_DIALOG *pNewExt = NULL;
-    RECT rc1, rc2;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             pNewExt = (NEWEXT_DIALOG *)lParam;
-            pNewExt->hwndDlg = hwndDlg;
-            pNewExt->bAdvanced = FALSE;
-            GetWindowRect(hwndDlg, &pNewExt->rcDlg);
-            GetWindowRect(GetDlgItem(hwndDlg, IDC_NEWEXT_EDIT), &rc1);
-            GetWindowRect(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), &rc2);
-            pNewExt->dy = rc2.top - rc1.top;
-            NewExtDlg_OnAdvanced(hwndDlg, pNewExt);
-            SendDlgItemMessageW(hwndDlg, IDC_NEWEXT_EDIT, EM_SETLIMITTEXT, _countof(pNewExt->szExt) - 1, 0);
+            NewExtDlg_OnInitDialog(hwndDlg, pNewExt);
             return TRUE;
         case WM_COMMAND:
             switch (LOWORD(wParam))
