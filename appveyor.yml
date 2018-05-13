@@ -24,10 +24,10 @@ init:
 build_script:
   - set PATH=C:\RosCMakeNinja\bin;%PATH%
   - if "%BuildType%" == "msvc-x64" (
-        call "C:\PROGRA~2\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-      ) else (
-        call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
-      )
+      call "C:\PROGRA~2\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+    ) else (
+      call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
+    )
   - cmake --version
   - md c:\ros_build
   - cd c:\ros_build
