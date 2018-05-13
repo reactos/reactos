@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Clipboard Viewer
- * FILE:            base/applications/clipbrd/clipbrd.c
- * PURPOSE:         Provides a view of the contents of the ReactOS clipboard.
- * PROGRAMMERS:     Ricardo Hanke
+ * PROJECT:     ReactOS Clipboard Viewer
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Provides a view of the contents of the ReactOS clipboard.
+ * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
+ *              Copyright 2015-2018 Hermes Belusca-Maito
  */
 
 #include "precomp.h"
@@ -13,26 +13,12 @@ static const WCHAR szClassName[] = L"ClipBookWClass";
 CLIPBOARD_GLOBALS Globals;
 SCROLLSTATE Scrollstate;
 
-static void UpdateLinesToScroll(void)
-{
-    UINT uLinesToScroll;
-
-    if (!SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &uLinesToScroll, 0))
-    {
-        Globals.uLinesToScroll = 3;
-    }
-    else
-    {
-        Globals.uLinesToScroll = uLinesToScroll;
-    }
-}
-
 static void SaveClipboardToFile(void)
 {
     OPENFILENAMEW sfn;
+    LPWSTR c;
     WCHAR szFileName[MAX_PATH];
     WCHAR szFilterMask[MAX_STRING_LEN + 10];
-    LPWSTR c;
 
     ZeroMemory(&szFilterMask, sizeof(szFilterMask));
     c = szFilterMask + LoadStringW(Globals.hInstance, STRING_FORMAT_NT, szFilterMask, MAX_STRING_LEN) + 1;
@@ -87,9 +73,9 @@ static void LoadClipboardDataFromFile(LPWSTR lpszFileName)
 static void LoadClipboardFromFile(void)
 {
     OPENFILENAMEW ofn;
+    LPWSTR c;
     WCHAR szFileName[MAX_PATH];
     WCHAR szFilterMask[MAX_STRING_LEN + 10];
-    LPWSTR c;
 
     ZeroMemory(&szFilterMask, sizeof(szFilterMask));
     c = szFilterMask + LoadStringW(Globals.hInstance, STRING_FORMAT_GEN, szFilterMask, MAX_STRING_LEN) + 1;
@@ -123,6 +109,8 @@ static void LoadClipboardFromDrop(HDROP hDrop)
 
 static void SetDisplayFormat(UINT uFormat)
 {
+    RECT rc;
+
     CheckMenuItem(Globals.hMenu, Globals.uCheckedItem, MF_BYCOMMAND | MF_UNCHECKED);
     Globals.uCheckedItem = uFormat + CMD_AUTOMATIC;
     CheckMenuItem(Globals.hMenu, Globals.uCheckedItem, MF_BYCOMMAND | MF_CHECKED);
@@ -136,13 +124,10 @@ static void SetDisplayFormat(UINT uFormat)
         Globals.uDisplayFormat = uFormat;
     }
 
-    if (Globals.hDspBmp)
-    {
-        DeleteObject(Globals.hDspBmp);
-    }
-
-    ZeroMemory(&Scrollstate, sizeof(Scrollstate));
-    UpdateWindowScrollState(Globals.hMainWnd, Globals.hDspBmp, &Scrollstate);
+    GetClipboardDataDimensions(Globals.uDisplayFormat, &rc);
+    Scrollstate.CurrentX = Scrollstate.CurrentY = 0;
+    Scrollstate.iWheelCarryoverX = Scrollstate.iWheelCarryoverY = 0;
+    UpdateWindowScrollState(Globals.hMainWnd, rc.right, rc.bottom, &Scrollstate);
 
     InvalidateRect(Globals.hMainWnd, NULL, TRUE);
 }
@@ -169,8 +154,8 @@ static void InitMenuPopup(HMENU hMenu, LPARAM index)
 static void UpdateDisplayMenu(void)
 {
     UINT uFormat;
-    WCHAR szFormatName[MAX_FMT_NAME_LEN + 1];
     HMENU hMenu;
+    WCHAR szFormatName[MAX_FMT_NAME_LEN + 1];
 
     hMenu = GetSubMenu(Globals.hMenu, DISPLAY_MENU_POS);
 
@@ -187,27 +172,34 @@ static void UpdateDisplayMenu(void)
 
     AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
 
-    uFormat = EnumClipboardFormats(0);
-    while (uFormat)
+    /* Display the supported clipboard formats first */
+    for (uFormat = EnumClipboardFormats(0); uFormat;
+         uFormat = EnumClipboardFormats(uFormat))
     {
-        RetrieveClipboardFormatName(Globals.hInstance, uFormat, TRUE, szFormatName, ARRAYSIZE(szFormatName));
-
-        if (!IsClipboardFormatSupported(uFormat))
+        if (IsClipboardFormatSupported(uFormat))
         {
-            AppendMenuW(hMenu, MF_STRING | MF_GRAYED, 0, szFormatName);
-        }
-        else
-        {
+            RetrieveClipboardFormatName(Globals.hInstance, uFormat, TRUE,
+                                        szFormatName, ARRAYSIZE(szFormatName));
             AppendMenuW(hMenu, MF_STRING, CMD_AUTOMATIC + uFormat, szFormatName);
         }
+    }
 
-        uFormat = EnumClipboardFormats(uFormat);
+    /* Now display the unsupported clipboard formats */
+    for (uFormat = EnumClipboardFormats(0); uFormat;
+         uFormat = EnumClipboardFormats(uFormat))
+    {
+        if (!IsClipboardFormatSupported(uFormat))
+        {
+            RetrieveClipboardFormatName(Globals.hInstance, uFormat, TRUE,
+                                        szFormatName, ARRAYSIZE(szFormatName));
+            AppendMenuW(hMenu, MF_STRING | MF_GRAYED, 0, szFormatName);
+        }
     }
 
     CloseClipboard();
 }
 
-static int ClipboardCommandHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static int OnCommand(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (LOWORD(wParam))
     {
@@ -274,67 +266,112 @@ static int ClipboardCommandHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
     return 0;
 }
 
-static void ClipboardPaintHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static void OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
     PAINTSTRUCT ps;
+    COLORREF crOldBkColor, crOldTextColor;
     RECT rc;
 
     if (!OpenClipboard(Globals.hMainWnd))
         return;
 
     hdc = BeginPaint(hWnd, &ps);
-    GetClientRect(hWnd, &rc);
+
+    /* Erase the background if needed */
+    if (ps.fErase)
+        FillRect(ps.hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+
+    /* Set the correct background and text colors */
+    crOldBkColor   = SetBkColor(ps.hdc, GetSysColor(COLOR_WINDOW));
+    crOldTextColor = SetTextColor(ps.hdc, GetSysColor(COLOR_WINDOWTEXT));
+
+    /* Realize the clipboard palette if there is one */
+    RealizeClipboardPalette(ps.hdc);
 
     switch (Globals.uDisplayFormat)
     {
         case CF_NONE:
         {
+            /* The clipboard is empty */
             break;
         }
 
+        case CF_DSPTEXT:
+        case CF_TEXT:
+        case CF_OEMTEXT:
         case CF_UNICODETEXT:
         {
-            DrawTextFromClipboard(hdc, &rc, DT_LEFT | DT_NOPREFIX);
+            DrawTextFromClipboard(Globals.uDisplayFormat, ps, Scrollstate);
             break;
         }
 
+        case CF_DSPBITMAP:
         case CF_BITMAP:
         {
-            BitBltFromClipboard(hdc, rc.left, rc.top, rc.right, rc.bottom, 0, 0, SRCCOPY);
+            BitBltFromClipboard(ps, Scrollstate, SRCCOPY);
             break;
         }
 
         case CF_DIB:
-        {
-            SetDIBitsToDeviceFromClipboard(CF_DIB, hdc, rc.left, rc.top, 0, 0, 0, DIB_RGB_COLORS);
-            break;
-        }
-
         case CF_DIBV5:
         {
-            SetDIBitsToDeviceFromClipboard(CF_DIBV5, hdc, rc.left, rc.top, 0, 0, 0, DIB_RGB_COLORS);
+            SetDIBitsToDeviceFromClipboard(Globals.uDisplayFormat, ps, Scrollstate, DIB_RGB_COLORS);
             break;
         }
 
+        case CF_DSPMETAFILEPICT:
         case CF_METAFILEPICT:
         {
+            GetClientRect(hWnd, &rc);
             PlayMetaFileFromClipboard(hdc, &rc);
             break;
         }
 
+        case CF_DSPENHMETAFILE:
         case CF_ENHMETAFILE:
         {
+            GetClientRect(hWnd, &rc);
             PlayEnhMetaFileFromClipboard(hdc, &rc);
+            break;
+        }
+
+        // case CF_PALETTE:
+            // TODO: Draw a palette with squares filled with colors.
+            // break;
+
+        case CF_OWNERDISPLAY:
+        {
+            HGLOBAL hglb;
+            PPAINTSTRUCT pps;
+
+            hglb = GlobalAlloc(GMEM_MOVEABLE, sizeof(ps));
+            if (hglb)
+            {
+                pps = GlobalLock(hglb);
+                CopyMemory(pps, &ps, sizeof(ps));
+                GlobalUnlock(hglb);
+
+                SendClipboardOwnerMessage(TRUE, WM_PAINTCLIPBOARD,
+                                          (WPARAM)hWnd, (LPARAM)hglb);
+
+                GlobalFree(hglb);
+            }
             break;
         }
 
         default:
         {
-            DrawTextFromResource(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT, hdc, &rc, DT_CENTER | DT_WORDBREAK | DT_NOPREFIX);
+            GetClientRect(hWnd, &rc);
+            DrawTextFromResource(Globals.hInstance, ERROR_UNSUPPORTED_FORMAT,
+                                 hdc, &rc, DT_CENTER | DT_WORDBREAK | DT_NOPREFIX);
             break;
         }
     }
+
+    /* Restore the original colors */
+    SetTextColor(ps.hdc, crOldTextColor);
+    SetBkColor(ps.hdc, crOldBkColor);
 
     EndPaint(hWnd, &ps);
 
@@ -347,12 +384,29 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
     {
         case WM_CREATE:
         {
+            TEXTMETRICW tm;
+            HDC hDC = GetDC(hWnd);
+
+            /*
+             * Note that the method with GetObjectW just returns
+             * the original parameters with which the font was created.
+             */
+            if (GetTextMetricsW(hDC, &tm))
+            {
+                Globals.CharWidth  = tm.tmMaxCharWidth; // tm.tmAveCharWidth;
+                Globals.CharHeight = tm.tmHeight + tm.tmExternalLeading;
+            }
+            ReleaseDC(hWnd, hDC);
+
+
             Globals.hMenu = GetMenu(hWnd);
             Globals.hWndNext = SetClipboardViewer(hWnd);
-            
+
             // For now, the Help dialog item is disabled because of lacking of HTML support
             EnableMenuItem(Globals.hMenu, CMD_HELP, MF_BYCOMMAND | MF_GRAYED);
-            
+
+            UpdateLinesToScroll(&Scrollstate);
+
             UpdateDisplayMenu();
             SetDisplayFormat(0);
             break;
@@ -367,54 +421,106 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_DESTROY:
         {
             ChangeClipboardChain(hWnd, Globals.hWndNext);
+
+            if (Globals.uDisplayFormat == CF_OWNERDISPLAY)
+            {
+                HGLOBAL hglb;
+                PRECT prc;
+
+                hglb = GlobalAlloc(GMEM_MOVEABLE, sizeof(*prc));
+                if (hglb)
+                {
+                    prc = GlobalLock(hglb);
+                    SetRectEmpty(prc);
+                    GlobalUnlock(hglb);
+
+                    SendClipboardOwnerMessage(TRUE, WM_SIZECLIPBOARD,
+                                              (WPARAM)hWnd, (LPARAM)hglb);
+
+                    GlobalFree(hglb);
+                }
+            }
+
             PostQuitMessage(0);
             break;
         }
 
         case WM_PAINT:
         {
-            ClipboardPaintHandler(hWnd, uMsg, wParam, lParam);
+            OnPaint(hWnd, wParam, lParam);
             break;
         }
 
         case WM_KEYDOWN:
         {
-            HandleKeyboardScrollEvents(hWnd, uMsg, wParam, lParam);
+            OnKeyScroll(hWnd, wParam, lParam, &Scrollstate);
             break;
         }
 
         case WM_MOUSEWHEEL:
+        case WM_MOUSEHWHEEL:
         {
-            HandleMouseScrollEvents(hWnd, uMsg, wParam, lParam, &Scrollstate);
+            OnMouseScroll(hWnd, uMsg, wParam, lParam, &Scrollstate);
             break;
         }
 
         case WM_HSCROLL:
         {
-            HandleHorizontalScrollEvents(hWnd, uMsg, wParam, lParam, &Scrollstate);
+            // NOTE: Windows uses an offset of 16 pixels
+            OnScroll(hWnd, SB_HORZ, wParam, 5, &Scrollstate);
             break;
         }
 
         case WM_VSCROLL:
         {
-            HandleVerticalScrollEvents(hWnd, uMsg, wParam, lParam, &Scrollstate);
+            // NOTE: Windows uses an offset of 16 pixels
+            OnScroll(hWnd, SB_VERT, wParam, 5, &Scrollstate);
             break;
         }
 
         case WM_SIZE:
         {
-            UpdateWindowScrollState(hWnd, Globals.hDspBmp, &Scrollstate);
+            RECT rc;
 
-            if ((Globals.uDisplayFormat == CF_METAFILEPICT) ||
-                (Globals.uDisplayFormat == CF_ENHMETAFILE) ||
-                (Globals.uDisplayFormat == CF_DSPENHMETAFILE) ||
-                (Globals.uDisplayFormat == CF_DSPMETAFILEPICT))
+            if (Globals.uDisplayFormat == CF_OWNERDISPLAY)
             {
-                InvalidateRect(Globals.hMainWnd, NULL, FALSE);
+                HGLOBAL hglb;
+                PRECT prc;
+
+                hglb = GlobalAlloc(GMEM_MOVEABLE, sizeof(*prc));
+                if (hglb)
+                {
+                    prc = GlobalLock(hglb);
+                    if (wParam == SIZE_MINIMIZED)
+                        SetRectEmpty(prc);
+                    else
+                        GetClientRect(hWnd, prc);
+                    GlobalUnlock(hglb);
+
+                    SendClipboardOwnerMessage(TRUE, WM_SIZECLIPBOARD,
+                                              (WPARAM)hWnd, (LPARAM)hglb);
+
+                    GlobalFree(hglb);
+                }
+                break;
             }
-            else if (!IsClipboardFormatSupported(Globals.uDisplayFormat))
+
+            GetClipboardDataDimensions(Globals.uDisplayFormat, &rc);
+            UpdateWindowScrollState(hWnd, rc.right, rc.bottom, &Scrollstate);
+
+            // NOTE: There still are little problems drawing
+            // the background when displaying clipboard text.
+            if (!IsClipboardFormatSupported(Globals.uDisplayFormat) ||
+                Globals.uDisplayFormat == CF_DSPTEXT ||
+                Globals.uDisplayFormat == CF_TEXT    ||
+                Globals.uDisplayFormat == CF_OEMTEXT ||
+                Globals.uDisplayFormat == CF_UNICODETEXT)
             {
                 InvalidateRect(Globals.hMainWnd, NULL, TRUE);
+            }
+            else
+            {
+                InvalidateRect(Globals.hMainWnd, NULL, FALSE);
             }
 
             break;
@@ -422,6 +528,7 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_CHANGECBCHAIN:
         {
+            /* Transmit through the clipboard viewer chain */
             if ((HWND)wParam == Globals.hWndNext)
             {
                 Globals.hWndNext = (HWND)lParam;
@@ -434,11 +541,32 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+        case WM_DESTROYCLIPBOARD:
+            break;
+
+        case WM_RENDERALLFORMATS:
+        {
+            /*
+             * When the user has cleared the clipboard via the DELETE command,
+             * we (clipboard viewer) become the clipboard owner. When we are
+             * subsequently closed, this message is then sent to us so that
+             * we get a chance to render everything we can. Since we don't have
+             * anything to render, just empty the clipboard.
+             */
+            DeleteClipboardContent();
+            break;
+        }
+
+        case WM_RENDERFORMAT:
+            // TODO!
+            break;
+
         case WM_DRAWCLIPBOARD:
         {
             UpdateDisplayMenu();
             SetDisplayFormat(0);
 
+            /* Pass the message to the next window in clipboard viewer chain */
             SendMessageW(Globals.hWndNext, uMsg, wParam, lParam);
             break;
         }
@@ -451,7 +579,7 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             }
             else
             {
-                ClipboardCommandHandler(hWnd, uMsg, wParam, lParam);
+                OnCommand(hWnd, uMsg, wParam, lParam);
             }
             break;
         }
@@ -468,28 +596,42 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+        case WM_PALETTECHANGED:
+        {
+            /* Ignore if this comes from ourselves */
+            if ((HWND)wParam == hWnd)
+                break;
+
+            /* Fall back to WM_QUERYNEWPALETTE */
+        }
+
         case WM_QUERYNEWPALETTE:
         {
-            if (RealizeClipboardPalette(hWnd) != GDI_ERROR)
+            BOOL Success;
+            HDC hDC;
+
+            if (!OpenClipboard(Globals.hMainWnd))
+                return FALSE;
+
+            hDC = GetDC(hWnd);
+            if (!hDC)
+            {
+                CloseClipboard();
+                return FALSE;
+            }
+
+            Success = RealizeClipboardPalette(hDC);
+
+            ReleaseDC(hWnd, hDC);
+            CloseClipboard();
+
+            if (Success)
             {
                 InvalidateRect(hWnd, NULL, TRUE);
                 UpdateWindow(hWnd);
                 return TRUE;
             }
             return FALSE;
-        }
-
-        case WM_PALETTECHANGED:
-        {
-            if ((HWND)wParam != hWnd)
-            {
-                if (RealizeClipboardPalette(hWnd) != GDI_ERROR)
-                {
-                    InvalidateRect(hWnd, NULL, TRUE);
-                    UpdateWindow(hWnd);
-                }
-            }
-            break;
         }
 
         case WM_SYSCOLORCHANGE:
@@ -502,7 +644,7 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             if (wParam == SPI_SETWHEELSCROLLLINES)
             {
-                UpdateLinesToScroll();
+                UpdateLinesToScroll(&Scrollstate);
             }
             break;
         }
@@ -512,6 +654,7 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
         }
     }
+
     return 0;
 }
 
@@ -530,6 +673,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         return 0;
     }
 
+    switch (GetUserDefaultUILanguage())
+    {
+        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
+
+        default:
+            break;
+    }
+
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
 
@@ -542,22 +695,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndclass.lpszMenuName = MAKEINTRESOURCEW(MAIN_MENU);
     wndclass.lpszClassName = szClassName;
-    
-    switch (GetUserDefaultUILanguage())
-    {
-        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-            SetProcessDefaultLayout(LAYOUT_RTL);
-            break;
-
-        default:
-            break;
-    }
 
     if (!RegisterClassExW(&wndclass))
     {
         ShowLastWin32Error(NULL);
         return 0;
     }
+
+    ZeroMemory(&Scrollstate, sizeof(Scrollstate));
 
     LoadStringW(hInstance, STRING_CLIPBOARD, szBuffer, ARRAYSIZE(szBuffer));
     Globals.hMainWnd = CreateWindowExW(WS_EX_CLIENTEDGE | WS_EX_ACCEPTFILES,
@@ -591,8 +736,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     if (lpCmdLine != NULL && *lpCmdLine)
         LoadClipboardDataFromFile(lpCmdLine);
 
-    UpdateLinesToScroll();
-
     while (GetMessageW(&msg, 0, 0, 0))
     {
         if (!TranslateAcceleratorW(Globals.hMainWnd, hAccel, &msg))
@@ -600,11 +743,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
-    }
-
-    if (Globals.hDspBmp)
-    {
-        DeleteObject(Globals.hDspBmp);
     }
 
     return (int)msg.wParam;

@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Clipboard Viewer
- * FILE:            base/applications/clipbrd/fileutils.c
- * PURPOSE:         Clipboard file format helper functions.
- * PROGRAMMERS:     Ricardo Hanke
- *                  Hermes Belusca-Maito
+ * PROJECT:     ReactOS Clipboard Viewer
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Clipboard file format helper functions.
+ * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
+ *              Copyright 2015-2018 Hermes Belusca-Maito
  */
 
 #include "precomp.h"
@@ -399,22 +398,22 @@ void ReadClipboardFile(LPCWSTR lpFileName)
                 break;
             }
 
-            case CF_BITMAP:
             case CF_DSPBITMAP:
+            case CF_BITMAP:
             {
                 bResult = ClipboardReadBitmap(hFile, dwOffData, dwLenData);
                 break;
             }
 
-            case CF_METAFILEPICT:
             case CF_DSPMETAFILEPICT:
+            case CF_METAFILEPICT:
             {
                 bResult = ClipboardReadMetafile(hFile, dwOffData, dwLenData);
                 break;
             }
 
-            case CF_ENHMETAFILE:
             case CF_DSPENHMETAFILE:
+            case CF_ENHMETAFILE:
             {
                 bResult = ClipboardReadEnhMetafile(hFile, dwOffData, dwLenData);
                 break;

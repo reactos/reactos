@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Clipboard Viewer
- * FILE:            base/applications/clipbrd/winutils.c
- * PURPOSE:         Miscellaneous helper functions.
- * PROGRAMMERS:     Ricardo Hanke
+ * PROJECT:     ReactOS Clipboard Viewer
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Display helper functions.
+ * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
+ *              Copyright 2015-2018 Hermes Belusca-Maito
  */
 
 #include "precomp.h"
@@ -46,22 +46,6 @@ void BringWindowToFront(HWND hWnd)
     }
 }
 
-int DrawTextFromResource(HINSTANCE hInstance, UINT uID, HDC hDC, LPRECT lpRect, UINT uFormat)
-{
-    LPWSTR lpBuffer;
-    int nCount;
-
-    nCount = LoadStringW(hInstance, uID, (LPWSTR)&lpBuffer, 0);
-    if (nCount)
-    {
-        return DrawTextW(hDC, lpBuffer, nCount, lpRect, uFormat);
-    }
-    else
-    {
-        return 0;
-    }
-}
-
 int MessageBoxRes(HWND hWnd, HINSTANCE hInstance, UINT uText, UINT uCaption, UINT uType)
 {
     MSGBOXPARAMSW mb;
@@ -78,45 +62,135 @@ int MessageBoxRes(HWND hWnd, HINSTANCE hInstance, UINT uText, UINT uCaption, UIN
     return MessageBoxIndirectW(&mb);
 }
 
-void DrawTextFromClipboard(HDC hDC, LPRECT lpRect, UINT uFormat)
+void DrawTextFromResource(HINSTANCE hInstance, UINT uID, HDC hDC, LPRECT lpRect, UINT uFormat)
 {
-    HGLOBAL hGlobal;
-    LPWSTR lpchText;
+    LPWSTR lpBuffer;
+    int nCount;
 
-    hGlobal = GetClipboardData(CF_UNICODETEXT);
+    nCount = LoadStringW(hInstance, uID, (LPWSTR)&lpBuffer, 0);
+    if (nCount)
+        DrawTextW(hDC, lpBuffer, nCount, lpRect, uFormat);
+}
+
+void DrawTextFromClipboard(UINT uFormat, PAINTSTRUCT ps, SCROLLSTATE state)
+{
+    POINT ptOrg;
+    HGLOBAL hGlobal;
+    PVOID lpText, ptr;
+    SIZE_T lineSize;
+    INT FirstLine, LastLine;
+
+    hGlobal = GetClipboardData(uFormat);
     if (!hGlobal)
         return;
 
-    lpchText = GlobalLock(hGlobal);
-    if (!lpchText)
+    lpText = GlobalLock(hGlobal);
+    if (!lpText)
         return;
 
-    DrawTextW(hDC, lpchText, -1, lpRect, uFormat);
+    /* Find the first and last line indices to display (Note that CurrentX/Y are in pixels!) */
+    FirstLine = max(0, (state.CurrentY + ps.rcPaint.top) / Globals.CharHeight);
+    // LastLine = min(LINES - 1, (state.CurrentY + ps.rcPaint.bottom) / Globals.CharHeight);
+    // NOTE: Can be less or greater than the actual number of lines in the text.
+    LastLine = (state.CurrentY + ps.rcPaint.bottom) / Globals.CharHeight;
+
+    /* Find the first text line to display */
+    while (FirstLine > 0)
+    {
+        if (uFormat == CF_UNICODETEXT)
+        {
+            if (*(LPCWSTR)lpText == UNICODE_NULL)
+                break;
+            GetLineExtentW(lpText, (LPCWSTR*)&ptr);
+        }
+        else
+        {
+            if (*(LPCSTR)lpText == ANSI_NULL)
+                break;
+            GetLineExtentA(lpText, (LPCSTR*)&ptr);
+        }
+
+        --FirstLine;
+        --LastLine;
+
+        lpText = ptr;
+    }
+
+    ptOrg.x = ps.rcPaint.left;
+    ptOrg.y = /* FirstLine */ max(0, (state.CurrentY + ps.rcPaint.top) / Globals.CharHeight)
+                    * Globals.CharHeight - state.CurrentY;
+
+    /* Display each line from the current one up to the last one */
+    ++LastLine;
+    while (LastLine >= 0)
+    {
+        if (uFormat == CF_UNICODETEXT)
+        {
+            if (*(LPCWSTR)lpText == UNICODE_NULL)
+                break;
+            lineSize = GetLineExtentW(lpText, (LPCWSTR*)&ptr);
+            TabbedTextOutW(ps.hdc, /*ptOrg.x*/0 - state.CurrentX, ptOrg.y,
+                           lpText, lineSize, 0, NULL,
+                           /*ptOrg.x*/0 - state.CurrentX);
+        }
+        else
+        {
+            if (*(LPCSTR)lpText == ANSI_NULL)
+                break;
+            lineSize = GetLineExtentA(lpText, (LPCSTR*)&ptr);
+            TabbedTextOutA(ps.hdc, /*ptOrg.x*/0 - state.CurrentX, ptOrg.y,
+                           lpText, lineSize, 0, NULL,
+                           /*ptOrg.x*/0 - state.CurrentX);
+        }
+
+        --LastLine;
+
+        ptOrg.y += Globals.CharHeight;
+        lpText = ptr;
+    }
+
     GlobalUnlock(hGlobal);
 }
 
-void BitBltFromClipboard(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, int nXSrc, int nYSrc, DWORD dwRop)
+void BitBltFromClipboard(PAINTSTRUCT ps, SCROLLSTATE state, DWORD dwRop)
 {
     HDC hdcMem;
-    HBITMAP hbm;
+    HBITMAP hBitmap;
+    BITMAP bmp;
+    LONG bmWidth, bmHeight;
 
-    hdcMem = CreateCompatibleDC(hdcDest);
-    if (hdcMem)
-    {
-        hbm = (HBITMAP)GetClipboardData(CF_BITMAP);
-        SelectObject(hdcMem, hbm);
-        BitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcMem, nXSrc, nYSrc, dwRop);
-        DeleteDC(hdcMem);
-    }
+    hdcMem = CreateCompatibleDC(ps.hdc);
+    if (!hdcMem)
+        return;
+
+    hBitmap = (HBITMAP)GetClipboardData(CF_BITMAP);
+    GetObjectW(hBitmap, sizeof(bmp), &bmp);
+
+    SelectObject(hdcMem, hBitmap);
+
+    bmWidth  = min(ps.rcPaint.right  - ps.rcPaint.left, bmp.bmWidth  - ps.rcPaint.left - state.CurrentX);
+    bmHeight = min(ps.rcPaint.bottom - ps.rcPaint.top , bmp.bmHeight - ps.rcPaint.top  - state.CurrentY);
+
+    BitBlt(ps.hdc,
+           ps.rcPaint.left,
+           ps.rcPaint.top,
+           bmWidth,
+           bmHeight,
+           hdcMem,
+           ps.rcPaint.left + state.CurrentX,
+           ps.rcPaint.top  + state.CurrentY,
+           dwRop);
+
+    DeleteDC(hdcMem);
 }
 
-void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest, int XSrc, int YSrc, UINT uStartScan, UINT fuColorUse)
+void SetDIBitsToDeviceFromClipboard(UINT uFormat, PAINTSTRUCT ps, SCROLLSTATE state, UINT fuColorUse)
 {
+    HGLOBAL hGlobal;
     LPBITMAPINFOHEADER lpInfoHeader;
     LPBYTE lpBits;
     LONG bmWidth, bmHeight;
     DWORD dwPalSize = 0;
-    HGLOBAL hGlobal;
 
     hGlobal = GetClipboardData(uFormat);
     if (!hGlobal)
@@ -183,9 +257,9 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest,
          *
          * FIXME: investigate!!
          * ANSWER: this is a Windows bug; part of the answer is there:
-         * http://go4answers.webhost4life.com/Help/bug-clipboard-format-conversions-28724.aspx
+         * https://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/ac7ab3b5-8609-4478-b86a-976dab44c271/bug-clipboard-format-conversions-cfdib-cfdibv5-cfdib
          * May be related:
-         * http://blog.talosintel.com/2015/10/dangerous-clipboard.html
+         * https://blog.talosintelligence.com/2015/10/dangerous-clipboard.html
          */
 #if 0
         if ((lpInfoHeader->biSize == sizeof(BITMAPINFOHEADER)) &&
@@ -196,6 +270,7 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest,
 #endif
 
         bmWidth  = lpInfoHeader->biWidth;
+        /* NOTE: biHeight < 0 for bottom-up DIBs, or > 0 for top-down DIBs */
         bmHeight = lpInfoHeader->biHeight;
     }
     else
@@ -207,11 +282,19 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, HDC hdc, int XDest, int YDest,
 
     lpBits = (LPBYTE)lpInfoHeader + lpInfoHeader->biSize + dwPalSize;
 
-    SetDIBitsToDevice(hdc,
-                      XDest, YDest,
-                      bmWidth, bmHeight,
-                      XSrc, YSrc,
-                      uStartScan,
+    /*
+     * The seventh parameter (YSrc) of SetDIBitsToDevice always designates
+     * the Y-coordinate of the "lower-left corner" of the image, be the DIB
+     * in bottom-up or top-down mode.
+     */
+    SetDIBitsToDevice(ps.hdc,
+                      -state.CurrentX, // ps.rcPaint.left,
+                      -state.CurrentY, // ps.rcPaint.top,
+                      bmWidth,
+                      bmHeight,
+                      0, // ps.rcPaint.left + state.CurrentX,
+                      0, // -(ps.rcPaint.top  + state.CurrentY),
+                      0, // uStartScan,
                       bmHeight,
                       lpBits,
                       (LPBITMAPINFO)lpInfoHeader,
@@ -248,52 +331,25 @@ void PlayEnhMetaFileFromClipboard(HDC hdc, const RECT *lpRect)
     PlayEnhMetaFile(hdc, hEmf, lpRect);
 }
 
-UINT RealizeClipboardPalette(HWND hWnd)
+BOOL RealizeClipboardPalette(HDC hdc)
 {
-    HPALETTE hPalette;
-    HPALETTE hOldPalette;
-    UINT uResult;
-    HDC hDevContext;
-
-    if (!OpenClipboard(Globals.hMainWnd))
-    {
-        return GDI_ERROR;
-    }
+    BOOL Success;
+    HPALETTE hPalette, hOldPalette;
 
     if (!IsClipboardFormatAvailable(CF_PALETTE))
-    {
-        CloseClipboard();
-        return GDI_ERROR;
-    }
+        return FALSE;
 
     hPalette = GetClipboardData(CF_PALETTE);
     if (!hPalette)
-    {
-        CloseClipboard();
-        return GDI_ERROR;
-    }
+        return FALSE;
 
-    hDevContext = GetDC(hWnd);
-    if (!hDevContext)
-    {
-        CloseClipboard();
-        return GDI_ERROR;
-    }
-
-    hOldPalette = SelectPalette(hDevContext, hPalette, FALSE);
+    hOldPalette = SelectPalette(hdc, hPalette, FALSE);
     if (!hOldPalette)
-    {
-        ReleaseDC(hWnd, hDevContext);
-        CloseClipboard();
-        return GDI_ERROR;
-    }
+        return FALSE;
 
-    uResult = RealizePalette(hDevContext);
+    Success = (RealizePalette(hdc) != GDI_ERROR);
 
-    SelectPalette(hDevContext, hOldPalette, FALSE);
-    ReleaseDC(hWnd, hDevContext);
+    SelectPalette(hdc, hOldPalette, FALSE);
 
-    CloseClipboard();
-
-    return uResult;
+    return Success;
 }
