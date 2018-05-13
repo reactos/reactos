@@ -1556,23 +1556,63 @@ FindSelectedItem(
     return NULL;
 }
 
+struct NEWEXT_DIALOG
+{
+    HWND hwndDlg;
+    RECT rcDlg;
+    BOOL bAdvanced;
+    INT dy;
+    WCHAR szExt[16];
+};
+
 static VOID
-NewExtDlg_OnAdvanced(HWND hwndDlg, BOOL bAdvanced)
+NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
 {
     WCHAR szText[64];
-    if (bAdvanced)
+    RECT rc, rc1, rc2;
+
+    GetWindowRect(hwndDlg, &rc);
+
+    GetWindowRect(GetDlgItem(hwndDlg, IDOK), &rc1);
+    MapWindowPoints(NULL, hwndDlg, (POINT *)&rc1, 2);
+
+    GetWindowRect(GetDlgItem(hwndDlg, IDCANCEL), &rc2);
+    MapWindowPoints(NULL, hwndDlg, (POINT *)&rc2, 2);
+
+    if (pNewExt->bAdvanced)
     {
+        rc1.top += pNewExt->dy;
+        rc1.bottom += pNewExt->dy;
+
+        rc2.top += pNewExt->dy;
+        rc2.bottom += pNewExt->dy;
+
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_SHOWNOACTIVATE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_SHOWNOACTIVATE);
         LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_RIGHT, szText, _countof(szText));
+
+        rc.bottom = rc.top + (pNewExt->rcDlg.bottom - pNewExt->rcDlg.top);
     }
     else
     {
+        rc1.top -= pNewExt->dy;
+        rc1.bottom -= pNewExt->dy;
+
+        rc2.top -= pNewExt->dy;
+        rc2.bottom -= pNewExt->dy;
+
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_HIDE);
         ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_HIDE);
         LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_LEFT, szText, _countof(szText));
+
+        rc.bottom = rc.top + (pNewExt->rcDlg.bottom - pNewExt->rcDlg.top) - pNewExt->dy;
     }
     SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
+
+    MoveWindow(GetDlgItem(hwndDlg, IDOK), rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top, TRUE);
+    MoveWindow(GetDlgItem(hwndDlg, IDCANCEL), rc2.left, rc2.top, rc2.right - rc2.left, rc2.bottom - rc2.top, TRUE);
+
+    MoveWindow(hwndDlg, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
 }
 
 // IDD_NEWEXTENSION dialog
@@ -1584,25 +1624,35 @@ NewExtensionDlgProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    static BOOL s_bAdvanced = FALSE;
+    static NEWEXT_DIALOG *pNewExt = NULL;
+    RECT rc1, rc2;
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            s_bAdvanced = FALSE;
-            NewExtDlg_OnAdvanced(hwndDlg, s_bAdvanced);
+            pNewExt = (NEWEXT_DIALOG *)lParam;
+            pNewExt->hwndDlg = hwndDlg;
+            pNewExt->bAdvanced = FALSE;
+            GetWindowRect(hwndDlg, &pNewExt->rcDlg);
+            GetWindowRect(GetDlgItem(hwndDlg, IDC_NEWEXT_EDIT), &rc1);
+            GetWindowRect(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), &rc2);
+            pNewExt->dy = rc2.top - rc1.top;
+            NewExtDlg_OnAdvanced(hwndDlg, pNewExt);
+            SendDlgItemMessageW(hwndDlg, IDC_NEWEXT_EDIT, EM_SETLIMITTEXT, _countof(pNewExt->szExt) - 1, 0);
             return TRUE;
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
+                    GetDlgItemText(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
                     EndDialog(hwndDlg, IDOK);
                     break;
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
                     break;
                 case IDC_NEWEXT_ADVANCED:
-                    s_bAdvanced = !s_bAdvanced;
-                    NewExtDlg_OnAdvanced(hwndDlg, s_bAdvanced);
+                    pNewExt->bAdvanced = !pNewExt->bAdvanced;
+                    NewExtDlg_OnAdvanced(hwndDlg, pNewExt);
                     break;
             }
             break;
@@ -1624,6 +1674,7 @@ FolderOptionsFileTypesDlg(
     WCHAR Buffer[255], FormatBuffer[255];
     PFOLDER_FILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
+    NEWEXT_DIALOG newext;
 
     switch(uMsg)
     {
@@ -1640,7 +1691,7 @@ FolderOptionsFileTypesDlg(
             switch(LOWORD(wParam))
             {
                 case IDC_FILETYPES_NEW:
-                    DialogBox(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION), hwndDlg, NewExtensionDlgProc);
+                    DialogBoxParam(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION), hwndDlg, NewExtensionDlgProc, LPARAM(&newext));
                     break;
                 case IDC_FILETYPES_CHANGE:
                     pItem = FindSelectedItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
