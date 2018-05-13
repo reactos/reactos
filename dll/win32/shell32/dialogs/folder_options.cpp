@@ -1679,6 +1679,7 @@ NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
 
     GetDlgItemText(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
     StringTrimW(pNewExt->szExt);
+    CharUpperW(pNewExt->szExt);
 
     GetDlgItemText(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
     StringTrimW(pNewExt->szFileType);
@@ -1812,17 +1813,18 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
 
     RegCloseKey(hKey);
 
-    // Create the ".EXT" key
+    // Create the ".ext" key
     WCHAR szExt[16];
     if (*pszExt == L'.')
         ++pszExt;
     StringCchPrintf(szExt, _countof(szExt), TEXT(".%s"), pszExt);
-    CharUpperW(szExt);
+    CharLowerW(szExt);
     nResult = RegCreateKeyEx(HKEY_CLASSES_ROOT, szExt, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    CharUpperW(szExt);
     if (ERROR_SUCCESS != nResult)
         return FALSE;
 
-    // ".EXT" @ --> "ft%06u"
+    // ".ext" @ --> "ft%06u"
     DWORD dwSize = (lstrlen(szKey) + 1) * sizeof(WCHAR);
     RegSetValueExW(hKey, NULL, 0, REG_SZ, (BYTE *)szKey, dwSize);
 
