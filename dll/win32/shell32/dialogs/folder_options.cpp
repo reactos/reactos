@@ -1650,6 +1650,26 @@ NewExtDlg_OnInitDialog(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     return TRUE;
 }
 
+static void
+StringTrimW(LPWSTR pszText)
+{
+    LPWSTR pchFirst, pchLast;
+    LPWSTR pch = pszText;
+    while (iswspace(*pch))
+        pch++;
+
+    pchFirst = pchLast = pch;
+    while (*pch && !iswspace(*pch))
+    {
+        pchLast = pch;
+        ++pch;
+    }
+
+    INT_PTR cch = pchLast - pchFirst;
+    MoveMemory(pszText, pchFirst, cch * sizeof(WCHAR));
+    pszText[cch + 1] = 0;
+}
+
 // IDD_NEWEXTENSION dialog
 INT_PTR
 CALLBACK
@@ -1672,7 +1692,11 @@ NewExtensionDlgProc(
             {
                 case IDOK:
                     GetDlgItemText(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
+                    StringTrimW(pNewExt->szExt);
+
                     GetDlgItemText(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
+                    StringTrimW(pNewExt->szFileType);
+
                     if (pNewExt->szExt[0] == 0)
                     {
                         WCHAR szText[128], szTitle[128];
