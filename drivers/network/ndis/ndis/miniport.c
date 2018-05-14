@@ -921,8 +921,8 @@ MiniReset(
 
    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
    Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
-            Adapter->NdisMiniportBlock.MiniportAdapterContext,
-            &AddressingReset);
+            &AddressingReset,
+            Adapter->NdisMiniportBlock.MiniportAdapterContext);
 
    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
    Adapter->NdisMiniportBlock.ResetStatus = Status;
@@ -1326,8 +1326,8 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
 
             KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
-                          Adapter->NdisMiniportBlock.MiniportAdapterContext,
-                          &AddressingReset);
+                          &AddressingReset,
+                          Adapter->NdisMiniportBlock.MiniportAdapterContext);
 
             KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
             Adapter->NdisMiniportBlock.ResetStatus = NdisStatus;
