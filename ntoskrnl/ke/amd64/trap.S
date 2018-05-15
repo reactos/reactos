@@ -730,9 +730,6 @@ FUNC KiInterruptDispatch
     ExitTrap (TF_SAVE_ALL or TF_SEND_EOI)
 ENDFUNC
 
-
-#define MAX_SYSCALL_PARAM_SIZE (16 * 8)
-
 EXTERN KiSystemCallHandler:PROC
 
 /*! \name KiSystemCallEntry64
@@ -1048,6 +1045,33 @@ KiConvertToGuiThreadFailed:
     ret
 
 ENDFUNC
+
+
+EXTERN KiSetTrapContextInternal:PROC
+
+/*
+ * VOID
+ * KiSetTrapContext(
+ *     _Out_ PKTRAP_FRAME TrapFrame,
+ *     _In_ PCONTEXT Context,
+ *     _In_ KPROCESSOR_MODE RequestorMode);
+ */
+PUBLIC KiSetTrapContext
+.PROC KiSetTrapContext
+    
+    /* Generate a KEXCEPTION_FRAME on the stack */
+    GENERATE_EXCEPTION_FRAME
+
+    call KiSetTrapContextInternal
+
+    /* Restore the registers from the KEXCEPTION_FRAME */
+    RESTORE_EXCEPTION_STATE
+
+    /* Return */
+    ret
+
+.ENDP
+
 
 /*
  * VOID
