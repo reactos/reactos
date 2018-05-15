@@ -832,6 +832,16 @@ IntsEnabled:
     /* Swap gs back to user */
     swapgs
 
+    ; Zero out volatiles
+    pxor xmm0, xmm0
+    pxor xmm1, xmm1
+    pxor xmm2, xmm2
+    pxor xmm3, xmm3
+    pxor xmm4, xmm4
+    pxor xmm5, xmm5
+    xor rdx, rdx
+    xor r10, r10
+
     /* return to user mode */
     .byte HEX(48) // REX prefix to return to long mode
     sysret
