@@ -59,7 +59,7 @@
 // #include <fslib/ntfslib.h>
 
 /* Internal Headers */
-#include "interface/consup.h"
+#include "consup.h"
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"
