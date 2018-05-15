@@ -334,20 +334,12 @@ CONSOLE_SetInputTextXY(
         &Written);
 
     coPos.X += Length;
-    FillConsoleOutputCharacterA(
-        StdOutput,
-        '_',
-        1,
-        coPos,
-        &Written);
-
-    if (len > Length + 1)
+    if (len > Length)
     {
-        coPos.X++;
         FillConsoleOutputCharacterA(
             StdOutput,
             ' ',
-            len - Length - 1,
+            len - Length,
             coPos,
             &Written);
     }
