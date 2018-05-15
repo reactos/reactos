@@ -8,13 +8,6 @@
 #   generator expressions)
 # If you want to slip-stream anything into the bootcd, then you want to alter reactos.dff.in
 
-# Idea taken from there : http://www.cmake.org/pipermail/cmake/2010-July/038028.html
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/concat.cmake "
-    file(READ \${SRC1} S1)
-    file(READ \${SRC2} S2)
-    file(WRITE \${DST} \"\${S1}\${S2}\")
-")
-
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.cmake "")
 
 # This generates reactos.dff.dyn by processing the generator expressions
@@ -30,7 +23,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -D SRC1=${CMAKE_CURRENT_SOURCE_DIR}/reactos.dff.in
                              -D SRC2=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.$<CONFIG>.dyn
                              -D DST=${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
-                             -P ${CMAKE_CURRENT_BINARY_DIR}/concat.cmake
+                             -P ${REACTOS_SOURCE_DIR}/sdk/cmake/concat.cmake
     COMMAND ${CMAKE_COMMAND} -E copy_if_different 
                              ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff.maydiff
                              ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff
