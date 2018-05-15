@@ -48,7 +48,6 @@ DoesFileExist(
 
 BOOLEAN
 IsValidPath(
-    PWCHAR InstallDir,
-    ULONG Length);
+    PWCHAR InstallDir);
 
 /* EOF */

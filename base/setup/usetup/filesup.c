@@ -133,10 +133,11 @@ DoesPathExist(
 
 BOOLEAN
 IsValidPath(
-    PWCHAR InstallDir,
-    ULONG Length)
+    PWCHAR InstallDir)
 {
-    UINT i;
+    UINT i, Length;
+
+    Length = wcslen(InstallDir);
 
     // TODO: Add check for 8.3 too.
 

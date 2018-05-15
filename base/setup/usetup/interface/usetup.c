@@ -3257,24 +3257,11 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 }
 
 
-/*
- * Displays the InstallDirectoryPage1.
- *
- * Next pages:
- *  PrepareCopyPage (At once)
- *
- * SIDEEFFECTS
- *  Inits DestinationRootPath
- *  Inits DestinationPath
- *  Inits DestinationArcPath
- *
- * RETURNS
- *   Number of the next page.
- */
-static PAGE_NUMBER
-InstallDirectoryPage1(PWCHAR InstallDir,
-                      PDISKENTRY DiskEntry,
-                      PPARTENTRY PartEntry)
+static
+VOID
+BuildInstallPaths(PWCHAR InstallDir,
+                  PDISKENTRY DiskEntry,
+                  PPARTENTRY PartEntry)
 {
     WCHAR PathBuffer[MAX_PATH];
 
@@ -3313,8 +3300,6 @@ InstallDirectoryPage1(PWCHAR InstallDir,
 
     wcscat(PathBuffer, InstallDir);
     RtlCreateUnicodeString(&DestinationArcPath, PathBuffer);
-
-    return PREPARE_COPY_PAGE;
 }
 
 
@@ -3356,9 +3341,21 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     PartEntry = PartitionList->CurrentPartition;
 
     if (IsUnattendedSetup)
-        wcscpy(InstallDir, UnattendInstallationDirectory);
-    else
-        wcscpy(InstallDir, L"\\ReactOS");
+    {
+        if (!IsValidPath(UnattendInstallationDirectory))
+        {
+            /* FIXME: Log the error? */
+            return QUIT_PAGE;
+        }
+
+        BuildInstallPaths(UnattendInstallationDirectory,
+                          DiskEntry,
+                          PartEntry);
+
+        return PREPARE_COPY_PAGE;
+    }
+
+    wcscpy(InstallDir, L"\\ReactOS");
 
     Length = wcslen(InstallDir);
     Pos = Length;
@@ -3366,17 +3363,6 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     CONSOLE_SetCursorXY(8 + Pos, 11);
     CONSOLE_SetCursorType(TRUE, TRUE);
     MUIDisplayPage(INSTALL_DIRECTORY_PAGE);
-
-    // FIXME: Check the validity of the InstallDir; however what to do
-    // if it is invalid but we are in unattended setup? (case of somebody
-    // specified an invalid installation directory in the unattended file).
-
-    if (IsUnattendedSetup)
-    {
-        return InstallDirectoryPage1(InstallDir,
-                                     DiskEntry,
-                                     PartEntry);
-    }
 
     while (TRUE)
     {
@@ -3446,14 +3432,17 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
              * Check for the validity of the installation directory and pop up
              * an error if it is not the case. Then the user can fix its input.
              */
-            if (!IsValidPath(InstallDir, Length))
+            if (!IsValidPath(InstallDir))
             {
                 MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
                 return INSTALL_DIRECTORY_PAGE;
             }
-            return InstallDirectoryPage1(InstallDir,
-                                         DiskEntry,
-                                         PartEntry);
+
+            BuildInstallPaths(InstallDir,
+                              DiskEntry,
+                              PartEntry);
+
+            return PREPARE_COPY_PAGE;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
         {
