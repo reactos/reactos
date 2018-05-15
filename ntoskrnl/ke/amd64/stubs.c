@@ -294,6 +294,9 @@ KiSystemCallHandler(
     TrapFrame->TrapFrame = (ULONG64)Thread->TrapFrame;
     Thread->TrapFrame = TrapFrame;
 
+    /* We don't have an exception frame yet */
+    TrapFrame->ExceptionFrame = 0;
+
     /* Before enabling interrupts get the user rsp from the KPCR */
     UserRsp = __readgsqword(FIELD_OFFSET(KIPCR, UserRsp));
     TrapFrame->Rsp = UserRsp;
