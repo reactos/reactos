@@ -63,8 +63,6 @@ typedef struct _PARTENTRY
     ULONG PartitionIndex;
 
     CHAR DriveLetter;
-    CHAR VolumeLabel[17];
-    CHAR FileSystemName[9];
 
     BOOLEAN LogicalPartition;
 
