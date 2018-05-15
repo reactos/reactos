@@ -2249,7 +2249,6 @@ InstallFatBootcodeToPartition(
     PUNICODE_STRING DestinationArcPath,
     UCHAR PartitionType)
 {
-#ifdef __REACTOS__
     NTSTATUS Status;
     BOOLEAN DoesFreeLdrExist;
     WCHAR SrcPath[MAX_PATH];
@@ -2494,9 +2493,6 @@ InstallFatBootcodeToPartition(
     }
 
     return STATUS_SUCCESS;
-#else
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 static
@@ -2507,7 +2503,6 @@ InstallExt2BootcodeToPartition(
     PUNICODE_STRING DestinationArcPath,
     UCHAR PartitionType)
 {
-#ifdef __REACTOS__
     NTSTATUS Status;
     BOOLEAN DoesFreeLdrExist;
     WCHAR SrcPath[MAX_PATH];
@@ -2613,9 +2608,6 @@ InstallExt2BootcodeToPartition(
     }
 
     return STATUS_SUCCESS;
-#else
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 
@@ -2666,7 +2658,6 @@ InstallFatBootcodeToFloppy(
     PUNICODE_STRING SourceRootPath,
     PUNICODE_STRING DestinationArcPath)
 {
-#ifdef __REACTOS__
     NTSTATUS Status;
     UNICODE_STRING FloppyDevice = RTL_CONSTANT_STRING(L"\\Device\\Floppy0");
     WCHAR SrcPath[MAX_PATH];
@@ -2725,9 +2716,6 @@ InstallFatBootcodeToFloppy(
     }
 
     return STATUS_SUCCESS;
-#else
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 /* EOF */

@@ -26,12 +26,6 @@
 
 #pragma once
 
-#ifndef __REACTOS__
-
-#include <setupapi.h>
-
-#else /* __REACTOS__ */
-
 #include <infcommon.h>
 
 #define SetupFindFirstLineW InfpFindFirstLineW
@@ -68,8 +62,6 @@ InfpOpenInfFileW(
     IN DWORD InfStyle,
     IN LCID LocaleId,
     OUT PUINT ErrorLine);
-
-#endif /* __REACTOS__ */
 
 BOOLEAN
 INF_GetData(

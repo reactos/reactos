@@ -33,7 +33,7 @@
 /* FUNCTIONS ****************************************************************/
 
 VOID
-FS_AddProvider(
+AddProvider(
     IN OUT PFILE_SYSTEM_LIST List,
     IN LPCWSTR FileSystemName,
     IN FORMATEX FormatFunc,
@@ -175,12 +175,16 @@ CreateFileSystemList(
     List->Selected = NULL;
     InitializeListHead(&List->ListHead);
 
-    HOST_CreateFileSystemList(List);
+    AddProvider(List, L"FAT", VfatFormat, VfatChkdsk);
+#if 0
+    AddProvider(List, L"EXT2", Ext2Format, Ext2Chkdsk);
+    AddProvider(List, L"NTFS", NtfsFormat, NtfsChkdsk);
+#endif
 
     if (!ForceFormat)
     {
         /* Add 'Keep' provider */
-       FS_AddProvider(List, NULL, NULL, NULL);
+        AddProvider(List, NULL, NULL, NULL);
     }
 
     /* Search for ForceFileSystem in list */

@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/native/utils/console.c
+ * FILE:            base/setup/usetup/console.c
  * PURPOSE:         Console support functions
  * PROGRAMMER:      Eric Kohl
  */

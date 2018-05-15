@@ -8,14 +8,11 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
-    native/utils/keytrans.c
-    native/utils/console.c
-    native/fslist.c
-    native/console.c
     bootsup.c
     cabinet.c
     chkdsk.c
     cmdcons.c
+    console.c
     consup.c
     devinst.c
     drivesup.c
@@ -26,6 +23,7 @@ list(APPEND SOURCE
     genlist.c
     inffile.c
     inicache.c
+    keytrans.c
     mui.c
     partlist.c
     progress.c

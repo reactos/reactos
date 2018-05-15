@@ -19,7 +19,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/native/utils/console.h
+ * FILE:            base/setup/usetup/console.h
  * PURPOSE:         Console support functions
  * PROGRAMMER:      Eric Kohl
  */
@@ -124,7 +124,6 @@ WriteConsoleOutputCharacterW(
 BOOL
 WINAPI
 SetConsoleOutputCP(
-    IN UINT wCodePageID
-);
+    IN UINT wCodePageID);
 
 /* EOF */

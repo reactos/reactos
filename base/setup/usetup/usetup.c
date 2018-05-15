@@ -3886,7 +3886,6 @@ PrepareCopyPage(PINPUT_RECORD Ir)
         wcscat(PathBuffer, L"\\");
         wcscat(PathBuffer, KeyValue);
 
-#ifdef __REACTOS__
         CabinetInitialize();
         CabinetSetEventHandlers(NULL, NULL, NULL);
         CabinetSetCabinetName(PathBuffer);
@@ -3929,7 +3928,6 @@ PrepareCopyPage(PINPUT_RECORD Ir)
             /* FIXME: show an error dialog */
             return QUIT_PAGE;
         }
-#endif
     } while (SetupFindNextLine(&CabinetsContext, &CabinetsContext));
 
     return FILE_COPY_PAGE;
@@ -4960,8 +4958,6 @@ RunUSetup(VOID)
 }
 
 
-#ifdef __REACTOS__
-
 VOID NTAPI
 NtProcessStartup(PPEB Peb)
 {
@@ -4971,6 +4967,5 @@ NtProcessStartup(PPEB Peb)
     InfSetHeap(ProcessHeap);
     RunUSetup();
 }
-#endif /* __REACTOS__ */
 
 /* EOF */

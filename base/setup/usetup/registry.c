@@ -31,7 +31,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifdef __REACTOS__
 #define FLG_ADDREG_BINVALUETYPE           0x00000001
 #define FLG_ADDREG_NOCLOBBER              0x00000002
 #define FLG_ADDREG_DELVAL                 0x00000004
@@ -45,7 +44,6 @@
 #define FLG_ADDREG_TYPE_DWORD            (0x00010000 | FLG_ADDREG_BINVALUETYPE)
 #define FLG_ADDREG_TYPE_NONE             (0x00020000 | FLG_ADDREG_BINVALUETYPE)
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
-#endif
 
 #ifdef _M_IX86
 #define Architecture L"x86"
@@ -324,16 +322,12 @@ do_reg_operation(HANDLE KeyHandle,
 
           DPRINT("setting dword %wZ to %lx\n", ValueName, dw);
 
-#ifdef __REACTOS__
           NtSetValueKey (KeyHandle,
                          ValueName,
                          0,
                          Type,
                          (PVOID)&dw,
                          sizeof(ULONG));
-#else
-          RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)&dw, sizeof(ULONG));
-#endif
         }
       else
         {
@@ -341,29 +335,21 @@ do_reg_operation(HANDLE KeyHandle,
 
           if (Str)
             {
-#ifdef __REACTOS__
               NtSetValueKey (KeyHandle,
                              ValueName,
                              0,
                              Type,
                              (PVOID)Str,
                              Size * sizeof(WCHAR));
-#else
-              RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)Str, Size * sizeof(WCHAR));
-#endif
             }
           else
             {
-#ifdef __REACTOS__
               NtSetValueKey (KeyHandle,
                              ValueName,
                              0,
                              Type,
                              (PVOID)&EmptyStr,
                              sizeof(WCHAR));
-#else
-              RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)&EmptyStr, sizeof(WCHAR));
-#endif
             }
         }
       RtlFreeHeap (ProcessHeap, 0, Str);
@@ -385,16 +371,12 @@ do_reg_operation(HANDLE KeyHandle,
           SetupGetBinaryField (Context, 5, Data, Size, NULL);
         }
 
-#ifdef __REACTOS__
       NtSetValueKey (KeyHandle,
                      ValueName,
                      0,
                      Type,
                      (PVOID)Data,
                      Size);
-#else
-      RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)Data, Size);
-#endif
 
       RtlFreeHeap (ProcessHeap, 0, Data);
     }
@@ -402,7 +384,6 @@ do_reg_operation(HANDLE KeyHandle,
   return TRUE;
 }
 
-#ifdef __REACTOS__
 NTSTATUS
 CreateNestedKey (PHANDLE KeyHandle,
                  ACCESS_MASK DesiredAccess,
@@ -494,7 +475,6 @@ CreateNestedKey (PHANDLE KeyHandle,
 
   return Status;
 }
-#endif
 
 /***********************************************************************
  *            registry_callback
@@ -543,7 +523,6 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
 
           DPRINT("Flags: %lx\n", Flags);
 
-#ifdef __REACTOS__
           RtlInitUnicodeString (&Name,
                                 Buffer);
 
@@ -575,26 +554,6 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
                   continue;
                 }
             }
-#else
-          if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
-             {
-                LONG rc = RegOpenKeyW(NULL, Buffer, &KeyHandle);
-                if (rc != ERROR_SUCCESS)
-                  {
-                    DPRINT("RegOpenKeyW(%S) failed (error %lu)\n", Buffer, rc);
-                    continue; /* ignore if it doesn't exist */
-                  }
-              }
-              else
-              {
-                  LONG rc = RegCreateKeyW(NULL, Buffer, &KeyHandle);
-                  if (rc != ERROR_SUCCESS)
-                  {
-                    DPRINT("RegCreateKeyW(%S) failed (error %lu)\n", Buffer, rc);
-                    continue;
-                  }
-              }
-#endif
 
           /* get value name */
           if (SetupGetStringFieldW (&Context, 3, Buffer, MAX_INF_STRING_LENGTH, NULL))
@@ -615,9 +574,7 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
               return FALSE;
             }
 
-#ifdef __REACTOS__
           NtClose (KeyHandle);
-#endif
         }
     }
 

@@ -63,17 +63,14 @@
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"
-#ifdef __REACTOS__
 #include "infros.h"
 #include "filequeue.h"
-#endif
 #include "registry.h"
 #include "fslist.h"
 #include "partlist.h"
 #include "cabinet.h"
 #include "filesup.h"
 #include "genlist.h"
-#include "host.h"
 #include "mui.h"
 #include "errorcode.h"
 
@@ -83,8 +80,6 @@ extern UNICODE_STRING SourceRootDir;
 extern UNICODE_STRING SourcePath;
 extern BOOLEAN IsUnattendedSetup;
 extern PWCHAR SelectedLanguageId;
-
-#ifdef __REACTOS__
 
 extern VOID InfSetHeap(PVOID Heap);
 extern VOID InfCloseFile(HINF InfHandle);
@@ -111,8 +106,6 @@ extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
 #define SetupGetBinaryField InfGetBinaryField
 #define SetupGetMultiSzFieldW InfGetMultiSzField
 #define SetupGetStringFieldW InfGetStringField
-
-#endif /* __REACTOS__ */
 
 #ifndef _PAGE_NUMBER_DEFINED
 #define _PAGE_NUMBER_DEFINED

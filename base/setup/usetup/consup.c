@@ -46,7 +46,7 @@ CONSOLE_Init(
     VOID)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (!HOST_InitConsole())
+    if (!AllocConsole())
         return FALSE;
 
     StdInput = GetStdHandle(STD_INPUT_HANDLE);
