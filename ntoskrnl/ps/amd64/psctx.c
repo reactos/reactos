@@ -13,83 +13,65 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID
+KiSetTrapContext(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _In_ PCONTEXT Context,
+    _In_ KPROCESSOR_MODE RequestorMode);
+
 /* FUNCTIONS ******************************************************************/
 
-VOID
-NTAPI
-PspGetContext(IN PKTRAP_FRAME TrapFrame,
-              IN PVOID NonVolatileContext,
-              IN OUT PCONTEXT Context)
-{   
-    PAGED_CODE();
- 
-    /* Convert the trap frame to a context */
-    KeTrapFrameToContext(TrapFrame, NULL, Context);
-}
 
+_IRQL_requires_(APC_LEVEL)
 VOID
 NTAPI
-PspSetContext(OUT PKTRAP_FRAME TrapFrame,
-              OUT PVOID NonVolatileContext,
-              IN PCONTEXT Context,
-              IN KPROCESSOR_MODE Mode)
-{   
-    PAGED_CODE();
-    
-    /* Convert the context to a trap frame structure */
-    KeContextToTrapFrame(Context, NULL, TrapFrame, Context->ContextFlags, Mode);
-}
-
-VOID
-NTAPI
-PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
-                                IN OUT PKNORMAL_ROUTINE* NormalRoutine,
-                                IN OUT PVOID* NormalContext,
-                                IN OUT PVOID* SystemArgument1,
-                                IN OUT PVOID* SystemArgument2)
+PspGetOrSetContextKernelRoutine(
+    _In_ PKAPC Apc,
+    _Inout_ PKNORMAL_ROUTINE* NormalRoutine,
+    _Inout_ PVOID* NormalContext,
+    _Inout_ PVOID* SystemArgument1,
+    _Inout_ PVOID* SystemArgument2)
 {
     PGET_SET_CTX_CONTEXT GetSetContext;
-    PKEVENT Event;
-    PCONTEXT Context;
     PKTHREAD Thread;
-    KPROCESSOR_MODE Mode;
     PKTRAP_FRAME TrapFrame = NULL;
+
     PAGED_CODE();
 
     /* Get the Context Structure */
     GetSetContext = CONTAINING_RECORD(Apc, GET_SET_CTX_CONTEXT, Apc);
-    Context = &GetSetContext->Context;
-    Event = &GetSetContext->Event;
-    Mode = GetSetContext->Mode;
     Thread = Apc->SystemArgument2;
+    NT_ASSERT(KeGetCurrentThread() == Thread);
     
     /* If this is a kernel-mode request, grab the saved trap frame */
-    if (Mode == KernelMode) TrapFrame = Thread->TrapFrame;
+    if (GetSetContext->Mode == KernelMode)
+    {
+        TrapFrame = Thread->TrapFrame;
+    }
     
     /* If we don't have one, grab it from the stack */
-    if (!TrapFrame)
+    if (TrapFrame == NULL)
     {
-        DPRINT1("FIXME!!!!\n");
-        /* Trap frame is right under our initial stack */
-//        TrapFrame = (PKTRAP_FRAME)((ULONG_PTR)Thread->InitialStack -
-//                                   ROUND_UP(sizeof(KTRAP_FRAME), KTRAP_FRAME_ALIGN) -
-//                                   sizeof(FX_SAVE_AREA));
+        /* Get the thread's base trap frame */
+        TrapFrame = KeGetTrapFrame(KeGetCurrentThread());
     }
 
     /* Check if it's a set or get */
-    if (Apc->SystemArgument1)
+    if (Apc->SystemArgument1 != 0)
     {
-        /* Get the Context */
-        PspSetContext(TrapFrame, NULL, Context, Mode);
+        /* Set the nonvolatiles on the stack, target frame is the trap frame */
+        KiSetTrapContext(TrapFrame, &GetSetContext->Context, GetSetContext->Mode);
     }
     else
     {
-        /* Set the Context */
-        PspGetContext(TrapFrame, NULL, Context);
+        /* Convert the trap frame to a context */
+        KeTrapFrameToContext(TrapFrame,
+                             NULL,
+                             &GetSetContext->Context);
     }
 
     /* Notify the Native API that we are done */
-    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+    KeSetEvent(&GetSetContext->Event, IO_NO_INCREMENT, FALSE);
 }
 
 /* EOF */
