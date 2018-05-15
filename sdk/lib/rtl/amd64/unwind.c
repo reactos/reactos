@@ -1052,3 +1052,71 @@ RtlGetCallersAddress(
     return;
 }
 
+VOID
+RtlCaptureNonVolatileContextPointers(
+    _Out_ PKNONVOLATILE_CONTEXT_POINTERS NonvolatileContextPointers,
+    _In_ ULONG64 TargetFrame)
+{
+    CONTEXT Context;
+    PRUNTIME_FUNCTION FunctionEntry;
+    ULONG64 ImageBase;
+    PVOID HandlerData;
+    ULONG64 EstablisherFrame;
+    KPROCESSOR_MODE Mode;
+
+    /* Zero out the nonvolatile context pointers */
+    RtlZeroMemory(NonvolatileContextPointers, sizeof(*NonvolatileContextPointers));
+
+    /* Capture the current context */
+    RtlCaptureContext(&Context);
+
+    /* Use the highest bit in RIP as mode flag */
+    Mode = Context.Rip >> 63;
+
+    do
+    {
+        /* Look up the function entry */
+        FunctionEntry = RtlLookupFunctionEntry(Context.Rip, &ImageBase, NULL);
+        ASSERT(FunctionEntry != NULL);
+
+        /* Do a virtual unwind to the caller */
+        RtlVirtualUnwind(UNW_FLAG_EHANDLER,
+                         ImageBase,
+                         Context.Rip,
+                         FunctionEntry,
+                         &Context,
+                         &HandlerData,
+                         &EstablisherFrame,
+                         NonvolatileContextPointers);
+
+        /* Continue until we reached the target frame or user mode */
+    } while ((EstablisherFrame < TargetFrame) && 
+             ((Context.Rip >> 63) == Mode));
+}
+
+VOID
+RtlSetUnwindContext(
+    _In_ PCONTEXT Context,
+    _In_ DWORD64 TargetFrame)
+{
+    KNONVOLATILE_CONTEXT_POINTERS ContextPointers;
+    
+    /* Capture pointers to the non-volatiles up to the target frame */
+    RtlCaptureNonVolatileContextPointers(&ContextPointers, TargetFrame);
+
+    /* Copy the nonvolatiles to the captured locations */
+    *ContextPointers.R12 = Context->R12;
+    *ContextPointers.R13 = Context->R13;
+    *ContextPointers.R14 = Context->R14;
+    *ContextPointers.R15 = Context->R15;
+    *ContextPointers.Xmm6 = Context->Xmm6;
+    *ContextPointers.Xmm7 = Context->Xmm7;
+    *ContextPointers.Xmm8 = Context->Xmm8;
+    *ContextPointers.Xmm9 = Context->Xmm9;
+    *ContextPointers.Xmm10 = Context->Xmm10;
+    *ContextPointers.Xmm11 = Context->Xmm11;
+    *ContextPointers.Xmm12 = Context->Xmm12;
+    *ContextPointers.Xmm13 = Context->Xmm13;
+    *ContextPointers.Xmm14 = Context->Xmm14;
+    *ContextPointers.Xmm15 = Context->Xmm15;
+}
