@@ -292,3 +292,29 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
 }
 
+VOID
+RtlSetUnwindContext(
+    _In_ PCONTEXT Context,
+    _In_ DWORD64 TargetFrame);
+
+VOID
+KiSetTrapContextInternal(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _In_ PCONTEXT Context,
+    _In_ KPROCESSOR_MODE RequestorMode)
+{
+    ULONG64 TargetFrame;
+
+    /* Save the volatile register context in the trap frame */
+    KeContextToTrapFrame(Context,
+                         NULL,
+                         TrapFrame,
+                         Context->ContextFlags,
+                         RequestorMode);
+
+    /* The target frame is MAX_SYSCALL_PARAM_SIZE bytes before the trap frame */
+    TargetFrame = (ULONG64)TrapFrame - MAX_SYSCALL_PARAM_SIZE ;
+
+    /* Set the nonvolatiles on the stack */
+    RtlSetUnwindContext(Context, TargetFrame);
+}
