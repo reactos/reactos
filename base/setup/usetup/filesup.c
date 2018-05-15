@@ -140,12 +140,37 @@ IsValidPath(
 
     // TODO: Add check for 8.3 too.
 
-    /* Check for whitespaces */
+    /* Path must be at least 2 characters long */
+    if (Length < 2)
+        return FALSE;
+
+    /* Path must start with a backslash */
+    if (InstallDir[0] != L'\\')
+        return FALSE;
+
+    /* Path must not end with a backslash */
+    if (InstallDir[Length - 1] == L'\\')
+        return FALSE;
+
+    /* Path must not contain whitespace characters */
     for (i = 0; i < Length; i++)
     {
         if (isspace(InstallDir[i]))
             return FALSE;
     }
+
+    /* Path component must not end with a dot */
+    for (i = 0; i < Length; i++)
+    {
+        if (InstallDir[i] == L'\\' && i > 0)
+        {
+            if (InstallDir[i - 1] == L'.')
+                return FALSE;
+        }
+    }
+
+    if (InstallDir[Length - 1] == L'.')
+        return FALSE;
 
     return TRUE;
 }
