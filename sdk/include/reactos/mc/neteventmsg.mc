@@ -1,6 +1,13 @@
 ;
 ; netevent.mc MESSAGE resources for netevent.dll
 ;
+;
+; IMPORTANT: When a new language is added, all messages in this file need to be
+; either translated or at least duplicated for the new language.
+; This is a new requirement by MS mc.exe
+; To do this, start with a regex replace:
+; - In VS IDE: "Language=English\r\n(?<String>(?:[^\.].*\r\n)*\.\r\n)" -> "Language=English\r\n${String}Language=MyLanguage\r\n${String}"
+;
 
 MessageIdTypedef=DWORD
 
@@ -134,6 +141,15 @@ Language=English
 Eventlog Service %0
 .
 Language=Russian
+
+;
+; IMPORTANT: When a new language is added, all messages in this file need to be
+; either translated or at least duplicated for the new language.
+; This is a new requirement by MS mc.exe
+; To do this, start with a regex replace:
+; - In VS IDE: "Language=English\r\n(?<String>(?:[^\.].*\r\n)*\.\r\n)" -> "Language=English\r\n${String}Language=MyLanguage\r\n${String}"
+;
+
 Служба журнала событий %0
 .
 Language=French
@@ -159,6 +175,9 @@ Severity=Warning
 Facility=System
 SymbolicName=EVENT_EventLogProductInfo
 Language=English
+ReactOS %1 %2 %3 %4.
+.
+Language=Russian
 ReactOS %1 %2 %3 %4.
 .
 Language=French
@@ -308,6 +327,9 @@ SymbolicName=EVENT_CALL_TO_FUNCTION_FAILED_II
 Language=English
 The %1 call failed for %2 with the following error: %n%3
 .
+Language=Russian
+The %1 call failed for %2 with the following error: %n%3
+.
 Language=French
 L'appel %1 a échoué pour %2 avec l'erreur suivante : %n%3
 .
@@ -317,6 +339,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_REVERTED_TO_LASTKNOWNGOOD
 Language=English
+The system reverted to its last known good configuration.  The system is restarting....
+.
+Language=Russian
 The system reverted to its last known good configuration.  The system is restarting....
 .
 Language=French
@@ -330,6 +355,9 @@ SymbolicName=EVENT_BAD_ACCOUNT_NAME
 Language=English
 No backslash is in the account name.
 .
+Language=Russian
+No backslash is in the account name.
+.
 Language=French
 Aucun backslash n'est présent dans le nom de compte.
 .
@@ -339,6 +367,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_CONNECTION_TIMEOUT
 Language=English
+Timeout (%1 milliseconds) waiting for the %2 service to connect.
+.
+Language=Russian
 Timeout (%1 milliseconds) waiting for the %2 service to connect.
 .
 Language=French
@@ -352,6 +383,9 @@ SymbolicName=EVENT_READFILE_TIMEOUT
 Language=English
 Timeout (%1 milliseconds) waiting for ReadFile.
 .
+Language=Russian
+Timeout (%1 milliseconds) waiting for ReadFile.
+.
 Language=French
 Expiration du délai (%1 millisecondes) lors de l'attente de ReadFile.
 .
@@ -361,6 +395,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_TRANSACT_TIMEOUT
 Language=English
+Timeout (%1 milliseconds) waiting for a transaction response from the %2 service.
+.
+Language=Russian
 Timeout (%1 milliseconds) waiting for a transaction response from the %2 service.
 .
 Language=French
@@ -374,6 +411,9 @@ SymbolicName=EVENT_TRANSACT_INVALID
 Language=English
 Message returned in transaction has incorrect size.
 .
+Language=Russian
+Message returned in transaction has incorrect size.
+.
 Language=French
 Le message retourné dans la transaction a une taille incorrecte.
 .
@@ -383,6 +423,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_FIRST_LOGON_FAILED
 Language=English
+Logon attempt with current password failed with the following error: %n%1
+.
+Language=Russian
 Logon attempt with current password failed with the following error: %n%1
 .
 Language=French
@@ -396,6 +439,9 @@ SymbolicName=EVENT_SECOND_LOGON_FAILED
 Language=English
 Second logon attempt with old password also failed with the following error: %n%1
 .
+Language=Russian
+Second logon attempt with old password also failed with the following error: %n%1
+.
 Language=French
 La seconde tentative de connexion avec l'ancien mot de passe a également échoué avec l'erreur suivante : %n%1
 .
@@ -405,6 +451,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_INVALID_DRIVER_DEPENDENCY
 Language=English
+Boot-start or system-start driver (%1) must not depend on a service.
+.
+Language=Russian
 Boot-start or system-start driver (%1) must not depend on a service.
 .
 Language=French
@@ -418,6 +467,9 @@ SymbolicName=EVENT_BAD_SERVICE_STATE
 Language=English
 The %1 service has reported an invalid current state %2.
 .
+Language=Russian
+The %1 service has reported an invalid current state %2.
+.
 Language=French
 Le service %1 a reporté un état courant invalide %2.
 .
@@ -427,6 +479,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_CIRCULAR_DEPENDENCY_DEMAND
 Language=English
+Detected circular dependencies demand starting %1.
+.
+Language=Russian
 Detected circular dependencies demand starting %1.
 .
 Language=French
@@ -440,6 +495,9 @@ SymbolicName=EVENT_CIRCULAR_DEPENDENCY_AUTO
 Language=English
 Detected circular dependencies auto-starting services.
 .
+Language=Russian
+Detected circular dependencies auto-starting services.
+.
 Language=French
 Dépendances circulaires détectées lors du démarrage automatique des services.
 .
@@ -449,6 +507,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_DEPEND_ON_LATER_SERVICE
 Language=English
+Circular dependency: The %1 service depends on a service in a group which starts later.
+.
+Language=Russian
 Circular dependency: The %1 service depends on a service in a group which starts later.
 .
 Language=French
@@ -462,6 +523,9 @@ SymbolicName=EVENT_DEPEND_ON_LATER_GROUP
 Language=English
 Circular dependency: The %1 service depends on a group which starts later.
 .
+Language=Russian
+Circular dependency: The %1 service depends on a group which starts later.
+.
 Language=French
 Dépendance circulaire : le service %1 dépend d'un groupe qui démarre plus tard.
 .
@@ -471,6 +535,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_SEVERE_SERVICE_FAILED
 Language=English
+About to revert to the last known good configuration because the %1 service failed to start.
+.
+Language=Russian
 About to revert to the last known good configuration because the %1 service failed to start.
 .
 Language=French
@@ -498,6 +565,9 @@ SymbolicName=EVENT_SERVICE_EXIT_FAILED
 Language=English
 The %1 service terminated with the following error: %n%2
 .
+Language=Russian
+The %1 service terminated with the following error: %n%2
+.
 Language=French
 Le service %1 s'est terminé avec l'erreur suivante : %n%2
 .
@@ -507,6 +577,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_EXIT_FAILED_SPECIFIC
 Language=English
+The %1 service terminated with service-specific error %2.
+.
+Language=Russian
 The %1 service terminated with service-specific error %2.
 .
 Language=French
@@ -520,6 +593,9 @@ SymbolicName=EVENT_SERVICE_START_AT_BOOT_FAILED
 Language=English
 At least one service or driver failed during system startup.  Use Event Viewer to examine the event log for details.
 .
+Language=Russian
+At least one service or driver failed during system startup.  Use Event Viewer to examine the event log for details.
+.
 Language=French
 Au moins un service ou pilote a échoué durant le démarrage du système. Utilisez la visionneuse d'évènements pour examiner les journaux d'évènements pour plus de détails.
 .
@@ -529,6 +605,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_BOOT_SYSTEM_DRIVERS_FAILED
 Language=English
+The following boot-start or system-start driver(s) failed to load: %1
+.
+Language=Russian
 The following boot-start or system-start driver(s) failed to load: %1
 .
 Language=French
@@ -542,6 +621,9 @@ SymbolicName=EVENT_RUNNING_LASTKNOWNGOOD
 Language=English
 ReactOS could not be started as configured.  A previous working configuration was used instead.
 .
+Language=Russian
+ReactOS could not be started as configured.  A previous working configuration was used instead.
+.
 Language=French
 ReactOS n'a pas pu démarrer tel que configuré. Une précédente configuration fonctionnelle a été utilisé à la place.
 .
@@ -551,6 +633,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_TAKE_OWNERSHIP
 Language=English
+The %1 Registry key denied access to SYSTEM account programs so the Service Control Manager took ownership of the Registry key.
+.
+Language=Russian
 The %1 Registry key denied access to SYSTEM account programs so the Service Control Manager took ownership of the Registry key.
 .
 Language=French
@@ -564,6 +649,9 @@ SymbolicName=TITLE_SC_MESSAGE_BOX
 Language=English
 Service Control Manager %0
 .
+Language=Russian
+Service Control Manager %0
+.
 Language=French
 Gestionnaire de contrôle des services %0
 .
@@ -573,6 +661,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_NOT_INTERACTIVE
 Language=English
+The %1 service is marked as an interactive service.  However, the system is configured to not allow interactive services.  This service may not function properly.
+.
+Language=Russian
 The %1 service is marked as an interactive service.  However, the system is configured to not allow interactive services.  This service may not function properly.
 .
 Language=French
@@ -586,6 +677,9 @@ SymbolicName=EVENT_SERVICE_CRASH
 Language=English
 The %1 service terminated unexpectedly.  It has done this %2 time(s).  The following corrective action will be taken in %3 milliseconds: %5.
 .
+Language=Russian
+The %1 service terminated unexpectedly.  It has done this %2 time(s).  The following corrective action will be taken in %3 milliseconds: %5.
+.
 Language=French
 Le service %1 s'est terminée de façon non prévue. Il l'a fait %2 fois. L'action corrective suivante va être prise dans %3 millisecondes : %5.
 .
@@ -597,6 +691,9 @@ SymbolicName=EVENT_SERVICE_RECOVERY_FAILED
 Language=English
 The Service Control Manager tried to take a corrective action (%2) after the unexpected termination of the %3 service, but this action failed with the following error: %n%4
 .
+Language=Russian
+The Service Control Manager tried to take a corrective action (%2) after the unexpected termination of the %3 service, but this action failed with the following error: %n%4
+.
 Language=French
 Le gestionnaire de contrôle des services a tenté de prendre une action corrective (%2) après la fin inattendue du service %3, mais cette action a échoué avec l'erreur suivante : %n%4
 .
@@ -606,6 +703,11 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_SCESRV_FAILED
 Language=English
+The Service Control Manager did not initialize successfully. The security
+configuration server (scesrv.dll) failed to initialize with error %1.  The
+system is restarting...
+.
+Language=Russian
 The Service Control Manager did not initialize successfully. The security
 configuration server (scesrv.dll) failed to initialize with error %1.  The
 system is restarting...
@@ -670,6 +772,14 @@ If you do not correct this configuration, you may not be able to restart the %1
 service or may encounter other errors.  To ensure that the service is configured
 properly, use the Services snap-in in Microsoft Management Console (MMC).
 .
+Language=Russian
+The Service Control Manager encountered an error undoing a configuration change
+to the %1 service.  The service's %2 is currently in an unpredictable state.
+
+If you do not correct this configuration, you may not be able to restart the %1
+service or may encounter other errors.  To ensure that the service is configured
+properly, use the Services snap-in in Microsoft Management Console (MMC).
+.
 Language=French
 Le gestionnaire de contrôle des services a rencontré une erreur lors de l'annulation
 d'un changement de configuration sur le service %1. Le %2 du service est actuellement
@@ -691,6 +801,12 @@ password due to the following error: %n%3%n%nTo ensure that the service is
 configured properly, use the Services snap-in in Microsoft Management
 Console (MMC).
 .
+Language=Russian
+The %1 service was unable to log on as %2 with the currently configured
+password due to the following error: %n%3%n%nTo ensure that the service is
+configured properly, use the Services snap-in in Microsoft Management
+Console (MMC).
+.
 Language=French
 Le service %1 n'a pas réussi à s'identifier en tant que %2 avec le mot de passe
 actuellement configuré en raison de l'erreur suivante : %n%3%n%nPour vous assurer
@@ -703,6 +819,13 @@ Severity=Warning
 Facility=System
 SymbolicName=EVENT_SERVICE_DIFFERENT_PID_CONNECTED
 Language=English
+A service process other than the one launched by the Service Control Manager
+connected when starting the %1 service.  The Service Control Manager launched
+process %2 and process %3 connected instead.%n%n
+
+Note that if this service is configured to start under a debugger, this behavior is expected.
+.
+Language=Russian
 A service process other than the one launched by the Service Control Manager
 connected when starting the %1 service.  The Service Control Manager launched
 process %2 and process %3 connected instead.%n%n
@@ -751,6 +874,22 @@ user right appears to be removed, a Group Policy object associated with this
 node might be removing the right. Check with your domain administrator to find
 out if this is happening.
 .
+Language=Russian
+The %1 service was unable to log on as %2 with the currently configured password due to the following error:%n
+Logon failure: the user has not been granted the requested logon type at this computer.%n%n
+Service: %1%n
+Domain and account: %2%n%n
+This service account does not have the necessary user right "Log on as a service."%n%n
+User Action%n%n
+Assign "Log on as a service" to the service account on this computer. You can
+use Local Security Settings (Secpol.msc) to do this. If this computer is a
+node in a cluster, check that this user right is assigned to the Cluster
+service account on all nodes in the cluster.%n%n
+If you have already assigned this user right to the service account, and the
+user right appears to be removed, a Group Policy object associated with this
+node might be removing the right. Check with your domain administrator to find
+out if this is happening.
+.
 Language=French
 Le service %1 n'a pas réussi à s'identifier en tant que %2 avec le mot de passe
 actuellement configuré en raison de l'erreur suivante : %n
@@ -777,6 +916,11 @@ The %1 service was successfully sent a %2 control.%n%n
 The reason specified was: %3 [%4]%n%n
 Comment: %5
 .
+Language=Russian
+The %1 service was successfully sent a %2 control.%n%n
+The reason specified was: %3 [%4]%n%n
+Comment: %5
+.
 Language=French
 Le contrôle %2 a été envoyé avec succès au service %1.%n%n
 La raison spécifiée était : %3 [%4]%n%n
@@ -788,6 +932,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_SERVICE_SHUTDOWN_FAILED
 Language=English
+The %1 service did not shut down properly after receiving a preshutdown control.
+.
+Language=Russian
 The %1 service did not shut down properly after receiving a preshutdown control.
 .
 Language=French
@@ -804,6 +951,9 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_TRANSPORT_REGISTER_FAILED
 Language=English
+%2 failed to register itself with the NDIS wrapper.
+.
+Language=Russian
 %2 failed to register itself with the NDIS wrapper.
 .
 Language=French
