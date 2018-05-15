@@ -449,6 +449,12 @@ KiGetUserModeStackAddress(void)
     return &PsGetCurrentThread()->Tcb.TrapFrame->Rsp;
 }
 
+VOID
+KiSetTrapContext(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _In_ PCONTEXT Context,
+    _In_ KPROCESSOR_MODE RequestorMode);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 
 /* EOF */
