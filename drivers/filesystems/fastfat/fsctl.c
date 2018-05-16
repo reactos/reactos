@@ -777,6 +777,10 @@ VfatMount(
     }
 
     VolumeFcb->Flags |= VCB_IS_DIRTY;
+    if (BooleanFlagOn(Vpb->RealDevice->Flags, DO_SYSTEM_BOOT_PARTITION))
+    {
+        SetFlag(DeviceExt->Flags, VCB_IS_SYS_OR_HAS_PAGE);
+    }
 
     FsRtlNotifyVolumeEvent(DeviceExt->FATFileObject, FSRTL_VOLUME_MOUNT);
     FsRtlNotifyInitializeSync(&DeviceExt->NotifySync);
@@ -1170,6 +1174,12 @@ VfatDismountVolume(
      * but we're here mainly for 1st stage, so KISS
      */
     if (!BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Deny dismount of boot volume */
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_SYS_OR_HAS_PAGE))
     {
         return STATUS_ACCESS_DENIED;
     }

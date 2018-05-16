@@ -778,6 +778,7 @@ VfatCreateFile(
                 if (PagingFileCreate)
                 {
                     pFcb->Flags |= FCB_IS_PAGE_FILE;
+                    SetFlag(DeviceExt->Flags, VCB_IS_SYS_OR_HAS_PAGE);
                 }
             }
             else
@@ -897,6 +898,7 @@ VfatCreateFile(
             else
             {
                 pFcb->Flags |= FCB_IS_PAGE_FILE;
+                SetFlag(DeviceExt->Flags, VCB_IS_SYS_OR_HAS_PAGE);
             }
         }
         else

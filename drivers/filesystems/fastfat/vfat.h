@@ -239,6 +239,7 @@ typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
 #define VCB_VOLUME_LOCKED       0x0001
 #define VCB_DISMOUNT_PENDING    0x0002
 #define VCB_IS_FATX             0x0004
+#define VCB_IS_SYS_OR_HAS_PAGE  0x0008
 #define VCB_IS_DIRTY            0x4000 /* Volume is dirty */
 #define VCB_CLEAR_DIRTY         0x8000 /* Clean dirty flag at shutdown */
 
