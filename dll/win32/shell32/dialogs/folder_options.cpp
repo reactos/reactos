@@ -1892,8 +1892,8 @@ FolderOptionsFileTypesDlg(
             {
                 case IDC_FILETYPES_NEW:
                     newext.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
-                    if (IDOK == DialogBoxParam(shell32_hInstance, MAKEINTRESOURCEW(IDD_NEWEXTENSION),
-                                               hwndDlg, NewExtensionDlgProc, (LPARAM)&newext))
+                    if (IDOK == DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_NEWEXTENSION),
+                                                hwndDlg, NewExtensionDlgProc, (LPARAM)&newext))
                     {
                         FileTypesDlg_AddExt(hwndDlg, newext.szExt, newext.szFileType);
                     }
