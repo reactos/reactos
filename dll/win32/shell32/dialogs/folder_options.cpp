@@ -1837,7 +1837,7 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     if (ERROR_SUCCESS != nResult)
         return FALSE;
 
-    // ".ext" @ --> "ft%06u"
+    // Set the default value of ".ext" to "ft%06u"
     DWORD dwSize = (lstrlen(szKey) + 1) * sizeof(WCHAR);
     RegSetValueExW(hKey, NULL, 0, REG_SZ, (BYTE *)szKey, dwSize);
 
