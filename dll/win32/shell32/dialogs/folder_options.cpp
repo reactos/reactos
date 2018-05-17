@@ -1619,10 +1619,23 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
         SetDlgItemTextW(hwndDlg, IDC_NEWEXT_COMBOBOX, szText);
     }
 
-    MoveWindow(GetDlgItem(hwndDlg, IDOK), rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top, TRUE);
-    MoveWindow(GetDlgItem(hwndDlg, IDCANCEL), rc2.left, rc2.top, rc2.right - rc2.left, rc2.bottom - rc2.top, TRUE);
+    HDWP hDWP = BeginDeferWindowPos(3);
 
-    MoveWindow(hwndDlg, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+    if (hDWP)
+        DeferWindowPos(hDWP, GetDlgItem(hwndDlg, IDOK), NULL,
+                       rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
+                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+    if (hDWP)
+        DeferWindowPos(hDWP, GetDlgItem(hwndDlg, IDCANCEL), NULL,
+                       rc2.left, rc2.top, rc2.right - rc2.left, rc2.bottom - rc2.top,
+                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+    if (hDWP)
+        DeferWindowPos(hDWP, hwndDlg, NULL,
+                       rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+
+    if (hDWP)
+        EndDeferWindowPos(hDWP);
 }
 
 static BOOL
