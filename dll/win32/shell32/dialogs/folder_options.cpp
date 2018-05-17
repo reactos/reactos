@@ -1624,15 +1624,15 @@ NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     if (hDWP)
         DeferWindowPos(hDWP, GetDlgItem(hwndDlg, IDOK), NULL,
                        rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
-                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+                       SWP_NOACTIVATE | SWP_NOZORDER);
     if (hDWP)
         DeferWindowPos(hDWP, GetDlgItem(hwndDlg, IDCANCEL), NULL,
                        rc2.left, rc2.top, rc2.right - rc2.left, rc2.bottom - rc2.top,
-                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+                       SWP_NOACTIVATE | SWP_NOZORDER);
     if (hDWP)
         DeferWindowPos(hDWP, hwndDlg, NULL,
                        rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
-                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+                       SWP_NOACTIVATE | SWP_NOZORDER);
 
     if (hDWP)
         EndDeferWindowPos(hDWP);
