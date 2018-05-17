@@ -1677,11 +1677,11 @@ NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     LV_FINDINFO find;
     INT iItem;
 
-    GetDlgItemText(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
+    GetDlgItemTextW(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
     StringTrimW(pNewExt->szExt);
     CharUpperW(pNewExt->szExt);
 
-    GetDlgItemText(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
+    GetDlgItemTextW(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
     StringTrimW(pNewExt->szFileType);
 
     if (pNewExt->szExt[0] == 0)
@@ -1725,7 +1725,7 @@ NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
         // get text
         LoadStringW(shell32_hInstance, IDS_NEWEXT_ALREADY_ASSOC, szFormat, _countof(szFormat));
         szText[_countof(szFormat) - 1] = 0;
-        StringCchPrintf(szText, _countof(szText), szFormat, find.psz, szFileType, find.psz, szFileType);
+        StringCchPrintfW(szText, _countof(szText), szFormat, find.psz, szFileType, find.psz, szFileType);
 
         // get title
         LoadStringW(shell32_hInstance, IDS_NEWEXT_EXT_IN_USE, szTitle, _countof(szTitle));
@@ -1791,7 +1791,7 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     // Search the next "ft%06u" key name
     do
     {
-        StringCchPrintf(szKey, _countof(szKey), TEXT("ft%06u"), dwValue);
+        StringCchPrintfW(szKey, _countof(szKey), TEXT("ft%06u"), dwValue);
 
         nResult = RegOpenKeyEx(HKEY_CLASSES_ROOT, szKey, 0, KEY_READ, &hKey);
         if (nResult != ERROR_SUCCESS)
@@ -1817,7 +1817,7 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     WCHAR szExt[16];
     if (*pszExt == L'.')
         ++pszExt;
-    StringCchPrintf(szExt, _countof(szExt), TEXT(".%s"), pszExt);
+    StringCchPrintfW(szExt, _countof(szExt), TEXT(".%s"), pszExt);
     CharLowerW(szExt);
     nResult = RegCreateKeyEx(HKEY_CLASSES_ROOT, szExt, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
     CharUpperW(szExt);
@@ -1834,7 +1834,7 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     WCHAR szFile[100], szFileFormat[100];
     LoadStringW(shell32_hInstance, IDS_FILE_EXT_TYPE, szFileFormat, _countof(szFileFormat));
     szFile[_countof(szFileFormat) - 1] = 0;
-    StringCchPrintf(szFile, _countof(szFile), szFileFormat, &szExt[1]);
+    StringCchPrintfW(szFile, _countof(szFile), szFileFormat, &szExt[1]);
 
     // Insert an item to listview
     HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
@@ -1892,7 +1892,7 @@ FolderOptionsFileTypesDlg(
             {
                 case IDC_FILETYPES_NEW:
                     newext.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
-                    if (IDOK == DialogBoxParam(shell32_hInstance, MAKEINTRESOURCE(IDD_NEWEXTENSION),
+                    if (IDOK == DialogBoxParam(shell32_hInstance, MAKEINTRESOURCEW(IDD_NEWEXTENSION),
                                                hwndDlg, NewExtensionDlgProc, (LPARAM)&newext))
                     {
                         FileTypesDlg_AddExt(hwndDlg, newext.szExt, newext.szFileType);
