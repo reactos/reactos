@@ -1798,7 +1798,7 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
 {
     DWORD dwValue = 1;
     HKEY hKey;
-    WCHAR szKey[MAX_PATH];
+    WCHAR szKey[13];    // max. "ft4294967295" + "\0"
     LONG nResult;
 
     // Search the next "ft%06u" key name
@@ -1812,11 +1812,11 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
 
         RegCloseKey(hKey);
         ++dwValue;
-    } while (dwValue < 0x1000000);
+    } while (dwValue != 0);
 
     RegCloseKey(hKey);
 
-    if (dwValue >= 0x1000000)
+    if (dwValue == 0)
         return FALSE;
 
     // Create new "ft%06u" key
