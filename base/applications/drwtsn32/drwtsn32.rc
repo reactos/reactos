@@ -31,3 +31,6 @@
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
