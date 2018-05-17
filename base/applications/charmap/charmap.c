@@ -25,10 +25,6 @@ HICON     hSmIcon;
 HICON     hBgIcon;
 SETTINGS  Settings;
 
-/* GetUName prototype */
-typedef int (WINAPI * GETUNAME)(WORD wCharCode, LPWSTR lpbuf);
-GETUNAME GetUName;
-
 /* Font-enumeration callback */
 static
 int
@@ -165,7 +161,7 @@ CopyCharacters(HWND hDlg)
 
     // Test if the whose text is unselected
     if(dwStart == dwEnd) {
-        
+
         // Select the whole text
         SendMessageW(hText, EM_SETSEL, 0, -1);
 
@@ -268,12 +264,9 @@ UpdateStatusBar(WCHAR wch)
     WCHAR buff[MAX_PATH];
     WCHAR szDesc[MAX_PATH];
 
-    if (GetUName)
-    {
-        GetUName(wch, szDesc);
-        wsprintfW(buff, L"U+%04X: %s", wch, szDesc);
-        SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)buff);
-    }
+    GetUName(wch, szDesc);
+    wsprintfW(buff, L"U+%04X: %s", wch, szDesc);
+    SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)buff);
 }
 
 static
@@ -593,7 +586,6 @@ wWinMain(HINSTANCE hInst,
     INT Ret = 1;
     HMODULE hRichEd20;
     MSG Msg;
-    HINSTANCE hGetUName = NULL;
 
     hInstance = hInst;
     
@@ -611,18 +603,6 @@ wWinMain(HINSTANCE hInst,
     iccx.dwSize = sizeof(INITCOMMONCONTROLSEX);
     iccx.dwICC = ICC_TAB_CLASSES;
     InitCommonControlsEx(&iccx);
-
-    /* Loading the GetUName function */
-    hGetUName = LoadLibraryW(L"getuname.dll");
-    if (hGetUName != NULL)
-    {
-        GetUName = (GETUNAME) GetProcAddress(hGetUName, "GetUName");
-        if (GetUName == NULL)
-        {
-            FreeLibrary(hGetUName);
-            hGetUName = NULL;
-        }
-    }
 
     if (RegisterMapClasses(hInstance))
     {
@@ -648,9 +628,6 @@ wWinMain(HINSTANCE hInst,
         }
         UnregisterMapClasses(hInstance);
     }
-
-    if (hGetUName != NULL)
-        FreeLibrary(hGetUName);
 
     return Ret;
 }
