@@ -670,6 +670,7 @@ vfatFCBInitializeCacheFromVolume(
     fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
     fileObject->FsContext = fcb;
     fileObject->FsContext2 = newCCB;
+    fileObject->Vpb = vcb->IoVPB;
     fcb->FileObject = fileObject;
 
     _SEH2_TRY
@@ -833,6 +834,7 @@ vfatAttachFCBToFileObject(
     fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
     fileObject->FsContext = fcb;
     fileObject->FsContext2 = newCCB;
+    fileObject->Vpb = vcb->IoVPB;
     DPRINT("file open: fcb:%p PathName:%wZ\n", fcb, &fcb->PathNameU);
 
 #ifdef KDBG
