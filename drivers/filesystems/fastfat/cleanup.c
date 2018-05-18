@@ -88,7 +88,7 @@ VfatCleanupFile(
 
         if (BooleanFlagOn(pFcb->Flags, FCB_IS_DIRTY))
         {
-            VfatUpdateEntry (pFcb, vfatVolumeIsFatX(DeviceExt));
+            VfatUpdateEntry (DeviceExt, pFcb);
         }
 
         if (BooleanFlagOn(pFcb->Flags, FCB_DELETE_PENDING) &&

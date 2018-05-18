@@ -640,62 +640,6 @@ vfatGrabFCBFromTable(
     return NULL;
 }
 
-static
-NTSTATUS
-vfatFCBInitializeCacheFromVolume(
-    PVCB vcb,
-    PVFATFCB fcb)
-{
-    PFILE_OBJECT fileObject;
-    PVFATCCB newCCB;
-    NTSTATUS status;
-
-    fileObject = IoCreateStreamFileObject (NULL, vcb->StorageDevice);
-
-#ifdef KDBG
-    if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &fcb->LongNameU, FALSE, NULL))
-    {
-        DPRINT1("Attaching %p to %p (%d)\n", fcb, fileObject, fcb->RefCount);
-    }
-#endif
-
-    newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
-    if (newCCB == NULL)
-    {
-        ObDereferenceObject(fileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    RtlZeroMemory(newCCB, sizeof (VFATCCB));
-
-    fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
-    fileObject->FsContext = fcb;
-    fileObject->FsContext2 = newCCB;
-    fileObject->Vpb = vcb->IoVPB;
-    fcb->FileObject = fileObject;
-
-    _SEH2_TRY
-    {
-        CcInitializeCacheMap(fileObject,
-                             (PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
-                             TRUE,
-                             &VfatGlobalData->CacheMgrCallbacks,
-                             fcb);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        status = _SEH2_GetExceptionCode();
-        fcb->FileObject = NULL;
-        ExFreeToNPagedLookasideList(&VfatGlobalData->CcbLookasideList, newCCB);
-        ObDereferenceObject(fileObject);
-        return status;
-    }
-    _SEH2_END;
-
-    vfatGrabFCB(vcb, fcb);
-    SetFlag(fcb->Flags, FCB_CACHE_INITIALIZED);
-    return STATUS_SUCCESS;
-}
-
 PVFATFCB
 vfatMakeRootFCB(
     PDEVICE_EXTENSION pVCB)
@@ -788,16 +732,6 @@ vfatMakeFCBFromDirEntry(
     vfatInitFCBFromDirEntry(vcb, rcFCB, DirContext);
 
     rcFCB->RefCount = 1;
-    if (vfatFCBIsDirectory(rcFCB))
-    {
-        Status = vfatFCBInitializeCacheFromVolume(vcb, rcFCB);
-        if (!NT_SUCCESS(Status))
-        {
-            vfatReleaseFCB(vcb, rcFCB);
-            ExFreePoolWithTag(NameU.Buffer, TAG_FCB);
-            return Status;
-        }
-    }
     rcFCB->parentFcb = directoryFCB;
     InsertTailList(&directoryFCB->ParentListHead, &rcFCB->ParentListEntry);
     vfatAddFCBToTable(vcb, rcFCB);
@@ -880,6 +814,7 @@ vfatDirFindFile(
     DirContext.ShortNameU.Buffer = ShortNameBuffer;
     DirContext.ShortNameU.Length = 0;
     DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
+    DirContext.DeviceExt = pDeviceExt;
 
     while (TRUE)
     {

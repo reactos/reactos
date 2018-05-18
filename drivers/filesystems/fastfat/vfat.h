@@ -281,7 +281,7 @@ typedef NTSTATUS (*PGET_NEXT_CLUSTER)(PDEVICE_EXTENSION,ULONG,PULONG);
 typedef NTSTATUS (*PFIND_AND_MARK_AVAILABLE_CLUSTER)(PDEVICE_EXTENSION,PULONG);
 typedef NTSTATUS (*PWRITE_CLUSTER)(PDEVICE_EXTENSION,ULONG,ULONG,PULONG);
 
-typedef BOOLEAN (*PIS_DIRECTORY_EMPTY)(struct _VFATFCB*);
+typedef BOOLEAN (*PIS_DIRECTORY_EMPTY)(PDEVICE_EXTENSION,struct _VFATFCB*);
 typedef NTSTATUS (*PADD_ENTRY)(PDEVICE_EXTENSION,PUNICODE_STRING,struct _VFATFCB**,struct _VFATFCB*,ULONG,UCHAR,struct _VFAT_MOVE_CONTEXT*);
 typedef NTSTATUS (*PDEL_ENTRY)(PDEVICE_EXTENSION,struct _VFATFCB*,struct _VFAT_MOVE_CONTEXT*);
 typedef NTSTATUS (*PGET_NEXT_DIR_ENTRY)(PVOID*,PVOID*,struct _VFATFCB*,struct _VFAT_DIRENTRY_CONTEXT*,BOOLEAN);
@@ -352,7 +352,7 @@ BOOLEAN
 VfatIsDirectoryEmpty(PDEVICE_EXTENSION DeviceExt,
                      struct _VFATFCB* Fcb)
 {
-    return DeviceExt->Dispatch.IsDirectoryEmpty(Fcb);
+    return DeviceExt->Dispatch.IsDirectoryEmpty(DeviceExt, Fcb);
 }
 
 FORCEINLINE
@@ -570,6 +570,7 @@ typedef struct _VFAT_DIRENTRY_CONTEXT
     DIR_ENTRY DirEntry;
     UNICODE_STRING LongNameU;
     UNICODE_STRING ShortNameU;
+    PDEVICE_EXTENSION DeviceExt;
 } VFAT_DIRENTRY_CONTEXT, *PVFAT_DIRENTRY_CONTEXT;
 
 typedef struct _VFAT_MOVE_CONTEXT
@@ -737,9 +738,14 @@ vfatDirEntryGetFirstCluster(
 /* dirwr.c */
 
 NTSTATUS
+vfatFCBInitializeCacheFromVolume(
+    PVCB vcb,
+    PVFATFCB fcb);
+
+NTSTATUS
 VfatUpdateEntry(
-    PVFATFCB pFcb,
-    IN BOOLEAN IsFatX);
+    IN PDEVICE_EXTENSION DeviceExt,
+    PVFATFCB pFcb);
 
 BOOLEAN
 vfatFindDirSpace(

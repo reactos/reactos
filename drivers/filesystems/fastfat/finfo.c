@@ -265,7 +265,7 @@ VfatSetBasicInformation(
         }
     }
 
-    VfatUpdateEntry(FCB, vfatVolumeIsFatX(DeviceExt));
+    VfatUpdateEntry(DeviceExt, FCB);
 
     if (NotifyFilter != 0)
     {
@@ -1407,7 +1407,7 @@ VfatSetAllocationSizeInformation(
     Fcb->Flags |= FCB_IS_DIRTY;
     if (AllocSizeChanged)
     {
-        VfatUpdateEntry(Fcb, vfatVolumeIsFatX(DeviceExt));
+        VfatUpdateEntry(DeviceExt, Fcb);
 
         vfatReportChange(DeviceExt, Fcb, FILE_NOTIFY_CHANGE_SIZE, FILE_ACTION_MODIFIED);
     }

@@ -599,6 +599,7 @@ DoQuery(
 
     DPRINT("Buffer=%p tofind=%wZ\n", Buffer, &pCcb->SearchPattern);
 
+    DirContext.DeviceExt = IrpContext->DeviceExt;
     DirContext.LongNameU.Buffer = LongNameBuffer;
     DirContext.LongNameU.MaximumLength = sizeof(LongNameBuffer);
     DirContext.ShortNameU.Buffer = ShortNameBuffer;

@@ -951,7 +951,7 @@ VfatCreateFile(
                                                &pFcb->entry.Fat.UpdateTime);
                 }
 
-                VfatUpdateEntry(pFcb, vfatVolumeIsFatX(DeviceExt));
+                VfatUpdateEntry(DeviceExt, pFcb);
             }
 
             ExAcquireResourceExclusiveLite(&(pFcb->MainResource), TRUE);
