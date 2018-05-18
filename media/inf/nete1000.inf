@@ -1,0 +1,50 @@
+; NETRTL.INF
+
+; Installation file for Intel-based NICs
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Net
+ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 18/05/2018,1.00
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%IntelMfg% = IntelMfg
+
+[IntelMfg]
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_100F
+
+;----------------------------- E1000 DRIVER -----------------------------
+
+[E1000_Inst.ndi.NT]
+Characteristics = 0x4 ; NCF_PHYSICAL
+BusType = 5 ; PCIBus
+CopyFiles = E1000_CopyFiles.NT
+
+[E1000_CopyFiles.NT]
+e1000.sys
+
+[E1000_Inst.ndi.NT.Services]
+AddService = e1000, 0x00000002, E1000_Service_Inst
+
+[E1000_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 0
+ServiceBinary = %12%\e1000.sys
+LoadOrderGroup = NDIS
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+IntelMfg = "Intel"
+
+IntelE1000.DeviceDesc = "Intel PRO/1000 Ethernet Adapter"
