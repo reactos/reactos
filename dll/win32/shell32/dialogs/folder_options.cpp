@@ -1363,12 +1363,9 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
     WCHAR szValue[64];
     DWORD cbValue = sizeof(szValue);
     nResult = RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(szValue), &cbValue);
-    if (nResult != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKey);
-        return FALSE;
-    }
     RegCloseKey(hKey);
+    if (nResult != ERROR_SUCCESS)
+        return FALSE;
 
     if (szValue[0])
         RegDeleteTreeW(HKEY_CLASSES_ROOT, szValue);
