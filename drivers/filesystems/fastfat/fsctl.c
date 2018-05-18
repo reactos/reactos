@@ -531,9 +531,9 @@ VfatMount(
     UNICODE_STRING VolumeNameU = RTL_CONSTANT_STRING(L"\\$$Volume$$");
     UNICODE_STRING VolumeLabelU;
     ULONG HashTableSize;
-    ULONG eocMark;
     ULONG i;
     FATINFO FatInfo;
+    BOOLEAN Dirty;
 
     DPRINT("VfatMount(IrpContext %p)\n", IrpContext);
 
@@ -617,7 +617,9 @@ VfatMount(
             DeviceExt->GetNextCluster = FAT12GetNextCluster;
             DeviceExt->FindAndMarkAvailableCluster = FAT12FindAndMarkAvailableCluster;
             DeviceExt->WriteCluster = FAT12WriteCluster;
-            DeviceExt->CleanShutBitMask = 0;
+            /* We don't define dirty bit functions here
+             * FAT12 doesn't have such bit and they won't get called
+             */
             break;
 
         case FAT16:
@@ -625,7 +627,8 @@ VfatMount(
             DeviceExt->GetNextCluster = FAT16GetNextCluster;
             DeviceExt->FindAndMarkAvailableCluster = FAT16FindAndMarkAvailableCluster;
             DeviceExt->WriteCluster = FAT16WriteCluster;
-            DeviceExt->CleanShutBitMask = 0x8000;
+            DeviceExt->GetDirtyStatus = FAT16GetDirtyStatus;
+            DeviceExt->SetDirtyStatus = FAT16SetDirtyStatus;
             break;
 
         case FAT32:
@@ -633,7 +636,8 @@ VfatMount(
             DeviceExt->GetNextCluster = FAT32GetNextCluster;
             DeviceExt->FindAndMarkAvailableCluster = FAT32FindAndMarkAvailableCluster;
             DeviceExt->WriteCluster = FAT32WriteCluster;
-            DeviceExt->CleanShutBitMask = 0x80000000;
+            DeviceExt->GetDirtyStatus = FAT32GetDirtyStatus;
+            DeviceExt->SetDirtyStatus = FAT32SetDirtyStatus;
             break;
     }
 
@@ -763,16 +767,20 @@ VfatMount(
     ReadVolumeLabel(DeviceExt, 0, vfatVolumeIsFatX(DeviceExt), &VolumeLabelU);
     Vpb->VolumeLabelLength = VolumeLabelU.Length;
 
-    /* read clean shutdown bit status */
-    Status = GetNextCluster(DeviceExt, 1, &eocMark);
+    /* read dirty bit status */
+    Status = GetDirtyStatus(DeviceExt, &Dirty);
     if (NT_SUCCESS(Status))
     {
-        if (eocMark & DeviceExt->CleanShutBitMask)
+        /* The volume wasn't dirty, it was properly dismounted */
+        if (!Dirty)
         {
-            /* unset clean shutdown bit */
-            eocMark &= ~DeviceExt->CleanShutBitMask;
-            WriteCluster(DeviceExt, 1, eocMark);
+            /* Mark it dirty now! */
+            SetDirtyStatus(DeviceExt, TRUE);
             VolumeFcb->Flags |= VCB_CLEAR_DIRTY;
+        }
+        else
+        {
+            DPRINT1("Mounting a dirty volume\n");
         }
     }
 
@@ -1055,7 +1063,6 @@ NTSTATUS
 VfatMarkVolumeDirty(
     PVFAT_IRP_CONTEXT IrpContext)
 {
-    ULONG eocMark;
     PDEVICE_EXTENSION DeviceExt;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1064,13 +1071,7 @@ VfatMarkVolumeDirty(
 
     if (!BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_IS_DIRTY))
     {
-        Status = GetNextCluster(DeviceExt, 1, &eocMark);
-        if (NT_SUCCESS(Status))
-        {
-            /* unset clean shutdown bit */
-            eocMark &= ~DeviceExt->CleanShutBitMask;
-            Status = WriteCluster(DeviceExt, 1, eocMark);
-        }
+        Status = SetDirtyStatus(DeviceExt, TRUE);
     }
 
     DeviceExt->VolumeFcb->Flags &= ~VCB_CLEAR_DIRTY;
@@ -1237,8 +1238,6 @@ VfatDismountVolume(
     PLIST_ENTRY NextEntry;
     PVFATFCB Fcb;
     PFILE_OBJECT FileObject;
-    ULONG eocMark;
-    NTSTATUS Status;
 
     DPRINT("VfatDismountVolume(%p)\n", IrpContext);
 
@@ -1270,16 +1269,12 @@ VfatDismountVolume(
 
     ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
 
+    /* We're performing a clean shutdown */
     if (BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_CLEAR_DIRTY))
     {
-        /* Set clean shutdown bit */
-        Status = GetNextCluster(DeviceExt, 1, &eocMark);
-        if (NT_SUCCESS(Status))
-        {
-            eocMark |= DeviceExt->CleanShutBitMask;
-            if (NT_SUCCESS(WriteCluster(DeviceExt, 1, eocMark)))
-                DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
-        }
+        /* Drop the dirty bit */
+        if (NT_SUCCESS(SetDirtyStatus(DeviceExt, FALSE)))
+            DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
     }
 
     /* Flush volume & files */
