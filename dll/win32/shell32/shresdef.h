@@ -259,6 +259,13 @@
 #define IDS_ADVANCED_SHOW_COMP_COLOR                30512
 #define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
+#define IDS_NEWEXT_ADVANCED_LEFT                    30515
+#define IDS_NEWEXT_ADVANCED_RIGHT                   30516
+#define IDS_NEWEXT_NEW                              30518
+#define IDS_NEWEXT_SPECIFY_EXT                      30519
+#define IDS_NEWEXT_ALREADY_ASSOC                    30520
+#define IDS_NEWEXT_EXT_IN_USE                       30521
+
 /* Dialogs */
 
 /* Run dialog */
@@ -348,12 +355,19 @@
 #define IDC_FILETYPES_DESCRIPTION           14007
 #define IDC_FILETYPES_ADVANCED              14008
 
+/* Control IDs for IDD_NEWEXTENSION dialog */
+#define IDC_NEWEXT_EDIT                     14001
+#define IDC_NEWEXT_ADVANCED                 14002
+#define IDC_NEWEXT_COMBOBOX                 14003
+#define IDC_NEWEXT_ASSOC                    14004
+
 /* Other dialogs */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
 #define IDD_NOOPEN       27
+#define IDD_NEWEXTENSION      28
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29

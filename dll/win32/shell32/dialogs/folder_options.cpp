@@ -2,7 +2,7 @@
  *    Open With  Context Menu extension
  *
  * Copyright 2007 Johannes Anderwald <johannes.anderwald@reactos.org>
- * Copyright 2016-2017 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * Copyright 2016-2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1556,6 +1556,324 @@ FindSelectedItem(
     return NULL;
 }
 
+struct NEWEXT_DIALOG
+{
+    HWND hwndDlg;
+    HWND hwndLV;
+    RECT rcDlg;
+    BOOL bAdvanced;
+    INT dy;
+    WCHAR szExt[16];
+    WCHAR szFileType[64];
+};
+
+static VOID
+NewExtDlg_OnAdvanced(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
+{
+    // If "Advanced" button was clicked, then we shrink or expand the dialog.
+    WCHAR szText[64];
+    RECT rc, rc1, rc2;
+
+    GetWindowRect(hwndDlg, &rc);
+    rc.bottom = rc.top + (pNewExt->rcDlg.bottom - pNewExt->rcDlg.top);
+
+    GetWindowRect(GetDlgItem(hwndDlg, IDOK), &rc1);
+    MapWindowPoints(NULL, hwndDlg, (POINT *)&rc1, 2);
+
+    GetWindowRect(GetDlgItem(hwndDlg, IDCANCEL), &rc2);
+    MapWindowPoints(NULL, hwndDlg, (POINT *)&rc2, 2);
+
+    if (pNewExt->bAdvanced)
+    {
+        rc1.top += pNewExt->dy;
+        rc1.bottom += pNewExt->dy;
+
+        rc2.top += pNewExt->dy;
+        rc2.bottom += pNewExt->dy;
+
+        ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_SHOWNOACTIVATE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_SHOWNOACTIVATE);
+
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_LEFT, szText, _countof(szText));
+        SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
+
+        SetFocus(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX));
+    }
+    else
+    {
+        rc1.top -= pNewExt->dy;
+        rc1.bottom -= pNewExt->dy;
+
+        rc2.top -= pNewExt->dy;
+        rc2.bottom -= pNewExt->dy;
+
+        ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_ASSOC), SW_HIDE);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), SW_HIDE);
+
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ADVANCED_RIGHT, szText, _countof(szText));
+        SetDlgItemTextW(hwndDlg, IDC_NEWEXT_ADVANCED, szText);
+
+        rc.bottom -= pNewExt->dy;
+
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_NEW, szText, _countof(szText));
+        SetDlgItemTextW(hwndDlg, IDC_NEWEXT_COMBOBOX, szText);
+    }
+
+    HDWP hDWP = BeginDeferWindowPos(3);
+
+    if (hDWP)
+        DeferWindowPos(hDWP, GetDlgItem(hwndDlg, IDOK), NULL,
+                       rc1.left, rc1.top, rc1.right - rc1.left, rc1.bottom - rc1.top,
+                       SWP_NOACTIVATE | SWP_NOZORDER);
+    if (hDWP)
+        DeferWindowPos(hDWP, GetDlgItem(hwndDlg, IDCANCEL), NULL,
+                       rc2.left, rc2.top, rc2.right - rc2.left, rc2.bottom - rc2.top,
+                       SWP_NOACTIVATE | SWP_NOZORDER);
+    if (hDWP)
+        DeferWindowPos(hDWP, hwndDlg, NULL,
+                       rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+                       SWP_NOACTIVATE | SWP_NOZORDER);
+
+    if (hDWP)
+        EndDeferWindowPos(hDWP);
+}
+
+static BOOL
+NewExtDlg_OnInitDialog(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
+{
+    WCHAR szText[64];
+
+    pNewExt->hwndDlg = hwndDlg;
+    pNewExt->bAdvanced = FALSE;
+
+    GetWindowRect(hwndDlg, &pNewExt->rcDlg);
+
+    RECT rc1, rc2;
+    GetWindowRect(GetDlgItem(hwndDlg, IDC_NEWEXT_EDIT), &rc1);
+    GetWindowRect(GetDlgItem(hwndDlg, IDC_NEWEXT_COMBOBOX), &rc2);
+    pNewExt->dy = rc2.top - rc1.top;
+
+    LoadStringW(shell32_hInstance, IDS_NEWEXT_NEW, szText, _countof(szText));
+    SendDlgItemMessageW(hwndDlg, IDC_NEWEXT_COMBOBOX, CB_ADDSTRING, 0, (LPARAM)szText);
+    SendDlgItemMessageW(hwndDlg, IDC_NEWEXT_COMBOBOX, CB_SETCURSEL, 0, 0);
+
+    SendDlgItemMessageW(hwndDlg, IDC_NEWEXT_EDIT, EM_SETLIMITTEXT, _countof(pNewExt->szExt) - 1, 0);
+
+    NewExtDlg_OnAdvanced(hwndDlg, pNewExt);
+
+    return TRUE;
+}
+
+static void
+StringTrimW(LPWSTR pszText)
+{
+    LPWSTR pch = pszText;
+    while (iswspace(*pch))
+        pch++;
+
+    LPWSTR pchFirst, pchLast;
+    pchFirst = pchLast = pch;
+    while (*pch && !iswspace(*pch))
+    {
+        ++pch;
+        pchLast = pch;
+    }
+
+    INT_PTR cch = pchLast - pchFirst;
+    MoveMemory(pszText, pchFirst, cch * sizeof(WCHAR));
+    pszText[cch] = 0;
+}
+
+static BOOL
+NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
+{
+    LV_FINDINFO find;
+    INT iItem;
+
+    GetDlgItemTextW(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
+    StringTrimW(pNewExt->szExt);
+    CharUpperW(pNewExt->szExt);
+
+    GetDlgItemTextW(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
+    StringTrimW(pNewExt->szFileType);
+
+    if (pNewExt->szExt[0] == 0)
+    {
+        WCHAR szText[128], szTitle[128];
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_SPECIFY_EXT, szText, _countof(szText));
+        szText[_countof(szText) - 1] = 0;
+        LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szTitle, _countof(szTitle));
+        szTitle[_countof(szTitle) - 1] = 0;
+        MessageBoxW(hwndDlg, szText, szTitle, MB_ICONERROR);
+        return FALSE;
+    }
+
+    ZeroMemory(&find, sizeof(find));
+    find.flags = LVFI_STRING;
+    if (pNewExt->szExt[0] == L'.')
+    {
+        find.psz = &pNewExt->szExt[1];
+    }
+    else
+    {
+        find.psz = pNewExt->szExt;
+    }
+
+    iItem = ListView_FindItem(pNewExt->hwndLV, -1, &find);
+    if (iItem >= 0)
+    {
+        // already exists
+        WCHAR szText[256], szFormat[256], szTitle[64], szFileType[64];
+
+        // get file type
+        LV_ITEM item;
+        ZeroMemory(&item, sizeof(item));
+        item.mask = LVIF_TEXT;
+        item.pszText = szFileType;
+        item.cchTextMax = _countof(szFileType);
+        item.iItem = iItem;
+        item.iSubItem = 1;
+        ListView_GetItem(pNewExt->hwndLV, &item);
+
+        // get text
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_ALREADY_ASSOC, szFormat, _countof(szFormat));
+        szText[_countof(szFormat) - 1] = 0;
+        StringCchPrintfW(szText, _countof(szText), szFormat, find.psz, szFileType, find.psz, szFileType);
+
+        // get title
+        LoadStringW(shell32_hInstance, IDS_NEWEXT_EXT_IN_USE, szTitle, _countof(szTitle));
+        szTitle[_countof(szTitle) - 1] = 0;
+
+        if (MessageBoxW(hwndDlg, szText, szTitle, MB_ICONWARNING | MB_YESNO) == IDNO)
+        {
+            return FALSE;
+        }
+
+        // Delete the item
+        ListView_DeleteItem(pNewExt->hwndLV, iItem);
+    }
+
+    EndDialog(hwndDlg, IDOK);
+    return TRUE;
+}
+
+// IDD_NEWEXTENSION dialog
+INT_PTR
+CALLBACK
+NewExtensionDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    static NEWEXT_DIALOG *s_pNewExt = NULL;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            s_pNewExt = (NEWEXT_DIALOG *)lParam;
+            NewExtDlg_OnInitDialog(hwndDlg, s_pNewExt);
+            return TRUE;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    NewExtDlg_OnOK(hwndDlg, s_pNewExt);
+                    break;
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
+                case IDC_NEWEXT_ADVANCED:
+                    s_pNewExt->bAdvanced = !s_pNewExt->bAdvanced;
+                    NewExtDlg_OnAdvanced(hwndDlg, s_pNewExt);
+                    break;
+            }
+            break;
+    }
+    return 0;
+}
+
+static BOOL
+FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
+{
+    DWORD dwValue = 1;
+    HKEY hKey;
+    WCHAR szKey[13];    // max. "ft4294967295" + "\0"
+    LONG nResult;
+
+    // Search the next "ft%06u" key name
+    do
+    {
+        StringCchPrintfW(szKey, _countof(szKey), TEXT("ft%06u"), dwValue);
+
+        nResult = RegOpenKeyEx(HKEY_CLASSES_ROOT, szKey, 0, KEY_READ, &hKey);
+        if (nResult != ERROR_SUCCESS)
+            break;
+
+        RegCloseKey(hKey);
+        ++dwValue;
+    } while (dwValue != 0);
+
+    RegCloseKey(hKey);
+
+    if (dwValue == 0)
+        return FALSE;
+
+    // Create new "ft%06u" key
+    nResult = RegCreateKeyEx(HKEY_CLASSES_ROOT, szKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    if (ERROR_SUCCESS != nResult)
+        return FALSE;
+
+    RegCloseKey(hKey);
+
+    // Create the ".ext" key
+    WCHAR szExt[16];
+    if (*pszExt == L'.')
+        ++pszExt;
+    StringCchPrintfW(szExt, _countof(szExt), TEXT(".%s"), pszExt);
+    CharLowerW(szExt);
+    nResult = RegCreateKeyEx(HKEY_CLASSES_ROOT, szExt, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    CharUpperW(szExt);
+    if (ERROR_SUCCESS != nResult)
+        return FALSE;
+
+    // Set the default value of ".ext" to "ft%06u"
+    DWORD dwSize = (lstrlen(szKey) + 1) * sizeof(WCHAR);
+    RegSetValueExW(hKey, NULL, 0, REG_SZ, (BYTE *)szKey, dwSize);
+
+    RegCloseKey(hKey);
+
+    // Make up the file type name
+    WCHAR szFile[100], szFileFormat[100];
+    LoadStringW(shell32_hInstance, IDS_FILE_EXT_TYPE, szFileFormat, _countof(szFileFormat));
+    szFile[_countof(szFileFormat) - 1] = 0;
+    StringCchPrintfW(szFile, _countof(szFile), szFileFormat, &szExt[1]);
+
+    // Insert an item to listview
+    HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+    INT iItem = ListView_GetItemCount(hListView);
+    INT iItemCopy = iItem;
+    InsertFileType(hListView, szExt, &iItemCopy, szFile);
+
+    LV_ITEM item;
+    ZeroMemory(&item, sizeof(item));
+    item.mask = LVIF_STATE | LVIF_TEXT;
+    item.iItem = iItem;
+    item.state = LVIS_SELECTED | LVIS_FOCUSED;
+    item.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
+    item.pszText = &szExt[1];
+    ListView_SetItem(hListView, &item);
+
+    item.pszText = szFile;
+    item.iSubItem = 1;
+    ListView_SetItem(hListView, &item);
+
+    ListView_EnsureVisible(hListView, iItem, FALSE);
+
+    return TRUE;
+}
+
+// IDD_FOLDER_OPTIONS_FILETYPES dialog
 INT_PTR
 CALLBACK
 FolderOptionsFileTypesDlg(
@@ -1569,6 +1887,7 @@ FolderOptionsFileTypesDlg(
     WCHAR Buffer[255], FormatBuffer[255];
     PFOLDER_FILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
+    NEWEXT_DIALOG newext;
 
     switch(uMsg)
     {
@@ -1578,14 +1897,22 @@ FolderOptionsFileTypesDlg(
             /* Disable the Delete button if the listview is empty or
                the selected item should not be deleted by the user */
             if (pItem == NULL || (pItem->EditFlags & 0x00000010)) // FTA_NoRemove
-                EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
             return TRUE;
 
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
-                case 14006:
-                    pItem = FindSelectedItem(GetDlgItem(hwndDlg, 14000));
+                case IDC_FILETYPES_NEW:
+                    newext.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+                    if (IDOK == DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_NEWEXTENSION),
+                                                hwndDlg, NewExtensionDlgProc, (LPARAM)&newext))
+                    {
+                        FileTypesDlg_AddExt(hwndDlg, newext.szExt, newext.szFileType);
+                    }
+                    break;
+                case IDC_FILETYPES_CHANGE:
+                    pItem = FindSelectedItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pItem)
                     {
                         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT;
@@ -1623,7 +1950,7 @@ FolderOptionsFileTypesDlg(
                     /* format buffer */
                     swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
                     /* update dialog */
-                    SetDlgItemTextW(hwndDlg, 14003, Buffer);
+                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DETAILS_GROUPBOX, Buffer);
 
                     if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
                     {
@@ -1633,19 +1960,19 @@ FolderOptionsFileTypesDlg(
                     /* format buffer */
                     swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
                     /* update dialog */
-                    SetDlgItemTextW(hwndDlg, 14007, Buffer);
+                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
 
                     /* Enable the Delete button */
                     if (pItem->EditFlags & 0x00000010) // FTA_NoRemove
-                        EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
                     else
-                        EnableWindow(GetDlgItem(hwndDlg, 14002), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), TRUE);
                 }
             }
             else if (lppl->hdr.code == PSN_SETACTIVE)
             {
                 /* On page activation, set the focus to the listview */
-                SetFocus(GetDlgItem(hwndDlg, 14000));
+                SetFocus(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
             }
             break;
     }
