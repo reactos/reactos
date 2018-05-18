@@ -1,0 +1,19 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_USAGE, "Sposób użycia: taskkill [/?] [/f] [/im nazwa_procesu | /pid id_procesu]\n"
+    STRING_INVALID_OPTION, "Błąd: Określono nieznaną lub nieprawidłową opcję.\n"
+    STRING_INVALID_PARAM, "Błąd: Nieprawidłowy parametr.\n"
+    STRING_MISSING_OPTION, "Błąd: Nie określono opcji /im ani /pid.\n"
+    STRING_MISSING_PARAM, "Błąd: Oczekiwano parametru dla opcji %1.\n"
+    STRING_MUTUAL_EXCLUSIVE, "Błąd: Opcje /im i /pid wzajemnie się wykluczają.\n"
+    STRING_CLOSE_PID_SEARCH, "Komunikat o zamknięciu został wysłany do okien najwyższego poziomu procesu z identyfikatorem PID %1!u!.\n"
+    STRING_CLOSE_PROC_SRCH, "Komunikat o zamknięciu został wysłany do okien najwyższego poziomu procesu ""%1"" z identyfikatorem PID %2!u!.\n"
+    STRING_TERM_PID_SEARCH, "Proces z identyfikatorem PID %1!u! został przymusowo zakończony.\n"
+    STRING_TERM_PROC_SEARCH, "Proces ""%1"" z identyfikatorem PID %2!u! został przymusowo zakończony.\n"
+    STRING_SEARCH_FAILED, "Błąd: Nie odnaleziono procesu ""%1"".\n"
+    STRING_ENUM_FAILED, "Błąd: Nie można wyliczyć listy procesów.\n"
+    STRING_TERMINATE_FAILED, "Błąd: Nie można zakończyć procesu ""%1"".\n"
+    STRING_SELF_TERMINATION, "Błąd: Proces nie może zakończyć sam siebie.\n"
+}

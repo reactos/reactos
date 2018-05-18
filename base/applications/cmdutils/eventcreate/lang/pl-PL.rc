@@ -1,0 +1,72 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Wpisz ""EVENTCREATE /?"", aby zobaczyć sposób użycia.\n"
+    IDS_HELP "\n\
+EVENTCREATE [/S komputer [/U [domena\\]użytkownik [/P hasło]]] /ID EventID\n\
+            {[/L nazwa_domeny] | [/SO źródło]} /T typ /C kategoria /D opis\n\
+\n\
+Opis:\n\
+    To narzędzie wiersza polecenia umożliwia administratorowi tworzenie\n\
+    niestandardowego identyfikatora i komunikatu zdarzenia w określonym\n\
+    dzienniku zdarzeń.\n\
+\n\
+Lista parametrów:\n\
+    /S  komputer          Określa system komputer do podłączenia.\n\
+\n\
+    /U  [domena\\]użytk    Określa kontekst użytkownika, w którym\n\
+                          polecenie powinno być wykonane.\n\
+\n\
+    /P  [hasło]           Określa hasło dla danego.\n\
+                          kontekstu użytkownika. W razie pominięcia monituje\n\
+                          o podanie danych.\n\
+\n\
+    /L  nazwa_dziennika   Określa dziennik zdarzeń, w którym ma być\n\
+                          utworzone zdarzenie. Prawidłowe nazwy to:\n\
+                          Application, System, Security\n\
+                          (ostatnia jest zarezerwowana tylko dla konta SYSTEM).\n\
+\n\
+    /SO źródło            Określa nazwę źródła do użycia dla zdarzenia.\n\
+                          (jeśli nie zostanie określona, domyślną nazwą żródła\n\
+                           będzie 'eventcreate').\n\
+                          Prawidłowe źródło może być dowolnym ciągiem\n\
+                          i powinno reprezentować aplikację lub składnik\n\
+                          generujący zdarzenie.\n\
+\n\
+    /T  typ               Określa typ zdarzenia do utworzenia.\n\
+                          Prawidłowe typy: SUCCESS, ERROR, WARNING,\n\
+                          INFORMATION.\n\
+\n\
+    /C  kategoria         Określa kategorię zdarzenia (liczba całkowita)\n\
+                          dla zdarzenia.\n\
+\n\
+    /ID EventID           Określa identyfikator zdarzenia dla zdarzenia. \n\
+                          Musi to być liczba całkowita z zakresu od 0 do 65535.\n\
+\n\
+    /D  opis              Określa opis, jaki ma być ustawiony\n\
+                          dla tworzonego zdarzenia.\n\
+\n\
+    /?                    Wyświetla tę pomoc/sposób użycia.\n\
+"
+    IDS_INVALIDSWITCH "Nieprawidłowy przełącznik - '%s'.\n"
+    IDS_BADSYNTAX_0 "Nieprawidłowa składnia.\n"
+    IDS_BADSYNTAX_1 "Nieprawidłowa składnia. Oczekiwano wartości dla '%s'.\n"
+    IDS_BADSYNTAX_2 "Nieprawidłowa składnia. Wartość dla opcji '%s' nie może być pusta.\n"
+    IDS_BADSYNTAX_3 "Nieprawidłowa składnia. Wartość '%s' nie jest dozwolona dla opcji '%s'.\n"
+    IDS_BADSYNTAX_4 "Nieprawidłowa składnia. Wartość nie może być określona dla opcji '%s'.\n"
+    IDS_BADSYNTAX_5 "Nieprawidłowa składnia. Opcja '%s' nie jest dozwolona więcej niż %lu razy.\n"
+    IDS_BADSYNTAX_6 "Nieprawidłowa składnia. Brak obowiązkowej opcji '%s'.\n"
+    // IDS_BADSYNTAX_7 "Nieprawidłowa składnia. Wartość dla opcji '%s' jest poza dozwolonym zakresem.\n"
+    IDS_BADSYNTAX_7 "Nieprawidłowa składnia. Wartość dla opcji '%s' musi być z zakresu od %d do %d.\n"
+
+    IDS_LOG_NOT_FOUND "Dziennik '%s' nie istnieje. Nie można utworzyć zdarzenia.\n"
+    IDS_SOURCE_NOCREATE "Nowe źródło można utworzyć tylko wtedy, gdy określona jest także nazwa dziennika.\nUżyj przełącznika /L, aby określić nazwę dziennika.\n"
+    IDS_SOURCE_EXISTS "Źródło już istnieje w dzienniku '%s'. Źródło nie może duplikowane.\n"
+    IDS_SOURCE_NOT_CUSTOM "Parametr źródłowy jest używany tylko do identyfikowania niestandardowych aplikacji/skryptów\n(źródła niewbudowane).\n"
+
+    IDS_SUCCESS_1   "Sukces: Zdarzenie typu '%s' jest utworzone w dzienniku '%s'.\n"
+    IDS_SUCCESS_2   "Sukces: Zdarzenie typu '%s' jest utworzone ze źródłem '%s'.\n"
+    IDS_SUCCESS_3   "Sukces: Zdarzenie typu '%s' jest utworzone\nw dzienniku '%s' ze źródłem '%s'.\n"
+    IDS_SWITCH_UNIMPLEMENTED "Opcja '%s' nie jest obecnie obsługiwana, przepraszamy za niedogodności!\n"
+END
