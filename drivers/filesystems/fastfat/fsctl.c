@@ -1121,6 +1121,70 @@ VfatLockOrUnlockVolume(
     {
         PLIST_ENTRY ListEntry;
 
+#if 1
+        /* FIXME: Hack that allows locking the system volume on
+         * boot so that autochk can run properly
+         * That hack is, on purpose, really restrictive
+         * it will only allow locking with two directories
+         * open: current directory of smss and autochk.
+         */
+        BOOLEAN ForceLock = TRUE;
+        ULONG HandleCount = 0;
+
+        /* Only allow boot volume */
+        if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_SYS_OR_HAS_PAGE))
+        {
+            /* We'll browse all the FCB */
+            ListEntry = DeviceExt->FcbListHead.Flink;
+            while (ListEntry != &DeviceExt->FcbListHead)
+            {
+                Fcb = CONTAINING_RECORD(ListEntry, VFATFCB, FcbListEntry);
+                ListEntry = ListEntry->Flink;
+
+                /* If no handle: that FCB is no problem for locking
+                 * so ignore it
+                 */
+                if (Fcb->OpenHandleCount == 0)
+                {
+                    continue;
+                }
+
+                /* Not a dir? We're no longer at boot */
+                if (!vfatFCBIsDirectory(Fcb))
+                {
+                    ForceLock = FALSE;
+                    break;
+                }
+
+                /* If we have cached initialized and several handles, we're
+                   not in the boot case
+                 */
+                if (Fcb->FileObject != NULL && Fcb->OpenHandleCount > 1)
+                {
+                    ForceLock = FALSE;
+                    break;
+                }
+
+                /* Count the handles */
+                HandleCount += Fcb->OpenHandleCount;
+                /* More than two handles? Then, we're not booting anymore */
+                if (HandleCount > 2)
+                {
+                    ForceLock = FALSE;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            ForceLock = FALSE;
+        }
+
+        /* Here comes the hack, ignore the failure! */
+        if (!ForceLock)
+        {
+#endif
+
         DPRINT1("Can't lock: %u opened\n", DeviceExt->OpenHandleCount);
 
         ListEntry = DeviceExt->FcbListHead.Flink;
@@ -1136,6 +1200,17 @@ VfatLockOrUnlockVolume(
         }
 
         return STATUS_ACCESS_DENIED;
+
+#if 1
+        /* End of the hack: be verbose about its usage,
+         * just in case we would mess up everything!
+         */
+        }
+        else
+        {
+            DPRINT1("HACK: Using lock-hack!\n");
+        }
+#endif
     }
 
     /* Finally, proceed */
