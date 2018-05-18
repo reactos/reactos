@@ -1368,9 +1368,9 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
         return FALSE;
 
     if (szValue[0])
-        RegDeleteTreeW(HKEY_CLASSES_ROOT, szValue);
+        SHDeleteKeyW(HKEY_CLASSES_ROOT, szValue);
 
-    RegDeleteTreeW(HKEY_CLASSES_ROOT, pszExt);
+    SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt);
     return TRUE;
 }
 
