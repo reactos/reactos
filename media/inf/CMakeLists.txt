@@ -25,6 +25,7 @@ list(APPEND INF_FILES
     msmouse.inf
     NET_NIC.inf
     netamd.inf
+    nete1000.inf
     netisa.inf
     netrtl.inf
     netrtpnt.inf
