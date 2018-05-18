@@ -1775,11 +1775,10 @@ NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
         }
 
         // Delete the extension
-        WCHAR szExt[20];
-        szExt[0] = L'.';
-        StringCchCopyW(&szExt[1], _countof(szExt) - 1, find.psz);
-        CharLowerW(szExt);
-        DeleteExt(hwndDlg, szExt);
+        CStringW strExt(L".");
+        strExt += find.psz;
+        strExt.MakeLower();
+        DeleteExt(hwndDlg, strExt);
 
         // Delete the item
         ListView_DeleteItem(pNewExt->hwndLV, iItem);
@@ -1966,11 +1965,13 @@ FolderOptionsFileTypesDlg(
                     }
                     break;
                 case IDC_FILETYPES_DELETE:
-                    LoadStringW(shell32_hInstance, IDS_REMOVE_EXT, Buffer, _countof(Buffer));
-                    LoadStringW(shell32_hInstance, IDS_FILE_TYPES, FormatBuffer, _countof(FormatBuffer));
-                    if (MessageBoxW(hwndDlg, Buffer, FormatBuffer, MB_ICONQUESTION | MB_YESNO) == IDYES)
                     {
-                        FileTypesDlg_RemoveExt(hwndDlg);
+                        CStringW strRemoveExt(MAKEINTRESOURCEW(IDS_REMOVE_EXT));
+                        CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+                        if (MessageBoxW(hwndDlg, strRemoveExt, strTitle, MB_ICONQUESTION | MB_YESNO) == IDYES)
+                        {
+                            FileTypesDlg_RemoveExt(hwndDlg);
+                        }
                     }
                     break;
                 case IDC_FILETYPES_CHANGE:
