@@ -1349,6 +1349,34 @@ FindItem(HWND hDlgCtrl, WCHAR * ItemName)
     return ListView_FindItem(hDlgCtrl, 0, &findInfo);
 }
 
+static BOOL
+DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
+{
+    if (*pszExt != L'.')
+        return FALSE;
+
+    HKEY hKey;
+    LONG nResult = RegOpenKeyExW(HKEY_CLASSES_ROOT, pszExt, 0, KEY_READ, &hKey);
+    if (nResult != ERROR_SUCCESS)
+        return FALSE;
+
+    WCHAR szValue[64];
+    DWORD cbValue = sizeof(szValue);
+    nResult = RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(szValue), &cbValue);
+    if (nResult != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+    RegCloseKey(hKey);
+
+    if (szValue[0])
+        RegDeleteTreeW(HKEY_CLASSES_ROOT, szValue);
+
+    RegDeleteTreeW(HKEY_CLASSES_ROOT, pszExt);
+    return TRUE;
+}
+
 static
 VOID
 InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
@@ -1749,6 +1777,13 @@ NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
             return FALSE;
         }
 
+        // Delete the extension
+        WCHAR szExt[20];
+        szExt[0] = L'.';
+        StringCchCopyW(&szExt[1], _countof(szExt) - 1, find.psz);
+        CharLowerW(szExt);
+        DeleteExt(hwndDlg, szExt);
+
         // Delete the item
         ListView_DeleteItem(pNewExt->hwndLV, iItem);
     }
@@ -1873,6 +1908,28 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     return TRUE;
 }
 
+static BOOL
+FileTypesDlg_RemoveExt(HWND hwndDlg)
+{
+    HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+
+    INT iItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
+    if (iItem == -1)
+        return FALSE;
+
+    WCHAR szExt[20];
+    szExt[0] = L'.';
+    ListView_GetItemText(hListView, iItem, 0, &szExt[1], _countof(szExt) - 1);
+    CharLowerW(szExt);
+
+    if (DeleteExt(hwndDlg, szExt))
+    {
+        ListView_DeleteItem(hListView, iItem);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 // IDD_FOLDER_OPTIONS_FILETYPES dialog
 INT_PTR
 CALLBACK
@@ -1909,6 +1966,14 @@ FolderOptionsFileTypesDlg(
                                                 hwndDlg, NewExtensionDlgProc, (LPARAM)&newext))
                     {
                         FileTypesDlg_AddExt(hwndDlg, newext.szExt, newext.szFileType);
+                    }
+                    break;
+                case IDC_FILETYPES_DELETE:
+                    LoadStringW(shell32_hInstance, IDS_REMOVE_EXT, Buffer, _countof(Buffer));
+                    LoadStringW(shell32_hInstance, IDS_FILE_TYPES, FormatBuffer, _countof(FormatBuffer));
+                    if (MessageBoxW(hwndDlg, Buffer, FormatBuffer, MB_ICONQUESTION | MB_YESNO) == IDYES)
+                    {
+                        FileTypesDlg_RemoveExt(hwndDlg);
                     }
                     break;
                 case IDC_FILETYPES_CHANGE:
