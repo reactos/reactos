@@ -37,6 +37,7 @@ vfatFCBInitializeCacheFromVolume(
     }
 
     ASSERT(vfatFCBIsDirectory(fcb));
+    ASSERT(fcb->FileObject == NULL);
 
     Acquired = FALSE;
     if (!ExIsResourceAcquiredExclusive(&vcb->DirResource))
