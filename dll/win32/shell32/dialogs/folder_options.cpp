@@ -1370,8 +1370,7 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
     if (szValue[0])
         SHDeleteKeyW(HKEY_CLASSES_ROOT, szValue);
 
-    SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt);
-    return TRUE;
+    return SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt) == ERROR_SUCCESS;
 }
 
 static
