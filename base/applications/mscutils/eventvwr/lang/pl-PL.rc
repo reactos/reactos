@@ -29,10 +29,10 @@ BEGIN
     END
     POPUP "Op&cje"
     BEGIN
-        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
-        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM "&Pokaż szczegóły zdarzenia", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "&Linie siatki", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "&Zapisz ustawienia przy wyjściu", IDM_SAVE_SETTINGS
     END
     POPUP "Po&moc"
     BEGIN
@@ -152,20 +152,20 @@ END
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "ReactOS Event Viewer\n\
+    IDS_USAGE "Podgląd zdarzeń ReactOS\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [nazwa komputera] [/l:<plik dziennika>] [/?]\n\
 \n\
-""computer name"" : Specifies the remote computer where to connect\n\
-\tto retrieve the events to display. If no name is specified, the\n\
-\tlocal computer is used.\n\
+""nazwa kopmutera"" : Określa komputer zdalny, z którym należy się połączyć,\n\
+\taby otrzymać zdarzenia do wyświetlenia. Jeśli nazwa nie jest określona,\n\
+\tzostanie użyty komputer lokalny.\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
-\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+/l:<plik dziennika> : Określa plik dziennika do otwarcia.\n\
+\tObsługiwane są tylko pliki w formacie .evt (NT ≤ 5.2).\n\
 \n\
-/? : Displays this help message.\n\
+/? : Wyświetla tę pomoc/sposób użycia.\n\
 "
-    IDS_EVENTLOGFILE "Event Log File"
+    IDS_EVENTLOGFILE "Plik dziennika"
 END
 
 STRINGTABLE
@@ -181,7 +181,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    IDS_BYTES_FORMAT "bajtów" // "%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
@@ -199,15 +199,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+    IDS_COPY "Typ zdarzenia:             %s\r\n\
+Źródło zdarzenia:         %s\r\n\
+Kategoria zdarzenia:      %s\r\n\
+Idnetyfikator Zdarzenia:  %s\r\n\
+Data:                     %s\r\n\
+Czas:                     %s\r\n\
+Użytkownik:               %s\r\n\
+Komputer:                 %s\r\n\
+Opis:\r\n%s"
 END
 
 STRINGTABLE

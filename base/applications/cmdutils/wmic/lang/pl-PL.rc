@@ -1,0 +1,9 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "Błąd: Funkcja lub operacja nie jest obsługiwana\n"
+    STRING_ALIAS_NOT_FOUND, "Błąd: Alias nie został znaleziony\n"
+    STRING_INVALID_QUERY, "Błąd: Nieprawidłowa kwerenda\n"
+    STRING_INVALID_PATH, "Błąd: Nieprawidłowa składnia PATH\n"
+}
