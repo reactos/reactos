@@ -27,6 +27,7 @@
  */
 
 #include <usetup.h>
+#include <math.h>
 
 #include "bootsup.h"
 #include "chkdsk.h"
@@ -1755,9 +1756,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 }
 
 
-#define PARTITION_SIZE_INPUT_FIELD_LENGTH 6
-/* Restriction for MaxSize: pow(10, PARTITION_SIZE_INPUT_FIELD_LENGTH)-1 */
-#define PARTITION_MAXSIZE 999999
+#define PARTITION_SIZE_INPUT_FIELD_LENGTH 9
+/* Restriction for MaxSize: pow(10, (PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)) - 1 */
+#define PARTITION_MAXSIZE (pow(10, (PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)) - 1)
 
 static VOID
 ShowPartitionSizeInputBox(SHORT Left,
@@ -1916,7 +1917,7 @@ ShowPartitionSizeInputBox(SHORT Left,
         }
         else if (Ir.Event.KeyEvent.uChar.AsciiChar != 0x00)
         {
-            if (Length < PARTITION_SIZE_INPUT_FIELD_LENGTH)
+            if (Length < PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)
             {
                 ch = (WCHAR)Ir.Event.KeyEvent.uChar.AsciiChar;
 
