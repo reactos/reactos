@@ -83,6 +83,8 @@ struct _BootSector32
     unsigned short Signature1;				// 510
 };
 
+#define FAT_DIRTY_BIT 0x01
+
 struct _BootSectorFatX
 {
     unsigned char SysType[4];        // 0
@@ -285,6 +287,8 @@ typedef BOOLEAN (*PIS_DIRECTORY_EMPTY)(PDEVICE_EXTENSION,struct _VFATFCB*);
 typedef NTSTATUS (*PADD_ENTRY)(PDEVICE_EXTENSION,PUNICODE_STRING,struct _VFATFCB**,struct _VFATFCB*,ULONG,UCHAR,struct _VFAT_MOVE_CONTEXT*);
 typedef NTSTATUS (*PDEL_ENTRY)(PDEVICE_EXTENSION,struct _VFATFCB*,struct _VFAT_MOVE_CONTEXT*);
 typedef NTSTATUS (*PGET_NEXT_DIR_ENTRY)(PVOID*,PVOID*,struct _VFATFCB*,struct _VFAT_DIRENTRY_CONTEXT*,BOOLEAN);
+typedef NTSTATUS (*PGET_DIRTY_STATUS)(PDEVICE_EXTENSION,PBOOLEAN);
+typedef NTSTATUS (*PSET_DIRTY_STATUS)(PDEVICE_EXTENSION,BOOLEAN);
 
 typedef struct _VFAT_DISPATCH
 {
@@ -326,7 +330,8 @@ typedef struct DEVICE_EXTENSION
     PGET_NEXT_CLUSTER GetNextCluster;
     PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
     PWRITE_CLUSTER WriteCluster;
-    ULONG CleanShutBitMask;
+    PGET_DIRTY_STATUS GetDirtyStatus;
+    PSET_DIRTY_STATUS SetDirtyStatus;
 
     ULONG BaseDateYear;
 
@@ -655,6 +660,14 @@ VfatReadDiskPartial(
     IN BOOLEAN Wait);
 
 NTSTATUS
+VfatWriteDisk(
+    IN PDEVICE_OBJECT pDeviceObject,
+    IN PLARGE_INTEGER WriteOffset,
+    IN ULONG WriteLength,
+    IN OUT PUCHAR Buffer,
+    IN BOOLEAN Override);
+
+NTSTATUS
 VfatWriteDiskPartial(
     IN PVFAT_IRP_CONTEXT IrpContext,
     IN PLARGE_INTEGER WriteOffset,
@@ -884,6 +897,36 @@ WriteCluster(
     PDEVICE_EXTENSION DeviceExt,
     ULONG ClusterToWrite,
     ULONG NewValue);
+
+NTSTATUS
+GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT16GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT32GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus);
+
+NTSTATUS
+SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT16SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT32SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus);
 
 /* fcb.c */
 

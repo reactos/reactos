@@ -58,8 +58,9 @@ vfatFCBInitializeCacheFromVolume(
     newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
     if (newCCB == NULL)
     {
+        status = STATUS_INSUFFICIENT_RESOURCES;
         ObDereferenceObject(fileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
     }
     RtlZeroMemory(newCCB, sizeof (VFATCCB));
 
@@ -83,19 +84,25 @@ vfatFCBInitializeCacheFromVolume(
         fcb->FileObject = NULL;
         ExFreeToNPagedLookasideList(&VfatGlobalData->CcbLookasideList, newCCB);
         ObDereferenceObject(fileObject);
+        if (Acquired)
+        {
+            ExReleaseResourceLite(&vcb->DirResource);
+        }
         return status;
     }
     _SEH2_END;
 
     vfatGrabFCB(vcb, fcb);
     SetFlag(fcb->Flags, FCB_CACHE_INITIALIZED);
+    status = STATUS_SUCCESS;
 
+Quit:
     if (Acquired)
     {
         ExReleaseResourceLite(&vcb->DirResource);
     }
 
-    return STATUS_SUCCESS;
+    return status;
 }
 
 /*
@@ -682,6 +689,7 @@ FATAddEntry(
     }
 
     /* No need to init cache here, vfatFindDirSpace() will have done it for us */
+    ASSERT(BooleanFlagOn(ParentFcb->Flags, FCB_CACHE_INITIALIZED));
 
     i = DeviceExt->FatInfo.BytesPerCluster / sizeof(FAT_DIR_ENTRY);
     FileOffset.u.HighPart = 0;
@@ -768,6 +776,7 @@ FATAddEntry(
         Status = vfatFCBInitializeCacheFromVolume(DeviceExt, (*Fcb));
         if (!NT_SUCCESS(Status))
         {
+            ExFreePoolWithTag(Buffer, TAG_VFAT);
             return Status;
         }
 
@@ -898,6 +907,7 @@ FATXAddEntry(
     }
 
     /* No need to init cache here, vfatFindDirSpace() will have done it for us */
+    ASSERT(BooleanFlagOn(ParentFcb->Flags, FCB_CACHE_INITIALIZED));
 
     /* add entry into parent directory */
     FileOffset.u.HighPart = 0;

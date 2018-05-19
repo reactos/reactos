@@ -1,0 +1,23 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Porównuje zawartość dwóch plików lub zestawów plików.\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      Określa lokalizację i nazwę pierwszego pliku do porównania.\n\
+  data2      Określa lokalizację i nazwę drugiego pliku do porównania.\n\
+  /A         Pokazuje różnice w znakach ASCII (domyślnie: szesnastkowo).\n\
+  /L         Pokazuje numery wierszów dla różnic.\n"
+    IDS_INVALIDSWITCH "Nieprawidłowy przełącznik - /%c\n"
+    IDS_BADSYNTAX "Nieprawidłowa składnia.\n"
+    IDS_FILEERROR "Nie można odnaleźć/otworzyć pliku: %s\n"
+    IDS_COMPARING "Porównywanie %s i %s...\n"
+    IDS_FILESIZEERROR "Nie można określić rozmiaru pliku: %s\n"
+    IDS_SIZEDIFFERS "Pliki mają różne rozmiary.\n"
+    IDS_READERROR "Błąd odczytu plików.\n"
+    IDS_MISMATCHLINE "Porównaj błąd w wierszu %d\n"
+    IDS_MISMATCHOFFSET "Porównaj błąd w offsecie 0x%X\n"
+    IDS_ASCIIDIFF "plik%d = %c\n"
+    IDS_HEXADECIMALDIFF "plik%d = %X\n"
+    IDS_MATCH "Pliki są takie same\n"
+END

@@ -1,0 +1,9 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nWpisz ""CLIP /?"", aby zobaczyć sposób użycia.\n"
+    IDS_HELP "\nPrzekierowuje dane wyjściowe aplikacji konsolowych do schowka.\n\n\
+CLIP [/?]\n\n\
+    /?  Wyświetla tę pomoc/sposób użycia.\n"
+END

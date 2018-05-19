@@ -647,17 +647,17 @@ Czy na pewno chcesz otworzyć ten plik?", IDC_STATIC, 35, 5, 230, 60
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "Tworzenie nowego rozszerzenia"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "&Rozszerzenie pliku:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "&Zaawansowane >>", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "&Skojarzony typ pliku:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 190, 55, 60, 14
 END
 
 STRINGTABLE
@@ -898,12 +898,12 @@ BEGIN
     IDS_ADVANCED_SHOW_COMP_COLOR "Pokaż zaszyfrowane lub skompresowane pliki NTFS w kolorze"
     IDS_ADVANCED_SHOW_INFO_TIP "Pokaż podręczny opis elementów folderów i pulpitu"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< &Zaawansowane"
+    IDS_NEWEXT_ADVANCED_RIGHT "&Zaawansowane >>"
+    IDS_NEWEXT_NEW "<Nowy>"
+    IDS_NEWEXT_SPECIFY_EXT "Musisz podać rozszerzenie."
+    IDS_NEWEXT_ALREADY_ASSOC "Rozszerzenie %s jest już związane z typem plików %s. Czy chcesz usunąć powiązanie %s z %s i utworzyć dla niego nowy typ plików?"
+    IDS_NEWEXT_EXT_IN_USE "Rozszerzenie jest w użyciu"
 
     IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\r\n\r\nAre you sure you want to remove this extension?"
 END
