@@ -1,4 +1,4 @@
-#include "demo.h"
+#include "biditext.h"
 
 /* Our main menu */
 IDR_MAINMENU MENU

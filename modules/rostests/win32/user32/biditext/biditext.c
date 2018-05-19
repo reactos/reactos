@@ -9,7 +9,7 @@
  *                  Test code by Baruch Rutman
  */
 
-#include "demo.h"
+#include "biditext.h"
 
 /* Global instance handle */
 HINSTANCE g_hInstance = NULL;
