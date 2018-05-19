@@ -85,6 +85,16 @@ typedef struct _INTERNAL_RANGE_LIST
 
 #define RANGE_LIST_MAGIC 0x33445566
 
+typedef struct _CONFLICT_DATA
+{
+    ULONG ulMagic;
+    PPNP_CONFLICT_LIST pConflictList;
+} CONFLICT_DATA, *PCONFLICT_DATA;
+
+#define CONFLICT_MAGIC 0x11225588
+
+
+/* FUNCTIONS ****************************************************************/
 
 static
 BOOL
@@ -375,6 +385,30 @@ IsValidLogConf(
     _SEH2_TRY
     {
         if (pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+            bValid = FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bValid = FALSE;
+    }
+    _SEH2_END;
+
+    return bValid;
+}
+
+
+BOOL
+IsValidConflictData(
+    _In_opt_ PCONFLICT_DATA pConflictData)
+{
+    BOOL bValid = TRUE;
+
+    if (pConflictData == NULL)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        if (pConflictData->ulMagic != CONFLICT_MAGIC)
             bValid = FALSE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2241,9 +2275,21 @@ WINAPI
 CM_Free_Resource_Conflict_Handle(
     _In_ CONFLICT_LIST clConflictList)
 {
-    FIXME("CM_Free_Resource_Conflict_Handle(%p)\n", clConflictList);
+    PCONFLICT_DATA pConflictData;
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    FIXME("CM_Free_Resource_Conflict_Handle(%p)\n",
+          clConflictList);
+
+    pConflictData = (PCONFLICT_DATA)clConflictList;
+    if (!IsValidConflictData(pConflictData))
+        return CR_INVALID_CONFLICT_LIST;
+
+    if (pConflictData->pConflictList != NULL)
+        MyFree(pConflictData->pConflictList);
+
+    MyFree(pConflictData);
+
+    return CR_SUCCESS;
 }
 
 
@@ -6487,11 +6533,107 @@ CM_Query_Resource_Conflict_List(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    PPNP_CONFLICT_LIST pConflictBuffer = NULL;
+    PCONFLICT_DATA pConflictData = NULL;
+    ULONG ulBufferLength;
+    LPWSTR lpDevInst;
+    CONFIGRET ret;
+
     FIXME("CM_Query_Resource_Conflict_List(%p %lx %lu %p %lu %lx %p)\n",
           pclConflictList, dnDevInst, ResourceID, ResourceData,
           ResourceLen, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVNODE;
+
+    if (ulFlags & ~CM_RESDES_WIDTH_BITS)
+        return CR_INVALID_FLAG;
+
+    if (pclConflictList == NULL ||
+        ResourceData == NULL ||
+        ResourceLen == 0)
+        return CR_INVALID_POINTER;
+
+    if (ResourceID == 0)
+        return CR_INVALID_RESOURCEID;
+
+    *pclConflictList = 0;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = pSetupStringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    pConflictData = MyMalloc(sizeof(PCONFLICT_DATA));
+    if (pConflictData == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    ulBufferLength = sizeof(PNP_CONFLICT_LIST) +
+                     sizeof(PNP_CONFLICT_STRINGS) +
+                     (sizeof(wchar_t) * 200);
+    pConflictBuffer = MyMalloc(ulBufferLength);
+    if (pConflictBuffer == NULL)
+    {
+        ret = CR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    RpcTryExcept
+    {
+        ret = PNP_QueryResConfList(BindingHandle,
+                                   lpDevInst,
+                                   ResourceID,
+                                   (PBYTE)ResourceData,
+                                   ResourceLen,
+                                   (PBYTE)pConflictBuffer,
+                                   ulBufferLength,
+                                   ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret != CR_SUCCESS)
+        goto done;
+
+    pConflictData->ulMagic = CONFLICT_MAGIC;
+    pConflictData->pConflictList = pConflictBuffer;
+
+    *pclConflictList = (CONFLICT_LIST)pConflictData;
+
+done:
+    if (ret != CR_SUCCESS)
+    {
+        if (pConflictBuffer != NULL)
+            MyFree(pConflictBuffer);
+
+        if (pConflictData != NULL)
+            MyFree(pConflictData);
+    }
+
+    return ret;
 }
 
 
