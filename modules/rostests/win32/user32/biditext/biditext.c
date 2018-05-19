@@ -1,0 +1,251 @@
+/*
+ * PROJECT:         ReactOS Tests
+ * FILE:            rostests/win32/user32/biditext/biditext.c
+ * PURPOSE:         Demonstrates how ExtTextOut and GetCharacterPlacement
+ *                  handle bidirectional text strings via certain selection
+ *                  of flags provided to them.
+ *
+ * PROGRAMMER:      Program skeleton: https://github.com/TransmissionZero/MinGW-Win32-Application
+ *                  Test code by Baruch Rutman
+ */
+
+#include "demo.h"
+
+/* Global instance handle */
+HINSTANCE g_hInstance = NULL;
+
+/* Our application entry point */
+int WINAPI
+wWinMain(HINSTANCE hInstance,
+          HINSTANCE hPrevInstance,
+          LPTSTR lpszCmdLine,
+          int nCmdShow)
+{
+  INITCOMMONCONTROLSEX icc;
+  HWND hWnd;
+  HACCEL hAccelerators;
+  MSG msg;
+
+  /* Assign global HINSTANCE */
+  g_hInstance = hInstance;
+
+  /* Initialise common controls */
+  icc.dwSize = sizeof(icc);
+  icc.dwICC = ICC_WIN95_CLASSES;
+  InitCommonControlsEx(&icc);
+
+  /* Register our main window class, or error */
+  if (!RegisterMainWindowClass())
+  {
+    MessageBox(NULL, TEXT("Error registering main window class."), TEXT("Error"), MB_ICONERROR | MB_OK);
+    return 0;
+  }
+
+  /* Create our main window, or error */
+  if (!(hWnd = CreateMainWindow()))
+  {
+    MessageBox(NULL, TEXT("Error creating main window."), TEXT("Error"), MB_ICONERROR | MB_OK);
+    return 0;
+  }
+
+  /* Load accelerators */
+  hAccelerators = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
+
+  /* Show main window and force a paint */
+  ShowWindow(hWnd, nCmdShow);
+  UpdateWindow(hWnd);
+
+  /* Main message loop */
+  while (GetMessage(&msg, NULL, 0, 0) > 0)
+  {
+    if (!TranslateAccelerator(hWnd, hAccelerators, &msg))
+    {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+  }
+
+  return (int)msg.wParam;
+}
+
+/* Dialog procedure for our "about" dialog */
+INT_PTR CALLBACK AboutDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  switch (uMsg)
+  {
+    case WM_COMMAND:
+    {
+      WORD id = LOWORD(wParam);
+
+      switch (id)
+      {
+        case IDOK:
+        case IDCANCEL:
+        {
+          EndDialog(hwndDlg, (INT_PTR)id);
+          return (INT_PTR)TRUE;
+        }
+      }
+      break;
+    }
+
+    case WM_INITDIALOG:
+    {
+      return (INT_PTR)TRUE;
+    }
+  }
+
+  return (INT_PTR)FALSE;
+}
+
+/* Show our "about" dialog */
+void ShowAboutDialog(HWND owner)
+{
+  DialogBox(g_hInstance, MAKEINTRESOURCE(IDD_ABOUTDIALOG), owner, &AboutDialogProc);
+}
+
+/* Main window class and title */
+static LPCTSTR MainWndClass = TEXT("BiDi Test");
+
+/* Window procedure for our main window */
+LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  switch (msg)
+  {
+    case WM_COMMAND:
+    {
+      WORD id = LOWORD(wParam);
+
+      switch (id)
+      {
+        case ID_HELP_ABOUT:
+        {
+          ShowAboutDialog(hWnd);
+          return 0;
+        }
+
+        case ID_FILE_EXIT:
+        {
+          DestroyWindow(hWnd);
+          return 0;
+        }
+      }
+      break;
+    }
+
+    case WM_GETMINMAXINFO:
+    {
+      /* Prevent our window from being sized too small */
+      MINMAXINFO *minMax = (MINMAXINFO*)lParam;
+      minMax->ptMinTrackSize.x = 220;
+      minMax->ptMinTrackSize.y = 110;
+
+      return 0;
+    }
+
+    /* Item from system menu has been invoked */
+    case WM_SYSCOMMAND:
+    {
+      WORD id = LOWORD(wParam);
+
+      switch (id)
+      {
+        /* Show "about" dialog on about system menu item */
+        case ID_HELP_ABOUT:
+        {
+          ShowAboutDialog(hWnd);
+          return 0;
+        }
+      }
+      break;
+    }
+    
+    case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            
+            HDC hdc = BeginPaint(hWnd, &ps);
+            
+            LPWSTR szString = L"אבגדהABCDוזחטי";
+            LPWSTR szReversedString = L"הדגבאABCDיטחזו";
+            int Len = (int)wcslen(szString);
+
+            WCHAR Glyphs[100] = { 0 };
+            GCP_RESULTSW Results = { 0 };
+            Results.lStructSize = sizeof(Results);
+            Results.lpGlyphs = Glyphs;
+            Results.nGlyphs = 100;
+
+            TextOutW(hdc, 10, 10, L"Proper (string being used):", 27);
+            TextOutW(hdc, 200, 10, szString, 14);
+            TextOutW(hdc, 10, 30, L"Reversed (example):", 19);
+            TextOutW(hdc, 200, 30, szReversedString, 14);
+
+            TextOutW(hdc, 10, 50, L"String with NULL ETO call (not reversed):", 41);
+            ExtTextOutW(hdc, 10, 70, 0, NULL, szString, Len, NULL);
+
+            TextOutW(hdc, 10, 90, L"String with ETO_IGNORELANGUAGE ETO call (reversed):", 51);
+            ExtTextOutW(hdc, 10, 110, ETO_IGNORELANGUAGE , NULL, szString, Len, NULL);
+
+            TextOutW(hdc, 10, 130, L"String with GCP_REORDER and ETO_GLYPH_INDEX call (not reversed):", 64);
+            GetCharacterPlacementW(hdc, szString, Len, 0, &Results, GCP_REORDER);
+            ExtTextOutW(hdc, 10, 150, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL);
+
+            TextOutW(hdc, 10, 170, L"String without GCP_REORDER and ETO_GLYPH_INDEX call (reversed):", 63);
+            GetCharacterPlacementW(hdc, szString, Len, 0, &Results, 0);
+            ExtTextOutW(hdc, 10, 190, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL);
+
+            EndPaint(hWnd, &ps);
+            break;
+        }
+
+    case WM_DESTROY:
+    {
+      PostQuitMessage(0);
+      return 0;
+    }
+  }
+
+  return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+/* Register a class for our main window */
+BOOL RegisterMainWindowClass()
+{
+  WNDCLASSEX wc;
+
+  /* Class for our main window */
+  wc.cbSize        = sizeof(wc);
+  wc.style         = 0;
+  wc.lpfnWndProc   = &MainWndProc;
+  wc.cbClsExtra    = 0;
+  wc.cbWndExtra    = 0;
+  wc.hInstance     = g_hInstance;
+  wc.hIcon         = (HICON)LoadImage(g_hInstance, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE |
+                                      LR_DEFAULTCOLOR | LR_SHARED);
+  wc.hCursor       = (HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_SHARED);
+  wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+  wc.lpszMenuName  = MAKEINTRESOURCE(IDR_MAINMENU);
+  wc.lpszClassName = MainWndClass;
+  wc.hIconSm       = (HICON)LoadImage(g_hInstance, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+
+  return (RegisterClassEx(&wc)) ? TRUE : FALSE;
+}
+
+/* Create an instance of our main window */
+HWND CreateMainWindow()
+{
+  /* Create instance of main window */
+  HWND hWnd = CreateWindowEx(0, MainWndClass, MainWndClass, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 640, 480,
+                             NULL, NULL, g_hInstance, NULL);
+
+  if (hWnd)
+  {
+    /* Add "about" to the system menu */
+    HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
+    InsertMenu(hSysMenu, 5, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+    InsertMenu(hSysMenu, 6, MF_BYPOSITION, ID_HELP_ABOUT, TEXT("About"));
+  }
+
+  return hWnd;
+}
