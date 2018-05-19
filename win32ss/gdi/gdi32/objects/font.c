@@ -447,7 +447,7 @@ GetCharacterPlacementW(
     SIZE size;
     UINT i, nSet;
     DPRINT("GetCharacterPlacementW\n");
-    
+
     if (dwFlags&(~GCP_REORDER)) DPRINT("flags 0x%08lx ignored\n", dwFlags);
     if (lpResults->lpClass) DPRINT("classes not implemented\n");
     if (lpResults->lpCaretPos && (dwFlags & GCP_REORDER))

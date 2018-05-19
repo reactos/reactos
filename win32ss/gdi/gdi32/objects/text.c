@@ -500,9 +500,8 @@ ExtTextOutW(
                   cwc,
                   lpDx);
 
-    if ( !(fuOptions &  (ETO_GLYPH_INDEX | ETO_IGNORELANGUAGE)))
+    if (!(fuOptions & (ETO_GLYPH_INDEX | ETO_IGNORELANGUAGE)))
         return LpkExtTextOut(hdc, x, y, fuOptions, lprc, lpString, cwc , lpDx, 0);
-
 
     return NtGdiExtTextOutW(hdc,
                             x,
