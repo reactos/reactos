@@ -1766,7 +1766,7 @@ ShowPartitionSizeInputBox(SHORT Left,
                           SHORT Right,
                           SHORT Bottom,
                           ULONG MaxSize,
-                          PCHAR InputBuffer,
+                          PWSTR InputBuffer,
                           PBOOLEAN Quit,
                           PBOOLEAN Cancel)
 {
@@ -1774,8 +1774,7 @@ ShowPartitionSizeInputBox(SHORT Left,
     COORD coPos;
     DWORD Written;
     CHAR Buffer[128];
-    WCHAR PartitionSizeBuffer[100];
-    ULONG Length, Pos;
+    INT Length, Pos;
     WCHAR ch;
     SHORT iLeft;
     SHORT iTop;
@@ -1810,13 +1809,13 @@ ShowPartitionSizeInputBox(SHORT Left,
                                  coPos,
                                  &Written);
 
-    swprintf(PartitionSizeBuffer, L"%lu", MaxSize);
-    Length = wcslen(PartitionSizeBuffer);
+    swprintf(InputBuffer, L"%lu", MaxSize);
+    Length = wcslen(InputBuffer);
     Pos = Length;
     CONSOLE_SetInputTextXY(iLeft,
                            iTop,
                            PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                           PartitionSizeBuffer);
+                           InputBuffer);
     CONSOLE_SetCursorXY(iLeft + Length, iTop);
     CONSOLE_SetCursorType(TRUE, TRUE);
 
@@ -1830,7 +1829,7 @@ ShowPartitionSizeInputBox(SHORT Left,
             if (Quit != NULL)
                 *Quit = TRUE;
 
-            PartitionSizeBuffer[0] = UNICODE_NULL;
+            InputBuffer[0] = UNICODE_NULL;
             CONSOLE_SetCursorType(TRUE, FALSE);
             break;
         }
@@ -1844,7 +1843,7 @@ ShowPartitionSizeInputBox(SHORT Left,
             if (Cancel != NULL)
                 *Cancel = TRUE;
 
-            PartitionSizeBuffer[0] = UNICODE_NULL;
+            InputBuffer[0] = UNICODE_NULL;
             CONSOLE_SetCursorType(TRUE, FALSE);
             break;
         }
@@ -1883,16 +1882,16 @@ ShowPartitionSizeInputBox(SHORT Left,
         {
             if (Pos < Length)
             {
-                memmove(&PartitionSizeBuffer[Pos],
-                        &PartitionSizeBuffer[Pos + 1],
+                memmove(&InputBuffer[Pos],
+                        &InputBuffer[Pos + 1],
                         (Length - Pos - 1) * sizeof(WCHAR));
-                PartitionSizeBuffer[Length - 1] = UNICODE_NULL;
+                InputBuffer[Length - 1] = UNICODE_NULL;
 
                 Length--;
                 CONSOLE_SetInputTextXY(iLeft,
                                        iTop,
                                        PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                                       PartitionSizeBuffer);
+                                       InputBuffer);
                 CONSOLE_SetCursorXY(iLeft + Pos, iTop);
             }
         }
@@ -1901,17 +1900,17 @@ ShowPartitionSizeInputBox(SHORT Left,
             if (Pos > 0)
             {
                 if (Pos < Length)
-                    memmove(&PartitionSizeBuffer[Pos - 1],
-                            &PartitionSizeBuffer[Pos],
+                    memmove(&InputBuffer[Pos - 1],
+                            &InputBuffer[Pos],
                             (Length - Pos) * sizeof(WCHAR));
-                PartitionSizeBuffer[Length - 1] = UNICODE_NULL;
+                InputBuffer[Length - 1] = UNICODE_NULL;
 
                 Pos--;
                 Length--;
                 CONSOLE_SetInputTextXY(iLeft,
                                        iTop,
                                        PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                                       PartitionSizeBuffer);
+                                       InputBuffer);
                 CONSOLE_SetCursorXY(iLeft + Pos, iTop);
             }
         }
@@ -1924,26 +1923,23 @@ ShowPartitionSizeInputBox(SHORT Left,
                 if ((ch >= L'0') && (ch <= L'9'))
                 {
                     if (Pos < Length)
-                        memmove(&PartitionSizeBuffer[Pos + 1],
-                                &PartitionSizeBuffer[Pos],
+                        memmove(&InputBuffer[Pos + 1],
+                                &InputBuffer[Pos],
                                 (Length - Pos) * sizeof(WCHAR));
-                    PartitionSizeBuffer[Length + 1] = UNICODE_NULL;
-                    PartitionSizeBuffer[Pos] = ch;
+                    InputBuffer[Length + 1] = UNICODE_NULL;
+                    InputBuffer[Pos] = ch;
 
                     Pos++;
                     Length++;
                     CONSOLE_SetInputTextXY(iLeft,
                                            iTop,
                                            PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                                           PartitionSizeBuffer);
+                                           InputBuffer);
                     CONSOLE_SetCursorXY(iLeft + Pos, iTop);
                 }
             }
         }
     }
-
-    /* Convert UNICODE --> ANSI the poor man's way */
-    sprintf(InputBuffer, "%S", PartitionSizeBuffer);
 }
 
 
@@ -1965,7 +1961,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
     PPARTENTRY PartEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
-    CHAR InputBuffer[50];
+    WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
@@ -2061,7 +2057,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
-            PartSize = atoi(InputBuffer);
+            PartSize = _wcstoui64(InputBuffer, NULL, 10);
 
             if (PartSize < 1)
             {
@@ -2122,7 +2118,7 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
     PPARTENTRY PartEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
-    CHAR InputBuffer[50];
+    WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
@@ -2218,7 +2214,7 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
-            PartSize = atoi(InputBuffer);
+            PartSize = _wcstoui64(InputBuffer, NULL, 10);
 
             if (PartSize < 1)
             {
@@ -2278,7 +2274,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     PPARTENTRY PartEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
-    CHAR InputBuffer[50];
+    WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
@@ -2374,7 +2370,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
-            PartSize = atoi(InputBuffer);
+            PartSize = _wcstoui64(InputBuffer, NULL, 10);
 
             if (PartSize < 1)
             {
