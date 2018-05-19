@@ -29,7 +29,6 @@ vfatFCBInitializeCacheFromVolume(
     PVFATCCB newCCB;
     NTSTATUS status;
     BOOLEAN Acquired;
-    NTSTATUS Status;
 
     /* Don't re-initialize if already done */
     if (BooleanFlagOn(fcb->Flags, FCB_CACHE_INITIALIZED))
@@ -59,7 +58,7 @@ vfatFCBInitializeCacheFromVolume(
     newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
     if (newCCB == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        status = STATUS_INSUFFICIENT_RESOURCES;
         ObDereferenceObject(fileObject);
         goto Quit;
     }
@@ -95,7 +94,7 @@ vfatFCBInitializeCacheFromVolume(
 
     vfatGrabFCB(vcb, fcb);
     SetFlag(fcb->Flags, FCB_CACHE_INITIALIZED);
-    Status = STATUS_SUCCESS;
+    status = STATUS_SUCCESS;
 
 Quit:
     if (Acquired)
@@ -103,7 +102,7 @@ Quit:
         ExReleaseResourceLite(&vcb->DirResource);
     }
 
-    return Status;
+    return status;
 }
 
 /*
