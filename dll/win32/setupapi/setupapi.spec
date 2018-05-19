@@ -51,7 +51,7 @@
 @ stdcall CM_Free_Res_Des(ptr ptr long)
 @ stdcall CM_Free_Res_Des_Ex(ptr ptr long ptr)
 @ stdcall CM_Free_Res_Des_Handle(ptr)
-@ stub CM_Free_Resource_Conflict_Handle
+@ stdcall CM_Free_Resource_Conflict_Handle(ptr)
 @ stdcall CM_Get_Child(ptr long long)
 @ stdcall CM_Get_Child_Ex(ptr long long ptr)
 @ stdcall CM_Get_Class_Key_NameA(ptr str ptr long)
@@ -165,7 +165,7 @@
 @ stdcall CM_Query_Arbitrator_Free_Size_Ex(ptr long long long ptr)
 @ stdcall CM_Query_Remove_SubTree(long long)
 @ stdcall CM_Query_Remove_SubTree_Ex(long long ptr)
-@ stub CM_Query_Resource_Conflict_List
+@ stdcall CM_Query_Resource_Conflict_List(ptr long long ptr long long ptr)
 @ stdcall CM_Reenumerate_DevNode(long long)
 @ stdcall CM_Reenumerate_DevNode_Ex(long long ptr)
 @ stdcall CM_Register_Device_Driver(long long)

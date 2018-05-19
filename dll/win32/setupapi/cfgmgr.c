@@ -2234,6 +2234,20 @@ CM_Free_Res_Des_Handle(
 
 
 /***********************************************************************
+ * CM_Free_Resource_Conflict_Handle [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Free_Resource_Conflict_Handle(
+    _In_ CONFLICT_LIST clConflictList)
+{
+    FIXME("CM_Free_Resource_Conflict_Handle(%p)\n", clConflictList);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Get_Child [SETUPAPI.@]
  */
 CONFIGRET
@@ -6454,6 +6468,28 @@ CM_Query_Remove_SubTree_Ex(
 {
     TRACE("CM_Query_Remove_SubTree_Ex(%lx %lx %p)\n",
           dnAncestor, ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Query_Resource_Conflict_List [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Query_Resource_Conflict_List(
+    _Out_ PCONFLICT_LIST pclConflictList,
+    _In_ DEVINST dnDevInst,
+    _In_ RESOURCEID ResourceID,
+    _In_ PCVOID ResourceData,
+    _In_ ULONG ResourceLen,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
+{
+    FIXME("CM_Query_Resource_Conflict_List(%p %lx %lu %p %lu %lx %p)\n",
+          pclConflictList, dnDevInst, ResourceID, ResourceData,
+          ResourceLen, ulFlags, hMachine);
 
     return CR_CALL_NOT_IMPLEMENTED;
 }
