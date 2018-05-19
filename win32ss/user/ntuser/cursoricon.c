@@ -482,7 +482,7 @@ NtUserGetIconInfo(
 
         if (!NT_SUCCESS(Status))
         {
-            WARN("Status: 0x%08x.\n", Status);
+            WARN("Status: 0x%08lx\n", Status);
             SetLastNtError(Status);
             goto leave;
         }
@@ -1334,7 +1334,7 @@ IntSetAconData(
         /* Check if the flags are valid */
         if (pcdFrame->CURSORF_flags & ~(CURSORF_USER_MASK|CURSORF_ACONFRAME))
         {
-            ERR("Invalid flags for acon frame %u: 0x%lx\n",
+            ERR("Invalid flags for acon frame %u: 0x%08lx\n",
                 i, pcdFrame->CURSORF_flags);
             goto Cleanup;
         }
@@ -1436,7 +1436,7 @@ UserSetCursorIconData(
                                        &atomModName);
         if (!NT_SUCCESS(status))
         {
-            ERR("Failed to create atom from module name '%wZ': %0x8lx\n",
+            ERR("Failed to create atom from module name '%wZ': 0x%08lx\n",
                 pustrModule, status);
             return FALSE;
         }
@@ -2179,7 +2179,7 @@ NtUserGetCursorFrameInfo(
 
     if (!NT_SUCCESS(Status))
     {
-        WARN("Status: 0x%08x.\n", Status);
+        WARN("Status: 0x%08lx\n", Status);
         SetLastNtError(Status);
         ret = NULL;
     }
