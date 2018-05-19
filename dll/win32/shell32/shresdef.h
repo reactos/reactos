@@ -266,6 +266,8 @@
 #define IDS_NEWEXT_ALREADY_ASSOC                    30520
 #define IDS_NEWEXT_EXT_IN_USE                       30521
 
+#define IDS_REMOVE_EXT                              30522
+
 /* Dialogs */
 
 /* Run dialog */

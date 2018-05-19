@@ -904,4 +904,6 @@ BEGIN
     IDS_NEWEXT_SPECIFY_EXT "Musisz podać rozszerzenie."
     IDS_NEWEXT_ALREADY_ASSOC "Rozszerzenie %s jest już związane z typem plików %s. Czy chcesz usunąć powiązanie %s z %s i utworzyć dla niego nowy typ plików?"
     IDS_NEWEXT_EXT_IN_USE "Rozszerzenie jest w użyciu"
+
+    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
 END
