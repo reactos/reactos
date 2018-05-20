@@ -1414,17 +1414,20 @@ DoExtractIcons(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
         // A negative value will be interpreted as a negated resource ID.
         iIndex = -iIndex;
 
+        INT cx, cy;
         HINSTANCE hDLL = LoadLibraryExW(IconPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
         if (bSmall)
         {
-            hIconRet = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
-                                        GetSystemMetrics(SM_CXSMICON),
-                                        GetSystemMetrics(SM_CYSMICON), 0));
+            cx = GetSystemMetrics(SM_CXSMICON);
+            cy = GetSystemMetrics(SM_CYSMICON);
         }
         else
         {
-            hIconRet = LoadIconW(hDLL, MAKEINTRESOURCEW(iIndex));
+            cx = GetSystemMetrics(SM_CXICON);
+            cy = GetSystemMetrics(SM_CYICON);
         }
+        hIconRet = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
+                                    cx, cy, 0));
         FreeLibrary(hDLL);
     }
     else
