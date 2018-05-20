@@ -38,7 +38,6 @@ typedef struct
     WCHAR ClassKey[MAX_PATH];
     DWORD EditFlags;
     WCHAR AppName[64];
-    WCHAR IconLocation[MAX_PATH + 64];
     HICON hIconLarge;
     HICON hIconSmall;
     WCHAR ProgramPath[MAX_PATH];
@@ -1446,22 +1445,23 @@ DoExtractIcons(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
 }
 
 static void
-GetFileTypeIconsComma(PFOLDER_FILE_TYPE_ENTRY Entry)
+GetFileTypeIconsComma(PFOLDER_FILE_TYPE_ENTRY Entry, const WCHAR *IconLocation)
 {
-    // Find the comma
-    WCHAR szIconLocation[MAX_PATH + 32];
-    StringCchCopyW(szIconLocation, _countof(szIconLocation), Entry->IconLocation);
+    // Expand the REG_EXPAND_SZ string by environment variables
+    WCHAR szLocation[MAX_PATH + 32];
+    if (!ExpandEnvironmentStringsW(IconLocation, szLocation, _countof(szLocation)))
+    {
+        return;
+    }
 
-    INT nIndex = PathParseIconLocationW(szIconLocation);
-
-    Entry->hIconLarge = DoExtractIcons(Entry, szIconLocation, nIndex, FALSE);
-    Entry->hIconSmall = DoExtractIcons(Entry, szIconLocation, nIndex, TRUE);
+    INT nIndex = PathParseIconLocationW(szLocation);
+    Entry->hIconLarge = DoExtractIcons(Entry, szLocation, nIndex, FALSE);
+    Entry->hIconSmall = DoExtractIcons(Entry, szLocation, nIndex, TRUE);
 }
 
 static BOOL
 GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconLocation)
 {
-    Entry->IconLocation[0] = 0;
     Entry->hIconLarge = Entry->hIconSmall = NULL;
 
     if (lstrcmpiW(Entry->FileExtension, L".exe") == 0 ||
@@ -1477,18 +1477,10 @@ GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconLocation)
     }
     else if (lstrcmpW(IconLocation, L"%1") == 0)
     {
-        // self icon
-        return FALSE;
+        return FALSE;   // self icon
     }
 
-    // Expand the REG_EXPAND_SZ string by environment variables
-    if (!ExpandEnvironmentStringsW(IconLocation, Entry->IconLocation,
-                                   _countof(Entry->IconLocation)))
-    {
-        return FALSE;
-    }
-
-    GetFileTypeIconsComma(Entry);
+    GetFileTypeIconsComma(Entry, IconLocation);
 
     return Entry->hIconLarge && Entry->hIconSmall;
 }
@@ -1496,7 +1488,6 @@ GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconLocation)
 static BOOL
 GetFileTypeIconsByKey(HKEY hKey, PFOLDER_FILE_TYPE_ENTRY Entry)
 {
-    Entry->IconLocation[0] = 0;
     Entry->hIconLarge = Entry->hIconSmall = NULL;
 
     // Open the "DefaultIcon" registry key
@@ -1505,18 +1496,15 @@ GetFileTypeIconsByKey(HKEY hKey, PFOLDER_FILE_TYPE_ENTRY Entry)
     if (nResult != ERROR_SUCCESS)
         return FALSE;
 
-    // Get the location info
-    WCHAR szLocation[MAX_PATH + 64];
+    // Get the icon location
+    WCHAR szLocation[MAX_PATH + 32];
     DWORD dwSize = sizeof(szLocation);
     nResult = RegQueryValueExW(hDefIconKey, NULL, NULL, NULL, LPBYTE(szLocation), &dwSize);
 
-    // Close it
     RegCloseKey(hDefIconKey);
 
     if (nResult != ERROR_SUCCESS)
-    {
         return FALSE;
-    }
 
     return GetFileTypeIconsEx(Entry, szLocation);
 }
@@ -1614,11 +1602,11 @@ InsertFileType(HWND hListView, WCHAR *szName, INT iItem, WCHAR *szFile)
     if (!GetFileTypeIconsByKey(hKey, Entry))
     {
         // set default icon
-        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
+        const INT iIndex = IDI_SHELL_FOLDER_OPTIONS;
+        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(iIndex));
         INT cxSmall = GetSystemMetrics(SM_CXSMICON);
         INT cySmall = GetSystemMetrics(SM_CYSMICON);
-        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance,
-                                             MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
+        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(iIndex),
                                              IMAGE_ICON, cxSmall, cySmall, 0));
     }
 
