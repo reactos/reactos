@@ -2655,6 +2655,9 @@ InstallWizard(VOID)
         }
     }
 
+    DeleteObject(pSetupData->hBoldFont);
+    DeleteObject(pSetupData->hTitleFont);
+
     if (pSetupData->hUnattendedInf != INVALID_HANDLE_VALUE)
         SetupCloseInfFile(pSetupData->hUnattendedInf);
 
@@ -2666,11 +2669,7 @@ done:
         FreeLibrary(hNetShell);
 
     if (pSetupData != NULL)
-    {
-        DeleteObject(pSetupData->hBoldFont);
-        DeleteObject(pSetupData->hTitleFont);
         HeapFree(GetProcessHeap(), 0, pSetupData);
-    }
 
     LogItem(L"END_SECTION", L"InstallWizard");
 }
