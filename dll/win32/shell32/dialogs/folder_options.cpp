@@ -37,6 +37,11 @@ typedef struct
     WCHAR FileDescription[100];
     WCHAR ClassKey[MAX_PATH];
     DWORD EditFlags;
+    WCHAR AppName[64];
+    WCHAR IconLocation[MAX_PATH + 64];
+    HICON hIconLarge;
+    HICON hIconSmall;
+    WCHAR ProgramPath[MAX_PATH];
 } FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
 
 // uniquely-defined icon entry for Advanced Settings
@@ -172,6 +177,31 @@ Create24BppBitmap(HDC hDC, INT cx, INT cy)
 
     HBITMAP hbm = CreateDIBSection(hDC, &bi, DIB_RGB_COLORS, &pvBits, NULL, 0);
     return hbm;
+}
+
+static HBITMAP BitmapFromIcon(HICON hIcon, INT cx, INT cy)
+{
+    HBITMAP hbmRet = NULL;
+    if (HDC hDC = CreateCompatibleDC(NULL))
+    {
+        if (HBITMAP hbm = Create24BppBitmap(hDC, cx, cy))
+        {
+            HGDIOBJ hbmOld = SelectObject(hDC, hbm);
+            {
+                RECT rc;
+                SetRect(&rc, 0, 0, cx, cy);
+                FillRect(hDC, &rc, HBRUSH(COLOR_3DFACE + 1));
+                if (hIcon)
+                {
+                    DrawIconEx(hDC, 0, 0, hIcon, cx, cy, 0, NULL, DI_NORMAL);
+                }
+            }
+            SelectObject(hDC, hbmOld);
+            hbmRet = hbm;
+        }
+        DeleteDC(hDC);
+    }
+    return hbmRet;
 }
 
 static HBITMAP
@@ -1373,9 +1403,133 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
     return SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt) == ERROR_SUCCESS;
 }
 
+static HICON
+DoExtractIcons(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
+               INT iIndex = 0, BOOL bSmall = FALSE)
+{
+    HICON hIconRet = NULL;
+
+    if (iIndex < 0)
+    {
+        // A negative value will be interpreted as a negated resource ID.
+        iIndex = -iIndex;
+
+        HINSTANCE hDLL = LoadLibraryExW(IconPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+        if (bSmall)
+        {
+            hIconRet = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
+                                        GetSystemMetrics(SM_CXSMICON),
+                                        GetSystemMetrics(SM_CYSMICON), 0));
+        }
+        else
+        {
+            hIconRet = LoadIconW(hDLL, MAKEINTRESOURCEW(iIndex));
+        }
+        FreeLibrary(hDLL);
+    }
+    else
+    {
+        // A positive value is icon index.
+        if (bSmall)
+            ExtractIconExW(IconPath, iIndex, NULL, &hIconRet, 1);
+        else
+            ExtractIconExW(IconPath, iIndex, &hIconRet, NULL, 1);
+    }
+    return hIconRet;
+}
+
+static void
+GetFileTypeIconsComma(PFOLDER_FILE_TYPE_ENTRY Entry)
+{
+    // Find the comma
+    WCHAR szIconLocation[MAX_PATH + 32];
+    StringCchCopyW(szIconLocation, _countof(szIconLocation), Entry->IconLocation);
+
+    INT nIndex = PathParseIconLocationW(szIconLocation);
+
+    Entry->hIconLarge = DoExtractIcons(Entry, szIconLocation, nIndex, FALSE);
+    Entry->hIconSmall = DoExtractIcons(Entry, szIconLocation, nIndex, TRUE);
+}
+
+static BOOL
+GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconLocation)
+{
+    Entry->IconLocation[0] = 0;
+    Entry->hIconLarge = Entry->hIconSmall = NULL;
+
+    if (lstrcmpiW(Entry->FileExtension, L".exe") == 0 ||
+        lstrcmpiW(Entry->FileExtension, L".scr") == 0)
+    {
+        // It's an executable
+        HMODULE hDLL = shell32_hInstance;
+        INT iIndex = IDI_SHELL_EXE;
+        Entry->hIconLarge = LoadIconW(hDLL, MAKEINTRESOURCEW(iIndex));
+        Entry->hIconSmall = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
+            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0));
+        return Entry->hIconLarge && Entry->hIconSmall;
+    }
+    else if (lstrcmpW(IconLocation, L"%1") == 0)
+    {
+        // self icon
+        return FALSE;
+    }
+
+    // Expand the REG_EXPAND_SZ string by environment variables
+    if (!ExpandEnvironmentStringsW(IconLocation, Entry->IconLocation,
+                                   _countof(Entry->IconLocation)))
+    {
+        return FALSE;
+    }
+
+    GetFileTypeIconsComma(Entry);
+
+    return Entry->hIconLarge && Entry->hIconSmall;
+}
+
+static BOOL
+GetFileTypeIconsByKey(HKEY hKey, PFOLDER_FILE_TYPE_ENTRY Entry)
+{
+    Entry->IconLocation[0] = 0;
+    Entry->hIconLarge = Entry->hIconSmall = NULL;
+
+    // Open the "DefaultIcon" registry key
+    HKEY hDefIconKey;
+    LONG nResult = RegOpenKeyExW(hKey, L"DefaultIcon", 0, KEY_READ, &hDefIconKey);
+    if (nResult != ERROR_SUCCESS)
+        return FALSE;
+
+    // Get the location info
+    WCHAR szLocation[MAX_PATH + 64];
+    DWORD dwSize = sizeof(szLocation);
+    nResult = RegQueryValueExW(hDefIconKey, NULL, NULL, NULL, LPBYTE(szLocation), &dwSize);
+
+    // Close it
+    RegCloseKey(hDefIconKey);
+
+    if (nResult != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    return GetFileTypeIconsEx(Entry, szLocation);
+}
+
+static BOOL
+QueryFileDescription(const WCHAR *ProgramPath, WCHAR *pszName, INT cchName)
+{
+    SHFILEINFOW FileInfo = { 0 };
+    if (SHGetFileInfoW(ProgramPath, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
+    {
+        StringCchCopyW(pszName, cchName, FileInfo.szDisplayName);
+        return TRUE;
+    }
+
+    return !!GetFileTitleW(ProgramPath, pszName, cchName);
+}
+
 static
 VOID
-InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
+InsertFileType(HWND hListView, WCHAR *szName, PINT iItem, WCHAR *szFile)
 {
     PFOLDER_FILE_TYPE_ENTRY Entry;
     HKEY hKey;
@@ -1388,6 +1542,10 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
         /* FIXME handle URL protocol handlers */
         return;
     }
+
+    // get imagelists of listview
+    HIMAGELIST himlLarge = ListView_GetImageList(hListView, LVSIL_NORMAL);
+    HIMAGELIST himlSmall = ListView_GetImageList(hListView, LVSIL_SMALL);
 
     /* allocate file type entry */
     Entry = (PFOLDER_FILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FOLDER_FILE_TYPE_ENTRY));
@@ -1443,19 +1601,49 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
             RegQueryValueExW(hKey, L"EditFlags", NULL, NULL, (LPBYTE)&Entry->EditFlags, &dwSize);
     }
 
+    /* convert extension to upper case */
+    wcscpy(Entry->FileExtension, szName);
+    _wcsupr(Entry->FileExtension);
+
+    /* get icon */
+    if (!GetFileTypeIconsByKey(hKey, Entry))
+    {
+        WCHAR szDefaultIconLocation[] = L"%SystemRoot%\\system32\\SHELL32.dll,-210";
+        GetFileTypeIconsEx(Entry, szDefaultIconLocation);
+    }
+
     /* close key */
     RegCloseKey(hKey);
+
+    // get program path and app name
+    DWORD cch = _countof(Entry->ProgramPath);
+    if (S_OK == AssocQueryStringW(ASSOCF_INIT_IGNOREUNKNOWN, ASSOCSTR_EXECUTABLE,
+                                  Entry->FileExtension, NULL, Entry->ProgramPath, &cch))
+    {
+        QueryFileDescription(Entry->ProgramPath, Entry->AppName, _countof(Entry->AppName));
+    }
+    else
+    {
+        Entry->ProgramPath[0] = Entry->AppName[0] = 0;
+    }
+
+    // add icon to imagelist
+    INT iLargeImage = -1, iSmallImage = -1;
+    if (Entry->hIconLarge && Entry->hIconSmall)
+    {
+        iLargeImage = ImageList_AddIcon(himlLarge, Entry->hIconLarge);
+        iSmallImage = ImageList_AddIcon(himlSmall, Entry->hIconSmall);
+        ASSERT(iLargeImage == iSmallImage);
+    }
 
     /* Do not add excluded entries */
     if (Entry->EditFlags & 0x00000001) //FTA_Exclude
     {
+        DestroyIcon(Entry->hIconLarge);
+        DestroyIcon(Entry->hIconSmall);
         HeapFree(GetProcessHeap(), 0, Entry);
         return;
     }
-
-    /* convert extension to upper case */
-    wcscpy(Entry->FileExtension, szName);
-    _wcsupr(Entry->FileExtension);
 
     if (!Entry->FileDescription[0])
     {
@@ -1466,19 +1654,20 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
     }
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
-    lvItem.mask = LVIF_TEXT | LVIF_PARAM;
+    lvItem.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     lvItem.iSubItem = 0;
     lvItem.pszText = &Entry->FileExtension[1];
     lvItem.iItem = *iItem;
     lvItem.lParam = (LPARAM)Entry;
-    (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
+    lvItem.iImage = iSmallImage;
+    (void)SendMessageW(hListView, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_TEXT;
     lvItem.pszText = Entry->FileDescription;
     lvItem.iItem = *iItem;
     lvItem.iSubItem = 1;
-    ListView_SetItem(hDlgCtrl, &lvItem);
+    ListView_SetItem(hListView, &lvItem);
 
     (*iItem)++;
 }
@@ -1512,8 +1701,19 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     DWORD dwName;
     LVITEMW lvItem;
     INT iItem = 0;
+    HIMAGELIST himlLarge, himlSmall;
 
-    hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+    // create imagelists
+    himlLarge = ImageList_Create(GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON),
+                                 ILC_COLOR32 | ILC_MASK, 256, 20);
+    himlSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+                                 ILC_COLOR32 | ILC_MASK, 256, 20);
+
+    // set imagelists to listview.
+    hDlgCtrl = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+    ListView_SetImageList(hDlgCtrl, himlLarge, LVSIL_NORMAL);
+    ListView_SetImageList(hDlgCtrl, himlSmall, LVSIL_SMALL);
+
     InitializeFileTypesListCtrlColumns(hDlgCtrl);
 
     szFile[0] = 0;
@@ -1555,13 +1755,19 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
 
 static
 PFOLDER_FILE_TYPE_ENTRY
-FindSelectedItem(
-    HWND hDlgCtrl)
+FindSelectedItem(HWND hDlgCtrl, INT Index = -1)
 {
-    UINT Count, Index;
+    INT Count;
     LVITEMW lvItem;
 
     Count = ListView_GetItemCount(hDlgCtrl);
+
+    if (Index == -1)
+    {
+        Index = ListView_GetNextItem(hDlgCtrl, -1, LVNI_SELECTED);
+        if (Index == -1)
+            return NULL;
+    }
 
     for (Index = 0; Index < Count; Index++)
     {
@@ -1879,8 +2085,10 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     szFile[_countof(szFileFormat) - 1] = 0;
     StringCchPrintfW(szFile, _countof(szFile), szFileFormat, &szExt[1]);
 
-    // Insert an item to listview
+    // Get imagelists
     HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+
+    // Insert an item to listview
     INT iItem = ListView_GetItemCount(hListView);
     INT iItemCopy = iItem;
     InsertFileType(hListView, szExt, &iItemCopy, szFile);
@@ -1940,6 +2148,7 @@ FolderOptionsFileTypesDlg(
     PFOLDER_FILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
     NEWEXT_DIALOG newext;
+    static HBITMAP s_hbmProgram = NULL;
 
     switch(uMsg)
     {
@@ -2023,6 +2232,23 @@ FolderOptionsFileTypesDlg(
                     swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
                     /* update dialog */
                     SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
+
+                    // delete previous program image
+                    if (s_hbmProgram)
+                    {
+                        DeleteObject(s_hbmProgram);
+                        s_hbmProgram = NULL;
+                    }
+
+                    // set program image
+                    HICON hIconSm = NULL;
+                    ExtractIconExW(pItem->ProgramPath, 0, NULL, &hIconSm, 1);
+                    s_hbmProgram = BitmapFromIcon(hIconSm, 16, 16);
+                    DestroyIcon(hIconSm);
+                    SendDlgItemMessageW(hwndDlg, IDC_FILETYPES_ICON, STM_SETIMAGE, IMAGE_BITMAP, LPARAM(s_hbmProgram));
+
+                    // set program name
+                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_APPNAME, pItem->AppName);
 
                     /* Enable the Delete button */
                     if (pItem->EditFlags & 0x00000010) // FTA_NoRemove

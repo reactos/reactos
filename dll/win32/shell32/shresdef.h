@@ -356,6 +356,7 @@
 #define IDC_FILETYPES_CHANGE                14006
 #define IDC_FILETYPES_DESCRIPTION           14007
 #define IDC_FILETYPES_ADVANCED              14008
+#define IDC_FILETYPES_ICON                  14009
 
 /* Control IDs for IDD_NEWEXTENSION dialog */
 #define IDC_NEWEXT_EDIT                     14001
