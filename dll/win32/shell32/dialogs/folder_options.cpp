@@ -2133,6 +2133,19 @@ FileTypesDlg_RemoveExt(HWND hwndDlg)
     return FALSE;
 }
 
+static PFOLDER_FILE_TYPE_ENTRY
+GetListViewEntry(HWND hListView, INT iItem)
+{
+    LVITEMW lvItem;
+    ZeroMemory(&lvItem, sizeof(LVITEM));
+    lvItem.mask = LVIF_PARAM;
+    lvItem.iItem = iItem;
+    if (!SendMessageW(hListView, LVM_GETITEMW, 0, (LPARAM)&lvItem))
+        return NULL;
+
+    return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
+}
+
 // IDD_FOLDER_OPTIONS_FILETYPES dialog
 INT_PTR
 CALLBACK
@@ -2143,7 +2156,6 @@ FolderOptionsFileTypesDlg(
     LPARAM lParam)
 {
     LPNMLISTVIEW lppl;
-    LVITEMW lvItem;
     WCHAR Buffer[255], FormatBuffer[255];
     PFOLDER_FILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
@@ -2196,16 +2208,24 @@ FolderOptionsFileTypesDlg(
 
         case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
-
+            if (lppl->hdr.code == LVN_DELETEALLITEMS)
+            {
+                return FALSE;   // send LVN_DELETEITEM
+            }
+            if (lppl->hdr.code == LVN_DELETEITEM)
+            {
+                pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
+                if (pItem)
+                {
+                    DestroyIcon(pItem->hIconLarge);
+                    DestroyIcon(pItem->hIconSmall);
+                    HeapFree(GetProcessHeap(), 0, pItem);
+                }
+                return FALSE;
+            }
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
-                ZeroMemory(&lvItem, sizeof(LVITEM));
-                lvItem.mask = LVIF_PARAM;
-                lvItem.iItem = lppl->iItem;
-                if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&lvItem))
-                    return TRUE;
-
-                pItem = (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
+                pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
                 if (!pItem)
                     return TRUE;
 
