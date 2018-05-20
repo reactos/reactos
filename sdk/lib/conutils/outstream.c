@@ -49,13 +49,11 @@
 #include "stream_private.h"
 
 
-// #define RC_STRING_MAX_SIZE  4096
+// Also known as: RC_STRING_MAX_SIZE, MAX_BUFFER_SIZE (some programs:
+// wlanconf, shutdown, set it to 5024), OUTPUT_BUFFER_SIZE (name given
+// in cmd/console.c), MAX_STRING_SIZE (name given in diskpart) or
+// MAX_MESSAGE_SIZE (set to 512 in shutdown).
 #define CON_RC_STRING_MAX_SIZE  4096
-// #define MAX_BUFFER_SIZE     4096    // Some programs (wlanconf, shutdown) set it to 5024
-// #define OUTPUT_BUFFER_SIZE  4096    // Name given in cmd/console.c
-// MAX_STRING_SIZE  // Name given in diskpart
-
-// #define MAX_MESSAGE_SIZE    512     // See shutdown...
 
 
 /**
@@ -92,8 +90,6 @@ ConWrite(
 #ifndef USE_CRT
     DWORD TotalLen = len, dwNumBytes = 0;
     PVOID p;
-
-    // CHAR strOem[CON_RC_STRING_MAX_SIZE]; // Some static buffer...
 
     /* If we do not write anything, just return */
     if (!szStr || len == 0)
