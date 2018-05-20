@@ -47,6 +47,11 @@ vfatFCBInitializeCacheFromVolume(
     }
 
     fileObject = IoCreateStreamFileObject (NULL, vcb->StorageDevice);
+    if (fileObject == NULL)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
 
 #ifdef KDBG
     if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &fcb->LongNameU, FALSE, NULL))
