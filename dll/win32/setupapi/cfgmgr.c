@@ -5158,6 +5158,67 @@ CM_Get_Res_Des_Data_Size_Ex(
 
 
 /***********************************************************************
+ * CM_Get_Resource_Conflict_Count [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Get_Resource_Conflict_Count(
+    _In_ CONFLICT_LIST clConflictList,
+    _Out_ PULONG pulCount)
+{
+    PCONFLICT_DATA pConflictData;
+
+    FIXME("CM_Get_Resource_Conflict_Count(%p %p)\n",
+          clConflictList, pulCount);
+
+    pConflictData = (PCONFLICT_DATA)clConflictList;
+    if (!IsValidConflictData(pConflictData))
+        return CR_INVALID_CONFLICT_LIST;
+
+    if (pulCount == NULL)
+        return CR_INVALID_POINTER;
+
+    *pulCount = pConflictData->pConflictList->ConflictsListed;
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Get_Resource_Conflict_DetailsA [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Get_Resource_Conflict_DetailsA(
+    _In_ CONFLICT_LIST clConflictList,
+    _In_ ULONG ulIndex,
+    _Inout_ PCONFLICT_DETAILS_A pConflictDetails)
+{
+    FIXME("CM_Get_Resource_Conflict_CountA(%p %lu %p)\n",
+          clConflictList, ulIndex, pConflictDetails);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Get_Resource_Conflict_DetailsW [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Get_Resource_Conflict_DetailsW(
+    _In_ CONFLICT_LIST clConflictList,
+    _In_ ULONG ulIndex,
+    _Inout_ PCONFLICT_DETAILS_W pConflictDetails)
+{
+    FIXME("CM_Get_Resource_Conflict_CountW(%p %lu %p)\n",
+          clConflictList, ulIndex, pConflictDetails);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Get_Sibling [SETUPAPI.@]
  */
 CONFIGRET
