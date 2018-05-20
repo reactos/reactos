@@ -2211,79 +2211,79 @@ FolderOptionsFileTypesDlg(
 
         case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
-            if (lppl->hdr.code == LVN_DELETEALLITEMS)
+            switch (lppl->hdr.code)
             {
-                return FALSE;   // send LVN_DELETEITEM
-            }
-            if (lppl->hdr.code == LVN_DELETEITEM)
-            {
-                pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
-                if (pItem)
-                {
-                    DestroyIcon(pItem->hIconLarge);
-                    DestroyIcon(pItem->hIconSmall);
-                    HeapFree(GetProcessHeap(), 0, pItem);
-                }
-                return FALSE;
-            }
-            if (lppl->hdr.code == LVN_ITEMCHANGING)
-            {
-                pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
-                if (!pItem)
-                    return TRUE;
+                case LVN_DELETEALLITEMS:
+                    return FALSE;   // send LVN_DELETEITEM
 
-                if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
-                {
-                    /* new focused item */
-                    if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILS, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
+                case LVN_DELETEITEM:
+                    pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
+                    if (pItem)
                     {
-                        /* use default english format string */
-                        wcscpy(FormatBuffer, L"Details for '%s' extension");
+                        DestroyIcon(pItem->hIconLarge);
+                        DestroyIcon(pItem->hIconSmall);
+                        HeapFree(GetProcessHeap(), 0, pItem);
                     }
+                    return FALSE;
 
-                    /* format buffer */
-                    swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
-                    /* update dialog */
-                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DETAILS_GROUPBOX, Buffer);
+                case LVN_ITEMCHANGING:
+                    pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
+                    if (!pItem)
+                        return TRUE;
 
-                    if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
+                    if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
                     {
-                        /* use default english format string */
-                        wcscpy(FormatBuffer, L"Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced.");
+                        /* new focused item */
+                        if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILS, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
+                        {
+                            /* use default english format string */
+                            wcscpy(FormatBuffer, L"Details for '%s' extension");
+                        }
+
+                        /* format buffer */
+                        swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
+                        /* update dialog */
+                        SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DETAILS_GROUPBOX, Buffer);
+
+                        if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
+                        {
+                            /* use default english format string */
+                            wcscpy(FormatBuffer, L"Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced.");
+                        }
+                        /* format buffer */
+                        swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
+                        /* update dialog */
+                        SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
+
+                        // delete previous program image
+                        if (s_hbmProgram)
+                        {
+                            DeleteObject(s_hbmProgram);
+                            s_hbmProgram = NULL;
+                        }
+
+                        // set program image
+                        HICON hIconSm = NULL;
+                        ExtractIconExW(pItem->ProgramPath, 0, NULL, &hIconSm, 1);
+                        s_hbmProgram = BitmapFromIcon(hIconSm, 16, 16);
+                        DestroyIcon(hIconSm);
+                        SendDlgItemMessageW(hwndDlg, IDC_FILETYPES_ICON, STM_SETIMAGE, IMAGE_BITMAP, LPARAM(s_hbmProgram));
+
+                        // set program name
+                        SetDlgItemTextW(hwndDlg, IDC_FILETYPES_APPNAME, pItem->AppName);
+
+                        /* Enable the Delete button */
+                        if (pItem->EditFlags & 0x00000010) // FTA_NoRemove
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
+                        else
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), TRUE);
                     }
-                    /* format buffer */
-                    swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
-                    /* update dialog */
-                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
+                    break;
 
-                    // delete previous program image
-                    if (s_hbmProgram)
-                    {
-                        DeleteObject(s_hbmProgram);
-                        s_hbmProgram = NULL;
-                    }
-
-                    // set program image
-                    HICON hIconSm = NULL;
-                    ExtractIconExW(pItem->ProgramPath, 0, NULL, &hIconSm, 1);
-                    s_hbmProgram = BitmapFromIcon(hIconSm, 16, 16);
-                    DestroyIcon(hIconSm);
-                    SendDlgItemMessageW(hwndDlg, IDC_FILETYPES_ICON, STM_SETIMAGE, IMAGE_BITMAP, LPARAM(s_hbmProgram));
-
-                    // set program name
-                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_APPNAME, pItem->AppName);
-
-                    /* Enable the Delete button */
-                    if (pItem->EditFlags & 0x00000010) // FTA_NoRemove
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
-                    else
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), TRUE);
-                }
-            }
-            else if (lppl->hdr.code == PSN_SETACTIVE)
-            {
-                /* On page activation, set the focus to the listview */
-                SetFocus(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
+                case PSN_SETACTIVE:
+                    /* On page activation, set the focus to the listview */
+                    SetFocus(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
+                    break;
             }
             break;
     }
