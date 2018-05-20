@@ -1403,7 +1403,7 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
     return SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt) == ERROR_SUCCESS;
 }
 
-static HICON
+static inline HICON
 DoExtractIcons(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
                INT iIndex = 0, BOOL bSmall = FALSE)
 {
@@ -1658,7 +1658,7 @@ InsertFileType(HWND hListView, WCHAR *szName, INT iItem, WCHAR *szFile)
     lvItem.iItem = iItem;
     lvItem.lParam = (LPARAM)Entry;
     lvItem.iImage = iSmallImage;
-    (void)SendMessageW(hListView, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
+    SendMessageW(hListView, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_TEXT;
@@ -2132,14 +2132,11 @@ FileTypesDlg_RemoveExt(HWND hwndDlg)
     return FALSE;
 }
 
-static PFOLDER_FILE_TYPE_ENTRY
+static inline PFOLDER_FILE_TYPE_ENTRY
 GetListViewEntry(HWND hListView, INT iItem)
 {
-    LVITEMW lvItem;
-    ZeroMemory(&lvItem, sizeof(LVITEM));
-    lvItem.mask = LVIF_PARAM;
-    lvItem.iItem = iItem;
-    if (!SendMessageW(hListView, LVM_GETITEMW, 0, (LPARAM)&lvItem))
+    LV_ITEMW lvItem = { LVIF_PARAM, iItem };
+    if (!ListView_GetItem(hListView, &lvItem))
         return NULL;
 
     return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
