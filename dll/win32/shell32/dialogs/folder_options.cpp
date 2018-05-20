@@ -181,27 +181,31 @@ Create24BppBitmap(HDC hDC, INT cx, INT cy)
 
 static HBITMAP BitmapFromIcon(HICON hIcon, INT cx, INT cy)
 {
-    HBITMAP hbmRet = NULL;
-    if (HDC hDC = CreateCompatibleDC(NULL))
+    HDC hDC = CreateCompatibleDC(NULL);
+    if (!hDC)
+        return NULL;
+
+    HBITMAP hbm = Create24BppBitmap(hDC, cx, cy);
+    if (!hbm)
     {
-        if (HBITMAP hbm = Create24BppBitmap(hDC, cx, cy))
-        {
-            HGDIOBJ hbmOld = SelectObject(hDC, hbm);
-            {
-                RECT rc;
-                SetRect(&rc, 0, 0, cx, cy);
-                FillRect(hDC, &rc, HBRUSH(COLOR_3DFACE + 1));
-                if (hIcon)
-                {
-                    DrawIconEx(hDC, 0, 0, hIcon, cx, cy, 0, NULL, DI_NORMAL);
-                }
-            }
-            SelectObject(hDC, hbmOld);
-            hbmRet = hbm;
-        }
         DeleteDC(hDC);
+        return NULL;
     }
-    return hbmRet;
+
+    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
+    {
+        RECT rc;
+        SetRect(&rc, 0, 0, cx, cy);
+        FillRect(hDC, &rc, HBRUSH(COLOR_3DFACE + 1));
+        if (hIcon)
+        {
+            DrawIconEx(hDC, 0, 0, hIcon, cx, cy, 0, NULL, DI_NORMAL);
+        }
+    }
+    SelectObject(hDC, hbmOld);
+    DeleteDC(hDC);
+
+    return hbm;
 }
 
 static HBITMAP
