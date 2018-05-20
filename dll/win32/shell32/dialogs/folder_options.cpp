@@ -1613,8 +1613,13 @@ InsertFileType(HWND hListView, WCHAR *szName, INT iItem, WCHAR *szFile)
     /* get icon */
     if (!GetFileTypeIconsByKey(hKey, Entry))
     {
-        WCHAR szDefaultIconLocation[] = L"%SystemRoot%\\system32\\SHELL32.dll,-210";
-        GetFileTypeIconsEx(Entry, szDefaultIconLocation);
+        // set default icon
+        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
+        INT cxSmall = GetSystemMetrics(SM_CXSMICON);
+        INT cySmall = GetSystemMetrics(SM_CYSMICON);
+        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance,
+                                             MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
+                                             IMAGE_ICON, cxSmall, cySmall, 0));
     }
 
     /* close key */
