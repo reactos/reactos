@@ -126,9 +126,9 @@
 @ stdcall CM_Get_Res_Des_Data_Ex(ptr ptr long long ptr)
 @ stdcall CM_Get_Res_Des_Data_Size(ptr ptr long)
 @ stdcall CM_Get_Res_Des_Data_Size_Ex(ptr ptr long ptr)
-@ stub CM_Get_Resource_Conflict_Count
-@ stub CM_Get_Resource_Conflict_DetailsA
-@ stub CM_Get_Resource_Conflict_DetailsW
+@ stdcall CM_Get_Resource_Conflict_Count(ptr ptr)
+@ stdcall CM_Get_Resource_Conflict_DetailsA(ptr long ptr)
+@ stdcall CM_Get_Resource_Conflict_DetailsW(ptr long ptr)
 @ stdcall CM_Get_Sibling(ptr long long)
 @ stdcall CM_Get_Sibling_Ex(ptr long long ptr)
 @ stdcall CM_Get_Version()
