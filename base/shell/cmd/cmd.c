@@ -382,7 +382,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     /* Save the original console title and build a new one */
     GetConsoleTitle(szWindowTitle, ARRAYSIZE(szWindowTitle));
     bTitleSet = FALSE;
-    _stprintf(szNewTitle, _T("%s - %s%s"), szWindowTitle, First, Rest);
+    StringCchPrintf(szNewTitle, ARRAYSIZE(szNewTitle),
+                    _T("%s - %s%s"), szWindowTitle, First, Rest);
     ConSetTitle(szNewTitle);
 
     /* check if this is a .BAT or .CMD file */
