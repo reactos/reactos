@@ -8306,7 +8306,7 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
     }
 
     /* Check if we can change the password at this time */
-    if ((StoredNtEmpty == FALSE) || (StoredNtEmpty == FALSE))
+    if ((StoredLmEmpty == FALSE) || (StoredNtEmpty == FALSE))
     {
         /* Get fixed domain data */
         Length = sizeof(SAM_DOMAIN_FIXED_DATA);
