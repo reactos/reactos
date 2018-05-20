@@ -1527,9 +1527,8 @@ QueryFileDescription(const WCHAR *ProgramPath, WCHAR *pszName, INT cchName)
     return !!GetFileTitleW(ProgramPath, pszName, cchName);
 }
 
-static
-VOID
-InsertFileType(HWND hListView, WCHAR *szName, PINT iItem, WCHAR *szFile)
+static BOOL
+InsertFileType(HWND hListView, WCHAR *szName, INT iItem, WCHAR *szFile)
 {
     PFOLDER_FILE_TYPE_ENTRY Entry;
     HKEY hKey;
@@ -1540,7 +1539,7 @@ InsertFileType(HWND hListView, WCHAR *szName, PINT iItem, WCHAR *szFile)
     if (szName[0] != L'.')
     {
         /* FIXME handle URL protocol handlers */
-        return;
+        return FALSE;
     }
 
     // get imagelists of listview
@@ -1549,15 +1548,14 @@ InsertFileType(HWND hListView, WCHAR *szName, PINT iItem, WCHAR *szFile)
 
     /* allocate file type entry */
     Entry = (PFOLDER_FILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FOLDER_FILE_TYPE_ENTRY));
-
     if (!Entry)
-        return;
+        return FALSE;
 
     /* open key */
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, Entry);
-        return;
+        return FALSE;
     }
 
     /* FIXME check for duplicates */
@@ -1642,7 +1640,7 @@ InsertFileType(HWND hListView, WCHAR *szName, PINT iItem, WCHAR *szFile)
         DestroyIcon(Entry->hIconLarge);
         DestroyIcon(Entry->hIconSmall);
         HeapFree(GetProcessHeap(), 0, Entry);
-        return;
+        return FALSE;
     }
 
     if (!Entry->FileDescription[0])
@@ -1657,7 +1655,7 @@ InsertFileType(HWND hListView, WCHAR *szName, PINT iItem, WCHAR *szFile)
     lvItem.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     lvItem.iSubItem = 0;
     lvItem.pszText = &Entry->FileExtension[1];
-    lvItem.iItem = *iItem;
+    lvItem.iItem = iItem;
     lvItem.lParam = (LPARAM)Entry;
     lvItem.iImage = iSmallImage;
     (void)SendMessageW(hListView, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
@@ -1665,11 +1663,11 @@ InsertFileType(HWND hListView, WCHAR *szName, PINT iItem, WCHAR *szFile)
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_TEXT;
     lvItem.pszText = Entry->FileDescription;
-    lvItem.iItem = *iItem;
+    lvItem.iItem = iItem;
     lvItem.iSubItem = 1;
     ListView_SetItem(hListView, &lvItem);
 
-    (*iItem)++;
+    return TRUE;
 }
 
 static
@@ -1728,7 +1726,8 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
 
     while (RegEnumKeyExW(HKEY_CLASSES_ROOT, dwIndex++, szName, &dwName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
-        InsertFileType(hDlgCtrl, szName, &iItem, szFile);
+        if (InsertFileType(hDlgCtrl, szName, iItem, szFile))
+            ++iItem;
         dwName = _countof(szName);
     }
 
@@ -2090,8 +2089,8 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
 
     // Insert an item to listview
     INT iItem = ListView_GetItemCount(hListView);
-    INT iItemCopy = iItem;
-    InsertFileType(hListView, szExt, &iItemCopy, szFile);
+    if (!InsertFileType(hListView, szExt, iItem, szFile))
+        return FALSE;
 
     LV_ITEM item;
     ZeroMemory(&item, sizeof(item));
