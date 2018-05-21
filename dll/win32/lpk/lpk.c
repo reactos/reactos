@@ -68,10 +68,8 @@ LpkExtTextOut(
 
     UNREFERENCED_PARAMETER(unknown);
 
-    fuOptions |= ETO_IGNORELANGUAGE;
-
-    /* Check if the string requires complex script processing */
-    if (ScriptIsComplex(lpString, uCount, SIC_COMPLEX) == S_OK)
+    /* Check if the string requires complex script processing and not a "glyph indices" array */
+    if (ScriptIsComplex(lpString, uCount, SIC_COMPLEX) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))
     {
         BIDI_Reorder(hdc, lpString, uCount, GCP_REORDER, WINE_GCPW_FORCE_LTR,
                      NULL, uCount, NULL, &glyphs, &cGlyphs);
@@ -83,6 +81,9 @@ LpkExtTextOut(
 
         return ExtTextOutW(hdc, x, y, fuOptions, lprc, (LPWSTR)glyphs, cGlyphs, lpDx);
     }
+
+    if (!(fuOptions & ETO_IGNORELANGUAGE))
+        fuOptions |= ETO_IGNORELANGUAGE;
 
     return ExtTextOutW(hdc, x, y, fuOptions, lprc, lpString, uCount, lpDx);
 }
@@ -109,9 +110,9 @@ LpkGetCharacterPlacement(
 
     UNREFERENCED_PARAMETER(dwUnused);
 
-    /* Sanity check */
+    /* Sanity check (most likely a direct call) */
     if (!(dwFlags & GCP_REORDER))
-       return FALSE;
+       return GetCharacterPlacementW(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags);
 
     lpOutString = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WCHAR));
 

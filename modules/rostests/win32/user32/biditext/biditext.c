@@ -11,6 +11,14 @@
 
 #include "biditext.h"
 
+/* Prototypes */
+DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent, 
+                                      GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
+
+BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y,
+                          UINT fuOptions, const RECT *lprc, LPCWSTR lpString,
+                          UINT uCount , const INT *lpDx, INT unknown);
+
 /* Global instance handle */
 HINSTANCE g_hInstance = NULL;
 
@@ -167,7 +175,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             HDC hdc = BeginPaint(hWnd, &ps);
             
             LPWSTR szString = L"אבגדהABCDוזחטי";
-            LPWSTR szReversedString = L"הדגבאABCDיטחזו";
             int Len = (int)wcslen(szString);
 
             WCHAR Glyphs[100] = { 0 };
@@ -179,21 +186,24 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             TextOutW(hdc, 10, 10, L"Proper (string being used):", 27);
             TextOutW(hdc, 200, 10, szString, 14);
             TextOutW(hdc, 10, 30, L"Reversed (example):", 19);
-            TextOutW(hdc, 200, 30, szReversedString, 14);
+            TextOutW(hdc, 200, 30, L"הדגבאABCDיטחזו", 14);
 
-            TextOutW(hdc, 10, 50, L"String with NULL ETO call (not reversed):", 41);
-            ExtTextOutW(hdc, 10, 70, 0, NULL, szString, Len, NULL);
+            TextOutW(hdc, 10, 50, L"String with NULL LpkETO call (not reversed):", 44);
+            LpkExtTextOut(hdc, 10, 70, 0, NULL, szString, Len, NULL, 0);
 
-            TextOutW(hdc, 10, 90, L"String with ETO_IGNORELANGUAGE ETO call (reversed):", 51);
-            ExtTextOutW(hdc, 10, 110, ETO_IGNORELANGUAGE , NULL, szString, Len, NULL);
+            TextOutW(hdc, 10, 90, L"String with ETO_IGNORELANGUAGE LpkETO call (not reversed):", 58);
+            LpkExtTextOut(hdc, 10, 110, ETO_IGNORELANGUAGE , NULL, szString, Len, NULL, 0);
 
-            TextOutW(hdc, 10, 130, L"String with GCP_REORDER and ETO_GLYPH_INDEX call (not reversed):", 64);
-            GetCharacterPlacementW(hdc, szString, Len, 0, &Results, GCP_REORDER);
-            ExtTextOutW(hdc, 10, 150, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL);
+            TextOutW(hdc, 10, 130, L"String with GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (not reversed):", 71);
+            LpkGetCharacterPlacement(hdc, szString, Len, 0, &Results, GCP_REORDER, 0);
+            LpkExtTextOut(hdc, 10, 150, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL, 0);
 
-            TextOutW(hdc, 10, 170, L"String without GCP_REORDER and ETO_GLYPH_INDEX call (reversed):", 63);
-            GetCharacterPlacementW(hdc, szString, Len, 0, &Results, 0);
-            ExtTextOutW(hdc, 10, 190, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL);
+            TextOutW(hdc, 10, 170, L"String without GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (reversed):", 70);
+            LpkGetCharacterPlacement(hdc, szString, Len, 0, &Results, 0, 0);
+            LpkExtTextOut(hdc, 10, 190, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL, 0);
+
+            TextOutW(hdc, 10, 210, L"String with ETO_IGNORELANGUAGE ETO call (reversed, not Lpk direct call!):", 73);
+            ExtTextOutW(hdc, 10, 230, ETO_IGNORELANGUAGE , NULL, szString, Len, NULL);
 
             EndPaint(hWnd, &ps);
             break;
