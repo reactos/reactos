@@ -1067,6 +1067,7 @@ VfatWrite(
 
         if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, CanWait))
         {
+            Status = STATUS_PENDING;
             goto ByeBye;
         }
 
