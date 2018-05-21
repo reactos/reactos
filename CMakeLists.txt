@@ -205,6 +205,8 @@ else()
         include(sdk/cmake/gcc.cmake)
     endif()
 
+    include(sdk/cmake/cabman.cmake)
+    include(sdk/cmake/mkisofs.cmake)
     # Generic macros
     include(sdk/cmake/CMakeMacros.cmake)
 
@@ -253,7 +255,8 @@ else()
     # For MSVC builds, this puts all debug symbols file in the same directory.
     set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
 
-    #begin with boot so reactos_cab target is defined before all other modules
+    # begin with dist so reactos_cab target is defined before all other modules
+    add_subdirectory(dist)
     add_subdirectory(boot)
     add_subdirectory(base)
     add_subdirectory(dll)
@@ -269,9 +272,6 @@ else()
 
     # Create the registry hives
     create_registry_hives()
-
-    # Create {bootcd, livecd, bootcdregtest}.lst
-    create_iso_lists()
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/sdk/include/reactos)
 
