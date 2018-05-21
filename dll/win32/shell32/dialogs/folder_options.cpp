@@ -1752,18 +1752,18 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
 }
 
-static
+static inline
 PFOLDER_FILE_TYPE_ENTRY
-FindSelectedItem(HWND hListView)
+GetListViewEntry(HWND hListView, INT iItem = -1)
 {
-    INT iItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
     if (iItem == -1)
-        return NULL;
+    {
+        iItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
+        if (iItem == -1)
+            return NULL;
+    }
 
-    LV_ITEMW lvItem;
-    ZeroMemory(&lvItem, sizeof(lvItem));
-    lvItem.mask = LVIF_PARAM;
-    lvItem.iItem = iItem;
+    LV_ITEMW lvItem = { LVIF_PARAM, iItem };
     if (ListView_GetItem(hListView, &lvItem))
         return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
 
@@ -2112,16 +2112,6 @@ FileTypesDlg_RemoveExt(HWND hwndDlg)
     return TRUE;
 }
 
-static inline PFOLDER_FILE_TYPE_ENTRY
-GetListViewEntry(HWND hListView, INT iItem)
-{
-    LV_ITEMW lvItem = { LVIF_PARAM, iItem };
-    if (!ListView_GetItem(hListView, &lvItem))
-        return NULL;
-
-    return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
-}
-
 static void
 FileTypesDlg_OnItemChanging(HWND hwndDlg, PFOLDER_FILE_TYPE_ENTRY pEntry)
 {
@@ -2218,7 +2208,7 @@ FolderOptionsFileTypesDlg(
                     }
                     break;
                 case IDC_FILETYPES_CHANGE:
-                    pItem = FindSelectedItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
+                    pItem = GetListViewEntry(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pItem)
                     {
                         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT;
