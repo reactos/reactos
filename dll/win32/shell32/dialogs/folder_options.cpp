@@ -1407,8 +1407,8 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
 }
 
 static inline HICON
-DoExtractIcons(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
-               INT iIndex = 0, BOOL bSmall = FALSE)
+DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
+              INT iIndex = 0, BOOL bSmall = FALSE)
 {
     HICON hIconRet = NULL;
 
@@ -1455,8 +1455,8 @@ GetFileTypeIconsComma(PFOLDER_FILE_TYPE_ENTRY Entry, const WCHAR *IconLocation)
     }
 
     INT nIndex = PathParseIconLocationW(szLocation);
-    Entry->hIconLarge = DoExtractIcons(Entry, szLocation, nIndex, FALSE);
-    Entry->hIconSmall = DoExtractIcons(Entry, szLocation, nIndex, TRUE);
+    Entry->hIconLarge = DoExtractIcon(Entry, szLocation, nIndex, FALSE);
+    Entry->hIconSmall = DoExtractIcon(Entry, szLocation, nIndex, TRUE);
 }
 
 static BOOL
