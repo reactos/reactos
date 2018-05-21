@@ -1753,19 +1753,12 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
 
 static
 PFOLDER_FILE_TYPE_ENTRY
-FindSelectedItem(HWND hDlgCtrl, INT Index = -1)
+FindSelectedItem(HWND hDlgCtrl)
 {
-    INT Count;
+    INT Index, Count;
     LVITEMW lvItem;
 
     Count = ListView_GetItemCount(hDlgCtrl);
-
-    if (Index == -1)
-    {
-        Index = ListView_GetNextItem(hDlgCtrl, -1, LVNI_SELECTED);
-        if (Index == -1)
-            return NULL;
-    }
 
     for (Index = 0; Index < Count; Index++)
     {
