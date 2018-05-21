@@ -2084,10 +2084,8 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     szFile[_countof(szFileFormat) - 1] = 0;
     StringCchPrintfW(szFile, _countof(szFile), szFileFormat, &szExt[1]);
 
-    // Get imagelists
+    // Insert an item to the listview
     HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
-
-    // Insert an item to listview
     INT iItem = ListView_GetItemCount(hListView);
     if (!InsertFileType(hListView, szExt, iItem, szFile))
         return FALSE;
