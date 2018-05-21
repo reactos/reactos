@@ -55,6 +55,11 @@ static int did_change = 0;
 static HANDLE fd;
 static LARGE_INTEGER CurrentOffset;
 
+#define ROUND_DOWN(n, align) ((n) & ~((align) - 1))
+#define ROUND_UP(n, align) ROUND_DOWN((n) + (align) - 1, (align))
+
+#define IS_ALIGNED(n, align) (((n) & ((align) - 1)) == 0)
+
 
 /**** Win32 / NT support ******************************************************/
 
@@ -281,20 +286,60 @@ void fs_read(off_t pos, int size, void *data)
 
 #if 1 // TMN
 
-	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;
- 	const off_t seekpos_aligned = pos - (pos % 512);
- 	const size_t seek_delta = (size_t)(pos - seekpos_aligned);
-#if DBG
-	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned;
-#endif
-	char* tmpBuf = alloc(readsize_aligned);
-    if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned) pdie("Seek to %lld",pos);
-    if ((got = read(fd, tmpBuf, readsize_aligned)) < 0) pdie("Read %d bytes at %lld",size,pos);
-	assert(got >= size);
-	got = size;
-	assert(seek_delta + size <= readsize);
-	memcpy(data, tmpBuf+seek_delta, size);
-	free(tmpBuf);
+    void *data_aligned = NULL;
+    off_t seekpos_aligned = pos;
+    size_t size_aligned = (size_t)size;
+
+    /* If the output buffer & lengths are not aligned, align those */
+    if (// !IS_ALIGNED(data, 512) ||
+        !IS_ALIGNED(size, (size_t)512) || !IS_ALIGNED(pos, (off_t)512))
+    {
+        /*
+         * Align the offset and the buffer length to sector boundaries,
+         * taking into account for cross-sector regions.
+         */
+        seekpos_aligned = ROUND_DOWN(pos, (off_t)512);
+        size_aligned = (size_t)(ROUND_UP(pos + size, (size_t)512) - seekpos_aligned);
+
+        data_aligned = alloc(size_aligned);
+        if (!data_aligned)
+            pdie("Not enough memory to allocate aligned buffer %d bytes for read", size_aligned);
+    }
+
+    /* Read it */
+    if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned)
+        pdie("Seek to %lld", seekpos_aligned);
+    got = read(fd, data_aligned ? data_aligned : data, size_aligned);
+    if (got < 0)
+        pdie("Read %d bytes at %lld", size, pos);
+    assert(got >= size);
+    got = size;
+
+    /*
+     * If an aligned buffer was used, copy its contents
+     * back into the user buffer and free it.
+     */
+    if (data_aligned)
+    {
+        /*
+         * Compute the offset between the user's buffer start and
+         * its aligned value, and store it in 'seekpos_aligned'.
+         */
+        seekpos_aligned = pos - seekpos_aligned;
+
+        /* Be sure the read data actually intersects the user's buffer area */
+        if (size_aligned > seekpos_aligned)
+        {
+            size_aligned = min(size_aligned - seekpos_aligned, size);
+            memcpy(data, (char*)data_aligned + seekpos_aligned, size_aligned);
+        }
+        else
+        {
+            size_aligned = 0;
+        }
+
+        free(data_aligned);
+    }
 
 #else // TMN:
 
@@ -327,11 +372,23 @@ int fs_test(off_t pos, int size)
 
 #if 1 // TMN
 
-	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
-	const off_t seekpos_aligned = pos - (pos % 512);                   // TMN:
-    scratch = alloc(readsize_aligned);
-    if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned) pdie("Seek to %lld",pos);
-    okay = read(fd, scratch, readsize_aligned) == (int)readsize_aligned;
+    /*
+     * Align the offset and the buffer length to sector boundaries,
+     * taking into account for cross-sector regions.
+     */
+    const off_t seekpos_aligned = ROUND_DOWN(pos, (off_t)512);
+    const size_t size_aligned = (size_t)(ROUND_UP(pos + size, (size_t)512) - seekpos_aligned);
+
+    scratch = alloc(size_aligned);
+    if (!scratch)
+        pdie("Not enough memory to allocate aligned buffer %d bytes for read", size_aligned);
+
+    /* Read it */
+    if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned)
+        pdie("Seek to %lld", pos);
+    okay = (read(fd, scratch, size_aligned) == (int)size_aligned);
+
+    /* Free the aligned buffer */
     free(scratch);
 
 #else // TMN:
@@ -356,37 +413,53 @@ void fs_write(off_t pos, int size, void *data)
 
 #if 1 //SAE
 
-    if (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE) {
-        void *scratch;
-        const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;
-        const off_t seekpos_aligned = pos - (pos % 512);
-        const size_t seek_delta = (size_t)(pos - seekpos_aligned);
-        BOOLEAN use_read = (seek_delta != 0) || ((readsize_aligned-size) != 0);
+    if (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE)
+    {
+        void *data_aligned = NULL;
+        off_t seekpos_aligned = pos;
+        size_t size_aligned = (size_t)size;
 
-        /* Aloc temp buffer if write is not aligned */
-        if (use_read)
-            scratch = alloc(readsize_aligned);
-        else
-            scratch = data;
-
-        did_change = 1;
-        if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned) pdie("Seek to %lld",seekpos_aligned);
-
-        if (use_read)
+        /* If the input buffer & lengths are not aligned, align those */
+        if (// !IS_ALIGNED(data, 512) ||
+            !IS_ALIGNED(size, (size_t)512) || !IS_ALIGNED(pos, (off_t)512))
         {
-            /* Read aligned data */
-            if (read(fd, scratch, readsize_aligned) < 0) pdie("Read %d bytes at %lld",size,pos);
+            /*
+             * Align the offset and the buffer length to sector boundaries,
+             * taking into account for cross-sector regions.
+             */
+            seekpos_aligned = ROUND_DOWN(pos, (off_t)512);
+            size_aligned = (size_t)(ROUND_UP(pos + size, (size_t)512) - seekpos_aligned);
 
-            /* Patch data in memory */
-            memcpy((char *)scratch + seek_delta, data, size);
+            data_aligned = alloc(size_aligned);
+            if (!data_aligned)
+                pdie("Not enough memory to allocate aligned buffer %d bytes for write", size_aligned);
+
+            /*
+             * Fetch full sectors into the aligned buffer,
+             * then patch it with user data.
+             */
+            did_change = 1;
+            if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned)
+                pdie("Seek to %lld", seekpos_aligned);
+            if (read(fd, data_aligned, size_aligned) < 0)
+                pdie("Read %d bytes at %lld", size, pos);
+
+            memcpy((char *)data_aligned + pos - seekpos_aligned, data, size);
         }
 
         /* Write it back */
-        if ((did = write(fd, scratch, readsize_aligned)) == (int)readsize_aligned)
-        {
-            if (use_read) free(scratch);
+        did_change = 1;
+        if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned)
+            pdie("Seek to %lld", seekpos_aligned);
+        did = write(fd, data_aligned ? data_aligned : data, size_aligned);
+
+        /* Free the aligned buffer */
+        if (data_aligned)
+            free(data_aligned);
+
+        if (did == (int)size_aligned)
             return;
-        }
+
         if (did < 0) pdie("Write %d bytes at %lld", size, pos);
         die("Wrote %d bytes instead of %d at %lld", did, size, pos);
     }
