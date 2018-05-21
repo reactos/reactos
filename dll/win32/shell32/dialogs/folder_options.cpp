@@ -1419,7 +1419,7 @@ DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconPath,
             cy = GetSystemMetrics(SM_CYICON);
         }
         hIcon = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
-                                    cx, cy, 0));
+                                 cx, cy, 0));
         FreeLibrary(hDLL);
     }
     else
