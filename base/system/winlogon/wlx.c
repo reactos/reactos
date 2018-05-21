@@ -105,7 +105,7 @@ GetDialogListEntry(HWND hwndDlg)
 }
 
 
-HWND
+VOID
 CloseAllDialogWindows(VOID)
 {
     PDIALOG_LIST_ENTRY Current;
