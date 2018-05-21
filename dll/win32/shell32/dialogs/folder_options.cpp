@@ -193,8 +193,7 @@ static HBITMAP BitmapFromIcon(HICON hIcon, INT cx, INT cy)
 
     HGDIOBJ hbmOld = SelectObject(hDC, hbm);
     {
-        RECT rc;
-        SetRect(&rc, 0, 0, cx, cy);
+        RECT rc = { 0, 0, cx, cy };
         FillRect(hDC, &rc, HBRUSH(COLOR_3DFACE + 1));
         if (hIcon)
         {
