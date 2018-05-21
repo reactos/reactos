@@ -1370,17 +1370,6 @@ InitializeFileTypesListCtrlColumns(HWND hDlgCtrl)
     SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 }
 
-INT
-FindItem(HWND hDlgCtrl, WCHAR * ItemName)
-{
-    LVFINDINFOW findInfo;
-    ZeroMemory(&findInfo, sizeof(LVFINDINFOW));
-
-    findInfo.flags = LVFI_STRING;
-    findInfo.psz = ItemName;
-    return ListView_FindItem(hDlgCtrl, 0, &findInfo);
-}
-
 static BOOL
 DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
 {
@@ -1410,7 +1399,7 @@ static inline HICON
 DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
               INT iIndex = 0, BOOL bSmall = FALSE)
 {
-    HICON hIconRet = NULL;
+    HICON hIcon = NULL;
 
     if (iIndex < 0)
     {
@@ -1429,7 +1418,7 @@ DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
             cx = GetSystemMetrics(SM_CXICON);
             cy = GetSystemMetrics(SM_CYICON);
         }
-        hIconRet = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
+        hIcon = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
                                     cx, cy, 0));
         FreeLibrary(hDLL);
     }
@@ -1437,15 +1426,15 @@ DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
     {
         // A positive value is icon index.
         if (bSmall)
-            ExtractIconExW(IconPath, iIndex, NULL, &hIconRet, 1);
+            ExtractIconExW(IconPath, iIndex, NULL, &hIcon, 1);
         else
-            ExtractIconExW(IconPath, iIndex, &hIconRet, NULL, 1);
+            ExtractIconExW(IconPath, iIndex, &hIcon, NULL, 1);
     }
-    return hIconRet;
+    return hIcon;
 }
 
 static void
-GetFileTypeIconsComma(PFOLDER_FILE_TYPE_ENTRY Entry, const WCHAR *IconLocation)
+DoFileTypeIconLocation(PFOLDER_FILE_TYPE_ENTRY Entry, const WCHAR *IconLocation)
 {
     // Expand the REG_EXPAND_SZ string by environment variables
     WCHAR szLocation[MAX_PATH + 32];
@@ -1469,18 +1458,19 @@ GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconLocation)
     {
         // It's an executable
         HMODULE hDLL = shell32_hInstance;
-        INT iIndex = IDI_SHELL_EXE;
+        const INT iIndex = IDI_SHELL_EXE;
         Entry->hIconLarge = LoadIconW(hDLL, MAKEINTRESOURCEW(iIndex));
         Entry->hIconSmall = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0));
-        return Entry->hIconLarge && Entry->hIconSmall;
     }
     else if (lstrcmpW(IconLocation, L"%1") == 0)
     {
         return FALSE;   // self icon
     }
-
-    GetFileTypeIconsComma(Entry, IconLocation);
+    else
+    {
+        DoFileTypeIconLocation(Entry, IconLocation);
+    }
 
     return Entry->hIconLarge && Entry->hIconSmall;
 }
@@ -1497,13 +1487,13 @@ GetFileTypeIconsByKey(HKEY hKey, PFOLDER_FILE_TYPE_ENTRY Entry)
         return FALSE;
 
     // Get the icon location
-    WCHAR szLocation[MAX_PATH + 32];
+    WCHAR szLocation[MAX_PATH + 32] = { 0 };
     DWORD dwSize = sizeof(szLocation);
     nResult = RegQueryValueExW(hDefIconKey, NULL, NULL, NULL, LPBYTE(szLocation), &dwSize);
 
     RegCloseKey(hDefIconKey);
 
-    if (nResult != ERROR_SUCCESS)
+    if (nResult != ERROR_SUCCESS || szLocation[0] == 0)
         return FALSE;
 
     return GetFileTypeIconsEx(Entry, szLocation);
@@ -2118,20 +2108,16 @@ FileTypesDlg_OnItemChanging(HWND hwndDlg, PFOLDER_FILE_TYPE_ENTRY pEntry)
     WCHAR Buffer[255];
     static HBITMAP s_hbmProgram = NULL;
 
-    /* format buffer */
+    // format buffer and set groupbox text
     CStringW strFormat(MAKEINTRESOURCEW(IDS_FILE_DETAILS));
     StringCchPrintfW(Buffer, _countof(Buffer), strFormat, &pEntry->FileExtension[1]);
-
-    /* update dialog */
     SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DETAILS_GROUPBOX, Buffer);
 
-    /* format buffer */
+    // format buffer and set description
     strFormat.LoadString(IDS_FILE_DETAILSADV);
     StringCchPrintfW(Buffer, _countof(Buffer), strFormat,
                      &pEntry->FileExtension[1], pEntry->FileDescription,
                      pEntry->FileDescription);
-
-    /* update dialog */
     SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
 
     // delete previous program image
