@@ -1753,26 +1753,18 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
 
 static
 PFOLDER_FILE_TYPE_ENTRY
-FindSelectedItem(HWND hDlgCtrl)
+FindSelectedItem(HWND hListView)
 {
-    INT Index, Count;
-    LVITEMW lvItem;
+    INT iItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
+    if (iItem == -1)
+        return NULL;
 
-    Count = ListView_GetItemCount(hDlgCtrl);
-
-    for (Index = 0; Index < Count; Index++)
-    {
-        ZeroMemory(&lvItem, sizeof(LVITEM));
-        lvItem.mask = LVIF_PARAM | LVIF_STATE;
-        lvItem.iItem = Index;
-        lvItem.stateMask = (UINT) - 1;
-
-        if (ListView_GetItem(hDlgCtrl, &lvItem))
-        {
-            if (lvItem.state & LVIS_SELECTED)
-                return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
-        }
-    }
+    LV_ITEMW lvItem;
+    ZeroMemory(&lvItem, sizeof(lvItem));
+    lvItem.mask = LVIF_PARAM;
+    lvItem.iItem = iItem;
+    if (ListView_GetItem(hListView, &lvItem))
+        return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
 
     return NULL;
 }
