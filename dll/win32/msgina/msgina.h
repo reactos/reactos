@@ -42,7 +42,6 @@ typedef struct
     HWND hStatusWindow;
     HANDLE LsaHandle;
     ULONG AuthenticationPackage;
-    DWORD AutoLogonState;
     BOOL bDisableCAD;
     BOOL bAutoAdminLogon;
     BOOL bDontDisplayLastUserName;

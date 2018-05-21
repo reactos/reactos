@@ -873,6 +873,8 @@ DoLogon(
     ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
     wcscpy(pgContext->Password, Password);
 
+    pgContext->bAutoAdminLogon = FALSE;
+
     result = TRUE;
 
 done:
@@ -944,8 +946,14 @@ LoggedOutWindowProc(
             pgContext = (PGINA_CONTEXT)lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pgContext);
 
-            if (!pgContext->bDontDisplayLastUserName)
+            if (pgContext->bAutoAdminLogon ||
+                !pgContext->bDontDisplayLastUserName)
                 SetDlgItemTextW(hwndDlg, IDC_USERNAME, pgContext->UserName);
+
+            if (pgContext->bAutoAdminLogon)
+                SetDlgItemTextW(hwndDlg, IDC_PASSWORD, pgContext->Password);
+
+            SetDomainComboBox(GetDlgItem(hwndDlg, IDC_LOGON_TO), pgContext);
 
             if (pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
@@ -953,12 +961,14 @@ LoggedOutWindowProc(
             if (!pgContext->bShutdownWithoutLogon)
                 EnableWindow(GetDlgItem(hwndDlg, IDC_SHUTDOWN), FALSE);
 
-            SetDomainComboBox(GetDlgItem(hwndDlg, IDC_LOGON_TO), pgContext);
-
             SetFocus(GetDlgItem(hwndDlg, pgContext->bDontDisplayLastUserName ? IDC_USERNAME : IDC_PASSWORD));
 
             /* Draw the logo bitmap */
             pgContext->hBitmap = LoadImageW(pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+
+            if (pgContext->bAutoAdminLogon)
+                PostMessage(GetDlgItem(hwndDlg, IDOK), BM_CLICK, 0, 0);
+
             return TRUE;
         }
 
