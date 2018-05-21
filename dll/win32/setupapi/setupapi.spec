@@ -28,8 +28,8 @@
 @ stdcall CM_Delete_DevNode_Key(long long long)
 @ stdcall CM_Delete_DevNode_Key_Ex(long long long ptr)
 @ stdcall CM_Delete_Range(int64 int64 ptr long)
-@ stub CM_Detect_Resource_Conflict
-@ stub CM_Detect_Resource_Conflict_Ex
+@ stdcall CM_Detect_Resource_Conflict(long long ptr long ptr long)
+@ stdcall CM_Detect_Resource_Conflict_Ex(long long ptr long ptr long ptr)
 @ stdcall CM_Disable_DevNode(long long)
 @ stdcall CM_Disable_DevNode_Ex(long long ptr)
 @ stdcall CM_Disconnect_Machine(ptr)

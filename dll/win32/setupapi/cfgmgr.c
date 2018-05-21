@@ -1549,6 +1549,55 @@ CM_Delete_Range(
 
 
 /***********************************************************************
+ * CM_Detect_Resource_Conflict [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Detect_Resource_Conflict(
+    _In_ DEVINST dnDevInst,
+    _In_ RESOURCEID ResourceID,
+    _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+    _In_ ULONG ResourceLen,
+    _Out_ PBOOL pbConflictDetected,
+    _In_ ULONG ulFlags)
+{
+    TRACE("CM_Detect_Resource_Conflict(%p %lu %p %lu %p 0x%lx)\n",
+          dnDevInst, ResourceID, ResourceData, ResourceLen,
+          pbConflictDetected, ulFlags);
+
+    return CM_Detect_Resource_Conflict_Ex(dnDevInst,
+                                          ResourceID,
+                                          ResourceData,
+                                          ResourceLen,
+                                          pbConflictDetected,
+                                          ulFlags,
+                                          NULL);
+}
+
+
+/***********************************************************************
+ * CM_Detect_Resource_Conflict_Ex [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CM_Detect_Resource_Conflict_Ex(
+    _In_ DEVINST dnDevInst,
+    _In_ RESOURCEID ResourceID,
+    _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+    _In_ ULONG ResourceLen,
+    _Out_ PBOOL pbConflictDetected,
+    _In_ ULONG ulFlags,
+    _In_opt_ HMACHINE hMachine)
+{
+    FIXME("CM_Detect_Resource_Conflict_Ex(%p %lu %p %lu %p 0x%lx %p)\n",
+          dnDevInst, ResourceID, ResourceData, ResourceLen,
+          pbConflictDetected, ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Disable_DevNode [SETUPAPI.@]
  */
 CONFIGRET
