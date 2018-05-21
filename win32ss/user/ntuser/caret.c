@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Caret functions
  * FILE:             win32ss/user/ntuser/caret.c
- * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ * PROGRAMERS:       Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -29,7 +30,7 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
        return;
     }
 
-    hdc = UserGetDCEx(pWnd, 0, DCX_USESTYLE | DCX_WINDOW);
+    hdc = UserGetDCEx(pWnd, NULL, DCX_CACHE | DCX_USESTYLE);
     if (!hdc)
     {
         ERR("GetDC failed\n");
