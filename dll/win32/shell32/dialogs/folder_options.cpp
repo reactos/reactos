@@ -1387,21 +1387,22 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
     if (*pszExt != L'.')
         return FALSE;
 
+    // open ".ext" key
     HKEY hKey;
-    LONG nResult = RegOpenKeyExW(HKEY_CLASSES_ROOT, pszExt, 0, KEY_READ, &hKey);
-    if (nResult != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, pszExt, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return FALSE;
 
-    WCHAR szValue[64];
+    // query "extfile" key name
+    WCHAR szValue[64] = { 0 };
     DWORD cbValue = sizeof(szValue);
-    nResult = RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(szValue), &cbValue);
+    RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(szValue), &cbValue);
     RegCloseKey(hKey);
-    if (nResult != ERROR_SUCCESS)
-        return FALSE;
 
+    // delete "extfile" key (if any)
     if (szValue[0])
         SHDeleteKeyW(HKEY_CLASSES_ROOT, szValue);
 
+    // delete ".ext" key
     return SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt) == ERROR_SUCCESS;
 }
 
@@ -2106,12 +2107,9 @@ FileTypesDlg_RemoveExt(HWND hwndDlg)
     ListView_GetItemText(hListView, iItem, 0, &szExt[1], _countof(szExt) - 1);
     CharLowerW(szExt);
 
-    if (DeleteExt(hwndDlg, szExt))
-    {
-        ListView_DeleteItem(hListView, iItem);
-        return TRUE;
-    }
-    return FALSE;
+    DeleteExt(hwndDlg, szExt);
+    ListView_DeleteItem(hListView, iItem);
+    return TRUE;
 }
 
 static inline PFOLDER_FILE_TYPE_ENTRY
