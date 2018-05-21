@@ -1396,7 +1396,7 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
 }
 
 static inline HICON
-DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
+DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconPath,
               INT iIndex = 0, BOOL bSmall = FALSE)
 {
     HICON hIcon = NULL;
@@ -1434,7 +1434,7 @@ DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconPath,
 }
 
 static void
-DoFileTypeIconLocation(PFOLDER_FILE_TYPE_ENTRY Entry, const WCHAR *IconLocation)
+DoFileTypeIconLocation(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
 {
     // Expand the REG_EXPAND_SZ string by environment variables
     WCHAR szLocation[MAX_PATH + 32];
@@ -1449,7 +1449,7 @@ DoFileTypeIconLocation(PFOLDER_FILE_TYPE_ENTRY Entry, const WCHAR *IconLocation)
 }
 
 static BOOL
-GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, WCHAR *IconLocation)
+GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
 {
     Entry->hIconLarge = Entry->hIconSmall = NULL;
 
@@ -1500,7 +1500,7 @@ GetFileTypeIconsByKey(HKEY hKey, PFOLDER_FILE_TYPE_ENTRY Entry)
 }
 
 static BOOL
-QueryFileDescription(const WCHAR *ProgramPath, WCHAR *pszName, INT cchName)
+QueryFileDescription(LPCWSTR ProgramPath, LPWSTR pszName, INT cchName)
 {
     SHFILEINFOW FileInfo = { 0 };
     if (SHGetFileInfoW(ProgramPath, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
@@ -1513,7 +1513,7 @@ QueryFileDescription(const WCHAR *ProgramPath, WCHAR *pszName, INT cchName)
 }
 
 static BOOL
-InsertFileType(HWND hListView, WCHAR *szName, INT iItem, WCHAR *szFile)
+InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
 {
     PFOLDER_FILE_TYPE_ENTRY Entry;
     HKEY hKey;
