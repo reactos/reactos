@@ -16,15 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include "d3dx9_private.h"
-
-#include <float.h>
-#include <assert.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
+#include "d3dx9_36_private.h"
 
 /* ReactOS FIXME: Insect */
 #define fmin min

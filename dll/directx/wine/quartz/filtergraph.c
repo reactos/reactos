@@ -18,28 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "dshow.h"
-#include "wine/debug.h"
 #include "quartz_private.h"
-#include "ole2.h"
-#include "olectl.h"
-#include "strmif.h"
-#include "vfwmsgs.h"
-#include "evcode.h"
-#include "wine/unicode.h"
-
-
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct {
     HWND     hWnd;      /* Target window */
@@ -200,6 +179,7 @@ typedef struct _IFilterGraphImpl {
     GUID timeformatseek;
     REFERENCE_TIME start_time;
     REFERENCE_TIME pause_time;
+    LONGLONG stop_position;
     LONG recursioncount;
     IUnknown *pSite;
     LONG version;
@@ -1048,7 +1028,6 @@ static HRESULT WINAPI FilterGraph2_Connect(IFilterGraph2 *iface, IPin *ppinOut, 
         if (IsEqualGUID(&clsid, &FilterCLSID)) {
             /* Skip filter (same as the one the output pin belongs to) */
             IBaseFilter_Release(pfilter);
-            pfilter = NULL;
             goto error;
         }
 
@@ -2479,6 +2458,52 @@ static HRESULT WINAPI MediaSeeking_GetDuration(IMediaSeeking *iface, LONGLONG *p
     return hr;
 }
 
+static HRESULT WINAPI MediaSeeking_GetStopPosition(IMediaSeeking *iface, LONGLONG *pStop)
+{
+    IFilterGraphImpl *This = impl_from_IMediaSeeking(iface);
+    HRESULT hr = S_OK;
+
+    TRACE("(%p/%p)->(%p)\n", This, iface, pStop);
+
+    if (!pStop)
+        return E_POINTER;
+
+    EnterCriticalSection(&This->cs);
+    if (This->stop_position < 0)
+        /* Stop position not set, use duration instead */
+        hr = IMediaSeeking_GetDuration(iface, pStop);
+    else
+        *pStop = This->stop_position;
+    LeaveCriticalSection(&This->cs);
+
+    return hr;
+}
+
+static HRESULT WINAPI MediaSeeking_GetCurrentPosition(IMediaSeeking *iface, LONGLONG *pCurrent)
+{
+    IFilterGraphImpl *This = impl_from_IMediaSeeking(iface);
+    LONGLONG time = 0;
+
+    if (!pCurrent)
+        return E_POINTER;
+
+    EnterCriticalSection(&This->cs);
+    if (This->state == State_Running && This->refClock && This->start_time >= 0)
+    {
+        IReferenceClock_GetTime(This->refClock, &time);
+        if (time)
+            time -= This->start_time;
+    }
+    if (This->pause_time > 0)
+        time += This->pause_time;
+    *pCurrent = time;
+    LeaveCriticalSection(&This->cs);
+
+    TRACE("Time: %u.%03u\n", (DWORD)(*pCurrent / 10000000), (DWORD)((*pCurrent / 10000)%1000));
+
+    return S_OK;
+}
+
 static HRESULT WINAPI MediaSeeking_ConvertTimeFormat(IMediaSeeking *iface, LONGLONG *pTarget,
         const GUID *pTargetFormat, LONGLONG Source, const GUID *pSourceFormat)
 {
@@ -2531,6 +2556,11 @@ static HRESULT WINAPI MediaSeeking_SetPositions(IMediaSeeking *iface, LONGLONG *
         (dwCurrentFlags & 0x7) != AM_SEEKING_NoPositioning)
         FIXME("Adjust method %x not handled yet!\n", dwCurrentFlags & 0x7);
 
+    if ((dwStopFlags & 0x7) == AM_SEEKING_AbsolutePositioning)
+        This->stop_position = *pStop;
+    else if ((dwStopFlags & 0x7) != AM_SEEKING_NoPositioning)
+        FIXME("Stop position not handled yet!\n");
+
     if (state == State_Running && !(dwCurrentFlags & AM_SEEKING_NoFlush))
         IMediaControl_Pause(&This->IMediaControl_iface);
     args.current = pCurrent;
@@ -2548,68 +2578,16 @@ static HRESULT WINAPI MediaSeeking_SetPositions(IMediaSeeking *iface, LONGLONG *
     return hr;
 }
 
-static HRESULT WINAPI found_getposition(IFilterGraphImpl *This, IMediaSeeking *seek, DWORD_PTR pargs)
-{
-    struct pos_args *args = (void*)pargs;
-
-    return IMediaSeeking_GetPositions(seek, args->current, args->stop);
-}
-
 static HRESULT WINAPI MediaSeeking_GetPositions(IMediaSeeking *iface, LONGLONG *pCurrent,
         LONGLONG *pStop)
 {
     IFilterGraphImpl *This = impl_from_IMediaSeeking(iface);
-    struct pos_args args;
-    LONGLONG time = 0;
     HRESULT hr;
 
     TRACE("(%p/%p)->(%p, %p)\n", This, iface, pCurrent, pStop);
-
-    args.current = pCurrent;
-    args.stop = pStop;
-    EnterCriticalSection(&This->cs);
-    hr = all_renderers_seek(This, found_getposition, (DWORD_PTR)&args);
-    if (This->state == State_Running && This->refClock && This->start_time >= 0)
-    {
-        IReferenceClock_GetTime(This->refClock, &time);
-        if (time)
-            time -= This->start_time;
-    }
-    if (This->pause_time > 0)
-        time += This->pause_time;
-    *pCurrent += time;
-    LeaveCriticalSection(&This->cs);
-
-    return hr;
-}
-
-static HRESULT WINAPI MediaSeeking_GetCurrentPosition(IMediaSeeking *iface, LONGLONG *pCurrent)
-{
-    LONGLONG time;
-    HRESULT hr;
-
-    if (!pCurrent)
-        return E_POINTER;
-
-    hr = MediaSeeking_GetPositions(iface, pCurrent, &time);
-
-    TRACE("Time: %u.%03u\n", (DWORD)(*pCurrent / 10000000), (DWORD)((*pCurrent / 10000)%1000));
-
-    return hr;
-}
-
-static HRESULT WINAPI MediaSeeking_GetStopPosition(IMediaSeeking *iface, LONGLONG *pStop)
-{
-    IFilterGraphImpl *This = impl_from_IMediaSeeking(iface);
-    LONGLONG time;
-    HRESULT hr;
-
-    TRACE("(%p/%p)->(%p)\n", This, iface, pStop);
-
-    if (!pStop)
-        return E_POINTER;
-
-    hr = MediaSeeking_GetPositions(iface, &time, pStop);
+    hr = IMediaSeeking_GetCurrentPosition(iface, pCurrent);
+    if (SUCCEEDED(hr))
+        hr = IMediaSeeking_GetStopPosition(iface, pStop);
 
     return hr;
 }
@@ -5735,6 +5713,7 @@ HRESULT FilterGraph_create(IUnknown *pUnkOuter, LPVOID *ppObj)
     fimpl->nItfCacheEntries = 0;
     memcpy(&fimpl->timeformatseek, &TIME_FORMAT_MEDIA_TIME, sizeof(GUID));
     fimpl->start_time = fimpl->pause_time = 0;
+    fimpl->stop_position = -1;
     fimpl->punkFilterMapper2 = NULL;
     fimpl->recursioncount = 0;
     fimpl->version = 0;

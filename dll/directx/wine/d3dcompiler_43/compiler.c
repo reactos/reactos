@@ -17,13 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#include "config.h"
-#include "wine/port.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-
 #include "d3dcompiler_private.h"
+#include "wine/unicode.h"
 #include "wine/wpp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dcompiler);
@@ -792,11 +787,3 @@ HRESULT WINAPI D3DCompileFromFile(const WCHAR *filename, const D3D_SHADER_MACRO 
 
     return E_NOTIMPL;
 }
-
-#ifndef __REACTOS__
-HRESULT WINAPI D3DLoadModule(const void *data, SIZE_T size, ID3D11Module **module)
-{
-    FIXME("data %p, size %lu, module %p stub!\n", data, size, module);
-    return E_NOTIMPL;
-}
-#endif

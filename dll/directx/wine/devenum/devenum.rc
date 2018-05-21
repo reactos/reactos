@@ -18,12 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "devenum_private.h"
+#include <windef.h>
 
-#pragma makedep po
+#include "resource.h"
+
+#pragma code_page(65001)
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
@@ -44,6 +43,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION 6,5,1,902
 #define WINE_PRODUCTVERSION_STR "6.5"
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>
 
 1 WINE_REGISTRY devenum_classes.rgs

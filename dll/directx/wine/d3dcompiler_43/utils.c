@@ -21,11 +21,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdio.h>
-
 #include "d3dcompiler_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dcompiler);

@@ -19,15 +19,6 @@
 #ifndef __WINE_DPLAYX_MESSAGES__
 #define __WINE_DPLAYX_MESSAGES__
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "dplay.h"
-#include "rpc.h" /* For GUID */
-
-#include "dplay_global.h"
-
 DWORD CreateLobbyMessageReceptionThread( HANDLE hNotifyEvent, HANDLE hStart,
                                          HANDLE hDeath, HANDLE hConnRead ) DECLSPEC_HIDDEN;
 
@@ -48,7 +39,7 @@ void DP_MSG_ToSelf( IDirectPlayImpl *This, DPID dpidSelf ) DECLSPEC_HIDDEN;
 #define DPMSG_DEFAULT_WAIT_TIME DPMSG_WAIT_30_SECS
 
 /* Message types etc. */
-#include "pshpack1.h"
+#include <pshpack1.h>
 
 /* Non provided messages for DPLAY - guess work which may be wrong :( */
 #define DPMSGCMD_ENUMSESSIONSREPLY    1
@@ -218,6 +209,6 @@ typedef struct tagDPMSG_FORWARDADDPLAYERNACK
 } DPMSG_FORWARDADDPLAYERNACK, *LPDPMSG_FORWARDADDPLAYERNACK;
 typedef const DPMSG_FORWARDADDPLAYERNACK* LPCDPMSG_FORWARDADDPLAYERNACK;
 
-#include "poppack.h"
+#include <poppack.h>
 
-#endif
+#endif /* __WINE_DPLAYX_MESSAGES__ */

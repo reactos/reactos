@@ -20,10 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 static inline struct d3d9_swapchain *impl_from_IDirect3DSwapChain9Ex(IDirect3DSwapChain9Ex *iface)
 {
@@ -137,7 +134,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_swapchain_Present(IDirect3DSwapChai
 
     wined3d_mutex_lock();
     hr = wined3d_swapchain_present(swapchain->wined3d_swapchain,
-            src_rect, dst_rect, dst_window_override, 0, flags);
+            src_rect, dst_rect, dst_window_override, flags);
     wined3d_mutex_unlock();
 
     return hr;
@@ -335,7 +332,7 @@ static const struct IDirect3DSwapChain9ExVtbl d3d9_swapchain_vtbl =
 
 static void STDMETHODCALLTYPE d3d9_swapchain_wined3d_object_released(void *parent)
 {
-    heap_free(parent);
+    HeapFree(GetProcessHeap(), 0, parent);
 }
 
 static const struct wined3d_parent_ops d3d9_swapchain_wined3d_parent_ops =
@@ -374,13 +371,13 @@ HRESULT d3d9_swapchain_create(struct d3d9_device *device, struct wined3d_swapcha
     struct d3d9_swapchain *object;
     HRESULT hr;
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = HeapAlloc(GetProcessHeap(),  HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     if (FAILED(hr = swapchain_init(object, device, desc)))
     {
         WARN("Failed to initialize swapchain, hr %#x.\n", hr);
-        heap_free(object);
+        HeapFree(GetProcessHeap(), 0, object);
         return hr;
     }
 

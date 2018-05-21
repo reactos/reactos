@@ -18,8 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "config.h"
-#include "wine/port.h"
+
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -35,7 +34,7 @@ ULONG CDECL wined3d_palette_incref(struct wined3d_palette *palette)
 
 static void wined3d_palette_destroy_object(void *object)
 {
-    heap_free(object);
+    HeapFree(GetProcessHeap(), 0, object);
 }
 
 ULONG CDECL wined3d_palette_decref(struct wined3d_palette *palette)
@@ -168,13 +167,14 @@ HRESULT CDECL wined3d_palette_create(struct wined3d_device *device, DWORD flags,
     TRACE("device %p, flags %#x, entry_count %u, entries %p, palette %p.\n",
             device, flags, entry_count, entries, palette);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
         return E_OUTOFMEMORY;
 
     if (FAILED(hr = wined3d_palette_init(object, device, flags, entry_count, entries)))
     {
         WARN("Failed to initialize palette, hr %#x.\n", hr);
-        heap_free(object);
+        HeapFree(GetProcessHeap(), 0, object);
         return hr;
     }
 

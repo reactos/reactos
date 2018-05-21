@@ -19,14 +19,33 @@
  *
  */
 
-#ifndef __WINE_D3DX9_PRIVATE_H
-#define __WINE_D3DX9_PRIVATE_H
+#ifndef __WINE_D3DX9_36_PRIVATE_H
+#define __WINE_D3DX9_36_PRIVATE_H
 
-#define NONAMELESSUNION
-#include "wine/debug.h"
+#include <config.h>
+#include <wine/port.h>
+
+#include <assert.h>
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
-#include "d3dx9.h"
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <d3dx9.h>
+
+#include <wine/unicode.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 #define ULONG64_MAX (~(ULONG64)0)
 
@@ -390,4 +409,4 @@ const struct ctab_constant *d3dx_shader_get_ctab_constant(ID3DXConstantTable *if
 
 HRESULT create_dummy_skin(ID3DXSkinInfo **iface) DECLSPEC_HIDDEN;
 
-#endif /* __WINE_D3DX9_PRIVATE_H */
+#endif /* __WINE_D3DX9_36_PRIVATE_H */

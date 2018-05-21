@@ -20,12 +20,6 @@
 
 #include "quartz_private.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include <assert.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
-
 typedef struct SystemClockAdviseEntry SystemClockAdviseEntry;
 struct SystemClockAdviseEntry {
   SystemClockAdviseEntry* next;
@@ -229,7 +223,7 @@ static ULONG WINAPI SystemClockImpl_Release(IReferenceClock* iface) {
   ULONG ref = InterlockedDecrement(&This->ref);
   TRACE("(%p): ReleaseRef to %d\n", This, ref);
   if (ref == 0) {
-    if (This->adviseThreadActive && SystemClockPostMessageToAdviseThread(This, ADVISE_EXIT)) {
+    if (SystemClockPostMessageToAdviseThread(This, ADVISE_EXIT)) {
       WaitForSingleObject(This->adviseThread, INFINITE);
       CloseHandle(This->adviseThread);
     }

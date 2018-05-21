@@ -17,12 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "ddraw_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 /*****************************************************************************
  * light_update
@@ -133,7 +128,7 @@ static ULONG WINAPI d3d_light_Release(IDirect3DLight *iface)
 
     if (!ref)
     {
-        heap_free(light);
+        HeapFree(GetProcessHeap(), 0, light);
         return 0;
     }
     return ref;

@@ -16,9 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
@@ -1242,7 +1239,7 @@ static void *shader_sm4_init(const DWORD *byte_code, size_t byte_code_size,
         return NULL;
     }
 
-    if (!(priv = heap_alloc(sizeof(*priv))))
+    if (!(priv = HeapAlloc(GetProcessHeap(), 0, sizeof(*priv))))
     {
         ERR("Failed to allocate private data\n");
         return NULL;
@@ -1311,9 +1308,9 @@ static void shader_sm4_free(void *data)
     list_move_head(&priv->src_free, &priv->src);
     LIST_FOR_EACH_ENTRY_SAFE(e1, e2, &priv->src_free, struct wined3d_shader_src_param_entry, entry)
     {
-        heap_free(e1);
+        HeapFree(GetProcessHeap(), 0, e1);
     }
-    heap_free(priv);
+    HeapFree(GetProcessHeap(), 0, priv);
 }
 
 static struct wined3d_shader_src_param *get_src_param(struct wined3d_sm4_data *priv)
@@ -1328,7 +1325,7 @@ static struct wined3d_shader_src_param *get_src_param(struct wined3d_sm4_data *p
     }
     else
     {
-        if (!(e = heap_alloc(sizeof(*e))))
+        if (!(e = HeapAlloc(GetProcessHeap(), 0, sizeof(*e))))
             return NULL;
         elem = &e->entry;
     }

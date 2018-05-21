@@ -20,12 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "d3drm_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3drm);
 
 static const char* get_IID_string(const GUID* guid)
 {
@@ -213,7 +208,7 @@ static inline struct d3drm *impl_from_IDirect3DRM3(IDirect3DRM3 *iface)
 
 static void d3drm_destroy(struct d3drm *d3drm)
 {
-    heap_free(d3drm);
+    HeapFree(GetProcessHeap(), 0, d3drm);
     TRACE("d3drm object %p is being destroyed.\n", d3drm);
 }
 
@@ -2308,7 +2303,7 @@ HRESULT WINAPI Direct3DRMCreate(IDirect3DRM **d3drm)
 
     TRACE("d3drm %p.\n", d3drm);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->IDirect3DRM_iface.lpVtbl = &d3drm1_vtbl;

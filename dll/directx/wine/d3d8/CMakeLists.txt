@@ -17,7 +17,7 @@ list(APPEND SOURCE
     texture.c
     vertexdeclaration.c
     volume.c
-    precomp.h)
+    d3d8_private.h)
 
 add_library(d3d8 SHARED
     ${SOURCE}
@@ -28,5 +28,5 @@ add_library(d3d8 SHARED
 set_module_type(d3d8 win32dll UNICODE)
 target_link_libraries(d3d8 uuid wine)
 add_importlibs(d3d8 d3dwine msvcrt kernel32 ntdll)
-add_pch(d3d8 precomp.h SOURCE)
+add_pch(d3d8 d3d8_private.h SOURCE)
 add_cd_file(TARGET d3d8 DESTINATION reactos/system32 FOR all)

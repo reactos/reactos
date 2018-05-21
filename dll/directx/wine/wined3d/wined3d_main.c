@@ -22,11 +22,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include "initguid.h"
 #include "wined3d_private.h"
+
+#include <winreg.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(winediag);
@@ -72,7 +70,7 @@ static CRITICAL_SECTION wined3d_wndproc_cs = {&wined3d_wndproc_cs_debug, -1, 0, 
  * where appropriate. */
 struct wined3d_settings wined3d_settings =
 {
-    TRUE,           /* Multithreaded CS by default. */
+    FALSE,          /* No multithreaded CS by default. */
     FALSE,          /* explicit_gl_version */
     MAKEDWORD_VERSION(1, 0), /* Default to legacy OpenGL */
     TRUE,           /* Use of GLSL enabled by default */
@@ -81,7 +79,6 @@ struct wined3d_settings wined3d_settings =
     PCI_DEVICE_NONE,/* PCI Device ID */
     0,              /* The default of memory is set in init_driver_info */
     NULL,           /* No wine logo by default */
-    TRUE,           /* Prefer multisample textures to multisample renderbuffers. */
     ~0u,            /* Don't force a specific sample count by default. */
     FALSE,          /* No strict draw ordering. */
     FALSE,          /* Don't range check relative addressing indices in float constants. */
@@ -99,7 +96,8 @@ struct wined3d * CDECL wined3d_create(DWORD flags)
     struct wined3d *object;
     HRESULT hr;
 
-    if (!(object = heap_alloc_zero(FIELD_OFFSET(struct wined3d, adapters[1]))))
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(struct wined3d, adapters[1]));
+    if (!object)
     {
         ERR("Failed to allocate wined3d object memory.\n");
         return NULL;
@@ -112,7 +110,7 @@ struct wined3d * CDECL wined3d_create(DWORD flags)
     if (FAILED(hr))
     {
         WARN("Failed to initialize wined3d object, hr %#x.\n", hr);
-        heap_free(object);
+        HeapFree(GetProcessHeap(), 0, object);
         return NULL;
     }
 
@@ -280,13 +278,10 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
         {
             size_t len = strlen(buffer) + 1;
 
-            if (!(wined3d_settings.logo = heap_alloc(len)))
-                ERR("Failed to allocate logo path memory.\n");
-            else
-                memcpy(wined3d_settings.logo, buffer, len);
+            wined3d_settings.logo = HeapAlloc(GetProcessHeap(), 0, len);
+            if (!wined3d_settings.logo) ERR("Failed to allocate logo path memory.\n");
+            else memcpy(wined3d_settings.logo, buffer, len);
         }
-        if (!get_config_key_dword(hkey, appkey, "MultisampleTextures", &wined3d_settings.multisample_textures))
-            ERR_(winediag)("Setting multisample textures to %#x.\n", wined3d_settings.multisample_textures);
         if (!get_config_key_dword(hkey, appkey, "SampleCount", &wined3d_settings.sample_count))
             ERR_(winediag)("Forcing sample count to %u. This may not be compatible with all applications.\n",
                     wined3d_settings.sample_count);
@@ -326,8 +321,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
 
-    wined3d_dxtn_init();
-
     return TRUE;
 }
 
@@ -352,16 +345,13 @@ static BOOL wined3d_dll_destroy(HINSTANCE hInstDLL)
          * these entries. */
         WARN("Leftover wndproc table entry %p.\n", &wndproc_table.entries[i]);
     }
-    heap_free(wndproc_table.entries);
+    HeapFree(GetProcessHeap(), 0, wndproc_table.entries);
 
-    heap_free(wined3d_settings.logo);
+    HeapFree(GetProcessHeap(), 0, wined3d_settings.logo);
     UnregisterClassA(WINED3D_OPENGL_WINDOW_CLASS_NAME, hInstDLL);
 
     DeleteCriticalSection(&wined3d_wndproc_cs);
     DeleteCriticalSection(&wined3d_cs);
-
-    wined3d_dxtn_free();
-
     return TRUE;
 }
 
@@ -514,11 +504,6 @@ void wined3d_unregister_window(HWND window)
     if (entry != last) *entry = *last;
 
     wined3d_wndproc_mutex_unlock();
-}
-
-void CDECL wined3d_strictdrawing_set(int value)
-{
-    wined3d_settings.strict_draw_ordering = value;
 }
 
 /* At process attach */

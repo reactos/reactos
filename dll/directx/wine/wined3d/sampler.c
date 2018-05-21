@@ -17,9 +17,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -47,7 +44,7 @@ static void wined3d_sampler_destroy_object(void *object)
         context_release(context);
     }
 
-    heap_free(sampler);
+    HeapFree(GetProcessHeap(), 0, sampler);
 }
 
 ULONG CDECL wined3d_sampler_decref(struct wined3d_sampler *sampler)
@@ -144,7 +141,7 @@ HRESULT CDECL wined3d_sampler_create(struct wined3d_device *device, const struct
             || desc->mip_filter > WINED3D_TEXF_LINEAR)
         return WINED3DERR_INVALIDCALL;
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     wined3d_sampler_init(object, device, desc, parent, parent_ops);

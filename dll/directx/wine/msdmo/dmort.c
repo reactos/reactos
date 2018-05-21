@@ -16,19 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#include "precomp.h"
 
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
-#include "mediaobj.h"
-#include "dmort.h"
-
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msdmo);
+#include <mediaobj.h>
+#include <dmort.h>
 
 /***********************************************************************
  *        MoCreateMediaType    (MSDMO.@)

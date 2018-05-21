@@ -19,29 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
-
 #include "quartz_private.h"
 
-#include "ole2.h"
-#include "olectl.h"
-#include "strmif.h"
-#include "wine/unicode.h"
-#include "uuids.h"
-#include "initguid.h"
-#include "fil_data.h"
-
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
+#include <initguid.h>
+#include <fil_data.h>
 
 #undef ARRAYSIZE
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))

@@ -20,10 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 static inline struct d3d9_query *impl_from_IDirect3DQuery9(IDirect3DQuery9 *iface)
 {
@@ -72,7 +69,7 @@ static ULONG WINAPI d3d9_query_Release(IDirect3DQuery9 *iface)
         wined3d_mutex_unlock();
 
         IDirect3DDevice9Ex_Release(query->parent_device);
-        heap_free(query);
+        HeapFree(GetProcessHeap(), 0, query);
     }
     return refcount;
 }

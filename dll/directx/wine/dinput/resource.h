@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "shlobj.h"
-
 #define IDD_CONFIGUREDEVICES                    1
 
 #define IDC_DEVICETEXT                          20

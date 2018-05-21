@@ -19,10 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include "dmusic_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
+#include <assert.h>
 
 typedef struct SynthPortImpl {
     IDirectMusicPort IDirectMusicPort_iface;

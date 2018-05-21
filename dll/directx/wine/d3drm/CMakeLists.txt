@@ -15,7 +15,7 @@ list(APPEND SOURCE
     meshbuilder.c
     texture.c
     viewport.c
-    precomp.h)
+    d3drm_private.h)
 
 add_library(d3drm SHARED
     ${SOURCE}
@@ -26,5 +26,5 @@ add_library(d3drm SHARED
 set_module_type(d3drm win32dll UNICODE)
 target_link_libraries(d3drm dxguid uuid wine)
 add_importlibs(d3drm ddraw d3dxof msvcrt kernel32 ntdll)
-add_pch(d3drm precomp.h SOURCE)
+add_pch(d3drm d3drm_private.h SOURCE)
 add_cd_file(TARGET d3drm DESTINATION reactos/system32 FOR all)

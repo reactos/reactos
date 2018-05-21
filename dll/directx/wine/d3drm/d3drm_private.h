@@ -21,17 +21,28 @@
 #ifndef __D3DRM_PRIVATE_INCLUDED__
 #define __D3DRM_PRIVATE_INCLUDED__
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
+#define NONAMELESSUNION
+
 #include <assert.h>
 #include <math.h>
-#include "dxfile.h"
-#include "d3drmwin.h"
-#include "rmxfguid.h"
-#include "wine/debug.h"
-#include "wine/heap.h"
-#include "wine/list.h"
+
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <d3drm.h>
+#include <dxfile.h>
+#include <d3drmwin.h>
+#include <rmxfguid.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(d3drm);
+
+#include <wine/list.h>
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))

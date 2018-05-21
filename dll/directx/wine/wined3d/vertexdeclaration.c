@@ -22,8 +22,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_decl);
@@ -54,8 +52,8 @@ static void wined3d_vertex_declaration_destroy_object(void *object)
 {
     struct wined3d_vertex_declaration *declaration = object;
 
-    heap_free(declaration->elements);
-    heap_free(declaration);
+    HeapFree(GetProcessHeap(), 0, declaration->elements);
+    HeapFree(GetProcessHeap(), 0, declaration);
 }
 
 ULONG CDECL wined3d_vertex_declaration_decref(struct wined3d_vertex_declaration *declaration)
@@ -114,15 +112,6 @@ static BOOL declaration_element_valid_ffp(const struct wined3d_vertex_element *e
                 case WINED3DFMT_R16G16B16A16_SINT:
                 case WINED3DFMT_R16G16_FLOAT:
                 case WINED3DFMT_R16G16B16A16_FLOAT:
-                    return TRUE;
-                default:
-                    return FALSE;
-            }
-
-        case WINED3D_DECL_USAGE_BLEND_INDICES:
-            switch(element->format)
-            {
-                case WINED3DFMT_R8G8B8A8_UINT:
                     return TRUE;
                 default:
                     return FALSE;
@@ -197,7 +186,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
     declaration->parent = parent;
     declaration->parent_ops = parent_ops;
     declaration->device = device;
-    if (!(declaration->elements = heap_calloc(element_count, sizeof(*declaration->elements))))
+    if (!(declaration->elements = wined3d_calloc(element_count, sizeof(*declaration->elements))))
     {
         ERR("Failed to allocate elements memory.\n");
         return E_OUTOFMEMORY;
@@ -232,7 +221,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
         {
             FIXME("The application tries to use an unsupported format (%s), returning E_FAIL.\n",
                     debug_d3dformat(elements[i].format));
-            heap_free(declaration->elements);
+            HeapFree(GetProcessHeap(), 0, declaration->elements);
             return E_FAIL;
         }
 
@@ -256,7 +245,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
         if (e->offset & 0x3)
         {
             WARN("Declaration element %u is not 4 byte aligned(%u), returning E_FAIL.\n", i, e->offset);
-            heap_free(declaration->elements);
+            HeapFree(GetProcessHeap(), 0, declaration->elements);
             return E_FAIL;
         }
 
@@ -279,14 +268,15 @@ HRESULT CDECL wined3d_vertex_declaration_create(struct wined3d_device *device,
     TRACE("device %p, elements %p, element_count %u, parent %p, parent_ops %p, declaration %p.\n",
             device, elements, element_count, parent, parent_ops, declaration);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if(!object)
         return E_OUTOFMEMORY;
 
     hr = vertexdeclaration_init(object, device, elements, element_count, parent, parent_ops);
     if (FAILED(hr))
     {
         WARN("Failed to initialize vertex declaration, hr %#x.\n", hr);
-        heap_free(object);
+        HeapFree(GetProcessHeap(), 0, object);
         return hr;
     }
 
@@ -354,7 +344,7 @@ static unsigned int convert_fvf_to_declaration(const struct wined3d_gl_info *gl_
            has_psize + has_diffuse + has_specular + num_textures;
 
     state.gl_info = gl_info;
-    if (!(state.elements = heap_calloc(size, sizeof(*state.elements))))
+    if (!(state.elements = wined3d_calloc(size, sizeof(*state.elements))))
         return ~0u;
     state.offset = 0;
     state.idx = 0;
@@ -453,6 +443,6 @@ HRESULT CDECL wined3d_vertex_declaration_create_from_fvf(struct wined3d_device *
     if (size == ~0U) return E_OUTOFMEMORY;
 
     hr = wined3d_vertex_declaration_create(device, elements, size, parent, parent_ops, declaration);
-    heap_free(elements);
+    HeapFree(GetProcessHeap(), 0, elements);
     return hr;
 }

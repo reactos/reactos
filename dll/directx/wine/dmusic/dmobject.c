@@ -20,13 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#include "objbase.h"
-#include "dmusici.h"
-#include "dmobject.h"
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dmobj);
+#include "dmusic_private.h"
 
 /* Generic IDirectMusicObject methods */
 static inline struct dmobject *impl_from_IDirectMusicObject(IDirectMusicObject *iface)

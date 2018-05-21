@@ -16,12 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "ddraw_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 /*****************************************************************************
  * IDirectDrawPalette::QueryInterface
@@ -100,7 +95,7 @@ static ULONG WINAPI ddraw_palette_Release(IDirectDrawPalette *iface)
             IUnknown_Release(palette->ifaceToRelease);
         wined3d_mutex_unlock();
 
-        heap_free(palette);
+        HeapFree(GetProcessHeap(), 0, palette);
     }
 
     return ref;

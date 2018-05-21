@@ -19,6 +19,7 @@ list(APPEND SOURCE
     cs.c
     device.c
     directx.c
+    drawprim.c
     dxtn.c
     gl_compat.c
     glsl_shader.c
@@ -39,7 +40,7 @@ list(APPEND SOURCE
     vertexdeclaration.c
     view.c
     wined3d_main.c
-    precomp.h)
+    wined3d_private.h)
 
 add_library(d3dwine SHARED
     ${SOURCE}
@@ -49,5 +50,5 @@ add_library(d3dwine SHARED
 set_module_type(d3dwine win32dll)
 target_link_libraries(d3dwine wine)
 add_importlibs(d3dwine user32 opengl32 gdi32 advapi32 msvcrt kernel32 ntdll)
-add_pch(d3dwine precomp.h SOURCE)
+add_pch(d3dwine wined3d_private.h SOURCE)
 add_cd_file(TARGET d3dwine DESTINATION reactos/system32 FOR all)

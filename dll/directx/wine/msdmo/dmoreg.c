@@ -17,22 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#include "precomp.h"
 
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "objbase.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "initguid.h"
-#include "dmo.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msdmo);
+#include <winuser.h>
+#include <winreg.h>
+#include <wine/unicode.h>
+#include <dmo.h>
 
 #define MSDMO_MAJOR_VERSION 6
 

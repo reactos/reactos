@@ -18,12 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "d3drm_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3drm);
 
 static inline struct d3drm_face *impl_from_IDirect3DRMFace(IDirect3DRMFace *iface)
 {
@@ -82,7 +77,7 @@ static ULONG WINAPI d3drm_face1_Release(IDirect3DRMFace *iface)
     if (!refcount)
     {
         d3drm_object_cleanup((IDirect3DRMObject *)iface, &face->obj);
-        heap_free(face);
+        HeapFree(GetProcessHeap(), 0, face);
     }
 
     return refcount;
@@ -627,7 +622,7 @@ HRESULT d3drm_face_create(struct d3drm_face **face)
 
     TRACE("face %p.\n", face);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->IDirect3DRMFace_iface.lpVtbl = &d3drm_face1_vtbl;

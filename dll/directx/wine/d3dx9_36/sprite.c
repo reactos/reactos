@@ -17,12 +17,7 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include "d3dx9_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
+#include "d3dx9_36_private.h"
 
 /* the combination of all possible D3DXSPRITE flags */
 #define D3DXSPRITE_FLAGLIMIT 511

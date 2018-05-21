@@ -18,10 +18,8 @@
  */
 
 #include "qedit_private.h"
-#include "rpcproxy.h"
-#include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(qedit);
+#include <rpcproxy.h>
 
 static HINSTANCE instance;
 

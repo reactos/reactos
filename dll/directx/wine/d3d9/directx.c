@@ -19,10 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 static inline struct d3d9 *impl_from_IDirect3D9Ex(IDirect3D9Ex *iface)
 {
@@ -86,7 +83,7 @@ static ULONG WINAPI d3d9_Release(IDirect3D9Ex *iface)
         wined3d_decref(d3d9->wined3d);
         wined3d_mutex_unlock();
 
-        heap_free(d3d9);
+        HeapFree(GetProcessHeap(), 0, d3d9);
     }
 
     return refcount;
@@ -400,14 +397,15 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_CreateDevice(IDirect3D9Ex *iface, U
     TRACE("iface %p, adapter %u, device_type %#x, focus_window %p, flags %#x, parameters %p, device %p.\n",
             iface, adapter, device_type, focus_window, flags, parameters, device);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
         return E_OUTOFMEMORY;
 
     hr = device_init(object, d3d9, d3d9->wined3d, adapter, device_type, focus_window, flags, parameters, NULL);
     if (FAILED(hr))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);
-        heap_free(object);
+        HeapFree(GetProcessHeap(), 0, object);
         return hr;
     }
 
@@ -507,14 +505,15 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_CreateDeviceEx(IDirect3D9Ex *iface,
     TRACE("iface %p, adapter %u, device_type %#x, focus_window %p, flags %#x, parameters %p, mode %p, device %p.\n",
             iface, adapter, device_type, focus_window, flags, parameters, mode, device);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
         return E_OUTOFMEMORY;
 
     hr = device_init(object, d3d9, d3d9->wined3d, adapter, device_type, focus_window, flags, parameters, mode);
     if (FAILED(hr))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);
-        heap_free(object);
+        HeapFree(GetProcessHeap(), 0, object);
         return hr;
     }
 
@@ -579,7 +578,7 @@ BOOL d3d9_init(struct d3d9 *d3d9, BOOL extended)
     DWORD flags = WINED3D_PRESENT_CONVERSION | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER
             | WINED3D_SRGB_READ_WRITE_CONTROL | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR
             | WINED3D_NO_PRIMITIVE_RESTART | WINED3D_LEGACY_CUBEMAP_FILTERING
-            | WINED3D_NORMALIZED_DEPTH_BIAS | WINED3D_LIMIT_VIEWPORT;
+            | WINED3D_NORMALIZED_DEPTH_BIAS;
 
     if (!extended)
         flags |= WINED3D_VIDMEM_ACCOUNTING;

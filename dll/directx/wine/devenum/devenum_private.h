@@ -22,28 +22,35 @@
  * - Private file where devenum globals are declared
  */
 
-#pragma once
+#ifndef __WINE_DEVENUM_H
+#define __WINE_DEVENUM_H
 
 #ifndef RC_INVOKED
 #include <stdarg.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
 
-#include "ole2.h"
-#include "strmif.h"
-#include "olectl.h"
-#include "uuids.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winreg.h>
+#include <objbase.h>
+#include <oleidl.h>
+#include <strmif.h>
+#include <uuids.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
 #ifndef RC_INVOKED
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 #endif
 
 /**********************************************************************
@@ -88,12 +95,4 @@ extern const WCHAR clsid_keyname[6] DECLSPEC_HIDDEN;
 extern const WCHAR wszInstanceKeyName[] DECLSPEC_HIDDEN;
 #define CLSID_STR_LEN (sizeof(clsid_keyname) / sizeof(WCHAR))
 
-/**********************************************************************
- * Resource IDs
- */
-#define IDS_DEVENUM_DSDEFAULT 7
-#define IDS_DEVENUM_DS        8
-#define IDS_DEVENUM_WODEFAULT 9
-#define IDS_DEVENUM_MIDEFAULT 10
-#define IDS_DEVENUM_KSDEFAULT 11
-#define IDS_DEVENUM_KS        12
+#endif /* __WINE_DEVENUM_H */

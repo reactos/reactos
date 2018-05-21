@@ -18,13 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winerror.h"
-#include "wine/debug.h"
+#include "dplayx_global.h"
 
-#include "lobbysp.h"
-#include "dplay_global.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
 typedef struct IDPLobbySPImpl
 {

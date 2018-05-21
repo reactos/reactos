@@ -18,25 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <string.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
-
-#include "ole2.h"
-#include "rpcproxy.h"
-#include "uuids.h"
-
 #include "d3dxof_private.h"
-#include "dxfile.h"
 
-#include "wine/debug.h"
+#include <rpcproxy.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dxof);
 

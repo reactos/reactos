@@ -18,11 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdio.h>
-
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
@@ -1025,9 +1020,8 @@ static void set_tex_op_atifs(struct wined3d_context *context, const struct wined
     desc = (const struct atifs_ffp_desc *)find_ffp_frag_shader(&priv->fragment_shaders, &settings);
     if (!desc)
     {
-        struct atifs_ffp_desc *new_desc;
-
-        if (!(new_desc = heap_alloc_zero(sizeof(*new_desc))))
+        struct atifs_ffp_desc *new_desc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*new_desc));
+        if (!new_desc)
         {
             ERR("Out of memory\n");
             return;
@@ -1321,7 +1315,7 @@ static void *atifs_alloc(const struct wined3d_shader_backend_ops *shader_backend
 {
     struct atifs_private_data *priv;
 
-    if (!(priv = heap_alloc_zero(sizeof(*priv))))
+    if (!(priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*priv))))
         return NULL;
 
     wine_rb_init(&priv->fragment_shaders, wined3d_ffp_frag_program_key_compare);
@@ -1336,7 +1330,7 @@ static void atifs_free_ffpshader(struct wine_rb_entry *entry, void *cb_ctx)
 
     GL_EXTCALL(glDeleteFragmentShaderATI(entry_ati->shader));
     checkGLcall("glDeleteFragmentShaderATI(entry->shader)");
-    heap_free(entry_ati);
+    HeapFree(GetProcessHeap(), 0, entry_ati);
 }
 
 /* Context activation is done by the caller. */
@@ -1346,7 +1340,7 @@ static void atifs_free(struct wined3d_device *device)
 
     wine_rb_destroy(&priv->fragment_shaders, atifs_free_ffpshader, &device->adapter->gl_info);
 
-    heap_free(priv);
+    HeapFree(GetProcessHeap(), 0, priv);
     device->fragment_priv = NULL;
 }
 
@@ -1359,9 +1353,8 @@ static BOOL atifs_color_fixup_supported(struct color_fixup_desc fixup)
 
 static BOOL atifs_alloc_context_data(struct wined3d_context *context)
 {
-    struct atifs_context_private_data *priv;
-
-    if (!(priv = heap_alloc_zero(sizeof(*priv))))
+    struct atifs_context_private_data *priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*priv));
+    if (!priv)
         return FALSE;
     context->fragment_pipe_data = priv;
     return TRUE;
@@ -1369,7 +1362,7 @@ static BOOL atifs_alloc_context_data(struct wined3d_context *context)
 
 static void atifs_free_context_data(struct wined3d_context *context)
 {
-    heap_free(context->fragment_pipe_data);
+    HeapFree(GetProcessHeap(), 0, context->fragment_pipe_data);
 }
 
 const struct fragment_pipeline atifs_fragment_pipeline = {
