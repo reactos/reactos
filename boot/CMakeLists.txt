@@ -24,8 +24,6 @@ add_custom_command(
     DEPENDS native-fatten fat bootmgfw
     VERBATIM)
 
-add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
-
 add_subdirectory(freeldr)
 add_subdirectory(bootdata)
 add_subdirectory(environ)

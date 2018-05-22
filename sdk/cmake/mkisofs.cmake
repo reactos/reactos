@@ -48,12 +48,12 @@ function(add_iso _target)
         DEPENDS "$<TARGET_PROPERTY:${_target}_iso,_iso_depends>"
         VERBATIM)
 
-    #add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin DESTINATION loader)
-    #add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/dosmbr.bin DESTINATION loader)
-    #add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/ext2.bin DESTINATION loader)
-    #add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/fat.bin DESTINATION loader)
-    #add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/fat32.bin DESTINATION loader)
-    #add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/efisys.bin DESTINATION loader)
+    add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin DESTINATION loader)
+    add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/dosmbr.bin DESTINATION loader)
+    add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/ext2.bin DESTINATION loader)
+    add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/fat.bin DESTINATION loader)
+    add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/freeldr/bootsect/fat32.bin DESTINATION loader)
+    add_iso_file(${_target} FILE ${CMAKE_BINARY_DIR}/boot/efisys.bin DESTINATION loader)
 
 endfunction()
 
