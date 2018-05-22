@@ -1024,6 +1024,9 @@ WlxLogoff(
 
     TRACE("WlxLogoff(%p)\n", pWlxContext);
 
+    /* Delete the password */
+    ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
+
     /* Close the user token */
     CloseHandle(pgContext->UserToken);
     pgContext->UserToken = NULL;
