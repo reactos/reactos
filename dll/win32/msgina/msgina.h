@@ -133,10 +133,16 @@ CreateProfile(
 /* shutdown.c */
 
 DWORD
+GetDefaultShutdownSelState(VOID);
+
+DWORD
 LoadShutdownSelState(VOID);
 
 VOID
 SaveShutdownSelState(DWORD ShutdownCode);
+
+DWORD
+GetDefaultShutdownOptions(VOID);
 
 DWORD
 GetAllowedShutdownOptions(VOID);

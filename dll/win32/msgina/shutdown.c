@@ -90,6 +90,11 @@ GetShutdownReasonUI(VOID)
 //    return (VersionInfo.wProductType == VER_NT_WORKSTATION) ? FALSE : TRUE;
 }
 
+DWORD
+GetDefaultShutdownSelState(VOID)
+{
+    return WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
+}
 
 DWORD
 LoadShutdownSelState(VOID)
@@ -212,6 +217,12 @@ SaveShutdownSelState(
 }
 
 DWORD
+GetDefaultShutdownOptions(VOID)
+{
+    return WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT;
+}
+
+DWORD
 GetAllowedShutdownOptions(VOID)
 {
     DWORD Options = 0;
@@ -271,6 +282,13 @@ UpdateShutdownDesc(
 
     LoadStringW(pContext->pgContext->hDllInstance, DescId, szBuffer, _countof(szBuffer));
     SetDlgItemTextW(hDlg, IDC_SHUTDOWN_DESCRIPTION, szBuffer);
+
+    if (pContext->bReasonUI)
+    {
+        EnableWindow(GetDlgItem(hDlg, IDC_REASON_PLANNED), (ShutdownCode != WLX_SAS_ACTION_LOGOFF));
+        EnableWindow(GetDlgItem(hDlg, IDC_REASON_LIST), (ShutdownCode != WLX_SAS_ACTION_LOGOFF));
+        EnableWindow(GetDlgItem(hDlg, IDC_REASON_COMMENT), (ShutdownCode != WLX_SAS_ACTION_LOGOFF));
+    }
 }
 
 static VOID

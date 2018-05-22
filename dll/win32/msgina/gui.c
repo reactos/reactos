@@ -624,31 +624,40 @@ OnShutDown(
     INT ret;
     DWORD ShutdownOptions;
 
-    if (ImpersonateLoggedOnUser(pgContext->UserToken))
+    TRACE("OnShutDown(%p %p)\n", hwndDlg, pgContext);
+
+    pgContext->nShutdownAction = GetDefaultShutdownSelState();
+    ShutdownOptions = GetDefaultShutdownOptions();
+
+    if (pgContext->UserToken != NULL)
     {
-        pgContext->nShutdownAction = LoadShutdownSelState();
-        ShutdownOptions = GetAllowedShutdownOptions();
-        RevertToSelf();
-    }
-    else
-    {
-        ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-        pgContext->nShutdownAction = 0;
-        ShutdownOptions = 0;
+        if (ImpersonateLoggedOnUser(pgContext->UserToken))
+        {
+            pgContext->nShutdownAction = LoadShutdownSelState();
+            ShutdownOptions = GetAllowedShutdownOptions();
+            RevertToSelf();
+        }
+        else
+        {
+            ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        }
     }
 
     ret = ShutdownDialog(hwndDlg, ShutdownOptions, pgContext);
 
     if (ret == IDOK)
     {
-        if (ImpersonateLoggedOnUser(pgContext->UserToken))
+        if (pgContext->UserToken != NULL)
         {
-            SaveShutdownSelState(pgContext->nShutdownAction);
-            RevertToSelf();
-        }
-        else
-        {
-            ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+            if (ImpersonateLoggedOnUser(pgContext->UserToken))
+            {
+                SaveShutdownSelState(pgContext->nShutdownAction);
+                RevertToSelf();
+            }
+            else
+            {
+                ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+            }
         }
     }
 
