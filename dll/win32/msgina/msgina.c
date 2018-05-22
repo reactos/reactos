@@ -1012,6 +1012,24 @@ WlxIsLogoffOk(
     return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+VOID WINAPI
+WlxLogoff(
+    PVOID pWlxContext)
+{
+    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+
+    TRACE("WlxLogoff(%p)\n", pWlxContext);
+
+    /* Close the user token */
+    CloseHandle(pgContext->UserToken);
+    pgContext->UserToken = NULL;
+}
+
+
 BOOL WINAPI
 DllMain(
     IN HINSTANCE hinstDLL,
