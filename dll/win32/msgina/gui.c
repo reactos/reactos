@@ -400,7 +400,7 @@ DoChangePassword(
                   RequestBuffer->NewPassword.MaximumLength);
 
     /* Connect to the LSA server */
-    if (!ConnectToLsa(pgContext))
+    if (ConnectToLsa(pgContext) != ERROR_SUCCESS)
     {
         ERR("ConnectToLsa() failed\n");
         goto done;
@@ -882,11 +882,11 @@ DoLogon(
     ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
     wcscpy(pgContext->Password, Password);
 
-    pgContext->bAutoAdminLogon = FALSE;
-
     result = TRUE;
 
 done:
+    pgContext->bAutoAdminLogon = FALSE;
+
     if (UserName != NULL)
         HeapFree(GetProcessHeap(), 0, UserName);
 
