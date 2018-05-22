@@ -1328,7 +1328,8 @@ SASWindowProc(
                 case MAKELONG(MOD_CONTROL | MOD_SHIFT, VK_ESCAPE):
                 {
                     TRACE("SAS: CONTROL+SHIFT+ESCAPE\n");
-                    DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+                    if (Session->LogonState == STATE_LOGGED_ON)
+                        DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
                     return TRUE;
                 }
             }
