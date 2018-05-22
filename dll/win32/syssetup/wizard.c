@@ -594,14 +594,14 @@ WriteDefaultLogonData(LPWSTR Domain)
         return FALSE;
 
     lError = RegSetValueEx(hKey,
-                           L"DefaultDomain",
+                           L"DefaultDomainName",
                            0,
                            REG_SZ,
                            (LPBYTE)Domain,
                            (wcslen(Domain)+ 1) * sizeof(WCHAR));
     if (lError != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueEx(\"DefaultDomain\") failed!\n");
+        DPRINT1("RegSetValueEx(\"DefaultDomainName\") failed!\n");
     }
 
     lError = RegSetValueEx(hKey,

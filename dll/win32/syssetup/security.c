@@ -580,7 +580,7 @@ SetAutoAdminLogon(VOID)
     if (wcscmp(szAutoAdminLogon, L"1") == 0)
     {
         RegSetValueExW(hKey,
-                       L"DefaultDomain",
+                       L"DefaultDomainName",
                        0,
                        REG_SZ,
                        (LPBYTE)AdminInfo.Domain,

@@ -246,7 +246,7 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
 
     dwSize = sizeof(pgContext->Domain);
     rc = RegQueryValueExW(hKey,
-                          L"DefaultDomain",
+                          L"DefaultDomainName",
                           NULL,
                           NULL,
                           (LPBYTE)&pgContext->Domain,
