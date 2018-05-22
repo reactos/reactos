@@ -50,17 +50,8 @@ VfatCleanupFile(
     }
     else
     {
-        if(!ExAcquireResourceExclusiveLite(&pFcb->MainResource,
-                                           BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
-        {
-            return STATUS_PENDING;
-        }
-        if(!ExAcquireResourceExclusiveLite(&pFcb->PagingIoResource,
-                                           BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
-        {
-            ExReleaseResourceLite(&pFcb->MainResource);
-            return STATUS_PENDING;
-        }
+        ExAcquireResourceExclusiveLite(&pFcb->MainResource, TRUE);
+        ExAcquireResourceExclusiveLite(&pFcb->PagingIoResource, TRUE);
 
         pCcb = FileObject->FsContext2;
         if (BooleanFlagOn(pCcb->Flags, CCB_DELETE_ON_CLOSE))
@@ -173,20 +164,9 @@ VfatCleanup(
         return STATUS_SUCCESS;
     }
 
-    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
-                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
-    {
-        return VfatMarkIrpContextForQueue(IrpContext);
-    }
-
+    ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, TRUE);
     Status = VfatCleanupFile(IrpContext);
-
     ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
-
-    if (Status == STATUS_PENDING)
-    {
-        return VfatMarkIrpContextForQueue(IrpContext);
-    }
 
     IrpContext->Irp->IoStatus.Information = 0;
     return Status;

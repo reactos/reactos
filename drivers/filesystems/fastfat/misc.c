@@ -287,18 +287,39 @@ VfatAllocateIrpContext(
         IrpContext->MinorFunction = IrpContext->Stack->MinorFunction;
         IrpContext->FileObject = IrpContext->Stack->FileObject;
         IrpContext->Flags = IRPCONTEXT_COMPLETE;
-        if (MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
-            MajorFunction == IRP_MJ_DEVICE_CONTROL ||
-            MajorFunction == IRP_MJ_SHUTDOWN)
+
+        /* Easy cases that can wait */
+        if (MajorFunction == IRP_MJ_CLEANUP ||
+            MajorFunction == IRP_MJ_CREATE ||
+            MajorFunction == IRP_MJ_SHUTDOWN ||
+            MajorFunction == IRP_MJ_CLOSE /* likely to be fixed */)
         {
-            IrpContext->Flags |= IRPCONTEXT_CANWAIT;
+            SetFlag(IrpContext->Flags, IRPCONTEXT_CANWAIT);
         }
-        else if (MajorFunction != IRP_MJ_CLEANUP &&
-                 MajorFunction != IRP_MJ_CLOSE &&
+        /* Cases that can wait if synchronous IRP */
+        else if ((MajorFunction == IRP_MJ_DEVICE_CONTROL ||
+                  MajorFunction == IRP_MJ_QUERY_INFORMATION ||
+                  MajorFunction == IRP_MJ_SET_INFORMATION ||
+                  MajorFunction == IRP_MJ_FLUSH_BUFFERS ||
+                  MajorFunction == IRP_MJ_LOCK_CONTROL ||
+                  MajorFunction == IRP_MJ_QUERY_VOLUME_INFORMATION ||
+                  MajorFunction == IRP_MJ_SET_VOLUME_INFORMATION ||
+                  MajorFunction == IRP_MJ_DIRECTORY_CONTROL ||
+                  MajorFunction == IRP_MJ_WRITE ||
+                  MajorFunction == IRP_MJ_READ) &&
                  IoIsOperationSynchronous(Irp))
         {
-            IrpContext->Flags |= IRPCONTEXT_CANWAIT;
+            SetFlag(IrpContext->Flags, IRPCONTEXT_CANWAIT);
         }
+        /* Cases that can wait if synchronous or if no FO */
+        else if ((MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL ||
+                  MajorFunction == IRP_MJ_PNP) &&
+                 (IoGetCurrentIrpStackLocation(Irp)->FileObject == NULL ||
+                  IoIsOperationSynchronous(Irp)))
+        {
+            SetFlag(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+        }
+
         KeInitializeEvent(&IrpContext->Event, NotificationEvent, FALSE);
         IrpContext->RefCount = 0;
         IrpContext->PriorityBoost = IO_NO_INCREMENT;
