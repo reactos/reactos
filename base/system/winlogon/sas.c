@@ -1372,7 +1372,9 @@ SASWindowProc(
                 case LN_SHELL_EXITED:
                 {
                     /* lParam is the exit code */
-                    if(lParam != 1)
+                    if (lParam != 1 &&
+                        Session->LogonState != STATE_LOGGED_OFF &&
+                        Session->LogonState != STATE_LOGGED_OFF_SAS)
                     {
                         SetTimer(hwndDlg, 1, 1000, NULL);
                     }
