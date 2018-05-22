@@ -170,6 +170,7 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
     LPWSTR lpAutoAdminLogon = NULL;
     LPWSTR lpDontDisplayLastUserName = NULL;
     LPWSTR lpShutdownWithoutLogon = NULL;
+    LPWSTR lpIgnoreShiftOverride = NULL;
     DWORD dwDisableCAD = 0;
     DWORD dwSize;
     LONG rc;
@@ -226,6 +227,15 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
             pgContext->bDontDisplayLastUserName = TRUE;
     }
 
+    rc = ReadRegSzValue(hKey,
+                        L"IgnoreShiftOverride",
+                        &lpIgnoreShiftOverride);
+    if (rc == ERROR_SUCCESS)
+    {
+        if (wcscmp(lpIgnoreShiftOverride, L"1") == 0)
+            pgContext->bIgnoreShiftOverride = TRUE;
+    }
+
     dwSize = sizeof(pgContext->UserName);
     rc = RegQueryValueExW(hKey,
                           L"DefaultUserName",
@@ -249,6 +259,9 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           NULL,
                           (LPBYTE)&pgContext->Password,
                           &dwSize);
+
+    if (lpIgnoreShiftOverride != NULL)
+        HeapFree(GetProcessHeap(), 0, lpIgnoreShiftOverride);
 
     if (lpShutdownWithoutLogon != NULL)
         HeapFree(GetProcessHeap(), 0, lpShutdownWithoutLogon);
@@ -893,9 +906,15 @@ WlxDisplaySASNotice(
 
     if (pgContext->bAutoAdminLogon)
     {
-        /* Don't display the window, we want to do an automatic logon */
-        pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
-        return;
+        if (pgContext->bIgnoreShiftOverride ||
+            (GetKeyState(VK_SHIFT) >= 0))
+        {
+            /* Don't display the window, we want to do an automatic logon */
+            pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
+            return;
+        }
+
+        pgContext->bAutoAdminLogon = FALSE;
     }
 
     if (pgContext->bDisableCAD)

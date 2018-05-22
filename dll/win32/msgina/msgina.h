@@ -28,10 +28,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msgina);
 
 #include "resource.h"
 
-/* Values for GINA_CONTEXT.AutoLogonState */
-#define AUTOLOGON_CHECK_REGISTRY 1
-#define AUTOLOGON_ONCE           2
-#define AUTOLOGON_DISABLED       3
 
 typedef struct
 {
@@ -46,6 +42,7 @@ typedef struct
     BOOL bAutoAdminLogon;
     BOOL bDontDisplayLastUserName;
     BOOL bShutdownWithoutLogon;
+    BOOL bIgnoreShiftOverride;
 
     ULONG nShutdownAction;
 
