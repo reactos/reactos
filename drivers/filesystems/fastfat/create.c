@@ -1059,11 +1059,6 @@ VfatCreate(
         return STATUS_SUCCESS;
     }
 
-    if (!BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT))
-    {
-        return VfatMarkIrpContextForQueue(IrpContext);
-    }
-
     IrpContext->Irp->IoStatus.Information = 0;
     ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, TRUE);
     Status = VfatCreateFile(IrpContext->DeviceObject, IrpContext->Irp);
