@@ -56,9 +56,6 @@ typedef struct
     PDWORD pdwOptions;
     PWLX_MPR_NOTIFY_INFO pMprNotifyInfo;
     PVOID *pProfile;
-
-    /* Current logo to display */
-    HBITMAP hBitmap;
 } GINA_CONTEXT, *PGINA_CONTEXT;
 
 extern HINSTANCE hDllInstance;

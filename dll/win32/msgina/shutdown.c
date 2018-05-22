@@ -24,6 +24,7 @@
 typedef struct _SHUTDOWN_DLG_CONTEXT
 {
     PGINA_CONTEXT pgContext;
+    HBITMAP hBitmap;
     DWORD ShutdownOptions;
     BOOL bCloseDlg;
     BOOL bReasonUI;
@@ -419,13 +420,13 @@ ShutdownDialogProc(
             ShutdownOnInit(hDlg, pContext);
 
             /* Draw the logo bitmap */
-            pContext->pgContext->hBitmap =
+            pContext->hBitmap =
                 LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             return TRUE;
         }
 
         case WM_DESTROY:
-            DeleteObject(pContext->pgContext->hBitmap);
+            DeleteObject(pContext->hBitmap);
             return TRUE;
 
         case WM_ACTIVATE:
@@ -449,10 +450,10 @@ ShutdownDialogProc(
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pContext->pgContext->hBitmap)
+            if (pContext->hBitmap)
             {
                 BeginPaint(hDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pContext->pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hDlg, &ps);
             }
             return TRUE;
