@@ -103,9 +103,11 @@ LpkGetCharacterPlacement(
     DWORD dwUnused)
 {
     LPWSTR lpOutString;
-    WORD *glyphs = NULL;
+    WORD *lpGlyphs = NULL;
     UINT *lpOrder = NULL;
-    UINT nSet;
+    SIZE size;
+    DWORD ret = 0;
+    UINT nSet, i;
     INT cGlyphs;
 
     UNREFERENCED_PARAMETER(dwUnused);
@@ -121,7 +123,7 @@ LpkGetCharacterPlacement(
         nSet = lpResults->nGlyphs;
 
     BIDI_Reorder(hdc, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpOutString,
-                 nSet, lpOrder, &glyphs, &cGlyphs);
+                 nSet, lpOrder, &lpGlyphs, &cGlyphs);
 
     lpResults->nGlyphs = (UINT)cGlyphs;
 
@@ -132,11 +134,50 @@ LpkGetCharacterPlacement(
         memcpy(lpResults->lpOrder, lpOrder, sizeof(lpOrder));
 
     if (lpResults->lpGlyphs)
-        wcscpy(lpResults->lpGlyphs, glyphs);
+        wcscpy(lpResults->lpGlyphs, lpGlyphs);
+
+    if (lpResults->lpDx && !(dwFlags & GCP_GLYPHSHAPE))
+    {
+        int c;
+        for (i = 0; i < nSet; i++)
+        {
+            if (GetCharWidth32W(hdc, lpOutString[i], lpOutString[i], &c))
+                lpResults->lpDx[i]= c;
+        }
+    }
+
+    /* If glyph shaping was requested */
+    else if (lpResults->lpDx && (dwFlags & GCP_GLYPHSHAPE))
+    {
+        int c;
+
+        if (lpResults->lpGlyphs)
+        {
+            for (i = 0; i < lpResults->nGlyphs; i++)
+            {
+                if (GetCharWidth32W(hdc, lpGlyphs[i], lpGlyphs[i], &c))
+                    lpResults->lpDx[i]= c;
+            }
+        }
+    }
+
+    /* FIXME: Currently not bidi compliant! */
+    if (lpResults->lpCaretPos)
+    {
+        int pos = 0;
+
+        lpResults->lpCaretPos[0] = 0;
+        for (i = 1; i < nSet; i++)
+            if (GetTextExtentPoint32W(hdc, &(lpString[i - 1]), 1, &size))
+                lpResults->lpCaretPos[i] = (pos += size.cx);
+    }
+
+    if (GetTextExtentPoint32W(hdc, lpString, uCount, &size))
+        ret = MAKELONG(size.cx, size.cy);
 
     HeapFree(GetProcessHeap(), 0, lpOutString);
     HeapFree(GetProcessHeap(), 0, lpOrder);
-    HeapFree(GetProcessHeap(), 0, glyphs);
+    HeapFree(GetProcessHeap(), 0, lpGlyphs);
 
-    return TRUE;
+    return ret;
 }

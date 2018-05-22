@@ -461,7 +461,7 @@ GetCharacterPlacementW(
     lpResults->nGlyphs = nSet;
     
     if (dwFlags & GCP_REORDER)
-        LpkGetCharacterPlacement(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags, 0);
+        return LpkGetCharacterPlacement(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags, 0);
 
     else
     {
