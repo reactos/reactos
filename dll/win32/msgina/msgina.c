@@ -1030,6 +1030,29 @@ WlxLogoff(
 }
 
 
+/*
+ * @implemented
+ */
+VOID WINAPI
+WlxShutdown(
+    PVOID pWlxContext,
+    DWORD ShutdownType)
+{
+    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+    NTSTATUS Status;
+
+    TRACE("WlxShutdown(%p %lx)\n", pWlxContext, ShutdownType);
+
+    /* Close the LSA handle */
+    pgContext->AuthenticationPackage = 0;
+    Status = LsaDeregisterLogonProcess(pgContext->LsaHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaDeregisterLogonProcess failed (Status 0x%08lx)\n", Status);
+    }
+}
+
+
 BOOL WINAPI
 DllMain(
     IN HINSTANCE hinstDLL,
