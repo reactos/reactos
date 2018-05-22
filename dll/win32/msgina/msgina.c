@@ -244,12 +244,12 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           (LPBYTE)&pgContext->UserName,
                           &dwSize);
 
-    dwSize = sizeof(pgContext->Domain);
+    dwSize = sizeof(pgContext->DomainName);
     rc = RegQueryValueExW(hKey,
                           L"DefaultDomainName",
                           NULL,
                           NULL,
-                          (LPBYTE)&pgContext->Domain,
+                          (LPBYTE)&pgContext->DomainName,
                           &dwSize);
 
     dwSize = sizeof(pgContext->Password);
@@ -803,12 +803,12 @@ CreateProfile(
     wcscpy(pgContext->UserName, UserName);
     if (Domain == NULL || wcslen(Domain) == 0)
     {
-        dwLength = _countof(pgContext->Domain);
-        GetComputerNameW(pgContext->Domain, &dwLength);
+        dwLength = _countof(pgContext->DomainName);
+        GetComputerNameW(pgContext->DomainName, &dwLength);
     }
     else
     {
-        wcscpy(pgContext->Domain, Domain);
+        wcscpy(pgContext->DomainName, Domain);
     }
 
     /* Get profile path */
@@ -841,7 +841,7 @@ CreateProfile(
     pProfile->pszProfile = ProfilePath;
 
     cbSize = sizeof(L"LOGONSERVER=\\\\") +
-             wcslen(pgContext->Domain) * sizeof(WCHAR) +
+             wcslen(pgContext->DomainName) * sizeof(WCHAR) +
              sizeof(UNICODE_NULL);
     lpEnvironment = HeapAlloc(GetProcessHeap(), 0, cbSize);
     if (!lpEnvironment)
@@ -850,7 +850,7 @@ CreateProfile(
         goto cleanup;
     }
 
-    StringCbPrintfW(lpEnvironment, cbSize, L"LOGONSERVER=\\\\%ls", pgContext->Domain);
+    StringCbPrintfW(lpEnvironment, cbSize, L"LOGONSERVER=\\\\%ls", pgContext->DomainName);
     ASSERT(wcslen(lpEnvironment) == cbSize / sizeof(WCHAR) - 2);
     lpEnvironment[cbSize / sizeof(WCHAR) - 1] = UNICODE_NULL;
 

@@ -435,7 +435,7 @@ DoChangePassword(
                        IDS_PASSWORDCHANGED);
 
     if ((wcscmp(UserName, pgContext->UserName) == 0) &&
-        (wcscmp(Domain, pgContext->Domain) == 0) &&
+        (wcscmp(Domain, pgContext->DomainName) == 0) &&
         (wcscmp(OldPassword, pgContext->Password) == 0))
     {
         ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
@@ -472,7 +472,7 @@ ChangePasswordDialogProc(
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pgContext);
 
             SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_USERNAME, pgContext->UserName);
-            SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_ADDSTRING, 0, (LPARAM)pgContext->Domain);
+            SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_ADDSTRING, 0, (LPARAM)pgContext->DomainName);
             SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_SETCURSEL, 0, 0);
             SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
             return TRUE;
@@ -520,7 +520,7 @@ OnInitSecurityDlg(HWND hwnd,
 
     LoadStringW(pgContext->hDllInstance, IDS_LOGONMSG, Buffer1, _countof(Buffer1));
 
-    wsprintfW(Buffer2, L"%s\\%s", pgContext->Domain, pgContext->UserName);
+    wsprintfW(Buffer2, L"%s\\%s", pgContext->DomainName, pgContext->UserName);
     wsprintfW(Buffer4, Buffer1, Buffer2);
 
     SetDlgItemTextW(hwnd, IDC_LOGONMSG, Buffer4);
@@ -836,7 +836,7 @@ DoLogon(
 
             Status = DoLoginTasks(pgContext,
                                   pgContext->UserName,
-                                  pgContext->Domain,
+                                  pgContext->DomainName,
                                   pgContext->Password,
                                   &SubStatus);
             if (!NT_SUCCESS(Status))
@@ -910,12 +910,12 @@ SetDomainComboBox(
         lIndex = SendMessageW(hwndDomainComboBox, CB_ADDSTRING, 0, (LPARAM)szComputerName);
     }
 
-    if (wcslen(pgContext->Domain) != 0)
+    if (wcslen(pgContext->DomainName) != 0)
     {
-        lFindIndex = SendMessageW(hwndDomainComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)pgContext->Domain);
+        lFindIndex = SendMessageW(hwndDomainComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)pgContext->DomainName);
         if (lFindIndex == CB_ERR)
         {
-            lIndex = SendMessageW(hwndDomainComboBox, CB_ADDSTRING, 0, (LPARAM)pgContext->Domain);
+            lIndex = SendMessageW(hwndDomainComboBox, CB_ADDSTRING, 0, (LPARAM)pgContext->DomainName);
         }
         else
         {
@@ -1125,7 +1125,7 @@ SetLockMessage(HWND hwnd,
 
     LoadStringW(pgContext->hDllInstance, IDS_LOCKMSG, Buffer1, _countof(Buffer1));
 
-    wsprintfW(Buffer2, L"%s\\%s", pgContext->Domain, pgContext->UserName);
+    wsprintfW(Buffer2, L"%s\\%s", pgContext->DomainName, pgContext->UserName);
     wsprintfW(Buffer3, Buffer1, Buffer2);
 
     SetDlgItemTextW(hwnd, nDlgItem, Buffer3);
@@ -1179,7 +1179,7 @@ DoUnlock(
             else
             {
                 LoadStringW(pgContext->hDllInstance, IDS_LOCKEDWRONGUSER, Buffer1, _countof(Buffer1));
-                wsprintfW(Buffer2, Buffer1, pgContext->Domain, pgContext->UserName);
+                wsprintfW(Buffer2, Buffer1, pgContext->DomainName, pgContext->UserName);
                 LoadStringW(pgContext->hDllInstance, IDS_COMPUTERLOCKED, Buffer1, _countof(Buffer1));
                 MessageBoxW(hwndDlg, Buffer2, Buffer1, MB_OK | MB_ICONERROR);
             }
