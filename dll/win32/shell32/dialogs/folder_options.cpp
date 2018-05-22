@@ -1457,10 +1457,8 @@ GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
         lstrcmpiW(Entry->FileExtension, L".scr") == 0)
     {
         // It's an executable
-        HMODULE hDLL = shell32_hInstance;
-        const INT iIndex = IDI_SHELL_EXE;
-        Entry->hIconLarge = LoadIconW(hDLL, MAKEINTRESOURCEW(iIndex));
-        Entry->hIconSmall = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
+        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_EXE));
+        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_EXE), IMAGE_ICON,
             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0));
     }
     else if (lstrcmpW(IconLocation, L"%1") == 0)
@@ -1592,11 +1590,10 @@ InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
     if (!GetFileTypeIconsByKey(hKey, Entry))
     {
         // set default icon
-        const INT iIndex = IDI_SHELL_FOLDER_OPTIONS;
-        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(iIndex));
+        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
         INT cxSmall = GetSystemMetrics(SM_CXSMICON);
         INT cySmall = GetSystemMetrics(SM_CYSMICON);
-        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(iIndex),
+        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
                                              IMAGE_ICON, cxSmall, cySmall, 0));
     }
 
