@@ -41,6 +41,69 @@ GUIInitialize(
     return TRUE;
 }
 
+
+static
+VOID
+SetWelcomeText(HWND hWnd)
+{
+    PWCHAR pBuffer = NULL, p;
+    HKEY hKey;
+    DWORD BufSize, dwType, dwWelcomeSize, dwTitleLength;
+    LONG rc;
+
+    TRACE("GetWelcomeText(%p)\n", hWnd);
+
+    /* Get the path of userinit */
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+                       L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        WARN("RegOpenKeyExW() failed with error %lu\n", rc);
+        return;
+    }
+
+    /* Get the size of the Welcome value */
+    dwWelcomeSize = 0;
+    rc = RegQueryValueExW(hKey,
+                          L"Welcome",
+                          NULL,
+                          &dwType,
+                          NULL,
+                          &dwWelcomeSize);
+    if (rc == ERROR_FILE_NOT_FOUND || dwWelcomeSize == 0 || dwType != REG_SZ)
+        goto done;
+
+    dwTitleLength = GetWindowTextLengthW(hWnd);
+    BufSize = dwWelcomeSize + ((dwTitleLength + 1) * sizeof(WCHAR));
+
+    pBuffer = HeapAlloc(GetProcessHeap(), 0, BufSize);
+    if (pBuffer == NULL)
+        goto done;
+
+    GetWindowTextW(hWnd, pBuffer, BufSize / sizeof(WCHAR));
+    wcscat(pBuffer, L" ");
+    p = &pBuffer[dwTitleLength + 1];
+
+    RegQueryValueExW(hKey,
+                     L"Welcome",
+                     NULL,
+                     &dwType,
+                     (PBYTE)p,
+                     &dwWelcomeSize);
+
+    SetWindowText(hWnd, pBuffer);
+
+done:
+    if (pBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, pBuffer);
+
+    RegCloseKey(hKey);
+}
+
+
 static INT_PTR CALLBACK
 StatusMessageWindowProc(
     IN HWND hwndDlg,
@@ -695,6 +758,8 @@ LoggedOnWindowProc(
             pgContext = (PGINA_CONTEXT)lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pgContext);
 
+            SetWelcomeText(hwndDlg);
+
             OnInitSecurityDlg(hwndDlg, (PGINA_CONTEXT)lParam);
             SetFocus(GetDlgItem(hwndDlg, IDNO));
             return TRUE;
@@ -972,6 +1037,11 @@ LoggedOutWindowProc(
             /* FIXME: take care of NoDomainUI */
             pDlgData->pgContext = (PGINA_CONTEXT)lParam;
 
+            /* Draw the logo bitmap */
+            pDlgData->hBitmap = LoadImageW(pDlgData->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+
+            SetWelcomeText(hwndDlg);
+
             if (pDlgData->pgContext->bAutoAdminLogon ||
                 !pDlgData->pgContext->bDontDisplayLastUserName)
                 SetDlgItemTextW(hwndDlg, IDC_USERNAME, pDlgData->pgContext->UserName);
@@ -988,9 +1058,6 @@ LoggedOutWindowProc(
                 EnableWindow(GetDlgItem(hwndDlg, IDC_SHUTDOWN), FALSE);
 
             SetFocus(GetDlgItem(hwndDlg, pDlgData->pgContext->bDontDisplayLastUserName ? IDC_USERNAME : IDC_PASSWORD));
-
-            /* Draw the logo bitmap */
-            pDlgData->hBitmap = LoadImageW(pDlgData->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
             if (pDlgData->pgContext->bAutoAdminLogon)
                 PostMessage(GetDlgItem(hwndDlg, IDOK), BM_CLICK, 0, 0);
@@ -1249,6 +1316,8 @@ UnlockWindowProc(
 
             pDlgData->pgContext = (PGINA_CONTEXT)lParam;
 
+            SetWelcomeText(hwndDlg);
+
             SetLockMessage(hwndDlg, IDC_LOCKMSG, pDlgData->pgContext);
 
             SetDlgItemTextW(hwndDlg, IDC_USERNAME, pDlgData->pgContext->UserName);
@@ -1349,6 +1418,8 @@ LockedWindowProc(
 
             /* Load the logo bitmap */
             pDlgData->hBitmap = LoadImageW(pDlgData->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+
+            SetWelcomeText(hwndDlg);
 
             SetLockMessage(hwndDlg, IDC_LOCKMSG, pDlgData->pgContext);
             return TRUE;
