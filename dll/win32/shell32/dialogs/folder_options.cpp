@@ -37,6 +37,10 @@ typedef struct
     WCHAR FileDescription[100];
     WCHAR ClassKey[MAX_PATH];
     DWORD EditFlags;
+    WCHAR AppName[64];
+    HICON hIconLarge;
+    HICON hIconSmall;
+    WCHAR ProgramPath[MAX_PATH];
 } FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
 
 // uniquely-defined icon entry for Advanced Settings
@@ -171,6 +175,34 @@ Create24BppBitmap(HDC hDC, INT cx, INT cy)
     bi.bmiHeader.biCompression = BI_RGB;
 
     HBITMAP hbm = CreateDIBSection(hDC, &bi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+    return hbm;
+}
+
+static HBITMAP BitmapFromIcon(HICON hIcon, INT cx, INT cy)
+{
+    HDC hDC = CreateCompatibleDC(NULL);
+    if (!hDC)
+        return NULL;
+
+    HBITMAP hbm = Create24BppBitmap(hDC, cx, cy);
+    if (!hbm)
+    {
+        DeleteDC(hDC);
+        return NULL;
+    }
+
+    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
+    {
+        RECT rc = { 0, 0, cx, cy };
+        FillRect(hDC, &rc, HBRUSH(COLOR_3DFACE + 1));
+        if (hIcon)
+        {
+            DrawIconEx(hDC, 0, 0, hIcon, cx, cy, 0, NULL, DI_NORMAL);
+        }
+    }
+    SelectObject(hDC, hbmOld);
+    DeleteDC(hDC);
+
     return hbm;
 }
 
@@ -1338,44 +1370,148 @@ InitializeFileTypesListCtrlColumns(HWND hDlgCtrl)
     SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 }
 
-INT
-FindItem(HWND hDlgCtrl, WCHAR * ItemName)
-{
-    LVFINDINFOW findInfo;
-    ZeroMemory(&findInfo, sizeof(LVFINDINFOW));
-
-    findInfo.flags = LVFI_STRING;
-    findInfo.psz = ItemName;
-    return ListView_FindItem(hDlgCtrl, 0, &findInfo);
-}
-
 static BOOL
 DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
 {
     if (*pszExt != L'.')
         return FALSE;
 
+    // open ".ext" key
     HKEY hKey;
-    LONG nResult = RegOpenKeyExW(HKEY_CLASSES_ROOT, pszExt, 0, KEY_READ, &hKey);
-    if (nResult != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, pszExt, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return FALSE;
 
-    WCHAR szValue[64];
+    // query "extfile" key name
+    WCHAR szValue[64] = { 0 };
     DWORD cbValue = sizeof(szValue);
-    nResult = RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(szValue), &cbValue);
+    RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(szValue), &cbValue);
     RegCloseKey(hKey);
-    if (nResult != ERROR_SUCCESS)
-        return FALSE;
 
+    // delete "extfile" key (if any)
     if (szValue[0])
         SHDeleteKeyW(HKEY_CLASSES_ROOT, szValue);
 
+    // delete ".ext" key
     return SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt) == ERROR_SUCCESS;
 }
 
-static
-VOID
-InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
+static inline HICON
+DoExtractIcon(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconPath,
+              INT iIndex = 0, BOOL bSmall = FALSE)
+{
+    HICON hIcon = NULL;
+
+    if (iIndex < 0)
+    {
+        // A negative value will be interpreted as a negated resource ID.
+        iIndex = -iIndex;
+
+        INT cx, cy;
+        HINSTANCE hDLL = LoadLibraryExW(IconPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+        if (bSmall)
+        {
+            cx = GetSystemMetrics(SM_CXSMICON);
+            cy = GetSystemMetrics(SM_CYSMICON);
+        }
+        else
+        {
+            cx = GetSystemMetrics(SM_CXICON);
+            cy = GetSystemMetrics(SM_CYICON);
+        }
+        hIcon = HICON(LoadImageW(hDLL, MAKEINTRESOURCEW(iIndex), IMAGE_ICON,
+                                 cx, cy, 0));
+        FreeLibrary(hDLL);
+    }
+    else
+    {
+        // A positive value is icon index.
+        if (bSmall)
+            ExtractIconExW(IconPath, iIndex, NULL, &hIcon, 1);
+        else
+            ExtractIconExW(IconPath, iIndex, &hIcon, NULL, 1);
+    }
+    return hIcon;
+}
+
+static void
+DoFileTypeIconLocation(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
+{
+    // Expand the REG_EXPAND_SZ string by environment variables
+    WCHAR szLocation[MAX_PATH + 32];
+    if (!ExpandEnvironmentStringsW(IconLocation, szLocation, _countof(szLocation)))
+    {
+        return;
+    }
+
+    INT nIndex = PathParseIconLocationW(szLocation);
+    Entry->hIconLarge = DoExtractIcon(Entry, szLocation, nIndex, FALSE);
+    Entry->hIconSmall = DoExtractIcon(Entry, szLocation, nIndex, TRUE);
+}
+
+static BOOL
+GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
+{
+    Entry->hIconLarge = Entry->hIconSmall = NULL;
+
+    if (lstrcmpiW(Entry->FileExtension, L".exe") == 0 ||
+        lstrcmpiW(Entry->FileExtension, L".scr") == 0)
+    {
+        // It's an executable
+        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_EXE));
+        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_EXE), IMAGE_ICON,
+            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0));
+    }
+    else if (lstrcmpW(IconLocation, L"%1") == 0)
+    {
+        return FALSE;   // self icon
+    }
+    else
+    {
+        DoFileTypeIconLocation(Entry, IconLocation);
+    }
+
+    return Entry->hIconLarge && Entry->hIconSmall;
+}
+
+static BOOL
+GetFileTypeIconsByKey(HKEY hKey, PFOLDER_FILE_TYPE_ENTRY Entry)
+{
+    Entry->hIconLarge = Entry->hIconSmall = NULL;
+
+    // Open the "DefaultIcon" registry key
+    HKEY hDefIconKey;
+    LONG nResult = RegOpenKeyExW(hKey, L"DefaultIcon", 0, KEY_READ, &hDefIconKey);
+    if (nResult != ERROR_SUCCESS)
+        return FALSE;
+
+    // Get the icon location
+    WCHAR szLocation[MAX_PATH + 32] = { 0 };
+    DWORD dwSize = sizeof(szLocation);
+    nResult = RegQueryValueExW(hDefIconKey, NULL, NULL, NULL, LPBYTE(szLocation), &dwSize);
+
+    RegCloseKey(hDefIconKey);
+
+    if (nResult != ERROR_SUCCESS || szLocation[0] == 0)
+        return FALSE;
+
+    return GetFileTypeIconsEx(Entry, szLocation);
+}
+
+static BOOL
+QueryFileDescription(LPCWSTR ProgramPath, LPWSTR pszName, INT cchName)
+{
+    SHFILEINFOW FileInfo = { 0 };
+    if (SHGetFileInfoW(ProgramPath, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
+    {
+        StringCchCopyW(pszName, cchName, FileInfo.szDisplayName);
+        return TRUE;
+    }
+
+    return !!GetFileTitleW(ProgramPath, pszName, cchName);
+}
+
+static BOOL
+InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
 {
     PFOLDER_FILE_TYPE_ENTRY Entry;
     HKEY hKey;
@@ -1386,20 +1522,23 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
     if (szName[0] != L'.')
     {
         /* FIXME handle URL protocol handlers */
-        return;
+        return FALSE;
     }
+
+    // get imagelists of listview
+    HIMAGELIST himlLarge = ListView_GetImageList(hListView, LVSIL_NORMAL);
+    HIMAGELIST himlSmall = ListView_GetImageList(hListView, LVSIL_SMALL);
 
     /* allocate file type entry */
     Entry = (PFOLDER_FILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FOLDER_FILE_TYPE_ENTRY));
-
     if (!Entry)
-        return;
+        return FALSE;
 
     /* open key */
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, Entry);
-        return;
+        return FALSE;
     }
 
     /* FIXME check for duplicates */
@@ -1443,19 +1582,53 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
             RegQueryValueExW(hKey, L"EditFlags", NULL, NULL, (LPBYTE)&Entry->EditFlags, &dwSize);
     }
 
+    /* convert extension to upper case */
+    wcscpy(Entry->FileExtension, szName);
+    _wcsupr(Entry->FileExtension);
+
+    /* get icon */
+    if (!GetFileTypeIconsByKey(hKey, Entry))
+    {
+        // set default icon
+        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
+        INT cxSmall = GetSystemMetrics(SM_CXSMICON);
+        INT cySmall = GetSystemMetrics(SM_CYSMICON);
+        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
+                                             IMAGE_ICON, cxSmall, cySmall, 0));
+    }
+
     /* close key */
     RegCloseKey(hKey);
+
+    // get program path and app name
+    DWORD cch = _countof(Entry->ProgramPath);
+    if (S_OK == AssocQueryStringW(ASSOCF_INIT_IGNOREUNKNOWN, ASSOCSTR_EXECUTABLE,
+                                  Entry->FileExtension, NULL, Entry->ProgramPath, &cch))
+    {
+        QueryFileDescription(Entry->ProgramPath, Entry->AppName, _countof(Entry->AppName));
+    }
+    else
+    {
+        Entry->ProgramPath[0] = Entry->AppName[0] = 0;
+    }
+
+    // add icon to imagelist
+    INT iLargeImage = -1, iSmallImage = -1;
+    if (Entry->hIconLarge && Entry->hIconSmall)
+    {
+        iLargeImage = ImageList_AddIcon(himlLarge, Entry->hIconLarge);
+        iSmallImage = ImageList_AddIcon(himlSmall, Entry->hIconSmall);
+        ASSERT(iLargeImage == iSmallImage);
+    }
 
     /* Do not add excluded entries */
     if (Entry->EditFlags & 0x00000001) //FTA_Exclude
     {
+        DestroyIcon(Entry->hIconLarge);
+        DestroyIcon(Entry->hIconSmall);
         HeapFree(GetProcessHeap(), 0, Entry);
-        return;
+        return FALSE;
     }
-
-    /* convert extension to upper case */
-    wcscpy(Entry->FileExtension, szName);
-    _wcsupr(Entry->FileExtension);
 
     if (!Entry->FileDescription[0])
     {
@@ -1466,21 +1639,22 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
     }
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
-    lvItem.mask = LVIF_TEXT | LVIF_PARAM;
+    lvItem.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     lvItem.iSubItem = 0;
     lvItem.pszText = &Entry->FileExtension[1];
-    lvItem.iItem = *iItem;
+    lvItem.iItem = iItem;
     lvItem.lParam = (LPARAM)Entry;
-    (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
+    lvItem.iImage = iSmallImage;
+    SendMessageW(hListView, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_TEXT;
     lvItem.pszText = Entry->FileDescription;
-    lvItem.iItem = *iItem;
+    lvItem.iItem = iItem;
     lvItem.iSubItem = 1;
-    ListView_SetItem(hDlgCtrl, &lvItem);
+    ListView_SetItem(hListView, &lvItem);
 
-    (*iItem)++;
+    return TRUE;
 }
 
 static
@@ -1512,8 +1686,19 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     DWORD dwName;
     LVITEMW lvItem;
     INT iItem = 0;
+    HIMAGELIST himlLarge, himlSmall;
 
-    hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+    // create imagelists
+    himlLarge = ImageList_Create(GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON),
+                                 ILC_COLOR32 | ILC_MASK, 256, 20);
+    himlSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+                                 ILC_COLOR32 | ILC_MASK, 256, 20);
+
+    // set imagelists to listview.
+    hDlgCtrl = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+    ListView_SetImageList(hDlgCtrl, himlLarge, LVSIL_NORMAL);
+    ListView_SetImageList(hDlgCtrl, himlSmall, LVSIL_SMALL);
+
     InitializeFileTypesListCtrlColumns(hDlgCtrl);
 
     szFile[0] = 0;
@@ -1528,7 +1713,8 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
 
     while (RegEnumKeyExW(HKEY_CLASSES_ROOT, dwIndex++, szName, &dwName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
-        InsertFileType(hDlgCtrl, szName, &iItem, szFile);
+        if (InsertFileType(hDlgCtrl, szName, iItem, szFile))
+            ++iItem;
         dwName = _countof(szName);
     }
 
@@ -1553,29 +1739,20 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
 }
 
-static
+static inline
 PFOLDER_FILE_TYPE_ENTRY
-FindSelectedItem(
-    HWND hDlgCtrl)
+GetListViewEntry(HWND hListView, INT iItem = -1)
 {
-    UINT Count, Index;
-    LVITEMW lvItem;
-
-    Count = ListView_GetItemCount(hDlgCtrl);
-
-    for (Index = 0; Index < Count; Index++)
+    if (iItem == -1)
     {
-        ZeroMemory(&lvItem, sizeof(LVITEM));
-        lvItem.mask = LVIF_PARAM | LVIF_STATE;
-        lvItem.iItem = Index;
-        lvItem.stateMask = (UINT) - 1;
-
-        if (ListView_GetItem(hDlgCtrl, &lvItem))
-        {
-            if (lvItem.state & LVIS_SELECTED)
-                return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
-        }
+        iItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
+        if (iItem == -1)
+            return NULL;
     }
+
+    LV_ITEMW lvItem = { LVIF_PARAM, iItem };
+    if (ListView_GetItem(hListView, &lvItem))
+        return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
 
     return NULL;
 }
@@ -1879,11 +2056,11 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     szFile[_countof(szFileFormat) - 1] = 0;
     StringCchPrintfW(szFile, _countof(szFile), szFileFormat, &szExt[1]);
 
-    // Insert an item to listview
+    // Insert an item to the listview
     HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
     INT iItem = ListView_GetItemCount(hListView);
-    INT iItemCopy = iItem;
-    InsertFileType(hListView, szExt, &iItemCopy, szFile);
+    if (!InsertFileType(hListView, szExt, iItem, szFile))
+        return FALSE;
 
     LV_ITEM item;
     ZeroMemory(&item, sizeof(item));
@@ -1917,12 +2094,54 @@ FileTypesDlg_RemoveExt(HWND hwndDlg)
     ListView_GetItemText(hListView, iItem, 0, &szExt[1], _countof(szExt) - 1);
     CharLowerW(szExt);
 
-    if (DeleteExt(hwndDlg, szExt))
+    DeleteExt(hwndDlg, szExt);
+    ListView_DeleteItem(hListView, iItem);
+    return TRUE;
+}
+
+static void
+FileTypesDlg_OnItemChanging(HWND hwndDlg, PFOLDER_FILE_TYPE_ENTRY pEntry)
+{
+    WCHAR Buffer[255];
+    static HBITMAP s_hbmProgram = NULL;
+
+    // format buffer and set groupbox text
+    CStringW strFormat(MAKEINTRESOURCEW(IDS_FILE_DETAILS));
+    StringCchPrintfW(Buffer, _countof(Buffer), strFormat, &pEntry->FileExtension[1]);
+    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DETAILS_GROUPBOX, Buffer);
+
+    // format buffer and set description
+    strFormat.LoadString(IDS_FILE_DETAILSADV);
+    StringCchPrintfW(Buffer, _countof(Buffer), strFormat,
+                     &pEntry->FileExtension[1], pEntry->FileDescription,
+                     pEntry->FileDescription);
+    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
+
+    // delete previous program image
+    if (s_hbmProgram)
     {
-        ListView_DeleteItem(hListView, iItem);
-        return TRUE;
+        DeleteObject(s_hbmProgram);
+        s_hbmProgram = NULL;
     }
-    return FALSE;
+
+    // set program image
+    HICON hIconSm = NULL;
+    ExtractIconExW(pEntry->ProgramPath, 0, NULL, &hIconSm, 1);
+    s_hbmProgram = BitmapFromIcon(hIconSm, 16, 16);
+    DestroyIcon(hIconSm);
+    SendDlgItemMessageW(hwndDlg, IDC_FILETYPES_ICON, STM_SETIMAGE, IMAGE_BITMAP, LPARAM(s_hbmProgram));
+
+    // set program name
+    if (pEntry->AppName[0])
+        SetDlgItemTextW(hwndDlg, IDC_FILETYPES_APPNAME, pEntry->AppName);
+    else
+        SetDlgItemTextW(hwndDlg, IDC_FILETYPES_APPNAME, L"ReactOS");
+
+    /* Enable the Delete button */
+    if (pEntry->EditFlags & 0x00000010) // FTA_NoRemove
+        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
+    else
+        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), TRUE);
 }
 
 // IDD_FOLDER_OPTIONS_FILETYPES dialog
@@ -1935,8 +2154,6 @@ FolderOptionsFileTypesDlg(
     LPARAM lParam)
 {
     LPNMLISTVIEW lppl;
-    LVITEMW lvItem;
-    WCHAR Buffer[255], FormatBuffer[255];
     PFOLDER_FILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
     NEWEXT_DIALOG newext;
@@ -1974,7 +2191,7 @@ FolderOptionsFileTypesDlg(
                     }
                     break;
                 case IDC_FILETYPES_CHANGE:
-                    pItem = FindSelectedItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
+                    pItem = GetListViewEntry(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pItem)
                     {
                         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT;
@@ -1987,54 +2204,36 @@ FolderOptionsFileTypesDlg(
 
         case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
-
-            if (lppl->hdr.code == LVN_ITEMCHANGING)
+            switch (lppl->hdr.code)
             {
-                ZeroMemory(&lvItem, sizeof(LVITEM));
-                lvItem.mask = LVIF_PARAM;
-                lvItem.iItem = lppl->iItem;
-                if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&lvItem))
-                    return TRUE;
+                case LVN_DELETEALLITEMS:
+                    return FALSE;   // send LVN_DELETEITEM
 
-                pItem = (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
-                if (!pItem)
-                    return TRUE;
-
-                if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
-                {
-                    /* new focused item */
-                    if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILS, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
+                case LVN_DELETEITEM:
+                    pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
+                    if (pItem)
                     {
-                        /* use default english format string */
-                        wcscpy(FormatBuffer, L"Details for '%s' extension");
+                        DestroyIcon(pItem->hIconLarge);
+                        DestroyIcon(pItem->hIconSmall);
+                        HeapFree(GetProcessHeap(), 0, pItem);
                     }
+                    return FALSE;
 
-                    /* format buffer */
-                    swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
-                    /* update dialog */
-                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DETAILS_GROUPBOX, Buffer);
+                case LVN_ITEMCHANGING:
+                    pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
+                    if (!pItem)
+                        return TRUE;
 
-                    if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
+                    if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
                     {
-                        /* use default english format string */
-                        wcscpy(FormatBuffer, L"Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced.");
+                        FileTypesDlg_OnItemChanging(hwndDlg, pItem);
                     }
-                    /* format buffer */
-                    swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
-                    /* update dialog */
-                    SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
+                    break;
 
-                    /* Enable the Delete button */
-                    if (pItem->EditFlags & 0x00000010) // FTA_NoRemove
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
-                    else
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), TRUE);
-                }
-            }
-            else if (lppl->hdr.code == PSN_SETACTIVE)
-            {
-                /* On page activation, set the focus to the listview */
-                SetFocus(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
+                case PSN_SETACTIVE:
+                    /* On page activation, set the focus to the listview */
+                    SetFocus(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
+                    break;
             }
             break;
     }
