@@ -1391,12 +1391,12 @@ CcRosInitializeFileCache (
     BOOLEAN Allocated;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
-    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     DPRINT("CcRosInitializeFileCache(FileObject 0x%p, SharedCacheMap 0x%p)\n",
            FileObject, SharedCacheMap);
 
     Allocated = FALSE;
     KeAcquireGuardedMutex(&ViewLock);
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     if (SharedCacheMap == NULL)
     {
         Allocated = TRUE;
