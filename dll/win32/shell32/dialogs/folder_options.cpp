@@ -1880,25 +1880,7 @@ NewExtDlg_OnInitDialog(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     return TRUE;
 }
 
-static void
-StringTrimW(LPWSTR pszText)
-{
-    LPWSTR pch = pszText;
-    while (iswspace(*pch))
-        pch++;
-
-    LPWSTR pchFirst, pchLast;
-    pchFirst = pchLast = pch;
-    while (*pch && !iswspace(*pch))
-    {
-        ++pch;
-        pchLast = pch;
-    }
-
-    INT_PTR cch = pchLast - pchFirst;
-    MoveMemory(pszText, pchFirst, cch * sizeof(WCHAR));
-    pszText[cch] = 0;
-}
+static LPCWSTR s_pszSpace = L" \t\n\r\f\v";
 
 static BOOL
 NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
@@ -1907,11 +1889,11 @@ NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     INT iItem;
 
     GetDlgItemTextW(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
-    StringTrimW(pNewExt->szExt);
+    StrTrimW(pNewExt->szExt, s_pszSpace);
     CharUpperW(pNewExt->szExt);
 
     GetDlgItemTextW(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
-    StringTrimW(pNewExt->szFileType);
+    StrTrimW(pNewExt->szFileType, s_pszSpace);
 
     if (pNewExt->szExt[0] == 0)
     {
@@ -2340,8 +2322,6 @@ EditTypeDlg_OnInitDialog(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
 
     return TRUE;
 }
-
-static LPCWSTR s_pszSpace = L" \t\n\r\f\v";
 
 static BOOL
 EditTypeDlg_OnRemove(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
