@@ -1474,7 +1474,6 @@ GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
     }
     else if (lstrcmpW(IconLocation, L"%1") == 0)
     {
-        StringCchCopyW(Entry->IconLocation, _countof(Entry->IconLocation), L"%SystemRoot%\\system32\\SHELL32.dll,-210");
         return FALSE;   // self icon
     }
     else
@@ -1612,6 +1611,8 @@ InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
         INT cySmall = GetSystemMetrics(SM_CYSMICON);
         Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
                                              IMAGE_ICON, cxSmall, cySmall, 0));
+        StringCchCopyW(Entry->IconLocation, _countof(Entry->IconLocation),
+                       L"%SystemRoot%\\system32\\SHELL32.dll,-210");
     }
 
     /* close key */
