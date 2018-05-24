@@ -2161,7 +2161,7 @@ struct EDITTYPE_DIALOG
 };
 
 static BOOL
-EditTypeDlg_InitClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey)
+EditTypeDlg_ReadClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey)
 {
     // open class key
     HKEY hKey;
@@ -2293,7 +2293,7 @@ EditTypeDlg_OnInitDialog(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     // set info
     SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_ICON, STM_SETICON, (WPARAM)pEntry->hIconLarge, 0);
     SetDlgItemTextW(hwndDlg, IDC_EDITTYPE_TEXT, pEntry->ClassName);
-    EditTypeDlg_InitClass(hwndDlg, pEditType, pEntry->ClassKey);
+    EditTypeDlg_ReadClass(hwndDlg, pEditType, pEntry->ClassKey);
     InvalidateRect(GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX), NULL, TRUE);
 
     // is listbox empty?
