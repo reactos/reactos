@@ -370,17 +370,4 @@ AllocateAddressMapping(
     return STATUS_SUCCESS;
 }
 
-#if defined(_M_AMD64)
-/* KeQuerySystemTime is an inline function, 
-   so we cannot forward the export to ntoskrnl */
-STORPORT_API
-VOID
-NTAPI
-StorPortQuerySystemTime(
-    _Out_ PLARGE_INTEGER CurrentTime)
-{
-    KeQuerySystemTime(CurrentTime);
-}
-#endif /* defined(_M_AMD64) */
-
 /* EOF */
