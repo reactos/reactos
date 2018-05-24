@@ -2156,7 +2156,6 @@ struct EDITTYPE_DIALOG
     HWND hwndLV;
     FOLDER_FILE_TYPE_ENTRY *pEntry;
     CSimpleMap<CStringW, CStringW> CommandLineMap;
-    CStringW strIconPath;
     WCHAR szIconLocation[MAX_PATH + 16];
     WCHAR szDefaultVerb[64];
 };
