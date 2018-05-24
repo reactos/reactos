@@ -1462,6 +1462,52 @@ typedef struct _EJOB
 #include <poppack.h>
 
 //
+// Job Information Structures for NtQueryInformationJobObject
+//
+
+typedef struct _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION
+{
+    LARGE_INTEGER TotalUserTime;
+    LARGE_INTEGER TotalKernelTime;
+    LARGE_INTEGER ThisPeriodTotalUserTime;
+    LARGE_INTEGER ThisPeriodTotalKernelTime;
+    ULONG TotalPageFaultCount;
+    ULONG TotalProcesses;
+    ULONG ActiveProcesses;
+    ULONG TotalTerminatedProcesses;
+} JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, *PJOBOBJECT_BASIC_ACCOUNTING_INFORMATION;
+
+typedef struct _JOBOBJECT_BASIC_LIMIT_INFORMATION
+{
+    LARGE_INTEGER PerProcessUserTimeLimit;
+    LARGE_INTEGER PerJobUserTimeLimit;
+    ULONG LimitFlags;
+    SIZE_T MinimumWorkingSetSize;
+    SIZE_T MaximumWorkingSetSize;
+    ULONG ActiveProcessLimit;
+    ULONG_PTR Affinity;
+    ULONG PriorityClass;
+    ULONG SchedulingClass;
+} JOBOBJECT_BASIC_LIMIT_INFORMATION, *PJOBOBJECT_BASIC_LIMIT_INFORMATION;
+
+typedef struct JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION
+{
+    JOBOBJECT_BASIC_ACCOUNTING_INFORMATION BasicInfo;
+    IO_COUNTERS IoInfo;
+} JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION, *PJOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION;
+
+typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+{
+    JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+    IO_COUNTERS IoInfo;
+    SIZE_T ProcessMemoryLimit;
+    SIZE_T JobMemoryLimit;
+    SIZE_T PeakProcessMemoryUsed;
+    SIZE_T PeakJobMemoryUsed;
+} JOBOBJECT_EXTENDED_LIMIT_INFORMATION, *PJOBOBJECT_EXTENDED_LIMIT_INFORMATION;
+
+
+//
 // Win32K Callback Registration Data
 //
 typedef struct _WIN32_POWEREVENT_PARAMETERS
