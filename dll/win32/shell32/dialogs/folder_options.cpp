@@ -2243,7 +2243,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKe
     {
         if (pEditType->CommandLineMap.FindKey(szVerbName) == -1)
         {
-            // doesn't exists in CommandLineMap, then delete it
+            // doesn't exist in CommandLineMap, then delete it
             if (SHDeleteKeyW(hShellKey, szVerbName) == ERROR_SUCCESS)
             {
                 --dwIndex;
@@ -2252,7 +2252,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKe
         ++dwIndex;
     }
 
-    // write shell command
+    // write shell commands
     const INT nCount = pEditType->CommandLineMap.GetSize();
     for (INT i = 0; i < nCount; ++i)
     {
@@ -2299,7 +2299,6 @@ EditTypeDlg_OnInitDialog(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     // is listbox empty?
     if (SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_GETCOUNT, 0, 0) == 0)
     {
-        EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_NEW), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_EDIT_BUTTON), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_REMOVE), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_SET_DEFAULT), FALSE);
