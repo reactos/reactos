@@ -2164,14 +2164,17 @@ static BOOL
 EditTypeDlg_ReadClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey)
 {
     // open class key
-    HKEY hKey;
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    HKEY hClassKey;
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_READ, &hClassKey) != ERROR_SUCCESS)
         return FALSE;
 
     // open "shell" key
     HKEY hShellKey;
-    if (RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(hClassKey, L"shell", 0, KEY_READ, &hShellKey) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hClassKey);
         return FALSE;
+    }
 
     WCHAR DefaultVerb[64];
     DWORD dwSize = sizeof(DefaultVerb);
@@ -2218,7 +2221,7 @@ EditTypeDlg_ReadClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey
     }
 
     RegCloseKey(hShellKey);
-    RegCloseKey(hKey);
+    RegCloseKey(hClassKey);
 
     return TRUE;
 }
@@ -2238,7 +2241,10 @@ EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType,
     // open "shell" key
     HKEY hShellKey;
     if (RegOpenKeyExW(hClassKey, L"shell", 0, KEY_WRITE, &hShellKey) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hClassKey);
         return FALSE;
+    }
 
     // delete shell commands
     WCHAR szVerbName[64];
