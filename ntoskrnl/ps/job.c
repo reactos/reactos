@@ -5,6 +5,7 @@
  * PURPOSE:         Job Native Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) (stubs)
  *                  Thomas Weidenmueller <w3seek@reactos.com>
+ *                  Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -278,6 +279,8 @@ NtCreateJobObject (
         /* inherit the session id from the caller */
         Job->SessionId = PsGetProcessSessionId(CurrentProcess);
 
+        KeInitializeGuardedMutex(&Job->MemoryLimitsLock);
+
         Status = ExInitializeResource(&Job->JobLock);
         if(!NT_SUCCESS(Status))
         {
@@ -444,8 +447,15 @@ NtOpenJobObject (
 }
 
 
+ULONG PspJobInfoLengths[] = { 0x0, sizeof(JOBOBJECT_BASIC_ACCOUNTING_INFORMATION),
+                                   sizeof(JOBOBJECT_BASIC_LIMIT_INFORMATION),
+                                   0x0C, 0x4, 0x14, 0x4, 0x8,
+                                   sizeof(JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION),
+                                   sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION), 0x4 };
+ULONG PspJobInfoAlign[] =   { 0x0, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4 };
+
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -456,8 +466,257 @@ NtQueryInformationJobObject (
     ULONG JobInformationLength,
     PULONG ReturnLength )
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PEJOB Job;
+    NTSTATUS Status;
+    BOOLEAN NoOutput;
+    PVOID GenericCopy;
+    PLIST_ENTRY NextEntry;
+    PKTHREAD CurrentThread;
+    KPROCESSOR_MODE PreviousMode;
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit;
+    JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION BasicAndIo;
+    ULONG RequiredLength, RequiredAlign, SizeToCopy, NeededSize;
+
+    PAGED_CODE();
+
+    CurrentThread  = KeGetCurrentThread();
+
+    /* Validate class */
+    if (JobInformationClass > JobObjectJobSetInformation || JobInformationClass < JobObjectBasicAccountingInformation)
+    {
+        return STATUS_INVALID_INFO_CLASS;
+    }
+
+    /* Get associated lengths & alignments */
+    RequiredLength = PspJobInfoLengths[JobInformationClass];
+    RequiredAlign = PspJobInfoAlign[JobInformationClass];
+    SizeToCopy = RequiredLength;
+    NeededSize = RequiredLength;
+
+    /* If length mismatch (needed versus provided) */
+    if (JobInformationLength != RequiredLength)
+    {
+        /* This can only be accepted if: JobObjectBasicProcessIdList or JobObjectSecurityLimitInformation
+         * Or if size is bigger than needed
+         */
+        if ((JobInformationClass != JobObjectBasicProcessIdList && JobInformationClass != JobObjectSecurityLimitInformation) ||
+            JobInformationLength < RequiredLength)
+        {
+            return STATUS_INFO_LENGTH_MISMATCH;
+        }
+
+        /* Set what we need to copy out */
+        SizeToCopy = JobInformationLength;
+    }
+
+    PreviousMode = ExGetPreviousMode();
+    /* If not comming from umode, we need to probe buffers */
+    if (PreviousMode != KernelMode)
+    {
+        ASSERT(((RequiredAlign) == 1) || ((RequiredAlign) == 2) || ((RequiredAlign) == 4) || ((RequiredAlign) == 8) || ((RequiredAlign) == 16));
+
+        _SEH2_TRY
+        {
+            /* Probe out buffer for write */
+            if (JobInformation != NULL)
+            {
+                ProbeForWrite(JobInformation, JobInformationLength, RequiredAlign);
+            }
+
+            /* But also return lenght if asked */
+            if (ReturnLength != NULL)
+            {
+                ProbeForWrite(JobInformation, sizeof(ULONG), sizeof(ULONG));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    /* If a job handle was provided, use it */
+    if (JobHandle != NULL)
+    {
+        Status = ObReferenceObjectByHandle(JobHandle,
+                                           JOB_OBJECT_QUERY,
+                                           PsJobType,
+                                           PreviousMode,
+                                           (PVOID*)&Job,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    /* Otherwise, get our current process' job, if any */
+    else
+    {
+        PEPROCESS CurrentProcess;
+
+        CurrentProcess = (PEPROCESS)CurrentThread->ApcState.Process;
+        Job = CurrentProcess->Job;
+        if (Job == NULL)
+        {
+            return STATUS_ACCESS_DENIED;
+        }
+
+        ObReferenceObject(Job);
+    }
+
+    /* By default, assume we'll have to copy data */
+    NoOutput = FALSE;
+    /* Select class */
+    switch (JobInformationClass)
+    {
+        /* Basic counters */
+        case JobObjectBasicAccountingInformation:
+        case JobObjectBasicAndIoAccountingInformation:
+            /* Zero basics */
+            RtlZeroMemory(&BasicAndIo.BasicInfo, sizeof(JOBOBJECT_BASIC_ACCOUNTING_INFORMATION));
+
+            /* Lock */
+            KeEnterGuardedRegionThread(CurrentThread);
+            ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
+
+            /* Initialize with job counters */
+            BasicAndIo.BasicInfo.TotalUserTime.QuadPart = Job->TotalUserTime.QuadPart;
+            BasicAndIo.BasicInfo.TotalKernelTime.QuadPart = Job->TotalKernelTime.QuadPart;
+            BasicAndIo.BasicInfo.ThisPeriodTotalUserTime.QuadPart = Job->ThisPeriodTotalUserTime.QuadPart;
+            BasicAndIo.BasicInfo.ThisPeriodTotalKernelTime.QuadPart = Job->ThisPeriodTotalKernelTime.QuadPart;
+            BasicAndIo.BasicInfo.TotalPageFaultCount = Job->TotalPageFaultCount;
+            BasicAndIo.BasicInfo.TotalProcesses = Job->TotalProcesses;
+            BasicAndIo.BasicInfo.ActiveProcesses = Job->ActiveProcesses;
+            BasicAndIo.BasicInfo.TotalTerminatedProcesses = Job->TotalTerminatedProcesses;
+
+            /* We also set IoInfo, even though we might not return it */
+            BasicAndIo.IoInfo.ReadOperationCount = Job->ReadOperationCount;
+            BasicAndIo.IoInfo.WriteOperationCount = Job->WriteOperationCount;
+            BasicAndIo.IoInfo.OtherOperationCount = Job->OtherOperationCount;
+            BasicAndIo.IoInfo.ReadTransferCount = Job->ReadTransferCount;
+            BasicAndIo.IoInfo.WriteTransferCount = Job->WriteTransferCount;
+            BasicAndIo.IoInfo.OtherTransferCount = Job->OtherTransferCount;
+
+            /* For every process, sum its counters */
+            for (NextEntry = Job->ProcessListHead.Flink;
+                 NextEntry != &Job->ProcessListHead;
+                 NextEntry = NextEntry->Flink)
+            {
+                PEPROCESS Process;
+
+                Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
+                if (!BooleanFlagOn(Process->JobStatus, 2))
+                {
+                    /* FIXME: Call KeQueryValuesProcess()
+                     * We should sum BasicInfo values here,
+                     * but we don't have them
+                     */
+                    BasicAndIo.IoInfo.ReadOperationCount += Process->ReadOperationCount.QuadPart;
+                    BasicAndIo.IoInfo.WriteOperationCount += Process->WriteOperationCount.QuadPart;
+                    BasicAndIo.IoInfo.OtherOperationCount += Process->OtherOperationCount.QuadPart;
+                    BasicAndIo.IoInfo.ReadTransferCount += Process->ReadTransferCount.QuadPart;
+                    BasicAndIo.IoInfo.WriteTransferCount += Process->WriteTransferCount.QuadPart;
+                    BasicAndIo.IoInfo.OtherTransferCount += Process->OtherTransferCount.QuadPart;
+                }
+            }
+
+            /* And done */
+            ExReleaseResourceLite(&Job->JobLock);
+            KeLeaveGuardedRegionThread(CurrentThread);
+
+            /* We'll copy back the buffer */
+            GenericCopy = &BasicAndIo;
+            Status = STATUS_SUCCESS;
+
+            break;
+
+        /* Limits information */
+        case JobObjectBasicLimitInformation:
+        case JobObjectExtendedLimitInformation:
+            /* Lock */
+            KeEnterGuardedRegionThread(CurrentThread);
+            ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
+
+            /* Copy basic information */
+            ExtendedLimit.BasicLimitInformation.LimitFlags = Job->LimitFlags;
+            ExtendedLimit.BasicLimitInformation.MinimumWorkingSetSize = Job->MinimumWorkingSetSize;
+            ExtendedLimit.BasicLimitInformation.MaximumWorkingSetSize = Job->MaximumWorkingSetSize;
+            ExtendedLimit.BasicLimitInformation.ActiveProcessLimit = Job->ActiveProcessLimit;
+            ExtendedLimit.BasicLimitInformation.PriorityClass = Job->PriorityClass;
+            ExtendedLimit.BasicLimitInformation.SchedulingClass = Job->SchedulingClass;
+            ExtendedLimit.BasicLimitInformation.Affinity = Job->Affinity;
+            ExtendedLimit.BasicLimitInformation.PerProcessUserTimeLimit.QuadPart = Job->PerProcessUserTimeLimit.QuadPart;
+            ExtendedLimit.BasicLimitInformation.PerJobUserTimeLimit.QuadPart = Job->PerJobUserTimeLimit.QuadPart;
+
+            /* If asking for extending limits */
+            if (JobInformationClass == JobObjectExtendedLimitInformation)
+            {
+                /* Lock our memory lock */
+                KeAcquireGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+                /* Return limits */
+                ExtendedLimit.ProcessMemoryLimit = Job->ProcessMemoryLimit << PAGE_SHIFT;
+                ExtendedLimit.JobMemoryLimit = Job->JobMemoryLimit << PAGE_SHIFT;
+                ExtendedLimit.PeakProcessMemoryUsed = Job->PeakProcessMemoryUsed << PAGE_SHIFT;
+                ExtendedLimit.PeakJobMemoryUsed = Job->PeakJobMemoryUsed << PAGE_SHIFT;
+                KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+
+                /* And done */
+                ExReleaseResourceLite(&Job->JobLock);
+                KeLeaveGuardedRegionThread(CurrentThread);
+
+                /* We'll never return IoInfo, so zero it out to avoid
+                 * kernel memory leak
+                 */
+                RtlZeroMemory(&ExtendedLimit.IoInfo, sizeof(IO_COUNTERS));
+            }
+            else
+            {
+                /* And done */
+                ExReleaseResourceLite(&Job->JobLock);
+                KeLeaveGuardedRegionThread(CurrentThread);
+            }
+
+            /* We'll copy back the buffer */
+            GenericCopy = &ExtendedLimit;
+            Status = STATUS_SUCCESS;
+
+            break;
+
+        default:
+            DPRINT1("Class %d not implemented\n", JobInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+    }
+
+    /* Job is no longer required */
+    ObDereferenceObject(Job);
+
+    /* If we succeeed, copy back data */
+    if (NT_SUCCESS(Status))
+    {
+        _SEH2_TRY
+        {
+            /* If we have anything to copy, do it */
+            if (!NoOutput)
+            {
+                RtlCopyMemory(JobInformation, GenericCopy, SizeToCopy);
+            }
+
+            /* And return length if asked */
+            if (ReturnLength != NULL)
+            {
+                *ReturnLength = NeededSize;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    return Status;
 }
 
 
