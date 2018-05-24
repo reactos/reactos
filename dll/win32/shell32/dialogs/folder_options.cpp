@@ -2314,6 +2314,8 @@ EditTypeDlg_OnInitDialog(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     return TRUE;
 }
 
+static LPCWSTR s_pszSpace[] = L" \t\n\r\f\v";
+
 static BOOL
 EditTypeDlg_OnRemove(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
 {
@@ -2329,9 +2331,10 @@ EditTypeDlg_OnRemove(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
         return FALSE;
 
     // get text
-    WCHAR szText[64] = { 0 };
+    WCHAR szText[64];
+    szText[0] = 0;
     SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_GETTEXT, iItem, (LPARAM)szText);
-    StrTrimW(szText, L" \t");
+    StrTrimW(szText, s_pszSpace);
 
     // remove it
     pEditType->CommandLineMap.Remove(szText);
@@ -2420,8 +2423,8 @@ NewAct_OnOK(HWND hwndDlg, ACTION_DIALOG *pNewAct)
 {
     GetDlgItemTextW(hwndDlg, IDC_ACTION_ACTION, pNewAct->szAction, _countof(pNewAct->szAction));
     GetDlgItemTextW(hwndDlg, IDC_ACTION_APP, pNewAct->szApp, _countof(pNewAct->szApp));
-    StrTrimW(pNewAct->szAction, L" \t");
-    StrTrimW(pNewAct->szApp, L" \t");
+    StrTrimW(pNewAct->szAction, s_pszSpace);
+    StrTrimW(pNewAct->szApp, s_pszSpace);
     if (pNewAct->szAction[0] == 0)
     {
         // action is empty, error
@@ -2530,8 +2533,8 @@ EditAct_OnOK(HWND hwndDlg, ACTION_DIALOG *pEditAct)
 {
     GetDlgItemTextW(hwndDlg, IDC_ACTION_ACTION, pEditAct->szAction, _countof(pEditAct->szAction));
     GetDlgItemTextW(hwndDlg, IDC_ACTION_APP, pEditAct->szApp, _countof(pEditAct->szApp));
-    StrTrimW(pEditAct->szAction, L" \t");
-    StrTrimW(pEditAct->szApp, L" \t");
+    StrTrimW(pEditAct->szAction, s_pszSpace);
+    StrTrimW(pEditAct->szApp, s_pszSpace);
     if (pEditAct->szAction[0] == 0)
     {
         HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_ACTION);
