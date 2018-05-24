@@ -2226,14 +2226,17 @@ EditTypeDlg_ReadClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey
 static BOOL
 EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey)
 {
+    if (ClassKey[0] == 0)
+        return FALSE;
+
     // open class key
-    HKEY hKey;
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_WRITE, &hKey) != ERROR_SUCCESS)
+    HKEY hClassKey;
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_WRITE, &hClassKey) != ERROR_SUCCESS)
         return FALSE;
 
     // open "shell" key
     HKEY hShellKey;
-    if (RegOpenKeyExW(hKey, L"shell", 0, KEY_WRITE, &hShellKey) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(hClassKey, L"shell", 0, KEY_WRITE, &hShellKey) != ERROR_SUCCESS)
         return FALSE;
 
     // delete shell commands
@@ -2251,6 +2254,9 @@ EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKe
         }
         ++dwIndex;
     }
+
+    // set default action
+    RegSetValueExW(hShellKey, NULL, 0, REG_SZ, LPBYTE(pEditType->szDefaultVerb), sizeof(pEditType->szDefaultVerb));
 
     // write shell commands
     const INT nCount = pEditType->CommandLineMap.GetSize();
@@ -2278,8 +2284,11 @@ EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKe
         }
     }
 
+    // set class name to class key
+    RegSetValueExW(hClassKey, NULL, 0, REG_SZ, LPBYTE(pEntry->ClassName), sizeof(pEntry->ClassName));
+
     RegCloseKey(hShellKey);
-    RegCloseKey(hKey);
+    RegCloseKey(hClassKey);
     return TRUE;
 }
 
@@ -2378,33 +2387,15 @@ EditTypeDlg_OnOK(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
 {
     FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
 
+    // get class name
+    GetDlgItemTextW(hwndDlg, IDC_EDITTYPE_TEXT, pEntry->ClassName, _countof(pEntry->ClassName));
+    StrTrimW(pEntry->ClassName, s_pszSpace);
+
     // write registry
     EditTypeDlg_WriteClass(hwndDlg, pEditType, pEntry->ClassKey);
 
     // update entry icon
     EditTypeDlg_UpdateEntryIcon(hwndDlg, pEntry, pEditType->szIconLocation);
-
-    // get class name
-    GetDlgItemTextW(hwndDlg, IDC_EDITTYPE_TEXT, pEntry->ClassName, _countof(pEntry->ClassName));
-
-    HKEY hClassKey;
-    if (pEntry->ClassKey[0] &&
-        RegOpenKeyExW(HKEY_CLASSES_ROOT, pEntry->ClassKey, 0, KEY_READ | KEY_WRITE, &hClassKey) == ERROR_SUCCESS)
-    {
-        HKEY hShellKey;
-        if (RegOpenKeyExW(hClassKey, NULL, 0, KEY_WRITE, &hShellKey) == ERROR_SUCCESS)
-        {
-            // set default action
-            RegSetValueExW(hShellKey, NULL, 0, REG_SZ, LPBYTE(pEditType->szDefaultVerb), sizeof(pEditType->szDefaultVerb));
-
-            RegCloseKey(hShellKey);
-        }
-
-        // set class name to class key
-        RegSetValueExW(hClassKey, NULL, 0, REG_SZ, LPBYTE(pEntry->ClassName), sizeof(pEntry->ClassName));
-
-        RegCloseKey(hClassKey);
-    }
 
     EndDialog(hwndDlg, IDOK);
 }
