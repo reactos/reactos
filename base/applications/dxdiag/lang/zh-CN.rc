@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "宋体"
 BEGIN
     LTEXT "该工具报告有关 ReactX 组件和安装在系统上的驱动程序的详细信息。", IDC_STATIC, 5, 0, 443, 17
-    LTEXT "如果您知道是哪个部分引起的错误，请单击上面适当的选项卡。否则，您可以使用下面的“下一页”按钮按顺序查阅每一页。 ", IDC_STATIC, 5, 15, 443, 25
+    LTEXT "如果您在使用ReactX是出现问题，并知道是哪个部分引起的错误，请单击上面适当的选项卡。否则，您可以使用下面的“下一页”按钮按顺序查阅每一页。 ", IDC_STATIC, 5, 15, 443, 25
     GROUPBOX "系统信息", IDC_STATIC, 5, 35, 452, 150, SS_RIGHT
     LTEXT "当前日期/时间：", IDC_STATIC, 70, 50, 80, 10, SS_RIGHT
     LTEXT "计算机名：", IDC_STATIC, 70, 60, 80, 10, SS_RIGHT
@@ -166,7 +166,7 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "DirectInput 设备", IDC_STATIC, 5, 0, 452, 85
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 15, 12, 432, 65
-    GROUPBOX "与输入相关的设备", IDC_STATIC, 5, 87, 452, 81
+    GROUPBOX "输入设备", IDC_STATIC, 5, 87, 452, 81
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
             WS_VISIBLE | WS_BORDER | WS_TABSTOP, 15, 99, 432, 60, 0x00000200
     GROUPBOX "说明", IDC_STATIC, 5, 170, 452, 50
@@ -209,7 +209,7 @@ BEGIN
     IDS_NETWORK_DIALOG "网络"
     IDS_HELP_DIALOG "帮助"
     IDS_FORMAT_MB "%I64uMB RAM"
-    IDS_FORMAT_SWAP "已使用 %I64u MB，还有 %I64u MB 可用"
+    IDS_FORMAT_SWAP "已使用 %I64u MB，%I64u MB 可用"
     IDS_FORMAT_UNIPROC "%s (%u CPU)"
     IDS_FORMAT_MPPROC "%s (%u CPUs)"
     IDS_VERSION_UNKNOWN "未知版本"
