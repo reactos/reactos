@@ -998,6 +998,7 @@ ViewDlg_ToggleCheckItem(HWND hwndDlg, HTREEITEM hItem)
         case AETYPE_CHECKBOX:
             pEntry->bChecked = !pEntry->bChecked;
             break;
+
         case AETYPE_RADIO:
             // reset all the entries of the same parent
             for (i = 0; i < s_AdvancedCount; ++i)
@@ -1015,6 +1016,7 @@ ViewDlg_ToggleCheckItem(HWND hwndDlg, HTREEITEM hItem)
             }
             pEntry->bChecked = TRUE;
             break;
+
         default:
             return FALSE;   // failure
     }
@@ -1288,6 +1290,7 @@ FolderOptionsViewDlg(
     {
         case WM_INITDIALOG:
             return ViewDlg_OnInitDialog(hwndDlg);
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -1296,23 +1299,28 @@ FolderOptionsViewDlg(
                     break;
             }
             break;
+
         case WM_NOTIFY:
             switch (LPNMHDR(lParam)->code)
             {
                 case NM_CLICK:  // clicked on treeview
                     ViewDlg_OnTreeViewClick(hwndDlg);
                     break;
+
                 case NM_CUSTOMDRAW:     // custom draw (for graying)
                     Draw = (NMTVCUSTOMDRAW *)lParam;
                     Result = ViewDlg_OnTreeCustomDraw(hwndDlg, Draw);
                     SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, Result);
                     return Result;
+
                 case TVN_KEYDOWN:       // key is down
                     ViewDlg_OnTreeViewKeyDown(hwndDlg, (TV_KEYDOWN *)lParam);
                     break;
+
                 case PSN_APPLY:         // [Apply] is clicked
                     ViewDlg_Apply(hwndDlg);
                     break;
+
                 default:
                     break;
             }
@@ -1988,15 +1996,18 @@ NewExtensionDlgProc(
             s_pNewExt = (NEWEXT_DIALOG *)lParam;
             NewExtDlg_OnInitDialog(hwndDlg, s_pNewExt);
             return TRUE;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
                     NewExtDlg_OnOK(hwndDlg, s_pNewExt);
                     break;
+
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
                     break;
+
                 case IDC_NEWEXT_ADVANCED:
                     s_pNewExt->bAdvanced = !s_pNewExt->bAdvanced;
                     NewExtDlg_OnAdvanced(hwndDlg, s_pNewExt);
@@ -2506,15 +2517,18 @@ NewActionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             s_pNewAct->bUseDDE = FALSE;
             EnableWindow(GetDlgItem(hwndDlg, IDC_ACTION_USE_DDE), FALSE);
             return TRUE;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
                     NewAct_OnOK(hwndDlg, s_pNewAct);
                     break;
+
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
                     break;
+
                 case IDC_ACTION_BROWSE:
                     Action_OnBrowse(hwndDlg, s_pNewAct, FALSE);
                     break;
@@ -2573,15 +2587,18 @@ EditActionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 SetWindowTextW(hwndDlg, str);
             }
             return TRUE;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
                     EditAct_OnOK(hwndDlg, s_pEditAct);
                     break;
+
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
                     break;
+
                 case IDC_ACTION_BROWSE:
                     Action_OnBrowse(hwndDlg, s_pEditAct, TRUE);
                     break;
@@ -2712,12 +2729,15 @@ EditTypeDlg_OnCommand(HWND hwndDlg, UINT id, UINT code, EDITTYPE_DIALOG *pEditTy
         case IDOK:
             EditTypeDlg_OnOK(hwndDlg, pEditType);
             break;
+
         case IDCANCEL:
             EndDialog(hwndDlg, IDCANCEL);
             break;
+
         case IDC_EDITTYPE_CHANGE_ICON:
             EditTypeDlg_OnChangeIcon(hwndDlg, pEditType);
             break;
+
         case IDC_EDITTYPE_NEW:
             action.bUseDDE = FALSE;
             action.hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
@@ -2755,6 +2775,7 @@ EditTypeDlg_OnCommand(HWND hwndDlg, UINT id, UINT code, EDITTYPE_DIALOG *pEditTy
                 }
             }
             break;
+
         case IDC_EDITTYPE_LISTBOX:
             if (code == LBN_SELCHANGE)
             {
@@ -2776,6 +2797,7 @@ EditTypeDlg_OnCommand(HWND hwndDlg, UINT id, UINT code, EDITTYPE_DIALOG *pEditTy
                 break;
             }
             // FALL THROUGH
+
         case IDC_EDITTYPE_EDIT_BUTTON:
             action.bUseDDE = FALSE;
             action.hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
@@ -2803,9 +2825,11 @@ EditTypeDlg_OnCommand(HWND hwndDlg, UINT id, UINT code, EDITTYPE_DIALOG *pEditTy
                 pEditType->CommandLineMap.SetAt(action.szAction, action.szApp);
             }
             break;
+
         case IDC_EDITTYPE_REMOVE:
             EditTypeDlg_OnRemove(hwndDlg, pEditType);
             break;
+
         case IDC_EDITTYPE_SET_DEFAULT:
             action.hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
             iItem = SendMessageW(action.hwndLB, LB_GETCURSEL, 0, 0);
@@ -2834,12 +2858,15 @@ EditTypeDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
             s_pEditType = (EDITTYPE_DIALOG *)lParam;
             return EditTypeDlg_OnInitDialog(hwndDlg, s_pEditType);
+
         case WM_DRAWITEM:
             pDraw = LPDRAWITEMSTRUCT(lParam);
             return EditTypeDlg_OnDrawItem(hwndDlg, pDraw, s_pEditType);
+
         case WM_MEASUREITEM:
             pMeasure = LPMEASUREITEMSTRUCT(lParam);
             return EditTypeDlg_OnMeasureItem(hwndDlg, pMeasure, s_pEditType);
+
         case WM_COMMAND:
             EditTypeDlg_OnCommand(hwndDlg, LOWORD(wParam), HIWORD(wParam), s_pEditType);
             break;
@@ -2896,9 +2923,11 @@ FolderOptionsFileTypesDlg(
                         FileTypesDlg_AddExt(hwndDlg, newext.szExt, newext.szFileType);
                     }
                     break;
+
                 case IDC_FILETYPES_DELETE:
                     EditTypeDlg_OnDelete(hwndDlg);
                     break;
+
                 case IDC_FILETYPES_CHANGE:
                     pItem = GetListViewEntry(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pItem)
@@ -2908,6 +2937,7 @@ FolderOptionsFileTypesDlg(
                         SHOpenWithDialog(hwndDlg, &Info);
                     }
                     break;
+
                 case IDC_FILETYPES_ADVANCED:
                     edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
                     edittype.pEntry = GetListViewEntry(edittype.hwndLV);
@@ -2930,12 +2960,14 @@ FolderOptionsFileTypesDlg(
                         }
                     }
                     break;
+
                 case NM_DBLCLK:
                     edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
                     edittype.pEntry = GetListViewEntry(edittype.hwndLV);
                     DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_EDITTYPE),
                                     hwndDlg, EditTypeDlgProc, (LPARAM)&edittype);
                     break;
+
                 case LVN_DELETEALLITEMS:
                     return FALSE;   // send LVN_DELETEITEM
 
@@ -3018,11 +3050,13 @@ Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
         case 0:
             ShowFolderOptionsDialog(hWnd, hInst);
             break;
+
         case 1:
             // show taskbar options dialog
             FIXME("notify explorer to show taskbar options dialog");
             //PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
             break;
+
         default:
             FIXME("unrecognized options id %d\n", fOptions);
     }
