@@ -2600,11 +2600,13 @@ EditTypeDlg_OnChangeIcon(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
         DestroyIcon(pEntry->hIconSmall);
         pEntry->hIconLarge = NULL;
         pEntry->hIconSmall = NULL;
-        DoFileTypeIconLocation(pEntry, pEditType->szIconLocation);
 
+        // do icon location
         StringCchPrintfW(pEditType->szIconLocation, _countof(pEditType->szIconLocation),
                          L"%s,-%u", szPath, IconIndex);
+        DoFileTypeIconLocation(pEntry, pEditType->szIconLocation);
 
+        // set icon to dialog
         SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_ICON, STM_SETICON, (WPARAM)pEntry->hIconLarge, 0);
     }
 }
