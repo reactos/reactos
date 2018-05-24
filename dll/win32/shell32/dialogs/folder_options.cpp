@@ -2224,7 +2224,8 @@ EditTypeDlg_ReadClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey
 }
 
 static BOOL
-EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey)
+EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType,
+                       LPCWSTR ClassKey, LPCWSTR ClassName, INT cchName)
 {
     if (ClassKey[0] == 0)
         return FALSE;
@@ -2285,7 +2286,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKe
     }
 
     // set class name to class key
-    RegSetValueExW(hClassKey, NULL, 0, REG_SZ, LPBYTE(pEntry->ClassName), sizeof(pEntry->ClassName));
+    RegSetValueExW(hClassKey, NULL, 0, REG_SZ, LPBYTE(ClassName), cchName);
 
     RegCloseKey(hShellKey);
     RegCloseKey(hClassKey);
@@ -2323,7 +2324,7 @@ EditTypeDlg_OnInitDialog(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     return TRUE;
 }
 
-static LPCWSTR s_pszSpace[] = L" \t\n\r\f\v";
+static LPCWSTR s_pszSpace = L" \t\n\r\f\v";
 
 static BOOL
 EditTypeDlg_OnRemove(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
@@ -2392,7 +2393,7 @@ EditTypeDlg_OnOK(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     StrTrimW(pEntry->ClassName, s_pszSpace);
 
     // write registry
-    EditTypeDlg_WriteClass(hwndDlg, pEditType, pEntry->ClassKey);
+    EditTypeDlg_WriteClass(hwndDlg, pEditType, pEntry->ClassKey, pEntry->ClassName, _countof(pEntry->ClassName));
 
     // update entry icon
     EditTypeDlg_UpdateEntryIcon(hwndDlg, pEntry, pEditType->szIconLocation);
@@ -2443,12 +2444,10 @@ NewAct_OnOK(HWND hwndDlg, ACTION_DIALOG *pNewAct)
 
 static LPWSTR MakeFilter(LPWSTR pszFilter)
 {
-    LPWSTR pch = pszFilter;
-    while (*pch)
+    for (LPWSTR pch = pszFilter; *pch; ++pch)
     {
         if (*pch == L'|')
             *pch = 0;
-        ++pch;
     }
     return pszFilter;
 }
