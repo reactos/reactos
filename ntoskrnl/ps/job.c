@@ -50,6 +50,36 @@ GENERIC_MAPPING PspJobMapping =
     STANDARD_RIGHTS_ALL | THREAD_ALL_ACCESS // bug fixed only in vista
 };
 
+ULONG PspJobInfoLengths[] =
+{
+    0x0,
+    sizeof(JOBOBJECT_BASIC_ACCOUNTING_INFORMATION),
+    sizeof(JOBOBJECT_BASIC_LIMIT_INFORMATION),
+    sizeof(JOBOBJECT_BASIC_PROCESS_ID_LIST),
+    sizeof(JOBOBJECT_BASIC_UI_RESTRICTIONS),
+    sizeof(JOBOBJECT_SECURITY_LIMIT_INFORMATION),
+    sizeof(JOBOBJECT_END_OF_JOB_TIME_INFORMATION),
+    sizeof(JOBOBJECT_ASSOCIATE_COMPLETION_PORT),
+    sizeof(JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION),
+    sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION),
+    0x4
+};
+
+ULONG PspJobInfoAlign[] =
+{
+    0x0,
+    sizeof(ULONG),
+    sizeof(ULONG),
+    sizeof(ULONG),
+    sizeof(ULONG),
+    sizeof(ULONG),
+    sizeof(ULONG),
+    sizeof(ULONG),
+    sizeof(ULONG),
+    sizeof(ULONG),
+    sizeof(ULONG)
+};
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -446,13 +476,6 @@ NtOpenJobObject (
     return Status;
 }
 
-
-ULONG PspJobInfoLengths[] = { 0x0, sizeof(JOBOBJECT_BASIC_ACCOUNTING_INFORMATION),
-                                   sizeof(JOBOBJECT_BASIC_LIMIT_INFORMATION),
-                                   0x0C, 0x4, 0x14, 0x4, 0x8,
-                                   sizeof(JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION),
-                                   sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION), 0x4 };
-ULONG PspJobInfoAlign[] =   { 0x0, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4 };
 
 /*
  * @implemented
