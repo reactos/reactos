@@ -63,10 +63,13 @@ LpkExtTextOut(
     const INT *lpDx,
     INT unknown)
 {
-    WORD *glyphs = NULL;
+    LPWORD glyphs = NULL;
     INT cGlyphs;
 
     UNREFERENCED_PARAMETER(unknown);
+
+    if (!(fuOptions & ETO_IGNORELANGUAGE))
+        fuOptions |= ETO_IGNORELANGUAGE;
 
     /* Check if the string requires complex script processing and not a "glyph indices" array */
     if (ScriptIsComplex(lpString, uCount, SIC_COMPLEX) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))
@@ -77,13 +80,10 @@ LpkExtTextOut(
         fuOptions |= ETO_GLYPH_INDEX;
 
         if (uCount > cGlyphs)
-        cGlyphs = uCount;
+            cGlyphs = uCount;
 
         return ExtTextOutW(hdc, x, y, fuOptions, lprc, (LPWSTR)glyphs, cGlyphs, lpDx);
     }
-
-    if (!(fuOptions & ETO_IGNORELANGUAGE))
-        fuOptions |= ETO_IGNORELANGUAGE;
 
     return ExtTextOutW(hdc, x, y, fuOptions, lprc, lpString, uCount, lpDx);
 }
@@ -98,13 +98,11 @@ LpkGetCharacterPlacement(
     LPCWSTR lpString,
     INT uCount,
     INT nMaxExtent,
-    GCP_RESULTSW *lpResults,
+    LPGCP_RESULTSW lpResults,
     DWORD dwFlags,
     DWORD dwUnused)
 {
-    LPWSTR lpOutString;
-    WORD *lpGlyphs = NULL;
-    UINT *lpOrder = NULL;
+    LPWORD lpGlyphs = NULL;
     SIZE size;
     DWORD ret = 0;
     UINT nSet, i;
@@ -116,22 +114,14 @@ LpkGetCharacterPlacement(
     if (!(dwFlags & GCP_REORDER))
        return GetCharacterPlacementW(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags);
 
-    lpOutString = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WCHAR));
-
     nSet = (UINT)uCount;
     if (nSet > lpResults->nGlyphs)
         nSet = lpResults->nGlyphs;
 
-    BIDI_Reorder(hdc, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpOutString,
-                 nSet, lpOrder, &lpGlyphs, &cGlyphs);
+    BIDI_Reorder(hdc, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
+                 nSet, lpResults->lpOrder, &lpGlyphs, &cGlyphs);
 
     lpResults->nGlyphs = (UINT)cGlyphs;
-
-    if (lpResults->lpOutString && lpOutString)
-        wcscpy(lpResults->lpOutString, lpOutString);
-
-    if (lpResults->lpOrder)
-        memcpy(lpResults->lpOrder, lpOrder, sizeof(lpOrder));
 
     if (lpResults->lpGlyphs)
         wcscpy(lpResults->lpGlyphs, lpGlyphs);
@@ -141,8 +131,8 @@ LpkGetCharacterPlacement(
         int c;
         for (i = 0; i < nSet; i++)
         {
-            if (GetCharWidth32W(hdc, lpOutString[i], lpOutString[i], &c))
-                lpResults->lpDx[i]= c;
+            if (GetCharWidth32W(hdc, lpResults->lpOutString[i], lpResults->lpOutString[i], &c))
+                lpResults->lpDx[i] = c;
         }
     }
 
@@ -156,7 +146,7 @@ LpkGetCharacterPlacement(
             for (i = 0; i < lpResults->nGlyphs; i++)
             {
                 if (GetCharWidth32W(hdc, lpGlyphs[i], lpGlyphs[i], &c))
-                    lpResults->lpDx[i]= c;
+                    lpResults->lpDx[i] = c;
             }
         }
     }
@@ -168,15 +158,15 @@ LpkGetCharacterPlacement(
 
         lpResults->lpCaretPos[0] = 0;
         for (i = 1; i < nSet; i++)
+        {
             if (GetTextExtentPoint32W(hdc, &(lpString[i - 1]), 1, &size))
                 lpResults->lpCaretPos[i] = (pos += size.cx);
+        }
     }
 
     if (GetTextExtentPoint32W(hdc, lpString, uCount, &size))
         ret = MAKELONG(size.cx, size.cy);
 
-    HeapFree(GetProcessHeap(), 0, lpOutString);
-    HeapFree(GetProcessHeap(), 0, lpOrder);
     HeapFree(GetProcessHeap(), 0, lpGlyphs);
 
     return ret;
