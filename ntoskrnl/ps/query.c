@@ -82,6 +82,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PUNICODE_STRING ImageName;
     ULONG Cookie, ExecuteOptions = 0;
     ULONG_PTR Wow64 = 0;
+    PROCESS_VALUES ProcessValues;
     PAGED_CODE();
 
     /* Check for user-mode caller */
@@ -251,15 +252,12 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
+            /* Query IO counters from the process */
+            KeQueryValuesProcess(&Process->Pcb, &ProcessValues);
+
             _SEH2_TRY
             {
-                /* FIXME: Call KeQueryValuesProcess */
-                IoCounters->ReadOperationCount = Process->ReadOperationCount.QuadPart;
-                IoCounters->ReadTransferCount = Process->ReadTransferCount.QuadPart;
-                IoCounters->WriteOperationCount = Process->WriteOperationCount.QuadPart;
-                IoCounters->WriteTransferCount = Process->WriteTransferCount.QuadPart;
-                IoCounters->OtherOperationCount = Process->OtherOperationCount.QuadPart;
-                IoCounters->OtherTransferCount = Process->OtherTransferCount.QuadPart;
+                RtlCopyMemory(IoCounters, &ProcessValues.IoInfo, sizeof(IO_COUNTERS));
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

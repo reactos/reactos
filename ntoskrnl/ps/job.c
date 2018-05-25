@@ -631,16 +631,17 @@ NtQueryInformationJobObject (
                 Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
                 if (!BooleanFlagOn(Process->JobStatus, 2))
                 {
-                    /* FIXME: Call KeQueryValuesProcess()
-                     * We should sum BasicInfo values here,
-                     * but we don't have them
-                     */
-                    BasicAndIo.IoInfo.ReadOperationCount += Process->ReadOperationCount.QuadPart;
-                    BasicAndIo.IoInfo.WriteOperationCount += Process->WriteOperationCount.QuadPart;
-                    BasicAndIo.IoInfo.OtherOperationCount += Process->OtherOperationCount.QuadPart;
-                    BasicAndIo.IoInfo.ReadTransferCount += Process->ReadTransferCount.QuadPart;
-                    BasicAndIo.IoInfo.WriteTransferCount += Process->WriteTransferCount.QuadPart;
-                    BasicAndIo.IoInfo.OtherTransferCount += Process->OtherTransferCount.QuadPart;
+                    PROCESS_VALUES Values;
+
+                    KeQueryValuesProcess(&Process->Pcb, &Values);
+                    BasicAndIo.BasicInfo.TotalUserTime.QuadPart += Values.TotalUserTime.QuadPart;
+                    BasicAndIo.BasicInfo.TotalKernelTime.QuadPart += Values.TotalKernelTime.QuadPart;
+                    BasicAndIo.IoInfo.ReadOperationCount += Values.IoInfo.ReadOperationCount;
+                    BasicAndIo.IoInfo.WriteOperationCount += Values.IoInfo.WriteOperationCount;
+                    BasicAndIo.IoInfo.OtherOperationCount += Values.IoInfo.OtherOperationCount;
+                    BasicAndIo.IoInfo.ReadTransferCount += Values.IoInfo.ReadTransferCount;
+                    BasicAndIo.IoInfo.WriteTransferCount += Values.IoInfo.WriteTransferCount;
+                    BasicAndIo.IoInfo.OtherTransferCount += Values.IoInfo.OtherTransferCount;
                 }
             }
 
