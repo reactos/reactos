@@ -1,5 +1,6 @@
 environment:
   matrix:
+#     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
     - BuildType: "msvc-x64"
     - BuildType: "msvc"
     - BuildType: "clang-cl"
@@ -44,6 +45,23 @@ test: off
 deploy: off
 
 for:
+-
+  matrix:
+    only:
+      - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+
+  clone_folder: ~/projects/ros_workdir/reactos-cov
+
+  init:
+    - cd ~/projects/ros_workdir
+    - wget https://svn.reactos.org/amine/RosBEBinFull.tar.gz
+    - tar -xzf RosBEBinFull.tar.gz
+    - echo 'mkdir ../Build && cd ../Build && $APPVEYOR_BUILD_FOLDER/configure.sh -DENABLE_ROSTESTS=1 && ninja -k0 && ninja bootcd' > tmp_build_file
+    - cd $APPVEYOR_BUILD_FOLDER
+
+  build_script:
+    - cd ~/projects/ros_workdir
+    - ./RosBEBinFull/RosBE.sh < tmp_build_file
 -
   matrix:
     only:
