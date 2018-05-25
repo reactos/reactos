@@ -754,8 +754,90 @@ NtSetInformationJobObject (
     PVOID JobInformation,
     ULONG JobInformationLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PEJOB Job;
+    NTSTATUS Status;
+    PKTHREAD CurrentThread;
+    ACCESS_MASK DesiredAccess;
+    KPROCESSOR_MODE PreviousMode;
+    ULONG RequiredLength, RequiredAlign;
+
+    PAGED_CODE();
+
+    CurrentThread  = KeGetCurrentThread();
+
+    /* Validate class */
+    if (JobInformationClass > JobObjectJobSetInformation || JobInformationClass < JobObjectBasicAccountingInformation)
+    {
+        return STATUS_INVALID_INFO_CLASS;
+    }
+
+    /* Get associated lengths & alignments */
+    RequiredLength = PspJobInfoLengths[JobInformationClass];
+    RequiredAlign = PspJobInfoAlign[JobInformationClass];
+
+    PreviousMode = ExGetPreviousMode();
+    /* If not comming from umode, we need to probe buffers */
+    if (PreviousMode != KernelMode)
+    {
+        ASSERT(((RequiredAlign) == 1) || ((RequiredAlign) == 2) || ((RequiredAlign) == 4) || ((RequiredAlign) == 8) || ((RequiredAlign) == 16));
+
+        _SEH2_TRY
+        {
+            /* Probe out buffer for read */
+            if (JobInformationLength != 0)
+            {
+                ProbeForRead(JobInformation, JobInformationLength, RequiredAlign);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    /* Validate input size */
+    if (JobInformationLength != RequiredLength)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Open the given job */
+    DesiredAccess = JOB_OBJECT_SET_ATTRIBUTES;
+    if (JobInformationClass == JobObjectSecurityLimitInformation)
+    {
+        DesiredAccess |= JOB_OBJECT_SET_SECURITY_ATTRIBUTES;
+    }
+    Status = ObReferenceObjectByHandle(JobHandle,
+                                       DesiredAccess,
+                                       PsJobType,
+                                       PreviousMode,
+                                       (PVOID*)&Job,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* And set the information */
+    KeEnterGuardedRegionThread(CurrentThread);
+    switch (JobInformationClass)
+    {
+        case JobObjectExtendedLimitInformation:
+            DPRINT1("Class JobObjectExtendedLimitInformation not implemented\n");
+            Status = STATUS_SUCCESS;
+            break;
+
+        default:
+            DPRINT1("Class %d not implemented\n", JobInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+    }
+    KeLeaveGuardedRegionThread(CurrentThread);
+
+    ObfDereferenceObject(Job);
+
+    return Status;
 }
 
 
