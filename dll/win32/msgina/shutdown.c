@@ -249,11 +249,11 @@ UpdateShutdownDesc(
     DWORD ShutdownCode;
     WCHAR szBuffer[256];
 
-    ShutdownCode = SendDlgItemMessageW(hDlg, IDC_SHUTDOWN_LIST, CB_GETCURSEL, 0, 0);
+    ShutdownCode = SendDlgItemMessageW(hDlg, IDC_SHUTDOWN_ACTION, CB_GETCURSEL, 0, 0);
     if (ShutdownCode == CB_ERR) // Invalid selection
         return;
 
-    ShutdownCode = SendDlgItemMessageW(hDlg, IDC_SHUTDOWN_LIST, CB_GETITEMDATA, ShutdownCode, 0);
+    ShutdownCode = SendDlgItemMessageW(hDlg, IDC_SHUTDOWN_ACTION, CB_GETITEMDATA, ShutdownCode, 0);
 
     switch (ShutdownCode)
     {
@@ -303,7 +303,7 @@ ShutdownOnInit(
     WCHAR szBuffer[256];
     WCHAR szBuffer2[256];
 
-    hwndList = GetDlgItem(hDlg, IDC_SHUTDOWN_LIST);
+    hwndList = GetDlgItem(hDlg, IDC_SHUTDOWN_ACTION);
 
     /* Clear the content before it's used */
     SendMessageW(hwndList, CB_RESETCONTENT, 0, 0);
@@ -383,7 +383,7 @@ ShutdownOnOk(
     INT idx;
 
     idx = SendDlgItemMessageW(hDlg,
-                              IDC_SHUTDOWN_LIST,
+                              IDC_SHUTDOWN_ACTION,
                               CB_GETCURSEL,
                               0,
                               0);
@@ -391,7 +391,7 @@ ShutdownOnOk(
     {
         pgContext->nShutdownAction =
             SendDlgItemMessageW(hDlg,
-                                IDC_SHUTDOWN_LIST,
+                                IDC_SHUTDOWN_ACTION,
                                 CB_GETITEMDATA,
                                 idx,
                                 0);
@@ -477,7 +477,7 @@ ShutdownDialogProc(
                     EndDialog(hDlg, LOWORD(wParam));
                     break;
 
-                case IDC_SHUTDOWN_LIST:
+                case IDC_SHUTDOWN_ACTION:
                     UpdateShutdownDesc(hDlg, pContext);
                     break;
             }
@@ -515,7 +515,7 @@ ShutdownDialog(
     {
         ret = pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                       pgContext->hDllInstance,
-                                                      MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN_DLG),
+                                                      MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN),
                                                       hwndDlg,
                                                       ShutdownDialogProc,
                                                       (LPARAM)&Context);
@@ -523,7 +523,7 @@ ShutdownDialog(
     else
     {
         ret = DialogBoxParamW(pgContext->hDllInstance,
-                              MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN_DLG),
+                              MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN),
                               hwndDlg,
                               ShutdownDialogProc,
                               (LPARAM)&Context);

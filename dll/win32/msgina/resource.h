@@ -1,47 +1,60 @@
 #pragma once
 
-#define IDC_STATIC           -1
-#define IDD_STATUSWINDOW_DLG 100
-#define IDD_NOTICE_DLG       101
-#define IDD_LOGGEDON_DLG     102
-#define IDD_LOGGEDOUT_DLG    103
-#define IDD_LOCKED_DLG       104
-#define IDD_UNLOCK_DLG       105
-#define IDD_SHUTDOWN_DLG     108
-#define IDD_SHUTDOWN_FANCY   109
-#define IDD_SHUTDOWN_REASON  110
+#define IDC_STATIC                 -1
 
-#define IDC_LOGOFF               1001
-#define IDC_USERNAME             1002
-#define IDC_PASSWORD             1003
-#define IDC_SHUTDOWN             1004
-#define IDC_STATUSLABEL          1005
-#define IDC_LOCK                 1006
+#define IDD_STATUS               1000
+#define IDC_STATUS_MESSAGE       1001
+
+#define IDD_WELCOME              1100
+#define IDC_WELCOME_HELP         1101
+
+#define IDD_LOGON                1200
+#define IDC_LOGON_USERNAME       1201
+#define IDC_LOGON_PASSWORD       1202
+#define IDC_LOGON_DOMAIN         1203
+#define IDC_LOGON_SHUTDOWN       1204
+
+#define IDD_SECURITY             1300
+#define IDC_SECURITY_MESSAGE     1301
+#define IDC_SECURITY_LOGONDATE   1302
+#define IDC_SECURITY_LOCK        1303
+#define IDC_SECURITY_LOGOFF      1304
+#define IDC_SECURITY_SHUTDOWN    1305
+#define IDC_SECURITY_CHANGEPWD   1306
+#define IDC_SECURITY_TASKMGR     1307
+
+#define IDD_LOCKED               1400
+#define IDC_LOCKED_MESSAGE       1401
+
+#define IDD_UNLOCK               1500
+#define IDC_UNLOCK_MESSAGE       1501
+#define IDC_UNLOCK_USERNAME      1502
+#define IDC_UNLOCK_PASSWORD      1503
+
+#define IDD_CHANGEPWD            1600
+#define IDC_CHANGEPWD_USERNAME   1601
+#define IDC_CHANGEPWD_DOMAIN     1602
+#define IDC_CHANGEPWD_OLDPWD     1603
+#define IDC_CHANGEPWD_NEWPWD1    1604
+#define IDC_CHANGEPWD_NEWPWD2    1605
+
+#define IDD_LOGOFF               1700
+
+#define IDD_SHUTDOWN             1800
+#define IDD_SHUTDOWN_FANCY       1900
+#define IDD_SHUTDOWN_REASON      2000
+
+#define IDC_SHUTDOWN_ACTION      2001
+#define IDC_SHUTDOWN_DESCRIPTION 2002
+#define IDC_REASON_PLANNED       2003
+#define IDC_REASON_LIST          2004
+#define IDC_REASON_DESCRIPTION   2005
+#define IDC_REASON_COMMENT       2006
+
+#define IDD_LEGALNOTICE          2100
+#define IDC_LEGALNOTICE_TEXT     2101
+
 #define IDC_ROSLOGO              1007
-#define IDC_TASKMGR              1008
-#define IDC_LOCKMSG              1009
-#define IDC_LOGONMSG             1010
-#define IDC_LOGONDATE            1011
-#define IDC_CHANGEPWD            1012
-#define IDC_LOGON_TO             1013
-#define IDC_SHUTDOWN_LIST        1014
-#define IDC_SHUTDOWN_DESCRIPTION 1015
-#define IDC_REASON_PLANNED       1016
-#define IDC_REASON_LIST          1017
-#define IDC_REASON_DESCRIPTION   1018
-#define IDC_REASON_COMMENT       1019
-
-#define IDD_CHANGE_PASSWORD    106
-#define IDC_CHANGEPWD_USERNAME 1013
-#define IDC_CHANGEPWD_DOMAIN   1014
-#define IDC_CHANGEPWD_OLDPWD   1015
-#define IDC_CHANGEPWD_NEWPWD1  1016
-#define IDC_CHANGEPWD_NEWPWD2  1017
-
-#define IDD_LOGOFF_DLG         107
-
-#define IDD_LEGALNOTICE_DLG      1018
-#define IDC_LEGALNOTICE_TEXT     1019
 
 
 #define IDI_ROSLOGO         20000
