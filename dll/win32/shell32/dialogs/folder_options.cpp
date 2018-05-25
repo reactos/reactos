@@ -42,7 +42,8 @@ typedef struct
     HICON hIconLarge;
     HICON hIconSmall;
     WCHAR ProgramPath[MAX_PATH];
-    WCHAR IconLocation[MAX_PATH + 16];
+    WCHAR IconPath[MAX_PATH];
+    INT nIconIndex;
 } FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
 
 // uniquely-defined icon entry for Advanced Settings
@@ -1453,9 +1454,10 @@ DoFileTypeIconLocation(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
         return;
     }
 
-    INT nIndex = PathParseIconLocationW(szLocation);
-    Entry->hIconLarge = DoExtractIcon(Entry, szLocation, nIndex, FALSE);
-    Entry->hIconSmall = DoExtractIcon(Entry, szLocation, nIndex, TRUE);
+    Entry->nIconIndex = PathParseIconLocationW(szLocation);
+    StringCchCopyW(Entry->IconPath, _countof(Entry->IconPath), szLocation);
+    Entry->hIconLarge = DoExtractIcon(Entry, szLocation, Entry->nIconIndex, FALSE);
+    Entry->hIconSmall = DoExtractIcon(Entry, szLocation, Entry->nIconIndex, TRUE);
 }
 
 static BOOL
@@ -1470,7 +1472,8 @@ GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
         Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_EXE));
         Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_EXE), IMAGE_ICON,
             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0));
-        StringCchCopyW(Entry->IconLocation, _countof(Entry->IconLocation), L"%SystemRoot%\\system32\\SHELL32.dll,-3");
+        StringCchCopyW(Entry->IconPath, _countof(Entry->IconPath), L"%SystemRoot%\\system32\\shell32.dll");
+        Entry->nIconIndex = -IDI_SHELL_EXE;
     }
     else if (lstrcmpW(IconLocation, L"%1") == 0)
     {
@@ -1479,7 +1482,6 @@ GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
     else
     {
         DoFileTypeIconLocation(Entry, IconLocation);
-        StringCchCopyW(Entry->IconLocation, _countof(Entry->IconLocation), IconLocation);
     }
 
     return Entry->hIconLarge && Entry->hIconSmall;
@@ -1611,8 +1613,8 @@ InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
         INT cySmall = GetSystemMetrics(SM_CYSMICON);
         Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
                                              IMAGE_ICON, cxSmall, cySmall, 0));
-        StringCchCopyW(Entry->IconLocation, _countof(Entry->IconLocation),
-                       L"%SystemRoot%\\system32\\SHELL32.dll,-210");
+        StringCchCopyW(Entry->IconPath, _countof(Entry->IconPath), L"%SystemRoot%\\system32\\shell32.dll");
+        Entry->nIconIndex = -IDI_SHELL_FOLDER_OPTIONS;
     }
 
     /* close key */
@@ -2150,7 +2152,8 @@ struct EDITTYPE_DIALOG
     HWND hwndLV;
     FOLDER_FILE_TYPE_ENTRY *pEntry;
     CSimpleMap<CStringW, CStringW> CommandLineMap;
-    WCHAR szIconLocation[MAX_PATH + 16];
+    WCHAR szIconPath[MAX_PATH];
+    INT nIconIndex;
     WCHAR szDefaultVerb[64];
 };
 
@@ -2297,7 +2300,8 @@ static BOOL
 EditTypeDlg_OnInitDialog(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
 {
     FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
-    StringCchCopyW(pEditType->szIconLocation, _countof(pEditType->szIconLocation), pEntry->IconLocation);
+    StringCchCopyW(pEditType->szIconPath, _countof(pEditType->szIconPath), pEntry->IconPath);
+    pEditType->nIconIndex = pEntry->nIconIndex;
     StringCchCopyW(pEditType->szDefaultVerb, _countof(pEditType->szDefaultVerb), L"open");
 
     // set info
@@ -2351,18 +2355,18 @@ EditTypeDlg_OnRemove(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
 }
 
 static void
-EditTypeDlg_UpdateEntryIcon(HWND hwndDlg, FOLDER_FILE_TYPE_ENTRY *pEntry, LPCWSTR IconLocation)
+EditTypeDlg_UpdateEntryIcon(HWND hwndDlg, FOLDER_FILE_TYPE_ENTRY *pEntry, LPCWSTR IconPath, INT IconIndex)
 {
-    if (lstrcmpiW(pEntry->IconLocation, IconLocation) == 0)
+    if (lstrcmpiW(pEntry->IconPath, IconPath) == 0 && pEntry->nIconIndex == IconIndex)
         return;
 
     DestroyIcon(pEntry->hIconLarge);
     DestroyIcon(pEntry->hIconSmall);
-    pEntry->hIconLarge = NULL;
-    pEntry->hIconSmall = NULL;
-    DoFileTypeIconLocation(pEntry, IconLocation);
+    pEntry->hIconLarge = DoExtractIcon(pEntry, IconPath, IconIndex, FALSE);
+    pEntry->hIconSmall = DoExtractIcon(pEntry, IconPath, IconIndex, TRUE);
 
-    StringCchCopyW(pEntry->IconLocation, _countof(pEntry->IconLocation), IconLocation);
+    StringCchCopyW(pEntry->IconPath, _countof(pEntry->IconPath), IconPath);
+    pEntry->nIconIndex = IconIndex;
 
     HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
     HIMAGELIST himlLarge = ListView_GetImageList(hListView, LVSIL_NORMAL);
@@ -2394,7 +2398,7 @@ EditTypeDlg_OnOK(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     EditTypeDlg_WriteClass(hwndDlg, pEditType, pEntry->ClassKey, pEntry->ClassName, _countof(pEntry->ClassName));
 
     // update entry icon
-    EditTypeDlg_UpdateEntryIcon(hwndDlg, pEntry, pEditType->szIconLocation);
+    EditTypeDlg_UpdateEntryIcon(hwndDlg, pEntry, pEditType->szIconPath, pEditType->nIconIndex);
 
     EndDialog(hwndDlg, IDOK);
 }
@@ -2595,20 +2599,30 @@ EditTypeDlg_OnChangeIcon(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     WCHAR szPath[MAX_PATH];
     INT IconIndex;
 
-    szPath[0] = 0;
-    IconIndex = 0;
+    ExpandEnvironmentStringsW(pEditType->szIconPath, szPath, _countof(szPath));
+    IconIndex = pEditType->nIconIndex;
     if (PickIconDlg(hwndDlg, szPath, _countof(szPath), &IconIndex))
     {
+        // replace Windows directory with "%SystemRoot%" (for portability)
+        WCHAR szWinDir[MAX_PATH];
+        GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
+        if (wcsstr(szPath, szWinDir) == 0)
+        {
+            CStringW str(L"%SystemRoot%");
+            str += &szPath[wcslen(szWinDir)];
+            StringCchCopyW(szPath, _countof(szPath), LPCWSTR(str));
+        }
+
+        // update FOLDER_FILE_TYPE_ENTRY
         FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
         DestroyIcon(pEntry->hIconLarge);
         DestroyIcon(pEntry->hIconSmall);
-        pEntry->hIconLarge = NULL;
-        pEntry->hIconSmall = NULL;
+        pEntry->hIconLarge = DoExtractIcon(pEntry, szPath, IconIndex, FALSE);
+        pEntry->hIconSmall = DoExtractIcon(pEntry, szPath, IconIndex, TRUE);
 
-        // do icon location
-        StringCchPrintfW(pEditType->szIconLocation, _countof(pEditType->szIconLocation),
-                         L"%s,-%u", szPath, IconIndex);
-        DoFileTypeIconLocation(pEntry, pEditType->szIconLocation);
+        // update EDITTYPE_DIALOG
+        StringCchCopyW(pEditType->szIconPath, _countof(pEditType->szIconPath), szPath);
+        pEditType->nIconIndex = IconIndex;
 
         // set icon to dialog
         SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_ICON, STM_SETICON, (WPARAM)pEntry->hIconLarge, 0);
