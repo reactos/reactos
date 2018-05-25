@@ -488,8 +488,6 @@ ExtTextOutW(
     _In_ UINT cwc,
     _In_reads_opt_(cwc) const INT *lpDx)
 {
-    BOOL bResult;
-
     HANDLE_METADC(BOOL,
                   ExtTextOut,
                   FALSE,
@@ -505,10 +503,7 @@ ExtTextOutW(
     if (!(fuOptions & (ETO_GLYPH_INDEX | ETO_IGNORELANGUAGE)))
     {
         if (LoadLPK(LPK_ETO))
-        {
-            bResult = LpkExtTextOut(hdc, x, y, fuOptions, lprc, lpString, cwc , lpDx, 0);
-            return bResult;
-        }
+            return LpkExtTextOut(hdc, x, y, fuOptions, lprc, lpString, cwc , lpDx, 0);
     }
 
     return NtGdiExtTextOutW(hdc,

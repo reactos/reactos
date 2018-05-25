@@ -2,8 +2,8 @@
 
 /* LoadLPK global variables */
 HINSTANCE hLpk = NULL;
-LPKETO LpkExtTextOut;
-LPKGCP LpkGetCharacterPlacement;
+LPKETO LpkExtTextOut = NULL;
+LPKGCP LpkGetCharacterPlacement = NULL;
 
 /**
  * @name CalculateColorTableSize
@@ -435,7 +435,6 @@ BOOL WINAPI LoadLPK(INT LpkFunctionID)
                 if (!LpkExtTextOut)
                 {
                     FreeLibrary(hLpk);
-                    LpkExtTextOut = NULL;
                     return FALSE;
                 }
 
@@ -448,11 +447,10 @@ BOOL WINAPI LoadLPK(INT LpkFunctionID)
                 if (!LpkGetCharacterPlacement)
                 {
                     FreeLibrary(hLpk);
-                    LpkGetCharacterPlacement = NULL;
                     return FALSE;
                 }
 
-            return TRUE;
+                return TRUE;
 
             default: 
                 FreeLibrary(hLpk);
