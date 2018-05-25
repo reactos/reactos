@@ -199,13 +199,13 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             TextOutW(hdc, 10, 130, L"String with GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (not reversed):", 71);
             LpkGetCharacterPlacement(hdc, szString, Len, 0, &Results, GCP_REORDER, 0);
             LpkExtTextOut(hdc, 10, 150, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL, 0);
-            TextOutW(hdc, 10, 250, L"String with GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (not reversed, lpOutString):", 84);
+            TextOutW(hdc, 10, 250, L"String with GCP_REORDER and ETO_IGNORELANGUAGE LpkGCP call (not reversed, lpOutString):", 87);
             ExtTextOutW(hdc, 10, 270, ETO_IGNORELANGUAGE, NULL, OutString, Results.nGlyphs, NULL);
 
             TextOutW(hdc, 10, 170, L"String without GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (reversed):", 70);
             LpkGetCharacterPlacement(hdc, szString, Len, 0, &Results, 0, 0);
             LpkExtTextOut(hdc, 10, 190, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL, 0);
-            TextOutW(hdc, 10, 290, L"String without GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (reversed, lpOutString):", 83);
+            TextOutW(hdc, 10, 290, L"String without GCP_REORDER and ETO_IGNORELANGUAGE LpkGCP call (reversed, lpOutString):", 86);
             ExtTextOutW(hdc, 10, 310, ETO_IGNORELANGUAGE, NULL, OutString, Len, NULL);
 
             TextOutW(hdc, 10, 210, L"String with ETO_IGNORELANGUAGE ETO call (reversed, not Lpk direct call!):", 73);

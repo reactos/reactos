@@ -459,22 +459,25 @@ GetCharacterPlacementW(
 
     /* return number of initialized fields */
     lpResults->nGlyphs = nSet;
-    
+
     if (dwFlags & GCP_REORDER)
-        return LpkGetCharacterPlacement(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags, 0);
-
-    else
     {
-        /* Treat the case where no special handling was requested in a fastpath way */
-        /* copy will do if the GCP_REORDER flag is not set */ 
-        if (lpResults->lpOutString)
-            lstrcpynW( lpResults->lpOutString, lpString, nSet );
-
-        if (lpResults->lpOrder)
+        if (LoadLPK(LPK_GCP))
         {
-            for (i = 0; i < nSet; i++)
-                lpResults->lpOrder[i] = i;
+            ret = LpkGetCharacterPlacement(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags, 0);
+            return ret;
         }
+    }
+
+    /* Treat the case where no special handling was requested in a fastpath way */
+    /* copy will do if the GCP_REORDER flag is not set */ 
+    if (lpResults->lpOutString)
+        lstrcpynW( lpResults->lpOutString, lpString, nSet );
+
+    if (lpResults->lpOrder)
+    {
+        for (i = 0; i < nSet; i++)
+        lpResults->lpOrder[i] = i;
     }
 
     /* FIXME: Will use the placement chars */
@@ -498,7 +501,7 @@ GetCharacterPlacementW(
                 lpResults->lpCaretPos[i] = (pos += size.cx);
     }
 
-    if (lpResults->lpGlyphs && !(dwFlags & GCP_REORDER))
+    if (lpResults->lpGlyphs)
         NtGdiGetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);
 
     if (GetTextExtentPoint32W(hdc, lpString, uCount, &size))
