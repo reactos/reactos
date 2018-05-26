@@ -94,6 +94,7 @@ void CMainWindow::saveImage(BOOL overwrite)
     else if (GetSaveFileName(&sfn) != 0)
     {
         imageModel.SaveImage(sfn.lpstrFile);
+        _tcsncpy(filepathname, sfn.lpstrFile, SIZEOF(filepathname));
         CString strTitle;
         strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)sfn.lpstrFileTitle);
         SetWindowText(strTitle);
