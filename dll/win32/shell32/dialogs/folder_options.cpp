@@ -2444,16 +2444,6 @@ NewAct_OnOK(HWND hwndDlg, ACTION_DIALOG *pNewAct)
     EndDialog(hwndDlg, IDOK);
 }
 
-static LPWSTR MakeFilter(LPWSTR pszFilter)
-{
-    for (LPWSTR pch = pszFilter; *pch; ++pch)
-    {
-        if (*pch == L'|')
-            *pch = 0;
-    }
-    return pszFilter;
-}
-
 static void
 Action_OnBrowse(HWND hwndDlg, ACTION_DIALOG *pNewAct, BOOL bEdit = FALSE)
 {
@@ -2469,7 +2459,7 @@ Action_OnBrowse(HWND hwndDlg, ACTION_DIALOG *pNewAct, BOOL bEdit = FALSE)
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400W;
     ofn.hwndOwner = hwndDlg;
-    ofn.lpstrFilter = MakeFilter(szFilter);
+    ofn.lpstrFilter = szFilter;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = _countof(szFile);
     ofn.lpstrTitle = strTitle;
