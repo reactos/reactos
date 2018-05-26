@@ -298,14 +298,18 @@ BOOL WINAPI PickIconDlg(
     StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), lpstrFile);
     ExpandEnvironmentStringsW(lpstrFile, IconContext.szExpandedPath, _countof(IconContext.szExpandedPath));
 
-    if (GetFileAttributesW(IconContext.szExpandedPath) == INVALID_FILE_ATTRIBUTES)
+    if (!IconContext.szExpandedPath[0] ||
+        GetFileAttributesW(IconContext.szExpandedPath) == INVALID_FILE_ATTRIBUTES)
     {
-        // no such file
-        CStringW strTitle(MAKEINTRESOURCEW(IDS_PICK_ICON_TITLE));
-        CStringW strFormat(MAKEINTRESOURCEW(IDS_FILE_NOT_FOUND));
-        WCHAR szText[MAX_PATH + 64];
-        StringCchPrintfW(szText, _countof(szText), strFormat, lpstrFile);
-        MessageBoxW(hWndOwner, szText, strTitle, MB_ICONWARNING);
+        if (IconContext.szExpandedPath[0])
+        {
+            // no such file
+            CStringW strTitle(MAKEINTRESOURCEW(IDS_PICK_ICON_TITLE));
+            CStringW strFormat(MAKEINTRESOURCEW(IDS_FILE_NOT_FOUND));
+            WCHAR szText[MAX_PATH + 64];
+            StringCchPrintfW(szText, _countof(szText), strFormat, lpstrFile);
+            MessageBoxW(hWndOwner, szText, strTitle, MB_ICONWARNING);
+        }
 
         // set default value
         StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), s_pszDefaultPath);
