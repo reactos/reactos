@@ -57,28 +57,23 @@ typedef struct
 BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
     LPCWSTR lpszType,
     LPWSTR lpszName,
-    LONG_PTR lParam
-)
+    LONG_PTR lParam)
 {
-    WCHAR szName[100];
-    int index;
-    PPICK_ICON_CONTEXT pPickIcon = PPICK_ICON_CONTEXT(lParam);
-    HWND hDlgCtrl = pPickIcon->hDlgCtrl;
+    PPICK_ICON_CONTEXT pIconContext = PPICK_ICON_CONTEXT(lParam);
+    HWND hDlgCtrl = pIconContext->hDlgCtrl;
 
     if (IS_INTRESOURCE(lpszName))
-        swprintf(szName, L"%u", (DWORD)lpszName);
+        lParam = LOWORD(lpszName);
     else
-        StringCbCopyW(szName, sizeof(szName), lpszName);
+        lParam = -1;
 
-    index = SendMessageW(hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)szName);
-    if (index != LB_ERR)
-        SendMessageW(hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)pPickIcon->phIcons[index]);
+    SendMessageW(hDlgCtrl, LB_ADDSTRING, 0, lParam);
 
     return TRUE;
 }
 
 static void
-DestroyIconList(HWND hDlgCtrl)
+DestroyIconList(HWND hDlgCtrl, PPICK_ICON_CONTEXT pIconContext)
 {
     int count;
     int index;
@@ -89,8 +84,8 @@ DestroyIconList(HWND hDlgCtrl)
 
     for(index = 0; index < count; index++)
     {
-        HICON hIcon = (HICON)SendMessageW(hDlgCtrl, LB_GETITEMDATA, index, 0);
-        DestroyIcon(hIcon);
+        DestroyIcon(pIconContext->phIcons[index]);
+        pIconContext->phIcons[index] = NULL;
     }
 }
 
@@ -98,7 +93,7 @@ static BOOL
 DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
 {
     // destroy previous
-    DestroyIconList(pIconContext->hDlgCtrl);
+    DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
     SendMessageW(pIconContext->hDlgCtrl, LB_RESETCONTENT, 0, 0);
 
     // store paths
@@ -137,9 +132,7 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
 
         if (ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons))
         {
-            INT index = SendMessageW(pIconContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)L"1");
-            if (index != LB_ERR)
-                SendMessageW(pIconContext->hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)pIconContext->phIcons[0]);
+            SendMessageW(pIconContext->hDlgCtrl, LB_ADDSTRING, 0, 0);
         }
         else
         {
@@ -212,8 +205,8 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
             if (pIconContext->Index < 0)
             {
                 // A negative value will be interpreted as a negated resource ID.
-                StringCchPrintfW(szText, _countof(szText), L"%u", -pIconContext->Index);
-                pIconContext->Index = (INT)SendMessageW(pIconContext->hDlgCtrl, LB_FINDSTRINGEXACT, -1, (LPARAM)szText);
+                LPARAM lParam = -pIconContext->Index;
+                pIconContext->Index = (INT)SendMessageW(pIconContext->hDlgCtrl, LB_FINDSTRINGEXACT, -1, lParam);
             }
 
             if (pIconContext->Index < 0 || count <= pIconContext->Index)
@@ -232,13 +225,13 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
             pIconContext->Index = index;
             GetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szPath, MAX_PATH);
             ExpandEnvironmentStringsW(pIconContext->szPath, pIconContext->szExpandedPath, _countof(pIconContext->szExpandedPath));
-            DestroyIconList(pIconContext->hDlgCtrl);
+            DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
             delete[] pIconContext->phIcons;
             EndDialog(hwndDlg, 1);
             break;
 
         case IDCANCEL:
-            DestroyIconList(pIconContext->hDlgCtrl);
+            DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
             delete[] pIconContext->phIcons;
             EndDialog(hwndDlg, 0);
             break;
@@ -301,7 +294,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 case ODA_SELECT:
                 case ODA_DRAWENTIRE:
                     index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
-                    hIcon = (HICON)SendMessageW(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, 0);
+                    hIcon = pIconContext->phIcons[lpdis->itemID];
 
                     if (lpdis->itemID == (UINT)index)
                         FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)(COLOR_HIGHLIGHT + 1));
