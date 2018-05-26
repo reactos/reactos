@@ -2893,6 +2893,9 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
 
                     if (pThis->m_sIcoPath)
                         wcscpy(wszPath, pThis->m_sIcoPath);
+                    else
+                        FindExecutableW(pThis->m_sPath, NULL, wszPath);
+
                     INT IconIndex = pThis->m_Header.nIconIndex;
                     if (PickIconDlg(hwndDlg, wszPath, _countof(wszPath), &IconIndex))
                     {
