@@ -176,10 +176,17 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         count = SendMessageW(pIconContext->hDlgCtrl, LB_GETCOUNT, 0, 0);
         if (count != LB_ERR)
         {
-            if (count > pIconContext->Index)
-                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, pIconContext->Index, 0);
-            else
-                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
+            if (pIconContext->Index < 0)
+            {
+                // A negative value will be interpreted as a negated resource ID.
+                StringCchPrintfW(szText, _countof(szText), L"%u", -pIconContext->Index);
+                pIconContext->Index = (INT)SendMessageW(pIconContext->hDlgCtrl, LB_FINDSTRINGEXACT, -1, (LPARAM)szText);
+            }
+
+            if (pIconContext->Index < 0 || count <= pIconContext->Index)
+                pIconContext->Index = 0;
+
+            SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, pIconContext->Index, 0);
         }
         return TRUE;
 
