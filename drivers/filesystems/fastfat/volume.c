@@ -313,6 +313,11 @@ FsdSetFsLabelInformation(
     }
 
     pRootFcb = vfatOpenRootFCB(DeviceExt);
+    Status = vfatFCBInitializeCacheFromVolume(DeviceExt, pRootFcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     /* Search existing volume entry on disk */
     FileOffset.QuadPart = 0;
