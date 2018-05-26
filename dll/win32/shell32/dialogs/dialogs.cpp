@@ -210,8 +210,16 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
             break;
 
         case IDC_PICKICON_LIST:
-            if (HIWORD(wParam) == LBN_SELCHANGE)
-                InvalidateRect((HWND)lParam, NULL, TRUE);
+            switch (HIWORD(wParam))
+            {
+                case LBN_SELCHANGE:
+                    InvalidateRect((HWND)lParam, NULL, TRUE);
+                    break;
+
+                case LBN_DBLCLK:
+                    SendMessage(hwndDlg, WM_COMMAND, MAKEWPARAM(IDOK, 0), 0);
+                    break;
+            }
             break;
 
         case IDC_BUTTON_PATH:
