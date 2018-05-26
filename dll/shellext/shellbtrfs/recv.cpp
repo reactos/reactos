@@ -1649,6 +1649,7 @@ BOOL BtrfsRecv::do_recv(HANDLE f, UINT64* pos, UINT64 size) {
 
             if (!ReadFile(f, data, cmd.length, NULL, NULL)) {
                 ShowRecvError(IDS_RECV_READFILE_FAILED, GetLastError(), format_message(GetLastError()).c_str());
+                free(data);
                 b = FALSE;
                 break;
             }
