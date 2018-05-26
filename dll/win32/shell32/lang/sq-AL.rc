@@ -214,9 +214,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Zgjidhni karakteristikat e avancuara që ju dëshironi për këtë ikonë.", -1, 5, 30, 210, 10
-    CHECKBOX "Ekzekuto me kredenciale të ndryshme", 14000, 25, 50, 150, 10
+    CHECKBOX "Ekzekuto me kredenciale të ndryshme", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "Ky opsion mund të lejojë për të drejtuar këtë ikonë si një përdorues tjetër, ose të vazhdojë si veten tënde, duke mbrojtur kompjuterin tuaj dhe të dhënat nga aktiviteti i paautorizuar i programit.", -1, 50, 60, 175, 40
-    CHECKBOX "Ekzekuto në hapësirë ​​të veçantë që e kujtesës", 14001, 25, 100, 150, 10, WS_DISABLED
+    CHECKBOX "Ekzekuto në hapësirë ​​të veçantë që e kujtesës", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Ndërprej", 2, 120, 124, 50, 15, WS_VISIBLE
 END

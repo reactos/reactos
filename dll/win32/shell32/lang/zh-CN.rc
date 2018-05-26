@@ -220,9 +220,9 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "为这个快捷方式选择您想要的高级属性。", -1, 5, 30, 210, 10
-    CHECKBOX "以其他用户身份运行", 14000, 25, 50, 150, 10
+    CHECKBOX "以其他用户身份运行", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "此选项允许您以另一用户身份运行此快捷方式，或继续以您自己的身份运行以保护您的计算机和数据不受未授权程序的破坏。", -1, 50, 60, 175, 40
-    CHECKBOX "在单独的内存空间中运行", 14001, 25, 100, 150, 10, WS_DISABLED
+    CHECKBOX "在单独的内存空间中运行", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "确定", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "取消", 2, 120, 124, 50, 15, WS_VISIBLE
 END

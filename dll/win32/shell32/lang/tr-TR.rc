@@ -212,9 +212,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Bu kısayol için istediğiniz gelişmiş husûsîyetleri seçiniz.", -1, 5, 30, 210, 10
-    CHECKBOX "&Ayrı Kimlik Bilgileriyle Çalıştır", 14000, 25, 50, 150, 10
+    CHECKBOX "&Ayrı Kimlik Bilgileriyle Çalıştır", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "Bu seçenek, bu kısayolu başka bir kullanıcı olarak çalıştırmanızı veyâ yetkilendirilmemiş izlence etkinliğinden bilgisayarınızı ve verinizi koruyarak kendiniz olarak sürdürmenizi sağlayabilir.", -1, 50, 60, 175, 40
-    CHECKBOX "A&yrı Bellek Alanında Çalıştır", 14001, 25, 100, 150, 10, WS_DISABLED
+    CHECKBOX "A&yrı Bellek Alanında Çalıştır", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "Tamam", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "İptal", 2, 120, 124, 50, 15, WS_VISIBLE
 END

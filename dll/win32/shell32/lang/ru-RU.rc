@@ -212,9 +212,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Установите нужные свойства для этого ярлыка.", -1, 5, 30, 210, 10
-    CHECKBOX "Запускать с другими учетными данными", 14000, 25, 50, 150, 10
+    CHECKBOX "Запускать с другими учетными данными", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "Позволяет использовать этот ярлык для запуска программы от &имени администратора, в то же время продолжая работу от своего имени, что защищает компьютер от несанкционированных действий других программ.", -1, 50, 60, 175, 40
-    CHECKBOX "Запус&кать в отдельной области памяти", 14001, 25, 104, 145, 10, WS_DISABLED
+    CHECKBOX "Запус&кать в отдельной области памяти", IDC_SHORTEX_RUN_SEPARATE, 25, 104, 145, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Отмена", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END

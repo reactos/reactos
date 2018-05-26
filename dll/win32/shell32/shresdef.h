@@ -367,6 +367,10 @@
 #define IDC_NEWEXT_COMBOBOX                 14003
 #define IDC_NEWEXT_ASSOC                    14004
 
+/* Control IDs for IDD_SHORTCUT_EXTENDED_PROPERTIES dialogs */
+#define IDC_SHORTEX_RUN_DIFFERENT           14000
+#define IDC_SHORTEX_RUN_SEPARATE            14001
+
 /* Other dialogs */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24

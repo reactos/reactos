@@ -2691,13 +2691,13 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
         case WM_INITDIALOG:
             if (lParam)
             {
-                HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+                HWND hDlgCtrl = GetDlgItem(hwndDlg, IDC_SHORTEX_RUN_DIFFERENT);
                 SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
             }
             return TRUE;
         case WM_COMMAND:
         {
-            HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+            HWND hDlgCtrl = GetDlgItem(hwndDlg, IDC_SHORTEX_RUN_DIFFERENT);
             if (LOWORD(wParam) == IDOK)
             {
                 if (SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -2709,7 +2709,7 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
             {
                 EndDialog(hwndDlg, -1);
             }
-            else if (LOWORD(wParam) == 14000)
+            else if (LOWORD(wParam) == IDC_SHORTEX_RUN_DIFFERENT)
             {
                 if (SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED)
                     SendMessage(hDlgCtrl, BM_SETCHECK, BST_UNCHECKED, 0);
