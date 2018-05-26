@@ -106,19 +106,34 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
         StringCchCopyW(pIconContext->szPath, _countof(pIconContext->szPath), pszFile);
     ExpandEnvironmentStringsW(pszFile, pIconContext->szExpandedPath, _countof(pIconContext->szExpandedPath));
 
-    // load DLL
+    // load DLL if possible
     HMODULE hLibrary = LoadLibraryExW(pIconContext->szExpandedPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
-    if (!hLibrary)
-        return FALSE;
-    FreeLibrary(pIconContext->hLibrary);
+    if (pIconContext->hLibrary)
+        FreeLibrary(pIconContext->hLibrary);
     pIconContext->hLibrary = hLibrary;
 
-    // load icons
-    pIconContext->nIcons = ExtractIconExW(pIconContext->szExpandedPath, -1, NULL, NULL, 0);
-    delete[] pIconContext->phIcons;
-    pIconContext->phIcons = new HICON[pIconContext->nIcons];
-    ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons);
-    EnumResourceNamesW(pIconContext->hLibrary, RT_GROUP_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
+    if (pIconContext->hLibrary)
+    {
+        // load icons from DLL
+        pIconContext->nIcons = ExtractIconExW(pIconContext->szExpandedPath, -1, NULL, NULL, 0);
+        delete[] pIconContext->phIcons;
+        pIconContext->phIcons = new HICON[pIconContext->nIcons];
+        ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons);
+
+        EnumResourceNamesW(pIconContext->hLibrary, RT_GROUP_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
+    }
+    else
+    {
+        // *.ico
+        pIconContext->nIcons = 1;
+        delete[] pIconContext->phIcons;
+        pIconContext->phIcons = new HICON[pIconContext->nIcons];
+        ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons);
+
+        INT index = SendMessageW(pIconContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)L"1");
+        if (index != LB_ERR)
+            SendMessageW(pIconContext->hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)pIconContext->phIcons[0]);
+    }
 
     // set text
     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szPath);
@@ -325,7 +340,8 @@ BOOL WINAPI PickIconDlg(
         *lpdwIconIndex = IconContext.Index;
     }
 
-    FreeLibrary(IconContext.hLibrary);
+    if (IconContext.hLibrary)
+        FreeLibrary(IconContext.hLibrary);
     return res;
 }
 
