@@ -2318,6 +2318,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType,
 
     RegCloseKey(hShellKey);
     RegCloseKey(hClassKey);
+
     return TRUE;
 }
 
@@ -2431,11 +2432,14 @@ EditTypeDlg_OnOK(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     GetDlgItemTextW(hwndDlg, IDC_EDITTYPE_TEXT, pEntry->ClassName, _countof(pEntry->ClassName));
     StrTrimW(pEntry->ClassName, s_pszSpace);
 
+    // update entry icon
+    EditTypeDlg_UpdateEntryIcon(hwndDlg, pEditType, pEditType->szIconPath, pEditType->nIconIndex);
+
     // write registry
     EditTypeDlg_WriteClass(hwndDlg, pEditType, pEntry->ClassKey, pEntry->ClassName, _countof(pEntry->ClassName));
 
-    // update entry icon
-    EditTypeDlg_UpdateEntryIcon(hwndDlg, pEditType, pEditType->szIconPath, pEditType->nIconIndex);
+    // update the icon cache
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
 
     EndDialog(hwndDlg, IDOK);
 }
