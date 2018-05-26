@@ -6,7 +6,7 @@
  *      Copyright 2009  Andrew Hill
  *      Copyright 2013  Dominik Hornung
  *      Copyright 2017  Hermes Belusca-Maito
- *      Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *      Copyright 2018  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1767,8 +1767,39 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
 
 HRESULT STDMETHODCALLTYPE CShellLink::Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
 {
-    if (!::ExtractIconExW(pszFile, nIconIndex, phiconLarge, phiconSmall, nIconSize))
-        return E_FAIL;
+    // do like ExtractIconEx but add link arrow
+    SHFILEINFOW info;
+    HIMAGELIST himl;
+
+    if (phiconLarge)
+        ZeroMemory(phiconLarge, sizeof(HICON) * nIconSize);
+    if (phiconSmall)
+        ZeroMemory(phiconSmall, sizeof(HICON) * nIconSize);
+
+    if (phiconLarge)
+    {
+        for (UINT i = 0; i < nIconSize; ++i)
+        {
+            ZeroMemory(&info, sizeof(info));
+            himl = (HIMAGELIST)SHGetFileInfoW(pszFile, 0, &info, sizeof(info), SHGFI_SYSICONINDEX | SHGFI_LARGEICON | SHGFI_LINKOVERLAY);
+            if (!himl)
+                return E_FAIL;
+            phiconLarge[i] = ImageList_GetIcon(himl, info.iIcon, ILD_NORMAL | ILD_TRANSPARENT);
+        }
+    }
+
+    if (phiconSmall)
+    {
+        for (UINT i = 0; i < nIconSize; ++i)
+        {
+            ZeroMemory(&info, sizeof(info));
+            himl = (HIMAGELIST)SHGetFileInfoW(pszFile, 0, &info, sizeof(info), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_LINKOVERLAY);
+            if (!himl)
+                return E_FAIL;
+            phiconSmall[i] = ImageList_GetIcon(himl, info.iIcon, ILD_NORMAL | ILD_TRANSPARENT);
+        }
+    }
+
     return S_OK;
 }
 
