@@ -948,5 +948,7 @@ BEGIN
     IDS_REMOVE_ACTION "Are you sure you want to remove this action?"
     IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
     IDS_EXE_FILTER "Programs|*.exe|All Files|*.*|"
-    IDS_EDITING_ACTION, "Editing action for type: "
+    IDS_EDITING_ACTION "Editing action for type: "
+    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
+    IDS_FILE_NOT_FOUND "The file '%s' was not found."
 END

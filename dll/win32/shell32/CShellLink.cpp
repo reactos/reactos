@@ -6,6 +6,7 @@
  *      Copyright 2009  Andrew Hill
  *      Copyright 2013  Dominik Hornung
  *      Copyright 2017  Hermes Belusca-Maito
+ *      Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1766,8 +1767,9 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
 
 HRESULT STDMETHODCALLTYPE CShellLink::Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
 {
-    UNIMPLEMENTED;
-    return E_FAIL;
+    if (!::ExtractIconExW(pszFile, nIconIndex, phiconLarge, phiconSmall, nIconSize))
+        return E_FAIL;
+    return S_OK;
 }
 
 #if 0
@@ -2895,9 +2897,14 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                     if (PickIconDlg(hwndDlg, wszPath, _countof(wszPath), &IconIndex))
                     {
                         pThis->SetIconLocation(wszPath, IconIndex);
-                        ///
-                        /// FIXME redraw icon
-                        ///
+
+                        HICON hIconLarge = NULL;
+                        if (S_OK == pThis->Extract(wszPath, IconIndex, &hIconLarge, NULL, 1))
+                        {
+                            HICON hIconOld = (HICON)SendDlgItemMessageW(hwndDlg, 14000, STM_GETICON, 0, 0);
+                            SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)hIconLarge, 0);
+                            DestroyIcon(hIconOld);
+                        }
                     }
                     return TRUE;
                 }

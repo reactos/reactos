@@ -273,6 +273,8 @@
 #define IDS_ACTION_EXISTS                           30526
 #define IDS_EXE_FILTER                              30527
 #define IDS_EDITING_ACTION                          30528
+#define IDS_NO_ICONS                                30529
+#define IDS_FILE_NOT_FOUND                          30530
 
 /* Dialogs */
 
