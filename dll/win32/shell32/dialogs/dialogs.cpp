@@ -102,7 +102,8 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
     SendMessageW(pIconContext->hDlgCtrl, LB_RESETCONTENT, 0, 0);
 
     // store paths
-    StringCchCopyW(pIconContext->szPath, _countof(pIconContext->szPath), pszFile);
+    if (pIconContext->szPath != pszFile)
+        StringCchCopyW(pIconContext->szPath, _countof(pIconContext->szPath), pszFile);
     ExpandEnvironmentStringsW(pszFile, pIconContext->szExpandedPath, _countof(pIconContext->szExpandedPath));
 
     // load DLL
