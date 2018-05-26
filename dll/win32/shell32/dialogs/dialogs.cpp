@@ -118,9 +118,15 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
         pIconContext->nIcons = ExtractIconExW(pIconContext->szExpandedPath, -1, NULL, NULL, 0);
         delete[] pIconContext->phIcons;
         pIconContext->phIcons = new HICON[pIconContext->nIcons];
-        ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons);
 
-        EnumResourceNamesW(pIconContext->hLibrary, RT_GROUP_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
+        if (ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons))
+        {
+            EnumResourceNamesW(pIconContext->hLibrary, RT_GROUP_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
+        }
+        else
+        {
+            pIconContext->nIcons = 0;
+        }
     }
     else
     {
@@ -128,15 +134,27 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
         pIconContext->nIcons = 1;
         delete[] pIconContext->phIcons;
         pIconContext->phIcons = new HICON[pIconContext->nIcons];
-        ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons);
 
-        INT index = SendMessageW(pIconContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)L"1");
-        if (index != LB_ERR)
-            SendMessageW(pIconContext->hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)pIconContext->phIcons[0]);
+        if (ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons))
+        {
+            INT index = SendMessageW(pIconContext->hDlgCtrl, LB_ADDSTRING, 0, (LPARAM)L"1");
+            if (index != LB_ERR)
+                SendMessageW(pIconContext->hDlgCtrl, LB_SETITEMDATA, index, (LPARAM)pIconContext->phIcons[0]);
+        }
+        else
+        {
+            pIconContext->nIcons = 0;
+        }
     }
 
     // set text
     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szPath);
+
+    if (pIconContext->nIcons == 0)
+    {
+        delete[] pIconContext->phIcons;
+        pIconContext->phIcons = NULL;
+    }
 
     return pIconContext->nIcons > 0;
 }
