@@ -37,11 +37,13 @@ NTSTATUS add_calc_job(device_extension* Vcb, UINT8* data, UINT32 sectors, UINT32
     KeInitializeEvent(&cj->event, NotificationEvent, FALSE);
 
     ExAcquireResourceExclusiveLite(&Vcb->calcthreads.lock, TRUE);
+
     InsertTailList(&Vcb->calcthreads.job_list, &cj->list_entry);
-    ExReleaseResourceLite(&Vcb->calcthreads.lock);
 
     KeSetEvent(&Vcb->calcthreads.event, 0, FALSE);
     KeClearEvent(&Vcb->calcthreads.event);
+
+    ExReleaseResourceLite(&Vcb->calcthreads.lock);
 
     *pcj = cj;
 

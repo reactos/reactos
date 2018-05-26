@@ -2113,10 +2113,10 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                 }
 
                 do_xor(scratch, &context->stripes[parity2].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)], len);
-            }
 
-            if (bad_stripe_num != 0)
-                galois_divpower(scratch, (UINT8)bad_stripe_num, len);
+                if (bad_stripe_num != 0)
+                    galois_divpower(scratch, (UINT8)bad_stripe_num, len);
+            }
 
             if (RtlCheckBit(&context->is_tree, bad_off1)) {
                 tree_header *th1 = NULL, *th2 = NULL;

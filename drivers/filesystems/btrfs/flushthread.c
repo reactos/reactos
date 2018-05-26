@@ -4254,8 +4254,9 @@ NTSTATUS insert_tree_item_batch(LIST_ENTRY* batchlist, device_extension* Vcb, ro
     le = br->items.Blink;
     while (le != &br->items) {
         batch_item* bi2 = CONTAINING_RECORD(le, batch_item, list_entry);
+        int cmp = keycmp(bi2->key, bi->key);
 
-        if (keycmp(bi2->key, bi->key) != 1) {
+        if (cmp == -1 || (cmp == 0 && bi->operation >= bi2->operation)) {
             InsertHeadList(&bi2->list_entry, &bi->list_entry);
             return STATUS_SUCCESS;
         }

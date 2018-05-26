@@ -2064,6 +2064,9 @@ static NTSTATUS set_end_of_file_information(device_extension* Vcb, PIRP Irp, PFI
             ERR("error - extend_file failed\n");
             goto end;
         }
+    } else if ((UINT64)feofi->EndOfFile.QuadPart == fcb->inode_item.st_size && advance_only) {
+        Status = STATUS_SUCCESS;
+        goto end;
     }
 
     ccfs.AllocationSize = fcb->Header.AllocationSize;

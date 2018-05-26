@@ -2093,7 +2093,6 @@ NTSTATUS read_data(_In_ device_extension* Vcb, _In_ UINT64 addr, _In_ UINT32 len
             if (!dummy_mdl) {
                 ERR("IoAllocateMdl failed\n");
                 Status = STATUS_INSUFFICIENT_RESOURCES;
-                ExFreePool(dummypage);
                 goto exit;
             }
 
@@ -2347,7 +2346,6 @@ NTSTATUS read_data(_In_ device_extension* Vcb, _In_ UINT64 addr, _In_ UINT32 len
             if (!dummy_mdl) {
                 ERR("IoAllocateMdl failed\n");
                 Status = STATUS_INSUFFICIENT_RESOURCES;
-                ExFreePool(dummypage);
                 goto exit;
             }
 
