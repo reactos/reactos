@@ -367,7 +367,28 @@
 #define IDC_NEWEXT_COMBOBOX                 14003
 #define IDC_NEWEXT_ASSOC                    14004
 
-/* Control IDs for IDD_SHORTCUT_EXTENDED_PROPERTIES dialogs */
+/* Control IDs for IDD_SHORTCUT_PROPERTIES dialog */
+#define IDC_SHORTCUT_ICON                   14000
+#define IDC_SHORTCUT_TEXT                   14001
+#define IDC_SHORTCUT_TYPE                   14004
+#define IDC_SHORTCUT_TYPE_EDIT              14005
+#define IDC_SHORTCUT_LOCATION               14006
+#define IDC_SHORTCUT_LOCATION_EDIT          14007
+#define IDC_SHORTCUT_TARGET                 14008
+#define IDC_SHORTCUT_TARGET_TEXT            14009
+#define IDC_SHORTCUT_START_IN               14010
+#define IDC_SHORTCUT_START_IN_EDIT          14011
+#define IDC_SHORTCUT_KEY                    14014
+#define IDC_SHORTCUT_KEY_HOTKEY             14015
+#define IDC_SHORTCUT_RUN                    14016
+#define IDC_SHORTCUT_RUN_COMBO              14017
+#define IDC_SHORTCUT_COMMENT                14018
+#define IDC_SHORTCUT_COMMENT_EDIT           14019
+#define IDC_SHORTCUT_FIND                   14020
+#define IDC_SHORTCUT_CHANGE_ICON            14021
+#define IDC_SHORTCUT_ADVANCED               14022
+
+/* Control IDs for IDD_SHORTCUT_EXTENDED_PROPERTIES dialog */
 #define IDC_SHORTEX_RUN_DIFFERENT           14000
 #define IDC_SHORTEX_RUN_SEPARATE            14001
 

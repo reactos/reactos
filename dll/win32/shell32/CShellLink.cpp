@@ -2805,13 +2805,13 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             }
 
             if (fi.hIcon) // TODO: destroy icon
-                SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)fi.hIcon, 0);
+                SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_SETICON, (WPARAM)fi.hIcon, 0);
             else
                 ERR("ExtractIconW failed %ls %u\n", pThis->m_sIcoPath, pThis->m_Header.nIconIndex);
 
             /* Target type */
             if (pThis->m_sPath)
-                SetDlgItemTextW(hwndDlg, 14005, SH_GetTargetTypeByPath(pThis->m_sPath));
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, SH_GetTargetTypeByPath(pThis->m_sPath));
 
             /* Target location */
             if (pThis->m_sPath)
@@ -2819,7 +2819,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                 WCHAR target[MAX_PATH];
                 StringCchCopyW(target, _countof(target), pThis->m_sPath);
                 PathRemoveFileSpecW(target);
-                SetDlgItemTextW(hwndDlg, 14007, PathFindFileNameW(target));
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION_EDIT, PathFindFileNameW(target));
             }
 
             /* Target path */
@@ -2836,16 +2836,16 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                     StringCchCatW(newpath, _countof(newpath), L" ");
                     StringCchCatW(newpath, _countof(newpath), pThis->m_sArgs);
                 }
-                SetDlgItemTextW(hwndDlg, 14009, newpath);
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TARGET_TEXT, newpath);
             }
 
             /* Working dir */
             if (pThis->m_sWorkDir)
-                SetDlgItemTextW(hwndDlg, 14011, pThis->m_sWorkDir);
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_START_IN_EDIT, pThis->m_sWorkDir);
 
             /* Description */
             if (pThis->m_sDescription)
-                SetDlgItemTextW(hwndDlg, 14019, pThis->m_sDescription);
+                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_COMMENT_EDIT, pThis->m_sDescription);
 
             return TRUE;
         }
@@ -2857,10 +2857,10 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             {
                 WCHAR wszBuf[MAX_PATH];
                 /* set working directory */
-                GetDlgItemTextW(hwndDlg, 14011, wszBuf, _countof(wszBuf));
+                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_START_IN_EDIT, wszBuf, _countof(wszBuf));
                 pThis->SetWorkingDirectory(wszBuf);
                 /* set link destination */
-                GetDlgItemTextW(hwndDlg, 14009, wszBuf, _countof(wszBuf));
+                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TARGET_TEXT, wszBuf, _countof(wszBuf));
                 LPWSTR lpszArgs = NULL;
                 LPWSTR unquoted = strdupW(wszBuf);
                 StrTrimW(unquoted, L" ");
@@ -2910,7 +2910,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
-                case 14020:
+                case IDC_SHORTCUT_FIND:
                     SHOpenFolderAndSelectItems(pThis->m_pPidl, 0, NULL, 0);
                     ///
                     /// FIXME
@@ -2918,7 +2918,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                     ///
                     return TRUE;
 
-                case 14021:
+                case IDC_SHORTCUT_CHANGE_ICON:
                 {
                     WCHAR wszPath[MAX_PATH] = L"";
 
@@ -2935,15 +2935,15 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                         HICON hIconLarge = NULL;
                         if (S_OK == pThis->Extract(wszPath, IconIndex, &hIconLarge, NULL, 1))
                         {
-                            HICON hIconOld = (HICON)SendDlgItemMessageW(hwndDlg, 14000, STM_GETICON, 0, 0);
-                            SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)hIconLarge, 0);
+                            HICON hIconOld = (HICON)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_GETICON, 0, 0);
+                            SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_SETICON, (WPARAM)hIconLarge, 0);
                             DestroyIcon(hIconOld);
                         }
                     }
                     return TRUE;
                 }
 
-                case 14022:
+                case IDC_SHORTCUT_ADVANCED:
                 {
                     INT_PTR result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_SHORTCUT_EXTENDED_PROPERTIES), hwndDlg, ExtendedShortcutProc, (LPARAM)pThis->m_bRunAs);
                     if (result == 1 || result == 0)
