@@ -220,6 +220,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 pIconContext->Index = 0;
 
             SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, pIconContext->Index, 0);
+            SendMessageW(pIconContext->hDlgCtrl, LB_SETTOPINDEX, pIconContext->Index, 0);
         }
         return TRUE;
 
