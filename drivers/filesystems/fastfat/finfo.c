@@ -1552,6 +1552,7 @@ VfatSetInformation(
     PVFATFCB FCB;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID SystemBuffer;
+    BOOLEAN LockDir;
 
     /* PRECONDITION */
     ASSERT(IrpContext);
@@ -1593,7 +1594,14 @@ VfatSetInformation(
         DPRINT("Can set file size\n");
     }
 
-    if (FileInformationClass == FileRenameInformation)
+    LockDir = FALSE;
+    if (FileInformationClass == FileRenameInformation || FileInformationClass == FileAllocationInformation ||
+        FileInformationClass == FileEndOfFileInformation || FileInformationClass == FileBasicInformation)
+    {
+        LockDir = TRUE;
+    }
+
+    if (LockDir)
     {
         if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
                                             BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
@@ -1607,7 +1615,7 @@ VfatSetInformation(
         if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,
                                             BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
-            if (FileInformationClass == FileRenameInformation)
+            if (LockDir)
             {
                 ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
             }
@@ -1662,7 +1670,7 @@ VfatSetInformation(
         ExReleaseResourceLite(&FCB->MainResource);
     }
 
-    if (FileInformationClass == FileRenameInformation)
+    if (LockDir)
     {
         ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
     }
