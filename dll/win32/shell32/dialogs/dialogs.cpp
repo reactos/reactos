@@ -287,6 +287,7 @@ BOOL WINAPI PickIconDlg(
         MessageBoxW(hWndOwner, szText, strTitle, MB_ICONWARNING);
 
         // set default value
+        StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), s_pszDefaultPath);
         ExpandEnvironmentStringsW(s_pszDefaultPath, IconContext.szPath, _countof(IconContext.szPath));
     }
 
