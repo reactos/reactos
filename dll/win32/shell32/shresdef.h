@@ -268,6 +268,9 @@
 
 #define IDS_REMOVE_EXT                              30522
 
+#define IDS_NO_ICONS                                30529
+#define IDS_FILE_NOT_FOUND                          30530
+
 /* Dialogs */
 
 /* Run dialog */
