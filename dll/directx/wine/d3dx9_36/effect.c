@@ -20,6 +20,8 @@
 #include "config.h"
 #include "wine/port.h"
 
+#include <stdio.h>
+
 #include "d3dx9_private.h"
 #include "d3dcompiler.h"
 
@@ -161,6 +163,10 @@ struct d3dx9_base_effect
     DWORD flags;
 
     ULONG64 version_counter;
+
+    struct wine_rb_tree param_tree;
+    char *full_name_tmp;
+    unsigned int full_name_tmp_size;
 };
 
 struct ID3DXEffectImpl
@@ -201,12 +207,10 @@ struct ID3DXEffectCompilerImpl
 {
     ID3DXEffectCompiler ID3DXEffectCompiler_iface;
     LONG ref;
-
-    struct d3dx9_base_effect base_effect;
 };
 
-static struct d3dx_parameter *get_annotation_by_name(UINT count, struct d3dx_parameter *parameters,
-        const char *name);
+static struct d3dx_parameter *get_annotation_by_name(struct d3dx9_base_effect *base,
+        unsigned int count, struct d3dx_parameter *parameters, const char *name);
 static HRESULT d3dx9_parse_state(struct d3dx9_base_effect *base, struct d3dx_state *state,
         const char *data, const char **ptr, struct d3dx_object *objects);
 static void free_parameter(struct d3dx_parameter *param, BOOL element, BOOL child);
@@ -682,6 +686,8 @@ static void d3dx9_base_effect_cleanup(struct d3dx9_base_effect *base)
 
     TRACE("base %p.\n", base);
 
+    heap_free(base->full_name_tmp);
+
     if (base->parameters)
     {
         for (i = 0; i < base->parameter_count; ++i)
@@ -726,13 +732,6 @@ static void free_effect(struct ID3DXEffectImpl *effect)
     }
 
     IDirect3DDevice9_Release(effect->device);
-}
-
-static void free_effect_compiler(struct ID3DXEffectCompilerImpl *compiler)
-{
-    TRACE("Free effect compiler %p\n", compiler);
-
-    d3dx9_base_effect_cleanup(&compiler->base_effect);
 }
 
 static void get_vector(struct d3dx_parameter *param, D3DXVECTOR4 *vector)
@@ -814,7 +813,8 @@ static void set_matrix_transpose(struct d3dx_parameter *param, const D3DXMATRIX 
     }
 }
 
-static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx_parameter *parameter, const char *name)
+static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx9_base_effect *base,
+        struct d3dx_parameter *parameter, const char *name)
 {
     UINT element;
     struct d3dx_parameter *temp_parameter;
@@ -835,7 +835,7 @@ static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx_paramete
         switch (*part++)
         {
             case '.':
-                return get_parameter_by_name(NULL, temp_parameter, part);
+                return get_parameter_by_name(base, temp_parameter, part);
 
             case '\0':
                 TRACE("Returning parameter %p\n", temp_parameter);
@@ -851,8 +851,8 @@ static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx_paramete
     return NULL;
 }
 
-static struct d3dx_parameter *get_annotation_by_name(UINT count, struct d3dx_parameter *annotations,
-        const char *name)
+static struct d3dx_parameter *get_annotation_by_name(struct d3dx9_base_effect *base,
+        unsigned int count, struct d3dx_parameter *annotations, const char *name)
 {
     UINT i, length;
     struct d3dx_parameter *temp_parameter;
@@ -879,10 +879,10 @@ static struct d3dx_parameter *get_annotation_by_name(UINT count, struct d3dx_par
             switch (*part++)
             {
                 case '.':
-                    return get_parameter_by_name(NULL, temp_parameter, part);
+                    return get_parameter_by_name(base, temp_parameter, part);
 
                 case '[':
-                    return get_parameter_element_by_name(temp_parameter, part);
+                    return get_parameter_element_by_name(base, temp_parameter, part);
 
                 default:
                     FIXME("Unhandled case \"%c\"\n", *--part);
@@ -898,15 +898,57 @@ static struct d3dx_parameter *get_annotation_by_name(UINT count, struct d3dx_par
 struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
         struct d3dx_parameter *parameter, const char *name)
 {
-    UINT i, count, length;
     struct d3dx_parameter *temp_parameter;
+    unsigned int name_len, param_name_len;
+    unsigned int i, count, length;
+    struct wine_rb_entry *entry;
+    unsigned int full_name_size;
     const char *part;
+    char *full_name;
 
     TRACE("base %p, parameter %p, name %s\n", base, parameter, debugstr_a(name));
 
     if (!name || !*name) return NULL;
 
+    if (!parameter)
+    {
+        if ((entry = wine_rb_get(&base->param_tree, name)))
+            return WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
+        return NULL;
+    }
+
+    /* Pass / technique annotations are not in the parameters tree. */
+    if (parameter->full_name)
+    {
+        name_len = strlen(name);
+        param_name_len = strlen(parameter->full_name);
+        full_name_size = name_len + param_name_len + 2;
+        if (base->full_name_tmp_size < full_name_size)
+        {
+            if (!(full_name = heap_realloc(base->full_name_tmp, full_name_size)))
+            {
+                ERR("Out of memory.\n");
+                return NULL;
+            }
+            base->full_name_tmp = full_name;
+            base->full_name_tmp_size = full_name_size;
+        }
+        else
+        {
+            full_name = base->full_name_tmp;
+        }
+        memcpy(full_name, parameter->full_name, param_name_len);
+        full_name[param_name_len] = '.';
+        memcpy(full_name + param_name_len + 1, name, name_len);
+        full_name[param_name_len + 1 + name_len] = 0;
+
+        if ((entry = wine_rb_get(&base->param_tree, full_name)))
+            return WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
+        return NULL;
+    }
+
     count = parameter ? parameter->member_count : base->parameter_count;
+
     length = strcspn( name, "[.@" );
     part = name + length;
 
@@ -925,18 +967,18 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
             switch (*part++)
             {
                 case '.':
-                    return get_parameter_by_name(NULL, temp_parameter, part);
+                    return get_parameter_by_name(base, temp_parameter, part);
 
                 case '@':
                 {
                     struct d3dx_top_level_parameter *top_param
                             = top_level_parameter_from_parameter(temp_parameter);
 
-                    return parameter ? NULL : get_annotation_by_name(top_param->annotation_count,
+                    return parameter ? NULL : get_annotation_by_name(base, top_param->annotation_count,
                             top_param->annotations, part);
                 }
                 case '[':
-                    return get_parameter_element_by_name(temp_parameter, part);
+                    return get_parameter_element_by_name(base, temp_parameter, part);
 
                 default:
                     FIXME("Unhandled case \"%c\"\n", *--part);
@@ -1460,7 +1502,7 @@ static D3DXHANDLE d3dx9_base_effect_get_annotation_by_name(struct d3dx9_base_eff
 
     annotation_count = get_annotation_from_object(base, object, &annotations);
 
-    annotation = get_annotation_by_name(annotation_count, annotations, name);
+    annotation = get_annotation_by_name(base, annotation_count, annotations, name);
     if (annotation)
     {
         TRACE("Returning parameter %p\n", annotation);
@@ -1555,13 +1597,16 @@ static HRESULT d3dx9_base_effect_set_value(struct d3dx9_base_effect *base,
             case D3DXPT_TEXTURECUBE:
                 for (i = 0; i < (param->element_count ? param->element_count : 1); ++i)
                 {
-                    IUnknown *unk = ((IUnknown **)data)[i];
-                    if (unk)
-                        IUnknown_AddRef(unk);
+                    IUnknown *old_texture = ((IUnknown **)param->data)[i];
+                    IUnknown *new_texture = ((IUnknown **)data)[i];
 
-                    unk = ((IUnknown **)param->data)[i];
-                    if (unk)
-                        IUnknown_Release(unk);
+                    if (new_texture == old_texture)
+                        continue;
+
+                    if (new_texture)
+                        IUnknown_AddRef(new_texture);
+                    if (old_texture)
+                        IUnknown_Release(old_texture);
                 }
             /* fallthrough */
             case D3DXPT_VOID:
@@ -3987,37 +4032,44 @@ done:
 static HRESULT WINAPI ID3DXEffectImpl_FindNextValidTechnique(ID3DXEffect *iface,
         D3DXHANDLE technique, D3DXHANDLE *next_technique)
 {
-    struct ID3DXEffectImpl *This = impl_from_ID3DXEffect(iface);
-    struct d3dx9_base_effect *base_effect = &This->base_effect;
-    UINT i = 0;
+    struct ID3DXEffectImpl *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx9_base_effect *base = &effect->base_effect;
+    struct d3dx_technique *prev_tech, *tech;
+    unsigned int i;
 
-    TRACE("iface %p, technique %p, next_technique %p\n", iface, technique, next_technique);
-
-    if (!next_technique)
-        return D3DERR_INVALIDCALL;
+    TRACE("iface %p, technique %p, next_technique %p.\n", iface, technique, next_technique);
 
     if (technique)
     {
-        for (; i < base_effect->technique_count; i++)
+        if (!(prev_tech = get_valid_technique(base, technique)))
+            return D3DERR_INVALIDCALL;
+
+        for (i = 0; i < base->technique_count; ++i)
         {
-            if (technique == get_technique_handle(&base_effect->techniques[i]))
+            tech = &base->techniques[i];
+            if (tech == prev_tech)
             {
-                i++; /* Go to next technique */
+                ++i;
                 break;
             }
         }
     }
-
-    for (; i < base_effect->technique_count; i++)
+    else
     {
-        if (SUCCEEDED(iface->lpVtbl->ValidateTechnique(iface, get_technique_handle(&base_effect->techniques[i]))))
+        i = 0;
+    }
+
+    for (; i < base->technique_count; ++i)
+    {
+        tech = &base->techniques[i];
+        if (SUCCEEDED(ID3DXEffectImpl_ValidateTechnique(iface, get_technique_handle(tech))))
         {
-            *next_technique = get_technique_handle(&base_effect->techniques[i]);
+            *next_technique = get_technique_handle(tech);
             return D3D_OK;
         }
     }
 
-    *next_technique = NULL;
+    *next_technique = get_technique_handle(&base->techniques[0]);
     return S_FALSE;
 }
 
@@ -4150,7 +4202,7 @@ static HRESULT WINAPI ID3DXEffectImpl_Begin(ID3DXEffect *iface, UINT *passes, DW
 
     TRACE("iface %p, passes %p, flags %#x.\n", iface, passes, flags);
 
-    if (passes && technique)
+    if (technique)
     {
         if (flags & ~(D3DXFX_DONOTSAVESTATE | D3DXFX_DONOTSAVESAMPLERSTATE | D3DXFX_DONOTSAVESHADERSTATE))
             WARN("Invalid flags (%#x) specified.\n", flags);
@@ -4182,7 +4234,8 @@ static HRESULT WINAPI ID3DXEffectImpl_Begin(ID3DXEffect *iface, UINT *passes, DW
                 ERR("StateBlock Capture failed, hr %#x.\n", hr);
         }
 
-        *passes = technique->pass_count;
+        if (passes)
+            *passes = technique->pass_count;
         effect->started = TRUE;
         effect->begin_flags = flags;
 
@@ -4302,13 +4355,65 @@ static HRESULT WINAPI ID3DXEffectImpl_GetDevice(ID3DXEffect *iface, struct IDire
     return S_OK;
 }
 
+static BOOL param_on_lost_device(void *data, struct d3dx_parameter *param)
+{
+    struct IDirect3DVolumeTexture9 *volume_texture;
+    struct IDirect3DCubeTexture9 *cube_texture;
+    struct IDirect3DTexture9 *texture;
+    D3DSURFACE_DESC surface_desc;
+    D3DVOLUME_DESC volume_desc;
+
+    if (param->class == D3DXPC_OBJECT && !param->element_count)
+    {
+        switch (param->type)
+        {
+            case D3DXPT_TEXTURE:
+            case D3DXPT_TEXTURE1D:
+            case D3DXPT_TEXTURE2D:
+                texture = *(IDirect3DTexture9 **)param->data;
+                if (!texture)
+                    return FALSE;
+                IDirect3DTexture9_GetLevelDesc(texture, 0, &surface_desc);
+                if (surface_desc.Pool != D3DPOOL_DEFAULT)
+                    return FALSE;
+                break;
+            case D3DXPT_TEXTURE3D:
+                volume_texture = *(IDirect3DVolumeTexture9 **)param->data;
+                if (!volume_texture)
+                    return FALSE;
+                IDirect3DVolumeTexture9_GetLevelDesc(volume_texture, 0, &volume_desc);
+                if (volume_desc.Pool != D3DPOOL_DEFAULT)
+                    return FALSE;
+                break;
+            case D3DXPT_TEXTURECUBE:
+                cube_texture = *(IDirect3DCubeTexture9 **)param->data;
+                if (!cube_texture)
+                    return FALSE;
+                IDirect3DTexture9_GetLevelDesc(cube_texture, 0, &surface_desc);
+                if (surface_desc.Pool != D3DPOOL_DEFAULT)
+                    return FALSE;
+                break;
+            default:
+                return FALSE;
+        }
+        IUnknown_Release(*(IUnknown **)param->data);
+        *(IUnknown **)param->data = NULL;
+    }
+    return FALSE;
+}
+
 static HRESULT WINAPI ID3DXEffectImpl_OnLostDevice(ID3DXEffect* iface)
 {
-    struct ID3DXEffectImpl *This = impl_from_ID3DXEffect(iface);
+    struct ID3DXEffectImpl *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx9_base_effect *base = &effect->base_effect;
+    unsigned int i;
 
-    FIXME("(%p)->(): stub\n", This);
+    TRACE("iface %p.\n", iface);
 
-    return E_NOTIMPL;
+    for (i = 0; i < base->parameter_count; ++i)
+        walk_parameter_tree(&base->parameters[i].param, param_on_lost_device, NULL);
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI ID3DXEffectImpl_OnResetDevice(ID3DXEffect* iface)
@@ -4379,7 +4484,7 @@ static HRESULT WINAPI ID3DXEffectImpl_ApplyParameterBlock(ID3DXEffect* iface, D3
     return E_NOTIMPL;
 }
 
-#if _D3DX9_VER >= 26
+#if D3DX_SDK_VERSION >= 26
 static HRESULT WINAPI ID3DXEffectImpl_DeleteParameterBlock(ID3DXEffect* iface, D3DXHANDLE parameter_block)
 {
     struct ID3DXEffectImpl *This = impl_from_ID3DXEffect(iface);
@@ -4398,14 +4503,20 @@ static HRESULT WINAPI ID3DXEffectImpl_CloneEffect(ID3DXEffect *iface,
     FIXME("(%p)->(%p, %p): stub\n", This, device, effect);
 
     if (!effect)
-        return D3DXERR_INVALIDDATA;
+        return D3DERR_INVALIDCALL;
+
+    if (This->base_effect.flags & D3DXFX_NOT_CLONEABLE)
+        return E_FAIL;
+
+    if (!device)
+        return D3DERR_INVALIDCALL;
 
     iface->lpVtbl->AddRef(iface);
     *effect = iface;
     return S_OK;
 }
 
-#if _D3DX9_VER >= 27
+#if D3DX_SDK_VERSION >= 27
 static HRESULT WINAPI ID3DXEffectImpl_SetRawValue(ID3DXEffect *iface,
         D3DXHANDLE parameter, const void *data, UINT byte_offset, UINT bytes)
 {
@@ -4497,11 +4608,11 @@ static const struct ID3DXEffectVtbl ID3DXEffect_Vtbl =
     ID3DXEffectImpl_BeginParameterBlock,
     ID3DXEffectImpl_EndParameterBlock,
     ID3DXEffectImpl_ApplyParameterBlock,
-#if _D3DX9_VER >= 26
+#if D3DX_SDK_VERSION >= 26
     ID3DXEffectImpl_DeleteParameterBlock,
 #endif
     ID3DXEffectImpl_CloneEffect,
-#if _D3DX9_VER >= 27
+#if D3DX_SDK_VERSION >= 27
     ID3DXEffectImpl_SetRawValue
 #endif
 };
@@ -4547,7 +4658,6 @@ static ULONG WINAPI ID3DXEffectCompilerImpl_Release(ID3DXEffectCompiler *iface)
 
     if (!ref)
     {
-        free_effect_compiler(This);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -4557,547 +4667,435 @@ static ULONG WINAPI ID3DXEffectCompilerImpl_Release(ID3DXEffectCompiler *iface)
 /*** ID3DXBaseEffect methods ***/
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetDesc(ID3DXEffectCompiler *iface, D3DXEFFECT_DESC *desc)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, desc %p stub!\n", iface, desc);
 
-    TRACE("iface %p, desc %p.\n", iface, desc);
-
-    return d3dx9_base_effect_get_desc(&compiler->base_effect, desc);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetParameterDesc(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXPARAMETER_DESC *desc)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, desc %p stub!\n", iface, parameter, desc);
 
-    TRACE("iface %p, parameter %p, desc %p.\n", iface, parameter, desc);
-
-    return d3dx9_base_effect_get_parameter_desc(&compiler->base_effect, parameter, desc);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetTechniqueDesc(ID3DXEffectCompiler *iface,
         D3DXHANDLE technique, D3DXTECHNIQUE_DESC *desc)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, technique %p, desc %p stub!\n", iface, technique, desc);
 
-    TRACE("iface %p, technique %p, desc %p.\n", iface, technique, desc);
-
-    return d3dx9_base_effect_get_technique_desc(&compiler->base_effect, technique, desc);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetPassDesc(ID3DXEffectCompiler *iface,
         D3DXHANDLE pass, D3DXPASS_DESC *desc)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, pass %p, desc %p stub!\n", iface, pass, desc);
 
-    TRACE("iface %p, pass %p, desc %p.\n", iface, pass, desc);
-
-    return d3dx9_base_effect_get_pass_desc(&compiler->base_effect, pass, desc);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetFunctionDesc(ID3DXEffectCompiler *iface,
         D3DXHANDLE shader, D3DXFUNCTION_DESC *desc)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, shader %p, desc %p stub!\n", iface, shader, desc);
 
-    TRACE("iface %p, shader %p, desc %p.\n", iface, shader, desc);
-
-    return d3dx9_base_effect_get_function_desc(&compiler->base_effect, shader, desc);
+    return E_NOTIMPL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetParameter(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, UINT index)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, index %u stub!\n", iface, parameter, index);
 
-    TRACE("iface %p, parameter %p, index %u.\n", iface, parameter, index);
-
-    return d3dx9_base_effect_get_parameter(&compiler->base_effect, parameter, index);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetParameterByName(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const char *name)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, name %s stub!\n", iface, parameter, debugstr_a(name));
 
-    TRACE("iface %p, parameter %p, name %s.\n", iface, parameter, debugstr_a(name));
-
-    return d3dx9_base_effect_get_parameter_by_name(&compiler->base_effect, parameter, name);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetParameterBySemantic(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const char *semantic)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, semantic %s stub!\n", iface, parameter, debugstr_a(semantic));
 
-    TRACE("iface %p, parameter %p, semantic %s.\n", iface, parameter, debugstr_a(semantic));
-
-    return d3dx9_base_effect_get_parameter_by_semantic(&compiler->base_effect, parameter, semantic);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetParameterElement(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, UINT index)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, index %u stub!\n", iface, parameter, index);
 
-    TRACE("iface %p, parameter %p, index %u.\n", iface, parameter, index);
-
-    return d3dx9_base_effect_get_parameter_element(&compiler->base_effect, parameter, index);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetTechnique(ID3DXEffectCompiler *iface, UINT index)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, index %u stub!\n", iface, index);
 
-    TRACE("iface %p, index %u.\n", iface, index);
-
-    return d3dx9_base_effect_get_technique(&compiler->base_effect, index);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetTechniqueByName(ID3DXEffectCompiler *iface, const char *name)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, name %s stub!\n", iface, debugstr_a(name));
 
-    TRACE("iface %p, name %s.\n", iface, debugstr_a(name));
-
-    return d3dx9_base_effect_get_technique_by_name(&compiler->base_effect, name);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetPass(ID3DXEffectCompiler *iface, D3DXHANDLE technique, UINT index)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, technique %p, index %u stub!\n", iface, technique, index);
 
-    TRACE("iface %p, technique %p, index %u.\n", iface, technique, index);
-
-    return d3dx9_base_effect_get_pass(&compiler->base_effect, technique, index);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetPassByName(ID3DXEffectCompiler *iface,
         D3DXHANDLE technique, const char *name)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, technique %p, name %s stub!\n", iface, technique, debugstr_a(name));
 
-    TRACE("iface %p, technique %p, name %s.\n", iface, technique, debugstr_a(name));
-
-    return d3dx9_base_effect_get_pass_by_name(&compiler->base_effect, technique, name);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetFunction(ID3DXEffectCompiler *iface, UINT index)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, index %u stub!\n", iface, index);
 
-    TRACE("iface %p, index %u.\n", iface, index);
-
-    return d3dx9_base_effect_get_function(&compiler->base_effect, index);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetFunctionByName(ID3DXEffectCompiler *iface, const char *name)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, name %s stub!\n", iface, debugstr_a(name));
 
-    TRACE("iface %p, name %s.\n", iface, debugstr_a(name));
-
-    return d3dx9_base_effect_get_function_by_name(&compiler->base_effect, name);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetAnnotation(ID3DXEffectCompiler *iface,
         D3DXHANDLE object, UINT index)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, object %p, index %u stub!\n", iface, object, index);
 
-    TRACE("iface %p, object %p, index %u.\n", iface, object, index);
-
-    return d3dx9_base_effect_get_annotation(&compiler->base_effect, object, index);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI ID3DXEffectCompilerImpl_GetAnnotationByName(ID3DXEffectCompiler *iface,
         D3DXHANDLE object, const char *name)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, object %p, name %s stub!\n", iface, object, debugstr_a(name));
 
-    TRACE("iface %p, object %p, name %s.\n", iface, object, debugstr_a(name));
-
-    return d3dx9_base_effect_get_annotation_by_name(&compiler->base_effect, object, name);
+    return NULL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetValue(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const void *data, UINT bytes)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, data %p, bytes %u stub!\n", iface, parameter, data, bytes);
 
-    TRACE("iface %p, parameter %p, data %p, bytes %u.\n", iface, parameter, data, bytes);
-
-    return d3dx9_base_effect_set_value(&compiler->base_effect, parameter, data, bytes);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetValue(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, void *data, UINT bytes)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, data %p, bytes %u stub!\n", iface, parameter, data, bytes);
 
-    TRACE("iface %p, parameter %p, data %p, bytes %u.\n", iface, parameter, data, bytes);
-
-    return d3dx9_base_effect_get_value(&compiler->base_effect, parameter, data, bytes);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetBool(ID3DXEffectCompiler *iface, D3DXHANDLE parameter, BOOL b)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, b %#x stub!\n", iface, parameter, b);
 
-    TRACE("iface %p, parameter %p, b %#x.\n", iface, parameter, b);
-
-    return d3dx9_base_effect_set_bool(&compiler->base_effect, parameter, b);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetBool(ID3DXEffectCompiler *iface, D3DXHANDLE parameter, BOOL *b)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, b %p stub!\n", iface, parameter, b);
 
-    TRACE("iface %p, parameter %p, b %p.\n", iface, parameter, b);
-
-    return d3dx9_base_effect_get_bool(&compiler->base_effect, parameter, b);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetBoolArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const BOOL *b, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, b %p, count %u stub!\n", iface, parameter, b, count);
 
-    TRACE("iface %p, parameter %p, b %p, count %u.\n", iface, parameter, b, count);
-
-    return d3dx9_base_effect_set_bool_array(&compiler->base_effect, parameter, b, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetBoolArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, BOOL *b, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, b %p, count %u stub!\n", iface, parameter, b, count);
 
-    TRACE("iface %p, parameter %p, b %p, count %u.\n", iface, parameter, b, count);
-
-    return d3dx9_base_effect_get_bool_array(&compiler->base_effect, parameter, b, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetInt(ID3DXEffectCompiler *iface, D3DXHANDLE parameter, INT n)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, n %d stub!\n", iface, parameter, n);
 
-    TRACE("iface %p, parameter %p, n %d.\n", iface, parameter, n);
-
-    return d3dx9_base_effect_set_int(&compiler->base_effect, parameter, n);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetInt(ID3DXEffectCompiler *iface, D3DXHANDLE parameter, INT *n)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, n %p stub!\n", iface, parameter, n);
 
-    TRACE("iface %p, parameter %p, n %p.\n", iface, parameter, n);
-
-    return d3dx9_base_effect_get_int(&compiler->base_effect, parameter, n);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetIntArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const INT *n, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, n %p, count %u stub!\n", iface, parameter, n, count);
 
-    TRACE("iface %p, parameter %p, n %p, count %u.\n", iface, parameter, n, count);
-
-    return d3dx9_base_effect_set_int_array(&compiler->base_effect, parameter, n, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetIntArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, INT *n, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, n %p, count %u stub!\n", iface, parameter, n, count);
 
-    TRACE("iface %p, parameter %p, n %p, count %u.\n", iface, parameter, n, count);
-
-    return d3dx9_base_effect_get_int_array(&compiler->base_effect, parameter, n, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetFloat(ID3DXEffectCompiler *iface, D3DXHANDLE parameter, float f)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, f %.8e stub!\n", iface, parameter, f);
 
-    TRACE("iface %p, parameter %p, f %.8e.\n", iface, parameter, f);
-
-    return d3dx9_base_effect_set_float(&compiler->base_effect, parameter, f);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetFloat(ID3DXEffectCompiler *iface, D3DXHANDLE parameter, float *f)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, f %p stub!\n", iface, parameter, f);
 
-    TRACE("iface %p, parameter %p, f %p.\n", iface, parameter, f);
-
-    return d3dx9_base_effect_get_float(&compiler->base_effect, parameter, f);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetFloatArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const float *f, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, f %p, count %u stub!\n", iface, parameter, f, count);
 
-    TRACE("iface %p, parameter %p, f %p, count %u.\n", iface, parameter, f, count);
-
-    return d3dx9_base_effect_set_float_array(&compiler->base_effect, parameter, f, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetFloatArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, float *f, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, f %p, count %u stub!\n", iface, parameter, f, count);
 
-    TRACE("iface %p, parameter %p, f %p, count %u.\n", iface, parameter, f, count);
-
-    return d3dx9_base_effect_get_float_array(&compiler->base_effect, parameter, f, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetVector(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const D3DXVECTOR4 *vector)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, vector %p stub!\n", iface, parameter, vector);
 
-    TRACE("iface %p, parameter %p, vector %p.\n", iface, parameter, vector);
-
-    return d3dx9_base_effect_set_vector(&compiler->base_effect, parameter, vector);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetVector(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXVECTOR4 *vector)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, vector %p stub!\n", iface, parameter, vector);
 
-    TRACE("iface %p, parameter %p, vector %p.\n", iface, parameter, vector);
-
-    return d3dx9_base_effect_get_vector(&compiler->base_effect, parameter, vector);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetVectorArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const D3DXVECTOR4 *vector, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, vector %p, count %u stub!\n", iface, parameter, vector, count);
 
-    TRACE("iface %p, parameter %p, vector %p, count %u.\n", iface, parameter, vector, count);
-
-    return d3dx9_base_effect_set_vector_array(&compiler->base_effect, parameter, vector, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetVectorArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXVECTOR4 *vector, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, vector %p, count %u stub!\n", iface, parameter, vector, count);
 
-    TRACE("iface %p, parameter %p, vector %p, count %u.\n", iface, parameter, vector, count);
-
-    return d3dx9_base_effect_get_vector_array(&compiler->base_effect, parameter, vector, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetMatrix(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const D3DXMATRIX *matrix)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p stub!\n", iface, parameter, matrix);
 
-    TRACE("iface %p, parameter %p, matrix %p.\n", iface, parameter, matrix);
-
-    return d3dx9_base_effect_set_matrix(&compiler->base_effect, parameter, matrix);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetMatrix(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXMATRIX *matrix)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p stub!\n", iface, parameter, matrix);
 
-    TRACE("iface %p, parameter %p, matrix %p.\n", iface, parameter, matrix);
-
-    return d3dx9_base_effect_get_matrix(&compiler->base_effect, parameter, matrix);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetMatrixArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const D3DXMATRIX *matrix, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p, count %u stub!\n", iface, parameter, matrix, count);
 
-    TRACE("iface %p, parameter %p, matrix %p, count %u.\n", iface, parameter, matrix, count);
-
-    return d3dx9_base_effect_set_matrix_array(&compiler->base_effect, parameter, matrix, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetMatrixArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXMATRIX *matrix, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p, count %u stub!\n", iface, parameter, matrix, count);
 
-    TRACE("iface %p, parameter %p, matrix %p, count %u.\n", iface, parameter, matrix, count);
-
-    return d3dx9_base_effect_get_matrix_array(&compiler->base_effect, parameter, matrix, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetMatrixPointerArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const D3DXMATRIX **matrix, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p, count %u stub!\n", iface, parameter, matrix, count);
 
-    TRACE("iface %p, parameter %p, matrix %p, count %u.\n", iface, parameter, matrix, count);
-
-    return d3dx9_base_effect_set_matrix_pointer_array(&compiler->base_effect, parameter, matrix, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetMatrixPointerArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXMATRIX **matrix, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p, count %u stub!\n", iface, parameter, matrix, count);
 
-    TRACE("iface %p, parameter %p, matrix %p, count %u.\n", iface, parameter, matrix, count);
-
-    return d3dx9_base_effect_get_matrix_pointer_array(&compiler->base_effect, parameter, matrix, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetMatrixTranspose(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const D3DXMATRIX *matrix)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p stub!\n", iface, parameter, matrix);
 
-    TRACE("iface %p, parameter %p, matrix %p.\n", iface, parameter, matrix);
-
-    return d3dx9_base_effect_set_matrix_transpose(&compiler->base_effect, parameter, matrix);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetMatrixTranspose(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXMATRIX *matrix)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p stub!\n", iface, parameter, matrix);
 
-    TRACE("iface %p, parameter %p, matrix %p.\n", iface, parameter, matrix);
-
-    return d3dx9_base_effect_get_matrix_transpose(&compiler->base_effect, parameter, matrix);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetMatrixTransposeArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const D3DXMATRIX *matrix, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p, count %u stub!\n", iface, parameter, matrix, count);
 
-    TRACE("iface %p, parameter %p, matrix %p, count %u.\n", iface, parameter, matrix, count);
-
-    return d3dx9_base_effect_set_matrix_transpose_array(&compiler->base_effect, parameter, matrix, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetMatrixTransposeArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXMATRIX *matrix, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p, count %u stub!\n", iface, parameter, matrix, count);
 
-    TRACE("iface %p, parameter %p, matrix %p, count %u.\n", iface, parameter, matrix, count);
-
-    return d3dx9_base_effect_get_matrix_transpose_array(&compiler->base_effect, parameter, matrix, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetMatrixTransposePointerArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const D3DXMATRIX **matrix, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p, count %u stub!\n", iface, parameter, matrix, count);
 
-    TRACE("iface %p, parameter %p, matrix %p, count %u.\n", iface, parameter, matrix, count);
-
-    return d3dx9_base_effect_set_matrix_transpose_pointer_array(&compiler->base_effect, parameter, matrix, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetMatrixTransposePointerArray(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, D3DXMATRIX **matrix, UINT count)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, matrix %p, count %u stub!\n", iface, parameter, matrix, count);
 
-    TRACE("iface %p, parameter %p, matrix %p, count %u.\n", iface, parameter, matrix, count);
-
-    return d3dx9_base_effect_get_matrix_transpose_pointer_array(&compiler->base_effect, parameter, matrix, count);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetString(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const char *string)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, string %s stub!\n", iface, parameter, debugstr_a(string));
 
-    TRACE("iface %p, parameter %p, string %s.\n", iface, parameter, debugstr_a(string));
-
-    return d3dx9_base_effect_set_string(&compiler->base_effect, parameter, string);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetString(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, const char **string)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, string %p stub!\n", iface, parameter, string);
 
-    TRACE("iface %p, parameter %p, string %p.\n", iface, parameter, string);
-
-    return d3dx9_base_effect_get_string(&compiler->base_effect, parameter, string);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetTexture(struct ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, struct IDirect3DBaseTexture9 *texture)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, texture %p stub!\n", iface, parameter, texture);
 
-    TRACE("iface %p, parameter %p, texture %p.\n", iface, parameter, texture);
-
-    return d3dx9_base_effect_set_texture(&compiler->base_effect, parameter, texture);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetTexture(struct ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, struct IDirect3DBaseTexture9 **texture)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, texture %p stub!\n", iface, parameter, texture);
 
-    TRACE("iface %p, parameter %p, texture %p.\n", iface, parameter, texture);
-
-    return d3dx9_base_effect_get_texture(&compiler->base_effect, parameter, texture);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetPixelShader(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, struct IDirect3DPixelShader9 **shader)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, shader %p stub!\n", iface, parameter, shader);
 
-    TRACE("iface %p, parameter %p, shader %p.\n", iface, parameter, shader);
-
-    return d3dx9_base_effect_get_pixel_shader(&compiler->base_effect, parameter, shader);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetVertexShader(struct ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, struct IDirect3DVertexShader9 **shader)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, shader %p stub!\n", iface, parameter, shader);
 
-    TRACE("iface %p, parameter %p, shader %p.\n", iface, parameter, shader);
-
-    return d3dx9_base_effect_get_vertex_shader(&compiler->base_effect, parameter, shader);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetArrayRange(ID3DXEffectCompiler *iface,
         D3DXHANDLE parameter, UINT start, UINT end)
 {
-    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    FIXME("iface %p, parameter %p, start %u, end %u stub!\n", iface, parameter, start, end);
 
-    TRACE("iface %p, parameter %p, start %u, end %u.\n", iface, parameter, start, end);
-
-    return d3dx9_base_effect_set_array_range(&compiler->base_effect, parameter, start, end);
+    return E_NOTIMPL;
 }
 
 /*** ID3DXEffectCompiler methods ***/
 static HRESULT WINAPI ID3DXEffectCompilerImpl_SetLiteral(ID3DXEffectCompiler *iface, D3DXHANDLE parameter, BOOL literal)
 {
-    struct ID3DXEffectCompilerImpl *This = impl_from_ID3DXEffectCompiler(iface);
-
-    FIXME("iface %p, parameter %p, literal %u\n", This, parameter, literal);
+    FIXME("iface %p, parameter %p, literal %#x stub!\n", iface, parameter, literal);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ID3DXEffectCompilerImpl_GetLiteral(ID3DXEffectCompiler *iface, D3DXHANDLE parameter, BOOL *literal)
 {
-    struct ID3DXEffectCompilerImpl *This = impl_from_ID3DXEffectCompiler(iface);
-
-    FIXME("iface %p, parameter %p, literal %p\n", This, parameter, literal);
+    FIXME("iface %p, parameter %p, literal %p stub!\n", iface, parameter, literal);
 
     return E_NOTIMPL;
 }
@@ -5105,9 +5103,7 @@ static HRESULT WINAPI ID3DXEffectCompilerImpl_GetLiteral(ID3DXEffectCompiler *if
 static HRESULT WINAPI ID3DXEffectCompilerImpl_CompileEffect(ID3DXEffectCompiler *iface, DWORD flags,
         ID3DXBuffer **effect, ID3DXBuffer **error_msgs)
 {
-    struct ID3DXEffectCompilerImpl *This = impl_from_ID3DXEffectCompiler(iface);
-
-    FIXME("iface %p, flags %#x, effect %p, error_msgs %p stub\n", This, flags, effect, error_msgs);
+    FIXME("iface %p, flags %#x, effect %p, error_msgs %p stub!\n", iface, flags, effect, error_msgs);
 
     return E_NOTIMPL;
 }
@@ -5116,10 +5112,8 @@ static HRESULT WINAPI ID3DXEffectCompilerImpl_CompileShader(ID3DXEffectCompiler 
         const char *target, DWORD flags, ID3DXBuffer **shader, ID3DXBuffer **error_msgs,
         ID3DXConstantTable **constant_table)
 {
-    struct ID3DXEffectCompilerImpl *This = impl_from_ID3DXEffectCompiler(iface);
-
-    FIXME("iface %p, function %p, target %p, flags %#x, shader %p, error_msgs %p, constant_table %p stub\n",
-            This, function, target, flags, shader, error_msgs, constant_table);
+    FIXME("iface %p, function %p, target %s, flags %#x, shader %p, error_msgs %p, constant_table %p stub!\n",
+            iface, function, debugstr_a(target), flags, shader, error_msgs, constant_table);
 
     return E_NOTIMPL;
 }
@@ -5455,6 +5449,83 @@ static HRESULT d3dx9_copy_data(struct d3dx9_base_effect *base, unsigned int obje
 static void param_set_magic_number(struct d3dx_parameter *param)
 {
     memcpy(param->magic_string, parameter_magic_string, sizeof(parameter_magic_string));
+}
+
+static int param_rb_compare(const void *key, const struct wine_rb_entry *entry)
+{
+    const char *name = key;
+    struct d3dx_parameter *param = WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
+
+    return strcmp(name, param->full_name);
+}
+
+static void add_param_to_tree(struct d3dx9_base_effect *base, struct d3dx_parameter *param,
+        struct d3dx_parameter *parent, char separator, unsigned int element)
+{
+    const char *parent_name = parent ? parent->full_name : NULL;
+    unsigned int i;
+
+    TRACE("Adding parameter %p (%s - parent %p, element %u) to the rbtree.\n",
+            param, debugstr_a(param->name), parent, element);
+
+    if (parent_name)
+    {
+        unsigned int parent_name_len = strlen(parent_name);
+        unsigned int name_len = strlen(param->name);
+        unsigned int part_str_len;
+        unsigned int len;
+        char part_str[16];
+
+        if (separator == '[')
+        {
+            sprintf(part_str, "[%u]", element);
+            part_str_len = strlen(part_str);
+            name_len = 0;
+        }
+        else
+        {
+            part_str[0] = separator;
+            part_str[1] = 0;
+            part_str_len = 1;
+        }
+        len = parent_name_len + part_str_len + name_len + 1;
+
+        if (!(param->full_name = heap_alloc(len)))
+        {
+            ERR("Out of memory.\n");
+            return;
+        }
+
+        memcpy(param->full_name, parent_name, parent_name_len);
+        memcpy(param->full_name + parent_name_len, part_str, part_str_len);
+        memcpy(param->full_name + parent_name_len + part_str_len, param->name, name_len);
+        param->full_name[len - 1] = 0;
+    }
+    else
+    {
+        unsigned int len = strlen(param->name) + 1;
+
+        if (!(param->full_name = heap_alloc(len)))
+        {
+            ERR("Out of memory.\n");
+            return;
+        }
+
+        memcpy(param->full_name, param->name, len);
+    }
+    TRACE("Full name is %s.\n", param->full_name);
+    wine_rb_put(&base->param_tree, param->full_name, &param->rb_entry);
+
+    if (is_top_level_parameter(param))
+        for (i = 0; i < param->top_level_param->annotation_count; ++i)
+            add_param_to_tree(base, &param->top_level_param->annotations[i], param, '@', 0);
+
+    if (param->element_count)
+        for (i = 0; i < param->element_count; ++i)
+            add_param_to_tree(base, &param->members[i], param, '[', i);
+    else
+        for (i = 0; i < param->member_count; ++i)
+            add_param_to_tree(base, &param->members[i], param, '.', 0);
 }
 
 static HRESULT d3dx9_parse_effect_typedef(struct d3dx9_base_effect *base, struct d3dx_parameter *param,
@@ -6302,6 +6373,7 @@ static HRESULT d3dx9_parse_effect(struct d3dx9_base_effect *base, const char *da
         goto err_out;
     }
 
+    wine_rb_init(&base->param_tree, param_rb_compare);
     if (base->parameter_count)
     {
         base->parameters = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -6324,6 +6396,7 @@ static HRESULT d3dx9_parse_effect(struct d3dx9_base_effect *base, const char *da
             }
             walk_parameter_tree(&base->parameters[i].param, param_set_top_level_param,
                 &base->parameters[i]);
+            add_param_to_tree(base, &base->parameters[i].param, NULL, 0, 0);
         }
     }
 
@@ -6503,8 +6576,10 @@ static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
 #endif
     unsigned int i, j;
 
-    TRACE("base %p, data %p, data_size %lu, effect %p, pool %p, skip_constants %s.\n",
-            base, data, data_size, effect, pool, debugstr_a(skip_constants_string));
+    TRACE("base %p, data %p, data_size %lu, defines %p, include %p, eflags %#x, errors %p, "
+            "effect %p, pool %p, skip_constants %s.\n",
+            base, data, data_size, defines, include, eflags, errors, effect, pool,
+            debugstr_a(skip_constants_string));
 
     base->effect = effect;
     base->pool = pool;
@@ -6517,7 +6592,7 @@ static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
     {
         TRACE("HLSL ASCII effect, trying to compile it.\n");
         hr = D3DCompile(data, data_size, NULL, defines, include,
-                "main", "fx_2_0", compile_flags, eflags, &bytecode, &temp_errors);
+                NULL, "fx_2_0", compile_flags, eflags, &bytecode, &temp_errors);
         if (FAILED(hr))
         {
             WARN("Failed to compile ASCII effect.\n");
@@ -6726,20 +6801,13 @@ static HRESULT d3dx9_effect_compiler_init(struct ID3DXEffectCompilerImpl *compil
         const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
         UINT eflags, ID3DBlob **error_messages)
 {
-    HRESULT hr;
-
-    TRACE("effect %p, data %p, data_size %lu\n", compiler, data, data_size);
+    TRACE("compiler %p, data %p, data_size %lu, defines %p, include %p, eflags %#x, error_messages %p.\n",
+            compiler, data, data_size, defines, include, eflags, error_messages);
 
     compiler->ID3DXEffectCompiler_iface.lpVtbl = &ID3DXEffectCompiler_Vtbl;
     compiler->ref = 1;
 
-    if (FAILED(hr = d3dx9_base_effect_init(&compiler->base_effect, data, data_size, defines,
-            include, eflags, error_messages, NULL, NULL, NULL)))
-    {
-        FIXME("Failed to parse effect, hr %#x.\n", hr);
-        free_effect_compiler(compiler);
-        return hr;
-    }
+    FIXME("ID3DXEffectCompiler implementation is only a stub.\n");
 
     return D3D_OK;
 }
@@ -6880,9 +6948,11 @@ HRESULT WINAPI D3DXCreateEffectFromFileExW(struct IDirect3DDevice9 *device, cons
         const D3DXMACRO *defines, struct ID3DXInclude *include, const char *skipconstants, DWORD flags,
         struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
 {
-    void *buffer;
+    struct d3dx_include_from_file include_from_file;
+    const void *buffer;
+    unsigned int size;
+    char *filename_a;
     HRESULT ret;
-    DWORD size;
 
     TRACE("device %p, srcfile %s, defines %p, include %p, skipconstants %s, "
             "flags %#x, pool %p, effect %p, compilationerrors %p.\n",
@@ -6892,14 +6962,33 @@ HRESULT WINAPI D3DXCreateEffectFromFileExW(struct IDirect3DDevice9 *device, cons
     if (!device || !srcfile)
         return D3DERR_INVALIDCALL;
 
-    ret = map_view_of_file(srcfile, &buffer, &size);
+    if (!include)
+    {
+        include_from_file.ID3DXInclude_iface.lpVtbl = &d3dx_include_from_file_vtbl;
+        include = &include_from_file.ID3DXInclude_iface;
+    }
 
+    size = WideCharToMultiByte(CP_ACP, 0, srcfile, -1, NULL, 0, NULL, NULL);
+    filename_a = heap_alloc(size);
+    if (!filename_a)
+        return E_OUTOFMEMORY;
+    WideCharToMultiByte(CP_ACP, 0, srcfile, -1, filename_a, size, NULL, NULL);
+
+    EnterCriticalSection(&from_file_mutex);
+    ret = ID3DXInclude_Open(include, D3DXINC_LOCAL, filename_a, NULL, &buffer, &size);
     if (FAILED(ret))
+    {
+        LeaveCriticalSection(&from_file_mutex);
+        heap_free(filename_a);
         return D3DXERR_INVALIDDATA;
+    }
 
-    ret = D3DXCreateEffectEx(device, buffer, size, defines, include, skipconstants, flags, pool, effect, compilationerrors);
-    UnmapViewOfFile(buffer);
+    ret = D3DXCreateEffectEx(device, buffer, size, defines, include, skipconstants, flags, pool,
+            effect, compilationerrors);
 
+    ID3DXInclude_Close(include, buffer);
+    LeaveCriticalSection(&from_file_mutex);
+    heap_free(filename_a);
     return ret;
 }
 

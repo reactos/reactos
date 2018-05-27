@@ -24,6 +24,8 @@
 
 #define NONAMELESSUNION
 #include "wine/debug.h"
+#include "wine/heap.h"
+#include "wine/rbtree.h"
 
 #define COBJMACROS
 #include "d3dx9.h"
@@ -66,6 +68,14 @@ struct pixel_format_desc {
     void (*from_rgba)(const struct vec4 *src, struct vec4 *dst);
     void (*to_rgba)(const struct vec4 *src, struct vec4 *dst, const PALETTEENTRY *palette);
 };
+
+struct d3dx_include_from_file
+{
+    ID3DXInclude ID3DXInclude_iface;
+};
+
+extern CRITICAL_SECTION from_file_mutex DECLSPEC_HIDDEN;
+extern const struct ID3DXIncludeVtbl d3dx_include_from_file_vtbl DECLSPEC_HIDDEN;
 
 static inline BOOL is_conversion_from_supported(const struct pixel_format_desc *format)
 {
@@ -280,6 +290,13 @@ struct d3dx_param_eval
     ULONG64 *version_counter;
 };
 
+struct param_rb_entry
+{
+    struct wine_rb_entry entry;
+    char *full_name;
+    struct d3dx_parameter *param;
+};
+
 struct d3dx_shared_data;
 struct d3dx_top_level_parameter;
 
@@ -302,6 +319,9 @@ struct d3dx_parameter
 
     struct d3dx_parameter *members;
     char *semantic;
+
+    char *full_name;
+    struct wine_rb_entry rb_entry;
 };
 
 struct d3dx_top_level_parameter

@@ -4568,7 +4568,7 @@ HRESULT WINAPI D3DXCreatePolygon(struct IDirect3DDevice9 *device, float length, 
     struct vertex *vertices;
     WORD (*faces)[3];
     DWORD (*adjacency_buf)[3];
-    float scale;
+    float angle, scale;
     unsigned int i;
 
     TRACE("device %p, length %f, sides %u, mesh %p, adjacency %p.\n",
@@ -4596,7 +4596,9 @@ HRESULT WINAPI D3DXCreatePolygon(struct IDirect3DDevice9 *device, float length, 
         return hr;
     }
 
-    scale = 0.5f * length / sinf(D3DX_PI / sides);
+    angle = D3DX_PI / sides;
+    scale = 0.5f * length / sinf(angle);
+    angle *= 2.0f;
 
     vertices[0].position.x = 0.0f;
     vertices[0].position.y = 0.0f;
@@ -4607,8 +4609,8 @@ HRESULT WINAPI D3DXCreatePolygon(struct IDirect3DDevice9 *device, float length, 
 
     for (i = 0; i < sides; ++i)
     {
-        vertices[i + 1].position.x = cosf(2.0f * D3DX_PI * i / sides) * scale;
-        vertices[i + 1].position.y = sinf(2.0f * D3DX_PI * i / sides) * scale;
+        vertices[i + 1].position.x = cosf(angle * i) * scale;
+        vertices[i + 1].position.y = sinf(angle * i) * scale;
         vertices[i + 1].position.z = 0.0f;
         vertices[i + 1].normal.x = 0.0f;
         vertices[i + 1].normal.y = 0.0f;
@@ -7572,18 +7574,6 @@ HRESULT WINAPI D3DXComputeNormals(struct ID3DXBaseMesh *mesh, const DWORD *adjac
             D3DX_DEFAULT, 0, D3DX_DEFAULT, 0, D3DDECLUSAGE_NORMAL, 0,
             D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_CALCULATE_NORMALS,
             adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
-}
-
-/*************************************************************************
- * D3DXComputeNormalMap    (D3DX9_36.@)
- */
-HRESULT WINAPI D3DXComputeNormalMap(IDirect3DTexture9 *texture, IDirect3DTexture9 *src_texture,
-        const PALETTEENTRY *src_palette, DWORD flags, DWORD channel, FLOAT amplitude)
-{
-    FIXME("texture %p, src_texture %p, src_palette %p, flags %#x, channel %u, amplitude %f stub.\n",
-            texture, src_texture, src_palette, flags, channel, amplitude);
-
-    return D3D_OK;
 }
 
 /*************************************************************************

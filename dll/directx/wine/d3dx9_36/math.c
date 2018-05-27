@@ -1987,27 +1987,33 @@ D3DXVECTOR3* WINAPI D3DXVec3TransformNormalArray(D3DXVECTOR3* out, UINT outstrid
     return out;
 }
 
-D3DXVECTOR3* WINAPI D3DXVec3Unproject(D3DXVECTOR3 *pout, const D3DXVECTOR3 *pv, const D3DVIEWPORT9 *pviewport, const D3DXMATRIX *pprojection, const D3DXMATRIX *pview, const D3DXMATRIX *pworld)
+D3DXVECTOR3 * WINAPI D3DXVec3Unproject(D3DXVECTOR3 *out, const D3DXVECTOR3 *v,
+        const D3DVIEWPORT9 *viewport, const D3DXMATRIX *projection, const D3DXMATRIX *view,
+        const D3DXMATRIX *world)
 {
     D3DXMATRIX m;
 
-    TRACE("pout %p, pv %p, pviewport %p, pprojection %p, pview %p, pworlds %p\n", pout, pv, pviewport, pprojection, pview, pworld);
+    TRACE("out %p, v %p, viewport %p, projection %p, view %p, world %p.\n",
+            out, v, viewport, projection, view, world);
 
     D3DXMatrixIdentity(&m);
-    if (pworld) D3DXMatrixMultiply(&m, &m, pworld);
-    if (pview) D3DXMatrixMultiply(&m, &m, pview);
-    if (pprojection) D3DXMatrixMultiply(&m, &m, pprojection);
+    if (world)
+        D3DXMatrixMultiply(&m, &m, world);
+    if (view)
+        D3DXMatrixMultiply(&m, &m, view);
+    if (projection)
+        D3DXMatrixMultiply(&m, &m, projection);
     D3DXMatrixInverse(&m, NULL, &m);
 
-    *pout = *pv;
-    if (pviewport)
+    *out = *v;
+    if (viewport)
     {
-        pout->x = 2.0f * ( pout->x - pviewport->X ) / pviewport->Width - 1.0f;
-        pout->y = 1.0f - 2.0f * ( pout->y - pviewport->Y ) / pviewport->Height;
-        pout->z = ( pout->z - pviewport->MinZ) / ( pviewport->MaxZ - pviewport->MinZ );
+        out->x = 2.0f * (out->x - viewport->X) / viewport->Width - 1.0f;
+        out->y = 1.0f - 2.0f * (out->y - viewport->Y) / viewport->Height;
+        out->z = (out->z - viewport->MinZ) / (viewport->MaxZ - viewport->MinZ);
     }
-    D3DXVec3TransformCoord(pout, pout, &m);
-    return pout;
+    D3DXVec3TransformCoord(out, out, &m);
+    return out;
 }
 
 D3DXVECTOR3* WINAPI D3DXVec3UnprojectArray(D3DXVECTOR3* out, UINT outstride, const D3DXVECTOR3* in, UINT instride, const D3DVIEWPORT9* viewport, const D3DXMATRIX* projection, const D3DXMATRIX* view, const D3DXMATRIX* world, UINT elements)
