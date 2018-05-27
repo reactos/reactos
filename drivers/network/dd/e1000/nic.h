@@ -21,6 +21,8 @@
 #define DRIVER_VERSION 1
 
 
+#define DEFAULT_INTERRUPT_MASK      (E1000_IMS_LSC)
+
 typedef struct _E1000_ADAPTER
 {
     NDIS_SPIN_LOCK Lock;
@@ -31,10 +33,34 @@ typedef struct _E1000_ADAPTER
     USHORT SubsystemVendorID;
 
     UCHAR PermanentMacAddress[IEEE_802_ADDR_LENGTH];
-    UCHAR CurrentMacAddress[IEEE_802_ADDR_LENGTH];
+    struct {
+        UCHAR MacAddress[IEEE_802_ADDR_LENGTH];
+    } MulticastList[MAXIMUM_MULTICAST_ADDRESSES];
 
     ULONG LinkSpeedMbps;
     ULONG MediaState;
+    ULONG PacketFilter;
+
+    /* Io Port */
+    ULONG IoPortAddress;
+    ULONG IoPortLength;
+    volatile PUCHAR IoPort;
+
+    /* NIC Memory */
+    NDIS_PHYSICAL_ADDRESS IoAddress;
+    ULONG IoLength;
+    volatile PUCHAR IoBase;
+
+    /* Interrupt */
+    ULONG InterruptVector;
+    ULONG InterruptLevel;
+    BOOLEAN InterruptShared;
+    ULONG InterruptFlags;
+
+    NDIS_MINIPORT_INTERRUPT Interrupt;
+    BOOLEAN InterruptRegistered;
+
+    ULONG InterruptMask;
     ULONG InterruptPending;
 
 } E1000_ADAPTER, *PE1000_ADAPTER;
@@ -53,7 +79,7 @@ NICInitializeAdapterResources(
 
 NDIS_STATUS
 NTAPI
-NICAllocateResources(
+NICAllocateIoResources(
     IN PE1000_ADAPTER Adapter);
 
 NDIS_STATUS
@@ -96,6 +122,11 @@ NTAPI
 NICGetPermanentMacAddress(
     IN PE1000_ADAPTER Adapter,
     OUT PUCHAR MacAddress);
+
+NDIS_STATUS
+NTAPI
+NICUpdateMulticastList(
+    IN PE1000_ADAPTER Adapter);
 
 NDIS_STATUS
 NTAPI

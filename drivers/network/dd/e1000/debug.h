@@ -62,3 +62,5 @@ extern ULONG DebugTraceLevel;
     } while (0)
 
 
+const char* Oid2Str(IN NDIS_OID Oid);
+
