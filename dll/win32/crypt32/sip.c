@@ -801,3 +801,13 @@ BOOL WINAPI CryptSIPVerifyIndirectData(SIP_SUBJECTINFO* pSubjectInfo,
     TRACE("returning %d\n", ret);
     return ret;
 }
+
+/***********************************************************************
+ *             CryptSIPRetrieveSubjectGuidForCatalogFile (CRYPT32.@)
+ */
+BOOL WINAPI CryptSIPRetrieveSubjectGuidForCatalogFile(LPCWSTR filename, HANDLE handle, GUID *subject)
+{
+    FIXME("(%s %p %p)\n", debugstr_w(filename), handle, subject);
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
