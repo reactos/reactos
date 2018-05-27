@@ -339,6 +339,9 @@ static HRESULT WINAPI d3drm_viewport2_Init(IDirect3DRMViewport2 *iface, IDirect3
     if (FAILED(hr = IDirect3D_CreateViewport(d3d1, &viewport->d3d_viewport, NULL)))
         goto cleanup;
 
+    if (FAILED(hr = IDirect3DDevice_AddViewport(d3d_device, viewport->d3d_viewport)))
+        goto cleanup;
+
     vp.dwSize = sizeof(vp);
     vp.dwWidth = width;
     vp.dwHeight = height;
@@ -353,9 +356,6 @@ static HRESULT WINAPI d3drm_viewport2_Init(IDirect3DRMViewport2 *iface, IDirect3
     vp.dvMaxZ = 1.0f;
 
     if (FAILED(hr = IDirect3DViewport_SetViewport(viewport->d3d_viewport, &vp)))
-        goto cleanup;
-
-    if (FAILED(hr = IDirect3DDevice_AddViewport(d3d_device, viewport->d3d_viewport)))
         goto cleanup;
 
     if (FAILED(hr = IDirect3DRMFrame3_QueryInterface(camera, &IID_IDirect3DRMFrame, (void **)&viewport->camera)))
