@@ -21,8 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/fslist.c
  * PURPOSE:         Filesystem list functions
- * PROGRAMMER:      Eric Kohl
- *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 #include "usetup.h"

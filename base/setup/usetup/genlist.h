@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/genlist.h
  * PURPOSE:         Generic list functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #pragma once

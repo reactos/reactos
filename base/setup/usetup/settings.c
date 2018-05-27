@@ -20,8 +20,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/settings.c
  * PURPOSE:         Device settings support functions
- * PROGRAMMERS:     Eric Kohl
- *                  Colin Finck
+ * PROGRAMMERS:     Colin Finck
  */
 
 /* INCLUDES *****************************************************************/

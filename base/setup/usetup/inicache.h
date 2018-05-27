@@ -22,7 +22,6 @@
  * FILE:            base/setup/usetup/inicache.h
  * PURPOSE:         INI file parser that caches contents of INI file in memory
  * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
  */
 
 #pragma once

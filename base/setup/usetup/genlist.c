@@ -20,8 +20,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/genlist.c
  * PURPOSE:         Generic list functions
- * PROGRAMMER:      Eric Kohl
- *                  Christoph von Wittich <christoph at reactos.org>
+ * PROGRAMMER:      Christoph von Wittich <christoph at reactos.org>
  */
 
 /* INCLUDES *****************************************************************/

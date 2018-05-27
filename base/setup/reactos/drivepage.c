@@ -20,8 +20,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS GUI first stage setup application
  * FILE:        base/setup/reactos/drivepage.c
- * PROGRAMMERS: Eric Kohl
- *              Matthias Kupfer
+ * PROGRAMMERS: Matthias Kupfer
  *              Dmitry Chapyshev (dmitry@reactos.org)
  */
 

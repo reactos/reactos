@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/bootsup.c
  * PURPOSE:         Bootloader support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #include "usetup.h"

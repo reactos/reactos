@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/registry.c
  * PURPOSE:         Registry creation functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/

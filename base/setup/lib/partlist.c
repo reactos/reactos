@@ -2,8 +2,7 @@
  * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Partition list functions
- * COPYRIGHT:   Copyright 2002-2018 Eric Kohl
- *              Copyright 2003-2018 Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * COPYRIGHT:   Copyright 2003-2018 Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 #include "precomp.h"

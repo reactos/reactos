@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/usetup.h
  * PURPOSE:         Text-mode setup
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #ifndef _USETUP_PCH_
