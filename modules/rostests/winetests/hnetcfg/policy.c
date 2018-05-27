@@ -102,6 +102,53 @@ static void test_interfaces(void)
     INetFwMgr_Release(manager);
 }
 
+static void test_NetFwAuthorizedApplication(void)
+{
+    INetFwAuthorizedApplication *app;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_NetFwAuthorizedApplication, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+            &IID_INetFwAuthorizedApplication, (void**)&app);
+    ok(hr == S_OK, "got: %08x\n", hr);
+    if(hr == S_OK)
+    {
+        BSTR image = SysAllocStringLen( NULL, MAX_PATH );
+        static WCHAR empty[] = {0};
+        BSTR bstr;
+
+        if (!GetModuleFileNameW( NULL, image, MAX_PATH ))
+        {
+            ok(0, "Failed to get filename\n");
+            SysFreeString( image );
+            return;
+        }
+
+        hr = INetFwAuthorizedApplication_get_ProcessImageFileName(app, NULL);
+        ok(hr == E_POINTER, "got: %08x\n", hr);
+
+        hr = INetFwAuthorizedApplication_get_ProcessImageFileName(app, &bstr);
+        ok(hr == S_OK || hr == HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY), "got: %08x\n", hr);
+        ok(!bstr, "got: %s\n",  wine_dbgstr_w(bstr));
+
+        hr = INetFwAuthorizedApplication_put_ProcessImageFileName(app, NULL);
+        ok(hr == E_INVALIDARG || hr == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), "got: %08x\n", hr);
+
+        hr = INetFwAuthorizedApplication_put_ProcessImageFileName(app, empty);
+        ok(hr == E_INVALIDARG || hr == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), "got: %08x\n", hr);
+
+        hr = INetFwAuthorizedApplication_put_ProcessImageFileName(app, image);
+        ok(hr == S_OK, "got: %08x\n", hr);
+
+        hr = INetFwAuthorizedApplication_get_ProcessImageFileName(app, &bstr);
+        ok(hr == S_OK, "got: %08x\n", hr);
+        ok(!lstrcmpiW(bstr,image), "got: %s\n", wine_dbgstr_w(bstr));
+        SysFreeString( bstr );
+
+        SysFreeString( image );
+        INetFwAuthorizedApplication_Release(app);
+    }
+}
+
 START_TEST(policy)
 {
     INetFwMgr *manager;
@@ -121,7 +168,7 @@ START_TEST(policy)
     INetFwMgr_Release(manager);
 
     test_interfaces();
-
+    test_NetFwAuthorizedApplication();
 
     CoUninitialize();
 }
