@@ -7,8 +7,6 @@
 
 #include "precomp.h"
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
-
 static PWSTR ControlsList[] =
 {
   L"Button\0",
