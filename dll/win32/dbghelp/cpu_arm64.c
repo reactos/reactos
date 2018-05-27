@@ -41,7 +41,7 @@ static BOOL arm64_get_addr(HANDLE hThread, const CONTEXT* ctx,
 #ifdef __aarch64__
     case cpu_addr_pc:    addr->Offset = ctx->Pc;  return TRUE;
     case cpu_addr_stack: addr->Offset = ctx->Sp;  return TRUE;
-    case cpu_addr_frame: addr->Offset = ctx->Fp; return TRUE;
+    case cpu_addr_frame: addr->Offset = ctx->u.s.Fp; return TRUE;
 #endif
     default: addr->Mode = -1;
         return FALSE;
@@ -69,7 +69,7 @@ static BOOL fetch_next_frame(struct cpu_stack_walk* csw,
                                CONTEXT* context, DWORD_PTR curr_pc)
 {
     DWORD_PTR               xframe;
-    DWORD_PTR               oldReturn = context->Lr;
+    DWORD_PTR               oldReturn = context->u.s.Lr;
 
     if (dwarf2_virtual_unwind(csw, curr_pc, context, &xframe))
     {
@@ -78,7 +78,7 @@ static BOOL fetch_next_frame(struct cpu_stack_walk* csw,
         return TRUE;
     }
 
-    if (context->Pc == context->Lr) return FALSE;
+    if (context->Pc == context->u.s.Lr) return FALSE;
     context->Pc = oldReturn;
 
     return TRUE;
@@ -123,8 +123,8 @@ static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, C
 
     /* set frame information */
     frame->AddrStack.Offset = context->Sp;
-    frame->AddrReturn.Offset = context->Lr;
-    frame->AddrFrame.Offset = context->Fp;
+    frame->AddrReturn.Offset = context->u.s.Lr;
+    frame->AddrFrame.Offset = context->u.s.Fp;
     frame->AddrPC.Offset = context->Pc;
 
     frame->Far = TRUE;
@@ -198,8 +198,8 @@ static void* arm64_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* siz
     case CV_ARM64_X0 + 27:
     case CV_ARM64_X0 + 28: *size = sizeof(ctx->u.X[0]); return &ctx->u.X[regno - CV_ARM64_X0];
     case CV_ARM64_PSTATE:  *size = sizeof(ctx->Cpsr);   return &ctx->Cpsr;
-    case CV_ARM64_FP:      *size = sizeof(ctx->Fp);     return &ctx->Fp;
-    case CV_ARM64_LR:      *size = sizeof(ctx->Lr);     return &ctx->Lr;
+    case CV_ARM64_FP:      *size = sizeof(ctx->u.s.Fp); return &ctx->u.s.Fp;
+    case CV_ARM64_LR:      *size = sizeof(ctx->u.s.Lr); return &ctx->u.s.Lr;
     case CV_ARM64_SP:      *size = sizeof(ctx->Sp);     return &ctx->Sp;
     case CV_ARM64_PC:      *size = sizeof(ctx->Pc);     return &ctx->Pc;
     }
