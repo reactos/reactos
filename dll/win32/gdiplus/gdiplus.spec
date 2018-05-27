@@ -534,7 +534,7 @@
 534 stdcall GdipSetPathGradientFocusScales(ptr float float)
 535 stdcall GdipSetPathGradientGammaCorrection(ptr long)
 536 stdcall GdipSetPathGradientLinearBlend(ptr float float)
-537 stub GdipSetPathGradientPath
+537 stdcall GdipSetPathGradientPath(ptr ptr)
 538 stdcall GdipSetPathGradientPresetBlend(ptr ptr ptr long)
 539 stdcall GdipSetPathGradientSigmaBlend(ptr float float)
 540 stdcall GdipSetPathGradientSurroundColorsWithCount(ptr ptr ptr)

@@ -353,15 +353,20 @@ static GpStatus get_clip_hrgn(GpGraphics *graphics, HRGN *hrgn)
     GpRegion *rgn;
     GpMatrix transform;
     GpStatus stat;
+    BOOL identity;
 
     stat = get_graphics_transform(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceDevice, &transform);
+
+    if (stat == Ok)
+        stat = GdipIsMatrixIdentity(&transform, &identity);
 
     if (stat == Ok)
         stat = GdipCloneRegion(graphics->clip, &rgn);
 
     if (stat == Ok)
     {
-        stat = GdipTransformRegion(rgn, &transform);
+        if (!identity)
+            stat = GdipTransformRegion(rgn, &transform);
 
         if (stat == Ok)
             stat = GdipGetRegionHRgn(rgn, NULL, hrgn);
@@ -1695,9 +1700,9 @@ static void draw_cap(GpGraphics *graphics, COLORREF color, GpLineCap cap, REAL s
             ptf[3].X = x2 - dbig;
             ptf[2].X = x2 + dsmall;
 
-            gdip_transform_points(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceWorld, ptf, 3);
+            gdip_transform_points(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceWorld, ptf, 4);
 
-            round_points(pt, ptf, 3);
+            round_points(pt, ptf, 4);
 
             Polygon(graphics->hdc, pt, 4);
 
@@ -1735,9 +1740,9 @@ static void draw_cap(GpGraphics *graphics, COLORREF color, GpLineCap cap, REAL s
             ptf[1].X = x2 + dx;
             ptf[1].Y = y2 + dy;
 
-            gdip_transform_points(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceWorld, ptf, 3);
+            gdip_transform_points(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceWorld, ptf, 2);
 
-            round_points(pt, ptf, 3);
+            round_points(pt, ptf, 2);
 
             Ellipse(graphics->hdc, pt[0].x, pt[0].y, pt[1].x, pt[1].y);
 
@@ -1781,9 +1786,9 @@ static void draw_cap(GpGraphics *graphics, COLORREF color, GpLineCap cap, REAL s
             ptf[3].X = x2 + dx;
             ptf[3].Y = y2 + dy;
 
-            gdip_transform_points(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceWorld, ptf, 3);
+            gdip_transform_points(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceWorld, ptf, 4);
 
-            round_points(pt, ptf, 3);
+            round_points(pt, ptf, 4);
 
             Pie(graphics->hdc, pt[0].x, pt[0].y, pt[1].x, pt[1].y, pt[2].x,
                 pt[2].y, pt[3].x, pt[3].y);
@@ -1792,6 +1797,13 @@ static void draw_cap(GpGraphics *graphics, COLORREF color, GpLineCap cap, REAL s
         case LineCapCustom:
             if(!custom)
                 break;
+
+            if (custom->type == CustomLineCapTypeAdjustableArrow)
+            {
+                GpAdjustableArrowCap *arrow = (GpAdjustableArrowCap *)custom;
+                if (arrow->cap.fill && arrow->height <= 0.0)
+                    break;
+            }
 
             count = custom->pathdata.Count;
             custptf = heap_alloc_zero(count * sizeof(PointF));
@@ -1810,9 +1822,9 @@ static void draw_cap(GpGraphics *graphics, COLORREF color, GpLineCap cap, REAL s
             GdipTranslateMatrix(&matrix, x2, y2, MatrixOrderAppend);
             GdipTransformMatrixPoints(&matrix, custptf, count);
 
-            gdip_transform_points(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceWorld, ptf, 3);
+            gdip_transform_points(graphics, WineCoordinateSpaceGdiDevice, CoordinateSpaceWorld, custptf, count);
 
-            round_points(pt, ptf, 3);
+            round_points(custpt, custptf, count);
 
             for(i = 0; i < count; i++)
                 tp[i] = convert_path_point_type(custom->pathdata.Types[i]);
@@ -6469,9 +6481,12 @@ GpStatus WINGDIPAPI GdipSetClipRect(GpGraphics *graphics, REAL x, REAL y,
     if (status == Ok)
     {
         GpMatrix world_to_device;
+        BOOL identity;
 
         get_graphics_transform(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, &world_to_device);
-        status = GdipTransformRegion(region, &world_to_device);
+        status = GdipIsMatrixIdentity(&world_to_device, &identity);
+        if (status == Ok && !identity)
+            status = GdipTransformRegion(region, &world_to_device);
         if (status == Ok)
             status = GdipCombineRegionRegion(graphics->clip, region, mode);
 
@@ -6520,9 +6535,12 @@ GpStatus WINGDIPAPI GdipSetClipRegion(GpGraphics *graphics, GpRegion *region,
     if (status == Ok)
     {
         GpMatrix world_to_device;
+        BOOL identity;
 
         get_graphics_transform(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, &world_to_device);
-        status = GdipTransformRegion(clip, &world_to_device);
+        status = GdipIsMatrixIdentity(&world_to_device, &identity);
+        if (status == Ok && !identity)
+            status = GdipTransformRegion(clip, &world_to_device);
         if (status == Ok)
             status = GdipCombineRegionRegion(graphics->clip, clip, mode);
 
