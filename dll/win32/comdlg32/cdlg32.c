@@ -32,6 +32,7 @@
 #include "commdlg.h"
 #include "cderr.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
@@ -43,20 +44,8 @@ DECLSPEC_HIDDEN HINSTANCE	COMDLG32_hInstance = 0;
 static DWORD COMDLG32_TlsIndex = TLS_OUT_OF_INDEXES;
 
 static HINSTANCE	SHELL32_hInstance;
-static HINSTANCE	SHFOLDER_hInstance;
-
-/* ITEMIDLIST */
-LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILClone) (LPCITEMIDLIST) DECLSPEC_HIDDEN;
-LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILCombine)(LPCITEMIDLIST,LPCITEMIDLIST) DECLSPEC_HIDDEN;
-LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILGetNext)(LPITEMIDLIST) DECLSPEC_HIDDEN;
-BOOL (WINAPI *COMDLG32_PIDL_ILRemoveLastID)(LPCITEMIDLIST) DECLSPEC_HIDDEN;
-BOOL (WINAPI *COMDLG32_PIDL_ILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST) DECLSPEC_HIDDEN;
-UINT (WINAPI *COMDLG32_PIDL_ILGetSize)(LPCITEMIDLIST) DECLSPEC_HIDDEN;
 
 /* SHELL */
-LPVOID (WINAPI *COMDLG32_SHAlloc)(DWORD) DECLSPEC_HIDDEN;
-DWORD (WINAPI *COMDLG32_SHFree)(LPVOID) DECLSPEC_HIDDEN;
-BOOL (WINAPI *COMDLG32_SHGetFolderPathW)(HWND,int,HANDLE,DWORD,LPWSTR) DECLSPEC_HIDDEN;
 LPITEMIDLIST (WINAPI *COMDLG32_SHSimpleIDListFromPathAW)(LPCVOID) DECLSPEC_HIDDEN;
 
 /***********************************************************************
@@ -88,33 +77,13 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 		SHELL32_hInstance = GetModuleHandleA("SHELL32.DLL");
 
-		/* ITEMIDLIST */
-		GPA(COMDLG32_PIDL_ILIsEqual, SHELL32_hInstance, (LPCSTR)21L);
-		GPA(COMDLG32_PIDL_ILCombine, SHELL32_hInstance, (LPCSTR)25L);
-		GPA(COMDLG32_PIDL_ILGetNext, SHELL32_hInstance, (LPCSTR)153L);
-		GPA(COMDLG32_PIDL_ILClone, SHELL32_hInstance, (LPCSTR)18L);
-		GPA(COMDLG32_PIDL_ILRemoveLastID, SHELL32_hInstance, (LPCSTR)17L);
-		GPA(COMDLG32_PIDL_ILGetSize, SHELL32_hInstance, (LPCSTR)152L);
-
 		/* SHELL */
 		GPA(COMDLG32_SHSimpleIDListFromPathAW, SHELL32_hInstance, (LPCSTR)162);
-		GPA(COMDLG32_SHAlloc, SHELL32_hInstance, (LPCSTR)196L);
-		GPA(COMDLG32_SHFree, SHELL32_hInstance, (LPCSTR)195L);
-
-		/* for the first versions of shell32 SHGetFolderPathW is in SHFOLDER.DLL */
-		COMDLG32_SHGetFolderPathW = (void*)GetProcAddress(SHELL32_hInstance,"SHGetFolderPathW");
-		if (!COMDLG32_SHGetFolderPathW)
-		{
-		  SHFOLDER_hInstance = LoadLibraryA("SHFOLDER.DLL");
-		  GPA(COMDLG32_SHGetFolderPathW, SHFOLDER_hInstance,"SHGetFolderPathW");
-		}
-
 		break;
 
 	case DLL_PROCESS_DETACH:
             if (Reserved) break;
             if (COMDLG32_TlsIndex != TLS_OUT_OF_INDEXES) TlsFree(COMDLG32_TlsIndex);
-            if(SHFOLDER_hInstance) FreeLibrary(SHFOLDER_hInstance);
             break;
 	}
 	return TRUE;
@@ -128,16 +97,17 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
  *		Success: Pointer to a heap block
  *		Failure: null
  */
-LPVOID COMDLG32_AllocMem(
-	int size	/* [in] Block size to allocate */
-) {
-        LPVOID ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-        if(!ptr)
-        {
-        	COMDLG32_SetCommDlgExtendedError(CDERR_MEMALLOCFAILURE);
-                return NULL;
-        }
-        return ptr;
+void *COMDLG32_AllocMem(int size)
+{
+    void *ptr = heap_alloc_zero(size);
+
+    if (!ptr)
+    {
+        COMDLG32_SetCommDlgExtendedError(CDERR_MEMALLOCFAILURE);
+        return NULL;
+    }
+
+    return ptr;
 }
 
 

@@ -32,6 +32,7 @@
 #include "commdlg.h"
 #include "dlgs.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
 #include "wine/unicode.h"
 #include "cderr.h"
 #include "cdlg.h"
@@ -162,7 +163,7 @@ static void _dump_cf_flags(DWORD cflags)
 {
     unsigned int i;
 
-    for (i = 0; i < sizeof(cfflags)/sizeof(cfflags[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(cfflags); i++)
         if (cfflags[i].mask & cflags)
             TRACE("%s|",cfflags[i].name);
     TRACE("\n");
@@ -442,7 +443,7 @@ static BOOL SetFontSizesToCombo3(HWND hwnd, const CHOOSEFONTW *lpcf)
     static const BYTE sizes[]={6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72};
     unsigned int i;
 
-    for (i = 0; i < sizeof(sizes)/sizeof(sizes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(sizes); i++)
         if (AddFontSizeToCombo3(hwnd, sizes[i], lpcf)) return TRUE;
     return FALSE;
 }
@@ -663,7 +664,7 @@ static LRESULT CFn_WMInitDialog(HWND hDlg, LPARAM lParam, LPCHOOSEFONTW lpcf)
             WCHAR name[30];
 
             if( LoadStringW(COMDLG32_hInstance, IDS_COLOR_BLACK+i, name,
-                        sizeof(name)/sizeof(*name) )==0 )
+                        ARRAY_SIZE(name)) == 0 )
             {
                 memcpy(name, strColorName, sizeof(strColorName));
             }
@@ -903,7 +904,7 @@ static INT get_dialog_font_point_size(HWND hDlg, CHOOSEFONTW *cf)
     {
         WCHAR buffW[8], *endptrW;
 
-        GetDlgItemTextW(hDlg, cmb3, buffW, sizeof(buffW)/sizeof(*buffW));
+        GetDlgItemTextW(hDlg, cmb3, buffW, ARRAY_SIZE(buffW));
         size = strtolW(buffW, &endptrW, 10);
         invalid_size = size == 0 && *endptrW;
 
@@ -934,7 +935,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
         WCHAR str_edit[256], str_cmb[256];
         int cmb = LOWORD(wParam);
 
-        GetDlgItemTextW(hDlg, cmb, str_edit, sizeof(str_edit) / sizeof(str_edit[0]));
+        GetDlgItemTextW(hDlg, cmb, str_edit, ARRAY_SIZE(str_edit));
         idx = SendDlgItemMessageW(hDlg, cmb, CB_FINDSTRING, -1, (LPARAM)str_edit);
         if(idx != -1)
         {
@@ -1016,7 +1017,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
             /* face name */
             i=SendDlgItemMessageW(hDlg,cmb1,CB_GETCURSEL,0,0);
             if (i==CB_ERR)
-                GetDlgItemTextW( hDlg, cmb1, str, sizeof(str)/sizeof(str[0]) );
+                GetDlgItemTextW( hDlg, cmb1, str, ARRAY_SIZE(str));
             else
             {
                 SendDlgItemMessageW(hDlg,cmb1,CB_GETLBTEXT,i,
@@ -1028,7 +1029,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
                    call back with the extra FONTTYPE_...  bits added */
                 lpxx->lfPitchAndFamily = HIWORD(l) >> 8;
             }
-            lstrcpynW(lpxx->lfFaceName, str, sizeof(lpxx->lfFaceName)/sizeof(lpxx->lfFaceName[0]));
+            lstrcpynW(lpxx->lfFaceName, str, ARRAY_SIZE(lpxx->lfFaceName));
 
             /* style */
             i=SendDlgItemMessageW(hDlg, cmb2, CB_GETCURSEL, 0, 0);
@@ -1098,7 +1099,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
         pointsize = get_dialog_font_point_size(hDlg, lpcf);
         if (pointsize == -1)
         {
-            LoadStringW(COMDLG32_hInstance, IDS_FONT_SIZE_INPUT, msgW, sizeof(msgW)/sizeof(*msgW));
+            LoadStringW(COMDLG32_hInstance, IDS_FONT_SIZE_INPUT, msgW, ARRAY_SIZE(msgW));
             MessageBoxW(hDlg, msgW, NULL, MB_OK | MB_ICONINFORMATION);
             return TRUE;
         }
@@ -1112,11 +1113,11 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
         {
             WCHAR format[80];
             DWORD_PTR args[2];
-            LoadStringW(COMDLG32_hInstance, IDS_FONT_SIZE, format, sizeof(format)/sizeof(WCHAR));
+            LoadStringW(COMDLG32_hInstance, IDS_FONT_SIZE, format, ARRAY_SIZE(format));
             args[0] = lpcf->nSizeMin;
             args[1] = lpcf->nSizeMax;
             FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                           format, 0, 0, msgW, sizeof(msgW)/sizeof(*msgW),
+                           format, 0, 0, msgW, ARRAY_SIZE(msgW),
                            (__ms_va_list*)args);
             MessageBoxW(hDlg, msgW, NULL, MB_OK);
         }
@@ -1151,11 +1152,11 @@ static LRESULT CFn_WMDestroy(HWND hwnd, LPCHOOSEFONTW lpcfw)
     if((lpcfw->Flags & CF_USESTYLE) && lpcfw->lpszStyle) {
         len = WideCharToMultiByte(CP_ACP, 0, lpcfw->lpszStyle, -1, NULL, 0, 0, 0);
         WideCharToMultiByte(CP_ACP, 0, lpcfw->lpszStyle, -1, lpcfa->lpszStyle, len, 0, 0);
-        HeapFree(GetProcessHeap(), 0, lpcfw->lpszStyle);
+        heap_free(lpcfw->lpszStyle);
     }
 
-    HeapFree(GetProcessHeap(), 0, lpcfw->lpLogFont);
-    HeapFree(GetProcessHeap(), 0, lpcfw);
+    heap_free(lpcfw->lpLogFont);
+    heap_free(lpcfw);
     SetPropW(hwnd, strWineFontData, 0);
 
     return TRUE;
@@ -1217,16 +1218,16 @@ static INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, 
         lpcfa=(LPCHOOSEFONTA)lParam;
         SetPropW(hDlg, strWineFontData_a, (HANDLE)lParam);
 
-        lpcfw = HeapAlloc(GetProcessHeap(), 0, sizeof(CHOOSEFONTW));
+        lpcfw = heap_alloc(sizeof(*lpcfw));
         memcpy(lpcfw, lpcfa, sizeof(CHOOSEFONTA));
-        lpcfw->lpLogFont = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGFONTW));
+        lpcfw->lpLogFont = heap_alloc(sizeof(*lpcfw->lpLogFont));
         memcpy(lpcfw->lpLogFont, lpcfa->lpLogFont, sizeof(LOGFONTA));
         MultiByteToWideChar(CP_ACP, 0, lpcfa->lpLogFont->lfFaceName,
                             LF_FACESIZE, lpcfw->lpLogFont->lfFaceName, LF_FACESIZE);
 
         if((lpcfa->Flags & CF_USESTYLE) && lpcfa->lpszStyle)  {
             len = MultiByteToWideChar(CP_ACP, 0, lpcfa->lpszStyle, -1, NULL, 0);
-            lpcfw->lpszStyle = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+            lpcfw->lpszStyle = heap_alloc(len * sizeof(WCHAR));
             MultiByteToWideChar(CP_ACP, 0, lpcfa->lpszStyle, -1, lpcfw->lpszStyle, len);
         }
 

@@ -659,7 +659,7 @@ static HRESULT on_default_action(FileDialogImpl *This)
                 if(hr != S_OK)
                 {
                     WCHAR buf[64];
-                    LoadStringW(COMDLG32_hInstance, IDS_INVALID_FOLDERNAME, buf, sizeof(buf)/sizeof(WCHAR));
+                    LoadStringW(COMDLG32_hInstance, IDS_INVALID_FOLDERNAME, buf, ARRAY_SIZE(buf));
 
                     MessageBoxW(This->dlg_hwnd, buf, This->custom_title, MB_OK | MB_ICONEXCLAMATION);
 
@@ -2510,7 +2510,7 @@ static HRESULT WINAPI IFileDialog2_fnSetOptions(IFileDialog2 *iface, FILEOPENDIA
     if( !(This->options & FOS_PICKFOLDERS) && (fos & FOS_PICKFOLDERS) )
     {
         WCHAR buf[30];
-        LoadStringW(COMDLG32_hInstance, IDS_SELECT_FOLDER, buf, sizeof(buf)/sizeof(WCHAR));
+        LoadStringW(COMDLG32_hInstance, IDS_SELECT_FOLDER, buf, ARRAY_SIZE(buf));
         IFileDialog2_SetTitle(iface, buf);
     }
 
@@ -4625,7 +4625,7 @@ static HRESULT FileDialog_constructor(IUnknown *pUnkOuter, REFIID riid, void **p
         fdimpl->u.IFileSaveDialog_iface.lpVtbl = &vt_IFileSaveDialog;
         fdimpl->options = FOS_OVERWRITEPROMPT | FOS_NOREADONLYRETURN | FOS_PATHMUSTEXIST | FOS_NOCHANGEDIR;
 
-        LoadStringW(COMDLG32_hInstance, IDS_SAVE, buf, sizeof(buf)/sizeof(WCHAR));
+        LoadStringW(COMDLG32_hInstance, IDS_SAVE, buf, ARRAY_SIZE(buf));
         fdimpl->custom_title = StrDupW(buf);
         fdimpl->custom_okbutton = StrDupW(buf);
     }
