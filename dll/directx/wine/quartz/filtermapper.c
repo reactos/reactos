@@ -1524,22 +1524,25 @@ static HRESULT WINAPI FilterMapper_UnregisterFilter(IFilterMapper * iface, CLSID
         strcatW(wszKeyName, wszClsid);
 
         lRet = RegOpenKeyExW(HKEY_CLASSES_ROOT, wszKeyName, 0, KEY_WRITE, &hKey);
+        if (lRet == ERROR_FILE_NOT_FOUND)
+            goto done;
         hr = HRESULT_FROM_WIN32(lRet);
     }
 
     if (SUCCEEDED(hr))
     {
         lRet = RegDeleteValueW(hKey, wszMeritName);
-        if (lRet != ERROR_SUCCESS)
+        if (lRet != ERROR_SUCCESS && lRet != ERROR_FILE_NOT_FOUND)
             hr = HRESULT_FROM_WIN32(lRet);
 
         lRet = RegDeleteTreeW(hKey, wszPins);
-        if (lRet != ERROR_SUCCESS)
+        if (lRet != ERROR_SUCCESS && lRet != ERROR_FILE_NOT_FOUND)
             hr = HRESULT_FROM_WIN32(lRet);
 
         RegCloseKey(hKey);
     }
 
+done:
     CoTaskMemFree(wszClsid);
 
     return hr;
