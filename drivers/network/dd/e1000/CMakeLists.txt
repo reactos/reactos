@@ -11,6 +11,7 @@ list(APPEND SOURCE
     interrupt.c
     nic.h
     e1000hw.h
+    debug.c
     debug.h)
 
 add_library(e1000 SHARED ${SOURCE} e1000.rc)

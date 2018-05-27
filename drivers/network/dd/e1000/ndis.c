@@ -224,7 +224,9 @@ MiniportInitialize(
         goto Cleanup;
     }
 
-    RtlCopyMemory(Adapter->CurrentMacAddress, Adapter->PermanentMacAddress, IEEE_802_ADDR_LENGTH);
+    RtlCopyMemory(Adapter->MulticastList[0].MacAddress, Adapter->PermanentMacAddress, IEEE_802_ADDR_LENGTH);
+
+    NICUpdateMulticastList(Adapter);
 
     /* Update link state and speed */
     NICUpdateLinkStatus(Adapter);
@@ -238,7 +240,7 @@ MiniportInitialize(
     }
 
     /* Enable interrupts on the NIC */
-    //Adapter->InterruptMask = DEFAULT_INTERRUPT_MASK;
+    Adapter->InterruptMask = DEFAULT_INTERRUPT_MASK;
     Status = NICApplyInterruptMask(Adapter);
     if (Status != NDIS_STATUS_SUCCESS)
     {
