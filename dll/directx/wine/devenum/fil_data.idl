@@ -1,7 +1,5 @@
 /*
- * Resources for Device Enumerator
- *
- * Copyright 2002 Robert Shearman
+ * Copyright (C) 2009 Vitaliy Margolen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,20 +16,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "devenum_private.h"
+#pragma makedep header
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+import "objidl.idl";
+import "strmif.idl";
+import "unknwn.idl";
 
-#define WINE_FILEDESCRIPTION_STR "Wine Device Enumerator Library"
-#define WINE_FILENAME_STR "devenum.dll"
-#define WINE_FILEVERSION 6,5,1,902
-#define WINE_FILEVERSION_STR "6.5.1.902"
-#define WINE_PRODUCTVERSION 6,5,1,902
-#define WINE_PRODUCTVERSION_STR "6.5"
 
-#include "wine/wine_common_ver.rc"
+/*****************************************************************************
+ * IAMFilterData interface
+ */
+[
+    object,
+    uuid(97f7c4d4-547b-4a5f-8332-536430ad2e4d),
+    pointer_default(unique)
+]
+interface IAMFilterData : IUnknown
+{
+    typedef [unique] IAMFilterData *LPIAMFILTERDATA;
 
-1 WINE_REGISTRY devenum_classes.rgs
+    HRESULT ParseFilterData(
+        [in] BYTE * rgbFilterData,
+        [in] ULONG cb,
+        [out] BYTE ** prgbRegFilter2);
+
+    HRESULT CreateFilterData(
+        [in] REGFILTER2 * prf2,
+        [out] BYTE ** prgbFilterData,
+        [out] ULONG * pcb);
+}
