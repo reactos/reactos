@@ -108,6 +108,111 @@ AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
 
 BOOL
 WINAPI
+CopySystemProfile(
+    IN ULONG Unused)
+{
+    WCHAR szKeyName[MAX_PATH];
+    WCHAR szImagePath[MAX_PATH];
+    UNICODE_STRING SidString = {0, 0, NULL};
+    HANDLE hToken = NULL;
+    PSID pUserSid = NULL;
+    HKEY hProfileKey = NULL;
+    DWORD dwDisposition;
+    BOOL bResult = FALSE;
+    DWORD dwError;
+
+    DPRINT1("CopySystemProfile()\n");
+
+    if (!OpenProcessToken(GetCurrentProcess(),
+                          TOKEN_QUERY | TOKEN_IMPERSONATE,
+                          &hToken))
+    {
+        DPRINT1("Failed to open the process token (Error %lu)\n", GetLastError());
+        return FALSE;
+    }
+
+    pUserSid = GetUserSid(hToken);
+    if (pUserSid == NULL)
+    {
+        DPRINT1("Failed to get the users SID (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    /* Get the user SID string */
+    if (!GetUserSidStringFromToken(hToken, &SidString))
+    {
+        DPRINT1("GetUserSidStringFromToken() failed\n");
+        goto done;
+    }
+
+    StringCbCopyW(szKeyName, sizeof(szKeyName),
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
+    StringCbCatW(szKeyName, sizeof(szKeyName), SidString.Buffer);
+
+    RtlFreeUnicodeString(&SidString);
+
+    dwError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                              szKeyName,
+                              0, NULL, 0,
+                              KEY_WRITE,
+                              NULL,
+                              &hProfileKey,
+                              &dwDisposition);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to create the profile key for the %s profile (Error %lu)\n",
+                SidString.Buffer, dwError);
+        goto done;
+    }
+
+    dwError = RegSetValueExW(hProfileKey,
+                             L"Sid",
+                             0,
+                             REG_BINARY,
+                             (PBYTE)pUserSid,
+                             RtlLengthSid(pUserSid));
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to set the SID value (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    wcscpy(szImagePath,
+           L"%systemroot%\\system32\\config\\systemprofile");
+
+    dwError = RegSetValueExW(hProfileKey,
+                             L"ProfileImagePath",
+                             0,
+                             REG_EXPAND_SZ,
+                             (PBYTE)szImagePath,
+                             (wcslen(szImagePath) + 1) * sizeof(WCHAR));
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to set the ProfileImagePath value (Error %lu)\n", dwError);
+        goto done;
+    }
+
+
+    bResult = TRUE;
+
+done:
+    if (hProfileKey != NULL)
+        RegCloseKey(hProfileKey);
+
+    RtlFreeUnicodeString(&SidString);
+
+    if (pUserSid != NULL)
+        LocalFree(pUserSid);
+
+    if (hToken != NULL)
+        CloseHandle(hToken);
+
+    return bResult;
+}
+
+
+BOOL
+WINAPI
 CreateUserProfileA(
     _In_ PSID pSid,
     _In_ LPCSTR lpUserName)
@@ -1030,7 +1135,7 @@ GetUserProfileDirectoryW(
                                    szImagePath,
                                    ARRAYSIZE(szImagePath)))
     {
-        DPRINT1 ("Error: %lu\n", GetLastError());
+        DPRINT1("Error: %lu\n", GetLastError());
         return FALSE;
     }
 
