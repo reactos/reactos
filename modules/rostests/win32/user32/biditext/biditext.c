@@ -194,22 +194,28 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LpkExtTextOut(hdc, 10, 70, 0, NULL, szString, Len, NULL, 0);
 
             TextOutW(hdc, 10, 90, L"String with ETO_IGNORELANGUAGE LpkETO call (not reversed):", 58);
-            LpkExtTextOut(hdc, 10, 110, ETO_IGNORELANGUAGE , NULL, szString, Len, NULL, 0);
+            LpkExtTextOut(hdc, 10, 110, ETO_IGNORELANGUAGE, NULL, szString, Len, NULL, 0);
 
             TextOutW(hdc, 10, 130, L"String with GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (not reversed):", 71);
             LpkGetCharacterPlacement(hdc, szString, Len, 0, &Results, GCP_REORDER, 0);
             LpkExtTextOut(hdc, 10, 150, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL, 0);
-            TextOutW(hdc, 10, 250, L"String with GCP_REORDER and ETO_IGNORELANGUAGE LpkGCP call (not reversed, lpOutString):", 87);
-            ExtTextOutW(hdc, 10, 270, ETO_IGNORELANGUAGE, NULL, OutString, Results.nGlyphs, NULL);
+            TextOutW(hdc, 10, 170, L"String with GCP_REORDER and ETO_IGNORELANGUAGE LpkGCP call (not reversed, lpOutString):", 87);
+            ExtTextOutW(hdc, 10, 190, ETO_IGNORELANGUAGE, NULL, OutString, Results.nGlyphs, NULL);
 
-            TextOutW(hdc, 10, 170, L"String without GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (reversed):", 70);
+            TextOutW(hdc, 10, 210, L"String without GCP_REORDER and ETO_GLYPH_INDEX LpkGCP call (reversed):", 70);
             LpkGetCharacterPlacement(hdc, szString, Len, 0, &Results, 0, 0);
-            LpkExtTextOut(hdc, 10, 190, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL, 0);
-            TextOutW(hdc, 10, 290, L"String without GCP_REORDER and ETO_IGNORELANGUAGE LpkGCP call (reversed, lpOutString):", 86);
-            ExtTextOutW(hdc, 10, 310, ETO_IGNORELANGUAGE, NULL, OutString, Len, NULL);
+            LpkExtTextOut(hdc, 10, 230, ETO_GLYPH_INDEX, NULL, Glyphs, Results.nGlyphs, NULL, 0);
+            TextOutW(hdc, 10, 250, L"String without GCP_REORDER and ETO_IGNORELANGUAGE LpkGCP call (reversed, lpOutString):", 86);
+            ExtTextOutW(hdc, 10, 270, ETO_IGNORELANGUAGE, NULL, OutString, Len, NULL);
 
-            TextOutW(hdc, 10, 210, L"String with ETO_IGNORELANGUAGE ETO call (reversed, not Lpk direct call!):", 73);
-            ExtTextOutW(hdc, 10, 230, ETO_IGNORELANGUAGE , NULL, szString, Len, NULL);
+            TextOutW(hdc, 10, 290, L"String with ETO_IGNORELANGUAGE ETO call (reversed, not Lpk direct call!):", 73);
+            ExtTextOutW(hdc, 10, 310, ETO_IGNORELANGUAGE, NULL, szString, Len, NULL);
+
+            TextOutW(hdc, 10, 330, L"String with ETO_RTLREADING LpkETO call (slight order change)", 60);
+            LpkExtTextOut(hdc, 10, 350, ETO_RTLREADING, NULL, szString, Len, NULL, 0);
+
+            TextOutW(hdc, 10, 370, L"String with ETO_RTLREADING ETO call (slight order change)", 57);
+            ExtTextOutW(hdc, 10, 390, ETO_RTLREADING, NULL, szString, Len, NULL);
 
             EndPaint(hWnd, &ps);
             break;
