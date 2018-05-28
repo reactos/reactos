@@ -294,9 +294,11 @@ static char print_fat_dirty_state(void)
     if (interactive) {
 	printf("1) Remove dirty bit\n" "2) No action\n");
 	return get_key("12", "?");
-    } else
+    } else if (rw) {
 	printf(" Automatically removing dirty bit.\n");
     return '1';
+    }
+    return '2';
 }
 
 static void check_fat_state_bit(DOS_FS * fs, void *b)
