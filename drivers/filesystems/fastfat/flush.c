@@ -33,6 +33,7 @@ VfatFlushFile(
         IoStatus.Status = STATUS_SUCCESS;
     }
 
+    ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
     if (BooleanFlagOn(Fcb->Flags, FCB_IS_DIRTY))
     {
         Status = VfatUpdateEntry(DeviceExt, Fcb);
@@ -41,6 +42,8 @@ VfatFlushFile(
             IoStatus.Status = Status;
         }
     }
+    ExReleaseResourceLite(&DeviceExt->DirResource);
+
     return IoStatus.Status;
 }
 
