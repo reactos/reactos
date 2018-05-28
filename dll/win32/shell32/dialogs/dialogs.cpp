@@ -157,11 +157,9 @@ static LPCWSTR s_pszDefaultPath = L"%SystemRoot%\\system32\\shell32.dll";
 static void NoIconsInFile(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext)
 {
     // show message
-    CStringW strFormat(MAKEINTRESOURCEW(IDS_NO_ICONS));
-    CStringW strTitle(MAKEINTRESOURCEW(IDS_PICK_ICON_TITLE));
-    WCHAR szCaption[MAX_PATH + 32];
-    StringCchPrintfW(szCaption, _countof(szCaption), strFormat, pIconContext->szPath);
-    MessageBoxW(hwndDlg, szCaption, strTitle, MB_ICONWARNING);
+    CStringW strText, strTitle(MAKEINTRESOURCEW(IDS_PICK_ICON_TITLE));
+    strText.Format(IDS_NO_ICONS, pIconContext->szPath);
+    MessageBoxW(hwndDlg, strText, strTitle, MB_ICONWARNING);
 
     // load default icons
     DoLoadIcons(hwndDlg, pIconContext, s_pszDefaultPath);
@@ -331,11 +329,9 @@ BOOL WINAPI PickIconDlg(
         if (IconContext.szExpandedPath[0])
         {
             // no such file
-            CStringW strTitle(MAKEINTRESOURCEW(IDS_PICK_ICON_TITLE));
-            CStringW strFormat(MAKEINTRESOURCEW(IDS_FILE_NOT_FOUND));
-            WCHAR szText[MAX_PATH + 64];
-            StringCchPrintfW(szText, _countof(szText), strFormat, lpstrFile);
-            MessageBoxW(hWndOwner, szText, strTitle, MB_ICONWARNING);
+            CStringW strText, strTitle(MAKEINTRESOURCEW(IDS_PICK_ICON_TITLE));
+            strText.Format(IDS_FILE_NOT_FOUND, lpstrFile);
+            MessageBoxW(hWndOwner, strText, strTitle, MB_ICONWARNING);
         }
 
         // set default value
