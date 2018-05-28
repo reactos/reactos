@@ -152,7 +152,7 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
     return pIconContext->nIcons > 0;
 }
 
-static LPCWSTR s_pszDefaultPath = L"%SystemRoot%\\system32\\shell32.dll";
+static const LPCWSTR s_pszDefaultPath = L"%SystemRoot%\\system32\\shell32.dll";
 
 static void NoIconsInFile(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext)
 {
