@@ -245,7 +245,7 @@ InstallBuiltinAccounts(VOID)
         return;
     }
 
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < ARRAYSIZE(BuiltinAccounts); i++)
     {
         if (!ConvertStringSidToSid(BuiltinAccounts[i], &AccountSid))
         {
@@ -314,7 +314,7 @@ InstallPrivileges(VOID)
                              NULL,
                              &InfContext))
     {
-        DPRINT1("SetupFindfirstLineW failed\n");
+        DPRINT1("SetupFindFirstLineW failed\n");
         goto done;
     }
 
@@ -324,7 +324,7 @@ InstallPrivileges(VOID)
         if (!SetupGetStringFieldW(&InfContext,
                                   0,
                                   szPrivilegeString,
-                                  256,
+                                  ARRAYSIZE(szPrivilegeString),
                                   NULL))
         {
             DPRINT1("SetupGetStringFieldW() failed\n");
@@ -337,7 +337,7 @@ InstallPrivileges(VOID)
             if (!SetupGetStringFieldW(&InfContext,
                                       i + 1,
                                       szSidString,
-                                      256,
+                                      ARRAYSIZE(szSidString),
                                       NULL))
             {
                 DPRINT1("SetupGetStringFieldW() failed\n");
@@ -400,11 +400,225 @@ done:
 }
 
 
+static
+VOID
+ApplyRegistryValues(VOID)
+{
+    HINF hSecurityInf = INVALID_HANDLE_VALUE;
+    WCHAR szRegistryPath[MAX_PATH];
+    WCHAR szRootName[MAX_PATH];
+    WCHAR szKeyName[MAX_PATH];
+    WCHAR szValueName[MAX_PATH];
+    INFCONTEXT InfContext;
+    DWORD dwLength, dwType;
+    HKEY hRootKey, hKey;
+    PWSTR Ptr1, Ptr2;
+    DWORD dwError;
+    PVOID pBuffer;
+
+    DPRINT("ApplyRegistryValues()\n");
+
+    hSecurityInf = SetupOpenInfFileW(L"defltws.inf", //szNameBuffer,
+                                     NULL,
+                                     INF_STYLE_WIN4,
+                                     NULL);
+    if (hSecurityInf == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("SetupOpenInfFileW failed\n");
+        return;
+    }
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                             L"Registry Values",
+                             NULL,
+                             &InfContext))
+    {
+        DPRINT1("SetupFindFirstLineW failed\n");
+        goto done;
+    }
+
+    do
+    {
+        /* Retrieve the privilege name */
+        if (!SetupGetStringFieldW(&InfContext,
+                                  0,
+                                  szRegistryPath,
+                                  ARRAYSIZE(szRegistryPath),
+                                  NULL))
+        {
+            DPRINT1("SetupGetStringFieldW() failed\n");
+            goto done;
+        }
+
+        DPRINT("RegistryPath: %S\n", szRegistryPath);
+
+        Ptr1 = wcschr(szRegistryPath, L'\\');
+        Ptr2 = wcsrchr(szRegistryPath, L'\\');
+        if (Ptr1 != NULL && Ptr2 != NULL && Ptr1 != Ptr2)
+        {
+            dwLength = (DWORD)(((ULONG_PTR)Ptr1 - (ULONG_PTR)szRegistryPath) / sizeof(WCHAR));
+            wcsncpy(szRootName, szRegistryPath, dwLength);
+            szRootName[dwLength] = UNICODE_NULL;
+
+            Ptr1++;
+            dwLength = (DWORD)(((ULONG_PTR)Ptr2 - (ULONG_PTR)Ptr1) / sizeof(WCHAR));
+            wcsncpy(szKeyName, Ptr1, dwLength);
+            szKeyName[dwLength] = UNICODE_NULL;
+
+            Ptr2++;
+            wcscpy(szValueName, Ptr2);
+
+            DPRINT("RootName: %S\n", szRootName);
+            DPRINT("KeyName: %S\n", szKeyName);
+            DPRINT("ValueName: %S\n", szValueName);
+
+            if (_wcsicmp(szRootName, L"Machine") == 0)
+            {
+                hRootKey = HKEY_LOCAL_MACHINE;
+            }
+            else
+            {
+                DPRINT1("Unsupported root key %S\n", szRootName);
+                break;
+            }
+
+            if (!SetupGetIntField(&InfContext,
+                                  1,
+                                  (PINT)&dwType))
+            {
+                DPRINT1("Failed to create the key %S (Error %lu)\n", szKeyName, dwError);
+                break;
+            }
+
+            if (dwType != REG_SZ && dwType != REG_EXPAND_SZ && dwType != REG_BINARY &&
+                dwType != REG_DWORD && dwType != REG_MULTI_SZ)
+            {
+                DPRINT1("Invalid value type %lu\n", dwType);
+                break;
+            }
+
+            dwLength = 0;
+            switch (dwType)
+            {
+                case REG_SZ:
+                case REG_EXPAND_SZ:
+                    SetupGetStringField(&InfContext,
+                                        2,
+                                        NULL,
+                                        0,
+                                        &dwLength);
+                    dwLength *= sizeof(WCHAR);
+                    break;
+
+                case REG_BINARY:
+                    SetupGetBinaryField(&InfContext,
+                                        2,
+                                        NULL,
+                                        0,
+                                        &dwLength);
+                    break;
+
+                case REG_DWORD:
+                    dwLength = sizeof(INT);
+                    break;
+
+                case REG_MULTI_SZ:
+                    SetupGetMultiSzField(&InfContext,
+                                         2,
+                                         NULL,
+                                         0,
+                                         &dwLength);
+                    dwLength *= sizeof(WCHAR);
+                    break;
+            }
+
+            if (dwLength == 0)
+            {
+                DPRINT1("Failed to determine the required buffer size!\n");
+                break;
+            }
+
+            dwError = RegCreateKeyExW(hRootKey,
+                                      szKeyName,
+                                      0,
+                                      NULL,
+                                      REG_OPTION_NON_VOLATILE,
+                                      KEY_WRITE,
+                                      NULL,
+                                      &hKey,
+                                      NULL);
+            if (dwError != ERROR_SUCCESS)
+            {
+                DPRINT1("Failed to create the key %S (Error %lu)\n", szKeyName, dwError);
+                break;
+            }
+
+            pBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
+            if (pBuffer)
+            {
+                switch (dwType)
+                {
+                    case REG_SZ:
+                    case REG_EXPAND_SZ:
+                        SetupGetStringField(&InfContext,
+                                            2,
+                                            pBuffer,
+                                            dwLength / sizeof(WCHAR),
+                                            &dwLength);
+                        dwLength *= sizeof(WCHAR);
+                        break;
+
+                    case REG_BINARY:
+                        SetupGetBinaryField(&InfContext,
+                                            2,
+                                            pBuffer,
+                                            dwLength,
+                                            &dwLength);
+                        break;
+
+                    case REG_DWORD:
+                        SetupGetIntField(&InfContext,
+                                         2,
+                                         pBuffer);
+                        break;
+
+                    case REG_MULTI_SZ:
+                        SetupGetMultiSzField(&InfContext,
+                                             2,
+                                             pBuffer,
+                                             dwLength / sizeof(WCHAR),
+                                             &dwLength);
+                        dwLength *= sizeof(WCHAR);
+                        break;
+                }
+
+                RegSetValueEx(hKey,
+                              szValueName,
+                              0,
+                              dwType,
+                              pBuffer,
+                              dwLength);
+
+                HeapFree(GetProcessHeap(), 0, pBuffer);
+            }
+
+            RegCloseKey(hKey);
+        }
+    }
+    while (SetupFindNextLine(&InfContext, &InfContext));
+
+done:
+    if (hSecurityInf != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hSecurityInf);
+}
+
+
 VOID
 InstallSecurity(VOID)
 {
     InstallBuiltinAccounts();
     InstallPrivileges();
+    ApplyRegistryValues();
 
     /* Hack */
     SetPrimaryDomain(L"WORKGROUP", NULL);

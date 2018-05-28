@@ -44,3 +44,20 @@ SeSystemTimePrivilege = *S-1-5-32-544
 SeTakeOwnershipPrivilege = *S-1-5-32-544
 SeTcbPrivilege =
 SeUndockPrivilege = *S-1-5-32-544, *S-1-5-32-545
+
+
+[Registry Values]
+; Full registry path = Type, Value
+;
+; Type:
+;   1: REG_SZ
+;   2: REG_EXPAND_SZ
+;   3: REG_BINARY
+;   4: REG_DWORD
+;   7: REG_MULTI_SZ
+
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\DontDisplayLastUserName = 4, 0
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\LegalNoticeCaption = 1, ""
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\LegalNoticeText = 7, ""
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ShutdownWithoutLogon = 4, 1
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\UndockWithoutLogon = 4, 1
