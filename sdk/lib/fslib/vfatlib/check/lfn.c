@@ -66,13 +66,27 @@ static unsigned char fat_uni2esc[64] = {
 /* for maxlen param */
 #define UNTIL_0		INT_MAX
 
+#ifdef __REACTOS__
+static void copy_lfn_part(unsigned char *dst, LFN_ENT * lfn);
+static char *cnv_unicode(const unsigned char *uni, int maxlen, int use_q);
+#endif
+
 /* Convert name part in 'lfn' from unicode to ASCII */
+#ifndef __REACTOS__
 #define CNV_THIS_PART(lfn)				\
     ({							\
 	unsigned char __part_uni[CHARS_PER_LFN*2];		\
 	copy_lfn_part( __part_uni, lfn );		\
 	cnv_unicode( __part_uni, CHARS_PER_LFN, 0 );	\
     })
+#else
+static __inline char* CNV_THIS_PART(LFN_ENT * lfn)
+{
+    unsigned char __part_uni[CHARS_PER_LFN*2];
+    copy_lfn_part(__part_uni, lfn);
+    return cnv_unicode(__part_uni, CHARS_PER_LFN, 0);
+}
+#endif
 
 /* Convert name parts collected so far (from previous slots) from unicode to
  * ASCII */
