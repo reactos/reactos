@@ -271,9 +271,9 @@ InstallBuiltinAccounts(VOID)
 
 static
 VOID
-InstallPrivileges(VOID)
+InstallPrivileges(
+    HINF hSecurityInf)
 {
-    HINF hSecurityInf = INVALID_HANDLE_VALUE;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     WCHAR szPrivilegeString[256];
     WCHAR szSidString[256];
@@ -286,16 +286,6 @@ InstallPrivileges(VOID)
     PLSA_TRANSLATED_SID2 Sids = NULL;
 
     DPRINT("InstallPrivileges()\n");
-
-    hSecurityInf = SetupOpenInfFileW(L"defltws.inf", //szNameBuffer,
-                                     NULL,
-                                     INF_STYLE_WIN4,
-                                     NULL);
-    if (hSecurityInf == INVALID_HANDLE_VALUE)
-    {
-        DPRINT1("SetupOpenInfFileW failed\n");
-        return;
-    }
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
 
@@ -394,17 +384,14 @@ InstallPrivileges(VOID)
 done:
     if (PolicyHandle != NULL)
         LsaClose(PolicyHandle);
-
-    if (hSecurityInf != INVALID_HANDLE_VALUE)
-        SetupCloseInfFile(hSecurityInf);
 }
 
 
 static
 VOID
-ApplyRegistryValues(VOID)
+ApplyRegistryValues(
+    HINF hSecurityInf)
 {
-    HINF hSecurityInf = INVALID_HANDLE_VALUE;
     WCHAR szRegistryPath[MAX_PATH];
     WCHAR szRootName[MAX_PATH];
     WCHAR szKeyName[MAX_PATH];
@@ -418,23 +405,13 @@ ApplyRegistryValues(VOID)
 
     DPRINT("ApplyRegistryValues()\n");
 
-    hSecurityInf = SetupOpenInfFileW(L"defltws.inf", //szNameBuffer,
-                                     NULL,
-                                     INF_STYLE_WIN4,
-                                     NULL);
-    if (hSecurityInf == INVALID_HANDLE_VALUE)
-    {
-        DPRINT1("SetupOpenInfFileW failed\n");
-        return;
-    }
-
     if (!SetupFindFirstLineW(hSecurityInf,
                              L"Registry Values",
                              NULL,
                              &InfContext))
     {
         DPRINT1("SetupFindFirstLineW failed\n");
-        goto done;
+        return;
     }
 
     do
@@ -447,7 +424,7 @@ ApplyRegistryValues(VOID)
                                   NULL))
         {
             DPRINT1("SetupGetStringFieldW() failed\n");
-            goto done;
+            return;
         }
 
         DPRINT("RegistryPath: %S\n", szRegistryPath);
@@ -606,19 +583,36 @@ ApplyRegistryValues(VOID)
         }
     }
     while (SetupFindNextLine(&InfContext, &InfContext));
-
-done:
-    if (hSecurityInf != INVALID_HANDLE_VALUE)
-        SetupCloseInfFile(hSecurityInf);
 }
 
 
 VOID
 InstallSecurity(VOID)
 {
+    HINF hSecurityInf = INVALID_HANDLE_VALUE;
+    PWSTR pszSecurityInf;
+
+//    if (IsServer())
+//        pszSecurityInf = L"defltsv.inf";
+//    else
+        pszSecurityInf = L"defltws.inf";
+
     InstallBuiltinAccounts();
-    InstallPrivileges();
-    ApplyRegistryValues();
+
+    hSecurityInf = SetupOpenInfFileW(pszSecurityInf,
+                                     NULL,
+                                     INF_STYLE_WIN4,
+                                     NULL);
+    if (hSecurityInf == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("SetupOpenInfFileW failed\n");
+        return;
+    }
+
+    InstallPrivileges(hSecurityInf);
+    ApplyRegistryValues(hSecurityInf);
+
+    SetupCloseInfFile(hSecurityInf);
 
     /* Hack */
     SetPrimaryDomain(L"WORKGROUP", NULL);
