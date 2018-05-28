@@ -95,6 +95,7 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
     // destroy previous
     DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
     SendMessageW(pIconContext->hDlgCtrl, LB_RESETCONTENT, 0, 0);
+    delete[] pIconContext->phIcons;
 
     // store paths
     if (pIconContext->szPath != pszFile)
@@ -111,7 +112,6 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
     {
         // load icons from DLL
         pIconContext->nIcons = ExtractIconExW(pIconContext->szExpandedPath, -1, NULL, NULL, 0);
-        delete[] pIconContext->phIcons;
         pIconContext->phIcons = new HICON[pIconContext->nIcons];
 
         if (ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons))
@@ -127,8 +127,7 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
     {
         // *.ico
         pIconContext->nIcons = 1;
-        delete[] pIconContext->phIcons;
-        pIconContext->phIcons = new HICON[pIconContext->nIcons];
+        pIconContext->phIcons = new HICON[1];
 
         if (ExtractIconExW(pIconContext->szExpandedPath, 0, pIconContext->phIcons, NULL, pIconContext->nIcons))
         {
