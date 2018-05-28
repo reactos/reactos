@@ -350,7 +350,11 @@ void reclaim_free(DOS_FS * fs)
 	get_fat(&curEntry, fs->fat, i, fs);
 
 	if (!get_owner(fs, i) && curEntry.value &&
+#ifndef __REACTOS__
+	    !FAT_IS_BAD(fs, curEntry.value)) {
+#else
 	    !FAT_IS_BAD(fs, curEntry.value) && rw) {
+#endif
 	    set_fat(fs, i, 0);
 	    reclaimed++;
 	}
@@ -490,32 +494,36 @@ void reclaim_file(DOS_FS * fs)
     }
     while (changed);
 
+#ifdef __REACTOS__
     if (rw) {
-        /* Now we can start recovery */
-        files = reclaimed = 0;
-        for (i = 2; i < total_num_clusters; i++)
-	    /* If this cluster is the head of an orphan chain... */
-	    if (get_owner(fs, i) == &orphan && !num_refs[i]) {
-	        DIR_ENT de;
-	        off_t offset;
-	        files++;
-	        offset = alloc_rootdir_entry(fs, &de, "FSCK%04dREC");
-	        de.start = htole16(i & 0xffff);
-	        if (fs->fat_bits == 32)
-		    de.starthi = htole16(i >> 16);
-	        for (walk = i; walk > 0 && walk != -1;
-		     walk = next_cluster(fs, walk)) {
-		    de.size = htole32(le32toh(de.size) + fs->cluster_size);
-		    reclaimed++;
-	        }
-	        fs_write(offset, sizeof(DIR_ENT), &de);
+#endif
+    /* Now we can start recovery */
+    files = reclaimed = 0;
+    for (i = 2; i < total_num_clusters; i++)
+	/* If this cluster is the head of an orphan chain... */
+	if (get_owner(fs, i) == &orphan && !num_refs[i]) {
+	    DIR_ENT de;
+	    off_t offset;
+	    files++;
+	    offset = alloc_rootdir_entry(fs, &de, "FSCK%04dREC", 1);
+	    de.start = htole16(i & 0xffff);
+	    if (fs->fat_bits == 32)
+		de.starthi = htole16(i >> 16);
+	    for (walk = i; walk > 0 && walk != -1;
+		 walk = next_cluster(fs, walk)) {
+		de.size = htole32(le32toh(de.size) + fs->cluster_size);
+		reclaimed++;
 	    }
-        if (reclaimed)
-	    printf("Reclaimed %d unused cluster%s (%llu bytes) in %d chain%s.\n",
-	           reclaimed, reclaimed == 1 ? "" : "s",
-	           (unsigned long long)reclaimed * fs->cluster_size, files,
-	           files == 1 ? "" : "s");
-    }
+	    fs_write(offset, sizeof(DIR_ENT), &de);
+	}
+    if (reclaimed)
+	printf("Reclaimed %d unused cluster%s (%llu bytes) in %d chain%s.\n",
+	       reclaimed, reclaimed == 1 ? "" : "s",
+	       (unsigned long long)reclaimed * fs->cluster_size, files,
+	       files == 1 ? "" : "s");
+#ifdef __REACTOS__
+	}
+#endif
 
     free(num_refs);
 }
@@ -545,9 +553,16 @@ uint32_t update_free(DOS_FS * fs)
 		   (long)fs->free_clusters, (long)free);
 	    if (interactive)
 		printf("1) Correct\n2) Don't correct\n");
-	    else if (rw)
+	    else
+#ifdef __REACTOS__
+	    if (rw)
+#endif
 		printf("  Auto-correcting.\n");
+#ifndef __REACTOS__
+	    if (!interactive || get_key("12", "?") == '1')
+#else
 	    if ((!interactive && rw) || (interactive && get_key("12", "?") == '1'))
+#endif
 		do_set = 1;
 	}
     } else {
