@@ -112,13 +112,16 @@ CopySystemProfile(
     IN ULONG Unused)
 {
     WCHAR szKeyName[MAX_PATH];
-    WCHAR szImagePath[MAX_PATH];
+    WCHAR szRawProfilePath[MAX_PATH];
+    WCHAR szProfilePath[MAX_PATH];
+    WCHAR szDefaultProfilePath[MAX_PATH];
     UNICODE_STRING SidString = {0, 0, NULL};
     HANDLE hToken = NULL;
     PSID pUserSid = NULL;
     HKEY hProfileKey = NULL;
     DWORD dwDisposition;
     BOOL bResult = FALSE;
+    DWORD cchSize;
     DWORD dwError;
 
     DPRINT1("CopySystemProfile()\n");
@@ -177,21 +180,96 @@ CopySystemProfile(
         goto done;
     }
 
-    wcscpy(szImagePath,
+    wcscpy(szRawProfilePath,
            L"%systemroot%\\system32\\config\\systemprofile");
 
     dwError = RegSetValueExW(hProfileKey,
                              L"ProfileImagePath",
                              0,
                              REG_EXPAND_SZ,
-                             (PBYTE)szImagePath,
-                             (wcslen(szImagePath) + 1) * sizeof(WCHAR));
+                             (PBYTE)szRawProfilePath,
+                             (wcslen(szRawProfilePath) + 1) * sizeof(WCHAR));
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("Failed to set the ProfileImagePath value (Error %lu)\n", dwError);
         goto done;
     }
 
+    /* Expand the raw profile path */
+    if (!ExpandEnvironmentStringsW(szRawProfilePath,
+                                   szProfilePath,
+                                   ARRAYSIZE(szProfilePath)))
+    {
+        DPRINT1("Failled to expand the raw profile path (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    /* Create the profile directory if it does not exist yet */
+    // FIXME: Security!
+    if (!CreateDirectoryW(szProfilePath, NULL))
+    {
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Failed to create the profile directory (Error %lu)\n", GetLastError());
+            goto done;
+        }
+    }
+
+    /* Get the path of the default profile */
+    cchSize = ARRAYSIZE(szDefaultProfilePath);
+    if (!GetDefaultUserProfileDirectoryW(szDefaultProfilePath, &cchSize))
+    {
+        DPRINT1("Failed to create the default profile path (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    /* Copy the default profile into the new profile directory */
+    // FIXME: Security!
+    if (!CopyDirectory(szProfilePath, szDefaultProfilePath))
+    {
+        DPRINT1("Failed to copy the default profile directory (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    /* Create user hive file */
+
+#if 0
+    /* Use the default hive file name */
+//    StringCbCopyW(szBuffer, sizeof(szBuffer), szProfilePath);
+    StringCbCatW(szProfilePath, sizeof(szProfilePath), L"\\ntuser.dat");
+
+    /* Acquire restore privilege */
+    if (!AcquireRemoveRestorePrivilege(TRUE))
+    {
+        DPRINT1("Failed to acquire the restore privilege (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    /* Load the user hive */
+    dwError = RegLoadKeyW(HKEY_USERS,
+                          SidString.Buffer,
+                          szProfilePath);
+    AcquireRemoveRestorePrivilege(FALSE);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to load the new registry hive (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    bResult = TRUE;
+
+    /* Initialize the user hive */
+    if (!CreateUserHive(SidString.Buffer, szProfilePath))
+    {
+        DPRINT1("Failed to create the new hive (Error %lu)\n", GetLastError());
+        bResult = FALSE;
+    }
+
+    /* Unload the user hive */
+    AcquireRemoveRestorePrivilege(TRUE);
+    RegUnLoadKeyW(HKEY_USERS, SidString.Buffer);
+    AcquireRemoveRestorePrivilege(FALSE);
+#endif
 
     bResult = TRUE;
 
