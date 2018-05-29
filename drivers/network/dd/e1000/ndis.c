@@ -30,9 +30,43 @@ MiniportSend(
     IN PNDIS_PACKET Packet,
     IN UINT Flags)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    PE1000_ADAPTER Adapter = (PE1000_ADAPTER)MiniportAdapterContext;
+    PSCATTER_GATHER_LIST sgList = NDIS_PER_PACKET_INFO_FROM_PACKET(Packet, ScatterGatherListPacketInfo);
+    ULONG TransmitLength;
+    ULONG TransmitBuffer;
+    NDIS_STATUS Status;
 
-    return NDIS_STATUS_FAILURE;
+    ASSERT(sgList != NULL);
+    ASSERT(sgList->NumberOfElements == 1);
+    ASSERT(sgList->Elements[0].Address.HighPart == 0);
+    ASSERT((sgList->Elements[0].Address.LowPart & 3) == 0);
+    ASSERT(sgList->Elements[0].Length <= MAXIMUM_FRAME_SIZE);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Sending %d byte packet\n", sgList->Elements[0].Length));
+
+    NdisAcquireSpinLock(&Adapter->Lock);
+
+    if (Adapter->TxFull)
+    {
+        NdisReleaseSpinLock(&Adapter->Lock);
+        NDIS_DbgPrint(MIN_TRACE, ("All TX descriptors are full\n"));
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    TransmitLength = sgList->Elements[0].Length;
+    TransmitBuffer = sgList->Elements[0].Address.LowPart;
+
+    Status = NICTransmitPacket(Adapter, TransmitBuffer, TransmitLength);
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        NdisReleaseSpinLock(&Adapter->Lock);
+        NDIS_DbgPrint(MIN_TRACE, ("Transmit packet failed\n"));
+        return Status;
+    }
+
+    NdisReleaseSpinLock(&Adapter->Lock);
+
+    return NDIS_STATUS_SUCCESS;
 }
 
 VOID
