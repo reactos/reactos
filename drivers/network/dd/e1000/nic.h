@@ -21,7 +21,7 @@
 #define DRIVER_VERSION 1
 
 
-#define DEFAULT_INTERRUPT_MASK      (E1000_IMS_LSC)
+#define DEFAULT_INTERRUPT_MASK      (E1000_IMS_LSC | E1000_IMS_TXDW)
 
 typedef struct _E1000_ADAPTER
 {
@@ -62,6 +62,15 @@ typedef struct _E1000_ADAPTER
 
     ULONG InterruptMask;
     ULONG InterruptPending;
+
+
+    /* Transmit */
+    PE1000_TRANSMIT_DESCRIPTOR TransmitDescriptors;
+    NDIS_PHYSICAL_ADDRESS TransmitDescriptorsPa;
+
+    ULONG CurrentTxDesc;
+    ULONG LastTxDesc;
+    BOOLEAN TxFull;
 
 } E1000_ADAPTER, *PE1000_ADAPTER;
 
@@ -143,16 +152,11 @@ NTAPI
 NICDisableInterrupts(
     IN PE1000_ADAPTER Adapter);
 
-USHORT
+ULONG
 NTAPI
 NICInterruptRecognized(
     IN PE1000_ADAPTER Adapter,
     OUT PBOOLEAN InterruptRecognized);
-
-VOID
-NTAPI
-NICAcknowledgeInterrupts(
-    IN PE1000_ADAPTER Adapter);
 
 VOID
 NTAPI
@@ -163,7 +167,6 @@ NDIS_STATUS
 NTAPI
 NICTransmitPacket(
     IN PE1000_ADAPTER Adapter,
-    IN UCHAR TxDesc,
     IN ULONG PhysicalAddress,
     IN ULONG Length);
 

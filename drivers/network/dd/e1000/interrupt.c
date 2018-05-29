@@ -17,15 +17,12 @@ MiniportISR(
     OUT PBOOLEAN QueueMiniportHandleInterrupt,
     IN NDIS_HANDLE MiniportAdapterContext)
 {
+    ULONG Value;
     PE1000_ADAPTER Adapter = (PE1000_ADAPTER)MiniportAdapterContext;
 
-    //
-    // FIXME: We need to synchronize with this ISR for changes to InterruptPending,
-    // LinkChange, MediaState, and LinkSpeedMbps. We can get away with IRQL
-    // synchronization on non-SMP machines because we run a DIRQL here.
-    //
+    Value = NICInterruptRecognized(Adapter, InterruptRecognized);
+    InterlockedOr(&Adapter->InterruptPending, Value);
 
-    Adapter->InterruptPending |= NICInterruptRecognized(Adapter, InterruptRecognized);
     if (!(*InterruptRecognized))
     {
         /* This is not ours. */
@@ -33,10 +30,7 @@ MiniportISR(
         return;
     }
 
-    UNIMPLEMENTED;
-
-    /* Acknowledge the interrupt and mark the events pending service */
-    NICAcknowledgeInterrupts(Adapter);
+    /* Mark the events pending service */
     *QueueMiniportHandleInterrupt = TRUE;
 }
 
@@ -45,5 +39,51 @@ NTAPI
 MiniportHandleInterrupt(
     IN NDIS_HANDLE MiniportAdapterContext)
 {
+    ULONG Value;
+    PE1000_ADAPTER Adapter = (PE1000_ADAPTER)MiniportAdapterContext;
+    volatile PE1000_TRANSMIT_DESCRIPTOR TransmitDescriptor;
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    Value = InterlockedExchange(&Adapter->InterruptPending, 0);
+
+    NdisDprAcquireSpinLock(&Adapter->Lock);
+
+    if (Value & E1000_IMS_LSC)
+    {
+        ULONG Status;
+        NdisDprReleaseSpinLock(&Adapter->Lock);
+        Value &= ~E1000_IMS_LSC;
+        NDIS_DbgPrint(MIN_TRACE, ("Link status changed!.\n"));
+
+        NICUpdateLinkStatus(Adapter);
+
+        Status = Adapter->MediaState == NdisMediaStateConnected ? NDIS_STATUS_MEDIA_CONNECT : NDIS_STATUS_MEDIA_DISCONNECT;
+        NdisMIndicateStatus(Adapter->AdapterHandle, Status, NULL, 0);
+        NdisMIndicateStatusComplete(Adapter->AdapterHandle);
+
+        NdisDprAcquireSpinLock(&Adapter->Lock);
+    }
+
+    if (Value & E1000_IMS_TXDW)
+    {
+        while (Adapter->TxFull || Adapter->LastTxDesc != Adapter->CurrentTxDesc)
+        {
+            TransmitDescriptor = Adapter->TransmitDescriptors + Adapter->LastTxDesc;
+
+            if (!(TransmitDescriptor->Status & E1000_TDESC_STATUS_DD))
+            {
+                /* Not processed yet */
+                break;
+            }
+
+            Adapter->LastTxDesc = (Adapter->LastTxDesc + 1) % NUM_TRANSMIT_DESCRIPTORS;
+            Value &= ~E1000_IMS_TXDW;
+            Adapter->TxFull = FALSE;
+            NDIS_DbgPrint(MAX_TRACE, ("CurrentTxDesc:%u, LastTxDesc:%u\n", Adapter->CurrentTxDesc, Adapter->LastTxDesc));
+        }
+    }
+
+
+    ASSERT(Value == 0);
 }

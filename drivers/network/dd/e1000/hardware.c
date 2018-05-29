@@ -259,6 +259,19 @@ NICAllocateIoResources(
                              Adapter->IoAddress,
                              Adapter->IoLength);
 
+
+    NdisMAllocateSharedMemory(Adapter->AdapterHandle,
+                              sizeof(E1000_TRANSMIT_DESCRIPTOR) * NUM_TRANSMIT_DESCRIPTORS,
+                              FALSE,
+                              (PVOID*)&Adapter->TransmitDescriptors,
+                              &Adapter->TransmitDescriptorsPa);
+    if (Adapter->TransmitDescriptors == NULL)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Unable to allocate transmit descriptors\n"));
+        return NDIS_STATUS_RESOURCES;
+    }
+
+
     return NDIS_STATUS_SUCCESS;
 }
 
@@ -309,6 +322,23 @@ NICReleaseIoResources(
     IN PE1000_ADAPTER Adapter)
 {
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    if (Adapter->TransmitDescriptors != NULL)
+    {
+        /* Disassociate our shared buffer before freeing it to avoid NIC-induced memory corruption */
+        //E1000WriteUlong(Adapter, E1000_REG_TDH, 0);
+        //E1000WriteUlong(Adapter, E1000_REG_TDT, 0);
+
+        NdisMFreeSharedMemory(Adapter->AdapterHandle,
+                              sizeof(E1000_TRANSMIT_DESCRIPTOR) * NUM_TRANSMIT_DESCRIPTORS,
+                              FALSE,
+                              Adapter->TransmitDescriptors,
+                              Adapter->TransmitDescriptorsPa);
+
+        Adapter->TransmitDescriptors = NULL;
+    }
+
+
 
     if (Adapter->IoPort)
     {
@@ -396,7 +426,33 @@ NTAPI
 NICEnableTxRx(
     IN PE1000_ADAPTER Adapter)
 {
+    ULONG Value;
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* Transmit descriptor ring buffer */
+    E1000WriteUlong(Adapter, E1000_REG_TDBAH, Adapter->TransmitDescriptorsPa.HighPart);
+    E1000WriteUlong(Adapter, E1000_REG_TDBAL, Adapter->TransmitDescriptorsPa.LowPart);
+
+    /* Transmit descriptor buffer size */
+    E1000WriteUlong(Adapter, E1000_REG_TDLEN, sizeof(E1000_TRANSMIT_DESCRIPTOR) * NUM_TRANSMIT_DESCRIPTORS);
+
+    /* Transmit descriptor tail / head */
+    E1000WriteUlong(Adapter, E1000_REG_TDH, 0);
+    E1000WriteUlong(Adapter, E1000_REG_TDT, 0);
+    Adapter->CurrentTxDesc = 0;
+
+
+    Value = E1000_TCTL_EN | E1000_TCTL_PSP;
+    E1000WriteUlong(Adapter, E1000_REG_TCTL, Value);
+
+
+
+
+    //E1000ReadUlong(Adapter, E1000_REG_RCTL, &Value);
+    //Value = E1000_RCTL_BSIZE_2048 | E1000_RCTL_SECRC | E1000_RCTL_EN;
+    //E1000WriteUlong(Adapter, E1000_REG_RCTL, Value);
+
 
     return NDIS_STATUS_SUCCESS;
 }
@@ -406,7 +462,17 @@ NTAPI
 NICDisableTxRx(
     IN PE1000_ADAPTER Adapter)
 {
+    ULONG Value;
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    E1000ReadUlong(Adapter, E1000_REG_TCTL, &Value);
+    Value &= ~E1000_TCTL_EN;
+    E1000WriteUlong(Adapter, E1000_REG_TCTL, Value);
+
+    //E1000ReadUlong(Adapter, E1000_REG_RCTL, &Value);
+    //Value &= ~E1000_RCTL_EN;
+    //E1000WriteUlong(Adapter, E1000_REG_RCTL, Value);
 
     return NDIS_STATUS_SUCCESS;
 }
@@ -532,23 +598,22 @@ NICDisableInterrupts(
     return NDIS_STATUS_SUCCESS;
 }
 
-USHORT
+ULONG
 NTAPI
 NICInterruptRecognized(
     IN PE1000_ADAPTER Adapter,
     OUT PBOOLEAN InterruptRecognized)
 {
+    ULONG Value;
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    return 0;
-}
+    /* Reading the interrupt acknowledges them */
+    E1000ReadUlong(Adapter, E1000_REG_ICR, &Value);
 
-VOID
-NTAPI
-NICAcknowledgeInterrupts(
-    IN PE1000_ADAPTER Adapter)
-{
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    *InterruptRecognized = (Value & Adapter->InterruptMask) != 0;
+
+    return (Value & Adapter->InterruptMask);
 }
 
 VOID
@@ -604,11 +669,33 @@ NDIS_STATUS
 NTAPI
 NICTransmitPacket(
     IN PE1000_ADAPTER Adapter,
-    IN UCHAR TxDesc,
     IN ULONG PhysicalAddress,
     IN ULONG Length)
 {
+    volatile PE1000_TRANSMIT_DESCRIPTOR TransmitDescriptor;
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    return NDIS_STATUS_FAILURE;
+    TransmitDescriptor = Adapter->TransmitDescriptors + Adapter->CurrentTxDesc;
+    TransmitDescriptor->Address = PhysicalAddress;
+    TransmitDescriptor->Length = Length;
+    TransmitDescriptor->ChecksumOffset = 0;
+    TransmitDescriptor->Command = E1000_TDESC_CMD_RS | E1000_TDESC_CMD_IFCS | E1000_TDESC_CMD_EOP;
+    TransmitDescriptor->Status = 0;
+    TransmitDescriptor->ChecksumStartField = 0;
+    TransmitDescriptor->Special = 0;
+
+    Adapter->CurrentTxDesc = (Adapter->CurrentTxDesc + 1) % NUM_TRANSMIT_DESCRIPTORS;
+
+    E1000WriteUlong(Adapter, E1000_REG_TDT, Adapter->CurrentTxDesc);
+
+    NDIS_DbgPrint(MAX_TRACE, ("CurrentTxDesc:%u, LastTxDesc:%u\n", Adapter->CurrentTxDesc, Adapter->LastTxDesc));
+
+    if (Adapter->CurrentTxDesc == Adapter->LastTxDesc)
+    {
+        NDIS_DbgPrint(MID_TRACE, ("All TX descriptors are full now\n"));
+        Adapter->TxFull = TRUE;
+    }
+
+    return NDIS_STATUS_SUCCESS;
 }

@@ -32,6 +32,61 @@ typedef struct _ETH_HEADER {
 
 
 
+#include <pshpack1.h>
+
+
+/* 3.2.3 Receive Descriptor Format */
+
+#define E1000_RDESC_STATUS_EOP          (1 << 1)    /* End of Packet */
+#define E1000_RDESC_STATUS_DD           (1 << 0)    /* Descriptor Done */
+
+typedef struct _E1000_RECEIVE_DESCRIPTOR
+{
+    UINT64 Address;
+
+    USHORT Length;
+    USHORT Checksum;
+    UCHAR Status;
+    UCHAR Errors;
+    USHORT Special;
+
+} E1000_RECEIVE_DESCRIPTOR, *PE1000_RECEIVE_DESCRIPTOR;
+
+
+/* 3.3.3 Legacy Transmit Descriptor Format */
+
+#define E1000_TDESC_CMD_RS              (1 << 3)    /* Report Status */
+#define E1000_TDESC_CMD_IFCS            (1 << 1)    /* Insert FCS */
+#define E1000_TDESC_CMD_EOP             (1 << 0)    /* End Of Packet */
+
+#define E1000_TDESC_STATUS_DD           (1 << 0)    /* Descriptor Done */
+
+typedef struct _E1000_TRANSMIT_DESCRIPTOR
+{
+    UINT64 Address;
+
+    USHORT Length;
+    UCHAR ChecksumOffset;
+    UCHAR Command;
+    UCHAR Status;
+    UCHAR ChecksumStartField;
+    USHORT Special;
+
+} E1000_TRANSMIT_DESCRIPTOR, *PE1000_TRANSMIT_DESCRIPTOR;
+
+#include <poppack.h>
+
+
+C_ASSERT(sizeof(E1000_RECEIVE_DESCRIPTOR) == 16);
+C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
+
+
+/* Valid Range: 80-256 for 82542 and 82543 gigabit ethernet controllers
+   Valid Range: 80-4096 for 82544 and newer */
+#define NUM_TRANSMIT_DESCRIPTORS        128
+#define NUM_RECEIVE_DESCRIPTORS         128
+
+
 
 /* Registers */
 #define E1000_REG_CTRL              0x0000      /* Device Control Register, R/W */
@@ -43,7 +98,16 @@ typedef struct _ETH_HEADER {
 
 #define E1000_REG_IMS               0x00D0      /* Interrupt Mask Set/Read Register, R/W */
 #define E1000_REG_IMC               0x00D8      /* Interrupt Mask Clear, W */
-#define E1000_REG_RCTL              0x0100      /* Receive Control, R/W */
+#define E1000_REG_RCTL              0x0100      /* Receive Control Register, R/W */
+
+#define E1000_REG_TCTL              0x0400      /* Transmit Control Register, R/W */
+
+#define E1000_REG_TDBAL             0x3800      /* Transmit Descriptor Base Address Low, R/W */
+#define E1000_REG_TDBAH             0x3804      /* Transmit Descriptor Base Address High, R/W */
+#define E1000_REG_TDLEN             0x3808      /* Transmit Descriptor Length, R/W */
+#define E1000_REG_TDH               0x3810      /* Transmit Descriptor Head, R/W */
+#define E1000_REG_TDT               0x3818      /* Transmit Descriptor Tail, R/W */
+
 
 #define E1000_REG_RAL               0x5400      /* Receive Address Low, R/W */
 #define E1000_REG_RAH               0x5404      /* Receive Address High, R/W */
@@ -76,6 +140,7 @@ typedef struct _ETH_HEADER {
 
 
 /* E1000_REG_IMS */
+#define E1000_IMS_TXDW              (1 << 0)    /* Transmit Descriptor Written Back */
 #define E1000_IMS_LSC               (1 << 2)    /* Sets mask for Link Status Change */
 
 
@@ -88,6 +153,14 @@ typedef struct _ETH_HEADER {
 #define E1000_RCTL_PMCF             (1 << 23)   /* Pass MAC Control Frames */
 
 #define E1000_RCTL_FILTER_BITS      (E1000_RCTL_SBP | E1000_RCTL_UPE | E1000_RCTL_MPE | E1000_RCTL_BAM | E1000_RCTL_PMCF)
+
+
+/* E1000_REG_TCTL */
+#define E1000_TCTL_EN               (1 << 1)    /* Transmit Enable */
+#define E1000_TCTL_PSP              (1 << 3)    /* Pad Short Packets */
+
+
+
 
 /* E1000_REG_RAH */
 #define E1000_RAH_AV                (1 << 31)   /* Address Valid */
