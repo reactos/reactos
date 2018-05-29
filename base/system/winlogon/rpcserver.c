@@ -499,6 +499,13 @@ BaseInitiateSystemShutdownEx(
     BOOLEAN bRebootAfterShutdown,
     ULONG dwReason)
 {
+    HANDLE hToken;
+    PTOKEN_PRIVILEGES tpPrivileges;
+    LUID luidSysShutdown;
+    LUID luidRemoteSysShutdown;
+    LPVOID lpAclBuffer;
+    DWORD dwAclSize = 0;
+    
     TRACE("BaseInitiateSystemShutdownEx()\n");
     TRACE("  Message: %wZ\n", lpMessage);
     TRACE("  Timeout: %lu\n", dwTimeout);
@@ -506,13 +513,88 @@ BaseInitiateSystemShutdownEx(
     TRACE("  Reboot: %d\n", bRebootAfterShutdown);
     TRACE("  Reason: %lu\n", dwReason);
 
-    //FIXME: Verify that the caller actually has the correct privileges
+    //FIXME: Verify that the caller actually has the correct privileges for remote shutdown
+  // Check if thread token exists
+    if (!OpenThreadToken(GetCurrentThread(), TOKEN_ALL_ACCESS, FALSE, &hToken))
+    {
+        // No thread token, try process token next
+        if (GetLastError() == ERROR_NO_TOKEN)
+        {
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken))
+                return GetLastError();
+        }
+        else
+            return GetLastError();
+    }
 
-    return StartSystemShutdown((PUNICODE_STRING)lpMessage,
-                               dwTimeout,
-                               bForceAppsClosed,
-                               bRebootAfterShutdown,
-                               dwReason);
+    // Get SeShutdownPrivilege
+    if (!LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &luidSysShutdown))
+    {
+        CloseHandle(hToken);
+        return GetLastError();
+    }
+
+    // Get initial buffer size 
+    if (!GetTokenInformation(hToken, TOKEN_INFORMATION_CLASS::TokenPrivileges, NULL, NULL, &dwAclSize))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            CloseHandle(hToken);
+            return GetLastError();
+        }
+    }
+
+    lpAclBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwAclSize);
+
+    if (!lpAclBuffer)
+    {
+        CloseHandle(hToken);
+        return GetLastError();
+    }
+
+    if (!GetTokenInformation(hToken, TOKEN_INFORMATION_CLASS::TokenPrivileges, lpAclBuffer, dwAclSize, &dwAclSize))
+    {
+        HeapFree(GetProcessHeap(), NULL, lpAclBuffer);
+
+        lpAclBuffer = NULL;
+
+        CloseHandle(hToken);
+        return GetLastError();
+    }
+
+    tpPrivileges = (PTOKEN_PRIVILEGES)lpAclBuffer;
+
+    // Enumerate through the privileges for the token and check for SeShutdownPrivilege 
+
+    for (SIZE_T szPrivIdx = 0; szPrivIdx < tpPrivileges->PrivilegeCount; szPrivIdx++) 
+    {
+        PLUID_AND_ATTRIBUTES plPriv = &tpPrivileges->Privileges[szPrivIdx];
+        if ((plPriv->Luid.LowPart == luidSysShutdown.LowPart) &&
+            (plPriv->Luid.HighPart == luidSysShutdown.HighPart)) 
+        {
+            if ((plPriv->Attributes & SE_PRIVILEGE_ENABLED) == SE_PRIVILEGE_ENABLED) 
+            {
+                HeapFree(GetProcessHeap(), NULL, lpAclBuffer);
+
+                lpAclBuffer = NULL;
+                
+                CloseHandle(hToken);
+                return StartSystemShutdown((PUNICODE_STRING)lpMessage,
+                    dwTimeout,
+                    bForceAppsClosed,
+                    bRebootAfterShutdown,
+                    dwReason);
+            }
+        }
+    }
+
+    HeapFree(GetProcessHeap(), NULL, lpAclBuffer);
+
+    lpAclBuffer = NULL;
+
+    CloseHandle(hToken);
+    SetLastError(ERROR_PRIVILEGE_NOT_HELD);
+    return GetLastError();
 }
 
 
