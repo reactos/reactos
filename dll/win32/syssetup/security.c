@@ -589,7 +589,7 @@ ApplyRegistryValues(
 VOID
 InstallSecurity(VOID)
 {
-    HINF hSecurityInf = INVALID_HANDLE_VALUE;
+    HINF hSecurityInf;
     PWSTR pszSecurityInf;
 
 //    if (IsServer())
@@ -603,16 +603,13 @@ InstallSecurity(VOID)
                                      NULL,
                                      INF_STYLE_WIN4,
                                      NULL);
-    if (hSecurityInf == INVALID_HANDLE_VALUE)
+    if (hSecurityInf != INVALID_HANDLE_VALUE)
     {
-        DPRINT1("SetupOpenInfFileW failed\n");
-        return;
+        InstallPrivileges(hSecurityInf);
+        ApplyRegistryValues(hSecurityInf);
+
+        SetupCloseInfFile(hSecurityInf);
     }
-
-    InstallPrivileges(hSecurityInf);
-    ApplyRegistryValues(hSecurityInf);
-
-    SetupCloseInfFile(hSecurityInf);
 
     /* Hack */
     SetPrimaryDomain(L"WORKGROUP", NULL);
