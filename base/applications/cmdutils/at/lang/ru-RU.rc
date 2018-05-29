@@ -31,6 +31,7 @@ id                 Порядковый номер запланированно�
     IDS_CONFIRM_YES "Y"
     IDS_CONFIRM_NO "N"
 
+    IDS_DELETE_ALL "This operation will delete all scheduled jobs.\n"
     IDS_NEW_JOB "Добавлено новое задание с ID = %lu\n"
     IDS_JOBS_LIST "Статус ID   День                     Время          Команда\n"
     IDS_NO_ENTRIES "В списке нет запланированных задач.\n"
