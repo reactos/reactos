@@ -13,5 +13,12 @@ STRINGTABLE
 BEGIN
     IDS_VDM_DUMPMEM_TXT,    "内存转储 (文本) (&T)"
     IDS_VDM_DUMPMEM_BIN,    "内存转储 (二进制) (&B)"
+    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
     IDS_VDM_QUIT       ,    "退出 ReactOS DOS 虚拟机 (&Q)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NO_MEDIA,   "No media"
 END
