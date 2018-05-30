@@ -1524,6 +1524,18 @@ QueryFileDescription(LPCWSTR ProgramPath, LPWSTR pszName, INT cchName)
     return !!GetFileTitleW(ProgramPath, pszName, cchName);
 }
 
+static void
+SetFileTypeEntryDefaultIcon(PFOLDER_FILE_TYPE_ENTRY Entry)
+{
+    Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
+    INT cxSmall = GetSystemMetrics(SM_CXSMICON);
+    INT cySmall = GetSystemMetrics(SM_CYSMICON);
+    Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
+                                         IMAGE_ICON, cxSmall, cySmall, 0));
+    StringCchCopyW(Entry->IconPath, _countof(Entry->IconPath), L"%SystemRoot%\\system32\\shell32.dll");
+    Entry->nIconIndex = -IDI_SHELL_FOLDER_OPTIONS;
+}
+
 static BOOL
 InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
 {
@@ -1608,13 +1620,7 @@ InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
     if (!GetFileTypeIconsByKey(hKey, Entry))
     {
         // set default icon
-        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
-        INT cxSmall = GetSystemMetrics(SM_CXSMICON);
-        INT cySmall = GetSystemMetrics(SM_CYSMICON);
-        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
-                                             IMAGE_ICON, cxSmall, cySmall, 0));
-        StringCchCopyW(Entry->IconPath, _countof(Entry->IconPath), L"%SystemRoot%\\system32\\shell32.dll");
-        Entry->nIconIndex = -IDI_SHELL_FOLDER_OPTIONS;
+        SetFileTypeEntryDefaultIcon(Entry);
     }
 
     /* close key */
@@ -2227,17 +2233,36 @@ static BOOL
 EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType,
                        LPCWSTR ClassKey, LPCWSTR ClassName, INT cchName)
 {
+    FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
+
     if (ClassKey[0] == 0)
         return FALSE;
 
-    // open class key
+    // create or open class key
     HKEY hClassKey;
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_WRITE, &hClassKey) != ERROR_SUCCESS)
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, NULL, 0, KEY_WRITE, NULL, &hClassKey, NULL) != ERROR_SUCCESS)
         return FALSE;
 
-    // open "shell" key
+    // create "DefaultIcon" key
+    if (pEntry->IconPath[0])
+    {
+        HKEY hDefaultIconKey;
+        if (RegCreateKeyExW(hClassKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE, NULL, &hDefaultIconKey, NULL) == ERROR_SUCCESS)
+        {
+            WCHAR szText[MAX_PATH];
+            StringCchPrintfW(szText, _countof(szText), L"%s,%d", pEntry->IconPath, pEntry->nIconIndex);
+
+            // set icon location
+            DWORD dwSize = (lstrlenW(szText) + 1) * sizeof(WCHAR);
+            RegSetValueExW(hDefaultIconKey, NULL, 0, REG_EXPAND_SZ, LPBYTE(szText), dwSize);
+
+            RegCloseKey(hDefaultIconKey);
+        }
+    }
+
+    // create "shell" key
     HKEY hShellKey;
-    if (RegOpenKeyExW(hClassKey, L"shell", 0, KEY_WRITE, &hShellKey) != ERROR_SUCCESS)
+    if (RegCreateKeyExW(hClassKey, L"shell", 0, NULL, 0, KEY_WRITE, NULL, &hShellKey, NULL) != ERROR_SUCCESS)
     {
         RegCloseKey(hClassKey);
         return FALSE;
@@ -2293,6 +2318,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType,
 
     RegCloseKey(hShellKey);
     RegCloseKey(hClassKey);
+
     return TRUE;
 }
 
@@ -2354,21 +2380,32 @@ EditTypeDlg_OnRemove(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     return TRUE;
 }
 
-static void
-EditTypeDlg_UpdateEntryIcon(HWND hwndDlg, FOLDER_FILE_TYPE_ENTRY *pEntry, LPCWSTR IconPath, INT IconIndex)
+static BOOL
+EditTypeDlg_UpdateEntryIcon(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR IconPath, INT IconIndex)
 {
-    if (lstrcmpiW(pEntry->IconPath, IconPath) == 0 && pEntry->nIconIndex == IconIndex)
-        return;
+    FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
 
-    DestroyIcon(pEntry->hIconLarge);
-    DestroyIcon(pEntry->hIconSmall);
-    pEntry->hIconLarge = DoExtractIcon(pEntry, IconPath, IconIndex, FALSE);
-    pEntry->hIconSmall = DoExtractIcon(pEntry, IconPath, IconIndex, TRUE);
+    BOOL bIconSet = FALSE;
+    if (IconPath && IconPath[0])
+    {
+        DestroyIcon(pEntry->hIconLarge);
+        DestroyIcon(pEntry->hIconSmall);
+        pEntry->hIconLarge = DoExtractIcon(pEntry, IconPath, IconIndex, FALSE);
+        pEntry->hIconSmall = DoExtractIcon(pEntry, IconPath, IconIndex, TRUE);
 
-    StringCchCopyW(pEntry->IconPath, _countof(pEntry->IconPath), IconPath);
-    pEntry->nIconIndex = IconIndex;
+        bIconSet = (pEntry->hIconLarge && pEntry->hIconSmall);
+    }
+    if (bIconSet)
+    {
+        StringCchCopyW(pEntry->IconPath, _countof(pEntry->IconPath), IconPath);
+        pEntry->nIconIndex = IconIndex;
+    }
+    else
+    {
+        SetFileTypeEntryDefaultIcon(pEntry);
+    }
 
-    HWND hListView = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+    HWND hListView = pEditType->hwndLV;
     HIMAGELIST himlLarge = ListView_GetImageList(hListView, LVSIL_NORMAL);
     HIMAGELIST himlSmall = ListView_GetImageList(hListView, LVSIL_SMALL);
 
@@ -2383,6 +2420,7 @@ EditTypeDlg_UpdateEntryIcon(HWND hwndDlg, FOLDER_FILE_TYPE_ENTRY *pEntry, LPCWST
         Item.iImage = iSmallImage;
         ListView_SetItem(hListView, &Item);
     }
+    return TRUE;
 }
 
 static void
@@ -2394,11 +2432,14 @@ EditTypeDlg_OnOK(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
     GetDlgItemTextW(hwndDlg, IDC_EDITTYPE_TEXT, pEntry->ClassName, _countof(pEntry->ClassName));
     StrTrimW(pEntry->ClassName, s_pszSpace);
 
+    // update entry icon
+    EditTypeDlg_UpdateEntryIcon(hwndDlg, pEditType, pEditType->szIconPath, pEditType->nIconIndex);
+
     // write registry
     EditTypeDlg_WriteClass(hwndDlg, pEditType, pEntry->ClassKey, pEntry->ClassName, _countof(pEntry->ClassName));
 
-    // update entry icon
-    EditTypeDlg_UpdateEntryIcon(hwndDlg, pEntry, pEditType->szIconPath, pEditType->nIconIndex);
+    // update the icon cache
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
 
     EndDialog(hwndDlg, IDOK);
 }
@@ -2444,16 +2485,6 @@ NewAct_OnOK(HWND hwndDlg, ACTION_DIALOG *pNewAct)
     EndDialog(hwndDlg, IDOK);
 }
 
-static LPWSTR MakeFilter(LPWSTR pszFilter)
-{
-    for (LPWSTR pch = pszFilter; *pch; ++pch)
-    {
-        if (*pch == L'|')
-            *pch = 0;
-    }
-    return pszFilter;
-}
-
 static void
 Action_OnBrowse(HWND hwndDlg, ACTION_DIALOG *pNewAct, BOOL bEdit = FALSE)
 {
@@ -2469,7 +2500,7 @@ Action_OnBrowse(HWND hwndDlg, ACTION_DIALOG *pNewAct, BOOL bEdit = FALSE)
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400W;
     ofn.hwndOwner = hwndDlg;
-    ofn.lpstrFilter = MakeFilter(szFilter);
+    ofn.lpstrFilter = szFilter;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = _countof(szFile);
     ofn.lpstrTitle = strTitle;
