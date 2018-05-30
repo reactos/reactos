@@ -418,7 +418,7 @@ HRESULT CDefView::IncludeObject(PCUITEMID_CHILD pidl)
     {
         TRACE("ICommDlgBrowser::IncludeObject pidl=%p\n", pidl);
         ret = m_pCommDlgBrowser->IncludeObject(this, pidl);
-        TRACE("--0x%08x\n", ret);
+        TRACE("-- returns 0x%08x\n", ret);
     }
 
     return ret;
@@ -432,7 +432,7 @@ HRESULT CDefView::OnDefaultCommand()
     {
         TRACE("ICommDlgBrowser::OnDefaultCommand\n");
         ret = m_pCommDlgBrowser->OnDefaultCommand(this);
-        TRACE("-- returns %08x\n", ret);
+        TRACE("-- returns 0x%08x\n", ret);
     }
 
     return ret;
@@ -2082,7 +2082,7 @@ HRESULT WINAPI CDefView::TranslateAccelerator(LPMSG lpmsg)
         if (::TranslateAcceleratorW(m_hWnd, m_hAccel, lpmsg) != 0)
             return S_OK;
 
-        TRACE("-- key=0x04%lx\n", lpmsg->wParam) ;
+        TRACE("-- key=0x%04lx\n", lpmsg->wParam) ;
     }
 
     return m_pShellBrowser->TranslateAcceleratorSB(lpmsg, 0);
@@ -3179,7 +3179,7 @@ HRESULT WINAPI CDefView::Unfreeze(DWORD dwFreeze)
 
 HRESULT WINAPI CDefView::SetAdvise(DWORD aspects, DWORD advf, IAdviseSink *pAdvSink)
 {
-    FIXME("partial stub: %p %08x %08x %p\n", this, aspects, advf, pAdvSink);
+    FIXME("partial stub: %p 0x%08x 0x%08x %p\n", this, aspects, advf, pAdvSink);
 
     /* FIXME: we set the AdviseSink, but never use it to send any advice */
     m_pAdvSink = pAdvSink;
