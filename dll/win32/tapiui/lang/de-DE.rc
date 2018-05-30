@@ -369,6 +369,7 @@ BEGIN
     43 "Auf das Ende eine Sprachnachricht warten"
     44 "Die Landeskennzahl, Vorwahl und Rufnummer wählen"
     45 "Die Vorwahl und Rufnummer wählen"
+    46 "Dial the area code and number."
     47 "Die Landeskennzahl wählen"
     48 "Die Vorwahl wählen"
     49 "Die Rufnummer wählen"
