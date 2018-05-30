@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "兼容性"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "如果您在 ReactOS 中运行此程序出现问题，选择 ReactOS 应报告给应用程序的操作系统。\n请注意，这是一项正在进行的工作。", -1, 7, 7, 210, 31
+    LTEXT "如果您在 ReactOS 中运行此程序出现问题，选择 ReactOS 应报告给应用程序的操作系统。\n请注意，这是一项正在进行的工作。", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "兼容模式", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "用兼容模式运行这个程序:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
