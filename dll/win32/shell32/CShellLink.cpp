@@ -1765,39 +1765,28 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CShellLink::Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
+HRESULT STDMETHODCALLTYPE
+CShellLink::Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
 {
-    // do like ExtractIconEx but add link arrow
     SHFILEINFOW info;
     HIMAGELIST himl;
 
     if (phiconLarge)
-        ZeroMemory(phiconLarge, sizeof(HICON) * nIconSize);
-    if (phiconSmall)
-        ZeroMemory(phiconSmall, sizeof(HICON) * nIconSize);
-
-    if (phiconLarge)
     {
-        for (UINT i = 0; i < nIconSize; ++i)
-        {
-            ZeroMemory(&info, sizeof(info));
-            himl = (HIMAGELIST)SHGetFileInfoW(pszFile, 0, &info, sizeof(info), SHGFI_SYSICONINDEX | SHGFI_LARGEICON | SHGFI_LINKOVERLAY);
-            if (!himl)
-                return E_FAIL;
-            phiconLarge[i] = ImageList_GetIcon(himl, info.iIcon, ILD_NORMAL | ILD_TRANSPARENT);
-        }
+        himl = (HIMAGELIST)SHGetFileInfoW(pszFile, 0, &info, sizeof(info),
+                                          SHGFI_SYSICONINDEX | SHGFI_LARGEICON | SHGFI_LINKOVERLAY);
+        if (!himl)
+            return E_FAIL;
+        *phiconLarge = ImageList_GetIcon(himl, info.iIcon, ILD_NORMAL | ILD_TRANSPARENT);
     }
 
     if (phiconSmall)
     {
-        for (UINT i = 0; i < nIconSize; ++i)
-        {
-            ZeroMemory(&info, sizeof(info));
-            himl = (HIMAGELIST)SHGetFileInfoW(pszFile, 0, &info, sizeof(info), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_LINKOVERLAY);
-            if (!himl)
-                return E_FAIL;
-            phiconSmall[i] = ImageList_GetIcon(himl, info.iIcon, ILD_NORMAL | ILD_TRANSPARENT);
-        }
+        himl = (HIMAGELIST)SHGetFileInfoW(pszFile, 0, &info, sizeof(info),
+                                          SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_LINKOVERLAY);
+        if (!himl)
+            return E_FAIL;
+        *phiconSmall = ImageList_GetIcon(himl, info.iIcon, ILD_NORMAL | ILD_TRANSPARENT);
     }
 
     return S_OK;
@@ -2933,7 +2922,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                         pThis->SetIconLocation(wszPath, IconIndex);
 
                         HICON hIconLarge = NULL;
-                        if (S_OK == pThis->Extract(wszPath, IconIndex, &hIconLarge, NULL, 1))
+                        if (S_OK == pThis->Extract(wszPath, IconIndex, &hIconLarge, NULL, 0))
                         {
                             HICON hIconOld = (HICON)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_GETICON, 0, 0);
                             SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_SETICON, (WPARAM)hIconLarge, 0);
