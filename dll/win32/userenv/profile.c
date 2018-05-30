@@ -1350,16 +1350,13 @@ LoadUserProfileW(
     _Inout_ LPPROFILEINFOW lpProfileInfo)
 {
     WCHAR szUserHivePath[MAX_PATH];
-    LPWSTR UserName = NULL, Domain = NULL;
-    DWORD UserNameLength = 0, DomainLength = 0;
     PTOKEN_USER UserSid = NULL;
-    SID_NAME_USE AccountType;
     UNICODE_STRING SidString = { 0, 0, NULL };
     LONG Error;
     BOOL ret = FALSE;
     DWORD dwLength = sizeof(szUserHivePath) / sizeof(szUserHivePath[0]);
 
-    DPRINT("LoadUserProfileW() called\n");
+    DPRINT("LoadUserProfileW(%p %p)\n", hToken, lpProfileInfo);
 
     /* Check profile info */
     if (!lpProfileInfo || (lpProfileInfo->dwSize != sizeof(PROFILEINFOW)) ||
@@ -1368,6 +1365,8 @@ LoadUserProfileW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+
+    DPRINT("UserName: %S\n", lpProfileInfo->lpUserName);
 
     /* Don't load a profile twice */
     if (CheckForLoadedProfile(hToken))
@@ -1423,50 +1422,8 @@ LoadUserProfileW(
             goto cleanup;
         }
 
-        /* Get user name */
-        do
-        {
-            if (UserNameLength > 0)
-            {
-                HeapFree(GetProcessHeap(), 0, UserName);
-                UserName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, UserNameLength * sizeof(WCHAR));
-                if (!UserName)
-                {
-                    DPRINT1("HeapAlloc() failed\n");
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto cleanup;
-                }
-            }
-            if (DomainLength > 0)
-            {
-                HeapFree(GetProcessHeap(), 0, Domain);
-                Domain = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, DomainLength * sizeof(WCHAR));
-                if (!Domain)
-                {
-                    DPRINT1("HeapAlloc() failed\n");
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto cleanup;
-                }
-            }
-            ret = LookupAccountSidW(NULL,
-                                    UserSid->User.Sid,
-                                    UserName,
-                                    &UserNameLength,
-                                    Domain,
-                                    &DomainLength,
-                                    &AccountType);
-        } while (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
-
-        if (!ret)
-        {
-            DPRINT1("LookupAccountSidW() failed\n");
-            goto cleanup;
-        }
-
         /* Create profile */
-        /* FIXME: ignore Domain? */
-        DPRINT("UserName %S, Domain %S\n", UserName, Domain);
-        ret = CreateUserProfileW(UserSid->User.Sid, UserName);
+        ret = CreateUserProfileW(UserSid->User.Sid, lpProfileInfo->lpUserName);
         if (!ret)
         {
             DPRINT1("CreateUserProfileW() failed\n");
@@ -1524,8 +1481,6 @@ LoadUserProfileW(
 
 cleanup:
     HeapFree(GetProcessHeap(), 0, UserSid);
-    HeapFree(GetProcessHeap(), 0, UserName);
-    HeapFree(GetProcessHeap(), 0, Domain);
     RtlFreeUnicodeString(&SidString);
 
     DPRINT("LoadUserProfileW() done\n");
