@@ -2775,15 +2775,13 @@ EditTypeDlg_OnCommand(HWND hwndDlg, UINT id, UINT code, EDITTYPE_DIALOG *pEditTy
                 if (SendMessageW(action.hwndLB, LB_FINDSTRING, -1, (LPARAM)action.szAction) != LB_ERR)
                 {
                     // already exists, error
-                    CStringW strFormat(MAKEINTRESOURCEW(IDS_ACTION_EXISTS));
-                    TCHAR szText[256];
-                    StringCchPrintfW(szText, _countof(szText), strFormat, action.szAction);
-
                     HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_ACTION);
                     SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
                     SetFocus(hwndCtrl);
-                    CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
-                    MessageBoxW(hwndDlg, szText, strTitle, MB_ICONERROR);
+
+                    CStringW strText, strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+                    strText.Format(IDS_ACTION_EXISTS, action.szAction);
+                    MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
                 }
                 else
                 {
