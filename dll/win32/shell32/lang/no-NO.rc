@@ -66,6 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Klipp &ut", IDM_CUT
         MENUITEM "&Kopier", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "&Opprett snarvei", IDM_CREATELINK
         MENUITEM "&Slett", IDM_DELETE

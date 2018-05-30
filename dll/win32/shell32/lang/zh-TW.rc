@@ -75,6 +75,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "剪下(&U)", IDM_CUT
         MENUITEM "複製(&C)", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "建立捷徑(&L)", IDM_CREATELINK
         MENUITEM "刪除(&D)", IDM_DELETE

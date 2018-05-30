@@ -73,6 +73,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Вырезать", IDM_CUT
         MENUITEM "&Копировать", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Создать &ярлык", IDM_CREATELINK
         MENUITEM "&Удалить", IDM_DELETE

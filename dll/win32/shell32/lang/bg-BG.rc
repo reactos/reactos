@@ -67,6 +67,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Из&рязване", IDM_CUT
         MENUITEM "За&помняне", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Създаване на &връзка", IDM_CREATELINK
         MENUITEM "Из&триване", IDM_DELETE
@@ -214,8 +215,8 @@ BEGIN
     CHECKBOX "Изпълняване с различни правомощия", IDC_SHORTEX_RUN_DIFFERENT, 30, 50, 150, 10
     LTEXT "Тази възможност ви позволява да изпълните препратката като друг потребител или да продължите като себе си, като предпазвате компютъра и данните от неупълномощена дейност на приложенията.", -1, 50, 60, 200, 40
     CHECKBOX "Изпълняване в отделен дял от паметта", IDC_SHORTEX_RUN_SEPARATE, 30, 100, 170, 10, WS_DISABLED
-    PUSHBUTTON "Добре", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "Прекъсване", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Добре", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Прекъсване", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205

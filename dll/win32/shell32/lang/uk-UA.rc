@@ -66,6 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Вирізати", IDM_CUT
         MENUITEM "&Копіювати", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Створити &ярлик", IDM_CREATELINK
         MENUITEM "В&идалити", IDM_DELETE
@@ -213,8 +214,8 @@ BEGIN
     CHECKBOX "Запускати з іншими обліковими даними", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "Цей параметр дозволяє використовувати цей ярлик від імені іншого користувача або продовжувати роботу від свого імені, що захищає комп'ютер й дані від несанкціонованих дій програми.", -1, 50, 60, 175, 40
     CHECKBOX "Запускати в окремій області пам'яті", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
-    PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "Скасувати", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Скасувати", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205

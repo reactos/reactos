@@ -74,6 +74,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "C&ortar", IDM_CUT
         MENUITEM "&Copiar", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "C&rear acceso directo", IDM_CREATELINK
         MENUITEM "&Eliminar", IDM_DELETE
@@ -221,8 +222,8 @@ BEGIN
     CHECKBOX "Ejecutar con credenciales diferentes", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "Esta opción puede permitirle ejecutar este acceso directo como otro usuario, o continuar como usted mismo mientras protege su equipo y datos de una actividad de programa no autorizada.", -1, 50, 60, 175, 40
     CHECKBOX "Ejecutar en otro espacio de memoria", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
-    PUSHBUTTON "Aceptar", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "Cancelar", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Aceptar", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Cancelar", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
