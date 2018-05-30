@@ -1173,6 +1173,52 @@ done:
 
 static
 DWORD
+SaveDefaultUserHive(VOID)
+{
+    WCHAR szDefaultUserHive[MAX_PATH];
+    HKEY hUserKey = NULL;
+    DWORD cchSize;
+    DWORD dwError;
+
+    DPRINT("SaveDefaultUserHive()\n");
+
+    cchSize = ARRAYSIZE(szDefaultUserHive);
+    GetDefaultUserProfileDirectoryW(szDefaultUserHive, &cchSize);
+
+    wcscat(szDefaultUserHive, L"\\ntuser.dat");
+
+    dwError = RegOpenKeyExW(HKEY_USERS,
+                            L".DEFAULT",
+                            0,
+                            KEY_READ,
+                            &hUserKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("RegOpenKeyExW() failed (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+    pSetupEnablePrivilege(L"SeBackupPrivilege", TRUE);
+
+    dwError = RegSaveKeyExW(hUserKey,
+                            szDefaultUserHive,
+                            NULL,
+                            REG_STANDARD_FORMAT);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("RegSaveKeyExW() failed (Error %lu)\n", dwError);
+    }
+
+    pSetupEnablePrivilege(L"SeBackupPrivilege", FALSE);
+
+    RegCloseKey(hUserKey);
+
+    return dwError;
+}
+
+
+static
+DWORD
 InstallReactOS(VOID)
 {
     WCHAR szBuffer[MAX_PATH];
@@ -1232,6 +1278,8 @@ InstallReactOS(VOID)
         wcscat(szBuffer, L"system");
         CreateDirectory(szBuffer, NULL);
     }
+
+    SaveDefaultUserHive();
 
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
 
