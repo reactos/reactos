@@ -949,6 +949,5 @@ BEGIN
     IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
     IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
     IDS_EDITING_ACTION "Editing action for type: "
-    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
+
 END
