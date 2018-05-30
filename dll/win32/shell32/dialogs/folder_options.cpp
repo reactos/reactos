@@ -2976,14 +2976,14 @@ FolderOptionsFileTypesDlg(
             switch (lppl->hdr.code)
             {
                 case LVN_KEYDOWN:
+                {
+                    LV_KEYDOWN *pKeyDown = (LV_KEYDOWN *)lParam;
+                    if (pKeyDown->wVKey == VK_DELETE)
                     {
-                        LV_KEYDOWN *pKeyDown = (LV_KEYDOWN *)lParam;
-                        if (pKeyDown->wVKey == VK_DELETE)
-                        {
-                            EditTypeDlg_OnDelete(hwndDlg);
-                        }
+                        EditTypeDlg_OnDelete(hwndDlg);
                     }
                     break;
+                }
 
                 case NM_DBLCLK:
                     edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
