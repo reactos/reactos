@@ -109,7 +109,7 @@ AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
 BOOL
 WINAPI
 CopySystemProfile(
-    IN ULONG Unused)
+    _In_ ULONG Unused)
 {
     WCHAR szKeyName[MAX_PATH];
     WCHAR szRawProfilePath[MAX_PATH];
@@ -230,46 +230,6 @@ CopySystemProfile(
         DPRINT1("Failed to copy the default profile directory (Error %lu)\n", GetLastError());
         goto done;
     }
-
-    /* Create user hive file */
-
-#if 0
-    /* Use the default hive file name */
-//    StringCbCopyW(szBuffer, sizeof(szBuffer), szProfilePath);
-    StringCbCatW(szProfilePath, sizeof(szProfilePath), L"\\ntuser.dat");
-
-    /* Acquire restore privilege */
-    if (!AcquireRemoveRestorePrivilege(TRUE))
-    {
-        DPRINT1("Failed to acquire the restore privilege (Error %lu)\n", GetLastError());
-        goto done;
-    }
-
-    /* Load the user hive */
-    dwError = RegLoadKeyW(HKEY_USERS,
-                          SidString.Buffer,
-                          szProfilePath);
-    AcquireRemoveRestorePrivilege(FALSE);
-    if (dwError != ERROR_SUCCESS)
-    {
-        DPRINT1("Failed to load the new registry hive (Error %lu)\n", dwError);
-        goto done;
-    }
-
-    bResult = TRUE;
-
-    /* Initialize the user hive */
-    if (!CreateUserHive(SidString.Buffer, szProfilePath))
-    {
-        DPRINT1("Failed to create the new hive (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-    }
-
-    /* Unload the user hive */
-    AcquireRemoveRestorePrivilege(TRUE);
-    RegUnLoadKeyW(HKEY_USERS, SidString.Buffer);
-    AcquireRemoveRestorePrivilege(FALSE);
-#endif
 
     bResult = TRUE;
 

@@ -1279,7 +1279,17 @@ InstallReactOS(VOID)
         CreateDirectory(szBuffer, NULL);
     }
 
-    SaveDefaultUserHive();
+    if (SaveDefaultUserHive() != ERROR_SUCCESS)
+    {
+        FatalError("SaveDefaultUserHive() failed");
+        return 0;
+    }
+
+    if (!CopySystemProfile(0))
+    {
+        FatalError("CopySystemProfile() failed");
+        return 0;
+    }
 
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
 
