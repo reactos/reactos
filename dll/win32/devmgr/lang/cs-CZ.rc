@@ -313,6 +313,7 @@ BEGIN
   IDS_HINT_UNINSTALL    " Odinstaluje ovladače vybraného zařízení."
   IDS_HINT_ADD          " Umožní přidat do systému zastaralé zařízení nepodporující Plug and Play."
   IDS_HINT_ABOUT        " Ukončí program.."
+  IDS_HINT_EXIT         " Exits the program."
 
   IDS_HINT_DEV_BY_TYPE  " Zobrazí zařízení podle typu hardwaru."
   IDS_HINT_DEV_BY_CONN  " Zobrazí zařízení podle typu připojení."
