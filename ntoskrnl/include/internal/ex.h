@@ -2,7 +2,7 @@
 
 /* GLOBAL VARIABLES *********************************************************/
 
-extern TIME_ZONE_INFORMATION ExpTimeZoneInfo;
+extern RTL_TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 extern ULONG ExpTickCountMultiplier;
@@ -1417,7 +1417,7 @@ ExTryToAcquireResourceExclusiveLite(
 
 NTSTATUS
 ExpSetTimeZoneInformation(
-    IN PTIME_ZONE_INFORMATION TimeZoneInformation
+    IN PRTL_TIME_ZONE_INFORMATION TimeZoneInformation
 );
 
 BOOLEAN

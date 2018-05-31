@@ -1939,9 +1939,9 @@ QSI_DEF(SystemLegacyDriverInformation)
 /* Class 44 - Current Time Zone Information */
 QSI_DEF(SystemCurrentTimeZoneInformation)
 {
-    *ReqSize = sizeof(TIME_ZONE_INFORMATION);
+    *ReqSize = sizeof(RTL_TIME_ZONE_INFORMATION);
 
-    if (sizeof(TIME_ZONE_INFORMATION) != Size)
+    if (sizeof(RTL_TIME_ZONE_INFORMATION) != Size)
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
@@ -1949,7 +1949,7 @@ QSI_DEF(SystemCurrentTimeZoneInformation)
     /* Copy the time zone information struct */
     memcpy(Buffer,
            &ExpTimeZoneInfo,
-           sizeof(TIME_ZONE_INFORMATION));
+           sizeof(RTL_TIME_ZONE_INFORMATION));
 
     return STATUS_SUCCESS;
 }
@@ -1958,12 +1958,12 @@ QSI_DEF(SystemCurrentTimeZoneInformation)
 SSI_DEF(SystemCurrentTimeZoneInformation)
 {
     /* Check user buffer's size */
-    if (Size < sizeof(TIME_ZONE_INFORMATION))
+    if (Size < sizeof(RTL_TIME_ZONE_INFORMATION))
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    return ExpSetTimeZoneInformation((PTIME_ZONE_INFORMATION)Buffer);
+    return ExpSetTimeZoneInformation((PRTL_TIME_ZONE_INFORMATION)Buffer);
 }
 
 static

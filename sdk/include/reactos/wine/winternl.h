@@ -102,6 +102,7 @@ typedef struct _FILETIME
 } FILETIME, *PFILETIME, *LPFILETIME;
 #endif /* _FILETIME_ */
 
+#if 0
 /*
  * RTL_SYSTEM_TIME and RTL_TIME_ZONE_INFORMATION are the same as
  * the SYSTEMTIME and TIME_ZONE_INFORMATION structures defined
@@ -120,14 +121,26 @@ typedef struct _RTL_SYSTEM_TIME {
     WORD wSecond;
     WORD wMilliseconds;
 } RTL_SYSTEM_TIME, *PRTL_SYSTEM_TIME;
+#endif
+
+typedef struct _TIME_FIELDS {
+    CSHORT Year;
+    CSHORT Month;
+    CSHORT Day;
+    CSHORT Hour;
+    CSHORT Minute;
+    CSHORT Second;
+    CSHORT Milliseconds;
+    CSHORT Weekday;
+} TIME_FIELDS, *PTIME_FIELDS;
 
 typedef struct _RTL_TIME_ZONE_INFORMATION {
     LONG Bias;
     WCHAR StandardName[32];
-    RTL_SYSTEM_TIME StandardDate;
+    TIME_FIELDS StandardDate;
     LONG StandardBias;
     WCHAR DaylightName[32];
-    RTL_SYSTEM_TIME DaylightDate;
+    TIME_FIELDS DaylightDate;
     LONG DaylightBias;
 } RTL_TIME_ZONE_INFORMATION, *PRTL_TIME_ZONE_INFORMATION;
 
@@ -135,10 +148,10 @@ typedef struct _RTL_TIME_DYNAMIC_ZONE_INFORMATION
 {
     LONG Bias;
     WCHAR StandardName[32];
-    RTL_SYSTEM_TIME StandardDate;
+    TIME_FIELDS StandardDate;
     LONG StandardBias;
     WCHAR DaylightName[32];
-    RTL_SYSTEM_TIME DaylightDate;
+    TIME_FIELDS DaylightDate;
     LONG DaylightBias;
     WCHAR TimeZoneKeyName[128];
     BOOLEAN DynamicDaylightTimeDisabled;
@@ -1646,17 +1659,6 @@ typedef struct _SYSTEM_TIME_ADJUSTMENT {
     ULONG   TimeAdjustment;
     BOOLEAN TimeAdjustmentDisabled;
 } SYSTEM_TIME_ADJUSTMENT, *PSYSTEM_TIME_ADJUSTMENT;
-
-typedef struct _TIME_FIELDS
-{   CSHORT Year;
-    CSHORT Month;
-    CSHORT Day;
-    CSHORT Hour;
-    CSHORT Minute;
-    CSHORT Second;
-    CSHORT Milliseconds;
-    CSHORT Weekday;
-} TIME_FIELDS, *PTIME_FIELDS;
 
 typedef struct _WINSTATIONINFORMATIONW {
   BYTE Reserved2[70];

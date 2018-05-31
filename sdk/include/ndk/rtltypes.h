@@ -1662,38 +1662,19 @@ typedef struct _RTL_ATOM_TABLE
     PRTL_ATOM_TABLE_ENTRY Buckets[1];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
-#ifndef _WINBASE_
 //
-// System Time and Timezone Structures
+// Timezone Information
 //
-typedef struct _SYSTEMTIME
-{
-    USHORT wYear;
-    USHORT wMonth;
-    USHORT wDayOfWeek;
-    USHORT wDay;
-    USHORT wHour;
-    USHORT wMinute;
-    USHORT wSecond;
-    USHORT wMilliseconds;
-} SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
-
-typedef struct _TIME_ZONE_INFORMATION
+typedef struct _RTL_TIME_ZONE_INFORMATION
 {
     LONG Bias;
     WCHAR StandardName[32];
-    SYSTEMTIME StandardDate;
+    TIME_FIELDS StandardDate;
     LONG StandardBias;
     WCHAR DaylightName[32];
-    SYSTEMTIME DaylightDate;
+    TIME_FIELDS DaylightDate;
     LONG DaylightBias;
-} TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
-#endif /* !_WINBASE_ */
-
-//
-// Native version of Timezone Structure
-//
-typedef LPTIME_ZONE_INFORMATION PRTL_TIME_ZONE_INFORMATION;
+} RTL_TIME_ZONE_INFORMATION, *PRTL_TIME_ZONE_INFORMATION;
 
 //
 // Hotpatch Header
