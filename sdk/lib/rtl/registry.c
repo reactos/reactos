@@ -96,17 +96,25 @@ RtlpQueryRegistryDirect(IN ULONG ValueType,
         }
         else
         {
-            /* Check if there's space for the length and type, plus data */
-            if (*Length < (2 * sizeof(ULONG) + ValueLength))
+            if (ValueType != REG_BINARY)
             {
-                /* Nope, fail */
-                return STATUS_BUFFER_TOO_SMALL;
-            }
+                /* Check if there's space for the length and type, plus data */
+                if (*Length < (2 * sizeof(ULONG) + ValueLength))
+                {
+                    /* Nope, fail */
+                    return STATUS_BUFFER_TOO_SMALL;
+                }
 
-            /* Return the data */
-            *Length++ = ValueLength;
-            *Length++ = ValueType;
-            RtlCopyMemory(Length, ValueData, ValueLength);
+                /* Return the data */
+                *Length++ = ValueLength;
+                *Length++ = ValueType;
+                RtlCopyMemory(Length, ValueData, ValueLength);
+            }
+            else
+            {
+                /* Return the REG_BINARY data */
+                RtlCopyMemory(Length, ValueData, ValueLength);
+            }
         }
     }
 
