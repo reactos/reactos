@@ -32,6 +32,9 @@ list(APPEND SOURCE
     dialogs/drive.cpp
     dialogs/drvdefext.cpp
     dialogs/folder_options.cpp
+    dialogs/general.cpp
+    dialogs/view.cpp
+    dialogs/filetypes.cpp
     dialogs/filedefext.cpp
     dialogs/fprop.cpp
     dialogs/recycler_prop.cpp
