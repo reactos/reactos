@@ -1769,24 +1769,23 @@ HRESULT STDMETHODCALLTYPE
 CShellLink::Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
 {
     SHFILEINFOW info;
-    HIMAGELIST himl;
 
     if (phiconLarge)
     {
-        himl = (HIMAGELIST)SHGetFileInfoW(pszFile, 0, &info, sizeof(info),
-                                          SHGFI_SYSICONINDEX | SHGFI_LARGEICON | SHGFI_LINKOVERLAY);
-        if (!himl)
+        SHGetFileInfoW(pszFile, 0, &info, sizeof(info),
+                       SHGFI_ICON | SHGFI_LARGEICON | SHGFI_LINKOVERLAY);
+        *phiconLarge = info.hIcon;
+        if (!info.hIcon)
             return E_FAIL;
-        *phiconLarge = ImageList_GetIcon(himl, info.iIcon, ILD_NORMAL | ILD_TRANSPARENT);
     }
 
     if (phiconSmall)
     {
-        himl = (HIMAGELIST)SHGetFileInfoW(pszFile, 0, &info, sizeof(info),
-                                          SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_LINKOVERLAY);
-        if (!himl)
+        SHGetFileInfoW(pszFile, 0, &info, sizeof(info),
+                       SHGFI_ICON | SHGFI_SMALLICON | SHGFI_LINKOVERLAY);
+        *phiconSmall = info.hIcon;
+        if (!info.hIcon)
             return E_FAIL;
-        *phiconSmall = ImageList_GetIcon(himl, info.iIcon, ILD_NORMAL | ILD_TRANSPARENT);
     }
 
     return S_OK;
