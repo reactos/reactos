@@ -114,9 +114,7 @@ DoFileTypeIconLocation(PFILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
     // Expand the REG_EXPAND_SZ string by environment variables
     WCHAR szLocation[MAX_PATH + 32];
     if (!ExpandEnvironmentStringsW(IconLocation, szLocation, _countof(szLocation)))
-    {
         return;
-    }
 
     Entry->nIconIndex = PathParseIconLocationW(szLocation);
     StringCbCopyW(Entry->IconPath, sizeof(Entry->IconPath), szLocation);
@@ -165,7 +163,8 @@ GetFileTypeIconsByKey(HKEY hKey, PFILE_TYPE_ENTRY Entry)
         return FALSE;
 
     // Get the icon location
-    WCHAR szLocation[MAX_PATH + 32] = { 0 };
+    WCHAR szLocation[MAX_PATH + 32];
+    szLocation[0] = 0;
     DWORD dwSize = sizeof(szLocation);
     nResult = RegQueryValueExW(hDefIconKey, NULL, NULL, NULL, LPBYTE(szLocation), &dwSize);
 
@@ -180,7 +179,7 @@ GetFileTypeIconsByKey(HKEY hKey, PFILE_TYPE_ENTRY Entry)
 static BOOL
 QueryFileDescription(LPCWSTR ProgramPath, LPWSTR pszName, INT cchName)
 {
-    SHFILEINFOW FileInfo = { 0 };
+    SHFILEINFOW FileInfo;
     if (SHGetFileInfoW(ProgramPath, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
     {
         StringCchCopyW(pszName, cchName, FileInfo.szDisplayName);
@@ -204,6 +203,8 @@ SetFileTypeEntryDefaultIcon(PFILE_TYPE_ENTRY Entry)
 
 /////////////////////////////////////////////////////////////////////////////
 // EditTypeDlg
+
+#define LISTBOX_MARGIN  2
 
 typedef struct EDITTYPE_DIALOG
 {
@@ -291,10 +292,10 @@ EditTypeDlg_OnDrawItem(HWND hwndDlg, LPDRAWITEMSTRUCT pDraw, PEDITTYPE_DIALOG pE
         if (hFont2)
         {
             HGDIOBJ hFontOld = SelectObject(pDraw->hDC, hFont2);
-            InflateRect(&pDraw->rcItem, -2, -2);
+            InflateRect(&pDraw->rcItem, -LISTBOX_MARGIN, -LISTBOX_MARGIN);
             DrawTextW(pDraw->hDC, szText, -1, &pDraw->rcItem,
                       DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-            InflateRect(&pDraw->rcItem, 2, 2);
+            InflateRect(&pDraw->rcItem, LISTBOX_MARGIN, LISTBOX_MARGIN);
             SelectObject(pDraw->hDC, hFontOld);
             DeleteObject(hFont2);
         }
@@ -302,10 +303,10 @@ EditTypeDlg_OnDrawItem(HWND hwndDlg, LPDRAWITEMSTRUCT pDraw, PEDITTYPE_DIALOG pE
     else
     {
         // non-default
-        InflateRect(&pDraw->rcItem, -2, -2);
+        InflateRect(&pDraw->rcItem, -LISTBOX_MARGIN, -LISTBOX_MARGIN);
         DrawTextW(pDraw->hDC, szText, -1, &pDraw->rcItem,
                   DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-        InflateRect(&pDraw->rcItem, 2, 2);
+        InflateRect(&pDraw->rcItem, LISTBOX_MARGIN, LISTBOX_MARGIN);
     }
 
     // draw focus rect
@@ -324,16 +325,12 @@ EditTypeDlg_OnMeasureItem(HWND hwndDlg, LPMEASUREITEMSTRUCT pMeasure, PEDITTYPE_
 
     HWND hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
 
-    RECT rc;
-    GetClientRect(hwndLB, &rc);
-
     HDC hDC = GetDC(hwndLB);
     if (hDC)
     {
         TEXTMETRICW tm;
         GetTextMetricsW(hDC, &tm);
-        pMeasure->itemWidth = rc.right - rc.left;
-        pMeasure->itemHeight = tm.tmHeight + 4;
+        pMeasure->itemHeight = tm.tmHeight + LISTBOX_MARGIN * 2;
         ReleaseDC(hwndLB, hDC);
         return TRUE;
     }
@@ -721,7 +718,7 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     // Search the next "ft%06u" key name
     do
     {
-        StringCbPrintfW(szKey, sizeof(szKey), TEXT("ft%06u"), dwValue);
+        StringCbPrintfW(szKey, sizeof(szKey), L"ft%06u", dwValue);
 
         nResult = RegOpenKeyEx(HKEY_CLASSES_ROOT, szKey, 0, KEY_READ, &hKey);
         if (nResult != ERROR_SUCCESS)
@@ -747,7 +744,7 @@ FileTypesDlg_AddExt(HWND hwndDlg, LPCWSTR pszExt, LPCWSTR pszFileType)
     WCHAR szExt[16];
     if (*pszExt == L'.')
         ++pszExt;
-    StringCbPrintfW(szExt, sizeof(szExt), TEXT(".%s"), pszExt);
+    StringCbPrintfW(szExt, sizeof(szExt), L".%s", pszExt);
     _wcslwr(szExt);
     nResult = RegCreateKeyEx(HKEY_CLASSES_ROOT, szExt, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
     _wcsupr(szExt);
@@ -862,13 +859,12 @@ ActionDlg_OnBrowse(HWND hwndDlg, PACTION_DIALOG pNewAct, BOOL bEdit = FALSE)
 static void
 NewActionDlg_OnOK(HWND hwndDlg, PACTION_DIALOG pNewAct)
 {
+    // check action
     GetDlgItemTextW(hwndDlg, IDC_ACTION_ACTION, pNewAct->szAction, _countof(pNewAct->szAction));
-    GetDlgItemTextW(hwndDlg, IDC_ACTION_APP, pNewAct->szApp, _countof(pNewAct->szApp));
     StrTrimW(pNewAct->szAction, g_pszSpace);
-    StrTrimW(pNewAct->szApp, g_pszSpace);
     if (pNewAct->szAction[0] == 0)
     {
-        // action is empty, error
+        // action was empty, error
         HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_ACTION);
         SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
         SetFocus(hwndCtrl);
@@ -877,9 +873,14 @@ NewActionDlg_OnOK(HWND hwndDlg, PACTION_DIALOG pNewAct)
         MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
         return;
     }
-    if (pNewAct->szApp[0] == 0 || GetFileAttributesW(pNewAct->szApp) == 0xFFFFFFFF)
+
+    // check app
+    GetDlgItemTextW(hwndDlg, IDC_ACTION_APP, pNewAct->szApp, _countof(pNewAct->szApp));
+    StrTrimW(pNewAct->szApp, g_pszSpace);
+    if (pNewAct->szApp[0] == 0 ||
+        GetFileAttributesW(pNewAct->szApp) == INVALID_FILE_ATTRIBUTES)
     {
-        // app is invalid
+        // app was empty or invalid
         HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_APP);
         SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
         SetFocus(hwndCtrl);
@@ -888,6 +889,7 @@ NewActionDlg_OnOK(HWND hwndDlg, PACTION_DIALOG pNewAct)
         MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
         return;
     }
+
     EndDialog(hwndDlg, IDOK);
 }
 
@@ -931,12 +933,12 @@ NewActionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static void
 EditActionDlg_OnOK(HWND hwndDlg, PACTION_DIALOG pEditAct)
 {
+    // check action
     GetDlgItemTextW(hwndDlg, IDC_ACTION_ACTION, pEditAct->szAction, _countof(pEditAct->szAction));
-    GetDlgItemTextW(hwndDlg, IDC_ACTION_APP, pEditAct->szApp, _countof(pEditAct->szApp));
     StrTrimW(pEditAct->szAction, g_pszSpace);
-    StrTrimW(pEditAct->szApp, g_pszSpace);
     if (pEditAct->szAction[0] == 0)
     {
+        // action was empty. show error
         HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_ACTION);
         SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
         SetFocus(hwndCtrl);
@@ -944,8 +946,13 @@ EditActionDlg_OnOK(HWND hwndDlg, PACTION_DIALOG pEditAct)
         CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
         MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
     }
+
+    // check app
+    GetDlgItemTextW(hwndDlg, IDC_ACTION_APP, pEditAct->szApp, _countof(pEditAct->szApp));
+    StrTrimW(pEditAct->szApp, g_pszSpace);
     if (pEditAct->szApp[0] == 0)
     {
+        // app was empty. show error
         HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_APP);
         SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
         SetFocus(hwndCtrl);
@@ -953,6 +960,7 @@ EditActionDlg_OnOK(HWND hwndDlg, PACTION_DIALOG pEditAct)
         CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
         MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
     }
+
     EndDialog(hwndDlg, IDOK);
 }
 
