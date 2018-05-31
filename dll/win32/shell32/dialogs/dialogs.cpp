@@ -164,6 +164,14 @@ static void NoIconsInFile(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext)
     DoLoadIcons(hwndDlg, pIconContext, s_pszDefaultPath);
 }
 
+// icon size
+#define CX_ICON 32
+#define CY_ICON 32
+
+// item size
+#define CX_ITEM 36
+#define CY_ITEM 44
+
 INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -187,7 +195,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pIconContext);
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
 
-        SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, 32, 0);
+        SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, CX_ITEM, 0);
 
         // load icons
         if (!DoLoadIcons(hwndDlg, pIconContext, pIconContext->szPath))
@@ -276,8 +284,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
 
         case WM_MEASUREITEM:
             lpmis = (LPMEASUREITEMSTRUCT) lParam;
-            lpmis->itemHeight = 32;
-            lpmis->itemWidth = 64;
+            lpmis->itemHeight = CY_ITEM;
             return TRUE;
 
         case WM_DRAWITEM:
@@ -290,6 +297,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
             {
                 case ODA_SELECT:
                 case ODA_DRAWENTIRE:
+                {
                     index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
                     hIcon = pIconContext->phIcons[lpdis->itemID];
 
@@ -298,9 +306,13 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                     else
                         FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)(COLOR_WINDOW + 1));
 
-                    DrawIconEx(lpdis->hDC, lpdis->rcItem.left,lpdis->rcItem.top, hIcon,
-                               0, 0, 0, NULL, DI_NORMAL);
+                    // centering
+                    INT x = lpdis->rcItem.left + (CX_ITEM - CX_ICON) / 2;
+                    INT y = lpdis->rcItem.top + (CY_ITEM - CY_ICON) / 2;
+
+                    DrawIconEx(lpdis->hDC, x, y, hIcon, 0, 0, 0, NULL, DI_NORMAL);
                     break;
+                }
             }
             return TRUE;
     }
