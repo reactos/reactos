@@ -165,12 +165,12 @@ static void NoIconsInFile(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext)
 }
 
 // icon size
-#define CX_ICON 32
-#define CY_ICON 32
+#define CX_ICON     GetSystemMetrics(SM_CXICON)
+#define CY_ICON     GetSystemMetrics(SM_CYICON)
 
 // item size
-#define CX_ITEM 36
-#define CY_ITEM 44
+#define CX_ITEM     (CX_ICON + 4)
+#define CY_ITEM     (CY_ICON + 12)
 
 INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     UINT uMsg,
