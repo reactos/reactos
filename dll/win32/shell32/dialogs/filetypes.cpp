@@ -163,8 +163,7 @@ GetFileTypeIconsByKey(HKEY hKey, PFILE_TYPE_ENTRY Entry)
         return FALSE;
 
     // Get the icon location
-    WCHAR szLocation[MAX_PATH + 32];
-    szLocation[0] = 0;
+    WCHAR szLocation[MAX_PATH + 32] = { 0 };
     DWORD dwSize = sizeof(szLocation);
     nResult = RegQueryValueExW(hDefIconKey, NULL, NULL, NULL, LPBYTE(szLocation), &dwSize);
 
@@ -179,7 +178,7 @@ GetFileTypeIconsByKey(HKEY hKey, PFILE_TYPE_ENTRY Entry)
 static BOOL
 QueryFileDescription(LPCWSTR ProgramPath, LPWSTR pszName, INT cchName)
 {
-    SHFILEINFOW FileInfo;
+    SHFILEINFOW FileInfo = { 0 };
     if (SHGetFileInfoW(ProgramPath, 0, &FileInfo, sizeof(FileInfo), SHGFI_DISPLAYNAME))
     {
         StringCchCopyW(pszName, cchName, FileInfo.szDisplayName);
