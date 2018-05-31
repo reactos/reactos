@@ -61,6 +61,9 @@ WINE_DECLARE_DEBUG_CHANNEL(d3d_bytecode);
 #define WINED3D_SM4_GLOBAL_FLAGS_SHIFT          11
 #define WINED3D_SM4_GLOBAL_FLAGS_MASK           (0xffu << WINED3D_SM4_GLOBAL_FLAGS_SHIFT)
 
+#define WINED3D_SM5_PRECISE_SHIFT               19
+#define WINED3D_SM5_PRECISE_MASK                (0xfu << WINED3D_SM5_PRECISE_SHIFT)
+
 #define WINED3D_SM5_CONTROL_POINT_COUNT_SHIFT   11
 #define WINED3D_SM5_CONTROL_POINT_COUNT_MASK    (0xffu << WINED3D_SM5_CONTROL_POINT_COUNT_SHIFT)
 
@@ -315,6 +318,7 @@ enum wined3d_sm4_register_type
     WINED3D_SM4_RT_PRIMID                  = 0x0b,
     WINED3D_SM4_RT_DEPTHOUT                = 0x0c,
     WINED3D_SM4_RT_NULL                    = 0x0d,
+    WINED3D_SM4_RT_RASTERIZER              = 0x0e,
     WINED3D_SM4_RT_OMASK                   = 0x0f,
     WINED3D_SM5_RT_STREAM                  = 0x10,
     WINED3D_SM5_RT_FUNCTION_BODY           = 0x11,
@@ -1129,7 +1133,7 @@ static const enum wined3d_shader_register_type register_type_table[] =
     /* WINED3D_SM4_RT_PRIMID */                  WINED3DSPR_PRIMID,
     /* WINED3D_SM4_RT_DEPTHOUT */                WINED3DSPR_DEPTHOUT,
     /* WINED3D_SM4_RT_NULL */                    WINED3DSPR_NULL,
-    /* UNKNOWN */                                ~0u,
+    /* WINED3D_SM4_RT_RASTERIZER */              WINED3DSPR_RASTERIZER,
     /* WINED3D_SM4_RT_OMASK */                   WINED3DSPR_SAMPLEMASK,
     /* WINED3D_SM5_RT_STREAM */                  WINED3DSPR_STREAM,
     /* WINED3D_SM5_RT_FUNCTION_BODY */           WINED3DSPR_FUNCTIONBODY,
@@ -1218,6 +1222,43 @@ static enum wined3d_data_type map_data_type(char t)
     }
 }
 
+enum wined3d_shader_type wined3d_get_sm4_shader_type(const DWORD *byte_code, size_t byte_code_size)
+{
+    DWORD shader_type;
+
+    if (byte_code_size / sizeof(*byte_code) < 1)
+    {
+        WARN("Invalid byte code size %lu.\n", (long)byte_code_size);
+        return WINED3D_SHADER_TYPE_INVALID;
+    }
+
+    shader_type = byte_code[0] >> 16;
+    switch (shader_type)
+    {
+        case WINED3D_SM4_PS:
+            return WINED3D_SHADER_TYPE_PIXEL;
+            break;
+        case WINED3D_SM4_VS:
+            return WINED3D_SHADER_TYPE_VERTEX;
+            break;
+        case WINED3D_SM4_GS:
+            return WINED3D_SHADER_TYPE_GEOMETRY;
+            break;
+        case WINED3D_SM5_HS:
+            return WINED3D_SHADER_TYPE_HULL;
+            break;
+        case WINED3D_SM5_DS:
+            return WINED3D_SHADER_TYPE_DOMAIN;
+            break;
+        case WINED3D_SM5_CS:
+            return WINED3D_SHADER_TYPE_COMPUTE;
+            break;
+        default:
+            FIXME("Unrecognised shader type %#x.\n", shader_type);
+            return WINED3D_SHADER_TYPE_INVALID;
+    }
+}
+
 static void *shader_sm4_init(const DWORD *byte_code, size_t byte_code_size,
         const struct wined3d_shader_signature *output_signature)
 {
@@ -1251,35 +1292,13 @@ static void *shader_sm4_init(const DWORD *byte_code, size_t byte_code_size,
     priv->start = &byte_code[2];
     priv->end = &byte_code[token_count];
 
-    switch (version_token >> 16)
+    priv->shader_version.type = wined3d_get_sm4_shader_type(byte_code, byte_code_size);
+    if (priv->shader_version.type == WINED3D_SHADER_TYPE_INVALID)
     {
-        case WINED3D_SM4_PS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_PIXEL;
-            break;
-
-        case WINED3D_SM4_VS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_VERTEX;
-            break;
-
-        case WINED3D_SM4_GS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_GEOMETRY;
-            break;
-
-        case WINED3D_SM5_HS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_HULL;
-            break;
-
-        case WINED3D_SM5_DS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_DOMAIN;
-            break;
-
-        case WINED3D_SM5_CS:
-            priv->shader_version.type = WINED3D_SHADER_TYPE_COMPUTE;
-            break;
-
-        default:
-            FIXME("Unrecognised shader type %#x.\n", version_token >> 16);
+        heap_free(priv);
+        return NULL;
     }
+
     priv->shader_version.major = WINED3D_SM4_VERSION_MAJOR(version_token);
     priv->shader_version.minor = WINED3D_SM4_VERSION_MINOR(version_token);
 
@@ -1628,6 +1647,7 @@ static void shader_sm4_read_instruction(void *data, const DWORD **ptr, struct wi
     unsigned int i, len;
     SIZE_T remaining;
     const DWORD *p;
+    DWORD precise;
 
     list_move_head(&priv->src_free, &priv->src);
 
@@ -1702,12 +1722,13 @@ static void shader_sm4_read_instruction(void *data, const DWORD **ptr, struct wi
             shader_sm4_read_instruction_modifier(previous_token = *p++, ins);
 
         ins->flags = (opcode_token & WINED3D_SM4_INSTRUCTION_FLAGS_MASK) >> WINED3D_SM4_INSTRUCTION_FLAGS_SHIFT;
-
         if (ins->flags & WINED3D_SM4_INSTRUCTION_FLAG_SATURATE)
         {
             ins->flags &= ~WINED3D_SM4_INSTRUCTION_FLAG_SATURATE;
             instruction_dst_modifier = WINED3DSPDM_SATURATE;
         }
+        precise = (opcode_token & WINED3D_SM5_PRECISE_MASK) >> WINED3D_SM5_PRECISE_SHIFT;
+        ins->flags |= precise << WINED3DSI_PRECISE_SHIFT;
 
         for (i = 0; i < ins->dst_count; ++i)
         {

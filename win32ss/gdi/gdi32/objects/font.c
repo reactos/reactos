@@ -448,35 +448,34 @@ GetCharacterPlacementW(
     UINT i, nSet;
     DPRINT("GetCharacterPlacementW\n");
 
-    if(dwFlags&(~GCP_REORDER)) DPRINT("flags 0x%08lx ignored\n", dwFlags);
-    if(lpResults->lpClass) DPRINT("classes not implemented\n");
+    if (dwFlags&(~GCP_REORDER)) DPRINT("flags 0x%08lx ignored\n", dwFlags);
+    if (lpResults->lpClass) DPRINT("classes not implemented\n");
     if (lpResults->lpCaretPos && (dwFlags & GCP_REORDER))
         DPRINT("Caret positions for complex scripts not implemented\n");
 
     nSet = (UINT)uCount;
-    if(nSet > lpResults->nGlyphs)
+    if (nSet > lpResults->nGlyphs)
         nSet = lpResults->nGlyphs;
 
     /* return number of initialized fields */
     lpResults->nGlyphs = nSet;
 
-    /*if((dwFlags&GCP_REORDER)==0 || !BidiAvail)
-      {*/
+    if (dwFlags & GCP_REORDER)
+    {
+        if (LoadLPK(LPK_GCP))
+            return LpkGetCharacterPlacement(hdc, lpString, uCount, nMaxExtent, lpResults, dwFlags, 0);
+    }
+
     /* Treat the case where no special handling was requested in a fastpath way */
-    /* copy will do if the GCP_REORDER flag is not set */
-    if(lpResults->lpOutString)
+    /* copy will do if the GCP_REORDER flag is not set */ 
+    if (lpResults->lpOutString)
         lstrcpynW( lpResults->lpOutString, lpString, nSet );
 
-    if(lpResults->lpOrder)
+    if (lpResults->lpOrder)
     {
-        for(i = 0; i < nSet; i++)
+        for (i = 0; i < nSet; i++)
             lpResults->lpOrder[i] = i;
     }
-    /*} else
-      {
-          BIDI_Reorder( lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
-                        nSet, lpResults->lpOrder );
-      }*/
 
     /* FIXME: Will use the placement chars */
     if (lpResults->lpDx)

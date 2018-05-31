@@ -36,11 +36,14 @@ typedef struct
     WCHAR FileExtension[30];
     WCHAR FileDescription[100];
     WCHAR ClassKey[MAX_PATH];
+    WCHAR ClassName[64];
     DWORD EditFlags;
     WCHAR AppName[64];
     HICON hIconLarge;
     HICON hIconSmall;
     WCHAR ProgramPath[MAX_PATH];
+    WCHAR IconPath[MAX_PATH];
+    INT nIconIndex;
 } FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
 
 // uniquely-defined icon entry for Advanced Settings
@@ -996,6 +999,7 @@ ViewDlg_ToggleCheckItem(HWND hwndDlg, HTREEITEM hItem)
         case AETYPE_CHECKBOX:
             pEntry->bChecked = !pEntry->bChecked;
             break;
+
         case AETYPE_RADIO:
             // reset all the entries of the same parent
             for (i = 0; i < s_AdvancedCount; ++i)
@@ -1013,6 +1017,7 @@ ViewDlg_ToggleCheckItem(HWND hwndDlg, HTREEITEM hItem)
             }
             pEntry->bChecked = TRUE;
             break;
+
         default:
             return FALSE;   // failure
     }
@@ -1286,6 +1291,7 @@ FolderOptionsViewDlg(
     {
         case WM_INITDIALOG:
             return ViewDlg_OnInitDialog(hwndDlg);
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -1294,23 +1300,28 @@ FolderOptionsViewDlg(
                     break;
             }
             break;
+
         case WM_NOTIFY:
             switch (LPNMHDR(lParam)->code)
             {
                 case NM_CLICK:  // clicked on treeview
                     ViewDlg_OnTreeViewClick(hwndDlg);
                     break;
+
                 case NM_CUSTOMDRAW:     // custom draw (for graying)
                     Draw = (NMTVCUSTOMDRAW *)lParam;
                     Result = ViewDlg_OnTreeCustomDraw(hwndDlg, Draw);
                     SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, Result);
                     return Result;
+
                 case TVN_KEYDOWN:       // key is down
                     ViewDlg_OnTreeViewKeyDown(hwndDlg, (TV_KEYDOWN *)lParam);
                     break;
+
                 case PSN_APPLY:         // [Apply] is clicked
                     ViewDlg_Apply(hwndDlg);
                     break;
+
                 default:
                     break;
             }
@@ -1443,9 +1454,10 @@ DoFileTypeIconLocation(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
         return;
     }
 
-    INT nIndex = PathParseIconLocationW(szLocation);
-    Entry->hIconLarge = DoExtractIcon(Entry, szLocation, nIndex, FALSE);
-    Entry->hIconSmall = DoExtractIcon(Entry, szLocation, nIndex, TRUE);
+    Entry->nIconIndex = PathParseIconLocationW(szLocation);
+    StringCchCopyW(Entry->IconPath, _countof(Entry->IconPath), szLocation);
+    Entry->hIconLarge = DoExtractIcon(Entry, szLocation, Entry->nIconIndex, FALSE);
+    Entry->hIconSmall = DoExtractIcon(Entry, szLocation, Entry->nIconIndex, TRUE);
 }
 
 static BOOL
@@ -1460,6 +1472,8 @@ GetFileTypeIconsEx(PFOLDER_FILE_TYPE_ENTRY Entry, LPCWSTR IconLocation)
         Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_EXE));
         Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_EXE), IMAGE_ICON,
             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0));
+        StringCchCopyW(Entry->IconPath, _countof(Entry->IconPath), L"%SystemRoot%\\system32\\shell32.dll");
+        Entry->nIconIndex = -IDI_SHELL_EXE;
     }
     else if (lstrcmpW(IconLocation, L"%1") == 0)
     {
@@ -1510,6 +1524,18 @@ QueryFileDescription(LPCWSTR ProgramPath, LPWSTR pszName, INT cchName)
     return !!GetFileTitleW(ProgramPath, pszName, cchName);
 }
 
+static void
+SetFileTypeEntryDefaultIcon(PFOLDER_FILE_TYPE_ENTRY Entry)
+{
+    Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
+    INT cxSmall = GetSystemMetrics(SM_CXSMICON);
+    INT cySmall = GetSystemMetrics(SM_CYSMICON);
+    Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
+                                         IMAGE_ICON, cxSmall, cySmall, 0));
+    StringCchCopyW(Entry->IconPath, _countof(Entry->IconPath), L"%SystemRoot%\\system32\\shell32.dll");
+    Entry->nIconIndex = -IDI_SHELL_FOLDER_OPTIONS;
+}
+
 static BOOL
 InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
 {
@@ -1551,12 +1577,16 @@ InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
         Entry->ClassKey[0] = 0;
     }
 
+    Entry->ClassName[0] = 0;
     if (Entry->ClassKey[0])
     {
         HKEY hTemp;
         /* try open linked key */
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, Entry->ClassKey, 0, KEY_READ, &hTemp) == ERROR_SUCCESS)
         {
+            DWORD dwSize = sizeof(Entry->ClassName);
+            RegQueryValueExW(hTemp, NULL, NULL, NULL, LPBYTE(Entry->ClassName), &dwSize);
+
             /* use linked key */
             RegCloseKey(hKey);
             hKey = hTemp;
@@ -1590,11 +1620,7 @@ InsertFileType(HWND hListView, LPCWSTR szName, INT iItem, LPCWSTR szFile)
     if (!GetFileTypeIconsByKey(hKey, Entry))
     {
         // set default icon
-        Entry->hIconLarge = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
-        INT cxSmall = GetSystemMetrics(SM_CXSMICON);
-        INT cySmall = GetSystemMetrics(SM_CYSMICON);
-        Entry->hIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS),
-                                             IMAGE_ICON, cxSmall, cySmall, 0));
+        SetFileTypeEntryDefaultIcon(Entry);
     }
 
     /* close key */
@@ -1759,7 +1785,6 @@ GetListViewEntry(HWND hListView, INT iItem = -1)
 
 struct NEWEXT_DIALOG
 {
-    HWND hwndDlg;
     HWND hwndLV;
     RECT rcDlg;
     BOOL bAdvanced;
@@ -1844,7 +1869,6 @@ NewExtDlg_OnInitDialog(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
 {
     WCHAR szText[64];
 
-    pNewExt->hwndDlg = hwndDlg;
     pNewExt->bAdvanced = FALSE;
 
     GetWindowRect(hwndDlg, &pNewExt->rcDlg);
@@ -1865,25 +1889,7 @@ NewExtDlg_OnInitDialog(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     return TRUE;
 }
 
-static void
-StringTrimW(LPWSTR pszText)
-{
-    LPWSTR pch = pszText;
-    while (iswspace(*pch))
-        pch++;
-
-    LPWSTR pchFirst, pchLast;
-    pchFirst = pchLast = pch;
-    while (*pch && !iswspace(*pch))
-    {
-        ++pch;
-        pchLast = pch;
-    }
-
-    INT_PTR cch = pchLast - pchFirst;
-    MoveMemory(pszText, pchFirst, cch * sizeof(WCHAR));
-    pszText[cch] = 0;
-}
+static LPCWSTR s_pszSpace = L" \t\n\r\f\v";
 
 static BOOL
 NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
@@ -1892,11 +1898,11 @@ NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     INT iItem;
 
     GetDlgItemTextW(hwndDlg, IDC_NEWEXT_EDIT, pNewExt->szExt, _countof(pNewExt->szExt));
-    StringTrimW(pNewExt->szExt);
+    StrTrimW(pNewExt->szExt, s_pszSpace);
     CharUpperW(pNewExt->szExt);
 
     GetDlgItemTextW(hwndDlg, IDC_NEWEXT_COMBOBOX, pNewExt->szFileType, _countof(pNewExt->szFileType));
-    StringTrimW(pNewExt->szFileType);
+    StrTrimW(pNewExt->szFileType, s_pszSpace);
 
     if (pNewExt->szExt[0] == 0)
     {
@@ -1981,15 +1987,18 @@ NewExtensionDlgProc(
             s_pNewExt = (NEWEXT_DIALOG *)lParam;
             NewExtDlg_OnInitDialog(hwndDlg, s_pNewExt);
             return TRUE;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
                     NewExtDlg_OnOK(hwndDlg, s_pNewExt);
                     break;
+
                 case IDCANCEL:
                     EndDialog(hwndDlg, IDCANCEL);
                     break;
+
                 case IDC_NEWEXT_ADVANCED:
                     s_pNewExt->bAdvanced = !s_pNewExt->bAdvanced;
                     NewExtDlg_OnAdvanced(hwndDlg, s_pNewExt);
@@ -2144,6 +2153,763 @@ FileTypesDlg_OnItemChanging(HWND hwndDlg, PFOLDER_FILE_TYPE_ENTRY pEntry)
         EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), TRUE);
 }
 
+struct EDITTYPE_DIALOG
+{
+    HWND hwndLV;
+    FOLDER_FILE_TYPE_ENTRY *pEntry;
+    CSimpleMap<CStringW, CStringW> CommandLineMap;
+    WCHAR szIconPath[MAX_PATH];
+    INT nIconIndex;
+    WCHAR szDefaultVerb[64];
+};
+
+static BOOL
+EditTypeDlg_ReadClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR ClassKey)
+{
+    // open class key
+    HKEY hClassKey;
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_READ, &hClassKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    // open "shell" key
+    HKEY hShellKey;
+    if (RegOpenKeyExW(hClassKey, L"shell", 0, KEY_READ, &hShellKey) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hClassKey);
+        return FALSE;
+    }
+
+    WCHAR DefaultVerb[64];
+    DWORD dwSize = sizeof(DefaultVerb);
+    if (RegQueryValueExW(hShellKey, NULL, NULL, NULL, LPBYTE(DefaultVerb), &dwSize) == ERROR_SUCCESS)
+    {
+        StringCchCopyW(pEditType->szDefaultVerb, _countof(pEditType->szDefaultVerb), DefaultVerb);
+    }
+    else
+    {
+        StringCchCopyW(pEditType->szDefaultVerb, _countof(pEditType->szDefaultVerb), L"open");
+    }
+
+    // enumerate shell verbs
+    WCHAR szVerbName[64];
+    DWORD dwIndex = 0;
+    while (RegEnumKeyW(hShellKey, dwIndex, szVerbName, _countof(szVerbName)) == ERROR_SUCCESS)
+    {
+        // open verb key
+        HKEY hVerbKey;
+        LONG nResult = RegOpenKeyExW(hShellKey, szVerbName, 0, KEY_READ, &hVerbKey);
+        if (nResult == ERROR_SUCCESS)
+        {
+            // open command key
+            HKEY hCommandKey;
+            nResult = RegOpenKeyExW(hVerbKey, L"command", 0, KEY_READ, &hCommandKey);
+            if (nResult == ERROR_SUCCESS)
+            {
+                // get command line
+                WCHAR szValue[MAX_PATH + 32];
+                dwSize = sizeof(szValue);
+                nResult = RegQueryValueExW(hCommandKey, NULL, NULL, NULL, LPBYTE(szValue), &dwSize);
+                if (nResult == ERROR_SUCCESS)
+                {
+                    pEditType->CommandLineMap.SetAt(szVerbName, szValue);
+                }
+
+                RegCloseKey(hCommandKey);
+            }
+
+            RegCloseKey(hVerbKey);
+        }
+        SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_ADDSTRING, 0, LPARAM(szVerbName));
+        ++dwIndex;
+    }
+
+    RegCloseKey(hShellKey);
+    RegCloseKey(hClassKey);
+
+    return TRUE;
+}
+
+static BOOL
+EditTypeDlg_WriteClass(HWND hwndDlg, EDITTYPE_DIALOG *pEditType,
+                       LPCWSTR ClassKey, LPCWSTR ClassName, INT cchName)
+{
+    FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
+
+    if (ClassKey[0] == 0)
+        return FALSE;
+
+    // create or open class key
+    HKEY hClassKey;
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, NULL, 0, KEY_WRITE, NULL, &hClassKey, NULL) != ERROR_SUCCESS)
+        return FALSE;
+
+    // create "DefaultIcon" key
+    if (pEntry->IconPath[0])
+    {
+        HKEY hDefaultIconKey;
+        if (RegCreateKeyExW(hClassKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE, NULL, &hDefaultIconKey, NULL) == ERROR_SUCCESS)
+        {
+            WCHAR szText[MAX_PATH];
+            StringCchPrintfW(szText, _countof(szText), L"%s,%d", pEntry->IconPath, pEntry->nIconIndex);
+
+            // set icon location
+            DWORD dwSize = (lstrlenW(szText) + 1) * sizeof(WCHAR);
+            RegSetValueExW(hDefaultIconKey, NULL, 0, REG_EXPAND_SZ, LPBYTE(szText), dwSize);
+
+            RegCloseKey(hDefaultIconKey);
+        }
+    }
+
+    // create "shell" key
+    HKEY hShellKey;
+    if (RegCreateKeyExW(hClassKey, L"shell", 0, NULL, 0, KEY_WRITE, NULL, &hShellKey, NULL) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hClassKey);
+        return FALSE;
+    }
+
+    // delete shell commands
+    WCHAR szVerbName[64];
+    DWORD dwIndex = 0;
+    while (RegEnumKeyW(hShellKey, dwIndex, szVerbName, _countof(szVerbName)) == ERROR_SUCCESS)
+    {
+        if (pEditType->CommandLineMap.FindKey(szVerbName) == -1)
+        {
+            // doesn't exist in CommandLineMap, then delete it
+            if (SHDeleteKeyW(hShellKey, szVerbName) == ERROR_SUCCESS)
+            {
+                --dwIndex;
+            }
+        }
+        ++dwIndex;
+    }
+
+    // set default action
+    RegSetValueExW(hShellKey, NULL, 0, REG_SZ, LPBYTE(pEditType->szDefaultVerb), sizeof(pEditType->szDefaultVerb));
+
+    // write shell commands
+    const INT nCount = pEditType->CommandLineMap.GetSize();
+    for (INT i = 0; i < nCount; ++i)
+    {
+        CStringW& key = pEditType->CommandLineMap.GetKeyAt(i);
+        CStringW& value = pEditType->CommandLineMap.GetValueAt(i);
+
+        // create verb key
+        HKEY hVerbKey;
+        if (RegCreateKeyExW(hShellKey, key, 0, NULL, 0, KEY_WRITE, NULL, &hVerbKey, NULL) == ERROR_SUCCESS)
+        {
+            // create command key
+            HKEY hCommandKey;
+            if (RegCreateKeyExW(hVerbKey, L"command", 0, NULL, 0, KEY_WRITE, NULL, &hCommandKey, NULL) == ERROR_SUCCESS)
+            {
+                // write the default value
+                DWORD dwSize = (value.GetLength() + 1) * sizeof(WCHAR);
+                RegSetValueExW(hCommandKey, NULL, 0, REG_EXPAND_SZ, LPBYTE(LPCWSTR(value)), dwSize);
+
+                RegCloseKey(hCommandKey);
+            }
+
+            RegCloseKey(hVerbKey);
+        }
+    }
+
+    // set class name to class key
+    RegSetValueExW(hClassKey, NULL, 0, REG_SZ, LPBYTE(ClassName), cchName);
+
+    RegCloseKey(hShellKey);
+    RegCloseKey(hClassKey);
+
+    return TRUE;
+}
+
+static BOOL
+EditTypeDlg_OnInitDialog(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
+{
+    FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
+    StringCchCopyW(pEditType->szIconPath, _countof(pEditType->szIconPath), pEntry->IconPath);
+    pEditType->nIconIndex = pEntry->nIconIndex;
+    StringCchCopyW(pEditType->szDefaultVerb, _countof(pEditType->szDefaultVerb), L"open");
+
+    // set info
+    SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_ICON, STM_SETICON, (WPARAM)pEntry->hIconLarge, 0);
+    SetDlgItemTextW(hwndDlg, IDC_EDITTYPE_TEXT, pEntry->ClassName);
+    EditTypeDlg_ReadClass(hwndDlg, pEditType, pEntry->ClassKey);
+    InvalidateRect(GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX), NULL, TRUE);
+
+    // is listbox empty?
+    if (SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_GETCOUNT, 0, 0) == 0)
+    {
+        EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_EDIT_BUTTON), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_REMOVE), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_SET_DEFAULT), FALSE);
+    }
+    else
+    {
+        // select first item
+        SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_SETCURSEL, 0, 0);
+    }
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_SAME_WINDOW), FALSE);
+
+    return TRUE;
+}
+
+static BOOL
+EditTypeDlg_OnRemove(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
+{
+    // get current selection
+    INT iItem = SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_GETCURSEL, 0, 0);
+    if (iItem == LB_ERR)
+        return FALSE;
+
+    // ask user for removal
+    CStringW strText(MAKEINTRESOURCEW(IDS_REMOVE_ACTION));
+    CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+    if (MessageBoxW(hwndDlg, strText, strTitle, MB_ICONINFORMATION | MB_YESNO) == IDNO)
+        return FALSE;
+
+    // get text
+    WCHAR szText[64];
+    szText[0] = 0;
+    SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_GETTEXT, iItem, (LPARAM)szText);
+    StrTrimW(szText, s_pszSpace);
+
+    // remove it
+    pEditType->CommandLineMap.Remove(szText);
+    SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_DELETESTRING, iItem, 0);
+    return TRUE;
+}
+
+static BOOL
+EditTypeDlg_UpdateEntryIcon(HWND hwndDlg, EDITTYPE_DIALOG *pEditType, LPCWSTR IconPath, INT IconIndex)
+{
+    FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
+
+    BOOL bIconSet = FALSE;
+    if (IconPath && IconPath[0])
+    {
+        DestroyIcon(pEntry->hIconLarge);
+        DestroyIcon(pEntry->hIconSmall);
+        pEntry->hIconLarge = DoExtractIcon(pEntry, IconPath, IconIndex, FALSE);
+        pEntry->hIconSmall = DoExtractIcon(pEntry, IconPath, IconIndex, TRUE);
+
+        bIconSet = (pEntry->hIconLarge && pEntry->hIconSmall);
+    }
+    if (bIconSet)
+    {
+        StringCchCopyW(pEntry->IconPath, _countof(pEntry->IconPath), IconPath);
+        pEntry->nIconIndex = IconIndex;
+    }
+    else
+    {
+        SetFileTypeEntryDefaultIcon(pEntry);
+    }
+
+    HWND hListView = pEditType->hwndLV;
+    HIMAGELIST himlLarge = ListView_GetImageList(hListView, LVSIL_NORMAL);
+    HIMAGELIST himlSmall = ListView_GetImageList(hListView, LVSIL_SMALL);
+
+    INT iLargeImage = ImageList_AddIcon(himlLarge, pEntry->hIconLarge);
+    INT iSmallImage = ImageList_AddIcon(himlSmall, pEntry->hIconSmall);
+    ASSERT(iLargeImage == iSmallImage);
+
+    INT iItem = ListView_GetNextItem(hListView, -1, LVNI_SELECTED);
+    if (iItem != -1)
+    {
+        LV_ITEMW Item = { LVIF_IMAGE, iItem };
+        Item.iImage = iSmallImage;
+        ListView_SetItem(hListView, &Item);
+    }
+    return TRUE;
+}
+
+static void
+EditTypeDlg_OnOK(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
+{
+    FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
+
+    // get class name
+    GetDlgItemTextW(hwndDlg, IDC_EDITTYPE_TEXT, pEntry->ClassName, _countof(pEntry->ClassName));
+    StrTrimW(pEntry->ClassName, s_pszSpace);
+
+    // update entry icon
+    EditTypeDlg_UpdateEntryIcon(hwndDlg, pEditType, pEditType->szIconPath, pEditType->nIconIndex);
+
+    // write registry
+    EditTypeDlg_WriteClass(hwndDlg, pEditType, pEntry->ClassKey, pEntry->ClassName, _countof(pEntry->ClassName));
+
+    // update the icon cache
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
+
+    EndDialog(hwndDlg, IDOK);
+}
+
+struct ACTION_DIALOG
+{
+    HWND hwndLB;
+    WCHAR ClassName[64];
+    WCHAR szAction[64];
+    WCHAR szApp[MAX_PATH];
+    BOOL bUseDDE;
+};
+
+static void
+NewAct_OnOK(HWND hwndDlg, ACTION_DIALOG *pNewAct)
+{
+    GetDlgItemTextW(hwndDlg, IDC_ACTION_ACTION, pNewAct->szAction, _countof(pNewAct->szAction));
+    GetDlgItemTextW(hwndDlg, IDC_ACTION_APP, pNewAct->szApp, _countof(pNewAct->szApp));
+    StrTrimW(pNewAct->szAction, s_pszSpace);
+    StrTrimW(pNewAct->szApp, s_pszSpace);
+    if (pNewAct->szAction[0] == 0)
+    {
+        // action is empty, error
+        HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_ACTION);
+        SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
+        SetFocus(hwndCtrl);
+        CStringW strText(MAKEINTRESOURCEW(IDS_SPECIFY_ACTION));
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+        MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
+        return;
+    }
+    if (pNewAct->szApp[0] == 0 || GetFileAttributesW(pNewAct->szApp) == 0xFFFFFFFF)
+    {
+        // app is invalid
+        HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_APP);
+        SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
+        SetFocus(hwndCtrl);
+        CStringW strText(MAKEINTRESOURCEW(IDS_INVALID_PROGRAM));
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+        MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
+        return;
+    }
+    EndDialog(hwndDlg, IDOK);
+}
+
+static void
+Action_OnBrowse(HWND hwndDlg, ACTION_DIALOG *pNewAct, BOOL bEdit = FALSE)
+{
+    WCHAR szFile[MAX_PATH];
+    szFile[0] = 0;
+
+    WCHAR szFilter[MAX_PATH];
+    LoadStringW(shell32_hInstance, IDS_EXE_FILTER, szFilter, _countof(szFilter));
+
+    CStringW strTitle(MAKEINTRESOURCEW(IDS_OPEN_WITH));
+
+    OPENFILENAMEW ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400W;
+    ofn.hwndOwner = hwndDlg;
+    ofn.lpstrFilter = szFilter;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = _countof(szFile);
+    ofn.lpstrTitle = strTitle;
+    ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = L"exe";
+    if (GetOpenFileNameW(&ofn))
+    {
+        if (bEdit)
+        {
+            CStringW str = szFile;
+            str += L" \"%1\"";
+            SetDlgItemTextW(hwndDlg, IDC_ACTION_APP, str);
+        }
+        else
+        {
+            SetDlgItemTextW(hwndDlg, IDC_ACTION_APP, szFile);
+        }
+    }
+}
+
+INT_PTR CALLBACK
+NewActionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    static ACTION_DIALOG *s_pNewAct = NULL;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            s_pNewAct = (ACTION_DIALOG *)lParam;
+            s_pNewAct->bUseDDE = FALSE;
+            EnableWindow(GetDlgItem(hwndDlg, IDC_ACTION_USE_DDE), FALSE);
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    NewAct_OnOK(hwndDlg, s_pNewAct);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
+
+                case IDC_ACTION_BROWSE:
+                    Action_OnBrowse(hwndDlg, s_pNewAct, FALSE);
+                    break;
+            }
+            break;
+    }
+    return 0;
+}
+
+static void
+EditAct_OnOK(HWND hwndDlg, ACTION_DIALOG *pEditAct)
+{
+    GetDlgItemTextW(hwndDlg, IDC_ACTION_ACTION, pEditAct->szAction, _countof(pEditAct->szAction));
+    GetDlgItemTextW(hwndDlg, IDC_ACTION_APP, pEditAct->szApp, _countof(pEditAct->szApp));
+    StrTrimW(pEditAct->szAction, s_pszSpace);
+    StrTrimW(pEditAct->szApp, s_pszSpace);
+    if (pEditAct->szAction[0] == 0)
+    {
+        HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_ACTION);
+        SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
+        SetFocus(hwndCtrl);
+        CStringW strText(MAKEINTRESOURCEW(IDS_SPECIFY_ACTION));
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+        MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
+    }
+    if (pEditAct->szApp[0] == 0)
+    {
+        HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_APP);
+        SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
+        SetFocus(hwndCtrl);
+        CStringW strText(MAKEINTRESOURCEW(IDS_INVALID_PROGRAM));
+        CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+        MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
+    }
+    EndDialog(hwndDlg, IDOK);
+}
+
+INT_PTR CALLBACK
+EditActionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    static ACTION_DIALOG *s_pEditAct = NULL;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            s_pEditAct = (ACTION_DIALOG *)lParam;
+            s_pEditAct->bUseDDE = FALSE;
+            SetDlgItemTextW(hwndDlg, IDC_ACTION_ACTION, s_pEditAct->szAction);
+            SetDlgItemTextW(hwndDlg, IDC_ACTION_APP, s_pEditAct->szApp);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_ACTION_USE_DDE), FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_ACTION_ACTION), FALSE);
+            {
+                // set title
+                CStringW str(MAKEINTRESOURCEW(IDS_EDITING_ACTION));
+                str += s_pEditAct->ClassName;
+                SetWindowTextW(hwndDlg, str);
+            }
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EditAct_OnOK(hwndDlg, s_pEditAct);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
+
+                case IDC_ACTION_BROWSE:
+                    Action_OnBrowse(hwndDlg, s_pEditAct, TRUE);
+                    break;
+            }
+            break;
+    }
+    return 0;
+}
+
+static void
+EditTypeDlg_OnChangeIcon(HWND hwndDlg, EDITTYPE_DIALOG *pEditType)
+{
+    WCHAR szPath[MAX_PATH];
+    INT IconIndex;
+
+    ExpandEnvironmentStringsW(pEditType->szIconPath, szPath, _countof(szPath));
+    IconIndex = pEditType->nIconIndex;
+    if (PickIconDlg(hwndDlg, szPath, _countof(szPath), &IconIndex))
+    {
+        // replace Windows directory with "%SystemRoot%" (for portability)
+        WCHAR szWinDir[MAX_PATH];
+        GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
+        if (wcsstr(szPath, szWinDir) == 0)
+        {
+            CStringW str(L"%SystemRoot%");
+            str += &szPath[wcslen(szWinDir)];
+            StringCchCopyW(szPath, _countof(szPath), LPCWSTR(str));
+        }
+
+        // update FOLDER_FILE_TYPE_ENTRY
+        FOLDER_FILE_TYPE_ENTRY *pEntry = pEditType->pEntry;
+        DestroyIcon(pEntry->hIconLarge);
+        DestroyIcon(pEntry->hIconSmall);
+        pEntry->hIconLarge = DoExtractIcon(pEntry, szPath, IconIndex, FALSE);
+        pEntry->hIconSmall = DoExtractIcon(pEntry, szPath, IconIndex, TRUE);
+
+        // update EDITTYPE_DIALOG
+        StringCchCopyW(pEditType->szIconPath, _countof(pEditType->szIconPath), szPath);
+        pEditType->nIconIndex = IconIndex;
+
+        // set icon to dialog
+        SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_ICON, STM_SETICON, (WPARAM)pEntry->hIconLarge, 0);
+    }
+}
+
+static BOOL
+EditTypeDlg_OnDrawItem(HWND hwndDlg, LPDRAWITEMSTRUCT pDraw, EDITTYPE_DIALOG *pEditType)
+{
+    WCHAR szText[64];
+    HFONT hFont, hFont2;
+
+    if (!pDraw)
+        return FALSE;
+
+    // fill rect and set colors
+    if (pDraw->itemState & ODS_SELECTED)
+    {
+        FillRect(pDraw->hDC, &pDraw->rcItem, HBRUSH(COLOR_HIGHLIGHT + 1));
+        SetTextColor(pDraw->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+        SetBkColor(pDraw->hDC, GetSysColor(COLOR_HIGHLIGHT));
+    }
+    else
+    {
+        FillRect(pDraw->hDC, &pDraw->rcItem, HBRUSH(COLOR_WINDOW + 1));
+        SetTextColor(pDraw->hDC, GetSysColor(COLOR_WINDOWTEXT));
+        SetBkColor(pDraw->hDC, GetSysColor(COLOR_WINDOW));
+    }
+
+    // get listbox text
+    SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_GETTEXT, pDraw->itemID, (LPARAM)szText);
+
+    // is it default?
+    hFont = (HFONT)SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, WM_GETFONT, 0, 0);
+    if (lstrcmpiW(pEditType->szDefaultVerb, szText) == 0)
+    {
+        // default. set bold
+        LOGFONTW lf;
+        GetObject(hFont, sizeof(lf), &lf);
+        lf.lfWeight = FW_BOLD;
+        hFont2 = CreateFontIndirectW(&lf);
+        if (hFont2)
+        {
+            HGDIOBJ hFontOld = SelectObject(pDraw->hDC, hFont2);
+            InflateRect(&pDraw->rcItem, -2, -2);
+            DrawTextW(pDraw->hDC, szText, -1, &pDraw->rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+            InflateRect(&pDraw->rcItem, 2, 2);
+            SelectObject(pDraw->hDC, hFontOld);
+            DeleteObject(hFont2);
+        }
+    }
+    else
+    {
+        // non-default
+        InflateRect(&pDraw->rcItem, -2, -2);
+        DrawTextW(pDraw->hDC, szText, -1, &pDraw->rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+        InflateRect(&pDraw->rcItem, 2, 2);
+    }
+
+    // draw focus rect
+    if (pDraw->itemState & ODS_FOCUS)
+    {
+        DrawFocusRect(pDraw->hDC, &pDraw->rcItem);
+    }
+    return TRUE;
+}
+
+static BOOL
+EditTypeDlg_OnMeasureItem(HWND hwndDlg, LPMEASUREITEMSTRUCT pMeasure, EDITTYPE_DIALOG *pEditType)
+{
+    if (!pMeasure)
+        return FALSE;
+
+    HWND hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
+
+    RECT rc;
+    GetClientRect(hwndLB, &rc);
+
+    HDC hDC = GetDC(hwndLB);
+    if (hDC)
+    {
+        TEXTMETRICW tm;
+        GetTextMetricsW(hDC, &tm);
+        pMeasure->itemWidth = rc.right - rc.left;
+        pMeasure->itemHeight = tm.tmHeight + 4;
+        ReleaseDC(hwndLB, hDC);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static void
+EditTypeDlg_OnCommand(HWND hwndDlg, UINT id, UINT code, EDITTYPE_DIALOG *pEditType)
+{
+    INT iItem, iIndex;
+    ACTION_DIALOG action;
+    switch (id)
+    {
+        case IDOK:
+            EditTypeDlg_OnOK(hwndDlg, pEditType);
+            break;
+
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDCANCEL);
+            break;
+
+        case IDC_EDITTYPE_CHANGE_ICON:
+            EditTypeDlg_OnChangeIcon(hwndDlg, pEditType);
+            break;
+
+        case IDC_EDITTYPE_NEW:
+            action.bUseDDE = FALSE;
+            action.hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
+            StringCchPrintfW(action.ClassName, _countof(action.ClassName), pEditType->pEntry->ClassName);
+            // open 'New Action' dialog
+            if (IDOK == DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_ACTION), hwndDlg,
+                                        NewActionDlgProc, LPARAM(&action)))
+            {
+                if (SendMessageW(action.hwndLB, LB_FINDSTRING, -1, (LPARAM)action.szAction) != LB_ERR)
+                {
+                    // already exists, error
+                    HWND hwndCtrl = GetDlgItem(hwndDlg, IDC_ACTION_ACTION);
+                    SendMessageW(hwndCtrl, EM_SETSEL, 0, -1);
+                    SetFocus(hwndCtrl);
+
+                    CStringW strText, strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+                    strText.Format(IDS_ACTION_EXISTS, action.szAction);
+                    MessageBoxW(hwndDlg, strText, strTitle, MB_ICONERROR);
+                }
+                else
+                {
+                    // add it
+                    CStringW strCommandLine = action.szApp;
+                    strCommandLine += L" \"%1\"";
+                    pEditType->CommandLineMap.SetAt(action.szAction, strCommandLine);
+                    SendMessageW(action.hwndLB, LB_ADDSTRING, 0, LPARAM(action.szAction));
+                    if (SendMessageW(action.hwndLB, LB_GETCOUNT, 0, 0) == 1)
+                    {
+                        // set default
+                        StringCchCopyW(pEditType->szDefaultVerb, _countof(pEditType->szDefaultVerb), action.szAction);
+                        InvalidateRect(action.hwndLB, NULL, TRUE);
+                    }
+                }
+            }
+            break;
+
+        case IDC_EDITTYPE_LISTBOX:
+            if (code == LBN_SELCHANGE)
+            {
+                action.hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
+                INT iItem = SendMessageW(action.hwndLB, LB_GETCURSEL, 0, 0);
+                SendMessageW(action.hwndLB, LB_GETTEXT, iItem, LPARAM(action.szAction));
+                if (lstrcmpiW(action.szAction, pEditType->szDefaultVerb) == 0)
+                {
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_SET_DEFAULT), FALSE);
+                }
+                else
+                {
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_SET_DEFAULT), TRUE);
+                }
+                break;
+            }
+            else if (code != LBN_DBLCLK)
+            {
+                break;
+            }
+            // FALL THROUGH
+
+        case IDC_EDITTYPE_EDIT_BUTTON:
+            action.bUseDDE = FALSE;
+            action.hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
+            StringCchPrintfW(action.ClassName, _countof(action.ClassName), pEditType->pEntry->ClassName);
+            iItem = SendMessageW(action.hwndLB, LB_GETCURSEL, 0, 0);
+            if (iItem == LB_ERR)
+                break;
+
+            // get action
+            SendMessageW(action.hwndLB, LB_GETTEXT, iItem, LPARAM(action.szAction));
+
+            // get app
+            {
+                iIndex = pEditType->CommandLineMap.FindKey(action.szAction);
+                CStringW str = pEditType->CommandLineMap.GetValueAt(iIndex);
+                StringCchCopyW(action.szApp, _countof(action.szApp), LPCWSTR(str));
+            }
+
+            // open dialog
+            if (IDOK == DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_ACTION), hwndDlg,
+                                        EditActionDlgProc, LPARAM(&action)))
+            {
+                SendMessageW(action.hwndLB, LB_DELETESTRING, iItem, 0);
+                SendMessageW(action.hwndLB, LB_INSERTSTRING, iItem, LPARAM(action.szAction));
+                pEditType->CommandLineMap.SetAt(action.szAction, action.szApp);
+            }
+            break;
+
+        case IDC_EDITTYPE_REMOVE:
+            EditTypeDlg_OnRemove(hwndDlg, pEditType);
+            break;
+
+        case IDC_EDITTYPE_SET_DEFAULT:
+            action.hwndLB = GetDlgItem(hwndDlg, IDC_EDITTYPE_LISTBOX);
+            iItem = SendMessageW(action.hwndLB, LB_GETCURSEL, 0, 0);
+            if (iItem == LB_ERR)
+                break;
+
+            SendMessageW(action.hwndLB, LB_GETTEXT, iItem, LPARAM(action.szAction));
+
+            // set default
+            StringCchCopyW(pEditType->szDefaultVerb, _countof(pEditType->szDefaultVerb), action.szAction);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_SET_DEFAULT), FALSE);
+            InvalidateRect(action.hwndLB, NULL, TRUE);
+            break;
+    }
+}
+
+INT_PTR CALLBACK
+EditTypeDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    static EDITTYPE_DIALOG *s_pEditType = NULL;
+    LPDRAWITEMSTRUCT pDraw;
+    LPMEASUREITEMSTRUCT pMeasure;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            s_pEditType = (EDITTYPE_DIALOG *)lParam;
+            return EditTypeDlg_OnInitDialog(hwndDlg, s_pEditType);
+
+        case WM_DRAWITEM:
+            pDraw = LPDRAWITEMSTRUCT(lParam);
+            return EditTypeDlg_OnDrawItem(hwndDlg, pDraw, s_pEditType);
+
+        case WM_MEASUREITEM:
+            pMeasure = LPMEASUREITEMSTRUCT(lParam);
+            return EditTypeDlg_OnMeasureItem(hwndDlg, pMeasure, s_pEditType);
+
+        case WM_COMMAND:
+            EditTypeDlg_OnCommand(hwndDlg, LOWORD(wParam), HIWORD(wParam), s_pEditType);
+            break;
+    }
+
+    return 0;
+}
+
+static void
+EditTypeDlg_OnDelete(HWND hwndDlg)
+{
+    CStringW strRemoveExt(MAKEINTRESOURCEW(IDS_REMOVE_EXT));
+    CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
+    if (MessageBoxW(hwndDlg, strRemoveExt, strTitle, MB_ICONQUESTION | MB_YESNO) == IDYES)
+    {
+        FileTypesDlg_RemoveExt(hwndDlg);
+    }
+}
+
 // IDD_FOLDER_OPTIONS_FILETYPES dialog
 INT_PTR
 CALLBACK
@@ -2157,6 +2923,7 @@ FolderOptionsFileTypesDlg(
     PFOLDER_FILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
     NEWEXT_DIALOG newext;
+    EDITTYPE_DIALOG edittype;
 
     switch(uMsg)
     {
@@ -2180,16 +2947,11 @@ FolderOptionsFileTypesDlg(
                         FileTypesDlg_AddExt(hwndDlg, newext.szExt, newext.szFileType);
                     }
                     break;
+
                 case IDC_FILETYPES_DELETE:
-                    {
-                        CStringW strRemoveExt(MAKEINTRESOURCEW(IDS_REMOVE_EXT));
-                        CStringW strTitle(MAKEINTRESOURCEW(IDS_FILE_TYPES));
-                        if (MessageBoxW(hwndDlg, strRemoveExt, strTitle, MB_ICONQUESTION | MB_YESNO) == IDYES)
-                        {
-                            FileTypesDlg_RemoveExt(hwndDlg);
-                        }
-                    }
+                    EditTypeDlg_OnDelete(hwndDlg);
                     break;
+
                 case IDC_FILETYPES_CHANGE:
                     pItem = GetListViewEntry(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pItem)
@@ -2199,6 +2961,13 @@ FolderOptionsFileTypesDlg(
                         SHOpenWithDialog(hwndDlg, &Info);
                     }
                     break;
+
+                case IDC_FILETYPES_ADVANCED:
+                    edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+                    edittype.pEntry = GetListViewEntry(edittype.hwndLV);
+                    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_EDITTYPE),
+                                    hwndDlg, EditTypeDlgProc, (LPARAM)&edittype);
+                    break;
             }
             break;
 
@@ -2206,6 +2975,23 @@ FolderOptionsFileTypesDlg(
             lppl = (LPNMLISTVIEW) lParam;
             switch (lppl->hdr.code)
             {
+                case LVN_KEYDOWN:
+                {
+                    LV_KEYDOWN *pKeyDown = (LV_KEYDOWN *)lParam;
+                    if (pKeyDown->wVKey == VK_DELETE)
+                    {
+                        EditTypeDlg_OnDelete(hwndDlg);
+                    }
+                    break;
+                }
+
+                case NM_DBLCLK:
+                    edittype.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+                    edittype.pEntry = GetListViewEntry(edittype.hwndLV);
+                    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_EDITTYPE),
+                                    hwndDlg, EditTypeDlgProc, (LPARAM)&edittype);
+                    break;
+
                 case LVN_DELETEALLITEMS:
                     return FALSE;   // send LVN_DELETEITEM
 
@@ -2222,7 +3008,9 @@ FolderOptionsFileTypesDlg(
                 case LVN_ITEMCHANGING:
                     pItem = GetListViewEntry(lppl->hdr.hwndFrom, lppl->iItem);
                     if (!pItem)
+                    {
                         return TRUE;
+                    }
 
                     if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
                     {
@@ -2286,11 +3074,13 @@ Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
         case 0:
             ShowFolderOptionsDialog(hWnd, hInst);
             break;
+
         case 1:
             // show taskbar options dialog
             FIXME("notify explorer to show taskbar options dialog");
             //PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
             break;
+
         default:
             FIXME("unrecognized options id %d\n", fOptions);
     }

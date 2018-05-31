@@ -783,12 +783,11 @@ static inline FileAsyncReader *impl_from_IAsyncReader(IAsyncReader *iface)
     return CONTAINING_RECORD(iface, FileAsyncReader, IAsyncReader_iface);
 }
 
-static HRESULT WINAPI FileAsyncReaderPin_QueryAccept(IPin *iface, const AM_MEDIA_TYPE *pmt)
+static HRESULT WINAPI FileAsyncReaderPin_CheckMediaType(BasePin *pin, const AM_MEDIA_TYPE *pmt)
 {
-    FileAsyncReader *This = impl_from_IPin(iface);
-    AM_MEDIA_TYPE *pmt_filter = impl_from_IBaseFilter(This->pin.pin.pinInfo.pFilter)->pmt;
+    AM_MEDIA_TYPE *pmt_filter = impl_from_IBaseFilter(pin->pinInfo.pFilter)->pmt;
 
-    FIXME("(%p, %p)\n", iface, pmt);
+    FIXME("(%p, %p)\n", pin, pmt);
 
     if (IsEqualGUID(&pmt->majortype, &pmt_filter->majortype) &&
         IsEqualGUID(&pmt->subtype, &pmt_filter->subtype) &&
@@ -874,7 +873,7 @@ static const IPinVtbl FileAsyncReaderPin_Vtbl =
     BasePinImpl_QueryPinInfo,
     BasePinImpl_QueryDirection,
     BasePinImpl_QueryId,
-    FileAsyncReaderPin_QueryAccept,
+    BasePinImpl_QueryAccept,
     BasePinImpl_EnumMediaTypes,
     BasePinImpl_QueryInternalConnections,
     BaseOutputPinImpl_EndOfStream,
@@ -933,7 +932,7 @@ static HRESULT WINAPI FileAsyncReaderPin_DecideBufferSize(BaseOutputPin *iface, 
 
 static const BaseOutputPinFuncTable output_BaseOutputFuncTable = {
     {
-        NULL,
+        FileAsyncReaderPin_CheckMediaType,
         FileAsyncReaderPin_AttemptConnection,
         BasePinImpl_GetMediaTypeVersion,
         FileAsyncReaderPin_GetMediaType

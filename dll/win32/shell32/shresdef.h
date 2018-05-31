@@ -266,6 +266,13 @@
 #define IDS_NEWEXT_ALREADY_ASSOC                    30520
 #define IDS_NEWEXT_EXT_IN_USE                       30521
 
+#define IDS_SPECIFY_ACTION                          30523
+#define IDS_INVALID_PROGRAM                         30524
+#define IDS_REMOVE_ACTION                           30525
+#define IDS_ACTION_EXISTS                           30526
+#define IDS_EXE_FILTER                              30527
+#define IDS_EDITING_ACTION                          30528
+
 #define IDS_REMOVE_EXT                              30522
 
 #define IDS_NO_ICONS                                30529
@@ -392,13 +399,34 @@
 #define IDC_SHORTEX_RUN_DIFFERENT           14000
 #define IDC_SHORTEX_RUN_SEPARATE            14001
 
+/* Control IDs for IDD_EDITTYPE dialog */
+#define IDC_EDITTYPE_ICON                   14001
+#define IDC_EDITTYPE_TEXT                   14002
+#define IDC_EDITTYPE_CHANGE_ICON            14003
+#define IDC_EDITTYPE_LISTBOX                14004
+#define IDC_EDITTYPE_NEW                    14005
+#define IDC_EDITTYPE_EDIT_BUTTON            14006
+#define IDC_EDITTYPE_REMOVE                 14007
+#define IDC_EDITTYPE_SET_DEFAULT            14008
+#define IDC_EDITTYPE_CONFIRM_OPEN           14009
+#define IDC_EDITTYPE_SHOW_EXT               14010
+#define IDC_EDITTYPE_SAME_WINDOW            14011
+
+/* Control IDs for IDD_ACTION dialog */
+#define IDC_ACTION_ACTION                   14001
+#define IDC_ACTION_APP                      14002
+#define IDC_ACTION_BROWSE                   14003
+#define IDC_ACTION_USE_DDE                  14004
+
 /* Other dialogs */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
 #define IDD_NOOPEN       27
-#define IDD_NEWEXTENSION      28
+#define IDD_NEWEXTENSION 28
+#define IDD_EDITTYPE     36
+#define IDD_ACTION       37
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29

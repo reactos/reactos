@@ -606,7 +606,7 @@ void METAFILE_Free(GpMetafile *metafile)
     if (metafile->record_stream)
         IStream_Release(metafile->record_stream);
 
-    for (i = 0; i < sizeof(metafile->objtable)/sizeof(metafile->objtable[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(metafile->objtable); i++)
         metafile_free_object_table_entry(metafile, i);
 }
 

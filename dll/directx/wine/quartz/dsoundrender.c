@@ -491,7 +491,7 @@ static HRESULT WINAPI DSoundRender_CompleteConnect(BaseRenderer * iface, IPin * 
                        DSBCAPS_GETCURRENTPOSITION2;
     buf_desc.dwBufferBytes = This->buf_size;
     buf_desc.lpwfxFormat = format;
-    hr = IDirectSound_CreateSoundBuffer(This->dsound, &buf_desc, &This->dsbuffer, NULL);
+    hr = IDirectSound8_CreateSoundBuffer(This->dsound, &buf_desc, &This->dsbuffer, NULL);
     This->writepos = This->buf_size;
     if (FAILED(hr))
         ERR("Can't create sound buffer (%x)\n", hr);
@@ -645,14 +645,14 @@ HRESULT DSoundRender_create(IUnknown * pUnkOuter, LPVOID * ppv)
         if (FAILED(hr))
             ERR("Cannot create Direct Sound object (%x)\n", hr);
         else
-            hr = IDirectSound_SetCooperativeLevel(pDSoundRender->dsound, GetDesktopWindow(), DSSCL_PRIORITY);
+            hr = IDirectSound8_SetCooperativeLevel(pDSoundRender->dsound, GetDesktopWindow(), DSSCL_PRIORITY);
         if (SUCCEEDED(hr)) {
             IDirectSoundBuffer *buf;
             DSBUFFERDESC buf_desc;
             memset(&buf_desc,0,sizeof(DSBUFFERDESC));
             buf_desc.dwSize = sizeof(DSBUFFERDESC);
             buf_desc.dwFlags = DSBCAPS_PRIMARYBUFFER;
-            hr = IDirectSound_CreateSoundBuffer(pDSoundRender->dsound, &buf_desc, &buf, NULL);
+            hr = IDirectSound8_CreateSoundBuffer(pDSoundRender->dsound, &buf_desc, &buf, NULL);
             if (SUCCEEDED(hr)) {
                 IDirectSoundBuffer_Play(buf, 0, 0, DSBPLAY_LOOPING);
                 IDirectSoundBuffer_Release(buf);
@@ -736,7 +736,7 @@ static ULONG WINAPI DSoundRender_Release(IBaseFilter * iface)
             IDirectSoundBuffer_Release(This->dsbuffer);
         This->dsbuffer = NULL;
         if (This->dsound)
-            IDirectSound_Release(This->dsound);
+            IDirectSound8_Release(This->dsound);
         This->dsound = NULL;
 
         BasicAudio_Destroy(&This->basicAudio);

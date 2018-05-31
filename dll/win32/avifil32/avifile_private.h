@@ -22,6 +22,8 @@
 #include <windef.h>
 #include <winuser.h>
 
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
+
 #ifndef MAX_AVISTREAMS
 #define MAX_AVISTREAMS 8
 #endif

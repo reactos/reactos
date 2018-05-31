@@ -22,7 +22,6 @@
  * FILE:            base/setup/usetup/inicache.h
  * PURPOSE:         INI file parser that caches contents of INI file in memory
  * PROGRAMMER:      Royce Mitchell III
- *                  Eric Kohl
  */
 
 #pragma once
@@ -72,6 +71,13 @@ typedef enum
 } INSERTION_TYPE;
 
 /* FUNCTIONS ****************************************************************/
+
+NTSTATUS
+IniCacheLoadFromMemory(
+    PINICACHE *Cache,
+    PCHAR FileBuffer,
+    ULONG FileLength,
+    BOOLEAN String);
 
 NTSTATUS
 IniCacheLoad(

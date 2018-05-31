@@ -32,6 +32,7 @@
 #define NO_SHLWAPI_STREAM
 #include <shlwapi.h>
 
+#include <wine/heap.h>
 #include <wine/unicode.h>
 #include <wine/debug.h>
 

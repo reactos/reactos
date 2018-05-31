@@ -1398,10 +1398,46 @@ static GpStatus transform_region_element(region_element* element, GpMatrix *matr
             return Ok;
         case RegionDataRect:
         {
-            /* We can't transform a rectangle, so convert it to a path. */
             GpRegion *new_region;
             GpPath *path;
 
+            if (matrix->matrix[1] == 0.0 && matrix->matrix[2] == 0.0)
+            {
+                GpPointF points[2];
+
+                points[0].X = element->elementdata.rect.X;
+                points[0].Y = element->elementdata.rect.Y;
+                points[1].X = element->elementdata.rect.X + element->elementdata.rect.Width;
+                points[1].Y = element->elementdata.rect.Y + element->elementdata.rect.Height;
+
+                stat = GdipTransformMatrixPoints(matrix, points, 2);
+                if (stat != Ok)
+                    return stat;
+
+                if (points[0].X > points[1].X)
+                {
+                    REAL temp;
+                    temp = points[0].X;
+                    points[0].X = points[1].X;
+                    points[1].X = temp;
+                }
+
+                if (points[0].Y > points[1].Y)
+                {
+                    REAL temp;
+                    temp = points[0].Y;
+                    points[0].Y = points[1].Y;
+                    points[1].Y = temp;
+                }
+
+                element->elementdata.rect.X = points[0].X;
+                element->elementdata.rect.Y = points[0].Y;
+                element->elementdata.rect.Width = points[1].X - points[0].X;
+                element->elementdata.rect.Height = points[1].Y - points[0].Y;
+                return Ok;
+            }
+
+            /* We can't rotate/shear a rectangle, so convert it to a path. */
             stat = GdipCreatePath(FillModeAlternate, &path);
             if (stat == Ok)
             {

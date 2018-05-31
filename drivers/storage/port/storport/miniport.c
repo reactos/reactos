@@ -362,4 +362,21 @@ MiniportHwInterrupt(
     return Result;
 }
 
+
+BOOLEAN
+MiniportStartIo(
+    _In_ PMINIPORT Miniport,
+    _In_ PSCSI_REQUEST_BLOCK Srb)
+{
+    BOOLEAN Result;
+
+    DPRINT1("MiniportHwStartIo(%p %p)\n",
+            Miniport, Srb);
+
+    Result = Miniport->InitData->HwStartIo(&Miniport->MiniportExtension->HwDeviceExtension, Srb);
+    DPRINT1("HwStartIo() returned %u\n", Result);
+
+    return Result;
+}
+
 /* EOF */

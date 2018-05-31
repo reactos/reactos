@@ -51,7 +51,7 @@ SetWelcomeText(HWND hWnd)
     DWORD BufSize, dwType, dwWelcomeSize, dwTitleLength;
     LONG rc;
 
-    TRACE("GetWelcomeText(%p)\n", hWnd);
+    TRACE("SetWelcomeText(%p)\n", hWnd);
 
     /* Get the path of userinit */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
@@ -105,7 +105,7 @@ done:
 
 
 static INT_PTR CALLBACK
-StatusMessageWindowProc(
+StatusDialogProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
     IN WPARAM wParam,
@@ -125,7 +125,7 @@ StatusMessageWindowProc(
 
             if (msg->pTitle)
                 SetWindowTextW(hwndDlg, msg->pTitle);
-            SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, msg->pMessage);
+            SetDlgItemTextW(hwndDlg, IDC_STATUS_MESSAGE, msg->pMessage);
             SetEvent(msg->StartupEvent);
             return TRUE;
         }
@@ -163,9 +163,9 @@ StartupWindowThread(LPVOID lpParam)
 
     DialogBoxParamW(
         hDllInstance,
-        MAKEINTRESOURCEW(IDD_STATUSWINDOW_DLG),
+        MAKEINTRESOURCEW(IDD_STATUS),
         GetDesktopWindow(),
-        StatusMessageWindowProc,
+        StatusDialogProc,
         (LPARAM)lpParam);
 
     HeapFree(GetProcessHeap(), 0, lpParam);
@@ -242,7 +242,7 @@ GUIDisplayStatusMessage(
     if (pTitle)
         SetWindowTextW(pgContext->hStatusWindow, pTitle);
 
-    SetDlgItemTextW(pgContext->hStatusWindow, IDC_STATUSLABEL, pMessage);
+    SetDlgItemTextW(pgContext->hStatusWindow, IDC_STATUS_MESSAGE, pMessage);
 
     return TRUE;
 }
@@ -261,7 +261,7 @@ GUIRemoveStatusMessage(
 }
 
 static INT_PTR CALLBACK
-NoticeWindowProc(
+WelcomeDialogProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
     IN WPARAM wParam,
@@ -318,9 +318,9 @@ GUIDisplaySASNotice(
     /* Display the notice window */
     pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                             pgContext->hDllInstance,
-                                            MAKEINTRESOURCEW(IDD_NOTICE_DLG),
+                                            MAKEINTRESOURCEW(IDD_WELCOME),
                                             GetDesktopWindow(),
-                                            NoticeWindowProc,
+                                            WelcomeDialogProc,
                                             (LPARAM)pgContext);
 }
 
@@ -598,7 +598,7 @@ OnInitSecurityDlg(HWND hwnd,
     wsprintfW(Buffer2, L"%s\\%s", pgContext->DomainName, pgContext->UserName);
     wsprintfW(Buffer4, Buffer1, Buffer2);
 
-    SetDlgItemTextW(hwnd, IDC_LOGONMSG, Buffer4);
+    SetDlgItemTextW(hwnd, IDC_SECURITY_MESSAGE, Buffer4);
 
     LoadStringW(pgContext->hDllInstance, IDS_LOGONDATE, Buffer1, _countof(Buffer1));
 
@@ -610,10 +610,10 @@ OnInitSecurityDlg(HWND hwnd,
 
     wsprintfW(Buffer4, Buffer1, Buffer2, Buffer3);
 
-    SetDlgItemTextW(hwnd, IDC_LOGONDATE, Buffer4);
+    SetDlgItemTextW(hwnd, IDC_SECURITY_LOGONDATE, Buffer4);
 
     if (pgContext->bAutoAdminLogon)
-        EnableWindow(GetDlgItem(hwnd, IDC_LOGOFF), FALSE);
+        EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOGOFF), FALSE);
 }
 
 
@@ -629,7 +629,7 @@ OnChangePassword(
     res = pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
         pgContext->hDllInstance,
-        MAKEINTRESOURCEW(IDD_CHANGE_PASSWORD),
+        MAKEINTRESOURCEW(IDD_CHANGEPWD),
         hwnd,
         ChangePasswordDialogProc,
         (LPARAM)pgContext);
@@ -683,7 +683,7 @@ OnLogOff(
     return pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
         pgContext->hDllInstance,
-        MAKEINTRESOURCEW(IDD_LOGOFF_DLG),
+        MAKEINTRESOURCEW(IDD_LOGOFF),
         hwndDlg,
         LogOffDialogProc,
         (LPARAM)pgContext);
@@ -741,7 +741,7 @@ OnShutDown(
 
 
 static INT_PTR CALLBACK
-LoggedOnWindowProc(
+SecurityDialogProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
     IN WPARAM wParam,
@@ -769,22 +769,22 @@ LoggedOnWindowProc(
         {
             switch (LOWORD(wParam))
             {
-                case IDC_LOCK:
+                case IDC_SECURITY_LOCK:
                     EndDialog(hwndDlg, WLX_SAS_ACTION_LOCK_WKSTA);
                     return TRUE;
-                case IDC_LOGOFF:
+                case IDC_SECURITY_LOGOFF:
                     if (OnLogOff(hwndDlg, pgContext) == IDYES)
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
                     return TRUE;
-                case IDC_SHUTDOWN:
+                case IDC_SECURITY_SHUTDOWN:
                     if (OnShutDown(hwndDlg, pgContext) == IDOK)
                         EndDialog(hwndDlg, pgContext->nShutdownAction);
                     return TRUE;
-                case IDC_CHANGEPWD:
+                case IDC_SECURITY_CHANGEPWD:
                     if (OnChangePassword(hwndDlg, pgContext))
                         EndDialog(hwndDlg, WLX_SAS_ACTION_PWD_CHANGED);
                     return TRUE;
-                case IDC_TASKMGR:
+                case IDC_SECURITY_TASKMGR:
                     EndDialog(hwndDlg, WLX_SAS_ACTION_TASKLIST);
                     return TRUE;
                 case IDCANCEL:
@@ -825,9 +825,9 @@ GUILoggedOnSAS(
     result = pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
         pgContext->hDllInstance,
-        MAKEINTRESOURCEW(IDD_LOGGEDON_DLG),
+        MAKEINTRESOURCEW(IDD_SECURITY),
         GetDesktopWindow(),
-        LoggedOnWindowProc,
+        SecurityDialogProc,
         (LPARAM)pgContext);
 
     if (result < WLX_SAS_ACTION_LOGON ||
@@ -858,13 +858,13 @@ DoLogon(
     BOOL result = FALSE;
     NTSTATUS Status, SubStatus = STATUS_SUCCESS;
 
-    if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
+    if (GetTextboxText(hwndDlg, IDC_LOGON_USERNAME, &UserName) && *UserName == '\0')
         goto done;
 
-    if (GetTextboxText(hwndDlg, IDC_LOGON_TO, &Domain) && *Domain == '\0')
+    if (GetTextboxText(hwndDlg, IDC_LOGON_DOMAIN, &Domain) && *Domain == '\0')
         goto done;
 
-    if (!GetTextboxText(hwndDlg, IDC_PASSWORD, &Password))
+    if (!GetTextboxText(hwndDlg, IDC_LOGON_PASSWORD, &Password))
         goto done;
 
     Status = DoLoginTasks(pgContext, UserName, Domain, Password, &SubStatus);
@@ -1014,7 +1014,7 @@ SetDomainComboBox(
 
 
 static INT_PTR CALLBACK
-LoggedOutWindowProc(
+LogonDialogProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
     IN WPARAM wParam,
@@ -1044,20 +1044,20 @@ LoggedOutWindowProc(
 
             if (pDlgData->pgContext->bAutoAdminLogon ||
                 !pDlgData->pgContext->bDontDisplayLastUserName)
-                SetDlgItemTextW(hwndDlg, IDC_USERNAME, pDlgData->pgContext->UserName);
+                SetDlgItemTextW(hwndDlg, IDC_LOGON_USERNAME, pDlgData->pgContext->UserName);
 
             if (pDlgData->pgContext->bAutoAdminLogon)
-                SetDlgItemTextW(hwndDlg, IDC_PASSWORD, pDlgData->pgContext->Password);
+                SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, pDlgData->pgContext->Password);
 
-            SetDomainComboBox(GetDlgItem(hwndDlg, IDC_LOGON_TO), pDlgData->pgContext);
+            SetDomainComboBox(GetDlgItem(hwndDlg, IDC_LOGON_DOMAIN), pDlgData->pgContext);
 
             if (pDlgData->pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
 
             if (!pDlgData->pgContext->bShutdownWithoutLogon)
-                EnableWindow(GetDlgItem(hwndDlg, IDC_SHUTDOWN), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_LOGON_SHUTDOWN), FALSE);
 
-            SetFocus(GetDlgItem(hwndDlg, pDlgData->pgContext->bDontDisplayLastUserName ? IDC_USERNAME : IDC_PASSWORD));
+            SetFocus(GetDlgItem(hwndDlg, pDlgData->pgContext->bDontDisplayLastUserName ? IDC_LOGON_USERNAME : IDC_LOGON_PASSWORD));
 
             if (pDlgData->pgContext->bAutoAdminLogon)
                 PostMessage(GetDlgItem(hwndDlg, IDOK), BM_CLICK, 0, 0);
@@ -1094,7 +1094,7 @@ LoggedOutWindowProc(
                     EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
                     return TRUE;
 
-                case IDC_SHUTDOWN:
+                case IDC_LOGON_SHUTDOWN:
                     if (OnShutDown(hwndDlg, pDlgData->pgContext) == IDOK)
                         EndDialog(hwndDlg, pDlgData->pgContext->nShutdownAction);
                     return TRUE;
@@ -1177,7 +1177,7 @@ GUILoggedOutSAS(
     {
         pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                 pgContext->hDllInstance,
-                                                MAKEINTRESOURCEW(IDD_LEGALNOTICE_DLG),
+                                                MAKEINTRESOURCEW(IDD_LEGALNOTICE),
                                                 GetDesktopWindow(),
                                                 LegalNoticeDialogProc,
                                                 (LPARAM)&LegalNotice);
@@ -1192,9 +1192,9 @@ GUILoggedOutSAS(
     result = pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
         pgContext->hDllInstance,
-        MAKEINTRESOURCEW(IDD_LOGGEDOUT_DLG),
+        MAKEINTRESOURCEW(IDD_LOGON),
         GetDesktopWindow(),
-        LoggedOutWindowProc,
+        LogonDialogProc,
         (LPARAM)pgContext);
     if (result >= WLX_SAS_ACTION_LOGON &&
         result <= WLX_SAS_ACTION_SWITCH_CONSOLE)
@@ -1239,13 +1239,13 @@ DoUnlock(
     LPWSTR Password = NULL;
     BOOL res = FALSE;
 
-    if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
+    if (GetTextboxText(hwndDlg, IDC_UNLOCK_USERNAME, &UserName) && *UserName == '\0')
     {
         HeapFree(GetProcessHeap(), 0, UserName);
         return FALSE;
     }
 
-    if (GetTextboxText(hwndDlg, IDC_PASSWORD, &Password))
+    if (GetTextboxText(hwndDlg, IDC_UNLOCK_PASSWORD, &Password))
     {
         if (UserName != NULL && Password != NULL &&
             wcscmp(UserName, pgContext->UserName) == 0 &&
@@ -1293,7 +1293,7 @@ DoUnlock(
 static
 INT_PTR
 CALLBACK
-UnlockWindowProc(
+UnlockDialogProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
     IN WPARAM wParam,
@@ -1318,10 +1318,10 @@ UnlockWindowProc(
 
             SetWelcomeText(hwndDlg);
 
-            SetLockMessage(hwndDlg, IDC_LOCKMSG, pDlgData->pgContext);
+            SetLockMessage(hwndDlg, IDC_UNLOCK_MESSAGE, pDlgData->pgContext);
 
-            SetDlgItemTextW(hwndDlg, IDC_USERNAME, pDlgData->pgContext->UserName);
-            SetFocus(GetDlgItem(hwndDlg, IDC_PASSWORD));
+            SetDlgItemTextW(hwndDlg, IDC_UNLOCK_USERNAME, pDlgData->pgContext->UserName);
+            SetFocus(GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD));
 
             if (pDlgData->pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
@@ -1377,9 +1377,9 @@ GUILockedSAS(
     result = pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
         pgContext->hDllInstance,
-        MAKEINTRESOURCEW(IDD_UNLOCK_DLG),
+        MAKEINTRESOURCEW(IDD_UNLOCK),
         GetDesktopWindow(),
-        UnlockWindowProc,
+        UnlockDialogProc,
         (LPARAM)pgContext);
     if (result >= WLX_SAS_ACTION_LOGON &&
         result <= WLX_SAS_ACTION_SWITCH_CONSOLE)
@@ -1394,7 +1394,7 @@ GUILockedSAS(
 
 
 static INT_PTR CALLBACK
-LockedWindowProc(
+LockedDialogProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
     IN WPARAM wParam,
@@ -1421,7 +1421,7 @@ LockedWindowProc(
 
             SetWelcomeText(hwndDlg);
 
-            SetLockMessage(hwndDlg, IDC_LOCKMSG, pDlgData->pgContext);
+            SetLockMessage(hwndDlg, IDC_LOCKED_MESSAGE, pDlgData->pgContext);
             return TRUE;
         }
         case WM_PAINT:
@@ -1456,9 +1456,9 @@ GUIDisplayLockedNotice(
     pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
         pgContext->hDllInstance,
-        MAKEINTRESOURCEW(IDD_LOCKED_DLG),
+        MAKEINTRESOURCEW(IDD_LOCKED),
         GetDesktopWindow(),
-        LockedWindowProc,
+        LockedDialogProc,
         (LPARAM)pgContext);
 }
 

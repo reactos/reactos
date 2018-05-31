@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/registry.h
  * PURPOSE:         Registry creation functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #pragma once
@@ -36,12 +36,6 @@ ImportRegistryFile(
 BOOLEAN
 SetInstallPathValue(
     PUNICODE_STRING InstallPath);
-
-BOOLEAN
-SetMountedDeviceValue(
-    CHAR Letter,
-    ULONG Signature,
-    LARGE_INTEGER StartingOffset);
 
 VOID
 SetDefaultPagefile(

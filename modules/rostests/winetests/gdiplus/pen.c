@@ -431,6 +431,38 @@ static void test_transform(void)
     expectf(6.0, values[4]);
     expectf(3.0,  values[5]);
 
+    /* Translate */
+    status = GdipTranslatePenTransform(NULL, 1.0, -2.0, MatrixOrderAppend);
+    expect(InvalidParameter, status);
+
+    status = GdipTranslatePenTransform(pen, 1.0, -2.0, MatrixOrderAppend);
+    expect(Ok, status);
+
+    status = GdipGetPenTransform(pen, matrix);
+    expect(Ok, status);
+    status = GdipGetMatrixElements(matrix, values);
+    expect(Ok, status);
+    expectf(3.0,  values[0]);
+    expectf(-2.0,  values[1]);
+    expectf(5.0,  values[2]);
+    expectf(2.0, values[3]);
+    expectf(7.0, values[4]);
+    expectf(1.0,  values[5]);
+
+    status = GdipTranslatePenTransform(pen, -3.0, 5.0, MatrixOrderPrepend);
+    expect(Ok, status);
+
+    status = GdipGetPenTransform(pen, matrix);
+    expect(Ok, status);
+    status = GdipGetMatrixElements(matrix, values);
+    expect(Ok, status);
+    expectf(3.0,  values[0]);
+    expectf(-2.0,  values[1]);
+    expectf(5.0,  values[2]);
+    expectf(2.0, values[3]);
+    expectf(23.0, values[4]);
+    expectf(17.0,  values[5]);
+
     status = GdipResetPenTransform(pen);
     expect(Ok, status);
 

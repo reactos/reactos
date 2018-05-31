@@ -1,7 +1,3 @@
-/****
- ** Platform-dependent file
- ****/
-
 /* common.c - Common functions
 
    Copyright (C) 1993 Werner Almesberger <werner.almesberger@lrc.di.epfl.ch>
@@ -33,12 +29,12 @@
 #define NDEBUG
 #include <debug.h>
 
-
 typedef struct _link {
     void *data;
     struct _link *next;
 } LINK;
 
+#ifdef __REACTOS__
 DECLSPEC_NORETURN // __attribute((noreturn))
 void exit(int exitcode)
 {
@@ -51,38 +47,61 @@ void exit(int exitcode)
 
 DECLSPEC_NORETURN // __attribute((noreturn))
 void die_func(const char *msg, ...) // die
+#else
+void die(const char *msg, ...)
+#endif
 {
     va_list args;
 
     va_start(args, msg);
-    // vfprintf(stderr, msg, args);
+#ifndef __REACTOS__
+    vfprintf(stderr, msg, args);
+#else
     DPRINT1("Unrecoverable problem!\n");
     VfatPrintV((char*)msg, args);
+#endif
     va_end(args);
-    // // fprintf(stderr, "\n");
-    // VfatPrint("\n");
-
+#ifndef __REACTOS__
+    fprintf(stderr, "\n");
+#endif
     exit(1);
 }
 
+#ifdef __REACTOS__
 DECLSPEC_NORETURN // __attribute((noreturn))
 void pdie_func(const char *msg, ...) // pdie
+#else
+void pdie(const char *msg, ...)
+#endif
 {
     va_list args;
 
     va_start(args, msg);
-    // vfprintf(stderr, msg, args);
+#ifndef __REACTOS__
+    vfprintf(stderr, msg, args);
+#else
     DPRINT1("Unrecoverable problem!\n");
     VfatPrintV((char*)msg, args);
+#endif
     va_end(args);
-    // // fprintf(stderr, ":%s\n", strerror(errno));
-    // // VfatPrint(":%s\n", strerror(errno));
-    // VfatPrint("\n");
-
+#ifndef __REACTOS__
+    fprintf(stderr, ":%s\n", strerror(errno));
+#endif
     exit(1);
 }
 
-void *vfalloc(size_t size)
+#ifndef __REACTOS__
+void *alloc(int size)
+{
+    void *this;
+
+    if ((this = malloc(size)))
+	return this;
+    pdie("malloc");
+    return NULL;		/* for GCC */
+}
+#else
+void *vfalloc(int size)
 {
     void *ptr;
 
@@ -97,7 +116,7 @@ void *vfalloc(size_t size)
     return ptr;
 }
 
-void *vfcalloc(size_t size, size_t count)
+void *vfcalloc(int size, int count)
 {
     void *ptr;
 
@@ -115,15 +134,24 @@ void vffree(void *ptr)
 {
     RtlFreeHeap(RtlGetProcessHeap(), 0, ptr);
 }
+#endif
 
 void *qalloc(void **root, int size)
 {
     LINK *link;
 
+#ifndef __REACTOS__
+    link = alloc(sizeof(LINK));
+#else
     link = vfalloc(sizeof(LINK));
+#endif
     link->next = *root;
     *root = link;
+#ifndef __REACTOS__
+    return link->data = alloc(size);
+#else
     return link->data = vfalloc(size);
+#endif
 }
 
 void qfree(void **root)
@@ -133,24 +161,29 @@ void qfree(void **root)
     while (*root) {
 	this = (LINK *) * root;
 	*root = this->next;
+#ifndef __REACTOS__
+	free(this->data);
+	free(this);
+#else
 	vffree(this->data);
 	vffree(this);
+#endif
     }
 }
 
-
+#ifdef __REACTOS__
 #ifdef min
 #undef min
 #endif
-int min(int a,int b)
+#endif
+int min(int a, int b)
 {
     return a < b ? a : b;
 }
 
-
 char get_key(const char *valid, const char *prompt)
 {
-#if 0
+#ifndef __REACTOS__
     int ch, okay;
 
     while (1) {

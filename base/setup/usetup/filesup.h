@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/filesup.h
  * PURPOSE:         File support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #pragma once
@@ -41,13 +41,48 @@ SetupExtractFile(
     PWCHAR SourceFileName,
     PWCHAR DestinationFileName);
 
-BOOLEAN
-DoesFileExist(
-    PWSTR PathName,
-    PWSTR FileName);
 
 BOOLEAN
 IsValidPath(
-    PWCHAR InstallDir);
+    IN PCWSTR InstallDir);
+
+NTSTATUS
+ConcatPaths(
+    IN OUT PWSTR PathElem1,
+    IN SIZE_T cchPathSize,
+    IN PCWSTR PathElem2 OPTIONAL);
+
+BOOLEAN
+DoesPathExist(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName);
+
+BOOLEAN
+DoesFileExist(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName OPTIONAL,
+    IN PCWSTR FileName);
+
+BOOLEAN
+NtPathToDiskPartComponents(
+    IN PCWSTR NtPath,
+    OUT PULONG pDiskNumber,
+    OUT PULONG pPartNumber,
+    OUT PCWSTR* PathComponent OPTIONAL);
+
+NTSTATUS
+OpenAndMapFile(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName OPTIONAL,
+    IN PCWSTR FileName,             // OPTIONAL
+    OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
+    OUT PHANDLE SectionHandle,
+    OUT PVOID* BaseAddress,
+    OUT PULONG FileSize OPTIONAL);
+
+BOOLEAN
+UnMapFile(
+    IN HANDLE SectionHandle,
+    IN PVOID BaseAddress);
 
 /* EOF */

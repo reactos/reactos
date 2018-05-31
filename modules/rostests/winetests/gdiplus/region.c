@@ -1441,6 +1441,22 @@ static void test_translate(void)
     ReleaseDC(0, hdc);
 }
 
+static DWORD get_region_type(GpRegion *region)
+{
+    DWORD *data;
+    DWORD size;
+    DWORD result;
+    DWORD status;
+    status = GdipGetRegionDataSize(region, &size);
+    expect(Ok, status);
+    data = GdipAlloc(size);
+    status = GdipGetRegionData(region, (BYTE*)data, size, NULL);
+    ok(status == Ok || status == InsufficientBuffer, "unexpected status 0x%x\n", status);
+    result = data[4];
+    GdipFree(data);
+    return result;
+}
+
 static void test_transform(void)
 {
     GpRegion *region, *region2;
@@ -1451,6 +1467,7 @@ static void test_transform(void)
     GpStatus status;
     HDC hdc = GetDC(0);
     BOOL res;
+    DWORD type;
 
     status = GdipCreateFromHDC(hdc, &graphics);
     expect(Ok, status);
@@ -1483,6 +1500,8 @@ static void test_transform(void)
     status = GdipIsEqualRegion(region, region2, graphics, &res);
     expect(Ok, status);
     ok(res, "Expected to be equal.\n");
+    type = get_region_type(region);
+    expect(0x10000003 /* RegionDataInfiniteRect */, type);
 
     /* empty */
     status = GdipSetEmpty(region);
@@ -1497,6 +1516,8 @@ static void test_transform(void)
     status = GdipIsEqualRegion(region, region2, graphics, &res);
     expect(Ok, status);
     ok(res, "Expected to be equal.\n");
+    type = get_region_type(region);
+    expect(0x10000002 /* RegionDataEmptyRect */, type);
 
     /* rect */
     rectf.X = 10.0;
@@ -1516,6 +1537,8 @@ static void test_transform(void)
     status = GdipIsEqualRegion(region, region2, graphics, &res);
     expect(Ok, status);
     ok(res, "Expected to be equal.\n");
+    type = get_region_type(region);
+    expect(0x10000000 /* RegionDataRect */, type);
 
     /* path */
     status = GdipAddPathEllipse(path, 0.0, 10.0, 100.0, 150.0);
@@ -1534,6 +1557,21 @@ static void test_transform(void)
     status = GdipIsEqualRegion(region, region2, graphics, &res);
     expect(Ok, status);
     ok(res, "Expected to be equal.\n");
+    type = get_region_type(region);
+    expect(0x10000001 /* RegionDataPath */, type);
+
+    /* rotated rect -> path */
+    rectf.X = 10.0;
+    rectf.Y = 0.0;
+    rectf.Width = rectf.Height = 100.0;
+    status = GdipCombineRegionRect(region, &rectf, CombineModeReplace);
+    expect(Ok, status);
+    status = GdipRotateMatrix(matrix, 45.0, MatrixOrderAppend);
+    expect(Ok, status);
+    status = GdipTransformRegion(region, matrix);
+    expect(Ok, status);
+    type = get_region_type(region);
+    expect(0x10000001 /* RegionDataPath */, type);
 
     status = GdipDeleteRegion(region);
     expect(Ok, status);

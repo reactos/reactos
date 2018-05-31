@@ -69,26 +69,10 @@ static inline IDirectInputDevice8W *IDirectInputDevice8W_from_impl(SysKeyboardIm
 
 static BYTE map_dik_code(DWORD scanCode, DWORD vkCode)
 {
-    static const BYTE asciiCodes[] =
-     {/*32*/  DIK_SPACE,0,0,0,0,0,0,DIK_APOSTROPHE,
-      /*40*/  0,0,0,0,DIK_COMMA,DIK_MINUS,DIK_PERIOD,DIK_SLASH,
-      /*48*/  DIK_0,DIK_1,DIK_2,DIK_3,DIK_4,DIK_5,DIK_6,DIK_7,
-      /*56*/  DIK_8,DIK_9,DIK_COLON,DIK_SEMICOLON,0,DIK_EQUALS,0,0,
-      /*64*/  DIK_AT,DIK_A,DIK_B,DIK_C,DIK_D,DIK_E,DIK_F,DIK_G,
-      /*72*/  DIK_H,DIK_I,DIK_J,DIK_K,DIK_L,DIK_M,DIK_N,DIK_O,
-      /*80*/  DIK_P,DIK_Q,DIK_R,DIK_S,DIK_T,DIK_U,DIK_V,DIK_W,
-      /*88*/  DIK_X,DIK_Y,DIK_Z,DIK_LBRACKET,0,DIK_RBRACKET,DIK_CIRCUMFLEX,DIK_UNDERLINE}      /*95*/ ;
+    if (!scanCode)
+        scanCode = MapVirtualKeyW(vkCode, MAPVK_VK_TO_VSC);
 
-    BYTE out_code = 0;
-    WCHAR c = MapVirtualKeyW(vkCode,MAPVK_VK_TO_CHAR);
-
-    if (c > 31 && c < 96)
-        out_code = asciiCodes[c - 32];
-
-    if (out_code == 0)
-        out_code = scanCode;
-
-    return out_code;
+    return scanCode;
 }
 
 static int KeyboardCallback( LPDIRECTINPUTDEVICE8A iface, WPARAM wparam, LPARAM lparam )
@@ -102,7 +86,8 @@ static int KeyboardCallback( LPDIRECTINPUTDEVICE8A iface, WPARAM wparam, LPARAM 
         wparam != WM_SYSKEYDOWN && wparam != WM_SYSKEYUP)
         return 0;
 
-    TRACE("(%p) %ld,%ld\n", iface, wparam, lparam);
+    TRACE("(%p) wp %08lx, lp %08lx, vk %02x, scan %02x\n",
+          iface, wparam, lparam, hook->vkCode, hook->scanCode);
 
     switch (hook->vkCode)
     {

@@ -409,7 +409,8 @@ static void free_parser_data(struct parser *parser)
 
 static void prepare_hex_string_data(struct parser *parser)
 {
-    if (parser->data_type == REG_EXPAND_SZ || parser->data_type == REG_MULTI_SZ)
+    if (parser->data_type == REG_EXPAND_SZ || parser->data_type == REG_MULTI_SZ ||
+        parser->data_type == REG_SZ)
     {
         if (parser->is_unicode)
         {

@@ -923,21 +923,27 @@ void read_registry(PUNICODE_STRING regpath, BOOL refresh) {
                 ERR("LogFile was type %u, length %u\n", kvfi->Type, kvfi->DataLength);
 
                 Status = ZwDeleteValueKey(h, &us);
-                if (!NT_SUCCESS(Status)) {
+                if (!NT_SUCCESS(Status))
                     ERR("ZwDeleteValueKey returned %08x\n", Status);
-                }
+
+                log_file.Length = 0;
             }
+        } else {
+            ERR("ZwQueryValueKey returned %08\n", Status);
+            log_file.Length = 0;
         }
 
         ExFreePool(kvfi);
     } else if (Status == STATUS_OBJECT_NAME_NOT_FOUND) {
         Status = ZwSetValueKey(h, &us, 0, REG_SZ, def_log_file, (ULONG)(wcslen(def_log_file) + 1) * sizeof(WCHAR));
 
-        if (!NT_SUCCESS(Status)) {
+        if (!NT_SUCCESS(Status))
             ERR("ZwSetValueKey returned %08x\n", Status);
-        }
+
+        log_file.Length = 0;
     } else {
         ERR("ZwQueryValueKey returned %08x\n", Status);
+        log_file.Length = 0;
     }
 
     if (log_file.Length == 0) {

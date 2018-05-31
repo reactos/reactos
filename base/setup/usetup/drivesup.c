@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/drivesup.c
  * PURPOSE:         Drive support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/

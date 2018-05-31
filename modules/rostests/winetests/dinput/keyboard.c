@@ -30,6 +30,53 @@
 #include "wingdi.h"
 #include "dinput.h"
 
+/* to make things easier with PSDK without a dinput.lib */
+static HRESULT (WINAPI *pDirectInputCreateA)(HINSTANCE,DWORD,IDirectInputA **,IUnknown *);
+
+static void pump_messages(void)
+{
+    MSG msg;
+
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+}
+
+static HKL activate_keyboard_layout(LANGID langid, HKL *hkl_orig)
+{
+    HKL hkl, hkl_current;
+    char hkl_name[64];
+
+    sprintf(hkl_name, "%08x", langid);
+    trace("Loading keyboard layout %s\n", hkl_name);
+    hkl = LoadKeyboardLayoutA(hkl_name, 0);
+    if (!hkl)
+    {
+        win_skip("Unable to load keyboard layout %s\n", hkl_name);
+        return 0;
+    }
+    *hkl_orig = ActivateKeyboardLayout(hkl, 0);
+    ok(*hkl_orig != 0, "Unable to activate keyboard layout %s\n", hkl_name);
+    if (!*hkl_orig) return 0;
+
+    hkl_current = GetKeyboardLayout(0);
+    if (LOWORD(hkl_current) != langid)
+    {
+        /* FIXME: Wine can't activate different keyboard layouts.
+         * for testing purposes use this workaround:
+         * setxkbmap us && LANG=en_US.UTF-8 make test
+         * setxkbmap fr && LANG=fr_FR.UTF-8 make test
+         * setxkbmap de && LANG=de_DE.UTF-8 make test
+         */
+        skip("current %08x != langid %08x\n", LOWORD(hkl_current), langid);
+        return 0;
+    }
+
+    return hkl;
+}
+
 static void acquire_tests(IDirectInputA *pDI, HWND hwnd)
 {
     HRESULT hr;
@@ -44,8 +91,12 @@ static void acquire_tests(IDirectInputA *pDI, HWND hwnd)
             { &GUID_Key, sizeof(LONG) * 2, DIDFT_MAKEINSTANCE(DIK_E)|DIDFT_BUTTON, 0 },
             { &GUID_Key, sizeof(LONG) * 4, DIDFT_MAKEINSTANCE(DIK_R)|DIDFT_BUTTON, 0 },
         };
-
     DIDATAFORMAT df;
+    HKL hkl, hkl_orig;
+
+    hkl = activate_keyboard_layout(MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &hkl_orig);
+    if (!hkl) return;
+
     df.dwSize = sizeof( df );
     df.dwObjSize = sizeof( DIOBJECTDATAFORMAT );
     df.dwFlags = DIDF_RELAXIS;
@@ -93,6 +144,8 @@ static void acquire_tests(IDirectInputA *pDI, HWND hwnd)
 
     /* simulate some keyboard input */
     SetFocus(hwnd);
+    pump_messages();
+
     keybd_event('Q', 0, 0, 0);
     hr = IDirectInputDevice_GetDeviceState(pKeyboard, sizeof(custom_state), custom_state);
     ok(SUCCEEDED(hr), "IDirectInputDevice_GetDeviceState() failed: %08x\n", hr);
@@ -113,6 +166,9 @@ static void acquire_tests(IDirectInputA *pDI, HWND hwnd)
     keybd_event('Q', 0, KEYEVENTF_KEYUP, 0);
 
     if (pKeyboard) IUnknown_Release(pKeyboard);
+
+    ActivateKeyboardLayout(hkl_orig, 0);
+    UnloadKeyboardLayout(hkl);
 }
 
 static const HRESULT SetCoop_null_window[16] =  {
@@ -225,6 +281,130 @@ static void test_capabilities(IDirectInputA *pDI, HWND hwnd)
     IUnknown_Release(pKeyboard);
 }
 
+static void test_dik_codes(IDirectInputA *dI, HWND hwnd, LANGID langid)
+{
+    static const struct key2dik
+    {
+        BYTE key, dik;
+    } key2dik_en[] =
+    {
+        {'Q',DIK_Q}, {'W',DIK_W}, {'E',DIK_E}, {'R',DIK_R}, {'T',DIK_T}, {'Y',DIK_Y}
+    },
+    key2dik_fr[] =
+    {
+        {'A',DIK_Q}, {'Z',DIK_W}, {'E',DIK_E}, {'R',DIK_R}, {'T',DIK_T}, {'Y',DIK_Y}
+    },
+    key2dik_de[] =
+    {
+        {'Q',DIK_Q}, {'W',DIK_W}, {'E',DIK_E}, {'R',DIK_R}, {'T',DIK_T}, {'Z',DIK_Y}
+    };
+    static const struct
+    {
+        LANGID langid;
+        const struct key2dik *map;
+    } expected[] =
+    {
+        { MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), key2dik_en },
+        { MAKELANGID(LANG_FRENCH, SUBLANG_FRENCH), key2dik_fr },
+        { MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN), key2dik_de },
+        { MAKELANGID(LANG_JAPANESE, SUBLANG_JAPANESE_JAPAN), key2dik_en }
+    };
+    const struct key2dik *map = NULL;
+    UINT i;
+    HRESULT hr;
+    IDirectInputDeviceA *device;
+    HKL hkl, hkl_orig;
+    MSG msg;
+
+    for (i = 0; i < sizeof(expected)/sizeof(expected[0]); i++)
+    {
+        if (expected[i].langid == langid)
+        {
+            map = expected[i].map;
+            break;
+        }
+    }
+    ok(map != NULL, "can't find mapping for langid %04x\n", langid);
+    if (!map) return;
+
+    hr = IDirectInput_CreateDevice(dI, &GUID_SysKeyboard, &device, NULL);
+    ok(hr == S_OK, "CreateDevice() failed: %08x\n", hr);
+    hr = IDirectInputDevice_SetDataFormat(device, &c_dfDIKeyboard);
+    ok(hr == S_OK, "SetDataFormat() failed: %08x\n", hr);
+    hr = IDirectInputDevice_Acquire(device);
+    ok(hr == S_OK, "Acquire() failed: %08x\n", hr);
+
+    hkl = activate_keyboard_layout(langid, &hkl_orig);
+    if (!hkl) goto fail;
+
+    SetFocus(hwnd);
+    pump_messages();
+
+    for (i = 0; i < sizeof(key2dik_en)/sizeof(key2dik_en[0]); i++)
+    {
+        BYTE kbd_state[256];
+        UINT n;
+        INPUT in;
+
+        n = MapVirtualKeyA(map[i].key, MAPVK_VK_TO_CHAR);
+        ok(n == map[i].key, "%u: expected %c, got %c\n", i, map[i].key, n);
+        n = MapVirtualKeyA(map[i].key, MAPVK_VK_TO_VSC);
+        ok(n == map[i].dik, "%u: expected %02x, got %02x\n", i, map[i].dik, n);
+
+        in.type = INPUT_KEYBOARD;
+        U(in).ki.wVk = map[i].key;
+        U(in).ki.wScan = map[i].dik; /* scan codes match the DIK_ codes */
+        U(in).ki.dwFlags = 0;
+        U(in).ki.dwExtraInfo = 0;
+        U(in).ki.time = 0;
+        n = SendInput(1, &in, sizeof(in));
+        ok(n == 1, "got %u\n", n);
+
+        if (!PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+        {
+            win_skip("failed to queue keyboard event\n");
+            break;
+        }
+        ok(msg.message == WM_KEYDOWN || broken(msg.message != WM_KEYDOWN), "expected WM_KEYDOWN, got %04x\n", msg.message);
+        /* this never happens on real hardware but tesbot VMs seem to have timing issues */
+        if (msg.message != WM_KEYDOWN)
+        {
+            win_skip("failed to queue keyboard event\n");
+            break;
+        }
+        DispatchMessageA(&msg);
+
+        trace("keydown wParam: %#lx (%c) lParam: %#lx, MapVirtualKey(MAPVK_VK_TO_CHAR) = %c\n",
+              msg.wParam, LOWORD(msg.wParam), msg.lParam, MapVirtualKeyA(msg.wParam, MAPVK_VK_TO_CHAR));
+
+        pump_messages();
+
+        hr = IDirectInputDevice_GetDeviceState(device, sizeof(kbd_state), kbd_state);
+        ok(hr == S_OK, "GetDeviceState() failed: %08x\n", hr);
+
+        /* this never happens on real hardware but tesbot VMs seem to have timing issues */
+        if (i == 0 && kbd_state[map[0].dik] != 0x80)
+        {
+            win_skip("dinput failed to handle keyboard event\n");
+            break;
+        }
+
+        ok(kbd_state[map[i].dik] == 0x80, "DI key %#x has state %#x\n", map[i].dik, kbd_state[map[i].dik]);
+
+        U(in).ki.dwFlags = KEYEVENTF_KEYUP;
+        n = SendInput(1, &in, sizeof(in));
+        ok(n == 1, "got %u\n", n);
+
+        pump_messages();
+    }
+
+    ActivateKeyboardLayout(hkl_orig, 0);
+    UnloadKeyboardLayout(hkl);
+fail:
+    IDirectInputDevice_Unacquire(device);
+    IUnknown_Release(device);
+}
+
 static void keyboard_tests(DWORD version)
 {
     HRESULT hr;
@@ -233,7 +413,7 @@ static void keyboard_tests(DWORD version)
     HWND hwnd;
     ULONG ref = 0;
 
-    hr = DirectInputCreateA(hInstance, version, &pDI, NULL);
+    hr = pDirectInputCreateA(hInstance, version, &pDI, NULL);
     if (hr == DIERR_OLDDIRECTINPUTVERSION)
     {
         skip("Tests require a newer dinput version\n");
@@ -248,10 +428,17 @@ static void keyboard_tests(DWORD version)
 
     if (hwnd)
     {
+        pump_messages();
+
         acquire_tests(pDI, hwnd);
         test_set_coop(pDI, hwnd);
         test_get_prop(pDI, hwnd);
         test_capabilities(pDI, hwnd);
+
+        test_dik_codes(pDI, hwnd, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT));
+        test_dik_codes(pDI, hwnd, MAKELANGID(LANG_FRENCH, SUBLANG_FRENCH));
+        test_dik_codes(pDI, hwnd, MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN));
+        test_dik_codes(pDI, hwnd, MAKELANGID(LANG_JAPANESE, SUBLANG_JAPANESE_JAPAN));
     }
 
     DestroyWindow(hwnd);
@@ -261,6 +448,8 @@ static void keyboard_tests(DWORD version)
 
 START_TEST(keyboard)
 {
+    pDirectInputCreateA = (void *)GetProcAddress(LoadLibraryA("dinput.dll"), "DirectInputCreateA");
+
     CoInitialize(NULL);
 
     keyboard_tests(0x0700);

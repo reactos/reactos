@@ -427,12 +427,7 @@ typedef struct _root {
 } root;
 
 enum batch_operation {
-    Batch_Insert,
     Batch_Delete,
-    Batch_SetXattr,
-    Batch_DirItem,
-    Batch_InodeRef,
-    Batch_InodeExtRef,
     Batch_DeleteInode,
     Batch_DeleteDirItem,
     Batch_DeleteInodeRef,
@@ -440,6 +435,11 @@ enum batch_operation {
     Batch_DeleteXattr,
     Batch_DeleteExtentData,
     Batch_DeleteFreeSpace,
+    Batch_Insert,
+    Batch_SetXattr,
+    Batch_DirItem,
+    Batch_InodeRef,
+    Batch_InodeExtRef,
 };
 
 typedef struct {

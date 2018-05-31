@@ -20,6 +20,10 @@
 #ifndef _MSDOS_FS_H
 #define _MSDOS_FS_H
 
+#ifndef __REACTOS__
+#include <stdint.h>
+#endif
+
 #define SECTOR_SIZE 512		/* sector size (bytes) */
 #define MSDOS_DPS (SECTOR_SIZE / sizeof(struct msdos_dir_entry))
 #define MSDOS_DPS_BITS 4	/* log2(MSDOS_DPS) */
@@ -43,7 +47,9 @@
 #define MSDOS_DOT ".          "		/* ".", padded to MSDOS_NAME chars */
 #define MSDOS_DOTDOT "..         "	/* "..", padded to MSDOS_NAME chars */
 
+#ifdef __REACTOS__
 #include <pshpack1.h>
+#endif
 
 struct msdos_dir_entry {
     uint8_t name[MSDOS_NAME];	/* name including extension */
@@ -58,6 +64,8 @@ struct msdos_dir_entry {
     uint32_t size;		/* file size (in bytes) */
 } __attribute__ ((packed));
 
+#ifdef __REACTOS__
 #include <poppack.h>
+#endif
 
 #endif /* _MSDOS_FS_H */

@@ -5065,7 +5065,7 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP* Pirp, UINT32 type) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
-#if WIN32_WINNT >= 0x0600
+#if _WIN32_WINNT >= 0x0600
         case FSCTL_MAKE_MEDIA_COMPATIBLE:
             WARN("STUB: FSCTL_MAKE_MEDIA_COMPATIBLE\n");
             Status = STATUS_INVALID_DEVICE_REQUEST;

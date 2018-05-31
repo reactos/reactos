@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/bootsup.c
  * PURPOSE:         Bootloader support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #include "usetup.h"
@@ -2275,7 +2275,7 @@ InstallFatBootcodeToPartition(
     wcscpy(DstPath, SystemRootPath->Buffer);
     wcscat(DstPath, L"\\freeldr.ini");
 
-    DoesFreeLdrExist = DoesFileExist(SystemRootPath->Buffer, L"freeldr.ini");
+    DoesFreeLdrExist = DoesFileExist(NULL, SystemRootPath->Buffer, L"freeldr.ini");
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
@@ -2292,8 +2292,8 @@ InstallFatBootcodeToPartition(
     /* Check for NT and other bootloaders */
 
     // FIXME: Check for Vista+ bootloader!
-    if (DoesFileExist(SystemRootPath->Buffer, L"ntldr") == TRUE ||
-        DoesFileExist(SystemRootPath->Buffer, L"boot.ini") == TRUE)
+    if (DoesFileExist(NULL, SystemRootPath->Buffer, L"ntldr") == TRUE ||
+        DoesFileExist(NULL, SystemRootPath->Buffer, L"boot.ini") == TRUE)
     {
         /* Search root directory for 'ntldr' and 'boot.ini' */
         DPRINT1("Found Microsoft Windows NT/2000/XP boot loader\n");
@@ -2375,8 +2375,8 @@ InstallFatBootcodeToPartition(
         PWCHAR BootSector;
         PWCHAR BootSectorFileName;
 
-        if (DoesFileExist(SystemRootPath->Buffer, L"io.sys") == TRUE ||
-            DoesFileExist(SystemRootPath->Buffer, L"msdos.sys") == TRUE)
+        if (DoesFileExist(NULL, SystemRootPath->Buffer, L"io.sys") == TRUE ||
+            DoesFileExist(NULL, SystemRootPath->Buffer, L"msdos.sys") == TRUE)
         {
             /* Search for root directory for 'io.sys' and 'msdos.sys' */
             DPRINT1("Found Microsoft DOS or Windows 9x boot loader\n");
@@ -2390,7 +2390,7 @@ InstallFatBootcodeToPartition(
             BootSectorFileName = L"\\bootsect.dos";
         }
         else
-        if (DoesFileExist(SystemRootPath->Buffer, L"kernel.sys") == TRUE)
+        if (DoesFileExist(NULL, SystemRootPath->Buffer, L"kernel.sys") == TRUE)
         {
             /* Search for root directory for 'kernel.sys' */
             DPRINT1("Found FreeDOS boot loader\n");
@@ -2529,7 +2529,7 @@ InstallExt2BootcodeToPartition(
     wcscpy(DstPath, SystemRootPath->Buffer);
     wcscat(DstPath, L"\\freeldr.ini");
 
-    DoesFreeLdrExist = DoesFileExist(SystemRootPath->Buffer, L"freeldr.ini");
+    DoesFreeLdrExist = DoesFileExist(NULL, SystemRootPath->Buffer, L"freeldr.ini");
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
@@ -2659,17 +2659,24 @@ InstallFatBootcodeToFloppy(
     PUNICODE_STRING DestinationArcPath)
 {
     NTSTATUS Status;
+    PFILE_SYSTEM FatFS;
     UNICODE_STRING FloppyDevice = RTL_CONSTANT_STRING(L"\\Device\\Floppy0");
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
 
     /* Format the floppy first */
-    Status = VfatFormat(&FloppyDevice,
-                        FMIFS_FLOPPY,
-                        NULL,
-                        TRUE,
-                        0,
-                        NULL);
+    FatFS = GetFileSystemByName(L"FAT");
+    if (!FatFS)
+    {
+        DPRINT1("FAT FS non existent on this system?!\n");
+        return STATUS_NOT_SUPPORTED;
+    }
+    Status = FatFS->FormatFunc(&FloppyDevice,
+                               FMIFS_FLOPPY,
+                               NULL,
+                               TRUE,
+                               0,
+                               NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("VfatFormat() failed (Status %lx)\n", Status);

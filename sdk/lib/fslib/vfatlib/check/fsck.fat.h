@@ -28,10 +28,14 @@
 #ifndef _DOSFSCK_H
 #define _DOSFSCK_H
 
-//#include "types.h"
-
+#ifndef __REACTOS__
+#include <sys/types.h>
+#include <fcntl.h>
+#include <stddef.h>
+#endif
 #include <stdint.h>
 
+#ifdef __REACTOS__
 #ifdef _WIN32
 
 typedef unsigned int __u32;
@@ -48,29 +52,8 @@ typedef unsigned __int64 __u64;
 #include "byteorder.h"
 #endif
 
-#if 0
-#undef le16toh
-#undef le32toh
-#undef htole16
-#undef htole32
-#endif
-
 #if __BYTE_ORDER == __BIG_ENDIAN
 #include "byteswap.h"
-
-#if 0
-#define le16toh(v) bswap_16(v)
-#define le32toh(v) bswap_32(v)
-#define htole16(v) le16toh(v)
-#define htole32(v) le32toh(v)
-#endif
-#if 0
-#define le16toh(v)	le16_to_cpu(v)
-#define le32toh(v)	le32_to_cpu(v)
-#define htole16(v)	cpu_to_le16(v)
-#define htole32(v)	cpu_to_le32(v)
-#endif
-
 #else
 #define le16toh(v) (v)
 #define le32toh(v) (v)
@@ -78,19 +61,17 @@ typedef unsigned __int64 __u64;
 #define htole32(v) (v)
 #endif /* __BIG_ENDIAN */
 
-// #include "endian_compat.h"
+#endif
 
+#ifndef __REACTOS__
+#include "endian_compat.h"
+#else
 #ifndef offsetof
 #define offsetof(t,e)	((int)&(((t *)0)->e))
 #endif
 
-
-// extern int interactive, rw, list, verbose, test, write_immed;
-// extern int atari_format;
-// extern unsigned n_files;
-// extern void *mem_queue;
-
 #include "rosglue.h"
+#endif
 
 #include "msdos_fs.h"
 
@@ -98,7 +79,9 @@ typedef unsigned __int64 __u64;
 
 #define FAT_STATE_DIRTY 0x01
 
+#ifdef __REACTOS__
 #include <pshpack1.h>
+#endif
 
 /* ++roman: Use own definition of boot sector structure -- the kernel headers'
  * name for it is msdos_boot_sector in 2.0 and fat_boot_sector in 2.1 ... */
@@ -171,14 +154,12 @@ struct boot_sector_16 {
 
 struct info_sector {
     uint32_t magic;		/* Magic for info sector ('RRaA') */
-    uint8_t junk[0x1dc];
-    uint32_t reserved1;		/* Nothing as far as I can tell */
+    uint8_t reserved1[480];
     uint32_t signature;		/* 0x61417272 ('rrAa') */
     uint32_t free_clusters;	/* Free cluster count.  -1 if unknown */
     uint32_t next_cluster;	/* Most recently allocated cluster. */
-    uint32_t reserved2[3];
-    uint16_t reserved3;
-    uint16_t boot_sign;
+    uint8_t reserved2[12];
+    uint32_t boot_sign;
 };
 
 typedef struct {
@@ -194,7 +175,9 @@ typedef struct {
     uint32_t size;		/* file size (in bytes) */
 } __attribute__ ((packed)) DIR_ENT;
 
+#ifdef __REACTOS__
 #include <poppack.h>
+#endif
 
 typedef struct _dos_file {
     DIR_ENT dir_ent;
@@ -214,7 +197,7 @@ typedef struct {
 typedef struct {
     int nfats;
     off_t fat_start;
-    unsigned int fat_size;	/* unit is bytes */
+    off_t fat_size;		/* unit is bytes */
     unsigned int fat_bits;	/* size of a FAT entry */
     unsigned int eff_fat_bits;	/* # of used bits in a FAT entry */
     uint32_t root_cluster;	/* 0 for old-style root dir */
@@ -231,6 +214,12 @@ typedef struct {
     char *label;
 } DOS_FS;
 
+#ifndef __REACTOS__
+extern int interactive, rw, list, verbose, test, write_immed;
+extern int atari_format;
+extern unsigned n_files;
+extern void *mem_queue;
+#endif
 
 /* value to use as end-of-file marker */
 #define FAT_EOF(fs)	((atari_format ? 0xfff : 0xff8) | FAT_EXTD(fs))

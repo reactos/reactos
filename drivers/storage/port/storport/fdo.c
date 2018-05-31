@@ -243,6 +243,289 @@ PortFdoStartDevice(
 }
 
 
+static NTSTATUS
+SpiSendInquiry(IN PDEVICE_OBJECT DeviceObject,
+               ULONG Bus, ULONG Target, ULONG Lun)
+{
+//    IO_STATUS_BLOCK IoStatusBlock;
+//    PIO_STACK_LOCATION IrpStack;
+//    KEVENT Event;
+//    KIRQL Irql;
+//    PIRP Irp;
+    NTSTATUS Status;
+    PINQUIRYDATA InquiryBuffer;
+    PUCHAR /*PSENSE_DATA*/ SenseBuffer;
+//    BOOLEAN KeepTrying = TRUE;
+//    ULONG RetryCount = 0;
+    SCSI_REQUEST_BLOCK Srb;
+    PCDB Cdb;
+//    PSCSI_PORT_LUN_EXTENSION LunExtension;
+//    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+
+PFDO_DEVICE_EXTENSION DeviceExtension;
+    PVOID SrbExtension = NULL;
+    BOOLEAN ret;
+
+    DPRINT1("SpiSendInquiry() called\n");
+
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    InquiryBuffer = ExAllocatePoolWithTag(NonPagedPool, INQUIRYDATABUFFERSIZE, TAG_INQUIRY_DATA);
+    if (InquiryBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    SenseBuffer = ExAllocatePoolWithTag(NonPagedPool, SENSE_BUFFER_SIZE, TAG_SENSE_DATA);
+    if (SenseBuffer == NULL)
+    {
+        ExFreePoolWithTag(InquiryBuffer, TAG_INQUIRY_DATA);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (DeviceExtension->Miniport.PortConfig.SrbExtensionSize != 0)
+    {
+        SrbExtension = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->Miniport.PortConfig.SrbExtensionSize, TAG_SENSE_DATA);
+        if (SrbExtension == NULL)
+        {
+            ExFreePoolWithTag(SenseBuffer, TAG_SENSE_DATA);
+            ExFreePoolWithTag(InquiryBuffer, TAG_INQUIRY_DATA);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+
+//    while (KeepTrying)
+    {
+        /* Initialize event for waiting */
+//        KeInitializeEvent(&Event,
+//                          NotificationEvent,
+//                          FALSE);
+
+        /* Create an IRP */
+//        Irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_EXECUTE_IN,
+//                                            DeviceObject,
+//                                            NULL,
+//                                            0,
+//                                            InquiryBuffer,
+//                                            INQUIRYDATABUFFERSIZE,
+//                                            TRUE,
+//                                            &Event,
+//                                            &IoStatusBlock);
+//        if (Irp == NULL)
+//        {
+//            DPRINT1("IoBuildDeviceIoControlRequest() failed\n");
+
+            /* Quit the loop */
+//            Status = STATUS_INSUFFICIENT_RESOURCES;
+//            KeepTrying = FALSE;
+//            continue;
+//        }
+
+        /* Prepare SRB */
+        RtlZeroMemory(&Srb, sizeof(SCSI_REQUEST_BLOCK));
+
+        Srb.Length = sizeof(SCSI_REQUEST_BLOCK);
+//        Srb.OriginalRequest = Irp;
+        Srb.PathId = Bus;
+        Srb.TargetId = Target;
+        Srb.Lun = Lun;
+        Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
+        Srb.SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+        Srb.TimeOutValue = 4;
+        Srb.CdbLength = 6;
+
+        Srb.SenseInfoBuffer = SenseBuffer;
+        Srb.SenseInfoBufferLength = SENSE_BUFFER_SIZE;
+
+        Srb.DataBuffer = InquiryBuffer;
+        Srb.DataTransferLength = INQUIRYDATABUFFERSIZE;
+
+        Srb.SrbExtension = SrbExtension;
+
+        /* Attach Srb to the Irp */
+//        IrpStack = IoGetNextIrpStackLocation(Irp);
+//        IrpStack->Parameters.Scsi.Srb = &Srb;
+
+        /* Fill in CDB */
+        Cdb = (PCDB)Srb.Cdb;
+        Cdb->CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
+        Cdb->CDB6INQUIRY.LogicalUnitNumber = Lun;
+        Cdb->CDB6INQUIRY.AllocationLength = INQUIRYDATABUFFERSIZE;
+
+        /* Call the driver */
+
+
+        ret = MiniportStartIo(&DeviceExtension->Miniport,
+                              &Srb);
+DPRINT1("MiniportStartIo returned %u\n", ret);
+
+//        Status = IoCallDriver(DeviceObject, Irp);
+
+        /* Wait for it to complete */
+//        if (Status == STATUS_PENDING)
+//        {
+//            DPRINT1("SpiSendInquiry(): Waiting for the driver to process request...\n");
+//            KeWaitForSingleObject(&Event,
+//                                  Executive,
+//                                  KernelMode,
+//                                  FALSE,
+//                                  NULL);
+//            Status = IoStatusBlock.Status;
+//        }
+
+//        DPRINT1("SpiSendInquiry(): Request processed by driver, status = 0x%08X\n", Status);
+
+        if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_SUCCESS)
+        {
+            /* All fine, copy data over */
+//            RtlCopyMemory(LunInfo->InquiryData,
+//                          InquiryBuffer,
+//                          INQUIRYDATABUFFERSIZE);
+
+            /* Quit the loop */
+            Status = STATUS_SUCCESS;
+//            KeepTrying = FALSE;
+//            continue;
+        }
+
+        DPRINT("Inquiry SRB failed with SrbStatus 0x%08X\n", Srb.SrbStatus);
+#if 0
+        /* Check if the queue is frozen */
+        if (Srb.SrbStatus & SRB_STATUS_QUEUE_FROZEN)
+        {
+            /* Something weird happened, deal with it (unfreeze the queue) */
+            KeepTrying = FALSE;
+
+            DPRINT("SpiSendInquiry(): the queue is frozen at TargetId %d\n", Srb.TargetId);
+
+            LunExtension = SpiGetLunExtension(DeviceExtension,
+                                              LunInfo->PathId,
+                                              LunInfo->TargetId,
+                                              LunInfo->Lun);
+
+            /* Clear frozen flag */
+            LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
+
+            /* Acquire the spinlock */
+            KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+
+            /* Process the request */
+            SpiGetNextRequestFromLun(DeviceObject->DeviceExtension, LunExtension);
+
+            /* SpiGetNextRequestFromLun() releases the spinlock,
+                so we just lower irql back to what it was before */
+            KeLowerIrql(Irql);
+        }
+
+        /* Check if data overrun happened */
+        if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_DATA_OVERRUN)
+        {
+            DPRINT("Data overrun at TargetId %d\n", LunInfo->TargetId);
+
+            /* Nothing dramatic, just copy data, but limiting the size */
+            RtlCopyMemory(LunInfo->InquiryData,
+                            InquiryBuffer,
+                            (Srb.DataTransferLength > INQUIRYDATABUFFERSIZE) ?
+                            INQUIRYDATABUFFERSIZE : Srb.DataTransferLength);
+
+            /* Quit the loop */
+            Status = STATUS_SUCCESS;
+            KeepTrying = FALSE;
+        }
+        else if ((Srb.SrbStatus & SRB_STATUS_AUTOSENSE_VALID) &&
+                 SenseBuffer->SenseKey == SCSI_SENSE_ILLEGAL_REQUEST)
+        {
+            /* LUN is not valid, but some device responds there.
+                Mark it as invalid anyway */
+
+            /* Quit the loop */
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            KeepTrying = FALSE;
+        }
+        else
+        {
+            /* Retry a couple of times if no timeout happened */
+            if ((RetryCount < 2) &&
+                (SRB_STATUS(Srb.SrbStatus) != SRB_STATUS_NO_DEVICE) &&
+                (SRB_STATUS(Srb.SrbStatus) != SRB_STATUS_SELECTION_TIMEOUT))
+            {
+                RetryCount++;
+                KeepTrying = TRUE;
+            }
+            else
+            {
+                /* That's all, quit the loop */
+                KeepTrying = FALSE;
+
+                /* Set status according to SRB status */
+                if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_BAD_FUNCTION ||
+                    SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_BAD_SRB_BLOCK_LENGTH)
+                {
+                    Status = STATUS_INVALID_DEVICE_REQUEST;
+                }
+                else
+                {
+                    Status = STATUS_IO_DEVICE_ERROR;
+                }
+            }
+        }
+#endif
+    }
+
+    /* Free buffers */
+    if (SrbExtension != NULL)
+        ExFreePoolWithTag(SrbExtension, TAG_SENSE_DATA);
+
+    ExFreePoolWithTag(SenseBuffer, TAG_SENSE_DATA);
+    ExFreePoolWithTag(InquiryBuffer, TAG_INQUIRY_DATA);
+
+    DPRINT("SpiSendInquiry() done with Status 0x%08X\n", Status);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+PortFdoScanBus(
+    _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
+{
+    ULONG Bus, Target, Lun;
+    NTSTATUS Status;
+
+
+    DPRINT1("PortFdoScanBus(%p)\n",
+            DeviceExtension);
+
+    DPRINT1("NumberOfBuses: %lu\n", DeviceExtension->Miniport.PortConfig.NumberOfBuses);
+    DPRINT1("MaximumNumberOfTargets: %lu\n", DeviceExtension->Miniport.PortConfig.MaximumNumberOfTargets);
+    DPRINT1("MaximumNumberOfLogicalUnits: %lu\n", DeviceExtension->Miniport.PortConfig.MaximumNumberOfLogicalUnits);
+
+    /* Scan all buses */
+    for (Bus = 0; Bus < DeviceExtension->Miniport.PortConfig.NumberOfBuses; Bus++)
+    {
+        DPRINT1("Scanning bus %ld\n", Bus);
+
+        /* Scan all targets */
+        for (Target = 0; Target < DeviceExtension->Miniport.PortConfig.MaximumNumberOfTargets; Target++)
+        {
+            DPRINT1("  Scanning target %ld:%ld\n", Bus, Target);
+
+            /* Scan all logical units */
+            for (Lun = 0; Lun < DeviceExtension->Miniport.PortConfig.MaximumNumberOfLogicalUnits; Lun++)
+            {
+                DPRINT1("    Scanning logical unit %ld:%ld:%ld\n", Bus, Target, Lun);
+
+                Status = SpiSendInquiry(DeviceExtension->Device, Bus, Target, Lun);
+                DPRINT1("SpiSendInquiry returned 0x%08lx\n", Status);
+            }
+        }
+    }
+
+    DPRINT1("Done!\n");
+
+    return STATUS_SUCCESS;
+}
+
+
 static
 NTSTATUS
 PortFdoQueryBusRelations(
@@ -253,6 +536,8 @@ PortFdoQueryBusRelations(
 
     DPRINT1("PortFdoQueryBusRelations(%p %p)\n",
             DeviceExtension, Information);
+
+    Status = PortFdoScanBus(DeviceExtension);
 
     *Information = 0;
 
@@ -279,6 +564,35 @@ PortFdoFilterRequirements(
     }
 
     return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
+PortFdoScsi(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+//    PIO_STACK_LOCATION Stack;
+    ULONG_PTR Information = 0;
+    NTSTATUS Status = STATUS_NOT_SUPPORTED;
+
+    DPRINT1("PortFdoScsi(%p %p)\n",
+            DeviceObject, Irp);
+
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension);
+    ASSERT(DeviceExtension->ExtensionType == FdoExtension);
+
+//    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+
+    Irp->IoStatus.Information = Information;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
 }
 
 

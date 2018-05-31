@@ -369,7 +369,7 @@ static DEVMODEA *convert_to_devmodeA(const DEVMODEW *dmW)
 static BOOL PRINTDLG_OpenDefaultPrinter(HANDLE *hprn)
 {
     WCHAR buf[260];
-    DWORD dwBufLen = sizeof(buf) / sizeof(buf[0]);
+    DWORD dwBufLen = ARRAY_SIZE(buf);
     BOOL res;
     if(!GetDefaultPrinterW(buf, &dwBufLen))
         return FALSE;
@@ -414,7 +414,7 @@ static INT PRINTDLG_SetUpPrinterListComboA(HWND hDlg, UINT id, LPCSTR name)
 				(LPARAM)name)) == CB_ERR) {
 
         char buf[260];
-        DWORD dwBufLen = sizeof(buf);
+        DWORD dwBufLen = ARRAY_SIZE(buf);
         if (name != NULL)
             WARN("Can't find %s in printer list so trying to find default\n",
 	        debugstr_a(name));
@@ -447,7 +447,7 @@ static INT PRINTDLG_SetUpPrinterListComboW(HWND hDlg, UINT id, LPCWSTR name)
        (i = SendDlgItemMessageW(hDlg, id, CB_FINDSTRINGEXACT, -1,
 				(LPARAM)name)) == CB_ERR) {
         WCHAR buf[260];
-        DWORD dwBufLen = sizeof(buf)/sizeof(buf[0]);
+        DWORD dwBufLen = ARRAY_SIZE(buf);
         if (name != NULL)
             WARN("Can't find %s in printer list so trying to find default\n",
 	        debugstr_w(name));
@@ -477,7 +477,7 @@ static BOOL PRINTDLG_CreateDevNames(HGLOBAL *hmem, const char* DeviceDriverName,
     char*   pTempPtr;
     LPDEVNAMES lpDevNames;
     char buf[260];
-    DWORD dwBufLen = sizeof(buf);
+    DWORD dwBufLen = ARRAY_SIZE(buf);
     const char *p;
 
     p = strrchr( DeviceDriverName, '\\' );
@@ -524,7 +524,7 @@ static BOOL PRINTDLG_CreateDevNamesW(HGLOBAL *hmem, LPCWSTR DeviceDriverName,
     LPWSTR   pTempPtr;
     LPDEVNAMES lpDevNames;
     WCHAR bufW[260];
-    DWORD dwBufLen = sizeof(bufW) / sizeof(WCHAR);
+    DWORD dwBufLen = ARRAY_SIZE(bufW);
     const WCHAR *p;
 
     p = strrchrW( DeviceDriverName, '\\' );
@@ -715,7 +715,7 @@ static BOOL PRINTDLG_UpdatePrintDlgW(HWND hDlg,
                 args[1] = lppd->nMaxPage;
                 FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
                                resourcestr, 0, 0, resultstr,
-                               sizeof(resultstr)/sizeof(*resultstr),
+                               ARRAY_SIZE(resultstr),
                                (__ms_va_list*)args);
 		LoadStringW(COMDLG32_hInstance, PD32_PRINT_TITLE,
 			    resourcestr, 255);
@@ -1559,7 +1559,7 @@ static LRESULT PRINTDLG_WMInitDialog(HWND hDlg,
     } else {
 	/* else use default printer */
 	char name[200];
-        DWORD dwBufLen = sizeof(name);
+        DWORD dwBufLen = ARRAY_SIZE(name);
 	BOOL ret = GetDefaultPrinterA(name, &dwBufLen);
 
 	if (ret)
@@ -1668,7 +1668,7 @@ static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg,
     } else {
 	/* else use default printer */
 	WCHAR name[200];
-        DWORD dwBufLen = sizeof(name) / sizeof(WCHAR);
+        DWORD dwBufLen = ARRAY_SIZE(name);
 	BOOL ret = GetDefaultPrinterW(name, &dwBufLen);
 
 	if (ret)
@@ -2610,7 +2610,7 @@ static WCHAR get_decimal_sep(void)
     if(!sep)
     {
         WCHAR buf[] = {'.', 0};
-        GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buf, sizeof(buf) / sizeof(buf[0]));
+        GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buf, ARRAY_SIZE(buf));
         sep = buf[0];
     }
     return sep;
@@ -2869,7 +2869,7 @@ static void pagesetup_set_devnames(pagesetup_data *data, LPCWSTR drv, LPCWSTR de
     }
 
     dn->wDefault = 0;
-    len = sizeof(def) / sizeof(def[0]);
+    len = ARRAY_SIZE(def);
     GetDefaultPrinterW(def, &len);
     if(!lstrcmpW(def, devname))
         dn->wDefault = 1;
@@ -3243,7 +3243,7 @@ static void margin_edit_notification(HWND hDlg, const pagesetup_data *data, WORD
         LONG val = 0;
         LONG *value = element_from_margin_id(pagesetup_get_margin_rect(data), id);
 
-        if (GetDlgItemTextW(hDlg, id, buf, sizeof(buf) / sizeof(buf[0])) != 0)
+        if (GetDlgItemTextW(hDlg, id, buf, ARRAY_SIZE(buf)) != 0)
         {
             WCHAR *end;
             WCHAR decimal = get_decimal_sep();
@@ -3282,7 +3282,7 @@ static void set_margin_groupbox_title(HWND hDlg, const pagesetup_data *data)
     WCHAR title[256];
 
     if(LoadStringW(COMDLG32_hInstance, is_metric(data) ? PD32_MARGINS_IN_MILLIMETERS : PD32_MARGINS_IN_INCHES,
-                   title, sizeof(title)/sizeof(title[0])))
+                   title, ARRAY_SIZE(title)))
         SetDlgItemTextW(hDlg, grp4, title);
 }
 
@@ -3486,7 +3486,7 @@ static UINT_PTR default_page_paint_hook(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
                  LoadStringW(COMDLG32_hInstance,
                         IDS_FAKEDOCTEXT,
                         wszFakeDocumentText,
-                        sizeof(wszFakeDocumentText)/sizeof(wszFakeDocumentText[0]));
+                        ARRAY_SIZE(wszFakeDocumentText));
 
             oldbkmode = SetBkMode(hdc, TRANSPARENT);
             DrawTextW(hdc, wszFakeDocumentText, -1, lprc, DT_TOP|DT_LEFT|DT_NOPREFIX|DT_WORDBREAK);

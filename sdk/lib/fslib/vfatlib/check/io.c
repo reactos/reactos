@@ -1,7 +1,3 @@
-/****
- ** Platform-dependent file
- ****/
-
 /* io.c - Virtual disk input/output
 
    Copyright (C) 1993 Werner Almesberger <werner.almesberger@lrc.di.epfl.ch>
@@ -51,6 +47,9 @@ typedef struct _change {
 } CHANGE;
 
 static CHANGE *changes, *last;
+#ifndef __REACTOS__
+static int fd, did_change = 0;
+#else
 static int did_change = 0;
 static HANDLE fd;
 static LARGE_INTEGER CurrentOffset;
@@ -157,8 +156,20 @@ static off_t WIN32lseek(HANDLE fd, off_t offset, int whence)
 #define lseek	WIN32lseek
 
 /******************************************************************************/
+#endif
 
 
+#ifndef __REACTOS__
+void fs_open(char *path, int rw)
+{
+    if ((fd = open(path, rw ? O_RDWR : O_RDONLY)) < 0) {
+	perror("open");
+	exit(6);
+    }
+    changes = last = NULL;
+    did_change = 0;
+}
+#else
 NTSTATUS fs_open(PUNICODE_STRING DriveRoot, int read_write)
 {
     NTSTATUS Status;
@@ -264,6 +275,7 @@ void fs_dismount(void)
         DPRINT1("NtFsControlFile() failed with Status 0x%08x\n", Status);
     }
 }
+#endif
 
 /**
  * Read data from the partition, accounting for any pending updates that are
@@ -279,8 +291,7 @@ void fs_read(off_t pos, int size, void *data)
     CHANGE *walk;
     int got;
 
-#if 1 // TMN
-
+#ifdef __REACTOS__
 	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;
  	const off_t seekpos_aligned = pos - (pos % 512);
  	const size_t seek_delta = (size_t)(pos - seekpos_aligned);
@@ -295,18 +306,14 @@ void fs_read(off_t pos, int size, void *data)
 	assert(seek_delta + size <= readsize);
 	memcpy(data, tmpBuf+seek_delta, size);
 	free(tmpBuf);
-
-#else // TMN:
-
+#else
     if (lseek(fd, pos, 0) != pos)
-	pdie("Seek to %lld", pos);
+	pdie("Seek to %lld", (long long)pos);
     if ((got = read(fd, data, size)) < 0)
-	pdie("Read %d bytes at %lld", size, pos);
-
-#endif // TMN:
-
+	pdie("Read %d bytes at %lld", size, (long long)pos);
+#endif
     if (got != size)
-	die("Got %d bytes instead of %d at %lld", got, size, pos);
+	die("Got %d bytes instead of %d at %lld", got, size, (long long)pos);
     for (walk = changes; walk; walk = walk->next) {
 	if (walk->pos < pos + size && walk->pos + walk->size > pos) {
 	    if (walk->pos < pos)
@@ -319,42 +326,35 @@ void fs_read(off_t pos, int size, void *data)
     }
 }
 
-
 int fs_test(off_t pos, int size)
 {
     void *scratch;
     int okay;
 
-#if 1 // TMN
-
+#ifdef __REACTOS__
 	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
 	const off_t seekpos_aligned = pos - (pos % 512);                   // TMN:
     scratch = alloc(readsize_aligned);
     if (lseek(fd, seekpos_aligned, 0) != seekpos_aligned) pdie("Seek to %lld",pos);
     okay = read(fd, scratch, readsize_aligned) == (int)readsize_aligned;
     free(scratch);
-
-#else // TMN:
-
+#else
     if (lseek(fd, pos, 0) != pos)
-	pdie("Seek to %lld", pos);
+	pdie("Seek to %lld", (long long)pos);
     scratch = alloc(size);
     okay = read(fd, scratch, size) == size;
     free(scratch);
-
-#endif // TMN:
+#endif
     return okay;
 }
-
 
 void fs_write(off_t pos, int size, void *data)
 {
     CHANGE *new;
     int did;
 
+#ifdef __REACTOS__
     assert(interactive || rw);
-
-#if 1 //SAE
 
     if (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE) {
         void *scratch;
@@ -390,22 +390,18 @@ void fs_write(off_t pos, int size, void *data)
         if (did < 0) pdie("Write %d bytes at %lld", size, pos);
         die("Wrote %d bytes instead of %d at %lld", did, size, pos);
     }
-
-#else //SAE
-
+#else
     if (write_immed) {
 	did_change = 1;
 	if (lseek(fd, pos, 0) != pos)
-	    pdie("Seek to %lld", pos);
+	    pdie("Seek to %lld", (long long)pos);
 	if ((did = write(fd, data, size)) == size)
 	    return;
 	if (did < 0)
-	    pdie("Write %d bytes at %lld", size, pos);
-	die("Wrote %d bytes instead of %d at %lld", did, size, pos);
+	    pdie("Write %d bytes at %lld", size, (long long)pos);
+	die("Wrote %d bytes instead of %d at %lld", did, size, (long long)pos);
     }
-
-#endif //SAE
-
+#endif
     new = alloc(sizeof(CHANGE));
     new->pos = pos;
     memcpy(new->data = alloc(new->size = size), data, size);
@@ -417,10 +413,9 @@ void fs_write(off_t pos, int size, void *data)
     last = new;
 }
 
-
 static void fs_flush(void)
 {
-#if 1
+#ifdef __REACTOS__
 
     CHANGE *this;
     int old_write_immed = (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE);
@@ -442,7 +437,6 @@ static void fs_flush(void)
     if (!old_write_immed) FsCheckFlags ^= FSCHECK_IMMEDIATE_WRITE;
 
 #else
-
     CHANGE *this;
     int size;
 
@@ -450,26 +444,18 @@ static void fs_flush(void)
 	this = changes;
 	changes = changes->next;
 	if (lseek(fd, this->pos, 0) != this->pos)
-    {
-	    // printf("Seek to %lld failed: %s\n  Did not write %d bytes.\n",
-		    // (long long)this->pos, strerror(errno), this->size);
-	    printf("Seek to %lld failed\n  Did not write %d bytes.\n",
-		    (long long)this->pos, this->size);
-    }
+	    fprintf(stderr,
+		    "Seek to %lld failed: %s\n  Did not write %d bytes.\n",
+		    (long long)this->pos, strerror(errno), this->size);
 	else if ((size = write(fd, this->data, this->size)) < 0)
-    {
-	    // printf("Writing %d bytes at %lld failed: %s\n", this->size,
-		    // (long long)this->pos, strerror(errno));
-	    printf("Writing %d bytes at %lld failed\n",
-		    this->size, (long long)this->pos);
-    }
+	    fprintf(stderr, "Writing %d bytes at %lld failed: %s\n", this->size,
+		    (long long)this->pos, strerror(errno));
 	else if (size != this->size)
-	    printf("Wrote %d bytes instead of %d bytes at %lld.\n",
-		    size, this->size, (long long)this->pos);
+	    fprintf(stderr, "Wrote %d bytes instead of %d bytes at %lld."
+		    "\n", size, this->size, (long long)this->pos);
 	free(this->data);
 	free(this);
     }
-
 #endif
 }
 
@@ -478,7 +464,7 @@ int fs_close(int write)
     CHANGE *next;
     int changed;
 
-    changed = !!changes;
+    changed = ! !changes;
     if (write)
 	fs_flush();
     else
@@ -495,5 +481,5 @@ int fs_close(int write)
 
 int fs_changed(void)
 {
-    return !!changes || did_change;
+    return ! !changes || did_change;
 }

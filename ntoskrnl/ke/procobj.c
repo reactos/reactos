@@ -517,6 +517,58 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     return OldPriority;
 }
 
+VOID
+NTAPI
+KeQueryValuesProcess(IN PKPROCESS Process,
+                     PPROCESS_VALUES Values)
+{
+    PEPROCESS EProcess;
+    PLIST_ENTRY NextEntry;
+    ULONG TotalKernel, TotalUser;
+    KLOCK_QUEUE_HANDLE ProcessLock;
+
+    ASSERT_PROCESS(Process);
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &ProcessLock);
+
+    /* Initialize user and kernel times */
+    TotalKernel = Process->KernelTime;
+    TotalUser = Process->UserTime;
+
+    /* Copy the IO_COUNTERS from the process */
+    EProcess = (PEPROCESS)Process;
+    Values->IoInfo.ReadOperationCount = EProcess->ReadOperationCount.QuadPart;
+    Values->IoInfo.WriteOperationCount = EProcess->WriteOperationCount.QuadPart;
+    Values->IoInfo.OtherOperationCount = EProcess->OtherOperationCount.QuadPart;
+    Values->IoInfo.ReadTransferCount = EProcess->ReadTransferCount.QuadPart;
+    Values->IoInfo.WriteTransferCount = EProcess->WriteTransferCount.QuadPart;
+    Values->IoInfo.OtherTransferCount = EProcess->OtherTransferCount.QuadPart;
+
+    /* Loop all child threads and sum up their times */
+    for (NextEntry = Process->ThreadListHead.Flink;
+         NextEntry != &Process->ThreadListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        PKTHREAD Thread;
+
+        /* Get the thread */
+        Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+        /* Sum up times */
+        TotalKernel += Thread->KernelTime;
+        TotalUser += Thread->UserTime;
+    }
+
+    /* Release the process lock */
+    KiReleaseProcessLock(&ProcessLock);
+
+    /* Compute total times */
+    Values->TotalKernelTime.QuadPart = TotalKernel * (LONGLONG)KeMaximumIncrement;
+    Values->TotalUserTime.QuadPart = TotalUser * (LONGLONG)KeMaximumIncrement;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*

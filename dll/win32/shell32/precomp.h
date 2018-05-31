@@ -29,6 +29,7 @@
 #include <atlcom.h>
 #include <atlwin.h>
 #include <atlstr.h>
+#include <atlsimpcoll.h>
 #include <powrprof.h>
 #include <winnetwk.h>
 #include <objsafe.h>

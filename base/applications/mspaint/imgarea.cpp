@@ -291,8 +291,8 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
-    ReleaseCapture();
     drawing = FALSE;
+    ReleaseCapture();
     return 0;
 }
 

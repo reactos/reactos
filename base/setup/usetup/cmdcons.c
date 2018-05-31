@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/cmdcons.c
  * PURPOSE:         Recovery console
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #include "usetup.h"

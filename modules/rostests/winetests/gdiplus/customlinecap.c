@@ -17,6 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <limits.h>
 
 #include "objbase.h"
 #include "gdiplus.h"
@@ -24,6 +25,22 @@
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 #define expectf(expected, got) ok(got == expected, "Expected %.2f, got %.2f\n", expected, got)
+
+static BOOL compare_float(float f, float g, unsigned int ulps)
+{
+    int x = *(int *)&f;
+    int y = *(int *)&g;
+
+    if (x < 0)
+        x = INT_MIN - x;
+    if (y < 0)
+        y = INT_MIN - y;
+
+    if (abs(x - y) > ulps)
+        return FALSE;
+
+    return TRUE;
+}
 
 static void test_constructor_destructor(void)
 {
@@ -219,21 +236,40 @@ static void test_scale(void)
 
 static void test_create_adjustable_cap(void)
 {
+    REAL inset, scale, height, width;
     GpAdjustableArrowCap *cap;
-    REAL inset, scale;
     GpLineJoin join;
     GpStatus stat;
     GpLineCap base;
+    BOOL ret;
 
     stat = GdipCreateAdjustableArrowCap(10.0, 10.0, TRUE, NULL);
-todo_wine
     ok(stat == InvalidParameter, "Unexpected return code, %d\n", stat);
 
     stat = GdipCreateAdjustableArrowCap(17.0, 15.0, TRUE, &cap);
-todo_wine
     ok(stat == Ok, "Failed to create adjustable cap, %d\n", stat);
-    if (stat != Ok)
-        return;
+
+    stat = GdipGetAdjustableArrowCapFillState(cap, NULL);
+    ok(stat == InvalidParameter, "Unexpected return code, %d\n", stat);
+
+    ret = FALSE;
+    stat = GdipGetAdjustableArrowCapFillState(cap, &ret);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+    ok(ret, "Unexpected fill state %d\n", ret);
+
+    stat = GdipGetAdjustableArrowCapHeight(cap, NULL);
+    ok(stat == InvalidParameter, "Unexpected return code, %d\n", stat);
+
+    stat = GdipGetAdjustableArrowCapHeight(cap, &height);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+    ok(height == 17.0, "Unexpected cap height %f\n", height);
+
+    stat = GdipGetAdjustableArrowCapWidth(cap, NULL);
+    ok(stat == InvalidParameter, "Unexpected return code, %d\n", stat);
+
+    stat = GdipGetAdjustableArrowCapWidth(cap, &width);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+    ok(width == 15.0, "Unexpected cap width %f\n", width);
 
     stat = GdipGetAdjustableArrowCapMiddleInset(cap, NULL);
     ok(stat == InvalidParameter, "Unexpected return code, %d\n", stat);
@@ -247,14 +283,41 @@ todo_wine
     ok(base == LineCapTriangle, "Unexpected base cap %d\n", base);
 
     stat = GdipSetCustomLineCapBaseCap((GpCustomLineCap*)cap, LineCapSquare);
+todo_wine
     ok(stat == Ok, "Unexpected return code, %d\n", stat);
 
     stat = GdipGetCustomLineCapBaseCap((GpCustomLineCap*)cap, &base);
     ok(stat == Ok, "Unexpected return code, %d\n", stat);
+todo_wine
     ok(base == LineCapSquare, "Unexpected base cap %d\n", base);
 
+    /* Base inset */
+    stat = GdipGetAdjustableArrowCapWidth(cap, &width);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+
+    stat = GdipGetAdjustableArrowCapHeight(cap, &height);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+
+    inset = 0.0;
     stat = GdipGetCustomLineCapBaseInset((GpCustomLineCap*)cap, &inset);
     ok(stat == Ok, "Unexpected return code, %d\n", stat);
+    ok(compare_float(inset, height / width, 1), "Unexpected inset %f\n", inset);
+
+    stat = GdipSetAdjustableArrowCapMiddleInset(cap, 1.0);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+
+    inset = 0.0;
+    stat = GdipGetCustomLineCapBaseInset((GpCustomLineCap*)cap, &inset);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+    ok(compare_float(inset, height / width, 1), "Unexpected inset %f\n", inset);
+
+    stat = GdipSetAdjustableArrowCapHeight(cap, 2.0 * height);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+
+    inset = 0.0;
+    stat = GdipGetCustomLineCapBaseInset((GpCustomLineCap*)cap, &inset);
+    ok(stat == Ok, "Unexpected return code, %d\n", stat);
+    ok(compare_float(inset, 2.0 * height / width, 1), "Unexpected inset %f\n", inset);
 
     stat = GdipGetCustomLineCapWidthScale((GpCustomLineCap*)cap, &scale);
     ok(stat == Ok, "Unexpected return code, %d\n", stat);
@@ -299,10 +362,7 @@ static void test_captype(void)
 
     /* arrow cap */
     stat = GdipCreateAdjustableArrowCap(17.0, 15.0, TRUE, &arrowcap);
-todo_wine
     ok(stat == Ok, "Failed to create adjustable cap, %d\n", stat);
-    if (stat != Ok)
-        return;
 
     stat = GdipGetCustomLineCapType((GpCustomLineCap*)arrowcap, &type);
     ok(stat == Ok, "Failed to get cap type, %d\n", stat);

@@ -39,7 +39,10 @@ static WCHAR *escape_string(WCHAR *str, size_t str_len, size_t *line_len)
     for (i = 0, escape_count = 0; i < str_len; i++)
     {
         WCHAR c = str[i];
-        if (c == '\r' || c == '\n' || c == '\\' || c == '"' || c == '\0')
+
+        if (!c) break;
+
+        if (c == '\r' || c == '\n' || c == '\\' || c == '"')
             escape_count++;
     }
 
@@ -48,6 +51,8 @@ static WCHAR *escape_string(WCHAR *str, size_t str_len, size_t *line_len)
     for (i = 0, pos = 0; i < str_len; i++, pos++)
     {
         WCHAR c = str[i];
+
+        if (!c) break;
 
         switch (c)
         {
@@ -66,10 +71,6 @@ static WCHAR *escape_string(WCHAR *str, size_t str_len, size_t *line_len)
         case '"':
             buf[pos++] = '\\';
             buf[pos] = '"';
-            break;
-        case '\0':
-            buf[pos++] = '\\';
-            buf[pos] = '0';
             break;
         default:
             buf[pos] = c;

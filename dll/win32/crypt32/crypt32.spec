@@ -177,6 +177,7 @@
 @ stdcall CryptSIPRemoveProvider(ptr)
 @ stdcall CryptSIPRemoveSignedDataMsg(ptr long)
 @ stdcall CryptSIPRetrieveSubjectGuid(wstr long ptr)
+@ stdcall CryptSIPRetrieveSubjectGuidForCatalogFile(wstr long ptr)
 @ stdcall CryptSIPVerifyIndirectData(ptr ptr)
 @ stub CryptSetAsyncParam
 @ stdcall CryptSetOIDFunctionValue(long str str wstr long ptr long)
