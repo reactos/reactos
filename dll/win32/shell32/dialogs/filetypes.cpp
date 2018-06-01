@@ -56,9 +56,8 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
         return FALSE;
 
     // query "extfile" key name
-    WCHAR szValue[64];
+    WCHAR szValue[64] = { 0 };
     DWORD cbValue = sizeof(szValue);
-    szValue[0] = 0;
     RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(szValue), &cbValue);
     RegCloseKey(hKey);
 
