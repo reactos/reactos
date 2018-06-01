@@ -30,7 +30,7 @@ IDI_ICON  ICON  DISCARDABLE  "res/icon_cylfrac.ico"
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
 #endif
-#ifdef LANGUAGE_ES_ES
+#ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
@@ -59,4 +59,7 @@ IDI_ICON  ICON  DISCARDABLE  "res/icon_cylfrac.ico"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
 #endif
