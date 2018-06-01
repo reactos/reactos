@@ -246,8 +246,7 @@ EditTypeDlg_OnChangeIcon(HWND hwndDlg, PEDITTYPE_DIALOG pEditType)
         pEditType->nIconIndex = IconIndex;
 
         // set icon to dialog
-        HWND hwndIcon = GetDlgItem(hwndDlg, IDC_EDITTYPE_ICON);
-        SendMessageW(hwndIcon, STM_SETICON, (WPARAM)pEntry->hIconLarge, 0);
+        SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_ICON, STM_SETICON, (WPARAM)pEntry->hIconLarge, 0);
     }
 }
 
