@@ -390,6 +390,12 @@
 #define IDC_ACTION_BROWSE                   14003
 #define IDC_ACTION_USE_DDE                  14004
 
+/* Control IDs for IDD_FOLDER_OPTIONS_VIEW dialog */
+#define IDC_VIEW_APPLY_TO_ALL               14001
+#define IDC_VIEW_RESET_ALL                  14002
+#define IDC_VIEW_TREEVIEW                   14003
+#define IDC_VIEW_RESTORE_DEFAULTS           14004
+
 /* Other dialogs */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24

@@ -439,11 +439,11 @@ BEGIN
     GROUPBOX "Изглед на папките", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Можете да прилагате изгледа (от рода на подробен\nи настелен) на тази папка за всички папки.", -1, 60, 20, 190, 20
-    PUSHBUTTON "Прилагане върху ви&чки папки", 14001, 20, 50, 115, 14, WS_TABSTOP
-    PUSHBUTTON "&Зачистване на всички папки", 14002, 140, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "Прилагане върху ви&чки папки", IDC_VIEW_APPLY_TO_ALL, 20, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "&Зачистване на всички папки", IDC_VIEW_RESET_ALL, 140, 50, 115, 14, WS_TABSTOP
     LTEXT "Разширени настройки", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "От под&разбираните", 14004, 177, 215, 80, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "От под&разбираните", IDC_VIEW_RESTORE_DEFAULTS, 177, 215, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256

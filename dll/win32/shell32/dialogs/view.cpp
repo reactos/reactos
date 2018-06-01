@@ -622,7 +622,7 @@ ViewDlg_CreateTreeImageList(VOID)
 static BOOL
 ViewDlg_OnInitDialog(HWND hwndDlg)
 {
-    HWND hwndTreeView = GetDlgItem(hwndDlg, 14003);
+    HWND hwndTreeView = GetDlgItem(hwndDlg, IDC_VIEW_TREEVIEW);
 
     s_hTreeImageList = ViewDlg_CreateTreeImageList();
     TreeView_SetImageList(hwndTreeView, s_hTreeImageList, TVSIL_NORMAL);
@@ -637,7 +637,7 @@ ViewDlg_OnInitDialog(HWND hwndDlg)
 static BOOL
 ViewDlg_ToggleCheckItem(HWND hwndDlg, HTREEITEM hItem)
 {
-    HWND hwndTreeView = GetDlgItem(hwndDlg, 14003);
+    HWND hwndTreeView = GetDlgItem(hwndDlg, IDC_VIEW_TREEVIEW);
 
     // get the item
     TV_ITEM Item;
@@ -697,7 +697,7 @@ ViewDlg_ToggleCheckItem(HWND hwndDlg, HTREEITEM hItem)
 static VOID
 ViewDlg_OnTreeViewClick(HWND hwndDlg)
 {
-    HWND hwndTreeView = GetDlgItem(hwndDlg, 14003);
+    HWND hwndTreeView = GetDlgItem(hwndDlg, IDC_VIEW_TREEVIEW);
 
     // do hit test to get the clicked item
     TV_HITTESTINFO HitTest;
@@ -719,7 +719,7 @@ ViewDlg_OnTreeViewClick(HWND hwndDlg)
 static void
 ViewDlg_OnTreeViewKeyDown(HWND hwndDlg, TV_KEYDOWN *KeyDown)
 {
-    HWND hwndTreeView = GetDlgItem(hwndDlg, 14003);
+    HWND hwndTreeView = GetDlgItem(hwndDlg, IDC_VIEW_TREEVIEW);
 
     if (KeyDown->wVKey == VK_SPACE)
     {
@@ -765,7 +765,7 @@ ViewDlg_OnTreeCustomDraw(HWND hwndDlg, NMTVCUSTOMDRAW *Draw)
 static VOID
 ViewDlg_RestoreDefaults(HWND hwndDlg)
 {
-    HWND hwndTreeView = GetDlgItem(hwndDlg, 14003);
+    HWND hwndTreeView = GetDlgItem(hwndDlg, IDC_VIEW_TREEVIEW);
 
     for (INT i = 0; i < s_ViewTreeEntryCount; ++i)
     {
@@ -959,7 +959,7 @@ FolderOptionsViewDlg(
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case 14004: // Restore Defaults
+                case IDC_VIEW_RESTORE_DEFAULTS: // Restore Defaults
                     ViewDlg_RestoreDefaults(hwndDlg);
                     break;
             }
