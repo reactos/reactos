@@ -287,6 +287,7 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
     lpTimeZoneInformation->StandardDate.wHour = TimeZoneInformation.StandardDate.Hour;
     lpTimeZoneInformation->StandardDate.wMinute = TimeZoneInformation.StandardDate.Minute;
     lpTimeZoneInformation->StandardDate.wSecond = TimeZoneInformation.StandardDate.Second;
+    lpTimeZoneInformation->StandardDate.wMilliseconds = TimeZoneInformation.StandardDate.Milliseconds;
     lpTimeZoneInformation->StandardDate.wDayOfWeek = TimeZoneInformation.StandardDate.Weekday;
     lpTimeZoneInformation->StandardBias = TimeZoneInformation.StandardBias;
 
@@ -299,6 +300,7 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
     lpTimeZoneInformation->DaylightDate.wHour = TimeZoneInformation.DaylightDate.Hour;
     lpTimeZoneInformation->DaylightDate.wMinute = TimeZoneInformation.DaylightDate.Minute;
     lpTimeZoneInformation->DaylightDate.wSecond = TimeZoneInformation.DaylightDate.Second;
+    lpTimeZoneInformation->DaylightDate.wMilliseconds = TimeZoneInformation.DaylightDate.Milliseconds;
     lpTimeZoneInformation->DaylightDate.wDayOfWeek = TimeZoneInformation.DaylightDate.Weekday;
     lpTimeZoneInformation->DaylightBias = TimeZoneInformation.DaylightBias;
 
@@ -329,6 +331,7 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
     TimeZoneInformation.StandardDate.Hour = lpTimeZoneInformation->StandardDate.wHour;
     TimeZoneInformation.StandardDate.Minute = lpTimeZoneInformation->StandardDate.wMinute;
     TimeZoneInformation.StandardDate.Second = lpTimeZoneInformation->StandardDate.wSecond;
+    TimeZoneInformation.StandardDate.Milliseconds = lpTimeZoneInformation->StandardDate.wMilliseconds;
     TimeZoneInformation.StandardDate.Weekday = lpTimeZoneInformation->StandardDate.wDayOfWeek;
     TimeZoneInformation.StandardBias = lpTimeZoneInformation->StandardBias;
 
@@ -341,6 +344,7 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
     TimeZoneInformation.DaylightDate.Hour = lpTimeZoneInformation->DaylightDate.wHour;
     TimeZoneInformation.DaylightDate.Minute = lpTimeZoneInformation->DaylightDate.wMinute;
     TimeZoneInformation.DaylightDate.Second = lpTimeZoneInformation->DaylightDate.wSecond;
+    TimeZoneInformation.DaylightDate.Milliseconds = lpTimeZoneInformation->DaylightDate.wMilliseconds;
     TimeZoneInformation.DaylightDate.Weekday = lpTimeZoneInformation->DaylightDate.wDayOfWeek;
     TimeZoneInformation.DaylightBias = lpTimeZoneInformation->DaylightBias;
 
