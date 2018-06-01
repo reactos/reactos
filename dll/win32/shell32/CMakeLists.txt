@@ -31,13 +31,13 @@ list(APPEND SOURCE
     dialogs/dialogs.cpp
     dialogs/drive.cpp
     dialogs/drvdefext.cpp
-    dialogs/folder_options.cpp
-    dialogs/general.cpp
-    dialogs/view.cpp
-    dialogs/filetypes.cpp
     dialogs/filedefext.cpp
+    dialogs/filetypes.cpp
+    dialogs/folder_options.cpp
     dialogs/fprop.cpp
+    dialogs/general.cpp
     dialogs/recycler_prop.cpp
+    dialogs/view.cpp
     CDropTargetHelper.cpp
     CEnumIDListBase.cpp
     CExtractIcon.cpp
