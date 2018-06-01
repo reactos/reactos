@@ -1153,6 +1153,73 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
     return TRUE;
 }
 
+static BOOL
+EditTypeDlg_ReadClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType, LPCWSTR ClassKey)
+{
+    // open class key
+    HKEY hClassKey;
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_READ, &hClassKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    // open "shell" key
+    HKEY hShellKey;
+    if (RegOpenKeyExW(hClassKey, L"shell", 0, KEY_READ, &hShellKey) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hClassKey);
+        return FALSE;
+    }
+
+    WCHAR DefaultVerb[64];
+    DWORD dwSize = sizeof(DefaultVerb);
+    if (RegQueryValueExW(hShellKey, NULL, NULL, NULL,
+                         LPBYTE(DefaultVerb), &dwSize) == ERROR_SUCCESS)
+    {
+        StringCbCopyW(pEditType->szDefaultVerb, sizeof(pEditType->szDefaultVerb), DefaultVerb);
+    }
+    else
+    {
+        StringCbCopyW(pEditType->szDefaultVerb, sizeof(pEditType->szDefaultVerb), L"open");
+    }
+
+    // enumerate shell verbs
+    WCHAR szVerbName[64];
+    DWORD dwIndex = 0;
+    while (RegEnumKeyW(hShellKey, dwIndex, szVerbName, _countof(szVerbName)) == ERROR_SUCCESS)
+    {
+        // open verb key
+        HKEY hVerbKey;
+        LONG nResult = RegOpenKeyExW(hShellKey, szVerbName, 0, KEY_READ, &hVerbKey);
+        if (nResult == ERROR_SUCCESS)
+        {
+            // open command key
+            HKEY hCommandKey;
+            nResult = RegOpenKeyExW(hVerbKey, L"command", 0, KEY_READ, &hCommandKey);
+            if (nResult == ERROR_SUCCESS)
+            {
+                // get command line
+                WCHAR szValue[MAX_PATH + 32];
+                dwSize = sizeof(szValue);
+                nResult = RegQueryValueExW(hCommandKey, NULL, NULL, NULL, LPBYTE(szValue), &dwSize);
+                if (nResult == ERROR_SUCCESS)
+                {
+                    pEditType->CommandLineMap.SetAt(szVerbName, szValue);
+                }
+
+                RegCloseKey(hCommandKey);
+            }
+
+            RegCloseKey(hVerbKey);
+        }
+        SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_ADDSTRING, 0, LPARAM(szVerbName));
+        ++dwIndex;
+    }
+
+    RegCloseKey(hShellKey);
+    RegCloseKey(hClassKey);
+
+    return TRUE;
+}
+
 static void
 EditTypeDlg_OnOK(HWND hwndDlg, PEDITTYPE_DIALOG pEditType)
 {
@@ -1324,73 +1391,6 @@ EditTypeDlg_OnCommand(HWND hwndDlg, UINT id, UINT code, PEDITTYPE_DIALOG pEditTy
             InvalidateRect(action.hwndLB, NULL, TRUE);
             break;
     }
-}
-
-static BOOL
-EditTypeDlg_ReadClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType, LPCWSTR ClassKey)
-{
-    // open class key
-    HKEY hClassKey;
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, KEY_READ, &hClassKey) != ERROR_SUCCESS)
-        return FALSE;
-
-    // open "shell" key
-    HKEY hShellKey;
-    if (RegOpenKeyExW(hClassKey, L"shell", 0, KEY_READ, &hShellKey) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hClassKey);
-        return FALSE;
-    }
-
-    WCHAR DefaultVerb[64];
-    DWORD dwSize = sizeof(DefaultVerb);
-    if (RegQueryValueExW(hShellKey, NULL, NULL, NULL,
-                         LPBYTE(DefaultVerb), &dwSize) == ERROR_SUCCESS)
-    {
-        StringCbCopyW(pEditType->szDefaultVerb, sizeof(pEditType->szDefaultVerb), DefaultVerb);
-    }
-    else
-    {
-        StringCbCopyW(pEditType->szDefaultVerb, sizeof(pEditType->szDefaultVerb), L"open");
-    }
-
-    // enumerate shell verbs
-    WCHAR szVerbName[64];
-    DWORD dwIndex = 0;
-    while (RegEnumKeyW(hShellKey, dwIndex, szVerbName, _countof(szVerbName)) == ERROR_SUCCESS)
-    {
-        // open verb key
-        HKEY hVerbKey;
-        LONG nResult = RegOpenKeyExW(hShellKey, szVerbName, 0, KEY_READ, &hVerbKey);
-        if (nResult == ERROR_SUCCESS)
-        {
-            // open command key
-            HKEY hCommandKey;
-            nResult = RegOpenKeyExW(hVerbKey, L"command", 0, KEY_READ, &hCommandKey);
-            if (nResult == ERROR_SUCCESS)
-            {
-                // get command line
-                WCHAR szValue[MAX_PATH + 32];
-                dwSize = sizeof(szValue);
-                nResult = RegQueryValueExW(hCommandKey, NULL, NULL, NULL, LPBYTE(szValue), &dwSize);
-                if (nResult == ERROR_SUCCESS)
-                {
-                    pEditType->CommandLineMap.SetAt(szVerbName, szValue);
-                }
-
-                RegCloseKey(hCommandKey);
-            }
-
-            RegCloseKey(hVerbKey);
-        }
-        SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_LISTBOX, LB_ADDSTRING, 0, LPARAM(szVerbName));
-        ++dwIndex;
-    }
-
-    RegCloseKey(hShellKey);
-    RegCloseKey(hClassKey);
-
-    return TRUE;
 }
 
 static BOOL
