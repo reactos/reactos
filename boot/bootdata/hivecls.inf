@@ -8,6 +8,14 @@ HKLM,"SOFTWARE\Classes",,0x00000010
 HKCR,"*","",0x00000000,""
 HKCR,"SystemFileAssociations","",0x00000000,""
 
+; Open With List
+HKCR,"*\OpenWithList\excel.exe","",0x00000000,""
+HKCR,"*\OpenWithList\iexplore.exe","",0x00000000,""
+HKCR,"*\OpenWithList\mspaint.exe","",0x00000000,""
+HKCR,"*\OpenWithList\notepad.exe","",0x00000000,""
+HKCR,"*\OpenWithList\winword.exe","",0x00000000,""
+HKCR,"*\OpenWithList\wordpad.exe","",0x00000000,""
+
 ; Folders
 HKCR,"Folder","",0x00000000,"Folder"
 ;HKCR,"Folder\DefaultIcon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
@@ -550,11 +558,6 @@ HKCR,"CLSID\{A65B8071-3BFE-4213-9A5B-491DA4461CA7}\VersionIndependentProgID","",
 HKCR,"NDS\Clsid","",0x00000002,"{323991f0-7bad-11cf-b03d-00aa006e0975}"
 
 HKCR,"WinNT\Clsid","",0x00000002,"{8b20cd60-0f29-11cf-abc4-02608c9e7553}"
-
-; Applications
-HKCR,"Applications\notepad.exe\shell\open\command","",0x00000002,"notepad.exe %1"
-HKCR,"Applications\mspaint.exe\shell\open\command","",0x00000002,"mspaint.exe %1"
-HKCR,"Applications\wordpad.exe\shell\open\command","",0x00000002,"wordpad.exe %1"
 
 ; Misc Perceived types
 HKCR,".asm","PerceivedType",0x00000000,"text"
