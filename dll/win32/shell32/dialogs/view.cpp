@@ -800,14 +800,6 @@ ViewDlg_RestoreDefaults(HWND hwndDlg)
     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 }
 
-// FIXME: These macros should not be defined here
-#ifndef SSF_SHOWSUPERHIDDEN
-    #define SSF_SHOWSUPERHIDDEN     0x00040000
-#endif
-#ifndef SSF_SEPPROCESS
-    #define SSF_SEPPROCESS          0x00080000
-#endif
-
 static VOID
 ScanAdvancedSettings(SHELLSTATE *pSS, DWORD *pdwMask)
 {
