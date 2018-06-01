@@ -855,7 +855,7 @@ static BOOL CALLBACK
 RefreshBrowsersCallback(HWND hWnd, LPARAM msg)
 {
     WCHAR ClassName[100];
-    if (GetClassName(hWnd, ClassName, 100))
+    if (GetClassNameW(hWnd, ClassName, _countof(ClassName)))
     {
         if (!wcscmp(ClassName, L"Progman") ||
             !wcscmp(ClassName, L"CabinetWClass") ||
