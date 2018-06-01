@@ -851,9 +851,6 @@ ScanAdvancedSettings(SHELLSTATE *pSS, DWORD *pdwMask)
     }
 }
 
-extern "C"
-VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet);
-
 static BOOL CALLBACK
 RefreshBrowsersCallback(HWND hWnd, LPARAM msg)
 {
