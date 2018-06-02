@@ -309,8 +309,17 @@ static int getdomainname()
                             (socklen_t)ptr->ai_addrlen, hostname, NI_MAXHOST, 
                             servInfo, NI_MAXSERV, NI_NAMEREQD);
                 if (status)
+#if 0
                     dprintf(1, "getnameinfo failed %d\n", WSAGetLastError());
                 else {
+#else
+                {
+                    dprintf(1, "getnameinfo failed %d, forcing name\n", WSAGetLastError());
+                    memcpy(hostname, "reactos.home", sizeof("reactos.home"));
+                    status = 0;
+                }
+                {
+#endif
                     size_t i, len = strlen(hostname);
                     char *p = hostname;
                     dprintf(1, "getdomainname: hostname %s %d\n", hostname, len);
