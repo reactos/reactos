@@ -1177,7 +1177,7 @@ static UINT BUTTON_CalcLabelRect(const BUTTON_INFO *infoPtr, HDC hdc, RECT *rc)
    UINT        dtStyle = BUTTON_BStoDT( style, ex_style );
    RECT        r = *rc;
    INT         n;
-#ifdef __REACTOS__
+#if !defined(_USER32_) && defined(__REACTOS__)
     BOOL bHasIml = BUTTON_DrawIml(hdc, &infoPtr->imlData, &r, TRUE, 0);
 #endif
 
@@ -1229,12 +1229,16 @@ static UINT BUTTON_CalcLabelRect(const BUTTON_INFO *infoPtr, HDC hdc, RECT *rc)
 
       default:
       empty_rect:
+#if !defined(_USER32_) && defined(__REACTOS__)
+         if (bHasIml)
+             break;
+#endif
          rc->right = r.left;
          rc->bottom = r.top;
          return (UINT)-1;
    }
 
-#ifdef __REACTOS__
+#if !defined(_USER32_) && defined(__REACTOS__)
    if (bHasIml)
    {
      if (infoPtr->imlData.uAlign == BUTTON_IMAGELIST_ALIGN_LEFT)
@@ -1318,7 +1322,7 @@ static void BUTTON_DrawLabel(const BUTTON_INFO *infoPtr, HDC hdc, UINT dtFlags, 
     * I don't have Win31 on hand to verify that, so I leave it as is.
     */
 
-#ifdef __REACTOS__
+#if !defined(_USER32_) && defined(__REACTOS__)
     RECT rcText = *rc;
     BUTTON_DrawIml(hdc, &infoPtr->imlData, &rcText, FALSE, 0);
 #endif
