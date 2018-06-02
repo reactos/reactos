@@ -9,6 +9,14 @@
  */
 
 #include "precomp.h"
+#include <sddl.h>
+
+
+typedef struct _PROFILEDATA
+{
+    PWSTR pszFullName;
+} PROFILEDATA, *PPROFILEDATA;
+
 
 static VOID
 SetListViewColumns(HWND hwndListView)
@@ -64,13 +72,86 @@ static VOID
 AddUserProfile(HWND hwndListView,
                LPTSTR lpProfileSid)
 {
+    PPROFILEDATA pProfileData = NULL;
+    PWSTR pszAccountName = NULL;
+    PWSTR pszDomainName = NULL;
+    SID_NAME_USE Use;
+    DWORD dwAccountNameSize, dwDomainNameSize;
+    DWORD dwProfileData;
+    PWSTR ptr;
+    PSID pSid = NULL;
     LV_ITEM lvi;
+
+    if (!ConvertStringSidToSid(lpProfileSid,
+                               &pSid))
+        return;
+
+    dwAccountNameSize = 0;
+    dwDomainNameSize = 0;
+    LookupAccountSidW(NULL,
+                      pSid,
+                      NULL,
+                      &dwAccountNameSize,
+                      NULL,
+                      &dwDomainNameSize,
+                      &Use);
+
+    pszDomainName = HeapAlloc(GetProcessHeap(),
+                              0,
+                              dwDomainNameSize * sizeof(WCHAR));
+    if (pszDomainName == NULL)
+        goto done;
+
+    pszAccountName = HeapAlloc(GetProcessHeap(),
+                               0,
+                               dwAccountNameSize * sizeof(WCHAR));
+    if (pszAccountName == NULL)
+        goto done;
+
+    if (!LookupAccountSidW(NULL,
+                           pSid,
+                           pszAccountName,
+                           &dwAccountNameSize,
+                           pszDomainName,
+                           &dwDomainNameSize,
+                           &Use))
+        goto done;
+
+    /* Show only the user accounts */
+    if (Use != SidTypeUser)
+        goto done;
+
+    dwProfileData = sizeof(PROFILEDATA) +
+                    ((wcslen(pszDomainName) + wcslen(pszAccountName) + 2) * sizeof(WCHAR));
+    pProfileData = HeapAlloc(GetProcessHeap(),
+                             0,
+                             dwProfileData);
+    if (pProfileData == NULL)
+        goto done;
+
+    ptr = (PWSTR)((ULONG_PTR)pProfileData + sizeof(PROFILEDATA));
+    pProfileData->pszFullName = ptr;
+
+    wsprintf(pProfileData->pszFullName, L"%s\\%s", pszDomainName, pszAccountName);
 
     memset(&lvi, 0x00, sizeof(lvi));
     lvi.mask = LVIF_TEXT | LVIF_STATE;
-    lvi.pszText = lpProfileSid;
+    lvi.pszText = pProfileData->pszFullName;
     lvi.state = 0;
     ListView_InsertItem(hwndListView, &lvi);
+
+done:
+    if (pProfileData == NULL)
+        HeapFree(GetProcessHeap(), 0, pProfileData);
+
+    if (pszDomainName == NULL)
+        HeapFree(GetProcessHeap(), 0, pszDomainName);
+
+    if (pszAccountName == NULL)
+        HeapFree(GetProcessHeap(), 0, pszAccountName);
+
+    if (pSid != NULL)
+        LocalFree(pSid);
 }
 
 
