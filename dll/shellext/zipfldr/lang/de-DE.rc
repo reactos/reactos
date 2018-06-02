@@ -27,8 +27,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
     LTEXT           "Die Dateien wurden in das folgende Verzeichnis extrahiert:",IDC_STATIC,6,12,222,18
     LTEXT           "Zielverzeichnis",IDC_DESTDIR,6,36,222,8
-    CONTROL         "Extrahierte Dateien anzeigen",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,81,10
-    LTEXT           "Abschließen drücken um fortzufahren.",IDC_STATIC,6,84,174,8
+    CONTROL         "Extrahierte Dateien anzeigen",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,105,10
+    LTEXT           "Klicken Sie auf 'Fertig' um fortzufahren.",IDC_STATIC,6,84,174,8
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
@@ -61,7 +61,7 @@ BEGIN
     IDS_WIZ_DEST_SUBTITLE "Dateien im ZIP-Archiv werden auf den von Ihnen hier angegebenen Pfad extrahiert."
     IDS_WIZ_COMPL_TITLE "Extrahieren abgeschlossen"
     IDS_WIZ_COMPL_SUBTITLE "Die Dateien des ZIP-Archives wurden extrahiert."
-    IDS_WIZ_BROWSE_TITLE "Wählen Sie ein Ziel zum extrahieren der Dateien."
+    IDS_WIZ_BROWSE_TITLE "Wählen Sie ein Ziel zum Extrahieren der Dateien."
 
     IDS_OVERWRITEFILE_TEXT "Dieser Ordner enthält bereits eine Datei '%1'.\nMöchten Sie die existierende Datei ersetzen?"
 
