@@ -141,14 +141,14 @@ AddUserProfile(HWND hwndListView,
     ListView_InsertItem(hwndListView, &lvi);
 
 done:
-    if (pProfileData == NULL)
+    if (pProfileData != NULL)
         HeapFree(GetProcessHeap(), 0, pProfileData);
 
-    if (pszDomainName == NULL)
-        HeapFree(GetProcessHeap(), 0, pszDomainName);
-
-    if (pszAccountName == NULL)
+    if (pszAccountName != NULL)
         HeapFree(GetProcessHeap(), 0, pszAccountName);
+
+    if (pszDomainName != NULL)
+        HeapFree(GetProcessHeap(), 0, pszDomainName);
 
     if (pSid != NULL)
         LocalFree(pSid);
