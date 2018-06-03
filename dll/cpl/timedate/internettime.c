@@ -130,140 +130,6 @@ SetNTPServer(HWND hwnd)
 }
 
 
-/* Get the domain name from the registry */
-static BOOL
-GetNTPServerAddress(LPWSTR *lpAddress)
-{
-    HKEY hKey;
-    WCHAR szSel[4];
-    DWORD dwSize;
-    LONG lRet;
-
-    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
-                         0,
-                         KEY_QUERY_VALUE,
-                         &hKey);
-    if (lRet != ERROR_SUCCESS)
-        goto fail;
-
-    /* Get data from default value */
-    dwSize = 4 * sizeof(WCHAR);
-    lRet = RegQueryValueExW(hKey,
-                            NULL,
-                            NULL,
-                            NULL,
-                            (LPBYTE)szSel,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto fail;
-
-    dwSize = 0;
-    lRet = RegQueryValueExW(hKey,
-                            szSel,
-                            NULL,
-                            NULL,
-                            NULL,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto fail;
-
-    (*lpAddress) = (LPWSTR)HeapAlloc(GetProcessHeap(),
-                                     0,
-                                     dwSize);
-    if ((*lpAddress) == NULL)
-    {
-        lRet = ERROR_NOT_ENOUGH_MEMORY;
-        goto fail;
-    }
-
-    lRet = RegQueryValueExW(hKey,
-                            szSel,
-                            NULL,
-                            NULL,
-                            (LPBYTE)*lpAddress,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS)
-        goto fail;
-
-    RegCloseKey(hKey);
-
-    return TRUE;
-
-fail:
-    DisplayWin32Error(lRet);
-    if (hKey)
-        RegCloseKey(hKey);
-    HeapFree(GetProcessHeap(), 0, *lpAddress);
-    return FALSE;
-}
-
-
-/* Request the time from the current NTP server */
-static ULONG
-GetTimeFromServer(VOID)
-{
-    LPWSTR lpAddress = NULL;
-    ULONG ulTime = 0;
-
-    if (GetNTPServerAddress(&lpAddress))
-    {
-        ulTime = GetServerTime(lpAddress);
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpAddress);
-    }
-
-    return ulTime;
-}
-
-/*
- * NTP servers state the number of seconds passed since
- * 1st Jan, 1900. The time returned from the server
- * needs adding to that date to get the current Gregorian time
- */
-static VOID
-UpdateSystemTime(ULONG ulTime)
-{
-    FILETIME ftNew;
-    LARGE_INTEGER li;
-    SYSTEMTIME stNew;
-
-    /* Time at 1st Jan 1900 */
-    stNew.wYear = 1900;
-    stNew.wMonth = 1;
-    stNew.wDay = 1;
-    stNew.wHour = 0;
-    stNew.wMinute = 0;
-    stNew.wSecond = 0;
-    stNew.wMilliseconds = 0;
-
-    /* Convert to a file time */
-    if (!SystemTimeToFileTime(&stNew, &ftNew))
-    {
-        DisplayWin32Error(GetLastError());
-        return;
-    }
-
-    /* Add on the time passed since 1st Jan 1900 */
-    li = *(LARGE_INTEGER *)&ftNew;
-    li.QuadPart += (LONGLONG)10000000 * ulTime;
-    ftNew = * (FILETIME *)&li;
-
-    /* Convert back to a system time */
-    if (!FileTimeToSystemTime(&ftNew, &stNew))
-    {
-        DisplayWin32Error(GetLastError());
-        return;
-    }
-
-    /* Use SystemSetTime with SystemTime = TRUE to set System Time */
-    if (!SystemSetTime(&stNew, TRUE))
-         DisplayWin32Error(GetLastError());
-}
-
-
 static VOID
 EnableDialogText(HWND hwnd)
 {
@@ -338,13 +204,8 @@ InetTimePageProc(HWND hwndDlg,
             {
                 case IDC_UPDATEBUTTON:
                 {
-                    ULONG ulTime;
-
                     SetNTPServer(hwndDlg);
-
-                    ulTime = GetTimeFromServer();
-                    if (ulTime != 0)
-                        UpdateSystemTime(ulTime);
+                    SyncTimeNow();
                 }
                 break;
 

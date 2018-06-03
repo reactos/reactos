@@ -9,6 +9,7 @@ list(APPEND SOURCE
     ntpclient.c
     timedate.c
     timezone.c
+    w32time.c
     timedate.h)
 
 file(GLOB timedate_rc_deps resources/*.*)

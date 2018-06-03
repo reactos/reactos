@@ -14,8 +14,7 @@
 static WNDPROC pOldWndProc = NULL;
 
 BOOL
-SystemSetTime(LPSYSTEMTIME lpSystemTime,
-              BOOL SystemTime)
+SystemSetLocalTime(LPSYSTEMTIME lpSystemTime)
 {
     HANDLE hToken;
     DWORD PrevSize;
@@ -47,19 +46,10 @@ SystemSetTime(LPSYSTEMTIME lpSystemTime,
             {
                 /*
                  * We successfully enabled it, we're permitted to change the time.
-                 * Check the second parameter for SystemTime and if TRUE set System Time.
-                 * Otherwise, if FALSE set the Local Time.
                  * Call SetLocalTime twice to ensure correct results.
                  */
-                if (SystemTime)
-                {
-                    Ret = SetSystemTime(lpSystemTime);
-                }
-                else
-                {
-                    Ret = SetLocalTime(lpSystemTime) &&
-                          SetLocalTime(lpSystemTime);
-                }
+                Ret = SetLocalTime(lpSystemTime) &&
+                      SetLocalTime(lpSystemTime);
 
                 /*
                  * For the sake of security, restore the previous status again
@@ -96,8 +86,7 @@ SetLocalSystemTime(HWND hwnd)
                      (WPARAM)&Time,
                      0))
     {
-        /* Set Local Time with SystemTime = FALSE */
-        SystemSetTime(&Time, FALSE);
+        SystemSetLocalTime(&Time);
 
         SetWindowLongPtrW(hwnd,
                           DWLP_MSGRESULT,
