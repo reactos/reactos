@@ -154,7 +154,7 @@ DoesPathExist(
     if (NT_SUCCESS(Status))
         NtClose(FileHandle);
     else
-        DPRINT1("Failed to open directory '%wZ', Status 0x%08lx\n", &Name, Status);
+        DPRINT("Failed to open directory '%wZ', Status 0x%08lx\n", &Name, Status);
 
     return NT_SUCCESS(Status);
 }
@@ -187,7 +187,7 @@ DoesFileExist(
     if (NT_SUCCESS(Status))
         NtClose(FileHandle);
     else
-        DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
+        DPRINT("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
 
     return NT_SUCCESS(Status);
 }
