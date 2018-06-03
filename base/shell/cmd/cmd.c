@@ -149,20 +149,22 @@ typedef NTSTATUS (WINAPI *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLAS
                                                           PVOID, ULONG, PULONG);
 typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
 
-BOOL bExit = FALSE;       /* indicates EXIT was typed */
-BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
+BOOL bExit = FALSE;       /* Indicates EXIT was typed */
+BOOL bCanExit = TRUE;     /* Indicates if this shell is exitable */
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
-static BOOL bWaitForCommand = FALSE; /* When we are executing something passed on the commandline after /c or /k */
+static BOOL fSingleCommand = 0; /* When we are executing something passed on the command line after /C or /K */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 CRITICAL_SECTION ChildProcessRunningLock;
 BOOL bDisableBatchEcho = FALSE;
 BOOL bEnableExtensions = TRUE;
 BOOL bDelayedExpansion = FALSE;
-BOOL bTitleSet = FALSE;
 DWORD dwChildProcessId = 0;
 LPTSTR lpOriginalEnvironment;
 HANDLE CMD_ModuleHandle;
+
+BOOL bTitleSet = FALSE; /* Indicates whether the console title has been changed and needs to be restored later */
+TCHAR szCurTitle[MAX_PATH];
 
 static NtQueryInformationProcessProc NtQueryInformationProcessPtr = NULL;
 static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr = NULL;
@@ -302,23 +304,51 @@ HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
 }
 
 
+static VOID
+SetConTitle(LPCTSTR pszTitle)
+{
+    TCHAR szNewTitle[MAX_PATH];
+
+    if (!pszTitle)
+        return;
+
+    /* Don't do anything if we run inside a batch file, or we are just running a single command */
+    if (bc || (fSingleCommand == 1))
+        return;
+
+    /* Save the original console title and build a new one */
+    GetConsoleTitle(szCurTitle, ARRAYSIZE(szCurTitle));
+    StringCchPrintf(szNewTitle, ARRAYSIZE(szNewTitle),
+                    _T("%s - %s"), szCurTitle, pszTitle);
+    bTitleSet = TRUE;
+    ConSetTitle(szNewTitle);
+}
+
+static VOID
+ResetConTitle(VOID)
+{
+    /* Restore the original console title */
+    if (!bc && bTitleSet)
+    {
+        ConSetTitle(szCurTitle);
+        bTitleSet = FALSE;
+    }
+}
 
 /*
- * This command (in first) was not found in the command table
+ * This command (in First) was not found in the command table
  *
- * Full  - buffer to hold whole command line
+ * Full  - output buffer to hold whole command line
  * First - first word on command line
  * Rest  - rest of command line
  */
 static INT
 Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 {
-    TCHAR szFullName[MAX_PATH];
     TCHAR *first, *rest, *dot;
-    TCHAR szWindowTitle[MAX_PATH];
-    TCHAR szNewTitle[MAX_PATH*2];
     DWORD dwExitCode = 0;
     TCHAR *FirstEnd;
+    TCHAR szFullName[MAX_PATH];
     TCHAR szFullCmdLine[CMDLINE_LENGTH];
 
     TRACE ("Execute: \'%s\' \'%s\'\n", debugstr_aw(First), debugstr_aw(Rest));
@@ -344,10 +374,10 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     }
 
     /* Copy the new first/rest into the buffer */
-    first = Full;
     rest = &Full[FirstEnd - First + 1];
     _tcscpy(rest, FirstEnd);
     _tcscat(rest, Rest);
+    first = Full;
     *FirstEnd = _T('\0');
     _tcscpy(first, First);
 
@@ -356,8 +386,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     {
         BOOL working = TRUE;
         if (!SetCurrentDirectory(first))
-        /* Guess they changed disc or something, handle that gracefully and get to root */
         {
+            /* Guess they changed disc or something, handle that gracefully and get to root */
             TCHAR str[4];
             str[0]=first[0];
             str[1]=_T(':');
@@ -379,12 +409,10 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         return 1;
     }
 
-    /* Save the original console title and build a new one */
-    GetConsoleTitle(szWindowTitle, ARRAYSIZE(szWindowTitle));
-    bTitleSet = FALSE;
-    StringCchPrintf(szNewTitle, ARRAYSIZE(szNewTitle),
-                    _T("%s - %s%s"), szWindowTitle, First, Rest);
-    ConSetTitle(szNewTitle);
+    /* Set the new console title */
+    FirstEnd = first + (FirstEnd - First); /* Point to the separating NULL in the full built string */
+    *FirstEnd = _T(' ');
+    SetConTitle(Full);
 
     /* check if this is a .BAT or .CMD file */
     dot = _tcsrchr (szFullName, _T('.'));
@@ -392,6 +420,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     {
         while (*rest == _T(' '))
             rest++;
+
+        *FirstEnd = _T('\0');
         TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
         dwExitCode = Batch(szFullName, first, rest, Cmd);
     }
@@ -402,7 +432,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         STARTUPINFO stui;
 
         /* build command line for CreateProcess(): FullName + " " + rest */
-        BOOL quoted = !!_tcschr(First, ' ');
+        BOOL quoted = !!_tcschr(First, _T(' '));
         _tcscpy(szFullCmdLine, quoted ? _T("\"") : _T(""));
         _tcsncat(szFullCmdLine, First, CMDLINE_LENGTH - _tcslen(szFullCmdLine) - 1);
         _tcsncat(szFullCmdLine, quoted ? _T("\"") : _T(""), CMDLINE_LENGTH - _tcslen(szFullCmdLine) - 1);
@@ -416,8 +446,9 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         TRACE ("[EXEC: %s]\n", debugstr_aw(szFullCmdLine));
 
         /* fill startup info */
-        memset (&stui, 0, sizeof (STARTUPINFO));
-        stui.cb = sizeof (STARTUPINFO);
+        memset(&stui, 0, sizeof(stui));
+        stui.cb = sizeof(stui);
+        stui.lpTitle = Full;
         stui.dwFlags = STARTF_USESHOWWINDOW;
         stui.wShowWindow = SW_SHOWDEFAULT;
 
@@ -448,9 +479,11 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
                                     SW_SHOWNORMAL);
         }
 
+        *FirstEnd = _T('\0');
+
         if (prci.hProcess != NULL)
         {
-            if (bc != NULL || bWaitForCommand || IsConsoleProcess(prci.hProcess))
+            if (bc != NULL || fSingleCommand != 0 || IsConsoleProcess(prci.hProcess))
             {
                 /* when processing a batch file or starting console processes: execute synchronously */
                 EnterCriticalSection(&ChildProcessRunningLock);
@@ -501,8 +534,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     }
 
     /* Restore the original console title */
-    if (!bTitleSet)
-        ConSetTitle(szWindowTitle);
+    ResetConTitle();
 
     return dwExitCode;
 }
@@ -568,9 +600,19 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 
             /* Skip over whitespace to rest of line, exclude 'echo' command */
             if (_tcsicmp(cmdptr->name, _T("echo")) != 0)
+            {
                 while (_istspace(*param))
                     param++;
+            }
+
+            /* Set the new console title */
+            SetConTitle(com);
+
             ret = cmdptr->func(param);
+
+            /* Restore the original console title */
+            ResetConTitle();
+
             cmd_free(com);
             return ret;
         }
@@ -1896,6 +1938,7 @@ Initialize(VOID)
             else if (option == _T('C') || option == _T('K') || option == _T('R'))
             {
                 /* Remainder of command line is a command to be run */
+                fSingleCommand = ((option == _T('K')) << 1) | 1;
                 break;
             }
             else if (option == _T('D'))
@@ -1983,14 +2026,13 @@ Initialize(VOID)
     {
         /* Do the /C or /K command */
         GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
-        bWaitForCommand = TRUE;
         /* nExitCode = */ ParseCommandLine(commandline);
-        bWaitForCommand = FALSE;
-        if (option != _T('K'))
+        if (fSingleCommand == 1)
         {
             // nErrorLevel = nExitCode;
             bExit = TRUE;
         }
+        fSingleCommand = 0;
     }
 }
 
