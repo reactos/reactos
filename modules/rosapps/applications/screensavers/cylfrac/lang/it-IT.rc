@@ -1,0 +1,8 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Cilindri frattali"
+    IDS_TITLE       "Informazioni"
+    IDS_TEXT        "Cilindri frattali di unC0Rr.\nRealizzato apposta per ReactOS."
+END
