@@ -269,7 +269,7 @@ AutoStartupApplications(INT nCSIDL_Folder)
     WIN32_FIND_DATAW FoundData;
     size_t cchPathLen;
 
-    TRACE("(%d)\n", clsid);
+    TRACE("(%d)\n", nCSIDL_Folder);
 
     // Get the special folder path
     hResult = SHGetFolderPathW(NULL, nCSIDL_Folder, NULL, SHGFP_TYPE_CURRENT, szPath);
@@ -281,7 +281,7 @@ AutoStartupApplications(INT nCSIDL_Folder)
     }
 
     // Build a path with wildcard
-    wcscatW(szPath, L"\\*");
+    wcscpy(szPath, L"\\*");
 
     // Start enumeration of files
     hFind = FindFirstFileW(szPath, &FoundData);
