@@ -135,6 +135,9 @@
  *
  *    25-Aug-2015 (Pierre Schweitzer)
  *        Implemented /R switch
+ *
+ *    3-June-2018 (Katayama Hirofumi MZ)
+ *        Fixed the behavior for "DIR ." and "DIR ..".
  */
 
 #include "precomp.h"
@@ -230,6 +233,19 @@ static VOID
 DirHelp(VOID)
 {
     ConOutResPaging(TRUE, STRING_DIR_HELP1);
+}
+
+/* Is the path "." or ".."? Speed optimized. */
+inline BOOL
+IsDots(LPCTSTR pszPath)
+{
+    if (pszPath[0] != _T('.'))
+        return FALSE;
+
+    if (pszPath[1] == 0)
+        return TRUE;
+
+    return (pszPath[1] == _T('.') && pszPath[2] == 0);
 }
 
 /*
@@ -830,8 +846,7 @@ getName(const TCHAR* file, TCHAR * dest)
     LPTSTR end;
 
     /* Check for "." and ".." folders */
-    if ((_tcscmp(file, _T(".")) == 0) ||
-        (_tcscmp(file, _T("..")) == 0))
+    if (IsDots(file))
     {
         _tcscpy(dest,file);
         return dest;
@@ -1094,8 +1109,7 @@ DirPrintBareList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
 
     for (i = 0; i < dwCount && !CheckCtrlBreak(BREAK_INPUT); i++)
     {
-        if ((_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T(".")) == 0) ||
-            (_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T("..")) == 0))
+        if (IsDots(ptrFiles[i]->stFindInfo.cFileName))
         {
             /* at bare format we don't print "." and ".." folder */
             continue;
@@ -1323,7 +1337,6 @@ static INT
 DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
         LPDIRSWITCHFLAGS lpFlags)   /* [IN] The flags of the listing */
 {
-    BOOL fPoint;                        /* If szPath is a file with extension fPoint will be True */
     HANDLE hSearch;                     /* The handle of the search */
     HANDLE hRecSearch;                  /* The handle for searching recursively */
     HANDLE hStreams;                    /* The handle for alternate streams */
@@ -1344,6 +1357,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     PDIRFINDSTREAMNODE ptrFreeNode;     /* The pointer used during cleanup */
     static HANDLE (WINAPI *pFindFirstStreamW)(LPCWSTR, STREAM_INFO_LEVELS, LPVOID, DWORD);
     static BOOL (WINAPI *pFindNextStreamW)(HANDLE, LPVOID);
+    size_t nLen;
 
     /* Initialize Variables */
     ptrStartNode = NULL;
@@ -1352,7 +1366,6 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     dwCountFiles = 0;
     dwCountDirs = 0;
     u64CountBytes = 0;
-    fPoint= FALSE;
 
     /* Create szFullPath */
     if (GetFullPathName(szPath, ARRAYSIZE(szFullPath), szFullPath, &pszFilePart) == 0)
@@ -1381,9 +1394,13 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     ptrStartNode->stInfo.ptrHead = NULL;
     ptrNextNode = ptrStartNode;
 
-    /* Checking if szPath is a File with/wout extension */
-    if (szPath[_tcslen(szPath) - 1] == _T('.'))
-        fPoint= TRUE;
+    /* Checking if the last character of szPath is '.' and szPath is neither "." or ".." */
+    nLen = _tcslen(szPath);
+    if (szPath[nLen - 1] == _T('.') && !IsDots(szPath))
+    {
+        /* Kill the last dot */
+        szPath[nLen - 1] = 0;
+    }
 
     /* Collect the results for the current folder */
     hSearch = FindFirstFile(szFullPath, &wfdFileInfo);
@@ -1391,14 +1408,8 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     {
         do
         {
-            /* If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName */
-            if (_tcschr(wfdFileInfo.cFileName,_T('.')) && (fPoint != FALSE))
-            {
-                continue;
-            /* Here we filter all the specified attributes */
-            }
-            else if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask )
-                    == (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal ))
+            if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask) ==
+                (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal))
             {
                 ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
                 if (ptrNextNode->ptrNext == NULL)
@@ -1622,8 +1633,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
             do
             {
                 /* We search for directories other than "." and ".." */
-                if ((_tcsicmp(wfdFileInfo.cFileName, _T(".")) != 0) &&
-                    (_tcsicmp(wfdFileInfo.cFileName, _T("..")) != 0 ) &&
+                if (!IsDots(wfdFileInfo.cFileName) &&
                     (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 {
                     /* Concat the path and the directory to do recursive */
