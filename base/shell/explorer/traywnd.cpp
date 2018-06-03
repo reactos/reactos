@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
+ * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * this library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -365,7 +366,15 @@ public:
 
         m_RunFileDlgOwner = hwnd;
 
-        RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+        WCHAR szHomeDrive[MAX_PATH], szHomePath[MAX_PATH];
+        GetEnvironmentVariableW(L"HOMEDRIVE", szHomeDrive, _countof(szHomeDrive));
+        GetEnvironmentVariableW(L"HOMEPATH", szHomePath, _countof(szHomePath));
+
+        WCHAR szDefaultDir[MAX_PATH];
+        StringCchCopyW(szDefaultDir, _countof(szDefaultDir), szHomeDrive);
+        StringCchCatW(szDefaultDir, _countof(szDefaultDir), szHomePath);
+
+        RunFileDlg(hwnd, NULL, szDefaultDir, NULL, NULL, RFF_CALCDIRECTORY);
 
         m_RunFileDlgOwner = NULL;
         ::DestroyWindow(hwnd);
