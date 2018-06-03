@@ -28,7 +28,8 @@ INT cmd_title(LPTSTR param)
         return 0;
     }
 
-    bTitleSet = TRUE;
+    /* Set the new console title, and tell CMD to not reset it */
+    bTitleSet = FALSE;
     return ConSetTitle(param);
 }
 
