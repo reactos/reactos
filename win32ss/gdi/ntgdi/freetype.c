@@ -53,7 +53,7 @@ FT_Library  g_library;
 static const UNICODE_STRING g_MarlettW = RTL_CONSTANT_STRING(L"Marlett");
 
 /* registry */
-static UNICODE_STRING FontRegPath =
+static UNICODE_STRING g_FontRegPath =
     RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
 
@@ -1162,7 +1162,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
         }
 
         /* registry */
-        InitializeObjectAttributes(&ObjectAttributes, &FontRegPath,
+        InitializeObjectAttributes(&ObjectAttributes, &g_FontRegPath,
                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL, NULL);
         Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
