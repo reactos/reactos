@@ -237,7 +237,7 @@ DirHelp(VOID)
 
 /* Is the path "." or ".."? Speed optimized. */
 inline BOOL
-IsDots(LPCTSTR pszPath)
+IsIgnoredDots(LPCTSTR pszPath)
 {
     if (pszPath[0] != _T('.'))
         return FALSE;
@@ -246,6 +246,27 @@ IsDots(LPCTSTR pszPath)
         return TRUE;
 
     return (pszPath[1] == _T('.') && pszPath[2] == 0);
+}
+
+// Yes, this is a copy cat of shlwapi PathFindExtension.
+static LPTSTR IntPathFindExtension(LPCTSTR pszPath)
+{
+    LPCTSTR pchLast = NULL;
+
+    if (pszPath)
+    {
+        while (*pszPath)
+        {
+            if (*pszPath == _T('\\') || *pszPath == _T('/') || *pszPath == _T(' '))
+                pchLast = NULL;
+            else if (*pszPath == _T('.'))
+                pchLast = pszPath;
+
+            pszPath = _tcsinc(pszPath);
+        }
+    }
+
+    return (LPTSTR)(pchLast ? pchLast : pszPath);
 }
 
 /*
@@ -846,7 +867,7 @@ getName(const TCHAR* file, TCHAR * dest)
     LPTSTR end;
 
     /* Check for "." and ".." folders */
-    if (IsDots(file))
+    if (IsIgnoredDots(file))
     {
         _tcscpy(dest,file);
         return dest;
@@ -1109,7 +1130,7 @@ DirPrintBareList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
 
     for (i = 0; i < dwCount && !CheckCtrlBreak(BREAK_INPUT); i++)
     {
-        if (IsDots(ptrFiles[i]->stFindInfo.cFileName))
+        if (IsIgnoredDots(ptrFiles[i]->stFindInfo.cFileName))
         {
             /* at bare format we don't print "." and ".." folder */
             continue;
@@ -1357,7 +1378,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     PDIRFINDSTREAMNODE ptrFreeNode;     /* The pointer used during cleanup */
     static HANDLE (WINAPI *pFindFirstStreamW)(LPCWSTR, STREAM_INFO_LEVELS, LPVOID, DWORD);
     static BOOL (WINAPI *pFindNextStreamW)(HANDLE, LPVOID);
-    size_t nLen;
+    LPTSTR pchDotExt;
 
     /* Initialize Variables */
     ptrStartNode = NULL;
@@ -1394,12 +1415,15 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     ptrStartNode->stInfo.ptrHead = NULL;
     ptrNextNode = ptrStartNode;
 
-    /* Checking if the last character of szPath is '.' and szPath is neither "." or ".." */
-    nLen = _tcslen(szPath);
-    if (szPath[nLen - 1] == _T('.') && !IsDots(szPath))
+    /* Checking if szFullPath's extension is dot-only extension */
+    pchDotExt = IntPathFindExtension(szFullPath);
+    if (*pchDotExt == _T('.') && szFullPath < pchDotExt)
     {
-        /* Kill the last dot */
-        szPath[nLen - 1] = 0;
+        if (wcschr(_T(".\\/"), *(pchDotExt - 1)) != NULL)
+        {
+            /* Kill the dot-only extension */
+            *pchDotExt = 0;
+        }
     }
 
     /* Collect the results for the current folder */
@@ -1633,7 +1657,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
             do
             {
                 /* We search for directories other than "." and ".." */
-                if (!IsDots(wfdFileInfo.cFileName) &&
+                if (!IsIgnoredDots(wfdFileInfo.cFileName) &&
                     (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 {
                     /* Concat the path and the directory to do recursive */
