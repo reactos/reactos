@@ -8,7 +8,7 @@
 #include "timedate.h"
 
 /* Get the domain name from the registry */
-static BOOL
+static DWORD
 GetNTPServerAddress(LPWSTR *lpAddress)
 {
     HKEY hKey;
@@ -16,13 +16,16 @@ GetNTPServerAddress(LPWSTR *lpAddress)
     DWORD dwSize;
     LONG lRet;
 
+    *lpAddress = NULL;
+    hKey = NULL;
+
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
                          0,
                          KEY_QUERY_VALUE,
                          &hKey);
     if (lRet != ERROR_SUCCESS)
-        goto fail;
+        goto Exit;
 
     /* Get data from default value */
     dwSize = 4 * sizeof(WCHAR);
@@ -33,7 +36,7 @@ GetNTPServerAddress(LPWSTR *lpAddress)
                             (LPBYTE)szSel,
                             &dwSize);
     if (lRet != ERROR_SUCCESS)
-        goto fail;
+        goto Exit;
 
     dwSize = 0;
     lRet = RegQueryValueExW(hKey,
@@ -43,7 +46,7 @@ GetNTPServerAddress(LPWSTR *lpAddress)
                             NULL,
                             &dwSize);
     if (lRet != ERROR_SUCCESS)
-        goto fail;
+        goto Exit;
 
     (*lpAddress) = (LPWSTR)HeapAlloc(GetProcessHeap(),
                                      0,
@@ -51,7 +54,7 @@ GetNTPServerAddress(LPWSTR *lpAddress)
     if ((*lpAddress) == NULL)
     {
         lRet = ERROR_NOT_ENOUGH_MEMORY;
-        goto fail;
+        goto Exit;
     }
 
     lRet = RegQueryValueExW(hKey,
@@ -61,38 +64,42 @@ GetNTPServerAddress(LPWSTR *lpAddress)
                             (LPBYTE)*lpAddress,
                             &dwSize);
     if (lRet != ERROR_SUCCESS)
-        goto fail;
+        goto Exit;
 
-    RegCloseKey(hKey);
-
-    return TRUE;
-
-fail:
-    DisplayWin32Error(lRet);
+Exit:
     if (hKey)
         RegCloseKey(hKey);
-    HeapFree(GetProcessHeap(), 0, *lpAddress);
-    return FALSE;
+    if (lRet != ERROR_SUCCESS)
+        HeapFree(GetProcessHeap(), 0, *lpAddress);
+
+    return lRet;
 }
 
 
 /* Request the time from the current NTP server */
-static ULONG
-GetTimeFromServer(VOID)
+static DWORD
+GetTimeFromServer(PULONG pulTime)
 {
-    LPWSTR lpAddress = NULL;
-    ULONG ulTime = 0;
+    LPWSTR lpAddress;
+    DWORD dwError;
 
-    if (GetNTPServerAddress(&lpAddress))
+    dwError = GetNTPServerAddress(&lpAddress);
+    if (dwError != ERROR_SUCCESS)
     {
-        ulTime = GetServerTime(lpAddress);
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpAddress);
+        return dwError;
     }
 
-    return ulTime;
+    *pulTime = GetServerTime(lpAddress);
+    if (*pulTime == 0)
+    {
+        dwError = ERROR_GEN_FAILURE;
+    }
+
+    HeapFree(GetProcessHeap(),
+             0,
+             lpAddress);
+
+    return dwError;
 }
 
 
@@ -158,7 +165,7 @@ SystemSetTime(LPSYSTEMTIME lpSystemTime)
  * 1st Jan, 1900. The time returned from the server
  * needs adding to that date to get the current Gregorian time
  */
-static VOID
+static DWORD
 UpdateSystemTime(ULONG ulTime)
 {
     FILETIME ftNew;
@@ -177,8 +184,7 @@ UpdateSystemTime(ULONG ulTime)
     /* Convert to a file time */
     if (!SystemTimeToFileTime(&stNew, &ftNew))
     {
-        DisplayWin32Error(GetLastError());
-        return;
+        return GetLastError();
     }
 
     /* Add on the time passed since 1st Jan 1900 */
@@ -189,23 +195,34 @@ UpdateSystemTime(ULONG ulTime)
     /* Convert back to a system time */
     if (!FileTimeToSystemTime(&ftNew, &stNew))
     {
-        DisplayWin32Error(GetLastError());
-        return;
+        return GetLastError();
     }
 
     if (!SystemSetTime(&stNew))
     {
-        DisplayWin32Error(GetLastError());
+        return GetLastError();
     }
+
+    return ERROR_SUCCESS;
 }
 
 
-VOID
+DWORD
 SyncTimeNow(VOID)
 {
+    DWORD dwError;
     ULONG ulTime;
-    ulTime = GetTimeFromServer();
+    dwError = GetTimeFromServer(&ulTime);
+    if (dwError != ERROR_SUCCESS)
+    {
+        return dwError;
+    }
+
     if (ulTime != 0)
-        UpdateSystemTime(ulTime);
+    {
+        dwError = UpdateSystemTime(ulTime);
+    }
+
+    return dwError;
 }
 

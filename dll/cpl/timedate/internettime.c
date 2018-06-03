@@ -204,8 +204,15 @@ InetTimePageProc(HWND hwndDlg,
             {
                 case IDC_UPDATEBUTTON:
                 {
+                    DWORD dwError;
+
                     SetNTPServer(hwndDlg);
-                    SyncTimeNow();
+
+                    dwError = SyncTimeNow();
+                    if (dwError != ERROR_SUCCESS)
+                    {
+                        DisplayWin32Error(dwError);
+                    }
                 }
                 break;
 

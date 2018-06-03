@@ -95,7 +95,7 @@ ULONG GetServerTime(LPWSTR lpAddress);
 
 
 /* w32time.c */
-VOID SyncTimeNow(VOID);
+DWORD SyncTimeNow(VOID);
 
 
 /* monthcal.c */
