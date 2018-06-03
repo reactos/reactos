@@ -24,7 +24,7 @@ static ULONG E1000WriteFlush(IN PE1000_ADAPTER Adapter)
     return Value;
 }
 
-static VOID E1000WriteUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, IN ULONG Value)
+VOID NTAPI E1000WriteUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, IN ULONG Value)
 {
     NdisWriteRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
 }
@@ -39,6 +39,64 @@ static VOID E1000WriteIoUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, IN UL
     NdisRawWritePortUlong((PULONG)(Adapter->IoPort), Address);
     E1000WriteFlush(Adapter);
     NdisRawWritePortUlong((PULONG)(Adapter->IoPort + 4), Value);
+}
+
+static ULONG PacketFilterToMask(ULONG PacketFilter)
+{
+    ULONG FilterMask = 0;
+
+    if (PacketFilter & NDIS_PACKET_TYPE_ALL_MULTICAST)
+    {
+        /* Multicast Promiscuous Enabled */
+        FilterMask |= E1000_RCTL_MPE;
+    }
+    if (PacketFilter & NDIS_PACKET_TYPE_PROMISCUOUS)
+    {
+        /* Unicast Promiscuous Enabled */
+        FilterMask |= E1000_RCTL_UPE;
+        /* Multicast Promiscuous Enabled */
+        FilterMask |= E1000_RCTL_MPE;
+    }
+    if (PacketFilter & NDIS_PACKET_TYPE_MAC_FRAME)
+    {
+        /* Pass MAC Control Frames */
+        FilterMask |= E1000_RCTL_PMCF;
+    }
+    if (PacketFilter & NDIS_PACKET_TYPE_BROADCAST)
+    {
+        /* Broadcast Accept Mode */
+        FilterMask |= E1000_RCTL_BAM;
+    }
+
+    return FilterMask;
+}
+
+static ULONG RcvBufAllocationSize(E1000_RCVBUF_SIZE BufSize)
+{
+    static ULONG PredefSizes[4] = {
+        2048, 1024, 512, 256,
+    };
+    ULONG Size;
+
+    Size = PredefSizes[BufSize & E1000_RCVBUF_INDEXMASK];
+    if (BufSize & E1000_RCVBUF_RESERVED)
+    {
+        ASSERT(BufSize != 2048);
+        Size *= 16;
+    }
+    return Size;
+}
+
+static ULONG RcvBufRegisterMask(E1000_RCVBUF_SIZE BufSize)
+{
+    ULONG Mask = 0;
+
+    Mask |= BufSize & E1000_RCVBUF_INDEXMASK;
+    Mask <<= E1000_RCTL_BSIZE_SHIFT;
+    if (BufSize & E1000_RCVBUF_RESERVED)
+        Mask |= E1000_RCTL_BSEX;
+
+    return Mask;
 }
 
 static BOOLEAN E1000ReadMdic(IN PE1000_ADAPTER Adapter, IN ULONG Address, USHORT *Result)
@@ -242,6 +300,9 @@ NICAllocateIoResources(
     IN PE1000_ADAPTER Adapter)
 {
     NDIS_STATUS Status;
+    ULONG AllocationSize;
+    UINT n;
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     Status = NdisMRegisterIoPortRange((PVOID*)&Adapter->IoPort,
@@ -271,6 +332,47 @@ NICAllocateIoResources(
         return NDIS_STATUS_RESOURCES;
     }
 
+    for (n = 0; n < NUM_TRANSMIT_DESCRIPTORS; ++n)
+    {
+        PE1000_TRANSMIT_DESCRIPTOR Descriptor = Adapter->TransmitDescriptors + n;
+        Descriptor->Address = 0;
+        Descriptor->Length = 0;
+    }
+
+    NdisMAllocateSharedMemory(Adapter->AdapterHandle,
+                              sizeof(E1000_RECEIVE_DESCRIPTOR) * NUM_RECEIVE_DESCRIPTORS,
+                              FALSE,
+                              (PVOID*)&Adapter->ReceiveDescriptors,
+                              &Adapter->ReceiveDescriptorsPa);
+    if (Adapter->ReceiveDescriptors == NULL)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Unable to allocate receive descriptors\n"));
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    AllocationSize = RcvBufAllocationSize(Adapter->ReceiveBufferType);
+    ASSERT(Adapter->ReceiveBufferEntrySize == 0 || Adapter->ReceiveBufferEntrySize == AllocationSize);
+    Adapter->ReceiveBufferEntrySize = AllocationSize;
+
+    NdisMAllocateSharedMemory(Adapter->AdapterHandle,
+                              Adapter->ReceiveBufferEntrySize * NUM_RECEIVE_DESCRIPTORS,
+                              FALSE,
+                              (PVOID*)&Adapter->ReceiveBuffer,
+                              &Adapter->ReceiveBufferPa);
+
+    if (Adapter->ReceiveBuffer == NULL)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Unable to allocate receive buffer\n"));
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    for (n = 0; n < NUM_RECEIVE_DESCRIPTORS; ++n)
+    {
+        PE1000_RECEIVE_DESCRIPTOR Descriptor = Adapter->ReceiveDescriptors + n;
+
+        RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+        Descriptor->Address = Adapter->ReceiveBufferPa.QuadPart + n * Adapter->ReceiveBufferEntrySize;
+    }
 
     return NDIS_STATUS_SUCCESS;
 }
@@ -323,11 +425,45 @@ NICReleaseIoResources(
 {
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
+    if (Adapter->ReceiveDescriptors != NULL)
+    {
+        /* Disassociate our shared buffer before freeing it to avoid NIC-induced memory corruption */
+        if (Adapter->IoBase)
+        {
+            E1000WriteUlong(Adapter, E1000_REG_RDH, 0);
+            E1000WriteUlong(Adapter, E1000_REG_RDT, 0);
+        }
+
+        NdisMFreeSharedMemory(Adapter->AdapterHandle,
+                              sizeof(E1000_RECEIVE_DESCRIPTOR) * NUM_RECEIVE_DESCRIPTORS,
+                              FALSE,
+                              Adapter->ReceiveDescriptors,
+                              Adapter->ReceiveDescriptorsPa);
+
+        Adapter->ReceiveDescriptors = NULL;
+    }
+
+    if (Adapter->ReceiveBuffer != NULL)
+    {
+        NdisMFreeSharedMemory(Adapter->AdapterHandle,
+                              Adapter->ReceiveBufferEntrySize * NUM_RECEIVE_DESCRIPTORS,
+                              FALSE,
+                              Adapter->ReceiveBuffer,
+                              Adapter->ReceiveBufferPa);
+
+        Adapter->ReceiveBuffer = NULL;
+        Adapter->ReceiveBufferEntrySize = 0;
+    }
+
+
     if (Adapter->TransmitDescriptors != NULL)
     {
         /* Disassociate our shared buffer before freeing it to avoid NIC-induced memory corruption */
-        //E1000WriteUlong(Adapter, E1000_REG_TDH, 0);
-        //E1000WriteUlong(Adapter, E1000_REG_TDT, 0);
+        if (Adapter->IoBase)
+        {
+            E1000WriteUlong(Adapter, E1000_REG_TDH, 0);
+            E1000WriteUlong(Adapter, E1000_REG_TDT, 0);
+        }
 
         NdisMFreeSharedMemory(Adapter->AdapterHandle,
                               sizeof(E1000_TRANSMIT_DESCRIPTOR) * NUM_TRANSMIT_DESCRIPTORS,
@@ -429,6 +565,10 @@ NICEnableTxRx(
     ULONG Value;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    NDIS_DbgPrint(MID_TRACE, ("Setting up transmit.\n"));
+
+    /* Make sure the thing is disabled first. */
+    E1000WriteUlong(Adapter, E1000_REG_TCTL, 0);
 
     /* Transmit descriptor ring buffer */
     E1000WriteUlong(Adapter, E1000_REG_TDBAH, Adapter->TransmitDescriptorsPa.HighPart);
@@ -447,12 +587,36 @@ NICEnableTxRx(
     E1000WriteUlong(Adapter, E1000_REG_TCTL, Value);
 
 
+    NDIS_DbgPrint(MID_TRACE, ("Setting up receive.\n"));
 
+    /* Make sure the thing is disabled first. */
+    E1000WriteUlong(Adapter, E1000_REG_RCTL, 0);
 
-    //E1000ReadUlong(Adapter, E1000_REG_RCTL, &Value);
-    //Value = E1000_RCTL_BSIZE_2048 | E1000_RCTL_SECRC | E1000_RCTL_EN;
-    //E1000WriteUlong(Adapter, E1000_REG_RCTL, Value);
+    /* Receive descriptor ring buffer */
+    E1000WriteUlong(Adapter, E1000_REG_RDBAH, Adapter->ReceiveDescriptorsPa.HighPart);
+    E1000WriteUlong(Adapter, E1000_REG_RDBAL, Adapter->ReceiveDescriptorsPa.LowPart);
 
+    /* Receive descriptor buffer size */
+    E1000WriteUlong(Adapter, E1000_REG_RDLEN, sizeof(E1000_RECEIVE_DESCRIPTOR) * NUM_RECEIVE_DESCRIPTORS);
+
+    /* Receive descriptor tail / head */
+    E1000WriteUlong(Adapter, E1000_REG_RDH, 0);
+    E1000WriteUlong(Adapter, E1000_REG_RDT, NUM_RECEIVE_DESCRIPTORS - 1);
+    Adapter->CurrentRxDesc = 0;
+
+    /* Setup Interrupt Throttling */
+    E1000WriteUlong(Adapter, E1000_REG_ITR, DEFAULT_ITR);
+
+    /* Some defaults */
+    Value = E1000_RCTL_SECRC | E1000_RCTL_EN;
+
+    /* Receive buffer size */
+    Value |= RcvBufRegisterMask(Adapter->ReceiveBufferType);
+
+    /* Add our current packet filter */
+    Value |= PacketFilterToMask(Adapter->PacketFilter);
+
+    E1000WriteUlong(Adapter, E1000_REG_RCTL, Value);
 
     return NDIS_STATUS_SUCCESS;
 }
@@ -542,35 +706,12 @@ NTAPI
 NICApplyPacketFilter(
     IN PE1000_ADAPTER Adapter)
 {
-    ULONG FilterMask = 0;
+    ULONG FilterMask;
 
     E1000ReadUlong(Adapter, E1000_REG_RCTL, &FilterMask);
 
     FilterMask &= ~E1000_RCTL_FILTER_BITS;
-
-    if (Adapter->PacketFilter & NDIS_PACKET_TYPE_ALL_MULTICAST)
-    {
-        /* Multicast Promiscuous Enabled */
-        FilterMask |= E1000_RCTL_MPE;
-    }
-    if (Adapter->PacketFilter & NDIS_PACKET_TYPE_PROMISCUOUS)
-    {
-        /* Unicast Promiscuous Enabled */
-        FilterMask |= E1000_RCTL_UPE;
-        /* Multicast Promiscuous Enabled */
-        FilterMask |= E1000_RCTL_MPE;
-    }
-    if (Adapter->PacketFilter & NDIS_PACKET_TYPE_MAC_FRAME)
-    {
-        /* Pass MAC Control Frames */
-        FilterMask |= E1000_RCTL_PMCF;
-    }
-    if (Adapter->PacketFilter & NDIS_PACKET_TYPE_BROADCAST)
-    {
-        /* Broadcast Accept Mode */
-        FilterMask |= E1000_RCTL_BAM;
-    }
-
+    FilterMask |= PacketFilterToMask(Adapter->PacketFilter);
     E1000WriteUlong(Adapter, E1000_REG_RCTL, FilterMask);
 
     return NDIS_STATUS_SUCCESS;

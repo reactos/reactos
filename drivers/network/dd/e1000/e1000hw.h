@@ -31,6 +31,22 @@ typedef struct _ETH_HEADER {
 
 
 
+typedef enum _E1000_RCVBUF_SIZE
+{
+    E1000_RCVBUF_2048 = 0,
+    E1000_RCVBUF_1024 = 1,
+    E1000_RCVBUF_512 = 2,
+    E1000_RCVBUF_256 = 3,
+
+    E1000_RCVBUF_INDEXMASK = 3,
+    E1000_RCVBUF_RESERVED = 4 | 0,
+
+    E1000_RCVBUF_16384 = 4 | 1,
+    E1000_RCVBUF_8192 =  4 | 2,
+    E1000_RCVBUF_4096 =  4 | 3,
+} E1000_RCVBUF_SIZE;
+
+
 
 #include <pshpack1.h>
 
@@ -95,12 +111,19 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 #define E1000_REG_MDIC              0x0020      /* MDI Control Register, R/W */
 #define E1000_REG_VET               0x0038      /* VLAN Ether Type, R/W */
 #define E1000_REG_ICR               0x00C0      /* Interrupt Cause Read, R/clr */
+#define E1000_REG_ITR               0x00C4      /* Interrupt Throttling Register, R/W */
 
 #define E1000_REG_IMS               0x00D0      /* Interrupt Mask Set/Read Register, R/W */
 #define E1000_REG_IMC               0x00D8      /* Interrupt Mask Clear, W */
-#define E1000_REG_RCTL              0x0100      /* Receive Control Register, R/W */
 
+#define E1000_REG_RCTL              0x0100      /* Receive Control Register, R/W */
 #define E1000_REG_TCTL              0x0400      /* Transmit Control Register, R/W */
+
+#define E1000_REG_RDBAL             0x2800      /* Receive Descriptor Base Address Low, R/W */
+#define E1000_REG_RDBAH             0x2804      /* Receive Descriptor Base Address High, R/W */
+#define E1000_REG_RDLEN             0x2808      /* Receive Descriptor Length, R/W */
+#define E1000_REG_RDH               0x2810      /* Receive Descriptor Head, R/W */
+#define E1000_REG_RDT               0x2818      /* Receive Descriptor Tail, R/W */
 
 #define E1000_REG_TDBAL             0x3800      /* Transmit Descriptor Base Address Low, R/W */
 #define E1000_REG_TDBAH             0x3804      /* Transmit Descriptor Base Address High, R/W */
@@ -142,6 +165,13 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 /* E1000_REG_IMS */
 #define E1000_IMS_TXDW              (1 << 0)    /* Transmit Descriptor Written Back */
 #define E1000_IMS_LSC               (1 << 2)    /* Sets mask for Link Status Change */
+#define E1000_IMS_RXDMT0            (1 << 4)    /* Receive Descriptor Minimum Threshold Reached */
+#define E1000_IMS_RXT0              (1 << 7)    /* Receiver Timer Interrupt */
+
+
+/* E1000_REG_ITR */
+#define MAX_INTS_PER_SEC        2000
+#define DEFAULT_ITR             1000000000/(MAX_INTS_PER_SEC * 256)
 
 
 /* E1000_REG_RCTL */
@@ -150,7 +180,10 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 #define E1000_RCTL_UPE              (1 << 3)    /* Unicast Promiscuous Enabled */
 #define E1000_RCTL_MPE              (1 << 4)    /* Multicast Promiscuous Enabled */
 #define E1000_RCTL_BAM              (1 << 15)   /* Broadcast Accept Mode */
+#define E1000_RCTL_BSIZE_SHIFT      16
 #define E1000_RCTL_PMCF             (1 << 23)   /* Pass MAC Control Frames */
+#define E1000_RCTL_BSEX             (1 << 25)   /* Buffer Size Extension */
+#define E1000_RCTL_SECRC            (1 << 26)   /* Strip Ethernet CRC from incoming packet */
 
 #define E1000_RCTL_FILTER_BITS      (E1000_RCTL_SBP | E1000_RCTL_UPE | E1000_RCTL_MPE | E1000_RCTL_BAM | E1000_RCTL_PMCF)
 

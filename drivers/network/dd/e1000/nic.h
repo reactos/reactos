@@ -21,7 +21,7 @@
 #define DRIVER_VERSION 1
 
 
-#define DEFAULT_INTERRUPT_MASK      (E1000_IMS_LSC | E1000_IMS_TXDW)
+#define DEFAULT_INTERRUPT_MASK      (E1000_IMS_LSC | E1000_IMS_TXDW | E1000_IMS_RXDMT0 | E1000_IMS_RXT0)
 
 typedef struct _E1000_ADAPTER
 {
@@ -71,6 +71,18 @@ typedef struct _E1000_ADAPTER
     ULONG CurrentTxDesc;
     ULONG LastTxDesc;
     BOOLEAN TxFull;
+
+
+    /* Receive */
+    PE1000_RECEIVE_DESCRIPTOR ReceiveDescriptors;
+    NDIS_PHYSICAL_ADDRESS ReceiveDescriptorsPa;
+
+    ULONG CurrentRxDesc;
+
+    E1000_RCVBUF_SIZE ReceiveBufferType;
+    volatile PUCHAR ReceiveBuffer;
+    NDIS_PHYSICAL_ADDRESS ReceiveBufferPa;
+    ULONG ReceiveBufferEntrySize;
 
 } E1000_ADAPTER, *PE1000_ADAPTER;
 
@@ -201,5 +213,15 @@ VOID
 NTAPI
 MiniportHandleInterrupt(
     IN NDIS_HANDLE MiniportAdapterContext);
+
+
+VOID
+NTAPI
+E1000WriteUlong(
+    IN PE1000_ADAPTER Adapter,
+    IN ULONG Address,
+    IN ULONG Value);
+
+
 
 #endif /* _E1000_PCH_ */
