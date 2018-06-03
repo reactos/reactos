@@ -1419,7 +1419,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     pchDotExt = IntPathFindExtension(szFullPath);
     if (*pchDotExt == _T('.') && szFullPath < pchDotExt)
     {
-        if (wcschr(_T(".\\/"), *(pchDotExt - 1)) != NULL)
+        if (wcschr(_T(".\\/"), *(pchDotExt - 1)) == NULL)
         {
             /* Kill the dot-only extension */
             *pchDotExt = 0;
