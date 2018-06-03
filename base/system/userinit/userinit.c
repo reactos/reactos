@@ -22,6 +22,7 @@
  * FILE:        base/system/userinit/userinit.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *              Hervé Poussineau (hpoussin@reactos.org)
+ *              Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "userinit.h"
@@ -190,7 +191,6 @@ StartAutoApplications(
     HRESULT hResult;
     HANDLE hFind;
     WIN32_FIND_DATAW findData;
-    SHELLEXECUTEINFOW ExecInfo;
     size_t len;
 
     TRACE("(%d)\n", clsid);
@@ -213,18 +213,24 @@ StartAutoApplications(
 
     do
     {
-        if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (findData.nFileSizeHigh || findData.nFileSizeLow))
+        // Ignore "." and ".."
+        if (wcscmp(findData.cFileName, L".") == 0 ||
+            wcscmp(findData.cFileName, L"..") == 0)
         {
-            ZeroMemory(&ExecInfo, sizeof(ExecInfo));
-            ExecInfo.cbSize = sizeof(ExecInfo);
-            wcscpy(&szPath[len+1], findData.cFileName);
-            ExecInfo.lpVerb = L"open";
-            ExecInfo.lpFile = szPath;
-            ExecInfo.lpDirectory = NULL;
-            TRACE("Executing %s in directory %s\n",
-                debugstr_w(findData.cFileName), debugstr_w(szPath));
-            ShellExecuteExW(&ExecInfo);
+            continue;
         }
+
+        // Don't run hidden files
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+            continue;
+
+        // Make the path
+        wcscpy(&szPath[len + 1], findData.cFileName);
+
+        TRACE("Executing %s in directory %s\n",
+            debugstr_w(findData.cFileName), debugstr_w(szPath));
+
+        ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWDEFAULT);
     } while (FindNextFileW(hFind, &findData));
     FindClose(hFind);
 }
