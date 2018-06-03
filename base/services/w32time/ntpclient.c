@@ -7,7 +7,7 @@
  *
  */
 
-#include "timedate.h"
+#include "w32time.h"
 
 #include <winsock2.h>
 

@@ -9,6 +9,8 @@
 
 #include "timedate.h"
 
+DWORD WINAPI W32TimeSyncNow(LPCWSTR cmdline, UINT blocking, UINT flags);
+
 static VOID
 CreateNTPServerList(HWND hwnd)
 {
@@ -208,7 +210,7 @@ InetTimePageProc(HWND hwndDlg,
 
                     SetNTPServer(hwndDlg);
 
-                    dwError = SyncTimeNow();
+                    dwError = W32TimeSyncNow(L"localhost", 0, 0);
                     if (dwError != ERROR_SUCCESS)
                     {
                         DisplayWin32Error(dwError);

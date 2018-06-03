@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  */
 
-#include "timedate.h"
+#include "w32time.h"
 
 /* Get the domain name from the registry */
 static DWORD
@@ -207,11 +207,14 @@ UpdateSystemTime(ULONG ulTime)
 }
 
 
-DWORD
-SyncTimeNow(VOID)
+DWORD WINAPI
+W32TimeSyncNow(LPCWSTR cmdline,
+               UINT blocking,
+               UINT flags)
 {
     DWORD dwError;
     ULONG ulTime;
+
     dwError = GetTimeFromServer(&ulTime);
     if (dwError != ERROR_SUCCESS)
     {
