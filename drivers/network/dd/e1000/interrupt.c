@@ -52,6 +52,7 @@ MiniportHandleInterrupt(
     if (Value & E1000_IMS_LSC)
     {
         ULONG Status;
+
         NdisDprReleaseSpinLock(&Adapter->Lock);
         Value &= ~E1000_IMS_LSC;
         NDIS_DbgPrint(MIN_TRACE, ("Link status changed!.\n"));
@@ -84,6 +85,56 @@ MiniportHandleInterrupt(
         }
     }
 
+    if (Value & (E1000_IMS_RXDMT0 | E1000_IMS_RXT0))
+    {
+        volatile PE1000_RECEIVE_DESCRIPTOR ReceiveDescriptor;
+        PETH_HEADER EthHeader;
+        ULONG BufferOffset;
+
+        /* Clear out these interrupts */
+        Value &= ~(E1000_IMS_RXDMT0 | E1000_IMS_RXT0);
+
+        while (TRUE)
+        {
+            BufferOffset = Adapter->CurrentRxDesc * Adapter->ReceiveBufferEntrySize;
+            ReceiveDescriptor = Adapter->ReceiveDescriptors + Adapter->CurrentRxDesc;
+
+            if (!(ReceiveDescriptor->Status & E1000_RDESC_STATUS_DD))
+            {
+                /* Not received yet */
+                break;
+            }
+
+            if (ReceiveDescriptor->Length != 0)
+            {
+                EthHeader = Adapter->ReceiveBuffer + BufferOffset;
+
+                NdisMEthIndicateReceive(Adapter->AdapterHandle,
+                                        NULL,
+                                        EthHeader,
+                                        sizeof(ETH_HEADER),
+                                        EthHeader + 1,
+                                        ReceiveDescriptor->Length - sizeof(ETH_HEADER),
+                                        ReceiveDescriptor->Length - sizeof(ETH_HEADER));
+
+                if (ReceiveDescriptor->Status & E1000_RDESC_STATUS_EOP)
+                {
+                    NdisMEthIndicateReceiveComplete(Adapter->AdapterHandle);
+                }
+                else
+                {
+                    __debugbreak();
+                }
+            }
+
+            /* Restore the descriptor Address, incase we received a NULL descriptor */
+            ReceiveDescriptor->Address = Adapter->ReceiveBufferPa.QuadPart + BufferOffset;
+            /* Give the descriptor back */
+            ReceiveDescriptor->Status = 0;
+            E1000WriteUlong(Adapter, E1000_REG_RDT, Adapter->CurrentRxDesc);
+            Adapter->CurrentRxDesc = (Adapter->CurrentRxDesc + 1) % NUM_RECEIVE_DESCRIPTORS;
+        }
+    }
 
     ASSERT(Value == 0);
 }
