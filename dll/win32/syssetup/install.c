@@ -1200,37 +1200,10 @@ SaveDefaultUserHive(VOID)
 
     pSetupEnablePrivilege(L"SeBackupPrivilege", TRUE);
 
-    /* Save the Default hive */
     dwError = RegSaveKeyExW(hUserKey,
                             szDefaultUserHive,
                             NULL,
                             REG_STANDARD_FORMAT);
-    if (dwError == ERROR_ALREADY_EXISTS)
-    {
-        WCHAR szBackupHive[MAX_PATH];
-
-        /* Build the backup hive file name by replacing the extension */
-        wcscpy(szBackupHive, szDefaultUserHive);
-        wcscpy(&szBackupHive[wcslen(szBackupHive) - 4], L".bak");
-
-        /* Back up the existing default user hive by renaming it, replacing any possible existing old backup */
-        if (!MoveFileExW(szDefaultUserHive,
-                         szBackupHive,
-                         MOVEFILE_REPLACE_EXISTING))
-        {
-            dwError = GetLastError();
-            DPRINT1("Failed to create a default-user hive backup '%S', MoveFileExW failed (Error %lu)\n",
-                    szBackupHive, dwError);
-        }
-        else
-        {
-            /* The backup has been done, retry saving the Default hive */
-            dwError = RegSaveKeyExW(hUserKey,
-                                    szDefaultUserHive,
-                                    NULL,
-                                    REG_STANDARD_FORMAT);
-        }
-    }
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("RegSaveKeyExW() failed (Error %lu)\n", dwError);
