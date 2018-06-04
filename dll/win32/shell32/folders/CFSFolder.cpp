@@ -129,67 +129,117 @@ HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pcl
     return S_OK;
 }
 
-static HRESULT getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
-                                        LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
+static HRESULT
+getDefaultIconLocation(LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT uFlags)
 {
-    static const WCHAR shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
+    static const WCHAR folder[] = { 'F', 'o', 'l', 'd', 'e', 'r', 0 };
+
+    if (!HCR_GetIconW(folder, szIconFile, NULL, cchMax, piIndex))
+    {
+        lstrcpynW(szIconFile, swShell32Name, cchMax);
+        *piIndex = -IDI_SHELL_FOLDER;
+    }
+
+    if (uFlags & GIL_OPENICON)
+    {
+        // next icon
+        if (*piIndex < 0)
+            (*piIndex)--;
+        else
+            (*piIndex)++;
+    }
+
+    return S_OK;
+}
+
+static const WCHAR s_shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
+
+static BOOL
+getShellClassInfo(LPCWSTR Entry, LPWSTR pszValue, DWORD cchValueLen, LPCWSTR IniFile)
+{
+    return GetPrivateProfileStringW(s_shellClassInfo, Entry, NULL, pszValue, cchValueLen, IniFile);
+}
+
+static HRESULT
+getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
+                         LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
+{
     static const WCHAR iconFile[] = { 'I', 'c', 'o', 'n', 'F', 'i', 'l', 'e', 0 };
     static const WCHAR clsid[] = { 'C', 'L', 'S', 'I', 'D', 0 };
     static const WCHAR clsid2[] = { 'C', 'L', 'S', 'I', 'D', '2', 0 };
     static const WCHAR iconIndex[] = { 'I', 'c', 'o', 'n', 'I', 'n', 'd', 'e', 'x', 0 };
+    static const WCHAR iconResource[] = { 'I', 'c', 'o', 'n', 'R', 'e', 's', 'o', 'u', 'r', 'c', 'e', 0 };
     static const WCHAR wszDesktopIni[] = { 'd','e','s','k','t','o','p','.','i','n','i',0 };
-    int icon_idx;
 
-    if (!(uFlags & GIL_DEFAULTICON) && (_ILGetFileAttributes(ILFindLastID(pidl), NULL, 0) & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0 )
+    do
     {
+        if (uFlags & GIL_DEFAULTICON)
+            break;
+
+        // read-only or system folder?
+        const DWORD dwFileAttrs = _ILGetFileAttributes(ILFindLastID(pidl), NULL, 0);
+        if ((dwFileAttrs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) == 0)
+            break;
+
+        // get path
         WCHAR wszFolderPath[MAX_PATH];
+        SHGetPathFromIDListW(pidl, wszFolderPath);
+        if (!PathIsDirectoryW(wszFolderPath))
+            break;
 
-        if (!ILGetDisplayNameExW(psf, pidl, wszFolderPath, 0))
-            return FALSE;
+        // build a full path of ini file
+        WCHAR wszIniFullPath[MAX_PATH];
+        StringCchCopyW(wszIniFullPath, _countof(wszIniFullPath), wszFolderPath);
+        PathAppendW(wszIniFullPath, wszDesktopIni);
 
-        PathAppendW(wszFolderPath, wszDesktopIni);
+        // get current folder
+        WCHAR wszCurDir[MAX_PATH];
+        GetCurrentDirectoryW(_countof(wszCurDir), wszCurDir);
 
-        if (PathFileExistsW(wszFolderPath))
+        WCHAR wszValue[MAX_PATH], wszTemp[MAX_PATH];
+        if (getShellClassInfo(iconFile, wszValue, _countof(wszValue), wszIniFullPath))
         {
-            WCHAR wszPath[MAX_PATH];
-            WCHAR wszCLSIDValue[CHARS_IN_GUID];
+            // wszValue --> wszTemp
+            ExpandEnvironmentStringsW(wszValue, wszTemp, _countof(wszTemp));
 
-            if (GetPrivateProfileStringW(shellClassInfo, iconFile, NULL, wszPath, MAX_PATH, wszFolderPath))
+            if (SetCurrentDirectoryW(wszFolderPath))
             {
-                ExpandEnvironmentStringsW(wszPath, szIconFile, cchMax);
+                // wszTemp --> szIconFile
+                GetFullPathNameW(wszTemp, cchMax, szIconFile, NULL);
+                SetCurrentDirectoryW(wszCurDir);
 
-                *piIndex = GetPrivateProfileIntW(shellClassInfo, iconIndex, 0, wszFolderPath);
-                return S_OK;
-            }
-            else if (GetPrivateProfileStringW(shellClassInfo, clsid, NULL, wszCLSIDValue, CHARS_IN_GUID, wszFolderPath) &&
-                HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
-            {
-                *piIndex = icon_idx;
-                return S_OK;
-            }
-            else if (GetPrivateProfileStringW(shellClassInfo, clsid2, NULL, wszCLSIDValue, CHARS_IN_GUID, wszFolderPath) &&
-                HCR_GetIconW(wszCLSIDValue, szIconFile, NULL, cchMax, &icon_idx))
-            {
-                *piIndex = icon_idx;
+                *piIndex = GetPrivateProfileIntW(s_shellClassInfo, iconIndex, 0, wszIniFullPath);
                 return S_OK;
             }
         }
-    }
+        else if (getShellClassInfo(clsid, wszValue, _countof(wszValue), wszIniFullPath) &&
+                 HCR_GetIconW(wszValue, szIconFile, NULL, cchMax, piIndex))
+        {
+            return S_OK;
+        }
+        else if (getShellClassInfo(clsid2, wszValue, _countof(wszValue), wszIniFullPath) &&
+                 HCR_GetIconW(wszValue, szIconFile, NULL, cchMax, piIndex))
+        {
+            return S_OK;
+        }
+        else if (getShellClassInfo(iconResource, wszValue, _countof(wszValue), wszIniFullPath))
+        {
+            *piIndex = PathParseIconLocationW(wszValue);
 
-    static const WCHAR folder[] = { 'F', 'o', 'l', 'd', 'e', 'r', 0 };
+            // wszValue --> wszTemp
+            ExpandEnvironmentStringsW(wszValue, wszTemp, _countof(wszTemp));
 
-    if (!HCR_GetIconW(folder, szIconFile, NULL, cchMax, &icon_idx))
-    {
-        lstrcpynW(szIconFile, swShell32Name, cchMax);
-        icon_idx = -IDI_SHELL_FOLDER;
-    }
+            if (SetCurrentDirectoryW(wszFolderPath))
+            {
+                // wszTemp --> szIconFile
+                GetFullPathNameW(wszTemp, cchMax, szIconFile, NULL);
+                SetCurrentDirectoryW(wszCurDir);
+                return S_OK;
+            }
+        }
+    } while (0);
 
-    if (uFlags & GIL_OPENICON)
-        *piIndex = icon_idx < 0 ? icon_idx - 1 : icon_idx + 1;
-    else
-        *piIndex = icon_idx;
-
-    return S_OK;
+    return getDefaultIconLocation(szIconFile, cchMax, piIndex, uFlags);
 }
 
 HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
