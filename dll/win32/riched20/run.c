@@ -295,7 +295,7 @@ ME_DisplayItem *ME_MakeRun(ME_Style *s, int nFlags)
 {
   ME_DisplayItem *item = ME_MakeDI(diRun);
   item->member.run.style = s;
-  item->member.run.ole_obj = NULL;
+  item->member.run.reobj = NULL;
   item->member.run.nFlags = nFlags;
   item->member.run.nCharOfs = -1;
   item->member.run.len = 0;

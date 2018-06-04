@@ -1379,16 +1379,46 @@ IRichEditOle_fnGetObject(IRichEditOle *me, LONG iob,
                REOBJECT *lpreobject, DWORD dwFlags)
 {
     IRichEditOleImpl *This = impl_from_IRichEditOle(me);
-    FIXME("stub %p\n",This);
-    return E_NOTIMPL;
+    struct re_object *reobj = NULL;
+    LONG count = 0;
+
+    TRACE("(%p)->(%x, %p, %x)\n", This, iob, lpreobject, dwFlags);
+
+    if (!lpreobject || !lpreobject->cbStruct)
+        return E_INVALIDARG;
+
+    if (iob == REO_IOB_USE_CP)
+    {
+        ME_Cursor cursor;
+
+        TRACE("character offset: %d\n", lpreobject->cp);
+        ME_CursorFromCharOfs(This->editor, lpreobject->cp, &cursor);
+        if (!cursor.pRun->member.run.reobj)
+            return E_INVALIDARG;
+        else
+            reobj = cursor.pRun->member.run.reobj;
+    }
+    else
+    {
+        if (iob > IRichEditOle_GetObjectCount(me))
+            return E_INVALIDARG;
+        LIST_FOR_EACH_ENTRY(reobj, &This->editor->reobj_list, struct re_object, entry)
+        {
+            if (count == iob)
+                break;
+            count++;
+        }
+    }
+    ME_CopyReObject(lpreobject, &reobj->obj, dwFlags);
+    return S_OK;
 }
 
 static LONG WINAPI
 IRichEditOle_fnGetObjectCount(IRichEditOle *me)
 {
     IRichEditOleImpl *This = impl_from_IRichEditOle(me);
-    FIXME("stub %p\n",This);
-    return 0;
+    TRACE("(%p)\n",This);
+    return list_count(&This->editor->reobj_list);
 }
 
 static HRESULT WINAPI
@@ -2170,17 +2200,63 @@ static HRESULT WINAPI ITextRange_fnMoveStart(ITextRange *me, LONG unit, LONG cou
     return E_NOTIMPL;
 }
 
+static HRESULT textrange_moveend(ITextRange *range, LONG unit, LONG count, LONG *delta)
+{
+    LONG old_start, old_end, new_start, new_end;
+    HRESULT hr = S_OK;
+
+    if (!count)
+    {
+        if (delta)
+            *delta = 0;
+        return S_FALSE;
+    }
+
+    ITextRange_GetStart(range, &old_start);
+    ITextRange_GetEnd(range, &old_end);
+    switch (unit)
+    {
+    case tomStory:
+        if (count < 0)
+            new_start = new_end = 0;
+        else
+        {
+            new_start = old_start;
+            ITextRange_GetStoryLength(range, &new_end);
+        }
+        if (delta)
+        {
+            if (new_end < old_end)
+                *delta = -1;
+            else if (new_end == old_end)
+                *delta = 0;
+            else
+                *delta = 1;
+        }
+        break;
+    default:
+        FIXME("unit %d is not supported\n", unit);
+        return E_NOTIMPL;
+    }
+    if (new_end == old_end)
+        hr = S_FALSE;
+    ITextRange_SetStart(range, new_start);
+    ITextRange_SetEnd(range, new_end);
+
+    return hr;
+}
+
 static HRESULT WINAPI ITextRange_fnMoveEnd(ITextRange *me, LONG unit, LONG count,
                                            LONG *delta)
 {
     ITextRangeImpl *This = impl_from_ITextRange(me);
 
-    FIXME("(%p)->(%d %d %p): stub\n", This, unit, count, delta);
+    TRACE("(%p)->(%d %d %p)\n", This, unit, count, delta);
 
     if (!This->child.reole)
         return CO_E_RELEASED;
 
-    return E_NOTIMPL;
+    return textrange_moveend(me, unit, count, delta);
 }
 
 static HRESULT WINAPI ITextRange_fnMoveWhile(ITextRange *me, VARIANT *charset, LONG count,
@@ -4650,6 +4726,8 @@ static HRESULT WINAPI ITextSelection_fnSetEnd(ITextSelection *me, LONG value)
 static HRESULT WINAPI ITextSelection_fnGetFont(ITextSelection *me, ITextFont **font)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    ITextRange *range = NULL;
+    HRESULT hr;
 
     TRACE("(%p)->(%p)\n", This, font);
 
@@ -4659,12 +4737,16 @@ static HRESULT WINAPI ITextSelection_fnGetFont(ITextSelection *me, ITextFont **f
     if (!font)
         return E_INVALIDARG;
 
-    return create_textfont((ITextRange*)me, NULL, font);
+    ITextSelection_QueryInterface(me, &IID_ITextRange, (void**)&range);
+    hr = create_textfont(range, NULL, font);
+    ITextRange_Release(range);
+    return hr;
 }
 
 static HRESULT WINAPI ITextSelection_fnSetFont(ITextSelection *me, ITextFont *font)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    ITextRange *range = NULL;
 
     TRACE("(%p)->(%p)\n", This, font);
 
@@ -4674,13 +4756,17 @@ static HRESULT WINAPI ITextSelection_fnSetFont(ITextSelection *me, ITextFont *fo
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    textrange_set_font((ITextRange*)me, font);
+    ITextSelection_QueryInterface(me, &IID_ITextRange, (void**)&range);
+    textrange_set_font(range, font);
+    ITextRange_Release(range);
     return S_OK;
 }
 
 static HRESULT WINAPI ITextSelection_fnGetPara(ITextSelection *me, ITextPara **para)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    ITextRange *range = NULL;
+    HRESULT hr;
 
     TRACE("(%p)->(%p)\n", This, para);
 
@@ -4690,7 +4776,10 @@ static HRESULT WINAPI ITextSelection_fnGetPara(ITextSelection *me, ITextPara **p
     if (!para)
         return E_INVALIDARG;
 
-    return create_textpara((ITextRange*)me, para);
+    ITextSelection_QueryInterface(me, &IID_ITextRange, (void**)&range);
+    hr = create_textpara(range, para);
+    ITextRange_Release(range);
+    return hr;
 }
 
 static HRESULT WINAPI ITextSelection_fnSetPara(ITextSelection *me, ITextPara *para)
@@ -4755,13 +4844,18 @@ static HRESULT WINAPI ITextSelection_fnCollapse(ITextSelection *me, LONG bStart)
 static HRESULT WINAPI ITextSelection_fnExpand(ITextSelection *me, LONG unit, LONG *delta)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    ITextRange *range = NULL;
+    HRESULT hr;
 
     TRACE("(%p)->(%d %p)\n", This, unit, delta);
 
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    return textrange_expand((ITextRange*)me, unit, delta);
+    ITextSelection_QueryInterface(me, &IID_ITextRange, (void**)&range);
+    hr = textrange_expand(range, unit, delta);
+    ITextRange_Release(range);
+    return hr;
 }
 
 static HRESULT WINAPI ITextSelection_fnGetIndex(ITextSelection *me, LONG unit, LONG *index)
@@ -4935,13 +5029,18 @@ static HRESULT WINAPI ITextSelection_fnMoveEnd(ITextSelection *me, LONG unit, LO
     LONG *delta)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    ITextRange *range = NULL;
+    HRESULT hr;
 
-    FIXME("(%p)->(%d %d %p): stub\n", This, unit, count, delta);
+    TRACE("(%p)->(%d %d %p)\n", This, unit, count, delta);
 
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    return E_NOTIMPL;
+    ITextSelection_QueryInterface(me, &IID_ITextRange, (void**)&range);
+    hr = textrange_moveend(range, unit, count, delta);
+    ITextRange_Release(range);
+    return hr;
 }
 
 static HRESULT WINAPI ITextSelection_fnMoveWhile(ITextSelection *me, VARIANT *charset, LONG count,
@@ -5456,11 +5555,11 @@ void ME_GetOLEObjectSize(const ME_Context *c, ME_Run *run, SIZE *pSize)
   ENHMETAHEADER emh;
 
   assert(run->nFlags & MERF_GRAPHICS);
-  assert(run->ole_obj);
+  assert(run->reobj);
 
-  if (run->ole_obj->sizel.cx != 0 || run->ole_obj->sizel.cy != 0)
+  if (run->reobj->obj.sizel.cx != 0 || run->reobj->obj.sizel.cy != 0)
   {
-    convert_sizel(c, &run->ole_obj->sizel, pSize);
+    convert_sizel(c, &run->reobj->obj.sizel, pSize);
     if (c->editor->nZoomNumerator != 0)
     {
       pSize->cx = MulDiv(pSize->cx, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
@@ -5469,13 +5568,13 @@ void ME_GetOLEObjectSize(const ME_Context *c, ME_Run *run, SIZE *pSize)
     return;
   }
 
-  if (!run->ole_obj->poleobj)
+  if (!run->reobj->obj.poleobj)
   {
     pSize->cx = pSize->cy = 0;
     return;
   }
 
-  if (IOleObject_QueryInterface(run->ole_obj->poleobj, &IID_IDataObject, (void**)&ido) != S_OK)
+  if (IOleObject_QueryInterface(run->reobj->obj.poleobj, &IID_IDataObject, (void**)&ido) != S_OK)
   {
       FIXME("Query Interface IID_IDataObject failed!\n");
       pSize->cx = pSize->cy = 0;
@@ -5538,13 +5637,13 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run *run, BOOL selected)
   RECT          rc;
 
   assert(run->nFlags & MERF_GRAPHICS);
-  assert(run->ole_obj);
-  if (IOleObject_QueryInterface(run->ole_obj->poleobj, &IID_IDataObject, (void**)&ido) != S_OK)
+  assert(run->reobj);
+  if (IOleObject_QueryInterface(run->reobj->obj.poleobj, &IID_IDataObject, (void**)&ido) != S_OK)
   {
     FIXME("Couldn't get interface\n");
     return;
   }
-  has_size = run->ole_obj->sizel.cx != 0 || run->ole_obj->sizel.cy != 0;
+  has_size = run->reobj->obj.sizel.cx != 0 || run->reobj->obj.sizel.cy != 0;
   fmt.cfFormat = CF_BITMAP;
   fmt.ptd = NULL;
   fmt.dwAspect = DVASPECT_CONTENT;
@@ -5571,7 +5670,7 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run *run, BOOL selected)
     old_bm = SelectObject(hMemDC, stgm.u.hBitmap);
     if (has_size)
     {
-      convert_sizel(c, &run->ole_obj->sizel, &sz);
+      convert_sizel(c, &run->reobj->obj.sizel, &sz);
     } else {
       sz.cx = dibsect.dsBm.bmWidth;
       sz.cy = dibsect.dsBm.bmHeight;
@@ -5591,7 +5690,7 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run *run, BOOL selected)
     GetEnhMetaFileHeader(stgm.u.hEnhMetaFile, sizeof(emh), &emh);
     if (has_size)
     {
-      convert_sizel(c, &run->ole_obj->sizel, &sz);
+      convert_sizel(c, &run->reobj->obj.sizel, &sz);
     } else {
       sz.cx = emh.rclBounds.right - emh.rclBounds.left;
       sz.cy = emh.rclBounds.bottom - emh.rclBounds.top;
@@ -5619,21 +5718,36 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run *run, BOOL selected)
     PatBlt(c->hDC, x, y - sz.cy, sz.cx, sz.cy, DSTINVERT);
 }
 
-void ME_DeleteReObject(REOBJECT* reo)
+void ME_DeleteReObject(struct re_object *reobj)
 {
-    if (reo->poleobj)   IOleObject_Release(reo->poleobj);
-    if (reo->pstg)      IStorage_Release(reo->pstg);
-    if (reo->polesite)  IOleClientSite_Release(reo->polesite);
-    heap_free(reo);
+    if (reobj->obj.poleobj)   IOleObject_Release(reobj->obj.poleobj);
+    if (reobj->obj.pstg)      IStorage_Release(reobj->obj.pstg);
+    if (reobj->obj.polesite)  IOleClientSite_Release(reobj->obj.polesite);
+    heap_free(reobj);
 }
 
-void ME_CopyReObject(REOBJECT* dst, const REOBJECT* src)
+void ME_CopyReObject(REOBJECT *dst, const REOBJECT *src, DWORD flags)
 {
     *dst = *src;
+    dst->poleobj = NULL;
+    dst->pstg = NULL;
+    dst->polesite = NULL;
 
-    if (dst->poleobj)   IOleObject_AddRef(dst->poleobj);
-    if (dst->pstg)      IStorage_AddRef(dst->pstg);
-    if (dst->polesite)  IOleClientSite_AddRef(dst->polesite);
+    if ((flags & REO_GETOBJ_POLEOBJ) && src->poleobj)
+    {
+        dst->poleobj = src->poleobj;
+        IOleObject_AddRef(dst->poleobj);
+    }
+    if ((flags & REO_GETOBJ_PSTG) && src->pstg)
+    {
+        dst->pstg = src->pstg;
+        IStorage_AddRef(dst->pstg);
+    }
+    if ((flags & REO_GETOBJ_POLESITE) && src->polesite)
+    {
+        dst->polesite = src->polesite;
+        IOleClientSite_AddRef(dst->polesite);
+    }
 }
 
 void ME_GetITextDocumentInterface(IRichEditOle *iface, LPVOID *ppvObj)
