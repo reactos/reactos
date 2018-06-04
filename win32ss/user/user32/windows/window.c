@@ -176,6 +176,7 @@ User32CreateWindowEx(DWORD dwExStyle,
     LPCWSTR lpszClsVersion;
     LPCWSTR lpLibFileName = NULL;
     HANDLE pCtx = NULL;
+    DWORD dwProcLayout = 0L;
 
 #if 0
     DbgPrint("[window] User32CreateWindowEx style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
@@ -281,6 +282,15 @@ User32CreateWindowEx(DWORD dwExStyle,
         lstrClassVersion.Length = ClassVersion.Length;
         lstrClassVersion.MaximumLength = ClassVersion.MaximumLength;
         plstrClassVersion = &lstrClassVersion;
+    }
+
+    /* Check process default layout */
+    if (!hWndParent)
+    {
+        NtUserCallOneParam((DWORD_PTR)&dwProcLayout, ONEPARAM_ROUTINE_GETPROCDEFLAYOUT);
+
+        if ((dwProcLayout == LAYOUT_RTL) && !(dwExStyle & (WS_EX_LAYOUTRTL | WS_EX_RIGHT)))
+            dwExStyle |= WS_EX_LAYOUTRTL;
     }
 
     for (;;)
