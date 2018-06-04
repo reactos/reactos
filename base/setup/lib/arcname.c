@@ -23,6 +23,7 @@
 
 #include "precomp.h"
 
+#include "filesup.h"
 #include "partlist.h"
 #include "arcname.h"
 
@@ -114,7 +115,7 @@ ArcGetNextTokenA(
     OUT PANSI_STRING TokenSpecifier,
     OUT PULONG Key)
 {
-    HRESULT hr;
+    NTSTATUS Status;
     PCSTR p = ArcPath;
     ULONG SpecifierLength;
     ULONG KeyValue;
@@ -154,9 +155,10 @@ ArcGetNextTokenA(
 #endif
 
     /* We should have succeeded, copy the token specifier in the buffer */
-    hr = StringCbCopyNA(TokenSpecifier->Buffer, TokenSpecifier->MaximumLength,
-                        ArcPath, SpecifierLength);
-    if (FAILED(hr))
+    Status = RtlStringCbCopyNA(TokenSpecifier->Buffer,
+                               TokenSpecifier->MaximumLength,
+                               ArcPath, SpecifierLength);
+    if (!NT_SUCCESS(Status))
         return NULL;
 
     TokenSpecifier->Length = strlen(TokenSpecifier->Buffer) * sizeof(CHAR);
@@ -174,7 +176,7 @@ ArcGetNextTokenU(
     OUT PUNICODE_STRING TokenSpecifier,
     OUT PULONG Key)
 {
-    HRESULT hr;
+    NTSTATUS Status;
     PCWSTR p = ArcPath;
     ULONG SpecifierLength;
     ULONG KeyValue;
@@ -216,9 +218,10 @@ ArcGetNextTokenU(
 #endif
 
     /* We should have succeeded, copy the token specifier in the buffer */
-    hr = StringCbCopyNW(TokenSpecifier->Buffer, TokenSpecifier->MaximumLength,
-                        ArcPath, SpecifierLength);
-    if (FAILED(hr))
+    Status = RtlStringCbCopyNW(TokenSpecifier->Buffer,
+                               TokenSpecifier->MaximumLength,
+                               ArcPath, SpecifierLength);
+    if (!NT_SUCCESS(Status))
         return NULL;
 
     TokenSpecifier->Length = wcslen(TokenSpecifier->Buffer) * sizeof(WCHAR);
@@ -298,7 +301,7 @@ ArcPathNormalize(
     OUT PUNICODE_STRING NormalizedArcPath,
     IN  PCWSTR ArcPath)
 {
-    HRESULT hr;
+    NTSTATUS Status;
     PCWSTR EndOfArcName;
     PCWSTR p;
 
@@ -315,24 +318,32 @@ ArcPathNormalize(
     while ((p = wcsstr(ArcPath, L"()")) && (p < EndOfArcName))
     {
 #if 0
-        hr = StringCbCopyNW(NormalizedArcPath->Buffer, NormalizedArcPath->MaximumLength,
-                            ArcPath, (p - ArcPath) * sizeof(WCHAR));
+        Status = RtlStringCbCopyNW(NormalizedArcPath->Buffer,
+                                   NormalizedArcPath->MaximumLength,
+                                   ArcPath, (p - ArcPath) * sizeof(WCHAR));
 #else
-        hr = StringCbCatNW(NormalizedArcPath->Buffer, NormalizedArcPath->MaximumLength,
-                           ArcPath, (p - ArcPath) * sizeof(WCHAR));
+        Status = RtlStringCbCatNW(NormalizedArcPath->Buffer,
+                                  NormalizedArcPath->MaximumLength,
+                                  ArcPath, (p - ArcPath) * sizeof(WCHAR));
 #endif
-        if (FAILED(hr))
+        if (!NT_SUCCESS(Status))
             return FALSE;
-        hr = StringCbCatW(NormalizedArcPath->Buffer, NormalizedArcPath->MaximumLength, L"(0)");
-        if (FAILED(hr))
+
+        Status = RtlStringCbCatW(NormalizedArcPath->Buffer,
+                                 NormalizedArcPath->MaximumLength,
+                                 L"(0)");
+        if (!NT_SUCCESS(Status))
             return FALSE;
 #if 0
         NormalizedArcPath->Buffer += wcslen(NormalizedArcPath->Buffer);
 #endif
         ArcPath = p + 2;
     }
-    hr = StringCbCatW(NormalizedArcPath->Buffer, NormalizedArcPath->MaximumLength, ArcPath);
-    if (FAILED(hr))
+
+    Status = RtlStringCbCatW(NormalizedArcPath->Buffer,
+                             NormalizedArcPath->MaximumLength,
+                             ArcPath);
+    if (!NT_SUCCESS(Status))
         return FALSE;
 
     NormalizedArcPath->Length = wcslen(NormalizedArcPath->Buffer) * sizeof(WCHAR);
@@ -450,7 +461,7 @@ ResolveArcNameManually(
     IN OUT PCWSTR* ArcNamePath,
     IN  PPARTLIST PartList OPTIONAL)
 {
-    HRESULT hr;
+    NTSTATUS Status;
     WCHAR TokenBuffer[50];
     UNICODE_STRING Token;
     PCWSTR p, q;
@@ -525,7 +536,8 @@ ResolveArcNameManually(
                 return STATUS_NOT_SUPPORTED;
             }
 
-            hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\Ramdisk%lu", AdapterKey);
+            Status = RtlStringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                                        L"\\Device\\Ramdisk%lu", AdapterKey);
             goto Quit;
         }
     }
@@ -644,14 +656,23 @@ ResolveArcNameManually(
 
 
     if (ControllerType == CdRomController) // and so, AdapterType == ScsiAdapter and PeripheralType == FDiskPeripheral
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\Scsi\\CdRom%lu", ControllerKey);
+    {
+        Status = RtlStringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                                    L"\\Device\\Scsi\\CdRom%lu", ControllerKey);
+    }
     else
     /* Now, ControllerType == DiskController */
     if (PeripheralType == CdRomPeripheral)
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\CdRom%lu", PeripheralKey);
+    {
+        Status = RtlStringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                                    L"\\Device\\CdRom%lu", PeripheralKey);
+    }
     else
     if (PeripheralType == FDiskPeripheral)
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\Floppy%lu", PeripheralKey);
+    {
+        Status = RtlStringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                                    L"\\Device\\Floppy%lu", PeripheralKey);
+    }
     else
     if (PeripheralType == RDiskPeripheral)
     {
@@ -676,76 +697,28 @@ ResolveArcNameManually(
             ASSERT(PartEntry->DiskEntry == DiskEntry);
         }
 
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\Harddisk%lu\\Partition%lu",
-                             DiskEntry->DiskNumber, PartitionNumber);
+        Status = RtlStringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                                    L"\\Device\\Harddisk%lu\\Partition%lu",
+                                    DiskEntry->DiskNumber, PartitionNumber);
     }
 #if 0
     else
     if (PeripheralType == VDiskPeripheral)
     {
         // TODO: Check how Win 7+ deals with virtual disks.
-        hr = StringCbPrintfW(NtName->Buffer, NtName->MaximumLength, L"\\Device\\VirtualHarddisk%lu\\Partition%lu",
-                             PeripheralKey, PartitionNumber);
+        Status = RtlStringCbPrintfW(NtName->Buffer, NtName->MaximumLength,
+                                    L"\\Device\\VirtualHarddisk%lu\\Partition%lu",
+                                    PeripheralKey, PartitionNumber);
     }
 #endif
 
 Quit:
-    if (FAILED(hr))
-    {
-        /*
-         * We can directly cast the HRESULTs into NTSTATUS since the error codes
-         * returned by StringCbPrintfW:
-         *    STRSAFE_E_INVALID_PARAMETER   == 0x80070057,
-         *    STRSAFE_E_INSUFFICIENT_BUFFER == 0x8007007a,
-         * do not have assigned values in the NTSTATUS space.
-         */
-        return (NTSTATUS)hr;
-    }
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     *ArcNamePath = p;
     return STATUS_SUCCESS;
 }
-
-
-/**** FIXME: Redundant with filesup.c ! ****\
-|** (but filesup.c is not yet included in **|
-\**    setuplib, hence this code copy)    **/
-
-static
-HRESULT
-ConcatPaths(
-    IN OUT PWSTR PathElem1,
-    IN SIZE_T cchPathSize,
-    IN PCWSTR PathElem2 OPTIONAL)
-{
-    HRESULT hr;
-    SIZE_T cchPathLen;
-
-    if (!PathElem2)
-        return S_OK;
-    if (cchPathSize <= 1)
-        return S_OK;
-
-    cchPathLen = min(cchPathSize, wcslen(PathElem1));
-
-    if (PathElem2[0] != L'\\' && cchPathLen > 0 && PathElem1[cchPathLen-1] != L'\\')
-    {
-        /* PathElem2 does not start with '\' and PathElem1 does not end with '\' */
-        hr = StringCchCatW(PathElem1, cchPathSize, L"\\");
-        if (FAILED(hr))
-            return hr;
-    }
-    else if (PathElem2[0] == L'\\' && cchPathLen > 0 && PathElem1[cchPathLen-1] == L'\\')
-    {
-        /* PathElem2 starts with '\' and PathElem1 ends with '\' */
-        while (*PathElem2 == L'\\')
-            ++PathElem2; // Skip any backslash
-    }
-    hr = StringCchCatW(PathElem1, cchPathSize, PathElem2);
-    return hr;
-}
-
-/*******************************************/
 
 
 BOOLEAN
@@ -825,9 +798,8 @@ ArcPathToNtPath(
      */
     if (BeginOfPath && *BeginOfPath)
     {
-        HRESULT hr;
-        hr = ConcatPaths(NtPath->Buffer, NtPath->MaximumLength / sizeof(WCHAR), BeginOfPath);
-        if (FAILED(hr))
+        Status = ConcatPaths(NtPath->Buffer, NtPath->MaximumLength / sizeof(WCHAR), 1, BeginOfPath);
+        if (!NT_SUCCESS(Status))
         {
             /* Buffer not large enough, or whatever...: just bail out */
             return FALSE;

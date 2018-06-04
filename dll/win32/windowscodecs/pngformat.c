@@ -829,20 +829,9 @@ static HRESULT WINAPI PngDecoder_GetContainerFormat(IWICBitmapDecoder *iface,
 static HRESULT WINAPI PngDecoder_GetDecoderInfo(IWICBitmapDecoder *iface,
     IWICBitmapDecoderInfo **ppIDecoderInfo)
 {
-    HRESULT hr;
-    IWICComponentInfo *compinfo;
-
     TRACE("(%p,%p)\n", iface, ppIDecoderInfo);
 
-    hr = CreateComponentInfo(&CLSID_WICPngDecoder, &compinfo);
-    if (FAILED(hr)) return hr;
-
-    hr = IWICComponentInfo_QueryInterface(compinfo, &IID_IWICBitmapDecoderInfo,
-        (void**)ppIDecoderInfo);
-
-    IWICComponentInfo_Release(compinfo);
-
-    return hr;
+    return get_decoder_info(&CLSID_WICPngDecoder, ppIDecoderInfo);
 }
 
 static HRESULT WINAPI PngDecoder_CopyPalette(IWICBitmapDecoder *iface,

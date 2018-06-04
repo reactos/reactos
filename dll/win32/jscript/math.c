@@ -559,7 +559,8 @@ HRESULT create_math(script_ctx_t *ctx, jsdisp_t **ret)
     }
 
     for(i=0; i < sizeof(constants)/sizeof(*constants); i++) {
-        hres = jsdisp_propput_const(math, constants[i].name, jsval_number(constants[i].val));
+        hres = jsdisp_define_data_property(math, constants[i].name, 0,
+                                           jsval_number(constants[i].val));
         if(FAILED(hres)) {
             jsdisp_release(math);
             return hres;

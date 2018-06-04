@@ -427,14 +427,13 @@ CheckUnattendedSetup(VOID)
     INT IntValue;
     PWCHAR Value;
 
-    if (DoesFileExist(NULL, SourcePath.Buffer, L"unattend.inf") == FALSE)
+    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2, SourcePath.Buffer, L"\\unattend.inf");
+
+    if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
-        DPRINT("Does not exist: %S\\%S\n", SourcePath.Buffer, L"unattend.inf");
+        DPRINT("Does not exist: %S\n", UnattendInfPath);
         return;
     }
-
-    wcscpy(UnattendInfPath, SourcePath.Buffer);
-    wcscat(UnattendInfPath, L"\\unattend.inf");
 
     /* Load 'unattend.inf' from install media. */
     UnattendInf = SetupOpenInfFileW(UnattendInfPath,
@@ -527,7 +526,7 @@ CheckUnattendedSetup(VOID)
         return;
     }
 
-    UnattendDestinationPartitionNumber = IntValue;
+    UnattendDestinationPartitionNumber = (LONG)IntValue;
 
     /* Search for 'InstallationDirectory' in the 'Unattend' section */
     if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
@@ -824,9 +823,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 #endif
 
     /* Load txtsetup.sif from install media. */
-    wcscpy(FileNameBuffer, SourcePath.Buffer);
-    wcscat(FileNameBuffer, L"\\txtsetup.sif");
-
+    CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2, SourcePath.Buffer, L"\\txtsetup.sif");
     SetupInf = SetupOpenInfFileW(FileNameBuffer,
                                  NULL,
                                  INF_STYLE_WIN4,
@@ -1379,8 +1376,8 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 
     return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }
- 
- 
+
+
 /*
  * Displays the DisplaySettingsPage.
  *
@@ -3203,12 +3200,8 @@ BuildInstallPaths(PWCHAR InstallDir,
 
     /* Create 'DestinationPath' string */
     RtlFreeUnicodeString(&DestinationPath);
-    wcscpy(PathBuffer, DestinationRootPath.Buffer);
-
-    if (InstallDir[0] != L'\\')
-        wcscat(PathBuffer, L"\\");
-
-    wcscat(PathBuffer, InstallDir);
+    CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
+                 DestinationRootPath.Buffer, InstallDir);
     RtlCreateUnicodeString(&DestinationPath, PathBuffer);
 
     /* Create 'DestinationArcPath' */
@@ -3217,11 +3210,7 @@ BuildInstallPaths(PWCHAR InstallDir,
              L"multi(0)disk(0)rdisk(%lu)partition(%lu)",
              DiskEntry->BiosDiskNumber,
              PartEntry->PartitionNumber);
-
-    if (InstallDir[0] != L'\\')
-        wcscat(PathBuffer, L"\\");
-
-    wcscat(PathBuffer, InstallDir);
+    ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallDir);
     RtlCreateUnicodeString(&DestinationArcPath, PathBuffer);
 }
 
@@ -3558,7 +3547,7 @@ AddSectionToCopyQueue(HINF InfFile,
             break;
         }
 
-        if ((DirKeyValue[0] == 0) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == 0))
+        if ((DirKeyValue[0] == UNICODE_NULL) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == UNICODE_NULL))
         {
             /* Installation path */
             wcscpy(CompleteOrigDirName, SourceRootDir.Buffer);
@@ -3571,16 +3560,15 @@ AddSectionToCopyQueue(HINF InfFile,
         else // if (DirKeyValue[0] != L'\\')
         {
             /* Path relative to the installation path */
-            wcscpy(CompleteOrigDirName, SourceRootDir.Buffer);
-            wcscat(CompleteOrigDirName, L"\\");
-            wcscat(CompleteOrigDirName, DirKeyValue);
+            CombinePaths(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName), 2,
+                         SourceRootDir.Buffer, DirKeyValue);
         }
 
         /* Remove trailing backslash */
         Length = wcslen(CompleteOrigDirName);
         if ((Length > 0) && (CompleteOrigDirName[Length - 1] == L'\\'))
         {
-            CompleteOrigDirName[Length - 1] = 0;
+            CompleteOrigDirName[Length - 1] = UNICODE_NULL;
         }
 
         if (!SetupQueueCopy(SetupFileQueue,
@@ -3647,7 +3635,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     Length = wcslen(PathBuffer);
     if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
     {
-        PathBuffer[Length - 1] = 0;
+        PathBuffer[Length - 1] = UNICODE_NULL;
     }
 
     /* Create the install directory */
@@ -3683,7 +3671,7 @@ PrepareCopyPageInfFile(HINF InfFile,
             break;
         }
 
-        if ((DirKeyValue[0] == 0) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == 0))
+        if ((DirKeyValue[0] == UNICODE_NULL) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == UNICODE_NULL))
         {
             /* Installation path */
             DPRINT("InstallationPath: '%S'\n", DirKeyValue);
@@ -3697,14 +3685,14 @@ PrepareCopyPageInfFile(HINF InfFile,
             /* Absolute path */
             DPRINT("Absolute Path: '%S'\n", DirKeyValue);
 
-            wcscpy(PathBuffer, DestinationRootPath.Buffer);
-            wcscat(PathBuffer, DirKeyValue);
+            CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
+                         DestinationRootPath.Buffer, DirKeyValue);
 
             /* Remove trailing backslash */
             Length = wcslen(PathBuffer);
             if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
             {
-                PathBuffer[Length - 1] = 0;
+                PathBuffer[Length - 1] = UNICODE_NULL;
             }
 
             DPRINT("FullPath: '%S'\n", PathBuffer);
@@ -3722,15 +3710,14 @@ PrepareCopyPageInfFile(HINF InfFile,
             /* Path relative to the installation path */
             DPRINT("RelativePath: '%S'\n", DirKeyValue);
 
-            wcscpy(PathBuffer, DestinationPath.Buffer);
-            wcscat(PathBuffer, L"\\");
-            wcscat(PathBuffer, DirKeyValue);
+            CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
+                         DestinationPath.Buffer, DirKeyValue);
 
             /* Remove trailing backslash */
             Length = wcslen(PathBuffer);
             if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
             {
-                PathBuffer[Length - 1] = 0;
+                PathBuffer[Length - 1] = UNICODE_NULL;
             }
 
             DPRINT("FullPath: '%S'\n", PathBuffer);
@@ -3805,9 +3792,8 @@ PrepareCopyPage(PINPUT_RECORD Ir)
         if (!INF_GetData(&CabinetsContext, NULL, &KeyValue))
             break;
 
-        wcscpy(PathBuffer, SourcePath.Buffer);
-        wcscat(PathBuffer, L"\\");
-        wcscat(PathBuffer, KeyValue);
+        CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
+                     SourcePath.Buffer, KeyValue);
 
         CabinetInitialize();
         CabinetSetEventHandlers(NULL, NULL, NULL);
@@ -4387,7 +4373,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
         {
-            if (DoesFileExist(NULL, L"\\Device\\Floppy0", L"\\") == FALSE)
+            if (DoesPathExist(NULL, L"\\Device\\Floppy0\\") == FALSE)
             {
                 MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
                 return BOOT_LOADER_FLOPPY_PAGE;
@@ -4484,14 +4470,12 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
              L"\\Device\\Harddisk%d\\Partition0",
              PartitionList->SystemPartition->DiskEntry->DiskNumber);
 
-    wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
-    wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");
+    CombinePaths(SourceMbrPathBuffer, ARRAYSIZE(SourceMbrPathBuffer), 2, SourceRootPath.Buffer, L"\\loader\\dosmbr.bin");
 
     if (IsThereAValidBootSector(DestinationDevicePathBuffer))
     {
         /* Save current MBR */
-        wcscpy(DstPath, SystemRootPath.Buffer);
-        wcscat(DstPath, L"\\mbr.old");
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath.Buffer, L"\\mbr.old");
 
         DPRINT1("Save MBR: %S ==> %S\n", DestinationDevicePathBuffer, DstPath);
         Status = SaveBootSector(DestinationDevicePathBuffer, DstPath, sizeof(PARTITION_SECTOR));

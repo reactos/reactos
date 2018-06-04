@@ -3311,7 +3311,7 @@ static const WCHAR *get_installeddriver( UINT vendorid )
     static const WCHAR driver_nvidiaW[] = {'n','v','d','3','d','u','m','.','d','l','l',0};
     static const WCHAR driver_wineW[] = {'w','i','n','e','.','d','l','l',0};
 
-    /* FIXME: wined3d has a better table, but we can not access this information through dxgi */
+    /* FIXME: wined3d has a better table, but we cannot access this information through dxgi */
 
     if (vendorid == HW_VENDOR_AMD)
         return driver_amdW;

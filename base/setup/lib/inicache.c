@@ -1,32 +1,15 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/inicache.c
- * PURPOSE:         INI file parser that caches contents of INI file in memory
- * PROGRAMMER:      Royce Mitchell III
+ * PROJECT:     ReactOS Setup Library
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     INI file parser that caches contents of INI file in memory.
+ * COPYRIGHT:   Copyright 2002-2018 Royce Mitchell III
  */
 
 /* INCLUDES *****************************************************************/
 
-#include "usetup.h"
+#include "precomp.h"
+
+#include "inicache.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -561,45 +544,19 @@ IniCacheLoadFromMemory(
 }
 
 NTSTATUS
-IniCacheLoad(
+IniCacheLoadByHandle(
     PINICACHE *Cache,
-    PWCHAR FileName,
+    HANDLE FileHandle,
     BOOLEAN String)
 {
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    FILE_STANDARD_INFORMATION FileInfo;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
     NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_STANDARD_INFORMATION FileInfo;
     PCHAR FileBuffer;
     ULONG FileLength;
     LARGE_INTEGER FileOffset;
 
     *Cache = NULL;
-
-    /* Open ini file */
-    RtlInitUnicodeString(&Name, FileName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        FILE_SHARE_READ,
-                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    DPRINT("NtOpenFile() successful\n");
 
     /* Query file size */
     Status = NtQueryInformationFile(FileHandle,
@@ -610,7 +567,6 @@ IniCacheLoad(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
         return Status;
     }
 
@@ -625,7 +581,6 @@ IniCacheLoad(
     if (FileBuffer == NULL)
     {
         DPRINT1("RtlAllocateHeap() failed\n");
-        NtClose(FileHandle);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -644,8 +599,6 @@ IniCacheLoad(
     /* Append NULL-terminator */
     FileBuffer[FileLength] = 0;
 
-    NtClose(FileHandle);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtReadFile() failed (Status %lx)\n", Status);
@@ -661,6 +614,50 @@ IniCacheLoad(
 Quit:
     /* Free the file buffer, and return */
     RtlFreeHeap(ProcessHeap, 0, FileBuffer);
+    return Status;
+}
+
+NTSTATUS
+IniCacheLoad(
+    PINICACHE *Cache,
+    PWCHAR FileName,
+    BOOLEAN String)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+
+    *Cache = NULL;
+
+    /* Open the INI file */
+    RtlInitUnicodeString(&Name, FileName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        FILE_GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
+        return Status;
+    }
+
+    DPRINT("NtOpenFile() successful\n");
+
+    Status = IniCacheLoadByHandle(Cache, FileHandle, String);
+
+    /* Close the INI file */
+    NtClose(FileHandle);
     return Status;
 }
 
@@ -948,24 +945,19 @@ IniCacheCreate(VOID)
 
 
 NTSTATUS
-IniCacheSave(
+IniCacheSaveByHandle(
     PINICACHE Cache,
-    PWCHAR FileName)
+    HANDLE FileHandle)
 {
-    UNICODE_STRING Name;
+    NTSTATUS Status;
     PINICACHESECTION Section;
     PINICACHEKEY Key;
     ULONG BufferSize;
     PCHAR Buffer;
     PCHAR Ptr;
     ULONG Len;
-    NTSTATUS Status;
-
-    OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     LARGE_INTEGER Offset;
-    HANDLE FileHandle;
-
 
     /* Calculate required buffer size */
     BufferSize = 0;
@@ -1025,33 +1017,7 @@ IniCacheSave(
         }
     }
 
-    /* Create ini file */
-    RtlInitUnicodeString(&Name, FileName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_SUPERSEDE,
-                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(ProcessHeap, 0, Buffer);
-        return Status;
-    }
-
+    /* Write to the INI file */
     Offset.QuadPart = 0LL;
     Status = NtWriteFile(FileHandle,
                          NULL,
@@ -1064,17 +1030,57 @@ IniCacheSave(
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
-      NtClose(FileHandle);
-      RtlFreeHeap(ProcessHeap, 0, Buffer);
-      return Status;
+        DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+        RtlFreeHeap(ProcessHeap, 0, Buffer);
+        return Status;
     }
 
-    NtClose(FileHandle);
-
     RtlFreeHeap(ProcessHeap, 0, Buffer);
-
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IniCacheSave(
+    PINICACHE Cache,
+    PWCHAR FileName)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+
+    /* Create the INI file */
+    RtlInitUnicodeString(&Name, FileName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&FileHandle,
+                          FILE_GENERIC_WRITE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_SUPERSEDE,
+                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY | FILE_NON_DIRECTORY_FILE,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+        return Status;
+    }
+
+    Status = IniCacheSaveByHandle(Cache, FileHandle);
+
+    /* Close the INI file */
+    NtClose(FileHandle);
+    return Status;
 }
 
 

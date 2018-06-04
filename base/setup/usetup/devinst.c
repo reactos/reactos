@@ -50,13 +50,13 @@ InstallDriver(
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hService;
     INFCONTEXT Context;
-    LPWSTR Driver, ClassGuid, ImagePath, FullImagePath;
+    PWSTR Driver, ClassGuid, ImagePath, FullImagePath;
     ULONG dwValue;
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
     UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
-    LPWSTR keyboardClass = L"kbdclass\0";
+    PWSTR keyboardClass = L"kbdclass\0";
 
     /* Check if we know the hardware */
     if (!SetupFindFirstLineW(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
@@ -84,14 +84,14 @@ InstallDriver(
 
     /* Prepare full driver path */
     dwValue = PathPrefix.MaximumLength + wcslen(ImagePath) * sizeof(WCHAR);
-    FullImagePath = (LPWSTR)RtlAllocateHeap(ProcessHeap, 0, dwValue);
+    FullImagePath = (PWSTR)RtlAllocateHeap(ProcessHeap, 0, dwValue);
     if (!FullImagePath)
     {
         DPRINT1("RtlAllocateHeap() failed\n");
         return FALSE;
     }
     RtlCopyMemory(FullImagePath, PathPrefix.Buffer, PathPrefix.MaximumLength);
-    wcscat(FullImagePath, ImagePath);
+    ConcatPaths(FullImagePath, dwValue / sizeof(WCHAR), 1, ImagePath);
 
     DPRINT1("Using driver '%S' for device '%S'\n", ImagePath, DeviceId);
 

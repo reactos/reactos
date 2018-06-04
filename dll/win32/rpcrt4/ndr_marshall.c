@@ -5745,11 +5745,16 @@ static unsigned char *union_arm_marshall(PMIDL_STUB_MESSAGE pStubMsg, unsigned c
                   pStubMsg->Buffer = saved_buffer + 4;
                 }
                 break;
+            case RPC_FC_IP:
+                /* must be dereferenced first */
+                m(pStubMsg, *(unsigned char **)pMemory, desc);
+                break;
             default:
                 m(pStubMsg, pMemory, desc);
             }
         }
-        else FIXME("no marshaller for embedded type %02x\n", *desc);
+        else if (*desc)
+            FIXME("no marshaller for embedded type %02x\n", *desc);
     }
     return NULL;
 }
@@ -5814,11 +5819,16 @@ static unsigned char *union_arm_unmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                   pStubMsg->Buffer = saved_buffer + 4;
                 }
                 break;
+            case RPC_FC_IP:
+                /* must be dereferenced first */
+                m(pStubMsg, *(unsigned char ***)ppMemory, desc, fMustAlloc);
+                break;
             default:
                 m(pStubMsg, ppMemory, desc, fMustAlloc);
             }
         }
-        else FIXME("no marshaller for embedded type %02x\n", *desc);
+        else if (*desc)
+            FIXME("no marshaller for embedded type %02x\n", *desc);
     }
     return NULL;
 }
@@ -5868,11 +5878,16 @@ static void union_arm_buffer_size(PMIDL_STUB_MESSAGE pStubMsg,
                     pStubMsg->BufferLength = saved_buffer_length;
                 }
                 break;
+            case RPC_FC_IP:
+                /* must be dereferenced first */
+                m(pStubMsg, *(unsigned char **)pMemory, desc);
+                break;
             default:
                 m(pStubMsg, pMemory, desc);
             }
         }
-        else FIXME("no buffersizer for embedded type %02x\n", *desc);
+        else if (*desc)
+            FIXME("no buffersizer for embedded type %02x\n", *desc);
     }
 }
 
@@ -5920,7 +5935,8 @@ static ULONG union_arm_memory_size(PMIDL_STUB_MESSAGE pStubMsg,
                 return m(pStubMsg, desc);
             }
         }
-        else FIXME("no marshaller for embedded type %02x\n", *desc);
+        else if (*desc)
+            FIXME("no marshaller for embedded type %02x\n", *desc);
     }
 
     TRACE("size %d\n", size);
@@ -5954,6 +5970,10 @@ static void union_arm_free(PMIDL_STUB_MESSAGE pStubMsg,
             case RPC_FC_OP:
             case RPC_FC_FP:
                 PointerFree(pStubMsg, *(unsigned char **)pMemory, desc);
+                break;
+            case RPC_FC_IP:
+                /* must be dereferenced first */
+                m(pStubMsg, *(unsigned char **)pMemory, desc);
                 break;
             default:
                 m(pStubMsg, pMemory, desc);

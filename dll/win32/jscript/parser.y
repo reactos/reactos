@@ -164,11 +164,11 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 }
 
 /* keywords */
-%token kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kIF kFINALLY kFOR kIN
-%token kINSTANCEOF kNEW kNULL kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
+%token <identifier> kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kFUNCTION kIF kFINALLY kFOR kIN
+%token <identifier> kINSTANCEOF kNEW kNULL kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
 %token tANDAND tOROR tINC tDEC tHTMLCOMMENT kDIVEQ kDCOL
 
-%token <srcptr> kFUNCTION '}'
+%token <srcptr> '}'
 
 /* tokens */
 %token <identifier> tIdentifier
@@ -241,6 +241,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 %type <literal> BooleanLiteral
 %type <srcptr> KFunction
 %type <ival> AssignOper
+%type <identifier> IdentifierName ReservedAsIdentifier
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc kELSE
@@ -272,7 +273,7 @@ FunctionExpression
                                 { $$ = new_function_expression(ctx, $4, $6, $9, $2, $1, $10-$1+1); }
 
 KFunction
-        : kFUNCTION             { $$ = $1; }
+        : kFUNCTION             { $$ = ctx->ptr - 8; }
 
 /* ECMA-262 3rd Edition    13 */
 FunctionBody
@@ -711,7 +712,7 @@ MemberExpression
         | FunctionExpression    { $$ = $1; }
         | MemberExpression '[' Expression ']'
                                 { $$ = new_binary_expression(ctx, EXPR_ARRAY, $1, $3); }
-        | MemberExpression '.' tIdentifier
+        | MemberExpression '.' IdentifierName
                                 { $$ = new_member_expression(ctx, $1, $3); }
         | kNEW MemberExpression Arguments
                                 { $$ = new_new_expression(ctx, $2, $3); }
@@ -724,7 +725,7 @@ CallExpression
                                 { $$ = new_call_expression(ctx, $1, $2); }
         | CallExpression '[' Expression ']'
                                 { $$ = new_binary_expression(ctx, EXPR_ARRAY, $1, $3); }
-        | CallExpression '.' tIdentifier
+        | CallExpression '.' IdentifierName
                                 { $$ = new_member_expression(ctx, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.2 */
@@ -787,7 +788,7 @@ PropertyNameAndValueList
 
 /* ECMA-262 3rd Edition    11.1.5 */
 PropertyName
-        : tIdentifier           { $$ = new_string_literal(ctx, $1); }
+        : IdentifierName        { $$ = new_string_literal(ctx, $1); }
         | tStringLiteral        { $$ = new_string_literal(ctx, $1); }
         | tNumericLiteral       { $$ = $1; }
 
@@ -795,6 +796,49 @@ PropertyName
 Identifier_opt
         : /* empty*/            { $$ = NULL; }
         | tIdentifier           { $$ = $1; }
+
+/* ECMA-262 5.1 Edition    7.6 */
+IdentifierName
+        : tIdentifier           { $$ = $1; }
+        | ReservedAsIdentifier
+        {
+            if(ctx->script->version < SCRIPTLANGUAGEVERSION_ES5) {
+                WARN("%s keyword used as an identifier in legacy mode.\n",
+                     debugstr_w($1));
+                YYABORT;
+            }
+            $$ = $1;
+        }
+
+ReservedAsIdentifier
+        : kBREAK                { $$ = $1; }
+        | kCASE                 { $$ = $1; }
+        | kCATCH                { $$ = $1; }
+        | kCONTINUE             { $$ = $1; }
+        | kDEFAULT              { $$ = $1; }
+        | kDELETE               { $$ = $1; }
+        | kDO                   { $$ = $1; }
+        | kELSE                 { $$ = $1; }
+        | kFALSE                { $$ = $1; }
+        | kFINALLY              { $$ = $1; }
+        | kFOR                  { $$ = $1; }
+        | kFUNCTION             { $$ = $1; }
+        | kIF                   { $$ = $1; }
+        | kIN                   { $$ = $1; }
+        | kINSTANCEOF           { $$ = $1; }
+        | kNEW                  { $$ = $1; }
+        | kNULL                 { $$ = $1; }
+        | kRETURN               { $$ = $1; }
+        | kSWITCH               { $$ = $1; }
+        | kTHIS                 { $$ = $1; }
+        | kTHROW                { $$ = $1; }
+        | kTRUE                 { $$ = $1; }
+        | kTRY                  { $$ = $1; }
+        | kTYPEOF               { $$ = $1; }
+        | kVAR                  { $$ = $1; }
+        | kVOID                 { $$ = $1; }
+        | kWHILE                { $$ = $1; }
+        | kWITH                 { $$ = $1; }
 
 /* ECMA-262 3rd Edition    7.8 */
 Literal

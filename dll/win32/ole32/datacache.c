@@ -547,6 +547,41 @@ static HRESULT open_pres_stream( IStorage *stg, int stream_number, IStream **stm
     return IStorage_OpenStream( stg, name, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
 }
 
+static HRESULT synthesize_emf( HMETAFILEPICT data, STGMEDIUM *med )
+{
+    METAFILEPICT *pict;
+    HRESULT hr = E_FAIL;
+    UINT size;
+    void *bits;
+
+    if (!(pict = GlobalLock( data ))) return hr;
+
+    size = GetMetaFileBitsEx( pict->hMF, 0, NULL );
+    if ((bits = HeapAlloc( GetProcessHeap(), 0, size )))
+    {
+        GetMetaFileBitsEx( pict->hMF, size, bits );
+        med->u.hEnhMetaFile = SetWinMetaFileBits( size, bits, NULL, pict );
+        HeapFree( GetProcessHeap(), 0, bits );
+        med->tymed = TYMED_ENHMF;
+        med->pUnkForRelease = NULL;
+        hr = S_OK;
+    }
+
+    GlobalUnlock( data );
+    return hr;
+}
+#include <pshpack2.h>
+struct meta_placeable
+{
+    DWORD key;
+    WORD hwmf;
+    WORD bounding_box[4];
+    WORD inch;
+    DWORD reserved;
+    WORD checksum;
+};
+#include <poppack.h>
+
 static HRESULT load_mf_pict( DataCacheEntry *cache_entry, IStream *stm )
 {
     HRESULT hr;
@@ -559,25 +594,26 @@ static HRESULT load_mf_pict( DataCacheEntry *cache_entry, IStream *stm )
     CLIPFORMAT clipformat;
     static const LARGE_INTEGER offset_zero;
     ULONG read;
-
-    if (cache_entry->load_stream_num == STREAM_NUMBER_CONTENTS)
-    {
-        FIXME( "Unimplemented for CONTENTS stream\n" );
-        return E_FAIL;
-    }
+    struct meta_placeable mf_place;
 
     hr = IStream_Stat( stm, &stat, STATFLAG_NONAME );
     if (FAILED( hr )) return hr;
 
-    hr = read_clipformat( stm, &clipformat );
-    if (FAILED( hr )) return hr;
-
-    hr = IStream_Read( stm, &header, sizeof(header), &read );
-    if (hr != S_OK || read != sizeof(header)) return E_FAIL;
+    if (cache_entry->load_stream_num != STREAM_NUMBER_CONTENTS)
+    {
+        hr = read_clipformat( stm, &clipformat );
+        if (hr != S_OK) return hr;
+        hr = IStream_Read( stm, &header, sizeof(header), &read );
+        if (hr != S_OK) return hr;
+    }
+    else
+    {
+        hr = IStream_Read( stm, &mf_place, sizeof(mf_place), &read );
+        if (hr != S_OK) return hr;
+    }
 
     hr = IStream_Seek( stm, offset_zero, STREAM_SEEK_CUR, &current_pos );
     if (FAILED( hr )) return hr;
-
     stat.cbSize.QuadPart -= current_pos.QuadPart;
 
     hmfpict = GlobalAlloc( GMEM_MOVEABLE, sizeof(METAFILEPICT) );
@@ -592,14 +628,23 @@ static HRESULT load_mf_pict( DataCacheEntry *cache_entry, IStream *stm )
     }
 
     hr = IStream_Read( stm, bits, stat.cbSize.u.LowPart, &read );
-    if (hr != S_OK || read != stat.cbSize.u.LowPart) hr = E_FAIL;
 
     if (SUCCEEDED( hr ))
     {
-        /* FIXME: get this from the stream */
         mfpict->mm = MM_ANISOTROPIC;
-        mfpict->xExt = header.dwObjectExtentX;
-        mfpict->yExt = header.dwObjectExtentY;
+        /* FIXME: get this from the stream */
+        if (cache_entry->load_stream_num != STREAM_NUMBER_CONTENTS)
+        {
+            mfpict->xExt = header.dwObjectExtentX;
+            mfpict->yExt = header.dwObjectExtentY;
+        }
+        else
+        {
+            mfpict->xExt = ((mf_place.bounding_box[2] - mf_place.bounding_box[0])
+                            * 2540) / mf_place.inch;
+            mfpict->yExt = ((mf_place.bounding_box[3] - mf_place.bounding_box[1])
+                            * 2540) / mf_place.inch;
+        }
         mfpict->hMF = SetMetaFileBitsEx( stat.cbSize.u.LowPart, bits );
         if (!mfpict->hMF)
             hr = E_FAIL;
@@ -623,48 +668,61 @@ static HRESULT load_dib( DataCacheEntry *cache_entry, IStream *stm )
 {
     HRESULT hr;
     STATSTG stat;
-    void *dib;
+    BYTE *dib;
     HGLOBAL hglobal;
     ULONG read, info_size, bi_size;
     BITMAPFILEHEADER file;
     BITMAPINFOHEADER *info;
-
-    if (cache_entry->load_stream_num != STREAM_NUMBER_CONTENTS)
-    {
-        FIXME( "Unimplemented for presentation stream\n" );
-        return E_FAIL;
-    }
+    CLIPFORMAT cf;
+    PresentationDataHeader pres;
+    ULARGE_INTEGER current_pos;
+    static const LARGE_INTEGER offset_zero;
 
     hr = IStream_Stat( stm, &stat, STATFLAG_NONAME );
     if (FAILED( hr )) return hr;
 
-    if (stat.cbSize.QuadPart < sizeof(file) + sizeof(DWORD)) return E_FAIL;
-    hr = IStream_Read( stm, &file, sizeof(file), &read );
-    if (hr != S_OK || read != sizeof(file)) return E_FAIL;
-    stat.cbSize.QuadPart -= sizeof(file);
+    if (cache_entry->load_stream_num != STREAM_NUMBER_CONTENTS)
+    {
+        hr = read_clipformat( stm, &cf );
+        if (hr != S_OK) return hr;
+        hr = IStream_Read( stm, &pres, sizeof(pres), &read );
+        if (hr != S_OK) return hr;
+    }
+    else
+    {
+        hr = IStream_Read( stm, &file, sizeof(BITMAPFILEHEADER), &read );
+        if (hr != S_OK) return hr;
+    }
+
+    hr = IStream_Seek( stm, offset_zero, STREAM_SEEK_CUR, &current_pos );
+    if (FAILED( hr )) return hr;
+    stat.cbSize.QuadPart -= current_pos.QuadPart;
 
     hglobal = GlobalAlloc( GMEM_MOVEABLE, stat.cbSize.u.LowPart );
     if (!hglobal) return E_OUTOFMEMORY;
     dib = GlobalLock( hglobal );
 
+    /* read first DWORD of BITMAPINFOHEADER */
     hr = IStream_Read( stm, dib, sizeof(DWORD), &read );
-    if (hr != S_OK || read != sizeof(DWORD)) goto fail;
+    if (hr != S_OK) goto fail;
     bi_size = *(DWORD *)dib;
     if (stat.cbSize.QuadPart < bi_size) goto fail;
 
-    hr = IStream_Read( stm, (char *)dib + sizeof(DWORD), bi_size - sizeof(DWORD), &read );
-    if (hr != S_OK || read != bi_size - sizeof(DWORD)) goto fail;
+    /* read rest of BITMAPINFOHEADER */
+    hr = IStream_Read( stm, dib + sizeof(DWORD), bi_size - sizeof(DWORD), &read );
+    if (hr != S_OK) goto fail;
 
-    info_size = bitmap_info_size( dib, DIB_RGB_COLORS );
+    info_size = bitmap_info_size( (BITMAPINFO *)dib, DIB_RGB_COLORS );
     if (stat.cbSize.QuadPart < info_size) goto fail;
     if (info_size > bi_size)
     {
-        hr = IStream_Read( stm, (char *)dib + bi_size, info_size - bi_size, &read );
-        if (hr != S_OK || read != info_size - bi_size) goto fail;
+        hr = IStream_Read( stm, dib + bi_size, info_size - bi_size, &read );
+        if (hr != S_OK) goto fail;
     }
     stat.cbSize.QuadPart -= info_size;
 
-    if (file.bfOffBits)
+    /* set Stream pointer to beginning of bitmap bits */
+    if (cache_entry->load_stream_num == STREAM_NUMBER_CONTENTS && file.bfOffBits)
     {
         LARGE_INTEGER skip;
 
@@ -675,8 +733,8 @@ static HRESULT load_dib( DataCacheEntry *cache_entry, IStream *stm )
         stat.cbSize.QuadPart -= skip.QuadPart;
     }
 
-    hr = IStream_Read( stm, (char *)dib + info_size, stat.cbSize.u.LowPart, &read );
-    if (hr != S_OK || read != stat.cbSize.QuadPart) goto fail;
+    hr = IStream_Read( stm, dib + info_size, stat.cbSize.u.LowPart, &read );
+    if (hr != S_OK) goto fail;
 
     if (bi_size >= sizeof(*info))
     {
@@ -695,13 +753,67 @@ static HRESULT load_dib( DataCacheEntry *cache_entry, IStream *stm )
     cache_entry->stgmedium.tymed = TYMED_HGLOBAL;
     cache_entry->stgmedium.u.hGlobal = hglobal;
 
-    return S_OK;
+    return hr;
 
 fail:
     GlobalUnlock( hglobal );
     GlobalFree( hglobal );
-    return E_FAIL;
+    return hr;
 
+}
+
+static HRESULT load_emf( DataCacheEntry *cache_entry, IStream *stm )
+{
+    HRESULT hr;
+
+    if (cache_entry->load_stream_num != STREAM_NUMBER_CONTENTS)
+    {
+        STGMEDIUM stgmed;
+
+        hr = load_mf_pict( cache_entry, stm );
+        if (SUCCEEDED( hr ))
+        {
+            hr = synthesize_emf( cache_entry->stgmedium.u.hMetaFilePict, &stgmed );
+            ReleaseStgMedium( &cache_entry->stgmedium );
+        }
+        if (SUCCEEDED( hr ))
+            cache_entry->stgmedium = stgmed;
+    }
+    else
+    {
+        STATSTG stat;
+        BYTE *data;
+        ULONG read, size_bits;
+
+        hr = IStream_Stat( stm, &stat, STATFLAG_NONAME );
+
+        if (SUCCEEDED( hr ))
+        {
+            data = HeapAlloc( GetProcessHeap(), 0, stat.cbSize.u.LowPart );
+            if (!data) return E_OUTOFMEMORY;
+
+            hr = IStream_Read( stm, data, stat.cbSize.u.LowPart, &read );
+            if (hr != S_OK)
+            {
+                HeapFree( GetProcessHeap(), 0, data );
+                return hr;
+            }
+
+            if (read <= sizeof(DWORD) + sizeof(ENHMETAHEADER))
+            {
+                HeapFree( GetProcessHeap(), 0, data );
+                return E_FAIL;
+            }
+            size_bits = read - sizeof(DWORD) - sizeof(ENHMETAHEADER);
+            cache_entry->stgmedium.u.hEnhMetaFile = SetEnhMetaFileBits( size_bits, data + (read - size_bits) );
+            cache_entry->stgmedium.tymed = TYMED_ENHMF;
+            cache_entry->stgmedium.pUnkForRelease = NULL;
+
+            HeapFree( GetProcessHeap(), 0, data );
+        }
+    }
+
+    return hr;
 }
 
 /************************************************************************
@@ -734,6 +846,10 @@ static HRESULT DataCacheEntry_LoadData(DataCacheEntry *cache_entry, IStorage *st
 
     case CF_DIB:
         hr = load_dib( cache_entry, stm );
+        break;
+
+    case CF_ENHMETAFILE:
+        hr = load_emf( cache_entry, stm );
         break;
 
     default:
@@ -816,18 +932,6 @@ end:
     if (bmi) GlobalUnlock(entry->stgmedium.u.hGlobal);
     return hr;
 }
-
-#include <pshpack2.h>
-struct meta_placeable
-{
-    DWORD key;
-    WORD hwmf;
-    WORD bounding_box[4];
-    WORD inch;
-    DWORD reserved;
-    WORD checksum;
-};
-#include <poppack.h>
 
 static HRESULT save_mfpict(DataCacheEntry *entry, BOOL contents, IStream *stream)
 {
@@ -1115,30 +1219,6 @@ static HRESULT synthesize_bitmap( HGLOBAL dib, STGMEDIUM *med )
         hr = S_OK;
     }
     ReleaseDC( 0, hdc );
-    return hr;
-}
-
-static HRESULT synthesize_emf( HMETAFILEPICT data, STGMEDIUM *med )
-{
-    METAFILEPICT *pict;
-    HRESULT hr = E_FAIL;
-    UINT size;
-    void *bits;
-
-    if (!(pict = GlobalLock( data ))) return hr;
-
-    size = GetMetaFileBitsEx( pict->hMF, 0, NULL );
-    if ((bits = HeapAlloc( GetProcessHeap(), 0, size )))
-    {
-        GetMetaFileBitsEx( pict->hMF, size, bits );
-        med->u.hEnhMetaFile = SetWinMetaFileBits( size, bits, NULL, pict );
-        HeapFree( GetProcessHeap(), 0, bits );
-        med->tymed = TYMED_ENHMF;
-        med->pUnkForRelease = NULL;
-        hr = S_OK;
-    }
-
-    GlobalUnlock( data );
     return hr;
 }
 
@@ -1763,6 +1843,7 @@ static HRESULT WINAPI DataCache_Load( IPersistStorage *iface, IStorage *stg )
 
     LIST_FOR_EACH_ENTRY_SAFE( entry, cursor2, &This->cache_list, DataCacheEntry, entry )
         DataCacheEntry_Destroy( This, entry );
+    This->clsid = CLSID_NULL;
 
     ReadClassStg( stg, &clsid );
     hr = create_automatic_entry( This, &clsid );

@@ -303,19 +303,31 @@ static ULONG WINAPI CF_Release(IClassFactory *iface)
 }
 
 
-static HRESULT WINAPI CF_CreateInstance(IClassFactory *iface, IUnknown *pOuter,
-                                        REFIID riid, LPVOID *ppobj)
+static HRESULT WINAPI CF_CreateInstance(IClassFactory *iface, IUnknown *outer,
+                                        REFIID riid, void **ppv)
 {
     ClassFactory *This = impl_from_IClassFactory(iface);
+    IUnknown *unk;
     HRESULT hres;
-    LPUNKNOWN punk;
     
-    TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
+    TRACE("(%p)->(%p %s %p)\n", This, outer, debugstr_guid(riid), ppv);
 
-    *ppobj = NULL;
-    if(SUCCEEDED(hres = This->pfnCreateInstance(pOuter, (LPVOID *) &punk))) {
-        hres = IUnknown_QueryInterface(punk, riid, ppobj);
-        IUnknown_Release(punk);
+    if(outer && !IsEqualGUID(riid, &IID_IUnknown)) {
+        *ppv = NULL;
+        return CLASS_E_NOAGGREGATION;
+    }
+
+    hres = This->pfnCreateInstance(outer, (void**)&unk);
+    if(FAILED(hres)) {
+        *ppv = NULL;
+        return hres;
+    }
+
+    if(!IsEqualGUID(riid, &IID_IUnknown)) {
+        hres = IUnknown_QueryInterface(unk, riid, ppv);
+        IUnknown_Release(unk);
+    }else {
+        *ppv = unk;
     }
     return hres;
 }

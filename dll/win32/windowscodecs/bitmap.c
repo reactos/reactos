@@ -45,7 +45,8 @@ typedef struct BitmapImpl {
     int palette_set;
     LONG lock; /* 0 if not locked, -1 if locked for writing, count if locked for reading */
     BYTE *data;
-    BOOL is_section; /* TRUE if data is a section created by an application */
+    void *view; /* used if data is a section created by an application */
+    UINT offset; /* offset into view */
     UINT width, height;
     UINT stride;
     UINT bpp;
@@ -288,8 +289,8 @@ static ULONG WINAPI BitmapImpl_Release(IWICBitmap *iface)
         if (This->palette) IWICPalette_Release(This->palette);
         This->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->cs);
-        if (This->is_section)
-            UnmapViewOfFile(This->data);
+        if (This->view)
+            UnmapViewOfFile(This->view);
         else
             HeapFree(GetProcessHeap(), 0, This->data);
         HeapFree(GetProcessHeap(), 0, This);
@@ -805,13 +806,13 @@ static const IMILUnknown2Vtbl IMILUnknown2Impl_Vtbl =
     IMILUnknown2Impl_unknown3
 };
 
-HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight,
-    UINT stride, UINT datasize, BYTE *data,
-    REFWICPixelFormatGUID pixelFormat, WICBitmapCreateCacheOption option,
+HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight, UINT stride, UINT datasize, void *view,
+    UINT offset, REFWICPixelFormatGUID pixelFormat, WICBitmapCreateCacheOption option,
     IWICBitmap **ppIBitmap)
 {
     HRESULT hr;
     BitmapImpl *This;
+    BYTE *data;
     UINT bpp;
 
     hr = get_pixelformat_bpp(pixelFormat, &bpp);
@@ -826,18 +827,12 @@ HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight,
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(BitmapImpl));
     if (!This) return E_OUTOFMEMORY;
 
-    if (!data)
+    if (view) data = (BYTE *)view + offset;
+    else if (!(data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, datasize)))
     {
-        data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, datasize);
-        if (!data)
-        {
-            HeapFree(GetProcessHeap(), 0, This);
-            return E_OUTOFMEMORY;
-        }
-        This->is_section = FALSE;
+        HeapFree(GetProcessHeap(), 0, This);
+        return E_OUTOFMEMORY;
     }
-    else
-        This->is_section = TRUE;
 
     This->IWICBitmap_iface.lpVtbl = &BitmapImpl_Vtbl;
     This->IMILBitmapSource_iface.lpVtbl = &IMILBitmapImpl_Vtbl;
@@ -848,6 +843,8 @@ HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight,
     This->palette_set = 0;
     This->lock = 0;
     This->data = data;
+    This->view = view;
+    This->offset = offset;
     This->width = uiWidth;
     This->height = uiHeight;
     This->stride = stride;

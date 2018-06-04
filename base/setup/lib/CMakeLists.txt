@@ -1,9 +1,13 @@
 
 list(APPEND SOURCE
     arcname.c
+    bldrsup.c
+    filesup.c
     fsutil.c
     genlist.c
+    inicache.c
     ntverrsrc.c
+    osdetect.c
     partlist.c
     precomp.h)
 
