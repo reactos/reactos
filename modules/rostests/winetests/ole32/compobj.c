@@ -608,28 +608,8 @@ static void test_StringFromGUID2(void)
   ok(len == 0, "len: %d (expected 0)\n", len);
 }
 
-struct info
-{
-    HANDLE wait, stop;
-};
-
-static DWORD CALLBACK ole_initialize_thread(LPVOID pv)
-{
-    HRESULT hr;
-    struct info *info = pv;
-
-    hr = pCoInitializeEx(NULL, COINIT_MULTITHREADED);
-
-    SetEvent(info->wait);
-    WaitForSingleObject(info->stop, 10000);
-
-    CoUninitialize();
-    return hr;
-}
-
-#define test_apt_type(t, q, t_t, t_q) _test_apt_type(t, q, t_t, t_q, __LINE__)
-static void _test_apt_type(APTTYPE expected_type, APTTYPEQUALIFIER expected_qualifier, BOOL todo_type,
-        BOOL todo_qualifier, int line)
+#define test_apt_type(t, q) _test_apt_type(t, q, __LINE__)
+static void _test_apt_type(APTTYPE expected_type, APTTYPEQUALIFIER expected_qualifier, int line)
 {
     APTTYPEQUALIFIER qualifier = ~0u;
     APTTYPE type = ~0u;
@@ -640,9 +620,7 @@ static void _test_apt_type(APTTYPE expected_type, APTTYPEQUALIFIER expected_qual
 
     hr = pCoGetApartmentType(&type, &qualifier);
     ok_(__FILE__, line)(hr == S_OK || hr == CO_E_NOTINITIALIZED, "Unexpected return code: 0x%08x\n", hr);
-todo_wine_if(todo_type)
     ok_(__FILE__, line)(type == expected_type, "Wrong apartment type %d, expected %d\n", type, expected_type);
-todo_wine_if(todo_qualifier)
     ok_(__FILE__, line)(qualifier == expected_qualifier, "Wrong apartment qualifier %d, expected %d\n", qualifier,
         expected_qualifier);
 }
@@ -650,10 +628,7 @@ todo_wine_if(todo_qualifier)
 static void test_CoCreateInstance(void)
 {
     HRESULT hr;
-    HANDLE thread;
-    DWORD tid, exitcode;
     IUnknown *pUnk;
-    struct info info;
     REFCLSID rclsid = &CLSID_InternetZoneManager;
 
     pUnk = (IUnknown *)0xdeadbeef;
@@ -688,51 +663,15 @@ static void test_CoCreateInstance(void)
     hr = CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&pUnk);
     ok(hr == CO_E_NOTINITIALIZED, "CoCreateInstance should have returned CO_E_NOTINITIALIZED instead of 0x%08x\n", hr);
 
-    /* show that COM doesn't have to be initialized for multi-threaded apartments if another
-       thread has already done so */
-
-    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
-
-    info.wait = CreateEventA(NULL, TRUE, FALSE, NULL);
-    ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
-
-    info.stop = CreateEventA(NULL, TRUE, FALSE, NULL);
-    ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
-
-    thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
-    ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-
-    ok( !WaitForSingleObject(info.wait, 10000 ), "wait timed out\n" );
-
-    test_apt_type(APTTYPE_MTA, APTTYPEQUALIFIER_IMPLICIT_MTA, TRUE, TRUE);
-
-    pUnk = (IUnknown *)0xdeadbeef;
-    hr = CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&pUnk);
-    ok(hr == S_OK, "CoCreateInstance should have returned S_OK instead of 0x%08x\n", hr);
-    if (pUnk) IUnknown_Release(pUnk);
-
-    SetEvent(info.stop);
-    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
-
-    GetExitCodeThread(thread, &exitcode);
-    hr = exitcode;
-    ok(hr == S_OK, "thread should have returned S_OK instead of 0x%08x\n", hr);
-
-    CloseHandle(thread);
-    CloseHandle(info.wait);
-    CloseHandle(info.stop);
-
-    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
+    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE);
 }
 
 static void test_CoGetClassObject(void)
 {
     HRESULT hr;
-    HANDLE thread, handle;
-    DWORD tid, exitcode;
+    HANDLE handle;
     ULONG_PTR cookie;
     IUnknown *pUnk;
-    struct info info;
     REFCLSID rclsid = &CLSID_InternetZoneManager;
     HKEY hkey;
     LONG res;
@@ -746,46 +685,7 @@ static void test_CoGetClassObject(void)
        broken(hr == CO_E_NOTINITIALIZED), /* win9x */
        "CoGetClassObject should have returned E_INVALIDARG instead of 0x%08x\n", hr);
 
-    /* show that COM doesn't have to be initialized for multi-threaded apartments if another
-       thread has already done so */
-
-    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
-
-    info.wait = CreateEventA(NULL, TRUE, FALSE, NULL);
-    ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
-
-    info.stop = CreateEventA(NULL, TRUE, FALSE, NULL);
-    ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
-
-    thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
-    ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-
-    ok( !WaitForSingleObject(info.wait, 10000), "wait timed out\n" );
-
-    test_apt_type(APTTYPE_MTA, APTTYPEQUALIFIER_IMPLICIT_MTA, TRUE, TRUE);
-
-    pUnk = (IUnknown *)0xdeadbeef;
-    hr = CoGetClassObject(rclsid, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void **)&pUnk);
-    if(hr == REGDB_E_CLASSNOTREG)
-        skip("IE not installed so can't test CoGetClassObject\n");
-    else
-    {
-        ok(hr == S_OK, "CoGetClassObject should have returned S_OK instead of 0x%08x\n", hr);
-        if (pUnk) IUnknown_Release(pUnk);
-    }
-
-    SetEvent(info.stop);
-    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
-
-    GetExitCodeThread(thread, &exitcode);
-    hr = exitcode;
-    ok(hr == S_OK, "thread should have returned S_OK instead of 0x%08x\n", hr);
-
-    CloseHandle(thread);
-    CloseHandle(info.wait);
-    CloseHandle(info.stop);
-
-    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
+    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE);
 
     if (!pRegOverridePredefKey)
     {
@@ -1886,9 +1786,6 @@ static void test_CoGetObjectContext(void)
     IObjContext *pObjContext;
     APTTYPE apttype;
     THDTYPE thdtype;
-    struct info info;
-    HANDLE thread;
-    DWORD tid, exitcode;
     GUID id, id2;
 
     if (!pCoGetObjectContext)
@@ -1901,27 +1798,12 @@ static void test_CoGetObjectContext(void)
     ok(hr == CO_E_NOTINITIALIZED, "CoGetObjectContext should have returned CO_E_NOTINITIALIZED instead of 0x%08x\n", hr);
     ok(pComThreadingInfo == NULL, "pComThreadingInfo should have been set to NULL\n");
 
-    /* show that COM doesn't have to be initialized for multi-threaded apartments if another
-       thread has already done so */
+    pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
-    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
+    test_apt_type(APTTYPE_MAINSTA, APTTYPEQUALIFIER_NONE);
 
-    info.wait = CreateEventA(NULL, TRUE, FALSE, NULL);
-    ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
-
-    info.stop = CreateEventA(NULL, TRUE, FALSE, NULL);
-    ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
-
-    thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
-    ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-
-    ok( !WaitForSingleObject(info.wait, 10000), "wait timed out\n" );
-
-    test_apt_type(APTTYPE_MTA, APTTYPEQUALIFIER_IMPLICIT_MTA, TRUE, TRUE);
-
-    pComThreadingInfo = NULL;
     hr = pCoGetObjectContext(&IID_IComThreadingInfo, (void **)&pComThreadingInfo);
-    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
+    ok_ole_success(hr, "CoGetObjectContext");
 
     threadinginfo2 = NULL;
     hr = pCoGetObjectContext(&IID_IComThreadingInfo, (void **)&threadinginfo2);
@@ -1938,28 +1820,6 @@ static void test_CoGetObjectContext(void)
 
     hr = CoGetCurrentLogicalThreadId(&id2);
     ok(IsEqualGUID(&id, &id2), "got %s, expected %s\n", wine_dbgstr_guid(&id), wine_dbgstr_guid(&id2));
-
-    IComThreadingInfo_Release(pComThreadingInfo);
-
-    SetEvent(info.stop);
-    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
-
-    GetExitCodeThread(thread, &exitcode);
-    hr = exitcode;
-    ok(hr == S_OK, "thread should have returned S_OK instead of 0x%08x\n", hr);
-
-    CloseHandle(thread);
-    CloseHandle(info.wait);
-    CloseHandle(info.stop);
-
-    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
-
-    pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-
-    test_apt_type(APTTYPE_MAINSTA, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
-
-    hr = pCoGetObjectContext(&IID_IComThreadingInfo, (void **)&pComThreadingInfo);
-    ok_ole_success(hr, "CoGetObjectContext");
 
     hr = IComThreadingInfo_GetCurrentApartmentType(pComThreadingInfo, &apttype);
     ok_ole_success(hr, "IComThreadingInfo_GetCurrentApartmentType");
@@ -2124,9 +1984,6 @@ static void test_CoGetContextToken(void)
     ULONG refs;
     ULONG_PTR token, token2;
     IObjContext *ctx;
-    struct info info;
-    HANDLE thread;
-    DWORD tid, exitcode;
 
     if (!pCoGetContextToken)
     {
@@ -2139,49 +1996,11 @@ static void test_CoGetContextToken(void)
     ok(hr == CO_E_NOTINITIALIZED, "Expected CO_E_NOTINITIALIZED, got 0x%08x\n", hr);
     ok(token == 0xdeadbeef, "Expected 0, got 0x%lx\n", token);
 
-    /* show that COM doesn't have to be initialized for multi-threaded apartments if another
-       thread has already done so */
-
-    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
-
-    info.wait = CreateEventA(NULL, TRUE, FALSE, NULL);
-    ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
-
-    info.stop = CreateEventA(NULL, TRUE, FALSE, NULL);
-    ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
-
-    thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
-    ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-
-    ok( !WaitForSingleObject(info.wait, 10000), "wait timed out\n" );
-
-    test_apt_type(APTTYPE_MTA, APTTYPEQUALIFIER_IMPLICIT_MTA, TRUE, TRUE);
-
-    token = 0;
-    hr = pCoGetContextToken(&token);
-    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
-
-    token2 = 0;
-    hr = pCoGetContextToken(&token2);
-    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
-    ok(token == token2, "got different token\n");
-
-    SetEvent(info.stop);
-    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
-
-    GetExitCodeThread(thread, &exitcode);
-    hr = exitcode;
-    ok(hr == S_OK, "thread should have returned S_OK instead of 0x%08x\n", hr);
-
-    CloseHandle(thread);
-    CloseHandle(info.wait);
-    CloseHandle(info.stop);
-
-    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
+    test_apt_type(APTTYPE_CURRENT, APTTYPEQUALIFIER_NONE);
 
     CoInitialize(NULL);
 
-    test_apt_type(APTTYPE_MAINSTA, APTTYPEQUALIFIER_NONE, FALSE, FALSE);
+    test_apt_type(APTTYPE_MAINSTA, APTTYPEQUALIFIER_NONE);
 
     hr = pCoGetContextToken(NULL);
     ok(hr == E_POINTER, "Expected E_POINTER, got 0x%08x\n", hr);
@@ -3185,14 +3004,36 @@ static void test_CoWaitForMultipleHandles(void)
     ok(index == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
     CloseHandle(thread);
 
+    CoUninitialize();
+
+    /* If COM was not initialized, messages are neither pumped nor peeked at */
+    PostMessageA(hWnd, WM_DDE_FIRST, 0, 0);
+    hr = CoWaitForMultipleHandles(0, 100, 2, handles, &index);
+    ok(hr == RPC_S_CALLPENDING, "got %#x\n", hr);
+    success = MsgWaitForMultipleObjectsEx(0, NULL, 2, QS_ALLPOSTMESSAGE, MWMO_ALERTABLE);
+    ok(success == 0, "MsgWaitForMultipleObjects returned %x\n", success);
+    success = PeekMessageA(&msg, hWnd, WM_DDE_FIRST, WM_DDE_FIRST, PM_REMOVE);
+    ok(success, "PeekMessage failed: %u\n", GetLastError());
+
+    /* same in an MTA */
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+    PostMessageA(hWnd, WM_DDE_FIRST, 0, 0);
+    hr = CoWaitForMultipleHandles(0, 100, 2, handles, &index);
+    ok(hr == RPC_S_CALLPENDING, "got %#x\n", hr);
+    success = MsgWaitForMultipleObjectsEx(0, NULL, 2, QS_ALLPOSTMESSAGE, MWMO_ALERTABLE);
+    ok(success == 0, "MsgWaitForMultipleObjects returned %x\n", success);
+    success = PeekMessageA(&msg, hWnd, WM_DDE_FIRST, WM_DDE_FIRST, PM_REMOVE);
+    ok(success, "PeekMessage failed: %u\n", GetLastError());
+
+    CoUninitialize();
+
     CloseHandle(handles[0]);
     CloseHandle(handles[1]);
     DestroyWindow(hWnd);
 
     success = UnregisterClassA(cls_name, GetModuleHandleA(0));
     ok(success, "UnregisterClass failed %u\n", GetLastError());
-
-    CoUninitialize();
 }
 
 static void test_CoGetMalloc(void)
@@ -3880,6 +3721,71 @@ static void init_funcs(void)
     pReleaseActCtx = (void*)GetProcAddress(hkernel32, "ReleaseActCtx");
 }
 
+static DWORD CALLBACK implicit_mta_proc(void *param)
+{
+    IComThreadingInfo *threading_info;
+    ULONG_PTR token;
+    IUnknown *unk;
+    DWORD cookie;
+    CLSID clsid;
+    HRESULT hr;
+
+    test_apt_type(APTTYPE_MTA, APTTYPEQUALIFIER_IMPLICIT_MTA);
+
+    hr = CoCreateInstance(&CLSID_InternetZoneManager, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&unk);
+    ok_ole_success(hr, "CoCreateInstance");
+    IUnknown_Release(unk);
+
+    hr = CoGetClassObject(&CLSID_InternetZoneManager, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void **)&unk);
+    ok_ole_success(hr, "CoGetClassObject");
+    IUnknown_Release(unk);
+
+    hr = CoGetObjectContext(&IID_IComThreadingInfo, (void **)&threading_info);
+    ok_ole_success(hr, "CoGetObjectContext");
+    IComThreadingInfo_Release(threading_info);
+
+    hr = CoGetContextToken(&token);
+    ok_ole_success(hr, "CoGetContextToken");
+
+    hr = CoRegisterPSClsid(&IID_IWineTest, &CLSID_WineTestPSFactoryBuffer);
+    ok_ole_success(hr, "CoRegisterPSClsid");
+
+    hr = CoGetPSClsid(&IID_IClassFactory, &clsid);
+    ok_ole_success(hr, "CoGetPSClsid");
+
+    hr = CoRegisterClassObject(&CLSID_WineOOPTest, (IUnknown *)&Test_ClassFactory,
+                               CLSCTX_INPROC_SERVER, REGCLS_SINGLEUSE, &cookie);
+    ok_ole_success(hr, "CoRegisterClassObject");
+
+    hr = CoRevokeClassObject(cookie);
+    ok_ole_success(hr, "CoRevokeClassObject");
+
+    hr = CoRegisterMessageFilter(NULL, NULL);
+    ok(hr == CO_E_NOT_SUPPORTED, "got %#x\n", hr);
+
+    hr = CoLockObjectExternal((IUnknown *)&Test_Unknown, TRUE, TRUE);
+    ok_ole_success(hr, "CoLockObjectExternal");
+
+    hr = CoDisconnectObject((IUnknown *)&Test_Unknown, 0);
+    ok_ole_success(hr, "CoDisconnectObject");
+
+    return 0;
+}
+
+/* Some COM functions (perhaps even all of them?) can make use of an "implicit"
+ * multi-threaded apartment created by another thread in the same process. */
+static void test_implicit_mta(void)
+{
+    HANDLE thread;
+
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+    thread = CreateThread(NULL, 0, implicit_mta_proc, NULL, 0, NULL);
+    ok(!WaitForSingleObject(thread, 1000), "wait failed\n");
+
+    CoUninitialize();
+}
+
 START_TEST(compobj)
 {
     init_funcs();
@@ -3929,4 +3835,5 @@ START_TEST(compobj)
     test_IInitializeSpy();
     test_CoGetInstanceFromFile();
     test_GlobalOptions();
+    test_implicit_mta();
 }
