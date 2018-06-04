@@ -132,10 +132,6 @@ StartWithDesktop(IN HINSTANCE hInstance)
     InitCommonControls();
     OleInitialize(NULL);
 
-#if !WIN7_DEBUG_MODE
-    ProcessStartupItems();
-#endif
-
 #if !WIN7_COMPAT_MODE
     /* Initialize shell dde support */
     _ShellDDEInit(TRUE);
@@ -164,6 +160,12 @@ StartWithDesktop(IN HINSTANCE hInstance)
     /* WinXP: Notify msgina to hide the welcome screen */
     if (!SetShellReadyEvent(L"msgina: ShellReadyEvent"))
         SetShellReadyEvent(L"Global\\msgina: ShellReadyEvent");
+
+    if (DoStartStartupItems(Tray))
+    {
+        ProcessStartupItems();
+        DoFinishStartupItems();
+    }
 #endif
 
     if (Tray != NULL)

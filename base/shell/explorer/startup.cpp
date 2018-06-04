@@ -41,6 +41,9 @@
 
 #include "precomp.h"
 
+// For the auto startup process
+static HANDLE s_hStartupMutex = NULL;
+
 #define INVALID_RUNCMD_RETURN -1
 /**
  * This function runs the specified command in the specified dir.
@@ -281,7 +284,7 @@ AutoStartupApplications(INT nCSIDL_Folder)
     }
 
     // Build a path with wildcard
-    wcscpy(szPath, L"\\*");
+    StringCbCatW(szPath, sizeof(szPath), L"\\*");
 
     // Start enumeration of files
     hFind = FindFirstFileW(szPath, &FoundData);
@@ -295,8 +298,11 @@ AutoStartupApplications(INT nCSIDL_Folder)
     do
     {
         // Ignore "." and ".."
-        if (wcscmp(FoundData.cFileName, L".") == 0 || wcscmp(FoundData.cFileName, L"..") == 0)
+        if (wcscmp(FoundData.cFileName, L".") == 0 ||
+            wcscmp(FoundData.cFileName, L"..") == 0)
+        {
             continue;
+        }
 
         // Don't run hidden files
         if (FoundData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
@@ -326,16 +332,13 @@ AutoStartupApplications(INT nCSIDL_Folder)
     return TRUE;
 }
 
-int
-ProcessStartupItems(VOID)
+INT ProcessStartupItems(VOID)
 {
     /* TODO: ProcessRunKeys already checks SM_CLEANBOOT -- items prefixed with * should probably run even in safe mode */
     BOOL bNormalBoot = GetSystemMetrics(SM_CLEANBOOT) == 0; /* Perform the operations that are performed every boot */
     /* First, set the current directory to SystemRoot */
     WCHAR gen_path[MAX_PATH];
     DWORD res;
-    HKEY hSessionKey, hKey;
-    HRESULT hr;
 
     res = GetWindowsDirectoryW(gen_path, _countof(gen_path));
     if (res == 0)
@@ -352,28 +355,9 @@ ProcessStartupItems(VOID)
         return 100;
     }
 
-    hr = SHCreateSessionKey(KEY_WRITE, &hSessionKey);
-    if (SUCCEEDED(hr))
-    {
-        LONG Error;
-        DWORD dwDisp;
-
-        Error = RegCreateKeyExW(hSessionKey, L"StartupHasBeenRun", 0, NULL, REG_OPTION_VOLATILE, KEY_WRITE, NULL, &hKey, &dwDisp);
-        RegCloseKey(hSessionKey);
-        if (Error == ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            if (dwDisp == REG_OPENED_EXISTING_KEY)
-            {
-                /* Startup programs has already been run */
-                return 0;
-            }
-        }
-    }
-
     /* Perform the operations by order checking if policy allows it, checking if this is not Safe Mode,
      * stopping if one fails, skipping if necessary.
-    */
+     */
     res = TRUE;
     /* TODO: RunOnceEx */
 
@@ -399,4 +383,85 @@ ProcessStartupItems(VOID)
     TRACE("Operation done\n");
 
     return res ? 0 : 101;
+}
+
+static BOOL IsSelfExplorer(VOID)
+{
+    WCHAR szPath[MAX_PATH];
+
+    GetModuleFileName(NULL, szPath, _countof(szPath));
+    PathRemoveArgsW(szPath);
+    PathRemoveBlanksW(szPath);
+
+    return (StrCmpIW(PathFindFileNameW(szPath), L"explorer.exe") == 0);
+}
+
+BOOL DoFinishStartupItems(VOID)
+{
+    if (s_hStartupMutex)
+    {
+        ReleaseMutex(s_hStartupMutex);
+        CloseHandle(s_hStartupMutex);
+        s_hStartupMutex = NULL;
+    }
+    return TRUE;
+}
+
+BOOL DoStartStartupItems(ITrayWindow *Tray)
+{
+    DWORD dwWait;
+
+    if (!IsSelfExplorer())
+        return FALSE;
+
+    if (!s_hStartupMutex)
+    {
+        // We use a mutex to synchronize the auto startup process
+        s_hStartupMutex = CreateMutexW(NULL, FALSE, L"ExplorerIsShellMutex");
+        if (s_hStartupMutex == NULL)
+            return FALSE;
+    }
+
+    dwWait = WaitForSingleObject(s_hStartupMutex, INFINITE);
+    TRACE("dwWait: 0x%08lX\n", dwWait);
+    if (dwWait != WAIT_OBJECT_0)
+    {
+        TRACE("LastError: %ld\n", GetLastError());
+
+        DoFinishStartupItems();
+        return FALSE;
+    }
+
+    const DWORD dwWaitTotal = 3000;     // in milliseconds
+    DWORD dwTick = GetTickCount();
+    while (GetShellWindow() == NULL && GetTickCount() - dwTick < dwWaitTotal)
+    {
+        TrayProcessMessages(Tray);
+    }
+
+    if (GetShellWindow() == NULL)
+    {
+        DoFinishStartupItems();
+        return FALSE;
+    }
+
+    // Check the volatile "StartupHasBeenRun" key
+    HKEY hSessionKey, hKey;
+    HRESULT hr = SHCreateSessionKey(KEY_WRITE, &hSessionKey);
+    if (SUCCEEDED(hr))
+    {
+        ASSERT(hSessionKey);
+
+        DWORD dwDisp;
+        LONG Error = RegCreateKeyExW(hSessionKey, L"StartupHasBeenRun", 0, NULL,
+                                     REG_OPTION_VOLATILE, KEY_WRITE, NULL, &hKey, &dwDisp);
+        RegCloseKey(hSessionKey);
+        RegCloseKey(hKey);
+        if (Error == ERROR_SUCCESS && dwDisp == REG_OPENED_EXISTING_KEY)
+        {
+            return FALSE;   // Startup programs has already been run
+        }
+    }
+
+    return TRUE;
 }
