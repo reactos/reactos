@@ -712,13 +712,14 @@ static VOID load_ot_tables(HDC hdc, ScriptCache *psc)
         psc->GDEF_Table = load_gdef_table(hdc);
 }
 
-INT SHAPE_does_GSUB_feature_apply_to_chars(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, const WCHAR *chars, INT write_dir, INT count, const char* feature)
+int SHAPE_does_GSUB_feature_apply_to_chars(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache *psc,
+        const WCHAR *chars, int write_dir, int count, const char *feature)
 {
     WORD *glyphs;
     INT glyph_count = count;
     INT rc;
 
-    glyphs = heap_alloc(2 * count * sizeof(*glyphs));
+    glyphs = heap_calloc(count, 2 * sizeof(*glyphs));
     GetGlyphIndicesW(hdc, chars, count, glyphs, 0);
     rc = apply_GSUB_feature_to_glyph(hdc, psa, psc, glyphs, 0, write_dir, &glyph_count, feature);
     if (rc > GSUB_E_NOGLYPH)
@@ -1695,7 +1696,7 @@ static void ComposeConsonants(HDC hdc, WCHAR *pwOutChars, INT *pcChars, const Co
     int offset = 0;
     int cWalk;
 
-    for (cWalk = 0; cWalk < *pcChars; cWalk++)
+    for (cWalk = 0; cWalk < *pcChars; cWalk += 2)
     {
         for (i = 0; consonants[i].output!= 0x0; i++)
         {
@@ -1720,7 +1721,6 @@ static void ComposeConsonants(HDC hdc, WCHAR *pwOutChars, INT *pcChars, const Co
                 break;
             }
         }
-        cWalk++;
     }
 }
 
