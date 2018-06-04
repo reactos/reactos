@@ -387,7 +387,7 @@ ULONG __RPC_USER HGLOBAL_UserSize(ULONG *pFlags, ULONG StartingSize, HGLOBAL *ph
 
     size += sizeof(ULONG);
 
-    if (LOWORD(*pFlags == MSHCTX_INPROC))
+    if (LOWORD(*pFlags) == MSHCTX_INPROC)
         size += sizeof(HGLOBAL);
     else
     {
@@ -429,7 +429,7 @@ unsigned char * __RPC_USER HGLOBAL_UserMarshal(ULONG *pFlags, unsigned char *pBu
 
     ALIGN_POINTER(pBuffer, 3);
 
-    if (LOWORD(*pFlags == MSHCTX_INPROC))
+    if (LOWORD(*pFlags) == MSHCTX_INPROC)
     {
         if (sizeof(*phGlobal) == 8)
             *(ULONG *)pBuffer = WDT_INPROC64_CALL;
@@ -572,7 +572,7 @@ void __RPC_USER HGLOBAL_UserFree(ULONG *pFlags, HGLOBAL *phGlobal)
 {
     TRACE("(%s, &%p\n", debugstr_user_flags(pFlags), *phGlobal);
 
-    if (LOWORD(*pFlags != MSHCTX_INPROC) && *phGlobal)
+    if (LOWORD(*pFlags) != MSHCTX_INPROC && *phGlobal)
         GlobalFree(*phGlobal);
 }
 
