@@ -20,6 +20,8 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
+#define COBJMACROS
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>
@@ -30,6 +32,7 @@
 #include <winnls.h>
 #include <ole2.h>
 #include <richedit.h>
+#include <richole.h>
 #include <commdlg.h>
 #include <time.h>
 #include <wine/test.h>
@@ -8798,6 +8801,94 @@ static void test_para_numbering(void)
     DestroyWindow( edit );
 }
 
+static void fill_reobject_struct(REOBJECT *reobj, LONG cp, LPOLEOBJECT poleobj,
+                                 LPSTORAGE pstg, LPOLECLIENTSITE polesite, LONG sizel_cx,
+                                 LONG sizel_cy, DWORD aspect, DWORD flags, DWORD user)
+{
+    reobj->cbStruct = sizeof(*reobj);
+    reobj->clsid = CLSID_NULL;
+    reobj->cp = cp;
+    reobj->poleobj = poleobj;
+    reobj->pstg = pstg;
+    reobj->polesite = polesite;
+    reobj->sizel.cx = sizel_cx;
+    reobj->sizel.cy = sizel_cy;
+    reobj->dvaspect = aspect;
+    reobj->dwFlags = flags;
+    reobj->dwUser = user;
+}
+
+static void test_EM_SELECTIONTYPE(void)
+{
+    HWND hwnd = new_richedit(NULL);
+    IRichEditOle *reole = NULL;
+    static const char text1[] = "abcdefg\n";
+    int result;
+    REOBJECT reo1, reo2;
+    IOleClientSite *clientsite;
+    HRESULT hr;
+
+    SendMessageA(hwnd, WM_SETTEXT, 0, (LPARAM)text1);
+    SendMessageA(hwnd, EM_GETOLEINTERFACE, 0, (LPARAM)&reole);
+
+    SendMessageA(hwnd, EM_SETSEL, 1, 1);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == SEL_EMPTY, "got wrong selection type: %x.\n", result);
+
+    SendMessageA(hwnd, EM_SETSEL, 1, 2);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == SEL_TEXT, "got wrong selection type: %x.\n", result);
+
+    SendMessageA(hwnd, EM_SETSEL, 2, 5);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == (SEL_TEXT | SEL_MULTICHAR), "got wrong selection type: %x.\n", result);
+
+    SendMessageA(hwnd, EM_SETSEL, 0, 1);
+    hr = IRichEditOle_GetClientSite(reole, &clientsite);
+    ok(hr == S_OK, "IRichEditOle_GetClientSite failed: 0x%08x\n", hr);
+    fill_reobject_struct(&reo1, REO_CP_SELECTION, NULL, NULL, clientsite, 10, 10,
+                         DVASPECT_CONTENT, 0, 1);
+    hr = IRichEditOle_InsertObject(reole, &reo1);
+    ok(hr == S_OK, "IRichEditOle_InsertObject failed: 0x%08x\n", hr);
+    IOleClientSite_Release(clientsite);
+
+    SendMessageA(hwnd, EM_SETSEL, 0, 1);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == SEL_OBJECT, "got wrong selection type: %x.\n", result);
+
+    SendMessageA(hwnd, EM_SETSEL, 0, 2);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == (SEL_TEXT | SEL_OBJECT), "got wrong selection type: %x.\n", result);
+
+    SendMessageA(hwnd, EM_SETSEL, 0, 3);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == (SEL_TEXT | SEL_MULTICHAR | SEL_OBJECT), "got wrong selection type: %x.\n", result);
+
+    SendMessageA(hwnd, EM_SETSEL, 2, 3);
+    hr = IRichEditOle_GetClientSite(reole, &clientsite);
+    ok(hr == S_OK, "IRichEditOle_GetClientSite failed: 0x%08x\n", hr);
+    fill_reobject_struct(&reo2, REO_CP_SELECTION, NULL, NULL, clientsite, 10, 10,
+                         DVASPECT_CONTENT, 0, 2);
+    hr = IRichEditOle_InsertObject(reole, &reo2);
+    ok(hr == S_OK, "IRichEditOle_InsertObject failed: 0x%08x\n", hr);
+    IOleClientSite_Release(clientsite);
+
+    SendMessageA(hwnd, EM_SETSEL, 0, 2);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == (SEL_OBJECT | SEL_TEXT), "got wrong selection type: %x.\n", result);
+
+    SendMessageA(hwnd, EM_SETSEL, 0, 3);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == (SEL_OBJECT | SEL_MULTIOBJECT | SEL_TEXT), "got wrong selection type: %x.\n", result);
+
+    SendMessageA(hwnd, EM_SETSEL, 0, 4);
+    result = SendMessageA(hwnd, EM_SELECTIONTYPE, 0, 0);
+    ok(result == (SEL_TEXT| SEL_MULTICHAR | SEL_OBJECT | SEL_MULTIOBJECT), "got wrong selection type: %x.\n", result);
+
+    IRichEditOle_Release(reole);
+    DestroyWindow(hwnd);
+}
+
 static void test_window_classes(void)
 {
     static const struct
@@ -8905,6 +8996,7 @@ START_TEST( editor )
   test_background();
   test_eop_char_fmt();
   test_para_numbering();
+  test_EM_SELECTIONTYPE();
 
   /* Set the environment variable WINETEST_RICHED20 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.
