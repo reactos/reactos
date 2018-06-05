@@ -388,7 +388,7 @@ CheckVolume(
             NTSTATUS WaitStatus;
 
             /* Let the user decide whether to repair */
-            PrintString("  One of your disks needs to be checked for consistency. You may cancel the disk check, but it is strongly recommended that you continue.");
+            PrintString("  One of your disks needs to be checked for consistency. You may cancel the disk check, but it is strongly recommended that you continue\r\n");
             PrintString("  To skip disk checking, press any key within 3 seconds\r\n", DrivePath);
 
             /* Timeout == fix it! */
