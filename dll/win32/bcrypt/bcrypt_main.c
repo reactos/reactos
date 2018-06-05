@@ -28,6 +28,9 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <gnutls/abstract.h>
+#elif defined(SONAME_LIBMBEDTLS)
+#include <mbedtls/ssl.h>
+#include <mbedtls/pk_internal.h>
 #endif
 
 #include "ntstatus.h"
@@ -40,7 +43,7 @@
 #include "bcrypt_internal.h"
 
 #include "wine/debug.h"
-#include "wine/heap.h"
+//#include "wine/heap.h"
 #include "wine/library.h"
 #include "wine/unicode.h"
 
@@ -221,6 +224,18 @@ static void gnutls_uninitialize(void)
     libgnutls_handle = NULL;
 }
 #endif /* HAVE_GNUTLS_CIPHER_INIT && !HAVE_COMMONCRYPTO_COMMONCRYPTOR_H */
+
+#if defined(SONAME_LIBMBEDTLS) && !defined(HAVE_COMMONCRYPTO_COMMONCRYPTOR_H)
+#ifndef __REACTOS__
+/* WINE prefers to keep it optional, disable this to link explicitly */
+#include "bcrypt_mbedtls_lazyload.h"
+#endif
+#endif /* SONAME_LIBMBEDTLS && !HAVE_COMMONCRYPTO_COMMONCRYPTOR_H */
+
+#ifdef __REACTOS__
+#define heap_alloc(s) HeapAlloc(GetProcessHeap(), 0, s)
+#define heap_free(s) HeapFree(GetProcessHeap(), 0, s)
+#endif
 
 NTSTATUS WINAPI BCryptAddContextFunction(ULONG table, LPCWSTR context, ULONG iface, LPCWSTR function, ULONG pos)
 {
@@ -1015,6 +1030,43 @@ struct key
         struct key_asymmetric a;
     } u;
 };
+
+#elif defined(SONAME_LIBMBEDTLS) && !defined(HAVE_COMMONCRYPTO_COMMONCRYPTOR_H)
+struct key_symmetric
+{
+    enum mode_id       mode;
+    ULONG              block_size;
+    mbedtls_cipher_context_t *decrypt_handle;
+    mbedtls_cipher_context_t *encrypt_handle;
+    UCHAR             *secret;
+    ULONG              secret_len;
+    UCHAR             *ad;
+    ULONG              ad_len;
+    UCHAR             *iv;
+    ULONG              iv_len;
+    UCHAR             *tag;
+    ULONG              tag_len;
+    ULONG              output_len;
+};
+
+struct key_asymmetric
+{
+    mbedtls_pk_context *handle;
+    UCHAR             *pubkey;
+    ULONG              pubkey_len;
+};
+
+struct key
+{
+    struct object      hdr;
+    enum alg_id alg_id;
+    union
+    {
+        struct key_symmetric s;
+        struct key_asymmetric a;
+    } u;
+};
+
 #else
 struct key_symmetric
 {
@@ -1079,6 +1131,56 @@ static NTSTATUS key_export( struct key *key, const WCHAR *type, UCHAR *output, U
     }
 
     FIXME( "unsupported key type %s\n", debugstr_w(type) );
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+#elif defined(SONAME_LIBMBEDTLS)
+static inline BOOL key_is_symmetric(struct key *key)
+{
+    return alg_props[key->alg_id].symmetric;
+}
+
+static inline BOOL key_is_asymmetric(struct key *key)
+{
+    return !alg_props[key->alg_id].symmetric;
+}
+
+static NTSTATUS key_symmetric_get_mode(struct key *key, enum mode_id *mode)
+{
+    *mode = key->u.s.mode;
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS key_symmetric_get_blocksize(struct key *key, ULONG *size)
+{
+    *size = key->u.s.block_size;
+    return STATUS_SUCCESS;
+}
+
+static ULONG get_block_size(struct algorithm *alg)
+{
+    ULONG ret = 0, size = sizeof(ret);
+    get_alg_property(alg, BCRYPT_BLOCK_LENGTH, (UCHAR *)&ret, sizeof(ret), &size);
+    return ret;
+}
+static NTSTATUS key_export(struct key *key, const WCHAR *type, UCHAR *output, ULONG output_len, ULONG *size)
+{
+    if (!strcmpW(type, BCRYPT_KEY_DATA_BLOB))
+    {
+        BCRYPT_KEY_DATA_BLOB_HEADER *header = (BCRYPT_KEY_DATA_BLOB_HEADER *)output;
+        ULONG req_size = sizeof(BCRYPT_KEY_DATA_BLOB_HEADER) + key->u.s.secret_len;
+
+        *size = req_size;
+        if (output_len < req_size) return STATUS_BUFFER_TOO_SMALL;
+
+        header->dwMagic = BCRYPT_KEY_DATA_BLOB_MAGIC;
+        header->dwVersion = BCRYPT_KEY_DATA_BLOB_VERSION1;
+        header->cbKeyData = key->u.s.secret_len;
+        memcpy(&header[1], key->u.s.secret, key->u.s.secret_len);
+        return STATUS_SUCCESS;
+    }
+
+    FIXME("unsupported key type %s\n", debugstr_w(type));
     return STATUS_NOT_IMPLEMENTED;
 }
 #else
@@ -1320,7 +1422,7 @@ static NTSTATUS key_symmetric_encrypt( struct key *key, const UCHAR *input, ULON
 }
 
 static NTSTATUS key_decrypt( struct key *key, const UCHAR *input, ULONG input_len, UCHAR *output,
-                             ULONG output_len  )
+                             ULONG output_len, UCHAR *tag, ULONG tag_len  )
 {
     int ret;
 
@@ -1804,7 +1906,7 @@ static NTSTATUS key_symmetric_encrypt( struct key *key, const UCHAR *input, ULON
 }
 
 static NTSTATUS key_decrypt( struct key *key, const UCHAR *input, ULONG input_len, UCHAR *output,
-                             ULONG output_len )
+                             ULONG output_len, UCHAR *tag, ULONG tag_len )
 {
     CCCryptorStatus status;
 
@@ -1838,6 +1940,738 @@ static NTSTATUS key_destroy( struct key *key )
     heap_free( key );
     return STATUS_SUCCESS;
 }
+
+#elif defined(SONAME_LIBMBEDTLS) && !defined(HAVE_COMMONCRYPTO_COMMONCRYPTOR_H)
+static mbedtls_cipher_type_t get_mbedtls_cipher(const struct key *key)
+{
+    switch (key->alg_id)
+    {
+    case ALG_ID_AES:
+        WARN("handle block size\n");
+        switch (key->u.s.mode)
+        {
+        case MODE_ID_GCM:
+            if (key->u.s.secret_len == 16) return MBEDTLS_CIPHER_AES_128_GCM;
+            if (key->u.s.secret_len == 32) return MBEDTLS_CIPHER_AES_256_GCM;
+            break;
+        case MODE_ID_ECB: /* can be emulated with CBC + empty IV */
+        case MODE_ID_CBC:
+            if (key->u.s.secret_len == 16) return MBEDTLS_CIPHER_AES_128_CBC;
+            if (key->u.s.secret_len == 24) return MBEDTLS_CIPHER_AES_192_CBC;
+            if (key->u.s.secret_len == 32) return MBEDTLS_CIPHER_AES_256_CBC;
+            break;
+        default:
+            break;
+        }
+        FIXME("aes mode %u with key length %u not supported\n", key->u.s.mode, key->u.s.secret_len);
+        return MBEDTLS_CIPHER_NONE;
+    default:
+        FIXME("algorithm %u not supported\n", key->alg_id);
+        return MBEDTLS_CIPHER_NONE;
+    }
+}
+
+static NTSTATUS key_symmetric_init(struct key *key, struct algorithm *alg, const UCHAR *secret, ULONG secret_len)
+{
+    UCHAR *buffer;
+    int ret, key_bitlen;
+    const mbedtls_cipher_info_t* info;
+    mbedtls_cipher_mode_t mode = MBEDTLS_MODE_NONE;
+
+    switch (alg->id)
+    {
+    case ALG_ID_AES:
+        break;
+
+    default:
+        FIXME("algorithm %u not supported\n", alg->id);
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    switch (alg->mode)
+    {
+    case MODE_ID_ECB:
+        mode = MBEDTLS_MODE_ECB;
+        break;
+
+    case MODE_ID_CBC:
+        mode = MBEDTLS_MODE_CBC;
+        break;
+
+    case MODE_ID_GCM:
+        mode = MBEDTLS_MODE_GCM;
+        break;
+
+    default:
+        FIXME("mode %u not supported\n", alg->mode);
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    if (!(key->u.s.block_size = get_block_size(alg))) return STATUS_INVALID_PARAMETER;
+    if (!(buffer = heap_alloc(secret_len))) return STATUS_NO_MEMORY;
+    //if (!(key->u.s.iv = heap_alloc(secret_len))) return STATUS_NO_MEMORY;
+    //if (!(key->u.s.ad = heap_alloc(secret_len))) return STATUS_NO_MEMORY;
+    //if (!(key->u.s.tag = heap_alloc(secret_len))) return STATUS_NO_MEMORY;
+    memcpy(buffer, secret, secret_len);
+
+    key->alg_id = alg->id;
+    key->u.s.mode = alg->mode;
+    //key->u.s.handle = 0;        /* initialized on first use */
+    key->u.s.secret = buffer;
+    key->u.s.secret_len = secret_len;
+    key->u.s.iv = 0;
+    key->u.s.iv_len = 0;
+    key->u.s.ad = 0;
+    key->u.s.ad_len = 0;
+    key->u.s.tag = 0;
+    key->u.s.tag_len = 0;
+
+    if (!(key->u.s.decrypt_handle = heap_alloc(sizeof(mbedtls_cipher_context_t)))) return STATUS_NO_MEMORY;
+    if (!(key->u.s.encrypt_handle = heap_alloc(sizeof(mbedtls_cipher_context_t)))) return STATUS_NO_MEMORY;
+    key_bitlen = key->u.s.secret_len * 8;
+    if (!(info = mbedtls_cipher_info_from_values(MBEDTLS_CIPHER_ID_AES, key_bitlen, mode))) return STATUS_INTERNAL_ERROR;
+    if ((ret = mbedtls_cipher_setup(key->u.s.decrypt_handle, info))) return STATUS_INTERNAL_ERROR;
+    if ((ret = mbedtls_cipher_setkey(key->u.s.decrypt_handle, key->u.s.secret, key_bitlen, MBEDTLS_DECRYPT))) return STATUS_INTERNAL_ERROR;
+    if (mode == MBEDTLS_MODE_CBC && (ret = mbedtls_cipher_set_padding_mode(key->u.s.decrypt_handle, MBEDTLS_PADDING_NONE))) return STATUS_INTERNAL_ERROR;
+    if ((ret = mbedtls_cipher_setup(key->u.s.encrypt_handle, info))) return STATUS_INTERNAL_ERROR;
+    if ((ret = mbedtls_cipher_setkey(key->u.s.encrypt_handle, key->u.s.secret, key_bitlen, MBEDTLS_ENCRYPT))) return STATUS_INTERNAL_ERROR;
+    if (mode == MBEDTLS_MODE_CBC && (ret = mbedtls_cipher_set_padding_mode(key->u.s.encrypt_handle, MBEDTLS_PADDING_NONE))) return STATUS_INTERNAL_ERROR;
+
+    return STATUS_SUCCESS;
+}
+#ifndef __REACTOS__
+struct buffer
+{
+    BYTE *buffer;
+    DWORD length;
+    DWORD pos;
+    BOOL error;
+};
+
+static void buffer_init(struct buffer *buffer)
+{
+    buffer->buffer = NULL;
+    buffer->length = 0;
+    buffer->pos = 0;
+    buffer->error = FALSE;
+}
+
+static void buffer_free(struct buffer *buffer)
+{
+    HeapFree(GetProcessHeap(), 0, buffer->buffer);
+}
+
+static void buffer_append(struct buffer *buffer, BYTE *data, DWORD len)
+{
+    if (!len) return;
+
+    if (buffer->pos + len > buffer->length)
+    {
+        DWORD new_length = max(max(buffer->pos + len, buffer->length * 2), 64);
+        BYTE *new_buffer;
+
+        if (buffer->buffer)
+            new_buffer = HeapReAlloc(GetProcessHeap(), 0, buffer->buffer, new_length);
+        else
+            new_buffer = HeapAlloc(GetProcessHeap(), 0, new_length);
+
+        if (!new_buffer)
+        {
+            ERR("out of memory\n");
+            buffer->error = TRUE;
+            return;
+        }
+
+        buffer->buffer = new_buffer;
+        buffer->length = new_length;
+    }
+
+    memcpy(&buffer->buffer[buffer->pos], data, len);
+    buffer->pos += len;
+}
+
+static void buffer_append_byte(struct buffer *buffer, BYTE value)
+{
+    buffer_append(buffer, &value, sizeof(value));
+}
+
+static void buffer_append_asn1_length(struct buffer *buffer, DWORD length)
+{
+    DWORD num_bytes;
+
+    if (length < 128)
+    {
+        buffer_append_byte(buffer, length);
+        return;
+    }
+
+    if (length <= 0xff) num_bytes = 1;
+    else if (length <= 0xffff) num_bytes = 2;
+    else if (length <= 0xffffff) num_bytes = 3;
+    else num_bytes = 4;
+
+    buffer_append_byte(buffer, 0x80 | num_bytes);
+    while (num_bytes--)
+        buffer_append_byte(buffer, length >> (num_bytes * 8));
+}
+
+static void buffer_append_asn1_integer(struct buffer *buffer, BYTE *data, DWORD len)
+{
+    DWORD leading_zero = (*data & 0x80) != 0;
+
+    buffer_append_byte(buffer, 0x02);  /* tag */
+    buffer_append_asn1_length(buffer, len + leading_zero);
+    if (leading_zero) buffer_append_byte(buffer, 0);
+    buffer_append(buffer, data, len);
+}
+
+static void buffer_append_asn1_sequence(struct buffer *buffer, struct buffer *content)
+{
+    if (content->error)
+    {
+        buffer->error = TRUE;
+        return;
+    }
+
+    buffer_append_byte(buffer, 0x30);  /* tag */
+    buffer_append_asn1_length(buffer, content->pos);
+    buffer_append(buffer, content->buffer, content->pos);
+}
+
+static void buffer_append_asn1_r_s(struct buffer *buffer, BYTE *r, DWORD r_len, BYTE *s, DWORD s_len)
+{
+    struct buffer value;
+
+    buffer_init(&value);
+    buffer_append_asn1_integer(&value, r, r_len);
+    buffer_append_asn1_integer(&value, s, s_len);
+    buffer_append_asn1_sequence(buffer, &value);
+    buffer_free(&value);
+}
+
+static NTSTATUS prepare_mbedtls_pk_ecp(struct key *key, UCHAR *signature, ULONG signature_len,
+    BYTE *mbedtls_signature)
+{
+    struct buffer buffer;
+    DWORD r_len = signature_len / 2;
+    DWORD s_len = r_len;
+    BYTE *r = signature;
+    BYTE *s = signature + r_len;
+
+    buffer_init(&buffer);
+    buffer_append_asn1_r_s(&buffer, r, r_len, s, s_len);
+    if (buffer.error)
+    {
+        buffer_free(&buffer);
+        return STATUS_NO_MEMORY;
+    }
+
+    gnutls_signature->data = buffer.buffer;
+    gnutls_signature->size = buffer.pos;
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS import_mbedtls_pubkey_ecc(struct key *key)
+{
+    BCRYPT_ECCKEY_BLOB *ecc_blob;
+    mbedtls_ecp_keypair *ecc;
+    gnutls_ecc_curve_t curve;
+    gnutls_datum_t x, y;
+    int ret;
+
+    switch (key->alg_id)
+    {
+    case ALG_ID_ECDSA_P256: curve = GNUTLS_ECC_CURVE_SECP256R1; break;
+    case ALG_ID_ECDSA_P384: curve = GNUTLS_ECC_CURVE_SECP384R1; break;
+
+    default:
+        FIXME("Algorithm %d not yet supported\n", key->alg_id);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    ecc_blob = (BCRYPT_ECCKEY_BLOB *)key->u.a.pubkey;
+    ecc = mbedtls_pk_ec(*key->u.a.handle);
+    x.data = key->u.a.pubkey + sizeof(*ecc_blob);
+    x.size = ecc_blob->cbKey;
+    y.data = key->u.a.pubkey + sizeof(*ecc_blob) + ecc_blob->cbKey;
+    y.size = ecc_blob->cbKey;
+
+    if ((ret = pgnutls_pubkey_import_ecc_raw(*gnutls_key, curve, &x, &y)))
+    {
+        pgnutls_perror(ret);
+        pgnutls_pubkey_deinit(*gnutls_key);
+        return STATUS_INTERNAL_ERROR;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS import_mbedtls_pubkey_rsa(struct key *key)
+{
+    BCRYPT_RSAKEY_BLOB *rsa_blob;
+    mbedtls_rsa_context *rsa;
+    int ret;
+
+    rsa_blob = (BCRYPT_RSAKEY_BLOB *)key->u.a.pubkey;
+    //e.data = key->u.a.pubkey + sizeof(*rsa_blob);
+    //e.size = rsa_blob->cbPublicExp;
+    //m.data = key->u.a.pubkey + sizeof(*rsa_blob) + rsa_blob->cbPublicExp;
+    //m.size = rsa_blob->cbModulus;
+    rsa = mbedtls_pk_parse_key(key->u.a.handle, key->u.a.pubkey, rsa_blob->cbPublicExp+rsa_blob->cbModulus, NULL, 0);
+    //memcpy(rsa->N.p, key->u.a.pubkey + sizeof(*rsa_blob) + rsa_blob->cbPublicExp, rsa_blob->cbModulus);
+    //memcpy(rsa->E.p, key->u.a.pubkey + sizeof(*rsa_blob), rsa_blob->cbPublicExp);
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS import_mbedtls_pubkey(struct key *key)
+{
+    switch (key->alg_id)
+    {
+    case ALG_ID_ECDSA_P256:
+    case ALG_ID_ECDSA_P384:
+        return import_mbedtls_pubkey_ecc(key);
+    case ALG_ID_RSA:
+        return import_mbedtls_pubkey_rsa(key);
+
+    default:
+        FIXME("Algorithm %d not yet supported\n", key->alg_id);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+}
+
+static NTSTATUS key_asymmetric_init(struct key *key, struct algorithm *alg, const UCHAR *pubkey, ULONG pubkey_len)
+{
+    UCHAR *buffer;
+    const mbedtls_pk_info_t* info;
+    mbedtls_pk_type_t type = MBEDTLS_PK_NONE;
+    ULONG offset, magic, size;
+    BCRYPT_ECCKEY_BLOB *eccblob = (BCRYPT_ECCKEY_BLOB *)pubkey;
+    BCRYPT_RSAKEY_BLOB *rsablob = (BCRYPT_RSAKEY_BLOB *)pubkey;
+
+    switch (alg->id)
+    {
+    case ALG_ID_ECDSA_P256:
+    case ALG_ID_ECDSA_P384:
+        type = MBEDTLS_PK_ECDSA;
+        break;
+    case ALG_ID_RSA:
+        type = MBEDTLS_PK_RSA;
+        break;
+
+    default:
+        FIXME("algorithm %u not supported\n", alg->id);
+        return STATUS_NOT_SUPPORTED;
+    }
+    TRACE("blob magic %08x\n", magic);
+
+    if (!(buffer = heap_alloc(pubkey_len))) return STATUS_NO_MEMORY;
+    memcpy(buffer, pubkey, pubkey_len);
+
+    key->alg_id = alg->id;
+    key->u.a.pubkey = buffer;
+    key->u.a.pubkey_len = pubkey_len;
+    if (!(key->u.a.handle = heap_alloc(sizeof(mbedtls_pk_context)))) return STATUS_NO_MEMORY;
+    if (!(info = mbedtls_pk_info_from_type(type))) return STATUS_INTERNAL_ERROR;
+    if (!(mbedtls_pk_setup(key->u.a.handle, info))) return STATUS_INTERNAL_ERROR;
+    if (!(import_mbedtls_pubkey(key))) return STATUS_INTERNAL_ERROR;
+
+    return STATUS_SUCCESS;
+}
+#endif /* !defined __REACTOS__ */
+static NTSTATUS key_duplicate(struct key *key_orig, struct key *key_copy)
+{
+    UCHAR *buffer;
+    struct algorithm alg;
+
+    key_copy->hdr = key_orig->hdr;
+    key_copy->alg_id = key_orig->alg_id;
+
+    if (key_is_symmetric(key_orig))
+    {
+        alg.id = key_orig->alg_id;
+        alg.mode = key_orig->u.s.mode;
+        key_symmetric_init(key_copy, &alg, key_orig->u.s.secret, key_orig->u.s.secret_len);
+        if (key_orig->u.s.iv)
+        {
+            if (!(key_copy->u.s.iv = HeapAlloc(GetProcessHeap(), 0, key_orig->u.s.iv_len))) return STATUS_NO_MEMORY;
+            memcpy(key_copy->u.s.iv, key_orig->u.s.iv, key_orig->u.s.iv_len);
+            key_copy->u.s.iv_len = key_orig->u.s.iv_len;
+        }
+        if (key_orig->u.s.tag)
+        {
+            if (!(key_copy->u.s.tag = HeapAlloc(GetProcessHeap(), 0, key_orig->u.s.tag_len))) return STATUS_NO_MEMORY;
+            memcpy(key_copy->u.s.tag, key_orig->u.s.tag, key_orig->u.s.tag_len);
+            key_copy->u.s.tag_len = key_orig->u.s.tag_len;
+        }
+        if (key_orig->u.s.ad)
+        {
+            if (!(key_copy->u.s.ad = HeapAlloc(GetProcessHeap(), 0, key_orig->u.s.ad_len))) return STATUS_NO_MEMORY;
+            memcpy(key_copy->u.s.ad, key_orig->u.s.ad, key_orig->u.s.ad_len);
+            key_copy->u.s.ad_len = key_orig->u.s.ad_len;
+        }
+    }
+    else
+    {
+        if (!(buffer = HeapAlloc(GetProcessHeap(), 0, key_orig->u.a.pubkey_len))) return STATUS_NO_MEMORY;
+        memcpy(buffer, key_orig->u.a.pubkey, key_orig->u.a.pubkey_len);
+
+        key_copy->u.a.pubkey = buffer;
+        key_copy->u.a.pubkey_len = key_orig->u.a.pubkey_len;
+
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS set_key_property(struct key *key, const WCHAR *prop, UCHAR *value, ULONG size, ULONG flags)
+{
+    if (!strcmpW(prop, BCRYPT_CHAINING_MODE))
+    {
+        if (!strncmpW((WCHAR *)value, BCRYPT_CHAIN_MODE_ECB, size))
+        {
+            key->u.s.mode = MODE_ID_ECB;
+            return STATUS_SUCCESS;
+        }
+        else if (!strncmpW((WCHAR *)value, BCRYPT_CHAIN_MODE_CBC, size))
+        {
+            key->u.s.mode = MODE_ID_CBC;
+            return STATUS_SUCCESS;
+        }
+        else if (!strncmpW((WCHAR *)value, BCRYPT_CHAIN_MODE_GCM, size))
+        {
+            key->u.s.mode = MODE_ID_GCM;
+            return STATUS_SUCCESS;
+        }
+        else
+        {
+            FIXME("unsupported mode %s\n", debugstr_wn((WCHAR *)value, size));
+            return STATUS_NOT_IMPLEMENTED;
+        }
+    }
+
+    FIXME("unsupported key property %s\n", debugstr_w(prop));
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+static NTSTATUS key_symmetric_set_params(struct key *key, UCHAR *iv, ULONG iv_len)
+{
+    mbedtls_cipher_type_t cipher;
+
+    if (!key->u.s.decrypt_handle || !key->u.s.encrypt_handle)
+    {
+        return STATUS_INTERNAL_ERROR;
+    }
+
+    if ((cipher = get_mbedtls_cipher(key)) == MBEDTLS_CIPHER_NONE)
+        return STATUS_NOT_SUPPORTED;
+
+    if (iv)
+    {
+        if (key->u.s.iv) heap_free(key->u.s.iv);
+        if (!(key->u.s.iv = heap_alloc(iv_len))) return STATUS_INTERNAL_ERROR;
+        memcpy(key->u.s.iv, iv, iv_len);
+        key->u.s.iv_len = iv_len;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS key_destroy(struct key *key)
+{
+    if (key_is_symmetric(key))
+    {
+        mbedtls_cipher_free(key->u.s.decrypt_handle);
+        mbedtls_cipher_free(key->u.s.encrypt_handle);
+        heap_free(key->u.s.decrypt_handle);
+        heap_free(key->u.s.encrypt_handle);
+        heap_free(key->u.s.secret);
+        if (key->u.s.ad) heap_free(key->u.s.ad);
+        if (key->u.s.iv) heap_free(key->u.s.iv);
+        if (key->u.s.tag) heap_free(key->u.s.tag);
+    }
+    else
+        heap_free(key->u.a.pubkey);
+    heap_free(key);
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS key_symmetric_set_auth_data(struct key *key, UCHAR *auth_data, ULONG len)
+{
+    if (!auth_data || !len) return STATUS_INTERNAL_ERROR;
+    if (key->u.s.ad) heap_free(key->u.s.ad);
+    if (!(key->u.s.ad = heap_alloc(len))) return STATUS_NO_MEMORY;
+    memcpy(key->u.s.ad, auth_data, len);
+    key->u.s.ad_len = len;
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS key_symmetric_encrypt(struct key *key, const UCHAR *input, ULONG input_len, UCHAR *output,
+    ULONG output_len)
+{
+    int ret;
+    ULONG output_len_out = output_len;
+    UCHAR *buf;
+
+    if (key->u.s.mode == MODE_ID_GCM)
+    {
+        if (key->u.s.tag) heap_free(key->u.s.tag);
+        if (!(key->u.s.tag = heap_alloc(key->u.s.block_size))) return STATUS_NO_MEMORY;
+        key->u.s.tag_len = key->u.s.block_size;
+        if ((ret = mbedtls_cipher_auth_encrypt(key->u.s.encrypt_handle, key->u.s.iv, key->u.s.iv_len, key->u.s.ad, key->u.s.ad_len, input, input_len, output, &output_len_out, key->u.s.tag, key->u.s.tag_len)))
+        {
+            return STATUS_INTERNAL_ERROR;
+        }
+    }
+    else
+    {
+        buf = heap_alloc(input_len + key->u.s.block_size);
+        if ((ret = mbedtls_cipher_crypt(key->u.s.encrypt_handle, key->u.s.iv, key->u.s.iv_len, input, input_len, buf, &output_len_out)))
+        {
+            heap_free(buf);
+            return STATUS_INTERNAL_ERROR;
+        }
+        memcpy(output, buf, output_len_out);
+        heap_free(buf);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS key_decrypt(struct key *key, const UCHAR *input, ULONG input_len, UCHAR *output,
+    ULONG output_len, UCHAR *tag, ULONG tag_len)
+{
+    int ret;
+    ULONG output_len_out = output_len;
+    UCHAR *buf;
+
+    if (key->u.s.mode == MODE_ID_GCM)
+    {
+        if ((ret = mbedtls_cipher_auth_decrypt(key->u.s.decrypt_handle, key->u.s.iv, key->u.s.iv_len, key->u.s.ad, key->u.s.ad_len, input, input_len, output, &output_len_out, tag, tag_len)))
+        {
+            if (ret == MBEDTLS_ERR_CIPHER_AUTH_FAILED)
+                return STATUS_AUTH_TAG_MISMATCH;
+            return STATUS_INTERNAL_ERROR;
+        }
+        if (key->u.s.tag) heap_free(key->u.s.tag);
+        if (!(key->u.s.tag = heap_alloc(tag_len))) return STATUS_NO_MEMORY;
+        memcpy(tag, key->u.s.tag, tag_len);
+        key->u.s.tag_len = tag_len;
+        if (output_len_out > output_len)
+        {
+            key->u.s.output_len = output_len_out;
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+    }
+    else
+    {
+        buf = heap_alloc(input_len+output_len+key->u.s.block_size);
+        if ((ret = mbedtls_cipher_crypt(key->u.s.decrypt_handle, key->u.s.iv, key->u.s.iv_len, input, input_len, buf, &output_len_out)))
+        {
+            heap_free(buf);
+            return STATUS_INTERNAL_ERROR;
+        }
+        memcpy(output, buf, output_len_out);
+        heap_free(buf);
+        if (output_len_out > output_len)
+        {
+            key->u.s.output_len = output_len_out;
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS key_get_tag(struct key *key, UCHAR *tag, ULONG len)
+{
+    if (!tag || !len) return STATUS_INTERNAL_ERROR;
+    if (!key->u.s.tag) return STATUS_INTERNAL_ERROR;
+    if (len < key->u.s.tag_len) STATUS_BUFFER_TOO_SMALL;
+    memcpy(tag, key->u.s.tag, key->u.s.tag_len);
+
+    return STATUS_SUCCESS;
+}
+#ifndef __REACTOS__
+static NTSTATUS prepare_mbedtls_signature_ecc(struct key *key, UCHAR *signature, ULONG signature_len,
+    gnutls_datum_t *gnutls_signature)
+{
+    struct buffer buffer;
+    DWORD r_len = signature_len / 2;
+    DWORD s_len = r_len;
+    BYTE *r = signature;
+    BYTE *s = signature + r_len;
+
+    buffer_init(&buffer);
+    buffer_append_asn1_r_s(&buffer, r, r_len, s, s_len);
+    if (buffer.error)
+    {
+        buffer_free(&buffer);
+        return STATUS_NO_MEMORY;
+    }
+
+    gnutls_signature->data = buffer.buffer;
+    gnutls_signature->size = buffer.pos;
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS prepare_mbedtls_signature_rsa(struct key *key, UCHAR *signature, ULONG signature_len,
+    gnutls_datum_t *gnutls_signature)
+{
+    gnutls_signature->data = signature;
+    gnutls_signature->size = signature_len;
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS prepare_mbedtls_signature(struct key *key, UCHAR *signature, ULONG signature_len,
+    gnutls_datum_t *gnutls_signature)
+{
+    switch (key->alg_id)
+    {
+    case ALG_ID_ECDSA_P256:
+    case ALG_ID_ECDSA_P384:
+        return prepare_gnutls_signature_ecc(key, signature, signature_len, gnutls_signature);
+    case ALG_ID_RSA:
+        return prepare_gnutls_signature_rsa(key, signature, signature_len, gnutls_signature);
+
+    default:
+        FIXME("Algorithm %d not yet supported\n", key->alg_id);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+}
+
+static NTSTATUS key_asymmetric_verify(struct key *key, void *padding, UCHAR *hash, ULONG hash_len,
+    UCHAR *signature, ULONG signature_len, DWORD flags)
+{
+    gnutls_digest_algorithm_t hash_algo;
+    gnutls_sign_algorithm_t sign_algo;
+    gnutls_datum_t gnutls_hash, gnutls_signature;
+    gnutls_pk_algorithm_t pk_algo;
+    gnutls_pubkey_t gnutls_key;
+    NTSTATUS status;
+    int ret;
+
+    if (key->alg_id == ALG_ID_RSA)
+    {
+        BCRYPT_PKCS1_PADDING_INFO *pinfo = (BCRYPT_PKCS1_PADDING_INFO *)padding;
+
+        if (!(flags & BCRYPT_PAD_PKCS1) || !pinfo) return STATUS_INVALID_PARAMETER;
+        if (!pinfo->pszAlgId) return STATUS_INVALID_SIGNATURE;
+
+        if (!strcmpW(pinfo->pszAlgId, BCRYPT_SHA1_ALGORITHM)) hash_algo = GNUTLS_DIG_SHA1;
+        else if (!strcmpW(pinfo->pszAlgId, BCRYPT_SHA256_ALGORITHM)) hash_algo = GNUTLS_DIG_SHA256;
+        else if (!strcmpW(pinfo->pszAlgId, BCRYPT_SHA384_ALGORITHM)) hash_algo = GNUTLS_DIG_SHA384;
+        else if (!strcmpW(pinfo->pszAlgId, BCRYPT_SHA512_ALGORITHM)) hash_algo = GNUTLS_DIG_SHA512;
+        else
+        {
+            FIXME("Hash algorithm %s not supported\n", debugstr_w(pinfo->pszAlgId));
+            return STATUS_NOT_SUPPORTED;
+        }
+    }
+    else
+    {
+        if (flags)
+            FIXME("Flags %08x not supported\n", flags);
+
+        /* only the hash size must match, not the actual hash function */
+        switch (hash_len)
+        {
+        case 32: hash_algo = GNUTLS_DIG_SHA256; break;
+        case 48: hash_algo = GNUTLS_DIG_SHA384; break;
+
+        default:
+            FIXME("Hash size %u not yet supported\n", hash_len);
+            return STATUS_INVALID_SIGNATURE;
+        }
+    }
+
+    switch (key->alg_id)
+    {
+    case ALG_ID_ECDSA_P256:
+    case ALG_ID_ECDSA_P384:
+        pk_algo = GNUTLS_PK_ECC;
+        break;
+    case ALG_ID_RSA:
+        pk_algo = GNUTLS_PK_RSA;
+        break;
+
+    default:
+        FIXME("Algorithm %d not yet supported\n", key->alg_id);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    if ((sign_algo = pgnutls_pk_to_sign(pk_algo, hash_algo)) == GNUTLS_SIGN_UNKNOWN)
+    {
+        FIXME("Gnutls does not support algorithm %d with hash len %u\n", key->alg_id, hash_len);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    if ((status = import_gnutls_pubkey(key, &gnutls_key)))
+        return status;
+
+    if ((status = prepare_gnutls_signature(key, signature, signature_len, &gnutls_signature)))
+    {
+        pgnutls_pubkey_deinit(gnutls_key);
+        return status;
+    }
+
+    gnutls_hash.data = hash;
+    gnutls_hash.size = hash_len;
+    ret = pgnutls_pubkey_verify_hash2(gnutls_key, sign_algo, 0, &gnutls_hash, &gnutls_signature);
+
+    if (gnutls_signature.data != signature)
+        HeapFree(GetProcessHeap(), 0, gnutls_signature.data);
+    pgnutls_pubkey_deinit(gnutls_key);
+    return (ret < 0) ? STATUS_INVALID_SIGNATURE : STATUS_SUCCESS;
+}
+
+static NTSTATUS key_asymmetric_verify(struct key *key, void *padding, UCHAR *hash, ULONG hash_len,
+    UCHAR *signature, ULONG signature_len, DWORD flags)
+{
+    mbedtls_md_type_t hash_algo;
+    int ret;
+
+    if (key->alg_id == ALG_ID_RSA)
+    {
+        BCRYPT_PKCS1_PADDING_INFO *pinfo = (BCRYPT_PKCS1_PADDING_INFO *)padding;
+
+        if (!(flags & BCRYPT_PAD_PKCS1) || !pinfo) return STATUS_INVALID_PARAMETER;
+        if (!pinfo->pszAlgId) return STATUS_INVALID_SIGNATURE;
+
+        if (!strcmpW(pinfo->pszAlgId, BCRYPT_SHA1_ALGORITHM)) hash_algo = MBEDTLS_MD_SHA1;
+        else if (!strcmpW(pinfo->pszAlgId, BCRYPT_SHA256_ALGORITHM)) hash_algo = MBEDTLS_MD_SHA256;
+        else if (!strcmpW(pinfo->pszAlgId, BCRYPT_SHA384_ALGORITHM)) hash_algo = MBEDTLS_MD_SHA384;
+        else if (!strcmpW(pinfo->pszAlgId, BCRYPT_SHA512_ALGORITHM)) hash_algo = MBEDTLS_MD_SHA512;
+        else
+        {
+            FIXME("Hash algorithm %s not supported\n", debugstr_w(pinfo->pszAlgId));
+            return STATUS_NOT_SUPPORTED;
+        }
+    }
+    else
+    {
+        if (flags)
+            FIXME("Flags %08x not supported\n", flags);
+
+        // only the hash size must match, not the actual hash function
+        switch (hash_len)
+        {
+        case 32: hash_algo = MBEDTLS_MD_SHA256; break;
+        case 48: hash_algo = MBEDTLS_MD_SHA384; break;
+
+        default:
+            FIXME("Hash size %u not yet supported\n", hash_len);
+            return STATUS_INVALID_SIGNATURE;
+        }
+    }
+
+    ret = mbedtls_pk_verify(key->u.a.handle, hash_algo, hash, hash_len, signature, signature_len);
+
+    return (ret != 0) ? STATUS_INVALID_SIGNATURE : STATUS_SUCCESS;
+}
+#endif /* !defined __REACTOS__ */
 #else
 static NTSTATUS key_symmetric_init( struct key *key, struct algorithm *alg, const UCHAR *secret, ULONG secret_len )
 {
@@ -1885,7 +2719,7 @@ static NTSTATUS key_symmetric_encrypt( struct key *key, const UCHAR *input, ULON
 }
 
 static NTSTATUS key_decrypt( struct key *key, const UCHAR *input, ULONG input_len, UCHAR *output,
-                             ULONG output_len )
+                             ULONG output_len, UCHAR *tag, ULONG tag_len )
 {
     ERR( "support for keys not available at build time\n" );
     return STATUS_NOT_IMPLEMENTED;
@@ -2044,6 +2878,10 @@ NTSTATUS WINAPI BCryptDuplicateKey( BCRYPT_KEY_HANDLE handle, BCRYPT_KEY_HANDLE 
 NTSTATUS WINAPI BCryptImportKeyPair( BCRYPT_ALG_HANDLE algorithm, BCRYPT_KEY_HANDLE decrypt_key, const WCHAR *type,
                                      BCRYPT_KEY_HANDLE *ret_key, UCHAR *input, ULONG input_len, ULONG flags )
 {
+#ifdef __REACTOS__
+    FIXME("decrypting of key not yet supported\n");
+    return STATUS_NOT_IMPLEMENTED;
+#else
     struct algorithm *alg = algorithm;
     NTSTATUS status;
     struct key *key;
@@ -2134,11 +2972,16 @@ NTSTATUS WINAPI BCryptImportKeyPair( BCRYPT_ALG_HANDLE algorithm, BCRYPT_KEY_HAN
 
     FIXME( "unsupported key type %s\n", debugstr_w(type) );
     return STATUS_NOT_SUPPORTED;
+#endif
 }
 
 NTSTATUS WINAPI BCryptVerifySignature( BCRYPT_KEY_HANDLE handle, void *padding, UCHAR *hash, ULONG hash_len,
                                        UCHAR *signature, ULONG signature_len, ULONG flags )
 {
+#ifdef __REACTOS__
+    FIXME("verify signature not yet supported\n");
+    return STATUS_NOT_IMPLEMENTED;
+#else
     struct key *key = handle;
 
     TRACE( "%p, %p, %p, %u, %p, %u, %08x\n", handle, padding, hash,
@@ -2149,6 +2992,7 @@ NTSTATUS WINAPI BCryptVerifySignature( BCRYPT_KEY_HANDLE handle, void *padding, 
     if (!key_is_asymmetric(key)) return STATUS_NOT_SUPPORTED;
 
     return key_asymmetric_verify( key, padding, hash, hash_len, signature, signature_len, flags );
+#endif
 }
 
 NTSTATUS WINAPI BCryptDestroyKey( BCRYPT_KEY_HANDLE handle )
@@ -2236,6 +3080,41 @@ NTSTATUS WINAPI BCryptEncrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
 
     src = input;
     dst = output;
+#if defined(SONAME_LIBMBEDTLS) && !defined(HAVE_COMMONCRYPTO_COMMONCRYPTOR_H)
+    if (key->u.s.mode == MODE_ID_CBC)
+    {
+        if (flags & BCRYPT_BLOCK_PADDING)
+        {
+            if ((status = mbedtls_cipher_set_padding_mode(key->u.s.encrypt_handle, MBEDTLS_PADDING_PKCS7))) return STATUS_INTERNAL_ERROR;
+        }
+        else
+        {
+            if ((status = mbedtls_cipher_set_padding_mode(key->u.s.encrypt_handle, MBEDTLS_PADDING_NONE))) return STATUS_INTERNAL_ERROR;
+        }
+    }
+    if (key->u.s.mode == MODE_ID_ECB && (flags & BCRYPT_BLOCK_PADDING))
+    {
+        while (bytes_left >= block_size)
+        {
+            if ((status = key_symmetric_encrypt(key, src, block_size, dst, block_size))) return status;
+            if (mode == MODE_ID_ECB && (status = key_symmetric_set_params(key, iv, iv_len))) return status;
+            bytes_left -= block_size;
+            src += block_size;
+            dst += block_size;
+        }
+
+        if (flags & BCRYPT_BLOCK_PADDING)
+        {
+            if (!(buf = heap_alloc(block_size))) return STATUS_NO_MEMORY;
+            memcpy(buf, src, bytes_left);
+            memset(buf + bytes_left, block_size - bytes_left, block_size - bytes_left);
+            status = key_symmetric_encrypt(key, buf, block_size, dst, block_size);
+            heap_free(buf);
+        }
+    }
+    else
+        status = key_symmetric_encrypt(key, src, input_len, dst, output_len);
+#else
     while (bytes_left >= block_size)
     {
         if ((status = key_symmetric_encrypt( key, src, block_size, dst, block_size ))) return status;
@@ -2253,6 +3132,7 @@ NTSTATUS WINAPI BCryptEncrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
         status = key_symmetric_encrypt( key, buf, block_size, dst, block_size );
         heap_free( buf );
     }
+#endif
 
     return status;
 }
@@ -2296,7 +3176,7 @@ NTSTATUS WINAPI BCryptDecrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
 
         if (auth_info->pbAuthData && (status = key_symmetric_set_auth_data( key, auth_info->pbAuthData, auth_info->cbAuthData )))
             return status;
-        if ((status = key_decrypt( key, input, input_len, output, output_len )))
+        if ((status = key_decrypt( key, input, input_len, output, output_len, auth_info->pbTag, auth_info->cbTag )))
             return status;
 
         if ((status = key_get_tag( key, tag, sizeof(tag) )))
@@ -2327,9 +3207,62 @@ NTSTATUS WINAPI BCryptDecrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
 
     src = input;
     dst = output;
+#if defined(SONAME_LIBMBEDTLS) && !defined(HAVE_COMMONCRYPTO_COMMONCRYPTOR_H)
+    if (key->u.s.mode == MODE_ID_CBC)
+    {
+        if (flags & BCRYPT_BLOCK_PADDING)
+        {
+            if ((status = mbedtls_cipher_set_padding_mode(key->u.s.decrypt_handle, MBEDTLS_PADDING_PKCS7))) return STATUS_INTERNAL_ERROR;
+        }
+        else
+        {
+            if ((status = mbedtls_cipher_set_padding_mode(key->u.s.decrypt_handle, MBEDTLS_PADDING_NONE))) return STATUS_INTERNAL_ERROR;
+        }
+    }
+    if (key->u.s.mode == MODE_ID_ECB && (flags & BCRYPT_BLOCK_PADDING))
+    {
+        while (bytes_left >= key->u.s.block_size)
+        {
+            if ((status = key_decrypt(key, src, key->u.s.block_size, dst, key->u.s.block_size, NULL, 0))) return status;
+            if (key->u.s.mode == MODE_ID_ECB && (status = key_symmetric_set_params(key, iv, iv_len))) return status;
+            bytes_left -= key->u.s.block_size;
+            src += key->u.s.block_size;
+            dst += key->u.s.block_size;
+        }
+
+        if (flags & BCRYPT_BLOCK_PADDING)
+        {
+            if (!(buf = heap_alloc(key->u.s.block_size))) return STATUS_NO_MEMORY;
+            status = key_decrypt(key, src, key->u.s.block_size, buf, key->u.s.block_size, NULL, 0);
+            if (!status && buf[key->u.s.block_size - 1] <= key->u.s.block_size)
+            {
+                *ret_len -= buf[key->u.s.block_size - 1];
+                if (output_len < *ret_len)
+                {
+                    key->u.s.output_len = *ret_len;
+                    status = STATUS_BUFFER_TOO_SMALL;
+                }
+                else memcpy(dst, buf, key->u.s.block_size - buf[key->u.s.block_size - 1]);
+            }
+            else
+                status = STATUS_UNSUCCESSFUL; /* FIXME: invalid padding */
+            heap_free(buf);
+        }
+    }
+    else
+        status = key_decrypt(key, src, input_len, dst, output_len, NULL, 0);
+    if (!status && *ret_len > output_len)
+    {
+        *ret_len = output_len;
+    }
+    if (status == STATUS_BUFFER_TOO_SMALL)
+    {
+        *ret_len = key->u.s.output_len;
+    }
+#else
     while (bytes_left >= key->u.s.block_size)
     {
-        if ((status = key_decrypt( key, src, key->u.s.block_size, dst, key->u.s.block_size ))) return status;
+        if ((status = key_decrypt( key, src, key->u.s.block_size, dst, key->u.s.block_size, NULL, 0 ))) return status;
         if (key->u.s.mode == MODE_ID_ECB && (status = key_symmetric_set_params( key, iv, iv_len ))) return status;
         bytes_left -= key->u.s.block_size;
         src += key->u.s.block_size;
@@ -2339,7 +3272,7 @@ NTSTATUS WINAPI BCryptDecrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
     if (flags & BCRYPT_BLOCK_PADDING)
     {
         if (!(buf = heap_alloc( key->u.s.block_size ))) return STATUS_NO_MEMORY;
-        status = key_decrypt( key, src, key->u.s.block_size, buf, key->u.s.block_size );
+        status = key_decrypt( key, src, key->u.s.block_size, buf, key->u.s.block_size, NULL, 0 );
         if (!status && buf[ key->u.s.block_size - 1 ] <= key->u.s.block_size)
         {
             *ret_len -= buf[ key->u.s.block_size - 1 ];
@@ -2350,6 +3283,7 @@ NTSTATUS WINAPI BCryptDecrypt( BCRYPT_KEY_HANDLE handle, UCHAR *input, ULONG inp
             status = STATUS_UNSUCCESSFUL; /* FIXME: invalid padding */
         heap_free( buf );
     }
+#endif
 
     return status;
 }
