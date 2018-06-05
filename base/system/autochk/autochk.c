@@ -5,7 +5,7 @@
  * PURPOSE:         Filesystem checker
  * PROGRAMMERS:     Aleksey Bragin
  *                  Eric Kohl
- *                  Hervé Poussineau
+ *                  HervÃ© Poussineau
  *                  Pierre Schweitzer
  */
 
@@ -346,7 +346,7 @@ CheckVolume(
     NTSTATUS Status;
     DWORD Count;
 
-    PrintString("  Verifying volume %S\r\n", DrivePath);
+    PrintString("  Checking file system on %S\r\n", DrivePath);
 
     /* Get the file system */
     Status = GetFileSystem(DrivePath,
@@ -359,7 +359,7 @@ CheckVolume(
         return Status;
     }
 
-    PrintString("  Its filesystem type is %S\r\n", FileSystem);
+    PrintString("  The type of the file system is %S\r\n", FileSystem);
 
     /* Call provider */
     for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
@@ -388,9 +388,8 @@ CheckVolume(
             NTSTATUS WaitStatus;
 
             /* Let the user decide whether to repair */
-            PrintString("  %S needs to be checked\r\n", DrivePath);
-            PrintString("  You can skip it, but be advised it is not recommanded\r\n");
-            PrintString("  To skip disk checking press any key in 3 seconds\r\n", DrivePath);
+            PrintString("  One of your disks needs to be checked for consistency. You may cancel the disk check, but it is strongly recommended that you continue.");
+            PrintString("  To skip disk checking, press any key within 3 seconds\r\n", DrivePath);
 
             /* Timeout == fix it! */
             WaitStatus = WaitForKeyboard();
