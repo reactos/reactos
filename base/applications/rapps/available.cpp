@@ -402,7 +402,7 @@ CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppNa
     while (CurrentListPosition != NULL)
     {
         info = m_InfoList.GetNext(CurrentListPosition);
-        if (info->m_szName == szAppName)
+        if (info->m_szName.CompareNoCase(szAppName) == 0)
         {
             return info;
         }
