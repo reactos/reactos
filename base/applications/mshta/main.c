@@ -1,14 +1,13 @@
 /*
- * PROJECT:         HTML Application Viewer
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mshta/main.c
- * PURPOSE:         HTML Application Host
- * PROGRAMMERS:     Jared Smudde (computerwhiz02@hotmail.com)
+ * PROJECT:     ReactOS HTML Application Host
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Forwards HTA application information to mshtml
+ * COPYRIGHT:   Copyright 2017-2018 Jared Smudde(computerwhiz02@hotmail.com)
  */
 
-#define WIN32_LEAN_AND_MEAN
-#include <stdio.h>
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <mshtml.h>
 
 extern DWORD WINAPI RunHTMLApplication(HINSTANCE hinst, HINSTANCE hPrevInst, LPSTR szCmdLine, int nCmdShow);
