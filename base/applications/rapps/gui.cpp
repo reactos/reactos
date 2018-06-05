@@ -1456,6 +1456,10 @@ private:
             PostMessageW(WM_CLOSE, 0, 0);
             break;
 
+        case ID_SEARCH:
+            ::SetFocus(m_SearchBar->m_hWnd);
+            break;
+
         case ID_INSTALL:
             if (IsAvailableEnum(SelectedEnumType))
             {
