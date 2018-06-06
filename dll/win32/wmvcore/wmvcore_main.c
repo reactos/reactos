@@ -2133,6 +2133,7 @@ static HRESULT WINAPI WMProfileManager_QueryInterface(IWMProfileManager *iface, 
         TRACE("(%p)->(IID_IWMProfileManager %p)\n", This, ppv);
         *ppv = &This->IWMProfileManager_iface;
     }else {
+        FIXME("Unsupported iface %s\n", debugstr_guid(riid));
         *ppv = NULL;
         return E_NOINTERFACE;
     }

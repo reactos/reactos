@@ -477,7 +477,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmap(IWICComponentFactory *iface,
 {
     TRACE("(%p,%u,%u,%s,%u,%p)\n", iface, uiWidth, uiHeight,
         debugstr_guid(pixelFormat), option, ppIBitmap);
-    return BitmapImpl_Create(uiWidth, uiHeight, 0, 0, NULL, pixelFormat, option, ppIBitmap);
+    return BitmapImpl_Create(uiWidth, uiHeight, 0, 0, NULL, 0, pixelFormat, option, ppIBitmap);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromSource(IWICComponentFactory *iface,
@@ -524,7 +524,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromSource(IWICComponentFacto
     }
 
     if (SUCCEEDED(hr))
-        hr = BitmapImpl_Create(width, height, 0, 0, NULL, &pixelformat, option, &result);
+        hr = BitmapImpl_Create(width, height, 0, 0, NULL, 0, &pixelformat, option, &result);
 
     if (SUCCEEDED(hr))
     {
@@ -606,7 +606,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromMemory(IWICComponentFacto
 
     if (!stride || !size || !buffer || !bitmap) return E_INVALIDARG;
 
-    hr = BitmapImpl_Create(width, height, stride, size, NULL, format, WICBitmapCacheOnLoad, bitmap);
+    hr = BitmapImpl_Create(width, height, stride, size, NULL, 0, format, WICBitmapCacheOnLoad, bitmap);
     if (SUCCEEDED(hr))
     {
         IWICBitmapLock *lock;
@@ -738,7 +738,8 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromHBITMAP(IWICComponentFact
         return E_INVALIDARG;
     }
 
-    hr = BitmapImpl_Create(bm.bmWidth, bm.bmHeight, bm.bmWidthBytes, 0, NULL, &format, WICBitmapCacheOnLoad, bitmap);
+    hr = BitmapImpl_Create(bm.bmWidth, bm.bmHeight, bm.bmWidthBytes, 0, NULL, 0, &format,
+                           WICBitmapCacheOnLoad, bitmap);
     if (hr != S_OK) return hr;
 
     hr = IWICBitmap_Lock(*bitmap, NULL, WICBitmapLockWrite, &lock);
@@ -822,7 +823,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromHICON(IWICComponentFactor
     stride = width * 4;
     size = stride * height;
 
-    hr = BitmapImpl_Create(width, height, stride, size, NULL,
+    hr = BitmapImpl_Create(width, height, stride, size, NULL, 0,
                            &GUID_WICPixelFormat32bppBGRA, WICBitmapCacheOnLoad, bitmap);
     if (hr != S_OK) goto failed;
 
@@ -1209,14 +1210,18 @@ HRESULT WINAPI WICCreateBitmapFromSectionEx(UINT width, UINT height,
         REFWICPixelFormatGUID format, HANDLE section, UINT stride,
         UINT offset, WICSectionAccessLevel wicaccess, IWICBitmap **bitmap)
 {
-    DWORD access;
-    void *buffer;
+    SYSTEM_INFO sysinfo;
+    UINT bpp, access, size, view_offset, view_size;
+    void *view;
     HRESULT hr;
 
-    TRACE("%u,%u,%s,%p,%u,%#x,%#x,%p\n", width, height, debugstr_guid(format),
-        section, stride, offset, wicaccess, bitmap);
+    TRACE("%u,%u,%s,%p,%u,%u,%#x,%p\n", width, height, debugstr_guid(format),
+          section, stride, offset, wicaccess, bitmap);
 
     if (!width || !height || !section || !bitmap) return E_INVALIDARG;
+
+    hr = get_pixelformat_bpp(format, &bpp);
+    if (FAILED(hr)) return hr;
 
     switch (wicaccess)
     {
@@ -1233,11 +1238,20 @@ HRESULT WINAPI WICCreateBitmapFromSectionEx(UINT width, UINT height,
         return E_INVALIDARG;
     }
 
-    buffer = MapViewOfFile(section, access, 0, offset, 0);
-    if (!buffer) return HRESULT_FROM_WIN32(GetLastError());
+    if (!stride) stride = (((bpp * width) + 31) / 32) * 4;
+    size = stride * height;
+    if (size / height != stride) return E_INVALIDARG;
 
-    hr = BitmapImpl_Create(width, height, stride, 0, buffer, format, WICBitmapCacheOnLoad, bitmap);
-    if (FAILED(hr)) UnmapViewOfFile(buffer);
+    GetSystemInfo(&sysinfo);
+    view_offset = offset - (offset % sysinfo.dwAllocationGranularity);
+    view_size = size + (offset - view_offset);
+
+    view = MapViewOfFile(section, access, 0, view_offset, view_size);
+    if (!view) return HRESULT_FROM_WIN32(GetLastError());
+
+    offset -= view_offset;
+    hr = BitmapImpl_Create(width, height, stride, 0, view, offset, format, WICBitmapCacheOnLoad, bitmap);
+    if (FAILED(hr)) UnmapViewOfFile(view);
     return hr;
 }
 

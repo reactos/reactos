@@ -86,8 +86,8 @@ if(USE_CLANG_CL OR (NOT MSVC))
     endif()
 else()
     #disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
-    replace_compile_flags("/we\"4189\"" " ")
-    add_target_compile_flags(reiserfs "/wd\"4189\" /wd\"4142\" /wd\"4101\"")
+    replace_compile_flags("/we4189" " ")
+    add_target_compile_flags(reiserfs "/wd4189 /wd4142 /wd4101")
 endif()
 
 target_link_libraries(reiserfs memcmp ${PSEH_LIB})

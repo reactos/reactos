@@ -471,12 +471,26 @@ ME_InternalInsertTextFromCursor(ME_TextEditor *editor, int nCursor,
   return ME_InsertRunAtCursor(editor, p, style, str, len, flags);
 }
 
+static struct re_object* create_re_object(const REOBJECT *reo)
+{
+  struct re_object *reobj = heap_alloc(sizeof(*reobj));
+
+  if (!reobj)
+  {
+    WARN("Fail to allocate re_object.\n");
+    return NULL;
+  }
+  ME_CopyReObject(&reobj->obj, reo, REO_GETOBJ_ALL_INTERFACES);
+  return reobj;
+}
 
 void ME_InsertOLEFromCursor(ME_TextEditor *editor, const REOBJECT* reo, int nCursor)
 {
   ME_Style              *pStyle = ME_GetInsertStyle(editor, nCursor);
   ME_DisplayItem        *di;
   WCHAR                 space = ' ';
+  ME_DisplayItem        *di_prev = NULL;
+  struct re_object      *reobj_prev = NULL;
   
   /* FIXME no no no */
   if (ME_IsSelection(editor))
@@ -484,8 +498,22 @@ void ME_InsertOLEFromCursor(ME_TextEditor *editor, const REOBJECT* reo, int nCur
 
   di = ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, pStyle,
                                        MERF_GRAPHICS);
-  di->member.run.ole_obj = heap_alloc(sizeof(*reo));
-  ME_CopyReObject(di->member.run.ole_obj, reo);
+  di->member.run.reobj = create_re_object(reo);
+
+  di_prev = di;
+  while (ME_PrevRun(NULL, &di_prev, TRUE))
+  {
+    if (di_prev->member.run.reobj)
+    {
+      reobj_prev = di_prev->member.run.reobj;
+      break;
+    }
+  }
+  if (reobj_prev)
+    list_add_after(&reobj_prev->entry, &di->member.run.reobj->entry);
+  else
+    list_add_head(&editor->reobj_list, &di->member.run.reobj->entry);
+
   ME_ReleaseStyle(pStyle);
 }
 
