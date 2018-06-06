@@ -29,12 +29,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 #ifdef _WIN64
 
 #define CTXARG_T DWORDLONG
+#define IActiveScriptDebugVtbl IActiveScriptDebug64Vtbl
 #define IActiveScriptParseVtbl IActiveScriptParse64Vtbl
 #define IActiveScriptParseProcedure2Vtbl IActiveScriptParseProcedure2_64Vtbl
 
 #else
 
 #define CTXARG_T DWORD
+#define IActiveScriptDebugVtbl IActiveScriptDebug32Vtbl
 #define IActiveScriptParseVtbl IActiveScriptParse32Vtbl
 #define IActiveScriptParseProcedure2Vtbl IActiveScriptParseProcedure2_32Vtbl
 
@@ -42,6 +44,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 struct VBScript {
     IActiveScript IActiveScript_iface;
+    IActiveScriptDebug IActiveScriptDebug_iface;
     IActiveScriptParse IActiveScriptParse_iface;
     IActiveScriptParseProcedure2 IActiveScriptParseProcedure2_iface;
     IObjectSafety IObjectSafety_iface;
@@ -94,6 +97,38 @@ static void exec_queued_code(script_ctx_t *ctx)
         if(iter->pending_exec)
             exec_global_code(ctx, iter);
     }
+}
+
+IDispatch *lookup_named_item(script_ctx_t *ctx, const WCHAR *name, unsigned flags)
+{
+    named_item_t *item;
+    HRESULT hres;
+
+    LIST_FOR_EACH_ENTRY(item, &ctx->named_items, named_item_t, entry) {
+        if((item->flags & flags) == flags && !strcmpiW(item->name, name)) {
+            if(!item->disp) {
+                IUnknown *unk;
+
+                hres = IActiveScriptSite_GetItemInfo(ctx->site, item->name,
+                                                     SCRIPTINFO_IUNKNOWN, &unk, NULL);
+                if(FAILED(hres)) {
+                    WARN("GetItemInfo failed: %08x\n", hres);
+                    continue;
+                }
+
+                hres = IUnknown_QueryInterface(unk, &IID_IDispatch, (void**)&item->disp);
+                IUnknown_Release(unk);
+                if(FAILED(hres)) {
+                    WARN("object does not implement IDispatch\n");
+                    continue;
+                }
+            }
+
+            return item->disp;
+        }
+    }
+
+    return NULL;
 }
 
 static HRESULT set_ctx_site(VBScript *This)
@@ -235,6 +270,9 @@ static HRESULT WINAPI VBScript_QueryInterface(IActiveScript *iface, REFIID riid,
     }else if(IsEqualGUID(riid, &IID_IActiveScript)) {
         TRACE("(%p)->(IID_IActiveScript %p)\n", This, ppv);
         *ppv = &This->IActiveScript_iface;
+    }else if(IsEqualGUID(riid, &IID_IActiveScriptDebug)) {
+        TRACE("(%p)->(IID_IActiveScriptDebug %p)\n", This, ppv);
+        *ppv = &This->IActiveScriptDebug_iface;
     }else if(IsEqualGUID(riid, &IID_IActiveScriptParse)) {
         TRACE("(%p)->(IID_IActiveScriptParse %p)\n", This, ppv);
         *ppv = &This->IActiveScriptParse_iface;
@@ -532,6 +570,64 @@ static const IActiveScriptVtbl VBScriptVtbl = {
     VBScript_Clone
 };
 
+static inline VBScript *impl_from_IActiveScriptDebug(IActiveScriptDebug *iface)
+{
+    return CONTAINING_RECORD(iface, VBScript, IActiveScriptDebug_iface);
+}
+
+static HRESULT WINAPI VBScriptDebug_QueryInterface(IActiveScriptDebug *iface, REFIID riid, void **ppv)
+{
+    VBScript *This = impl_from_IActiveScriptDebug(iface);
+    return IActiveScript_QueryInterface(&This->IActiveScript_iface, riid, ppv);
+}
+
+static ULONG WINAPI VBScriptDebug_AddRef(IActiveScriptDebug *iface)
+{
+    VBScript *This = impl_from_IActiveScriptDebug(iface);
+    return IActiveScript_AddRef(&This->IActiveScript_iface);
+}
+
+static ULONG WINAPI VBScriptDebug_Release(IActiveScriptDebug *iface)
+{
+    VBScript *This = impl_from_IActiveScriptDebug(iface);
+    return IActiveScript_Release(&This->IActiveScript_iface);
+}
+
+static HRESULT WINAPI VBScriptDebug_GetScriptTextAttributes(IActiveScriptDebug *iface,
+        LPCOLESTR code, ULONG len, LPCOLESTR delimiter, DWORD flags, SOURCE_TEXT_ATTR *attr)
+{
+    VBScript *This = impl_from_IActiveScriptDebug(iface);
+    FIXME("(%p)->(%s %u %s %#x %p)\n", This, debugstr_w(code), len,
+          debugstr_w(delimiter), flags, attr);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI VBScriptDebug_GetScriptletTextAttributes(IActiveScriptDebug *iface,
+        LPCOLESTR code, ULONG len, LPCOLESTR delimiter, DWORD flags, SOURCE_TEXT_ATTR *attr)
+{
+    VBScript *This = impl_from_IActiveScriptDebug(iface);
+    FIXME("(%p)->(%s %u %s %#x %p)\n", This, debugstr_w(code), len,
+          debugstr_w(delimiter), flags, attr);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI VBScriptDebug_EnumCodeContextsOfPosition(IActiveScriptDebug *iface,
+        CTXARG_T source, ULONG offset, ULONG len, IEnumDebugCodeContexts **ret)
+{
+    VBScript *This = impl_from_IActiveScriptDebug(iface);
+    FIXME("(%p)->(%s %u %u %p)\n", This, wine_dbgstr_longlong(source), offset, len, ret);
+    return E_NOTIMPL;
+}
+
+static const IActiveScriptDebugVtbl VBScriptDebugVtbl = {
+    VBScriptDebug_QueryInterface,
+    VBScriptDebug_AddRef,
+    VBScriptDebug_Release,
+    VBScriptDebug_GetScriptTextAttributes,
+    VBScriptDebug_GetScriptletTextAttributes,
+    VBScriptDebug_EnumCodeContextsOfPosition,
+};
+
 static inline VBScript *impl_from_IActiveScriptParse(IActiveScriptParse *iface)
 {
     return CONTAINING_RECORD(iface, VBScript, IActiveScriptParse_iface);
@@ -604,6 +700,7 @@ static HRESULT WINAPI VBScriptParse_ParseScriptText(IActiveScriptParse *iface,
         DWORD dwFlags, VARIANT *pvarResult, EXCEPINFO *pexcepinfo)
 {
     VBScript *This = impl_from_IActiveScriptParse(iface);
+    IDispatch *context = NULL;
     vbscode_t *code;
     HRESULT hres;
 
@@ -614,9 +711,20 @@ static HRESULT WINAPI VBScriptParse_ParseScriptText(IActiveScriptParse *iface,
     if(This->thread_id != GetCurrentThreadId() || This->state == SCRIPTSTATE_CLOSED)
         return E_UNEXPECTED;
 
+    if(pstrItemName) {
+        context = lookup_named_item(This->ctx, pstrItemName, 0);
+        if(!context) {
+            WARN("Inknown context %s\n", debugstr_w(pstrItemName));
+            return E_INVALIDARG;
+        }
+    }
+
     hres = compile_script(This->ctx, pstrCode, pstrDelimiter, &code);
     if(FAILED(hres))
         return hres;
+
+    if(context)
+        IDispatch_AddRef(code->context = context);
 
     if(!is_started(This)) {
         code->pending_exec = TRUE;
@@ -762,6 +870,7 @@ HRESULT WINAPI VBScriptFactory_CreateInstance(IClassFactory *iface, IUnknown *pU
         return E_OUTOFMEMORY;
 
     ret->IActiveScript_iface.lpVtbl = &VBScriptVtbl;
+    ret->IActiveScriptDebug_iface.lpVtbl = &VBScriptDebugVtbl;
     ret->IActiveScriptParse_iface.lpVtbl = &VBScriptParseVtbl;
     ret->IActiveScriptParseProcedure2_iface.lpVtbl = &VBScriptParseProcedureVtbl;
     ret->IObjectSafety_iface.lpVtbl = &VBScriptSafetyVtbl;

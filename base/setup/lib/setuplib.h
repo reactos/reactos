@@ -14,10 +14,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <wingdi.h> // For LF_FACESIZE and TranslateCharsetInfo()
-#include <wincon.h>
-#include <winnls.h> // For code page support
-#include <winreg.h>
+#include <winxxx.h>
 
 #endif
 
@@ -29,9 +26,13 @@ extern HANDLE ProcessHeap;
 #include "linklist.h"
 #include "ntverrsrc.h"
 // #include "arcname.h"
+#include "bldrsup.h"
+#include "filesup.h"
 #include "fsutil.h"
 #include "genlist.h"
+#include "inicache.h"
 #include "partlist.h"
 #include "arcname.h"
+#include "osdetect.h"
 
 /* EOF */

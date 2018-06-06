@@ -64,6 +64,7 @@ static DWORD tmSinkCookie;
 static DWORD tmSinkRefCount;
 static DWORD dmSinkCookie;
 static DWORD documentStatus;
+static DWORD key_trace_sink_cookie;
 static ITfDocumentMgr *test_CurrentFocus = NULL;
 static ITfDocumentMgr *test_PrevFocus = NULL;
 static ITfDocumentMgr *test_LastCurrentFocus = FOCUS_SAVE;
@@ -625,6 +626,51 @@ static HRESULT ThreadMgrEventSink_Constructor(IUnknown **ppOut)
     return S_OK;
 }
 
+static HRESULT WINAPI TfKeyTraceEventSink_QueryInterface(ITfKeyTraceEventSink *iface, REFIID riid, void **ppv)
+{
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_ITfKeyTraceEventSink, riid)) {
+        *ppv = iface;
+        return S_OK;
+    }
+
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI TfKeyTraceEventSink_AddRef(ITfKeyTraceEventSink *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI TfKeyTraceEventSink_Release(ITfKeyTraceEventSink *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI TfKeyTraceEventSink_OnKeyTraceDown(ITfKeyTraceEventSink *iface,
+                                                         WPARAM wparam, LPARAM lparam)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TfKeyTraceEventSink_OnKeyTraceUp(ITfKeyTraceEventSink *iface,
+                                                       WPARAM wparam, LPARAM lparam)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static const ITfKeyTraceEventSinkVtbl TfKeyTraceEventSinkVtbl = {
+    TfKeyTraceEventSink_QueryInterface,
+    TfKeyTraceEventSink_AddRef,
+    TfKeyTraceEventSink_Release,
+    TfKeyTraceEventSink_OnKeyTraceDown,
+    TfKeyTraceEventSink_OnKeyTraceUp
+};
+
+static ITfKeyTraceEventSink TfKeyTraceEventSink = { &TfKeyTraceEventSinkVtbl };
+
 static HRESULT WINAPI TfTransitoryExtensionSink_QueryInterface(ITfTransitoryExtensionSink *iface, REFIID riid, void **ppv)
 {
     if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_ITfTransitoryExtensionSink, riid)) {
@@ -1070,13 +1116,18 @@ static void test_ThreadMgrAdviseSinks(void)
     tmSinkRefCount = 1;
     tmSinkCookie = 0;
     hr = ITfSource_AdviseSink(source,&IID_ITfThreadMgrEventSink, sink, &tmSinkCookie);
-    ok(SUCCEEDED(hr),"Failed to Advise Sink\n");
+    ok(hr == S_OK, "Failed to Advise Sink\n");
     ok(tmSinkCookie!=0,"Failed to get sink cookie\n");
 
     /* Advising the sink adds a ref, Releasing here lets the object be deleted
        when unadvised */
     tmSinkRefCount = 2;
     IUnknown_Release(sink);
+
+    hr = ITfSource_AdviseSink(source, &IID_ITfKeyTraceEventSink, (IUnknown*)&TfKeyTraceEventSink,
+                              &key_trace_sink_cookie);
+    ok(hr == S_OK, "Failed to Advise Sink\n");
+
     ITfSource_Release(source);
 }
 
@@ -1092,7 +1143,11 @@ static void test_ThreadMgrUnadviseSinks(void)
 
     tmSinkRefCount = 1;
     hr = ITfSource_UnadviseSink(source, tmSinkCookie);
-    ok(SUCCEEDED(hr),"Failed to unadvise Sink\n");
+    ok(hr == S_OK, "Failed to unadvise Sink\n");
+
+    hr = ITfSource_UnadviseSink(source, key_trace_sink_cookie);
+    ok(hr == S_OK, "Failed to unadvise Sink\n");
+
     ITfSource_Release(source);
 }
 

@@ -654,6 +654,7 @@ static void test_TxGetText(void)
 
     hres = ITextServices_TxGetText(txtserv, &rettext);
     ok(hres == S_OK, "ITextServices_TxGetText failed (result = %x)\n", hres);
+    SysFreeString(rettext);
 
     ITextServices_Release(txtserv);
     ITextHost_Release(host);

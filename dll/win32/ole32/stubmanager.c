@@ -73,7 +73,8 @@ struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *s
     struct ifstub *stub;
     HRESULT hr;
 
-    TRACE("oid=%s, stubbuffer=%p, iid=%s\n", wine_dbgstr_longlong(m->oid), sb, debugstr_guid(iid));
+    TRACE("oid=%s, stubbuffer=%p, iid=%s, dest_context=%x\n", wine_dbgstr_longlong(m->oid), sb,
+          debugstr_guid(iid), dest_context);
 
     stub = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ifstub));
     if (!stub) return NULL;
@@ -470,7 +471,7 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tablewea
 /* gets the stub manager associated with an ipid - caller must have
  * a reference to the apartment while a reference to the stub manager is held.
  * it must also call release on the stub manager when it is no longer needed */
-static struct stub_manager *get_stub_manager_from_ipid(APARTMENT *apt, const IPID *ipid)
+static struct stub_manager *get_stub_manager_from_ipid(APARTMENT *apt, const IPID *ipid, struct ifstub **ifstub)
 {
     struct stub_manager *result = NULL;
     struct list         *cursor;
@@ -480,7 +481,7 @@ static struct stub_manager *get_stub_manager_from_ipid(APARTMENT *apt, const IPI
     {
         struct stub_manager *m = LIST_ENTRY( cursor, struct stub_manager, entry );
 
-        if (stub_manager_ipid_to_ifstub(m, ipid))
+        if ((*ifstub = stub_manager_ipid_to_ifstub(m, ipid)))
         {
             result = m;
             stub_manager_int_addref(result);
@@ -497,7 +498,8 @@ static struct stub_manager *get_stub_manager_from_ipid(APARTMENT *apt, const IPI
     return result;
 }
 
-static HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stubmgr_ret)
+static HRESULT ipid_to_ifstub(const IPID *ipid, APARTMENT **stub_apt,
+                              struct stub_manager **stubmgr_ret, struct ifstub **ifstub)
 {
     /* FIXME: hack for IRemUnknown */
     if (ipid->Data2 == 0xffff)
@@ -509,7 +511,7 @@ static HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, stru
         TRACE("Couldn't find apartment corresponding to TID 0x%04x\n", ipid->Data2);
         return RPC_E_INVALID_OBJECT;
     }
-    *stubmgr_ret = get_stub_manager_from_ipid(*stub_apt, ipid);
+    *stubmgr_ret = get_stub_manager_from_ipid(*stub_apt, ipid, ifstub);
     if (!*stubmgr_ret)
     {
         apartment_release(*stub_apt);
@@ -517,6 +519,12 @@ static HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, stru
         return RPC_E_INVALID_OBJECT;
     }
     return S_OK;
+}
+
+static HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stub)
+{
+    struct ifstub *ifstub;
+    return ipid_to_ifstub(ipid, stub_apt, stub, &ifstub);
 }
 
 /* gets the apartment, stub and channel of an object. the caller must
@@ -532,32 +540,22 @@ HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt,
     APARTMENT *apt;
     HRESULT hr;
 
-    hr = ipid_to_stub_manager(ipid, &apt, &stubmgr);
+    hr = ipid_to_ifstub(ipid, &apt, &stubmgr, &ifstub);
     if (hr != S_OK) return RPC_E_DISCONNECTED;
 
-    ifstub = stub_manager_ipid_to_ifstub(stubmgr, ipid);
-    if (ifstub)
-    {
-        *stub = ifstub->stubbuffer;
-        IRpcStubBuffer_AddRef(*stub);
-        *chan = ifstub->chan;
-        IRpcChannelBuffer_AddRef(*chan);
-        *stub_apt = apt;
-        *iid = ifstub->iid;
-        *iface = ifstub->iface;
+    *stub = ifstub->stubbuffer;
+    IRpcStubBuffer_AddRef(*stub);
+    *chan = ifstub->chan;
+    IRpcChannelBuffer_AddRef(*chan);
+    *stub_apt = apt;
+    *iid = ifstub->iid;
+    *iface = ifstub->iface;
 
-        if (manager)
-            *manager = stubmgr;
-        else
-            stub_manager_int_release(stubmgr);
-        return S_OK;
-    }
+    if (manager)
+        *manager = stubmgr;
     else
-    {
         stub_manager_int_release(stubmgr);
-        apartment_release(apt);
-        return RPC_E_DISCONNECTED;
-    }
+    return S_OK;
 }
 
 /* returns TRUE if it is possible to unmarshal, FALSE otherwise. */
@@ -707,18 +705,23 @@ static HRESULT WINAPI RemUnknown_RemQueryInterface(IRemUnknown *iface,
     USHORT successful_qis = 0;
     APARTMENT *apt;
     struct stub_manager *stubmgr;
+    struct ifstub *ifstub;
+    DWORD dest_context;
+    void *dest_context_data;
 
     TRACE("(%p)->(%s, %d, %d, %p, %p)\n", iface, debugstr_guid(ripid), cRefs, cIids, iids, ppQIResults);
 
-    hr = ipid_to_stub_manager(ripid, &apt, &stubmgr);
+    hr = ipid_to_ifstub(ripid, &apt, &stubmgr, &ifstub);
     if (hr != S_OK) return hr;
+
+    IRpcChannelBuffer_GetDestCtx(ifstub->chan, &dest_context, &dest_context_data);
 
     *ppQIResults = CoTaskMemAlloc(sizeof(REMQIRESULT) * cIids);
 
     for (i = 0; i < cIids; i++)
     {
         HRESULT hrobj = marshal_object(apt, &(*ppQIResults)[i].std, &iids[i],
-                                       stubmgr->object, MSHCTX_DIFFERENTMACHINE, NULL, MSHLFLAGS_NORMAL);
+                                       stubmgr->object, dest_context, dest_context_data, MSHLFLAGS_NORMAL);
         if (hrobj == S_OK)
             successful_qis++;
         (*ppQIResults)[i].hResult = hrobj;
@@ -812,11 +815,10 @@ static const IRemUnknownVtbl RemUnknown_Vtbl =
 };
 
 /* starts the IRemUnknown listener for the current apartment */
-HRESULT start_apartment_remote_unknown(void)
+HRESULT start_apartment_remote_unknown(APARTMENT *apt)
 {
     IRemUnknown *pRemUnknown;
     HRESULT hr = S_OK;
-    APARTMENT *apt = COM_CurrentApt();
 
     EnterCriticalSection(&apt->cs);
     if (!apt->remunk_exported)

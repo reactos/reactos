@@ -707,7 +707,7 @@ DWORD WINAPI GetFileVersionInfoSizeExW( DWORD flags, LPCWSTR filename, LPDWORD h
     default:
         if (lzfd == HFILE_ERROR)
             SetLastError(ofs.nErrCode);
-        else if (GetVersion() & 0x80000000)
+        else if (GetVersion() & 0x80000000) /* Windows 95/98 */
             SetLastError(ERROR_FILE_NOT_FOUND);
         else
             SetLastError(ERROR_RESOURCE_DATA_NOT_FOUND);

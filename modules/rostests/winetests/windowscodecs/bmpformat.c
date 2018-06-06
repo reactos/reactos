@@ -1058,80 +1058,6 @@ static void test_createfromstream(void)
     IWICImagingFactory_Release(factory);
 }
 
-/* 1x1 pixel gif, missing trailer */
-static unsigned char gifimage_notrailer[] = {
-0x47,0x49,0x46,0x38,0x37,0x61,0x01,0x00,0x01,0x00,0x80,0x00,0x71,0xff,0xff,0xff,
-0xff,0xff,0xff,0x2c,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x00,0x02,0x02,0x44,
-0x01,0x00
-};
-
-static void test_gif_notrailer(void)
-{
-    IWICBitmapDecoder *decoder;
-    IWICImagingFactory *factory;
-    HRESULT hr;
-    IWICStream *gifstream;
-    IWICBitmapFrameDecode *framedecode;
-    double dpiX = 0.0, dpiY = 0.0;
-    UINT framecount;
-
-    hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IWICImagingFactory, (void**)&factory);
-    ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
-    if (FAILED(hr)) return;
-
-    hr = IWICImagingFactory_CreateStream(factory, &gifstream);
-    ok(hr == S_OK, "CreateStream failed, hr=%x\n", hr);
-    if (SUCCEEDED(hr))
-    {
-        hr = IWICStream_InitializeFromMemory(gifstream, gifimage_notrailer,
-            sizeof(gifimage_notrailer));
-        ok(hr == S_OK, "InitializeFromMemory failed, hr=%x\n", hr);
-
-        if (SUCCEEDED(hr))
-        {
-            hr = CoCreateInstance(&CLSID_WICGifDecoder, NULL, CLSCTX_INPROC_SERVER,
-                &IID_IWICBitmapDecoder, (void**)&decoder);
-            ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
-        }
-
-        if (SUCCEEDED(hr))
-        {
-            hr = IWICBitmapDecoder_Initialize(decoder, (IStream*)gifstream,
-                WICDecodeMetadataCacheOnDemand);
-            ok(hr == S_OK, "Initialize failed, hr=%x\n", hr);
-
-            if (SUCCEEDED(hr))
-            {
-                hr = IWICBitmapDecoder_GetFrame(decoder, 0, &framedecode);
-                ok(hr == S_OK, "GetFrame failed, hr=%x\n", hr);
-                if (SUCCEEDED(hr))
-                {
-                    hr = IWICBitmapFrameDecode_GetResolution(framedecode, &dpiX, &dpiY);
-                    ok(SUCCEEDED(hr), "GetResolution failed, hr=%x\n", hr);
-                    ok(dpiX == 48.0, "expected dpiX=48.0, got %f\n", dpiX);
-                    ok(dpiY == 96.0, "expected dpiY=96.0, got %f\n", dpiY);
-
-                    IWICBitmapFrameDecode_Release(framedecode);
-                }
-            }
-
-            if (SUCCEEDED(hr))
-            {
-                hr = IWICBitmapDecoder_GetFrameCount(decoder, &framecount);
-                ok(hr == S_OK, "GetFrameCount failed, hr=%x\n", hr);
-                ok(framecount == 1, "framecount=%u\n", framecount);
-            }
-
-            IWICBitmapDecoder_Release(decoder);
-        }
-
-        IWICStream_Release(gifstream);
-    }
-
-    IWICImagingFactory_Release(factory);
-}
-
 static void test_create_decoder(void)
 {
     IWICBitmapDecoder *decoder;
@@ -1170,7 +1096,6 @@ START_TEST(bmpformat)
     test_decode_rle4();
     test_componentinfo();
     test_createfromstream();
-    test_gif_notrailer();
     test_create_decoder();
 
     CoUninitialize();

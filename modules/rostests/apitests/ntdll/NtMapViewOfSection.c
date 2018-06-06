@@ -1173,10 +1173,12 @@ static struct _MY_IMAGE_FILE
     IMAGE_SECTION_HEADER text_header;
     IMAGE_SECTION_HEADER rossym_header;
     IMAGE_SECTION_HEADER rsrc_header;
-    BYTE pad[16];
+    IMAGE_SECTION_HEADER clc_header;
+    BYTE pad[488];
     BYTE text_data[0x400];
     BYTE rossym_data[0x400];
     BYTE rsrc_data[0x400];
+    BYTE clc_data[0x1000];
 } ImageFile =
 {
     /* IMAGE_DOS_HEADER */
@@ -1197,7 +1199,7 @@ static struct _MY_IMAGE_FILE
         /* IMAGE_FILE_HEADER */
         {
             IMAGE_FILE_MACHINE_I386, /* Machine */
-            3, /* NumberOfSections */
+            4, /* NumberOfSections */
             0x47EFDF09, /* TimeDateStamp */
             0, /* PointerToSymbolTable */
             0, /* NumberOfSymbols */
@@ -1227,8 +1229,8 @@ static struct _MY_IMAGE_FILE
             4, /* MajorSubsystemVersion */
             0, /* MinorSubsystemVersion */
             0, /* Win32VersionValue */
-            0x8000, /* SizeOfImage */
-            0x200, /* SizeOfHeaders */
+            0xa000, /* SizeOfImage */
+            0x400, /* SizeOfHeaders */
             0x0, /* CheckSum */
             IMAGE_SUBSYSTEM_WINDOWS_CUI, /* Subsystem */
             IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE |
@@ -1267,13 +1269,13 @@ static struct _MY_IMAGE_FILE
         { 0x394 }, /* Misc.VirtualSize */
         0x2000, /* VirtualAddress */
         0x400, /* SizeOfRawData */
-        0x200, /* PointerToRawData */
+        0x400, /* PointerToRawData */
         0, /* PointerToRelocations */
         0, /* PointerToLinenumbers */
         0, /* NumberOfRelocations */
         0, /* NumberOfLinenumbers */
         IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE |
-        IMAGE_SCN_CNT_CODE, /* Characteristics */
+            IMAGE_SCN_CNT_CODE, /* Characteristics */
     },
     /* IMAGE_SECTION_HEADER */
     {
@@ -1281,11 +1283,12 @@ static struct _MY_IMAGE_FILE
         { 0x100 }, /* Misc.VirtualSize */
         0x4000, /* VirtualAddress */
         0x400, /* SizeOfRawData */
-        0x600, /* PointerToRawData */
+        0x800, /* PointerToRawData */
         0, /* PointerToRelocations */
         0, /* PointerToLinenumbers */
         0, /* NumberOfRelocations */
         0, /* NumberOfLinenumbers */
+        /* CORE-8384 */
         IMAGE_SCN_MEM_READ | IMAGE_SCN_TYPE_NOLOAD, /* Characteristics */
     },
     /* IMAGE_SECTION_HEADER */
@@ -1294,37 +1297,75 @@ static struct _MY_IMAGE_FILE
         { 0x100 }, /* Misc.VirtualSize */
         0x6000, /* VirtualAddress */
         0x400, /* SizeOfRawData */
-        0xA00, /* PointerToRawData */
+        0xC00, /* PointerToRawData */
         0, /* PointerToRelocations */
         0, /* PointerToLinenumbers */
         0, /* NumberOfRelocations */
         0, /* NumberOfLinenumbers */
-        IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ, /* Characteristics */
+        IMAGE_SCN_MEM_READ |
+            IMAGE_SCN_CNT_INITIALIZED_DATA, /* Characteristics */
+    },
+    /* IMAGE_SECTION_HEADER */
+    {
+        ".clc", /* Name */
+        { 0x2000 }, /* Misc.VirtualSize */
+        0x8000, /* VirtualAddress */
+        0x1000, /* SizeOfRawData */
+        0x1000, /* PointerToRawData */
+        0, /* PointerToRelocations */
+        0, /* PointerToLinenumbers */
+        0, /* NumberOfRelocations */
+        0, /* NumberOfLinenumbers */
+        /* CORE-12582 */
+        IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE |
+            IMAGE_SCN_CNT_UNINITIALIZED_DATA | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_CNT_CODE, /* Characteristics */
     },
     /* fill */
     { 0 },
     /* text */
     { 0xc3, 0 },
     /* rossym */
-    { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
-      BYTES8(0xaa),
-      BYTES16(0xbb),
-      BYTES32(0xcc),
-      BYTES64(0xdd),
-      BYTES64(0xee),
-      BYTES64(0xff),
+    {
+        0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+        BYTES8(0xaa),
+        BYTES16(0xbb),
+        BYTES32(0xcc),
+        BYTES64(0xdd),
+        BYTES64(0xee),
+        BYTES64(0xff),
     },
     /* rsrc */
-    { 0 },
+    {
+        BYTES128(0xee),
+        BYTES128(0x55),
+        BYTES128(0xee),
+        BYTES128(0x11),
+        BYTES128(0xff),
+        BYTES128(0x00),
+        BYTES128(0x00),
+        BYTES128(0xdd),
+    },
+    /* clc */
+    {
+        BYTES512(0x11),
+        BYTES512(0x22),
+        BYTES512(0x33),
+        BYTES512(0x44),
+        BYTES512(0x55),
+        BYTES512(0x66),
+        BYTES512(0x77),
+        BYTES512(0x88),
+    },
 };
 
-C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, text_data) == 0x200);
-C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, rossym_data) == 0x600);
-C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, rsrc_data) == 0xa00);
+C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, text_data) == 0x400);
+C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, rossym_data) == 0x800);
+C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, rsrc_data) == 0xc00);
+C_ASSERT(FIELD_OFFSET(struct _MY_IMAGE_FILE, clc_data) == 0x1000);
 
 static
 void
-Test_NoLoadSection(BOOL Relocate)
+Test_SectionContents(BOOL Relocate)
 {
     NTSTATUS Status;
     WCHAR TempPath[MAX_PATH];
@@ -1405,8 +1446,12 @@ Test_NoLoadSection(BOOL Relocate)
         {
             PUCHAR Bytes = BaseAddress;
 #define TEST_BYTE(n, v) StartSeh() ok_hex(Bytes[n], v); EndSeh(STATUS_SUCCESS);
+#define TEST_WRITE(n) StartSeh() *(volatile UCHAR *)&Bytes[n] = Bytes[n]; EndSeh(STATUS_SUCCESS);
+#define TEST_NOWRITE(n) StartSeh() *(volatile UCHAR *)&Bytes[n] = Bytes[n]; EndSeh(STATUS_ACCESS_VIOLATION);
+            TEST_NOWRITE(0x2000);
             TEST_BYTE(0x2000, 0xc3);
             TEST_BYTE(0x2001, 0x00);
+            TEST_NOWRITE(0x4000);
             TEST_BYTE(0x4000, 0x01);
             TEST_BYTE(0x4001, 0x23);
             TEST_BYTE(0x4007, 0xef);
@@ -1419,6 +1464,15 @@ Test_NoLoadSection(BOOL Relocate)
             TEST_BYTE(0x40ff, 0xff);
             TEST_BYTE(0x4100, 0x00);
             TEST_BYTE(0x41ff, 0x00);
+            TEST_NOWRITE(0x6000);
+            TEST_BYTE(0x6000, 0xee);
+            TEST_BYTE(0x60ff, 0x55);
+            TEST_BYTE(0x6100, 0xee);
+            TEST_BYTE(0x63ff, 0xdd);
+            TEST_BYTE(0x6400, 0x00);
+            TEST_WRITE(0x8000);
+            TEST_BYTE(0x8000, 0x11);
+            TEST_BYTE(0x8400, 0x33);
             Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
             ok_ntstatus(Status, STATUS_SUCCESS);
         }
@@ -1577,8 +1631,8 @@ START_TEST(NtMapViewOfSection)
     Test_PageFileSection();
     Test_ImageSection();
     Test_BasedSection();
-    Test_NoLoadSection(FALSE);
-    Test_NoLoadSection(TRUE);
+    Test_SectionContents(FALSE);
+    Test_SectionContents(TRUE);
     Test_EmptyFile();
     Test_Truncate();
 }

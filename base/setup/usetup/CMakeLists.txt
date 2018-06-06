@@ -24,10 +24,8 @@ list(APPEND SOURCE
     fslist.c
     genlist.c
     inffile.c
-    inicache.c
     keytrans.c
     mui.c
-    osdetect.c
     partlist.c
     progress.c
     registry.c

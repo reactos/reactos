@@ -66,7 +66,7 @@ static inline void URLMON_UnlockModule(void) { InterlockedDecrement( &URLMON_ref
 extern HINSTANCE urlmon_instance;
 
 IInternetProtocolInfo *get_protocol_info(LPCWSTR) DECLSPEC_HIDDEN;
-HRESULT get_protocol_handler(IUri*,CLSID*,BOOL*,IClassFactory**) DECLSPEC_HIDDEN;
+HRESULT get_protocol_handler(IUri*,CLSID*,IClassFactory**) DECLSPEC_HIDDEN;
 IInternetProtocol *get_mime_filter(LPCWSTR) DECLSPEC_HIDDEN;
 BOOL is_registered_protocol(LPCWSTR) DECLSPEC_HIDDEN;
 HRESULT register_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL) DECLSPEC_HIDDEN;
@@ -172,13 +172,11 @@ typedef struct {
     IInternetPriority     IInternetPriority_iface;
     IServiceProvider      IServiceProvider_iface;
     IInternetProtocolSink IInternetProtocolSink_iface;
-    IWinInetHttpInfo      IWinInetHttpInfo_iface;
 
     LONG ref;
 
+    IUnknown *protocol_unk;
     IInternetProtocol *protocol;
-    IWinInetInfo *wininet_info;
-    IWinInetHttpInfo *wininet_http_info;
 
     IInternetBindInfo *bind_info;
     IInternetProtocolSink *protocol_sink;
@@ -196,7 +194,6 @@ typedef struct {
 
     BOOL reported_result;
     BOOL reported_mime;
-    BOOL from_urlmon;
     DWORD pi;
 
     DWORD bscf;
@@ -217,7 +214,7 @@ typedef struct {
     BSTR display_uri;
 }  BindProtocol;
 
-HRESULT create_binding_protocol(BOOL,BindProtocol**) DECLSPEC_HIDDEN;
+HRESULT create_binding_protocol(BindProtocol**) DECLSPEC_HIDDEN;
 void set_binding_sink(BindProtocol*,IInternetProtocolSink*,IInternetBindInfo*) DECLSPEC_HIDDEN;
 
 typedef struct {

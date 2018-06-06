@@ -972,6 +972,64 @@ static void test_clipper(void)
     IWICBitmapClipper_Release(clipper);
 }
 
+static HRESULT (WINAPI *pWICCreateBitmapFromSectionEx)
+    (UINT, UINT, REFWICPixelFormatGUID, HANDLE, UINT, UINT, WICSectionAccessLevel, IWICBitmap **);
+
+static void test_WICCreateBitmapFromSectionEx(void)
+{
+    SYSTEM_INFO sysinfo;
+    HANDLE hsection;
+    BITMAPINFO info;
+    void *bits;
+    HBITMAP hdib;
+    IWICBitmap *bitmap;
+    HRESULT hr;
+    pWICCreateBitmapFromSectionEx =
+        (void *)GetProcAddress(LoadLibraryA("windowscodecs"), "WICCreateBitmapFromSectionEx");
+
+    if (!pWICCreateBitmapFromSectionEx)
+    {
+        win_skip("WICCreateBitmapFromSectionEx not available\n");
+        return;
+    }
+
+    GetSystemInfo(&sysinfo);
+    hsection = CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0,
+                                  sysinfo.dwAllocationGranularity * 2, NULL);
+    ok(hsection != NULL, "CreateFileMapping failed %u\n", GetLastError());
+
+    memset(&info, 0, sizeof(info));
+    info.bmiHeader.biSize        = sizeof(info.bmiHeader);
+    info.bmiHeader.biWidth       = 3;
+    info.bmiHeader.biHeight      = -3;
+    info.bmiHeader.biBitCount    = 24;
+    info.bmiHeader.biPlanes      = 1;
+    info.bmiHeader.biCompression = BI_RGB;
+
+    hdib = CreateDIBSection(0, &info, DIB_RGB_COLORS, &bits, hsection, 0);
+    ok(hdib != NULL, "CreateDIBSection failed\n");
+
+    hr = pWICCreateBitmapFromSectionEx(3, 3, &GUID_WICPixelFormat24bppBGR, hsection, 0, 0,
+                                       WICSectionAccessLevelReadWrite, &bitmap);
+    ok(hr == S_OK, "WICCreateBitmapFromSectionEx returned %#x\n", hr);
+    IWICBitmap_Release(bitmap);
+
+    /* non-zero offset, smaller than allocation granularity */
+    hr = pWICCreateBitmapFromSectionEx(3, 3, &GUID_WICPixelFormat24bppBGR, hsection, 0, 0x100,
+                                       WICSectionAccessLevelReadWrite, &bitmap);
+    ok(hr == S_OK, "WICCreateBitmapFromSectionEx returned %#x\n", hr);
+    IWICBitmap_Release(bitmap);
+
+    /* offset larger than allocation granularity */
+    hr = pWICCreateBitmapFromSectionEx(3, 3, &GUID_WICPixelFormat24bppBGR, hsection, 0,
+                                       sysinfo.dwAllocationGranularity + 1,
+                                       WICSectionAccessLevelReadWrite, &bitmap);
+    ok(hr == S_OK, "WICCreateBitmapFromSectionEx returned %#x\n", hr);
+    IWICBitmap_Release(bitmap);
+    DeleteObject(hdib);
+    CloseHandle(hsection);
+}
+
 START_TEST(bitmap)
 {
     HRESULT hr;
@@ -992,4 +1050,6 @@ START_TEST(bitmap)
     IWICImagingFactory_Release(factory);
 
     CoUninitialize();
+
+    test_WICCreateBitmapFromSectionEx();
 }
