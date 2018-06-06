@@ -444,11 +444,11 @@ BEGIN
     GROUPBOX "Podgląd folderów", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Możesz użyć podglądów (takich jak Detale lub Tytuły)\nktóre są ustawione dla tego katalogu, dla pozostałych.", -1, 20, 20, 210, 20
-    PUSHBUTTON "Zastosuj do w&szystkich Katalogów", 14001, 30, 50, 120, 14, WS_TABSTOP
-    PUSHBUTTON "Z&resetuj ustawienia", 14002, 170, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "Zastosuj do w&szystkich Katalogów", IDC_VIEW_APPLY_TO_ALL, 30, 50, 120, 14, WS_TABSTOP
+    PUSHBUTTON "Z&resetuj ustawienia", IDC_VIEW_RESET_ALL, 170, 50, 80, 14, WS_TABSTOP
     LTEXT "Zaawansowane:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "Przywróć &domyślne", 14004, 160, 220, 90, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "Przywróć &domyślne", IDC_VIEW_RESTORE_DEFAULTS, 160, 220, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
