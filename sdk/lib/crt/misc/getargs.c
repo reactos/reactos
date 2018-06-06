@@ -208,7 +208,7 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
    len = strlen(_acmdln);
    buffer = malloc(sizeof(char) * len);
 
-   // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461(v=vs.71).aspx
+   // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461.aspx
    while (TRUE)
    {
       // Arguments are delimited by white space, which is either a space or a tab.
@@ -294,7 +294,6 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
 
    /* Free the temporary buffer. */
    free(buffer);
-   HeapValidate(GetProcessHeap(), 0, NULL);
 
    *argc = __argc;
    if (__argv == NULL)
@@ -304,7 +303,21 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
    }
    *argv = __argv;
    *env  = _environ;
-   _pgmptr = _strdup(__argv[0]);
+
+   _pgmptr = malloc(MAX_PATH * sizeof(char));
+   if (_pgmptr)
+   {
+      if (!GetModuleFileNameA(NULL, _pgmptr, MAX_PATH))
+        _pgmptr[0] = '\0';
+      else
+        _pgmptr[MAX_PATH - 1] = '\0';
+   }
+   else
+   {
+      _pgmptr = _strdup(__argv[0]);
+   }
+
+   HeapValidate(GetProcessHeap(), 0, NULL);
 
    // if (new_mode) _set_new_mode(*new_mode);
 }
@@ -342,7 +355,7 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
    len = wcslen(_wcmdln);
    buffer = malloc(sizeof(wchar_t) * len);
 
-   // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461(v=vs.71).aspx
+   // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461.aspx
    while (TRUE)
    {
       // Arguments are delimited by white space, which is either a space or a tab.
@@ -429,8 +442,6 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
    /* Free the temporary buffer. */
    free(buffer);
 
-   HeapValidate(GetProcessHeap(), 0, NULL);
-
    *argc = __argc;
    if (__wargv == NULL)
    {
@@ -439,7 +450,21 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
    }
    *wargv = __wargv;
    *wenv = __winitenv;
-   _wpgmptr = _wcsdup(__wargv[0]);
+
+   _wpgmptr = malloc(MAX_PATH * sizeof(wchar_t));
+   if (_wpgmptr)
+   {
+      if (!GetModuleFileNameW(NULL, _wpgmptr, MAX_PATH))
+        _wpgmptr[0] = '\0';
+      else
+        _wpgmptr[MAX_PATH - 1] = '\0';
+   }
+   else
+   {
+      _wpgmptr = _wcsdup(__wargv[0]);
+   }
+
+   HeapValidate(GetProcessHeap(), 0, NULL);
 
    // if (new_mode) _set_new_mode(*new_mode);
 }

@@ -62,9 +62,3 @@ add_custom_command(TARGET browseui POST_BUILD
      "$<TARGET_FILE:browseui>"
      "$<TARGET_FILE_DIR:filebrowser>/$<TARGET_FILE_NAME:browseui>" 
   COMMENT "Copying to output directory")
-
-add_custom_command(TARGET browseui POST_BUILD 
-  COMMAND "${CMAKE_COMMAND}" -E copy 
-     "$<TARGET_FILE:browseui>"
-     "$<TARGET_FILE_DIR:filebrowser>/$<TARGET_FILE_NAME:browseui>" 
-  COMMENT "Copying to output directory")

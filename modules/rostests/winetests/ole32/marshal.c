@@ -560,12 +560,12 @@ static IPSFactoryBuffer PSFactoryBuffer = { &PSFactoryBufferVtbl };
 struct host_object_data
 {
     IStream *stream;
-    IID iid;
+    const IID *iid;
     IUnknown *object;
     MSHLFLAGS marshal_flags;
     IMessageFilter *filter;
     IUnknown *register_object;
-    CLSID register_clsid;
+    const CLSID *register_clsid;
     HANDLE marshal_event;
 };
 
@@ -583,7 +583,7 @@ static DWORD CALLBACK host_object_proc(LPVOID p)
     pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     if(data->register_object) {
-        hr = CoRegisterClassObject(&data->register_clsid, data->register_object,
+        hr = CoRegisterClassObject(data->register_clsid, data->register_object,
             CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &registration_key);
         ok(hr == S_OK, "CoRegisterClassObject failed: %08x\n", hr);
     }
@@ -596,7 +596,7 @@ static DWORD CALLBACK host_object_proc(LPVOID p)
         ok_ole_success(hr, CoRegisterMessageFilter);
     }
 
-    hr = CoMarshalInterface(data->stream, &data->iid, data->object, MSHCTX_INPROC, NULL, data->marshal_flags);
+    hr = CoMarshalInterface(data->stream, data->iid, data->object, MSHCTX_INPROC, NULL, data->marshal_flags);
     ok_ole_success(hr, CoMarshalInterface);
 
     /* force the message queue to be created before signaling parent thread */
@@ -641,7 +641,7 @@ static DWORD start_host_object2(struct host_object_data *object_data, HANDLE *th
 
 static DWORD start_host_object(IStream *stream, REFIID riid, IUnknown *object, MSHLFLAGS marshal_flags, HANDLE *thread)
 {
-    struct host_object_data object_data = { stream, *riid, object, marshal_flags };
+    struct host_object_data object_data = { stream, riid, object, marshal_flags };
     return start_host_object2(&object_data, thread);
 }
 
@@ -1256,9 +1256,9 @@ static void test_marshal_channel_buffer(void)
     HANDLE thread;
     HRESULT hr;
 
-    struct host_object_data object_data = { NULL, IID_IOleClientSite, (IUnknown*)&Test_OleClientSite,
+    struct host_object_data object_data = { NULL, &IID_IOleClientSite, (IUnknown*)&Test_OleClientSite,
                                             MSHLFLAGS_NORMAL, NULL, (IUnknown*)&PSFactoryBuffer,
-                                            CLSID_WineTestPSFactoryBuffer };
+                                            &CLSID_WineTestPSFactoryBuffer };
 
     cLocks = 0;
     external_connections = 0;
@@ -2323,7 +2323,7 @@ static void test_message_filter(void)
     IMessageFilter *prev_filter = NULL;
     HANDLE thread;
 
-    struct host_object_data object_data = { NULL, IID_IClassFactory, (IUnknown*)&Test_ClassFactory,
+    struct host_object_data object_data = { NULL, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory,
                                             MSHLFLAGS_NORMAL, &MessageFilter };
 
     cLocks = 0;
@@ -4215,7 +4215,7 @@ static void test_channel_hook(void)
     HANDLE thread;
     HRESULT hr;
 
-    struct host_object_data object_data = { NULL, IID_IClassFactory, (IUnknown*)&Test_ClassFactory,
+    struct host_object_data object_data = { NULL, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory,
                                             MSHLFLAGS_NORMAL, &MessageFilter };
 
     hr = CoRegisterChannelHook(&EXTENTID_WineTest, &TestChannelHook);
