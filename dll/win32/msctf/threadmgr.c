@@ -621,6 +621,13 @@ static HRESULT WINAPI ThreadMgrSource_AdviseSink(ITfSource *iface,
         return advise_sink(&This->ThreadFocusSink, &IID_ITfThreadFocusSink, COOKIE_MAGIC_THREADFOCUSSINK, punk, pdwCookie);
     }
 
+    if (IsEqualIID(riid, &IID_ITfKeyTraceEventSink))
+    {
+        WARN("semi-stub for ITfKeyTraceEventSink: sink won't be used.\n");
+        return advise_sink(&This->KeyTraceEventSink, &IID_ITfKeyTraceEventSink,
+                           COOKIE_MAGIC_KEYTRACESINK, punk, pdwCookie);
+    }
+
     FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
     return E_NOTIMPL;
 }
@@ -628,10 +635,13 @@ static HRESULT WINAPI ThreadMgrSource_AdviseSink(ITfSource *iface,
 static HRESULT WINAPI ThreadMgrSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
     ThreadMgr *This = impl_from_ITfSource(iface);
+    DWORD magic;
 
     TRACE("(%p) %x\n",This,pdwCookie);
 
-    if (get_Cookie_magic(pdwCookie) != COOKIE_MAGIC_TMSINK && get_Cookie_magic(pdwCookie) != COOKIE_MAGIC_THREADFOCUSSINK)
+    magic = get_Cookie_magic(pdwCookie);
+    if (magic != COOKIE_MAGIC_TMSINK && magic != COOKIE_MAGIC_THREADFOCUSSINK
+        && magic != COOKIE_MAGIC_KEYTRACESINK)
         return E_INVALIDARG;
 
     return unadvise_sink(pdwCookie);

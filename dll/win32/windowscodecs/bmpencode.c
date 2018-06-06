@@ -261,8 +261,10 @@ static HRESULT WINAPI BmpFrameEncode_WritePixels(IWICBitmapFrameEncode *iface,
     UINT lineCount, UINT cbStride, UINT cbBufferSize, BYTE *pbPixels)
 {
     BmpFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    UINT dstbuffersize, bytesperrow, row;
+    BYTE *dst, *src;
     HRESULT hr;
-    WICRect rc;
+
     TRACE("(%p,%u,%u,%u,%p)\n", iface, lineCount, cbStride, cbBufferSize, pbPixels);
 
     if (!This->initialized || !This->width || !This->height || !This->format)
@@ -271,19 +273,27 @@ static HRESULT WINAPI BmpFrameEncode_WritePixels(IWICBitmapFrameEncode *iface,
     hr = BmpFrameEncode_AllocateBits(This);
     if (FAILED(hr)) return hr;
 
-    rc.X = 0;
-    rc.Y = 0;
-    rc.Width = This->width;
-    rc.Height = lineCount;
+    bytesperrow = ((This->format->bpp * This->width) + 7) / 8;
 
-    hr = copy_pixels(This->format->bpp, pbPixels, This->width, lineCount, cbStride,
-        &rc, This->stride, This->stride*(This->height-This->lineswritten),
-        This->bits + This->stride*This->lineswritten);
+    if (This->stride < bytesperrow)
+        return E_INVALIDARG;
 
-    if (SUCCEEDED(hr))
-        This->lineswritten += lineCount;
+    dstbuffersize = This->stride * (This->height - This->lineswritten);
+    if ((This->stride * (lineCount - 1)) + bytesperrow > dstbuffersize)
+        return E_INVALIDARG;
 
-    return hr;
+    src = pbPixels;
+    dst = This->bits + This->stride * (This->height - This->lineswritten - 1);
+    for (row = 0; row < lineCount; row++)
+    {
+        memcpy(dst, src, bytesperrow);
+        src += cbStride;
+        dst -= This->stride;
+    }
+
+    This->lineswritten += lineCount;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI BmpFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
@@ -314,11 +324,10 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
     BmpFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     BITMAPFILEHEADER bfh;
     BITMAPV5HEADER bih;
-    UINT info_size, i;
+    UINT info_size;
     LARGE_INTEGER pos;
     ULONG byteswritten;
     HRESULT hr;
-    const BYTE *bits;
 
     TRACE("(%p)\n", iface);
 
@@ -331,7 +340,7 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
 
     bih.bV5Size = info_size = sizeof(BITMAPINFOHEADER);
     bih.bV5Width = This->width;
-    bih.bV5Height = This->height; /* bottom-top bitmap */
+    bih.bV5Height = This->height;
     bih.bV5Planes = 1;
     bih.bV5BitCount = This->format->bpp;
     bih.bV5Compression = This->format->compression;
@@ -378,15 +387,9 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
         if (byteswritten != This->colors * sizeof(WICColor)) return E_FAIL;
     }
 
-    /* write the image bits as a bottom-top array */
-    bits = This->bits + bih.bV5SizeImage;
-    for (i = 0; i < This->height; i++)
-    {
-        bits -= This->stride;
-        hr = IStream_Write(This->stream, bits, This->stride, &byteswritten);
-        if (FAILED(hr)) return hr;
-        if (byteswritten != This->stride) return E_FAIL;
-    }
+    hr = IStream_Write(This->stream, This->bits, bih.bV5SizeImage, &byteswritten);
+    if (FAILED(hr)) return hr;
+    if (byteswritten != bih.bV5SizeImage) return E_FAIL;
 
     This->committed = TRUE;
 

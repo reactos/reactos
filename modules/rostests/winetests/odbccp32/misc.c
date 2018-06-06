@@ -27,6 +27,15 @@
 static const WCHAR abcd_key[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C','\\','a','b','c','d','.','I','N','I','\\','w','i','n','e','o','d','b','c',0};
 static const WCHAR abcdini_key[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C','\\','a','b','c','d','.','I','N','I',0 };
 
+static void check_error_(int line, DWORD expect)
+{
+    RETCODE ret;
+    DWORD err;
+    ret = SQLInstallerError(1, &err, NULL, 0, NULL);
+    ok_(__FILE__, line)(ret == SQL_SUCCESS_WITH_INFO, "got %d\n", ret);
+    ok_(__FILE__, line)(err == expect, "expected %u, got %u\n", expect, ret);
+}
+#define check_error(a) check_error_(__LINE__, a)
 
 static void test_SQLConfigMode(void)
 {
@@ -605,6 +614,63 @@ static void test_SQLInstallTranslatorEx(void)
 
 }
 
+static void test_SQLGetInstalledDrivers(void)
+{
+    char buffer[1000], *p;
+    WORD written, len;
+    int found = 0;
+    BOOL ret;
+
+    SQLInstallDriverEx("Wine test\0Driver=test.dll\0\0", NULL, buffer,
+                       sizeof(buffer), &written, ODBC_INSTALL_COMPLETE, NULL);
+
+    ret = SQLGetInstalledDrivers(NULL, sizeof(buffer), &written);
+    ok(!ret, "got %d\n", ret);
+    check_error(ODBC_ERROR_INVALID_BUFF_LEN);
+
+    ret = SQLGetInstalledDrivers(buffer, 0, &written);
+    ok(!ret, "got %d\n", ret);
+    check_error(ODBC_ERROR_INVALID_BUFF_LEN);
+
+    ret = SQLGetInstalledDrivers(buffer, 10, &written);
+    ok(ret, "got %d\n", ret);
+    ok(strlen(buffer) == 8, "got len %u\n", lstrlenA(buffer));
+    ok(written == 10, "got written %d\n", written);
+    ok(!buffer[9], "buffer not doubly null-terminated\n");
+
+    ret = SQLGetInstalledDrivers(buffer, sizeof(buffer), &written);
+    ok(ret, "got %d\n", ret);
+    ok(!buffer[written-1] && !buffer[written-2], "buffer not doubly null-terminated\n");
+    len = strlen(buffer);
+
+    for (p = buffer; *p; p += strlen(p) + 1)
+    {
+        if (!strcmp(p, "Wine test"))
+            found = 1;
+    }
+    ok(found, "installed driver not found\n");
+
+    ret = SQLGetInstalledDrivers(buffer, len, &written);
+    ok(ret, "got %d\n", ret);
+    ok(strlen(buffer) == len-2, "expected len %d, got %u\n", len-2, lstrlenA(buffer));
+    ok(written == len, "expected written %d, got %d\n", len, written);
+    ok(!buffer[len-1], "buffer not doubly null-terminated\n");
+
+    ret = SQLGetInstalledDrivers(buffer, len+1, &written);
+    ok(ret, "got %d\n", ret);
+    ok(strlen(buffer) == len-1, "expected len %d, got %u\n", len-1, lstrlenA(buffer));
+    ok(written == len+1, "expected written %d, got %d\n", len+1, written);
+    ok(!buffer[len], "buffer not doubly null-terminated\n");
+
+    ret = SQLGetInstalledDrivers(buffer, len+2, &written);
+    ok(ret, "got %d\n", ret);
+    ok(strlen(buffer) == len, "expected len %d, got %u\n", len, lstrlenA(buffer));
+    ok(written == len+2, "expected written %d, got %d\n", len+2, written);
+    ok(!buffer[len+1], "buffer not doubly null-terminated\n");
+
+    SQLRemoveDriver("Wine test", TRUE, NULL);
+}
+
 START_TEST(misc)
 {
     test_SQLConfigMode();
@@ -615,4 +681,5 @@ START_TEST(misc)
     test_SQLGetPrivateProfileStringW();
     test_SQLInstallDriverEx();
     test_SQLInstallTranslatorEx();
+    test_SQLGetInstalledDrivers();
 }

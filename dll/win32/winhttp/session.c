@@ -225,7 +225,7 @@ static BOOL session_set_option( object_header_t *hdr, DWORD option, LPVOID buffe
         return TRUE;
     default:
         FIXME("unimplemented option %u\n", option);
-        set_last_error( ERROR_INVALID_PARAMETER );
+        set_last_error( ERROR_WINHTTP_INVALID_OPTION );
         return FALSE;
     }
 }
@@ -1028,8 +1028,8 @@ static BOOL request_set_option( object_header_t *hdr, DWORD option, LPVOID buffe
         return TRUE;
     default:
         FIXME("unimplemented option %u\n", option);
-        set_last_error( ERROR_INVALID_PARAMETER );
-        return TRUE;
+        set_last_error( ERROR_WINHTTP_INVALID_OPTION );
+        return FALSE;
     }
 }
 
@@ -1583,29 +1583,21 @@ BOOL WINAPI WinHttpGetDefaultProxyConfiguration( WINHTTP_PROXY_INFO *info )
     }
     if (!got_from_reg && (envproxy = getenv( "http_proxy" )))
     {
-        char *colon, *http_proxy;
+        char *colon, *http_proxy = NULL;
 
-        if ((colon = strchr( envproxy, ':' )))
+        if (!(colon = strchr( envproxy, ':' ))) http_proxy = envproxy;
+        else
         {
             if (*(colon + 1) == '/' && *(colon + 2) == '/')
             {
-                static const char http[] = "http://";
-
                 /* It's a scheme, check that it's http */
-                if (!strncmp( envproxy, http, strlen( http ) ))
-                    http_proxy = envproxy + strlen( http );
-                else
-                {
-                    WARN("unsupported scheme in $http_proxy: %s\n", envproxy);
-                    http_proxy = NULL;
-                }
+                if (!strncmp( envproxy, "http://", 7 )) http_proxy = envproxy + 7;
+                else WARN("unsupported scheme in $http_proxy: %s\n", envproxy);
             }
-            else
-                http_proxy = envproxy;
+            else http_proxy = envproxy;
         }
-        else
-            http_proxy = envproxy;
-        if (http_proxy)
+
+        if (http_proxy && http_proxy[0])
         {
             WCHAR *http_proxyW;
             int len;
@@ -1618,8 +1610,7 @@ BOOL WINAPI WinHttpGetDefaultProxyConfiguration( WINHTTP_PROXY_INFO *info )
                 info->dwAccessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
                 info->lpszProxy = http_proxyW;
                 info->lpszProxyBypass = NULL;
-                TRACE("http proxy (from environment) = %s\n",
-                    debugstr_w(info->lpszProxy));
+                TRACE("http proxy (from environment) = %s\n", debugstr_w(info->lpszProxy));
             }
         }
     }

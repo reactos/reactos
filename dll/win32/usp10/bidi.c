@@ -998,7 +998,7 @@ static void computeIsolatingRunsSet(unsigned baselevel, WORD *pcls, const WORD *
     Run *runs;
     IsolatedRun *current_isolated;
 
-    if (!(runs = heap_alloc(uCount * sizeof(*runs))))
+    if (!(runs = heap_calloc(uCount, sizeof(*runs))))
         return;
 
     list_init(set);

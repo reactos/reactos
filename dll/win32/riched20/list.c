@@ -97,7 +97,7 @@ BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para)
   {
     if (p->type == diParagraph) {
       if (!all_para) return FALSE;
-      if (p->member.para.prev_para->type == diParagraph)
+      if (para && p->member.para.prev_para->type == diParagraph)
         *para = p->member.para.prev_para;
     } else if (p->type == diRun) {
       *run = p;
@@ -169,7 +169,11 @@ void ME_DestroyDisplayItem(ME_DisplayItem *item)
 
   if (item->type==diRun)
   {
-    if (item->member.run.ole_obj) ME_DeleteReObject(item->member.run.ole_obj);
+    if (item->member.run.reobj)
+    {
+      list_remove(&item->member.run.reobj->entry);
+      ME_DeleteReObject(item->member.run.reobj);
+    }
     heap_free( item->member.run.glyphs );
     heap_free( item->member.run.clusters );
     ME_ReleaseStyle(item->member.run.style);

@@ -787,7 +787,7 @@ CRYPT_PROVIDER_CERT * WINAPI WTHelperGetProvCertFromChain(
 
     TRACE("(%p %d)\n", pSgnr, idxCert);
 
-    if (idxCert >= pSgnr->csCertChain || !pSgnr->pasCertChain)
+    if (!pSgnr || idxCert >= pSgnr->csCertChain || !pSgnr->pasCertChain)
         return NULL;
     cert = &pSgnr->pasCertChain[idxCert];
     TRACE("returning %p\n", cert);

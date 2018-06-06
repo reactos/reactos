@@ -142,6 +142,7 @@ struct apartment
   DWORD host_apt_tid;      /* thread ID of apartment hosting objects of differing threading model (CS cs) */
   HWND host_apt_hwnd;      /* handle to apartment window of host apartment (CS cs) */
   LocalServer *local_server; /* A marshallable object exposing local servers (CS cs) */
+  BOOL being_destroyed;    /* is currently being destroyed */
 
   /* FIXME: OIDs should be given out by RPCSS */
   OID oidc;                /* object ID counter, starts at 1, zero is invalid OID (CS cs) */
@@ -199,7 +200,7 @@ void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const
 void stub_manager_disconnect(struct stub_manager *m) DECLSPEC_HIDDEN;
 HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **manager, IRpcStubBuffer **stub,
                                  IRpcChannelBuffer **chan, IID *iid, IUnknown **iface) DECLSPEC_HIDDEN;
-HRESULT start_apartment_remote_unknown(void) DECLSPEC_HIDDEN;
+HRESULT start_apartment_remote_unknown(APARTMENT *apt) DECLSPEC_HIDDEN;
 
 HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, DWORD dest_context, void *dest_context_data, MSHLFLAGS mshlflags) DECLSPEC_HIDDEN;
 
@@ -211,7 +212,7 @@ void    RPC_StartRemoting(struct apartment *apt) DECLSPEC_HIDDEN;
 HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
                                 const OXID_INFO *oxid_info,
                                 DWORD dest_context, void *dest_context_data,
-                                IRpcChannelBuffer **chan) DECLSPEC_HIDDEN;
+                                IRpcChannelBuffer **chan, APARTMENT *apt) DECLSPEC_HIDDEN;
 HRESULT RPC_CreateServerChannel(DWORD dest_context, void *dest_context_data, IRpcChannelBuffer **chan) DECLSPEC_HIDDEN;
 void    RPC_ExecuteCall(struct dispatch_params *params) DECLSPEC_HIDDEN;
 HRESULT RPC_RegisterInterface(REFIID riid) DECLSPEC_HIDDEN;
@@ -247,6 +248,7 @@ HRESULT apartment_createwindowifneeded(struct apartment *apt) DECLSPEC_HIDDEN;
 HWND apartment_getwindow(const struct apartment *apt) DECLSPEC_HIDDEN;
 HRESULT enter_apartment(struct oletls *info, DWORD model) DECLSPEC_HIDDEN;
 void leave_apartment(struct oletls *info) DECLSPEC_HIDDEN;
+APARTMENT *apartment_get_current_or_mta(void) DECLSPEC_HIDDEN;
 
 /* DCOM messages used by the apartment window (not compatible with native) */
 #define DM_EXECUTERPC   (WM_USER + 0) /* WPARAM = 0, LPARAM = (struct dispatch_params *) */

@@ -439,11 +439,11 @@ BEGIN
     GROUPBOX "Vistas das Pastas", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Pode aplicar a vista (como detalhes ou títulos) que\nestá a usar para esta pasta para todas as pastas.", -1, 60, 20, 180, 20
-    PUSHBUTTON "Applicar a T&odas as Pastas", 14001, 60, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "&Reiniciar todas as Pastas", 14002, 150, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "Applicar a T&odas as Pastas", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Reiniciar todas as Pastas", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Definições avançadas:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "Restaurar valores por &Defeito", 14004, 177, 215, 80, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "Restaurar valores por &Defeito", IDC_VIEW_RESTORE_DEFAULTS, 177, 215, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256

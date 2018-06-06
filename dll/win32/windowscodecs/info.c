@@ -33,6 +33,8 @@
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "wine/list.h"
+#include "wine/rbtree.h"
+#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
@@ -55,6 +57,13 @@ static const WCHAR requiresfullstream_valuename[] = {'R','e','q','u','i','r','e'
 static const WCHAR supportspadding_valuename[] = {'S','u','p','p','o','r','t','s','P','a','d','d','i','n','g',0};
 static const WCHAR fileextensions_valuename[] = {'F','i','l','e','E','x','t','e','n','s','i','o','n','s',0};
 static const WCHAR containers_keyname[] = {'C','o','n','t','a','i','n','e','r','s',0};
+
+typedef struct {
+    IWICComponentInfo IWICComponentInfo_iface;
+    LONG ref;
+    CLSID clsid;
+    struct wine_rb_entry entry;
+} ComponentInfo;
 
 static HRESULT ComponentInfo_GetStringValue(HKEY classkey, LPCWSTR value,
     UINT buffer_size, WCHAR *buffer, UINT *actual_size)
@@ -204,15 +213,16 @@ static HRESULT ComponentInfo_GetGuidList(HKEY classkey, LPCWSTR subkeyname,
 }
 
 typedef struct {
-    IWICBitmapDecoderInfo IWICBitmapDecoderInfo_iface;
-    LONG ref;
+    ComponentInfo base;
     HKEY classkey;
-    CLSID clsid;
+    WICBitmapPattern *patterns;
+    UINT pattern_count;
+    UINT patterns_size;
 } BitmapDecoderInfo;
 
 static inline BitmapDecoderInfo *impl_from_IWICBitmapDecoderInfo(IWICBitmapDecoderInfo *iface)
 {
-    return CONTAINING_RECORD(iface, BitmapDecoderInfo, IWICBitmapDecoderInfo_iface);
+    return CONTAINING_RECORD(iface, BitmapDecoderInfo, base.IWICComponentInfo_iface);
 }
 
 static HRESULT WINAPI BitmapDecoderInfo_QueryInterface(IWICBitmapDecoderInfo *iface, REFIID iid,
@@ -228,7 +238,7 @@ static HRESULT WINAPI BitmapDecoderInfo_QueryInterface(IWICBitmapDecoderInfo *if
         IsEqualIID(&IID_IWICBitmapCodecInfo, iid) ||
         IsEqualIID(&IID_IWICBitmapDecoderInfo ,iid))
     {
-        *ppv = &This->IWICBitmapDecoderInfo_iface;
+        *ppv = &This->base.IWICComponentInfo_iface;
     }
     else
     {
@@ -243,7 +253,7 @@ static HRESULT WINAPI BitmapDecoderInfo_QueryInterface(IWICBitmapDecoderInfo *if
 static ULONG WINAPI BitmapDecoderInfo_AddRef(IWICBitmapDecoderInfo *iface)
 {
     BitmapDecoderInfo *This = impl_from_IWICBitmapDecoderInfo(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    ULONG ref = InterlockedIncrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
@@ -253,13 +263,14 @@ static ULONG WINAPI BitmapDecoderInfo_AddRef(IWICBitmapDecoderInfo *iface)
 static ULONG WINAPI BitmapDecoderInfo_Release(IWICBitmapDecoderInfo *iface)
 {
     BitmapDecoderInfo *This = impl_from_IWICBitmapDecoderInfo(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
     if (ref == 0)
     {
         RegCloseKey(This->classkey);
+        heap_free(This->patterns);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -283,8 +294,7 @@ static HRESULT WINAPI BitmapDecoderInfo_GetCLSID(IWICBitmapDecoderInfo *iface, C
     if (!pclsid)
         return E_INVALIDARG;
 
-    memcpy(pclsid, &This->clsid, sizeof(CLSID));
-
+    *pclsid = This->base.clsid;
     return S_OK;
 }
 
@@ -445,103 +455,26 @@ static HRESULT WINAPI BitmapDecoderInfo_GetPatterns(IWICBitmapDecoderInfo *iface
     UINT cbSizePatterns, WICBitmapPattern *pPatterns, UINT *pcPatterns, UINT *pcbPatternsActual)
 {
     BitmapDecoderInfo *This = impl_from_IWICBitmapDecoderInfo(iface);
-    UINT pattern_count=0, patterns_size=0;
-    WCHAR subkeyname[11];
-    LONG res;
-    HKEY patternskey, patternkey;
-    static const WCHAR uintformatW[] = {'%','u',0};
-    static const WCHAR patternsW[] = {'P','a','t','t','e','r','n','s',0};
-    static const WCHAR positionW[] = {'P','o','s','i','t','i','o','n',0};
-    static const WCHAR lengthW[] = {'L','e','n','g','t','h',0};
-    static const WCHAR patternW[] = {'P','a','t','t','e','r','n',0};
-    static const WCHAR maskW[] = {'M','a','s','k',0};
-    static const WCHAR endofstreamW[] = {'E','n','d','O','f','S','t','r','e','a','m',0};
-    HRESULT hr=S_OK;
-    UINT i;
-    BYTE *bPatterns=(BYTE*)pPatterns;
-    DWORD length, valuesize;
 
     TRACE("(%p,%i,%p,%p,%p)\n", iface, cbSizePatterns, pPatterns, pcPatterns, pcbPatternsActual);
 
-    res = RegOpenKeyExW(This->classkey, patternsW, 0, KEY_READ, &patternskey);
-    if (res != ERROR_SUCCESS) return HRESULT_FROM_WIN32(res);
+    if (!pcPatterns || !pcbPatternsActual) return E_INVALIDARG;
 
-    res = RegQueryInfoKeyW(patternskey, NULL, NULL, NULL, &pattern_count, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    if (res == ERROR_SUCCESS)
+    *pcPatterns = This->pattern_count;
+    *pcbPatternsActual = This->patterns_size;
+    if (pPatterns)
     {
-        patterns_size = pattern_count * sizeof(WICBitmapPattern);
-
-        for (i=0; i<pattern_count; i++)
-        {
-            snprintfW(subkeyname, 11, uintformatW, i);
-            res = RegOpenKeyExW(patternskey, subkeyname, 0, KEY_READ, &patternkey);
-            if (res == ERROR_SUCCESS)
-            {
-                valuesize = sizeof(ULONG);
-                res = RegGetValueW(patternkey, NULL, lengthW, RRF_RT_DWORD, NULL,
-                    &length, &valuesize);
-                patterns_size += length*2;
-
-                if ((cbSizePatterns >= patterns_size) && (res == ERROR_SUCCESS))
-                {
-                    pPatterns[i].Length = length;
-
-                    pPatterns[i].EndOfStream = 0;
-                    valuesize = sizeof(BOOL);
-                    RegGetValueW(patternkey, NULL, endofstreamW, RRF_RT_DWORD, NULL,
-                        &pPatterns[i].EndOfStream, &valuesize);
-
-                    pPatterns[i].Position.QuadPart = 0;
-                    valuesize = sizeof(ULARGE_INTEGER);
-                    res = RegGetValueW(patternkey, NULL, positionW, RRF_RT_DWORD|RRF_RT_QWORD, NULL,
-                        &pPatterns[i].Position, &valuesize);
-
-                    if (res == ERROR_SUCCESS)
-                    {
-                        pPatterns[i].Pattern = bPatterns+patterns_size-length*2;
-                        valuesize = length;
-                        res = RegGetValueW(patternkey, NULL, patternW, RRF_RT_REG_BINARY, NULL,
-                            pPatterns[i].Pattern, &valuesize);
-                    }
-
-                    if (res == ERROR_SUCCESS)
-                    {
-                        pPatterns[i].Mask = bPatterns+patterns_size-length;
-                        valuesize = length;
-                        res = RegGetValueW(patternkey, NULL, maskW, RRF_RT_REG_BINARY, NULL,
-                            pPatterns[i].Mask, &valuesize);
-                    }
-                }
-
-                RegCloseKey(patternkey);
-            }
-            if (res != ERROR_SUCCESS)
-            {
-                hr = HRESULT_FROM_WIN32(res);
-                break;
-            }
-        }
+        if (This->patterns_size && cbSizePatterns < This->patterns_size)
+            return WINCODEC_ERR_INSUFFICIENTBUFFER;
+        memcpy(pPatterns, This->patterns, This->patterns_size);
     }
-    else hr = HRESULT_FROM_WIN32(res);
-
-    RegCloseKey(patternskey);
-
-    if (hr == S_OK)
-    {
-        *pcPatterns = pattern_count;
-        *pcbPatternsActual = patterns_size;
-        if (pPatterns && cbSizePatterns < patterns_size)
-            hr = WINCODEC_ERR_INSUFFICIENTBUFFER;
-    }
-
-    return hr;
+    return S_OK;
 }
 
 static HRESULT WINAPI BitmapDecoderInfo_MatchesPattern(IWICBitmapDecoderInfo *iface,
     IStream *pIStream, BOOL *pfMatches)
 {
-    WICBitmapPattern *patterns;
-    UINT pattern_count=0, patterns_size=0;
+    BitmapDecoderInfo *This = impl_from_IWICBitmapDecoderInfo(iface);
     HRESULT hr;
     UINT i;
     ULONG pos;
@@ -552,22 +485,13 @@ static HRESULT WINAPI BitmapDecoderInfo_MatchesPattern(IWICBitmapDecoderInfo *if
 
     TRACE("(%p,%p,%p)\n", iface, pIStream, pfMatches);
 
-    hr = BitmapDecoderInfo_GetPatterns(iface, 0, NULL, &pattern_count, &patterns_size);
-    if (FAILED(hr)) return hr;
-
-    patterns = HeapAlloc(GetProcessHeap(), 0, patterns_size);
-    if (!patterns) return E_OUTOFMEMORY;
-
-    hr = BitmapDecoderInfo_GetPatterns(iface, patterns_size, patterns, &pattern_count, &patterns_size);
-    if (FAILED(hr)) goto end;
-
-    for (i=0; i<pattern_count; i++)
+    for (i=0; i < This->pattern_count; i++)
     {
-        if (datasize < patterns[i].Length)
+        if (datasize < This->patterns[i].Length)
         {
             HeapFree(GetProcessHeap(), 0, data);
-            datasize = patterns[i].Length;
-            data = HeapAlloc(GetProcessHeap(), 0, patterns[i].Length);
+            datasize = This->patterns[i].Length;
+            data = HeapAlloc(GetProcessHeap(), 0, This->patterns[i].Length);
             if (!data)
             {
                 hr = E_OUTOFMEMORY;
@@ -575,25 +499,25 @@ static HRESULT WINAPI BitmapDecoderInfo_MatchesPattern(IWICBitmapDecoderInfo *if
             }
         }
 
-        if (patterns[i].EndOfStream)
-            seekpos.QuadPart = -patterns[i].Position.QuadPart;
+        if (This->patterns[i].EndOfStream)
+            seekpos.QuadPart = -This->patterns[i].Position.QuadPart;
         else
-            seekpos.QuadPart = patterns[i].Position.QuadPart;
-        hr = IStream_Seek(pIStream, seekpos, patterns[i].EndOfStream ? STREAM_SEEK_END : STREAM_SEEK_SET, NULL);
+            seekpos.QuadPart = This->patterns[i].Position.QuadPart;
+        hr = IStream_Seek(pIStream, seekpos, This->patterns[i].EndOfStream ? STREAM_SEEK_END : STREAM_SEEK_SET, NULL);
         if (hr == STG_E_INVALIDFUNCTION) continue; /* before start of stream */
         if (FAILED(hr)) break;
 
-        hr = IStream_Read(pIStream, data, patterns[i].Length, &bytesread);
-        if (hr == S_FALSE || (hr == S_OK && bytesread != patterns[i].Length)) /* past end of stream */
+        hr = IStream_Read(pIStream, data, This->patterns[i].Length, &bytesread);
+        if (hr == S_FALSE || (hr == S_OK && bytesread != This->patterns[i].Length)) /* past end of stream */
             continue;
         if (FAILED(hr)) break;
 
-        for (pos=0; pos<patterns[i].Length; pos++)
+        for (pos=0; pos < This->patterns[i].Length; pos++)
         {
-            if ((data[pos] & patterns[i].Mask[pos]) != patterns[i].Pattern[pos])
+            if ((data[pos] & This->patterns[i].Mask[pos]) != This->patterns[i].Pattern[pos])
                 break;
         }
-        if (pos == patterns[i].Length) /* matches pattern */
+        if (pos == This->patterns[i].Length) /* matches pattern */
         {
             hr = S_OK;
             *pfMatches = TRUE;
@@ -601,16 +525,13 @@ static HRESULT WINAPI BitmapDecoderInfo_MatchesPattern(IWICBitmapDecoderInfo *if
         }
     }
 
-    if (i == pattern_count) /* does not match any pattern */
+    if (i == This->pattern_count) /* does not match any pattern */
     {
         hr = S_OK;
         *pfMatches = FALSE;
     }
 
-end:
-    HeapFree(GetProcessHeap(), 0, patterns);
     HeapFree(GetProcessHeap(), 0, data);
-
     return hr;
 }
 
@@ -621,7 +542,7 @@ static HRESULT WINAPI BitmapDecoderInfo_CreateInstance(IWICBitmapDecoderInfo *if
 
     TRACE("(%p,%p)\n", iface, ppIBitmapDecoder);
 
-    return create_instance(&This->clsid, &IID_IWICBitmapDecoder, (void**)ppIBitmapDecoder);
+    return create_instance(&This->base.clsid, &IID_IWICBitmapDecoder, (void**)ppIBitmapDecoder);
 }
 
 static const IWICBitmapDecoderInfoVtbl BitmapDecoderInfo_Vtbl = {
@@ -653,36 +574,146 @@ static const IWICBitmapDecoderInfoVtbl BitmapDecoderInfo_Vtbl = {
     BitmapDecoderInfo_CreateInstance
 };
 
-static HRESULT BitmapDecoderInfo_Constructor(HKEY classkey, REFCLSID clsid, IWICComponentInfo **ppIInfo)
+static void read_bitmap_patterns(BitmapDecoderInfo *info)
+{
+    UINT pattern_count=0, patterns_size=0;
+    WCHAR subkeyname[11];
+    LONG res;
+    HKEY patternskey, patternkey;
+    static const WCHAR uintformatW[] = {'%','u',0};
+    static const WCHAR patternsW[] = {'P','a','t','t','e','r','n','s',0};
+    static const WCHAR positionW[] = {'P','o','s','i','t','i','o','n',0};
+    static const WCHAR lengthW[] = {'L','e','n','g','t','h',0};
+    static const WCHAR patternW[] = {'P','a','t','t','e','r','n',0};
+    static const WCHAR maskW[] = {'M','a','s','k',0};
+    static const WCHAR endofstreamW[] = {'E','n','d','O','f','S','t','r','e','a','m',0};
+    UINT i;
+    WICBitmapPattern *patterns;
+    BYTE *patterns_ptr;
+    DWORD length, valuesize;
+
+    res = RegOpenKeyExW(info->classkey, patternsW, 0, KEY_READ, &patternskey);
+    if (res != ERROR_SUCCESS) return;
+
+    res = RegQueryInfoKeyW(patternskey, NULL, NULL, NULL, &pattern_count, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        RegCloseKey(patternskey);
+        return;
+    }
+
+    patterns_size = pattern_count * sizeof(WICBitmapPattern);
+    patterns = heap_alloc(patterns_size);
+    if (!patterns)
+    {
+        RegCloseKey(patternskey);
+        return;
+    }
+
+    for (i=0; res == ERROR_SUCCESS && i < pattern_count; i++)
+    {
+        snprintfW(subkeyname, 11, uintformatW, i);
+        res = RegOpenKeyExW(patternskey, subkeyname, 0, KEY_READ, &patternkey);
+        if (res != ERROR_SUCCESS) break;
+
+        valuesize = sizeof(ULONG);
+        res = RegGetValueW(patternkey, NULL, lengthW, RRF_RT_DWORD, NULL, &length, &valuesize);
+        if (res == ERROR_SUCCESS)
+        {
+            patterns_size += length*2;
+            patterns[i].Length = length;
+
+            valuesize = sizeof(BOOL);
+            res = RegGetValueW(patternkey, NULL, endofstreamW, RRF_RT_DWORD, NULL,
+                               &patterns[i].EndOfStream, &valuesize);
+            if (res) patterns[i].EndOfStream = 0;
+
+            patterns[i].Position.QuadPart = 0;
+            valuesize = sizeof(ULARGE_INTEGER);
+            res = RegGetValueW(patternkey, NULL, positionW, RRF_RT_DWORD|RRF_RT_QWORD, NULL,
+                               &patterns[i].Position, &valuesize);
+        }
+
+        RegCloseKey(patternkey);
+    }
+
+    if (res != ERROR_SUCCESS || !(patterns_ptr = heap_realloc(patterns, patterns_size)))
+    {
+        heap_free(patterns);
+        RegCloseKey(patternskey);
+        return;
+    }
+    patterns = (WICBitmapPattern*)patterns_ptr;
+    patterns_ptr += pattern_count * sizeof(*patterns);
+
+    for (i=0; res == ERROR_SUCCESS && i < pattern_count; i++)
+    {
+        snprintfW(subkeyname, 11, uintformatW, i);
+        res = RegOpenKeyExW(patternskey, subkeyname, 0, KEY_READ, &patternkey);
+        if (res != ERROR_SUCCESS) break;
+
+        length = patterns[i].Length;
+        patterns[i].Pattern = patterns_ptr;
+        valuesize = length;
+        res = RegGetValueW(patternkey, NULL, patternW, RRF_RT_REG_BINARY, NULL,
+                           patterns[i].Pattern, &valuesize);
+        patterns_ptr += length;
+
+        if (res == ERROR_SUCCESS)
+        {
+            patterns[i].Mask = patterns_ptr;
+            valuesize = length;
+            res = RegGetValueW(patternkey, NULL, maskW, RRF_RT_REG_BINARY, NULL,
+                               patterns[i].Mask, &valuesize);
+            patterns_ptr += length;
+        }
+
+        RegCloseKey(patternkey);
+    }
+
+    RegCloseKey(patternskey);
+
+    if (res != ERROR_SUCCESS)
+    {
+        heap_free(patterns);
+        return;
+    }
+
+    info->pattern_count = pattern_count;
+    info->patterns_size = patterns_size;
+    info->patterns = patterns;
+}
+
+static HRESULT BitmapDecoderInfo_Constructor(HKEY classkey, REFCLSID clsid, ComponentInfo **ret)
 {
     BitmapDecoderInfo *This;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(BitmapDecoderInfo));
+    This = heap_alloc_zero(sizeof(BitmapDecoderInfo));
     if (!This)
     {
         RegCloseKey(classkey);
         return E_OUTOFMEMORY;
     }
 
-    This->IWICBitmapDecoderInfo_iface.lpVtbl = &BitmapDecoderInfo_Vtbl;
-    This->ref = 1;
+    This->base.IWICComponentInfo_iface.lpVtbl = (const IWICComponentInfoVtbl*)&BitmapDecoderInfo_Vtbl;
+    This->base.ref = 1;
     This->classkey = classkey;
-    memcpy(&This->clsid, clsid, sizeof(CLSID));
+    This->base.clsid = *clsid;
 
-    *ppIInfo = (IWICComponentInfo *)&This->IWICBitmapDecoderInfo_iface;
+    read_bitmap_patterns(This);
+
+    *ret = &This->base;
     return S_OK;
 }
 
 typedef struct {
-    IWICBitmapEncoderInfo IWICBitmapEncoderInfo_iface;
-    LONG ref;
+    ComponentInfo base;
     HKEY classkey;
-    CLSID clsid;
 } BitmapEncoderInfo;
 
 static inline BitmapEncoderInfo *impl_from_IWICBitmapEncoderInfo(IWICBitmapEncoderInfo *iface)
 {
-    return CONTAINING_RECORD(iface, BitmapEncoderInfo, IWICBitmapEncoderInfo_iface);
+    return CONTAINING_RECORD(iface, BitmapEncoderInfo, base.IWICComponentInfo_iface);
 }
 
 static HRESULT WINAPI BitmapEncoderInfo_QueryInterface(IWICBitmapEncoderInfo *iface, REFIID iid,
@@ -698,7 +729,7 @@ static HRESULT WINAPI BitmapEncoderInfo_QueryInterface(IWICBitmapEncoderInfo *if
         IsEqualIID(&IID_IWICBitmapCodecInfo, iid) ||
         IsEqualIID(&IID_IWICBitmapEncoderInfo ,iid))
     {
-        *ppv = &This->IWICBitmapEncoderInfo_iface;
+        *ppv = &This->base.IWICComponentInfo_iface;
     }
     else
     {
@@ -713,7 +744,7 @@ static HRESULT WINAPI BitmapEncoderInfo_QueryInterface(IWICBitmapEncoderInfo *if
 static ULONG WINAPI BitmapEncoderInfo_AddRef(IWICBitmapEncoderInfo *iface)
 {
     BitmapEncoderInfo *This = impl_from_IWICBitmapEncoderInfo(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    ULONG ref = InterlockedIncrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
@@ -723,7 +754,7 @@ static ULONG WINAPI BitmapEncoderInfo_AddRef(IWICBitmapEncoderInfo *iface)
 static ULONG WINAPI BitmapEncoderInfo_Release(IWICBitmapEncoderInfo *iface)
 {
     BitmapEncoderInfo *This = impl_from_IWICBitmapEncoderInfo(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
@@ -753,8 +784,7 @@ static HRESULT WINAPI BitmapEncoderInfo_GetCLSID(IWICBitmapEncoderInfo *iface, C
     if (!pclsid)
         return E_INVALIDARG;
 
-    memcpy(pclsid, &This->clsid, sizeof(CLSID));
-
+    *pclsid = This->base.clsid;
     return S_OK;
 }
 
@@ -918,7 +948,7 @@ static HRESULT WINAPI BitmapEncoderInfo_CreateInstance(IWICBitmapEncoderInfo *if
 
     TRACE("(%p,%p)\n", iface, ppIBitmapEncoder);
 
-    return create_instance(&This->clsid, &IID_IWICBitmapEncoder, (void**)ppIBitmapEncoder);
+    return create_instance(&This->base.clsid, &IID_IWICBitmapEncoder, (void**)ppIBitmapEncoder);
 }
 
 static const IWICBitmapEncoderInfoVtbl BitmapEncoderInfo_Vtbl = {
@@ -948,7 +978,7 @@ static const IWICBitmapEncoderInfoVtbl BitmapEncoderInfo_Vtbl = {
     BitmapEncoderInfo_CreateInstance
 };
 
-static HRESULT BitmapEncoderInfo_Constructor(HKEY classkey, REFCLSID clsid, IWICComponentInfo **ppIInfo)
+static HRESULT BitmapEncoderInfo_Constructor(HKEY classkey, REFCLSID clsid, ComponentInfo **ret)
 {
     BitmapEncoderInfo *This;
 
@@ -959,25 +989,23 @@ static HRESULT BitmapEncoderInfo_Constructor(HKEY classkey, REFCLSID clsid, IWIC
         return E_OUTOFMEMORY;
     }
 
-    This->IWICBitmapEncoderInfo_iface.lpVtbl = &BitmapEncoderInfo_Vtbl;
-    This->ref = 1;
+    This->base.IWICComponentInfo_iface.lpVtbl = (const IWICComponentInfoVtbl*)&BitmapEncoderInfo_Vtbl;
+    This->base.ref = 1;
     This->classkey = classkey;
-    memcpy(&This->clsid, clsid, sizeof(CLSID));
+    This->base.clsid = *clsid;
 
-    *ppIInfo = (IWICComponentInfo *)&This->IWICBitmapEncoderInfo_iface;
+    *ret = &This->base;
     return S_OK;
 }
 
 typedef struct {
-    IWICFormatConverterInfo IWICFormatConverterInfo_iface;
-    LONG ref;
+    ComponentInfo base;
     HKEY classkey;
-    CLSID clsid;
 } FormatConverterInfo;
 
 static inline FormatConverterInfo *impl_from_IWICFormatConverterInfo(IWICFormatConverterInfo *iface)
 {
-    return CONTAINING_RECORD(iface, FormatConverterInfo, IWICFormatConverterInfo_iface);
+    return CONTAINING_RECORD(iface, FormatConverterInfo, base.IWICComponentInfo_iface);
 }
 
 static HRESULT WINAPI FormatConverterInfo_QueryInterface(IWICFormatConverterInfo *iface, REFIID iid,
@@ -992,7 +1020,7 @@ static HRESULT WINAPI FormatConverterInfo_QueryInterface(IWICFormatConverterInfo
         IsEqualIID(&IID_IWICComponentInfo, iid) ||
         IsEqualIID(&IID_IWICFormatConverterInfo ,iid))
     {
-        *ppv = &This->IWICFormatConverterInfo_iface;
+        *ppv = &This->base.IWICComponentInfo_iface;
     }
     else
     {
@@ -1007,7 +1035,7 @@ static HRESULT WINAPI FormatConverterInfo_QueryInterface(IWICFormatConverterInfo
 static ULONG WINAPI FormatConverterInfo_AddRef(IWICFormatConverterInfo *iface)
 {
     FormatConverterInfo *This = impl_from_IWICFormatConverterInfo(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    ULONG ref = InterlockedIncrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
@@ -1017,7 +1045,7 @@ static ULONG WINAPI FormatConverterInfo_AddRef(IWICFormatConverterInfo *iface)
 static ULONG WINAPI FormatConverterInfo_Release(IWICFormatConverterInfo *iface)
 {
     FormatConverterInfo *This = impl_from_IWICFormatConverterInfo(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
@@ -1047,8 +1075,7 @@ static HRESULT WINAPI FormatConverterInfo_GetCLSID(IWICFormatConverterInfo *ifac
     if (!pclsid)
         return E_INVALIDARG;
 
-    memcpy(pclsid, &This->clsid, sizeof(CLSID));
-
+    *pclsid = This->base.clsid;
     return S_OK;
 }
 
@@ -1125,7 +1152,7 @@ static HRESULT WINAPI FormatConverterInfo_CreateInstance(IWICFormatConverterInfo
 
     TRACE("(%p,%p)\n", iface, ppIFormatConverter);
 
-    return create_instance(&This->clsid, &IID_IWICFormatConverter,
+    return create_instance(&This->base.clsid, &IID_IWICFormatConverter,
             (void**)ppIFormatConverter);
 }
 
@@ -1165,7 +1192,7 @@ static const IWICFormatConverterInfoVtbl FormatConverterInfo_Vtbl = {
     FormatConverterInfo_CreateInstance
 };
 
-static HRESULT FormatConverterInfo_Constructor(HKEY classkey, REFCLSID clsid, IWICComponentInfo **ppIInfo)
+static HRESULT FormatConverterInfo_Constructor(HKEY classkey, REFCLSID clsid, ComponentInfo **ret)
 {
     FormatConverterInfo *This;
 
@@ -1176,25 +1203,23 @@ static HRESULT FormatConverterInfo_Constructor(HKEY classkey, REFCLSID clsid, IW
         return E_OUTOFMEMORY;
     }
 
-    This->IWICFormatConverterInfo_iface.lpVtbl = &FormatConverterInfo_Vtbl;
-    This->ref = 1;
+    This->base.IWICComponentInfo_iface.lpVtbl = (const IWICComponentInfoVtbl*)&FormatConverterInfo_Vtbl;
+    This->base.ref = 1;
     This->classkey = classkey;
-    memcpy(&This->clsid, clsid, sizeof(CLSID));
+    This->base.clsid = *clsid;
 
-    *ppIInfo = (IWICComponentInfo *)&This->IWICFormatConverterInfo_iface;
+    *ret = &This->base;
     return S_OK;
 }
 
 typedef struct {
-    IWICPixelFormatInfo2 IWICPixelFormatInfo2_iface;
-    LONG ref;
+    ComponentInfo base;
     HKEY classkey;
-    CLSID clsid;
 } PixelFormatInfo;
 
 static inline PixelFormatInfo *impl_from_IWICPixelFormatInfo2(IWICPixelFormatInfo2 *iface)
 {
-    return CONTAINING_RECORD(iface, PixelFormatInfo, IWICPixelFormatInfo2_iface);
+    return CONTAINING_RECORD(iface, PixelFormatInfo, base.IWICComponentInfo_iface);
 }
 
 static HRESULT WINAPI PixelFormatInfo_QueryInterface(IWICPixelFormatInfo2 *iface, REFIID iid,
@@ -1210,7 +1235,7 @@ static HRESULT WINAPI PixelFormatInfo_QueryInterface(IWICPixelFormatInfo2 *iface
         IsEqualIID(&IID_IWICPixelFormatInfo, iid) ||
         IsEqualIID(&IID_IWICPixelFormatInfo2 ,iid))
     {
-        *ppv = &This->IWICPixelFormatInfo2_iface;
+        *ppv = &This->base.IWICComponentInfo_iface;
     }
     else
     {
@@ -1225,7 +1250,7 @@ static HRESULT WINAPI PixelFormatInfo_QueryInterface(IWICPixelFormatInfo2 *iface
 static ULONG WINAPI PixelFormatInfo_AddRef(IWICPixelFormatInfo2 *iface)
 {
     PixelFormatInfo *This = impl_from_IWICPixelFormatInfo2(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    ULONG ref = InterlockedIncrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
@@ -1235,7 +1260,7 @@ static ULONG WINAPI PixelFormatInfo_AddRef(IWICPixelFormatInfo2 *iface)
 static ULONG WINAPI PixelFormatInfo_Release(IWICPixelFormatInfo2 *iface)
 {
     PixelFormatInfo *This = impl_from_IWICPixelFormatInfo2(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
@@ -1265,8 +1290,7 @@ static HRESULT WINAPI PixelFormatInfo_GetCLSID(IWICPixelFormatInfo2 *iface, CLSI
     if (!pclsid)
         return E_INVALIDARG;
 
-    memcpy(pclsid, &This->clsid, sizeof(CLSID));
-
+    *pclsid = This->base.clsid;
     return S_OK;
 }
 
@@ -1345,8 +1369,7 @@ static HRESULT WINAPI PixelFormatInfo_GetFormatGUID(IWICPixelFormatInfo2 *iface,
     if (!pFormat)
         return E_INVALIDARG;
 
-    *pFormat = This->clsid;
-
+    *pFormat = This->base.clsid;
     return S_OK;
 }
 
@@ -1459,7 +1482,7 @@ static const IWICPixelFormatInfo2Vtbl PixelFormatInfo_Vtbl = {
     PixelFormatInfo_GetNumericRepresentation
 };
 
-static HRESULT PixelFormatInfo_Constructor(HKEY classkey, REFCLSID clsid, IWICComponentInfo **ppIInfo)
+static HRESULT PixelFormatInfo_Constructor(HKEY classkey, REFCLSID clsid, ComponentInfo **ret)
 {
     PixelFormatInfo *This;
 
@@ -1470,26 +1493,45 @@ static HRESULT PixelFormatInfo_Constructor(HKEY classkey, REFCLSID clsid, IWICCo
         return E_OUTOFMEMORY;
     }
 
-    This->IWICPixelFormatInfo2_iface.lpVtbl = &PixelFormatInfo_Vtbl;
-    This->ref = 1;
+    This->base.IWICComponentInfo_iface.lpVtbl = (const IWICComponentInfoVtbl*)&PixelFormatInfo_Vtbl;
+    This->base.ref = 1;
     This->classkey = classkey;
-    memcpy(&This->clsid, clsid, sizeof(CLSID));
+    This->base.clsid = *clsid;
 
-    *ppIInfo = (IWICComponentInfo *)&This->IWICPixelFormatInfo2_iface;
+    *ret = &This->base;
     return S_OK;
 }
 
+struct metadata_container
+{
+    WICMetadataPattern *patterns;
+    UINT pattern_count;
+    UINT patterns_size;
+};
+
 typedef struct
 {
-    IWICMetadataReaderInfo IWICMetadataReaderInfo_iface;
-    LONG ref;
+    ComponentInfo base;
     HKEY classkey;
-    CLSID clsid;
+    GUID *container_formats;
+    struct metadata_container *containers;
+    UINT container_count;
 } MetadataReaderInfo;
+
+static struct metadata_container *get_metadata_container(MetadataReaderInfo *info, const GUID *guid)
+{
+    unsigned i;
+
+    for (i = 0; i < info->container_count; i++)
+        if (IsEqualGUID(info->container_formats + i, guid))
+            return info->containers + i;
+
+    return NULL;
+}
 
 static inline MetadataReaderInfo *impl_from_IWICMetadataReaderInfo(IWICMetadataReaderInfo *iface)
 {
-    return CONTAINING_RECORD(iface, MetadataReaderInfo, IWICMetadataReaderInfo_iface);
+    return CONTAINING_RECORD(iface, MetadataReaderInfo, base.IWICComponentInfo_iface);
 }
 
 static HRESULT WINAPI MetadataReaderInfo_QueryInterface(IWICMetadataReaderInfo *iface,
@@ -1506,7 +1548,7 @@ static HRESULT WINAPI MetadataReaderInfo_QueryInterface(IWICMetadataReaderInfo *
         IsEqualIID(&IID_IWICMetadataHandlerInfo, riid) ||
         IsEqualIID(&IID_IWICMetadataReaderInfo, riid))
     {
-        *ppv = &This->IWICMetadataReaderInfo_iface;
+        *ppv = &This->base.IWICComponentInfo_iface;
     }
     else
     {
@@ -1521,7 +1563,7 @@ static HRESULT WINAPI MetadataReaderInfo_QueryInterface(IWICMetadataReaderInfo *
 static ULONG WINAPI MetadataReaderInfo_AddRef(IWICMetadataReaderInfo *iface)
 {
     MetadataReaderInfo *This = impl_from_IWICMetadataReaderInfo(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    ULONG ref = InterlockedIncrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
     return ref;
@@ -1530,13 +1572,18 @@ static ULONG WINAPI MetadataReaderInfo_AddRef(IWICMetadataReaderInfo *iface)
 static ULONG WINAPI MetadataReaderInfo_Release(IWICMetadataReaderInfo *iface)
 {
     MetadataReaderInfo *This = impl_from_IWICMetadataReaderInfo(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->base.ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
 
     if (!ref)
     {
+        unsigned i;
         RegCloseKey(This->classkey);
+        for (i = 0; i < This->container_count; i++)
+            heap_free(This->containers[i].patterns);
+        heap_free(This->containers);
+        heap_free(This->container_formats);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -1560,7 +1607,7 @@ static HRESULT WINAPI MetadataReaderInfo_GetCLSID(IWICMetadataReaderInfo *iface,
     TRACE("(%p,%p)\n", iface, clsid);
 
     if (!clsid) return E_INVALIDARG;
-    *clsid = This->clsid;
+    *clsid = This->base.clsid;
     return S_OK;
 }
 
@@ -1637,10 +1684,20 @@ static HRESULT WINAPI MetadataReaderInfo_GetContainerFormats(IWICMetadataReaderI
     UINT length, GUID *formats, UINT *actual_length)
 {
     MetadataReaderInfo *This = impl_from_IWICMetadataReaderInfo(iface);
+
     TRACE("(%p,%u,%p,%p)\n", iface, length, formats, actual_length);
 
-    return ComponentInfo_GetGuidList(This->classkey, containers_keyname, length,
-        formats, actual_length);
+    if (!actual_length)
+        return E_INVALIDARG;
+
+    *actual_length = This->container_count;
+    if (formats)
+    {
+        if (This->container_count && length < This->container_count)
+            return WINCODEC_ERR_INSUFFICIENTBUFFER;
+        memcpy(formats, This->container_formats, This->container_count);
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI MetadataReaderInfo_GetDeviceManufacturer(IWICMetadataReaderInfo *iface,
@@ -1681,122 +1738,35 @@ static HRESULT WINAPI MetadataReaderInfo_DoesRequireFixedSize(IWICMetadataReader
 }
 
 static HRESULT WINAPI MetadataReaderInfo_GetPatterns(IWICMetadataReaderInfo *iface,
-    REFGUID container, UINT length, WICMetadataPattern *patterns, UINT *count, UINT *actual_length)
+    REFGUID container_guid, UINT length, WICMetadataPattern *patterns, UINT *count, UINT *actual_length)
 {
     MetadataReaderInfo *This = impl_from_IWICMetadataReaderInfo(iface);
-    HRESULT hr=S_OK;
-    LONG res;
-    UINT pattern_count=0, patterns_size=0;
-    DWORD valuesize, patternsize;
-    BYTE *bPatterns=(BYTE*)patterns;
-    HKEY containers_key, guid_key, pattern_key;
-    WCHAR subkeyname[11];
-    WCHAR guidkeyname[39];
-    int i;
-    static const WCHAR uintformatW[] = {'%','u',0};
-    static const WCHAR patternW[] = {'P','a','t','t','e','r','n',0};
-    static const WCHAR positionW[] = {'P','o','s','i','t','i','o','n',0};
-    static const WCHAR maskW[] = {'M','a','s','k',0};
-    static const WCHAR dataoffsetW[] = {'D','a','t','a','O','f','f','s','e','t',0};
+    struct metadata_container *container;
 
-    TRACE("(%p,%s,%u,%p,%p,%p)\n", iface, debugstr_guid(container), length, patterns, count, actual_length);
+    TRACE("(%p,%s,%u,%p,%p,%p)\n", iface, debugstr_guid(container_guid), length, patterns, count, actual_length);
 
-    if (!actual_length || !container) return E_INVALIDARG;
+    if (!actual_length || !container_guid) return E_INVALIDARG;
 
-    res = RegOpenKeyExW(This->classkey, containers_keyname, 0, KEY_READ, &containers_key);
-    if (res == ERROR_SUCCESS)
+    if (!(container = get_metadata_container(This, container_guid)))
+        return WINCODEC_ERR_COMPONENTNOTFOUND;
+
+    *count = container->pattern_count;
+    *actual_length = container->patterns_size;
+    if (patterns)
     {
-        StringFromGUID2(container, guidkeyname, 39);
-
-        res = RegOpenKeyExW(containers_key, guidkeyname, 0, KEY_READ, &guid_key);
-        if (res == ERROR_FILE_NOT_FOUND) hr = WINCODEC_ERR_COMPONENTNOTFOUND;
-        else if (res != ERROR_SUCCESS) hr = HRESULT_FROM_WIN32(res);
-
-        RegCloseKey(containers_key);
+        if (container->patterns_size && length < container->patterns_size)
+            return WINCODEC_ERR_INSUFFICIENTBUFFER;
+        memcpy(patterns, container->patterns, container->patterns_size);
     }
-    else if (res == ERROR_FILE_NOT_FOUND) hr = WINCODEC_ERR_COMPONENTNOTFOUND;
-    else hr = HRESULT_FROM_WIN32(res);
-
-    if (SUCCEEDED(hr))
-    {
-        res = RegQueryInfoKeyW(guid_key, NULL, NULL, NULL, &pattern_count, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-        if (res != ERROR_SUCCESS) hr = HRESULT_FROM_WIN32(res);
-
-        if (SUCCEEDED(hr))
-        {
-            patterns_size = pattern_count * sizeof(WICMetadataPattern);
-
-            for (i=0; i<pattern_count; i++)
-            {
-                snprintfW(subkeyname, 11, uintformatW, i);
-                res = RegOpenKeyExW(guid_key, subkeyname, 0, KEY_READ, &pattern_key);
-                if (res == ERROR_SUCCESS)
-                {
-                    res = RegGetValueW(pattern_key, NULL, patternW, RRF_RT_REG_BINARY, NULL,
-                        NULL, &patternsize);
-                    patterns_size += patternsize*2;
-
-                    if ((length >= patterns_size) && (res == ERROR_SUCCESS))
-                    {
-                        patterns[i].Length = patternsize;
-
-                        patterns[i].DataOffset.QuadPart = 0;
-                        valuesize = sizeof(ULARGE_INTEGER);
-                        RegGetValueW(pattern_key, NULL, dataoffsetW, RRF_RT_DWORD|RRF_RT_QWORD, NULL,
-                            &patterns[i].DataOffset, &valuesize);
-
-                        patterns[i].Position.QuadPart = 0;
-                        valuesize = sizeof(ULARGE_INTEGER);
-                        res = RegGetValueW(pattern_key, NULL, positionW, RRF_RT_DWORD|RRF_RT_QWORD, NULL,
-                            &patterns[i].Position, &valuesize);
-
-                        if (res == ERROR_SUCCESS)
-                        {
-                            patterns[i].Pattern = bPatterns+patterns_size-patternsize*2;
-                            valuesize = patternsize;
-                            res = RegGetValueW(pattern_key, NULL, patternW, RRF_RT_REG_BINARY, NULL,
-                                patterns[i].Pattern, &valuesize);
-                        }
-
-                        if (res == ERROR_SUCCESS)
-                        {
-                            patterns[i].Mask = bPatterns+patterns_size-patternsize;
-                            valuesize = patternsize;
-                            res = RegGetValueW(pattern_key, NULL, maskW, RRF_RT_REG_BINARY, NULL,
-                                patterns[i].Mask, &valuesize);
-                        }
-                    }
-
-                    RegCloseKey(pattern_key);
-                }
-                if (res != ERROR_SUCCESS)
-                {
-                    hr = HRESULT_FROM_WIN32(res);
-                    break;
-                }
-            }
-        }
-
-        RegCloseKey(guid_key);
-    }
-
-    if (hr == S_OK)
-    {
-        *count = pattern_count;
-        *actual_length = patterns_size;
-        if (patterns && length < patterns_size)
-            hr = WINCODEC_ERR_INSUFFICIENTBUFFER;
-    }
-
-    return hr;
+    return S_OK;
 }
 
 static HRESULT WINAPI MetadataReaderInfo_MatchesPattern(IWICMetadataReaderInfo *iface,
-    REFGUID container, IStream *stream, BOOL *matches)
+    REFGUID container_guid, IStream *stream, BOOL *matches)
 {
+    MetadataReaderInfo *This = impl_from_IWICMetadataReaderInfo(iface);
+    struct metadata_container *container;
     HRESULT hr;
-    WICMetadataPattern *patterns;
-    UINT pattern_count=0, patterns_size=0;
     ULONG datasize=0;
     BYTE *data=NULL;
     ULONG bytesread;
@@ -1804,24 +1774,18 @@ static HRESULT WINAPI MetadataReaderInfo_MatchesPattern(IWICMetadataReaderInfo *
     LARGE_INTEGER seekpos;
     ULONG pos;
 
-    TRACE("(%p,%s,%p,%p)\n", iface, debugstr_guid(container), stream, matches);
+    TRACE("(%p,%s,%p,%p)\n", iface, debugstr_guid(container_guid), stream, matches);
 
-    hr = MetadataReaderInfo_GetPatterns(iface, container, 0, NULL, &pattern_count, &patterns_size);
-    if (FAILED(hr)) return hr;
+    if (!(container = get_metadata_container(This, container_guid)))
+        return WINCODEC_ERR_COMPONENTNOTFOUND;
 
-    patterns = HeapAlloc(GetProcessHeap(), 0, patterns_size);
-    if (!patterns) return E_OUTOFMEMORY;
-
-    hr = MetadataReaderInfo_GetPatterns(iface, container, patterns_size, patterns, &pattern_count, &patterns_size);
-    if (FAILED(hr)) goto end;
-
-    for (i=0; i<pattern_count; i++)
+    for (i=0; i < container->pattern_count; i++)
     {
-        if (datasize < patterns[i].Length)
+        if (datasize < container->patterns[i].Length)
         {
             HeapFree(GetProcessHeap(), 0, data);
-            datasize = patterns[i].Length;
-            data = HeapAlloc(GetProcessHeap(), 0, patterns[i].Length);
+            datasize = container->patterns[i].Length;
+            data = HeapAlloc(GetProcessHeap(), 0, container->patterns[i].Length);
             if (!data)
             {
                 hr = E_OUTOFMEMORY;
@@ -1829,21 +1793,21 @@ static HRESULT WINAPI MetadataReaderInfo_MatchesPattern(IWICMetadataReaderInfo *
             }
         }
 
-        seekpos.QuadPart = patterns[i].Position.QuadPart;
+        seekpos.QuadPart = container->patterns[i].Position.QuadPart;
         hr = IStream_Seek(stream, seekpos, STREAM_SEEK_SET, NULL);
         if (FAILED(hr)) break;
 
-        hr = IStream_Read(stream, data, patterns[i].Length, &bytesread);
-        if (hr == S_FALSE || (hr == S_OK && bytesread != patterns[i].Length)) /* past end of stream */
+        hr = IStream_Read(stream, data, container->patterns[i].Length, &bytesread);
+        if (hr == S_FALSE || (hr == S_OK && bytesread != container->patterns[i].Length)) /* past end of stream */
             continue;
         if (FAILED(hr)) break;
 
-        for (pos=0; pos<patterns[i].Length; pos++)
+        for (pos=0; pos < container->patterns[i].Length; pos++)
         {
-            if ((data[pos] & patterns[i].Mask[pos]) != patterns[i].Pattern[pos])
+            if ((data[pos] & container->patterns[i].Mask[pos]) != container->patterns[i].Pattern[pos])
                 break;
         }
-        if (pos == patterns[i].Length) /* matches pattern */
+        if (pos == container->patterns[i].Length) /* matches pattern */
         {
             hr = S_OK;
             *matches = TRUE;
@@ -1851,14 +1815,12 @@ static HRESULT WINAPI MetadataReaderInfo_MatchesPattern(IWICMetadataReaderInfo *
         }
     }
 
-    if (i == pattern_count) /* does not match any pattern */
+    if (i == container->pattern_count) /* does not match any pattern */
     {
         hr = S_OK;
         *matches = FALSE;
     }
 
-end:
-    HeapFree(GetProcessHeap(), 0, patterns);
     HeapFree(GetProcessHeap(), 0, data);
 
     return hr;
@@ -1871,7 +1833,7 @@ static HRESULT WINAPI MetadataReaderInfo_CreateInstance(IWICMetadataReaderInfo *
 
     TRACE("(%p,%p)\n", iface, reader);
 
-    return create_instance(&This->clsid, &IID_IWICMetadataReader, (void **)reader);
+    return create_instance(&This->base.clsid, &IID_IWICMetadataReader, (void **)reader);
 }
 
 static const IWICMetadataReaderInfoVtbl MetadataReaderInfo_Vtbl = {
@@ -1898,23 +1860,180 @@ static const IWICMetadataReaderInfoVtbl MetadataReaderInfo_Vtbl = {
     MetadataReaderInfo_CreateInstance
 };
 
-static HRESULT MetadataReaderInfo_Constructor(HKEY classkey, REFCLSID clsid, IWICComponentInfo **info)
+static void read_metadata_patterns(MetadataReaderInfo *info, GUID *container_guid,
+                                   struct metadata_container *container)
+{
+    UINT pattern_count=0, patterns_size=0;
+    WCHAR subkeyname[11], guidkeyname[39];
+    LONG res;
+    HKEY containers_key, guid_key, patternkey;
+    static const WCHAR uintformatW[] = {'%','u',0};
+    static const WCHAR patternW[] = {'P','a','t','t','e','r','n',0};
+    static const WCHAR positionW[] = {'P','o','s','i','t','i','o','n',0};
+    static const WCHAR maskW[] = {'M','a','s','k',0};
+    static const WCHAR dataoffsetW[] = {'D','a','t','a','O','f','f','s','e','t',0};
+    UINT i;
+    WICMetadataPattern *patterns;
+    BYTE *patterns_ptr;
+    DWORD length, valuesize;
+
+    res = RegOpenKeyExW(info->classkey, containers_keyname, 0, KEY_READ, &containers_key);
+    if (res != ERROR_SUCCESS) return;
+
+    StringFromGUID2(container_guid, guidkeyname, 39);
+    res = RegOpenKeyExW(containers_key, guidkeyname, 0, KEY_READ, &guid_key);
+    RegCloseKey(containers_key);
+    if (res != ERROR_SUCCESS) return;
+
+    res = RegQueryInfoKeyW(guid_key, NULL, NULL, NULL, &pattern_count,
+                           NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    if (res != ERROR_SUCCESS)
+    {
+        RegCloseKey(guid_key);
+        return;
+    }
+
+    patterns_size = pattern_count * sizeof(WICMetadataPattern);
+    patterns = heap_alloc(patterns_size);
+    if (!patterns)
+    {
+        RegCloseKey(guid_key);
+        return;
+    }
+
+    for (i=0; res == ERROR_SUCCESS && i < pattern_count; i++)
+    {
+        snprintfW(subkeyname, 11, uintformatW, i);
+        res = RegOpenKeyExW(guid_key, subkeyname, 0, KEY_READ, &patternkey);
+        if (res != ERROR_SUCCESS) break;
+
+        res = RegGetValueW(patternkey, NULL, patternW, RRF_RT_REG_BINARY, NULL, NULL, &length);
+        if (res == ERROR_SUCCESS)
+        {
+            patterns_size += length*2;
+            patterns[i].Length = length;
+
+            valuesize = sizeof(DWORD64);
+            res = RegGetValueW(patternkey, NULL, dataoffsetW, RRF_RT_DWORD|RRF_RT_QWORD, NULL,
+                               &patterns[i].DataOffset, &valuesize);
+            if (res) patterns[i].DataOffset.QuadPart = 0;
+
+            patterns[i].Position.QuadPart = 0;
+            valuesize = sizeof(DWORD64);
+            res = RegGetValueW(patternkey, NULL, positionW, RRF_RT_DWORD|RRF_RT_QWORD, NULL,
+                               &patterns[i].Position, &valuesize);
+        }
+
+        RegCloseKey(patternkey);
+    }
+
+    if (res != ERROR_SUCCESS || !(patterns_ptr = heap_realloc(patterns, patterns_size)))
+    {
+        heap_free(patterns);
+        RegCloseKey(guid_key);
+        return;
+    }
+    patterns = (WICMetadataPattern*)patterns_ptr;
+    patterns_ptr += pattern_count * sizeof(*patterns);
+
+    for (i=0; res == ERROR_SUCCESS && i < pattern_count; i++)
+    {
+        snprintfW(subkeyname, 11, uintformatW, i);
+        res = RegOpenKeyExW(guid_key, subkeyname, 0, KEY_READ, &patternkey);
+        if (res != ERROR_SUCCESS) break;
+
+        length = patterns[i].Length;
+        patterns[i].Pattern = patterns_ptr;
+        valuesize = length;
+        res = RegGetValueW(patternkey, NULL, patternW, RRF_RT_REG_BINARY, NULL,
+                           patterns[i].Pattern, &valuesize);
+        patterns_ptr += length;
+
+        if (res == ERROR_SUCCESS)
+        {
+            patterns[i].Mask = patterns_ptr;
+            valuesize = length;
+            res = RegGetValueW(patternkey, NULL, maskW, RRF_RT_REG_BINARY, NULL,
+                               patterns[i].Mask, &valuesize);
+            patterns_ptr += length;
+        }
+
+        RegCloseKey(patternkey);
+    }
+
+    RegCloseKey(guid_key);
+
+    if (res != ERROR_SUCCESS)
+    {
+        heap_free(patterns);
+        return;
+    }
+
+    container->pattern_count = pattern_count;
+    container->patterns_size = patterns_size;
+    container->patterns = patterns;
+}
+
+static BOOL read_metadata_info(MetadataReaderInfo *info)
+{
+    UINT format_count;
+    GUID *formats;
+    HRESULT hr;
+
+    hr = ComponentInfo_GetGuidList(info->classkey, containers_keyname, 0, NULL, &format_count);
+    if (FAILED(hr)) return TRUE;
+
+    formats = heap_calloc(format_count, sizeof(*formats));
+    if (!formats) return FALSE;
+
+    hr = ComponentInfo_GetGuidList(info->classkey, containers_keyname, format_count, formats,
+                                   &format_count);
+    if (FAILED(hr))
+    {
+        heap_free(formats);
+        return FALSE;
+    }
+
+    info->container_formats = formats;
+    info->container_count = format_count;
+
+    if (format_count)
+    {
+        unsigned i;
+
+        info->containers = heap_calloc(format_count, sizeof(*info->containers));
+        if (!info->containers) return FALSE;
+
+        for (i = 0; i < format_count; i++)
+            read_metadata_patterns(info, info->container_formats + i, info->containers + i);
+    }
+
+    return TRUE;
+}
+
+static HRESULT MetadataReaderInfo_Constructor(HKEY classkey, REFCLSID clsid, ComponentInfo **info)
 {
     MetadataReaderInfo *This;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    This = heap_alloc_zero(sizeof(*This));
     if (!This)
     {
         RegCloseKey(classkey);
         return E_OUTOFMEMORY;
     }
 
-    This->IWICMetadataReaderInfo_iface.lpVtbl = &MetadataReaderInfo_Vtbl;
-    This->ref = 1;
+    This->base.IWICComponentInfo_iface.lpVtbl = (const IWICComponentInfoVtbl*)&MetadataReaderInfo_Vtbl;
+    This->base.ref = 1;
     This->classkey = classkey;
-    This->clsid = *clsid;
+    This->base.clsid = *clsid;
 
-    *info = (IWICComponentInfo *)&This->IWICMetadataReaderInfo_iface;
+    if (!read_metadata_info(This))
+    {
+        IWICComponentInfo_Release(&This->base.IWICComponentInfo_iface);
+        return WINCODEC_ERR_COMPONENTNOTFOUND;
+    }
+
+    *info = &This->base;
     return S_OK;
 }
 
@@ -1924,7 +2043,7 @@ static const WCHAR instance_keyname[] = {'I','n','s','t','a','n','c','e',0};
 struct category {
     WICComponentType type;
     const GUID *catid;
-    HRESULT (*constructor)(HKEY,REFCLSID,IWICComponentInfo**);
+    HRESULT (*constructor)(HKEY,REFCLSID,ComponentInfo**);
 };
 
 static const struct category categories[] = {
@@ -1936,8 +2055,27 @@ static const struct category categories[] = {
     {0}
 };
 
+static int ComponentInfo_Compare(const void *key, const struct wine_rb_entry *entry)
+{
+    ComponentInfo *info = WINE_RB_ENTRY_VALUE(entry, ComponentInfo, entry);
+    return memcmp(key, &info->clsid, sizeof(info->clsid));
+}
+
+static struct wine_rb_tree component_info_cache = { ComponentInfo_Compare };
+
+static CRITICAL_SECTION component_info_cache_cs;
+static CRITICAL_SECTION_DEBUG component_info_cache_cs_dbg =
+{
+    0, 0, &component_info_cache_cs,
+    { &component_info_cache_cs_dbg.ProcessLocksList, &component_info_cache_cs_dbg.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": component_info_cache") }
+};
+static CRITICAL_SECTION component_info_cache_cs = { &component_info_cache_cs_dbg, -1, 0, 0, 0, 0 };
+
 HRESULT CreateComponentInfo(REFCLSID clsid, IWICComponentInfo **ppIInfo)
 {
+    struct wine_rb_entry *cache_entry;
+    ComponentInfo *info;
     HKEY clsidkey;
     HKEY classkey;
     HKEY catidkey;
@@ -1948,9 +2086,23 @@ HRESULT CreateComponentInfo(REFCLSID clsid, IWICComponentInfo **ppIInfo)
     BOOL found = FALSE;
     HRESULT hr;
 
+    EnterCriticalSection(&component_info_cache_cs);
+
+    cache_entry = wine_rb_get(&component_info_cache, clsid);
+    if(cache_entry)
+    {
+        info = WINE_RB_ENTRY_VALUE(cache_entry, ComponentInfo, entry);
+        IWICComponentInfo_AddRef(*ppIInfo = &info->IWICComponentInfo_iface);
+        LeaveCriticalSection(&component_info_cache_cs);
+        return S_OK;
+    }
+
     res = RegOpenKeyExW(HKEY_CLASSES_ROOT, clsid_keyname, 0, KEY_READ, &clsidkey);
     if (res != ERROR_SUCCESS)
+    {
+        LeaveCriticalSection(&component_info_cache_cs);
         return HRESULT_FROM_WIN32(res);
+    }
 
     for (category=categories; category->type; category++)
     {
@@ -1979,7 +2131,7 @@ HRESULT CreateComponentInfo(REFCLSID clsid, IWICComponentInfo **ppIInfo)
     {
         res = RegOpenKeyExW(clsidkey, guidstring, 0, KEY_READ, &classkey);
         if (res == ERROR_SUCCESS)
-            hr = category->constructor(classkey, clsid, ppIInfo);
+            hr = category->constructor(classkey, clsid, &info);
         else
             hr = HRESULT_FROM_WIN32(res);
     }
@@ -1990,6 +2142,35 @@ HRESULT CreateComponentInfo(REFCLSID clsid, IWICComponentInfo **ppIInfo)
     }
 
     RegCloseKey(clsidkey);
+
+    if (SUCCEEDED(hr))
+    {
+        wine_rb_put(&component_info_cache, clsid, &info->entry);
+        IWICComponentInfo_AddRef(*ppIInfo = &info->IWICComponentInfo_iface);
+    }
+    LeaveCriticalSection(&component_info_cache_cs);
+    return hr;
+}
+
+void ReleaseComponentInfos(void)
+{
+    ComponentInfo *info, *next_info;
+    WINE_RB_FOR_EACH_ENTRY_DESTRUCTOR(info, next_info, &component_info_cache, ComponentInfo, entry)
+        IWICComponentInfo_Release(&info->IWICComponentInfo_iface);
+}
+
+HRESULT get_decoder_info(const CLSID *clsid, IWICBitmapDecoderInfo **info)
+{
+    IWICComponentInfo *compinfo;
+    HRESULT hr;
+
+    hr = CreateComponentInfo(clsid, &compinfo);
+    if (FAILED(hr)) return hr;
+
+    hr = IWICComponentInfo_QueryInterface(compinfo, &IID_IWICBitmapDecoderInfo,
+        (void **)info);
+
+    IWICComponentInfo_Release(compinfo);
 
     return hr;
 }

@@ -1,6 +1,6 @@
 @ stub PIDGenA
 @ stub PIDGenW
-@ stub PIDGenSimpA
+@ stdcall PIDGenSimpA(str long long long long long long long long)
 @ stub PIDGenSimpW
 @ stub SetupPIDGenA
 @ stub SetupPIDGenW

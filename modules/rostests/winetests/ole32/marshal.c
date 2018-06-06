@@ -34,9 +34,36 @@
 #include "initguid.h"
 
 #include "wine/test.h"
+#include "wine/heap.h"
+
+#define DEFINE_EXPECT(func) \
+    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
+
+#define SET_EXPECT(func) \
+    expect_ ## func = TRUE
+
+#define CHECK_EXPECT2(func) \
+    do { \
+        ok(expect_ ##func, "unexpected call " #func "\n"); \
+        called_ ## func = TRUE; \
+    }while(0)
+
+#define CHECK_EXPECT(func) \
+    do { \
+        CHECK_EXPECT2(func); \
+        expect_ ## func = FALSE; \
+    }while(0)
+
+#define CHECK_CALLED(func) \
+    do { \
+        ok(called_ ## func, "expected " #func "\n"); \
+        expect_ ## func = called_ ## func = FALSE; \
+    }while(0)
 
 DEFINE_GUID(CLSID_StdGlobalInterfaceTable,0x00000323,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 DEFINE_GUID(CLSID_ManualResetEvent,       0x0000032c,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+
+static const GUID CLSID_WineTestPSFactoryBuffer = { 0x22222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
 
 /* functions that are not present on all versions of Windows */
 static HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
@@ -281,25 +308,285 @@ static const IClassFactoryVtbl TestClassFactory_Vtbl =
 
 static IClassFactory Test_ClassFactory = { &TestClassFactory_Vtbl };
 
+DEFINE_EXPECT(Invoke);
+DEFINE_EXPECT(CreateStub);
+DEFINE_EXPECT(CreateProxy);
+DEFINE_EXPECT(GetWindow);
+DEFINE_EXPECT(Disconnect);
+
+static HRESULT WINAPI OleWindow_QueryInterface(IOleWindow *iface, REFIID riid, void **ppv)
+{
+    ok(0, "unexpected call %s\n", wine_dbgstr_guid(riid));
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI OleWindow_AddRef(IOleWindow *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI OleWindow_Release(IOleWindow *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI OleWindow_GetWindow(IOleWindow *iface, HWND *hwnd)
+{
+    CHECK_EXPECT(GetWindow);
+    *hwnd = (HWND)0xdeadbeef;
+    return S_OK;
+}
+
+static const IOleWindowVtbl OleWindowVtbl = {
+    OleWindow_QueryInterface,
+    OleWindow_AddRef,
+    OleWindow_Release,
+    OleWindow_GetWindow,
+    /* not needed */
+};
+
+static IOleWindow Test_OleWindow = { &OleWindowVtbl };
+
+static HRESULT WINAPI OleClientSite_QueryInterface(IOleClientSite *iface, REFIID riid, void **ppv)
+{
+    if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IOleClientSite))
+        *ppv = iface;
+    else if (IsEqualGUID(riid, &IID_IOleWindow))
+        *ppv = &Test_OleWindow;
+    else
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI OleClientSite_AddRef(IOleClientSite *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI OleClientSite_Release(IOleClientSite *iface)
+{
+    return 1;
+}
+
+static const IOleClientSiteVtbl OleClientSiteVtbl = {
+    OleClientSite_QueryInterface,
+    OleClientSite_AddRef,
+    OleClientSite_Release,
+    /* we don't need the rest, we never call it */
+};
+
+static IOleClientSite Test_OleClientSite = { &OleClientSiteVtbl };
+
+typedef struct {
+    IRpcStubBuffer IRpcStubBuffer_iface;
+    LONG ref;
+    IRpcStubBuffer *buffer;
+} StubBufferWrapper;
+
+static StubBufferWrapper *impl_from_IRpcStubBuffer(IRpcStubBuffer *iface)
+{
+    return CONTAINING_RECORD(iface, StubBufferWrapper, IRpcStubBuffer_iface);
+}
+
+static HRESULT WINAPI RpcStubBuffer_QueryInterface(IRpcStubBuffer *iface, REFIID riid, void **ppv)
+{
+    StubBufferWrapper *This = impl_from_IRpcStubBuffer(iface);
+
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IRpcStubBuffer, riid)) {
+        *ppv = &This->IRpcStubBuffer_iface;
+    }else {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI RpcStubBuffer_AddRef(IRpcStubBuffer *iface)
+{
+    StubBufferWrapper *This = impl_from_IRpcStubBuffer(iface);
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI RpcStubBuffer_Release(IRpcStubBuffer *iface)
+{
+    StubBufferWrapper *This = impl_from_IRpcStubBuffer(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+    if(!ref) {
+        IRpcStubBuffer_Release(This->buffer);
+        heap_free(This);
+    }
+    return ref;
+}
+
+static HRESULT WINAPI RpcStubBuffer_Connect(IRpcStubBuffer *iface, IUnknown *pUnkServer)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static void WINAPI RpcStubBuffer_Disconnect(IRpcStubBuffer *iface)
+{
+    CHECK_EXPECT(Disconnect);
+}
+
+static HRESULT WINAPI RpcStubBuffer_Invoke(IRpcStubBuffer *iface, RPCOLEMESSAGE *_prpcmsg,
+    IRpcChannelBuffer *_pRpcChannelBuffer)
+{
+    StubBufferWrapper *This = impl_from_IRpcStubBuffer(iface);
+    void *dest_context_data;
+    DWORD dest_context;
+    HRESULT hr;
+
+    CHECK_EXPECT(Invoke);
+
+    hr = IRpcChannelBuffer_GetDestCtx(_pRpcChannelBuffer, &dest_context, &dest_context_data);
+    ok(hr == S_OK, "GetDestCtx failed: %08x\n", hr);
+    ok(dest_context == MSHCTX_INPROC, "desc_context = %x\n", dest_context);
+    ok(!dest_context_data, "desc_context_data = %p\n", dest_context_data);
+
+    return IRpcStubBuffer_Invoke(This->buffer, _prpcmsg, _pRpcChannelBuffer);
+}
+
+static IRpcStubBuffer *WINAPI RpcStubBuffer_IsIIDSupported(IRpcStubBuffer *iface, REFIID riid)
+{
+    ok(0, "unexpected call\n");
+    return NULL;
+}
+
+static ULONG WINAPI RpcStubBuffer_CountRefs(IRpcStubBuffer *iface)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI RpcStubBuffer_DebugServerQueryInterface(IRpcStubBuffer *iface, void **ppv)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static void WINAPI RpcStubBuffer_DebugServerRelease(IRpcStubBuffer *iface, void *pv)
+{
+    ok(0, "unexpected call\n");
+}
+
+static const IRpcStubBufferVtbl RpcStubBufferVtbl = {
+    RpcStubBuffer_QueryInterface,
+    RpcStubBuffer_AddRef,
+    RpcStubBuffer_Release,
+    RpcStubBuffer_Connect,
+    RpcStubBuffer_Disconnect,
+    RpcStubBuffer_Invoke,
+    RpcStubBuffer_IsIIDSupported,
+    RpcStubBuffer_CountRefs,
+    RpcStubBuffer_DebugServerQueryInterface,
+    RpcStubBuffer_DebugServerRelease
+};
+
+static IPSFactoryBuffer *ps_factory_buffer;
+
+static HRESULT WINAPI PSFactoryBuffer_QueryInterface(IPSFactoryBuffer *iface, REFIID riid, void **ppv)
+{
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IPSFactoryBuffer))
+        *ppv = iface;
+    else
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI PSFactoryBuffer_AddRef(IPSFactoryBuffer *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI PSFactoryBuffer_Release(IPSFactoryBuffer *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI PSFactoryBuffer_CreateProxy(IPSFactoryBuffer *iface, IUnknown *outer,
+    REFIID riid, IRpcProxyBuffer **ppProxy, void **ppv)
+{
+    CHECK_EXPECT(CreateProxy);
+    return IPSFactoryBuffer_CreateProxy(ps_factory_buffer, outer, riid, ppProxy, ppv);
+}
+
+static HRESULT WINAPI PSFactoryBuffer_CreateStub(IPSFactoryBuffer *iface, REFIID riid,
+    IUnknown *server, IRpcStubBuffer **ppStub)
+{
+    StubBufferWrapper *stub;
+    HRESULT hr;
+
+    CHECK_EXPECT(CreateStub);
+
+    ok(server == (IUnknown*)&Test_OleClientSite, "unexpected server %p\n", server);
+
+    stub = heap_alloc(sizeof(*stub));
+    stub->IRpcStubBuffer_iface.lpVtbl = &RpcStubBufferVtbl;
+    stub->ref = 1;
+
+    hr = IPSFactoryBuffer_CreateStub(ps_factory_buffer, riid, server, &stub->buffer);
+    ok(hr == S_OK, "CreateStub failed: %08x\n", hr);
+
+    *ppStub = &stub->IRpcStubBuffer_iface;
+    return S_OK;
+}
+
+static IPSFactoryBufferVtbl PSFactoryBufferVtbl =
+{
+    PSFactoryBuffer_QueryInterface,
+    PSFactoryBuffer_AddRef,
+    PSFactoryBuffer_Release,
+    PSFactoryBuffer_CreateProxy,
+    PSFactoryBuffer_CreateStub
+};
+
+static IPSFactoryBuffer PSFactoryBuffer = { &PSFactoryBufferVtbl };
+
 #define RELEASEMARSHALDATA WM_USER
 
 struct host_object_data
 {
     IStream *stream;
-    IID iid;
+    const IID *iid;
     IUnknown *object;
     MSHLFLAGS marshal_flags;
-    HANDLE marshal_event;
     IMessageFilter *filter;
+    IUnknown *register_object;
+    const CLSID *register_clsid;
+    HANDLE marshal_event;
 };
+
+#ifndef __REACTOS__ /* FIXME: Inspect */
+static IPSFactoryBuffer PSFactoryBuffer;
+#endif
 
 static DWORD CALLBACK host_object_proc(LPVOID p)
 {
     struct host_object_data *data = p;
+    DWORD registration_key;
     HRESULT hr;
     MSG msg;
 
     pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    if(data->register_object) {
+        hr = CoRegisterClassObject(data->register_clsid, data->register_object,
+            CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &registration_key);
+        ok(hr == S_OK, "CoRegisterClassObject failed: %08x\n", hr);
+    }
 
     if (data->filter)
     {
@@ -309,7 +596,7 @@ static DWORD CALLBACK host_object_proc(LPVOID p)
         ok_ole_success(hr, CoRegisterMessageFilter);
     }
 
-    hr = CoMarshalInterface(data->stream, &data->iid, data->object, MSHCTX_INPROC, NULL, data->marshal_flags);
+    hr = CoMarshalInterface(data->stream, data->iid, data->object, MSHCTX_INPROC, NULL, data->marshal_flags);
     ok_ole_success(hr, CoMarshalInterface);
 
     /* force the message queue to be created before signaling parent thread */
@@ -335,31 +622,27 @@ static DWORD CALLBACK host_object_proc(LPVOID p)
     return hr;
 }
 
-static DWORD start_host_object2(IStream *stream, REFIID riid, IUnknown *object, MSHLFLAGS marshal_flags, IMessageFilter *filter, HANDLE *thread)
+static DWORD start_host_object2(struct host_object_data *object_data, HANDLE *thread)
 {
     DWORD tid = 0;
-    HANDLE marshal_event = CreateEventA(NULL, FALSE, FALSE, NULL);
-    struct host_object_data *data = HeapAlloc(GetProcessHeap(), 0, sizeof(*data));
+    struct host_object_data *data;
 
-    data->stream = stream;
-    data->iid = *riid;
-    data->object = object;
-    data->marshal_flags = marshal_flags;
-    data->marshal_event = marshal_event;
-    data->filter = filter;
-
+    data = HeapAlloc(GetProcessHeap(), 0, sizeof(*data));
+    *data = *object_data;
+    data->marshal_event = CreateEventA(NULL, FALSE, FALSE, NULL);
     *thread = CreateThread(NULL, 0, host_object_proc, data, 0, &tid);
 
     /* wait for marshaling to complete before returning */
-    ok( !WaitForSingleObject(marshal_event, 10000), "wait timed out\n" );
-    CloseHandle(marshal_event);
+    ok( !WaitForSingleObject(data->marshal_event, 10000), "wait timed out\n" );
+    CloseHandle(data->marshal_event);
 
     return tid;
 }
 
 static DWORD start_host_object(IStream *stream, REFIID riid, IUnknown *object, MSHLFLAGS marshal_flags, HANDLE *thread)
 {
-    return start_host_object2(stream, riid, object, marshal_flags, NULL, thread);
+    struct host_object_data object_data = { stream, riid, object, marshal_flags };
+    return start_host_object2(&object_data, thread);
 }
 
 /* asks thread to release the marshal data because it has to be done by the
@@ -960,6 +1243,75 @@ static void test_marshal_proxy_mta_apartment_shutdown(void)
     end_host_object(tid, thread);
 
     pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+}
+
+static void test_marshal_channel_buffer(void)
+{
+    DWORD registration_key;
+    IUnknown *proxy = NULL;
+    IOleWindow *ole_window;
+    HWND hwnd;
+    CLSID clsid;
+    DWORD tid;
+    HANDLE thread;
+    HRESULT hr;
+
+    struct host_object_data object_data = { NULL, &IID_IOleClientSite, (IUnknown*)&Test_OleClientSite,
+                                            MSHLFLAGS_NORMAL, NULL, (IUnknown*)&PSFactoryBuffer,
+                                            &CLSID_WineTestPSFactoryBuffer };
+
+    cLocks = 0;
+    external_connections = 0;
+
+    hr = CoGetPSClsid(&IID_IOleWindow, &clsid);
+    ok_ole_success(hr, "CoGetPSClsid");
+
+    hr = CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IPSFactoryBuffer,
+        (void **)&ps_factory_buffer);
+    ok_ole_success(hr, "CoGetClassObject");
+
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &object_data.stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
+    tid = start_host_object2(&object_data, &thread);
+
+    IStream_Seek(object_data.stream, ullZero, STREAM_SEEK_SET, NULL);
+    hr = CoUnmarshalInterface(object_data.stream, &IID_IUnknown, (void **)&proxy);
+    ok_ole_success(hr, CoUnmarshalInterface);
+    IStream_Release(object_data.stream);
+
+    hr = CoRegisterClassObject(&CLSID_WineTestPSFactoryBuffer, (IUnknown *)&PSFactoryBuffer,
+        CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &registration_key);
+    ok(hr == S_OK, "CoRegisterClassObject failed: %08x\n", hr);
+
+    hr = CoRegisterPSClsid(&IID_IOleWindow, &CLSID_WineTestPSFactoryBuffer);
+    ok(hr == S_OK, "CoRegisterPSClsid failed: %08x\n", hr);
+
+    SET_EXPECT(CreateStub);
+    SET_EXPECT(CreateProxy);
+    hr = IUnknown_QueryInterface(proxy, &IID_IOleWindow, (void**)&ole_window);
+    ok(hr == S_OK, "Could not get IOleWindow iface: %08x\n", hr);
+    CHECK_CALLED(CreateStub);
+    CHECK_CALLED(CreateProxy);
+
+    SET_EXPECT(Invoke);
+    SET_EXPECT(GetWindow);
+    hr = IOleWindow_GetWindow(ole_window, &hwnd);
+    ok(hr == S_OK, "GetWindow failed: %08x\n", hr);
+    ok(hwnd == (HWND)0xdeadbeef, "hwnd = %p\n", hwnd);
+    CHECK_CALLED(Invoke);
+    CHECK_CALLED(GetWindow);
+
+    IOleWindow_Release(ole_window);
+
+    SET_EXPECT(Disconnect);
+    IUnknown_Release(proxy);
+todo_wine
+    CHECK_CALLED(Disconnect);
+
+    hr = CoRevokeClassObject(registration_key);
+    ok(hr == S_OK, "CoRevokeClassObject failed: %08x\n", hr);
+
+    end_host_object(tid, thread);
 }
 
 struct ncu_params
@@ -1965,25 +2317,27 @@ static IMessageFilter MessageFilter = { &MessageFilter_Vtbl };
 static void test_message_filter(void)
 {
     HRESULT hr;
-    IStream *pStream = NULL;
     IClassFactory *cf = NULL;
     DWORD tid;
     IUnknown *proxy = NULL;
     IMessageFilter *prev_filter = NULL;
     HANDLE thread;
 
+    struct host_object_data object_data = { NULL, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory,
+                                            MSHLFLAGS_NORMAL, &MessageFilter };
+
     cLocks = 0;
 
-    hr = CreateStreamOnHGlobal(NULL, TRUE, &pStream);
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &object_data.stream);
     ok_ole_success(hr, CreateStreamOnHGlobal);
-    tid = start_host_object2(pStream, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory, MSHLFLAGS_NORMAL, &MessageFilter, &thread);
+    tid = start_host_object2(&object_data, &thread);
 
     ok_more_than_one_lock();
 
-    IStream_Seek(pStream, ullZero, STREAM_SEEK_SET, NULL);
-    hr = CoUnmarshalInterface(pStream, &IID_IClassFactory, (void **)&cf);
+    IStream_Seek(object_data.stream, ullZero, STREAM_SEEK_SET, NULL);
+    hr = CoUnmarshalInterface(object_data.stream, &IID_IClassFactory, (void **)&cf);
     ok_ole_success(hr, CoUnmarshalInterface);
-    IStream_Release(pStream);
+    IStream_Release(object_data.stream);
 
     ok_more_than_one_lock();
 
@@ -3419,6 +3773,169 @@ static void test_manualresetevent(void)
     ok(!ref, "Got nonzero ref: %d\n", ref);
 }
 
+static DWORD CALLBACK implicit_mta_unmarshal_proc(void *param)
+{
+    IStream *stream = param;
+    IClassFactory *cf;
+    IUnknown *proxy;
+    HRESULT hr;
+
+    IStream_Seek(stream, ullZero, STREAM_SEEK_SET, NULL);
+    hr = CoUnmarshalInterface(stream, &IID_IClassFactory, (void **)&cf);
+    ok_ole_success(hr, CoUnmarshalInterface);
+
+    hr = IClassFactory_CreateInstance(cf, NULL, &IID_IUnknown, (void **)&proxy);
+    ok_ole_success(hr, IClassFactory_CreateInstance);
+
+    IUnknown_Release(proxy);
+
+    /* But if we initialize an STA in this apartment, it becomes the wrong one. */
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    hr = IClassFactory_CreateInstance(cf, NULL, &IID_IUnknown, (void **)&proxy);
+    ok(hr == RPC_E_WRONG_THREAD, "got %#x\n", hr);
+
+    CoUninitialize();
+
+    ok_more_than_one_lock();
+    ok_non_zero_external_conn();
+
+    IClassFactory_Release(cf);
+
+    ok_no_locks();
+    ok_zero_external_conn();
+    ok_last_release_closes(TRUE);
+    return 0;
+}
+
+static DWORD CALLBACK implicit_mta_use_proc(void *param)
+{
+    IClassFactory *cf = param;
+    IUnknown *proxy;
+    HRESULT hr;
+
+    hr = IClassFactory_CreateInstance(cf, NULL, &IID_IUnknown, (void **)&proxy);
+    ok_ole_success(hr, IClassFactory_CreateInstance);
+
+    IUnknown_Release(proxy);
+
+    /* But if we initialize an STA in this apartment, it becomes the wrong one. */
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    hr = IClassFactory_CreateInstance(cf, NULL, &IID_IUnknown, (void **)&proxy);
+    ok(hr == RPC_E_WRONG_THREAD, "got %#x\n", hr);
+
+    CoUninitialize();
+    return 0;
+}
+
+struct implicit_mta_marshal_data
+{
+    IStream *stream;
+    HANDLE start;
+    HANDLE stop;
+};
+
+static DWORD CALLBACK implicit_mta_marshal_proc(void *param)
+{
+    struct implicit_mta_marshal_data *data = param;
+    HRESULT hr;
+
+    hr = CoMarshalInterface(data->stream, &IID_IClassFactory,
+        (IUnknown *)&Test_ClassFactory, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+    ok_ole_success(hr, CoMarshalInterface);
+
+    SetEvent(data->start);
+
+    ok(!WaitForSingleObject(data->stop, 1000), "wait failed\n");
+    return 0;
+}
+
+static void test_implicit_mta(void)
+{
+    struct implicit_mta_marshal_data data;
+    HANDLE host_thread, thread;
+    IClassFactory *cf;
+    IUnknown *proxy;
+    IStream *stream;
+    HRESULT hr;
+    DWORD tid;
+
+    cLocks = 0;
+    external_connections = 0;
+
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+    /* Firstly: we can unmarshal and use an object while in the implicit MTA. */
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
+    tid = start_host_object(stream, &IID_IClassFactory, (IUnknown *)&Test_ClassFactory, MSHLFLAGS_NORMAL, &host_thread);
+
+    ok_more_than_one_lock();
+    ok_non_zero_external_conn();
+
+    thread = CreateThread(NULL, 0, implicit_mta_unmarshal_proc, stream, 0, NULL);
+    ok(!WaitForSingleObject(thread, 1000), "wait failed\n");
+    CloseHandle(thread);
+
+    IStream_Release(stream);
+    end_host_object(tid, host_thread);
+
+    /* Secondly: we can unmarshal an object into the real MTA and then use it
+     * from the implicit MTA. */
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
+    tid = start_host_object(stream, &IID_IClassFactory, (IUnknown *)&Test_ClassFactory, MSHLFLAGS_NORMAL, &host_thread);
+
+    ok_more_than_one_lock();
+    ok_non_zero_external_conn();
+
+    IStream_Seek(stream, ullZero, STREAM_SEEK_SET, NULL);
+    hr = CoUnmarshalInterface(stream, &IID_IClassFactory, (void **)&cf);
+    ok_ole_success(hr, CoUnmarshalInterface);
+
+    thread = CreateThread(NULL, 0, implicit_mta_use_proc, cf, 0, NULL);
+    ok(!WaitForSingleObject(thread, 1000), "wait failed\n");
+    CloseHandle(thread);
+
+    IClassFactory_Release(cf);
+    IStream_Release(stream);
+
+    ok_no_locks();
+    ok_non_zero_external_conn();
+    ok_last_release_closes(TRUE);
+
+    end_host_object(tid, host_thread);
+
+    /* Thirdly: we can marshal an object from the implicit MTA and then
+     * unmarshal it into the real one. */
+    data.start = CreateEventA(NULL, FALSE, FALSE, NULL);
+    data.stop  = CreateEventA(NULL, FALSE, FALSE, NULL);
+
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &data.stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
+
+    thread = CreateThread(NULL, 0, implicit_mta_marshal_proc, &data, 0, NULL);
+    ok(!WaitForSingleObject(data.start, 1000), "wait failed\n");
+
+    IStream_Seek(data.stream, ullZero, STREAM_SEEK_SET, NULL);
+    hr = CoUnmarshalInterface(data.stream, &IID_IClassFactory, (void **)&cf);
+    ok_ole_success(hr, CoUnmarshalInterface);
+
+    hr = IClassFactory_CreateInstance(cf, NULL, &IID_IUnknown, (void **)&proxy);
+    ok_ole_success(hr, IClassFactory_CreateInstance);
+
+    IUnknown_Release(proxy);
+
+    SetEvent(data.stop);
+    ok(!WaitForSingleObject(thread, 1000), "wait failed\n");
+    CloseHandle(thread);
+
+    IStream_Release(data.stream);
+
+    CoUninitialize();
+}
+
 static const char *debugstr_iid(REFIID riid)
 {
     static char name[256];
@@ -3692,12 +4209,14 @@ static IChannelHook TestChannelHook = { &TestChannelHookVtbl };
 
 static void test_channel_hook(void)
 {
-    IStream *pStream = NULL;
     IClassFactory *cf = NULL;
     DWORD tid;
     IUnknown *proxy = NULL;
     HANDLE thread;
     HRESULT hr;
+
+    struct host_object_data object_data = { NULL, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory,
+                                            MSHLFLAGS_NORMAL, &MessageFilter };
 
     hr = CoRegisterChannelHook(&EXTENTID_WineTest, &TestChannelHook);
     ok_ole_success(hr, CoRegisterChannelHook);
@@ -3707,17 +4226,17 @@ static void test_channel_hook(void)
 
     cLocks = 0;
 
-    hr = CreateStreamOnHGlobal(NULL, TRUE, &pStream);
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &object_data.stream);
     ok_ole_success(hr, CreateStreamOnHGlobal);
-    tid = start_host_object2(pStream, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory, MSHLFLAGS_NORMAL, &MessageFilter, &thread);
+    tid = start_host_object2(&object_data, &thread);
     server_tid = tid;
 
     ok_more_than_one_lock();
 
-    IStream_Seek(pStream, ullZero, STREAM_SEEK_SET, NULL);
-    hr = CoUnmarshalInterface(pStream, &IID_IClassFactory, (void **)&cf);
+    IStream_Seek(object_data.stream, ullZero, STREAM_SEEK_SET, NULL);
+    hr = CoUnmarshalInterface(object_data.stream, &IID_IClassFactory, (void **)&cf);
     ok_ole_success(hr, CoUnmarshalInterface);
-    IStream_Release(pStream);
+    IStream_Release(object_data.stream);
 
     ok_more_than_one_lock();
 
@@ -3765,6 +4284,7 @@ START_TEST(marshal)
     register_test_window();
 
     test_cocreateinstance_proxy();
+    test_implicit_mta();
 
     pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
@@ -3802,6 +4322,7 @@ START_TEST(marshal)
         with_external_conn = !with_external_conn;
     } while (with_external_conn);
 
+    test_marshal_channel_buffer();
     test_hresult_marshaling();
     test_proxy_used_in_wrong_thread();
     test_message_filter();

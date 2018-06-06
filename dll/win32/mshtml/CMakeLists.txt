@@ -8,7 +8,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_idl_headers(mshtml_nsiface_header nsiface.idl)
-spec2def(mshtml.dll mshtml.spec)
+spec2def(mshtml.dll mshtml.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     conpoint.c
