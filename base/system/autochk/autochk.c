@@ -359,7 +359,7 @@ CheckVolume(
         return Status;
     }
 
-    PrintString("  The type of the file system is %S\r\n", FileSystem);
+    PrintString("  File system type is %S\r\n", FileSystem);
 
     /* Call provider */
     for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
@@ -388,8 +388,8 @@ CheckVolume(
             NTSTATUS WaitStatus;
 
             /* Let the user decide whether to repair */
-            PrintString("  One of your disks needs to be checked for consistency. You may cancel the disk check, but it is strongly recommended that you continue\r\n");
-            PrintString("  To skip disk checking, press any key within 3 seconds\r\n", DrivePath);
+            PrintString("  This volume needs to be checked for problems. You may cancel this check, but it's recommended that you continue\r\n");
+            PrintString("  To cancel and resume startup, press any key within 3 seconds\r\n");
 
             /* Timeout == fix it! */
             WaitStatus = WaitForKeyboard();
@@ -404,7 +404,7 @@ CheckVolume(
             }
             else
             {
-                PrintString("  %S checking has been skipped\r\n", DrivePath);
+                PrintString("  Volume check has been skipped\r\n");
             }
         }
         break;
