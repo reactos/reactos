@@ -404,7 +404,7 @@ CheckVolume(
             }
             else
             {
-                PrintString("  Volume check has been skipped\r\n");
+                PrintString("  File system check has been skipped\r\n");
             }
         }
         break;
