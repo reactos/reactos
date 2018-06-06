@@ -100,6 +100,7 @@ list(APPEND FONT_FILES
     UbuntuMono-RI.ttf
     Ubuntu-R.ttf
     Ubuntu-RI.ttf
+    unifont-10.0.07.ttf
     UniVGA16.ttf)
 
 foreach(item ${FONT_FILES})
