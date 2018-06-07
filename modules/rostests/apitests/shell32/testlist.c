@@ -12,6 +12,7 @@ extern void func_CShellLink(void);
 extern void func_CUserNotification(void);
 extern void func_IShellFolderViewCB(void);
 extern void func_menu(void);
+extern void func_OpenAs_RunDLL(void);
 extern void func_PathResolve(void);
 extern void func_SHCreateFileExtractIconW(void);
 extern void func_ShellExecuteEx(void);
@@ -28,6 +29,7 @@ const struct test winetest_testlist[] =
     { "CUserNotification", func_CUserNotification },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "menu", func_menu },
+    { "OpenAs_RunDLL", func_OpenAs_RunDLL },
     { "PathResolve", func_PathResolve },
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
     { "ShellExecuteEx", func_ShellExecuteEx },

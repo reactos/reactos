@@ -15,6 +15,7 @@ list(APPEND SOURCE
     CUserNotification.cpp
     IShellFolderViewCB.cpp
     menu.cpp
+    OpenAs_RunDLL.cpp
     PathResolve.cpp
     SHCreateFileExtractIconW.cpp
     ShellExecuteEx.cpp
