@@ -29,7 +29,7 @@ START_TEST(PathUnExpandEnvStringsForUser)
     WCHAR OutStr[MAX_PATH], TestStr[MAX_PATH];
     HINSTANCE hShlwapi;
 
-    hShlwapi = LoadLibraryA("shlwapi");
+    hShlwapi = GetModuleHandleW(L"shlwapi");
     if (hShlwapi == NULL)
     {
         skip("shlwapi.dll was not loaded\n");
@@ -48,7 +48,6 @@ START_TEST(PathUnExpandEnvStringsForUser)
     if (pPathUnExpandEnvStringsForUserW == NULL)
     {
         skip("PathUnExpandEnvStringsForUserW was not found\n");
-        FreeLibrary(hShlwapi);
         return;
     }
 
@@ -117,6 +116,4 @@ START_TEST(PathUnExpandEnvStringsForUser)
     DO_TEST(FALSE, NULL, TestStr, L"%ProgramFiles%\\TEST", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%ProgramFiles%\\TEST", 2);
     DO_TEST(TRUE, NULL, TestStr, L"%ProgramFiles%\\TEST", MAX_PATH);
-
-    FreeLibrary(hShlwapi);
 }
