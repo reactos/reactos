@@ -425,10 +425,10 @@ BEGIN
     GROUPBOX "Klicka på objekt enligt följande", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Enkelklicka för att öppna (markera genom att peka)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Stryk under ikontitlar som min &webbläsare", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10
-    AUTORADIOBUTTON "Stryk under ikontitlar endast när jag &pekar på dem", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
     AUTORADIOBUTTON "&Dubbelklicka för att öppna (markera genom att enkelklicka)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 200, 10
-    PUSHBUTTON "&Återställ standardvärde", 14011, 160, 180, 90, 14, WS_TABSTOP
+    AUTORADIOBUTTON "Stryk under ikontitlar som min &webbläsare", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Stryk under ikontitlar endast när jag &pekar på dem", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    PUSHBUTTON "&Återställ standardvärde", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256

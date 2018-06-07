@@ -426,10 +426,10 @@ BEGIN
     GROUPBOX "Цъкането действа така:", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Отваряне с единично цъкане (избор с посочване)", IDC_FOLDER_OPTIONS_SINGLECLICK, 20, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Подчертаване заглавията на значетата съгласно &обзорника ми", IDC_FOLDER_OPTIONS_ULBROWSER, 30, 220, 170, 10
-    AUTORADIOBUTTON "Подчертаване на заглавията на значетата при &посочване", IDC_FOLDER_OPTIONS_ULPOINT, 30, 144, 220, 10
     AUTORADIOBUTTON "&Отваряне с двойно цъкане (избиране с единично)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 20, 156, 170, 10
-    PUSHBUTTON "От под&разбираните", 14011, 160, 180, 75, 14, WS_TABSTOP
+    AUTORADIOBUTTON "Подчертаване заглавията на значетата съгласно &обзорника ми", IDC_FOLDER_OPTIONS_ULBROWSER, 30, 220, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Подчертаване на заглавията на значетата при &посочване", IDC_FOLDER_OPTIONS_ULPOINT, 30, 144, 220, 10
+    PUSHBUTTON "От под&разбираните", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
